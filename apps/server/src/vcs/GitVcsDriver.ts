@@ -4,6 +4,7 @@ import { legacyRoveCheckpointRef } from "@rove-code/shared/roveMigration";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
+import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
@@ -13,6 +14,7 @@ import { ChildProcessSpawner } from "effect/unstable/process";
 import {
   GitCommandError,
   VcsProcessExitError,
+  type VcsError,
   type VcsSwitchRefInput,
   type VcsSwitchRefResult,
   type VcsCreateRefInput,
@@ -522,6 +524,14 @@ export const makeVcsDriverShape = Effect.fn("makeGitVcsDriverShape")(function* (
   const fileSystem = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const vcsProcess = yield* VcsProcess.VcsProcess;
+  const driverScope = yield* Effect.scope;
+  const pendingDiffs = new Map<
+    string,
+    {
+      readonly fiber: Fiber.Fiber<VcsProcess.VcsProcessOutput, VcsError>;
+      users: number;
+    }
+  >();
   const capabilities = {
     kind: "git" as const,
     supportsWorktrees: true,
@@ -1195,7 +1205,59 @@ export const makeVcsDriverShape = Effect.fn("makeGitVcsDriverShape")(function* (
           maxOutputBytes: CHECKPOINT_DIFF_MAX_OUTPUT_BYTES,
           outputMode: input.format === "numstat" ? "error" : "truncate",
         });
-      let result = yield* runDiff(fromRevision, input.toCheckpointRef);
+      // Resolve movable refs before sharing. Completed output is deliberately
+      // not cached: Git config and attributes can change without a new commit.
+      const resolved = yield* execute({
+        operation,
+        cwd: input.cwd,
+        args: [
+          "rev-parse",
+          "--revs-only",
+          "--end-of-options",
+          `${fromRevision}^{commit}`,
+          `${input.toCheckpointRef}^{commit}`,
+        ],
+        allowNonZeroExit: true,
+        maxOutputBytes: 512,
+      });
+      const commits = resolved.stdout.trim().split("\n");
+      const read =
+        resolved.exitCode === 0 && commits.length === 2
+          ? runDiff(commits[0]!, commits[1]!)
+          : runDiff(fromRevision, input.toCheckpointRef);
+      const key = [
+        input.cwd,
+        ...commits,
+        String(input.ignoreWhitespace),
+        input.format ?? "patch",
+      ].join("\0");
+      const sharedRead: Effect.Effect<VcsProcess.VcsProcessOutput, VcsError> =
+        Effect.uninterruptibleMask((restore) =>
+          Effect.gen(function* (): Effect.fn.Return<VcsProcess.VcsProcessOutput, VcsError> {
+            let pending = pendingDiffs.get(key);
+            if (!pending) {
+              if (resolved.exitCode !== 0 || commits.length !== 2 || pendingDiffs.size >= 64)
+                return yield* restore(read);
+              const fiber = yield* restore(read).pipe(Effect.forkIn(driverScope));
+              pending = { fiber, users: 0 };
+              pendingDiffs.set(key, pending);
+            }
+            const entry = pending;
+            entry.users++;
+            return yield* restore(Fiber.join(entry.fiber)).pipe(
+              Effect.ensuring(
+                Effect.gen(function* () {
+                  entry.users--;
+                  if (entry.users === 0) {
+                    if (pendingDiffs.get(key) === entry) pendingDiffs.delete(key);
+                    yield* Fiber.interrupt(entry.fiber);
+                  }
+                }),
+              ),
+            );
+          }),
+        );
+      let result = yield* sharedRead;
       if (
         result.exitCode !== 0 &&
         (legacyRoveCheckpointRef(fromRevision) || legacyRoveCheckpointRef(input.toCheckpointRef))

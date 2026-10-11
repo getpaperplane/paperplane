@@ -253,10 +253,12 @@ export interface ProjectionSnapshotQueryShape {
   ) => Effect.Effect<Option.Option<ProjectionFullThreadDiffContext>, ProjectionRepositoryError>;
 
   /**
-   * Read a single active thread shell row by id.
+   * Read a single active thread shell row by id. Shell subscriptions may share
+   * persisted reads by passing the engine's current committed generation.
    */
   readonly getThreadShellById: (
     threadId: ThreadId,
+    generation?: number,
   ) => Effect.Effect<Option.Option<OrchestrationThreadShell>, ProjectionRepositoryError>;
 
   /** Read the active thread and session facts used to ingest provider events. */

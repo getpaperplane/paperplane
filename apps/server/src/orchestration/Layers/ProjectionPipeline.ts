@@ -2211,6 +2211,16 @@ const makeOrchestrationProjectionPipeline = Effect.fn("makeOrchestrationProjecti
             (projector) => byProjector.get(projector.name)?.lastAppliedSequence ?? 0,
           ),
         );
+        const projectionStart = Math.min(
+          ...projectors.map(
+            (projector) => byProjector.get(projector.name)?.lastAppliedSequence ?? 0,
+          ),
+        );
+        const [head] = yield* sql<{ sequence: number; occurredAt: string }>`
+          SELECT sequence, occurred_at AS "occurredAt"
+          FROM orchestration_events ORDER BY sequence DESC LIMIT 1
+        `;
+        const replayBoundary = { toSequenceInclusive: head?.sequence ?? 0 };
         // Persist this boundary before replay: a reset projector can encounter an old
         // revert, then fail after other projectors have committed past that event.
         yield* projectionStateRepository.upsert({
@@ -2228,22 +2238,24 @@ const makeOrchestrationProjectionPipeline = Effect.fn("makeOrchestrationProjecti
           ]),
         );
         const pendingCleanup = new Map<string, OrchestrationEvent>();
-        let lastEvent: OrchestrationEvent | undefined;
         yield* Stream.runForEachArray(
-          eventStore.readFromSequence(cleanupStart, Number.MAX_SAFE_INTEGER),
-          (events) =>
-            replayPage(events, cursors).pipe(
-              Effect.tap(() =>
-                Effect.sync(() => {
-                  for (const event of events) {
-                    lastEvent = event;
-                    if (event.type === "thread.reverted" || event.type === "thread.deleted") {
-                      pendingCleanup.set(`${event.type}:${event.payload.threadId}`, event);
-                    }
-                  }
-                }),
-              ),
-            ),
+          eventStore.readFromSequence(projectionStart, Number.MAX_SAFE_INTEGER, replayBoundary),
+          (events) => replayPage(events, cursors),
+        );
+        // Cleanup discovery must not decode ordinary traffic from the previous
+        // uptime. Rebuild lagging projections first so all attachment references
+        // are current before replaying the sparse cleanup range.
+        yield* Stream.runForEach(
+          eventStore.readFromSequence(cleanupStart, Number.MAX_SAFE_INTEGER, {
+            ...replayBoundary,
+            types: ["thread.reverted", "thread.deleted"],
+          }),
+          (event) =>
+            Effect.sync(() => {
+              if (event.type === "thread.reverted" || event.type === "thread.deleted") {
+                pendingCleanup.set(`${event.type}:${event.payload.threadId}`, event);
+              }
+            }),
         );
         for (const event of pendingCleanup.values()) {
           if (event.type !== "thread.reverted" && event.type !== "thread.deleted") continue;
@@ -2257,11 +2269,11 @@ const makeOrchestrationProjectionPipeline = Effect.fn("makeOrchestrationProjecti
           // Leave the cleanup cursor behind this event so the next bootstrap retries it.
           if (!cleaned) return;
         }
-        if (lastEvent) {
+        if (head && head.sequence > cleanupStart) {
           yield* projectionStateRepository.upsert({
             projector: cleanupProjector,
-            lastAppliedSequence: lastEvent.sequence,
-            updatedAt: lastEvent.occurredAt,
+            lastAppliedSequence: head.sequence,
+            updatedAt: head.occurredAt,
           });
         }
       },

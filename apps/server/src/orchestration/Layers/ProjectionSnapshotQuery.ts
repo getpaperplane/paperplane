@@ -3359,7 +3359,10 @@ pending_approval_requests AS (
       });
     });
 
-  const getThreadShellById: ProjectionSnapshotQueryShape["getThreadShellById"] = (threadId) =>
+  const readThreadShellById: ProjectionSnapshotQueryShape["getThreadShellById"] = (
+    threadId,
+    generation,
+  ) =>
     Effect.gen(function* () {
       const [threadRow, latestTurnRow, sessionRow, pullRequestRows] = yield* Effect.all([
         getActiveThreadRowById({ threadId }).pipe(
@@ -3413,7 +3416,7 @@ pending_approval_requests AS (
         ...mapThreadPullRequests(
           pullRequestRows.map(mapPullRequestRow),
           threadRow.value.projectId,
-          pullRequestRows.length === 0
+          pullRequestRows.length === 0 || generation !== undefined
             ? null
             : Option.getOrNull(yield* getProjectShellById(threadRow.value.projectId))
                 ?.repositoryIdentity,
@@ -3446,6 +3449,58 @@ pending_approval_requests AS (
         planProgress: threadPlanProgress.getThreadPlanProgress(threadRow.value.threadId),
       } satisfies OrchestrationThreadShell);
     });
+
+  // Only subscription reads opt in. Keep one bounded committed generation,
+  // never authorization, stream cursors, or a failure. Volatile annotations are
+  // reapplied per caller even when the persisted rows have not changed.
+  const shellReads = new Map<
+    ThreadId,
+    ReturnType<ProjectionSnapshotQueryShape["getThreadShellById"]>
+  >();
+  let shellGeneration: number | undefined;
+  const getThreadShellById: ProjectionSnapshotQueryShape["getThreadShellById"] = Effect.fnUntraced(
+    function* (
+      threadId: ThreadId,
+      generation?: number,
+    ): Effect.fn.Return<Option.Option<OrchestrationThreadShell>, ProjectionRepositoryError> {
+      if (generation === undefined) return yield* readThreadShellById(threadId);
+      if (generation !== shellGeneration) {
+        shellReads.clear();
+        shellGeneration = generation;
+      }
+      let read = shellReads.get(threadId);
+      if (!read) {
+        read = yield* Effect.cached(
+          readThreadShellById(threadId, generation).pipe(Effect.uninterruptible),
+        );
+        if (shellReads.size >= 256) shellReads.delete(shellReads.keys().next().value!);
+        shellReads.set(threadId, read);
+      }
+      const sharedRead = read;
+      const shell = yield* sharedRead.pipe(
+        Effect.tapCause(() =>
+          Effect.sync(() => {
+            if (shellReads.get(threadId) === sharedRead) shellReads.delete(threadId);
+          }),
+        ),
+      );
+      if (Option.isNone(shell)) return shell;
+      const thread = shell.value;
+      // Repository identity can be invalidated without an orchestration event.
+      // Refresh this enrichment alongside plan/background annotations.
+      const identity =
+        thread.pullRequests.length === 0 || thread.projectId === null
+          ? null
+          : Option.getOrNull(yield* getProjectShellById(thread.projectId))?.repositoryIdentity;
+      const { linkedPullRequest: _legacyLink, ...persisted } = thread;
+      return Option.some({
+        ...persisted,
+        ...mapThreadPullRequests(thread.pullRequests, thread.projectId, identity),
+        backgroundLiveness: threadBackgroundLiveness.getThreadBackgroundLiveness(threadId),
+        planProgress: threadPlanProgress.getThreadPlanProgress(threadId),
+      });
+    },
+  );
 
   const getThreadRuntimeContext: ProjectionSnapshotQueryShape["getThreadRuntimeContext"] =
     Effect.fn("ProjectionSnapshotQuery.getThreadRuntimeContext")(function* (threadId) {

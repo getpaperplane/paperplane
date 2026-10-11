@@ -17,6 +17,7 @@ import {
   agentSpawnSummary,
   buildPendingUserInputAnswers,
   buildThreadFeed,
+  createThreadFeedBuilder,
   deriveThreadFeedPresentation,
   isPendingUserInputOptionSelected,
   setPendingUserInputCustomAnswer,
@@ -311,6 +312,63 @@ function makeThread(
 }
 
 describe("buildThreadFeed", () => {
+  it("incrementally replaces streaming messages and rebuilds grouping and history boundaries", () => {
+    const build = createThreadFeedBuilder();
+    const activities = [0, 2, 4].map((index) =>
+      makeActivity({
+        id: EventId.make(`work-${index}`),
+        kind: "runtime.info",
+        summary: "Fixture",
+        createdAt: `2026-04-01T00:00:0${index}.000Z`,
+      }),
+    );
+    const messages: OrchestrationThread["messages"] = [1, 3].map((index) => ({
+      id: MessageId.make(`message-${index}`),
+      role: "assistant",
+      text: index === 1 ? "" : "Initial",
+      createdAt: `2026-04-01T00:00:0${index}.000Z`,
+      updatedAt: `2026-04-01T00:00:0${index}.000Z`,
+      streaming: true,
+      turnId: null,
+    }));
+    let thread = { messages, activities };
+    const initial = build(thread);
+    for (let index = 0; index < 25; index++) {
+      thread = {
+        ...thread,
+        messages: [thread.messages[0]!, { ...thread.messages[1]!, text: `Delta ${index}` }],
+      };
+      const feed = build(thread);
+      expect(feed).toEqual(buildThreadFeed(thread));
+      expect(feed[0]).toBe(initial[0]);
+    }
+    thread = {
+      ...thread,
+      messages: [{ ...thread.messages[0]!, text: "Now visible" }, thread.messages[1]!],
+    };
+    expect(build(thread)).toEqual(buildThreadFeed(thread));
+    expect(build(thread).map((entry) => entry.id)).toEqual([
+      "work-0",
+      "message-1",
+      "work-2",
+      "message-3",
+      "work-4",
+    ]);
+    for (const next of [
+      { ...thread, messages: [...thread.messages].reverse() },
+      { ...thread, messages: thread.messages.slice(1) },
+      {
+        ...thread,
+        activities: [...activities, { ...activities[0]!, id: EventId.make("new-work") }],
+      },
+      { ...thread, messages: [{ ...thread.messages[0]!, text: "" }, thread.messages[1]!] },
+    ])
+      expect(build(next)).toEqual(buildThreadFeed(next));
+    const options = { loadedMessages: thread.messages.slice(1) };
+    expect(build(thread, options)).toEqual(buildThreadFeed(thread, options));
+    expect(build(thread)).toEqual(buildThreadFeed(thread));
+  });
+
   it("hides Pi status from the feed without hiding extension notifications", () => {
     const thread = makeThread({
       id: ThreadId.make("thread-pi-status"),

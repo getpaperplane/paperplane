@@ -234,21 +234,71 @@ export const make = Effect.gen(function* () {
   // One permit per cwd for remote reads that write the cache. Without it a
   // periodic poll that started before `gh pr create` can finish after the
   // turn-end refresh and overwrite the fresh PR with its stale `pr: null`.
-  const remoteWriteLocks = new Map<string, Semaphore.Semaphore>();
-  const withRemoteWriteLock = <A, E, R>(cwd: string, effect: Effect.Effect<A, E, R>) => {
-    let lock = remoteWriteLocks.get(cwd);
-    if (lock === undefined) {
-      lock = Semaphore.makeUnsafe(1);
-      remoteWriteLocks.set(cwd, lock);
-    }
-    return lock.withPermits(1)(effect);
+  const remoteWriteLocks = new Map<string, { readonly lock: Semaphore.Semaphore; users: number }>();
+  const accessOrder = new Map<string, true>();
+  const touch = (cwd: string) => {
+    accessOrder.delete(cwd);
+    accessOrder.set(cwd, true);
   };
   const pollersRef = yield* SynchronizedRef.make(new Map<string, ActiveRemotePoller>());
+  const pruneInactiveCache: Effect.Effect<void> = Effect.gen(function* () {
+    const active = yield* SynchronizedRef.get(pollersRef);
+    yield* Ref.update(cacheRef, (cache) => {
+      if (cache.size <= 128) return cache;
+      const pinned = (cwd: string) => active.has(cwd) || remoteWriteLocks.has(cwd);
+      let inactive = 0;
+      for (const cwd of cache.keys()) if (!pinned(cwd)) inactive++;
+      if (inactive <= 128) return cache;
+      const next = new Map(cache);
+      for (const cwd of accessOrder.keys()) {
+        if (inactive <= 128) break;
+        if (pinned(cwd)) continue;
+        next.delete(cwd);
+        accessOrder.delete(cwd);
+        inactive--;
+      }
+      return next;
+    });
+  });
+  // Acquire the lease when the effect runs, including queued and cancelled
+  // waiters. Retiring a semaphore while a waiter still holds it breaks ordering.
+  const withRemoteWriteLock = <A, E, R>(
+    cwd: string,
+    effect: Effect.Effect<A, E, R>,
+  ): Effect.Effect<A, E, R> =>
+    Effect.suspend(() => {
+      let entry = remoteWriteLocks.get(cwd);
+      if (!entry) {
+        entry = { lock: Semaphore.makeUnsafe(1), users: 0 };
+        remoteWriteLocks.set(cwd, entry);
+      }
+      const held = entry;
+      held.users++;
+      return held.lock
+        .withPermits(1)(effect)
+        .pipe(
+          Effect.ensuring(
+            Effect.gen(function* () {
+              held.users--;
+              if (held.users === 0) {
+                remoteWriteLocks.delete(cwd);
+                yield* pruneInactiveCache;
+              }
+            }),
+          ),
+        );
+    });
 
   const getCachedStatus = Effect.fn("VcsStatusBroadcaster.getCachedStatus")(function* (
     cwd: string,
   ) {
-    return yield* Ref.get(cacheRef).pipe(Effect.map((cache) => cache.get(cwd) ?? null));
+    return yield* Ref.get(cacheRef).pipe(
+      Effect.map((cache) => {
+        const status = cache.get(cwd) ?? null;
+        if (status) touch(cwd);
+        return status;
+      }),
+    );
   });
 
   const updateCachedLocalStatus = Effect.fn("VcsStatusBroadcaster.updateCachedLocalStatus")(
@@ -277,6 +327,8 @@ export const make = Effect.gen(function* () {
         });
       }
 
+      touch(cwd);
+      yield* pruneInactiveCache;
       return local;
     },
   );
@@ -307,6 +359,8 @@ export const make = Effect.gen(function* () {
         });
       }
 
+      touch(cwd);
+      yield* pruneInactiveCache;
       return remote;
     },
   );
@@ -350,6 +404,8 @@ export const make = Effect.gen(function* () {
       });
     }
 
+    touch(cwd);
+    yield* pruneInactiveCache;
     return mergeGitStatusParts(local, remote);
   });
 
@@ -692,6 +748,7 @@ export const make = Effect.gen(function* () {
     if (pollerToInterrupt) {
       yield* Fiber.interrupt(pollerToInterrupt).pipe(Effect.ignore);
     }
+    yield* pruneInactiveCache;
   });
 
   const streamStatus: VcsStatusBroadcaster["Service"]["streamStatus"] = (input, options) =>
