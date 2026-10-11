@@ -944,6 +944,73 @@ it.effect("GitVcsDriver forwards execute env to the VCS process", () => {
   );
 });
 
+it.effect("shares concurrent checkpoint diffs but rereads completed output", () => {
+  let reads = 0;
+  let resolutions = 0;
+  let gate: Deferred.Deferred<void>;
+  let resolvedBoth: Deferred.Deferred<void>;
+  return Effect.gen(function* () {
+    gate = yield* Deferred.make<void>();
+    resolvedBoth = yield* Deferred.make<void>();
+    const driver = yield* GitVcsDriver.makeVcsDriverShape();
+    const input = {
+      cwd: "/repo",
+      fromCheckpointRef: CheckpointRef.make("refs/rove/from"),
+      toCheckpointRef: CheckpointRef.make("refs/rove/to"),
+      ignoreWhitespace: false,
+    };
+    const requests = yield* Effect.all(
+      [driver.checkpoints.diffCheckpoints(input), driver.checkpoints.diffCheckpoints(input)],
+      { concurrency: "unbounded" },
+    ).pipe(Effect.forkScoped);
+    yield* Deferred.await(resolvedBoth);
+    yield* Deferred.succeed(gate, undefined);
+    assert.deepEqual(yield* Fiber.join(requests), ["patch", "patch"]);
+    assert.strictEqual(reads, 1);
+    // Attributes/config can change with the same commits, so do not reuse a
+    // completed patch and do not retain a failed read indefinitely either.
+    assert.strictEqual(yield* driver.checkpoints.diffCheckpoints(input), "patch");
+    assert.strictEqual(reads, 2);
+    resolutions = 0;
+    gate = yield* Deferred.make<void>();
+    resolvedBoth = yield* Deferred.make<void>();
+    const first = yield* driver.checkpoints.diffCheckpoints(input).pipe(Effect.forkScoped);
+    const second = yield* driver.checkpoints.diffCheckpoints(input).pipe(Effect.forkScoped);
+    yield* Deferred.await(resolvedBoth);
+    yield* Fiber.interrupt(first);
+    yield* Deferred.succeed(gate, undefined);
+    assert.strictEqual(yield* Fiber.join(second), "patch");
+    assert.strictEqual(reads, 3);
+  }).pipe(
+    Effect.provide(
+      Layer.mergeAll(
+        NodeServices.layer,
+        Layer.mock(VcsProcess.VcsProcess)({
+          run: (input) =>
+            Effect.gen(function* () {
+              let stdout = "";
+              if (input.args.includes("rev-parse")) {
+                stdout = "from-commit\nto-commit\n";
+                if (++resolutions === 2) yield* Deferred.succeed(resolvedBoth, undefined);
+              } else {
+                reads++;
+                yield* Deferred.await(gate);
+                stdout = "patch";
+              }
+              return {
+                exitCode: ChildProcessSpawner.ExitCode(0),
+                stdout,
+                stderr: "",
+                stdoutTruncated: false,
+                stderrTruncated: false,
+              };
+            }),
+        }),
+      ),
+    ),
+  );
+});
+
 it.effect("GitVcsDriver flushes checkpoint objects and refs to disk before publishing them", () => {
   const observedArgs: ReadonlyArray<string>[] = [];
 

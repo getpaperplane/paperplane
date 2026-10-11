@@ -231,6 +231,39 @@ describe("VcsStatusBroadcaster", () => {
     }).pipe(Effect.provide(makeTestLayer(state)));
   });
 
+  it.effect("bounds inactive status retention while pinning live subscriptions", () => {
+    const state = {
+      currentLocalStatus: baseLocalStatus,
+      currentRemoteStatus: baseRemoteStatus,
+      localStatusCalls: 0,
+      remoteStatusCalls: 0,
+      localInvalidationCalls: 0,
+      remoteInvalidationCalls: 0,
+      backgroundWorkEnabled: false,
+    };
+    return Effect.gen(function* () {
+      const broadcaster = yield* VcsStatusBroadcaster.VcsStatusBroadcaster;
+      yield* broadcaster.getStatus({ cwd: "/pinned" });
+      yield* Effect.scoped(
+        Effect.gen(function* () {
+          const pull = yield* Stream.toPull(broadcaster.streamStatus({ cwd: "/pinned" }));
+          yield* pull;
+          for (let i = 0; i < 160; i++) yield* broadcaster.getStatus({ cwd: `/inactive-${i}` });
+          const before = state.localStatusCalls;
+          yield* broadcaster.getStatus({ cwd: "/pinned" });
+          yield* broadcaster.getStatus({ cwd: "/inactive-159" });
+          assert.equal(state.localStatusCalls, before);
+          yield* broadcaster.getStatus({ cwd: "/inactive-0" });
+          assert.equal(state.localStatusCalls, before + 1);
+        }),
+      );
+      for (let i = 0; i < 160; i++) yield* broadcaster.getStatus({ cwd: `/later-${i}` });
+      const before = state.localStatusCalls;
+      yield* broadcaster.getStatus({ cwd: "/pinned" });
+      assert.equal(state.localStatusCalls, before + 1);
+    }).pipe(Effect.provide(makeTestLayer(state)));
+  });
+
   it.effect("refreshes a loaded cwd without reusing a previous branch's PR", () => {
     const state = {
       currentLocalStatus: baseLocalStatus,

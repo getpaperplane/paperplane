@@ -314,6 +314,28 @@ layer("OrchestrationEventStore", (it) => {
         );
       }
       assert.deepEqual(yield* Stream.runCollect(store.readFromSequence(0, -1)), []);
+      assert.deepEqual(
+        yield* Stream.runCollect(store.readFromSequence(0, 1000, { types: [] })),
+        [],
+      );
+      assert.deepEqual(
+        (yield* Stream.runCollect(
+          store.readFromSequence(persisted[0]!.sequence - 1, 1000, {
+            types: ["thread.message-sent"],
+            toSequenceInclusive: head,
+          }),
+        )).map((event) => event.sequence),
+        persisted.map((event) => event.sequence),
+      );
+      assert.deepEqual(
+        yield* Stream.runCollect(
+          store.readFromSequence(persisted[0]!.sequence - 1, 1000, {
+            types: ["thread.deleted", "thread.reverted"],
+            toSequenceInclusive: head,
+          }),
+        ),
+        [],
+      );
     }),
   );
 });

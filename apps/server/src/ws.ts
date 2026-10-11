@@ -1007,7 +1007,11 @@ const makeWsRpcLayer = (
         retryShellProjectionRead(
           "thread",
           threadId,
-          projectionSnapshotQuery.getThreadShellById(threadId),
+          orchestrationEngine.latestSequence.pipe(
+            Effect.flatMap((generation) =>
+              projectionSnapshotQuery.getThreadShellById(threadId, generation),
+            ),
+          ),
         ).pipe(
           Effect.map(
             Option.flatMap((thread) =>

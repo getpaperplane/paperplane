@@ -58,6 +58,10 @@ export interface OrchestrationEventStoreContract {
   readonly readFromSequence: (
     sequenceExclusive: number,
     limit?: number,
+    options?: {
+      readonly types?: ReadonlyArray<OrchestrationEvent["type"]>;
+      readonly toSequenceInclusive?: number;
+    },
   ) => Stream.Stream<OrchestrationEvent, OrchestrationEventStoreError>;
 
   /** Read one aggregate through a captured global head, without decoding other streams. */

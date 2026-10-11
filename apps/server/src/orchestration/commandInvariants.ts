@@ -10,6 +10,7 @@ import { normalizeProjectPathForComparison } from "@rove-code/shared/path";
 import * as Effect from "effect/Effect";
 
 import { OrchestrationCommandInvariantError } from "./Errors.ts";
+import { indexOfThread } from "./readModelIndexes.ts";
 
 function invariantError(commandType: string, detail: string): OrchestrationCommandInvariantError {
   return new OrchestrationCommandInvariantError({
@@ -22,7 +23,7 @@ function findThreadById(
   readModel: OrchestrationReadModel,
   threadId: ThreadId,
 ): OrchestrationThread | undefined {
-  return readModel.threads.find((thread) => thread.id === threadId);
+  return readModel.threads[indexOfThread(readModel.threads, threadId)];
 }
 
 function findProjectById(

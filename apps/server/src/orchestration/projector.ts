@@ -34,6 +34,7 @@ import * as Schema from "effect/Schema";
 import * as Predicate from "effect/Predicate";
 
 import { toProjectorDecodeError, type OrchestrationProjectorDecodeError } from "./Errors.ts";
+import { indexOfThread, preserveThreadIndex } from "./readModelIndexes.ts";
 import {
   MessageSentPayloadSchema,
   ProjectCreatedPayload,
@@ -67,6 +68,10 @@ import {
 type ThreadPatch = Partial<Omit<OrchestrationThread, "id" | "projectId">>;
 const MAX_THREAD_MESSAGES = 2_000;
 const MAX_THREAD_CHECKPOINTS = 500;
+const messagePositions = new WeakMap<
+  OrchestrationThread["messages"],
+  ReadonlyMap<OrchestrationMessage["id"], number>
+>();
 
 // Async questions can stay open while the agent produces more activity.
 // Match the database snapshot's pending-question retention.
@@ -133,7 +138,7 @@ function updateThread(
   threadId: ThreadId,
   patch: ThreadPatch,
 ): ReadonlyArray<OrchestrationThread> {
-  const index = threads.findIndex((thread) => thread.id === threadId);
+  const index = indexOfThread(threads, threadId);
   return index === -1 ? threads : patchThreadAt(threads, index, patch);
 }
 
@@ -145,6 +150,7 @@ function patchThreadAt(
 ): ReadonlyArray<OrchestrationThread> {
   const next = threads.slice();
   next[index] = { ...threads[index]!, ...patch };
+  preserveThreadIndex(threads, next);
   return next;
 }
 
@@ -733,7 +739,7 @@ export function projectEvent(
           event.type,
           "payload",
         );
-        const threadIndex = nextBase.threads.findIndex((entry) => entry.id === payload.threadId);
+        const threadIndex = indexOfThread(nextBase.threads, payload.threadId);
         const thread = nextBase.threads[threadIndex];
         if (!thread) {
           return nextBase;
@@ -756,29 +762,47 @@ export function projectEvent(
           "message",
         );
 
-        const existingMessage = thread.messages.find((entry) => entry.id === message.id);
-        const messages = existingMessage
-          ? thread.messages.map((entry) =>
-              entry.id === message.id
-                ? {
-                    ...entry,
-                    text: message.streaming
-                      ? `${entry.text}${message.text}`
-                      : message.text.length > 0
-                        ? message.text
-                        : entry.text,
-                    streaming: message.streaming,
-                    updatedAt: message.updatedAt,
-                    turnId: message.turnId,
-                    ...(message.attachments !== undefined
-                      ? { attachments: message.attachments }
-                      : {}),
-                    ...(message.context !== undefined ? { context: message.context } : {}),
-                  }
-                : entry,
-            )
-          : [...thread.messages, message];
-        const cappedMessages = messages.slice(-MAX_THREAD_MESSAGES);
+        let positions = messagePositions.get(thread.messages);
+        if (!positions) {
+          const indexed = new Map<OrchestrationMessage["id"], number>();
+          for (let index = 0; index < thread.messages.length; index++) {
+            const id = thread.messages[index]!.id;
+            indexed.set(id, indexed.has(id) ? -1 : index);
+          }
+          positions = indexed;
+          messagePositions.set(thread.messages, positions);
+        }
+        const messageIndex = positions.get(message.id);
+        const messages = thread.messages.slice();
+        if (messageIndex !== undefined) {
+          const update = (entry: OrchestrationMessage) => ({
+            ...entry,
+            text: message.streaming
+              ? `${entry.text}${message.text}`
+              : message.text.length > 0
+                ? message.text
+                : entry.text,
+            streaming: message.streaming,
+            updatedAt: message.updatedAt,
+            turnId: message.turnId,
+            ...(message.attachments !== undefined ? { attachments: message.attachments } : {}),
+            ...(message.context !== undefined ? { context: message.context } : {}),
+          });
+          if (messageIndex < 0) {
+            // Keep the original projector semantics even for externally supplied
+            // models with duplicate ids; engine-produced histories are unique.
+            for (let index = 0; index < messages.length; index++) {
+              if (messages[index]!.id === message.id) messages[index] = update(messages[index]!);
+            }
+          } else {
+            messages[messageIndex] = update(messages[messageIndex]!);
+          }
+          messagePositions.set(messages, positions);
+        } else {
+          messages.push(message);
+        }
+        const cappedMessages =
+          messages.length > MAX_THREAD_MESSAGES ? messages.slice(-MAX_THREAD_MESSAGES) : messages;
 
         return {
           ...nextBase,

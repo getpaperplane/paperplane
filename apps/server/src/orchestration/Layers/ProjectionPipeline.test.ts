@@ -67,6 +67,52 @@ const encodeThreadLinkedPullRequest = Schema.encodeSync(
   Schema.fromJsonString(ThreadLinkedPullRequest),
 );
 
+it.effect("advances cleanup without decoding already-projected ordinary events", () =>
+  Effect.gen(function* () {
+    const pipeline = yield* OrchestrationProjectionPipeline;
+    const store = yield* OrchestrationEventStore;
+    const state = yield* ProjectionStateRepository;
+    const sql = yield* SqlClient.SqlClient;
+    const now = "2026-01-01T00:00:00.000Z";
+    const event = yield* store.append({
+      type: "project.created",
+      eventId: EventId.make("sparse-cleanup"),
+      aggregateKind: "project",
+      aggregateId: ProjectId.make("sparse-project"),
+      occurredAt: now,
+      commandId: null,
+      causationEventId: null,
+      correlationId: null,
+      metadata: {},
+      payload: {
+        projectId: ProjectId.make("sparse-project"),
+        title: "Fixture",
+        workspaceRoot: "/fixture",
+        defaultModelSelection: null,
+        scripts: [],
+        createdAt: now,
+        updatedAt: now,
+      },
+    });
+    yield* pipeline.projectEvent(event);
+    // A payload that cannot be decoded proves cleanup never loads ordinary rows.
+    yield* sql`UPDATE orchestration_events SET payload_json = 'invalid' WHERE sequence = ${event.sequence}`;
+    yield* pipeline.bootstrap;
+    assert.strictEqual(
+      (yield* state.listAll()).find((row) => row.projector === "projection.attachment-cleanup")
+        ?.lastAppliedSequence,
+      event.sequence,
+    );
+    // Resetting an actual projector must still replay and reject this payload.
+    yield* state.upsert({
+      projector: ORCHESTRATION_PROJECTOR_NAMES.projects,
+      lastAppliedSequence: 0,
+      updatedAt: now,
+    });
+    assert.strictEqual((yield* pipeline.bootstrap.pipe(Effect.result))._tag, "Failure");
+  }).pipe(Effect.provide(Layer.fresh(BaseTestLayer))),
+);
+
 it.layer(Layer.fresh(makeProjectionPipelinePrefixedTestLayer("rove-projection-cursor-batch-")))(
   "OrchestrationProjectionPipeline cursor batches",
   (it) => {

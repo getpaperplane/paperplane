@@ -1,6 +1,7 @@
 import {
   CommandId,
   EventId,
+  MessageId,
   ProjectId,
   ProviderDriverKind,
   ThreadId,
@@ -42,6 +43,139 @@ function makeEvent(input: {
 }
 
 describe("orchestration projector", () => {
+  effectIt.effect(
+    "keeps message indexes correct across retention and preserves earlier models",
+    () =>
+      Effect.gen(function* () {
+        const now = "2026-01-01T00:00:00.000Z";
+        const created = makeEvent({
+          sequence: 1,
+          type: "thread.created",
+          occurredAt: now,
+          aggregateKind: "thread",
+          aggregateId: "indexed",
+          commandId: null,
+          payload: {
+            threadId: "indexed",
+            projectId: null,
+            title: "Fixture",
+            modelSelection: { instanceId: "codex", model: "fixture" },
+            runtimeMode: "full-access",
+            branch: null,
+            worktreePath: null,
+            createdAt: now,
+            updatedAt: now,
+          },
+        });
+        const empty = yield* projectEvent(createEmptyReadModel(now), created);
+        let model = empty;
+        model = {
+          ...empty,
+          threads: [
+            {
+              ...empty.threads[0]!,
+              messages: Array.from({ length: 2000 }, (_, i) => ({
+                id: MessageId.make(`message-${i}`),
+                role: "assistant" as const,
+                text: "Initial",
+                streaming: true,
+                turnId: null,
+                createdAt: now,
+                updatedAt: now,
+              })),
+            },
+          ],
+        };
+        const original = model;
+        for (const messageId of [
+          "message-1999",
+          "new-message",
+          "message-1999",
+          "message-0",
+          "message-1999",
+        ]) {
+          model = yield* projectEvent(
+            model,
+            makeEvent({
+              sequence: model.snapshotSequence + 1,
+              type: "thread.message-sent",
+              occurredAt: now,
+              aggregateKind: "thread",
+              aggregateId: "indexed",
+              commandId: null,
+              payload: {
+                threadId: "indexed",
+                messageId,
+                role: "assistant",
+                text: " delta",
+                streaming: true,
+                turnId: null,
+                createdAt: now,
+                updatedAt: now,
+              },
+            }),
+          );
+        }
+        expect(model.threads[0]!.messages).toHaveLength(2000);
+        expect(
+          model.threads[0]!.messages.find((message) => message.id === "message-1999")?.text,
+        ).toBe("Initial delta delta delta");
+        expect(model.threads[0]!.messages.find((message) => message.id === "message-0")?.text).toBe(
+          " delta",
+        );
+        expect(original.threads[0]!.messages[1999]!.text).toBe("Initial");
+        const duplicateModel = {
+          ...empty,
+          threads: [
+            {
+              ...empty.threads[0]!,
+              messages: [
+                {
+                  ...original.threads[0]!.messages[0]!,
+                  id: MessageId.make("duplicate"),
+                  text: "A",
+                },
+                {
+                  ...original.threads[0]!.messages[0]!,
+                  id: MessageId.make("duplicate"),
+                  text: "B",
+                },
+              ],
+            },
+          ],
+        };
+        const updatedDuplicates = yield* projectEvent(
+          duplicateModel,
+          makeEvent({
+            sequence: 2,
+            type: "thread.message-sent",
+            occurredAt: now,
+            aggregateKind: "thread",
+            aggregateId: "indexed",
+            commandId: null,
+            payload: {
+              threadId: "indexed",
+              messageId: "duplicate",
+              role: "assistant",
+              text: " delta",
+              streaming: true,
+              turnId: null,
+              createdAt: now,
+              updatedAt: now,
+            },
+          }),
+        );
+        expect(updatedDuplicates.threads[0]!.messages.map((message) => message.text)).toEqual([
+          "A delta",
+          "B delta",
+        ]);
+        expect(duplicateModel.threads[0]!.messages.map((message) => message.text)).toEqual([
+          "A",
+          "B",
+        ]);
+      }),
+  );
+
   it("applies thread.created events", async () => {
     const now = "2026-01-01T00:00:00.000Z";
     const model = createEmptyReadModel(now);

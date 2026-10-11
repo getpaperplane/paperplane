@@ -100,6 +100,71 @@ it.effect("reads project shells without loading threads or resolving excluded pr
   }).pipe(Effect.provide(layer));
 });
 
+it.effect("shares committed shell reads without retaining failures or volatile state", () =>
+  Effect.gen(function* () {
+    const query = yield* ProjectionSnapshotQuery;
+    const sql = yield* SqlClient.SqlClient;
+    const progress = yield* ThreadPlanProgress.ThreadPlanProgressService;
+    const liveness = yield* ThreadBackgroundLiveness.ThreadBackgroundLivenessService;
+    const threadId = ThreadId.make("shared-shell");
+    yield* sql`INSERT INTO projection_threads
+      (thread_id, project_id, title, model_selection_json, created_at, updated_at)
+      VALUES (${threadId}, NULL, 'Before', '{"instanceId":"codex","model":"fixture"}',
+        '2026-01-01T00:00:00Z', '2026-01-01T00:00:00Z')`;
+    const counter = makeSqlStatementCounter();
+    const read = (generation: number) =>
+      query.getThreadShellById(threadId, generation).pipe(Effect.withTracer(counter.tracer));
+    const shells = yield* Effect.all(
+      Array.from({ length: 8 }, () => read(1)),
+      {
+        concurrency: "unbounded",
+      },
+    );
+    assert.strictEqual(counter.count(), 4);
+    assert.isTrue(shells.every((shell) => Option.getOrThrow(shell).title === "Before"));
+    progress.recordPlanProgress(threadId, [{ step: "Fresh plan", status: "inProgress" }]);
+    assert.strictEqual(Option.getOrThrow(yield* read(1)).planProgress?.step, "Fresh plan");
+    assert.strictEqual(counter.count(), 4);
+    liveness.recordTaskLiveness({
+      threadId,
+      taskId: "live-task",
+      taskType: "agent",
+      status: "running",
+      kind: "started",
+    });
+    assert.strictEqual(Option.getOrThrow(yield* read(1)).backgroundLiveness, "working");
+    liveness.clearThreadLiveness(threadId);
+    progress.clearThreadPlanProgress(threadId);
+    const cleared = Option.getOrThrow(yield* read(1));
+    assert.strictEqual(cleared.backgroundLiveness, null);
+    assert.strictEqual(cleared.planProgress, null);
+    assert.strictEqual(counter.count(), 4);
+    yield* sql`UPDATE projection_threads SET title = 'After' WHERE thread_id = ${threadId}`;
+    assert.strictEqual(Option.getOrThrow(yield* query.getThreadShellById(threadId)).title, "After");
+    assert.strictEqual(Option.getOrThrow(yield* read(2)).title, "After");
+    assert.strictEqual(counter.count(), 8);
+    yield* sql`UPDATE projection_threads SET model_selection_json = 'invalid' WHERE thread_id = ${threadId}`;
+    assert.isTrue((yield* read(3).pipe(Effect.result))._tag === "Failure");
+    yield* sql`UPDATE projection_threads SET model_selection_json = '{"instanceId":"codex","model":"fixture"}'
+      WHERE thread_id = ${threadId}`;
+    assert.strictEqual(Option.getOrThrow(yield* read(3)).title, "After");
+    yield* sql`UPDATE projection_threads SET deleted_at = '2026-01-02T00:00:00Z' WHERE thread_id = ${threadId}`;
+    assert.isTrue(Option.isNone(yield* read(4)));
+    yield* sql`UPDATE projection_threads SET deleted_at = NULL, title = 'Recreated' WHERE thread_id = ${threadId}`;
+    assert.strictEqual(Option.getOrThrow(yield* read(5)).title, "Recreated");
+  }).pipe(
+    Effect.provide(
+      OrchestrationProjectionSnapshotQueryLive.pipe(
+        Layer.provideMerge(ThreadBackgroundLiveness.layer),
+        Layer.provideMerge(ThreadPlanProgress.layer),
+        Layer.provide(RepositoryIdentityResolver.layer),
+        Layer.provideMerge(SqlitePersistenceMemory),
+        Layer.provide(NodeServices.layer),
+      ),
+    ),
+  ),
+);
+
 const projectionSnapshotLayer = it.layer(
   OrchestrationProjectionSnapshotQueryLive.pipe(
     Layer.provide(ThreadBackgroundLiveness.layer),

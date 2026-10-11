@@ -2201,6 +2201,64 @@ export function buildPendingUserInputAnswers(
   return answers;
 }
 
+/** Reuse the sorted feed during text updates; structural changes rebuild it.
+ * Each composer owns its builder so switching views cannot retain another feed.
+ */
+export function createThreadFeedBuilder(): typeof buildThreadFeed {
+  let previous:
+    | {
+        readonly messages: OrchestrationThread["messages"];
+        readonly activities: OrchestrationThread["activities"];
+        readonly entries: ThreadFeedEntry[];
+      }
+    | undefined;
+  return (thread, options) => {
+    if (
+      !options &&
+      previous &&
+      previous.activities === thread.activities &&
+      previous.messages.length === thread.messages.length
+    ) {
+      const changes = new Map<string, OrchestrationThread["messages"][number]>();
+      let stable = true;
+      for (let index = 0; index < thread.messages.length; index++) {
+        const before = previous.messages[index]!;
+        const after = thread.messages[index]!;
+        if (before === after) continue;
+        // Empty messages do not break activity groups. Their first token (or
+        // last attachment removal) changes grouping and needs the full builder.
+        if (
+          before.id !== after.id ||
+          before.role !== after.role ||
+          before.createdAt !== after.createdAt ||
+          Boolean(before.text.trim() || before.attachments?.length) !==
+            Boolean(after.text.trim() || after.attachments?.length)
+        ) {
+          stable = false;
+          break;
+        }
+        changes.set(after.id, after);
+      }
+      if (stable) {
+        const entries =
+          changes.size === 0
+            ? previous.entries
+            : previous.entries.map((entry) => {
+                const message = entry.type === "message" ? changes.get(entry.id) : undefined;
+                return message ? { ...entry, message } : entry;
+              });
+        previous = { messages: thread.messages, activities: thread.activities, entries };
+        return entries;
+      }
+    }
+    const entries = buildThreadFeed(thread, options);
+    previous = options
+      ? undefined
+      : { messages: thread.messages, activities: thread.activities, entries };
+    return entries;
+  };
+}
+
 export function buildThreadFeed(
   thread: Pick<OrchestrationThread, "messages" | "activities">,
   options?: {
