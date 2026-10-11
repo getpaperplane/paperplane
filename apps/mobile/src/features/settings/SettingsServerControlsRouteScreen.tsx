@@ -427,7 +427,7 @@ function ServerSettingsDetail(props: { readonly page: SettingsPage }) {
                   ) : null}
                   <SettingsSection title="Privacy">
                     <FanoutSwitchRow
-                      icon="lock"
+                      icon={{ ios: "lock", android: "lock" }}
                       label="Share product usage data"
                       subtitle={
                         projectSelected
