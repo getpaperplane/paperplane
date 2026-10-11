@@ -124,6 +124,38 @@ describe("resolveThreadListV2SnoozeMenuSelection", () => {
 });
 
 describe("resolveThreadListV2Status", () => {
+  it("reports background work independently of the parent response", () => {
+    const thread = makeThread({ id: ThreadId.make("background"), title: "Background" });
+    expect(resolveThreadListV2Status({ ...thread, backgroundLiveness: "working" })).toBe(
+      "background",
+    );
+    expect(resolveThreadListV2Status({ ...thread, backgroundLiveness: "monitoring" })).toBe(
+      "monitoring",
+    );
+    expect(
+      resolveThreadListV2Status({
+        ...thread,
+        backgroundLiveness: "working",
+        hasPendingUserInput: true,
+      }),
+    ).toBe("input");
+    expect(
+      resolveThreadListV2Status({
+        ...thread,
+        backgroundLiveness: "working",
+        session: {
+          threadId: thread.id,
+          status: "running",
+          providerName: "pi",
+          runtimeMode: "full-access",
+          activeTurnId: null,
+          lastError: null,
+          updatedAt: NOW,
+        },
+      }),
+    ).toBe("working");
+  });
+
   it("shows a scheduled continuation and restores failure when cancelled", () => {
     const id = ThreadId.make("limited");
     const thread = makeThread({

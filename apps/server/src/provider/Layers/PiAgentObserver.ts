@@ -37,6 +37,7 @@ import { PiAgentRoster, type PiAgentTaskDescriptor } from "./PiAgentRoster.ts";
 export interface PiAgentObserver {
   /** Start attributing work done by a thread's Pi agent to that thread. */
   registerThreadAgent(threadId: string, agent: object): void;
+  unregisterThread(threadId: string): void;
   dispose(): void;
 }
 
@@ -136,6 +137,26 @@ export function startPiAgentObserver(options: PiAgentObserverOptions): PiAgentOb
     emit: options.emit,
     replay: (threadId, agentId) =>
       transcriptsRoot ? readPiAgentTranscript(transcriptsRoot, threadId, agentId) : [],
+    isProcessAlive: (pid) => {
+      try {
+        // Signal 0 only probes a PID captured at spawn; it never kills a process.
+        process.kill(pid, 0);
+        // A zombie still accepts signal 0 but cannot produce another exit report.
+        // oxlint-disable-next-line rove/no-global-process-runtime -- Runs in the Pi worker.
+        if (NodeOS.platform() === "linux") {
+          try {
+            if (/^\S+ \(.*\) [ZX] /.test(NodeFS.readFileSync(`/proc/${pid}/stat`, "utf8")))
+              return false;
+          } catch (error) {
+            // Permission failures are not evidence of process death.
+            return !(error instanceof Error && "code" in error && error.code === "ENOENT");
+          }
+        }
+        return true;
+      } catch (error) {
+        return !(error instanceof Error && "code" in error && error.code === "ESRCH");
+      }
+    },
   });
   const hookDir =
     options.hookDir ??
@@ -183,6 +204,7 @@ export function startPiAgentObserver(options: PiAgentObserverOptions): PiAgentOb
   // --- in-worker agents -----------------------------------------------------------
   const modelCallAgents = new Map<string, string>();
   const threadAgents = new WeakMap<object, { readonly th: string }>();
+  const roots = new Map<string, object>();
   const childAgents = new WeakMap<object, { readonly th: string; readonly id: string }>();
   const wrappedTools = new WeakMap<object, WeakMap<AgentTool, AgentTool>>();
   const wrappedLists = new WeakMap<object, { source: AgentTool[]; wrapped: AgentTool[] }>();
@@ -439,12 +461,21 @@ export function startPiAgentObserver(options: PiAgentObserverOptions): PiAgentOb
 
   return {
     registerThreadAgent(threadId, agent) {
+      roots.set(threadId, agent);
       threadAgents.set(agent, { th: threadId });
       patchAgentClass(agent);
       // SAFETY: Pi thread sessions expose pi-agent-core's Agent here.
       wrapStateTools(agent as AgentLike);
     },
+    unregisterThread(threadId) {
+      const agent = roots.get(threadId);
+      if (agent) threadAgents.delete(agent);
+      roots.delete(threadId);
+      roster.closeThread(threadId);
+    },
     dispose() {
+      for (const threadId of roots.keys()) roster.closeThread(threadId);
+      roots.clear();
       server.close();
       // oxlint-disable-next-line rove/no-global-process-runtime -- Runs in the Pi worker, outside any Effect runtime.
       if (NodeOS.platform() !== "win32") NodeFS.rmSync(channel, { force: true });

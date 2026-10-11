@@ -43,6 +43,8 @@ export interface PiAgentRosterOptions {
    * so replaying on exit and on a closed channel recovers entries still in flight.
    */
   readonly replay?: (threadId: string, agentId: string) => ReadonlyArray<PiAgentEntry>;
+  /** A CLI's reporting spawner can exit before its detached child does. */
+  readonly isProcessAlive?: (pid: number) => boolean;
 }
 
 type Status = "running" | "completed" | "failed" | "stopped";
@@ -54,6 +56,7 @@ interface AgentState {
   parent: PiAgentParent | undefined;
   label: string | undefined;
   cmd: string | undefined;
+  pid: number | undefined;
   name: string | undefined;
   task: string | undefined;
   model: string | undefined;
@@ -176,8 +179,20 @@ export class PiAgentRoster {
       for (const id of ids) {
         const agent = this.agents.get(id);
         if (!agent || agent.exited) continue;
+        if (
+          agent.src === "cli" &&
+          agent.pid !== undefined &&
+          this.options.isProcessAlive?.(agent.pid)
+        ) {
+          // The spawner is gone, so no exit callback can reach us later.
+          // Probe only the captured PID while live; do not repeatedly scan its transcript.
+          this.schedule(() => this.channelClosed([id]), 5_000);
+          continue;
+        }
         this.replay(agent);
-        if (agent.exited || agent.src === "cli" || agent.src === "model") continue;
+        if (agent.exited || agent.src === "model") continue;
+        if (agent.src === "cli" && (agent.pid === undefined || !this.options.isProcessAlive))
+          continue;
         agent.exited = true;
         if (!isTerminal(agent.status)) {
           agent.lastError ??= "The agent process ended before it finished.";
@@ -185,6 +200,17 @@ export class PiAgentRoster {
         }
       }
     }, this.closeGraceMs);
+  }
+
+  /** Retiring a thread runtime interrupts its owned work, not other threads. */
+  closeThread(threadId: string): void {
+    for (const agent of this.agents.values()) {
+      if (agent.th !== threadId || agent.exited) continue;
+      this.replay(agent);
+      agent.exited = true;
+      agent.revealTimer?.cancel();
+      if (agent.visible && !isTerminal(agent.status)) this.settle(agent, "stopped");
+    }
   }
 
   private replay(agent: AgentState): void {
@@ -199,6 +225,7 @@ export class PiAgentRoster {
       parent: entry.parent,
       label: undefined,
       cmd: undefined,
+      pid: undefined,
       name: undefined,
       task: undefined,
       model: undefined,
@@ -232,6 +259,7 @@ export class PiAgentRoster {
         agent.parent = entry.parent ?? agent.parent;
         agent.label = entry.label ?? agent.label;
         agent.cmd = entry.cmd ?? agent.cmd;
+        agent.pid = entry.pid ?? agent.pid;
         if (agent.src === "cli") {
           agent.revealTimer = this.schedule(() => this.reveal(agent), this.cliRevealMs);
         } else this.reveal(agent);

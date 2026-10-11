@@ -252,8 +252,11 @@ export async function runPiRuntimeWorker(): Promise<void> {
             case "dispose": {
               unsubscribe();
               sessions.delete(key);
-              for (const [threadId, threadKey] of threadKeys)
-                if (threadKey === key) threadKeys.delete(threadId);
+              for (const [threadId, threadKey] of threadKeys) {
+                if (threadKey !== key) continue;
+                agentObserver.unregisterThread(threadId);
+                threadKeys.delete(threadId);
+              }
               return await session.dispose();
             }
           }

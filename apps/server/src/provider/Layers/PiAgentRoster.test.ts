@@ -3,7 +3,10 @@ import { describe, expect, it } from "vite-plus/test";
 import type { PiAgentEntry } from "./PiAgentHook.ts";
 import { PiAgentRoster, type PiAgentTaskDescriptor } from "./PiAgentRoster.ts";
 
-function harness(replay: Record<string, PiAgentEntry[]> = {}) {
+function harness(
+  replay: Record<string, PiAgentEntry[]> = {},
+  isProcessAlive?: (pid: number) => boolean,
+) {
   const tasks: PiAgentTaskDescriptor[] = [];
   const timers: Array<() => void> = [];
   const roster = new PiAgentRoster({
@@ -14,6 +17,7 @@ function harness(replay: Record<string, PiAgentEntry[]> = {}) {
     },
     progressIntervalMs: 0,
     replay: (_threadId, agentId) => replay[agentId] ?? [],
+    ...(isProcessAlive ? { isProcessAlive } : {}),
   });
   let sequence = 0;
   const entry = (a: string, k: PiAgentEntry["k"], fields: Partial<PiAgentEntry> = {}) =>
@@ -95,6 +99,44 @@ describe("PiAgentRoster", () => {
     roster.ingest(entry("pi", "exit", { code: 0 }));
     expect(statuses("pi")).toEqual(["task.started", "task.progress", "completed:completed"]);
     expect(tasks.at(-1)?.payload).toMatchObject({ summary: "All done" });
+  });
+
+  it("reconciles a CLI after its spawner disappears without interrupting a live detached child", () => {
+    let alive = true;
+    const { roster, entry, statuses, runTimers } = harness({}, () => alive);
+    roster.ingest(entry("cli", "start", { src: "cli", pid: 123 }));
+    roster.ingest(entry("cli", "text", { text: "Reviewing" }));
+    roster.channelClosed(["cli"]);
+    runTimers();
+    expect(statuses("cli").at(-1)).toBe("task.progress");
+    alive = false;
+    runTimers();
+    runTimers();
+    expect(statuses("cli").at(-1)).toBe("completed:failed");
+  });
+
+  it("replays terminal entries before reconciling a lost CLI channel", () => {
+    const { roster, entry, statuses, runTimers } = harness(
+      {
+        cli: [{ v: 1, a: "cli", th: "thread", w: 2, q: 1, at: 1, k: "exit", code: 0 }],
+      },
+      () => false,
+    );
+    roster.ingest(entry("cli", "start", { src: "cli", pid: 123 }));
+    roster.ingest(entry("cli", "text", { text: "Done" }));
+    roster.channelClosed(["cli"]);
+    runTimers();
+    expect(statuses("cli").at(-1)).toBe("completed:completed");
+  });
+
+  it("retires only the owning thread and does not revive an exited agent", () => {
+    const { roster, entry, statuses } = harness();
+    roster.ingest(entry("child", "start", { src: "agent" }));
+    roster.ingest(entry("other", "start", { src: "agent", th: "other-thread" }));
+    roster.closeThread("thread");
+    roster.ingest(entry("child", "busy"));
+    expect(statuses("child").at(-1)).toBe("completed:stopped");
+    expect(statuses("other").at(-1)).toBe("task.started");
   });
 
   it("fails an agent whose process vanished mid-run", () => {

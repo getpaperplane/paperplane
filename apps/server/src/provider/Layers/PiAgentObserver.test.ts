@@ -25,7 +25,16 @@ function runHarness() {
   const result = NodeChildProcess.spawnSync(
     process.execPath,
     [NodePath.join(fixtures, "pi-agent-observer-harness.ts"), transcripts, fixtures],
-    { encoding: "utf8", timeout: 30_000 },
+    {
+      encoding: "utf8",
+      timeout: 30_000,
+      // Tests launched by an observed agent must not preload its installed hook.
+      env: Object.fromEntries(
+        Object.entries(process.env).filter(
+          ([key]) => key !== "NODE_OPTIONS" && !key.startsWith("ROVE_AGENT_"),
+        ),
+      ),
+    },
   );
   expect(result.stderr).toBe("");
   expect(result.status).toBe(0);
@@ -44,8 +53,21 @@ describe.skipIf(NodeOS.platform() === "win32")("PiAgentObserver", () => {
     const completed = tasks.flatMap(({ task }) =>
       task.type === "task.completed" && task.payload.taskType === "subagent" ? [task.payload] : [],
     );
+    expect(
+      tasks.some(
+        ({ task }) => "toolUseId" in task.payload && task.payload.toolUseId === "call-probes",
+      ),
+    ).toBe(false);
+    expect(completed).toHaveLength(9);
+    expect(completed.find((payload) => payload.toolUseId === "call-shell-review")).toMatchObject({
+      role: "claude",
+      summary: "Review passed",
+      status: "completed",
+    });
     const byRole = Object.fromEntries(
-      completed.map((payload) => [`${payload.role}:${payload.title}`, payload]),
+      completed
+        .filter((payload) => payload.toolUseId !== "call-shell-review")
+        .map((payload) => [`${payload.role}:${payload.title}`, payload]),
     );
     expect(Object.keys(byRole).toSorted()).toEqual(
       [

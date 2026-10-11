@@ -44,6 +44,8 @@ export type ThreadListV2Status =
   | "approval"
   | "input"
   | "working"
+  | "background"
+  | "monitoring"
   | "auto-resume"
   | "failed"
   | "ready";
@@ -124,7 +126,12 @@ export const THREAD_LIST_V2_SETTLED_PAGE_COUNT = 25;
 export function resolveThreadListV2Status(
   thread: Pick<
     EnvironmentThreadShell,
-    "hasPendingApprovals" | "hasPendingUserInput" | "session" | "limitRecovery" | "snoozedUntil"
+    | "hasPendingApprovals"
+    | "hasPendingUserInput"
+    | "session"
+    | "limitRecovery"
+    | "snoozedUntil"
+    | "backgroundLiveness"
   >,
 ): ThreadListV2Status {
   if (thread.hasPendingApprovals) {
@@ -140,6 +147,8 @@ export function resolveThreadListV2Status(
   if (thread.session?.status === "error") {
     return "failed";
   }
+  if (thread.backgroundLiveness === "working") return "background";
+  if (thread.backgroundLiveness === "monitoring") return "monitoring";
   return "ready";
 }
 

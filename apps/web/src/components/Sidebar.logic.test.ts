@@ -2030,6 +2030,27 @@ describe("resolveThreadStatusPill", () => {
     ).toMatchObject({ label: "Awaiting Input", pulse: false });
   });
 
+  it("distinguishes background agents from the parent's running response", () => {
+    const thread = { ...baseThread, backgroundLiveness: "working" as const };
+    expect(resolveThreadStatusPill({ thread })).toMatchObject({ label: "Working" });
+    expect(
+      resolveThreadStatusPill({
+        thread: {
+          ...thread,
+          session: { ...thread.session, status: "ready", activeTurnId: null },
+        },
+      }),
+    ).toMatchObject({ label: "Background", pulse: false });
+    expect(
+      resolveThreadStatusPill({
+        thread: {
+          ...thread,
+          hasPendingUserInput: true,
+        },
+      }),
+    ).toMatchObject({ label: "Awaiting Input" });
+  });
+
   it("falls back to working when the thread is actively running without blockers", () => {
     expect(
       resolveThreadStatusPill({

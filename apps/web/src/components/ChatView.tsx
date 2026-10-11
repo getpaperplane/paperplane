@@ -6360,9 +6360,9 @@ export default function ChatView(props: ChatViewProps) {
       ),
       title: working
         ? liveCount > 0
-          ? `${liveCount} ${liveCount === 1 ? "agent" : "agents"} working`
-          : "Background work"
-        : "Monitoring",
+          ? `${liveCount} ${liveCount === 1 ? "agent" : "agents"} working in background`
+          : "Agents working in background"
+        : "Monitoring in background",
       actions: (
         <>
           {showViewAgents ? (

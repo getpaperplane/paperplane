@@ -38,8 +38,8 @@ All of this lives in Rove Code; nothing is installed into extensions or Pi.
 - **Agent CLIs.** The process wrapper recognizes common agent CLIs by command
   name, directly or at the start of a shell command line, and reads their
   JSON-lines output by tapping the stdout stream's `push`, which does not change
-  how the extension consumes it. Runs that exit quickly without output (such as
-  `--version`) never become rows.
+  how the extension consumes it. Version and help probes never become rows,
+  even when they print output or fail.
 
 ## Transport and transcripts
 

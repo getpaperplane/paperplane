@@ -1392,6 +1392,15 @@ export function makePiAdapter(
             });
             return;
           }
+          case "runtime_exited": {
+            yield* stopSession(ctx.threadId);
+            yield* offerRuntimeEvent({
+              ...base,
+              type: "session.exited",
+              payload: { reason: String(event.error ?? "Pi runtime exited"), exitKind: "error" },
+            });
+            return;
+          }
           case "prompt_error": {
             if (ctx.activeTurnId === undefined) return;
             const turnId = ctx.activeTurnId;
@@ -2128,17 +2137,6 @@ export function makePiAdapter(
                 }
                 // Retire the extension runtime as well: background notifications must
                 // not revive a thread after the user pressed Stop.
-                for (const taskId of ctx.liveTaskIds) {
-                  yield* offerRuntimeEvent({
-                    ...(yield* makeEventStamp()),
-                    provider: PROVIDER,
-                    ...(boundInstanceId ? { providerInstanceId: boundInstanceId } : {}),
-                    threadId,
-                    ...(abortedId ? { turnId: abortedId } : {}),
-                    type: "task.completed",
-                    payload: { taskId: RuntimeTaskId.make(taskId), status: "stopped" },
-                  });
-                }
                 yield* stopSession(threadId);
                 yield* offerRuntimeEvent({
                   ...(yield* makeEventStamp()),
@@ -2205,6 +2203,19 @@ export function makePiAdapter(
         if (!ctx) return;
         // Disposal unsubscribes first, so clear the client snapshot while the session is still routed.
         yield* handleSdkEvent(ctx, { type: "rove_ui_status", statuses: [] });
+        // All retirement paths reconcile owned agents, not just the Stop button.
+        for (const taskId of ctx.liveTaskIds) {
+          yield* offerRuntimeEvent({
+            ...(yield* makeEventStamp()),
+            provider: PROVIDER,
+            ...(boundInstanceId ? { providerInstanceId: boundInstanceId } : {}),
+            threadId,
+            ...(ctx.activeTurnId ? { turnId: ctx.activeTurnId } : {}),
+            type: "task.completed",
+            payload: { taskId: RuntimeTaskId.make(taskId), status: "stopped" },
+          });
+        }
+        ctx.liveTaskIds.clear();
         sessions.delete(threadId);
         ctx.unsubscribe();
         ctx.toolCallArgs.clear();

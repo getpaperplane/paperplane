@@ -461,6 +461,8 @@ class RemotePiSession implements PiSessionLike {
     }
     this.emit({ type: "rove_ui_status", statuses: [] });
     this.emit({ type: "prompt_error", error: error.message });
+    // A worker can die after its parent response settled, while agents remain live.
+    this.emit({ type: "runtime_exited", error: error.message });
   }
   get sessionId() {
     return this.state.sessionId ?? "";

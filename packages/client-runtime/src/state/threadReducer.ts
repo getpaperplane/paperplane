@@ -741,7 +741,11 @@ export function applyThreadDetailEvent(
 
     // ── Activities ──────────────────────────────────────────────────
     case "thread.activity-appended": {
-      const activity = event.payload.activity;
+      // Provider timestamps can tie; UUIDs must not decide lifecycle order.
+      const activity = {
+        ...event.payload.activity,
+        sequence: event.payload.activity.sequence ?? event.sequence,
+      };
       // A context-window snapshot supersedes earlier snapshots for the same
       // turn: consumers only read the latest value (walking the array
       // backwards), and providers stream these updates continuously, so

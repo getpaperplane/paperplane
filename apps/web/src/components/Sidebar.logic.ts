@@ -527,6 +527,7 @@ export function buildBulkUnpinContextMenuItem(input: {
 export interface ThreadStatusPill {
   label:
     | "Working"
+    | "Background"
     | "Monitoring"
     | "Connecting"
     | "Completed"
@@ -546,6 +547,7 @@ const THREAD_STATUS_PRIORITY: Record<ThreadStatusPill["label"], number> = {
   "Pending Approval": 6,
   "Awaiting Input": 5,
   Working: 4,
+  Background: 4,
   Connecting: 4,
   "Plan Ready": 3,
   Monitoring: 2,
@@ -1055,16 +1057,13 @@ export function resolveThreadStatusPill(input: {
     };
   }
 
-  // The turn can settle while native background work runs on. Subagent and
-  // workflow fleets read as plain Working; Monitoring is reserved for watch
-  // loops (a parent agent babysitting a PR, tailing checks) with no other
-  // live work. Same recede treatment as Working per inbox-zero.
+  // A settled parent with live agents is background work, not a running response.
   if (thread.backgroundLiveness === "working") {
     return {
-      label: "Working",
+      label: "Background",
       colorClass: "text-sky-600 dark:text-sky-300/80",
       dotClass: "bg-sky-500 dark:bg-sky-300/80",
-      pulse: true,
+      pulse: false,
     };
   }
 

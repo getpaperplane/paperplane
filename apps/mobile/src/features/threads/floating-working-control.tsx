@@ -126,9 +126,9 @@ export function FloatingWorkingControl(props: {
     return null;
   }
 
-  // Only the connection label is a button (tap to reconnect); the others
-  // pass touches through to the feed like before.
-  const statusInteractive = props.status?.kind === "connection";
+  // Connection reconnects; background work stops independently of the parent turn.
+  const statusInteractive =
+    props.status?.kind === "connection" || props.status?.kind === "background";
   const capsuleInteractive = statusInteractive || props.devicePreview !== null;
   // The host stays centered on the capsule, but its measurement constraint
   // comes from the overlay, independent of the capsule's current width.
@@ -314,6 +314,23 @@ function FloatingStatusLabel(props: {
           className="max-w-[260px] shrink font-rove-medium text-xs text-foreground"
           numberOfLines={1}
         >
+          {props.status.label}
+        </Text>
+      </StatusLabelRow>
+    );
+  }
+  if (props.status.kind === "background") {
+    return (
+      <StatusLabelRow
+        key="background"
+        accessibilityLabel={`Stop background work: ${props.status.label}`}
+        accessibilityRole="button"
+        className="gap-2"
+        onLayout={props.onLayout}
+        onPress={props.status.onPress}
+      >
+        <View className="h-1.5 w-1.5 rounded-full bg-foreground" />
+        <Text className="shrink font-rove-medium text-xs text-foreground" numberOfLines={1}>
           {props.status.label}
         </Text>
       </StatusLabelRow>
