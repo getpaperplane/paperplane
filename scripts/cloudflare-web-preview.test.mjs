@@ -8,11 +8,12 @@ import {
   previewWorkerName,
 } from "./cloudflare-web-preview.mjs";
 import { hostedBuildDefines } from "../apps/web/vite/hostedBuild.ts";
+import { workerFirstPaths } from "../apps/web/cloudflare/worker.mjs";
 
 afterEach(() => vi.unstubAllGlobals());
 afterEach(() => vi.unstubAllEnvs());
 
-it("builds an isolated static Worker configuration without production routes or bindings", () => {
+it("builds an isolated Worker configuration using only the trusted edge handler and assets", () => {
   const deployment = previewDeployment(
     42,
     "rove-test",
@@ -30,7 +31,12 @@ it("builds an isolated static Worker configuration without production routes or 
   NodeAssert.equal(deployment.origin, "https://rove-web-pr-42.rove-test.workers.dev");
   NodeAssert.equal(deployment.config.name, "rove-web-pr-42");
   NodeAssert.equal(deployment.config.assets.directory, NodePath.resolve("/tmp/preview/dist"));
-  for (const key of ["routes", "main", "vars", "kv_namespaces"]) {
+  NodeAssert.equal(deployment.config.main, NodePath.resolve("apps/web/cloudflare/worker.mjs"));
+  NodeAssert.equal(deployment.config.assets.binding, "ASSETS");
+  NodeAssert.equal(deployment.config.assets.not_found_handling, "none");
+  NodeAssert.equal(deployment.config.assets.html_handling, "none");
+  NodeAssert.deepEqual(deployment.config.assets.run_worker_first, workerFirstPaths);
+  for (const key of ["routes", "vars", "kv_namespaces"]) {
     NodeAssert.equal(key in deployment.config, false);
   }
   const defines = hostedBuildDefines(deployment.origin);

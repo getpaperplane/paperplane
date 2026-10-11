@@ -81,8 +81,8 @@ jobs:
 
       - name: Test hosted build configuration
         run: |
-          vp test run apps/web/vite/hostedBuild.test.ts
-          vp test run scripts/check-cloudflare-web.test.mjs
+          vp test run apps/web/vite/hostedBuild.test.ts apps/web/vite/hostedContent.test.mjs
+          vp test run scripts/check-cloudflare-web.test.mjs scripts/cloudflare-web-preview.test.mjs
 
       - name: Build
         env:
@@ -129,7 +129,7 @@ jobs:
             args:
               - --filter=@rove-code/scripts...
 
-      - name: Deploy static assets
+      - name: Deploy hosted app and content handler
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
@@ -138,7 +138,7 @@ jobs:
           : "${CLOUDFLARE_ACCOUNT_ID:?Missing CLOUDFLARE_ACCOUNT_ID. Check cloudflare-web environment secrets and caller secret forwarding.}"
           vp dlx wrangler@4.147.0 deploy --config "$CLOUDFLARE_WEB_CONFIG"
 
-      - name: Verify deployed project file schema
+      - name: Verify deployed schema and agent endpoints
         run: |
           origin="$(node --input-type=module -e 'import { readFileSync } from "node:fs"; const config = JSON.parse(readFileSync(process.env.CLOUDFLARE_WEB_CONFIG, "utf8")); console.log(`https://${config.routes[0].pattern}`);')"
           node scripts/check-cloudflare-web.mjs --url "$origin"

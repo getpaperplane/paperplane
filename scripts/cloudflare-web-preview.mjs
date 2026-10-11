@@ -2,6 +2,7 @@ import * as NodeAssert from "node:assert/strict";
 import * as NodeFS from "node:fs";
 import * as NodePath from "node:path";
 import * as NodeURL from "node:url";
+import { workerFirstPaths } from "../apps/web/cloudflare/worker.mjs";
 
 export function previewWorkerName(prNumber) {
   NodeAssert.match(String(prNumber), /^[1-9][0-9]*$/);
@@ -16,11 +17,16 @@ export function previewDeployment(prNumber, subdomain, baseConfig, assetsDirecto
     config: {
       name,
       compatibility_date: baseConfig.compatibility_date,
+      // Always use the trusted deploy checkout's edge handler, never PR artifact code.
+      main: NodePath.resolve("apps/web/cloudflare/worker.mjs"),
       workers_dev: true,
       preview_urls: false,
       assets: {
         directory: NodePath.resolve(assetsDirectory),
-        not_found_handling: "single-page-application",
+        binding: "ASSETS",
+        not_found_handling: "none",
+        html_handling: "none",
+        run_worker_first: workerFirstPaths,
       },
     },
   };

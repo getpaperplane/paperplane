@@ -4,6 +4,7 @@ import * as NodePath from "node:path";
 import * as NodeURL from "node:url";
 
 import { buildRoveProjectFileJsonSchema } from "@rove-code/shared/roveProjectFile";
+import { checkAgentReadiness } from "./check-agent-readiness.mjs";
 
 function checkProjectFileSchema(raw, expectedSchema) {
   NodeAssert.deepEqual(JSON.parse(raw), expectedSchema);
@@ -132,7 +133,10 @@ if (
     : buildRoveProjectFileJsonSchema();
   if (args[0] === "--url") {
     await checkDeployedProjectFileSchema(args[1], expectedSchema);
-    console.log("Deployed project file schema verified.");
+    const readiness = await checkAgentReadiness(args[1]);
+    console.log(
+      `Deployed schema and agent endpoints verified (${readiness.characters} raw homepage characters).`,
+    );
   } else {
     const result = checkCloudflareWeb(directory, expectedSchema);
     console.log(`Cloudflare assets checked. ${result.files} files, ${result.bytes} bytes.`);
