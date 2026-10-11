@@ -635,7 +635,8 @@ function ThreadRouteContent(
     if (
       !selectedThread ||
       (selectedThread.session?.status !== "running" &&
-        selectedThread.session?.status !== "starting")
+        selectedThread.session?.status !== "starting" &&
+        selectedThread.backgroundLiveness == null)
     ) {
       return;
     }
@@ -643,7 +644,7 @@ function ThreadRouteContent(
       environmentId: selectedThread.environmentId,
       input: {
         threadId: selectedThread.id,
-        ...(selectedThread.session.activeTurnId
+        ...(selectedThread.session?.activeTurnId
           ? { turnId: selectedThread.session.activeTurnId }
           : undefined),
       },

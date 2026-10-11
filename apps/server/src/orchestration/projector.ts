@@ -1061,7 +1061,7 @@ export function projectEvent(
           const activities = retainThreadActivities(
             [
               ...thread.activities.filter((entry) => entry.id !== payload.activity.id),
-              payload.activity,
+              { ...payload.activity, sequence: payload.activity.sequence ?? event.sequence },
             ].toSorted(compareThreadActivities),
           );
 

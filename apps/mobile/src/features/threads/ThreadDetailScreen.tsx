@@ -96,7 +96,11 @@ import {
   FLOATING_WORKING_CONTROL_COVERAGE,
   FloatingWorkingControl,
 } from "./floating-working-control";
-import { connectionFloatingStatus, type FloatingWorkingStatus } from "./floating-working-status";
+import {
+  backgroundFloatingStatus,
+  connectionFloatingStatus,
+  type FloatingWorkingStatus,
+} from "./floating-working-status";
 import {
   derivePendingUserInputMaxHeight,
   ESTIMATED_KEYBOARD_HEIGHT,
@@ -409,7 +413,15 @@ export const ThreadDetailScreen = memo(function ThreadDetailScreen(props: Thread
     if (props.activeWorkStartedAt !== null && contentPresentationKind === "ready") {
       return { kind: "working", startedAt: props.activeWorkStartedAt };
     }
-    return null;
+    return contentPresentationKind === "ready"
+      ? backgroundFloatingStatus({
+          parentActive:
+            props.selectedThread.session?.status === "running" ||
+            props.selectedThread.session?.status === "starting",
+          liveness: props.selectedThread.backgroundLiveness,
+          onStop: props.onStopThread,
+        })
+      : null;
   })();
   const showWorkingControl = floatingStatus !== null;
   // Connection and working status occupy the same space. Keep the feed inset

@@ -183,6 +183,10 @@ On web and desktop, use **Agents** to follow work delegated to subagents. Select
 an agent to see what it is doing now, each step it has taken, and its result;
 press Escape or **Back** to return to the list.
 
+Background agents and monitoring can continue after the main response finishes.
+Their status is shown separately. Use **Stop** on the background-work status to
+end that work, including on mobile.
+
 Expand a tool call in the conversation to see its full command and output.
 Summaries shorten shell wrappers and can still describe the latest call after it
 finishes; the call's own result shows its status.

@@ -1153,7 +1153,12 @@ const SidebarThreadRow = memo(function SidebarThreadRow(props: {
   const topStatus =
     status === "working"
       ? {
-          label: "Working",
+          label:
+            thread.backgroundLiveness === "working" &&
+            thread.session?.status !== "running" &&
+            thread.session?.status !== "starting"
+              ? "Background"
+              : "Working",
           icon: "working" as const,
           // No shimmer: a label that animates forever is noise in a sidebar
           // full of them (and repaints every vsync on high-refresh displays).

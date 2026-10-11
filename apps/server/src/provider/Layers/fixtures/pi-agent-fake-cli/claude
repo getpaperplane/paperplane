@@ -1,5 +1,9 @@
 #!/usr/bin/env node
 // Stands in for an agent CLI that streams JSON lines.
+if (process.argv.slice(2).some((arg) => ["--version", "--help", "-v", "-h"].includes(arg))) {
+  process.stdout.write("Fake CLI probe output\n");
+  process.exit(process.argv.includes("--fail-probe") ? 1 : 0);
+}
 const lines = [
   {
     type: "assistant",

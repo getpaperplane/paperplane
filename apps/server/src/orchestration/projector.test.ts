@@ -1308,6 +1308,70 @@ describe("orchestration projector", () => {
     expect(thread?.checkpoints.at(-1)?.turnId).toBe("turn-599");
   });
 
+  effectIt.effect(
+    "preserves persisted lifecycle order when timestamps tie and IDs sort backwards",
+    () =>
+      Effect.gen(function* () {
+        const now = "2026-03-01T10:00:00.000Z";
+        let model = yield* projectEvent(
+          createEmptyReadModel(now),
+          makeEvent({
+            sequence: 1,
+            type: "thread.created",
+            aggregateKind: "thread",
+            aggregateId: "thread-1",
+            occurredAt: now,
+            commandId: null,
+            payload: {
+              threadId: "thread-1",
+              projectId: "project-1",
+              title: "Lifecycle",
+              modelSelection: { instanceId: "pi", model: "test/model" },
+              runtimeMode: "full-access",
+              branch: null,
+              worktreePath: null,
+              createdAt: now,
+              updatedAt: now,
+            },
+          }),
+        );
+        for (const [sequence, id, kind] of [
+          [2, "z-progress", "task.progress"],
+          [3, "a-complete", "task.completed"],
+        ] as const) {
+          model = yield* projectEvent(
+            model,
+            makeEvent({
+              sequence,
+              type: "thread.activity-appended",
+              aggregateKind: "thread",
+              aggregateId: "thread-1",
+              occurredAt: now,
+              commandId: null,
+              payload: {
+                threadId: "thread-1",
+                activity: {
+                  id,
+                  tone: "info",
+                  kind,
+                  summary: kind,
+                  payload: {},
+                  turnId: null,
+                  createdAt: now,
+                },
+              },
+            }),
+          );
+        }
+        expect(
+          model.threads[0]?.activities.map((activity) => [activity.id, activity.sequence]),
+        ).toEqual([
+          ["z-progress", 2],
+          ["a-complete", 3],
+        ]);
+      }),
+  );
+
   effectIt.effect("keeps worktree setup and Pi status past the activity retention cap", () =>
     Effect.gen(function* () {
       const createdAt = "2026-03-01T10:00:00.000Z";

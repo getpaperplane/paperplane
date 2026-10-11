@@ -865,7 +865,7 @@ it.layer(BaseTestLayer)("OrchestrationProjectionPipeline", (it) => {
       assert.deepEqual(threadShellUpdates, [{ count: 1 }]);
 
       yield* sql`UPDATE thread_shell_updates SET count = 0`;
-      yield* eventStore.append({
+      const savedActivity = yield* eventStore.append({
         type: "thread.activity-appended",
         eventId: EventId.make("evt-routine-activity"),
         aggregateKind: "thread",
@@ -889,6 +889,10 @@ it.layer(BaseTestLayer)("OrchestrationProjectionPipeline", (it) => {
         },
       });
       yield* projectionPipeline.bootstrap;
+      const activityOrder = yield* sql<{ readonly sequence: number }>`
+        SELECT sequence FROM projection_thread_activities WHERE activity_id = 'activity-routine'
+      `;
+      assert.deepEqual(activityOrder, [{ sequence: savedActivity.sequence }]);
 
       threadShellUpdates = yield* sql<{ readonly count: number }>`
         SELECT count FROM thread_shell_updates

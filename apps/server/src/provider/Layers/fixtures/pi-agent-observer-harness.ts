@@ -16,7 +16,7 @@ const [transcriptsRoot, fixtures] = process.argv.slice(2) as [string, string];
 const fakePi = NodePath.join(fixtures, "pi-agent-fake-pi", "cli.mjs");
 const fakeClaude = NodePath.join(fixtures, "pi-agent-fake-cli", "claude");
 const fakeRunner = NodePath.join(fixtures, "pi-agent-fake-sdk", "runner.mjs");
-const expectedAgents = 8;
+const expectedAgents = 9;
 
 let settled = 0;
 const observer = startPiAgentObserver({
@@ -72,6 +72,20 @@ const exited = (child: NodeChildProcess.ChildProcess) =>
   new Promise<void>((resolve) => child.once("exit", () => resolve()));
 
 const tools: Tool[] = [
+  {
+    name: "probes",
+    execute: async () => {
+      for (const args of [["--version"], ["app-server", "--help"], ["-h", "--fail-probe"]]) {
+        const child = NodeChildProcess.spawn(fakeClaude, args, { stdio: "pipe" });
+        child.stdout.on("data", () => undefined);
+        await exited(child);
+      }
+      await new Promise<void>((resolve) => {
+        NodeChildProcess.exec(`"${fakeClaude}" --version`, () => resolve());
+      });
+      NodeChildProcess.spawnSync(fakeClaude, ["--help"], { stdio: "pipe" });
+    },
+  },
   {
     name: "subagent",
     execute: () => exited(NodeChildProcess.spawn(process.execPath, [fakePi], { stdio: "inherit" })),
@@ -144,6 +158,13 @@ const tools: Tool[] = [
       } as never);
       await stream.result();
     },
+  },
+  {
+    name: "shell-review",
+    execute: () =>
+      new Promise<void>((resolve) => {
+        NodeChildProcess.exec(`"${fakeClaude}" -p "Explain --help usage"`, () => resolve());
+      }),
   },
   {
     name: "review",

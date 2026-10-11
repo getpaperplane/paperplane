@@ -19,6 +19,7 @@ import {
   PiSettings,
   type PiExtensionStatusSnapshot,
   ProviderInstanceId,
+  RuntimeTaskId,
   ThreadId,
   TurnId,
   type ChatImageAttachment,
@@ -492,6 +493,87 @@ it.layer(testLayer)("PiAdapter", (it) => {
       );
     }),
   );
+  it.effect("reconciles observed agents when a settled session is retired", () =>
+    Effect.gen(function* () {
+      const fake = new FakePiSession();
+      const adapter = yield* makeAdapter(fake);
+      const started = yield* Deferred.make<void>();
+      const settled = yield* Deferred.make<void>();
+      const completed = yield* Deferred.make<ProviderRuntimeEvent>();
+      yield* adapter.streamEvents.pipe(
+        Stream.runForEach((event) => {
+          if (event.type === "task.started") return Deferred.succeed(started, undefined);
+          if (event.type === "turn.completed") return Deferred.succeed(settled, undefined);
+          if (event.type === "task.completed") return Deferred.succeed(completed, event);
+          return Effect.void;
+        }),
+        Effect.forkChild({ startImmediately: true }),
+      );
+      yield* adapter.startSession({ threadId, runtimeMode: "full-access" });
+      yield* adapter.sendTurn({ threadId, input: "delegate" });
+      fake.emit({
+        type: "rove_agent_task",
+        task: {
+          type: "task.started",
+          payload: { taskId: "orphan", taskType: "subagent", title: "Review" },
+        },
+      });
+      yield* Deferred.await(started);
+      fake.emit({ type: "agent_settled" });
+      yield* Deferred.await(settled);
+      yield* adapter.stopSession(threadId);
+      const event = yield* Deferred.await(completed);
+      assert.strictEqual(event.type, "task.completed");
+      if (event.type === "task.completed")
+        assert.deepStrictEqual(event.payload, {
+          taskId: RuntimeTaskId.make("orphan"),
+          status: "stopped",
+        });
+      assert.isUndefined(event.turnId);
+      assert.isFalse(yield* adapter.hasSession(threadId));
+    }),
+  );
+
+  it.effect("clears background agents when the worker dies after the parent response settled", () =>
+    Effect.gen(function* () {
+      const fake = new FakePiSession();
+      const adapter = yield* makeAdapter(fake);
+      const started = yield* Deferred.make<void>();
+      const settled = yield* Deferred.make<void>();
+      const exited = yield* Deferred.make<void>();
+      const completed: Array<ProviderRuntimeEvent> = [];
+      yield* adapter.streamEvents.pipe(
+        Stream.runForEach((event) => {
+          if (event.type === "task.completed") completed.push(event);
+          if (event.type === "task.started") return Deferred.succeed(started, undefined);
+          if (event.type === "turn.completed") return Deferred.succeed(settled, undefined);
+          if (event.type === "session.exited") return Deferred.succeed(exited, undefined);
+          return Effect.void;
+        }),
+        Effect.forkChild({ startImmediately: true }),
+      );
+      yield* adapter.startSession({ threadId, runtimeMode: "full-access" });
+      yield* adapter.sendTurn({ threadId, input: "delegate" });
+      fake.emit({
+        type: "rove_agent_task",
+        task: {
+          type: "task.started",
+          payload: { taskId: "background", taskType: "subagent", title: "Review" },
+        },
+      });
+      yield* Deferred.await(started);
+      fake.emit({ type: "agent_settled" });
+      yield* Deferred.await(settled);
+      fake.emit({ type: "runtime_exited", error: "Worker disconnected" });
+      yield* Deferred.await(exited);
+      assert.deepStrictEqual(
+        completed.map((event) => event.payload),
+        [{ taskId: RuntimeTaskId.make("background"), status: "stopped" }],
+      );
+      assert.isFalse(yield* adapter.hasSession(threadId));
+    }),
+  );
+
   it.effect("publishes extension failures as warnings and completes handled commands", () =>
     Effect.gen(function* () {
       const fake = new FakePiSession();

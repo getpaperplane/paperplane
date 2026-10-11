@@ -436,10 +436,18 @@ function roveAgentHook(
     if (command === process.execPath) return true;
     return /^(node|nodejs|electron|bun)$/.test(commandName(command));
   };
+  // Probes can print output or fail; neither makes them delegated work.
+  const isCliProbe = (args: readonly unknown[]) => {
+    for (const arg of args) {
+      if (arg === "--") break;
+      if (["--version", "--help", "-v", "-h"].includes(String(arg))) return true;
+    }
+    return false;
+  };
   /** Agent CLI named at the start of any segment of a shell command line. */
   const shellAgentCli = (line: string): string | undefined => {
     for (const segment of line.split(/&&|\|\||[;|&\n]/)) {
-      const tokens = segment.trim().split(/\s+/);
+      const tokens = segment.trim().match(/"(?:\\.|[^"\\])*"|'[^']*'|\S+/g) ?? [];
       let index = 0;
       while (
         index < tokens.length &&
@@ -450,7 +458,11 @@ function roveAgentHook(
       )
         index++;
       const name = commandName((tokens[index] ?? "").replace(/^['"]|['"]$/g, ""));
-      if (AGENT_CLIS.has(name) || name === "pi") return name;
+      if (
+        (AGENT_CLIS.has(name) || name === "pi") &&
+        !isCliProbe(tokens.slice(index + 1).map((token) => token.replace(/^['"]|['"]$/g, "")))
+      )
+        return name;
     }
     return undefined;
   };
@@ -622,7 +634,11 @@ function roveAgentHook(
           : commandName(command) === "pi" && !shellLine
             ? -1
             : -2;
-    if (piEntryIndex !== -2 && !PI_SUBCOMMANDS.has(String(args?.[piEntryIndex + 1] ?? ""))) {
+    if (
+      piEntryIndex !== -2 &&
+      !PI_SUBCOMMANDS.has(String(args?.[piEntryIndex + 1] ?? "")) &&
+      !isCliProbe(args?.slice(piEntryIndex + 1) ?? [])
+    ) {
       piAgentId = newId();
       if (!args) {
         args = [];
@@ -639,7 +655,11 @@ function roveAgentHook(
     let cliName: string | undefined;
     if (!piAgentId) {
       const direct = commandName(command);
-      cliName = AGENT_CLIS.has(direct) ? direct : shellLine ? shellAgentCli(shellLine) : undefined;
+      cliName = shellLine
+        ? shellAgentCli(shellLine)
+        : AGENT_CLIS.has(direct) && !isCliProbe(args ?? [])
+          ? direct
+          : undefined;
       if (cliName === "pi") cliName = undefined;
     }
     const cliAgentId = cliName ? newId() : undefined;
@@ -695,6 +715,9 @@ function roveAgentHook(
     return { argv: next, after };
   };
 
+  // Node's exec helpers call other child_process exports synchronously.
+  // Observe only the outer launch, rather than inventing two agents for one PID.
+  let launching = false;
   for (const method of [
     "spawn",
     "fork",
@@ -708,14 +731,20 @@ function roveAgentHook(
     if (typeof original !== "function" || original[wrappedMarker]) continue;
     const wrapped = function (this: unknown, ...argv: unknown[]) {
       const parent = currentParent();
-      if (!parent) return original.apply(this, argv);
+      if (!parent || launching) return original.apply(this, argv);
       let plan: ReturnType<typeof prepare>;
       try {
         plan = prepare(method, argv, parent);
       } catch {
         return original.apply(this, argv);
       }
-      const child = original.apply(this, plan.argv);
+      let child: AnyRecord;
+      launching = true;
+      try {
+        child = original.apply(this, plan.argv);
+      } finally {
+        launching = false;
+      }
       try {
         plan.after(child);
       } catch {
@@ -773,7 +802,8 @@ function roveAgentHook(
       argvEntry &&
       isPiCli(argvEntry) &&
       !process.argv.includes(hookPath) &&
-      !PI_SUBCOMMANDS.has(process.argv[2] ?? "")
+      !PI_SUBCOMMANDS.has(process.argv[2] ?? "") &&
+      !isCliProbe(process.argv.slice(2))
     ) {
       process.argv.splice(2, 0, "-e", hookPath);
     }

@@ -1279,6 +1279,44 @@ describe("applyThreadDetailEvent", () => {
   });
 
   describe("thread.activity-appended", () => {
+    it("keeps same-millisecond lifecycle events in persisted order despite reversed IDs", () => {
+      let thread = baseThread;
+      for (const [sequence, id, kind] of [
+        [12, "z-progress", "task.progress"],
+        [13, "a-complete", "task.completed"],
+      ] as const) {
+        const result = applyThreadDetailEvent(thread, {
+          ...baseEventFields,
+          sequence,
+          occurredAt: "2026-04-01T11:00:00.000Z",
+          aggregateKind: "thread",
+          aggregateId: thread.id,
+          type: "thread.activity-appended",
+          payload: {
+            threadId: thread.id,
+            activity: {
+              id: EventId.make(id),
+              tone: "info",
+              kind,
+              summary: kind,
+              payload: {
+                taskId: "agent",
+                status: kind === "task.completed" ? "completed" : "running",
+              },
+              turnId: null,
+              createdAt: "2026-04-01T11:00:00.000Z",
+            },
+          },
+        });
+        expect(result.kind).toBe("updated");
+        if (result.kind === "updated") thread = result.thread;
+      }
+      expect(thread.activities.map((activity) => [activity.id, activity.sequence])).toEqual([
+        ["z-progress", 12],
+        ["a-complete", 13],
+      ]);
+    });
+
     it("adds an activity", () => {
       const result = applyThreadDetailEvent(baseThread, {
         ...baseEventFields,
