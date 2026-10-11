@@ -15,6 +15,7 @@ import { loadRepoEnv } from "../../scripts/lib/public-config";
 import { thirdPartyLicensesPlugin } from "../../scripts/lib/third-party-licenses";
 import { tailwindPlugins } from "./vite/tailwind";
 import { hostedBuildDefines } from "./vite/hostedBuild";
+import { hostedContentPlugin } from "./vite/hostedContent";
 import { projectFileSchemaPlugin } from "./vite/projectFileSchema";
 
 const repoEnv = loadRepoEnv();
@@ -167,6 +168,9 @@ export default defineConfig(({ command, mode }) => {
     plugins: [
       devCompressionPlugin(),
       projectFileSchemaPlugin(),
+      ...(isHostedBuild && configuredHostedAppUrl
+        ? [hostedContentPlugin(new URL(configuredHostedAppUrl).origin)]
+        : []),
       thirdPartyLicensesPlugin({
         bundleName: "web",
         configFile: new URL("../../third-party-licenses.config.json", import.meta.url),

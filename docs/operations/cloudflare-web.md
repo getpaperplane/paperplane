@@ -1,8 +1,8 @@
 # Deploy the Rove browser app for free
 
-Deploy the stable browser app at `https://rove.hafiezulzikry.com` and the nightly app at `https://rove-nightly.hafiezulzikry.com` with Cloudflare Workers Static Assets. These deployments contain no Worker server code or agent backend. Users pair their own running Rove environments. The two origins keep separate browser connections and settings.
+Deploy the stable browser app at `https://rove.hafiezulzikry.com` and the nightly app at `https://rove-nightly.hafiezulzikry.com` with Cloudflare Workers Static Assets. A small Worker handles public content negotiation, documentation, and errors; these deployments contain no agent backend. Users pair their own running Rove environments. The two origins keep separate browser connections and settings.
 
-Use Cloudflare's free plan. Static asset requests are [free and unlimited](https://developers.cloudflare.com/workers/static-assets/billing-and-limitations/). You still pay for domain renewal and any coding-agent subscriptions or API usage.
+Use Cloudflare's free plan. Static asset requests are [free and unlimited](https://developers.cloudflare.com/workers/static-assets/billing-and-limitations/). Bundled `/assets/*` requests stay asset-first; page, documentation, and error requests invoke the Worker and count toward the Workers request quota. You still pay for domain renewal and any coding-agent subscriptions or API usage.
 
 ## Connect your domain
 
@@ -54,7 +54,7 @@ Do not enable `ROVE_CLOUD_READY` or `ROVE_HOSTED_RELEASE_READY` for this deploym
 4. Open `https://rove.hafiezulzikry.com` for stable or `https://rove-nightly.hafiezulzikry.com` for nightly.
 5. Confirm that the app opens without requesting an account on an inherited cloud service.
 
-The initial deployment can take time to provision its HTTPS certificate. Opening the website does not start an agent or connect to a backend automatically.
+The initial deployment can take time to provision its HTTPS certificate. Opening the website does not start an agent or connect to a backend automatically. The deployment check verifies the raw HTML overview, Markdown negotiation, discovery files, real 404s, JSON errors, and existing app deep links. Run it independently with `node scripts/check-agent-readiness.mjs https://rove.hafiezulzikry.com` (or the nightly origin).
 
 After the first deployment works, set the repository variable `ROVE_CLOUDFLARE_WEB_READY=true`. Published stable releases deploy the stable app; published nightlies deploy only the nightly app, without changing stable. Preview releases deploy neither. To deploy outside a release, run the workflow manually on an allowed deployment branch and select the channel.
 
@@ -76,7 +76,7 @@ After the first deployment works, set the repository variable `ROVE_MARKETING_RE
 
 Register a free `workers.dev` subdomain in the account's Workers settings. Production keeps its custom domain and does not enable its `workers.dev` route.
 
-Add `preview:web` to a same-repository pull request. The workflow builds the PR without deployment credentials, then uploads its static assets to a separate `rove-web-pr-<number>` Worker. Trusted base-branch jobs use the existing `cloudflare-web` environment, so its `main` branch restriction can stay in place. Fork pull requests do not deploy.
+Add `preview:web` to a same-repository pull request. The workflow builds the PR without deployment credentials, then uploads its static assets to a separate `rove-web-pr-<number>` Worker with the trusted base checkout's content handler. Trusted base-branch jobs use the existing `cloudflare-web` environment, so its `main` branch restriction can stay in place. Fork pull requests do not deploy.
 
 The PR comment links the preview. Pair your own HTTPS Rove environment to use it. Each new push replaces that PR's preview without changing production. Closing the PR or removing `preview:web` deletes its Worker and marks the preview removed.
 
