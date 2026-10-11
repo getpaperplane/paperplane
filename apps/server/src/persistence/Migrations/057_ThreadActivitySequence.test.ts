@@ -1,9 +1,14 @@
 import { assert, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
+import * as Schema from "effect/Schema";
 import * as SqlClient from "effect/unstable/sql/SqlClient";
 import * as NodeSqliteClient from "@rove-code/shared/nodeSqliteClient";
 
 import migrate from "./057_ThreadActivitySequence.ts";
+
+const encodePayload = Schema.encodeSync(
+  Schema.fromJsonString(Schema.Struct({ activity: Schema.Struct({ id: Schema.String }) })),
+);
 
 it.layer(NodeSqliteClient.layer({ filename: ":memory:" }))("057_ThreadActivitySequence", (it) => {
   it.effect("recovers lifecycle order while preserving provider sequences and unmatched rows", () =>
@@ -25,7 +30,7 @@ it.layer(NodeSqliteClient.layer({ filename: ":memory:" }))("057_ThreadActivitySe
         [11, "a-complete"],
         [12, "provider"],
       ] as const) {
-        yield* sql`INSERT INTO orchestration_events VALUES (${sequence}, 'thread', 'thread.activity-appended', ${JSON.stringify({ activity: { id } })})`;
+        yield* sql`INSERT INTO orchestration_events VALUES (${sequence}, 'thread', 'thread.activity-appended', ${encodePayload({ activity: { id } })})`;
       }
       yield* migrate;
       yield* migrate;

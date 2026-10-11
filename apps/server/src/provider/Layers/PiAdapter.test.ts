@@ -19,6 +19,7 @@ import {
   PiSettings,
   type PiExtensionStatusSnapshot,
   ProviderInstanceId,
+  RuntimeTaskId,
   ThreadId,
   TurnId,
   type ChatImageAttachment,
@@ -525,7 +526,7 @@ it.layer(testLayer)("PiAdapter", (it) => {
       assert.strictEqual(event.type, "task.completed");
       if (event.type === "task.completed")
         assert.deepStrictEqual(event.payload, {
-          taskId: "orphan",
+          taskId: RuntimeTaskId.make("orphan"),
           status: "stopped",
         });
       assert.isUndefined(event.turnId);
@@ -567,7 +568,7 @@ it.layer(testLayer)("PiAdapter", (it) => {
       yield* Deferred.await(exited);
       assert.deepStrictEqual(
         completed.map((event) => event.payload),
-        [{ taskId: "background", status: "stopped" }],
+        [{ taskId: RuntimeTaskId.make("background"), status: "stopped" }],
       );
       assert.isFalse(yield* adapter.hasSession(threadId));
     }),
