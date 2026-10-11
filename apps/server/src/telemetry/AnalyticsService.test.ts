@@ -1,57 +1,20 @@
-import * as NodeHttpServer from "@effect/platform-node/NodeHttpServer";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { assert, it } from "@effect/vitest";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
+import * as Deferred from "effect/Deferred";
+import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as Schema from "effect/Schema";
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
-import * as HttpServer from "effect/unstable/http/HttpServer";
-import * as HttpServerRequest from "effect/unstable/http/HttpServerRequest";
-import * as HttpServerResponse from "effect/unstable/http/HttpServerResponse";
 import { HostProcessArchitecture, HostProcessPlatform } from "@rove-code/shared/hostProcess";
-
 import * as ServerConfig from "../config.ts";
-import { getTelemetryIdentifier } from "./Identify.ts";
+import * as ServerSettings from "../serverSettings.ts";
 import * as AnalyticsService from "./AnalyticsService.ts";
-import * as RuntimePredicate from "effect/Predicate";
 
-interface RecordedBatchRequest {
-  readonly path: string;
-  readonly body: {
-    readonly batch?: ReadonlyArray<{
-      readonly event?: string;
-      readonly properties?: {
-        readonly index?: number;
-        readonly clientType?: string;
-        readonly serverOs?: string;
-        readonly serverArch?: string;
-        readonly serverAppVersion?: string;
-        readonly serverMode?: string;
-        readonly roveVersion?: string;
-      };
-    }>;
-  } | null;
-}
-
-interface RecordedBatchBody {
-  readonly batch: ReadonlyArray<{
-    readonly event?: string;
-    readonly properties?: {
-      readonly index?: number;
-      readonly clientType?: string;
-      readonly serverOs?: string;
-      readonly serverArch?: string;
-      readonly serverAppVersion?: string;
-      readonly serverMode?: string;
-      readonly roveVersion?: string;
-    };
-  }>;
-}
-
-const decodeBatchPayload = Schema.decodeEffect(
+const decodeBatch = Schema.decodeUnknownSync(
   Schema.fromJsonString(
     Schema.Struct({
       api_key: Schema.String,
@@ -59,219 +22,280 @@ const decodeBatchPayload = Schema.decodeEffect(
         Schema.Struct({
           event: Schema.String,
           distinct_id: Schema.String,
-          properties: Schema.Struct({ $process_person_profile: Schema.Boolean }),
+          properties: Schema.Record(Schema.String, Schema.Unknown),
         }),
       ),
     }),
   ),
 );
 
-it.layer(NodeServices.layer)("AnalyticsService test", (it) => {
-  it.effect("uses Rove's project key and US ingestion host by default", () =>
+const serialize = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
+
+function fixture(
+  options: {
+    readonly env?: Record<string, string | number | boolean>;
+    readonly enabled?: boolean;
+    readonly status?: () => number;
+    readonly response?: Effect.Effect<number>;
+  } = {},
+) {
+  const requests: Array<{ url: string; payload: ReturnType<typeof decodeBatch> }> = [];
+  const httpClient = HttpClient.make((request) =>
     Effect.gen(function* () {
-      const requests: Array<{ url: string; body: string }> = [];
-      const httpClient = HttpClient.make((request) =>
-        Effect.sync(() => {
-          requests.push({
-            url: request.url,
-            body:
-              request.body._tag === "Uint8Array" ? new TextDecoder().decode(request.body.body) : "",
-          });
-          return HttpClientResponse.fromWeb(request, new Response(null, { status: 200 }));
-        }),
-      );
-      const runtimeLayer = AnalyticsService.layer.pipe(
-        Layer.provide(ServerConfig.layerTest(process.cwd(), { prefix: "rove-telemetry-default-" })),
-        Layer.provide(
-          Layer.mergeAll(
-            Layer.succeed(HttpClient.HttpClient, httpClient),
-            Layer.succeed(HostProcessPlatform, "linux"),
-            Layer.succeed(HostProcessArchitecture, "arm64"),
-            ConfigProvider.layer(ConfigProvider.fromUnknown({})),
-          ),
-        ),
-      );
-
-      yield* Effect.gen(function* () {
-        const analytics = yield* AnalyticsService.AnalyticsService;
-        yield* analytics.record("test.default");
-        yield* analytics.flush;
-      }).pipe(Effect.provide(runtimeLayer));
-
-      assert.equal(requests.length, 1);
-      assert.equal(requests[0]?.url, "https://us.i.posthog.com/batch/");
-      const payload = yield* decodeBatchPayload(requests[0]?.body ?? "");
-      assert.equal(payload.api_key, "phc_yeQwVXeqVTddxs65mQDciB89XFT3VdixFEyPuHdEbR9V");
-      assert.equal(payload.batch.length, 1);
-      assert.equal(payload.batch[0]?.event, "test.default");
-      assert.match(payload.batch[0]?.distinct_id ?? "", /^[0-9a-f]{64}$/);
-      assert.isFalse(payload.batch[0]?.properties.$process_person_profile);
+      const body =
+        request.body._tag === "Uint8Array" ? new TextDecoder().decode(request.body.body) : "";
+      requests.push({ url: request.url, payload: decodeBatch(body) });
+      const status = options.response ? yield* options.response : (options.status?.() ?? 200);
+      return HttpClientResponse.fromWeb(request, new Response(null, { status }));
     }),
   );
+  const configLayer = ServerConfig.layerTest(process.cwd(), { prefix: "rove-analytics-" });
+  const settingsLayer = ServerSettings.layerTest({ telemetryEnabled: options.enabled ?? true });
+  const layer = AnalyticsService.layer.pipe(
+    Layer.provideMerge(configLayer),
+    Layer.provideMerge(settingsLayer),
+    Layer.provide(
+      Layer.mergeAll(
+        Layer.succeed(HttpClient.HttpClient, httpClient),
+        Layer.succeed(HostProcessPlatform, "linux"),
+        Layer.succeed(HostProcessArchitecture, "arm64"),
+        ConfigProvider.layer(ConfigProvider.fromUnknown(options.env ?? {})),
+      ),
+    ),
+  );
+  return { requests, layer };
+}
 
-  it.effect("flush drains all buffered events across multiple batches", () =>
-    Effect.gen(function* () {
-      const capturedRequests: Array<RecordedBatchRequest> = [];
-      const serverConfigLayer = ServerConfig.ServerConfig.layerTest(process.cwd(), {
-        prefix: "rove-telemetry-base-",
+it.layer(NodeServices.layer)("AnalyticsService", (it) => {
+  it.effect("sends anonymous allowlisted metadata to Rove's ingestion host", () => {
+    const f = fixture({ env: { ROVE_ANALYTICS_ENVIRONMENT: "test" } });
+    return Effect.gen(function* () {
+      const analytics = yield* AnalyticsService.AnalyticsService;
+      yield* analytics.record("client.connected", {
+        surface: "mobile",
+        clientOs: "iOS",
+        clientDeviceType: "phone",
+        clientOsMajorVersion: 18,
+        deviceModel: "Personal device",
+        clientDeviceModel: "Personal device",
+        prompt: "secret prompt",
+        token: "secret token",
+        threadId: "private-thread",
+        $current_url: "https://secret.test",
+        $set: { email: "secret@example.test" },
+        $process_person_profile: true,
+        $ip: "203.0.113.10",
       });
-
-      const telemetryLayer = AnalyticsService.layer.pipe(Layer.provideMerge(serverConfigLayer));
-      const configLayer = ConfigProvider.layer(
-        ConfigProvider.fromUnknown({
-          ROVE_TELEMETRY_ENABLED: true,
-          ROVE_POSTHOG_KEY: "phc_test_key",
-          ROVE_POSTHOG_HOST: "http://localhost",
-          ROVE_TELEMETRY_FLUSH_BATCH_SIZE: 20,
-        }),
-      );
-      const batchServerLayer = HttpServer.serve(
-        Effect.gen(function* () {
-          const request = yield* HttpServerRequest.HttpServerRequest;
-          if (request.method !== "POST") {
-            return HttpServerResponse.empty({ status: 404 });
-          }
-
-          const // SAFETY: This fixture intentionally supplies the asserted collaborator contract.
-            payload = yield* request.json.pipe(
-              Effect.map((body) => body as RecordedBatchRequest["body"]),
-              Effect.orElseSucceed(() => null),
-            );
-
-          capturedRequests.push({ path: request.url, body: payload });
-
-          return HttpServerResponse.jsonUnsafe({});
-        }),
-      );
-      const runtimeLayer = telemetryLayer.pipe(
-        Layer.provide(configLayer),
-        Layer.provide(
-          Layer.mergeAll(
-            Layer.succeed(HostProcessPlatform, "linux"),
-            Layer.succeed(HostProcessArchitecture, "arm64"),
-          ),
-        ),
-        Layer.provideMerge(NodeHttpServer.layerTest),
-      );
-
-      yield* Effect.gen(function* () {
-        yield* Layer.launch(batchServerLayer).pipe(Effect.forkScoped);
-        const telemetryIdentifier = yield* getTelemetryIdentifier;
-        assert.equal(telemetryIdentifier !== null, true);
-        const analytics = yield* AnalyticsService.AnalyticsService;
-
-        for (let index = 0; index < 45; index += 1) {
-          yield* analytics.record("test.flush.drain", { index });
-        }
-
-        yield* analytics.flush;
-      }).pipe(Effect.provide(runtimeLayer));
-
-      const batchRequests = capturedRequests.filter(
-        (request): request is RecordedBatchRequest & { readonly body: RecordedBatchBody } =>
-          Array.isArray(request.body?.batch),
-      );
-      assert.equal(batchRequests.length, 3);
+      yield* analytics.flush;
+      assert.equal(f.requests.length, 1);
+      assert.equal(f.requests[0]?.url, "https://us.i.posthog.com/batch/");
       assert.equal(
-        batchRequests.every(
-          (request) => request.path.endsWith("/batch/") || request.path.endsWith("/batch"),
-        ),
-        true,
+        f.requests[0]?.payload.api_key,
+        "phc_yeQwVXeqVTddxs65mQDciB89XFT3VdixFEyPuHdEbR9V",
       );
-      const deliveredIndexes = batchRequests.flatMap((request) =>
-        request.body.batch
-          .filter((event) => event.event === "test.flush.drain")
-          .map((event) => event.properties?.index)
-          .filter((index): index is number => RuntimePredicate.isNumber(index)),
-      );
+      const event = f.requests[0]?.payload.batch[0];
+      assert.match(event?.distinct_id ?? "", /^[0-9a-f]{64}$/);
+      assert.equal(event?.properties.$process_person_profile, false);
+      assert.equal(event?.properties.$lib, "rove-server");
+      assert.equal(event?.properties.$geoip_disable, true);
+      assert.isNull(event?.properties.$ip);
+      assert.notProperty(event?.properties ?? {}, "$set");
+      assert.equal(event?.properties.analyticsEnvironment, "test");
+      assert.equal(event?.properties.releaseChannel, "stable");
+      assert.equal(event?.properties.clientOs, "iOS");
+      assert.equal(event?.properties.clientOsMajorVersion, 18);
+      assert.equal(event?.properties.serverOs, "Linux");
+      assert.equal(event?.properties.serverArch, "arm64");
+      assert.notInclude(serialize(f.requests), "secret");
+      assert.notInclude(serialize(f.requests), "Personal device");
+      assert.notInclude(serialize(f.requests), "private-thread");
+    }).pipe(Effect.provide(f.layer));
+  });
 
-      const sorted = deliveredIndexes.toSorted((a, b) => a - b);
-      assert.equal(sorted.length, 45);
+  it.effect("only production client activity creates minimal installation profiles", () => {
+    const f = fixture();
+    return Effect.gen(function* () {
+      const analytics = yield* AnalyticsService.AnalyticsService;
+      yield* analytics.record("server.boot.heartbeat", { threadCount: 12 });
+      yield* analytics.record("provider.turn.completed", { provider: "pi" });
+      yield* analytics.record("client.connected");
+      yield* analytics.record("client.turn.requested");
+      yield* analytics.flush;
+      const events = f.requests.flatMap((r) => r.payload.batch);
       assert.deepEqual(
-        sorted,
+        events.map((e) => e.properties.$process_person_profile),
+        [false, false, true, true],
+      );
+      assert.equal(new Set(events.map((e) => e.distinct_id)).size, 1);
+      for (const event of events) {
+        assert.equal(event.properties.analyticsEnvironment, "production");
+        assert.notProperty(event.properties, "$set");
+        assert.notProperty(event.properties, "$set_once");
+        assert.notProperty(event.properties, "email");
+        assert.notProperty(event.properties, "name");
+      }
+    }).pipe(Effect.provide(f.layer));
+  });
+
+  for (const environment of ["development", "test"] as const) {
+    it.effect(`${environment} traffic never requests person profile creation`, () => {
+      const f = fixture({ env: { NODE_ENV: environment } });
+      return Effect.gen(function* () {
+        const analytics = yield* AnalyticsService.AnalyticsService;
+        yield* analytics.record("client.connected");
+        yield* analytics.record("client.feature.used", {
+          feature: "terminal",
+          action: "open",
+          outcome: "succeeded",
+        });
+        yield* analytics.flush;
+        for (const event of f.requests.flatMap((r) => r.payload.batch)) {
+          assert.equal(event.properties.analyticsEnvironment, environment);
+          assert.isFalse(event.properties.$process_person_profile);
+        }
+      }).pipe(Effect.provide(f.layer));
+    });
+  }
+
+  it.effect("flush drains multiple bounded batches", () => {
+    const f = fixture();
+    return Effect.gen(function* () {
+      const analytics = yield* AnalyticsService.AnalyticsService;
+      for (let index = 0; index < 45; index++) {
+        yield* analytics.record("provider.turn.sent", { attachmentCount: index });
+      }
+      yield* analytics.flush;
+      assert.deepEqual(
+        f.requests.map((r) => r.payload.batch.length),
+        [20, 20, 5],
+      );
+      assert.deepEqual(
+        f.requests.flatMap((r) => r.payload.batch.map((e) => e.properties.attachmentCount)),
         Array.from({ length: 45 }, (_, index) => index),
       );
-      assert.equal(
-        batchRequests.every((request) =>
-          request.body.batch.every((event) => event.properties?.clientType === "cli-web-client"),
-        ),
-        true,
-      );
-      assert.equal(
-        batchRequests.every((request) =>
-          request.body.batch.every(
-            (event) =>
-              event.properties?.serverOs === "Linux" &&
-              event.properties.serverArch === "arm64" &&
-              event.properties.serverAppVersion === event.properties.roveVersion &&
-              event.properties.serverMode === "web",
-          ),
-        ),
-        true,
-      );
-    }),
-  );
+    }).pipe(Effect.provide(f.layer));
+  });
 
-  it.effect("does not access identity files or send requests when telemetry is disabled", () =>
-    Effect.gen(function* () {
-      const capturedPaths: Array<string> = [];
-      const fileSystem = yield* FileSystem.FileSystem;
-      const identityReads: Array<string> = [];
-      const identityWrites: Array<string> = [];
-      const serverConfigLayer = ServerConfig.ServerConfig.layerTest(process.cwd(), {
-        prefix: "rove-telemetry-disabled-",
+  it.effect("drops unknown events and invalid or unapproved properties", () => {
+    const f = fixture();
+    return Effect.gen(function* () {
+      const analytics = yield* AnalyticsService.AnalyticsService;
+      yield* analytics.record("private.event", { prompt: "secret" });
+      yield* analytics.record("provider.turn.sent", {
+        provider: "pi",
+        runtimeMode: "auto",
+        attachmentCount: -1,
+        model: "secret prompt with spaces",
+        durationMs: Infinity,
+        arbitrary: "secret",
       });
-      const telemetryLayer = AnalyticsService.layer.pipe(Layer.provideMerge(serverConfigLayer));
-      const configLayer = ConfigProvider.layer(
-        ConfigProvider.fromUnknown({
-          ROVE_TELEMETRY_ENABLED: false,
-          ROVE_POSTHOG_KEY: "phc_test_key",
-          ROVE_POSTHOG_HOST: "http://localhost",
-        }),
-      );
-      const batchServerLayer = HttpServer.serve(
-        Effect.gen(function* () {
-          const request = yield* HttpServerRequest.HttpServerRequest;
-          capturedPaths.push(request.url);
-          return HttpServerResponse.jsonUnsafe({});
-        }),
-      );
-      const runtimeLayer = telemetryLayer.pipe(
-        Layer.provide(configLayer),
-        Layer.provide(
-          Layer.mergeAll(
-            Layer.succeed(HostProcessPlatform, "linux"),
-            Layer.succeed(HostProcessArchitecture, "arm64"),
-          ),
-        ),
-        Layer.provideMerge(NodeHttpServer.layerTest),
-      );
+      yield* analytics.flush;
+      assert.equal(f.requests[0]?.payload.batch.length, 1);
+      const properties = f.requests[0]?.payload.batch[0]?.properties;
+      assert.equal(properties?.provider, "pi");
+      assert.equal(properties?.runtimeMode, "auto");
+      assert.notProperty(properties ?? {}, "attachmentCount");
+      assert.notProperty(properties ?? {}, "model");
+      assert.notProperty(properties ?? {}, "durationMs");
+      assert.notInclude(serialize(f.requests), "secret");
+    }).pipe(Effect.provide(f.layer));
+  });
 
-      yield* Effect.gen(function* () {
-        yield* Layer.launch(batchServerLayer).pipe(Effect.forkScoped);
+  for (const [name, options] of [
+    ["environment opt-out", { env: { ROVE_TELEMETRY_ENABLED: false } }],
+    ["persisted preference opt-out", { enabled: false }],
+  ] as const) {
+    it.effect(`${name} prevents identity access and requests`, () => {
+      const f = fixture(options);
+      return Effect.gen(function* () {
         const analytics = yield* AnalyticsService.AnalyticsService;
-        yield* analytics.record("test.disabled", { index: 1 });
-        yield* analytics.flush;
         const config = yield* ServerConfig.ServerConfig;
-        assert.isFalse(yield* fileSystem.exists(config.anonymousIdPath));
-      }).pipe(
-        Effect.provide(runtimeLayer),
-        Effect.provideService(FileSystem.FileSystem, {
-          ...fileSystem,
-          readFileString: (filePath, options) => {
-            identityReads.push(filePath);
-            return fileSystem.readFileString(filePath, options);
-          },
-          writeFileString: (filePath, contents, options) => {
-            identityWrites.push(filePath);
-            return fileSystem.writeFileString(filePath, contents, options);
-          },
-        }),
-      );
+        const fs = yield* FileSystem.FileSystem;
+        yield* analytics.record("client.connected");
+        yield* analytics.flush;
+        assert.isFalse(yield* fs.exists(config.anonymousIdPath));
+        assert.equal(f.requests.length, 0);
+      }).pipe(Effect.provide(f.layer));
+    });
+  }
 
-      assert.deepEqual(identityReads, []);
-      assert.deepEqual(identityWrites, []);
-      assert.deepEqual(capturedPaths, []);
+  it.effect("live opt-out discards queued events; opting back in records only new events", () => {
+    const f = fixture();
+    return Effect.gen(function* () {
+      const analytics = yield* AnalyticsService.AnalyticsService;
+      const settings = yield* ServerSettings.ServerSettingsService;
+      yield* analytics.record("client.connected");
+      yield* settings.updateSettings({ telemetryEnabled: false });
+      yield* analytics.flush;
+      yield* analytics.record("client.thread.started");
+      yield* settings.updateSettings({ telemetryEnabled: true });
+      yield* analytics.record("client.turn.requested");
+      yield* analytics.flush;
+      assert.deepEqual(
+        f.requests.flatMap((r) => r.payload.batch.map((e) => e.event)),
+        ["client.turn.requested"],
+      );
+    }).pipe(Effect.provide(f.layer));
+  });
+
+  it.effect("a failed in-flight batch cannot return after opt-out and opt-in", () =>
+    Effect.gen(function* () {
+      const started = yield* Deferred.make<void>();
+      const response = yield* Deferred.make<number>();
+      let first = true;
+      const f = fixture({
+        response: Effect.gen(function* () {
+          if (!first) return 200;
+          first = false;
+          yield* Deferred.succeed(started, undefined);
+          return yield* Deferred.await(response);
+        }),
+      });
+      yield* Effect.gen(function* () {
+        const analytics = yield* AnalyticsService.AnalyticsService;
+        const settings = yield* ServerSettings.ServerSettingsService;
+        yield* analytics.record("client.connected");
+        const pendingFlush = yield* analytics.flush.pipe(Effect.forkChild);
+        yield* Deferred.await(started);
+        yield* settings.updateSettings({ telemetryEnabled: false });
+        yield* analytics.flush;
+        yield* settings.updateSettings({ telemetryEnabled: true });
+        yield* analytics.record("client.turn.requested");
+        yield* Deferred.succeed(response, 503);
+        yield* Fiber.join(pendingFlush);
+        yield* analytics.flush;
+        assert.deepEqual(
+          f.requests.map((r) => r.payload.batch.map((e) => e.event)),
+          [["client.connected"], ["client.turn.requested"]],
+        );
+      }).pipe(Effect.provide(f.layer));
     }),
   );
+
+  it.effect("the environment opt-out cannot be overridden by Settings", () => {
+    const f = fixture({ env: { ROVE_TELEMETRY_ENABLED: false } });
+    return Effect.gen(function* () {
+      const settings = yield* ServerSettings.ServerSettingsService;
+      yield* settings.updateSettings({ telemetryEnabled: true });
+      const analytics = yield* AnalyticsService.AnalyticsService;
+      yield* analytics.record("client.connected");
+      yield* analytics.flush;
+      assert.equal(f.requests.length, 0);
+    }).pipe(Effect.provide(f.layer));
+  });
+
+  it.effect("retries failed batches without duplicating successfully delivered events", () => {
+    let status = 503;
+    const f = fixture({ status: () => status });
+    return Effect.gen(function* () {
+      const analytics = yield* AnalyticsService.AnalyticsService;
+      yield* analytics.record("client.connected");
+      yield* analytics.flush;
+      status = 200;
+      yield* analytics.flush;
+      yield* analytics.flush;
+      assert.equal(f.requests.length, 2);
+      assert.deepEqual(f.requests[0]?.payload, f.requests[1]?.payload);
+    }).pipe(Effect.provide(f.layer));
+  });
 });
