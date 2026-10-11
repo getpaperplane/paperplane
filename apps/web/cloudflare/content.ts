@@ -27,7 +27,7 @@ export const homepage = {
   ] satisfies [string, string][],
 };
 
-export const docs = {
+const docs = {
   title: "Connect to Rove Code",
   introduction:
     "The public Rove Code website is a browser client. Your own Rove environment runs the backend and coding providers. Documentation endpoints on this origin are public and read-only; they cannot start turns, access files, or authenticate a provider.",
@@ -58,7 +58,7 @@ export const docs = {
   ] satisfies [string, string][],
 };
 
-export function markdownContent(page: typeof homepage) {
+function markdownContent(page: typeof homepage) {
   return `# ${page.title}\n\n${page.introduction}\n\n${page.sections
     .map((section) => `## ${section.title}\n\n${section.text}`)
     .join("\n\n")}\n\n## Links\n\n${page.links
@@ -88,7 +88,7 @@ export function htmlContent(page: typeof homepage) {
     .join("\n")}</ul>`;
 }
 
-export function htmlDocument(page: typeof homepage) {
+function htmlDocument(page: typeof homepage) {
   return `<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${escapeHtml(page.title)}</title></head><body><main>${htmlContent(page)}</main></body></html>\n`;
 }
 
@@ -104,7 +104,7 @@ export function publicFiles(origin: string) {
   };
 }
 
-export function openApiDocument(origin: string) {
+function openApiDocument(origin: string) {
   const errorContent = {
     "application/json": { schema: { $ref: "#/components/schemas/Error" } },
     "text/markdown": { schema: { type: "string" } },
