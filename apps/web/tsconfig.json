@@ -27,6 +27,7 @@
   },
   "include": [
     "src",
+    "cloudflare",
     "vite",
     "vite.config.ts",
     "vercel.ts",
