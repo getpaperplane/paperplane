@@ -291,6 +291,27 @@ it.layer(NodeServices.layer)("server settings", (it) => {
     ).pipe(Effect.provide(makeServerSettingsLayer())),
   );
 
+  it.effect("persists and broadcasts telemetry opt-out and opt-in", () =>
+    Effect.scoped(
+      Effect.gen(function* () {
+        const settings = yield* ServerSettingsModule.ServerSettingsService;
+        const config = yield* ServerConfig.ServerConfig;
+        const fs = yield* FileSystem.FileSystem;
+        const changes = yield* settings.subscribeChanges;
+        const readPersisted = fs
+          .readFileString(config.settingsPath)
+          .pipe(Effect.flatMap(Schema.decodeUnknownEffect(Schema.fromJsonString(ServerSettings))));
+        assert.isTrue((yield* settings.getSettings).telemetryEnabled);
+        yield* settings.updateSettings({ telemetryEnabled: false });
+        assert.isFalse((yield* readPersisted).telemetryEnabled);
+        assert.isFalse(Option.getOrUndefined(yield* Stream.runHead(changes))?.telemetryEnabled);
+        yield* settings.updateSettings({ telemetryEnabled: true });
+        assert.isTrue((yield* readPersisted).telemetryEnabled);
+        assert.isTrue(Option.getOrUndefined(yield* Stream.runHead(changes))?.telemetryEnabled);
+      }),
+    ).pipe(Effect.provide(makeServerSettingsLayer())),
+  );
+
   it.effect("persists custom usage prices and removes them from the settings file", () =>
     Effect.scoped(
       Effect.gen(function* () {

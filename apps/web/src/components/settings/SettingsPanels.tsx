@@ -2150,6 +2150,11 @@ export function GeneralSettingsPanel() {
     connectedEnvironments.every(
       (target) => target.serverConfig?.environment.capabilities.threadUsageLimitRecovery === true,
     );
+  const supportsTelemetryControls =
+    connectedEnvironments.length > 0 &&
+    connectedEnvironments.every(
+      (target) => target.serverConfig?.environment.capabilities.telemetryControls === true,
+    );
   const supportsRestartContinuation =
     connectedEnvironments.length > 0 &&
     connectedEnvironments.every(
@@ -2774,6 +2779,27 @@ export function GeneralSettingsPanel() {
                 <SelectItem value="steer">Steer</SelectItem>
               </SelectPopup>
             </Select>
+          }
+        />
+
+        <SettingsRow
+          serverScoped
+          settingKeys={["telemetryEnabled"]}
+          {...searchableSetting("product-usage-data")}
+          status={
+            !supportsTelemetryControls
+              ? "Update selected environments to control product usage data."
+              : undefined
+          }
+          description="Share feature usage, outcomes, timings, and agent token counts with Rove via PostHog, using a random installation ID. No name, email, prompts, responses, code, paths, commands, or recordings. Applies to all clients on the selected environments. ROVE_TELEMETRY_ENABLED=false overrides this preference."
+          control={
+            <ScopedSwitch
+              settingKeys={["telemetryEnabled"]}
+              checked={settings.telemetryEnabled}
+              disabled={!supportsTelemetryControls}
+              onCheckedChange={(checked) => updateSettings({ telemetryEnabled: Boolean(checked) })}
+              aria-label="Share product usage data"
+            />
           }
         />
 

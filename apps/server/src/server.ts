@@ -591,7 +591,7 @@ const RuntimeDependenciesLive = RuntimeCoreDependenciesLive.pipe(
   Layer.provideMerge(ResourceDiagnosticsLayerLive),
   Layer.provideMerge(UsageLayerLive),
   Layer.provideMerge(TraceDiagnostics.layer),
-  Layer.provideMerge(AnalyticsService.layer),
+  Layer.provideMerge(AnalyticsService.layer.pipe(Layer.provide(ServerSettingsLayerLive))),
   Layer.provideMerge(ExternalLauncher.layer),
   Layer.provideMerge(RemoteOpenTargets.layer),
   Layer.provideMerge(ServerLifecycleEvents.layer),

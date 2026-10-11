@@ -204,6 +204,9 @@ function ServerSettingsDetail(props: { readonly page: SettingsPage }) {
   );
   const disabled =
     pendingWrites > 0 || !hasConnectedSelection || (projectSelected && !supportsProjectOverrides);
+  const supportsTelemetryControls = targets.every(
+    (target) => target.environment.serverConfig.environment.capabilities.telemetryControls === true,
+  );
   const supportsContinuation = targets.every(
     (target) =>
       target.environment.serverConfig.environment.capabilities.threadRestartContinuation === true,
@@ -422,6 +425,22 @@ function ServerSettingsDetail(props: { readonly page: SettingsPage }) {
                       ))}
                     </SettingsSection>
                   ) : null}
+                  <SettingsSection title="Privacy">
+                    <FanoutSwitchRow
+                      icon={{ ios: "lock", android: "lock" }}
+                      label="Share product usage data"
+                      subtitle={
+                        projectSelected
+                          ? "Environment-wide setting. Select All projects to change it."
+                          : !supportsTelemetryControls
+                            ? "Update selected environments to control product usage data."
+                            : "Share feature usage, outcomes, timings, and agent token counts with Rove via PostHog, using a random installation ID. No name, email, prompts, responses, code, paths, commands, or recordings. Applies to all clients on these environments. ROVE_TELEMETRY_ENABLED=false overrides this preference."
+                      }
+                      value={uniform("telemetryEnabled")}
+                      disabled={disabledFor("telemetryEnabled") || !supportsTelemetryControls}
+                      onValueChange={(value) => write({ telemetryEnabled: value })}
+                    />
+                  </SettingsSection>
                   <SettingsSection title="Updates">
                     <FanoutSwitchRow
                       icon="arrow.clockwise"

@@ -15,6 +15,7 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
 import * as Ref from "effect/Ref";
+import * as Stream from "effect/Stream";
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
 import * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
@@ -22,11 +23,14 @@ import * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
 import packageJson from "../../package.json" with { type: "json" };
 import * as ServerConfig from "../config.ts";
 import { getTelemetryIdentifier } from "./Identify.ts";
+import { ServerSettingsService } from "../serverSettings.ts";
+import { sanitizeAnalyticsProperties } from "./AnalyticsPolicy.ts";
 
 interface BufferedAnalyticsEvent {
   readonly event: string;
-  readonly properties?: Readonly<Record<string, unknown>>;
+  readonly properties?: Readonly<Record<string, string | number | boolean>>;
   readonly capturedAt: string;
+  readonly generation: number;
 }
 
 const TelemetryEnvConfig = Config.all({
@@ -37,6 +41,11 @@ const TelemetryEnvConfig = Config.all({
     Config.withDefault("https://us.i.posthog.com"),
   ),
   enabled: Config.Boolean("ROVE_TELEMETRY_ENABLED").pipe(Config.withDefault(true)),
+  environment: Config.Literals(
+    ["production", "development", "test"],
+    "ROVE_ANALYTICS_ENVIRONMENT",
+  ).pipe(Config.option),
+  nodeEnvironment: Config.String("NODE_ENV").pipe(Config.option),
   flushBatchSize: Config.Number("ROVE_TELEMETRY_FLUSH_BATCH_SIZE").pipe(Config.withDefault(20)),
   maxBufferedEvents: Config.Number("ROVE_TELEMETRY_MAX_BUFFERED_EVENTS").pipe(
     Config.withDefault(1_000),
@@ -91,13 +100,52 @@ export const make = Effect.gen(function* () {
 
   const httpClient = yield* HttpClient.HttpClient;
   const serverConfig = yield* ServerConfig.ServerConfig;
-  const identifier = yield* getTelemetryIdentifier;
+  const settings = yield* ServerSettingsService;
+  // Cache the effect, not its result: opting out before the first event must
+  // neither read nor create an installation identifier.
+  const identityContext = yield* Effect.context<Effect.Services<typeof getTelemetryIdentifier>>();
+  const identifier = yield* Effect.cached(
+    getTelemetryIdentifier.pipe(Effect.provideContext(identityContext)),
+  );
   const bufferRef = yield* Ref.make<ReadonlyArray<BufferedAnalyticsEvent>>([]);
+  // A failed request can finish after opt-out and opt-in. Its old batch must
+  // not be requeued into the newly opted-in buffer.
+  let generation = 0;
+  const discardBufferedEvents = Effect.sync(() => {
+    generation++;
+  }).pipe(Effect.andThen(Ref.set(bufferRef, [])));
+  const settingsChanges = yield* settings.subscribeChanges;
+  yield* settingsChanges.pipe(
+    Stream.runForEach((next) => (next.telemetryEnabled ? Effect.void : discardBufferedEvents)),
+    Effect.forkScoped,
+  );
+  const collectionEnabled = settings.getSettings.pipe(
+    Effect.map((current) => current.telemetryEnabled),
+    // Privacy wins over delivery if settings cannot be read.
+    Effect.orElseSucceed(() => false),
+  );
+  const analyticsEnvironment = Option.getOrElse(telemetryConfig.environment, () =>
+    Option.getOrUndefined(telemetryConfig.nodeEnvironment) === "test"
+      ? "test"
+      : serverConfig.devUrl ||
+          Option.getOrUndefined(telemetryConfig.nodeEnvironment) === "development"
+        ? "development"
+        : "production",
+  );
+  const releaseChannel = packageJson.version.includes("nightly")
+    ? "nightly"
+    : packageJson.version.includes("preview")
+      ? "preview"
+      : "stable";
   const clientType = serverConfig.mode === "desktop" ? "desktop-app" : "cli-web-client";
   const hostPlatform = yield* HostProcessPlatform;
   const hostArchitecture = yield* HostProcessArchitecture;
 
-  const enqueueBufferedEvent = (event: string, properties?: Readonly<Record<string, unknown>>) =>
+  const enqueueBufferedEvent = (
+    event: string,
+    eventGeneration: number,
+    properties?: Readonly<Record<string, string | number | boolean>>,
+  ) =>
     Effect.flatMap(DateTime.now, (now) =>
       Ref.modify(bufferRef, (current) => {
         const appended = [
@@ -106,6 +154,7 @@ export const make = Effect.gen(function* () {
             event,
             ...(properties ? { properties } : undefined),
             capturedAt: DateTime.formatIso(now),
+            generation: eventGeneration,
           } satisfies BufferedAnalyticsEvent,
         ];
 
@@ -127,24 +176,41 @@ export const make = Effect.gen(function* () {
   const sendBatch = Effect.fn("AnalyticsService.sendBatch")(function* (
     events: ReadonlyArray<BufferedAnalyticsEvent>,
   ) {
-    if (!telemetryConfig.enabled || !identifier) return;
+    if (!(yield* collectionEnabled)) {
+      yield* discardBufferedEvents;
+      return;
+    }
+    const batchGeneration = generation;
+    const currentEvents = events.filter((event) => event.generation === batchGeneration);
+    if (currentEvents.length === 0) return;
+    const distinctId = yield* identifier;
+    if (!distinctId) return;
+    if (!(yield* collectionEnabled) || generation !== batchGeneration) return;
 
     const payload = {
       api_key: telemetryConfig.posthogKey,
-      batch: events.map((event) => ({
+      batch: currentEvents.map((event) => ({
         event: event.event,
-        distinct_id: identifier,
+        distinct_id: distinctId,
         properties: {
           ...event.properties,
-          $process_person_profile: false,
+          // Only real client activity creates a pseudonymous installation
+          // profile. Boot heartbeats and dev/test runs must not inflate Persons.
+          $process_person_profile:
+            analyticsEnvironment === "production" && event.event.startsWith("client."),
+          $geoip_disable: true,
+          $ip: null,
+          $lib: "rove-server",
+          analyticsEnvironment,
+          releaseChannel,
           platform: hostPlatform,
-          wsl: Option.getOrUndefined(telemetryConfig.wslDistroName),
+          wsl: Option.isSome(telemetryConfig.wslDistroName),
           arch: hostArchitecture,
           roveVersion: packageJson.version,
           clientType,
           serverOs: serverOsFromNodePlatform(hostPlatform),
           serverArch: hostArchitecture,
-          serverWslDistro: Option.getOrUndefined(telemetryConfig.wslDistroName),
+          serverWsl: Option.isSome(telemetryConfig.wslDistroName),
           serverAppVersion: packageJson.version,
           serverMode: serverConfig.mode,
         },
@@ -161,6 +227,10 @@ export const make = Effect.gen(function* () {
 
   const flush: AnalyticsService["Service"]["flush"] = Effect.gen(function* () {
     while (true) {
+      if (!(yield* collectionEnabled)) {
+        yield* discardBufferedEvents;
+        return;
+      }
       const batch = yield* Ref.modify(bufferRef, (current) => {
         if (current.length === 0) {
           return [[] as ReadonlyArray<BufferedAnalyticsEvent>, current] as const;
@@ -176,9 +246,11 @@ export const make = Effect.gen(function* () {
 
       yield* sendBatch(batch).pipe(
         Effect.catch((error) =>
-          Ref.update(bufferRef, (current) => [...batch, ...current]).pipe(
-            Effect.flatMap(() => Effect.fail(error)),
-          ),
+          Ref.update(bufferRef, (current) =>
+            [...batch.filter((event) => event.generation === generation), ...current].slice(
+              -telemetryConfig.maxBufferedEvents,
+            ),
+          ).pipe(Effect.flatMap(() => Effect.fail(error))),
         ),
       );
     }
@@ -186,9 +258,15 @@ export const make = Effect.gen(function* () {
 
   const record: AnalyticsService["Service"]["record"] = Effect.fn("AnalyticsService.record")(
     function* (event, properties) {
-      if (!telemetryConfig.enabled || !identifier) return;
+      const safeProperties = sanitizeAnalyticsProperties(event, properties);
+      if (safeProperties === undefined) return;
+      const eventGeneration = generation;
+      if (!(yield* collectionEnabled)) {
+        yield* discardBufferedEvents;
+        return;
+      }
 
-      const enqueueResult = yield* enqueueBufferedEvent(event, properties);
+      const enqueueResult = yield* enqueueBufferedEvent(event, eventGeneration, safeProperties);
       if (enqueueResult.dropped) {
         yield* Effect.logDebug("analytics buffer full; dropping oldest event", {
           size: enqueueResult.size,
@@ -198,9 +276,15 @@ export const make = Effect.gen(function* () {
     },
   );
 
-  yield* Effect.forever(Effect.sleep(1000).pipe(Effect.flatMap(() => flush)), {
-    disableYield: true,
-  }).pipe(Effect.forkScoped);
+  // Idle hosts should not materialize settings (and provider secrets) every
+  // second. Explicit flush still enforces opt-out even with a batch in flight.
+  yield* Effect.forever(
+    Effect.sleep(1000).pipe(
+      Effect.flatMap(() => Ref.get(bufferRef)),
+      Effect.flatMap((events) => (events.length === 0 ? Effect.void : flush)),
+    ),
+    { disableYield: true },
+  ).pipe(Effect.forkScoped);
 
   yield* Effect.addFinalizer(() => flush);
 

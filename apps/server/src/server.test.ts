@@ -331,6 +331,8 @@ const testEnvironmentDescriptor = {
     repositoryIdentity: true,
   },
 };
+const serializeAnalytics = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
+
 const makeDefaultOrchestrationReadModel = () => {
   const now = "2026-01-01T00:00:00.000Z";
   return {
@@ -12898,8 +12900,11 @@ it.layer(NodeServices.layer)("server router seam", (it) => {
     }).pipe(Effect.provide(NodeHttpServer.layerTest)),
   );
 
-  it.effect("routes websocket rpc terminal methods", () =>
+  it.effect("routes websocket rpc terminal methods and records metadata-only feature usage", () =>
     Effect.gen(function* () {
+      const featureProperties: Array<
+        Parameters<AnalyticsService.AnalyticsService["Service"]["record"]>[1]
+      > = [];
       const snapshot = {
         threadId: "thread-1",
         terminalId: "default",
@@ -12923,6 +12928,12 @@ it.layer(NodeServices.layer)("server router seam", (it) => {
             clear: () => Effect.void,
             restart: () => Effect.succeed(snapshot),
             close: () => Effect.void,
+          },
+          analyticsService: {
+            record: (event, properties) =>
+              Effect.sync(() => {
+                if (event === "client.feature.used") featureProperties.push(properties);
+              }),
           },
         },
       });
@@ -12991,6 +13002,17 @@ it.layer(NodeServices.layer)("server router seam", (it) => {
           }),
         ),
       );
+      assert.deepEqual(
+        featureProperties.map((props) => [props?.feature, props?.action, props?.outcome]),
+        [
+          ["terminal", "open", "succeeded"],
+          ["terminal", "restart", "succeeded"],
+          ["terminal", "close", "succeeded"],
+        ],
+      );
+      assert.notInclude(serializeAnalytics(featureProperties), "thread-1");
+      assert.notInclude(serializeAnalytics(featureProperties), "/tmp/project");
+      assert.notInclude(serializeAnalytics(featureProperties), "echo hi");
     }).pipe(Effect.provide(NodeHttpServer.layerTest)),
   );
 

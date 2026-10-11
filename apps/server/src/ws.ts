@@ -172,6 +172,7 @@ import * as ProcessResourceMonitor from "./diagnostics/ProcessResourceMonitor.ts
 import * as ResourceTelemetry from "./resourceTelemetry/ResourceTelemetry.ts";
 import * as HostResources from "./resourceTelemetry/HostResources.ts";
 import * as AnalyticsService from "./telemetry/AnalyticsService.ts";
+import { makeFeatureAnalytics } from "./telemetry/FeatureAnalytics.ts";
 import * as UsageLimitSources from "./usage/UsageLimitSources.ts";
 import * as UsageService from "./usage/UsageService.ts";
 import * as TraceDiagnostics from "./diagnostics/TraceDiagnostics.ts";
@@ -559,6 +560,27 @@ const makeWsRpcLayer = (
                   analytics.record("client.turn.requested", clientAnalyticsProps),
                 )
               : analytics.record("client.turn.requested", clientAnalyticsProps);
+          case "thread.checkpoint.revert":
+          case "thread.conversation.revert":
+          case "thread.pull-request.link":
+          case "thread.pull-request.unlink":
+          case "thread.archive":
+          case "thread.unarchive":
+          case "thread.snooze":
+          case "thread.unsnooze":
+          case "thread.pin":
+          case "thread.unpin":
+            return analytics.record("client.feature.used", {
+              ...clientAnalyticsProps,
+              feature: command.type.includes("revert")
+                ? "checkpoint"
+                : command.type.includes("pull-request")
+                  ? "pull-request"
+                  : "thread-organization",
+              action: command.type,
+              // Command acceptance, not completion of the async reactor.
+              outcome: "succeeded",
+            });
           default:
             return Effect.void;
         }
@@ -708,6 +730,7 @@ const makeWsRpcLayer = (
         currentSession.scopes.includes(requiredScope)
           ? stream
           : Stream.fail(authorizationError(requiredScope));
+      const observeFeature = makeFeatureAnalytics(analytics, clientAnalyticsProps);
       const observeRpcEffect = <A, E, R>(
         method: string,
         effect: Effect.Effect<A, E, R>,
@@ -715,7 +738,7 @@ const makeWsRpcLayer = (
       ) =>
         instrumentRpcEffect(
           method,
-          authorizeEffect(requiredScopeForRpcMethod(method), effect),
+          observeFeature(method, authorizeEffect(requiredScopeForRpcMethod(method), effect)),
           traceAttributes,
         );
       const observeRpcStream = <A, E, R>(
@@ -2753,6 +2776,9 @@ const makeWsRpcLayer = (
                 ...patch,
                 ...(deviceHosts ? { deviceHosts } : {}),
               });
+              // Discard queued telemetry before acknowledging opt-out, even
+              // if the settings-change subscriber has not drained yet.
+              if (!settings.telemetryEnabled) yield* analytics.flush;
               yield* republishRepositoryRemoteChanges(previous, settings);
               return ServerSettings.redactServerSettingsForClient(settings);
             }),
