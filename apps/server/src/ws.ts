@@ -2003,11 +2003,15 @@ const makeWsRpcLayer = (
           .pipe(Effect.ignoreCause({ log: true }), Effect.forkDetach, Effect.asVoid);
 
       return WsRpcGroup.of({
-        [WS_METHODS.sandboxInventory]: () => authorizeEffect("orchestration:read", sandboxes.inventory),
-        [WS_METHODS.sandboxConfigure]: input => authorizeEffect("access:write", sandboxes.configure(input)),
-        [WS_METHODS.sandboxCreate]: input => authorizeEffect("access:write", sandboxes.create(input)),
-        [WS_METHODS.sandboxAction]: input => authorizeEffect("access:write", sandboxes.action(input)),
-        [WS_METHODS.sandboxLink]: input => authorizeEffect("access:write", sandboxes.link(input)),
+        [WS_METHODS.sandboxInventory]: () =>
+          authorizeEffect("orchestration:read", sandboxes.inventory),
+        [WS_METHODS.sandboxConfigure]: (input) =>
+          authorizeEffect("access:write", sandboxes.configure(input)),
+        [WS_METHODS.sandboxCreate]: (input) =>
+          authorizeEffect("access:write", sandboxes.create(input)),
+        [WS_METHODS.sandboxAction]: (input) =>
+          authorizeEffect("access:write", sandboxes.action(input)),
+        [WS_METHODS.sandboxLink]: (input) => authorizeEffect("access:write", sandboxes.link(input)),
 
         [ORCHESTRATION_WS_METHODS.dispatchCommand]: (command) =>
           observeRpcEffect(
