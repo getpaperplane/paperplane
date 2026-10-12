@@ -18,6 +18,7 @@ import * as Schema from "effect/Schema";
 import * as Semaphore from "effect/Semaphore";
 import { ServerSecretStore } from "../auth/ServerSecretStore.ts";
 import { sandboxPairCommand, sandboxStartCommand, sandboxStopCommand } from "./bootstrap.ts";
+import { SandboxDriverError } from "./errors.ts";
 import {
   makeSandboxDriver,
   sandboxHandle,
@@ -160,10 +161,16 @@ export const makeSandboxManager = Effect.fn("SandboxManager.make")(function* (
       (driver) => Effect.sync(() => driver.close()),
     );
   };
-  // Vendor errors can contain bearer tokens or command output. Return only a
-  // bounded product-owned error; leave the resource handle available for repair.
+  // Drivers may surface product-owned diagnostics, never raw vendor errors.
+  // Keep the resource handle available for repair regardless of the error.
   const operation = <A>(run: () => Promise<A>, message: string) =>
-    Effect.tryPromise({ try: run, catch: () => new SandboxError({ message }) });
+    Effect.tryPromise({
+      try: run,
+      catch: (error) =>
+        new SandboxError({
+          message: error instanceof SandboxDriverError ? error.message : message,
+        }),
+    });
 
   const configure = Effect.fn("SandboxManager.configure")(function* (
     input: typeof SandboxConfigureInput.Type,

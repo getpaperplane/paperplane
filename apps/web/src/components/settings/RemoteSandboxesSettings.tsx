@@ -12,6 +12,7 @@ import {
   type SandboxProvider,
 } from "@rove-code/contracts";
 import { useRouter } from "@tanstack/react-router";
+import { AlertCircleIcon, ChevronDownIcon, ExternalLinkIcon, RefreshCwIcon } from "lucide-react";
 import { sandboxEnvironment } from "../../state/sandbox";
 import { useEnvironmentSessionState } from "../../state/session";
 import { threadEnvironment } from "../../state/threads";
@@ -19,9 +20,12 @@ import { useAtomCommand } from "../../state/use-atom-command";
 import { connectPairing } from "../../connection/onboarding";
 import { requestConfirmDialog } from "../../confirmDialog";
 import { newThreadId } from "../../lib/utils";
+import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
-import { SettingsSection } from "./settingsLayout";
+import { Menu, MenuItem, MenuPopup, MenuSeparator, MenuTrigger } from "../ui/menu";
+import { Select, SelectItem, SelectPopup, SelectTrigger, SelectValue } from "../ui/select";
+import { SettingsRow, SettingsSection } from "./settingsLayout";
 import { useSettingsScope } from "./SettingsScopeContext";
 
 function value<A, E>(result: AtomCommandResult<A, E>): A {
@@ -36,20 +40,25 @@ export function RemoteSandboxesSettings() {
       ? connectedEnvironments[0]
       : undefined;
   return (
-    <SettingsSection id="remote-sandboxes" title="Remote sandboxes · Preview">
-      <p className="mb-4 text-sm text-muted-foreground">
-        Run a thread in its own remote Linux environment using your Boat or Modal account. Agent
-        work continues without this machine. Lifecycle controls are manual in this preview: settle a
-        thread, then pause its sandbox. No account credentials are copied from this environment.
-      </p>
+    <SettingsSection
+      id="remote-sandboxes"
+      title="Remote sandboxes"
+      headerAction={
+        <Badge variant="secondary" size="sm">
+          Preview
+        </Badge>
+      }
+    >
       {!environment ? (
-        <p className="text-sm text-muted-foreground">
-          Select one connected environment to manage its sandboxes.
-        </p>
+        <SettingsRow
+          title="Select an environment"
+          description="Select one connected environment to manage its sandboxes."
+        />
       ) : environment.serverConfig?.environment.capabilities.remoteSandboxes !== true ? (
-        <p className="text-sm text-muted-foreground">
-          Update the selected Rove server to manage remote sandboxes.
-        </p>
+        <SettingsRow
+          title="Server update required"
+          description="Update the selected Rove server to manage remote sandboxes."
+        />
       ) : (
         <SandboxControls
           key={environment.environmentId}
@@ -85,7 +94,7 @@ function SandboxControls({ environmentId }: { environmentId: EnvironmentId }) {
     void inventoryCommand({ environmentId, input: {} }).then((result) => {
       if (!active) return;
       if (result._tag === "Success") setInventory(result.value);
-      else setError("Could not load remote sandbox configuration.");
+      else setError("Could not load remote sandbox configuration. Try Refresh.");
     });
     return () => {
       active = false;
@@ -112,9 +121,15 @@ function SandboxControls({ environmentId }: { environmentId: EnvironmentId }) {
     setProvider(next);
     setToken("");
     setTokenId("");
+    setError(null);
   };
   const configured = inventory?.configuredProviders.includes(provider) ?? false;
   const tracked = inventory?.sandboxes.some((sandbox) => sandbox.provider === provider) ?? false;
+  const providerName = provider === "boat" ? "Boat" : "Modal";
+  const dashboardUrl =
+    provider === "boat" ? "https://boat.dev/dashboard" : "https://modal.com/apps";
+  const hasRecordedError =
+    inventory?.sandboxes.some((sandbox) => sandbox.detail === error) ?? false;
   const operate = async (sandbox: RemoteSandbox, kind: "pause" | "resume" | "delete") => {
     const message =
       kind === "delete"
@@ -131,6 +146,23 @@ function SandboxControls({ environmentId }: { environmentId: EnvironmentId }) {
     await run(async () => {
       value(
         await action({ environmentId, input: { id: sandbox.id, action: kind, confirmed: true } }),
+      );
+    });
+  };
+  const forget = async (sandbox: RemoteSandbox) => {
+    if (
+      !(await requestConfirmDialog(
+        "Forget this failed record only? This does NOT stop billing or delete vendor resources. Verify cleanup in the vendor dashboard first. Saved recovery handles will be lost.",
+        { variant: "destructive" },
+      ))
+    )
+      return;
+    await run(async () => {
+      value(
+        await action({
+          environmentId,
+          input: { id: sandbox.id, action: "forget", confirmed: true },
+        }),
       );
     });
   };
@@ -169,239 +201,326 @@ function SandboxControls({ environmentId }: { environmentId: EnvironmentId }) {
       });
     });
   return (
-    <fieldset disabled={!allowed}>
+    <fieldset disabled={!allowed} className="min-w-0 divide-y divide-border/50">
+      <legend className="sr-only">Remote sandbox account and lifecycle</legend>
       {!allowed ? (
-        <p className="mb-4 text-sm text-muted-foreground">
+        <p className="px-3 py-3 text-xs text-muted-foreground sm:px-4">
           Administrative access is required to manage remote sandboxes.
         </p>
       ) : null}
-      <div className="space-y-4">
-        <div className="flex flex-wrap gap-2" role="group" aria-label="Sandbox provider">
-          {(["boat", "modal"] as const).map((name) => (
-            <Button
-              key={name}
-              size="sm"
-              variant={provider === name ? "default" : "outline"}
+      <SettingsRow
+        title="Provider"
+        description="Run a thread on remote Linux compute. Work continues when this machine disconnects."
+        control={
+          <div className="w-full @min-[32rem]/settings-row:w-40">
+            <Select
+              value={provider}
               disabled={busy}
-              onClick={() => changeProvider(name)}
+              onValueChange={(next) => {
+                if (next === "boat" || next === "modal") changeProvider(next);
+              }}
             >
-              {name === "boat" ? "Boat" : "Modal"}
+              <SelectTrigger size="sm" aria-label="Sandbox provider">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectPopup>
+                <SelectItem value="boat">Boat</SelectItem>
+                <SelectItem value="modal">Modal</SelectItem>
+              </SelectPopup>
+            </Select>
+          </div>
+        }
+      />
+      {configured ? (
+        <SettingsRow
+          title={`${providerName} credentials`}
+          description={
+            tracked
+              ? "Delete this provider's tracked sandboxes before changing credentials."
+              : "Saved on this environment. No account credentials are copied to sandboxes."
+          }
+          status={
+            <Badge variant="success" size="sm">
+              Saved
+            </Badge>
+          }
+          control={
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={busy || tracked}
+              onClick={() =>
+                void run(async () => {
+                  value(await configure({ environmentId, input: { provider, token: "" } }));
+                })
+              }
+            >
+              Remove credentials
             </Button>
-          ))}
-        </div>
-        <p className="text-sm text-muted-foreground">
-          {provider === "boat"
-            ? "Boat default: 4 vCPU / 8 GB, currently $0.036/hour. Stopped storage is advertised as free; confirm retention with Boat."
-            : "Modal: 2 physical cores / 8 GiB, up to 24 hours per run. A dedicated persistent volume retains thread data across runs. Compute, volumes, and snapshots may be billed; free credits are limited."}
-        </p>
-        <p className="text-sm">
-          Credentials: {configured ? "Configured on this environment" : "Not configured"}
-        </p>
+          }
+        />
+      ) : (
         <form
-          className="space-y-3"
           onSubmit={(event) => {
             event.preventDefault();
-            if (!token.trim() || busy) return;
+            if (!token.trim() || busy || (provider === "modal" && !tokenId.trim())) return;
             void run(async () => {
-              value(
-                await configure({
-                  environmentId,
-                  input: { provider, token, tokenId },
-                }),
-              );
+              value(await configure({ environmentId, input: { provider, token, tokenId } }));
               setToken("");
               setTokenId("");
             });
           }}
         >
-          {provider === "modal" ? (
-            <label className="block space-y-1 text-sm">
-              <span>Modal token ID</span>
+          <SettingsRow
+            title={`${providerName} credentials`}
+            description="Use your own account. Saving credentials does not start compute."
+            control={
+              <div className="flex w-full flex-col gap-2 @min-[32rem]/settings-row:w-72">
+                {provider === "modal" ? (
+                  <Input
+                    size="sm"
+                    aria-label="Modal token ID"
+                    placeholder="Token ID"
+                    value={tokenId}
+                    onChange={(event) => setTokenId(event.target.value)}
+                    autoComplete="off"
+                    disabled={busy || tracked}
+                    required
+                  />
+                ) : null}
+                <div className="flex items-center gap-2">
+                  <Input
+                    size="sm"
+                    type="password"
+                    aria-label={provider === "boat" ? "Boat API key" : "Modal token secret"}
+                    placeholder={provider === "boat" ? "API key" : "Token secret"}
+                    value={token}
+                    onChange={(event) => setToken(event.target.value)}
+                    autoComplete="off"
+                    disabled={busy || tracked}
+                    required
+                  />
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    type="submit"
+                    disabled={
+                      busy || tracked || !token.trim() || (provider === "modal" && !tokenId.trim())
+                    }
+                  >
+                    Save
+                  </Button>
+                </div>
+              </div>
+            }
+          />
+        </form>
+      )}
+      <form
+        onSubmit={(event) => {
+          event.preventDefault();
+          if (!configured || !label.trim() || busy) return;
+          void (async () => {
+            if (
+              !(await requestConfirmDialog(
+                `Create a remote sandbox on your ${providerName} account? Compute billing starts immediately. No agent prompt will be sent. Pause or delete it when finished.`,
+              ))
+            )
+              return;
+            await run(async () => {
+              value(
+                await create({
+                  environmentId,
+                  input: { provider, label: label.trim(), confirmCost: true },
+                }),
+              );
+              setLabel("");
+            });
+          })();
+        }}
+      >
+        <SettingsRow
+          title="New sandbox"
+          description={
+            provider === "boat"
+              ? "4 vCPU / 8 GB. Requires Boat billing setup and a plan that supports unlimited runtime."
+              : "2 cores / 8 GiB, up to 24 hours per run. Compute, persistent storage and snapshots may be billed."
+          }
+          control={
+            <div className="flex w-full items-center gap-2 @min-[32rem]/settings-row:w-72">
               <Input
-                value={tokenId}
-                onChange={(event) => setTokenId(event.target.value)}
-                autoComplete="off"
-                disabled={busy || tracked}
+                size="sm"
+                aria-label="Sandbox name"
+                value={label}
+                onChange={(event) => setLabel(event.target.value)}
+                maxLength={80}
+                placeholder="Sandbox name"
+                disabled={busy || !configured}
                 required
               />
-            </label>
-          ) : null}
-          <label className="block space-y-1 text-sm">
-            <span>{provider === "boat" ? "Boat API key" : "Modal token secret"}</span>
-            <Input
-              type="password"
-              value={token}
-              onChange={(event) => setToken(event.target.value)}
-              autoComplete="off"
-              disabled={busy || tracked}
-              required
-            />
-          </label>
-          <div className="flex gap-2">
+              <Button size="sm" type="submit" disabled={busy || !configured || !label.trim()}>
+                Create…
+              </Button>
+            </div>
+          }
+        >
+          <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2 pt-2 pb-2">
+            <p className="max-w-xl text-xs leading-normal text-muted-foreground/80">
+              Connect to create a blank thread, then clone a repository and sign in to a coding
+              provider there. Pause manually when work finishes; settling a thread does not stop
+              billing.
+            </p>
             <Button
+              size="xs"
+              variant="ghost-muted"
+              render={<a href={dashboardUrl} target="_blank" rel="noopener noreferrer" />}
+            >
+              {providerName} dashboard <ExternalLinkIcon />
+            </Button>
+          </div>
+        </SettingsRow>
+      </form>
+      {error && !hasRecordedError ? <SandboxErrorMessage message={error} /> : null}
+      {busy ? (
+        <p role="status" className="px-3 py-3 text-xs text-muted-foreground sm:px-4">
+          Working on the sandbox…
+        </p>
+      ) : null}
+      <SettingsRow
+        title="Sandboxes"
+        description={
+          inventory === null
+            ? "Loading saved state…"
+            : inventory.sandboxes.length === 0
+              ? "No sandboxes yet. Add credentials and create one above."
+              : "Pausing keeps files and conversations, but interrupts running work. Resume to reconnect."
+        }
+        control={
+          <Button size="xs" variant="ghost-muted" disabled={busy} onClick={() => void run(refresh)}>
+            <RefreshCwIcon /> Refresh
+          </Button>
+        }
+      />
+      {inventory?.sandboxes.map((sandbox) => (
+        <SettingsRow
+          key={sandbox.id}
+          title={<span className="break-words [overflow-wrap:anywhere]">{sandbox.label}</span>}
+          description={sandbox.provider === "boat" ? "Boat" : "Modal"}
+          status={
+            <Badge
               size="sm"
-              variant="outline"
-              type="submit"
-              disabled={
-                busy || tracked || !token.trim() || (provider === "modal" && !tokenId.trim())
+              variant={
+                sandbox.phase === "error"
+                  ? "error"
+                  : sandbox.phase === "running"
+                    ? "success"
+                    : "secondary"
               }
             >
-              Save credentials
-            </Button>
-            {configured ? (
-              <Button
-                size="sm"
-                variant="outline"
-                disabled={busy || tracked}
-                onClick={() =>
-                  void run(async () => {
-                    value(await configure({ environmentId, input: { provider, token: "" } }));
-                  })
-                }
-              >
-                Remove credentials
-              </Button>
-            ) : null}
-          </div>
-          <p className="text-xs text-muted-foreground">
-            Saving credentials does not contact the vendor or start compute. Delete tracked
-            sandboxes before changing accounts.
-          </p>
-        </form>
-        <form
-          className="flex flex-wrap items-end gap-2"
-          onSubmit={(event) => {
-            event.preventDefault();
-            if (!configured || !label.trim() || busy) return;
-            void (async () => {
-              if (
-                !(await requestConfirmDialog(
-                  `Create a remote sandbox on your ${provider} account? Compute billing starts immediately. No agent prompt will be sent. Pause or delete it when finished.`,
-                ))
-              )
-                return;
-              await run(async () => {
-                value(
-                  await create({
-                    environmentId,
-                    input: { provider, label: label.trim(), confirmCost: true },
-                  }),
-                );
-                setLabel("");
-              });
-            })();
-          }}
-        >
-          <label className="min-w-48 flex-1 space-y-1 text-sm">
-            <span>Thread sandbox name</span>
-            <Input
-              value={label}
-              onChange={(event) => setLabel(event.target.value)}
-              maxLength={80}
-              placeholder="My remote task"
-              disabled={busy}
-              required
-            />
-          </label>
-          <Button size="sm" type="submit" disabled={busy || !configured || !label.trim()}>
-            Create sandbox…
-          </Button>
-        </form>
-        <p className="text-xs text-muted-foreground">
-          Connect to create one blank thread, then sign in to a coding provider inside that
-          environment. Existing repositories and local provider credentials are not uploaded
-          automatically. Viewing a transcript through the remote connection requires the sandbox to
-          be running.
-        </p>
-        {error ? (
-          <p role="alert" className="text-sm text-destructive">
-            {error}
-          </p>
-        ) : null}
-        {busy ? (
-          <p role="status" className="text-sm text-muted-foreground">
-            Working on the sandbox…
-          </p>
-        ) : null}
-        <div className="space-y-3">
-          {inventory?.sandboxes.map((sandbox) => (
-            <div key={sandbox.id} className="border-t border-border py-3">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <div>
-                  <p className="text-sm font-medium">{sandbox.label}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {sandbox.provider} · {sandbox.phase}
-                    {sandbox.phase === "error" ? " (may still be billing)" : ""}{" "}
-                    {sandbox.remoteId ? `· ${sandbox.remoteId}` : ""}
-                  </p>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    disabled={busy || sandbox.phase !== "running"}
-                    onClick={() => void open(sandbox)}
-                  >
-                    {sandbox.threadId ? "Open thread" : "Connect & create thread"}
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    disabled={busy || !sandbox.remoteId}
+              {sandbox.phase === "error"
+                ? "Failed"
+                : sandbox.phase === "running"
+                  ? "Running"
+                  : sandbox.phase === "paused"
+                    ? "Paused"
+                    : sandbox.phase === "creating"
+                      ? "Creating"
+                      : "Deleting"}
+            </Badge>
+          }
+          control={
+            <>
+              {sandbox.phase === "running" ? (
+                <Button
+                  size="xs"
+                  variant="outline"
+                  disabled={busy}
+                  onClick={() => void open(sandbox)}
+                >
+                  {sandbox.threadId ? "Open thread" : "Connect & create thread"}
+                </Button>
+              ) : null}
+              <Menu>
+                <MenuTrigger
+                  render={
+                    <Button
+                      size="xs"
+                      variant="outline"
+                      disabled={busy || !allowed}
+                      aria-label={`Actions for ${sandbox.label}`}
+                    />
+                  }
+                >
+                  Actions <ChevronDownIcon />
+                </MenuTrigger>
+                <MenuPopup align="end">
+                  <MenuItem
+                    disabled={!sandbox.remoteId || sandbox.phase === "deleting"}
                     onClick={() =>
                       void operate(sandbox, sandbox.phase === "running" ? "pause" : "resume")
                     }
                   >
-                    {sandbox.phase === "running" ? "Pause…" : "Resume / repair…"}
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    disabled={busy}
-                    onClick={() => void operate(sandbox, "delete")}
+                    {sandbox.phase === "running" ? "Pause sandbox…" : "Resume / repair…"}
+                  </MenuItem>
+                  <MenuItem
+                    render={
+                      <a
+                        href={
+                          sandbox.provider === "boat"
+                            ? "https://boat.dev/dashboard"
+                            : "https://modal.com/apps"
+                        }
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      />
+                    }
                   >
-                    Delete…
-                  </Button>
+                    Open vendor dashboard <ExternalLinkIcon />
+                  </MenuItem>
+                  <MenuSeparator />
+                  <MenuItem variant="destructive" onClick={() => void operate(sandbox, "delete")}>
+                    Delete sandbox…
+                  </MenuItem>
                   {sandbox.phase === "error" || sandbox.phase === "deleting" ? (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      disabled={busy}
-                      onClick={() =>
-                        void (async () => {
-                          if (
-                            !(await requestConfirmDialog(
-                              "Forget this failed record only? This does NOT stop billing or delete vendor resources. Verify cleanup in the vendor dashboard first. Saved recovery handles will be lost.",
-                              { variant: "destructive" },
-                            ))
-                          )
-                            return;
-                          await run(async () => {
-                            value(
-                              await action({
-                                environmentId,
-                                input: { id: sandbox.id, action: "forget", confirmed: true },
-                              }),
-                            );
-                          });
-                        })()
-                      }
-                    >
+                    <MenuItem variant="destructive" onClick={() => void forget(sandbox)}>
                       Forget failed record…
-                    </Button>
+                    </MenuItem>
                   ) : null}
-                </div>
-              </div>
-              {sandbox.detail ? (
-                <p className="mt-2 text-sm text-destructive">{sandbox.detail}</p>
-              ) : null}
+                </MenuPopup>
+              </Menu>
+            </>
+          }
+        >
+          {sandbox.detail ? (
+            <div className="pt-2 pb-2">
+              <SandboxErrorMessage message={sandbox.detail} inline />
             </div>
-          ))}
-        </div>
-        <Button size="sm" variant="outline" disabled={busy} onClick={() => void run(refresh)}>
-          Refresh saved state
-        </Button>
-      </div>
+          ) : null}
+          {sandbox.phase === "error" ? (
+            <p className="pb-2 text-xs leading-normal text-muted-foreground/80">
+              Resources may still be billing. Check the vendor dashboard before retrying or
+              forgetting this record.
+            </p>
+          ) : null}
+        </SettingsRow>
+      ))}
     </fieldset>
+  );
+}
+
+function SandboxErrorMessage({ message, inline = false }: { message: string; inline?: boolean }) {
+  return (
+    <div
+      role="alert"
+      className={inline ? "flex items-start gap-2" : "flex items-start gap-2 px-3 py-3 sm:px-4"}
+    >
+      <AlertCircleIcon
+        aria-hidden
+        className="mt-0.5 size-3.5 shrink-0 text-destructive-foreground"
+      />
+      <p className="max-w-xl break-words text-xs leading-relaxed text-destructive-foreground">
+        {message}
+      </p>
+    </div>
   );
 }

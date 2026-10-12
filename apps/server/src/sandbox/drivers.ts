@@ -1,6 +1,7 @@
 import { SANDBOX_PORT, type RemoteSandbox, type SandboxProvider } from "@rove-code/contracts";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
+import { boatRequestError, modalOperation, SandboxDriverError } from "./errors.ts";
 
 export const SandboxCredentials = Schema.Struct({ token: Schema.String, tokenId: Schema.String });
 export type SandboxCredentials = typeof SandboxCredentials.Type;
@@ -64,9 +65,17 @@ export function makeBoatDriver(
       headers,
       body: body === undefined ? null : JSON.stringify(body),
       signal: AbortSignal.timeout(method === "GET" ? 15_000 : 200_000),
+    }).catch((error: unknown) => {
+      const timedOut =
+        error instanceof Error && ["TimeoutError", "AbortError"].includes(error.name);
+      throw new SandboxDriverError(
+        timedOut
+          ? "The Boat request timed out. Check the Boat dashboard for existing resources before retrying."
+          : "Could not reach Boat. Check the managing environment's internet connection and the Boat dashboard before retrying.",
+      );
     });
-    // Do not surface vendor response bodies: they can echo credentials or commands.
-    if (!response.ok) throw new Error(`Boat request failed (HTTP ${response.status}).`);
+    if (!response.ok)
+      throw boatRequestError(response.status, await response.json().catch(() => null));
     return response.status === 204 ? null : await response.json();
   };
   const path = (handle: SandboxHandle) => `/sandboxes/${encodeURIComponent(handle.remoteId)}`;
@@ -76,10 +85,14 @@ export function makeBoatDriver(
       const result = decodeBoatSandbox(await request(path(handle)));
       if (["ready", "idle", "running"].includes(result.sandbox.state)) return;
       if (["error", "archived", "stopped", "cancelled"].includes(result.sandbox.state))
-        throw new Error("Boat sandbox is not running.");
+        throw new SandboxDriverError(
+          "The Boat sandbox is not running. Resume it before trying again.",
+        );
       await Effect.runPromise(Effect.sleep("1 second"));
     }
-    throw new Error("Boat sandbox did not become ready.");
+    throw new SandboxDriverError(
+      "The Boat sandbox did not become ready within two minutes. Check its state in the Boat dashboard before resuming or deleting it.",
+    );
   };
   const exec = async (handle: SandboxHandle, command: string) => {
     await ready(handle);
@@ -87,7 +100,9 @@ export function makeBoatDriver(
       await request(`${path(handle)}/commands`, { command, timeoutSeconds: 180 }),
     );
     if (!result.success || result.exitCode !== 0)
-      throw new Error("Sandbox command failed. Inspect the sandbox in Boat for details.");
+      throw new SandboxDriverError(
+        "Sandbox command failed. Inspect the sandbox in Boat for details.",
+      );
     return result.stdout;
   };
   return {
@@ -117,7 +132,9 @@ export function makeBoatDriver(
         if (["archived", "stopped"].includes(result.sandbox.state)) return;
         await Effect.runPromise(Effect.sleep("1 second"));
       }
-      throw new Error("Boat stop is still pending; inspect its snapshot status before retrying.");
+      throw new SandboxDriverError(
+        "Boat stop is still pending; inspect its snapshot status before retrying.",
+      );
     },
     remove: async (handle, saveDeletion) => {
       const id =
@@ -133,10 +150,10 @@ export function makeBoatDriver(
         );
         if (result.operation.status === "completed") return;
         if (result.operation.status === "blocked")
-          throw new Error("Boat deletion is blocked; inspect the vendor dashboard.");
+          throw new SandboxDriverError("Boat deletion is blocked; inspect the Boat dashboard.");
         await Effect.runPromise(Effect.sleep("1 second"));
       }
-      throw new Error(
+      throw new SandboxDriverError(
         "Boat deletion remains pending. Its operation receipt was retained for retry.",
       );
     },
@@ -146,12 +163,19 @@ export function makeBoatDriver(
       // URLs. Rove's own authentication, not an ungated agent endpoint, owns access.
       const output = await exec(handle, `host ${SANDBOX_PORT} --public`);
       const url = output.match(/https:\/\/[a-zA-Z0-9-]+\.on\.boat\.dev/u)?.[0];
-      if (!url) throw new Error("Boat did not return a hosted URL.");
+      if (!url)
+        throw new SandboxDriverError(
+          "Boat did not return a hosted URL. Check the sandbox's hosted ports in the Boat dashboard, then resume to repair it.",
+        );
       return url;
     },
     close: () => {},
   };
 }
+
+// Modal does not allow volume mounts at /root. Keep HOME on the dedicated
+// volume so bootstrap, provider credentials and workspaces persist together.
+const MODAL_HOME = "/rove-home";
 
 // The gRPC SDK is loaded only for an explicit Modal lifecycle operation, not at startup.
 export const makeSandboxDriver: SandboxDriverFactory = async (provider, credentials) => {
@@ -172,15 +196,15 @@ export const makeSandboxDriver: SandboxDriverFactory = async (provider, credenti
       runtime: "vm",
       timeoutMs: 24 * 60 * 60 * 1000,
       encryptedPorts: [SANDBOX_PORT],
-      env: { HOME: "/root" },
+      env: { HOME: MODAL_HOME },
       // Thread state survives the 24-hour compute limit even without a manual
       // filesystem snapshot. This volume is deleted only by explicit deletion.
-      volumes: { "/root": volume },
+      volumes: { [MODAL_HOME]: volume },
       name: volumeName,
     });
     return { remoteId: sandbox.sandboxId, url: null, snapshotIds: [], volumeName, paused: false };
   };
-  return {
+  const driver: SandboxDriver = {
     create: (id) => create(`rove-${id}`),
     resume: async (handle) => {
       if (!handle.paused) {
@@ -191,7 +215,10 @@ export const makeSandboxDriver: SandboxDriverFactory = async (provider, credenti
           if (!(error instanceof NotFoundError)) throw error;
         }
       }
-      if (!handle.volumeName) throw new Error("Recovery volume is missing.");
+      if (!handle.volumeName)
+        throw new SandboxDriverError(
+          "The Modal recovery volume is missing. Check the Modal dashboard before deleting this record; its files cannot be restored without the volume.",
+        );
       return {
         ...(await create(handle.volumeName, handle.snapshotIds.at(-1))),
         snapshotIds: handle.snapshotIds,
@@ -232,16 +259,30 @@ export const makeSandboxDriver: SandboxDriverFactory = async (provider, credenti
         process.wait(),
       ]);
       if (exitCode !== 0)
-        throw new Error("Sandbox command failed. Inspect the sandbox in Modal for details.");
+        throw new SandboxDriverError(
+          "Sandbox command failed. Inspect the sandbox in Modal for details.",
+        );
       return stdout;
     },
     expose: async (handle) => {
       const sandbox = await client.sandboxes.fromId(handle.remoteId);
       const tunnel = (await sandbox.tunnels())[SANDBOX_PORT];
-      if (!tunnel) throw new Error("Modal did not return a tunnel URL.");
+      if (!tunnel)
+        throw new SandboxDriverError(
+          "Modal did not return a tunnel URL. Check the sandbox in the Modal dashboard, then resume to repair it.",
+        );
       return tunnel.url;
     },
     close: () => client.close(),
+  };
+  return {
+    ...driver,
+    create: (id) => modalOperation(() => driver.create(id)),
+    resume: (handle) => modalOperation(() => driver.resume(handle)),
+    pause: (handle, save) => modalOperation(() => driver.pause(handle, save)),
+    remove: (handle, save) => modalOperation(() => driver.remove(handle, save)),
+    exec: (handle, command) => modalOperation(() => driver.exec(handle, command)),
+    expose: (handle) => modalOperation(() => driver.expose(handle)),
   };
 };
 
