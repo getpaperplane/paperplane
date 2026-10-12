@@ -185,7 +185,7 @@ import * as ReviewService from "./review/ReviewService.ts";
 import * as SourceControlRepositoryService from "./sourceControl/SourceControlRepositoryService.ts";
 import { REPLAY_MARKER_MAX_AGE } from "./auth/replayMarkers.ts";
 import * as ServerSecretStore from "./auth/ServerSecretStore.ts";
-import { SandboxManager } from "./sandbox/SandboxManager.ts";
+import { makeSandboxManager, SandboxManager } from "./sandbox/SandboxManager.ts";
 import * as EnvironmentAuth from "./auth/EnvironmentAuth.ts";
 import * as PairingGrantStore from "./auth/PairingGrantStore.ts";
 import * as CloudManagedEndpointRuntime from "./cloud/ManagedEndpointRuntime.ts";
@@ -235,6 +235,25 @@ import {
 import { symlinksSupported } from "@rove-code/shared/testing/symlinks";
 import { DEFAULT_SIGNAL_EXPORT, otlpSerializationLayer } from "@rove-code/shared/observability";
 import * as OtelEnvironment from "@rove-code/shared/otelEnvironment";
+
+// Sandbox RPCs are tested for authorization here; credential checks and
+// lifecycle operations must never reach a real vendor.
+const offlineSandboxOperation = async (): Promise<never> => {
+  throw new Error("Offline test driver");
+};
+const offlineSandboxManager = Layer.effect(
+  SandboxManager,
+  makeSandboxManager(async () => ({
+    verify: async () => {},
+    create: offlineSandboxOperation,
+    resume: offlineSandboxOperation,
+    pause: offlineSandboxOperation,
+    remove: offlineSandboxOperation,
+    exec: offlineSandboxOperation,
+    expose: offlineSandboxOperation,
+    close: () => {},
+  })),
+);
 
 const defaultProjectId = ProjectId.make("project-default");
 const defaultThreadId = ThreadId.make("thread-default");
@@ -1254,7 +1273,7 @@ const buildAppUnderTest = (options?: {
         };
       }),
       Layer.provideMerge(makeAuthTestLayer()),
-      Layer.provideMerge(SandboxManager.layer.pipe(Layer.provideMerge(ServerSecretStore.layer))),
+      Layer.provideMerge(offlineSandboxManager.pipe(Layer.provideMerge(ServerSecretStore.layer))),
       Layer.provide(workspaceAndProjectServicesLayer),
       Layer.provideMerge(
         options?.layers?.httpClient === undefined

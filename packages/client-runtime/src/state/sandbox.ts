@@ -1,7 +1,33 @@
 import { WS_METHODS } from "@rove-code/contracts";
-import type { EnvironmentRegistry } from "../connection/registry.ts";
+import * as Effect from "effect/Effect";
+import * as Option from "effect/Option";
+import * as Stream from "effect/Stream";
+import * as SubscriptionRef from "effect/SubscriptionRef";
 import { Atom } from "effect/unstable/reactivity";
+import type { EnvironmentRegistry } from "../connection/registry.ts";
+import { EnvironmentSupervisor } from "../connection/supervisor.ts";
+import { EnvironmentRpcUnavailableError, request } from "../rpc/client.ts";
 import { createAtomCommandScheduler, createEnvironmentRpcCommand } from "./runtime.ts";
+
+/** A just-paired sandbox is registered before its socket connects. */
+const awaitSession = EnvironmentSupervisor.pipe(
+  Effect.flatMap((supervisor) =>
+    SubscriptionRef.changes(supervisor.session).pipe(
+      Stream.filter(Option.isSome),
+      Stream.runHead,
+      Effect.timeoutOrElse({
+        duration: "60 seconds",
+        orElse: () =>
+          Effect.fail(
+            new EnvironmentRpcUnavailableError({
+              environmentId: supervisor.target.environmentId,
+              message: "The sandbox didn't accept a connection within a minute. Try again.",
+            }),
+          ),
+      }),
+    ),
+  ),
+);
 
 /** Shared by web/desktop and mobile. Inventory reads only local saved state;
  * neither rendering settings nor saving credentials starts cloud compute. */
@@ -45,6 +71,8 @@ export function createSandboxEnvironmentAtoms<R, E>(
     getConfig: createEnvironmentRpcCommand(runtime, {
       label: "sandbox:connection-config",
       tag: WS_METHODS.serverGetConfig,
+      execute: (input) =>
+        awaitSession.pipe(Effect.andThen(request(WS_METHODS.serverGetConfig, input))),
     }),
   };
 }

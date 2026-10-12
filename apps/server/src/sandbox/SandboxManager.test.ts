@@ -27,6 +27,7 @@ function fixture() {
     paused: false,
   };
   const driver: SandboxDriver = {
+    verify: vi.fn(async () => {}),
     create: vi.fn(async () => handle),
     resume: vi.fn(async () => ({ ...handle, remoteId: "vm-two" })),
     exec: vi.fn(async (_handle, command) =>
@@ -68,21 +69,21 @@ function fixture() {
   };
 }
 
-it.effect(
-  "saving BYOK credentials and loading inventory never starts or contacts cloud compute",
-  () =>
-    Effect.gen(function* () {
-      const f = fixture();
-      const manager = yield* f.make;
-      yield* manager.configure({ provider: "boat", token: "secret-token" });
-      yield* manager.configure({ provider: "modal", token: "modal-secret", tokenId: "modal-id" });
-      const inventory = yield* manager.inventory;
-      expect(inventory.configuredProviders).toEqual(["boat", "modal"]);
-      expect(encodeTestJson(inventory)).not.toContain("secret");
-      expect(f.factory).not.toHaveBeenCalled();
-      const reloaded = yield* f.make;
-      expect((yield* reloaded.inventory).configuredProviders).toEqual(["boat", "modal"]);
-    }),
+it.effect("saving BYOK credentials verifies them but never starts cloud compute", () =>
+  Effect.gen(function* () {
+    const f = fixture();
+    const manager = yield* f.make;
+    yield* manager.configure({ provider: "boat", token: "secret-token" });
+    yield* manager.configure({ provider: "modal", token: "modal-secret", tokenId: "modal-id" });
+    const inventory = yield* manager.inventory;
+    expect(inventory.configuredProviders).toEqual(["boat", "modal"]);
+    expect(encodeTestJson(inventory)).not.toContain("secret");
+    expect(f.driver.verify).toHaveBeenCalledTimes(2);
+    expect(f.driver.create).not.toHaveBeenCalled();
+    expect(f.driver.exec).not.toHaveBeenCalled();
+    const reloaded = yield* f.make;
+    expect((yield* reloaded.inventory).configuredProviders).toEqual(["boat", "modal"]);
+  }),
 );
 
 it.effect(
@@ -104,7 +105,8 @@ it.effect(
         ),
       ).toBe(true);
       expect(sandboxStartCommand).not.toMatch(/boat prompt|claude -p|codex exec/);
-      expect(f.driver.close).toHaveBeenCalledOnce();
+      // One driver for credential verification, one for creation; both closed.
+      expect(f.driver.close).toHaveBeenCalledTimes(2);
     }),
 );
 
@@ -135,15 +137,17 @@ it.effect(
   () =>
     Effect.gen(function* () {
       const f = fixture();
-      const transport = vi.fn<typeof fetch>().mockResolvedValue(
-        new Response(
-          encodeTestJson({
-            code: "subscription_required",
-            message: "secret-token",
-            error: { code: "subscription_required", details: { token: "secret-token" } },
-          }),
-          { status: 402 },
-        ),
+      const transport = vi.fn<typeof fetch>().mockImplementation(async (url) =>
+        String(url).endsWith("/me")
+          ? new Response(encodeTestJson({ ok: true }))
+          : new Response(
+              encodeTestJson({
+                code: "subscription_required",
+                message: "secret-token",
+                error: { code: "subscription_required", details: { token: "secret-token" } },
+              }),
+              { status: 402 },
+            ),
       );
       f.factory.mockResolvedValue(
         makeBoatDriver({ token: "secret-token", tokenId: "" }, transport),
@@ -168,7 +172,7 @@ it.effect(
 );
 
 it.effect(
-  "Modal authentication failures reach the client and retain the named recovery volume",
+  "Modal authentication failures reach the client and retain the sandbox name for cleanup",
   () =>
     Effect.gen(function* () {
       const f = fixture();
@@ -249,7 +253,7 @@ it.effect(
     }),
 );
 
-it.effect("a failed graceful shutdown refuses snapshot and termination", () =>
+it.effect("a failed graceful shutdown refuses snapshot and keeps the sandbox running", () =>
   Effect.gen(function* () {
     const f = fixture();
     const manager = yield* f.make;
@@ -260,7 +264,10 @@ it.effect("a failed graceful shutdown refuses snapshot and termination", () =>
     });
     yield* Effect.result(manager.action({ id: sandbox.id, action: "pause", confirmed: true }));
     expect(f.driver.pause).not.toHaveBeenCalled();
-    expect((yield* manager.inventory).sandboxes[0]?.phase).toBe("error");
+    expect((yield* manager.inventory).sandboxes[0]).toMatchObject({
+      phase: "running",
+      detail: expect.stringContaining("Pause was refused"),
+    });
   }),
 );
 
@@ -313,6 +320,38 @@ it.effect("account replacement is refused while its sandboxes remain tracked", (
   }),
 );
 
+it.effect("rejected credentials are not saved", () =>
+  Effect.gen(function* () {
+    const f = fixture();
+    f.driver.verify = vi.fn(async () => {
+      throw new SandboxDriverError("Boat rejected the API key.");
+    });
+    const manager = yield* f.make;
+    const error = yield* Effect.flip(manager.configure({ provider: "boat", token: "bad-key" }));
+    expect(error.message).toBe("Boat rejected the API key.");
+    expect((yield* manager.inventory).configuredProviders).toEqual([]);
+    const swapped = yield* Effect.flip(
+      manager.configure({ provider: "modal", token: "ak-id", tokenId: "as-secret" }),
+    );
+    expect(swapped.message).toContain("look swapped");
+  }),
+);
+
+it.effect("a failed pairing reports the problem without marking a running sandbox failed", () =>
+  Effect.gen(function* () {
+    const f = fixture();
+    const manager = yield* f.make;
+    yield* manager.configure({ provider: "boat", token: "secret" });
+    const sandbox = yield* manager.create({ provider: "boat", label: "Task", confirmCost: true });
+    f.driver.exec = vi.fn(async () => "not json");
+    yield* Effect.flip(manager.action({ id: sandbox.id, action: "pair", confirmed: true }));
+    expect((yield* manager.inventory).sandboxes[0]).toMatchObject({
+      phase: "running",
+      detail: "Rove returned an invalid pairing response.",
+    });
+  }),
+);
+
 it.effect("pairing is one-time, is not persisted, and cannot wake paused compute", () =>
   Effect.gen(function* () {
     const f = fixture();
@@ -347,7 +386,7 @@ it.effect(
     }),
 );
 
-it.effect("incomplete Modal provisioning retains its named volume until explicit cleanup", () =>
+it.effect("incomplete Modal provisioning retains its sandbox name until explicit cleanup", () =>
   Effect.gen(function* () {
     const f = fixture();
     f.driver.create = vi.fn(async () => {

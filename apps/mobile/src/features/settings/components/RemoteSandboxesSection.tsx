@@ -17,6 +17,7 @@ import {
 import { useEffect, useRef, useState } from "react";
 import { Alert, TextInput, View } from "react-native";
 import { AppText as Text } from "../../../components/AppText";
+import { environmentCatalog } from "../../../connection/catalog";
 import { connectPairingUrl } from "../../../connection/onboarding";
 import { uuidv4 } from "../../../lib/uuid";
 import { sandboxEnvironment } from "../../../state/sandbox";
@@ -46,6 +47,7 @@ export function RemoteSandboxesSection({
   const getConfig = useAtomCommand(sandboxEnvironment.getConfig, { reportFailure: false });
   const pair = useAtomCommand(connectPairingUrl, { reportFailure: false });
   const createThread = useAtomCommand(threadEnvironment.create, { reportFailure: false });
+  const removeEnvironment = useAtomCommand(environmentCatalog.remove, { reportFailure: false });
   const [inventory, setInventory] = useState<SandboxInventory | null>(null);
   const [provider, setProvider] = useState<SandboxProvider>("boat");
   const [tokenId, setTokenId] = useState("");
@@ -58,8 +60,15 @@ export function RemoteSandboxesSection({
     let active = true;
     void inventoryCommand({ environmentId, input: {} }).then((result) => {
       if (!active) return;
-      if (result._tag === "Success") setInventory(result.value);
-      else setError("Could not read sandbox configuration.");
+      if (result._tag === "Failure") {
+        setError("Could not read sandbox configuration.");
+        return;
+      }
+      setInventory(result.value);
+      // Open on the account already in use rather than always on Boat.
+      setProvider(
+        result.value.sandboxes[0]?.provider ?? result.value.configuredProviders[0] ?? "boat",
+      );
     });
     return () => {
       active = false;
@@ -139,12 +148,12 @@ export function RemoteSandboxesSection({
         </Text>
         <Text className="text-sm text-foreground">
           {provider === "boat"
-            ? "Boat: 4 vCPU / 8 GB, currently $0.036/hour."
-            : "Modal: 2 cores / 8 GiB, up to 24 hours per run. Persistent volume and snapshots may cost extra."}
+            ? "Boat: 4 vCPU / 8 GB. Requires a paid Boat plan."
+            : "Modal: 2 cores / 8 GiB. Modal ends each run after 24 hours; pause before then to keep changes. Snapshots may cost extra."}
         </Text>
         <Text className="text-sm text-foreground-muted">
-          Credentials: {configured ? "configured" : "not configured"}. Saving them does not start
-          compute. Delete tracked sandboxes before changing accounts.
+          Credentials: {configured ? "verified" : "not configured"}. Saving checks them but does not
+          start compute. Delete tracked sandboxes before changing accounts.
         </Text>
         {provider === "modal" ? (
           <TextInput
@@ -305,6 +314,8 @@ export function RemoteSandboxesSection({
                       input: { id: sandbox.id, action: "delete", confirmed: true },
                     }),
                   );
+                  // Connecting saved the sandbox as an environment; drop it too.
+                  if (sandbox.environmentId) await removeEnvironment(sandbox.environmentId);
                 },
                 true,
               )
@@ -327,6 +338,7 @@ export function RemoteSandboxesSection({
                         input: { id: sandbox.id, action: "forget", confirmed: true },
                       }),
                     );
+                    if (sandbox.environmentId) await removeEnvironment(sandbox.environmentId);
                   },
                   true,
                 )
