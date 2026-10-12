@@ -121,8 +121,13 @@ function installElectronRuntime(electronDir, version) {
   const zipPath = NodePath.join(tempDir, `electron-v${version}-${hostPlatform}-${hostArch}.zip`);
 
   try {
+    // GitHub release downloads intermittently return 5xx; retry rather than
+    // failing the whole job.
     runChecked("curl", [
       "-fsSL",
+      "--retry",
+      "5",
+      "--retry-all-errors",
       `https://github.com/electron/electron/releases/download/v${version}/electron-v${version}-${hostPlatform}-${hostArch}.zip`,
       "-o",
       zipPath,
