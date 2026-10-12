@@ -4,6 +4,7 @@ import { useScopedSettings, useUpdateScopedSettings } from "./useScopedSettings"
 import { ScopedSwitch } from "./ScopedSwitch";
 import { ComputerUseSettings } from "./ComputerUseSettings";
 import { DeviceHostsSettings } from "./DeviceHostsSettings";
+import { RemoteSandboxesSettings } from "./RemoteSandboxesSettings";
 /**
  * Integrations settings - preferences for surfaces Rove Code embeds rather than
  * owns. Browser is the first section: the defaults a preview tab opens at,
@@ -1456,6 +1457,7 @@ export function IntegrationsSettingsPanel() {
           previewDefaults
         )}
       </SettingsSection>
+      <RemoteSandboxesSettings />
       <DeviceIntegrationSettings />
       <ComputerUseSettings />
     </SettingsPageContainer>

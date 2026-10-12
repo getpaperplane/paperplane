@@ -16,6 +16,7 @@ import { useAtomCommand } from "../../state/use-atom-command";
 import { useRemoteConnections } from "../../state/use-remote-environment-registry";
 import { ConnectionEnvironmentRow } from "../connection/ConnectionEnvironmentRow";
 import { SettingsActionRow } from "./components/SettingsActionRow";
+import { RemoteSandboxesSection } from "./components/RemoteSandboxesSection";
 import { SettingsScreen } from "./components/SettingsScreen";
 import { SettingsSection } from "./components/SettingsSection";
 import {
@@ -255,6 +256,9 @@ function EnvironmentDetail({ environmentId }: { readonly environmentId: Environm
                     />
                   ) : null}
                 </SettingsSection>
+                {capabilities?.remoteSandboxes === true ? (
+                  <RemoteSandboxesSection environmentId={environmentId} allowed={allowed} />
+                ) : null}
                 <SettingsSection title="Providers">
                   <SettingsActionRow
                     icon="arrow.clockwise"

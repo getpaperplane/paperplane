@@ -12,6 +12,8 @@ allowBuilds:
   "@google/genai": false
   browser-tabs-lock: false
   bufferutil: false
+  # Modal's cbor-x codec has a JavaScript fallback; no native install script is needed.
+  cbor-extract: false
   core-js: false
   electron: true
   electron-winstaller: false

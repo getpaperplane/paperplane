@@ -1,4 +1,5 @@
 import {
+  AuthAccessWriteScope,
   AuthOrchestrationOperateScope,
   AuthOrchestrationReadScope,
   AuthRelayReadScope,
@@ -17,6 +18,18 @@ import {
 describe("RPC authorization scopes", () => {
   it("declares exactly one scope for every RPC in the server group", () => {
     expect(new Set(Object.keys(RPC_REQUIRED_SCOPES))).toEqual(new Set(WsRpcGroup.requests.keys()));
+  });
+
+  it("requires administrative access for sandbox credentials and lifecycle controls", () => {
+    expect(requiredScopeForRpcMethod(WS_METHODS.sandboxInventory)).toBe(AuthOrchestrationReadScope);
+    for (const method of [
+      WS_METHODS.sandboxConfigure,
+      WS_METHODS.sandboxCreate,
+      WS_METHODS.sandboxAction,
+      WS_METHODS.sandboxLink,
+    ]) {
+      expect(requiredScopeForRpcMethod(method)).toBe(AuthAccessWriteScope);
+    }
   });
 
   it("lets read-only clients inspect worktrees without granting removal", () => {
