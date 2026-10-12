@@ -68,6 +68,12 @@ on:
         required: false
         default: false
         type: boolean
+      # Whether the job builds the desktop app. A CLI-only job (desktop: false,
+      # cli_archive: true) splits a slow target's two builds across runners.
+      desktop:
+        required: false
+        default: true
+        type: boolean
       version:
         required: true
         type: string
@@ -140,6 +146,27 @@ jobs:
           git sparse-checkout set --no-cone '/*' '!/.repos/'
           git checkout --detach FETCH_HEAD
 
+      # Only the desktop build needs these, but Ubuntu mirrors sometimes stall
+      # for minutes, so the install starts in the background here and is
+      # joined just before the desktop build.
+      - uses: ./.github/actions/setup-apt-mirrors
+        if: inputs.platform == 'linux'
+
+      - name: Start Linux desktop build libraries install
+        if: inputs.platform == 'linux'
+        shell: bash
+        run: |
+          cat > "$RUNNER_TEMP/apt.sh" <<'SCRIPT'
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y libsecret-1-dev pkg-config
+          if ! command -v magick >/dev/null 2>&1 && ! command -v convert >/dev/null 2>&1; then
+            sudo apt-get install -y imagemagick
+          fi
+          if command -v magick >/dev/null 2>&1; then magick -version; else convert -version; fi
+          SCRIPT
+          bash .github/scripts/background-start.sh apt bash "$RUNNER_TEMP/apt.sh"
+
       - name: Test Windows signing
         if: inputs.platform == 'win'
         shell: pwsh
@@ -164,6 +191,9 @@ jobs:
         with:
           path: ${{ steps.package_cache_path.outputs.path }}
           key: windows-release-packages-v1-${{ inputs.arch }}-${{ hashFiles('pnpm-lock.yaml') }}
+          # A lockfile change otherwise downloads every package again (2-5 min
+          # on windows-11-arm); an older store only needs the difference.
+          restore-keys: windows-release-packages-v1-${{ inputs.arch }}-
 
       # pnpm checks the lockfile and policy before reusing this result. A missing
       # artifact leaves the cache empty, so installation runs the checks again.
@@ -173,6 +203,25 @@ jobs:
         with:
           name: release-dependency-verification
           path: ${{ runner.temp }}/pnpm-metadata
+
+      # Electron and electron-builder's packaging tools (fpm, NSIS, AppImage)
+      # otherwise download from GitHub Releases on every run, which is slow and
+      # fails the build whenever GitHub returns a 5xx. Both versions are pinned
+      # in apps/desktop/package.json.
+      - name: Locate Electron download caches
+        if: inputs.desktop
+        shell: bash
+        run: |
+          echo "ELECTRON_CACHE=$RUNNER_TEMP/electron-downloads/electron" >> "$GITHUB_ENV"
+          echo "ELECTRON_BUILDER_CACHE=$RUNNER_TEMP/electron-downloads/electron-builder" >> "$GITHUB_ENV"
+
+      - name: Cache Electron downloads
+        if: inputs.desktop
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          path: ${{ runner.temp }}/electron-downloads
+          key: electron-downloads-v1-${{ inputs.platform }}-${{ inputs.arch }}-${{ hashFiles('apps/desktop/package.json') }}
+          restore-keys: electron-downloads-v1-${{ inputs.platform }}-${{ inputs.arch }}-
 
       - name: Install desktop dependencies
         env:
@@ -242,11 +291,10 @@ jobs:
       - name: Align package versions to release version
         run: node scripts/update-release-package-versions.ts "${{ inputs.version }}"
 
-      # Windows builds are the release's longest jobs, so release.yml starts
-      # them without `needs` on the bundle or the Linux CLI archive. Their setup
-      # overlaps those jobs, and each artifact is awaited just before its use.
+      # release.yml starts every platform without `needs` on the bundle (and
+      # Windows without the Linux CLI archive), so setup overlaps those jobs and
+      # each artifact is awaited just before its use.
       - name: Wait for JS bundle
-        if: inputs.platform == 'win'
         uses: ./.github/actions/wait-for-artifact
         with:
           name: js-bundle
@@ -285,25 +333,6 @@ jobs:
             Write-Error "Visual Studio Installer failed with exit code $code"
             exit $code
           }
-
-      - uses: ./.github/actions/setup-apt-mirrors
-        if: inputs.platform == 'linux'
-
-      - name: Install Linux desktop build libraries
-        if: inputs.platform == 'linux'
-        shell: bash
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libsecret-1-dev pkg-config
-          if ! command -v magick >/dev/null 2>&1 && ! command -v convert >/dev/null 2>&1; then
-              sudo apt-get install -y imagemagick
-          fi
-
-          if command -v magick >/dev/null 2>&1; then
-              magick -version
-          else
-              convert -version
-          fi
 
       - name: Prepare Azure Trusted Signing
         if: inputs.platform == 'win' && vars.WINDOWS_SIGNING_MODE != 'self-signed'
@@ -367,22 +396,6 @@ jobs:
             Select-Object -Unique
           "PSModulePath=$($modulePathEntries -join ';')" >> $env:GITHUB_ENV
 
-      # The WSL backend runs the Linux CLI archive inside the distro, so the
-      # Windows desktop embeds the same-arch archive the release attaches.
-      - name: Wait for Linux CLI archive for WSL
-        if: inputs.platform == 'win'
-        uses: ./.github/actions/wait-for-artifact
-        with:
-          name: cli-linux-${{ inputs.arch }}
-          job: Build Linux ${{ inputs.arch }}
-
-      - name: Download Linux CLI archive for WSL
-        if: inputs.platform == 'win'
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
-        with:
-          name: cli-linux-${{ inputs.arch }}
-          path: wsl-runtime
-
       - name: Import self-signed Windows identity
         if: inputs.platform == 'win' && vars.WINDOWS_SIGNING_MODE == 'self-signed'
         shell: pwsh
@@ -400,11 +413,149 @@ jobs:
           CSC_NAME: ${{ vars.MACOS_SIGNING_IDENTITY || 'Rove Code Release Signing' }}
         run: bash scripts/import-macos-self-signed.sh
 
+      # The CLI archive and the desktop app build concurrently and both ship
+      # the resource monitor, so it is compiled once here, up front.
+      - name: Build resource monitor
+        if: steps.resource_monitor_cache.outputs.cache-hit != 'true'
+        shell: bash
+        run: cargo build --locked --release --manifest-path native/resource-monitor/Cargo.toml --target "${{ inputs.rust_target }}"
+
+      - name: Import macOS signing certificate for the CLI archive
+        if: inputs.cli_archive && inputs.platform == 'mac' && vars.MACOS_SIGNING_MODE != 'self-signed'
+        shell: bash
+        env:
+          CSC_LINK: ${{ secrets.CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          if [[ -z "$CSC_LINK" || -z "$CSC_KEY_PASSWORD" ]]; then
+            echo "macOS CLI signing disabled (missing CSC_LINK); the archive is signed ad hoc."
+            exit 0
+          fi
+          keychain="$RUNNER_TEMP/rove-cli-signing.keychain-db"
+          keychain_password="$(openssl rand -hex 16)"
+          cert_path="$RUNNER_TEMP/rove-cli-signing.p12"
+          printf '%s' "$CSC_LINK" | base64 --decode > "$cert_path"
+          security create-keychain -p "$keychain_password" "$keychain"
+          security set-keychain-settings -lut 21600 "$keychain"
+          security unlock-keychain -p "$keychain_password" "$keychain"
+          security import "$cert_path" -k "$keychain" -P "$CSC_KEY_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$keychain_password" "$keychain" >/dev/null
+          security list-keychains -d user -s "$keychain" $(security list-keychains -d user | tr -d '"')
+          identity="$(security find-identity -v -p codesigning "$keychain" | sed -n 's/.*"\(Developer ID Application: [^"]*\)".*/\1/p' | head -n 1)"
+          if [[ -z "$identity" ]]; then
+            echo "No Developer ID Application identity found in CSC_LINK." >&2
+            exit 1
+          fi
+          echo "::add-mask::$keychain_password"
+          echo "ROVE_CLI_MAC_SIGN_IDENTITY=$identity" >> "$GITHUB_ENV"
+          echo "macOS CLI signing enabled."
+
+      - name: Stage resource monitor for the CLI archive
+        if: inputs.cli_archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          binary_name="rove-resource-monitor"
+          if [[ "${{ inputs.platform }}" == "win" ]]; then
+            binary_name="${binary_name}.exe"
+          fi
+          target_dir="$RUNNER_TEMP/cli-resource-monitor/${{ inputs.resource_key }}"
+          mkdir -p "$target_dir"
+          cp "native/resource-monitor/target/${{ inputs.rust_target }}/release/${binary_name}" "$target_dir/$binary_name"
+
+      # The CLI archive (single-executable, archive, smoke test) builds in the
+      # background while the desktop app builds; neither reads the other's
+      # output. Linux joins it first instead, because the Windows jobs embed
+      # the Linux archive as their WSL runtime and wait for its upload.
+      #
+      # The single-executable is built with a Node that supports --build-sea
+      # (25.7+); the repo itself stays on the engines.node version. It always
+      # injects into the runner's own Node: tsdown's cross-target download path
+      # runs `tar` on a drive-letter path on Windows, which GNU tar reads as a
+      # remote host, and a cross-built macOS binary cannot be smoke-tested.
+      - name: Start CLI archive build
+        if: inputs.cli_archive
+        shell: bash
+        env:
+          ROVE_MACOS_SIGNING_MODE: ${{ vars.MACOS_SIGNING_MODE || 'developer-id' }}
+          ROVE_WINDOWS_SIGNING_MODE: ${{ vars.WINDOWS_SIGNING_MODE || 'azure' }}
+          WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
+          APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
+          APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
+          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          AZURE_TRUSTED_SIGNING_ENDPOINT: ${{ secrets.AZURE_TRUSTED_SIGNING_ENDPOINT }}
+          AZURE_TRUSTED_SIGNING_ACCOUNT_NAME: ${{ secrets.AZURE_TRUSTED_SIGNING_ACCOUNT_NAME }}
+          AZURE_TRUSTED_SIGNING_CERTIFICATE_PROFILE_NAME: ${{ secrets.AZURE_TRUSTED_SIGNING_CERTIFICATE_PROFILE_NAME }}
+        run: |
+          set -euo pipefail
+          if [[ "${{ inputs.platform }}" == "mac" && "$ROVE_MACOS_SIGNING_MODE" == "self-signed" ]]; then
+            unset APPLE_API_KEY APPLE_API_KEY_ID APPLE_API_ISSUER
+          fi
+          if [[ "${{ inputs.platform }}" == "mac" && -n "${APPLE_API_KEY:-}" ]]; then
+            key_path="$RUNNER_TEMP/AuthKey_cli_${APPLE_API_KEY_ID}.p8"
+            printf '%s' "$APPLE_API_KEY" > "$key_path"
+            export APPLE_API_KEY="$key_path"
+          fi
+          cat > "$RUNNER_TEMP/cli-archive.sh" <<'SCRIPT'
+          set -euo pipefail
+          # The exact version, not a major: vp downloads it from nodejs.org/dist on
+          # the runner, and only exact versions have a dist directory. Keep in
+          # step with SEA_NODE_VERSION in apps/server/vite.config.ts.
+          VP_NODE_VERSION=26.8.2 node apps/server/scripts/cli.ts build-exe --verbose
+          node scripts/build-cli-archive.ts \
+            --platform "${{ inputs.platform }}" \
+            --arch "${{ inputs.arch }}" \
+            --version "${{ inputs.version }}" \
+            --resource-monitor-dir "$RUNNER_TEMP/cli-resource-monitor" \
+            --output-dir release-cli
+          archive=(release-cli/*)
+          node scripts/smoke-cli-archive.ts --archive "${archive[@]}" --expect-version "${{ inputs.version }}"
+          SCRIPT
+          bash .github/scripts/background-start.sh cli-archive bash "$RUNNER_TEMP/cli-archive.sh"
+
+      - name: Finish CLI archive build
+        if: inputs.cli_archive && inputs.platform == 'linux'
+        shell: bash
+        run: bash .github/scripts/background-join.sh cli-archive
+
+      - name: Upload CLI archive
+        if: inputs.cli_archive && inputs.platform == 'linux'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: cli-${{ inputs.platform }}-${{ inputs.arch }}
+          path: release-cli/*
+          if-no-files-found: error
+
+      - name: Finish Linux desktop build libraries install
+        if: inputs.platform == 'linux'
+        shell: bash
+        run: bash .github/scripts/background-join.sh apt
+
+      - name: Wait for Linux CLI archive for WSL
+        if: inputs.platform == 'win' && inputs.desktop
+        uses: ./.github/actions/wait-for-artifact
+        with:
+          name: cli-linux-${{ inputs.arch }}
+          job: Build Linux ${{ inputs.arch }}
+
+      - name: Download Linux CLI archive for WSL
+        if: inputs.platform == 'win' && inputs.desktop
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: cli-linux-${{ inputs.arch }}
+          path: wsl-runtime
+
       - name: Build desktop artifact
+        if: inputs.desktop
         shell: bash
         env:
           pnpm_config_cache_dir: ${{ runner.temp }}/pnpm-metadata
-          ROVE_DESKTOP_REUSE_RESOURCE_MONITOR: ${{ steps.resource_monitor_cache.outputs.cache-hit == 'true' }}
+          # Built (or restored) before the CLI archive, which ships it too.
+          ROVE_DESKTOP_REUSE_RESOURCE_MONITOR: true
           ROVE_DESKTOP_REUSE_LINUX_CAPTURE_HELPERS: ${{ steps.capture_helper_cache.outputs.cache-hit == 'true' }}
           ROVE_MACOS_SIGNING_MODE: ${{ vars.MACOS_SIGNING_MODE || 'developer-id' }}
           ROVE_WINDOWS_SIGNING_MODE: ${{ vars.WINDOWS_SIGNING_MODE || 'azure' }}
@@ -566,105 +717,13 @@ jobs:
             } >> "$GITHUB_STEP_SUMMARY"
           fi
 
-      # The single-executable is built with a Node that supports --build-sea
-      # (25.7+); the repo itself stays on the engines.node version. It always
-      # injects into the runner's own Node: tsdown's cross-target download path
-      # runs `tar` on a drive-letter path on Windows, which GNU tar reads as a
-      # remote host, and a cross-built macOS binary cannot be smoke-tested.
-      - name: Build CLI single-executable
-        if: inputs.cli_archive
+      - name: Finish CLI archive build
+        if: inputs.cli_archive && inputs.platform != 'linux'
         shell: bash
-        env:
-          # The exact version, not a major: vp downloads it from nodejs.org/dist on
-          # the runner, and only exact versions have a dist directory. Keep in
-          # step with SEA_NODE_VERSION in apps/server/vite.config.ts.
-          VP_NODE_VERSION: "26.8.2"
-        run: node apps/server/scripts/cli.ts build-exe --verbose
-
-      - name: Import macOS signing certificate for the CLI archive
-        if: inputs.cli_archive && inputs.platform == 'mac' && vars.MACOS_SIGNING_MODE != 'self-signed'
-        shell: bash
-        env:
-          CSC_LINK: ${{ secrets.CSC_LINK }}
-          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
-        run: |
-          set -euo pipefail
-          if [[ -z "$CSC_LINK" || -z "$CSC_KEY_PASSWORD" ]]; then
-            echo "macOS CLI signing disabled (missing CSC_LINK); the archive is signed ad hoc."
-            exit 0
-          fi
-          keychain="$RUNNER_TEMP/rove-cli-signing.keychain-db"
-          keychain_password="$(openssl rand -hex 16)"
-          cert_path="$RUNNER_TEMP/rove-cli-signing.p12"
-          printf '%s' "$CSC_LINK" | base64 --decode > "$cert_path"
-          security create-keychain -p "$keychain_password" "$keychain"
-          security set-keychain-settings -lut 21600 "$keychain"
-          security unlock-keychain -p "$keychain_password" "$keychain"
-          security import "$cert_path" -k "$keychain" -P "$CSC_KEY_PASSWORD" -T /usr/bin/codesign
-          security set-key-partition-list -S apple-tool:,apple: -s -k "$keychain_password" "$keychain" >/dev/null
-          security list-keychains -d user -s "$keychain" $(security list-keychains -d user | tr -d '"')
-          identity="$(security find-identity -v -p codesigning "$keychain" | sed -n 's/.*"\(Developer ID Application: [^"]*\)".*/\1/p' | head -n 1)"
-          if [[ -z "$identity" ]]; then
-            echo "No Developer ID Application identity found in CSC_LINK." >&2
-            exit 1
-          fi
-          echo "::add-mask::$keychain_password"
-          echo "ROVE_CLI_MAC_SIGN_IDENTITY=$identity" >> "$GITHUB_ENV"
-          echo "macOS CLI signing enabled."
-
-      - name: Stage resource monitor for the CLI archive
-        if: inputs.cli_archive
-        shell: bash
-        run: |
-          set -euo pipefail
-          binary_name="rove-resource-monitor"
-          if [[ "${{ inputs.platform }}" == "win" ]]; then
-            binary_name="${binary_name}.exe"
-          fi
-          target_dir="$RUNNER_TEMP/cli-resource-monitor/${{ inputs.resource_key }}"
-          mkdir -p "$target_dir"
-          cp "native/resource-monitor/target/${{ inputs.rust_target }}/release/${binary_name}" "$target_dir/$binary_name"
-
-      - name: Build CLI archive
-        if: inputs.cli_archive
-        shell: bash
-        env:
-          ROVE_MACOS_SIGNING_MODE: ${{ vars.MACOS_SIGNING_MODE || 'developer-id' }}
-          ROVE_WINDOWS_SIGNING_MODE: ${{ vars.WINDOWS_SIGNING_MODE || 'azure' }}
-          WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
-          APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
-          APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
-          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
-          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-          AZURE_TRUSTED_SIGNING_ENDPOINT: ${{ secrets.AZURE_TRUSTED_SIGNING_ENDPOINT }}
-          AZURE_TRUSTED_SIGNING_ACCOUNT_NAME: ${{ secrets.AZURE_TRUSTED_SIGNING_ACCOUNT_NAME }}
-          AZURE_TRUSTED_SIGNING_CERTIFICATE_PROFILE_NAME: ${{ secrets.AZURE_TRUSTED_SIGNING_CERTIFICATE_PROFILE_NAME }}
-        run: |
-          set -euo pipefail
-          if [[ "${{ inputs.platform }}" == "mac" && "$ROVE_MACOS_SIGNING_MODE" == "self-signed" ]]; then
-            unset APPLE_API_KEY APPLE_API_KEY_ID APPLE_API_ISSUER
-          fi
-          if [[ "${{ inputs.platform }}" == "mac" && -n "${APPLE_API_KEY:-}" ]]; then
-            key_path="$RUNNER_TEMP/AuthKey_cli_${APPLE_API_KEY_ID}.p8"
-            printf '%s' "$APPLE_API_KEY" > "$key_path"
-            export APPLE_API_KEY="$key_path"
-          fi
-          node scripts/build-cli-archive.ts \
-            --platform "${{ inputs.platform }}" \
-            --arch "${{ inputs.arch }}" \
-            --version "${{ inputs.version }}" \
-            --resource-monitor-dir "$RUNNER_TEMP/cli-resource-monitor" \
-            --output-dir release-cli
-
-      - name: Smoke-test CLI archive
-        if: inputs.cli_archive
-        shell: bash
-        run: node scripts/smoke-cli-archive.ts --archive release-cli/* --expect-version "${{ inputs.version }}"
+        run: bash .github/scripts/background-join.sh cli-archive
 
       - name: Upload CLI archive
-        if: inputs.cli_archive
+        if: inputs.cli_archive && inputs.platform != 'linux'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: cli-${{ inputs.platform }}-${{ inputs.arch }}
@@ -672,6 +731,7 @@ jobs:
           if-no-files-found: error
 
       - name: Collect release assets
+        if: inputs.desktop
         shell: bash
         run: |
           set -euo pipefail
@@ -718,6 +778,7 @@ jobs:
           fi
 
       - name: Collect resource monitor
+        if: inputs.desktop
         shell: bash
         run: |
           set -euo pipefail
@@ -731,6 +792,7 @@ jobs:
           cp "$source_path" "$target_dir/$binary_name"
 
       - name: Upload build artifacts
+        if: inputs.desktop
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: desktop-${{ inputs.platform }}-${{ inputs.arch }}
@@ -738,6 +800,7 @@ jobs:
           if-no-files-found: error
 
       - name: Upload resource monitor
+        if: inputs.desktop
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: resource-monitor-${{ inputs.resource_key }}

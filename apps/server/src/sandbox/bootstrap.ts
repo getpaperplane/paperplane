@@ -49,10 +49,15 @@ mkdir -p "$ROOT/data" "$ROOT/workspace" "$RUNTIME" || exit ${SANDBOX_INSTALL_FAI
 export ROVE_SANDBOX_RUNTIME_DIR="$RUNTIME"
 installed() { [ -x "$(node -p ${quote(resolveBinary)} 2>/dev/null)" ] && ${WRAPPER} --version >/dev/null 2>&1; }
 # A partial install must not wedge every later repair, so verify the binary.
+# npm exits 0 when an optional platform package is missing (npm can take a while
+# to serve freshly published binaries), so each attempt is checked by running it.
 if ! installed; then
-  rm -rf "$RUNTIME/node_modules" "$RUNTIME/package.json" "$RUNTIME/package-lock.json"
-  { npm install --prefix "$RUNTIME" --no-audit --no-fund ${quote(`@rove-code/cli@${packageJson.version}`)} ||
-    npm install --prefix "$RUNTIME" --no-audit --no-fund @rove-code/cli@latest; } >"$ROOT/install.log" 2>&1
+  : >"$ROOT/install.log"
+  for spec in ${quote(`@rove-code/cli@${packageJson.version}`)} @rove-code/cli@latest; do
+    rm -rf "$RUNTIME/node_modules" "$RUNTIME/package.json" "$RUNTIME/package-lock.json"
+    npm install --prefix "$RUNTIME" --no-audit --no-fund "$spec" >>"$ROOT/install.log" 2>&1
+    installed && break
+  done
   installed || exit ${SANDBOX_INSTALL_FAILED}
 fi
 ${nodeCommand(`${identityHelpers}

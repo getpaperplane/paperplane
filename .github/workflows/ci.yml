@@ -20,17 +20,19 @@ jobs:
   # Preserve the required status names while their work runs independently.
   check:
     name: Check
-    needs: [check_static, desktop_build]
+    needs: [check_static, typecheck, desktop_build]
     if: always()
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
-      - name: Require static checks and desktop build
+      - name: Require static checks, typecheck, and desktop build
         env:
           STATIC_RESULT: ${{ needs.check_static.result }}
+          TYPECHECK_RESULT: ${{ needs.typecheck.result }}
           BUILD_RESULT: ${{ needs.desktop_build.result }}
         run: |
           test "$STATIC_RESULT" = success
+          test "$TYPECHECK_RESULT" = success
           test "$BUILD_RESULT" = success
 
   check_static:
@@ -71,6 +73,31 @@ jobs:
       - name: Check
         run: vp check
 
+  # Split from Static Checks: the two halves take about as long as each other,
+  # so running them on separate runners halves that critical path.
+  typecheck:
+    name: Typecheck
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          sparse-checkout: |
+            /*
+            !/.repos/
+          sparse-checkout-cone-mode: false
+
+      - name: Setup Vite+
+        uses: voidzero-dev/setup-vp@v1
+        with:
+          node-version-file: package.json
+          cache: true
+          run-install: true
+
+      - name: Ensure Electron runtime is installed
+        run: vp run --filter @rove-code/desktop ensure:electron
+
       - name: Typecheck
         run: vpr typecheck
 
@@ -110,11 +137,16 @@ jobs:
       - name: Verify preload bundle output
         run: node apps/desktop/scripts/verify-preload-bundle.mjs
 
+      # Folded in from its own job: it needs the same install and takes
+      # seconds, and every job slot counts against the concurrent-job limit.
+      - name: Exercise release-only workflow steps
+        run: node scripts/release-smoke.ts
+
   # Large client suites get their own runners so they cannot queue behind
   # desktop and script tests or compete with each other's isolated workers.
   test:
     name: Test
-    needs: [test_packages, test_client, test_server, windows_release]
+    needs: [test_packages, test_desktop, test_client, test_server, windows_release]
     if: always()
     runs-on: ubuntu-24.04
     timeout-minutes: 5
@@ -122,11 +154,13 @@ jobs:
       - name: Require package, client, and server tests
         env:
           PACKAGES_RESULT: ${{ needs.test_packages.result }}
+          DESKTOP_RESULT: ${{ needs.test_desktop.result }}
           CLIENT_RESULT: ${{ needs.test_client.result }}
           SERVER_RESULT: ${{ needs.test_server.result }}
           WINDOWS_RESULT: ${{ needs.windows_release.result }}
         run: |
           test "$PACKAGES_RESULT" = success
+          test "$DESKTOP_RESULT" = success
           test "$CLIENT_RESULT" = success
           test "$SERVER_RESULT" = success
           test "$WINDOWS_RESULT" = success
@@ -201,7 +235,42 @@ jobs:
           vp run --parallel --concurrency-limit 4
           --filter '!@rove-code/server' --filter '!@rove-code/monorepo'
           --filter '!@rove-code/web' --filter '!@rove-code/mobile'
-          --filter '!@rove-code/client-runtime' test
+          --filter '!@rove-code/client-runtime' --filter '!@rove-code/desktop' test
+
+  # Split from Test Packages: desktop and relay were each about two minutes
+  # and competed for the same four CPUs.
+  test_desktop:
+    name: Test desktop
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          sparse-checkout: |
+            /*
+            !/.repos/
+          sparse-checkout-cone-mode: false
+
+      - name: Setup Vite+
+        uses: voidzero-dev/setup-vp@v1
+        with:
+          node-version-file: package.json
+          cache: true
+          run-install: true
+
+      - name: Ensure Electron runtime is installed
+        run: vp run --filter @rove-code/desktop ensure:electron
+
+      - uses: ./.github/actions/setup-apt-mirrors
+
+      - name: Install browser secret helper build libraries
+        run: |
+          sudo sed -i 's|http://|https://|g' /etc/apt/blacksmith-ubuntu-mirrors.txt /etc/apt/sources.list.d/ubuntu.sources
+          sudo apt-get update && sudo apt-get install -y libsecret-1-dev pkg-config
+
+      - name: Test
+        run: vp run --filter @rove-code/desktop test
 
   test_client:
     name: Test ${{ matrix.workspace }} ${{ matrix.shard }}
@@ -232,6 +301,8 @@ jobs:
             !/.repos/
           sparse-checkout-cone-mode: false
 
+      # A full install: `vp run` loads every package's config, and server
+      # tests import mobile sources, so filtered installs break them.
       - name: Setup Vite+
         uses: voidzero-dev/setup-vp@v1
         with:
@@ -253,7 +324,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3, 4]
+        shard: [1, 2, 3, 4, 5, 6]
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -263,6 +334,8 @@ jobs:
             !/.repos/
           sparse-checkout-cone-mode: false
 
+      # A full install: `vp run` loads every package's config, and server
+      # tests import mobile sources, so filtered installs break them.
       - name: Setup Vite+
         uses: voidzero-dev/setup-vp@v1
         with:
@@ -452,28 +525,3 @@ jobs:
 
       - name: Lint mobile native sources
         run: vp run lint:mobile
-
-  release_smoke:
-    name: Release Smoke
-    runs-on: ubuntu-24.04
-    timeout-minutes: 10
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          sparse-checkout: |
-            /*
-            !/.repos/
-          sparse-checkout-cone-mode: false
-
-      - name: Setup Vite+
-        uses: voidzero-dev/setup-vp@v1
-        with:
-          node-version-file: package.json
-          cache: true
-          run-install: |
-            args:
-              - --filter=@rove-code/scripts...
-
-      - name: Exercise release-only workflow steps
-        run: node scripts/release-smoke.ts

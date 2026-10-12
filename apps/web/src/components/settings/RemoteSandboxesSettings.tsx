@@ -428,7 +428,11 @@ function SandboxControls({
         }
         status={
           pendingIn("create") ??
-          errorIn("create") ??
+          // A failure recorded on the new sandbox's row is shown there instead.
+          errorIn(
+            "create",
+            inventory?.sandboxes.find((sandbox) => sandbox.detail === error?.label)?.detail,
+          ) ??
           (!configured && inventory !== null ? (
             <span className="text-muted-foreground">Save {providerName} credentials first.</span>
           ) : null)

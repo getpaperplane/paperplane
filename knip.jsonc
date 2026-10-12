@@ -17,7 +17,9 @@
     },
     "scripts": {
       // Knip loads its preprocessor through a CLI option; native verification runs directly.
-      "entry": ["knip-schemas.ts", "mobile-native-client.ts"],
+      // release-desktop.yml runs the CLI smoke test from a generated background
+      // script, where knip's workflow parsing can't see it.
+      "entry": ["knip-schemas.ts", "mobile-native-client.ts", "smoke-cli-archive.ts"],
     },
     "apps/server": {
       // Vite+ pack entries and the launcher used by installed background services.
