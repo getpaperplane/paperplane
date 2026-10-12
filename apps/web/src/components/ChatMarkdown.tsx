@@ -92,6 +92,8 @@ import remarkBreaks from "remark-breaks";
 import { parseAssistantCitationHref } from "@rove-code/shared/assistantCitations";
 import { parseComposerContextHref } from "@rove-code/shared/composerContextReferences";
 import { AssistantCitationChip } from "./chat/AssistantCitationChip";
+import { splitRichResponse } from "@rove-code/shared/richResponse";
+import { RichResponseContent } from "./chat/RichResponseContent";
 import remarkGfm from "remark-gfm";
 import { remarkGithubAlerts } from "../markdown-github-alerts";
 import {
@@ -212,6 +214,8 @@ interface ChatMarkdownProps {
   environmentId?: EnvironmentId | undefined;
   onTaskListChange?: ((input: { markerOffset: number; checked: boolean }) => void) | undefined;
   isStreaming?: boolean;
+  /** Native response fences are enabled only for assistant conversation messages. */
+  renderRichResponses?: boolean;
   skills?: ReadonlyArray<Pick<ServerProviderSkill, "name" | "displayName">>;
   className?: string;
   /** Treat single newlines as hard breaks — chat-style user input. */
@@ -2303,6 +2307,7 @@ function useChatMarkdownState({
   environmentId: explicitEnvironmentId,
   onTaskListChange,
   isStreaming = false,
+  renderRichResponses = false,
   skills = EMPTY_MARKDOWN_SKILLS,
   onUseArtifactTemplate,
   onRunShellCommand,
@@ -2695,8 +2700,13 @@ function useChatMarkdownState({
     ],
   );
 
+  const richResponses = useMemo(
+    () => (renderRichResponses ? splitRichResponse(text, isStreaming) : []),
+    [renderRichResponses, text, isStreaming],
+  );
   const componentState = useMemo(
     () => ({
+      richResponses,
       cwd,
       diffThemeName,
       environmentId,
@@ -2757,6 +2767,7 @@ function useChatMarkdownState({
       text,
       threadRef,
       updateThreadPullRequestLink,
+      richResponses,
     ],
   );
   return {
@@ -3275,9 +3286,20 @@ const CHAT_MARKDOWN_COMPONENTS = {
     return <MarkdownDetails open={detailsOpen}>{children}</MarkdownDetails>;
   },
   pre: function MarkdownPre({ node, children, ...props }) {
-    const { resolvedTheme, diffThemeName, isStreaming, onRunShellCommand, text } = use(
-      ChatMarkdownRendererContext,
+    const { resolvedTheme, diffThemeName, isStreaming, onRunShellCommand, text, richResponses } =
+      use(ChatMarkdownRendererContext);
+    const richResponse = richResponses.find(
+      (segment) =>
+        segment.sourceOffset === node?.position?.start.offset && segment.kind !== "markdown",
     );
+    if (richResponse?.kind === "rich-response")
+      return <RichResponseContent response={richResponse.response} />;
+    if (richResponse?.kind === "pending")
+      return (
+        <p role="status" className="py-2 text-sm text-muted-foreground">
+          Preparing rich response…
+        </p>
+      );
     const codeBlock = extractCodeBlock(children);
     if (!codeBlock) {
       return <pre {...props}>{children}</pre>;
