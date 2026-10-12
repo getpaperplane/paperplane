@@ -1,6 +1,7 @@
 import { SANDBOX_PORT, type RemoteSandbox, type SandboxProvider } from "@rove-code/contracts";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
+import { sandboxCommandFailure } from "./bootstrap.ts";
 import { boatRequestError, modalOperation, SandboxDriverError } from "./errors.ts";
 
 export const SandboxCredentials = Schema.Struct({ token: Schema.String, tokenId: Schema.String });
@@ -13,7 +14,12 @@ export interface SandboxHandle {
   paused: boolean;
   deletionOperationId?: string;
 }
+// Bootstrap installs Rove and waits for it to become ready; both can be slow.
+const COMMAND_TIMEOUT_SECONDS = 600;
+
 export interface SandboxDriver {
+  /** Checks the account credentials with a free, read-only request. */
+  verify: () => Promise<void>;
   create: (id: string) => Promise<SandboxHandle>;
   resume: (handle: SandboxHandle) => Promise<SandboxHandle>;
   pause: (handle: SandboxHandle, saveSnapshot: (id: string) => Promise<void>) => Promise<void>;
@@ -35,6 +41,7 @@ const BoatCommandResponse = Schema.Struct({
   exitCode: Schema.NullOr(Schema.Int),
   stdout: Schema.String,
 });
+const BoatHostResponse = Schema.Struct({ url: Schema.String });
 const BoatDeletionResponse = Schema.Struct({
   operation: Schema.Struct({ id: Schema.String, status: Schema.String }),
 });
@@ -42,6 +49,7 @@ const BoatDeletionResponse = Schema.Struct({
 const decodeBoatSandbox = Schema.decodeUnknownSync(BoatSandboxResponse);
 const decodeBoatCommand = Schema.decodeUnknownSync(BoatCommandResponse);
 const decodeBoatDeletion = Schema.decodeUnknownSync(BoatDeletionResponse);
+const decodeBoatHost = Schema.decodeUnknownSync(BoatHostResponse);
 
 export function makeBoatDriver(
   credentials: SandboxCredentials,
@@ -64,7 +72,9 @@ export function makeBoatDriver(
       method,
       headers,
       body: body === undefined ? null : JSON.stringify(body),
-      signal: AbortSignal.timeout(method === "GET" ? 15_000 : 200_000),
+      signal: AbortSignal.timeout(
+        method === "GET" ? 15_000 : (COMMAND_TIMEOUT_SECONDS + 30) * 1000,
+      ),
     }).catch((error: unknown) => {
       const timedOut =
         error instanceof Error && ["TimeoutError", "AbortError"].includes(error.name);
@@ -97,15 +107,22 @@ export function makeBoatDriver(
   const exec = async (handle: SandboxHandle, command: string) => {
     await ready(handle);
     const result = decodeBoatCommand(
-      await request(`${path(handle)}/commands`, { command, timeoutSeconds: 180 }),
+      await request(`${path(handle)}/commands`, {
+        command,
+        timeoutSeconds: COMMAND_TIMEOUT_SECONDS,
+      }),
     );
     if (!result.success || result.exitCode !== 0)
       throw new SandboxDriverError(
-        "Sandbox command failed. Inspect the sandbox in Boat for details.",
+        (result.exitCode === null ? undefined : sandboxCommandFailure(result.exitCode)) ??
+          "Sandbox command failed. Inspect the sandbox in Boat for details.",
       );
     return result.stdout;
   };
   return {
+    verify: async () => {
+      await request("/me");
+    },
     create: async (id) => {
       const result = decodeBoatSandbox(
         await request("/sandboxes", { type: "default", noEnv: true, ttlSeconds: null }, "POST", id),
@@ -159,35 +176,37 @@ export function makeBoatDriver(
     },
     exec,
     expose: async (handle) => {
-      // The Boat proxy token isn't compatible with Rove's pairing/WebSocket
-      // URLs. Rove's own authentication, not an ungated agent endpoint, owns access.
-      const output = await exec(handle, `host ${SANDBOX_PORT} --public`);
-      const url = output.match(/https:\/\/[a-zA-Z0-9-]+\.on\.boat\.dev/u)?.[0];
-      if (!url)
+      await ready(handle);
+      // Boat's proxy token isn't compatible with Rove's pairing/WebSocket URLs.
+      // Rove's own authentication, not an ungated agent endpoint, owns access.
+      const result = decodeBoatHost(
+        await request(`${path(handle)}/host`, { port: SANDBOX_PORT, public: true }),
+      );
+      const url = new URL(result.url);
+      if (url.protocol !== "https:")
         throw new SandboxDriverError(
           "Boat did not return a hosted URL. Check the sandbox's hosted ports in the Boat dashboard, then resume to repair it.",
         );
-      return url;
+      return url.origin;
     },
     close: () => {},
   };
 }
-
-// Modal does not allow volume mounts at /root. Keep HOME on the dedicated
-// volume so bootstrap, provider credentials and workspaces persist together.
-const MODAL_HOME = "/rove-home";
 
 // The gRPC SDK is loaded only for an explicit Modal lifecycle operation, not at startup.
 export const makeSandboxDriver: SandboxDriverFactory = async (provider, credentials) => {
   if (provider === "boat") return makeBoatDriver(credentials);
   const { ModalClient, NotFoundError } = await import("modal");
   const client = new ModalClient({ tokenId: credentials.tokenId, tokenSecret: credentials.token });
-  const create = async (volumeName: string, snapshotId?: string): Promise<SandboxHandle> => {
+  // State lives on the sandbox filesystem and persists through pause snapshots,
+  // as Modal recommends for work beyond its 24-hour run limit. Modal volumes
+  // can't hold it: they reject hard links, which npm and Rove's atomic writes need.
+  // `name` (stored as volumeName for older records) finds unrecorded sandboxes.
+  const create = async (name: string, snapshotId?: string): Promise<SandboxHandle> => {
     const app = await client.apps.fromName("rove-thread-sandboxes", { createIfMissing: true });
     const image = snapshotId
       ? await client.images.fromId(snapshotId)
       : client.images.fromRegistry("node:24-bookworm");
-    const volume = await client.volumes.fromName(volumeName, { createIfMissing: true });
     const sandbox = await client.sandboxes.create(app, image, {
       cpu: 2,
       cpuLimit: 2,
@@ -196,15 +215,20 @@ export const makeSandboxDriver: SandboxDriverFactory = async (provider, credenti
       runtime: "vm",
       timeoutMs: 24 * 60 * 60 * 1000,
       encryptedPorts: [SANDBOX_PORT],
-      env: { HOME: MODAL_HOME },
-      // Thread state survives the 24-hour compute limit even without a manual
-      // filesystem snapshot. This volume is deleted only by explicit deletion.
-      volumes: { [MODAL_HOME]: volume },
-      name: volumeName,
+      name,
     });
-    return { remoteId: sandbox.sandboxId, url: null, snapshotIds: [], volumeName, paused: false };
+    return {
+      remoteId: sandbox.sandboxId,
+      url: null,
+      snapshotIds: [],
+      volumeName: name,
+      paused: false,
+    };
   };
   const driver: SandboxDriver = {
+    verify: async () => {
+      await client.apps.fromName("rove-thread-sandboxes", { createIfMissing: true });
+    },
     create: (id) => create(`rove-${id}`),
     resume: async (handle) => {
       if (!handle.paused) {
@@ -215,12 +239,11 @@ export const makeSandboxDriver: SandboxDriverFactory = async (provider, credenti
           if (!(error instanceof NotFoundError)) throw error;
         }
       }
-      if (!handle.volumeName)
-        throw new SandboxDriverError(
-          "The Modal recovery volume is missing. Check the Modal dashboard before deleting this record; its files cannot be restored without the volume.",
-        );
       return {
-        ...(await create(handle.volumeName, handle.snapshotIds.at(-1))),
+        ...(await create(
+          handle.volumeName ?? `rove-${handle.remoteId}`,
+          handle.snapshotIds.at(-1),
+        )),
         snapshotIds: handle.snapshotIds,
       };
     },
@@ -248,11 +271,14 @@ export const makeSandboxDriver: SandboxDriverFactory = async (provider, credenti
           if (!(error instanceof NotFoundError)) throw error;
         }
       }
+      // Older sandboxes kept their home on a volume of the same name.
       if (handle.volumeName) await client.volumes.delete(handle.volumeName, { allowMissing: true });
     },
     exec: async (handle, command) => {
       const sandbox = await client.sandboxes.fromId(handle.remoteId);
-      const process = await sandbox.exec(["bash", "-lc", command], { timeoutMs: 180_000 });
+      const process = await sandbox.exec(["bash", "-lc", command], {
+        timeoutMs: COMMAND_TIMEOUT_SECONDS * 1000,
+      });
       const [stdout, , exitCode] = await Promise.all([
         process.stdout.readText(),
         process.stderr.readText(),
@@ -260,7 +286,8 @@ export const makeSandboxDriver: SandboxDriverFactory = async (provider, credenti
       ]);
       if (exitCode !== 0)
         throw new SandboxDriverError(
-          "Sandbox command failed. Inspect the sandbox in Modal for details.",
+          sandboxCommandFailure(exitCode) ??
+            "Sandbox command failed. Inspect the sandbox in Modal for details.",
         );
       return stdout;
     },
@@ -277,6 +304,7 @@ export const makeSandboxDriver: SandboxDriverFactory = async (provider, credenti
   };
   return {
     ...driver,
+    verify: () => modalOperation(() => driver.verify()),
     create: (id) => modalOperation(() => driver.create(id)),
     resume: (handle) => modalOperation(() => driver.resume(handle)),
     pause: (handle, save) => modalOperation(() => driver.pause(handle, save)),

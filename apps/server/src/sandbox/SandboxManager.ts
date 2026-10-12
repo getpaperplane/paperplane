@@ -46,6 +46,7 @@ const StateJson = Schema.fromJsonString(StoredState);
 const decodeStateJson = Schema.decodeUnknownEffect(StateJson);
 const encodeStateJson = Schema.encodeEffect(StateJson);
 const KEY = "remote-sandboxes";
+const providerName = (provider: SandboxProvider) => (provider === "boat" ? "Boat" : "Modal");
 const textEncoder = new TextEncoder();
 const textDecoder = new TextDecoder();
 
@@ -144,22 +145,32 @@ export const makeSandboxManager = Effect.fn("SandboxManager.make")(function* (
     loaded.error
       ? Effect.fail(loaded.error)
       : semaphore.withPermit(effect).pipe(Effect.uninterruptible);
+  const withCredentials = <A>(
+    provider: SandboxProvider,
+    credentials: SandboxCredentials,
+    use: (driver: Awaited<ReturnType<SandboxDriverFactory>>) => Effect.Effect<A, SandboxError>,
+  ) =>
+    Effect.acquireUseRelease(
+      Effect.tryPromise({
+        try: () => factory(provider, credentials),
+        catch: () =>
+          new SandboxError({
+            message: `Could not initialize ${providerName(provider)}. Check its credentials.`,
+          }),
+      }),
+      use,
+      (driver) => Effect.sync(() => driver.close()),
+    );
   const withDriver = <A>(
     provider: SandboxProvider,
     use: (driver: Awaited<ReturnType<SandboxDriverFactory>>) => Effect.Effect<A, SandboxError>,
   ) => {
     const credentials = state.credentials[provider];
     if (!credentials)
-      return Effect.fail(new SandboxError({ message: `Configure ${provider} credentials first.` }));
-    return Effect.acquireUseRelease(
-      Effect.tryPromise({
-        try: () => factory(provider, credentials),
-        catch: () =>
-          new SandboxError({ message: `Could not initialize ${provider}. Check its credentials.` }),
-      }),
-      use,
-      (driver) => Effect.sync(() => driver.close()),
-    );
+      return Effect.fail(
+        new SandboxError({ message: `Configure ${providerName(provider)} credentials first.` }),
+      );
+    return withCredentials(provider, credentials, use);
   };
   // Drivers may surface product-owned diagnostics, never raw vendor errors.
   // Keep the resource handle available for repair regardless of the error.
@@ -180,17 +191,29 @@ export const makeSandboxManager = Effect.fn("SandboxManager.make")(function* (
         message:
           "Delete this provider's tracked sandboxes before changing its account credentials.",
       });
-    if (input.provider === "modal" && input.token.trim() && !input.tokenId?.trim())
+    const token = input.token.trim();
+    const tokenId = input.tokenId?.trim() ?? "";
+    if (input.provider === "modal" && token && !tokenId)
       return yield* new SandboxError({
         message: "Modal requires both a token ID and token secret.",
       });
+    if (input.provider === "modal" && tokenId.startsWith("as-") && token.startsWith("ak-"))
+      return yield* new SandboxError({
+        message:
+          "The Modal token ID and secret look swapped. The ID starts with ak- and the secret with as-.",
+      });
     const credentials = { ...state.credentials };
-    if (input.token.trim())
-      credentials[input.provider] = {
-        token: input.token.trim(),
-        tokenId: input.tokenId?.trim() ?? "",
-      };
-    else delete credentials[input.provider];
+    if (token) {
+      // Saving verifies the account so a bad key surfaces now, not after a
+      // user has confirmed billed compute.
+      yield* withCredentials(input.provider, { token, tokenId }, (driver) =>
+        operation(
+          () => driver.verify(),
+          `Could not verify the ${providerName(input.provider)} credentials. Check them and your internet connection, then try again.`,
+        ),
+      );
+      credentials[input.provider] = { token, tokenId };
+    } else delete credentials[input.provider];
     yield* save({ ...state, credentials });
   });
   const create = Effect.fn("SandboxManager.create")(function* (
@@ -308,6 +331,9 @@ export const makeSandboxManager = Effect.fn("SandboxManager.make")(function* (
     return yield* withDriver(record.provider, (driver) =>
       Effect.gen(function* () {
         let current = selected;
+        // Failures that leave the remote server untouched keep the sandbox's
+        // phase, so a refused pause or failed pairing doesn't hide Connect.
+        let untouched = input.action === "pair" || input.action === "pause";
         return yield* Effect.gen(function* () {
           let pairingUrl: string | null = null;
           const handle = sandboxHandle(current);
@@ -339,6 +365,7 @@ export const makeSandboxManager = Effect.fn("SandboxManager.make")(function* (
               () => driver.exec(handle, sandboxStopCommand),
               "Rove did not shut down cleanly. Pause was refused to protect its data.",
             );
+            untouched = false;
             // Snapshot handles must commit before the driver terminates compute.
             const saveSnapshot = (id: string) =>
               Effect.runPromise(
@@ -386,14 +413,17 @@ export const makeSandboxManager = Effect.fn("SandboxManager.make")(function* (
             const url = new URL("/pair", current.url);
             url.hash = new URLSearchParams({ token: credential.credential }).toString();
             pairingUrl = url.toString();
+            current = { ...current, detail: null };
           }
           yield* replace(current);
           return { sandbox: publicRecord(current), pairingUrl };
         }).pipe(
           Effect.catch((error) =>
-            replace({ ...current, phase: "error", detail: error.message }).pipe(
-              Effect.andThen(Effect.fail(error)),
-            ),
+            replace({
+              ...current,
+              phase: untouched ? current.phase : "error",
+              detail: error.message,
+            }).pipe(Effect.andThen(Effect.fail(error))),
           ),
         );
       }),

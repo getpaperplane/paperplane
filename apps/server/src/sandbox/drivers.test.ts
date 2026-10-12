@@ -92,16 +92,29 @@ it("Boat hosting is public at the proxy but remains protected by Rove authentica
     .fn<typeof fetch>()
     .mockImplementation(async (url) =>
       response(
-        String(url).endsWith("/commands")
-          ? { success: true, exitCode: 0, stdout: "Hosted at https://example-7340.on.boat.dev\n" }
+        String(url).endsWith("/host")
+          ? { ok: true, url: "https://example-7340.on.boat.dev?_token=unused" }
           : sandbox("running"),
       ),
     );
   const url = await makeBoatDriver({ token: "key", tokenId: "" }, transport).expose(handle);
   expect(url).toBe("https://example-7340.on.boat.dev");
-  expect(transport.mock.calls[1]?.[1]?.body).toBe(
-    JSON.stringify({ command: "host 7340 --public", timeoutSeconds: 180 }),
-  );
+  expect(transport.mock.calls[1]?.[1]?.body).toBe(JSON.stringify({ port: 7340, public: true }));
+});
+
+it("bootstrap failures explain which stage failed without forwarding command output", async () => {
+  const transport = vi
+    .fn<typeof fetch>()
+    .mockImplementation(async (url) =>
+      response(
+        String(url).endsWith("/commands")
+          ? { success: false, exitCode: 10, stdout: "secret-output" }
+          : sandbox(),
+      ),
+    );
+  const result = makeBoatDriver({ token: "key", tokenId: "" }, transport).exec(handle, "start");
+  await expect(result).rejects.toThrow("Could not install Rove in the sandbox.");
+  await expect(result).rejects.not.toThrow("secret-output");
 });
 
 it.each([

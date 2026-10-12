@@ -1,7 +1,19 @@
 import { SANDBOX_PORT } from "@rove-code/contracts";
+import packageJson from "../../package.json" with { type: "json" };
 
 const quote = (value: string) => `'${value.replaceAll("'", "'\\''")}'`;
 const nodeCommand = (source: string) => `node -e ${quote(source)}`;
+
+// Bootstrap scripts exit with these codes so failures can be explained without
+// forwarding command output, which may contain credentials.
+export const SANDBOX_INSTALL_FAILED = 10;
+export const SANDBOX_UNOWNED_SERVER = 11;
+export const SANDBOX_NOT_READY = 12;
+export const SANDBOX_STILL_RUNNING = 13;
+
+const ROOT = `"$HOME/.rove-sandbox"`;
+const RUNTIME = `"$HOME/.rove-sandbox/runtime"`;
+const WRAPPER = `"$HOME/.rove-sandbox/runtime/node_modules/.bin/rove"`;
 
 // Only this deployment's captured PID may be signalled. Boot identity and process
 // start time also prevent a restored PID file from targeting a different process.
@@ -11,51 +23,64 @@ const path = require('node:path');
 const root = path.join(process.env.HOME, '.rove-sandbox');
 const pidFile = path.join(root, 'server.json');
 const bootId = () => fs.readFileSync('/proc/sys/kernel/random/boot_id', 'utf8').trim();
-const ticks = pid => fs.readFileSync('/proc/' + pid + '/stat', 'utf8').split(') ')[1].split(' ')[19];
+const stat = pid => fs.readFileSync('/proc/' + pid + '/stat', 'utf8').split(') ')[1].split(' ');
+const ticks = pid => stat(pid)[19];
 const owned = () => {
   try {
     const saved = JSON.parse(fs.readFileSync(pidFile, 'utf8'));
-    return saved.bootId === bootId() && saved.ticks === ticks(saved.pid) ? saved.pid : null;
+    // An unreaped zombie has already exited and closed its database.
+    return saved.bootId === bootId() && saved.ticks === ticks(saved.pid) && stat(saved.pid)[0] !== 'Z' ? saved.pid : null;
   } catch { return null; }
+};
+const responding = async () => {
+  try { return (await fetch('http://127.0.0.1:${SANDBOX_PORT}/.well-known/rove/environment', { signal: AbortSignal.timeout(1000) })).ok; }
+  catch { return false; }
 };
 `;
 
-export const sandboxStartCommand = `set -eu
-ROOT="$HOME/.rove-sandbox"
-mkdir -p "$ROOT/runtime" "$ROOT/data" "$ROOT/workspace"
-if [ ! -x "$ROOT/runtime/node_modules/.bin/rove" ]; then
-  npm install --prefix "$ROOT/runtime" --no-audit --no-fund @rove-code/cli@latest
+// The npm wrapper runs the platform binary as a child and does not forward
+// signals, so the server is spawned from the platform package directly.
+const resolveBinary = `require('node:path').join(require('node:path').dirname(require.resolve('@rove-code/cli-' + process.platform + '-' + process.arch + '/package.json', { paths: [process.env.ROVE_SANDBOX_RUNTIME_DIR] })), 'rove')`;
+
+export const sandboxStartCommand = `set -u
+ROOT=${ROOT}
+RUNTIME=${RUNTIME}
+mkdir -p "$ROOT/data" "$ROOT/workspace" "$RUNTIME" || exit ${SANDBOX_INSTALL_FAILED}
+export ROVE_SANDBOX_RUNTIME_DIR="$RUNTIME"
+installed() { [ -x "$(node -p ${quote(resolveBinary)} 2>/dev/null)" ] && ${WRAPPER} --version >/dev/null 2>&1; }
+# A partial install must not wedge every later repair, so verify the binary.
+if ! installed; then
+  rm -rf "$RUNTIME/node_modules" "$RUNTIME/package.json" "$RUNTIME/package-lock.json"
+  { npm install --prefix "$RUNTIME" --no-audit --no-fund ${quote(`@rove-code/cli@${packageJson.version}`)} ||
+    npm install --prefix "$RUNTIME" --no-audit --no-fund @rove-code/cli@latest; } >"$ROOT/install.log" 2>&1
+  installed || exit ${SANDBOX_INSTALL_FAILED}
 fi
 ${nodeCommand(`${identityHelpers}
 (async () => {
-if (!owned()) {
-  let responding = false;
-  try { responding = (await fetch('http://127.0.0.1:${SANDBOX_PORT}/.well-known/rove/environment', { signal: AbortSignal.timeout(1000) })).ok; } catch {}
-  if (responding) throw new Error('A Rove server is running without a matching owned PID; restart refused');
+  if (owned()) return;
+  if (await responding()) process.exit(${SANDBOX_UNOWNED_SERVER});
+  const binary = ${resolveBinary};
   const log = fs.openSync(path.join(root, 'server.log'), 'a', 0o600);
-  const child = require('node:child_process').spawn(path.join(root, 'runtime/node_modules/.bin/rove'),
+  const child = require('node:child_process').spawn(binary,
     ['serve', '--host', '0.0.0.0', '--port', '${SANDBOX_PORT}', '--base-dir', path.join(root, 'data'), '--no-browser'],
     { cwd: path.join(root, 'workspace'), detached: true, stdio: ['ignore', log, log],
       env: { ...process.env, ROVE_AUTO_BOOTSTRAP_PROJECT_FROM_CWD: 'false', ROVE_NO_BROWSER: 'true' } });
-  child.on('error', () => process.exit(1));
+  child.on('error', () => process.exit(${SANDBOX_INSTALL_FAILED}));
   fs.writeFileSync(pidFile, JSON.stringify({ pid: child.pid, bootId: bootId(), ticks: ticks(child.pid) }), { mode: 0o600 });
   fs.closeSync(log);
   child.unref();
-}
-})().catch(() => process.exit(1));
-`)}
+})().catch(() => process.exit(${SANDBOX_NOT_READY}));
+`)} || exit $?
 # Readiness is local to the VM; this never invokes a coding provider.
-${nodeCommand(`
+${nodeCommand(`${identityHelpers}
 (async () => {
   for (let attempt = 0; attempt < 120; attempt++) {
-    try {
-      const response = await fetch('http://127.0.0.1:${SANDBOX_PORT}/.well-known/rove/environment', { signal: AbortSignal.timeout(1000) });
-      if (response.ok) return;
-    } catch {}
+    if (await responding()) return;
+    if (!owned()) process.exit(${SANDBOX_NOT_READY});
     await new Promise(resolve => setTimeout(resolve, 1000));
   }
-  throw new Error('Rove server did not become ready');
-})().catch(() => process.exit(1));
+  process.exit(${SANDBOX_NOT_READY});
+})().catch(() => process.exit(${SANDBOX_NOT_READY}));
 `)}`;
 
 export const sandboxStopCommand = nodeCommand(`${identityHelpers}
@@ -63,9 +88,7 @@ export const sandboxStopCommand = nodeCommand(`${identityHelpers}
   const pid = owned();
   if (!pid) {
     // A missing/stale PID file must not silently snapshot a still-running DB.
-    let responding = false;
-    try { responding = (await fetch('http://127.0.0.1:${SANDBOX_PORT}/.well-known/rove/environment', { signal: AbortSignal.timeout(1000) })).ok; } catch {}
-    if (responding) throw new Error('A Rove server is running without a matching owned PID; snapshot refused');
+    if (await responding()) process.exit(${SANDBOX_UNOWNED_SERVER});
     return;
   }
   process.kill(pid, 'SIGTERM');
@@ -73,8 +96,24 @@ export const sandboxStopCommand = nodeCommand(`${identityHelpers}
     if (!owned()) { fs.rmSync(pidFile, { force: true }); return; }
     await new Promise(resolve => setTimeout(resolve, 1000));
   }
-  throw new Error('Rove server is still shutting down; snapshot refused');
+  process.exit(${SANDBOX_STILL_RUNNING});
 })().catch(() => process.exit(1));
 `);
 
-export const sandboxPairCommand = `"$HOME/.rove-sandbox/runtime/node_modules/.bin/rove" auth pairing create --base-dir "$HOME/.rove-sandbox/data" --json`;
+export const sandboxPairCommand = `${WRAPPER} auth pairing create --base-dir "$HOME/.rove-sandbox/data" --json`;
+
+/** Product-owned explanations for bootstrap exit codes. */
+export function sandboxCommandFailure(exitCode: number): string | undefined {
+  switch (exitCode) {
+    case SANDBOX_INSTALL_FAILED:
+      return "Could not install Rove in the sandbox. Check its network access, then resume to retry. The install log is at ~/.rove-sandbox/install.log in the sandbox.";
+    case SANDBOX_UNOWNED_SERVER:
+      return "Another Rove server is using the sandbox's port without a matching process record. Stop it from the vendor dashboard, then resume.";
+    case SANDBOX_NOT_READY:
+      return "Rove started in the sandbox but did not become ready. Resume to retry. The server log is at ~/.rove-sandbox/server.log in the sandbox.";
+    case SANDBOX_STILL_RUNNING:
+      return "Rove is still shutting down in the sandbox. Pause was refused to protect its data; try again shortly.";
+    default:
+      return undefined;
+  }
+}
