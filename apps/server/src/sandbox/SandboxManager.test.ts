@@ -11,6 +11,7 @@ import { makeSandboxManager } from "./SandboxManager.ts";
 import { sandboxPairCommand, sandboxStartCommand, sandboxStopCommand } from "./bootstrap.ts";
 import type { SandboxDriver, SandboxHandle } from "./drivers.ts";
 
+const encodeTestJson = Schema.encodeUnknownSync(Schema.fromJsonString(Schema.Unknown));
 const decodeCreateInput = Schema.decodeUnknownSync(SandboxCreateInput);
 const decodeActionInput = Schema.decodeUnknownSync(SandboxActionInput);
 
@@ -77,7 +78,7 @@ it.effect(
       yield* manager.configure({ provider: "modal", token: "modal-secret", tokenId: "modal-id" });
       const inventory = yield* manager.inventory;
       expect(inventory.configuredProviders).toEqual(["boat", "modal"]);
-      expect(JSON.stringify(inventory)).not.toContain("secret");
+      expect(encodeTestJson(inventory)).not.toContain("secret");
       expect(f.factory).not.toHaveBeenCalled();
       const reloaded = yield* f.make;
       expect((yield* reloaded.inventory).configuredProviders).toEqual(["boat", "modal"]);
@@ -124,7 +125,7 @@ it.effect(
       const reloaded = yield* f.make;
       const inventory = yield* reloaded.inventory;
       expect(inventory.sandboxes[0]).toMatchObject({ phase: "error", remoteId: "vm-one" });
-      expect(JSON.stringify(inventory)).not.toContain("secret-token");
+      expect(encodeTestJson(inventory)).not.toContain("secret-token");
       expect(f.driver.remove).not.toHaveBeenCalled();
     }),
 );
@@ -293,7 +294,7 @@ it.effect("accepted deletion retains its receipt on failure and cannot be resume
     });
     yield* Effect.result(manager.action({ id: sandbox.id, action: "delete", confirmed: true }));
     expect(f.stored()).toContain("deletion-one");
-    expect(JSON.stringify(yield* manager.inventory)).not.toContain("deletion-one");
+    expect(encodeTestJson(yield* manager.inventory)).not.toContain("deletion-one");
     expect(
       (yield* Effect.result(manager.action({ id: sandbox.id, action: "resume", confirmed: true })))
         ._tag,

@@ -1254,8 +1254,7 @@ const buildAppUnderTest = (options?: {
         };
       }),
       Layer.provideMerge(makeAuthTestLayer()),
-      Layer.provideMerge(SandboxManager.layer),
-      Layer.provideMerge(ServerSecretStore.layer),
+      Layer.provideMerge(SandboxManager.layer.pipe(Layer.provideMerge(ServerSecretStore.layer))),
       Layer.provide(workspaceAndProjectServicesLayer),
       Layer.provideMerge(
         options?.layers?.httpClient === undefined
@@ -1778,7 +1777,7 @@ it.layer(NodeServices.layer)("server router seam", (it) => {
             const inventory = yield* client[WS_METHODS.sandboxInventory]({});
             assert.deepEqual(inventory.configuredProviders, ["boat"]);
             assert.deepEqual(inventory.sandboxes, []);
-            assert.notInclude(JSON.stringify(inventory), "test-only-not-a-vendor-key");
+            assert.notInclude(encodeTestJson(inventory), "test-only-not-a-vendor-key");
           }),
         ),
       );

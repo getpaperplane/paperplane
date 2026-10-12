@@ -1,4 +1,5 @@
 import { SANDBOX_PORT, type RemoteSandbox, type SandboxProvider } from "@rove-code/contracts";
+import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
 export const SandboxCredentials = Schema.Struct({ token: Schema.String, tokenId: Schema.String });
@@ -76,7 +77,7 @@ export function makeBoatDriver(
       if (["ready", "idle", "running"].includes(result.sandbox.state)) return;
       if (["error", "archived", "stopped", "cancelled"].includes(result.sandbox.state))
         throw new Error("Boat sandbox is not running.");
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await Effect.runPromise(Effect.sleep("1 second"));
     }
     throw new Error("Boat sandbox did not become ready.");
   };
@@ -114,7 +115,7 @@ export function makeBoatDriver(
       for (let attempt = 0; attempt < 120 && performance.now() < deadline; attempt++) {
         const result = decodeBoatSandbox(await request(path(handle)));
         if (["archived", "stopped"].includes(result.sandbox.state)) return;
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+        await Effect.runPromise(Effect.sleep("1 second"));
       }
       throw new Error("Boat stop is still pending; inspect its snapshot status before retrying.");
     },
@@ -133,7 +134,7 @@ export function makeBoatDriver(
         if (result.operation.status === "completed") return;
         if (result.operation.status === "blocked")
           throw new Error("Boat deletion is blocked; inspect the vendor dashboard.");
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+        await Effect.runPromise(Effect.sleep("1 second"));
       }
       throw new Error(
         "Boat deletion remains pending. Its operation receipt was retained for retry.",
