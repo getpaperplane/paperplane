@@ -221,7 +221,7 @@ function SandboxControls({ environmentId }: { environmentId: EnvironmentId }) {
               }}
             >
               <SelectTrigger size="sm" aria-label="Sandbox provider">
-                <SelectValue />
+                <SelectValue>{providerName}</SelectValue>
               </SelectTrigger>
               <SelectPopup>
                 <SelectItem value="boat">Boat</SelectItem>
