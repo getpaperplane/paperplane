@@ -53,8 +53,7 @@ function fixture() {
     getOrCreateRandom: () => Effect.succeed(new Uint8Array()),
   });
   const make = makeSandboxManager(factory).pipe(
-    Effect.provide(Layer.succeed(ServerSecretStore, store)),
-    Effect.provide(NodeServices.layer),
+    Effect.provide(Layer.merge(Layer.succeed(ServerSecretStore, store), NodeServices.layer)),
   );
   return {
     make,
