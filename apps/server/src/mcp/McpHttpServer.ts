@@ -662,7 +662,7 @@ export const PreviewToolkitRegistrationLive = Layer.mergeAll(
   PreviewSnapshotRegistrationLive,
 );
 
-export const RichResponseToolkitRegistrationLive = McpServer.toolkit(RichResponseToolkit).pipe(
+const RichResponseToolkitRegistrationLive = McpServer.toolkit(RichResponseToolkit).pipe(
   Layer.provide(RichResponseToolkitHandlersLive),
 );
 

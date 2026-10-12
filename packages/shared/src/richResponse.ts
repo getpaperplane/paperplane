@@ -88,7 +88,7 @@ export function splitRichResponse(text: string, isStreaming = false): RichRespon
 const escapeMarkdown = (text: string) => text.replaceAll(/([\\`*_{}[\]<>#!|])/g, "\\$1");
 
 /** Readable fallback for clipboard/export; no generated UI syntax or executable content. */
-export function richResponseToMarkdown(response: RichResponse): string {
+function richResponseToMarkdown(response: RichResponse): string {
   return response.blocks
     .map((block) => {
       switch (block.type) {
