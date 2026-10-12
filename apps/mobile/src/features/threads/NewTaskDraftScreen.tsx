@@ -119,6 +119,7 @@ import { armAgentAwarenessLiveActivityForLocalWork } from "../agent-awareness/re
 import { enqueueThreadOutboxMessage } from "../../state/thread-outbox";
 import { useRemoteConnectionStatus } from "../../state/use-remote-environment-registry";
 import { useNewTaskFlow } from "./new-task-flow-provider";
+import { HandoffDraftNotice } from "./ThreadContinuation";
 import { resolveProjectThreadCreationBranch } from "./projectThreadCreationValidation";
 import { resolveDraftProjectSelection } from "./new-task-project-selection";
 import {
@@ -1562,6 +1563,12 @@ export function NewTaskDraftScreen(props: {
       }
       style={{ paddingBottom: controlsBottomPadding }}
     >
+      {flow.handoff && flow.draftKey ? (
+        <HandoffDraftNotice
+          handoff={flow.handoff}
+          onRemove={() => updateComposerDraftSettings(flow.draftKey!, { handoff: undefined })}
+        />
+      ) : null}
       {!voiceInput.isBusy &&
       composerMenu.trigger &&
       (composerMenu.items.length > 0 || composerMenu.trigger.kind === "pull-request") ? (

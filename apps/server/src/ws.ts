@@ -154,6 +154,8 @@ import * as WorkspacePaths from "./workspace/WorkspacePaths.ts";
 import * as VcsStatusBroadcaster from "./vcs/VcsStatusBroadcaster.ts";
 import * as VcsProvisioningService from "./vcs/VcsProvisioningService.ts";
 import * as GitWorkflowService from "./git/GitWorkflowService.ts";
+import { exportThreadHandoff } from "./orchestration/threadHandoff.ts";
+import { THREAD_HANDOFF_ACTIVITY_KIND } from "@rove-code/contracts";
 import { linkCreatedPullRequest } from "./git/linkCreatedPullRequest.ts";
 import * as ReviewService from "./review/ReviewService.ts";
 import * as ProjectSetupScriptRunner from "./project/ProjectSetupScriptRunner.ts";
@@ -1418,6 +1420,44 @@ const makeWsRpcLayer = (
 
           const bootstrapProgram = Effect.gen(function* () {
             const prepareWorktree = bootstrap?.prepareWorktree;
+            if (bootstrap?.handoff) {
+              const handoff = bootstrap.handoff;
+              const target = bootstrap.createThread?.projectId;
+              const project = target
+                ? yield* projectionSnapshotQuery.getProjectShellById(target)
+                : Option.none();
+              if (
+                !prepareWorktree ||
+                prepareWorktree.checkoutBaseBranch !== true ||
+                prepareWorktree.expectedCommit !== handoff.commitSha ||
+                Option.isNone(project)
+              ) {
+                return yield* new OrchestrationDispatchCommandError({
+                  message:
+                    "A continuation requires its verified project and worktree configuration.",
+                });
+              }
+              const identity = yield* repositoryIdentityResolver.resolve(
+                project.value.workspaceRoot,
+                {
+                  refresh: true,
+                  preferredRemote:
+                    project.value.repositoryIdentity?.locator.remoteName === "upstream"
+                      ? "upstream"
+                      : "origin",
+                },
+              );
+              if (
+                identity?.canonicalKey !== handoff.repositoryKey ||
+                prepareWorktree.projectCwd !== project.value.workspaceRoot ||
+                prepareWorktree.baseBranch !== `${identity.locator.remoteName}/${handoff.branch}`
+              ) {
+                return yield* new OrchestrationDispatchCommandError({
+                  message:
+                    "The destination repository or branch no longer matches this handoff. Prepare a new continuation.",
+                });
+              }
+            }
             let shouldPrepareWorktree = prepareWorktree
               ? yield* gitWorkflow.isRepository(prepareWorktree.projectCwd)
               : false;
@@ -1477,10 +1517,14 @@ const makeWsRpcLayer = (
                 // just pushed from another machine, so refresh it first. A
                 // local branch (no remote prefix) is used as it is.
                 const separator = prepareWorktree.baseBranch.indexOf("/");
-                const remoteName =
-                  separator > 0 ? prepareWorktree.baseBranch.slice(0, separator) : null;
+                const remoteName = bootstrap?.handoff
+                  ? prepareWorktree.baseBranch.slice(0, -bootstrap.handoff.branch.length - 1)
+                  : separator > 0
+                    ? prepareWorktree.baseBranch.slice(0, separator)
+                    : null;
                 const remoteBranch =
-                  separator > 0 ? prepareWorktree.baseBranch.slice(separator + 1) : "";
+                  bootstrap?.handoff?.branch ??
+                  (separator > 0 ? prepareWorktree.baseBranch.slice(separator + 1) : "");
                 if (
                   remoteName !== null &&
                   remoteBranch.length > 0 &&
@@ -1625,7 +1669,14 @@ const makeWsRpcLayer = (
               });
               const worktree = yield* gitWorkflow.createWorktree(
                 prepareWorktree.checkoutBaseBranch === true
-                  ? { cwd: prepareWorktree.projectCwd, refName: worktreeBaseRef, path: null }
+                  ? {
+                      cwd: prepareWorktree.projectCwd,
+                      refName: worktreeBaseRef,
+                      path: null,
+                      ...(prepareWorktree.expectedCommit
+                        ? { expectedCommit: prepareWorktree.expectedCommit }
+                        : {}),
+                    }
                   : {
                       cwd: prepareWorktree.projectCwd,
                       refName: worktreeBaseRef,
@@ -1723,6 +1774,41 @@ const makeWsRpcLayer = (
               yield* refreshGitStatus(targetWorktreePath);
             }
 
+            if (bootstrap?.handoff) {
+              const handoff = bootstrap.handoff;
+              yield* dispatchFromClient({
+                type: "thread.activity.append",
+                commandId: CommandId.make(
+                  `handoff:${handoff.transferId}:${command.message.messageId}:import`,
+                ),
+                threadId,
+                activity: {
+                  id: EventId.make(`handoff:${handoff.transferId}`),
+                  tone: "info",
+                  kind: THREAD_HANDOFF_ACTIVITY_KIND,
+                  summary: `Context imported from ${handoff.sourceLabel}`,
+                  payload: { handoff, messageId: command.message.messageId },
+                  turnId: null,
+                  createdAt: handoff.createdAt,
+                },
+                createdAt: handoff.createdAt,
+              });
+              yield* dispatchFromClient({
+                type: "thread.continuation.record",
+                commandId: CommandId.make(
+                  `handoff:${handoff.transferId}:${command.message.messageId}:from`,
+                ),
+                threadId,
+                link: {
+                  direction: "from",
+                  environmentId: handoff.sourceEnvironmentId,
+                  threadId: handoff.sourceThreadId,
+                  environmentLabel: handoff.sourceLabel,
+                  transferId: handoff.transferId,
+                },
+                createdAt: handoff.createdAt,
+              });
+            }
             const pendingSetupScript = yield* runSetupProgram();
 
             yield* track(worktreeSetupTracker.stageStatus(threadId, "agent", "running"));
@@ -3534,6 +3620,10 @@ const makeWsRpcLayer = (
                 ),
             ),
             { "rpc.aggregate": "vcs" },
+          ),
+        [WS_METHODS.threadHandoffExport]: (input) =>
+          serverEnvironment.getDescriptor.pipe(
+            Effect.flatMap((environment) => exportThreadHandoff(input, environment)),
           ),
         [WS_METHODS.gitResolvePullRequest]: (input) =>
           observeRpcEffect(

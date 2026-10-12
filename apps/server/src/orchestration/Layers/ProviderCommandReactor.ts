@@ -29,6 +29,10 @@ import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
 import * as Path from "effect/Path";
 import * as Schedule from "effect/Schedule";
+import { ImportedThreadHandoff, THREAD_HANDOFF_ACTIVITY_KIND } from "@rove-code/contracts";
+import { renderHandoffContext } from "@rove-code/shared/threadHandoff";
+import { ProjectionThreadActivityRepository } from "../../persistence/Services/ProjectionThreadActivities.ts";
+import { ProjectionThreadActivityRepositoryLive } from "../../persistence/Layers/ProjectionThreadActivities.ts";
 import * as Schema from "effect/Schema";
 import * as Stream from "effect/Stream";
 import { makeDrainableWorker } from "@rove-code/shared/DrainableWorker";
@@ -210,10 +214,13 @@ function buildGeneratedWorktreeBranchName(raw: string): string {
   return `${WORKTREE_BRANCH_PREFIX}/${safeFragment}`;
 }
 
+const isImportedThreadHandoff = Schema.is(ImportedThreadHandoff);
+
 const make = Effect.gen(function* () {
   const crypto = yield* Crypto.Crypto;
   const orchestrationEngine = yield* OrchestrationEngineService;
   const projectionSnapshotQuery = yield* ProjectionSnapshotQuery;
+  const handoffActivities = yield* ProjectionThreadActivityRepository;
   const providerAuthService = yield* ProviderAuthService;
   const providerService = yield* ProviderService;
   const providerRegistry = yield* ProviderRegistry;
@@ -1495,12 +1502,29 @@ const make = Effect.gen(function* () {
       turnsAfterCompaction.set(event.payload.threadId, queued);
       return;
     }
+    const handoffRows = !hasOtherUserMessages
+      ? yield* handoffActivities.listByThreadId({
+          threadId: event.payload.threadId,
+          activityKinds: [THREAD_HANDOFF_ACTIVITY_KIND],
+          limit: 1,
+        })
+      : [];
+    const imported = handoffRows
+      .flatMap((row) =>
+        isImportedThreadHandoff(row.payload) && row.payload.messageId === message.id
+          ? [row.payload.handoff]
+          : [],
+      )
+      .at(0);
+    const userText = projectComposerContextForProvider({
+      text: message.text,
+      records: message.context?.records ?? [],
+    });
     const sendTurnRequest = yield* buildSendTurnRequestForThread({
       threadId: event.payload.threadId,
-      messageText: projectComposerContextForProvider({
-        text: message.text,
-        records: message.context?.records ?? [],
-      }),
+      messageText: imported
+        ? `${renderHandoffContext(imported)}\n\nCurrent user request:\n${userText}`
+        : userText,
       ...(message.attachments !== undefined ? { attachments: message.attachments } : {}),
       ...(event.payload.modelSelection !== undefined
         ? { modelSelection: event.payload.modelSelection }
@@ -1967,4 +1991,6 @@ const make = Effect.gen(function* () {
   } satisfies ProviderCommandReactorContract;
 });
 
-export const ProviderCommandReactorLive = Layer.effect(ProviderCommandReactor, make);
+export const ProviderCommandReactorLive = Layer.effect(ProviderCommandReactor, make).pipe(
+  Layer.provide(ProjectionThreadActivityRepositoryLive),
+);

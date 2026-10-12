@@ -7,6 +7,7 @@ import {
   type ProjectId,
   type ProviderInteractionMode,
   type RuntimeMode,
+  type ThreadHandoff,
 } from "@rove-code/contracts";
 import { assistantCitationsToPlainText } from "@rove-code/shared/assistantCitations";
 
@@ -40,6 +41,7 @@ export interface ProjectThreadStartTurnSpec {
   readonly branch: string | null;
   readonly worktreePath: string | null;
   readonly startFromOrigin: boolean;
+  readonly handoff?: ThreadHandoff;
   /** Generated temp branch for worktree mode; unused for local mode. */
   readonly worktreeBranchName: string;
 }
@@ -67,6 +69,7 @@ export function buildProjectThreadStartTurnInput(spec: ProjectThreadStartTurnSpe
     runtimeMode: spec.runtimeMode,
     interactionMode: spec.interactionMode,
     bootstrap: {
+      ...(spec.handoff ? { handoff: spec.handoff } : {}),
       createThread: {
         projectId: spec.projectId,
         title,
@@ -82,8 +85,16 @@ export function buildProjectThreadStartTurnInput(spec: ProjectThreadStartTurnSpe
             prepareWorktree: {
               projectCwd: spec.projectCwd,
               baseBranch: spec.branch!,
-              branch: spec.worktreeBranchName,
-              ...(spec.startFromOrigin ? { startFromOrigin: true } : undefined),
+              ...(spec.handoff
+                ? {
+                    checkoutBaseBranch: true,
+                    requireWorktree: true,
+                    expectedCommit: spec.handoff.commitSha,
+                  }
+                : {
+                    branch: spec.worktreeBranchName,
+                    ...(spec.startFromOrigin ? { startFromOrigin: true } : {}),
+                  }),
             },
             runSetupScript: true,
           }

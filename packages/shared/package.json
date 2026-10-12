@@ -3,6 +3,10 @@
   "private": true,
   "type": "module",
   "exports": {
+    "./threadHandoff": {
+      "types": "./src/threadHandoff.ts",
+      "import": "./src/threadHandoff.ts"
+    },
     "./threadRevert": {
       "types": "./src/threadRevert.ts",
       "import": "./src/threadRevert.ts"

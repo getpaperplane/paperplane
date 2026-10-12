@@ -183,6 +183,8 @@ import { buildTemporaryWorktreeBranchName } from "@rove-code/shared/git";
 import { useWorktreeCheckoutStore } from "../worktreeCheckoutStore";
 import { useRecordThreadHandoff } from "../hooks/useContinueThreadOnEnvironment";
 import { resolveLatestContinuation } from "../lib/threadHandoff";
+import { renderHandoffContext } from "@rove-code/client-runtime/threadHandoff";
+import { useThreadHandoffStore } from "../threadHandoffStore";
 import { useMediaQuery } from "../hooks/useMediaQuery";
 import { RIGHT_PANEL_INLINE_LAYOUT_MEDIA_QUERY } from "../rightPanelLayout";
 import {
@@ -5911,10 +5913,20 @@ export default function ChatView(props: ChatViewProps) {
   const requestedCheckoutBaseBranch = useWorktreeCheckoutStore(
     (store) => store.checkoutBaseBranchByThreadId[activeThread?.id ?? ""] ?? false,
   );
-  const checkoutBaseBranch = canCheckoutBaseBranch && requestedCheckoutBaseBranch;
+  const draftHandoff = isLocalDraftThread ? draftThread?.handoff : null;
+  const checkoutBaseBranch =
+    canCheckoutBaseBranch &&
+    (draftHandoff
+      ? true
+      : isLocalDraftThread
+        ? (draftThread?.checkoutBaseBranch ?? requestedCheckoutBaseBranch)
+        : requestedCheckoutBaseBranch);
   const onCheckoutBaseBranchChange = (next: boolean) => {
     if (!activeThread) return;
-    useWorktreeCheckoutStore.getState().setCheckoutBaseBranch(activeThread.id, next);
+    if (draftHandoff) return;
+    if (isLocalDraftThread)
+      setDraftThreadContext(composerDraftTarget, { checkoutBaseBranch: next });
+    else useWorktreeCheckoutStore.getState().setCheckoutBaseBranch(activeThread.id, next);
   };
   const localCheckoutBranchMismatch = useMemo(
     () =>
@@ -6633,7 +6645,49 @@ export default function ChatView(props: ChatViewProps) {
       resumeCompactionBannerItem === null ? [] : [resumeCompactionBannerItem];
     const wokeThreadItems = wokeThreadBannerItem === null ? [] : [wokeThreadBannerItem];
     const parkedThreadItems = parkedThreadBannerItem === null ? [] : [parkedThreadBannerItem];
-    const continuationItems = continuationBannerItem === null ? [] : [continuationBannerItem];
+    const continuationItems: ComposerBannerStackItem[] = draftHandoff
+      ? [
+          {
+            id: `draft-handoff:${draftHandoff.transferId}`,
+            variant: "info",
+            icon: <MonitorUpIcon />,
+            title: `Continue from ${draftHandoff.sourceLabel}`,
+            description: `${draftHandoff.branch} at ${draftHandoff.commitSha.slice(0, 7)} · ${draftHandoff.codeOnly ? "Code only: no conversation or attachments transferred" : `${draftHandoff.items.length} context items · ${draftHandoff.omittedItems} items and ${draftHandoff.omittedAttachments} attachments not transferred`}`,
+            actions: (
+              <Button
+                size="xs"
+                variant="ghost"
+                onClick={() =>
+                  toastManager.add(
+                    stackedThreadToast({
+                      type: "info",
+                      title: "Continuation context",
+                      description: "Imported history is context, not a new instruction.",
+                      data: {
+                        expandableContent: (
+                          <pre className="max-h-80 overflow-auto whitespace-pre-wrap text-xs">
+                            {renderHandoffContext(draftHandoff, 128_000)}
+                          </pre>
+                        ),
+                      },
+                    }),
+                  )
+                }
+              >
+                Review context
+              </Button>
+            ),
+            dismissLabel: "Remove handoff",
+            onDismiss: () =>
+              setDraftThreadContext(composerDraftTarget, {
+                handoff: null,
+                checkoutBaseBranch: false,
+              }),
+          },
+        ]
+      : continuationBannerItem === null
+        ? []
+        : [continuationBannerItem];
     // The user asked for this one, so it leads the notice tier instead of trailing it.
     const usageLimitsItems = usageLimitsBanner === null ? [] : [usageLimitsBanner];
     const projectCloneItems = projectCloneBannerItem === null ? [] : [projectCloneBannerItem];
@@ -6705,6 +6759,9 @@ export default function ChatView(props: ChatViewProps) {
     activeBranchMismatchKey,
     backgroundLivenessBannerItem,
     continuationBannerItem,
+    draftHandoff,
+    composerDraftTarget,
+    setDraftThreadContext,
     feedbackBannerItems,
     handleRestoreThreadBranch,
     isRestoringThreadBranch,
@@ -7529,6 +7586,20 @@ export default function ChatView(props: ChatViewProps) {
       return;
     }
     const multipleModelSelections = sendCtx.multipleModelSelections;
+    if (
+      draftHandoff &&
+      (multipleModelSelections !== null ||
+        appAtomRegistry.get(environmentServerConfigsAtom).get(activeThread.environmentId)
+          ?.environment.capabilities.threadPortableHandoff !== true)
+    ) {
+      setThreadError(
+        activeThread.id,
+        multipleModelSelections !== null
+          ? "A continuation runs one provider in the verified worktree. Choose one model."
+          : "Update this environment before sending a verified continuation.",
+      );
+      return;
+    }
     if (
       multipleModelSelections !== null &&
       serverConfig?.environment.capabilities.requiredWorktreeBootstrap !== true
@@ -8476,6 +8547,7 @@ export default function ChatView(props: ChatViewProps) {
                     },
                   }
                 : {}),
+              ...(draftHandoff ? { handoff: draftHandoff } : {}),
               ...(baseBranchForWorktree
                 ? {
                     prepareWorktree: checkoutBaseBranch
@@ -8483,6 +8555,7 @@ export default function ChatView(props: ChatViewProps) {
                           projectCwd: activeProject.workspaceRoot,
                           baseBranch: baseBranchForWorktree,
                           checkoutBaseBranch: true,
+                          ...(draftHandoff ? { expectedCommit: draftHandoff.commitSha } : {}),
                           // The user asked for this exact branch, so a
                           // missing one must fail rather than quietly run
                           // in the project checkout.
@@ -8506,6 +8579,10 @@ export default function ChatView(props: ChatViewProps) {
       if (backgroundThreadRef) {
         beginBackgroundDraftSubmissionByRef(backgroundThreadRef);
       }
+      if (draftHandoff)
+        useThreadHandoffStore
+          .getState()
+          .enqueue({ environmentId, threadId: threadIdForSend, handoff: draftHandoff });
       const startPromise = startThreadTurn({
         environmentId,
         input: {
@@ -8579,6 +8656,7 @@ export default function ChatView(props: ChatViewProps) {
         failure = startResult;
       } else {
         turnStartSucceeded = true;
+        useThreadHandoffStore.getState().markReady({ environmentId, threadId: threadIdForSend });
         void recordThreadHandoff({ environmentId, threadId: threadIdForSend });
         // The turn is under way and will spend quota, so that thread's limits
         // snapshot is stale. Uploads may have outlasted a navigation, so only

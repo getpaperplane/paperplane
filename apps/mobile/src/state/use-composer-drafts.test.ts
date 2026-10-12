@@ -7,6 +7,7 @@ import {
   ProjectId,
   ProviderInstanceId,
   ThreadId,
+  type ThreadHandoff,
 } from "@rove-code/contracts";
 import { onTestFinished, vi } from "vite-plus/test";
 
@@ -188,6 +189,10 @@ import {
   rememberComposerDraftSelection,
   setComposerDraftAttachmentUpload,
   waitForComposerDraftsLoaded,
+  updateComposerDraftSettings,
+  queueHandoffBacklink,
+  completeHandoffBacklink,
+  handoffBacklinksAtom,
   setStickyComposerModelSelection,
   stickyComposerModelSelectionAtom,
   undoComposerDraftMerge,
@@ -238,6 +243,65 @@ function contextDraft(start: number, count: number): ComposerDraft {
 }
 
 describe("mobile composer drafts", () => {
+  it("persists portable draft context and retryable lineage before clearing delivered work", async () => {
+    const handoff: ThreadHandoff = {
+      version: 1,
+      transferId: "mobile-transfer",
+      sourceEnvironmentId: EnvironmentId.make("source"),
+      sourceThreadId: ThreadId.make("source-thread"),
+      sourceLabel: "Laptop",
+      title: "Original",
+      repositoryKey: "github.com/acme/repo",
+      branch: "feature",
+      commitSha: "a".repeat(40),
+      sourceTurnId: null,
+      sourceSequence: 1,
+      createdAt: "2026-10-11T00:00:00.000Z",
+      items: [{ id: "original", role: "user", kind: "message", text: "Keep the constraints." }],
+      omittedItems: 2,
+      omittedAttachments: 1,
+    };
+    const draftId = createNewTaskDraft({
+      environmentId: EnvironmentId.make("target"),
+      projectId: ProjectId.make("project"),
+    });
+    setComposerDraftText(draftId, "Continue the work.");
+    updateComposerDraftSettings(draftId, {
+      handoff,
+      workspaceSelection: { mode: "worktree", branch: "origin/feature", worktreePath: null },
+    });
+    await flushComposerDrafts();
+    const restored = decodePersistedComposerState(JSON.parse(composerDraftFileMocks.getDocument()));
+    expect(restored.drafts[draftId]).toMatchObject({
+      handoff,
+      workspaceSelection: { branch: "origin/feature", mode: "worktree" },
+    });
+    const backlink = {
+      transferId: handoff.transferId,
+      sourceEnvironmentId: handoff.sourceEnvironmentId,
+      sourceThreadId: handoff.sourceThreadId,
+      environmentId: EnvironmentId.make("target"),
+      threadId: ThreadId.make("target-thread"),
+      environmentLabel: "Phone",
+      createdAt: handoff.createdAt,
+      ready: false,
+    };
+    await queueHandoffBacklink(backlink);
+    clearComposerDraftContent(draftId, { clearWorkspaceSelection: true });
+    await queueHandoffBacklink({ ...backlink, ready: true });
+    await queueHandoffBacklink(backlink);
+    expect(
+      decodePersistedComposerState(JSON.parse(composerDraftFileMocks.getDocument()))
+        .handoffBacklinks,
+    ).toEqual([{ ...backlink, ready: true }]);
+    completeHandoffBacklink(handoff.transferId);
+    await flushComposerDrafts();
+    expect(appAtomRegistry.get(handoffBacklinksAtom)).toEqual([]);
+    expect(
+      decodePersistedComposerState(JSON.parse(composerDraftFileMocks.getDocument()))
+        .handoffBacklinks ?? [],
+    ).toEqual([]);
+  });
   it.each([false, true])(
     "restores visible file chips from legacy drafts (archived: %s)",
     async (archived) => {

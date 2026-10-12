@@ -8,6 +8,7 @@ import type {
   ProviderOptionSelection,
   RuntimeMode,
   ServerProvider,
+  ThreadHandoff,
 } from "@rove-code/contracts";
 import {
   CommandId,
@@ -151,6 +152,7 @@ type NewTaskFlowContextValue = {
   readonly selectedWorktreePath: string | null;
   readonly startFromOrigin: boolean;
   readonly draftKey: string | null;
+  readonly handoff: ThreadHandoff | undefined;
   readonly editingPendingTask: QueuedThreadMessage | null;
   readonly prompt: string;
   readonly attachments: ReadonlyArray<DraftComposerAttachment>;
@@ -964,6 +966,7 @@ export function NewTaskFlowProvider(props: React.PropsWithChildren) {
           worktreePath: message.creation.worktreePath,
           startFromOrigin: message.creation.startFromOrigin ?? false,
         },
+        handoff: message.creation.handoff,
       });
     }
     setSelectedEnvironmentId(message.environmentId);
@@ -1032,6 +1035,7 @@ export function NewTaskFlowProvider(props: React.PropsWithChildren) {
           ),
         }),
         creation: {
+          ...(draft.handoff ? { handoff: draft.handoff } : {}),
           projectId: selectedProject.id,
           ...(projectTitle !== undefined ? { projectTitle } : undefined),
           ...(projectCwd !== undefined ? { projectCwd } : undefined),
@@ -1184,6 +1188,7 @@ export function NewTaskFlowProvider(props: React.PropsWithChildren) {
       selectedWorktreePath,
       startFromOrigin,
       draftKey: selectedProjectDraftKey,
+      handoff: selectedProjectDraft.handoff,
       editingPendingTask,
       prompt,
       attachments,
@@ -1271,6 +1276,7 @@ export function NewTaskFlowProvider(props: React.PropsWithChildren) {
       selectedModelKey,
       selectedModelOption,
       selectedProjectDraftKey,
+      selectedProjectDraft.handoff,
       selectedProviderStatus,
       piCatalog,
       showPiCatalog,

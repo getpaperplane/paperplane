@@ -58,9 +58,13 @@ Clone the repository and authenticate an eligible provider on each machine befor
 
 ## Continue a thread on another machine
 
-On web and desktop, right-click a project thread (or open its menu in the chat header) and choose **Continue on**, then the machine. Each machine needs its own clone of the repository with the same remote.
+On web and desktop, open a project thread's menu and choose **Continue on**, then the machine. On mobile, use the thread's menu or **Continue on another machine** in the chat. Both machines need an up-to-date Rove Code host and their own clone of the repository with the same remote.
 
-The thread's branch must be pushed first. Commit and push any remaining changes from the thread before continuing. Rove Code then opens a new thread on the other machine that checks out the same branch in a new worktree, with the recent conversation in the composer. Review it and send it to continue. Once it is sent, each thread links to the other: the original shows **Continued on** with a way to open the new thread. The original thread stays where it was; its provider session does not move.
+Wait for the source thread and its background work to finish, then commit and push any remaining changes. Rove Code verifies the published branch and commit before opening a continuation draft. The destination checks out that exact commit in a new worktree; an existing branch at a different commit is not reset.
+
+Review the draft's transferred context and edit the request before sending. It includes intact selected messages, the original request when it fits, and recent work state. The review shows omitted history and attachments; additional imported items remain readable by the destination agent even when the source is offline. If history cannot be loaded, retry or explicitly choose **Continue with code only**.
+
+Drafts survive reloads. Once sent, the threads link to each other, with source links retried when needed. The original thread and its provider session stay where they were; previous permission approvals do not transfer.
 
 ## Revoke access
 
