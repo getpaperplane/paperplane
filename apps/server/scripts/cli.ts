@@ -1,11 +1,13 @@
 #!/usr/bin/env node
 import * as NodeRuntime from "@effect/platform-node/NodeRuntime";
 import * as NodeServices from "@effect/platform-node/NodeServices";
+import * as Clock from "effect/Clock";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Logger from "effect/Logger";
 import * as Option from "effect/Option";
 import * as Path from "effect/Path";
+import * as Schema from "effect/Schema";
 import { Command, Flag } from "effect/unstable/cli";
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 
@@ -18,6 +20,7 @@ import {
   ServerCliDevelopmentIconSourceMissingError,
   ServerCliDevelopmentIconTargetMissingError,
   ServerCliExecutableImportError,
+  ServerCliRegistryWaitError,
 } from "./cliErrors.ts";
 
 const RepoRoot = Effect.service(Path.Path).pipe(
@@ -165,12 +168,44 @@ const buildExeCmd = Command.make(
 // publish subcommand
 // ---------------------------------------------------------------------------
 
+// npm accepts a large tarball long before it serves it: Linux packages have
+// taken over an hour to appear. Until then npm silently skips the missing
+// optional dependency and the launcher installs without an executable.
+const REGISTRY_WAIT_MINUTES = 120;
+const REGISTRY_POLL_SECONDS = 30;
+const decodePackageManifest = Schema.decodeEffect(
+  Schema.fromJsonString(Schema.Struct({ name: Schema.String, version: Schema.String })),
+);
+
+/** Whether the configured registry serves `spec` (`name@version`) right now. */
+const registryServes = Effect.fn("registryServes")(function* (spec: string) {
+  const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+  const spawnCommand = yield* resolveSpawnCommand("npm", [
+    "view",
+    spec,
+    "version",
+    "--prefer-online",
+  ]);
+  const child = yield* spawner.spawn(
+    ChildProcess.make(spawnCommand.command, spawnCommand.args, {
+      stdout: "ignore",
+      stderr: "ignore",
+      shell: spawnCommand.shell,
+    }),
+  );
+  return (yield* child.exitCode) === 0;
+});
+
 /**
  * Publishes the tarballs scripts/build-npm-platform-packages.ts produced:
  * every `@rove-code/cli-<platform>.tgz` first, `@rove-code/cli.tgz` (the launcher) last, so
  * the launcher is never installable before the executables it depends on.
  * Tarballs rather than directories because `npm publish <dir>` strips the
  * `node_modules/` the executable loads its native addons from.
+ *
+ * A real publish waits until npm serves every platform package before
+ * publishing the launcher, and skips versions npm already serves so a timed-out
+ * run can be retried.
  */
 const publishCmd = Command.make(
   "publish",
@@ -212,7 +247,22 @@ const publishCmd = Command.make(
       if (config.provenance) args.push("--provenance");
       if (config.dryRun) args.push("--dry-run");
 
+      // Each tarball sits beside the package directory it was packed from.
+      const specOf = Effect.fn("specOf")(function* (tarball: string) {
+        const manifest = yield* decodePackageManifest(
+          yield* fs.readFileString(path.join(tarball.replace(/\.tgz$/, ""), "package.json")),
+        );
+        return `${manifest.name}@${manifest.version}`;
+      });
+
       const publishTarball = Effect.fn("publishTarball")(function* (tarball: string) {
+        if (!config.dryRun) {
+          const spec = yield* specOf(tarball);
+          if (yield* registryServes(spec)) {
+            yield* Effect.log(`[cli] ${spec} is already on npm; skipping`);
+            return;
+          }
+        }
         const spawnCommand = yield* resolveSpawnCommand("npm", [...args, tarball]);
         yield* Effect.log(`[cli] npm ${args.join(" ")} ${path.basename(tarball)}`);
         yield* runCommand(
@@ -229,6 +279,25 @@ const publishCmd = Command.make(
         concurrency: "unbounded",
         discard: true,
       });
+      if (!config.dryRun) {
+        let waiting = yield* Effect.forEach(platformTarballs, specOf);
+        const deadline = (yield* Clock.currentTimeMillis) + REGISTRY_WAIT_MINUTES * 60_000;
+        while (true) {
+          const served = yield* Effect.forEach(waiting, registryServes, {
+            concurrency: "unbounded",
+          });
+          waiting = waiting.filter((_, index) => !served[index]);
+          if (waiting.length === 0) break;
+          if ((yield* Clock.currentTimeMillis) >= deadline) {
+            return yield* new ServerCliRegistryWaitError({
+              packages: waiting,
+              minutes: REGISTRY_WAIT_MINUTES,
+            });
+          }
+          yield* Effect.log(`[cli] Waiting for npm to serve ${waiting.join(", ")}`);
+          yield* Effect.sleep(`${REGISTRY_POLL_SECONDS} seconds`);
+        }
+      }
       yield* publishTarball(launcherTarball);
     }),
 ).pipe(

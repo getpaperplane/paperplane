@@ -698,7 +698,8 @@ jobs:
       ]
     if: ${{ !failure() && !cancelled() && needs.preflight.result == 'success' && needs.relay_public_config.result != 'failure' && needs.quality.result == 'success' && needs.desktop_mac_arm64.result == 'success' && needs.desktop_linux_x64.result == 'success' && needs.desktop_linux_arm64.result == 'success' && needs.desktop_win_x64.result == 'success' && needs.desktop_win_arm64.result == 'success' }}
     runs-on: ubuntu-24.04 # ubuntu-24.04
-    timeout-minutes: 15
+    # Publishing waits up to 120 minutes for npm to serve the platform packages.
+    timeout-minutes: 150
     permissions:
       contents: read
       id-token: write

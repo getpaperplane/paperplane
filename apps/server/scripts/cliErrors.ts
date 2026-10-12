@@ -47,6 +47,18 @@ export class ServerCliBuildAssetMissingError extends Schema.TaggedError<ServerCl
   }
 }
 
+export class ServerCliRegistryWaitError extends Schema.TaggedError<ServerCliRegistryWaitError>()(
+  "ServerCliRegistryWaitError",
+  {
+    packages: Schema.Array(Schema.String),
+    minutes: Schema.Number,
+  },
+) {
+  override get message(): string {
+    return `npm still does not serve ${this.packages.join(", ")} after ${this.minutes} minutes, so the launcher was not published. Rerun the publish step later; already-served versions are skipped.`;
+  }
+}
+
 export class ServerCliExecutableImportError extends Schema.TaggedError<ServerCliExecutableImportError>()(
   "ServerCliExecutableImportError",
   {
