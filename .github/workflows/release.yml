@@ -98,6 +98,7 @@ jobs:
       is_prerelease: ${{ steps.release_meta.outputs.is_prerelease }}
       make_latest: ${{ steps.release_meta.outputs.make_latest }}
       ref: ${{ needs.resolve_commit.outputs.ref }}
+      ci_passed: ${{ steps.ci.outputs.passed }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -108,6 +109,24 @@ jobs:
             /*
             !/.repos/
           sparse-checkout-cone-mode: false
+
+      # CI runs the same suites (and more) on every push to main. When it has
+      # already passed for this exact commit, the release reuses that result
+      # instead of spending ten runners repeating it. Any other commit, or CI
+      # that is still running or failed, runs the release quality checks.
+      - id: ci
+        name: Check CI result for the release commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_SHA: ${{ needs.resolve_commit.outputs.ref }}
+        run: |
+          count="$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/ci.yml/runs?head_sha=$RELEASE_SHA&event=push&status=success&per_page=1" --jq .total_count || echo 0)"
+          if [[ "$count" -gt 0 ]]; then
+            echo "CI already passed for $RELEASE_SHA; skipping release quality checks."
+            echo "passed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "passed=false" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Check public release identity
         env:
@@ -224,13 +243,14 @@ jobs:
     steps:
       - name: Require every quality check
         env:
+          CI_PASSED: ${{ needs.preflight.outputs.ci_passed }}
           QUALITY_RESULT: ${{ needs.quality_checks.result }}
-        run: test "$QUALITY_RESULT" = success
+        run: test "$CI_PASSED" = true || test "$QUALITY_RESULT" = success
 
   quality_checks:
     name: Release quality ${{ matrix.suite }} ${{ matrix.workspace }} ${{ matrix.shard }}
     needs: [preflight]
-    if: ${{ !failure() && !cancelled() && needs.preflight.result == 'success' }}
+    if: ${{ !failure() && !cancelled() && needs.preflight.result == 'success' && needs.preflight.outputs.ci_passed != 'true' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     strategy:
@@ -522,15 +542,16 @@ jobs:
           retention-days: 1
 
   # One job per platform and architecture (see release-desktop.yml), each on
-  # hardware of its own architecture, and each gated only on what it consumes:
-  # every platform needs the JS bundle, and the Windows jobs also need the
-  # same-arch Linux job, whose CLI archive they embed as the WSL runtime. Every
+  # hardware of its own architecture. Each starts with preflight and awaits the
+  # artifacts it consumes inside the job, so runner setup overlaps the bundle
+  # build: every platform needs the JS bundle, and the Windows jobs also need
+  # the same-arch Linux CLI archive, which they embed as the WSL runtime. Every
   # job builds the desktop app; all but macOS x64 also build the CLI archive
   # for their platform, so a target either ships fully or not at all.
   desktop_mac_arm64:
     name: Desktop macOS arm64
-    needs: [preflight, relay_public_config, build_bundle]
-    if: ${{ !cancelled() && needs.preflight.result == 'success' && needs.relay_public_config.result != 'failure' && needs.build_bundle.result == 'success' }}
+    needs: [preflight, relay_public_config]
+    if: ${{ !cancelled() && needs.preflight.result == 'success' && needs.relay_public_config.result != 'failure' }}
     uses: ./.github/workflows/release-desktop.yml
     secrets: inherit
     with:
@@ -553,8 +574,8 @@ jobs:
 
   desktop_mac_x64:
     name: Desktop macOS x64
-    needs: [preflight, relay_public_config, build_bundle]
-    if: ${{ !cancelled() && needs.preflight.result == 'success' && needs.relay_public_config.result != 'failure' && needs.build_bundle.result == 'success' }}
+    needs: [preflight, relay_public_config]
+    if: ${{ !cancelled() && needs.preflight.result == 'success' && needs.relay_public_config.result != 'failure' }}
     uses: ./.github/workflows/release-desktop.yml
     secrets: inherit
     with:
@@ -580,8 +601,8 @@ jobs:
 
   desktop_linux_x64:
     name: Desktop Linux x64
-    needs: [preflight, relay_public_config, build_bundle]
-    if: ${{ !cancelled() && needs.preflight.result == 'success' && needs.relay_public_config.result != 'failure' && needs.build_bundle.result == 'success' }}
+    needs: [preflight, relay_public_config]
+    if: ${{ !cancelled() && needs.preflight.result == 'success' && needs.relay_public_config.result != 'failure' }}
     uses: ./.github/workflows/release-desktop.yml
     secrets: inherit
     with:
@@ -606,8 +627,8 @@ jobs:
   # and archive are built on arm64 hardware rather than cross-built.
   desktop_linux_arm64:
     name: Desktop Linux arm64
-    needs: [preflight, relay_public_config, build_bundle]
-    if: ${{ !cancelled() && needs.preflight.result == 'success' && needs.relay_public_config.result != 'failure' && needs.build_bundle.result == 'success' }}
+    needs: [preflight, relay_public_config]
+    if: ${{ !cancelled() && needs.preflight.result == 'success' && needs.relay_public_config.result != 'failure' }}
     uses: ./.github/workflows/release-desktop.yml
     secrets: inherit
     with:
@@ -630,7 +651,7 @@ jobs:
 
   # The Windows jobs embed the same-arch Linux CLI archive as the WSL runtime.
   # `!cancelled()` (not `!failure()`) still lets them start when that Linux job
-  # failed; the download step inside then fails this single platform if the
+  # failed; the wait step inside then fails this single platform if the
   # archive is missing.
   desktop_win_x64:
     name: Desktop Windows x64
@@ -683,21 +704,99 @@ jobs:
   # npm gets the same bytes as the GitHub Release: the launcher plus one
   # package per CLI archive. Preview publishes too, under the `preview`
   # dist-tag, which nothing resolves unless asked for by name.
+  #
+  # Packaging starts with preflight and awaits each CLI archive as it lands, so
+  # it overlaps the desktop builds instead of following them.
+  package_cli:
+    name: Package CLI for npm
+    needs: [preflight, relay_public_config]
+    if: ${{ !cancelled() && needs.preflight.result == 'success' && needs.relay_public_config.result != 'failure' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.preflight.outputs.ref }}
+          sparse-checkout: |
+            /*
+            !/.repos/
+          sparse-checkout-cone-mode: false
+
+      - name: Setup Vite+
+        uses: voidzero-dev/setup-vp@v1
+        with:
+          node-version-file: package.json
+          cache: true
+          run-install: |
+            args:
+              - --filter=@rove-code/server...
+              - --filter=@rove-code/scripts...
+
+      - name: Wait for Linux x64 CLI archive
+        uses: ./.github/actions/wait-for-artifact
+        with: { name: cli-linux-x64, job: Build Linux x64 }
+      - name: Wait for Linux arm64 CLI archive
+        uses: ./.github/actions/wait-for-artifact
+        with: { name: cli-linux-arm64, job: Build Linux arm64 }
+      - name: Wait for macOS arm64 CLI archive
+        uses: ./.github/actions/wait-for-artifact
+        with: { name: cli-mac-arm64, job: Build macOS arm64 }
+      - name: Wait for Windows x64 CLI archive
+        uses: ./.github/actions/wait-for-artifact
+        with: { name: cli-win-x64, job: Build Windows x64 }
+      - name: Wait for Windows arm64 CLI archive
+        uses: ./.github/actions/wait-for-artifact
+        with: { name: cli-win-arm64, job: Build Windows arm64 }
+
+      - name: Download all CLI archives
+        uses: actions/download-artifact@v8
+        with:
+          pattern: cli-*
+          merge-multiple: true
+          path: release-cli
+
+      - name: Build npm packages from CLI archives
+        run: node scripts/build-npm-platform-packages.ts --archives-dir release-cli --version "${{ needs.preflight.outputs.version }}" --output-dir npm-packages
+
+      # Each package.json rides along because `cli.ts publish` reads the name
+      # and version from the directory beside each tarball.
+      - name: Upload npm packages for inspection and bootstrap
+        uses: actions/upload-artifact@v7
+        with:
+          name: npm-packages
+          path: |
+            npm-packages/@rove-code/*.tgz
+            npm-packages/@rove-code/*/package.json
+          if-no-files-found: error
+          retention-days: 14
+
+      # A dry run validates package contents, not registry ownership or OIDC
+      # access. First publication still needs the npm bootstrap procedure.
+      - name: Validate npm packages (dry run)
+        run: node apps/server/scripts/cli.ts publish --packages-dir npm-packages --tag "${{ needs.preflight.outputs.cli_dist_tag }}" --dry-run --verbose
+
+  # Nothing waits on this job. npm can take over an hour to serve freshly
+  # published platform packages, and the launcher is held back until it does
+  # (see `cli.ts publish`), so the GitHub Release, hosted web app, and
+  # announcement go out without it. If it fails, re-run it: published
+  # versions are skipped.
   publish_cli:
-    name: Package CLI and optionally publish to npm
+    name: Publish CLI to npm
     needs:
       [
         preflight,
-        relay_public_config,
         quality,
+        package_cli,
         desktop_mac_arm64,
+        desktop_mac_x64,
         desktop_linux_x64,
         desktop_linux_arm64,
         desktop_win_x64,
         desktop_win_arm64,
       ]
-    if: ${{ !failure() && !cancelled() && needs.preflight.result == 'success' && needs.relay_public_config.result != 'failure' && needs.quality.result == 'success' && needs.desktop_mac_arm64.result == 'success' && needs.desktop_linux_x64.result == 'success' && needs.desktop_linux_arm64.result == 'success' && needs.desktop_win_x64.result == 'success' && needs.desktop_win_arm64.result == 'success' }}
-    runs-on: ubuntu-24.04 # ubuntu-24.04
+    if: ${{ !inputs.build_only && !failure() && !cancelled() && needs.preflight.result == 'success' && needs.quality.result == 'success' && needs.package_cli.result == 'success' && needs.desktop_mac_arm64.result == 'success' && needs.desktop_mac_x64.result == 'success' && needs.desktop_linux_x64.result == 'success' && needs.desktop_linux_arm64.result == 'success' && needs.desktop_win_x64.result == 'success' && needs.desktop_win_arm64.result == 'success' }}
+    runs-on: ubuntu-24.04
     # Publishing waits up to 120 minutes for npm to serve the platform packages.
     timeout-minutes: 150
     permissions:
@@ -723,32 +822,28 @@ jobs:
               - --filter=@rove-code/server...
               - --filter=@rove-code/scripts...
 
-      - name: Download all CLI archives
+      - name: Download npm packages
         uses: actions/download-artifact@v8
         with:
-          pattern: cli-*
-          merge-multiple: true
-          path: release-cli
-
-      - name: Build npm packages from CLI archives
-        run: node scripts/build-npm-platform-packages.ts --archives-dir release-cli --version "${{ needs.preflight.outputs.version }}" --output-dir npm-packages
-
-      - name: Upload npm packages for inspection and bootstrap
-        uses: actions/upload-artifact@v7
-        with:
           name: npm-packages
-          path: npm-packages/@rove-code/*.tgz
-          if-no-files-found: error
-          retention-days: 14
-
-      # A dry run validates package contents, not registry ownership or OIDC
-      # access. First publication still needs the npm bootstrap procedure.
-      - name: Validate npm packages (dry run)
-        run: node apps/server/scripts/cli.ts publish --packages-dir npm-packages --tag "${{ needs.preflight.outputs.cli_dist_tag }}" --dry-run --verbose
+          # The artifact root is @rove-code/, the paths' common ancestor.
+          path: npm-packages/@rove-code
 
       - name: Publish CLI packages
-        if: ${{ !inputs.build_only }}
         run: node apps/server/scripts/cli.ts publish --packages-dir npm-packages --tag "${{ needs.preflight.outputs.cli_dist_tag }}" --provenance --verbose
+
+  # The hosted app is built while the desktop jobs run; deploy_web only ships it.
+  build_web:
+    name: Build hosted web app
+    needs: [preflight]
+    if: ${{ vars.ROVE_CLOUDFLARE_WEB_READY == 'true' && !cancelled() && needs.preflight.result == 'success' && contains(fromJSON('["stable", "nightly"]'), needs.preflight.outputs.release_channel) }}
+    uses: ./.github/workflows/cloudflare-web.yml
+    secrets: inherit
+    with:
+      deploy: false
+      channel: ${{ needs.preflight.outputs.release_channel }}
+      ref: ${{ needs.preflight.outputs.ref }}
+      version: ${{ needs.preflight.outputs.version }}
 
   release:
     name: Publish GitHub Release
@@ -761,9 +856,10 @@ jobs:
         desktop_linux_arm64,
         desktop_win_x64,
         desktop_win_arm64,
-        publish_cli,
+        quality,
+        package_cli,
       ]
-    if: ${{ !inputs.build_only && !failure() && !cancelled() && needs.preflight.result == 'success' && needs.desktop_mac_arm64.result == 'success' && needs.desktop_mac_x64.result == 'success' && needs.desktop_linux_x64.result == 'success' && needs.desktop_linux_arm64.result == 'success' && needs.desktop_win_x64.result == 'success' && needs.desktop_win_arm64.result == 'success' && needs.publish_cli.result == 'success' }}
+    if: ${{ !inputs.build_only && !failure() && !cancelled() && needs.preflight.result == 'success' && needs.desktop_mac_arm64.result == 'success' && needs.desktop_mac_x64.result == 'success' && needs.desktop_linux_x64.result == 'success' && needs.desktop_linux_arm64.result == 'success' && needs.desktop_win_x64.result == 'success' && needs.desktop_win_arm64.result == 'success' && needs.quality.result == 'success' && needs.package_cli.result == 'success' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     permissions:
@@ -954,12 +1050,13 @@ jobs:
 
   deploy_web:
     name: Deploy hosted web app
-    needs: [preflight, release]
-    if: ${{ vars.ROVE_CLOUDFLARE_WEB_READY == 'true' && !failure() && !cancelled() && needs.preflight.result == 'success' && needs.release.result == 'success' && contains(fromJSON('["stable", "nightly"]'), needs.preflight.outputs.release_channel) }}
+    needs: [preflight, release, build_web]
+    if: ${{ vars.ROVE_CLOUDFLARE_WEB_READY == 'true' && !failure() && !cancelled() && needs.preflight.result == 'success' && needs.release.result == 'success' && needs.build_web.result == 'success' && contains(fromJSON('["stable", "nightly"]'), needs.preflight.outputs.release_channel) }}
     uses: ./.github/workflows/cloudflare-web.yml
     secrets: inherit
     with:
       deploy: true
+      prebuilt: true
       channel: ${{ needs.preflight.outputs.release_channel }}
       ref: ${{ needs.preflight.outputs.ref }}
       version: ${{ needs.preflight.outputs.version }}

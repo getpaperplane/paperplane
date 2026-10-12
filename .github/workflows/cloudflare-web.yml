@@ -29,6 +29,10 @@ on:
         description: Version shown in the app. Defaults to apps/web/package.json.
         type: string
         default: ""
+      prebuilt:
+        description: Deploy the cloudflare-web-<channel> artifact an earlier call in this run built.
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -44,6 +48,7 @@ env:
 jobs:
   build:
     name: Build hosted web
+    if: ${{ !inputs.prebuilt }}
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
@@ -106,7 +111,7 @@ jobs:
 
   deploy:
     name: Deploy hosted web
-    if: ${{ inputs.deploy }}
+    if: ${{ inputs.deploy && !cancelled() && (needs.build.result == 'success' || (inputs.prebuilt && needs.build.result == 'skipped')) }}
     needs: build
     runs-on: ubuntu-24.04
     timeout-minutes: 10
