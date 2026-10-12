@@ -84,6 +84,11 @@ const tools: Tool[] = [
         NodeChildProcess.exec(`"${fakeClaude}" --version`, () => resolve());
       });
       NodeChildProcess.spawnSync(fakeClaude, ["--help"], { stdio: "pipe" });
+      // A dev server started by a tool hosts provider protocols; that is not delegation.
+      await exited(NodeChildProcess.spawn(fakeClaude, ["app-server"], { stdio: "pipe" }));
+      await new Promise<void>((resolve) => {
+        NodeChildProcess.exec(`"${fakeClaude}" mcp-server --stdio`, () => resolve());
+      });
     },
   },
   {

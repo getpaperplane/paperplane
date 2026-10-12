@@ -4,6 +4,7 @@ if (process.argv.slice(2).some((arg) => ["--version", "--help", "-v", "-h"].incl
   process.stdout.write("Fake CLI probe output\n");
   process.exit(process.argv.includes("--fail-probe") ? 1 : 0);
 }
+if (["app-server", "mcp-server"].includes(process.argv[2])) process.exit(0);
 const lines = [
   {
     type: "assistant",
