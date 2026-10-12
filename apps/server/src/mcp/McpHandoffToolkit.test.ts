@@ -1,6 +1,8 @@
 import { expect, it } from "@effect/vitest";
 import {
   EnvironmentId,
+  ImportedThreadHandoff,
+  MessageId,
   ProviderInstanceId,
   ThreadId,
   type ThreadHandoff,
@@ -8,13 +10,15 @@ import {
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as Schema from "effect/Schema";
 import * as SqlClient from "effect/unstable/sql/SqlClient";
 import { McpSchema, McpServer } from "effect/unstable/ai";
 import { SqlitePersistenceMemory } from "../persistence/Layers/Sqlite.ts";
 import { HandoffToolkitRegistrationLive } from "./McpHttpServer.ts";
-import { McpInvocationContext } from "./McpInvocationContext.ts";
+import { McpInvocationContext, type McpCapability } from "./McpInvocationContext.ts";
 import type { ReadThreadHandoffInput } from "./toolkits/handoff/tools.ts";
 
+const encodeImported = Schema.encodeEffect(Schema.fromJsonString(ImportedThreadHandoff));
 const TestLayer = HandoffToolkitRegistrationLive.pipe(
   Layer.provideMerge(McpServer.McpServer.layer),
   Layer.provideMerge(SqlitePersistenceMemory),
@@ -58,7 +62,8 @@ it.effect(
         const sql = yield* SqlClient.SqlClient;
         const server = yield* McpServer.McpServer;
         yield* sql`INSERT INTO projection_threads (thread_id, project_id, title, model_selection_json, runtime_mode, interaction_mode, created_at, updated_at) VALUES ('destination', NULL, 'Destination', '{"instanceId":"codex","model":"fixture"}', 'approval-required', 'default', ${handoff.createdAt}, ${handoff.createdAt})`;
-        yield* sql`INSERT INTO projection_thread_activities (activity_id, thread_id, turn_id, tone, kind, summary, payload_json, sequence, created_at) VALUES ('import', 'destination', NULL, 'info', 'thread.handoff', 'Imported context', ${JSON.stringify({ handoff, messageId: "first" })}, 1, ${handoff.createdAt})`;
+        const payload = yield* encodeImported({ handoff, messageId: MessageId.make("first") });
+        yield* sql`INSERT INTO projection_thread_activities (activity_id, thread_id, turn_id, tone, kind, summary, payload_json, sequence, created_at) VALUES ('import', 'destination', NULL, 'info', 'thread.handoff', 'Imported context', ${payload}, 1, ${handoff.createdAt})`;
         const call = (threadId: string, args: ReadThreadHandoffInput) =>
           server.callTool({ name: "read_thread_handoff", arguments: args }).pipe(
             Effect.provideService(McpInvocationContext, {
@@ -66,7 +71,7 @@ it.effect(
               threadId: ThreadId.make(threadId),
               providerSessionId: "fixture",
               providerInstanceId: ProviderInstanceId.make("codex"),
-              capabilities: new Set(),
+              capabilities: new Set<McpCapability>(),
               issuedAt: 1,
             }),
             Effect.provideService(McpSchema.McpServerClient, client),

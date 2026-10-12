@@ -62,7 +62,11 @@ export function renderHandoffContext(handoff: ThreadHandoff, budget = 16_000): s
 /** Bounded reads of destination-local history, including the remainder of a long item. */
 export function readHandoffPage(
   handoff: ThreadHandoff,
-  input: { itemId?: string; offset?: number; textOffset?: number },
+  input: {
+    itemId?: string | undefined;
+    offset?: number | undefined;
+    textOffset?: number | undefined;
+  },
 ) {
   if (input.itemId !== undefined) {
     const item = handoff.items.find((item) => item.id === input.itemId);
