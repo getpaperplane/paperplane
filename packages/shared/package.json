@@ -3,6 +3,10 @@
   "private": true,
   "type": "module",
   "exports": {
+    "./richResponse": {
+      "types": "./src/richResponse.ts",
+      "default": "./src/richResponse.ts"
+    },
     "./threadHandoff": {
       "types": "./src/threadHandoff.ts",
       "import": "./src/threadHandoff.ts"

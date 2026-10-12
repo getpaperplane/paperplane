@@ -35,6 +35,10 @@ import { ComputerUseToolsRegistrationLive } from "./toolkits/computerUse/handler
 import { PullRequestsToolkitHandlersLive } from "./toolkits/pullRequests/handlers.ts";
 import { PullRequestsToolkit } from "./toolkits/pullRequests/tools.ts";
 import { HandoffToolkit } from "./toolkits/handoff/tools.ts";
+import {
+  RichResponseToolkit,
+  RichResponseToolkitHandlersLive,
+} from "./toolkits/richResponse/tools.ts";
 import { HandoffToolkitHandlersLive } from "./toolkits/handoff/handlers.ts";
 import { ProjectionThreadActivityRepositoryLive } from "../persistence/Layers/ProjectionThreadActivities.ts";
 import {
@@ -658,6 +662,10 @@ export const PreviewToolkitRegistrationLive = Layer.mergeAll(
   PreviewSnapshotRegistrationLive,
 );
 
+const RichResponseToolkitRegistrationLive = McpServer.toolkit(RichResponseToolkit).pipe(
+  Layer.provide(RichResponseToolkitHandlersLive),
+);
+
 export const HandoffToolkitRegistrationLive = McpServer.toolkit(HandoffToolkit).pipe(
   Layer.provide(HandoffToolkitHandlersLive),
   Layer.provide(ProjectionThreadActivityRepositoryLive),
@@ -691,6 +699,7 @@ export const layer = Layer.mergeAll(
   PreviewToolkitRegistrationLive,
   PullRequestsToolkitRegistrationLive,
   HandoffToolkitRegistrationLive,
+  RichResponseToolkitRegistrationLive,
   DeviceToolkitRegistrationLive,
   ComputerUseToolsRegistrationLive,
 ).pipe(Layer.provideMerge(McpTransportLive));

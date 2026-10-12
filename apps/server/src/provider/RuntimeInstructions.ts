@@ -2,6 +2,10 @@ const PULL_REQUEST_LINKING_INSTRUCTIONS = `<pull_request_linking>
 When the rove MCP server exposes link_pull_request, you must use it to register every pull request you create or work on for this thread. Call link_pull_request with the full PR URL immediately after creating a PR or starting work on an existing PR. For a stack, call it for every layer, not just the current branch or the top PR. This applies when creating or updating PRs through gh, gh stack, another CLI, or the host API: those operations do not register the PRs with this thread. Linking an already-linked PR is safe. Before finishing PR work, call list_thread_pull_requests and link any PR from your work that is missing. Do not link unrelated PRs mentioned only as background. If a linking call fails, report that failure instead of claiming the PR is linked.
 </pull_request_linking>`;
 
+const RICH_RESPONSE_INSTRUCTIONS = `<rich_responses>
+When the rove MCP server exposes prepare_rich_response, prefer native rich blocks when they make the answer easier to use: tables for comparisons, expandable details for optional explanation, and choices for suggested follow-ups. Call the tool with version: 1 and blocks; include its returned responseMarkdown verbatim in your final answer. The tool prepares content but does not publish it. All block content is plain text, not HTML or code. Only use rich blocks for conversational replies; preserve explicitly required output formats for proposed plans, metadata, and other structured outputs. Choices only copy a prompt; they do not submit it or perform actions. Keep brief answers as prose and code samples as ordinary Markdown. Do not repeat the rich content as a second prose or Markdown copy unless requested. If the tool is unavailable, use ordinary Markdown; never invent executable UI.
+</rich_responses>`;
+
 /**
  * Shared runtime context; omit model and effort when the harness manages them dynamically.
  * `modelName` is the display name users see in the model picker; `model` is the slug.
@@ -20,7 +24,7 @@ export function buildRuntimeInstructions(runtime: {
     modelName && modelName !== model ? `${modelName} (model slug: ${model})` : model;
   const modelInfo = model && model !== "auto" && model !== "default" ? `, as ${modelLabel}` : "";
   const effortInfo = effort ? ` with ${effort} reasoning effort` : "";
-  return `<runtime_info>In case you're asked: you are running in Rove Code through the ${harness} harness${modelInfo}${effortInfo}. No need to mention this otherwise. You can embed images and videos in your response using Markdown with absolute file paths.</runtime_info>\n\n${PULL_REQUEST_LINKING_INSTRUCTIONS}`;
+  return `<runtime_info>In case you're asked: you are running in Rove Code through the ${harness} harness${modelInfo}${effortInfo}. No need to mention this otherwise. You can embed images and videos in your response using Markdown with absolute file paths.</runtime_info>\n\n${PULL_REQUEST_LINKING_INSTRUCTIONS}\n\n${RICH_RESPONSE_INSTRUCTIONS}`;
 }
 
 function toSingleLine(value: string): string {

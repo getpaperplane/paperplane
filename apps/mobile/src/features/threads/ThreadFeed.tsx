@@ -17,6 +17,8 @@ import type {
   TurnId,
 } from "@rove-code/contracts";
 import { renderAssistantCitationsAsText } from "@rove-code/shared/assistantCitations";
+import { splitRichResponse, richResponseTextFallback } from "@rove-code/shared/richResponse";
+import { RichResponseContent } from "./RichResponseContent";
 import { encodeComposerContextFragment } from "@rove-code/shared/composerContextClipboard";
 import {
   parseComposerContextHref,
@@ -63,6 +65,7 @@ import {
   useId,
   type ReactNode,
   type RefObject,
+  type ComponentProps,
 } from "react";
 import {
   Markdown,
@@ -777,7 +780,42 @@ interface MarkdownLinkHandlers {
   readonly onFileContextMenuAction: (href: string, actionId: string) => void;
 }
 
-const AssistantMarkdownContent = memo(function AssistantMarkdownContent(props: {
+const AssistantMarkdownContent = memo(function AssistantMarkdownContent(
+  props: ComponentProps<typeof AssistantMarkdownSegment> & { readonly isStreaming: boolean },
+) {
+  const segments = useMemo(
+    () => splitRichResponse(props.markdown, props.isStreaming),
+    [props.markdown, props.isStreaming],
+  );
+  return segments.map((segment) => {
+    switch (segment.kind) {
+      case "rich-response":
+        return (
+          <RichResponseContent
+            key={segment.sourceOffset}
+            response={segment.response}
+            textStyle={props.markdownStyles.nativeTextStyle}
+          />
+        );
+      case "pending":
+        return (
+          <Text
+            key={segment.sourceOffset}
+            accessibilityRole="text"
+            className="py-2 text-foreground-muted"
+          >
+            Preparing rich response…
+          </Text>
+        );
+      case "markdown":
+        return (
+          <AssistantMarkdownSegment key={segment.sourceOffset} {...props} markdown={segment.text} />
+        );
+    }
+  });
+});
+
+const AssistantMarkdownSegment = memo(function AssistantMarkdownSegment(props: {
   readonly markdown: string;
   readonly markdownStyles: MarkdownStyleSet;
   readonly linkHandlers: MarkdownLinkHandlers;
@@ -802,7 +840,9 @@ const AssistantMarkdownContent = memo(function AssistantMarkdownContent(props: {
     }
     if (segment.markdown.trim().length === 0) return null;
 
-    const markdown = renderCodexFileCitationsAsMarkdown(segment.markdown);
+    const markdown = renderCodexFileCitationsAsMarkdown(
+      renderAssistantCitationsAsText(segment.markdown),
+    );
     return hasNativeSelectableMarkdownText() ? (
       <SelectableMarkdownText
         key={`markdown:${segment.sourceOffset}`}
@@ -1480,7 +1520,8 @@ function renderFeedEntry(
   if (entry.type === "message") {
     const { message } = entry;
     const isUser = message.role === "user";
-    const renderedText = renderAssistantCitationsAsText(message.text);
+    // Rich blocks must be decoded before prose-only citation transforms touch their JSON.
+    const renderedText = isUser ? renderAssistantCitationsAsText(message.text) : message.text;
     const styles = isUser ? markdownStyles.user : markdownStyles.assistant;
     const timestampLabel = formatMessageTime(isUser ? message.createdAt : message.updatedAt);
     const attachments = message.attachments ?? [];
@@ -1664,6 +1705,7 @@ function renderFeedEntry(
           <MarkdownImageAvailableWidthContext value={props.markdownContentWidth}>
             <AssistantMarkdownContent
               markdown={renderedText}
+              isStreaming={Boolean(message.streaming)}
               markdownStyles={styles}
               linkHandlers={props.markdownLinkHandlers}
               onUseArtifactTemplate={props.onUseArtifactTemplate}
@@ -1699,7 +1741,7 @@ function renderFeedEntry(
           <View className="mt-1 flex-row items-center gap-1">
             <CopyTextButton
               accessibilityLabel="Copy message"
-              text={renderedText}
+              text={renderAssistantCitationsAsText(richResponseTextFallback(renderedText))}
               tintColor={iconSubtleColor}
               buttonSize={28}
               iconSize={13}

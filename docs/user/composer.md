@@ -12,6 +12,16 @@ becomes an attachment when inserting it would exceed the message limit. On a
 hardware keyboard, use `Cmd+Shift+V` on Apple devices or `Ctrl+Shift+V` elsewhere
 to keep a large paste editable in the composer instead.
 
+## Rich responses
+
+Agents can use native tables, expandable explanations, and suggested follow-ups
+when those make an answer easier to use. Ask for a comparison or more detail;
+brief replies and code samples can still use Markdown.
+
+Suggested follow-ups only copy text. Paste one into the composer, edit it, and
+send it when you are ready. Opening an explanation or copying a suggestion does
+not start a turn or run a command.
+
 ## Attach files
 
 Attach up to 100 files per message. Each image can be up to 10 MiB, with at most

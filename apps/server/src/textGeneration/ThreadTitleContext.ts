@@ -1,5 +1,6 @@
 import type { ChatAttachment } from "@rove-code/contracts";
 import { assistantCitationsToPlainText } from "@rove-code/shared/assistantCitations";
+import { richResponseTextFallback } from "@rove-code/shared/richResponse";
 
 export type ThreadTitleMessage = {
   readonly role: "user" | "assistant" | "system";
@@ -33,7 +34,11 @@ export function formatThreadTitleContext(messages: ReadonlyArray<ThreadTitleMess
   const contentsFor = (section: (typeof sections)[number]) => {
     const cached = formatted.get(section.index);
     if (cached !== undefined) return cached;
-    const text = assistantCitationsToPlainText(section.message.text).trim();
+    const text = assistantCitationsToPlainText(
+      section.message.role === "assistant"
+        ? richResponseTextFallback(section.message.text)
+        : section.message.text,
+    ).trim();
     const names = section.message.attachments?.map((attachment) => attachment.name).join(", ");
     const contents = [text, ...(names ? [`[Attachments: ${names}]`] : [])]
       .filter(Boolean)

@@ -178,6 +178,63 @@ describe("ChatMarkdown favicon privacy", () => {
   });
 });
 
+describe("ChatMarkdown native rich responses", () => {
+  it.each([0, 2, 3])(
+    "promotes a completed response with %s-space indentation without breaking Markdown references",
+    async (indent) => {
+      vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+      let renderer: ReactTestRenderer | undefined;
+      const fence = [
+        "```rove-response",
+        JSON.stringify({
+          version: 1,
+          blocks: [
+            { type: "table", title: "Options", columns: ["Choice"], rows: [["Native rendering"]] },
+          ],
+        }),
+        "```",
+      ]
+        .map((line) => `${" ".repeat(indent)}${line}`)
+        .join("\n");
+      try {
+        await act(async () => {
+          renderer = create(
+            <ChatMarkdown
+              cwd={undefined}
+              renderRichResponses
+              isStreaming
+              text={`Read [docs][ref].\n\n${fence.slice(0, -3)}`}
+            />,
+          );
+        });
+        expect(renderer!.root.findByProps({ role: "status" }).children).toEqual([
+          "Preparing rich response…",
+        ]);
+        expect(renderer!.root.findAllByType("td")).toHaveLength(0);
+        await act(async () => {
+          renderer!.update(
+            <ChatMarkdown
+              cwd={undefined}
+              renderRichResponses
+              text={`Read [docs][ref].\n\n${fence}\n\n[ref]: https://example.com/docs`}
+            />,
+          );
+        });
+        expect(renderer!.root.findAllByProps({ role: "status" })).toHaveLength(0);
+        expect(renderer!.root.findByType("td").children).toEqual(["Native rendering"]);
+        expect(
+          renderer!.root
+            .findAllByType("a")
+            .some((link) => link.props.href === "https://example.com/docs"),
+        ).toBe(true);
+      } finally {
+        if (renderer) await act(async () => renderer!.unmount());
+        vi.unstubAllGlobals();
+      }
+    },
+  );
+});
+
 describe("ChatMarkdown streaming", () => {
   it("runs only a complete single-line shell block after a click", async () => {
     vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);

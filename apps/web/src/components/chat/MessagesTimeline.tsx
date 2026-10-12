@@ -100,6 +100,7 @@ import {
 } from "../../lib/diffRendering";
 import { PREFERRED_HIGHLIGHTER } from "../../lib/syntaxHighlighting";
 import ChatMarkdown, { ChatMarkdownAssetImage } from "../ChatMarkdown";
+import { richResponseTextFallback } from "@rove-code/shared/richResponse";
 import {
   BotIcon,
   BrainIcon,
@@ -2343,6 +2344,7 @@ function AssistantTimelineRow({ row }: { row: Extract<TimelineRow, { kind: "mess
         >
           <ChatMarkdown
             text={messageText}
+            renderRichResponses
             cwd={ctx.markdownCwd}
             threadRef={ctx.threadRef ?? undefined}
             isStreaming={Boolean(row.message.streaming)}
@@ -2454,7 +2456,12 @@ function AssistantCopyButton({
     return null;
   }
 
-  return <MessageCopyButton text={assistantCopyState.text ?? ""} variant="ghost" />;
+  return (
+    <MessageCopyButton
+      text={richResponseTextFallback(assistantCopyState.text ?? "")}
+      variant="ghost"
+    />
+  );
 }
 
 function ProposedPlanTimelineRow({

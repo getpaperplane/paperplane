@@ -29,6 +29,22 @@ function rows(
 }
 
 describe("timeline minimap previews", () => {
+  it("previews rich responses as readable text instead of their JSON payload", () => {
+    const payload = JSON.stringify({
+      version: 1,
+      blocks: [{ type: "details", title: "Cause", text: "Token expired." }],
+    });
+    const [item] = deriveTimelineMinimapItems(
+      rows([
+        ["user", "Why?"],
+        ["assistant", `Found it.\n\n\`\`\`rove-response\n${payload}\n\`\`\``],
+      ]),
+    );
+    expect(resolveTimelineMinimapPreview(item ?? null)?.assistantText).toBe(
+      "Found it. ### Cause Token expired.",
+    );
+  });
+
   it("previews the last assistant response before the next prompt and retains jump targets", () => {
     const source = rows([
       ["user", "  Inspect\n this  "],
