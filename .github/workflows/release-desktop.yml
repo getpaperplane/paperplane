@@ -68,6 +68,12 @@ on:
         required: false
         default: false
         type: boolean
+      # Whether the job builds the desktop app. A CLI-only job (desktop: false,
+      # cli_archive: true) splits a slow target's two builds across runners.
+      desktop:
+        required: false
+        default: true
+        type: boolean
       version:
         required: true
         type: string
@@ -173,15 +179,6 @@ jobs:
           cache: ${{ inputs.platform != 'win' }}
           run-install: false
 
-      # node_modules lives on the workspace Dev Drive, and pnpm can only
-      # hardlink or clone from a store on the same volume. With its default
-      # store on C:, it copied every package file and Defender scanned the
-      # restored store.
-      - name: Keep the package store on the Dev Drive
-        if: inputs.platform == 'win' && inputs.arch == 'arm64'
-        shell: pwsh
-        run: '"pnpm_config_store_dir=${{ github.workspace }}\.pnpm-store" >> $env:GITHUB_ENV'
-
       - name: Resolve Windows package cache path
         if: inputs.platform == 'win'
         id: package_cache_path
@@ -206,6 +203,25 @@ jobs:
         with:
           name: release-dependency-verification
           path: ${{ runner.temp }}/pnpm-metadata
+
+      # Electron and electron-builder's packaging tools (fpm, NSIS, AppImage)
+      # otherwise download from GitHub Releases on every run, which is slow and
+      # fails the build whenever GitHub returns a 5xx. Both versions are pinned
+      # in apps/desktop/package.json.
+      - name: Locate Electron download caches
+        if: inputs.desktop
+        shell: bash
+        run: |
+          echo "ELECTRON_CACHE=$RUNNER_TEMP/electron-downloads/electron" >> "$GITHUB_ENV"
+          echo "ELECTRON_BUILDER_CACHE=$RUNNER_TEMP/electron-downloads/electron-builder" >> "$GITHUB_ENV"
+
+      - name: Cache Electron downloads
+        if: inputs.desktop
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          path: ${{ runner.temp }}/electron-downloads
+          key: electron-downloads-v1-${{ inputs.platform }}-${{ inputs.arch }}-${{ hashFiles('apps/desktop/package.json') }}
+          restore-keys: electron-downloads-v1-${{ inputs.platform }}-${{ inputs.arch }}-
 
       - name: Install desktop dependencies
         env:
@@ -520,20 +536,21 @@ jobs:
         run: bash .github/scripts/background-join.sh apt
 
       - name: Wait for Linux CLI archive for WSL
-        if: inputs.platform == 'win'
+        if: inputs.platform == 'win' && inputs.desktop
         uses: ./.github/actions/wait-for-artifact
         with:
           name: cli-linux-${{ inputs.arch }}
           job: Build Linux ${{ inputs.arch }}
 
       - name: Download Linux CLI archive for WSL
-        if: inputs.platform == 'win'
+        if: inputs.platform == 'win' && inputs.desktop
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           name: cli-linux-${{ inputs.arch }}
           path: wsl-runtime
 
       - name: Build desktop artifact
+        if: inputs.desktop
         shell: bash
         env:
           pnpm_config_cache_dir: ${{ runner.temp }}/pnpm-metadata
@@ -714,6 +731,7 @@ jobs:
           if-no-files-found: error
 
       - name: Collect release assets
+        if: inputs.desktop
         shell: bash
         run: |
           set -euo pipefail
@@ -760,6 +778,7 @@ jobs:
           fi
 
       - name: Collect resource monitor
+        if: inputs.desktop
         shell: bash
         run: |
           set -euo pipefail
@@ -773,6 +792,7 @@ jobs:
           cp "$source_path" "$target_dir/$binary_name"
 
       - name: Upload build artifacts
+        if: inputs.desktop
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: desktop-${{ inputs.platform }}-${{ inputs.arch }}
@@ -780,6 +800,7 @@ jobs:
           if-no-files-found: error
 
       - name: Upload resource monitor
+        if: inputs.desktop
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: resource-monitor-${{ inputs.resource_key }}
