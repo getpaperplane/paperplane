@@ -6,10 +6,10 @@ const nodeCommand = (source: string) => `node -e ${quote(source)}`;
 
 // Bootstrap scripts exit with these codes so failures can be explained without
 // forwarding command output, which may contain credentials.
-export const SANDBOX_INSTALL_FAILED = 10;
-export const SANDBOX_UNOWNED_SERVER = 11;
-export const SANDBOX_NOT_READY = 12;
-export const SANDBOX_STILL_RUNNING = 13;
+const SANDBOX_INSTALL_FAILED = 10;
+const SANDBOX_UNOWNED_SERVER = 11;
+const SANDBOX_NOT_READY = 12;
+const SANDBOX_STILL_RUNNING = 13;
 
 const ROOT = `"$HOME/.rove-sandbox"`;
 const RUNTIME = `"$HOME/.rove-sandbox/runtime"`;
