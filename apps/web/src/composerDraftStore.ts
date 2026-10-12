@@ -31,6 +31,7 @@ import {
   scopeThreadRef,
 } from "@rove-code/client-runtime/environment";
 import * as Schema from "effect/Schema";
+import { ThreadHandoff } from "@rove-code/contracts";
 import * as Equal from "effect/Equal";
 import * as Effect from "effect/Effect";
 import { DeepMutable } from "effect/Types";
@@ -323,6 +324,8 @@ const PersistedDraftThreadState = Schema.Struct({
   worktreePath: Schema.NullOr(Schema.String),
   envMode: DraftThreadEnvModeSchema,
   startFromOrigin: Schema.Boolean.pipe(Schema.withDecodingDefault(Effect.succeed(false))),
+  checkoutBaseBranch: Schema.optionalKey(Schema.Boolean),
+  handoff: Schema.optionalKey(Schema.NullOr(ThreadHandoff)),
   promotedTo: Schema.optionalKey(
     Schema.NullOr(
       Schema.Struct({
@@ -450,6 +453,8 @@ export interface DraftSessionState {
   worktreePath: string | null;
   envMode: DraftThreadEnvMode;
   startFromOrigin: boolean;
+  checkoutBaseBranch?: boolean | undefined;
+  handoff?: ThreadHandoff | null | undefined;
   promotedTo?: ScopedThreadRef | null;
 }
 
@@ -547,6 +552,8 @@ interface ComposerDraftStoreState {
   setDraftThreadContext: (
     threadRef: ComposerThreadTarget,
     options: {
+      checkoutBaseBranch?: boolean;
+      handoff?: ThreadHandoff | null;
       branch?: string | null;
       worktreePath?: string | null;
       projectRef?: ScopedProjectRef;
@@ -1560,6 +1567,8 @@ function createDraftThreadState(
     envMode:
       options?.envMode ?? (nextWorktreePath ? "worktree" : (existingThread?.envMode ?? "local")),
     startFromOrigin: nextStartFromOrigin,
+    checkoutBaseBranch: existingThread?.checkoutBaseBranch,
+    handoff: existingThread?.handoff,
     promotedTo: null,
   };
 }
@@ -1594,6 +1603,8 @@ function draftThreadsEqual(left: DraftThreadState | undefined, right: DraftThrea
     left.worktreePath === right.worktreePath &&
     left.envMode === right.envMode &&
     left.startFromOrigin === right.startFromOrigin &&
+    left.checkoutBaseBranch === right.checkoutBaseBranch &&
+    left.handoff === right.handoff &&
     scopedThreadRefsEqual(left.promotedTo, right.promotedTo)
   );
 }
@@ -1742,6 +1753,10 @@ function normalizePersistedDraftThreads(
         worktreePath: normalizedWorktreePath,
         envMode: normalizeDraftThreadEnvMode(candidateDraftThread.envMode, normalizedWorktreePath),
         startFromOrigin,
+        checkoutBaseBranch: candidateDraftThread.checkoutBaseBranch === true,
+        ...(Schema.is(ThreadHandoff)(candidateDraftThread.handoff)
+          ? { handoff: candidateDraftThread.handoff }
+          : {}),
         ...(candidateDraftThread.environmentSelection === "manual" ||
         candidateDraftThread.environmentSelection === "auto"
           ? { environmentSelection: candidateDraftThread.environmentSelection }
@@ -2206,7 +2221,16 @@ export function partializeComposerDraftStoreState(
     if (!keptSessionKeys.has(threadKey)) {
       continue;
     }
-    persistedDraftThreadsByThreadKey[threadKey] = draftThread;
+    const { handoff, checkoutBaseBranch, ...metadata } = draftThread;
+    persistedDraftThreadsByThreadKey[threadKey] = {
+      ...metadata,
+      ...(checkoutBaseBranch !== undefined ? { checkoutBaseBranch } : {}),
+      ...(handoff
+        ? { handoff: { ...handoff, items: handoff.items.map((item) => ({ ...item })) } }
+        : handoff === null
+          ? { handoff: null }
+          : {}),
+    };
   }
   return {
     draftsByThreadKey: persistedDraftsByThreadKey,
@@ -2487,6 +2511,8 @@ function toHydratedDraftThreadState(
     worktreePath: persistedDraftThread.worktreePath,
     envMode: persistedDraftThread.envMode,
     startFromOrigin: persistedDraftThread.startFromOrigin,
+    checkoutBaseBranch: persistedDraftThread.checkoutBaseBranch,
+    handoff: persistedDraftThread.handoff,
     ...(persistedDraftThread.environmentSelection
       ? { environmentSelection: persistedDraftThread.environmentSelection }
       : {}),
@@ -2790,6 +2816,8 @@ const composerDraftStore = create<ComposerDraftStoreState>()(
               envMode:
                 options.envMode ?? (nextWorktreePath ? "worktree" : (existing.envMode ?? "local")),
               startFromOrigin: nextStartFromOrigin,
+              checkoutBaseBranch: options.checkoutBaseBranch ?? existing.checkoutBaseBranch,
+              handoff: options.handoff === undefined ? existing.handoff : options.handoff,
               promotedTo: existing.promotedTo ?? null,
             };
             const isUnchanged =
@@ -2805,6 +2833,8 @@ const composerDraftStore = create<ComposerDraftStoreState>()(
               nextDraftThread.worktreePath === existing.worktreePath &&
               nextDraftThread.envMode === existing.envMode &&
               nextDraftThread.startFromOrigin === existing.startFromOrigin &&
+              nextDraftThread.checkoutBaseBranch === existing.checkoutBaseBranch &&
+              nextDraftThread.handoff === existing.handoff &&
               scopedThreadRefsEqual(nextDraftThread.promotedTo, existing.promotedTo);
             if (isUnchanged) {
               return state;

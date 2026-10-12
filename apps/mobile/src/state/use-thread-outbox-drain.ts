@@ -18,6 +18,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Alert } from "react-native";
 
 import { createDebugLogger } from "../lib/debugLog";
+import { rememberQueuedHandoff } from "./handoff-backlinks";
 import { scopedThreadKey } from "../lib/scopedEntities";
 import { buildProjectThreadStartTurnInput } from "../lib/projectThreadStartTurn";
 import { serializeComposerMessageForServer, uploadedComposerContext } from "../lib/composerContext";
@@ -294,6 +295,7 @@ export async function completeQueuedMessageDelivery(
     if (appAtomRegistry.get(editingQueuedMessageIdsAtom)[queuedMessage.messageId]) {
       return "edited";
     }
+    await rememberQueuedHandoff(queuedMessage, true);
     retainAcknowledgedThreadMessage(queuedMessage);
     // Removal also releases the message's local attachment files.
     const removed = await removeThreadOutboxMessage(
@@ -377,6 +379,7 @@ export async function recoverEditedCreationAfterDelivery(
   }
   const draftKey = scopedThreadKey(kept.environmentId, kept.threadId);
   try {
+    await rememberQueuedHandoff(kept, false);
     // Merge before removing: the draft's reference keeps the removal sweep
     // from deleting the attachment files. allowOverflow mirrors the
     // send-failure restore; the send path refuses over-cap drafts, so the
@@ -500,6 +503,7 @@ export async function restoreRejectedQueuedMessage(
       ...(queuedMessage.interactionMode ? { interactionMode: queuedMessage.interactionMode } : {}),
       ...(queuedMessage.creation
         ? {
+            handoff: queuedMessage.creation.handoff,
             workspaceSelection: {
               mode: queuedMessage.creation.workspaceMode,
               branch: queuedMessage.creation.branch,
@@ -1012,6 +1016,16 @@ export function useThreadOutboxDrain(): void {
         settings,
         currentConfig.providers,
       );
+      if (
+        creation.handoff &&
+        currentConfig.environment.capabilities.threadPortableHandoff !== true
+      ) {
+        return restoreQueuedMessage(
+          persistedMessage,
+          "This environment no longer supports verified continuations. Update it or prepare a new draft.",
+        );
+      }
+      await rememberQueuedHandoff(queuedMessage, false);
       const deliveryResult = await startTurn({
         environmentId: queuedMessage.environmentId,
         input: buildProjectThreadStartTurnInput({
@@ -1035,6 +1049,7 @@ export function useThreadOutboxDrain(): void {
           runtimeMode: sendSettings.runtimeMode,
           interactionMode: sendSettings.interactionMode,
           workspaceMode: creation.workspaceMode,
+          ...(creation.handoff ? { handoff: creation.handoff } : {}),
           branch: creation.branch,
           worktreePath: creation.worktreePath,
           startFromOrigin: creation.startFromOrigin ?? false,

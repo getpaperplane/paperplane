@@ -16,6 +16,7 @@ import {
   RemoteSandbox,
 } from "./sandbox.ts";
 import * as Schema from "effect/Schema";
+import { ThreadHandoff, ThreadHandoffExportInput, ThreadHandoffError } from "./threadHandoff.ts";
 import * as Rpc from "effect/unstable/rpc/Rpc";
 import * as RpcGroup from "effect/unstable/rpc/RpcGroup";
 import { NonNegativeInt, TrimmedNonEmptyString } from "./baseSchemas.ts";
@@ -365,6 +366,7 @@ export const WS_METHODS = {
 
   // Git workflow methods
   gitRunStackedAction: "git.runStackedAction",
+  threadHandoffExport: "thread.handoff.export",
   gitResolvePullRequest: "git.resolvePullRequest",
   gitPreparePullRequestThread: "git.preparePullRequestThread",
 
@@ -1148,6 +1150,12 @@ const WsGitRunStackedActionRpc = Rpc.make(WS_METHODS.gitRunStackedAction, {
   stream: true,
 });
 
+const WsThreadHandoffExportRpc = Rpc.make(WS_METHODS.threadHandoffExport, {
+  payload: ThreadHandoffExportInput,
+  success: ThreadHandoff,
+  error: Schema.Union([ThreadHandoffError, EnvironmentAuthorizationError]),
+});
+
 const WsGitResolvePullRequestRpc = Rpc.make(WS_METHODS.gitResolvePullRequest, {
   payload: GitPullRequestRefInput,
   success: GitResolvePullRequestResult,
@@ -1650,6 +1658,7 @@ export const WsRpcGroup = RpcGroup.make(
   WsVcsPullRpc,
   WsVcsRefreshStatusRpc,
   WsGitRunStackedActionRpc,
+  WsThreadHandoffExportRpc,
   WsGitResolvePullRequestRpc,
   WsGitPreparePullRequestThreadRpc,
   WsWorktreeInventoryListRpc,

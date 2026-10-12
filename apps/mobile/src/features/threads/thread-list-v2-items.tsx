@@ -38,6 +38,7 @@ import { useThreadPr } from "../../state/use-thread-pr";
 import { useSwipeRowDormant } from "../home/swipe-row-activation";
 import { ThreadSwipeable } from "../home/thread-swipe-actions";
 import { buildThreadTitleRegenerationMenuItems } from "./thread-title-regeneration-menu";
+import { useContinueThreadOnEnvironment } from "./use-continue-thread-on-environment";
 import {
   THREAD_LIST_V2_SETTLED_PAGE_COUNT,
   resolveThreadListV2SnoozeMenuSelection,
@@ -704,15 +705,33 @@ export const ThreadListV2Row = memo(function ThreadListV2Row(props: {
         : [],
     [props.autoSettleOptOutSupported, thread.autoSettleDisabledAt],
   );
+  const continuation = useContinueThreadOnEnvironment();
+  const continueTargets = useMemo(
+    () => continuation.resolveTargets(thread),
+    [continuation.resolveTargets, thread.environmentId, thread.id, thread.projectId, thread.branch],
+  );
   const titleMenuItems = useMemo<MenuAction[]>(
     () => [
+      ...(continueTargets.length > 0
+        ? [
+            {
+              id: "continue-on",
+              title: "Continue on",
+              image: "desktopcomputer",
+              subactions: continueTargets.map((target) => ({
+                id: `continue-on:${target.environmentId}`,
+                title: target.label,
+              })),
+            },
+          ]
+        : []),
       { id: "rename", title: "Rename", image: "square.and.pencil" },
       ...buildThreadTitleRegenerationMenuItems({
         supported: props.titleRegenerationSupported,
         isRegenerating: thread.titleRegeneration != null,
       }),
     ],
-    [props.titleRegenerationSupported, thread.titleRegeneration],
+    [props.titleRegenerationSupported, thread.titleRegeneration, continueTargets],
   );
   const snoozableCardMenuActions = useMemo<MenuAction[]>(
     () => [
@@ -774,6 +793,10 @@ export const ThreadListV2Row = memo(function ThreadListV2Row(props: {
   );
   const handleMenuAction = useCallback(
     ({ nativeEvent }: { readonly nativeEvent: { readonly event: string } }) => {
+      const target = continueTargets.find(
+        (target) => nativeEvent.event === `continue-on:${target.environmentId}`,
+      );
+      if (target) void continuation.continueOn(thread, target);
       if (nativeEvent.event === "new-thread-on-branch") onNewThreadOnBranch(thread);
       if (nativeEvent.event === "settle") handleSettle();
       if (nativeEvent.event === "unsettle") handleUnsettle();
@@ -811,6 +834,8 @@ export const ThreadListV2Row = memo(function ThreadListV2Row(props: {
       onNewThreadOnBranch,
       thread,
       handleArchive,
+      continueTargets,
+      continuation.continueOn,
       handleDelete,
       handleRegenerateTitle,
       handleRename,

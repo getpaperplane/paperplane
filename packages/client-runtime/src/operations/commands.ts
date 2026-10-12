@@ -1,17 +1,18 @@
 import {
   CommandId,
   ORCHESTRATION_WS_METHODS,
+  WS_METHODS,
   type ClientOrchestrationCommand,
 } from "@rove-code/contracts";
 import * as Crypto from "effect/Crypto";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 
-import type { EnvironmentSupervisor } from "../connection/supervisor.ts";
+import { EnvironmentSupervisor } from "../connection/supervisor.ts";
 import {
   type EnvironmentRpcFailure,
   type EnvironmentRpcSuccess,
-  type EnvironmentRpcUnavailableError,
+  EnvironmentRpcUnavailableError,
   request,
 } from "../rpc/client.ts";
 
@@ -333,6 +334,24 @@ export const setThreadInteractionMode: (input: SetThreadInteractionModeInput) =>
 export const startThreadTurn: (input: StartThreadTurnInput) => CommandEffect = Effect.fn(
   "EnvironmentCommands.startThreadTurn",
 )(function* (input) {
+  if (input.bootstrap?.handoff) {
+    const environment = yield* EnvironmentSupervisor;
+    const config = yield* request(WS_METHODS.serverGetConfig, {}).pipe(
+      Effect.mapError(
+        (error) =>
+          new EnvironmentRpcUnavailableError({
+            environmentId: environment.target.environmentId,
+            message: `Could not verify continuation support: ${error.message}`,
+          }),
+      ),
+    );
+    if (config.environment.capabilities.threadPortableHandoff !== true) {
+      return yield* new EnvironmentRpcUnavailableError({
+        environmentId: environment.target.environmentId,
+        message: "Update this environment before sending a verified continuation.",
+      });
+    }
+  }
   const metadata = yield* timestampedCommandMetadata(input);
   return yield* dispatch({
     ...input,

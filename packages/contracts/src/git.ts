@@ -142,6 +142,7 @@ export const VcsCreateWorktreeInput = Schema.Struct({
   refName: TrimmedNonEmptyStringSchema,
   newRefName: Schema.optional(TrimmedNonEmptyStringSchema),
   baseRefName: Schema.optional(TrimmedNonEmptyStringSchema),
+  expectedCommit: Schema.optional(Schema.String.check(Schema.isPattern(/^[a-f0-9]{40,64}$/))),
   path: Schema.NullOr(TrimmedNonEmptyStringSchema),
 });
 export type VcsCreateWorktreeInput = typeof VcsCreateWorktreeInput.Type;

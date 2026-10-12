@@ -1,37 +1,53 @@
-import type { EnvironmentId, ThreadId } from "@rove-code/contracts";
+import type { EnvironmentId, ThreadId, ThreadHandoff } from "@rove-code/contracts";
 import { create } from "zustand";
+import { createJSONStorage, persist } from "zustand/middleware";
+import { threadKey } from "@rove-code/client-runtime/state/entities";
 
-/** Where a draft opened by "Continue on" came from. */
 export interface PendingThreadHandoff {
-  readonly sourceEnvironmentId: EnvironmentId;
-  readonly sourceThreadId: ThreadId;
+  readonly environmentId: EnvironmentId;
+  readonly threadId: ThreadId;
+  readonly handoff: ThreadHandoff;
+  readonly ready: boolean;
 }
 
-/**
- * Drafts opened by "Continue on", keyed by the draft's thread id. The links
- * between the two threads are recorded only once the draft's first send
- * creates the thread, so an abandoned draft never leaves a link behind.
- * In memory: a reload drops the pending link, not the draft.
- */
-interface ThreadHandoffStoreState {
-  pendingByThreadId: Readonly<Record<string, PendingThreadHandoff>>;
-  setPending: (threadId: ThreadId, pending: PendingThreadHandoff) => void;
-  /** Returns and clears the pending handoff for a thread. */
-  take: (threadId: ThreadId) => PendingThreadHandoff | null;
-}
-
-export const useThreadHandoffStore = create<ThreadHandoffStoreState>((set, get) => ({
-  pendingByThreadId: {},
-  setPending: (threadId, pending) =>
-    set((state) => ({ pendingByThreadId: { ...state.pendingByThreadId, [threadId]: pending } })),
-  take: (threadId) => {
-    const pending = get().pendingByThreadId[threadId] ?? null;
-    if (pending !== null) {
-      set((state) => {
-        const { [threadId]: _taken, ...rest } = state.pendingByThreadId;
-        return { pendingByThreadId: rest };
-      });
-    }
-    return pending;
-  },
-}));
+/** Durable backlink outbox. Destination provenance commits in the bootstrap transaction flow. */
+export const useThreadHandoffStore = create<{
+  pending: Readonly<Record<string, PendingThreadHandoff>>;
+  enqueue: (target: Omit<PendingThreadHandoff, "ready">) => void;
+  markReady: (target: { environmentId: EnvironmentId; threadId: ThreadId }) => void;
+  complete: (key: string) => void;
+}>()(
+  persist(
+    (set) => ({
+      pending: {},
+      enqueue: (target) =>
+        set((state) => ({
+          pending: { ...state.pending, [threadKey(target)]: { ...target, ready: false } },
+        })),
+      markReady: (target) =>
+        set((state) => {
+          const key = threadKey(target);
+          const pending = state.pending[key];
+          return pending
+            ? { pending: { ...state.pending, [key]: { ...pending, ready: true } } }
+            : state;
+        }),
+      complete: (key) =>
+        set((state) => {
+          const { [key]: _completed, ...pending } = state.pending;
+          return { pending };
+        }),
+    }),
+    {
+      name: "rove-thread-handoff-outbox-v1",
+      // Resolve storage on use: a storage failure must reject a send, not
+      // silently turn this durable outbox into an in-memory one.
+      storage: createJSONStorage(() => ({
+        getItem: (name) => localStorage.getItem(name),
+        setItem: (name, value) => localStorage.setItem(name, value),
+        removeItem: (name) => localStorage.removeItem(name),
+      })),
+      partialize: ({ pending }) => ({ pending }),
+    },
+  ),
+);

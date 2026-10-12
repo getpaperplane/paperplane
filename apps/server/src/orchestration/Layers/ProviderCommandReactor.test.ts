@@ -939,6 +939,92 @@ describe("ProviderCommandReactor", () => {
     expect(harness.startSession.mock.calls[0]?.[1]).not.toHaveProperty("title");
   });
 
+  effectIt.effect(
+    "delivers imported context to the first user turn using only the mock provider",
+    () =>
+      Effect.gen(function* () {
+        const sent = yield* Deferred.make<void>();
+        const harness = yield* Effect.promise(() => createHarness());
+        harness.sendTurn.mockImplementation(() =>
+          Deferred.succeed(sent, undefined).pipe(
+            Effect.as({ threadId: ThreadId.make("thread-1"), turnId: asTurnId("turn-1") }),
+          ),
+        );
+        const now = "2026-01-01T00:00:00.000Z";
+        yield* harness.engine.dispatch({
+          type: "thread.activity.append",
+          commandId: CommandId.make("import-portable-history"),
+          threadId: ThreadId.make("thread-1"),
+          createdAt: now,
+          activity: {
+            id: EventId.make("portable-history"),
+            turnId: null,
+            tone: "info",
+            kind: "thread.handoff",
+            summary: "Imported history",
+            createdAt: now,
+            payload: {
+              messageId: asMessageId("portable-message"),
+              handoff: {
+                version: 1,
+                transferId: "portable-transfer",
+                sourceEnvironmentId: EnvironmentId.make("offline-source"),
+                sourceThreadId: ThreadId.make("original-thread"),
+                sourceLabel: "Laptop",
+                title: "Original task",
+                repositoryKey: "github.com/acme/repo",
+                branch: "feature",
+                commitSha: "a".repeat(40),
+                sourceTurnId: null,
+                sourceSequence: 5,
+                createdAt: now,
+                items: [
+                  {
+                    id: "original-request",
+                    role: "user",
+                    kind: "message",
+                    text: "Keep backwards compatibility.",
+                  },
+                ],
+                omittedItems: 3,
+                omittedAttachments: 1,
+              },
+            },
+          },
+        });
+        yield* harness.engine.dispatch({
+          type: "thread.turn.start",
+          commandId: CommandId.make("start-portable-turn"),
+          threadId: ThreadId.make("thread-1"),
+          message: {
+            messageId: asMessageId("portable-message"),
+            role: "user",
+            text: "Continue with the next failing test.",
+            attachments: [],
+          },
+          interactionMode: DEFAULT_PROVIDER_INTERACTION_MODE,
+          runtimeMode: "approval-required",
+          createdAt: now,
+        });
+        yield* Deferred.await(sent);
+        yield* Effect.promise(harness.drain);
+        expect(harness.sendTurn.mock.calls[0]?.[0]).toMatchObject({
+          input: expect.stringContaining("Keep backwards compatibility."),
+        });
+        expect(harness.sendTurn.mock.calls[0]?.[0]).toMatchObject({
+          input: expect.stringContaining(
+            "Current user request:\nContinue with the next failing test.",
+          ),
+        });
+        expect(harness.sendTurn.mock.calls[0]?.[0]).toMatchObject({
+          input: expect.stringContaining("permission grants were not transferred"),
+        });
+        expect(harness.startSession.mock.calls[0]?.[1]).toMatchObject({
+          runtimeMode: "approval-required",
+        });
+      }),
+  );
+
   effectIt.effect("forwards only a user-renamed title when starting a provider session", () =>
     Effect.gen(function* () {
       const harness = yield* Effect.promise(() =>

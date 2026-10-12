@@ -1,173 +1,182 @@
-import { scopeProjectRef } from "@rove-code/client-runtime/environment";
+import { scopeProjectRef, scopeThreadRef } from "@rove-code/client-runtime/environment";
 import { squashAtomCommandFailure } from "@rove-code/client-runtime/state/runtime";
-import type { EnvironmentId, ScopedThreadRef, ThreadId } from "@rove-code/contracts";
-import { useCallback, useMemo } from "react";
+import {
+  CommandId,
+  ThreadHandoffError,
+  type EnvironmentId,
+  type ScopedThreadRef,
+  type ThreadId,
+} from "@rove-code/contracts";
+import { useCallback, useMemo, useRef } from "react";
+import * as Schema from "effect/Schema";
+
+const isThreadHandoffError = Schema.is(ThreadHandoffError);
 
 import { stackedThreadToast, toastManager } from "../components/ui/toast";
 import { useComposerDraftStore } from "../composerDraftStore";
-import {
-  buildHandoffPrompt,
-  type HandoffTarget,
-  resolveHandoffBlocker,
-  resolveHandoffTargets,
-} from "../lib/threadHandoff";
+import { type HandoffTarget, resolveHandoffTargets } from "../lib/threadHandoff";
 import { appAtomRegistry } from "../rpc/atomRegistry";
-import { readProject, readProjects, readThreadShell, waitForThreadDetail } from "../state/entities";
+import { readProject, readProjects, readThreadShell } from "../state/entities";
 import { environmentServerConfigsAtom } from "../state/server";
 import { threadEnvironment } from "../state/threads";
 import { useAtomCommand } from "../state/use-atom-command";
-import { vcsEnvironment } from "../state/vcs";
 import { useThreadHandoffStore } from "../threadHandoffStore";
-import { useWorktreeCheckoutStore } from "../worktreeCheckoutStore";
+import { threadKey } from "@rove-code/client-runtime/state/entities";
 import { useNewThreadHandler } from "./useHandleNewThread";
 
 function readEnvironments() {
-  const configs = appAtomRegistry.get(environmentServerConfigsAtom);
   return new Map(
-    [...configs].map(([environmentId, config]) => [
+    [...appAtomRegistry.get(environmentServerConfigsAtom)].map(([environmentId, config]) => [
       environmentId,
       {
         label: config.environment.label,
         supportsCheckoutBaseBranch:
           config.environment.capabilities.worktreeCheckoutBaseBranch === true,
-        supportsContinuationLinks: config.environment.capabilities.threadContinuationLinks === true,
+        supportsPortableHandoff: config.environment.capabilities.threadPortableHandoff === true,
       },
     ]),
   );
 }
 
-/**
- * "Continue on another environment" for the thread menus. Targets are read
- * at menu-open time; continuing checks the branch is pushed, then opens a
- * draft on the target that checks out the same branch with the conversation
- * in its composer. Nothing is sent until the user sends it.
- */
+/** No agent runs until the destination draft is reviewed and sent. */
 export function useContinueThreadOnEnvironment() {
   const handleNewThread = useNewThreadHandler();
-  const refreshStatus = useAtomCommand(vcsEnvironment.refreshStatus, { reportFailure: false });
-
+  const inFlight = useRef(new Set<string>());
+  const exportHandoff = useAtomCommand(threadEnvironment.exportHandoff, { reportFailure: false });
   const resolveTargets = useCallback((threadRef: ScopedThreadRef): ReadonlyArray<HandoffTarget> => {
     const thread = readThreadShell(threadRef);
-    if (!thread?.projectId || !thread.branch) return [];
+    if (
+      !thread?.projectId ||
+      !thread.branch ||
+      !readEnvironments().get(thread.environmentId)?.supportsPortableHandoff
+    )
+      return [];
     const source = readProject(scopeProjectRef(thread.environmentId, thread.projectId));
-    if (!source) return [];
-    return resolveHandoffTargets({
-      source,
-      projects: readProjects(),
-      environments: readEnvironments(),
-    });
+    return source
+      ? resolveHandoffTargets({
+          source,
+          projects: readProjects(),
+          environments: readEnvironments(),
+        })
+      : [];
   }, []);
-
   const continueOn = useCallback(
-    async (threadRef: ScopedThreadRef, target: HandoffTarget) => {
-      const thread = readThreadShell(threadRef);
-      const project = thread?.projectId
-        ? readProject(scopeProjectRef(thread.environmentId, thread.projectId))
-        : null;
-      if (!thread || !project) return;
-      const blocked = (description: string) =>
+    async function continueOn(
+      threadRef: ScopedThreadRef,
+      target: HandoffTarget,
+      codeOnly = false,
+    ): Promise<void> {
+      const key = threadKey(threadRef);
+      if (inFlight.current.has(key)) return;
+      inFlight.current.add(key);
+      try {
+        const result = await exportHandoff({
+          environmentId: threadRef.environmentId,
+          input: { threadId: threadRef.threadId, ...(codeOnly ? { codeOnly: true } : {}) },
+        });
+        if (result._tag === "Failure") {
+          const error = squashAtomCommandFailure(result);
+          toastManager.add(
+            stackedThreadToast({
+              type: "warning",
+              title: `Can't continue on ${target.label} yet`,
+              description:
+                error instanceof Error ? error.message : "Could not prepare the source thread.",
+              actionProps: {
+                children: "Retry",
+                onClick: () => void continueOn(threadRef, target, codeOnly),
+              },
+              ...(isThreadHandoffError(error) && error.kind === "history"
+                ? {
+                    data: {
+                      secondaryActionProps: {
+                        children: "Continue with code only",
+                        onClick: () => void continueOn(threadRef, target, true),
+                      },
+                    },
+                  }
+                : {}),
+            }),
+          );
+          return;
+        }
+        const handoff = result.value;
+        const opened = await handleNewThread(
+          scopeProjectRef(target.environmentId, target.projectId),
+          {
+            branch: `${target.remoteName}/${handoff.branch}`,
+            worktreePath: null,
+            envMode: "worktree",
+            startFromOrigin: false,
+          },
+        );
+        if (!opened) return;
+        useComposerDraftStore.getState().setDraftThreadContext(opened.draftId, {
+          handoff,
+          checkoutBaseBranch: true,
+          environmentSelection: "manual",
+        });
+        useComposerDraftStore
+          .getState()
+          .setPrompt(
+            opened.draftId,
+            "Review the branch and continue where the original thread left off.",
+          );
+      } catch (error) {
         toastManager.add(
           stackedThreadToast({
             type: "warning",
-            title: `Can't continue on ${target.label} yet`,
-            description,
+            title: "Could not save continuation draft",
+            description: error instanceof Error ? error.message : "The draft could not be saved.",
           }),
         );
-      const status = await refreshStatus({
-        environmentId: thread.environmentId,
-        input: { cwd: thread.worktreePath ?? project.workspaceRoot },
-      });
-      if (status._tag === "Failure") {
-        const error = squashAtomCommandFailure(status);
-        blocked(error instanceof Error ? error.message : "Could not read the branch status.");
-        return;
+      } finally {
+        inFlight.current.delete(key);
       }
-      const blocker = resolveHandoffBlocker(status.value);
-      const branch = status.value.refName;
-      if (blocker !== null || branch === null) {
-        blocked(blocker ?? "Check out a branch before continuing elsewhere.");
-        return;
-      }
-      const detail = await waitForThreadDetail(threadRef);
-      const prompt = buildHandoffPrompt({
-        title: thread.title,
-        sourceLabel: readEnvironments().get(thread.environmentId)?.label ?? "another machine",
-        branch,
-        messages: detail?.messages ?? [],
-      });
-      const opened = await handleNewThread(
-        scopeProjectRef(target.environmentId, target.projectId),
-        {
-          branch: `${target.remoteName}/${branch}`,
-          worktreePath: null,
-          envMode: "worktree",
-          startFromOrigin: false,
-        },
-      );
-      if (opened === null) return;
-      useWorktreeCheckoutStore.getState().setCheckoutBaseBranch(opened.threadId, true);
-      useThreadHandoffStore.getState().setPending(opened.threadId, {
-        sourceEnvironmentId: threadRef.environmentId,
-        sourceThreadId: threadRef.threadId,
-      });
-      useComposerDraftStore.getState().setPrompt(opened.draftId, prompt);
     },
-    [handleNewThread, refreshStatus],
+    [exportHandoff, handleNewThread],
   );
-
-  return useMemo(() => ({ resolveTargets, continueOn }), [continueOn, resolveTargets]);
+  return useMemo(() => ({ resolveTargets, continueOn }), [resolveTargets, continueOn]);
 }
 
-/**
- * Links a thread created from a "Continue on" draft with the thread it came
- * from, on both environments. Called once the draft's first send succeeds.
- * Best effort: a missing link never undoes the continued thread.
- */
+/** Stable command ids make retries safe; destination provenance is already persisted by the server. */
 export function useRecordThreadHandoff() {
   const recordContinuation = useAtomCommand(threadEnvironment.recordContinuation, {
     reportFailure: false,
   });
   return useCallback(
     async (target: { readonly environmentId: EnvironmentId; readonly threadId: ThreadId }) => {
-      const pending = useThreadHandoffStore.getState().take(target.threadId);
-      if (pending === null) return;
-      const environments = readEnvironments();
-      const source = environments.get(pending.sourceEnvironmentId);
-      const destination = environments.get(target.environmentId);
-      if (!source || !destination) return;
-      const createdAt = new Date().toISOString();
-      await Promise.all([
-        destination.supportsContinuationLinks
-          ? recordContinuation({
-              environmentId: target.environmentId,
-              input: {
-                threadId: target.threadId,
-                link: {
-                  direction: "from",
-                  environmentId: pending.sourceEnvironmentId,
-                  threadId: pending.sourceThreadId,
-                  environmentLabel: source.label,
-                },
-                createdAt,
-              },
-            })
-          : null,
-        source.supportsContinuationLinks
-          ? recordContinuation({
-              environmentId: pending.sourceEnvironmentId,
-              input: {
-                threadId: pending.sourceThreadId,
-                link: {
-                  direction: "to",
-                  environmentId: target.environmentId,
-                  threadId: target.threadId,
-                  environmentLabel: destination.label,
-                },
-                createdAt,
-              },
-            })
-          : null,
-      ]);
+      const key = threadKey(target);
+      const pending = useThreadHandoffStore.getState().pending[key];
+      if (!pending) return true;
+      if (
+        !pending.ready &&
+        !readThreadShell(scopeThreadRef(target.environmentId, target.threadId))?.latestTurn
+      )
+        return false;
+      const destination = readEnvironments().get(target.environmentId);
+      if (
+        !destination ||
+        !readEnvironments().get(pending.handoff.sourceEnvironmentId)?.supportsPortableHandoff
+      )
+        return false;
+      const result = await recordContinuation({
+        environmentId: pending.handoff.sourceEnvironmentId,
+        input: {
+          commandId: CommandId.make(`handoff:${pending.handoff.transferId}:to`),
+          threadId: pending.handoff.sourceThreadId,
+          link: {
+            direction: "to",
+            environmentId: target.environmentId,
+            threadId: target.threadId,
+            environmentLabel: destination.label,
+            transferId: pending.handoff.transferId,
+          },
+          createdAt: pending.handoff.createdAt,
+        },
+      });
+      if (result._tag === "Success") useThreadHandoffStore.getState().complete(key);
+      return result._tag === "Success";
     },
     [recordContinuation],
   );

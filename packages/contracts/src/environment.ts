@@ -121,6 +121,8 @@ export const ExecutionEnvironmentCapabilities = Schema.Struct({
   /** Server accepts thread.continuation.record. Absent on older servers, which
       would reject the command, so clients skip recording the link there. */
   threadContinuationLinks: Schema.optionalKey(Schema.Boolean),
+  /** Verified Git state and durable, destination-local portable context. */
+  threadPortableHandoff: Schema.optionalKey(Schema.Boolean),
   /** Server accepts thread.create with a null projectId and gives the thread
       its own workspace. Older servers reject the command at decode, so
       clients only offer standalone threads where this is true. */

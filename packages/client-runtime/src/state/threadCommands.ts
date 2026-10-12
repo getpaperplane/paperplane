@@ -113,6 +113,10 @@ export function createThreadEnvironmentAtoms<R, E>(
       JSON.stringify([environmentId, input.threadId]),
   };
   const commands = {
+    exportHandoff: createEnvironmentRpcCommand(runtime, {
+      label: "environment-data:commands:thread:export-handoff",
+      tag: WS_METHODS.threadHandoffExport,
+    }),
     create: createEnvironmentCommand(runtime, {
       label: "environment-data:commands:thread:create",
       execute: (input: CreateThreadInput) => createThread(input),

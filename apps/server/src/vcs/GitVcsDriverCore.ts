@@ -3231,6 +3231,21 @@ export const makeGitVcsDriverCore = Effect.fn("makeGitVcsDriverCore")(function* 
       ? null
       : yield* resolveWorktreeCheckoutTarget(input.cwd, input.refName);
     const targetBranch = input.newRefName ?? checkoutTarget?.refName ?? input.refName;
+    if (input.expectedCommit !== undefined) {
+      // Check both the requested remote ref and any existing local branch. Never
+      // move a local branch as a side effect of continuing another machine's work.
+      for (const revision of new Set([input.refName, checkoutTarget?.trackRef ?? targetBranch])) {
+        const resolved = yield* resolveCommit({ cwd: input.cwd, revision });
+        if (resolved.commitSha !== input.expectedCommit) {
+          return yield* new GitCommandError({
+            operation: "GitVcsDriver.createWorktree",
+            cwd: input.cwd,
+            command: "git rev-parse",
+            detail: `Branch '${revision}' is at ${resolved.commitSha.slice(0, 7)}, not the handoff commit ${input.expectedCommit.slice(0, 7)}. Reconcile the branch before continuing; no branch was changed.`,
+          });
+        }
+      }
+    }
     const sanitizedBranch = targetBranch.replace(/\//g, "-");
     const repoName = path.basename(input.cwd);
     const worktreePath = input.path ?? path.join(worktreesDir, repoName, sanitizedBranch);
@@ -3284,6 +3299,20 @@ export const makeGitVcsDriverCore = Effect.fn("makeGitVcsDriverCore")(function* 
 
     if (progress?.onWorktreeClaimed) {
       yield* progress.onWorktreeClaimed(worktreePath);
+    }
+    if (input.expectedCommit !== undefined) {
+      const checkedOut = yield* resolveCommit({ cwd: worktreePath, revision: "HEAD" });
+      if (checkedOut.commitSha !== input.expectedCommit) {
+        // Remove only the new, clean checkout. A concurrently edited checkout
+        // must remain recoverable rather than being force-deleted.
+        yield* removeWorktree({ cwd: input.cwd, path: worktreePath }).pipe(Effect.ignore);
+        return yield* new GitCommandError({
+          operation: "GitVcsDriver.createWorktree",
+          cwd: input.cwd,
+          command: "git worktree add",
+          detail: "The branch changed during checkout. Prepare a new continuation.",
+        });
+      }
     }
 
     // `git worktree add` leaves submodules empty, so a repo that keeps agent

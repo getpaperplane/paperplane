@@ -4,6 +4,7 @@ import * as SchemaIssue from "effect/SchemaIssue";
 import * as SchemaTransformation from "effect/SchemaTransformation";
 import * as Struct from "effect/Struct";
 import { OrchestrationMessageContext } from "./composerContext.ts";
+import { ThreadHandoff, HandoffCommit } from "./threadHandoff.ts";
 import { ProviderOptionSelections } from "./model.ts";
 import { RepositoryIdentity, ThreadEnvMode } from "./environment.ts";
 import {
@@ -1286,6 +1287,7 @@ export const ThreadContinuationLink = Schema.Struct({
   environmentId: EnvironmentId,
   threadId: ThreadId,
   environmentLabel: TrimmedNonEmptyString,
+  transferId: Schema.optional(TrimmedNonEmptyString),
 });
 export type ThreadContinuationLink = typeof ThreadContinuationLink.Type;
 
@@ -1349,12 +1351,15 @@ const ThreadTurnStartBootstrapPrepareWorktree = Schema.Struct({
   requireWorktree: Schema.optional(Schema.Boolean),
   /** Check out `baseBranch` itself instead of creating `branch` from it. */
   checkoutBaseBranch: Schema.optional(Schema.Boolean),
+  /** Refuse a different local or fetched branch before creating the worktree. */
+  expectedCommit: Schema.optional(HandoffCommit),
 });
 
 const ThreadTurnStartBootstrap = Schema.Struct({
   createThread: Schema.optional(ThreadTurnStartBootstrapCreateThread),
   prepareWorktree: Schema.optional(ThreadTurnStartBootstrapPrepareWorktree),
   runSetupScript: Schema.optional(Schema.Boolean),
+  handoff: Schema.optional(ThreadHandoff),
 });
 
 export type ThreadTurnStartBootstrap = typeof ThreadTurnStartBootstrap.Type;

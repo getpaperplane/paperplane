@@ -1860,6 +1860,60 @@ describe("composerDraftStore project draft thread mapping", () => {
     expect(store.getComposerDraft(draftId)?.prompt).toBe("keep this prompt");
   });
 
+  it("serializes continuation provenance together with verified checkout intent", () => {
+    const store = useComposerDraftStore.getState();
+    const handoff = {
+      version: 1 as const,
+      transferId: "draft-transfer",
+      sourceEnvironmentId: TEST_ENVIRONMENT_ID,
+      sourceThreadId: threadId,
+      sourceLabel: "Laptop",
+      title: "Original",
+      repositoryKey: "github.com/acme/repo",
+      branch: "feature",
+      commitSha: "a".repeat(40),
+      sourceTurnId: null,
+      sourceSequence: 1,
+      createdAt: "2026-10-11T00:00:00.000Z",
+      items: [
+        {
+          id: "original",
+          role: "user" as const,
+          kind: "message",
+          text: "Keep the original constraints.",
+        },
+      ],
+      omittedItems: 2,
+      omittedAttachments: 1,
+    };
+    store.setProjectDraftThreadId(projectRef, draftId, {
+      threadId,
+      branch: "origin/feature",
+      envMode: "worktree",
+    });
+    store.setPrompt(draftId, "Continue the work.");
+    store.setDraftThreadContext(draftId, {
+      handoff,
+      checkoutBaseBranch: true,
+      environmentSelection: "manual",
+    });
+    const serialized = JSON.parse(
+      JSON.stringify(partializeComposerDraftStoreState(useComposerDraftStore.getState())),
+    );
+    expect(serialized.draftThreadsByThreadKey[draftId]).toMatchObject({
+      handoff,
+      checkoutBaseBranch: true,
+      branch: "origin/feature",
+      environmentSelection: "manual",
+    });
+    store.setDraftThreadContext(draftId, { handoff: null, checkoutBaseBranch: false });
+    expect(store.getDraftThread(draftId)).toMatchObject({
+      handoff: null,
+      checkoutBaseBranch: false,
+    });
+    expect(store.getComposerDraft(draftId)?.prompt).toBe("Continue the work.");
+  });
+
   it("clears branch and worktree but keeps env mode when changing a draft thread project ref", () => {
     const store = useComposerDraftStore.getState();
     store.setProjectDraftThreadId(projectRef, draftId, {

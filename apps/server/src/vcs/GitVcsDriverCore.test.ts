@@ -3189,6 +3189,69 @@ it.layer(TestLayer)("GitVcsDriver core integration", (it) => {
       }),
     );
 
+    it.effect("refuses a stale local branch during a verified continuation without moving it", () =>
+      Effect.gen(function* () {
+        const cwd = yield* makeTmpDir();
+        const remote = yield* makeTmpDir("git-handoff-remote-");
+        yield* initRepoWithCommit(cwd);
+        yield* git(remote, ["init", "--bare"]);
+        yield* git(cwd, ["remote", "add", "origin", remote]);
+        yield* git(cwd, ["branch", "feature/shared"]);
+        const stale = yield* git(cwd, ["rev-parse", "feature/shared"]);
+        yield* git(cwd, ["commit", "--allow-empty", "-m", "New work"]);
+        const expectedCommit = yield* git(cwd, ["rev-parse", "HEAD"]);
+        yield* git(cwd, ["push", "origin", "HEAD:refs/heads/feature/shared"]);
+        const driver = yield* GitVcsDriver.GitVcsDriver;
+        const root = yield* makeTmpDir("git-handoff-worktree-");
+        const path = yield* Path.Path;
+        const result = yield* driver
+          .createWorktree({
+            cwd,
+            refName: "origin/feature/shared",
+            expectedCommit,
+            path: path.join(root, "continued"),
+          })
+          .pipe(Effect.result);
+        assert.isTrue(Result.isFailure(result));
+        assert.equal(yield* git(cwd, ["rev-parse", "feature/shared"]), stale);
+        assert.isFalse(yield* (yield* FileSystem.FileSystem).exists(path.join(root, "continued")));
+        if (Result.isFailure(result))
+          assert.include(result.failure.detail, "not the handoff commit");
+        const remoteMismatch = yield* driver
+          .createWorktree({
+            cwd,
+            refName: "origin/feature/shared",
+            expectedCommit: stale,
+            path: path.join(root, "wrong-remote"),
+          })
+          .pipe(Effect.result);
+        assert.isTrue(Result.isFailure(remoteMismatch));
+      }),
+    );
+
+    it.effect("creates a verified continuation on the exact published commit", () =>
+      Effect.gen(function* () {
+        const cwd = yield* makeTmpDir();
+        const remote = yield* makeTmpDir("git-handoff-remote-");
+        yield* initRepoWithCommit(cwd);
+        yield* git(remote, ["init", "--bare"]);
+        yield* git(cwd, ["remote", "add", "origin", remote]);
+        yield* git(cwd, ["push", "origin", "HEAD:refs/heads/feature/shared"]);
+        const expectedCommit = yield* git(cwd, ["rev-parse", "HEAD"]);
+        const root = yield* makeTmpDir("git-handoff-worktree-");
+        const path = yield* Path.Path;
+        const driver = yield* GitVcsDriver.GitVcsDriver;
+        const created = yield* driver.createWorktree({
+          cwd,
+          refName: "origin/feature/shared",
+          expectedCommit,
+          path: path.join(root, "continued"),
+        });
+        assert.equal(yield* git(created.worktree.path, ["rev-parse", "HEAD"]), expectedCommit);
+        assert.equal(created.worktree.refName, "feature/shared");
+      }),
+    );
+
     it.effect("creates a worktree from the latest fetched remote commit", () =>
       Effect.gen(function* () {
         const cwd = yield* makeTmpDir();

@@ -11,6 +11,8 @@ import {
   ProjectId as ProjectIdSchema,
   ProviderInteractionMode as ProviderInteractionModeSchema,
   RuntimeMode as RuntimeModeSchema,
+  ThreadHandoff,
+  ThreadHandoffBacklink,
   type EnvironmentId,
   type ModelSelection,
   type ProjectId,
@@ -330,6 +332,7 @@ export interface ComposerDraft {
   readonly runtimeMode?: RuntimeMode;
   readonly interactionMode?: ProviderInteractionMode;
   readonly workspaceSelection?: ComposerDraftWorkspaceSelection;
+  readonly handoff?: ThreadHandoff;
   /**
    * Set on new-task drafts only. The project is stored here rather than in
    * the key so a project can hold any number of drafts and a draft can be
@@ -360,7 +363,12 @@ export interface ComposerDraftWorkspaceSelection {
 
 export type ComposerDraftSettingsUpdate = Pick<
   ComposerDraft,
-  "modelSelection" | "runtimeMode" | "interactionMode" | "workspaceSelection" | "project"
+  | "modelSelection"
+  | "runtimeMode"
+  | "interactionMode"
+  | "workspaceSelection"
+  | "project"
+  | "handoff"
 >;
 
 const ComposerDraftWorkspaceSelectionSchema = Schema.Struct({
@@ -392,12 +400,14 @@ const ComposerDraftSchema = Schema.Struct({
   runtimeMode: Schema.optional(RuntimeModeSchema),
   interactionMode: Schema.optional(ProviderInteractionModeSchema),
   workspaceSelection: Schema.optional(ComposerDraftWorkspaceSelectionSchema),
+  handoff: Schema.optional(ThreadHandoff),
   project: Schema.optional(ComposerDraftProjectSchema),
 });
 
 const PersistedComposerDraftsSchema = Schema.Struct({
   schemaVersion: Schema.Literal(COMPOSER_DRAFTS_SCHEMA_VERSION),
   drafts: Schema.Record(Schema.String, ComposerDraftSchema),
+  handoffBacklinks: Schema.optional(Schema.Array(ThreadHandoffBacklink)),
   stickyModelSelection: Schema.optional(ModelSelectionSchema),
   cloudAccountId: Schema.optional(Schema.String),
   signedOutDrafts: Schema.optional(
@@ -444,6 +454,30 @@ export const composerCloudDraftsAtom = Atom.make<ComposerCloudDraftState>({
   accountId: null,
   signedOut: {},
 }).pipe(Atom.keepAlive);
+
+export const handoffBacklinksAtom = Atom.make<ReadonlyArray<ThreadHandoffBacklink>>([]).pipe(
+  Atom.keepAlive,
+);
+
+export async function queueHandoffBacklink(link: ThreadHandoffBacklink): Promise<void> {
+  await waitForComposerDraftsLoaded();
+  const current = appAtomRegistry.get(handoffBacklinksAtom);
+  const prior = current.find((candidate) => candidate.transferId === link.transferId);
+  appAtomRegistry.set(handoffBacklinksAtom, [
+    ...current.filter((candidate) => candidate.transferId !== link.transferId),
+    { ...link, ready: link.ready || prior?.ready === true },
+  ]);
+  schedulePersistComposerState();
+  await flushComposerDrafts();
+}
+
+export function completeHandoffBacklink(transferId: string): void {
+  appAtomRegistry.set(
+    handoffBacklinksAtom,
+    appAtomRegistry.get(handoffBacklinksAtom).filter((link) => link.transferId !== transferId),
+  );
+  schedulePersistComposerState();
+}
 
 let loadPromise: Promise<void> | null = null;
 let persistTimer: ReturnType<typeof setTimeout> | null = null;
@@ -609,6 +643,7 @@ export function decodePersistedComposerState(value: unknown): {
   readonly drafts: Record<string, ComposerDraft>;
   readonly stickyModelSelection: ModelSelection | null;
   readonly cloudDrafts: ComposerCloudDraftState;
+  readonly handoffBacklinks?: ReadonlyArray<ThreadHandoffBacklink>;
 } {
   const parsed = decodePersistedComposerDraftsDocument(value);
   const now = new Date().toISOString();
@@ -641,6 +676,7 @@ export function decodePersistedComposerState(value: unknown): {
         // re-imported after restart.
         .filter(([, draft]) => !isEmptyDraft(draft) || (draft.importedShareIds?.length ?? 0) > 0),
     ),
+    ...(parsed.handoffBacklinks ? { handoffBacklinks: parsed.handoffBacklinks } : {}),
     stickyModelSelection: parsed.stickyModelSelection ?? null,
     cloudDrafts: {
       accountId: parsed.cloudAccountId ?? null,
@@ -712,6 +748,9 @@ async function writePersistedComposerState(
     const document = {
       schemaVersion: COMPOSER_DRAFTS_SCHEMA_VERSION,
       drafts: nonEmptyDrafts,
+      ...(appAtomRegistry.get(handoffBacklinksAtom).length > 0
+        ? { handoffBacklinks: appAtomRegistry.get(handoffBacklinksAtom) }
+        : {}),
       ...(stickyModelSelection ? { stickyModelSelection } : {}),
       ...(cloudDrafts.accountId ? { cloudAccountId: cloudDrafts.accountId } : {}),
       ...(Object.keys(cloudDrafts.signedOut).length > 0
@@ -1002,6 +1041,7 @@ export function ensureComposerDraftsLoaded(): void {
   }
   const loading = loadPersistedComposerState().then((persisted) => {
     appAtomRegistry.set(composerCloudDraftsAtom, persisted.cloudDrafts);
+    appAtomRegistry.set(handoffBacklinksAtom, persisted.handoffBacklinks ?? []);
     if (Object.keys(persisted.drafts).length > 0) {
       const current = appAtomRegistry.get(composerDraftsAtom);
       appAtomRegistry.set(composerDraftsAtom, {
@@ -1490,6 +1530,7 @@ export function clearComposerDraftContentState(
     modelSelection,
     workspaceSelection,
     project: _project,
+    handoff: _handoff,
     ...retained
   } = existing;
   const draft = {
@@ -1678,7 +1719,9 @@ export function sameComposerDraftState(a: ComposerDraft, b: ComposerDraft): bool
     a.modelSelection === b.modelSelection &&
     a.runtimeMode === b.runtimeMode &&
     a.interactionMode === b.interactionMode &&
-    a.workspaceSelection === b.workspaceSelection
+    a.workspaceSelection === b.workspaceSelection &&
+    a.handoff === b.handoff &&
+    a.project === b.project
   );
 }
 
