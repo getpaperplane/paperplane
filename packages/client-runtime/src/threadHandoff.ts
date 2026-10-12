@@ -70,12 +70,7 @@ export function resolveHandoffTargets(input: {
   return [...targets.values()].sort((left, right) => left.label.localeCompare(right.label));
 }
 
-export {
-  selectHandoffItems,
-  portableHandoffText,
-  renderHandoffContext,
-  readHandoffPage,
-} from "@rove-code/shared/threadHandoff";
+export { renderHandoffContext } from "@rove-code/shared/threadHandoff";
 
 const isThreadContinuationLink = Schema.is(ThreadContinuationLink);
 
