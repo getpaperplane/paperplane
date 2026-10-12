@@ -94,6 +94,9 @@ import * as Socket from "effect/unstable/socket/Socket";
 import { vi } from "vite-plus/test";
 
 const TEST_EPOCH = DateTime.makeUnsafe("1970-01-01T00:00:00.000Z");
+const decodeSandboxPairingCredential = Schema.decodeUnknownEffect(
+  Schema.Struct({ credential: Schema.String }),
+);
 const SUCCESSFUL_GIT_EXECUTION = {
   exitCode: ChildProcessSpawner.ExitCode(0),
   stdout: "",
@@ -182,6 +185,7 @@ import * as ReviewService from "./review/ReviewService.ts";
 import * as SourceControlRepositoryService from "./sourceControl/SourceControlRepositoryService.ts";
 import { REPLAY_MARKER_MAX_AGE } from "./auth/replayMarkers.ts";
 import * as ServerSecretStore from "./auth/ServerSecretStore.ts";
+import { SandboxManager } from "./sandbox/SandboxManager.ts";
 import * as EnvironmentAuth from "./auth/EnvironmentAuth.ts";
 import * as PairingGrantStore from "./auth/PairingGrantStore.ts";
 import * as CloudManagedEndpointRuntime from "./cloud/ManagedEndpointRuntime.ts";
@@ -1250,6 +1254,7 @@ const buildAppUnderTest = (options?: {
         };
       }),
       Layer.provideMerge(makeAuthTestLayer()),
+      Layer.provideMerge(SandboxManager.layer),
       Layer.provideMerge(ServerSecretStore.layer),
       Layer.provide(workspaceAndProjectServicesLayer),
       Layer.provideMerge(
@@ -1759,6 +1764,51 @@ const EMPTY_DEVICE_STATE: DeviceServiceState = {
 };
 
 it.layer(NodeServices.layer)("server router seam", (it) => {
+  it.effect("sandbox RPC configuration is local-only and administrative", () =>
+    Effect.gen(function* () {
+      yield* buildAppUnderTest();
+      const ownerWs = yield* getWsServerUrl("/ws");
+      yield* Effect.scoped(
+        withWsRpcClient(ownerWs, (client) =>
+          Effect.gen(function* () {
+            yield* client[WS_METHODS.sandboxConfigure]({
+              provider: "boat",
+              token: "test-only-not-a-vendor-key",
+            });
+            const inventory = yield* client[WS_METHODS.sandboxInventory]({});
+            assert.deepEqual(inventory.configuredProviders, ["boat"]);
+            assert.deepEqual(inventory.sandboxes, []);
+            assert.notInclude(JSON.stringify(inventory), "test-only-not-a-vendor-key");
+          }),
+        ),
+      );
+      const ownerCookie = yield* getAuthenticatedSessionCookieHeader();
+      const issued = yield* HttpClient.post("/api/auth/pairing-token", {
+        headers: { cookie: ownerCookie },
+        body: yield* HttpBody.json({}),
+      });
+      const credential = yield* decodeSandboxPairingCredential(yield* issued.json);
+      const clientWs = yield* getWsServerUrl("/ws", { credential: credential.credential });
+      yield* Effect.scoped(
+        withWsRpcClient(clientWs, (client) =>
+          Effect.gen(function* () {
+            assert.deepEqual((yield* client[WS_METHODS.sandboxInventory]({})).configuredProviders, [
+              "boat",
+            ]);
+            const error = yield* client[WS_METHODS.sandboxConfigure]({
+              provider: "boat",
+              token: "",
+            }).pipe(Effect.flip);
+            assert.equal(error._tag, "EnvironmentAuthorizationError");
+            assert.deepEqual((yield* client[WS_METHODS.sandboxInventory]({})).configuredProviders, [
+              "boat",
+            ]);
+          }),
+        ),
+      );
+    }).pipe(Effect.provide(NodeHttpServer.layerTest)),
+  );
+
   it.effect("parks HTTP ingress until command readiness", () =>
     Effect.gen(function* () {
       const fileSystem = yield* FileSystem.FileSystem;

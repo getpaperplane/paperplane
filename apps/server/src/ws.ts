@@ -101,6 +101,7 @@ import { RpcSerialization, RpcServer } from "effect/unstable/rpc";
 
 import * as CheckpointDiffQuery from "./checkpointing/CheckpointDiffQuery.ts";
 import * as ServerConfig from "./config.ts";
+import { SandboxManager } from "./sandbox/SandboxManager.ts";
 import * as EnvironmentTheme from "./environmentTheme.ts";
 import * as Keybindings from "./keybindings.ts";
 import * as ExternalLauncher from "./process/externalLauncher.ts";
@@ -615,6 +616,7 @@ const makeWsRpcLayer = (
       const config = yield* ServerConfig.ServerConfig;
       const lifecycleEvents = yield* ServerLifecycleEvents.ServerLifecycleEvents;
       const serverSettings = yield* ServerSettings.ServerSettingsService;
+      const sandboxes = yield* SandboxManager;
       const startup = yield* ServerRuntimeStartup.ServerRuntimeStartup;
       const workspaceEntries = yield* WorkspaceEntries.WorkspaceEntries;
       const workspaceFileSystem = yield* WorkspaceFileSystem.WorkspaceFileSystem;
@@ -2001,6 +2003,12 @@ const makeWsRpcLayer = (
           .pipe(Effect.ignoreCause({ log: true }), Effect.forkDetach, Effect.asVoid);
 
       return WsRpcGroup.of({
+        [WS_METHODS.sandboxInventory]: () => authorizeEffect("orchestration:read", sandboxes.inventory),
+        [WS_METHODS.sandboxConfigure]: input => authorizeEffect("access:write", sandboxes.configure(input)),
+        [WS_METHODS.sandboxCreate]: input => authorizeEffect("access:write", sandboxes.create(input)),
+        [WS_METHODS.sandboxAction]: input => authorizeEffect("access:write", sandboxes.action(input)),
+        [WS_METHODS.sandboxLink]: input => authorizeEffect("access:write", sandboxes.link(input)),
+
         [ORCHESTRATION_WS_METHODS.dispatchCommand]: (command) =>
           observeRpcEffect(
             ORCHESTRATION_WS_METHODS.dispatchCommand,

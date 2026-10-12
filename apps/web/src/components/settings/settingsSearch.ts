@@ -598,6 +598,13 @@ export const SETTINGS_SEARCH_ITEMS = [
     searchTerms: ["allow disable enable open drive preview tools sessions project override"],
   },
   {
+    id: "remote-sandboxes",
+    title: "Remote sandboxes",
+    to: "/settings/integrations",
+    scope: "environment-defaults",
+    searchTerms: ["boat modal cloud vm byok remote thread pause resume sandbox"],
+  },
+  {
     id: "device-hosts",
     title: "Device hosts",
     to: "/settings/integrations",

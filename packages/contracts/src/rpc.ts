@@ -5,6 +5,16 @@ import {
   ChatGptHandoffInput,
   ChatGptHandoffState,
 } from "./providerSetup.ts";
+import {
+  SandboxActionInput,
+  SandboxActionResult,
+  SandboxConfigureInput,
+  SandboxCreateInput,
+  SandboxError,
+  SandboxInventory,
+  SandboxLinkInput,
+  RemoteSandbox,
+} from "./sandbox.ts";
 import * as Schema from "effect/Schema";
 import * as Rpc from "effect/unstable/rpc/Rpc";
 import * as RpcGroup from "effect/unstable/rpc/RpcGroup";
@@ -424,6 +434,13 @@ export const WS_METHODS = {
   serverGetBackgroundPolicy: "server.getBackgroundPolicy",
   serverGetUsageSummary: "server.getUsageSummary",
   serverRefreshUsageRates: "server.refreshUsageRates",
+
+  // Remote sandbox infrastructure (independent of coding providers and Rove Connect).
+  sandboxInventory: "sandbox.inventory",
+  sandboxConfigure: "sandbox.configure",
+  sandboxCreate: "sandbox.create",
+  sandboxAction: "sandbox.action",
+  sandboxLink: "sandbox.link",
 
   // Cloud environment methods
   cloudGetRelayClientStatus: "cloud.getRelayClientStatus",
@@ -1506,7 +1523,34 @@ const WsSubscribeResourceTelemetryRpc = Rpc.make(WS_METHODS.subscribeResourceTel
   stream: true,
 });
 
+const SandboxRpcError = Schema.Union([SandboxError, EnvironmentAuthorizationError]);
+
 export const WsRpcGroup = RpcGroup.make(
+  Rpc.make(WS_METHODS.sandboxInventory, {
+    payload: Schema.Struct({}),
+    success: SandboxInventory,
+    error: SandboxRpcError,
+  }),
+  Rpc.make(WS_METHODS.sandboxConfigure, {
+    payload: SandboxConfigureInput,
+    success: Schema.Void,
+    error: SandboxRpcError,
+  }),
+  Rpc.make(WS_METHODS.sandboxCreate, {
+    payload: SandboxCreateInput,
+    success: RemoteSandbox,
+    error: SandboxRpcError,
+  }),
+  Rpc.make(WS_METHODS.sandboxAction, {
+    payload: SandboxActionInput,
+    success: SandboxActionResult,
+    error: SandboxRpcError,
+  }),
+  Rpc.make(WS_METHODS.sandboxLink, {
+    payload: SandboxLinkInput,
+    success: Schema.Void,
+    error: SandboxRpcError,
+  }),
   WsServerProbeRpc,
   WsServerGetConfigRpc,
   WsServerRefreshProvidersRpc,

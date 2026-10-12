@@ -44,6 +44,18 @@ Open the hosted app and add each environment under **Settings → Connections**.
 
 Use a reachable HTTPS backend, such as Tailscale HTTPS or an operator-managed Cloudflare Tunnel. A plain HTTP LAN endpoint does not work from a public HTTPS app. A loopback URL refers to the device opening it, not the remote host.
 
+## Run a thread in a remote sandbox (preview)
+
+On web and desktop, open **Settings → Integrations → Remote sandboxes**, with one environment selected. On mobile, open **Settings → Environments**, select the managing environment, and use **Remote sandboxes**. Administrative access to that environment is required.
+
+Add your own Boat API key or Modal token ID and secret. Credentials stay on the managing environment; saving them does not start compute. Creating or resuming a sandbox starts billing on your infrastructure account. Free credits, storage charges, and retention depend on the vendor. Boat provisioning currently requests unlimited runtime, which is not available on every trial account.
+
+Connect to create a blank thread in the sandbox's separate Linux environment. Clone your repository there and authenticate a coding provider there; local repositories and provider credentials are not copied. Agent execution can continue after your client disconnects. Linux sandboxes do not replace a Mac for Xcode builds.
+
+**Settling a thread does not stop billing in this preview.** Pause its sandbox manually after work finishes. Pausing interrupts running agents, builds, and terminals; resuming restores files and persisted conversations, not running processes. Modal runs have a 24-hour limit; keep important files under `/root`, its persistent home volume. Boat retention is governed by your account's policy. A paused environment is offline, including its transcripts, until resumed.
+
+The managing environment must be online for lifecycle controls. Explicit deletion removes the remote workspace and recovery data irreversibly; removing a client connection does not delete or pause compute. If provisioning fails without a resource ID, check the vendor dashboard for orphaned resources before deleting the saved failure record. If credentials expire or vendor-side cleanup prevents deletion through Rove, clean up in the vendor dashboard, then forget the failed record. Forgetting removes only Rove's tracking and recovery handles; it does not stop billing.
+
 ## Use configured Rove Connect
 
 Rove Connect links an environment to a cloud account and manages its tunnel. It is available only in builds configured for an operator's Clerk instance and relay. Direct pairing, Tailscale, and SSH do not require it.
