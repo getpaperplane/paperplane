@@ -9,7 +9,8 @@ import { SandboxActionInput, SandboxCreateInput } from "@rove-code/contracts";
 import { ServerSecretStore } from "../auth/ServerSecretStore.ts";
 import { makeSandboxManager } from "./SandboxManager.ts";
 import { sandboxPairCommand, sandboxStartCommand, sandboxStopCommand } from "./bootstrap.ts";
-import type { SandboxDriver, SandboxHandle } from "./drivers.ts";
+import { makeBoatDriver, type SandboxDriver, type SandboxHandle } from "./drivers.ts";
+import { modalOperation, SandboxDriverError } from "./errors.ts";
 
 const encodeTestJson = Schema.encodeUnknownSync(Schema.fromJsonString(Schema.Unknown));
 const decodeCreateInput = Schema.decodeUnknownSync(SandboxCreateInput);
@@ -126,6 +127,92 @@ it.effect(
       expect(inventory.sandboxes[0]).toMatchObject({ phase: "error", remoteId: "vm-one" });
       expect(encodeTestJson(inventory)).not.toContain("secret-token");
       expect(f.driver.remove).not.toHaveBeenCalled();
+    }),
+);
+
+it.effect(
+  "Boat billing diagnostics reach the client and survive manager restart without vendor secrets",
+  () =>
+    Effect.gen(function* () {
+      const f = fixture();
+      const transport = vi.fn<typeof fetch>().mockResolvedValue(
+        new Response(
+          encodeTestJson({
+            code: "subscription_required",
+            message: "secret-token",
+            error: { code: "subscription_required", details: { token: "secret-token" } },
+          }),
+          { status: 402 },
+        ),
+      );
+      f.factory.mockResolvedValue(
+        makeBoatDriver({ token: "secret-token", tokenId: "" }, transport),
+      );
+      const manager = yield* f.make;
+      yield* manager.configure({ provider: "boat", token: "secret-token" });
+      const error = yield* Effect.flip(
+        manager.create({ provider: "boat", label: "Task", confirmCost: true }),
+      );
+      expect(error.message).toContain("Complete checkout in the Boat dashboard");
+      expect(error.message).toContain("HTTP 402");
+      const restarted = yield* f.make;
+      const inventory = yield* restarted.inventory;
+      expect(inventory.sandboxes[0]).toMatchObject({
+        phase: "error",
+        remoteId: null,
+        detail: error.message,
+      });
+      expect(encodeTestJson(inventory)).not.toContain("secret-token");
+      expect(f.driver.exec).not.toHaveBeenCalled();
+    }),
+);
+
+it.effect(
+  "Modal authentication failures reach the client and retain the named recovery volume",
+  () =>
+    Effect.gen(function* () {
+      const f = fixture();
+      f.driver.create = () =>
+        modalOperation(async () => {
+          throw Object.assign(new Error("secret-token"), { code: 16 });
+        });
+      const manager = yield* f.make;
+      yield* manager.configure({ provider: "modal", token: "secret-token", tokenId: "token-id" });
+      const error = yield* Effect.flip(
+        manager.create({ provider: "modal", label: "Task", confirmCost: true }),
+      );
+      expect(error.message).toContain("Check the token ID and secret");
+      const inventory = yield* manager.inventory;
+      expect(inventory.sandboxes[0]).toMatchObject({
+        phase: "error",
+        remoteId: null,
+        detail: error.message,
+      });
+      expect(f.stored()).toContain(`rove-${inventory.sandboxes[0]!.id}`);
+      expect(encodeTestJson(inventory)).not.toContain("secret-token");
+    }),
+);
+
+it.effect(
+  "safe driver diagnostics also reach lifecycle actions while keeping recovery handles",
+  () =>
+    Effect.gen(function* () {
+      const f = fixture();
+      const manager = yield* f.make;
+      yield* manager.configure({ provider: "boat", token: "secret" });
+      const sandbox = yield* manager.create({ provider: "boat", label: "Task", confirmCost: true });
+      f.driver.resume = vi.fn(async () => {
+        throw new SandboxDriverError("Boat rejected the API key. Save a new key.");
+      });
+      const error = yield* Effect.flip(
+        manager.action({ id: sandbox.id, action: "resume", confirmed: true }),
+      );
+      expect(error.message).toBe("Boat rejected the API key. Save a new key.");
+      expect((yield* manager.inventory).sandboxes[0]).toMatchObject({
+        remoteId: "vm-one",
+        phase: "error",
+        detail: error.message,
+      });
     }),
 );
 

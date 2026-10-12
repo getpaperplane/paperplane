@@ -104,10 +104,69 @@ it("Boat hosting is public at the proxy but remains protected by Rove authentica
   );
 });
 
+it.each([
+  [402, { code: "subscription_required" }, "Complete checkout"],
+  [
+    402,
+    { error: { code: "billing_required", message: "echoed-key" } },
+    "Complete trial/subscription checkout",
+  ],
+  [400, { code: "trial_auto_stop_required" }, "auto-stop within two hours"],
+  [403, { error: "api_key_action_forbidden" }, "sandbox lifecycle permissions"],
+  [429, { code: "rate_limited" }, "Wait for the limit to reset"],
+  [503, { code: "no_ready_machine" }, "no machine available"],
+] as const)(
+  "Boat HTTP %i failures explain how to resolve the blocker",
+  async (status, body, message) => {
+    const transport = vi.fn<typeof fetch>().mockResolvedValue(response(body, status));
+    await expect(
+      makeBoatDriver({ token: "echoed-key", tokenId: "" }, transport).create("id"),
+    ).rejects.toThrow(message);
+  },
+);
+
+it.each([
+  { code: "unknown_echoed-key", message: "echoed-key" },
+  { error: { code: "__proto__", details: { token: "echoed-key" } } },
+  "echoed-key",
+  null,
+])(
+  "unknown Boat responses retain the HTTP status without leaking response contents",
+  async (body) => {
+    const transport = vi.fn<typeof fetch>().mockResolvedValue(response(body, 418));
+    const result = makeBoatDriver({ token: "echoed-key", tokenId: "" }, transport).create("id");
+    await expect(result).rejects.toThrow("HTTP 418");
+    await expect(result).rejects.not.toThrow("echoed-key");
+  },
+);
+
+it("non-JSON Boat errors still have an actionable HTTP diagnostic", async () => {
+  const transport = vi
+    .fn<typeof fetch>()
+    .mockResolvedValue(new Response("secret body", { status: 502 }));
+  await expect(
+    makeBoatDriver({ token: "key", tokenId: "" }, transport).create("id"),
+  ).rejects.toThrow("Check the Boat dashboard for existing resources before retrying. (HTTP 502)");
+});
+
+it.each([
+  [new DOMException("secret-token", "TimeoutError"), "request timed out"],
+  [new TypeError("secret-token"), "Could not reach Boat"],
+])(
+  "Boat transport failures explain safe recovery without exposing the exception",
+  async (error, message) => {
+    const transport = vi.fn<typeof fetch>().mockRejectedValue(error);
+    const result = makeBoatDriver({ token: "secret-token", tokenId: "" }, transport).create("id");
+    await expect(result).rejects.toThrow(message);
+    await expect(result).rejects.not.toThrow("secret-token");
+  },
+);
+
 it("vendor error bodies and failed command output are not surfaced to users", async () => {
   const transport = vi.fn<typeof fetch>().mockResolvedValue(response({ error: "echoed-key" }, 401));
   const driver = makeBoatDriver({ token: "echoed-key", tokenId: "" }, transport);
-  await expect(driver.create("id")).rejects.toThrow("Boat request failed (HTTP 401).");
+  await expect(driver.create("id")).rejects.toThrow("Boat rejected the API key.");
+  await expect(driver.create("id")).rejects.not.toThrow("echoed-key");
   const failed = vi
     .fn<typeof fetch>()
     .mockImplementation(async (url) =>
