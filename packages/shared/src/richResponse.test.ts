@@ -5,7 +5,7 @@ import {
   parseRichResponse,
   richResponseTextFallback,
   splitRichResponse,
-} from "./richResponse";
+} from "./richResponse.ts";
 
 const response: RichResponse = {
   version: 1,

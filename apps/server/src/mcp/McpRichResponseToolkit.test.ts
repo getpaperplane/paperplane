@@ -3,7 +3,7 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Schema from "effect/Schema";
 import { McpSchema, McpServer } from "effect/unstable/ai";
-import { parseRichResponse, splitRichResponse } from "@rove-code/shared/richResponse";
+import { splitRichResponse } from "@rove-code/shared/richResponse";
 import {
   RichResponseToolkit,
   RichResponseToolkitHandlersLive,
@@ -48,7 +48,6 @@ it.effect("prepares a validated response without publishing or calling a provide
       kind: "rich-response",
       response,
     });
-    expect(parseRichResponse(JSON.stringify(response))).toEqual(response);
   }).pipe(Effect.provideService(McpSchema.McpServerClient, client), Effect.provide(TestLayer)),
 );
 

@@ -1,3 +1,4 @@
+import { richResponseTextFallback } from "@rove-code/shared/richResponse";
 import type { MessagesTimelineRow } from "./MessagesTimeline.logic";
 
 export interface TimelineMinimapItem {
@@ -61,6 +62,8 @@ export function resolveTimelineMinimapPreview(
     : {
         ...item,
         userText: compactMinimapPreview(item.userText),
-        assistantText: compactMinimapPreview(item.assistantText),
+        assistantText: compactMinimapPreview(
+          item.assistantText === null ? null : richResponseTextFallback(item.assistantText),
+        ),
       };
 }

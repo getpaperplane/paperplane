@@ -19,6 +19,19 @@ describe("thread title context", () => {
     expect(result.message).toContain("ASSISTANT:\nImplementation details.");
   });
 
+  it("summarizes assistant rich responses as readable text instead of JSON", () => {
+    const richResponse = JSON.stringify({
+      version: 1,
+      blocks: [{ type: "details", title: "Root cause", text: "The QR token expired." }],
+    });
+    const result = formatThreadTitleContext([
+      { role: "user", text: "Fix pairing" },
+      { role: "assistant", text: `Found it.\n\n\`\`\`rove-response\n${richResponse}\n\`\`\`` },
+    ]);
+    expect(result.message).toContain("### Root cause\n\nThe QR token expired.");
+    expect(result.message).not.toContain("rove-response");
+  });
+
   it("retains both ends and role labels in long user messages", () => {
     const result = formatThreadTitleContext([
       { role: "system", text: "System instructions" },
