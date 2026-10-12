@@ -140,6 +140,25 @@ jobs:
           git sparse-checkout set --no-cone '/*' '!/.repos/'
           git checkout --detach FETCH_HEAD
 
+      # Only the desktop build needs these, but Ubuntu mirrors sometimes stall
+      # for minutes, so the install starts in the background here and is
+      # joined just before the desktop build.
+      - uses: ./.github/actions/setup-apt-mirrors
+        if: inputs.platform == 'linux'
+
+      - name: Start Linux desktop build libraries install
+        if: inputs.platform == 'linux'
+        shell: bash
+        run: |
+          ( (set -e
+            sudo apt-get update
+            sudo apt-get install -y libsecret-1-dev pkg-config
+            if ! command -v magick >/dev/null 2>&1 && ! command -v convert >/dev/null 2>&1; then
+              sudo apt-get install -y imagemagick
+            fi
+            if command -v magick >/dev/null 2>&1; then magick -version; else convert -version; fi
+          ) > "$RUNNER_TEMP/apt.log" 2>&1 < /dev/null; echo $? > "$RUNNER_TEMP/apt.exit") > /dev/null 2>&1 < /dev/null &
+
       - name: Test Windows signing
         if: inputs.platform == 'win'
         shell: pwsh
@@ -491,24 +510,17 @@ jobs:
           path: release-cli/*
           if-no-files-found: error
 
-      - uses: ./.github/actions/setup-apt-mirrors
-        if: inputs.platform == 'linux'
-
-      - name: Install Linux desktop build libraries
+      - name: Finish Linux desktop build libraries install
         if: inputs.platform == 'linux'
         shell: bash
         run: |
-          sudo apt-get update
-          sudo apt-get install -y libsecret-1-dev pkg-config
-          if ! command -v magick >/dev/null 2>&1 && ! command -v convert >/dev/null 2>&1; then
-              sudo apt-get install -y imagemagick
-          fi
-
-          if command -v magick >/dev/null 2>&1; then
-              magick -version
-          else
-              convert -version
-          fi
+          for ((waited = 0; waited < 900; waited += 2)); do
+            [[ -f "$RUNNER_TEMP/apt.exit" ]] && break
+            sleep 2
+          done
+          cat "$RUNNER_TEMP/apt.log"
+          [[ -f "$RUNNER_TEMP/apt.exit" ]] || { echo "::error::Installing Linux build libraries did not finish."; exit 1; }
+          exit "$(cat "$RUNNER_TEMP/apt.exit")"
 
       # The WSL backend runs the Linux CLI archive inside the distro, so the
       # Windows desktop embeds the same-arch archive the release attaches.
