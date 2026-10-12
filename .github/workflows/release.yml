@@ -111,16 +111,18 @@ jobs:
           sparse-checkout-cone-mode: false
 
       # CI runs the same suites (and more) on every push to main. When it has
-      # already passed for this exact commit, the release reuses that result
-      # instead of spending ten runners repeating it. Any other commit, or CI
-      # that is still running or failed, runs the release quality checks.
+      # already passed for this exact commit (a push, or a manual CI run on the
+      # commit itself), the release reuses that result instead of spending ten
+      # runners repeating it. Pull request runs don't count: they test a merge
+      # commit. Otherwise the release quality checks run.
       - id: ci
         name: Check CI result for the release commit
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_SHA: ${{ needs.resolve_commit.outputs.ref }}
         run: |
-          count="$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/ci.yml/runs?head_sha=$RELEASE_SHA&event=push&status=success&per_page=1" --jq .total_count || echo 0)"
+          count="$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/ci.yml/runs?head_sha=$RELEASE_SHA&status=success" \
+            --jq '[.workflow_runs[] | select(.event == "push" or .event == "workflow_dispatch")] | length' || echo 0)"
           if [[ "$count" -gt 0 ]]; then
             echo "CI already passed for $RELEASE_SHA; skipping release quality checks."
             echo "passed=true" >> "$GITHUB_OUTPUT"
@@ -800,7 +802,10 @@ jobs:
 
       # A dry run validates package contents, not registry ownership or OIDC
       # access. First publication still needs the npm bootstrap procedure.
+      # Publishing runs skip it: the real publish validates the same contents,
+      # and this job gates the GitHub Release.
       - name: Validate npm packages (dry run)
+        if: inputs.build_only
         run: node apps/server/scripts/cli.ts publish --packages-dir npm-packages --tag "${{ needs.preflight.outputs.cli_dist_tag }}" --dry-run --verbose
 
   # Nothing waits on this job. npm can take over an hour to serve freshly
