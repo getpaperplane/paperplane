@@ -156,11 +156,13 @@
       "name": "modal",
       "version": "0.11.0",
       "sourceUrl": "https://github.com/modal-labs/modal-client/blob/main/LICENSE",
-      "generatedNotice": { "licenseId": "Apache-2.0" }
+      "generatedNotice": {
+        "licenseId": "Apache-2.0"
+      }
     },
     {
       "repositoryUrl": "https://github.com/earendil-works/pi",
-      "sourceUrl": "https://github.com/earendil-works/pi/blob/v1.0.2/LICENSE",
+      "sourceUrl": "https://github.com/earendil-works/pi/blob/v1.1.0/LICENSE",
       "generatedNotice": {
         "licenseId": "MIT",
         "copyrights": ["Copyright (c) 2025 Mario Zechner"]
