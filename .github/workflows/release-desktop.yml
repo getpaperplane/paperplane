@@ -150,14 +150,16 @@ jobs:
         if: inputs.platform == 'linux'
         shell: bash
         run: |
-          ( (set -e
-            sudo apt-get update
-            sudo apt-get install -y libsecret-1-dev pkg-config
-            if ! command -v magick >/dev/null 2>&1 && ! command -v convert >/dev/null 2>&1; then
-              sudo apt-get install -y imagemagick
-            fi
-            if command -v magick >/dev/null 2>&1; then magick -version; else convert -version; fi
-          ) > "$RUNNER_TEMP/apt.log" 2>&1 < /dev/null; echo $? > "$RUNNER_TEMP/apt.exit") > /dev/null 2>&1 < /dev/null &
+          cat > "$RUNNER_TEMP/apt.sh" <<'SCRIPT'
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y libsecret-1-dev pkg-config
+          if ! command -v magick >/dev/null 2>&1 && ! command -v convert >/dev/null 2>&1; then
+            sudo apt-get install -y imagemagick
+          fi
+          if command -v magick >/dev/null 2>&1; then magick -version; else convert -version; fi
+          SCRIPT
+          bash .github/scripts/background-start.sh apt bash "$RUNNER_TEMP/apt.sh"
 
       - name: Test Windows signing
         if: inputs.platform == 'win'
@@ -170,6 +172,15 @@ jobs:
           node-version-file: package.json
           cache: ${{ inputs.platform != 'win' }}
           run-install: false
+
+      # node_modules lives on the workspace Dev Drive, and pnpm can only
+      # hardlink or clone from a store on the same volume. With its default
+      # store on C:, it copied every package file and Defender scanned the
+      # restored store.
+      - name: Keep the package store on the Dev Drive
+        if: inputs.platform == 'win' && inputs.arch == 'arm64'
+        shell: pwsh
+        run: '"pnpm_config_store_dir=${{ github.workspace }}\.pnpm-store" >> $env:GITHUB_ENV'
 
       - name: Resolve Windows package cache path
         if: inputs.platform == 'win'
@@ -386,31 +397,12 @@ jobs:
           CSC_NAME: ${{ vars.MACOS_SIGNING_IDENTITY || 'Rove Code Release Signing' }}
         run: bash scripts/import-macos-self-signed.sh
 
-      # The CLI archive is built before the desktop app, so the resource
-      # monitor both ship is compiled here rather than by the desktop build.
+      # The CLI archive and the desktop app build concurrently and both ship
+      # the resource monitor, so it is compiled once here, up front.
       - name: Build resource monitor
         if: steps.resource_monitor_cache.outputs.cache-hit != 'true'
         shell: bash
         run: cargo build --locked --release --manifest-path native/resource-monitor/Cargo.toml --target "${{ inputs.rust_target }}"
-
-      # The CLI archive is built before the desktop app: the Windows jobs wait
-      # on the Linux archive, and on Windows the archive work overlaps that
-      # wait. Its smoke test then runs in the background during the desktop
-      # build and is joined before anything is uploaded from this job.
-      # The single-executable is built with a Node that supports --build-sea
-      # (25.7+); the repo itself stays on the engines.node version. It always
-      # injects into the runner's own Node: tsdown's cross-target download path
-      # runs `tar` on a drive-letter path on Windows, which GNU tar reads as a
-      # remote host, and a cross-built macOS binary cannot be smoke-tested.
-      - name: Build CLI single-executable
-        if: inputs.cli_archive
-        shell: bash
-        env:
-          # The exact version, not a major: vp downloads it from nodejs.org/dist on
-          # the runner, and only exact versions have a dist directory. Keep in
-          # step with SEA_NODE_VERSION in apps/server/vite.config.ts.
-          VP_NODE_VERSION: "26.8.2"
-        run: node apps/server/scripts/cli.ts build-exe --verbose
 
       - name: Import macOS signing certificate for the CLI archive
         if: inputs.cli_archive && inputs.platform == 'mac' && vars.MACOS_SIGNING_MODE != 'self-signed'
@@ -456,7 +448,17 @@ jobs:
           mkdir -p "$target_dir"
           cp "native/resource-monitor/target/${{ inputs.rust_target }}/release/${binary_name}" "$target_dir/$binary_name"
 
-      - name: Build CLI archive
+      # The CLI archive (single-executable, archive, smoke test) builds in the
+      # background while the desktop app builds; neither reads the other's
+      # output. Linux joins it first instead, because the Windows jobs embed
+      # the Linux archive as their WSL runtime and wait for its upload.
+      #
+      # The single-executable is built with a Node that supports --build-sea
+      # (25.7+); the repo itself stays on the engines.node version. It always
+      # injects into the runner's own Node: tsdown's cross-target download path
+      # runs `tar` on a drive-letter path on Windows, which GNU tar reads as a
+      # remote host, and a cross-built macOS binary cannot be smoke-tested.
+      - name: Start CLI archive build
         if: inputs.cli_archive
         shell: bash
         env:
@@ -482,28 +484,30 @@ jobs:
             printf '%s' "$APPLE_API_KEY" > "$key_path"
             export APPLE_API_KEY="$key_path"
           fi
+          cat > "$RUNNER_TEMP/cli-archive.sh" <<'SCRIPT'
+          set -euo pipefail
+          # The exact version, not a major: vp downloads it from nodejs.org/dist on
+          # the runner, and only exact versions have a dist directory. Keep in
+          # step with SEA_NODE_VERSION in apps/server/vite.config.ts.
+          VP_NODE_VERSION=26.8.2 node apps/server/scripts/cli.ts build-exe --verbose
           node scripts/build-cli-archive.ts \
             --platform "${{ inputs.platform }}" \
             --arch "${{ inputs.arch }}" \
             --version "${{ inputs.version }}" \
             --resource-monitor-dir "$RUNNER_TEMP/cli-resource-monitor" \
             --output-dir release-cli
-
-      # All output is redirected so the step does not wait on the background
-      # process. The exit status file is what "Finish" waits for.
-      - name: Start CLI archive smoke test
-        if: inputs.cli_archive
-        shell: bash
-        run: |
           archive=(release-cli/*)
-          (node scripts/smoke-cli-archive.ts --archive "${archive[@]}" --expect-version "${{ inputs.version }}"
-            echo $? > "$RUNNER_TEMP/cli-smoke.exit") > "$RUNNER_TEMP/cli-smoke.log" 2>&1 < /dev/null &
+          node scripts/smoke-cli-archive.ts --archive "${archive[@]}" --expect-version "${{ inputs.version }}"
+          SCRIPT
+          bash .github/scripts/background-start.sh cli-archive bash "$RUNNER_TEMP/cli-archive.sh"
 
-      # Uploaded before its smoke test finishes so the Windows jobs can embed it
-      # sooner. A failing smoke test still fails this job, which blocks the
-      # release and npm publication of every target.
+      - name: Finish CLI archive build
+        if: inputs.cli_archive && inputs.platform == 'linux'
+        shell: bash
+        run: bash .github/scripts/background-join.sh cli-archive
+
       - name: Upload CLI archive
-        if: inputs.cli_archive
+        if: inputs.cli_archive && inputs.platform == 'linux'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: cli-${{ inputs.platform }}-${{ inputs.arch }}
@@ -513,17 +517,8 @@ jobs:
       - name: Finish Linux desktop build libraries install
         if: inputs.platform == 'linux'
         shell: bash
-        run: |
-          for ((waited = 0; waited < 900; waited += 2)); do
-            [[ -f "$RUNNER_TEMP/apt.exit" ]] && break
-            sleep 2
-          done
-          cat "$RUNNER_TEMP/apt.log"
-          [[ -f "$RUNNER_TEMP/apt.exit" ]] || { echo "::error::Installing Linux build libraries did not finish."; exit 1; }
-          exit "$(cat "$RUNNER_TEMP/apt.exit")"
+        run: bash .github/scripts/background-join.sh apt
 
-      # The WSL backend runs the Linux CLI archive inside the distro, so the
-      # Windows desktop embeds the same-arch archive the release attaches.
       - name: Wait for Linux CLI archive for WSL
         if: inputs.platform == 'win'
         uses: ./.github/actions/wait-for-artifact
@@ -705,17 +700,18 @@ jobs:
             } >> "$GITHUB_STEP_SUMMARY"
           fi
 
-      - name: Finish CLI archive smoke test
-        if: inputs.cli_archive
+      - name: Finish CLI archive build
+        if: inputs.cli_archive && inputs.platform != 'linux'
         shell: bash
-        run: |
-          for ((waited = 0; waited < 900; waited += 2)); do
-            [[ -f "$RUNNER_TEMP/cli-smoke.exit" ]] && break
-            sleep 2
-          done
-          cat "$RUNNER_TEMP/cli-smoke.log"
-          [[ -f "$RUNNER_TEMP/cli-smoke.exit" ]] || { echo "::error::The CLI archive smoke test did not finish."; exit 1; }
-          exit "$(cat "$RUNNER_TEMP/cli-smoke.exit")"
+        run: bash .github/scripts/background-join.sh cli-archive
+
+      - name: Upload CLI archive
+        if: inputs.cli_archive && inputs.platform != 'linux'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: cli-${{ inputs.platform }}-${{ inputs.arch }}
+          path: release-cli/*
+          if-no-files-found: error
 
       - name: Collect release assets
         shell: bash
