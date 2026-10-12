@@ -87,7 +87,8 @@ describe("portable handoff context", () => {
     let offset: number | null = 0;
     while (offset !== null) {
       const page = readHandoffPage(imported, { itemId: "long", textOffset: offset });
-      if (!("item" in page)) throw new Error("Expected item page");
+      if (!("item" in page) || page.nextTextOffset === undefined)
+        throw new Error("Expected item page");
       expect(page.item.text.length).toBeLessThanOrEqual(8_000);
       pieces.push(page.item.text);
       offset = page.nextTextOffset;
