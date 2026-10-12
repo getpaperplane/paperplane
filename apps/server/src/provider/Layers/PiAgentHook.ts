@@ -216,6 +216,20 @@ function roveAgentHook(
     "kiro-cli",
     "auggie",
   ]);
+  const NON_AGENT_SUBCOMMANDS = new Set([
+    "app-server",
+    "mcp-server",
+    "mcp",
+    "acp",
+    "serve",
+    "login",
+    "logout",
+    "auth",
+    "completion",
+    "doctor",
+    "update",
+    "upgrade",
+  ]);
   const PI_SUBCOMMANDS = new Set([
     "install",
     "remove",
@@ -436,13 +450,17 @@ function roveAgentHook(
     if (command === process.execPath) return true;
     return /^(node|nodejs|electron|bun)$/.test(commandName(command));
   };
-  // Probes can print output or fail; neither makes them delegated work.
-  const isCliProbe = (args: readonly unknown[]) => {
+  // Probes, admin commands, and protocol hosts (such as a dev server's
+  // `codex app-server`) are not delegated work, even when Pi spawned them.
+  const isNonAgentRun = (args: readonly unknown[]) => {
+    let positional: string | undefined;
     for (const arg of args) {
-      if (arg === "--") break;
-      if (["--version", "--help", "-v", "-h"].includes(String(arg))) return true;
+      const value = String(arg);
+      if (value === "--") break;
+      if (["--version", "--help", "-v", "-h"].includes(value)) return true;
+      if (positional === undefined && !value.startsWith("-")) positional = value;
     }
-    return false;
+    return positional !== undefined && NON_AGENT_SUBCOMMANDS.has(positional);
   };
   /** Agent CLI named at the start of any segment of a shell command line. */
   const shellAgentCli = (line: string): string | undefined => {
@@ -460,7 +478,7 @@ function roveAgentHook(
       const name = commandName((tokens[index] ?? "").replace(/^['"]|['"]$/g, ""));
       if (
         (AGENT_CLIS.has(name) || name === "pi") &&
-        !isCliProbe(tokens.slice(index + 1).map((token) => token.replace(/^['"]|['"]$/g, "")))
+        !isNonAgentRun(tokens.slice(index + 1).map((token) => token.replace(/^['"]|['"]$/g, "")))
       )
         return name;
     }
@@ -637,7 +655,7 @@ function roveAgentHook(
     if (
       piEntryIndex !== -2 &&
       !PI_SUBCOMMANDS.has(String(args?.[piEntryIndex + 1] ?? "")) &&
-      !isCliProbe(args?.slice(piEntryIndex + 1) ?? [])
+      !isNonAgentRun(args?.slice(piEntryIndex + 1) ?? [])
     ) {
       piAgentId = newId();
       if (!args) {
@@ -657,7 +675,7 @@ function roveAgentHook(
       const direct = commandName(command);
       cliName = shellLine
         ? shellAgentCli(shellLine)
-        : AGENT_CLIS.has(direct) && !isCliProbe(args ?? [])
+        : AGENT_CLIS.has(direct) && !isNonAgentRun(args ?? [])
           ? direct
           : undefined;
       if (cliName === "pi") cliName = undefined;
@@ -803,7 +821,7 @@ function roveAgentHook(
       isPiCli(argvEntry) &&
       !process.argv.includes(hookPath) &&
       !PI_SUBCOMMANDS.has(process.argv[2] ?? "") &&
-      !isCliProbe(process.argv.slice(2))
+      !isNonAgentRun(process.argv.slice(2))
     ) {
       process.argv.splice(2, 0, "-e", hookPath);
     }
