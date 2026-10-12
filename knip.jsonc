@@ -42,9 +42,12 @@
       // cross-spawn, jose and ws are declared so relocated installs keep a
       // top-level link for packages the externalized Pi runtime closure
       // resolves at runtime; see scripts/lib/cli-external-packages.test.ts.
+      // cbor-x is a staging root for Modal's codec and optional native loader.
+      // Modal imports it; the bundled server needs it on disk beside the bundle.
       "ignoreDependencies": [
         "@effect/platform-node-shared",
         "@rove-code/web",
+        "cbor-x",
         "cross-spawn",
         "jose",
         "ws",

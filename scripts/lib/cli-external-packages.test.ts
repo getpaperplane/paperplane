@@ -15,6 +15,7 @@ import * as Schema from "effect/Schema";
 import serverPackageJson from "../../apps/server/package.json" with { type: "json" };
 
 import { findEsmImportsOfExternalPackages } from "./cli-executable-imports.ts";
+import { runtimePackageClosure } from "./runtime-package-closure.ts";
 
 import {
   CLI_RUNTIME_EXTERNAL_PREFIXES,
@@ -67,6 +68,11 @@ describe("shouldBundleCliDependency", () => {
       "@napi-rs/keyring",
       "@clerk/electron-passkeys",
       "node-addon-api",
+      "cbor-x",
+      "cbor-extract",
+      "@cbor-extract/cbor-extract-linux-x64",
+      "@cbor-extract/cbor-extract-win32-x64",
+      "detect-libc",
     ]) {
       assert.strictEqual(shouldBundleCliDependency(id), false, id);
     }
@@ -94,13 +100,15 @@ describe("shouldBundleCliDependency", () => {
   // went external with the Pi runtime closure while nothing declared it,
   // so the desktop backend exited code=1 in a restart loop.
   it("resolves every external bare import of the server bundle from the repo", () => {
-    const externals = ["ws", "jose", "cross-spawn"];
+    const externals = ["ws", "jose", "cross-spawn", "cbor-x"];
     for (const name of externals) {
       assert.strictEqual(shouldBundleCliDependency(name), false, name);
-      assert.ok(
-        CLI_PI_RUNTIME_PACKAGES.includes(name),
-        `expected ${name} in the Pi runtime closure`,
-      );
+      if (name !== "cbor-x") {
+        assert.ok(
+          CLI_PI_RUNTIME_PACKAGES.includes(name),
+          `expected ${name} in the Pi runtime closure`,
+        );
+      }
     }
     // SAFETY: apps/server/package.json is repo-controlled and always parses
     // to an object; only its optional dependencies map is read.
@@ -153,6 +161,7 @@ describe("selectCliRuntimeExternalDependencies", () => {
         "@ff-labs/fff-node",
         "@modelcontextprotocol/sdk",
         "@napi-rs/keyring",
+        "cbor-x",
         "cross-spawn",
         "diff",
         "jose",
@@ -478,26 +487,61 @@ describe("findEsmImportsOfExternalPackages", () => {
   });
 });
 
-it("bundles the server CLI without inlining Pi SDK sources", { timeout: 240000 }, async () => {
-  const dist = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "rove-cli-pi-bundle-check-"));
+it("loads Modal's CBOR codec from an isolated runtime sidecar", () => {
+  const selected = selectCliRuntimeExternalDependencies(serverPackageJson.dependencies);
+  assert.strictEqual(selected["cbor-x"], "1.6.6");
+  const root = NodePath.join(serverRoot, "node_modules/cbor-x");
+  const stage = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "rove-cbor-sidecar-"));
   try {
-    const packed = NodeChildProcess.spawnSync("vp", ["pack", "--out-dir", dist], {
-      cwd: serverRoot,
-      encoding: "utf8",
-      timeout: 180_000,
-    });
-    assert.strictEqual(packed.status, 0, packed.stderr || packed.stdout);
-    let totalRegions = 0;
-    for (const file of NodeFS.readdirSync(dist).filter((name) => name.endsWith(".mjs"))) {
-      const result = findInlinedExternalPackages(
-        NodeFS.readFileSync(NodePath.join(dist, file), "utf8"),
-      );
-      totalRegions += result.regionCount;
-      const piPackages = result.inlined.filter((name) => name.startsWith("@earendil-works/"));
-      assert.deepStrictEqual(piPackages, [], file);
+    const closure = runtimePackageClosure(root);
+    assert.isAtLeast(closure.size, 1);
+    for (const [directory, { name }] of closure) {
+      NodeFS.cpSync(directory, NodePath.join(stage, "node_modules", name), { recursive: true });
     }
-    assert.isAtLeast(totalRegions, 1);
+    const loaded = NodeChildProcess.spawnSync(
+      "node",
+      [
+        "--input-type=module",
+        "-e",
+        'import { encode, decode } from "cbor-x"; ' +
+          'import assert from "node:assert/strict"; ' +
+          'const value = { message: "sandbox", values: [1, 2, 3] }; ' +
+          "assert.deepEqual(decode(encode(value)), value);",
+      ],
+      { cwd: stage, encoding: "utf8" },
+    );
+    assert.strictEqual(loaded.status, 0, loaded.stderr || loaded.stdout);
   } finally {
-    NodeFS.rmSync(dist, { recursive: true, force: true });
+    NodeFS.rmSync(stage, { recursive: true, force: true });
   }
 });
+
+it(
+  "bundles the server CLI without inlining Pi or CBOR runtime sources",
+  { timeout: 240000 },
+  async () => {
+    const dist = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "rove-cli-pi-bundle-check-"));
+    try {
+      const packed = NodeChildProcess.spawnSync("vp", ["pack", "--out-dir", dist], {
+        cwd: serverRoot,
+        encoding: "utf8",
+        timeout: 180_000,
+      });
+      assert.strictEqual(packed.status, 0, packed.stderr || packed.stdout);
+      let totalRegions = 0;
+      for (const file of NodeFS.readdirSync(dist).filter((name) => name.endsWith(".mjs"))) {
+        const result = findInlinedExternalPackages(
+          NodeFS.readFileSync(NodePath.join(dist, file), "utf8"),
+        );
+        totalRegions += result.regionCount;
+        assert.deepStrictEqual(result.inlined, [], file);
+        for (const name of result.inlinedPackages) {
+          assert.notMatch(name, /^(?:cbor-x|cbor-extract|@cbor-extract\/)/, file);
+        }
+      }
+      assert.isAtLeast(totalRegions, 1);
+    } finally {
+      NodeFS.rmSync(dist, { recursive: true, force: true });
+    }
+  },
+);
