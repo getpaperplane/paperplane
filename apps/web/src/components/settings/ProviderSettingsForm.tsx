@@ -492,10 +492,7 @@ function PiThinkingSettingsField({
       <SettingsRow
         title={<label htmlFor={id}>{field.label}</label>}
         description={<span>{hint}</span>}
-        control={renderSelect(
-          "sm",
-          "w-full max-w-full @min-[32rem]/settings-row:w-56",
-        )}
+        control={renderSelect("sm", "w-full max-w-full @min-[32rem]/settings-row:w-56")}
       />
     );
   }
@@ -506,7 +503,9 @@ function PiThinkingSettingsField({
         {field.label}
       </label>
       {renderSelect("sm", cn("w-full", variant === "card" && "mt-1.5"))}
-      <p className={cn("mt-1 text-muted-foreground", variant === "dialog" ? "text-2xs" : "text-xs")}>
+      <p
+        className={cn("mt-1 text-muted-foreground", variant === "dialog" ? "text-2xs" : "text-xs")}
+      >
         {hint}
       </p>
     </FieldFrame>
