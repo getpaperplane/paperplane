@@ -871,6 +871,14 @@ export const PiSettings = makeProviderSettingsSchema(
         },
       }),
     ),
+    subagentThinkingLevel: Schema.NullOr(PiThinkingLevel).pipe(
+      Schema.withDecodingDefault(Effect.succeed(null)),
+      Schema.annotateKey({
+        title: "Subagent thinking level",
+        description: "Leave unset to use the thread's current thinking level.",
+        providerSettingsForm: { clearWhenEmpty: "omit" },
+      }),
+    ),
     // Extension paths blocked from loading in new Pi sessions. Toggled from
     // the provider extensions panel and applied at session creation.
     disabledExtensions: Schema.Array(Schema.String).pipe(
@@ -888,6 +896,7 @@ export const PiSettings = makeProviderSettingsSchema(
       "thinkingLevel",
       "subagents",
       "subagentModel",
+      "subagentThinkingLevel",
       "agentDir",
       "workloadProtection",
       "workloadMemoryMiB",
@@ -1649,6 +1658,7 @@ const PiSettingsPatch = Schema.Struct({
   workloadMemoryMiB: Schema.optionalKey(PiWorkloadMemoryMiB),
   model: Schema.optionalKey(TrimmedString),
   thinkingLevel: Schema.optionalKey(Schema.NullOr(PiThinkingLevel)),
+  subagentThinkingLevel: Schema.optionalKey(Schema.NullOr(PiThinkingLevel)),
   disabledExtensions: Schema.optionalKey(Schema.Array(Schema.String)),
   customModels: Schema.optionalKey(Schema.Array(Schema.String)),
 });

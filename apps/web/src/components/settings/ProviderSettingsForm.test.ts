@@ -4,6 +4,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { ProviderDriverKind, type ServerProviderModel } from "@rove-code/contracts";
 
 import { DRIVER_OPTION_BY_VALUE } from "./providerDriverMeta";
+import { resolvePiSubagentSettings } from "./PiSubagentSettings";
 import {
   deriveProviderSettingsFields,
   nextProviderConfigWithFieldValue,
@@ -50,6 +51,80 @@ describe("ProviderSettingsForm helpers", () => {
       },
     },
   ];
+
+  it("follows the child model's thinking capabilities, not the provider's default model", () => {
+    const resolved = resolvePiSubagentSettings(
+      {
+        model: "local/reasoning",
+        thinkingLevel: "max",
+        subagentModel: "local/plain",
+        subagentThinkingLevel: "max",
+      },
+      piModels,
+    );
+    expect(resolved.thinkingOptions.map((option) => option.id)).toEqual(["off"]);
+    expect(resolved.thinkingUnavailable).toBe(true);
+    expect(resolved.thinking).toBe("max");
+  });
+
+  it("does not guess the caller's model when subagents inherit, or a missing model's capabilities", () => {
+    const inherited = resolvePiSubagentSettings(
+      { model: "local/plain", subagentThinkingLevel: null },
+      piModels,
+    );
+    expect(inherited.model).toBe("");
+    expect(inherited.thinking).toBe("");
+    expect(inherited.thinkingOptions.map((option) => option.id)).toContain("max");
+    const missing = resolvePiSubagentSettings(
+      { subagentModel: "removed/model", subagentThinkingLevel: "high" },
+      piModels,
+    );
+    expect(missing.modelOptions.at(-1)).toMatchObject({
+      slug: "removed/model",
+      isUnavailable: true,
+    });
+    expect(missing.thinkingOptions).toEqual([]);
+    expect(missing.thinkingUnavailable).toBe(true);
+    expect(resolvePiSubagentSettings({ subagentModel: "local/plain" }, []).thinkingOptions).toEqual(
+      [],
+    );
+  });
+
+  it("clears model and thinking overrides independently while preserving the parent and other config", () => {
+    const pi = DRIVER_OPTION_BY_VALUE[ProviderDriverKind.make("pi")]!;
+    const fields = deriveProviderSettingsFields(pi);
+    const modelField = fields.find((field) => field.key === "subagentModel")!;
+    const thinkingField = fields.find((field) => field.key === "subagentThinkingLevel")!;
+    const config = {
+      model: "local/reasoning",
+      thinkingLevel: "max",
+      subagentModel: "local/plain",
+      subagentThinkingLevel: "off",
+      agentDir: "/custom",
+    };
+    const withoutModel = nextProviderConfigWithFieldValue(config, modelField, "");
+    expect(withoutModel).toEqual({
+      model: "local/reasoning",
+      thinkingLevel: "max",
+      subagentThinkingLevel: "off",
+      agentDir: "/custom",
+    });
+    const withoutThinking = nextProviderConfigWithFieldValue(withoutModel, thinkingField, "");
+    expect(withoutThinking).toEqual({
+      model: "local/reasoning",
+      thinkingLevel: "max",
+      agentDir: "/custom",
+    });
+    expect(resolvePiSubagentSettings(withoutThinking, piModels)).toMatchObject({
+      model: "",
+      thinking: "",
+      thinkingUnavailable: false,
+    });
+    expect(nextProviderConfigWithFieldValue(config, modelField, "local/reasoning")).toMatchObject({
+      subagentModel: "local/reasoning",
+      subagentThinkingLevel: "off",
+    });
+  });
 
   it("limits Pi settings to the selected model and distinguishes a stale override", () => {
     const current = resolvePiThinkingSetting(

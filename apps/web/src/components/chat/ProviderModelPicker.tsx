@@ -6,6 +6,7 @@ import {
 } from "@rove-code/contracts";
 import { memo, useEffect, useMemo, useState } from "react";
 import { Badge } from "../ui/badge";
+import { Button } from "../ui/button";
 import { Popover, PopoverPopup, PopoverTrigger } from "../ui/popover";
 import { Tooltip, TooltipPopup, TooltipTrigger } from "../ui/tooltip";
 import { cn } from "~/lib/utils";
@@ -52,6 +53,8 @@ export const ProviderModelPicker = memo(function ProviderModelPicker(props: {
   /** Aggregate settings can show a neutral value without claiming one provider is selected. */
   triggerLabel?: string;
   triggerAriaLabel?: string;
+  /** An explicit inheritance/reset choice, kept out of model favorites and ordering. */
+  defaultOption?: { label: string; onSelect: () => void };
   onOpenChange?: (open: boolean) => void;
   onOpenProviderSetup?: (instanceId: ProviderInstanceId) => void;
   getModelDisabledReason?: (instanceId: ProviderInstanceId, model: string) => string | null;
@@ -285,6 +288,22 @@ export const ProviderModelPicker = memo(function ProviderModelPicker(props: {
         className="before:hidden"
         padding="none"
       >
+        {props.defaultOption ? (
+          <div className="border-b border-border p-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full justify-start"
+              onClick={() => {
+                if (props.disabled) return;
+                props.defaultOption?.onSelect();
+                setIsMenuOpen(false);
+              }}
+            >
+              {props.defaultOption.label}
+            </Button>
+          </div>
+        ) : null}
         <ModelPickerContent
           activeInstanceId={activeInstanceId}
           model={props.model}

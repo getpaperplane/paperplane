@@ -864,6 +864,7 @@ export function ProviderInstanceCard({
   const runtimeFields = driverOption ? (
     <ProviderSettingsForm
       definition={driverOption}
+      provider={liveProvider}
       models={liveProvider?.models}
       supportsPiWorkloadProtection={supportsPiWorkloadProtection}
       value={instance.config}

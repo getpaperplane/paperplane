@@ -8,7 +8,7 @@ import { ThreadId } from "@rove-code/contracts";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 import { foldAgentTranscript } from "../../orchestration/agentTranscriptQuery.ts";
-import type { PiSessionLike } from "./PiAdapter.ts";
+import type { PiCreateSessionInput, PiSessionLike } from "./PiAdapter.ts";
 import { createPiSession } from "./PiSessionFactory.ts";
 import {
   createPiSubagentTool,
@@ -45,24 +45,37 @@ describe("Rove subagents in Pi threads", () => {
     NodeFS.rmSync(root, { recursive: true, force: true });
   });
 
-  const run = async (subagents: boolean) => {
+  const run = async (
+    subagents: boolean,
+    options?: {
+      subagents?: PiCreateSessionInput["subagents"];
+      thinkingLevel?: string;
+      currentThinkingLevel?: string;
+      reportSelection?: boolean;
+    },
+  ) => {
     const threadId = ThreadId.make("pi-subagents");
     const tasks: PiAgentTaskDescriptor[] = [];
     const session = await createPiSession(
       {
         threadId,
         cwd,
-        model: "rove-subagent-test/fixture",
-        thinkingLevel: undefined,
+        model: options?.reportSelection
+          ? "rove-subagent-test/reasoning"
+          : "rove-subagent-test/fixture",
+        thinkingLevel: options?.thinkingLevel,
         resumeSessionId: undefined,
-        ...(subagents ? { subagents: {} } : undefined),
+        ...(subagents ? { subagents: options?.subagents ?? {} } : undefined),
       },
       { onSubagentTask: (task) => tasks.push(task), subagentTranscriptsRoot: transcripts },
     );
     sessions.push(session);
-    await session.prompt("delegate");
+    if (options?.currentThinkingLevel !== undefined) {
+      await session.setThinkingLevel?.(options.currentThinkingLevel);
+    }
+    await session.prompt(options?.reportSelection ? "delegate and report session" : "delegate");
     const reply = JSON.stringify(session.messages.at(-1));
-    return { threadId, tasks, reply };
+    return { threadId, tasks, reply, session };
   };
 
   it("runs a subagent as a sterile child session and reports its lifecycle", async () => {
@@ -94,6 +107,56 @@ describe("Rove subagents in Pi threads", () => {
         { kind: "task", text: "inspect" },
         { kind: "text", text: "child report" },
       ],
+    });
+  });
+
+  it.each([undefined, null])(
+    "inherits the parent's current thinking when override is %s",
+    async (thinkingLevel) => {
+      const { tasks, reply, session } = await run(true, {
+        thinkingLevel: "high",
+        currentThinkingLevel: "low",
+        subagents: { thinkingLevel },
+        reportSelection: true,
+      });
+      expect(reply).toContain("child selection: reasoning/low");
+      expect(session.getThinkingLevel?.()).toBe("low");
+      expect(tasks.find((task) => task.type === "task.completed")?.payload).toMatchObject({
+        effort: "low",
+      });
+    },
+  );
+
+  it.each([
+    { parent: "low", child: "high" as const },
+    { parent: "high", child: "off" as const },
+  ])(
+    "runs the child with $child thinking without changing parent $parent",
+    async ({ parent, child }) => {
+      const { tasks, reply, session } = await run(true, {
+        thinkingLevel: parent,
+        subagents: { thinkingLevel: child },
+        reportSelection: true,
+      });
+      expect(reply).toContain(`child selection: reasoning/${child}`);
+      expect(session.getThinkingLevel?.()).toBe(parent);
+      expect(tasks.find((task) => task.type === "task.completed")?.payload).toMatchObject({
+        effort: child,
+      });
+    },
+  );
+
+  it("clamps thinking to the overridden child model and reports the effective level", async () => {
+    const { tasks, reply, session } = await run(true, {
+      thinkingLevel: "low",
+      subagents: { model: "rove-subagent-test/fixture", thinkingLevel: "high" },
+      reportSelection: true,
+    });
+    expect(reply).toContain("child selection: fixture/off");
+    expect(session.getThinkingLevel?.()).toBe("low");
+    expect(tasks.find((task) => task.type === "task.completed")?.payload).toMatchObject({
+      model: "rove-subagent-test/fixture",
+      effort: "off",
     });
   });
 

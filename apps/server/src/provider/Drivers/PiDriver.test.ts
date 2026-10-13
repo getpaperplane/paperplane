@@ -5,10 +5,12 @@ import * as NodePath from "node:path";
 
 import { assert, it } from "@effect/vitest";
 import * as NodeServices from "@effect/platform-node/NodeServices";
-import { ProviderInstanceId, ThreadId } from "@rove-code/contracts";
+import { ProviderInstanceId, ThreadId, type ProviderRuntimeEvent } from "@rove-code/contracts";
+import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Schema from "effect/Schema";
+import * as Stream from "effect/Stream";
 import { afterEach, beforeEach, describe, vi } from "vite-plus/test";
 
 import * as BackgroundPolicy from "../../background/BackgroundPolicy.ts";
@@ -266,6 +268,62 @@ describe("Pi SDK discovery client", () => {
       assert.strictEqual(process.env.PI_CODING_AGENT_DIR, agentDir);
       assert.isFalse(NodeFS.existsSync(NodePath.join(agentDir, "settings.json")));
     }).pipe(Effect.scoped, Effect.provide(testLayer)),
+  );
+
+  it.effect(
+    "passes subagent thinking overrides through the isolated runtime and clears them to inherit",
+    () =>
+      Effect.gen(function* () {
+        const extension = NodePath.join(agentDir, "subagent.ts");
+        NodeFS.copyFileSync(
+          new URL("../Layers/fixtures/pi-subagent-extension.ts", import.meta.url),
+          extension,
+        );
+        NodeFS.writeFileSync(
+          NodePath.join(agentDir, "settings.json"),
+          encodeExtensionSettings({ extensions: [extension] }),
+        );
+        for (const subagentThinkingLevel of ["high", null] as const) {
+          const instance = yield* PiDriver.create({
+            instanceId: ProviderInstanceId.make(`pi-thinking-${subagentThinkingLevel}`),
+            displayName: undefined,
+            enabled: true,
+            environment: [],
+            config: {
+              ...PiDriver.defaultConfig(),
+              agentDir,
+              model: "rove-subagent-test/reasoning",
+              thinkingLevel: "low",
+              subagentThinkingLevel,
+            },
+          });
+          const completion =
+            yield* Deferred.make<Extract<ProviderRuntimeEvent, { type: "turn.completed" }>>();
+          const task =
+            yield* Deferred.make<Extract<ProviderRuntimeEvent, { type: "task.completed" }>>();
+          yield* instance.adapter.streamEvents.pipe(
+            Stream.runForEach((event) =>
+              event.type === "turn.completed"
+                ? Deferred.succeed(completion, event)
+                : event.type === "task.completed"
+                  ? Deferred.succeed(task, event)
+                  : Effect.void,
+            ),
+            Effect.forkChild({ startImmediately: true }),
+          );
+          const threadId = ThreadId.make(`pi-thinking-${subagentThinkingLevel}-thread`);
+          yield* instance.adapter.startSession({ threadId, cwd: root, runtimeMode: "full-access" });
+          yield* instance.adapter.sendTurn({ threadId, input: "delegate and report session" });
+          const completedTask = yield* Deferred.await(task);
+          const expectedThinking = subagentThinkingLevel ?? "low";
+          assert.strictEqual(completedTask.payload.effort, expectedThinking);
+          assert.strictEqual(
+            completedTask.payload.summary,
+            `child selection: reasoning/${expectedThinking}`,
+          );
+          assert.strictEqual((yield* Deferred.await(completion)).payload.state, "completed");
+        }
+      }).pipe(Effect.scoped, Effect.provide(testLayer)),
   );
 
   it.effect("does not load extensions or admit work when the instance is disabled", () =>

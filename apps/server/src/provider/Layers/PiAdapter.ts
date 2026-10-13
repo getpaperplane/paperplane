@@ -18,6 +18,7 @@ import {
   type ChatAttachment,
   EventId,
   PiSettings,
+  type PiThinkingLevel,
   PiExtensionStatusSnapshot,
   ProviderDriverKind,
   ProviderInstanceId,
@@ -297,8 +298,13 @@ export interface PiCreateSessionInput {
   readonly resumeSessionFile?: string | undefined;
   /** Pi extension paths blocked from loading; matched against the loader's discovered paths. */
   readonly disabledExtensions?: ReadonlyArray<string> | undefined;
-  /** Present when the thread gets Rove's subagent tool; `model` overrides the caller's model. */
-  readonly subagents?: { readonly model?: string | undefined } | undefined;
+  /** Present when the thread gets Rove's subagent tool; unset overrides inherit the caller's selection. */
+  readonly subagents?:
+    | {
+        readonly model?: string | undefined;
+        readonly thinkingLevel?: PiThinkingLevel | null | undefined;
+      }
+    | undefined;
 }
 
 export class PiExtensionLoadError extends Error {
