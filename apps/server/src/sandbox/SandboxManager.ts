@@ -1,6 +1,9 @@
+// @effect-diagnostics nodeBuiltinImport:off
+import * as NodeOS from "node:os";
 import {
   RemoteSandbox,
   SandboxError,
+  type SandboxCredentialKind,
   type SandboxProvider,
   SandboxActionInput,
   SandboxActionResult,
@@ -9,6 +12,7 @@ import {
   SandboxInventory,
   SandboxLinkInput,
 } from "@rove-code/contracts";
+import { HostProcessEnvironment, HostProcessPlatform } from "@rove-code/shared/hostProcess";
 import * as Context from "effect/Context";
 import * as Crypto from "effect/Crypto";
 import * as Effect from "effect/Effect";
@@ -17,13 +21,22 @@ import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 import * as Semaphore from "effect/Semaphore";
 import { ServerSecretStore } from "../auth/ServerSecretStore.ts";
-import { sandboxPairCommand, sandboxStartCommand, sandboxStopCommand } from "./bootstrap.ts";
+import {
+  sandboxCredentialsCommand,
+  sandboxLabelCommand,
+  sandboxPairCommand,
+  sandboxStartCommand,
+  sandboxStopCommand,
+} from "./bootstrap.ts";
+import { makeLocalSandboxCredentials, type SandboxCredentialSource } from "./credentials.ts";
 import { SandboxDriverError } from "./errors.ts";
 import {
   makeSandboxDriver,
   sandboxHandle,
   SandboxCredentials,
+  type SandboxDriver,
   type SandboxDriverFactory,
+  type SandboxHandle,
 } from "./drivers.ts";
 
 const StoredSandbox = Schema.Struct({
@@ -71,8 +84,16 @@ export class SandboxManager extends Context.Service<
 
 export const makeSandboxManager = Effect.fn("SandboxManager.make")(function* (
   factory: SandboxDriverFactory = makeSandboxDriver,
+  credentials?: SandboxCredentialSource,
 ) {
   const store = yield* ServerSecretStore;
+  const credentialSource =
+    credentials ??
+    makeLocalSandboxCredentials({
+      env: yield* HostProcessEnvironment,
+      home: NodeOS.homedir(),
+      platform: yield* HostProcessPlatform,
+    });
   const crypto = yield* Crypto.Crypto;
   const semaphore = yield* Semaphore.make(1);
   const emptyState: typeof StoredState.Type = { credentials: {}, sandboxes: [] };
@@ -128,14 +149,26 @@ export const makeSandboxManager = Effect.fn("SandboxManager.make")(function* (
     } = record;
     return result;
   };
+  // Settings polls inventory during long operations; detection runs `gh` and
+  // `security`, so reuse a recent answer.
+  let detected: { at: number; kinds: ReadonlyArray<SandboxCredentialKind> } | null = null;
+  const availableCredentials = Effect.promise(async () => {
+    if (detected && performance.now() - detected.at < 30_000) return detected.kinds;
+    const kinds = await credentialSource.available();
+    detected = { at: performance.now(), kinds };
+    return kinds;
+  });
   const inventory = loaded.error
     ? Effect.fail(loaded.error)
-    : Effect.sync(() => ({
-        configuredProviders: (["boat", "modal"] as const).filter(
-          (provider) => state.credentials[provider] !== undefined,
-        ),
-        sandboxes: state.sandboxes.map(publicRecord),
-      }));
+    : availableCredentials.pipe(
+        Effect.map((available) => ({
+          configuredProviders: (["boat", "modal"] as const).filter(
+            (provider) => state.credentials[provider] !== undefined,
+          ),
+          sandboxes: state.sandboxes.map(publicRecord),
+          availableCredentials: available,
+        })),
+      );
   const replace = (record: typeof StoredSandbox.Type) =>
     save({
       ...state,
@@ -182,6 +215,32 @@ export const makeSandboxManager = Effect.fn("SandboxManager.make")(function* (
           message: error instanceof SandboxDriverError ? error.message : message,
         }),
     });
+  // Copies fresh sign-ins from this environment, and removes deselected ones,
+  // before Rove (re)starts so its provider probes see the tools and logins.
+  const forwardCredentials = (
+    driver: SandboxDriver,
+    handle: SandboxHandle,
+    kinds: ReadonlyArray<SandboxCredentialKind>,
+  ) =>
+    operation(async () => {
+      const payload = await credentialSource.payload(kinds);
+      await driver.exec(handle, sandboxCredentialsCommand, JSON.stringify(payload));
+    }, "Could not forward sign-ins to the sandbox. Change a sign-in under Remote sandboxes to retry.");
+  const nameEnvironment = (driver: SandboxDriver, handle: SandboxHandle, label: string) =>
+    Effect.ignore(operation(() => driver.exec(handle, sandboxLabelCommand(label)), ""));
+  // A failed forward shouldn't strand a sandbox that is otherwise healthy and
+  // billing; record the reason and keep going.
+  const forwardOnStart = (
+    driver: SandboxDriver,
+    handle: SandboxHandle,
+    record: typeof StoredSandbox.Type,
+  ) =>
+    record.credentials === undefined
+      ? Effect.succeed<string | null>(null)
+      : forwardCredentials(driver, handle, record.credentials).pipe(
+          Effect.as<string | null>(null),
+          Effect.catch((error) => Effect.succeed<string | null>(error.message)),
+        );
 
   const configure = Effect.fn("SandboxManager.configure")(function* (
     input: typeof SandboxConfigureInput.Type,
@@ -238,11 +297,13 @@ export const makeSandboxManager = Effect.fn("SandboxManager.make")(function* (
           threadId: null,
           snapshotIds: [],
           volumeName: input.provider === "modal" ? `rove-${id}` : null,
+          ...(input.credentials?.length ? { credentials: input.credentials } : {}),
+          ...(input.provider === "modal" && input.region ? { region: input.region } : {}),
         };
         yield* save({ ...state, sandboxes: [...state.sandboxes, record] });
         return yield* Effect.gen(function* () {
           const handle = yield* operation(
-            () => driver.create(record.id),
+            () => driver.create(record.id, record.region),
             "Provisioning failed. Check the vendor dashboard for resources before retrying.",
           );
           record = {
@@ -252,6 +313,8 @@ export const makeSandboxManager = Effect.fn("SandboxManager.make")(function* (
             volumeName: handle.volumeName,
           };
           yield* replace(record);
+          yield* nameEnvironment(driver, handle, record.label);
+          const forwardError = yield* forwardOnStart(driver, handle, record);
           yield* operation(
             () => driver.exec(handle, sandboxStartCommand),
             "Rove setup failed. The sandbox may still be billing; resume to repair or delete it.",
@@ -260,7 +323,7 @@ export const makeSandboxManager = Effect.fn("SandboxManager.make")(function* (
             () => driver.expose(handle),
             "Could not expose Rove. The sandbox may still be billing; resume to repair or delete it.",
           );
-          record = { ...record, phase: "running", url };
+          record = { ...record, phase: "running", url, detail: forwardError };
           yield* replace(record);
           return publicRecord(record);
         }).pipe(
@@ -333,7 +396,8 @@ export const makeSandboxManager = Effect.fn("SandboxManager.make")(function* (
         let current = selected;
         // Failures that leave the remote server untouched keep the sandbox's
         // phase, so a refused pause or failed pairing doesn't hide Connect.
-        let untouched = input.action === "pair" || input.action === "pause";
+        let untouched =
+          input.action === "pair" || input.action === "pause" || input.action === "credentials";
         return yield* Effect.gen(function* () {
           let pairingUrl: string | null = null;
           const handle = sandboxHandle(current);
@@ -350,6 +414,8 @@ export const makeSandboxManager = Effect.fn("SandboxManager.make")(function* (
               detail: null,
             };
             yield* replace(current);
+            yield* nameEnvironment(driver, resumed, current.label);
+            const forwardError = yield* forwardOnStart(driver, resumed, current);
             yield* operation(
               () => driver.exec(resumed, sandboxStartCommand),
               "Rove restart failed. Resume again to repair, or delete the sandbox.",
@@ -358,7 +424,14 @@ export const makeSandboxManager = Effect.fn("SandboxManager.make")(function* (
               () => driver.expose(resumed),
               "Could not expose the resumed Rove server.",
             );
-            current = { ...current, url, phase: "running" };
+            current = { ...current, url, phase: "running", detail: forwardError };
+          } else if (input.action === "credentials") {
+            const kinds = input.credentials;
+            if (!kinds)
+              return yield* new SandboxError({ message: "Choose which sign-ins to forward." });
+            // A paused sandbox applies the new selection when it resumes.
+            if (current.phase === "running") yield* forwardCredentials(driver, handle, kinds);
+            current = { ...current, credentials: kinds, detail: null };
           } else if (input.action === "pause") {
             if (current.phase === "paused") return { sandbox: publicRecord(current), pairingUrl };
             yield* operation(

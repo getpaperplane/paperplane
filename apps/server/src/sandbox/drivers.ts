@@ -1,4 +1,9 @@
-import { SANDBOX_PORT, type RemoteSandbox, type SandboxProvider } from "@rove-code/contracts";
+import {
+  SANDBOX_PORT,
+  type RemoteSandbox,
+  type SandboxProvider,
+  type SandboxRegion,
+} from "@rove-code/contracts";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 import { sandboxCommandFailure } from "./bootstrap.ts";
@@ -13,6 +18,8 @@ export interface SandboxHandle {
   volumeName: string | null;
   paused: boolean;
   deletionOperationId?: string;
+  /** Modal only; resumed sandboxes stay in the region they were created in. */
+  region?: SandboxRegion;
 }
 // Bootstrap installs Rove and waits for it to become ready; both can be slow.
 const COMMAND_TIMEOUT_SECONDS = 600;
@@ -20,11 +27,12 @@ const COMMAND_TIMEOUT_SECONDS = 600;
 export interface SandboxDriver {
   /** Checks the account credentials with a free, read-only request. */
   verify: () => Promise<void>;
-  create: (id: string) => Promise<SandboxHandle>;
+  create: (id: string, region?: SandboxRegion) => Promise<SandboxHandle>;
   resume: (handle: SandboxHandle) => Promise<SandboxHandle>;
   pause: (handle: SandboxHandle, saveSnapshot: (id: string) => Promise<void>) => Promise<void>;
   remove: (handle: SandboxHandle, saveDeletion: (id: string) => Promise<void>) => Promise<void>;
-  exec: (handle: SandboxHandle, command: string) => Promise<string>;
+  /** `stdin` carries secrets so they never appear in the command line. */
+  exec: (handle: SandboxHandle, command: string, stdin?: string) => Promise<string>;
   expose: (handle: SandboxHandle) => Promise<string>;
   close: () => void;
 }
@@ -104,11 +112,17 @@ export function makeBoatDriver(
       "The Boat sandbox did not become ready within two minutes. Check its state in the Boat dashboard before resuming or deleting it.",
     );
   };
-  const exec = async (handle: SandboxHandle, command: string) => {
+  const exec = async (handle: SandboxHandle, command: string, stdin?: string) => {
     await ready(handle);
+    // Boat's command API has no stdin; the payload travels in the HTTPS body
+    // to Boat, the same trust boundary as the sandbox itself.
+    const piped =
+      stdin === undefined
+        ? command
+        : `printf %s ${Buffer.from(stdin).toString("base64")} | base64 -d | ${command}`;
     const result = decodeBoatCommand(
       await request(`${path(handle)}/commands`, {
-        command,
+        command: piped,
         timeoutSeconds: COMMAND_TIMEOUT_SECONDS,
       }),
     );
@@ -202,7 +216,11 @@ export const makeSandboxDriver: SandboxDriverFactory = async (provider, credenti
   // as Modal recommends for work beyond its 24-hour run limit. Modal volumes
   // can't hold it: they reject hard links, which npm and Rove's atomic writes need.
   // `name` (stored as volumeName for older records) finds unrecorded sandboxes.
-  const create = async (name: string, snapshotId?: string): Promise<SandboxHandle> => {
+  const create = async (
+    name: string,
+    region: SandboxRegion | undefined,
+    snapshotId?: string,
+  ): Promise<SandboxHandle> => {
     const app = await client.apps.fromName("rove-thread-sandboxes", { createIfMissing: true });
     const image = snapshotId
       ? await client.images.fromId(snapshotId)
@@ -216,6 +234,7 @@ export const makeSandboxDriver: SandboxDriverFactory = async (provider, credenti
       timeoutMs: 24 * 60 * 60 * 1000,
       encryptedPorts: [SANDBOX_PORT],
       name,
+      ...(region ? { regions: [region] } : {}),
     });
     return {
       remoteId: sandbox.sandboxId,
@@ -223,13 +242,14 @@ export const makeSandboxDriver: SandboxDriverFactory = async (provider, credenti
       snapshotIds: [],
       volumeName: name,
       paused: false,
+      ...(region ? { region } : {}),
     };
   };
   const driver: SandboxDriver = {
     verify: async () => {
       await client.apps.fromName("rove-thread-sandboxes", { createIfMissing: true });
     },
-    create: (id) => create(`rove-${id}`),
+    create: (id, region) => create(`rove-${id}`, region),
     resume: async (handle) => {
       if (!handle.paused) {
         try {
@@ -242,6 +262,7 @@ export const makeSandboxDriver: SandboxDriverFactory = async (provider, credenti
       return {
         ...(await create(
           handle.volumeName ?? `rove-${handle.remoteId}`,
+          handle.region,
           handle.snapshotIds.at(-1),
         )),
         snapshotIds: handle.snapshotIds,
@@ -274,11 +295,15 @@ export const makeSandboxDriver: SandboxDriverFactory = async (provider, credenti
       // Older sandboxes kept their home on a volume of the same name.
       if (handle.volumeName) await client.volumes.delete(handle.volumeName, { allowMissing: true });
     },
-    exec: async (handle, command) => {
+    exec: async (handle, command, stdin) => {
       const sandbox = await client.sandboxes.fromId(handle.remoteId);
       const process = await sandbox.exec(["bash", "-lc", command], {
         timeoutMs: COMMAND_TIMEOUT_SECONDS * 1000,
       });
+      if (stdin !== undefined) {
+        await process.stdin.writeText(stdin);
+        await process.stdin.close();
+      }
       const [stdout, , exitCode] = await Promise.all([
         process.stdout.readText(),
         process.stderr.readText(),
@@ -305,11 +330,11 @@ export const makeSandboxDriver: SandboxDriverFactory = async (provider, credenti
   return {
     ...driver,
     verify: () => modalOperation(() => driver.verify()),
-    create: (id) => modalOperation(() => driver.create(id)),
+    create: (id, region) => modalOperation(() => driver.create(id, region)),
     resume: (handle) => modalOperation(() => driver.resume(handle)),
     pause: (handle, save) => modalOperation(() => driver.pause(handle, save)),
     remove: (handle, save) => modalOperation(() => driver.remove(handle, save)),
-    exec: (handle, command) => modalOperation(() => driver.exec(handle, command)),
+    exec: (handle, command, stdin) => modalOperation(() => driver.exec(handle, command, stdin)),
     expose: (handle) => modalOperation(() => driver.expose(handle)),
   };
 };
@@ -331,6 +356,7 @@ export function sandboxHandle(
     snapshotIds: record.snapshotIds,
     volumeName: record.volumeName,
     paused: record.phase === "paused",
+    ...(record.region ? { region: record.region } : {}),
   };
   return record.deletionOperationId
     ? { ...handle, deletionOperationId: record.deletionOperationId }

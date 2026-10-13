@@ -16,7 +16,8 @@ export {
 
 export interface EnvironmentOption {
   environmentId: EnvironmentId;
-  projectId: ProjectId;
+  /** Null for an empty sandbox that clones the project when picked. */
+  projectId: ProjectId | null;
   label: string;
   isPrimary: boolean;
   machine: EnvironmentMachineKind;

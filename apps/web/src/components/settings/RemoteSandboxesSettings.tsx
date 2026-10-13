@@ -8,12 +8,15 @@ import {
 import {
   type EnvironmentId,
   type RemoteSandbox,
+  type SandboxCredentialKind,
   SandboxInventory,
   type SandboxProvider,
+  type SandboxRegion,
 } from "@rove-code/contracts";
 import { useRouter } from "@tanstack/react-router";
 import { AlertCircleIcon, ChevronDownIcon, ExternalLinkIcon, RefreshCwIcon } from "lucide-react";
 import { sandboxEnvironment } from "../../state/sandbox";
+import { serverEnvironment } from "../../state/server";
 import { useEnvironmentSessionState } from "../../state/session";
 import { threadEnvironment } from "../../state/threads";
 import { useAtomCommand } from "../../state/use-atom-command";
@@ -23,6 +26,7 @@ import { requestConfirmDialog } from "../../confirmDialog";
 import { newThreadId } from "../../lib/utils";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
+import { Checkbox } from "../ui/checkbox";
 import { Input } from "../ui/input";
 import { Menu, MenuItem, MenuPopup, MenuSeparator, MenuTrigger } from "../ui/menu";
 import { Select, SelectItem, SelectPopup, SelectTrigger, SelectValue } from "../ui/select";
@@ -76,6 +80,21 @@ const DASHBOARD_URLS = {
   boat: "https://boat.dev/dashboard",
   modal: "https://modal.com/apps",
 } satisfies Record<SandboxProvider, string>;
+const CREDENTIAL_NAMES = {
+  codex: "Codex",
+  claude: "Claude",
+  pi: "Pi",
+  opencode: "OpenCode",
+  github: "GitHub",
+} satisfies Record<SandboxCredentialKind, string>;
+// Modal places unpinned sandboxes anywhere at base price; pinning a broad
+// region costs 1.15x.
+const REGION_LABELS = {
+  default: "Any · base price",
+  us: "United States · 1.15x",
+  eu: "Europe · 1.15x",
+  ap: "Asia-Pacific · 1.15x",
+} satisfies Record<SandboxRegion | "default", string>;
 const PHASE_LABELS = {
   creating: "Creating",
   running: "Running",
@@ -105,6 +124,9 @@ function SandboxControls({
   const createThread = useAtomCommand(threadEnvironment.create, { reportFailure: false });
   const getConfig = useAtomCommand(sandboxEnvironment.getConfig, { reportFailure: false });
   const removeEnvironment = useAtomCommand(environmentCatalog.remove, { reportFailure: false });
+  const refreshProviders = useAtomCommand(serverEnvironment.refreshProviders, {
+    reportFailure: false,
+  });
   // Connecting saved the sandbox as an environment here; drop it with the sandbox.
   const forgetConnection = async (sandbox: RemoteSandbox) => {
     if (sandbox.environmentId) await removeEnvironment(sandbox.environmentId);
@@ -115,6 +137,8 @@ function SandboxControls({
   const [token, setToken] = useState("");
   const [tokenId, setTokenId] = useState("");
   const [label, setLabel] = useState("");
+  const [region, setRegion] = useState<SandboxRegion | "default">("default");
+  const [newCredentials, setNewCredentials] = useState<ReadonlyArray<SandboxCredentialKind>>([]);
   const [pending, setPending] = useState<Pending | null>(null);
   const pendingRef = useRef(false);
   const [error, setError] = useState<Pending | null>(null);
@@ -181,6 +205,8 @@ function SandboxControls({
   const configured = inventory?.configuredProviders.includes(provider) ?? false;
   const tracked = inventory?.sandboxes.some((sandbox) => sandbox.provider === provider) ?? false;
   const providerName = PROVIDER_NAMES[provider];
+  // Absent on servers that predate sign-in forwarding.
+  const availableCredentials = inventory?.availableCredentials;
   // Errors appear beside the row that started the operation.
   const errorIn = (scope: string, recorded?: string | null) =>
     error?.scope === scope && error.label !== recorded ? (
@@ -208,6 +234,27 @@ function SandboxControls({
       );
       if (kind === "delete") await forgetConnection(sandbox);
     });
+  };
+  const changeCredentials = (sandbox: RemoteSandbox, kind: SandboxCredentialKind, on: boolean) => {
+    const current = sandbox.credentials ?? [];
+    const credentials = on ? [...current, kind] : current.filter((value) => value !== kind);
+    void run(
+      {
+        scope: sandbox.id,
+        label: sandbox.phase === "running" ? "Updating sign-ins…" : "Saving sign-ins…",
+      },
+      async () => {
+        value(
+          await action({
+            environmentId,
+            input: { id: sandbox.id, action: "credentials", confirmed: true, credentials },
+          }),
+        );
+        // Rove in the sandbox only re-checks providers on request.
+        if (sandbox.environmentId && sandbox.phase === "running")
+          await refreshProviders({ environmentId: sandbox.environmentId, input: {} });
+      },
+    );
   };
   const forget = async (sandbox: RemoteSandbox) => {
     if (
@@ -286,7 +333,13 @@ function SandboxControls({
         value(
           await create({
             environmentId,
-            input: { provider, label: label.trim(), confirmCost: true },
+            input: {
+              provider,
+              label: label.trim(),
+              confirmCost: true,
+              ...(newCredentials.length ? { credentials: newCredentials } : {}),
+              ...(provider === "modal" && region !== "default" ? { region } : {}),
+            },
           }),
         );
         setLabel("");
@@ -461,10 +514,51 @@ function SandboxControls({
           </form>
         }
       >
+        {availableCredentials ? (
+          <div className="space-y-2 pt-2">
+            <CredentialChoices
+              available={availableCredentials}
+              selected={newCredentials}
+              disabled={locked || !configured}
+              onChange={(kind, on) =>
+                setNewCredentials((current) =>
+                  on ? [...current, kind] : current.filter((value) => value !== kind),
+                )
+              }
+            />
+            {provider === "modal" ? (
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <span>Region</span>
+                <Select
+                  value={region}
+                  disabled={locked || !configured}
+                  onValueChange={(next) => {
+                    if (next === "default" || next === "us" || next === "eu" || next === "ap")
+                      setRegion(next);
+                  }}
+                >
+                  <div className="w-44">
+                    <SelectTrigger size="xs" aria-label="Sandbox region">
+                      <SelectValue>{REGION_LABELS[region]}</SelectValue>
+                    </SelectTrigger>
+                  </div>
+                  <SelectPopup>
+                    {(["default", "us", "eu", "ap"] as const).map((option) => (
+                      <SelectItem key={option} value={option}>
+                        {REGION_LABELS[option]}
+                      </SelectItem>
+                    ))}
+                  </SelectPopup>
+                </Select>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
         <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2 pt-2 pb-2">
           <p className="max-w-xl text-xs leading-normal text-muted-foreground/80">
-            Connect to open a blank thread, then clone a repository and sign in to a coding provider
-            there. Settling a thread doesn't stop billing; pause the sandbox when work finishes.
+            {availableCredentials
+              ? "Selected sign-ins are copied from this environment and refreshed on every resume. Pick the sandbox under Run on to clone a project there. Settling a thread doesn't stop billing; pause the sandbox when work finishes."
+              : "Connect to open a blank thread, then clone a repository and sign in to a coding provider there. Settling a thread doesn't stop billing; pause the sandbox when work finishes."}
           </p>
           <Button
             size="xs"
@@ -605,6 +699,16 @@ function SandboxControls({
               </>
             }
           >
+            {availableCredentials && (sandbox.phase === "running" || sandbox.phase === "paused") ? (
+              <div className="pt-2 pb-2">
+                <CredentialChoices
+                  available={availableCredentials}
+                  selected={sandbox.credentials ?? []}
+                  disabled={locked}
+                  onChange={(kind, on) => changeCredentials(sandbox, kind, on)}
+                />
+              </div>
+            ) : null}
             {sandbox.detail || sandbox.phase === "error" || errorIn(sandbox.id, sandbox.detail) ? (
               <div className="space-y-1 pt-2 pb-2">
                 {errorIn(sandbox.id, sandbox.detail)}
@@ -620,6 +724,45 @@ function SandboxControls({
         );
       })}
     </>
+  );
+}
+
+/** Sign-ins found on the managing environment, plus any still forwarded after a local sign-out. */
+function CredentialChoices({
+  available,
+  selected,
+  disabled,
+  onChange,
+}: {
+  available: ReadonlyArray<SandboxCredentialKind>;
+  selected: ReadonlyArray<SandboxCredentialKind>;
+  disabled: boolean;
+  onChange: (kind: SandboxCredentialKind, on: boolean) => void;
+}) {
+  const kinds = (Object.keys(CREDENTIAL_NAMES) as Array<SandboxCredentialKind>).filter(
+    (kind) => available.includes(kind) || selected.includes(kind),
+  );
+  if (kinds.length === 0)
+    return (
+      <p className="text-xs text-muted-foreground/80">
+        Sign in to Codex, Claude, Pi, OpenCode, or GitHub on this environment to forward it.
+      </p>
+    );
+  return (
+    <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-muted-foreground">
+      <span>Forward sign-ins</span>
+      {kinds.map((kind) => (
+        <label key={kind} className="flex cursor-pointer items-center gap-1.5">
+          <Checkbox
+            aria-label={`Forward ${CREDENTIAL_NAMES[kind]} sign-in`}
+            checked={selected.includes(kind)}
+            disabled={disabled}
+            onCheckedChange={(checked) => onChange(kind, checked === true)}
+          />
+          <span className="text-foreground">{CREDENTIAL_NAMES[kind]}</span>
+        </label>
+      ))}
+    </div>
   );
 }
 
