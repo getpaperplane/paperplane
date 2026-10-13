@@ -95,7 +95,9 @@ Create a Neon project on the **Free** plan, with Postgres only and no payment me
 (`production` for new console projects). Create a project-scoped API key for `NEON_API_KEY`; it
 cannot create projects or change organization billing.
 
-The `prod` Alchemy stage adopts and retains that branch, applying the relay's Postgres migrations.
+The `prod` Alchemy stage adopts and retains that branch, applying the committed Postgres migrations.
+After changing the schema, run `vp run db:generate` from `infra/relay`, review the SQL, and commit it
+before deployment. Deployment does not generate new migrations.
 Personal stages fork separate branches from it, including data and applied migration history.
 Deployment does not provision a paid database. Deploy `prod` before personal stages because it also
 owns the shared DNS zones. Existing PlanetScale deployments require an explicit Postgres data

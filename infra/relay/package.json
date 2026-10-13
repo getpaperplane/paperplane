@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "deploy": "node -- scripts/deploy.ts",
+    "db:generate": "drizzle-kit generate --dialect=postgresql --schema=./src/persistence/schema.ts --out=./migrations/postgres",
     "push:android:smoke": "node scripts/android-push-smoke.ts",
     "push:android:watch": "node scripts/android-push-watch.ts",
     "destroy": "alchemy destroy",

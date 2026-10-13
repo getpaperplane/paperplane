@@ -1,6 +1,5 @@
 import type { PgClient } from "@effect/sql-pg/PgClient";
 import * as Cloudflare from "alchemy/Cloudflare";
-import * as Drizzle from "alchemy/Drizzle";
 import * as Neon from "alchemy/Neon";
 import { adopt } from "alchemy/AdoptPolicy";
 import * as Alchemy from "alchemy";
@@ -43,17 +42,13 @@ export const NeonDatabaseBranch = Effect.gen(function* () {
   const productionBranch = yield* Config.NonEmptyString("NEON_PRODUCTION_BRANCH").pipe(
     Config.withDefault("production"),
   );
-  const schema = yield* Drizzle.Schema("RelaySchema", {
-    schema: "./src/persistence/schema.ts",
-    out: "./migrations/postgres",
-    dialect: "postgres",
-  });
-
   // The project is created on Neon Free outside Alchemy. A project-scoped key
   // cannot create projects or change organization billing.
   const branch = Neon.Branch("RelayNeonDatabaseBranch", {
     ...relayNeonBranchConfig(stage, projectId, productionBranch),
-    migrations: { dir: schema.out, table: "relay_migrations" },
+    // Apply committed migrations. An unresolved Schema resource output here
+    // prevents Alchemy from discovering an existing branch during planning.
+    migrations: { dir: "./migrations/postgres", table: "relay_migrations" },
   });
 
   if (stage === "prod") {
