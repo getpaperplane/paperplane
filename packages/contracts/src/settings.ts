@@ -1311,6 +1311,13 @@ export const ServerSettings = Schema.Struct({
    */
   enableAgentComputerUse: Schema.Boolean.pipe(Schema.withDecodingDefault(Effect.succeed(false))),
   /**
+   * Whether agents may answer with interactive pages (`html_render`). Off is
+   * the plain Markdown behavior from before rich responses: the tool and its
+   * prompt text are left out when the agent session starts, and calls from a
+   * session started earlier are refused.
+   */
+  enableRichResponses: Schema.Boolean.pipe(Schema.withDecodingDefault(Effect.succeed(true))),
+  /**
    * Whether this server may install and run Rove's device helper processes.
    * Kept separate from agent access so enabling the user's Device panel does
    * not also grant providers control of simulators and emulators.
@@ -1684,6 +1691,7 @@ export const ServerSettingsPatch = Schema.Struct({
   ),
   enableAgentDeviceAccess: Schema.optionalKey(Schema.Boolean),
   enableAgentComputerUse: Schema.optionalKey(Schema.Boolean),
+  enableRichResponses: Schema.optionalKey(Schema.Boolean),
   enableDeviceSupport: Schema.optionalKey(Schema.Boolean),
   deviceOnboardingCompleted: Schema.optionalKey(Schema.Boolean),
   deviceHosts: Schema.optionalKey(SshDeviceHostConfigs),

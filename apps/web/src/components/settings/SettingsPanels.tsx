@@ -573,6 +573,9 @@ export function useSettingsRestore(onRestored?: () => void) {
       ...(settings.responseStreamingMode !== DEFAULT_UNIFIED_SETTINGS.responseStreamingMode
         ? ["Response streaming"]
         : []),
+      ...(settings.enableRichResponses !== DEFAULT_UNIFIED_SETTINGS.enableRichResponses
+        ? ["Interactive responses"]
+        : []),
       ...(settings.enableProviderUpdateChecks !==
       DEFAULT_UNIFIED_SETTINGS.enableProviderUpdateChecks
         ? ["Provider update checks"]
@@ -651,6 +654,7 @@ export function useSettingsRestore(onRestored?: () => void) {
       settings.glassOpacity,
       settings.panelAnimationDurationMs,
       settings.responseStreamingMode,
+      settings.enableRichResponses,
       settings.enableProviderUpdateChecks,
       settings.continueThreadsAfterServerUpdate,
       settings.sidebarAutoSettleAfterDays,
@@ -758,6 +762,7 @@ export function useSettingsRestore(onRestored?: () => void) {
       sidebarAutoSettleOnMerge: DEFAULT_UNIFIED_SETTINGS.sidebarAutoSettleOnMerge,
       autoResumeLimitedThreads: DEFAULT_UNIFIED_SETTINGS.autoResumeLimitedThreads,
       responseStreamingMode: DEFAULT_UNIFIED_SETTINGS.responseStreamingMode,
+      enableRichResponses: DEFAULT_UNIFIED_SETTINGS.enableRichResponses,
       enableProviderUpdateChecks: DEFAULT_UNIFIED_SETTINGS.enableProviderUpdateChecks,
       continueThreadsAfterServerUpdate: DEFAULT_UNIFIED_SETTINGS.continueThreadsAfterServerUpdate,
       backgroundActivity: DEFAULT_UNIFIED_SETTINGS.backgroundActivity,
@@ -2483,6 +2488,38 @@ export function GeneralSettingsPanel() {
                 }}
               />
             </>
+          }
+        />
+        <SettingsRow
+          serverScoped
+          settingKeys={["enableRichResponses"]}
+          {...searchableSetting("interactive-responses")}
+          description={
+            settings.enableRichResponses
+              ? "Agents can answer with interactive pages such as charts, galleries, and videos. Applies when an agent session next starts."
+              : "Agents answer in plain Markdown, as before interactive pages. Applies when an agent session next starts."
+          }
+          resetAction={
+            settings.enableRichResponses !== DEFAULT_UNIFIED_SETTINGS.enableRichResponses ? (
+              <SettingResetButton
+                label="interactive responses"
+                onClick={() =>
+                  updateSettings({
+                    enableRichResponses: DEFAULT_UNIFIED_SETTINGS.enableRichResponses,
+                  })
+                }
+              />
+            ) : null
+          }
+          control={
+            <ScopedSwitch
+              settingKeys={["enableRichResponses"]}
+              checked={settings.enableRichResponses}
+              onCheckedChange={(checked) =>
+                updateSettings({ enableRichResponses: Boolean(checked) })
+              }
+              aria-label="Interactive responses"
+            />
           }
         />
         <SettingsRow

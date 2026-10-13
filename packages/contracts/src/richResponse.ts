@@ -7,7 +7,27 @@ const Label = Schema.String.check(Schema.isMinLength(1), Schema.isMaxLength(200)
 const Text = Schema.String.check(Schema.isMinLength(1), Schema.isMaxLength(8_000));
 const Cell = Schema.String.check(Schema.isMaxLength(2_000));
 
-/** A deliberately small, non-executable catalog. All leaf content is plain text. */
+export const HTML_RENDER_MIN_HEIGHT = 80;
+export const HTML_RENDER_MAX_HEIGHT = 2_000;
+export const HTML_RENDER_DEFAULT_HEIGHT = 360;
+
+/**
+ * An interactive page the `html_render` tool stored in the thread's attachment
+ * store. Only the reference travels in message text; clients load the page
+ * into a sandboxed frame with an opaque origin.
+ */
+const HtmlRenderAttachmentId = Schema.String.check(
+  Schema.isMaxLength(256),
+  Schema.isPattern(
+    /^[a-z0-9_]+(?:-[a-z0-9_]+)*-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}-html$/,
+  ),
+);
+
+/**
+ * Blocks clients render natively. `html` is the current interactive format;
+ * `table`, `details`, and `choices` are kept so replies written before it
+ * still render. All leaf content other than the stored page is plain text.
+ */
 export const RichResponseBlock = Schema.Union([
   Schema.Struct({ type: Schema.Literal("text"), text: Text }),
   Schema.Struct({
@@ -24,6 +44,15 @@ export const RichResponseBlock = Schema.Union([
     }),
   ),
   Schema.Struct({ type: Schema.Literal("details"), title: Label, text: Text }),
+  Schema.Struct({
+    type: Schema.Literal("html"),
+    attachmentId: HtmlRenderAttachmentId,
+    title: Label,
+    /** The agent's estimate, reserved until the page reports its own height. */
+    height: Schema.Int.check(
+      Schema.isBetween({ minimum: HTML_RENDER_MIN_HEIGHT, maximum: HTML_RENDER_MAX_HEIGHT }),
+    ),
+  }),
   Schema.Struct({
     type: Schema.Literal("choices"),
     title: Label,

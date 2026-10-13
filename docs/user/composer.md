@@ -12,15 +12,25 @@ becomes an attachment when inserting it would exceed the message limit. On a
 hardware keyboard, use `Cmd+Shift+V` on Apple devices or `Ctrl+Shift+V` elsewhere
 to keep a large paste editable in the composer instead.
 
-## Rich responses
+## Interactive responses
 
-Agents can use native tables, expandable explanations, and suggested follow-ups
-when those make an answer easier to use. Ask for a comparison or more detail;
-brief replies and code samples can still use Markdown.
+Agents can answer with an interactive page instead of only text: a chart,
+diagram, dashboard, filterable table, image gallery, video, or mockup. Ask for
+one ("show this as a chart", "put these screenshots side by side") and the page
+appears inside the reply, where you can hover, filter, play, and scroll it. It
+works with every provider, on web, desktop, and mobile.
 
-Suggested follow-ups only copy text. Paste one into the composer, edit it, and
-send it when you are ready. Opening an explanation or copying a suggestion does
-not start a turn or run a command.
+Pages follow your theme and light or dark mode. Scripts run sandboxed away from
+Rove Code and your session, and links open in your browser. Images, videos, and
+audio the agent uses from this machine are embedded in the page, so it keeps
+working after the original files move. On web and desktop, the expand button
+opens a page in the side panel, where you can view its source or save it.
+Copying a reply copies the page's title in its place.
+
+To get plain Markdown replies, as before interactive pages, turn off
+**Settings > General > Interactive responses** (on mobile, **Thread behavior**).
+Agent sessions pick up the change when they next start; agents already running
+can no longer publish pages.
 
 ## Attach files
 

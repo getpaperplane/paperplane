@@ -295,9 +295,12 @@ export function AttachmentFilePreview(props: {
           <span aria-current="page" className="min-w-0 truncate px-0.5 font-medium text-foreground">
             {props.name}
           </span>
-          <span className="ml-2 shrink-0 text-muted-foreground">
-            {formatAttachmentSize(props.sizeBytes)}
-          </span>
+          {/* Pages from html_render open without a known size. */}
+          {props.sizeBytes > 0 ? (
+            <span className="ml-2 shrink-0 text-muted-foreground">
+              {formatAttachmentSize(props.sizeBytes)}
+            </span>
+          ) : null}
         </div>
         {renderedMode ? (
           <FileSurfaceAction

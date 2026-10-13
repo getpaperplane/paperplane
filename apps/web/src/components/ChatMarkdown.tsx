@@ -3286,18 +3286,32 @@ const CHAT_MARKDOWN_COMPONENTS = {
     return <MarkdownDetails open={detailsOpen}>{children}</MarkdownDetails>;
   },
   pre: function MarkdownPre({ node, children, ...props }) {
-    const { resolvedTheme, diffThemeName, isStreaming, onRunShellCommand, text, richResponses } =
-      use(ChatMarkdownRendererContext);
+    const {
+      resolvedTheme,
+      diffThemeName,
+      isStreaming,
+      onRunShellCommand,
+      text,
+      richResponses,
+      environmentId,
+      threadRef,
+    } = use(ChatMarkdownRendererContext);
     const richResponse = richResponses.find(
       (segment) =>
         segment.sourceOffset === node?.position?.start.offset && segment.kind !== "markdown",
     );
     if (richResponse?.kind === "rich-response")
-      return <RichResponseContent response={richResponse.response} />;
+      return (
+        <RichResponseContent
+          response={richResponse.response}
+          environmentId={environmentId}
+          threadRef={threadRef}
+        />
+      );
     if (richResponse?.kind === "pending")
       return (
         <p role="status" className="py-2 text-sm text-muted-foreground">
-          Preparing rich response…
+          Preparing response…
         </p>
       );
     const codeBlock = extractCodeBlock(children);

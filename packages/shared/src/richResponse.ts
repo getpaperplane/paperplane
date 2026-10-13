@@ -101,11 +101,24 @@ function richResponseToMarkdown(response: RichResponse): string {
             `| ${cells.map((cell) => escapeMarkdown(cell).replaceAll(/\r?\n/g, " ")).join(" | ")} |`;
           return `### ${escapeMarkdown(block.title)}\n\n${row(block.columns)}\n${row(block.columns.map(() => "---"))}\n${block.rows.map(row).join("\n")}`;
         }
+        case "html":
+          return `**${escapeMarkdown(block.title)}** (interactive page)`;
         case "choices":
           return `### ${escapeMarkdown(block.title)}\n\n${block.options.map((option) => `- **${escapeMarkdown(option.label)}**: ${escapeMarkdown(option.prompt)}`).join("\n")}`;
       }
     })
     .join("\n\n");
+}
+
+/** Pages referenced by complete rich responses, so a revert keeps what a reply still shows. */
+export function richResponseHtmlAttachmentIds(text: string): string[] {
+  return splitRichResponse(text).flatMap((segment) =>
+    segment.kind === "rich-response"
+      ? segment.response.blocks.flatMap((block) =>
+          block.type === "html" ? [block.attachmentId] : [],
+        )
+      : [],
+  );
 }
 
 export function richResponseTextFallback(text: string): string {

@@ -338,6 +338,12 @@ export const SETTINGS_SEARCH_ITEMS = [
     searchTerms: ["output token paragraph buffered wait turn legacy"],
   },
   {
+    id: "interactive-responses",
+    title: "Interactive responses",
+    to: "/settings/general",
+    searchTerms: ["rich html chart graph image video page plain markdown legacy format"],
+  },
+  {
     id: "hide-whitespace-changes",
     title: "Hide whitespace changes",
     to: "/settings/general",

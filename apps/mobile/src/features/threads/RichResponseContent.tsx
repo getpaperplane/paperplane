@@ -1,11 +1,14 @@
 /* eslint-disable react/no-array-index-key -- Rich payloads are published atomically; fixed block and cell positions preserve disclosure state. */
 import { memo, useState } from "react";
 import { Alert, Pressable, ScrollView, View } from "react-native";
+import type { EnvironmentId } from "@rove-code/contracts";
 import type { RichResponse, RichResponseBlock } from "@rove-code/contracts/rich-response";
 import type { NativeMarkdownTextStyle } from "@rove-code/mobile-markdown-text/types";
 import { AppText as Text } from "../../components/AppText";
 import { tryCopyTextWithHaptic } from "../../lib/copyTextWithHaptic";
+import { HtmlRenderWebView } from "./HtmlRenderWebView";
 
+/** Replies from before interactive pages; open, so reading them takes no extra step. */
 function RichDetails({
   block,
   textStyle,
@@ -13,7 +16,7 @@ function RichDetails({
   block: Extract<RichResponseBlock, { type: "details" }>;
   textStyle: NativeMarkdownTextStyle;
 }) {
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(true);
   return (
     <View className="overflow-hidden rounded-lg border border-subtle">
       <Pressable
@@ -84,9 +87,11 @@ function FollowUpChoice({
 export const RichResponseContent = memo(function RichResponseContent({
   response,
   textStyle,
+  environmentId,
 }: {
   response: RichResponse;
   textStyle: NativeMarkdownTextStyle;
+  environmentId: EnvironmentId;
 }) {
   const bodyStyle = {
     color: textStyle.color,
@@ -111,6 +116,14 @@ export const RichResponseContent = memo(function RichResponseContent({
             );
           case "details":
             return <RichDetails key={index} block={block} textStyle={textStyle} />;
+          case "html":
+            return (
+              <HtmlRenderWebView
+                key={block.attachmentId}
+                environmentId={environmentId}
+                block={block}
+              />
+            );
           case "table":
             return (
               <View key={index} className="overflow-hidden rounded-lg border border-subtle">

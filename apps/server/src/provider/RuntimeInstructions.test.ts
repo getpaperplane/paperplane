@@ -10,16 +10,18 @@ describe("buildRuntimeInstructions", () => {
     expect(instructions).toContain("call list_thread_pull_requests and link any PR");
   });
 
-  it.each(["Codex", "Claude Code", "Cursor", "Grok", "OpenCode", "Antigravity", "Pi"])(
-    "offers optional, non-executable rich responses for %s",
-    (harness) => {
-      const instructions = buildRuntimeInstructions({ harness });
-      expect(instructions).toContain("prepare_rich_response");
-      expect(instructions).toContain("does not publish it");
-      expect(instructions).toContain("do not submit it or perform actions");
-      expect(instructions).toContain("If the tool is unavailable, use ordinary Markdown");
-    },
-  );
+  it("describes html_render only when the session grants rich responses", () => {
+    const rich = buildRuntimeInstructions({ harness: "Pi", richResponses: true });
+    expect(rich).toContain("html_render");
+    expect(rich).toContain("responseMarkdown verbatim");
+    expect(rich).toContain("answer in Markdown");
+    // Plain mode is the pre-rich-response prompt: no mention of the tool at all.
+    for (const richResponses of [false, undefined]) {
+      const plain = buildRuntimeInstructions({ harness: "Pi", richResponses });
+      expect(plain).not.toContain("html_render");
+      expect(plain).not.toContain("rich_responses");
+    }
+  });
 
   it("keeps known model and effort metadata on one line", () => {
     expect(

@@ -69,6 +69,8 @@ export async function createPiRoveTools(config: McpProviderSessionConfig | undef
     do {
       const page = await client.listTools(cursor ? { cursor } : {}, { timeout: 10_000 });
       for (const tool of page.tools) {
+        // Pi builds its own tool list, so plain-Markdown sessions never see html_render.
+        if (tool.name === "html_render" && !config.capabilities.has("rich-responses")) continue;
         tools.push({
           name: `mcp__rove__${tool.name}`,
           label: tool.annotations?.title ?? tool.title ?? tool.name,
