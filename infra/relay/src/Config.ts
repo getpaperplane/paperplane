@@ -22,6 +22,11 @@ export const managedEndpointCleanupModeConfig = Config.String("RELAY_TUNNEL_CLEA
   ),
 );
 
+export const maintenanceScheduleConfig = Config.String("RELAY_MAINTENANCE_SCHEDULE").pipe(
+  Config.withDefault("*/5 * * * *"),
+  Config.map((value) => value.trim() || "*/5 * * * *"),
+);
+
 export interface ApnsCredentials {
   readonly teamId: string;
   readonly keyId: string;

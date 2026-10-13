@@ -2,7 +2,7 @@ import { expect, it } from "@effect/vitest";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
 
-import { managedEndpointCleanupModeConfig } from "./Config.ts";
+import { maintenanceScheduleConfig, managedEndpointCleanupModeConfig } from "./Config.ts";
 
 it.effect.each([
   { name: "missing", env: {}, expected: "off" },
@@ -19,6 +19,20 @@ it.effect.each([
   Effect.gen(function* () {
     const provider = ConfigProvider.fromEnv({ env });
     expect(yield* managedEndpointCleanupModeConfig.parse(provider)).toBe(expected);
+  }),
+);
+
+it.effect.each([
+  { name: "existing default", env: {}, expected: "*/5 * * * *" },
+  { name: "empty CI variable", env: { RELAY_MAINTENANCE_SCHEDULE: "" }, expected: "*/5 * * * *" },
+  {
+    name: "hourly Free-tier maintenance",
+    env: { RELAY_MAINTENANCE_SCHEDULE: " 0 * * * * " },
+    expected: "0 * * * *",
+  },
+] as const)("loads $name schedule", ({ env, expected }) =>
+  Effect.gen(function* () {
+    expect(yield* maintenanceScheduleConfig.parse(ConfigProvider.fromEnv({ env }))).toBe(expected);
   }),
 );
 

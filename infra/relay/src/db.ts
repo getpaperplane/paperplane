@@ -1,15 +1,16 @@
 import type { PgClient } from "@effect/sql-pg/PgClient";
 import * as Cloudflare from "alchemy/Cloudflare";
-import * as Drizzle from "alchemy/Drizzle";
-import * as Planetscale from "alchemy/Planetscale";
+import * as Neon from "alchemy/Neon";
+import { adopt } from "alchemy/AdoptPolicy";
 import * as Alchemy from "alchemy";
 import * as RemovalPolicy from "alchemy/RemovalPolicy";
 import type { EffectPgDatabase } from "drizzle-orm/effect-postgres";
+import * as Config from "effect/Config";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 
-import { relayDatabaseMode } from "./dbConfig.ts";
+import { relayNeonBranchConfig } from "./dbConfig.ts";
 
 export class RelayDb extends Context.Service<
   RelayDb,
@@ -35,48 +36,33 @@ export class RelayTransactions extends Context.Service<
   );
 }
 
-export const PlanetscaleDatabase = Effect.gen(function* () {
+export const NeonDatabaseBranch = Effect.gen(function* () {
   const { stage } = yield* Alchemy.Stack;
-  const schema = yield* Drizzle.Schema("RelaySchema", {
-    schema: "./src/persistence/schema.ts",
-    out: "./migrations/postgres",
-    dialect: "postgres",
+  const projectId = yield* Config.NonEmptyString("NEON_PROJECT_ID");
+  const productionBranch = yield* Config.NonEmptyString("NEON_PRODUCTION_BRANCH").pipe(
+    Config.withDefault("production"),
+  );
+  // The project is created on Neon Free outside Alchemy. A project-scoped key
+  // cannot create projects or change organization billing.
+  const branch = Neon.Branch("RelayNeonDatabaseBranch", {
+    ...relayNeonBranchConfig(stage, projectId, productionBranch),
+    // Apply committed migrations. An unresolved Schema resource output here
+    // prevents Alchemy from discovering an existing branch during planning.
+    migrations: { dir: "./migrations/postgres", table: "relay_migrations" },
   });
 
-  const mode = relayDatabaseMode(stage);
-  const database =
-    mode === "shared-database"
-      ? yield* Planetscale.PostgresDatabase("RelayPostgresDatabase", {
-          name: "roverelay",
-          region: { slug: "us-west" },
-          clusterSize: "PS_20",
-          migrations: { dir: schema.out, table: "relay_migrations" },
-          replicas: 2,
-        }).pipe(RemovalPolicy.retain())
-      : yield* Planetscale.PostgresDatabase.ref("RelayPostgresDatabase", {
-          stage: "prod",
-        });
-  const branch =
-    mode === "stage-branch"
-      ? yield* Planetscale.PostgresBranch("RelayPostgresBranch", {
-          database,
-          migrations: { dir: schema.out, table: "relay_migrations" },
-        })
-      : undefined;
-
-  const runtimeRole = yield* Planetscale.PostgresRole("RelayPostgresRuntimeRole", {
-    database,
-    ...(branch ? { branch } : undefined),
-    inheritedRoles: ["pg_read_all_data", "pg_write_all_data"],
-  });
-
-  return { branch, database, runtimeRole };
+  if (stage === "prod") {
+    return yield* branch.pipe(adopt(true), RemovalPolicy.retain());
+  }
+  return yield* branch;
 });
 
 export const RelayHyperdrive = Effect.gen(function* () {
-  const { runtimeRole } = yield* PlanetscaleDatabase;
+  const branch = yield* NeonDatabaseBranch;
   return yield* Cloudflare.Hyperdrive.Connection("RelayHyperdrive", {
-    origin: runtimeRole.origin,
+    // Hyperdrive already pools connections; do not stack Neon's pooler behind it.
+    origin: branch.origin,
+    dev: branch.pooledOrigin,
     caching: {
       disabled: true,
     },

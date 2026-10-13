@@ -403,9 +403,10 @@ jobs:
 
       - id: relay_state
         name: Read production relay tracing config
+        working-directory: infra/relay
         shell: bash
         run: |
-          vp run --filter rove-relay deploy \
+          node scripts/deploy.ts \
             --stage prod \
             --read-state \
             --github-output \

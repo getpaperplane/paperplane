@@ -90,10 +90,24 @@ file from the relay directory. Runtime secrets include Clerk, APNs, and optional
 the configured API and tunnel DNS zones as retained Cloudflare resources. Personal stages reference
 the production-owned zones.
 
-The `prod` Alchemy stage owns the retained PlanetScale database and is the shared hosted relay for
-stable and nightly clients. Every other stage references that database and provisions an isolated
-PlanetScale branch and runtime role for local development, so deploy `prod` before creating
-developer stages:
+Create a Neon project on the **Free** plan, with Postgres only and no payment method. Set
+`NEON_PROJECT_ID` to its ID and `NEON_PRODUCTION_BRANCH` to its existing default branch name
+(`production` for new console projects). Create a project-scoped API key for `NEON_API_KEY`; it
+cannot create projects or change organization billing.
+
+The `prod` Alchemy stage adopts and retains that branch, applying the committed Postgres migrations.
+After changing the schema, run `vp run db:generate` from `infra/relay`, review the SQL, and commit it
+before deployment. Deployment does not generate new migrations.
+Personal stages fork separate branches from it, including data and applied migration history.
+Deployment does not provision a paid database. Deploy `prod` before personal stages because it also
+owns the shared DNS zones. Existing PlanetScale deployments require an explicit Postgres data
+export/restore into Neon before switching; this stack does not transfer their data automatically.
+
+For a low-traffic Free deployment, set `RELAY_MAINTENANCE_SCHEDULE=0 * * * *` to let Neon suspend
+between maintenance runs. Free compute, storage, and Cloudflare usage still have limits; this is
+not unlimited free hosting. Do not upgrade the plans to work around those limits.
+
+Deploy production first:
 
 ```sh
 vp run --filter rove-relay deploy -- --stage prod
@@ -116,46 +130,56 @@ the URL manually.
 ### Deployment CI
 
 The relay is versioned separately from client releases. `.github/workflows/deploy-relay.yml` deploys
-the shared Alchemy `prod` stage on every push to `main`. Stable and nightly release builds both
-resolve their static public config from the same
-`production` GitHub environment. Pull requests do not deploy relay stages. Developers can
-deploy personal non-production stages locally with any stage name other than `prod`.
+the shared Alchemy `prod` stage on pushes to `main` when `ROVE_CLOUD_READY=true`. For initial
+setup, run it manually with `dry_run=true` to inspect the plan, then `dry_run=false` to apply it.
+Manual deployment leaves the release readiness gate unchanged. Planning may initialize Alchemy's
+free Cloudflare state-store Worker before it plans relay resources.
+
+Stable and nightly release builds resolve their static public config from the same `production`
+GitHub environment. Pull requests do not deploy relay stages. Developers can deploy personal
+non-production stages locally with any stage name other than `prod`.
 
 The repository must define these Actions variables shared by relay deployments:
 
 - `CLOUDFLARE_ACCOUNT_ID`
-- `PLANETSCALE_ORGANIZATION`
 - `AXIOM_ORG_ID`
 
 The repository must define these Actions secrets shared by relay deployments:
 
 - `CLOUDFLARE_API_TOKEN`
-- `PLANETSCALE_API_TOKEN_ID`
-- `PLANETSCALE_API_TOKEN`
 - `AXIOM_TOKEN`
 
 The `production` GitHub environment must define these Actions variables:
 
+- `NEON_PROJECT_ID`
+- `NEON_PRODUCTION_BRANCH` (defaults to `production`)
+- `RELAY_MAINTENANCE_SCHEDULE` (CI defaults to hourly)
 - `RELAY_API_ZONE_NAME`
 - `RELAY_TUNNEL_ZONE_NAME`
 - `RELAY_DOMAIN` if overriding the derived production relay domain
 - `CLERK_PUBLISHABLE_KEY`
 - `CLERK_JWT_AUDIENCE`
 - `CLERK_JWT_TEMPLATE`
-- `APNS_ENVIRONMENT`
+- `CLERK_CLI_OAUTH_CLIENT_ID`
+- `APNS_ENABLED` (`false` when Apple push is not configured)
+- `APNS_ENVIRONMENT` (required only when APNs is enabled)
 - `APNS_TEAM_ID`
 - `APNS_KEY_ID`
 - `APNS_BUNDLE_ID`
 
 The `production` GitHub environment must define these Actions secrets:
 
+- `NEON_API_KEY` (project-scoped)
 - `CLERK_SECRET_KEY`
-- `APNS_PRIVATE_KEY`
+- `APNS_PRIVATE_KEY` (required only when APNs is enabled)
 - `FCM_SERVICE_ACCOUNT` when Android push is enabled
 
 The account-scoped repository credentials are consumed by Alchemy while provisioning relay stages; they
-are not bound into the relay Worker. The production deployment uses an Axiom personal access token,
-so `AXIOM_ORG_ID` must accompany `AXIOM_TOKEN`. The release workflow reads the production relay's
+are not bound into the relay Worker. Prefer an organization-scoped advanced Axiom API token with
+management access to datasets, views, and API tokens, plus dataset ingest and query access. Billing
+permissions are not needed. Set `AXIOM_ORG_ID` alongside `AXIOM_TOKEN` to target the organization
+explicitly; a personal access token also works but grants broader account access.
+The release workflow reads the production relay's
 derived public URL and Clerk publishable key from the same environment for downstream desktop, CLI,
 and hosted web builds.
 
