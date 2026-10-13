@@ -459,7 +459,7 @@ function PiThinkingSettingsField({
         ? "The saved override is not supported by this model. Choose a supported level or use Pi default."
         : "Choices follow the selected model. Use Pi default to clear the override.";
 
-  const renderSelect = (size: "sm" | "xs", className: string) => (
+  const select = (
     <Select
       value={selected}
       onValueChange={(next) => {
@@ -468,7 +468,18 @@ function PiThinkingSettingsField({
         }
       }}
     >
-      <SelectTrigger id={id} size={size} className={className} aria-label={field.label}>
+      <SelectTrigger
+        id={id}
+        size="sm"
+        className={
+          variant === "settings"
+            ? "w-full max-w-full @min-[32rem]/settings-row:w-56"
+            : variant === "card"
+              ? "mt-1.5 w-full"
+              : "w-full"
+        }
+        aria-label={field.label}
+      >
         <SelectValue>{triggerLabel}</SelectValue>
       </SelectTrigger>
       <SelectPopup align="start" alignItemWithTrigger={false}>
@@ -492,7 +503,7 @@ function PiThinkingSettingsField({
       <SettingsRow
         title={<label htmlFor={id}>{field.label}</label>}
         description={<span>{hint}</span>}
-        control={renderSelect("sm", "w-full max-w-full @min-[32rem]/settings-row:w-56")}
+        control={select}
       />
     );
   }
@@ -502,7 +513,7 @@ function PiThinkingSettingsField({
       <label htmlFor={id} className="text-xs font-medium text-foreground">
         {field.label}
       </label>
-      {renderSelect("sm", cn("w-full", variant === "card" && "mt-1.5"))}
+      {select}
       <p
         className={cn("mt-1 text-muted-foreground", variant === "dialog" ? "text-2xs" : "text-xs")}
       >
