@@ -1259,6 +1259,107 @@ antigravityInstanceRouting.layer("ProviderServiceLive instance-owned conversatio
   );
 });
 
+for (const driver of [ProviderDriverKind.make("pi"), CODEX_DRIVER]) {
+  const originalInstanceId = ProviderInstanceId.make(`${driver}-original`);
+  const replacementInstanceId = ProviderInstanceId.make(`${driver}-replacement`);
+  const isolatedInstanceId = ProviderInstanceId.make(`${driver}-isolated`);
+  const original = makeFakeCodexAdapter(driver);
+  const replacement = makeFakeCodexAdapter(driver);
+  const isolated = makeFakeCodexAdapter(driver);
+  const baseRegistry = makeStaticInstanceRegistry([
+    [originalInstanceId, original.adapter],
+    [replacementInstanceId, replacement.adapter],
+    [isolatedInstanceId, isolated.adapter],
+  ]);
+  const instanceRouting = makeProviderServiceLayer({
+    registry: {
+      ...baseRegistry,
+      getInstanceInfo: (instanceId) =>
+        baseRegistry.getInstanceInfo(instanceId).pipe(
+          Effect.map((info) => ({
+            ...info,
+            continuationIdentity: {
+              driverKind: driver,
+              continuationKey:
+                instanceId === isolatedInstanceId ? `${driver}:isolated` : `${driver}:shared`,
+            },
+          })),
+        ),
+    },
+  });
+
+  instanceRouting.layer(`ProviderServiceLive ${driver} instance continuation`, (it) => {
+    it.effect("restores saved history across compatible instances without a live session", () =>
+      Effect.gen(function* () {
+        const provider = yield* ProviderService.ProviderService;
+        const directory = yield* ProviderSessionDirectory.ProviderSessionDirectory;
+        const cwd = fixtureCwd(`${driver}-instance-continuation`);
+        const savedCursor = { sessionId: "saved-session", turnCount: 8 };
+        const explicitCursor = { sessionId: "explicit-session", turnCount: 4 };
+
+        for (const passCursor of [false, true]) {
+          const threadId = asThreadId(`${driver}-instance-continuation-${passCursor}`);
+          // Only the durable binding survives a restart; neither adapter has a session.
+          yield* directory.upsert({
+            threadId,
+            provider: driver,
+            providerInstanceId: originalInstanceId,
+            status: "stopped",
+            runtimeMode: "full-access",
+            resumeCursor: savedCursor,
+            runtimePayload: { cwd },
+          });
+          assert.isFalse(yield* original.adapter.hasSession(threadId));
+          assert.isFalse(yield* replacement.adapter.hasSession(threadId));
+
+          const session = yield* provider.startSession(threadId, {
+            providerInstanceId: replacementInstanceId,
+            threadId,
+            runtimeMode: "full-access",
+            resumeCursor: passCursor ? explicitCursor : undefined,
+          });
+          const expectedCursor = passCursor ? explicitCursor : savedCursor;
+          assert.deepEqual(session.resumeCursor, expectedCursor);
+          assert.equal(session.cwd, cwd);
+          assert.equal(session.providerInstanceId, replacementInstanceId);
+          const binding = Option.getOrThrow(yield* directory.getBinding(threadId));
+          assert.deepEqual(binding.resumeCursor, expectedCursor);
+          assert.equal(binding.providerInstanceId, replacementInstanceId);
+          assert.isFalse(yield* original.adapter.hasSession(threadId));
+        }
+      }),
+    );
+
+    it.effect("rejects incompatible instance switches without replacing saved history", () =>
+      Effect.gen(function* () {
+        const provider = yield* ProviderService.ProviderService;
+        const directory = yield* ProviderSessionDirectory.ProviderSessionDirectory;
+        const threadId = asThreadId(`${driver}-incompatible-instance-continuation`);
+        yield* directory.upsert({
+          threadId,
+          provider: driver,
+          providerInstanceId: originalInstanceId,
+          status: "stopped",
+          runtimeMode: "full-access",
+          resumeCursor: { sessionId: "saved-session" },
+        });
+        const originalBinding = yield* directory.getBinding(threadId);
+        const error = yield* Effect.flip(
+          provider.startSession(threadId, {
+            providerInstanceId: isolatedInstanceId,
+            threadId,
+            runtimeMode: "full-access",
+          }),
+        );
+        assert.instanceOf(error, ProviderValidationError);
+        assert.include(error.issue, "provider resume state is incompatible");
+        assert.isFalse(yield* isolated.adapter.hasSession(threadId));
+        assert.deepEqual(yield* directory.getBinding(threadId), originalBinding);
+      }),
+    );
+  });
+}
+
 const unsupportedRollback = makeProviderServiceLayer({ supportsConversationRollback: false });
 unsupportedRollback.layer("ProviderServiceLive unsupported rewind", (it) => {
   it.effect("rejects rewind without starting or changing the provider conversation", () =>
