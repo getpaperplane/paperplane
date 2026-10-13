@@ -29,14 +29,14 @@ export interface SandboxCredentialSource {
   payload: (kinds: ReadonlyArray<SandboxCredentialKind>) => Promise<SandboxCredentialPayload>;
 }
 
-export const SANDBOX_CREDENTIAL_KINDS: ReadonlyArray<SandboxCredentialKind> = [
+const SANDBOX_CREDENTIAL_KINDS: ReadonlyArray<SandboxCredentialKind> = [
   "codex",
   "claude",
   "pi",
   "opencode",
   "github",
 ];
-export const sandboxCredentialName = {
+const sandboxCredentialName = {
   codex: "Codex",
   claude: "Claude",
   pi: "Pi",

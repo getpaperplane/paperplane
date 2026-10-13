@@ -80,7 +80,7 @@ export const SANDBOX_PORT = 7340;
  * sandbox bootstrap), which lets clients recognize sandbox environments, and
  * pick a clone destination, without asking the managing environment.
  */
-export const SANDBOX_WORKSPACE_DIR = ".rove-sandbox/workspace";
+const SANDBOX_WORKSPACE_DIR = ".rove-sandbox/workspace";
 export function isRemoteSandboxWorkspace(cwd: string): boolean {
   return cwd.replace(/\/+$/, "").endsWith(`/${SANDBOX_WORKSPACE_DIR}`);
 }
