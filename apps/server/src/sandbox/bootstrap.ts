@@ -10,7 +10,10 @@ const SANDBOX_INSTALL_FAILED = 10;
 const SANDBOX_UNOWNED_SERVER = 11;
 const SANDBOX_NOT_READY = 12;
 const SANDBOX_STILL_RUNNING = 13;
+const SANDBOX_CREDENTIALS_FAILED = 14;
+const SANDBOX_TOOLS_FAILED = 15;
 
+// Clients recognize sandboxes by the workspace below (SANDBOX_WORKSPACE_DIR).
 const ROOT = `"$HOME/.rove-sandbox"`;
 const RUNTIME = `"$HOME/.rove-sandbox/runtime"`;
 const WRAPPER = `"$HOME/.rove-sandbox/runtime/node_modules/.bin/rove"`;
@@ -105,6 +108,50 @@ export const sandboxStopCommand = nodeCommand(`${identityHelpers}
 })().catch(() => process.exit(1));
 `);
 
+// Reads a SandboxCredentialPayload (see credentials.ts) from stdin. Removals run
+// first so turning a sign-in off takes effect even if a tool install fails.
+export const sandboxCredentialsCommand = nodeCommand(`
+const fs = require('node:fs');
+const path = require('node:path');
+const cp = require('node:child_process');
+const home = process.env.HOME;
+const ok = (command, args) => cp.spawnSync(command, args, { stdio: 'ignore' }).status === 0;
+const has = bin => ok('sh', ['-c', 'command -v "$0"', bin]);
+let input = '';
+process.stdin.setEncoding('utf8');
+process.stdin.on('data', chunk => { input += chunk; });
+process.stdin.on('end', () => {
+  let payload;
+  try {
+    payload = JSON.parse(input);
+    for (const rel of payload.remove) fs.rmSync(path.join(home, rel), { force: true });
+    for (const file of payload.files) {
+      const target = path.join(home, file.path);
+      fs.mkdirSync(path.dirname(target), { recursive: true, mode: 0o700 });
+      fs.writeFileSync(target + '.rove-tmp', file.content, { mode: 0o600 });
+      fs.renameSync(target + '.rove-tmp', target);
+    }
+  } catch { process.exit(${SANDBOX_CREDENTIALS_FAILED}); }
+  const npm = payload.tools.filter(tool => tool.install === 'npm' && !has(tool.bin)).map(tool => tool.name);
+  if (npm.length && !ok('npm', ['install', '-g', '--no-audit', '--no-fund', ...npm])) process.exit(${SANDBOX_TOOLS_FAILED});
+  const apt = payload.tools.filter(tool => tool.install === 'apt' && !has(tool.bin)).map(tool => tool.name);
+  if (apt.length && !(ok('apt-get', ['update', '-qq']) && ok('apt-get', ['install', '-y', '-qq', ...apt]))) process.exit(${SANDBOX_TOOLS_FAILED});
+  if (payload.git) {
+    if (payload.git.setupGh && !ok('gh', ['auth', 'setup-git', '--hostname', 'github.com'])) process.exit(${SANDBOX_CREDENTIALS_FAILED});
+    if (payload.git.name) ok('git', ['config', '--global', 'user.name', payload.git.name]);
+    if (payload.git.email) ok('git', ['config', '--global', 'user.email', payload.git.email]);
+  }
+});
+`);
+
+/**
+ * Names the sandbox's Rove environment after the sandbox: Rove on Linux labels
+ * itself from PRETTY_HOSTNAME, otherwise every sandbox shows its vendor hostname.
+ * Read at startup, so run it before Rove starts. Best effort; needs root.
+ */
+export const sandboxLabelCommand = (label: string) =>
+  `printf 'PRETTY_HOSTNAME=%s\\n' ${quote(label.replace(/[\r\n]+/g, " "))} > /etc/machine-info 2>/dev/null || true`;
+
 export const sandboxPairCommand = `${WRAPPER} auth pairing create --base-dir "$HOME/.rove-sandbox/data" --json`;
 
 /** Product-owned explanations for bootstrap exit codes. */
@@ -118,6 +165,10 @@ export function sandboxCommandFailure(exitCode: number): string | undefined {
       return "Rove started in the sandbox but did not become ready. Resume to retry. The server log is at ~/.rove-sandbox/server.log in the sandbox.";
     case SANDBOX_STILL_RUNNING:
       return "Rove is still shutting down in the sandbox. Pause was refused to protect its data; try again shortly.";
+    case SANDBOX_CREDENTIALS_FAILED:
+      return "Could not save the forwarded sign-ins in the sandbox. Try forwarding them again.";
+    case SANDBOX_TOOLS_FAILED:
+      return "Could not install the coding tools for the forwarded sign-ins. Check the sandbox's network access, then try again.";
     default:
       return undefined;
   }

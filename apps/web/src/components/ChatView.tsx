@@ -42,6 +42,7 @@ import {
   PROVIDER_SEND_TURN_MAX_ATTACHMENTS,
   ProviderInteractionMode,
   ProviderDriverKind,
+  isRemoteSandboxWorkspace,
   resolveEnvironmentMachineKind,
   RuntimeMode,
   TerminalOpenInput,
@@ -106,7 +107,8 @@ import { flushSync } from "react-dom";
 import { useLocation, useNavigate } from "@tanstack/react-router";
 import { assistantCitationsToPlainText } from "@rove-code/shared/assistantCitations";
 import { assistantCitationFromLocation } from "../lib/assistantCitationNavigation";
-import { isMacPlatform } from "../lib/utils";
+import { isMacPlatform, newProjectId } from "../lib/utils";
+import { cloneDirectoryName, sandboxCloneUrl } from "../lib/remoteSandbox";
 import type { AssistantCitationSourceAnchor } from "~/lib/assistantTextSelection";
 import { useShallow } from "zustand/react/shallow";
 import {
@@ -370,6 +372,7 @@ import {
   useThread,
   useThreadRefs,
   useThreadShell,
+  waitForProject,
 } from "../state/entities";
 import { environmentShell } from "../state/shell";
 import { ChatComposer, type ChatComposerHandle } from "./chat/ChatComposer";
@@ -2477,7 +2480,7 @@ export default function ChatView(props: ChatViewProps) {
       (p) => deriveLogicalProjectKeyFromSettings(p, projectGroupingSettings) === logicalKey,
     );
     const seen = new Set<string>();
-    const envs: EnvironmentOption[] = [];
+    const envs: Array<EnvironmentOption & { projectId: ProjectId }> = [];
     for (const p of memberProjects) {
       if (seen.has(p.environmentId)) continue;
       seen.add(p.environmentId);
@@ -2498,7 +2501,39 @@ export default function ChatView(props: ChatViewProps) {
     });
     return envs;
   }, [activeProject, allProjects, projectGroupingSettings, primaryEnvironmentId, environmentById]);
-  const hasMultipleEnvironments = logicalProjectEnvironments.length > 1;
+  // Sandboxes start empty: offer connected ones for any project with a remote,
+  // and clone it there when picked.
+  const sandboxCloneTargets = useMemo(() => {
+    if (!activeProject?.repositoryIdentity) return [];
+    const present = new Set(logicalProjectEnvironments.map((option) => option.environmentId));
+    return environments.flatMap((environment): EnvironmentOption[] => {
+      const config = environment.serverConfig;
+      if (
+        !config ||
+        present.has(environment.environmentId) ||
+        !isRemoteSandboxWorkspace(config.cwd) ||
+        config.environment.capabilities.projectCloneTracking !== true
+      )
+        return [];
+      return [
+        {
+          environmentId: environment.environmentId,
+          projectId: null,
+          label: environment.label,
+          isPrimary: false,
+          machine: resolveEnvironmentMachineKind(config),
+        },
+      ];
+    });
+  }, [activeProject?.repositoryIdentity, environments, logicalProjectEnvironments]);
+  const composerEnvironmentOptions = useMemo(
+    () =>
+      sandboxCloneTargets.length === 0
+        ? logicalProjectEnvironments
+        : [...logicalProjectEnvironments, ...sandboxCloneTargets],
+    [logicalProjectEnvironments, sandboxCloneTargets],
+  );
+  const hasMultipleEnvironments = composerEnvironmentOptions.length > 1;
   const activeEnvironmentOption =
     logicalProjectEnvironments.find(
       (environment) => environment.environmentId === activeThread?.environmentId,
@@ -3925,20 +3960,75 @@ export default function ChatView(props: ChatViewProps) {
   // Handle environment change for draft threads.  When the user picks a
   // different environment we update the draft context to point at the physical
   // project in that environment while keeping the same logical project.
+  const startProjectClone = useAtomCommand(sourceControlEnvironment.startProjectClone, {
+    reportFailure: false,
+  });
+  const cloningIntoRef = useRef<EnvironmentId | null>(null);
+  // The draft moves to the new project right away; its clone banner shows
+  // progress and holds sending until the checkout exists.
+  const cloneIntoSandbox = useCallback(
+    async (environmentId: EnvironmentId, targetDraftId: DraftId) => {
+      const identity = activeProject?.repositoryIdentity;
+      const cwd = environmentById.get(environmentId)?.serverConfig?.cwd;
+      if (!identity || !cwd || cloningIntoRef.current !== null) return;
+      cloningIntoRef.current = environmentId;
+      try {
+        const remoteUrl = sandboxCloneUrl(identity.locator.remoteUrl);
+        const projectId = newProjectId();
+        const result = await startProjectClone({
+          environmentId,
+          input: {
+            projectId,
+            title: activeProject.title,
+            createdAt: new Date().toISOString(),
+            remoteUrl,
+            destinationPath: `${cwd.replace(/\/+$/, "")}/${cloneDirectoryName(remoteUrl)}`,
+          },
+        });
+        if (result._tag === "Failure") {
+          if (!isAtomCommandInterrupted(result)) {
+            const error = squashAtomCommandFailure(result);
+            toastManager.add(
+              stackedThreadToast({
+                type: "error",
+                title: "Couldn't clone into the sandbox",
+                description: error instanceof Error ? error.message : "The clone didn't start.",
+              }),
+            );
+          }
+          return;
+        }
+        const projectRef = scopeProjectRef(environmentId, projectId);
+        await waitForProject(projectRef, 3_000).catch(() => null);
+        setDraftThreadContext(targetDraftId, {
+          projectRef,
+          environmentSelection: "manual",
+          loadBalancedEnvironmentId: null,
+        });
+      } finally {
+        cloningIntoRef.current = null;
+      }
+    },
+    [activeProject, environmentById, setDraftThreadContext, startProjectClone],
+  );
   const onEnvironmentChange = useCallback(
     (nextEnvironmentId: EnvironmentId) => {
       if (envLocked || !draftId) return;
-      const target = logicalProjectEnvironments.find(
+      const target = composerEnvironmentOptions.find(
         (env) => env.environmentId === nextEnvironmentId,
       );
       if (!target) return;
+      if (target.projectId === null) {
+        void cloneIntoSandbox(target.environmentId, draftId);
+        return;
+      }
       setDraftThreadContext(draftId, {
         projectRef: scopeProjectRef(target.environmentId, target.projectId),
         environmentSelection: "manual",
         loadBalancedEnvironmentId: null,
       });
     },
-    [draftId, envLocked, logicalProjectEnvironments, setDraftThreadContext],
+    [cloneIntoSandbox, composerEnvironmentOptions, draftId, envLocked, setDraftThreadContext],
   );
 
   const activeTerminalGroup =
@@ -10378,7 +10468,7 @@ export default function ChatView(props: ChatViewProps) {
                                     ? onAutoEnvironment
                                     : undefined
                                 }
-                                availableEnvironments={logicalProjectEnvironments}
+                                availableEnvironments={composerEnvironmentOptions}
                                 composerControlsHostRef={setRestingComposerControlsHost}
                                 contextStripVisible={showComposerContextStrip}
                               />

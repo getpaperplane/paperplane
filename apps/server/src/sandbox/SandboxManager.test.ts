@@ -8,7 +8,14 @@ import * as Schema from "effect/Schema";
 import { SandboxActionInput, SandboxCreateInput } from "@rove-code/contracts";
 import { ServerSecretStore } from "../auth/ServerSecretStore.ts";
 import { makeSandboxManager } from "./SandboxManager.ts";
-import { sandboxPairCommand, sandboxStartCommand, sandboxStopCommand } from "./bootstrap.ts";
+import {
+  sandboxCredentialsCommand,
+  sandboxLabelCommand,
+  sandboxPairCommand,
+  sandboxStartCommand,
+  sandboxStopCommand,
+} from "./bootstrap.ts";
+import type { SandboxCredentialSource } from "./credentials.ts";
 import { makeBoatDriver, type SandboxDriver, type SandboxHandle } from "./drivers.ts";
 import { modalOperation, SandboxDriverError } from "./errors.ts";
 
@@ -43,6 +50,15 @@ function fixture() {
     close: vi.fn(),
   };
   const factory = vi.fn(async () => driver);
+  const credentials: SandboxCredentialSource = {
+    available: vi.fn(async () => ["codex" as const, "github" as const]),
+    payload: vi.fn<SandboxCredentialSource["payload"]>(async (kinds) => ({
+      files: kinds.map((kind) => ({ path: kind, content: `${kind}-login-secret` })),
+      remove: [],
+      tools: [],
+      git: null,
+    })),
+  };
   const store = ServerSecretStore.of({
     get: () => Effect.sync(() => (bytes ? Option.some(bytes) : Option.none())),
     set: (_name, value) =>
@@ -54,13 +70,14 @@ function fixture() {
     remove: () => Effect.void,
     getOrCreateRandom: () => Effect.succeed(new Uint8Array()),
   });
-  const make = makeSandboxManager(factory).pipe(
+  const make = makeSandboxManager(factory, credentials).pipe(
     Effect.provide(Layer.merge(Layer.succeed(ServerSecretStore, store), NodeServices.layer)),
   );
   return {
     make,
     driver,
     factory,
+    credentials,
     events,
     stored: () => new TextDecoder().decode(bytes),
     corrupt: () => {
@@ -464,3 +481,81 @@ it("wire contracts require explicit acknowledgement of compute cost and destruct
   expect(() => decodeCreateInput({ provider: "boat", label: "Task" })).toThrow();
   expect(() => decodeActionInput({ id: "one", action: "delete", confirmed: false })).toThrow();
 });
+
+it.effect("forwarded sign-ins reach the sandbox over stdin before Rove starts", () =>
+  Effect.gen(function* () {
+    const f = fixture();
+    const manager = yield* f.make;
+    yield* manager.configure({ provider: "modal", token: "secret", tokenId: "id" });
+    expect((yield* manager.inventory).availableCredentials).toEqual(["codex", "github"]);
+    const sandbox = yield* manager.create(
+      decodeCreateInput({
+        provider: "modal",
+        label: "Task",
+        confirmCost: true,
+        credentials: ["codex"],
+        region: "ap",
+      }),
+    );
+    expect(sandbox).toMatchObject({ credentials: ["codex"], region: "ap", detail: null });
+    expect(f.driver.create).toHaveBeenCalledWith(sandbox.id, "ap");
+    const calls = vi.mocked(f.driver.exec).mock.calls;
+    expect(calls.map(([, command]) => command)).toEqual([
+      sandboxLabelCommand("Task"),
+      sandboxCredentialsCommand,
+      sandboxStartCommand,
+    ]);
+    // Secrets travel on stdin, never in the command line or saved state.
+    expect(calls[1]![2]).toContain("codex-login-secret");
+    expect(sandboxCredentialsCommand).not.toContain("login-secret");
+    expect(f.stored()).not.toContain("login-secret");
+  }),
+);
+
+it.effect("a failed forward keeps the new sandbox running and explains why", () =>
+  Effect.gen(function* () {
+    const f = fixture();
+    f.credentials.payload = async () => {
+      throw new SandboxDriverError("Codex isn't signed in on the managing environment.");
+    };
+    const manager = yield* f.make;
+    yield* manager.configure({ provider: "boat", token: "secret" });
+    const sandbox = yield* manager.create(
+      decodeCreateInput({
+        provider: "boat",
+        label: "Task",
+        confirmCost: true,
+        credentials: ["codex"],
+      }),
+    );
+    expect(sandbox).toMatchObject({
+      phase: "running",
+      detail: "Codex isn't signed in on the managing environment.",
+    });
+  }),
+);
+
+it.effect("changing sign-ins applies now when running and on resume when paused", () =>
+  Effect.gen(function* () {
+    const f = fixture();
+    const manager = yield* f.make;
+    yield* manager.configure({ provider: "boat", token: "secret" });
+    const sandbox = yield* manager.create({ provider: "boat", label: "Task", confirmCost: true });
+    // Without a selection nothing is forwarded.
+    expect(f.credentials.payload).not.toHaveBeenCalled();
+    const change = (credentials: ReadonlyArray<"codex" | "github">) =>
+      manager.action(
+        decodeActionInput({ id: sandbox.id, action: "credentials", confirmed: true, credentials }),
+      );
+    yield* change(["github"]);
+    expect(f.credentials.payload).toHaveBeenLastCalledWith(["github"]);
+    yield* manager.action(decodeActionInput({ id: sandbox.id, action: "pause", confirmed: true }));
+    vi.mocked(f.credentials.payload).mockClear();
+    const paused = yield* change([]);
+    expect(paused.sandbox).toMatchObject({ phase: "paused", credentials: [] });
+    expect(f.credentials.payload).not.toHaveBeenCalled();
+    yield* manager.action(decodeActionInput({ id: sandbox.id, action: "resume", confirmed: true }));
+    // Resuming removes the deselected sign-ins before Rove restarts.
+    expect(f.credentials.payload).toHaveBeenLastCalledWith([]);
+  }),
+);
