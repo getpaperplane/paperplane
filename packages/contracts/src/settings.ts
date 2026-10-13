@@ -850,6 +850,27 @@ export const PiSettings = makeProviderSettingsSchema(
         providerSettingsForm: { placeholder: "2048", clearWhenEmpty: "omit" },
       }),
     ),
+    subagents: Schema.Boolean.pipe(
+      Schema.withDecodingDefault(Effect.succeed(true)),
+      Schema.annotateKey({
+        title: "Subagents",
+        description:
+          "Give Pi threads Rove's subagent tool. Rove runs each subagent and shows it in Agents. Subagents that extensions start appear as ordinary tool calls.",
+        providerSettingsForm: { control: "switch", clearWhenEmpty: "omit" },
+      }),
+    ),
+    subagentModel: TrimmedString.pipe(
+      Schema.withDecodingDefault(Effect.succeed("")),
+      Schema.annotateKey({
+        title: "Subagent model",
+        description:
+          "Model for subagents, as provider/model-id from your Pi catalog. Leave blank to use the thread's current model.",
+        providerSettingsForm: {
+          placeholder: "e.g. anthropic/claude-haiku-5",
+          clearWhenEmpty: "omit",
+        },
+      }),
+    ),
     // Extension paths blocked from loading in new Pi sessions. Toggled from
     // the provider extensions panel and applied at session creation.
     disabledExtensions: Schema.Array(Schema.String).pipe(
@@ -862,7 +883,15 @@ export const PiSettings = makeProviderSettingsSchema(
     ),
   },
   {
-    order: ["model", "thinkingLevel", "agentDir", "workloadProtection", "workloadMemoryMiB"],
+    order: [
+      "model",
+      "thinkingLevel",
+      "subagents",
+      "subagentModel",
+      "agentDir",
+      "workloadProtection",
+      "workloadMemoryMiB",
+    ],
   },
 ).pipe(
   Schema.annotate({

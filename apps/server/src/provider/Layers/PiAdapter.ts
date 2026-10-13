@@ -61,7 +61,7 @@ import { acquirePiResource, disposePiResource, PI_STARTUP_TIMEOUT_MS } from "./P
 
 import { ProviderAdapterRequestError } from "../Errors.ts";
 import { piBounded, piRecord, piTrimmed } from "./PiValues.ts";
-import type { PiAgentTaskDescriptor } from "./PiAgentRoster.ts";
+import type { PiAgentTaskDescriptor } from "./PiSubagents.ts";
 import { compactPiToolProgress } from "./PiRuntimeEvents.ts";
 import type {
   ProviderAdapterContract,
@@ -297,6 +297,8 @@ export interface PiCreateSessionInput {
   readonly resumeSessionFile?: string | undefined;
   /** Pi extension paths blocked from loading; matched against the loader's discovered paths. */
   readonly disabledExtensions?: ReadonlyArray<string> | undefined;
+  /** Present when the thread gets Rove's subagent tool; `model` overrides the caller's model. */
+  readonly subagents?: { readonly model?: string | undefined } | undefined;
 }
 
 export class PiExtensionLoadError extends Error {
@@ -943,7 +945,7 @@ export function makePiAdapter(
           return turnId;
         });
 
-        /** Agents rows from subagent observation (PiAgentObserver); they can outlive the turn. */
+        /** Agents rows from Rove subagents (PiSubagents); they can outlive the turn. */
         const offerAgentTask = (
           descriptor: PiAgentTaskDescriptor,
         ): Effect.Effect<void, ProviderAdapterRequestError> =>

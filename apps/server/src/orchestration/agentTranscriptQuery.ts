@@ -1,8 +1,8 @@
 // @effect-diagnostics nodeBuiltinImport:off
 /**
- * Read side of observed-agent transcripts (ADR 0002).
+ * Read side of subagent transcripts (ADR 0003).
  *
- * The agent hook writes one JSONL file per agent under
+ * Rove subagents write one JSONL file per agent under
  * `<stateDir>/agent-transcripts/<threadId>/<agentId>.jsonl`. The client never
  * supplies a path: it names a thread and a task, and both are reduced to safe
  * file-name segments before the read, so a request cannot leave the root.
@@ -20,7 +20,7 @@ import {
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 
-import type { PiAgentEntry } from "../provider/Layers/PiAgentHook.ts";
+import type { PiAgentEntry } from "../provider/Layers/PiSubagents.ts";
 
 const TRANSCRIPT_BYTE_CAP = 4 * 1024 * 1024;
 const ENTRY_LIMIT = 2_000;

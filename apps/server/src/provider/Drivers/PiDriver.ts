@@ -30,7 +30,7 @@ import { mergeProviderInstanceEnvironment } from "../ProviderInstanceEnvironment
 import { makePiTextGeneration } from "../../textGeneration/PiTextGeneration.ts";
 import { ServerConfig } from "../../config.ts";
 import { agentTranscriptsRoot } from "../../orchestration/agentTranscriptQuery.ts";
-import { PI_AGENT_ENV } from "../Layers/PiAgentHook.ts";
+import { PI_SUBAGENT_TRANSCRIPTS_ENV } from "../Layers/PiSubagents.ts";
 import { makePiAdapter } from "../Layers/PiAdapter.ts";
 import { LazyPiRuntime, PiRuntimeProcess } from "../Layers/PiRuntimeProcess.ts";
 import { PI_CONFIG_DIR } from "../PiSdkMetadata.ts";
@@ -146,8 +146,11 @@ export const PiDriver: ProviderDriver<PiSettings, PiDriverEnv> = {
                   workloadMemoryMiB: effectiveConfig.workloadMemoryMiB,
                 },
                 executable,
-                // Subagents the instance's threads start write transcripts here (ADR 0002).
-                { ...processEnv, [PI_AGENT_ENV.transcripts]: agentTranscriptsRoot(stateDir) },
+                // Rove subagents write their transcripts here (ADR 0003).
+                {
+                  ...processEnv,
+                  [PI_SUBAGENT_TRANSCRIPTS_ENV]: agentTranscriptsRoot(stateDir),
+                },
               ),
             PI_RUNTIME_IDLE_MS,
           )
@@ -191,7 +194,13 @@ export const PiDriver: ProviderDriver<PiSettings, PiDriverEnv> = {
         instanceId,
         createSession: (input) =>
           getCatalogHost().then((host) =>
-            host.createSession({ ...input, agentDir: effectiveAgentDir }),
+            host.createSession({
+              ...input,
+              agentDir: effectiveAgentDir,
+              ...(effectiveConfig.subagents
+                ? { subagents: { model: effectiveConfig.subagentModel || undefined } }
+                : undefined),
+            }),
           ),
         getSettings: serverSettings.getSettings.pipe(
           Effect.map(readCurrentPiSettings),
