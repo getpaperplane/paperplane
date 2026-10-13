@@ -8,6 +8,7 @@ import type {
   ProviderSettingsFormControl,
   ProviderSettingsFormOption,
   ProviderSettingsFormSchemaAnnotation,
+  ServerProvider,
   ServerProviderModel,
 } from "@rove-code/contracts";
 
@@ -19,6 +20,7 @@ import { Switch } from "../ui/switch";
 import { Textarea } from "../ui/textarea";
 import type { ProviderClientDefinition } from "./providerDriverMeta";
 import { SettingsRow } from "./settingsLayout";
+import { PiSubagentSettings } from "./PiSubagentSettings";
 
 export interface ProviderSettingsFieldModel {
   readonly key: string;
@@ -170,6 +172,7 @@ interface ProviderSettingsFormProps {
   readonly definition: ProviderClientDefinition;
   readonly value: unknown;
   readonly models?: ReadonlyArray<ServerProviderModel> | undefined;
+  readonly provider?: ServerProvider | undefined;
   readonly supportsPiWorkloadProtection?: boolean | undefined;
   readonly idPrefix: string;
   /**
@@ -527,6 +530,7 @@ export function ProviderSettingsForm({
   definition,
   value,
   models,
+  provider,
   supportsPiWorkloadProtection = false,
   idPrefix,
   variant,
@@ -540,21 +544,48 @@ export function ProviderSettingsForm({
   if (fields.length === 0) {
     return null;
   }
+  const subagentThinkingField = fields.find((field) => field.key === "subagentThinkingLevel");
 
   return (
     <>
-      {fields.map((field) =>
-        definition.value === "pi" && field.key === "thinkingLevel" ? (
-          <PiThinkingSettingsField
-            key={field.key}
-            field={field}
-            value={value}
-            models={models}
-            idPrefix={idPrefix}
-            variant={variant}
-            onChange={onChange}
-          />
-        ) : (
+      {fields.map((field) => {
+        if (definition.value === "pi") {
+          if (field.key === "subagentThinkingLevel") return null;
+          if (field.key === "subagentModel" && subagentThinkingField) {
+            return (
+              <PiSubagentSettings
+                key={field.key}
+                modelField={field}
+                thinkingField={subagentThinkingField}
+                value={value}
+                provider={provider}
+                models={models}
+                idPrefix={idPrefix}
+                variant={variant}
+                onModelChange={(next) =>
+                  onChange(nextProviderConfigWithFieldValue(value, field, next))
+                }
+                onThinkingChange={(next) =>
+                  onChange(nextProviderConfigWithFieldValue(value, subagentThinkingField, next))
+                }
+              />
+            );
+          }
+          if (field.key === "thinkingLevel") {
+            return (
+              <PiThinkingSettingsField
+                key={field.key}
+                field={field}
+                value={value}
+                models={models}
+                idPrefix={idPrefix}
+                variant={variant}
+                onChange={onChange}
+              />
+            );
+          }
+        }
+        return (
           <ProviderSettingsFieldRow
             key={field.key}
             field={field}
@@ -563,8 +594,8 @@ export function ProviderSettingsForm({
             variant={variant}
             onChange={onChange}
           />
-        ),
-      )}
+        );
+      })}
     </>
   );
 }

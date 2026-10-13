@@ -14,6 +14,7 @@ import {
 } from "./settings.ts";
 
 const decodePiSettings = Schema.decodeUnknownSync(PiSettings);
+const encodePiSettings = Schema.encodeSync(PiSettings);
 
 const decodeClientSettings = Schema.decodeUnknownSync(ClientSettingsSchema);
 const decodeClientSettingsPatch = Schema.decodeUnknownSync(ClientSettingsPatch);
@@ -1020,6 +1021,7 @@ describe("PiSettings", () => {
     expect(settings.disabledExtensions).toEqual([]);
     expect(settings.model).toBe("");
     expect(settings.thinkingLevel).toBeNull();
+    expect(settings.subagentThinkingLevel).toBeNull();
     expect(settings.customModels).toEqual([]);
     expect(settings.workloadProtection).toBe("auto");
     expect(settings.workloadMemoryMiB).toBe("2048");
@@ -1027,7 +1029,7 @@ describe("PiSettings", () => {
 
   it("persists workload policy and rejects memory limits that cannot reserve both slots", () => {
     const settings = decodePiSettings({ workloadProtection: "on", workloadMemoryMiB: "3072" });
-    expect(decodePiSettings(Schema.encodeSync(PiSettings)(settings))).toMatchObject({
+    expect(decodePiSettings(encodePiSettings(settings))).toMatchObject({
       workloadProtection: "on",
       workloadMemoryMiB: "3072",
     });
@@ -1054,6 +1056,36 @@ describe("PiSettings", () => {
 
     expect(settings.model).toBe("anthropic/claude-sonnet-5");
     expect(settings.thinkingLevel).toBe("high");
+  });
+
+  it("round-trips subagent thinking overrides independently and clears them to inherit", () => {
+    for (const subagentThinkingLevel of [
+      "off",
+      "minimal",
+      "low",
+      "medium",
+      "high",
+      "xhigh",
+      "max",
+      null,
+    ]) {
+      const settings = decodePiSettings({ thinkingLevel: "high", subagentThinkingLevel });
+      expect(decodePiSettings(encodePiSettings(settings))).toMatchObject({
+        thinkingLevel: "high",
+        subagentThinkingLevel,
+      });
+      const patch = decodeServerSettingsPatch({ providers: { pi: { subagentThinkingLevel } } });
+      expect(patch.providers?.pi?.subagentThinkingLevel).toBe(subagentThinkingLevel);
+      expect(patch.providers?.pi).not.toHaveProperty("thinkingLevel");
+    }
+    expect(decodePiSettings({ subagentThinkingLevel: undefined }).subagentThinkingLevel).toBeNull();
+    expect(decodeServerSettingsPatch({ providers: { pi: {} } }).providers?.pi).not.toHaveProperty(
+      "subagentThinkingLevel",
+    );
+    expect(() => decodePiSettings({ subagentThinkingLevel: "galaxy-brain" })).toThrow();
+    expect(() =>
+      decodeServerSettingsPatch({ providers: { pi: { subagentThinkingLevel: "galaxy-brain" } } }),
+    ).toThrow();
   });
 
   it("rejects an unknown thinking level", () => {

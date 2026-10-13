@@ -19,6 +19,7 @@ import * as NodePath from "node:path";
 import type { ToolDefinition } from "@earendil-works/pi-coding-agent";
 import {
   RuntimeTaskId,
+  type PiThinkingLevel,
   type RuntimeTaskUsage,
   type TaskCompletedPayload,
   type TaskProgressPayload,
@@ -114,7 +115,12 @@ interface PiSubagentToolOptions {
   readonly startSession: (parent: {
     readonly model: unknown;
     readonly thinkingLevel: string | undefined;
-  }) => Promise<{ readonly session: PiSubagentSession; readonly model: string | undefined }>;
+  }) => Promise<{
+    readonly session: PiSubagentSession;
+    readonly model: string | undefined;
+    /** Effective SDK selection, after clamping to the child model. */
+    readonly thinkingLevel?: PiThinkingLevel | undefined;
+  }>;
   readonly progressIntervalMs?: number;
 }
 
@@ -362,6 +368,7 @@ export function createPiSubagentTool(options: PiSubagentToolOptions) {
         session = child.session;
         running.add(session);
         state.model = child.model;
+        state.thinking = child.thinkingLevel ?? ctx.thinkingLevel;
         write("meta", {
           ...(state.model ? { model: state.model } : undefined),
           ...(state.thinking ? { thinking: state.thinking } : undefined),

@@ -1024,6 +1024,7 @@ export async function createPiSession(
               agentDir,
               modelRuntime,
               model: input.subagents?.model,
+              thinkingLevel: input.subagents?.thinkingLevel,
               parent,
               tools: options.workloads?.tools(cwd, workloadOwner) ?? [],
             }),
@@ -1087,16 +1088,22 @@ export async function createPiSession(
  * A subagent is a fresh, extension-free session in the same workspace: it gets
  * the standard tools and project context, but no extension tools, so it cannot
  * start further agents. It runs on the configured subagent model, or the
- * caller's current model.
+ * caller's current model, and inherits the caller's current thinking level
+ * unless a subagent override is configured. The SDK clamps it to the child model.
  */
 async function startPiSubagentSession(options: {
   readonly cwd: string;
   readonly agentDir: string;
   readonly modelRuntime: ModelRuntime;
   readonly model: string | undefined;
+  readonly thinkingLevel: PiThinkingLevel | null | undefined;
   readonly parent: { readonly model: unknown; readonly thinkingLevel: string | undefined };
   readonly tools: ToolDefinition[];
-}): Promise<{ session: PiSubagentSession; model: string | undefined }> {
+}): Promise<{
+  session: PiSubagentSession;
+  model: string | undefined;
+  thinkingLevel: PiThinkingLevel;
+}> {
   const settingsManager = SettingsManager.create(options.cwd, options.agentDir);
   settingsManager.setProjectTrusted(true);
   const services = await createPiSessionServices({
@@ -1117,18 +1124,20 @@ async function startPiSubagentSession(options: {
       throw new Error(resolved.error ?? `Unknown subagent model "${options.model}".`);
     model = resolved.model;
   }
+  const thinkingLevel = options.thinkingLevel ?? options.parent.thinkingLevel;
   const { session } = await createAgentSessionFromServices({
     services,
     sessionManager: SessionManager.inMemory(options.cwd),
     customTools: options.tools,
     ...(model !== undefined ? { model } : undefined),
-    ...(options.parent.thinkingLevel !== undefined
-      ? // SAFETY: The parent session reports a Pi thinking level; the SDK clamps it to the model.
-        { thinkingLevel: options.parent.thinkingLevel as PiThinkingLevel }
+    ...(thinkingLevel !== undefined
+      ? // SAFETY: Overrides and the parent report Pi thinking levels; the SDK clamps to the child model.
+        { thinkingLevel: thinkingLevel as PiThinkingLevel }
       : undefined),
   });
   return {
     session,
     model: session.model ? `${session.model.provider}/${session.model.id}` : undefined,
+    thinkingLevel: session.thinkingLevel,
   };
 }

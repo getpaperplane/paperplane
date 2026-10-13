@@ -198,7 +198,12 @@ export const PiDriver: ProviderDriver<PiSettings, PiDriverEnv> = {
               ...input,
               agentDir: effectiveAgentDir,
               ...(effectiveConfig.subagents
-                ? { subagents: { model: effectiveConfig.subagentModel || undefined } }
+                ? {
+                    subagents: {
+                      model: effectiveConfig.subagentModel || undefined,
+                      thinkingLevel: effectiveConfig.subagentThinkingLevel ?? undefined,
+                    },
+                  }
                 : undefined),
             }),
           ),

@@ -20,8 +20,17 @@ export default function (pi: ExtensionAPI) {
         contextWindow: 128000,
         maxTokens: 1024,
       },
+      {
+        id: "reasoning",
+        name: "Reasoning fixture",
+        reasoning: true,
+        input: ["text"],
+        cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+        contextWindow: 128000,
+        maxTokens: 1024,
+      },
     ],
-    streamSimple(model, context) {
+    streamSimple(model, context, options) {
       const system = context.messages
         .filter((message) => message.role === "system")
         .map((message) => JSON.stringify(message))
@@ -54,7 +63,17 @@ export default function (pi: ExtensionAPI) {
         stream.end();
         return stream;
       };
+      const reportSelection = context.messages.some(
+        (message) =>
+          message.role === "user" && JSON.stringify(message.content).includes("report session"),
+      );
       if (system.includes("<subagent>")) {
+        if (reportSelection) {
+          return reply(
+            [{ type: "text", text: `child selection: ${model.id}/${options?.reasoning ?? "off"}` }],
+            "stop",
+          );
+        }
         // Subagents load no extensions, so they can never delegate again.
         const text = hasSubagentTool ? "subagent saw the subagent tool" : "child report";
         return reply([{ type: "text", text }], "stop");
@@ -72,7 +91,10 @@ export default function (pi: ExtensionAPI) {
             type: "toolCall",
             id: "delegate-1",
             name: "rove_subagent",
-            arguments: { description: "Inspect the repo", prompt: "inspect" },
+            arguments: {
+              description: "Inspect the repo",
+              prompt: reportSelection ? "report session" : "inspect",
+            },
           },
         ],
         "toolUse",

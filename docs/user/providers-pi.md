@@ -143,10 +143,10 @@ Background text generation, including thread titles, does not load extensions or
 
 ## Subagents
 
-Pi has no built-in subagents, so Rove gives Pi threads a `rove_subagent` tool. The thread agent uses it to hand a self-contained task to a subagent, and can start several at once. Each subagent works in the same project with Pi's standard tools and project context, but loads no extensions, so it cannot start further subagents. When it finishes, its final report goes back to the thread agent.
+Pi has no built-in subagents, so Rove gives Pi threads a `rove_subagent` tool. The thread agent decides when to delegate a self-contained task, and can start several at once. Enabling subagents does not make every task delegate; explicitly asking the agent to use subagents can encourage it. Each subagent works in the same project with Pi's standard tools and project context, but loads no extensions, so it cannot start further subagents. When it finishes, its final report goes back to the thread agent.
 
 Open a subagent in **Agents** to see its task, each step with its output, token use, and the result. Stopping the thread stops its subagents.
 
-In **Settings → Providers → Pi**, turn off **Subagents** to remove the tool, or set **Subagent model** to run subagents on a different model than the thread. Changes apply when a thread starts its next Pi session.
+In **Settings → Providers → Pi**, turn off **Subagents** to remove the tool. Select **Subagent model** and **Subagent thinking level** to override either independently. Leave either unset to inherit the thread's current model or thinking level when it delegates. Pi adjusts unsupported thinking levels to one the subagent model supports. Changes apply when a thread starts its next Pi session.
 
 Subagents that extensions start, such as `pi-subagents`, still run, but Rove shows them only as that extension's tool calls, not in **Agents**.
