@@ -90,7 +90,6 @@ export const HtmlRenderFrame = memo(function HtmlRenderFrame(props: {
             className="block size-full border-0 bg-transparent"
             sandbox="allow-scripts allow-forms allow-popups allow-modals"
             allow="fullscreen; clipboard-write"
-            allowFullScreen
           />
           {threadRef ? (
             <div className="absolute end-2 top-2 opacity-0 transition-opacity duration-150 focus-within:opacity-100 group-hover/html-render:opacity-100 pointer-coarse:opacity-100">
