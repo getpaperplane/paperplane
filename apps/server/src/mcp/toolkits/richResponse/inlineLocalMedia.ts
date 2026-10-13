@@ -3,7 +3,7 @@ import * as FileSystem from "effect/FileSystem";
 import * as Schema from "effect/Schema";
 
 /** Total bytes a page may embed; data URIs grow them by a third again. */
-export const HTML_RENDER_MAX_EMBEDDED_BYTES = 24 * 1024 * 1024;
+const HTML_RENDER_MAX_EMBEDDED_BYTES = 24 * 1024 * 1024;
 
 const MEDIA_MIME_TYPES = {
   png: "image/png",

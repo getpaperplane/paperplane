@@ -49,7 +49,7 @@ export const HTML_RENDER_THEME_VARIABLES = [
 ] as const;
 
 /** Categorical chart colors; the app has no chart tokens of its own. */
-export const HTML_RENDER_CHART_COLORS = {
+const HTML_RENDER_CHART_COLORS = {
   light: ["#2563eb", "#0d9488", "#d97706", "#9333ea", "#e11d48"],
   dark: ["#60a5fa", "#2dd4bf", "#fbbf24", "#c084fc", "#fb7185"],
 } as const;

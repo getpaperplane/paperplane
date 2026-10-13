@@ -25,7 +25,7 @@ import { McpInvocationContext } from "../../McpInvocationContext.ts";
 import { inlineLocalMedia } from "./inlineLocalMedia.ts";
 
 /** Pages are written by hand or generated; anything larger belongs in a file the user opens. */
-export const HTML_RENDER_MAX_SOURCE_CHARS = 1_000_000;
+const HTML_RENDER_MAX_SOURCE_CHARS = 1_000_000;
 
 class HtmlRenderError extends Schema.TaggedError<HtmlRenderError>()("HtmlRenderError", {
   message: Schema.String,
