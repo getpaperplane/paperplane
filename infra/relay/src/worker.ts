@@ -183,6 +183,7 @@ export const ApiLive = Api.make(
     const managedEndpointDnsBinding = yield* Cloudflare.DNS.ReadWriteDns(managedEndpointZone);
     const managedEndpointZoneName = yield* managedEndpointZone.name;
     const managedEndpointCleanupMode = yield* RelayConfiguration.managedEndpointCleanupModeConfig;
+    const maintenanceSchedule = yield* RelayConfiguration.maintenanceScheduleConfig;
 
     //
     // 3. Runtime layers and app construction
@@ -322,7 +323,7 @@ export const ApiLive = Api.make(
         ),
     );
 
-    yield* Cloudflare.Workers.cron("*/5 * * * *", () =>
+    yield* Cloudflare.Workers.cron(maintenanceSchedule, () =>
       Effect.all(
         [
           DpopProofs.DpopProofReplay.pipe(
