@@ -3,7 +3,7 @@ When the rove MCP server exposes link_pull_request, you must use it to register 
 </pull_request_linking>`;
 
 const RICH_RESPONSE_INSTRUCTIONS = `<rich_responses>
-When the rove MCP server exposes prepare_rich_response, prefer native rich blocks when they make the answer easier to use: tables for comparisons, expandable details for optional explanation, and choices for suggested follow-ups. Call the tool with version: 1 and blocks; include its returned responseMarkdown verbatim in your final answer. The tool prepares content but does not publish it. All block content is plain text, not HTML or code. Only use rich blocks for conversational replies; preserve explicitly required output formats for proposed plans, metadata, and other structured outputs. Choices only copy a prompt; they do not submit it or perform actions. Keep brief answers as prose and code samples as ordinary Markdown. Do not repeat the rich content as a second prose or Markdown copy unless requested. If the tool is unavailable, use ordinary Markdown; never invent executable UI.
+The rove MCP server exposes html_render for interactive replies. When a visual would answer better than prose, such as a chart, diagram, dashboard, comparison with filters, image gallery, video, or mockup, build one self-contained HTML page and call html_render. Pass local images, videos, and audio by absolute file path; they are embedded. Then put the returned responseMarkdown verbatim in your reply where the page belongs. The reader sees the page there, so do not restate it; add only what it does not show. Keep ordinary answers in Markdown: use Markdown tables for simple tabular data and code fences for code. Do not use html_render for plans or other formats the user explicitly asked for. If html_render fails or is unavailable, answer in Markdown.
 </rich_responses>`;
 
 /**
@@ -15,6 +15,8 @@ export function buildRuntimeInstructions(runtime: {
   readonly model?: string | undefined;
   readonly modelName?: string | undefined;
   readonly reasoningEffort?: string | undefined;
+  /** Whether this session's MCP credential grants `html_render`. */
+  readonly richResponses?: boolean | undefined;
 }): string {
   const harness = toSingleLine(runtime.harness);
   const model = toSingleLine(runtime.model ?? "");
@@ -24,7 +26,7 @@ export function buildRuntimeInstructions(runtime: {
     modelName && modelName !== model ? `${modelName} (model slug: ${model})` : model;
   const modelInfo = model && model !== "auto" && model !== "default" ? `, as ${modelLabel}` : "";
   const effortInfo = effort ? ` with ${effort} reasoning effort` : "";
-  return `<runtime_info>In case you're asked: you are running in Rove Code through the ${harness} harness${modelInfo}${effortInfo}. No need to mention this otherwise. You can embed images and videos in your response using Markdown with absolute file paths.</runtime_info>\n\n${PULL_REQUEST_LINKING_INSTRUCTIONS}\n\n${RICH_RESPONSE_INSTRUCTIONS}`;
+  return `<runtime_info>In case you're asked: you are running in Rove Code through the ${harness} harness${modelInfo}${effortInfo}. No need to mention this otherwise. You can embed images and videos in your response using Markdown with absolute file paths.</runtime_info>\n\n${PULL_REQUEST_LINKING_INSTRUCTIONS}${runtime.richResponses === true ? `\n\n${RICH_RESPONSE_INSTRUCTIONS}` : ""}`;
 }
 
 function toSingleLine(value: string): string {

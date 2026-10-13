@@ -1,9 +1,11 @@
 /* eslint-disable react/no-array-index-key -- Rich payloads are published atomically; fixed block and cell positions preserve disclosure state. */
 import { memo, useState } from "react";
 import { CopyIcon, CheckIcon } from "lucide-react";
+import type { EnvironmentId, ScopedThreadRef } from "@rove-code/contracts";
 import type { RichResponse, RichResponseBlock } from "@rove-code/contracts/rich-response";
 import { useCopyToClipboard } from "~/hooks/useCopyToClipboard";
 import { Button } from "../ui/button";
+import { HtmlRenderFrame } from "./HtmlRenderFrame";
 import "./RichResponseContent.css";
 
 function FollowUpChoice({ label, prompt }: { label: string; prompt: string }) {
@@ -32,20 +34,14 @@ function FollowUpChoice({ label, prompt }: { label: string; prompt: string }) {
   );
 }
 
+/** Replies from before interactive pages; open, so reading them takes no extra step. */
 function RichDetails({ block }: { block: Extract<RichResponseBlock, { type: "details" }> }) {
-  const [expanded, setExpanded] = useState(false);
   return (
-    <details
-      className="rounded-lg border border-border/70"
-      onToggle={(event) => setExpanded(event.currentTarget.open)}
-    >
+    <details open className="rounded-lg border border-border/70">
       <summary className="cursor-pointer rounded-lg px-3 py-2 font-medium focus-visible:outline-2 focus-visible:outline-ring">
         {block.title}
       </summary>
-      <p
-        aria-hidden={!expanded}
-        className="whitespace-pre-wrap break-words border-t border-border/50 px-3 py-2"
-      >
+      <p className="whitespace-pre-wrap break-words border-t border-border/50 px-3 py-2">
         {block.text}
       </p>
     </details>
@@ -54,8 +50,12 @@ function RichDetails({ block }: { block: Extract<RichResponseBlock, { type: "det
 
 export const RichResponseContent = memo(function RichResponseContent({
   response,
+  environmentId,
+  threadRef,
 }: {
   response: RichResponse;
+  environmentId: EnvironmentId | null;
+  threadRef: ScopedThreadRef | undefined;
 }) {
   return (
     <div className="my-3 flex min-w-0 flex-col gap-4 text-sm leading-relaxed" data-rich-response="">
@@ -108,6 +108,19 @@ export const RichResponseContent = memo(function RichResponseContent({
             );
           case "details":
             return <RichDetails key={index} block={block} />;
+          case "html":
+            return environmentId === null ? (
+              <p key={index} className="text-muted-foreground text-xs">
+                {block.title} (interactive page) is unavailable without its environment.
+              </p>
+            ) : (
+              <HtmlRenderFrame
+                key={block.attachmentId}
+                environmentId={environmentId}
+                threadRef={threadRef}
+                block={block}
+              />
+            );
           case "choices":
             return (
               <section key={index} aria-label={block.title} className="flex flex-col gap-2">

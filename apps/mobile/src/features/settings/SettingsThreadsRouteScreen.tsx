@@ -43,12 +43,47 @@ export function SettingsThreadsRouteScreen() {
           contentContainerClassName="gap-6 px-5 pt-4"
           contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 18) + 18 }}
         >
+          <ResponseFormatSettingsRow />
           <LimitRecoverySettingsRow />
           <AutoSettleSettingsRows />
           <LegacySettingsSection />
         </ScrollView>
       </SettingsScreen>
     </>
+  );
+}
+
+/** Interactive pages or the plain Markdown replies from before them, per environment. */
+function ResponseFormatSettingsRow() {
+  const { selectedTargets, selectedProjectKey } = useSettingsEnvironmentFilter();
+  const update = useAtomCommand(serverEnvironment.updateSettings, "response format settings");
+  const [busy, setBusy] = useState(false);
+  const targets = selectedTargets.filter((target) => target.serverConfig !== null);
+  if (selectedProjectKey !== null || targets.length === 0) return null;
+  return (
+    <SettingsSection title="Responses">
+      <SettingsSwitchRow
+        icon="text.bubble"
+        label="Interactive responses"
+        subtitle="Let agents answer with interactive pages such as charts, galleries, and videos. Each page uses more tokens than a text reply. Off keeps replies in plain Markdown. Applies when an agent session next starts."
+        value={
+          targets[0]?.serverConfig?.settings.enableRichResponses ??
+          DEFAULT_SERVER_SETTINGS.enableRichResponses
+        }
+        disabled={busy}
+        onValueChange={(value) => {
+          setBusy(true);
+          void Promise.allSettled(
+            targets.map((target) =>
+              update({
+                environmentId: target.environmentId,
+                input: { patch: { enableRichResponses: value } },
+              }),
+            ),
+          ).finally(() => setBusy(false));
+        }}
+      />
+    </SettingsSection>
   );
 }
 

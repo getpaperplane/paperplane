@@ -727,6 +727,8 @@ export interface CreatePiSessionServicesOptions {
   readonly additionalExtensionPaths?: ReadonlyArray<string> | undefined;
   readonly noExtensions?: boolean | undefined;
   readonly extensionFactories?: ReadonlyArray<InlineExtension> | undefined;
+  /** Whether the session's MCP credential grants `html_render`. */
+  readonly richResponses?: boolean | undefined;
 }
 
 export async function createPiSessionServices(options: CreatePiSessionServicesOptions): Promise<
@@ -750,7 +752,7 @@ export async function createPiSessionServices(options: CreatePiSessionServicesOp
   const settingsManager = options.settingsManager ?? SettingsManager.create(cwd, agentDir);
   const disabledExtensions = options.disabledExtensions ?? [];
   const appendSystemPrompt = [
-    buildRuntimeInstructions({ harness: "Pi" }),
+    buildRuntimeInstructions({ harness: "Pi", richResponses: options.richResponses }),
     ...(disabledExtensions.length > 0 ? [disabledExtensionsPromptNote(disabledExtensions)] : []),
   ];
 
@@ -897,6 +899,10 @@ export async function createPiSession(
   const startupErrors: PiSessionEventLike[] = [];
 
   const usageLimits = createUsageLimitCapture();
+  const mcpProviderSession =
+    options.mcpProviderSession ??
+    (input.threadId === undefined ? undefined : readMcpProviderSession(input.threadId));
+  const richResponses = mcpProviderSession?.capabilities.has("rich-responses") === true;
   let services = await createPiSessionServices({
     cwd,
     agentDir,
@@ -905,6 +911,7 @@ export async function createPiSession(
     noExtensions: options.extensions === false,
     modelRuntime: options.modelRuntime,
     extensionFactories: [usageLimits.extension],
+    richResponses,
   });
 
   const getErrors = (s: AgentSessionServices) => [
@@ -936,6 +943,7 @@ export async function createPiSession(
           noExtensions: false,
           modelRuntime: options.modelRuntime,
           extensionFactories: [usageLimits.extension],
+          richResponses,
         });
         for (const { path, error } of services.resourceLoader.getExtensions().errors) {
           startupErrors.push({
@@ -987,10 +995,7 @@ export async function createPiSession(
       | PiThinkingLevel
       | undefined;
 
-  const roveTools = await createPiRoveTools(
-    options.mcpProviderSession ??
-      (input.threadId === undefined ? undefined : readMcpProviderSession(input.threadId)),
-  );
+  const roveTools = await createPiRoveTools(mcpProviderSession);
   const { session, modelFallbackMessage: sdkModelFallbackMessage } =
     await createAgentSessionFromServices({
       services,

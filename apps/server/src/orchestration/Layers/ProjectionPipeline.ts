@@ -64,6 +64,7 @@ import { ProjectionThreadSessionRepositoryLive } from "../../persistence/Layers/
 import { ProjectionTurnRepositoryLive } from "../../persistence/Layers/ProjectionTurns.ts";
 import { ProjectionThreadRepositoryLive } from "../../persistence/Layers/ProjectionThreads.ts";
 import { ServerConfig } from "../../config.ts";
+import { richResponseHtmlAttachmentIds } from "@rove-code/shared/richResponse";
 import {
   OrchestrationProjectionPipeline,
   type OrchestrationProjectionPipelineContract,
@@ -372,6 +373,14 @@ function collectThreadAttachmentRelativePaths(
       const relativePath = attachmentRelativePath(attachment);
       if (relativePath) {
         relativePaths.add(relativePath);
+      }
+    }
+    // Pages from html_render are referenced only by the reply that shows them.
+    if (message.role === "assistant") {
+      for (const attachmentId of richResponseHtmlAttachmentIds(message.text)) {
+        if (parseThreadSegmentFromAttachmentId(attachmentId) === threadSegment) {
+          relativePaths.add(`${attachmentId}.html`);
+        }
       }
     }
   }

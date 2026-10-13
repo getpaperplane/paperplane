@@ -5101,7 +5101,9 @@ describe("agent browser access", () => {
   const projectId = ProjectId.make("project-browser-access");
 
   const startSessionWith = (
-    access: boolean | { readonly browser: boolean; readonly device: boolean },
+    access:
+      | boolean
+      | { readonly browser: boolean; readonly device: boolean; readonly richResponses?: boolean },
     threadId: ThreadId,
     projectOverride?: boolean | { readonly browser?: boolean; readonly device?: boolean },
     options?: { readonly withoutOrchestration?: boolean },
@@ -5109,6 +5111,8 @@ describe("agent browser access", () => {
     Effect.gen(function* () {
       const enableAgentBrowserAccess = typeof access === "boolean" ? access : access.browser;
       const enableAgentDeviceAccess = typeof access === "boolean" ? access : access.device;
+      // Off unless a test asks, so the browser and device cases read on their own.
+      const enableRichResponses = typeof access === "boolean" ? false : access.richResponses;
       const issued: Array<{ threadId: ThreadId; capabilities: ReadonlyArray<string> }> = [];
       const codex = makeFakeCodexAdapter();
       const providerAdapterLayer = Layer.succeed(
@@ -5187,6 +5191,7 @@ describe("agent browser access", () => {
           ServerSettings.ServerSettingsService.layerTest({
             enableAgentBrowserAccess,
             enableAgentDeviceAccess,
+            enableRichResponses: enableRichResponses ?? false,
             projectSettingsOverrides:
               projectOverride === undefined
                 ? {}
@@ -5249,6 +5254,21 @@ describe("agent browser access", () => {
       assert.deepEqual(issued, [
         { threadId, capabilities: ["device", "preview", "pull-requests"] },
       ]);
+    }).pipe(Effect.provide(NodeServices.layer)),
+  );
+
+  it.effect("grants rich responses from the environment setting", () =>
+    Effect.gen(function* () {
+      const on = asThreadId("thread-rich-responses-on");
+      assert.deepEqual(
+        yield* startSessionWith({ browser: false, device: false, richResponses: true }, on),
+        [{ threadId: on, capabilities: ["pull-requests", "rich-responses"] }],
+      );
+      const off = asThreadId("thread-rich-responses-off");
+      assert.deepEqual(
+        yield* startSessionWith({ browser: false, device: false, richResponses: false }, off),
+        [{ threadId: off, capabilities: ["pull-requests"] }],
+      );
     }).pipe(Effect.provide(NodeServices.layer)),
   );
 

@@ -17,6 +17,7 @@ The \`rove\` MCP server also exposes \`device_*\` tools for iOS Simulators and A
 export interface RoveToolAvailability {
   readonly browser: boolean;
   readonly device: boolean;
+  readonly richResponses?: boolean;
 }
 
 const normalizeAvailability = (
@@ -216,11 +217,12 @@ export function buildCodexAdditionalContext(
   toolsAvailable: boolean | RoveToolAvailability = true,
 ): Record<string, V2TurnStartParams__AdditionalContextEntry> {
   const tools = toolInstructions(toolsAvailable);
+  const { richResponses } = normalizeAvailability(toolsAvailable);
   // Separate keys keep each value under Codex's per-entry token cap.
   return {
     rove_runtime: {
       kind: "application",
-      value: buildRuntimeInstructions({ harness: "Codex", ...runtime }),
+      value: buildRuntimeInstructions({ harness: "Codex", ...runtime, richResponses }),
     },
     ...(tools ? { rove_tools: { kind: "application", value: tools } } : {}),
   };

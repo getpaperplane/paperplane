@@ -3,6 +3,10 @@
   "private": true,
   "type": "module",
   "exports": {
+    "./htmlRender": {
+      "types": "./src/htmlRender.ts",
+      "default": "./src/htmlRender.ts"
+    },
     "./richResponse": {
       "types": "./src/richResponse.ts",
       "default": "./src/richResponse.ts"

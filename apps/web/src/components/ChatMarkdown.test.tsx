@@ -208,7 +208,7 @@ describe("ChatMarkdown native rich responses", () => {
           );
         });
         expect(renderer!.root.findByProps({ role: "status" }).children).toEqual([
-          "Preparing rich response…",
+          "Preparing response…",
         ]);
         expect(renderer!.root.findAllByType("td")).toHaveLength(0);
         await act(async () => {

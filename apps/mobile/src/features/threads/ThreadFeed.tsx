@@ -781,7 +781,10 @@ interface MarkdownLinkHandlers {
 }
 
 const AssistantMarkdownContent = memo(function AssistantMarkdownContent(
-  props: ComponentProps<typeof AssistantMarkdownSegment> & { readonly isStreaming: boolean },
+  props: ComponentProps<typeof AssistantMarkdownSegment> & {
+    readonly isStreaming: boolean;
+    readonly environmentId: EnvironmentId;
+  },
 ) {
   const segments = useMemo(
     () => splitRichResponse(props.markdown, props.isStreaming),
@@ -795,6 +798,7 @@ const AssistantMarkdownContent = memo(function AssistantMarkdownContent(
             key={segment.sourceOffset}
             response={segment.response}
             textStyle={props.markdownStyles.nativeTextStyle}
+            environmentId={props.environmentId}
           />
         );
       case "pending":
@@ -804,7 +808,7 @@ const AssistantMarkdownContent = memo(function AssistantMarkdownContent(
             accessibilityRole="text"
             className="py-2 text-foreground-muted"
           >
-            Preparing rich response…
+            Preparing response…
           </Text>
         );
       case "markdown":
@@ -1706,6 +1710,7 @@ function renderFeedEntry(
             <AssistantMarkdownContent
               markdown={renderedText}
               isStreaming={Boolean(message.streaming)}
+              environmentId={props.environmentId}
               markdownStyles={styles}
               linkHandlers={props.markdownLinkHandlers}
               onUseArtifactTemplate={props.onUseArtifactTemplate}

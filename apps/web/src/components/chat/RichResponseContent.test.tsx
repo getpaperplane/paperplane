@@ -44,7 +44,9 @@ describe("native rich response choices", () => {
     });
     vi.stubGlobal("fetch", fetch);
     await act(async () => {
-      renderer = create(<RichResponseContent response={response} />);
+      renderer = create(
+        <RichResponseContent response={response} environmentId={null} threadRef={undefined} />,
+      );
     });
     await act(async () => {
       choice().onClick?.(
@@ -63,7 +65,9 @@ describe("native rich response choices", () => {
       .mockResolvedValue(undefined);
     vi.stubGlobal("navigator", { clipboard: { writeText } });
     await act(async () => {
-      renderer = create(<RichResponseContent response={response} />);
+      renderer = create(
+        <RichResponseContent response={response} environmentId={null} threadRef={undefined} />,
+      );
     });
     await act(async () => {
       choice().onClick?.(

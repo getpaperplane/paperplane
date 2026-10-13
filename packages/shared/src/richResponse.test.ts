@@ -3,6 +3,7 @@ import { MAX_RICH_RESPONSE_CHARS, type RichResponse } from "@rove-code/contracts
 import {
   encodeRichResponse,
   parseRichResponse,
+  richResponseHtmlAttachmentIds,
   richResponseTextFallback,
   splitRichResponse,
 } from "./richResponse.ts";
@@ -49,6 +50,10 @@ describe("rich responses", () => {
     { version: 2, blocks: response.blocks },
     { version: 1, blocks: [] },
     { version: 1, blocks: [{ type: "html", html: "<script>fetch('/api')</script>" }] },
+    {
+      version: 1,
+      blocks: [{ type: "html", attachmentId: "../secrets", title: "Escape", height: 200 }],
+    },
     { version: 1, blocks: [{ type: "text", text: "Safe", onClick: "run-command" }] },
     {
       version: 1,
@@ -164,6 +169,20 @@ describe("rich responses", () => {
     };
     expect(richResponseTextFallback(encodeRichResponse(plain))).toBe(
       "\\<script\\>alert(1)\\</script\\> \\*\\*not bold\\*\\*",
+    );
+  });
+
+  it("references stored pages by id and copies them as a titled placeholder", () => {
+    const attachmentId = "thread-1-0f8fad5b-d9cb-469f-a165-70867728950e-html";
+    const page: RichResponse = {
+      version: 1,
+      blocks: [{ type: "html", attachmentId, title: "Memory budget", height: 420 }],
+    };
+    const source = `Here:\n\n${encodeRichResponse(page)}\n\nDone.`;
+    expect(splitRichResponse(source)[1]).toMatchObject({ kind: "rich-response", response: page });
+    expect(richResponseHtmlAttachmentIds(source)).toEqual([attachmentId]);
+    expect(richResponseTextFallback(source)).toBe(
+      "Here:\n\n**Memory budget** (interactive page)\n\nDone.",
     );
   });
 });
