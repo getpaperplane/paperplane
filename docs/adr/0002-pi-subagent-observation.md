@@ -1,5 +1,7 @@
 # Pi subagents are observed through the processes and agents they start
 
+Status: superseded by [ADR 0003](0003-pi-subagents-are-rove-owned.md).
+
 Pi has no subagent API. Each subagent extension invents its own: some relaunch
 the Pi CLI, some start a detached runner that launches Pi later, some run an
 agent inside the parent process, some call a model directly, and some start

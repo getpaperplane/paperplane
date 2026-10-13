@@ -243,8 +243,6 @@
   "src/provider/Layers/OpenCodeAdapter.test.ts": 2.7,
   "src/provider/Layers/OpenCodeProvider.test.ts": 0.8,
   "src/provider/Layers/PiAdapter.test.ts": 1.8,
-  "src/provider/Layers/PiAgentObserver.test.ts": 2.3,
-  "src/provider/Layers/PiAgentRoster.test.ts": 0.5,
   "src/provider/Layers/PiCatalogHost.test.ts": 2.4,
   "src/provider/Layers/PiExtensionUI.test.ts": 1.3,
   "src/provider/Layers/PiLifecycle.test.ts": 0.3,

@@ -38,6 +38,7 @@ import {
   type ExtensionRuntime,
   type InlineExtension,
   type LoadExtensionsResult,
+  type ToolDefinition,
 } from "@earendil-works/pi-coding-agent";
 
 import type { ProviderUsageLimit } from "@rove-code/contracts";
@@ -57,6 +58,12 @@ import {
   type McpProviderSessionConfig,
 } from "../../mcp/McpProviderSession.ts";
 import { createPiRoveTools } from "./PiRoveTools.ts";
+import {
+  createPiSubagentTool,
+  PI_SUBAGENT_INSTRUCTIONS,
+  type PiAgentTaskDescriptor,
+  type PiSubagentSession,
+} from "./PiSubagents.ts";
 import type { PiWorkloads } from "./PiWorkloads.ts";
 import { createPiExtensionUI } from "./PiExtensionUI.ts";
 import { disposePiResource } from "./PiLifecycle.ts";
@@ -729,6 +736,8 @@ export interface CreatePiSessionServicesOptions {
   readonly extensionFactories?: ReadonlyArray<InlineExtension> | undefined;
   /** Whether the session's MCP credential grants `html_render`. */
   readonly richResponses?: boolean | undefined;
+  /** Replaces Rove's thread runtime instructions (subagents get their own). */
+  readonly runtimeInstructions?: string | undefined;
 }
 
 export async function createPiSessionServices(options: CreatePiSessionServicesOptions): Promise<
@@ -752,7 +761,8 @@ export async function createPiSessionServices(options: CreatePiSessionServicesOp
   const settingsManager = options.settingsManager ?? SettingsManager.create(cwd, agentDir);
   const disabledExtensions = options.disabledExtensions ?? [];
   const appendSystemPrompt = [
-    buildRuntimeInstructions({ harness: "Pi", richResponses: options.richResponses }),
+    options.runtimeInstructions ??
+      buildRuntimeInstructions({ harness: "Pi", richResponses: options.richResponses }),
     ...(disabledExtensions.length > 0 ? [disabledExtensionsPromptNote(disabledExtensions)] : []),
   ];
 
@@ -858,8 +868,10 @@ export async function createPiSession(
     compatibility?: PiUiCompatibility;
     /** Thread authorization passed over the isolated runtime's private IPC channel. */
     mcpProviderSession?: McpProviderSessionConfig | undefined;
-    /** Receives the session's agent so subagent observation can attribute its tool calls. */
-    observeAgent?: (agent: object) => void;
+    /** Receives the Agents rows of Rove subagents this thread session starts. */
+    onSubagentTask?: (task: PiAgentTaskDescriptor) => void;
+    /** Root for Rove subagent transcripts; unset keeps rows without transcripts. */
+    subagentTranscriptsRoot?: string | undefined;
   } = {},
 ): Promise<PiSessionLike> {
   const cwd = input.cwd;
@@ -996,13 +1008,35 @@ export async function createPiSession(
       | undefined;
 
   const roveTools = await createPiRoveTools(mcpProviderSession);
+  const workloadOwner = input.threadId ?? sessionManager.getSessionId();
+  const subagents =
+    input.subagents !== undefined &&
+    input.threadId !== undefined &&
+    options.onSubagentTask !== undefined &&
+    !options.textGeneration
+      ? createPiSubagentTool({
+          threadId: input.threadId,
+          transcriptsRoot: options.subagentTranscriptsRoot,
+          emit: options.onSubagentTask,
+          startSession: (parent) =>
+            startPiSubagentSession({
+              cwd,
+              agentDir,
+              modelRuntime,
+              model: input.subagents?.model,
+              parent,
+              tools: options.workloads?.tools(cwd, workloadOwner) ?? [],
+            }),
+        })
+      : undefined;
   const { session, modelFallbackMessage: sdkModelFallbackMessage } =
     await createAgentSessionFromServices({
       services,
       sessionManager,
       customTools: [
         ...roveTools.tools,
-        ...(options.workloads?.tools(cwd, input.threadId ?? sessionManager.getSessionId()) ?? []),
+        ...(options.workloads?.tools(cwd, workloadOwner) ?? []),
+        ...(subagents ? [subagents.tool] : []),
       ],
       ...(options.textGeneration ? { noTools: "all" as const } : {}),
       ...(resolved?.model !== undefined ? { model: resolved.model } : undefined),
@@ -1014,7 +1048,6 @@ export async function createPiSession(
       throw error;
     });
   usageLimits.observe(session.agent);
-  options.observeAgent?.(session.agent);
 
   // Collect every way the effective model/reasoning selection differs from the
   // requested one: fuzzy-match warnings, the SDK's restore fallback, and
@@ -1040,11 +1073,62 @@ export async function createPiSession(
     startupErrors,
     modelFallbackMessage.length > 0 ? modelFallbackMessage : undefined,
     async () => {
-      await options.workloads?.disposeOwner(input.threadId ?? sessionManager.getSessionId());
+      await subagents?.dispose();
+      await options.workloads?.disposeOwner(workloadOwner);
       await roveTools.dispose();
     },
     input.interactive === true && !options.textGeneration,
     options.compatibility,
     usageLimits.take,
   );
+}
+
+/**
+ * A subagent is a fresh, extension-free session in the same workspace: it gets
+ * the standard tools and project context, but no extension tools, so it cannot
+ * start further agents. It runs on the configured subagent model, or the
+ * caller's current model.
+ */
+async function startPiSubagentSession(options: {
+  readonly cwd: string;
+  readonly agentDir: string;
+  readonly modelRuntime: ModelRuntime;
+  readonly model: string | undefined;
+  readonly parent: { readonly model: unknown; readonly thinkingLevel: string | undefined };
+  readonly tools: ToolDefinition[];
+}): Promise<{ session: PiSubagentSession; model: string | undefined }> {
+  const settingsManager = SettingsManager.create(options.cwd, options.agentDir);
+  settingsManager.setProjectTrusted(true);
+  const services = await createPiSessionServices({
+    cwd: options.cwd,
+    agentDir: options.agentDir,
+    settingsManager,
+    modelRuntime: options.modelRuntime,
+    noExtensions: true,
+    runtimeInstructions: PI_SUBAGENT_INSTRUCTIONS,
+  });
+  let model = options.parent.model as AgentSession["model"];
+  if (options.model) {
+    const resolved = resolveCliModel({
+      cliModel: options.model,
+      modelRuntime: options.modelRuntime,
+    });
+    if (resolved.error !== undefined || resolved.model === undefined)
+      throw new Error(resolved.error ?? `Unknown subagent model "${options.model}".`);
+    model = resolved.model;
+  }
+  const { session } = await createAgentSessionFromServices({
+    services,
+    sessionManager: SessionManager.inMemory(options.cwd),
+    customTools: options.tools,
+    ...(model !== undefined ? { model } : undefined),
+    ...(options.parent.thinkingLevel !== undefined
+      ? // SAFETY: The parent session reports a Pi thinking level; the SDK clamps it to the model.
+        { thinkingLevel: options.parent.thinkingLevel as PiThinkingLevel }
+      : undefined),
+  });
+  return {
+    session,
+    model: session.model ? `${session.model.provider}/${session.model.id}` : undefined,
+  };
 }
