@@ -27,6 +27,11 @@ working after the original files move. On web and desktop, the expand button
 opens a page in the side panel, where you can view its source or save it.
 Copying a reply copies the page's title in its place.
 
+The agent writes each page as code, so a reply with a page uses more tokens than
+a text reply, typically one to a few thousand more. The page also stays in the
+thread's context for later turns. Agents only build pages when a visual helps,
+but if you track usage closely, ask for text or turn the feature off.
+
 To get plain Markdown replies, as before interactive pages, turn off
 **Settings > General > Interactive responses** (on mobile, **Thread behavior**).
 Agent sessions pick up the change when they next start; agents already running

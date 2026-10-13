@@ -65,7 +65,7 @@ function ResponseFormatSettingsRow() {
       <SettingsSwitchRow
         icon="text.bubble"
         label="Interactive responses"
-        subtitle="Let agents answer with interactive pages such as charts, galleries, and videos. Off keeps replies in plain Markdown. Applies when an agent session next starts."
+        subtitle="Let agents answer with interactive pages such as charts, galleries, and videos. Each page uses more tokens than a text reply. Off keeps replies in plain Markdown. Applies when an agent session next starts."
         value={
           targets[0]?.serverConfig?.settings.enableRichResponses ??
           DEFAULT_SERVER_SETTINGS.enableRichResponses

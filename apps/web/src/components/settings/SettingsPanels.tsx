@@ -2496,7 +2496,7 @@ export function GeneralSettingsPanel() {
           {...searchableSetting("interactive-responses")}
           description={
             settings.enableRichResponses
-              ? "Agents can answer with interactive pages such as charts, galleries, and videos. Applies when an agent session next starts."
+              ? "Agents can answer with interactive pages such as charts, galleries, and videos. Each page uses more tokens than a text reply. Applies when an agent session next starts."
               : "Agents answer in plain Markdown, as before interactive pages. Applies when an agent session next starts."
           }
           resetAction={
