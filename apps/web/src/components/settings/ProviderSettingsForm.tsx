@@ -446,48 +446,78 @@ function PiThinkingSettingsField({
 }: ProviderSettingsFieldRowProps & { models?: ReadonlyArray<ServerProviderModel> | undefined }) {
   const { options, selected, unavailable } = resolvePiThinkingSetting(value, models);
   const id = `${idPrefix}-${field.key}`;
+  const triggerLabel =
+    selected === ""
+      ? "Use Pi default"
+      : unavailable
+        ? `${selected} (unavailable)`
+        : (options.find((option) => option.id === selected)?.label ?? selected);
+  const hint =
+    options.length === 0
+      ? "Reasoning choices are available once the selected model is in this provider's catalog."
+      : unavailable
+        ? "The saved override is not supported by this model. Choose a supported level or use Pi default."
+        : "Choices follow the selected model. Use Pi default to clear the override.";
+
+  const select = (
+    <Select
+      value={selected}
+      onValueChange={(next) => {
+        if (next !== null && (next === "" || options.some((option) => option.id === next))) {
+          onChange(nextProviderConfigWithFieldValue(value, field, next));
+        }
+      }}
+    >
+      <SelectTrigger
+        id={id}
+        size="sm"
+        className={
+          variant === "settings"
+            ? "w-full max-w-full @min-[32rem]/settings-row:w-56"
+            : variant === "card"
+              ? "mt-1.5 w-full"
+              : "w-full"
+        }
+        aria-label={field.label}
+      >
+        <SelectValue>{triggerLabel}</SelectValue>
+      </SelectTrigger>
+      <SelectPopup align="start" alignItemWithTrigger={false}>
+        <SelectItem value="">Use Pi default</SelectItem>
+        {unavailable ? (
+          <SelectItem value={selected} disabled>
+            {selected} (unavailable)
+          </SelectItem>
+        ) : null}
+        {options.map((option) => (
+          <SelectItem key={option.id} value={option.id}>
+            {option.label}
+          </SelectItem>
+        ))}
+      </SelectPopup>
+    </Select>
+  );
+
+  if (variant === "settings") {
+    return (
+      <SettingsRow
+        title={<label htmlFor={id}>{field.label}</label>}
+        description={<span>{hint}</span>}
+        control={select}
+      />
+    );
+  }
+
   return (
     <FieldFrame variant={variant}>
       <label htmlFor={id} className="text-xs font-medium text-foreground">
         {field.label}
       </label>
-      <Select
-        value={selected}
-        onValueChange={(next) => {
-          if (next !== null && (next === "" || options.some((option) => option.id === next))) {
-            onChange(nextProviderConfigWithFieldValue(value, field, next));
-          }
-        }}
+      {select}
+      <p
+        className={cn("mt-1 text-muted-foreground", variant === "dialog" ? "text-2xs" : "text-xs")}
       >
-        <SelectTrigger id={id} className="mt-1.5 w-full">
-          <SelectValue>
-            {selected === ""
-              ? "Use Pi default"
-              : unavailable
-                ? `${selected} (unavailable)`
-                : options.find((option) => option.id === selected)?.label}
-          </SelectValue>
-        </SelectTrigger>
-        <SelectPopup>
-          <SelectItem value="">Use Pi default</SelectItem>
-          {unavailable ? (
-            <SelectItem value={selected} disabled>
-              {selected} (unavailable)
-            </SelectItem>
-          ) : null}
-          {options.map((option) => (
-            <SelectItem key={option.id} value={option.id}>
-              {option.label}
-            </SelectItem>
-          ))}
-        </SelectPopup>
-      </Select>
-      <p className="mt-1 text-xs text-muted-foreground">
-        {options.length === 0
-          ? "Reasoning choices are available once the selected model is in this provider's catalog."
-          : unavailable
-            ? "The saved override is not supported by this model. Choose a supported level or use Pi default."
-            : "Choices follow the selected model. Use Pi default to clear the override."}
+        {hint}
       </p>
     </FieldFrame>
   );
