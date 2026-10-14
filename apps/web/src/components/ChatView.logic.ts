@@ -398,7 +398,10 @@ export function resolveThreadSwitchTimeline<T extends readonly unknown[]>(input:
 
 export function resolveDraftPromotionNavigationTarget(input: {
   serverThreadRef: ScopedThreadRef | null;
-  serverThread: Pick<Thread, "latestTurn" | "session" | "messages"> | null | undefined;
+  serverThread:
+    | Pick<Thread, "latestTurn" | "session" | "messages" | "activities">
+    | null
+    | undefined;
   backgroundSubmissionPending: boolean;
 }): ScopedThreadRef | null {
   if (input.backgroundSubmissionPending) {
@@ -414,7 +417,12 @@ export function resolveDraftPromotionNavigationTarget(input: {
   // its startup error.
   const messagePersisted =
     input.serverThread?.messages.some((message) => message.role === "user") ?? false;
-  return turnStarted || startupStopped || messagePersisted ? input.serverThreadRef : null;
+  const potetoStarted = input.serverThread?.activities.some(
+    (activity) => activity.kind === "poteto.requested",
+  );
+  return turnStarted || startupStopped || messagePersisted || potetoStarted
+    ? input.serverThreadRef
+    : null;
 }
 
 export function scheduleEnvironmentReconnectWarning(showWarning: () => void): () => void {
@@ -989,7 +997,11 @@ export function recallCheckoutIsRepo(
 
 export function threadHasStarted(thread: Thread | null | undefined): boolean {
   return Boolean(
-    thread && (thread.latestTurn !== null || thread.messages.length > 0 || thread.session !== null),
+    thread &&
+    (thread.latestTurn !== null ||
+      thread.messages.length > 0 ||
+      thread.session !== null ||
+      thread.activities.some((activity) => activity.kind === "poteto.requested")),
   );
 }
 

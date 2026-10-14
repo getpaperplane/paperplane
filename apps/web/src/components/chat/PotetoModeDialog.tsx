@@ -40,6 +40,7 @@ export function PotetoModeDialog(props: {
   readonly enabled: boolean;
   readonly onOpenChange: (open: boolean) => void;
   readonly getModelSelection: () => ModelSelection | null;
+  readonly onBeforeDraft: (model: ModelSelection) => Promise<AtomCommandResult<void, unknown>>;
   readonly onBeforeStart: (model: ModelSelection) => Promise<AtomCommandResult<void, unknown>>;
 }) {
   const [description, setDescription] = useState("");
@@ -62,6 +63,12 @@ export function PotetoModeDialog(props: {
         const modelSelection = props.getModelSelection();
         if (!modelSelection) {
           setError("Select a Pi model in the composer first.");
+          return;
+        }
+        // A new conversation has only a local draft until Poteto needs its workspace.
+        const prepared = await props.onBeforeDraft(modelSelection);
+        if (prepared._tag === "Failure") {
+          if (!isAtomCommandInterrupted(prepared)) throw squashAtomCommandFailure(prepared);
           return;
         }
         const result = await draftPoteto({

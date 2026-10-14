@@ -11,7 +11,10 @@ import { feedbackBannerItem } from "./chat/ComposerFeedback";
 import { usageLimitsBannerItem } from "./chat/ComposerUsageLimits";
 import { derivePendingRequests } from "@rove-code/client-runtime/pending-requests";
 import { latestPiExtensionStatuses } from "@rove-code/client-runtime/pi-extension-status";
-import { deriveThreadPotetoView } from "@rove-code/client-runtime/poteto";
+import {
+  deriveThreadPotetoView,
+  resolvePotetoDraftWorkspace,
+} from "@rove-code/client-runtime/poteto";
 import {
   questionAttachmentDraftId,
   questionAttachmentDraftPrefix,
@@ -368,6 +371,7 @@ import { useProjectClone } from "../state/projectClones";
 import { projectCloneDisplayName, projectCloneProgressSummary } from "@rove-code/contracts";
 import { useEnvironments, usePrimaryEnvironment } from "../state/environments";
 import {
+  readThreadShell,
   useProject,
   useProjects,
   useThread,
@@ -5444,22 +5448,23 @@ export default function ChatView(props: ChatViewProps) {
   );
   const persistModelForPoteto = useCallback(
     async (modelSelection: ModelSelection): Promise<AtomCommandResult<void, unknown>> => {
-      if (!serverThread) return AsyncResult.success(undefined);
+      const thread = readThreadShell(scopeThreadRef(environmentId, threadId));
+      if (!thread) return AsyncResult.failure(Cause.fail(new Error("Thread not found.")));
       const metadataUpdate = resolveThreadMetadataUpdateForNextTurn({
-        currentModelSelection: serverThread.modelSelection,
+        currentModelSelection: thread.modelSelection,
         nextModelSelection: modelSelection,
-        currentBranch: serverThread.branch,
+        currentBranch: thread.branch,
       });
       if (!metadataUpdate) return AsyncResult.success(undefined);
       return mapAtomCommandResult(
         await updateThreadMetadata({
           environmentId,
-          input: { threadId: serverThread.id, ...metadataUpdate },
+          input: { threadId: thread.id, ...metadataUpdate },
         }),
         () => undefined,
       );
     },
-    [environmentId, serverThread, updateThreadMetadata],
+    [environmentId, threadId, updateThreadMetadata],
   );
 
   // Debounce *showing* the scroll-to-bottom pill so it doesn't flash during
@@ -6058,6 +6063,62 @@ export default function ChatView(props: ChatViewProps) {
           })
         : null,
     [activeThreadBranch, activeWorktreePath, envMode, gitStatusQuery.data?.refName, isServerThread],
+  );
+  const prepareThreadForPoteto = useCallback(
+    async (modelSelection: ModelSelection): Promise<AtomCommandResult<void, unknown>> => {
+      // Draft and thread share a reserved id. Retries must reuse an already-created thread.
+      if (readThreadShell(scopeThreadRef(environmentId, threadId))) {
+        return AsyncResult.success(undefined);
+      }
+      if (!activeThread || !activeProject) {
+        return AsyncResult.failure(Cause.fail(new Error("Select a project first.")));
+      }
+      const workspace = resolvePotetoDraftWorkspace({
+        workspaceMode: envMode,
+        branch: activeThreadBranch,
+        currentBranch: gitStatusQuery.data?.refName ?? null,
+        worktreePath: activeWorktreePath,
+      });
+      if (!workspace.valid) {
+        return AsyncResult.failure(Cause.fail(new Error(workspace.reason)));
+      }
+      if (draftHandoff) {
+        return AsyncResult.failure(
+          Cause.fail(new Error("Finish the thread transfer before starting Poteto Mode.")),
+        );
+      }
+      return mapAtomCommandResult(
+        await createThread({
+          environmentId,
+          input: {
+            threadId,
+            projectId: activeProject.id,
+            title: "Poteto Mode",
+            modelSelection,
+            runtimeMode,
+            interactionMode,
+            branch: workspace.branch,
+            worktreePath: workspace.worktreePath,
+            createdAt: activeThread.createdAt,
+          },
+        }),
+        () => undefined,
+      );
+    },
+    [
+      activeThread,
+      activeProject,
+      environmentId,
+      threadId,
+      envMode,
+      activeThreadBranch,
+      activeWorktreePath,
+      gitStatusQuery.data?.refName,
+      draftHandoff,
+      createThread,
+      runtimeMode,
+      interactionMode,
+    ],
   );
   const activeComposerTasksProgress = useMemo(() => {
     if (!activeLatestTurn || latestTurnSettled || activePlan?.turnId !== activeLatestTurn.turnId) {
@@ -10086,11 +10147,12 @@ export default function ChatView(props: ChatViewProps) {
               : { onOpenPullRequest: openProjectPullRequest })}
             activeThreadEnvironmentId={activeThread.environmentId}
             activeThreadId={activeThread.id}
+            onBeforeDraftPoteto={prepareThreadForPoteto}
             onBeforeStartPoteto={persistModelForPoteto}
             getPotetoModelSelection={getModelForPoteto}
             supportsPotetoMode={
-              isServerThread &&
               selectedProviderEntry?.driverKind === "pi" &&
+              multipleModelSelections === null &&
               activeEnvironmentConnectionPhase === "connected" &&
               !potetoActive &&
               serverConfig?.environment.capabilities.potetoMode === true &&

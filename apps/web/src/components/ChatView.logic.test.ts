@@ -64,6 +64,7 @@ import {
   resolveProactiveTurnDiffAction,
   resolveThreadMetadataUpdateForNextTurn,
   resolveSendEnvMode,
+  threadHasStarted,
   threadShellHasStarted,
   resolveDraftHeroState,
   isPaintOnlyThreadTimeline,
@@ -934,6 +935,37 @@ describe("draft promotion during worktree setup", () => {
         backgroundSubmissionPending: false,
       }),
     ).toEqual(serverThreadRef);
+  });
+
+  it("promotes and finalizes a Poteto run without any chat prompt or provider session", () => {
+    const serverThread = makeThread({
+      activities: [
+        {
+          id: EventId.make("poteto-started"),
+          kind: "poteto.requested",
+          tone: "info",
+          summary: "Poteto Mode requested",
+          createdAt: now,
+          turnId: null,
+          payload: {},
+        },
+      ],
+    });
+    expect(threadHasStarted(serverThread)).toBe(true);
+    expect(
+      resolveDraftPromotionNavigationTarget({
+        serverThreadRef,
+        serverThread,
+        backgroundSubmissionPending: false,
+      }),
+    ).toEqual(serverThreadRef);
+    expect(
+      resolveDraftPromotionNavigationTarget({
+        serverThreadRef,
+        serverThread,
+        backgroundSubmissionPending: true,
+      }),
+    ).toBeNull();
   });
 
   it("promotes when the provider starts the first turn", () => {
