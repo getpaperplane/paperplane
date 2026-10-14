@@ -143,7 +143,7 @@ Background text generation, including thread titles, does not load extensions or
 
 ## Subagents
 
-Pi has no built-in subagents, so Rove gives Pi threads a `rove_subagent` tool. The thread agent decides when to delegate a self-contained task, and can start several at once. Enabling subagents does not make every task delegate; explicitly asking the agent to use subagents can encourage it. Each subagent works in the same project with Pi's standard tools and project context, but loads no extensions, so it cannot start further subagents. When it finishes, its final report goes back to the thread agent.
+Pi has no built-in subagents, so Rove gives Pi threads a `rove_subagent` tool. The thread agent decides when to delegate a self-contained task, and can start several at once. Enabling subagents does not make every task delegate; explicitly asking the agent to use subagents can encourage it. Each subagent works in the same project with Pi's standard tools and project context, but loads no extensions, so it cannot start further subagents. When it finishes, its final report goes back to the thread agent. If a subagent is stopped or fails, the thread agent instead gets its last message and the files it changed, so asking it to continue picks up from there instead of starting over.
 
 Open a subagent in **Agents** to see its task, each step with its output, token use, and the result. Stopping the thread stops its subagents.
 

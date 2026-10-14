@@ -247,6 +247,48 @@ describe("createPiSubagentTool", () => {
     expect(tasks.at(-1)?.payload).toMatchObject({ status: "stopped" });
   });
 
+  it("tells the parent what a stopped child already did", async () => {
+    const session = fakeChild();
+    const subscribe = session.subscribe.bind(session);
+    session.subscribe = (listener) => {
+      const unsubscribe = subscribe(listener);
+      listener({
+        type: "message_end",
+        message: { role: "assistant", content: [{ type: "text", text: "Wired the reducer." }] },
+      });
+      listener({
+        type: "tool_execution_start",
+        toolCallId: "t1",
+        toolName: "edit",
+        args: { path: "src/reducer.ts" },
+      });
+      listener({ type: "tool_execution_end", toolCallId: "t1" });
+      listener({
+        type: "tool_execution_start",
+        toolCallId: "t2",
+        toolName: "write",
+        args: { path: "src/rejected.ts" },
+      });
+      listener({ type: "tool_execution_end", toolCallId: "t2", isError: true });
+      return unsubscribe;
+    };
+    const { tasks, subagents } = setup(session);
+    const running = subagents.tool.execute(
+      "call-1",
+      { prompt: "work" },
+      undefined,
+      undefined,
+      context,
+    );
+    await vi.waitFor(() => expect(tasks[0]?.type).toBe("task.started"));
+    await subagents.dispose();
+    const error = await running.catch((cause: Error) => cause.message);
+    expect(error).toContain("Subagent was stopped.");
+    expect(error).toContain("Wired the reducer.");
+    expect(error).toContain("- src/reducer.ts");
+    expect(error).not.toContain("src/rejected.ts");
+  });
+
   it("fails the tool call with the child's error", async () => {
     const { tasks, subagents } = setup(fakeChild("model unavailable"));
     await expect(
