@@ -71,7 +71,7 @@ function terminalProgress(run: ThreadPotetoRun, error: unknown): PotetoProgress 
   };
 }
 
-export const make = Effect.gen(function* () {
+const make = Effect.gen(function* () {
   const engine = yield* OrchestrationEngineService;
   const snapshots = yield* ProjectionSnapshotQuery;
   const runner = yield* ThreadPotetoRunner;

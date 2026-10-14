@@ -3,10 +3,8 @@ import * as NodeFSP from "node:fs/promises";
 import * as NodeOS from "node:os";
 import * as NodePath from "node:path";
 import { runPotetoCommand } from "./PotetoProjectRunner.ts";
-import {
-  validatePotetoDraft,
-  type PotetoDraftRequest,
-} from "../../provider/Layers/PiPotetoDraft.ts";
+import { validatePotetoDraft } from "./PotetoDraftValidation.ts";
+import type { PotetoDraftRequest } from "../../provider/Layers/PiPotetoDraft.ts";
 import type { PotetoDraftResult } from "@rove-code/contracts";
 
 /** Pins HEAD once; reads only regular committed JS/TS blobs, never dirty files or symlinks. */

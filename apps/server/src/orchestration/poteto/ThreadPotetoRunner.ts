@@ -82,7 +82,7 @@ export function recoverThreadPotetoCandidate(
 }
 
 /** All control state is in the main event log; only pinned snapshots/check output/patches live here. */
-export const make = Effect.gen(function* () {
+const make = Effect.gen(function* () {
   const { stateDir } = yield* ServerConfig;
   const instances = yield* ProviderInstanceRegistry;
   const context = yield* Effect.context<ProviderInstanceRegistry>();

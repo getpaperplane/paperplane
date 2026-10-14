@@ -5,7 +5,7 @@ import * as NodePath from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 import { runPotetoCommand } from "./PotetoProjectRunner.ts";
 import { draftPotetoProject, selectPotetoDraftSnapshot } from "./PotetoDraftSnapshot.ts";
-import { validatePotetoDraft } from "../../provider/Layers/PiPotetoDraft.ts";
+import { validatePotetoDraft } from "./PotetoDraftValidation.ts";
 
 const spec = {
   task: "Fix inclusive boundary",

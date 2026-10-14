@@ -10,7 +10,7 @@ import {
 } from "@earendil-works/pi-coding-agent";
 import { PotetoDraftResult, type PiThinkingLevel } from "@rove-code/contracts";
 import * as Schema from "effect/Schema";
-import { validatePotetoProjectSpec } from "../../orchestration/poteto/PotetoProjectRunner.ts";
+import { validatePotetoDraft } from "../../orchestration/poteto/PotetoDraftValidation.ts";
 
 export interface PotetoDraftRequest {
   readonly description: string;
@@ -18,25 +18,8 @@ export interface PotetoDraftRequest {
   readonly signal: AbortSignal;
 }
 
-const decodeDraft = Schema.decodeUnknownSync(PotetoDraftResult);
 const decodeRead = Schema.decodeUnknownSync(Schema.Struct({ path: Schema.String }));
 const decodeSubmit = Schema.decodeUnknownSync(Schema.Struct({ result: Schema.Unknown }));
-
-/** Revalidates both model output and its file references; no invented scope can escape. */
-export function validatePotetoDraft(
-  value: unknown,
-  files: PotetoDraftRequest["files"],
-): PotetoDraftResult {
-  const result = decodeDraft(value);
-  if (result.status === "unsupported") return result;
-  const spec = validatePotetoProjectSpec(result.spec);
-  const available = new Set(files.map((file) => file.path));
-  for (const path of [...spec.editableFiles, ...spec.contextFiles, spec.check.module]) {
-    if (!available.has(path))
-      throw new Error("Draft references a file outside the committed snapshot.");
-  }
-  return { status: "draft", spec };
-}
 
 /** Only reads an in-memory committed snapshot and submits a proposal. Never runs checks. */
 export async function runPiPotetoDraft(

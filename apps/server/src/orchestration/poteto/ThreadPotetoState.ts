@@ -37,7 +37,7 @@ const decodeRecord = Schema.decodeUnknownOption(PotetoRecordPayload);
 
 export const MAX_POTETO_CORE_EVENTS = 64;
 // Also bound retries that fail before producing any core events.
-export const MAX_POTETO_ATTEMPTS = 16;
+const MAX_POTETO_ATTEMPTS = 16;
 
 export interface ThreadPotetoRun {
   readonly runId: CommandId;

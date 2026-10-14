@@ -15,7 +15,7 @@ export const POTETO_PHASES = [
   "verify",
   "review",
 ] as const;
-export const POTETO_VERSION = "bug-fix-prototype-v2";
+const POTETO_VERSION = "bug-fix-prototype-v2";
 const Phase = Schema.Literals(POTETO_PHASES);
 export type PotetoPhase = typeof Phase.Type;
 const Text = Schema.String.check(Schema.isNonEmpty(), Schema.isMaxLength(4096));

@@ -106,7 +106,7 @@ export async function runPotetoCommand(
 
 // No expected outputs or pass/fail authority enter the candidate process.
 // The host compares the returned JSON values, not a candidate-authored test verdict.
-export const POTETO_SUBJECT_PROGRAM = `import fs from "node:fs";
+const POTETO_SUBJECT_PROGRAM = `import fs from "node:fs";
 import { pathToFileURL } from "node:url";
 import { isDeepStrictEqual } from "node:util";
 const input = JSON.parse(fs.readFileSync(0, "utf8"));

@@ -4,7 +4,7 @@ import type { PotetoRole } from "../../orchestration/poteto/PotetoMode.ts";
 import { registerPotetoFixtureModel } from "./potetoFixture.ts";
 
 /** Known edit for testing the included pilot's plumbing, never a generic coding agent. */
-export const POTETO_PILOT_SCRIPTED_EDIT = {
+const POTETO_PILOT_SCRIPTED_EDIT = {
   path: "packages/shared/src/String.ts",
   oldText: "  return `${trimmed.slice(0, maxLength)}...`;",
   newText:

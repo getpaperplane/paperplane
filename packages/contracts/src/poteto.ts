@@ -29,7 +29,7 @@ export const PotetoDraftResult = Schema.Union([
 ]);
 export type PotetoDraftResult = typeof PotetoDraftResult.Type;
 
-export const POTETO_PHASES = [
+const POTETO_PHASES = [
   "reproduce",
   "investigate",
   "design",
