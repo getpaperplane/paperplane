@@ -95,6 +95,10 @@ export interface ProviderInstance {
   >;
   readonly adapter: ProviderAdapterContract<ProviderAdapterError>;
   readonly textGeneration: TextGeneration.TextGeneration["Service"];
+  readonly potetoDraft?: (
+    options: { cwd: string; agentDir: string; model: string },
+    request: import("./Layers/PiPotetoDraft.ts").PotetoDraftRequest,
+  ) => Promise<import("@rove-code/contracts").PotetoDraftResult>;
   readonly potetoWorker?: (
     options: { cwd: string; agentDir: string; model: string },
     request: PotetoWorkerRequest,

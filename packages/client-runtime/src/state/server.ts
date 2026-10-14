@@ -1093,6 +1093,14 @@ export function createServerEnvironmentAtoms<R, E>(
         key: ({ environmentId, input }) => JSON.stringify([environmentId, input]),
       },
     }),
+    potetoDraft: createEnvironmentRpcCommand(runtime, {
+      label: "environment-data:server:poteto-draft",
+      tag: WS_METHODS.potetoDraft,
+      concurrency: {
+        mode: "singleFlight",
+        key: ({ environmentId, input }) => JSON.stringify([environmentId, input.threadId]),
+      },
+    }),
     piCatalog: createEnvironmentRpcQueryAtomFamily(runtime, {
       label: "environment-data:server:pi-catalog",
       tag: WS_METHODS.piGetCatalog,

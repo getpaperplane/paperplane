@@ -1,5 +1,6 @@
 import {
   type EnvironmentId,
+  type ModelSelection,
   type EditorId,
   type ProjectScript,
   type ProviderInstanceId,
@@ -81,7 +82,8 @@ interface ChatHeaderProps {
   rightPanelOpen: boolean;
   supportsPotetoMode: boolean;
   /** Saves state Poteto reads from the thread (for example, the picker's model) before starting. */
-  onBeforeStartPoteto: () => Promise<AtomCommandResult<void, unknown>>;
+  onBeforeStartPoteto: (model: ModelSelection) => Promise<AtomCommandResult<void, unknown>>;
+  getPotetoModelSelection: () => ModelSelection | null;
   /** Pi instance bound to this thread, or null. Drives the header catalog button. */
   piCatalogInstanceId: ProviderInstanceId | null;
   gitCwd: string | null;
@@ -155,6 +157,7 @@ export const ChatHeader = memo(function ChatHeader({
   rightPanelOpen,
   supportsPotetoMode,
   onBeforeStartPoteto,
+  getPotetoModelSelection,
   piCatalogInstanceId,
   gitCwd,
   onOpenPullRequest,
@@ -577,6 +580,8 @@ export const ChatHeader = memo(function ChatHeader({
         </Menu>
       </div>
       <PotetoModeDialog
+        key={`${activeThreadEnvironmentId}:${activeThreadId}`}
+        getModelSelection={getPotetoModelSelection}
         environmentId={activeThreadEnvironmentId}
         threadId={activeThreadId}
         open={potetoDialogOpen}

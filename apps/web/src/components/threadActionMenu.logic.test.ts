@@ -63,7 +63,7 @@ describe("buildThreadActionMenuItems", () => {
         ...baseState,
         supports: { ...baseState.supports, potetoMode: true },
       }).find((item) => item.id === "poteto-mode"),
-    ).toMatchObject({ label: "Poteto Mode", icon: "sparkles" });
+    ).toMatchObject({ label: "Poteto Mode", icon: "potato" });
   });
 
   it("omits project settings for standalone threads", () => {

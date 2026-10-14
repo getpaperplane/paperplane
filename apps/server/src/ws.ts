@@ -131,6 +131,9 @@ import * as ProviderSessionDirectory from "./provider/Services/ProviderSessionDi
 import * as ProviderMaintenanceRunner from "./provider/providerMaintenanceRunner.ts";
 import { ProviderAuthService } from "./provider/Services/ProviderAuthService.ts";
 import { ProviderInstanceRegistry } from "./provider/Services/ProviderInstanceRegistry.ts";
+import { draftPotetoProject } from "./orchestration/poteto/PotetoDraftSnapshot.ts";
+import { getModelSelectionStringOptionValue } from "@rove-code/shared/model";
+import { PI_THINKING_DESCRIPTOR_ID } from "./provider/Layers/PiProvider.ts";
 import { makeProviderInstallation } from "./provider/providerInstallation.ts";
 import * as ServerSelfUpdate from "./cloud/selfUpdate.ts";
 import * as ServerLifecycleEvents from "./serverLifecycleEvents.ts";
@@ -2673,6 +2676,67 @@ const makeWsRpcLayer = (
                     cause,
                   }),
               ),
+            ),
+            { "rpc.aggregate": "provider" },
+          ),
+        [WS_METHODS.potetoDraft]: (input) =>
+          observeRpcEffect(
+            WS_METHODS.potetoDraft,
+            Effect.gen(function* () {
+              const instance = yield* providerInstances.getInstance(
+                input.modelSelection.instanceId,
+              );
+              if (!instance?.enabled || !instance.potetoDraft)
+                return {
+                  status: "unsupported" as const,
+                  reason:
+                    "This provider does not support restricted Poteto drafting. Select an enabled Pi instance.",
+                };
+              const thread = yield* projectionSnapshotQuery.getThreadShellById(input.threadId);
+              if (Option.isNone(thread))
+                return { status: "unsupported" as const, reason: "Thread not found." };
+              if (thread.value.modelSelection.instanceId !== input.modelSelection.instanceId)
+                return {
+                  status: "unsupported" as const,
+                  reason:
+                    "Select a model from this thread’s Pi instance, or start a new Pi thread.",
+                };
+              let workspace = thread.value.worktreePath ?? thread.value.workspacePath;
+              if (!workspace && thread.value.projectId) {
+                const project = yield* projectionSnapshotQuery.getProjectShellById(
+                  thread.value.projectId,
+                );
+                if (Option.isSome(project)) workspace = project.value.workspaceRoot;
+              }
+              if (!workspace)
+                return {
+                  status: "unsupported" as const,
+                  reason: "This thread has no committed workspace.",
+                };
+              const draft = instance.potetoDraft;
+              const thinking = getModelSelectionStringOptionValue(
+                input.modelSelection,
+                PI_THINKING_DESCRIPTOR_ID,
+              );
+              const model = thinking
+                ? `${input.modelSelection.model}:${thinking}`
+                : input.modelSelection.model;
+              return yield* Effect.tryPromise({
+                try: (signal) =>
+                  draftPotetoProject({
+                    workspace,
+                    description: input.description,
+                    model,
+                    signal,
+                    draft,
+                  }),
+                catch: () => ({ status: "unsupported" as const, reason: "Draft unavailable." }),
+              });
+            }).pipe(
+              Effect.orElseSucceed(() => ({
+                status: "unsupported" as const,
+                reason: "Unable to resolve drafting context.",
+              })),
             ),
             { "rpc.aggregate": "provider" },
           ),

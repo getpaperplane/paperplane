@@ -20,6 +20,15 @@ export const PotetoProjectSpec = Schema.Struct({
 });
 export type PotetoProjectSpec = typeof PotetoProjectSpec.Type;
 
+export const PotetoDraftResult = Schema.Union([
+  Schema.Struct({ status: Schema.Literal("draft"), spec: PotetoProjectSpec }),
+  Schema.Struct({
+    status: Schema.Literal("unsupported"),
+    reason: Schema.String.check(Schema.isNonEmpty(), Schema.isMaxLength(4096)),
+  }),
+]);
+export type PotetoDraftResult = typeof PotetoDraftResult.Type;
+
 export const POTETO_PHASES = [
   "reproduce",
   "investigate",

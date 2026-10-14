@@ -153,7 +153,7 @@ export function buildThreadActionMenuItems(
         ]
       : []),
     ...(state.supports.potetoMode
-      ? [{ id: "poteto-mode" as const, label: "Poteto Mode", icon: "sparkles" }]
+      ? [{ id: "poteto-mode" as const, label: "Poteto Mode", icon: "potato" }]
       : []),
     { id: "mark-unread", label: "Mark unread", icon: "mail-open" },
     ...(state.projectFilter

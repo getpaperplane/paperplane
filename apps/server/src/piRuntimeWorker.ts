@@ -5,6 +5,7 @@ import {
   createPiPotetoWorker,
   resolvePiPotetoThinkingLevel,
 } from "./provider/Layers/PiPotetoWorker.ts";
+import { runPiPotetoDraft } from "./provider/Layers/PiPotetoDraft.ts";
 import type { PotetoWorkerResult } from "./orchestration/poteto/PotetoMode.ts";
 import { PiCatalogHost } from "./provider/Layers/PiCatalogHost.ts";
 import { createPiSession } from "./provider/Layers/PiSessionFactory.ts";
@@ -93,7 +94,10 @@ export async function runPiRuntimeWorker(): Promise<void> {
   const initializing = new Set<Promise<unknown>>();
   const potetoWorkers = new Map<
     number,
-    { controller: AbortController; drain: Promise<PotetoWorkerResult> }
+    {
+      controller: AbortController;
+      drain: Promise<PotetoWorkerResult | import("@rove-code/contracts").PotetoDraftResult>;
+    }
   >();
   const post = (message: PiRuntimeMessage) => {
     if (!process.connected) return;
@@ -153,6 +157,29 @@ export async function runPiRuntimeWorker(): Promise<void> {
         return getHost().getCatalogModels(...request.args);
       case "discover":
         return getHost().discover(...request.args);
+      case "potetoDraft": {
+        const [key, options, serialized] = request.args;
+        const controller = new AbortController();
+        const drain = runPiPotetoDraft(
+          {
+            ...options,
+            modelRuntime: getHost().getModelRuntime(),
+            thinkingLevel: resolvePiPotetoThinkingLevel(
+              getHost().getModelRuntime(),
+              options.model,
+              SettingsManager.create(options.cwd, getAgentDir()),
+              options.thinkingLevel,
+            ),
+          },
+          { ...serialized, signal: controller.signal },
+        );
+        potetoWorkers.set(key, { controller, drain });
+        try {
+          return await drain;
+        } finally {
+          potetoWorkers.delete(key);
+        }
+      }
       case "potetoWorker": {
         const [key, options, serialized] = request.args;
         const controller = new AbortController();

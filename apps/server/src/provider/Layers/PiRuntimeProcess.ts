@@ -41,6 +41,7 @@ const NON_FATAL_METHODS: ReadonlySet<keyof PiRuntimeCalls> = new Set<keyof PiRun
   "respondToUserInput",
   "fork",
   "discover",
+  "potetoDraft",
   "potetoWorker",
   "potetoAbort",
 ]);
@@ -51,7 +52,8 @@ const NON_FATAL_METHODS: ReadonlySet<keyof PiRuntimeCalls> = new Set<keyof PiRun
  */
 function requestTimeoutMs(method: keyof PiRuntimeCalls): number | undefined {
   if (method === "shutdown" || method === "compact") return undefined;
-  if (method === "potetoWorker" || method === "potetoAbort") return 70_000;
+  if (method === "potetoDraft" || method === "potetoWorker" || method === "potetoAbort")
+    return 70_000;
   return method === "dispose" || method === "abort" ? 4_000 : 60_000;
 }
 
@@ -237,16 +239,21 @@ export class PiRuntimeProcess {
               if (!NON_FATAL_METHODS.has(method)) return this.fail(error);
               // The reply is the drain acknowledgement. Keep both the IPC entry and
               // caller pending so a retry cannot overlap still-running inference.
-              if (method === "potetoWorker" || method === "potetoAbort") {
+              if (
+                method === "potetoDraft" ||
+                method === "potetoWorker" ||
+                method === "potetoAbort"
+              ) {
                 const pending = this.pending.get(id);
                 if (pending) pending.timeoutError = error;
               } else this.pending.delete(id);
-              if (method === "potetoWorker") {
+              if (method === "potetoDraft" || method === "potetoWorker") {
                 // SAFETY: potetoWorker's typed IPC tuple always starts with its numeric phase key.
                 const key = args[0] as number;
                 void this.request("potetoAbort", [key]).catch(() => {});
               }
-              if (method !== "potetoWorker" && method !== "potetoAbort") reject(error);
+              if (method !== "potetoDraft" && method !== "potetoWorker" && method !== "potetoAbort")
+                reject(error);
               this.notifyIfIdle();
             }, timeout);
       timer?.unref();
@@ -256,7 +263,7 @@ export class PiRuntimeProcess {
         reject: (error) => {
           if (
             this.failure &&
-            (method === "potetoWorker" || method === "potetoAbort") &&
+            (method === "potetoDraft" || method === "potetoWorker" || method === "potetoAbort") &&
             this.child.exitCode === null &&
             this.child.signalCode === null
           ) {
@@ -276,6 +283,32 @@ export class PiRuntimeProcess {
         this.fail(error instanceof Error ? error : new Error(String(error)));
       }
     });
+  }
+
+  async runPotetoDraft(
+    options: {
+      cwd: string;
+      agentDir: string;
+      model: string;
+      thinkingLevel?: PiThinkingLevel | undefined;
+    },
+    request: import("./PiPotetoDraft.ts").PotetoDraftRequest,
+  ): Promise<import("@rove-code/contracts").PotetoDraftResult> {
+    request.signal.throwIfAborted();
+    const key = ++this.nextId;
+    const { signal, ...serialized } = request;
+    const operation = this.request("potetoDraft", [key, options, serialized]);
+    const abort = () => {
+      void this.request("potetoAbort", [key]).catch(() => {});
+    };
+    signal.addEventListener("abort", abort, { once: true });
+    try {
+      const result = await operation;
+      signal.throwIfAborted();
+      return result;
+    } finally {
+      signal.removeEventListener("abort", abort);
+    }
   }
 
   async runPotetoWorker(

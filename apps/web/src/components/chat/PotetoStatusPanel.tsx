@@ -14,14 +14,9 @@ import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { toastManager } from "../ui/toast";
 
-const PHASE_LABELS = {
-  reproduce: "Reproduce",
-  investigate: "Investigate",
-  design: "Design",
-  implement: "Implement",
-  verify: "Verify",
-  review: "Review",
-} as const;
+import { PotatoIcon } from "../icons/PotatoIcon";
+import { useCopyToClipboard } from "~/hooks/useCopyToClipboard";
+import { derivePotetoStatus, POTETO_PHASE_COPY } from "./potetoStatus.logic";
 
 const STATUS_VARIANTS = {
   requested: "secondary",
@@ -42,16 +37,23 @@ export function PotetoStatusPanel(props: {
   const { progress, artifacts } = props;
   const [controlling, setControlling] = useState(false);
   const controlPoteto = useAtomCommand(threadEnvironment.controlPoteto, { reportFailure: false });
+  const [stopRequested, setStopRequested] = useState<string | null>(null);
+  const { copyToClipboard } = useCopyToClipboard({
+    target: "candidate patch",
+    onCopy: () => toastManager.add({ type: "success", title: "Patch copied" }),
+    onError: () => toastManager.add({ type: "error", title: "Could not copy patch" }),
+  });
   if (!progress) return null;
 
-  const active = progress.status === "requested" || progress.status === "running";
-  const retryable =
-    !props.pending &&
-    (progress.status === "blocked" ||
-      progress.status === "interrupted" ||
-      progress.status === "cancelled");
-  const statusLabel = progress.status === "candidate-ready" ? "Candidate ready" : progress.status;
-  const phaseLabel = progress.phase ? PHASE_LABELS[progress.phase] : active ? "Preparing" : "";
+  const view = derivePotetoStatus(progress, props.pending);
+  const stopping = props.pending && (view.stopping || stopRequested === progress.attemptId);
+  const { active, retryable } = view;
+  const statusLabel = stopping ? "Stopping…" : view.label;
+  const phaseLabel = progress.phase
+    ? POTETO_PHASE_COPY[progress.phase].label
+    : active
+      ? "Preparing"
+      : "";
   const patch = progress.status === "candidate-ready" ? progress.patch : undefined;
   const patchPreview =
     patch && patch.length > 24_000 ? `${patch.slice(0, 24_000)}\n… patch preview truncated` : patch;
@@ -64,6 +66,7 @@ export function PotetoStatusPanel(props: {
       input: { threadId: props.threadId, runId: progress.runId, action },
     });
     setControlling(false);
+    if (action === "cancel" && result._tag === "Success") setStopRequested(progress.attemptId);
     if (result._tag === "Failure" && !isAtomCommandInterrupted(result)) {
       const error = squashAtomCommandFailure(result);
       toastManager.add({
@@ -81,6 +84,7 @@ export function PotetoStatusPanel(props: {
     >
       <div className="max-h-[45dvh] overflow-y-auto rounded-xl border border-border bg-card/72 px-3 py-2.5">
         <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+          <PotatoIcon width={18} height={18} />
           <span className="text-sm font-medium">Poteto Mode</span>
           <Badge variant={STATUS_VARIANTS[progress.status]} size="sm">
             {statusLabel}
@@ -91,7 +95,7 @@ export function PotetoStatusPanel(props: {
               <Button
                 size="xs"
                 variant="outline"
-                disabled={controlling}
+                disabled={controlling || stopping}
                 onClick={() => void handleControl("cancel")}
               >
                 Stop
@@ -109,24 +113,52 @@ export function PotetoStatusPanel(props: {
             ) : null}
           </span>
         </div>
+        <p className="mt-2 text-sm text-muted-foreground" role="status">
+          {stopping
+            ? "Stopping safely; waiting for current work to finish. Retry is unavailable until it drains."
+            : view.action}
+        </p>
+        <ol aria-label="Poteto phases" className="mt-2 grid grid-cols-3 gap-1.5 sm:grid-cols-6">
+          {view.phases.map(({ phase, state }, index) => (
+            <li
+              key={phase}
+              aria-current={state === "current" ? "step" : undefined}
+              className={`rounded-md border px-2 py-1.5 text-xs ${state === "current" ? "border-primary bg-primary/10 text-foreground" : "border-border text-muted-foreground"}`}
+            >
+              <span className="block">
+                {index + 1}. {POTETO_PHASE_COPY[phase].label}
+              </span>
+              <span className="block text-3xs">
+                {state === "complete"
+                  ? "Complete"
+                  : state === "current"
+                    ? "Current phase"
+                    : "Phase"}
+              </span>
+            </li>
+          ))}
+        </ol>
         {progress.reason ? (
           <p className="mt-1 text-sm text-warning-foreground">{progress.reason}</p>
         ) : null}
         {progress.baseCommit || progress.revision ? (
-          <div className="mt-1 grid gap-x-3 gap-y-0.5 text-xs text-muted-foreground sm:grid-cols-2">
-            {progress.baseCommit ? (
-              <div className="min-w-0">
-                <span>Base </span>
-                <code className="break-all text-foreground/80">{progress.baseCommit}</code>
-              </div>
-            ) : null}
-            {progress.revision ? (
-              <div className="min-w-0">
-                <span>Revision </span>
-                <code className="break-all text-foreground/80">{progress.revision}</code>
-              </div>
-            ) : null}
-          </div>
+          <details className="mt-2 text-xs text-muted-foreground">
+            <summary className="cursor-pointer">Technical details</summary>
+            <div className="mt-1 grid gap-x-3 gap-y-0.5 sm:grid-cols-2">
+              {progress.baseCommit ? (
+                <div className="min-w-0">
+                  <span>Base </span>
+                  <code className="break-all text-foreground/80">{progress.baseCommit}</code>
+                </div>
+              ) : null}
+              {progress.revision ? (
+                <div className="min-w-0">
+                  <span>Revision </span>
+                  <code className="break-all text-foreground/80">{progress.revision}</code>
+                </div>
+              ) : null}
+            </div>
+          </details>
         ) : null}
         {artifacts.length > 0 ? (
           <details className="group/poteto-artifacts mt-2 border-t border-border/70 pt-1.5">
@@ -137,16 +169,31 @@ export function PotetoStatusPanel(props: {
               {artifacts.map((entry) => (
                 <li key={entry.id} className="min-w-0 rounded-lg bg-muted/48 px-2.5 py-2">
                   <div className="text-xs font-medium text-foreground">
-                    {entry.phase ? PHASE_LABELS[entry.phase] : "Poteto report"}
+                    {entry.phase ? POTETO_PHASE_COPY[entry.phase].label : "Poteto report"}
                   </div>
                   {potetoArtifactPreview(entry.artifact) ? (
-                    <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
-                      {potetoArtifactPreview(entry.artifact)}
+                    <p className="mt-1 whitespace-pre-wrap text-xs leading-relaxed text-muted-foreground">
+                      {entry.phase === "reproduce" &&
+                      potetoArtifactPreview(entry.artifact) === "fail"
+                        ? "Bug reproduced: the original code failed the checks."
+                        : entry.phase === "verify" &&
+                            potetoArtifactPreview(entry.artifact) === "pass"
+                          ? "The candidate passed the checks."
+                          : potetoArtifactPreview(entry.artifact)}
                     </p>
-                  ) : null}
-                  <pre className="mt-1 max-h-40 overflow-auto whitespace-pre-wrap break-words text-xs text-muted-foreground">
-                    {JSON.stringify(entry.artifact, null, 2)}
-                  </pre>
+                  ) : (
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Evidence recorded for this phase. Expand the technical report for details.
+                    </p>
+                  )}
+                  <details className="mt-1">
+                    <summary className="cursor-pointer text-xs text-muted-foreground">
+                      Technical report (JSON)
+                    </summary>
+                    <pre className="mt-1 max-h-40 overflow-auto whitespace-pre-wrap break-words text-xs text-muted-foreground">
+                      {JSON.stringify(entry.artifact, null, 2)}
+                    </pre>
+                  </details>
                 </li>
               ))}
             </ol>
@@ -154,17 +201,44 @@ export function PotetoStatusPanel(props: {
         ) : null}
         {progress.status === "candidate-ready" ? (
           patchPreview ? (
-            <details className="mt-2 border-t border-border/70 pt-1.5">
-              <summary className="cursor-pointer text-xs font-medium text-muted-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
-                View candidate patch
-              </summary>
-              <pre className="mt-2 max-h-80 overflow-auto rounded-lg bg-muted/48 p-2.5 font-mono text-xs text-foreground">
-                {patchPreview}
-              </pre>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Reviewed candidate only. This patch has not been applied.
-              </p>
-            </details>
+            <div className="mt-2">
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  size="xs"
+                  variant="outline"
+                  onClick={() => void copyToClipboard(patch ?? "", undefined)}
+                >
+                  Copy patch
+                </Button>
+                <Button
+                  size="xs"
+                  variant="outline"
+                  onClick={() => {
+                    const url = URL.createObjectURL(
+                      new Blob([patch ?? ""], { type: "text/plain" }),
+                    );
+                    const link = document.createElement("a");
+                    link.href = url;
+                    link.download = "poteto-candidate.patch";
+                    link.click();
+                    setTimeout(() => URL.revokeObjectURL(url), 1000);
+                  }}
+                >
+                  Download patch
+                </Button>
+              </div>
+              <details className="mt-2 border-t border-border/70 pt-1.5">
+                <summary className="cursor-pointer text-xs font-medium text-muted-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
+                  View candidate patch
+                </summary>
+                <pre className="mt-2 max-h-80 overflow-auto rounded-lg bg-muted/48 p-2.5 font-mono text-xs text-foreground">
+                  {patchPreview}
+                </pre>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Reviewed candidate only. This patch has not been applied.
+                </p>
+              </details>
+            </div>
           ) : (
             <p className="mt-2 text-xs text-muted-foreground">
               No patch was attached to this candidate.

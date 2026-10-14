@@ -5438,23 +5438,29 @@ export default function ChatView(props: ChatViewProps) {
   );
 
   // Poteto runs with the thread's saved model; persist the visible picker choice first.
-  const persistModelForPoteto = useCallback(async (): Promise<AtomCommandResult<void, unknown>> => {
-    const modelSelection = composerRef.current?.getSendContext().selectedModelSelection;
-    if (!serverThread || !modelSelection) return AsyncResult.success(undefined);
-    const metadataUpdate = resolveThreadMetadataUpdateForNextTurn({
-      currentModelSelection: serverThread.modelSelection,
-      nextModelSelection: modelSelection,
-      currentBranch: serverThread.branch,
-    });
-    if (!metadataUpdate) return AsyncResult.success(undefined);
-    return mapAtomCommandResult(
-      await updateThreadMetadata({
-        environmentId,
-        input: { threadId: serverThread.id, ...metadataUpdate },
-      }),
-      () => undefined,
-    );
-  }, [environmentId, serverThread, updateThreadMetadata]);
+  const getModelForPoteto = useCallback(
+    () => composerRef.current?.getSendContext().selectedModelSelection ?? null,
+    [],
+  );
+  const persistModelForPoteto = useCallback(
+    async (modelSelection: ModelSelection): Promise<AtomCommandResult<void, unknown>> => {
+      if (!serverThread) return AsyncResult.success(undefined);
+      const metadataUpdate = resolveThreadMetadataUpdateForNextTurn({
+        currentModelSelection: serverThread.modelSelection,
+        nextModelSelection: modelSelection,
+        currentBranch: serverThread.branch,
+      });
+      if (!metadataUpdate) return AsyncResult.success(undefined);
+      return mapAtomCommandResult(
+        await updateThreadMetadata({
+          environmentId,
+          input: { threadId: serverThread.id, ...metadataUpdate },
+        }),
+        () => undefined,
+      );
+    },
+    [environmentId, serverThread, updateThreadMetadata],
+  );
 
   // Debounce *showing* the scroll-to-bottom pill so it doesn't flash during
   // thread switches. LegendList fires scroll events with isAtEnd=false while
@@ -10081,12 +10087,14 @@ export default function ChatView(props: ChatViewProps) {
             activeThreadEnvironmentId={activeThread.environmentId}
             activeThreadId={activeThread.id}
             onBeforeStartPoteto={persistModelForPoteto}
+            getPotetoModelSelection={getModelForPoteto}
             supportsPotetoMode={
               isServerThread &&
               selectedProviderEntry?.driverKind === "pi" &&
               activeEnvironmentConnectionPhase === "connected" &&
               !potetoActive &&
-              serverConfig?.environment.capabilities.potetoMode === true
+              serverConfig?.environment.capabilities.potetoMode === true &&
+              serverConfig?.environment.capabilities.potetoDraft === true
             }
             {...(routeKind === "draft" && draftId ? { draftId } : {})}
             activeThreadTitle={activeThread.title}

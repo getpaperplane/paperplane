@@ -54,6 +54,19 @@ export type PiRuntimeCalls = SessionCalls &
       result: void;
     };
     prompt: { args: [key: number, text: string, options: PiPromptOptions]; result: void };
+    potetoDraft: {
+      args: [
+        key: number,
+        options: {
+          cwd: string;
+          agentDir: string;
+          model: string;
+          thinkingLevel?: PiThinkingLevel | undefined;
+        },
+        request: Omit<import("./PiPotetoDraft.ts").PotetoDraftRequest, "signal">,
+      ];
+      result: import("@rove-code/contracts").PotetoDraftResult;
+    };
     potetoWorker: {
       args: [
         key: number,

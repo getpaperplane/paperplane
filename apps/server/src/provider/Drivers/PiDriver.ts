@@ -317,6 +317,13 @@ export const PiDriver: ProviderDriver<PiSettings, PiDriverEnv> = {
           }),
         adapter,
         textGeneration,
+        potetoDraft: (options, request) =>
+          getCatalogHost().then((host) =>
+            host.runPotetoDraft(
+              { ...options, thinkingLevel: effectiveConfig.thinkingLevel ?? undefined },
+              request,
+            ),
+          ),
         potetoWorker: (options, request) =>
           getCatalogHost().then((host) =>
             host.runPotetoWorker(

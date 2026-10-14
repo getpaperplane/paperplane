@@ -181,6 +181,8 @@ export const ExecutionEnvironmentCapabilities = Schema.Struct({
   threadPullRequests: Schema.optionalKey(Schema.Boolean),
   /** Native, enforced Pi-only candidate-validation pilot. Missing means unsupported. */
   potetoMode: Schema.optionalKey(Schema.Boolean),
+  /** Restricted, user-invoked spec drafting before explicit Poteto start approval. */
+  potetoDraft: Schema.optionalKey(Schema.Boolean),
   pullRequestStackActions: Schema.optionalKey(Schema.Boolean),
   /** The update path clients should offer for this server. Absent on
       servers that must be relaunched manually (dev checkouts, Windows
