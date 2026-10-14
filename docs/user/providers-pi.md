@@ -12,7 +12,7 @@ Tools run through the connected Rove server, including when you control a thread
 
 ## Poteto Mode (pilot)
 
-In an idle Pi thread on web or desktop, choose **Poteto Mode** from the thread actions and describe the bug and expected behavior. Include a file path or function name when you know it. Your selected Pi model reads a bounded committed snapshot and proposes the files it may change and example checks. Drafting uses model calls, but cannot run code or edit files. Review the proposal, refine the description if needed, then explicitly approve it to start.
+You can start **Poteto Mode** before sending your first prompt. On web or desktop, use the Poteto shortcut in a new Pi draft, or choose it from an idle thread's actions, then describe the bug and expected behavior. On mobile, choose Poteto Mode in a new Pi task or an idle Pi thread and provide a project spec. Select Local or an existing worktree first; Poteto does not create worktrees or switch branches. Include a file path or function name when you know it. Your selected Pi model reads a bounded committed snapshot and proposes the files it may change and example checks. Drafting uses model calls, but cannot run code or edit files. Review the proposal, refine the description if needed, then explicitly approve it to start.
 
 Rove enforces reproduction, investigation, competing designs, implementation, verification, and an independent review. The approved model, scope, and checks stay fixed throughout the run. Phase results and blockers remain in the thread across reconnects. Unstarted proposals are temporary; reloads do not resume drafting automatically.
 

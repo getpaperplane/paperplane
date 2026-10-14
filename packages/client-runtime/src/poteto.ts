@@ -8,6 +8,33 @@ import {
   type PotetoProjectSpec,
 } from "@rove-code/contracts";
 
+/** Empty thread creation records a checkout; it cannot create or switch one. */
+export function resolvePotetoDraftWorkspace(input: {
+  readonly workspaceMode: "local" | "worktree";
+  readonly branch: string | null;
+  readonly currentBranch: string | null;
+  readonly worktreePath: string | null;
+}) {
+  if (input.workspaceMode === "worktree" && !input.worktreePath) {
+    return {
+      valid: false as const,
+      reason: "Poteto Mode needs an existing checkout. Choose Local or an existing worktree first.",
+    };
+  }
+  if (!input.worktreePath && input.branch && input.branch !== input.currentBranch) {
+    return {
+      valid: false as const,
+      reason:
+        "Check out the selected branch first, or choose the current branch. Poteto Mode runs from committed HEAD without switching branches.",
+    };
+  }
+  return {
+    valid: true as const,
+    branch: input.worktreePath ? input.branch : input.currentBranch,
+    worktreePath: input.worktreePath,
+  };
+}
+
 export type PotetoProjectSpecValidation =
   | { readonly valid: true; readonly spec: PotetoProjectSpec }
   | { readonly valid: false; readonly errors: ReadonlyArray<string> };

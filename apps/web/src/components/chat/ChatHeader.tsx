@@ -54,6 +54,7 @@ import {
 import { cn } from "~/lib/utils";
 import { ProviderExtensions } from "./ProviderExtensions";
 import { PotetoModeDialog } from "./PotetoModeDialog";
+import { PotatoIcon } from "../icons/PotatoIcon";
 import { useProviderResources } from "../../lib/useProviderResources";
 import { useEnvironmentSettings, useUpdateEnvironmentSettings } from "~/hooks/useSettings";
 import {
@@ -81,6 +82,8 @@ interface ChatHeaderProps {
   availableEditors: ReadonlyArray<EditorId>;
   rightPanelOpen: boolean;
   supportsPotetoMode: boolean;
+  /** Creates a server thread for a local draft before resolving its workspace. */
+  onBeforeDraftPoteto: (model: ModelSelection) => Promise<AtomCommandResult<void, unknown>>;
   /** Saves state Poteto reads from the thread (for example, the picker's model) before starting. */
   onBeforeStartPoteto: (model: ModelSelection) => Promise<AtomCommandResult<void, unknown>>;
   getPotetoModelSelection: () => ModelSelection | null;
@@ -156,6 +159,7 @@ export const ChatHeader = memo(function ChatHeader({
   availableEditors,
   rightPanelOpen,
   supportsPotetoMode,
+  onBeforeDraftPoteto,
   onBeforeStartPoteto,
   getPotetoModelSelection,
   piCatalogInstanceId,
@@ -546,6 +550,24 @@ export const ChatHeader = memo(function ChatHeader({
           "[[data-panel-animations=true]_&]:motion-safe:transition-[padding-right] [[data-panel-animations=true]_&]:motion-safe:duration-(--panel-animation-duration) [[data-panel-animations=true]_&]:motion-safe:ease-out",
         )}
       >
+        {/* Drafts have no thread action menu yet. Keep Poteto reachable before a prompt. */}
+        {!isServerThread && supportsPotetoMode && (
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Button
+                  size="icon-sm"
+                  variant="ghost"
+                  aria-label="Start Poteto Mode"
+                  onClick={openPotetoDialog}
+                />
+              }
+            >
+              <PotatoIcon />
+            </TooltipTrigger>
+            <TooltipPopup>Start Poteto Mode</TooltipPopup>
+          </Tooltip>
+        )}
         {/* Pi extensions open their own popover, so they stay out of the collapsible menu. */}
         {piCatalogInstanceId !== null && (
           <ProviderExtensions
@@ -585,8 +607,9 @@ export const ChatHeader = memo(function ChatHeader({
         environmentId={activeThreadEnvironmentId}
         threadId={activeThreadId}
         open={potetoDialogOpen}
-        enabled={supportsPotetoMode && isServerThread}
+        enabled={supportsPotetoMode}
         onOpenChange={setPotetoDialogOpen}
+        onBeforeDraft={onBeforeDraftPoteto}
         onBeforeStart={onBeforeStartPoteto}
       />
     </div>

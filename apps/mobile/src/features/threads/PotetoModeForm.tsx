@@ -19,9 +19,12 @@ export function PotetoModeForm(props: {
   const start = async () => {
     if (!validation.valid || submitting) return;
     setSubmitting(true);
-    const started = await props.onStart(validation.spec);
-    setSubmitting(false);
-    if (started) props.onClose();
+    try {
+      const started = await props.onStart(validation.spec);
+      if (started) props.onClose();
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -29,7 +32,9 @@ export function PotetoModeForm(props: {
       visible={props.visible}
       animationType="none"
       presentationStyle="pageSheet"
-      onRequestClose={props.onClose}
+      onRequestClose={() => {
+        if (!submitting) props.onClose();
+      }}
     >
       <KeyboardAvoidingView
         className="flex-1 bg-sheet"

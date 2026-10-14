@@ -1,6 +1,7 @@
 import { act, cloneElement, createElement, type ReactElement, type ReactNode } from "react";
 import { create, type ReactTestRenderer } from "react-test-renderer";
 import { AsyncResult } from "effect/unstable/reactivity";
+import * as Cause from "effect/Cause";
 import type { EnvironmentId, ModelSelection, ThreadId } from "@rove-code/contracts";
 import { afterEach, beforeEach, expect, it, vi } from "vite-plus/test";
 
@@ -34,6 +35,7 @@ const spec = {
 };
 let renderer: ReactTestRenderer;
 let model: ModelSelection;
+const prepareDraft = vi.fn();
 const prepare = vi.fn();
 const close = vi.fn();
 
@@ -42,6 +44,7 @@ beforeEach(async () => {
   vi.clearAllMocks();
   commands.draft.mockResolvedValue(AsyncResult.success({ status: "draft", spec }));
   commands.start.mockResolvedValue(AsyncResult.success(undefined));
+  prepareDraft.mockResolvedValue(AsyncResult.success(undefined));
   prepare.mockResolvedValue(AsyncResult.success(undefined));
   await act(async () => {
     renderer = create(
@@ -51,6 +54,7 @@ beforeEach(async () => {
         open
         enabled
         getModelSelection={() => model}
+        onBeforeDraft={prepareDraft}
         onBeforeStart={prepare}
         onOpenChange={close}
       />,
@@ -100,6 +104,54 @@ it("makes drafting non-executing and waits for explicit approval with the frozen
     input: { threadId: "thread", spec },
   });
   expect(close).toHaveBeenCalledWith(false);
+});
+
+it("creates the empty thread before drafting, without starting a normal prompt", async () => {
+  let release: (() => void) | undefined;
+  prepareDraft.mockImplementation(
+    () =>
+      new Promise((resolve) => {
+        release = () => resolve(AsyncResult.success(undefined));
+      }),
+  );
+  await describe();
+  let finishing: Promise<void> | undefined;
+  await act(async () => {
+    finishing = submit();
+  });
+  expect(prepareDraft).toHaveBeenCalledWith(firstModel);
+  expect(commands.draft).not.toHaveBeenCalled();
+  expect(commands.start).not.toHaveBeenCalled();
+  await act(async () => {
+    release?.();
+    await finishing;
+  });
+  expect(commands.draft).toHaveBeenCalledWith({
+    environmentId: "env",
+    input: {
+      threadId: "thread",
+      description: "text.ts adds too many dots",
+      modelSelection: firstModel,
+    },
+  });
+  expect(commands.start).not.toHaveBeenCalled();
+});
+
+it("keeps the description retryable when empty-thread creation fails", async () => {
+  prepareDraft.mockResolvedValue(AsyncResult.failure(Cause.fail(new Error("Choose Local first."))));
+  await describe();
+  await act(async () => {
+    await submit();
+  });
+  expect(JSON.stringify(renderer.toJSON())).toContain("Choose Local first.");
+  expect(renderer.root.findByType("textarea").props.value).toBe("text.ts adds too many dots");
+  expect(commands.draft).not.toHaveBeenCalled();
+  expect(commands.start).not.toHaveBeenCalled();
+  prepareDraft.mockResolvedValue(AsyncResult.success(undefined));
+  await act(async () => {
+    await submit();
+  });
+  expect(commands.draft).toHaveBeenCalledTimes(1);
 });
 
 it("retains the description on unsupported drafts and never exposes approval", async () => {
