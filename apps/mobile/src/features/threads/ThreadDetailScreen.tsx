@@ -21,6 +21,7 @@ import type {
   ModelSelection,
   OrchestrationThreadShell,
   PiExtensionStatusSnapshot,
+  PotetoProgress,
   ProviderApprovalDecision,
   ProviderInteractionMode,
   RuntimeMode,
@@ -118,6 +119,8 @@ import type { ThreadContentPresentation } from "./threadContentPresentation";
 import { resolveThreadFeedSubmissionAnchor } from "./thread-feed-live-follow";
 
 import { ThreadContinuationControl } from "./ThreadContinuation";
+import { PotetoStatusPanel } from "./PotetoStatusPanel";
+import type { PotetoActivityArtifact } from "@rove-code/client-runtime/poteto";
 
 export interface ThreadDetailScreenProps {
   readonly worktreeSetup?: WorktreeSetupCardProps | null;
@@ -131,6 +134,9 @@ export interface ThreadDetailScreenProps {
   readonly onDismissFeedback: (id: MessageId) => void;
   readonly selectedThreadFeed: ReadonlyArray<ThreadFeedEntry>;
   readonly piExtensionStatuses: PiExtensionStatusSnapshot["statuses"];
+  readonly potetoPending: boolean;
+  readonly potetoProgress: PotetoProgress | null;
+  readonly potetoArtifacts: ReadonlyArray<PotetoActivityArtifact>;
   readonly activeWorkStartedAt: string | null;
   readonly isCompacting: boolean;
   /**
@@ -786,6 +792,7 @@ export const ThreadDetailScreen = memo(function ThreadDetailScreen(props: Thread
   ]);
 
   const handleSendMessage = useCallback(async () => {
+    if (props.potetoPending) return null;
     const targetThreadKey = selectedThreadKey;
     const hasUserMessage = selectedThreadFeed.some(
       (entry) => entry.type === "message" && entry.message.role === "user",
@@ -814,6 +821,7 @@ export const ThreadDetailScreen = memo(function ThreadDetailScreen(props: Thread
     anchorMessageId,
     clearUsageLimitsFor,
     props.onSendMessage,
+    props.potetoPending,
     props.selectedThread.latestTurn,
     props.selectedThreadQueueCount,
     selectedThreadFeed,
@@ -899,6 +907,15 @@ export const ThreadDetailScreen = memo(function ThreadDetailScreen(props: Thread
 
   return (
     <View className="flex-1">
+      {props.potetoProgress ? (
+        <PotetoStatusPanel
+          environmentId={props.environmentId}
+          threadId={props.selectedThread.id}
+          progress={props.potetoProgress}
+          artifacts={props.potetoArtifacts}
+          pending={props.potetoPending}
+        />
+      ) : null}
       {showContent ? (
         <View
           style={{ flex: 1 }}
@@ -1110,7 +1127,11 @@ export const ThreadDetailScreen = memo(function ThreadDetailScreen(props: Thread
                   // them against a thread id the server may still reject
                   // would strand them in the outbox.
                   sendBlockedReason={
-                    props.creationState?.kind === "preparing" ? "Starting the task…" : null
+                    props.potetoPending
+                      ? "Poteto Mode is active"
+                      : props.creationState?.kind === "preparing"
+                        ? "Starting the task…"
+                        : null
                   }
                   bottomInset={composerBottomInset}
                   onChangeDraftMessage={props.onChangeDraftMessage}

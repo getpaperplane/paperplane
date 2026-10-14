@@ -1,6 +1,7 @@
 // @effect-diagnostics nodeBuiltinImport:off
-// @effect-diagnostics globalTimers:off - Parent-owned deadlines must also terminate a blocked SDK process.
+// @effect-diagnostics globalTimers:off - Parent-owned IPC deadlines.
 // @effect-diagnostics globalDate:off - LazyPiRuntime idle deadlines live outside the Effect runtime.
+import type { PiThinkingLevel } from "@rove-code/contracts";
 import * as NodeChildProcess from "node:child_process";
 import * as NodeURL from "node:url";
 import * as NodeSea from "node:sea";
@@ -9,6 +10,10 @@ import {
   resolvePiWorkloadMemory,
   type PiWorkloadConfig,
 } from "../../diagnostics/PiWorkloadPolicy.ts";
+import type {
+  PotetoWorkerRequest,
+  PotetoWorkerResult,
+} from "../../orchestration/poteto/PotetoMode.ts";
 import type { PiCatalogHostOptions } from "./PiCatalogHost.ts";
 import {
   PiExtensionLoadError,
@@ -36,6 +41,9 @@ const NON_FATAL_METHODS: ReadonlySet<keyof PiRuntimeCalls> = new Set<keyof PiRun
   "respondToUserInput",
   "fork",
   "discover",
+  "potetoDraft",
+  "potetoWorker",
+  "potetoAbort",
 ]);
 
 /**
@@ -44,6 +52,8 @@ const NON_FATAL_METHODS: ReadonlySet<keyof PiRuntimeCalls> = new Set<keyof PiRun
  */
 function requestTimeoutMs(method: keyof PiRuntimeCalls): number | undefined {
   if (method === "shutdown" || method === "compact") return undefined;
+  if (method === "potetoDraft" || method === "potetoWorker" || method === "potetoAbort")
+    return 70_000;
   return method === "dispose" || method === "abort" ? 4_000 : 60_000;
 }
 
@@ -56,6 +66,7 @@ export class PiRuntimeProcess {
       reject: (error: Error) => void;
       preflight?: ((success: boolean) => void) | undefined;
       clearDeadline: () => void;
+      timeoutError?: Error;
     }
   >();
   private readonly sessions = new Map<number, RemotePiSession>();
@@ -164,7 +175,9 @@ export class PiRuntimeProcess {
         if (!pending) return;
         this.pending.delete(message.id);
         pending.clearDeadline();
-        if (message.error) {
+        if (pending.timeoutError) {
+          pending.reject(pending.timeoutError);
+        } else if (message.error) {
           pending.reject(
             message.error.failedExtensionPaths
               ? new PiExtensionLoadError(message.error.message, message.error.failedExtensionPaths)
@@ -224,15 +237,41 @@ export class PiRuntimeProcess {
                   : `Pi instance ${method} timed out. Disable and re-enable this Pi instance to continue.`,
               );
               if (!NON_FATAL_METHODS.has(method)) return this.fail(error);
-              this.pending.delete(id);
-              reject(error);
+              // The reply is the drain acknowledgement. Keep both the IPC entry and
+              // caller pending so a retry cannot overlap still-running inference.
+              if (
+                method === "potetoDraft" ||
+                method === "potetoWorker" ||
+                method === "potetoAbort"
+              ) {
+                const pending = this.pending.get(id);
+                if (pending) pending.timeoutError = error;
+              } else this.pending.delete(id);
+              if (method === "potetoDraft" || method === "potetoWorker") {
+                // SAFETY: potetoWorker's typed IPC tuple always starts with its numeric phase key.
+                const key = args[0] as number;
+                void this.request("potetoAbort", [key]).catch(() => {});
+              }
+              if (method !== "potetoDraft" && method !== "potetoWorker" && method !== "potetoAbort")
+                reject(error);
               this.notifyIfIdle();
             }, timeout);
       timer?.unref();
       this.pending.set(id, {
         // SAFETY: Each method's result is produced by the matching child handler.
         resolve: (value) => resolve(value as PiRuntimeCalls[K]["result"]),
-        reject,
+        reject: (error) => {
+          if (
+            this.failure &&
+            (method === "potetoDraft" || method === "potetoWorker" || method === "potetoAbort") &&
+            this.child.exitCode === null &&
+            this.child.signalCode === null
+          ) {
+            // A disconnect/send failure is not proof inference stopped. fail kills
+            // the child; only its exit acknowledgement releases the caller.
+            void this.exited.then(() => reject(error));
+          } else reject(error);
+        },
         preflight,
         clearDeadline: () => clearTimeout(timer),
       });
@@ -244,6 +283,60 @@ export class PiRuntimeProcess {
         this.fail(error instanceof Error ? error : new Error(String(error)));
       }
     });
+  }
+
+  async runPotetoDraft(
+    options: {
+      cwd: string;
+      agentDir: string;
+      model: string;
+      thinkingLevel?: PiThinkingLevel | undefined;
+    },
+    request: import("./PiPotetoDraft.ts").PotetoDraftRequest,
+  ): Promise<import("@rove-code/contracts").PotetoDraftResult> {
+    request.signal.throwIfAborted();
+    const key = ++this.nextId;
+    const { signal, ...serialized } = request;
+    const operation = this.request("potetoDraft", [key, options, serialized]);
+    const abort = () => {
+      void this.request("potetoAbort", [key]).catch(() => {});
+    };
+    signal.addEventListener("abort", abort, { once: true });
+    try {
+      const result = await operation;
+      signal.throwIfAborted();
+      return result;
+    } finally {
+      signal.removeEventListener("abort", abort);
+    }
+  }
+
+  async runPotetoWorker(
+    options: {
+      cwd: string;
+      agentDir: string;
+      model: string;
+      thinkingLevel?: PiThinkingLevel | undefined;
+    },
+    request: PotetoWorkerRequest,
+  ): Promise<PotetoWorkerResult> {
+    request.signal.throwIfAborted();
+    const key = ++this.nextId;
+    const { signal, ...serialized } = request;
+    const operation = this.request("potetoWorker", [key, options, serialized]);
+    const abort = () => {
+      // The original operation is the drain acknowledgement; do not race it
+      // against cancellation or stop the instance shared with normal sessions.
+      void this.request("potetoAbort", [key]).catch(() => {});
+    };
+    signal.addEventListener("abort", abort, { once: true });
+    try {
+      const result = await operation;
+      signal.throwIfAborted();
+      return result;
+    } finally {
+      signal.removeEventListener("abort", abort);
+    }
   }
 
   async createSession(input: PiCreateSessionInput, textGeneration = false): Promise<PiSessionLike> {

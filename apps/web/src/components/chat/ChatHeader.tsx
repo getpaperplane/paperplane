@@ -1,5 +1,6 @@
 import {
   type EnvironmentId,
+  type ModelSelection,
   type EditorId,
   type ProjectScript,
   type ProviderInstanceId,
@@ -8,6 +9,7 @@ import {
 } from "@rove-code/contracts";
 import { scopeThreadRef } from "@rove-code/client-runtime/environment";
 import type { EnvironmentProject } from "@rove-code/client-runtime/state/shell";
+import type { AtomCommandResult } from "@rove-code/client-runtime/state/runtime";
 import {
   isAtomCommandInterrupted,
   squashAtomCommandFailure,
@@ -51,6 +53,7 @@ import {
 } from "../WorkspaceBreadcrumb";
 import { cn } from "~/lib/utils";
 import { ProviderExtensions } from "./ProviderExtensions";
+import { PotetoModeDialog } from "./PotetoModeDialog";
 import { useProviderResources } from "../../lib/useProviderResources";
 import { useEnvironmentSettings, useUpdateEnvironmentSettings } from "~/hooks/useSettings";
 import {
@@ -77,6 +80,10 @@ interface ChatHeaderProps {
   keybindings: ResolvedKeybindingsConfig;
   availableEditors: ReadonlyArray<EditorId>;
   rightPanelOpen: boolean;
+  supportsPotetoMode: boolean;
+  /** Saves state Poteto reads from the thread (for example, the picker's model) before starting. */
+  onBeforeStartPoteto: (model: ModelSelection) => Promise<AtomCommandResult<void, unknown>>;
+  getPotetoModelSelection: () => ModelSelection | null;
   /** Pi instance bound to this thread, or null. Drives the header catalog button. */
   piCatalogInstanceId: ProviderInstanceId | null;
   gitCwd: string | null;
@@ -148,6 +155,9 @@ export const ChatHeader = memo(function ChatHeader({
   keybindings,
   availableEditors,
   rightPanelOpen,
+  supportsPotetoMode,
+  onBeforeStartPoteto,
+  getPotetoModelSelection,
   piCatalogInstanceId,
   gitCwd,
   onOpenPullRequest,
@@ -187,6 +197,7 @@ export const ChatHeader = memo(function ChatHeader({
   }, []);
   const actionsCollapsed = isMobile || isNarrowHeader;
   const [actionsOpen, setActionsOpen] = useState(false);
+  const [potetoDialogOpen, setPotetoDialogOpen] = useState(false);
   const [actionsContainer] = useState(() => {
     const container = document.createElement("div");
     container.className = "contents";
@@ -266,10 +277,13 @@ export const ChatHeader = memo(function ChatHeader({
     },
     [activeThreadEnvironmentId, activeThreadId, activeThreadTitle, updateThreadMetadata],
   );
+  const openPotetoDialog = useCallback(() => setPotetoDialogOpen(true), []);
   const { openMenu, closeMenu } = useThreadActionMenu({
     threadRef: isServerThread ? activeThreadRef : null,
     projectCwd: activeProjectCwd,
     onStartRename: startRename,
+    supportsPotetoMode: supportsPotetoMode && isServerThread,
+    onOpenPotetoMode: openPotetoDialog,
   });
   const piCatalog = useProviderResources(activeThreadEnvironmentId, piCatalogInstanceId);
   const environmentSettings = useEnvironmentSettings(activeThreadEnvironmentId);
@@ -565,6 +579,16 @@ export const ChatHeader = memo(function ChatHeader({
           </MenuPopup>
         </Menu>
       </div>
+      <PotetoModeDialog
+        key={`${activeThreadEnvironmentId}:${activeThreadId}`}
+        getModelSelection={getPotetoModelSelection}
+        environmentId={activeThreadEnvironmentId}
+        threadId={activeThreadId}
+        open={potetoDialogOpen}
+        enabled={supportsPotetoMode && isServerThread}
+        onOpenChange={setPotetoDialogOpen}
+        onBeforeStart={onBeforeStartPoteto}
+      />
     </div>
   );
 });

@@ -27,6 +27,7 @@ import {
 } from "./baseSchemas.ts";
 import { ProviderInstanceId } from "./providerInstance.ts";
 import { ThreadLimitRecoverySetCommand, ProviderUsageLimit } from "./usageLimitRecovery.ts";
+import { PotetoProgress, PotetoProjectSpec } from "./poteto.ts";
 import {
   PullRequestActor,
   PullRequestChecksState,
@@ -1407,6 +1408,46 @@ const ClientThreadTurnStartCommand = Schema.Struct({
   createdAt: IsoDateTime,
 });
 
+export const ThreadPotetoStartCommand = Schema.Struct({
+  type: Schema.Literal("thread.poteto.start"),
+  commandId: CommandId,
+  threadId: ThreadId,
+  spec: PotetoProjectSpec,
+  createdAt: IsoDateTime,
+});
+export type ThreadPotetoStartCommand = typeof ThreadPotetoStartCommand.Type;
+
+export const ThreadPotetoControlCommand = Schema.Struct({
+  type: Schema.Literal("thread.poteto.control"),
+  commandId: CommandId,
+  threadId: ThreadId,
+  runId: CommandId,
+  action: Schema.Literals(["cancel", "retry"]),
+  createdAt: IsoDateTime,
+});
+export type ThreadPotetoControlCommand = typeof ThreadPotetoControlCommand.Type;
+
+const ThreadPotetoAppendCommand = Schema.Struct({
+  type: Schema.Literal("thread.poteto.append"),
+  commandId: CommandId,
+  threadId: ThreadId,
+  runId: CommandId,
+  attemptId: CommandId,
+  expectedLength: NonNegativeInt,
+  event: Schema.Unknown,
+  createdAt: IsoDateTime,
+});
+
+const ThreadPotetoFinishCommand = Schema.Struct({
+  type: Schema.Literal("thread.poteto.finish"),
+  commandId: CommandId,
+  threadId: ThreadId,
+  runId: CommandId,
+  attemptId: CommandId,
+  progress: PotetoProgress,
+  createdAt: IsoDateTime,
+});
+
 const ThreadTurnInterruptCommand = Schema.Struct({
   type: Schema.Literal("thread.turn.interrupt"),
   commandId: CommandId,
@@ -1505,6 +1546,8 @@ const DispatchableClientOrchestrationCommand = Schema.Union([
   ThreadRuntimeModeSetCommand,
   ThreadInteractionModeSetCommand,
   ThreadTurnStartCommand,
+  ThreadPotetoStartCommand,
+  ThreadPotetoControlCommand,
   ThreadTurnInterruptCommand,
   ThreadApprovalRespondCommand,
   ThreadUserInputRespondCommand,
@@ -1541,6 +1584,8 @@ export const ClientOrchestrationCommand = Schema.Union([
   ThreadRuntimeModeSetCommand,
   ThreadInteractionModeSetCommand,
   ClientThreadTurnStartCommand,
+  ThreadPotetoStartCommand,
+  ThreadPotetoControlCommand,
   ThreadTurnInterruptCommand,
   ThreadApprovalRespondCommand,
   ThreadUserInputRespondCommand,
@@ -1737,6 +1782,8 @@ const InternalOrchestrationCommand = Schema.Union([
   ThreadProposedPlanUpsertCommand,
   ThreadTurnDiffCompleteCommand,
   ThreadActivityAppendCommand,
+  ThreadPotetoAppendCommand,
+  ThreadPotetoFinishCommand,
   ThreadRevertCompleteCommand,
   ThreadTitleRegenerationCompleteCommand,
   ThreadTitleGenerateCompleteCommand,

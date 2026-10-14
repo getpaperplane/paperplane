@@ -11,6 +11,7 @@ import { feedbackBannerItem } from "./chat/ComposerFeedback";
 import { usageLimitsBannerItem } from "./chat/ComposerUsageLimits";
 import { derivePendingRequests } from "@rove-code/client-runtime/pending-requests";
 import { latestPiExtensionStatuses } from "@rove-code/client-runtime/pi-extension-status";
+import { deriveThreadPotetoView } from "@rove-code/client-runtime/poteto";
 import {
   questionAttachmentDraftId,
   questionAttachmentDraftPrefix,
@@ -386,6 +387,7 @@ import type { AssistantCitationRequest } from "./chat/AssistantCitationSource";
 import { resolveTimelineIsAtEnd, worktreeSetupAgentStarted } from "./chat/MessagesTimeline.logic";
 import { resolveComposerTimelineInset, resolveScrollToEndClearance } from "./composerFooterLayout";
 import { ChatHeader } from "./chat/ChatHeader";
+import { PotetoStatusPanel } from "./chat/PotetoStatusPanel";
 import { PanelLayoutControls, RightPanelMaximizeControl } from "./chat/PanelLayoutControls";
 import { expandedImageKey, type ExpandedImagePreview } from "./chat/ExpandedImagePreview";
 import { NoActiveThreadState } from "./NoActiveThreadState";
@@ -2948,6 +2950,8 @@ export default function ChatView(props: ChatViewProps) {
     conversationProviderStatus.supportsConversationRollback !== false;
   const phase = derivePhase(activeThread?.session ?? null);
   const threadActivities = activeThread?.activities ?? EMPTY_ACTIVITIES;
+  const potetoView = useMemo(() => deriveThreadPotetoView(threadActivities), [threadActivities]);
+  const potetoActive = potetoView.pending;
   const latestCheckpointCompletedAt = activeThread?.checkpoints.at(-1)?.completedAt ?? null;
   const workspaceMutationId = useMemo(() => {
     const activityId = latestWorkspaceMutationId(threadActivities);
@@ -5433,6 +5437,31 @@ export default function ChatView(props: ChatViewProps) {
     ],
   );
 
+  // Poteto runs with the thread's saved model; persist the visible picker choice first.
+  const getModelForPoteto = useCallback(
+    () => composerRef.current?.getSendContext().selectedModelSelection ?? null,
+    [],
+  );
+  const persistModelForPoteto = useCallback(
+    async (modelSelection: ModelSelection): Promise<AtomCommandResult<void, unknown>> => {
+      if (!serverThread) return AsyncResult.success(undefined);
+      const metadataUpdate = resolveThreadMetadataUpdateForNextTurn({
+        currentModelSelection: serverThread.modelSelection,
+        nextModelSelection: modelSelection,
+        currentBranch: serverThread.branch,
+      });
+      if (!metadataUpdate) return AsyncResult.success(undefined);
+      return mapAtomCommandResult(
+        await updateThreadMetadata({
+          environmentId,
+          input: { threadId: serverThread.id, ...metadataUpdate },
+        }),
+        () => undefined,
+      );
+    },
+    [environmentId, serverThread, updateThreadMetadata],
+  );
+
   // Debounce *showing* the scroll-to-bottom pill so it doesn't flash during
   // thread switches. LegendList fires scroll events with isAtEnd=false while
   // initialScrollAtEnd is settling; hiding is always immediate.
@@ -7596,6 +7625,7 @@ export default function ChatView(props: ChatViewProps) {
     },
   ) => {
     e?.preventDefault();
+    if (potetoActive) return;
     // Typed out in full rather than picked from the menu. Attachments or contexts
     // mean the user is sending a prompt, so those go through as usual.
     if (
@@ -10056,6 +10086,16 @@ export default function ChatView(props: ChatViewProps) {
               : { onOpenPullRequest: openProjectPullRequest })}
             activeThreadEnvironmentId={activeThread.environmentId}
             activeThreadId={activeThread.id}
+            onBeforeStartPoteto={persistModelForPoteto}
+            getPotetoModelSelection={getModelForPoteto}
+            supportsPotetoMode={
+              isServerThread &&
+              selectedProviderEntry?.driverKind === "pi" &&
+              activeEnvironmentConnectionPhase === "connected" &&
+              !potetoActive &&
+              serverConfig?.environment.capabilities.potetoMode === true &&
+              serverConfig?.environment.capabilities.potetoDraft === true
+            }
             {...(routeKind === "draft" && draftId ? { draftId } : {})}
             activeThreadTitle={activeThread.title}
             isServerThread={isServerThread}
@@ -10124,6 +10164,15 @@ export default function ChatView(props: ChatViewProps) {
             </div>
             {/* Messages Wrapper */}
             <div className="relative flex min-h-0 flex-1 flex-col bg-background">
+              {activeThread && potetoView.progress ? (
+                <PotetoStatusPanel
+                  environmentId={activeThread.environmentId}
+                  threadId={activeThread.id}
+                  progress={potetoView.progress}
+                  artifacts={potetoView.artifacts}
+                  pending={potetoView.pending}
+                />
+              ) : null}
               {/* Messages — LegendList handles virtualization and scrolling internally */}
               <MessagesTimeline
                 citationRequest={paintOnlyDisplayedTimeline ? null : citationRequest}
@@ -10326,9 +10375,11 @@ export default function ChatView(props: ChatViewProps) {
                                   ? "Sending feedback"
                                   : threadDetailLoading
                                     ? "Messages loading"
-                                    : worktreeSetupBlocksSend
-                                      ? "Preparing worktree"
-                                      : projectCloneSendBlockReason
+                                    : potetoActive
+                                      ? "Poteto Mode is running"
+                                      : worktreeSetupBlocksSend
+                                        ? "Preparing worktree"
+                                        : projectCloneSendBlockReason
                             }
                             isPreparingWorktree={isPreparingWorktree}
                             bannerItems={composerBannerItems}

@@ -3,11 +3,13 @@ import type {
   OrchestrationEvent,
   OrchestrationReadModel,
   ProjectId,
+  ProviderInstanceId,
   ThreadId,
 } from "@rove-code/contracts";
 import { CommandId, OrchestrationCommand } from "@rove-code/contracts";
 import { currentLimitRecovery, sameLimitRecoveryModel } from "@rove-code/shared/limitRecovery";
 import { UsageLimitChecks } from "../../provider/UsageLimitChecks.ts";
+import { ProviderInstanceRegistry } from "../../provider/Services/ProviderInstanceRegistry.ts";
 import * as Cause from "effect/Cause";
 import * as Clock from "effect/Clock";
 import * as Crypto from "effect/Crypto";
@@ -93,6 +95,7 @@ const makeOrchestrationEngine = Effect.gen(function* () {
   const threadBackgroundLiveness = yield* ThreadBackgroundLivenessService;
   const crypto = yield* Crypto.Crypto;
   const usageChecks = yield* UsageLimitChecks;
+  const providerInstances = yield* Effect.serviceOption(ProviderInstanceRegistry);
 
   const nowIso = Effect.map(DateTime.now, DateTime.formatIso);
   let commandReadModel = createEmptyReadModel(yield* nowIso);
@@ -246,10 +249,28 @@ const makeOrchestrationEngine = Effect.gen(function* () {
           envelope.command.type === "thread.user-input.dismiss"
             ? yield* projectionSnapshotQuery.getUserInputActivity(envelope.command)
             : Option.none();
+        let potetoInstanceIds: ReadonlyArray<ProviderInstanceId> | undefined;
+        if (
+          Option.isSome(providerInstances) &&
+          (envelope.command.type === "thread.poteto.start" ||
+            (envelope.command.type === "thread.poteto.control" &&
+              envelope.command.action === "retry"))
+        ) {
+          const threadId = envelope.command.threadId;
+          const thread = commandReadModel.threads.find((entry) => entry.id === threadId);
+          const instance = thread
+            ? yield* providerInstances.value.getInstance(thread.modelSelection.instanceId)
+            : undefined;
+          potetoInstanceIds =
+            instance?.driverKind === "pi" && instance.enabled && instance.potetoWorker
+              ? [instance.instanceId]
+              : [];
+        }
         const eventBase = yield* decideOrchestrationCommand({
           command: envelope.command,
           readModel: commandReadModel,
           autoResumeEnabled: yield* usageChecks.enabled,
+          ...(potetoInstanceIds === undefined ? {} : { potetoInstanceIds }),
           ...(envelope.checkedRecoveryRequestId === undefined
             ? {}
             : { checkedRecoveryRequestId: envelope.checkedRecoveryRequestId }),

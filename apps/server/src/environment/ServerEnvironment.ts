@@ -244,6 +244,8 @@ export const make = Effect.gen(function* () {
       threadAutoSettleOptOut: true,
       threadTitleRegeneration: true,
       threadPullRequests: true,
+      potetoMode: true,
+      potetoDraft: true,
       pullRequestStackActions: true,
       threadPullRequestLinking: true,
       environmentIcon: true,

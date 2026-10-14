@@ -322,6 +322,25 @@ export const PiDriver: ProviderDriver<PiSettings, PiDriverEnv> = {
           }),
         adapter,
         textGeneration,
+        potetoDraft: (options, request) =>
+          getCatalogHost().then((host) =>
+            host.runPotetoDraft(
+              { ...options, thinkingLevel: effectiveConfig.thinkingLevel ?? undefined },
+              request,
+            ),
+          ),
+        potetoWorker: (options, request) =>
+          getCatalogHost().then((host) =>
+            host.runPotetoWorker(
+              {
+                ...options,
+                // The runner encodes explicit thread reasoning in the model suffix;
+                // child resolution gives that suffix priority over this default.
+                thinkingLevel: effectiveConfig.thinkingLevel ?? undefined,
+              },
+              request,
+            ),
+          ),
         piCatalog: {
           getCatalog: () =>
             Effect.tryPromise({

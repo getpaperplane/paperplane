@@ -24,6 +24,7 @@ export type ThreadActionMenuId =
   | "unsnooze"
   | "rename"
   | "regenerate-title"
+  | "poteto-mode"
   | "mark-unread"
   | "copy"
   | "copy-path"
@@ -65,6 +66,7 @@ export interface ThreadActionMenuState {
     readonly snooze: boolean;
     readonly pinning: boolean;
     readonly titleRegeneration: boolean;
+    readonly potetoMode?: boolean;
   };
   readonly snoozePresets: ReadonlyArray<SnoozePreset>;
 }
@@ -149,6 +151,9 @@ export function buildThreadActionMenuItems(
             disabled: state.isRegeneratingTitle,
           },
         ]
+      : []),
+    ...(state.supports.potetoMode
+      ? [{ id: "poteto-mode" as const, label: "Poteto Mode", icon: "potato" }]
       : []),
     { id: "mark-unread", label: "Mark unread", icon: "mail-open" },
     ...(state.projectFilter

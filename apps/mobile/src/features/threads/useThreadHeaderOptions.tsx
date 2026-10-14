@@ -18,11 +18,35 @@ export function useThreadHeaderOptions(props: {
   readonly usesNativeHeaderGlass: boolean;
   readonly gitControls: Parameters<typeof ThreadGitControls>[0];
   readonly onReturnToThread?: () => void;
+  readonly onStartPotetoMode?: (() => void) | undefined;
 }) {
   const navigation = useNavigation();
   const { layout, panes, togglePrimarySidebar } = useAdaptiveWorkspaceLayout();
-  const threadCenterHeaderItems = useThreadGitCenterHeaderItems(props.gitControls);
-  const compactRightHeaderItems = useThreadGitRightHeaderItems(props.gitControls);
+  const centerHeaderItems = useThreadGitCenterHeaderItems(props.gitControls);
+  const rightHeaderItems = useThreadGitRightHeaderItems(props.gitControls);
+  const potetoHeaderItem = useMemo(
+    () =>
+      props.onStartPotetoMode
+        ? [
+            withNativeGlassHeaderItem({
+              accessibilityLabel: "Start Poteto Mode",
+              icon: { name: "sparkles", type: "sfSymbol" as const },
+              identifier: "thread-poteto-mode",
+              onPress: props.onStartPotetoMode,
+              type: "button" as const,
+            }),
+          ]
+        : [],
+    [props.onStartPotetoMode],
+  );
+  const threadCenterHeaderItems = useMemo(
+    () => [...centerHeaderItems, ...potetoHeaderItem],
+    [centerHeaderItems, potetoHeaderItem],
+  );
+  const compactRightHeaderItems = useMemo(
+    () => [...rightHeaderItems, ...potetoHeaderItem],
+    [potetoHeaderItem, rightHeaderItems],
+  );
   const splitLeftHeaderItems = useMemo<NativeHeaderItems>(
     () => [
       {

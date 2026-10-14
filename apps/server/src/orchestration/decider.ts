@@ -1,5 +1,6 @@
 import {
   EventId,
+  ProviderInstanceId,
   THREAD_CONTINUED_ACTIVITY_KIND,
   MAX_SCRIPT_ID_LENGTH,
   MAX_LIMIT_RECOVERY_ATTEMPTS,
@@ -50,6 +51,15 @@ import {
 import { projectEvent } from "./projector.ts";
 import { threadHasQueuedTurnStart } from "./ThreadSettlementPolicy.ts";
 import { currentLimitRecovery, sameLimitRecoveryModel } from "@rove-code/shared/limitRecovery";
+import {
+  canRetryThreadPotetoRun,
+  hasFinishedPotetoAttempt,
+  isThreadPotetoActive,
+  MAX_POTETO_CORE_EVENTS,
+  readThreadPotetoRun,
+} from "./poteto/ThreadPotetoState.ts";
+import { decodePotetoEvents, potetoRevision, replayPotetoMode } from "./poteto/PotetoMode.ts";
+import { validatePotetoProjectSpec } from "./poteto/PotetoProjectRunner.ts";
 
 const monogramSegmenter = new Intl.Segmenter(undefined, { granularity: "grapheme" });
 
@@ -147,11 +157,118 @@ function hasQueuedTurnStartForThread(
   );
 }
 
+function hasActiveProviderTurnOrQueuedTurnStart(
+  thread: Pick<OrchestrationThread, "messages" | "activities" | "latestTurn" | "session">,
+  now: string,
+): boolean {
+  return (
+    thread.latestTurn?.state === "running" ||
+    thread.session?.status === "starting" ||
+    thread.session?.status === "running" ||
+    hasQueuedTurnStartForThread(thread, now)
+  );
+}
+
 function findPullRequestLink(
   thread: Pick<OrchestrationThread, "pullRequests">,
   key: ThreadPullRequestKey,
 ): ThreadPullRequestLink | undefined {
   return thread.pullRequests.find((link) => threadPullRequestKeysEqual(link, key));
+}
+
+function potetoActivityEvent(input: {
+  readonly commandId: CommandId;
+  readonly threadId: OrchestrationThread["id"];
+  readonly createdAt: string;
+  readonly activityId: string;
+  readonly kind: "poteto.requested" | "poteto.control" | "poteto.event" | "poteto.finished";
+  readonly summary: string;
+  readonly payload: unknown;
+}): Effect.Effect<PlannedOrchestrationEvent, PlatformError.PlatformError, Crypto.Crypto> {
+  return withEventBase({
+    aggregateKind: "thread",
+    aggregateId: input.threadId,
+    occurredAt: input.createdAt,
+    commandId: input.commandId,
+  }).pipe(
+    Effect.map((base) => ({
+      ...base,
+      type: "thread.activity-appended" as const,
+      payload: {
+        threadId: input.threadId,
+        activity: {
+          id: EventId.make(input.activityId),
+          kind: input.kind,
+          summary: input.summary,
+          tone: "info" as const,
+          turnId: null,
+          createdAt: input.createdAt,
+          payload: input.payload,
+        },
+      },
+    })),
+  );
+}
+
+const potetoLifecycleResetEvents = Effect.fnUntraced(function* (
+  thread: OrchestrationThread,
+  command: { commandId: CommandId; threadId: OrchestrationThread["id"]; createdAt: string },
+) {
+  const events: Array<PlannedOrchestrationEvent> = [];
+  // Starting work spends a snooze and clears both settled and keep-active overrides.
+  for (const type of [
+    ...(thread.settledOverride !== null || thread.settledAt != null
+      ? (["thread.unsettled"] as const)
+      : []),
+    ...(thread.snoozedUntil != null ? (["thread.unsnoozed"] as const) : []),
+  ]) {
+    events.push({
+      ...(yield* withEventBase({
+        aggregateKind: "thread",
+        aggregateId: command.threadId,
+        occurredAt: command.createdAt,
+        commandId: command.commandId,
+      })),
+      type,
+      payload: {
+        threadId: command.threadId,
+        reason: "activity",
+        updatedAt: command.createdAt,
+      },
+    });
+  }
+  return events;
+});
+
+function replayPotetoThreadRun(run: NonNullable<ReturnType<typeof readThreadPotetoRun>>) {
+  if (run.events.length > MAX_POTETO_CORE_EVENTS) {
+    throw new Error("Poteto journal event budget exceeded.");
+  }
+  const events = decodePotetoEvents(run.events);
+  if (events.length === 0) return { events, state: null };
+  const created = events[0]!;
+  const specPaths = [...run.spec.editableFiles, ...run.spec.contextFiles];
+  if (
+    created.type !== "created" ||
+    created.task !== run.spec.task ||
+    JSON.stringify(created.files.map((file) => file.path)) !== JSON.stringify(specPaths) ||
+    JSON.stringify(created.editablePaths ?? created.files.map((file) => file.path)) !==
+      JSON.stringify(run.spec.editableFiles)
+  ) {
+    throw new Error("Poteto journal does not match its requested project scope.");
+  }
+  return { events, state: replayPotetoMode(events) };
+}
+
+function samePotetoModelSelection(
+  left: OrchestrationThread["modelSelection"],
+  right: OrchestrationThread["modelSelection"],
+): boolean {
+  return (
+    left.instanceId === right.instanceId &&
+    left.model === right.model &&
+    JSON.stringify(left.options ?? []) === JSON.stringify(right.options ?? [])
+  );
 }
 
 function withEventBase(
@@ -224,18 +341,53 @@ const decideCommandSequence = Effect.fn("decideCommandSequence")(function* ({
   return plannedEvents;
 });
 
+const decideNativeStopPotetoCancellation = Effect.fnUntraced(function* (
+  thread: OrchestrationThread,
+  command: { commandId: CommandId; threadId: OrchestrationThread["id"]; createdAt: string },
+  readModel: OrchestrationReadModel,
+): Effect.fn.Return<
+  ReadonlyArray<PlannedOrchestrationEvent>,
+  OrchestrationCommandRejection | PlatformError.PlatformError,
+  Crypto.Crypto
+> {
+  const run = readThreadPotetoRun(thread);
+  if (
+    !run ||
+    !isThreadPotetoActive(thread) ||
+    !["requested", "running", "blocked"].includes(run.progress.status)
+  ) {
+    return [];
+  }
+  // Reuse the durable control path; native Stop must also abort controlled workers.
+  return yield* decideCommandSequence({
+    readModel,
+    commands: [
+      {
+        type: "thread.poteto.control",
+        commandId: command.commandId,
+        threadId: command.threadId,
+        createdAt: command.createdAt,
+        runId: run.runId,
+        action: "cancel",
+      },
+    ],
+  });
+});
+
 export const decideOrchestrationCommand = Effect.fn("decideOrchestrationCommand")(function* ({
   command,
   readModel,
   userInputActivity,
   checkedRecoveryRequestId,
   autoResumeEnabled = true,
+  potetoInstanceIds = [ProviderInstanceId.make("pi")],
 }: {
   readonly command: OrchestrationCommand;
   readonly readModel: OrchestrationReadModel;
   readonly userInputActivity?: OrchestrationThreadActivity;
   readonly checkedRecoveryRequestId?: CommandId;
   readonly autoResumeEnabled?: boolean;
+  readonly potetoInstanceIds?: ReadonlyArray<ProviderInstanceId>;
 }): Effect.fn.Return<
   DecideOrchestrationCommandResult,
   OrchestrationCommandRejection | PlatformError.PlatformError,
@@ -286,6 +438,15 @@ export const decideOrchestrationCommand = Effect.fn("decideOrchestrationCommand"
         command,
         projectId: command.projectId,
       });
+      if (
+        command.workspaceRoot !== undefined &&
+        listThreadsByProjectId(readModel, command.projectId).some(isThreadPotetoActive)
+      ) {
+        return yield* new OrchestrationCommandInvariantError({
+          commandType: command.type,
+          detail: `Project '${command.projectId}' has an active Poteto run and its workspace cannot change.`,
+        });
+      }
       if (
         command.projectIcon?.kind === "monogram" &&
         Array.from(monogramSegmenter.segment(command.projectIcon.text)).length > 2
@@ -353,6 +514,12 @@ export const decideOrchestrationCommand = Effect.fn("decideOrchestrationCommand"
       const activeThreads = listThreadsByProjectId(readModel, command.projectId).filter(
         (thread) => thread.deletedAt === null,
       );
+      if (activeThreads.some(isThreadPotetoActive)) {
+        return yield* new OrchestrationCommandInvariantError({
+          commandType: command.type,
+          detail: `Project '${command.projectId}' has an active Poteto run and cannot be deleted.`,
+        });
+      }
       if (activeThreads.length > 0 && command.force !== true) {
         return yield* new OrchestrationCommandInvariantError({
           commandType: command.type,
@@ -439,11 +606,17 @@ export const decideOrchestrationCommand = Effect.fn("decideOrchestrationCommand"
     }
 
     case "thread.delete": {
-      yield* requireThread({
+      const thread = yield* requireThread({
         readModel,
         command,
         threadId: command.threadId,
       });
+      if (isThreadPotetoActive(thread)) {
+        return yield* new OrchestrationCommandInvariantError({
+          commandType: command.type,
+          detail: `Thread '${thread.id}' has an active Poteto run and cannot be deleted.`,
+        });
+      }
       const occurredAt = yield* nowIso;
       return {
         ...(yield* withEventBase({
@@ -461,11 +634,17 @@ export const decideOrchestrationCommand = Effect.fn("decideOrchestrationCommand"
     }
 
     case "thread.archive": {
-      yield* requireThreadNotArchived({
+      const thread = yield* requireThreadNotArchived({
         readModel,
         command,
         threadId: command.threadId,
       });
+      if (isThreadPotetoActive(thread)) {
+        return yield* new OrchestrationCommandInvariantError({
+          commandType: command.type,
+          detail: `Thread '${thread.id}' has an active Poteto run and cannot be archived.`,
+        });
+      }
       const occurredAt = yield* nowIso;
       return {
         ...(yield* withEventBase({
@@ -512,6 +691,12 @@ export const decideOrchestrationCommand = Effect.fn("decideOrchestrationCommand"
         command,
         threadId: command.threadId,
       });
+      if (isThreadPotetoActive(thread)) {
+        return yield* new OrchestrationCommandInvariantError({
+          commandType: command.type,
+          detail: `Thread '${thread.id}' has an active Poteto run and cannot be settled.`,
+        });
+      }
       if (
         command.type === "thread.auto-settle" &&
         (thread.settledOverride !== null || thread.autoSettleDisabledAt != null)
@@ -954,6 +1139,17 @@ export const decideOrchestrationCommand = Effect.fn("decideOrchestrationCommand"
         command,
         threadId: command.threadId,
       });
+      if (
+        isThreadPotetoActive(thread) &&
+        (command.modelSelection !== undefined ||
+          command.branch !== undefined ||
+          command.worktreePath !== undefined)
+      ) {
+        return yield* new OrchestrationCommandInvariantError({
+          commandType: command.type,
+          detail: `Thread '${thread.id}' has an active Poteto run and its model or workspace cannot change.`,
+        });
+      }
       if (thread.projectId === null && command.worktreePath != null) {
         return yield* new OrchestrationCommandInvariantError({
           commandType: command.type,
@@ -1376,11 +1572,18 @@ export const decideOrchestrationCommand = Effect.fn("decideOrchestrationCommand"
     }
 
     case "thread.runtime-mode.set": {
-      yield* requireThread({
+      const thread = yield* requireThread({
         readModel,
         command,
         threadId: command.threadId,
       });
+      // This event can resume an ordinary provider session, even without a turn.
+      if (isThreadPotetoActive(thread)) {
+        return yield* new OrchestrationCommandInvariantError({
+          commandType: command.type,
+          detail: `Thread '${thread.id}' has an active Poteto run and its runtime mode cannot change.`,
+        });
+      }
       const occurredAt = yield* nowIso;
       return {
         ...(yield* withEventBase({
@@ -1583,6 +1786,387 @@ export const decideOrchestrationCommand = Effect.fn("decideOrchestrationCommand"
       };
     }
 
+    case "thread.poteto.start": {
+      const thread = yield* requireThreadNotArchived({
+        readModel,
+        command,
+        threadId: command.threadId,
+      });
+      if (!potetoInstanceIds.includes(thread.modelSelection.instanceId)) {
+        return yield* new OrchestrationCommandInvariantError({
+          commandType: command.type,
+          detail: "The Poteto pilot is currently available only on Pi threads.",
+        });
+      }
+      if (isThreadPotetoActive(thread)) {
+        return yield* new OrchestrationCommandInvariantError({
+          commandType: command.type,
+          detail: `Thread '${thread.id}' already has an active Poteto run.`,
+        });
+      }
+      const now = yield* nowIso;
+      if (hasActiveProviderTurnOrQueuedTurnStart(thread, now)) {
+        return yield* new OrchestrationCommandInvariantError({
+          commandType: command.type,
+          detail: `Thread '${thread.id}' has an active or queued provider turn.`,
+        });
+      }
+      const spec = yield* Effect.try({
+        try: () => validatePotetoProjectSpec(command.spec),
+        catch: (error) =>
+          new OrchestrationCommandInvariantError({
+            commandType: command.type,
+            detail: error instanceof Error ? error.message : String(error),
+          }),
+      });
+      const progress = {
+        runId: command.commandId,
+        attemptId: command.commandId,
+        status: "requested" as const,
+        phase: null,
+        reason: null,
+      };
+      const lifecycleResetEvents = yield* potetoLifecycleResetEvents(thread, command);
+      const requestedEvent = yield* potetoActivityEvent({
+        commandId: command.commandId,
+        threadId: command.threadId,
+        createdAt: command.createdAt,
+        activityId: `poteto-requested:${command.commandId}`,
+        kind: "poteto.requested",
+        summary: "Poteto pilot requested",
+        payload: {
+          runId: command.commandId,
+          attemptId: command.commandId,
+          spec,
+          modelSelection: thread.modelSelection,
+          progress,
+        },
+      });
+      return [...lifecycleResetEvents, requestedEvent];
+    }
+
+    case "thread.poteto.control": {
+      const thread = yield* requireThreadNotArchived({
+        readModel,
+        command,
+        threadId: command.threadId,
+      });
+      const run = readThreadPotetoRun(thread);
+      if (!run || run.runId !== command.runId) {
+        return yield* new OrchestrationCommandInvariantError({
+          commandType: command.type,
+          detail: `Poteto run '${command.runId}' is no longer the latest run on this thread.`,
+        });
+      }
+      if (command.action === "cancel") {
+        if (
+          !isThreadPotetoActive(thread) ||
+          !["requested", "running", "blocked"].includes(run.progress.status)
+        ) {
+          return yield* new OrchestrationCommandInvariantError({
+            commandType: command.type,
+            detail: `Poteto run '${command.runId}' is not running.`,
+          });
+        }
+        const progress = {
+          ...run.progress,
+          status: "cancelled" as const,
+          reason: "Cancelled by user",
+        };
+        return yield* potetoActivityEvent({
+          commandId: command.commandId,
+          threadId: command.threadId,
+          createdAt: command.createdAt,
+          activityId: `poteto-control:${command.commandId}`,
+          kind: "poteto.control",
+          summary: "Poteto pilot cancellation requested",
+          payload: {
+            runId: run.runId,
+            attemptId: run.attemptId,
+            action: "cancel",
+            progress,
+          },
+        });
+      }
+
+      if (
+        isThreadPotetoActive(thread) ||
+        !hasFinishedPotetoAttempt(thread, run.runId, run.attemptId) ||
+        (run.progress.status !== "blocked" &&
+          run.progress.status !== "interrupted" &&
+          run.progress.status !== "cancelled")
+      ) {
+        return yield* new OrchestrationCommandInvariantError({
+          commandType: command.type,
+          detail:
+            "Poteto can only be retried after a blocked, interrupted, or cancelled attempt has finished.",
+        });
+      }
+      if (
+        !potetoInstanceIds.includes(thread.modelSelection.instanceId) ||
+        !potetoInstanceIds.includes(run.modelSelection.instanceId) ||
+        !samePotetoModelSelection(thread.modelSelection, run.modelSelection)
+      ) {
+        return yield* new OrchestrationCommandInvariantError({
+          commandType: command.type,
+          detail:
+            "The thread model selection changed after this Poteto run; start a new run instead.",
+        });
+      }
+      const now = yield* nowIso;
+      if (hasActiveProviderTurnOrQueuedTurnStart(thread, now)) {
+        return yield* new OrchestrationCommandInvariantError({
+          commandType: command.type,
+          detail: `Thread '${thread.id}' has an active or queued provider turn.`,
+        });
+      }
+      const canRetry = yield* Effect.try({
+        try: () => {
+          replayPotetoThreadRun(run);
+          return canRetryThreadPotetoRun(run);
+        },
+        catch: () =>
+          new OrchestrationCommandInvariantError({
+            commandType: command.type,
+            detail: "The Poteto journal is invalid or its retry budget is exhausted.",
+          }),
+      });
+      if (!canRetry) {
+        return yield* new OrchestrationCommandInvariantError({
+          commandType: command.type,
+          detail: "The Poteto journal is invalid or its retry budget is exhausted.",
+        });
+      }
+      const progress = {
+        runId: run.runId,
+        attemptId: command.commandId,
+        status: "requested" as const,
+        phase: run.progress.phase,
+        reason: null,
+        ...(run.progress.baseCommit !== undefined ? { baseCommit: run.progress.baseCommit } : {}),
+      };
+      const lifecycleResetEvents = yield* potetoLifecycleResetEvents(thread, command);
+      const requestedEvent = yield* potetoActivityEvent({
+        commandId: command.commandId,
+        threadId: command.threadId,
+        createdAt: command.createdAt,
+        activityId: `poteto-control:${command.commandId}`,
+        kind: "poteto.control",
+        summary: "Poteto pilot retry requested",
+        payload: {
+          runId: run.runId,
+          attemptId: command.commandId,
+          action: "retry",
+          progress,
+        },
+      });
+      return [...lifecycleResetEvents, requestedEvent];
+    }
+
+    case "thread.poteto.append": {
+      const thread = yield* requireThread({
+        readModel,
+        command,
+        threadId: command.threadId,
+      });
+      const run = readThreadPotetoRun(thread);
+      if (
+        !run ||
+        run.runId !== command.runId ||
+        run.attemptId !== command.attemptId ||
+        !isThreadPotetoActive(thread) ||
+        !["requested", "running", "blocked"].includes(run.progress.status)
+      ) {
+        return yield* new OrchestrationCommandInvariantError({
+          commandType: command.type,
+          detail: "Poteto append has a stale run or attempt owner.",
+        });
+      }
+      if (command.expectedLength !== run.events.length) {
+        return yield* new OrchestrationCommandInvariantError({
+          commandType: command.type,
+          detail: `Poteto append expected ${command.expectedLength} events, but the journal has ${run.events.length}.`,
+        });
+      }
+      if (run.events.length >= MAX_POTETO_CORE_EVENTS) {
+        return yield* new OrchestrationCommandInvariantError({
+          commandType: command.type,
+          detail: "Poteto journal event budget exceeded.",
+        });
+      }
+      const { nextEvents, nextState } = yield* Effect.try({
+        try: () => {
+          const current = replayPotetoThreadRun(run);
+          const nextEvents = decodePotetoEvents([...current.events, command.event]);
+          const next = replayPotetoThreadRun({ ...run, events: nextEvents });
+          if (next.state === null) throw new Error("Poteto event did not create a journal.");
+          return { nextEvents, nextState: next.state };
+        },
+        catch: (error) =>
+          new OrchestrationCommandInvariantError({
+            commandType: command.type,
+            detail: `Poteto event rejected: ${error instanceof Error ? error.message : String(error)}`,
+          }),
+      });
+      const progress = {
+        runId: run.runId,
+        attemptId: run.attemptId,
+        status:
+          nextState.status === "blocked"
+            ? ("blocked" as const)
+            : nextState.status === "candidate-ready"
+              ? ("candidate-ready" as const)
+              : ("running" as const),
+        phase: nextState.phase ?? null,
+        reason: nextState.reason ?? null,
+        ...(run.progress.baseCommit !== undefined ? { baseCommit: run.progress.baseCommit } : {}),
+        ...(run.progress.revision !== undefined ? { revision: run.progress.revision } : {}),
+      };
+      return yield* potetoActivityEvent({
+        commandId: command.commandId,
+        threadId: command.threadId,
+        createdAt: command.createdAt,
+        activityId: `poteto-event:${command.commandId}`,
+        kind: "poteto.event",
+        summary: "Poteto pilot progress",
+        payload: {
+          runId: run.runId,
+          attemptId: run.attemptId,
+          event: nextEvents.at(-1),
+          progress,
+        },
+      });
+    }
+
+    case "thread.poteto.finish": {
+      const thread = yield* requireThread({
+        readModel,
+        command,
+        threadId: command.threadId,
+      });
+      const run = readThreadPotetoRun(thread);
+      if (
+        !run ||
+        run.runId !== command.runId ||
+        run.attemptId !== command.attemptId ||
+        command.progress.runId !== run.runId ||
+        command.progress.attemptId !== run.attemptId ||
+        !isThreadPotetoActive(thread)
+      ) {
+        return yield* new OrchestrationCommandInvariantError({
+          commandType: command.type,
+          detail: "Poteto finish has a stale run or attempt owner.",
+        });
+      }
+      if (
+        command.progress.status !== "blocked" &&
+        command.progress.status !== "interrupted" &&
+        command.progress.status !== "cancelled" &&
+        command.progress.status !== "candidate-ready"
+      ) {
+        return yield* new OrchestrationCommandInvariantError({
+          commandType: command.type,
+          detail: "Poteto finish requires a terminal progress status.",
+        });
+      }
+      const replayed = yield* Effect.try({
+        try: () => replayPotetoThreadRun(run),
+        catch: (error) =>
+          new OrchestrationCommandInvariantError({
+            commandType: command.type,
+            detail: `Poteto journal cannot finish: ${error instanceof Error ? error.message : String(error)}`,
+          }),
+      });
+      const coreStatus = replayed.state?.status ?? null;
+      if (
+        command.progress.status === "candidate-ready" &&
+        (replayed.state?.status !== "candidate-ready" ||
+          command.progress.revision !== potetoRevision(replayed.state.files))
+      ) {
+        return yield* new OrchestrationCommandInvariantError({
+          commandType: command.type,
+          detail: "Candidate-ready finish must match the replayed candidate revision.",
+        });
+      }
+      if (
+        command.progress.status === "blocked" &&
+        (run.events.length > 0 ? coreStatus !== "blocked" : run.progress.status === "cancelled")
+      ) {
+        return yield* new OrchestrationCommandInvariantError({
+          commandType: command.type,
+          detail: "Blocked finish requires a blocked journal or an empty setup-failure journal.",
+        });
+      }
+      if (
+        command.progress.status === "interrupted" &&
+        run.events.length > 0 &&
+        coreStatus !== "running" &&
+        coreStatus !== "blocked" &&
+        coreStatus !== "ready"
+      ) {
+        return yield* new OrchestrationCommandInvariantError({
+          commandType: command.type,
+          detail: "Interrupted finish does not match the replayed journal state.",
+        });
+      }
+      if (run.progress.status === "cancelled" && command.progress.status !== "cancelled") {
+        return yield* new OrchestrationCommandInvariantError({
+          commandType: command.type,
+          detail: "A cancelled Poteto attempt must finish as cancelled.",
+        });
+      }
+      if (command.progress.status === "cancelled" && run.progress.status !== "cancelled") {
+        return yield* new OrchestrationCommandInvariantError({
+          commandType: command.type,
+          detail: "Only a cancelled Poteto attempt can finish as cancelled.",
+        });
+      }
+      if (
+        command.progress.status === "blocked" &&
+        run.progress.status !== "blocked" &&
+        run.events.length > 0
+      ) {
+        return yield* new OrchestrationCommandInvariantError({
+          commandType: command.type,
+          detail: "Blocked finish does not match the latest Poteto progress.",
+        });
+      }
+      if (
+        command.progress.status === "candidate-ready" &&
+        run.progress.status !== "candidate-ready"
+      ) {
+        return yield* new OrchestrationCommandInvariantError({
+          commandType: command.type,
+          detail: "Candidate-ready finish does not match the latest Poteto progress.",
+        });
+      }
+      if (command.progress.status === "interrupted" && run.progress.status === "candidate-ready") {
+        return yield* new OrchestrationCommandInvariantError({
+          commandType: command.type,
+          detail: "A candidate-ready Poteto run cannot finish as interrupted.",
+        });
+      }
+      return yield* potetoActivityEvent({
+        commandId: command.commandId,
+        threadId: command.threadId,
+        createdAt: command.createdAt,
+        activityId: `poteto-finished:${command.commandId}`,
+        kind: "poteto.finished",
+        summary: `Poteto pilot ${command.progress.status}`,
+        payload: {
+          runId: run.runId,
+          attemptId: run.attemptId,
+          progress: {
+            ...(run.progress.baseCommit !== undefined
+              ? { baseCommit: run.progress.baseCommit }
+              : {}),
+            ...(run.progress.revision !== undefined ? { revision: run.progress.revision } : {}),
+            ...command.progress,
+          },
+        },
+      });
+    }
+
     case "thread.turn.start": {
       if (isImportedAgentSessionMessageId(command.message.messageId)) {
         return yield* new OrchestrationCommandInvariantError({
@@ -1595,6 +2179,12 @@ export const decideOrchestrationCommand = Effect.fn("decideOrchestrationCommand"
         command,
         threadId: command.threadId,
       });
+      if (isThreadPotetoActive(targetThread)) {
+        return yield* new OrchestrationCommandInvariantError({
+          commandType: command.type,
+          detail: `Thread '${targetThread.id}' has an active Poteto run and cannot start a provider turn.`,
+        });
+      }
       const currentRecovery = currentLimitRecovery(targetThread);
       if (
         checkedRecoveryRequestId !== undefined &&
@@ -1820,12 +2410,17 @@ export const decideOrchestrationCommand = Effect.fn("decideOrchestrationCommand"
     }
 
     case "thread.turn.interrupt": {
-      yield* requireThread({
+      const thread = yield* requireThread({
         readModel,
         command,
         threadId: command.threadId,
       });
-      return {
+      const cancellationEvents = yield* decideNativeStopPotetoCancellation(
+        thread,
+        command,
+        readModel,
+      );
+      const interruptEvent: PlannedOrchestrationEvent = {
         ...(yield* withEventBase({
           aggregateKind: "thread",
           aggregateId: command.threadId,
@@ -1839,6 +2434,9 @@ export const decideOrchestrationCommand = Effect.fn("decideOrchestrationCommand"
           createdAt: command.createdAt,
         },
       };
+      return cancellationEvents.length > 0
+        ? [...cancellationEvents, interruptEvent]
+        : interruptEvent;
     }
 
     case "thread.approval.respond": {
@@ -2073,11 +2671,17 @@ export const decideOrchestrationCommand = Effect.fn("decideOrchestrationCommand"
 
     case "thread.conversation.revert":
     case "thread.checkpoint.revert": {
-      yield* requireThread({
+      const thread = yield* requireThread({
         readModel,
         command,
         threadId: command.threadId,
       });
+      if (isThreadPotetoActive(thread)) {
+        return yield* new OrchestrationCommandInvariantError({
+          commandType: command.type,
+          detail: `Thread '${thread.id}' has an active Poteto run and cannot be reverted.`,
+        });
+      }
       return {
         ...(yield* withEventBase({
           aggregateKind: "thread",
@@ -2112,6 +2716,7 @@ export const decideOrchestrationCommand = Effect.fn("decideOrchestrationCommand"
           thread.session?.status === "starting" || thread.session?.status === "running";
         if (
           thread.settledOverride !== "settled" ||
+          isThreadPotetoActive(thread) ||
           sessionComingAlive ||
           hasQueuedTurnStartForThread(thread, command.createdAt)
         ) {
@@ -2121,7 +2726,12 @@ export const decideOrchestrationCommand = Effect.fn("decideOrchestrationCommand"
           });
         }
       }
-      return {
+      const cancellationEvents = yield* decideNativeStopPotetoCancellation(
+        thread,
+        command,
+        readModel,
+      );
+      const stopEvent: PlannedOrchestrationEvent = {
         ...(yield* withEventBase({
           aggregateKind: "thread",
           aggregateId: command.threadId,
@@ -2134,6 +2744,7 @@ export const decideOrchestrationCommand = Effect.fn("decideOrchestrationCommand"
           createdAt: command.createdAt,
         },
       };
+      return cancellationEvents.length > 0 ? [...cancellationEvents, stopEvent] : stopEvent;
     }
 
     case "thread.session.set": {
@@ -2393,11 +3004,17 @@ export const decideOrchestrationCommand = Effect.fn("decideOrchestrationCommand"
     }
 
     case "thread.revert.complete": {
-      yield* requireThread({
+      const thread = yield* requireThread({
         readModel,
         command,
         threadId: command.threadId,
       });
+      if (isThreadPotetoActive(thread)) {
+        return yield* new OrchestrationCommandInvariantError({
+          commandType: command.type,
+          detail: `Thread '${thread.id}' has an active Poteto run and cannot be reverted.`,
+        });
+      }
       return {
         ...(yield* withEventBase({
           aggregateKind: "thread",

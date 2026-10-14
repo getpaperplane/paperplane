@@ -10,6 +10,18 @@ Pi threads automatically receive Rove's browser-preview tools, including navigat
 
 Tools run through the connected Rove server, including when you control a thread remotely. Browser automation still requires an automation-capable preview client. This built-in connection does not load arbitrary MCP servers from Pi settings.
 
+## Poteto Mode (pilot)
+
+In an idle Pi thread on web or desktop, choose **Poteto Mode** from the thread actions and describe the bug and expected behavior. Include a file path or function name when you know it. Your selected Pi model reads a bounded committed snapshot and proposes the files it may change and example checks. Drafting uses model calls, but cannot run code or edit files. Review the proposal, refine the description if needed, then explicitly approve it to start.
+
+Rove enforces reproduction, investigation, competing designs, implementation, verification, and an independent review. The approved model, scope, and checks stay fixed throughout the run. Phase results and blockers remain in the thread across reconnects. Unstarted proposals are temporary; reloads do not resume drafting automatically.
+
+The pilot supports small, dependency-free JavaScript/TypeScript exports and JSON inputs and outputs. Only explicitly approved, committed files from the workspace's HEAD are included; unsaved, uncommitted, and untracked changes are excluded. The server needs Docker running and a prepared image: run `docker pull node:24-alpine` on the host. Checks run without network access in a read-only container. This is not an arbitrary project test runner or the full Poteto playbook.
+
+Use **Stop** to cancel, or **Retry** after a blocked, cancelled, or interrupted attempt has finished cleaning up. A server restart never automatically resumes model calls. Ordinary messages wait until the attempt finishes. A successful run provides a reviewed candidate patch; it does not modify the workspace, create commits, or publish anything. Inspect the patch before applying it yourself. Other providers and older servers do not offer this pilot.
+
+Inspired by [Lauren Tan's Poteto Mode](https://github.com/poteto/plugins/tree/main/pstack/skills/poteto-mode).
+
 ## Session recovery
 
 Rove saves each Pi session's identity and absolute file location on the server. Sessions remain recoverable when a thread's working directory changes, provided the saved file remains accessible. Older sessions without a saved file location use Pi's working-directory lookup.

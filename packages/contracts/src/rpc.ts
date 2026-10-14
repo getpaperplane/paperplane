@@ -19,7 +19,16 @@ import * as Schema from "effect/Schema";
 import { ThreadHandoff, ThreadHandoffExportInput, ThreadHandoffError } from "./threadHandoff.ts";
 import * as Rpc from "effect/unstable/rpc/Rpc";
 import * as RpcGroup from "effect/unstable/rpc/RpcGroup";
-import { NonNegativeInt, TrimmedNonEmptyString } from "./baseSchemas.ts";
+import { NonNegativeInt, TrimmedNonEmptyString, ThreadId } from "./baseSchemas.ts";
+import { ModelSelection } from "./orchestration.ts";
+import { PotetoDraftResult } from "./poteto.ts";
+
+export const PotetoDraftInput = Schema.Struct({
+  threadId: ThreadId,
+  description: Schema.String.check(Schema.isNonEmpty(), Schema.isMaxLength(4096)),
+  modelSelection: ModelSelection,
+});
+export type PotetoDraftInput = typeof PotetoDraftInput.Type;
 import {
   CodexAuthCallbackInput,
   CodexAuthCallbackState,
@@ -413,6 +422,7 @@ export const WS_METHODS = {
   serverProbe: "server.probe",
   serverGetConfig: "server.getConfig",
   serverRefreshProviders: "server.refreshProviders",
+  potetoDraft: "thread.poteto.draft",
   piGetCatalog: "pi.getCatalog",
   piRefreshCatalog: "pi.refreshCatalog",
   serverUpdateProvider: "server.updateProvider",
@@ -525,6 +535,12 @@ const WsServerGetConfigRpc = Rpc.make(WS_METHODS.serverGetConfig, {
   payload: Schema.Struct({}),
   success: ServerConfig,
   error: Schema.Union([KeybindingsConfigError, ServerSettingsError, EnvironmentAuthorizationError]),
+});
+
+const WsPotetoDraftRpc = Rpc.make(WS_METHODS.potetoDraft, {
+  payload: PotetoDraftInput,
+  success: PotetoDraftResult,
+  error: EnvironmentAuthorizationError,
 });
 
 const WsPiGetCatalogRpc = Rpc.make(WS_METHODS.piGetCatalog, {
@@ -1562,6 +1578,7 @@ export const WsRpcGroup = RpcGroup.make(
   WsServerProbeRpc,
   WsServerGetConfigRpc,
   WsServerRefreshProvidersRpc,
+  WsPotetoDraftRpc,
   WsPiGetCatalogRpc,
   WsPiRefreshCatalogRpc,
   WsServerUpdateProviderRpc,

@@ -35,6 +35,10 @@ import type * as Schema from "effect/Schema";
 import type * as Scope from "effect/Scope";
 
 import type * as TextGeneration from "../textGeneration/TextGeneration.ts";
+import type {
+  PotetoWorkerRequest,
+  PotetoWorkerResult,
+} from "../orchestration/poteto/PotetoMode.ts";
 import type { ProviderAdapterError, ProviderDriverError } from "./Errors.ts";
 import type { ProviderAdapterContract } from "./Services/ProviderAdapter.ts";
 import type { ServerProviderContract } from "./Services/ServerProvider.ts";
@@ -91,6 +95,14 @@ export interface ProviderInstance {
   >;
   readonly adapter: ProviderAdapterContract<ProviderAdapterError>;
   readonly textGeneration: TextGeneration.TextGeneration["Service"];
+  readonly potetoDraft?: (
+    options: { cwd: string; agentDir: string; model: string },
+    request: import("./Layers/PiPotetoDraft.ts").PotetoDraftRequest,
+  ) => Promise<import("@rove-code/contracts").PotetoDraftResult>;
+  readonly potetoWorker?: (
+    options: { cwd: string; agentDir: string; model: string },
+    request: PotetoWorkerRequest,
+  ) => Promise<PotetoWorkerResult>;
   readonly auth?: ProviderAuthController;
   readonly piCatalog?: {
     readonly getCatalog: () => Effect.Effect<PiCatalogSnapshot, PiCatalogError>;

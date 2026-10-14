@@ -33,6 +33,9 @@
         "scripts/pi-extensions-bundle-smoke.ts",
         "scripts/pi-oauth-bundle-smoke.ts",
         "scripts/measure-pr-preview.ts",
+        // Standalone Poteto Mode prototype and real-project pilot.
+        "scripts/prototype-poteto-mode.ts",
+        "scripts/pilot-poteto-mode.ts",
         "src/provider/testFixtures/*.mjs",
       ],
       // Keep the transitive Effect runtime pinned for standalone npm installs.

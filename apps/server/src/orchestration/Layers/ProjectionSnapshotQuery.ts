@@ -1572,6 +1572,39 @@ const makeProjectionSnapshotQuery = Effect.gen(function* () {
       `,
   });
 
+  // Sequence, not timestamps, owns the latest durable Poteto journal.
+  const listLatestPotetoRows = SqlSchema.findAll({
+    Request: Schema.Struct({ threadId: Schema.optional(ThreadId) }),
+    Result: ProjectionThreadActivityDbRowSchema,
+    execute: ({ threadId }) => sql`
+      WITH latest AS (
+        SELECT t.thread_id, (
+          SELECT sequence FROM projection_thread_activities
+          WHERE thread_id = t.thread_id AND kind = 'poteto.requested'
+          ORDER BY sequence DESC LIMIT 1
+        ) AS start_sequence
+        FROM projection_threads t
+        WHERE ${threadId === undefined ? sql`1 = 1` : sql`t.thread_id = ${threadId}`}
+      )
+      SELECT a.activity_id AS "activityId", a.thread_id AS "threadId",
+        a.turn_id AS "turnId", a.tone, a.kind, a.summary,
+        a.payload_json AS "payload", a.sequence, a.created_at AS "createdAt"
+      FROM latest JOIN projection_thread_activities a
+        ON a.thread_id = latest.thread_id AND a.sequence >= latest.start_sequence
+      WHERE a.kind IN ('poteto.requested', 'poteto.control', 'poteto.event', 'poteto.finished')
+      ORDER BY a.sequence ASC, a.activity_id ASC
+    `,
+  });
+  const readLatestPotetoRows = (threadId?: ThreadId) =>
+    listLatestPotetoRows(threadId === undefined ? {} : { threadId }).pipe(
+      Effect.mapError(
+        toPersistenceSqlOrDecodeError(
+          "ProjectionSnapshotQuery:listLatestPoteto:query",
+          "ProjectionSnapshotQuery:listLatestPoteto:decodeRows",
+        ),
+      ),
+    );
+
   const getUserInputActivityRow = SqlSchema.findOneOption({
     Request: Schema.Struct({ threadId: ThreadId, requestId: ApprovalRequestId }),
     Result: ProjectionThreadActivityDbRowSchema,
@@ -1648,6 +1681,7 @@ const makeProjectionSnapshotQuery = Effect.gen(function* () {
         SELECT activity_id AS "activityId"
         FROM projection_thread_activities
         WHERE thread_id = ${threadId}
+          AND kind NOT IN ('poteto.requested', 'poteto.control', 'poteto.event', 'poteto.finished')
         ORDER BY
           sequence DESC,
           created_at DESC,
@@ -1675,6 +1709,7 @@ const makeProjectionSnapshotQuery = Effect.gen(function* () {
         -- The selectors already scoped these globally unique ids to the
         -- thread inside this transaction. Keep this as a primary-key lookup.
         WHERE ${sql.in("activity_id", activityIds)}
+          AND kind NOT IN ('poteto.requested', 'poteto.control', 'poteto.event', 'poteto.finished')
       `,
   });
 
@@ -2558,6 +2593,7 @@ pending_approval_requests AS (
               ),
             ),
           ),
+          readLatestPotetoRows(),
         ]),
       )
       .pipe(
@@ -2570,8 +2606,15 @@ pending_approval_requests AS (
             sessionRows,
             latestTurnRows,
             stateRows,
+            potetoRows,
           ]) =>
             Effect.gen(function* () {
+              const potetoByThread = new Map<string, OrchestrationThreadActivity[]>();
+              for (const activity of potetoRows) {
+                const activities = potetoByThread.get(activity.threadId) ?? [];
+                activities.push(mapThreadActivityRow(activity));
+                potetoByThread.set(activity.threadId, activities);
+              }
               const linkedThreadIds = new Set(pullRequestRows.map((row) => row.threadId));
               const linkedProjectIds = new Set(
                 threadRows
@@ -2719,7 +2762,7 @@ pending_approval_requests AS (
                   deletedAt: row.deletedAt,
                   messages: [],
                   proposedPlans: proposedPlansByThread.get(row.threadId) ?? [],
-                  activities: [],
+                  activities: potetoByThread.get(row.threadId) ?? [],
                   checkpoints: [],
                   session: sessionByThread.get(row.threadId) ?? null,
                 });
@@ -3570,7 +3613,7 @@ pending_approval_requests AS (
   const listProjectedThreadActivities = Effect.fn(
     "ProjectionSnapshotQuery.listProjectedThreadActivities",
   )(function* (threadId: ThreadId, bounds: ThreadDetailBounds | undefined) {
-    const [activityIdRows, pinnedActivityIdRows] = yield* Effect.all([
+    const [activityIdRows, pinnedActivityIdRows, potetoRows] = yield* Effect.all([
       (bounds === undefined
         ? listThreadActivityIdsByThread({ threadId })
         : listThreadActivityIdsByThreadWindow({ threadId, ...bounds })
@@ -3590,11 +3633,14 @@ pending_approval_requests AS (
           ),
         ),
       ),
+      readLatestPotetoRows(threadId),
     ]);
     const activityIds = [
       ...new Set([...activityIdRows, ...pinnedActivityIdRows].map(({ activityId }) => activityId)),
     ];
-    const activities: OrchestrationThreadActivity[] = [];
+    const activities: OrchestrationThreadActivity[] = potetoRows.map((row) =>
+      projectActivityPayload(mapThreadActivityRow(row)),
+    );
 
     for (
       let offset = 0;
@@ -3614,7 +3660,9 @@ pending_approval_requests AS (
         ),
       );
       for (const row of batchRows) {
-        activities.push(projectActivityPayload(mapThreadActivityRow(row)));
+        if (!row.kind.startsWith("poteto.")) {
+          activities.push(projectActivityPayload(mapThreadActivityRow(row)));
+        }
       }
     }
 
@@ -3642,10 +3690,18 @@ pending_approval_requests AS (
                   : listThreadActivityRowsByThreadWindow({ threadId, ...bounds })
                 : activityRead.query.activityKinds.length === 0
                   ? Effect.succeed([])
-                  : listThreadActivityRowsByThreadAndKinds({
-                      threadId,
-                      activityKinds: activityRead.query.activityKinds,
-                    })
+                  : activityRead.query.activityKinds.every((kind) => kind.startsWith("poteto."))
+                    ? readLatestPotetoRows(threadId).pipe(
+                        Effect.map((rows) =>
+                          rows.filter((row) =>
+                            activityRead.query!.activityKinds!.includes(row.kind),
+                          ),
+                        ),
+                      )
+                    : listThreadActivityRowsByThreadAndKinds({
+                        threadId,
+                        activityKinds: activityRead.query.activityKinds,
+                      })
               ).pipe(
                 Effect.mapError(
                   toPersistenceSqlOrDecodeError(
@@ -3664,13 +3720,22 @@ pending_approval_requests AS (
                     ),
                   )
                 : Effect.succeed([]),
+              activityRead.query?.activityKinds === undefined
+                ? readLatestPotetoRows(threadId)
+                : Effect.succeed([]),
             ]).pipe(
-              Effect.map(([activityRows, pinnedActivityRows]) =>
+              Effect.map(([activityRows, pinnedActivityRows, potetoRows]) =>
                 [
                   ...new Map(
-                    [...activityRows, ...pinnedActivityRows].map(
-                      (row) => [row.activityId, row] as const,
-                    ),
+                    [
+                      ...activityRows.filter(
+                        (row) =>
+                          activityRead.query?.activityKinds !== undefined ||
+                          !row.kind.startsWith("poteto."),
+                      ),
+                      ...pinnedActivityRows,
+                      ...potetoRows,
+                    ].map((row) => [row.activityId, row] as const),
                   ).values(),
                 ]
                   .toSorted(

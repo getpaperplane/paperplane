@@ -1,6 +1,7 @@
 import { projectQuestionToolInput } from "@rove-code/shared/toolActivity";
 import {
   isContextWindowSnapshotPayload,
+  isPotetoActivity,
   type OrchestrationEvent,
   type OrchestrationThreadActivity,
   type OrchestrationThreadDetailSnapshot,
@@ -400,6 +401,55 @@ function projectRawOutput(value: unknown): Record<string, unknown> | undefined {
   return undefined;
 }
 
+function compactPotetoValue(
+  value: unknown,
+  budget: { remaining: number; nodes: number },
+  depth = 0,
+): unknown {
+  if (depth > 5 || budget.remaining <= 0 || budget.nodes >= 128) return undefined;
+  budget.nodes += 1;
+  if (typeof value === "string") {
+    const compact = value.slice(0, Math.min(512, budget.remaining));
+    budget.remaining -= compact.length;
+    return compact;
+  }
+  if (value === null || typeof value === "boolean" || typeof value === "number") return value;
+  if (Array.isArray(value)) {
+    return value
+      .slice(0, 8)
+      .map((entry) => compactPotetoValue(entry, budget, depth + 1))
+      .filter((entry) => entry !== undefined);
+  }
+  const record = asRecord(value);
+  if (!record) return undefined;
+  const compact: Record<string, unknown> = {};
+  for (const [key, entry] of Object.entries(record).slice(0, 16)) {
+    if (key === "files" || budget.remaining <= 0) continue;
+    const safeKey = key.slice(0, 64);
+    const projected = compactPotetoValue(entry, budget, depth + 1);
+    if (projected !== undefined) compact[safeKey] = projected;
+  }
+  return compact;
+}
+
+function projectPotetoActivityPayload(payload: Record<string, unknown>): Record<string, unknown> {
+  const projected = Object.fromEntries(
+    Object.entries(payload).filter(
+      ([key]) => key !== "event" && key !== "spec" && key !== "modelSelection",
+    ),
+  );
+  const event = asRecord(payload.event);
+  if (!event || projected.artifact !== undefined) return projected;
+  const artifact: Record<string, unknown> = {};
+  if (typeof event.type === "string") artifact.type = event.type;
+  if (typeof event.phase === "string") artifact.phase = event.phase;
+  if (typeof event.reason === "string") artifact.reason = event.reason.slice(0, 1000);
+  if (event.result !== undefined) {
+    artifact.result = compactPotetoValue(event.result, { remaining: 6_000, nodes: 0 });
+  }
+  return { ...projected, ...(Object.keys(artifact).length > 0 ? { artifact } : {}) };
+}
+
 function projectAcpContent(value: unknown): Record<string, unknown> | undefined {
   if (!Array.isArray(value)) {
     return undefined;
@@ -427,10 +477,12 @@ export function projectActivityPayload(
   activity: OrchestrationThreadActivity,
 ): OrchestrationThreadActivity {
   const payload = asRecord(activity.payload);
-  const data = asRecord(payload?.data);
-  if (!payload || !data) {
-    return activity;
+  if (!payload) return activity;
+  if (isPotetoActivity(activity.kind)) {
+    return { ...activity, payload: projectPotetoActivityPayload(payload) };
   }
+  const data = asRecord(payload.data);
+  if (!data) return activity;
 
   const itemStatus = asRecord(data.item)?.status;
   const statusPayload =
