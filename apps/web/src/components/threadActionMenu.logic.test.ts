@@ -56,6 +56,16 @@ describe("buildThreadActionMenuItems", () => {
     expect(running?.disabled).toBe(true);
   });
 
+  it("offers Poteto Mode only for capable thread headers", () => {
+    expect(allIds(baseState)).not.toContain("poteto-mode");
+    expect(
+      buildThreadActionMenuItems({
+        ...baseState,
+        supports: { ...baseState.supports, potetoMode: true },
+      }).find((item) => item.id === "poteto-mode"),
+    ).toMatchObject({ label: "Poteto Mode", icon: "sparkles" });
+  });
+
   it("omits project settings for standalone threads", () => {
     expect(allIds({ ...baseState, hasProject: false })).not.toContain("project-settings");
     expect(allIds({ ...baseState, hasProject: false })).toContain("copy-path");

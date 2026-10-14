@@ -331,6 +331,186 @@ describe("isolated Pi instance runtime", () => {
     expect(models.some((model) => model.slug === "rove-extension-test/fixture")).toBe(true);
   });
 
+  it("runs Poteto phases in the configured instance with fresh restricted sessions", async () => {
+    const agentDir = directory("poteto");
+    const fixture = NodePath.resolve(import.meta.dirname, "../testFixtures/potetoFixture.ts");
+    const extension = NodePath.join(agentDir, "poteto.ts");
+    NodeFS.writeFileSync(
+      extension,
+      `
+      import { registerPotetoFixtureModel } from ${JSON.stringify(fixture)};
+      import { readFileSync } from 'node:fs';
+      export default (pi) => registerPotetoFixtureModel({
+        registerProvider(name, config) {
+          const stream = config.streamSimple;
+          pi.registerProvider(name, { ...config, apiKey: '$POTETO_INSTANCE_KEY',
+            streamSimple(model, context, options) {
+              if (options.apiKey !== 'instance-only-key') throw new Error('Wrong instance environment');
+              const auth = JSON.parse(readFileSync(process.env.PI_CODING_AGENT_DIR + '/auth.json', 'utf8'));
+              if (auth.local.key !== 'key-poteto') throw new Error('Wrong instance auth');
+              return stream(model, context, options);
+            }
+          });
+        }
+      }, 'attempt-bypass', { reasoning: true });
+    `,
+    );
+    NodeFS.writeFileSync(
+      NodePath.join(agentDir, "settings.json"),
+      JSON.stringify({ extensions: [extension] }),
+    );
+    const runtime = await PiRuntimeProcess.create({ agentDir }, false, {
+      ...process.env,
+      POTETO_INSTANCE_KEY: "instance-only-key",
+    });
+    runtimes.push(runtime);
+    const cwd = NodePath.join(root, "sandbox");
+    const neutralAgentDir = NodePath.join(root, "sandbox-agent");
+    NodeFS.mkdirSync(cwd);
+    NodeFS.mkdirSync(neutralAgentDir);
+    NodeFS.mkdirSync(NodePath.join(cwd, ".pi", "extensions"), { recursive: true });
+    NodeFS.writeFileSync(
+      NodePath.join(cwd, ".pi", "extensions", "poison.ts"),
+      'throw new Error("Loaded worker extension")',
+    );
+    const controller = new AbortController();
+    const options = { cwd, agentDir: neutralAgentDir, model: "rove-poteto-fixture/fixture:high" };
+    const request = {
+      role: "how" as const,
+      task: "Fix inclusive discounts",
+      files: [{ path: "discount.json", content: '{"minimum":100,"rate":0.1,"comparison":"gt"}' }],
+      context: {},
+      signal: controller.signal,
+    };
+    const result = await runtime.runPotetoWorker(options, request);
+    expect(result).toMatchObject({
+      readPaths: ["discount.json"],
+      execution: { model: "rove-poteto-fixture/fixture", thinkingLevel: "high" },
+    });
+    expect(result.files).toEqual(request.files);
+    expect(await runtime.runPotetoWorker(options, request)).toEqual(result);
+    expect(runtime.isIdle).toBe(true);
+    expect(NodeFS.existsSync(NodePath.join(neutralAgentDir, "sessions"))).toBe(false);
+    expect(NodeFS.existsSync(NodePath.join(cwd, "discount.json"))).toBe(false);
+    controller.abort();
+    await expect(runtime.runPotetoWorker(options, request)).rejects.toThrow();
+    expect(process.env.POTETO_INSTANCE_KEY).toBeUndefined();
+  });
+
+  it.each(["signal", "deadline", "exit"] as const)(
+    "drains a Poteto phase after %s without overlapping inference",
+    async (mode) => {
+      let started!: () => void;
+      let draining!: () => void;
+      let release!: () => void;
+      const startedReceipt = new Promise<void>((resolve) => {
+        started = resolve;
+      });
+      const drainReceipt = new Promise<void>((resolve) => {
+        draining = resolve;
+      });
+      const server = NodeHttp.createServer((request, response) => {
+        if (request.url === "/started") {
+          response.end();
+          started();
+        } else {
+          release = () => response.end();
+          draining();
+        }
+      });
+      await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+      const address = server.address();
+      if (!address || RuntimePredicate.isString(address))
+        throw new Error("Missing fixture address");
+      const agentDir = directory("poteto-cancel");
+      const extension = NodePath.join(agentDir, "cancel.ts");
+      NodeFS.writeFileSync(
+        extension,
+        `
+      import { createAssistantMessageEventStream } from '@earendil-works/pi-ai';
+      export default (pi) => pi.registerProvider('poteto-cancel', {
+        api: 'openai-completions', apiKey: 'fixture', baseUrl: 'https://example.invalid',
+        models: [{ id: 'fixture', name: 'Fixture', reasoning: false, input: ['text'],
+          cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 }, contextWindow: 64000, maxTokens: 2048 }],
+        streamSimple(model, context, options) {
+          const stream = createAssistantMessageEventStream();
+          void (async () => {
+            const aborted = new Promise(resolve => {
+              if (options.signal.aborted) resolve();
+              else options.signal.addEventListener('abort', resolve, { once: true });
+            });
+            await fetch('http://127.0.0.1:${address.port}/started');
+            await aborted;
+            await fetch('http://127.0.0.1:${address.port}/drain');
+            const message = { role: 'assistant', api: model.api, provider: model.provider, model: model.id,
+              timestamp: 0, content: [], stopReason: 'aborted', errorMessage: 'Cancelled',
+              usage: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, totalTokens: 0,
+                cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 } } };
+            stream.push({ type: 'error', reason: 'aborted', error: message });
+            stream.end();
+          })();
+          return stream;
+        }
+      });
+    `,
+      );
+      NodeFS.writeFileSync(
+        NodePath.join(agentDir, "settings.json"),
+        JSON.stringify({
+          extensions: [NodePath.join(agentDir, "instance.ts"), extension],
+        }),
+      );
+      try {
+        const runtime = await create(agentDir);
+        const current = await session(runtime, agentDir);
+        const controller = new AbortController();
+        vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+        let settled = false;
+        const operation = runtime
+          .runPotetoWorker(
+            { cwd: root, agentDir, model: "poteto-cancel/fixture" },
+            {
+              role: "how",
+              task: "cancel",
+              files: [{ path: "test", content: "test" }],
+              context: {},
+              signal: controller.signal,
+            },
+          )
+          .catch((error: unknown) => error)
+          .finally(() => {
+            settled = true;
+          });
+        await startedReceipt;
+        if (mode === "signal") controller.abort();
+        else await vi.advanceTimersByTimeAsync(70_000);
+        await drainReceipt;
+        await vi.advanceTimersByTimeAsync(70_000);
+        expect(settled).toBe(false);
+        expect(runtime.isIdle).toBe(false);
+        vi.useRealTimers();
+        if (mode === "exit") {
+          await runtime.dispose();
+          expect(await operation).toBeInstanceOf(Error);
+          return;
+        }
+        await current.prompt("hello");
+        expect(current.messages.at(-1)).toMatchObject({
+          content: [{ type: "text", text: "poteto-cancel" }],
+        });
+        release();
+        const error = await operation;
+        expect(error).toBeInstanceOf(Error);
+        if (mode === "deadline") expect(String(error)).toContain("potetoWorker timed out");
+        await current.dispose();
+        expect(runtime.isIdle).toBe(true);
+      } finally {
+        release?.();
+        await new Promise<void>((resolve) => server.close(() => resolve()));
+      }
+    },
+  );
+
   it("shares extension model implementations with tool-free helper sessions", async () => {
     const agentDir = directory("helpers");
     const runtime = await create(agentDir);

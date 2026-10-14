@@ -1,5 +1,11 @@
 // @effect-diagnostics nodeBuiltinImport:off
 // @effect-diagnostics globalTimers:off - Orphan cleanup bounds extension shutdown outside the server runtime.
+import { getAgentDir, SettingsManager } from "@earendil-works/pi-coding-agent";
+import {
+  createPiPotetoWorker,
+  resolvePiPotetoThinkingLevel,
+} from "./provider/Layers/PiPotetoWorker.ts";
+import type { PotetoWorkerResult } from "./orchestration/poteto/PotetoMode.ts";
 import { PiCatalogHost } from "./provider/Layers/PiCatalogHost.ts";
 import { createPiSession } from "./provider/Layers/PiSessionFactory.ts";
 import { PiWorkloads } from "./provider/Layers/PiWorkloads.ts";
@@ -85,6 +91,10 @@ export async function runPiRuntimeWorker(): Promise<void> {
   >();
   const subagentTranscriptsRoot = process.env[PI_SUBAGENT_TRANSCRIPTS_ENV];
   const initializing = new Set<Promise<unknown>>();
+  const potetoWorkers = new Map<
+    number,
+    { controller: AbortController; drain: Promise<PotetoWorkerResult> }
+  >();
   const post = (message: PiRuntimeMessage) => {
     if (!process.connected) return;
     // A stalled parent must not let streaming progress grow an unbounded IPC queue.
@@ -107,6 +117,8 @@ export async function runPiRuntimeWorker(): Promise<void> {
   const shutdown = () =>
     (shutdownPromise ??= (async () => {
       closing = true;
+      for (const { controller } of potetoWorkers.values()) controller.abort();
+      await Promise.allSettled([...potetoWorkers.values()].map(({ drain }) => drain));
       await Promise.allSettled(initializing);
       await workloads?.dispose();
       await Promise.allSettled(
@@ -141,6 +153,35 @@ export async function runPiRuntimeWorker(): Promise<void> {
         return getHost().getCatalogModels(...request.args);
       case "discover":
         return getHost().discover(...request.args);
+      case "potetoWorker": {
+        const [key, options, serialized] = request.args;
+        const controller = new AbortController();
+        const worker = createPiPotetoWorker({
+          ...options,
+          modelRuntime: getHost().getModelRuntime(),
+          thinkingLevel: resolvePiPotetoThinkingLevel(
+            getHost().getModelRuntime(),
+            options.model,
+            SettingsManager.create(options.cwd, getAgentDir()),
+            options.thinkingLevel,
+          ),
+        });
+        const drain = worker({ ...serialized, signal: controller.signal });
+        potetoWorkers.set(key, { controller, drain });
+        try {
+          return await drain;
+        } finally {
+          potetoWorkers.delete(key);
+        }
+      }
+      case "potetoAbort": {
+        const worker = potetoWorkers.get(request.args[0]);
+        if (worker) {
+          worker.controller.abort();
+          await worker.drain.catch(() => {});
+        }
+        return;
+      }
       case "createSession": {
         const [key, input, textGeneration, mcp] = request.args;
         const compatibility = getHost().observeThreadUI();

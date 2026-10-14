@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vite-plus/test";
-import type { OrchestrationThreadActivity } from "@rove-code/contracts";
+import { latestThreadPotetoProgress, type OrchestrationThreadActivity } from "@rove-code/contracts";
 import { projectActivityPayload } from "./ActivityPayloadProjection.ts";
 import type { Json as SchemaJson } from "effect/Schema";
 
@@ -331,6 +331,64 @@ describe("projectActivityPayload", () => {
     expect(
       projectActivityPayload(activity({ itemType: "mcp_tool_call", data })).payload,
     ).not.toHaveProperty("toolIcon");
+  });
+
+  it("slims Poteto journal payloads while retaining progress and a bounded report artifact", () => {
+    const projected = projectActivityPayload({
+      ...activity({
+        runId: "poteto-run",
+        attemptId: "poteto-attempt",
+        spec: { task: "private setup detail" },
+        modelSelection: { instanceId: "pi", model: "private model" },
+        progress: {
+          runId: "poteto-run",
+          attemptId: "poteto-attempt",
+          status: "running",
+          phase: "implement",
+          reason: null,
+        },
+        event: {
+          type: "accepted",
+          phase: "implement",
+          result: {
+            report: { summary: "r".repeat(2_000), evidenceIds: ["reproduction"] },
+            files: [{ path: "private.ts", content: "secret candidate".repeat(2_000) }],
+          },
+        },
+      }),
+      kind: "poteto.event",
+    });
+    const payload = projected.payload as Record<string, unknown>;
+    expect(payload.event).toBeUndefined();
+    expect(payload.spec).toBeUndefined();
+    expect(payload.modelSelection).toBeUndefined();
+    expect(payload.progress).toMatchObject({ status: "running", phase: "implement" });
+    expect(payload.artifact).toMatchObject({ type: "accepted", phase: "implement" });
+    expect(JSON.stringify(payload.artifact)).not.toContain("private.ts");
+    expect(JSON.stringify(payload.artifact).length).toBeLessThan(7_000);
+    expect(projectActivityPayload(projected).payload).toEqual(projected.payload);
+  });
+
+  it("finds the latest decodable Poteto progress and tolerates pre-pilot activities", () => {
+    expect(
+      latestThreadPotetoProgress([
+        { kind: "tool.completed", payload: { status: "completed" } },
+        { kind: "poteto.event", payload: { progress: { status: "future-version" } } },
+        {
+          kind: "poteto.finished",
+          payload: {
+            progress: {
+              runId: "run-1",
+              attemptId: "attempt-2",
+              status: "blocked",
+              phase: "review",
+              reason: "Needs another look",
+            },
+          },
+        },
+      ]),
+    ).toMatchObject({ status: "blocked", phase: "review", reason: "Needs another look" });
+    expect(latestThreadPotetoProgress([{ kind: "tool.completed", payload: {} }])).toBeUndefined();
   });
 
   it("passes task lifecycle payloads (no data field) through untouched", () => {

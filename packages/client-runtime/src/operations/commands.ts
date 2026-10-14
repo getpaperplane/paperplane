@@ -53,6 +53,8 @@ export type RecordThreadContinuationInput = CommandInput<"thread.continuation.re
 export type SetThreadRuntimeModeInput = CommandInput<"thread.runtime-mode.set">;
 export type SetThreadInteractionModeInput = CommandInput<"thread.interaction-mode.set">;
 export type StartThreadTurnInput = CommandInput<"thread.turn.start">;
+export type StartThreadPotetoInput = CommandInput<"thread.poteto.start">;
+export type ControlThreadPotetoInput = CommandInput<"thread.poteto.control">;
 export type InterruptThreadTurnInput = CommandInput<"thread.turn.interrupt">;
 export type RespondToThreadApprovalInput = CommandInput<"thread.approval.respond">;
 export type RespondToThreadUserInputInput = CommandInput<"thread.user-input.respond">;
@@ -356,6 +358,30 @@ export const startThreadTurn: (input: StartThreadTurnInput) => CommandEffect = E
   return yield* dispatch({
     ...input,
     type: "thread.turn.start",
+    commandId: metadata.commandId,
+    createdAt: metadata.createdAt,
+  });
+});
+
+export const startThreadPoteto: (input: StartThreadPotetoInput) => CommandEffect = Effect.fn(
+  "EnvironmentCommands.startThreadPoteto",
+)(function* (input) {
+  const metadata = yield* timestampedCommandMetadata(input);
+  return yield* dispatch({
+    ...input,
+    type: "thread.poteto.start",
+    commandId: metadata.commandId,
+    createdAt: metadata.createdAt,
+  });
+});
+
+export const controlThreadPoteto: (input: ControlThreadPotetoInput) => CommandEffect = Effect.fn(
+  "EnvironmentCommands.controlThreadPoteto",
+)(function* (input) {
+  const metadata = yield* timestampedCommandMetadata(input);
+  return yield* dispatch({
+    ...input,
+    type: "thread.poteto.control",
     commandId: metadata.commandId,
     createdAt: metadata.createdAt,
   });

@@ -78,6 +78,13 @@ const messagePositions = new WeakMap<
 function retainThreadActivities(activities: OrchestrationThread["activities"]) {
   const recentStart = activities.length - 500;
   if (recentStart <= 0) return activities;
+  let latestPotetoRunId: string | null = null;
+  for (let index = activities.length - 1; index >= 0; index -= 1) {
+    const activity = activities[index]!;
+    if (activity.kind !== "poteto.requested" || !Predicate.isObject(activity.payload)) continue;
+    if (typeof activity.payload.runId === "string") latestPotetoRunId = activity.payload.runId;
+    break;
+  }
   const pending = new Map<string, OrchestrationThread["activities"][number]>();
   for (const activity of activities) {
     if (!Predicate.isObject(activity.payload)) continue;
@@ -98,7 +105,11 @@ function retainThreadActivities(activities: OrchestrationThread["activities"]) {
       // whole life and is the only durable copy of a running setup; an async
       // setup script can outlast a chatty first turn.
       activity.kind === WORKTREE_SETUP_ACTIVITY_KIND ||
-      activity.kind === PI_EXTENSION_STATUS_ACTIVITY_KIND,
+      activity.kind === PI_EXTENSION_STATUS_ACTIVITY_KIND ||
+      (latestPotetoRunId !== null &&
+        activity.kind.startsWith("poteto.") &&
+        Predicate.isObject(activity.payload) &&
+        activity.payload.runId === latestPotetoRunId),
   );
 }
 

@@ -31,6 +31,10 @@
       "types": "./src/projectFaviconCache.ts",
       "default": "./src/projectFaviconCache.ts"
     },
+    "./poteto": {
+      "types": "./src/poteto.ts",
+      "default": "./src/poteto.ts"
+    },
     "./pending-requests": {
       "types": "./src/pendingRequests.ts",
       "default": "./src/pendingRequests.ts"

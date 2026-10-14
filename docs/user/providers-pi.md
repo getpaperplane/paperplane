@@ -10,6 +10,16 @@ Pi threads automatically receive Rove's browser-preview tools, including navigat
 
 Tools run through the connected Rove server, including when you control a thread remotely. Browser automation still requires an automation-capable preview client. This built-in connection does not load arbitrary MCP servers from Pi settings.
 
+## Poteto Mode (pilot)
+
+In an idle Pi thread, choose **Poteto Mode** from the thread actions and supply a JSON specification containing `task`, `editableFiles`, `contextFiles`, and `check` (`module`, `export`, and `cases` with `args` and `expected`). Rove runs reproduction, investigation, competing designs, implementation, verification, and a fresh review. Phase results and blockers remain in the thread across reconnects.
+
+The pilot supports small, dependency-free JavaScript/TypeScript exports and JSON inputs and outputs. Only explicitly approved, committed files from the workspace's HEAD are included; unsaved, uncommitted, and untracked changes are excluded. The server needs Docker running and a prepared image: run `docker pull node:24-alpine` on the host. Checks run without network access in a read-only container. This is not an arbitrary project test runner or the full Poteto playbook.
+
+Use **Stop** to cancel, or **Retry** after a blocked, cancelled, or interrupted attempt has finished cleaning up. A server restart never automatically resumes model calls. Ordinary messages wait until the attempt finishes. A successful run provides a reviewed candidate patch; it does not modify the workspace, create commits, or publish anything. Inspect the patch before applying it yourself. Other providers and older servers do not offer this pilot.
+
+Inspired by [Lauren Tan's Poteto Mode](https://github.com/poteto/plugins/tree/main/pstack/skills/poteto-mode).
+
 ## Session recovery
 
 Rove saves each Pi session's identity and absolute file location on the server. Sessions remain recoverable when a thread's working directory changes, provided the saved file remains accessible. Older sessions without a saved file location use Pi's working-directory lookup.

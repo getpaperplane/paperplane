@@ -24,12 +24,18 @@ import {
   DEFAULT_SERVER_SETTINGS,
   EnvironmentId,
   ThreadId,
+  type PotetoProjectSpec,
   type ProjectScript,
 } from "@rove-code/contracts";
 import {
   requestOlderThreadTurns,
   threadHasOlderTurns,
 } from "@rove-code/client-runtime/state/threads";
+import { deriveThreadPotetoView } from "@rove-code/client-runtime/poteto";
+import {
+  isAtomCommandInterrupted,
+  squashAtomCommandFailure,
+} from "@rove-code/client-runtime/state/runtime";
 import {
   projectScriptCwd,
   projectScriptRuntimeEnv,
@@ -70,6 +76,7 @@ import {
 } from "../terminal/terminalLaunchContext";
 import { terminalDebugLog } from "../terminal/terminalDebugLog";
 import { ThreadDetailScreen, type ThreadDetailScreenProps } from "./ThreadDetailScreen";
+import { PotetoModeForm } from "./PotetoModeForm";
 import { GitOverviewSheet } from "./git/GitOverviewSheet";
 import { useAtomCommand } from "../../state/use-atom-command";
 import { useSelectedThreadGitActions } from "../../state/use-selected-thread-git-actions";
@@ -101,6 +108,7 @@ function ThreadHeader(
     readonly onToggleInspector: () => void;
     readonly onOpenGitInspector: () => void;
     readonly onOpenFilesInspector: () => void;
+    readonly onStartPotetoMode?: (() => void) | undefined;
   },
 ) {
   const navigation = useNavigation();
@@ -137,6 +145,13 @@ function ThreadHeader(
       icon: "point.topleft.down.curvedto.point.bottomright.up",
       onPress: props.onOpenGitInspector,
     });
+    if (props.onStartPotetoMode) {
+      actions.push({
+        accessibilityLabel: "Start Poteto Mode",
+        icon: { ios: "sparkles", android: "auto_awesome" },
+        onPress: props.onStartPotetoMode,
+      });
+    }
     return actions;
   }, [
     props.inspectorMode,
@@ -144,6 +159,7 @@ function ThreadHeader(
     props.onOpenFilesInspector,
     onOpenTerminal,
     props.onOpenGitInspector,
+    props.onStartPotetoMode,
     toggleAuxiliaryPane,
     props.onReturnToThread,
     props.hasThreadCwd,
@@ -336,6 +352,10 @@ function ThreadRouteContent(
   } = useThreadSelection();
   const selectedThreadDetailState = props.selectedThreadDetailState;
   const selectedThreadDetail = Option.getOrNull(selectedThreadDetailState.data);
+  const potetoView = useMemo(
+    () => deriveThreadPotetoView(selectedThreadDetail?.activities ?? []),
+    [selectedThreadDetail],
+  );
   // "Load earlier turns" header state for windowed (paginated) thread loads.
   const loadEarlierTurns = useMemo(() => {
     if (selectedThread === null || !threadHasOlderTurns(selectedThreadDetailState)) {
@@ -358,6 +378,7 @@ function ThreadRouteContent(
   const gitActions = useSelectedThreadGitActions();
   const requests = useSelectedThreadRequests();
   const interruptThreadTurn = useAtomCommand(threadEnvironment.interruptTurn, "thread interrupt");
+  const startPoteto = useAtomCommand(threadEnvironment.startPoteto, { reportFailure: false });
   const navigation = useNavigation();
   const params = props.route.params;
   const environmentIdRaw = firstRouteParam(params.environmentId);
@@ -368,6 +389,7 @@ function ThreadRouteContent(
   const [inspectorSelection, setInspectorSelection] = useState<ThreadInspectorSelection | null>(
     () => (props.renderInspector ? { routeThreadIdentity, mode: "route" } : null),
   );
+  const [potetoFormOpen, setPotetoFormOpen] = useState(false);
   const inspectorMode = (() => {
     if (inspectorSelection?.routeThreadIdentity === routeThreadIdentity) {
       if (inspectorSelection.mode === "files" && selectedThreadCwd === null) {
@@ -956,8 +978,46 @@ function ThreadRouteContent(
           connectionState: routeConnectionState,
         });
   const serverConfig = routeEnvironmentRuntime?.serverConfig ?? null;
+  const selectedPotetoProvider = serverConfig?.providers.find(
+    (provider) =>
+      provider.instanceId ===
+      (selectedThreadWithDraftSettings ?? selectedThread).modelSelection.instanceId,
+  );
+  const supportsPotetoMode =
+    creationState === null &&
+    routeConnectionState === "connected" &&
+    !potetoView.pending &&
+    selectedPotetoProvider?.driver === "pi" &&
+    serverConfig?.environment.capabilities.potetoMode === true;
+  const openPotetoModeForm = useCallback(() => setPotetoFormOpen(true), []);
+  const handleStartPotetoMode = useCallback(
+    async (spec: PotetoProjectSpec) => {
+      if (!supportsPotetoMode) return false;
+      const result = await startPoteto({
+        environmentId: selectedThread.environmentId,
+        input: { threadId: selectedThread.id, spec },
+      });
+      if (result._tag === "Failure") {
+        if (!isAtomCommandInterrupted(result)) {
+          const error = squashAtomCommandFailure(result);
+          Alert.alert(
+            "Could not start Poteto Mode",
+            error instanceof Error ? error.message : "The request was rejected.",
+          );
+        }
+        return false;
+      }
+      return true;
+    },
+    [selectedThread, startPoteto, supportsPotetoMode],
+  );
   const renderThreadRouteBody = () => (
     <>
+      <PotetoModeForm
+        visible={potetoFormOpen}
+        onClose={() => setPotetoFormOpen(false)}
+        onStart={handleStartPotetoMode}
+      />
       <GitActionProgressOverlay progress={gitActionProgress} onDismiss={dismissGitActionResult} />
 
       <View className="flex-1 bg-screen android:overflow-hidden android:rounded-t-[28px] android:bg-thread-canvas">
@@ -970,6 +1030,9 @@ function ThreadRouteContent(
           feedbackSubmissions={composer.feedbackSubmissions}
           onDismissFeedback={composer.dismissFeedback}
           selectedThreadFeed={composer.selectedThreadFeed}
+          potetoPending={potetoView.pending}
+          potetoProgress={potetoView.progress}
+          potetoArtifacts={potetoView.artifacts}
           piExtensionStatuses={composer.piExtensionStatuses}
           activeWorkStartedAt={composer.activeWorkStartedAt}
           isCompacting={composer.isCompacting}
@@ -1060,6 +1123,7 @@ function ThreadRouteContent(
         onOpenGitInspector={handleOpenGitInspector}
         onOpenFilesInspector={handleOpenFilesInspector}
         onReturnToThread={props.onReturnToThread}
+        {...(supportsPotetoMode ? { onStartPotetoMode: openPotetoModeForm } : {})}
       />
 
       {renderThreadRouteBody()}

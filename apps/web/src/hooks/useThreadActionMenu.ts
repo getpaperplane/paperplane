@@ -68,8 +68,10 @@ export function useThreadActionMenu(input: {
   /** Fallback for "Copy path" when the thread has no worktree. */
   readonly projectCwd: string | null;
   readonly onStartRename: () => void;
+  readonly supportsPotetoMode?: boolean;
+  readonly onOpenPotetoMode?: (() => void) | undefined;
 }) {
-  const { threadRef, projectCwd, onStartRename } = input;
+  const { threadRef, projectCwd, onStartRename, supportsPotetoMode, onOpenPotetoMode } = input;
   const router = useRouter();
   const projects = useProjects();
   const primaryEnvironmentId = usePrimaryEnvironmentId();
@@ -140,6 +142,7 @@ export function useThreadActionMenu(input: {
           snooze: readEnvironmentSupportsSnooze(threadRef.environmentId),
           pinning: readEnvironmentSupportsPinning(threadRef.environmentId),
           titleRegeneration: readEnvironmentSupportsTitleRegeneration(threadRef.environmentId),
+          potetoMode: supportsPotetoMode === true,
         };
         const isRegeneratingTitle = thread.titleRegeneration != null;
         const snoozePresets = resolveSnoozePresets(now, timestampFormat);
@@ -250,6 +253,9 @@ export function useThreadActionMenu(input: {
           case "rename":
             onStartRename();
             return;
+          case "poteto-mode":
+            onOpenPotetoMode?.();
+            return;
           case "regenerate-title":
             if (isRegeneratingTitle) return;
             await reportFailure("Failed to regenerate thread title", () =>
@@ -347,6 +353,7 @@ export function useThreadActionMenu(input: {
       handleNewThread,
       logicalProjectKeyByPhysicalKey,
       markThreadUnread,
+      onOpenPotetoMode,
       onStartRename,
       pinThread,
       projectCwd,
@@ -356,6 +363,7 @@ export function useThreadActionMenu(input: {
       setThreadAutoSettle,
       settleThread,
       snoozeThread,
+      supportsPotetoMode,
       threadRef,
       timestampFormat,
       unsettleThread,

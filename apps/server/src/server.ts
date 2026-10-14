@@ -97,6 +97,8 @@ import * as UsageLimitChecks from "./provider/UsageLimitChecks.ts";
 import * as StorageCleanup from "./storageCleanup.ts";
 import * as PullRequestSyncReactor from "./orchestration/PullRequestSyncReactor.ts";
 import * as ThreadPullRequestReactor from "./orchestration/ThreadPullRequestReactor.ts";
+import * as ThreadPotetoReactor from "./orchestration/poteto/ThreadPotetoReactor.ts";
+import * as ThreadPotetoRunner from "./orchestration/poteto/ThreadPotetoRunner.ts";
 import * as AgentAwarenessRelay from "./relay/AgentAwarenessRelay.ts";
 import { hasCloudPublicConfig } from "./cloud/publicConfig.ts";
 import { ProviderRegistryLive } from "./provider/Layers/ProviderRegistry.ts";
@@ -278,6 +280,7 @@ const ReactorLayerLive = Layer.empty.pipe(
   Layer.provideMerge(UsageLimitRecoveryReactor.layer),
   Layer.provideMerge(PullRequestSyncReactor.layer),
   Layer.provideMerge(ThreadPullRequestReactor.layer),
+  Layer.provideMerge(ThreadPotetoReactor.layer.pipe(Layer.provide(ThreadPotetoRunner.layer))),
   Layer.provideMerge(AgentAwarenessRelay.layer.pipe(Layer.provide(ServerSecretStore.layer))),
   Layer.provideMerge(RuntimeReceiptBusLive),
 );
