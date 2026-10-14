@@ -169,6 +169,41 @@ const TITLE_LIMIT = 100;
 const SUMMARY_LIMIT = 180;
 const TEXT_LIMIT = 16_384;
 const OUTPUT_LIMIT = 4_096;
+const PARTIAL_TEXT_LIMIT = 2_000;
+const PARTIAL_FILES_LIMIT = 50;
+
+// Pi's standard tools that change files; their `path` argument names the file.
+const FILE_CHANGING_TOOLS = new Set(["edit", "write"]);
+const decodeFileArgs = Schema.decodeUnknownOption(
+  Schema.Struct({ path: Schema.optional(Schema.String) }),
+);
+
+/**
+ * What a stopped or failed child got done, so the parent can resume from it
+ * instead of repeating the work. The message becomes the tool call's result.
+ */
+function unfinishedResult(
+  headline: string,
+  progress: { readonly lastText: string | undefined; readonly changedFiles: Set<string> },
+): string {
+  const parts = [headline];
+  if (progress.lastText) {
+    const text = progress.lastText.trim();
+    parts.push(
+      `Its last message:\n${text.length <= PARTIAL_TEXT_LIMIT ? text : `${text.slice(0, PARTIAL_TEXT_LIMIT)}…`}`,
+    );
+  }
+  if (progress.changedFiles.size > 0) {
+    const files = [...progress.changedFiles];
+    const listed = files.slice(0, PARTIAL_FILES_LIMIT).map((file) => `- ${file}`);
+    if (files.length > PARTIAL_FILES_LIMIT)
+      listed.push(`- …and ${files.length - PARTIAL_FILES_LIMIT} more`);
+    parts.push(
+      `Files it changed (they may be partly edited; check them before redoing the work):\n${listed.join("\n")}`,
+    );
+  }
+  return parts.join("\n\n");
+}
 
 const safeSegment = (value: string) => value.replace(/[^A-Za-z0-9._-]/g, "_").slice(0, 200);
 
@@ -250,7 +285,7 @@ export function createPiSubagentTool(options: PiSubagentToolOptions) {
     name: PI_SUBAGENT_TOOL_NAME,
     label: "Subagent",
     description:
-      "Delegate a self-contained task to a subagent. It works in the same workspace with its own fresh context and the standard tools, then returns its final report. The subagent cannot see this conversation, so put everything it needs in the prompt. Use it for independent research or work that would flood your context; call it several times in one response to run subagents in parallel.",
+      "Delegate a self-contained task to a subagent. It works in the same workspace with its own fresh context and the standard tools, then returns its final report. The subagent cannot see this conversation, so put everything it needs in the prompt. Use it for independent research or work that would flood your context; call it several times in one response to run subagents in parallel. Do not delegate what you can finish in a few tool calls: a subagent starts cold, without your context, and pays for its own setup.",
     promptSnippet: "Delegate a self-contained task to a subagent with its own context",
     parameters: {
       type: "object",
@@ -281,6 +316,9 @@ export function createPiSubagentTool(options: PiSubagentToolOptions) {
         lastStop: undefined as string | undefined,
         lastTool: undefined as string | undefined,
         openTools: new Map<string, string>(),
+        /** Paths that file-changing tools were called with, keyed by call until they succeed. */
+        pendingFiles: new Map<string, string>(),
+        changedFiles: new Set<string>(),
         toolCount: 0,
         usage: { in: 0, out: 0, cr: 0, cw: 0 },
       };
@@ -416,6 +454,10 @@ export function createPiSubagentTool(options: PiSubagentToolOptions) {
               state.toolCount += 1;
               state.lastTool = name;
               state.openTools.set(id, `▸ ${name}${target ? ` ${target}` : ""}`);
+              const path = FILE_CHANGING_TOOLS.has(name)
+                ? Option.getOrUndefined(decodeFileArgs(tool.value.args))?.path?.trim()
+                : undefined;
+              if (path) state.pendingFiles.set(id, path);
               write("tool", { id, name, ...(target ? { target } : undefined) });
               break;
             }
@@ -424,6 +466,9 @@ export function createPiSubagentTool(options: PiSubagentToolOptions) {
               if (Option.isNone(tool)) return;
               const id = tool.value.toolCallId;
               state.openTools.delete(id);
+              const changed = state.pendingFiles.get(id);
+              state.pendingFiles.delete(id);
+              if (changed && !tool.value.isError) state.changedFiles.add(changed);
               const out = messageText(tool.value.result).trim();
               write("toolEnd", {
                 id,
@@ -466,12 +511,12 @@ export function createPiSubagentTool(options: PiSubagentToolOptions) {
       const report = session?.getLastAssistantText()?.trim() || state.lastText;
       if (state.lastStop === "aborted" || signal?.aborted) {
         settle("stopped", "Stopped");
-        throw new Error("Subagent was stopped.");
+        throw new Error(unfinishedResult("Subagent was stopped.", state));
       }
       if (state.lastStop === "error" || state.lastError) {
         const error = state.lastError ?? "Subagent failed.";
         settle("failed", error);
-        throw new Error(error);
+        throw new Error(unfinishedResult(error, state));
       }
       settle("completed", report);
       return {
