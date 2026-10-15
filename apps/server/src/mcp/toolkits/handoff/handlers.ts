@@ -34,7 +34,8 @@ export const HandoffToolkitHandlersLive = HandoffToolkit.toLayer(
           )
             return yield* new ThreadHandoffError({
               kind: "history",
-              message: "This thread has no matching imported handoff.",
+              message:
+                "This thread has no matching imported handoff. To read another thread in this environment, use read_thread_history with its threadId.",
             });
           return yield* Effect.try({
             try: () => readHandoffPage(imported, input),

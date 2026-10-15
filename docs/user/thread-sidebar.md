@@ -150,6 +150,12 @@ and copying a thread reference. A copied reference uses the thread's pull reques
 link when available, otherwise its thread ID. See [keybindings](./keybindings.md)
 for custom configuration.
 
+To pick up another thread's work in the same environment, give your agent its thread ID
+and ask it to review the conversation before continuing. Agents can read saved messages
+and proposed plans without starting the original agent. This does not switch branches
+or copy code changes; choose the appropriate workspace separately. A thread that is still
+running may gain new messages while it is being read.
+
 ## Continue after a usage limit
 
 Enable **Auto-resume limited threads** in **Settings → General** on web and desktop,

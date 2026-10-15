@@ -16,7 +16,7 @@ export type ReadThreadHandoffInput = typeof ReadThreadHandoffInput.Type;
 export const HandoffToolkit = Toolkit.make(
   Tool.make("read_thread_handoff", {
     description:
-      "Read portable history imported into this thread. With no itemId, list item IDs and lengths using offset/nextOffset. With itemId, read its text using textOffset/nextTextOffset until null. This reads the destination's saved artifact even when the original machine is offline. It cannot recover items or attachments that were not transferred.",
+      "Read portable history imported into this thread. With no itemId, list item IDs and lengths using offset/nextOffset. With itemId, read its text using textOffset/nextTextOffset until null. This reads the destination's saved artifact even when the original machine is offline. It cannot recover items or attachments that were not transferred. To review or continue another thread in this environment by its Thread ID, use read_thread_history instead.",
     parameters: ReadThreadHandoffInput,
     success: Schema.Unknown,
     failure: ThreadHandoffError,

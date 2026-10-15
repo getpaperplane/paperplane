@@ -40,6 +40,8 @@ import {
   RichResponseToolkitHandlersLive,
 } from "./toolkits/richResponse/tools.ts";
 import { HandoffToolkitHandlersLive } from "./toolkits/handoff/handlers.ts";
+import { ThreadHistoryToolkit } from "./toolkits/threadHistory/tools.ts";
+import { ThreadHistoryToolkitHandlersLive } from "./toolkits/threadHistory/handlers.ts";
 import { ProjectionThreadActivityRepositoryLive } from "../persistence/Layers/ProjectionThreadActivities.ts";
 import {
   DeviceScreenshotToolkitHandlersLive,
@@ -671,6 +673,10 @@ export const HandoffToolkitRegistrationLive = McpServer.toolkit(HandoffToolkit).
   Layer.provide(ProjectionThreadActivityRepositoryLive),
 );
 
+export const ThreadHistoryToolkitRegistrationLive = McpServer.toolkit(ThreadHistoryToolkit).pipe(
+  Layer.provide(ThreadHistoryToolkitHandlersLive),
+);
+
 export const PullRequestsToolkitRegistrationLive = McpServer.toolkit(PullRequestsToolkit).pipe(
   Layer.provide(PullRequestsToolkitHandlersLive),
 );
@@ -699,6 +705,7 @@ export const layer = Layer.mergeAll(
   PreviewToolkitRegistrationLive,
   PullRequestsToolkitRegistrationLive,
   HandoffToolkitRegistrationLive,
+  ThreadHistoryToolkitRegistrationLive,
   RichResponseToolkitRegistrationLive,
   DeviceToolkitRegistrationLive,
   ComputerUseToolsRegistrationLive,
