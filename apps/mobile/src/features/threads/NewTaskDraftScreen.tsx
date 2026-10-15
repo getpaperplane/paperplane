@@ -31,8 +31,8 @@ import {
   PROVIDER_SEND_TURN_MAX_ATTACHMENTS,
   PROVIDER_SEND_TURN_MAX_INPUT_CHARS,
   resolveEnvironmentMachineKind,
+  CommandId,
   ThreadId,
-  type PotetoProjectSpec,
 } from "@rove-code/contracts";
 
 import {
@@ -84,7 +84,12 @@ import {
 } from "./use-thread-settings-sheet-presentation";
 
 import { ProviderExtensions } from "./ProviderExtensions";
-import { PotetoModeForm } from "./PotetoModeForm";
+import { PotetoModeForm, type PotetoModeFormProps } from "./PotetoModeForm";
+import {
+  createPotetoThreadTarget,
+  requirePotetoCommandSuccess,
+  startReviewedPoteto,
+} from "./poteto-submission";
 import { threadEnvironment } from "../../state/threads";
 import { resolvePotetoDraftWorkspace } from "@rove-code/client-runtime/poteto";
 import { makeTurnCommandMetadata } from "../../lib/commandMetadata";
@@ -104,6 +109,7 @@ import {
   getComposerDraftSnapshot,
   mergeComposerDraftContent,
   restoreComposerDraftSnapshot,
+  setComposerDraftText,
   updateComposerDraftSettings,
   scheduleUnusedComposerAttachmentCleanup,
   type ComposerDraft,
@@ -289,12 +295,19 @@ export function NewTaskDraftScreen(props: {
   };
   const createPotetoThread = useAtomCommand(threadEnvironment.create, { reportFailure: false });
   const startPoteto = useAtomCommand(threadEnvironment.startPoteto, { reportFailure: false });
-  const [potetoFormOpen, setPotetoFormOpen] = useState(false);
-  const potetoTargetRef = useRef<ReturnType<typeof makeTurnCommandMetadata> | null>(null);
+  const updatePotetoThread = useAtomCommand(threadEnvironment.updateMetadata, {
+    reportFailure: false,
+  });
+  const [potetoForm, setPotetoForm] = useState<Omit<PotetoModeFormProps, "visible"> | null>(null);
+  const potetoTargetRef = useRef<{
+    key: string;
+    getThreadId: () => Promise<ThreadId>;
+  } | null>(null);
   const potetoBusyRef = useRef(false);
   const offersPotetoMode =
     environmentConnected &&
     selectedEnvironmentServerConfig?.environment.capabilities.potetoMode === true &&
+    selectedEnvironmentServerConfig?.environment.capabilities.potetoDraft === true &&
     flow.selectedProviderStatus?.driver === "pi" &&
     !props.pendingTaskId;
   const uploadStates = useAtomValue(composerAttachmentUploadsAtom);
@@ -1197,10 +1210,22 @@ export function NewTaskDraftScreen(props: {
     [composerMenu, flow, selectedEnvironmentServerConfig],
   );
 
-  async function handleStartPoteto(spec: PotetoProjectSpec): Promise<boolean> {
-    if (!offersPotetoMode || !selectedProject || !flow.selectedModel || potetoBusyRef.current) {
-      return false;
-    }
+  function openPotetoModeForm() {
+    if (
+      !offersPotetoMode ||
+      !selectedProject ||
+      !flow.selectedModel ||
+      !flow.draftKey ||
+      isComposerInteractionLocked ||
+      cloneBlocksStart ||
+      voiceInput.isBusy ||
+      potetoForm
+    )
+      return;
+    const project = selectedProject;
+    const draftKey = flow.draftKey;
+    const draft = getComposerDraftSnapshot(draftKey);
+    const modelSelection = flow.selectedModel;
     const workspace = resolvePotetoDraftWorkspace({
       workspaceMode: flow.workspaceMode,
       branch: flow.selectedBranchName,
@@ -1209,54 +1234,86 @@ export function NewTaskDraftScreen(props: {
     });
     if (!workspace.valid) {
       Alert.alert("Choose an existing workspace", workspace.reason);
-      return false;
+      return;
     }
-    potetoBusyRef.current = true;
-    flow.setSubmitting(true);
-    try {
-      const target = potetoTargetRef.current ?? makeTurnCommandMetadata();
-      if (!potetoTargetRef.current) {
-        const created = await createPotetoThread({
-          environmentId: selectedProject.environmentId,
-          input: {
-            threadId: ThreadId.make(target.threadId),
-            projectId: selectedProject.id,
-            title: "Poteto Mode",
-            modelSelection: flow.selectedModel,
-            runtimeMode: flow.runtimeMode,
-            interactionMode: flow.interactionMode,
-            branch: workspace.branch,
-            worktreePath: workspace.worktreePath,
-            createdAt: target.createdAt,
-          },
-        });
-        if (AsyncResult.isFailure(created)) throw Cause.squash(created.cause);
-        // Retain the empty thread when start fails so retry does not create another.
-        potetoTargetRef.current = target;
-      }
-      const started = await startPoteto({
-        environmentId: selectedProject.environmentId,
-        input: { threadId: ThreadId.make(target.threadId), spec },
-      });
-      if (AsyncResult.isFailure(started)) throw Cause.squash(started.cause);
-      // This is a separate task: leave the original prompt and attachments in its draft.
-      setSubmitNavigationAction(
-        StackActions.replace("Thread", {
-          environmentId: String(selectedProject.environmentId),
-          threadId: String(target.threadId),
+    const creation = {
+      projectId: project.id,
+      title: "Poteto Mode",
+      modelSelection,
+      runtimeMode: flow.runtimeMode,
+      interactionMode: flow.interactionMode,
+      branch: workspace.branch,
+      worktreePath: workspace.worktreePath,
+    };
+    const key = JSON.stringify([project.environmentId, creation]);
+    if (potetoTargetRef.current?.key !== key) {
+      const metadata = makeTurnCommandMetadata();
+      potetoTargetRef.current = {
+        key,
+        getThreadId: createPotetoThreadTarget(async () => {
+          const threadId = ThreadId.make(metadata.threadId);
+          const created = await createPotetoThread({
+            environmentId: project.environmentId,
+            input: {
+              ...creation,
+              threadId,
+              commandId: CommandId.make(metadata.commandId),
+              createdAt: metadata.createdAt,
+            },
+          });
+          requirePotetoCommandSuccess(created);
+          return threadId;
         }),
-      );
-      return true;
-    } catch (error) {
-      Alert.alert(
-        "Could not start Poteto Mode",
-        error instanceof Error ? error.message : "Try again.",
-      );
-      return false;
-    } finally {
-      potetoBusyRef.current = false;
-      flow.setSubmitting(false);
+      };
     }
+    const getThreadId = potetoTargetRef.current.getThreadId;
+    promptInputRef.current?.blur();
+    setPotetoForm({
+      description: draft.text,
+      hasAttachments:
+        draft.attachments.length > 0 || pendingPastedTextAttachmentCountRef.current > 0,
+      hasContext: (draft.context?.records.length ?? 0) > 0,
+      environmentId: project.environmentId,
+      modelSelection,
+      getThreadId,
+      onClose: () => {
+        if (!potetoBusyRef.current) setPotetoForm(null);
+      },
+      onStart: async (spec, description, reviewedModel) => {
+        if (potetoBusyRef.current) return false;
+        potetoBusyRef.current = true;
+        flow.setSubmitting(true);
+        try {
+          const threadId = await getThreadId();
+          await startReviewedPoteto({
+            description,
+            modelSelection: reviewedModel,
+            prepare: (modelSelection) =>
+              updatePotetoThread({
+                environmentId: project.environmentId,
+                input: { threadId, modelSelection },
+              }),
+            start: () =>
+              startPoteto({
+                environmentId: project.environmentId,
+                input: { threadId, spec },
+              }),
+            readPrompt: () => getComposerDraftSnapshot(draftKey).text,
+            clearPrompt: () => setComposerDraftText(draftKey, ""),
+          });
+          setSubmitNavigationAction(
+            StackActions.replace("Thread", {
+              environmentId: String(project.environmentId),
+              threadId: String(threadId),
+            }),
+          );
+          return true;
+        } finally {
+          potetoBusyRef.current = false;
+          flow.setSubmitting(false);
+        }
+      },
+    });
   }
 
   async function handleStart(): Promise<void> {
@@ -1740,31 +1797,6 @@ export function NewTaskDraftScreen(props: {
           </View>
         ) : null}
 
-        {offersPotetoMode ? (
-          <View className="px-[14px] pb-2">
-            <ComposerInlineControl
-              accessibilityLabel="Start Poteto Mode"
-              disabled={isComposerInteractionLocked || cloneBlocksStart || voiceInput.isBusy}
-              label="Poteto Mode"
-              showChevron={false}
-              onPress={() => {
-                const workspace = resolvePotetoDraftWorkspace({
-                  workspaceMode: flow.workspaceMode,
-                  branch: flow.selectedBranchName,
-                  currentBranch: flow.currentCheckoutBranchName,
-                  worktreePath: flow.selectedWorktreePath,
-                });
-                if (!workspace.valid) {
-                  Alert.alert("Choose an existing workspace", workspace.reason);
-                  return;
-                }
-                potetoTargetRef.current = null;
-                promptInputRef.current?.blur();
-                setPotetoFormOpen(true);
-              }}
-            />
-          </View>
-        ) : null}
         <View className="px-[14px]">{promptEditor}</View>
         <View className="h-1" />
 
@@ -1847,6 +1879,20 @@ export function NewTaskDraftScreen(props: {
                 onConfirm={voiceInput.stop}
                 onCancel={voiceInput.cancel}
               />
+              {offersPotetoMode && voicePresentation.showsSend ? (
+                <ComposerInlineControl
+                  accessibilityLabel="Poteto Mode"
+                  label="Poteto"
+                  showChevron={false}
+                  disabled={
+                    !flow.prompt.trim() ||
+                    isComposerInteractionLocked ||
+                    cloneBlocksStart ||
+                    voiceInput.isBusy
+                  }
+                  onPress={openPotetoModeForm}
+                />
+              ) : null}
               {voicePresentation.showsSend ? (
                 <ComposerActionButton
                   accessibilityLabel={
@@ -1875,13 +1921,7 @@ export function NewTaskDraftScreen(props: {
           </ComposerDictationToolbar>
         </Animated.View>
       </ComposerSurface>
-      <PotetoModeForm
-        visible={potetoFormOpen}
-        onClose={() => {
-          if (!potetoBusyRef.current) setPotetoFormOpen(false);
-        }}
-        onStart={handleStartPoteto}
-      />
+      {potetoForm ? <PotetoModeForm visible {...potetoForm} /> : null}
       <VideoPreviewModal source={previewVideo} onRequestClose={closeMediaPreview} />
       <FilePreviewModal source={previewFile} onRequestClose={closeMediaPreview} />
     </View>

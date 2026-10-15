@@ -18,35 +18,11 @@ export function useThreadHeaderOptions(props: {
   readonly usesNativeHeaderGlass: boolean;
   readonly gitControls: Parameters<typeof ThreadGitControls>[0];
   readonly onReturnToThread?: () => void;
-  readonly onStartPotetoMode?: (() => void) | undefined;
 }) {
   const navigation = useNavigation();
   const { layout, panes, togglePrimarySidebar } = useAdaptiveWorkspaceLayout();
   const centerHeaderItems = useThreadGitCenterHeaderItems(props.gitControls);
   const rightHeaderItems = useThreadGitRightHeaderItems(props.gitControls);
-  const potetoHeaderItem = useMemo(
-    () =>
-      props.onStartPotetoMode
-        ? [
-            withNativeGlassHeaderItem({
-              accessibilityLabel: "Start Poteto Mode",
-              icon: { name: "sparkles", type: "sfSymbol" as const },
-              identifier: "thread-poteto-mode",
-              onPress: props.onStartPotetoMode,
-              type: "button" as const,
-            }),
-          ]
-        : [],
-    [props.onStartPotetoMode],
-  );
-  const threadCenterHeaderItems = useMemo(
-    () => [...centerHeaderItems, ...potetoHeaderItem],
-    [centerHeaderItems, potetoHeaderItem],
-  );
-  const compactRightHeaderItems = useMemo(
-    () => [...rightHeaderItems, ...potetoHeaderItem],
-    [potetoHeaderItem, rightHeaderItems],
-  );
   const splitLeftHeaderItems = useMemo<NativeHeaderItems>(
     () => [
       {
@@ -127,8 +103,7 @@ export function useThreadHeaderOptions(props: {
     // Search lives in the persistent sidebar, so the split header keeps
     // the git controls on the RIGHT (no center items — center space is
     // reserved for future breadcrumbs/status).
-    unstable_headerRightItems: () =>
-      layout.usesSplitView ? threadCenterHeaderItems : compactRightHeaderItems,
+    unstable_headerRightItems: () => (layout.usesSplitView ? centerHeaderItems : rightHeaderItems),
     unstable_headerSubtitle: props.usesNativeHeaderGlass ? props.subtitle : undefined,
     contentStyle: undefined,
   };
