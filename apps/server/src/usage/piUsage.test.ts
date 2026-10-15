@@ -15,6 +15,7 @@ import {
 } from "./usagePricing.ts";
 import { decodeScanCache, encodeScanCache, type ScanCache } from "./usageScanCache.ts";
 import { readTranscriptRecords } from "./usageTranscriptReader.ts";
+import type { PiAgentEntry } from "../provider/Layers/PiSubagents.ts";
 
 const timestamp = "2026-08-01T10:00:00Z";
 const usage = {
@@ -36,6 +37,18 @@ function assistant(id = "message-a", model = "model-a", provider = "custom") {
 }
 const modelCost = { input: 2, output: 10, cacheRead: 0.1, cacheWrite: 2 };
 
+function subagentEntry(
+  k: string,
+  q: number,
+  fields: Partial<PiAgentEntry> & { src?: string } = {},
+) {
+  return { v: 1, k, a: "child-a", th: "thread-a", w: 123, q, at: Date.parse(timestamp), ...fields };
+}
+
+function subagentUsage(q = 3) {
+  return subagentEntry("usage", q, { in: 100, outTok: 40, cr: 200, cw: 30, cost: 1.25 });
+}
+
 function aggregator() {
   return new UsageAggregator({
     timeZone: "UTC",
@@ -46,6 +59,58 @@ function aggregator() {
 }
 
 describe("Pi usage", () => {
+  it("counts owned subagents once, carrying their effective model and saved prices", () => {
+    const state = initialPiScanState();
+    parsePiRecord(subagentEntry("start", 0, { cwd: "/project" }), state);
+    parsePiRecord(subagentEntry("meta", 1, { model: "custom/model-a" }), state);
+    const first = parsePiRecord(subagentUsage(), state)!;
+    expect(first.sessionId).toBe("pi-subagent:thread-a:child-a");
+    expect(first.totals).toEqual({
+      uncachedInputTokens: 100,
+      cachedInputTokens: 200,
+      cacheCreationTokens: 30,
+      outputTokens: 40,
+      reasoningTokens: 0,
+    });
+    expect(first.model).toBe("custom/model-a");
+    expect(first.rateModel).toBe("model-a");
+    expect(priceUsage(new Map(), first)).toEqual({ costUsd: 1.25, costSource: "providerReported" });
+    parsePiRecord(subagentEntry("text", 4, { model: "other/model-b" }), state);
+    const next = parsePiRecord(subagentUsage(5), state)!;
+    expect(next.model).toBe("other/model-b");
+    expect(next.rateModel).toBe("model-b");
+    const result = aggregator();
+    expect(result.add(first)).toBe(true);
+    expect(result.add(first)).toBe(false);
+    expect(result.add(next)).toBe(true);
+    const differentWriter = parsePiRecord({ ...subagentUsage(5), w: 456 }, state)!;
+    expect(result.add(differentWriter)).toBe(true);
+    expect(result.finish().buckets.reduce((sum, bucket) => sum + bucket.costUsd, 0)).toBe(3.75);
+  });
+
+  it("rejects malformed, cumulative, and legacy observed subagent usage", () => {
+    const state = initialPiScanState();
+    expect(parsePiRecord(subagentUsage(), state)).toBeNull();
+    for (const fields of [{ src: "pi" }, { src: "agent" }, { cmd: "pi --mode json" }]) {
+      parsePiRecord(subagentEntry("start", 0, fields), state);
+      parsePiRecord(subagentEntry("meta", 1, { model: "custom/model-a" }), state);
+      expect(parsePiRecord(subagentUsage(), state)).toBeNull();
+    }
+    parsePiRecord(subagentEntry("start", 0), state);
+    expect(parsePiRecord(subagentUsage(), state)).toBeNull();
+    parsePiRecord(subagentEntry("meta", 1, { model: "custom/model-a" }), state);
+    for (const fields of [{ in: -1 }, { at: NaN }, { v: 2 }, { cum: true }]) {
+      expect(parsePiRecord({ ...subagentUsage(), ...fields }, state)).toBeNull();
+    }
+    expect(parsePiRecord(subagentEntry("tool", 2), state)).toBeNull();
+    const costOnly = parsePiRecord(subagentEntry("usage", 4, { cost: 0.25 }), state)!;
+    expect(costOnly.reportedCostUsd).toBe(0.25);
+    const unpriced = parsePiRecord({ ...subagentUsage(), cost: 0 }, state)!;
+    expect(priceUsage(new Map(), unpriced).costSource).toBe("unpriced");
+    parsePiRecord(subagentEntry("meta", 5, { session: "/native/session.jsonl" }), state);
+    expect(parsePiRecord(subagentUsage(6), state)).toBeNull();
+  });
+
   it("keeps disjoint token counts and saved prices", () => {
     const state = initialPiScanState();
     parsePiRecord({ type: "session", id: "session-a" }, state);
@@ -254,6 +319,44 @@ afterEach(async () => {
 });
 
 describe("Pi transcript scanning", () => {
+  for (const streamingThresholdBytes of [64, 8 * 1024 * 1024]) {
+    it(`resumes owned subagent usage after a durable scan (threshold ${streamingThresholdBytes})`, async () => {
+      const path = NodePath.join(dir, "child.jsonl");
+      const entries = [
+        subagentEntry("start", 0),
+        subagentEntry("task", 1, { text: "ignored context".repeat(1000) }),
+        subagentEntry("meta", 2, { model: "custom/model-a" }),
+        subagentUsage(),
+        subagentEntry("text", 4, { model: "other/model-b", text: "report".repeat(1000) }),
+      ];
+      const unfinished = JSON.stringify(subagentUsage(5));
+      await NodeFSP.writeFile(
+        path,
+        entries.map((entry) => JSON.stringify(entry)).join("\n") + "\n" + unfinished,
+      );
+      const options = { streamingThresholdBytes };
+      const first = (await readTranscriptRecords(path, "pi", undefined, options))!;
+      expect(first.records).toHaveLength(1);
+      expect(first.records[0]?.model).toBe("custom/model-a");
+      expect(first.tailRecords[0]?.model).toBe("other/model-b");
+      const cache: ScanCache = new Map([
+        [path, { size: (await NodeFSP.stat(path)).size, mtimeMs: 1, provider: "pi", ...first }],
+      ]);
+      const restored = decodeScanCache(JSON.parse(JSON.stringify(encodeScanCache(cache)))).get(
+        path,
+      )!;
+      expect(restored.position.piState?.subagent).toBe(true);
+      await NodeFSP.appendFile(path, "\n" + JSON.stringify(subagentUsage(6)) + "\n");
+      const appended = (await readTranscriptRecords(path, "pi", restored.position, options))!;
+      expect(appended.resumed).toBe(true);
+      expect(appended.records).toHaveLength(2);
+      expect(appended.records[0]?.model).toBe("other/model-b");
+      expect(appended.records[0]?.sessionId).toBe(first.records[0]?.sessionId);
+      const full = await readTranscriptRecords(path, "pi", undefined, options);
+      expect([...restored.records, ...appended.records]).toEqual(full?.records);
+    });
+  }
+
   it("preserves prices, model state, and unfinished tails through a durable incremental scan", async () => {
     const path = NodePath.join(dir, "session.jsonl");
     const header = { type: "session", id: "session-a" };

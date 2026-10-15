@@ -124,6 +124,23 @@ const USAGE_FIELDS: Record<"claude" | "codex" | "grok" | "pi", SelectedFields> =
     modelId: true,
     usage: true,
     message: { role: true, provider: true, model: true, usage: true },
+    // Rove-owned subagent transcripts share the Pi reducer and scan cache.
+    v: true,
+    k: true,
+    a: true,
+    th: true,
+    w: true,
+    q: true,
+    at: true,
+    src: true,
+    cmd: true,
+    session: true,
+    cum: true,
+    in: true,
+    outTok: true,
+    cr: true,
+    cw: true,
+    cost: true,
   },
   grok: {
     timestamp: true,
@@ -306,7 +323,8 @@ export async function readTranscriptRecords(
         if (
           !mightCarryUsage(line, provider) &&
           !line.includes('"session"') &&
-          !line.includes('"model_change"')
+          !line.includes('"model_change"') &&
+          !line.includes('"k"')
         )
           return;
         const record = parsePiLine(line, pi);

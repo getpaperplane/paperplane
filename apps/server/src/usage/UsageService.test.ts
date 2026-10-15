@@ -31,6 +31,7 @@ import { HttpClient, HttpClientResponse } from "effect/unstable/http";
 import * as ServerConfig from "../config.ts";
 import * as ServerSettings from "../serverSettings.ts";
 import * as UsageService from "./UsageService.ts";
+import type { PiAgentEntry } from "../provider/Layers/PiSubagents.ts";
 
 const encodeUnknownJson = Schema.encodeEffect(Schema.fromJsonString(Schema.Unknown));
 const encodeUnknownJsonString = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
@@ -207,7 +208,7 @@ describe("UsageService", () => {
             const service = yield* UsageService.make;
             const summary = yield* service.readSummary(WINDOW);
             const piSources = summary.sources.filter(
-              (source) => source.fingerprint.provider === "pi",
+              (source) => source.fingerprint.provider === "pi" && source.status !== "missing",
             );
             assert.strictEqual(piSources.length, 1);
             assert.strictEqual(
@@ -232,6 +233,133 @@ describe("UsageService", () => {
         }).pipe(Effect.scoped),
     );
   }
+
+  it.live(
+    "includes historical owned subagent usage alongside native Pi sessions exactly once",
+    () =>
+      Effect.gen(function* () {
+        const { home, settings } = yield* setup;
+        const agentDir = NodePath.join(home, "pi");
+        const layers = serviceLayers({
+          prefix: "usage-pi-subagents",
+          home,
+          settings: { ...settings, providers: { ...settings.providers, pi: { agentDir } } },
+        });
+        yield* Effect.gen(function* () {
+          const config = yield* ServerConfig.ServerConfig;
+          const root = NodePath.join(config.stateDir, "agent-transcripts");
+          const threadDir = NodePath.join(root, "parent-thread");
+          const childPath = NodePath.join(threadDir, "child.jsonl");
+          const row = (
+            k: string,
+            q: number,
+            fields: Partial<PiAgentEntry> & { src?: string } = {},
+          ) => ({
+            v: 1,
+            k,
+            a: "child",
+            th: "parent-thread",
+            w: 123,
+            q,
+            at: 1785578400000,
+            ...fields,
+          });
+          const childUsage = row("usage", 3, { in: 100, cr: 200, cw: 30, outTok: 40, cost: 1.25 });
+          yield* Effect.promise(async () => {
+            await NodeFSP.mkdir(threadDir, { recursive: true });
+            const sessions = NodePath.join(agentDir, "sessions");
+            await NodeFSP.mkdir(sessions, { recursive: true });
+            await NodeFSP.writeFile(
+              NodePath.join(sessions, "parent.jsonl"),
+              [
+                { type: "session", id: "parent" },
+                {
+                  type: "message",
+                  id: "parent-message",
+                  timestamp: "2026-08-01T10:00:00Z",
+                  message: {
+                    role: "assistant",
+                    provider: "custom",
+                    model: "model-a",
+                    usage: { output: 5, cost: { total: 0.5 } },
+                  },
+                },
+              ]
+                .map((entry) => encodeUnknownJsonString(entry))
+                .join("\n") + "\n",
+            );
+            const lines =
+              [
+                row("start", 0),
+                row("meta", 1, { model: "custom/model-a" }),
+                // File mtime is current, but this usage is outside the requested window.
+                row("usage", 2, { at: 1782900000000, outTok: 9000, cost: 99 }),
+                childUsage,
+              ]
+                .map((entry) => encodeUnknownJsonString(entry))
+                .join("\n") + "\n";
+            await NodeFSP.writeFile(childPath, lines);
+            await NodeFSP.writeFile(NodePath.join(threadDir, "copy.jsonl"), lines);
+            await NodeFSP.writeFile(
+              NodePath.join(threadDir, "observed.jsonl"),
+              [
+                row("start", 0, { src: "pi" }),
+                row("meta", 1, { model: "custom/model-a" }),
+                row("usage", 2, { outTok: 5000, cost: 50 }),
+              ]
+                .map((entry) => encodeUnknownJsonString(entry))
+                .join("\n") + "\n",
+            );
+          });
+          const service = yield* UsageService.make;
+          const first = yield* service.readSummary(WINDOW);
+          assert.strictEqual(totalOutputTokens(first), 45);
+          assert.strictEqual(
+            first.buckets.reduce((sum, b) => sum + b.costUsd, 0),
+            1.75,
+          );
+          const childBucket = first.buckets.find((bucket) => bucket.sourcePath === root);
+          assert.deepStrictEqual(childBucket?.totals, {
+            uncachedInputTokens: 100,
+            cachedInputTokens: 200,
+            cacheCreationTokens: 30,
+            outputTokens: 40,
+            reasoningTokens: 0,
+          });
+          assert.strictEqual(childBucket?.records, 1);
+          const source = first.sources.find(
+            (source) => source.fingerprint.resolvedHomePath === root,
+          )!;
+          assert.strictEqual(source.fingerprint.provider, "pi");
+          assert.strictEqual(source.distinctSessions, 1);
+          assert.deepStrictEqual((yield* service.readSummary(WINDOW)).buckets, first.buckets);
+
+          yield* Effect.promise(() =>
+            NodeFSP.appendFile(
+              childPath,
+              encodeUnknownJsonString(row("usage", 4, { outTok: 7, cost: 0.25 })) + "\n",
+            ),
+          );
+          const grown = yield* service.readSummary(WINDOW);
+          assert.strictEqual(totalOutputTokens(grown), 52);
+          assert.strictEqual(
+            grown.buckets.reduce((sum, b) => sum + b.costUsd, 0),
+            2,
+          );
+          const restarted = yield* UsageService.make;
+          assert.deepStrictEqual((yield* restarted.readSummary(WINDOW)).buckets, grown.buckets);
+          yield* Effect.promise(() => NodeFSP.rm(root, { recursive: true }));
+          const retainedService = yield* UsageService.make;
+          const retained = yield* retainedService.readSummary(WINDOW);
+          assert.deepStrictEqual(retained.buckets, grown.buckets);
+          const retainedSource = retained.sources.find(
+            (s) => s.fingerprint.resolvedHomePath === root,
+          )!;
+          assert.strictEqual(retainedSource.status, "ok");
+          assert.deepStrictEqual(retainedSource.fingerprint, source.fingerprint);
+        }).pipe(Effect.provide(layers));
+      }).pipe(Effect.scoped),
+  );
 
   it.live(
     "scopes Pi model prices to each home and distinguishes free from unpriced usage after restart",

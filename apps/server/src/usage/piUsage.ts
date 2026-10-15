@@ -1,4 +1,5 @@
 import * as Option from "effect/Option";
+import * as Predicate from "effect/Predicate";
 import * as Schema from "effect/Schema";
 
 import { lookupRate, type ModelRate, type RateTable } from "./usagePricing.ts";
@@ -40,6 +41,7 @@ export const PiScanState = Schema.Struct({
   sessionId: Schema.String,
   model: Schema.String,
   rateModel: Schema.String,
+  subagent: Schema.optional(Schema.Boolean),
 });
 export type PiScanState = {
   -readonly [Key in keyof typeof PiScanState.Type]: (typeof PiScanState.Type)[Key];
@@ -64,6 +66,9 @@ export function parsePiLine(line: string, state: PiScanState): UsageRecord | nul
 }
 
 export function parsePiRecord(parsed: unknown, state: PiScanState): UsageRecord | null {
+  if (Predicate.isObject(parsed) && "v" in parsed && "k" in parsed) {
+    return parsePiSubagentRecord(parsed, state);
+  }
   const decoded = decodeEntry(parsed);
   if (Option.isNone(decoded)) return null;
   const entry = decoded.value;
@@ -138,6 +143,67 @@ export function parsePiRecord(parsed: unknown, state: PiScanState): UsageRecord 
     ...(reportedCacheSavingsUsd !== undefined ? { reportedCacheSavingsUsd } : undefined),
     fast: false,
     dedupeKey: entry.id ? `pi:${entry.type}:${entry.id}:${timestampMs}:${model}` : null,
+  };
+}
+
+const PiSubagentEntry = Schema.Struct({
+  v: Schema.Literal(1),
+  k: Schema.String,
+  a: Schema.NonEmptyString,
+  th: Schema.NonEmptyString,
+  w: NonNegativeNumber,
+  q: NonNegativeNumber,
+  at: NonNegativeNumber,
+  model: Schema.optional(Schema.String),
+  src: Schema.optional(Schema.String),
+  cmd: Schema.optional(Schema.String),
+  session: Schema.optional(Schema.String),
+  cum: Schema.optional(Schema.Boolean),
+  in: Schema.optional(NonNegativeNumber),
+  outTok: Schema.optional(NonNegativeNumber),
+  cr: Schema.optional(NonNegativeNumber),
+  cw: Schema.optional(NonNegativeNumber),
+  cost: Schema.optional(NonNegativeNumber),
+});
+const decodeSubagentEntry = Schema.decodeUnknownOption(PiSubagentEntry);
+
+/** Only owned children are independent usage; legacy observations may duplicate native sessions. */
+function parsePiSubagentRecord(parsed: unknown, state: PiScanState): UsageRecord | null {
+  const decoded = decodeSubagentEntry(parsed);
+  if (Option.isNone(decoded)) return null;
+  const entry = decoded.value;
+  if (entry.k === "start") {
+    state.subagent = entry.src === undefined && entry.cmd === undefined;
+    state.sessionId = `pi-subagent:${entry.th}:${entry.a}`;
+    state.model = "";
+    state.rateModel = "";
+    return null;
+  }
+  if (entry.session !== undefined) state.subagent = false;
+  if (!state.subagent) return null;
+  if (entry.model) {
+    state.model = entry.model;
+    state.rateModel = entry.model.slice(entry.model.indexOf("/") + 1);
+  }
+  if (entry.k !== "usage" || entry.cum || !state.model) return null;
+  const totals = {
+    uncachedInputTokens: Math.trunc(entry.in ?? 0),
+    cachedInputTokens: Math.trunc(entry.cr ?? 0),
+    cacheCreationTokens: Math.trunc(entry.cw ?? 0),
+    outputTokens: Math.trunc(entry.outTok ?? 0),
+    reasoningTokens: 0,
+  };
+  if (totalTokens(totals) === 0 && !(entry.cost && entry.cost > 0)) return null;
+  return {
+    provider: "pi",
+    timestampMs: entry.at,
+    model: state.model,
+    rateModel: state.rateModel,
+    sessionId: state.sessionId,
+    totals,
+    reportedCostUsd: entry.cost && entry.cost > 0 ? entry.cost : null,
+    fast: false,
+    dedupeKey: `pi-subagent:${entry.th}:${entry.a}:${entry.w}:${entry.q}`,
   };
 }
 
