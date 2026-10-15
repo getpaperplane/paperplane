@@ -11,7 +11,7 @@ import type {
   ThreadId,
 } from "@rove-code/contracts";
 import { ArrowLeftIcon, ArrowRightIcon, CheckIcon } from "lucide-react";
-import { useRef, useState, type FormEvent } from "react";
+import { useEffect, useEffectEvent, useRef, useState, type FormEvent } from "react";
 import { PotatoIcon } from "../icons/PotatoIcon";
 import { Button } from "../ui/button";
 import {
@@ -23,7 +23,6 @@ import {
   DialogPopup,
   DialogTitle,
 } from "../ui/dialog";
-import { Textarea } from "../ui/textarea";
 import { threadEnvironment } from "~/state/threads";
 import { serverEnvironment } from "~/state/server";
 import { useAtomCommand } from "~/state/use-atom-command";
@@ -38,24 +37,30 @@ export function PotetoModeDialog(props: {
   readonly threadId: ThreadId;
   readonly open: boolean;
   readonly enabled: boolean;
+  readonly description: string;
+  readonly onStarted: () => void;
   readonly onOpenChange: (open: boolean) => void;
   readonly getModelSelection: () => ModelSelection | null;
   readonly onBeforeDraft: (model: ModelSelection) => Promise<AtomCommandResult<void, unknown>>;
   readonly onBeforeStart: (model: ModelSelection) => Promise<AtomCommandResult<void, unknown>>;
 }) {
-  const [description, setDescription] = useState("");
+  const description = props.description;
+  const requestedRef = useRef(false);
+  const mountedRef = useRef(false);
   const [draft, setDraft] = useState<ReviewedDraft | null>(null);
   const [pending, setPending] = useState<"draft" | "start" | null>(null);
-  const pendingRef = useRef(false);
+  const pendingRef = useRef<"draft" | "start" | null>(null);
   const [error, setError] = useState<string | null>(null);
   const draftPoteto = useAtomCommand(serverEnvironment.potetoDraft, { reportFailure: false });
   const startPoteto = useAtomCommand(threadEnvironment.startPoteto, { reportFailure: false });
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const prepareOrStart = async () => {
     if (!props.enabled || pendingRef.current) return;
-    if (!draft && !description.trim()) return;
-    pendingRef.current = true;
+    if (!draft && (!description.trim() || description.trim().length > 4096)) {
+      setError("Describe the bug in the composer using up to 4096 characters.");
+      return;
+    }
+    pendingRef.current = draft ? "start" : "draft";
     setError(null);
     setPending(draft ? "start" : "draft");
     try {
@@ -67,6 +72,7 @@ export function PotetoModeDialog(props: {
         }
         // A new conversation has only a local draft until Poteto needs its workspace.
         const prepared = await props.onBeforeDraft(modelSelection);
+        if (!mountedRef.current) return;
         if (prepared._tag === "Failure") {
           if (!isAtomCommandInterrupted(prepared)) throw squashAtomCommandFailure(prepared);
           return;
@@ -75,6 +81,7 @@ export function PotetoModeDialog(props: {
           environmentId: props.environmentId,
           input: { threadId: props.threadId, description: description.trim(), modelSelection },
         });
+        if (!mountedRef.current) return;
         if (result._tag === "Failure") {
           if (!isAtomCommandInterrupted(result)) throw squashAtomCommandFailure(result);
           return;
@@ -95,6 +102,7 @@ export function PotetoModeDialog(props: {
       }
       // Freeze the model with the reviewed proposal, not a picker changed while this was open.
       const prepared = await props.onBeforeStart(draft.modelSelection);
+      if (!mountedRef.current) return;
       const result =
         prepared._tag === "Failure"
           ? prepared
@@ -102,28 +110,53 @@ export function PotetoModeDialog(props: {
               environmentId: props.environmentId,
               input: { threadId: props.threadId, spec: draft.spec },
             });
+      if (!mountedRef.current) return;
       if (result._tag === "Failure") {
         if (!isAtomCommandInterrupted(result)) throw squashAtomCommandFailure(result);
         return;
       }
+      props.onStarted();
       props.onOpenChange(false);
       setDraft(null);
-      setDescription("");
     } catch (cause) {
+      if (!mountedRef.current) return;
       setError(
         cause instanceof Error ? cause.message : "Could not complete this request. Try again.",
       );
     } finally {
-      pendingRef.current = false;
-      setPending(null);
+      pendingRef.current = null;
+      if (mountedRef.current) setPending(null);
     }
+  };
+
+  // Mounted only for a composer submission. Single-flight also avoids duplicate model calls
+  // when React replays effects in development.
+  const prepareOnOpen = useEffectEvent(() => void prepareOrStart());
+  useEffect(() => {
+    mountedRef.current = true;
+    if (!requestedRef.current) {
+      requestedRef.current = true;
+      prepareOnOpen();
+    }
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    void prepareOrStart();
+  };
+
+  const close = () => {
+    if (pendingRef.current !== "start") props.onOpenChange(false);
   };
 
   return (
     <Dialog
       open={props.open}
       onOpenChange={(open) => {
-        if (pending !== "start") props.onOpenChange(open);
+        if (pendingRef.current !== "start") props.onOpenChange(open);
       }}
     >
       <DialogPopup className="max-w-2xl" render={<form onSubmit={handleSubmit} />}>
@@ -139,21 +172,6 @@ export function PotetoModeDialog(props: {
           </DialogDescription>
         </DialogHeader>
         <DialogPanel scrollFade={false}>
-          <ol aria-label="Setup steps" className="mb-5 flex items-center gap-3 text-xs">
-            <li
-              aria-current={!draft ? "step" : undefined}
-              className={!draft ? "font-medium text-foreground" : "text-muted-foreground"}
-            >
-              1. Describe the bug
-            </li>
-            <ArrowRightIcon aria-hidden="true" className="size-3 text-muted-foreground" />
-            <li
-              aria-current={draft ? "step" : undefined}
-              className={draft ? "font-medium text-foreground" : "text-muted-foreground"}
-            >
-              2. Review & start
-            </li>
-          </ol>
           {draft ? (
             <div className="space-y-5">
               <section aria-label="Proposed fix">
@@ -230,29 +248,9 @@ export function PotetoModeDialog(props: {
             </div>
           ) : (
             <div className="space-y-4">
-              <div className="space-y-2">
-                <label htmlFor="poteto-description" className="text-sm font-medium">
-                  What’s going wrong?
-                </label>
-                <Textarea
-                  id="poteto-description"
-                  aria-label="Describe the bug"
-                  rows={6}
-                  autoGrow={false}
-                  maxLength={4096}
-                  value={description}
-                  disabled={pending !== null}
-                  placeholder="Describe what happens and what you expected instead. Include a file path or function name if you know it."
-                  onChange={(event) => {
-                    setDescription(event.currentTarget.value);
-                    setError(null);
-                  }}
-                />
-                <p className="text-xs leading-relaxed text-muted-foreground">
-                  No spec or test file needed. Your selected Pi model reads committed source and
-                  drafts the allowed files and checks for you to approve.
-                </p>
-              </div>
+              <p className="whitespace-pre-wrap break-words text-sm text-muted-foreground">
+                {description}
+              </p>
               <div className="space-y-2 border-t border-border pt-4 text-xs leading-relaxed text-muted-foreground">
                 <p>
                   <span className="font-medium text-foreground">A focused pilot.</span> Small
@@ -267,8 +265,7 @@ export function PotetoModeDialog(props: {
               </div>
               {pending === "draft" ? (
                 <p role="status" className="text-sm text-muted-foreground">
-                  Reading committed source and drafting checks… You can close this and return to the
-                  proposal.
+                  Reading committed source and drafting checks… No code will run until you approve.
                 </p>
               ) : null}
             </div>
@@ -293,24 +290,10 @@ export function PotetoModeDialog(props: {
           ) : null}
         </DialogPanel>
         <DialogFooter>
-          {draft ? (
-            <Button
-              type="button"
-              variant="ghost"
-              disabled={pending !== null}
-              onClick={() => {
-                setDraft(null);
-                setError(null);
-              }}
-            >
-              <ArrowLeftIcon />
-              Refine description
-            </Button>
-          ) : (
-            <Button type="button" variant="ghost" onClick={() => props.onOpenChange(false)}>
-              Close
-            </Button>
-          )}
+          <Button type="button" variant="ghost" disabled={pending === "start"} onClick={close}>
+            <ArrowLeftIcon />
+            Back to composer
+          </Button>
           <Button
             type="submit"
             disabled={!props.enabled || pending !== null || (!draft && !description.trim())}
@@ -321,7 +304,7 @@ export function PotetoModeDialog(props: {
                 ? "Starting…"
                 : draft
                   ? "Approve & start"
-                  : "Prepare proposal"}
+                  : "Retry proposal"}
             {pending === null ? draft ? <PotatoIcon /> : <ArrowRightIcon /> : null}
           </Button>
         </DialogFooter>

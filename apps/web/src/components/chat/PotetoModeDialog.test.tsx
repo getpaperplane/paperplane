@@ -1,4 +1,11 @@
-import { act, cloneElement, createElement, type ReactElement, type ReactNode } from "react";
+import {
+  act,
+  cloneElement,
+  createElement,
+  StrictMode,
+  type ReactElement,
+  type ReactNode,
+} from "react";
 import { create, type ReactTestRenderer } from "react-test-renderer";
 import { AsyncResult } from "effect/unstable/reactivity";
 import * as Cause from "effect/Cause";
@@ -22,65 +29,69 @@ vi.mock("../ui/dialog", () => ({
   DialogFooter: ({ children }: { children: ReactNode }) => createElement("footer", {}, children),
 }));
 vi.mock("../ui/button", () => ({ Button: "button" }));
-vi.mock("../ui/textarea", () => ({ Textarea: "textarea" }));
 import { PotetoModeDialog } from "./PotetoModeDialog";
 
 const firstModel = { instanceId: "pi", model: "fixture/first" } as ModelSelection;
 const otherModel = { instanceId: "pi", model: "fixture/other" } as ModelSelection;
+const description = "text.ts adds too many dots";
 const spec = {
   task: "Respect the boundary",
   editableFiles: ["text.ts"],
   contextFiles: [],
   check: { module: "text.ts", export: "truncate", cases: [{ args: ["hello", 2], expected: ".." }] },
 };
-let renderer: ReactTestRenderer;
+let renderer: ReactTestRenderer | undefined;
 let model: ModelSelection;
 const prepareDraft = vi.fn();
 const prepare = vi.fn();
 const close = vi.fn();
+const started = vi.fn();
 
-beforeEach(async () => {
+beforeEach(() => {
   model = firstModel;
   vi.clearAllMocks();
   commands.draft.mockResolvedValue(AsyncResult.success({ status: "draft", spec }));
   commands.start.mockResolvedValue(AsyncResult.success(undefined));
   prepareDraft.mockResolvedValue(AsyncResult.success(undefined));
   prepare.mockResolvedValue(AsyncResult.success(undefined));
-  await act(async () => {
-    renderer = create(
-      <PotetoModeDialog
-        environmentId={"env" as EnvironmentId}
-        threadId={"thread" as ThreadId}
-        open
-        enabled
-        getModelSelection={() => model}
-        onBeforeDraft={prepareDraft}
-        onBeforeStart={prepare}
-        onOpenChange={close}
-      />,
-    );
-  });
 });
 afterEach(async () => {
-  await act(async () => renderer.unmount());
+  await act(async () => renderer?.unmount());
+  renderer = undefined;
 });
-const submit = () => renderer.root.findByType("form").props.onSubmit({ preventDefault() {} });
-async function describe() {
+async function open(text = description) {
   await act(async () => {
-    renderer.root
-      .findByType("textarea")
-      .props.onChange({ currentTarget: { value: "text.ts adds too many dots" } });
+    renderer = create(
+      <StrictMode>
+        <PotetoModeDialog
+          environmentId={"env" as EnvironmentId}
+          threadId={"thread" as ThreadId}
+          open
+          enabled
+          description={text}
+          getModelSelection={() => model}
+          onBeforeDraft={prepareDraft}
+          onBeforeStart={prepare}
+          onOpenChange={close}
+          onStarted={started}
+        />
+      </StrictMode>,
+    );
   });
 }
+const submit = () => renderer!.root.findByType("form").props.onSubmit({ preventDefault() {} });
+const visibleText = () => JSON.stringify(renderer!.toJSON());
 
-it("makes drafting non-executing and waits for explicit approval with the frozen model", async () => {
-  await describe();
-  await act(async () => {
-    await submit();
+it("uses the composer description automatically and waits for approval with the frozen model", async () => {
+  await open(`  ${description}  `);
+  expect(commands.draft).toHaveBeenCalledTimes(1);
+  expect(commands.draft).toHaveBeenCalledWith({
+    environmentId: "env",
+    input: { threadId: "thread", description, modelSelection: firstModel },
   });
   expect(commands.start).not.toHaveBeenCalled();
   expect(prepare).not.toHaveBeenCalled();
-  expect(JSON.stringify(renderer.toJSON())).toContain("What counts as fixed");
+  expect(visibleText()).toContain("What counts as fixed");
   model = otherModel;
   let release: (() => void) | undefined;
   prepare.mockImplementation(
@@ -89,24 +100,30 @@ it("makes drafting non-executing and waits for explicit approval with the frozen
         release = () => resolve(AsyncResult.success(undefined));
       }),
   );
-  let finishing: Promise<void> | undefined;
   await act(async () => {
-    finishing = submit();
+    submit();
+    submit();
+    renderer!.root
+      .findAllByType("button")
+      .find((button) => button.props.type === "button")!
+      .props.onClick();
   });
+  expect(close).not.toHaveBeenCalled();
+  expect(prepare).toHaveBeenCalledTimes(1);
   expect(prepare).toHaveBeenCalledWith(firstModel);
   expect(commands.start).not.toHaveBeenCalled();
   await act(async () => {
     release?.();
-    await finishing;
   });
   expect(commands.start).toHaveBeenCalledWith({
     environmentId: "env",
     input: { threadId: "thread", spec },
   });
+  expect(started).toHaveBeenCalledTimes(1);
   expect(close).toHaveBeenCalledWith(false);
 });
 
-it("creates the empty thread before drafting, without starting a normal prompt", async () => {
+it("prepares the empty thread before drafting without starting a normal prompt", async () => {
   let release: (() => void) | undefined;
   prepareDraft.mockImplementation(
     () =>
@@ -114,66 +131,53 @@ it("creates the empty thread before drafting, without starting a normal prompt",
         release = () => resolve(AsyncResult.success(undefined));
       }),
   );
-  await describe();
-  let finishing: Promise<void> | undefined;
+  await open();
   await act(async () => {
-    finishing = submit();
+    submit();
   });
+  expect(prepareDraft).toHaveBeenCalledTimes(1);
   expect(prepareDraft).toHaveBeenCalledWith(firstModel);
   expect(commands.draft).not.toHaveBeenCalled();
   expect(commands.start).not.toHaveBeenCalled();
   await act(async () => {
     release?.();
-    await finishing;
   });
-  expect(commands.draft).toHaveBeenCalledWith({
-    environmentId: "env",
-    input: {
-      threadId: "thread",
-      description: "text.ts adds too many dots",
-      modelSelection: firstModel,
-    },
-  });
+  expect(commands.draft).toHaveBeenCalledTimes(1);
   expect(commands.start).not.toHaveBeenCalled();
 });
 
-it("keeps the description retryable when empty-thread creation fails", async () => {
+it("keeps the composer description retryable when thread preparation fails", async () => {
   prepareDraft.mockResolvedValue(AsyncResult.failure(Cause.fail(new Error("Choose Local first."))));
-  await describe();
-  await act(async () => {
-    await submit();
-  });
-  expect(JSON.stringify(renderer.toJSON())).toContain("Choose Local first.");
-  expect(renderer.root.findByType("textarea").props.value).toBe("text.ts adds too many dots");
+  await open();
+  expect(visibleText()).toContain("Choose Local first.");
+  expect(visibleText()).toContain(description);
   expect(commands.draft).not.toHaveBeenCalled();
-  expect(commands.start).not.toHaveBeenCalled();
+  expect(started).not.toHaveBeenCalled();
   prepareDraft.mockResolvedValue(AsyncResult.success(undefined));
   await act(async () => {
-    await submit();
+    submit();
   });
   expect(commands.draft).toHaveBeenCalledTimes(1);
 });
 
-it("retains the description on unsupported drafts and never exposes approval", async () => {
+it("retains unsupported descriptions and retries without exposing approval", async () => {
   commands.draft.mockResolvedValue(
     AsyncResult.success({ status: "unsupported", reason: "Needs a browser." }),
   );
-  await describe();
-  await act(async () => {
-    await submit();
-  });
-  expect(JSON.stringify(renderer.toJSON())).toContain("Needs a browser.");
-  expect(renderer.root.findByType("textarea").props.value).toBe("text.ts adds too many dots");
+  await open();
+  expect(visibleText()).toContain("Needs a browser.");
+  expect(visibleText()).toContain(description);
+  expect(visibleText()).not.toContain("Approve & start");
   expect(commands.start).not.toHaveBeenCalled();
   commands.draft.mockResolvedValue(AsyncResult.success({ status: "draft", spec }));
   await act(async () => {
-    await submit();
+    submit();
   });
-  expect(JSON.stringify(renderer.toJSON())).toContain("What counts as fixed");
+  expect(visibleText()).toContain("What counts as fixed");
   expect(commands.start).not.toHaveBeenCalled();
 });
 
-it("single-flights a double submit and rejects invalid scope before approval", async () => {
+it("single-flights drafting and rejects invalid scope before approval", async () => {
   let release: (() => void) | undefined;
   commands.draft.mockImplementation(
     () =>
@@ -187,18 +191,101 @@ it("single-flights a double submit and rejects invalid scope before approval", a
           );
       }),
   );
-  await describe();
-  let finishing: Promise<void> | undefined;
+  await open();
   await act(async () => {
-    finishing = submit();
-    await submit();
+    submit();
+    submit();
   });
   expect(commands.draft).toHaveBeenCalledTimes(1);
   await act(async () => {
     release?.();
-    await finishing;
   });
-  expect(JSON.stringify(renderer.toJSON())).toContain("could not be validated");
+  expect(visibleText()).toContain("could not be validated");
   expect(commands.start).not.toHaveBeenCalled();
   expect(prepare).not.toHaveBeenCalled();
 });
+
+it("preserves the reviewed proposal and text when starting fails", async () => {
+  commands.start.mockResolvedValue(
+    AsyncResult.failure(Cause.fail(new Error("Docker unavailable."))),
+  );
+  await open();
+  await act(async () => {
+    submit();
+  });
+  expect(visibleText()).toContain("Docker unavailable.");
+  expect(visibleText()).toContain("What counts as fixed");
+  expect(started).not.toHaveBeenCalled();
+  expect(close).not.toHaveBeenCalled();
+  commands.start.mockResolvedValue(AsyncResult.success(undefined));
+  await act(async () => {
+    submit();
+  });
+  expect(started).toHaveBeenCalledTimes(1);
+  expect(commands.draft).toHaveBeenCalledTimes(1);
+});
+
+it("returns to the composer without consuming text or starting checks", async () => {
+  await open();
+  await act(async () => {
+    renderer!.root
+      .findAllByType("button")
+      .find((button) => button.props.type === "button")!
+      .props.onClick();
+  });
+  expect(close).toHaveBeenCalledWith(false);
+  expect(started).not.toHaveBeenCalled();
+  expect(commands.start).not.toHaveBeenCalled();
+});
+
+it("does not begin drafting if the dialog unmounts during thread preparation", async () => {
+  let release: (() => void) | undefined;
+  prepareDraft.mockImplementation(
+    () =>
+      new Promise((resolve) => {
+        release = () => resolve(AsyncResult.success(undefined));
+      }),
+  );
+  await open();
+  await act(async () => {
+    renderer!.unmount();
+  });
+  await act(async () => {
+    release?.();
+  });
+  expect(commands.draft).not.toHaveBeenCalled();
+  expect(started).not.toHaveBeenCalled();
+});
+
+it("does not clear another composer's text after navigation during approval", async () => {
+  let release: (() => void) | undefined;
+  commands.start.mockImplementation(
+    () =>
+      new Promise((resolve) => {
+        release = () => resolve(AsyncResult.success(undefined));
+      }),
+  );
+  await open();
+  await act(async () => {
+    submit();
+  });
+  await act(async () => {
+    renderer!.unmount();
+  });
+  await act(async () => {
+    release?.();
+  });
+  expect(started).not.toHaveBeenCalled();
+  expect(close).not.toHaveBeenCalled();
+});
+
+it.each(["   ", "x".repeat(4097)])(
+  "rejects invalid composer descriptions without model usage",
+  async (text) => {
+    await open(text);
+    expect(visibleText()).toContain("up to 4096 characters");
+    expect(prepareDraft).not.toHaveBeenCalled();
+    expect(commands.draft).not.toHaveBeenCalled();
+    expect(started).not.toHaveBeenCalled();
+  },
+);

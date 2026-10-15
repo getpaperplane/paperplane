@@ -391,6 +391,8 @@ import type { AssistantCitationRequest } from "./chat/AssistantCitationSource";
 import { resolveTimelineIsAtEnd, worktreeSetupAgentStarted } from "./chat/MessagesTimeline.logic";
 import { resolveComposerTimelineInset, resolveScrollToEndClearance } from "./composerFooterLayout";
 import { ChatHeader } from "./chat/ChatHeader";
+import { collectComposerContextReferences } from "@rove-code/shared/composerContextReferences";
+import { PotetoModeDialog } from "./chat/PotetoModeDialog";
 import { PotetoStatusPanel } from "./chat/PotetoStatusPanel";
 import { PanelLayoutControls, RightPanelMaximizeControl } from "./chat/PanelLayoutControls";
 import { expandedImageKey, type ExpandedImagePreview } from "./chat/ExpandedImagePreview";
@@ -2956,6 +2958,20 @@ export default function ChatView(props: ChatViewProps) {
   const threadActivities = activeThread?.activities ?? EMPTY_ACTIVITIES;
   const potetoView = useMemo(() => deriveThreadPotetoView(threadActivities), [threadActivities]);
   const potetoActive = potetoView.pending;
+  const [potetoSubmission, setPotetoSubmission] = useState<{
+    threadKey: string;
+    description: string;
+  } | null>(null);
+  if (potetoSubmission !== null && potetoSubmission.threadKey !== routeThreadKey) {
+    setPotetoSubmission(null);
+  }
+  const supportsPotetoMode =
+    selectedProviderEntry?.driverKind === "pi" &&
+    multipleModelSelections === null &&
+    activeEnvironmentConnectionPhase === "connected" &&
+    !potetoActive &&
+    serverConfig?.environment.capabilities.potetoMode === true &&
+    serverConfig?.environment.capabilities.potetoDraft === true;
   const latestCheckpointCompletedAt = activeThread?.checkpoints.at(-1)?.completedAt ?? null;
   const workspaceMutationId = useMemo(() => {
     const activityId = latestWorkspaceMutationId(threadActivities);
@@ -6120,6 +6136,56 @@ export default function ChatView(props: ChatViewProps) {
       interactionMode,
     ],
   );
+  const openPotetoMode = useCallback(() => {
+    if (
+      !supportsPotetoMode ||
+      isSendBusy ||
+      isConnecting ||
+      isRevertingCheckpoint ||
+      threadDetailLoading ||
+      worktreeSetupBlocksSend ||
+      projectCloneSendBlockReason ||
+      feedbackUploading ||
+      pendingApprovals.length > 0 ||
+      pendingUserInputs.length > 0 ||
+      showPlanFollowUpPrompt ||
+      phase === "running" ||
+      potetoSubmission
+    )
+      return;
+    const description = promptRef.current;
+    const hasContext =
+      composerHasNonPromptContent || collectComposerContextReferences(description).length > 0;
+    if (!description.trim() || description.trim().length > 4096 || hasContext) {
+      toastManager.add({
+        type: "warning",
+        title: "Describe the bug in the composer",
+        description: hasContext
+          ? "Poteto proposals use text only. Remove attachments and other context first."
+          : "Use up to 4096 characters, including a file path or function name if you know it.",
+      });
+      scheduleComposerFocus();
+      return;
+    }
+    setPotetoSubmission({ threadKey: routeThreadKey, description });
+  }, [
+    supportsPotetoMode,
+    isSendBusy,
+    isConnecting,
+    isRevertingCheckpoint,
+    threadDetailLoading,
+    worktreeSetupBlocksSend,
+    projectCloneSendBlockReason,
+    feedbackUploading,
+    pendingApprovals.length,
+    pendingUserInputs.length,
+    showPlanFollowUpPrompt,
+    phase,
+    potetoSubmission,
+    composerHasNonPromptContent,
+    scheduleComposerFocus,
+    routeThreadKey,
+  ]);
   const activeComposerTasksProgress = useMemo(() => {
     if (!activeLatestTurn || latestTurnSettled || activePlan?.turnId !== activeLatestTurn.turnId) {
       return null;
@@ -10140,6 +10206,31 @@ export default function ChatView(props: ChatViewProps) {
             />
           ) : null}
           {!rightPanelControlsAtRoot && !rightPanelControlsInPanel ? panelLayoutControls : null}
+          {potetoSubmission !== null && potetoSubmission.threadKey === routeThreadKey ? (
+            <PotetoModeDialog
+              environmentId={environmentId}
+              threadId={threadId}
+              open
+              enabled={supportsPotetoMode}
+              description={potetoSubmission.description}
+              getModelSelection={getModelForPoteto}
+              onBeforeDraft={prepareThreadForPoteto}
+              onBeforeStart={persistModelForPoteto}
+              onOpenChange={(open) => {
+                if (!open) {
+                  setPotetoSubmission(null);
+                  scheduleComposerFocus();
+                }
+              }}
+              onStarted={() => {
+                if (promptRef.current === potetoSubmission.description) {
+                  promptRef.current = "";
+                  setComposerDraftPrompt(composerDraftTarget, "");
+                  composerRef.current?.resetCursorState({ cursor: 0 });
+                }
+              }}
+            />
+          ) : null}
           <ChatHeader
             piCatalogInstanceId={piCatalogInstanceId}
             {...(!supportsPullRequests || activeProjectRepository === null
@@ -10147,17 +10238,8 @@ export default function ChatView(props: ChatViewProps) {
               : { onOpenPullRequest: openProjectPullRequest })}
             activeThreadEnvironmentId={activeThread.environmentId}
             activeThreadId={activeThread.id}
-            onBeforeDraftPoteto={prepareThreadForPoteto}
-            onBeforeStartPoteto={persistModelForPoteto}
-            getPotetoModelSelection={getModelForPoteto}
-            supportsPotetoMode={
-              selectedProviderEntry?.driverKind === "pi" &&
-              multipleModelSelections === null &&
-              activeEnvironmentConnectionPhase === "connected" &&
-              !potetoActive &&
-              serverConfig?.environment.capabilities.potetoMode === true &&
-              serverConfig?.environment.capabilities.potetoDraft === true
-            }
+            onOpenPotetoMode={openPotetoMode}
+            supportsPotetoMode={supportsPotetoMode}
             {...(routeKind === "draft" && draftId ? { draftId } : {})}
             activeThreadTitle={activeThread.title}
             isServerThread={isServerThread}
@@ -10510,6 +10592,7 @@ export default function ChatView(props: ChatViewProps) {
                             onPageScrollRelease={onComposerPageScrollRelease}
                             onCompactContext={onCompactContext}
                             onSend={onSend}
+                            onPotetoMode={supportsPotetoMode ? openPotetoMode : undefined}
                             onInterrupt={onInterrupt}
                             onImplementPlanInNewThread={onImplementPlanInNewThread}
                             onRespondToApproval={onRespondToApproval}

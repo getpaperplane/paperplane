@@ -3,6 +3,7 @@ import { enqueueThreadOutboxMessage } from "../../state/thread-outbox";
 import {
   getComposerDraftSnapshot,
   clearComposerDraftContent,
+  setComposerDraftText,
 } from "../../state/use-composer-drafts";
 import { useWorktreeSetup } from "./use-worktree-setup";
 import { worktreeSetupAgentStarted } from "@rove-code/client-runtime/worktree-setup";
@@ -24,7 +25,6 @@ import {
   DEFAULT_SERVER_SETTINGS,
   EnvironmentId,
   ThreadId,
-  type PotetoProjectSpec,
   type ProjectScript,
 } from "@rove-code/contracts";
 import {
@@ -32,10 +32,6 @@ import {
   threadHasOlderTurns,
 } from "@rove-code/client-runtime/state/threads";
 import { deriveThreadPotetoView } from "@rove-code/client-runtime/poteto";
-import {
-  isAtomCommandInterrupted,
-  squashAtomCommandFailure,
-} from "@rove-code/client-runtime/state/runtime";
 import {
   projectScriptCwd,
   projectScriptRuntimeEnv,
@@ -76,7 +72,8 @@ import {
 } from "../terminal/terminalLaunchContext";
 import { terminalDebugLog } from "../terminal/terminalDebugLog";
 import { ThreadDetailScreen, type ThreadDetailScreenProps } from "./ThreadDetailScreen";
-import { PotetoModeForm } from "./PotetoModeForm";
+import { PotetoModeForm, type PotetoModeFormProps } from "./PotetoModeForm";
+import { startReviewedPoteto } from "./poteto-submission";
 import { GitOverviewSheet } from "./git/GitOverviewSheet";
 import { useAtomCommand } from "../../state/use-atom-command";
 import { useSelectedThreadGitActions } from "../../state/use-selected-thread-git-actions";
@@ -108,7 +105,6 @@ function ThreadHeader(
     readonly onToggleInspector: () => void;
     readonly onOpenGitInspector: () => void;
     readonly onOpenFilesInspector: () => void;
-    readonly onStartPotetoMode?: (() => void) | undefined;
   },
 ) {
   const navigation = useNavigation();
@@ -145,13 +141,6 @@ function ThreadHeader(
       icon: "point.topleft.down.curvedto.point.bottomright.up",
       onPress: props.onOpenGitInspector,
     });
-    if (props.onStartPotetoMode) {
-      actions.push({
-        accessibilityLabel: "Start Poteto Mode",
-        icon: { ios: "sparkles", android: "auto_awesome" },
-        onPress: props.onStartPotetoMode,
-      });
-    }
     return actions;
   }, [
     props.inspectorMode,
@@ -159,7 +148,6 @@ function ThreadHeader(
     props.onOpenFilesInspector,
     onOpenTerminal,
     props.onOpenGitInspector,
-    props.onStartPotetoMode,
     toggleAuxiliaryPane,
     props.onReturnToThread,
     props.hasThreadCwd,
@@ -379,6 +367,9 @@ function ThreadRouteContent(
   const requests = useSelectedThreadRequests();
   const interruptThreadTurn = useAtomCommand(threadEnvironment.interruptTurn, "thread interrupt");
   const startPoteto = useAtomCommand(threadEnvironment.startPoteto, { reportFailure: false });
+  const updatePotetoThread = useAtomCommand(threadEnvironment.updateMetadata, {
+    reportFailure: false,
+  });
   const navigation = useNavigation();
   const params = props.route.params;
   const environmentIdRaw = firstRouteParam(params.environmentId);
@@ -389,7 +380,7 @@ function ThreadRouteContent(
   const [inspectorSelection, setInspectorSelection] = useState<ThreadInspectorSelection | null>(
     () => (props.renderInspector ? { routeThreadIdentity, mode: "route" } : null),
   );
-  const [potetoFormOpen, setPotetoFormOpen] = useState(false);
+  const [potetoForm, setPotetoForm] = useState<Omit<PotetoModeFormProps, "visible"> | null>(null);
   const inspectorMode = (() => {
     if (inspectorSelection?.routeThreadIdentity === routeThreadIdentity) {
       if (inspectorSelection.mode === "files" && selectedThreadCwd === null) {
@@ -987,37 +978,47 @@ function ThreadRouteContent(
     creationState === null &&
     routeConnectionState === "connected" &&
     !potetoView.pending &&
+    composer.activeWorkStartedAt === null &&
     selectedPotetoProvider?.driver === "pi" &&
-    serverConfig?.environment.capabilities.potetoMode === true;
-  const openPotetoModeForm = useCallback(() => setPotetoFormOpen(true), []);
-  const handleStartPotetoMode = useCallback(
-    async (spec: PotetoProjectSpec) => {
-      if (!supportsPotetoMode) return false;
-      const result = await startPoteto({
-        environmentId: selectedThread.environmentId,
-        input: { threadId: selectedThread.id, spec },
-      });
-      if (result._tag === "Failure") {
-        if (!isAtomCommandInterrupted(result)) {
-          const error = squashAtomCommandFailure(result);
-          Alert.alert(
-            "Could not start Poteto Mode",
-            error instanceof Error ? error.message : "The request was rejected.",
-          );
-        }
-        return false;
-      }
-      return true;
-    },
-    [selectedThread, startPoteto, supportsPotetoMode],
-  );
+    serverConfig?.environment.capabilities.potetoMode === true &&
+    serverConfig?.environment.capabilities.potetoDraft === true;
+  const openPotetoModeForm = () => {
+    if (!supportsPotetoMode || potetoForm) return;
+    const target = { environmentId: selectedThread.environmentId, threadId: selectedThread.id };
+    const draftKey = scopedThreadKey(target.environmentId, target.threadId);
+    const draft = getComposerDraftSnapshot(draftKey);
+    setPotetoForm({
+      description: draft.text,
+      hasAttachments: draft.attachments.length > 0,
+      hasContext: (draft.context?.records.length ?? 0) > 0,
+      environmentId: target.environmentId,
+      modelSelection: (selectedThreadWithDraftSettings ?? selectedThread).modelSelection,
+      getThreadId: async () => target.threadId,
+      onClose: () => setPotetoForm(null),
+      onStart: async (spec, description, modelSelection) => {
+        await startReviewedPoteto({
+          modelSelection,
+          description,
+          prepare: (modelSelection) =>
+            updatePotetoThread({
+              environmentId: target.environmentId,
+              input: { threadId: target.threadId, modelSelection },
+            }),
+          start: () =>
+            startPoteto({
+              environmentId: target.environmentId,
+              input: { threadId: target.threadId, spec },
+            }),
+          readPrompt: () => getComposerDraftSnapshot(draftKey).text,
+          clearPrompt: () => setComposerDraftText(draftKey, ""),
+        });
+        return true;
+      },
+    });
+  };
   const renderThreadRouteBody = () => (
     <>
-      <PotetoModeForm
-        visible={potetoFormOpen}
-        onClose={() => setPotetoFormOpen(false)}
-        onStart={handleStartPotetoMode}
-      />
+      {potetoForm ? <PotetoModeForm visible {...potetoForm} /> : null}
       <GitActionProgressOverlay progress={gitActionProgress} onDismiss={dismissGitActionResult} />
 
       <View className="flex-1 bg-screen android:overflow-hidden android:rounded-t-[28px] android:bg-thread-canvas">
@@ -1092,6 +1093,7 @@ function ThreadRouteContent(
           serverConfig={serverConfig}
           onStopThread={awaitingBootstrapTurn ? handleCancelWorktreeSetup : handleStopThread}
           onSendMessage={composer.onSendMessage}
+          onStartPotetoMode={supportsPotetoMode ? openPotetoModeForm : undefined}
           onReconnectEnvironment={handleReconnectEnvironment}
           onUpdateThreadModelSelection={composer.onUpdateModelSelection}
           onUpdateThreadRuntimeMode={composer.onUpdateRuntimeMode}
@@ -1123,7 +1125,6 @@ function ThreadRouteContent(
         onOpenGitInspector={handleOpenGitInspector}
         onOpenFilesInspector={handleOpenFilesInspector}
         onReturnToThread={props.onReturnToThread}
-        {...(supportsPotetoMode ? { onStartPotetoMode: openPotetoModeForm } : {})}
       />
 
       {renderThreadRouteBody()}

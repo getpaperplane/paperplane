@@ -154,6 +154,7 @@ export interface ThreadComposerProps {
   readonly onRemoveDraftImage: (imageId: string) => void;
   readonly onStopThread: () => void;
   readonly onSendMessage: () => Promise<MessageId | null>;
+  readonly onStartPotetoMode?: (() => void) | undefined;
   /** `/usage-limits` resolves locally; the host decides where the report shows. Null clears it. */
   readonly onShowUsageLimits: (report: UsageLimitsReport | null) => void;
   readonly onUpdateModelSelection: (modelSelection: ModelSelection) => void;
@@ -439,6 +440,17 @@ export const ThreadComposer = memo(function ThreadComposer(props: ThreadComposer
     !voiceInput.blocksSubmission &&
     sendBlockedReason === null &&
     !modelUnavailable;
+  const canDraftPoteto =
+    props.draftMessage.trim().length > 0 &&
+    !contextImports[composerOwnerKey] &&
+    !voiceInput.isBusy &&
+    pendingPastedTextAttachmentCount === 0 &&
+    !modelUnavailable;
+  const openPotetoMode = () => {
+    if (!canDraftPoteto || pendingPastedTextAttachmentCountRef.current > 0) return;
+    inputRef.current?.blur();
+    props.onStartPotetoMode?.();
+  };
 
   // Keep the feed inset aligned with the card or compact dictation strip.
   useEffect(() => {
@@ -926,6 +938,15 @@ export const ThreadComposer = memo(function ThreadComposer(props: ThreadComposer
                   onStart={voiceInput.start}
                   onCancel={voiceInput.cancel}
                 />
+                {props.onStartPotetoMode && !showStopAction ? (
+                  <ComposerInlineControl
+                    accessibilityLabel="Poteto Mode"
+                    label="Poteto"
+                    showChevron={false}
+                    disabled={!canDraftPoteto}
+                    onPress={openPotetoMode}
+                  />
+                ) : null}
                 {showStopAction ? (
                   <ComposerActionButton
                     accessibilityLabel="Stop agent"
@@ -1018,6 +1039,15 @@ export const ThreadComposer = memo(function ThreadComposer(props: ThreadComposer
                     onConfirm={voiceInput.stop}
                     onCancel={voiceInput.cancel}
                   />
+                  {props.onStartPotetoMode && !showStopAction && voicePresentation.showsSend ? (
+                    <ComposerInlineControl
+                      accessibilityLabel="Poteto Mode"
+                      label="Poteto"
+                      showChevron={false}
+                      disabled={!canDraftPoteto}
+                      onPress={openPotetoMode}
+                    />
+                  ) : null}
                   {showStopAction ? (
                     <ComposerActionButton
                       accessibilityLabel="Stop agent"

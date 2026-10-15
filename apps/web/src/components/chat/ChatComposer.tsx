@@ -301,6 +301,7 @@ import {
   subscribeToPendingSnapShotAnimations,
 } from "../../lib/snapShotAnimation";
 import { resizeSnapShotSource } from "../../lib/snapShotSource";
+import { PotatoIcon } from "../icons/PotatoIcon";
 import { basenameOfPath } from "../../pierre-icons";
 import { cn, isMacPlatform, randomUUID } from "~/lib/utils";
 import {
@@ -1447,6 +1448,7 @@ export interface ChatComposerProps {
 
   // Callbacks
   onCompactContext: () => void;
+  onPotetoMode?: (() => void) | undefined;
   onSend: (e?: { preventDefault: () => void }, intent?: ComposerSubmissionIntent) => void;
   onInterrupt: () => void;
   onImplementPlanInNewThread: () => void;
@@ -1563,6 +1565,7 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
     onPageScrollKeyUp,
     onPageScrollRelease,
     onCompactContext,
+    onPotetoMode,
     onSend,
     onInterrupt,
     onImplementPlanInNewThread,
@@ -6119,6 +6122,40 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
     ],
   );
 
+  const potetoAction =
+    onPotetoMode &&
+    phase !== "running" &&
+    pendingUserInputs.length === 0 &&
+    pendingApprovals.length === 0 &&
+    !showPlanFollowUpPrompt ? (
+      <Tooltip>
+        <TooltipTrigger
+          render={
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              aria-label="Poteto Mode"
+              disabled={
+                !prompt.trim() ||
+                isSendBusy ||
+                isConnecting ||
+                isSendDisabled ||
+                isPreparingWorktree ||
+                projectSelectionRequired ||
+                environmentUnavailable !== null
+              }
+              onPointerDown={(event) => event.preventDefault()}
+              onClick={onPotetoMode}
+            />
+          }
+        >
+          <PotatoIcon />
+        </TooltipTrigger>
+        <TooltipPopup>Prepare a Poteto proposal from your message</TooltipPopup>
+      </Tooltip>
+    ) : null;
+
   // Render
   // ------------------------------------------------------------------
   return (
@@ -6429,6 +6466,7 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
                         : "Ask anything...")}
                 </button>
                 {collapsedComposerImagePreviews}
+                {potetoAction}
                 <button
                   type="button"
                   data-chat-composer-transition-actions="true"
@@ -7041,6 +7079,7 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
                       </Tooltip>
                     </>
                   ) : null}
+                  {potetoAction}
                   <ComposerFooterPrimaryActions
                     compact={isComposerResting || isComposerPrimaryActionsCompact}
                     activeContextWindow={
