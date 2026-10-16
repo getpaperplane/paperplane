@@ -1,6 +1,8 @@
 import { useAtomValue } from "@effect/atom-react";
 import * as Schema from "effect/Schema";
 import {
+  lazy,
+  Suspense,
   useEffect,
   useState,
   useSyncExternalStore,
@@ -31,7 +33,6 @@ import {
   usePanelAnimationSettings,
   usePanelNavigationSuppression,
 } from "../panelAnimations";
-import LegacyThreadSidebar from "./LegacySidebar";
 import { useThreadVisitedMigration } from "../hooks/useThreadVisitedMigration";
 import ThreadSidebar from "./Sidebar";
 import { SettingsSidebarNav } from "./settings/SettingsSidebarNav";
@@ -228,6 +229,8 @@ function ProjectProjectionRetention() {
   return null;
 }
 
+const LegacyThreadSidebar = lazy(() => import("./LegacySidebar"));
+
 export function AppSidebarLayout({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const legacySidebarEnabled = useLegacySidebarEnabled();
@@ -346,7 +349,11 @@ export function AppSidebarLayout({ children }: { children: ReactNode }) {
               <SettingsSidebarNav pathname={pathname} />
             </>
           ) : legacySidebarEnabled ? (
-            <LegacyThreadSidebar />
+            // Settings hydrate after the default sidebar first paints, so keep it up
+            // until the opt-in legacy sidebar's chunk arrives.
+            <Suspense fallback={<ThreadSidebar />}>
+              <LegacyThreadSidebar />
+            </Suspense>
           ) : (
             <ThreadSidebar />
           )}
