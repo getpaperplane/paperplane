@@ -74,6 +74,14 @@ vi.mock("~/lib/openPullRequestLink", () => ({
   useOpenChangeRequestLink: () => vi.fn(),
 }));
 
+import { derivePendingThreadRequests } from "@rove-code/client-runtime/state/thread-requests";
+import { memo, useMemo } from "react";
+import * as DateTime from "effect/DateTime";
+
+import { useStableCallback } from "../../hooks/useStableCallback";
+import { useStructuralValue } from "../../hooks/useStructuralValue";
+import { derivePendingApprovals, derivePendingUserInputs } from "../../session-logic";
+import { makeThreadProjectionFixture } from "../../test-fixtures";
 import ChatMarkdown from "../ChatMarkdown";
 
 const DELTAS = 500;
@@ -213,6 +221,94 @@ async function streamMarkdown(label: string, reply: string): Promise<MarkdownStr
 
 const results: MarkdownStreamResult[] = [];
 
+// ChatView cannot mount in a unit test, so the composer section reproduces how
+// ChatView derived the composer props that changed on every delta, before and
+// after this change, from a projection rebuilt per delta as the reducer does.
+type ProjectionMessages = ReadonlyArray<{ readonly id: string; readonly role: string }>;
+const EMPTY_TASKS: readonly never[] = [];
+
+let composerRenders = 0;
+const ProbeComposer = memo(function ProbeComposer(_props: Record<string, unknown>) {
+  composerRenders += 1;
+  return null;
+});
+
+function ComposerPropsBefore(props: {
+  projection: ReturnType<typeof makeThreadProjectionFixture>;
+  messages: ProjectionMessages;
+}) {
+  const pendingRequests = useMemo(
+    () => derivePendingThreadRequests(props.projection),
+    [props.projection],
+  );
+  const pendingApprovals = useMemo(
+    () => derivePendingApprovals(pendingRequests.approvals),
+    [pendingRequests.approvals],
+  );
+  const pendingUserInputs = useMemo(
+    () => derivePendingUserInputs(pendingRequests.userInputs),
+    [pendingRequests.userInputs],
+  );
+  const backgroundTasks: ReadonlyArray<unknown> = [];
+  const bannerItems = useMemo(() => [...backgroundTasks], [backgroundTasks]);
+  return (
+    <ProbeComposer
+      promptHistoryMessages={props.messages}
+      pendingApprovals={pendingApprovals}
+      pendingUserInputs={pendingUserInputs}
+      bannerItems={bannerItems}
+    />
+  );
+}
+
+function ComposerPropsAfter(props: {
+  projection: ReturnType<typeof makeThreadProjectionFixture>;
+  messages: ProjectionMessages;
+}) {
+  const pendingRequests = useMemo(
+    () => derivePendingThreadRequests(props.projection),
+    [props.projection],
+  );
+  const pendingApprovals = useStructuralValue(
+    useMemo(() => derivePendingApprovals(pendingRequests.approvals), [pendingRequests.approvals]),
+  );
+  const pendingUserInputs = useStructuralValue(
+    useMemo(
+      () => derivePendingUserInputs(pendingRequests.userInputs),
+      [pendingRequests.userInputs],
+    ),
+  );
+  const getPromptHistoryMessages = useStableCallback(() => props.messages);
+  const bannerItems = useMemo(() => [...EMPTY_TASKS], []);
+  return (
+    <ProbeComposer
+      getPromptHistoryMessages={getPromptHistoryMessages}
+      pendingApprovals={pendingApprovals}
+      pendingUserInputs={pendingUserInputs}
+      bannerItems={bannerItems}
+    />
+  );
+}
+
+/** Renders of the memoized composer while a reply streams. */
+async function streamComposerProps(Harness: typeof ComposerPropsBefore): Promise<number> {
+  const container = document.createElement("div");
+  const root = createRoot(container);
+  const base = makeThreadProjectionFixture();
+  const user = { id: "user-1", role: "user" };
+  composerRenders = 0;
+  for (let delta = 1; delta <= DELTAS; delta++) {
+    const projection = {
+      ...base,
+      updatedAt: DateTime.makeUnsafe(Date.UTC(2026, 0, 1, 0, 0, delta)),
+    };
+    const messages = [user, { id: "assistant-1", role: "assistant", text: "x".repeat(delta) }];
+    await act(async () => root.render(<Harness projection={projection} messages={messages} />));
+  }
+  await act(async () => root.unmount());
+  return composerRenders;
+}
+
 // Vitest buffers console output per test; the report goes straight to stdout.
 function printTable(rows: ReadonlyArray<Record<string, string | number>>) {
   const columns = Object.keys(rows[0] ?? {});
@@ -249,6 +345,16 @@ describe.skipIf(!enabled)("streaming render benchmark", () => {
         "parse ms": Math.round(result.parseMs),
       })),
     );
+  });
+
+  it("re-renders the memoized composer only when its props change", async () => {
+    const before = await streamComposerProps(ComposerPropsBefore);
+    const after = await streamComposerProps(ComposerPropsAfter);
+    printTable([
+      { "ChatComposer renders per 500 deltas": "before", count: before },
+      { "ChatComposer renders per 500 deltas": "after", count: after },
+    ]);
+    expect(after).toBeLessThan(before);
   });
 
   it("streams a 10 KB prose reply through ChatMarkdown", async () => {
