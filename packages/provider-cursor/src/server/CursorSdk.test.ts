@@ -24,23 +24,53 @@ writeFileSync(
   stub,
   "module.exports = { Agent: {}, AuthenticationError: class {}, createAgentPlatform: () => ({}), Cursor: {}, CursorSdkError: class {}, InMemoryCredentialStore: class {} };",
 );
+const loads = [];
 registerHooks({
   resolve(specifier, context, next) {
     if (specifier === "@cursor/sdk" || specifier === "@cursor/sdk/sqlite") {
+      loads.push(specifier);
+      if (process.argv[1] === "load-failure") throw new Error("optional SDK is missing");
       return { url: pathToFileURL(stub).href, shortCircuit: true };
     }
     return next(specifier, context);
   },
 });
 
-const { layer } = await import(${JSON.stringify(cursorSdkUrl)});
+const { layer, CursorSdk } = await import(${JSON.stringify(cursorSdkUrl)});
 const Effect = await import("effect/Effect");
 const Layer = await import("effect/Layer");
 const Exit = await import("effect/Exit");
 const Scope = await import("effect/Scope");
 const scope = Scope.makeUnsafe();
-await Effect.runPromise(Layer.buildWithScope(layer, scope));
+const context = await Effect.runPromise(Layer.buildWithScope(layer, scope));
 const mode = process.argv[1];
+if (mode === "lazy") {
+  const assert = await import("node:assert/strict");
+  assert.deepEqual(loads, []);
+  const Context = await import("effect/Context");
+  const sdk = Context.get(context, CursorSdk);
+  const agent = sdk.Agent;
+  assert.equal(sdk.Agent, agent);
+  void sdk.createAgentPlatform;
+  assert.deepEqual(loads, ["@cursor/sdk"]);
+  void sdk.SqliteLocalAgentStore;
+  void sdk.SqliteLocalAgentStore;
+  assert.deepEqual(loads, ["@cursor/sdk", "@cursor/sdk/sqlite"]);
+  await Effect.runPromise(Scope.close(scope, Exit.void));
+  process.exit(0);
+}
+if (mode === "load-failure") {
+  const assert = await import("node:assert/strict");
+  assert.deepEqual(loads, []);
+  const Catalog = await import(${JSON.stringify(new URL("./CursorSdkCatalog.ts", import.meta.url).href)});
+  const catalog = await Effect.runPromise(Catalog.makeCursorSdkCatalog());
+  const failure = await Effect.runPromise(Effect.flip(catalog.read("test-key")));
+  assert.equal(failure._tag, "CursorSdkCatalogError");
+  assert.equal(failure.authenticationFailure, false);
+  assert.equal(failure.cause.message, "optional SDK is missing");
+  await Effect.runPromise(Scope.close(scope, Exit.void));
+  process.exit(0);
+}
 const missingCwd = join(tmpdir(), "rove-missing-cwd-" + process.pid);
 
 if (mode === "cursor-shell") {
@@ -152,6 +182,17 @@ describe("isCursorShellSpawnFailure", () => {
 });
 
 describe("Cursor shell spawn guard", () => {
+  it("keeps the SDK unloaded until use and memoizes each disk-backed entry", async () => {
+    const result = await runProbe("lazy");
+    expect(result.code).toBe(0);
+    expect(result.stderr).toBe("");
+  });
+  it("reports a failed lazy SDK load through the catalog error channel", async () => {
+    const result = await runProbe("load-failure");
+    expect(result.code).toBe(0);
+    expect(result.stderr).toBe("");
+  });
+
   it("keeps the process alive when Cursor's shell spawn rejects", async () => {
     const result = await runProbe("cursor-shell");
     expect(result.code).toBe(0);

@@ -16,28 +16,25 @@ import {
 
 import { isWorkspaceImagePreviewPath } from "@rove-code/shared/filePreview";
 import { normalizeClaudeTurnTokenUsage } from "../../provider/ClaudeTurnTokenUsage.ts";
-import {
-  type CanUseTool,
-  forkSession as forkClaudeSession,
-  type EffortLevel,
-  type ForkSessionOptions,
-  type ForkSessionResult,
-  getSubagentMessages,
-  query,
-  type Options as ClaudeQueryOptions,
-  type PermissionMode,
-  type PermissionResult,
-  type PermissionUpdate,
-  type Query as ClaudeQuery,
-  type Settings as ClaudeSdkSettings,
-  type SpawnOptions as ClaudeSpawnOptions,
-  type SpawnedProcess as ClaudeSpawnedProcess,
-  type SDKAssistantMessage,
-  type SDKAPIRetryMessage,
-  type SDKMessage,
-  type SDKRateLimitInfo,
-  type SDKResultMessage,
-  type SDKUserMessage,
+import type {
+  CanUseTool,
+  EffortLevel,
+  ForkSessionOptions,
+  ForkSessionResult,
+  Options as ClaudeQueryOptions,
+  PermissionMode,
+  PermissionResult,
+  PermissionUpdate,
+  Query as ClaudeQuery,
+  Settings as ClaudeSdkSettings,
+  SpawnOptions as ClaudeSpawnOptions,
+  SpawnedProcess as ClaudeSpawnedProcess,
+  SDKAssistantMessage,
+  SDKAPIRetryMessage,
+  SDKMessage,
+  SDKRateLimitInfo,
+  SDKResultMessage,
+  SDKUserMessage,
 } from "@anthropic-ai/claude-agent-sdk";
 import type {
   AskUserQuestionInput,
@@ -783,6 +780,10 @@ export const layerQueryRunner: Layer.Layer<
         const spawnClaudeCodeProcess =
           options.spawnClaudeCodeProcess ??
           (platform === "win32" ? undefined : spawnClaudeProcessGroup);
+        const { query } = yield* Effect.tryPromise({
+          try: () => import("@anthropic-ai/claude-agent-sdk"),
+          catch: (cause) => queryRunnerError(cause, "query"),
+        });
         // The CLI is running once query() returns, so it is closed if anything
         // before the session is handed out fails or is interrupted.
         const queryRuntime = yield* Effect.uninterruptibleMask((restore) =>
@@ -997,7 +998,11 @@ export const layerQueryRunner: Layer.Layer<
           },
         });
         const result = yield* Effect.tryPromise({
-          try: () => forkClaudeSession(input.sessionId, input.options),
+          try: async (signal) => {
+            const { forkSession } = await import("@anthropic-ai/claude-agent-sdk");
+            signal.throwIfAborted();
+            return forkSession(input.sessionId, input.options);
+          },
           catch: (cause) => queryRunnerError(cause, "forkSession"),
         });
         yield* logProtocolEvent({
@@ -1031,11 +1036,14 @@ export const layerQueryRunner: Layer.Layer<
           // The CLI stamps every message of a subagent's transcript with the
           // tool call that launched it; one message is enough.
           const messages = yield* Effect.tryPromise({
-            try: () =>
-              getSubagentMessages(input.sessionId, input.agentId, {
+            try: async (signal) => {
+              const { getSubagentMessages } = await import("@anthropic-ai/claude-agent-sdk");
+              signal.throwIfAborted();
+              return getSubagentMessages(input.sessionId, input.agentId, {
                 ...(input.dir === null ? {} : { dir: input.dir }),
                 limit: 1,
-              }),
+              });
+            },
             catch: (cause) => queryRunnerError(cause, "getSubagentMessages"),
           });
           const toolUseId = messages[0]?.parent_tool_use_id ?? null;

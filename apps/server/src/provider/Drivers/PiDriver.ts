@@ -30,7 +30,6 @@ import { acquirePiResource, disposePiResource } from "../Layers/PiLifecycle.ts";
 import { LazyPiRuntime, PiRuntimeProcess } from "../Layers/PiRuntimeProcess.ts";
 import { PI_SUBAGENT_TRANSCRIPTS_ENV } from "../Layers/PiSubagents.ts";
 import { PI_CONFIG_DIR } from "../PiSdkMetadata.ts";
-import { registerPiBundledOAuthFlows } from "./PiOAuth.ts";
 import {
   buildInitialPiProviderSnapshot,
   checkPiProviderStatus,
@@ -42,7 +41,6 @@ import {
   type ProviderSnapshotSettings,
 } from "../providerUpdateSettings.ts";
 
-registerPiBundledOAuthFlows();
 const DRIVER_KIND = ProviderDriverKind.make("pi");
 const decodePiSettings = Schema.decodeSync(PiSettings);
 const MAINTENANCE = makeManualOnlyProviderMaintenanceCapabilities({

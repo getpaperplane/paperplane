@@ -1,16 +1,16 @@
 #!/usr/bin/env node
 // Fresh-state source or bundled server benchmark. Readiness deliberately uses TCP:
 // requesting / can wait indefinitely when the source entry has no web assets.
-import { spawn, execFile } from "node:child_process";
-import { mkdtemp, rm } from "node:fs/promises";
-import { createServer, connect } from "node:net";
-import { tmpdir } from "node:os";
-import { resolve, join } from "node:path";
-import { performance } from "node:perf_hooks";
-import { setTimeout as delay } from "node:timers/promises";
-import { parseArgs, promisify } from "node:util";
+import * as NodeChildProcess from "node:child_process";
+import * as NodeFSP from "node:fs/promises";
+import * as NodeNet from "node:net";
+import * as NodeOS from "node:os";
+import * as NodePath from "node:path";
+import * as NodePerfHooks from "node:perf_hooks";
+import * as NodeTimersPromises from "node:timers/promises";
+import * as NodeUtil from "node:util";
 
-const { values } = parseArgs({
+const { values } = NodeUtil.parseArgs({
   options: {
     runs: { type: "string", default: "3" },
     entry: { type: "string", default: "apps/server/src/bin.ts" },
@@ -35,25 +35,28 @@ if (
     "runs must be a positive integer, idle-seconds nonnegative, and ready timeout positive",
   );
 }
-const entry = resolve(values.entry);
+const entry = NodePath.resolve(values.entry);
 const profileDir = values["cpu-prof"]
   ? values["profile-dir"]
-    ? resolve(values["profile-dir"])
-    : await mkdtemp(join(tmpdir(), "rove-boot-profiles-"))
+    ? NodePath.resolve(values["profile-dir"])
+    : await NodeFSP.mkdtemp(NodePath.join(NodeOS.tmpdir(), "rove-boot-profiles-"))
   : undefined;
-const baseDir = await mkdtemp(join(tmpdir(), "rove-boot-"));
-const exec = promisify(execFile);
-let active: ReturnType<typeof spawn> | undefined;
+if (profileDir) await NodeFSP.mkdir(profileDir, { recursive: true });
+const baseDir = await NodeFSP.mkdtemp(NodePath.join(NodeOS.tmpdir(), "rove-boot-"));
+const exec = NodeUtil.promisify(NodeChildProcess.execFile);
+let active: ReturnType<typeof NodeChildProcess.spawn> | undefined;
+const abort = new AbortController();
 let interrupted = false;
 const interrupt = () => {
   interrupted = true;
+  abort.abort();
   active?.kill("SIGTERM");
 };
 process.on("SIGINT", interrupt);
 process.on("SIGTERM", interrupt);
 
 async function freePort() {
-  const server = createServer();
+  const server = NodeNet.createServer();
   await new Promise<void>((accept, reject) => {
     server.once("error", reject);
     server.listen(0, "127.0.0.1", accept);
@@ -68,7 +71,7 @@ async function freePort() {
 
 async function connects(port: number) {
   return new Promise<boolean>((accept) => {
-    const socket = connect({ port, host: "127.0.0.1" });
+    const socket = NodeNet.connect({ port, host: "127.0.0.1" });
     const finish = (ready: boolean) => {
       socket.destroy();
       accept(ready);
@@ -98,9 +101,9 @@ async function sample(pid: number, atSeconds: number) {
 async function run(index: number) {
   if (interrupted) throw new Error("Benchmark interrupted");
   const port = await freePort();
-  const home = join(baseDir, String(index));
-  const started = performance.now();
-  const child = spawn(
+  const home = NodePath.join(baseDir, String(index));
+  const started = NodePerfHooks.performance.now();
+  const child = NodeChildProcess.spawn(
     process.execPath,
     [
       ...(profileDir
@@ -136,20 +139,24 @@ async function run(index: number) {
       if (interrupted || child.exitCode !== null || child.signalCode !== null) {
         throw new Error(`Server exited before readiness: ${output}`);
       }
-      if (performance.now() - started > readyTimeoutSeconds * 1000) {
+      if (NodePerfHooks.performance.now() - started > readyTimeoutSeconds * 1000) {
         throw new Error(`Server readiness timed out: ${output}`);
       }
-      await delay(20);
+      await NodeTimersPromises.setTimeout(20, undefined, { signal: abort.signal });
     }
-    const readyMs = performance.now() - started;
-    const readyAt = performance.now();
+    const readyMs = NodePerfHooks.performance.now() - started;
+    const readyAt = NodePerfHooks.performance.now();
     if (!child.pid) throw new Error("Server has no PID");
     const samples = [await sample(child.pid, 0)];
     const idleTimes = [
       ...new Set([...(idleSeconds >= 10 ? [10] : []), ...(idleSeconds > 0 ? [idleSeconds] : [])]),
     ];
     for (const seconds of idleTimes) {
-      await delay(Math.max(0, seconds * 1000 - (performance.now() - readyAt)));
+      await NodeTimersPromises.setTimeout(
+        Math.max(0, seconds * 1000 - (NodePerfHooks.performance.now() - readyAt)),
+        undefined,
+        { signal: abort.signal },
+      );
       if (interrupted) throw new Error("Benchmark interrupted");
       samples.push(await sample(child.pid, seconds));
     }
@@ -166,7 +173,7 @@ async function run(index: number) {
       }
     }
     active = undefined;
-    await rm(home, { recursive: true, force: true });
+    await NodeFSP.rm(home, { recursive: true, force: true });
   }
 }
 
@@ -207,5 +214,5 @@ try {
 } finally {
   process.off("SIGINT", interrupt);
   process.off("SIGTERM", interrupt);
-  await rm(baseDir, { recursive: true, force: true });
+  await NodeFSP.rm(baseDir, { recursive: true, force: true });
 }
