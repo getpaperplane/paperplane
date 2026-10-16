@@ -18,6 +18,8 @@ const { values } = NodeUtil.parseArgs({
     "ready-timeout-seconds": { type: "string", default: "60" },
     "cpu-prof": { type: "boolean", default: false },
     "profile-dir": { type: "string" },
+    // Copied into each run's home, e.g. <worktree>/.rove/userdata from `vp run migrate-dev-db`.
+    "seed-userdata": { type: "string" },
   },
 });
 const runs = Number(values.runs);
@@ -36,6 +38,9 @@ if (
   );
 }
 const entry = NodePath.resolve(values.entry);
+const seedUserdata = values["seed-userdata"]
+  ? NodePath.resolve(values["seed-userdata"])
+  : undefined;
 const profileDir = values["cpu-prof"]
   ? values["profile-dir"]
     ? NodePath.resolve(values["profile-dir"])
@@ -102,6 +107,9 @@ async function run(index: number) {
   if (interrupted) throw new Error("Benchmark interrupted");
   const port = await freePort();
   const home = NodePath.join(baseDir, String(index));
+  if (seedUserdata) {
+    await NodeFSP.cp(seedUserdata, NodePath.join(home, "userdata"), { recursive: true });
+  }
   const started = NodePerfHooks.performance.now();
   const child = NodeChildProcess.spawn(
     process.execPath,
