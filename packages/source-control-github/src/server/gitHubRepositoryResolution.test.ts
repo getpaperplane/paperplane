@@ -2,6 +2,7 @@ import { assert, describe, it } from "@effect/vitest";
 
 import {
   gitHubApiHostForRemote,
+  gitHubRepositoryForContextRemote,
   selectGitHubBaseRepository,
 } from "./gitHubRepositoryResolution.ts";
 
@@ -73,6 +74,44 @@ describe("selectGitHubBaseRepository", () => {
       assert.strictEqual(select(input), null);
     }
   });
+});
+
+describe("gitHubRepositoryForContextRemote", () => {
+  it.each([
+    ["git@github.com:Acme/Web.git", "github.com"],
+    ["git@github:acme/web.git", "github.com"],
+    ["git@github-work:acme/web.git", "github.com"],
+    ["ssh://git@github-work/acme/web.git", "github.com"],
+    ["git@code.example.test:acme/web.git", "code.example.test"],
+    ["ssh://git@code.example.test/acme/web.git", "code.example.test"],
+    ["https://code.example.test/acme/web.git", "code.example.test"],
+  ])("resolves %s on %s", (remoteUrl, host) => {
+    assert.deepStrictEqual(gitHubRepositoryForContextRemote(remoteUrl), {
+      host,
+      owner: "acme",
+      name: "web",
+    });
+  });
+
+  it.each([
+    ["git@code.example.test:acme/web.git", "code.example.test:8443", "code.example.test:8443"],
+    ["git@ssh.example.test:acme/web.git", "api.example.test:8443", "api.example.test:8443"],
+    ["git@github.com:acme/web.git", "explicit.example.test", "explicit.example.test"],
+    ["git@github-work:acme/web.git", "github-work", "github.com"],
+  ])("uses the host hint for %s: %s", (remoteUrl, hostHint, host) => {
+    assert.deepStrictEqual(gitHubRepositoryForContextRemote(remoteUrl, hostHint), {
+      host,
+      owner: "acme",
+      name: "web",
+    });
+  });
+
+  it.each(["", "not-a-remote", "git@github.com:web.git", "https://github.com/acme/web/extra"])(
+    "leaves an unparseable repository to remote selection: %s",
+    (remoteUrl) => {
+      assert.strictEqual(gitHubRepositoryForContextRemote(remoteUrl), null);
+    },
+  );
 });
 
 describe("gitHubApiHostForRemote", () => {

@@ -30,7 +30,7 @@ export function parseFetchRemotes(
  *
  * Null whenever gh might weigh the remotes differently: a remote on another host or under an
  * SSH alias, more than one mark, or several remotes with none of those names. Callers then
- * fall back to the provider's remote, then to the best-ranked remote on the host.
+ * fall back to the best-ranked remote on the host.
  */
 export function selectGitHubBaseRepository(input: {
   readonly remotes: string;
@@ -68,10 +68,28 @@ export function selectGitHubBaseRepository(input: {
     : null;
 }
 
+/** The context remote's repository, using the caller's API host when known. */
+export function gitHubRepositoryForContextRemote(
+  remoteUrl: string,
+  hostHint?: string,
+): GitHubRepositoryLocator | null {
+  const [remoteHost, owner, name, ...rest] = normalizeGitRemoteUrl(remoteUrl).split("/");
+  if (!remoteHost || !owner || !name || rest.length > 0) return null;
+  return {
+    host:
+      hostHint === undefined
+        ? (gitHubApiHostForRemote(remoteUrl) ?? apiHostForHint(remoteHost))
+        : apiHostForHint(hostHint),
+    owner,
+    name,
+  };
+}
+
 /**
  * The repository `gh` would act on in a checkout, from its remotes: the remote `gh` would pick,
  * else the best-ranked remote on the host. `host` is the API host it settled on, which a caller
- * names when no repository was found there. GH_REPO is the caller's to check first.
+ * names when no repository was found there. GH_REPO and the provider context are the caller's
+ * to check first.
  */
 export function resolveGitHubRepository(input: {
   readonly remotes: string;
