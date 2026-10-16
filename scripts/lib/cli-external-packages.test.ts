@@ -87,6 +87,11 @@ describe("shouldBundleCliDependency", () => {
       "@earendil-works/pi-mcp",
       "jiti",
       "typebox/compile",
+      // Pi's @google/genai optional peer is externalized even though a clean
+      // production install only includes it when Rove declares it directly.
+      "@modelcontextprotocol/sdk/client/index.js",
+      "@modelcontextprotocol/sdk/client/streamableHttp.js",
+      "@modelcontextprotocol/sdk/client/stdio.js",
     ]) {
       assert.strictEqual(shouldBundleCliDependency(name), false, name);
     }
@@ -101,7 +106,7 @@ describe("shouldBundleCliDependency", () => {
   // went external with the Pi runtime closure while nothing declared it,
   // so the desktop backend exited code=1 in a restart loop.
   it("resolves every external bare import of the server bundle from the repo", () => {
-    const externals = ["ws", "jose", "cross-spawn", "cbor-x"];
+    const externals = ["ws", "jose", "cross-spawn", "cbor-x", "@modelcontextprotocol/sdk"];
     for (const name of externals) {
       assert.strictEqual(shouldBundleCliDependency(name), false, name);
       if (name !== "cbor-x") {
@@ -161,6 +166,7 @@ describe("selectCliRuntimeExternalDependencies", () => {
         "@earendil-works/pi-ai",
         "@earendil-works/pi-coding-agent",
         "@ff-labs/fff-node",
+        "@modelcontextprotocol/sdk",
         "@napi-rs/keyring",
         "cbor-x",
         "cross-spawn",
@@ -485,6 +491,34 @@ describe("findEsmImportsOfExternalPackages", () => {
     const source = 'const { FileFinder } = createRequire(import.meta.url)("@ff-labs/fff-node");';
     assert.deepStrictEqual(findEsmImportsOfExternalPackages(source), []);
   });
+});
+
+it("loads Rove's MCP clients from an isolated runtime sidecar", () => {
+  const selected = selectCliRuntimeExternalDependencies(serverPackageJson.dependencies);
+  assert.strictEqual(selected["@modelcontextprotocol/sdk"], "1.29.0");
+  const stage = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "rove-mcp-sidecar-"));
+  try {
+    const closure = runtimePackageClosure(
+      NodePath.join(serverRoot, "node_modules/@modelcontextprotocol/sdk"),
+    );
+    assert.isAtLeast(closure.size, 1);
+    for (const [directory, { name }] of closure) {
+      NodeFS.cpSync(directory, NodePath.join(stage, "node_modules", name), { recursive: true });
+    }
+    const loaded = NodeChildProcess.spawnSync(
+      process.execPath,
+      [
+        "-e",
+        'const assert = require("node:assert/strict"); ' +
+          'for (const [path, name] of [["index", "Client"], ["streamableHttp", "StreamableHTTPClientTransport"], ["stdio", "StdioClientTransport"]]) ' +
+          'assert.equal(typeof require(`@modelcontextprotocol/sdk/client/${path}.js`)[name], "function");',
+      ],
+      { cwd: stage, encoding: "utf8", env: { ...process.env, NODE_PATH: "" } },
+    );
+    assert.strictEqual(loaded.status, 0, loaded.stderr || loaded.stdout);
+  } finally {
+    NodeFS.rmSync(stage, { recursive: true, force: true });
+  }
 });
 
 it("loads Modal's CBOR codec from an isolated runtime sidecar", () => {

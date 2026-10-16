@@ -4,6 +4,8 @@ import { escapeHtml } from "./content.ts";
 export const appRoutes = [
   "/",
   "/connect",
+  "/connect-agent",
+  "/new",
   "/pair",
   "/settings",
   "/usage",
@@ -23,6 +25,7 @@ export const appRoutes = [
     "open-source-licenses",
     "projects",
     "providers",
+    "scheduled-tasks",
     "snap-shot",
     "source-control",
     "storage",
