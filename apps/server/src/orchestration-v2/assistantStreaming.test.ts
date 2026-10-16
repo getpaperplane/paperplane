@@ -55,14 +55,76 @@ describe("V2 assistant streaming", () => {
   it("delivers completed paragraphs, coalesces rapid updates, and flushes final text", () => {
     const filter = makeAssistantStreamingFilter("paragraph");
     expect(filter(message("First"), 0)).toBeNull();
-    expect(filter(message("First\n\nSec"), 10)).toMatchObject({ message: { text: "First\n\n" } });
-    expect(filter(message("First\n\nSecond\n\nThi"), 100)).toBeNull();
-    expect(filter(message("First\n\nSecond\n\nThird"), 410)).toMatchObject({
+    expect(filter(message("First\n\nSec"), 10)).toBeNull();
+    expect(filter(message("First\n\nSec"), 400)).toMatchObject({ message: { text: "First\n\n" } });
+    expect(filter(message("First\n\nSecond\n\nThi"), 500)).toBeNull();
+    expect(filter(message("First\n\nSecond\n\nThird"), 800)).toMatchObject({
       message: { text: "First\n\nSecond\n\n" },
     });
     const final = message("First\n\nSecond\n\nThird", false);
-    expect(filter(final, 420)).toBe(final);
+    expect(filter(final, 810)).toBe(final);
   });
+  it("throttles empty and unchanged boundaries, but never delays completion", () => {
+    const filter = makeAssistantStreamingFilter("paragraph");
+    expect(filter(message("```ts\nx()\n"), 0)).toBeNull();
+    expect(filter(message("```ts\nx()\n```\n"), 50)).toBeNull();
+    expect(filter(message("```ts\nx()\n```\n"), 400)).toMatchObject({
+      message: { text: "```ts\nx()\n```\n" },
+    });
+    expect(filter(message("```ts\nx()\n```\nNext"), 800)).toBeNull();
+    expect(filter(message("```ts\nx()\n```\nNext\n\n"), 850)).toBeNull();
+    const final = message("```ts\nx()\n```\nNext\n\n", false);
+    expect(filter(final, 851)).toBe(final);
+    // Completion forgets both throttle and fence state for a reused item ID.
+    expect(filter(message("Fresh\n\n"), 852)).toMatchObject({ message: { text: "Fresh\n\n" } });
+  });
+
+  it.each([
+    "Intro\n\n```ts\nx()\n\n```\nAfter\n\nLast",
+    "## Results\n\nBody\n\n**Next**\n\n~~~js\nx()\n~~~\nEnd",
+    "- first\n- second\n  - nested\n1. ordered\n2) next\n\nTail",
+    "    ```ts\nx\n        ```\ncontent\n     ```\nAfter\n\n",
+    "```\nx\n```info\ny\n````\n\u00a0\n\nTail",
+    "Intro\r\n \t\r\n## Title\r\n\r\nBody\r\n\r\nTail",
+  ])("incremental boundaries match a fresh scan for every prefix of %j", (text) => {
+    const filter = makeAssistantStreamingFilter("paragraph");
+    let delivered = "";
+    for (let length = 0; length <= text.length; length++) {
+      const prefix = text.slice(0, length);
+      const ready = splitBufferedAssistantText(prefix).ready;
+      const event = filter(message(prefix), length * 400);
+      if (ready && ready !== delivered) {
+        expect(event).toMatchObject({ message: { text: ready } });
+        delivered = ready;
+      } else {
+        expect(event).toBeNull();
+      }
+    }
+  });
+
+  it("rescans corrected and shortened snapshots rather than retaining obsolete fence state", () => {
+    const filter = makeAssistantStreamingFilter("paragraph");
+    expect(filter(message("Intro\n\n```ts\nx\n"), 0)).toMatchObject({
+      message: { text: "Intro\n\n" },
+    });
+    expect(filter(message("New\n\nTail"), 400)).toMatchObject({ message: { text: "New\n\n" } });
+    expect(filter(message("New\n"), 800)).toBeNull();
+    expect(filter(message("New\n\nFinal\n\n"), 1200)).toMatchObject({
+      message: { text: "New\n\nFinal\n\n" },
+    });
+  });
+
+  it("keeps message and reasoning scanners independent", () => {
+    const filter = makeAssistantStreamingFilter("paragraph");
+    expect(filter(message("```ts\nx\n"), 0)).toBeNull();
+    expect(filter(turnItem("Reason\n\n", true, "reasoning"), 0)).toMatchObject({
+      turnItem: { text: "Reason\n\n" },
+    });
+    expect(filter(message("```ts\nx\n```\n"), 400)).toMatchObject({
+      message: { text: "```ts\nx\n```\n" },
+    });
+  });
+
   it("keeps code fences intact", () => {
     expect(splitBufferedAssistantText("Intro\n\n```ts\nx()\n\n")).toEqual({
       ready: "Intro\n\n",
@@ -88,15 +150,16 @@ describe("V2 assistant streaming", () => {
       const item = (text: string, streaming = true) => turnItem(text, streaming, type);
       const filter = makeAssistantStreamingFilter("paragraph");
       expect(filter(item("First"), 0)).toBeNull();
-      expect(filter(item("First\n\nSec"), 10)).toMatchObject({
+      expect(filter(item("First\n\nSec"), 10)).toBeNull();
+      expect(filter(item("First\n\nSec"), 400)).toMatchObject({
         turnItem: { text: "First\n\n", streaming: true, type },
       });
-      expect(filter(item("First\n\nSecond\n\nThi"), 100)).toBeNull();
-      expect(filter(item("First\n\nSecond\n\nThi"), 410)).toMatchObject({
+      expect(filter(item("First\n\nSecond\n\nThi"), 500)).toBeNull();
+      expect(filter(item("First\n\nSecond\n\nThi"), 800)).toMatchObject({
         turnItem: { text: "First\n\nSecond\n\n", streaming: true },
       });
       const final = item("First\n\nSecond\n\nThird", false);
-      expect(filter(final, 420)).toBe(final);
+      expect(filter(final, 810)).toBe(final);
 
       const buffered = makeAssistantStreamingFilter("turn");
       expect(buffered(item("First\n\nSecond"), 0)).toBeNull();

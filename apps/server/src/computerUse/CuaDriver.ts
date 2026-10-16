@@ -12,8 +12,7 @@ import {
   Environment as HostProcessEnvironment,
   Platform as HostProcessPlatform,
 } from "@rove-code/shared/HostProcess";
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
+import type { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import type { Tool as CuaMcpTool } from "@modelcontextprotocol/sdk/types.js";
 import * as Context from "effect/Context";
 import * as Duration from "effect/Duration";
@@ -260,6 +259,11 @@ export const make = Effect.fn("CuaDriver.make")(function* (options?: {
   ) =>
     Effect.tryPromise({
       try: async (signal) => {
+        const [{ Client }, { StdioClientTransport }] = await Promise.all([
+          import("@modelcontextprotocol/sdk/client/index.js"),
+          import("@modelcontextprotocol/sdk/client/stdio.js"),
+        ]);
+        signal.throwIfAborted();
         const client = new Client({ name: "rove-code", version: "1.0.0" });
         signal.addEventListener("abort", () => void client.close(), { once: true });
         try {

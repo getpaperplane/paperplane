@@ -3,6 +3,8 @@ import { isOrchestrationV2WorkActive } from "@rove-code/contracts";
 import { deriveSubagentElapsedMs } from "@rove-code/shared/orchestrationTiming";
 import { useEffect, useRef } from "react";
 
+import { subscribeRelativeTimeTick } from "../../hooks/useRelativeTimeTick";
+
 function formatElapsedSeconds(totalSeconds: number): string {
   const seconds = Math.max(0, Math.floor(totalSeconds));
   const minutes = Math.floor(seconds / 60);
@@ -28,7 +30,8 @@ export function formatCompactElapsedSeconds(totalSeconds: number): string {
 
 /**
  * Elapsed time for the current activation. Live agents self-tick via DOM
- * writes (zero React commits per tick); settled agents freeze at completedAt.
+ * writes on the shared clock (zero React commits per tick); settled agents
+ * freeze at completedAt.
  * `compact` drops the smaller unit for narrow rows such as Lineage.
  */
 export function AgentElapsed({
@@ -60,8 +63,7 @@ export function AgentElapsed({
     };
     update();
     if (!live) return;
-    const id = setInterval(update, 1000);
-    return () => clearInterval(id);
+    return subscribeRelativeTimeTick(1_000, update);
   }, [live, startedAt, completedAt, agent.status, format]);
 
   const elapsedMs = deriveSubagentElapsedMs(agent, 0);

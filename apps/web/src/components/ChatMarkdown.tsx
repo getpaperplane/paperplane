@@ -15,6 +15,10 @@ import { isAbsolutePath } from "@rove-code/shared/path";
 import { usePullRequestLinking } from "~/hooks/usePullRequestLinking";
 import { AuthFilesystemReadScope, AuthOrchestrationOperateScope } from "@rove-code/contracts";
 import {
+  createMarkdownBlockSplitter,
+  type MarkdownBlock,
+} from "@rove-code/shared/markdownStreamingBlocks";
+import {
   CHAT_MARKDOWN_REMARK_PLUGINS,
   CHAT_MARKDOWN_REMARK_PLUGINS_WITH_BREAKS,
   CHAT_MARKDOWN_REHYPE_PLUGINS,
@@ -100,7 +104,6 @@ import type {
 } from "react-markdown";
 import ReactMarkdown from "react-markdown";
 import { toHtml } from "hast-util-to-html";
-import { createIncrementalMarkdownPlugin } from "../markdown-incremental";
 import { defaultUrlTransform } from "react-markdown";
 import { parseAssistantCitationHref } from "@rove-code/shared/assistantCitations";
 import { parseComposerContextHref } from "@rove-code/shared/composerContextReferences";
@@ -1852,19 +1855,21 @@ function githubHeadingSlug(text: string): string {
 /**
  * Gives headings without an authored id GitHub's slug id, deduplicated per document. Like the
  * sanitizer's ids, they carry the `user-content-` prefix so they cannot clobber app element ids;
- * fragment lookup strips it.
+ * fragment lookup strips it. A streamed document renders in blocks, so `registry` carries the
+ * ids each earlier block took.
  */
-function rehypeHeadingIds() {
+function rehypeHeadingIds(registry?: HeadingIdRegistry, blockOffset = 0) {
   return (tree: HeadingHastNode) => {
     // Every id already in the document, authored or assigned, so a suffix never
     // lands on one that exists: `Setup`, `Setup`, `Setup-1` get three distinct ids.
-    const taken = new Set<string>();
+    const taken = new Set<string>(registry?.idsBefore(blockOffset));
     const collect = (node: HeadingHastNode) => {
       const id = node.properties?.id;
       if (typeof id === "string") taken.add(id);
       node.children?.forEach(collect);
     };
     collect(tree);
+    const assigned: string[] = [];
     const nextSuffix = new Map<string, number>();
     const visit = (node: HeadingHastNode) => {
       if (node.type === "element" && node.tagName && /^h[1-6]$/.test(node.tagName)) {
@@ -1878,6 +1883,7 @@ function rehypeHeadingIds() {
           }
           nextSuffix.set(slug, count);
           taken.add(id);
+          assigned.push(id);
           node.properties = { ...node.properties, id };
         }
         return;
@@ -1885,18 +1891,38 @@ function rehypeHeadingIds() {
       node.children?.forEach(visit);
     };
     visit(tree);
+    registry?.record(blockOffset, assigned);
   };
 }
 
-// Heading ids are added after sanitizing, which would prefix them a second time.
-const CHAT_MARKDOWN_RENDER_REHYPE_PLUGINS = [
-  ...CHAT_MARKDOWN_REHYPE_PLUGINS,
-  rehypeHeadingIds,
-] satisfies NonNullable<ReactMarkdownOptions["rehypePlugins"]>;
+/** Heading ids taken by each rendered block of one streamed document, keyed by block offset. */
+class HeadingIdRegistry {
+  private readonly idsByOffset = new Map<number, ReadonlyArray<string>>();
 
-const CHAT_MARKDOWN_LITERAL_HTML_REHYPE_PLUGINS = [rehypeHeadingIds] satisfies NonNullable<
-  ReactMarkdownOptions["rehypePlugins"]
->;
+  record(offset: number, ids: ReadonlyArray<string>) {
+    this.idsByOffset.set(offset, ids);
+  }
+
+  /** Blocks render in document order, so every earlier block has recorded its ids. */
+  *idsBefore(offset: number): Iterable<string> {
+    for (const [blockOffset, ids] of this.idsByOffset) {
+      if (blockOffset < offset) yield* ids;
+    }
+  }
+}
+
+// Heading ids are added after sanitizing, which would prefix them a second time.
+function chatMarkdownRehypePlugins(
+  parseRawHtml: boolean,
+  registry?: HeadingIdRegistry,
+  blockOffset?: number,
+): NonNullable<ReactMarkdownOptions["rehypePlugins"]> {
+  const headingIds = () => rehypeHeadingIds(registry, blockOffset);
+  return parseRawHtml ? [...CHAT_MARKDOWN_REHYPE_PLUGINS, headingIds] : [headingIds];
+}
+
+const CHAT_MARKDOWN_RENDER_REHYPE_PLUGINS = chatMarkdownRehypePlugins(true);
+const CHAT_MARKDOWN_LITERAL_HTML_REHYPE_PLUGINS = chatMarkdownRehypePlugins(false);
 
 function MarkdownExternalLinkContent({
   host,
@@ -2451,14 +2477,24 @@ function useChatMarkdownState({
     [environmentId, openInEditor],
   );
   const diffThemeName = resolveDiffThemeName(resolvedTheme);
+  // Keyed by the links and code spans, not the text, so streamed deltas that add
+  // neither keep every renderer's context unchanged.
+  const markdownLinkHrefsKey = useMemo(
+    () =>
+      extractMarkdownLinkHrefs(renderCodexInlineDirectivesAsMarkdown(text))
+        .filter((href) => !parseComposerContextHref(href))
+        .map(normalizeMarkdownLinkHrefKey)
+        .join("\n"),
+    [text],
+  );
+  const inlineCodeSpansKey = useMemo(() => extractInlineCodeSpans(text).join("\n"), [text]);
   const markdownFileLinkMetaByHref = useMemo(() => {
     const metaByHref = new Map<
       string,
       NonNullable<ReturnType<typeof resolveMarkdownFileLinkMeta>>
     >();
-    for (const href of extractMarkdownLinkHrefs(renderCodexInlineDirectivesAsMarkdown(text))) {
-      if (parseComposerContextHref(href)) continue;
-      const normalizedHref = normalizeMarkdownLinkHrefKey(href);
+    if (!markdownLinkHrefsKey) return metaByHref;
+    for (const normalizedHref of markdownLinkHrefsKey.split("\n")) {
       if (metaByHref.has(normalizedHref)) continue;
       const meta = resolveMarkdownFileLinkMeta(normalizedHref, cwd, imageBaseDir ?? cwd);
       if (meta) {
@@ -2466,10 +2502,11 @@ function useChatMarkdownState({
       }
     }
     return metaByHref;
-  }, [cwd, imageBaseDir, text]);
+  }, [cwd, imageBaseDir, markdownLinkHrefsKey]);
   const inlineCodeFileLinkMetaByText = useMemo(() => {
     const metaByText = new Map<string, MarkdownFileLinkMeta>();
-    for (const span of extractInlineCodeSpans(text)) {
+    if (!inlineCodeSpansKey) return metaByText;
+    for (const span of inlineCodeSpansKey.split("\n")) {
       if (metaByText.has(span)) continue;
       const meta = resolveInlineCodeFileLinkMeta(span, cwd, imageBaseDir ?? cwd);
       if (meta) {
@@ -2477,7 +2514,7 @@ function useChatMarkdownState({
       }
     }
     return metaByText;
-  }, [cwd, imageBaseDir, text]);
+  }, [cwd, imageBaseDir, inlineCodeSpansKey]);
   const fileLinkParentSuffixByPath = useMemo(() => {
     const filePaths = [
       ...[...markdownFileLinkMetaByHref.values()].map((meta) => meta.filePath),
@@ -2764,7 +2801,6 @@ function useChatMarkdownState({
       resolvedTheme,
       serverConfig,
       skills,
-      text,
       threadRef,
       updateThreadPullRequestLink,
     }),
@@ -2797,7 +2833,6 @@ function useChatMarkdownState({
       resolvedTheme,
       serverConfig,
       skills,
-      text,
       threadRef,
       updateThreadPullRequestLink,
     ],
@@ -2815,6 +2850,9 @@ function useChatMarkdownState({
 const ChatMarkdownRendererContext = React.createContext<
   ReturnType<typeof useChatMarkdownState>["componentState"]
 >(null!);
+
+/** The Markdown a renderer's node positions index into, and where it sits in the message. */
+const ChatMarkdownBlockContext = React.createContext<MarkdownBlock>({ offset: 0, source: "" });
 
 // Screen readers take a heading's level from its tag, which would let a `#` in a
 // message outrank the heading placed above it. Override only the exposed level:
@@ -2888,10 +2926,14 @@ const CHAT_MARKDOWN_COMPONENTS = {
     );
   },
   li: function MarkdownListItem({ node, children, ...props }) {
-    const { text, skills } = use(ChatMarkdownRendererContext);
+    const { skills } = use(ChatMarkdownRendererContext);
+    const block = use(ChatMarkdownBlockContext);
     const listItemStart = node?.position?.start.offset;
-    const markerOffset =
-      typeof listItemStart === "number" ? findTaskListMarkerOffset(text, listItemStart) : null;
+    const blockMarkerOffset =
+      typeof listItemStart === "number"
+        ? findTaskListMarkerOffset(block.source, listItemStart)
+        : null;
+    const markerOffset = blockMarkerOffset === null ? null : block.offset + blockMarkerOffset;
     return (
       <li {...props} data-task-marker-offset={markerOffset ?? undefined}>
         {renderSkillInlineMarkdownChildren(children, skills)}
@@ -2947,8 +2989,8 @@ const CHAT_MARKDOWN_COMPONENTS = {
       updateThreadPullRequestLink,
       fileLinkChip,
       renderContextReference,
-      text,
     } = use(ChatMarkdownRendererContext);
+    const { source: blockSource } = use(ChatMarkdownBlockContext);
     const citation = href ? parseAssistantCitationHref(href) : null;
     if (citation) return <AssistantCitationChip citation={citation} />;
     // A thread link names a thread in this message's environment and opens it in the app.
@@ -3191,7 +3233,7 @@ const CHAT_MARKDOWN_COMPONENTS = {
     const label = nodeToPlainText(children);
     const start = node?.position?.start.offset;
     const end = node?.position?.end.offset;
-    const source = start !== undefined && end !== undefined ? text.slice(start, end) : "";
+    const source = start !== undefined && end !== undefined ? blockSource.slice(start, end) : "";
     const copyMarkdown =
       source.startsWith("[") && source.includes("](")
         ? source
@@ -3364,9 +3406,10 @@ const CHAT_MARKDOWN_COMPONENTS = {
     return <MarkdownDetails open={detailsOpen}>{children}</MarkdownDetails>;
   },
   pre: function MarkdownPre({ node, children, ...props }) {
-    const { resolvedTheme, diffThemeName, expandMedia, isStreaming, onRunShellCommand, text } = use(
+    const { resolvedTheme, diffThemeName, expandMedia, isStreaming, onRunShellCommand } = use(
       ChatMarkdownRendererContext,
     );
+    const { source: blockSource } = use(ChatMarkdownBlockContext);
     const codeBlock = extractCodeBlock(children);
     if (!codeBlock) {
       return <pre {...props}>{children}</pre>;
@@ -3417,7 +3460,7 @@ const CHAT_MARKDOWN_COMPONENTS = {
         fenceTitle={fenceTitle}
         theme={resolvedTheme}
         onRunShellCommand={
-          onRunShellCommand && !isStreaming && isClosedCodeFence(node, text)
+          onRunShellCommand && !isStreaming && isClosedCodeFence(node, blockSource)
             ? onRunShellCommand
             : undefined
         }
@@ -3428,6 +3471,71 @@ const CHAT_MARKDOWN_COMPONENTS = {
     );
   },
 } satisfies Components;
+
+interface ChatMarkdownBlockProps {
+  readonly block: MarkdownBlock;
+  readonly remarkPlugins: NonNullable<ReactMarkdownOptions["remarkPlugins"]>;
+  readonly parseRawHtml: boolean;
+  readonly urlTransform: ReactMarkdownOptions["urlTransform"];
+  /** Present when the message renders in blocks; a document renders in one. */
+  readonly headingIds?: HeadingIdRegistry | undefined;
+}
+
+/** One independently parsed slice of a message. Finished blocks of a streaming
+    reply keep their props, so only the growing tail parses and renders again. */
+const ChatMarkdownBlock = memo(function ChatMarkdownBlock({
+  block,
+  remarkPlugins,
+  parseRawHtml,
+  urlTransform,
+  headingIds,
+}: ChatMarkdownBlockProps) {
+  const rehypePlugins = useMemo(
+    () =>
+      headingIds === undefined
+        ? parseRawHtml
+          ? CHAT_MARKDOWN_RENDER_REHYPE_PLUGINS
+          : CHAT_MARKDOWN_LITERAL_HTML_REHYPE_PLUGINS
+        : chatMarkdownRehypePlugins(parseRawHtml, headingIds, block.offset),
+    [block.offset, headingIds, parseRawHtml],
+  );
+  // react-markdown converts unparsed HTML nodes to text when skipHtml is false.
+  // Keep that behavior explicit because literal mode depends on escaping the
+  // complete source token instead of dropping it from the rendered message.
+  return (
+    <ChatMarkdownBlockContext value={block}>
+      {/* The HTML compiler separates top-level nodes with a newline. */}
+      {block.offset > 0 ? "\n" : null}
+      <ReactMarkdown
+        remarkPlugins={remarkPlugins}
+        rehypePlugins={rehypePlugins}
+        skipHtml={false}
+        components={CHAT_MARKDOWN_COMPONENTS}
+        urlTransform={urlTransform}
+      >
+        {block.source}
+      </ReactMarkdown>
+    </ChatMarkdownBlockContext>
+  );
+});
+
+/** Splits a message into blocks once it has streamed, and keeps doing so after
+    the stream ends so finishing does not rebuild the rendered DOM. */
+function useChatMarkdownBlocks(text: string, enabled: boolean, streaming: boolean) {
+  const [split] = useState(createMarkdownBlockSplitter);
+  const [engaged, setEngaged] = useState(false);
+  if (enabled && streaming && !engaged) setEngaged(true);
+  const blocks = useMemo(
+    () => (enabled && engaged ? split(text) : null),
+    [enabled, engaged, split, text],
+  );
+  const generation = blocks?.generation;
+  const headingIds = useMemo(
+    () => (generation === undefined ? undefined : new HeadingIdRegistry()),
+    [generation],
+  );
+  return { blocks, headingIds };
+}
 
 function ChatMarkdown({
   text,
@@ -3445,22 +3553,34 @@ function ChatMarkdown({
     localMediaPreview,
     setLocalMediaPreview,
   } = useChatMarkdownState({ text, ...props });
-  const incrementalParsing =
-    props.isStreaming === true &&
-    extraRemarkPlugins.length === 0 &&
-    /(?:^|\n) {0,3}(?:`{3}|~{3})/.test(text);
+  // Extra syntax plugins can introduce document-wide constructs the block
+  // splitter does not know about.
+  const { blocks, headingIds } = useChatMarkdownBlocks(
+    text,
+    extraRemarkPlugins.length === 0,
+    props.isStreaming === true,
+  );
   const remarkPlugins = useMemo(
     () => [
       ...(lineBreaks ? CHAT_MARKDOWN_REMARK_PLUGINS_WITH_BREAKS : CHAT_MARKDOWN_REMARK_PLUGINS),
       ...extraRemarkPlugins,
-      ...(incrementalParsing ? [createIncrementalMarkdownPlugin()] : []),
     ],
-    [extraRemarkPlugins, incrementalParsing, lineBreaks],
+    [extraRemarkPlugins, lineBreaks],
+  );
+  const documentBlock = useMemo(() => ({ offset: 0, source: text }), [text]);
+  const renderBlock = (block: MarkdownBlock) => (
+    // Keyed by offset: when the tail finishes a block, the block keeps the
+    // tail's component and DOM, so streamed blocks do not fade in twice.
+    <ChatMarkdownBlock
+      key={block.offset}
+      block={block}
+      remarkPlugins={remarkPlugins}
+      parseRawHtml={parseRawHtml}
+      urlTransform={markdownUrlTransform}
+      headingIds={headingIds}
+    />
   );
 
-  // react-markdown converts unparsed HTML nodes to text when skipHtml is false.
-  // Keep that behavior explicit because literal mode depends on escaping the
-  // complete source token instead of dropping it from the rendered message.
   return (
     <div
       ref={markdownRef}
@@ -3473,19 +3593,7 @@ function ChatMarkdown({
       onCopy={handleCopy}
     >
       <ChatMarkdownRendererContext value={componentState}>
-        <ReactMarkdown
-          remarkPlugins={remarkPlugins}
-          rehypePlugins={
-            parseRawHtml
-              ? CHAT_MARKDOWN_RENDER_REHYPE_PLUGINS
-              : CHAT_MARKDOWN_LITERAL_HTML_REHYPE_PLUGINS
-          }
-          skipHtml={false}
-          components={CHAT_MARKDOWN_COMPONENTS}
-          urlTransform={markdownUrlTransform}
-        >
-          {text}
-        </ReactMarkdown>
+        {(blocks === null ? [documentBlock] : [...blocks.committed, blocks.tail]).map(renderBlock)}
       </ChatMarkdownRendererContext>
       {localMediaPreview ? (
         <ExpandedImageDialog

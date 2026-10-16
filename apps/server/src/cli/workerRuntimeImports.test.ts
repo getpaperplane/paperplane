@@ -37,6 +37,38 @@ it.each(["--help", "--version"])(
   },
 );
 
+it("does not load optional SDKs or native search for CLI help", () => {
+  const rejectOptionalImports = String.raw`
+import { registerHooks } from "node:module";
+registerHooks({
+  resolve(specifier, context, nextResolve) {
+    if (
+      specifier === "@cursor/sdk" || specifier === "@cursor/sdk/sqlite" ||
+      specifier === "@ff-labs/fff-node" ||
+      specifier === "@earendil-works/pi-ai/bun-oauth" ||
+      specifier === "@anthropic-ai/claude-agent-sdk" ||
+      specifier.startsWith("@modelcontextprotocol/sdk/client/")
+    ) {
+      throw new Error("Unused feature loaded by the CLI: " + specifier);
+    }
+    return nextResolve(specifier, context);
+  }
+});
+`;
+  const result = NodeChildProcess.spawnSync(
+    process.execPath,
+    [
+      "--import",
+      `data:text/javascript,${encodeURIComponent(rejectOptionalImports)}`,
+      entry,
+      "--help",
+    ],
+    { encoding: "utf8", timeout: 30_000 },
+  );
+  assert.strictEqual(result.status, 0, result.stderr || result.stdout);
+  assert.isNotEmpty(result.stdout);
+});
+
 it("reads an absent Claude session through the hidden history command", () => {
   const directory = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "rove-cli-history-"));
   try {

@@ -19,6 +19,89 @@ const SECTION_TITLE_PATTERN = /^ {0,3}(?:#{1,6}(?:[ \t]|$)|\*\*(?:[^*]|\*(?!\*))
 // blank line between them. A bold line would continue the paragraph instead.
 const TOP_LEVEL_HEADING_PATTERN = /^#{1,6}(?:[ \t]|$)/;
 
+interface BufferedAssistantScan {
+  text: string;
+  openFence: { marker: string; indent: number } | null;
+  boundary: number;
+  lineStart: number;
+  searchedThrough: number;
+  titleAwaitingContent: boolean;
+}
+
+const makeBufferedAssistantScan = (): BufferedAssistantScan => ({
+  text: "",
+  openFence: null,
+  boundary: -1,
+  lineStart: 0,
+  searchedThrough: 0,
+  titleAwaitingContent: false,
+});
+
+// Only complete lines advance markdown state. Revisit the final partial line
+// for tight-list lookahead; an edited/shrunk snapshot starts over.
+function scanBufferedAssistantText(text: string, scan: BufferedAssistantScan) {
+  if (!text.startsWith(scan.text)) Object.assign(scan, makeBufferedAssistantScan());
+  let boundary = scan.boundary;
+  for (;;) {
+    const newline = text.indexOf("\n", scan.searchedThrough);
+    if (newline === -1) {
+      scan.searchedThrough = text.length;
+      if (
+        scan.openFence === null &&
+        scan.lineStart > 0 &&
+        !scan.titleAwaitingContent &&
+        LIST_ITEM_START_PATTERN.test(text.slice(scan.lineStart).replace(/[ \t\r]+$/, ""))
+      ) {
+        boundary = scan.lineStart;
+      }
+      break;
+    }
+    const line = text.slice(scan.lineStart, newline).replace(/[ \t\r]+$/, "");
+    if (
+      scan.openFence === null &&
+      scan.lineStart > 0 &&
+      !scan.titleAwaitingContent &&
+      LIST_ITEM_START_PATTERN.test(line)
+    ) {
+      boundary = scan.lineStart;
+    }
+    const fenceMatch = MARKDOWN_FENCE_PATTERN.exec(line);
+    if (fenceMatch) {
+      const indent = fenceMatch[1]!.length;
+      const marker = fenceMatch[2]!;
+      if (scan.openFence === null) {
+        scan.openFence = { marker, indent };
+        scan.titleAwaitingContent = false;
+      } else if (
+        marker[0] === scan.openFence.marker[0] &&
+        marker.length >= scan.openFence.marker.length &&
+        indent <= scan.openFence.indent + 3 &&
+        line.length === indent + marker.length
+      ) {
+        // CommonMark: a closing fence carries no info string.
+        scan.openFence = null;
+        boundary = newline + 1;
+      }
+    } else if (scan.openFence === null && BLANK_LINE_PATTERN.test(line) && scan.lineStart > 0) {
+      if (!scan.titleAwaitingContent) boundary = newline + 1;
+    } else if (scan.openFence === null) {
+      if (
+        scan.lineStart > 0 &&
+        !scan.titleAwaitingContent &&
+        TOP_LEVEL_HEADING_PATTERN.test(line)
+      ) {
+        boundary = scan.lineStart;
+      }
+      scan.titleAwaitingContent = SECTION_TITLE_PATTERN.test(line);
+    }
+    scan.lineStart = newline + 1;
+    scan.searchedThrough = scan.lineStart;
+    scan.boundary = boundary;
+  }
+  scan.text = text;
+  return boundary;
+}
+
 /**
  * Splits buffered assistant text at the last blank line, closing code fence,
  * or list item start that is not inside an open fenced code block. `ready` is
@@ -33,55 +116,7 @@ const TOP_LEVEL_HEADING_PATTERN = /^#{1,6}(?:[ \t]|$)/;
  * title never lands alone and waits above a block that is still streaming.
  */
 export function splitBufferedAssistantText(text: string): { ready: string; rest: string } {
-  let openFence: { marker: string; indent: number } | null = null;
-  let boundary = -1;
-  let lineStart = 0;
-  let titleAwaitingContent = false;
-  for (;;) {
-    const newline = text.indexOf("\n", lineStart);
-    const line = text
-      .slice(lineStart, newline === -1 ? text.length : newline)
-      .replace(/[ \t\r]+$/, "");
-    if (
-      openFence === null &&
-      lineStart > 0 &&
-      !titleAwaitingContent &&
-      LIST_ITEM_START_PATTERN.test(line)
-    ) {
-      boundary = lineStart;
-    }
-    if (newline === -1) {
-      break;
-    }
-    const fenceMatch = MARKDOWN_FENCE_PATTERN.exec(line);
-    if (fenceMatch) {
-      const indent = fenceMatch[1]!.length;
-      const marker = fenceMatch[2]!;
-      if (openFence === null) {
-        openFence = { marker, indent };
-        titleAwaitingContent = false;
-      } else if (
-        marker[0] === openFence.marker[0] &&
-        marker.length >= openFence.marker.length &&
-        indent <= openFence.indent + 3 &&
-        line.length === indent + marker.length
-      ) {
-        // CommonMark: a closing fence carries no info string.
-        openFence = null;
-        boundary = newline + 1;
-      }
-    } else if (openFence === null && BLANK_LINE_PATTERN.test(line) && lineStart > 0) {
-      if (!titleAwaitingContent) {
-        boundary = newline + 1;
-      }
-    } else if (openFence === null) {
-      if (lineStart > 0 && !titleAwaitingContent && TOP_LEVEL_HEADING_PATTERN.test(line)) {
-        boundary = lineStart;
-      }
-      titleAwaitingContent = SECTION_TITLE_PATTERN.test(line);
-    }
-    lineStart = newline + 1;
-  }
+  const boundary = scanBufferedAssistantText(text, makeBufferedAssistantScan());
   if (boundary === -1) {
     return { ready: "", rest: text };
   }
@@ -90,7 +125,7 @@ export function splitBufferedAssistantText(text: string): { ready: string; rest:
 
 /** Buffer assistant messages and reasoning alike, keeping unfinished markdown out of the read model. */
 export function makeAssistantStreamingFilter(mode: ResponseStreamingMode) {
-  const delivered = new Map<string, { text: string; at: number }>();
+  const delivered = new Map<string, { text: string; at: number; scan: BufferedAssistantScan }>();
   return (
     event: ProviderAdapter.ProviderAdapterV2Event,
     now: number,
@@ -117,9 +152,14 @@ export function makeAssistantStreamingFilter(mode: ResponseStreamingMode) {
     if (mode === "turn") return null;
     const previous = delivered.get(key);
     if (previous && now - previous.at < 400) return null;
-    const { ready } = splitBufferedAssistantText(message.text);
-    if (!ready || ready === previous?.text) return null;
-    delivered.set(key, { text: ready, at: now });
+    const state = previous ?? { text: "", at: now, scan: makeBufferedAssistantScan() };
+    // Throttle scans even when no boundary is ready or it has not advanced.
+    state.at = now;
+    delivered.set(key, state);
+    const boundary = scanBufferedAssistantText(message.text, state.scan);
+    const ready = boundary === -1 ? "" : message.text.slice(0, boundary);
+    if (!ready || ready === state.text) return null;
+    state.text = ready;
     if (event.type === "message.updated")
       return { ...event, message: { ...event.message, text: ready } };
     if (

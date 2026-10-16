@@ -61,6 +61,26 @@ export function hasDismissedResumeCompaction(
   });
 }
 
+/** When a large Claude context's prompt cache expires, so the next turn would
+    re-read all of it uncached; null when no offer applies. */
+export function resumeCompactionDueAtMs(input: {
+  readonly provider: string | null | undefined;
+  readonly usedTokens: number | null | undefined;
+  readonly updatedAt: string | null | undefined;
+  readonly promptCacheTtlMs?: number | undefined;
+}): number | null {
+  if (
+    input.provider !== "claudeAgent" ||
+    (input.usedTokens ?? 0) < CLAUDE_RESUME_COMPACTION_TOKENS
+  ) {
+    return null;
+  }
+  const updatedAt = Date.parse(input.updatedAt ?? "");
+  return Number.isFinite(updatedAt)
+    ? updatedAt + (input.promptCacheTtlMs ?? CLAUDE_RESUME_COMPACTION_FALLBACK_MS)
+    : null;
+}
+
 /** True once a large Claude context's prompt cache has expired, so the next
     turn would re-read all of it uncached. */
 export function shouldOfferResumeCompaction(input: {
@@ -70,20 +90,9 @@ export function shouldOfferResumeCompaction(input: {
   readonly promptCacheTtlMs?: number | undefined;
   readonly now: string;
 }): boolean {
-  if (
-    input.provider !== "claudeAgent" ||
-    (input.usedTokens ?? 0) < CLAUDE_RESUME_COMPACTION_TOKENS
-  ) {
-    return false;
-  }
-
-  const updatedAt = Date.parse(input.updatedAt ?? "");
+  const dueAt = resumeCompactionDueAtMs(input);
   const now = Date.parse(input.now);
-  return (
-    Number.isFinite(updatedAt) &&
-    Number.isFinite(now) &&
-    now - updatedAt >= (input.promptCacheTtlMs ?? CLAUDE_RESUME_COMPACTION_FALLBACK_MS)
-  );
+  return dueAt !== null && Number.isFinite(now) && now >= dueAt;
 }
 
 export function resolveContextWindowModelDisplayName(

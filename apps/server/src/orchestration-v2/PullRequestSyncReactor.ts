@@ -23,7 +23,7 @@ import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Schema from "effect/Schema";
-import * as Schedule from "effect/Schedule";
+import { makePeriodicWork } from "../background/periodicWork.ts";
 import type * as Scope from "effect/Scope";
 import * as Semaphore from "effect/Semaphore";
 import * as Stream from "effect/Stream";
@@ -133,8 +133,9 @@ function isUnsettled(thread: ProjectionStore.ProjectionThreadPullRequests): bool
 }
 
 /**
- * Keeps every thread ↔ pull request link's host snapshot current. One sweep a minute reads
- * only the active threads that have links, groups visible links by pull request so the host
+ * Keeps every thread ↔ pull request link's host snapshot current. Periodic sweeps read
+ * only the active threads that have links: every minute with foreground demand,
+ * every fifteen minutes otherwise. They group visible links so the host
  * is asked once per PR no matter how many threads share it, and writes back only what
  * changed. Native stacks the host reports are auto-linked to the thread as `source: "stack"`.
  */
@@ -154,6 +155,7 @@ export class PullRequestSyncReactor extends Context.Service<
 /** @public Service construction is part of the canonical Effect module API. */
 export const make = Effect.gen(function* () {
   const engine = yield* Orchestrator.OrchestratorV2;
+  const periodicWork = yield* makePeriodicWork;
   const projections = yield* ProjectionStore.ProjectionStoreV2;
   const pullRequests = yield* PullRequestService.PullRequestService;
   const git = yield* GitManager.GitManager;
@@ -473,10 +475,12 @@ export const make = Effect.gen(function* () {
       }).pipe(Effect.catchCause(logSkipped("pull request sync event stream failed", {}))),
     );
     yield* forkParked(
-      Effect.gen(function* () {
-        yield* worker.enqueue("all");
-        yield* worker.drain;
-      }).pipe(Effect.repeat(Schedule.spaced("1 minute")), Effect.asVoid),
+      periodicWork(
+        Effect.gen(function* () {
+          yield* worker.enqueue("all");
+          yield* worker.drain;
+        }),
+      ),
     );
   });
 

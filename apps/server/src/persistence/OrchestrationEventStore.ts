@@ -26,6 +26,7 @@ import {
   ThreadId,
   type OrchestrationV2DomainEvent,
 } from "@rove-code/contracts";
+import * as NodeSqliteClient from "@rove-code/shared/nodeSqliteClient";
 import * as Context from "effect/Context";
 import * as SqlClient from "effect/sql/SqlClient";
 import * as SqlSchema from "effect/sql/SqlSchema";
@@ -64,6 +65,8 @@ export class OrchestrationEventStore extends Context.Service<
     readonly appendAgentEvents: (input: {
       readonly commandId?: CommandId;
       readonly events: ReadonlyArray<OrchestrationV2DomainEvent>;
+      /** Reuse the full encoded payload in the surrounding projection transaction. */
+      readonly onEncodedPayload?: (event: OrchestrationV2DomainEvent, payloadJson: string) => void;
     }) => Effect.Effect<ReadonlyArray<OrchestrationV2StoredEvent>, OrchestrationEventStoreError>;
 
     /**
@@ -492,6 +495,7 @@ const makeEventStore = Effect.gen(function* () {
           const promptKey = subagent === undefined ? undefined : `${event.type}:${subagent.id}`;
           const hint = promptKey === undefined ? undefined : promptHints.get(promptKey);
           const payloadJson = yield* encodeJson(encoded.payload);
+          input.onEncodedPayload?.(event, payloadJson);
           // Progress ticks repeat an unchanged prompt, so store it once and point
           // later rows at it. Keep an empty prompt so older servers still decode
           // the row. ProjectionMaintenance never deletes these anchor rows. The
@@ -603,6 +607,7 @@ const makeEventStore = Effect.gen(function* () {
           onlyAgentEvents: true,
           limit: pageLimit,
         }).pipe(
+          NodeSqliteClient.readOnly,
           Effect.mapError(toPersistenceSqlError("OrchestrationEventStore.readAgentEvents:query")),
           Effect.map((rows) => {
             const last = rows.at(-1);

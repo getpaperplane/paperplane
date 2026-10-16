@@ -471,6 +471,10 @@
       "types": "./src/markdownPipeline.ts",
       "import": "./src/markdownPipeline.ts"
     },
+    "./markdownStreamingBlocks": {
+      "types": "./src/markdownStreamingBlocks.ts",
+      "import": "./src/markdownStreamingBlocks.ts"
+    },
     "./threadFindText": {
       "types": "./src/threadFindText.ts",
       "import": "./src/threadFindText.ts"

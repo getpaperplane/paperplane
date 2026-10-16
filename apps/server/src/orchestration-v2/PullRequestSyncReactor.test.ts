@@ -35,6 +35,7 @@ import { TestClock } from "effect/testing";
 import { PullRequestProviderError } from "@rove-code/source-control-core/server/PullRequestProvider";
 import * as GitManager from "../git/GitManager.ts";
 import * as PullRequestService from "../pullRequest/PullRequestService.ts";
+import { layerPolicy } from "../background/testkit.ts";
 import * as ServerActivation from "../serverActivation.ts";
 import * as Orchestrator from "./Orchestrator.ts";
 import * as ProjectionStore from "./ProjectionStore.ts";
@@ -164,6 +165,7 @@ function makeSummary(
 }
 
 interface HarnessOptions {
+  readonly foreground?: boolean;
   readonly invalidate?: PullRequestService.PullRequestService["Service"]["invalidate"];
   readonly snapshot: TestShellSnapshot;
   readonly summary?: (
@@ -218,6 +220,7 @@ const makeHarness = Effect.fn("makePullRequestSyncHarness")(function* (options: 
   };
 
   const layerDependencies = Layer.mergeAll(
+    layerPolicy(options.foreground ?? true),
     Layer.mock(PullRequestService.PullRequestService)({
       summary,
       stack,
@@ -426,6 +429,33 @@ describe("PullRequestSyncReactor", () => {
         }).pipe(Effect.provide(fixture.layer));
       }),
     ),
+  );
+
+  it.effect("idle refreshes back off but an explicit refresh is still immediate", () =>
+    Effect.gen(function* () {
+      const fixture = yield* makeHarness({
+        foreground: false,
+        snapshot: makeSnapshot([makeThread("one", { pullRequests: [makeLink(7, {})] })]),
+      });
+      yield* Effect.gen(function* () {
+        const reactor = yield* startAndSweep(fixture);
+        yield* TestClock.adjust("14 minutes");
+        assert.equal(yield* Queue.size(fixture.snapshotReads), 0);
+        assert.equal((yield* Ref.get(fixture.summaryCalls)).length, 1);
+        yield* reactor.requestSync({
+          host: "github.com",
+          repository: "owner/repository",
+          number: 7,
+        });
+        yield* Queue.take(fixture.snapshotReads);
+        yield* reactor.drain;
+        assert.equal((yield* Ref.get(fixture.summaryCalls)).length, 2);
+        yield* TestClock.adjust("1 minute");
+        yield* Queue.take(fixture.snapshotReads);
+        yield* reactor.drain;
+        assert.equal((yield* Ref.get(fixture.summaryCalls)).length, 3);
+      }).pipe(Effect.provide(fixture.layer));
+    }),
   );
 
   it.effect("explicit refresh reads a changed stack even when its PR summary is unchanged", () =>

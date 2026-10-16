@@ -346,11 +346,18 @@ const layerBase: Layer.Layer<
       );
     };
 
-    const applyStoredEvents = (storedEvents: ReadonlyArray<OrchestrationV2StoredEvent>) =>
+    const applyStoredEvents = (
+      storedEvents: ReadonlyArray<OrchestrationV2StoredEvent>,
+      payloads: ReadonlyMap<string, string>,
+    ) =>
       Effect.gen(function* () {
-        yield* Effect.forEach(storedEvents, (stored) => projectionStore.apply(stored.event), {
-          concurrency: 1,
-        });
+        yield* Effect.forEach(
+          storedEvents,
+          (stored) => projectionStore.apply(stored.event, payloads.get(stored.event.id)),
+          {
+            concurrency: 1,
+          },
+        );
         const sequence = storedEvents.at(-1)?.sequence;
         if (sequence !== undefined) {
           const now = DateTime.formatIso(yield* DateTime.now);
@@ -376,6 +383,20 @@ const layerBase: Layer.Layer<
         }
       });
 
+    // Keep encoded payloads local to this append, never on stored events published
+    // to subscribers. Subagent prompt deduplication still forwards the full JSON.
+    const appendAndApply = Effect.fnUntraced(function* (
+      input: Parameters<EventStore.EventStoreV2Shape["append"]>[0],
+    ) {
+      const payloads = new Map<string, string>();
+      const stored = yield* eventStore.append({
+        ...input,
+        onEncodedPayload: (event, payloadJson) => payloads.set(event.id, payloadJson),
+      });
+      yield* applyStoredEvents(stored, payloads);
+      return stored;
+    });
+
     const writeEffect = Effect.fn("orchestrationV2.EventSink.write")(function* (
       input: Parameters<EventSinkV2Shape["writeWithEffects"]>[0],
     ) {
@@ -392,11 +413,10 @@ const layerBase: Layer.Layer<
               ? yield* guardUserInputCancellations(input.events)
               : input.events,
           );
-          const committed = yield* eventStore.append({
+          const committed = yield* appendAndApply({
             ...(input.commandId === undefined ? {} : { commandId: input.commandId }),
             events: normalized,
           });
-          yield* applyStoredEvents(committed);
           yield* effectOutbox.enqueue(input.effects);
           return committed;
         }).pipe(
@@ -455,11 +475,10 @@ const layerBase: Layer.Layer<
                 ? yield* guardUserInputCancellations(input.events)
                 : input.events,
             );
-            const storedEvents = yield* eventStore.append({
+            const storedEvents = yield* appendAndApply({
               ...(input.commandId === undefined ? {} : { commandId: input.commandId }),
               events: normalized,
             });
-            yield* applyStoredEvents(storedEvents);
             yield* effectOutbox.enqueue(input.effects ?? []);
             return { committed: true as const, storedEvents };
           }),
@@ -520,11 +539,10 @@ const layerBase: Layer.Layer<
               ? yield* guardUserInputCancellations(input.events)
               : input.events,
           );
-          const storedEvents = yield* eventStore.append({
+          const storedEvents = yield* appendAndApply({
             ...(input.commandId === undefined ? {} : { commandId: input.commandId }),
             events: normalized,
           });
-          yield* applyStoredEvents(storedEvents);
           return { committed: true as const, storedEvents };
         }),
         (result) => (result.committed ? publishStoredEvents(result.storedEvents) : Effect.void),
@@ -556,8 +574,7 @@ const layerBase: Layer.Layer<
           }
 
           const normalized = yield* normalizeEvents(input.events);
-          const storedEvents = yield* eventStore.append({ events: normalized });
-          yield* applyStoredEvents(storedEvents);
+          const storedEvents = yield* appendAndApply({ events: normalized });
           return { committed: true as const, storedEvents };
         }),
         (result) => (result.committed ? publishStoredEvents(result.storedEvents) : Effect.void),
@@ -599,7 +616,7 @@ const layerBase: Layer.Layer<
           }
 
           const normalized = yield* normalizeEvents(input.events);
-          const storedEvents = yield* eventStore.append({
+          const storedEvents = yield* appendAndApply({
             commandId: input.commandId,
             events: normalized,
           });
@@ -609,7 +626,6 @@ const layerBase: Layer.Layer<
               new Error(`Command ${input.commandId} produced no orchestration events.`),
             );
           }
-          yield* applyStoredEvents(storedEvents);
           yield* effectOutbox.enqueue(input.effects);
           const receipt: CommandReceiptStore.CommandReceiptV2 = {
             commandId: input.commandId,

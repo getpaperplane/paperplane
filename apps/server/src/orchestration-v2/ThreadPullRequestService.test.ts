@@ -24,6 +24,7 @@ import * as GitManager from "../git/GitManager.ts";
 import * as ProjectStore from "./ProjectStore.ts";
 import * as RepositoryIdentityResolver from "../project/RepositoryIdentityResolver.ts";
 import * as PullRequestService from "../pullRequest/PullRequestService.ts";
+import { layerPolicy } from "../background/testkit.ts";
 import * as ServerActivation from "../serverActivation.ts";
 import * as Orchestrator from "./Orchestrator.ts";
 import * as ThreadPullRequestService from "./ThreadPullRequestService.ts";
@@ -181,6 +182,7 @@ describe("ThreadPullRequestServiceV2 reads", () => {
           ThreadId | { readonly location?: string; readonly unsettledOnly?: boolean }
         >();
         const layerDependencies = Layer.mergeAll(
+          layerPolicy(),
           Layer.mock(Orchestrator.OrchestratorV2)({
             streamDomainEvents: Stream.fromPubSub(events),
             getShellSnapshot: (options) =>
@@ -274,6 +276,7 @@ describe("ThreadPullRequestServiceV2 reads", () => {
           readonly unsettledOnly?: boolean;
         }>();
         const layerDependencies = Layer.mergeAll(
+          layerPolicy(),
           Layer.mock(Orchestrator.OrchestratorV2)({
             streamDomainEvents: Stream.never,
             getShellSnapshot: (options) =>

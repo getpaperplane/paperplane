@@ -1562,8 +1562,9 @@ export interface ChatComposerProps {
   activeThread: Thread | undefined;
   /** The routed server thread's shell, present before its detail loads. */
   activeThreadShell: ThreadShell | null;
-  /** Timeline messages including optimistic sends, for ArrowUp prompt recall. */
-  promptHistoryMessages: ReadonlyArray<ChatMessage>;
+  /** Timeline messages including optimistic sends, for ArrowUp prompt recall.
+      A stable getter: the timeline changes on every streamed delta. */
+  getPromptHistoryMessages: () => ReadonlyArray<ChatMessage>;
   isServerThread: boolean;
   isLocalDraftThread: boolean;
   forceExpandedOnMobile: boolean;
@@ -1754,7 +1755,7 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
     activeThreadId,
     activeThreadEnvironmentId: _activeThreadEnvironmentId,
     activeThread,
-    promptHistoryMessages,
+    getPromptHistoryMessages,
     isServerThread: _isServerThread,
     isLocalDraftThread: _isLocalDraftThread,
     forceExpandedOnMobile,
@@ -4332,8 +4333,6 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
   // ------------------------------------------------------------------
   // Entries are built on the keypress, not per render: the timeline changes
   // on every streamed delta and ArrowUp is rare.
-  const promptHistoryMessagesRef = useRef(promptHistoryMessages);
-  promptHistoryMessagesRef.current = promptHistoryMessages;
 
   // The composer persists across threads. A recall from thread A must not
   // be treated as active in thread B, where the text-match fallback could
@@ -4383,7 +4382,7 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
     }
     const step = stepComposerPromptHistory({
       direction,
-      entries: buildComposerPromptHistoryEntries(promptHistoryMessagesRef.current),
+      entries: buildComposerPromptHistoryEntries(getPromptHistoryMessages()),
       position: promptHistoryPositionRef.current,
       currentPrompt: promptRef.current,
     });

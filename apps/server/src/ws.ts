@@ -1093,7 +1093,10 @@ export const subscribeOrchestrationV2Shell = Effect.fn("ws.orchestrationV2.subsc
             if ("aggregateKind" in stored) {
               return yield* projectItem(stored);
             }
-            const shell = yield* threadManagement.getThreadShell(stored.event.threadId);
+            const shell = yield* threadManagement.getThreadShell(
+              stored.event.threadId,
+              stored.sequence,
+            );
             return shellStreamItemFromThreadShell({ stored, shell });
           }),
         { concurrency: 8 },
@@ -1865,7 +1868,7 @@ const layerCoreWsRpc = (
                 coalesceStoredThreadEvents(Array.from(events)),
                 (stored) =>
                   threadManagement
-                    .getThreadShell(stored.event.threadId)
+                    .getThreadShell(stored.event.threadId, stored.sequence)
                     .pipe(
                       Effect.map((shell) =>
                         archivedShellStreamItemFromThreadShell({ stored, shell }),
@@ -3244,6 +3247,10 @@ export const layer = Layer.unwrap(
     const reviewGuides = yield* PullRequestReviewGuideService.PullRequestReviewGuideService;
     const sql = yield* SqlClient.SqlClient;
     const worktreeInventory = yield* WorktreeInventory.WorktreeInventory;
+    const agentSessionScanner = yield* AgentSessionScanner.AgentSessionScanner;
+    const providerMaintenance = yield* ProviderMaintenanceRunner.ProviderMaintenanceRunner;
+    const otlpEndpointCheck = yield* OtlpEndpointCheck.OtlpEndpointCheck;
+    const defectReporterContext = yield* Layer.build(DefectReporter.layer);
     return HttpRouter.add(
       "GET",
       "/ws",
@@ -3301,16 +3308,23 @@ export const layer = Layer.unwrap(
               Layer.provideMerge(RpcSerialization.layerJson),
               // Request fibers run in the handlers' context, so this reporter sees
               // their defects, not the rest of the server's.
-              Layer.provide(DefectReporter.layer),
+              Layer.provide(Layer.succeedContext(defectReporterContext)),
               Layer.provide(Layer.succeed(SqlClient.SqlClient, sql)),
               Layer.provide(Layer.succeed(WorktreeInventory.WorktreeInventory, worktreeInventory)),
-              Layer.provide(AgentSessionScanner.layer),
-              Layer.provide(ProviderMaintenanceRunner.layer),
+              Layer.provide(
+                Layer.succeed(AgentSessionScanner.AgentSessionScanner, agentSessionScanner),
+              ),
+              Layer.provide(
+                Layer.succeed(
+                  ProviderMaintenanceRunner.ProviderMaintenanceRunner,
+                  providerMaintenance,
+                ),
+              ),
               Layer.provide(Layer.succeed(ServerSelfUpdate.ServerSelfUpdate, serverSelfUpdate)),
               // One server-lifetime service means clients share the same PR caches, and a WS
               // mutation invalidates the HTTP diff cache that every client reads from.
               Layer.provide(Layer.succeed(PullRequestService.PullRequestService, pullRequests)),
-              Layer.provide(OtlpEndpointCheck.layer),
+              Layer.provide(Layer.succeed(OtlpEndpointCheck.OtlpEndpointCheck, otlpEndpointCheck)),
               // Shared like the pull request service, so concurrent generations single-flight.
               Layer.provide(
                 Layer.succeed(

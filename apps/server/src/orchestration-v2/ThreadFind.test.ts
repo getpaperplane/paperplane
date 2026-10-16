@@ -181,7 +181,7 @@ const commit = Effect.fn("ThreadFindTest.commit")(function* (
   const store = yield* EventStore.EventStoreV2;
   const projection = yield* ProjectionStore.ProjectionStoreV2;
   yield* store.append({ events });
-  yield* Effect.forEach(events, projection.apply, { discard: true });
+  yield* Effect.forEach(events, (event) => projection.apply(event), { discard: true });
 });
 const putItems = (items: readonly OrchestrationV2TurnItem[], version = "initial") =>
   commit(
@@ -832,7 +832,7 @@ describe("V2 thread find", () => {
             payload: message,
           },
         ] satisfies OrchestrationV2DomainEvent[],
-        projection.apply,
+        (event) => projection.apply(event),
         { discard: true },
       );
       assert.equal(

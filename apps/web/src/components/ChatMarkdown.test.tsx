@@ -545,6 +545,120 @@ describe("ChatMarkdown streaming", () => {
   });
 });
 
+describe("ChatMarkdown streamed blocks", () => {
+  // Block rendering is opted out by any extra syntax plugin, which makes a
+  // document-rendered reference that otherwise matches the streamed props.
+  const wholeDocument = [() => {}];
+  const documents = [
+    "# Setup\n\nIntro with `code` and [docs](https://example.com).\n\n## Setup\n\nMore.\n\n# Setup-1\n\nEnd",
+    "- a\n  - b\n\n    continued\n- c\n\n1. one\n2. two\n\n   para in item\n\nafter",
+    "```ts\nconst a = 1;\n\n\nconst b = 2;\n```\n\ntext\n\n~~~\nx\n\n~~~\n\nend",
+    "intro\n| a | b |\n| - | - |\n| 1 | 2 |\nmore\n\nafter",
+    "<div>\nhello\n\n</div>\n\nend",
+    "a <b>bold\n\nnext</b> para\n\nend",
+    "line<br>break\n\nnext <kbd>K</kbd> key\n\nend",
+    "text\n\n<hr>\n\nafter <sup>1</sup>\n\nend",
+    'text <span id="x">a</span>\n\n# Head\n\nafter',
+    "[ref] and note[^n]\n\n## Head\n\n[ref]: https://example.com\n\n[^n]: note",
+    "a\n===\n\nb\n---\n\n***\n\nc\n-\n\nd",
+    "> [!NOTE]\n> alert\n\n- [ ] task\n- [x] done\n\n- [ ] later",
+    "para\n\n    code\n\n    more\n\nend\n> quote\ncontinued\n\npara",
+    "first\r\n\r\nsecond\r\n\r\nthird",
+  ];
+
+  function prefixes(source: string) {
+    const ends = new Set([source.length]);
+    for (let end = 0; end < source.length; end += 5) ends.add(end);
+    for (let end = 0; end < source.length; end++) {
+      if (source[end] === "\n") ends.add(end).add(end + 1);
+    }
+    return [...ends].toSorted((left, right) => left - right);
+  }
+
+  it.each(documents)("matches the whole-document render while streaming %j", async (source) => {
+    await getSyntaxHighlighterPromise("ts");
+    vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+    const streamed = document.createElement("div");
+    const reference = document.createElement("div");
+    const streamedRoot = createRoot(streamed);
+    const referenceRoot = createRoot(reference);
+    const onTaskListChange = () => {};
+    const render = async (text: string, isStreaming: boolean) => {
+      await act(async () => {
+        streamedRoot.render(
+          <ChatMarkdown
+            cwd="/tmp/project"
+            text={text}
+            isStreaming={isStreaming}
+            onTaskListChange={onTaskListChange}
+          />,
+        );
+        referenceRoot.render(
+          <ChatMarkdown
+            cwd="/tmp/project"
+            text={text}
+            isStreaming={isStreaming}
+            onTaskListChange={onTaskListChange}
+            extraRemarkPlugins={wholeDocument}
+          />,
+        );
+      });
+      expect(streamed.firstElementChild?.innerHTML, JSON.stringify(text)).toBe(
+        reference.firstElementChild?.innerHTML,
+      );
+    };
+    try {
+      for (const end of prefixes(source)) await render(source.slice(0, end), true);
+      await render(source, false);
+      // An edit replaces the document rather than extending it.
+      await render(source.slice(0, Math.floor(source.length / 2)) + " edited", false);
+    } finally {
+      await act(async () => {
+        streamedRoot.unmount();
+        referenceRoot.unmount();
+      });
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("keeps finished blocks' DOM and parses only the tail", async () => {
+    vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+    const { unified } = await import("unified");
+    const processor = Object.getPrototypeOf(unified()) as {
+      parse: (...args: unknown[]) => unknown;
+    };
+    const parse = vi.spyOn(processor, "parse");
+    const container = document.createElement("div");
+    const root = createRoot(container);
+    const paragraphs = Array.from({ length: 40 }, (_, index) => `Paragraph ${index} text.`);
+    const render = (text: string, isStreaming: boolean) =>
+      act(async () => {
+        root.render(<ChatMarkdown cwd="/tmp/project" text={text} isStreaming={isStreaming} />);
+      });
+    try {
+      await render(paragraphs[0]!, true);
+      const first = container.querySelector("p");
+      for (let count = 2; count <= paragraphs.length; count++) {
+        await render(paragraphs.slice(0, count).join("\n\n"), true);
+      }
+      parse.mockClear();
+      const full = paragraphs.join("\n\n");
+      await render(full + " Tail.", true);
+      const parsed = parse.mock.calls.map(([file]) => String(file));
+      expect(parsed.length).toBeGreaterThan(0);
+      expect(Math.max(...parsed.map((text) => text.length))).toBeLessThan(full.length / 10);
+
+      await render(full + " Tail.", false);
+      expect(container.querySelector("p")).toBe(first);
+      expect(container.querySelectorAll("p")).toHaveLength(paragraphs.length);
+    } finally {
+      await act(async () => root.unmount());
+      vi.unstubAllGlobals();
+      vi.restoreAllMocks();
+    }
+  });
+});
+
 describe("canUseMarkdownFileShellActions", () => {
   const environmentId = EnvironmentId.make("environment-1");
 

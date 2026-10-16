@@ -25,6 +25,8 @@
       "entry": [
         "knip-schemas.ts",
         "mobile-native-client.ts",
+        // Benchmarks run by hand: node scripts/perf/<name>.ts
+        "perf/*.ts",
         "setup-worktree.ts",
         "smoke-cli-archive.ts",
       ],
@@ -41,6 +43,7 @@
         "scripts/pi-extensions-bundle-smoke.ts",
         "scripts/pi-oauth-bundle-smoke.ts",
         "scripts/measure-pr-preview.ts",
+        "scripts/perf/*.ts",
         "scripts/probe-claude-fork-local-rollback-replay.ts",
         "scripts/update-test-shard-weights.ts",
         "scripts/verify-background-live.ts",

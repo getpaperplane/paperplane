@@ -70,6 +70,11 @@ import {
   isOrchestrationV2SupersededInterrupt,
 } from "@rove-code/shared/orchestrationV2Timeline";
 import { derivePendingBackgroundWork } from "@rove-code/shared/orchestrationV2PendingBackgroundWork";
+import * as NodeSqliteClient from "@rove-code/shared/nodeSqliteClient";
+import * as Cache from "effect/Cache";
+import * as Data from "effect/Data";
+import * as Duration from "effect/Duration";
+import * as Exit from "effect/Exit";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -407,9 +412,13 @@ export interface ProjectionStoreV2Shape {
     filter?: ProjectionRecordFilter,
   ) => Effect.Effect<ProjectionRecords<K>, ProjectionStoreV2Error>;
 
+  /** encodedPayloadJson is the full event payload encoded by the event store, not wire JSON. */
   readonly apply: (
     event: OrchestrationV2DomainEvent,
+    encodedPayloadJson?: string,
   ) => Effect.Effect<void, ProjectionStoreV2Error>;
+  /** Maintenance that replaces canonical rows must invalidate deduplication hints first. */
+  readonly clearNodeCache: Effect.Effect<void>;
   readonly getShellSnapshot: (
     options?: ShellSnapshotOptions,
   ) => Effect.Effect<OrchestrationV2ThreadShellSnapshot, ProjectionStoreV2Error>;
@@ -427,12 +436,16 @@ export interface ProjectionStoreV2Shape {
   >;
   readonly getThreadShell: (
     threadId: ThreadId,
+    /** A committed event sequence opts live subscribers into a shared read. */
+    sequence?: number,
   ) => Effect.Effect<OrchestrationV2ThreadShell | null, ProjectionStoreV2Error>;
   readonly getThread: (
     threadId: ThreadId,
   ) => Effect.Effect<OrchestrationV2AppThread, ProjectionStoreV2Error>;
   readonly getLimitRecoveryCandidates: (options: {
     readonly now: DateTime.Utc;
+    /** Include armed future recoveries so the scheduler can derive its next deadline. */
+    readonly includeFuture?: boolean;
     readonly autoResume: boolean;
     readonly snooze: boolean;
   }) => Effect.Effect<ReadonlyArray<ProjectionLimitRecoveryCandidate>, ProjectionStoreV2Error>;
@@ -1861,6 +1874,48 @@ export const layer: Layer.Layer<ProjectionStoreV2, never, SqlClient.SqlClient> =
   ProjectionStoreV2,
   Effect.gen(function* () {
     const sql = yield* SqlClient.SqlClient;
+    // Hints are populated only by committed, non-transactional reads. apply
+    // invalidates before AND after a write, including failures. A read racing a
+    // write must not put its old result back after that invalidation.
+    const nodePayloads = new Map<NodeId, { payloadJson: string; runId: RunId | null }>();
+    let nodeCacheGeneration = 0;
+    let nodeCacheChars = 0;
+    const forgetNode = (id: NodeId) => {
+      const cached = nodePayloads.get(id);
+      if (cached !== undefined) nodeCacheChars -= cached.payloadJson.length;
+      nodePayloads.delete(id);
+    };
+    const clearNodeCache = Effect.sync(() => {
+      nodeCacheGeneration++;
+      nodePayloads.clear();
+      nodeCacheChars = 0;
+    });
+    const invalidateNodeEvent = (event: OrchestrationV2DomainEvent) => {
+      if (event.type === "node.updated") {
+        nodeCacheGeneration++;
+        forgetNode(event.payload.id);
+      } else if (
+        (event.type === "run.created" || event.type === "run.updated") &&
+        !activeRunStatuses.has(event.payload.status)
+      ) {
+        nodeCacheGeneration++;
+        for (const [id, cached] of nodePayloads) {
+          if (cached.runId === event.payload.id) forgetNode(id);
+        }
+      }
+    };
+    const rememberNode = (node: OrchestrationV2ExecutionNode, payloadJson: string) => {
+      if (settledNodeStatuses.has(node.status) || payloadJson.length > 16_384) return;
+      forgetNode(node.id);
+      nodePayloads.set(node.id, { payloadJson, runId: node.runId });
+      nodeCacheChars += payloadJson.length;
+      // Bound both count and retained text, even if native refs are unusually large.
+      while (nodePayloads.size > 4096 || nodeCacheChars > 1_048_576) {
+        const oldest = nodePayloads.keys().next().value;
+        if (oldest === undefined) break;
+        forgetNode(oldest);
+      }
+    };
 
     // For run upserts: a snapshot without `path` keeps the value another event recorded there.
     const keepRecordedRunField = (payload: Statement.Fragment, path: string) => sql`
@@ -1876,8 +1931,9 @@ export const layer: Layer.Layer<ProjectionStoreV2, never, SqlClient.SqlClient> =
       END
     `;
 
-    const apply: ProjectionStoreV2Shape["apply"] = (event) =>
+    const apply: ProjectionStoreV2Shape["apply"] = (event, encodedPayloadJson) =>
       Effect.gen(function* () {
+        invalidateNodeEvent(event);
         switch (event.type) {
           case "thread.pull-request-link-updated": {
             const thread = yield* getThread(event.threadId);
@@ -2422,8 +2478,7 @@ export const layer: Layer.Layer<ProjectionStoreV2, never, SqlClient.SqlClient> =
             break;
           }
           case "message.updated": {
-            const payloadJson = yield* encodeMessagePayload(event.payload);
-            const payload = parseEncodedPayload(payloadJson);
+            const payloadJson = encodedPayloadJson ?? (yield* encodeMessagePayload(event.payload));
             yield* sql`
               INSERT INTO orchestration_v2_projection_messages (
                 message_id,
@@ -2443,8 +2498,8 @@ export const layer: Layer.Layer<ProjectionStoreV2, never, SqlClient.SqlClient> =
                 ${event.payload.nodeId},
                 ${event.payload.role},
                 ${booleanInt(event.payload.streaming)},
-                ${stringField(payload, "createdAt")},
-                ${stringField(payload, "updatedAt")},
+                ${DateTime.formatIso(event.payload.createdAt)},
+                ${DateTime.formatIso(event.payload.updatedAt)},
                 ${payloadJson}
               )
               ON CONFLICT(message_id)
@@ -2493,8 +2548,7 @@ export const layer: Layer.Layer<ProjectionStoreV2, never, SqlClient.SqlClient> =
             break;
           }
           case "turn-item.updated": {
-            const payloadJson = yield* encodeTurnItemPayload(event.payload);
-            const payload = parseEncodedPayload(payloadJson);
+            const payloadJson = encodedPayloadJson ?? (yield* encodeTurnItemPayload(event.payload));
             yield* sql`
               INSERT INTO orchestration_v2_projection_turn_items (
                 turn_item_id,
@@ -2521,7 +2575,7 @@ export const layer: Layer.Layer<ProjectionStoreV2, never, SqlClient.SqlClient> =
                 ${event.payload.ordinal},
                 ${event.payload.type},
                 ${event.payload.status},
-                ${stringField(payload, "updatedAt")},
+                ${DateTime.formatIso(event.payload.updatedAt)},
                 ${payloadJson}
               )
               ON CONFLICT(turn_item_id)
@@ -2753,6 +2807,7 @@ export const layer: Layer.Layer<ProjectionStoreV2, never, SqlClient.SqlClient> =
           `;
         }
       }).pipe(
+        Effect.ensuring(Effect.sync(() => invalidateNodeEvent(event))),
         Effect.mapError(
           (cause) =>
             new ProjectionStoreApplyEventError({
@@ -3634,10 +3689,15 @@ export const layer: Layer.Layer<ProjectionStoreV2, never, SqlClient.SqlClient> =
                 json_extract(t.payload_json, '$.limitRecovery.runId') IS r.run_id
                 AND json_extract(t.payload_json, '$.limitRecovery.resetAt') IS json_extract(item.payload_json, '$.failure.resetAt')
                 AND json_extract(t.payload_json, '$.limitRecovery.autoResume') = 1
-                AND julianday(json_extract(item.payload_json, '$.failure.resetAt')) <= julianday(${DateTime.formatIso(options.now)})
                 AND (
-                  json_extract(t.payload_json, '$.snoozedUntil') IS NULL
-                  OR julianday(json_extract(t.payload_json, '$.snoozedUntil')) <= julianday(${DateTime.formatIso(options.now)})
+                  ${booleanInt(options.includeFuture ?? false)}
+                  OR (
+                    julianday(json_extract(item.payload_json, '$.failure.resetAt')) <= julianday(${DateTime.formatIso(options.now)})
+                    AND (
+                      json_extract(t.payload_json, '$.snoozedUntil') IS NULL
+                      OR julianday(json_extract(t.payload_json, '$.snoozedUntil')) <= julianday(${DateTime.formatIso(options.now)})
+                    )
+                  )
                 )
               )
               OR (
@@ -3684,6 +3744,7 @@ export const layer: Layer.Layer<ProjectionStoreV2, never, SqlClient.SqlClient> =
         }
         return candidates;
       },
+      NodeSqliteClient.readOnly,
       Effect.mapError((cause) => new ProjectionStoreSetupError({ cause })),
     );
 
@@ -4509,10 +4570,25 @@ export const layer: Layer.Layer<ProjectionStoreV2, never, SqlClient.SqlClient> =
     const isNodeStored: ProjectionStoreV2Shape["isNodeStored"] = (node) =>
       Effect.gen(function* () {
         const payloadJson = yield* encodeNodePayload(node);
-        const rows = yield* sql<PayloadRow>`
+        // A transaction may read its own uncommitted write, or later roll back
+        // a savepoint. Neither lookup nor population may use global hints there.
+        const inTransaction = (yield* Effect.serviceOption(sql.transactionService))._tag === "Some";
+        if (!inTransaction && nodePayloads.get(node.id)?.payloadJson === payloadJson) return true;
+        const generation = nodeCacheGeneration;
+        const read = sql<PayloadRow>`
           SELECT payload_json FROM orchestration_v2_projection_nodes WHERE node_id = ${node.id}
         `;
-        return rows[0]?.payload_json === payloadJson;
+        // A cold hint must come from a committed read transaction, so a failed
+        // COMMIT left open on the writer fails BEGIN instead of caching dirty
+        // rows. readOnly keeps this off the write lock when a reader exists.
+        const rows = yield* inTransaction
+          ? read
+          : sql.withTransaction(read).pipe(NodeSqliteClient.readOnly);
+        const matches = rows[0]?.payload_json === payloadJson;
+        if (!inTransaction && generation === nodeCacheGeneration && matches) {
+          rememberNode(node, payloadJson);
+        }
+        return matches;
       }).pipe(Effect.mapError(controlReadError(node.threadId)));
 
     const getRuntimeRequest: ProjectionStoreV2Shape["getRuntimeRequest"] = (threadId, requestId) =>
@@ -5292,6 +5368,7 @@ export const layer: Layer.Layer<ProjectionStoreV2, never, SqlClient.SqlClient> =
           }),
         )
         .pipe(
+          NodeSqliteClient.readOnly,
           Effect.mapError((cause) =>
             isProjectionStoreThreadNotFoundError(cause) || isProjectionStoreReadError(cause)
               ? cause
@@ -5752,7 +5829,10 @@ export const layer: Layer.Layer<ProjectionStoreV2, never, SqlClient.SqlClient> =
             })),
           ),
         );
-      }).pipe(Effect.mapError((cause) => new ProjectionStoreSetupError({ cause })));
+      }).pipe(
+        NodeSqliteClient.readOnly,
+        Effect.mapError((cause) => new ProjectionStoreSetupError({ cause })),
+      );
 
     const getThreadWorktreePaths: ProjectionStoreV2Shape["getThreadWorktreePaths"] = () =>
       sql<{ readonly thread_id: string; readonly worktree_path: string }>`
@@ -6032,7 +6112,7 @@ export const layer: Layer.Layer<ProjectionStoreV2, never, SqlClient.SqlClient> =
     // Per-thread shell for the live shell streams: reads only the target thread
     // plus its fork-source chain instead of materializing every thread. Returns
     // null when the thread is deleted or unknown.
-    const getThreadShell: ProjectionStoreV2Shape["getThreadShell"] = (threadId) =>
+    const readThreadShell = (threadId: ThreadId) =>
       sql
         .withTransaction(
           Effect.gen(function* () {
@@ -6097,10 +6177,35 @@ export const layer: Layer.Layer<ProjectionStoreV2, never, SqlClient.SqlClient> =
             });
           }),
         )
-        .pipe(Effect.mapError((cause) => new ProjectionStoreReadError({ threadId, cause })));
+        .pipe(
+          NodeSqliteClient.readOnly,
+          Effect.mapError((cause) => new ProjectionStoreReadError({ threadId, cause })),
+        );
+
+    // Publication happens after commit. A fresh reader transaction establishes
+    // its WAL snapshot at the first SELECT, so it sees that sequence or newer,
+    // not a lagging replica. Share only reads keyed by a committed event, never
+    // ordinary control reads or reads inside a caller's transaction (which must
+    // observe its own writes/snapshot). Both active and archived streams use it.
+    class ShellReadKey extends Data.Class<{
+      readonly threadId: ThreadId;
+      readonly sequence: number;
+    }> {}
+    const shellReads = yield* Cache.makeWith((key: ShellReadKey) => readThreadShell(key.threadId), {
+      capacity: 256,
+      timeToLive: (exit) => (Exit.isSuccess(exit) ? Duration.seconds(10) : Duration.zero),
+    });
+    const getThreadShell: ProjectionStoreV2Shape["getThreadShell"] = (threadId, sequence) =>
+      Effect.withFiber((fiber) =>
+        sequence === undefined ||
+        Context.getOrUndefined(fiber.context, sql.transactionService) !== undefined
+          ? readThreadShell(threadId)
+          : Cache.get(shellReads, new ShellReadKey({ threadId, sequence })),
+      );
 
     return {
       apply,
+      clearNodeCache,
       getShellSnapshot,
       readShellSnapshot,
       getThreadShell,
@@ -6150,6 +6255,7 @@ export const layerMemory: Layer.Layer<ProjectionStoreV2> = Layer.effect(
     const sequence = yield* Ref.make(0);
 
     const service: ProjectionStoreV2Shape = {
+      clearNodeCache: Effect.void,
       apply: (event) =>
         Effect.gen(function* () {
           const result = yield* Ref.modify(replayState, (existing) => {
@@ -6330,9 +6436,10 @@ export const layerMemory: Layer.Layer<ProjectionStoreV2> = Layer.effect(
                 }
                 return (
                   thread.limitRecovery.autoResume &&
-                  resetMs <= nowMs &&
-                  (thread.snoozedUntil == null ||
-                    DateTime.toEpochMillis(thread.snoozedUntil) <= nowMs)
+                  (options.includeFuture ||
+                    (resetMs <= nowMs &&
+                      (thread.snoozedUntil == null ||
+                        DateTime.toEpochMillis(thread.snoozedUntil) <= nowMs)))
                 );
               })
               .toSorted((left, right) => left.id.localeCompare(right.id)),
