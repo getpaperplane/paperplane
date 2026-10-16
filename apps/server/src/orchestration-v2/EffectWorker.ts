@@ -890,7 +890,13 @@ export const runDaemonWithOptions = (options: OrchestrationEffectDaemonOptions =
             onNone: () => livenessPollIntervalMs,
             onSome: (availableAt) => {
               const untilAvailable = DateTime.toEpochMillis(availableAt) - now;
-              return Math.min(livenessPollIntervalMs, untilAvailable > 0 ? untilAvailable : 25);
+              // Timers pause during machine sleep; re-read wall time at least each minute
+              // so a retry due during sleep runs promptly after wake.
+              return Math.min(
+                livenessPollIntervalMs,
+                60_000,
+                untilAvailable > 0 ? untilAvailable : 25,
+              );
             },
           });
           yield* Effect.raceFirst(

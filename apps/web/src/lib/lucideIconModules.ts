@@ -25,6 +25,9 @@ const iconLoaders = new Map(
 
 export const lucideIconNames: ReadonlyArray<string> = [...iconLoaders.keys()];
 
+// Names saved before Lucide renamed the icon file.
+const iconAliases: Readonly<Record<string, string>> = { fingerprint: "fingerprint-pattern" };
+
 export function loadLucideIcon(name: string): Promise<LucideIcon> | null {
-  return iconLoaders.get(name)?.() ?? null;
+  return iconLoaders.get(iconAliases[name] ?? name)?.() ?? null;
 }

@@ -9,6 +9,9 @@ import * as Scope from "effect/Scope";
 import { forkParked } from "../serverActivation.ts";
 
 const SAFETY_INTERVAL_MS = 15 * 60 * 1_000;
+// Timers pause while the machine sleeps, so a long sleep can overshoot a wall
+// deadline by its full length after wake. Waking to re-read wall time is cheap.
+const MAX_TIMER_MS = 60_000;
 // Failed dispatches or corrupt, already-due rows must not create a hot retry loop.
 const RETRY_INTERVAL_MS = 5_000;
 
@@ -95,7 +98,10 @@ const make = Effect.gen(function* () {
         now + SAFETY_INTERVAL_MS,
         ...[...sources.values()].filter((source) => !source.running).map((source) => source.nextAt),
       );
-      yield* Effect.raceFirst(Queue.take(changed), Effect.sleep(Math.max(0, next - now)));
+      yield* Effect.raceFirst(
+        Queue.take(changed),
+        Effect.sleep(Math.min(MAX_TIMER_MS, Math.max(0, next - now))),
+      );
     }).pipe(Effect.forever),
   );
   return Scheduler.of({ register });

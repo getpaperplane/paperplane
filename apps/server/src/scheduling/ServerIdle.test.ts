@@ -189,8 +189,11 @@ it.effect("bounds one simulated hour of idle work with retained threads and an o
       }
     }).pipe(Effect.provide(workers), Effect.provideService(Statement.CurrentTransformer, counter));
   }).pipe(
-    Effect.provide(ProjectionStore.layer),
-    Effect.provide(Sqlite.layerMemory),
-    Effect.provide(NodeServices.layer),
+    Effect.provide(
+      ProjectionStore.layer.pipe(
+        Layer.provideMerge(Sqlite.layerMemory),
+        Layer.provideMerge(NodeServices.layer),
+      ),
+    ),
   ),
 );

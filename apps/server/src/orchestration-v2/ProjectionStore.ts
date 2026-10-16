@@ -4578,10 +4578,12 @@ export const layer: Layer.Layer<ProjectionStoreV2, never, SqlClient.SqlClient> =
         const read = sql<PayloadRow>`
           SELECT payload_json FROM orchestration_v2_projection_nodes WHERE node_id = ${node.id}
         `;
-        // A cold hint must come from a successfully committed read transaction.
-        // In particular, never cache dirty rows if a failed SQLite COMMIT left
-        // its transaction open: BEGIN fails until the connection is recovered.
-        const rows = yield* inTransaction ? read : sql.withTransaction(read);
+        // A cold hint must come from a committed read transaction, so a failed
+        // COMMIT left open on the writer fails BEGIN instead of caching dirty
+        // rows. readOnly keeps this off the write lock when a reader exists.
+        const rows = yield* inTransaction
+          ? read
+          : sql.withTransaction(read).pipe(NodeSqliteClient.readOnly);
         const matches = rows[0]?.payload_json === payloadJson;
         if (!inTransaction && generation === nodeCacheGeneration && matches) {
           rememberNode(node, payloadJson);
