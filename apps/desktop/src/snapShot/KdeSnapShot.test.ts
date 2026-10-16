@@ -158,6 +158,23 @@ it("repairs the old semicolon permission entry without replacing unrelated regis
   expect(await NodeFSP.readdir(NodePath.dirname(desktop))).toEqual([NodePath.basename(desktop)]);
 });
 
+it.each(["install-kde-helper", "remove-kde-helper"] as const)(
+  "%s recognizes a legacy capture registration",
+  async (action) => {
+    await setup.perform("install-kde-helper");
+    const { desktop } = kdeCapturePaths(paths);
+    const entry = await NodeFSP.readFile(desktop, "utf8");
+    await NodeFSP.writeFile(
+      desktop,
+      entry.replace("X-RoveCode-Capture-Helper=true", "X-T3Code-Capture-Helper=true"),
+    );
+    await setup.perform(action);
+    expect((await setup.state()).status).toBe(
+      action === "install-kde-helper" ? "ready" : "not-installed",
+    );
+  },
+);
+
 it("still verifies capture access when a systemd user manager is unavailable", async () => {
   const executeNormally = execute.getMockImplementation()!;
   execute.mockImplementation((file, args, options, callback) => {

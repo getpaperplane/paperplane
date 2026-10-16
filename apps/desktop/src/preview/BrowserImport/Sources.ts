@@ -793,7 +793,11 @@ export const posixLockIsHeld = Effect.fnUntraced(function* (
         );
         return stdout.trim();
       }),
-    ).pipe(Effect.orElseSucceed(() => ""));
+    ).pipe(
+      // Apple's developer-tools shim can wait indefinitely instead of exiting.
+      Effect.timeoutOrElse({ duration: "2 seconds", orElse: () => Effect.succeed("") }),
+      Effect.orElseSucceed(() => ""),
+    );
     if (verdict === "held") return true;
     if (verdict === "free") return false;
   }

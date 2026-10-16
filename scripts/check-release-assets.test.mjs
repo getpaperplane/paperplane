@@ -46,12 +46,13 @@ it("rejects the published space-to-dot mismatch instead of accepting a green upl
   await NodeAssert.rejects(checkReleaseAssets(directory), /missing release asset/);
 });
 
-for (const url of ["Rove Code.exe", "../outside.exe", "https://example.com/update.exe"]) {
-  it(`rejects non-portable asset reference ${url}`, async () => {
+it.each(["Rove Code.exe", "../outside.exe", "https://example.com/update.exe"])(
+  "rejects non-portable asset reference %s",
+  async (url) => {
     manifest("latest.yml", [url]);
     await NodeAssert.rejects(checkReleaseAssets(directory), /non-portable release filename/);
-  });
-}
+  },
+);
 
 it("rejects an asset whose bytes changed after the manifest was generated", async () => {
   const url = "Rove-Code-1.2.3-x64.exe";

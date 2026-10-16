@@ -160,24 +160,6 @@ export function resolvePiToolCallArgs(
   }
   return undefined;
 }
-export function describePiToolCall(toolName: string, args: Record<string, Json> | undefined) {
-  if (!args) return {};
-  const command = piTrimmed(args.command);
-  const path = piTrimmed(args.path);
-  const task = piTrimmed(args.task);
-  const pattern = piTrimmed(args.pattern);
-  return {
-    ...(command ? { data: { command } } : path ? { data: { path } } : {}),
-    ...(task
-      ? { detail: piBounded(task, 120) }
-      : pattern
-        ? { detail: path ? `"${pattern}" in ${path}` : pattern }
-        : {}),
-    ...(toolName.includes("subagent") && piTrimmed(args.agent)
-      ? { title: `Subagent ${piTrimmed(args.agent)}` }
-      : {}),
-  };
-}
 /** Pi context is authoritative, including unknown-after-compaction and unavailable. */
 export function piContextUsage(session: PiSessionLike): ThreadTokenUsageSnapshot {
   const context = session.getSessionStats?.()?.contextUsage;

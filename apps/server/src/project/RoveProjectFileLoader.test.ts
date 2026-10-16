@@ -51,6 +51,28 @@ it.layer(layerTest)("RoveProjectFileLoader", (it) => {
       }),
     );
 
+    it.effect("loads legacy t3.json only when rove.json is absent", () =>
+      Effect.gen(function* () {
+        const loader = yield* RoveProjectFileLoader.RoveProjectFileLoader;
+        const cwd = yield* makeTempDir;
+        const fileSystem = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        yield* fileSystem.writeFileString(
+          path.join(cwd, "t3.json"),
+          '{ "scripts": [{ "name": "Legacy", "command": "pnpm dev" }] }',
+        );
+        expect(Option.getOrThrow(yield* loader.load(cwd)).scripts).toEqual([
+          { name: "Legacy", command: "pnpm dev" },
+        ]);
+        yield* writeProjectFile(cwd, '{ "scripts": [{ "name": "Current", "command": "vp dev" }] }');
+        expect(Option.getOrThrow(yield* loader.load(cwd)).scripts).toEqual([
+          { name: "Current", command: "vp dev" },
+        ]);
+        yield* writeProjectFile(cwd, "{ invalid");
+        expect(Option.isNone(yield* loader.load(cwd))).toBe(true);
+      }),
+    );
+
     it.effect("returns none when rove.json is missing", () =>
       Effect.gen(function* () {
         const loader = yield* RoveProjectFileLoader.RoveProjectFileLoader;

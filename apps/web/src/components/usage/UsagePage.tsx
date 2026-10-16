@@ -1166,7 +1166,7 @@ export function UsagePage() {
                               <td className="py-2 text-foreground">
                                 <button
                                   type="button"
-                                  className="rounded-sm text-left outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                  className="rounded-sm text-left outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
                                 >
                                   {"hourStart" in period
                                     ? formatHourShort(period.hourStart, shownWindow.timeZone)

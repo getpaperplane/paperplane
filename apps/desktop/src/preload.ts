@@ -1,9 +1,7 @@
 import type {
   DesktopBridge,
   DesktopPreviewOpenLinkEvent,
-  DesktopPreviewPointerEvent,
   DesktopPreviewRecordingInputEvent,
-  DesktopPreviewRecordingFrame,
   DesktopSnapShotEvent,
 } from "@rove-code/contracts";
 import { exposeClerkBridge } from "@clerk/electron/preload";
@@ -11,7 +9,17 @@ import { contextBridge, ipcRenderer, webFrame, webUtils } from "electron";
 
 import * as IpcChannels from "./ipc/channels.ts";
 import { mergeLegacyLocalStorage } from "./legacyLocalStorageMerge.ts";
-import { isBoolean, isDesktopPreviewTabState, isRecord, isString } from "./preloadGuards.ts";
+import {
+  isBoolean,
+  isDesktopAppBranding,
+  isDesktopPreviewPointerEvent,
+  isDesktopPreviewRecordingFrame,
+  isDesktopPreviewTabState,
+  isDesktopSshPasswordPromptRequest,
+  isDesktopUpdateState,
+  isRecord,
+  isString,
+} from "./preloadGuards.ts";
 
 const SNAP_SHOT_EVENT_TYPES = new Set([
   "requested",
@@ -78,10 +86,10 @@ function unwrapEnsureSshEnvironmentResult(result: unknown) {
 contextBridge.exposeInMainWorld("desktopBridge", {
   getAppBranding: () => {
     const result = ipcRenderer.sendSync(IpcChannels.GET_APP_BRANDING_CHANNEL);
-    if (typeof result !== "object" || result === null) {
+    if (!isDesktopAppBranding(result)) {
       return null;
     }
-    return result as ReturnType<DesktopBridge["getAppBranding"]>;
+    return result;
   },
   getPathForFile: (file: File) => webUtils.getPathForFile(file),
   getClientPlatform: () => clientPlatform,
@@ -163,8 +171,8 @@ contextBridge.exposeInMainWorld("desktopBridge", {
     ipcRenderer.invoke(IpcChannels.ISSUE_SSH_WEBSOCKET_TOKEN_CHANNEL, { httpBaseUrl, bearerToken }),
   onSshPasswordPrompt: (listener) => {
     const wrappedListener = (_event: Electron.IpcRendererEvent, request: unknown) => {
-      if (typeof request !== "object" || request === null) return;
-      listener(request as Parameters<typeof listener>[0]);
+      if (!isDesktopSshPasswordPromptRequest(request)) return;
+      listener(request);
     };
 
     ipcRenderer.on(IpcChannels.SSH_PASSWORD_PROMPT_CHANNEL, wrappedListener);
@@ -275,8 +283,8 @@ contextBridge.exposeInMainWorld("desktopBridge", {
   },
   onUpdateState: (listener) => {
     const wrappedListener = (_event: Electron.IpcRendererEvent, state: unknown) => {
-      if (typeof state !== "object" || state === null) return;
-      listener(state as Parameters<typeof listener>[0]);
+      if (!isDesktopUpdateState(state)) return;
+      listener(state);
     };
 
     ipcRenderer.on(IpcChannels.UPDATE_STATE_CHANNEL, wrappedListener);
@@ -398,8 +406,8 @@ contextBridge.exposeInMainWorld("desktopBridge", {
         }),
       onFrame: (listener) => {
         const wrappedListener = (_event: Electron.IpcRendererEvent, frame: unknown) => {
-          if (typeof frame !== "object" || frame === null) return;
-          listener(frame as DesktopPreviewRecordingFrame);
+          if (!isDesktopPreviewRecordingFrame(frame)) return;
+          listener(frame);
         };
         ipcRenderer.on(IpcChannels.PREVIEW_RECORDING_FRAME_CHANNEL, wrappedListener);
         return () =>
@@ -421,8 +429,8 @@ contextBridge.exposeInMainWorld("desktopBridge", {
     },
     onPointerEvent: (listener) => {
       const wrappedListener = (_event: Electron.IpcRendererEvent, pointerEvent: unknown) => {
-        if (typeof pointerEvent !== "object" || pointerEvent === null) return;
-        listener(pointerEvent as DesktopPreviewPointerEvent);
+        if (!isDesktopPreviewPointerEvent(pointerEvent)) return;
+        listener(pointerEvent);
       };
       ipcRenderer.on(IpcChannels.PREVIEW_POINTER_EVENT_CHANNEL, wrappedListener);
       return () =>

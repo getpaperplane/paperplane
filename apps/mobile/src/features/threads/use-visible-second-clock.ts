@@ -18,14 +18,12 @@ export function useVisibleSecondClock(enabled: boolean): number {
       setAppActive(state === "active"),
     );
     // A change between the first render and this subscription has no event to replay.
-    // oxlint-disable-next-line react/set-state-in-effect -- Syncs state the listener missed.
     setAppActive(AppState.currentState === "active");
     return () => subscription.remove();
   }, []);
   const ticking = enabled && focused && appActive;
   useLayoutEffect(() => {
     if (!ticking) return;
-    // oxlint-disable-next-line react/set-state-in-effect -- Resuming reads the clock that stood still.
     setNowMs(Date.now());
     const intervalId = setInterval(() => setNowMs(Date.now()), 1_000);
     return () => clearInterval(intervalId);

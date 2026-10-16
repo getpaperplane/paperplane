@@ -18,7 +18,7 @@ const dependencies = [
  * Cua exposes ~60 operations whose schemas total ~150 KB. Mirroring them would
  * put that into every provider session, so agents discover them on demand.
  */
-export const ComputerDescribeTool = Tool.make("computer_describe", {
+const ComputerDescribeTool = Tool.make("computer_describe", {
   description:
     "Control apps through Cua Driver. macOS uses background-only host-window operations. Linux uses a private, offline desktop per thread with guest-only apps, focus, clipboard and temporary files. It cannot access host apps, profiles or project files. Call with no arguments for target-specific workflow guidance and operations, or with `tool` for its schema. Follow that guidance before acting. For web pages in Rove's browser panel, use preview_* instead.",
   parameters: Schema.Struct({
@@ -38,7 +38,7 @@ export const ComputerDescribeTool = Tool.make("computer_describe", {
   .annotate(Tool.Idempotent, true)
   .annotate(Tool.OpenWorld, false);
 
-export const ComputerCallTool = Tool.make("computer_call", {
+const ComputerCallTool = Tool.make("computer_call", {
   description:
     "Run one Cua Driver operation on the server-owned target for this thread. Read target-specific guidance and the operation schema with computer_describe first. Host macOS input stays background-only. Linux input is confined to the private desktop. Do not pass session labels or change driver configuration. close_desktop discards the calling thread's Linux desktop. Refused actions execute nothing.",
   parameters: Schema.Struct({

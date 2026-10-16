@@ -741,10 +741,25 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
         "../apps/desktop/resources/linux/com.rovetools.rovecode.metainfo.xml",
       );
       assert.isTrue(yield* (yield* FileSystem.FileSystem).exists(appStreamSource));
-      assert.deepStrictEqual(linux.deb?.fpm, [
-        `${appStreamSource}=/usr/share/metainfo/io.github.hafiezul.rove.metainfo.xml`,
-        `${NodePath.resolve(import.meta.dirname, "../LICENSE")}=/usr/share/doc/rove/copyright`,
-      ]);
+      assert.deepStrictEqual(linux.deb, {
+        fpm: [
+          `${appStreamSource}=/usr/share/metainfo/io.github.hafiezul.rove.metainfo.xml`,
+          `${NodePath.resolve(import.meta.dirname, "../LICENSE")}=/usr/share/doc/rove/copyright`,
+        ],
+        depends: [
+          "libasound2t64 | libasound2",
+          "libatspi2.0-0t64 | libatspi2.0-0",
+          "libgbm1",
+          "libgtk-3-0t64 | libgtk-3-0",
+          "libnotify4",
+          "libnss3",
+          "libsecret-1-0",
+          "libuuid1",
+          "libxss1",
+          "libxtst6",
+          "xdg-utils",
+        ],
+      });
       // A Linux AppImage build also emits the .deb from the same run.
       assert.deepStrictEqual((linux.linux as Record<string, unknown>).target, ["AppImage", "deb"]);
       // Linux must register the renderer schemes so the generated .desktop
@@ -1428,8 +1443,9 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
       ),
   );
 
-  for (const targetArch of ["x64", "arm64"] as const) {
-    it.effect(`accepts an embedded archive with the Linux ${targetArch} node-pty prebuild`, () =>
+  it.effect.each(["x64", "arm64"] as const)(
+    "accepts an embedded archive with the Linux %s node-pty prebuild",
+    (targetArch) =>
       Effect.scoped(
         Effect.gen(function* () {
           const fixture = yield* makeWindowsPayloadFixture({
@@ -1449,33 +1465,32 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
           assert.equal(result.packagedAppDir, fixture.packagedAppDir);
         }),
       ).pipe(Effect.provideService(HostProcess.Platform, "linux")),
-    );
+  );
 
-    it.effect(
-      `rejects a node-pty prebuild for the wrong architecture in a Linux ${targetArch} archive`,
-      () =>
-        Effect.scoped(
-          Effect.gen(function* () {
-            const fixture = yield* makeWindowsPayloadFixture({
-              copyUnpackedNatives: true,
-              wslRuntime: "valid",
-              targetArch,
-              ptyPrebuildArch: targetArch === "x64" ? "arm64" : "x64",
-            });
-            const error = yield* validateWindowsPackagedPayload({
-              stageDistDir: fixture.stageDistDir,
-              appExecutableName: fixture.appExecutableName,
-              targetArch,
-              appVersion: WINDOWS_PAYLOAD_FIXTURE_VERSION,
-              expectWslRuntime: true,
-            }).pipe(Effect.flip);
+  it.effect.each(["x64", "arm64"] as const)(
+    "rejects a node-pty prebuild for the wrong architecture in a Linux %s archive",
+    (targetArch) =>
+      Effect.scoped(
+        Effect.gen(function* () {
+          const fixture = yield* makeWindowsPayloadFixture({
+            copyUnpackedNatives: true,
+            wslRuntime: "valid",
+            targetArch,
+            ptyPrebuildArch: targetArch === "x64" ? "arm64" : "x64",
+          });
+          const error = yield* validateWindowsPackagedPayload({
+            stageDistDir: fixture.stageDistDir,
+            appExecutableName: fixture.appExecutableName,
+            targetArch,
+            appVersion: WINDOWS_PAYLOAD_FIXTURE_VERSION,
+            expectWslRuntime: true,
+          }).pipe(Effect.flip);
 
-            assert.instanceOf(error, WindowsPackagedPayloadValidationError);
-            assert.equal(error.reason, "wsl-runtime-invalid");
-          }),
-        ),
-    );
-  }
+          assert.instanceOf(error, WindowsPackagedPayloadValidationError);
+          assert.equal(error.reason, "wsl-runtime-invalid");
+        }),
+      ),
+  );
 
   it.effect("rejects an embedded archive built for a different release version", () =>
     Effect.scoped(
@@ -2401,21 +2416,17 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
     ),
   );
 
-  for (const env of [
+  it.effect.each([
     { ROVE_WINDOWS_SIGNING_MODE: "self-signed" },
     { ROVE_WINDOWS_SIGNING_MODE: "unsupported" },
-  ]) {
-    it.effect(
-      `refuses incomplete Windows signing configuration ${env.ROVE_WINDOWS_SIGNING_MODE}`,
-      () =>
-        Effect.gen(function* () {
-          const result = yield* Effect.result(
-            createBuildConfig("win", "nsis", "1.2.3", true, false, undefined, undefined),
-          );
-          assert.isTrue(result._tag === "Failure");
-        }).pipe(Effect.provide(ConfigProvider.layer(ConfigProvider.fromEnv({ env })))),
-    );
-  }
+  ])("refuses incomplete Windows signing configuration $ROVE_WINDOWS_SIGNING_MODE", (env) =>
+    Effect.gen(function* () {
+      const result = yield* Effect.result(
+        createBuildConfig("win", "nsis", "1.2.3", true, false, undefined, undefined),
+      );
+      assert.isTrue(result._tag === "Failure");
+    }).pipe(Effect.provide(ConfigProvider.layer(ConfigProvider.fromEnv({ env })))),
+  );
 
   it.effect("configures Windows executable metadata and native signing extensions", () =>
     Effect.gen(function* () {

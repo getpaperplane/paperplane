@@ -66,7 +66,12 @@ const packExecutableTargets = packExecutableTarget
   : undefined;
 
 export default mergeConfig(
-  baseConfig,
+  {
+    ...baseConfig,
+    // Oxlint discovers the root lint config itself. Copying it here makes root-only
+    // options invalid and resolves the local JS plugins relative to apps/server.
+    lint: {},
+  },
   defineConfig({
     run: {
       tasks: {

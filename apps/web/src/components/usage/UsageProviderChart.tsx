@@ -434,7 +434,7 @@ export function UsageProviderChart({
           role="group"
           tabIndex={0}
           aria-label="Usage over time. Click or drag to focus a period. Use arrow keys to inspect, Enter to focus, and Shift with arrows to extend."
-          className="relative h-56 flex-1 cursor-crosshair touch-pan-y rounded-sm outline-none select-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="relative h-56 flex-1 cursor-crosshair touch-pan-y rounded-sm outline-none select-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
           onPointerDown={(event) => {
             if (event.button !== 0 || !onSelectionChange) return;
             const index = indexAt(event.clientX, event.clientY);

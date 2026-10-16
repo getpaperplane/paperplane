@@ -79,8 +79,6 @@ import {
 import * as NodeOS from "node:os";
 import { expandHomePath } from "@rove-code/provider-core/server/pathExpansion";
 
-export { PiExtensionLoadError } from "./PiAdapter.ts";
-
 /**
  * Adapt an SDK `AgentSession` to the narrow `PiSessionLike` surface the
  * adapter consumes. Two non-mechanical pieces:

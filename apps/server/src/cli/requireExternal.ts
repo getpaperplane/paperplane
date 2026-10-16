@@ -4,7 +4,6 @@ import * as NodeModule from "node:module";
 const require = NodeModule.createRequire(import.meta.url);
 
 /** Load sidecar packages from a SEA, where file-backed ESM imports are unavailable. */
-// oxlint-disable-next-line anti-slop/no-unknown-returns -- Generic bundler bridge; each generated facade retains its package's own export contract.
 export function requireCliExternal(specifier: string): unknown {
   if (!specifier.startsWith("@earendil-works/")) return require(specifier);
 

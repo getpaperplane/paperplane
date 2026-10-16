@@ -113,7 +113,6 @@ function TelemetryExportForm() {
     }
   });
   useEffect(() => {
-    // oxlint-disable-next-line react/set-state-in-effect -- State changes only after the response arrives.
     if (canCheck) sendPendingChecks();
   }, [canCheck]);
 

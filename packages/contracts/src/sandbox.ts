@@ -75,12 +75,3 @@ export class SandboxError extends Schema.TaggedError<SandboxError>()("SandboxErr
   message: Schema.String,
 }) {}
 export const SANDBOX_PORT = 7340;
-/**
- * Rove in a sandbox serves from this bootstrap-owned workspace (see the server's
- * sandbox bootstrap), which lets clients recognize sandbox environments, and
- * pick a clone destination, without asking the managing environment.
- */
-const SANDBOX_WORKSPACE_DIR = ".rove-sandbox/workspace";
-export function isRemoteSandboxWorkspace(cwd: string): boolean {
-  return cwd.replace(/\/+$/, "").endsWith(`/${SANDBOX_WORKSPACE_DIR}`);
-}

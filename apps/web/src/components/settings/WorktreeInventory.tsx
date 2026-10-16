@@ -112,7 +112,7 @@ function EnvironmentWorktrees(props: {
         role="region"
         aria-label={`Worktrees on ${props.label}`}
         tabIndex={0}
-        className="max-h-[min(32rem,60dvh)] overflow-y-auto overscroll-contain rounded-[inherit] divide-y divide-border/50 outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="max-h-[min(32rem,60dvh)] overflow-y-auto overscroll-contain rounded-[inherit] divide-y divide-border/50 outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
       >
         {!props.supported ? (
           <p className="p-4 text-sm text-muted-foreground">

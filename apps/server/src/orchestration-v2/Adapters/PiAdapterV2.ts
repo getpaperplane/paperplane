@@ -45,7 +45,7 @@ import {
 import { piRecord, piTrimmed } from "../../provider/Layers/PiValues.ts";
 
 export const PI_PROVIDER = ProviderDriverKind.make("pi");
-export const PiProviderCapabilitiesV2 = {
+const PiProviderCapabilitiesV2 = {
   runtimePolicy: { enforcement: "native" },
   sessions: {
     supportsMultipleProviderThreadsPerSession: false,

@@ -35,7 +35,6 @@
     "@rove-code/provider-grok": "workspace:*",
     "@rove-code/provider-muse": "workspace:*",
     "@rove-code/provider-opencode": "workspace:*",
-    "@rove-code/provider-pi": "workspace:*",
     "@rove-code/shared": "workspace:*",
     "@tanstack/react-pacer": "^0.19.4",
     "@tanstack/react-router": "^1.160.2",

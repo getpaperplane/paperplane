@@ -6,10 +6,6 @@ export const LEGACY_PROJECT_FILE_NAME = "t3.json";
 export const LEGACY_SERVICE_LAUNCHER_CONTEXT_ENV = "T3_SERVICE_LAUNCHER_CONTEXT";
 export const LEGACY_BOOT_SERVICE_UNIT_ENV = "T3_BOOT_SERVICE_UNIT";
 export const LEGACY_RELAY_CLIENT_IDS = ["t3-mobile", "t3-web"] as const;
-export const COMPOSER_CONTEXT_READ_HTML_ATTRIBUTES = [
-  "data-rove-context-fragment",
-  "data-t3-context-fragment",
-] as const;
 export const COMPOSER_CONTEXT_READ_PROTOCOLS = ["rove-context", "t3-context"] as const;
 export const ASSISTANT_CITATION_READ_PROTOCOLS = ["rove-citation", "t3-citation"] as const;
 export const COMPOSER_ATTACHMENT_READ_DIRECTORIES = [

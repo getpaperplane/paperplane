@@ -107,7 +107,6 @@ export function McpAppFrame(props: {
     return observeResize(box, ([entry]) => {
       if (entry) setWidth(Math.round(entry.contentRect.width));
     });
-    // oxlint-disable-next-line react/exhaustive-effect-dependencies -- Closing and reopening replaces the box.
   }, [closed]);
 
   const resource = useMemo(
@@ -135,7 +134,6 @@ export function McpAppFrame(props: {
   useEffect(() => {
     if (src !== null || cachedUrl === null || minting.current) return;
     if (cachedExpiresAt - Date.now() > MIN_URL_LIFE_MS) {
-      // oxlint-disable-next-line react/set-state-in-effect -- Adopts the cached URL once it is known to last.
       setSrc(cachedUrl);
       return;
     }
@@ -450,19 +448,16 @@ export function McpAppFrame(props: {
       void host.teardown();
       hostRef.current = null;
     };
-    // oxlint-disable-next-line react/exhaustive-effect-dependencies -- A reopened document needs a new host.
   }, [src, app, documentGeneration]);
 
   // The host reads the context through `latest`; these only say when to resend.
   useEffect(() => {
     hostRef.current?.updateHostContext();
-    // oxlint-disable-next-line react/exhaustive-effect-dependencies -- Context changes trigger a resend.
   }, [theme, width, displayMode, toolDefinition]);
 
   // A new document gets a new host, which needs the call again.
   useEffect(() => {
     if (toolCall !== undefined) hostRef.current?.setToolCall(toolCall);
-    // oxlint-disable-next-line react/exhaustive-effect-dependencies -- Each new document needs the call.
   }, [toolCall, src, documentGeneration]);
 
   // An app that asked to close keeps the box an inline row had, so the

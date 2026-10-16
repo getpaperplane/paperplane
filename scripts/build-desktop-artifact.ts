@@ -2935,23 +2935,6 @@ export const createBuildConfig = Effect.fn("createBuildConfig")(function* (
       },
     };
     buildConfig.deb = {
-      // Electron's runtime libraries. Debian 13 and Ubuntu 24.04 renamed some
-      // for 64-bit time; the old name is the fallback for older releases.
-      depends: [
-        "libasound2t64 | libasound2",
-        "libatspi2.0-0t64 | libatspi2.0-0",
-        "libgbm1",
-        "libgtk-3-0t64 | libgtk-3-0",
-        "libnotify4",
-        "libnss3",
-        "libsecret-1-0",
-        "libuuid1",
-        "libxss1",
-        "libxtst6",
-        "xdg-utils",
-      ],
-    };
-    buildConfig.deb = {
       // FPM runs outside the staged app directory, so source paths must be absolute.
       // AppStream consumers associate this metadata with our rove.desktop entry.
       fpm: [

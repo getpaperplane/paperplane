@@ -751,7 +751,6 @@ setInterval(() => {}, 1_000);
       // macOS temp directory is on APFS, so the clone requirement applies there.
       assert.include(
         blocker ?? "",
-        // oxlint-disable-next-line rove/no-global-process-runtime -- mirrors the standalone launcher's own platform check.
         process.platform === "darwin" ? "1.0 GB needed, 0.0 GB free" : "GB needed, 0.0 GB free",
       );
       // Linux probes leave nothing behind in the backup directory.

@@ -59,7 +59,6 @@ interface ManagedChild {
 // built-ins only.
 const runtimePaths = (baseDir: string, version: string) => {
   const versionDir = NodePath.join(baseDir, "runtime", "versions", version);
-  // oxlint-disable-next-line rove/no-global-process-runtime -- Standalone launcher has no Effect runtime.
   const executableName = process.platform === "win32" ? "rove.exe" : "rove";
   return {
     versionDir,
@@ -132,7 +131,6 @@ function runCp(args: ReadonlyArray<string>): Promise<boolean> {
  * regular copy.
  */
 async function copyDatabaseFile(source: string, destination: string): Promise<void> {
-  // oxlint-disable-next-line rove/no-global-process-runtime -- Standalone launcher has no Effect runtime.
   const platform = process.platform;
   // `cp -c` replaces the destination with a new file, which would cut a
   // hard-linked database off from its other links; copy into it instead.
@@ -185,7 +183,6 @@ async function statDatabaseFiles(dbPath: string): Promise<ReadonlyArray<NodeFS.S
  * - Elsewhere: never.
  */
 async function backupCanClone(dbPath: string, backupRoot: string): Promise<boolean> {
-  // oxlint-disable-next-line rove/no-global-process-runtime -- Standalone launcher has no Effect runtime.
   const platform = process.platform;
   if (platform === "darwin") {
     const [backupDirectory, backupFs, systemFs] = await Promise.all([

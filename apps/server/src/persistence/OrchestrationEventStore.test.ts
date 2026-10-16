@@ -787,7 +787,6 @@ it.effect("releases consumed application replay pages", () =>
         }),
       { discard: true },
     );
-    // oxlint-disable-next-line typescript/no-extraneous-class -- Counts retained page markers after full GC.
     class ReplayPage {}
     let count = 0;
     yield* store

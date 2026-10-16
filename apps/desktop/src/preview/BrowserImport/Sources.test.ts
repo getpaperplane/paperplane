@@ -4,6 +4,10 @@ import * as NodePath from "node:path";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { assert, describe, it } from "@effect/vitest";
 import * as HostProcess from "@rove-code/shared/HostProcess";
+import * as Deferred from "effect/Deferred";
+import * as Fiber from "effect/Fiber";
+import * as Sink from "effect/Sink";
+import * as TestClock from "effect/testing/TestClock";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
@@ -892,7 +896,7 @@ describe("listSourceProfiles Firefox fallback", () => {
 });
 
 describe("isSourceRunning for Firefox", () => {
-  it.effect.skipIf(!symlinksSupported)("finds the lock inside the profile, not at the root", () =>
+  it.live.skipIf(!symlinksSupported)("finds the lock inside the profile, not at the root", () =>
     run(
       Effect.gen(function* () {
         const fileSystem = yield* FileSystem.FileSystem;
@@ -927,6 +931,46 @@ describe("isSourceRunning for Firefox", () => {
     ),
   );
 
+  it.effect("tries the next interpreter when the probe hangs", () =>
+    Effect.gen(function* () {
+      const started = yield* Deferred.make<void>();
+      const interrupted = yield* Deferred.make<void>();
+      let launches = 0;
+      const spawner = ChildProcessSpawner.make(() => {
+        if (++launches === 1) {
+          return Deferred.succeed(started, undefined).pipe(
+            Effect.andThen(Effect.never),
+            Effect.onInterrupt(() => Deferred.succeed(interrupted, undefined)),
+          );
+        }
+        return Effect.succeed(
+          ChildProcessSpawner.makeHandle({
+            pid: ChildProcessSpawner.ProcessId(1),
+            exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(0)),
+            isRunning: Effect.succeed(false),
+            kill: () => Effect.void,
+            unref: Effect.succeed(Effect.void),
+            stdin: Sink.drain,
+            stdout: Stream.encodeText(Stream.make("held")),
+            stderr: Stream.empty,
+            all: Stream.empty,
+            getInputFd: () => Sink.drain,
+            getOutputFd: () => Stream.empty,
+          }),
+        );
+      });
+      const fiber = yield* posixLockIsHeld("/fixture/.parentlock", ["stuck", "available"]).pipe(
+        Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
+        Effect.forkChild,
+      );
+      yield* Deferred.await(started);
+      yield* TestClock.adjust("2 seconds");
+      assert.isTrue(yield* Fiber.join(fiber));
+      yield* Deferred.await(interrupted);
+      assert.strictEqual(launches, 2);
+    }),
+  );
+
   it.effect("reports not-held when no interpreter can run the fcntl probe", () =>
     run(
       Effect.gen(function* () {
@@ -948,7 +992,7 @@ describe("isSourceRunning for Firefox", () => {
   );
 
   // Holds the lock with python3's fcntl, which does not exist on Windows.
-  it.effect.skipIf(HostProcess.Platform.defaultValue() === "win32")(
+  it.live.skipIf(HostProcess.Platform.defaultValue() === "win32")(
     "detects a live fcntl lock on .parentlock, as macOS Firefox leaves it",
     () =>
       run(

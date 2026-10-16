@@ -492,18 +492,15 @@ export function ThreadMcpApp(props: {
       void next.teardown();
       hostRef.current = null;
     };
-    // oxlint-disable-next-line react/exhaustive-effect-dependencies -- A restarted view needs a new host.
   }, [uri, app, generation, documentKey]);
 
   // The host reads the context through `latest`; these only say when to resend.
   useEffect(() => {
     hostRef.current?.updateHostContext();
-    // oxlint-disable-next-line react/exhaustive-effect-dependencies -- Context changes trigger a resend.
   }, [theme, props.width, props.height, insets, toolDefinition]);
   // A new document gets a new host, which needs the call again.
   useEffect(() => {
     if (toolCall !== undefined) hostRef.current?.setToolCall(toolCall);
-    // oxlint-disable-next-line react/exhaustive-effect-dependencies -- Each new document needs the call.
   }, [toolCall, uri, generation, documentKey]);
 
   const source = useMemo(

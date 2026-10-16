@@ -261,7 +261,7 @@ it("publishes valid discovery formats and resolves every OpenAPI schema referenc
   }
 });
 
-for (const [accept, expected] of [
+it.each([
   [null, "text/html"],
   ["*/*", "text/html"],
   ["text/markdown", "text/markdown"],
@@ -281,8 +281,6 @@ for (const [accept, expected] of [
   ["text/html;q=0.9, text/html;charset=utf-8;q=0.1, text/markdown;q=0.5", "text/markdown"],
   ['text/html;profile="comma,value", text/markdown', "text/markdown"],
   ["text/html;q=0.2, text/html;q=0.8, text/markdown;q=0.5", "text/html"],
-]) {
-  it(`negotiates Accept ${accept}`, () => {
-    NodeAssert.equal(negotiate(accept, ["text/html", "text/markdown"]), expected);
-  });
-}
+])("negotiates Accept %s", (accept, expected) => {
+  NodeAssert.equal(negotiate(accept, ["text/html", "text/markdown"]), expected);
+});

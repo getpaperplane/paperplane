@@ -142,7 +142,10 @@ vi.mock("../lib/commandMetadata", () => ({
   }),
 }));
 vi.mock("../lib/copyTextWithHaptic", () => ({ copyTextWithHaptic: vi.fn() }));
-vi.mock("../lib/modelOptions", () => ({ isModelSelectionUnavailable: () => false }));
+vi.mock(import("../lib/modelOptions"), async (importOriginal) => ({
+  ...(await importOriginal()),
+  isModelSelectionUnavailable: () => false,
+}));
 vi.mock("./use-remote-environment-registry", () => ({ setPendingConnectionError: vi.fn() }));
 
 import { useThreadComposerState } from "./use-thread-composer-state";

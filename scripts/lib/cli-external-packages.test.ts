@@ -83,7 +83,8 @@ describe("shouldBundleCliDependency", () => {
       "@earendil-works/pi-coding-agent",
       "@earendil-works/pi-coding-agent/rpc-entry",
       "@earendil-works/pi-ai",
-      "@earendil-works/chord/context",
+      "@earendil-works/pi-codemode",
+      "@earendil-works/pi-mcp",
       "jiti",
       "typebox/compile",
     ]) {
@@ -163,7 +164,6 @@ describe("selectCliRuntimeExternalDependencies", () => {
         "@napi-rs/keyring",
         "cbor-x",
         "cross-spawn",
-        "diff",
         "jose",
         "node-pty",
         "playwright-core",

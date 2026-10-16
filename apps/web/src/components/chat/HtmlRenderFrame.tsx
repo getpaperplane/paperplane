@@ -97,7 +97,6 @@ export function HtmlRenderFrame(props: {
   useEffect(() => {
     if (src !== null || minting.current) return;
     if (cacheFailed) {
-      // oxlint-disable-next-line react/set-state-in-effect -- Mirrors the cached URL's failure.
       setFailed(true);
       return;
     }

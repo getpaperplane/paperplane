@@ -72,12 +72,10 @@ describe("update-manifest block map metadata", () => {
     assert.throws(() => parse("files:\n    blockMapSize: 196282\n"), /without a file entry/);
   });
 
-  for (const value of ["-1", "1.5", "invalid"]) {
-    it(`rejects an invalid block map size: ${value}`, () => {
-      assert.throws(
-        () => parse(rawManifest.replace("blockMapSize: 196282", `blockMapSize: ${value}`)),
-        /unsupported line/,
-      );
-    });
-  }
+  it.each(["-1", "1.5", "invalid"])("rejects an invalid block map size: %s", (value) => {
+    assert.throws(
+      () => parse(rawManifest.replace("blockMapSize: 196282", `blockMapSize: ${value}`)),
+      /unsupported line/,
+    );
+  });
 });
