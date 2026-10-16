@@ -1093,7 +1093,10 @@ export const subscribeOrchestrationV2Shell = Effect.fn("ws.orchestrationV2.subsc
             if ("aggregateKind" in stored) {
               return yield* projectItem(stored);
             }
-            const shell = yield* threadManagement.getThreadShell(stored.event.threadId);
+            const shell = yield* threadManagement.getThreadShell(
+              stored.event.threadId,
+              stored.sequence,
+            );
             return shellStreamItemFromThreadShell({ stored, shell });
           }),
         { concurrency: 8 },
@@ -1865,7 +1868,7 @@ const layerCoreWsRpc = (
                 coalesceStoredThreadEvents(Array.from(events)),
                 (stored) =>
                   threadManagement
-                    .getThreadShell(stored.event.threadId)
+                    .getThreadShell(stored.event.threadId, stored.sequence)
                     .pipe(
                       Effect.map((shell) =>
                         archivedShellStreamItemFromThreadShell({ stored, shell }),
