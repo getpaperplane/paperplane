@@ -1,3 +1,4 @@
+// @effect-diagnostics nodeBuiltinImport:off globalConsole:off preferSchemaOverJson:off - Standalone benchmark owns pacing, temp files, raw application-JSON size measurements and machine-readable output.
 /**
  * File-backed WAL contention workload using the real event store/projections.
  * Run from the repo root: node apps/server/scripts/perf/read-contention.ts
@@ -13,6 +14,11 @@
  * subscribers | ingest p50/p99 ms | loop p99 ms | writer wait ms | writer tx
  *           1 |     2.861 / 8.899 |       4.694 |          1.926 |       600
  *           3 |     2.858 / 8.826 |       5.374 |          1.991 |      1000
+ * After reader routing/shared shells, same workload (median of 3 rounds):
+ *           1 |     0.396 / 4.891 |       2.053 |          0.794 |       200
+ *           3 |     0.371 / 4.574 |       2.078 |          0.935 |       200
+ * Each fixed round uses 400 reader transactions (200 snapshots, 200 shared
+ * shells); the warmup timeline encodes to 931,426 bytes.
  * Main-thread reads usually finish without yielding in this workload, so their
  * blocking appears in latency/loop delay rather than semaphore wait. No busy
  * external writer or disk fault is simulated. Absolute timings are advisory.
@@ -154,13 +160,16 @@ async function run(subscribers: number, round: number) {
             ),
           );
         }
-        yield* projections.getThreadSnapshotWindow(threadId, { rowLimit: 75 });
+        const snapshot = yield* projections.getThreadSnapshotWindow(threadId, { rowLimit: 75 });
+        const snapshotTimelineJsonBytes = Buffer.byteLength(
+          JSON.stringify(snapshot.projection.visibleTurnItems.map((row) => row.item)),
+        );
         yield* projections.getThreadShell(threadId);
         // Start the worker even on baseline, so startup is excluded from both.
         yield* sql`SELECT 1`.pipe(NodeSqliteClient.readOnly);
         const mode = yield* sql<{ journal_mode: string }>`PRAGMA journal_mode`;
         if (mode[0]?.journal_mode !== "wal") throw new Error("Expected file-backed WAL");
-        return { ingest, projections, store };
+        return { ingest, projections, store, snapshotTimelineJsonBytes };
       }),
     );
     // An optional sequence is ignored by baseline; the fixed service shares it.
@@ -220,7 +229,7 @@ async function run(subscribers: number, round: number) {
           await execute(context.store.publishCommitted([stored]));
           await execute(
             Effect.all(
-              [...Array.from({ length: subscribers }, () => readShell(threadId, stored.sequence))],
+              Array.from({ length: subscribers }, () => readShell(threadId, stored.sequence)),
               { concurrency: "unbounded", discard: true },
             ),
           );
@@ -236,6 +245,7 @@ async function run(subscribers: number, round: number) {
       round,
       events,
       seedRows: rows,
+      snapshotTimelineJsonBytes: context.snapshotTimelineJsonBytes,
       periodMs,
       elapsedMs: Number((performance.now() - start).toFixed(3)),
       ingestP50Ms: percentile(latencies, 0.5),

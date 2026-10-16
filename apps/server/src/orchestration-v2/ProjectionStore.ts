@@ -70,6 +70,11 @@ import {
   isOrchestrationV2SupersededInterrupt,
 } from "@rove-code/shared/orchestrationV2Timeline";
 import { derivePendingBackgroundWork } from "@rove-code/shared/orchestrationV2PendingBackgroundWork";
+import * as NodeSqliteClient from "@rove-code/shared/nodeSqliteClient";
+import * as Cache from "effect/Cache";
+import * as Data from "effect/Data";
+import * as Duration from "effect/Duration";
+import * as Exit from "effect/Exit";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -427,6 +432,8 @@ export interface ProjectionStoreV2Shape {
   >;
   readonly getThreadShell: (
     threadId: ThreadId,
+    /** A committed event sequence opts live subscribers into a shared read. */
+    sequence?: number,
   ) => Effect.Effect<OrchestrationV2ThreadShell | null, ProjectionStoreV2Error>;
   readonly getThread: (
     threadId: ThreadId,
@@ -3684,6 +3691,7 @@ export const layer: Layer.Layer<ProjectionStoreV2, never, SqlClient.SqlClient> =
         }
         return candidates;
       },
+      NodeSqliteClient.readOnly,
       Effect.mapError((cause) => new ProjectionStoreSetupError({ cause })),
     );
 
@@ -5292,6 +5300,7 @@ export const layer: Layer.Layer<ProjectionStoreV2, never, SqlClient.SqlClient> =
           }),
         )
         .pipe(
+          NodeSqliteClient.readOnly,
           Effect.mapError((cause) =>
             isProjectionStoreThreadNotFoundError(cause) || isProjectionStoreReadError(cause)
               ? cause
@@ -5752,7 +5761,10 @@ export const layer: Layer.Layer<ProjectionStoreV2, never, SqlClient.SqlClient> =
             })),
           ),
         );
-      }).pipe(Effect.mapError((cause) => new ProjectionStoreSetupError({ cause })));
+      }).pipe(
+        NodeSqliteClient.readOnly,
+        Effect.mapError((cause) => new ProjectionStoreSetupError({ cause })),
+      );
 
     const getThreadWorktreePaths: ProjectionStoreV2Shape["getThreadWorktreePaths"] = () =>
       sql<{ readonly thread_id: string; readonly worktree_path: string }>`
@@ -6032,7 +6044,7 @@ export const layer: Layer.Layer<ProjectionStoreV2, never, SqlClient.SqlClient> =
     // Per-thread shell for the live shell streams: reads only the target thread
     // plus its fork-source chain instead of materializing every thread. Returns
     // null when the thread is deleted or unknown.
-    const getThreadShell: ProjectionStoreV2Shape["getThreadShell"] = (threadId) =>
+    const readThreadShell = (threadId: ThreadId) =>
       sql
         .withTransaction(
           Effect.gen(function* () {
@@ -6097,7 +6109,31 @@ export const layer: Layer.Layer<ProjectionStoreV2, never, SqlClient.SqlClient> =
             });
           }),
         )
-        .pipe(Effect.mapError((cause) => new ProjectionStoreReadError({ threadId, cause })));
+        .pipe(
+          NodeSqliteClient.readOnly,
+          Effect.mapError((cause) => new ProjectionStoreReadError({ threadId, cause })),
+        );
+
+    // Publication happens after commit. A fresh reader transaction establishes
+    // its WAL snapshot at the first SELECT, so it sees that sequence or newer,
+    // not a lagging replica. Share only reads keyed by a committed event, never
+    // ordinary control reads or reads inside a caller's transaction (which must
+    // observe its own writes/snapshot). Both active and archived streams use it.
+    class ShellReadKey extends Data.Class<{
+      readonly threadId: ThreadId;
+      readonly sequence: number;
+    }> {}
+    const shellReads = yield* Cache.makeWith((key: ShellReadKey) => readThreadShell(key.threadId), {
+      capacity: 256,
+      timeToLive: (exit) => (Exit.isSuccess(exit) ? Duration.seconds(10) : Duration.zero),
+    });
+    const getThreadShell: ProjectionStoreV2Shape["getThreadShell"] = (threadId, sequence) =>
+      Effect.withFiber((fiber) =>
+        sequence === undefined ||
+        Context.getOrUndefined(fiber.context, sql.transactionService) !== undefined
+          ? readThreadShell(threadId)
+          : Cache.get(shellReads, new ShellReadKey({ threadId, sequence })),
+      );
 
     return {
       apply,

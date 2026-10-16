@@ -26,6 +26,7 @@ import {
   ThreadId,
   type OrchestrationV2DomainEvent,
 } from "@rove-code/contracts";
+import * as NodeSqliteClient from "@rove-code/shared/nodeSqliteClient";
 import * as Context from "effect/Context";
 import * as SqlClient from "effect/sql/SqlClient";
 import * as SqlSchema from "effect/sql/SqlSchema";
@@ -603,6 +604,7 @@ const makeEventStore = Effect.gen(function* () {
           onlyAgentEvents: true,
           limit: pageLimit,
         }).pipe(
+          NodeSqliteClient.readOnly,
           Effect.mapError(toPersistenceSqlError("OrchestrationEventStore.readAgentEvents:query")),
           Effect.map((rows) => {
             const last = rows.at(-1);
