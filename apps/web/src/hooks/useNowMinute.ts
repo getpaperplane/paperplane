@@ -1,7 +1,9 @@
 import { useSyncExternalStore } from "react";
 
 /** Minute-quantized UI clock ("YYYY-MM-DDTHH:MM"). One module-level timer
-    feeds every consumer through useSyncExternalStore. */
+    feeds every consumer through useSyncExternalStore, and pauses while the
+    document is hidden. Call it from the leaf that shows the time, not from a
+    large parent, so a tick re-renders only the label. */
 
 function currentMinute(): string {
   return new Date().toISOString().slice(0, 16);
@@ -34,25 +36,40 @@ function startTimer(): void {
   );
 }
 
+function stopTimer(): void {
+  if (timerId === null) return;
+  if (timerIsInterval) window.clearInterval(timerId);
+  else window.clearTimeout(timerId);
+  timerId = null;
+}
+
+function onVisibilityChange(): void {
+  stopTimer();
+  if (document.visibilityState === "hidden") return;
+  tick();
+  startTimer();
+}
+
 function subscribe(listener: () => void): () => void {
   if (listeners.size === 0) {
-    startTimer();
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    if (document.visibilityState !== "hidden") startTimer();
   }
   listeners.add(listener);
   return () => {
     listeners.delete(listener);
-    if (listeners.size === 0 && timerId !== null) {
-      if (timerIsInterval) window.clearInterval(timerId);
-      else window.clearTimeout(timerId);
-      timerId = null;
+    if (listeners.size === 0) {
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+      stopTimer();
     }
   };
 }
 
 function getSnapshot(): string {
   // With no timer running (no subscribers yet — e.g. the first render after
-  // a full unmount), the stored minute may be stale; re-read it so a fresh
-  // mount renders the current minute instead of waiting for the first tick.
+  // a full unmount — or a hidden document), the stored minute may be stale;
+  // re-read it so a fresh mount renders the current minute instead of waiting
+  // for the first tick.
   // While the timer runs the cached value is returned untouched, as
   // useSyncExternalStore requires between change notifications.
   if (timerId === null) {

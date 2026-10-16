@@ -22,6 +22,7 @@ import type {
 import { useNavigate } from "@tanstack/react-router";
 import * as Option from "effect/Option";
 import { type MouseEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useRelativeTimeTick } from "../hooks/useRelativeTimeTick";
 import { flushSync } from "react-dom";
 import {
   CheckIcon,
@@ -333,19 +334,18 @@ function GitActionElapsedTime({
   startedAtMs: number | null;
   className?: string;
 }) {
-  const [nowMs, setNowMs] = useState(() => Date.now());
+  if (startedAtMs === null) return null;
+  return <TickingGitActionElapsedTime startedAtMs={startedAtMs} className={className} />;
+}
 
-  useEffect(() => {
-    if (startedAtMs === null) {
-      return;
-    }
-
-    const intervalId = window.setInterval(() => {
-      setNowMs(Date.now());
-    }, 1_000);
-    return () => window.clearInterval(intervalId);
-  }, [startedAtMs]);
-
+function TickingGitActionElapsedTime({
+  startedAtMs,
+  className,
+}: {
+  startedAtMs: number;
+  className?: string | undefined;
+}) {
+  const nowMs = useRelativeTimeTick(1_000);
   const elapsed = formatGitActionElapsed(startedAtMs, nowMs);
   if (!elapsed) {
     return null;

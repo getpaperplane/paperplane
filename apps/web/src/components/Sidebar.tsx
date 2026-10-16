@@ -151,7 +151,8 @@ import { startNewThreadFromContext } from "../lib/chatThreadActions";
 import { useClientSettings } from "../hooks/useSettings";
 import { useCopyToClipboard } from "../hooks/useCopyToClipboard";
 import { useLocalStorage } from "../hooks/useLocalStorage";
-import { useNowMinute } from "../hooks/useNowMinute";
+import { useRelativeTimeTick } from "../hooks/useRelativeTimeTick";
+import { LiveMinuteText } from "./LiveMinuteText";
 import {
   useEnvironmentIdentities,
   useConnectedEnvironmentIds,
@@ -334,6 +335,18 @@ function checkThreadOperations(
   return false;
 }
 
+// One function per wake time keeps memoized rows' props stable across renders.
+const snoozeWakeLabelTexts = new Map<string, () => string>();
+function snoozeWakeLabelTextFor(snoozedUntil: string): () => string {
+  let text = snoozeWakeLabelTexts.get(snoozedUntil);
+  if (!text) {
+    if (snoozeWakeLabelTexts.size >= 256) snoozeWakeLabelTexts.clear();
+    text = () => snoozeWakeLabel(snoozedUntil, { now: new Date().toISOString() });
+    snoozeWakeLabelTexts.set(snoozedUntil, text);
+  }
+  return text;
+}
+
 function compactSidebarTimeLabel(label: string): string {
   if (label === "just now") return "now";
   return label.endsWith(" ago") ? label.slice(0, -4) : label;
@@ -370,16 +383,18 @@ function JumpHintBadge(props: { label: string }) {
 }
 
 // Self-ticking so only this span re-renders each second, not the whole row.
+// Every duration shares one visibility-paused clock.
 function WorkingDuration(props: { startedAt: string | null }) {
   const startedMs = props.startedAt !== null ? Date.parse(props.startedAt) : Number.NaN;
-  const [, setTick] = useState(0);
-  useEffect(() => {
-    if (Number.isNaN(startedMs)) return;
-    const id = window.setInterval(() => setTick((tick) => tick + 1), 1_000);
-    return () => window.clearInterval(id);
-  }, [startedMs]);
   if (Number.isNaN(startedMs)) return null;
-  return <span className="tabular-nums">{formatWorkingDurationLabel(Date.now() - startedMs)}</span>;
+  return <TickingWorkingDuration startedMs={startedMs} />;
+}
+
+function TickingWorkingDuration(props: { startedMs: number }) {
+  const nowMs = useRelativeTimeTick(1_000);
+  return (
+    <span className="tabular-nums">{formatWorkingDurationLabel(nowMs - props.startedMs)}</span>
+  );
 }
 
 function terminalProcessLabel(count: number): string {
@@ -1142,7 +1157,8 @@ const SidebarThreadRow = memo(function SidebarThreadRow(props: {
   // The action this row will take when the sweep is released.
   sweepAction: SidebarSweepAction | null;
   // Compact wake countdown ("2h") for rows in the snoozed shelf.
-  snoozeWakeLabelText: string | null;
+  /** Reads the clock, so the row renders it in a ticking leaf. */
+  snoozeWakeLabelText: (() => string) | null;
   // When a snooze ended (timer or early wake); drives the Woke pill until
   // the user visits the thread.
   wokeAt: string | null;
@@ -1867,7 +1883,7 @@ const SidebarThreadRow = memo(function SidebarThreadRow(props: {
                     // Snoozed rows show when they come BACK, not when they were
                     // last touched — the return ticket is the row's whole story.
                     <span className="text-xs text-info-foreground tabular-nums">
-                      {props.snoozeWakeLabelText}
+                      <LiveMinuteText text={props.snoozeWakeLabelText} />
                     </span>
                   ) : isWoke ? (
                     // A wake can land straight in the settled tail (e.g. PR
@@ -1890,9 +1906,13 @@ const SidebarThreadRow = memo(function SidebarThreadRow(props: {
                     </Tooltip>
                   ) : (
                     <span className="text-xs">
-                      {variantAction === "unsettle"
-                        ? settledTimeLabel(thread)
-                        : threadTimeLabel(thread)}
+                      <LiveMinuteText
+                        text={() =>
+                          variantAction === "unsettle"
+                            ? settledTimeLabel(thread)
+                            : threadTimeLabel(thread)
+                        }
+                      />
                     </span>
                   )}
                 </span>
@@ -2092,7 +2112,7 @@ const SidebarThreadRow = memo(function SidebarThreadRow(props: {
                         </span>
                       )
                     ) : (
-                      threadTimeLabel(thread)
+                      <LiveMinuteText text={() => threadTimeLabel(thread)} />
                     )}
                   </span>
                   {props.settlementSupported || showSnoozeButton || hasUnsentDraft ? (
@@ -2393,7 +2413,7 @@ const SidebarSearchResultRow = memo(function SidebarSearchResultRow(props: {
                 />
               </span>
               <span className="w-8 shrink-0 text-right text-xs text-muted-foreground/55 tabular-nums">
-                {threadTimeLabel(thread)}
+                <LiveMinuteText text={() => threadTimeLabel(thread)} />
               </span>
             </span>
             {props.searchMatch ? (
@@ -2585,7 +2605,6 @@ export default function Sidebar() {
     [projectGroups],
   );
 
-  const nowMinute = useNowMinute();
   const changeRequestSnapshotByKey = useAtomValue(threadChangeRequestSnapshotsAtom);
   // Snooze wake times are second-precise, so classifying with the quantized
   // minute would hold a woken thread on the shelf for up to a minute. The
@@ -2918,7 +2937,6 @@ export default function Sidebar() {
       snoozeNow: preciseNow,
     };
   }, [
-    nowMinute,
     optimisticDrop,
     scopedProjectKeys,
     serverConfigs,
@@ -5312,9 +5330,7 @@ export default function Sidebar() {
                             }
                             snoozeWakeLabelText={
                               section === "snoozed" && thread.snoozedUntil != null
-                                ? snoozeWakeLabel(thread.snoozedUntil, {
-                                    now: new Date().toISOString(),
-                                  })
+                                ? snoozeWakeLabelTextFor(thread.snoozedUntil)
                                 : null
                             }
                             // All sections: a woken thread can classify straight
