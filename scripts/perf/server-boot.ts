@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// @effect-diagnostics nodeBuiltinImport:off globalTimers:off globalConsole:off - Standalone benchmark that spawns and times its own server process.
 // Fresh-state source or bundled server benchmark. Readiness deliberately uses TCP:
 // requesting / can wait indefinitely when the source entry has no web assets.
 import * as NodeChildProcess from "node:child_process";

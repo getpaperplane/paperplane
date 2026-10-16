@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// @effect-diagnostics nodeBuiltinImport:off globalTimers:off globalDate:off globalConsole:off - Standalone benchmark that samples its own server process.
 // Run from the repository root: node scripts/perf/server-idle.ts --seconds 120
 // Uses a new empty home, TCP readiness (HTTP readiness can hang), and only its own child PID.
 import { spawn, execFileSync } from "node:child_process";

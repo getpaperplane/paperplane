@@ -6,7 +6,7 @@ type ClockSubscription = {
   notify: () => void;
 };
 
-let timerId: number | null = null;
+let timerId: ReturnType<typeof setInterval> | null = null;
 const subscriptions = new Set<ClockSubscription>();
 
 function tick(force = false) {
@@ -20,15 +20,20 @@ function tick(force = false) {
 }
 
 function syncTimer() {
-  if (timerId !== null) window.clearInterval(timerId);
+  if (timerId !== null) clearInterval(timerId);
   timerId = null;
-  if (subscriptions.size === 0 || document.visibilityState === "hidden") return;
+  if (subscriptions.size === 0 || isDocumentHidden()) return;
   const intervalMs = Math.min(...Array.from(subscriptions, (entry) => entry.intervalMs));
-  timerId = window.setInterval(() => tick(), intervalMs);
+  timerId = setInterval(() => tick(), intervalMs);
+}
+
+// Non-DOM renderers (tests, SSR) have no document; treat them as visible.
+function isDocumentHidden() {
+  return typeof document !== "undefined" && document.visibilityState === "hidden";
 }
 
 function onVisibilityChange() {
-  if (document.visibilityState !== "hidden") tick(true);
+  if (!isDocumentHidden()) tick(true);
   syncTimer();
 }
 
@@ -47,14 +52,14 @@ export function subscribeRelativeTimeTick(
     notify: () => onTick(subscription.nowMs),
   };
   subscriptions.add(subscription);
-  if (subscriptions.size === 1) {
+  if (subscriptions.size === 1 && typeof document !== "undefined") {
     document.addEventListener("visibilitychange", onVisibilityChange);
   }
   syncTimer();
   return () => {
     if (!subscriptions.delete(subscription)) return;
     syncTimer();
-    if (subscriptions.size === 0) {
+    if (subscriptions.size === 0 && typeof document !== "undefined") {
       document.removeEventListener("visibilitychange", onVisibilityChange);
     }
   };

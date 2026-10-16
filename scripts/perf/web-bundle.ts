@@ -1,3 +1,4 @@
+// @effect-diagnostics nodeBuiltinImport:off globalConsole:off - Standalone report over a built web bundle.
 /**
  * Startup bundle report for apps/web.
  *
