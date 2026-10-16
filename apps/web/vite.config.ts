@@ -303,6 +303,26 @@ export default defineConfig(({ command, mode }) => {
       emptyOutDir: true,
       manifest: true,
       sourcemap,
+      rolldownOptions: {
+        output: {
+          codeSplitting: {
+            groups: [
+              {
+                // Each Lucide icon is its own module, and an icon shared by a
+                // different set of lazy chunks would otherwise become its own
+                // sub-1 KB chunk — dozens of extra requests on the chat route,
+                // each one a protocol round trip in Electron. Group icons by the
+                // chunks that use them and fold the small groups together.
+                // Runtime-chosen project icons (`?project-icon`) stay per-icon.
+                name: "icons",
+                test: /lucide-react[\\/]dist[\\/]esm[\\/]icons[\\/][^?]+\.js$/,
+                entriesAware: true,
+                entriesAwareMergeThreshold: 16 * 1024,
+              },
+            ],
+          },
+        },
+      },
     },
     test: {
       projects: [defineProject(unitTestProject)],
