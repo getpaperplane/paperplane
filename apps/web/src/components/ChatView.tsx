@@ -349,7 +349,7 @@ import {
   useClientSettingsHydrated,
   useEnvironmentSettings,
 } from "../hooks/useSettings";
-import { useNowMinute } from "../hooks/useNowMinute";
+import { useClockReached } from "../hooks/useClockReached";
 import { usePanelAnimationSettings, usePanelPresence } from "../panelAnimations";
 import { useNewThreadHandler } from "../hooks/useHandleNewThread";
 import { useRemoveClonedProject } from "../hooks/useRemoveClonedProject";
@@ -500,13 +500,14 @@ import {
 import { useLinkedThreadPullRequest } from "./ThreadStatusIndicators";
 import type { ComposerBannerStackItem } from "./chat/ComposerBannerStack";
 import { ThreadStatusLine } from "./chat/ThreadStatusLine";
+import { LiveMinuteText } from "./LiveMinuteText";
 import { formatRelativeTimeLabel, formatRelativeTimeUntilLabel } from "../timestampFormat";
 import { ComposerSurface } from "./chat/ComposerSurface";
 import { resolveThreadSyncPhase } from "../threadSync";
 import {
   hasAvailableCompactionProvider,
   hasDismissedResumeCompaction,
-  shouldOfferResumeCompaction,
+  resumeCompactionDueAtMs,
 } from "./chat/ContextWindowMeter.logic";
 import {
   deriveLatestContextWindowSnapshot,
@@ -7174,7 +7175,6 @@ export default function ChatView(props: ChatViewProps) {
   const composerHasDraftContent = useComposerDraftStore((store) =>
     composerDraftHasUserContent(store.getComposerDraft(composerDraftTarget)),
   );
-  const nowMinute = useNowMinute();
   const activeBranchMismatchKey = branchMismatchKey(
     activeThread?.id ?? null,
     localCheckoutBranchMismatch,
@@ -7521,16 +7521,19 @@ export default function ChatView(props: ChatViewProps) {
   // marks the wake as seen (same acknowledgment as the pill); sending a
   // message clears it as a side effect of the send path.
   // Memoized: it is the timeline's list footer, and a new element re-renders that footer.
-  // nowMinute keeps the relative time fresh.
+  // Relative times tick in their own leaf.
   const threadStatusLine = useMemo(() => {
-    void nowMinute;
+    const snoozedUntil = activeThreadShell?.snoozedUntil;
+    const settledAt = activeThreadShell?.settledAt;
     return activeThreadSnoozed ? (
       <ThreadStatusLine
         icon={<AlarmClockIcon />}
         label={
-          activeThreadShell?.snoozedUntil
-            ? `Snoozed, ${formatRelativeTimeUntilLabel(activeThreadShell.snoozedUntil)}`
-            : "Snoozed"
+          snoozedUntil ? (
+            <LiveMinuteText text={() => `Snoozed, ${formatRelativeTimeUntilLabel(snoozedUntil)}`} />
+          ) : (
+            "Snoozed"
+          )
         }
         actionLabel={isUnsnoozing ? "Waking..." : "Wake now"}
         actionDisabled={!canOperateThread || isUnsnoozing}
@@ -7540,9 +7543,11 @@ export default function ChatView(props: ChatViewProps) {
       <ThreadStatusLine
         icon={<CheckCircle2Icon />}
         label={
-          activeThreadShell?.settledAt
-            ? `Settled ${formatRelativeTimeLabel(activeThreadShell.settledAt)}`
-            : "Settled"
+          settledAt ? (
+            <LiveMinuteText text={() => `Settled ${formatRelativeTimeLabel(settledAt)}`} />
+          ) : (
+            "Settled"
+          )
         }
         actionLabel={isUnsettling ? "Un-settling..." : "Un-settle"}
         actionDisabled={!canOperateThread || isUnsettling}
@@ -7568,7 +7573,6 @@ export default function ChatView(props: ChatViewProps) {
     handleUnsnoozeActiveThreadStable,
     isUnsettling,
     isUnsnoozing,
-    nowMinute,
   ]);
   const activeThreadHasCompactableConversation = serverVisibleTurnItems.some(
     ({ item }) =>
@@ -7615,6 +7619,17 @@ export default function ChatView(props: ChatViewProps) {
           ? "Compaction is unavailable for this provider"
           : "Compacting is unavailable right now"
     : null;
+  const resumeCompactionDue = useClockReached(
+    activeContextWindow
+      ? resumeCompactionDueAtMs({
+          provider: selectedProvider,
+          usedTokens: activeContextWindow.usedTokens,
+          updatedAt: activeContextWindow.updatedAt,
+          // Only the live report carries a TTL, and only when it is the window's source.
+          promptCacheTtlMs: activeThreadLiveTokenUsage?.promptCacheTtlMs,
+        })
+      : null,
+  );
   // Tokens a stale Claude session would re-read on its next turn. While set,
   // the composer shows a Compact chip and Enter compacts first; turning the
   // chip off sends the next message with full history. Held queues and
@@ -7627,14 +7642,7 @@ export default function ChatView(props: ChatViewProps) {
     !compactDisabled &&
     !hasHeldQueuedRuns &&
     multipleModelSelections === null &&
-    shouldOfferResumeCompaction({
-      provider: selectedProvider,
-      usedTokens: activeContextWindow.usedTokens,
-      updatedAt: activeContextWindow.updatedAt,
-      // Only the live report carries a TTL, and only when it is the window's source.
-      promptCacheTtlMs: activeThreadLiveTokenUsage?.promptCacheTtlMs,
-      now: `${nowMinute}:00.000Z`,
-    })
+    resumeCompactionDue
       ? activeContextWindow.usedTokens
       : null;
   // Threads whose Compact chip is turned off. A send that starts its turn
