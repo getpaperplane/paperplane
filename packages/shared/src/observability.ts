@@ -484,12 +484,17 @@ export const makeTraceSink = Effect.fn("makeTraceSink")(function* (options: Trac
 
   yield* Effect.addFinalizer(() => flush.pipe(Effect.ignore));
   yield* Effect.forkScoped(
-    // Flush when push fills a batch or the batch window passes.
-    Queue.take(flushRequests).pipe(
-      Effect.timeoutOption(`${options.batchWindowMs} millis`),
-      Effect.andThen(flush),
-      Effect.forever,
-    ),
+    Effect.gen(function* () {
+      // An empty trace buffer has no deadline. The first push arms the batch
+      // window; a full batch wakes it early, without a permanent idle timer.
+      yield* Queue.take(flushRequests);
+      if (buffer.length > 0 && buffer.length < FLUSH_BUFFER_THRESHOLD) {
+        yield* Queue.take(flushRequests).pipe(
+          Effect.timeoutOption(`${options.batchWindowMs} millis`),
+        );
+      }
+      yield* flush;
+    }).pipe(Effect.forever),
   );
 
   return {
@@ -505,7 +510,7 @@ export const makeTraceSink = Effect.fn("makeTraceSink")(function* (options: Trac
         }
         buffer.push({ text, bytes });
         bufferBytes += bytes;
-        if (buffer.length >= FLUSH_BUFFER_THRESHOLD) {
+        if (buffer.length === 1 || buffer.length >= FLUSH_BUFFER_THRESHOLD) {
           Queue.offerUnsafe(flushRequests, undefined);
         }
       } catch {

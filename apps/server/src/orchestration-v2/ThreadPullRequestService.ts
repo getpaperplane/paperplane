@@ -19,7 +19,7 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
-import * as Schedule from "effect/Schedule";
+import { makePeriodicWork } from "../background/periodicWork.ts";
 import type * as Scope from "effect/Scope";
 import * as Stream from "effect/Stream";
 
@@ -99,6 +99,7 @@ interface RefreshRequest {
 }
 
 export const make = Effect.gen(function* () {
+  const periodicWork = yield* makePeriodicWork;
   const orchestrator = yield* Orchestrator.OrchestratorV2;
   const projectStore = yield* ProjectStore.ProjectStoreV2;
   const git = yield* GitManager.GitManager;
@@ -402,10 +403,13 @@ export const make = Effect.gen(function* () {
       Effect.gen(function* () {
         yield* worker.enqueue({ threadId: null, refresh: false, backfill: true });
         yield* worker.drain;
-        yield* Effect.gen(function* () {
-          yield* worker.enqueue({ threadId: null, refresh: false });
-          yield* worker.drain;
-        }).pipe(Effect.repeat(Schedule.spaced("1 minute")), Effect.delay("1 minute"));
+        return yield* periodicWork(
+          Effect.gen(function* () {
+            yield* worker.enqueue({ threadId: null, refresh: false });
+            yield* worker.drain;
+          }),
+          { runImmediately: false },
+        );
       }).pipe(Effect.asVoid),
     );
   });

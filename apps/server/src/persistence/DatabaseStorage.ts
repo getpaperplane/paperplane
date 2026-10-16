@@ -1,4 +1,5 @@
 import type { DatabaseStorageStatus } from "@rove-code/contracts";
+import { makePeriodicWork } from "../background/periodicWork.ts";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
@@ -29,11 +30,13 @@ export class DatabaseStorage extends Context.Service<
 
 /**
  * Deletes superseded history every few hours and hands freed pages back to
- * the filesystem every minute. Deleted events are always superseded by a
+ * the filesystem every minute with foreground demand, every fifteen minutes otherwise.
+ * Deleted events are always superseded by a
  * retained event with a higher sequence, so a client replaying from an older
  * cursor still reaches the same state; no replay boundary is published.
  */
 const make = Effect.gen(function* () {
+  const periodicWork = yield* makePeriodicWork;
   const sql = yield* SqlClient.SqlClient;
   const maintenance = yield* ProjectionMaintenance.ProjectionMaintenanceV2;
   const config = yield* ServerConfig.ServerConfig;
@@ -111,7 +114,7 @@ const make = Effect.gen(function* () {
     publishStatus.pipe(
       Effect.andThen(Effect.sleep("1 minute")),
       Effect.andThen(
-        reclaim.pipe(Effect.andThen(publishStatus), Effect.repeat(Schedule.spaced("1 minute"))),
+        periodicWork(reclaim.pipe(Effect.andThen(publishStatus)), { runImmediately: false }),
       ),
     ),
   );

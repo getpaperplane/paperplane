@@ -14,6 +14,8 @@ import * as PubSub from "effect/PubSub";
 import * as Ref from "effect/Ref";
 import * as Stream from "effect/Stream";
 
+import * as TestClock from "effect/testing/TestClock";
+import { DEFAULT_SERVER_SETTINGS } from "@rove-code/contracts";
 import * as ServerSettings from "../serverSettings.ts";
 import * as BackgroundPolicy from "./BackgroundPolicy.ts";
 import * as HostPowerMonitor from "./HostPowerMonitor.ts";
@@ -78,6 +80,31 @@ function layerFor(
 }
 
 describe("BackgroundPolicy", () => {
+  it.effect("does no periodic settings reads or publications with no client leases", () =>
+    Effect.gen(function* () {
+      const reads = yield* Ref.make(0);
+      const layer = BackgroundPolicy.layer.pipe(
+        Layer.provide(
+          Layer.mergeAll(
+            Layer.effect(HostPowerMonitor.HostPowerMonitor, HostPowerMonitor.make()),
+            Layer.mock(ServerSettings.ServerSettingsService)({
+              getSettings: Ref.update(reads, (count) => count + 1).pipe(
+                Effect.as(DEFAULT_SERVER_SETTINGS),
+              ),
+              streamChanges: Stream.empty,
+            }),
+          ),
+        ),
+      );
+      yield* Effect.gen(function* () {
+        const policy = yield* BackgroundPolicy.BackgroundPolicy;
+        yield* policy.snapshot;
+        assert.equal(yield* Ref.get(reads), 1);
+        yield* TestClock.adjust("1 hour");
+        assert.equal(yield* Ref.get(reads), 1);
+      }).pipe(Effect.provide(layer));
+    }),
+  );
   it.effect("records foreground scoped client demand", () =>
     Effect.gen(function* () {
       const policy = yield* BackgroundPolicy.BackgroundPolicy;

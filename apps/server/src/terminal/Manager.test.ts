@@ -1099,10 +1099,10 @@ it.layer(
     }),
   );
 
-  it.effect("does not invoke subprocess polling until a terminal session is running", () =>
+  it.effect("does not invoke subprocess polling while no terminal session is running", () =>
     Effect.gen(function* () {
       let checks = 0;
-      const { manager } = yield* createManager(5, {
+      yield* createManager(5, {
         subprocessInspector: () => {
           checks += 1;
           return Effect.succeed({
@@ -1114,15 +1114,9 @@ it.layer(
         subprocessPollIntervalMs: 20,
       });
 
-      yield* Effect.sleep("80 millis");
+      yield* TestClock.adjust("1 hour");
       assert.equal(checks, 0);
-
-      yield* manager.open(openInput());
-      yield* waitFor(
-        Effect.sync(() => checks > 0),
-        "1200 millis",
-      );
-    }),
+    }).pipe(Effect.provide(TestClock.layer())),
   );
 
   it.effect("derives subprocess activity for every terminal from one shared process snapshot", () =>

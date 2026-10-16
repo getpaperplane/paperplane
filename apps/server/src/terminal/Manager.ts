@@ -59,6 +59,7 @@ import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
 import * as Path from "effect/Path";
+import * as Queue from "effect/Queue";
 import * as Schema from "effect/Schema";
 import * as Scope from "effect/Scope";
 import * as SynchronizedRef from "effect/SynchronizedRef";
@@ -1591,10 +1592,14 @@ export const makeWithOptions = Effect.fn("TerminalManager.makeWithOptions")(func
   const threadLocks = yield* KeyedLock.make<string>();
   const terminalEventListeners = new Set<(event: TerminalEvent) => Effect.Effect<void>>();
   const workerScope = yield* Scope.make("sequential");
+  const subprocessChanges = yield* Queue.sliding<void>(1);
   yield* Effect.addFinalizer(() => Scope.close(workerScope, Exit.void));
 
   const publishEvent = (event: TerminalEvent) =>
     Effect.gen(function* () {
+      if (["started", "restarted", "exited", "closed"].includes(event.type)) {
+        yield* Queue.offer(subprocessChanges, undefined);
+      }
       for (const listener of terminalEventListeners) {
         yield* listener(event).pipe(Effect.ignoreCause({ log: true }));
       }
@@ -2560,12 +2565,12 @@ export const makeWithOptions = Effect.fn("TerminalManager.makeWithOptions")(func
                   subprocessPollIntervalMs,
                   subprocessSnapshotFailureCount,
                 );
-                return Effect.sleep(delayMs);
+                return Effect.raceFirst(Queue.take(subprocessChanges), Effect.sleep(delayMs));
               }),
             )
           : Effect.sync(() => {
               subprocessSnapshotFailureCount = 0;
-            }).pipe(Effect.flatMap(() => Effect.sleep(subprocessPollIntervalMs))),
+            }).pipe(Effect.andThen(Queue.take(subprocessChanges))),
       ),
     ),
   ).pipe(Effect.forkIn(workerScope));

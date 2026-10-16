@@ -33,6 +33,7 @@ import { TestClock } from "effect/testing";
 import * as GitManager from "../git/GitManager.ts";
 import * as ProjectSetupScriptRunner from "../project/ProjectSetupScriptRunner.ts";
 import * as PullRequestService from "../pullRequest/PullRequestService.ts";
+import { layerPolicy } from "../background/testkit.ts";
 import * as ServerActivation from "../serverActivation.ts";
 import * as ServerSettings from "../serverSettings.ts";
 import * as TerminalManager from "../terminal/Manager.ts";
@@ -634,6 +635,7 @@ const makeHarness = Effect.fn("makeThreadSettlementHarness")(function* (options:
   });
 
   const layerDependencies = Layer.mergeAll(
+    layerPolicy(),
     Layer.mock(ProjectStore.ProjectStoreV2)({
       listShells: () => Ref.get(snapshots).pipe(Effect.map((snapshot) => snapshot.projects)),
     }),

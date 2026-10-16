@@ -411,7 +411,11 @@ export const layer = Layer.effect(
     // full list() re-emit anyway, so a slow subscriber only ever needs the
     // latest signal — an unbounded backlog would just grow memory.
     const changesPubSub = yield* PubSub.sliding<void>(1);
-    const notifyChanged = PubSub.publish(changesPubSub, undefined).pipe(Effect.asVoid);
+    let wakeScheduler = Effect.void;
+    const notifyChanged = PubSub.publish(changesPubSub, undefined).pipe(
+      Effect.andThen(Effect.suspend(() => wakeScheduler)),
+      Effect.asVoid,
+    );
 
     const selectAllRows = () => sql<ScheduledTaskRow>`
       SELECT
@@ -977,7 +981,22 @@ export const layer = Layer.effect(
       ),
     );
 
-    yield* scheduler.register("scheduled-tasks", runDueTasks());
+    const nextDueAt = sql<{ readonly next_run_at: string | null }>`
+      SELECT MIN(next_run_at) AS next_run_at FROM scheduled_tasks
+      WHERE enabled = 1 AND next_run_at IS NOT NULL AND last_run_status <> 'running'
+    `.pipe(
+      Effect.map((rows) => {
+        const value = rows[0]?.next_run_at;
+        const millis = value == null ? NaN : Date.parse(value);
+        return Number.isFinite(millis) ? millis : null;
+      }),
+      Effect.mapError((cause) => taskError("Could not read next schedule task time.", { cause })),
+    );
+    ({ wake: wakeScheduler } = yield* scheduler.register(
+      "scheduled-tasks",
+      runDueTasks(),
+      nextDueAt,
+    ));
 
     const list: ScheduledTaskService["Service"]["list"] = () =>
       listRows().pipe(

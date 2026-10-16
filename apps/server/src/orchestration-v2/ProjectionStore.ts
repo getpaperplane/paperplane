@@ -433,6 +433,8 @@ export interface ProjectionStoreV2Shape {
   ) => Effect.Effect<OrchestrationV2AppThread, ProjectionStoreV2Error>;
   readonly getLimitRecoveryCandidates: (options: {
     readonly now: DateTime.Utc;
+    /** Include armed future recoveries so the scheduler can derive its next deadline. */
+    readonly includeFuture?: boolean;
     readonly autoResume: boolean;
     readonly snooze: boolean;
   }) => Effect.Effect<ReadonlyArray<ProjectionLimitRecoveryCandidate>, ProjectionStoreV2Error>;
@@ -3634,10 +3636,15 @@ export const layer: Layer.Layer<ProjectionStoreV2, never, SqlClient.SqlClient> =
                 json_extract(t.payload_json, '$.limitRecovery.runId') IS r.run_id
                 AND json_extract(t.payload_json, '$.limitRecovery.resetAt') IS json_extract(item.payload_json, '$.failure.resetAt')
                 AND json_extract(t.payload_json, '$.limitRecovery.autoResume') = 1
-                AND julianday(json_extract(item.payload_json, '$.failure.resetAt')) <= julianday(${DateTime.formatIso(options.now)})
                 AND (
-                  json_extract(t.payload_json, '$.snoozedUntil') IS NULL
-                  OR julianday(json_extract(t.payload_json, '$.snoozedUntil')) <= julianday(${DateTime.formatIso(options.now)})
+                  ${booleanInt(options.includeFuture ?? false)}
+                  OR (
+                    julianday(json_extract(item.payload_json, '$.failure.resetAt')) <= julianday(${DateTime.formatIso(options.now)})
+                    AND (
+                      json_extract(t.payload_json, '$.snoozedUntil') IS NULL
+                      OR julianday(json_extract(t.payload_json, '$.snoozedUntil')) <= julianday(${DateTime.formatIso(options.now)})
+                    )
+                  )
                 )
               )
               OR (
@@ -6330,9 +6337,10 @@ export const layerMemory: Layer.Layer<ProjectionStoreV2> = Layer.effect(
                 }
                 return (
                   thread.limitRecovery.autoResume &&
-                  resetMs <= nowMs &&
-                  (thread.snoozedUntil == null ||
-                    DateTime.toEpochMillis(thread.snoozedUntil) <= nowMs)
+                  (options.includeFuture ||
+                    (resetMs <= nowMs &&
+                      (thread.snoozedUntil == null ||
+                        DateTime.toEpochMillis(thread.snoozedUntil) <= nowMs)))
                 );
               })
               .toSorted((left, right) => left.id.localeCompare(right.id)),
