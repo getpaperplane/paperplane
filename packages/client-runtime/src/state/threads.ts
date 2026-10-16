@@ -44,6 +44,7 @@ import {
   mergeOlderHistoryIntoProjection,
   type ThreadHistoryMeta,
 } from "./threadHistoryMerge.ts";
+import { latestPerFrame } from "../platform/frameCoalescing.ts";
 import * as ThreadSnapshotLoader from "./threadSnapshotHttp.ts";
 import {
   EMPTY_ENVIRONMENT_THREAD_STATE,
@@ -912,7 +913,10 @@ function threadStateChanges(
   return followStreamInEnvironment(
     environmentId,
     Stream.unwrap(
-      makeEnvironmentThreadState(threadId, resumeCache).pipe(Effect.map(SubscriptionRef.changes)),
+      // Live events can arrive many times per frame while a reply streams.
+      makeEnvironmentThreadState(threadId, resumeCache).pipe(
+        Effect.map((state) => latestPerFrame(SubscriptionRef.changes(state))),
+      ),
     ),
   );
 }
