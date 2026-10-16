@@ -5,7 +5,6 @@ import {
   ProviderInstanceId,
   ProviderSetupError,
 } from "@rove-code/contracts";
-import * as Cause from "effect/Cause";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
@@ -18,10 +17,10 @@ import * as Scope from "effect/Scope";
 import * as Stream from "effect/Stream";
 import * as TestClock from "effect/testing/TestClock";
 import { type AcpError, AcpRequestError } from "effect-acp/errors";
-import type * as AcpSchema from "effect-acp/schema";
+import type * as AcpSchema from "effect-acp/compat";
 import { expect } from "vite-plus/test";
 
-import type { AcpSessionRuntimeEvent } from "../provider/acp/AcpSessionRuntime.ts";
+import type * as AcpSessionRuntime from "@rove-code/provider-acp/server/AcpSessionRuntime";
 import { removeAntigravitySessionFiles } from "../provider/acp/AntigravitySessionFiles.ts";
 
 import {
@@ -32,6 +31,7 @@ import {
 
 type TextRuntime = Effect.Success<ReturnType<AntigravityTextGenerationOptions["makeRuntime"]>>;
 
+const requestContext = { requestId: "test-request", method: "test" };
 const SESSION_ID = "047c62f6-607b-44db-bfbe-f83b67e9e8b1";
 const modelSelection = {
   instanceId: ProviderInstanceId.make("antigravity-test"),
@@ -58,6 +58,7 @@ const makeFixture = Effect.fn("makeAntigravityTextGenerationFixture")(function* 
   options: {
     readonly outputs?: ReadonlyArray<string>;
     readonly prompt?: (context: PromptContext) => Effect.Effect<AcpSchema.PromptResponse, AcpError>;
+    readonly startError?: AcpError;
     readonly start?: Effect.Effect<void, AcpError>;
     readonly rejectAdmission?: boolean;
     readonly sessionId?: string;
@@ -121,7 +122,7 @@ const makeFixture = Effect.fn("makeAntigravityTextGenerationFixture")(function* 
 
   const makeRuntime: AntigravityTextGenerationOptions["makeRuntime"] = (cwd) =>
     Effect.gen(function* () {
-      const events = yield* Queue.unbounded<AcpSessionRuntimeEvent>();
+      const events = yield* Queue.unbounded<AcpSessionRuntime.AcpSessionRuntimeEvent>();
       state.workspaces.push(cwd);
       expect(yield* fs.readDirectory(cwd).pipe(Effect.orDie)).toEqual([]);
       yield* Effect.addFinalizer(() =>
@@ -135,6 +136,7 @@ const makeFixture = Effect.fn("makeAntigravityTextGenerationFixture")(function* 
       return {
         start: () =>
           Effect.gen(function* () {
+            if (options.startError) return yield* options.startError;
             if (options.start) yield* options.start;
             yield* fs.makeDirectory(brainDirectory, { recursive: true }).pipe(Effect.orDie);
             yield* fs.writeFileString(`${sessionBase}.db`, "helper session").pipe(Effect.orDie);
@@ -362,14 +364,17 @@ it.layer(NodeServices.layer)("AntigravityTextGeneration", (it) => {
         .generateThreadTitle(fixture.titleInput)
         .pipe(Effect.forkChild);
       yield* Deferred.await(fixture.enteredPrompt);
-      const reply = yield* fixture.incoming.permission({
-        sessionId: SESSION_ID,
-        toolCall: { toolCallId: "question-1", title: "Choose a title", kind: "other" },
-        options: [
-          { optionId: "first-native-choice", name: "Use this title", kind: "allow_once" },
-          { optionId: "second-native-choice", name: "Use this title", kind: "allow_once" },
-        ],
-      });
+      const reply = yield* fixture.incoming.permission(
+        {
+          sessionId: SESSION_ID,
+          toolCall: { toolCallId: "question-1", title: "Choose a title", kind: "other" },
+          options: [
+            { optionId: "first-native-choice", name: "Use this title", kind: "allow_once" },
+            { optionId: "second-native-choice", name: "Use this title", kind: "allow_once" },
+          ],
+        },
+        requestContext,
+      );
       const error = yield* Fiber.join(child).pipe(Effect.flip);
       expect(reply).toEqual({ outcome: { outcome: "cancelled" } });
       expect(error.detail).toContain("permission or user input");
@@ -384,14 +389,17 @@ it.layer(NodeServices.layer)("AntigravityTextGeneration", (it) => {
         .generateThreadTitle(fixture.titleInput)
         .pipe(Effect.forkChild);
       yield* Deferred.await(fixture.enteredPrompt);
-      const reply = yield* fixture.incoming.question({
-        sessionId: SESSION_ID,
-        mode: "form",
-        message: "Name this branch",
-        requestedSchema: { type: "object", properties: {} },
-      });
+      const reply = yield* fixture.incoming.question(
+        {
+          sessionId: SESSION_ID,
+          mode: "form",
+          message: "Name this branch",
+          requestedSchema: { type: "object", properties: {} },
+        },
+        requestContext,
+      );
       const error = yield* Fiber.join(child).pipe(Effect.flip);
-      expect(reply).toEqual({ action: { action: "decline" } });
+      expect(reply).toEqual({ action: "decline" });
       expect(error.detail).toContain("user input");
       yield* fixture.assertCleaned;
     }).pipe(Effect.scoped),
@@ -408,10 +416,16 @@ it.layer(NodeServices.layer)("AntigravityTextGeneration", (it) => {
         yield* Deferred.await(fixture.enteredPrompt);
         const request =
           kind === "file"
-            ? fixture.incoming.readFile({ sessionId: SESSION_ID, path: "/not-allowed" })
+            ? fixture.incoming.readFile(
+                { sessionId: SESSION_ID, path: "/not-allowed" },
+                requestContext,
+              )
             : kind === "terminal"
-              ? fixture.incoming.createTerminal({ sessionId: SESSION_ID, command: "not-allowed" })
-              : fixture.incoming.extension("_ask_user", {});
+              ? fixture.incoming.createTerminal(
+                  { sessionId: SESSION_ID, command: "not-allowed" },
+                  requestContext,
+                )
+              : fixture.incoming.extension("_ask_user", {}, requestContext);
         const denied = yield* request.pipe(Effect.exit);
         expect(Exit.isFailure(denied)).toBe(true);
         const error = yield* Fiber.join(child).pipe(Effect.flip);
@@ -574,7 +588,6 @@ it.layer(NodeServices.layer)("AntigravityTextGeneration", (it) => {
         expect(fixture.state.workspaces).toHaveLength(1);
         expect(fixture.state.prompts).toEqual([]);
         yield* fixture.assertCleaned;
-
         expect(yield* fixture.textGeneration.generateCommitMessage(input)).toEqual({
           subject: "Repair login",
           body: "Keep remote callbacks.",
@@ -625,9 +638,8 @@ it.layer(NodeServices.layer)("AntigravityTextGeneration", (it) => {
         } else {
           if (!fixture.state.stop) return yield* Effect.die("No tracked helper to stop.");
           yield* fixture.state.stop;
+          yield* Fiber.await(child);
         }
-        const exit = yield* Fiber.await(child);
-        expect(Exit.isFailure(exit) && Cause.hasInterruptsOnly(exit.cause)).toBe(true);
         expect(fixture.state.cancellations).toBe(1);
         yield* fixture.assertCleaned;
       }).pipe(Effect.scoped),

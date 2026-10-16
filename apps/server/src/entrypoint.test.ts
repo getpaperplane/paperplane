@@ -9,9 +9,8 @@ import { describe, expect, it } from "vite-plus/test";
 import { isEntrypoint } from "./entrypoint.ts";
 import { symlinksSupported } from "@rove-code/shared/testing/symlinks";
 
-// Resolved, so macOS's /var -> /private/var link matches the realpaths Node reports.
 const makeTempDir = () =>
-  NodeFS.realpathSync(NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "rove-entrypoint-test-")));
+  NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "rove-entrypoint-test-"));
 
 describe("isEntrypoint", () => {
   it("uses the runtime answer when Node provides one", () => {
@@ -56,9 +55,11 @@ describe("isEntrypoint", () => {
       NodeFS.writeFileSync(real, "");
       NodeFS.symlinkSync(real, link);
 
+      // Node resolves the module URL to the real path, and on macOS the temp
+      // directory itself sits behind a symlink (`/var` -> `/private/var`).
       expect(
         isEntrypoint({
-          moduleUrl: NodeURL.pathToFileURL(real).href,
+          moduleUrl: NodeURL.pathToFileURL(NodeFS.realpathSync(real)).href,
           entryPath: link,
           runtimeMain: undefined,
         }),

@@ -14,7 +14,6 @@ export async function resolvePiWorkloadMemory(
   mode: "auto" | "on" | "off",
   configured: string,
   environment: NodeJS.ProcessEnv,
-  // oxlint-disable-next-line rove/no-global-process-runtime -- Pi runtime creation is SDK-native, outside Effect; tests inject this argument.
   platform = process.platform,
   totalMemory = NodeOS.totalmem(),
 ): Promise<number | undefined> {

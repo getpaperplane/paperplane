@@ -2,113 +2,57 @@ import {
   AntigravitySettings,
   ClaudeSettings,
   CodexSettings,
-  CursorSettings,
-  GrokSettings,
-  OpenCodeSettings,
   PiSettings,
   ProviderDriverKind,
 } from "@rove-code/contracts";
-import type * as Schema from "effect/Schema";
-import {
-  AntigravityIcon,
-  ClaudeAI,
-  CursorIcon,
-  GrokIcon,
-  type Icon,
-  OpenAI,
-  OpenCodeIcon,
-  PiAgentIcon,
-} from "../Icons";
+import { acpRegistryClient } from "@rove-code/provider-acp-registry/client";
+import { defineProviderClient, makeProviderClientRegistry } from "@rove-code/provider-core/client";
+import { cursorClient } from "@rove-code/provider-cursor/client";
+import { grokClient } from "@rove-code/provider-grok/client";
+import { museClient } from "@rove-code/provider-muse/client";
+import { openCodeClient } from "@rove-code/provider-opencode/client";
 
-type ProviderSettingsSchema = {
-  readonly fields: Readonly<Record<string, Schema.Top>>;
-} & Schema.Top;
+// Rove runs Pi in-process through its SDK (ADR 0001), so its client definition
+// stays here on Rove's own PiSettings instead of upstream's RPC provider-pi package.
+const piClient = defineProviderClient({
+  driverKind: ProviderDriverKind.make("pi"),
+  label: "Pi",
+  badgeLabel: "Early Access",
+  settingsSchema: PiSettings,
+  icon: {
+    viewBox: "165.29 165.29 469.43 469.43",
+    fill: { light: "#0F0F0F", dark: "#F5F5F5" },
+    paths: [
+      {
+        d: "M165.29 165.29H517.36V400H400V517.36H282.65V634.72H165.29ZM282.65 282.65V400H400V282.65Z",
+        fillRule: "evenodd",
+      },
+      { d: "M517.36 400H634.72V634.72H517.36Z" },
+    ],
+  },
+});
 
-/**
- * Browser-safe provider definition. This is deliberately shaped like the
- * future provider package client export: the core web app gets a schema with
- * field annotations plus provider-level presentation metadata, then renders
- * settings generically.
- */
-export interface ProviderClientDefinition {
-  readonly value: ProviderDriverKind;
-  readonly label: string;
-  readonly icon: Icon;
-  readonly settingsSchema: ProviderSettingsSchema;
-  /**
-   * Optional short label rendered as a `variant="warning"` badge next to
-   * the instance title. Used to flag drivers that still ship under an
-   * early-access or preview gate — the flag is a property of the driver
-   * kind (not a specific instance), so every instance of that driver —
-   * built-in default or custom — advertises the same marker.
-   */
-  readonly badgeLabel?: string;
-}
-
-const PROVIDER_CLIENT_DEFINITIONS: readonly ProviderClientDefinition[] = [
+/** The provider client definitions this web build ships, in presentation order. */
+export const providerClients = makeProviderClientRegistry([
   {
-    value: ProviderDriverKind.make("codex"),
+    driverKind: ProviderDriverKind.make("codex"),
     label: "Codex",
-    icon: OpenAI,
     settingsSchema: CodexSettings,
   },
   {
-    value: ProviderDriverKind.make("claudeAgent"),
+    driverKind: ProviderDriverKind.make("claudeAgent"),
     label: "Claude",
-    icon: ClaudeAI,
     settingsSchema: ClaudeSettings,
   },
+  cursorClient,
+  grokClient,
+  openCodeClient,
   {
-    value: ProviderDriverKind.make("cursor"),
-    label: "Cursor",
-    icon: CursorIcon,
-    badgeLabel: "Early Access",
-    settingsSchema: CursorSettings,
-  },
-  {
-    value: ProviderDriverKind.make("grok"),
-    label: "Grok",
-    icon: GrokIcon,
-    badgeLabel: "Early Access",
-    settingsSchema: GrokSettings,
-  },
-  {
-    value: ProviderDriverKind.make("opencode"),
-    label: "OpenCode",
-    icon: OpenCodeIcon,
-    settingsSchema: OpenCodeSettings,
-  },
-  {
-    value: ProviderDriverKind.make("antigravity"),
+    driverKind: ProviderDriverKind.make("antigravity"),
     label: "Antigravity",
-    icon: AntigravityIcon,
     settingsSchema: AntigravitySettings,
   },
-  {
-    value: ProviderDriverKind.make("pi"),
-    label: "Pi",
-    icon: PiAgentIcon,
-    badgeLabel: "Early Access",
-    settingsSchema: PiSettings,
-  },
-];
-
-const PROVIDER_CLIENT_DEFINITION_BY_VALUE: Partial<
-  Record<ProviderDriverKind, ProviderClientDefinition>
-> = Object.fromEntries(
-  PROVIDER_CLIENT_DEFINITIONS.map((definition) => [definition.value, definition]),
-);
-
-export const DRIVER_OPTIONS = PROVIDER_CLIENT_DEFINITIONS;
-export const DRIVER_OPTION_BY_VALUE = PROVIDER_CLIENT_DEFINITION_BY_VALUE;
-export type DriverOption = ProviderClientDefinition;
-
-/**
- * Look up the driver metadata for an instance's `driver` field. Accepts
- * Returns `undefined` for fork / unknown drivers so callers can decide how
- * to render them — typically by falling back to a generic card.
- */
-export function getDriverOption(driver: ProviderDriverKind | undefined): DriverOption | undefined {
-  if (driver === undefined) return undefined;
-  return PROVIDER_CLIENT_DEFINITION_BY_VALUE[driver];
-}
+  museClient,
+  piClient,
+  acpRegistryClient,
+]);

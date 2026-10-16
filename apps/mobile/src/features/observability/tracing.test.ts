@@ -4,10 +4,10 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import { vi } from "vite-plus/test";
 
-import { remoteHttpClientLayer } from "@rove-code/client-runtime/rpc";
+import { layerRemoteHttpClient } from "@rove-code/client-runtime/rpc";
 import { withRelayClientTracing } from "@rove-code/shared/relayTracing";
 
-import { makeTracingLayer } from "./tracing";
+import * as Tracing from "./tracing";
 
 vi.mock("expo-constants", () => ({
   default: {
@@ -19,7 +19,7 @@ vi.mock("expo-constants", () => ({
 
 it.effect("exports spans through the scoped mobile OTLP layer", () => {
   const fetchFn = vi.fn<typeof fetch>(async () => new Response(null, { status: 202 }));
-  const tracingLayer = makeTracingLayer(
+  const layerTracing = Tracing.layerFromConfig(
     {
       tracesUrl: "https://api.axiom.test/v1/traces",
       tracesDataset: "mobile-traces",
@@ -29,13 +29,13 @@ it.effect("exports spans through the scoped mobile OTLP layer", () => {
       appVariant: "test",
       serviceVersion: "1.2.3",
     },
-  ).pipe(Layer.provide(remoteHttpClientLayer(fetchFn)));
-  const tracedApplication = Layer.effectDiscard(
+  ).pipe(Layer.provide(layerRemoteHttpClient(fetchFn)));
+  const layerTracedApplication = Layer.effectDiscard(
     Effect.void.pipe(Effect.withSpan("mobile.test.span"), withRelayClientTracing),
-  ).pipe(Layer.provide(tracingLayer));
+  ).pipe(Layer.provide(layerTracing));
 
   return Effect.gen(function* () {
-    yield* Layer.build(tracedApplication);
+    yield* Layer.build(layerTracedApplication);
 
     expect(fetchFn).not.toHaveBeenCalled();
   }).pipe(
@@ -56,7 +56,7 @@ it.effect("exports spans through the scoped mobile OTLP layer", () => {
 
 it.effect("does not let OTLP serialization failures alter application effects", () => {
   const fetchFn = vi.fn<typeof fetch>(async () => new Response(null, { status: 202 }));
-  const tracingLayer = makeTracingLayer(
+  const layerTracing = Tracing.layerFromConfig(
     {
       tracesUrl: "https://api.axiom.test/v1/traces",
       tracesDataset: "mobile-traces",
@@ -66,9 +66,9 @@ it.effect("does not let OTLP serialization failures alter application effects", 
       appVariant: "test",
       serviceVersion: "1.2.3",
     },
-  ).pipe(Layer.provide(remoteHttpClientLayer(fetchFn)));
+  ).pipe(Layer.provide(layerRemoteHttpClient(fetchFn)));
   const failure = { durationNanos: 1n };
-  const tracedApplication = Layer.effectDiscard(
+  const layerTracedApplication = Layer.effectDiscard(
     Effect.fail(failure).pipe(
       Effect.withSpan("mobile.test.failed-span"),
       withRelayClientTracing,
@@ -82,9 +82,9 @@ it.effect("does not let OTLP serialization failures alter application effects", 
           : Effect.die(new Error("Expected the original typed failure."));
       }),
     ),
-  ).pipe(Layer.provide(tracingLayer));
+  ).pipe(Layer.provide(layerTracing));
 
-  return Layer.build(tracedApplication).pipe(
+  return Layer.build(layerTracedApplication).pipe(
     Effect.scoped,
     Effect.andThen(
       Effect.sync(() => {

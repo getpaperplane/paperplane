@@ -1,12 +1,7 @@
-import type { PiThinkingLevel } from "@rove-code/contracts";
-import type {
-  PotetoWorkerRequest,
-  PotetoWorkerResult,
-} from "../../orchestration/poteto/PotetoMode.ts";
 import type { PiWorkloadConfig } from "../../diagnostics/PiWorkloadPolicy.ts";
 import type { PiCatalogHost, PiCatalogHostOptions } from "./PiCatalogHost.ts";
 import type { PiCreateSessionInput, PiSessionEventLike, PiSessionLike } from "./PiAdapter.ts";
-import type { McpProviderSessionConfig } from "../../mcp/McpProviderSession.ts";
+import type { McpProviderSessionConfig } from "@rove-code/provider-core/server/mcpSession";
 
 export type PiPromptOptions = Omit<
   NonNullable<Parameters<PiSessionLike["prompt"]>[1]>,
@@ -54,33 +49,6 @@ export type PiRuntimeCalls = SessionCalls &
       result: void;
     };
     prompt: { args: [key: number, text: string, options: PiPromptOptions]; result: void };
-    potetoDraft: {
-      args: [
-        key: number,
-        options: {
-          cwd: string;
-          agentDir: string;
-          model: string;
-          thinkingLevel?: PiThinkingLevel | undefined;
-        },
-        request: Omit<import("./PiPotetoDraft.ts").PotetoDraftRequest, "signal">,
-      ];
-      result: import("@rove-code/contracts").PotetoDraftResult;
-    };
-    potetoWorker: {
-      args: [
-        key: number,
-        options: {
-          cwd: string;
-          agentDir: string;
-          model: string;
-          thinkingLevel?: PiThinkingLevel | undefined;
-        },
-        request: Omit<PotetoWorkerRequest, "signal">,
-      ];
-      result: PotetoWorkerResult;
-    };
-    potetoAbort: { args: [key: number]; result: void };
     shutdown: { args: []; result: void };
   };
 export type PiRuntimeRequest = {

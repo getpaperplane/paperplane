@@ -31,6 +31,10 @@ import { runtimePackageClosure } from "./runtime-package-closure.ts";
  * enforced by a test, not by inspection.
  */
 export const CLI_RUNTIME_EXTERNAL_PREFIXES = [
+  // Cursor ships computed Webpack imports and platform helper packages.
+  "@cursor/sdk",
+  // Playwright reads package.json and browsers.json beside its runtime modules.
+  "playwright-core",
   "node-pty",
   "ffi-rs",
   "@yuuang/",
@@ -89,11 +93,26 @@ export const CLI_EXTERNAL_PACKAGE_PREFIXES = [
   ...CLI_RUNTIME_EXTERNAL_PREFIXES,
   ...CLI_BUILD_ONLY_EXTERNAL_PREFIXES,
 ] as const;
+// These are Cursor's disk-backed dependency closure. Match package boundaries
+// so "zod" does not also externalize unrelated packages such as zod-to-json-schema.
+const CURSOR_RUNTIME_DEPENDENCIES = [
+  "@bufbuild/protobuf",
+  "@connectrpc/connect",
+  "@connectrpc/connect-node",
+  "@connectrpc/connect-web",
+  "@statsig/js-client",
+  "@statsig/client-core",
+  "zod",
+  "undici",
+  "@fastify/busboy",
+] as const;
+
 export function isRuntimeExternalCliDependency(id: string): boolean {
   const packageName = id.startsWith("@") ? id.split("/").slice(0, 2).join("/") : id.split("/")[0];
   return (
     piRuntimePackages.has(packageName ?? "") ||
-    CLI_RUNTIME_EXTERNAL_PREFIXES.some((prefix) => id.startsWith(prefix))
+    CLI_RUNTIME_EXTERNAL_PREFIXES.some((prefix) => id.startsWith(prefix)) ||
+    CURSOR_RUNTIME_DEPENDENCIES.some((name) => id === name || id.startsWith(`${name}/`))
   );
 }
 
@@ -108,10 +127,9 @@ export function isRuntimeExternalCliDependency(id: string): boolean {
  * dependency) stayed external.
  */
 export function isExternalCliDependency(id: string): boolean {
-  const packageName = id.startsWith("@") ? id.split("/").slice(0, 2).join("/") : id.split("/")[0];
   return (
-    piRuntimePackages.has(packageName ?? "") ||
-    CLI_EXTERNAL_PACKAGE_PREFIXES.some((prefix) => id.startsWith(prefix))
+    isRuntimeExternalCliDependency(id) ||
+    CLI_BUILD_ONLY_EXTERNAL_PREFIXES.some((prefix) => id.startsWith(prefix))
   );
 }
 
@@ -135,7 +153,7 @@ export const CLI_EXTERNAL_PACKAGE_UNPACK_GLOBS = [
     `node_modules/${prefix}*/**/*`,
     `node_modules/.pnpm/**/node_modules/${prefix}*/**/*`,
   ]),
-  ...CLI_PI_RUNTIME_PACKAGES.flatMap((name) => [
+  ...[...CLI_PI_RUNTIME_PACKAGES, ...CURSOR_RUNTIME_DEPENDENCIES].flatMap((name) => [
     `node_modules/${name}/**/*`,
     `node_modules/.pnpm/**/node_modules/${name}/**/*`,
   ]),

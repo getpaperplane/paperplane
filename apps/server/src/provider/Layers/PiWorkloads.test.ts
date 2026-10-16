@@ -11,7 +11,6 @@ import { resolvePiWorkloadMemory } from "../../diagnostics/PiWorkloadPolicy.ts";
 import { PiWorkloads } from "./PiWorkloads.ts";
 
 const supported =
-  // oxlint-disable-next-line rove/no-global-process-runtime -- This integration-test skip requires the real host platform, outside an Effect runtime.
   process.platform === "linux" &&
   NodeChildProcess.spawnSync("systemctl", ["--user", "show-environment"]).status === 0;
 const quote = (s: string) => `'${s.replaceAll("'", "'\\''")}'`;

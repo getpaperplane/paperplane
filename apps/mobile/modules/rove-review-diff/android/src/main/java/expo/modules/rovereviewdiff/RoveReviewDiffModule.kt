@@ -41,6 +41,12 @@ class RoveReviewDiffModule : Module() {
       Prop("contentWidth") { view: RoveReviewDiffView, contentWidth: Double ->
         view.setContentWidth(contentWidth.toFloat())
       }
+      Prop("contentInsetBottom") { view: RoveReviewDiffView, value: Double ->
+        view.setContentInsetBottom(value.toFloat())
+      }
+      Prop("scrollEnabled") { view: RoveReviewDiffView, enabled: Boolean ->
+        view.setScrollEnabled(enabled)
+      }
       Prop("initialRowIndex") { view: RoveReviewDiffView, initialRowIndex: Double ->
         view.setInitialRowIndex(initialRowIndex)
       }

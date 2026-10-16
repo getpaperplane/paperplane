@@ -1,4 +1,4 @@
-import { HostProcessPlatform } from "@rove-code/shared/hostProcess";
+import * as HostProcess from "@rove-code/shared/HostProcess";
 import * as Config from "effect/Config";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -34,17 +34,16 @@ export interface SshAuthOptions {
   readonly interactiveAuth?: boolean;
 }
 
-export interface SshPasswordPromptContract {
+export interface SshPasswordPromptShape {
   readonly isAvailable: boolean;
   readonly request: (
     request: SshPasswordRequest,
   ) => Effect.Effect<string | null, SshPasswordPromptError>;
 }
 
-export class SshPasswordPrompt extends Context.Service<
-  SshPasswordPrompt,
-  SshPasswordPromptContract
->()("@rove-code/ssh/auth/SshPasswordPrompt") {
+export class SshPasswordPrompt extends Context.Service<SshPasswordPrompt, SshPasswordPromptShape>()(
+  "@rove-code/ssh/auth/SshPasswordPrompt",
+) {
   static readonly disabledLayer = Layer.succeed(
     SshPasswordPrompt,
     SshPasswordPrompt.of({
@@ -114,7 +113,7 @@ export const buildSshAskpassHelperDescriptor = Effect.fn(
 )(function* (input: {
   readonly directory: string;
 }): Effect.fn.Return<SshAskpassHelperDescriptor, never, Path.Path> {
-  const platform = yield* HostProcessPlatform;
+  const platform = yield* HostProcess.Platform;
   const path = yield* Path.Path;
   const directory = input.directory;
 
@@ -153,7 +152,7 @@ const ensureSshAskpassHelpers = Effect.fn("ssh/auth.ensureSshAskpassHelpers")(fu
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const descriptor = yield* buildSshAskpassHelperDescriptor(input);
-  const platform = yield* HostProcessPlatform;
+  const platform = yield* HostProcess.Platform;
 
   yield* fs.makeDirectory(path.dirname(descriptor.launcherPath), { recursive: true });
 
@@ -183,7 +182,7 @@ export const buildSshChildEnvironment = Effect.fn("ssh/auth.buildSshChildEnviron
     return baseEnv;
   }
 
-  const platform = yield* HostProcessPlatform;
+  const platform = yield* HostProcess.Platform;
   const hostDisplay = input.baseEnv
     ? input.baseEnv.DISPLAY
     : yield* Config.String("DISPLAY").pipe(
@@ -198,10 +197,8 @@ export const buildSshChildEnvironment = Effect.fn("ssh/auth.buildSshChildEnviron
     ...baseEnv,
     SSH_ASKPASS: sshAskpass,
     SSH_ASKPASS_REQUIRE: "force",
-    ...(input.authSecret === undefined
-      ? undefined
-      : { ROVE_SSH_AUTH_SECRET: input.authSecret ?? "" }),
-    ...(platform === "win32" || baseEnv.DISPLAY || hostDisplay ? undefined : { DISPLAY: "rove" }),
+    ...(input.authSecret === undefined ? {} : { ROVE_SSH_AUTH_SECRET: input.authSecret ?? "" }),
+    ...(platform === "win32" || baseEnv.DISPLAY || hostDisplay ? {} : { DISPLAY: "rove" }),
   };
 });
 

@@ -1,5 +1,5 @@
 import * as Effect from "effect/Effect";
-import { Command } from "effect/unstable/cli";
+import { Command } from "effect/cli";
 
 /** Single-executable equivalent of the bundled pi-runtime-worker entry. */
 export const piRuntimeCommand = Command.make("__pi-runtime").pipe(

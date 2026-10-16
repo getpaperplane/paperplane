@@ -1,6 +1,7 @@
+// @effect-diagnostics nodeBuiltinImport:off -- Podman image hashing and process-scoped container names use synchronous Node crypto.
 import * as NodeCrypto from "node:crypto";
 
-import { HostProcessEnvironment } from "@rove-code/shared/hostProcess";
+import { Environment as HostProcessEnvironment } from "@rove-code/shared/HostProcess";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";

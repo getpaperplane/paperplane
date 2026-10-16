@@ -20,7 +20,7 @@ const defaultInput = {
   runningUnderArm64Translation: false,
 } satisfies DesktopEnvironment.MakeDesktopEnvironmentInput;
 
-const makeEnvironmentLayer = (
+const layerEnvironment = (
   overrides: Partial<DesktopEnvironment.MakeDesktopEnvironmentInput> = {},
   env: Record<string, string | undefined> = {},
 ) =>
@@ -36,8 +36,7 @@ const makeEnvironmentLayer = (
 const makeEnvironment = (
   overrides: Partial<DesktopEnvironment.MakeDesktopEnvironmentInput> = {},
   env: Record<string, string | undefined> = {},
-) =>
-  DesktopEnvironment.DesktopEnvironment.pipe(Effect.provide(makeEnvironmentLayer(overrides, env)));
+) => DesktopEnvironment.DesktopEnvironment.pipe(Effect.provide(layerEnvironment(overrides, env)));
 
 describe("DesktopEnvironment", () => {
   it.effect("derives state paths and development identity inside Effect", () =>
@@ -79,10 +78,7 @@ describe("DesktopEnvironment", () => {
       assert.equal(environment.backendCwd, "/repo");
       assert.equal(environment.appUserModelId, "io.github.hafiezul.rove.dev");
       assert.equal(environment.linuxWmClass, "rove-dev");
-      assert.equal(
-        environment.linuxDesktopEntryName,
-        "io.github.hafiezul.rove.Development.desktop",
-      );
+      assert.equal(environment.linuxDesktopEntryName, "io.github.hafiezul.rove.dev.desktop");
       assert.deepEqual(
         Option.map(environment.devServerUrl, (url) => url.href),
         Option.some("http://localhost:5173/"),
@@ -166,6 +162,8 @@ describe("DesktopEnvironment", () => {
       );
       const production = yield* makeEnvironment();
 
+      assert.equal(development.baseDir, "/Users/alice/.rove-code");
+      assert.equal(production.baseDir, "/Users/alice/.rove-code");
       assert.equal(development.stateDir, "/Users/alice/.rove-code/dev");
       assert.equal(production.stateDir, "/Users/alice/.rove-code/userdata");
     }),
@@ -176,12 +174,12 @@ describe("DesktopEnvironment", () => {
       const environment = yield* makeEnvironment(
         {},
         {
-          ROVE_DESKTOP_APP_USER_MODEL_ID: " dev.rove.app.dev.local ",
+          ROVE_DESKTOP_APP_USER_MODEL_ID: " io.github.hafiezul.rove.dev.local ",
           VITE_DEV_SERVER_URL: "http://localhost:5173",
         },
       );
 
-      assert.equal(environment.appUserModelId, "dev.rove.app.dev.local");
+      assert.equal(environment.appUserModelId, "io.github.hafiezul.rove.dev.local");
     }),
   );
 

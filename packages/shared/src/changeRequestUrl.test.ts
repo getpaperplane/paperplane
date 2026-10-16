@@ -48,8 +48,8 @@ describe("parseChangeRequestUrl", () => {
 
   it("reads a GitLab merge request on any host, nested groups and all", () => {
     expect(
-      parseChangeRequestUrl("https://gitlab.com/rovetools/platform/rove/-/merge_requests/42"),
-    ).toEqual({ host: "gitlab.com", repository: "rovetools/platform/rove", number: 42 });
+      parseChangeRequestUrl("https://gitlab.com/t3tools/platform/rove/-/merge_requests/42"),
+    ).toEqual({ host: "gitlab.com", repository: "t3tools/platform/rove", number: 42 });
     expect(parseChangeRequestUrl("https://code.acme.test/team/project/-/merge_requests/9")).toEqual(
       { host: "code.acme.test", repository: "team/project", number: 9 },
     );

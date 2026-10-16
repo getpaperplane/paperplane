@@ -109,7 +109,7 @@ export class GhosttyRuntime {
   }
 
   readPointer(slot: number): number {
-    return this.currentMemoryView().getUint32(slot, true);
+    return this.memoryDataView().getUint32(slot, true);
   }
 
   attachPtyWriter(terminal: number, writer: (data: string) => void): number {
@@ -138,7 +138,7 @@ export class GhosttyRuntime {
   }
 
   /** Reuse scalar reads across cells, refreshing after any terminal grows shared WASM memory. */
-  private currentMemoryView(): DataView {
+  memoryDataView(): DataView {
     if (this.memoryView.buffer !== this.memory.buffer) {
       this.memoryView = new DataView(this.memory.buffer);
     }
@@ -148,7 +148,7 @@ export class GhosttyRuntime {
   setField(pointer: number, structName: string, fieldName: string, value: number): void {
     const field = this.layout(structName).fields[fieldName];
     if (!field) throw new Error(`libghostty-vt field is unavailable: ${structName}.${fieldName}`);
-    const view = this.currentMemoryView();
+    const view = this.memoryDataView();
     const offset = pointer + field.offset;
     switch (field.type) {
       case "bool":
@@ -176,7 +176,7 @@ export class GhosttyRuntime {
   readField(pointer: number, structName: string, fieldName: string): number {
     const field = this.layout(structName).fields[fieldName];
     if (!field) throw new Error(`libghostty-vt field is unavailable: ${structName}.${fieldName}`);
-    const view = this.currentMemoryView();
+    const view = this.memoryDataView();
     const offset = pointer + field.offset;
     switch (field.type) {
       case "bool":

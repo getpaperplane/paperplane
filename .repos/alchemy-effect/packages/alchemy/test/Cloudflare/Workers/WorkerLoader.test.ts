@@ -4,7 +4,7 @@ import { expect } from "alchemy-test";
 import * as Data from "effect/Data";
 import * as Effect from "effect/Effect";
 import * as Schedule from "effect/Schedule";
-import * as HttpClient from "effect/unstable/http/HttpClient";
+import * as HttpClient from "effect/http/HttpClient";
 import Stack from "./fixtures/dynamic-worker-loader/stack.ts";
 
 const { test, beforeAll, afterAll, deploy, destroy } = Test.make({
@@ -56,7 +56,10 @@ test(
     const body = yield* readJson(asyncWorkerUrl);
     expect(body).toMatchObject({ mode: "async", ok: true });
   }),
-  { timeout: 180_000 },
+  {
+    tags: ["provider:cloudflare", "provider:cloudflare:worker", "live"],
+    timeout: 180_000,
+  },
 );
 
 test(
@@ -66,7 +69,79 @@ test(
     const body = yield* readJson(effectWorkerUrl);
     expect(body).toMatchObject({ mode: "effect", ok: true });
   }),
-  { timeout: 180_000 },
+  {
+    tags: ["provider:cloudflare", "provider:cloudflare:worker", "live"],
+    timeout: 180_000,
+  },
+);
+
+test(
+  "effect worker reaches a named dynamic worker via loader.get",
+  Effect.gen(function* () {
+    const { effectWorkerUrl } = yield* stack;
+    const body = yield* readJson(`${effectWorkerUrl}/get`);
+    expect(body).toMatchObject({ mode: "get", ok: true });
+  }),
+  {
+    tags: ["provider:cloudflare", "provider:cloudflare:worker", "live"],
+    timeout: 180_000,
+  },
+);
+
+test(
+  "effect worker get() fetch proxies to a cached dynamic worker",
+  Effect.gen(function* () {
+    const { getWorkerUrl } = yield* stack;
+    const id = yield* freshId("stub");
+    const body = yield* readJson(`${getWorkerUrl}/?id=${id}`);
+    expect(body).toMatchObject({ id, hits: 1 });
+  }),
+  {
+    tags: ["provider:cloudflare", "provider:cloudflare:worker", "live"],
+    timeout: 180_000,
+  },
+);
+
+test(
+  "effect worker get() reuses the isolate for the same id",
+  Effect.gen(function* () {
+    const { getWorkerUrl } = yield* stack;
+    const id = yield* freshId("reuse");
+    const first = yield* readJson(`${getWorkerUrl}/?id=${id}`);
+    expect(first).toMatchObject({ id, hits: 1 });
+    // `get()` only reuses an isolate within the same colo/process, so two
+    // back-to-back requests can occasionally be served by two fresh
+    // isolates (both reporting `hits: 1`). Any response with `hits >= 2`
+    // proves module state survived across requests, i.e. the isolate was
+    // reused — poll for that instead of asserting the second request exactly.
+    const reused = yield* readJson(`${getWorkerUrl}/?id=${id}`).pipe(
+      Effect.repeat({
+        until: (body) => (body as { hits: number }).hits >= 2,
+        schedule: Schedule.spaced("500 millis"),
+        times: 10,
+      }),
+    );
+    expect(reused).toMatchObject({ id });
+    expect((reused as { hits: number }).hits).toBeGreaterThanOrEqual(2);
+  }),
+  {
+    tags: ["provider:cloudflare", "provider:cloudflare:worker", "live"],
+    timeout: 180_000,
+  },
+);
+
+test(
+  "effect worker get() getEntrypoint() fetch works",
+  Effect.gen(function* () {
+    const { getWorkerUrl } = yield* stack;
+    const id = yield* freshId("named");
+    const body = yield* readJson(`${getWorkerUrl}/?id=${id}&entrypoint=1`);
+    expect(body).toMatchObject({ id, hits: 1 });
+  }),
+  {
+    tags: ["provider:cloudflare", "provider:cloudflare:worker", "live"],
+    timeout: 180_000,
+  },
 );
 
 test(
@@ -138,7 +213,10 @@ test(
     const body = yield* readJson(`${effectWorkerUrl}/outbound/sandboxed`);
     expect(body).toMatchObject({ outbound: "blocked" });
   }),
-  { timeout: 180_000 },
+  {
+    tags: ["provider:cloudflare", "provider:cloudflare:worker", "live"],
+    timeout: 180_000,
+  },
 );
 
 test(
@@ -148,5 +226,8 @@ test(
     const body = yield* readJson(`${effectWorkerUrl}/outbound/open`);
     expect(body).toMatchObject({ outbound: "allowed", status: 200 });
   }),
-  { timeout: 180_000 },
+  {
+    tags: ["provider:cloudflare", "provider:cloudflare:worker", "live"],
+    timeout: 180_000,
+  },
 );

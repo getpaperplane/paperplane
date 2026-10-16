@@ -41,7 +41,7 @@ import {
   type ToolDefinition,
 } from "@earendil-works/pi-coding-agent";
 
-import type { ProviderUsageLimit } from "@rove-code/contracts";
+import type { ProviderUsageLimit } from "../PiUsageLimits.ts";
 
 type PiThinkingLevel = "off" | "minimal" | "low" | "medium" | "high" | "xhigh" | "max";
 
@@ -53,10 +53,7 @@ import {
   type PiSessionResumeOutcome,
 } from "./PiAdapter.ts";
 
-import {
-  readMcpProviderSession,
-  type McpProviderSessionConfig,
-} from "../../mcp/McpProviderSession.ts";
+import type { McpProviderSessionConfig } from "@rove-code/provider-core/server/mcpSession";
 import { createPiRoveTools } from "./PiRoveTools.ts";
 import {
   createPiSubagentTool,
@@ -67,17 +64,20 @@ import {
 import type { PiWorkloads } from "./PiWorkloads.ts";
 import { createPiExtensionUI } from "./PiExtensionUI.ts";
 import { disposePiResource } from "./PiLifecycle.ts";
+import {
+  ROVE_CODE_ORCHESTRATION_INSTRUCTIONS,
+  ROVE_CODE_BROWSER_TOOL_INSTRUCTIONS,
+} from "@rove-code/provider-core/server/orchestrationInstructions";
 import { buildRuntimeInstructions } from "../RuntimeInstructions.ts";
-import { readPiSubscriptionStatus } from "../piUsageLimitRecovery.ts";
+import { readPiSubscriptionStatus } from "../PiUsageLimits.ts";
 import type { UsageLimitStatus } from "../usageLimitStatus.ts";
 import {
   usageLimitFromError,
   usageLimitFromErrorPayload,
   usageLimitFromHttpError,
 } from "../usageLimitError.ts";
-import { expandHomePath } from "../../pathExpansion.ts";
-
-export { PiExtensionLoadError } from "./PiAdapter.ts";
+import * as NodeOS from "node:os";
+import { expandHomePath } from "@rove-code/provider-core/server/pathExpansion";
 
 /**
  * Adapt an SDK `AgentSession` to the narrow `PiSessionLike` surface the
@@ -224,13 +224,22 @@ async function toPiSessionLike(
         () => compatibility?.reportUnsupportedUI(),
       )
     : undefined;
-  const abort = () => {
+  let disposedDuringPreparation = false;
+  const abort = async () => {
     stopped = true;
     extensionUI?.stop();
     // Pi abort deliberately continues queued messages. Rove Stop must discard
     // them before aborting, or a queued follow-up can execute more tools.
     session.clearQueue();
-    return session.abort();
+    // Pi 1.2 invokes its preflight callback outside _startRun's finally block.
+    // A host cancellation there can otherwise leave waitForIdle permanently busy.
+    // This session is never reused after Stop; dispose its SDK context before
+    // the cancelled hook unwinds, without waiting on that broken idle latch.
+    if (preparingPrompt) {
+      disposedDuringPreparation = true;
+      session.dispose();
+    } else await session.abort();
+    emit({ type: "agent_settled" });
   };
   let disposal: Promise<void> | undefined;
   const dispose = () =>
@@ -244,7 +253,7 @@ async function toPiSessionLike(
         await Effect.runPromise(
           Effect.all(
             [
-              disposePiResource(() => session.abort()),
+              ...(disposedDuringPreparation ? [] : [disposePiResource(() => session.abort())]),
               disposePiResource(() =>
                 session.extensionRunner.emit({ type: "session_shutdown", reason: "quit" }),
               ),
@@ -309,7 +318,7 @@ async function toPiSessionLike(
     ...(resumeOutcome !== undefined ? { resumeOutcome } : undefined),
     ...(modelFallbackMessage !== undefined ? { modelFallbackMessage } : undefined),
     get isStreaming() {
-      return session.isStreaming;
+      return disposedDuringPreparation ? false : session.isStreaming;
     },
     get hasPendingUserInput() {
       return extensionUI?.hasPendingInput ?? false;
@@ -876,7 +885,7 @@ export async function createPiSession(
 ): Promise<PiSessionLike> {
   const cwd = input.cwd;
   const agentDir = input.agentDir
-    ? NodePath.resolve(expandHomePath(input.agentDir))
+    ? NodePath.resolve(expandHomePath(input.agentDir, NodeOS.homedir()))
     : getAgentDir();
   const outcome = resolvePiSessionResume(
     cwd,
@@ -911,10 +920,13 @@ export async function createPiSession(
   const startupErrors: PiSessionEventLike[] = [];
 
   const usageLimits = createUsageLimitCapture();
-  const mcpProviderSession =
-    options.mcpProviderSession ??
-    (input.threadId === undefined ? undefined : readMcpProviderSession(input.threadId));
-  const richResponses = mcpProviderSession?.capabilities.has("rich-responses") === true;
+  const mcpProviderSession = options.mcpProviderSession;
+  const richResponses = mcpProviderSession !== undefined;
+  const runtimeInstructions = [
+    buildRuntimeInstructions({ harness: "Pi", richResponses }),
+    ...(mcpProviderSession ? [ROVE_CODE_ORCHESTRATION_INSTRUCTIONS] : []),
+    ...(mcpProviderSession?.browserToolsAvailable ? [ROVE_CODE_BROWSER_TOOL_INSTRUCTIONS] : []),
+  ].join("\n\n");
   let services = await createPiSessionServices({
     cwd,
     agentDir,
@@ -924,6 +936,7 @@ export async function createPiSession(
     modelRuntime: options.modelRuntime,
     extensionFactories: [usageLimits.extension],
     richResponses,
+    runtimeInstructions,
   });
 
   const getErrors = (s: AgentSessionServices) => [
@@ -956,6 +969,7 @@ export async function createPiSession(
           modelRuntime: options.modelRuntime,
           extensionFactories: [usageLimits.extension],
           richResponses,
+          runtimeInstructions,
         });
         for (const { path, error } of services.resourceLoader.getExtensions().errors) {
           startupErrors.push({

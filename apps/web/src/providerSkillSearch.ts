@@ -1,7 +1,7 @@
+import { formatProviderSkillDisplayName } from "@rove-code/shared/inlineSkills";
 import type { ServerProviderSkill } from "@rove-code/contracts";
 import {
   dedupeProviderSkillsByName,
-  formatProviderSkillDisplayName,
   isProviderSkillUserInvocable,
 } from "@rove-code/client-runtime/providerSkills";
 import {

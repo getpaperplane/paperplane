@@ -1,4 +1,4 @@
-import type { ThreadTitleMessage } from "../src/textGeneration/ThreadTitleContext.ts";
+import type { ThreadTitleMessage } from "@rove-code/provider-core/server/threadTitleContext";
 
 // Public PR subjects and existing title scenarios. Repeated text adds context pressure.
 export const threadTitleEvaluationCases = [

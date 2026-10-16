@@ -1,8 +1,8 @@
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 
-import { lookupRate, type ModelRate, type RateTable } from "./usagePricing.ts";
-import { totalTokens, type UsageRecord } from "./usageTranscripts.ts";
+import { parsePiModelRates as parsePiRates, type RateTable } from "./usagePricing.ts";
+import { totalTokens, type UsageRecord } from "@rove-code/provider-core/server/usage";
 
 const NonNegativeNumber = Schema.Finite.check(Schema.isGreaterThanOrEqualTo(0));
 const PiUsage = Schema.Struct({
@@ -136,83 +136,11 @@ export function parsePiRecord(parsed: unknown, state: PiScanState): UsageRecord 
     // Pi also writes zero when no model price is configured. Resolve that through rates.
     reportedCostUsd: savedCost?.total && savedCost.total > 0 ? savedCost.total : null,
     ...(reportedCacheSavingsUsd !== undefined ? { reportedCacheSavingsUsd } : undefined),
-    fast: false,
+    speed: "standard",
     dedupeKey: entry.id ? `pi:${entry.type}:${entry.id}:${timestampMs}:${model}` : null,
   };
 }
 
-const PiModelCost = Schema.Struct({
-  input: NonNegativeNumber,
-  output: NonNegativeNumber,
-  cacheRead: NonNegativeNumber,
-  cacheWrite: NonNegativeNumber,
-});
-const PiModelCostOverride = Schema.Struct({
-  input: Schema.optional(NonNegativeNumber),
-  output: Schema.optional(NonNegativeNumber),
-  cacheRead: Schema.optional(NonNegativeNumber),
-  cacheWrite: Schema.optional(NonNegativeNumber),
-});
-const PiModelsDocument = Schema.Struct({
-  providers: Schema.Record(
-    Schema.String,
-    Schema.Struct({
-      models: Schema.optional(
-        Schema.Array(Schema.Struct({ id: Schema.String, cost: Schema.optional(Schema.Unknown) })),
-      ),
-      modelOverrides: Schema.optional(
-        Schema.Record(Schema.String, Schema.Struct({ cost: Schema.optional(Schema.Unknown) })),
-      ),
-    }),
-  ),
-});
-const decodeModels = Schema.decodeUnknownOption(PiModelsDocument);
-const decodeModelCost = Schema.decodeUnknownOption(PiModelCost);
-const decodeModelCostOverride = Schema.decodeUnknownOption(PiModelCostOverride);
-
-export function parsePiModelRates(
-  document: unknown,
-  fallbackRates: RateTable = new Map<string, ModelRate>(),
-): RateTable {
-  const table = new Map<string, ModelRate>();
-  const decoded = decodeModels(document);
-  if (Option.isNone(decoded)) return table;
-  for (const [provider, config] of Object.entries(decoded.value.providers)) {
-    for (const model of config.models ?? []) {
-      const id = model.id;
-      const cost = decodeModelCost(model.cost);
-      if (Option.isNone(cost)) continue;
-      table.set(`${provider}/${id}`.toLowerCase(), {
-        inputCostPerToken: cost.value.input / 1_000_000,
-        outputCostPerToken: cost.value.output / 1_000_000,
-        cacheReadCostPerToken: cost.value.cacheRead / 1_000_000,
-        cacheCreationCostPerToken: cost.value.cacheWrite / 1_000_000,
-        fastMultiplier: 1,
-      });
-    }
-    for (const [id, override] of Object.entries(config.modelOverrides ?? {})) {
-      const cost = decodeModelCostOverride(override.cost);
-      if (Option.isNone(cost)) continue;
-      const key = `${provider}/${id}`.toLowerCase();
-      const base =
-        table.get(key) ?? lookupRate(fallbackRates, key) ?? lookupRate(fallbackRates, id);
-      if (base === null) continue;
-      table.set(key, {
-        inputCostPerToken:
-          cost.value.input === undefined ? base.inputCostPerToken : cost.value.input / 1_000_000,
-        outputCostPerToken:
-          cost.value.output === undefined ? base.outputCostPerToken : cost.value.output / 1_000_000,
-        cacheReadCostPerToken:
-          cost.value.cacheRead === undefined
-            ? base.cacheReadCostPerToken
-            : cost.value.cacheRead / 1_000_000,
-        cacheCreationCostPerToken:
-          cost.value.cacheWrite === undefined
-            ? base.cacheCreationCostPerToken
-            : cost.value.cacheWrite / 1_000_000,
-        fastMultiplier: 1,
-      });
-    }
-  }
-  return table;
-}
+/** Shared V2 pricing parser also honors the SDK models.json overrides. */
+export const parsePiModelRates = (document: unknown, fallbackRates: RateTable = new Map()) =>
+  parsePiRates(document, fallbackRates);

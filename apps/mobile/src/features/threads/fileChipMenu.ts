@@ -1,7 +1,7 @@
-import { fileBasename } from "@rove-code/client-runtime/markdown-links";
+import { fileBasename } from "@rove-code/shared/path";
 import type { ThreadId } from "@rove-code/contracts";
-import { resolveMarkdownLinkPresentation } from "@rove-code/mobile-markdown-text/links";
-import type { MarkdownFileContextMenu } from "@rove-code/mobile-markdown-text/types";
+import { resolveMarkdownLinkPresentation } from "../../lib/markdownLinks";
+import type { MarkdownFileContextMenu } from "../../native/SelectableMarkdownText.types";
 import { hostPreviewMimeTypeFromExtension } from "@rove-code/shared/filePreview";
 
 import {

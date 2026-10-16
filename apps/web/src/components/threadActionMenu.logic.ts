@@ -8,8 +8,6 @@ import type { SnoozePreset } from "@rove-code/client-runtime/state/thread-settle
  */
 export type ThreadActionMenuId =
   | "new-thread-on-branch"
-  | "continue-on"
-  | `continue-on:${string}`
   | "filter-by-project"
   | "project-settings"
   | "pin"
@@ -24,7 +22,6 @@ export type ThreadActionMenuId =
   | "unsnooze"
   | "rename"
   | "regenerate-title"
-  | "poteto-mode"
   | "mark-unread"
   | "copy"
   | "copy-path"
@@ -33,14 +30,48 @@ export type ThreadActionMenuId =
   | "archive"
   | "delete";
 
-export interface ThreadActionMenuState {
-  readonly branch: string | null;
-  /** Other environments holding this repository, keyed by environment id. */
-  readonly continueTargets?: ReadonlyArray<{
-    readonly environmentId: string;
-    readonly label: string;
-  }>;
+export type DraftActionMenuId =
+  | "copy"
+  | "copy-path"
+  | "copy-branch"
+  | "project-settings"
+  | "discard";
+
+/** Right-click menu for an unsent draft row in the sidebar. */
+export function buildDraftActionMenuItems(options: {
+  readonly hasPath: boolean;
+  readonly hasBranch: boolean;
   readonly hasProject: boolean;
+}): ReadonlyArray<ContextMenuItem<DraftActionMenuId>> {
+  return [
+    {
+      id: "copy",
+      label: "Copy",
+      icon: "copy",
+      disabled: !options.hasPath && !options.hasBranch,
+      children: [
+        ...(options.hasPath ? [{ id: "copy-path" as const, label: "Path", icon: "folder" }] : []),
+        ...(options.hasBranch
+          ? [{ id: "copy-branch" as const, label: "Branch", icon: "git-branch" }]
+          : []),
+      ],
+    },
+    ...(options.hasProject
+      ? [{ id: "project-settings" as const, label: "Project settings", icon: "settings" }]
+      : []),
+    {
+      id: "discard",
+      label: "Discard draft",
+      icon: "trash",
+      destructive: true,
+      separatorBefore: true,
+    },
+  ];
+}
+
+export interface ThreadActionMenuState {
+  readonly canOperate: boolean;
+  readonly branch: string | null;
   /**
    * Project scoping for the thread list. Null on surfaces with no scoped
    * list behind the menu (the chat header), where the item must not show.
@@ -57,7 +88,7 @@ export interface ThreadActionMenuState {
   readonly isSnoozed: boolean;
   readonly canSnoozeNow: boolean;
   readonly isRegeneratingTitle: boolean;
-  /** Archive rejects a thread with an active turn, so disable it here rather than let the action fail. */
+  /** Archive rejects a thread with an attached provider, so disable it here rather than let the action fail. */
   readonly isRunning: boolean;
   readonly supports: {
     readonly settlement: boolean;
@@ -66,9 +97,21 @@ export interface ThreadActionMenuState {
     readonly snooze: boolean;
     readonly pinning: boolean;
     readonly titleRegeneration: boolean;
-    readonly potetoMode?: boolean;
   };
   readonly snoozePresets: ReadonlyArray<SnoozePreset>;
+}
+
+/** Local navigation, read markers, and copying remain available to read-only clients. */
+export function threadActionRequiresOperate(action: ThreadActionMenuId): boolean {
+  return ![
+    "new-thread-on-branch",
+    "project-settings",
+    "mark-unread",
+    "copy",
+    "copy-path",
+    "copy-branch",
+    "copy-thread-id",
+  ].includes(action);
 }
 
 /**
@@ -79,29 +122,13 @@ export interface ThreadActionMenuState {
 export function buildThreadActionMenuItems(
   state: ThreadActionMenuState,
 ): ReadonlyArray<ContextMenuItem<ThreadActionMenuId>> {
-  return [
+  const items: ReadonlyArray<ContextMenuItem<ThreadActionMenuId>> = [
     ...(state.branch
       ? [
           {
             id: "new-thread-on-branch" as const,
             label: `New thread on ${state.branch}`,
             icon: "message-square-plus",
-          },
-        ]
-      : []),
-    // The branch is what travels, so the item needs one. A running turn may
-    // still be changing files that would be left behind.
-    ...(state.branch && state.continueTargets && state.continueTargets.length > 0
-      ? [
-          {
-            id: "continue-on" as const,
-            label: "Continue on",
-            icon: "monitor-up",
-            disabled: state.isRunning,
-            children: state.continueTargets.map((target) => ({
-              id: `continue-on:${target.environmentId}` as const,
-              label: target.label,
-            })),
           },
         ]
       : []),
@@ -151,9 +178,6 @@ export function buildThreadActionMenuItems(
             disabled: state.isRegeneratingTitle,
           },
         ]
-      : []),
-    ...(state.supports.potetoMode
-      ? [{ id: "poteto-mode" as const, label: "Poteto Mode", icon: "potato" }]
       : []),
     { id: "mark-unread", label: "Mark unread", icon: "mail-open" },
     ...(state.projectFilter
@@ -205,9 +229,7 @@ export function buildThreadActionMenuItems(
         { id: "copy-thread-id", label: "Thread ID", icon: "hash" },
       ],
     },
-    ...(state.hasProject
-      ? [{ id: "project-settings" as const, label: "Project settings", icon: "settings" }]
-      : []),
+    { id: "project-settings", label: "Project settings", icon: "settings" },
     // Archive removes the thread from the sidebar while keeping its
     // conversation under Settings > Archived threads — distinct from Settle
     // (stays visible in the Settled shelf) and Delete (clears history for
@@ -227,4 +249,17 @@ export function buildThreadActionMenuItems(
       icon: "trash",
     },
   ];
+  return state.canOperate
+    ? items
+    : items.map((item) =>
+        threadActionRequiresOperate(item.id)
+          ? {
+              ...item,
+              disabled: true,
+              ...(item.children
+                ? { children: item.children.map((child) => ({ ...child, disabled: true })) }
+                : {}),
+            }
+          : item,
+      );
 }

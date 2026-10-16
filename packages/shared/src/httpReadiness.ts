@@ -3,9 +3,7 @@ import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
 import * as Ref from "effect/Ref";
 import * as Schedule from "effect/Schedule";
-import type { Json } from "effect/Schema";
-import { HttpClient, HttpClientRequest } from "effect/unstable/http";
-import * as RuntimePredicate from "effect/Predicate";
+import { HttpClient, HttpClientRequest } from "effect/http";
 
 const DEFAULT_HTTP_READY_PROBE_TIMEOUT_MS = 1_000;
 
@@ -15,52 +13,26 @@ const DEFAULT_HTTP_READY_PROBE_TIMEOUT_MS = 1_000;
  * message/cause) shape for Effect tagged errors while recursing through nested
  * `cause`/`reason` chains.
  */
-interface ReadinessCauseRecord {
-  readonly [field: string]: Json | Error | ReadinessCauseRecord | Function;
-}
-
-interface TaggedReadinessError extends Error {
-  readonly _tag?: unknown;
-  readonly cause?: unknown;
-}
-
-function isReadinessCauseRecord(value: unknown): value is ReadinessCauseRecord {
-  return RuntimePredicate.isObjectOrArray(value);
-}
-
-export function describeReadinessCause(cause: unknown): Json {
+export function describeReadinessCause(cause: unknown): unknown {
   if (cause instanceof Error) {
-    const taggedCause: TaggedReadinessError = cause;
-    const tag = taggedCause._tag;
-    const nested = taggedCause.cause;
+    const tag = (cause as { readonly _tag?: unknown })._tag;
+    const nested = (cause as { readonly cause?: unknown }).cause;
     return {
-      ...(RuntimePredicate.isString(tag) ? { _tag: tag } : { name: cause.name }),
+      ...(typeof tag === "string" ? { _tag: tag } : { name: cause.name }),
       message: cause.message,
-      ...(nested === undefined ? undefined : { cause: describeReadinessCause(nested) }),
+      ...(nested === undefined ? {} : { cause: describeReadinessCause(nested) }),
     };
   }
-  if (cause === null) {
-    return null;
-  }
-  if (
-    RuntimePredicate.isString(cause) ||
-    RuntimePredicate.isNumber(cause) ||
-    RuntimePredicate.isBoolean(cause)
-  ) {
+  if (typeof cause !== "object" || cause === null) {
     return cause;
   }
-  if (RuntimePredicate.isBigInt(cause)) {
-    return cause.toString();
-  }
-  if (!isReadinessCauseRecord(cause)) {
-    return String(cause);
-  }
 
+  const record = cause as Readonly<Record<string, unknown>>;
   return {
-    ...(RuntimePredicate.isString(cause._tag) ? { _tag: cause._tag } : undefined),
-    ...(RuntimePredicate.isString(cause.message) ? { message: cause.message } : undefined),
-    ...(cause.reason === undefined ? undefined : { reason: describeReadinessCause(cause.reason) }),
-    ...(cause.cause === undefined ? undefined : { cause: describeReadinessCause(cause.cause) }),
+    ...(typeof record._tag === "string" ? { _tag: record._tag } : {}),
+    ...(typeof record.message === "string" ? { message: record.message } : {}),
+    ...(record.reason === undefined ? {} : { reason: describeReadinessCause(record.reason) }),
+    ...(record.cause === undefined ? {} : { cause: describeReadinessCause(record.cause) }),
   };
 }
 
@@ -109,13 +81,13 @@ export const waitForHttpReady = Effect.fn("shared.httpReadiness.waitForHttpReady
   const madeErrors = new WeakSet<object>();
   const fail = (cause: unknown): E => {
     const error = makeError({ requestUrl, probeTimeoutMs, attempt, cause });
-    if (RuntimePredicate.isObjectOrArray(error)) {
+    if (typeof error === "object" && error !== null) {
       madeErrors.add(error);
     }
     return error;
   };
   const isMadeError = (value: unknown): value is E =>
-    RuntimePredicate.isObjectOrArray(value) && madeErrors.has(value);
+    typeof value === "object" && value !== null && madeErrors.has(value);
 
   yield* Effect.logDebug("httpReadiness.start", {
     baseUrl: input.baseUrl,

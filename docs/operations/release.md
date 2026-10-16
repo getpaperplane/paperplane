@@ -12,7 +12,7 @@ npm can take over an hour to serve a large platform package it has already accep
 
 A release skips its own quality checks when CI has already passed on a push of the same commit, which is the usual case for nightlies built from `main`.
 
-The first release is **self-hosted desktop and persistent CLI hosts, with local, LAN, Tailscale, and desktop SSH connections**. Leave `ROVE_CLOUD_READY` unset: relay deployment and configuration are skipped, and desktop/CLI builds omit Rove Connect. Apple and Azure signing credentials may be omitted for unsigned builds. Signed macOS previews require `ROVE_MACOS_SIGNING_READY=true`; mobile production requires `ROVE_MOBILE_STORES_READY=true` because store distribution needs paid developer accounts. Hosted web, AUR, and marketing retain separate readiness controls; those controls indicate release readiness, not necessarily a paid service.
+The first release is **self-hosted desktop and persistent CLI hosts, with local, LAN, Tailscale, and desktop SSH connections**. Leave `ROVE_CLOUD_READY` unset: relay deployment and configuration are skipped, and desktop/CLI builds omit Rove Connect. Apple and Azure signing credentials may be omitted for unsigned builds. Signed macOS previews require `ROVE_MACOS_SIGNING_READY=true`; mobile production requires `ROVE_MOBILE_STORES_READY=true` because store distribution needs paid developer accounts. Hosted web and marketing retain separate readiness controls; those controls indicate release readiness, not necessarily a paid service.
 
 The static browser app deploys to Cloudflare. See the [Cloudflare deployment procedure](./cloudflare-web.md). When `ROVE_CLOUDFLARE_WEB_READY=true`, stable releases deploy to `rove.hafiezulzikry.com` and nightlies deploy to the separate `rove-nightly.hafiezulzikry.com` origin. Preview releases deploy neither. Marketing deploys only on stable releases when `ROVE_MARKETING_RELEASE_READY=true`. These deployments do not require the relay gate.
 
@@ -25,6 +25,8 @@ added again after their receiver class changes.
 Before publishing new project-file schema links, deploy the web or marketing build and verify that
 `https://rove.hafiezulzikry.com/schema/rove.json` returns the generated JSON Schema rather than the
 app's HTML fallback. Source-tree generation does not clear this deployment gate.
+
+Updates from the previous orchestration system preserve transcripts but cannot carry all runtime history forward. Before testing an upgrade, read [Threads from older Rove Code versions](../user/thread-migration.md) and verify the `statev2.sqlite` migration against isolated data.
 
 ## Before enabling publication
 

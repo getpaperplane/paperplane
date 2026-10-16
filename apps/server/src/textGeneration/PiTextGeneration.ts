@@ -25,19 +25,21 @@ import {
   buildBranchNamePrompt,
   buildCommitMessagePrompt,
   buildPrContentPrompt,
+  buildReviewGuidePrompt,
   buildThreadTitlePrompt,
-} from "./TextGenerationPrompts.ts";
+} from "@rove-code/provider-core/server/textGenerationPrompts";
 import {
   sanitizeCommitSubject,
   sanitizePrTitle,
   sanitizeThreadTitle,
-} from "./TextGenerationUtils.ts";
+} from "@rove-code/provider-core/server/textGenerationUtils";
 import * as RuntimePredicate from "effect/Predicate";
 
 type TextGenerationOperation =
   | "generateCommitMessage"
   | "generatePrContent"
   | "generateBranchName"
+  | "generateReviewGuide"
   | "generateThreadTitle";
 
 export interface PiTextGenerationOptions {
@@ -163,7 +165,6 @@ export const makePiTextGeneration = (
               }
               // The prompt builders rebuild the schema per call, so the
               // decoder cannot be hoisted to a stable module-level const.
-              // oxlint-disable-next-line rove/no-inline-schema-compile
               return Schema.decodeEffect(Schema.fromJsonString(input.outputSchema))(
                 extractJsonObject(trimmed),
               ).pipe(
@@ -265,7 +266,19 @@ export const makePiTextGeneration = (
         return { title: sanitizeThreadTitle(generated.title) };
       });
 
+    const generateReviewGuide: TextGeneration.TextGeneration["Service"]["generateReviewGuide"] =
+      Effect.fn("PiTextGeneration.generateReviewGuide")(function* (input) {
+        const { prompt, outputSchema } = buildReviewGuidePrompt(input);
+        return yield* runPiJson({
+          operation: "generateReviewGuide",
+          cwd: input.cwd,
+          prompt,
+          outputSchema,
+          modelSelection: input.modelSelection,
+        });
+      });
     return Effect.succeed({
+      generateReviewGuide,
       generateCommitMessage,
       generatePrContent,
       generateBranchName,

@@ -1,18 +1,14 @@
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { expect, it } from "@effect/vitest";
-import {
-  HostProcessExecutablePath,
-  HostProcessPlatform,
-  HostProcessUserId,
-} from "@rove-code/shared/hostProcess";
+import * as HostProcess from "@rove-code/shared/HostProcess";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
-import { HttpClient } from "effect/unstable/http";
-import * as ChildProcessSpawner from "effect/unstable/process/ChildProcessSpawner";
+import { HttpClient } from "effect/http";
+import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
 import * as ProcessRunner from "../processRunner.ts";
 import * as BootService from "./bootService.ts";
@@ -180,6 +176,8 @@ const makeHarness = Effect.fn("test.make_boot_service_harness")(function* (
         control.linger = "yes";
       if (!failed && command === "systemctl --user enable rove.service") control.enabled = true;
       if (!failed && command === "systemctl --user restart rove.service") control.active = true;
+      // A stop that fails (a timeout, say) has still stopped the service.
+      if (command === "systemctl --user stop rove.service") control.active = false;
       if (
         control.stateAfterStop !== undefined &&
         (command === "systemctl --user stop rove.service" ||
@@ -202,7 +200,11 @@ const makeHarness = Effect.fn("test.make_boot_service_harness")(function* (
                 : "",
         stderr: "",
         code: ChildProcessSpawner.ExitCode(
-          failed || (input.args[1] === "is-active" && !control.active) ? 1 : 0,
+          failed ||
+            (input.args[1] === "is-active" && !control.active) ||
+            (input.args[1] === "is-enabled" && !control.enabled)
+            ? 1
+            : 0,
         ),
         timedOut: false,
         stdoutTruncated: false,
@@ -236,9 +238,9 @@ const makeHarness = Effect.fn("test.make_boot_service_harness")(function* (
       Effect.provideService(ProcessRunner.ProcessRunner, runner),
       Effect.provide(
         Layer.mergeAll(
-          Layer.succeed(HostProcessPlatform, platform),
-          Layer.succeed(HostProcessUserId, 501),
-          Layer.succeed(HostProcessExecutablePath, "/usr/bin/rove"),
+          Layer.succeed(HostProcess.Platform, platform),
+          Layer.succeed(HostProcess.UserId, 501),
+          Layer.succeed(HostProcess.ExecutablePath, "/usr/bin/rove"),
           Layer.succeed(
             HttpClient.HttpClient,
             HttpClient.make(() => Effect.die("no release download expected")),
@@ -420,7 +422,6 @@ it.layer(NodeServices.layer)("boot service install", (it) => {
         current: true,
         installedVersion: "1.2.3",
       });
-      // @effect-diagnostics-next-line preferSchemaOverJson:off - fixed launcher-owned test document.
       const pendingState = JSON.stringify({
         protocol: SERVICE_LAUNCHER_PROTOCOL,
         activeVersion: "1.2.3",
@@ -607,7 +608,6 @@ it.layer(NodeServices.layer)("boot service install", (it) => {
     Effect.gen(function* () {
       const { service, fs, statePath } = yield* makeHarness();
       yield* service.install();
-      // @effect-diagnostics-next-line preferSchemaOverJson:off - fixed launcher-owned test document.
       const pendingState = JSON.stringify({
         protocol: SERVICE_LAUNCHER_PROTOCOL,
         activeVersion: "1.2.3",
@@ -624,6 +624,73 @@ it.layer(NodeServices.layer)("boot service install", (it) => {
       const error = yield* service.install({ start: false }).pipe(Effect.flip);
       expect(error._tag).toBe("BootServiceUpdatePendingError");
       expect(yield* fs.readFileString(statePath)).toBe(pendingState);
+    }),
+  );
+
+  it.effect("pauses only this home's running service for maintenance, even when it fails", () =>
+    Effect.gen(function* () {
+      const { service, commands, control, makeService } = yield* makeHarness();
+      yield* service.install();
+      const failure = yield* service
+        .withStopped(
+          Effect.suspend(() => Effect.fail(control.active ? "running" : "repair failed")),
+        )
+        .pipe(Effect.flip);
+      expect(failure).toBe("repair failed");
+      expect(control.active).toBe(true);
+
+      // A failed stop skips the operation but still starts the service again.
+      control.failCommand = "systemctl --user stop rove.service";
+      let ran = false;
+      const stopFailure = yield* service
+        .withStopped(
+          Effect.sync(() => {
+            ran = true;
+          }),
+        )
+        .pipe(Effect.flip);
+      expect(stopFailure).toMatchObject({
+        _tag: "BootServiceCommandError",
+        step: "stopping the installed service",
+      });
+      expect(ran).toBe(false);
+      expect(control.active).toBe(true);
+      control.failCommand = undefined;
+
+      // An enabled unit that is not active (crash-looping in auto-restart, say)
+      // is still stopped for the repair and started again afterwards.
+      control.active = false;
+      commands.length = 0;
+      yield* service.withStopped(Effect.sync(() => commands.push("repair")));
+      expect(commands).toEqual([
+        "systemctl --user is-enabled rove.service",
+        "systemctl --user is-active rove.service",
+        "systemctl --user stop rove.service",
+        "repair",
+        "systemctl --user restart rove.service",
+      ]);
+      expect(control.active).toBe(true);
+      // A running unit the user disabled is started again but stays disabled.
+      control.enabled = false;
+      yield* service.withStopped(Effect.void);
+      expect(control).toMatchObject({ active: true, enabled: false });
+      // A unit that was neither enabled nor active stays stopped.
+      control.active = false;
+      control.enabled = false;
+      commands.length = 0;
+      yield* service.withStopped(Effect.sync(() => commands.push("repair")));
+      expect(commands).toContain("systemctl --user stop rove.service");
+      expect(commands).not.toContain("systemctl --user restart rove.service");
+      expect(control.active).toBe(false);
+      control.enabled = true;
+      control.active = true;
+
+      const fs = yield* FileSystem.FileSystem;
+      const otherHome = yield* fs.makeTempDirectoryScoped({ prefix: "rove-doctor-other-" });
+      const other = yield* makeService(undefined, "1.2.3", otherHome);
+      commands.length = 0;
+      expect(yield* other.withStopped(Effect.sync(() => control.active))).toBe(true);
+      expect(commands).toEqual([]);
     }),
   );
 
@@ -708,7 +775,6 @@ it.layer(NodeServices.layer)("boot service install", (it) => {
     Effect.gen(function* () {
       const { service, fs, statePath, commands } = yield* makeHarness();
       yield* service.install();
-      // @effect-diagnostics-next-line preferSchemaOverJson:off - fixed launcher-owned test document.
       const pendingState = JSON.stringify({
         protocol: SERVICE_LAUNCHER_PROTOCOL - 1,
         activeVersion: "1.2.3",
@@ -866,7 +932,6 @@ it.layer(NodeServices.layer)("boot service install", (it) => {
       const { service, fs, statePath, commands } = yield* makeHarness("darwin");
       yield* service.install();
       const plistPath = (yield* service.status).unitPath;
-      // @effect-diagnostics-next-line preferSchemaOverJson:off - fixed launcher-owned test document.
       const pendingState = JSON.stringify({
         protocol: SERVICE_LAUNCHER_PROTOCOL - 1,
         activeVersion: "1.2.3",

@@ -24,13 +24,13 @@ describe("owned attachment paths", () => {
     );
   });
 
-  it("keeps historical attachments in their original directory after an iOS container move", () => {
+  it("resolves legacy attachment directories after a container move without relocating the file", () => {
     const oldUri = `file:///var/mobile/Containers/Data/Application/${OLD_CONTAINER}/Documents/t3-composer-attachments/${FILE_NAME}`;
     const documentUri = `file:///var/mobile/Containers/Data/Application/${CURRENT_CONTAINER}/Documents/`;
-    const resolved = `${documentUri}t3-composer-attachments/${FILE_NAME}`;
-    expect(resolveOwnedComposerAttachmentFileUri(oldUri, documentUri)).toBe(resolved);
+    const currentUri = `${documentUri}t3-composer-attachments/${FILE_NAME}`;
+    expect(resolveOwnedComposerAttachmentFileUri(oldUri, documentUri)).toBe(currentUri);
     expect(composerAttachmentFileReferenceKey(oldUri)).toBe(
-      composerAttachmentFileReferenceKey(resolved),
+      composerAttachmentFileReferenceKey(currentUri),
     );
   });
 

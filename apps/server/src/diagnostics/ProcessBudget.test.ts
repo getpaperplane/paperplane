@@ -4,7 +4,7 @@ import * as NodeCrypto from "node:crypto";
 import * as NodeFSP from "node:fs/promises";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
-import { HostProcessPlatform } from "@rove-code/shared/hostProcess";
+import { Platform as HostProcessPlatform } from "@rove-code/shared/HostProcess";
 import { it } from "@effect/vitest";
 import { afterAll, describe, expect } from "vite-plus/test";
 import {

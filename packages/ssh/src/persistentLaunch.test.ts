@@ -3,7 +3,9 @@ import * as NodeChildProcess from "node:child_process";
 import * as NodeFS from "node:fs";
 import * as NodeOS from "node:os";
 import * as NodePath from "node:path";
-import { expect, it } from "vite-plus/test";
+import * as NodeServices from "@effect/platform-node/NodeServices";
+import * as Effect from "effect/Effect";
+import { expect, it } from "@effect/vitest";
 
 import { remoteStateKey } from "./command.ts";
 import { buildRemoteLaunchScript, buildRemoteStopScript } from "./tunnel.ts";
@@ -11,7 +13,7 @@ import { buildRemoteLaunchScript, buildRemoteStopScript } from "./tunnel.ts";
 const target = { alias: "wsl", hostname: "100.117.60.97", username: "jo", port: 22 };
 const runner = { archiveVersion: "1.2.3" };
 
-it.each([
+it.effect.each([
   {
     name: "new host",
     installed: false,
@@ -44,15 +46,21 @@ it.each([
     action: "install",
     success: false,
   },
-])("release SSH lifecycle on a $name", ({ installed, running, supported, action, success }) => {
-  const home = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "rove-persistent-ssh-"));
-  try {
-    const runtime = NodePath.join(home, ".rove-code/runtime/versions", runner.archiveVersion);
-    NodeFS.mkdirSync(runtime, { recursive: true });
-    NodeFS.writeFileSync(NodePath.join(runtime, ".install-complete"), `${runner.archiveVersion}\n`);
-    NodeFS.writeFileSync(
-      NodePath.join(runtime, "rove"),
-      `#!/bin/sh
+])("release SSH lifecycle on a $name", ({ installed, running, supported, action, success }) =>
+  Effect.gen(function* () {
+    const stateKey = yield* remoteStateKey(target);
+    yield* Effect.sync(() => {
+      const home = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "rove-persistent-ssh-"));
+      try {
+        const runtime = NodePath.join(home, ".rove-code/runtime/versions", runner.archiveVersion);
+        NodeFS.mkdirSync(runtime, { recursive: true });
+        NodeFS.writeFileSync(
+          NodePath.join(runtime, ".install-complete"),
+          `${runner.archiveVersion}\n`,
+        );
+        NodeFS.writeFileSync(
+          NodePath.join(runtime, "rove"),
+          `#!/bin/sh
 set -eu
 case "$1" in
   --version) printf 'rove v1.2.3\\n' ;;
@@ -72,44 +80,44 @@ case "$1" in
   *) exit 1 ;;
 esac
 `,
-      { mode: 0o755 },
-    );
-    const launched = NodeChildProcess.spawnSync("/bin/sh", ["-s", "--", remoteStateKey(target)], {
-      input: buildRemoteLaunchScript(runner),
-      env: { ...process.env, HOME: home },
-      encoding: "utf8",
-      timeout: 10_000,
+          { mode: 0o755 },
+        );
+        const launched = NodeChildProcess.spawnSync("/bin/sh", ["-s", "--", stateKey], {
+          input: buildRemoteLaunchScript(runner),
+          env: { ...process.env, HOME: home },
+          encoding: "utf8",
+          timeout: 10_000,
+        });
+        expect(launched.error).toBeUndefined();
+        expect(launched.status === 0).toBe(success);
+        const actions = NodePath.join(home, "actions");
+        expect(NodeFS.existsSync(actions) ? NodeFS.readFileSync(actions, "utf8").trim() : "").toBe(
+          action,
+        );
+        if (success) {
+          expect(JSON.parse(launched.stdout.trim())).toEqual({
+            remotePort: 3773,
+            serverKind: "external",
+          });
+          const stopped = NodeChildProcess.spawnSync("/bin/sh", ["-s"], {
+            input: buildRemoteStopScript(stateKey),
+            env: { ...process.env, HOME: home },
+            encoding: "utf8",
+            timeout: 10_000,
+          });
+          expect(stopped.status).toBe(0);
+          expect(
+            NodeFS.existsSync(actions) ? NodeFS.readFileSync(actions, "utf8").trim() : "",
+          ).toBe(action);
+          expect(NodeFS.existsSync(NodePath.join(runtime, "rove"))).toBe(true);
+        } else {
+          expect(
+            NodeFS.existsSync(NodePath.join(home, ".rove-code/ssh-launch", stateKey, "managed")),
+          ).toBe(false);
+        }
+      } finally {
+        NodeFS.rmSync(home, { recursive: true, force: true });
+      }
     });
-    expect(launched.error).toBeUndefined();
-    expect(launched.status === 0).toBe(success);
-    const actions = NodePath.join(home, "actions");
-    expect(NodeFS.existsSync(actions) ? NodeFS.readFileSync(actions, "utf8").trim() : "").toBe(
-      action,
-    );
-    if (success) {
-      expect(JSON.parse(launched.stdout.trim())).toEqual({
-        remotePort: 3773,
-        serverKind: "external",
-      });
-      const stopped = NodeChildProcess.spawnSync("/bin/sh", ["-s"], {
-        input: buildRemoteStopScript(target),
-        env: { ...process.env, HOME: home },
-        encoding: "utf8",
-        timeout: 10_000,
-      });
-      expect(stopped.status).toBe(0);
-      expect(NodeFS.existsSync(actions) ? NodeFS.readFileSync(actions, "utf8").trim() : "").toBe(
-        action,
-      );
-      expect(NodeFS.existsSync(NodePath.join(runtime, "rove"))).toBe(true);
-    } else {
-      expect(
-        NodeFS.existsSync(
-          NodePath.join(home, ".rove-code/ssh-launch", remoteStateKey(target), "managed"),
-        ),
-      ).toBe(false);
-    }
-  } finally {
-    NodeFS.rmSync(home, { recursive: true, force: true });
-  }
-});
+  }).pipe(Effect.provide(NodeServices.layer)),
+);

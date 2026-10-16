@@ -94,8 +94,8 @@ function EmptyMobileClients() {
       <EmptyHeader>
         <EmptyTitle>No mobile clients</EmptyTitle>
         <EmptyDescription>
-          Sign in to Rove Code on your iPhone to register it for push notifications and Live
-          Activities.
+          Install Rove Code on your phone and sign in to Rove Connect to get push notifications and
+          Live Activities.
         </EmptyDescription>
       </EmptyHeader>
     </Empty>
@@ -112,7 +112,7 @@ export function MobileClientsUserProfilePage() {
   return (
     <ClerkUserProfilePage
       title="Mobile clients"
-      description="Devices registered to receive Rove Connect activity from your environments."
+      description="Mobile devices that get notifications from your environments."
       action={
         <ClerkUserProfileRefreshButton
           isPending={devicesState.isPending}

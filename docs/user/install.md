@@ -3,7 +3,7 @@
 Download desktop installers from [Rove Code releases](https://github.com/hafiezul/rove/releases).
 Use Rove-owned CLI packages. Do not substitute an upstream package.
 
-## Install a CLI host
+## Command line
 
 With Node.js and npm available for installation, run:
 
@@ -43,6 +43,12 @@ Outside a development worktree, Rove Code uses `~/.rove-code` for its data.
 The inherited installation's `~/.rove` is left untouched. Do not point both
 applications at the same data directory. Importing an existing installation
 is not yet supported.
+
+## Desktop command line
+
+The desktop app includes the `rove` command. In **Settings → General → About**, choose **Install** next to **rove command**, then open a new terminal. **Remove** takes it off your PATH again. An existing npm installation stays unchanged.
+
+With the desktop app running, `rove app` opens a new thread for the current directory. Pass a path, such as `rove app ../my-project`, to use another directory. This requires the desktop app; a standalone server or SSH session is not enough.
 
 ## Test an unsigned macOS build
 
@@ -108,6 +114,8 @@ computer.
 | Cursor      | Install [Cursor CLI](https://cursor.com/cli), then run `agent login`.                                                                                     |
 | Grok Build  | Install [Grok Build CLI](https://x.ai/cli), then run `grok login`.                                                                                        |
 | OpenCode    | Install [OpenCode](https://opencode.ai), then run `opencode auth login`.                                                                                  |
+| Pi          | Rove Code embeds Pi through its SDK. Authenticate Pi on the server and enable it in provider settings; see [Pi](./providers-pi.md).                       |
+| Muse Code   | Install [Muse Code](https://dev.meta.ai/docs/muse-code) on the server, run `muse login`, then enable it in Settings → Providers.                          |
 | Antigravity | Install and sign in with Google from Rove Code's provider settings.                                                                                       |
 
 Provider CLIs must be on the server's `PATH`. If Rove Code cannot find one, set its

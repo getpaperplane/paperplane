@@ -1,149 +1,299 @@
-import type { EnvironmentId } from "@rove-code/contracts";
-import type { RichResponseBlock } from "@rove-code/contracts/rich-response";
+import { AppActivityIndicator } from "../../components/ui/AppActivityIndicator";
+import { useNavigation } from "@react-navigation/native";
+import type { EnvironmentId, ThreadId } from "@rove-code/contracts";
 import {
-  chartVariables,
-  clampHtmlRenderHeight,
   htmlRenderFileName,
+  htmlRenderFrameHeight,
   htmlRenderThemeFragment,
   htmlRenderThemeMessage,
-  readHtmlRenderContentHeight,
-  readHtmlRenderLinkRequest,
+  type HtmlRenderReference,
   type HtmlRenderTheme,
 } from "@rove-code/shared/htmlRender";
-import { HTML_RENDER_MAX_HEIGHT } from "@rove-code/contracts/rich-response";
-import { memo, useEffect, useMemo, useRef, useState } from "react";
-import { View } from "react-native";
-import { WebView } from "react-native-webview";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Platform, Pressable, View, type ColorValue } from "react-native";
+import { WebView, type WebViewMessageEvent } from "react-native-webview";
 
-import { AppText as Text } from "../../components/AppText";
-import { useAppearancePreferences } from "../settings/appearance/AppearancePreferencesProvider";
+import { SymbolView } from "../../components/ui/AppSymbol";
+import { AppText as Text } from "../../components/ui/AppText";
+import { mobileHtmlRenderTheme } from "../../lib/htmlRenderTheme";
 import { tryOpenExternalUrl } from "../../lib/openExternalUrl";
-import { useAssetUrlState } from "../../state/assets";
+import { useAssetUrlState, useRefreshAssetUrl } from "../../state/assets";
+import { useAppearancePreferences } from "../settings/appearance/AppearancePreferencesProvider";
 
-type HtmlBlock = Extract<RichResponseBlock, { type: "html" }>;
+const ROW_BOTTOM_MARGIN = 8;
+const FULL_SCREEN_GUTTER = 16;
 
-const FONT_SANS = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif';
-const FONT_MONO = 'Menlo, "SF Mono", "Roboto Mono", monospace';
+/** A render row is its frame's height plus spacing; the page's content never sizes it. */
+export function htmlRenderRowHeight(frameHeight: number) {
+  return frameHeight + ROW_BOTTOM_MARGIN;
+}
 
-/** The mobile palette mapped onto the variables pages style against. */
-function useMobileHtmlRenderTheme(): HtmlRenderTheme {
-  const { themeVariables: colors, themeAppearance } = useAppearancePreferences();
+function useHtmlRenderTheme() {
+  const { themeId, themeAppearance, themeVariables, systemColorsActive } =
+    useAppearancePreferences();
   return useMemo(
-    () => ({
-      appearance: themeAppearance,
-      variables: {
-        "--background": colors["--color-thread-canvas"],
-        "--foreground": colors["--color-foreground"],
-        "--muted": colors["--color-subtle"],
-        "--muted-foreground": colors["--color-foreground-muted"],
-        "--card": colors["--color-card"],
-        "--card-foreground": colors["--color-foreground"],
-        "--border": colors["--color-border"],
-        "--primary": colors["--color-primary"],
-        "--primary-foreground": colors["--color-primary-foreground"],
-        "--accent": colors["--color-subtle-strong"],
-        "--accent-foreground": colors["--color-foreground"],
-        "--destructive": colors["--color-danger"],
-        "--warning": colors["--color-warning"],
-        "--success": themeAppearance === "dark" ? "#34d399" : "#059669",
-        "--info": themeAppearance === "dark" ? "#60a5fa" : "#2563eb",
-        ...chartVariables(themeAppearance),
-        "--radius": "0.625rem",
-        "--font-sans": FONT_SANS,
-        "--font-mono": FONT_MONO,
-      },
-    }),
-    [colors, themeAppearance],
+    () =>
+      mobileHtmlRenderTheme({
+        themeId,
+        appearance: themeAppearance,
+        variables: themeVariables,
+        systemColors: systemColorsActive,
+        platform: Platform.OS,
+      }),
+    [themeId, themeAppearance, themeVariables, systemColorsActive],
   );
+}
+
+function postTheme(view: WebView<object> | null, theme: HtmlRenderTheme) {
+  view?.injectJavaScript(
+    `window.postMessage(${JSON.stringify(htmlRenderThemeMessage(theme))}, "*"); true;`,
+  );
+}
+
+const OVERFLOW_MESSAGE_TYPE = "rove-html-render-overflow";
+
+// Reports which ways the page overflows its frame, so a feed row only takes
+// scroll gestures from a page that can use them.
+const OVERFLOW_SCRIPT = `(function(){var last;function report(){var d=document.documentElement,b=document.body;var x=Math.max(d.scrollWidth,b?b.scrollWidth:0)>window.innerWidth+1,y=Math.max(d.scrollHeight,b?b.scrollHeight:0)>window.innerHeight+1,o=x+","+y;if(o===last)return;last=o;window.ReactNativeWebView.postMessage(JSON.stringify({type:${JSON.stringify(OVERFLOW_MESSAGE_TYPE)},x:x,y:y}));}report();if(window.ResizeObserver){var r=new ResizeObserver(report);r.observe(document.documentElement);if(document.body)r.observe(document.body);}window.addEventListener("resize",report);})();true;`;
+
+type Overflow = { readonly x: boolean; readonly y: boolean };
+
+const NO_OVERFLOW: Overflow = { x: false, y: false };
+
+function readOverflowMessage(data: string): Overflow | null {
+  try {
+    const message: unknown = JSON.parse(data);
+    return typeof message === "object" &&
+      message !== null &&
+      "type" in message &&
+      message.type === OVERFLOW_MESSAGE_TYPE &&
+      "x" in message &&
+      typeof message.x === "boolean" &&
+      "y" in message &&
+      typeof message.y === "boolean"
+      ? { x: message.x, y: message.y }
+      : null;
+  } catch {
+    return null;
+  }
 }
 
 const withoutFragment = (url: string) => url.split("#", 1)[0];
 
 /**
- * An agent's interactive page inline in a reply. The page reports its height
- * through `window.ReactNativeWebView`, so the view grows to fit it and the feed,
- * not the page, owns vertical scrolling. Links open in the system browser.
+ * An agent's HTML page, themed before first paint and kept in step with the app theme.
+ * The page may move within its own document; links leave for the browser.
  */
-export const HtmlRenderWebView = memo(function HtmlRenderWebView(props: {
-  readonly environmentId: EnvironmentId;
-  readonly block: HtmlBlock;
+export function HtmlRenderWebView(props: {
+  readonly uri: string;
+  readonly title: string;
+  /** Inside the feed, the page takes scroll gestures only when it overflows its frame. */
+  readonly nested: boolean;
+  readonly onLoadError?: () => void;
 }) {
-  const { attachmentId, title } = props.block;
+  const theme = useHtmlRenderTheme();
+  const [initialTheme] = useState(theme);
+  const [generation, setGeneration] = useState(0);
+  const [loaded, setLoaded] = useState(false);
+  const [overflow, setOverflow] = useState(NO_OVERFLOW);
+  const webView = useRef<WebView<object>>(null);
+  const crashes = useRef(0);
+  // The theme the loaded document shows; null until it loads.
+  const shownTheme = useRef<HtmlRenderTheme | null>(null);
+  const source = useMemo(
+    () => ({ uri: props.uri + htmlRenderThemeFragment(initialTheme) }),
+    [props.uri, initialTheme],
+  );
+  useEffect(() => {
+    if (shownTheme.current === null || shownTheme.current === theme) return;
+    shownTheme.current = theme;
+    postTheme(webView.current, theme);
+  }, [theme]);
+  const restart = () => {
+    // A page that keeps crashing its web process is not reloaded forever.
+    crashes.current += 1;
+    if (crashes.current > 1) {
+      props.onLoadError?.();
+      return;
+    }
+    shownTheme.current = null;
+    setLoaded(false);
+    setOverflow(NO_OVERFLOW);
+    setGeneration((value) => value + 1);
+  };
+  const scrollable = !props.nested || overflow.x || overflow.y;
+  // Pages have no horizontal padding of their own, so full screen adds the
+  // feed's gutter in the page's background color.
+  return (
+    <View
+      style={
+        props.nested
+          ? { flex: 1 }
+          : {
+              flex: 1,
+              paddingHorizontal: FULL_SCREEN_GUTTER,
+              backgroundColor: theme.variables["--background"],
+            }
+      }
+    >
+      <WebView<object>
+        key={generation}
+        ref={webView}
+        source={source}
+        accessibilityLabel={props.title}
+        style={{ flex: 1, backgroundColor: "transparent" }}
+        allowsInlineMediaPlayback
+        automaticallyAdjustContentInsets={!props.nested}
+        bounces={!props.nested}
+        showsVerticalScrollIndicator={!props.nested}
+        showsHorizontalScrollIndicator={!props.nested}
+        scrollEnabled={scrollable}
+        // Android only: the page holds vertical drags until it reaches an edge,
+        // then hands them to the feed (patches/react-native-webview). A page
+        // that only overflows sideways leaves vertical drags to the feed.
+        nestedScrollEnabled={props.nested && overflow.y}
+        overScrollMode={props.nested ? "never" : "always"}
+        // Only the page itself loads here; other top-frame navigations are
+        // dropped. A link the reader taps opens as a new window, which the
+        // platform allows only from a tap, and goes to the browser.
+        onShouldStartLoadWithRequest={(request) =>
+          request.isTopFrame === false ||
+          withoutFragment(request.url) === withoutFragment(props.uri)
+        }
+        onOpenWindow={(event) => {
+          const url = event.nativeEvent.targetUrl;
+          if (/^https?:/i.test(url)) void tryOpenExternalUrl(url, "html-render");
+        }}
+        onLoadEnd={() => {
+          setLoaded(true);
+          shownTheme.current = theme;
+          if (theme !== initialTheme) postTheme(webView.current, theme);
+        }}
+        onError={props.onLoadError}
+        onHttpError={props.onLoadError}
+        onContentProcessDidTerminate={restart}
+        onRenderProcessGone={restart}
+        {...(props.nested
+          ? {
+              injectedJavaScript: OVERFLOW_SCRIPT,
+              onMessage: (event: WebViewMessageEvent) => {
+                const next = readOverflowMessage(event.nativeEvent.data);
+                if (next !== null) setOverflow(next);
+              },
+            }
+          : {})}
+      />
+      {loaded ? null : (
+        <View pointerEvents="none" className="absolute inset-0 items-center justify-center">
+          <AppActivityIndicator />
+        </View>
+      )}
+    </View>
+  );
+}
+
+/** A completed `html_render` call in the thread feed: the page itself, at a fixed height. */
+export function ThreadHtmlRender(props: {
+  readonly environmentId: EnvironmentId;
+  readonly threadId: ThreadId;
+  readonly render: HtmlRenderReference;
+  /** The feed's content width; the frame's height follows the page's measured height there. */
+  readonly frameWidth: number;
+  readonly iconColor: ColorValue;
+}) {
+  const navigation = useNavigation();
+  const { attachmentId, title } = props.render;
+  const height = htmlRenderFrameHeight(props.render, props.frameWidth);
+  const fileName = htmlRenderFileName(title);
   const resource = useMemo(
     () => ({
       _tag: "attachment" as const,
       attachmentId,
-      fileName: htmlRenderFileName(title),
+      fileName,
       mimeType: "text/html",
       disposition: "inline" as const,
     }),
-    [attachmentId, title],
+    [attachmentId, fileName],
   );
-  const assetUrl = useAssetUrlState(props.environmentId, resource);
-  const theme = useMobileHtmlRenderTheme();
-  const webViewRef = useRef<WebView>(null);
-  const [contentHeight, setContentHeight] = useState<number>();
-
-  // The page keeps the URL and theme it first loaded with; later theme changes
-  // are posted in, so switching themes never reloads (and resets) the page.
-  const [src, setSrc] = useState<string | null>(null);
-  const loadedUrl = assetUrl._tag === "Success" ? assetUrl.url : null;
-  useEffect(() => {
-    if (src === null && loadedUrl !== null) setSrc(loadedUrl + htmlRenderThemeFragment(theme));
-  }, [loadedUrl, src, theme]);
-
-  useEffect(() => {
-    const message = JSON.stringify(htmlRenderThemeMessage(theme));
-    webViewRef.current?.injectJavaScript(
-      `window.dispatchEvent(new MessageEvent("message",{data:${message}}));true;`,
-    );
-  }, [theme]);
-
-  const height = clampHtmlRenderHeight(contentHeight ?? props.block.height);
-  // A page taller than the cap scrolls inside; otherwise the feed keeps the gesture.
-  const scrollsInside = contentHeight !== undefined && contentHeight > HTML_RENDER_MAX_HEIGHT;
+  const asset = useAssetUrlState(props.environmentId, resource);
+  const refresh = useRefreshAssetUrl(props.environmentId, resource);
+  // Signed URLs are re-minted periodically; following them would reload the page.
+  const [uri, setUri] = useState<string | null>(null);
+  if (uri === null && asset._tag === "Success") setUri(asset.url);
+  const [failed, setFailed] = useState(false);
+  // A failed load retries once with a fresh URL, or remounts on the same one,
+  // since the failure may have been the connection rather than the URL.
+  const [attempt, setAttempt] = useState(0);
+  const retried = useRef(false);
+  const handleLoadError = () => {
+    if (retried.current) {
+      setFailed(true);
+      return;
+    }
+    retried.current = true;
+    void refresh().then((next) => {
+      if (next === null) setFailed(true);
+      else if (next !== uri) setUri(next);
+      else setAttempt((value) => value + 1);
+    });
+  };
 
   return (
-    <View style={{ height }} accessibilityLabel={title}>
-      {src !== null ? (
-        <WebView
-          ref={webViewRef}
-          source={{ uri: src }}
-          originWhitelist={["*"]}
-          scrollEnabled={scrollsInside}
-          nestedScrollEnabled={scrollsInside}
-          allowsInlineMediaPlayback
-          allowsFullscreenVideo
-          mediaPlaybackRequiresUserAction
-          setSupportMultipleWindows={false}
-          onMessage={(event) => {
-            const data = event.nativeEvent.data;
-            const reported = readHtmlRenderContentHeight(data);
-            if (reported !== undefined) {
-              setContentHeight(reported);
-              return;
+    <View style={{ marginBottom: ROW_BOTTOM_MARGIN }}>
+      <View style={{ height }}>
+        {uri !== null && !failed ? (
+          <HtmlRenderWebView
+            key={`${uri}:${attempt}`}
+            uri={uri}
+            title={title}
+            nested
+            onLoadError={handleLoadError}
+          />
+        ) : failed || asset._tag === "Failure" ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`Reload ${title}`}
+            className="flex-1 items-center justify-center"
+            onPress={() => {
+              retried.current = false;
+              setFailed(false);
+              if (uri === null) void refresh().then((next) => next !== null && setUri(next));
+            }}
+          >
+            <Text className="text-sm text-foreground-muted">Page unavailable</Text>
+          </Pressable>
+        ) : (
+          <View className="flex-1 items-center justify-center">
+            <AppActivityIndicator />
+          </View>
+        )}
+        {uri !== null && !failed ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`Open ${title}`}
+            hitSlop={8}
+            className="absolute right-1.5 top-1.5 h-7 w-7 items-center justify-center rounded-full border border-border/60 bg-card/80"
+            onPress={() =>
+              navigation.navigate("ThreadAttachment", {
+                environmentId: String(props.environmentId),
+                threadId: String(props.threadId),
+                attachmentId,
+                name: fileName,
+                mimeType: "text/html",
+                sizeBytes: "0",
+                htmlRender: "1",
+              })
             }
-            const url = readHtmlRenderLinkRequest(data);
-            if (url !== undefined) void tryOpenExternalUrl(url, "markdown-link");
-          }}
-          onShouldStartLoadWithRequest={(request) => {
-            // The page itself, its frames, and in-page anchors load here; anything
-            // else would replace the page inside the thread, so it opens outside.
-            if (!request.isTopFrame || withoutFragment(request.url) === withoutFragment(src)) {
-              return true;
-            }
-            if (/^https?:\/\//i.test(request.url)) {
-              void tryOpenExternalUrl(request.url, "markdown-link");
-            }
-            return false;
-          }}
-          style={{ flex: 1, backgroundColor: "transparent" }}
-        />
-      ) : assetUrl._tag === "Failure" ? (
-        <View className="flex-1 items-center justify-center">
-          <Text className="text-xs text-foreground-muted">Unable to load {title}</Text>
-        </View>
-      ) : null}
+          >
+            <SymbolView
+              name="arrow.up.left.and.arrow.down.right"
+              size={12}
+              tintColor={props.iconColor}
+              type="monochrome"
+            />
+          </Pressable>
+        ) : null}
+      </View>
     </View>
   );
-});
+}

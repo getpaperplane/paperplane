@@ -1,22 +1,15 @@
 import { useAtomValue } from "@effect/atom-react";
 import {
-  STANDALONE_THREADS_UNSUPPORTED_MESSAGE,
-  standaloneThreadInput,
-  supportsStandaloneThreads,
-} from "@rove-code/client-runtime/state/standalone-thread";
-import {
   scopedProjectKey,
   scopeProjectRef,
   scopeThreadRef,
 } from "@rove-code/client-runtime/environment";
 import {
   DEFAULT_SERVER_SETTINGS,
-  type EnvironmentId,
   type ScopedProjectRef,
   type ThreadId,
 } from "@rove-code/contracts";
 import { useParams, useRouter } from "@tanstack/react-router";
-import { Cause } from "effect";
 import { useCallback, useMemo } from "react";
 import {
   composerDraftHasUserContent,
@@ -33,8 +26,15 @@ import {
   getProjectOrderKey,
   selectProjectGroupingSettings,
 } from "../logicalProject";
-import { resolveProjectSettings } from "@rove-code/shared/projectSettings";
-import { readProjects, readThreadShell, useProjects, useThread } from "../state/entities";
+import { resolveNewThreadEnvMode, resolveProjectSettings } from "@rove-code/shared/projectSettings";
+import {
+  readProject,
+  readProjects,
+  readThreadShell,
+  readThreadShells,
+  useProjects,
+  useThreadShell,
+} from "../state/entities";
 import {
   hasExplicitComposerModelSelection,
   resolveNewDraftStartFromOrigin,
@@ -45,9 +45,6 @@ import { environmentServerConfigsAtom } from "../state/server";
 import { resolveThreadRouteTarget } from "../threadRoutes";
 import { legacyProjectCwdPreferenceKey, useUiStateStore } from "../uiStateStore";
 import { useClientSettings } from "./useSettings";
-import { usePrimaryEnvironmentId } from "../state/environments";
-import { useAtomCommand } from "../state/use-atom-command";
-import { threadEnvironment } from "../state/threads";
 
 interface NewThreadWorkspaceOptions {
   branch?: string | null;
@@ -72,8 +69,6 @@ export function useNewThreadHandler() {
   const environmentServerConfigs = useAtomValue(environmentServerConfigsAtom);
   const projectGroupingSettings = useClientSettings(selectProjectGroupingSettings);
   const router = useRouter();
-  const primaryEnvironmentId = usePrimaryEnvironmentId();
-  const createThread = useAtomCommand(threadEnvironment.create);
   const getCurrentRouteTarget = useCallback(() => {
     const currentRouteParams = router.state.matches[router.state.matches.length - 1]?.params ?? {};
     return resolveThreadRouteTarget(currentRouteParams);
@@ -81,9 +76,8 @@ export function useNewThreadHandler() {
 
   return useCallback(
     (
-      projectRef: ScopedProjectRef | null,
+      projectRef: ScopedProjectRef,
       options?: {
-        environmentId?: EnvironmentId;
         branch?: string | null;
         worktreePath?: string | null;
         envMode?: DraftThreadEnvMode;
@@ -94,43 +88,6 @@ export function useNewThreadHandler() {
       // prepared checkout, a task to write — addresses that one rather than looking the project
       // up again and finding whichever draft it happens to hold.
     ): Promise<{ draftId: DraftId; threadId: ThreadId } | null> => {
-      if (projectRef === null) {
-        const routeTarget = getCurrentRouteTarget();
-        const environmentId =
-          options?.environmentId ??
-          (routeTarget?.kind === "server" ? routeTarget.threadRef.environmentId : null) ??
-          primaryEnvironmentId ??
-          environmentServerConfigs.keys().next().value;
-        if (!environmentId)
-          return Promise.reject(new Error("Connect an environment to start a thread."));
-        const config = environmentServerConfigs.get(environmentId);
-        if (!supportsStandaloneThreads(config))
-          return Promise.reject(new Error(STANDALONE_THREADS_UNSUPPORTED_MESSAGE));
-        // Provider instances are per environment, so only carry a model
-        // selection from a thread on the target environment.
-        const source =
-          routeTarget?.kind === "server" && routeTarget.threadRef.environmentId === environmentId
-            ? readThreadShell(routeTarget.threadRef)
-            : null;
-        const threadId = newThreadId();
-        return createThread({
-          environmentId,
-          input: standaloneThreadInput(threadId, config, source?.modelSelection),
-        }).then(async (result) => {
-          if (result._tag === "Failure") {
-            const error = Cause.squash(result.cause);
-            throw error instanceof Error
-              ? error
-              : new Error("Could not start a standalone thread.");
-          }
-          await router.navigate({
-            to: "/$environmentId/$threadId",
-            params: { environmentId, threadId },
-            replace: options?.replace ?? false,
-          });
-          return null;
-        });
-      }
       const projects = readProjects();
       const targetServerSettings =
         environmentServerConfigs.get(projectRef.environmentId)?.settings ?? DEFAULT_SERVER_SETTINGS;
@@ -182,6 +139,10 @@ export function useNewThreadHandler() {
           candidate.id === projectRef.projectId &&
           candidate.environmentId === projectRef.environmentId,
       );
+      // Removal can land while the project file is read; a draft opened
+      // after that belongs to a project that no longer exists.
+      const abandonedSinceRequest = () =>
+        routeChangedSinceRequest() || (project !== undefined && readProject(projectRef) === null);
       // The resolver applies project overrides and, until the server has
       // folded them, the aggregate's own legacy fields.
       const projectSettings = resolveProjectSettings(
@@ -208,12 +169,21 @@ export function useNewThreadHandler() {
         const projectFile = consultProjectFile
           ? await readRoveProjectFile(project.environmentId, project.workspaceRoot)
           : null;
-        return resolveProjectSettings(
-          targetServerSettings,
-          project?.id ?? null,
-          project,
-          projectFile,
-        ).settings.defaultThreadEnvMode;
+        return resolveNewThreadEnvMode({
+          projectSettings: resolveProjectSettings(
+            targetServerSettings,
+            project?.id ?? null,
+            project,
+            projectFile,
+          ),
+          workspaceRoot: project?.workspaceRoot ?? null,
+          newProjectsRoot: environmentServerConfigs.get(projectRef.environmentId)?.newProjectsRoot,
+          projectHasThreads: readThreadShells().some(
+            (thread) =>
+              thread.environmentId === projectRef.environmentId &&
+              thread.projectId === projectRef.projectId,
+          ),
+        });
       };
       const logicalProjectKey = project
         ? deriveLogicalProjectKeyFromSettings(project, projectGroupingSettings)
@@ -276,7 +246,7 @@ export function useNewThreadHandler() {
             workspaceContext = pickExplicitWorkspaceOptions(options);
           } else if (!isDraftAlreadyOpen) {
             const defaultEnvMode = await resolveDefaultEnvMode();
-            if (routeChangedSinceRequest()) {
+            if (abandonedSinceRequest()) {
               return null;
             }
             // The await yields. If the draft was opened (a concurrent
@@ -415,7 +385,7 @@ export function useNewThreadHandler() {
       const createdAt = new Date().toISOString();
       return (async () => {
         const initialEnvMode = options?.envMode ?? (await resolveDefaultEnvMode());
-        if (routeChangedSinceRequest()) {
+        if (abandonedSinceRequest()) {
           return null;
         }
         // The await yields, so a concurrent invocation may have registered a
@@ -484,14 +454,7 @@ export function useNewThreadHandler() {
         return { draftId, threadId };
       })();
     },
-    [
-      createThread,
-      environmentServerConfigs,
-      getCurrentRouteTarget,
-      primaryEnvironmentId,
-      projectGroupingSettings,
-      router,
-    ],
+    [environmentServerConfigs, getCurrentRouteTarget, projectGroupingSettings, router],
   );
 }
 
@@ -503,7 +466,7 @@ export function useHandleNewThread() {
   });
   const routeThreadRef = routeTarget?.kind === "server" ? routeTarget.threadRef : null;
   const routeDraftId = routeTarget?.kind === "draft" ? routeTarget.draftId : null;
-  const activeThread = useThread(routeThreadRef);
+  const activeThread = useThreadShell(routeThreadRef);
   const getDraftThread = useComposerDraftStore((store) => store.getDraftThread);
   const activeDraftThread = useComposerDraftStore(() =>
     routeTarget

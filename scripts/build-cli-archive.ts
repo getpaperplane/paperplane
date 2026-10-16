@@ -25,10 +25,10 @@ import * as Option from "effect/Option";
 import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
 import * as Schema from "effect/Schema";
-import { Command, Flag } from "effect/unstable/cli";
-import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
+import { Command, Flag } from "effect/cli";
+import { ChildProcess, ChildProcessSpawner } from "effect/process";
 
-import { HostProcessArchitecture, HostProcessPlatform } from "@rove-code/shared/hostProcess";
+import * as HostProcess from "@rove-code/shared/HostProcess";
 import { fromYaml } from "@rove-code/shared/schemaYaml";
 import { resolveSpawnCommand } from "@rove-code/shared/shell";
 import rootPackageJson from "../package.json" with { type: "json" };
@@ -544,8 +544,8 @@ const buildCliArchive = Effect.fn("buildCliArchive")(function* (input: {
   );
   // The unsuffixed host build is only a valid stand-in when it was built for
   // this platform and architecture; otherwise a missing target must fail.
-  const hostPlatform = yield* HostProcessPlatform;
-  const hostKey = `${hostPlatform === "win32" ? "win" : hostPlatform}-${yield* HostProcessArchitecture}`;
+  const hostPlatform = yield* HostProcess.Platform;
+  const hostKey = `${hostPlatform === "win32" ? "win" : hostPlatform}-${yield* HostProcess.Architecture}`;
   const builtExecutable = (yield* fs.exists(targetExecutable))
     ? targetExecutable
     : targetKey === hostKey

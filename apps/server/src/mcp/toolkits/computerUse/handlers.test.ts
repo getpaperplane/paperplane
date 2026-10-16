@@ -3,20 +3,26 @@ import { EnvironmentId, ProviderInstanceId, ThreadId } from "@rove-code/contract
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Schema from "effect/Schema";
-import { McpSchema, McpServer } from "effect/unstable/ai";
+import { McpSchema, McpServer } from "effect/ai";
 
 import { BACKGROUND_ONLY_INSTRUCTIONS } from "../../../computerUse/BackgroundPolicy.ts";
 import * as CuaDriver from "../../../computerUse/CuaDriver.ts";
 import * as ServerSettings from "../../../serverSettings.ts";
 import * as McpInvocationContext from "../../McpInvocationContext.ts";
-import { ComputerUseToolsRegistrationLive } from "./handlers.ts";
+import { layerComputerUseToolkit } from "../../McpHttpServer.ts";
+import * as McpToolAccessTestkit from "../../McpToolAccess.testkit.ts";
+import * as ThreadManagementService from "../../../orchestration-v2/ThreadManagementService.ts";
 
 const threadId = ThreadId.make("thread-computer-use");
 const invocation = {
   environmentId: EnvironmentId.make("environment-computer-use"),
-  threadId,
-  providerSessionId: "provider-session-computer-use",
-  providerInstanceId: ProviderInstanceId.make("pi"),
+  requestNamespace: "provider-session-computer-use",
+  thread: {
+    threadId,
+    providerSessionId: "provider-session-computer-use",
+    providerInstanceId: ProviderInstanceId.make("codex"),
+  },
+  client: undefined,
   capabilities: new Set<McpInvocationContext.McpCapability>(),
   issuedAt: 1,
 };
@@ -92,6 +98,7 @@ const makeLayer = (options: {
   readonly threads?: Array<ThreadId>;
   readonly calls: Array<{ name: string; args: CuaDriver.CuaArguments }>;
   readonly unavailable?: boolean;
+  readonly inactive?: boolean;
   readonly results?: Readonly<Record<string, McpSchema.CallToolResult>>;
 }) => {
   const unavailable = new CuaDriver.CuaDriverUnavailableError({
@@ -122,14 +129,26 @@ const makeLayer = (options: {
         }),
     }),
   );
-  return ComputerUseToolsRegistrationLive.pipe(
+  return layerComputerUseToolkit.pipe(
     Layer.provideMerge(McpServer.McpServer.layer),
+    Layer.provideMerge(
+      options.inactive
+        ? Layer.mock(ThreadManagementService.ThreadManagementService)({
+            getThreadShell: (id) =>
+              Effect.succeed(McpToolAccessTestkit.liveThreadShell(id, { activeRunId: null })),
+          })
+        : McpToolAccessTestkit.liveThreadsLayer,
+    ),
     Layer.provideMerge(ServerSettings.layerTest({ enableAgentComputerUse: options.enabled })),
     Layer.provide(driver),
   );
 };
 
-const callTool = (name: string, args: CuaDriver.CuaArguments, scope = invocation) =>
+const callTool = (
+  name: string,
+  args: CuaDriver.CuaArguments,
+  scope: McpInvocationContext.McpInvocationScope = invocation,
+) =>
   Effect.gen(function* () {
     const server = yield* McpServer.McpServer;
     return yield* server
@@ -235,7 +254,7 @@ it.effect("routes threads to distinct driver connections without named-session i
         tool: "click",
         arguments: { pid: 4 },
       },
-      { ...invocation, threadId: peer },
+      { ...invocation, thread: { ...invocation.thread, threadId: peer } },
     );
     yield* callTool("computer_call", { tool: "list_apps", arguments: null });
     expect(calls).toEqual([
@@ -325,6 +344,54 @@ it.effect(
     }).pipe(Effect.provide(makeLayer({ enabled: true, calls, extraTools })));
   },
 );
+
+it.effect("refuses clients without a Rove thread before contacting Cua", () => {
+  const calls: Array<{ name: string; args: CuaDriver.CuaArguments }> = [];
+  return Effect.gen(function* () {
+    const external = {
+      ...invocation,
+      thread: undefined,
+      client: {
+        sessionId: "external",
+        label: "External MCP client",
+        access: "full-access" as const,
+      },
+    };
+    for (const name of ["computer_describe", "computer_call"]) {
+      const refused = yield* callTool(name, { tool: "list_apps" }, external);
+      expect(refused.isError).toBe(true);
+      expect(text(refused)).toContain("needs an agent running inside Rove Code");
+    }
+    expect(calls).toHaveLength(0);
+  }).pipe(Effect.provide(makeLayer({ enabled: true, calls })));
+});
+
+it.effect("refuses a provider that no longer owns the calling thread", () => {
+  const calls: Array<{ name: string; args: CuaDriver.CuaArguments }> = [];
+  return Effect.gen(function* () {
+    const refused = yield* callTool(
+      "computer_call",
+      { tool: "list_apps" },
+      {
+        ...invocation,
+        thread: { ...invocation.thread, providerInstanceId: ProviderInstanceId.make("pi") },
+      },
+    );
+    expect(refused.isError).toBe(true);
+    expect(text(refused)).toContain("no longer owns an active thread run");
+    expect(calls).toHaveLength(0);
+  }).pipe(Effect.provide(makeLayer({ enabled: true, calls })));
+});
+
+it.effect("refuses computer actions after the calling run has ended", () => {
+  const calls: Array<{ name: string; args: CuaDriver.CuaArguments }> = [];
+  return Effect.gen(function* () {
+    const refused = yield* callTool("computer_call", { tool: "list_apps" });
+    expect(refused.isError).toBe(true);
+    expect(text(refused)).toContain("no longer owns an active thread run");
+    expect(calls).toHaveLength(0);
+  }).pipe(Effect.provide(makeLayer({ enabled: true, calls, inactive: true })));
+});
 
 it.effect("rejects calls without an operation name", () =>
   Effect.gen(function* () {

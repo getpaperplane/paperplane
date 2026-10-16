@@ -6,7 +6,7 @@ import * as NodePath from "node:path";
 import * as NodeOS from "node:os";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
-import { HostProcessEnvironment } from "@rove-code/shared/hostProcess";
+import { Environment as HostProcessEnvironment } from "@rove-code/shared/HostProcess";
 import {
   createBashToolDefinition,
   getShellConfig,

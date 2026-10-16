@@ -1,4 +1,5 @@
 import { scopeThreadRef } from "@rove-code/client-runtime/environment";
+import type { EnvironmentShellStatus } from "@rove-code/client-runtime/state/shell";
 import type { EnvironmentId, ScopedThreadRef, ThreadId } from "@rove-code/contracts";
 import type { DraftId } from "./composerDraftStore";
 
@@ -20,36 +21,40 @@ type DraftThreadRouteState = {
 
 export type ThreadRouteRenderState = "loading" | "ready" | "missing";
 
+export function isThreadRouteSnapshotAuthoritative(
+  status: EnvironmentShellStatus | undefined,
+): boolean {
+  return status === "live";
+}
+
 export function resolveThreadRouteRenderState(input: {
   bootstrapComplete: boolean;
-  serverThreadShellExists: boolean;
-  serverThreadDetailExists: boolean;
-  serverThreadDetailDeleted: boolean;
-  serverThreadDetailPending: boolean;
+  serverThreadExists: boolean;
+  serverThreadDeleted: boolean;
   draftThreadExists: boolean;
 }): ThreadRouteRenderState {
+  if (input.draftThreadExists || (input.serverThreadExists && !input.serverThreadDeleted)) {
+    return "ready";
+  }
   if (!input.bootstrapComplete) {
     return "loading";
   }
-  if (input.serverThreadDetailExists || input.draftThreadExists) {
-    return "ready";
-  }
-  if (input.serverThreadDetailDeleted) {
-    return "missing";
-  }
-  // A create receipt can arrive before the shell stream. Let the detail
-  // subscription establish whether the thread exists instead of redirecting.
-  return input.serverThreadShellExists || input.serverThreadDetailPending ? "loading" : "missing";
+  return "missing";
 }
 
-export function buildThreadRouteParams(ref: ScopedThreadRef) {
+export function buildThreadRouteParams(ref: ScopedThreadRef): {
+  environmentId: EnvironmentId;
+  threadId: ThreadId;
+} {
   return {
     environmentId: ref.environmentId,
     threadId: ref.threadId,
   };
 }
 
-export function buildDraftThreadRouteParams(draftId: DraftId) {
+export function buildDraftThreadRouteParams(draftId: DraftId): {
+  draftId: DraftId;
+} {
   return { draftId };
 }
 
@@ -60,7 +65,6 @@ export function resolveThreadRouteRef(
     return null;
   }
 
-  // SAFETY: The surrounding adapter boundary establishes the asserted runtime contract.
   return scopeThreadRef(params.environmentId as EnvironmentId, params.threadId as ThreadId);
 }
 
@@ -68,7 +72,6 @@ export function resolveThreadRouteTarget(
   params: Partial<Record<"environmentId" | "threadId" | "draftId", string | undefined>>,
 ): ThreadRouteTarget | null {
   if (params.environmentId && params.threadId) {
-    // SAFETY: The surrounding adapter boundary establishes the asserted runtime contract.
     return {
       kind: "server",
       threadRef: scopeThreadRef(params.environmentId as EnvironmentId, params.threadId as ThreadId),
@@ -79,7 +82,6 @@ export function resolveThreadRouteTarget(
     return null;
   }
 
-  // SAFETY: The surrounding adapter boundary establishes the asserted runtime contract.
   return {
     kind: "draft",
     draftId: params.draftId as DraftId,

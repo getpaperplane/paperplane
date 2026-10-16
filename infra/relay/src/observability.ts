@@ -4,16 +4,11 @@ import * as Output from "alchemy/Output";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
-import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
-import * as Redacted from "effect/Redacted";
 import * as Schema from "effect/Schema";
 import * as Tracer from "effect/Tracer";
-import { OtlpExporter, OtlpSerialization, OtlpTracer } from "effect/unstable/observability";
 
 import { relayResourceNameForStage } from "./deploymentConfig.ts";
-import * as RuntimePredicate from "effect/Predicate";
-import type { Json as SchemaJson } from "effect/Schema";
 
 const relayRecentSpansQuery = (dataset: string) =>
   [
@@ -71,23 +66,29 @@ export const RelayObservability = Effect.gen(function* () {
 });
 
 export const withSpanAttributes =
-  (attributes: Record<string, SchemaJson>) =>
+  (attributes: Record<string, unknown>) =>
   <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E, R> =>
     Effect.annotateCurrentSpan(attributes).pipe(
       Effect.andThen(effect.pipe(Effect.annotateSpans(attributes))),
     );
 
 const appendEncodedAttributes = (
-  attributes: Record<string, SchemaJson>,
+  attributes: Record<string, unknown>,
   prefix: string,
   value: unknown,
 ): void => {
-  const encodedValue = encodeSpanAttributeValue(value);
-  if (encodedValue !== undefined) {
-    attributes[prefix] = encodedValue;
+  if (
+    value === null ||
+    typeof value === "string" ||
+    typeof value === "number" ||
+    typeof value === "boolean" ||
+    typeof value === "bigint" ||
+    Array.isArray(value)
+  ) {
+    attributes[prefix] = value;
     return;
   }
-  if (value === null || !RuntimePredicate.isObjectOrArray(value)) {
+  if (typeof value !== "object") {
     return;
   }
   for (const [key, child] of Object.entries(value)) {
@@ -95,57 +96,28 @@ const appendEncodedAttributes = (
   }
 };
 
-function encodeSpanAttributeValue(value: unknown): SchemaJson | undefined {
-  if (
-    value === null ||
-    RuntimePredicate.isString(value) ||
-    RuntimePredicate.isNumber(value) ||
-    RuntimePredicate.isBoolean(value)
-  ) {
-    return value;
-  }
-  if (RuntimePredicate.isBigInt(value)) {
-    return value.toString();
-  }
-  if (!Array.isArray(value)) {
-    return undefined;
-  }
-
-  const encodedItems: SchemaJson[] = [];
-  for (const item of value) {
-    const encodedItem = encodeSpanAttributeValue(item);
-    if (encodedItem !== undefined) {
-      encodedItems.push(encodedItem);
-    }
-  }
-  return encodedItems;
-}
-
-const schemaErrorAttributes = (error: unknown): Record<string, SchemaJson> | undefined => {
-  if (!RuntimePredicate.isObjectOrArray(error)) {
+const schemaErrorAttributes = (error: unknown): Record<string, unknown> | undefined => {
+  if (typeof error !== "object" || error === null) {
     return undefined;
   }
   const constructor = error.constructor;
   if (!Schema.isSchema(constructor)) {
     return undefined;
   }
-  const // SAFETY: The surrounding adapter boundary establishes the asserted runtime contract.
-    encoded = Schema.encodeUnknownOption(constructor as Schema.Encoder<unknown>)(error);
-  if (
-    Option.isNone(encoded) ||
-    !(RuntimePredicate.isObjectOrArray(encoded.value) || encoded.value === null) ||
-    encoded.value === null
-  ) {
+  const encoded = Schema.encodeUnknownOption(constructor as unknown as Schema.Encoder<unknown>)(
+    error,
+  );
+  if (Option.isNone(encoded) || typeof encoded.value !== "object" || encoded.value === null) {
     return undefined;
   }
-  const tag = Object.getOwnPropertyDescriptor(encoded.value, "_tag")?.value;
-  if (!RuntimePredicate.isString(tag)) {
+  const tag = Reflect.get(encoded.value, "_tag");
+  if (typeof tag !== "string") {
     return undefined;
   }
 
-  const attributes = {
+  const attributes: Record<string, unknown> = {
     "error.type": tag,
-  } satisfies Record<string, SchemaJson>;
+  };
   for (const [key, value] of Object.entries(encoded.value)) {
     if (key !== "_tag") {
       appendEncodedAttributes(attributes, `error.${key}`, value);
@@ -222,7 +194,7 @@ class RelayTraceSpan implements Tracer.Span {
     this.delegate.attribute(key, value);
   }
 
-  event(name: string, startTime: bigint, attributes?: Record<string, SchemaJson>): void {
+  event(name: string, startTime: bigint, attributes?: Record<string, unknown>): void {
     this.delegate.event(name, startTime, attributes);
   }
 
@@ -234,30 +206,17 @@ class RelayTraceSpan implements Tracer.Span {
 const withSchemaErrorAttributes = (delegate: Tracer.Tracer): Tracer.Tracer =>
   Tracer.make({
     span: (options) => new RelayTraceSpan(delegate.span(options)),
-    ...(delegate.context ? { context: delegate.context } : undefined),
+    ...(delegate.context ? { context: delegate.context } : {}),
   });
 
-export const makeRelayTraceLayer = (input: {
-  readonly tracesEndpoint: string;
-  readonly tracesDatasetName: string;
-  readonly ingestToken: Redacted.Redacted<string>;
-}) =>
-  Layer.effect(
-    Tracer.Tracer,
-    OtlpTracer.make({
-      url: input.tracesEndpoint,
-      resource: {
-        serviceName: "rove-relay",
-        attributes: {
-          "service.namespace": "rove",
-          "service.runtime": "cloudflare-worker",
-          "service.component": "relay",
-        },
-      },
-      headers: {
-        Authorization: `Bearer ${Redacted.value(input.ingestToken)}`,
-        "X-Axiom-Dataset": input.tracesDatasetName,
-      },
-      exportInterval: "1 second",
-    }).pipe(Effect.map(withSchemaErrorAttributes)),
-  ).pipe(Layer.provideMerge(OtlpExporter.layerFlusher), Layer.provide(OtlpSerialization.layerJson));
+/**
+ * Adds a failed span's schema error fields (`error.type`, `error.<field>`) to
+ * the span, on whichever tracer is current. Provide it around the work whose
+ * spans should carry them; the Worker's telemetry still owns export.
+ */
+export const withSchemaErrorSpanAttributes = <A, E, R>(
+  effect: Effect.Effect<A, E, R>,
+): Effect.Effect<A, E, R> =>
+  Effect.flatMap(Effect.tracer, (tracer) =>
+    effect.pipe(Effect.withTracer(withSchemaErrorAttributes(tracer))),
+  );

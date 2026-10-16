@@ -30,20 +30,24 @@ enum RoveComposerClipboard {
     let board = UIPasteboard.general
     return [
       "text": board.string ?? "",
-      "fragment": (board.data(forPasteboardType: fragmentType) ?? board.data(forPasteboardType: "app.t3.context-fragment")).flatMap { String(data: $0, encoding: .utf8) } ?? "",
+      "fragment": board.data(forPasteboardType: fragmentType).flatMap { String(data: $0, encoding: .utf8) } ?? "",
       "html": board.data(forPasteboardType: "public.html").flatMap { String(data: $0, encoding: .utf8) } ?? "",
     ]
   }
 }
 
+// Expo Modules 2.0: the clipboard function is a @JS member; the view stays in
+// definition() until the 2.0 view API lands.
+@ExpoModule("RoveComposerEditor")
 public class RoveComposerEditorModule: Module {
+  // UIPasteboard is main-thread only, so the member is main-actor isolated.
+  @JS
+  @MainActor
+  func writeContextClipboard(text: String, fragment: String) async {
+    RoveComposerClipboard.write(text: text, fragment: fragment)
+  }
+
   public func definition() -> ModuleDefinition {
-    Name("RoveComposerEditor")
-
-    AsyncFunction("writeContextClipboard") { (text: String, fragment: String) in
-      RoveComposerClipboard.write(text: text, fragment: fragment)
-    }.runOnQueue(.main)
-
     View(RoveComposerEditorView.self) {
       Prop("controlledDocumentJson") { (view: RoveComposerEditorView, documentJson: String) in
         view.setControlledDocumentJson(documentJson)
@@ -86,6 +90,12 @@ public class RoveComposerEditorModule: Module {
       }
       Prop("spellCheck") { (view: RoveComposerEditorView, spellCheck: Bool) in
         view.setSpellCheck(spellCheck)
+      }
+      Prop("submitTitle") { (view: RoveComposerEditorView, title: String) in
+        view.setSubmitTitle(title)
+      }
+      Prop("alternateSubmitTitle") { (view: RoveComposerEditorView, title: String) in
+        view.setAlternateSubmitTitle(title)
       }
       Prop("enterBehavior") { (view: RoveComposerEditorView, behavior: String) in
         view.setEnterBehavior(behavior)

@@ -5,7 +5,7 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
-import { HostProcessPlatform } from "@rove-code/shared/hostProcess";
+import * as HostProcess from "@rove-code/shared/HostProcess";
 
 import {
   buildSshAskpassHelperDescriptor,
@@ -53,7 +53,7 @@ describe("ssh auth", () => {
         'printf "%s\\n" "$ROVE_SSH_AUTH_SECRET"',
       );
     }).pipe(
-      Effect.provide(Layer.merge(NodeServices.layer, Layer.succeed(HostProcessPlatform, "linux"))),
+      Effect.provide(Layer.merge(NodeServices.layer, Layer.succeed(HostProcess.Platform, "linux"))),
       Effect.scoped,
     ),
   );
@@ -64,7 +64,7 @@ describe("ssh auth", () => {
         directory: "C:\\temp\\rove-ssh-askpass",
       }).pipe(
         Effect.provide(
-          Layer.merge(NodeServices.layer, Layer.succeed(HostProcessPlatform, "win32")),
+          Layer.merge(NodeServices.layer, Layer.succeed(HostProcess.Platform, "win32")),
         ),
       );
 

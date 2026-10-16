@@ -46,8 +46,8 @@ function scopeForSubscription(
   if (observation.method !== WS_METHODS.subscribeVcsStatus) {
     return null;
   }
-  const // SAFETY: The surrounding adapter boundary establishes the asserted runtime contract.
-    input = observation.input as { readonly cwd?: unknown };
+  const input = observation.input as { readonly cwd?: unknown; readonly includeRemote?: unknown };
+  if (input.includeRemote === false) return null;
   return RuntimePredicate.isString(input.cwd) ? { type: "vcs-status", cwd: input.cwd } : null;
 }
 

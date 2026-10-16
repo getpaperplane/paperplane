@@ -7,8 +7,8 @@ import * as PlatformError from "effect/PlatformError";
 import * as References from "effect/References";
 import type { ReadonlyRecord } from "effect/Record";
 import * as Schema from "effect/Schema";
-import * as ChildProcessSpawner from "effect/unstable/process/ChildProcessSpawner";
-import { HostProcessHostname, HostProcessPlatform } from "@rove-code/shared/hostProcess";
+import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+import * as HostProcess from "@rove-code/shared/HostProcess";
 import { vi } from "vite-plus/test";
 
 import * as ProcessRunner from "../processRunner.ts";
@@ -28,16 +28,16 @@ interface CapturedLog {
 
 const runMock = vi.fn<ProcessRunner.ProcessRunner["Service"]["run"]>();
 
-const ProcessRunnerTest = Layer.succeed(
+const layerProcessRunnerTest = Layer.succeed(
   ProcessRunner.ProcessRunner,
   ProcessRunner.ProcessRunner.of({
     run: (input) => runMock(input),
   }),
 );
-const NoopFileSystemLayer = FileSystem.layerNoop({});
-const TestLayer = Layer.merge(NoopFileSystemLayer, ProcessRunnerTest);
-const LinuxMachineInfoLayer = Layer.merge(
-  ProcessRunnerTest,
+const layerNoopFileSystem = FileSystem.layerNoop({});
+const layerTest = Layer.merge(layerNoopFileSystem, layerProcessRunnerTest);
+const layerLinuxMachineInfo = Layer.merge(
+  layerProcessRunnerTest,
   FileSystem.layerNoop({
     exists: (path) => Effect.succeed(path === "/etc/machine-info"),
     readFileString: (path) =>
@@ -53,8 +53,8 @@ const withHostPlatform = <ROut, E, RIn>(
 ) =>
   Layer.mergeAll(
     layer,
-    Layer.succeed(HostProcessPlatform, platform),
-    Layer.succeed(HostProcessHostname, hostname),
+    Layer.succeed(HostProcess.Platform, platform),
+    Layer.succeed(HostProcess.Hostname, hostname),
   );
 
 afterEach(() => {
@@ -66,7 +66,7 @@ describe("resolveServerEnvironmentLabel", () => {
     Effect.gen(function* () {
       const result = yield* ServerEnvironmentLabel.resolveServerEnvironmentLabel({
         cwdBaseName: "rove",
-      }).pipe(Effect.provide(withHostPlatform(TestLayer, "win32", "macbook-pro")));
+      }).pipe(Effect.provide(withHostPlatform(layerTest, "win32", "macbook-pro")));
 
       expect(result).toBe("macbook-pro");
     }),
@@ -89,7 +89,7 @@ describe("resolveServerEnvironmentLabel", () => {
 
       const result = yield* ServerEnvironmentLabel.resolveServerEnvironmentLabel({
         cwdBaseName: "rove",
-      }).pipe(Effect.provide(withHostPlatform(TestLayer, "darwin", "macbook-pro")));
+      }).pipe(Effect.provide(withHostPlatform(layerTest, "darwin", "macbook-pro")));
 
       expect(result).toBe("Julius's MacBook Pro");
       expect(runMock).toHaveBeenCalledWith(
@@ -106,7 +106,7 @@ describe("resolveServerEnvironmentLabel", () => {
     Effect.gen(function* () {
       const result = yield* ServerEnvironmentLabel.resolveServerEnvironmentLabel({
         cwdBaseName: "rove",
-      }).pipe(Effect.provide(withHostPlatform(LinuxMachineInfoLayer, "linux", "buildbox")));
+      }).pipe(Effect.provide(withHostPlatform(layerLinuxMachineInfo, "linux", "buildbox")));
 
       expect(result).toBe("Build Agent 01");
       expect(runMock).not.toHaveBeenCalled();
@@ -130,7 +130,7 @@ describe("resolveServerEnvironmentLabel", () => {
 
       const result = yield* ServerEnvironmentLabel.resolveServerEnvironmentLabel({
         cwdBaseName: "rove",
-      }).pipe(Effect.provide(withHostPlatform(TestLayer, "linux", "runner-01")));
+      }).pipe(Effect.provide(withHostPlatform(layerTest, "linux", "runner-01")));
 
       expect(result).toBe("CI Runner");
       expect(runMock).toHaveBeenCalledWith(
@@ -147,7 +147,7 @@ describe("resolveServerEnvironmentLabel", () => {
     Effect.gen(function* () {
       const result = yield* ServerEnvironmentLabel.resolveServerEnvironmentLabel({
         cwdBaseName: "rove",
-      }).pipe(Effect.provide(withHostPlatform(TestLayer, "win32", "JULIUS-LAPTOP")));
+      }).pipe(Effect.provide(withHostPlatform(layerTest, "win32", "JULIUS-LAPTOP")));
 
       expect(result).toBe("JULIUS-LAPTOP");
     }),
@@ -193,7 +193,7 @@ describe("resolveServerEnvironmentLabel", () => {
     }).pipe(
       Effect.provide(
         Layer.mergeAll(
-          withHostPlatform(TestLayer, "darwin", "macbook-pro"),
+          withHostPlatform(layerTest, "darwin", "macbook-pro"),
           Logger.layer([logger], { mergeWithExisting: false }),
           Layer.succeed(References.MinimumLogLevel, "Debug"),
         ),
@@ -217,7 +217,7 @@ describe("resolveServerEnvironmentLabel", () => {
       pathOrDescriptor: "/etc/machine-info",
       cause: fileCause,
     });
-    const fileSystemLayer = FileSystem.layerNoop({
+    const layerFileSystem = FileSystem.layerNoop({
       exists: () => Effect.fail(platformError),
     });
     runMock.mockReturnValueOnce(
@@ -253,7 +253,11 @@ describe("resolveServerEnvironmentLabel", () => {
     }).pipe(
       Effect.provide(
         Layer.mergeAll(
-          withHostPlatform(Layer.merge(ProcessRunnerTest, fileSystemLayer), "linux", "buildbox"),
+          withHostPlatform(
+            Layer.merge(layerProcessRunnerTest, layerFileSystem),
+            "linux",
+            "buildbox",
+          ),
           Logger.layer([logger], { mergeWithExisting: false }),
           Layer.succeed(References.MinimumLogLevel, "Debug"),
         ),
@@ -278,7 +282,7 @@ describe("resolveServerEnvironmentLabel", () => {
 
       const result = yield* ServerEnvironmentLabel.resolveServerEnvironmentLabel({
         cwdBaseName: "rove",
-      }).pipe(Effect.provide(withHostPlatform(TestLayer, "linux", "   ")));
+      }).pipe(Effect.provide(withHostPlatform(layerTest, "linux", "   ")));
 
       expect(result).toBe("rove");
     }),
@@ -288,7 +292,7 @@ describe("resolveServerEnvironmentLabel", () => {
     Effect.gen(function* () {
       const result = yield* ServerEnvironmentLabel.resolveServerEnvironmentLabel({
         cwdBaseName: "",
-      }).pipe(Effect.provide(withHostPlatform(TestLayer, "win32", "   ")));
+      }).pipe(Effect.provide(withHostPlatform(layerTest, "win32", "   ")));
 
       expect(result).toBe("Rove Code environment");
     }),

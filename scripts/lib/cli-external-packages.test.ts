@@ -18,8 +18,8 @@ import { findEsmImportsOfExternalPackages } from "./cli-executable-imports.ts";
 import { runtimePackageClosure } from "./runtime-package-closure.ts";
 
 import {
-  CLI_RUNTIME_EXTERNAL_PREFIXES,
   CLI_PI_RUNTIME_PACKAGES,
+  isRuntimeExternalCliDependency,
   findInlinedExternalPackages,
   selectCliRuntimeExternalDependencies,
   shouldBundleCliDependency,
@@ -50,7 +50,7 @@ const serverRoot = NodePath.resolve(
 
 describe("shouldBundleCliDependency", () => {
   it("bundles ordinary runtime dependencies", () => {
-    for (const id of ["effect", "@effect/platform", "@rove-code/shared/hostProcess"]) {
+    for (const id of ["effect", "@effect/platform", "@rove-code/shared/HostProcess"]) {
       assert.strictEqual(shouldBundleCliDependency(id), true, id);
     }
   });
@@ -83,7 +83,8 @@ describe("shouldBundleCliDependency", () => {
       "@earendil-works/pi-coding-agent",
       "@earendil-works/pi-coding-agent/rpc-entry",
       "@earendil-works/pi-ai",
-      "@earendil-works/chord/context",
+      "@earendil-works/pi-codemode",
+      "@earendil-works/pi-mcp",
       "jiti",
       "typebox/compile",
     ]) {
@@ -156,17 +157,18 @@ describe("selectCliRuntimeExternalDependencies", () => {
     assert.deepStrictEqual(
       Object.keys(selectCliRuntimeExternalDependencies(serverPackageJson.dependencies)).sort(),
       [
+        "@cursor/sdk",
         "@earendil-works/pi-ai",
         "@earendil-works/pi-coding-agent",
         "@ff-labs/fff-node",
-        "@modelcontextprotocol/sdk",
         "@napi-rs/keyring",
         "cbor-x",
         "cross-spawn",
-        "diff",
         "jose",
         "node-pty",
+        "playwright-core",
         "proper-lockfile",
+        "undici",
         "ws",
         "yaml",
       ],
@@ -237,9 +239,7 @@ it.layer(NodeServices.layer)("external package dependency closure", (it) => {
 
   // Runtime-external only. The build-only entries resolve `bun:*` and are never
   // loaded by Node, so their closure genuinely does not need to be external.
-  const isRuntimeExternal = (name: string) =>
-    CLI_RUNTIME_EXTERNAL_PREFIXES.some((prefix) => name.startsWith(prefix)) ||
-    CLI_PI_RUNTIME_PACKAGES.includes(name);
+  const isRuntimeExternal = isRuntimeExternalCliDependency;
 
   // A cold walk of the pnpm store can exceed the root timeout when the Windows
   // lane runs four filesystem-heavy workspace suites at once.

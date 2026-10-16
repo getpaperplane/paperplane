@@ -1,5 +1,5 @@
-import { SymbolView } from "../../components/AppSymbol";
-import { ControlPillMenu } from "../../components/ControlPill";
+import { SymbolView } from "../../components/ui/AppSymbol";
+import { Menu } from "../../components/ui/Menu";
 import type { MenuAction } from "@react-native-menu/menu";
 import * as Haptics from "expo-haptics";
 import {
@@ -39,7 +39,7 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 
-import { AppText as Text } from "../../components/AppText";
+import { AppText as Text } from "../../components/ui/AppText";
 import { SwipeRowActivationContext, type SwipeRowActivation } from "./swipe-row-activation";
 import { registerThreadDismissal } from "./thread-dismissal";
 
@@ -64,7 +64,7 @@ interface ThreadSwipeAction {
   readonly label: string;
   readonly menu?: {
     readonly actions: MenuAction[];
-    readonly onPressAction: NonNullable<ComponentProps<typeof ControlPillMenu>["onPressAction"]>;
+    readonly onPressAction: NonNullable<ComponentProps<typeof Menu>["onPressAction"]>;
     readonly title?: string;
   };
   readonly onPress: () => void;
@@ -266,9 +266,7 @@ interface ThreadSwipeableProps {
   readonly resetKey?: string;
   /** Paints the row without swipe machinery; see swipe-row-activation. */
   readonly dormant?: boolean;
-  readonly simultaneousWithExternalGesture?: ComponentProps<
-    typeof ReanimatedSwipeable
-  >["simultaneousWithExternalGesture"];
+  readonly simultaneousWith?: ComponentProps<typeof ReanimatedSwipeable>["simultaneousWith"];
   readonly threadTitle: string;
 }
 
@@ -433,7 +431,7 @@ function ThreadSwipeableRow(props: ThreadSwipeableProps) {
           animationOptions={THREAD_SWIPE_SPRING}
           childrenContainerStyle={{ backgroundColor: props.backgroundColor }}
           containerStyle={[{ backgroundColor: props.backgroundColor }, props.containerStyle]}
-          dragOffsetFromRightEdge={8}
+          dragOffsetFromRight={-8}
           enabled={!isDismissing && props.enabled !== false && gateEnabled}
           enableTrackpadTwoFingerGesture={props.enableTrackpadSwipe ?? true}
           // Fail the swipe once the pan is vertically dominant (patched-in RNGH
@@ -497,7 +495,7 @@ function ThreadSwipeableRow(props: ThreadSwipeableProps) {
             </Animated.View>
           )}
           rightThreshold={actionsWidth * 0.42}
-          simultaneousWithExternalGesture={props.simultaneousWithExternalGesture}
+          simultaneousWith={props.simultaneousWith}
         >
           {props.children(close)}
         </ReanimatedSwipeable>
@@ -687,14 +685,14 @@ function SwipeActionButton(props: {
       {props.menu === undefined ? (
         button
       ) : (
-        <ControlPillMenu
+        <Menu
           actions={props.menu.actions}
           onPressAction={props.menu.onPressAction}
           title={props.menu.title}
           style={{ height: "100%", width: "100%" }}
         >
           {button}
-        </ControlPillMenu>
+        </Menu>
       )}
     </Animated.View>
   );

@@ -2,14 +2,15 @@ import * as NodeBuffer from "node:buffer";
 import { legacyRoveCheckpointRef } from "@rove-code/shared/roveMigration";
 
 import * as Context from "effect/Context";
+import * as Fiber from "effect/Fiber";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
-import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
+import * as Schema from "effect/Schema";
 import * as Path from "effect/Path";
-import { ChildProcessSpawner } from "effect/unstable/process";
+import { ChildProcessSpawner } from "effect/process";
 
 import {
   GitCommandError,
@@ -41,6 +42,18 @@ import {
 } from "./GitVcsDriverCore.ts";
 import * as VcsDriver from "./VcsDriver.ts";
 import * as VcsProcess from "./VcsProcess.ts";
+
+const encodeDiffReadKey = Schema.encodeSync(
+  Schema.fromJsonString(
+    Schema.Tuple([
+      Schema.String,
+      Schema.Array(Schema.String),
+      Schema.Boolean,
+      Schema.String,
+      Schema.NullOr(Schema.Array(Schema.String)),
+    ]),
+  ),
+);
 
 export interface ExecuteGitInput {
   readonly operation: string;
@@ -78,10 +91,18 @@ export interface GitStatusDetails {
   upstreamRef: string | null;
   hasWorkingTreeChanges: boolean;
   workingTree: VcsStatusResult["workingTree"];
+  branchChanges?: VcsStatusResult["branchChanges"];
   hasUpstream: boolean;
   aheadCount: number;
   behindCount: number;
   aheadOfDefaultCount: number;
+}
+
+export interface GitLocalStatusOptions {
+  /** Skip revision walks and return zero divergence counts for local-only consumers. */
+  readonly includeDivergence?: boolean;
+  /** Also read the diff panel's Changes totals. Failures leave them out. */
+  readonly includeBranchChanges?: boolean;
 }
 
 export interface GitRemoteStatusDetails {
@@ -150,11 +171,8 @@ export interface CreateWorktreeOptions {
    * own rove.json.
    */
   readonly submodules?: WorktreeSubmodules | null;
-}
-
-export interface RemoveWorktreeOptions {
-  /** Only after the server has verified ownership of the checkout. */
-  readonly recoverPartialManagedWorktree: true;
+  /** The `worktreesDirectory` setting, used when the input has no explicit path. */
+  readonly worktreesDirectory?: string;
 }
 
 export interface GitCommitProgress {
@@ -173,6 +191,14 @@ export interface GitCommitProgress {
 export interface GitCommitOptions {
   readonly timeoutMs?: number;
   readonly progress?: GitCommitProgress;
+  /** Stage the current working tree immediately before committing. */
+  readonly stage?: { readonly filePaths?: readonly string[] };
+}
+
+export interface GitDeleteLocalBranchInput {
+  readonly cwd: string;
+  readonly refName: string;
+  readonly force?: boolean;
 }
 
 export interface GitPushResult {
@@ -189,6 +215,8 @@ export interface GitRangeContext {
 }
 
 export interface GitRenameBranchInput {
+  /** Fail on a name collision instead of appending a numeric suffix. */
+  exactName?: boolean;
   cwd: string;
   oldBranch: string;
   newBranch: string;
@@ -296,7 +324,10 @@ export class GitVcsDriver extends Context.Service<
     readonly execute: (input: ExecuteGitInput) => Effect.Effect<ExecuteGitResult, GitCommandError>;
     readonly status: (input: VcsStatusInput) => Effect.Effect<VcsStatusResult, GitCommandError>;
     readonly statusDetails: (cwd: string) => Effect.Effect<GitStatusDetails, GitCommandError>;
-    readonly statusDetailsLocal: (cwd: string) => Effect.Effect<GitStatusDetails, GitCommandError>;
+    readonly statusDetailsLocal: (
+      cwd: string,
+      options?: GitLocalStatusOptions,
+    ) => Effect.Effect<GitStatusDetails, GitCommandError>;
     readonly statusDetailsRemote: (
       cwd: string,
       options?: GitRemoteStatusOptions,
@@ -329,6 +360,11 @@ export class GitVcsDriver extends Context.Service<
     readonly readConfigValue: (
       cwd: string,
       key: string,
+    ) => Effect.Effect<string | null, GitCommandError>;
+    /** Returns the branch name of a local or remote-tracking ref, excluding tags and commits. */
+    readonly resolveBranchName: (
+      cwd: string,
+      refName: string,
     ) => Effect.Effect<string | null, GitCommandError>;
     readonly listRefs: (
       input: VcsListRefsInput,
@@ -377,12 +413,19 @@ export class GitVcsDriver extends Context.Service<
     ) => Effect.Effect<void, GitCommandError>;
     readonly removeWorktree: (
       input: VcsRemoveWorktreeInput,
-      options?: RemoveWorktreeOptions,
     ) => Effect.Effect<void, GitCommandError>;
     /** Drops worktree admin entries whose directory is already gone (`git worktree prune`). */
     readonly pruneWorktrees: (input: {
       readonly cwd: string;
     }) => Effect.Effect<void, GitCommandError>;
+    /**
+     * Absolute paths of every live worktree of the repository at `cwd`, the
+     * main checkout included. Worktrees whose directory is gone are left out.
+     */
+    readonly listWorktreePaths: (cwd: string) => Effect.Effect<string[], GitCommandError>;
+    readonly deleteLocalBranch: (
+      input: GitDeleteLocalBranchInput,
+    ) => Effect.Effect<void, GitCommandError>;
     readonly renameBranch: (
       input: GitRenameBranchInput,
     ) => Effect.Effect<GitRenameBranchResult, GitCommandError>;
@@ -400,14 +443,9 @@ export class GitVcsDriver extends Context.Service<
 const WORKSPACE_FILES_MAX_OUTPUT_BYTES = 16 * 1024 * 1024;
 const CHECKPOINT_RECOVERY_MAX_CANDIDATES = 64;
 const CHECKPOINT_RECOVERY_TIMEOUT = "5 seconds";
+const CHECKPOINT_ADD_TIMEOUT_MS = 120_000;
 const GIT_CHECK_IGNORE_MAX_STDIN_BYTES = 256 * 1024;
 const CHECKPOINT_DIFF_MAX_OUTPUT_BYTES = 10_000_000;
-// The checkpoint `add` walks the full tracked tree. Seed the throwaway
-// index from the worktree's warm index so git's stat cache survives and
-// unchanged files skip re-hashing (~0.5s vs ~7s on a 22k-file tree).
-// Keep the add bounded on its own generous budget; a timeout here reports
-// as `.add` so it is distinguishable from the other capture sub-steps.
-const CHECKPOINT_ADD_TIMEOUT_MS = 120_000;
 const WORKSPACE_GIT_HARDENED_CONFIG_ARGS = [
   "-c",
   "core.fsmonitor=false",
@@ -793,10 +831,7 @@ export const makeVcsDriverShape = Effect.fn("makeGitVcsDriverShape")(function* (
         "-c",
         "sparse.expectFilesOutsideOfPatterns=false",
       ];
-      // Temp index lives in the OS temp dir: unique per call, no litter or
-      // lock contention in the shared common dir on timeouts. `makeTempFile`
-      // pre-creates an empty file, which git rejects as a truncated index when
-      // no seed copy is made, so it is removed and git creates the index.
+      // Keep each private index outside the repository; killed captures leave no shared-dir litter.
       const tempIndexPath = yield* fileSystem
         .makeTempFile({ prefix: `rove-checkpoint-index-${process.pid}-` })
         .pipe(
@@ -958,7 +993,6 @@ export const makeVcsDriverShape = Effect.fn("makeGitVcsDriverShape")(function* (
 
         const stageFiles = (exclusions: ReadonlyArray<string>) =>
           execute({
-            // A timeout report names the add step instead of the whole capture.
             operation: "GitVcsDriver.checkpoints.captureCheckpoint.add",
             cwd: input.cwd,
             // Preserve absent skipped entries, but capture present nonignored files outside the cone.
@@ -972,8 +1006,8 @@ export const makeVcsDriverShape = Effect.fn("makeGitVcsDriverShape")(function* (
               ".",
               ...exclusions,
             ],
-            env: commitEnv,
             timeoutMs: CHECKPOINT_ADD_TIMEOUT_MS,
+            env: commitEnv,
           });
         yield* stageFiles([]).pipe(
           Effect.catchTags({
@@ -1046,10 +1080,18 @@ export const makeVcsDriverShape = Effect.fn("makeGitVcsDriverShape")(function* (
         }
 
         const message = `rove checkpoint ref=${input.checkpointRef}`;
+        // HEAD is the parent so listAuthoredPaths can see how HEAD moved between checkpoints.
         const commitTreeResult = yield* execute({
           operation,
           cwd: input.cwd,
-          args: [...durableWrite, "commit-tree", treeOid, "-m", message],
+          args: [
+            ...durableWrite,
+            "commit-tree",
+            treeOid,
+            ...(headExists ? ["-p", "HEAD"] : []),
+            "-m",
+            message,
+          ],
           env: commitEnv,
         });
         const commitOid = commitTreeResult.stdout.trim();
@@ -1103,7 +1145,7 @@ export const makeVcsDriverShape = Effect.fn("makeGitVcsDriverShape")(function* (
         });
       }
       // Restoring away the last tracked file can remove a nested workspace directory.
-      yield* fileSystem.makeDirectory(input.cwd, { recursive: true }).pipe(
+      const recreateWorkspace = fileSystem.makeDirectory(input.cwd, { recursive: true }).pipe(
         Effect.mapError(
           (cause) =>
             new VcsProcessExitError({
@@ -1115,6 +1157,7 @@ export const makeVcsDriverShape = Effect.fn("makeGitVcsDriverShape")(function* (
             }),
         ),
       );
+      yield* recreateWorkspace;
       const cleaned = yield* execute({
         operation,
         cwd: input.cwd,
@@ -1139,6 +1182,8 @@ export const makeVcsDriverShape = Effect.fn("makeGitVcsDriverShape")(function* (
             detail: cleaned.stderr.trim() || "Could not clean the checkpoint workspace.",
           });
       }
+      // On Windows the same clean can remove './' and exit 0.
+      yield* recreateWorkspace;
 
       const headExists = yield* hasHeadCommit(input.cwd);
       if (headExists) {
@@ -1154,6 +1199,7 @@ export const makeVcsDriverShape = Effect.fn("makeGitVcsDriverShape")(function* (
 
     diffCheckpoints: Effect.fn("GitVcsDriver.checkpoints.diffCheckpoints")(function* (input) {
       const operation = "GitVcsDriver.checkpoints.diffCheckpoints";
+      if (input.filePaths?.length === 0) return "";
       yield* Effect.annotateCurrentSpan({
         "checkpoint.cwd": input.cwd,
         "checkpoint.from_ref": input.fromCheckpointRef,
@@ -1200,13 +1246,16 @@ export const makeVcsDriverShape = Effect.fn("makeGitVcsDriverShape")(function* (
             ...(input.ignoreWhitespace ? ["--ignore-all-space"] : []),
             `${from}^{commit}`,
             `${to}^{commit}`,
+            ...(input.filePaths
+              ? ["--", ...input.filePaths.map((file) => `:(top,literal)${file}`)]
+              : []),
           ],
           allowNonZeroExit: true,
           maxOutputBytes: CHECKPOINT_DIFF_MAX_OUTPUT_BYTES,
           outputMode: input.format === "numstat" ? "error" : "truncate",
         });
-      // Resolve movable refs before sharing. Completed output is deliberately
-      // not cached: Git config and attributes can change without a new commit.
+      // Resolve movable refs before sharing only in-flight reads. Attributes/config can
+      // change without a commit, so completed output is never cached.
       const resolved = yield* execute({
         operation,
         cwd: input.cwd,
@@ -1225,38 +1274,38 @@ export const makeVcsDriverShape = Effect.fn("makeGitVcsDriverShape")(function* (
         resolved.exitCode === 0 && commits.length === 2
           ? runDiff(commits[0]!, commits[1]!)
           : runDiff(fromRevision, input.toCheckpointRef);
-      const key = [
+      const key = encodeDiffReadKey([
         input.cwd,
-        ...commits,
-        String(input.ignoreWhitespace),
+        commits,
+        input.ignoreWhitespace,
         input.format ?? "patch",
-      ].join("\0");
-      const sharedRead: Effect.Effect<VcsProcess.VcsProcessOutput, VcsError> =
-        Effect.uninterruptibleMask((restore) =>
-          Effect.gen(function* (): Effect.fn.Return<VcsProcess.VcsProcessOutput, VcsError> {
-            let pending = pendingDiffs.get(key);
-            if (!pending) {
-              if (resolved.exitCode !== 0 || commits.length !== 2 || pendingDiffs.size >= 64)
-                return yield* restore(read);
-              const fiber = yield* restore(read).pipe(Effect.forkIn(driverScope));
-              pending = { fiber, users: 0 };
-              pendingDiffs.set(key, pending);
-            }
-            const entry = pending;
-            entry.users++;
-            return yield* restore(Fiber.join(entry.fiber)).pipe(
-              Effect.ensuring(
-                Effect.gen(function* () {
-                  entry.users--;
-                  if (entry.users === 0) {
-                    if (pendingDiffs.get(key) === entry) pendingDiffs.delete(key);
-                    yield* Fiber.interrupt(entry.fiber);
-                  }
-                }),
-              ),
-            );
-          }),
-        );
+        input.filePaths ?? null,
+      ]);
+      const sharedRead = Effect.uninterruptibleMask((restore) =>
+        Effect.gen(function* (): Effect.fn.Return<VcsProcess.VcsProcessOutput, VcsError> {
+          let pending = pendingDiffs.get(key);
+          if (!pending) {
+            if (resolved.exitCode !== 0 || commits.length !== 2 || pendingDiffs.size >= 64)
+              return yield* restore(read);
+            const fiber = yield* restore(read).pipe(Effect.forkIn(driverScope));
+            pending = { fiber, users: 0 };
+            pendingDiffs.set(key, pending);
+          }
+          const entry = pending;
+          entry.users++;
+          return yield* restore(Fiber.join(entry.fiber)).pipe(
+            Effect.ensuring(
+              Effect.gen(function* () {
+                entry.users--;
+                if (entry.users === 0) {
+                  if (pendingDiffs.get(key) === entry) pendingDiffs.delete(key);
+                  yield* Fiber.interrupt(entry.fiber);
+                }
+              }),
+            ),
+          );
+        }),
+      );
       let result = yield* sharedRead;
       if (
         result.exitCode !== 0 &&
@@ -1280,15 +1329,62 @@ export const makeVcsDriverShape = Effect.fn("makeGitVcsDriverShape")(function* (
       return result.stdout;
     }),
 
+    listAuthoredPaths: Effect.fn("GitVcsDriver.checkpoints.listAuthoredPaths")(function* (input) {
+      const operation = "GitVcsDriver.checkpoints.listAuthoredPaths";
+      const heads = yield* execute({
+        operation,
+        cwd: input.cwd,
+        args: [
+          "log",
+          "--no-walk=unsorted",
+          "--format=%P %ct",
+          `${input.fromCheckpointRef}^{commit}`,
+          `${input.toCheckpointRef}^{commit}`,
+        ],
+      });
+      // Each line is "<parent> <committer time>". The parent is the HEAD at capture.
+      const [fromLine = "", toLine = ""] = heads.stdout.trimEnd().split("\n");
+      const [startHead = "", capturedAt = ""] = fromLine.split(" ");
+      const [endHead = ""] = toLine.split(" ");
+      if (startHead === "" || endHead === "" || startHead === endHead) {
+        return null;
+      }
+
+      const listPaths = (args: ReadonlyArray<string>) =>
+        execute({
+          operation,
+          cwd: input.cwd,
+          args: [...args, "--name-only", "-z", "--no-renames", "--no-ext-diff"],
+          maxOutputBytes: CHECKPOINT_DIFF_MAX_OUTPUT_BYTES,
+          outputMode: "error",
+        }).pipe(Effect.map((result) => result.stdout.split("\0")));
+      // Remerge diff lists a merge's paths only where the result differs from Git's
+      // automatic merge, so a merge keeps its conflict fixes and drops clean upstream changes.
+      const pathLists = yield* Effect.all(
+        [
+          listPaths(["diff", startHead, `${input.fromCheckpointRef}^{commit}`]),
+          listPaths(["diff", endHead, `${input.toCheckpointRef}^{commit}`]),
+          listPaths(["log", "--format=", "--diff-merges=remerge", `${endHead}..${startHead}`]),
+          listPaths([
+            "log",
+            "--format=",
+            "--diff-merges=remerge",
+            `--since=@${capturedAt}`,
+            `${startHead}..${endHead}`,
+          ]),
+        ],
+        { concurrency: "unbounded" },
+      );
+      return new Set(pathLists.flat().filter((path) => path.length > 0));
+    }),
+
     deleteCheckpointRefs: Effect.fn("GitVcsDriver.checkpoints.deleteCheckpointRefs")(
       function* (input) {
         yield* Effect.forEach(
-          new Set(
-            input.checkpointRefs.flatMap((ref) => {
-              const historical = legacyRoveCheckpointRef(ref);
-              return historical === undefined ? [ref] : [ref, historical];
-            }),
-          ),
+          input.checkpointRefs.flatMap((checkpointRef) => {
+            const historicalRef = legacyRoveCheckpointRef(checkpointRef);
+            return historicalRef === undefined ? [checkpointRef] : [checkpointRef, historicalRef];
+          }),
           (checkpointRef) =>
             execute({
               operation: "GitVcsDriver.checkpoints.deleteCheckpointRefs",
@@ -1325,5 +1421,5 @@ export const make = Effect.gen(function* () {
   return GitVcsDriver.of(git);
 });
 
-export const vcsLayer = Layer.effect(VcsDriver.VcsDriver, makeVcsDriver);
+export const layerVcs = Layer.effect(VcsDriver.VcsDriver, makeVcsDriver);
 export const layer = Layer.effect(GitVcsDriver, make);

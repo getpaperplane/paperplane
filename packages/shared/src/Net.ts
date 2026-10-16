@@ -5,7 +5,6 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Context from "effect/Context";
 import * as Predicate from "effect/Predicate";
-import * as RuntimePredicate from "effect/Predicate";
 
 export class NetError extends Data.TaggedError("NetError")<{
   readonly message: string;
@@ -21,13 +20,6 @@ const isErrnoExceptionWithCode = (
   Predicate.hasProperty(cause, "code") &&
   Predicate.isString(cause.code);
 
-const isAddressInfo = (
-  address: NodeNet.AddressInfo | string | null,
-): address is NodeNet.AddressInfo =>
-  RuntimePredicate.isObjectOrArray(address) &&
-  "port" in address &&
-  RuntimePredicate.isNumber(address.port);
-
 const closeServer = (server: NodeNet.Server) => {
   try {
     server.close();
@@ -36,7 +28,7 @@ const closeServer = (server: NodeNet.Server) => {
   }
 };
 
-export interface NetServiceContract {
+export interface NetServiceShape {
   /**
    * Returns true when a TCP server can bind to {host, port}.
    */
@@ -67,7 +59,7 @@ export interface NetServiceContract {
 /**
  * NetService - Service tag for startup networking helpers.
  */
-export class NetService extends Context.Service<NetService, NetServiceContract>()(
+export class NetService extends Context.Service<NetService, NetServiceShape>()(
   "@rove-code/shared/Net/NetService",
 ) {}
 
@@ -180,7 +172,7 @@ export const make = () => {
 
       probe.listen(0, host, () => {
         const address = probe.address();
-        const port = isAddressInfo(address) ? address.port : 0;
+        const port = typeof address === "object" && address !== null ? address.port : 0;
         probe.close(() => {
           if (port > 0) {
             settle(Effect.succeed(port));
@@ -207,7 +199,7 @@ export const make = () => {
         }
         return yield* reserveLoopbackPort();
       }),
-  } satisfies NetServiceContract;
+  } satisfies NetServiceShape;
 };
 
 export const layer = Layer.sync(NetService, make);

@@ -7,7 +7,6 @@ import {
   ProjectId,
   ProviderInstanceId,
   ThreadId,
-  type ThreadHandoff,
 } from "@rove-code/contracts";
 import { onTestFinished, vi } from "vite-plus/test";
 
@@ -176,6 +175,7 @@ import {
   getComposerDraftSnapshot,
   mergeComposerDraftContentState,
   migrateLegacyNewTaskDraft,
+  modelOptionMemoryAtom,
   releaseUnusedComposerAttachmentFiles,
   removeComposerDraftsForEnvironment,
   replaceComposerDraftAttachments,
@@ -189,10 +189,6 @@ import {
   rememberComposerDraftSelection,
   setComposerDraftAttachmentUpload,
   waitForComposerDraftsLoaded,
-  updateComposerDraftSettings,
-  queueHandoffBacklink,
-  completeHandoffBacklink,
-  handoffBacklinksAtom,
   setStickyComposerModelSelection,
   stickyComposerModelSelectionAtom,
   undoComposerDraftMerge,
@@ -219,6 +215,7 @@ afterEach(() => {
   appAtomRegistry.set(composerDraftsAtom, {});
   appAtomRegistry.set(composerCloudDraftsAtom, { accountId: null, signedOut: {} });
   appAtomRegistry.set(stickyComposerModelSelectionAtom, null);
+  appAtomRegistry.set(modelOptionMemoryAtom, {});
   appAtomRegistry.set(threadOutboxManager.queuedMessagesByThreadKeyAtom, {});
   composerAttachmentCleanupMocks.remove.mockClear();
   composerAttachmentCleanupMocks.releaseUploads.mockReset();
@@ -243,64 +240,37 @@ function contextDraft(start: number, count: number): ComposerDraft {
 }
 
 describe("mobile composer drafts", () => {
-  it("persists portable draft context and retryable lineage before clearing delivered work", async () => {
-    const handoff: ThreadHandoff = {
-      version: 1,
-      transferId: "mobile-transfer",
-      sourceEnvironmentId: EnvironmentId.make("source"),
-      sourceThreadId: ThreadId.make("source-thread"),
-      sourceLabel: "Laptop",
-      title: "Original",
-      repositoryKey: "github.com/acme/repo",
-      branch: "feature",
-      commitSha: "a".repeat(40),
-      sourceTurnId: null,
-      sourceSequence: 1,
-      createdAt: "2026-10-11T00:00:00.000Z",
-      items: [{ id: "original", role: "user", kind: "message", text: "Keep the constraints." }],
-      omittedItems: 2,
-      omittedAttachments: 1,
+  it("retains draft content but drops obsolete V1 continuation metadata", () => {
+    const decoded = decodePersistedComposerState({
+      schemaVersion: 1,
+      drafts: {
+        task: {
+          text: "Continue investigating",
+          attachments: [],
+          handoff: { transferId: "old-transfer", sourceThreadId: "old-thread" },
+        },
+      },
+      handoffBacklinks: [{ transferId: "old-transfer", ready: true }],
+    });
+    expect(decoded.drafts.task).toEqual({ text: "Continue investigating", attachments: [] });
+    expect(decoded).not.toHaveProperty("handoffBacklinks");
+  });
+
+  it("restores a PR checkout source after restarting the composer", () => {
+    const draft: ComposerDraft = {
+      text: "Address feedback",
+      attachments: [],
+      workspaceSelection: {
+        mode: "worktree",
+        branch: "fork/feature",
+        worktreePath: null,
+        startFromOrigin: false,
+        pullRequestReference: "https://github.com/acme/repo/pull/123",
+      },
     };
-    const draftId = createNewTaskDraft({
-      environmentId: EnvironmentId.make("target"),
-      projectId: ProjectId.make("project"),
-    });
-    setComposerDraftText(draftId, "Continue the work.");
-    updateComposerDraftSettings(draftId, {
-      handoff,
-      workspaceSelection: { mode: "worktree", branch: "origin/feature", worktreePath: null },
-    });
-    await flushComposerDrafts();
-    const restored = decodePersistedComposerState(JSON.parse(composerDraftFileMocks.getDocument()));
-    expect(restored.drafts[draftId]).toMatchObject({
-      handoff,
-      workspaceSelection: { branch: "origin/feature", mode: "worktree" },
-    });
-    const backlink = {
-      transferId: handoff.transferId,
-      sourceEnvironmentId: handoff.sourceEnvironmentId,
-      sourceThreadId: handoff.sourceThreadId,
-      environmentId: EnvironmentId.make("target"),
-      threadId: ThreadId.make("target-thread"),
-      environmentLabel: "Phone",
-      createdAt: handoff.createdAt,
-      ready: false,
-    };
-    await queueHandoffBacklink(backlink);
-    clearComposerDraftContent(draftId, { clearWorkspaceSelection: true });
-    await queueHandoffBacklink({ ...backlink, ready: true });
-    await queueHandoffBacklink(backlink);
     expect(
-      decodePersistedComposerState(JSON.parse(composerDraftFileMocks.getDocument()))
-        .handoffBacklinks,
-    ).toEqual([{ ...backlink, ready: true }]);
-    completeHandoffBacklink(handoff.transferId);
-    await flushComposerDrafts();
-    expect(appAtomRegistry.get(handoffBacklinksAtom)).toEqual([]);
-    expect(
-      decodePersistedComposerState(JSON.parse(composerDraftFileMocks.getDocument()))
-        .handoffBacklinks ?? [],
-    ).toEqual([]);
+      decodePersistedComposerState({ schemaVersion: 1, drafts: { task: draft } }).drafts.task,
+    ).toEqual(draft);
   });
   it.each([false, true])(
     "restores visible file chips from legacy drafts (archived: %s)",
@@ -1977,6 +1947,44 @@ describe("mobile composer drafts", () => {
     ).toEqual({
       instanceId: "codex",
       model: "gpt-5.6-sol",
+    });
+  });
+
+  it("decodes model option memory from the composer document", () => {
+    expect(
+      decodePersistedComposerState({
+        schemaVersion: 1,
+        drafts: {},
+        modelOptionMemory: {
+          pi: { "xai/grok-4.6": [{ id: "thinking", value: "xhigh" }] },
+        },
+      }).modelOptionMemory,
+    ).toEqual({ pi: { "xai/grok-4.6": [{ id: "thinking", value: "xhigh" }] } });
+  });
+
+  it("merges persisted option memory without replacing newer choices", async () => {
+    composerDraftFileMocks.setDocument({
+      schemaVersion: 1,
+      drafts: {},
+      modelOptionMemory: {
+        pi: {
+          "xai/grok-4.6": [{ id: "thinking", value: "high" }],
+          "openai/gpt-5.4": [{ id: "thinking", value: "medium" }],
+        },
+      },
+    });
+    appAtomRegistry.set(modelOptionMemoryAtom, {
+      pi: { "xai/grok-4.6": [{ id: "thinking", value: "xhigh" }] },
+    });
+
+    ensureComposerDraftsLoaded();
+    await waitForComposerDraftsLoaded();
+
+    expect(appAtomRegistry.get(modelOptionMemoryAtom)).toEqual({
+      pi: {
+        "xai/grok-4.6": [{ id: "thinking", value: "xhigh" }],
+        "openai/gpt-5.4": [{ id: "thinking", value: "medium" }],
+      },
     });
   });
 

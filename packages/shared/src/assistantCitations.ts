@@ -6,18 +6,15 @@ import {
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 
-import { ASSISTANT_CITATION_READ_PROTOCOLS } from "./roveMigration.ts";
-
 const CITATION_PROTOCOL = "rove-citation:";
-const READ_CITATION_PREFIXES = ASSISTANT_CITATION_READ_PROTOCOLS.map(
-  (protocol) => `${protocol}://v1/`,
-);
 const CITATION_HREF_PREFIX = `${CITATION_PROTOCOL}//v1/`;
+// Historical schemes are read-only compatibility for stored messages and clipboards.
+const CITATION_HREF_PATTERN = "(?:rove|t3)-citation://v1/";
 // Percent encoding needs up to nine characters per UTF-16 code unit; 16k covers selectors.
 const MAX_CITATION_HREF_LENGTH =
   9 * (ASSISTANT_CITATION_MAX_TEXT_LENGTH + ASSISTANT_CITATION_MAX_COMMENT_LENGTH) + 16_000;
 const CITATION_LINK = new RegExp(
-  String.raw`\[Assistant quote\]\(((?:${READ_CITATION_PREFIXES.join("|")})[^\s)]{1,${MAX_CITATION_HREF_LENGTH - CITATION_HREF_PREFIX.length}})\)`,
+  String.raw`\[Assistant quote\]\((${CITATION_HREF_PATTERN}[^\s)]{1,${MAX_CITATION_HREF_LENGTH - CITATION_HREF_PREFIX.length}})\)`,
   "g",
 );
 const decodeCitation = Schema.decodeUnknownOption(AssistantCitation);
@@ -57,7 +54,7 @@ export function formatAssistantCitationHref(citation: AssistantCitation): string
 
 export function parseAssistantCitationHref(href: string): AssistantCitation | null {
   if (
-    !READ_CITATION_PREFIXES.some((prefix) => href.startsWith(prefix)) ||
+    (!href.startsWith(CITATION_HREF_PREFIX) && !href.startsWith("t3-citation://v1/")) ||
     href.length > MAX_CITATION_HREF_LENGTH
   ) {
     return null;
@@ -66,7 +63,7 @@ export function parseAssistantCitationHref(href: string): AssistantCitation | nu
     const url = new URL(href);
     const parts = url.pathname.slice(1).split("/");
     if (
-      !ASSISTANT_CITATION_READ_PROTOCOLS.some((protocol) => url.protocol === `${protocol}:`) ||
+      (url.protocol !== CITATION_PROTOCOL && url.protocol !== "t3-citation:") ||
       url.hostname !== "v1" ||
       parts.length !== 3 ||
       url.username ||
@@ -104,6 +101,12 @@ export function parseAssistantCitationHref(href: string): AssistantCitation | nu
   } catch {
     return null;
   }
+}
+
+/** Visible chip text: the comment, else the quoted text, collapsed and capped. */
+export function assistantCitationLabel(citation: AssistantCitation): string {
+  const preview = (citation.comment?.trim() || citation.text).replace(/\s+/g, " ");
+  return preview.length > 64 ? `${preview.slice(0, 64)}…` : preview;
 }
 
 export function serializeAssistantCitation(citation: AssistantCitation): string {

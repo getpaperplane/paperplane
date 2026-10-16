@@ -10,7 +10,6 @@ import * as PubSub from "effect/PubSub";
 import * as Ref from "effect/Ref";
 import * as Schedule from "effect/Schedule";
 import * as Scope from "effect/Scope";
-import * as Semaphore from "effect/Semaphore";
 import * as Stream from "effect/Stream";
 import * as SynchronizedRef from "effect/SynchronizedRef";
 import type {
@@ -20,13 +19,15 @@ import type {
   VcsStatusRemoteResult,
   VcsStatusResult,
   VcsStatusStreamEvent,
+  VcsStatusSubscriptionInput,
 } from "@rove-code/contracts";
 import { mergeGitStatusParts } from "@rove-code/shared/git";
+import * as KeyedLock from "@rove-code/shared/KeyedLock";
 import { resolveProjectSettings } from "@rove-code/shared/projectSettings";
 
 import * as BackgroundPolicy from "../background/BackgroundPolicy.ts";
 import * as GitWorkflowService from "../git/GitWorkflowService.ts";
-import * as ProjectionSnapshotQuery from "../orchestration/Services/ProjectionSnapshotQuery.ts";
+import * as ProjectStore from "../orchestration-v2/ProjectStore.ts";
 import * as ServerSettings from "../serverSettings.ts";
 
 const DEFAULT_VCS_STATUS_REFRESH_INTERVAL = Duration.seconds(30);
@@ -145,22 +146,22 @@ interface StreamStatusOptions {
 
 export class VcsAutoPullPolicy extends Context.Reference<{
   readonly isEnabled: (cwd: string) => Effect.Effect<boolean, never>;
-}>("@rove-code/server/vcs/VcsAutoPullPolicy", {
+}>("@rove-code/server/vcs/VcsStatusBroadcaster/VcsAutoPullPolicy", {
   defaultValue: () => ({ isEnabled: () => Effect.succeed(false) }),
 }) {}
 
-export const autoPullPolicyLayer = Layer.effect(
+export const layerAutoPullPolicy = Layer.effect(
   VcsAutoPullPolicy,
   Effect.gen(function* () {
-    const snapshots = yield* ProjectionSnapshotQuery.ProjectionSnapshotQuery;
+    const projects = yield* ProjectStore.ProjectStoreV2;
     const serverSettings = yield* ServerSettings.ServerSettingsService;
     return {
       isEnabled: Effect.fn("VcsAutoPullPolicy.isEnabled")(
         function* (cwd: string) {
-          const project = yield* snapshots.getActiveProjectByWorkspaceRoot(cwd);
+          const project = yield* projects.findActiveByWorkspaceRoot(cwd);
           if (project._tag === "None") return false;
           const settings = yield* serverSettings.getSettings;
-          return resolveProjectSettings(settings, project.value.id).settings.defaultAutoPull;
+          return resolveProjectSettings(settings, project.value.projectId).settings.defaultAutoPull;
         },
         Effect.orElseSucceed(() => false),
       ),
@@ -201,7 +202,7 @@ export class VcsStatusBroadcaster extends Context.Service<
       cwd: string,
     ) => Effect.Effect<VcsStatusRemoteResult | null, GitManagerServiceError>;
     readonly streamStatus: (
-      input: VcsStatusInput,
+      input: VcsStatusSubscriptionInput,
       options?: StreamStatusOptions,
     ) => Stream.Stream<VcsStatusStreamEvent, GitManagerServiceError>;
   }
@@ -234,18 +235,18 @@ export const make = Effect.gen(function* () {
   // One permit per cwd for remote reads that write the cache. Without it a
   // periodic poll that started before `gh pr create` can finish after the
   // turn-end refresh and overwrite the fresh PR with its stale `pr: null`.
-  const remoteWriteLocks = new Map<string, { readonly lock: Semaphore.Semaphore; users: number }>();
+  const remoteWriteLocks = yield* KeyedLock.make<string>();
+  const pollersRef = yield* SynchronizedRef.make(new Map<string, ActiveRemotePoller>());
   const accessOrder = new Map<string, true>();
   const touch = (cwd: string) => {
     accessOrder.delete(cwd);
     accessOrder.set(cwd, true);
   };
-  const pollersRef = yield* SynchronizedRef.make(new Map<string, ActiveRemotePoller>());
-  const pruneInactiveCache: Effect.Effect<void> = Effect.gen(function* () {
+  const pruneInactiveCache = Effect.gen(function* () {
     const active = yield* SynchronizedRef.get(pollersRef);
+    const held = new Set(yield* remoteWriteLocks.activeKeys);
     yield* Ref.update(cacheRef, (cache) => {
-      if (cache.size <= 128) return cache;
-      const pinned = (cwd: string) => active.has(cwd) || remoteWriteLocks.has(cwd);
+      const pinned = (cwd: string) => active.has(cwd) || held.has(cwd);
       let inactive = 0;
       for (const cwd of cache.keys()) if (!pinned(cwd)) inactive++;
       if (inactive <= 128) return cache;
@@ -253,41 +254,14 @@ export const make = Effect.gen(function* () {
       for (const cwd of accessOrder.keys()) {
         if (inactive <= 128) break;
         if (pinned(cwd)) continue;
-        next.delete(cwd);
+        if (next.delete(cwd)) inactive--;
         accessOrder.delete(cwd);
-        inactive--;
       }
       return next;
     });
   });
-  // Acquire the lease when the effect runs, including queued and cancelled
-  // waiters. Retiring a semaphore while a waiter still holds it breaks ordering.
-  const withRemoteWriteLock = <A, E, R>(
-    cwd: string,
-    effect: Effect.Effect<A, E, R>,
-  ): Effect.Effect<A, E, R> =>
-    Effect.suspend(() => {
-      let entry = remoteWriteLocks.get(cwd);
-      if (!entry) {
-        entry = { lock: Semaphore.makeUnsafe(1), users: 0 };
-        remoteWriteLocks.set(cwd, entry);
-      }
-      const held = entry;
-      held.users++;
-      return held.lock
-        .withPermits(1)(effect)
-        .pipe(
-          Effect.ensuring(
-            Effect.gen(function* () {
-              held.users--;
-              if (held.users === 0) {
-                remoteWriteLocks.delete(cwd);
-                yield* pruneInactiveCache;
-              }
-            }),
-          ),
-        );
-    });
+  const withRemoteWriteLock = <A, E, R>(cwd: string, effect: Effect.Effect<A, E, R>) =>
+    remoteWriteLocks.withLock(cwd, effect).pipe(Effect.ensuring(pruneInactiveCache));
 
   const getCachedStatus = Effect.fn("VcsStatusBroadcaster.getCachedStatus")(function* (
     cwd: string,
@@ -518,9 +492,22 @@ export const make = Effect.gen(function* () {
         if (options?.refreshUpstream !== false) {
           yield* workflow.invalidateRemoteStatus(cwd);
         }
+        const previousRemote = (yield* getCachedStatus(cwd))?.remote?.value;
         const remote = yield* workflow.remoteStatus({ cwd }, options);
         const pulled = yield* maybeAutoPull(cwd, remote, options?.policyCwds ?? [cwd]);
         if (pulled !== null) return pulled.remote;
+        // Local status holds the Changes totals, which compare against remote refs. A fetch can
+        // move them with no local trigger (a push from a terminal, a PR merged on the host), so
+        // re-read local status on the first fetch and whenever divergence moves.
+        if (
+          remote &&
+          (!previousRemote ||
+            previousRemote.aheadCount !== remote.aheadCount ||
+            previousRemote.behindCount !== remote.behindCount ||
+            previousRemote.aheadOfDefaultCount !== remote.aheadOfDefaultCount)
+        ) {
+          yield* refreshLocalStatusCore(cwd);
+        }
         return yield* updateCachedRemoteStatus(cwd, remote, { publish: true });
       }),
     );
@@ -536,10 +523,9 @@ export const make = Effect.gen(function* () {
       cwd,
       Effect.gen(function* () {
         yield* workflow.invalidateStatus(cwd);
-        const [local, remote] = yield* Effect.all(
-          [workflow.localStatus({ cwd }), workflow.remoteStatus({ cwd })],
-          { concurrency: "unbounded" },
-        );
+        // Local after remote: the fetch can move the base that the Changes totals compare with.
+        const remote = yield* workflow.remoteStatus({ cwd });
+        const local = yield* workflow.localStatus({ cwd });
         const pulled = yield* maybeAutoPull(cwd, remote, [rawCwd]);
         if (pulled !== null) return mergeGitStatusParts(pulled.local, pulled.remote);
         return yield* updateCachedStatus(cwd, local, remote, { publish: true });
@@ -748,7 +734,6 @@ export const make = Effect.gen(function* () {
     if (pollerToInterrupt) {
       yield* Fiber.interrupt(pollerToInterrupt).pipe(Effect.ignore);
     }
-    yield* pruneInactiveCache;
   });
 
   const streamStatus: VcsStatusBroadcaster["Service"]["streamStatus"] = (input, options) =>
@@ -759,15 +744,19 @@ export const make = Effect.gen(function* () {
         const initialLocal = yield* getOrLoadLocalStatus(cwd);
         const cachedStatus = yield* getCachedStatus(cwd);
         const initialRemote = cachedStatus?.remote?.value ?? null;
-        yield* retainRemotePoller(
-          cwd,
-          input.cwd,
-          options?.automaticRemoteRefreshInterval ??
-            Effect.succeed(DEFAULT_VCS_STATUS_REFRESH_INTERVAL),
-          cachedStatus?.remote === null || cachedStatus?.remote === undefined,
-        );
-
-        const release = releaseRemotePoller(cwd, input.cwd).pipe(Effect.ignore, Effect.asVoid);
+        if (input.includeRemote !== false) {
+          yield* retainRemotePoller(
+            cwd,
+            input.cwd,
+            options?.automaticRemoteRefreshInterval ??
+              Effect.succeed(DEFAULT_VCS_STATUS_REFRESH_INTERVAL),
+            cachedStatus?.remote === null || cachedStatus?.remote === undefined,
+          );
+        }
+        const release =
+          input.includeRemote === false
+            ? Effect.void
+            : releaseRemotePoller(cwd, input.cwd).pipe(Effect.ignore, Effect.asVoid);
 
         return Stream.concat(
           Stream.make({

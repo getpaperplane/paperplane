@@ -16,12 +16,12 @@ const repoRoot = NodePath.resolve(desktopDir, "..", "..");
 const devBundleIdSuffix = NodePath.basename(repoRoot)
   .toLowerCase()
   .replaceAll(/[^a-z0-9]+/g, "");
-const APP_DISPLAY_NAME = isDevelopment ? "Rove Code (Dev)" : "Rove Code (Alpha)";
+const APP_DISPLAY_NAME = isDevelopment ? "Rove Code (Dev)" : "Rove Code (Beta)";
 const APP_BUNDLE_ID = isDevelopment
   ? `io.github.hafiezul.rove.dev.${devBundleIdSuffix || "local"}`
   : "io.github.hafiezul.rove";
 const APP_PROTOCOL_SCHEMES = isDevelopment ? ["rove-dev"] : ["rove"];
-const LAUNCHER_VERSION = 19;
+const LAUNCHER_VERSION = 20;
 const developmentMacIconPngPath = NodePath.join(
   repoRoot,
   "assets",
@@ -281,6 +281,8 @@ function patchMainBundleInfoPlist(appBundlePath, iconPath, executableName) {
   for (const [key, value] of Object.entries(resolveMacBundleInfoPlistStrings(executableName))) {
     setPlistString(infoPlistPath, key, value);
   }
+  // macOS 26 offers Messages/Mail codes in every text field unless opted out.
+  setPlistJson(infoPlistPath, "NSAutoFillRequiresTextContentTypeForOneTimeCodeOnMac", true);
   setPlistJson(infoPlistPath, "CFBundleURLTypes", [
     {
       CFBundleURLName: APP_BUNDLE_ID,

@@ -8,7 +8,7 @@ import * as Path from "effect/Path";
 
 import * as RoveProjectFileLoader from "./RoveProjectFileLoader.ts";
 
-const TestLayer = Layer.empty.pipe(
+const layerTest = Layer.empty.pipe(
   Layer.provideMerge(RoveProjectFileLoader.layer),
   Layer.provideMerge(NodeServices.layer),
 );
@@ -26,7 +26,7 @@ const writeProjectFile = Effect.fn("writeProjectFile")(function* (cwd: string, c
   yield* fileSystem.writeFileString(path.join(cwd, "rove.json"), contents).pipe(Effect.orDie);
 });
 
-it.layer(TestLayer)("RoveProjectFileLoader", (it) => {
+it.layer(layerTest)("RoveProjectFileLoader", (it) => {
   describe("load", () => {
     it.effect("loads and decodes a valid rove.json", () =>
       Effect.gen(function* () {
@@ -51,18 +51,23 @@ it.layer(TestLayer)("RoveProjectFileLoader", (it) => {
       }),
     );
 
-    it.effect("reads the historical file without renaming it and prefers the canonical file", () =>
+    it.effect("loads legacy t3.json only when rove.json is absent", () =>
       Effect.gen(function* () {
         const loader = yield* RoveProjectFileLoader.RoveProjectFileLoader;
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
         const cwd = yield* makeTempDir;
-        const legacyPath = path.join(cwd, "t3.json");
-        yield* fs.writeFileString(legacyPath, '{"iconPath":"old.svg"}');
-        expect(Option.getOrNull(yield* loader.load(cwd))?.iconPath).toBe("old.svg");
-        expect(yield* fs.exists(legacyPath)).toBe(true);
-        yield* writeProjectFile(cwd, '{"iconPath":"new.svg"}');
-        expect(Option.getOrNull(yield* loader.load(cwd))?.iconPath).toBe("new.svg");
+        const fileSystem = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        yield* fileSystem.writeFileString(
+          path.join(cwd, "t3.json"),
+          '{ "scripts": [{ "name": "Legacy", "command": "pnpm dev" }] }',
+        );
+        expect(Option.getOrThrow(yield* loader.load(cwd)).scripts).toEqual([
+          { name: "Legacy", command: "pnpm dev" },
+        ]);
+        yield* writeProjectFile(cwd, '{ "scripts": [{ "name": "Current", "command": "vp dev" }] }');
+        expect(Option.getOrThrow(yield* loader.load(cwd)).scripts).toEqual([
+          { name: "Current", command: "vp dev" },
+        ]);
         yield* writeProjectFile(cwd, "{ invalid");
         expect(Option.isNone(yield* loader.load(cwd))).toBe(true);
       }),

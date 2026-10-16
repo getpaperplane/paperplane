@@ -5,11 +5,7 @@ import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodePath from "@effect/platform-node/NodePath";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { ProviderInstanceId } from "@rove-code/contracts";
-import {
-  HostProcessExecutablePath,
-  HostProcessIsExecutable,
-  HostProcessPlatform,
-} from "@rove-code/shared/hostProcess";
+import * as HostProcess from "@rove-code/shared/HostProcess";
 import { describe, expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -18,9 +14,9 @@ import * as Path from "effect/Path";
 import * as Result from "effect/Result";
 import * as Schema from "effect/Schema";
 import * as Stream from "effect/Stream";
-import * as Ndjson from "effect/unstable/encoding/Ndjson";
-import * as ChildProcess from "effect/unstable/process/ChildProcess";
-import * as ChildProcessSpawner from "effect/unstable/process/ChildProcessSpawner";
+import * as Ndjson from "effect/encoding/Ndjson";
+import * as ChildProcess from "effect/process/ChildProcess";
+import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as AcpErrors from "effect-acp/errors";
 import { symlinksSupported } from "@rove-code/shared/testing/symlinks";
 
@@ -574,8 +570,8 @@ it.layer(NodeServices.layer)("Antigravity profile preparation", (it) => {
       expect(profile.browserCommand).not.toContain("/packaged/rove");
       expect(yield* fs.exists(profile.acpDirectory)).toBe(true);
     }).pipe(
-      Effect.provideService(HostProcessIsExecutable, true),
-      Effect.provideService(HostProcessExecutablePath, "/packaged/rove"),
+      Effect.provideService(HostProcess.IsExecutable, true),
+      Effect.provideService(HostProcess.ExecutablePath, "/packaged/rove"),
     ),
   );
 
@@ -596,12 +592,11 @@ it.layer(NodeServices.layer)("Antigravity profile preparation", (it) => {
           detail: expect.stringContaining("Install Node.js"),
           cause: {
             _tag: "NodeRuntimeUnavailableError",
-            cause: { _tag: "CommandResolutionError" },
           },
         });
       }
       expect(yield* fs.exists(profileDirectory)).toBe(false);
-    }).pipe(Effect.provideService(HostProcessIsExecutable, true)),
+    }).pipe(Effect.provideService(HostProcess.IsExecutable, true)),
   );
 
   it.effect("preflights the no-browser helper and creates private directories only", () =>
@@ -616,7 +611,7 @@ it.layer(NodeServices.layer)("Antigravity profile preparation", (it) => {
       expect(profile.geminiHome).toBe(path.join(temporaryDirectory, "profile"));
       expect(yield* fs.exists(profile.acpDirectory)).toBe(true);
       expect(yield* fs.exists(profile.tokenPath)).toBe(false);
-      if ((yield* HostProcessPlatform) !== "win32") {
+      if ((yield* HostProcess.Platform) !== "win32") {
         expect((yield* fs.stat(profile.geminiHome)).mode & 0o777).toBe(0o700);
         expect((yield* fs.stat(profile.acpDirectory)).mode & 0o777).toBe(0o700);
       }

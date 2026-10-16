@@ -1,5 +1,5 @@
 included:
-  - ios/Rove Code
+  - ios/RoveCode
   - modules/rove-composer-editor/ios
   - modules/rove-native-controls/ios
   - modules/rove-terminal/ios

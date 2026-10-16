@@ -8,7 +8,10 @@ import {
   type ComputerUseStatus,
   type ThreadId,
 } from "@rove-code/contracts";
-import { HostProcessEnvironment, HostProcessPlatform } from "@rove-code/shared/hostProcess";
+import {
+  Environment as HostProcessEnvironment,
+  Platform as HostProcessPlatform,
+} from "@rove-code/shared/HostProcess";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import type { Tool as CuaMcpTool } from "@modelcontextprotocol/sdk/types.js";
@@ -23,7 +26,7 @@ import * as Path from "effect/Path";
 import * as Schema from "effect/Schema";
 import * as Semaphore from "effect/Semaphore";
 import * as Stream from "effect/Stream";
-import { McpSchema } from "effect/unstable/ai";
+import { McpSchema } from "effect/ai";
 
 import * as ProcessRunner from "../processRunner.ts";
 import * as ServerSettings from "../serverSettings.ts";

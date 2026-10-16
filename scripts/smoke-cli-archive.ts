@@ -18,18 +18,13 @@ import * as Path from "effect/Path";
 import * as Schedule from "effect/Schedule";
 import * as Schema from "effect/Schema";
 import * as Stream from "effect/Stream";
-import { Command, Flag } from "effect/unstable/cli";
-import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
+import { Command, Flag } from "effect/cli";
+import { ChildProcess, ChildProcessSpawner } from "effect/process";
 
 import * as NetService from "@rove-code/shared/Net";
-import { HostProcessPlatform } from "@rove-code/shared/hostProcess";
+import * as HostProcess from "@rove-code/shared/HostProcess";
 import { windowsSystemTar } from "./build-cli-archive.ts";
-import {
-  FetchHttpClient,
-  HttpClient,
-  HttpClientRequest,
-  HttpClientResponse,
-} from "effect/unstable/http";
+import { FetchHttpClient, HttpClient, HttpClientRequest, HttpClientResponse } from "effect/http";
 
 const descriptorSchema = Schema.Struct({
   environmentId: Schema.String,
@@ -109,20 +104,19 @@ const smokeCliArchive = Effect.fn("smokeCliArchive")(function* (input: {
 }) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const platform = yield* HostProcessPlatform;
+  const platform = yield* HostProcess.Platform;
   const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
-  // On Windows the launcher's SIGTERM only terminates the launcher; the runtime
-  // host exits moments later when its IPC channel closes, and keeps its
-  // executable locked until then. Cleanup waits that out instead of failing.
-  const scratch = yield* Effect.acquireRelease(
-    fs.makeTempDirectory({ prefix: "rove-cli-smoke-" }),
-    (directory) =>
-      fs.remove(directory, { recursive: true }).pipe(
-        Effect.retry({ schedule: Schedule.spaced(Duration.millis(500)), times: 20 }),
-        Effect.catch((error) =>
-          Effect.logWarning(`[cli-smoke] could not remove ${directory}: ${error.message}`),
-        ),
+  const scratch = yield* fs.makeTempDirectory({ prefix: "rove-cli-smoke-" });
+  // Windows can keep rove.exe locked (EBUSY) for a moment after the server
+  // exits. A leftover scratch directory on a CI runner is harmless, so
+  // cleanup retries briefly and never fails a smoke test that passed.
+  yield* Effect.addFinalizer(() =>
+    fs.remove(scratch, { recursive: true }).pipe(
+      Effect.retry({ times: 10, schedule: Schedule.spaced("500 millis") }),
+      Effect.catch((error) =>
+        Effect.logWarning(`[cli-smoke] could not remove ${scratch}: ${error.message}`),
       ),
+    ),
   );
 
   // On Windows the archive is a zip and the Git Bash `tar` on PATH is GNU

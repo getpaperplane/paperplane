@@ -42,12 +42,10 @@ it("rejects a build that would serve the SPA fallback instead of the schema", ()
   NodeAssert.throws(() => checkCloudflareWeb(directory), /rove.json/);
 });
 
-for (const raw of ["<html></html>", '{"type":"object"}']) {
-  it(`rejects incorrect schema content ${raw}`, () => {
-    NodeFS.writeFileSync(NodePath.join(directory, "schema/rove.json"), raw);
-    NodeAssert.throws(() => checkCloudflareWeb(directory));
-  });
-}
+it.each(["<html></html>", '{"type":"object"}'])("rejects incorrect schema content %s", (raw) => {
+  NodeFS.writeFileSync(NodePath.join(directory, "schema/rove.json"), raw);
+  NodeAssert.throws(() => checkCloudflareWeb(directory));
+});
 
 it("accepts a PR schema change without comparing it to the base branch", async () => {
   const previewSchema = { ...buildRoveProjectFileJsonSchema(), description: "A PR schema change." };
@@ -73,31 +71,26 @@ it("accepts a PR schema change without comparing it to the base branch", async (
   }
 });
 
-for (const change of [
-  { $id: "https://wrong.example/schema" },
-  { $schema: "wrong" },
-  { type: "string" },
-]) {
-  it(`rejects a preview schema with incorrect metadata ${JSON.stringify(change)}`, () => {
+it.each([{ $id: "https://wrong.example/schema" }, { $schema: "wrong" }, { type: "string" }])(
+  "rejects a preview schema with incorrect metadata %j",
+  (change) => {
     NodeFS.writeFileSync(
       NodePath.join(directory, "schema/rove.json"),
       JSON.stringify({ ...buildRoveProjectFileJsonSchema(), ...change }),
     );
     NodeAssert.throws(() => readBuiltProjectFileSchema(directory));
-  });
-}
+  },
+);
 
 it("rejects an output directory without the SPA entry point", () => {
   NodeFS.unlinkSync(NodePath.join(directory, "index.html"));
   NodeAssert.throws(() => checkCloudflareWeb(directory));
 });
 
-for (const filename of ["app.js.map", ".env.local"]) {
-  it(`rejects ${filename} in deployable assets`, () => {
-    NodeFS.writeFileSync(NodePath.join(directory, filename), "private");
-    NodeAssert.throws(() => checkCloudflareWeb(directory), /Refusing to upload/);
-  });
-}
+it.each(["app.js.map", ".env.local"])("rejects %s in deployable assets", (filename) => {
+  NodeFS.writeFileSync(NodePath.join(directory, filename), "private");
+  NodeAssert.throws(() => checkCloudflareWeb(directory), /Refusing to upload/);
+});
 
 it("accepts an asset exactly 25 MiB in size", () => {
   const filename = NodePath.join(directory, "terminal.wasm");
@@ -106,8 +99,9 @@ it("accepts an asset exactly 25 MiB in size", () => {
   NodeAssert.equal(checkCloudflareWeb(directory).files, 3);
 });
 
-for (const isSchema of [true, false]) {
-  it(`checks the deployed response instead of trusting HTTP 200, schema=${isSchema}`, async () => {
+it.each([true, false])(
+  "checks the deployed response instead of trusting HTTP 200, schema=%s",
+  async (isSchema) => {
     const server = NodeHttp.createServer((request, response) => {
       NodeAssert.equal(request.url, "/schema/rove.json");
       response.setHeader("content-type", isSchema ? "application/json" : "text/html");
@@ -124,8 +118,8 @@ for (const isSchema of [true, false]) {
       server.close();
       await NodeEvents.once(server, "close");
     }
-  });
-}
+  },
+);
 
 function mockDeploymentFetch() {
   vi.useFakeTimers();
@@ -141,8 +135,9 @@ function schemaResponse(schema = buildRoveProjectFileJsonSchema()) {
   });
 }
 
-for (const code of ["ENOTFOUND", "EAI_AGAIN", "ECONNRESET", "UND_ERR_CONNECT_TIMEOUT"]) {
-  it(`retries ${code} after deployment and verifies the recovered response`, async () => {
+it.each(["ENOTFOUND", "EAI_AGAIN", "ECONNRESET", "UND_ERR_CONNECT_TIMEOUT"])(
+  "retries %s after deployment and verifies the recovered response",
+  async (code) => {
     const fetchMock = mockDeploymentFetch();
     fetchMock
       .mockRejectedValueOnce(new TypeError("fetch failed", { cause: { code } }))
@@ -153,21 +148,19 @@ for (const code of ["ENOTFOUND", "EAI_AGAIN", "ECONNRESET", "UND_ERR_CONNECT_TIM
     await vi.advanceTimersByTimeAsync(1);
     await check;
     NodeAssert.equal(fetchMock.mock.calls.length, 2);
-  });
-}
+  },
+);
 
-for (const status of [429, 503, 522]) {
-  it(`retries transient HTTP ${status}`, async () => {
-    const fetchMock = mockDeploymentFetch();
-    fetchMock
-      .mockResolvedValueOnce(new Response("unavailable", { status }))
-      .mockResolvedValueOnce(schemaResponse());
-    const check = checkDeployedProjectFileSchema("https://nightly.example.com");
-    await vi.advanceTimersByTimeAsync(5_000);
-    await check;
-    NodeAssert.equal(fetchMock.mock.calls.length, 2);
-  });
-}
+it.each([429, 503, 522])("retries transient HTTP %s", async (status) => {
+  const fetchMock = mockDeploymentFetch();
+  fetchMock
+    .mockResolvedValueOnce(new Response("unavailable", { status }))
+    .mockResolvedValueOnce(schemaResponse());
+  const check = checkDeployedProjectFileSchema("https://nightly.example.com");
+  await vi.advanceTimersByTimeAsync(5_000);
+  await check;
+  NodeAssert.equal(fetchMock.mock.calls.length, 2);
+});
 
 it("retries a request timeout", async () => {
   const fetchMock = mockDeploymentFetch();
@@ -201,41 +194,37 @@ it("retries when the request times out while reading the response body", async (
   NodeAssert.equal(fetchMock.mock.calls.length, 2);
 });
 
-for (const failure of [
+it.each([
   new TypeError("fetch failed", { cause: { code: "ENOTFOUND" } }),
   new Response("unavailable", { status: 503 }),
-]) {
-  it(`stops retrying persistent ${failure instanceof Response ? "HTTP" : "DNS"} failures`, async () => {
-    const fetchMock = mockDeploymentFetch();
-    if (failure instanceof Response) {
-      fetchMock.mockImplementation(async () => new Response("unavailable", { status: 503 }));
-    } else {
-      fetchMock.mockRejectedValue(failure);
-    }
-    const rejected = NodeAssert.rejects(
-      checkDeployedProjectFileSchema("https://nightly.example.com"),
-      failure instanceof Response ? /HTTP 503/ : /fetch failed/,
-    );
-    await vi.advanceTimersByTimeAsync(95_000);
-    await rejected;
-    NodeAssert.equal(fetchMock.mock.calls.length, 6);
-  });
-}
+])("stops retrying persistent failures: %s", async (failure) => {
+  const fetchMock = mockDeploymentFetch();
+  if (failure instanceof Response) {
+    fetchMock.mockImplementation(async () => new Response("unavailable", { status: 503 }));
+  } else {
+    fetchMock.mockRejectedValue(failure);
+  }
+  const rejected = NodeAssert.rejects(
+    checkDeployedProjectFileSchema("https://nightly.example.com"),
+    failure instanceof Response ? /HTTP 503/ : /fetch failed/,
+  );
+  await vi.advanceTimersByTimeAsync(95_000);
+  await rejected;
+  NodeAssert.equal(fetchMock.mock.calls.length, 6);
+});
 
-for (const response of [
+it.each([
   new Response("not found", { status: 404 }),
   new Response("<html></html>", { headers: { "content-type": "text/html" } }),
   new Response("invalid JSON", { headers: { "content-type": "application/json" } }),
   schemaResponse({ type: "object" }),
-]) {
-  it(`does not retry invalid schema responses (${response.status}, ${response.headers.get("content-type")})`, async () => {
-    const fetchMock = mockDeploymentFetch();
-    fetchMock.mockResolvedValueOnce(response);
-    await NodeAssert.rejects(checkDeployedProjectFileSchema("https://nightly.example.com"));
-    NodeAssert.equal(fetchMock.mock.calls.length, 1);
-    NodeAssert.equal(console.warn.mock.calls.length, 0);
-  });
-}
+])("does not retry invalid schema responses: %s", async (response) => {
+  const fetchMock = mockDeploymentFetch();
+  fetchMock.mockResolvedValueOnce(response);
+  await NodeAssert.rejects(checkDeployedProjectFileSchema("https://nightly.example.com"));
+  NodeAssert.equal(fetchMock.mock.calls.length, 1);
+  NodeAssert.equal(console.warn.mock.calls.length, 0);
+});
 
 it("does not retry non-transient network errors", async () => {
   const fetchMock = mockDeploymentFetch();

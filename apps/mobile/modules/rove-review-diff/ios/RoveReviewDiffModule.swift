@@ -5,6 +5,14 @@ public class RoveReviewDiffModule: Module {
     Name("RoveReviewDiffSurface")
 
     View(RoveReviewDiffView.self) {
+      Prop("contentInsetTop") { (view: RoveReviewDiffView, value: Double) in
+        view.setContentInsetTop(CGFloat(value))
+      }
+
+      Prop("contentInsetBottom") { (view: RoveReviewDiffView, value: Double) in
+        view.setContentInsetBottom(CGFloat(value))
+      }
+
       Prop("tokensResetKey") { (view: RoveReviewDiffView, tokensResetKey: String) in
         view.setTokensResetKey(tokensResetKey)
       }
@@ -51,6 +59,18 @@ public class RoveReviewDiffModule: Module {
 
       Prop("initialRowIndex") { (view: RoveReviewDiffView, initialRowIndex: Double) in
         view.setInitialRowIndex(initialRowIndex)
+      }
+
+      Prop("scrollEnabled") { (view: RoveReviewDiffView, enabled: Bool) in
+        view.setScrollEnabled(enabled)
+      }
+
+      Prop("bounces") { (view: RoveReviewDiffView, bounces: Bool) in
+        view.setBounces(bounces)
+      }
+
+      Prop("refreshEnabled") { (view: RoveReviewDiffView, enabled: Bool) in
+        view.setRefreshEnabled(enabled)
       }
 
       Prop("refreshing") { (view: RoveReviewDiffView, refreshing: Bool) in

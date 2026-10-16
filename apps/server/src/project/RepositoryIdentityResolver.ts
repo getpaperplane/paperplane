@@ -89,10 +89,26 @@ function pickPrimaryRemote(
   return remoteName && remoteUrl ? { remoteName, remoteUrl } : null;
 }
 
+function repositoryPathOf(canonicalKey: string): string {
+  return canonicalKey.split("/").slice(1).join("/");
+}
+
+function buildRepositoryOrigin(
+  originUrl: string | undefined,
+  canonicalKey: string,
+): RepositoryIdentity["origin"] {
+  if (!originUrl) return undefined;
+  const originKey = normalizeGitRemoteUrl(originUrl);
+  if (originKey === canonicalKey) return undefined;
+  const displayName = repositoryPathOf(originKey);
+  return { canonicalKey: originKey, ...(displayName ? { displayName } : {}) };
+}
+
 function buildRepositoryIdentity(input: {
   readonly remoteName: string;
   readonly remoteUrl: string;
   readonly rootPath: string;
+  readonly originUrl?: string | undefined;
   /** The real host behind an `~/.ssh/config` alias, when the remote uses one. */
   readonly sshHostname?: string | null;
 }): RepositoryIdentity {
@@ -109,6 +125,7 @@ function buildRepositoryIdentity(input: {
   const [owner] = repositoryPathSegments;
   const repositoryName = repositoryPathSegments.at(-1);
 
+  const origin = buildRepositoryOrigin(input.originUrl, canonicalKey);
   return {
     canonicalKey,
     locator: {
@@ -121,6 +138,7 @@ function buildRepositoryIdentity(input: {
     ...(sourceControlProvider ? { provider: sourceControlProvider.kind } : undefined),
     ...(owner ? { owner } : undefined),
     ...(repositoryName ? { name: repositoryName } : undefined),
+    ...(origin ? { origin } : {}),
   };
 }
 
@@ -229,13 +247,16 @@ const resolveRepositoryIdentityFromCacheKey = Effect.fn(
     return null;
   }
 
-  const remote = pickPrimaryRemote(
-    parseRemoteFetchUrls(remoteResult.value.stdout),
-    preferredRemote,
-  );
+  const remotes = parseRemoteFetchUrls(remoteResult.value.stdout);
+  const remote = pickPrimaryRemote(remotes, preferredRemote);
   if (remote === null) return null;
   const sshHostname = yield* resolveSshHostname(remote.remoteUrl, rootPath);
-  return buildRepositoryIdentity({ ...remote, rootPath, sshHostname });
+  return buildRepositoryIdentity({
+    ...remote,
+    rootPath,
+    sshHostname,
+    originUrl: remotes.get("origin"),
+  });
 });
 
 export const make = Effect.fn("RepositoryIdentityResolver.make")(function* (

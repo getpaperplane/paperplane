@@ -1,7 +1,7 @@
 import { useAtomValue } from "@effect/atom-react";
 import type { EnvironmentShellStatus } from "@rove-code/client-runtime/state/shell";
 import type { EnvironmentId, MessageId } from "@rove-code/contracts";
-import { Atom } from "effect/unstable/reactivity";
+import { Atom } from "effect/reactivity";
 
 import { appAtomRegistry } from "./atom-registry";
 import { environmentShell } from "./shell";

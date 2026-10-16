@@ -1,6 +1,12 @@
 import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Option from "effect/Option";
+import * as Path from "effect/Path";
+import * as Schema from "effect/Schema";
 
-import { HostProcessArguments } from "@rove-code/shared/hostProcess";
+import type { ServerInstallation } from "@rove-code/contracts";
+import * as HostProcess from "@rove-code/shared/HostProcess";
+import { isCommandAvailable } from "@rove-code/shared/shell";
 
 import packageJson from "../../package.json" with { type: "json" };
 
@@ -36,6 +42,68 @@ function detectCliRunner(entryPath: string): CliRunner | null {
   return null;
 }
 
+const InstallManifest = Schema.Struct({
+  name: Schema.String,
+  version: Schema.String,
+  bin: Schema.optionalKey(Schema.Struct({ rove: Schema.String })),
+  optionalDependencies: Schema.optionalKey(Schema.Record(Schema.String, Schema.String)),
+});
+const decodeInstallManifest = Schema.decodeUnknownEffect(Schema.fromJsonString(InstallManifest));
+
+/** Prove the running package and its global bin belong together before suggesting an update. */
+export const resolveServerInstallation = Effect.gen(function* () {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const args = yield* HostProcess.Arguments;
+  const executable = yield* HostProcess.IsExecutable;
+  const executablePath = yield* HostProcess.ExecutablePath;
+  const platform = yield* HostProcess.Platform;
+  const entry = yield* fs.realPath(executable ? executablePath : (args[1] ?? ""));
+  const match =
+    /^(.*)\/lib\/node_modules\/@rove-code\/cli\/(?:dist\/bin\.mjs|bin\/rove\.js|node_modules\/@rove\/rove-[^/]+\/rove)$/.exec(
+      entry,
+    );
+  if (!match) {
+    const runner = detectCliRunner(entry);
+    return runner === null
+      ? null
+      : ({ kind: runner === "pnpm dlx" ? "pnpm-dlx" : runner } satisfies ServerInstallation);
+  }
+  // A global prefix can contain runner-like names; prove its ownership first.
+  // Windows shims and other package managers need their own ownership proof.
+  if (platform === "win32") return null;
+  const prefix = match[1] || "/";
+  if (
+    prefix.includes("/node_modules/") ||
+    /\/(?:Cellar|Caskroom)\//i.test(prefix) ||
+    /\/mise\/installs\/(?!node\/)[^/]+\//.test(prefix)
+  )
+    return null;
+
+  const packageRoot = path.join(prefix, "lib/node_modules/@rove-code/cli");
+  const manifest = yield* fs
+    .readFileString(path.join(packageRoot, "package.json"))
+    .pipe(Effect.flatMap(decodeInstallManifest));
+  if (manifest.name !== "@rove-code/cli" || !manifest.bin) return null;
+  const bin = yield* fs.realPath(path.join(packageRoot, manifest.bin.rove));
+  const globalBin = yield* fs.realPath(path.join(prefix, "bin/rove"));
+  if (globalBin !== bin) return null;
+  if (executable) {
+    const nativeManifest = yield* fs
+      .readFileString(path.join(path.dirname(entry), "package.json"))
+      .pipe(Effect.flatMap(decodeInstallManifest));
+    if (
+      manifest.bin.rove !== "./bin/rove.js" ||
+      manifest.optionalDependencies?.[nativeManifest.name] !== nativeManifest.version ||
+      nativeManifest.version !== manifest.version
+    )
+      return null;
+  } else if (bin !== entry) {
+    return null;
+  }
+  return { kind: "npm-global", prefix } satisfies ServerInstallation;
+}).pipe(Effect.orElseSucceed(() => null));
+
 /**
  * The `@rove-code/cli` package spec to suggest. The literal spec the user typed (e.g.
  * `@rove-code/cli@nightly`) is resolved away before our process starts, so re-derive it
@@ -67,10 +135,98 @@ export function formatCliCommand(input: {
 
 /** `formatCliCommand` against this process's real entry path and version. */
 export const resolveCliCommand = (subcommand: string) =>
-  Effect.map(HostProcessArguments, (processArguments) =>
+  Effect.map(HostProcess.Arguments, (processArguments) =>
     formatCliCommand({
       subcommand,
       entryPath: processArguments[1] ?? "",
       version: packageJson.version,
     }),
   );
+
+/** Quotes `value` for a POSIX shell when it needs it. */
+const shellWord = (value: string) =>
+  /^[\w@%+=:,./-]+$/.test(value) ? value : `'${value.replaceAll("'", `'"'"'`)}'`;
+
+/**
+ * Quotes `value` for PowerShell, the default Windows terminal. Always quoted,
+ * so a path reads the same whether or not it holds a space. Inside double
+ * quotes `"` and its typographic forms (which also end the string) double,
+ * and `$` and the backtick are escaped so nothing expands.
+ */
+const powershellWord = (value: string) =>
+  `"${value
+    .replaceAll("`", "``")
+    .replaceAll("$", "`$")
+    .replace(/["\u201C\u201D\u201E]/g, "$&$&")}"`;
+
+/** Quotes a word for the host's shell: POSIX, or PowerShell on Windows. */
+const hostShellWord = (platform: NodeJS.Platform, value: string) =>
+  platform === "win32" ? powershellWord(value) : shellWord(value);
+
+/**
+ * The launcher a person can type to run this install when `rove` is not on
+ * PATH: the desktop app's `rove` shim, which the app and the shim itself name in
+ * `ROVE_CLI_PATH`, or a standalone binary's own path. Script installs (a
+ * repo checkout) have no single launcher and keep plain `rove`.
+ */
+const resolveInstallLauncher = Effect.gen(function* () {
+  const fs = yield* FileSystem.FileSystem;
+  const shim = (yield* HostProcess.Environment).ROVE_CLI_PATH?.trim();
+  if (shim && (yield* fs.exists(shim).pipe(Effect.orElseSucceed(() => false)))) {
+    return Option.some(shim);
+  }
+  return (yield* HostProcess.IsExecutable)
+    ? Option.some(yield* HostProcess.ExecutablePath)
+    : Option.none<string>();
+});
+
+/**
+ * `rove <subcommand> <args>` for a person to run on this host: `rove` when it is
+ * on PATH, the package runner this process came from, or else the absolute
+ * path of the launcher for this install, such as the one the desktop app
+ * installs. `args` are quoted for the host's shell: POSIX, or PowerShell on
+ * Windows.
+ */
+export const resolveHostCliCommand = (subcommand: string, args: ReadonlyArray<string> = []) =>
+  Effect.gen(function* () {
+    const platform = yield* HostProcess.Platform;
+    const withArgs = (prefix: string) =>
+      [prefix, ...args.map((arg) => hostShellWord(platform, arg))].join(" ");
+    const command = yield* resolveCliCommand(subcommand);
+    if (command !== `rove ${subcommand}`) return { command: withArgs(command), launcher: false };
+    if (yield* isCommandAvailable("rove")) return { command: withArgs(command), launcher: false };
+    const launcher = yield* resolveInstallLauncher;
+    if (Option.isNone(launcher)) return { command: withArgs(command), launcher: false };
+    // PowerShell runs a quoted path only through the call operator.
+    const quoted = hostShellWord(platform, launcher.value);
+    const call = platform === "win32" ? `& ${quoted}` : quoted;
+    return { command: withArgs(`${call} ${subcommand}`), launcher: true };
+  });
+
+/**
+ * `rove <subcommand>` as root, for setup a person runs once on the host. `sudo`
+ * resets PATH on most distributions, which drops a user-installed Node (nvm,
+ * fnm, a tarball) and with it `npx` or a global `rove`, so the command carries
+ * PATH through unless Node is on root's PATH too. An absolute launcher needs
+ * neither.
+ */
+export const resolveRootCliCommand = (subcommand: string) =>
+  Effect.gen(function* () {
+    const { command, launcher } = yield* resolveHostCliCommand(subcommand);
+    if (launcher) return `sudo ${command}`;
+    const executablePath = yield* HostProcess.ExecutablePath;
+    const systemNode = ROOT_PATH_DIRECTORIES.some((directory) =>
+      executablePath.startsWith(`${directory}/`),
+    );
+    return systemNode ? `sudo ${command}` : `sudo env "PATH=$PATH" ${command}`;
+  });
+
+/** Debian and Ubuntu's sudo `secure_path`, minus snap. */
+const ROOT_PATH_DIRECTORIES = [
+  "/usr/local/sbin",
+  "/usr/local/bin",
+  "/usr/sbin",
+  "/usr/bin",
+  "/sbin",
+  "/bin",
+];

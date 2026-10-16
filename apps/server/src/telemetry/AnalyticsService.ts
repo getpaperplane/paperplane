@@ -1,24 +1,32 @@
 /**
- * Installation-scoped PostHog telemetry service.
+ * Anonymous PostHog telemetry service.
  *
  * Persists an installation-scoped anonymous identifier, buffers events in
- * memory, and flushes batches over Effect's HTTP client.
+ * memory, and flushes batches over Effect's HTTP client. A failed batch is
+ * retried with backoff and dropped after a few tries. Each event carries a
+ * uuid, so PostHog can tell a retried copy from a new event.
  *
  * @module AnalyticsService
  */
-import { HostProcessArchitecture, HostProcessPlatform } from "@rove-code/shared/hostProcess";
+import * as HostProcess from "@rove-code/shared/HostProcess";
 import type { ClientOs } from "@rove-code/contracts";
+import * as Clock from "effect/Clock";
 import * as Config from "effect/Config";
 import * as Context from "effect/Context";
+import * as Crypto from "effect/Crypto";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
+import * as Random from "effect/Random";
 import * as Ref from "effect/Ref";
+import * as Result from "effect/Result";
 import * as Stream from "effect/Stream";
-import * as HttpClient from "effect/unstable/http/HttpClient";
-import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
-import * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
+import * as Semaphore from "effect/Semaphore";
+import * as HttpClient from "effect/http/HttpClient";
+import * as HttpClientRequest from "effect/http/HttpClientRequest";
+import * as HttpClientResponse from "effect/http/HttpClientResponse";
 
 import packageJson from "../../package.json" with { type: "json" };
 import * as ServerConfig from "../config.ts";
@@ -27,10 +35,39 @@ import { ServerSettingsService } from "../serverSettings.ts";
 import { sanitizeAnalyticsProperties } from "./AnalyticsPolicy.ts";
 
 interface BufferedAnalyticsEvent {
+  readonly uuid: string;
   readonly event: string;
-  readonly properties?: Readonly<Record<string, string | number | boolean>>;
+  readonly properties?: Readonly<Record<string, unknown>>;
   readonly capturedAt: string;
   readonly generation: number;
+}
+
+interface DeliveryState {
+  /** Batch that failed last. It is sent again before newer events. */
+  readonly failedBatch: ReadonlyArray<BufferedAnalyticsEvent>;
+  /** Failed sends of `failedBatch`. */
+  readonly batchAttempts: number;
+  /** Failed sends since the last success. Sets the backoff delay. */
+  readonly failures: number;
+  /** The background flush does not send before this time (epoch ms). */
+  readonly retryAt: number;
+}
+
+const FLUSH_INTERVAL_MS = 1_000;
+// A hung send would hold the flush lock, and with it the shutdown flush.
+const SEND_TIMEOUT = "10 seconds";
+const MAX_BATCH_ATTEMPTS = 5;
+const RETRY_BASE_DELAY_MS = 2_000;
+const RETRY_MAX_DELAY_MS = 300_000;
+
+/**
+ * Delay before the next send after `failures` consecutive failed sends. The
+ * ceiling doubles from 2s up to 5 minutes, and the delay is a random point in
+ * its upper half. `random` is in [0, 1).
+ */
+export function retryDelayMs(failures: number, random: number): number {
+  const ceiling = Math.min(RETRY_MAX_DELAY_MS, RETRY_BASE_DELAY_MS * 2 ** (failures - 1));
+  return Math.round(ceiling / 2 + (ceiling / 2) * random);
 }
 
 const TelemetryEnvConfig = Config.all({
@@ -94,26 +131,34 @@ function serverOsFromNodePlatform(platform: string): ClientOs {
 /** @public Service construction is part of the canonical Effect module API. */
 export const make = Effect.gen(function* () {
   const telemetryConfig = yield* TelemetryEnvConfig;
+  const httpClient = yield* HttpClient.HttpClient;
+  const serverConfig = yield* ServerConfig.ServerConfig;
   if (!telemetryConfig.enabled) {
     return AnalyticsService.of({ record: () => Effect.void, flush: Effect.void });
   }
-
-  const httpClient = yield* HttpClient.HttpClient;
-  const serverConfig = yield* ServerConfig.ServerConfig;
   const settings = yield* ServerSettingsService;
-  // Cache the effect, not its result: opting out before the first event must
-  // neither read nor create an installation identifier.
+  // Cache the effect, not an eagerly-created installation identifier.
   const identityContext = yield* Effect.context<Effect.Services<typeof getTelemetryIdentifier>>();
   const identifier = yield* Effect.cached(
     getTelemetryIdentifier.pipe(Effect.provideContext(identityContext)),
   );
+  const crypto = yield* Crypto.Crypto;
   const bufferRef = yield* Ref.make<ReadonlyArray<BufferedAnalyticsEvent>>([]);
-  // A failed request can finish after opt-out and opt-in. Its old batch must
-  // not be requeued into the newly opted-in buffer.
+  const deliveryRef = yield* Ref.make<DeliveryState>({
+    failedBatch: [],
+    batchAttempts: 0,
+    failures: 0,
+    retryAt: 0,
+  });
   let generation = 0;
   const discardBufferedEvents = Effect.sync(() => {
     generation++;
-  }).pipe(Effect.andThen(Ref.set(bufferRef, [])));
+  }).pipe(
+    Effect.andThen(Ref.set(bufferRef, [])),
+    Effect.andThen(
+      Ref.set(deliveryRef, { failedBatch: [], batchAttempts: 0, failures: 0, retryAt: 0 }),
+    ),
+  );
   const settingsChanges = yield* settings.subscribeChanges;
   yield* settingsChanges.pipe(
     Stream.runForEach((next) => (next.telemetryEnabled ? Effect.void : discardBufferedEvents)),
@@ -121,7 +166,6 @@ export const make = Effect.gen(function* () {
   );
   const collectionEnabled = settings.getSettings.pipe(
     Effect.map((current) => current.telemetryEnabled),
-    // Privacy wins over delivery if settings cannot be read.
     Effect.orElseSucceed(() => false),
   );
   const analyticsEnvironment = Option.getOrElse(telemetryConfig.environment, () =>
@@ -137,22 +181,27 @@ export const make = Effect.gen(function* () {
     : packageJson.version.includes("preview")
       ? "preview"
       : "stable";
+
+  // The background flush and the shutdown flush must not send the same batch at once.
+  const flushLock = yield* Semaphore.make(1);
   const clientType = serverConfig.mode === "desktop" ? "desktop-app" : "cli-web-client";
-  const hostPlatform = yield* HostProcessPlatform;
-  const hostArchitecture = yield* HostProcessArchitecture;
+  const hostPlatform = yield* HostProcess.Platform;
+  const hostArchitecture = yield* HostProcess.Architecture;
 
   const enqueueBufferedEvent = (
+    uuid: string,
     event: string,
     eventGeneration: number,
-    properties?: Readonly<Record<string, string | number | boolean>>,
+    properties?: Readonly<Record<string, unknown>>,
   ) =>
     Effect.flatMap(DateTime.now, (now) =>
       Ref.modify(bufferRef, (current) => {
         const appended = [
           ...current,
           {
+            uuid,
             event,
-            ...(properties ? { properties } : undefined),
+            ...(properties ? { properties } : {}),
             capturedAt: DateTime.formatIso(now),
             generation: eventGeneration,
           } satisfies BufferedAnalyticsEvent,
@@ -184,18 +233,16 @@ export const make = Effect.gen(function* () {
     const currentEvents = events.filter((event) => event.generation === batchGeneration);
     if (currentEvents.length === 0) return;
     const distinctId = yield* identifier;
-    if (!distinctId) return;
-    if (!(yield* collectionEnabled) || generation !== batchGeneration) return;
+    if (!distinctId || !(yield* collectionEnabled) || generation !== batchGeneration) return;
 
     const payload = {
       api_key: telemetryConfig.posthogKey,
       batch: currentEvents.map((event) => ({
+        uuid: event.uuid,
         event: event.event,
         distinct_id: distinctId,
         properties: {
           ...event.properties,
-          // Only real client activity creates a pseudonymous installation
-          // profile. Boot heartbeats and dev/test runs must not inflate Persons.
           $process_person_profile:
             analyticsEnvironment === "production" && event.event.startsWith("client."),
           $geoip_disable: true,
@@ -206,6 +253,7 @@ export const make = Effect.gen(function* () {
           platform: hostPlatform,
           wsl: Option.isSome(telemetryConfig.wslDistroName),
           arch: hostArchitecture,
+          roveCodeVersion: packageJson.version,
           roveVersion: packageJson.version,
           clientType,
           serverOs: serverOsFromNodePlatform(hostPlatform),
@@ -222,39 +270,69 @@ export const make = Effect.gen(function* () {
       HttpClientRequest.bodyJson(payload),
       Effect.flatMap(httpClient.execute),
       Effect.flatMap(HttpClientResponse.filterStatusOk),
+      Effect.timeout(SEND_TIMEOUT),
     );
   });
 
-  const flush: AnalyticsService["Service"]["flush"] = Effect.gen(function* () {
+  const takeBatch = Ref.modify(bufferRef, (current) => {
+    const nextBatch = current.slice(0, telemetryConfig.flushBatchSize);
+    return [nextBatch, current.slice(nextBatch.length)] as const;
+  });
+
+  // Sends batches until the buffer is empty or a send fails. A failed batch is
+  // kept for the next flush, and dropped after MAX_BATCH_ATTEMPTS failed sends.
+  const flushBatches = Effect.gen(function* () {
     while (true) {
       if (!(yield* collectionEnabled)) {
         yield* discardBufferedEvents;
         return;
       }
-      const batch = yield* Ref.modify(bufferRef, (current) => {
-        if (current.length === 0) {
-          return [[] as ReadonlyArray<BufferedAnalyticsEvent>, current] as const;
-        }
-        const nextBatch = current.slice(0, telemetryConfig.flushBatchSize);
-        const remaining = current.slice(nextBatch.length);
-        return [nextBatch, remaining] as const;
-      });
-
+      const batchGeneration = generation;
+      const delivery = yield* Ref.get(deliveryRef);
+      const batch = delivery.failedBatch.length > 0 ? delivery.failedBatch : yield* takeBatch;
       if (batch.length === 0) {
         return;
       }
 
-      yield* sendBatch(batch).pipe(
-        Effect.catch((error) =>
-          Ref.update(bufferRef, (current) =>
-            [...batch.filter((event) => event.generation === generation), ...current].slice(
-              -telemetryConfig.maxBufferedEvents,
-            ),
-          ).pipe(Effect.flatMap(() => Effect.fail(error))),
-        ),
-      );
+      const sent = yield* Effect.result(sendBatch(batch));
+      if (!(yield* collectionEnabled) || generation !== batchGeneration) return;
+      if (Result.isSuccess(sent)) {
+        yield* Ref.set(deliveryRef, { failedBatch: [], batchAttempts: 0, failures: 0, retryAt: 0 });
+        continue;
+      }
+
+      const failures = delivery.failures + 1;
+      const batchAttempts = delivery.batchAttempts + 1;
+      const retryAt = (yield* Clock.currentTimeMillis) + retryDelayMs(failures, yield* Random.next);
+      if (batchAttempts < MAX_BATCH_ATTEMPTS) {
+        yield* Ref.set(deliveryRef, { failedBatch: batch, batchAttempts, failures, retryAt });
+        yield* Effect.logDebug("Failed to send telemetry batch; will retry", {
+          attempt: batchAttempts,
+          cause: sent.failure,
+        });
+        return;
+      }
+      yield* Ref.set(deliveryRef, { failedBatch: [], batchAttempts: 0, failures, retryAt });
+      yield* Effect.logWarning("Dropped telemetry batch after repeated send failures", {
+        events: batch.length,
+        attempts: batchAttempts,
+        cause: sent.failure,
+      });
+      return;
     }
-  }).pipe(Effect.catch((cause) => Effect.logError("Failed to flush telemetry", { cause })));
+  }).pipe(flushLock.withPermit);
+
+  // Opt-out must discard a queued or in-flight generation without waiting for HTTP.
+  const flush: AnalyticsService["Service"]["flush"] = collectionEnabled.pipe(
+    Effect.flatMap((enabled) => (enabled ? flushBatches : discardBufferedEvents)),
+  );
+
+  const flushWhenDue = Effect.gen(function* () {
+    const { retryAt } = yield* Ref.get(deliveryRef);
+    if ((yield* Clock.currentTimeMillis) >= retryAt) {
+      yield* flush;
+    }
+  });
 
   const record: AnalyticsService["Service"]["record"] = Effect.fn("AnalyticsService.record")(
     function* (event, properties) {
@@ -266,7 +344,17 @@ export const make = Effect.gen(function* () {
         return;
       }
 
-      const enqueueResult = yield* enqueueBufferedEvent(event, eventGeneration, safeProperties);
+      // Telemetry is best effort: an event without a uuid is not sent. The
+      // Node implementation throws (a defect) rather than failing, so catch both.
+      const uuid = yield* Effect.exit(crypto.randomUUIDv7());
+      if (Exit.isFailure(uuid)) return;
+
+      const enqueueResult = yield* enqueueBufferedEvent(
+        uuid.value,
+        event,
+        eventGeneration,
+        safeProperties,
+      );
       if (enqueueResult.dropped) {
         yield* Effect.logDebug("analytics buffer full; dropping oldest event", {
           size: enqueueResult.size,
@@ -276,14 +364,20 @@ export const make = Effect.gen(function* () {
     },
   );
 
-  // Idle hosts should not materialize settings (and provider secrets) every
-  // second. Explicit flush still enforces opt-out even with a batch in flight.
   yield* Effect.forever(
-    Effect.sleep(1000).pipe(
+    Effect.sleep(FLUSH_INTERVAL_MS).pipe(
       Effect.flatMap(() => Ref.get(bufferRef)),
-      Effect.flatMap((events) => (events.length === 0 ? Effect.void : flush)),
+      Effect.flatMap((events) =>
+        Ref.get(deliveryRef).pipe(
+          Effect.flatMap((delivery) =>
+            events.length === 0 && delivery.failedBatch.length === 0 ? Effect.void : flushWhenDue,
+          ),
+        ),
+      ),
     ),
-    { disableYield: true },
+    {
+      disableYield: true,
+    },
   ).pipe(Effect.forkScoped);
 
   yield* Effect.addFinalizer(() => flush);
@@ -293,4 +387,4 @@ export const make = Effect.gen(function* () {
 
 export const layer = Layer.effect(AnalyticsService, make);
 
-export const layerTest = AnalyticsService.layerTest;
+const layerTest = AnalyticsService.layerTest;

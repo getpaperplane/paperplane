@@ -3,23 +3,26 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "deploy": "node -- scripts/deploy.ts",
+    "deploy": "alchemy deploy",
+    "plan": "alchemy plan",
     "db:generate": "drizzle-kit generate --dialect=postgresql --schema=./src/persistence/schema.ts --out=./migrations/postgres",
     "push:android:smoke": "node scripts/android-push-smoke.ts",
     "push:android:watch": "node scripts/android-push-watch.ts",
+    "tunnels:census": "node scripts/tunnel-census.ts",
     "destroy": "alchemy destroy",
-    "test": "vp test run",
-    "typecheck": "tsc --noEmit"
+    "test": "vp test run --config ../../vite.config.ts --dir .",
+    "typecheck": "tsc-rs --noEmit"
   },
   "dependencies": {
     "@clerk/backend": "catalog:",
     "@effect/sql-pg": "catalog:",
+    "@effect/sql-sqlite-do": "catalog:",
     "@noble/curves": "catalog:",
     "@noble/hashes": "catalog:",
     "@rove-code/client-runtime": "workspace:*",
     "@rove-code/contracts": "workspace:*",
     "@rove-code/shared": "workspace:*",
-    "alchemy": "2.0.0-beta.79",
+    "alchemy": "2.0.0-beta.80",
     "drizzle-orm": "1.0.0-rc.5-ab785fc",
     "effect": "catalog:"
   },
@@ -29,6 +32,7 @@
     "@effect/vitest": "catalog:",
     "@types/node": "catalog:",
     "drizzle-kit": "1.0.0-rc.5-ab785fc",
+    "typescript": "catalog:",
     "vite": "catalog:",
     "vite-plus": "catalog:"
   }

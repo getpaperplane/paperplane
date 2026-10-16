@@ -9,7 +9,7 @@ import * as Option from "effect/Option";
 import * as Predicate from "effect/Predicate";
 import * as Schema from "effect/Schema";
 import { decodeMigratedRoveJson } from "@rove-code/shared/roveMigration";
-import { HostProcessPlatform } from "@rove-code/shared/hostProcess";
+import * as HostProcess from "@rove-code/shared/HostProcess";
 
 export class BootstrapFdStatError extends Schema.TaggedError<BootstrapFdStatError>()(
   "BootstrapFdStatError",
@@ -160,7 +160,7 @@ const isFdReady = (fd: number) =>
 
 const makeBootstrapInputStream = (fd: number) =>
   Effect.gen(function* () {
-    const platform = yield* HostProcessPlatform;
+    const platform = yield* HostProcess.Platform;
     const fdPath = resolveFdPath(fd, platform);
     return yield* Effect.try<NodeStream.Readable, BootstrapInputStreamOpenError>({
       try: () => {

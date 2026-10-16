@@ -1,4 +1,5 @@
 import * as Schema from "effect/Schema";
+import { TrimmedNonEmptyString } from "./baseSchemas.ts";
 import { ProviderInstanceId } from "./providerInstance.ts";
 
 export const PiCatalogInput = Schema.Struct({
@@ -34,3 +35,11 @@ export type PiCatalogSnapshot = typeof PiCatalogSnapshot.Type;
 export class PiCatalogError extends Schema.TaggedError<PiCatalogError>()("PiCatalogError", {
   message: Schema.String,
 }) {}
+
+/** Extension status lines Pi shows above the composer (`runtime.ui.status` events). */
+export const PiExtensionStatusSnapshot = Schema.Struct({
+  statuses: Schema.Array(
+    Schema.Struct({ key: TrimmedNonEmptyString, text: TrimmedNonEmptyString }),
+  ),
+});
+export type PiExtensionStatusSnapshot = typeof PiExtensionStatusSnapshot.Type;

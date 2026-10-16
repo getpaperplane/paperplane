@@ -1,12 +1,9 @@
 import type { ContextMenuItem } from "@rove-code/contracts";
 
-import { POTATO_ICON_PATHS } from "./components/icons/PotatoIcon";
-
 const SVG_NS = "http://www.w3.org/2000/svg";
 
 // Inline Lucide-style icon paths (stroke-based, viewBox 0 0 24 24, strokeWidth 2).
 const ICON_PATHS: Record<string, ReadonlyArray<{ tag: string; attrs: Record<string, string> }>> = {
-  potato: POTATO_ICON_PATHS.map((d) => ({ tag: "path", attrs: { d } })),
   archive: [
     { tag: "rect", attrs: { width: "20", height: "5", x: "2", y: "3", rx: "1" } },
     { tag: "path", attrs: { d: "M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8" } },
@@ -78,13 +75,6 @@ const ICON_PATHS: Record<string, ReadonlyArray<{ tag: string; attrs: Record<stri
     },
     { tag: "path", attrs: { d: "M12 8v6" } },
     { tag: "path", attrs: { d: "M9 11h6" } },
-  ],
-  "monitor-up": [
-    { tag: "path", attrs: { d: "m9 10 3-3 3 3" } },
-    { tag: "path", attrs: { d: "M12 13V7" } },
-    { tag: "rect", attrs: { width: "20", height: "14", x: "2", y: "3", rx: "2" } },
-    { tag: "path", attrs: { d: "M12 17v4" } },
-    { tag: "path", attrs: { d: "M8 21h8" } },
   ],
   pin: [
     { tag: "path", attrs: { d: "M12 17v5" } },
@@ -313,10 +303,12 @@ export function showContextMenuFallback<T extends string>(
       menu.dataset.level = String(level);
 
       const inner = document.createElement("div");
+      // Fit the viewport (minus clampMenuPosition's 4px margins) so menus only
+      // scroll when the window is shorter than the menu itself.
       inner.className =
-        "max-h-[min(24rem,70vh)] min-w-0 max-w-sm overflow-y-auto overflow-x-hidden p-1";
+        "max-h-[calc(100vh-0.5rem)] min-w-0 max-w-sm overflow-y-auto overflow-x-hidden p-1";
       inner.style.cssText =
-        "max-height:min(24rem,70vh);min-width:0;max-width:24rem;overflow-x:hidden;overflow-y:auto;padding:0.25rem;";
+        "max-height:calc(100vh - 0.5rem);min-width:0;max-width:24rem;overflow-x:hidden;overflow-y:auto;padding:0.25rem;";
 
       for (const item of entries) {
         if (item.separatorBefore === true && inner.children.length > 0) {

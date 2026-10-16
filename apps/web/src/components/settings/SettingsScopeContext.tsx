@@ -2,7 +2,7 @@ import { ROVE_PROJECT_FILE_NAME, type RoveProjectFile } from "@rove-code/contrac
 import { parseRoveProjectFile } from "@rove-code/shared/roveProjectFile";
 import { useAtomValue } from "@effect/atom-react";
 import * as Option from "effect/Option";
-import { AsyncResult, Atom } from "effect/unstable/reactivity";
+import { AsyncResult, Atom } from "effect/reactivity";
 import { createContext, type ReactNode, useContext, useMemo } from "react";
 
 import { useEnvironments, usePrimaryEnvironmentId } from "../../state/environments";
@@ -30,7 +30,6 @@ function useMemberProjectFiles(scope: ReturnType<typeof resolveSettingsScope>) {
                 member.environmentId,
                 member.workspaceRoot,
                 ROVE_PROJECT_FILE_NAME,
-                { allowLegacyProjectFile: true },
               ),
             );
             if (result.waiting) continue;

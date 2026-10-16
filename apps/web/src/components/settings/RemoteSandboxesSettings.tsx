@@ -2,14 +2,10 @@ import { useEffect, useRef, useState } from "react";
 import * as Cause from "effect/Cause";
 import type { AtomCommandResult } from "@rove-code/client-runtime/state/runtime";
 import {
-  standaloneThreadInput,
-  supportsStandaloneThreads,
-} from "@rove-code/client-runtime/state/standalone-thread";
-import {
   type EnvironmentId,
   type RemoteSandbox,
   type SandboxCredentialKind,
-  SandboxInventory,
+  type SandboxInventory,
   type SandboxProvider,
   type SandboxRegion,
 } from "@rove-code/contracts";
@@ -18,12 +14,10 @@ import { AlertCircleIcon, ChevronDownIcon, ExternalLinkIcon, RefreshCwIcon } fro
 import { sandboxEnvironment } from "../../state/sandbox";
 import { serverEnvironment } from "../../state/server";
 import { useEnvironmentSessionState } from "../../state/session";
-import { threadEnvironment } from "../../state/threads";
 import { useAtomCommand } from "../../state/use-atom-command";
 import { environmentCatalog } from "../../connection/catalog";
 import { connectPairing } from "../../connection/onboarding";
 import { requestConfirmDialog } from "../../confirmDialog";
-import { newThreadId } from "../../lib/utils";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { Checkbox } from "../ui/checkbox";
@@ -119,10 +113,7 @@ function SandboxControls({
   const configure = useAtomCommand(sandboxEnvironment.configure, { reportFailure: false });
   const create = useAtomCommand(sandboxEnvironment.create, { reportFailure: false });
   const action = useAtomCommand(sandboxEnvironment.action, { reportFailure: false });
-  const link = useAtomCommand(sandboxEnvironment.link, { reportFailure: false });
   const pair = useAtomCommand(connectPairing, { reportFailure: false });
-  const createThread = useAtomCommand(threadEnvironment.create, { reportFailure: false });
-  const getConfig = useAtomCommand(sandboxEnvironment.getConfig, { reportFailure: false });
   const removeEnvironment = useAtomCommand(environmentCatalog.remove, { reportFailure: false });
   const refreshProviders = useAtomCommand(serverEnvironment.refreshProviders, {
     reportFailure: false,
@@ -132,7 +123,7 @@ function SandboxControls({
     if (sandbox.environmentId) await removeEnvironment(sandbox.environmentId);
   };
   const router = useRouter();
-  const [inventory, setInventory] = useState<typeof SandboxInventory.Type | null>(null);
+  const [inventory, setInventory] = useState<SandboxInventory | null>(null);
   const [provider, setProvider] = useState<SandboxProvider>("boat");
   const [token, setToken] = useState("");
   const [tokenId, setTokenId] = useState("");
@@ -281,32 +272,16 @@ function SandboxControls({
       );
       if (!result.pairingUrl) throw new Error("Pairing URL is unavailable.");
       const targetId = value(await pair({ pairingUrl: result.pairingUrl }));
-      const config = value(await getConfig({ environmentId: targetId, input: {} }));
-      if (!supportsStandaloneThreads(config))
-        throw new Error(
-          "Update the sandbox's Rove installation before creating a standalone thread.",
-        );
-      if (sandbox.environmentId !== null && sandbox.environmentId !== targetId)
-        throw new Error("Sandbox identity changed. Existing thread was not replaced.");
-      const threadId = sandbox.threadId ?? newThreadId();
-      if (sandbox.threadId === null) {
-        value(
-          await createThread({
-            environmentId: targetId,
-            input: standaloneThreadInput(threadId, config),
-          }),
-        );
-        value(
-          await link({
-            environmentId,
-            input: { id: sandbox.id, environmentId: targetId, threadId },
-          }),
-        );
+      // Pairing is independent of orchestration. Choose or create a V2 project
+      // in the connected environment instead of reviving a V1 standalone thread.
+      if (sandbox.threadId && sandbox.environmentId === targetId) {
+        await router.navigate({
+          to: "/$environmentId/$threadId",
+          params: { environmentId: targetId, threadId: sandbox.threadId },
+        });
+      } else {
+        await router.navigate({ to: "/", search: { environmentId: targetId } });
       }
-      await router.navigate({
-        to: "/$environmentId/$threadId",
-        params: { environmentId: targetId, threadId },
-      });
     });
   const saveCredentials = () => {
     if (locked || tracked || !token.trim() || (provider === "modal" && !tokenId.trim())) return;

@@ -74,7 +74,7 @@ describe("resolveEnvironmentProjectMatch", () => {
   it("follows the same repository onto the target machine", () => {
     const selected = makeProject("rove", "mac", { repositoryKey: "github.com/rovetools/rove" });
     const target = [
-      makeProject("other", "server", { repositoryKey: "github.com/rovetools/other" }),
+      makeProject("other", "server", { repositoryKey: "github.com/t3tools/other" }),
       makeProject("rove-clone", "server", { repositoryKey: "github.com/rovetools/rove" }),
     ];
     expect(resolveEnvironmentProjectMatch(target, selected)).toBe(target[1]);
@@ -167,7 +167,7 @@ describe("filterProjectScopes", () => {
   });
 
   it("matches logical names and workspace names or paths without case sensitivity", () => {
-    expect(filterProjectScopes(scopes, "  ROVE CODE ")).toEqual([code]);
+    expect(filterProjectScopes(scopes, "  Rove CODE ")).toEqual([code]);
     expect(filterProjectScopes(scopes, "DESKTOP")).toEqual([code]);
     expect(filterProjectScopes(scopes, "REMOTE-WORKSPACE")).toEqual([code]);
     expect(filterProjectScopes(scopes, "documentation")).toEqual([docs]);

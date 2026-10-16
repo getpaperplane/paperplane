@@ -1,26 +1,36 @@
 "use client";
 
-import { useMemo, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
-import type {
-  ProviderSettingsFormAnnotation,
-  ProviderSettingsFormControl,
-  ProviderSettingsFormOption,
-  ProviderSettingsFormSchemaAnnotation,
-  ServerProvider,
-  ServerProviderModel,
+import {
+  isSecretSetting,
+  type ProviderSettingsFormAnnotation,
+  type ProviderSettingsFormControl,
+  type ProviderSettingsFormOption,
+  type ProviderSettingsFormSchemaAnnotation,
+  type EnvironmentId,
+  type ServerProvider,
+  type ServerProviderModel,
 } from "@rove-code/contracts";
+import { PlusIcon, XIcon } from "lucide-react";
 
 import { cn } from "../../lib/utils";
+import { Button } from "../ui/button";
 import { DraftInput } from "../ui/draft-input";
 import { Input } from "../ui/input";
+import { SecretInput } from "./SecretInput";
 import { Select, SelectItem, SelectPopup, SelectTrigger, SelectValue } from "../ui/select";
 import { Switch } from "../ui/switch";
 import { Textarea } from "../ui/textarea";
-import type { ProviderClientDefinition } from "./providerDriverMeta";
-import { SettingsRow } from "./settingsLayout";
+import type { ProviderClientDefinition } from "@rove-code/provider-core/client";
+
+/** What the form reads from a definition: an agent provider's, or a source control host's. */
+export type SettingsFormDefinition = Pick<ProviderClientDefinition, "settingsSchema"> & {
+  readonly driverKind?: ProviderClientDefinition["driverKind"];
+};
 import { PiSubagentSettings } from "./PiSubagentSettings";
+import { SettingsRow } from "./settingsLayout";
 
 export interface ProviderSettingsFieldModel {
   readonly key: string;
@@ -29,6 +39,8 @@ export interface ProviderSettingsFieldModel {
   readonly description?: string | undefined;
   readonly placeholder?: string | undefined;
   readonly clearWhenEmpty: "omit" | "persist";
+  /** Kept in the server's secret store: a saved value arrives as `SECRET_REDACTED` and never shows. */
+  readonly secret?: boolean | undefined;
   readonly defaultBooleanValue?: boolean | undefined;
   /** Choices for a `select` control. The first entry is the default. */
   readonly options?: ReadonlyArray<ProviderSettingsFormOption> | undefined;
@@ -64,7 +76,7 @@ function readProviderSettingsFormAnnotation(
 }
 
 function readProviderSettingsFormSchemaAnnotation(
-  definition: ProviderClientDefinition,
+  definition: SettingsFormDefinition,
 ): ProviderSettingsFormSchemaAnnotation {
   return Schema.resolveAnnotations(definition.settingsSchema)?.providerSettingsFormSchema ?? {};
 }
@@ -78,9 +90,13 @@ function readFieldBooleanDefault(
 }
 
 export function deriveProviderSettingsFields(
-  definition: ProviderClientDefinition,
+  definition: SettingsFormDefinition,
+  value?: unknown,
   supportsPiWorkloadProtection = true,
 ): ReadonlyArray<ProviderSettingsFieldModel> {
+  const isLocalAcp =
+    definition.driverKind === "acpRegistry" &&
+    readProviderConfigString(value, "source") === "local";
   const schemaAnnotation = readProviderSettingsFormSchemaAnnotation(definition);
   const orderedKeys = new Map(
     (schemaAnnotation.order ?? []).map((key, index) => [key, index] as const),
@@ -99,8 +115,9 @@ export function deriveProviderSettingsFields(
       const fieldSchema = definition.settingsSchema.fields[key]!;
       const formAnnotation = readProviderSettingsFormAnnotation(fieldSchema);
       if (formAnnotation.hidden) return [];
+      if (isLocalAcp && key !== "source" && key !== "commandPath") return [];
       if (
-        definition.value === "pi" &&
+        definition.driverKind === "pi" &&
         !supportsPiWorkloadProtection &&
         (key === "workloadProtection" || key === "workloadMemoryMiB")
       )
@@ -112,12 +129,22 @@ export function deriveProviderSettingsFields(
         {
           key,
           control: formAnnotation.control ?? "text",
-          label: annotatedTitle ?? titleizeFieldKey(key),
-          ...(annotatedDescription !== undefined ? { description: annotatedDescription } : {}),
-          ...(formAnnotation.placeholder !== undefined
-            ? { placeholder: formAnnotation.placeholder }
-            : {}),
+          label:
+            isLocalAcp && key === "commandPath"
+              ? "Executable"
+              : (annotatedTitle ?? titleizeFieldKey(key)),
+          ...(isLocalAcp && key === "commandPath"
+            ? { description: "Executable name or path on this environment." }
+            : annotatedDescription !== undefined
+              ? { description: annotatedDescription }
+              : {}),
+          ...(isLocalAcp && key === "commandPath"
+            ? { placeholder: "e.g. dsh" }
+            : formAnnotation.placeholder !== undefined
+              ? { placeholder: formAnnotation.placeholder }
+              : {}),
           clearWhenEmpty: formAnnotation.clearWhenEmpty ?? "omit",
+          ...(isSecretSetting(fieldSchema) ? { secret: true } : {}),
           ...(formAnnotation.control === "switch"
             ? { defaultBooleanValue: readFieldBooleanDefault(fieldSchema) }
             : {}),
@@ -127,6 +154,112 @@ export function deriveProviderSettingsFields(
         } satisfies ProviderSettingsFieldModel,
       ];
     });
+}
+
+let commandArgumentDraftId = 0;
+const makeCommandArgumentDraftRow = (value: string) => ({
+  id: `provider-argument-${commandArgumentDraftId++}`,
+  value,
+});
+
+function commandArgumentsEqual(left: ReadonlyArray<string>, right: ReadonlyArray<string>) {
+  return left.length === right.length && left.every((argument, index) => argument === right[index]);
+}
+
+function ProviderCommandArguments({
+  value,
+  onChange,
+}: Pick<ProviderSettingsFormProps, "value" | "onChange">) {
+  const args = useMemo(() => {
+    const configured =
+      value !== null && typeof value === "object"
+        ? (value as Record<string, unknown>).commandArgs
+        : undefined;
+    return Array.isArray(configured)
+      ? configured.filter((argument): argument is string => typeof argument === "string")
+      : [];
+  }, [value]);
+  const [rows, setRows] = useState(() => args.map(makeCommandArgumentDraftRow));
+  const rowsRef = useRef(rows);
+  const previousArgsRef = useRef(args);
+  const lastPublishedArgsRef = useRef<ReadonlyArray<string> | undefined>(undefined);
+
+  useEffect(() => {
+    const previousArgs = previousArgsRef.current;
+    const lastPublishedArgs = lastPublishedArgsRef.current;
+    previousArgsRef.current = args;
+    lastPublishedArgsRef.current = undefined;
+    if (
+      commandArgumentsEqual(previousArgs, args) ||
+      (lastPublishedArgs !== undefined && commandArgumentsEqual(lastPublishedArgs, args))
+    )
+      return;
+    const nextRows = args.map(makeCommandArgumentDraftRow);
+    rowsRef.current = nextRows;
+    setRows(nextRows);
+  }, [args]);
+
+  const updateArguments = (nextRows: typeof rows) => {
+    rowsRef.current = nextRows;
+    setRows(nextRows);
+    const next = nextRows.map((row) => row.value);
+    lastPublishedArgsRef.current = next;
+    const config =
+      value !== null && typeof value === "object" ? { ...(value as Record<string, unknown>) } : {};
+    onChange({ ...config, commandArgs: next });
+  };
+
+  return (
+    <SettingsRow
+      title="Arguments"
+      description="One literal argument per row, in launch order."
+      control={
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          onClick={() => updateArguments([...rowsRef.current, makeCommandArgumentDraftRow("")])}
+        >
+          <PlusIcon />
+          Add argument
+        </Button>
+      }
+    >
+      {rows.length > 0 ? (
+        <div className="mt-3 min-w-0 space-y-2 pb-2">
+          {rows.map((argument, index) => (
+            <div key={argument.id} className="flex min-w-0 items-center gap-1.5">
+              <DraftInput
+                size="sm"
+                font="mono"
+                value={argument.value}
+                onCommit={(next) =>
+                  updateArguments(
+                    rowsRef.current.map((current) =>
+                      current.id === argument.id ? { ...current, value: next } : current,
+                    ),
+                  )
+                }
+                aria-label={`Argument ${index + 1}`}
+                spellCheck={false}
+              />
+              <Button
+                type="button"
+                size="icon-micro"
+                variant="ghost-destructive"
+                onClick={() =>
+                  updateArguments(rowsRef.current.filter((current) => current.id !== argument.id))
+                }
+                aria-label={`Remove argument ${index + 1}`}
+              >
+                <XIcon />
+              </Button>
+            </div>
+          ))}
+        </div>
+      ) : null}
+    </SettingsRow>
+  );
 }
 
 function readProviderConfigString(config: unknown, key: string): string {
@@ -169,10 +302,11 @@ export function nextProviderConfigWithFieldValue(
 }
 
 interface ProviderSettingsFormProps {
-  readonly definition: ProviderClientDefinition;
+  readonly definition: SettingsFormDefinition;
   readonly value: unknown;
-  readonly models?: ReadonlyArray<ServerProviderModel> | undefined;
+  readonly environmentId?: EnvironmentId | null | undefined;
   readonly provider?: ServerProvider | undefined;
+  readonly models?: ReadonlyArray<ServerProviderModel> | undefined;
   readonly supportsPiWorkloadProtection?: boolean | undefined;
   readonly idPrefix: string;
   /**
@@ -293,6 +427,16 @@ function ProviderSettingsFieldRow({
           placeholder={field.placeholder}
           spellCheck={false}
         />
+      ) : field.secret ? (
+        <SecretInput
+          id={inputId}
+          aria-describedby={descriptionId}
+          size="sm"
+          className="w-full max-w-full @min-[32rem]/settings-row:w-56"
+          configured={readProviderConfigString(value, field.key).length > 0}
+          value=""
+          onCommit={(next) => onChange(nextProviderConfigWithFieldValue(value, field, next))}
+        />
       ) : (
         <DraftInput
           id={inputId}
@@ -302,8 +446,10 @@ function ProviderSettingsFieldRow({
           type={field.control === "password" ? "password" : undefined}
           autoComplete={field.control === "password" ? "off" : undefined}
           value={readProviderConfigString(value, field.key)}
-          onCommit={(next) => onChange(nextProviderConfigWithFieldValue(value, field, next))}
           placeholder={field.placeholder}
+          onCommit={(next) => {
+            onChange(nextProviderConfigWithFieldValue(value, field, next));
+          }}
           spellCheck={false}
         />
       );
@@ -382,27 +528,29 @@ function ProviderSettingsFieldRow({
   }
 
   const type = field.control === "password" ? "password" : undefined;
+  const BufferedInput = field.secret ? SecretInput : DraftInput;
+  const ControlledInput = field.secret ? SecretInput : Input;
   return (
     <FieldFrame variant={variant}>
       <label htmlFor={inputId} className={cn(variant === "card" && "block")}>
         {label}
         {variant === "card" ? (
-          <DraftInput
+          <BufferedInput
             id={inputId}
             size="sm"
             className="mt-1.5"
-            type={type}
-            autoComplete={field.control === "password" ? "off" : undefined}
+            type={field.secret ? undefined : type}
+            autoComplete={!field.secret && field.control === "password" ? "off" : undefined}
             value={readProviderConfigString(value, field.key)}
             onCommit={(next) => onChange(nextProviderConfigWithFieldValue(value, field, next))}
             placeholder={field.placeholder}
             spellCheck={false}
           />
         ) : (
-          <Input
+          <ControlledInput
             id={inputId}
-            type={type}
-            autoComplete={field.control === "password" ? "off" : undefined}
+            type={field.secret ? undefined : type}
+            autoComplete={!field.secret && field.control === "password" ? "off" : undefined}
             value={readProviderConfigString(value, field.key)}
             onChange={(event) =>
               onChange(nextProviderConfigWithFieldValue(value, field, event.target.value))
@@ -437,12 +585,12 @@ export function resolvePiThinkingSetting(
   };
 }
 
-const EMPTY_MODELS: ReadonlyArray<ServerProviderModel> = [];
+const EMPTY_PI_MODELS: ReadonlyArray<ServerProviderModel> = [];
 
 function PiThinkingSettingsField({
   field,
   value,
-  models = EMPTY_MODELS,
+  models = EMPTY_PI_MODELS,
   idPrefix,
   variant,
   onChange,
@@ -461,56 +609,49 @@ function PiThinkingSettingsField({
       : unavailable
         ? "The saved override is not supported by this model. Choose a supported level or use Pi default."
         : "Choices follow the selected model. Use Pi default to clear the override.";
-
   const select = (
-    <Select
-      value={selected}
-      onValueChange={(next) => {
-        if (next !== null && (next === "" || options.some((option) => option.id === next))) {
-          onChange(nextProviderConfigWithFieldValue(value, field, next));
-        }
-      }}
+    <div
+      className={cn(
+        variant === "settings" ? "w-full max-w-full @min-[32rem]/settings-row:w-56" : "w-full",
+        variant === "card" && "mt-1.5",
+      )}
     >
-      <SelectTrigger
-        id={id}
-        size="sm"
-        className={
-          variant === "settings"
-            ? "w-full max-w-full @min-[32rem]/settings-row:w-56"
-            : variant === "card"
-              ? "mt-1.5 w-full"
-              : "w-full"
-        }
-        aria-label={field.label}
+      <Select
+        value={selected}
+        onValueChange={(next) => {
+          if (next !== null && (next === "" || options.some((option) => option.id === next))) {
+            onChange(nextProviderConfigWithFieldValue(value, field, next));
+          }
+        }}
       >
-        <SelectValue>{triggerLabel}</SelectValue>
-      </SelectTrigger>
-      <SelectPopup align="start" alignItemWithTrigger={false}>
-        <SelectItem value="">Use Pi default</SelectItem>
-        {unavailable ? (
-          <SelectItem value={selected} disabled>
-            {selected} (unavailable)
-          </SelectItem>
-        ) : null}
-        {options.map((option) => (
-          <SelectItem key={option.id} value={option.id}>
-            {option.label}
-          </SelectItem>
-        ))}
-      </SelectPopup>
-    </Select>
+        <SelectTrigger id={id} size="sm" aria-label={field.label}>
+          <SelectValue>{triggerLabel}</SelectValue>
+        </SelectTrigger>
+        <SelectPopup align="start" alignItemWithTrigger={false}>
+          <SelectItem value="">Use Pi default</SelectItem>
+          {unavailable ? (
+            <SelectItem value={selected} disabled>
+              {selected} (unavailable)
+            </SelectItem>
+          ) : null}
+          {options.map((option) => (
+            <SelectItem key={option.id} value={option.id}>
+              {option.label}
+            </SelectItem>
+          ))}
+        </SelectPopup>
+      </Select>
+    </div>
   );
-
   if (variant === "settings") {
     return (
       <SettingsRow
         title={<label htmlFor={id}>{field.label}</label>}
-        description={<span>{hint}</span>}
+        description={hint}
         control={select}
       />
     );
   }
-
   return (
     <FieldFrame variant={variant}>
       <label htmlFor={id} className="text-xs font-medium text-foreground">
@@ -529,63 +670,70 @@ function PiThinkingSettingsField({
 export function ProviderSettingsForm({
   definition,
   value,
-  models,
+  environmentId = null,
   provider,
+  models,
   supportsPiWorkloadProtection = false,
   idPrefix,
   variant,
   onChange,
 }: ProviderSettingsFormProps) {
   const fields = useMemo(
-    () => deriveProviderSettingsFields(definition, supportsPiWorkloadProtection),
-    [definition, supportsPiWorkloadProtection],
+    () => deriveProviderSettingsFields(definition, value, supportsPiWorkloadProtection),
+    [definition, value, supportsPiWorkloadProtection],
   );
+  const isLocalAcp =
+    definition.driverKind === "acpRegistry" &&
+    readProviderConfigString(value, "source") === "local";
 
   if (fields.length === 0) {
     return null;
   }
-  const subagentThinkingField = fields.find((field) => field.key === "subagentThinkingLevel");
+
+  const subagentModelField =
+    definition.driverKind === "pi"
+      ? fields.find((field) => field.key === "subagentModel")
+      : undefined;
+  const subagentThinkingField =
+    definition.driverKind === "pi"
+      ? fields.find((field) => field.key === "subagentThinkingLevel")
+      : undefined;
 
   return (
     <>
-      {fields.map((field) => {
-        if (definition.value === "pi") {
-          if (field.key === "subagentThinkingLevel") return null;
-          if (field.key === "subagentModel" && subagentThinkingField) {
-            return (
-              <PiSubagentSettings
-                key={field.key}
-                modelField={field}
-                thinkingField={subagentThinkingField}
-                value={value}
-                provider={provider}
-                models={models}
-                idPrefix={idPrefix}
-                variant={variant}
-                onModelChange={(next) =>
-                  onChange(nextProviderConfigWithFieldValue(value, field, next))
-                }
-                onThinkingChange={(next) =>
-                  onChange(nextProviderConfigWithFieldValue(value, subagentThinkingField, next))
-                }
-              />
-            );
-          }
-          if (field.key === "thinkingLevel") {
-            return (
-              <PiThinkingSettingsField
-                key={field.key}
-                field={field}
-                value={value}
-                models={models}
-                idPrefix={idPrefix}
-                variant={variant}
-                onChange={onChange}
-              />
-            );
-          }
-        }
-        return (
+      {fields.map((field) =>
+        subagentModelField && subagentThinkingField && field.key === "subagentModel" ? (
+          <PiSubagentSettings
+            key={field.key}
+            environmentId={environmentId}
+            provider={provider}
+            models={models}
+            modelField={subagentModelField}
+            thinkingField={subagentThinkingField}
+            value={value}
+            idPrefix={idPrefix}
+            variant={variant}
+            onModelChange={(next) =>
+              onChange(nextProviderConfigWithFieldValue(value, subagentModelField, next))
+            }
+            onThinkingChange={(next) =>
+              onChange(nextProviderConfigWithFieldValue(value, subagentThinkingField, next))
+            }
+          />
+        ) : subagentModelField &&
+          subagentThinkingField &&
+          field.key === "subagentThinkingLevel" ? null : definition.driverKind === "pi" &&
+          field.key === "thinkingLevel" ? (
+          <PiThinkingSettingsField
+            key={field.key}
+            field={field}
+            value={value}
+            models={models}
+            idPrefix={idPrefix}
+            variant={variant}
+            onChange={onChange}
+          />
+        ) : (
           <ProviderSettingsFieldRow
             key={field.key}
             field={field}
@@ -594,8 +742,9 @@ export function ProviderSettingsForm({
             variant={variant}
             onChange={onChange}
           />
-        );
-      })}
+        ),
+      )}
+      {isLocalAcp ? <ProviderCommandArguments value={value} onChange={onChange} /> : null}
     </>
   );
 }

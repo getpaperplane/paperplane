@@ -1,5 +1,5 @@
 name: Triage report
-description: Filed with `npx @rove-code/cli triage`, where a coding agent investigated the machine. For hand-written reports use the bug report template instead.
+description: Filed with `npx rove triage`, where a coding agent investigated the machine. For hand-written reports use the bug report template instead.
 labels:
   - via-triage
 body:
@@ -37,7 +37,7 @@ body:
     id: version
     attributes:
       label: Version
-      description: Installed Rove Code version or commit.
+      description: Version the bug happened on (not the `rove triage` CLI version), or unknown.
       placeholder: 0.0.33
     validations:
       required: true

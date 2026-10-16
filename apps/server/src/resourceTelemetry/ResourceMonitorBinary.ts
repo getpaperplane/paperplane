@@ -1,8 +1,4 @@
-import {
-  HostProcessArchitecture,
-  HostProcessEnvironment,
-  HostProcessPlatform,
-} from "@rove-code/shared/hostProcess";
+import * as HostProcess from "@rove-code/shared/HostProcess";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -11,8 +7,7 @@ import * as Option from "effect/Option";
 import * as Path from "effect/Path";
 import * as Schema from "effect/Schema";
 
-import { ServerConfig } from "../config.ts";
-import * as RuntimePredicate from "effect/Predicate";
+import * as ServerConfig from "../config.ts";
 
 export class ResourceMonitorBinaryUnsupported extends Schema.TaggedError<ResourceMonitorBinaryUnsupported>()(
   "ResourceMonitorBinaryUnsupported",
@@ -71,22 +66,21 @@ export type ResourceMonitorLinuxLibc = "gnu" | "musl";
 
 function detectResourceMonitorLinuxLibc(): ResourceMonitorLinuxLibc {
   try {
-    const // SAFETY: The surrounding adapter boundary establishes the asserted runtime contract.
-      report = process.report?.getReport() as
-        | {
-            readonly header?: {
-              readonly glibcVersionRuntime?: unknown;
-            };
-          }
-        | undefined;
-    return RuntimePredicate.isString(report?.header?.glibcVersionRuntime) ? "gnu" : "musl";
+    const report = process.report?.getReport() as
+      | {
+          readonly header?: {
+            readonly glibcVersionRuntime?: unknown;
+          };
+        }
+      | undefined;
+    return typeof report?.header?.glibcVersionRuntime === "string" ? "gnu" : "musl";
   } catch {
     return "musl";
   }
 }
 
 export const ResourceMonitorHostLinuxLibc = Context.Reference<ResourceMonitorLinuxLibc>(
-  "@rove-code/server/resourceTelemetry/ResourceMonitorHostLinuxLibc",
+  "@rove-code/server/resourceTelemetry/ResourceMonitorBinary/ResourceMonitorHostLinuxLibc",
   {
     defaultValue: detectResourceMonitorLinuxLibc,
   },
@@ -138,12 +132,12 @@ function resourceMonitorRustTarget(
 }
 
 export const make = Effect.fn("resourceTelemetry.resourceMonitorBinary.make")(function* () {
-  const config = yield* ServerConfig;
+  const config = yield* ServerConfig.ServerConfig;
   const fileSystem = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const platform = yield* HostProcessPlatform;
-  const architecture = yield* HostProcessArchitecture;
-  const environment = yield* HostProcessEnvironment;
+  const platform = yield* HostProcess.Platform;
+  const architecture = yield* HostProcess.Architecture;
+  const environment = yield* HostProcess.Environment;
   const linuxLibc = platform === "linux" ? yield* ResourceMonitorHostLinuxLibc : undefined;
   const executableName = binaryName(platform);
   const platformKey = resourceMonitorPlatformKey(platform, architecture);
@@ -202,9 +196,14 @@ export const make = Effect.fn("resourceTelemetry.resourceMonitorBinary.make")(fu
       const exists = yield* fileSystem.exists(candidate).pipe(Effect.orElseSucceed(() => false));
       if (!exists) continue;
 
-      if (platform !== "win32") {
-        const stat = yield* fileSystem.stat(candidate).pipe(Effect.option);
-        if (Option.isSome(stat) && (stat.value.mode & 0o111) === 0) {
+      const stat = yield* fileSystem.stat(candidate).pipe(Effect.option);
+      if (Option.isSome(stat)) {
+        // Directories are executable-looking on win32, where the exec-bit test
+        // below is skipped, and only fail later at spawn.
+        const unusable =
+          stat.value.type === "Directory" ||
+          (platform !== "win32" && (stat.value.mode & 0o111) === 0);
+        if (unusable) {
           return yield* new ResourceMonitorBinaryNotExecutable({
             path: candidate,
             mode: stat.value.mode,

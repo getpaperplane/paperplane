@@ -1,4 +1,4 @@
-import { ProviderUsageLimit } from "@rove-code/contracts";
+import { ProviderUsageLimit } from "./PiUsageLimits.ts";
 import * as Schema from "effect/Schema";
 import * as DateTime from "effect/DateTime";
 import * as Option from "effect/Option";

@@ -1,67 +1,56 @@
+import { HTML_RENDER_DEFAULT_FONTS, htmlRenderTheme } from "@rove-code/shared/htmlRender";
+import { useMemo, useSyncExternalStore } from "react";
+
+import { appearanceFontStack } from "../appearanceFonts";
 import {
-  chartVariables,
-  HTML_RENDER_THEME_VARIABLES,
-  type HtmlRenderTheme,
-} from "@rove-code/shared/htmlRender";
-import { useSyncExternalStore } from "react";
+  getStandardThemeColors,
+  getThemeColorsForMode,
+  getThemeDefinition,
+  resolveThemeHalf,
+  subscribeToCustomThemes,
+  themeColorToHex,
+  type ThemeAppearance,
+  type ThemeHalves,
+  type ThemePreference,
+} from "../themePalette";
+import { useClientSettings } from "./useSettings";
+import { useTheme } from "./useTheme";
 
-/**
- * The app's active theme as HTML render variables. Themes apply by changing
- * the root element's class, style, and data attributes, so one observer on it
- * serves every mounted page; a snapshot keeps its identity until a value
- * actually changes.
- */
-let snapshot: HtmlRenderTheme | null = null;
-let snapshotKey = "";
-const listeners = new Set<() => void>();
-let observer: MutationObserver | null = null;
-
-function readTheme(): HtmlRenderTheme {
-  const root = document.documentElement;
-  const appearance = root.classList.contains("dark") ? "dark" : "light";
-  const style = getComputedStyle(root);
-  const variables: Record<string, string> = { ...chartVariables(appearance) };
-  for (const name of HTML_RENDER_THEME_VARIABLES) {
-    const value = style.getPropertyValue(name).trim();
-    if (value) variables[name] = value;
-  }
-  return { appearance, variables };
+/** The palette `applyTheme` paints for a preference, or the stock look when no theme applies. */
+function resolveActiveThemeColors(
+  theme: ThemePreference,
+  halves: ThemeHalves | null,
+  appearance: ThemeAppearance,
+) {
+  const definition = getThemeDefinition(resolveThemeHalf(theme, halves, appearance));
+  return definition === null
+    ? getStandardThemeColors(appearance)
+    : (getThemeColorsForMode(definition, appearance) ?? definition.colors);
 }
 
-function refresh() {
-  const next = readTheme();
-  const key = JSON.stringify(next);
-  if (key === snapshotKey) return false;
-  snapshot = next;
-  snapshotKey = key;
-  return true;
-}
-
-function subscribe(listener: () => void) {
-  listeners.add(listener);
-  if (!observer) {
-    observer = new MutationObserver(() => {
-      if (refresh()) for (const notify of listeners) notify();
-    });
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ["class", "style", "data-theme-id"],
-    });
-  }
-  return () => {
-    listeners.delete(listener);
-    if (listeners.size === 0) {
-      observer?.disconnect();
-      observer = null;
-    }
-  };
-}
-
-function getSnapshot(): HtmlRenderTheme {
-  if (snapshot === null || !observer) refresh();
-  return snapshot!;
-}
-
-export function useHtmlRenderTheme(): HtmlRenderTheme {
-  return useSyncExternalStore(subscribe, getSnapshot);
+/** The app's active theme and fonts, as handed to agent HTML renders. Stable until one changes. */
+export function useHtmlRenderTheme() {
+  const { theme, resolvedTheme, themeHalves } = useTheme();
+  // Custom and published palettes can be edited in place, under an unchanged preference.
+  const colors = useSyncExternalStore(
+    subscribeToCustomThemes,
+    () => resolveActiveThemeColors(theme, themeHalves, resolvedTheme),
+    () => getStandardThemeColors(resolvedTheme),
+  );
+  const sans = useClientSettings((settings) => settings.fontFamilySans);
+  const mono = useClientSettings((settings) => settings.fontFamilyCode);
+  return useMemo(
+    () =>
+      htmlRenderTheme(
+        Object.fromEntries(
+          Object.entries(colors).map(([role, color]) => [role, themeColorToHex(color) ?? color]),
+        ) as typeof colors,
+        resolvedTheme,
+        {
+          sans: appearanceFontStack(sans, HTML_RENDER_DEFAULT_FONTS.sans),
+          mono: appearanceFontStack(mono, HTML_RENDER_DEFAULT_FONTS.mono),
+        },
+      ),
+    [colors, resolvedTheme, sans, mono],
+  );
 }

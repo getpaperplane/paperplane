@@ -16,8 +16,11 @@ import { useComposerMenuState } from "./useComposerMenuState";
 export const CompactComposerControlsMenu = memo(function CompactComposerControlsMenu(props: {
   interactionMode: ProviderInteractionMode;
   runtimeMode: RuntimeMode;
+  runtimeModeOptions: ReadonlyArray<{
+    readonly mode: RuntimeMode;
+    readonly label: string;
+  }>;
   showInteractionModeToggle: boolean;
-  runtimeModeSelectable: boolean;
   traitsMenuContent?: ReactNode;
   size?: "sm" | "xs";
   /**
@@ -32,7 +35,6 @@ export const CompactComposerControlsMenu = memo(function CompactComposerControls
   const composerFloatingLayerProps = useComposerMenuProps();
   const size = props.size ?? "sm";
   const [open, setOpen] = useComposerMenuState(props.hidden);
-  const displayedRuntimeMode = props.runtimeModeSelectable ? props.runtimeMode : "full-access";
 
   return (
     <Menu open={open} onOpenChange={setOpen}>
@@ -74,31 +76,18 @@ export const CompactComposerControlsMenu = memo(function CompactComposerControls
           </>
         ) : null}
         <div className="px-2 py-1.5 font-medium text-muted-foreground text-xs">Access</div>
-        {!props.runtimeModeSelectable ? (
-          <div className="px-2 pb-1.5 text-muted-foreground text-xs">
-            Pi managed — permission modes can't be changed yet.
-          </div>
-        ) : null}
         <MenuRadioGroup
-          value={displayedRuntimeMode}
+          value={props.runtimeMode}
           onValueChange={(value) => {
-            if (!props.runtimeModeSelectable || !value || value === props.runtimeMode) return;
-            // SAFETY: The surrounding adapter boundary establishes the asserted runtime contract.
+            if (!value || value === props.runtimeMode) return;
             props.onRuntimeModeChange(value as RuntimeMode);
           }}
         >
-          <MenuRadioItem disabled={!props.runtimeModeSelectable} value="approval-required">
-            Supervised
-          </MenuRadioItem>
-          <MenuRadioItem disabled={!props.runtimeModeSelectable} value="auto-accept-edits">
-            Auto-accept edits
-          </MenuRadioItem>
-          <MenuRadioItem disabled={!props.runtimeModeSelectable} value="auto">
-            Auto
-          </MenuRadioItem>
-          <MenuRadioItem disabled={!props.runtimeModeSelectable} value="full-access">
-            Full access
-          </MenuRadioItem>
+          {props.runtimeModeOptions.map((option) => (
+            <MenuRadioItem key={option.mode} value={option.mode}>
+              {option.label}
+            </MenuRadioItem>
+          ))}
         </MenuRadioGroup>
       </MenuPopup>
     </Menu>

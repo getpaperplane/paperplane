@@ -76,7 +76,6 @@ export default function (pi: ExtensionAPI) {
       const systemPrompt = context.messages
         .filter((message) => message.role === "system")
         .map((message) =>
-          // oxlint-disable-next-line anti-slop/no-runtime-typeof -- Mirrors pi-ai's declared `content: string | TextContent[]` union; extensions can inject either shape.
           typeof message.content === "string"
             ? message.content
             : message.content

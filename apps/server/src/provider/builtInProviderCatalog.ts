@@ -1,6 +1,6 @@
 import type { ProviderDriverKind, ProviderInstanceId, ServerProvider } from "@rove-code/contracts";
 import type * as Stream from "effect/Stream";
-import type { ServerProviderContract } from "./Services/ServerProvider.ts";
+import type { ManagedServerProvider } from "@rove-code/provider-core/server/snapshot";
 
 export type ProviderSnapshotSource = {
   /**
@@ -11,7 +11,7 @@ export type ProviderSnapshotSource = {
   readonly instanceId: ProviderInstanceId;
   /** Driver implementation kind. */
   readonly driverKind: ProviderDriverKind;
-  readonly getSnapshot: ServerProviderContract["getSnapshot"];
-  readonly refresh: ServerProviderContract["refresh"];
+  readonly getSnapshot: ManagedServerProvider["getSnapshot"];
+  readonly refresh: ManagedServerProvider["refresh"];
   readonly streamChanges: Stream.Stream<ServerProvider>;
 };

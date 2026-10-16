@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import {
   PI_THINKING_LEVELS,
+  type EnvironmentId,
   type PiThinkingLevel,
   type ServerProvider,
   type ServerProviderModel,
@@ -10,6 +11,7 @@ import * as Schema from "effect/Schema";
 import { deriveProviderInstanceEntries } from "../../providerInstances";
 import { ProviderModelPicker } from "../chat/ProviderModelPicker";
 import { ComposerSelectControl } from "../chat/ComposerControl";
+import { Button } from "../ui/button";
 import { Select, SelectItem, SelectPopup, SelectValue } from "../ui/select";
 import { SettingsRow, SETTINGS_PICKER_TRIGGER_CLASSNAME } from "./settingsLayout";
 import type { ProviderSettingsFieldModel } from "./ProviderSettingsForm";
@@ -72,6 +74,7 @@ export function resolvePiSubagentSettings(
 
 /** Reuses the composer's catalog picker, scoped to this exact Pi instance. */
 export function PiSubagentSettings({
+  environmentId,
   modelField,
   thinkingField,
   value,
@@ -82,6 +85,7 @@ export function PiSubagentSettings({
   onModelChange,
   onThinkingChange,
 }: {
+  environmentId: EnvironmentId | null;
   modelField: ProviderSettingsFieldModel;
   thinkingField: ProviderSettingsFieldModel;
   value: unknown;
@@ -120,11 +124,11 @@ export function PiSubagentSettings({
     <div className="flex max-w-full flex-wrap items-center justify-end gap-1.5">
       {provider ? (
         <ProviderModelPicker
+          environmentId={environmentId}
           activeInstanceId={provider.instanceId}
           model={model}
           lockedProvider={provider.driver}
           {...(!model ? { triggerLabel: "Use thread model" } : {})}
-          defaultOption={{ label: "Use thread model", onSelect: () => onModelChange("") }}
           instanceEntries={entries}
           modelOptionsByInstance={optionsByInstance}
           triggerClassName={SETTINGS_PICKER_TRIGGER_CLASSNAME}
@@ -151,6 +155,11 @@ export function PiSubagentSettings({
           </SelectPopup>
         </Select>
       )}
+      {provider && model ? (
+        <Button size="xs" variant="ghost" onClick={() => onModelChange("")}>
+          Use thread model
+        </Button>
+      ) : null}
       <Select
         value={thinking}
         onValueChange={(next) => {

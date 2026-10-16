@@ -11,6 +11,7 @@ vi.mock("react", async (original) => {
   const actual = await original<typeof import("react")>();
   return {
     ...actual,
+    useMemo: <A>(factory: () => A) => factory(),
     useSyncExternalStore: (
       subscribe: (listener: () => void) => () => void,
       getSnapshot: () => number,
@@ -25,8 +26,8 @@ vi.mock("react", async (original) => {
 let page: EventTarget & { visibilityState: string };
 const cleanups: Array<() => void> = [];
 
-function subscribe(listener = vi.fn()) {
-  useRelativeTimeTick();
+function subscribe(listener = vi.fn(), intervalMs = 1_000) {
+  useRelativeTimeTick(intervalMs);
   const cleanup = store.subscribe!(listener);
   cleanups.push(cleanup);
   return { listener, cleanup };
@@ -52,6 +53,23 @@ afterEach(() => {
 });
 
 describe("relative-time clock", () => {
+  it("keeps minute labels quiet while second labels share their timer", () => {
+    const fast = subscribe();
+    const slow = subscribe(vi.fn(), 60_000);
+    const slowSnapshot = store.getSnapshot!;
+    const initial = slowSnapshot();
+    expect(vi.getTimerCount()).toBe(1);
+    vi.advanceTimersByTime(59_000);
+    expect(fast.listener).toHaveBeenCalledTimes(59);
+    expect(slow.listener).not.toHaveBeenCalled();
+    expect(slowSnapshot()).toBe(initial);
+    vi.advanceTimersByTime(1_000);
+    expect(slow.listener).toHaveBeenCalledTimes(1);
+    fast.cleanup();
+    vi.advanceTimersByTime(60_000);
+    expect(slow.listener).toHaveBeenCalledTimes(2);
+    expect(vi.getTimerCount()).toBe(1);
+  });
   it("shares one timer and one timestamp across labels", () => {
     const first = subscribe();
     const second = subscribe();

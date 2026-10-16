@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vite-plus/test";
 
-import { backgroundFloatingStatus, connectionFloatingStatus } from "./floating-working-status";
+import { connectionFloatingStatus } from "./floating-working-status";
 
 const status = (
   connectionState: Parameters<typeof connectionFloatingStatus>[0]["connectionState"],
@@ -13,26 +13,6 @@ const status = (
       overrides.environmentLabel === undefined ? "Mac mini" : overrides.environmentLabel,
     onReconnect: () => {},
   });
-
-describe("backgroundFloatingStatus", () => {
-  it("does not replace an active parent response with background status", () => {
-    expect(
-      backgroundFloatingStatus({ parentActive: true, liveness: "working", onStop: () => {} }),
-    ).toBeNull();
-    expect(
-      backgroundFloatingStatus({ parentActive: false, liveness: null, onStop: () => {} }),
-    ).toBeNull();
-  });
-
-  it("reports agents and monitors separately after the parent settles", () => {
-    expect(
-      backgroundFloatingStatus({ parentActive: false, liveness: "working", onStop: () => {} }),
-    ).toMatchObject({ kind: "background", label: "Background agents · Stop" });
-    expect(
-      backgroundFloatingStatus({ parentActive: false, liveness: "monitoring", onStop: () => {} }),
-    ).toMatchObject({ kind: "background", label: "Monitoring · Stop" });
-  });
-});
 
 describe("connectionFloatingStatus", () => {
   it("yields the pill to sync and working state once connected", () => {

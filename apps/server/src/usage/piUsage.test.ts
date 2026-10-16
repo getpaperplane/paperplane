@@ -5,7 +5,45 @@ import * as NodePath from "node:path";
 
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 
-import { initialPiScanState, parsePiModelRates, parsePiRecord } from "./piUsage.ts";
+import {
+  initialPiScanState,
+  parsePiModelRates,
+  parsePiRecord,
+  parsePiLine,
+  PiScanState,
+} from "./piUsage.ts";
+import type { TranscriptUsageFormat } from "@rove-code/provider-core/server/usage";
+import * as Schema from "effect/Schema";
+const format: TranscriptUsageFormat<PiScanState> = {
+  selectFields: {
+    type: true,
+    id: true,
+    timestamp: true,
+    provider: true,
+    model: true,
+    modelId: true,
+    usage: true,
+    message: { role: true, provider: true, model: true, usage: true },
+  },
+  usageMarkers: [
+    "session",
+    "model_change",
+    "assistant",
+    "toolResult",
+    "compaction",
+    "branch_summary",
+    "usage",
+  ],
+  state: { initial: initialPiScanState, schema: PiScanState },
+  parseLine: (line, state) => {
+    const result = parsePiLine(line, state);
+    return result ? [result] : [];
+  },
+  parseProjected: (value, state) => {
+    const result = parsePiRecord(value, state);
+    return result ? [result] : [];
+  },
+};
 import { UsageAggregator } from "./usageAggregation.ts";
 import {
   cacheSavingsUsd,
@@ -62,7 +100,7 @@ describe("Pi usage", () => {
     const newerRates = parsePiModelRates({
       providers: { custom: { models: [{ id: "model-a", cost: { ...modelCost, input: 99 } }] } },
     });
-    expect(priceUsage(newerRates, record)).toEqual({
+    expect(priceUsage(newerRates, record)).toMatchObject({
       costUsd: 0.00068,
       costSource: "providerReported",
     });
@@ -151,7 +189,10 @@ describe("Pi usage", () => {
     const rates = parsePiModelRates({
       providers: { custom: { models: [{ id: "model-a", cost: modelCost }] } },
     });
-    expect(priceUsage(rates, record)).toEqual({ costUsd: 0.00068, costSource: "modelPriced" });
+    expect(priceUsage(rates, record)).toMatchObject({
+      costUsd: 0.00068,
+      costSource: "modelPriced",
+    });
     const freeRates = parsePiModelRates({
       providers: {
         custom: {
@@ -159,7 +200,7 @@ describe("Pi usage", () => {
         },
       },
     });
-    expect(priceUsage(freeRates, record)).toEqual({ costUsd: 0, costSource: "modelPriced" });
+    expect(priceUsage(freeRates, record)).toMatchObject({ costUsd: 0, costSource: "modelPriced" });
     expect(
       priceUsage(
         parseRateTable({
@@ -271,9 +312,11 @@ describe("Pi transcript scanning", () => {
         "\n" +
         unfinishedSwitch,
     );
-    const first = await readTranscriptRecords(path, "pi");
+    const first = await readTranscriptRecords(path, format);
     expect(first).not.toBeNull();
-    expect(first!.position.piState?.model).toBe("custom/model-b");
+    expect(Schema.decodeUnknownSync(PiScanState)(first!.position.state).model).toBe(
+      "custom/model-b",
+    );
     const cache: ScanCache = new Map([
       [
         path,
@@ -287,14 +330,17 @@ describe("Pi transcript scanning", () => {
         },
       ],
     ]);
-    const restored = decodeScanCache(JSON.parse(JSON.stringify(encodeScanCache(cache)))).get(path)!;
+    const restored = decodeScanCache(
+      JSON.parse(JSON.stringify(encodeScanCache(cache))),
+      new Map([["pi", format]]),
+    ).get(path)!;
     expect(restored).toEqual(cache.get(path));
     await NodeFSP.appendFile(path, "\n" + JSON.stringify(compact) + "\n");
-    const appended = await readTranscriptRecords(path, "pi", restored.position);
+    const appended = await readTranscriptRecords(path, format, restored.position);
     expect(appended?.resumed).toBe(true);
     expect(appended?.records[0]?.model).toBe("custom/model-c");
     expect(appended?.records[0]?.sessionId).toBe("session-a");
-    const full = await readTranscriptRecords(path, "pi");
+    const full = await readTranscriptRecords(path, format);
     expect([...restored.records, ...appended!.records]).toEqual(full?.records);
   });
 
@@ -314,8 +360,8 @@ describe("Pi transcript scanning", () => {
         }) +
         "\n",
     );
-    const native = await readTranscriptRecords(path, "pi");
-    const streaming = await readTranscriptRecords(path, "pi", undefined, {
+    const native = await readTranscriptRecords(path, format);
+    const streaming = await readTranscriptRecords(path, format, undefined, {
       streamingThresholdBytes: 64,
     });
     expect(streaming?.records).toEqual(native?.records);

@@ -259,54 +259,6 @@ describe("resolveBranchTriggerLabel", () => {
     ).toBe("Select ref");
   });
 
-  it("names the branch the worktree will check out", () => {
-    expect(
-      resolveBranchTriggerLabel({
-        activeWorktreePath: null,
-        effectiveEnvMode: "worktree",
-        resolvedActiveBranch: "origin/feature/demo",
-        resolvedActiveBranchIsRemote: true,
-        startFromOrigin: true,
-        checkoutBaseBranch: true,
-      }),
-    ).toBe("feature/demo");
-    expect(
-      resolveBranchTriggerLabel({
-        activeWorktreePath: null,
-        effectiveEnvMode: "worktree",
-        resolvedActiveBranch: "feature/demo",
-        resolvedActiveBranchIsRemote: false,
-        startFromOrigin: true,
-        checkoutBaseBranch: true,
-      }),
-    ).toBe("feature/demo");
-  });
-
-  it("names a not-yet-fetched branch under the project's remote by its local name", () => {
-    expect(
-      resolveBranchTriggerLabel({
-        activeWorktreePath: null,
-        effectiveEnvMode: "worktree",
-        resolvedActiveBranch: "origin/feature/demo",
-        resolvedActiveBranchIsRemote: null,
-        startFromOrigin: false,
-        checkoutBaseBranch: true,
-        primaryRemoteName: "origin",
-      }),
-    ).toBe("feature/demo");
-    expect(
-      resolveBranchTriggerLabel({
-        activeWorktreePath: null,
-        effectiveEnvMode: "worktree",
-        resolvedActiveBranch: "feature/demo",
-        resolvedActiveBranchIsRemote: null,
-        startFromOrigin: false,
-        checkoutBaseBranch: true,
-        primaryRemoteName: "origin",
-      }),
-    ).toBe("feature/demo");
-  });
-
   it("does not fabricate an origin ref while branch metadata is loading", () => {
     expect(
       resolveBranchTriggerLabel({
@@ -472,9 +424,28 @@ describe("shouldShowEnvironmentIndicator", () => {
 });
 
 describe("shouldShowComposerContextStrip", () => {
+  it.each([false, true])(
+    "honors the active-thread preference with resting controls %s",
+    (hostsRestingComposerControls) => {
+      const input = {
+        isDraftHeroState: false,
+        hasActiveProject: true,
+        isGitRepo: true,
+        showEnvironmentIndicator: true,
+        hostsRestingComposerControls,
+      };
+      expect(shouldShowComposerContextStrip({ ...input, persistInActiveThreads: false })).toBe(
+        false,
+      );
+      expect(shouldShowComposerContextStrip({ ...input, persistInActiveThreads: true })).toBe(true);
+    },
+  );
+
   it("keeps the environment indicator visible for a non-Git project", () => {
     expect(
       shouldShowComposerContextStrip({
+        isDraftHeroState: true,
+        persistInActiveThreads: false,
         hasActiveProject: true,
         isGitRepo: false,
         showEnvironmentIndicator: true,
@@ -486,6 +457,8 @@ describe("shouldShowComposerContextStrip", () => {
   it("hides the strip when a non-Git project has nothing to show", () => {
     expect(
       shouldShowComposerContextStrip({
+        isDraftHeroState: true,
+        persistInActiveThreads: false,
         hasActiveProject: true,
         isGitRepo: false,
         showEnvironmentIndicator: false,
@@ -497,6 +470,8 @@ describe("shouldShowComposerContextStrip", () => {
   it("keeps the strip for visible resting composer controls in a non-Git thread", () => {
     expect(
       shouldShowComposerContextStrip({
+        isDraftHeroState: true,
+        persistInActiveThreads: false,
         hasActiveProject: true,
         isGitRepo: false,
         showEnvironmentIndicator: false,
@@ -508,6 +483,8 @@ describe("shouldShowComposerContextStrip", () => {
   it("shows Git controls without requiring an environment indicator", () => {
     expect(
       shouldShowComposerContextStrip({
+        isDraftHeroState: true,
+        persistInActiveThreads: false,
         hasActiveProject: true,
         isGitRepo: true,
         showEnvironmentIndicator: false,

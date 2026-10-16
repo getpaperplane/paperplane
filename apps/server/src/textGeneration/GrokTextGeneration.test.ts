@@ -11,18 +11,19 @@ import * as Layer from "effect/Layer";
 import * as Schema from "effect/Schema";
 import { createModelSelection } from "@rove-code/shared/model";
 import { expect } from "vite-plus/test";
-import { GrokSettings, ProviderInstanceId } from "@rove-code/contracts";
+import { ProviderInstanceId } from "@rove-code/contracts";
+import { GrokSettings } from "@rove-code/provider-grok/settings";
 
 import * as ServerConfig from "../config.ts";
 import * as TextGeneration from "./TextGeneration.ts";
-import { makeGrokTextGeneration } from "./GrokTextGeneration.ts";
-import { execScriptSource, writeFakeCli } from "../testUtils/fakeCli.ts";
+import { makeGrokTextGeneration } from "@rove-code/provider-grok/testing";
+import { execScriptSource, writeFakeCli } from "@rove-code/provider-testing/fakeCli";
 const decodeGrokSettings = Schema.decodeSync(GrokSettings);
 
 const __dirname = NodePath.dirname(NodeURL.fileURLToPath(import.meta.url));
-const mockAgentPath = NodePath.join(__dirname, "../../scripts/acp-mock-agent.ts");
+const mockAgentPath = NodePath.join(__dirname, "../provider/testFixtures/grok-text-mock-agent.mjs");
 
-const GrokTextGenerationTestLayer = ServerConfig.ServerConfig.layerTest(process.cwd(), {
+const layerGrokTextGenerationTest = ServerConfig.ServerConfig.layerTest(process.cwd(), {
   prefix: "rove-grok-text-generation-test-",
 }).pipe(Layer.provideMerge(NodeServices.layer));
 
@@ -66,7 +67,7 @@ function readJsonRpcRequests(
     .map((line) => JSON.parse(line) as { method?: string; params?: Record<string, unknown> });
 }
 
-it.layer(GrokTextGenerationTestLayer)("GrokTextGeneration", (it) => {
+it.layer(layerGrokTextGenerationTest)("GrokTextGeneration", (it) => {
   it.effect("uses ACP with disabled tool capabilities and forwards the requested model id", () => {
     const requestLogDir = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "rove-grok-text-log-"));
     const requestLogPath = NodePath.join(requestLogDir, "requests.ndjson");

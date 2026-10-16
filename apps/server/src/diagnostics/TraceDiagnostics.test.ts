@@ -8,7 +8,6 @@ import * as Option from "effect/Option";
 import * as PlatformError from "effect/PlatformError";
 import * as References from "effect/References";
 import * as Stream from "effect/Stream";
-import type { ReadonlyRecord } from "effect/Record";
 
 import * as TraceDiagnostics from "./TraceDiagnostics.ts";
 

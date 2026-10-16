@@ -1,5 +1,4 @@
 import * as Exit from "effect/Exit";
-import type * as JsonSchema from "effect/JsonSchema";
 import * as Schema from "effect/Schema";
 
 import { RoveProjectFile, ROVE_PROJECT_FILE_SCHEMA_URL } from "@rove-code/contracts";
@@ -13,12 +12,6 @@ import { fromLenientJson } from "./schemaJson.ts";
 export const RoveProjectFileFromJson = fromLenientJson(RoveProjectFile);
 
 const decodeRoveProjectFile = Schema.decodeExit(RoveProjectFileFromJson);
-
-interface RoveProjectFileJsonSchema extends JsonSchema.JsonSchema {
-  readonly $schema: string;
-  readonly $id: string;
-  $defs?: JsonSchema.Definitions;
-}
 
 /**
  * Decode raw `rove.json` contents, treating invalid or malformed files as
@@ -36,11 +29,11 @@ export function parseRoveProjectFile(contents: string): RoveProjectFile | null {
  * Served from the marketing site at {@link ROVE_PROJECT_FILE_SCHEMA_URL} so
  * editors get LSP support via a `$schema` reference.
  */
-export function buildRoveProjectFileJsonSchema(): RoveProjectFileJsonSchema {
+export function buildRoveProjectFileJsonSchema(): Record<string, unknown> {
   // Closed objects, as before effect rc.113 changed the generator default;
   // editors then flag unknown keys in rove.json.
   const document = Schema.toJsonSchemaDocument(RoveProjectFile, { onExcessProperty: "error" });
-  const jsonSchema: RoveProjectFileJsonSchema = {
+  const jsonSchema: Record<string, unknown> = {
     $schema: "https://json-schema.org/draft/2020-12/schema",
     $id: ROVE_PROJECT_FILE_SCHEMA_URL,
     ...document.schema,

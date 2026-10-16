@@ -36,7 +36,7 @@ import {
   type AgentSession,
   type ModelRuntime,
 } from "@earendil-works/pi-coding-agent";
-import { buildSelectOptionDescriptor } from "../providerSnapshot.ts";
+import { buildSelectOptionDescriptor } from "@rove-code/provider-core/server/snapshotProbe";
 import { disposePiResource } from "./PiLifecycle.ts";
 import {
   PI_THINKING_DESCRIPTOR_ID,

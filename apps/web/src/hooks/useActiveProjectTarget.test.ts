@@ -15,14 +15,13 @@ beforeEach(() => {
 });
 
 describe("workspace targets for file picking and content search", () => {
-  it("queries a standalone workspace without a registered project", () => {
+  it("queries a V2 scratch worktree without a registered project snapshot", () => {
     mocks.selection.mockReturnValue({
       activeThread: {
         id: threadId,
         environmentId,
-        projectId: null,
-        worktreePath: null,
-        workspacePath: "/fixture/workspaces/thread",
+        projectId: ProjectId.make("scratch"),
+        worktreePath: "/fixture/workspaces/thread",
       },
       activeDraftThread: null,
     });
@@ -59,7 +58,12 @@ describe("workspace targets for file picking and content search", () => {
       },
     ]);
     mocks.selection.mockReturnValue({
-      activeThread: { id: threadId, environmentId, projectId: null, worktreePath: null },
+      activeThread: {
+        id: threadId,
+        environmentId,
+        projectId: ProjectId.make("missing"),
+        worktreePath: null,
+      },
       activeDraftThread: null,
     });
     expect(useActiveProjectTarget()).toBeNull();

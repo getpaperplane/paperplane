@@ -54,15 +54,26 @@ const RESTRICTED_PULL_REQUEST_GLYPH_IMPORTS = {
 };
 
 export default defineConfig({
+  assetsInclude: ["**/*.wasm"],
   resolve: {
     alias: {
       "~": NodeURL.fileURLToPath(new URL("./apps/web/src", import.meta.url)),
     },
   },
   test: {
+    // Patched @effect/vitest must share the runner's suite state even when pnpm
+    // materializes another vite-plus instance for mobile's optional peers.
+    alias: [
+      {
+        find: /^vite-plus\/test$/,
+        replacement: NodeURL.fileURLToPath(import.meta.resolve("vite-plus/test")),
+      },
+    ],
+    server: { deps: { inline: ["@effect/vitest"] } },
     environment: "node",
     exclude: [
       "**/.repos/**",
+      "**/.rove/**",
       "**/node_modules/**",
       "**/dist/**",
       "**/dist-electron/**",
@@ -94,6 +105,8 @@ export default defineConfig({
       "pnpm-lock.yaml",
       "*.tsbuildinfo",
       "**/routeTree.gen.ts",
+      "**/*.graphql.ts",
+      "packages/source-control-github/schema/**",
       "apps/mobile/android/**",
       "apps/mobile/ios/**",
       "apps/mobile/uniwind-types.d.ts",
@@ -120,6 +133,8 @@ export default defineConfig({
       "pnpm-lock.yaml",
       "*.tsbuildinfo",
       "**/routeTree.gen.ts",
+      "**/*.graphql.ts",
+      "packages/source-control-github/schema/**",
       "apps/mobile/android/**",
       "apps/mobile/ios/**",
       "apps/mobile/uniwind-types.d.ts",
@@ -195,13 +210,84 @@ export default defineConfig({
       "rove/no-inline-schema-compile": "warn",
       "rove/no-manual-effect-runtime-in-tests": "error",
       "rove/no-native-title-tooltip": "error",
+      "rove/no-raw-mcp-registration": "error",
+      "rove/no-test-in-loop": "error",
+      "rove/no-rpc-permission-bypass": ["error", { allowRawClientAccess: true }],
+      "rove/no-unscoped-has": "error",
       "rove/namespace-node-imports": "error",
+      "rove/prefer-catch-tags": "error",
+      "rove/require-centered-scroll-gutter": "error",
+      "rove/require-suppression-reason": "error",
     },
     overrides: [
       {
+        files: ["packages/client-runtime/src/state/**", "apps/{web,mobile,desktop}/src/**"],
+        rules: { "rove/no-rpc-permission-bypass": ["error", { allowRawClientAccess: false }] },
+      },
+      {
+        // Only shared command boundaries install the session-backed permission guard.
+        files: [
+          "packages/client-runtime/src/state/runtime.ts",
+          "packages/client-runtime/src/state/vcsAction.ts",
+        ],
+        rules: {
+          "rove/no-rpc-permission-bypass": [
+            "error",
+            { allowGuardInstallation: true, allowRawClientAccess: false },
+          ],
+        },
+      },
+      {
+        // These clients are session metadata, device streams, and an Expo update adapter.
+        files: [
+          "apps/web/src/components/settings/ConnectionsSettings.tsx",
+          "apps/mobile/src/features/updates/app-updates.ts",
+          "apps/web/src/components/device/DevicePhoneViewport.tsx",
+          "apps/web/src/components/device/DeviceDuoViewport.tsx",
+        ],
+        rules: { "rove/no-rpc-permission-bypass": ["error", { allowRawClientAccess: true }] },
+      },
+      {
+        // Incompatible hosts cannot open a normal session; their updater uses a dedicated socket.
+        files: ["packages/client-runtime/src/connection/outdatedHostUpdate.ts"],
+        rules: { "rove/no-rpc-permission-bypass": "off" },
+      },
+      {
+        // RPC implementation and transport test fixtures need the raw client.
+        files: [
+          "packages/client-runtime/src/rpc/**",
+          "**/*.{test,spec}.{ts,tsx,js,jsx,mts,cts,mjs,cjs}",
+        ],
+        rules: { "rove/no-rpc-permission-bypass": "off" },
+      },
+      {
         // The one place that reads the host platform to seed the injected references.
-        files: ["packages/shared/src/hostProcess.ts"],
+        files: ["packages/shared/src/HostProcess.ts"],
         rules: { "rove/no-global-process-runtime": "off" },
+      },
+      {
+        // The registration helpers that only accept handlers built by McpToolAccess.
+        files: ["apps/server/src/mcp/McpHttpServer.ts"],
+        rules: { "rove/no-raw-mcp-registration": "off" },
+      },
+      {
+        files: ["apps/web/src/**"],
+        excludeFiles: ["apps/web/src/components/ui/**"],
+        rules: {
+          "eslint/no-restricted-imports": [
+            "error",
+            {
+              paths: [...RESTRICTED_IMPORT_PATHS, RESTRICTED_PULL_REQUEST_GLYPH_IMPORTS],
+              patterns: RESTRICTED_UI_VARIANT_PATTERNS,
+            },
+          ],
+        },
+      },
+      {
+        // The one module allowed to name lucide's pull-request glyphs; everything else picks
+        // from its vocabulary. The other import restrictions still apply here.
+        files: ["apps/web/src/components/pullRequest/pullRequestIcons.tsx"],
+        rules: { "eslint/no-restricted-imports": ["error", { paths: RESTRICTED_IMPORT_PATHS }] },
       },
       {
         files: ["apps/web/src/**"],
@@ -227,10 +313,25 @@ export default defineConfig({
         rules: { "rove/no-mobile-uniwind-theme-escape-hatches": "error" },
       },
       {
+        // React commits state set in a raw ResizeObserver callback after the paint, so derived
+        // layout lands a frame late. observeResize flushes every observed resize in one render.
+        files: ["apps/web/src/**"],
+        excludeFiles: [
+          "apps/web/src/lib/observeResize.ts",
+          "**/*.{test,spec}.{ts,tsx,js,jsx,mts,cts,mjs,cjs}",
+        ],
+        rules: { "rove/no-raw-resize-observer": "error" },
+      },
+      {
         // Every class in web code must be one Tailwind generates: a typo or a class nothing
         // declares ships silently unstyled. JS hooks use data attributes, not class names.
         files: ["apps/web/src/**"],
         rules: { "shadcn/no-unknown-classes": "error" },
+      },
+      {
+        // State indicators paint inward; decorative rings keep their own geometry.
+        files: ["apps/web/src/**"],
+        rules: { "rove/no-outset-state-indicators": "error" },
       },
       {
         // Colors come from theme tokens so status tones follow custom themes. components/ui
@@ -342,6 +443,10 @@ export default defineConfig({
           "apps/mobile/src/features/threads/NewTaskDraftScreen.tsx",
           "apps/mobile/src/features/threads/ThreadComposer.tsx",
           "apps/mobile/src/features/threads/ThreadFeed.tsx",
+          "apps/mobile/src/features/settings/appearance/components/FontSizeSliderRow.tsx",
+          "apps/mobile/src/features/threads/NewTaskContextPickerScreens.tsx",
+          "apps/mobile/src/features/threads/ThreadQueueControl.tsx",
+          "apps/mobile/src/features/threads/ThreadAgentsSheet.tsx",
           "apps/mobile/src/features/review/ReviewCommentCard.tsx",
           "apps/mobile/src/features/threads/ThreadSettingsSheet.tsx",
           "apps/mobile/src/features/threads/git/GitOverviewSheet.tsx",
@@ -350,34 +455,12 @@ export default defineConfig({
           "apps/mobile/src/lib/useMobileNavigationTheme.ts",
           "apps/mobile/src/native/RoveComposerEditor.ios.tsx",
           "apps/mobile/src/native/RoveComposerEditor.native.tsx",
-          "apps/mobile/src/native/SelectableMarkdownText.android.tsx",
+          "apps/mobile/src/native/SelectableMarkdownText.tsx",
         ],
         rules: {
           "rove/no-mobile-uniwind-theme-escape-hatches": ["error", { allowUniwindTheme: true }],
         },
       },
-      // Legacy manual Effect runners tracked as debt: no net-new occurrences.
-      // Lower a ceiling when you migrate a file, and delete its entry at zero.
-      ...Object.entries({
-        "apps/server/src/orchestration/Layers/CheckpointReactor.test.ts": 37,
-        "apps/server/src/orchestration/Layers/OrchestrationEngine.test.ts": 5,
-        "apps/server/src/orchestration/Layers/OrchestrationReactor.test.ts": 4,
-        "apps/server/src/orchestration/Layers/ProviderCommandReactor.test.ts": 66,
-        "apps/server/src/orchestration/Layers/ProviderRuntimeIngestion.test.ts": 29,
-        "apps/server/src/orchestration/Layers/ThreadDeletionReactor.test.ts": 2,
-        "apps/server/src/orchestration/commandInvariants.test.ts": 5,
-        "apps/server/src/orchestration/projector.test.ts": 20,
-        "apps/server/src/provider/Layers/CodexAdapter.test.ts": 1,
-        "apps/server/src/provider/Layers/CodexSessionRuntime.test.ts": 5,
-        "apps/server/src/provider/Layers/CursorAdapter.test.ts": 1,
-        "apps/server/src/provider/Layers/CursorProvider.test.ts": 1,
-        "apps/server/src/provider/Layers/ProviderService.test.ts": 2,
-        "apps/server/src/provider/Layers/ProviderSessionReaper.test.ts": 12,
-        "apps/server/src/provider/acp/CursorAcpSupport.test.ts": 1,
-      }).map(([file, maxOccurrences]) => {
-        const rule: ["error", { maxOccurrences: number }] = ["error", { maxOccurrences }];
-        return { files: [file], rules: { "rove/no-manual-effect-runtime-in-tests": rule } };
-      }),
     ],
     options: {
       reportUnusedDisableDirectives: "error",

@@ -5,9 +5,17 @@ import {
   ProviderInstanceId,
   ProviderDriverKind,
   ThreadId,
+  EventId,
+  MessageId,
+  NodeId,
+  ProviderSessionId,
+  ProviderThreadId,
+  RuntimeRequestId,
+  type OrchestrationV2RuntimeRequest,
+  RunId,
+  type OrchestrationV2Run,
+  type OrchestrationV2AppThread,
   type OrchestrationProjectShell,
-  type OrchestrationThreadShell,
-  type ProviderSession,
   type TerminalSummary,
 } from "@rove-code/contracts";
 import * as DateTime from "effect/DateTime";
@@ -17,17 +25,25 @@ import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 
 import { ServerConfig } from "../config.ts";
-import { ProjectionSnapshotQuery } from "../orchestration/Services/ProjectionSnapshotQuery.ts";
-import { ProviderService } from "../provider/Services/ProviderService.ts";
+import {
+  ProjectionStoreV2,
+  layer as projectionLayer,
+} from "../orchestration-v2/ProjectionStore.ts";
+import { ProjectStoreV2, layer as projectLayer } from "../orchestration-v2/ProjectStore.ts";
+import { ProviderSessionManagerV2 } from "../orchestration-v2/ProviderSessionManager.ts";
+import { CodexProviderCapabilitiesV2 } from "../orchestration-v2/Adapters/CodexAdapterV2.ts";
+import * as SqlitePersistence from "../persistence/Sqlite.ts";
 import { TerminalManager } from "../terminal/Manager.ts";
 import { GitVcsDriver, layer as GitVcsDriverLayer } from "../vcs/GitVcsDriver.ts";
 import {
-  makeWorktreeInventory,
+  WorktreeInventory,
+  layer as inventoryLayer,
   parseWorktreeInventory,
   worktreeLastActivity,
 } from "./worktreeInventory.ts";
 
-const TestLayer = GitVcsDriverLayer.pipe(
+const TestLayer = Layer.mergeAll(GitVcsDriverLayer, projectionLayer, projectLayer).pipe(
+  Layer.provideMerge(SqlitePersistence.layerMemory),
   Layer.provideMerge(ServerConfig.layerTest(process.cwd(), { prefix: "rove-worktree-inventory-" })),
   Layer.provideMerge(NodeServices.layer),
 );
@@ -36,29 +52,32 @@ const createdAt = "2026-01-01T00:00:00.000Z";
 
 function thread(
   worktreePath: string,
-  overrides: Partial<OrchestrationThreadShell> = {},
-): OrchestrationThreadShell {
+  overrides: Partial<OrchestrationV2AppThread> = {},
+): OrchestrationV2AppThread {
+  const now = DateTime.makeUnsafe(createdAt);
+  const id = overrides.id ?? ThreadId.make("thread-1");
   return {
-    id: ThreadId.make("thread-1"),
+    createdBy: "user",
+    creationSource: "web",
+    id,
     projectId,
     title: "Feature work",
+    providerInstanceId: ProviderInstanceId.make("codex"),
     modelSelection: { instanceId: ProviderInstanceId.make("codex"), model: "gpt-5.3-codex" },
     runtimeMode: "full-access",
     interactionMode: "default",
     branch: "feature",
     worktreePath,
-    latestTurn: null,
-    createdAt,
-    updatedAt: createdAt,
+    activeProviderThreadId: null,
+    lineage: { parentThreadId: null, relationshipToParent: null, rootThreadId: id },
+    forkedFrom: null,
+    createdAt: now,
+    updatedAt: now,
     archivedAt: null,
     settledAt: null,
     settledOverride: null,
-    session: null,
-    pullRequests: [],
-    latestUserMessageAt: null,
-    hasPendingApprovals: false,
-    hasPendingUserInput: false,
-    hasActionableProposedPlan: false,
+    lastVisitedAt: null,
+    deletedAt: null,
     ...overrides,
   };
 }
@@ -92,13 +111,165 @@ const fixture = Effect.gen(function* () {
       updatedAt: createdAt,
     },
   ];
-  const threads: OrchestrationThreadShell[] = [];
-  const archivedThreads: OrchestrationThreadShell[] = [];
-  const sessions: ProviderSession[] = [];
+  const projections = yield* ProjectionStoreV2;
+  const projectStore = yield* ProjectStoreV2;
+  let eventSequence = 0;
+  const addProject = Effect.fnUntraced(function* (project: OrchestrationProjectShell) {
+    yield* projectStore.apply({
+      sequence: ++eventSequence,
+      eventId: EventId.make(`project:${eventSequence}`),
+      aggregateKind: "project",
+      aggregateId: project.id,
+      occurredAt: createdAt,
+      commandId: null,
+      causationEventId: null,
+      correlationId: null,
+      metadata: {},
+      type: "project.created",
+      payload: { ...project, projectId: project.id },
+    });
+  });
+  yield* addProject(projects[0]!);
+  const addThread = Effect.fnUntraced(function* (value: OrchestrationV2AppThread) {
+    yield* projections.apply({
+      id: EventId.make(`thread:${++eventSequence}`),
+      type: "thread.created",
+      threadId: value.id,
+      occurredAt: value.createdAt,
+      payload: value,
+    });
+  });
+  const addRun = Effect.fnUntraced(function* (
+    status: OrchestrationV2Run["status"],
+    queueHeld = false,
+  ) {
+    const now = yield* DateTime.now;
+    const id = RunId.make(`run:${++eventSequence}`);
+    yield* projections.apply({
+      id: EventId.make(`event:${eventSequence}`),
+      type: "run.created",
+      threadId: ThreadId.make("thread-1"),
+      runId: id,
+      occurredAt: now,
+      payload: {
+        id,
+        threadId: ThreadId.make("thread-1"),
+        ordinal: eventSequence,
+        providerInstanceId: ProviderInstanceId.make("codex"),
+        modelSelection: thread(worktreePath).modelSelection,
+        providerThreadId: null,
+        userMessageId: MessageId.make(`message:${eventSequence}`),
+        rootNodeId: NodeId.make(`node:${eventSequence}`),
+        activeAttemptId: null,
+        status,
+        queueHeld,
+        requestedAt: now,
+        startedAt: null,
+        completedAt: null,
+        checkpointId: null,
+        contextHandoffId: null,
+      },
+    });
+  });
+  const addMessage = Effect.fnUntraced(function* (at: DateTime.Utc) {
+    yield* projections.apply({
+      id: EventId.make(`event:${++eventSequence}`),
+      type: "message.updated",
+      threadId: ThreadId.make("thread-1"),
+      occurredAt: at,
+      payload: {
+        createdBy: "user",
+        creationSource: "web",
+        id: MessageId.make(`message:${eventSequence}`),
+        threadId: ThreadId.make("thread-1"),
+        runId: null,
+        nodeId: null,
+        role: "user",
+        text: "Work on this",
+        attachments: [],
+        streaming: false,
+        createdAt: at,
+        updatedAt: at,
+      },
+    });
+  });
+  const addSession = Effect.fnUntraced(function* (status: "ready" | "stopped" | "error" = "ready") {
+    const now = yield* DateTime.now;
+    yield* projections.apply({
+      id: EventId.make(`event:${++eventSequence}`),
+      type: "provider-session.attached",
+      threadId: ThreadId.make("outside-thread"),
+      occurredAt: now,
+      payload: {
+        id: ProviderSessionId.make("session:outside"),
+        driver: ProviderDriverKind.make("codex"),
+        providerInstanceId: ProviderInstanceId.make("codex"),
+        status,
+        cwd: worktreePath,
+        model: null,
+        capabilities: CodexProviderCapabilitiesV2,
+        createdAt: now,
+        updatedAt: now,
+        lastError: null,
+      },
+    });
+  });
+  const setRequest = Effect.fnUntraced(function* (
+    kind: OrchestrationV2RuntimeRequest["kind"],
+    status: "pending" | "resolved",
+  ) {
+    const now = yield* DateTime.now;
+    yield* projections.apply({
+      id: EventId.make(`event:${++eventSequence}`),
+      type: "runtime-request.updated",
+      threadId: ThreadId.make("thread-1"),
+      occurredAt: now,
+      payload: {
+        id: RuntimeRequestId.make("request:inventory"),
+        nodeId: NodeId.make("node:request"),
+        providerTurnId: null,
+        nativeRequestRef: null,
+        kind,
+        status,
+        responseCapability: { type: "not_resumable", reason: "runtime stopped" },
+        createdAt: now,
+        resolvedAt: status === "resolved" ? now : null,
+      },
+    });
+  });
+  const setBackground = Effect.fnUntraced(function* (pending: boolean) {
+    const now = yield* DateTime.now;
+    yield* projections.apply({
+      id: EventId.make(`event:${++eventSequence}`),
+      type: "provider-thread.updated",
+      threadId: ThreadId.make("thread-1"),
+      occurredAt: now,
+      payload: {
+        id: ProviderThreadId.make("provider-thread:inventory"),
+        driver: ProviderDriverKind.make("codex"),
+        providerInstanceId: ProviderInstanceId.make("codex"),
+        providerSessionId: null,
+        appThreadId: ThreadId.make("thread-1"),
+        ownerNodeId: null,
+        nativeThreadRef: null,
+        nativeConversationHeadRef: null,
+        status: "idle",
+        firstRunOrdinal: null,
+        lastRunOrdinal: null,
+        handoffIds: [],
+        forkedFrom: null,
+        pendingBackgroundTasks: pending ? [{ taskId: "background", kind: "background_task" }] : [],
+        createdAt: now,
+        updatedAt: now,
+      },
+    });
+  });
   const terminalEntries: TerminalSummary[] = [];
+  const liveSessionIds = new Set<ProviderSessionId>();
   let subscriptions = 0;
   const operations: string[] = [];
-  const inventory = yield* makeWorktreeInventory.pipe(
+  const inventory = yield* WorktreeInventory.pipe(
+    Effect.provide(inventoryLayer),
     Effect.provideService(GitVcsDriver, {
       ...driver,
       execute: (input) => {
@@ -108,18 +279,9 @@ const fixture = Effect.gen(function* () {
     }),
     Effect.provide(
       Layer.mergeAll(
-        Layer.mock(ProjectionSnapshotQuery, {
-          getShellSnapshot: () =>
-            Effect.succeed({ projects, threads, snapshotSequence: 0, updatedAt: createdAt }),
-          getArchivedShellSnapshot: () =>
-            Effect.succeed({
-              projects: [],
-              threads: archivedThreads,
-              snapshotSequence: 0,
-              updatedAt: createdAt,
-            }),
+        Layer.mock(ProviderSessionManagerV2, {
+          isLive: (id) => Effect.succeed(liveSessionIds.has(id)),
         }),
-        Layer.mock(ProviderService, { listSessions: () => Effect.succeed(sessions) }),
         Layer.mock(TerminalManager, {
           subscribeMetadata: (listener) =>
             Effect.gen(function* () {
@@ -140,9 +302,15 @@ const fixture = Effect.gen(function* () {
     worktreePath,
     inventory,
     projects,
-    threads,
-    archivedThreads,
-    sessions,
+    addProject,
+    addThread,
+    addRun,
+    addMessage,
+    addSession,
+    setRequest,
+    setBackground,
+    projections,
+    liveSessionIds,
     terminalEntries,
     git,
     subscriptions: () => subscriptions,
@@ -150,7 +318,7 @@ const fixture = Effect.gen(function* () {
   };
 });
 
-const firstEntry = (inventory: Effect.Success<typeof makeWorktreeInventory>) =>
+const firstEntry = (inventory: WorktreeInventory["Service"]) =>
   inventory.list({}).pipe(
     Effect.flatMap((result) =>
       inventory.inspect({
@@ -212,15 +380,15 @@ describe("worktree inventory", () => {
 
   it.effect("joins archived activity and ignores metadata refresh timestamps", () =>
     Effect.gen(function* () {
-      const { inventory, worktreePath, archivedThreads } = yield* fixture;
+      const { inventory, worktreePath, addThread, addMessage } = yield* fixture;
       const activityAt = "2026-02-01T00:00:00.000Z";
-      archivedThreads.push(
+      yield* addThread(
         thread(worktreePath, {
-          archivedAt: activityAt,
-          latestUserMessageAt: activityAt,
-          updatedAt: "2026-03-01T00:00:00.000Z",
+          archivedAt: DateTime.makeUnsafe(activityAt),
+          updatedAt: DateTime.makeUnsafe("2026-03-01T00:00:00.000Z"),
         }),
       );
+      yield* addMessage(DateTime.makeUnsafe(activityAt));
       const entry = yield* firstEntry(inventory);
       assert.strictEqual(entry.lastActivityAt, activityAt);
       assert.isTrue(entry.threads[0]!.archived);
@@ -230,8 +398,8 @@ describe("worktree inventory", () => {
 
   it.effect("filters projects and deduplicates worktrees across checkouts of one repository", () =>
     Effect.gen(function* () {
-      const { inventory, projects, worktreePath } = yield* fixture;
-      projects.push({
+      const { inventory, projects, worktreePath, addProject } = yield* fixture;
+      yield* addProject({
         ...projects[0]!,
         id: ProjectId.make("project-2"),
         workspaceRoot: worktreePath,
@@ -244,20 +412,24 @@ describe("worktree inventory", () => {
 
   it.effect("reports repository failures instead of presenting an empty successful scan", () =>
     Effect.gen(function* () {
-      const { inventory, projects, fs } = yield* fixture;
+      const { inventory, projects, fs, addProject } = yield* fixture;
       const missing = yield* fs.makeTempDirectoryScoped({ prefix: "rove-inventory-not-git-" });
-      projects.push({ ...projects[0]!, id: ProjectId.make("project-2"), workspaceRoot: missing });
+      yield* addProject({
+        ...projects[0]!,
+        id: ProjectId.make("project-2"),
+        workspaceRoot: missing,
+      });
       const result = yield* inventory.list({});
       assert.strictEqual(result.worktrees.length, 1);
       assert.strictEqual(result.issues.length, 1);
-      assert.strictEqual(result.issues[0]!.projectId, projects[1]!.id);
+      assert.strictEqual(result.issues[0]!.projectId, ProjectId.make("project-2"));
     }).pipe(Effect.provide(TestLayer)),
   );
 
   it.effect("removes only the checkout while preserving its branch and thread records", () =>
     Effect.gen(function* () {
-      const { inventory, worktreePath, threads, fs, git } = yield* fixture;
-      threads.push(thread(worktreePath));
+      const { inventory, worktreePath, addThread, projections, fs, git } = yield* fixture;
+      yield* addThread(thread(worktreePath));
       const entry = yield* firstEntry(inventory);
       yield* inventory.remove({
         projectId,
@@ -266,7 +438,10 @@ describe("worktree inventory", () => {
         expectedBranch: entry.branch,
       });
       assert.isFalse(yield* fs.exists(worktreePath));
-      assert.strictEqual(threads.length, 1);
+      assert.strictEqual(
+        (yield* projections.getThread(ThreadId.make("thread-1"))).worktreePath,
+        worktreePath,
+      );
       assert.strictEqual((yield* git(["rev-parse", "feature"])).stdout.trim(), entry.head);
       assert.strictEqual((yield* inventory.list({})).worktrees.length, 0);
     }).pipe(Effect.provide(TestLayer)),
@@ -317,10 +492,13 @@ describe("worktree inventory", () => {
 
   it.effect("keeps worktrees shared by active and archived threads", () =>
     Effect.gen(function* () {
-      const { inventory, worktreePath, threads, archivedThreads } = yield* fixture;
-      threads.push(thread(worktreePath));
-      archivedThreads.push(
-        thread(worktreePath, { id: ThreadId.make("thread-2"), archivedAt: createdAt }),
+      const { inventory, worktreePath, addThread } = yield* fixture;
+      yield* addThread(thread(worktreePath));
+      yield* addThread(
+        thread(worktreePath, {
+          id: ThreadId.make("thread-2"),
+          archivedAt: DateTime.makeUnsafe(createdAt),
+        }),
       );
       const entry = yield* firstEntry(inventory);
       assert.strictEqual(entry.threads.length, 2);
@@ -328,39 +506,88 @@ describe("worktree inventory", () => {
     }).pipe(Effect.provide(TestLayer)),
   );
 
-  it.effect("keeps active background work and pending user input", () =>
+  it.effect("keeps preparing, running and waiting work", () =>
     Effect.gen(function* () {
-      const { inventory, worktreePath, threads, fs } = yield* fixture;
-      threads.push(thread(worktreePath, { backgroundLiveness: "working" }));
-      const entry = yield* firstEntry(inventory);
-      assert.isTrue(entry.removalBlockers.some((blocker) => blocker.includes("agent session")));
-      threads[0] = thread(worktreePath, { hasPendingUserInput: true });
-      const failure = yield* inventory
-        .remove({
-          projectId,
-          path: entry.path,
-          expectedHead: entry.head,
-          expectedBranch: entry.branch,
-        })
-        .pipe(Effect.flip);
-      assert.include(failure.detail, "agent session");
-      assert.isTrue(yield* fs.exists(worktreePath));
+      const { inventory, worktreePath, addThread, addRun, fs } = yield* fixture;
+      yield* addThread(thread(worktreePath));
+      for (const status of ["preparing", "running", "waiting"] as const) {
+        yield* addRun(status);
+        const entry = yield* firstEntry(inventory);
+        assert.isTrue(entry.removalBlockers.some((blocker) => blocker.includes("agent session")));
+        const failure = yield* inventory
+          .remove({
+            projectId,
+            path: entry.path,
+            expectedHead: entry.head,
+            expectedBranch: entry.branch,
+          })
+          .pipe(Effect.flip);
+        assert.include(failure.detail, "agent session");
+        assert.isTrue(yield* fs.exists(worktreePath));
+      }
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect("keeps background work and pending approvals or user input until resolved", () =>
+    Effect.gen(function* () {
+      const { inventory, worktreePath, addThread, setRequest, setBackground } = yield* fixture;
+      yield* addThread(thread(worktreePath));
+      yield* setBackground(true);
+      assert.isTrue(
+        (yield* firstEntry(inventory)).removalBlockers.some((blocker) =>
+          blocker.includes("agent session"),
+        ),
+      );
+      yield* setBackground(false);
+      assert.deepStrictEqual((yield* firstEntry(inventory)).removalBlockers, []);
+      for (const kind of ["command", "user_input"] as const) {
+        yield* setRequest(kind, "pending");
+        assert.isTrue(
+          (yield* firstEntry(inventory)).removalBlockers.some((blocker) =>
+            blocker.includes("agent session"),
+          ),
+        );
+        yield* setRequest(kind, "resolved");
+        assert.deepStrictEqual((yield* firstEntry(inventory)).removalBlockers, []);
+      }
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect("protects a recent user message before a run adopts it", () =>
+    Effect.gen(function* () {
+      const { inventory, worktreePath, addThread, addMessage } = yield* fixture;
+      yield* addThread(thread(worktreePath));
+      yield* addMessage(yield* DateTime.now);
+      assert.isTrue(
+        (yield* firstEntry(inventory)).removalBlockers.some((blocker) =>
+          blocker.includes("agent session"),
+        ),
+      );
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect("ignores released sessions but protects a runtime still live after an error", () =>
+    Effect.gen(function* () {
+      const { inventory, addSession, liveSessionIds } = yield* fixture;
+      yield* addSession("stopped");
+      assert.deepStrictEqual((yield* firstEntry(inventory)).removalBlockers, []);
+      yield* addSession("error");
+      liveSessionIds.add(ProviderSessionId.make("session:outside"));
+      assert.isTrue(
+        (yield* firstEntry(inventory)).removalBlockers.some((blocker) =>
+          blocker.includes("agent session"),
+        ),
+      );
+      liveSessionIds.clear();
+      assert.deepStrictEqual((yield* firstEntry(inventory)).removalBlockers, []);
     }).pipe(Effect.provide(TestLayer)),
   );
 
   it.effect("keeps live provider sessions that use an otherwise unlinked checkout", () =>
     Effect.gen(function* () {
-      const { inventory, worktreePath, sessions, fs } = yield* fixture;
+      const { inventory, worktreePath, addSession, fs } = yield* fixture;
       const entry = yield* firstEntry(inventory);
-      sessions.push({
-        provider: ProviderDriverKind.make("codex"),
-        threadId: ThreadId.make("outside-thread"),
-        status: "ready",
-        runtimeMode: "full-access",
-        cwd: worktreePath,
-        createdAt,
-        updatedAt: createdAt,
-      });
+      yield* addSession();
       const failure = yield* inventory
         .remove({
           projectId,
@@ -376,9 +603,9 @@ describe("worktree inventory", () => {
 
   it.effect("keeps a queued turn before its provider session starts", () =>
     Effect.gen(function* () {
-      const { inventory, worktreePath, threads } = yield* fixture;
-      const now = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
-      threads.push(thread(worktreePath, { latestUserMessageAt: now }));
+      const { inventory, worktreePath, addThread, addRun } = yield* fixture;
+      yield* addThread(thread(worktreePath));
+      yield* addRun("queued", true);
       assert.isTrue(
         (yield* firstEntry(inventory)).removalBlockers.some((blocker) =>
           blocker.includes("agent session"),
@@ -419,7 +646,7 @@ describe("worktree inventory", () => {
 
   it.effect("keeps project roots and detached or locked worktrees", () =>
     Effect.gen(function* () {
-      const { inventory, worktreePath, projects, git } = yield* fixture;
+      const { inventory, worktreePath, projects, git, addProject } = yield* fixture;
       yield* git(["worktree", "lock", worktreePath]);
       assert.isTrue(
         (yield* firstEntry(inventory)).removalBlockers.some((blocker) =>
@@ -433,7 +660,7 @@ describe("worktree inventory", () => {
           blocker.includes("detached HEAD"),
         ),
       );
-      projects.push({
+      yield* addProject({
         ...projects[0]!,
         id: ProjectId.make("project-2"),
         workspaceRoot: worktreePath,

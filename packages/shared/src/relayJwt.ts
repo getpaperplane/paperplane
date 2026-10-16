@@ -11,6 +11,9 @@ export const RELAY_MINT_RESPONSE_TYP = "rove-env-mint+jwt";
 export const RELAY_HEALTH_RESPONSE_TYP = "rove-env-health+jwt";
 export const RELAY_ACTIVITY_PUBLISH_TYP = "rove-env-activity+jwt";
 export const RELAY_MANAGED_TUNNEL_RECOVERY_TYP = "rove-env-managed-tunnel-recovery+jwt";
+export const RELAY_HOOK_DELIVERY_TYP = "rove-relay-hook-delivery+jwt";
+/** Header carrying the signed proof that a webhook request came from the relay. */
+export const RELAY_HOOK_DELIVERY_HEADER = "x-rove-relay-delivery";
 
 export class RelayJwtError extends Schema.TaggedError<RelayJwtError>()("RelayJwtError", {
   operation: Schema.Literals(["sign", "verify"]),

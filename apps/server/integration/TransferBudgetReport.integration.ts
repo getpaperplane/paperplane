@@ -10,7 +10,6 @@ import {
   TRANSFER_HISTORY_TURN_COUNT,
   TRANSFER_MEASURED_MCP_RESULT_BYTES,
   TRANSFER_MEASURED_TOOLS,
-  TRANSFER_PROVIDERS,
 } from "./fixtures/transferBudget.ts";
 
 /** Catch-up delivered to a resubscribing client, and which path the server chose. */
@@ -31,9 +30,9 @@ export interface TransferBudgetRun {
   /** The second client resubscribes after the turn from the cursor it held before it. */
   readonly reconnectThread: WebSocketCatchUpMeasurement;
   readonly reconnectShell: WebSocketCatchUpMeasurement;
-  /** `sql.execute` spans opened server-wide during the measured turn. */
+  /** SQL statement spans opened server-wide during the measured turn. */
   readonly measuredTurnSqlStatements: number;
-  /** `sql.execute` spans opened while serving both reconnect catch-ups. */
+  /** SQL statement spans opened while serving both reconnect catch-ups. */
   readonly reconnectSqlStatements: number;
 }
 
@@ -45,20 +44,22 @@ interface ProviderTransferBudget {
   readonly measuredTurnWebSocketMessages: number;
 }
 
-// These caps leave roughly 30% headroom above the client projection of the
+// These caps leave at least 30% headroom above the client projection of the
 // deterministic 9 MB retained-result fixture. Full MCP results stay in
 // persistence, so accidentally shipping them again exceeds these caps by
 // orders of magnitude. The CI report preserves exact values for review.
 const TRANSFER_BUDGET = {
-  totalWireBytes: 15_500,
-  // Persisted activity sequences add ~470 gzip bytes to the ten-turn history.
-  threadSnapshotWireBytes: 8_000,
-  measuredTurnWebSocketWireBytes: 8_000,
-  measuredTurnWebSocketDecodedBytes: 68_000,
-  measuredTurnWebSocketMessages: 21,
+  totalWireBytes: 7_000,
+  threadSnapshotWireBytes: 5_000,
+  measuredTurnWebSocketWireBytes: 2_000,
+  measuredTurnWebSocketDecodedBytes: 30_000,
+  measuredTurnWebSocketMessages: 8,
 } satisfies ProviderTransferBudget;
 
-const TRANSFER_BUDGETS = new Map(TRANSFER_PROVIDERS.map((provider) => [provider, TRANSFER_BUDGET]));
+const TRANSFER_BUDGETS: Readonly<Record<string, ProviderTransferBudget>> = {
+  codex: TRANSFER_BUDGET,
+  claudeAgent: TRANSFER_BUDGET,
+};
 
 function totalWireBytes(run: TransferBudgetRun): number {
   return run.threadSnapshot.wireBytes + run.measuredTurnWebSocket.wireBytes;
@@ -88,16 +89,16 @@ function observedTransfer(run: TransferBudgetRun) {
 export function formatTransferBudgetResult(runs: ReadonlyArray<TransferBudgetRun>): string {
   const providers = Object.fromEntries(
     runs.flatMap((run) => {
-      const ceiling = TRANSFER_BUDGETS.get(run.provider);
+      const ceiling = TRANSFER_BUDGETS[run.provider];
       return ceiling ? [[run.provider, { observed: observedTransfer(run), ceiling }]] : [];
     }),
   );
 
   return `${JSON.stringify(
     {
-      schemaVersion: 2,
+      schemaVersion: 1,
       scenario: {
-        id: "thread-transfer-v1",
+        id: "thread-transfer-v2",
         historyTurns: TRANSFER_HISTORY_TURN_COUNT,
         historyCommandToolsPerTurn: TRANSFER_HISTORY_TOOLS_PER_TURN,
         historyMcpResultBytes: TRANSFER_HISTORY_MCP_RESULT_BYTES,
@@ -161,7 +162,7 @@ function webSocketRows(
 export function transferBudgetViolations(runs: ReadonlyArray<TransferBudgetRun>): string[] {
   const violations: string[] = [];
   for (const run of runs) {
-    const budget = TRANSFER_BUDGETS.get(run.provider);
+    const budget = TRANSFER_BUDGETS[run.provider];
     if (!budget) {
       violations.push(`${run.provider}: no transfer budget is configured`);
       continue;
@@ -199,13 +200,13 @@ export function formatTransferBudgetReport(runs: ReadonlyArray<TransferBudgetRun
     "# Rove Code thread transfer budget",
     "",
     "Wire values are thread data bytes read from local HTTP and WebSocket sockets. HTTP includes response headers; WebSocket measurement starts after the resumed thread subscription synchronizes. TCP/IP, TLS framing, and the WebSocket upgrade are excluded. WebSocket permessage-deflate is negotiated.",
-    "The measured turn is observed on three sockets at once: one with only the thread subscription (the capped rows), one with only the shell subscription, and a second client holding both. Server egress is the sum of the three. After the turn the second client disconnects and resubscribes from the cursor it held before the turn, which is the cursor a backgrounded phone would hold. SQL statements are `sql.execute` spans counted across the orchestration runtime and the WebSocket handlers.",
-    `Scenario: ${TRANSFER_HISTORY_TURN_COUNT} historical turns with ${TRANSFER_HISTORY_TOOLS_PER_TURN} command tools and one retained ${formatBytes(TRANSFER_HISTORY_MCP_RESULT_BYTES)} MCP result each, followed by one measured turn with ${TRANSFER_MEASURED_TOOLS} command tools and a retained ${formatBytes(TRANSFER_MEASURED_MCP_RESULT_BYTES)} MCP result. Payload sizes are calibrated from heavy local Codex and Claude histories and contain no user data.`,
+    "The measured turn is observed on three sockets at once: one with only the thread subscription (the capped rows), one with only the shell subscription, and a second client holding both. Server egress is the sum of the three. After the turn the second client disconnects and new sockets resubscribe from the cursor it held before the turn, which is the cursor a backgrounded phone would hold. SQL statements are the SQL client's per-statement spans, counted across V2 persistence and the HTTP/WebSocket handlers.",
+    `Scenario: ${TRANSFER_HISTORY_TURN_COUNT} historical turns with ${TRANSFER_HISTORY_TOOLS_PER_TURN} command tools and one retained ${formatBytes(TRANSFER_HISTORY_MCP_RESULT_BYTES)} MCP result each, followed by one measured turn with ${TRANSFER_MEASURED_TOOLS} command tools and a retained ${formatBytes(TRANSFER_MEASURED_MCP_RESULT_BYTES)} MCP result. Synthetic V2 domain events exercise persistence, wire projection, and production HTTP/subscription handlers; this does not measure provider adapter ingestion. Payloads contain no user data.`,
     "",
     "| Provider | Total thread wire | Budget | Result |",
     "| --- | ---: | ---: | --- |",
     ...runs.flatMap((run) => {
-      const budget = TRANSFER_BUDGETS.get(run.provider);
+      const budget = TRANSFER_BUDGETS[run.provider];
       if (!budget) return [];
       const observed = observedTransfer(run).totalWireBytes;
       return [
@@ -220,7 +221,7 @@ export function formatTransferBudgetReport(runs: ReadonlyArray<TransferBudgetRun
   ];
 
   for (const run of runs) {
-    const budget = TRANSFER_BUDGETS.get(run.provider);
+    const budget = TRANSFER_BUDGETS[run.provider];
     if (!budget) continue;
     lines.push(
       row(

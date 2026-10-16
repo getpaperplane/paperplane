@@ -6,11 +6,9 @@ import {
   markdownImageSourceFragment,
   type MarkdownImageSource,
 } from "./markdownImages.ts";
-import {
-  fileBasename,
-  splitFilePathPosition,
-  splitMarkdownLinkSearchAndHash,
-} from "./markdownLinks.ts";
+import { fileBasename } from "@rove-code/shared/path";
+import { splitFilePathPosition } from "@rove-code/shared/fileLinks";
+import { splitMarkdownLinkSearchAndHash } from "@rove-code/shared/markdownLinks";
 import {
   mediaFileReference,
   mediaReferenceFileName,

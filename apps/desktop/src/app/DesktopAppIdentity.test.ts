@@ -14,6 +14,7 @@ import * as DesktopAppIdentity from "./DesktopAppIdentity.ts";
 import * as DesktopAssets from "./DesktopAssets.ts";
 import * as DesktopConfig from "./DesktopConfig.ts";
 import * as DesktopEnvironment from "./DesktopEnvironment.ts";
+import * as DesktopUserData from "./DesktopUserData.ts";
 
 const defaultEnvironmentInput = {
   dirname: "/repo/apps/desktop/dist-electron",
@@ -37,7 +38,7 @@ interface ElectronAppCalls {
   readonly setName: string[];
 }
 
-const makeElectronAppLayer = (calls: ElectronAppCalls) =>
+const layerElectronApp = (calls: ElectronAppCalls) =>
   Layer.succeed(ElectronApp.ElectronApp, {
     metadata: Effect.die("unexpected metadata read"),
     name: Effect.succeed("Rove Code"),
@@ -69,7 +70,7 @@ const makeElectronAppLayer = (calls: ElectronAppCalls) =>
     on: () => Effect.void,
   } satisfies ElectronApp.ElectronApp["Service"]);
 
-const makeAssetsLayer = (png: Option.Option<string>) =>
+const layerAssets = (png: Option.Option<string>) =>
   Layer.succeed(DesktopAssets.DesktopAssets, {
     iconPaths: Effect.succeed({
       ico: Option.none(),
@@ -79,7 +80,7 @@ const makeAssetsLayer = (png: Option.Option<string>) =>
     resolveResourcePath: () => Effect.succeedNone,
   } satisfies DesktopAssets.DesktopAssets["Service"]);
 
-const makeEnvironmentLayer = (overrides: TestEnvironmentInput = {}) => {
+const layerEnvironment = (overrides: TestEnvironmentInput = {}) => {
   const { env, ...environmentOverrides } = overrides;
   return DesktopEnvironment.layer({
     ...defaultEnvironmentInput,
@@ -124,41 +125,58 @@ const withIdentity = <A, E, R>(
   return effect.pipe(
     Effect.provide(
       DesktopAppIdentity.layer.pipe(
+        Layer.provide(NodePath.layerPosix),
         Layer.provideMerge(
           FileSystem.layerNoop({
             exists: (path) =>
-              input.legacyPathProbeError
+              input.legacyPathProbeError && /\/rove-code(?:-dev)?(?:\/|$)/.test(path)
                 ? Effect.fail(input.legacyPathProbeError)
                 : Effect.succeed(
-                    input.legacyPathExists === true && path.includes("Rove Code (Alpha)"),
+                    input.legacyPathExists === true && /\/rove-code(?:-dev)?(?:\/|$)/.test(path),
                   ),
             readFileString: () =>
               Effect.succeed(input.packageJson ?? '{"roveCommitHash":"abcdef1234567890"}'),
           }),
         ),
-        Layer.provideMerge(makeAssetsLayer(input.pngIconPath ?? Option.none())),
-        Layer.provideMerge(makeElectronAppLayer(calls)),
-        Layer.provideMerge(makeEnvironmentLayer(input.environment)),
+        Layer.provideMerge(layerAssets(input.pngIconPath ?? Option.none())),
+        Layer.provideMerge(layerElectronApp(calls)),
+        Layer.provideMerge(layerEnvironment(input.environment)),
       ),
     ),
   );
 };
 
 describe("DesktopAppIdentity", () => {
-  it.effect("uses isolated userData even when the inherited app directory exists", () =>
+  it.effect("isolates the V2 profile even when the legacy V1 profile exists", () =>
     withIdentity(
       Effect.gen(function* () {
         const identity = yield* DesktopAppIdentity.DesktopAppIdentity;
         const userDataPath = yield* identity.resolveUserDataPath;
 
-        assert.equal(userDataPath, "/Users/alice/Library/Application Support/rove-code");
+        assert.equal(userDataPath, "/Users/alice/Library/Application Support/rove-v2");
       }),
       { legacyPathExists: true },
     ),
   );
 
-  it.effect("does not inspect the inherited app directory", () => {
-    const legacyPath = "/Users/alice/Library/Application Support/Rove Code (Alpha)";
+  it.effect("isolates development from the legacy profile and V2 production", () =>
+    withIdentity(
+      Effect.gen(function* () {
+        const identity = yield* DesktopAppIdentity.DesktopAppIdentity;
+        assert.equal(
+          yield* identity.resolveUserDataPath,
+          "/Users/alice/Library/Application Support/rove-dev",
+        );
+      }),
+      {
+        legacyPathExists: true,
+        environment: { env: { VITE_DEV_SERVER_URL: "http://localhost:5173" } },
+      },
+    ),
+  );
+
+  it.effect("preserves failures while inspecting the legacy Windows credential state", () => {
+    const legacyPath = "/Users/alice/AppData/Roaming/rove-code-dev/Local State";
     const cause = PlatformError.systemError({
       _tag: "PermissionDenied",
       module: "FileSystem",
@@ -170,10 +188,20 @@ describe("DesktopAppIdentity", () => {
     return withIdentity(
       Effect.gen(function* () {
         const identity = yield* DesktopAppIdentity.DesktopAppIdentity;
-        const userDataPath = yield* identity.resolveUserDataPath;
-        assert.equal(userDataPath, "/Users/alice/Library/Application Support/rove-code");
+        const error = yield* identity.resolveUserDataPath.pipe(Effect.flip);
+
+        assert.instanceOf(error, DesktopUserData.DesktopUserDataInitializationError);
+        assert.equal(error.resourcePath, legacyPath);
+        assert.strictEqual(error.cause, cause);
+        assert.equal(
+          error.message,
+          `Could not initialize Electron user data during inspect at ${legacyPath} (PermissionDenied).`,
+        );
       }),
-      { legacyPathProbeError: cause },
+      {
+        legacyPathProbeError: cause,
+        environment: { platform: "win32", env: { VITE_DEV_SERVER_URL: "http://localhost:5173" } },
+      },
     );
   });
 
@@ -189,8 +217,8 @@ describe("DesktopAppIdentity", () => {
         const identity = yield* DesktopAppIdentity.DesktopAppIdentity;
         yield* identity.configure;
 
-        assert.deepEqual(calls.setName, ["Rove Code (Alpha)"]);
-        assert.equal(calls.setAboutPanelOptions[0]?.applicationName, "Rove Code (Alpha)");
+        assert.deepEqual(calls.setName, ["Rove Code Beta"]);
+        assert.equal(calls.setAboutPanelOptions[0]?.applicationName, "Rove Code (Beta)");
         assert.equal(calls.setAboutPanelOptions[0]?.applicationVersion, "1.2.3");
         assert.equal(calls.setAboutPanelOptions[0]?.version, "0123456789ab");
         // Packaged: the bundle's own icon stands, so a custom one the user
@@ -206,6 +234,39 @@ describe("DesktopAppIdentity", () => {
         },
         pngIconPath: Option.some("/icon.png"),
       },
+    );
+  });
+
+  it.effect.each([
+    { stage: "Beta", environment: {} },
+    {
+      stage: "Nightly",
+      environment: { appVersion: "0.0.43-nightly.20260929.2428" },
+    },
+    {
+      stage: "Dev",
+      environment: { env: { VITE_DEV_SERVER_URL: "http://localhost:5173" } },
+    },
+  ])("uses a valid native User-Agent product name for $stage", ({ stage, environment }) => {
+    const calls: ElectronAppCalls = {
+      setAboutPanelOptions: [],
+      setDockIcon: [],
+      setName: [],
+    };
+
+    return withIdentity(
+      Effect.gen(function* () {
+        const identity = yield* DesktopAppIdentity.DesktopAppIdentity;
+        yield* identity.configure;
+
+        const runtimeName = calls.setName[0];
+        assert.isDefined(runtimeName);
+        assert.equal(runtimeName, `Rove Code ${stage}`);
+        // RFC 9110's token grammar, after Electron removes ASCII spaces.
+        assert.match(runtimeName.replaceAll(" ", ""), /^[!#$%&'*+\-.^_`|~0-9A-Za-z]+$/);
+        assert.equal(calls.setAboutPanelOptions[0]?.applicationName, `Rove Code (${stage})`);
+      }),
+      { calls, environment },
     );
   });
 

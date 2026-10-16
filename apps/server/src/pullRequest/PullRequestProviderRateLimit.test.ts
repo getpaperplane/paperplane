@@ -1,21 +1,23 @@
+import { SourceControlProviderKind } from "@rove-code/contracts";
 import { assert, it } from "@effect/vitest";
 
-import * as AzureDevOpsCli from "../sourceControl/AzureDevOpsCli.ts";
-import * as BitbucketApi from "../sourceControl/BitbucketApi.ts";
-import * as GitHubCli from "../sourceControl/GitHubCli.ts";
-import * as SourceControlRateLimit from "../sourceControl/SourceControlRateLimit.ts";
-import * as GitLabCli from "../sourceControl/GitLabCli.ts";
-import { azureDevOpsProviderFailure } from "./AzureDevOpsPullRequestProvider.ts";
-import { bitbucketProviderFailure } from "./BitbucketPullRequestProvider.ts";
-import { gitHubProviderFailure } from "./GitHubPullRequestProvider.ts";
-import { gitLabProviderFailure } from "./GitLabPullRequestProvider.ts";
+import * as AzureDevOpsCli from "@rove-code/source-control-azure-devops/server/AzureDevOpsCli";
+import * as BitbucketApi from "@rove-code/source-control-bitbucket/server/BitbucketApi";
+import * as GitHubRest from "@rove-code/source-control-github/server/GitHubRest";
+import * as GitHubRequestPolicy from "@rove-code/source-control-github/server/GitHubRequestPolicy";
+import * as SourceControlRateLimit from "@rove-code/source-control-core/server/SourceControlRateLimit";
+import * as GitLabCli from "@rove-code/source-control-gitlab/server/GitLabCli";
+import { azureDevOpsProviderFailure } from "@rove-code/source-control-azure-devops/server/AzureDevOpsPullRequestProvider";
+import { bitbucketProviderFailure } from "@rove-code/source-control-bitbucket/server/BitbucketPullRequestProvider";
+import { gitHubProviderFailure } from "@rove-code/source-control-github/server/GitHubPullRequestProvider";
+import { gitLabProviderFailure } from "@rove-code/source-control-gitlab/server/GitLabPullRequestProvider";
 
 const cause = new Error("redacted provider failure");
 
 it("classifies rate limits from every pull-request provider", () => {
   assert.deepStrictEqual(
     gitHubProviderFailure(
-      new GitHubCli.GitHubCliRateLimitError({ command: "gh", cwd: "/repo", cause }),
+      new GitHubRequestPolicy.GitHubApiRateLimitError({ host: "github.com", operation: "execute" }),
     ),
     { reason: "rate-limited" },
   );
@@ -59,7 +61,7 @@ it("keeps GitHub's exact retry time", () => {
   assert.deepStrictEqual(
     gitHubProviderFailure(
       new SourceControlRateLimit.SourceControlRateLimitPausedError({
-        provider: "github",
+        provider: SourceControlProviderKind.make("github"),
         host: "github.com",
         retryAt: 1_786_802_400_000,
       }),

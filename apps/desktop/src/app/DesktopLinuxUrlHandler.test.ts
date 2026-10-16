@@ -10,7 +10,7 @@ import * as PlatformError from "effect/PlatformError";
 import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
 import * as TestClock from "effect/testing/TestClock";
-import * as ChildProcessSpawner from "effect/unstable/process/ChildProcessSpawner";
+import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
 import * as DesktopEnvironment from "./DesktopEnvironment.ts";
 import * as DesktopAssets from "./DesktopAssets.ts";
@@ -29,13 +29,13 @@ const makeEnvironment = (path: Path.Path, overrides: Record<string, unknown> = {
     isPackaged: true,
     isDevelopment: false,
     displayName: "Rove Code (Alpha)",
-    linuxDesktopEntryName: "com.hafiezulzikry.rove.RoveCode.desktop",
+    linuxDesktopEntryName: "io.github.hafiezul.rove.desktop",
     linuxWmClass: "rove",
     linuxApplicationsDir: "/home/alice/.local/share/applications",
-    appImagePath: Option.some("/home/alice/Applications/Rove Code.AppImage"),
+    appImagePath: Option.some("/home/alice/Applications/Rove-Code.AppImage"),
     path,
     ...overrides,
-  } as DesktopEnvironment.DesktopEnvironment["Service"]);
+  } as unknown as DesktopEnvironment.DesktopEnvironment["Service"]);
 
 const mockProcess = (exitCode: number, stalled = false) =>
   ChildProcessSpawner.makeHandle({
@@ -52,7 +52,7 @@ const mockProcess = (exitCode: number, stalled = false) =>
     getOutputFd: () => Stream.empty,
   });
 
-const makeHandlerLayer = (
+const layerHandler = (
   recorded: RecordedRegistration,
   input: {
     readonly environment?: Record<string, unknown>;
@@ -143,12 +143,12 @@ const makeHandlerLayer = (
 
 const runRegister = (
   recorded: RecordedRegistration,
-  input: Parameters<typeof makeHandlerLayer>[1] = {},
+  input: Parameters<typeof layerHandler>[1] = {},
 ) =>
   Effect.gen(function* () {
     const handler = yield* DesktopLinuxUrlHandler.DesktopLinuxUrlHandler;
     yield* handler.register;
-  }).pipe(Effect.provide(makeHandlerLayer(recorded, input)));
+  }).pipe(Effect.provide(layerHandler(recorded, input)));
 
 const emptyRecording = (): RecordedRegistration => ({
   directories: [],
@@ -185,8 +185,7 @@ describe("DesktopLinuxUrlHandler", () => {
     const writeError = new DesktopLinuxUrlHandler.DesktopLinuxUrlHandlerRegistrationError({
       step: "write-desktop-entry",
       scheme: "rove",
-      desktopEntryPath:
-        "/home/alice/.local/share/applications/com.hafiezulzikry.rove.RoveCode.desktop",
+      desktopEntryPath: "/home/alice/.local/share/applications/io.github.hafiezul.rove.desktop",
       cause: new Error("boom"),
     });
     assert.equal(
@@ -195,7 +194,7 @@ describe("DesktopLinuxUrlHandler", () => {
     );
     assert.equal(
       writeError.desktopEntryPath,
-      "/home/alice/.local/share/applications/com.hafiezulzikry.rove.RoveCode.desktop",
+      "/home/alice/.local/share/applications/io.github.hafiezul.rove.desktop",
     );
 
     const exitError = new DesktopLinuxUrlHandler.DesktopLinuxUrlHandlerRegistrationError({
@@ -221,11 +220,11 @@ describe("DesktopLinuxUrlHandler", () => {
         assert.equal(recorded.files.length, 1);
         assert.equal(
           recorded.files[0]?.path,
-          "/home/alice/.local/share/applications/com.hafiezulzikry.rove.RoveCode.desktop",
+          "/home/alice/.local/share/applications/io.github.hafiezul.rove.desktop",
         );
         assert.include(
           recorded.files[0]?.content,
-          'Exec="/home/alice/Applications/Rove Code.AppImage" %U',
+          'Exec="/home/alice/Applications/Rove-Code.AppImage" %U',
         );
         assert.include(recorded.files[0]?.content, "MimeType=x-scheme-handler/rove;");
         assert.deepEqual(recorded.commands, [
@@ -235,7 +234,7 @@ describe("DesktopLinuxUrlHandler", () => {
           },
           {
             command: "xdg-mime",
-            args: ["default", "com.hafiezulzikry.rove.RoveCode.desktop", "x-scheme-handler/rove"],
+            args: ["default", "io.github.hafiezul.rove.desktop", "x-scheme-handler/rove"],
           },
         ]);
       });
@@ -262,9 +261,9 @@ describe("DesktopLinuxUrlHandler", () => {
       yield* runRegister(recorded, {
         existingEntry: DesktopLinuxUrlHandler.renderUrlHandlerDesktopEntry({
           displayName: "Rove Code (Alpha)",
-          execTarget: "/home/alice/Applications/Rove Code.AppImage",
+          execTarget: "/home/alice/Applications/Rove-Code.AppImage",
           scheme: "rove",
-          iconPath: "/home/alice/.local/share/icons/com.hafiezulzikry.rove.RoveCode.desktop.png",
+          iconPath: "/home/alice/.local/share/icons/io.github.hafiezul.rove.desktop.png",
         }),
       });
 
@@ -277,7 +276,7 @@ describe("DesktopLinuxUrlHandler", () => {
         },
         {
           command: "xdg-mime",
-          args: ["default", "com.hafiezulzikry.rove.RoveCode.desktop", "x-scheme-handler/rove"],
+          args: ["default", "io.github.hafiezul.rove.desktop", "x-scheme-handler/rove"],
         },
       ]);
     });
@@ -285,13 +284,13 @@ describe("DesktopLinuxUrlHandler", () => {
 
   it.effect("installs a persistent icon even when the desktop entry is already current", () => {
     const recorded = emptyRecording();
-    const iconPath = "/home/alice/.local/share/icons/com.hafiezulzikry.rove.RoveCode.desktop.png";
+    const iconPath = "/home/alice/.local/share/icons/io.github.hafiezul.rove.desktop.png";
     return Effect.gen(function* () {
       yield* runRegister(recorded, {
         iconSource: "/tmp/.mount_Rove/resources/icon.png",
         existingEntry: DesktopLinuxUrlHandler.renderUrlHandlerDesktopEntry({
           displayName: "Rove Code (Alpha)",
-          execTarget: "/home/alice/Applications/Rove Code.AppImage",
+          execTarget: "/home/alice/Applications/Rove-Code.AppImage",
           scheme: "rove",
           iconPath,
         }),
@@ -333,14 +332,14 @@ describe("DesktopLinuxUrlHandler", () => {
       yield* runRegister(unpackaged, {
         environment: {
           isPackaged: false,
-          linuxDesktopEntryName: "com.hafiezulzikry.rove.RoveCode.Development.desktop",
+          linuxDesktopEntryName: "io.github.hafiezul.rove.dev.desktop",
         },
       });
 
       assert.deepEqual(nonLinux.files, []);
       assert.equal(
         unpackaged.files[0]?.path,
-        "/home/alice/.local/share/applications/com.hafiezulzikry.rove.RoveCode.Development.desktop",
+        "/home/alice/.local/share/applications/io.github.hafiezul.rove.dev.desktop",
       );
       assert.deepEqual(unpackaged.commands, []);
     });
@@ -360,8 +359,7 @@ describe("DesktopLinuxUrlHandler", () => {
           module: "FileSystem",
           method: "writeFileString",
           description: "read-only filesystem",
-          pathOrDescriptor:
-            "/home/alice/.local/share/applications/com.hafiezulzikry.rove.RoveCode.desktop",
+          pathOrDescriptor: "/home/alice/.local/share/applications/io.github.hafiezul.rove.desktop",
         }),
       });
 

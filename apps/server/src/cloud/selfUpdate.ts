@@ -6,7 +6,7 @@ import {
   type ServerSelfUpdateResult,
   type ThreadId,
 } from "@rove-code/contracts";
-import { HostProcessArchitecture, HostProcessPlatform } from "@rove-code/shared/hostProcess";
+import * as HostProcess from "@rove-code/shared/HostProcess";
 import * as Cause from "effect/Cause";
 import * as Config from "effect/Config";
 import * as Context from "effect/Context";
@@ -18,7 +18,7 @@ import * as Ref from "effect/Ref";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
-import { HttpClient } from "effect/unstable/http";
+import { HttpClient } from "effect/http";
 
 import { CLI_RELEASE_BASE_URL_ENV } from "@rove-code/shared/cliRelease";
 
@@ -36,6 +36,14 @@ import * as ServiceLauncherClient from "./serviceLauncherClient.ts";
 import { isExactServiceVersion, SERVICE_LAUNCHER_PROTOCOL } from "./serviceProtocol.ts";
 
 const PREFLIGHT_TIMEOUT = Duration.seconds(30);
+
+export function resolveServerSelfUpdateCapability(input: {
+  readonly desktopManaged: boolean;
+  readonly launcherManaged: boolean;
+}): ServerSelfUpdateCapability | null {
+  if (input.desktopManaged) return "desktop-managed" as const;
+  return input.launcherManaged ? ("boot-service" as const) : null;
+}
 
 export class ServerSelfUpdate extends Context.Service<
   ServerSelfUpdate,
@@ -168,8 +176,8 @@ export const make = Effect.fn("cloud.server_self_update.make")(function* () {
   const runner = yield* ProcessRunner.ProcessRunner;
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const platform = yield* HostProcessPlatform;
-  const arch = yield* HostProcessArchitecture;
+  const platform = yield* HostProcess.Platform;
+  const arch = yield* HostProcess.Architecture;
   // Archive-distributed targets download from GitHub Releases. The client is
   // optional so callers without one (tests, npm-only hosts) still construct.
   const httpClient = yield* HttpClient.HttpClient;
@@ -207,7 +215,7 @@ export const make = Effect.fn("cloud.server_self_update.make")(function* () {
 
     const targetVersion = input.targetVersion.trim();
     if (!isExactServiceVersion(targetVersion)) {
-      return yield* failWith(`'${targetVersion}' is not an exact Rove version.`);
+      return yield* failWith(`'${targetVersion}' is not an exact rove version.`);
     }
     if (yield* Ref.getAndSet(inFlight, true)) {
       return yield* failWith("A server update is already in progress.");
@@ -298,7 +306,7 @@ export const make = Effect.fn("cloud.server_self_update.make")(function* () {
         Effect.mapError((error) =>
           error._tag === "PinnedRuntimePreflightBlockedError"
             ? failWith(error.reason, error)
-            : failWith(`Could not prepare Rove ${targetVersion}.`, error),
+            : failWith(`Could not prepare rove@${targetVersion}.`, error),
         ),
       );
 

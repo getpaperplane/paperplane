@@ -50,17 +50,19 @@ it("gives each PR a stable origin without sharing Workers", () => {
   NodeAssert.notEqual(first.origin, previewDeployment(2, "rove", {}, ".").origin);
 });
 
-for (const prNumber of [0, -1, "../rove-web", "1\nname=rove-web"]) {
-  it(`rejects unsafe preview names ${prNumber}`, () => {
+it.each([0, -1, "../rove-web", "1\nname=rove-web"])(
+  "rejects unsafe preview names %s",
+  (prNumber) => {
     NodeAssert.throws(() => previewWorkerName(prNumber));
-  });
-}
+  },
+);
 
-for (const subdomain of ["", "rove.example.com", "rove\nVITE_HTTP_URL=bad"]) {
-  it(`rejects unsafe workers.dev subdomains ${subdomain}`, () => {
+it.each(["", "rove.example.com", "rove\nVITE_HTTP_URL=bad"])(
+  "rejects unsafe workers.dev subdomains %s",
+  (subdomain) => {
     NodeAssert.throws(() => previewDeployment(1, subdomain, {}, "."));
-  });
-}
+  },
+);
 
 it("treats deletion of an absent preview as complete", async () => {
   vi.stubEnv("CLOUDFLARE_ACCOUNT_ID", "account-fixture");

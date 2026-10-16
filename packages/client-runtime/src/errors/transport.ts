@@ -1,12 +1,18 @@
-import * as RuntimePredicate from "effect/Predicate";
+import { NETWORK_BLOCKING_HINT } from "./network.ts";
+
+const escapeRegExp = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
 const TRANSPORT_ERROR_PATTERNS = [
   /\bSocketCloseError\b/i,
   /\bSocketOpenError\b/i,
   /\bSocket is not connected\b/i,
   /Unable to connect to the Rove server WebSocket\./i,
-  /\bis not connected\.$/i,
-  /\bdisconnected\.$/i,
-  /\bcould not establish a WebSocket connection\.$/i,
+  // The RPC session appends the network hint for relay connections. Any other
+  // trailing text means a different error that the user should still see.
+  new RegExp(
+    `\\b(?:is not connected|disconnected|stopped responding|could not establish a WebSocket connection)\\.(?: ${escapeRegExp(NETWORK_BLOCKING_HINT)})?$`,
+    "i",
+  ),
   /\bClientProtocolError\b/i,
   /\bRpcClientError\b/i,
   /\bping timeout\b/i,
@@ -18,7 +24,7 @@ const TRANSPORT_ERROR_PATTERNS = [
  * business-logic error.
  */
 export function isTransportConnectionErrorMessage(message: string | null | undefined): boolean {
-  if (!RuntimePredicate.isString(message)) {
+  if (typeof message !== "string") {
     return false;
   }
 

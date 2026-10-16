@@ -1,8 +1,8 @@
+import * as KeyedLock from "@rove-code/shared/KeyedLock";
 import * as Effect from "effect/Effect";
 import * as Ref from "effect/Ref";
-import * as Semaphore from "effect/Semaphore";
 
-export interface ProviderMaintenanceCommandCoordinatorContract<E> {
+export interface ProviderMaintenanceCommandCoordinatorShape<E> {
   readonly withCommandLock: <A, R>(input: {
     readonly targetKey: string;
     readonly lockKey: string;
@@ -15,7 +15,7 @@ export const makeProviderMaintenanceCommandCoordinator = Effect.fn(
   "makeProviderMaintenanceCommandCoordinator",
 )(function* <E>(input: { readonly makeAlreadyRunningError: (targetKey: string) => E }) {
   const runningTargetsRef = yield* Ref.make<ReadonlySet<string>>(new Set());
-  const locksRef = yield* Ref.make<ReadonlyMap<string, Semaphore.Semaphore>>(new Map());
+  const locks = yield* KeyedLock.make<string>();
 
   const acquireTarget = Effect.fn("acquireTarget")(function* (targetKey: string) {
     return yield* Ref.modify(runningTargetsRef, (runningTargets) => {
@@ -35,25 +35,7 @@ export const makeProviderMaintenanceCommandCoordinator = Effect.fn(
       return next;
     });
 
-  const getLock = Effect.fn("getProviderMaintenanceCommandLock")(function* (lockKey: string) {
-    const existing = (yield* Ref.get(locksRef)).get(lockKey);
-    if (existing) {
-      return existing;
-    }
-
-    const lock = yield* Semaphore.make(1);
-    return yield* Ref.modify(locksRef, (locks) => {
-      const current = locks.get(lockKey);
-      if (current) {
-        return [current, locks] as const;
-      }
-      const next = new Map(locks);
-      next.set(lockKey, lock);
-      return [lock, next] as const;
-    });
-  });
-
-  const withCommandLock: ProviderMaintenanceCommandCoordinatorContract<E>["withCommandLock"] = ({
+  const withCommandLock: ProviderMaintenanceCommandCoordinatorShape<E>["withCommandLock"] = ({
     targetKey,
     lockKey,
     onQueued,
@@ -65,16 +47,13 @@ export const makeProviderMaintenanceCommandCoordinator = Effect.fn(
         return yield* Effect.fail(input.makeAlreadyRunningError(targetKey));
       }
 
-      return yield* Effect.gen(function* () {
-        const lock = yield* getLock(lockKey);
-        if (onQueued) {
-          yield* onQueued;
-        }
-        return yield* lock.withPermits(1)(run);
-      }).pipe(Effect.ensuring(releaseTarget(targetKey)));
+      return yield* (onQueued ?? Effect.void).pipe(
+        Effect.andThen(locks.withLock(lockKey, run)),
+        Effect.ensuring(releaseTarget(targetKey)),
+      );
     });
 
   return {
     withCommandLock,
-  } satisfies ProviderMaintenanceCommandCoordinatorContract<E>;
+  } satisfies ProviderMaintenanceCommandCoordinatorShape<E>;
 });

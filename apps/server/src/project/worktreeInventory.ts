@@ -1,6 +1,8 @@
 import {
   WorktreeInventoryError,
-  type OrchestrationThreadShell,
+  ProviderSessionId,
+  ThreadId,
+  type OrchestrationV2ThreadShell,
   type TerminalSummary,
   type WorktreeInventoryEntry,
   type WorktreeInventoryInput,
@@ -12,9 +14,16 @@ import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
 
 import { ServerConfig } from "../config.ts";
-import { ProjectionSnapshotQuery } from "../orchestration/Services/ProjectionSnapshotQuery.ts";
-import { threadHasQueuedTurnStart } from "../orchestration/ThreadSettlementPolicy.ts";
-import { ProviderService } from "../provider/Services/ProviderService.ts";
+import * as Context from "effect/Context";
+import * as Layer from "effect/Layer";
+import * as Schema from "effect/Schema";
+import * as SqlClient from "effect/sql/SqlClient";
+import * as SqlSchema from "effect/sql/SqlSchema";
+import * as NodeSqliteClient from "@rove-code/shared/nodeSqliteClient";
+import { ProjectionStoreV2 } from "../orchestration-v2/ProjectionStore.ts";
+import { ProjectStoreV2 } from "../orchestration-v2/ProjectStore.ts";
+import { threadHasQueuedTurnStart } from "../orchestration-v2/ThreadSettlementService.ts";
+import { ProviderSessionManagerV2 } from "../orchestration-v2/ProviderSessionManager.ts";
 import { TerminalManager } from "../terminal/Manager.ts";
 import { GitVcsDriver } from "../vcs/GitVcsDriver.ts";
 import { withWorkspaceLease } from "../workspace/workspaceLease.ts";
@@ -45,29 +54,92 @@ type InventoryProject = Pick<
   "projectId" | "projectTitle" | "workspaceRoot"
 >;
 
-export function worktreeLastActivity(threads: readonly OrchestrationThreadShell[]) {
+export function worktreeLastActivity(threads: readonly OrchestrationV2ThreadShell[]) {
   const timestamps = threads
     .flatMap((thread) => [
       thread.createdAt,
       thread.latestUserMessageAt,
-      thread.latestTurn?.requestedAt,
-      thread.latestTurn?.startedAt,
-      thread.latestTurn?.completedAt,
+      thread.latestRunRequestedAt,
+      thread.latestRunStartedAt,
+      thread.latestRunCompletedAt,
     ])
-    .filter((value): value is string => value != null);
-  return timestamps.reduce<string | null>(
-    (latest, value) => (latest === null || Date.parse(value) > Date.parse(latest) ? value : latest),
+    .filter((value): value is DateTime.Utc => value != null);
+  const latest = timestamps.reduce<DateTime.Utc | null>(
+    (latest, value) =>
+      latest === null || DateTime.toEpochMillis(value) > DateTime.toEpochMillis(latest)
+        ? value
+        : latest,
     null,
   );
+  return latest === null ? null : DateTime.formatIso(latest);
 }
 
-export const makeWorktreeInventory = Effect.gen(function* () {
+export class WorktreeInventory extends Context.Service<
+  WorktreeInventory,
+  {
+    readonly list: (input: WorktreeInventoryInput) => Effect.Effect<
+      {
+        readonly worktrees: readonly WorktreeInventoryEntry[];
+        readonly issues: readonly {
+          projectId: WorktreeInventoryEntry["projectId"];
+          projectTitle: string;
+          detail: string;
+        }[];
+      },
+      WorktreeInventoryError
+    >;
+    readonly inspect: (
+      input: WorktreeInventoryTarget,
+    ) => Effect.Effect<
+      WorktreeInventoryEntry & { removalBlockers: readonly string[] },
+      WorktreeInventoryError
+    >;
+    readonly measure: (
+      input: WorktreeInventoryTarget,
+    ) => Effect.Effect<{ bytes: number }, WorktreeInventoryError>;
+    readonly remove: (
+      input: WorktreeInventoryRemoveInput,
+    ) => Effect.Effect<void, WorktreeInventoryError>;
+  }
+>()("@rove-code/server/project/worktreeInventory") {}
+
+const make = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const config = yield* ServerConfig;
   const git = yield* GitVcsDriver;
-  const snapshots = yield* ProjectionSnapshotQuery;
-  const providers = yield* ProviderService;
+  const snapshots = yield* ProjectionStoreV2;
+  const projects = yield* ProjectStoreV2;
+  const providers = yield* ProviderSessionManagerV2;
+  const sql = yield* SqlClient.SqlClient;
+  // Sessions are global in V2: a runtime can host threads in different projects.
+  // Bindings and cwd also protect unlinked/deleted threads' live checkouts.
+  const readSessions = SqlSchema.findAll({
+    Request: Schema.Void,
+    Result: Schema.Struct({
+      id: ProviderSessionId,
+      cwd: Schema.String,
+      status: Schema.String,
+      threadId: Schema.NullOr(ThreadId),
+    }),
+    execute: () => sql`
+      SELECT session.provider_session_id AS id,
+        json_extract(session.payload_json, '$.cwd') AS cwd,
+        session.status AS status, binding.thread_id AS "threadId"
+      FROM orchestration_v2_projection_provider_sessions AS session
+      LEFT JOIN orchestration_v2_projection_provider_session_bindings AS binding
+        ON binding.provider_session_id = session.provider_session_id
+    `,
+  });
+  const readBlockingRuns = SqlSchema.findAll({
+    Request: Schema.Array(ThreadId),
+    Result: Schema.Struct({ threadId: ThreadId }),
+    execute: (threadIds) => sql`
+      SELECT DISTINCT thread_id AS "threadId" FROM orchestration_v2_projection_runs
+      WHERE ${sql.in("thread_id", threadIds)}
+        AND status IN ('preparing', 'queued', 'starting', 'running', 'waiting')
+    `,
+  });
   const terminals = yield* TerminalManager;
   const error = (detail: string) => new WorktreeInventoryError({ detail });
   const inside = (root: string, target: string) => {
@@ -84,8 +156,7 @@ export const makeWorktreeInventory = Effect.gen(function* () {
 
   const context = Effect.fn("WorktreeInventory.context")(
     function* () {
-      const active = yield* snapshots.getShellSnapshot();
-      const archived = yield* snapshots.getArchivedShellSnapshot();
+      const snapshot = yield* snapshots.getShellSnapshot().pipe(NodeSqliteClient.readOnly);
       const terminalMap = new Map<string, TerminalSummary>();
       yield* Effect.acquireUseRelease(
         terminals.subscribeMetadata((event) =>
@@ -108,13 +179,12 @@ export const makeWorktreeInventory = Effect.gen(function* () {
         (unsubscribe) => Effect.sync(unsubscribe),
       );
       return {
-        projects: active.projects,
-        threadsByPath: Map.groupBy([...active.threads, ...archived.threads], (thread) =>
+        projects: yield* projects.listShells(),
+        threadsByPath: Map.groupBy([...snapshot.threads, ...snapshot.archivedThreads], (thread) =>
           thread.worktreePath === null ? null : normalize(thread.worktreePath),
         ),
-        sessions: yield* providers.listSessions(),
         terminals: [...terminalMap.values()],
-        now: yield* DateTime.now.pipe(Effect.map(DateTime.formatIso)),
+        now: yield* DateTime.now.pipe(Effect.map(DateTime.toEpochMillis)),
       };
     },
     Effect.mapError(() => error("Could not read worktree activity. Refresh and try again.")),
@@ -141,7 +211,7 @@ export const makeWorktreeInventory = Effect.gen(function* () {
   const summarize = (
     worktree: GitWorktree,
     project: InventoryProject,
-    threads: readonly OrchestrationThreadShell[],
+    threads: readonly OrchestrationV2ThreadShell[],
     root: string,
   ) =>
     ({
@@ -184,21 +254,40 @@ export const makeWorktreeInventory = Effect.gen(function* () {
           "This checkout has a detached HEAD. Save its commits to a branch before removing it.",
         );
       if (linkedThreads.length > 1) blockers.push("Multiple threads share this worktree.");
+      // Held queued runs do not own sidebar activity, but still reserve the
+      // checkout. Read their statuses without loading completed run history.
+      const blockingRuns =
+        linkedThreads.length === 0
+          ? []
+          : yield* readBlockingRuns(linkedThreads.map((thread) => thread.id));
+      const runtimeRecords = yield* Effect.forEach(linkedThreads, (thread) =>
+        snapshots.getThreadRecords(thread.id, ["providerThreads"]),
+      );
+      const sessions = yield* readSessions(undefined);
+      const liveSessions = yield* Effect.filter(sessions, (session) =>
+        session.status !== "stopped" && session.status !== "error"
+          ? Effect.succeed(true)
+          : providers.isLive(session.id),
+      );
       if (
         linkedThreads.some(
           (thread) =>
-            (thread.session !== null && thread.session.status !== "stopped") ||
-            thread.latestTurn?.state === "running" ||
-            thread.backgroundLiveness != null ||
-            thread.hasPendingApprovals ||
-            thread.hasPendingUserInput ||
+            thread.activityRunStatus != null ||
+            (thread.pendingBackgroundTasks?.length ?? 0) > 0 ||
+            thread.pendingRuntimeRequest !== null ||
             threadHasQueuedTurnStart(thread, state.now),
         ) ||
-        state.sessions.some(
+        blockingRuns.length > 0 ||
+        runtimeRecords.some((records) =>
+          records.providerThreads.some(
+            (thread) =>
+              thread.status === "active" || (thread.pendingBackgroundTasks?.length ?? 0) > 0,
+          ),
+        ) ||
+        liveSessions.some(
           (session) =>
-            session.status !== "closed" &&
-            (linkedThreads.some((thread) => thread.id === session.threadId) ||
-              (session.cwd !== undefined && atOrInside(worktreePath, normalize(session.cwd)))),
+            linkedThreads.some((thread) => thread.id === session.threadId) ||
+            atOrInside(worktreePath, normalize(session.cwd)),
         )
       )
         blockers.push("Stop the agent session before removing this worktree.");
@@ -439,5 +528,7 @@ export const makeWorktreeInventory = Effect.gen(function* () {
     Effect.mapError((cause) => error(cause.message)),
   );
 
-  return { list, inspect: inspectTarget, measure, remove };
+  return WorktreeInventory.of({ list, inspect: inspectTarget, measure, remove });
 });
+
+export const layer = Layer.effect(WorktreeInventory, make);

@@ -4,7 +4,6 @@ import {
 } from "@rove-code/contracts";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
-import { COMPOSER_CONTEXT_READ_HTML_ATTRIBUTES } from "./roveMigration.ts";
 
 export { COMPOSER_CONTEXT_CLIPBOARD_MIME };
 
@@ -39,9 +38,7 @@ export function decodeComposerContextClipboardHtml(
   // `encodeURIComponent` expands one non-ASCII code unit to up to nine characters, so a
   // fragment just under the limit must still survive the round trip through the attribute.
   if (!html || html.length > MAX_FRAGMENT_CHARS * 9 + HTML_WRAPPER_SLACK_CHARS) return null;
-  const encoded = COMPOSER_CONTEXT_READ_HTML_ATTRIBUTES.map(
-    (attribute) => new RegExp(`${attribute}=["']([^"']+)["']`).exec(html)?.[1],
-  ).find((value) => value !== undefined);
+  const encoded = /data-(?:rove|t3)-context-fragment=["']([^"']+)["']/.exec(html)?.[1];
   if (!encoded) return null;
   try {
     return decodeComposerContextFragment(decodeURIComponent(encoded));

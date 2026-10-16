@@ -1,11 +1,12 @@
 import * as Crypto from "effect/Crypto";
 import * as Effect from "effect/Effect";
-import * as Encoding from "effect/Encoding";
+import * as Hex from "effect/encoding/Hex";
 import * as FileSystem from "effect/FileSystem";
 import * as Option from "effect/Option";
 import * as PlatformError from "effect/PlatformError";
 import * as Schema from "effect/Schema";
 
+import { writeFileStringAtomically } from "@rove-code/shared/atomicWrite";
 import * as ServerConfig from "../config.ts";
 
 class TelemetryIdentityReadError extends Schema.TaggedError<TelemetryIdentityReadError>()(
@@ -111,7 +112,7 @@ const readIdentityFile = (fileSystem: FileSystem.FileSystem, filePath: string) =
 const hash = (value: string) =>
   Crypto.Crypto.pipe(
     Effect.flatMap((crypto) => crypto.digest("SHA-256", new TextEncoder().encode(value))),
-    Effect.map(Encoding.encodeHex),
+    Effect.map(Hex.encode),
     Effect.mapError(
       (cause) =>
         new TelemetryIdentityHashError({
@@ -132,7 +133,7 @@ const upsertAnonymousId = Effect.gen(function* () {
   }
 
   const anonymousId = yield* Crypto.Crypto.pipe(
-    Effect.flatMap((crypto) => crypto.randomUUIDv4),
+    Effect.flatMap((crypto) => crypto.randomUUIDv4()),
     Effect.mapError(
       (cause) =>
         new TelemetryAnonymousIdGenerationError({
@@ -142,7 +143,7 @@ const upsertAnonymousId = Effect.gen(function* () {
         }),
     ),
   );
-  yield* fileSystem.writeFileString(anonymousIdPath, anonymousId).pipe(
+  yield* writeFileStringAtomically({ filePath: anonymousIdPath, contents: anonymousId }).pipe(
     Effect.mapError(
       (cause) =>
         new TelemetryAnonymousIdPersistenceError({

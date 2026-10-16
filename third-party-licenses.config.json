@@ -62,7 +62,6 @@
       "license": "MIT",
       "name": "agent-device",
       "sourceUrl": "https://github.com/callstack/agent-device",
-      "version": "0.21.7",
       "generatedNotices": [
         {
           "licenseId": "MIT",
@@ -76,7 +75,6 @@
       "license": "MIT AND Apache-2.0 AND BSD-3-Clause",
       "name": "expo-device-hub",
       "sourceUrl": "https://github.com/expo/expo-device-hub",
-      "version": "0.10.1",
       "generatedNotices": [
         {
           "licenseId": "MIT",
@@ -112,13 +110,13 @@
       "bundles": ["ios", "mobile"],
       "license": "MIT",
       "name": "GhosttyKit",
-      "sourceUrl": "https://github.com/Yash-Singh1/ghostty/tree/t3code/custom-io-ordered-feed",
+      "sourceUrl": "https://github.com/Yash-Singh1/ghostty/tree/rove/custom-io-ordered-feed",
       "generatedNotices": [
         {
           "licenseId": "MIT",
           "copyrights": ["Copyright (c) 2024 Mitchell Hashimoto, Ghostty contributors"],
           "preamble": [
-            "GhosttyKit\n\nThe iOS terminal renderer vendors GhosttyKit.xcframework, a libghostty build produced from VVTerm's custom-I/O and live-padding Ghostty branch.\n\nUpstream project: https://github.com/ghostty-org/ghostty\nBased on: https://github.com/wiedymi/ghostty/tree/vvterm/custom-io-padding\nVendored source branch: https://github.com/Yash-Singh1/ghostty/tree/t3code/custom-io-ordered-feed\nVendored revision: cf8edc23f3a6a87a96e41a90013e89e987d34980\nReference integration: https://github.com/vivy-company/vvterm"
+            "GhosttyKit\n\nThe iOS terminal renderer vendors GhosttyKit.xcframework, a libghostty build produced from VVTerm's custom-I/O and live-padding Ghostty branch.\n\nUpstream project: https://github.com/ghostty-org/ghostty\nBased on: https://github.com/wiedymi/ghostty/tree/vvterm/custom-io-padding\nVendored source branch: https://github.com/Yash-Singh1/ghostty/tree/rove/custom-io-ordered-feed\nVendored revision: cf8edc23f3a6a87a96e41a90013e89e987d34980\nReference integration: https://github.com/vivy-company/vvterm"
           ]
         }
       ]
@@ -131,7 +129,7 @@
       "generatedNotices": [
         {
           "licenseId": "Apache-2.0",
-          "copyrights": ["Copyright 2009, 2010, 2013 André Berg"]
+          "copyrights": ["Copyright 2009, 2010, 2013 Andr\u00e9 Berg"]
         }
       ]
     },
@@ -139,7 +137,7 @@
       "bundles": ["mobile"],
       "license": "MIT",
       "name": "react-native-uitextview",
-      "noticeFile": "apps/mobile/modules/rove-markdown-text/LICENSE",
+      "noticeFile": "apps/mobile/modules/rove-source-text/LICENSE",
       "sourceUrl": "https://github.com/bluesky-social/react-native-uitextview",
       "version": "2.2.0"
     },
@@ -153,45 +151,33 @@
   ],
   "packageOverrides": [
     {
-      "name": "modal",
-      "version": "0.11.0",
-      "sourceUrl": "https://github.com/modal-labs/modal-client/blob/main/LICENSE",
-      "generatedNotice": { "licenseId": "Apache-2.0" }
+      "name": "@bufbuild/protobuf",
+      "version": "1.10.0",
+      "generatedNotices": [
+        {
+          "licenseId": "Apache-2.0",
+          "copyrights": ["Copyright 2021-2024 Buf Technologies, Inc."]
+        },
+        {
+          "licenseId": "BSD-3-Clause",
+          "copyrights": ["Copyright 2008 Google Inc. All rights reserved."]
+        }
+      ]
     },
     {
-      "repositoryUrl": "https://github.com/earendil-works/pi",
-      "sourceUrl": "https://github.com/earendil-works/pi/blob/v1.0.2/LICENSE",
+      "name": "@connectrpc/connect",
+      "version": "1.7.0",
       "generatedNotice": {
-        "licenseId": "MIT",
-        "copyrights": ["Copyright (c) 2025 Mario Zechner"]
+        "licenseId": "Apache-2.0",
+        "copyrights": ["Copyright 2021-2024 The Connect Authors"]
       }
     },
     {
-      "repositoryUrl": "https://github.com/badlogic/clipboard",
+      "name": "@connectrpc/connect-web",
+      "version": "1.7.0",
       "generatedNotice": {
-        "licenseId": "MIT",
-        "copyrights": ["Copyright (c) CrossCopy/clipboard contributors and Mario Zechner"],
-        "preamble": [
-          "Fork of https://github.com/CrossCopy/clipboard. The published package declares MIT but omits a license file; attribution follows https://github.com/badlogic/clipboard/blob/main/README.md."
-        ]
-      }
-    },
-    {
-      "name": "standardwebhooks",
-      "version": "1.0.0",
-      "sourceUrl": "https://github.com/standard-webhooks/standard-webhooks/blob/main/libraries/LICENSE",
-      "generatedNotice": {
-        "licenseId": "MIT",
-        "copyrights": ["Copyright (c) 2023 Svix (https://www.svix.com)"]
-      }
-    },
-    {
-      "name": "data-uri-to-buffer",
-      "version": "4.0.1",
-      "sourceUrl": "https://github.com/TooTallNate/node-data-uri-to-buffer/blob/4.0.1/README.md#license",
-      "generatedNotice": {
-        "licenseId": "MIT",
-        "copyrights": ["Copyright (c) 2014 Nathan Rajlich <nathan@tootallnate.net>"]
+        "licenseId": "Apache-2.0",
+        "copyrights": ["Copyright 2021-2024 The Connect Authors"]
       }
     },
     {
@@ -281,6 +267,27 @@
         "licenseId": "MIT",
         "copyrights": ["Copyright (c) 2025 Stephen Crowe"]
       }
+    },
+    {
+      "license": "MIT",
+      "repositoryUrl": "https://github.com/iamEvanYT/electron-webauthn",
+      "generatedNotice": {
+        "licenseId": "MIT",
+        "copyrights": ["Copyright (c) 2026 iamEvan"]
+      }
+    },
+    {
+      "license": "MIT",
+      "name": "@electron-webauthn/types",
+      "sourceUrl": "https://github.com/iamEvanYT/electron-webauthn",
+      "generatedNotice": {
+        "licenseId": "MIT",
+        "copyrights": ["Copyright (c) 2026 iamEvan"]
+      }
+    },
+    {
+      "license": "MIT",
+      "name": "objc-js"
     },
     {
       "license": "MIT",
@@ -514,6 +521,165 @@
       "generatedNotice": {
         "licenseId": "MIT",
         "copyrights": ["Copyright (c) 2025 opencode"]
+      }
+    },
+    {
+      "repositoryUrl": "https://github.com/anomalyco/opencode",
+      "generatedNotice": {
+        "licenseId": "MIT",
+        "copyrights": ["Copyright (c) 2025 opencode"]
+      }
+    },
+    {
+      "license": "MIT",
+      "name": "noxcturnal",
+      "sourceUrl": "https://github.com/expo/noxcturnal",
+      "generatedNotice": {
+        "licenseId": "MIT",
+        "copyrights": ["Copyright (c) 2015-present 650 Industries, Inc. (aka Expo)"]
+      }
+    },
+    {
+      "license": "MIT",
+      "name": "@noxcturnal/noxcturnal-linux-x64-gnu",
+      "sourceUrl": "https://github.com/expo/noxcturnal",
+      "generatedNotice": {
+        "licenseId": "MIT",
+        "copyrights": ["Copyright (c) 2015-present 650 Industries, Inc. (aka Expo)"]
+      }
+    },
+    {
+      "license": "MIT",
+      "name": "@noxcturnal/noxcturnal-darwin-x64",
+      "sourceUrl": "https://github.com/expo/noxcturnal",
+      "generatedNotice": {
+        "licenseId": "MIT",
+        "copyrights": ["Copyright (c) 2015-present 650 Industries, Inc. (aka Expo)"]
+      }
+    },
+    {
+      "license": "MIT",
+      "name": "@noxcturnal/noxcturnal-linux-arm64-gnu",
+      "sourceUrl": "https://github.com/expo/noxcturnal",
+      "generatedNotice": {
+        "licenseId": "MIT",
+        "copyrights": ["Copyright (c) 2015-present 650 Industries, Inc. (aka Expo)"]
+      }
+    },
+    {
+      "license": "MIT",
+      "name": "@noxcturnal/noxcturnal-darwin-arm64",
+      "sourceUrl": "https://github.com/expo/noxcturnal",
+      "generatedNotice": {
+        "licenseId": "MIT",
+        "copyrights": ["Copyright (c) 2015-present 650 Industries, Inc. (aka Expo)"]
+      }
+    },
+    {
+      "license": "MIT",
+      "name": "@noxcturnal/noxcturnal-linux-arm64-musl",
+      "sourceUrl": "https://github.com/expo/noxcturnal",
+      "generatedNotice": {
+        "licenseId": "MIT",
+        "copyrights": ["Copyright (c) 2015-present 650 Industries, Inc. (aka Expo)"]
+      }
+    },
+    {
+      "license": "MIT",
+      "name": "@noxcturnal/noxcturnal-linux-x64-musl",
+      "sourceUrl": "https://github.com/expo/noxcturnal",
+      "generatedNotice": {
+        "licenseId": "MIT",
+        "copyrights": ["Copyright (c) 2015-present 650 Industries, Inc. (aka Expo)"]
+      }
+    },
+    {
+      "license": "MIT",
+      "name": "@noxcturnal/noxcturnal-win32-arm64-msvc",
+      "sourceUrl": "https://github.com/expo/noxcturnal",
+      "generatedNotice": {
+        "licenseId": "MIT",
+        "copyrights": ["Copyright (c) 2015-present 650 Industries, Inc. (aka Expo)"]
+      }
+    },
+    {
+      "license": "MIT",
+      "name": "@noxcturnal/noxcturnal-win32-x64-msvc",
+      "sourceUrl": "https://github.com/expo/noxcturnal",
+      "generatedNotice": {
+        "licenseId": "MIT",
+        "copyrights": ["Copyright (c) 2015-present 650 Industries, Inc. (aka Expo)"]
+      }
+    },
+    {
+      "license": "MIT",
+      "name": "fastdom",
+      "sourceUrl": "https://github.com/wilsonpage/fastdom",
+      "generatedNotice": {
+        "licenseId": "MIT",
+        "copyrights": ["Copyright (c) 2016 Wilson Page"]
+      }
+    },
+    {
+      "license": "MIT",
+      "name": "strictdom",
+      "sourceUrl": "https://github.com/wilsonpage/strictdom",
+      "generatedNotice": {
+        "licenseId": "MIT",
+        "copyrights": ["Copyright (c) 2013 Wilson Page"]
+      }
+    },
+    {
+      "license": "MIT",
+      "name": "khroma",
+      "sourceUrl": "https://github.com/fabiospampinato/khroma",
+      "generatedNotice": {
+        "licenseId": "MIT",
+        "copyrights": ["Copyright (c) 2019-present Fabio Spampinato, Andrew Maney"]
+      }
+    },
+    {
+      "name": "modal",
+      "version": "0.11.0",
+      "sourceUrl": "https://github.com/modal-labs/modal-client/blob/main/LICENSE",
+      "generatedNotice": {
+        "licenseId": "Apache-2.0"
+      }
+    },
+    {
+      "repositoryUrl": "https://github.com/earendil-works/pi",
+      "sourceUrl": "https://github.com/earendil-works/pi/blob/v1.0.2/LICENSE",
+      "generatedNotice": {
+        "licenseId": "MIT",
+        "copyrights": ["Copyright (c) 2025 Mario Zechner"]
+      }
+    },
+    {
+      "repositoryUrl": "https://github.com/badlogic/clipboard",
+      "generatedNotice": {
+        "licenseId": "MIT",
+        "copyrights": ["Copyright (c) CrossCopy/clipboard contributors and Mario Zechner"],
+        "preamble": [
+          "Fork of https://github.com/CrossCopy/clipboard. The published package declares MIT but omits a license file; attribution follows https://github.com/badlogic/clipboard/blob/main/README.md."
+        ]
+      }
+    },
+    {
+      "name": "standardwebhooks",
+      "version": "1.0.0",
+      "sourceUrl": "https://github.com/standard-webhooks/standard-webhooks/blob/main/libraries/LICENSE",
+      "generatedNotice": {
+        "licenseId": "MIT",
+        "copyrights": ["Copyright (c) 2023 Svix (https://www.svix.com)"]
+      }
+    },
+    {
+      "name": "data-uri-to-buffer",
+      "version": "4.0.1",
+      "sourceUrl": "https://github.com/TooTallNate/node-data-uri-to-buffer/blob/4.0.1/README.md#license",
+      "generatedNotice": {
+        "licenseId": "MIT",
+        "copyrights": ["Copyright (c) 2014 Nathan Rajlich <nathan@tootallnate.net>"]
       }
     },
     {

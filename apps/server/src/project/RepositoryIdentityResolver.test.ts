@@ -1,14 +1,14 @@
 // @effect-diagnostics nodeBuiltinImport:off - realpathSync.native resolves Windows 8.3 short names, which the Effect realPath does not.
 import * as NodeFS from "node:fs";
 import * as NodeServices from "@effect/platform-node/NodeServices";
-import { SourceControlProviderError } from "@rove-code/contracts";
+import { SourceControlProviderError, SourceControlProviderKind } from "@rove-code/contracts";
 import { expect, it } from "@effect/vitest";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
-import * as ChildProcessSpawner from "effect/unstable/process/ChildProcessSpawner";
+import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import { TestClock } from "effect/testing";
 
 import * as ProcessRunner from "../processRunner.ts";
@@ -71,7 +71,7 @@ it.layer(NodeServices.layer)("RepositoryIdentityResolverLive", (it) => {
           if (refinementFails)
             return Effect.fail(
               new SourceControlProviderError({
-                provider: "forgejo",
+                provider: SourceControlProviderKind.make("forgejo"),
                 operation: "detectProvider",
                 cwd: rootPath,
                 detail: "account unavailable",
@@ -372,6 +372,29 @@ it.layer(NodeServices.layer)("RepositoryIdentityResolverLive", (it) => {
         expect(identity?.displayName).toBe("rovetools/rove");
         expect(yield* resolver.resolve(cwd, preferUpstream)).toEqual(identity);
       }).pipe(Effect.provide(RepositoryIdentityResolver.layer)),
+  );
+
+  it.effect("reports a fork's own remote as origin next to the upstream identity", () =>
+    Effect.gen(function* () {
+      const fileSystem = yield* FileSystem.FileSystem;
+      const cwd = yield* fileSystem.makeTempDirectoryScoped({
+        prefix: "rove-repository-identity-fork-test-",
+      });
+
+      yield* git(cwd, ["init"]);
+      yield* git(cwd, ["remote", "add", "origin", "git@github.com:julius/rove-fork.git"]);
+      yield* git(cwd, ["remote", "add", "upstream", "git@github.com:RoveTools/rove.git"]);
+
+      const resolver = yield* RepositoryIdentityResolver.RepositoryIdentityResolver;
+      const identity = yield* resolver.resolve(cwd, { preferredRemote: "upstream" });
+
+      expect(identity?.canonicalKey).toBe("github.com/rovetools/rove");
+      expect(identity?.displayName).toBe("rovetools/rove");
+      expect(identity?.origin).toEqual({
+        canonicalKey: "github.com/julius/rove-fork",
+        displayName: "julius/rove-fork",
+      });
+    }).pipe(Effect.provide(RepositoryIdentityResolver.layer)),
   );
 
   it.effect("uses the last remote path segment as the repository name for nested groups", () =>

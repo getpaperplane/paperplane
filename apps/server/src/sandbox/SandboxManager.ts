@@ -12,7 +12,10 @@ import {
   SandboxInventory,
   SandboxLinkInput,
 } from "@rove-code/contracts";
-import { HostProcessEnvironment, HostProcessPlatform } from "@rove-code/shared/hostProcess";
+import {
+  Environment as HostProcessEnvironment,
+  Platform as HostProcessPlatform,
+} from "@rove-code/shared/HostProcess";
 import * as Context from "effect/Context";
 import * as Crypto from "effect/Crypto";
 import * as Effect from "effect/Effect";
@@ -280,11 +283,13 @@ export const makeSandboxManager = Effect.fn("SandboxManager.make")(function* (
   ) {
     return yield* withDriver(input.provider, (driver) =>
       Effect.gen(function* () {
-        const id = yield* crypto.randomUUIDv4.pipe(
-          Effect.mapError(
-            () => new SandboxError({ message: "Could not generate a sandbox identity." }),
-          ),
-        );
+        const id = yield* crypto
+          .randomUUIDv4()
+          .pipe(
+            Effect.mapError(
+              () => new SandboxError({ message: "Could not generate a sandbox identity." }),
+            ),
+          );
         let record: typeof StoredSandbox.Type = {
           id,
           provider: input.provider,

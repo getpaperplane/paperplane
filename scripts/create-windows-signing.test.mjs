@@ -5,7 +5,7 @@ import * as NodeFS from "node:fs";
 import * as NodeOS from "node:os";
 import * as NodePath from "node:path";
 import { afterEach, it } from "vite-plus/test";
-import { HostProcessPlatform } from "@rove-code/shared/hostProcess";
+import * as HostProcess from "@rove-code/shared/HostProcess";
 
 const directories = [];
 afterEach(() => {
@@ -13,7 +13,7 @@ afterEach(() => {
     NodeFS.rmSync(directory, { recursive: true, force: true });
 });
 
-it.skipIf(HostProcessPlatform.defaultValue() === "win32")(
+it.skipIf(HostProcess.Platform.defaultValue() === "win32")(
   "creates a password-protected code-signing identity without replacing it on retry",
   () => {
     const directory = NodeFS.mkdtempSync(

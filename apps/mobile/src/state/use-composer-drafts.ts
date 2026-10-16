@@ -10,21 +10,22 @@ import {
   PROVIDER_SEND_TURN_MAX_ATTACHMENTS,
   ProjectId as ProjectIdSchema,
   ProviderInteractionMode as ProviderInteractionModeSchema,
+  ProviderOptionSelection as ProviderOptionSelectionSchema,
   RuntimeMode as RuntimeModeSchema,
-  ThreadHandoff,
-  ThreadHandoffBacklink,
   type EnvironmentId,
   type ModelSelection,
   type ProjectId,
   type ProviderInteractionMode,
+  type ProviderOptionSelection,
   type RuntimeMode,
 } from "@rove-code/contracts";
 import * as Schema from "effect/Schema";
 import { useEffect } from "react";
-import { Atom } from "effect/unstable/reactivity";
+import { Atom } from "effect/reactivity";
 
 import { writeFileAtomically } from "../lib/atomic-file";
 import { createComposerContextHistory, referencedComposerContext } from "../lib/composerContext";
+import { isQueuedEditDraftKey } from "./queued-edit-draft-key";
 import {
   collectComposerContextReferences,
   formatComposerContextReference,
@@ -332,7 +333,6 @@ export interface ComposerDraft {
   readonly runtimeMode?: RuntimeMode;
   readonly interactionMode?: ProviderInteractionMode;
   readonly workspaceSelection?: ComposerDraftWorkspaceSelection;
-  readonly handoff?: ThreadHandoff;
   /**
    * Set on new-task drafts only. The project is stored here rather than in
    * the key so a project can hold any number of drafts and a draft can be
@@ -359,16 +359,13 @@ export interface ComposerDraftWorkspaceSelection {
   readonly branch: string | null;
   readonly worktreePath: string | null;
   readonly startFromOrigin?: boolean;
+  /** Resolve and check out this PR when the queued task is sent. */
+  readonly pullRequestReference?: string;
 }
 
 export type ComposerDraftSettingsUpdate = Pick<
   ComposerDraft,
-  | "modelSelection"
-  | "runtimeMode"
-  | "interactionMode"
-  | "workspaceSelection"
-  | "project"
-  | "handoff"
+  "modelSelection" | "runtimeMode" | "interactionMode" | "workspaceSelection" | "project"
 >;
 
 const ComposerDraftWorkspaceSelectionSchema = Schema.Struct({
@@ -376,6 +373,7 @@ const ComposerDraftWorkspaceSelectionSchema = Schema.Struct({
   branch: Schema.NullOr(Schema.String),
   worktreePath: Schema.NullOr(Schema.String),
   startFromOrigin: Schema.optional(Schema.Boolean),
+  pullRequestReference: Schema.optional(Schema.String),
 });
 
 const ComposerDraftProjectSchema = Schema.Struct({
@@ -400,15 +398,19 @@ const ComposerDraftSchema = Schema.Struct({
   runtimeMode: Schema.optional(RuntimeModeSchema),
   interactionMode: Schema.optional(ProviderInteractionModeSchema),
   workspaceSelection: Schema.optional(ComposerDraftWorkspaceSelectionSchema),
-  handoff: Schema.optional(ThreadHandoff),
   project: Schema.optional(ComposerDraftProjectSchema),
 });
 
 const PersistedComposerDraftsSchema = Schema.Struct({
   schemaVersion: Schema.Literal(COMPOSER_DRAFTS_SCHEMA_VERSION),
   drafts: Schema.Record(Schema.String, ComposerDraftSchema),
-  handoffBacklinks: Schema.optional(Schema.Array(ThreadHandoffBacklink)),
   stickyModelSelection: Schema.optional(ModelSelectionSchema),
+  modelOptionMemory: Schema.optional(
+    Schema.Record(
+      Schema.String,
+      Schema.Record(Schema.String, Schema.Array(ProviderOptionSelectionSchema)),
+    ),
+  ),
   cloudAccountId: Schema.optional(Schema.String),
   signedOutDrafts: Schema.optional(
     Schema.Record(
@@ -440,6 +442,15 @@ export const stickyComposerModelSelectionAtom = Atom.make<ModelSelection | null>
   Atom.withLabel("mobile:sticky-composer-model-selection"),
 );
 
+export type ModelOptionMemoryState = Readonly<
+  Record<string, Readonly<Record<string, ReadonlyArray<ProviderOptionSelection>>>>
+>;
+
+export const modelOptionMemoryAtom = Atom.make<ModelOptionMemoryState>({}).pipe(
+  Atom.keepAlive,
+  Atom.withLabel("mobile:model-option-memory"),
+);
+
 interface SignedOutDrafts {
   readonly drafts: Record<string, ComposerDraft>;
   readonly queuedMessages: ReadonlyArray<QueuedThreadMessage>;
@@ -454,30 +465,6 @@ export const composerCloudDraftsAtom = Atom.make<ComposerCloudDraftState>({
   accountId: null,
   signedOut: {},
 }).pipe(Atom.keepAlive);
-
-export const handoffBacklinksAtom = Atom.make<ReadonlyArray<ThreadHandoffBacklink>>([]).pipe(
-  Atom.keepAlive,
-);
-
-export async function queueHandoffBacklink(link: ThreadHandoffBacklink): Promise<void> {
-  await waitForComposerDraftsLoaded();
-  const current = appAtomRegistry.get(handoffBacklinksAtom);
-  const prior = current.find((candidate) => candidate.transferId === link.transferId);
-  appAtomRegistry.set(handoffBacklinksAtom, [
-    ...current.filter((candidate) => candidate.transferId !== link.transferId),
-    { ...link, ready: link.ready || prior?.ready === true },
-  ]);
-  schedulePersistComposerState();
-  await flushComposerDrafts();
-}
-
-export function completeHandoffBacklink(transferId: string): void {
-  appAtomRegistry.set(
-    handoffBacklinksAtom,
-    appAtomRegistry.get(handoffBacklinksAtom).filter((link) => link.transferId !== transferId),
-  );
-  schedulePersistComposerState();
-}
 
 let loadPromise: Promise<void> | null = null;
 let persistTimer: ReturnType<typeof setTimeout> | null = null;
@@ -642,8 +629,8 @@ export function migrateLegacyNewTaskDraft(
 export function decodePersistedComposerState(value: unknown): {
   readonly drafts: Record<string, ComposerDraft>;
   readonly stickyModelSelection: ModelSelection | null;
+  readonly modelOptionMemory: ModelOptionMemoryState;
   readonly cloudDrafts: ComposerCloudDraftState;
-  readonly handoffBacklinks?: ReadonlyArray<ThreadHandoffBacklink>;
 } {
   const parsed = decodePersistedComposerDraftsDocument(value);
   const now = new Date().toISOString();
@@ -674,10 +661,14 @@ export function decodePersistedComposerState(value: unknown): {
         // importedShareIds are share-import receipts: a contentless draft
         // carrying one is not empty, or the same native share would be
         // re-imported after restart.
-        .filter(([, draft]) => !isEmptyDraft(draft) || (draft.importedShareIds?.length ?? 0) > 0),
+        .filter(([, draft]) => !isEmptyDraft(draft) || (draft.importedShareIds?.length ?? 0) > 0)
+        // Queued-message edits are in-memory sessions. Their draft outlives a
+        // restart on disk, but the edit record that says which run it belongs
+        // to does not, so the draft would be unreachable and invisible.
+        .filter(([key]) => !isQueuedEditDraftKey(key)),
     ),
-    ...(parsed.handoffBacklinks ? { handoffBacklinks: parsed.handoffBacklinks } : {}),
     stickyModelSelection: parsed.stickyModelSelection ?? null,
+    modelOptionMemory: parsed.modelOptionMemory ?? {},
     cloudDrafts: {
       accountId: parsed.cloudAccountId ?? null,
       signedOut: Object.fromEntries(
@@ -716,6 +707,7 @@ async function loadPersistedComposerState(): Promise<
       return {
         drafts: {},
         stickyModelSelection: null,
+        modelOptionMemory: {},
         cloudDrafts: { accountId: null, signedOut: {} },
       };
     }
@@ -748,10 +740,10 @@ async function writePersistedComposerState(
     const document = {
       schemaVersion: COMPOSER_DRAFTS_SCHEMA_VERSION,
       drafts: nonEmptyDrafts,
-      ...(appAtomRegistry.get(handoffBacklinksAtom).length > 0
-        ? { handoffBacklinks: appAtomRegistry.get(handoffBacklinksAtom) }
-        : {}),
       ...(stickyModelSelection ? { stickyModelSelection } : {}),
+      ...(Object.keys(appAtomRegistry.get(modelOptionMemoryAtom)).length > 0
+        ? { modelOptionMemory: appAtomRegistry.get(modelOptionMemoryAtom) }
+        : {}),
       ...(cloudDrafts.accountId ? { cloudAccountId: cloudDrafts.accountId } : {}),
       ...(Object.keys(cloudDrafts.signedOut).length > 0
         ? {
@@ -1008,7 +1000,7 @@ registerComposerAttachmentUnusedHandler((attachment) => {
   scheduleUnusedComposerAttachmentCleanup([attachment]);
 });
 
-function schedulePersistComposerState(): void {
+export function schedulePersistComposerState(): void {
   if (persistTimer !== null) {
     clearTimeout(persistTimer);
   }
@@ -1041,7 +1033,6 @@ export function ensureComposerDraftsLoaded(): void {
   }
   const loading = loadPersistedComposerState().then((persisted) => {
     appAtomRegistry.set(composerCloudDraftsAtom, persisted.cloudDrafts);
-    appAtomRegistry.set(handoffBacklinksAtom, persisted.handoffBacklinks ?? []);
     if (Object.keys(persisted.drafts).length > 0) {
       const current = appAtomRegistry.get(composerDraftsAtom);
       appAtomRegistry.set(composerDraftsAtom, {
@@ -1054,6 +1045,18 @@ export function ensureComposerDraftsLoaded(): void {
       appAtomRegistry.get(stickyComposerModelSelectionAtom) === null
     ) {
       appAtomRegistry.set(stickyComposerModelSelectionAtom, persisted.stickyModelSelection);
+    }
+    if (Object.keys(persisted.modelOptionMemory).length > 0) {
+      const current = appAtomRegistry.get(modelOptionMemoryAtom);
+      appAtomRegistry.set(modelOptionMemoryAtom, {
+        ...persisted.modelOptionMemory,
+        ...Object.fromEntries(
+          Object.entries(current).map(([instanceId, models]) => [
+            instanceId,
+            { ...(persisted.modelOptionMemory[instanceId] ?? {}), ...models },
+          ]),
+        ),
+      });
     }
   });
   loadPromise = loading;
@@ -1195,6 +1198,8 @@ export async function removeDeliveredCloudQueuedMessage(
           (editor.workspaceSelection.mode !== message.creation?.workspaceMode ||
             editor.workspaceSelection.branch !== message.creation?.branch ||
             editor.workspaceSelection.worktreePath !== message.creation?.worktreePath ||
+            editor.workspaceSelection.pullRequestReference !==
+              message.creation?.pullRequestReference ||
             (editor.workspaceSelection.startFromOrigin ?? false) !==
               (message.creation?.startFromOrigin ?? false))))
     )
@@ -1530,7 +1535,6 @@ export function clearComposerDraftContentState(
     modelSelection,
     workspaceSelection,
     project: _project,
-    handoff: _handoff,
     ...retained
   } = existing;
   const draft = {
@@ -1720,7 +1724,6 @@ export function sameComposerDraftState(a: ComposerDraft, b: ComposerDraft): bool
     a.runtimeMode === b.runtimeMode &&
     a.interactionMode === b.interactionMode &&
     a.workspaceSelection === b.workspaceSelection &&
-    a.handoff === b.handoff &&
     a.project === b.project
   );
 }

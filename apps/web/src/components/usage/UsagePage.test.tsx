@@ -30,6 +30,7 @@ vi.mock("../WorkspaceBreadcrumb", () => ({
   WorkspaceBreadcrumb: "div",
   WorkspaceBreadcrumbItem: "div",
   WorkspaceBreadcrumbSeparator: "span",
+  WorkspaceBreadcrumbText: "span",
 }));
 vi.mock("../WorkspacePageContainer", () => ({ WorkspacePageContainer: "main" }));
 vi.mock("../WorkspacePageHeader", () => ({ WorkspacePageHeader: "header" }));
@@ -39,9 +40,18 @@ vi.mock("./usageProviders", async (importOriginal) => {
   const actual = await importOriginal<typeof import("./usageProviders")>();
   return {
     ...actual,
+    PROVIDER_ORDER: ["codex", "claude"],
     PROVIDER_PRESENTATION: {
-      codex: { color: "white", label: "Codex", mark: "span" },
-      claude: { color: "orange", label: "Claude Code", mark: "span" },
+      codex: {
+        color: "white",
+        label: "Codex",
+        driverKind: actual.PROVIDER_PRESENTATION.codex.driverKind,
+      },
+      claude: {
+        color: "orange",
+        label: "Claude Code",
+        driverKind: actual.PROVIDER_PRESENTATION.claude.driverKind,
+      },
     },
   };
 });
@@ -52,6 +62,7 @@ const environments = [
     environmentId: EnvironmentId.make("test-environment"),
     label: "Test environment",
     isPending: false,
+    canReadDiagnostics: true,
     error: null,
     summary: {
       contractVersion: USAGE_CONTRACT_VERSION,
@@ -74,6 +85,7 @@ beforeEach(() => {
     environments,
     selectedEnvironments: environments,
     isPending: false,
+    shown: null,
     isPartial: false,
     refresh: vi.fn(),
   });

@@ -1,8 +1,7 @@
 import { expect, it } from "@effect/vitest";
-import { HostProcessEnvironment } from "@rove-code/shared/hostProcess";
+import * as HostProcess from "@rove-code/shared/HostProcess";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
-import * as Schema from "effect/Schema";
 
 import {
   SERVICE_LAUNCHER_CONTEXT_ENV,
@@ -46,34 +45,8 @@ class FakeLauncherProcess {
 const makeClient = (host: FakeLauncherProcess, currentVersion: string) =>
   ServiceLauncherClient.make({ currentVersion }).pipe(
     Effect.provideService(ServiceLauncherClient.ServiceLauncherHostProcess, host),
-    Effect.provideService(HostProcessEnvironment, host.env),
+    Effect.provideService(HostProcess.Environment, host.env),
   );
-
-it.effect("reads context from an installed historical launcher and prefers canonical context", () =>
-  Effect.gen(function* () {
-    const context = { protocol: SERVICE_LAUNCHER_PROTOCOL, childVersion: "1.0.0" };
-    const host = new FakeLauncherProcess(context);
-    host.env.T3_SERVICE_LAUNCHER_CONTEXT = host.env[SERVICE_LAUNCHER_CONTEXT_ENV];
-    delete host.env[SERVICE_LAUNCHER_CONTEXT_ENV];
-    const historical = yield* makeClient(host, "1.0.0");
-    expect(historical.managed).toBe(true);
-    const requested = yield* Effect.forkChild(
-      historical.requestUpdate({ targetVersion: "1.1.0", dbPath: "/tmp/legacy.sqlite" }),
-      { startImmediately: true },
-    );
-    yield* Effect.yieldNow;
-    host.emit({ type: "update-accepted", updateId: "historical-launcher-update" });
-    expect(yield* Fiber.join(requested)).toBe("historical-launcher-update");
-    host.env[SERVICE_LAUNCHER_CONTEXT_ENV] = yield* Schema.encodeEffect(
-      Schema.fromJsonString(Schema.Json),
-    )({
-      ...context,
-      childVersion: "2.0.0",
-    });
-    const error = yield* makeClient(host, "1.0.0").pipe(Effect.flip);
-    expect(error.operation).toBe("version-mismatch");
-  }),
-);
 
 it.effect("waits for the launcher to durably commit the trial update ID", () =>
   Effect.gen(function* () {

@@ -5,12 +5,7 @@ import * as Exit from "effect/Exit";
 import * as Metric from "effect/Metric";
 import { dual } from "effect/Function";
 
-import {
-  compactMetricAttributes,
-  normalizeModelMetricLabel,
-  outcomeFromExit,
-} from "./Attributes.ts";
-import * as RuntimePredicate from "effect/Predicate";
+import { compactMetricAttributes, outcomeFromExit } from "./Attributes.ts";
 
 export const rpcRequestsTotal = Metric.counter("rove_rpc_requests_total", {
   description: "Total RPC requests handled by the websocket RPC server.",
@@ -20,28 +15,17 @@ export const rpcRequestDuration = Metric.timer("rove_rpc_request_duration", {
   description: "RPC request handling duration.",
 });
 
-export const orchestrationCommandsTotal = Metric.counter("rove_orchestration_commands_total", {
-  description: "Total orchestration commands dispatched.",
-});
-
-export const orchestrationCommandDuration = Metric.timer("rove_orchestration_command_duration", {
-  description: "Orchestration command dispatch duration.",
-});
-
-export const orchestrationCommandAckDuration = Metric.timer(
-  "rove_orchestration_command_ack_duration",
+export const orchestrationEffectClaimsTotal = Metric.counter(
+  "rove_orchestration_effect_claims_total",
   {
-    description:
-      "Time from orchestration command dispatch to the first committed domain event emitted for that command.",
+    description: "Total completed orchestration effect outbox claim attempts by result.",
   },
 );
 
-export const orchestrationEventsProcessedTotal = Metric.counter(
-  "rove_orchestration_events_processed_total",
-  {
-    description: "Total orchestration intent events processed by runtime reactors.",
-  },
-);
+export const orchestrationEffectQueueWait = Metric.timer("rove_orchestration_effect_queue_wait", {
+  description:
+    "Time from an orchestration effect's temporal availability until claim, including same-thread blocking.",
+});
 
 export const providerSessionsTotal = Metric.counter("rove_provider_sessions_total", {
   description: "Total provider session lifecycle operations.",
@@ -52,11 +36,7 @@ export const providerTurnsTotal = Metric.counter("rove_provider_turns_total", {
 });
 
 export const providerTurnDuration = Metric.timer("rove_provider_turn_duration", {
-  description: "Provider turn request duration.",
-});
-
-export const providerRuntimeEventsTotal = Metric.counter("rove_provider_runtime_events_total", {
-  description: "Total canonical provider runtime events processed.",
+  description: "Time for the provider adapter to start a turn, not how long the turn runs.",
 });
 
 export const gitCommandsTotal = Metric.counter("rove_git_commands_total", {
@@ -73,6 +53,40 @@ export const terminalSessionsTotal = Metric.counter("rove_terminal_sessions_tota
 
 export const terminalRestartsTotal = Metric.counter("rove_terminal_restarts_total", {
   description: "Total terminal restart requests handled.",
+});
+
+/**
+ * One per webhook request that reached a task, by `outcome` (accepted,
+ * not_found, rejected_signature, disabled, rate_limited, queue_full, expired,
+ * prompt_too_long, error) and `source` (relay or direct).
+ */
+export const webhookDeliveriesTotal = Metric.counter("rove_webhook_deliveries_total", {
+  description: "Webhook requests handled, by outcome and source.",
+});
+
+export const webhookDeliveryDuration = Metric.timer("rove_webhook_delivery_duration", {
+  description: "Time to verify, log, and enqueue one webhook request.",
+});
+
+/** How long a relay-held request waited before this environment got it. */
+export const webhookHeldDelay = Metric.timer("rove_webhook_held_delay", {
+  description:
+    "Time between the relay receiving a webhook request and the environment handling it.",
+});
+
+/** Runs started by webhook deliveries, by `outcome` (started, skipped, failed). */
+export const webhookRunsTotal = Metric.counter("rove_webhook_runs_total", {
+  description: "Runs started from webhook deliveries, by outcome.",
+});
+
+/** Secrets agents asked users for, by how each ended: saved, declined, cancelled, timed_out. */
+export const secretRequestsTotal = Metric.counter("rove_secret_requests_total", {
+  description: "Secrets agents asked users for, by how each request ended.",
+});
+
+/** One-use secret refs a tool tried to use, by result: used, rejected. */
+export const secretRefsConsumedTotal = Metric.counter("rove_secret_refs_consumed_total", {
+  description: "Secret refs tools tried to use, by result.",
 });
 
 export const metricAttributes = (
@@ -96,19 +110,15 @@ export interface WithMetricsOptions {
   ) => Readonly<Record<string, unknown>>;
 }
 
-const withMetricsImpl = <A, E, R>(
-  effect: Effect.Effect<A, E, R>,
+const recordMetrics = (
   options: WithMetricsOptions,
-): Effect.Effect<A, E, R> =>
+  startedAt: bigint,
+  exit: Exit.Exit<unknown, unknown>,
+) =>
   Effect.gen(function* () {
-    const startedAt = yield* Clock.currentTimeNanos;
-    const exit = yield* Effect.exit(effect);
-    const endedAt = yield* Clock.currentTimeNanos;
-    const elapsedNanos = endedAt > startedAt ? endedAt - startedAt : 0n;
-    const duration = Duration.nanos(elapsedNanos);
-    const baseAttributes = RuntimePredicate.isFunction(options.attributes)
-      ? options.attributes()
-      : (options.attributes ?? {});
+    const duration = Duration.nanos((yield* Clock.monotonicTimeNanos) - startedAt);
+    const baseAttributes =
+      typeof options.attributes === "function" ? options.attributes() : (options.attributes ?? {});
 
     if (options.timer) {
       yield* Metric.update(
@@ -125,44 +135,27 @@ const withMetricsImpl = <A, E, R>(
           metricAttributes({
             ...baseAttributes,
             outcome,
-            ...(options.outcomeAttributes ? options.outcomeAttributes(outcome) : undefined),
+            ...(options.outcomeAttributes ? options.outcomeAttributes(outcome) : {}),
           }),
         ),
         1,
       );
     }
-
-    if (Exit.isSuccess(exit)) {
-      return exit.value;
-    }
-    return yield* Effect.failCause(exit.cause);
   });
+
+// Durations come from the monotonic clock, so wall-clock corrections cannot skew them, and
+// metrics are recorded in an exit finalizer, so interrupted work is counted as "interrupt".
+const withMetricsImpl = <A, E, R>(
+  effect: Effect.Effect<A, E, R>,
+  options: WithMetricsOptions,
+): Effect.Effect<A, E, R> =>
+  Effect.flatMap(Clock.monotonicTimeNanos, (startedAt) =>
+    Effect.onExit(effect, (exit) => recordMetrics(options, startedAt, exit)),
+  );
 
 export const withMetrics: {
-  <A, E, R>(
+  (
     options: WithMetricsOptions,
-  ): (effect: Effect.Effect<A, E, R>) => Effect.Effect<A, E, R>;
+  ): <A, E, R>(effect: Effect.Effect<A, E, R>) => Effect.Effect<A, E, R>;
   <A, E, R>(effect: Effect.Effect<A, E, R>, options: WithMetricsOptions): Effect.Effect<A, E, R>;
 } = dual(2, withMetricsImpl);
-
-export const providerMetricAttributes = (
-  provider: string,
-  extra?: Readonly<Record<string, unknown>>,
-) =>
-  compactMetricAttributes({
-    provider,
-    ...extra,
-  });
-
-export const providerTurnMetricAttributes = (input: {
-  readonly provider: string;
-  readonly model: string | null | undefined;
-  readonly extra?: Readonly<Record<string, unknown>>;
-}) => {
-  const modelFamily = normalizeModelMetricLabel(input.model);
-  return compactMetricAttributes({
-    provider: input.provider,
-    ...(modelFamily ? { modelFamily } : undefined),
-    ...input.extra,
-  });
-};

@@ -20,14 +20,17 @@ import { PI_SDK_VERSION } from "../PiSdkMetadata.ts";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 
-import { buildServerProvider, type ServerProviderDraft } from "../providerSnapshot.ts";
+import {
+  buildServerProvider,
+  type ServerProviderDraft,
+} from "@rove-code/provider-core/server/snapshotProbe";
 
 const PI_PRESENTATION = {
   displayName: "Pi",
   reportsContextWindow: true,
   // Pi has no tool-approval model; threads run full-access.
   showInteractionModeToggle: false,
-  runtimeModeSelectable: false,
+  supportedRuntimeModes: ["full-access"],
   // set_model works on a live session.
   requiresNewThreadForModelChange: false,
 } as const;

@@ -1,4 +1,3 @@
-import { testDouble } from "../testDouble.ts";
 import { describe, expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -7,13 +6,11 @@ import { PgDialect } from "drizzle-orm/pg-core";
 import * as RelayDb from "../db.ts";
 import { relayEnvironmentLinks } from "../persistence/schema.ts";
 import * as EnvironmentLinks from "./EnvironmentLinks.ts";
-import * as RuntimePredicate from "effect/Predicate";
-import type { Json as SchemaJson } from "effect/Schema";
 
 describe("EnvironmentLinks", () => {
   it.effect("retains link lookup failures with user and environment identity", () => {
     const cause = new Error("database unavailable");
-    const fakeDb = testDouble<RelayDb.RelayDb["Service"]>({
+    const fakeDb = {
       select: () => ({
         from: (table: unknown) => {
           expect(table).toBe(relayEnvironmentLinks);
@@ -24,7 +21,7 @@ describe("EnvironmentLinks", () => {
           };
         },
       }),
-    });
+    } as unknown as RelayDb.RelayDb["Service"];
 
     return Effect.gen(function* () {
       const links = yield* EnvironmentLinks.EnvironmentLinks;
@@ -47,7 +44,7 @@ describe("EnvironmentLinks", () => {
 
   it.effect("identifies delivery-user list failures without retaining key material", () => {
     const cause = new Error("database unavailable");
-    const fakeDb = testDouble<RelayDb.RelayDb["Service"]>({
+    const fakeDb = {
       select: () => ({
         from: (table: unknown) => {
           expect(table).toBe(relayEnvironmentLinks);
@@ -56,7 +53,7 @@ describe("EnvironmentLinks", () => {
           };
         },
       }),
-    });
+    } as unknown as RelayDb.RelayDb["Service"];
 
     return Effect.gen(function* () {
       const links = yield* EnvironmentLinks.EnvironmentLinks;
@@ -83,7 +80,7 @@ describe("EnvironmentLinks", () => {
 
   it.effect("selects notification or Live Activity users by environment key", () => {
     const whereConditions: Array<unknown> = [];
-    const fakeDb = testDouble<RelayDb.RelayDb["Service"]>({
+    const fakeDb = {
       select: (selection: unknown) => {
         expect(selection).toBeDefined();
         return {
@@ -98,7 +95,7 @@ describe("EnvironmentLinks", () => {
           },
         };
       },
-    });
+    } as unknown as RelayDb.RelayDb["Service"];
 
     return Effect.gen(function* () {
       const links = yield* EnvironmentLinks.EnvironmentLinks;
@@ -110,8 +107,7 @@ describe("EnvironmentLinks", () => {
       ).toEqual([]);
       expect(whereConditions).toHaveLength(1);
 
-      const // SAFETY: This fixture intentionally supplies the asserted collaborator contract.
-        query = new PgDialect().sqlToQuery(whereConditions[0] as never);
+      const query = new PgDialect().sqlToQuery(whereConditions[0] as never);
       expect(query.sql).toContain('"relay_environment_links"."environment_id" = $1');
       expect(query.sql).toContain('"relay_environment_links"."revoked_at" is null');
       expect(query.sql).toContain('"relay_environment_links"."notifications_enabled" = $2');
@@ -126,14 +122,53 @@ describe("EnvironmentLinks", () => {
     );
   });
 
+  it.effect("carries the webhook-hold opt-in over only from links with the same key", () => {
+    const inserted: Array<Record<string, unknown>> = [];
+    const fakeDb = {
+      insert: () => ({
+        values: (values: Record<string, unknown>) => {
+          inserted.push(values);
+          return { onConflictDoUpdate: () => Effect.void };
+        },
+      }),
+    } as unknown as RelayDb.RelayDb["Service"];
+
+    return Effect.gen(function* () {
+      const links = yield* EnvironmentLinks.EnvironmentLinks;
+      yield* links.upsert({
+        userId: "user-1",
+        request: {
+          notificationsEnabled: false,
+          liveActivitiesEnabled: false,
+          managedTunnelsEnabled: true,
+        } as never,
+        proof: {
+          environmentId: "env-1",
+          environmentPublicKey: "public-key-1",
+          descriptor: { label: "Laptop" },
+        } as never,
+        endpoint: { httpBaseUrl: "https://a.example", wsBaseUrl: "wss://a.example" } as never,
+      });
+      const query = new PgDialect().sqlToQuery(inserted[0]?.holdWebhooksWhileOffline as never);
+      // An environment id is public: another account linking it with its own
+      // key must not switch the opt-in on for this one.
+      expect(query.sql).toContain("environment_public_key");
+      expect(query.params).toEqual(["env-1", "public-key-1"]);
+    }).pipe(
+      Effect.provide(
+        EnvironmentLinks.layer.pipe(Layer.provide(Layer.succeed(RelayDb.RelayDb, fakeDb))),
+      ),
+    );
+  });
+
   it.effect("revokes only the active link owned by the requesting user", () => {
-    const updateValues: Array<Record<string, SchemaJson>> = [];
+    const updateValues: Array<Record<string, unknown>> = [];
     const whereConditions: Array<unknown> = [];
-    const fakeDb = testDouble<RelayDb.RelayDb["Service"]>({
+    const fakeDb = {
       update: (table: unknown) => {
         expect(table).toBe(relayEnvironmentLinks);
         return {
-          set: (values: Record<string, SchemaJson>) => {
+          set: (values: Record<string, unknown>) => {
             updateValues.push(values);
             return {
               where: (condition: unknown) => {
@@ -149,7 +184,7 @@ describe("EnvironmentLinks", () => {
           },
         };
       },
-    });
+    } as unknown as RelayDb.RelayDb["Service"];
 
     return Effect.gen(function* () {
       const links = yield* EnvironmentLinks.EnvironmentLinks;
@@ -161,12 +196,11 @@ describe("EnvironmentLinks", () => {
       expect(revoked).toBe(true);
       expect(updateValues).toHaveLength(1);
       expect(updateValues[0]?.revokedAt).toEqual(updateValues[0]?.updatedAt);
-      expect(RuntimePredicate.isString(updateValues[0]?.revokedAt)).toBe(true);
+      expect(typeof updateValues[0]?.revokedAt).toBe("string");
       expect(whereConditions).toHaveLength(1);
 
       const dialect = new PgDialect();
-      const // SAFETY: This fixture intentionally supplies the asserted collaborator contract.
-        query = dialect.sqlToQuery(whereConditions[0] as never);
+      const query = dialect.sqlToQuery(whereConditions[0] as never);
       expect(query.sql).toContain('"relay_environment_links"."user_id" = $1');
       expect(query.sql).toContain('"relay_environment_links"."environment_id" = $2');
       expect(query.sql).toContain('"relay_environment_links"."revoked_at" is null');

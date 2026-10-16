@@ -6,7 +6,10 @@ import {
   ThreadId,
   type ServerSettings as SettingsValue,
 } from "@rove-code/contracts";
-import { HostProcessEnvironment, HostProcessPlatform } from "@rove-code/shared/hostProcess";
+import {
+  Environment as HostProcessEnvironment,
+  Platform as HostProcessPlatform,
+} from "@rove-code/shared/HostProcess";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -15,13 +18,14 @@ import * as Queue from "effect/Queue";
 import * as Schema from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as TestClock from "effect/testing/TestClock";
-import { McpSchema, McpServer } from "effect/unstable/ai";
+import { McpSchema, McpServer } from "effect/ai";
 
 import * as CuaDriver from "../../../computerUse/CuaDriver.ts";
 import * as ProcessRunner from "../../../processRunner.ts";
 import * as ServerSettings from "../../../serverSettings.ts";
 import * as McpInvocationContext from "../../McpInvocationContext.ts";
-import { ComputerUseToolsRegistrationLive } from "./handlers.ts";
+import { layerComputerUseToolkit } from "../../McpHttpServer.ts";
+import * as McpToolAccessTestkit from "../../McpToolAccess.testkit.ts";
 
 const enabled =
   HostProcessPlatform.defaultValue() === "linux" && process.env.ROVE_TEST_LINUX_CUA === "1";
@@ -158,10 +162,14 @@ it.effect.skipIf(!enabled)(
           .callTool({ name: "computer_call", arguments: { tool, arguments: args } })
           .pipe(
             Effect.provideService(McpInvocationContext.McpInvocationContext, {
-              threadId,
               environmentId: EnvironmentId.make("linux-native-verification"),
-              providerSessionId: "native-verification",
-              providerInstanceId: ProviderInstanceId.make("pi"),
+              requestNamespace: "native-verification",
+              thread: {
+                threadId,
+                providerSessionId: "native-verification",
+                providerInstanceId: ProviderInstanceId.make("codex"),
+              },
+              client: undefined,
               capabilities: new Set<McpInvocationContext.McpCapability>(),
               issuedAt: 1,
             }),
@@ -369,8 +377,9 @@ it.effect.skipIf(!enabled)(
     }).pipe(
       Effect.scoped,
       Effect.provide(
-        ComputerUseToolsRegistrationLive.pipe(
+        layerComputerUseToolkit.pipe(
           Layer.provideMerge(McpServer.McpServer.layer),
+          Layer.provide(McpToolAccessTestkit.liveThreadsLayer),
           Layer.provideMerge(services),
         ),
       ),

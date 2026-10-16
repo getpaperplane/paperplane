@@ -5,6 +5,8 @@ import { LazyPiRuntime, type LazyPiRuntimeTarget } from "./PiRuntimeProcess.ts";
 class FakeRuntime implements LazyPiRuntimeTarget {
   busy = 0;
   disposed = false;
+  isFailed = false;
+  private readonly changeListeners = new Set<() => void>();
   private readonly idleListeners = new Set<() => void>();
   get isIdle() {
     return !this.disposed && this.busy === 0;
@@ -13,8 +15,13 @@ class FakeRuntime implements LazyPiRuntimeTarget {
     this.idleListeners.add(listener);
     return () => this.idleListeners.delete(listener);
   }
-  onChange() {
-    return () => {};
+  onChange(listener: () => void) {
+    this.changeListeners.add(listener);
+    return () => this.changeListeners.delete(listener);
+  }
+  fail() {
+    this.isFailed = true;
+    for (const listener of this.changeListeners) listener();
   }
   dispose() {
     this.disposed = true;
@@ -81,6 +88,17 @@ describe("LazyPiRuntime", () => {
     await vi.advanceTimersByTimeAsync(IDLE_MS / 2);
     expect(runtime.disposed).toBe(true);
     expect(created).toHaveLength(1);
+  });
+
+  it("replaces a failed worker instead of resuming into its dead IPC channel", async () => {
+    const first = await lazy.get();
+    first.start();
+    first.fail();
+    expect(first.disposed).toBe(true);
+    const second = await lazy.get();
+    expect(second).not.toBe(first);
+    expect(second.isFailed).toBe(false);
+    expect(created).toHaveLength(2);
   });
 
   it("retries startup after a failed start", async () => {

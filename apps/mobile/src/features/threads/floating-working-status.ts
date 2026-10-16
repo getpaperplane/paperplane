@@ -9,7 +9,22 @@ export type FloatingWorkingStatus =
   | { readonly kind: "working"; readonly startedAt: string }
   | { readonly kind: "syncing"; readonly label: string }
   | { readonly kind: "compacting" }
-  | { readonly kind: "background"; readonly label: string; readonly onPress: () => void }
+  | {
+      readonly kind: "child-input";
+      readonly label: string;
+      readonly accessibilityLabel: string;
+      readonly onPress: () => void;
+    }
+  // The turn settled while background work it started still runs. `waiting`
+  // is false when only commands remain, such as a dev server: the agent is done.
+  | {
+      readonly kind: "background";
+      readonly label: string;
+      readonly accessibilityLabel: string;
+      readonly waiting: boolean;
+    }
+  // A native /goal on an idle thread: paused, blocked, complete, or set.
+  | { readonly kind: "goal"; readonly label: string; readonly accessibilityLabel: string }
   // A task whose thread the server has not created yet: the worktree may
   // still be checking out, so there is no turn to time.
   | { readonly kind: "preparing"; readonly label: string }
@@ -19,20 +34,6 @@ export type FloatingWorkingStatus =
       readonly label: string;
       readonly onPress: () => void;
     };
-
-/** Background work is independent of the parent response and has its own Stop affordance. */
-export function backgroundFloatingStatus(input: {
-  readonly parentActive: boolean;
-  readonly liveness: "working" | "monitoring" | null | undefined;
-  readonly onStop: () => void;
-}): FloatingWorkingStatus | null {
-  if (input.parentActive || input.liveness == null) return null;
-  return {
-    kind: "background",
-    label: input.liveness === "working" ? "Background agents · Stop" : "Monitoring · Stop",
-    onPress: input.onStop,
-  };
-}
 
 /**
  * The pill's connection variant, or null once the environment is connected and

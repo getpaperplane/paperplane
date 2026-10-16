@@ -28,9 +28,7 @@ export async function readRoveProjectFile(
 ): Promise<RoveProjectFile | null> {
   const result = await executeAtomQuery(
     appAtomRegistry,
-    getProjectFileQueryAtom(environmentId, workspaceRoot, ROVE_PROJECT_FILE_NAME, {
-      allowLegacyProjectFile: true,
-    }),
+    getProjectFileQueryAtom(environmentId, workspaceRoot, ROVE_PROJECT_FILE_NAME),
     { reportDefect: false, reportFailure: false },
   );
   const data = resolveProjectFileQueryData(

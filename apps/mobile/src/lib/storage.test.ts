@@ -1,6 +1,5 @@
 import { EnvironmentId } from "@rove-code/contracts";
 import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
-import * as RuntimePredicate from "effect/Predicate";
 
 const mocks = vi.hoisted(() => {
   const values = new Map<string, string>();
@@ -59,10 +58,10 @@ const mocks = vi.hoisted(() => {
         if (savePreferencesFails) {
           return Promise.reject(new Error("database unavailable"));
         }
-        if (RuntimePredicate.isString(payload)) {
+        if (typeof payload === "string") {
           preferencesJson = payload;
         }
-        if (RuntimePredicate.isNumber(updatedAt)) {
+        if (typeof updatedAt === "number") {
           preferencesUpdatedAt = updatedAt;
         }
         return Promise.resolve();
@@ -247,33 +246,40 @@ describe("mobile connection storage", () => {
   it("falls back to secure storage when SQLite cannot save preferences", async () => {
     mocks.setDatabaseFailures(true, true);
     await expect(savePreferencesPatch({ baseFontSize: 19 })).resolves.toEqual({ baseFontSize: 19 });
-    const // SAFETY: This fixture intentionally supplies the asserted collaborator contract.
-      fallback = JSON.parse(mocks.getStoredValue("rove.preferences.fallback") ?? "") as {
-        readonly payload: string;
-        readonly updatedAt: number;
-      };
+    const fallback = JSON.parse(mocks.getStoredValue("rove.preferences.fallback") ?? "") as {
+      readonly payload: string;
+      readonly updatedAt: number;
+    };
     expect(JSON.parse(fallback.payload)).toEqual({ baseFontSize: 19 });
     expect(fallback.updatedAt).toEqual(expect.any(Number));
   });
 
-  it("persists thread list shelf expansion preferences", async () => {
+  it("persists thread list shelf preferences", async () => {
     await expect(
       savePreferencesPatch({
         threadListSettledShelfExpanded: false,
         threadListSnoozedShelfExpanded: true,
+        threadListWorkingShelfExpanded: true,
+        workingShelfEnabled: true,
       }),
     ).resolves.toEqual({
       threadListSettledShelfExpanded: false,
       threadListSnoozedShelfExpanded: true,
+      threadListWorkingShelfExpanded: true,
+      workingShelfEnabled: true,
     });
 
     await expect(loadPreferences()).resolves.toEqual({
       threadListSettledShelfExpanded: false,
       threadListSnoozedShelfExpanded: true,
+      threadListWorkingShelfExpanded: true,
+      workingShelfEnabled: true,
     });
     expect(JSON.parse(mocks.getPreferencesJson() ?? "")).toEqual({
       threadListSettledShelfExpanded: false,
       threadListSnoozedShelfExpanded: true,
+      threadListWorkingShelfExpanded: true,
+      workingShelfEnabled: true,
     });
   });
 
@@ -290,6 +296,32 @@ describe("mobile connection storage", () => {
     );
 
     await expect(loadPreferences()).resolves.toEqual({ baseFontSize: 17 });
+  });
+
+  it("keeps valid list filters and drops malformed ones", async () => {
+    const threadListFilters = { environmentId: "environment-1", projectKey: null };
+    const pullRequestListFilters = {
+      environmentId: null,
+      controls: {
+        "": {
+          state: "all",
+          involvement: "reviewing",
+          filters: { labels: [["size:S"]] },
+          sort: "oldest",
+        },
+      },
+    };
+    mocks.setPreferencesJson(JSON.stringify({ threadListFilters, pullRequestListFilters }), 10);
+    await expect(loadPreferences()).resolves.toEqual({ threadListFilters, pullRequestListFilters });
+
+    mocks.setPreferencesJson(
+      JSON.stringify({
+        threadListFilters: { environmentId: 1, projectKey: null },
+        pullRequestListFilters: { environmentId: null, controls: { "": { sort: "newest" } } },
+      }),
+      11,
+    );
+    await expect(loadPreferences()).resolves.toEqual({});
   });
 
   it("reconciles fallback preferences after SQLite recovers", async () => {
