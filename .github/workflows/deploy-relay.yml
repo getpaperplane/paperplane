@@ -78,14 +78,17 @@ jobs:
             args:
               - --filter=rove-relay...
 
+      # Runs Alchemy directly: `vp run --filter` loads every workspace's Vite
+      # config, and apps/server's needs dependencies the relay-only install skips.
       - name: Deploy production relay stage
+        working-directory: infra/relay
         shell: bash
         run: |
           set -euo pipefail
           if [[ "$DRY_RUN" == "true" ]]; then
-            vp run --filter rove-relay plan --stage prod
+            npx alchemy plan --stage prod
           else
-            vp run --filter rove-relay deploy --stage prod --yes --no-input ${FORCE:+--force}
+            npx alchemy deploy --stage prod --yes --no-input ${FORCE:+--force}
           fi
         env:
           DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}
