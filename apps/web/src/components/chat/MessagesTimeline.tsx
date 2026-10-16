@@ -70,7 +70,9 @@ import { claudeSkillInvocation, isJavaScriptReplTool } from "@rove-code/shared/t
 import { observeVisibleAnimation } from "../../lib/visibleAnimation";
 import {
   createContext,
+  lazy,
   memo,
+  Suspense,
   use,
   useCallback,
   useContext,
@@ -88,8 +90,6 @@ import {
   type LegendListRef,
   type MaintainScrollAtEndOptions,
 } from "@legendapp/list/react";
-import { FileDiff } from "@pierre/diffs/react";
-import { DiffWorkerPoolProvider } from "../DiffWorkerPoolProvider";
 import {
   type TimelineEntry,
   providerErrorPresentation,
@@ -109,12 +109,7 @@ import {
   isVideoAttachment,
   type TurnDiffSummary,
 } from "../../types";
-import {
-  getRenderablePatch,
-  resolveDiffThemeName,
-  resolveFileDiffPath,
-} from "../../lib/diffRendering";
-import { PREFERRED_HIGHLIGHTER } from "../../lib/syntaxHighlighting";
+import { getRenderablePatch } from "../../lib/diffRendering";
 import ChatMarkdown, { ChatMarkdownAssetImage } from "../ChatMarkdown";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -303,6 +298,8 @@ import {
   formatReviewCommentFence,
   type ReviewCommentContext,
 } from "../../reviewCommentContext";
+
+const ReviewCommentFileDiffs = lazy(() => import("./ReviewCommentFileDiffs"));
 
 // ---------------------------------------------------------------------------
 // Context — shared state consumed by every row component via Context.
@@ -4979,20 +4976,9 @@ function UserMessageReviewCommentCard({ comment }: { comment: ReviewCommentConte
         />
       )}
       {renderablePatch?.kind === "files" && (
-        <DiffWorkerPoolProvider>
-          {renderablePatch.files.map((fileDiff) => (
-            <FileDiff
-              key={resolveFileDiffPath(fileDiff)}
-              fileDiff={fileDiff}
-              options={{
-                collapsed: false,
-                diffStyle: "unified",
-                theme: resolveDiffThemeName(ctx.resolvedTheme),
-                preferredHighlighter: PREFERRED_HIGHLIGHTER,
-              }}
-            />
-          ))}
-        </DiffWorkerPoolProvider>
+        <Suspense fallback={null}>
+          <ReviewCommentFileDiffs files={renderablePatch.files} resolvedTheme={ctx.resolvedTheme} />
+        </Suspense>
       )}
       {renderablePatch?.kind === "raw" && (
         <pre className="overflow-x-auto rounded-md bg-muted/40 p-2 text-xs">

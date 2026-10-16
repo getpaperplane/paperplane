@@ -6,7 +6,8 @@ import {
   type ProjectIconColor,
   type ProjectIconOverride,
 } from "@rove-code/contracts";
-import { DynamicIcon, type IconName } from "lucide-react/dynamic";
+import type { IconName } from "lucide-react/dynamic";
+import { NamedLucideIcon } from "../NamedLucideIcon";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   filterProjectIconNames,
@@ -33,6 +34,10 @@ import { Toggle, ToggleGroup } from "../ui/toggle-group";
 const DEFAULT_ICON: IconName = "folder-code";
 const isMonogramText = Schema.is(ProjectMonogramText);
 
+function LoadingIconSlot({ className }: { className?: string | undefined }) {
+  return <span className={className} />;
+}
+
 function iconLabel(name: string): string {
   return name
     .split("-")
@@ -55,8 +60,8 @@ export function ProjectIconPickerDialog({
 }) {
   const automatic = deriveProjectIdentity(projectName);
   const [mode, setMode] = useState<ProjectIconOverride["kind"]>(current?.kind ?? "lucide");
-  const [iconName, setIconName] = useState<IconName>(
-    current?.kind === "lucide" ? (current.name as IconName) : DEFAULT_ICON,
+  const [iconName, setIconName] = useState<string>(
+    current?.kind === "lucide" ? current.name : DEFAULT_ICON,
   );
   const [color, setColor] = useState<ProjectIconColor>(
     current && current.kind !== "emoji" ? current.color : automatic.color,
@@ -72,7 +77,7 @@ export function ProjectIconPickerDialog({
   useEffect(() => {
     if (open && !previousOpenRef.current) {
       setMode(current?.kind ?? "lucide");
-      setIconName(current?.kind === "lucide" ? (current.name as IconName) : DEFAULT_ICON);
+      setIconName(current?.kind === "lucide" ? current.name : DEFAULT_ICON);
       setColor(current && current.kind !== "emoji" ? current.color : automatic.color);
       setLetters(current?.kind === "monogram" ? current.text : automatic.monogram);
       setEmoji(current?.kind === "emoji" ? current.emoji : "💻");
@@ -167,7 +172,7 @@ export function ProjectIconPickerDialog({
                       )}
                       onClick={() => setIconName(name)}
                     >
-                      <DynamicIcon name={name} className="size-5" />
+                      <NamedLucideIcon name={name} className="size-5" fallback={LoadingIconSlot} />
                     </button>
                   ))}
                 </div>
