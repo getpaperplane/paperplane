@@ -48,9 +48,15 @@ const CHAT_ROUTE_SOURCES = [
   /src\/routes\/_chat\.\$environmentId\.\$threadId\.tsx/,
 ];
 
-// Module patterns that should never be in the startup graph. Matched against
-// sourcemap `sources` (module paths) and, as a fallback, chunk file names.
-const FORBIDDEN: ReadonlyArray<{ readonly id: string; readonly pattern: RegExp }> = [
+// Modules that should never be in the startup graph. `pattern` matches sourcemap
+// `sources` (module paths) and, as a fallback, chunk file names. `chunkKey`
+// matches manifest keys, which tell split route components (`?tsr-split`) apart
+// from the route definitions that the router keeps in main.
+const FORBIDDEN: ReadonlyArray<{
+  readonly id: string;
+  readonly pattern: RegExp;
+  readonly chunkKey?: RegExp;
+}> = [
   { id: "shiki", pattern: /shared_highlighter|[/@]shikijs?\/|\/shiki\// },
   { id: "pierre-diffs-renderers", pattern: /@pierre\/diffs\/dist\/(react|components|renderers)\// },
   { id: "clerk", pattern: /@clerk\// },
@@ -58,7 +64,8 @@ const FORBIDDEN: ReadonlyArray<{ readonly id: string; readonly pattern: RegExp }
   { id: "terminal", pattern: /@xterm\/|ghostty|ThreadTerminalDrawer/ },
   {
     id: "settings-pages",
-    pattern: /src\/components\/settings\/[^/]+Settings[^/]*\.tsx|src\/routes\/settings\./,
+    pattern: /src\/components\/settings\/[^/]+Settings[^/]*\.tsx/,
+    chunkKey: /src\/routes\/settings[^?]*\?tsr-split/,
   },
 ];
 
@@ -161,18 +168,31 @@ function makeStatsReader(dist: string) {
   };
 }
 
-function summarize(manifest: Manifest, keys: Iterable<string>, read: (file: string) => FileStats) {
+function summarize(
+  manifest: Manifest,
+  keySet: Iterable<string>,
+  read: (file: string) => FileStats,
+) {
+  const keys = [...keySet];
   const files = [
-    ...new Set([...keys].map((key) => manifest[key]?.file).filter((f) => f?.endsWith(".js"))),
+    ...new Set(keys.map((key) => manifest[key]?.file).filter((f) => f?.endsWith(".js"))),
   ]
     .map((file) => read(file!))
     .sort((a, b) => b.raw - a.raw);
   const flags: Record<string, string[]> = {};
-  for (const { id, pattern } of FORBIDDEN) {
-    const hits = files.filter(
-      (stats) => pattern.test(stats.file) || stats.modules.some((module) => pattern.test(module)),
+  for (const { id, pattern, chunkKey } of FORBIDDEN) {
+    const hits = new Set(
+      files
+        .filter(
+          (stats) =>
+            pattern.test(stats.file) || stats.modules.some((module) => pattern.test(module)),
+        )
+        .map((stats) => stats.file),
     );
-    if (hits.length > 0) flags[id] = hits.map((stats) => stats.file);
+    if (chunkKey) {
+      for (const key of keys) if (chunkKey.test(key)) hits.add(manifest[key]!.file);
+    }
+    if (hits.size > 0) flags[id] = [...hits];
   }
   return {
     rawBytes: files.reduce((sum, stats) => sum + stats.raw, 0),
