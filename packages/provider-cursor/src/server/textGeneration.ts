@@ -58,7 +58,7 @@ export const makeCursorTextGeneration = Effect.fn("makeCursorTextGeneration")(fu
   withAccess?: CursorAuth["withAccess"],
 ) {
   const fs = yield* FileSystem.FileSystem;
-  const { Agent, SqliteLocalAgentStore } = yield* CursorSdk.CursorSdk;
+  const sdk = yield* CursorSdk.CursorSdk;
   const resolvedEnvironment = environment ?? process.env;
 
   const resolveCursorApiKey = (operation: TextGenerationOperations.Operation) =>
@@ -103,7 +103,7 @@ export const makeCursorTextGeneration = Effect.fn("makeCursorTextGeneration")(fu
       // agent's workspace stays empty.
       const stateRoot = yield* fs.makeTempDirectoryScoped({ prefix: "rove-cursor-text-state-" });
       const store = yield* Effect.acquireRelease(
-        Effect.tryPromise(() => SqliteLocalAgentStore.open({ workspaceRef: cwd, stateRoot })),
+        Effect.tryPromise(() => sdk.SqliteLocalAgentStore.open({ workspaceRef: cwd, stateRoot })),
         (store) => Effect.tryPromise(() => store.dispose()).pipe(Effect.ignore({ log: true })),
       );
       const agentOptions = {
@@ -121,7 +121,7 @@ export const makeCursorTextGeneration = Effect.fn("makeCursorTextGeneration")(fu
       } satisfies AgentOptions;
       const createCursorAgent = (sandboxEnabled: boolean) =>
         Effect.tryPromise((signal) =>
-          Agent.create(
+          sdk.Agent.create(
             sandboxEnabled
               ? agentOptions
               : {

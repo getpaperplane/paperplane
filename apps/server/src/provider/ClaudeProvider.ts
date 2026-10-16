@@ -15,13 +15,12 @@ import * as Result from "effect/Result";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import { createModelCapabilities } from "@rove-code/shared/model";
 import { resolveSpawnCommand } from "@rove-code/shared/shell";
-import {
-  query as claudeQuery,
-  type Options as ClaudeQueryOptions,
-  type SlashCommand as ClaudeSlashCommand,
-  type SDKControlGetUsageResponse,
-  type SDKUserMessage,
-  type SettingSource,
+import type {
+  Options as ClaudeQueryOptions,
+  SlashCommand as ClaudeSlashCommand,
+  SDKControlGetUsageResponse,
+  SDKUserMessage,
+  SettingSource,
 } from "@anthropic-ai/claude-agent-sdk";
 
 import {
@@ -389,6 +388,8 @@ const probeClaudeCapabilities = (
     );
     const managedMcpConfig = yield* hasClaudeManagedMcpConfig();
     return yield* Effect.tryPromise(async () => {
+      const { query: claudeQuery } = await import("@anthropic-ai/claude-agent-sdk");
+      abort.signal.throwIfAborted();
       const q = claudeQuery({
         // Never yield — we only need initialization data, not a conversation.
         // This prevents any prompt from reaching the Anthropic API.
