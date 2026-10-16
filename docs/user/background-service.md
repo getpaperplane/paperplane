@@ -1,70 +1,121 @@
-# Keep a Rove host running
+# Running Rove Code in the background
 
-Install the Rove CLI from a published Rove release before following this guide. Release candidates can use the staged CLI executable. See [installation](./install.md).
+On Linux and macOS, Rove Code can run as a service for your user so you do not need
+to keep a terminal open.
 
-## Install the service
+## Manage the service
 
-Run the command as the account that owns your repositories and provider credentials. Do not run Rove with `sudo`.
+Install the `rove` CLI first ([Install Rove Code](./install.md#command-line)), then
+run these commands on the machine that will host Rove Code:
 
-```sh
-rove service install
-rove service status
-```
+| Task                            | Command                  |
+| ------------------------------- | ------------------------ |
+| Install and start               | `rove service install`   |
+| Inspect status and log location | `rove service status`    |
+| Move to a newer release         | `rove update`            |
+| Restart                         | `rove service restart`   |
+| Stop and remove from startup    | `rove service uninstall` |
 
-The service runs independently of your terminal and connected clients. It uses an exact-version runtime outside the npm cache. Removing an npm cache entry does not remove the installed host.
+Uninstalling the service leaves your projects, threads, and settings intact.
+Running `rove service install` again repairs a service that `rove service status`
+reports as broken.
 
-To reach the host over a tailnet, install it with Tailscale HTTPS enabled:
+`rove update` downloads the newest release on your channel and switches `rove`
+and the service to it. Restarting interrupts running agent turns, terminals,
+and remote clients, so it asks first; answer no and the service keeps running
+the old version until you run `rove service restart`. Pass `--yes` from a
+script. A server you started by hand is left running; stop and start it again
+to pick up the new version. Wait for any remote update already in progress
+before updating; to match a remote client's version, follow
+[Updating Rove Code](./updating.md).
 
-```sh
-rove service install --tailscale-serve
-rove pair --tailscale
-```
+Pass an exact version (`rove update 0.0.42`) to pin one, `--channel nightly` to
+switch trains, or `--allow-downgrade` to move backwards. `preview` is a
+maintainers' test train: its builds can be broken and are never offered as
+updates, so the installer and `rove update` ask for confirmation before
+installing one.
 
-To bind directly to a private interface, specify its address and port:
+`rove uninstall` removes the background service, the `rove` launcher, and the
+downloaded versions after showing you the list and asking once. Your projects,
+threads, and settings under `~/.rove-code/userdata` are kept. Pass `--yes` from a
+script.
 
-```sh
-rove service install --host <private-ip> --port 3773
-rove pair
-```
+## Platform support
 
-Installation saves the address, port, Tailscale settings, and provider search path. Repairs and updates retain these settings when you omit the flags. To change them, run `service install` with the new values. Use `--tailscale-serve=false` to disable Tailscale exposure, and `--host 127.0.0.1` to return to loopback binding.
+Linux needs systemd user services. Setup enables lingering so Rove Code starts at
+boot and keeps running after logout. If this needs administrator permission,
+setup prints a recovery command before changing the service.
 
-## Prepare Linux or WSL
+macOS starts the service when you log in and stops it when you log out. Keep the
+Mac logged in and awake for unattended remote access. Installing over SSH while
+nobody is logged in at the Mac's screen can fail at the final start step; the
+service is still installed and will start at the next login.
 
-Linux hosts require a systemd user manager. WSL distributions must have systemd enabled and remain running while clients use the environment. A user service does not start Windows or a stopped WSL distribution.
+Windows background services are not supported.
 
-Check the prerequisites:
+Rove Connect can offer service installation during setup, but the two are managed
+separately. Signing out of Rove Connect does not stop or uninstall the service.
 
-```sh
-systemctl --user status
-loginctl show-user "$(id -un)" --property=Linger
-```
+## Troubleshooting
 
-Installation attempts to enable lingering for your account. If permission is denied, enable it as an administrator, then retry installation as your normal user:
+Start with `rove service status` on the host. It prints the log path and, on Linux,
+checks whether the installed service is running, enabled, and allowed to survive
+logout.
+
+If it stops when your SSH session closes, check for `linger-disabled`. An
+administrator can enable lingering with:
 
 ```sh
 sudo loginctl enable-linger "$(id -un)"
 ```
 
-Lingering allows the service to run after your last login session ends. Native Windows background services are not supported. Use a systemd-enabled WSL distribution for a persistent Windows host.
-
-macOS hosts use a launch agent in your graphical login session. Installing one over SSH requires that session to exist.
-
-## Update or remove the service
+Over SSH, allow sudo to prompt:
 
 ```sh
-rove update
-rove service status
+ssh -t your-server 'sudo loginctl enable-linger "$(id -un)"'
 ```
 
-The update command downloads the selected release and offers to restart the service. If you defer the restart, run `rove service restart` when ready. Connected clients reconnect to the same environment. Pairing and thread history remain in its data directory.
+Then retry service setup as your normal user. Run only the `loginctl` command
+with sudo; running Rove Code as root creates a separate installation and Connect
+identity. Without administrator access, run `rove serve` in a terminal and keep
+that session open.
 
-Authorized clients can update launcher-managed hosts in **Settings → Connections**. Finish terminal commands before an update. See [updates](./updating.md) for thread continuation and rollback behavior.
+| Status problem                          | Next step                                                                                                                      |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `linger-unavailable`                    | Run `loginctl show-user "$(id -un)" --property=Linger` and check that systemd-logind is available.                             |
+| `user-manager-unavailable`              | Run `systemctl --user status` in a login session for the service user; check your distribution's systemd user-session support. |
+| `service-disabled` or `service-stopped` | Read the log and `systemctl --user status rove.service`, then use the repair command printed by Rove Code.                     |
+| `restart-pending`                       | A newer version is installed but the service still runs the previous one. Run `rove service restart`.                          |
 
-To remove automatic startup and stop the service:
+On macOS, check **System Settings → General → Login Items** if the service no
+longer starts at login. If agent work cannot access Desktop, Documents, or
+Downloads, it may need Full Disk Access for the `rove` executable listed in
+`ProgramArguments` in
+`~/Library/LaunchAgents/dev.rove.app.service.plist`.
 
-```sh
-rove service uninstall
-```
+For failures after signing in to Rove Connect, see
+[connection troubleshooting](./remote-access.md#rove-connect-troubleshooting).
 
-Removal does not delete repositories, credentials, or thread history. Reinstalling with the same data directory restores the same environment.
+## Reclaim database space
+
+Rove Code removes superseded internal history on its own while it runs; your
+conversations are kept. Databases created before this shrank automatically
+still hold the freed space on disk until a one-time offline repair returns it
+and turns on automatic shrinking. Settings > Storage (web and desktop) or
+Settings > Maintenance (mobile) suggests the repair when at least 1 GiB can be
+reclaimed.
+
+Run `rove doctor` on the machine that hosts the environment. It reports the
+database size and the space it can reclaim, then asks which repairs to run;
+pass `--fix` to run the recommended ones without a prompt (for scripts), or
+`--dry-run` to only report. An installed background service for the same data
+directory is stopped for the repair and started again afterwards, also when
+the repair fails. Quit a server you started by hand, or the desktop app, first:
+the repair refuses to touch a database that is in use. Use `--base-dir` for a
+different data directory.
+
+The repair can take several minutes on a large database. It rebuilds the
+database through a temporary copy, so it needs free space of about the
+database's size twice over: once in the system temporary directory (`TMPDIR`
+or `/tmp` on Linux and macOS) and once next to the database for its
+write-ahead log.

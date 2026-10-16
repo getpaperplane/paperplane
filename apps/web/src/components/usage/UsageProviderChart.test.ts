@@ -1,7 +1,52 @@
 import { describe, expect, it } from "vite-plus/test";
 
-import { buildPeriodColumns, niceScale, resolvePeriodSelection } from "./UsageProviderChart";
+import {
+  buildPeriodColumns,
+  chartScale,
+  niceScale,
+  resolvePeriodSelection,
+} from "./UsageProviderChart";
 import { providersWithUsage } from "./usageProviders";
+
+describe("resolvePeriodSelection", () => {
+  const days = ["2026-08-01", "2026-08-02", "2026-08-03", "2026-08-04"];
+  it("orders a drag in either direction", () => {
+    expect(resolvePeriodSelection(days, 3, 1, null)).toEqual({
+      start: "2026-08-02",
+      end: "2026-08-04",
+    });
+  });
+  it("toggles a focused single period and narrows an existing range", () => {
+    const single = { start: "2026-08-03", end: "2026-08-03" };
+    expect(resolvePeriodSelection(days, 2, 2, null)).toEqual(single);
+    expect(resolvePeriodSelection(days, 2, 2, single)).toBeNull();
+    expect(resolvePeriodSelection(days, 1, 1, { start: "2026-08-01", end: "2026-08-04" })).toEqual({
+      start: "2026-08-02",
+      end: "2026-08-02",
+    });
+  });
+});
+
+describe("chartScale", () => {
+  const column = (codex: number) => ({
+    total: codex,
+    bands: [{ provider: "codex" as const, value: codex }],
+  });
+
+  it("holds unlabeled placeholder gridlines while loading providers have nothing to show", () => {
+    const scale = chartScale([column(0)], new Set(["codex" as const]));
+
+    expect(scale.labeled).toBe(false);
+    expect(scale.ticks.length).toBeGreaterThan(1);
+  });
+
+  it("scales to what is on screen, loading or not", () => {
+    expect(chartScale([column(40)], new Set(["codex" as const]))).toMatchObject({
+      max: 40,
+      labeled: true,
+    });
+  });
+});
 
 describe("niceScale", () => {
   it("never puts the peak above the top of the scale", () => {
@@ -139,29 +184,5 @@ describe("hourly chart columns", () => {
         "cost",
       ).map((column) => column.total),
     ).toEqual([0, 4, 0]);
-  });
-});
-
-describe("resolvePeriodSelection", () => {
-  const days = ["2026-08-01", "2026-08-02", "2026-08-03", "2026-08-04"];
-
-  it("orders a drag in either direction", () => {
-    expect(resolvePeriodSelection(days, 3, 1, null)).toEqual({
-      start: "2026-08-02",
-      end: "2026-08-04",
-    });
-  });
-
-  it("toggles a click on the already-focused single period", () => {
-    const single = { start: "2026-08-03", end: "2026-08-03" };
-    expect(resolvePeriodSelection(days, 2, 2, null)).toEqual(single);
-    expect(resolvePeriodSelection(days, 2, 2, single)).toBeNull();
-  });
-
-  it("narrows a range to a clicked period inside it", () => {
-    expect(resolvePeriodSelection(days, 1, 1, { start: "2026-08-01", end: "2026-08-04" })).toEqual({
-      start: "2026-08-02",
-      end: "2026-08-02",
-    });
   });
 });

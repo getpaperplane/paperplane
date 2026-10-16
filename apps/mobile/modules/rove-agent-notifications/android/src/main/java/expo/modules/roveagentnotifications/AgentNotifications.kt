@@ -20,8 +20,7 @@ import expo.modules.notifications.service.ExpoFirebaseMessagingService
 
 class AgentMessagingService : ExpoFirebaseMessagingService() {
   override fun onMessageReceived(remoteMessage: RemoteMessage) {
-    val kind = remoteMessage.data["rove_kind"] ?: remoteMessage.data["t3_kind"]
-    if (kind == "agent_activity") {
+    if (remoteMessage.data["rove_kind"] == "agent_activity") {
       AgentNotifications.receive(this, remoteMessage.data)
     } else {
       super.onMessageReceived(remoteMessage)
@@ -44,31 +43,6 @@ class AgentActivityExpiryReceiver : BroadcastReceiver() {
 /** Handles data pushes natively so delivery does not depend on a running JS bridge. */
 object AgentNotifications {
   private const val STORE = "rove-agent-notifications"
-  private const val MIGRATED = "roveNamesMigrated"
-
-  @Synchronized
-  private fun preferences(context: Context): SharedPreferences {
-    val current = context.getSharedPreferences(STORE, Context.MODE_PRIVATE)
-    if (current.getBoolean(MIGRATED, false)) return current
-    val previous = context.getSharedPreferences("t3-agent-notifications", Context.MODE_PRIVATE)
-    val editor = current.edit()
-    for ((key, value) in previous.all) {
-      if (current.contains(key)) continue
-      when (value) {
-        is String -> editor.putString(key, value)
-        is Boolean -> editor.putBoolean(key, value)
-        is Long -> editor.putLong(key, value)
-        is Int -> editor.putInt(key, value)
-        is Float -> editor.putFloat(key, value)
-        is Set<*> -> editor.putStringSet(key, value.filterIsInstance<String>().toSet())
-      }
-    }
-    val notifications = manager(context)
-    notifications.activeNotifications
-      .filter { it.tag == "t3-agent-activity" || it.tag == "t3-agent-alert" }
-      .forEach { notifications.cancel(it.tag, it.id) }
-    return if (editor.putBoolean(MIGRATED, true).commit()) current else previous
-  }
   private const val ACTIVITY_CHANNEL = "agent-activity"
   private const val ALERT_CHANNEL = "agent-alerts"
   private const val ACTIVITY_TAG = "rove-agent-activity"
@@ -86,7 +60,7 @@ object AgentNotifications {
     scheme: String,
     ongoingEnabled: Boolean
   ) {
-    val prefs = preferences(context)
+    val prefs = context.getSharedPreferences(STORE, Context.MODE_PRIVATE)
     // JS identity is empty on a cold start. Compare the durable identity here
     // so reopening preserves cards, dismissal and replay history for this user.
     if (prefs.getString("userId", null) != userId ||
@@ -108,28 +82,44 @@ object AgentNotifications {
   @Synchronized
   fun clear(context: Context) {
     cancelActivity(context)
-    preferences(context).edit().clear().putBoolean(MIGRATED, true).apply()
+    context.getSharedPreferences(STORE, Context.MODE_PRIVATE).edit().clear().apply()
     val manager = manager(context)
-    manager.activeNotifications.filter { it.tag == ACTIVITY_TAG || it.tag == ALERT_TAG }
+    manager.activeNotifications.filter {
+      it.tag == ACTIVITY_TAG || it.tag == ALERT_TAG ||
+        it.tag?.startsWith("$ALERT_TAG-summary:") == true
+    }
       .forEach { manager.cancel(it.tag, it.id) }
+  }
+
+  /** Records the thread route the app is showing, or null when none is open. */
+  @Volatile private var threadOnScreen: String? = null
+
+  fun setThreadOnScreen(path: String?) {
+    threadOnScreen = path
   }
 
   @Synchronized
   fun dismiss(context: Context) {
-    preferences(context).edit().putBoolean("dismissed", true).apply()
+    context.getSharedPreferences(
+      STORE,
+      Context.MODE_PRIVATE
+    ).edit().putBoolean("dismissed", true).apply()
     cancelActivity(context)
   }
 
   @Synchronized
   fun expire(context: Context, now: Long = System.currentTimeMillis()) {
-    val expiresAt = preferences(context).getLong("expiresAt", 0)
+    val expiresAt = context.getSharedPreferences(
+      STORE,
+      Context.MODE_PRIVATE
+    ).getLong("expiresAt", 0)
     // An already-dispatched alarm must not remove a newer run's card.
     if (expiresAt > 0 && expiresAt <= now) cancelActivity(context)
   }
 
   @Synchronized
   fun receive(context: Context, data: Map<String, String>) {
-    val prefs = preferences(context)
+    val prefs = context.getSharedPreferences(STORE, Context.MODE_PRIVATE)
     val updatedAt = data["updated_at"]?.toLongOrNull() ?: return
     val registered = prefs.getBoolean("enabled", false) &&
       data["device_id"] == prefs.getString("deviceId", null) &&
@@ -155,26 +145,72 @@ object AgentNotifications {
     val seen = prefs.getString("seenAlertsOrdered", null)?.split('\n')
       ?: prefs.getStringSet("seenAlerts", emptySet()).orEmpty().toList()
     if (alertId != null && alertId !in seen) {
-      // Match iOS foreground presentation. Consume suppressed alerts as well,
-      // so a delivery retry cannot surface them after the app backgrounds.
-      if (!ProcessLifecycleOwner.get().lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
-        val title = data["alert_title"].orEmpty().take(120)
-        // Grouped alerts list up to five 120-character thread titles.
-        val body = data["alert_body"].orEmpty().take(608)
-        val id = alertId.hashCode()
-        val notification = base(context, ALERT_CHANNEL)
-          .setContentTitle(title).setContentText(body)
-          .setStyle(NotificationCompat.BigTextStyle().bigText(body))
-          .setAutoCancel(true)
-          .setContentIntent(contentIntent(context, scheme, data["alert_path"], id))
-          .build()
-        manager(context).notify(ALERT_TAG, id, notification)
+      // Consume suppressed alerts so retries cannot resurface them later.
+      val resumed = ProcessLifecycleOwner.get().lifecycle.currentState.isAtLeast(
+        Lifecycle.State.RESUMED
+      )
+      val visibleThread = threadOnScreen
+      val onScreen = resumed && visibleThread != null && data["alert_path"] == visibleThread
+      if (!onScreen) {
+        postAlert(context, scheme, data, alertId)
       }
       prefs.edit().remove("seenAlerts").putString(
         "seenAlertsOrdered",
         (seen.takeLast(63) + alertId).joinToString("\n")
       ).apply()
     }
+  }
+
+  private fun postAlert(
+    context: Context,
+    scheme: String,
+    data: Map<String, String>,
+    alertId: String
+  ) {
+    val title = data["alert_title"].orEmpty().take(120)
+    // Grouped alerts list up to five 120-character thread titles.
+    val body = data["alert_body"].orEmpty().take(608)
+    val id = alertId.hashCode()
+    val group = data["alert_group"]?.takeIf { it.isNotBlank() } ?: ALERT_TAG
+    val notification = base(context, ALERT_CHANNEL)
+      .setContentTitle(title).setContentText(body)
+      .setStyle(NotificationCompat.BigTextStyle().bigText(body))
+      .setAutoCancel(true)
+      .setGroup(group)
+      .setContentIntent(contentIntent(context, scheme, data["alert_path"], id))
+      .build()
+    manager(context).notify(ALERT_TAG, id, notification)
+    val children = manager(context).activeNotifications.filter {
+      it.tag == ALERT_TAG && it.notification.group == group
+    }
+    if (children.size > 1) {
+      val style = NotificationCompat.InboxStyle()
+      children.forEach {
+        style.addLine(it.notification.extras.getCharSequence(android.app.Notification.EXTRA_TEXT))
+      }
+      val summary = base(context, ALERT_CHANNEL)
+        .setContentTitle(title)
+        .setContentText(body)
+        .setStyle(style)
+        .setGroup(group)
+        .setGroupSummary(true)
+        .setSilent(true)
+        .setAutoCancel(true)
+        .setContentIntent(contentIntent(context, scheme, data["alert_path"], 0))
+        .build()
+      manager(context).notify("$ALERT_TAG-summary:$group", 0, summary)
+    }
+  }
+
+  /**
+   * Renders a relay-shaped payload without the registration, freshness and
+   * foreground checks, for the showcase capture's staged notifications.
+   */
+  @Synchronized
+  fun showcase(context: Context, scheme: String, data: Map<String, String>) {
+    channels(context)
+    data["alert_id"]?.let { postAlert(context, scheme, data, it) }
+    showActivity(context, scheme, data, data["active"] == "true", RUNNING_LIFETIME_MS)
   }
 
   private fun updateActivity(
@@ -246,7 +282,8 @@ object AgentNotifications {
       // expires cards on Android 7, including when the app process has exited.
       // No exact-alarm permission, foreground service or periodic work needed.
       val expiresAt = System.currentTimeMillis() + remainingMs
-      preferences(context).edit().putLong("expiresAt", expiresAt).apply()
+      context.getSharedPreferences(STORE, Context.MODE_PRIVATE).edit()
+        .putLong("expiresAt", expiresAt).apply()
       context.getSystemService(
         AlarmManager::class.java
       ).setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, expiresAt, expiryIntent(context))
@@ -264,7 +301,7 @@ object AgentNotifications {
     manager(context).cancel(ACTIVITY_TAG, ACTIVITY_ID)
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
       context.getSystemService(AlarmManager::class.java).cancel(expiryIntent(context))
-      preferences(context).edit().remove("expiresAt").apply()
+      context.getSharedPreferences(STORE, Context.MODE_PRIVATE).edit().remove("expiresAt").apply()
     }
   }
 

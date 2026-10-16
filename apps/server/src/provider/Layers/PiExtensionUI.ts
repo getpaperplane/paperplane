@@ -141,8 +141,7 @@ export function createPiExtensionUI(
           value: String(index),
         })) ?? [],
       allowCustomAnswer: choices === undefined,
-      ...(editor ? { inputMode: "multiline" as const } : undefined),
-      ...(editor?.prefill !== undefined ? { initialAnswer: editor.prefill } : undefined),
+      ...(editor ? { initialAnswer: editor.prefill ?? "" } : undefined),
       multiSelect: false,
     } satisfies UserInputQuestion;
     return new Promise((resolve) => {

@@ -12,16 +12,20 @@ describe("hostedPairing", () => {
     vi.unstubAllEnvs();
   });
 
-  it("does not use an upstream hosted origin without explicit configuration", () => {
+  it("uses Rove's hosted origin without configuration, not an upstream origin", () => {
     vi.stubEnv("VITE_HOSTED_APP_URL", "");
+    vi.stubEnv("VITE_HOSTED_APP_CHANNEL", "");
     vi.stubEnv("VITE_HTTP_URL", "");
     vi.stubEnv("VITE_WS_URL", "");
 
-    expect(isHostedStaticApp(new URL("https://app.rove.codes/"))).toBe(false);
+    expect(isHostedStaticApp(new URL("https://app.t3.codes/"))).toBe(false);
+    expect(isHostedStaticApp(new URL("https://rove.hafiezulzikry.com/"))).toBe(true);
+    expect(isHostedStaticApp(new URL("http://localhost:3000/"))).toBe(false);
+    expect(isHostedStaticApp(new URL("https://rove.hafiezulzikry.com.evil.test/"))).toBe(false);
     expect(
       new URL(buildHostedPairingUrl({ host: "https://host.example.com", token: "test", label: "" }))
-        .hostname,
-    ).toBe("app.example.invalid");
+        .origin,
+    ).toBe("https://rove.hafiezulzikry.com");
   });
 
   it("reads hosted pairing host and query token parameters", () => {

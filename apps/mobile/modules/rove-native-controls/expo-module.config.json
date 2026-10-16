@@ -1,11 +1,16 @@
 {
   "platforms": ["apple", "android"],
   "apple": {
-    "modules": ["RoveNativeControlsModule", "RoveKeyboardCommandsModule"]
+    "modules": ["RoveNativeControlsModule", "RoveKeyboardCommandsModule"],
+    "appDelegateSubscribers": [
+      "RoveWorkspaceOrientationSubscriber",
+      "RoveMenuDismissTouchGateSubscriber"
+    ]
   },
   "android": {
     "modules": [
       "expo.modules.rovenativecontrols.RoveNativeControlsModule",
+      "expo.modules.rovenativecontrols.RoveWorkspaceNavigationModule",
       "expo.modules.rovenativecontrols.RoveKeyboardCommandsModule"
     ]
   }

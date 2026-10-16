@@ -1,5 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
-import { HostProcessPlatform } from "@rove-code/shared/hostProcess";
+import * as HostProcess from "@rove-code/shared/HostProcess";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -14,6 +14,7 @@ const {
   mkdirSyncMock,
   writeFileSyncMock,
   copyFileSyncMock,
+  execFileSyncMock,
 } = vi.hoisted(() => ({
   appendSwitchMock: vi.fn(),
   getSwitchValueMock: vi.fn(),
@@ -23,6 +24,7 @@ const {
   mkdirSyncMock: vi.fn(),
   writeFileSyncMock: vi.fn(),
   copyFileSyncMock: vi.fn(),
+  execFileSyncMock: vi.fn(),
 }));
 
 vi.mock("electron", () => ({
@@ -49,6 +51,10 @@ vi.mock("node:fs", () => ({
   copyFileSync: copyFileSyncMock,
 }));
 
+vi.mock("node:child_process", () => ({
+  execFileSync: execFileSyncMock,
+}));
+
 import * as DesktopPreReadyPlatform from "./DesktopPreReadyPlatform.ts";
 
 describe("DesktopPreReadyPlatform", () => {
@@ -61,6 +67,7 @@ describe("DesktopPreReadyPlatform", () => {
     mkdirSyncMock.mockReset();
     writeFileSyncMock.mockReset();
     copyFileSyncMock.mockReset();
+    execFileSyncMock.mockReset();
   });
 
   it.effect("preserves an explicit Linux password-store switch", () => {
@@ -75,60 +82,109 @@ describe("DesktopPreReadyPlatform", () => {
     }).pipe(
       Effect.provide(
         DesktopPreReadyPlatform.layer.pipe(
-          Layer.provide(Layer.succeed(HostProcessPlatform, "linux")),
+          Layer.provide(Layer.succeed(HostProcess.Platform, "linux")),
         ),
       ),
     );
   });
 
-  for (const previousEntry of [undefined, 'Exec="/Applications/deleted-previous.AppImage" %U']) {
-    it.effect(
-      `prepares a ${previousEntry ? "stale" : "missing"} Linux desktop entry before startup yields`,
-      () => {
-        vi.stubEnv("VITE_DEV_SERVER_URL", "");
-        vi.stubEnv("XDG_DATA_HOME", "/xdg");
-        vi.stubEnv("APPIMAGE", "/Applications/current.AppImage");
-        getSwitchValueMock.mockReturnValue("");
-        let desktopName = "rove.desktop";
-        let desktopEntry = previousEntry;
-        let iconInstalled = false;
-        copyFileSyncMock.mockImplementation((_source: string, destination: string) => {
-          iconInstalled = destination === "/xdg/icons/io.github.hafiezul.rove.desktop.png";
-        });
-        setDesktopNameMock.mockImplementation((name: string) => {
-          desktopName = name;
-        });
-        writeFileSyncMock.mockImplementation((path: string, contents: string) => {
-          if (path === "/xdg/applications/io.github.hafiezul.rove.desktop") desktopEntry = contents;
-        });
-
-        return Effect.scoped(
-          Effect.gen(function* () {
-            const portalIdentity = Promise.resolve().then(() => ({
-              desktopName,
-              desktopEntry,
-              iconInstalled,
-            }));
-            yield* Layer.build(
-              DesktopPreReadyPlatform.layer.pipe(
-                Layer.provide(Layer.succeed(HostProcessPlatform, "linux")),
-              ),
-            );
-            const identity = yield* Effect.promise(() => portalIdentity);
-            assert.equal(identity.desktopName, "io.github.hafiezul.rove.desktop");
-            assert.include(identity.desktopEntry ?? "", 'Exec="/Applications/current.AppImage" %U');
-            assert.include(identity.desktopEntry ?? "", "Name=Rove Code (Alpha)");
-            assert.include(identity.desktopEntry ?? "", "MimeType=x-scheme-handler/rove;");
-            assert.include(
-              identity.desktopEntry ?? "",
-              "Icon=/xdg/icons/io.github.hafiezul.rove.desktop.png",
-            );
-            assert.isTrue(identity.iconInstalled);
-          }),
-        ).pipe(Effect.ensuring(Effect.sync(() => vi.unstubAllEnvs())));
-      },
+  it.effect.each([
+    {
+      label: "merges the color-manager fallback into disabled features on Hyprland 0.48.1",
+      switches: { "ozone-platform": "wayland", "disable-features": "Vulkan" },
+      hyprlandVersion: "0.48.1",
+      hyprlandCommit: "29e2e59fdbab8ed2cc23a20e3c6043d5decb5cdc",
+      expected: [["disable-features", "Vulkan,WaylandWpColorManagerV1"]],
+    },
+    {
+      label: "preserves color management on Hyprland 0.51.0",
+      switches: { "ozone-platform": "wayland", "disable-features": "Vulkan" },
+      hyprlandVersion: "0.51.0",
+      hyprlandCommit: "0123456789abcdef0123456789abcdef01234567",
+      expected: [],
+    },
+    {
+      label: "preserves color management when Electron resolved X11",
+      switches: { "ozone-platform": "x11", "disable-features": "Vulkan" },
+      hyprlandVersion: "0.48.1",
+      hyprlandCommit: "29e2e59fdbab8ed2cc23a20e3c6043d5decb5cdc",
+      expected: [],
+    },
+  ])("$label", ({ switches, hyprlandVersion, hyprlandCommit, expected }) => {
+    vi.stubEnv("XDG_CURRENT_DESKTOP", "Hyprland");
+    vi.stubEnv("XDG_SESSION_TYPE", "wayland");
+    const commandLine = new Map<string, string>(Object.entries(switches));
+    hasSwitchMock.mockImplementation((switchName: string) => commandLine.has(switchName));
+    getSwitchValueMock.mockImplementation(
+      (switchName: string) => commandLine.get(switchName) ?? "",
     );
-  }
+    execFileSyncMock.mockReturnValue(
+      JSON.stringify({
+        commit: hyprlandCommit,
+        version: hyprlandVersion,
+        dirty: false,
+        tag: `v${hyprlandVersion}`,
+      }),
+    );
+
+    return DesktopPreReadyPlatform.make.pipe(
+      Effect.provideService(HostProcess.Platform, "linux"),
+      Effect.map(() => {
+        const featureSwitches = appendSwitchMock.mock.calls.filter(([name]) =>
+          ["disable-features", "enable-features", "ozone-platform"].includes(name),
+        );
+        assert.deepEqual(featureSwitches, expected);
+      }),
+      Effect.ensuring(Effect.sync(() => vi.unstubAllEnvs())),
+    );
+  });
+
+  it.effect.each([
+    { previousEntry: undefined, label: "missing" },
+    { previousEntry: 'Exec="/Applications/deleted-previous.AppImage" %U', label: "stale" },
+  ])("prepares a $label Linux desktop entry before startup yields", ({ previousEntry }) => {
+    vi.stubEnv("VITE_DEV_SERVER_URL", "");
+    vi.stubEnv("XDG_DATA_HOME", "/xdg");
+    vi.stubEnv("APPIMAGE", "/Applications/current.AppImage");
+    getSwitchValueMock.mockReturnValue("");
+    let desktopName = "rove.desktop";
+    let desktopEntry = previousEntry;
+    let iconInstalled = false;
+    copyFileSyncMock.mockImplementation((_source: string, destination: string) => {
+      iconInstalled = destination === "/xdg/icons/io.github.hafiezul.rove.desktop.png";
+    });
+    setDesktopNameMock.mockImplementation((name: string) => {
+      desktopName = name;
+    });
+    writeFileSyncMock.mockImplementation((path: string, contents: string) => {
+      if (path === "/xdg/applications/io.github.hafiezul.rove.desktop") desktopEntry = contents;
+    });
+
+    return Effect.scoped(
+      Effect.gen(function* () {
+        const portalIdentity = Promise.resolve().then(() => ({
+          desktopName,
+          desktopEntry,
+          iconInstalled,
+        }));
+        yield* Layer.build(
+          DesktopPreReadyPlatform.layer.pipe(
+            Layer.provide(Layer.succeed(HostProcess.Platform, "linux")),
+          ),
+        );
+        const identity = yield* Effect.promise(() => portalIdentity);
+        assert.equal(identity.desktopName, "io.github.hafiezul.rove.desktop");
+        assert.include(identity.desktopEntry ?? "", 'Exec="/Applications/current.AppImage" %U');
+        assert.include(identity.desktopEntry ?? "", "Name=Rove Code (Beta)");
+        assert.include(identity.desktopEntry ?? "", "MimeType=x-scheme-handler/rove;");
+        assert.include(
+          identity.desktopEntry ?? "",
+          "Icon=/xdg/icons/io.github.hafiezul.rove.desktop.png",
+        );
+        assert.isTrue(identity.iconInstalled);
+      }),
+    ).pipe(Effect.ensuring(Effect.sync(() => vi.unstubAllEnvs())));
+  });
 
   it.effect("keeps startup available when the early desktop entry cannot be written", () => {
     getSwitchValueMock.mockReturnValue("");
@@ -137,7 +193,7 @@ describe("DesktopPreReadyPlatform", () => {
     });
 
     return DesktopPreReadyPlatform.make.pipe(
-      Effect.provideService(HostProcessPlatform, "linux"),
+      Effect.provideService(HostProcess.Platform, "linux"),
       Effect.asVoid,
     );
   });
@@ -153,29 +209,28 @@ describe("DesktopPreReadyPlatform", () => {
       assert.include(contents, "MimeType=x-scheme-handler/rove;");
       assert.include(contents, "Icon=");
       assert.equal(setDesktopNameMock.mock.calls.length, 1);
-    }).pipe(Effect.provideService(HostProcessPlatform, "linux"));
+    }).pipe(Effect.provideService(HostProcess.Platform, "linux"));
   });
 
   it.effect(
     "acquires a synchronous pre-ready layer before an asynchronous Clerk-shaped layer",
     () =>
       Effect.gen(function* () {
-        class ClerkReadyContext extends Context.Service<
-          ClerkReadyContext,
-          { readonly ready: true }
-        >()("@rove-code/desktop/app/DesktopPreReadyPlatform.test/ClerkReadyContext") {}
+        class ClerkShaped extends Context.Service<ClerkShaped, { readonly ready: true }>()(
+          "@rove-code/desktop/app/DesktopPreReadyPlatform.test/ClerkShaped",
+        ) {}
 
         const events: Array<string> = [];
         registerSchemesMock.mockImplementation(() => {
           events.push("pre-ready");
         });
 
-        const preReadyLayer = DesktopPreReadyPlatform.layer.pipe(
-          Layer.provide(Layer.succeed(HostProcessPlatform, "darwin")),
+        const layerPreReady = DesktopPreReadyPlatform.layer.pipe(
+          Layer.provide(Layer.succeed(HostProcess.Platform, "darwin")),
         );
 
-        const clerkReadyLayer = Layer.effect(
-          ClerkReadyContext,
+        const layerClerkShaped = Layer.effect(
+          ClerkShaped,
           Effect.promise(() => Promise.resolve()).pipe(
             Effect.map(() => {
               events.push("clerk");
@@ -184,15 +239,15 @@ describe("DesktopPreReadyPlatform", () => {
           ),
         );
 
-        const runtimeLayer = clerkReadyLayer.pipe(
+        const layerRuntime = layerClerkShaped.pipe(
           Layer.flatMap((clerkContext) => Layer.succeedContext(clerkContext)),
-          Layer.provideMerge(preReadyLayer),
+          Layer.provideMerge(layerPreReady),
         );
 
         const result = yield* Effect.all({
-          clerk: ClerkReadyContext,
+          clerk: ClerkShaped,
           preReady: DesktopPreReadyPlatform.DesktopPreReadyElectronOptions,
-        }).pipe(Effect.provide(runtimeLayer));
+        }).pipe(Effect.provide(layerRuntime));
 
         assert.deepEqual(result, {
           clerk: { ready: true },

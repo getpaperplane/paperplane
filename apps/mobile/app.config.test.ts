@@ -7,6 +7,12 @@ vi.mock("../../scripts/lib/public-config.ts", () => ({
 
 const originalEnv = { ...process.env };
 const configuredKeys = [
+  "APP_VARIANT",
+  "ROVE_CLOUD_READY",
+  "ROVE_RELAY_URL",
+  "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY",
+  "EXPO_PUBLIC_CLERK_JWT_TEMPLATE",
+  "EXPO_PUBLIC_CLERK_GOOGLE_WEB_CLIENT_ID",
   "ROVE_EXPO_PROJECT_ID",
   "ROVE_EXPO_OWNER",
   "ROVE_MOBILE_UPDATES_ENABLED",
@@ -41,6 +47,7 @@ describe("source-built mobile identity", () => {
 
   it("uses explicitly configured, project-owned native identities", async () => {
     const config = await configFor({
+      ROVE_CLOUD_READY: "1",
       ROVE_EXPO_PROJECT_ID: "00000000-0000-4000-8000-000000000000",
       ROVE_EXPO_OWNER: "rove-test",
       ROVE_MOBILE_UPDATES_ENABLED: "1",
@@ -58,6 +65,36 @@ describe("source-built mobile identity", () => {
     ]);
   });
 
+  it.each([undefined, "0", "1"])(
+    "gates configured Rove Connect infrastructure (%s)",
+    async (gate) => {
+      const config = await configFor({
+        ...(gate ? { ROVE_CLOUD_READY: gate } : undefined),
+        ROVE_RELAY_URL: "https://relay.example.test",
+        EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY: "pk_test_example",
+        EXPO_PUBLIC_CLERK_JWT_TEMPLATE: "rove-relay",
+        EXPO_PUBLIC_CLERK_GOOGLE_WEB_CLIENT_ID: "google-web",
+      });
+      expect(config.extra?.cloudReady).toBe(gate === "1");
+      expect(config.extra?.relay.url).toBe(gate === "1" ? "https://relay.example.test" : null);
+      expect(config.extra?.clerk.publishableKey).toBe(gate === "1" ? "pk_test_example" : null);
+      expect(config.extra?.EXPO_PUBLIC_CLERK_GOOGLE_WEB_CLIENT_ID).toBe(
+        gate === "1" ? "google-web" : undefined,
+      );
+    },
+  );
+
+  it.each([
+    ["development", "Rove Code Dev", "dev.rove.app.dev"],
+    ["preview", "Rove Code Preview", "dev.rove.app.preview"],
+    ["production", "Rove Code", "dev.rove.app"],
+  ])("retains the %s Rove app identity", async (variant, name, id) => {
+    const config = await configFor({ APP_VARIANT: variant });
+    expect(config.name).toBe(name);
+    expect(config.ios?.bundleIdentifier).toBe(id);
+    expect(config.android?.package).toBe(id);
+  });
+
   it("refuses OTA updates without a project ID", async () => {
     await expect(configFor({ ROVE_MOBILE_UPDATES_ENABLED: "1" })).rejects.toThrow(
       "ROVE_EXPO_PROJECT_ID is required",
@@ -65,8 +102,8 @@ describe("source-built mobile identity", () => {
   });
 
   it("refuses upstream relying-party domains even if explicitly configured", async () => {
-    await expect(configFor({ ROVE_CLERK_RELYING_PARTY_DOMAIN: "clerk.t3.codes" })).rejects.toThrow(
-      "must belong to this project",
-    );
+    await expect(
+      configFor({ ROVE_CLOUD_READY: "1", ROVE_CLERK_RELYING_PARTY_DOMAIN: "clerk.t3.codes" }),
+    ).rejects.toThrow("must belong to this project");
   });
 });

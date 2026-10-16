@@ -2,12 +2,12 @@ import { testDouble } from "~/testDouble";
 import type { DesktopBridge } from "@rove-code/contracts";
 import { afterEach, describe, expect, it, vi } from "@effect/vitest";
 import * as Effect from "effect/Effect";
-import { HttpClient } from "effect/unstable/http";
+import { HttpClient } from "effect/http";
 
 import { __resetDesktopPrimaryAuthForTests } from "./desktopAuth";
-import { makePrimaryEnvironmentHttpLayer } from "./httpLayer";
+import * as PrimaryEnvironmentHttpLayer from "./httpLayer";
 
-describe.sequential("primary environment HTTP layer", () => {
+describe("primary environment HTTP layer", { concurrent: false }, () => {
   afterEach(() => {
     __resetDesktopPrimaryAuthForTests();
     Reflect.deleteProperty(globalThis, "window");
@@ -33,7 +33,7 @@ describe.sequential("primary environment HTTP layer", () => {
       const request = new Request(fetchMock.mock.calls[0]?.[0], fetchMock.mock.calls[0]?.[1]);
       expect(request.credentials).toBe("include");
       expect(request.headers.get("authorization")).toBeNull();
-    }).pipe(Effect.provide(makePrimaryEnvironmentHttpLayer()));
+    }).pipe(Effect.provide(PrimaryEnvironmentHttpLayer.layerForCurrentOrigin()));
   });
 
   it.effect("uses bearer auth without cookies for desktop-managed primaries", () => {
@@ -61,6 +61,6 @@ describe.sequential("primary environment HTTP layer", () => {
       const request = new Request(fetchMock.mock.calls[0]?.[0], fetchMock.mock.calls[0]?.[1]);
       expect(request.credentials).not.toBe("include");
       expect(request.headers.get("authorization")).toBe("Bearer desktop-bearer-token");
-    }).pipe(Effect.provide(makePrimaryEnvironmentHttpLayer()));
+    }).pipe(Effect.provide(PrimaryEnvironmentHttpLayer.layerForCurrentOrigin()));
   });
 });

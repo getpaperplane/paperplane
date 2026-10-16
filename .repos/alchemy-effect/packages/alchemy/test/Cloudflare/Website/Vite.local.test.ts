@@ -5,7 +5,7 @@ import * as Data from "effect/Data";
 import * as Effect from "effect/Effect";
 import { MinimumLogLevel } from "effect/References";
 import * as Schedule from "effect/Schedule";
-import * as HttpClient from "effect/unstable/http/HttpClient";
+import * as HttpClient from "effect/http/HttpClient";
 import * as pathe from "pathe";
 import { cloneFixture } from "../Utils/Fixture.ts";
 
@@ -138,7 +138,68 @@ test.provider(
 
       yield* stack.destroy();
     }).pipe(logLevel),
-  { timeout: 240_000 },
+  {
+    tags: [
+      "provider:cloudflare",
+      "provider:cloudflare:queue",
+      "provider:cloudflare:website",
+      "local",
+    ],
+    timeout: 240_000,
+  },
+);
+
+/** Regression test for cron configuration dropped by the Vite child path. */
+test.provider(
+  "Vite dev: automatically invokes scheduled handlers",
+  (stack) =>
+    Effect.gen(function* () {
+      yield* stack.destroy();
+
+      const rootDir = yield* cloneFixture(cronFixtureDir, {
+        prefix: "alchemy-vite-cron-",
+        tempRoot,
+        entries: fixtureEntries,
+      });
+
+      const site = yield* stack.deploy(
+        Cloudflare.Website.Vite("ViteCronSite", {
+          rootDir,
+          main: "worker.ts",
+          workersDev: true,
+          compatibility: {
+            date: "2024-09-23",
+            flags: ["nodejs_compat"],
+          },
+          memo: { include: fixtureEntries },
+          assets: { runWorkerFirst: true },
+          dev: { port: 0 },
+          // Effect Cron supports seconds for fast local feedback; five-field
+          // production expressions use the same runtime path.
+          crons: ["* * * * * *"],
+        }),
+      );
+
+      const scheduledCount = yield* getJsonReady(
+        `${site.url}/api/scheduled`,
+      ).pipe(
+        Effect.map(
+          (body) => (body as { scheduledCount: number }).scheduledCount,
+        ),
+        Effect.repeat({
+          schedule: Schedule.spaced("500 millis"),
+          until: (count) => count > 0,
+          times: 20,
+        }),
+      );
+      expect(scheduledCount).toBeGreaterThan(0);
+
+      yield* stack.destroy();
+    }).pipe(logLevel),
+  {
+    tags: ["provider:cloudflare", "provider:cloudflare:website", "local"],
+    timeout: 240_000,
+  },
 );
 
 /** Regression test for cron configuration dropped by the Vite child path. */

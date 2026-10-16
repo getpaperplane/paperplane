@@ -75,7 +75,6 @@ function summary(
 }
 
 function environment(id: string, usageSummary: UsageSummary): EnvironmentUsage {
-  // SAFETY: This fixture intentionally supplies the asserted collaborator contract.
   return { environmentId: id as EnvironmentId, label: id, summary: usageSummary };
 }
 
@@ -112,6 +111,7 @@ describe("mergeUsage", () => {
     expect(merged.models[0]?.model).toBe("anthropic/claude-sonnet-4-5");
     expect(merged.duplicateSources).toHaveLength(1);
   });
+
   it("counts a Cursor account once across servers while retaining each server's other providers", () => {
     const account = {
       provider: "cursor" as const,
@@ -547,6 +547,44 @@ describe("mergeUsage", () => {
     expect(merged.costQuality.cacheSavingsUsd).toBe(4);
   });
 
+  it("derives model token shares independently of their cost shares", () => {
+    const merged = mergeUsage(
+      [
+        environment(
+          "env-a",
+          summary(
+            [
+              bucket({ costUsd: 90 }),
+              bucket({
+                provider: "codex",
+                model: "gpt-5.6-sol",
+                costUsd: 10,
+                totals: {
+                  uncachedInputTokens: 3 * 1160,
+                  cachedInputTokens: 0,
+                  cacheCreationTokens: 0,
+                  outputTokens: 0,
+                  reasoningTokens: 0,
+                },
+              }),
+            ],
+            [
+              { provider: "claude", hostId: "mac", homePath: "/a/.claude" },
+              { provider: "codex", hostId: "mac", homePath: "/a/.codex" },
+            ],
+          ),
+        ),
+      ],
+      USAGE_CONTRACT_VERSION,
+    );
+
+    const byModel = Object.fromEntries(merged.models.map((model) => [model.model, model]));
+    expect(byModel["claude-fable-5"]?.costShare).toBeCloseTo(0.9, 5);
+    expect(byModel["claude-fable-5"]?.tokenShare).toBeCloseTo(0.25, 5);
+    expect(byModel["gpt-5.6-sol"]?.costShare).toBeCloseTo(0.1, 5);
+    expect(byModel["gpt-5.6-sol"]?.tokenShare).toBeCloseTo(0.75, 5);
+  });
+
   it("marks a model with no known rates as unpriced rather than free", () => {
     const merged = mergeUsage(
       [
@@ -579,6 +617,67 @@ describe("mergeUsage", () => {
     ]);
   });
 
+  it("splits cost by category and speed, counting older servers as unsplit standard cost", () => {
+    const merged = mergeUsage(
+      [
+        environment(
+          "env-a",
+          summary(
+            [
+              bucket({
+                costUsd: 10,
+                categoryCostUsd: { input: 1, cacheRead: 2, cacheWrite: 3, output: 4 },
+                fastCostUsd: 6,
+                speedPremiumUsd: 3,
+              }),
+              bucket({
+                provider: "codex",
+                model: "unknown-model",
+                costUsd: 0,
+                costSource: "unpriced",
+                unpricedRecords: 5,
+              }),
+              // Reported cost on one record, no rates for the other four.
+              bucket({
+                provider: "codex",
+                model: "partly-reported",
+                costUsd: 0,
+                unpricedRecords: 4,
+              }),
+            ],
+            [
+              { provider: "claude", hostId: "mac", homePath: "/a/.claude" },
+              { provider: "codex", hostId: "mac", homePath: "/a/.codex" },
+            ],
+          ),
+        ),
+        environment(
+          "env-b",
+          summary(
+            [bucket({ costUsd: 5 })],
+            [{ provider: "claude", hostId: "linux", homePath: "/b/.claude" }],
+            USAGE_MERGE_COMPATIBLE_SINCE,
+          ),
+        ),
+      ],
+      USAGE_CONTRACT_VERSION,
+    );
+
+    expect(merged.categoryCost).toEqual({
+      input: 1,
+      cacheRead: 2,
+      cacheWrite: 3,
+      output: 4,
+      unsplit: 5,
+    });
+    expect(merged.speedCost).toEqual({ standard: 9, fast: 6, ultrafast: 0, premium: 3 });
+    expect(merged.models.map(({ model, unpricedTokens }) => [model, unpricedTokens])).toEqual([
+      ["claude-fable-5", 0],
+      ["unknown-model", 1160],
+      ["partly-reported", 928],
+    ]);
+  });
+
   it("orders models by cost descending", () => {
     const merged = mergeUsage(
       [
@@ -605,11 +704,11 @@ describe("mergeUsage", () => {
   it("keeps two machines apart when hostname and home path collide", () => {
     // Every Mac resolves /Users/theo/.claude, so a hostname clash used to make
     // one machine's usage vanish. Filesystem identity separates them.
-    const source = { provider: "claude" as const, hostId: "mac", homePath: "/Users/theo/.claude" };
+    const shape = { provider: "claude" as const, hostId: "mac", homePath: "/Users/theo/.claude" };
     const merged = mergeUsage(
       [
-        environment("env-a", summary([bucket()], [{ ...source, volumeId: "16777220:1234" }])),
-        environment("env-b", summary([bucket()], [{ ...source, volumeId: "16777221:9999" }])),
+        environment("env-a", summary([bucket()], [{ ...shape, volumeId: "16777220:1234" }])),
+        environment("env-b", summary([bucket()], [{ ...shape, volumeId: "16777221:9999" }])),
       ],
       USAGE_CONTRACT_VERSION,
     );

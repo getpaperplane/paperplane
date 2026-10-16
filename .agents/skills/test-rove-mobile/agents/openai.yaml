@@ -1,4 +1,4 @@
 interface:
-  display_name: "Test Rove Code Mobile"
-  short_description: "Test Rove Code on iOS or Android"
-  default_prompt: "Use $test-rove-mobile to launch Rove Code against an isolated backend and verify the affected flow on an available simulator or emulator."
+  display_name: "Test Rove Mobile"
+  short_description: "Test iOS and Android in Rove's Device panel"
+  default_prompt: "Use $test-rove-mobile to verify the affected native mobile flow through Rove's Device panel and AgentDevice."

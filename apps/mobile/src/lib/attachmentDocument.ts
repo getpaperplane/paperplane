@@ -1,3 +1,4 @@
+import * as Dialog from "../components/ui/Dialog";
 import { filePreviewDelimiter, parseDelimitedPreview } from "@rove-code/shared/delimitedPreview";
 import type { EnvironmentId } from "@rove-code/contracts";
 import { readFilePreviewResponse } from "@rove-code/client-runtime/file-preview";
@@ -5,7 +6,6 @@ import { filePreviewKind, FILE_TEXT_PREVIEW_MAX_BYTES } from "@rove-code/shared/
 import { fetch } from "expo/fetch";
 import { File } from "expo-file-system";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Alert } from "react-native";
 
 import type { FileBackedComposerAttachment } from "./composerImages";
 import { loadLocalAttachmentPreview } from "./localAttachmentPreview";
@@ -74,7 +74,7 @@ export function useAttachmentDocument(input: {
     if (attachment) return;
     let cancelled = false;
     // Await a fresh signed URL: cached links can expire while the client is suspended.
-    // A new preview request clears its previous URL and error.
+    // oxlint-disable-next-line react/set-state-in-effect -- A new preview request clears its previous URL and error.
     setRemoteUri(null);
     setError(null);
     textReadUrl.current = null;
@@ -92,13 +92,13 @@ export function useAttachmentDocument(input: {
     return () => {
       cancelled = true;
     };
-    // Retry must reauthorize the remote file.
+    // oxlint-disable-next-line react/exhaustive-effect-dependencies -- Retry must reauthorize the remote file.
   }, [attachment, refresh, revision]);
   useEffect(() => {
     if (!attachment) return;
     // A new attachment must not keep the previous file behind it: `share()` would otherwise
     // send the old bytes under the new name if this load fails.
-    // A new attachment invalidates the last one.
+    // oxlint-disable-next-line react/set-state-in-effect -- A new attachment invalidates the last one.
     setLocalUri(null);
     setContent(null);
     setContentError(null);
@@ -120,14 +120,14 @@ export function useAttachmentDocument(input: {
       controller.abort();
       release?.();
     };
-    // Retry must reacquire a local file lease after a failed load.
+    // oxlint-disable-next-line react/exhaustive-effect-dependencies -- Retry must reacquire a local file lease after a failed load.
   }, [attachment, revision]);
   const needsText = kind === "text" || kind === "markdown" || (kind === "html" && !rendered);
   const sizeBytes = input.sizeBytes;
   useEffect(() => {
     if (!uri || !needsText) return;
     const controller = new AbortController();
-    // A new external resource must clear the previous response before loading.
+    // oxlint-disable-next-line react/set-state-in-effect -- A new external resource must clear the previous response before loading.
     setContent(null);
     setContentError(null);
     const response = isLocalUri(uri)
@@ -179,7 +179,7 @@ export function useAttachmentDocument(input: {
       else await downloadAndShareAttachment({ ...request, url: (await refresh()) ?? uri });
     } catch (cause) {
       if (controller.signal.aborted) return;
-      Alert.alert(
+      Dialog.alert(
         "Could not share file",
         cause instanceof Error ? cause.message : "Please try again.",
       );

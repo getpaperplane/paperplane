@@ -15,7 +15,7 @@ export type ArchivedThreadSortOrder = "newest" | "oldest";
 
 export interface ArchivedThreadGroup {
   readonly key: string;
-  readonly project: EnvironmentProject | null;
+  readonly project: EnvironmentProject;
   readonly environmentId: EnvironmentId;
   readonly threads: ReadonlyArray<EnvironmentThreadShell>;
 }
@@ -45,7 +45,7 @@ export function buildArchivedThreadGroups(input: {
     }
 
     const environmentLabel = input.environmentLabels[entry.environmentId] ?? null;
-    const threadsByProjectId = new Map<string | null, EnvironmentThreadShell[]>();
+    const threadsByProjectId = new Map<string, EnvironmentThreadShell[]>();
     for (const thread of entry.snapshot.threads) {
       if (thread.archivedAt === null) {
         continue;
@@ -91,27 +91,6 @@ export function buildArchivedThreadGroups(input: {
         ),
       });
     }
-    const standalone = threadsByProjectId.get(null) ?? [];
-    const matchingStandalone =
-      query.length === 0 ||
-      matchesQuery("Standalone threads", query) ||
-      matchesQuery(environmentLabel, query)
-        ? standalone
-        : standalone.filter((thread) => matchesQuery(thread.title, query));
-    if (matchingStandalone.length > 0) {
-      const direction = input.sortOrder === "newest" ? -1 : 1;
-      groups.push({
-        key: `${entry.environmentId}:standalone`,
-        environmentId: entry.environmentId,
-        project: null,
-        threads: [...matchingStandalone].sort(
-          (left, right) =>
-            direction * (archiveTimestamp(left) - archiveTimestamp(right)) ||
-            left.title.localeCompare(right.title) ||
-            left.id.localeCompare(right.id),
-        ),
-      });
-    }
   }
 
   const timestampOrder = input.sortOrder === "newest" ? Order.flip(Order.Number) : Order.Number;
@@ -121,7 +100,7 @@ export function buildArchivedThreadGroups(input: {
       Order.Struct({ timestamp: timestampOrder, title: Order.String, key: Order.String }),
       (group: ArchivedThreadGroup) => ({
         timestamp: group.threads[0] ? archiveTimestamp(group.threads[0]) : 0,
-        title: group.project?.title ?? "Standalone threads",
+        title: group.project.title,
         key: group.key,
       }),
     ),

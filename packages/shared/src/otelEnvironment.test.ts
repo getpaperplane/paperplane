@@ -2,7 +2,7 @@ import { assert, describe, it } from "@effect/vitest";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import * as OtlpResource from "effect/unstable/observability/OtlpResource";
+import * as OtlpResource from "effect/observability/OtlpResource";
 
 import * as OtelEnvironment from "./otelEnvironment.ts";
 
@@ -11,7 +11,8 @@ const load = (env: Record<string, string>) =>
 
 const SPEC_OFF =
   "OTEL_SDK_DISABLED is set, so no telemetry is exported, whatever configured it; set ROVE_OTEL_SDK_DISABLED=false to export anyway";
-const T3_OFF = "ROVE_OTEL_SDK_DISABLED is set, so no telemetry is exported, whatever configured it";
+const ROVE_OFF =
+  "ROVE_OTEL_SDK_DISABLED is set, so no telemetry is exported, whatever configured it";
 const specIgnored = (value: string) =>
   `OTEL_SDK_DISABLED=${value} was read as false; the OpenTelemetry specification recognizes only the string true, so use OTEL_SDK_DISABLED=true or ROVE_OTEL_SDK_DISABLED to say it any other way`;
 
@@ -41,12 +42,12 @@ describe("OtelEnvironment", () => {
       warnings: [specIgnored("yes")],
     },
     // ROVE_OTEL_SDK_DISABLED takes Config.Boolean's values, case-insensitively.
-    { name: "rove 1", env: { ROVE_OTEL_SDK_DISABLED: "1" }, disabled: true, warnings: [T3_OFF] },
+    { name: "rove 1", env: { ROVE_OTEL_SDK_DISABLED: "1" }, disabled: true, warnings: [ROVE_OFF] },
     {
       name: "rove TRUE",
       env: { ROVE_OTEL_SDK_DISABLED: "TRUE" },
       disabled: true,
-      warnings: [T3_OFF],
+      warnings: [ROVE_OFF],
     },
     { name: "rove n", env: { ROVE_OTEL_SDK_DISABLED: "n" }, disabled: false, warnings: [] },
     {
@@ -201,7 +202,7 @@ describe("OtelEnvironment", () => {
         traces: "Unset",
         metrics: "Unset",
         logs: "Unset",
-        warnings: [T3_OFF],
+        warnings: [ROVE_OFF],
       },
       {
         name: "an exporter of none turns off only its signal",
@@ -389,7 +390,7 @@ describe("OtelEnvironment", () => {
   });
 
   describe("resolveSignalEndpoint", () => {
-    const t3Export = {
+    const roveExport = {
       protocol: "http/json",
       headers: { "x-key": "rove" },
       exportIntervalMs: 5_000,
@@ -408,19 +409,19 @@ describe("OtelEnvironment", () => {
       {
         name: "ROVE_OTLP_*_URL wins over an OTEL endpoint",
         otel: withLogs(otelExport),
-        t3Url: "http://rove:4318/v1/logs",
-        expected: { url: "http://rove:4318/v1/logs", export: t3Export },
+        roveUrl: "http://rove:4318/v1/logs",
+        expected: { url: "http://rove:4318/v1/logs", export: roveExport },
       },
       {
         name: "ROVE_OTLP_*_URL wins over a signal the OTEL variables turned off",
         otel: withLogs(OtelEnvironment.OtelSignal.Off()),
-        t3Url: "http://rove:4318/v1/logs",
-        expected: { url: "http://rove:4318/v1/logs", export: t3Export },
+        roveUrl: "http://rove:4318/v1/logs",
+        expected: { url: "http://rove:4318/v1/logs", export: roveExport },
       },
       {
         name: "an OTEL endpoint brings its headers and protocol over the fallback",
         otel: withLogs(otelExport),
-        t3Url: " ",
+        roveUrl: " ",
         expected: {
           url: "http://otel:4318/v1/logs",
           export: {
@@ -433,27 +434,27 @@ describe("OtelEnvironment", () => {
       {
         name: "a signal the OTEL variables turned off does not fall through",
         otel: withLogs(OtelEnvironment.OtelSignal.Off()),
-        t3Url: undefined,
+        roveUrl: undefined,
         expected: undefined,
       },
       {
         name: "an unset signal takes the first non-blank fallback",
         otel: withLogs(OtelEnvironment.OtelSignal.Unset()),
-        t3Url: undefined,
-        expected: { url: "http://settings:4318/v1/logs", export: t3Export },
+        roveUrl: undefined,
+        expected: { url: "http://settings:4318/v1/logs", export: roveExport },
       },
       {
         name: "the kill switch wins over everything",
         otel: withLogs(otelExport, true),
-        t3Url: "http://rove:4318/v1/logs",
+        roveUrl: "http://rove:4318/v1/logs",
         expected: undefined,
       },
-    ])("$name", ({ otel, t3Url, expected }) => {
+    ])("$name", ({ otel, roveUrl, expected }) => {
       assert.deepStrictEqual(
         OtelEnvironment.resolveSignalEndpoint(
           otel,
           "logs",
-          { url: t3Url, export: t3Export },
+          { url: roveUrl, export: roveExport },
           "",
           "http://settings:4318/v1/logs",
         ),
@@ -491,17 +492,23 @@ describe("OtelEnvironment", () => {
       { name: "encoded separators", raw: "a%2Cb=x%3Dy", attributes: ["a,b"] },
     ])("lets the exporters' own read succeed with $name", ({ raw, attributes }) =>
       Effect.gen(function* () {
-        const env = ConfigProvider.layer(
+        const layerEnv = ConfigProvider.layer(
           ConfigProvider.fromEnv({ env: { OTEL_RESOURCE_ATTRIBUTES: raw } }),
         );
-        const otel = yield* OtelEnvironment.load.pipe(Effect.provide(env));
+        const otel = yield* OtelEnvironment.load.pipe(Effect.provide(layerEnv));
         const resource = yield* OtlpResource.fromConfig({ serviceName: "rove" }).pipe(
           Effect.provide(
-            Layer.provide(OtelEnvironment.layerResourceAttributes(otel.resourceAttributes), env),
+            Layer.provide(
+              OtelEnvironment.layerResourceAttributes(otel.resourceAttributes),
+              layerEnv,
+            ),
           ),
         );
         assert.deepStrictEqual(
-          resource.attributes.map((attribute) => attribute.key),
+          resource.attributes
+            .map((attribute) => attribute.key)
+            // Effect adds these to every resource.
+            .filter((key) => !key.startsWith("telemetry.sdk.")),
           [...attributes, "service.name"],
         );
       }),

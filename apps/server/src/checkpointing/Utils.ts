@@ -1,15 +1,15 @@
-import * as Encoding from "effect/Encoding";
+import * as Base64Url from "effect/encoding/Base64Url";
 import { CheckpointRef, ProjectId, type ThreadId } from "@rove-code/contracts";
 
 import { ROVE_CHECKPOINT_REFS_PREFIX } from "@rove-code/shared/roveMigration";
 
 export function checkpointRefForThreadTurn(threadId: ThreadId, turnCount: number): CheckpointRef {
   return CheckpointRef.make(
-    `${ROVE_CHECKPOINT_REFS_PREFIX}/${Encoding.encodeBase64Url(threadId)}/turn/${turnCount}`,
+    `${ROVE_CHECKPOINT_REFS_PREFIX}/${Base64Url.encode(threadId)}/turn/${turnCount}`,
   );
 }
 
-export function resolveThreadWorkspaceCwd(input: {
+function resolveThreadWorkspaceCwd(input: {
   readonly thread: {
     readonly projectId: ProjectId | null;
     readonly worktreePath: string | null;

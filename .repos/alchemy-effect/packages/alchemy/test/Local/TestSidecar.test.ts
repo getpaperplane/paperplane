@@ -40,6 +40,7 @@ dev.test(
     const proxy = yield* Effect.serviceOption(RpcProviderProxy);
     expect(proxy._tag).toBe("Some");
   }),
+  { tags: ["provider:cloudflare", "local"] },
 );
 
 inProcess.test(
@@ -48,6 +49,7 @@ inProcess.test(
     const proxy = yield* Effect.serviceOption(RpcProviderProxy);
     expect(proxy._tag).toBe("None");
   }),
+  { tags: ["provider:cloudflare", "local"] },
 );
 
 live.test(
@@ -56,6 +58,19 @@ live.test(
     const proxy = yield* Effect.serviceOption(RpcProviderProxy);
     expect(proxy._tag).toBe("None");
   }),
+  { tags: ["provider:cloudflare", "local"] },
+);
+
+live.test(
+  "test runtimes provide a non-interactive Interaction",
+  Effect.gen(function* () {
+    const interaction = yield* Interaction;
+    const failure = yield* Effect.flip(
+      interaction.prompt.confirm({ message: "?" }),
+    );
+    expect(failure._tag).toBe("NonInteractiveTerminal");
+  }),
+  { tags: ["provider:cloudflare", "local"] },
 );
 
 live.test(

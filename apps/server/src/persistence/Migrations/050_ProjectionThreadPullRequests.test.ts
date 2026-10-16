@@ -2,7 +2,7 @@ import { assert, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 import * as Layer from "effect/Layer";
-import * as SqlClient from "effect/unstable/sql/SqlClient";
+import * as SqlClient from "effect/sql/SqlClient";
 
 import { runMigrations } from "../Migrations.ts";
 import * as NodeSqliteClient from "@rove-code/shared/nodeSqliteClient";
@@ -67,7 +67,7 @@ layer("050_ProjectionThreadPullRequests", (it) => {
             'project-1',
             'GitHub link',
             '{"instanceId":"codex","model":"gpt-5.4"}',
-            '{"projectId":"project-1","repository":"RoveCode/Rove","number":42,"url":"https://GitHub.com/rovecode/rove/pull/42"}',
+            '{"projectId":"project-1","repository":"PingDotGG/T3Code","number":42,"url":"https://GitHub.com/pingdotgg/t3code/pull/42"}',
             '2026-03-01T00:00:01.000Z',
             '2026-03-02T00:00:00.000Z'
           ),
@@ -132,9 +132,9 @@ layer("050_ProjectionThreadPullRequests", (it) => {
         {
           threadId: "thread-github",
           host: "github.com",
-          repository: "rovecode/rove",
+          repository: "pingdotgg/t3code",
           number: 42,
-          url: "https://GitHub.com/rovecode/rove/pull/42",
+          url: "https://GitHub.com/pingdotgg/t3code/pull/42",
           source: "manual",
           linkedAt: "2026-03-02T00:00:00.000Z",
           snapshotJson: null,

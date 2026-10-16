@@ -10,15 +10,15 @@ import { assert, describe, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as TestConsole from "effect/testing/TestConsole";
-import { Command } from "effect/unstable/cli";
+import { Command } from "effect/cli";
 
-import { cli } from "../bin.ts";
+import { cli } from "../binCli.ts";
 import { symlinksSupported } from "@rove-code/shared/testing/symlinks";
-import { HostProcessPlatform } from "@rove-code/shared/hostProcess";
+import * as HostProcess from "@rove-code/shared/HostProcess";
 
 // These force a failure with chmod, which Windows ignores for directories and
 // cannot use to make a file unreadable, so the failure never happens there.
-const windowsHost = HostProcessPlatform.defaultValue() === "win32";
+const windowsHost = HostProcess.Platform.defaultValue() === "win32";
 
 const runCli = (args: ReadonlyArray<string>) =>
   Command.runWith(cli, { version: "0.0.0" })(args).pipe(

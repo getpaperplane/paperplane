@@ -3,9 +3,11 @@ import {
   ProjectId,
   ProviderInstanceId,
   ThreadId,
-  type OrchestrationCommand,
+  type OrchestrationV2ServerCommand as OrchestrationCommand,
+  PullRequestOperationError,
   type OrchestrationProjectShell,
-  type OrchestrationThreadShell,
+  type PullRequestRef,
+  type PullRequestReviewGuideResult,
   type ThreadPullRequestLink,
 } from "@rove-code/contracts";
 import { describe, expect, it } from "@effect/vitest";
@@ -15,16 +17,20 @@ import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
 import * as Ref from "effect/Ref";
 import * as Stream from "effect/Stream";
-import type { Tool } from "effect/unstable/ai";
+import type { Tool } from "effect/ai";
 
-import { OrchestrationCommandInvariantError } from "../../../orchestration/Errors.ts";
+import * as Orchestrator from "../../../orchestration-v2/Orchestrator.ts";
 import {
-  OrchestrationEngineService,
-  type OrchestrationEngineContract,
-} from "../../../orchestration/Services/OrchestrationEngine.ts";
-import { ProjectionSnapshotQuery } from "../../../orchestration/Services/ProjectionSnapshotQuery.ts";
+  type PullRequestTestThread,
+  v2PullRequestThread,
+} from "../../../orchestration-v2/testkit/pullRequestFixtures.ts";
+import * as ProjectService from "../../../project/ProjectService.ts";
+import * as PullRequestReviewGuideService from "../../../pullRequest/PullRequestReviewGuideService.ts";
 import * as McpInvocationContext from "../../McpInvocationContext.ts";
-import { listThreadPullRequests, PullRequestsToolkitHandlersLive } from "./handlers.ts";
+import * as McpToolAccess from "../../McpToolAccess.ts";
+import * as McpToolAccessTestkit from "../../McpToolAccess.testkit.ts";
+import { listThreadPullRequests } from "./handlers.ts";
+import * as PullRequestsHandlers from "./handlers.ts";
 import { PullRequestLinkFailedError, PullRequestsToolkit } from "./tools.ts";
 
 const PROJECT_ID = ProjectId.make("project-1");
@@ -39,16 +45,20 @@ const invocation = (
   capabilities: ReadonlyArray<McpInvocationContext.McpCapability>,
 ): McpInvocationContext.McpInvocationScope => ({
   environmentId: EnvironmentId.make("environment-1"),
-  threadId: THREAD_ID,
-  providerSessionId: "provider-session-1",
-  providerInstanceId: ProviderInstanceId.make("codex"),
+  requestNamespace: "provider-session-1",
+  thread: {
+    threadId: THREAD_ID,
+    providerSessionId: "provider-session-1",
+    providerInstanceId: ProviderInstanceId.make("codex"),
+  },
+  client: undefined,
   capabilities: new Set(capabilities),
   issuedAt: 1,
 });
 
 function makeProject(
   repositoryIdentity: OrchestrationProjectShell["repositoryIdentity"] = {
-    canonicalKey: "github.com/rovetools/rove",
+    canonicalKey: "github.com/hafiezul/rove",
     locator: {
       source: "git-remote",
       remoteName: "origin",
@@ -72,7 +82,7 @@ function makeProject(
   };
 }
 
-function makeThread(pullRequests: ReadonlyArray<ThreadPullRequestLink>): OrchestrationThreadShell {
+function makeThread(pullRequests: ReadonlyArray<ThreadPullRequestLink>): PullRequestTestThread {
   return {
     id: THREAD_ID,
     projectId: PROJECT_ID,
@@ -83,17 +93,12 @@ function makeThread(pullRequests: ReadonlyArray<ThreadPullRequestLink>): Orchest
     branch: null,
     worktreePath: null,
     pullRequests,
-    latestTurn: null,
     createdAt: "2026-08-01T00:00:00.000Z",
     updatedAt: "2026-08-20T00:00:00.000Z",
     archivedAt: null,
     settledOverride: null,
     settledAt: null,
-    session: null,
     latestUserMessageAt: "2026-08-20T00:00:00.000Z",
-    hasPendingApprovals: false,
-    hasPendingUserInput: false,
-    hasActionableProposedPlan: false,
   };
 }
 
@@ -107,9 +112,9 @@ function makeLink(
   const { headBranch, baseBranch, ...rest } = overrides;
   return {
     host: "github.com",
-    repository: "rovetools/rove",
+    repository: "hafiezul/rove",
     number,
-    url: `https://github.com/rovetools/rove/pull/${number}`,
+    url: `https://github.com/hafiezul/rove/pull/${number}`,
     source: "manual",
     linkedAt: "2026-08-10T00:00:00.000Z",
     snapshot:
@@ -130,40 +135,79 @@ function makeLink(
 }
 
 interface HarnessOptions {
-  readonly thread?: OrchestrationThreadShell | null;
+  readonly thread?: PullRequestTestThread | null;
   readonly project?: OrchestrationProjectShell | null;
-  readonly reject?: (command: OrchestrationCommand) => OrchestrationCommandInvariantError | null;
+  /** A rejection the orchestrator reports as the dispatch error's cause. */
+  readonly reject?: (command: OrchestrationCommand) => string | null;
+  /** Every project in the environment; defaults to the thread's own. */
+  readonly projects?: ReadonlyArray<OrchestrationProjectShell>;
+  /** What the guide service answers for a pull request it is asked to write. */
+  readonly generate?: (
+    input: PullRequestRef,
+  ) => Effect.Effect<
+    PullRequestReviewGuideResult & { started: boolean },
+    PullRequestOperationError
+  >;
 }
+
+const NO_GUIDE: PullRequestReviewGuideResult = { guide: null, run: null, currentHeadSha: "head-1" };
 
 const makeHarness = Effect.fn("makePullRequestsToolkitHarness")(function* (
   options: HarnessOptions = {},
 ) {
   const commands = yield* Ref.make<ReadonlyArray<OrchestrationCommand>>([]);
+  const guideRequests = yield* Ref.make<ReadonlyArray<PullRequestRef>>([]);
   const thread = options.thread === undefined ? makeThread([]) : options.thread;
   const project = options.project === undefined ? makeProject() : options.project;
-  const dispatch: OrchestrationEngineContract["dispatch"] = (command) =>
+  const dispatch: Orchestrator.OrchestratorV2Shape["dispatch"] = (command) =>
     Effect.gen(function* () {
       const rejection = options.reject?.(command) ?? null;
-      if (rejection !== null) return yield* rejection;
+      if (rejection !== null)
+        return yield* new Orchestrator.OrchestratorDispatchError({
+          commandId: command.commandId,
+          commandType: command.type,
+          cause: rejection,
+        });
       yield* Ref.update(commands, (recorded) => [...recorded, command]);
-      return { sequence: 1 };
+      return { sequence: 1, storedEvents: [] };
     });
-  const dependencies = Layer.mergeAll(
-    Layer.mock(ProjectionSnapshotQuery)({
-      getThreadShellById: (threadId) =>
-        Effect.succeed(threadId === THREAD_ID ? Option.fromNullishOr(thread) : Option.none()),
-      getProjectShellById: () => Effect.succeed(Option.fromNullishOr(project)),
+  const layerDependencies = Layer.mergeAll(
+    Layer.mock(ProjectService.ProjectService)({
+      getShell: () => Effect.succeed(Option.fromNullishOr(project)),
+      listShells: () => Effect.succeed(options.projects ?? (project ? [project] : [])),
     }),
-    Layer.mock(OrchestrationEngineService)({
-      readEvents: () => Stream.empty,
+    Layer.mock(PullRequestReviewGuideService.PullRequestReviewGuideService)({
+      get: () => Effect.succeed(NO_GUIDE),
+      generate: (input) =>
+        Ref.update(guideRequests, (recorded) => [...recorded, input]).pipe(
+          Effect.andThen(
+            options.generate?.(input) ??
+              Effect.succeed({
+                ...NO_GUIDE,
+                run: {
+                  _tag: "Running" as const,
+                  headSha: "head-1",
+                  startedAt: "2026-10-11T00:00:00.000Z",
+                },
+                started: true,
+              }),
+          ),
+        ),
+    }),
+    Layer.mock(Orchestrator.OrchestratorV2)({
+      getThreadShell: (id) =>
+        Effect.succeed(id === THREAD_ID && thread ? v2PullRequestThread(thread) : null),
       dispatch,
-      streamDomainEvents: Stream.empty,
-      latestSequence: Effect.succeed(0),
     }),
     Layer.succeed(Crypto.Crypto, testCrypto),
+    McpToolAccessTestkit.liveThreadsLayer,
   );
   const toolkit = yield* PullRequestsToolkit.pipe(
-    Effect.provide(PullRequestsToolkitHandlersLive.pipe(Layer.provide(dependencies))),
+    Effect.provide(
+      McpToolAccess.HandlersLayer.layer(PullRequestsHandlers.layer).pipe(
+        Layer.provide(layerDependencies),
+      ),
+    ),
   );
   const call = <Name extends keyof typeof PullRequestsToolkit.tools>(
     name: Name,
@@ -178,9 +222,9 @@ const makeHarness = Effect.fn("makePullRequestsToolkitHarness")(function* (
         (chunk) => chunk.at(-1)!.result as Tool.Success<(typeof PullRequestsToolkit.tools)[Name]>,
       ),
       Effect.provideService(McpInvocationContext.McpInvocationContext, invocation(capabilities)),
-      Effect.provide(dependencies),
+      Effect.provide(layerDependencies),
     );
-  return { commands, call };
+  return { commands, guideRequests, call };
 });
 
 describe("pull request toolkit handlers", () => {
@@ -203,13 +247,13 @@ describe("pull request toolkit handlers", () => {
     Effect.gen(function* () {
       const harness = yield* makeHarness();
       const result = yield* harness.call("link_pull_request", {
-        url: "https://github.com/RoveTools/Rove/pull/123/files",
+        url: "https://github.com/hafiezul/rove/pull/123/files",
       });
       expect(result).toEqual({
         host: "github.com",
-        repository: "rovetools/rove",
+        repository: "hafiezul/rove",
         number: 123,
-        url: "https://github.com/RoveTools/Rove/pull/123/files",
+        url: "https://github.com/hafiezul/rove/pull/123/files",
         alreadyLinked: false,
       });
       expect(yield* Ref.get(harness.commands)).toMatchObject([
@@ -217,7 +261,7 @@ describe("pull request toolkit handlers", () => {
           type: "thread.pull-request.link",
           threadId: THREAD_ID,
           host: "github.com",
-          repository: "rovetools/rove",
+          repository: "hafiezul/rove",
           number: 123,
           source: "agent",
         },
@@ -225,18 +269,106 @@ describe("pull request toolkit handlers", () => {
     }),
   );
 
+  it.effect("watching an unlinked pull request links it first", () =>
+    Effect.gen(function* () {
+      const harness = yield* makeHarness();
+      const result = yield* harness.call("watch_pull_request", {
+        url: "https://github.com/hafiezul/rove/pull/9",
+      });
+      // The harness thread never changes, so the result reports what it still holds.
+      expect(result).toMatchObject({ number: 9, watching: false, wasWatching: false });
+      expect(yield* Ref.get(harness.commands)).toMatchObject([
+        {
+          type: "thread.pull-request.watch",
+          number: 9,
+          watching: true,
+          link: { url: "https://github.com/hafiezul/rove/pull/9", source: "agent" },
+        },
+      ]);
+    }),
+  );
+
+  it.effect("refuses to watch a merged pull request and stops an existing watch", () =>
+    Effect.gen(function* () {
+      const watch = {
+        startedAt: "2026-08-20T00:00:00.000Z",
+        headSha: null,
+        failedChecks: [],
+        passed: false,
+        passedChecks: [],
+        remarksThrough: "2026-08-20T00:00:00.000Z",
+        remarkIds: [],
+        conflicting: false,
+        wakes: 0,
+      };
+      const merged = makeLink(1, { headBranch: "done" });
+      const harness = yield* makeHarness({
+        thread: makeThread([
+          { ...merged, snapshot: merged.snapshot && { ...merged.snapshot, state: "merged" } },
+          makeLink(2, { headBranch: "idle" }),
+          makeLink(3, { headBranch: "watched", watch }),
+        ]),
+      });
+      const error = yield* harness
+        .call("watch_pull_request", { repository: "hafiezul/rove", number: 1 })
+        .pipe(Effect.flip);
+      expect(error).toMatchObject({ _tag: "PullRequestNotOpenError", state: "merged" });
+      expect(
+        yield* harness.call("unwatch_pull_request", { repository: "hafiezul/rove", number: 3 }),
+      ).toMatchObject({ wasWatching: true });
+      expect(yield* Ref.get(harness.commands)).toMatchObject([
+        { type: "thread.pull-request.watch", number: 3, watching: false },
+      ]);
+    }),
+  );
+
+  it.effect("watches a pull request saved as closed, since it may have reopened", () =>
+    Effect.gen(function* () {
+      const closed = makeLink(1, { headBranch: "closed" });
+      const harness = yield* makeHarness({
+        thread: makeThread([
+          { ...closed, snapshot: closed.snapshot && { ...closed.snapshot, state: "closed" } },
+        ]),
+      });
+      yield* harness.call("watch_pull_request", { repository: "hafiezul/rove", number: 1 });
+      expect(yield* Ref.get(harness.commands)).toMatchObject([
+        { type: "thread.pull-request.watch", number: 1, watching: true },
+      ]);
+    }),
+  );
+
+  it.effect("refuses a watch from a subagent thread, whose parent owns the pull request", () =>
+    Effect.gen(function* () {
+      const harness = yield* makeHarness({
+        thread: {
+          ...makeThread([makeLink(1, { headBranch: "feature" })]),
+          lineage: {
+            rootThreadId: ThreadId.make("parent"),
+            parentThreadId: ThreadId.make("parent"),
+            relationshipToParent: "subagent",
+          },
+        },
+      });
+      const error = yield* harness
+        .call("watch_pull_request", { repository: "hafiezul/rove", number: 1 })
+        .pipe(Effect.flip);
+      expect(error).toMatchObject({ _tag: "PullRequestWatchFromSubagentError" });
+      expect(yield* Ref.get(harness.commands)).toEqual([]);
+    }),
+  );
+
   it.effect("links by repository and number, defaulting the host to the project's", () =>
     Effect.gen(function* () {
       const harness = yield* makeHarness();
       const result = yield* harness.call("link_pull_request", {
-        repository: "RoveTools/Other",
+        repository: "hafiezul/other",
         number: 7,
       });
       expect(result).toEqual({
         host: "github.com",
-        repository: "rovetools/other",
+        repository: "hafiezul/other",
         number: 7,
-        url: "https://github.com/rovetools/other/pull/7",
+        url: "https://github.com/hafiezul/other/pull/7",
         alreadyLinked: false,
       });
     }),
@@ -308,7 +440,7 @@ describe("pull request toolkit handlers", () => {
       expect(error).toMatchObject({ _tag: "PullRequestTargetIncompleteError" });
       const unknown = yield* harness
         .call("link_pull_request", {
-          url: "https://github.com/rovetools/rove/issues/1?token=private-value",
+          url: "https://github.com/hafiezul/rove/issues/1?token=private-value",
         })
         .pipe(Effect.flip);
       expect(unknown).toMatchObject({ _tag: "PullRequestUrlInvalidError" });
@@ -322,15 +454,10 @@ describe("pull request toolkit handlers", () => {
       const harness = yield* makeHarness({
         thread: makeThread([makeLink(123)]),
         reject: (command) =>
-          command.type === "thread.pull-request.link"
-            ? new OrchestrationCommandInvariantError({
-                commandType: command.type,
-                detail: "already linked",
-              })
-            : null,
+          command.type === "thread.pull-request.link" ? "already linked" : null,
       });
       const result = yield* harness.call("link_pull_request", {
-        url: "https://github.com/rovetools/rove/pull/123",
+        url: "https://github.com/hafiezul/rove/pull/123",
       });
       expect(result.alreadyLinked).toBe(true);
     }),
@@ -342,24 +469,21 @@ describe("pull request toolkit handlers", () => {
         thread: makeThread([makeLink(5)]),
         reject: (command) =>
           command.type === "thread.pull-request.unlink" && command.number !== 5
-            ? new OrchestrationCommandInvariantError({
-                commandType: command.type,
-                detail: "not linked",
-              })
+            ? "not linked"
             : null,
       });
       const linked = yield* harness.call("unlink_pull_request", {
-        repository: "rovetools/rove",
+        repository: "hafiezul/rove",
         number: 5,
       });
       expect(linked).toEqual({
         host: "github.com",
-        repository: "rovetools/rove",
+        repository: "hafiezul/rove",
         number: 5,
         wasLinked: true,
       });
       const missing = yield* harness.call("unlink_pull_request", {
-        url: "https://github.com/rovetools/rove/pull/9",
+        url: "https://github.com/hafiezul/rove/pull/9",
       });
       expect(missing.wasLinked).toBe(false);
       expect(yield* Ref.get(harness.commands)).toMatchObject([
@@ -373,7 +497,7 @@ describe("pull request toolkit handlers", () => {
       makeThread([
         makeLink(42, {
           host: "forge.example",
-          url: "http://forge.example:3000/rovetools/rove/pulls/42",
+          url: "http://forge.example:3000/hafiezul/rove/pulls/42",
         }),
       ]),
     );
@@ -403,10 +527,11 @@ describe("pull request toolkit handlers", () => {
       expect(result.pullRequests.map((entry) => entry.number)).toEqual([3, 1, 2, 10]);
       expect(result.pullRequests[0]).toEqual({
         host: "github.com",
-        repository: "rovetools/rove",
+        repository: "hafiezul/rove",
         number: 3,
-        url: "https://github.com/rovetools/rove/pull/3",
+        url: "https://github.com/hafiezul/rove/pull/3",
         source: "agent",
+        watching: false,
         state: "open",
         title: "PR 3",
         headBranch: "feat-c",
@@ -435,7 +560,7 @@ describe("listThreadPullRequests", () => {
       kind: "native" as const,
       id: "stack-1",
       number: 1,
-      url: "https://github.com/rovetools/rove/stack/1",
+      url: "https://github.com/hafiezul/rove/stack/1",
       base: "main",
       layers: [
         { number: 1, headBranch: "a", state: "open" as const },
@@ -454,6 +579,159 @@ describe("listThreadPullRequests", () => {
     ]);
     expect(result.chains).toEqual([{ kind: "native", numbers: [1, 2] }]);
   });
+});
+
+describe("pull request guide tools", () => {
+  it.effect(
+    "writes guides through the project whose checkout is each pull request's repository",
+    () =>
+      Effect.gen(function* () {
+        const other = {
+          ...makeProject({
+            canonicalKey: "github.com/acme/web",
+            locator: {
+              source: "git-remote",
+              remoteName: "origin",
+              remoteUrl: "git@github.com:acme/web.git",
+            },
+            provider: "github",
+            displayName: "acme/web",
+            owner: "acme",
+            name: "web",
+          }),
+          id: ProjectId.make("project-web"),
+        };
+        const harness = yield* makeHarness({ projects: [makeProject(), other] });
+        const result = yield* harness.call("write_pull_request_guides", {
+          pullRequests: [
+            { url: "https://github.com/acme/web/pull/7" },
+            { repository: "hafiezul/rove", number: 12 },
+            { url: "https://github.com/someone/else/pull/1" },
+          ],
+        });
+        expect(
+          result.guides.map((guide) => [guide.repository, guide.number, guide.outcome]),
+        ).toEqual([
+          ["acme/web", 7, "started"],
+          ["hafiezul/rove", 12, "started"],
+          ["someone/else", 1, "failed"],
+        ]);
+        expect(result.guides[2]?.detail).toContain("No project in this environment");
+        expect(
+          (yield* Ref.get(harness.guideRequests)).map((ref) => [ref.projectId, ref.number]),
+        ).toEqual([
+          ["project-web", 7],
+          [PROJECT_ID, 12],
+        ]);
+      }),
+  );
+
+  it.effect("reports a refused run on its own pull request without failing the rest", () =>
+    Effect.gen(function* () {
+      const harness = yield* makeHarness({
+        generate: (input) =>
+          input.number === 1
+            ? Effect.fail(
+                new PullRequestOperationError({
+                  operation: "generateReviewGuide",
+                  detail: "Review guides are off. Turn them on in Settings → Source Control.",
+                }),
+              )
+            : Effect.succeed({
+                ...NO_GUIDE,
+                run: {
+                  _tag: "Running" as const,
+                  headSha: "head-1",
+                  startedAt: "2026-10-11T00:00:00.000Z",
+                },
+                started: true,
+              }),
+      });
+      const result = yield* harness.call("write_pull_request_guides", {
+        pullRequests: [
+          { repository: "hafiezul/rove", number: 1 },
+          { repository: "hafiezul/rove", number: 2 },
+        ],
+      });
+      expect(result.guides.map((guide) => [guide.number, guide.outcome, guide.detail])).toEqual([
+        [1, "failed", "Review guides are off. Turn them on in Settings → Source Control."],
+        [2, "started", null],
+      ]);
+    }),
+  );
+
+  it.effect("reports an unreadable entry on its own and still writes the rest of the batch", () =>
+    Effect.gen(function* () {
+      const harness = yield* makeHarness();
+      const result = yield* harness.call("write_pull_request_guides", {
+        pullRequests: [
+          { url: "https://example.com/not-a-pull-request" },
+          { repository: "hafiezul/rove" },
+          { repository: "hafiezul/rove", number: 5 },
+        ],
+      });
+      expect(result.guides.map((guide) => guide.outcome)).toEqual(["failed", "failed", "started"]);
+      expect(result.guides[0]?.detail).toContain("not a recognised pull request URL");
+      expect(result.guides[1]?.detail).toContain("Pass either url");
+      expect((yield* Ref.get(harness.guideRequests)).map((ref) => ref.number)).toEqual([5]);
+    }),
+  );
+
+  it.effect("reports a run the service joined as running, not as a new one", () =>
+    Effect.gen(function* () {
+      const harness = yield* makeHarness({
+        generate: () =>
+          Effect.succeed({
+            ...NO_GUIDE,
+            run: { _tag: "Running", headSha: "head-1", startedAt: "2026-10-11T00:00:00.000Z" },
+            started: false,
+          }),
+      });
+      const result = yield* harness.call("write_pull_request_guides", {
+        pullRequests: [{ repository: "hafiezul/rove", number: 4 }],
+      });
+      expect(result.guides.map((guide) => guide.outcome)).toEqual(["running"]);
+    }),
+  );
+
+  it.effect("finds an Azure DevOps checkout for a pull request named by its full path", () =>
+    Effect.gen(function* () {
+      const azure = {
+        ...makeProject({
+          canonicalKey: "dev.azure.com/org/project/_git/web",
+          locator: {
+            source: "git-remote",
+            remoteName: "origin",
+            remoteUrl: "https://dev.azure.com/org/project/_git/web",
+          },
+          provider: "azure-devops",
+          displayName: "org/project/_git/web",
+          owner: "org",
+          name: "web",
+        }),
+        id: ProjectId.make("project-azure"),
+      };
+      const harness = yield* makeHarness({ projects: [makeProject(), azure] });
+      const result = yield* harness.call("write_pull_request_guides", {
+        pullRequests: [{ host: "dev.azure.com", repository: "org/project/_git/web", number: 9 }],
+      });
+      expect(result.guides.map((guide) => guide.outcome)).toEqual(["started"]);
+      expect((yield* Ref.get(harness.guideRequests)).map((ref) => ref.projectId)).toEqual([
+        "project-azure",
+      ]);
+    }),
+  );
+
+  it.effect("reads a stored guide and says when a push left it behind", () =>
+    Effect.gen(function* () {
+      const harness = yield* makeHarness();
+      const result = yield* harness.call("read_pull_request_guide", {
+        repository: "hafiezul/rove",
+        number: 3,
+      });
+      expect(result).toMatchObject({ number: 3, guide: null, run: null, stale: false });
+    }),
+  );
 });
 
 it("keeps failure diagnostics as the cause rather than exposing them in the tool message", () => {

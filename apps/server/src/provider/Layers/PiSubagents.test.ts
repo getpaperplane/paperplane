@@ -7,7 +7,6 @@ import type { ToolDefinition } from "@earendil-works/pi-coding-agent";
 import { ThreadId } from "@rove-code/contracts";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
-import { foldAgentTranscript } from "../../orchestration/agentTranscriptQuery.ts";
 import type { PiCreateSessionInput, PiSessionLike } from "./PiAdapter.ts";
 import { createPiSession } from "./PiSessionFactory.ts";
 import {
@@ -92,7 +91,6 @@ describe("Rove subagents in Pi threads", () => {
       summary: "child report",
       model: "rove-subagent-test/fixture",
       toolUseId: "delegate-1",
-      runHandles: { hasTranscript: true },
     });
 
     const taskId = completed!.payload.taskId;
@@ -100,14 +98,14 @@ describe("Rove subagents in Pi threads", () => {
       NodePath.join(transcripts, threadId, `${taskId}.jsonl`),
       "utf8",
     ).split("\n");
-    expect(foldAgentTranscript(lines, false)).toMatchObject({
-      model: "rove-subagent-test/fixture",
-      cwd,
-      entries: [
-        { kind: "task", text: "inspect" },
-        { kind: "text", text: "child report" },
-      ],
-    });
+    const entries = lines.filter(Boolean).map((line) => JSON.parse(line));
+    expect(entries).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ k: "task", text: "inspect" }),
+        expect.objectContaining({ k: "text", text: "child report" }),
+        expect.objectContaining({ k: "meta", model: "rove-subagent-test/fixture" }),
+      ]),
+    );
   });
 
   it.each([undefined, null])(

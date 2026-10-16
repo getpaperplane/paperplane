@@ -1,197 +1,140 @@
 import { describe, expect, it } from "vite-plus/test";
-import { EventId, type OrchestrationThreadActivity, TurnId } from "@rove-code/contracts";
-
+import * as DateTime from "effect/DateTime";
 import {
-  contextWindowTokenCounters,
   deriveLatestContextWindowSnapshot,
   formatContextWindowTokens,
+  latestProviderTurnTokenUsage,
 } from "./contextWindow";
 
-function makeActivity(id: string, kind: string, payload: unknown): OrchestrationThreadActivity {
-  return {
-    id: EventId.make(id),
-    tone: "info",
-    kind,
-    summary: kind,
-    payload,
-    turnId: TurnId.make("turn-1"),
-    createdAt: "2026-03-23T00:00:00.000Z",
-  };
-}
-
-describe("contextWindow", () => {
-  it("derives the latest valid context window snapshot", () => {
-    const snapshot = deriveLatestContextWindowSnapshot([
-      makeActivity("activity-1", "context-window.updated", {
-        usedTokens: 1000,
-      }),
-      makeActivity("activity-2", "tool.started", {}),
-      makeActivity("activity-3", "context-window.updated", {
-        usedTokens: 14_000,
-        maxTokens: 258_000,
-        compactsAutomatically: true,
-        autoCompactThreshold: 200_000,
-      }),
-    ]);
-
-    expect(snapshot).not.toBeNull();
-    expect(snapshot?.usedTokens).toBe(14_000);
-    expect(snapshot?.totalProcessedTokens).toBeNull();
-    expect(snapshot?.maxTokens).toBe(258_000);
-    expect(snapshot?.compactsAutomatically).toBe(true);
-    expect(snapshot?.autoCompactThreshold).toBe(200_000);
-  });
-
-  it("ignores malformed payloads", () => {
-    const snapshot = deriveLatestContextWindowSnapshot([
-      makeActivity("activity-1", "context-window.updated", {}),
-    ]);
-
-    expect(snapshot).toBeNull();
-  });
-
-  it("keeps valid zero-usage snapshots", () => {
-    const snapshot = deriveLatestContextWindowSnapshot([
-      makeActivity("activity-1", "context-window.updated", {
-        usedTokens: 0,
-        maxTokens: 100_000,
-      }),
-    ]);
-
-    expect(snapshot).toMatchObject({
-      usedTokens: 0,
-      maxTokens: 100_000,
-      remainingTokens: 100_000,
-      usedPercentage: 0,
-      remainingPercentage: 100,
-    });
-  });
-
-  it("derives an intentional unknown context state without retaining stale usage", () => {
-    const snapshot = deriveLatestContextWindowSnapshot([
-      makeActivity("activity-known", "context-window.updated", {
-        usedTokens: 81_659,
-        maxTokens: 400_000,
-        inputTokens: 70_000,
-        cachedInputTokens: 30_000,
-        cacheCreationTokens: 500,
-        tokenBreakdownScope: "activeBranch",
-      }),
-      makeActivity("activity-unknown", "context-window.updated", {
+describe("V2 context window presentation", () => {
+  it("preserves an unknown Pi window without fabricating occupancy after compaction", () => {
+    const snapshot = deriveLatestContextWindowSnapshot([], undefined, {
+      contextUsage: {
         contextUsageState: "unknown",
         contextUsageUnknownReason: "compacted",
-        maxTokens: 400_000,
-        totalProcessedTokens: 748_126,
-        totalProcessedTokensScope: "activeBranch",
-        compactsAutomatically: true,
-      }),
-    ]);
-
+        maxTokens: 200_000,
+        totalProcessedTokens: 42_000,
+      },
+      updatedAt: DateTime.makeUnsafe("2026-08-23T00:00:00.000Z"),
+    });
     expect(snapshot).toMatchObject({
+      contextUsageState: "unknown",
       usedTokens: null,
-      maxTokens: 400_000,
+      maxTokens: 200_000,
+      totalProcessedTokens: 42_000,
       usedPercentage: null,
       remainingTokens: null,
-      contextUsageState: "unknown",
-      contextUsageUnknownReason: "compacted",
-      totalProcessedTokens: 748_126,
-      totalProcessedTokensScope: "activeBranch",
-      inputTokens: null,
-      cachedInputTokens: null,
-      cacheCreationTokens: null,
-      tokenBreakdownScope: null,
     });
   });
 
-  it("clears a previous meter when context-window metadata becomes unavailable", () => {
+  it("invalidates stale context metadata when the provider reports it unavailable", () => {
+    expect(
+      deriveLatestContextWindowSnapshot([], undefined, {
+        contextUsage: { contextUsageState: "unavailable" },
+        updatedAt: DateTime.makeUnsafe("2026-08-23T00:00:00.000Z"),
+      }),
+    ).toBeNull();
+  });
+  it("uses retained compaction token data when available", () => {
     const snapshot = deriveLatestContextWindowSnapshot([
-      makeActivity("activity-known", "context-window.updated", {
-        usedTokens: 81_659,
-        maxTokens: 400_000,
-      }),
-      makeActivity("activity-unavailable", "context-window.updated", {
-        contextUsageState: "unavailable",
-      }),
+      {
+        item: {
+          id: "compaction-1" as never,
+          threadId: "thread-1" as never,
+          runId: null,
+          nodeId: null,
+          providerThreadId: null,
+          providerTurnId: null,
+          nativeItemRef: null,
+          parentItemId: null,
+          ordinal: 1,
+          status: "completed",
+          title: null,
+          startedAt: null,
+          completedAt: null,
+          updatedAt: DateTime.makeUnsafe("2026-06-20T00:00:00.000Z"),
+          type: "compaction",
+          driver: null,
+          beforeTokenCount: 10_000,
+          afterTokenCount: 2_000,
+        },
+      },
     ]);
-
-    expect(snapshot).toBeNull();
+    expect(snapshot?.usedTokens).toBe(2_000);
+    expect(snapshot?.totalProcessedTokens).toBe(10_000);
   });
 
-  it("formats compact token counts", () => {
-    expect(formatContextWindowTokens(999)).toBe("999");
-    expect(formatContextWindowTokens(1400)).toBe("1.4k");
-    expect(formatContextWindowTokens(14_000)).toBe("14k");
-    expect(formatContextWindowTokens(258_000)).toBe("258k");
-    expect(formatContextWindowTokens(999_999)).toBe("1m");
+  it("prefers current provider usage and preserves ACP cost", () => {
+    const snapshot = deriveLatestContextWindowSnapshot([], undefined, {
+      contextUsage: {
+        usedTokens: 2_500,
+        maxTokens: 10_000,
+        cost: { amount: 0.42, currency: "USD" },
+      },
+      updatedAt: DateTime.makeUnsafe("2026-08-23T00:00:00.000Z"),
+    });
+
+    expect(snapshot).toMatchObject({
+      usedTokens: 2_500,
+      maxTokens: 10_000,
+      remainingTokens: 7_500,
+      usedPercentage: 25,
+      cost: { amount: 0.42, currency: "USD" },
+    });
   });
 
-  it("separates uncached input from cache reads and writes without double-counting", () => {
-    const snapshot = deriveLatestContextWindowSnapshot([
-      makeActivity("activity-1", "context-window.updated", {
-        usedTokens: 130_000,
-        maxTokens: 1_000_000,
-        inputTokens: 36_948_000,
-        cachedInputTokens: 32_000_000,
-        cacheCreationTokens: 948_000,
-        outputTokens: 130_000,
-        tokenBreakdownScope: "activeBranch",
-      }),
-    ]);
-
-    expect(snapshot?.tokenBreakdownScope).toBe("activeBranch");
-    expect(snapshot && contextWindowTokenCounters(snapshot)).toEqual([
-      { label: "Uncached input", value: 4_000_000 },
-      { label: "Output", value: 130_000 },
-      { label: "Cache read", value: 32_000_000 },
-      { label: "Cache write", value: 948_000 },
-    ]);
+  it("formats compact token values", () => {
+    expect(formatContextWindowTokens(1_500)).toBe("1.5k");
   });
 
-  it("does not infer uncached input if cache writes are unreported", () => {
-    const snapshot = deriveLatestContextWindowSnapshot([
-      makeActivity("activity-1", "context-window.updated", {
-        usedTokens: 100,
-        inputTokens: 400,
-        cachedInputTokens: 300,
-        outputTokens: 0,
-        tokenBreakdownScope: "latestResponse",
-      }),
-    ]);
+  it.each([
+    [999_499, "999k"],
+    [999_500, "1m"],
+    [999_999, "1m"],
+    [1_000_000, "1m"],
+    [1_100_000, "1.1m"],
+  ])("formats %d tokens as %s at the million boundary", (tokens, expected) => {
+    expect(formatContextWindowTokens(tokens)).toBe(expected);
+  });
+});
 
-    expect(snapshot?.tokenBreakdownScope).toBe("latestResponse");
-    expect(snapshot && contextWindowTokenCounters(snapshot)).toEqual([
-      { label: "Input total", value: 400 },
-      { label: "Cache read", value: 300 },
-    ]);
+describe("live provider-turn usage (#8144)", () => {
+  it("prefers the provider's live report over compaction items", () => {
+    const snapshot = deriveLatestContextWindowSnapshot([], {
+      usedTokens: 42_000,
+      maxTokens: 200_000,
+      inputTokens: 40_000,
+      outputTokens: 2_000,
+      updatedAt: "2026-08-27T00:00:00.000Z",
+    });
+    expect(snapshot).not.toBeNull();
+    expect(snapshot?.usedTokens).toBe(42_000);
+    expect(snapshot?.maxTokens).toBe(200_000);
+    expect(snapshot?.remainingTokens).toBe(158_000);
+    expect(snapshot?.usedPercentage).toBe(21);
   });
 
-  it("shows zero uncached input when the entire reported input was cached", () => {
-    const snapshot = deriveLatestContextWindowSnapshot([
-      makeActivity("activity-1", "context-window.updated", {
-        usedTokens: 100,
-        inputTokens: 400,
-        cachedInputTokens: 400,
-        cacheCreationTokens: 0,
-      }),
-    ]);
-
-    expect(snapshot && contextWindowTokenCounters(snapshot)).toEqual([
-      { label: "Uncached input", value: 0 },
-      { label: "Cache read", value: 400 },
-    ]);
+  it("handles a report without a known context window", () => {
+    const snapshot = deriveLatestContextWindowSnapshot([], {
+      usedTokens: 42_000,
+      updatedAt: "2026-08-27T00:00:00.000Z",
+    });
+    expect(snapshot?.maxTokens).toBeNull();
+    expect(snapshot?.usedPercentage).toBeNull();
   });
+});
 
-  it("includes total processed tokens when available", () => {
-    const snapshot = deriveLatestContextWindowSnapshot([
-      makeActivity("activity-1", "context-window.updated", {
-        usedTokens: 81_659,
-        totalProcessedTokens: 748_126,
-        maxTokens: 258_400,
-        lastUsedTokens: 81_659,
-      }),
+describe("latestProviderTurnTokenUsage", () => {
+  it("picks the newest report, not the last turn in snapshot order", () => {
+    const usage = (usedTokens: number, updatedAt: string) => ({
+      tokenUsage: { usedTokens, updatedAt },
+    });
+    // Snapshots sort by provider thread id, so an older thread can come last.
+    const latest = latestProviderTurnTokenUsage([
+      usage(300_000, "2026-06-20T12:00:00.000Z"),
+      {},
+      usage(90_000, "2026-06-20T09:00:00.000Z"),
     ]);
-
-    expect(snapshot?.usedTokens).toBe(81_659);
-    expect(snapshot?.totalProcessedTokens).toBe(748_126);
+    expect(latest?.usedTokens).toBe(300_000);
   });
 });

@@ -2,7 +2,7 @@ import * as Schema from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
 
 import { ThreadEnvMode, WorktreeSubmodules } from "./environment.ts";
-import { ProjectScriptIcon } from "./orchestration.ts";
+import { ProjectScriptIcon } from "./project.ts";
 import type { ProjectScopedServerSettingKey, ServerSettings } from "./settings.ts";
 
 /** File name of the checked-in Rove project file, resolved at the workspace root. */
@@ -41,6 +41,12 @@ export const RoveProjectFileScript = Schema.Struct({
     Schema.Boolean.annotate({
       description:
         "When true, the script runs automatically after a worktree is created for a new thread.",
+    }),
+  ),
+  runOnSettle: Schema.optionalKey(
+    Schema.Boolean.annotate({
+      description:
+        "When true, the script runs in the thread's worktree each time the thread settles, for example to delete build output. Threads without their own worktree skip it.",
     }),
   ),
   async: Schema.optionalKey(
@@ -101,7 +107,7 @@ export const RoveProjectFile = Schema.Struct({
       .check(Schema.isMaxLength(ROVE_PROJECT_FILE_MAX_SCRIPTS)),
   ),
 }).annotate({
-  title: "Rove Code project file",
+  title: "Rove project file",
   description:
     "Checked-in project configuration for Rove Code (rove.json at the repository root). See https://github.com/hafiezul/rove/blob/main/docs/user/project-settings.md for documentation.",
 });
@@ -120,7 +126,10 @@ export const PROJECT_FILE_BACKED_SETTINGS = {
   defaultThreadEnvMode: { field: "defaultThreadEnvMode", builtIn: "local" },
   worktreeSubmodules: { field: "worktreeSubmodules", builtIn: "recursive" },
 } as const satisfies {
-  readonly [K in ProjectScopedServerSettingKey]?: {
+  // `providerInstances` is scoped per project but overrides field by field
+  // rather than replacing a whole `ServerSettings` value (see its doc comment
+  // in settings.ts), so it cannot be file-backed and is excluded here.
+  readonly [K in ProjectScopedServerSettingKey & keyof ServerSettings]?: {
     readonly field: {
       readonly [F in keyof RoveProjectFile]: RoveProjectFile[F] extends
         | Exclude<ServerSettings[K], null>

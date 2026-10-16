@@ -8,8 +8,8 @@
  * does, and how it ends: rows come from that lifecycle, never from guessing at
  * processes. Agents that third-party extensions start are ordinary tool calls.
  *
- * Transcripts are JSONL under `<root>/<threadId>/<agentId>.jsonl`, read back by
- * `orchestration/agentTranscriptQuery.ts`.
+ * Transcripts remain JSONL under `<root>/<threadId>/<agentId>.jsonl`.
+ * V2 observes their child-node lifecycle; transcript inspection needs a separate authorized query.
  *
  * @module provider/Layers/PiSubagents
  */
@@ -345,7 +345,6 @@ export function createPiSubagentTool(options: PiSubagentToolOptions) {
           ...(state.thinking ? { effort: state.thinking } : undefined),
           toolUseId: toolCallId,
           ...(usage ? { typedUsage: usage } : undefined),
-          ...(options.transcriptsRoot ? { runHandles: { hasTranscript: true } } : undefined),
         } as const;
       };
 

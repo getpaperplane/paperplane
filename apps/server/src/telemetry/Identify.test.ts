@@ -1,3 +1,4 @@
+// @effect-diagnostics nodeBuiltinImport:off -- Compare the persisted anonymous identifier's digest against an independent SHA-256 implementation.
 import * as NodeCrypto from "node:crypto";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { assert, it } from "@effect/vitest";

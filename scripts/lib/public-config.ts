@@ -25,6 +25,23 @@ const REPO_ROOT = NodePath.dirname(
   NodePath.dirname(NodePath.dirname(NodeURL.fileURLToPath(import.meta.url))),
 );
 
+const CLOUD_CONFIG_KEYS = [
+  "ROVE_CLERK_PUBLISHABLE_KEY",
+  "VITE_CLERK_PUBLISHABLE_KEY",
+  "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY",
+  "ROVE_CLERK_JWT_TEMPLATE",
+  "VITE_CLERK_JWT_TEMPLATE",
+  "EXPO_PUBLIC_CLERK_JWT_TEMPLATE",
+  "ROVE_CLERK_CLI_OAUTH_CLIENT_ID",
+  "VITE_CLERK_CLI_OAUTH_CLIENT_ID",
+  "ROVE_RELAY_URL",
+  "VITE_ROVE_RELAY_URL",
+  "EXPO_PUBLIC_CLERK_GOOGLE_WEB_CLIENT_ID",
+  "EXPO_PUBLIC_CLERK_GOOGLE_IOS_CLIENT_ID",
+  "EXPO_PUBLIC_CLERK_GOOGLE_ANDROID_CLIENT_ID",
+  "EXPO_PUBLIC_CLERK_GOOGLE_IOS_URL_SCHEME",
+] as const;
+
 export function loadRepoEnv({
   baseEnv = process.env,
   repoRoot = REPO_ROOT,
@@ -35,8 +52,10 @@ export function loadRepoEnv({
   const rootEnv = readEnvFile(NodePath.join(repoRoot, ".env"));
   const localEnv = readEnvFile(NodePath.join(repoRoot, ".env.local"));
   const config = resolvePublicConfig(baseEnv, localEnv, rootEnv);
+  const cloudReady =
+    (baseEnv.ROVE_CLOUD_READY ?? localEnv.ROVE_CLOUD_READY ?? rootEnv.ROVE_CLOUD_READY) === "1";
 
-  return {
+  const env = {
     ...rootEnv,
     ...localEnv,
     ...baseEnv,
@@ -103,6 +122,16 @@ export function loadRepoEnv({
         }
       : undefined),
   };
+  // Clear configured aliases after projection. Empty strings are intentional:
+  // callers assign this into process.env, which turns undefined into "undefined".
+  return cloudReady
+    ? env
+    : {
+        ...env,
+        ...Object.fromEntries(
+          CLOUD_CONFIG_KEYS.filter((key) => key in env).map((key) => [key, ""]),
+        ),
+      };
 }
 
 export function resolvePublicConfig(...sources: readonly Environment[]): RovePublicConfig {

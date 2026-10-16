@@ -1,15 +1,15 @@
-import * as NodeCrypto from "node:crypto";
-
 import type { DesktopSshEnvironmentTarget } from "@rove-code/contracts";
-import { HostProcessPlatform } from "@rove-code/shared/hostProcess";
+import * as HostProcess from "@rove-code/shared/HostProcess";
+import * as Crypto from "effect/Crypto";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
+import * as Hex from "effect/encoding/Hex";
 import * as FileSystem from "effect/FileSystem";
 import * as Option from "effect/Option";
 import * as Path from "effect/Path";
 import * as Scope from "effect/Scope";
 import * as Stream from "effect/Stream";
-import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
+import { ChildProcess, ChildProcessSpawner } from "effect/process";
 
 import { buildSshChildEnvironment, type SshAuthOptions } from "./auth.ts";
 import { SshCommandError, SshInvalidTargetError } from "./errors.ts";
@@ -25,7 +25,7 @@ const MAX_SSH_ERROR_OUTPUT_LENGTH = 4_000;
 const sshCommandForPlatform = (platform: NodeJS.Platform): string =>
   platform === "win32" ? "ssh.exe" : "ssh";
 
-export const resolveSshCommand = Effect.map(HostProcessPlatform, sshCommandForPlatform);
+export const resolveSshCommand = Effect.map(HostProcess.Platform, sshCommandForPlatform);
 
 const encoder = new TextEncoder();
 
@@ -72,12 +72,16 @@ export function targetConnectionKey(target: DesktopSshEnvironmentTarget): string
   return `${target.alias}\u0000${target.hostname}\u0000${target.username ?? ""}\u0000${target.port ?? ""}`;
 }
 
-export function remoteStateKey(target: DesktopSshEnvironmentTarget): string {
-  return NodeCrypto.createHash("sha256")
-    .update(targetConnectionKey(target))
-    .digest("hex")
-    .slice(0, 16);
-}
+/** Names the remote state directory for a target: the first 16 hex chars of its SHA-256 key. */
+export const remoteStateKey = Effect.fn("ssh/command.remoteStateKey")(function* (
+  target: DesktopSshEnvironmentTarget,
+): Effect.fn.Return<string, never, Crypto.Crypto> {
+  const crypto = yield* Crypto.Crypto;
+  const digest = yield* crypto
+    .digest("SHA-256", encoder.encode(targetConnectionKey(target)))
+    .pipe(Effect.orDie);
+  return Hex.encode(digest).slice(0, 16);
+});
 
 function buildSshHostSpec(target: DesktopSshEnvironmentTarget): string {
   const destination = target.alias.trim() || target.hostname.trim();
@@ -180,10 +184,8 @@ const runSshCommandInScope = Effect.fn("ssh/command.runSshCommand.inScope")(func
 > {
   const hostSpec = yield* buildSshHostSpecEffect(target);
   const environment = yield* buildSshChildEnvironment({
-    ...(input.interactiveAuth === undefined
-      ? undefined
-      : { interactiveAuth: input.interactiveAuth }),
-    ...(input.authSecret === undefined ? undefined : { authSecret: input.authSecret }),
+    ...(input.interactiveAuth === undefined ? {} : { interactiveAuth: input.interactiveAuth }),
+    ...(input.authSecret === undefined ? {} : { authSecret: input.authSecret }),
   }).pipe(
     Effect.mapError(
       (cause) =>

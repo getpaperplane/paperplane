@@ -4,7 +4,7 @@ import {
   PROVIDER_SEND_TURN_MAX_FILE_BYTES,
   type ExecutionEnvironmentDescriptor,
 } from "@rove-code/contracts";
-import { HostProcessArchitecture, HostProcessPlatform } from "@rove-code/shared/hostProcess";
+import * as HostProcess from "@rove-code/shared/HostProcess";
 import * as Context from "effect/Context";
 import * as Crypto from "effect/Crypto";
 import * as Effect from "effect/Effect";
@@ -15,9 +15,11 @@ import * as Schema from "effect/Schema";
 
 import packageJson from "../../package.json" with { type: "json" };
 import * as ServerSecretStore from "../auth/ServerSecretStore.ts";
+import { resolveServerInstallation } from "../cli/invocation.ts";
 import { readAgentActivityPublishingActive } from "../cloud/config.ts";
+import { resolveServerSelfUpdateCapability } from "../cloud/selfUpdate.ts";
+import { resolveServiceLauncherMode } from "../cloud/serviceLauncherClient.ts";
 import * as ServerConfig from "../config.ts";
-import * as ServiceLauncherClient from "../cloud/serviceLauncherClient.ts";
 import * as ProcessRunner from "../processRunner.ts";
 import { resolveServerEnvironmentLabel } from "./ServerEnvironmentLabel.ts";
 import { detectServerEnvironmentMachineKind } from "./ServerEnvironmentMachine.ts";
@@ -37,6 +39,18 @@ export class ServerEnvironmentIdPersistenceError extends Schema.TaggedError<Serv
     return `Server environment ID ${this.operation} failed at '${this.environmentIdPath}'.`;
   }
 }
+
+declare const __ROVE_BUILD_CLOUD_READY__: boolean | undefined;
+const cloudReady =
+  process.env.ROVE_CLOUD_READY === "1" ||
+  (typeof __ROVE_BUILD_CLOUD_READY__ !== "undefined" && __ROVE_BUILD_CLOUD_READY__);
+
+export class ServerEnvironmentCloudReady extends Context.Reference<boolean>(
+  "@rove-code/server/environment/ServerEnvironment/ServerEnvironmentCloudReady",
+  {
+    defaultValue: () => cloudReady,
+  },
+) {}
 
 export class ServerEnvironment extends Context.Service<
   ServerEnvironment,
@@ -156,7 +170,7 @@ const makeIdentity = Effect.gen(function* () {
       return persisted;
     }
 
-    const generated = yield* crypto.randomUUIDv4;
+    const generated = yield* crypto.randomUUIDv4();
     yield* persistEnvironmentId(generated, "create");
     let winner = yield* readPersistedEnvironmentId;
     if (winner === null) {
@@ -184,21 +198,24 @@ export const make = Effect.gen(function* () {
   const serverConfig = yield* ServerConfig.ServerConfig;
   const secrets = yield* ServerSecretStore.ServerSecretStore;
   const identity = yield* ServerEnvironmentIdentity;
-  const hostPlatform = yield* HostProcessPlatform;
-  const hostArchitecture = yield* HostProcessArchitecture;
+  const hostPlatform = yield* HostProcess.Platform;
+  const hostArchitecture = yield* HostProcess.Architecture;
   const environmentId = yield* identity.getEnvironmentId;
-  const launcher = yield* ServiceLauncherClient.ServiceLauncherClient;
-  const updateOwner =
-    serverConfig.mode === "desktop"
-      ? ("desktop-managed" as const)
-      : launcher.managed
-        ? ("boot-service" as const)
-        : null;
-  const desktopUpdateAvailable =
-    serverConfig.mode === "desktop" && serverConfig.desktopTelemetryControlFd !== undefined;
   const cwdBaseName = path.basename(serverConfig.cwd).trim();
   const label = yield* resolveServerEnvironmentLabel({ cwdBaseName });
   const machine = yield* detectServerEnvironmentMachineKind();
+  const launcher = yield* resolveServiceLauncherMode();
+  const serverSelfUpdate = resolveServerSelfUpdateCapability({
+    desktopManaged: serverConfig.mode === "desktop",
+    launcherManaged: launcher.managed,
+  });
+  const serverInstallation = serverSelfUpdate === null ? yield* resolveServerInstallation : null;
+  // Static is correct: the control fd is known at bootstrap, and the desktop
+  // app and its bundled server ship in one artifact, so a present fd means
+  // the app speaks the requestDesktopUpdate protocol. WSL backends never get
+  // the fd and correctly do not advertise.
+  const desktopAppUpdate =
+    serverSelfUpdate === "desktop-managed" && serverConfig.desktopTelemetryControlFd !== undefined;
 
   const descriptor: ExecutionEnvironmentDescriptor = {
     environmentId,
@@ -217,47 +234,53 @@ export const make = Effect.gen(function* () {
       questionAttachments: true,
       fileAttachments: { maxUploadBytes: PROVIDER_SEND_TURN_MAX_FILE_BYTES },
       pullRequests: true,
+      pullRequestChecks: true,
       inlineMessageContext: true,
       requiredWorktreeBootstrap: true,
-      worktreeCheckoutBaseBranch: true,
-      threadPortableHandoff: true,
-      threadContinuationLinks: true,
-      standaloneThreads: true,
       threadSettlement: true,
       threadAutoSettlement: true,
-      threadUsageLimitRecovery: true,
       storageCleanup: true,
-      worktreeInventory: true,
+      storageCleanupRun: true,
+      databaseStorage: true,
+      otlpEndpointCheck: true,
       projectWorktreeCleanup: true,
+      settledWorktreeCleanup: true,
+      worktreesDirectory: true,
+      threadAutoSettlementScope: true,
       threadRestartContinuation: true,
-      telemetryControls: true,
-      remoteSandboxes: true,
       projectSettingsOverrides: true,
+      telemetryControls: true,
+      worktreeInventory: true,
+      remoteSandboxes: true,
+      projectProviderInstanceOverrides: true,
       threadSnooze: true,
       environmentThemes: true,
       usageLimitSources: true,
       usagePriceOverrides: true,
-      piWorkloadProtection: true,
+      usageModelAliases: true,
       threadPinning: true,
       threadPinReorder: true,
       threadActiveReorder: true,
       threadAutoSettleOptOut: true,
       threadTitleRegeneration: true,
+      commandOutputStreaming: true,
+      threadVisitedTracking: true,
       threadPullRequests: true,
-      potetoMode: true,
-      potetoDraft: true,
+      threadPullRequestWatch: true,
       pullRequestStackActions: true,
       threadPullRequestLinking: true,
+      serverResolvedCommandContext: true,
       environmentIcon: true,
       projectCloneTracking: true,
-      ...(updateOwner === null ? {} : { serverSelfUpdate: updateOwner }),
-      ...(launcher.managed || desktopUpdateAvailable
-        ? {
-            serverSelfUpdateProgress: true,
-            serverUpdateThreadContinuation: true,
-          }
+      ...(serverSelfUpdate === null ? {} : { serverSelfUpdate }),
+      ...(serverInstallation === null ? {} : { serverInstallation }),
+      // V2 restart recovery uses the environment-owned opt-in. The old
+      // per-update request flag is not wired into the V2 update RPC path.
+      ...(serverSelfUpdate === "boot-service" || desktopAppUpdate
+        ? { serverSelfUpdateProgress: true }
         : {}),
-      ...(desktopUpdateAvailable ? { desktopAppUpdate: true } : {}),
+      ...(desktopAppUpdate ? { desktopAppUpdate: true } : {}),
+      serverBrowser: true,
     },
   };
 
@@ -266,7 +289,10 @@ export const make = Effect.gen(function* () {
     // The publish opt-in and relay link change at runtime (`rove connect
     // publish`, the client settings toggle), so the capability is read per
     // descriptor request rather than baked in at startup.
-    getDescriptor: readAgentActivityPublishingActive(secrets).pipe(
+    getDescriptor: ServerEnvironmentCloudReady.pipe(
+      Effect.flatMap((enabled) =>
+        enabled ? readAgentActivityPublishingActive(secrets) : Effect.succeed(false),
+      ),
       Effect.map((agentActivityPublishing) => ({
         ...descriptor,
         capabilities: { ...descriptor.capabilities, agentActivityPublishing },
@@ -275,7 +301,7 @@ export const make = Effect.gen(function* () {
   });
 });
 
-export const identityLayer = Layer.effect(ServerEnvironmentIdentity, makeIdentity);
+export const layerIdentity = Layer.effect(ServerEnvironmentIdentity, makeIdentity);
 
 /**
  * ServerEnvironment is acquired from persisted filesystem and host-process
@@ -284,7 +310,6 @@ export const identityLayer = Layer.effect(ServerEnvironmentIdentity, makeIdentit
  * ServerSecretStore backing the descriptor's publishing capability.
  */
 export const layer = Layer.effect(ServerEnvironment, make).pipe(
-  Layer.provideMerge(identityLayer),
+  Layer.provideMerge(layerIdentity),
   Layer.provide(ProcessRunner.layer),
-  Layer.provide(ServiceLauncherClient.layer),
 );

@@ -1,5 +1,8 @@
+import { SourceControlProviderKind } from "@rove-code/contracts";
+import { vi } from "vite-plus/test";
 import {
   EnvironmentId,
+  AuthSourceControlWriteScope,
   WS_METHODS,
   type SourceControlPublishRepositoryResult,
 } from "@rove-code/contracts";
@@ -8,7 +11,7 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
 import * as SubscriptionRef from "effect/SubscriptionRef";
-import { AsyncResult, Atom, AtomRegistry } from "effect/unstable/reactivity";
+import { AsyncResult, Atom, AtomRegistry } from "effect/reactivity";
 
 import {
   AVAILABLE_CONNECTION_STATE,
@@ -21,7 +24,6 @@ import * as EnvironmentSupervisor from "../connection/supervisor.ts";
 import * as Persistence from "../platform/persistence.ts";
 import { EnvironmentRpcUnavailableError } from "../rpc/client.ts";
 import type { WsRpcProtocolClient } from "../rpc/protocol.ts";
-import { testDouble } from "../testDouble.ts";
 import type { RpcSession } from "../rpc/session.ts";
 import { createSourceControlEnvironmentAtoms } from "./sourceControl.ts";
 import { vcsRefsCacheStateAtom } from "./vcsRefInvalidation.ts";
@@ -35,7 +37,7 @@ const TARGET = new PrimaryConnectionTarget({
 
 const PUBLISH_RESULT: SourceControlPublishRepositoryResult = {
   repository: {
-    provider: "github",
+    provider: SourceControlProviderKind.make("github"),
     nameWithOwner: "rovetools/rove",
     url: "https://github.com/rovetools/rove",
     sshUrl: "git@github.com:rovetools/rove.git",
@@ -47,12 +49,11 @@ const PUBLISH_RESULT: SourceControlPublishRepositoryResult = {
   status: "pushed",
 };
 
-function session(client: unknown): RpcSession {
-  const rpcClient = testDouble<WsRpcProtocolClient>(client);
+function session(client: WsRpcProtocolClient): RpcSession {
   return {
-    client: rpcClient,
+    client,
     initialConfig: Effect.never,
-    subscribeServerConfig: (input) => rpcClient.subscribeServerConfig(input),
+    subscribeServerConfig: (input) => client.subscribeServerConfig(input),
     ready: Effect.void,
     probe: Effect.void,
     closed: Effect.never,
@@ -84,7 +85,7 @@ describe("source control environment atoms", () => {
                   }),
                 );
           },
-        };
+        } as unknown as WsRpcProtocolClient;
         const supervisor = EnvironmentSupervisor.EnvironmentSupervisor.of({
           target: TARGET,
           state: yield* SubscriptionRef.make(connectionState),
@@ -100,7 +101,7 @@ describe("source control environment atoms", () => {
         ) => Effect.provideService(effect, EnvironmentSupervisor.EnvironmentSupervisor, supervisor);
         const environmentRegistry = EnvironmentRegistry.EnvironmentRegistry.of({
           run,
-        } as EnvironmentRegistry.EnvironmentRegistry["Service"]);
+        } as unknown as EnvironmentRegistry.EnvironmentRegistry["Service"]);
         const removed = new Array<string>();
         const cache = Persistence.EnvironmentCacheStore.of({
           loadShell: () => Effect.succeedNone,
@@ -140,7 +141,7 @@ describe("source control environment atoms", () => {
             environmentId: TARGET.environmentId,
             input: {
               cwd: "/repo",
-              provider: "github",
+              provider: SourceControlProviderKind.make("github"),
               repository: "rovetools/rove",
               visibility: "private",
             },
@@ -156,7 +157,7 @@ describe("source control environment atoms", () => {
             environmentId: TARGET.environmentId,
             input: {
               cwd: "/repo",
-              provider: "github",
+              provider: SourceControlProviderKind.make("github"),
               repository: "rovetools/rove",
               visibility: "private",
             },
@@ -170,3 +171,23 @@ describe("source control environment atoms", () => {
     ),
   );
 });
+
+// Transport fixtures have a source-control-only session; authorization edge cases
+// are exercised by commandPermissions.test.ts.
+vi.mock("./session.ts", () => ({
+  createEnvironmentSessionAtoms: () => ({ sessionStateAtom: grantedSessions }),
+}));
+const grantedSessions = Atom.family((_id: EnvironmentId) =>
+  Atom.make(
+    AsyncResult.success({
+      authenticated: true,
+      auth: {
+        policy: "remote-reachable",
+        bootstrapMethods: [],
+        sessionMethods: [],
+        sessionCookieName: "test",
+      },
+      scopes: [AuthSourceControlWriteScope],
+    }),
+  ),
+);

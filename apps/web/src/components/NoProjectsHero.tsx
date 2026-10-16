@@ -1,9 +1,10 @@
-import { PlusIcon } from "lucide-react";
-import { useCallback, useState } from "react";
-import { useNewThreadHandler } from "../hooks/useHandleNewThread";
+import { MessageSquareDashedIcon, PlusIcon } from "lucide-react";
+import { useCallback } from "react";
 
 import { openCommandPalette } from "../commandPaletteBus";
 import { isElectron } from "../env";
+import { useScratchProject } from "../hooks/useScratchProject";
+import { usePrimaryEnvironmentId } from "../state/environments";
 import { Button } from "./ui/button";
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "./ui/empty";
 import { SidebarInset } from "./ui/sidebar";
@@ -11,25 +12,9 @@ import { WorkspacePageHeader } from "./WorkspacePageHeader";
 
 export function NoProjectsHero() {
   const openAddProject = useCallback(() => openCommandPalette({ open: "add-project" }), []);
-  const handleNewThread = useNewThreadHandler();
-  const [starting, setStarting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const startThread = async () => {
-    if (starting) return;
-    setStarting(true);
-    setError(null);
-    try {
-      await handleNewThread(null);
-    } catch (cause) {
-      setError(
-        cause instanceof Error
-          ? cause.message
-          : "Could not start a thread. Check your environment connection and try again.",
-      );
-    } finally {
-      setStarting(false);
-    }
-  };
+  const primaryEnvironmentId = usePrimaryEnvironmentId();
+  const { scratchEnvironmentId, startScratchThread } = useScratchProject();
+  const scratchTargetEnvironmentId = scratchEnvironmentId(primaryEnvironmentId);
 
   return (
     <SidebarInset className="h-dvh min-h-0 overflow-hidden overscroll-y-none">
@@ -41,22 +26,25 @@ export function NoProjectsHero() {
             <EmptyHeader className="max-w-none">
               <EmptyTitle>What should we work on?</EmptyTitle>
               <EmptyDescription>
-                Start a thread, or add a project to work in an existing folder.
+                {scratchTargetEnvironmentId === null
+                  ? "Add a project to start your first thread."
+                  : "Add a project, or start without one."}
               </EmptyDescription>
-              {error ? (
-                <p role="alert" className="text-sm text-destructive">
-                  {error}
-                </p>
-              ) : null}
               <div className="mt-6 flex justify-center gap-2">
-                <Button size="sm" disabled={starting} onClick={() => void startThread()}>
-                  <PlusIcon className="size-4" />
-                  {starting ? "Starting…" : "New thread"}
-                </Button>
-                <Button variant="outline" size="sm" onClick={openAddProject}>
+                <Button size="sm" onClick={openAddProject}>
                   <PlusIcon className="size-4" />
                   Add project
                 </Button>
+                {scratchTargetEnvironmentId === null ? null : (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => void startScratchThread(scratchTargetEnvironmentId)}
+                  >
+                    <MessageSquareDashedIcon className="size-4" />
+                    Start without a project
+                  </Button>
+                )}
               </div>
             </EmptyHeader>
           </div>

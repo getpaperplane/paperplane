@@ -5,7 +5,7 @@ import * as NodeOS from "node:os";
 import * as NodePath from "node:path";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import * as Effect from "effect/Effect";
-import { HostProcessPlatform } from "@rove-code/shared/hostProcess";
+import { Platform as HostProcessPlatform } from "@rove-code/shared/HostProcess";
 import { it } from "@effect/vitest";
 import { describe, expect } from "vite-plus/test";
 import { isCwdInside, isServerOwnedCgroup, stopWorktreeProcesses } from "./worktreeProcesses.ts";

@@ -38,6 +38,7 @@ concurrency:
   queue: max
 
 permissions:
+  actions: read
   contents: read
   id-token: none
 
@@ -69,12 +70,18 @@ jobs:
           BUILD_ONLY: ${{ inputs.build_only }}
         with:
           script: |
-            const { resolveReleaseCommit } = require('./.github/scripts/check-nightly-release.cjs');
+            const { resolveReleaseCommit, assertReleaseSource, assertCommitOnDefaultBranch } = require('./.github/scripts/check-nightly-release.cjs');
+            const buildOnly = process.env.BUILD_ONLY === 'true';
+            const releaseChannel = context.eventName === 'schedule' ? 'nightly' : (process.env.DISPATCH_CHANNEL || 'preview');
+            if (!buildOnly) await assertReleaseSource({ github, context, releaseChannel });
             const outputs = await resolveReleaseCommit({
               github, context, core,
               channel: process.env.DISPATCH_CHANNEL,
               buildOnly: process.env.BUILD_ONLY === 'true',
             });
+            if (!buildOnly && releaseChannel === 'stable') {
+              await assertCommitOnDefaultBranch({ github, context, sha: outputs.ref });
+            }
             for (const [name, value] of Object.entries(outputs)) {
               core.setOutput(name, value);
             }
@@ -335,7 +342,7 @@ jobs:
 
       - name: Install browser secret helper build libraries
         if: matrix.suite == 'packages'
-        run: sudo apt-get update && sudo apt-get install -y libsecret-1-dev pkg-config
+        run: sudo apt-get update && sudo apt-get install -y libsecret-1-dev pkg-config build-essential
 
       - name: Test packages
         if: matrix.suite == 'packages'
@@ -348,6 +355,10 @@ jobs:
       - name: Test client
         if: matrix.suite == 'client'
         run: vp run --filter @rove-code/${{ matrix.workspace }} test --shard ${{ matrix.shard }}/${{ matrix.shards }} --maxWorkers 2
+
+      - name: Install Chromium for server browser integration tests
+        if: matrix.suite == 'server'
+        run: node apps/server/node_modules/playwright-core/cli.js install --with-deps --only-shell chromium
 
       # Server test files stay serial within each runner, as in CI.
       - name: Test server
@@ -401,16 +412,25 @@ jobs:
             args:
               - --filter=rove-relay...
 
-      - id: relay_state
-        name: Read production relay tracing config
+      - name: Read production relay tracing config
         working-directory: infra/relay
         shell: bash
         run: |
-          node scripts/deploy.ts \
-            --stage prod \
-            --read-state \
-            --github-output \
-            --github-env-file "$RUNNER_TEMP/relay-client-tracing.env"
+          set -euo pipefail
+          output="$(npx alchemy state read RoveCodeRelay/prod/output --backend cloudflare --log-level error --no-input | sed -n '/^{/,$p')"
+          field() {
+            jq -er --arg key "$1" '.[$key] | if type == "object" then .__redacted__ else . end | select(. != null and . != "")' <<<"$output" \
+              || { echo "Relay stack output is missing $1" >&2; exit 1; }
+          }
+          url="$(field clientTracingUrl)"
+          dataset="$(field clientTracingDataset)"
+          token="$(field clientTracingToken)"
+          echo "::add-mask::$token"
+          {
+            echo "ROVE_RELAY_CLIENT_OTLP_TRACES_URL=$url"
+            echo "ROVE_RELAY_CLIENT_OTLP_TRACES_DATASET=$dataset"
+            echo "ROVE_RELAY_CLIENT_OTLP_TRACES_TOKEN=$token"
+          } > "$RUNNER_TEMP/relay-client-tracing.env"
 
       - name: Upload relay client tracing config
         uses: actions/upload-artifact@v7
@@ -524,7 +544,7 @@ jobs:
       # @rove-code/desktop#build compiles the Linux browser secret helper on a
       # Linux host before packing, and that needs libsecret headers.
       - name: Install browser secret helper build libraries
-        run: sudo apt-get update && sudo apt-get install -y libsecret-1-dev pkg-config
+        run: sudo apt-get update && sudo apt-get install -y libsecret-1-dev pkg-config build-essential
 
       # Runs @rove-code/server#build (which depends on @rove-code/web#build) and
       # @rove-code/desktop#build, so apps/server/dist holds the server bundle
@@ -1073,16 +1093,6 @@ jobs:
           fail_on_unmatched_files: true
           token: ${{ github.token }}
 
-  publish_aur:
-    name: Publish AUR package
-    needs: [preflight, release]
-    if: ${{ vars.ROVE_AUR_RELEASE_READY == 'true' && !failure() && !cancelled() && needs.preflight.result == 'success' && needs.release.result == 'success' && needs.preflight.outputs.release_channel != 'preview' }}
-    uses: ./.github/workflows/publish-aur.yml
-    with:
-      release_tag: ${{ needs.preflight.outputs.tag }}
-    secrets:
-      AUR_SSH_PRIVATE_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
-
   deploy_web:
     name: Deploy hosted web app
     needs: [preflight, release, build_web]
@@ -1217,6 +1227,24 @@ jobs:
             args:
               - --filter=@rove-code/scripts...
 
+      - name: Read published release notes
+        if: needs.preflight.outputs.is_prerelease == 'true'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ needs.preflight.outputs.tag }}
+          RELEASE_CHANNEL: ${{ needs.preflight.outputs.release_channel }}
+        run: |
+          if [ "$RELEASE_CHANNEL" = 'nightly' ]; then
+            if ! gh release view "$RELEASE_TAG" --json body --jq '.body // ""' > "$RUNNER_TEMP/discord-release-notes.md"; then
+              : > "$RUNNER_TEMP/discord-release-notes.md"
+              echo '::warning::Could not read published release notes; announcing without a changelog.'
+            fi
+          else
+            : > "$RUNNER_TEMP/discord-release-notes.md"
+          fi
+
       - name: Announce prerelease on Discord
         if: needs.preflight.outputs.is_prerelease == 'true'
         continue-on-error: true
@@ -1229,7 +1257,8 @@ jobs:
             --release-name "${{ needs.preflight.outputs.release_name }}" \
             --release-version "${{ needs.preflight.outputs.version }}" \
             --tag "${{ needs.preflight.outputs.tag }}" \
-            --release-url "https://github.com/${{ github.repository }}/releases/tag/${{ needs.preflight.outputs.tag }}"
+            --release-url "https://github.com/${{ github.repository }}/releases/tag/${{ needs.preflight.outputs.tag }}" \
+            --release-notes-file "$RUNNER_TEMP/discord-release-notes.md"
 
       - name: Announce latest release on Discord
         if: needs.preflight.outputs.make_latest == 'true'

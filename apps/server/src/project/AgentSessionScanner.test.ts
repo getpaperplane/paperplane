@@ -19,7 +19,7 @@ import * as Stream from "effect/Stream";
 import * as TestClock from "effect/testing/TestClock";
 
 import * as ServerConfig from "../config.ts";
-import * as ProjectionSnapshotQuery from "../orchestration/Services/ProjectionSnapshotQuery.ts";
+import * as ProjectStore from "../orchestration-v2/ProjectStore.ts";
 import * as ServerSettings from "../serverSettings.ts";
 import * as AgentSessionScanner from "./AgentSessionScanner.ts";
 
@@ -33,40 +33,12 @@ const makeProjectShell = (workspaceRoot: string): OrchestrationProjectShell => (
   updatedAt: "2026-01-01T00:00:00.000Z",
 });
 
-/** Only `getShellSnapshot` is exercised; the rest must not be called. */
-const makeProjectionSnapshotQueryLayer = (importedWorkspaceRoots: ReadonlyArray<string>) =>
-  Layer.succeed(ProjectionSnapshotQuery.ProjectionSnapshotQuery, {
-    getCommandReadModel: () => Effect.die("unused"),
-    getUserInputActivity: () => Effect.die("unused"),
-    listActivitiesByKind: () => Effect.die("unused"),
-    getSnapshot: () => Effect.die("unused"),
-    getShellSnapshot: () =>
-      Effect.succeed({
-        snapshotSequence: 0,
-        projects: importedWorkspaceRoots.map((workspaceRoot) => makeProjectShell(workspaceRoot)),
-        threads: [],
-        updatedAt: "2026-01-01T00:00:00.000Z",
-      }),
-    getDeletedWorktreeThreads: () => Effect.die("unused"),
-    listThreadsWithPullRequests: () => Effect.die("unused"),
-    getArchivedShellSnapshot: () => Effect.die("unused"),
-    getSnapshotSequence: () => Effect.die("unused"),
-    getCounts: () => Effect.die("unused"),
-    getEventReplayStats: () => Effect.die("unused"),
-    getActiveProjectByWorkspaceRoot: () => Effect.die("unused"),
-    getProjectShells: () => Effect.die("unused"),
-    getActiveProjectIdByCwd: () => Effect.succeed(Option.none()),
-    getProjectShellById: () => Effect.die("unused"),
-    getImportedAgentSessionSources: () => Effect.succeed([]),
-    getFirstActiveThreadIdByProjectId: () => Effect.die("unused"),
-    getThreadCheckpointContext: () => Effect.die("unused"),
-    getFullThreadDiffContext: () => Effect.die("unused"),
-    getThreadShellById: () => Effect.die("unused"),
-    getThreadRuntimeContext: () => Effect.die("unused"),
-    getTurnStartMessage: () => Effect.die("unused"),
-    getThreadDetailById: () => Effect.die("unused"),
-    getThreadDetailSnapshot: () => Effect.die("unused"),
-    searchThreads: () => Effect.die("unused"),
+const layerProjectStore = (importedWorkspaceRoots: ReadonlyArray<string>) =>
+  Layer.mock(ProjectStore.ProjectStoreV2)({
+    listShells: () =>
+      Effect.succeed(
+        importedWorkspaceRoots.map((workspaceRoot) => makeProjectShell(workspaceRoot)),
+      ),
   });
 
 /**
@@ -82,24 +54,30 @@ interface ScannerTestInput {
   readonly providerInstances?: ContractServerSettings["providerInstances"];
 }
 
-const makeScannerTestLayer = (input: ScannerTestInput) =>
+const layerScannerTest = (input: ScannerTestInput) =>
   AgentSessionScanner.layer.pipe(
     Layer.provide(
       Layer.mergeAll(
         ServerSettings.layerTest({
-          providers: {
-            claudeAgent: { homePath: input.claudeHomePath },
-            codex: { homePath: input.codexHomePath },
+          // Default slots point at the fixture homes; explicit test instances
+          // replace a slot with the same id.
+          providerInstances: {
+            [ProviderInstanceId.make("claudeAgent")]: {
+              driver: ProviderDriverKind.make("claudeAgent"),
+              config: { homePath: input.claudeHomePath },
+            },
+            [ProviderInstanceId.make("codex")]: {
+              driver: ProviderDriverKind.make("codex"),
+              config: { homePath: input.codexHomePath },
+            },
+            ...input.providerInstances,
           },
-          ...(input.providerInstances === undefined
-            ? {}
-            : { providerInstances: input.providerInstances }),
         }),
         ServerConfig.layerTest(
           input.claudeHomePath,
           input.configBaseDir ?? { prefix: "rove-scanner-config-" },
         ),
-        makeProjectionSnapshotQueryLayer(input.importedWorkspaceRoots ?? []),
+        layerProjectStore(input.importedWorkspaceRoots ?? []),
       ),
     ),
   );
@@ -108,7 +86,7 @@ const runScan = (input: ScannerTestInput) =>
   Effect.gen(function* () {
     const scanner = yield* AgentSessionScanner.AgentSessionScanner;
     return yield* scanner.scan;
-  }).pipe(Effect.provide(makeScannerTestLayer(input)));
+  }).pipe(Effect.provide(layerScannerTest(input)));
 
 const runRecentThreadOutcomes = (input: ScannerTestInput & { readonly workspaceRoot: string }) =>
   Effect.gen(function* () {
@@ -117,7 +95,7 @@ const runRecentThreadOutcomes = (input: ScannerTestInput & { readonly workspaceR
       Stream.runCollect,
       Effect.map((outcomes) => Array.from(outcomes)),
     );
-  }).pipe(Effect.provide(makeScannerTestLayer(input)));
+  }).pipe(Effect.provide(layerScannerTest(input)));
 
 const runRecentThreads = (input: ScannerTestInput & { readonly workspaceRoot: string }) =>
   runRecentThreadOutcomes(input).pipe(
@@ -128,8 +106,7 @@ const runRecentThreads = (input: ScannerTestInput & { readonly workspaceRoot: st
 
 const makeTempDir = Effect.fn("AgentSessionScanner.test.makeTempDir")(function* (prefix: string) {
   const fileSystem = yield* FileSystem.FileSystem;
-  // Resolved, so macOS's /var -> /private/var link matches the realpaths the scanner compares.
-  return yield* fileSystem.realPath(yield* fileSystem.makeTempDirectoryScoped({ prefix }));
+  return yield* fileSystem.makeTempDirectoryScoped({ prefix });
 });
 
 const writeTranscript = Effect.fn("AgentSessionScanner.test.writeTranscript")(function* (input: {
@@ -562,7 +539,7 @@ it.layer(NodeServices.layer)("AgentSessionScanner", (it) => {
       }),
     );
 
-    it.effect("uses explicit provider instance homes instead of overridden legacy homes", () =>
+    it.effect("uses explicit default-slot homes instead of the fixture homes", () =>
       Effect.gen(function* () {
         const path = yield* Path.Path;
         const claudeHomePath = yield* makeTempDir("rove-claude-legacy-");
@@ -931,7 +908,7 @@ it.layer(NodeServices.layer)("AgentSessionScanner", (it) => {
         yield* fileSystem.makeDirectory(path.join(repo, ".git"));
         yield* fileSystem.writeFileString(
           path.join(repo, ".git", "config"),
-          '[core]\n\tbare = false\n[remote "origin"]\n\turl = git@github.com:rovecode/rove.git\n\tfetch = +refs/heads/*:refs/remotes/origin/*\n',
+          '[core]\n\tbare = false\n[remote "origin"]\n\turl = git@github.com:pingdotgg/t3code.git\n\tfetch = +refs/heads/*:refs/remotes/origin/*\n',
         );
         yield* fileSystem.writeFileString(
           path.join(worktree, ".git"),
@@ -972,7 +949,7 @@ it.layer(NodeServices.layer)("AgentSessionScanner", (it) => {
           { path: plain, git: null },
           {
             path: repo,
-            git: { remoteKey: "github.com/rovecode/rove", repository: "rovecode/rove" },
+            git: { remoteKey: "github.com/pingdotgg/t3code", repository: "pingdotgg/t3code" },
           },
         ]);
       }),
@@ -1010,9 +987,11 @@ it.layer(NodeServices.layer)("AgentSessionScanner", (it) => {
         const path = yield* Path.Path;
         const claudeHomePath = yield* makeTempDir("rove-claude-home-");
         const codexHomePath = yield* makeTempDir("rove-codex-home-");
-        const configBaseDir = yield* makeTempDir("rove-scanner-base-");
-        const linkParent = yield* makeTempDir("rove-scanner-links-");
         const fileSystem = yield* FileSystem.FileSystem;
+        const configBaseDir = yield* makeTempDir("rove-scanner-base-").pipe(
+          Effect.flatMap((directory) => fileSystem.realPath(directory)),
+        );
+        const linkParent = yield* makeTempDir("rove-scanner-links-");
 
         // The recorded cwd is a symlink whose own spelling looks harmless;
         // only its realpath reveals the managed sandbox.
@@ -1736,7 +1715,7 @@ it.layer(NodeServices.layer)("AgentSessionScanner", (it) => {
           expect(scan.candidates[0]?.threadCount).toBe(5);
           return yield* scanner.recentThreads(workspace).pipe(Stream.runCollect);
         }).pipe(
-          Effect.provide(makeScannerTestLayer({ claudeHomePath, codexHomePath })),
+          Effect.provide(layerScannerTest({ claudeHomePath, codexHomePath })),
           Effect.provideService(FileSystem.FileSystem, trackedFileSystem),
         );
 
@@ -1886,7 +1865,7 @@ it.layer(NodeServices.layer)("AgentSessionScanner", (it) => {
                 } else {
                   expect(outcomes).toEqual([{ _tag: "Skipped" }]);
                 }
-              }).pipe(Effect.provide(makeScannerTestLayer({ claudeHomePath, codexHomePath })));
+              }).pipe(Effect.provide(layerScannerTest({ claudeHomePath, codexHomePath })));
             }),
         );
       }
@@ -1957,7 +1936,7 @@ it.layer(NodeServices.layer)("AgentSessionScanner", (it) => {
             thread: { providerSessionId: "replaced-session" },
             source: { size: imported.source.size, mtimeMs: imported.source.mtimeMs },
           });
-        }).pipe(Effect.provide(makeScannerTestLayer({ claudeHomePath, codexHomePath })));
+        }).pipe(Effect.provide(layerScannerTest({ claudeHomePath, codexHomePath })));
       }),
     );
 
@@ -2381,7 +2360,7 @@ it.layer(NodeServices.layer)("AgentSessionScanner", (it) => {
             Effect.map((items) => Array.from(items)),
           );
         }).pipe(
-          Effect.provide(makeScannerTestLayer({ claudeHomePath, codexHomePath })),
+          Effect.provide(layerScannerTest({ claudeHomePath, codexHomePath })),
           Effect.provideService(FileSystem.FileSystem, simulatedFileSystem),
         );
 
@@ -2604,7 +2583,7 @@ it.layer(NodeServices.layer)("AgentSessionScanner", (it) => {
           expect(scan.truncated).toBe(true);
           return yield* scanner.recentThreads(recentWorkspace).pipe(Stream.runCollect);
         }).pipe(
-          Effect.provide(makeScannerTestLayer(input)),
+          Effect.provide(layerScannerTest(input)),
           Effect.provideService(FileSystem.FileSystem, simulatedFileSystem),
         );
 

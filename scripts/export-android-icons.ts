@@ -1,17 +1,11 @@
 #!/usr/bin/env node
 
-// Renders the Android launcher and splash artwork from the Icon Composer SVG sources.
+// Renders Android backgrounds from Icon Composer SVGs and the foreground from Rove's
+// transparent monochrome artwork. Full app icons cannot be used as foregrounds:
+// Android would mask their rounded-square silhouette a second time.
 //
-// Icon Composer exports already contain a rounded-square silhouette, and Android masks
-// the central 72dp of a 108dp adaptive canvas, so exporting them as a foreground produces
-// a double-framed icon with the letters cropped by the mask. Instead, each variant gets a
-// full-bleed background layer (the artwork behind the wordmark) and a shared transparent
-// foreground that keeps the wordmark inside the safe zone.
-//
-// The Android 12+ splash screen masks its icon to a circle covering the central two thirds
-// of a 288dp canvas, which is the same proportion the launcher crops. Composing the two
-// adaptive layers into one 288dp image therefore makes the splash frame the wordmark
-// exactly like the launcher icon does.
+// The Android 12+ splash screen uses the same central-two-thirds mask as the launcher,
+// so both compose the same full-bleed background and safe-zone foreground.
 
 import * as NodeRuntime from "@effect/platform-node/NodeRuntime";
 import * as NodeServices from "@effect/platform-node/NodeServices";
@@ -28,12 +22,11 @@ type IconVariant = "dev" | "nightly" | "prod";
 const ADAPTIVE_CANVAS = 432;
 // 288dp at xxxhdpi: the full Android 12+ splash canvas, so the icon needs no upscaling.
 const SPLASH_CANVAS = 1152;
-// Icon Composer's layer sources use a 128pt viewBox; the wordmark path spans this box.
+// The blueprint annotation layer retains its original 128pt coordinate space.
 const TEXT = { x: 15.53, y: 37, width: 94.5, height: 57 };
-// Wordmark width as a fraction of the 108dp canvas. The visible area is 72dp (66dp
-// guaranteed), so 0.48 leaves the letters at ~72% of the mask with room for the
-// launcher's own zoom effects.
-const WORDMARK_FRACTION = 0.48;
+const ANNOTATION_FRACTION = 0.48;
+// Keep every visible pixel of Rove's folded R inside Android's circular safe zone.
+const MARK_FRACTION = 0.45;
 // Icon Composer positions layers on a 1024pt canvas, with translation relative to center.
 const COMPOSER_CANVAS_PT = 1024;
 const SVG_DENSITY = 300;
@@ -46,8 +39,8 @@ export class AndroidIconRenderError extends Schema.TaggedError<AndroidIconRender
   { layer: Schema.String, cause: Schema.Defect() },
 ) {}
 
-const wordmarkTransform = (size: number) => {
-  const scale = (size * WORDMARK_FRACTION) / TEXT.width;
+const annotationTransform = (size: number) => {
+  const scale = (size * ANNOTATION_FRACTION) / TEXT.width;
   const tx = (size - TEXT.width * scale) / 2 - TEXT.x * scale;
   const ty = (size - TEXT.height * scale) / 2 - TEXT.y * scale;
   return `translate(${tx.toFixed(3)} ${ty.toFixed(3)}) scale(${scale.toFixed(4)})`;
@@ -103,23 +96,35 @@ const readLayerSource = Effect.fn("androidIcons.readLayerSource")(function* (
   );
 });
 
-const renderForeground = Effect.fn("androidIcons.renderForeground")(function* (
+export const renderForeground = Effect.fn("androidIcons.renderForeground")(function* (
   repositoryRoot: string,
   size: number,
 ) {
-  const text = yield* readLayerSource(repositoryRoot, "prod", "text.svg");
-  const paths = text.match(/<path[^>]*\/>/g) ?? [];
-  return yield* rasterize(
-    "foreground",
-    canvasSvg(size, `<g transform="${wordmarkTransform(size)}">${paths.join("")}</g>`),
-    size,
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  // The Icon Composer projects now use opaque logo.png artwork, not text.svg.
+  // Reuse the shipped transparent Rove mark instead of extracting obsolete T3 paths.
+  const source = yield* fs.readFile(
+    path.join(repositoryRoot, OUTPUT_DIRECTORY, "android-icon-mark.png"),
   );
+  const markSize = Math.round(size * MARK_FRACTION);
+  const mark = yield* Effect.tryPromise({
+    try: () =>
+      sharp(Buffer.from(source))
+        .trim()
+        .resize(markSize, markSize, { fit: "contain", background: "#00000000" })
+        .png()
+        .toBuffer(),
+    catch: (cause) => new AndroidIconRenderError({ layer: "foreground", cause }),
+  });
+  const canvas = yield* solidCanvas("foreground", size, "#00000000");
+  const inset = Math.floor((size - markSize) / 2);
+  return yield* composite("foreground", canvas, [{ input: mark, left: inset, top: inset }]);
 });
 
 const renderDevelopmentBackground = Effect.fn("androidIcons.renderDevelopmentBackground")(
   function* (repositoryRoot: string, size: number) {
-    // The annotation layer shares the wordmark's coordinate space, so it is scaled and
-    // centered the same way to keep the dimension lines around the letters.
+    // Keep the blueprint dimension lines in their original coordinate space.
     const annotations = yield* readLayerSource(repositoryRoot, "dev", "annotations.svg");
     const defs = annotations.match(/<defs>[\s\S]*?<\/defs>/)?.[0] ?? "";
     const body = annotations.replace(/^[\s\S]*?<\/defs>/, "").replace(/<\/svg>\s*$/, "");
@@ -127,7 +132,7 @@ const renderDevelopmentBackground = Effect.fn("androidIcons.renderDevelopmentBac
     const background = yield* rasterize("dev-background", fullBleed(paper), size);
     const overlay = yield* rasterize(
       "dev-annotations",
-      canvasSvg(size, `${defs}<g transform="${wordmarkTransform(size)}">${body}</g>`),
+      canvasSvg(size, `${defs}<g transform="${annotationTransform(size)}">${body}</g>`),
       size,
     );
     return yield* composite("dev-background", background, [{ input: overlay }]);

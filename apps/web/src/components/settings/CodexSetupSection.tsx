@@ -1,3 +1,5 @@
+import { AuthProvidersManageScope } from "@rove-code/contracts";
+import { useEnvironmentScope } from "../../state/session";
 import {
   isAtomCommandInterrupted,
   squashAtomCommandFailure,
@@ -167,6 +169,7 @@ export function AddManagedCodexAccountDialog({
     | ((instanceId: ProviderInstanceId, displayName: string) => void)
     | undefined;
 }) {
+  const canManageProviders = useEnvironmentScope(environmentId, AuthProvidersManageScope);
   return (
     <AddCodexAccountDialog
       environmentId={environmentId}
@@ -180,6 +183,7 @@ export function AddManagedCodexAccountDialog({
           provider={provider}
           mode="managed"
           enabled
+          readOnly={!canManageProviders}
           autoStart
           onAutoStartConsumed={noop}
           onModeChange={noop}
@@ -707,7 +711,7 @@ function ManagedCodexSetup({
           <details>
             <summary className="cursor-pointer">Other ways to connect</summary>
             <Button className="mt-2" size="sm" variant="outline" render={<a href={handoffUrl} />}>
-              Use Rove Code desktop for automatic return
+              Use Rove desktop for automatic return
             </Button>
           </details>
         ) : null}
@@ -1094,7 +1098,7 @@ function CodexSignInDescription({
   return (
     <button
       type="button"
-      className="inline-flex items-center gap-1.5 rounded-sm text-left leading-relaxed outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      className="inline-flex items-center gap-1.5 rounded-sm text-left leading-relaxed outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
       aria-label="Having trouble signing in?"
       aria-expanded={expanded}
       aria-controls={controls}

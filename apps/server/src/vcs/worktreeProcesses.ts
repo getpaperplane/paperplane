@@ -1,7 +1,7 @@
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Option from "effect/Option";
-import { HostProcessPlatform } from "@rove-code/shared/hostProcess";
+import { Platform as HostProcessPlatform } from "@rove-code/shared/HostProcess";
 
 const PROVIDER_WORKLOAD_POOL_SEGMENT = "/rove-provider-workloads.slice/";
 const TERMINATE_GRACE_MS = 3_000;

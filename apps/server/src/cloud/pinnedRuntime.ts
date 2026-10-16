@@ -1,13 +1,13 @@
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
-import * as Encoding from "effect/Encoding";
+import * as Hex from "effect/encoding/Hex";
 import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
 import * as Schema from "effect/Schema";
 import * as Option from "effect/Option";
 import * as Stream from "effect/Stream";
 import * as Semaphore from "effect/Semaphore";
-import { HttpClient, HttpClientRequest, HttpClientResponse } from "effect/unstable/http";
+import { HttpClient, HttpClientRequest, HttpClientResponse } from "effect/http";
 
 import {
   CLI_RELEASE_CHECKSUMS_FILE,
@@ -21,13 +21,14 @@ import {
 import * as ProcessRunner from "../processRunner.ts";
 
 /**
- * A pinned runtime is an exact Rove release archive unpacked into
+ * A pinned runtime is an exact rove release archive unpacked into
  * <baseDir>/runtime/versions/<version>: the self-contained executable, the
  * web client, and the native packages beside it. The boot service points its
  * unit or launch agent at the executable, and server self-update installs the
  * target version here before switching over. The runtime never depends on a
- * Node or npm on the machine; `@rove-code/cli` is only a launcher for people who
- * prefer npm, and also pins an archive when it sets up the service.
+ * Node or npm on the machine; people who prefer npm install `@rove-code/cli`
+ * with `npx @rove-code/cli` or `npm install -g @rove-code/cli`. Even a
+ * CLI installed that way pins an archive when it sets up the service.
  */
 const PINNED_RUNTIME_DIR = "runtime";
 const PINNED_RUNTIME_INSTALL_TIMEOUT = Duration.minutes(10);
@@ -103,7 +104,7 @@ export type PinnedRuntimeProgress =
   | { readonly stage: "verify" | "extract" | "validate" | "cached" };
 
 /**
- * Installs the Rove Code release archive for `version` into the pinned runtime
+ * Installs the rove release archive for `version` into the pinned runtime
  * directory unless a complete install is already there, and returns its
  * paths. The sentinel is written only after extraction and validation
  * succeed; checking the entry file alone is not enough, since tar writes the
@@ -188,7 +189,7 @@ const installFromArchive = Effect.fn("cloud.pinned_runtime.install_archive")(fun
   const platformKey = cliArchivePlatformKey(input.platform, input.arch);
   if (platformKey === undefined) {
     return yield* new PinnedRuntimeInstallError({
-      step: `selecting a Rove release archive for ${input.platform}-${input.arch}`,
+      step: `selecting a rove release archive for ${input.platform}-${input.arch}`,
     });
   }
   const httpClient = input.httpClient;
@@ -201,31 +202,31 @@ const installFromArchive = Effect.fn("cloud.pinned_runtime.install_archive")(fun
       yield* fetchReleaseAsset(
         httpClient,
         `${baseUrl}/${CLI_RELEASE_CHECKSUMS_FILE}`,
-        "downloading the Rove release checksums",
+        "downloading the rove release checksums",
       ),
     ),
   );
   const expected = checksums.get(fileName);
   if (expected === undefined) {
     return yield* new PinnedRuntimeInstallError({
-      step: `finding ${fileName} in the Rove release checksums`,
+      step: `finding ${fileName} in the rove release checksums`,
     });
   }
   const archive = yield* fetchReleaseAsset(
     httpClient,
     `${baseUrl}/${fileName}`,
-    "downloading the Rove release archive",
+    "downloading the rove release archive",
     input.onProgress,
   );
   input.onProgress?.({ stage: "verify" });
   const digest = yield* Effect.tryPromise({
     try: () => crypto.subtle.digest("SHA-256", archive),
     catch: (cause) =>
-      new PinnedRuntimeInstallError({ step: "verifying the Rove release archive", cause }),
+      new PinnedRuntimeInstallError({ step: "verifying the rove release archive", cause }),
   });
-  if (Encoding.encodeHex(new Uint8Array(digest)) !== expected) {
+  if (Hex.encode(new Uint8Array(digest)) !== expected) {
     return yield* new PinnedRuntimeInstallError({
-      step: "verifying the Rove release archive checksum",
+      step: "verifying the rove release archive checksum",
     });
   }
 
@@ -235,11 +236,11 @@ const installFromArchive = Effect.fn("cloud.pinned_runtime.install_archive")(fun
     .pipe(
       Effect.mapError(
         (cause) =>
-          new PinnedRuntimeInstallError({ step: "writing the Rove release archive", cause }),
+          new PinnedRuntimeInstallError({ step: "writing the rove release archive", cause }),
       ),
     );
   input.onProgress?.({ stage: "extract" });
-  const extractStep = "extracting the Rove release archive";
+  const extractStep = "extracting the rove release archive";
   // The archive wraps everything in one directory named after its stem;
   // strip it so the executable lands at <versionDir>/rove.
   yield* input.runner

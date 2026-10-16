@@ -1,15 +1,15 @@
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { expect, it } from "@effect/vitest";
 import { ServerSelfUpdateError, ThreadId } from "@rove-code/contracts";
-import { HostProcessArchitecture, HostProcessPlatform } from "@rove-code/shared/hostProcess";
+import * as HostProcess from "@rove-code/shared/HostProcess";
 import * as Cause from "effect/Cause";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Fiber from "effect/Fiber";
 import * as Path from "effect/Path";
-import { HttpClient, HttpClientResponse } from "effect/unstable/http";
-import * as ChildProcessSpawner from "effect/unstable/process/ChildProcessSpawner";
+import { HttpClient, HttpClientResponse } from "effect/http";
+import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
 import * as ServerConfig from "../config.ts";
 import * as DesktopAppUpdate from "../desktopUpdate/DesktopAppUpdate.ts";
@@ -86,7 +86,6 @@ const makeHarness = Effect.fn("test.make_self_update_harness")(function* (
                 launcherProtocol: SERVICE_LAUNCHER_PROTOCOL,
               };
         return {
-          // @effect-diagnostics-next-line preferSchemaOverJson:off - fake child-process stdout.
           stdout: JSON.stringify(result),
           stderr: "",
           code: ChildProcessSpawner.ExitCode(0),
@@ -123,8 +122,8 @@ const makeHarness = Effect.fn("test.make_self_update_harness")(function* (
       },
     ),
     Effect.provideService(HttpClient.HttpClient, releaseHttpClient(order)),
-    Effect.provideService(HostProcessPlatform, "linux"),
-    Effect.provideService(HostProcessArchitecture, "x64"),
+    Effect.provideService(HostProcess.Platform, "linux"),
+    Effect.provideService(HostProcess.Architecture, "x64"),
     Effect.provide(ServerConfig.layer({ ...config, mode: options.mode ?? "web" })),
   );
   return { selfUpdate, order };
@@ -363,7 +362,7 @@ it.layer(NodeServices.layer)("server self update", (it) => {
       const web = yield* makeHarness();
       expect(
         (yield* web.selfUpdate.update({ targetVersion: "latest" }).pipe(Effect.flip)).reason,
-      ).toBe("'latest' is not an exact Rove version.");
+      ).toBe("'latest' is not an exact rove version.");
       const desktop = yield* makeHarness({ mode: "desktop" });
       expect(
         (yield* desktop.selfUpdate.update({ targetVersion: "1.1.0" }).pipe(Effect.flip)).reason,

@@ -24,16 +24,6 @@ describe("owned attachment paths", () => {
     );
   });
 
-  it("keeps historical attachments in their original directory after an iOS container move", () => {
-    const oldUri = `file:///var/mobile/Containers/Data/Application/${OLD_CONTAINER}/Documents/t3-composer-attachments/${FILE_NAME}`;
-    const documentUri = `file:///var/mobile/Containers/Data/Application/${CURRENT_CONTAINER}/Documents/`;
-    const resolved = `${documentUri}t3-composer-attachments/${FILE_NAME}`;
-    expect(resolveOwnedComposerAttachmentFileUri(oldUri, documentUri)).toBe(resolved);
-    expect(composerAttachmentFileReferenceKey(oldUri)).toBe(
-      composerAttachmentFileReferenceKey(resolved),
-    );
-  });
-
   it("recognizes the private/var alias without changing the stored filename", () => {
     const oldUri = `file:///private/var/mobile/Containers/Data/Application/${OLD_CONTAINER}/Documents/rove-composer-attachments/${FILE_NAME}`;
     const documentUri = `file:///var/mobile/Containers/Data/Application/${CURRENT_CONTAINER}/Documents/`;

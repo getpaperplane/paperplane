@@ -1,7 +1,6 @@
 // @effect-diagnostics nodeBuiltinImport:off
 // @effect-diagnostics globalTimers:off - Parent-owned IPC deadlines.
 // @effect-diagnostics globalDate:off - LazyPiRuntime idle deadlines live outside the Effect runtime.
-import type { PiThinkingLevel } from "@rove-code/contracts";
 import * as NodeChildProcess from "node:child_process";
 import * as NodeURL from "node:url";
 import * as NodeSea from "node:sea";
@@ -10,10 +9,6 @@ import {
   resolvePiWorkloadMemory,
   type PiWorkloadConfig,
 } from "../../diagnostics/PiWorkloadPolicy.ts";
-import type {
-  PotetoWorkerRequest,
-  PotetoWorkerResult,
-} from "../../orchestration/poteto/PotetoMode.ts";
 import type { PiCatalogHostOptions } from "./PiCatalogHost.ts";
 import {
   PiExtensionLoadError,
@@ -21,7 +16,7 @@ import {
   type PiSessionEventLike,
   type PiSessionLike,
 } from "./PiAdapter.ts";
-import { readMcpProviderSession } from "../../mcp/McpProviderSession.ts";
+import type { McpProviderSessionConfig } from "@rove-code/provider-core/server/mcpSession";
 import type {
   PiRuntimeCalls,
   PiRuntimeMessage,
@@ -41,9 +36,6 @@ const NON_FATAL_METHODS: ReadonlySet<keyof PiRuntimeCalls> = new Set<keyof PiRun
   "respondToUserInput",
   "fork",
   "discover",
-  "potetoDraft",
-  "potetoWorker",
-  "potetoAbort",
 ]);
 
 /**
@@ -52,8 +44,6 @@ const NON_FATAL_METHODS: ReadonlySet<keyof PiRuntimeCalls> = new Set<keyof PiRun
  */
 function requestTimeoutMs(method: keyof PiRuntimeCalls): number | undefined {
   if (method === "shutdown" || method === "compact") return undefined;
-  if (method === "potetoDraft" || method === "potetoWorker" || method === "potetoAbort")
-    return 70_000;
   return method === "dispose" || method === "abort" ? 4_000 : 60_000;
 }
 
@@ -237,41 +227,15 @@ export class PiRuntimeProcess {
                   : `Pi instance ${method} timed out. Disable and re-enable this Pi instance to continue.`,
               );
               if (!NON_FATAL_METHODS.has(method)) return this.fail(error);
-              // The reply is the drain acknowledgement. Keep both the IPC entry and
-              // caller pending so a retry cannot overlap still-running inference.
-              if (
-                method === "potetoDraft" ||
-                method === "potetoWorker" ||
-                method === "potetoAbort"
-              ) {
-                const pending = this.pending.get(id);
-                if (pending) pending.timeoutError = error;
-              } else this.pending.delete(id);
-              if (method === "potetoDraft" || method === "potetoWorker") {
-                // SAFETY: potetoWorker's typed IPC tuple always starts with its numeric phase key.
-                const key = args[0] as number;
-                void this.request("potetoAbort", [key]).catch(() => {});
-              }
-              if (method !== "potetoDraft" && method !== "potetoWorker" && method !== "potetoAbort")
-                reject(error);
+              this.pending.delete(id);
+              reject(error);
               this.notifyIfIdle();
             }, timeout);
       timer?.unref();
       this.pending.set(id, {
         // SAFETY: Each method's result is produced by the matching child handler.
         resolve: (value) => resolve(value as PiRuntimeCalls[K]["result"]),
-        reject: (error) => {
-          if (
-            this.failure &&
-            (method === "potetoDraft" || method === "potetoWorker" || method === "potetoAbort") &&
-            this.child.exitCode === null &&
-            this.child.signalCode === null
-          ) {
-            // A disconnect/send failure is not proof inference stopped. fail kills
-            // the child; only its exit acknowledgement releases the caller.
-            void this.exited.then(() => reject(error));
-          } else reject(error);
-        },
+        reject,
         preflight,
         clearDeadline: () => clearTimeout(timer),
       });
@@ -285,71 +249,16 @@ export class PiRuntimeProcess {
     });
   }
 
-  async runPotetoDraft(
-    options: {
-      cwd: string;
-      agentDir: string;
-      model: string;
-      thinkingLevel?: PiThinkingLevel | undefined;
-    },
-    request: import("./PiPotetoDraft.ts").PotetoDraftRequest,
-  ): Promise<import("@rove-code/contracts").PotetoDraftResult> {
-    request.signal.throwIfAborted();
-    const key = ++this.nextId;
-    const { signal, ...serialized } = request;
-    const operation = this.request("potetoDraft", [key, options, serialized]);
-    const abort = () => {
-      void this.request("potetoAbort", [key]).catch(() => {});
-    };
-    signal.addEventListener("abort", abort, { once: true });
-    try {
-      const result = await operation;
-      signal.throwIfAborted();
-      return result;
-    } finally {
-      signal.removeEventListener("abort", abort);
-    }
-  }
-
-  async runPotetoWorker(
-    options: {
-      cwd: string;
-      agentDir: string;
-      model: string;
-      thinkingLevel?: PiThinkingLevel | undefined;
-    },
-    request: PotetoWorkerRequest,
-  ): Promise<PotetoWorkerResult> {
-    request.signal.throwIfAborted();
-    const key = ++this.nextId;
-    const { signal, ...serialized } = request;
-    const operation = this.request("potetoWorker", [key, options, serialized]);
-    const abort = () => {
-      // The original operation is the drain acknowledgement; do not race it
-      // against cancellation or stop the instance shared with normal sessions.
-      void this.request("potetoAbort", [key]).catch(() => {});
-    };
-    signal.addEventListener("abort", abort, { once: true });
-    try {
-      const result = await operation;
-      signal.throwIfAborted();
-      return result;
-    } finally {
-      signal.removeEventListener("abort", abort);
-    }
-  }
-
-  async createSession(input: PiCreateSessionInput, textGeneration = false): Promise<PiSessionLike> {
+  async createSession(
+    input: PiCreateSessionInput,
+    textGeneration = false,
+    mcp?: McpProviderSessionConfig,
+  ): Promise<PiSessionLike> {
     const key = ++this.nextId;
     const session = new RemotePiSession(this, key);
     this.sessions.set(key, session);
     try {
-      await this.request("createSession", [
-        key,
-        input,
-        textGeneration,
-        input.threadId === undefined ? undefined : readMcpProviderSession(input.threadId),
-      ]);
+      await this.request("createSession", [key, input, textGeneration, mcp]);
       return session;
     } catch (error) {
       this.forgetSession(key);
@@ -360,6 +269,10 @@ export class PiRuntimeProcess {
   forgetSession(key: number): void {
     this.sessions.delete(key);
     this.notifyIfIdle();
+  }
+  /** A failed worker can be replaced on the next explicit session/catalog request. */
+  get isFailed(): boolean {
+    return this.failure !== undefined;
   }
   /** True when no request is in flight and no session is open. */
   get isIdle(): boolean {
@@ -421,6 +334,7 @@ export class PiRuntimeProcess {
 /** The slice of PiRuntimeProcess that LazyPiRuntime manages. */
 export interface LazyPiRuntimeTarget {
   readonly isIdle: boolean;
+  readonly isFailed?: boolean;
   onIdle(listener: () => void): () => void;
   onChange(listener: () => void): () => void;
   dispose(): Promise<void>;
@@ -433,6 +347,7 @@ export interface LazyPiRuntimeTarget {
  */
 export class LazyPiRuntime<R extends LazyPiRuntimeTarget = PiRuntimeProcess> {
   private current: Promise<R> | undefined;
+  private retiring: Promise<void> | undefined;
   private idleTimer: ReturnType<typeof setTimeout> | undefined;
   private lastUsedAt = 0;
   private readonly changeListeners = new Set<() => void>();
@@ -454,20 +369,29 @@ export class LazyPiRuntime<R extends LazyPiRuntimeTarget = PiRuntimeProcess> {
     this.lastUsedAt = Date.now();
     const existing = this.current;
     if (existing) return existing;
-    const started = this.create().then(
-      (runtime) => {
-        runtime.onChange(() => {
-          for (const listener of this.changeListeners) listener();
-        });
-        runtime.onIdle(() => this.scheduleIdleStop(started, runtime, this.idleMs));
-        this.scheduleIdleStop(started, runtime, this.idleMs);
-        return runtime;
-      },
-      (error: unknown) => {
-        if (this.current === started) this.current = undefined;
-        throw error;
-      },
-    );
+    const started = (this.retiring ?? Promise.resolve())
+      .then(() => this.create())
+      .then(
+        (runtime) => {
+          runtime.onChange(() => {
+            if (runtime.isFailed && this.current === started) {
+              this.cancelIdleStop();
+              // Wait for the captured worker's exit before a replacement can run.
+              // Accepted turns are never replayed; V2 resumes its durable cursor.
+              this.retiring = runtime.dispose().catch(() => {});
+              this.current = undefined;
+            }
+            for (const listener of this.changeListeners) listener();
+          });
+          runtime.onIdle(() => this.scheduleIdleStop(started, runtime, this.idleMs));
+          this.scheduleIdleStop(started, runtime, this.idleMs);
+          return runtime;
+        },
+        (error: unknown) => {
+          if (this.current === started) this.current = undefined;
+          throw error;
+        },
+      );
     this.current = started;
     return started;
   }
@@ -490,6 +414,7 @@ export class LazyPiRuntime<R extends LazyPiRuntimeTarget = PiRuntimeProcess> {
         (runtime) => runtime.dispose(),
         () => {},
       );
+    await this.retiring;
   }
 
   // Busy runtimes skip the stop; their next idle transition schedules a new one.

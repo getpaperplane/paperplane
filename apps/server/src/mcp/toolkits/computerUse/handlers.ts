@@ -1,9 +1,6 @@
-import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
-import * as Layer from "effect/Layer";
-import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
-import { McpSchema, McpServer, Tool } from "effect/unstable/ai";
+import { McpSchema } from "effect/ai";
 
 import {
   backgroundRefusal,
@@ -14,50 +11,8 @@ import {
 import * as CuaDriver from "../../../computerUse/CuaDriver.ts";
 import * as ServerSettings from "../../../serverSettings.ts";
 import * as McpInvocationContext from "../../McpInvocationContext.ts";
-
-const ComputerDescribeInput = Schema.Struct({
-  tool: Schema.optional(
-    Schema.String.annotate({
-      description:
-        "Operation name. Omit to list supported operations and target-specific workflow guidance.",
-    }),
-  ),
-});
-
-const ComputerCallInput = Schema.Struct({
-  tool: Schema.String.annotate({ description: "Operation name from computer_describe." }),
-  arguments: Schema.optional(
-    Schema.Record(Schema.String, Schema.Unknown).annotate({
-      description: "Arguments matching the operation's input schema.",
-    }),
-  ),
-});
-
-/**
- * Cua exposes ~60 operations whose schemas total ~150 KB. Mirroring them would
- * put that into every provider session, so agents discover them on demand.
- */
-const ComputerDescribeTool = Tool.make("computer_describe", {
-  description:
-    "Control apps through Cua Driver. macOS uses background-only host-window operations. Linux uses a private, offline desktop per thread with guest-only apps, focus, clipboard and temporary files. It cannot access host apps, profiles or project files. Call with no arguments for target-specific workflow guidance and operations, or with `tool` for its schema. Follow that guidance before acting. For web pages in Rove's browser panel, use preview_* instead.",
-  parameters: Schema.toCodecJson(ComputerDescribeInput),
-})
-  .annotate(Tool.Title, "Describe computer use")
-  .annotate(Tool.Readonly, true)
-  .annotate(Tool.Destructive, false)
-  .annotate(Tool.Idempotent, true)
-  .annotate(Tool.OpenWorld, false);
-
-const ComputerCallTool = Tool.make("computer_call", {
-  description:
-    "Run one Cua Driver operation on the server-owned target for this thread. Read target-specific guidance and the operation schema with computer_describe first. Host macOS input stays background-only. Linux input is confined to the private desktop. Do not pass session labels or change driver configuration. close_desktop discards the calling thread's Linux desktop. Refused actions execute nothing.",
-  parameters: Schema.toCodecJson(ComputerCallInput),
-})
-  .annotate(Tool.Title, "Use computer")
-  .annotate(Tool.Readonly, false)
-  .annotate(Tool.Destructive, true)
-  .annotate(Tool.Idempotent, false)
-  .annotate(Tool.OpenWorld, true);
+import * as McpToolAccess from "../../McpToolAccess.ts";
+import { ComputerUseToolkit } from "./tools.ts";
 
 const encodeJsonText = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 
@@ -129,37 +84,12 @@ const policyRefusalResult = (reason: string, policy: CuaDriver.CuaCatalog["polic
     ],
   });
 
-const toMcpTool = (tool: typeof ComputerDescribeTool | typeof ComputerCallTool) =>
-  new McpSchema.Tool({
-    name: tool.name,
-    description: Tool.getDescription(tool),
-    inputSchema: Tool.getJsonSchema(tool),
-    annotations: {
-      ...Context.getOption(tool.annotations, Tool.Title).pipe(
-        Option.map((title) => ({ title })),
-        Option.getOrUndefined,
-      ),
-      readOnlyHint: Context.get(tool.annotations, Tool.Readonly),
-      destructiveHint: Context.get(tool.annotations, Tool.Destructive),
-      idempotentHint: Context.get(tool.annotations, Tool.Idempotent),
-      openWorldHint: Context.get(tool.annotations, Tool.OpenWorld),
-    },
-  });
-
-const decodeDescribeInput = Schema.decodeUnknownEffect(Schema.toCodecJson(ComputerDescribeInput));
-const decodeCallInput = Schema.decodeUnknownEffect(Schema.toCodecJson(ComputerCallInput));
-const invalidParams = (error: Schema.SchemaError) =>
-  new McpSchema.InvalidParams({ message: error.message });
-
-const registerComputerUseTools = Effect.gen(function* () {
-  const server = yield* McpServer.McpServer;
+const make = Effect.gen(function* () {
   const driver = yield* CuaDriver.CuaDriver;
   const settings = yield* ServerSettings.ServerSettingsService;
 
   /** Read on every call so turning the setting off stops agents mid-session. */
-  const whenEnabled = <E>(
-    effect: Effect.Effect<McpSchema.CallToolResult, E>,
-  ): Effect.Effect<McpSchema.CallToolResult, E> =>
+  const whenEnabled = <E, R>(effect: Effect.Effect<McpSchema.CallToolResult, E, R>) =>
     settings.getSettings.pipe(
       Effect.map((current) => current.enableAgentComputerUse),
       Effect.orElseSucceed(() => false),
@@ -178,93 +108,69 @@ const registerComputerUseTools = Effect.gen(function* () {
   const unavailable = (error: CuaDriver.CuaDriverUnavailableError) =>
     Effect.succeed(textResult(error.detail, true));
 
-  yield* server.addTool({
-    tool: toMcpTool(ComputerDescribeTool),
-    annotations: ComputerDescribeTool.annotations,
-    handle: (payload) =>
-      decodeDescribeInput(payload ?? {}).pipe(
-        Effect.mapError(invalidParams),
-        Effect.flatMap((input) =>
-          whenEnabled(
-            driver.catalog.pipe(
-              Effect.map((catalog) => {
-                const instructions = instructionsFor(catalog.policy);
-                if (input.tool === undefined) {
-                  const operations = catalog.tools
-                    .filter((tool) => isAllowedTool(tool, catalog.policy))
-                    .map((tool) => `- ${tool.name}: ${summary(tool.description)}`)
-                    .join("\n");
-                  return textResult(
-                    `${instructions}\n\n${catalog.instructions ?? ""}\n\nOperations (run with computer_call):\n${operations}`.trim(),
-                  );
-                }
-                const tool = catalog.tools.find((candidate) => candidate.name === input.tool);
-                if (!tool)
-                  return textResult(
-                    `Cua Driver has no operation named ${input.tool}. Call computer_describe without arguments to list them.`,
-                    true,
-                  );
-                if (!isAllowedTool(tool, catalog.policy))
-                  return policyRefusalResult(
-                    `${tool.name} is not an allowed ${catalog.policy} operation.`,
-                    catalog.policy,
-                  );
-                return textResult(
-                  encodeJsonText({
-                    name: tool.name,
-                    description: `${instructions}\n\n${tool.description}`,
-                    inputSchema: backgroundInputSchema(tool.inputSchema),
-                  }),
-                );
+  return {
+    computer_describe: McpToolAccess.readsAsCaller((input) =>
+      whenEnabled(
+        driver.catalog.pipe(
+          Effect.map((catalog) => {
+            const instructions = instructionsFor(catalog.policy);
+            if (input.tool == null) {
+              const operations = catalog.tools
+                .filter((tool) => isAllowedTool(tool, catalog.policy))
+                .map((tool) => `- ${tool.name}: ${summary(tool.description)}`)
+                .join("\n");
+              return textResult(
+                `${instructions}\n\n${catalog.instructions ?? ""}\n\nOperations (run with computer_call):\n${operations}`.trim(),
+              );
+            }
+            const tool = catalog.tools.find((candidate) => candidate.name === input.tool);
+            if (!tool)
+              return textResult(
+                `Cua Driver has no operation named ${input.tool}. Call computer_describe without arguments to list them.`,
+                true,
+              );
+            if (!isAllowedTool(tool, catalog.policy))
+              return policyRefusalResult(
+                `${tool.name} is not an allowed ${catalog.policy} operation.`,
+                catalog.policy,
+              );
+            return textResult(
+              encodeJsonText({
+                name: tool.name,
+                description: `${instructions}\n\n${tool.description}`,
+                inputSchema: backgroundInputSchema(tool.inputSchema),
               }),
-              Effect.catchTag("CuaDriverUnavailableError", unavailable),
-            ),
-          ),
+            );
+          }),
+          Effect.catchTags({ CuaDriverUnavailableError: unavailable }),
         ),
       ),
-  });
-
-  yield* server.addTool({
-    tool: toMcpTool(ComputerCallTool),
-    annotations: ComputerCallTool.annotations,
-    handle: (payload) =>
-      Effect.withFiber((fiber) => {
-        const invocation = Context.getUnsafe(
-          fiber.context,
-          McpInvocationContext.McpInvocationContext,
-        );
-        return decodeCallInput(payload ?? {}).pipe(
-          Effect.mapError(invalidParams),
-          Effect.flatMap((input) =>
-            whenEnabled(
-              driver.catalog.pipe(
-                Effect.flatMap((catalog) => {
-                  const tool = catalog.tools.find((candidate) => candidate.name === input.tool);
-                  if (!tool) {
-                    return Effect.succeed(
-                      textResult(
-                        `Cua Driver has no operation named ${input.tool}. Call computer_describe without arguments to list them.`,
-                        true,
-                      ),
-                    );
-                  }
-                  const args = input.arguments ?? {};
-                  const refusal =
-                    catalog.policy === "isolated-desktop"
-                      ? isolatedRefusal(tool, args)
-                      : backgroundRefusal(tool, args);
-                  if (refusal) return Effect.succeed(policyRefusalResult(refusal, catalog.policy));
-                  return driver
-                    .call(tool.name, args, invocation.threadId)
-                    .pipe(Effect.map(withStructuredText));
-                }),
-                Effect.catchTag("CuaDriverUnavailableError", unavailable),
-              ),
-            ),
-          ),
-        );
-      }),
-  });
+    ),
+    computer_call: McpToolAccess.actsAsCaller((input) =>
+      whenEnabled(
+        Effect.gen(function* () {
+          const scope = yield* McpInvocationContext.McpInvocationContext;
+          const invocation = yield* McpInvocationContext.requireThreadScope(scope, "Computer use");
+          const catalog = yield* driver.catalog;
+          const tool = catalog.tools.find((candidate) => candidate.name === input.tool);
+          if (!tool)
+            return textResult(
+              `Cua Driver has no operation named ${input.tool}. Call computer_describe without arguments to list them.`,
+              true,
+            );
+          const args = input.arguments ?? {};
+          const refusal =
+            catalog.policy === "isolated-desktop"
+              ? isolatedRefusal(tool, args)
+              : backgroundRefusal(tool, args);
+          if (refusal) return policyRefusalResult(refusal, catalog.policy);
+          return yield* driver
+            .call(tool.name, args, invocation.thread.threadId)
+            .pipe(Effect.map(withStructuredText));
+        }).pipe(Effect.catchTags({ CuaDriverUnavailableError: unavailable })),
+      ),
+    ),
+  } satisfies McpToolAccess.Handlers<typeof ComputerUseToolkit.tools>;
 });
 
-export const ComputerUseToolsRegistrationLive = Layer.effectDiscard(registerComputerUseTools);
+export const layer = McpToolAccess.toLayer(ComputerUseToolkit, make);

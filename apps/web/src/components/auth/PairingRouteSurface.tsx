@@ -1,3 +1,4 @@
+import { Alert, AlertDescription } from "../ui/alert";
 import type { AuthSessionState } from "@rove-code/contracts";
 import { squashAtomCommandFailure } from "@rove-code/client-runtime/state/runtime";
 import React, { startTransition, useEffect, useRef, useState, useCallback } from "react";
@@ -14,7 +15,6 @@ import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { StandalonePage, StandalonePageHeader } from "../ui/standalone-page";
 import { useAtomCommand } from "../../state/use-atom-command";
-import * as RuntimePredicate from "effect/Predicate";
 
 export function PairingPendingSurface() {
   return (
@@ -114,9 +114,9 @@ export function PairingRouteSurface({
         </div>
 
         {errorMessage ? (
-          <div className="rounded-lg border border-destructive/30 bg-destructive/6 px-3 py-2 text-sm text-destructive">
-            {errorMessage}
-          </div>
+          <Alert variant="error">
+            <AlertDescription>{errorMessage}</AlertDescription>
+          </Alert>
         ) : null}
 
         <div className="flex flex-wrap gap-2">
@@ -231,10 +231,12 @@ export function HostedPairingRouteSurface() {
       ) : null}
 
       {status === "error" ? (
-        <div className="mt-5 rounded-lg border border-destructive/30 bg-destructive/6 px-3 py-2 text-sm text-destructive">
-          Verify the backend is reachable from this browser, supports CORS for hosted clients, and
-          is served over HTTPS when opening this page from HTTPS.
-        </div>
+        <Alert variant="error" className="mt-5">
+          <AlertDescription>
+            Verify the backend is reachable from this browser, supports CORS for hosted clients, and
+            is served over HTTPS when opening this page from HTTPS.
+          </AlertDescription>
+        </Alert>
       ) : null}
 
       <div className="mt-6 flex flex-wrap gap-2">
@@ -262,7 +264,7 @@ function errorMessageFromUnknown(error: unknown): string {
     return error.message;
   }
 
-  if (RuntimePredicate.isString(error) && error.trim().length > 0) {
+  if (typeof error === "string" && error.trim().length > 0) {
     return error;
   }
 

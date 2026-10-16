@@ -5,18 +5,18 @@ import * as Layer from "effect/Layer";
 import { EnvironmentId } from "@rove-code/contracts";
 import { RelayMobileClientId } from "@rove-code/contracts/relay";
 import { ManagedRelay } from "@rove-code/client-runtime/relay";
-import { remoteHttpClientLayer } from "@rove-code/client-runtime/rpc";
-import { HttpClient } from "effect/unstable/http";
+import { layerRemoteHttpClient } from "@rove-code/client-runtime/rpc";
+import { HttpClient } from "effect/http";
 
-import { MobileStorage } from "../../persistence/mobile-storage";
+import * as MobileStorage from "../../persistence/mobile-storage";
 
 import { linkEnvironmentToCloudWithPreference } from "./linkEnvironment";
-import type { Json as SchemaJson } from "effect/Schema";
 
 vi.mock("expo-constants", () => ({
   default: {
     expoConfig: {
       extra: {
+        cloudReady: true,
         relay: {
           url: "https://relay.example.test",
         },
@@ -64,7 +64,7 @@ const createProofMock = vi.fn(
   (input: { readonly method: string; readonly url: string; readonly accessToken?: string }) =>
     Effect.succeed(`dpop:${input.method}:${input.url}`),
 );
-const testDpopSignerLayer = Layer.succeed(
+const layerTestDpopSigner = Layer.succeed(
   ManagedRelay.ManagedRelayDpopSigner,
   ManagedRelay.ManagedRelayDpopSigner.of({
     thumbprint: Effect.succeed("client-proof-key-thumbprint"),
@@ -72,13 +72,13 @@ const testDpopSignerLayer = Layer.succeed(
   }),
 );
 
-function cloudClientLayer() {
-  const httpClientLayer = remoteHttpClientLayer((input, init) => globalThis.fetch(input, init));
+function layerCloudClient() {
+  const layerHttpClient = layerRemoteHttpClient((input, init) => globalThis.fetch(input, init));
   return Layer.mergeAll(
-    httpClientLayer,
+    layerHttpClient,
     Layer.succeed(
-      MobileStorage,
-      MobileStorage.of({
+      MobileStorage.MobileStorage,
+      MobileStorage.MobileStorage.of({
         loadSavedConnections: Effect.succeed([]),
         saveConnection: () => Effect.void,
         clearSavedConnection: () => Effect.void,
@@ -94,7 +94,7 @@ function cloudClientLayer() {
     ManagedRelay.layer({
       relayUrl: "https://relay.example.test",
       clientId: RelayMobileClientId,
-    }).pipe(Layer.provideMerge(testDpopSignerLayer), Layer.provide(httpClientLayer)),
+    }).pipe(Layer.provideMerge(layerTestDpopSigner), Layer.provide(layerHttpClient)),
   );
 }
 
@@ -105,9 +105,9 @@ const withCloudServices = <A, E>(
     | HttpClient.HttpClient
     | ManagedRelay.ManagedRelayClient
     | ManagedRelay.ManagedRelayDpopSigner
-    | MobileStorage
+    | MobileStorage.MobileStorage
   >,
-) => effect.pipe(Effect.provide(cloudClientLayer()));
+) => effect.pipe(Effect.provide(layerCloudClient()));
 
 function validLinkProof() {
   return "signed-environment-link-jwt";
@@ -294,7 +294,6 @@ describe("mobile cloud link environment client", () => {
       const bodies: Array<unknown> = [];
       const fetchMock = vi.fn((url: string | URL, init?: RequestInit) => {
         if (init?.body) {
-          // @effect-diagnostics-next-line preferSchemaOverJson:off
           bodies.push(JSON.parse(requestBodyText(init.body)));
         }
         if (String(url).endsWith("/v1/client/environment-link-challenges")) {
@@ -349,9 +348,7 @@ describe("mobile cloud link environment client", () => {
       const bodies: Array<Record<string, unknown>> = [];
       const fetchMock = vi.fn((url: string | URL, init?: RequestInit) => {
         if (init?.body) {
-          // @effect-diagnostics-next-line preferSchemaOverJson:off
-          // SAFETY: This fixture intentionally supplies the asserted collaborator contract.
-          bodies.push(JSON.parse(requestBodyText(init.body)) as Record<string, SchemaJson>);
+          bodies.push(JSON.parse(requestBodyText(init.body)) as Record<string, unknown>);
         }
         if (String(url).endsWith("/v1/client/environment-link-challenges")) {
           return Promise.resolve(Response.json(validLinkChallengeResponse()));

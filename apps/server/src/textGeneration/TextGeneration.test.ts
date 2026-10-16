@@ -1,4 +1,3 @@
-import { testDouble } from "../testDouble.ts";
 import { it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as PubSub from "effect/PubSub";
@@ -9,12 +8,12 @@ import { describe, expect } from "vite-plus/test";
 import { ProviderInstanceId } from "@rove-code/contracts";
 import { createModelSelection } from "@rove-code/shared/model";
 
-import type { ProviderInstance } from "../provider/ProviderDriver.ts";
-import * as ProviderInstanceRegistry from "../provider/Services/ProviderInstanceRegistry.ts";
+import type { ProviderInstance } from "@rove-code/provider-core/server/driver";
+import * as ProviderInstanceRegistry from "../provider/ProviderInstanceRegistry.ts";
 import * as TextGeneration from "./TextGeneration.ts";
 import * as SourceControlProviderRegistry from "../sourceControl/SourceControlProviderRegistry.ts";
 import * as Layer from "effect/Layer";
-import { buildThreadTitlePrompt } from "./TextGenerationPrompts.ts";
+import { buildThreadTitlePrompt } from "@rove-code/provider-core/server/textGenerationPrompts";
 
 const makeStubTextGeneration = (
   overrides: Partial<TextGeneration.TextGeneration["Service"]>,
@@ -25,27 +24,27 @@ const makeStubTextGeneration = (
     generatePrContent: () => Effect.die("generatePrContent stub not configured for this test"),
     generateBranchName: () => Effect.die("generateBranchName stub not configured for this test"),
     generateThreadTitle: () => Effect.die("generateThreadTitle stub not configured for this test"),
+    generateReviewGuide: () => Effect.die("generateReviewGuide stub not configured for this test"),
     ...overrides,
   });
 
-const // SAFETY: This fixture intentionally supplies the asserted collaborator contract.
-  makeStubInstance = (
-    instanceId: ProviderInstanceId,
-    textGeneration: TextGeneration.TextGeneration["Service"],
-  ): ProviderInstance =>
-    ({
-      instanceId,
-      driverKind: testDouble<ProviderInstance["driverKind"]>(instanceId),
-      continuationIdentity: {
-        driverKind: testDouble<ProviderInstance["driverKind"]>(instanceId),
-        continuationKey: `${instanceId}:test`,
-      },
-      displayName: undefined,
-      enabled: true,
-      snapshot: {} as ProviderInstance["snapshot"],
-      adapter: {} as ProviderInstance["adapter"],
-      textGeneration,
-    }) satisfies ProviderInstance;
+const makeStubInstance = (
+  instanceId: ProviderInstanceId,
+  textGeneration: TextGeneration.TextGeneration["Service"],
+): ProviderInstance =>
+  ({
+    instanceId,
+    driverKind: instanceId as unknown as ProviderInstance["driverKind"],
+    continuationIdentity: {
+      driverKind: instanceId as unknown as ProviderInstance["driverKind"],
+      continuationKey: `${instanceId}:test`,
+    },
+    displayName: undefined,
+    enabled: true,
+    snapshot: {} as ProviderInstance["snapshot"],
+    orchestrationAdapter: {} as ProviderInstance["orchestrationAdapter"],
+    textGeneration,
+  }) satisfies ProviderInstance;
 
 const makeStubRegistry = (
   instances: ReadonlyArray<ProviderInstance>,

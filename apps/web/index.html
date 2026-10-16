@@ -123,7 +123,7 @@
           },
         };
         // Keep the built-in mode list in sync with the runtime so the selected
-        // Rove Chat palette is visible before React has mounted.
+        // Plum palette is visible before React has mounted.
         const BUILT_IN_THEME_MODES = Object.fromEntries(
           Object.entries(BUILT_IN_THEME_PALETTES).map(([id, palettes]) => [
             id,
@@ -135,16 +135,18 @@
           "light",
           "dark",
           "plum",
+          "plum-dark",
+          "t3-chat",
           "grove",
           "ocean",
           "ember",
           "iris",
-          "plum-dark",
-          "t3-chat",
           "t3-chat-dark",
           "t3-grove",
           "t3-ocean",
           "t3-ember",
+          "rove-ocean",
+          "rove-ember",
           "t3-iris",
         ];
         // Update every theme-color meta so any element another layer added
@@ -221,20 +223,25 @@
         try {
           const storedTheme = window.localStorage.getItem("rove:theme");
           const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-          // Boot runs before imports. Keep these saved-state aliases in sync with roveMigration.ts.
+          // Older builds stored dark Plum as its own theme id and used
+          // prefixed maintainer ids. Keep these preferences readable; mirror
+          // the runtime's historical alias table.
           const LEGACY_THEME_IDS = {
-            "plum-dark": "plum",
             "t3-chat": "plum",
             "t3-chat-dark": "plum",
+            "plum-dark": "plum",
             "t3-grove": "grove",
             "t3-ocean": "ocean",
             "t3-ember": "ember",
+            "rove-ocean": "ocean",
+            "rove-ember": "ember",
             "t3-iris": "iris",
           };
-          const isLegacyPlumDark = storedTheme === "plum-dark" || storedTheme === "t3-chat-dark";
+          const isLegacyRoveChatDark =
+            storedTheme === "t3-chat-dark" || storedTheme === "plum-dark";
           const themeId =
             storedTheme === null ? "" : (LEGACY_THEME_IDS[storedTheme] ?? storedTheme);
-          const legacyMode = isLegacyPlumDark ? "dark" : null;
+          const legacyMode = isLegacyRoveChatDark ? "dark" : null;
           const builtInModes = BUILT_IN_THEME_MODES[themeId] ?? null;
           const customTheme = builtInModes ? null : findCustomTheme(themeId);
           const themeModes =
@@ -479,7 +486,7 @@
         cursor: pointer;
       }
     </style>
-    <title>Rove Code (Alpha)</title>
+    <title>Rove Code (Beta)</title>
   </head>
   <body>
     <div id="root">

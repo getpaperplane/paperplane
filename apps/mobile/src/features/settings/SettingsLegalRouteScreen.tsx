@@ -1,7 +1,7 @@
 import { Linking, Pressable, View } from "react-native";
 
-import { SymbolView } from "../../components/AppSymbol";
-import { AppText as Text } from "../../components/AppText";
+import { SymbolView } from "../../components/ui/AppSymbol";
+import { AppText as Text } from "../../components/ui/AppText";
 import { SettingsLegalDocumentRouteScreen } from "./components/SettingsLegalDocumentRouteScreen";
 import { LEGAL_URL } from "./lib/legal-document-url";
 

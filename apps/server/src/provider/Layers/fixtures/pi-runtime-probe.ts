@@ -30,8 +30,8 @@ export default function (pi: ExtensionAPI) {
       NodeFS.writeFileSync(
         childPath,
         `
-        import '@earendil-works/chord';
-        import '@earendil-works/chord/context';
+        import '@earendil-works/pi-agent-core';
+        import '@earendil-works/pi-ai';
         import assert from 'node:assert/strict';
         const root = ${JSON.stringify(directory)};
         const pi = await import(${JSON.stringify(NodeURL.pathToFileURL(entry).href)});

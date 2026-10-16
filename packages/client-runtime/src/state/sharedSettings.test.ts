@@ -119,22 +119,23 @@ describe("splitSharedServerPatch", () => {
 });
 
 describe("pickSharedServerSettings", () => {
-  it("only shares automatic recovery with capable environments", () => {
+  it("shares automatic recovery preferences without a V1 capability gate", () => {
     const settings = { ...DEFAULT_SERVER_SETTINGS, autoResumeLimitedThreads: true };
-    expect(
-      pickSharedServerSettings(settings, { threadUsageLimitRecovery: true })
-        .autoResumeLimitedThreads,
-    ).toBe(true);
-    expect(filterSharedServerPatch({ autoResumeLimitedThreads: true }, {})).toEqual({});
+    expect(pickSharedServerSettings(settings, {}).autoResumeLimitedThreads).toBe(true);
+    expect(filterSharedServerPatch({ autoResumeLimitedThreads: true }, {})).toEqual({
+      autoResumeLimitedThreads: true,
+    });
   });
   it("returns only the shared keys", () => {
     expect(
       Object.keys(pickSharedServerSettings(DEFAULT_SERVER_SETTINGS, restartCapabilities)).sort(),
     ).toEqual([
+      "autoResumeLimitedThreads",
       "continueThreadsAfterServerUpdate",
       "newWorktreesStartFromOrigin",
       "sidebarAutoSettleAfterDays",
       "sidebarAutoSettleOnMerge",
+      "snoozeLimitedThreads",
       "sourceControlWritingStyle",
       "textGenerationModelSelection",
     ]);

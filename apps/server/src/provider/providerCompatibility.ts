@@ -7,7 +7,11 @@ import {
 } from "@rove-code/contracts";
 import { satisfiesSemverRange } from "@rove-code/shared/semver";
 import * as Schema from "effect/Schema";
-import packageJson from "../../package.json" with { type: "json" };
+
+// Manifest gates describe upstream adapter generations, not Rove's independent
+// release numbering. This V2 port implements the 0.0.46 adapter generation;
+// keep reported server/release versions honest and advance this with future ports.
+export const PROVIDER_COMPATIBILITY_BASELINE = "0.0.46";
 
 // Deliberately uses the shared CLI gate syntax: comparator groups joined by ||.
 // Prereleases and unrecognized release tags remain unknown.
@@ -60,22 +64,25 @@ export function resolveProviderCompatibility(
   policies: ReadonlyArray<ProviderCompatibilityPolicy> | undefined,
   driver: ProviderDriverKind,
   version: string | null,
-  roveCodeVersion = packageJson.version,
+  compatibilityVersion = PROVIDER_COMPATIBILITY_BASELINE,
 ): ServerProviderCompatibilityAdvisory | undefined {
   const policy = policies?.find(
     (entry) =>
-      entry.driver === driver && satisfiesSemverRange(roveCodeVersion, entry.roveCodeRange),
+      entry.driver === driver && satisfiesSemverRange(compatibilityVersion, entry.roveCodeRange),
   );
   if (!policy) return undefined;
   const unprefixed = version?.replace(/^v/, "");
-  // Cursor appends a build hash to its date; Google's ACP runtime uses a release prefix.
-  // Strip only these driver-specific forms, keeping semver prereleases unknown.
+  // Cursor appends a build hash to its date; Google's ACP runtime uses a release prefix;
+  // Muse appends a release revision. Strip only these driver-specific forms, keeping
+  // semver prereleases unknown.
   const stable =
     driver === "cursor"
       ? unprefixed?.replace(/^(\d{4}\.\d{2}\.\d{2})-[a-f0-9]+$/, "$1")
       : driver === "antigravity"
         ? unprefixed?.replace(/^agy_acp_server_(\d+\.\d+\.\d+)$/, "$1")
-        : unprefixed;
+        : driver === "muse"
+          ? unprefixed?.replace(/^(\d+\.\d+\.\d+)-R\d+(?:\.\d+)?$/, "$1")
+          : unprefixed;
   const status =
     stable && /^\d+\.\d+\.\d+$/.test(stable)
       ? (policy.ranges.find((entry) => satisfiesSemverRange(stable, entry.range))?.status ??

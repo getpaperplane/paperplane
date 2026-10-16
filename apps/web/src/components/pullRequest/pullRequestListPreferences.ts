@@ -25,7 +25,7 @@ export interface PullRequestListPreferences {
   readonly environmentId?: EnvironmentId;
   readonly projectId?: ProjectId;
   readonly host?: string;
-  readonly q?: string;
+  readonly q?: string | undefined;
   readonly draft?: "only" | "hide";
   readonly review?: NonNullable<PullRequestListFilters["review"]>;
   readonly checks?: NonNullable<PullRequestListFilters["checks"]>;
@@ -62,8 +62,6 @@ const PullRequestListPreferencesSchema = Schema.Struct({
 const decodePullRequestListPreferences = Schema.decodeUnknownOption(
   PullRequestListPreferencesSchema,
 );
-import { readMigratedRoveStorage } from "@rove-code/shared/roveMigration";
-
 const PULL_REQUEST_LIST_PREFERENCES_STORAGE_KEY = "rove.pullRequests.preferences";
 type PreferenceStorage = Pick<Storage, "getItem" | "setItem">;
 
@@ -97,10 +95,9 @@ export function readPullRequestListPreferences(
   storage?: PreferenceStorage,
 ): PullRequestListPreferences {
   try {
-    const resolved = resolvePreferenceStorage(storage);
-    const raw = resolved
-      ? readMigratedRoveStorage(resolved, PULL_REQUEST_LIST_PREFERENCES_STORAGE_KEY)
-      : null;
+    const raw = resolvePreferenceStorage(storage)?.getItem(
+      PULL_REQUEST_LIST_PREFERENCES_STORAGE_KEY,
+    );
     if (!raw) return DEFAULT_PULL_REQUEST_LIST_PREFERENCES;
     const decoded = decodePullRequestListPreferences(JSON.parse(raw));
     return decoded._tag === "Some"

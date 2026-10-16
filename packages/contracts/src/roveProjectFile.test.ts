@@ -1,9 +1,11 @@
 import * as Schema from "effect/Schema";
 import { describe, expect, it } from "vite-plus/test";
 
-import { RoveProjectFile } from "./roveProjectFile.ts";
+import { RoveProjectFile, type RoveProjectFile as RoveProjectFileType } from "./roveProjectFile.ts";
 
-const decode = Schema.decodeUnknownSync(RoveProjectFile);
+const decode = Schema.decodeUnknownSync(RoveProjectFile as never) as (
+  input: unknown,
+) => RoveProjectFileType;
 
 describe("RoveProjectFile", () => {
   it("decodes a full project file", () => {

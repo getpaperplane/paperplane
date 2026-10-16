@@ -1,109 +1,158 @@
-import type { OrchestrationThreadActivity } from "@rove-code/contracts";
-import * as RuntimePredicate from "effect/Predicate";
-import type { Json as SchemaJson } from "effect/Schema";
-
-function asRecord(value: unknown): Record<string, SchemaJson> | null {
-  // SAFETY: The surrounding adapter has established this JSON-object view before field access.
-  return value && (RuntimePredicate.isObjectOrArray(value) || value === null)
-    ? (value as Record<string, SchemaJson>)
-    : null;
-}
+import type {
+  OrchestrationV2ProviderTurn,
+  OrchestrationV2ProviderTurnTokenUsage,
+  OrchestrationV2ProviderThread,
+  OrchestrationV2TurnItem,
+  ThreadTokenUsageKnownSnapshot,
+} from "@rove-code/contracts";
+import * as DateTime from "effect/DateTime";
 
 function asFiniteNumber(value: unknown): number | null {
-  return RuntimePredicate.isNumber(value) && Number.isFinite(value) ? value : null;
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
 }
 
-function asBoolean(value: unknown): boolean | null {
-  return RuntimePredicate.isBoolean(value) ? value : null;
-}
+type NullableContextWindowUsage = {
+  readonly [
+    Key in keyof ThreadTokenUsageKnownSnapshot
+  ]: undefined extends ThreadTokenUsageKnownSnapshot[Key]
+    ? Exclude<ThreadTokenUsageKnownSnapshot[Key], undefined> | null
+    : ThreadTokenUsageKnownSnapshot[Key];
+};
 
-export type ContextWindowSnapshot = {
+export type ContextWindowSnapshot = Omit<
+  NullableContextWindowUsage,
+  "usedTokens" | "maxTokens" | "contextUsageState"
+> & {
   readonly contextUsageState: "known" | "unknown";
-  readonly contextUsageUnknownReason: "compacted" | null;
   readonly usedTokens: number | null;
-  readonly totalProcessedTokens: number | null;
-  readonly totalProcessedTokensScope: "activeBranch" | null;
   readonly maxTokens: number | null;
   readonly remainingTokens: number | null;
   readonly usedPercentage: number | null;
   readonly remainingPercentage: number | null;
-  readonly inputTokens: number | null;
-  readonly cachedInputTokens: number | null;
-  readonly cacheCreationTokens: number | null;
-  readonly tokenBreakdownScope: "latestResponse" | "activeBranch" | null;
-  readonly outputTokens: number | null;
-  readonly reasoningOutputTokens: number | null;
-  readonly lastUsedTokens: number | null;
-  readonly lastInputTokens: number | null;
-  readonly lastCachedInputTokens: number | null;
-  readonly lastCacheCreationTokens: number | null;
-  readonly lastOutputTokens: number | null;
-  readonly lastReasoningOutputTokens: number | null;
-  readonly toolUses: number | null;
-  readonly durationMs: number | null;
-  readonly compactsAutomatically: boolean;
-  readonly autoCompactThreshold: number | null;
   readonly updatedAt: string;
 };
 
+/** Newest usage report across a thread's provider turns. Snapshots order turns
+    by provider thread, not time, so pick by timestamp. */
+export function latestProviderTurnTokenUsage(
+  turns: ReadonlyArray<Pick<OrchestrationV2ProviderTurn, "tokenUsage">>,
+): OrchestrationV2ProviderTurnTokenUsage | null {
+  let latest: OrchestrationV2ProviderTurnTokenUsage | null = null;
+  for (const { tokenUsage } of turns) {
+    if (tokenUsage === undefined) continue;
+    // Ties go to the later entry, since live upserts append.
+    if (latest === null || Date.parse(tokenUsage.updatedAt) >= Date.parse(latest.updatedAt)) {
+      latest = tokenUsage;
+    }
+  }
+  return latest;
+}
+
+/** Prefers the provider's live usage report (#8144); falls back to the last compaction item. */
 export function deriveLatestContextWindowSnapshot(
-  activities: ReadonlyArray<OrchestrationThreadActivity>,
+  entries: ReadonlyArray<{
+    readonly item: OrchestrationV2TurnItem;
+  }>,
+  liveUsage?: OrchestrationV2ProviderTurnTokenUsage | null,
+  providerThread?: Pick<OrchestrationV2ProviderThread, "contextUsage" | "updatedAt"> | null,
 ): ContextWindowSnapshot | null {
-  for (let index = activities.length - 1; index >= 0; index -= 1) {
-    const activity = activities[index];
-    if (!activity || activity.kind !== "context-window.updated") {
-      continue;
-    }
-
-    const payload = asRecord(activity.payload);
-    const contextUsageState = payload?.contextUsageState;
-    if (contextUsageState === "unavailable") {
-      return null;
-    }
-
-    const maxTokens = asFiniteNumber(payload?.maxTokens);
-    if (contextUsageState === "unknown") {
-      if (maxTokens === null || maxTokens <= 0) {
-        continue;
-      }
-
+  if (liveUsage != null) {
+    const usedTokens = Math.max(0, liveUsage.usedTokens);
+    const maxTokens = liveUsage.maxTokens ?? null;
+    const usedPercentage =
+      maxTokens !== null && maxTokens > 0 ? Math.min(100, (usedTokens / maxTokens) * 100) : null;
+    const remainingTokens =
+      maxTokens !== null ? Math.max(0, Math.round(maxTokens - usedTokens)) : null;
+    const remainingPercentage = usedPercentage !== null ? Math.max(0, 100 - usedPercentage) : null;
+    return {
+      contextUsageState: "known",
+      usedTokens,
+      totalProcessedTokens: null,
+      maxTokens,
+      remainingTokens,
+      usedPercentage,
+      remainingPercentage,
+      inputTokens: liveUsage.inputTokens ?? null,
+      cachedInputTokens: liveUsage.cachedInputTokens ?? null,
+      outputTokens: liveUsage.outputTokens ?? null,
+      reasoningOutputTokens: liveUsage.reasoningOutputTokens ?? null,
+      lastUsedTokens: null,
+      lastInputTokens: null,
+      lastCachedInputTokens: null,
+      lastOutputTokens: null,
+      lastReasoningOutputTokens: null,
+      toolUses: null,
+      durationMs: null,
+      compactsAutomatically: true,
+      autoCompactThreshold: null,
+      cost: null,
+      updatedAt: liveUsage.updatedAt,
+    };
+  }
+  const providerUsage = providerThread?.contextUsage;
+  const providerUsageUpdatedAt = providerThread?.updatedAt;
+  if (
+    providerUsage !== null &&
+    providerUsage !== undefined &&
+    providerUsageUpdatedAt !== undefined
+  ) {
+    // An unavailable report invalidates any older compaction fallback. Unknown
+    // occupancy still carries a real window, but must never become a fabricated zero.
+    if (providerUsage.contextUsageState === "unavailable") return null;
+    if (providerUsage.contextUsageState === "unknown") {
       return {
         contextUsageState: "unknown",
-        contextUsageUnknownReason:
-          payload?.contextUsageUnknownReason === "compacted" ? "compacted" : null,
         usedTokens: null,
-        totalProcessedTokens: asFiniteNumber(payload?.totalProcessedTokens),
-        totalProcessedTokensScope:
-          payload?.totalProcessedTokensScope === "activeBranch" ? "activeBranch" : null,
-        maxTokens,
+        maxTokens: providerUsage.maxTokens,
+        totalProcessedTokens: providerUsage.totalProcessedTokens ?? null,
         remainingTokens: null,
         usedPercentage: null,
         remainingPercentage: null,
-        inputTokens: null,
-        cachedInputTokens: null,
-        cacheCreationTokens: null,
-        tokenBreakdownScope: null,
-        outputTokens: null,
-        reasoningOutputTokens: null,
-        lastUsedTokens: null,
-        lastInputTokens: null,
-        lastCachedInputTokens: null,
-        lastCacheCreationTokens: null,
-        lastOutputTokens: null,
-        lastReasoningOutputTokens: null,
-        toolUses: null,
-        durationMs: null,
-        compactsAutomatically: asBoolean(payload?.compactsAutomatically) ?? false,
-        autoCompactThreshold: null,
-        updatedAt: activity.createdAt,
+        compactsAutomatically: providerUsage.compactsAutomatically ?? null,
+        updatedAt: DateTime.formatIso(providerUsageUpdatedAt),
       };
     }
-
-    const usedTokens = asFiniteNumber(payload?.usedTokens);
+    const maxTokens = asFiniteNumber(providerUsage.maxTokens);
+    const usedTokens = providerUsage.usedTokens;
+    const usedPercentage =
+      maxTokens !== null && maxTokens > 0 ? Math.min(100, (usedTokens / maxTokens) * 100) : null;
+    return {
+      contextUsageState: "known",
+      usedTokens,
+      totalProcessedTokens: asFiniteNumber(providerUsage.totalProcessedTokens),
+      maxTokens,
+      remainingTokens: maxTokens === null ? null : Math.max(0, Math.round(maxTokens - usedTokens)),
+      usedPercentage,
+      remainingPercentage: usedPercentage === null ? null : Math.max(0, 100 - usedPercentage),
+      inputTokens: asFiniteNumber(providerUsage.inputTokens),
+      cachedInputTokens: asFiniteNumber(providerUsage.cachedInputTokens),
+      outputTokens: asFiniteNumber(providerUsage.outputTokens),
+      reasoningOutputTokens: asFiniteNumber(providerUsage.reasoningOutputTokens),
+      lastUsedTokens: asFiniteNumber(providerUsage.lastUsedTokens),
+      lastInputTokens: asFiniteNumber(providerUsage.lastInputTokens),
+      lastCachedInputTokens: asFiniteNumber(providerUsage.lastCachedInputTokens),
+      lastOutputTokens: asFiniteNumber(providerUsage.lastOutputTokens),
+      lastReasoningOutputTokens: asFiniteNumber(providerUsage.lastReasoningOutputTokens),
+      toolUses: asFiniteNumber(providerUsage.toolUses),
+      durationMs: asFiniteNumber(providerUsage.durationMs),
+      compactsAutomatically: providerUsage.compactsAutomatically ?? null,
+      cost: providerUsage.cost ?? null,
+      autoCompactThreshold: providerUsage.autoCompactThreshold ?? null,
+      updatedAt: DateTime.formatIso(providerUsageUpdatedAt),
+    };
+  }
+  for (let index = entries.length - 1; index >= 0; index -= 1) {
+    const entry = entries[index];
+    if (!entry || entry.item.type !== "compaction") {
+      continue;
+    }
+    const payload = entry.item;
+    const usedTokens = asFiniteNumber(payload.afterTokenCount);
     if (usedTokens === null || usedTokens < 0) {
       continue;
     }
 
+    const maxTokens = null;
     const usedPercentage =
       maxTokens !== null && maxTokens > 0 ? Math.min(100, (usedTokens / maxTokens) * 100) : null;
     const remainingTokens =
@@ -112,74 +161,31 @@ export function deriveLatestContextWindowSnapshot(
 
     return {
       contextUsageState: "known",
-      contextUsageUnknownReason: null,
       usedTokens,
-      totalProcessedTokens: asFiniteNumber(payload?.totalProcessedTokens),
-      totalProcessedTokensScope:
-        payload?.totalProcessedTokensScope === "activeBranch" ? "activeBranch" : null,
+      totalProcessedTokens: asFiniteNumber(payload.beforeTokenCount),
       maxTokens,
       remainingTokens,
       usedPercentage,
       remainingPercentage,
-      inputTokens: asFiniteNumber(payload?.inputTokens),
-      cachedInputTokens: asFiniteNumber(payload?.cachedInputTokens),
-      cacheCreationTokens: asFiniteNumber(payload?.cacheCreationTokens),
-      tokenBreakdownScope:
-        payload?.tokenBreakdownScope === "latestResponse" ||
-        payload?.tokenBreakdownScope === "activeBranch"
-          ? payload.tokenBreakdownScope
-          : null,
-      outputTokens: asFiniteNumber(payload?.outputTokens),
-      reasoningOutputTokens: asFiniteNumber(payload?.reasoningOutputTokens),
-      lastUsedTokens: asFiniteNumber(payload?.lastUsedTokens),
-      lastInputTokens: asFiniteNumber(payload?.lastInputTokens),
-      lastCachedInputTokens: asFiniteNumber(payload?.lastCachedInputTokens),
-      lastCacheCreationTokens: asFiniteNumber(payload?.lastCacheCreationTokens),
-      lastOutputTokens: asFiniteNumber(payload?.lastOutputTokens),
-      lastReasoningOutputTokens: asFiniteNumber(payload?.lastReasoningOutputTokens),
-      toolUses: asFiniteNumber(payload?.toolUses),
-      durationMs: asFiniteNumber(payload?.durationMs),
-      compactsAutomatically: asBoolean(payload?.compactsAutomatically) ?? false,
-      autoCompactThreshold: asFiniteNumber(payload?.autoCompactThreshold),
-      updatedAt: activity.createdAt,
+      inputTokens: null,
+      cachedInputTokens: null,
+      outputTokens: null,
+      reasoningOutputTokens: null,
+      lastUsedTokens: null,
+      lastInputTokens: null,
+      lastCachedInputTokens: null,
+      lastOutputTokens: null,
+      lastReasoningOutputTokens: null,
+      toolUses: null,
+      durationMs: null,
+      compactsAutomatically: true,
+      autoCompactThreshold: null,
+      cost: null,
+      updatedAt: DateTime.formatIso(payload.startedAt ?? payload.updatedAt),
     };
   }
 
   return null;
-}
-
-export function contextWindowTokenCounters(
-  usage: ContextWindowSnapshot,
-): ReadonlyArray<{ readonly label: string; readonly value: number }> {
-  const counters: Array<{ label: string; value: number }> = [];
-  const { inputTokens, cachedInputTokens, cacheCreationTokens, outputTokens } = usage;
-  // Both cache counts must be present to split input without mislabeling unreported writes.
-  const uncachedInput =
-    inputTokens !== null &&
-    cachedInputTokens !== null &&
-    cacheCreationTokens !== null &&
-    cachedInputTokens + cacheCreationTokens <= inputTokens
-      ? inputTokens - cachedInputTokens - cacheCreationTokens
-      : null;
-  const hasCache = (cachedInputTokens ?? 0) > 0 || (cacheCreationTokens ?? 0) > 0;
-
-  if (inputTokens !== null && (inputTokens > 0 || (uncachedInput === 0 && hasCache))) {
-    counters.push({
-      label:
-        uncachedInput !== null && hasCache ? "Uncached input" : hasCache ? "Input total" : "Input",
-      value: uncachedInput !== null && hasCache ? uncachedInput : inputTokens,
-    });
-  }
-  if (outputTokens !== null && outputTokens > 0) {
-    counters.push({ label: "Output", value: outputTokens });
-  }
-  if (cachedInputTokens !== null && cachedInputTokens > 0) {
-    counters.push({ label: "Cache read", value: cachedInputTokens });
-  }
-  if (cacheCreationTokens !== null && cacheCreationTokens > 0) {
-    counters.push({ label: "Cache write", value: cacheCreationTokens });
-  }
-  return counters;
 }
 
 export function formatContextWindowTokens(value: number | null): string {
@@ -192,6 +198,7 @@ export function formatContextWindowTokens(value: number | null): string {
   if (value < 10_000) {
     return `${(value / 1_000).toFixed(1).replace(/\.0$/, "")}k`;
   }
+  // Anything from 999,500 rounds to 1000k, so it belongs to the next unit.
   if (value < 999_500) {
     return `${Math.round(value / 1_000)}k`;
   }

@@ -29,7 +29,6 @@ import android.widget.EditText
 import expo.modules.kotlin.AppContext
 import expo.modules.kotlin.viewevent.EventDispatcher
 import expo.modules.kotlin.views.ExpoView
-import expo.modules.rovemarkdowntext.RoveContextChip
 import org.json.JSONObject
 import kotlin.math.max
 
@@ -37,6 +36,9 @@ class RoveComposerEditorView(context: Context, appContext: AppContext) : ExpoVie
   context,
   appContext
 ) {
+  // React Native ignores the editor's requestLayout(), which makes TextView defer caret scrolls.
+  override val shouldUseAndroidLayout = true
+
   private val editor = SelectionAwareEditText(context)
   private val defaultHighlightColor = editor.highlightColor
   private val defaultSelectionColor = context.resolveThemeColor(
@@ -705,9 +707,7 @@ internal class SelectionAwareEditText(context: Context) : EditText(context) {
 
   private fun pasteContextOrImages(): Boolean {
     val payload = RoveComposerClipboard.read(context)
-    if (payload["html"]?.contains("data-rove-context-fragment=") == true ||
-      payload["html"]?.contains("data-t3-context-fragment=") == true
-    ) {
+    if (payload["html"]?.contains("data-rove-context-fragment=") == true) {
       pasteContextListener?.invoke(payload)
       return true
     }

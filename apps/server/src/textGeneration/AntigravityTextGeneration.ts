@@ -1,10 +1,4 @@
-import {
-  type ModelSelection,
-  type ProviderSetupError,
-  TextGenerationError,
-} from "@rove-code/contracts";
-import { sanitizeBranchFragment, sanitizeFeatureBranchName } from "@rove-code/shared/git";
-import { extractJsonObject } from "@rove-code/shared/schemaJson";
+import { type ProviderSetupError, TextGenerationError } from "@rove-code/contracts";
 import * as Cause from "effect/Cause";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
@@ -20,19 +14,8 @@ import { type AcpError, AcpRequestError } from "effect-acp/errors";
 
 import { applyAntigravityAcpModelSelection } from "../provider/acp/AntigravityAcpSupport.ts";
 import { removeAntigravitySessionFiles } from "../provider/acp/AntigravitySessionFiles.ts";
-import type { AcpSessionRuntime } from "../provider/acp/AcpSessionRuntime.ts";
-import type * as TextGeneration from "./TextGeneration.ts";
-import {
-  buildBranchNamePrompt,
-  buildCommitMessagePrompt,
-  buildPrContentPrompt,
-  buildThreadTitlePrompt,
-} from "./TextGenerationPrompts.ts";
-import {
-  sanitizeCommitSubject,
-  sanitizePrTitle,
-  sanitizeThreadTitle,
-} from "./TextGenerationUtils.ts";
+import type * as AcpSessionRuntime from "@rove-code/provider-acp/server/AcpSessionRuntime";
+import * as TextGenerationOperations from "@rove-code/provider-core/server/textGenerationOperations";
 
 const ANTIGRAVITY_TIMEOUT_MS = 180_000;
 const MAX_OUTPUT_CHARS = 128_000;
@@ -43,7 +26,7 @@ const decodeConfiguration = Schema.decodeEffect(Schema.fromJsonString(Configurat
 const decodeConfigurationObject = Schema.decodeUnknownEffect(Configuration);
 
 type AntigravityTextRuntime = Pick<
-  AcpSessionRuntime["Service"],
+  AcpSessionRuntime.AcpSessionRuntime["Service"],
   | "start"
   | "setMode"
   | "getConfigOptions"
@@ -120,13 +103,9 @@ export const makeAntigravityTextGeneration = Effect.fn("makeAntigravityTextGener
     Effect.provideService(Path.Path, path),
   );
 
+  // Ignores `cwd`: the helper runs in an empty temp directory, away from the project.
   const runAntigravityJson = Effect.fn("AntigravityTextGeneration.runJson")(
-    function* <S extends Schema.Top>(input: {
-      readonly operation: keyof TextGeneration.TextGeneration["Service"];
-      readonly prompt: string;
-      readonly outputSchema: S;
-      readonly modelSelection: ModelSelection;
-    }) {
+    function* <S extends Schema.Top>(input: TextGenerationOperations.Request<S>) {
       const { operation } = input;
       const scope = yield* Scope.make();
       yield* Effect.addFinalizer((exit) => Scope.close(scope, exit));
@@ -187,7 +166,7 @@ export const makeAntigravityTextGeneration = Effect.fn("makeAntigravityTextGener
           );
           yield* runtime.handleElicitation(() =>
             reject("Antigravity text generation requested user input.").pipe(
-              Effect.as({ action: { action: "decline" as const } }),
+              Effect.as({ action: "decline" as const }),
             ),
           );
           yield* runtime.handleReadTextFile(rejectToolRequest);
@@ -291,17 +270,7 @@ export const makeAntigravityTextGeneration = Effect.fn("makeAntigravityTextGener
             detail: "Antigravity returned empty text generation output.",
           });
         }
-        const decodeOutput = Schema.decodeEffect(Schema.fromJsonString(input.outputSchema));
-        return yield* decodeOutput(extractJsonObject(rawResult)).pipe(
-          Effect.mapError(
-            (cause) =>
-              new TextGenerationError({
-                operation,
-                detail: "Antigravity returned invalid structured output.",
-                cause,
-              }),
-          ),
-        );
+        return yield* TextGenerationOperations.decodeJsonReply(input, "Antigravity", rawResult);
       }).pipe(
         Effect.scoped,
         Effect.timeoutOption(ANTIGRAVITY_TIMEOUT_MS),
@@ -326,11 +295,8 @@ export const makeAntigravityTextGeneration = Effect.fn("makeAntigravityTextGener
     (effect, input) =>
       effect.pipe(
         Effect.catchCause((cause) => {
-          if (Cause.hasInterruptsOnly(cause)) {
-            return Effect.interrupt;
-          }
-          // ACP can surface authentication failures as RPC defects. Normalize
-          // those at the provider boundary so Git can report a retryable failure.
+          if (Cause.hasInterruptsOnly(cause)) return Effect.interrupt;
+          // ACP authentication failures can be RPC defects. Normalize them so Git can offer retry.
           const error = Cause.squash(cause);
           return Effect.fail(
             isTextGenerationError(error)
@@ -349,78 +315,8 @@ export const makeAntigravityTextGeneration = Effect.fn("makeAntigravityTextGener
       ),
   );
 
-  const generateCommitMessage: TextGeneration.TextGeneration["Service"]["generateCommitMessage"] =
-    Effect.fn("AntigravityTextGeneration.generateCommitMessage")(function* (input) {
-      const generated = yield* runAntigravityJson({
-        operation: "generateCommitMessage",
-        ...buildCommitMessagePrompt({
-          branch: input.branch,
-          stagedSummary: input.stagedSummary,
-          stagedPatch: input.stagedPatch,
-          includeBranch: input.includeBranch === true,
-          policy: input.policy,
-        }),
-        modelSelection: input.modelSelection,
-      });
-      return {
-        subject: sanitizeCommitSubject(generated.subject),
-        body: generated.body.trim(),
-        ...("branch" in generated && typeof generated.branch === "string"
-          ? { branch: sanitizeFeatureBranchName(generated.branch) }
-          : {}),
-      };
-    });
-
-  const generatePrContent: TextGeneration.TextGeneration["Service"]["generatePrContent"] =
-    Effect.fn("AntigravityTextGeneration.generatePrContent")(function* (input) {
-      const generated = yield* runAntigravityJson({
-        operation: "generatePrContent",
-        ...buildPrContentPrompt({
-          baseBranch: input.baseBranch,
-          headBranch: input.headBranch,
-          commitSummary: input.commitSummary,
-          diffSummary: input.diffSummary,
-          diffPatch: input.diffPatch,
-          policy: input.policy,
-          changeRequestTemplate: input.changeRequestTemplate,
-        }),
-        modelSelection: input.modelSelection,
-      });
-      return { title: sanitizePrTitle(generated.title), body: generated.body.trim() };
-    });
-
-  const generateBranchName: TextGeneration.TextGeneration["Service"]["generateBranchName"] =
-    Effect.fn("AntigravityTextGeneration.generateBranchName")(function* (input) {
-      const generated = yield* runAntigravityJson({
-        operation: "generateBranchName",
-        ...buildBranchNamePrompt({ message: input.message, attachments: input.attachments }),
-        modelSelection: input.modelSelection,
-      });
-      return { branch: sanitizeBranchFragment(generated.branch) };
-    });
-
-  const generateThreadTitle: TextGeneration.TextGeneration["Service"]["generateThreadTitle"] =
-    Effect.fn("AntigravityTextGeneration.generateThreadTitle")(function* (input) {
-      const generated = yield* runAntigravityJson({
-        operation: "generateThreadTitle",
-        ...buildThreadTitlePrompt({
-          message: input.message,
-          previousTitle: input.previousTitle,
-          linkedContext: input.linkedContext,
-          attachments: input.attachments,
-        }),
-        modelSelection: input.modelSelection,
-      });
-      return {
-        title: sanitizeThreadTitle(generated.title),
-        ...(generated.needsRefinement ? { needsRefinement: true } : {}),
-      };
-    });
-
-  return {
-    generateCommitMessage,
-    generatePrContent,
-    generateBranchName,
-    generateThreadTitle,
-  } satisfies TextGeneration.TextGeneration["Service"];
+  return TextGenerationOperations.fromRunner(
+    "AntigravityTextGeneration",
+    TextGenerationOperations.withoutInvestigation("Antigravity", runAntigravityJson),
+  );
 });

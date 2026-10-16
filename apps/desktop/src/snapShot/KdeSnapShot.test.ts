@@ -89,6 +89,9 @@ it("does not install or request screenshots during initial discovery", async () 
 it("installs offline at a stable path and verifies permissions using the installed identity", async () => {
   await setup.perform("install-kde-helper");
   const { executable, desktop } = kdeCapturePaths(paths);
+  expect(desktop).toBe(
+    NodePath.join(paths.dataHome, "applications", "io.github.hafiezul.rove.KdeCapture.desktop"),
+  );
   expect(await NodeFSP.readFile(executable, "utf8")).toBe("bundled executable");
   expect((await NodeFSP.stat(executable)).mode & 0o777).toBe(0o755);
   expect(await NodeFSP.readFile(desktop, "utf8")).toBe(kdeCaptureDesktopEntry(executable));

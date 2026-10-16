@@ -2,12 +2,13 @@ import { EnvironmentId, ProjectId, ProviderInstanceId, ThreadId } from "@rove-co
 import { describe, expect, it } from "vite-plus/test";
 
 import { DEFAULT_INTERACTION_MODE, DEFAULT_RUNTIME_MODE, type Thread } from "./types";
+import { makeThreadFixture } from "./test-fixtures";
 import { formatWorktreePathForDisplay, getOrphanedWorktreePathForThread } from "./worktreeCleanup";
 
 const localEnvironmentId = EnvironmentId.make("environment-local");
 
 function makeThread(overrides: Partial<Thread> = {}): Thread {
-  return {
+  return makeThreadFixture({
     id: ThreadId.make("thread-1"),
     environmentId: localEnvironmentId,
     projectId: ProjectId.make("project-1"),
@@ -18,11 +19,8 @@ function makeThread(overrides: Partial<Thread> = {}): Thread {
     },
     runtimeMode: DEFAULT_RUNTIME_MODE,
     interactionMode: DEFAULT_INTERACTION_MODE,
-    session: null,
+    runtime: null,
     messages: [],
-    checkpoints: [],
-    pullRequests: [],
-    activities: [],
     proposedPlans: [],
     createdAt: "2026-02-13T00:00:00.000Z",
     updatedAt: "2026-02-13T00:00:00.000Z",
@@ -30,11 +28,11 @@ function makeThread(overrides: Partial<Thread> = {}): Thread {
     settledOverride: null,
     settledAt: null,
     deletedAt: null,
-    latestTurn: null,
+    latestRun: null,
     branch: null,
     worktreePath: null,
     ...overrides,
-  };
+  });
 }
 
 describe("getOrphanedWorktreePathForThread", () => {
@@ -101,7 +99,7 @@ describe("formatWorktreePathForDisplay", () => {
     expect(result).toBe("rove-4e609bb8");
   });
 
-  it("uses the final segment even when outside ~/.rove/worktrees", () => {
+  it("uses the final segment even when outside ~/.rove-code/worktrees", () => {
     const result = formatWorktreePathForDisplay("/tmp/custom-worktrees/my-worktree");
     expect(result).toBe("my-worktree");
   });

@@ -7,8 +7,11 @@ import {
   ThreadId,
   type ServerSettings as ServerSettingsValue,
 } from "@rove-code/contracts";
-import { HostProcessEnvironment, HostProcessPlatform } from "@rove-code/shared/hostProcess";
-import * as ChildProcessSpawner from "effect/unstable/process/ChildProcessSpawner";
+import {
+  Environment as HostProcessEnvironment,
+  Platform as HostProcessPlatform,
+} from "@rove-code/shared/HostProcess";
+import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
@@ -21,6 +24,7 @@ import * as TestClock from "effect/testing/TestClock";
 import * as ProcessRunner from "../processRunner.ts";
 import * as ServerSettings from "../serverSettings.ts";
 import * as CuaDriver from "./CuaDriver.ts";
+import { withLinuxProcessFiles } from "./LinuxDesktop.testkit.ts";
 
 const require = NodeModule.createRequire(import.meta.url);
 const threadId = ThreadId.make("cua-driver-test");
@@ -260,6 +264,7 @@ const withDriver = <A, E>(
     Effect.provideService(HostProcessPlatform, options.platform ?? "darwin"),
     Effect.provide(ProcessRunner.layer),
     Effect.scoped,
+    Effect.updateService(FileSystem.FileSystem, withLinuxProcessFiles),
     Effect.provide(NodeServices.layer),
   );
 

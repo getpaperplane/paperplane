@@ -10,6 +10,7 @@ You bring your own subscriptions. If a provider is set up on the host, Rove Code
 - Grok Build
 - OpenCode
 - Google Antigravity
+- Muse
 - Pi (embedded through its SDK)
 
 ## Install
@@ -44,17 +45,18 @@ Open the pairing URL the dev runner prints. The bare origin will not authenticat
 
 ## Repository layout
 
-| Path                      | What it is                                              |
-| ------------------------- | ------------------------------------------------------- |
-| `apps/server`             | WebSocket server, orchestration, provider adapters, CLI |
-| `apps/web`                | React/Vite client (also served by the CLI host)         |
-| `apps/desktop`            | Electron shell that wraps the web client and the server |
-| `apps/mobile`             | React Native client for iOS and Android                 |
-| `apps/marketing`          | Landing page                                            |
-| `packages/contracts`      | Wire schemas shared by every surface                    |
-| `packages/client-runtime` | Client logic shared by web and mobile                   |
-| `packages/shared`         | Shared runtime utilities                                |
-| `infra/relay`             | Rove Connect relay (off unless cloud is configured)     |
+| Path                      | What it is                                                 |
+| ------------------------- | ---------------------------------------------------------- |
+| `apps/server`             | WebSocket server, Orchestration V2, provider adapters, CLI |
+| `apps/web`                | React/Vite client (also served by the CLI host)            |
+| `apps/desktop`            | Electron shell that wraps the web client and the server    |
+| `apps/mobile`             | React Native client for iOS and Android                    |
+| `apps/marketing`          | Landing page                                               |
+| `packages/contracts`      | Wire schemas shared by every surface                       |
+| `packages/client-runtime` | Client logic shared by web and mobile                      |
+| `packages/provider-*`     | Shared provider adapters and protocols                     |
+| `packages/shared`         | Shared runtime utilities                                   |
+| `infra/relay`             | Rove Connect relay (off unless cloud is configured)        |
 
 ## Documentation
 

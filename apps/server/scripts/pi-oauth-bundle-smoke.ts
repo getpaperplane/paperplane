@@ -1,8 +1,8 @@
 import { ModelRuntime } from "@earendil-works/pi-coding-agent";
 
-import { PiDriver } from "../src/provider/Drivers/PiDriver.ts";
+import { registerPiBundledOAuthFlows } from "../src/provider/Drivers/PiOAuth.ts";
 
-void PiDriver;
+registerPiBundledOAuthFlows();
 
 const modelRuntime = await ModelRuntime.create({ allowModelNetwork: false });
 const model = modelRuntime.getModel("openai-codex", "gpt-5.6-luna");

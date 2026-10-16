@@ -55,7 +55,7 @@ describe("Niri capture config edits", () => {
     expect(result.shortcut).toBe("Ctrl+Alt+Y");
   });
   it("replaces and removes only this app's capture binding", () => {
-    const other = captureConfigBinding("niri", "com.hafiezulzikry.rove.Other", "Ctrl+Alt+4");
+    const other = captureConfigBinding("niri", "com.t3tools.Other", "Ctrl+Alt+4");
     const before = `binds {\n    ${binding}\n    ${other}\n}\n`;
     const result = editCaptureConfig(before, "niri", app, "install", "Ctrl+Alt+Y");
     expect(result.after).toContain(other);

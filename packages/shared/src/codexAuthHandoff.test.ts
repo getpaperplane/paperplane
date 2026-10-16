@@ -22,7 +22,7 @@ const authorizationUrl = () => {
 };
 const input = {
   authorizationUrl: authorizationUrl(),
-  returnUrl: "http://localhost:5733/welcome#agents:remote-environment",
+  returnUrl: "https://rove.hafiezulzikry.com/welcome#agents:remote-environment",
   environmentId: EnvironmentId.make("remote-environment"),
   instanceId: ProviderInstanceId.make("work-codex"),
   flowId: "flow-one",

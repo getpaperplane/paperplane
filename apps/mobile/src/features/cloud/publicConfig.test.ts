@@ -42,6 +42,7 @@ describe("resolveCloudPublicConfig", () => {
   it("normalizes statically injected cloud configuration", () => {
     expect(
       resolveCloudPublicConfig({
+        cloudReady: true,
         clerk: { publishableKey: "  pk_test_example  ", jwtTemplate: "  rove-relay  " },
         relay: { url: " https://relay.example.test/// " },
         observability: {
@@ -69,6 +70,7 @@ describe("resolveCloudPublicConfig", () => {
   it("rejects an insecure relay URL", () => {
     expect(
       resolveCloudPublicConfig({
+        cloudReady: true,
         clerk: { publishableKey: "pk_test_example", jwtTemplate: "rove-relay" },
         relay: { url: "http://relay.example.test" },
       }),
@@ -87,6 +89,19 @@ describe("resolveCloudPublicConfig", () => {
       },
     });
   });
+
+  it.each([undefined, false, "1", true])(
+    "requires the injected boolean cloud release gate (%s)",
+    (cloudReady) => {
+      const config = resolveCloudPublicConfig({
+        cloudReady,
+        clerk: { publishableKey: "pk_test_example", jwtTemplate: "rove-relay" },
+        relay: { url: "https://relay.example.test" },
+      });
+      expect(config.clerk.publishableKey).toBe(cloudReady === true ? "pk_test_example" : null);
+      expect(config.relay.url).toBe(cloudReady === true ? "https://relay.example.test" : null);
+    },
+  );
 
   it("rejects an insecure traces URL", () => {
     expect(

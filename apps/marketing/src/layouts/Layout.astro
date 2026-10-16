@@ -52,6 +52,7 @@ const canonicalUrl = Astro.site ? new URL(Astro.url.pathname, Astro.site) : null
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
+    <meta name="twitter:image:alt" content="Rove Code. Your agents. Your machines. One workspace." />
     {socialImageUrl && <meta name="twitter:image" content={socialImageUrl} />}
     <link rel="preload" href={displayFontUrl} as="font" type="font/woff2" crossorigin="anonymous" />
     <link rel="icon" href="/favicon.ico" sizes="48x48" />

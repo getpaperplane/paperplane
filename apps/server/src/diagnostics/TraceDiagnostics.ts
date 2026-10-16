@@ -17,8 +17,6 @@ import * as PlatformError from "effect/PlatformError";
 import * as Result from "effect/Result";
 import * as Schema from "effect/Schema";
 import * as Stream from "effect/Stream";
-import * as RuntimePredicate from "effect/Predicate";
-import type { Json as SchemaJson } from "effect/Schema";
 
 interface TraceRecordLike {
   readonly name?: unknown;
@@ -89,15 +87,15 @@ export function toRotatedTracePaths(
 }
 
 function isRecordObject(value: unknown): value is TraceRecordLike {
-  return RuntimePredicate.isObjectOrArray(value);
+  return typeof value === "object" && value !== null;
 }
 
 function toStringValue(value: unknown): string | null {
-  return RuntimePredicate.isString(value) && value.trim().length > 0 ? value : null;
+  return typeof value === "string" && value.trim().length > 0 ? value : null;
 }
 
 function toNumberValue(value: unknown): number | null {
-  return RuntimePredicate.isNumber(value) && Number.isFinite(value) ? value : null;
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
 }
 
 function unixNanoToDateTime(value: unknown): DateTime.Utc | null {
@@ -122,13 +120,12 @@ function readExitCause(exit: unknown): string {
 }
 
 function isTraceEvent(value: unknown): value is TraceEventLike {
-  return RuntimePredicate.isObjectOrArray(value);
+  return typeof value === "object" && value !== null;
 }
 
-function readEventAttributes(event: TraceEventLike): Readonly<Record<string, SchemaJson>> {
-  // SAFETY: The surrounding adapter has established this JSON-object view before field access.
-  return RuntimePredicate.isObjectOrArray(event.attributes)
-    ? (event.attributes as Readonly<Record<string, SchemaJson>>)
+function readEventAttributes(event: TraceEventLike): Readonly<Record<string, unknown>> {
+  return typeof event.attributes === "object" && event.attributes !== null
+    ? (event.attributes as Readonly<Record<string, unknown>>)
     : {};
 }
 

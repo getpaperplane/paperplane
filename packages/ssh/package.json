@@ -25,8 +25,8 @@
     }
   },
   "scripts": {
-    "typecheck": "tsc --noEmit",
-    "test": "vp test run"
+    "typecheck": "tsc-rs --noEmit",
+    "test": "vp test run --config ../../vite.config.ts --dir ."
   },
   "dependencies": {
     "@rove-code/contracts": "workspace:*",

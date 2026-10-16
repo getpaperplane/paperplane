@@ -1,5 +1,5 @@
 // @effect-diagnostics nodeBuiltinImport:off - Drives the real shell installer through a PTY and a gated HTTP fixture.
-import { HostProcessArchitecture, HostProcessPlatform } from "@rove-code/shared/hostProcess";
+import * as HostProcess from "@rove-code/shared/HostProcess";
 import * as NodeChildProcess from "node:child_process";
 import * as NodeCrypto from "node:crypto";
 import * as NodeFSP from "node:fs/promises";
@@ -9,13 +9,13 @@ import * as NodePath from "node:path";
 import { describe, expect, it } from "vite-plus/test";
 
 // util-linux's script gives the real installer a terminal without a browser or extra packages.
-describe.skipIf(HostProcessPlatform.defaultValue() !== "linux")("installer terminal", () => {
+describe.skipIf(HostProcess.Platform.defaultValue() !== "linux")("installer terminal", () => {
   it.each([false, true])(
     "preserves download and install behavior (HTTP failure: %s)",
     async (fail) => {
       const root = await NodeFSP.mkdtemp(NodePath.join(NodeOS.tmpdir(), "rove-install-progress-"));
       const version = "1.2.3";
-      const stem = `rove-${version}-linux-${HostProcessArchitecture.defaultValue()}`;
+      const stem = `rove-${version}-linux-${HostProcess.Architecture.defaultValue()}`;
       const archiveName = `${stem}.tar.gz`;
       let resumeDownload: (() => void) | undefined;
       let sawPartialProgress = false;
@@ -87,13 +87,13 @@ describe.skipIf(HostProcessPlatform.defaultValue() !== "linux")("installer termi
         });
         const versions = NodePath.join(root, "home/runtime/versions");
         if (fail) {
-          expect(code, output).not.toBe(0);
+          expect(code).not.toBe(0);
           expect(output).toContain("500");
           expect(output).not.toContain("100%");
           expect(output).not.toContain("Installed Rove Code");
           expect(await NodeFSP.readdir(versions)).toEqual([]);
         } else {
-          expect(code, output).toBe(0);
+          expect(code).toBe(0);
           expect(sawPartialProgress).toBe(true);
           expect(output).toContain("100%");
           expect(output).toContain("0.1 / 0.1 MB");

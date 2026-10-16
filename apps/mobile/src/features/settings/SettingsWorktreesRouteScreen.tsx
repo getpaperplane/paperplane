@@ -1,3 +1,4 @@
+import { useAtomValue } from "@effect/atom-react";
 import type {
   EnvironmentId,
   ProjectId,
@@ -15,8 +16,8 @@ import { useState } from "react";
 import { Alert, Pressable, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { AppText as Text, AppTextInput } from "../../components/AppText";
-import { ScreenScrollView as ScrollView } from "../../components/ScreenScrollView";
+import { AppText as Text, AppTextInput } from "../../components/ui/AppText";
+import { ScreenScrollView as ScrollView } from "../../components/ui/ScreenScrollView";
 import { useEnvironmentQuery } from "../../state/query";
 import { useAtomCommand } from "../../state/use-atom-command";
 import { vcsEnvironment } from "../../state/vcs";
@@ -189,7 +190,12 @@ function WorktreeRow({
   const [removing, setRemoving] = useState(false);
   const measure = useAtomCommand(vcsEnvironment.measureWorktree, { reportFailure: false });
   const remove = useAtomCommand(vcsEnvironment.removeInventoryWorktree, { reportFailure: false });
+  const measureAllowed = useAtomValue(vcsEnvironment.measureWorktree.permissionAtom(environmentId));
+  const removeAllowed = useAtomValue(
+    vcsEnvironment.removeInventoryWorktree.permissionAtom(environmentId),
+  );
   const measureSize = async () => {
+    if (!measureAllowed) return;
     setSize({ kind: "measuring" });
     const result = await measure({
       environmentId,
@@ -202,6 +208,7 @@ function WorktreeRow({
     );
   };
   const removeCheckout = async (target: WorktreeInventoryInspection) => {
+    if (!removeAllowed) return;
     setRemoving(true);
     const result = await remove({
       environmentId,
@@ -281,7 +288,7 @@ function WorktreeRow({
             </Text>
             <Pressable
               accessibilityRole="button"
-              disabled={size.kind === "measuring"}
+              disabled={!measureAllowed || size.kind === "measuring"}
               onPress={() => void measureSize()}
               className="min-h-11 justify-center px-2 active:opacity-70 disabled:opacity-40"
             >
@@ -342,7 +349,13 @@ function WorktreeRow({
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Remove worktree"
-            disabled={removing || inspection.isPending || blockers === null || blockers.length > 0}
+            disabled={
+              !removeAllowed ||
+              removing ||
+              inspection.isPending ||
+              blockers === null ||
+              blockers.length > 0
+            }
             onPress={confirmRemoval}
             className="min-h-11 justify-center active:opacity-70 disabled:opacity-40"
           >

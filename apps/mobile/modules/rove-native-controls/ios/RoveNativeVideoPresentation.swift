@@ -65,7 +65,7 @@ final class RoveNativeVideoPresentation: NSObject, AVPlayerViewControllerDelegat
     do {
       try audioSession.setCategory(.playback, mode: .moviePlayback)
     } catch {
-      NSLog("Rove Code video audio session: %@", error.localizedDescription)
+      NSLog("Rove video audio session: %@", error.localizedDescription)
     }
     // AVKit exposes programmatic inline-to-full-screen entry through this selector.
     // This is the same guarded entry point used by expo-video's enterFullscreen().
@@ -152,15 +152,19 @@ final class RoveNativeVideoPresentation: NSObject, AVPlayerViewControllerDelegat
     if let backgroundObserver { NotificationCenter.default.removeObserver(backgroundObserver) }
     backgroundObserver = nil
     let audioSession = AVAudioSession.sharedInstance()
+    // Still what present() set, allowing the .mixWithOthers flip expo-video
+    // makes when the inline players pause under this preview. A recorder that
+    // claimed the session since owns it.
     if let previousAudioSession, audioSession.category == .playback,
-      audioSession.mode == .moviePlayback, audioSession.categoryOptions.isEmpty {
-      // AVPlayer owns activation. Deactivating the shared session here could
-      // stop another player or recorder that was active before this preview.
+      audioSession.mode == .moviePlayback,
+      audioSession.categoryOptions.isSubset(of: [.mixWithOthers]) {
       try? audioSession.setCategory(
         previousAudioSession.category,
         mode: previousAudioSession.mode,
         options: previousAudioSession.options
       )
+      // Deactivating with notification lets interrupted apps resume.
+      try? audioSession.setActive(false, options: [.notifyOthersOnDeactivation])
     }
     completion(playbackError)
   }

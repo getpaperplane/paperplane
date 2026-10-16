@@ -1,12 +1,12 @@
 import {
   ANTIGRAVITY_DEFAULT_MODEL,
   type ProviderInstanceId,
+  type EnvironmentId,
   type ProviderDriverKind,
   type ResolvedKeybindingsConfig,
 } from "@rove-code/contracts";
 import { memo, useEffect, useMemo, useState } from "react";
 import { Badge } from "../ui/badge";
-import { Button } from "../ui/button";
 import { Popover, PopoverPopup, PopoverTrigger } from "../ui/popover";
 import { Tooltip, TooltipPopup, TooltipTrigger } from "../ui/tooltip";
 import { cn } from "~/lib/utils";
@@ -28,6 +28,7 @@ import { useComposerMenuProps } from "./composerEventScope";
 import { shortcutLabelForCommand } from "../../keybindings";
 
 export const ProviderModelPicker = memo(function ProviderModelPicker(props: {
+  environmentId: EnvironmentId | null;
   /**
    * The instance currently selected in the composer. Drives the trigger
    * icon, label and the default-highlighted combobox row.
@@ -45,6 +46,7 @@ export const ProviderModelPicker = memo(function ProviderModelPicker(props: {
   activeProviderIconClassName?: string;
   instanceIndicatorBackground?: string;
   size?: ComposerControlSize;
+  compact?: boolean;
   isComposerOwned?: boolean;
   disabled?: boolean;
   terminalOpen?: boolean;
@@ -53,8 +55,6 @@ export const ProviderModelPicker = memo(function ProviderModelPicker(props: {
   /** Aggregate settings can show a neutral value without claiming one provider is selected. */
   triggerLabel?: string;
   triggerAriaLabel?: string;
-  /** An explicit inheritance/reset choice, kept out of model favorites and ordering. */
-  defaultOption?: { label: string; onSelect: () => void };
   onOpenChange?: (open: boolean) => void;
   onOpenProviderSetup?: (instanceId: ProviderInstanceId) => void;
   getModelDisabledReason?: (instanceId: ProviderInstanceId, model: string) => string | null;
@@ -212,7 +212,9 @@ export const ProviderModelPicker = memo(function ProviderModelPicker(props: {
             data-chat-provider-model-picker="true"
             className={cn(
               "min-w-0 shrink justify-between whitespace-nowrap",
-              !props.isComposerOwned && "max-w-48 sm:max-w-56",
+              props.compact
+                ? "max-w-42 shrink-0"
+                : !props.isComposerOwned && "max-w-48 sm:max-w-56",
               props.triggerClassName,
             )}
             disabled={props.disabled}
@@ -249,6 +251,8 @@ export const ProviderModelPicker = memo(function ProviderModelPicker(props: {
               driverKind={activeEntry.driverKind}
               displayName={activeEntry.displayName}
               accentColor={activeEntry.accentColor}
+              acpRegistryAgentId={activeEntry.acpRegistryAgentId}
+              acpRegistryIconUrl={activeEntry.acpRegistryIconUrl}
               showBadge={showInstanceBadge}
               className="size-4"
               iconClassName={cn("size-4", props.activeProviderIconClassName)}
@@ -285,26 +289,10 @@ export const ProviderModelPicker = memo(function ProviderModelPicker(props: {
       <PopoverPopup
         {...(props.isComposerOwned ? composerFloatingLayerProps : {})}
         align="start"
-        className="before:hidden"
         padding="none"
       >
-        {props.defaultOption ? (
-          <div className="border-b border-border p-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="w-full justify-start"
-              onClick={() => {
-                if (props.disabled) return;
-                props.defaultOption?.onSelect();
-                setIsMenuOpen(false);
-              }}
-            >
-              {props.defaultOption.label}
-            </Button>
-          </div>
-        ) : null}
         <ModelPickerContent
+          environmentId={props.environmentId}
           activeInstanceId={activeInstanceId}
           model={props.model}
           {...(props.selectedModels !== undefined ? { selectedModels: props.selectedModels } : {})}

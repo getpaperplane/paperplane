@@ -2,7 +2,8 @@
 import * as NodePath from "node:path";
 import type { ServerProviderSlashCommand } from "@rove-code/contracts";
 
-import { expandHomePath } from "../../pathExpansion.ts";
+import * as NodeOS from "node:os";
+import { expandHomePath } from "@rove-code/provider-core/server/pathExpansion";
 import type { PiDiscoveryClient } from "./PiProvider.ts";
 
 /** Discover resources without running extensions or changing persisted project trust. */
@@ -15,7 +16,9 @@ export const makeSdkDiscoveryClient = (
   discover: async ({ cwd }) => {
     const { DefaultResourceLoader, getAgentDir, SettingsManager } =
       await import("@earendil-works/pi-coding-agent");
-    const resolvedAgentDir = agentDir ? NodePath.resolve(expandHomePath(agentDir)) : getAgentDir();
+    const resolvedAgentDir = agentDir
+      ? NodePath.resolve(expandHomePath(agentDir, NodeOS.homedir()))
+      : getAgentDir();
     const settingsManager = SettingsManager.create(cwd ?? resolvedAgentDir, resolvedAgentDir);
     if (cwd !== undefined) settingsManager.setProjectTrusted(true);
     const loader = new DefaultResourceLoader({

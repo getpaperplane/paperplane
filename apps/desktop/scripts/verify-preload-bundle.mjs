@@ -69,9 +69,6 @@ const createSandboxModules = (exposedGlobals) => {
       exposeInMainWorld: (name, api) => exposedGlobals.set(name, api),
     },
     ipcRenderer,
-    webFrame: {
-      getZoomFactor: () => 1,
-    },
     webUtils: {
       getPathForFile: () => "",
     },
@@ -91,7 +88,6 @@ const createSandboxModules = (exposedGlobals) => {
 };
 
 const executeBundle = (source, sandboxModules) => {
-  const windowEvents = new NodeEvents.EventEmitter();
   const sandboxProcess = {
     contextIsolated: true,
     // oxlint-disable-next-line rove/no-global-process-runtime -- This standalone CI verifier supplies the preload's host platform without loading Effect.
@@ -107,30 +103,16 @@ const executeBundle = (source, sandboxModules) => {
     return sandboxModules.get(moduleName);
   };
 
-  const context = NodeVM.createContext({
-    process: sandboxProcess,
-    require: requireSandboxModule,
-    window: {
-      addEventListener: (type, listener, options) => {
-        if (options?.once) windowEvents.once(type, listener);
-        else windowEvents.on(type, listener);
-      },
-      dispatchEvent: (event) => windowEvents.emit(event.type, event),
+  NodeVM.runInNewContext(
+    source,
+    {
+      process: sandboxProcess,
+      require: requireSandboxModule,
     },
-    document: {
-      documentElement: {
-        style: { setProperty: () => undefined },
-      },
+    {
+      filename: "desktop-preload.cjs",
+      timeout: preloadExecutionTimeoutMs,
     },
-  });
-  NodeVM.runInContext(source, context, {
-    filename: "desktop-preload.cjs",
-    timeout: preloadExecutionTimeoutMs,
-  });
-  NodeVM.runInContext(
-    'window.dispatchEvent({ type: "DOMContentLoaded" }); window.dispatchEvent({ type: "resize" });',
-    context,
-    { filename: "desktop-preload-window-events.cjs", timeout: preloadExecutionTimeoutMs },
   );
 };
 

@@ -20,7 +20,7 @@ const isGlobalProcessObject = (node: unknown): boolean => {
 };
 
 const message = (property: string) =>
-  `Use HostProcess${property === "arch" ? "Architecture" : "Platform"} instead of process.${property}; inject the runtime reference in Effect code and provide it explicitly in tests.`;
+  `Use HostProcess.${property === "arch" ? "Architecture" : "Platform"} instead of process.${property}; inject the runtime reference in Effect code and provide it explicitly in tests.`;
 
 const getLiteralStringValue = (node: unknown): Option.Option<string> => {
   if (!RuntimePredicate.isObjectOrArray(node)) return Option.none();

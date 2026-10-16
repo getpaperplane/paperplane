@@ -33,13 +33,7 @@ export function useRoveProjectFileState(
   environmentId: EnvironmentId,
   cwd: string | null,
 ): RoveProjectFileState {
-  const query = useProjectFileQuery(
-    environmentId,
-    cwd ?? "",
-    ROVE_PROJECT_FILE_NAME,
-    cwd !== null,
-    { allowLegacyProjectFile: true },
-  );
+  const query = useProjectFileQuery(environmentId, cwd ?? "", ROVE_PROJECT_FILE_NAME, cwd !== null);
   const contents = query.data && !query.data.truncated ? query.data.contents : null;
   const isPending = query.isPending;
   return useMemo(() => {

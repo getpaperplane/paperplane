@@ -2,7 +2,7 @@ import type { ScopedThreadRef } from "@rove-code/contracts";
 import { isWindowsAbsolutePath, normalizeProjectPathForComparison } from "@rove-code/shared/path";
 
 import { useRightPanelStore } from "./rightPanelStore";
-import { resolvePathLinkTarget } from "./terminal-links";
+import { resolvePathLinkTarget } from "@rove-code/shared/fileLinks";
 
 interface OpenDiffFilePrimaryActionInput {
   readonly threadRef: ScopedThreadRef | null;

@@ -3,11 +3,11 @@ import { assert, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
-import * as SqlClient from "effect/unstable/sql/SqlClient";
+import * as SqlClient from "effect/sql/SqlClient";
 
 import * as NodeSqliteClient from "@rove-code/shared/nodeSqliteClient";
 import { runSqliteState } from "./rove-sqlite-state.ts";
-import { HostProcessPlatform } from "@rove-code/shared/hostProcess";
+import * as HostProcess from "@rove-code/shared/HostProcess";
 import { symlinksSupported } from "@rove-code/shared/testing/symlinks";
 
 const createFixtureDatabase = Effect.fn("createSqliteStateFixtureDatabase")(function* (
@@ -16,7 +16,7 @@ const createFixtureDatabase = Effect.fn("createSqliteStateFixtureDatabase")(func
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const stateDir = path.join(baseDir, "userdata");
-  const databasePath = path.join(stateDir, "state.sqlite");
+  const databasePath = path.join(stateDir, "statev2.sqlite");
   yield* fs.makeDirectory(stateDir, { recursive: true });
   yield* Effect.gen(function* () {
     const sql = yield* SqlClient.SqlClient;
@@ -75,6 +75,25 @@ it.layer(NodeServices.layer)("rove-sqlite-state", (it) => {
     }),
   );
 
+  it.effect("enables checkpoint_fullfsync on its direct connection", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const baseDir = yield* fs.makeTempDirectoryScoped({ prefix: "rove-sqlite-state-fsync-" });
+      yield* createFixtureDatabase(baseDir);
+
+      const result = yield* runSqliteState({
+        operation: "query",
+        baseDir,
+        sql: "PRAGMA checkpoint_fullfsync",
+      });
+
+      assert.equal(result.operation, "query");
+      if (result.operation === "query") {
+        assert.deepStrictEqual(result.rows, [{ checkpoint_fullfsync: 1 }]);
+      }
+    }),
+  );
+
   it.effect.skipIf(!symlinksSupported)(
     "backs up isolated state before writes and refuses the shared home",
     () =>
@@ -90,7 +109,7 @@ it.layer(NodeServices.layer)("rove-sqlite-state", (it) => {
           sql: "INSERT INTO fixtures (id, label) VALUES (2, 'seeded')",
         });
         assert.equal(mutation.operation, "exec");
-        if (mutation.operation === "exec" && (yield* HostProcessPlatform) !== "win32") {
+        if (mutation.operation === "exec" && (yield* HostProcess.Platform) !== "win32") {
           // NTFS has no POSIX mode bits to report.
           assert.equal((yield* fs.stat(mutation.backup)).mode & 0o777, 0o600);
         }

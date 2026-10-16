@@ -1,15 +1,12 @@
 import { describe, expect, it } from "vite-plus/test";
-import { createElement } from "react";
-import { renderToStaticMarkup } from "react-dom/server";
 import { ProviderDriverKind, type ServerProviderModel } from "@rove-code/contracts";
 
-import { DRIVER_OPTION_BY_VALUE } from "./providerDriverMeta";
+import { providerClients } from "./providerDriverMeta";
 import { resolvePiSubagentSettings } from "./PiSubagentSettings";
 import {
   deriveProviderSettingsFields,
   nextProviderConfigWithFieldValue,
   resolvePiThinkingSetting,
-  ProviderSettingsForm,
 } from "./ProviderSettingsForm";
 
 describe("ProviderSettingsForm helpers", () => {
@@ -52,126 +49,57 @@ describe("ProviderSettingsForm helpers", () => {
     },
   ];
 
-  it("follows the child model's thinking capabilities, not the provider's default model", () => {
-    const resolved = resolvePiSubagentSettings(
-      {
-        model: "local/reasoning",
-        thinkingLevel: "max",
-        subagentModel: "local/plain",
-        subagentThinkingLevel: "max",
-      },
-      piModels,
-    );
-    expect(resolved.thinkingOptions.map((option) => option.id)).toEqual(["off"]);
-    expect(resolved.thinkingUnavailable).toBe(true);
-    expect(resolved.thinking).toBe("max");
-  });
-
-  it("does not guess the caller's model when subagents inherit, or a missing model's capabilities", () => {
-    const inherited = resolvePiSubagentSettings(
-      { model: "local/plain", subagentThinkingLevel: null },
-      piModels,
-    );
-    expect(inherited.model).toBe("");
-    expect(inherited.thinking).toBe("");
-    expect(inherited.thinkingOptions.map((option) => option.id)).toContain("max");
-    const missing = resolvePiSubagentSettings(
-      { subagentModel: "removed/model", subagentThinkingLevel: "high" },
-      piModels,
-    );
-    expect(missing.modelOptions.at(-1)).toMatchObject({
-      slug: "removed/model",
-      isUnavailable: true,
-    });
-    expect(missing.thinkingOptions).toEqual([]);
-    expect(missing.thinkingUnavailable).toBe(true);
-    expect(resolvePiSubagentSettings({ subagentModel: "local/plain" }, []).thinkingOptions).toEqual(
-      [],
-    );
-  });
-
-  it("clears model and thinking overrides independently while preserving the parent and other config", () => {
-    const pi = DRIVER_OPTION_BY_VALUE[ProviderDriverKind.make("pi")]!;
-    const fields = deriveProviderSettingsFields(pi);
-    const modelField = fields.find((field) => field.key === "subagentModel")!;
-    const thinkingField = fields.find((field) => field.key === "subagentThinkingLevel")!;
-    const config = {
-      model: "local/reasoning",
-      thinkingLevel: "max",
-      subagentModel: "local/plain",
-      subagentThinkingLevel: "off",
-      agentDir: "/custom",
-    };
-    const withoutModel = nextProviderConfigWithFieldValue(config, modelField, "");
-    expect(withoutModel).toEqual({
-      model: "local/reasoning",
-      thinkingLevel: "max",
-      subagentThinkingLevel: "off",
-      agentDir: "/custom",
-    });
-    const withoutThinking = nextProviderConfigWithFieldValue(withoutModel, thinkingField, "");
-    expect(withoutThinking).toEqual({
-      model: "local/reasoning",
-      thinkingLevel: "max",
-      agentDir: "/custom",
-    });
-    expect(resolvePiSubagentSettings(withoutThinking, piModels)).toMatchObject({
+  it("preserves subagent inheritance and unavailable overrides without altering the thread model", () => {
+    expect(resolvePiSubagentSettings({}, piModels)).toMatchObject({
       model: "",
       thinking: "",
       thinkingUnavailable: false,
     });
-    expect(nextProviderConfigWithFieldValue(config, modelField, "local/reasoning")).toMatchObject({
-      subagentModel: "local/reasoning",
-      subagentThinkingLevel: "off",
+    const missing = resolvePiSubagentSettings(
+      {
+        subagentModel: "missing/model",
+        subagentThinkingLevel: "max",
+      },
+      piModels,
+    );
+    expect(missing).toMatchObject({ model: "missing/model", thinkingUnavailable: true });
+    expect(missing.modelOptions.at(-1)).toMatchObject({
+      slug: "missing/model",
+      isUnavailable: true,
     });
+    const pi = providerClients.get(ProviderDriverKind.make("pi"))!;
+    const field = deriveProviderSettingsFields(pi).find((field) => field.key === "subagentModel")!;
+    expect(
+      nextProviderConfigWithFieldValue(
+        { model: "local/reasoning", subagentModel: "missing/model" },
+        field,
+        "",
+      ),
+    ).toEqual({ model: "local/reasoning" });
   });
 
-  it("limits Pi settings to the selected model and distinguishes a stale override", () => {
-    const current = resolvePiThinkingSetting(
-      { model: "local/reasoning", thinkingLevel: "max" },
-      piModels,
-    );
-    expect(current.options.map((option) => option.id)).toEqual(["low", "max"]);
-    expect(current.unavailable).toBe(false);
-    const changed = resolvePiThinkingSetting(
-      { model: "local/plain", thinkingLevel: "max" },
-      piModels,
-    );
-    expect(changed.options.map((option) => option.id)).toEqual(["off"]);
-    expect(changed.unavailable).toBe(true);
-    expect(changed.selected).toBe("max");
-  });
-
-  it("uses the catalog default model but never guesses for unknown or pending models", () => {
+  it("distinguishes an unsupported Pi thinking override from the provider default", () => {
+    expect(
+      resolvePiThinkingSetting({ model: "local/plain", thinkingLevel: "max" }, piModels),
+    ).toMatchObject({ selected: "max", unavailable: true });
     expect(resolvePiThinkingSetting({}, piModels).options.map((option) => option.id)).toEqual([
       "low",
       "max",
     ]);
-    expect(resolvePiThinkingSetting({ model: "missing" }, piModels).options).toEqual([]);
-    expect(resolvePiThinkingSetting({}, []).options).toEqual([]);
+    expect(
+      resolvePiThinkingSetting({ model: "missing/model", thinkingLevel: "max" }, piModels),
+    ).toMatchObject({ options: [], selected: "max", unavailable: true });
   });
 
-  it("allows clearing an unsupported Pi setting without discarding other config", () => {
-    const pi = DRIVER_OPTION_BY_VALUE[ProviderDriverKind.make("pi")]!;
-    const field = deriveProviderSettingsFields(pi).find((field) => field.key === "thinkingLevel")!;
-    const next = nextProviderConfigWithFieldValue(
-      { model: "local/plain", thinkingLevel: "max" },
-      field,
-      "",
-    );
-    expect(next).toEqual({ model: "local/plain" });
-    expect(resolvePiThinkingSetting(next, piModels).selected).toBe("");
-  });
-
-  it("hides unsupported workload controls without discarding saved policy when another field changes", () => {
-    const pi = DRIVER_OPTION_BY_VALUE[ProviderDriverKind.make("pi")]!;
-    expect(deriveProviderSettingsFields(pi, true).map((field) => field.key)).toContain(
+  it("hides unsupported Pi workload controls without clearing saved policy", () => {
+    const pi = providerClients.get(ProviderDriverKind.make("pi"))!;
+    expect(deriveProviderSettingsFields(pi, undefined, true).map((field) => field.key)).toContain(
       "workloadProtection",
     );
-    const legacyFields = deriveProviderSettingsFields(pi, false);
-    expect(legacyFields.map((field) => field.key)).not.toContain("workloadProtection");
-    expect(legacyFields.map((field) => field.key)).not.toContain("workloadMemoryMiB");
-    const model = legacyFields.find((field) => field.key === "model")!;
+    const fields = deriveProviderSettingsFields(pi, undefined, false);
+    expect(fields.map((field) => field.key)).not.toContain("workloadProtection");
+    expect(fields.map((field) => field.key)).not.toContain("workloadMemoryMiB");
+    const model = fields.find((field) => field.key === "model")!;
     expect(
       nextProviderConfigWithFieldValue(
         { workloadProtection: "on", workloadMemoryMiB: "3072" },
@@ -181,37 +109,24 @@ describe("ProviderSettingsForm helpers", () => {
     ).toEqual({ workloadProtection: "on", workloadMemoryMiB: "3072", model: "local/fixture" });
   });
 
-  it("renders Pi thinking as a labeled selector in both Settings entry points", () => {
-    const definition = DRIVER_OPTION_BY_VALUE[ProviderDriverKind.make("pi")]!;
-    for (const variant of ["card", "dialog"] as const) {
-      const markup = renderToStaticMarkup(
-        createElement(ProviderSettingsForm, {
-          definition,
-          models: piModels,
-          value: { model: "local/plain", thinkingLevel: "max" },
-          idPrefix: "pi-settings",
-          variant,
-          onChange: () => {},
-        }),
-      );
-      expect(markup).toContain("max (unavailable)");
-      expect(markup).toContain('role="combobox"');
-      expect(markup).not.toMatch(/<input[^>]*id="pi-settings-thinkingLevel"/);
-    }
-    const unset = renderToStaticMarkup(
-      createElement(ProviderSettingsForm, {
-        definition,
-        value: {},
-        idPrefix: "pi-settings",
-        variant: "dialog",
-        onChange: () => {},
-      }),
+  it("clears an unsupported Pi thinking override without changing the model", () => {
+    const pi = providerClients.get(ProviderDriverKind.make("pi"))!;
+    const thinking = deriveProviderSettingsFields(pi).find(
+      (field) => field.key === "thinkingLevel",
+    )!;
+    const next = nextProviderConfigWithFieldValue(
+      { model: "local/plain", thinkingLevel: "max" },
+      thinking,
+      "",
     );
-    expect(unset).toContain("Use Pi default");
+    expect(next).toEqual({ model: "local/plain" });
+    expect(resolvePiThinkingSetting(next, piModels)).toMatchObject({
+      selected: "",
+      unavailable: false,
+    });
   });
-
   it("derives visible provider config fields from the client definition schema", () => {
-    const codex = DRIVER_OPTION_BY_VALUE[ProviderDriverKind.make("codex")];
+    const codex = providerClients.get(ProviderDriverKind.make("codex"));
 
     expect(codex).toBeDefined();
     expect(deriveProviderSettingsFields(codex!).map((field) => field.key)).toEqual([
@@ -223,7 +138,7 @@ describe("ProviderSettingsForm helpers", () => {
   });
 
   it("sources labels and descriptions from schema annotations", () => {
-    const opencode = DRIVER_OPTION_BY_VALUE[ProviderDriverKind.make("opencode")];
+    const opencode = providerClients.get(ProviderDriverKind.make("opencode"));
     expect(opencode).toBeDefined();
 
     const serverPassword = deriveProviderSettingsFields(opencode!).find(
@@ -237,8 +152,44 @@ describe("ProviderSettingsForm helpers", () => {
     });
   });
 
+  it("uses a dedicated environment field instead of legacy Cursor CLI settings", () => {
+    const cursor = providerClients.get(ProviderDriverKind.make("cursor"));
+
+    expect(cursor).toBeDefined();
+    expect(deriveProviderSettingsFields(cursor!)).toEqual([]);
+    expect(cursor?.environmentFields).toEqual([
+      {
+        name: "CURSOR_API_KEY",
+        label: "Cursor API key",
+        description: "Optional. Overrides browser sign-in for this provider.",
+        placeholder: "Paste API key",
+        sensitive: true,
+      },
+    ]);
+  });
+
+  it("exposes ACP Registry as an instance-only configurable driver", () => {
+    const acpRegistry = providerClients.get(ProviderDriverKind.make("acpRegistry"));
+
+    expect(acpRegistry).toBeDefined();
+    expect(acpRegistry?.hasDefaultInstance).toBe(false);
+    expect(deriveProviderSettingsFields(acpRegistry!).map((field) => field.key)).toEqual([
+      "source",
+      "agentId",
+      "commandPath",
+      "authMethodId",
+    ]);
+  });
+
+  it("shows the local executable without registry identity or authentication fields", () => {
+    const acpRegistry = providerClients.get(ProviderDriverKind.make("acpRegistry"));
+    expect(
+      deriveProviderSettingsFields(acpRegistry!, { source: "local" }).map((field) => field.key),
+    ).toEqual(["source", "commandPath"]);
+  });
+
   it("derives a select control with its choices for the Antigravity sign-in method", () => {
-    const antigravity = DRIVER_OPTION_BY_VALUE[ProviderDriverKind.make("antigravity")];
+    const antigravity = providerClients.get(ProviderDriverKind.make("antigravity"));
     expect(antigravity).toBeDefined();
 
     const fields = deriveProviderSettingsFields(antigravity!);
@@ -261,7 +212,7 @@ describe("ProviderSettingsForm helpers", () => {
   });
 
   it("shows the auto-compaction threshold for Claude providers", () => {
-    const claude = DRIVER_OPTION_BY_VALUE[ProviderDriverKind.make("claudeAgent")];
+    const claude = providerClients.get(ProviderDriverKind.make("claudeAgent"));
     expect(claude).toBeDefined();
 
     expect(deriveProviderSettingsFields(claude!).map((field) => field.key)).toEqual([
@@ -273,7 +224,7 @@ describe("ProviderSettingsForm helpers", () => {
   });
 
   it("preserves unknown config keys while omitting empty configurable fields", () => {
-    const opencode = DRIVER_OPTION_BY_VALUE[ProviderDriverKind.make("opencode")];
+    const opencode = providerClients.get(ProviderDriverKind.make("opencode"));
     expect(opencode).toBeDefined();
 
     const serverUrl = deriveProviderSettingsFields(opencode!).find(

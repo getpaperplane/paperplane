@@ -5,7 +5,7 @@ import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
 import * as Schedule from "effect/Schedule";
 import * as Semaphore from "effect/Semaphore";
-import { ChildProcessSpawner } from "effect/unstable/process";
+import { ChildProcessSpawner } from "effect/process";
 
 import {
   type VcsError,
@@ -206,7 +206,6 @@ export const make = Effect.gen(function* () {
     const bounded = vcsProcesses.withPermits(1)(runUnbounded(input));
     if (
       input.command === "git" &&
-      // Capture sub-steps (such as `.add`) carry their own names for timeout reports.
       (input.operation === CHECKPOINT_CAPTURE_OPERATION ||
         input.operation.startsWith(`${CHECKPOINT_CAPTURE_OPERATION}.`)) &&
       input.onStdoutChunk === undefined

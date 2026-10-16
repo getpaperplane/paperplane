@@ -8,10 +8,10 @@ import { Platform, ScrollView, useWindowDimensions, View } from "react-native";
 
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { AndroidSheetHeader } from "../../../components/AndroidScreenHeader";
-import { MaterialScreenContent } from "../../../components/MaterialScreenContent";
+import { AndroidSheetHeader } from "../../../components/ui/AndroidScreenHeader";
+import { ScreenContent } from "../../../components/ui/ScreenContent";
 import { NativeStackScreenOptions } from "../../../native/StackHeader";
-import { AppText as Text } from "../../../components/AppText";
+import { AppText as Text } from "../../../components/ui/AppText";
 import { useSelectedThreadGitActions } from "../../../state/use-selected-thread-git-actions";
 import { useSelectedThreadGitState } from "../../../state/use-selected-thread-git-state";
 import { SheetActionButton } from "./gitSheetComponents";
@@ -32,16 +32,16 @@ export function GitConfirmSheet(props: GitConfirmSheetProps) {
   const { height: windowHeight } = useWindowDimensions();
   const gitState = useSelectedThreadGitState();
   const gitActions = useSelectedThreadGitActions();
+  const { canWriteSourceControl, canChangeThreadBranch } = gitActions;
 
   const params = props.route.params;
 
-  const // SAFETY: The surrounding adapter boundary establishes the asserted runtime contract.
-    confirmAction = params.confirmAction as
-      | "push"
-      | "create_pr"
-      | "commit_push"
-      | "commit_push_pr"
-      | undefined;
+  const confirmAction = params.confirmAction as
+    | "push"
+    | "create_pr"
+    | "commit_push"
+    | "commit_push_pr"
+    | undefined;
   const branchName = params.branchName ?? "";
   const includesCommit = params.includesCommit === "true";
   const environmentId = params.environmentId ?? "";
@@ -60,25 +60,33 @@ export function GitConfirmSheet(props: GitConfirmSheetProps) {
   );
 
   const continuePendingAction = useCallback(async () => {
-    if (!confirmAction) return;
+    if (!canWriteSourceControl || !confirmAction) return;
     navigation.dispatch(StackActions.replace("Thread", { environmentId, threadId }));
     await gitActions.onRunSelectedThreadGitAction({
       action: confirmAction,
-      ...(params.commitMessage ? { commitMessage: params.commitMessage } : undefined),
-      ...(params.filePaths ? { filePaths: params.filePaths.split(",") } : undefined),
+      ...(params.commitMessage ? { commitMessage: params.commitMessage } : {}),
+      ...(params.filePaths ? { filePaths: params.filePaths.split(",") } : {}),
     });
-  }, [confirmAction, environmentId, gitActions, params, navigation, threadId]);
+  }, [
+    canWriteSourceControl,
+    confirmAction,
+    environmentId,
+    gitActions,
+    params,
+    navigation,
+    threadId,
+  ]);
 
   const movePendingActionToFeatureBranch = useCallback(async () => {
-    if (!confirmAction) return;
+    if (!canChangeThreadBranch || !confirmAction) return;
     navigation.dispatch(StackActions.replace("Thread", { environmentId, threadId }));
 
     if (includesCommit) {
       await gitActions.onRunSelectedThreadGitAction({
         action: confirmAction,
         featureBranch: true,
-        ...(params.commitMessage ? { commitMessage: params.commitMessage } : undefined),
-        ...(params.filePaths ? { filePaths: params.filePaths.split(",") } : undefined),
+        ...(params.commitMessage ? { commitMessage: params.commitMessage } : {}),
+        ...(params.filePaths ? { filePaths: params.filePaths.split(",") } : {}),
       });
       return;
     }
@@ -92,9 +100,11 @@ export function GitConfirmSheet(props: GitConfirmSheetProps) {
         branch.isRemote ? Result.failVoid : Result.succeed(branch.name),
       ),
     );
-    await gitActions.onCreateSelectedThreadBranch(newBranchName);
+    const created = await gitActions.onCreateSelectedThreadBranch(newBranchName);
+    if (created === null) return;
     await gitActions.onRunSelectedThreadGitAction({ action: confirmAction });
   }, [
+    canChangeThreadBranch,
     confirmAction,
     gitActions,
     gitState.selectedThreadBranches,
@@ -129,8 +139,9 @@ export function GitConfirmSheet(props: GitConfirmSheetProps) {
         <View className="min-h-4 pt-2" />
       )}
 
-      <MaterialScreenContent fitToContents>
+      <ScreenContent fitToContents>
         <ScrollView
+          nestedScrollEnabled
           className="android:shrink android:grow-0 ios:flex-1"
           showsVerticalScrollIndicator={false}
           contentContainerClassName="android:gap-2 android:p-2"
@@ -165,17 +176,19 @@ export function GitConfirmSheet(props: GitConfirmSheetProps) {
             <SheetActionButton
               icon="arrow.right.circle"
               label={copy?.continueLabel ?? "Continue"}
+              disabled={!canWriteSourceControl}
               onPress={() => void continuePendingAction()}
             />
             <SheetActionButton
               icon="arrow.branch"
               label="Feature branch & continue"
+              disabled={!canChangeThreadBranch}
               tone="primary"
               onPress={() => void movePendingActionToFeatureBranch()}
             />
           </View>
         </ScrollView>
-      </MaterialScreenContent>
+      </ScreenContent>
     </View>
   );
 }

@@ -1,5 +1,7 @@
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { assert, describe, it } from "@effect/vitest";
+import { currentDesktopBootstrapToken } from "@rove-code/shared/desktopBootstrapToken";
+import * as Clock from "effect/Clock";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
@@ -9,10 +11,11 @@ import * as Option from "effect/Option";
 import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
 import * as Schema from "effect/Schema";
-import { ChildProcessSpawner } from "effect/unstable/process";
+import { ChildProcessSpawner } from "effect/process";
 
 import * as DesktopEnvironment from "../app/DesktopEnvironment.ts";
 import * as DesktopBackendConfiguration from "./DesktopBackendConfiguration.ts";
+import * as DesktopShellEnvironment from "../shell/DesktopShellEnvironment.ts";
 import * as DesktopConfig from "../app/DesktopConfig.ts";
 import * as DesktopServerExposure from "./DesktopServerExposure.ts";
 import * as DesktopAppSettings from "../settings/DesktopAppSettings.ts";
@@ -35,7 +38,15 @@ const isDesktopBackendObservabilitySettingsReadError = Schema.is(
   DesktopBackendConfiguration.DesktopBackendObservabilitySettingsReadError,
 );
 
-const serverExposureLayer = Layer.succeed(DesktopServerExposure.DesktopServerExposure, {
+const layerShellEnvironment = (prepared = true) =>
+  Layer.succeed(DesktopShellEnvironment.DesktopShellEnvironment, {
+    installIntoProcess: Effect.succeed(prepared),
+  });
+
+const layerBackendConfiguration = (prepared = true) =>
+  DesktopBackendConfiguration.layer.pipe(Layer.provide(layerShellEnvironment(prepared)));
+
+const layerServerExposure = Layer.succeed(DesktopServerExposure.DesktopServerExposure, {
   getState: Effect.die("unexpected getState"),
   backendConfig: Effect.succeed({
     port: 4888,
@@ -50,7 +61,7 @@ const serverExposureLayer = Layer.succeed(DesktopServerExposure.DesktopServerExp
   getAdvertisedEndpoints: Effect.succeed([]),
 } satisfies DesktopServerExposure.DesktopServerExposure["Service"]);
 
-function makeEnvironmentLayer(
+function layerEnvironment(
   baseDir: string,
   options?: {
     readonly appPath?: string;
@@ -112,6 +123,7 @@ const withHarness = <A, E, R>(
     | FileSystem.FileSystem
     | DesktopBackendConfiguration.DesktopBackendConfiguration
   >,
+  prepared = true,
 ) =>
   Effect.gen(function* () {
     const fileSystem = yield* FileSystem.FileSystem;
@@ -121,12 +133,12 @@ const withHarness = <A, E, R>(
 
     return yield* effect.pipe(
       Effect.provide(
-        DesktopBackendConfiguration.layer.pipe(
-          Layer.provideMerge(serverExposureLayer),
+        layerBackendConfiguration(prepared).pipe(
+          Layer.provideMerge(layerServerExposure),
           Layer.provideMerge(DesktopAppSettings.layerTest()),
           Layer.provideMerge(DesktopWslEnvironment.layerTest()),
           Layer.provideMerge(DesktopWslServerTree.layerTest()),
-          Layer.provideMerge(makeEnvironmentLayer(baseDir)),
+          Layer.provideMerge(layerEnvironment(baseDir)),
         ),
       ),
     );
@@ -182,7 +194,7 @@ const withPackagedWslHarness = <A, E, R>(
       mountedAppRoot,
       mountedEntryPath,
     } satisfies PackagedWslHarnessContext;
-    const serverTreeLayer = input.forbidFallback
+    const layerServerTree = input.forbidFallback
       ? Layer.succeed(
           DesktopWslServerTree.DesktopWslServerTree,
           DesktopWslServerTree.DesktopWslServerTree.of({
@@ -199,10 +211,10 @@ const withPackagedWslHarness = <A, E, R>(
 
     return yield* effect(context).pipe(
       Effect.provide(
-        DesktopBackendConfiguration.layer.pipe(
-          Layer.provideMerge(serverExposureLayer),
+        layerBackendConfiguration().pipe(
+          Layer.provideMerge(layerServerExposure),
           Layer.provideMerge(DesktopAppSettings.layerTest()),
-          Layer.provideMerge(serverTreeLayer),
+          Layer.provideMerge(layerServerTree),
           Layer.provideMerge(
             DesktopWslEnvironment.layerTest({
               isAvailable: true,
@@ -213,7 +225,7 @@ const withPackagedWslHarness = <A, E, R>(
             }),
           ),
           Layer.provideMerge(
-            makeEnvironmentLayer(baseDir, {
+            layerEnvironment(baseDir, {
               appPath: baseDir,
               platform: "win32",
               resourcesPath: baseDir,
@@ -255,8 +267,24 @@ describe("DesktopBackendConfiguration", () => {
         assert.equal(first.bootstrap.roveHome, environment.baseDir);
         assert.equal(first.bootstrap.tailscaleServeEnabled, true);
         assert.equal(first.bootstrap.tailscaleServePort, 8443);
-        assert.match(first.bootstrap.desktopBootstrapToken, /^[0-9a-f]{48}$/i);
-        assert.equal(second.bootstrap.desktopBootstrapToken, first.bootstrap.desktopBootstrapToken);
+        assert.match(first.bootstrap.desktopBootstrapSecret ?? "", /^[0-9a-f]{64}$/i);
+        assert.equal(
+          second.bootstrap.desktopBootstrapSecret,
+          first.bootstrap.desktopBootstrapSecret,
+        );
+        // The launch token is the secret's token for the current window, and
+        // the renderer is handed the same one.
+        assert.equal(
+          first.bootstrap.desktopBootstrapToken,
+          currentDesktopBootstrapToken(
+            first.bootstrap.desktopBootstrapSecret ?? "",
+            yield* Clock.currentTimeMillis,
+          ),
+        );
+        assert.equal(
+          yield* configuration.currentBootstrapToken,
+          first.bootstrap.desktopBootstrapToken,
+        );
       }),
     ),
   );
@@ -275,8 +303,8 @@ describe("DesktopBackendConfiguration", () => {
         return yield* configuration.resolvePrimary;
       }).pipe(
         Effect.provide(
-          DesktopBackendConfiguration.layer.pipe(
-            Layer.provideMerge(serverExposureLayer),
+          layerBackendConfiguration().pipe(
+            Layer.provideMerge(layerServerExposure),
             Layer.provideMerge(DesktopAppSettings.layerTest()),
             Layer.provideMerge(DesktopWslEnvironment.layerTest()),
             Layer.provideMerge(
@@ -289,7 +317,7 @@ describe("DesktopBackendConfiguration", () => {
               ),
             ),
             Layer.provideMerge(
-              makeEnvironmentLayer(baseDir, {
+              layerEnvironment(baseDir, {
                 appPath: `${resourcesPath}/app.asar`,
                 platform: "win32",
                 resourcesPath,
@@ -305,6 +333,32 @@ describe("DesktopBackendConfiguration", () => {
       );
       assert.equal(config.env.ELECTRON_RUN_AS_NODE, "1");
     }).pipe(Effect.scoped, Effect.provide(NodeServices.layer)),
+  );
+
+  it.effect("only the local primary bootstrap claims the prepared shell environment", () =>
+    withHarness(
+      Effect.gen(function* () {
+        const configuration = yield* DesktopBackendConfiguration.DesktopBackendConfiguration;
+
+        const primary = yield* configuration.resolvePrimary;
+        const wsl = yield* configuration.resolveWsl({ port: 5000, distro: null });
+
+        assert.equal(primary.bootstrap.shellEnvironmentPrepared, true);
+        // A WSL server runs on its own Linux user environment and must hydrate it.
+        assert.isUndefined(wsl.bootstrap.shellEnvironmentPrepared);
+      }),
+    ),
+  );
+
+  it.effect("keeps server hydration enabled when desktop preparation failed", () =>
+    withHarness(
+      Effect.gen(function* () {
+        const configuration = yield* DesktopBackendConfiguration.DesktopBackendConfiguration;
+        const primary = yield* configuration.resolvePrimary;
+        assert.equal(primary.bootstrap.shellEnvironmentPrepared, false);
+      }),
+      false,
+    ),
   );
 
   it.effect("resolveWsl reuses the primary's bootstrap token", () =>
@@ -337,8 +391,8 @@ describe("DesktopBackendConfiguration", () => {
         return yield* configuration.resolveWsl({ port: 5000, distro: null });
       }).pipe(
         Effect.provide(
-          DesktopBackendConfiguration.layer.pipe(
-            Layer.provideMerge(serverExposureLayer),
+          layerBackendConfiguration().pipe(
+            Layer.provideMerge(layerServerExposure),
             Layer.provideMerge(DesktopAppSettings.layerTest()),
             Layer.provideMerge(DesktopWslServerTree.layerTest()),
             Layer.provideMerge(
@@ -363,7 +417,7 @@ describe("DesktopBackendConfiguration", () => {
               }),
             ),
             Layer.provideMerge(
-              makeEnvironmentLayer(baseDir, {
+              layerEnvironment(baseDir, {
                 appPath: baseDir,
                 platform: "win32",
                 resourcesPath: baseDir,
@@ -388,7 +442,7 @@ describe("DesktopBackendConfiguration", () => {
     }> = [];
     const observedProbeRoots: string[] = [];
     let legacyCleanupCount = 0;
-    const linuxAppRoot = "/home/test/.rove/wsl-runtime/1.2.3-x64";
+    const linuxAppRoot = "/home/test/.rove-code/wsl-runtime/1.2.3-x64";
     const resolvedPath = "/home/test/.local/bin:/usr/bin:/bin";
 
     return withPackagedWslHarness(
@@ -525,7 +579,7 @@ describe("DesktopBackendConfiguration", () => {
 
   it.effect("resolveWsl retires a staged runtime whose executable does not start", () => {
     const archiveHash = "c".repeat(64);
-    const stagedAppRoot = `/home/test/.rove/wsl-runtime/sha256-${archiveHash}`;
+    const stagedAppRoot = `/home/test/.rove-code/wsl-runtime/sha256-${archiveHash}`;
     const observedProbeRoots: string[] = [];
     const observedNodePtyRoots: string[] = [];
     const invalidatedRuntimeIds: string[] = [];
@@ -567,7 +621,7 @@ describe("DesktopBackendConfiguration", () => {
   });
 
   it.effect("resolveWsl keeps the staged runtime when the mounted tree fails too", () => {
-    const stagedAppRoot = "/home/test/.rove/wsl-runtime/cache";
+    const stagedAppRoot = "/home/test/.rove-code/wsl-runtime/cache";
     const invalidatedRuntimeIds: string[] = [];
     return withPackagedWslHarness(
       {
@@ -603,7 +657,7 @@ describe("DesktopBackendConfiguration", () => {
   });
 
   it.effect("resolveWsl keeps WSL retryable when the mounted fallback fails transiently", () => {
-    const stagedAppRoot = "/home/test/.rove/wsl-runtime/cache";
+    const stagedAppRoot = "/home/test/.rove-code/wsl-runtime/cache";
     const invalidatedRuntimeIds: string[] = [];
     return withPackagedWslHarness(
       {
@@ -659,8 +713,8 @@ describe("DesktopBackendConfiguration", () => {
           return yield* configuration.resolveWsl({ port: 5000, distro: "Ubuntu" });
         }).pipe(
           Effect.provide(
-            DesktopBackendConfiguration.layer.pipe(
-              Layer.provideMerge(serverExposureLayer),
+            layerBackendConfiguration().pipe(
+              Layer.provideMerge(layerServerExposure),
               Layer.provideMerge(DesktopAppSettings.layerTest()),
               Layer.provideMerge(DesktopWslServerTree.layerTest()),
               Layer.provideMerge(
@@ -673,7 +727,7 @@ describe("DesktopBackendConfiguration", () => {
                 }),
               ),
               Layer.provideMerge(
-                makeEnvironmentLayer(baseDir, {
+                layerEnvironment(baseDir, {
                   appPath: baseDir,
                   devServerUrl,
                   isPackaged: true,
@@ -787,8 +841,8 @@ describe("DesktopBackendConfiguration", () => {
         assert.equal(config.bootstrap.otlpLogsUrl, "http://127.0.0.1:4318/v1/logs");
       }).pipe(
         Effect.provide(
-          DesktopBackendConfiguration.layer.pipe(
-            Layer.provideMerge(serverExposureLayer),
+          layerBackendConfiguration().pipe(
+            Layer.provideMerge(layerServerExposure),
             Layer.provideMerge(DesktopAppSettings.layerTest()),
             Layer.provideMerge(DesktopWslServerTree.layerTest()),
             Layer.provideMerge(
@@ -799,7 +853,7 @@ describe("DesktopBackendConfiguration", () => {
               }),
             ),
             Layer.provideMerge(
-              makeEnvironmentLayer(baseDir, {
+              layerEnvironment(baseDir, {
                 platform: "win32",
                 otlpTracesUrl: " http://127.0.0.1:4318/v1/traces ",
                 otlpMetricsUrl: " http://127.0.0.1:4318/v1/metrics ",
@@ -845,13 +899,13 @@ describe("DesktopBackendConfiguration", () => {
         assert.equal(config.bootstrap.otlpMetricsUrl, "http://persisted:4318/v1/metrics");
       }).pipe(
         Effect.provide(
-          DesktopBackendConfiguration.layer.pipe(
-            Layer.provideMerge(serverExposureLayer),
+          layerBackendConfiguration().pipe(
+            Layer.provideMerge(layerServerExposure),
             Layer.provideMerge(DesktopAppSettings.layerTest()),
             Layer.provideMerge(DesktopWslServerTree.layerTest()),
             Layer.provideMerge(DesktopWslEnvironment.layerTest()),
             Layer.provideMerge(
-              makeEnvironmentLayer(baseDir, { otlpLogsUrl: "http://env:4318/v1/logs" }),
+              layerEnvironment(baseDir, { otlpLogsUrl: "http://env:4318/v1/logs" }),
             ),
           ),
         ),
@@ -877,7 +931,7 @@ describe("DesktopBackendConfiguration", () => {
       const logger = Logger.make(({ message }) => {
         messages.push(message);
       });
-      const failingFileSystemLayer = Layer.succeed(
+      const layerFailingFileSystem = Layer.succeed(
         FileSystem.FileSystem,
         FileSystem.makeNoop({
           readFileString: () => Effect.fail(cause),
@@ -890,13 +944,13 @@ describe("DesktopBackendConfiguration", () => {
       }).pipe(
         Effect.provide(
           Layer.mergeAll(
-            DesktopBackendConfiguration.layer.pipe(
-              Layer.provideMerge(serverExposureLayer),
+            layerBackendConfiguration().pipe(
+              Layer.provideMerge(layerServerExposure),
               Layer.provideMerge(DesktopAppSettings.layerTest()),
               Layer.provideMerge(DesktopWslServerTree.layerTest()),
               Layer.provideMerge(DesktopWslEnvironment.layerTest()),
-              Layer.provideMerge(makeEnvironmentLayer(baseDir)),
-              Layer.provideMerge(failingFileSystemLayer),
+              Layer.provideMerge(layerEnvironment(baseDir)),
+              Layer.provideMerge(layerFailingFileSystem),
             ),
             Logger.layer([logger], { mergeWithExisting: false }),
           ),
@@ -935,13 +989,13 @@ describe("DesktopBackendConfiguration", () => {
         assert.notInclude(config.args, "--require");
       }).pipe(
         Effect.provide(
-          DesktopBackendConfiguration.layer.pipe(
-            Layer.provideMerge(serverExposureLayer),
+          layerBackendConfiguration().pipe(
+            Layer.provideMerge(layerServerExposure),
             Layer.provideMerge(DesktopAppSettings.layerTest()),
             Layer.provideMerge(DesktopWslServerTree.layerTest()),
             Layer.provideMerge(DesktopWslEnvironment.layerTest()),
             Layer.provideMerge(
-              makeEnvironmentLayer(baseDir, {
+              layerEnvironment(baseDir, {
                 isPackaged: false,
                 devServerUrl: "http://127.0.0.1:5733",
               }),
@@ -961,9 +1015,11 @@ describe("DesktopBackendConfiguration", () => {
 
       const previousWslEnv = process.env.WSLENV;
       const previousDisabled = process.env.OTEL_SDK_DISABLED;
+      const previousTelemetry = process.env.ROVE_TELEMETRY_ENABLED;
       try {
         delete process.env.WSLENV;
         process.env.OTEL_SDK_DISABLED = "true";
+        process.env.ROVE_TELEMETRY_ENABLED = "false";
 
         yield* Effect.gen(function* () {
           const configuration = yield* DesktopBackendConfiguration.DesktopBackendConfiguration;
@@ -971,10 +1027,12 @@ describe("DesktopBackendConfiguration", () => {
 
           assert.equal(config.env.OTEL_SDK_DISABLED, "true");
           assert.include((config.env.WSLENV ?? "").split(":"), "OTEL_SDK_DISABLED");
+          assert.equal(config.env.ROVE_TELEMETRY_ENABLED, "false");
+          assert.include((config.env.WSLENV ?? "").split(":"), "ROVE_TELEMETRY_ENABLED");
         }).pipe(
           Effect.provide(
-            DesktopBackendConfiguration.layer.pipe(
-              Layer.provideMerge(serverExposureLayer),
+            layerBackendConfiguration().pipe(
+              Layer.provideMerge(layerServerExposure),
               Layer.provideMerge(DesktopAppSettings.layerTest()),
               Layer.provideMerge(DesktopWslServerTree.layerTest()),
               Layer.provideMerge(
@@ -984,13 +1042,14 @@ describe("DesktopBackendConfiguration", () => {
                   getDistroIp: () => Option.some("172.27.0.99"),
                 }),
               ),
-              Layer.provideMerge(makeEnvironmentLayer(baseDir, { platform: "win32" })),
+              Layer.provideMerge(layerEnvironment(baseDir, { platform: "win32" })),
             ),
           ),
         );
       } finally {
         restoreEnv("WSLENV", previousWslEnv);
         restoreEnv("OTEL_SDK_DISABLED", previousDisabled);
+        restoreEnv("ROVE_TELEMETRY_ENABLED", previousTelemetry);
       }
     }).pipe(Effect.scoped, Effect.provide(NodeServices.layer)),
   );
@@ -1039,8 +1098,8 @@ describe("DesktopBackendConfiguration", () => {
             assert.include(wslEnv, "ROVE_OTLP_TRACES_URL");
           }).pipe(
             Effect.provide(
-              DesktopBackendConfiguration.layer.pipe(
-                Layer.provideMerge(serverExposureLayer),
+              layerBackendConfiguration().pipe(
+                Layer.provideMerge(layerServerExposure),
                 Layer.provideMerge(DesktopAppSettings.layerTest()),
                 Layer.provideMerge(DesktopWslServerTree.layerTest()),
                 Layer.provideMerge(
@@ -1050,7 +1109,7 @@ describe("DesktopBackendConfiguration", () => {
                     getDistroIp: () => Option.some("172.27.0.99"),
                   }),
                 ),
-                Layer.provideMerge(makeEnvironmentLayer(baseDir, { platform: "win32" })),
+                Layer.provideMerge(layerEnvironment(baseDir, { platform: "win32" })),
               ),
             ),
           );
@@ -1113,8 +1172,8 @@ describe("DesktopBackendConfiguration", () => {
           );
         }).pipe(
           Effect.provide(
-            DesktopBackendConfiguration.layer.pipe(
-              Layer.provideMerge(serverExposureLayer),
+            layerBackendConfiguration().pipe(
+              Layer.provideMerge(layerServerExposure),
               Layer.provideMerge(DesktopAppSettings.layerTest()),
               Layer.provideMerge(DesktopWslServerTree.layerTest()),
               Layer.provideMerge(
@@ -1124,7 +1183,7 @@ describe("DesktopBackendConfiguration", () => {
                   getDistroIp: () => Option.some("172.27.0.99"),
                 }),
               ),
-              Layer.provideMerge(makeEnvironmentLayer(baseDir, { platform: "win32" })),
+              Layer.provideMerge(layerEnvironment(baseDir, { platform: "win32" })),
             ),
           ),
         );
@@ -1161,8 +1220,8 @@ describe("DesktopBackendConfiguration", () => {
           assert.isTrue(Option.isNone(config.preflightFailure));
         }).pipe(
           Effect.provide(
-            DesktopBackendConfiguration.layer.pipe(
-              Layer.provideMerge(serverExposureLayer),
+            layerBackendConfiguration().pipe(
+              Layer.provideMerge(layerServerExposure),
               Layer.provideMerge(
                 DesktopAppSettings.layerTest({
                   ...DesktopAppSettings.DEFAULT_DESKTOP_SETTINGS,
@@ -1172,7 +1231,7 @@ describe("DesktopBackendConfiguration", () => {
               ),
               Layer.provideMerge(DesktopWslServerTree.layerTest()),
               Layer.provideMerge(DesktopWslEnvironment.layerTest({ isAvailable: false })),
-              Layer.provideMerge(makeEnvironmentLayer(baseDir, { platform: "win32" })),
+              Layer.provideMerge(layerEnvironment(baseDir, { platform: "win32" })),
             ),
           ),
         );
@@ -1198,8 +1257,8 @@ describe("DesktopBackendConfiguration", () => {
           assert.include(failure.reason, "Removed-Distro");
         }).pipe(
           Effect.provide(
-            DesktopBackendConfiguration.layer.pipe(
-              Layer.provideMerge(serverExposureLayer),
+            layerBackendConfiguration().pipe(
+              Layer.provideMerge(layerServerExposure),
               Layer.provideMerge(
                 DesktopAppSettings.layerTest({
                   ...DesktopAppSettings.DEFAULT_DESKTOP_SETTINGS,
@@ -1215,7 +1274,7 @@ describe("DesktopBackendConfiguration", () => {
                   distros: [{ name: "Ubuntu", isDefault: true, version: 2 }],
                 }),
               ),
-              Layer.provideMerge(makeEnvironmentLayer(baseDir, { platform: "win32" })),
+              Layer.provideMerge(layerEnvironment(baseDir, { platform: "win32" })),
             ),
           ),
         );
@@ -1239,8 +1298,8 @@ describe("DesktopBackendConfiguration", () => {
         assert.include(failure.reason, "timed out");
       }).pipe(
         Effect.provide(
-          DesktopBackendConfiguration.layer.pipe(
-            Layer.provideMerge(serverExposureLayer),
+          layerBackendConfiguration().pipe(
+            Layer.provideMerge(layerServerExposure),
             Layer.provideMerge(DesktopAppSettings.layerTest()),
             Layer.provideMerge(DesktopWslServerTree.layerTest()),
             Layer.provideMerge(
@@ -1251,7 +1310,7 @@ describe("DesktopBackendConfiguration", () => {
                 }),
               }),
             ),
-            Layer.provideMerge(makeEnvironmentLayer(baseDir, { platform: "win32" })),
+            Layer.provideMerge(layerEnvironment(baseDir, { platform: "win32" })),
           ),
         ),
       );
@@ -1274,8 +1333,8 @@ describe("DesktopBackendConfiguration", () => {
         assert.include(failure.reason, "missing server entry");
       }).pipe(
         Effect.provide(
-          DesktopBackendConfiguration.layer.pipe(
-            Layer.provideMerge(serverExposureLayer),
+          layerBackendConfiguration().pipe(
+            Layer.provideMerge(layerServerExposure),
             Layer.provideMerge(DesktopAppSettings.layerTest()),
             Layer.provideMerge(DesktopWslServerTree.layerTest()),
             Layer.provideMerge(
@@ -1284,7 +1343,7 @@ describe("DesktopBackendConfiguration", () => {
                 distros: [{ name: "Ubuntu", isDefault: true, version: 2 }],
               }),
             ),
-            Layer.provideMerge(makeEnvironmentLayer(baseDir, { platform: "win32" })),
+            Layer.provideMerge(layerEnvironment(baseDir, { platform: "win32" })),
           ),
         ),
       );
@@ -1308,8 +1367,8 @@ describe("DesktopBackendConfiguration", () => {
         assert.include(failure.reason, "could not be extracted");
       }).pipe(
         Effect.provide(
-          DesktopBackendConfiguration.layer.pipe(
-            Layer.provideMerge(serverExposureLayer),
+          layerBackendConfiguration().pipe(
+            Layer.provideMerge(layerServerExposure),
             Layer.provideMerge(DesktopAppSettings.layerTest()),
             Layer.provideMerge(
               DesktopWslServerTree.layerTest({
@@ -1326,7 +1385,7 @@ describe("DesktopBackendConfiguration", () => {
                 distros: [{ name: "Ubuntu", isDefault: true, version: 2 }],
               }),
             ),
-            Layer.provideMerge(makeEnvironmentLayer(baseDir, { platform: "win32" })),
+            Layer.provideMerge(layerEnvironment(baseDir, { platform: "win32" })),
           ),
         ),
       );
@@ -1349,8 +1408,8 @@ describe("DesktopBackendConfiguration", () => {
         assert.include(failure.reason, "Removed-Distro");
       }).pipe(
         Effect.provide(
-          DesktopBackendConfiguration.layer.pipe(
-            Layer.provideMerge(serverExposureLayer),
+          layerBackendConfiguration().pipe(
+            Layer.provideMerge(layerServerExposure),
             Layer.provideMerge(DesktopAppSettings.layerTest()),
             Layer.provideMerge(DesktopWslServerTree.layerTest()),
             Layer.provideMerge(
@@ -1359,7 +1418,7 @@ describe("DesktopBackendConfiguration", () => {
                 distros: [{ name: "Ubuntu", isDefault: true, version: 2 }],
               }),
             ),
-            Layer.provideMerge(makeEnvironmentLayer(baseDir, { platform: "win32" })),
+            Layer.provideMerge(layerEnvironment(baseDir, { platform: "win32" })),
           ),
         ),
       );
@@ -1379,8 +1438,8 @@ describe("DesktopBackendConfiguration", () => {
         assert.equal(label, "WSL (Ubuntu)");
       }).pipe(
         Effect.provide(
-          DesktopBackendConfiguration.layer.pipe(
-            Layer.provideMerge(serverExposureLayer),
+          layerBackendConfiguration().pipe(
+            Layer.provideMerge(layerServerExposure),
             Layer.provideMerge(
               DesktopAppSettings.layerTest({
                 ...DesktopAppSettings.DEFAULT_DESKTOP_SETTINGS,
@@ -1391,7 +1450,7 @@ describe("DesktopBackendConfiguration", () => {
             ),
             Layer.provideMerge(DesktopWslServerTree.layerTest()),
             Layer.provideMerge(DesktopWslEnvironment.layerTest({ isAvailable: true })),
-            Layer.provideMerge(makeEnvironmentLayer(baseDir, { platform: "win32" })),
+            Layer.provideMerge(layerEnvironment(baseDir, { platform: "win32" })),
           ),
         ),
       );
@@ -1428,13 +1487,13 @@ describe("DesktopBackendConfiguration", () => {
         assert.equal(config.bootstrap.desktopTelemetryControlFd, 5);
       }).pipe(
         Effect.provide(
-          DesktopBackendConfiguration.layer.pipe(
-            Layer.provideMerge(serverExposureLayer),
+          layerBackendConfiguration().pipe(
+            Layer.provideMerge(layerServerExposure),
             Layer.provideMerge(DesktopAppSettings.layerTest()),
             Layer.provideMerge(DesktopWslServerTree.layerTest()),
             Layer.provideMerge(DesktopWslEnvironment.layerTest()),
             Layer.provideMerge(
-              makeEnvironmentLayer(baseDir, {
+              layerEnvironment(baseDir, {
                 appPath: `${resourcesPath}/app.asar`,
                 dirname,
                 isPackaged: true,
@@ -1474,13 +1533,13 @@ describe("DesktopBackendConfiguration", () => {
         assert.equal(config.bootstrap.resourceMonitorPath, releaseMonitorPath);
       }).pipe(
         Effect.provide(
-          DesktopBackendConfiguration.layer.pipe(
-            Layer.provideMerge(serverExposureLayer),
+          layerBackendConfiguration().pipe(
+            Layer.provideMerge(layerServerExposure),
             Layer.provideMerge(DesktopAppSettings.layerTest()),
             Layer.provideMerge(DesktopWslServerTree.layerTest()),
             Layer.provideMerge(DesktopWslEnvironment.layerTest()),
             Layer.provideMerge(
-              makeEnvironmentLayer(baseDir, {
+              layerEnvironment(baseDir, {
                 dirname,
                 devServerUrl: "http://127.0.0.1:5733",
                 isPackaged: false,
@@ -1518,8 +1577,8 @@ describe("DesktopBackendConfiguration", () => {
         assert.equal(label, "Windows");
       }).pipe(
         Effect.provide(
-          DesktopBackendConfiguration.layer.pipe(
-            Layer.provideMerge(serverExposureLayer),
+          layerBackendConfiguration().pipe(
+            Layer.provideMerge(layerServerExposure),
             Layer.provideMerge(
               DesktopAppSettings.layerTest({
                 ...DesktopAppSettings.DEFAULT_DESKTOP_SETTINGS,
@@ -1530,7 +1589,7 @@ describe("DesktopBackendConfiguration", () => {
             ),
             Layer.provideMerge(DesktopWslServerTree.layerTest()),
             Layer.provideMerge(DesktopWslEnvironment.layerTest({ isAvailable: false })),
-            Layer.provideMerge(makeEnvironmentLayer(baseDir, { platform: "win32" })),
+            Layer.provideMerge(layerEnvironment(baseDir, { platform: "win32" })),
           ),
         ),
       );
@@ -1547,8 +1606,8 @@ describe("DesktopBackendConfiguration", () => {
     // top-level runSync, exactly as the handler does.
     // oxlint-disable-next-line rove/no-manual-effect-runtime-in-tests -- This test intentionally replicates the sync IPC handler's runSync path to catch a regression to async-only resolution; it.effect would mask it.
     const runtime = ManagedRuntime.make(
-      DesktopBackendConfiguration.layer.pipe(
-        Layer.provideMerge(serverExposureLayer),
+      layerBackendConfiguration().pipe(
+        Layer.provideMerge(layerServerExposure),
         Layer.provideMerge(DesktopAppSettings.layerTest()),
         Layer.provideMerge(DesktopWslServerTree.layerTest()),
         Layer.provideMerge(DesktopWslEnvironment.layer),
@@ -1562,9 +1621,7 @@ describe("DesktopBackendConfiguration", () => {
             ),
           ),
         ),
-        Layer.provideMerge(
-          makeEnvironmentLayer("/tmp/rove-wsl-isavailable", { platform: "win32" }),
-        ),
+        Layer.provideMerge(layerEnvironment("/tmp/rove-wsl-isavailable", { platform: "win32" })),
         Layer.provide(NodeServices.layer),
       ),
     );

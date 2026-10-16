@@ -1,13 +1,16 @@
-import { ProviderRegistry, type ProviderRegistryContract } from "../Services/ProviderRegistry.ts";
+import * as ProviderRegistry from "../ProviderRegistry.ts";
 import { PiCatalogError, type ServerProvider } from "@rove-code/contracts";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Stream from "effect/Stream";
-import { makeManualOnlyProviderMaintenanceCapabilities } from "../providerMaintenance.ts";
+import { makeManualOnlyProviderMaintenanceCapabilities } from "@rove-code/provider-core/server/maintenanceResolver";
 
 const makeProviderRegistryMock = (
   providers: ReadonlyArray<ServerProvider> = [],
-): ProviderRegistryContract => ({
+): ProviderRegistry.ProviderRegistry["Service"] => ({
+  piCatalog: () => Effect.fail(new PiCatalogError({ message: "Pi is unavailable in this test." })),
+  refreshPiCatalog: () =>
+    Effect.fail(new PiCatalogError({ message: "Pi is unavailable in this test." })),
   getProviders: Effect.succeed(providers),
   refresh: () => Effect.succeed(providers),
   refreshInstance: () => Effect.succeed(providers),
@@ -16,9 +19,7 @@ const makeProviderRegistryMock = (
     Effect.succeed(makeManualOnlyProviderMaintenanceCapabilities({ provider, packageName: null })),
   setProviderMaintenanceActionState: () => Effect.succeed(providers),
   streamChanges: Stream.empty,
-  piCatalog: () => Effect.fail(new PiCatalogError({ message: "Unavailable in tests." })),
-  refreshPiCatalog: () => Effect.fail(new PiCatalogError({ message: "Unavailable in tests." })),
 });
 
-export const makeProviderRegistryLayer = (providers: ReadonlyArray<ServerProvider> = []) =>
-  Layer.succeed(ProviderRegistry, makeProviderRegistryMock(providers));
+export const layer = (providers: ReadonlyArray<ServerProvider> = []) =>
+  Layer.succeed(ProviderRegistry.ProviderRegistry, makeProviderRegistryMock(providers));

@@ -1,7 +1,13 @@
 import type { ModelTotals } from "@rove-code/shared/usageMerge";
 import { describe, expect, it } from "vite-plus/test";
 
-import { cacheHitRate, sortModels } from "./usageBreakdown";
+import {
+  cacheHitRate,
+  costPerMillionTokens,
+  modelShare,
+  sortModels,
+  sortModelsByTokens,
+} from "./usageBreakdown";
 
 const model = (
   name: string,
@@ -13,17 +19,26 @@ const model = (
   provider: "codex",
   costUsd,
   totalTokens,
-  records: 1,
-  unpricedRecords: 0,
-  costShare: 0,
-  uncachedInputTokens: 0,
+  tokens: {
+    uncachedInputTokens: totalTokens,
+    cachedInputTokens: 0,
+    cacheCreationTokens: 0,
+    outputTokens: 0,
+    reasoningTokens: 0,
+  },
+  uncachedInputTokens: totalTokens,
   cachedInputTokens: 0,
   cacheCreationTokens: 0,
   outputTokens: 0,
+  records: 1,
+  unpricedRecords: 0,
+  unpricedTokens: 0,
+  costShare: 0,
+  tokenShare: 0,
   ...overrides,
 });
 
-describe("sortModels", () => {
+describe("sortModelsByTokens", () => {
   it("sorts by tokens, breaks ties by cost, and leaves the input alone", () => {
     const models = [
       model("lower-cost", 100, 1),
@@ -31,18 +46,20 @@ describe("sortModels", () => {
       model("higher-cost", 100, 3),
     ];
 
-    expect(sortModels(models, "tokens").map((item) => item.model)).toEqual([
+    expect(sortModelsByTokens(models).map((item) => item.model)).toEqual([
       "more-tokens",
       "higher-cost",
       "lower-cost",
     ]);
     expect(models.map((item) => item.model)).toEqual(["lower-cost", "more-tokens", "higher-cost"]);
   });
+});
 
-  it("ranks unpriced models below free priced ones by cost", () => {
+describe("sortModels", () => {
+  it("ranks unpriced models below priced free models and sorts responses independently", () => {
     const models = [
       model("unpriced", 900, 0, { unpricedRecords: 1 }),
-      model("free", 10, 0),
+      model("free", 10, 0, { records: 3 }),
       model("paid", 10, 5),
     ];
     expect(sortModels(models, "cost").map((item) => item.model)).toEqual([
@@ -50,19 +67,51 @@ describe("sortModels", () => {
       "free",
       "unpriced",
     ]);
+    expect(sortModels(models, "responses").map((item) => item.model)).toEqual([
+      "free",
+      "unpriced",
+      "paid",
+    ]);
+  });
+});
+
+describe("modelShare", () => {
+  it("follows the selected metric", () => {
+    const priced = model("priced", 100, 9, { costShare: 0.9, tokenShare: 0.25 });
+
+    expect(modelShare(priced, "cost")).toBe(0.9);
+    expect(modelShare(priced, "tokens")).toBe(0.25);
   });
 
-  it("ranks models without input last by cache hit rate", () => {
-    const models = [
-      model("none", 10, 0),
-      model("half", 10, 0, { cachedInputTokens: 5, uncachedInputTokens: 5 }),
-      model("most", 10, 0, { cachedInputTokens: 9, cacheCreationTokens: 1 }),
-    ];
-    expect(sortModels(models, "cacheHit").map((item) => item.model)).toEqual([
-      "most",
-      "half",
-      "none",
-    ]);
-    expect(cacheHitRate(models[0]!)).toBeNull();
+  it("has no cost share for an unknown cost but keeps its token share", () => {
+    const unpriced = model("unpriced", 300, 0, {
+      unpricedRecords: 1,
+      unpricedTokens: 300,
+      tokenShare: 0.75,
+    });
+
+    expect(modelShare(unpriced, "cost")).toBeNull();
+    expect(modelShare(unpriced, "tokens")).toBe(0.75);
+  });
+});
+
+describe("model rates", () => {
+  it("counts cache writes as misses and leaves unpriced tokens out of $/1M", () => {
+    const mixed = model("mixed", 4_000_000, 6, {
+      tokens: {
+        uncachedInputTokens: 1_000_000,
+        cachedInputTokens: 1_000_000,
+        cacheCreationTokens: 2_000_000,
+        outputTokens: 0,
+        reasoningTokens: 0,
+      },
+      records: 4,
+      unpricedRecords: 1,
+      unpricedTokens: 1_000_000,
+    });
+
+    expect(cacheHitRate(mixed)).toBe(0.25);
+    expect(costPerMillionTokens(mixed)).toBe(2);
+    expect(costPerMillionTokens({ ...mixed, unpricedRecords: 4 })).toBeNull();
   });
 });

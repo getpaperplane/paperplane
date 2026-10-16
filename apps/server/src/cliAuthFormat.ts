@@ -2,14 +2,11 @@ import type { AuthClientMetadata, AuthClientSession, AuthPairingLink } from "@ro
 import * as DateTime from "effect/DateTime";
 
 import type { IssuedBearerSession, IssuedPairingLink } from "./auth/EnvironmentAuth.ts";
-import * as RuntimePredicate from "effect/Predicate";
 
 const newline = "\n";
 
 function serializeOptionalFields(values: ReadonlyArray<string | null | undefined>) {
-  return values.filter(
-    (value): value is string => RuntimePredicate.isString(value) && value.length > 0,
-  );
+  return values.filter((value): value is string => typeof value === "string" && value.length > 0);
 }
 
 function formatClientMetadata(metadata: AuthClientMetadata): string {
@@ -49,10 +46,10 @@ export function formatIssuedPairingCredential(
       {
         id: credential.id,
         credential: credential.credential,
-        ...(credential.label ? { label: credential.label } : undefined),
+        ...(credential.label ? { label: credential.label } : {}),
         scopes: credential.scopes,
         expiresAt: toIsoString(credential.expiresAt),
-        ...(pairUrl ? { pairUrl } : undefined),
+        ...(pairUrl ? { pairUrl } : {}),
       },
       null,
       2,
@@ -64,7 +61,7 @@ export function formatIssuedPairingCredential(
       `Issued client pairing token ${credential.id}.`,
       `Token: ${credential.credential}`,
       ...(pairUrl ? [`Pair URL: ${pairUrl}`] : []),
-      `Expires at: ${credential.expiresAt}`,
+      `Expires at: ${toIsoString(credential.expiresAt)}`,
     ].join(newline) + newline
   );
 }
@@ -79,8 +76,8 @@ export function formatPairingCredentialList(
     return `${JSON.stringify(
       credentials.map((credential) => ({
         id: credential.id,
-        ...(credential.label ? { label: credential.label } : undefined),
-        scopes: credential.scopes,
+        ...(credential.label ? { label: credential.label } : {}),
+        scopes: credential.permissions ?? credential.scopes,
         createdAt: toIsoString(credential.createdAt),
         expiresAt: toIsoString(credential.expiresAt),
       })),
@@ -98,7 +95,7 @@ export function formatPairingCredentialList(
       .map((credential) =>
         [
           `${credential.id}${credential.label ? ` (${credential.label})` : ""}`,
-          `  scopes: ${credential.scopes.join(" ")}`,
+          `  scopes: ${(credential.permissions ?? credential.scopes).join(" ")}`,
           `  created: ${toIsoString(credential.createdAt)}`,
           `  expires: ${toIsoString(credential.expiresAt)}`,
         ].join(newline),

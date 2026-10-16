@@ -45,7 +45,7 @@ describe("loadRepoEnv", () => {
     const repoRoot = makeTemporaryDirectory();
     NodeFS.writeFileSync(
       NodePath.join(repoRoot, ".env"),
-      "ROVE_CLERK_PUBLISHABLE_KEY=pk_root\nROVE_CLERK_JWT_TEMPLATE=template_root\nROVE_CLERK_CLI_OAUTH_CLIENT_ID=oauth_root\nROVE_RELAY_URL=https://root.example.test\n",
+      "ROVE_CLOUD_READY=1\nROVE_CLERK_PUBLISHABLE_KEY=pk_root\nROVE_CLERK_JWT_TEMPLATE=template_root\nROVE_CLERK_CLI_OAUTH_CLIENT_ID=oauth_root\nROVE_RELAY_URL=https://root.example.test\n",
     );
     NodeFS.writeFileSync(
       NodePath.join(repoRoot, ".env.local"),
@@ -78,6 +78,29 @@ describe("loadRepoEnv", () => {
     });
   });
 
+  it("strips canonical and framework cloud aliases unless the release gate is enabled", () => {
+    const repoRoot = makeTemporaryDirectory();
+    NodeFS.writeFileSync(
+      NodePath.join(repoRoot, ".env"),
+      "ROVE_CLOUD_READY=1\nROVE_RELAY_URL=https://root.example.test\n",
+    );
+    const cloud = {
+      ROVE_CLERK_PUBLISHABLE_KEY: "pk_canonical",
+      EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY: "pk_expo",
+      VITE_CLERK_PUBLISHABLE_KEY: "pk_vite",
+      EXPO_PUBLIC_CLERK_GOOGLE_WEB_CLIENT_ID: "google-web",
+      VITE_ROVE_RELAY_URL: "https://alias.example.test",
+    };
+    const disabled = loadRepoEnv({ baseEnv: { ...cloud, ROVE_CLOUD_READY: "0" }, repoRoot });
+    for (const key of [...Object.keys(cloud), "ROVE_RELAY_URL"]) expect(disabled[key]).toBe("");
+    const enabled = loadRepoEnv({ baseEnv: cloud, repoRoot });
+    expect(enabled.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY).toBe("pk_canonical");
+    expect(enabled.VITE_ROVE_RELAY_URL).toBe("https://alias.example.test");
+    expect(enabled.EXPO_PUBLIC_CLERK_GOOGLE_WEB_CLIENT_ID).toBe("google-web");
+    const unconfigured = loadRepoEnv({ baseEnv: cloud, repoRoot: makeTemporaryDirectory() });
+    for (const key of Object.keys(cloud)) expect(unconfigured[key]).toBe("");
+  });
+
   it("accepts legacy framework aliases as root overrides", () => {
     expect(
       resolvePublicConfig({
@@ -107,6 +130,7 @@ describe("loadRepoEnv", () => {
     expect(
       loadRepoEnv({
         baseEnv: {
+          ROVE_CLOUD_READY: "1",
           ROVE_RELAY_CLIENT_OTLP_TRACES_URL: "https://api.axiom.co/v1/traces",
           ROVE_RELAY_CLIENT_OTLP_TRACES_DATASET: "relay-client-traces",
           ROVE_RELAY_CLIENT_OTLP_TRACES_TOKEN: "relay-client-token",
@@ -114,6 +138,7 @@ describe("loadRepoEnv", () => {
         repoRoot: makeTemporaryDirectory(),
       }),
     ).toEqual({
+      ROVE_CLOUD_READY: "1",
       ROVE_RELAY_CLIENT_OTLP_TRACES_URL: "https://api.axiom.co/v1/traces",
       ROVE_RELAY_CLIENT_OTLP_TRACES_DATASET: "relay-client-traces",
       ROVE_RELAY_CLIENT_OTLP_TRACES_TOKEN: "relay-client-token",
@@ -127,6 +152,7 @@ describe("loadRepoEnv", () => {
     expect(
       loadRepoEnv({
         baseEnv: {
+          ROVE_CLOUD_READY: "1",
           ROVE_RELAY_URL: "https://relay.example.test",
           ROVE_MOBILE_OTLP_TRACES_URL: "https://api.axiom.co/v1/traces",
           ROVE_MOBILE_OTLP_TRACES_DATASET: "mobile-traces",
@@ -135,6 +161,7 @@ describe("loadRepoEnv", () => {
         repoRoot: makeTemporaryDirectory(),
       }),
     ).toEqual({
+      ROVE_CLOUD_READY: "1",
       ROVE_RELAY_URL: "https://relay.example.test",
       VITE_ROVE_RELAY_URL: "https://relay.example.test",
       ROVE_MOBILE_OTLP_TRACES_URL: "https://api.axiom.co/v1/traces",

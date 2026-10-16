@@ -1,13 +1,13 @@
 import * as NodeOS from "node:os";
 import type { HostResourcesSnapshot } from "@rove-code/contracts";
-import { HostProcessPlatform } from "@rove-code/shared/hostProcess";
+import * as HostProcess from "@rove-code/shared/HostProcess";
 import * as Cache from "effect/Cache";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
-import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
+import { ChildProcess, ChildProcessSpawner } from "effect/process";
 
 export class HostResources extends Context.Service<
   HostResources,
@@ -38,9 +38,9 @@ function darwinAvailableMemory(output: string): number | null {
   return Number.isSafeInteger(available) && Number(pageSize) > 0 ? available : null;
 }
 
-export const make = Effect.fn("makeHostResources")(function* () {
+const make = Effect.fn("makeHostResources")(function* () {
   const fs = yield* FileSystem.FileSystem;
-  const platform = yield* HostProcessPlatform;
+  const platform = yield* HostProcess.Platform;
   const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
 
   const sample = Effect.fn("HostResources.sample")(function* () {

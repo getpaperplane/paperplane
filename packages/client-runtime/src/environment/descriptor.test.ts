@@ -1,7 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import { ORCHESTRATION_PROTOCOL_VERSION } from "@rove-code/contracts";
-import { remoteHttpClientLayer } from "../rpc/http.ts";
+import { layerRemoteHttpClient } from "../rpc/http.ts";
 import { orchestrationProtocolCompatibilityError } from "../connection/compatibility.ts";
 import { fetchRemoteEnvironmentDescriptor } from "./descriptor.ts";
 
@@ -30,7 +30,7 @@ describe("environment descriptor transition", () => {
         "https://server.test/.well-known/rove/environment",
         "https://server.test/.well-known/t3/environment",
       ]);
-    }).pipe(Effect.provide(remoteHttpClientLayer(fetchFn)));
+    }).pipe(Effect.provide(layerRemoteHttpClient(fetchFn)));
   });
 
   it.effect("uses the canonical descriptor without a historical request", () => {
@@ -46,7 +46,7 @@ describe("environment descriptor transition", () => {
       const value = yield* fetchRemoteEnvironmentDescriptor({ httpBaseUrl: "https://server.test" });
       expect(orchestrationProtocolCompatibilityError(value)).toBeNull();
       expect(requests).toHaveLength(1);
-    }).pipe(Effect.provide(remoteHttpClientLayer(fetchFn)));
+    }).pipe(Effect.provide(layerRemoteHttpClient(fetchFn)));
   });
 
   it.effect("does not retry historical discovery for an unavailable canonical endpoint", () => {
@@ -58,6 +58,6 @@ describe("environment descriptor transition", () => {
     return Effect.gen(function* () {
       yield* Effect.flip(fetchRemoteEnvironmentDescriptor({ httpBaseUrl: "https://server.test" }));
       expect(requests).toEqual(["https://server.test/.well-known/rove/environment"]);
-    }).pipe(Effect.provide(remoteHttpClientLayer(fetchFn)));
+    }).pipe(Effect.provide(layerRemoteHttpClient(fetchFn)));
   });
 });

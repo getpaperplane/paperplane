@@ -1,14 +1,15 @@
 import { expect, it } from "@effect/vitest";
 import * as NodeServices from "@effect/platform-node/NodeServices";
-import { HostProcessEnvironment } from "@rove-code/shared/hostProcess";
+import { Environment as HostProcessEnvironment } from "@rove-code/shared/HostProcess";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
 import * as Schema from "effect/Schema";
-import * as ChildProcessSpawner from "effect/unstable/process/ChildProcessSpawner";
+import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
 import * as ProcessRunner from "../processRunner.ts";
 import * as LinuxDesktop from "./LinuxDesktop.ts";
+import { withLinuxProcessFiles } from "./LinuxDesktop.testkit.ts";
 
 const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 const decodeProcessIdentity = Schema.decodeUnknownSync(
@@ -120,6 +121,7 @@ const withRuntime = <A, E>(
     });
   }).pipe(
     Effect.scoped,
+    Effect.updateService(FileSystem.FileSystem, withLinuxProcessFiles),
     Effect.provide(NodeServices.layer),
     Effect.provideService(HostProcessEnvironment, {}),
   );

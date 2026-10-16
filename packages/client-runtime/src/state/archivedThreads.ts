@@ -1,13 +1,13 @@
-import { EnvironmentId, type OrchestrationShellSnapshot } from "@rove-code/contracts";
+import { EnvironmentId, type OrchestrationV2ArchivedShellSnapshot } from "@rove-code/contracts";
 import * as Arr from "effect/Array";
 import { pipe } from "effect/Function";
 import * as Option from "effect/Option";
 import * as Order from "effect/Order";
-import { AsyncResult, Atom } from "effect/unstable/reactivity";
+import { AsyncResult, Atom } from "effect/reactivity";
 
 export interface ArchivedSnapshotEntry {
   readonly environmentId: EnvironmentId;
-  readonly snapshot: OrchestrationShellSnapshot;
+  readonly snapshot: OrchestrationV2ArchivedShellSnapshot;
 }
 
 export interface ArchivedThreadSnapshotsState {
@@ -17,8 +17,7 @@ export interface ArchivedThreadSnapshotsState {
 }
 
 const ARCHIVED_THREADS_ENVIRONMENT_KEY_SEPARATOR = "\u001f";
-const // SAFETY: The surrounding adapter boundary establishes the asserted runtime contract.
-  environmentIdOrder = Order.String as Order.Order<EnvironmentId>;
+const environmentIdOrder = Order.String as Order.Order<EnvironmentId>;
 
 export function makeArchivedThreadsEnvironmentKey(
   environmentIds: ReadonlyArray<EnvironmentId>,
@@ -41,7 +40,7 @@ export function parseArchivedThreadsEnvironmentKey(key: string): ReadonlyArray<E
 export function createArchivedThreadSnapshotsAtomFamily<E>(options: {
   readonly getSnapshotAtom: (
     environmentId: EnvironmentId,
-  ) => Atom.Atom<AsyncResult.AsyncResult<OrchestrationShellSnapshot, E>>;
+  ) => Atom.Atom<AsyncResult.AsyncResult<OrchestrationV2ArchivedShellSnapshot, E>>;
   readonly labelPrefix: string;
 }) {
   return Atom.family((environmentKey: string) =>

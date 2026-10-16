@@ -54,7 +54,6 @@ describe("Pi extension editor questions", () => {
     expect(request.questions).toMatchObject([
       {
         question: "Edit",
-        inputMode: "multiline",
         initialAnswer: "First line\nSecond line",
         allowCustomAnswer: true,
       },
@@ -91,8 +90,7 @@ describe("Pi extension editor questions", () => {
     const { bridge, latestQuestion } = createUI();
     const editing = bridge.ui.editor("Edit", undefined);
     const editorRequest = latestQuestion();
-    expect(editorRequest.questions[0]).toMatchObject({ inputMode: "multiline" });
-    expect(editorRequest.questions[0]).not.toHaveProperty("initialAnswer");
+    expect(editorRequest.questions[0]).toMatchObject({ initialAnswer: "" });
     bridge.respond(String(editorRequest.requestId), { answer: "A\nB" });
     await expect(editing).resolves.toBe("A\nB");
 

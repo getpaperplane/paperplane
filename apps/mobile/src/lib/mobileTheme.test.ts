@@ -3,12 +3,15 @@ import {
   BUILT_IN_THEME_IDS,
   BUILT_IN_THEMES,
   PLUM_THEME,
-  ROVE_LIGHT_THEME_COLORS,
-  ROVE_DARK_THEME_COLORS,
+  ROVE_CODE_LIGHT_THEME_COLORS,
+  ROVE_CODE_DARK_THEME_COLORS,
   MOBILE_THEME_IDS,
   getThemeColorsForAppearance,
 } from "@rove-code/shared/themePalettes";
-import { readDefaultMobileThemeVariables } from "./mobileTheme.test-support";
+import {
+  readDefaultMobileThemeVariables,
+  readGeneratedMobileThemeVariables,
+} from "./mobileTheme.test-support";
 import { getMobileThemeRuntimeVariables } from "./mobileThemeVariables";
 
 import {
@@ -82,8 +85,8 @@ describe("mobile themes", () => {
       const colors = theme
         ? getThemeColorsForAppearance(theme, appearance)!
         : appearance === "dark"
-          ? ROVE_DARK_THEME_COLORS
-          : ROVE_LIGHT_THEME_COLORS;
+          ? ROVE_CODE_DARK_THEME_COLORS
+          : ROVE_CODE_LIGHT_THEME_COLORS;
       const variables =
         themeId === DEFAULT_MOBILE_THEME_ID
           ? readDefaultMobileThemeVariables(appearance)
@@ -96,12 +99,7 @@ describe("mobile themes", () => {
       );
       expect(variables["--color-card"]).toBe(themeColorToNativeColor(colors.surface));
       expect(variables["--color-composer-surface"]).toBe(
-        themeColorWithAlpha(
-          themeId === DEFAULT_MOBILE_THEME_ID
-            ? variables["--color-grouped-card"]
-            : themeColorToNativeColor(colors.surface),
-          appearance === "dark" ? 0.9 : 0.94,
-        ),
+        themeColorWithAlpha(variables["--color-grouped-card"], appearance === "dark" ? 0.9 : 0.94),
       );
       expect(variables["--color-thread-selected"]).toBe(
         themeColorToNativeColor(colors.sidebarRowActive),
@@ -158,6 +156,21 @@ describe("mobile themes", () => {
     }
   });
 
+  it.each(MOBILE_THEME_IDS)("keeps %s sidebar text readable on Android", (themeId) => {
+    for (const appearance of ["light", "dark"] as const) {
+      const variables = getMobileThemeRuntimeVariables(themeId, appearance, "android");
+      for (const foreground of [
+        "--color-drawer-foreground",
+        "--color-drawer-foreground-muted",
+      ] as const) {
+        expect(
+          contrastRatio(variables[foreground], variables["--color-drawer"]),
+          `${appearance}: ${foreground}`,
+        ).toBeGreaterThanOrEqual(4.5);
+      }
+    }
+  });
+
   it("applies palette overrides on top of the selected built-in theme", () => {
     const variables = getMobileThemeVariables("ocean", "dark", {
       "--color-primary": "#123456",
@@ -165,6 +178,49 @@ describe("mobile themes", () => {
 
     expect(variables["--color-primary"]).toBe("#123456");
     expect(variables["--color-screen"]).toMatch(/^#/);
+  });
+
+  it.each(MOBILE_THEME_IDS)("separates %s filled groups from their sheets", (themeId) => {
+    for (const appearance of ["light", "dark"] as const) {
+      const generated = readGeneratedMobileThemeVariables(
+        themeId === DEFAULT_MOBILE_THEME_ID ? appearance : `${themeId}-${appearance}`,
+      );
+      expect(generated).toEqual(getMobileThemeVariables(themeId, appearance));
+      for (const platform of ["ios", "android"]) {
+        const variables = getMobileThemeRuntimeVariables(themeId, appearance, platform);
+        const sheet = variables["--color-sheet-solid"];
+        const group = variables["--color-grouped-card"];
+        expect(
+          contrastRatio(group, sheet),
+          `${platform} ${appearance}: grouped surface on sheet`,
+        ).toBeGreaterThanOrEqual(1.025);
+        for (const role of [
+          "--color-foreground",
+          "--color-foreground-secondary",
+          "--color-foreground-muted",
+          "--color-placeholder",
+          "--color-primary-text",
+        ] as const) {
+          expect(
+            contrastRatio(variables[role], group),
+            `${platform} ${appearance}: ${role} on grouped surface`,
+          ).toBeGreaterThanOrEqual(4.5);
+        }
+        if (platform === "android") {
+          const header = flattenThemeColor(variables["--color-header"], sheet);
+          for (const role of ["--color-header-foreground", "--color-foreground-muted"] as const) {
+            expect(
+              contrastRatio(variables[role], header),
+              `${appearance}: ${role} on Android header`,
+            ).toBeGreaterThanOrEqual(4.5);
+          }
+        }
+        expect(
+          contrastRatio(variables["--color-foreground-muted"], variables["--color-secondary"]),
+          `${platform} ${appearance}: muted label on secondary surface`,
+        ).toBeGreaterThanOrEqual(4.5);
+      }
+    }
   });
 
   it.each(["light", "dark"] as const)(
@@ -182,9 +238,11 @@ describe("mobile themes", () => {
           runtime[platform === "android" ? "--color-header" : "--color-drawer"],
           runtime["--color-screen"],
         );
-        expect(relativeLuminance(sidebar)).toBeLessThan(
-          relativeLuminance(runtime["--color-thread-canvas"]),
-        );
+        if (platform === "ios") {
+          expect(relativeLuminance(sidebar)).toBeLessThan(
+            relativeLuminance(runtime["--color-thread-canvas"]),
+          );
+        }
         expect(contrastRatio(chrome, runtime["--color-screen"])).toBeGreaterThanOrEqual(1.06);
         const foregroundRoles =
           platform === "android"
@@ -197,11 +255,72 @@ describe("mobile themes", () => {
     },
   );
 
+  it("keeps Plum light grouped cards distinct from the sheet", () => {
+    const variables = getMobileThemeVariables("plum", "light");
+    const group = variables["--color-grouped-card"];
+    expect(contrastRatio(group, variables["--color-sheet-solid"])).toBeGreaterThanOrEqual(1.1);
+    for (const role of ["--color-foreground", "--color-foreground-muted"] as const) {
+      expect(contrastRatio(variables[role], group)).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+
+  it.each(MOBILE_THEME_IDS)("keeps %s prominent actions readable and themed", (themeId) => {
+    for (const appearance of ["light", "dark"] as const) {
+      const variables = getMobileThemeVariables(themeId, appearance);
+      const fill = variables["--color-prominent-action"];
+      expect(
+        contrastRatio(variables["--color-prominent-action-foreground"], fill),
+      ).toBeGreaterThanOrEqual(4.5);
+      expect(fill).toBe(
+        variables[
+          themeId === "plum" && appearance === "dark"
+            ? "--color-primary-foreground"
+            : themeId === DEFAULT_MOBILE_THEME_ID || themeId === "plum"
+              ? "--color-foreground"
+              : "--color-primary"
+        ],
+      );
+    }
+  });
+
+  it.each(["grove", "ocean", "ember", "iris"] as const)(
+    "keeps %s grouped cards and floating controls visibly tinted",
+    (themeId) => {
+      const saturation = (hex: string) => {
+        const channels = hex
+          .slice(1)
+          .match(/.{2}/g)!
+          .map((value) => parseInt(value, 16));
+        return (Math.max(...channels) - Math.min(...channels)) / Math.max(...channels);
+      };
+      for (const appearance of ["light", "dark"] as const) {
+        const variables = getMobileThemeVariables(themeId, appearance);
+        const sheet = variables["--color-sheet-solid"];
+        const group = variables["--color-grouped-card"];
+        expect(contrastRatio(group, sheet)).toBeGreaterThanOrEqual(1.06);
+        for (const role of ["--color-composer-surface", "--color-glass-fallback"] as const) {
+          const surface = flattenThemeColor(variables[role], sheet);
+          expect(contrastRatio(surface, sheet)).toBeGreaterThanOrEqual(1.06);
+          expect(contrastRatio(variables["--color-placeholder"], surface)).toBeGreaterThanOrEqual(
+            4.5,
+          );
+          if (appearance === "dark") {
+            expect(saturation(surface)).toBeGreaterThanOrEqual(saturation(sheet));
+          }
+        }
+        if (appearance === "dark") {
+          expect(saturation(group)).toBeGreaterThanOrEqual(saturation(sheet));
+        }
+      }
+    },
+  );
+
   it.each(["light", "dark"] as const)(
     "slightly strengthens default %s messages and separates fallback materials",
     (appearance) => {
       const variables = getMobileThemeVariables("rove", appearance);
-      const desktop = appearance === "dark" ? ROVE_DARK_THEME_COLORS : ROVE_LIGHT_THEME_COLORS;
+      const desktop =
+        appearance === "dark" ? ROVE_CODE_DARK_THEME_COLORS : ROVE_CODE_LIGHT_THEME_COLORS;
       const bubbleContrast = contrastRatio(
         variables["--color-user-bubble"],
         variables["--color-screen"],

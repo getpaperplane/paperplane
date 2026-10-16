@@ -1,5 +1,5 @@
+import { SourceControlProviderKind } from "@rove-code/contracts";
 import type {
-  OrchestrationCommand,
   ProjectCloneSnapshot,
   ProjectCloneStage,
   ProjectCloneStartInput,
@@ -302,7 +302,7 @@ export const make = Effect.gen(function* () {
       if (!claimed) {
         return yield* new SourceControlRepositoryError({
           operation: "cloneRepository",
-          provider: input.provider ?? "unknown",
+          provider: input.provider ?? SourceControlProviderKind.make("unknown"),
           detail: "A clone into this destination is already in progress.",
         });
       }
@@ -443,11 +443,7 @@ const isSourceControlRepositoryError = Schema.is(SourceControlRepositoryError);
  */
 export const rejectCommandsDuringClone = (
   tracker: ProjectCloneTracker["Service"],
-  command: {
-    readonly type: string;
-    readonly projectId?: ProjectId | null;
-    readonly bootstrap?: unknown;
-  },
+  command: { readonly type: string; readonly projectId?: ProjectId; readonly bootstrap?: unknown },
 ): Effect.Effect<void, OrchestrationDispatchCommandError> =>
   Effect.gen(function* () {
     const projectId =
@@ -472,13 +468,6 @@ function bootstrapProjectId(bootstrap: unknown): ProjectId | null {
   const createThread = (bootstrap as { createThread?: { projectId?: ProjectId } }).createThread;
   return createThread?.projectId ?? null;
 }
-
-/** Removing a project mid-clone stops the clone and drops its partial checkout. */
-export const discardCloneForDeletedProject = (
-  tracker: ProjectCloneTracker["Service"],
-  command: OrchestrationCommand,
-): Effect.Effect<void> =>
-  command.type === "project.delete" ? tracker.discard(command.projectId) : Effect.void;
 
 function describeCloneFailure(cause: Cause.Cause<unknown>): string {
   const error = Cause.squash(cause);

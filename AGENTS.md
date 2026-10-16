@@ -1,6 +1,6 @@
 # Rove Code
 
-Rove Code is a minimal GUI for coding agents. A Node WebSocket server wraps provider runtimes (Codex, Claude Code, Cursor, Grok, OpenCode, Antigravity, Pi) and serves web, desktop, and mobile clients.
+Rove Code is a minimal GUI for coding agents. A Node WebSocket server wraps provider runtimes (Codex, Claude Code, Cursor, Grok, OpenCode, Antigravity, Muse, Pi) and serves web, desktop, and mobile clients.
 
 It is a "bring-your-own-subscription" alternative to apps like Claude Desktop, Codex App, Cursor Glass, and Conductor.
 
@@ -45,10 +45,10 @@ Most contributions are made through Rove Code itself, often remotely. Be careful
 - **upstream** means T3 Code (`pingdotgg/t3code`), the project Rove Code forked from.
 - **user** means the person using Rove Code to direct coding agents.
 - **agent** means the coding agent a user runs inside Rove Code. Depending on context, that may also include you.
-- **provider** means the agent runtime Rove Code talks to: Codex, Claude, Cursor, Grok, OpenCode, Antigravity, or Pi. Most run as subprocesses. Pi runs in-process through its SDK (see [ADR 0001](docs/adr/0001-pi-provider-uses-sdk-in-process.md)).
+- **provider** means the agent runtime Rove Code talks to: Codex, Claude, Cursor, Grok, OpenCode, Antigravity, Muse, or Pi. Most run as subprocesses. Pi runs in-process through its SDK (see [ADR 0001](docs/adr/0001-pi-provider-uses-sdk-in-process.md)).
 - **client** means the web, desktop, or mobile UI.
 - **environment** means one running Rove Code server and the machine, filesystem, provider credentials, and state it owns.
-- **project** means an environment-local workspace record rooted at a directory. Threads can also be standalone, with no project.
+- **project** means an environment-local workspace record rooted at a directory.
 - **thread** means the durable conversation and work history.
 - **turn** means one user-to-agent cycle, including follow-up work such as checkpointing.
 - **Rove Code home** means the base data directory, `~/.rove-code` by default. Runtime state lives in its `userdata` directory. The upstream install's `~/.rove` is a different app; leave it alone.
@@ -67,7 +67,8 @@ The most common defect in this repo is a change that works on the tested path an
 
 - **Entry points.** A behavior reachable from the chat view is usually also reachable from Settings, the command palette, and a keybinding. Fixing one is not fixing the feature.
 - **Clients.** Web, desktop (wraps web and adds the Electron shell and IPC), and mobile (React Native with separate navigation). Shared logic lives in `packages/client-runtime`.
-- **Providers.** Codex, Claude, Cursor, Grok, OpenCode, Antigravity, and Pi each have a driver in `apps/server/src/provider/Drivers`. Provider-shaped features need a decision for each driver, even if the decision is "not supported here".
+- **Providers.** Codex, Claude, Cursor, Grok, OpenCode, Antigravity, Muse, and Pi each have an adapter. Shared provider implementations live in `packages/provider-*`; Rove's in-process Pi implementation stays in `apps/server/src/provider`. Provider-shaped features need a decision for each adapter, even if the decision is "not supported here".
+- **Agents.** A capability a user can trigger is usually one an agent should reach through MCP tools, and scheduled tasks run the same paths. That only works when it is a service method, not handler code.
 - **Contracts.** Anything crossing the wire is typed in `packages/contracts`. When the schema changes, update the server, web, mobile, and desktop to match.
 - **Reverse states.** If you add a way in, add a way out and a way to see it. Snooze needs unsnooze. Close needs reopen. A one-way door is a bug.
 - **Connection modes.** Local, LAN, Tailscale, SSH, the hosted web app, and Rove Connect (when enabled) behave differently. Multi-device and multi-environment cases are real.
@@ -87,19 +88,10 @@ The most common defect in this repo is a change that works on the tested path an
 
 An empty database is a bad test. Seed your worktree's `.rove` with a copy of real data instead of pointing at live state:
 
-- Copy from `~/.rove-code/userdata` (the developer's real data and the most realistic test set) or `~/.rove-code/dev/userdata`. Worktree state lives at `<worktree>/.rove/userdata`.
-- Snapshot the database with `VACUUM INTO`. It is safe even while a server has the source open, and it produces one consistent file:
-
-  ```bash
-  mkdir -p .rove/userdata
-  rm -f .rove/userdata/state.sqlite*  # VACUUM INTO refuses to overwrite
-  bun -e "new (require('bun:sqlite').Database)(process.env.HOME + '/.rove-code/userdata/state.sqlite', { readonly: true }).run(\"VACUUM INTO '.rove/userdata/state.sqlite'\")"
-  ```
-
-  A plain `cp` is safe only when no server has the source open, and it must include the `-wal` and `-shm` siblings. Copying a live file produces a corrupt copy.
-
-- Copy `secrets` and `settings.json` only if the flow under test needs them.
-- Copy data in; never symlink. Data flows one way: into your sandbox, never back out.
+- Run `vp run migrate-dev-db` with your dev server stopped. It rebuilds `<worktree>/.rove/userdata/statev2.sqlite` from a read-only snapshot of `~/.rove-code/userdata/statev2.sqlite`, the developer's real data. It keeps recent projects and their stopped threads, and drops scheduled tasks, pending work, and auth sessions, so your dev server never runs the developer's agents. Raise `--projects` and `--threads-per-project` for more data.
+- Refresh `statev2.sqlite`, not `state.sqlite`. The server copies the V1 `state.sqlite` only when `statev2.sqlite` is missing.
+- Bring `secrets` and `settings.json` only if the flow under test needs them.
+- Copy in, never symlink. Data flows one way: into your sandbox, never back out.
 
 ## Verifying
 
@@ -107,7 +99,7 @@ An empty database is a bad test. Seed your worktree's `.rove` with a copy of rea
 - Test meaningful logic or observable behavior. Do not render components to static markup to assert props or attributes, and do not add tests that only check callback wiring or mirror the implementation.
 - **Do not run repo-wide checks.** Do not run `vp check`, `vp run -r test`, or `vp run -r typecheck` unless asked. CI owns the full suite.
 - Ship backend behavior changes with focused tests for that behavior.
-- The server is event-sourced, and its async flows emit typed receipts. Wait on receipts and worker drains, never on sleeps or polling. A test that needs a timeout to pass is wrong.
+- The server is event-sourced, and side effects run after the command commits. In tests, drain the effect worker (`OrchestrationEffectWorkerV2.drain`) or await the specific persisted event or `Deferred` that marks the milestone. Never wait on sleeps or polling. A test that needs a timeout to pass is wrong.
 - When asked, give user-visible frontend changes one integrated pass in a real client: use `test-rove-app` for web and `test-rove-mobile` for mobile (skills in `.agents/skills`). The primary agent does this once after integrating. Subagents do not launch their own dev servers. Ask permission before using computer use or opening browsers.
 
 For authorized mobile verification, a missing or outdated native client is a build step, not a blocker. Run `node scripts/mobile-native-client.ts ensure <ios|android> <device-id>` on the simulator host before starting Metro. It checks the local Expo fingerprint and builds or installs when needed. See `test-rove-mobile` for the full workflow.
@@ -154,18 +146,19 @@ Most code changes do not need an internal documentation change. Agents can read 
 
 ## How it works
 
-Clients send typed WebSocket requests. The server turns them into _commands_, a pure _decider_ turns commands into persisted _events_, and a _projector_ derives the read model the UI renders. Each provider has a _driver_ that produces its snapshot, adapter, and text-generation closures. Adapters translate native protocols into orchestration events. Side effects run in queue-backed _reactors_ that emit _receipts_ when milestones land. Each turn ends with a _checkpoint_, a hidden git ref that lets the app diff and restore.
+Clients send typed WebSocket requests. The server turns them into _commands_. The _orchestrator_ (`apps/server/src/orchestration-v2/Orchestrator.ts`) serializes commands and decides _events_ without doing I/O. The _event sink_ commits events, read-model projections, the command receipt, and outbox effects in one transaction. The _effect worker_ then runs effects, such as starting a provider turn or capturing a checkpoint, and feeds results back as commands. Provider _adapters_ translate native protocols into orchestration events. Most providers run as subprocesses; Rove's Pi provider uses its in-process SDK. Each turn ends with a _checkpoint_, a hidden git ref that lets the app diff and restore.
 
-Start with [`docs/internals/overview.md`](docs/internals/overview.md).
+Architecture and constraints: [`docs/internals/overview.md`](docs/internals/overview.md). Glossary: [`docs/internals/glossary.md`](docs/internals/glossary.md).
 
 ## Where code lives
 
-- `apps/server` - WebSocket server, orchestration, providers, checkpointing, and the `rove` CLI. It uses Effect heavily: read `.repos/effect-smol/LLMS.md` before writing Effect code.
+- `apps/server` - WebSocket server, orchestration, providers, checkpointing, and the `rove` CLI. Effect-heavy: read [Effect services](docs/internals/effect-services.md) before adding server code, and `.repos/effect-smol/LLMS.md` for the Effect library itself.
 - `apps/web` - React/Vite UI. `apps/desktop` wraps it in Electron, `apps/mobile` is React Native, and `apps/marketing` is the landing page.
 - `packages/contracts` - Effect/Schema contracts and small derived helpers. No heavy runtime logic.
 - `packages/shared` - shared runtime utilities with subpath exports and no barrel.
 - `packages/client-runtime` - client code shared by web and mobile.
 - `packages/ssh`, `packages/tailscale` - remote connection helpers.
+- `packages/provider-*` - shared provider adapters and runtime protocols. Rove's Pi runtime remains SDK-based, not upstream's RPC provider.
 - `packages/effect-acp`, `packages/effect-codex-app-server` - Effect bindings for provider protocols.
 - `infra/relay` - Rove Connect relay, gated by `ROVE_CLOUD_READY`.
 - `native/` - native helpers (resource monitor, terminal VT, Linux SnapShot, browser secrets).
@@ -175,6 +168,8 @@ Start with [`docs/internals/overview.md`](docs/internals/overview.md).
 ## Taste
 
 - Complexity belongs at the adapter boundary. Orchestration stays pure, and UI stays dumb.
+- Client mutations use `createEnvironmentRpcCommand`. Add protected methods to `CLIENT_GUARDED_RPC_SCOPES` in contracts and use the command's `permissionAtom` for UI availability. Grants are checked at execution against the destination environment; the server remains authoritative. Keep raw RPC clients inside `rpc/`, and extend the permission behavior tests when adding a protected method.
+- Server features are services; transports stay thin. A `ws.ts` RPC handler, HTTP route, or MCP tool decodes input, calls one service method, and maps errors. See [Effect services](docs/internals/effect-services.md).
 - `apps/web/src/components/ui` exports own their look. Choose a `variant` or `size`; do not restyle one with `className`. If none fits and the look is generic, add a variant to the component. A look that belongs to one feature stays in that feature's component, not in `components/ui`. Layout classes such as width, flex, margin, and position belong on the parent. `shadcn/no-restyle` fails lint on violations.
 - Prefer inferred types over annotations. `any` is the enemy.
 - Comments describe how code is used and move when the code moves. Use them mostly for functions, not to annotate every line of behavior.

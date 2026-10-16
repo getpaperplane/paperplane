@@ -1,0 +1,23 @@
+{
+  "name": "@rove-code/source-control-testing",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./TestSourceControlHost": {
+      "types": "./src/TestSourceControlHost.ts",
+      "import": "./src/TestSourceControlHost.ts"
+    }
+  },
+  "scripts": {
+    "typecheck": "tsc-rs --noEmit"
+  },
+  "dependencies": {
+    "@rove-code/contracts": "workspace:*",
+    "@rove-code/shared": "workspace:*",
+    "@rove-code/source-control-core": "workspace:*",
+    "effect": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:"
+  }
+}

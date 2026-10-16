@@ -1,17 +1,22 @@
+import { Toolbar } from "../../components/ui/Toolbar";
+import * as Dialog from "../../components/ui/Dialog";
 /* oxlint-disable react/no-array-index-key -- Captured table rows and columns have stable positions and may contain identical values. */
-import { NativeHeaderToolbar, NativeStackScreenOptions } from "../../native/StackHeader";
+import { NativeStackScreenOptions } from "../../native/StackHeader";
 import { useNavigation, type StaticScreenProps } from "@react-navigation/native";
 import type { MenuAction } from "@react-native-menu/menu";
 import { EnvironmentId } from "@rove-code/contracts";
 import { formatAttachmentSize } from "@rove-code/client-runtime/state/attachments";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Alert, Platform, ScrollView, View } from "react-native";
+import { Platform, ScrollView, View } from "react-native";
 
-import { AndroidHeaderIconButton, AndroidScreenHeader } from "../../components/AndroidScreenHeader";
-import { AppText as Text } from "../../components/AppText";
-import { AudioFilePreview } from "../../components/AudioFilePreview";
-import { ControlPillMenu } from "../../components/ControlPill";
-import { EmptyState } from "../../components/EmptyState";
+import {
+  AndroidHeaderIconButton,
+  AndroidScreenHeader,
+} from "../../components/ui/AndroidScreenHeader";
+import { AppText as Text } from "../../components/ui/AppText";
+import { AudioFilePreview } from "./AudioFilePreview";
+import { Menu } from "../../components/ui/Menu";
+import { EmptyState } from "../../components/ui/EmptyState";
 import { FilePreviewModal, type FilePreviewSource } from "../../components/FilePreviewModal";
 import { useAttachmentDocument } from "../../lib/attachmentDocument";
 import { nativeViewerErrorMessage } from "../../lib/attachmentDownload";
@@ -24,6 +29,7 @@ import { FileMarkdownPreview } from "./FileMarkdownPreview";
 import { useAppearancePreferences } from "../settings/appearance/AppearancePreferencesProvider";
 import { SourceFileSurface } from "./SourceFileSurface";
 import { WorkspaceFileWebPreview } from "./WorkspaceFileWebPreview";
+import { HtmlRenderWebView } from "../threads/HtmlRenderWebView";
 
 /**
  * Both the thread stack and the new-task sheet stack register this screen, so a chip in a
@@ -38,6 +44,8 @@ export type AttachmentFileRouteParams = {
   readonly sizeBytes: string;
   /** Present for a draft attachment, which may still live only on this device. */
   readonly draftKey?: string;
+  /** Present for a page an agent published with `html_render`, which takes the app theme. */
+  readonly htmlRender?: "1";
 };
 
 type AttachmentFileScreenProps = StaticScreenProps<AttachmentFileRouteParams>;
@@ -54,6 +62,7 @@ function AttachmentDocumentBody(props: {
   readonly document: ReturnType<typeof useAttachmentDocument>;
   readonly name: string;
   readonly environmentId: EnvironmentId | null;
+  readonly htmlRender: boolean;
   readonly nativeViewer: "pending" | "open" | "unavailable" | null;
   readonly nativeError: string | null;
   readonly onOpenNative: () => void;
@@ -141,7 +150,11 @@ function AttachmentDocumentBody(props: {
     return <AudioFilePreview key={document.revision} uri={document.uri} onRetry={document.retry} />;
   }
   if (document.kind === "html") {
-    return <WorkspaceFileWebPreview uri={document.uri} />;
+    return props.htmlRender ? (
+      <HtmlRenderWebView key={document.uri} uri={document.uri} title={props.name} nested={false} />
+    ) : (
+      <WorkspaceFileWebPreview uri={document.uri} />
+    );
   }
   return (
     <View className="flex-1 items-center justify-center bg-sheet px-6">
@@ -164,7 +177,9 @@ export function AttachmentFileScreen(props: AttachmentFileScreenProps) {
   const iconColor = useUniwindTheme()["--color-icon"];
   const isAndroid = Platform.OS === "android";
   const params = props.route.params;
-  const environmentId = params.environmentId ? EnvironmentId.make(params.environmentId) : null;
+  const environmentId = params.environmentId?.trim()
+    ? EnvironmentId.make(params.environmentId)
+    : null;
   const sizeBytes = Number.parseInt(params.sizeBytes, 10) || 0;
   const draftKey = params.draftKey ?? null;
   const draft = useComposerDraft(draftKey);
@@ -196,7 +211,7 @@ export function AttachmentFileScreen(props: AttachmentFileScreenProps) {
   const { uri, resource } = document;
   useEffect(() => {
     if (nativeViewer !== "pending" || !uri) return;
-    // Presenting the viewer waits on the resolved file.
+    // oxlint-disable-next-line react/set-state-in-effect -- Presenting the viewer waits on the resolved file.
     setNativeViewer("open");
     setNativeOpen(true);
   }, [nativeViewer, uri]);
@@ -218,7 +233,7 @@ export function AttachmentFileScreen(props: AttachmentFileScreenProps) {
     pendingNativeError.current = null;
     if (nativeViewer === null) {
       // A file this screen renders itself: an explicit viewer failure is worth a word.
-      if (message) Alert.alert("Could not open document", message);
+      if (message) Dialog.alert("Could not open document", message);
       return;
     }
     if (message) {
@@ -339,7 +354,7 @@ export function AttachmentFileScreen(props: AttachmentFileScreenProps) {
     },
     [menuActions],
   );
-  const subtitle = `${draftKey ? "Draft attachment" : "Attachment"} · ${formatAttachmentSize(sizeBytes)}`;
+  const subtitle = `${draftKey ? "Draft attachment" : "Attachment"}${sizeBytes > 0 ? ` · ${formatAttachmentSize(sizeBytes)}` : ""}`;
 
   return (
     <View className="flex-1 bg-sheet">
@@ -358,53 +373,54 @@ export function AttachmentFileScreen(props: AttachmentFileScreenProps) {
           subtitle={subtitle}
           onBack={handleBack}
           trailing={
-            <ControlPillMenu
+            <Menu
               actions={androidMenuActions}
               isAnchoredToRight
               title="File actions"
               onPressAction={handleAndroidMenuAction}
             >
               <AndroidHeaderIconButton accessibilityLabel="File actions" icon="ellipsis" />
-            </ControlPillMenu>
+            </Menu>
           }
         />
       ) : null}
-      <NativeHeaderToolbar placement="right">
-        <NativeHeaderToolbar.Menu accessibilityLabel="File actions" icon="ellipsis">
+      <Toolbar placement="right">
+        <Toolbar.Menu accessibilityLabel="File actions" icon="ellipsis">
           {renderedMode ? (
-            <NativeHeaderToolbar.Menu inline>
+            <Toolbar.Menu inline>
               {menuActions
                 .filter(({ inline }) => inline)
                 .map((action) => (
-                  <NativeHeaderToolbar.MenuAction
+                  <Toolbar.MenuAction
                     key={action.id}
                     icon={action.icon}
                     isOn={action.id === selectedAction}
                     onPress={action.onPress}
                   >
                     {action.title}
-                  </NativeHeaderToolbar.MenuAction>
+                  </Toolbar.MenuAction>
                 ))}
-            </NativeHeaderToolbar.Menu>
+            </Toolbar.Menu>
           ) : null}
           {menuActions
             .filter(({ inline }) => !inline)
             .map((action) => (
-              <NativeHeaderToolbar.MenuAction
+              <Toolbar.MenuAction
                 key={action.id}
                 icon={action.icon}
                 destructive={"destructive" in action}
                 onPress={action.onPress}
               >
                 {action.title}
-              </NativeHeaderToolbar.MenuAction>
+              </Toolbar.MenuAction>
             ))}
-        </NativeHeaderToolbar.Menu>
-      </NativeHeaderToolbar>
+        </Toolbar.Menu>
+      </Toolbar>
       <AttachmentDocumentBody
         document={document}
         name={params.name}
         environmentId={environmentId}
+        htmlRender={params.htmlRender === "1"}
         nativeViewer={nativeViewer}
         nativeError={nativeError}
         onOpenNative={() => {

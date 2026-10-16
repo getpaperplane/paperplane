@@ -36,8 +36,34 @@ import * as Layer from "effect/Layer";
 import * as Redacted from "effect/Redacted";
 import * as Schedule from "effect/Schedule";
 import * as Stream from "effect/Stream";
-import { HttpServerRequest } from "effect/unstable/http/HttpServerRequest";
-import * as HttpServerResponse from "effect/unstable/http/HttpServerResponse";
+import { HttpServerRequest } from "effect/http/HttpServerRequest";
+import * as HttpServerResponse from "effect/http/HttpServerResponse";
+
+type BindingError =
+  | ec2.DescribeInstancesError
+  | ec2.DescribeInstanceStatusError
+  | ec2.StartInstancesError
+  | ec2.StopInstancesError
+  | ec2.RebootInstancesError
+  | ec2.GetConsoleOutputError
+  | ec2.GetPasswordDataError
+  | ec2.CreateSnapshotError
+  | ec2.AuthorizeSecurityGroupIngressError
+  | ec2.RevokeSecurityGroupIngressError;
+
+const authorizationResult = <A, E extends BindingError, R>(
+  operation: Effect.Effect<A, E, R>,
+) =>
+  operation.pipe(
+    Effect.retry({
+      while: (error) => error._tag === "UnauthorizedOperation",
+      schedule: Schedule.spaced("3 seconds"),
+      times: 8,
+    }),
+    // Return a typed timeout before Lambda's 30-second invocation limit.
+    Effect.timeout("25 seconds"),
+    Effect.result,
+  );
 
 type BindingError =
   | ec2.DescribeInstancesError

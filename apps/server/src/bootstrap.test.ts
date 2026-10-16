@@ -11,7 +11,7 @@ import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
 import * as TestClock from "effect/testing/TestClock";
 import { vi } from "vite-plus/test";
-import { HostProcessPlatform } from "@rove-code/shared/hostProcess";
+import * as HostProcess from "@rove-code/shared/HostProcess";
 
 import {
   BootstrapEnvelopeDecodeError,
@@ -58,7 +58,7 @@ vi.mock("node:fs", async (importOriginal) => {
   };
 });
 
-const windowsHost = HostProcessPlatform.defaultValue() === "win32";
+const windowsHost = HostProcess.Platform.defaultValue() === "win32";
 const nullDevice = windowsHost ? "\\\\.\\NUL" : "/dev/null";
 const closeIfOpen = (fd: number) => {
   try {
@@ -142,7 +142,7 @@ it.layer(NodeServices.layer)("readBootstrapEnvelope", (it) => {
       try {
         const payload = yield* readBootstrapEnvelope(TestEnvelopeSchema, fd, {
           timeoutMs: 100,
-        }).pipe(Effect.provideService(HostProcessPlatform, "linux"));
+        }).pipe(Effect.provideService(HostProcess.Platform, "linux"));
         assertSome(payload, {
           mode: "desktop",
         });
@@ -170,7 +170,7 @@ it.layer(NodeServices.layer)("readBootstrapEnvelope", (it) => {
       try {
         const error = yield* readBootstrapEnvelope(TestEnvelopeSchema, fd, {
           timeoutMs: 100,
-        }).pipe(Effect.provideService(HostProcessPlatform, "linux"), Effect.flip);
+        }).pipe(Effect.provideService(HostProcess.Platform, "linux"), Effect.flip);
 
         assert.instanceOf(error, BootstrapInputStreamOpenError);
         assert.equal(error.fd, fd);

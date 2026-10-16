@@ -30,6 +30,10 @@ class RoveTerminalModule : Module() {
         view.focusRequest = focusRequest
       }
 
+      Prop("readOnly") { view: RoveTerminalView, readOnly: Boolean ->
+        view.readOnly = readOnly
+      }
+
       Prop("autoFocus") { view: RoveTerminalView, autoFocus: Boolean ->
         view.autoFocus = autoFocus
       }

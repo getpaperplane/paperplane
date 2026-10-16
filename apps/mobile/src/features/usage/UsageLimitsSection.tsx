@@ -1,12 +1,14 @@
+import * as Dialog from "../../components/ui/Dialog";
 import { useAtomValue } from "@effect/atom-react";
-import type {
-  EnvironmentId,
-  ProviderConsumeResetCreditOutcome,
-  ProviderConsumeResetCreditInput,
-  ServerProvider,
-  ServerProviderResetCredits,
-  ServerProviderUsageWindow,
-  UsageProviderKind,
+import {
+  AuthProvidersManageScope,
+  type EnvironmentId,
+  type ProviderConsumeResetCreditOutcome,
+  type ProviderConsumeResetCreditInput,
+  type ServerProvider,
+  type ServerProviderResetCredits,
+  type ServerProviderUsageWindow,
+  type UsageProviderKind,
 } from "@rove-code/contracts";
 import {
   elapsedShare,
@@ -18,12 +20,13 @@ import {
 } from "@rove-code/shared/usageLimits";
 import { type ReactNode, useEffect, useEffectEvent, useRef, useState } from "react";
 import { refreshUsageLimits } from "@rove-code/client-runtime/state/usage";
-import { Alert, Linking, Pressable, View } from "react-native";
+import { Linking, Pressable, View } from "react-native";
 
-import { AppText as Text } from "../../components/AppText";
+import { AppText as Text } from "../../components/ui/AppText";
 import { ProviderIcon } from "../../components/ProviderIcon";
 import { environmentPresentations } from "../../state/presentation";
 import { serverEnvironment } from "../../state/server";
+import { readEnvironmentScope, useEnvironmentScope } from "../../state/session";
 import { useAtomCommand } from "../../state/use-atom-command";
 import { useProviderColors } from "./usageProviders";
 
@@ -207,6 +210,7 @@ export function ResetCredits(props: {
   readonly dense?: boolean;
 }) {
   const { environmentId, input, credits, now, dense = false } = props;
+  const canManageProviders = useEnvironmentScope(environmentId, AuthProvidersManageScope);
   const consume = useAtomCommand(serverEnvironment.consumeResetCredit, {
     reportFailure: false,
   });
@@ -225,6 +229,7 @@ export function ResetCredits(props: {
         }`;
 
   const redeem = async () => {
+    if (!readEnvironmentScope(environmentId, AuthProvidersManageScope)) return;
     setBusy(true);
     setStatus(null);
     const result = await consume({ environmentId, input });
@@ -241,7 +246,8 @@ export function ResetCredits(props: {
   };
 
   const confirm = () => {
-    Alert.alert(
+    if (!readEnvironmentScope(environmentId, AuthProvidersManageScope)) return;
+    Dialog.alert(
       "Use a reset credit?",
       "This redeems one credit on your account and clears the current rate-limit windows. It cannot be undone.",
       [
@@ -257,13 +263,13 @@ export function ResetCredits(props: {
       {credits.availableCount > 0 ? (
         <Pressable
           accessibilityRole="button"
-          accessibilityState={{ disabled: busy }}
-          disabled={busy}
+          accessibilityState={{ disabled: busy || !canManageProviders }}
+          disabled={busy || !canManageProviders}
           onPress={confirm}
           className={
             dense
-              ? "rounded-full bg-subtle-strong px-2.5 py-1"
-              : "min-h-[44px] justify-center rounded-full bg-subtle-strong px-3 py-1.5"
+              ? "rounded-full bg-subtle-strong px-2.5 py-1 disabled:opacity-[0.45]"
+              : "min-h-[44px] justify-center rounded-full bg-subtle-strong px-3 py-1.5 disabled:opacity-[0.45]"
           }
         >
           <Text
@@ -276,6 +282,11 @@ export function ResetCredits(props: {
             {busy ? "Using…" : "Use reset"}
           </Text>
         </Pressable>
+      ) : null}
+      {!canManageProviders ? (
+        <Text className="text-xs text-foreground-tertiary">
+          This connection cannot manage provider accounts.
+        </Text>
       ) : null}
       {status ? <Text className="text-sm text-foreground">{status}</Text> : null}
     </View>

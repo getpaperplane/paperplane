@@ -8,7 +8,11 @@
     ".": {
       // Keep vendored reference repositories outside the root project.
       "project": ["*.{js,mjs,cjs,ts,mts,cts}", ".github/**/*.cjs"],
-      "entry": [".github/scripts/thread-transfer-report.cjs"],
+      "entry": [
+        // CodeRabbit loads its configuration by filename.
+        ".coderabbit.config.ts",
+        ".github/scripts/thread-transfer-report.cjs",
+      ],
       "vite": { "entry": [".github/**/*.test.cjs"] },
       "vitest": { "entry": [".github/**/*.test.cjs"] },
       // The lint runtime is driven through the Vite+ lint integration, which
@@ -16,10 +20,14 @@
       "ignoreDependencies": ["oxlint"],
     },
     "scripts": {
-      // Knip loads its preprocessor through a CLI option; native verification runs directly.
-      // release-desktop.yml runs the CLI smoke test from a generated background
-      // script, where knip's workflow parsing can't see it.
-      "entry": ["knip-schemas.ts", "mobile-native-client.ts", "smoke-cli-archive.ts"],
+      // Knip loads its preprocessor through a CLI option; native verification and
+      // worktree setup (from rove.json) run directly.
+      "entry": [
+        "knip-schemas.ts",
+        "mobile-native-client.ts",
+        "setup-worktree.ts",
+        "smoke-cli-archive.ts",
+      ],
     },
     "apps/server": {
       // Vite+ pack entries and the launcher used by installed background services.
@@ -29,25 +37,23 @@
         "src/pi-runtime-worker.ts!",
         "scripts/cli.ts",
         "scripts/evaluate-thread-titles.ts",
-        // Packed and executed by the Pi bundle regression tests.
+        // Packed and executed by the retained in-process Pi bundle regression tests.
         "scripts/pi-extensions-bundle-smoke.ts",
         "scripts/pi-oauth-bundle-smoke.ts",
         "scripts/measure-pr-preview.ts",
-        // Standalone Poteto Mode prototype and real-project pilot.
-        "scripts/prototype-poteto-mode.ts",
-        "scripts/pilot-poteto-mode.ts",
+        "scripts/probe-claude-fork-local-rollback-replay.ts",
+        "scripts/update-test-shard-weights.ts",
+        "scripts/verify-background-live.ts",
         "src/provider/testFixtures/*.mjs",
       ],
       // Keep the transitive Effect runtime pinned for standalone npm installs.
       // The Vite+ web build prerequisite.
-      // cross-spawn, jose and ws are declared so relocated installs keep a
-      // top-level link for packages the externalized Pi runtime closure
-      // resolves at runtime; see scripts/lib/cli-external-packages.test.ts.
-      // cbor-x is a staging root for Modal's codec and optional native loader.
-      // Modal imports it; the bundled server needs it on disk beside the bundle.
+      // Native and disk-loaded provider packages stay external to the bundle; the
+      // CLI archive and desktop sidecar stage them from this manifest.
       "ignoreDependencies": [
         "@effect/platform-node-shared",
         "@rove-code/web",
+        "@napi-rs/keyring",
         "cbor-x",
         "cross-spawn",
         "jose",
@@ -78,7 +84,7 @@
     "apps/web": {
       // Vitest loads this through the per-file @vitest-environment directive.
       "ignoreDependencies": ["jsdom"],
-      // Worktree setup invokes this directly from rove.json.
+      // Worktree setup (scripts/setup-worktree.ts) runs this directly.
       "entry": ["scripts/warm-dep-cache.ts"],
       // UI component modules are copied and adapted as cohesive sets. Keep their
       // named subcomponents even before they have callers; the file audit still
@@ -86,12 +92,14 @@
       "ignoreIssues": { "src/components/ui/*.tsx": ["exports", "nsExports", "duplicates"] },
     },
     "apps/mobile": {
-      // Expo loads plugins by string; Metro embeds the browser entry in the native WebView.
+      // Expo loads plugins and the fingerprint config by string; Metro embeds the browser entry in the native WebView.
       "entry": [
         "index.ts!",
+        "fingerprint.config.js",
         "plugins/*.cjs",
         "scripts/generate-device-stream.mts",
         "src/features/devices/device-stream.browser.ts!",
+        "src/features/browser/preview-stream.browser.ts!",
       ],
       // Fonts are configured as asset paths; Expo autolinks the native packages.
       "ignoreDependencies": [
@@ -100,7 +108,7 @@
         "@rove-code/mobile-terminal-native",
       ],
     },
-    "apps/mobile/modules/rove-markdown-text": {
+    "apps/mobile/modules/rove-source-text": {
       // React Native codegen discovers component specifications by filename.
       "entry": ["src/*NativeComponent.ts!"],
     },
@@ -121,6 +129,11 @@
       "includeEntryExports": true,
       "entry": ["test/fixtures/*.ts"],
       "ignoreIssues": { "src/_generated/**": ["exports", "types"] },
+    },
+    "packages/source-control-github": {
+      // graphqlgen reads its config; the generated operations export every selection's class.
+      "entry": ["graphql.config.ts"],
+      "ignoreIssues": { "**/*.graphql.ts": ["exports", "types", "namespaceMembers"] },
     },
   },
 }

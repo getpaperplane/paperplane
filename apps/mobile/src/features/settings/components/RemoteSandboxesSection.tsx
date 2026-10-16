@@ -1,27 +1,21 @@
+import { useAtomValue } from "@effect/atom-react";
 import { useNavigation } from "@react-navigation/native";
 import {
-  ThreadId,
   type EnvironmentId,
   type RemoteSandbox,
   type SandboxInventory,
   type SandboxProvider,
 } from "@rove-code/contracts";
 import {
-  standaloneThreadInput,
-  supportsStandaloneThreads,
-} from "@rove-code/client-runtime/state/standalone-thread";
-import {
   squashAtomCommandFailure,
   type AtomCommandResult,
 } from "@rove-code/client-runtime/state/runtime";
 import { useEffect, useRef, useState } from "react";
 import { Alert, TextInput, View } from "react-native";
-import { AppText as Text } from "../../../components/AppText";
+import { AppText as Text } from "../../../components/ui/AppText";
 import { environmentCatalog } from "../../../connection/catalog";
 import { connectPairingUrl } from "../../../connection/onboarding";
-import { uuidv4 } from "../../../lib/uuid";
 import { sandboxEnvironment } from "../../../state/sandbox";
-import { threadEnvironment } from "../../../state/threads";
 import { useAtomCommand } from "../../../state/use-atom-command";
 import { SettingsActionRow } from "./SettingsActionRow";
 import { SettingsSection } from "./SettingsSection";
@@ -43,10 +37,8 @@ export function RemoteSandboxesSection({
   const configure = useAtomCommand(sandboxEnvironment.configure, { reportFailure: false });
   const create = useAtomCommand(sandboxEnvironment.create, { reportFailure: false });
   const action = useAtomCommand(sandboxEnvironment.action, { reportFailure: false });
-  const link = useAtomCommand(sandboxEnvironment.link, { reportFailure: false });
-  const getConfig = useAtomCommand(sandboxEnvironment.getConfig, { reportFailure: false });
+  const mutationAllowed = useAtomValue(sandboxEnvironment.action.permissionAtom(environmentId));
   const pair = useAtomCommand(connectPairingUrl, { reportFailure: false });
-  const createThread = useAtomCommand(threadEnvironment.create, { reportFailure: false });
   const removeEnvironment = useAtomCommand(environmentCatalog.remove, { reportFailure: false });
   const [inventory, setInventory] = useState<SandboxInventory | null>(null);
   const [provider, setProvider] = useState<SandboxProvider>("boat");
@@ -77,7 +69,7 @@ export function RemoteSandboxesSection({
   const refresh = async () =>
     setInventory(value(await inventoryCommand({ environmentId, input: {} })));
   const run = async (work: () => Promise<void>) => {
-    if (!allowed || busyRef.current) return;
+    if (!allowed || !mutationAllowed || busyRef.current) return;
     busyRef.current = true;
     setBusy(true);
     setError(null);
@@ -107,35 +99,29 @@ export function RemoteSandboxesSection({
     ]);
   const configured = inventory?.configuredProviders.includes(provider) ?? false;
   const tracked = inventory?.sandboxes.some((sandbox) => sandbox.provider === provider) ?? false;
-  const disabled = !allowed || busy;
+  const disabled = !allowed || !mutationAllowed || busy;
   const open = (sandbox: RemoteSandbox) =>
     void run(async () => {
       const result = value(
         await action({ environmentId, input: { id: sandbox.id, action: "pair", confirmed: true } }),
       );
       if (!result.pairingUrl) throw new Error("Pairing URL is unavailable.");
-      const targetId = value(await pair(result.pairingUrl));
-      const config = value(await getConfig({ environmentId: targetId, input: {} }));
-      if (!supportsStandaloneThreads(config))
-        throw new Error("Update Rove in the sandbox before creating a thread.");
-      if (sandbox.environmentId !== null && sandbox.environmentId !== targetId)
-        throw new Error("Sandbox identity changed; existing thread was not replaced.");
-      const threadId = sandbox.threadId ?? ThreadId.make(uuidv4());
-      if (sandbox.threadId === null) {
-        value(
-          await createThread({
-            environmentId: targetId,
-            input: standaloneThreadInput(threadId, config),
-          }),
-        );
-        value(
-          await link({
-            environmentId,
-            input: { id: sandbox.id, environmentId: targetId, threadId },
-          }),
-        );
+      // V2 threads require a project. Pairing is independent of thread creation;
+      // a sandbox-owned Scratch workspace is a separate V2 port.
+      const targetId = value(
+        await pair({
+          pairingUrl: result.pairingUrl,
+          ...(sandbox.environmentId ? { expectedEnvironmentId: sandbox.environmentId } : undefined),
+        }),
+      );
+      if (sandbox.threadId) {
+        navigation.navigate("Thread", { environmentId: targetId, threadId: sandbox.threadId });
+      } else {
+        navigation.navigate("SettingsSheet", {
+          screen: "SettingsContent",
+          params: { screen: "SettingsEnvironmentDetail", params: { environmentId: targetId } },
+        });
       }
-      navigation.navigate("Thread", { environmentId: targetId, threadId });
     });
   return (
     <SettingsSection title="Remote sandboxes · Preview">
@@ -272,7 +258,7 @@ export function RemoteSandboxesSection({
           </View>
           <SettingsActionRow
             icon="arrow.up.right"
-            label={sandbox.threadId ? "Open thread" : "Connect & create blank thread"}
+            label={sandbox.threadId ? "Open thread" : "Connect environment"}
             disabled={disabled || sandbox.phase !== "running"}
             onPress={() => open(sandbox)}
           />

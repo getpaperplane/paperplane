@@ -33,7 +33,7 @@ Bundled servers also accept runtime overrides for operator-managed deployments.
 Copy `infra/relay/.env.example` to `infra/relay/.env` for relay deployment settings.
 Create an existing Neon Free project and supply its project ID, production branch name, and a
 project-scoped API key as described in the relay README. Deploy `prod` before personal stages
-because it owns their shared DNS zones and initializes the branch they fork. The deploy wrapper
+because it owns their shared DNS zones and initializes the branch they fork. The stack's `PublishClientConfig` action
 writes the resulting relay URL back to the root `.env`.
 
 ## CLI OAuth application
@@ -99,7 +99,7 @@ For a production macOS app with bundle ID `dev.rove.app`:
    This setting also configures Electron/macOS passkeys.
 4. Check `https://<frontend-api>/.well-known/apple-app-site-association`. Its
    `webcredentials.apps` must include `<TEAM_ID>.dev.rove.app`.
-5. Configure signing as described in the [release runbook](./release.md#2-apple-signing--notarization-setup-macos).
+5. Apple provisioning is separate from [Rove's self-signed release mode](./release.md#build-self-signed-macos-artifacts-without-apple-membership), which does not enable native passkeys or notarization. Use Developer ID signing with the Apple credentials and provisioning profile when testing this setup.
 
 Local signed builds additionally use:
 

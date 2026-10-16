@@ -55,8 +55,8 @@ function EnabledPullRequestThreadLinks({
   onPickerOpenChange,
 }: PullRequestThreadLinksProps) {
   const parsed = parseChangeRequestUrl(url);
-  const currentThreadRef = threadRef?.environmentId === environmentId ? threadRef : null;
-  const thread = useThreadShell(currentThreadRef);
+  const thread = useThreadShell(threadRef?.environmentId === environmentId ? threadRef : null);
+  const currentThreadRef = thread === null ? null : threadRef;
   const linking = usePullRequestLinking(environmentId);
   const linkedHere = linking.isLinked(thread, url);
   const relations = useEnvironmentQuery(
@@ -204,7 +204,7 @@ function ThreadPicker({
       (thread) =>
         thread.environmentId === environmentId &&
         thread.archivedAt === null &&
-        `${thread.title} ${thread.projectId === null ? "Standalone" : (projectNames.get(thread.projectId) ?? "")}`
+        `${thread.title} ${projectNames.get(thread.projectId) ?? ""}`
           .toLocaleLowerCase()
           .includes(search),
     )
@@ -231,7 +231,7 @@ function ThreadPicker({
                 <span className="flex min-w-0 flex-1 flex-col">
                   <span className="truncate">{thread.title || "Untitled thread"}</span>
                   <span className="truncate text-xs text-muted-foreground">
-                    {thread.projectId === null ? "Standalone" : projectNames.get(thread.projectId)}
+                    {projectNames.get(thread.projectId)}
                   </span>
                 </span>
                 {linked ? (

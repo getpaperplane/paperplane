@@ -16,7 +16,10 @@ import {
 } from "@rove-code/contracts";
 
 import type * as PullRequestFilesViewed from "../persistence/PullRequestFilesViewed.ts";
-import type { ProviderFileRevisions, PullRequestProviderError } from "./PullRequestProvider.ts";
+import type {
+  ProviderFileRevisions,
+  PullRequestProviderError,
+} from "@rove-code/source-control-core/server/PullRequestProvider";
 import type { PullRequestError, SupportedProject } from "./PullRequestService.ts";
 
 /**

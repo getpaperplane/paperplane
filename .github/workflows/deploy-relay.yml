@@ -1,6 +1,12 @@
 name: Deploy Rove Connect relay
 
 on:
+  push:
+    branches:
+      - main
+  # Redeploys main after a variable or secret change. Alchemy redeploys the
+  # Worker when a value it reads changes, so force is rarely needed, and it
+  # replaces the Postgres runtime role (alchemy-run/alchemy#1832).
   workflow_dispatch:
     inputs:
       dry_run:
@@ -8,9 +14,10 @@ on:
         type: boolean
         required: true
         default: true
-  push:
-    branches:
-      - main
+      force:
+        description: Redeploy every resource, including ones with no detected changes. Replaces the Postgres runtime role.
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -24,10 +31,11 @@ concurrency:
 jobs:
   deploy_relay:
     name: Deploy production relay
-    # Requires Cloudflare, Neon, Clerk, and Axiom credentials.
-    # Manual setup does not enable Connect in release builds. Automatic main
-    # deployments still require the repository readiness gate.
-    if: github.event_name == 'workflow_dispatch' || vars.ROVE_CLOUD_READY == 'true'
+    # Requires Cloudflare, Neon, Clerk, and Axiom credentials. A manual run from
+    # another branch would deploy that branch to production. Manual setup does not
+    # enable Connect in release builds; automatic main deployments still require
+    # the repository readiness gate.
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'workflow_dispatch' || vars.ROVE_CLOUD_READY == 'true')
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     environment:
@@ -41,6 +49,7 @@ jobs:
       RELAY_API_ZONE_NAME: ${{ vars.RELAY_API_ZONE_NAME }}
       RELAY_TUNNEL_ZONE_NAME: ${{ vars.RELAY_TUNNEL_ZONE_NAME }}
       RELAY_TUNNEL_CLEANUP_MODE: ${{ vars.RELAY_TUNNEL_CLEANUP_MODE }}
+      RELAY_LEGACY_TUNNEL_CLEANUP_MODE: ${{ vars.RELAY_LEGACY_TUNNEL_CLEANUP_MODE }}
       # Let the Free database suspend between maintenance runs.
       RELAY_MAINTENANCE_SCHEDULE: ${{ vars.RELAY_MAINTENANCE_SCHEDULE || '0 * * * *' }}
       CLERK_PUBLISHABLE_KEY: ${{ vars.CLERK_PUBLISHABLE_KEY }}
@@ -70,18 +79,20 @@ jobs:
               - --filter=rove-relay...
 
       - name: Deploy production relay stage
-        id: deploy
-        working-directory: infra/relay
         shell: bash
         run: |
           set -euo pipefail
-          args=(--stage prod --yes --github-output)
           if [[ "$DRY_RUN" == "true" ]]; then
-            args+=(--dry-run)
+            vp run --filter rove-relay plan --stage prod
+          else
+            vp run --filter rove-relay deploy --stage prod --yes --no-input ${FORCE:+--force}
           fi
-          node scripts/deploy.ts "${args[@]}"
         env:
           DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}
+          FORCE: ${{ inputs.force && 'true' || '' }}
+          # The PublishClientConfig action writes the client env here instead
+          # of the repo-root .env; nothing on the runner reads it.
+          ROVE_RELAY_CLIENT_CONFIG_ENV: ${{ runner.temp }}/relay-client-config.env
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
           AXIOM_TOKEN: ${{ secrets.AXIOM_TOKEN }}
@@ -93,20 +104,13 @@ jobs:
         uses: actions/github-script@v8
         with:
           script: |
-            const result = "${{ steps.deploy.outputs.result }}";
-            const changed = "${{ steps.deploy.outputs.changed }}" === "true";
-            const description = changed
-              ? "Relay production deploy applied infrastructure changes."
-              : result === "noop"
-                ? "Relay production deploy was a no-op."
-                : `Relay production deploy completed with result: ${result}.`;
-
+            const dryRun = "${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}" === "true";
             await github.rest.repos.createCommitStatus({
               owner: context.repo.owner,
               repo: context.repo.repo,
               sha: context.sha,
               state: "success",
-              context: result === "dry-run" ? "Relay plan / production" : "Relay deploy / production",
-              description,
+              context: dryRun ? "Relay plan / production" : "Relay deploy / production",
+              description: dryRun ? "Relay production plan completed." : "Relay production deploy completed.",
               target_url: `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
             });

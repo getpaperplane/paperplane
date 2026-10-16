@@ -128,17 +128,6 @@ describe("chatThreadActions", () => {
     expect(projectRef).toEqual(scopeProjectRef(ENVIRONMENT_ID, PROJECT_ID));
   });
 
-  it("falls back to the default project ref from a standalone thread", () => {
-    const projectRef = resolveThreadActionProjectRef(
-      createContext({
-        activeThread: { environmentId: ENVIRONMENT_ID, projectId: null },
-        defaultProjectRef: scopeProjectRef(ENVIRONMENT_ID, PROJECT_ID),
-      }),
-    );
-
-    expect(projectRef).toEqual(scopeProjectRef(ENVIRONMENT_ID, PROJECT_ID));
-  });
-
   it("falls back to the default project ref when there is no active thread context", () => {
     const projectRef = resolveThreadActionProjectRef(
       createContext({
@@ -166,7 +155,7 @@ describe("chatThreadActions", () => {
     expect(handleNewThread).toHaveBeenCalledWith(scopeProjectRef(ENVIRONMENT_ID, PROJECT_ID));
   });
 
-  it("starts a standalone thread when there is no project context", async () => {
+  it("does not start a thread when there is no project context", async () => {
     const handleNewThread = vi.fn<ChatThreadActionContext["handleNewThread"]>(async () => null);
 
     const didStart = await startNewThreadFromContext(
@@ -176,7 +165,7 @@ describe("chatThreadActions", () => {
       }),
     );
 
-    expect(didStart).toBe(true);
-    expect(handleNewThread).toHaveBeenCalledWith(null);
+    expect(didStart).toBe(false);
+    expect(handleNewThread).not.toHaveBeenCalled();
   });
 });

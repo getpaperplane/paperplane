@@ -32,7 +32,7 @@ function ExternalLink({
   return (
     <a
       className={cn(
-        "rounded-sm outline-none transition-colors hover:text-foreground focus-visible:text-foreground focus-visible:ring-2 focus-visible:ring-ring",
+        "rounded-sm outline-none transition-colors hover:text-foreground focus-visible:text-foreground focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
         className,
       )}
       href={href}

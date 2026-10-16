@@ -1,6 +1,6 @@
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { assert, describe, it } from "@effect/vitest";
-import { HostProcessPlatform } from "@rove-code/shared/hostProcess";
+import * as HostProcess from "@rove-code/shared/HostProcess";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
@@ -8,9 +8,10 @@ import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
 import * as Schema from "effect/Schema";
 import * as Stream from "effect/Stream";
-import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
+import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as NodeNet from "node:net";
 
+import { remoteStateKey } from "./command.ts";
 import { buildRemoteStopScript, buildRemoteRoveRunnerScript } from "./tunnel.ts";
 
 const Started = Schema.Struct({
@@ -20,7 +21,7 @@ const Started = Schema.Struct({
 });
 const decodeStarted = Schema.decodeUnknownSync(Schema.fromJsonString(Started));
 
-describe.skipIf(HostProcessPlatform.defaultValue() === "win32")(
+describe.skipIf(HostProcess.Platform.defaultValue() === "win32")(
   "remote runner process ownership",
   () => {
     it.live("keeps the server PID and graceful shutdown through the node-script runner", () =>
@@ -44,7 +45,7 @@ const server = net.createServer((socket) => {
 process.on("SIGTERM", () => server.close(() => {
   process.stdout.write("graceful shutdown\\n");
 }));
-server.listen(Number(process.env.ROVE_TEST_PORT ?? 0), "127.0.0.1", () => {
+server.listen(Number(process.env.T3_TEST_PORT ?? 0), "127.0.0.1", () => {
   process.stdout.write(JSON.stringify({
     pid: process.pid,
     port: server.address().port,
@@ -62,7 +63,7 @@ server.listen(Number(process.env.ROVE_TEST_PORT ?? 0), "127.0.0.1", () => {
                 cwd: fixture,
                 env: {
                   PATH: bin,
-                  ROVE_TEST_PORT: String(port),
+                  T3_TEST_PORT: String(port),
                 },
                 detached: false,
                 stdin: Stream.make(
@@ -131,7 +132,7 @@ server.listen(Number(process.env.ROVE_TEST_PORT ?? 0), "127.0.0.1", () => {
   },
 );
 
-describe.skipIf(HostProcessPlatform.defaultValue() === "win32")(
+describe.skipIf(HostProcess.Platform.defaultValue() === "win32")(
   "remote stop process ownership",
   () => {
     it.live.each(["graceful", "timeout", "external"] as const)(
@@ -188,23 +189,25 @@ server.listen(0, "127.0.0.1", () => {
           for (const [name, contents] of Object.entries(savedState)) {
             yield* fs.writeFileString(path.join(fixture, name), contents);
           }
-          const script = buildRemoteStopScript({
-            alias: "fixture",
-            hostname: "fixture",
-            username: null,
-            port: null,
-          });
+          const script = buildRemoteStopScript(
+            yield* remoteStateKey({
+              alias: "fixture",
+              hostname: "fixture",
+              username: null,
+              port: null,
+            }),
+          );
           // Redirect only the state directory. Never use the developer's SSH state.
           const isolatedScript = script.replace(
             /^STATE_DIR=.*$/mu,
-            'STATE_DIR="$ROVE_TEST_STATE_DIR"',
+            'STATE_DIR="$T3_TEST_STATE_DIR"',
           );
           assert.notEqual(isolatedScript, script);
           const runStop = Effect.fn("test.remoteStop")(function* () {
             const stop = yield* spawner.spawn(
               ChildProcess.make("/bin/sh", ["-s"], {
                 cwd: fixture,
-                env: { ROVE_TEST_STATE_DIR: fixture },
+                env: { T3_TEST_STATE_DIR: fixture },
                 stdin: Stream.make(new TextEncoder().encode(isolatedScript)),
               }),
             );

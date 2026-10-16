@@ -55,15 +55,10 @@ export function projectScriptCwd(input: {
   return input.worktreePath ?? input.project.cwd;
 }
 
-interface ProjectScriptRuntimeEnv {
-  [name: string]: string;
-  readonly ROVE_PROJECT_ROOT: string;
-}
-
 export function projectScriptRuntimeEnv(
   input: ProjectScriptRuntimeEnvInput,
-): ProjectScriptRuntimeEnv {
-  const env: ProjectScriptRuntimeEnv = {
+): Record<string, string> {
+  const env: Record<string, string> = {
     ROVE_PROJECT_ROOT: input.project.cwd,
   };
   if (input.worktreePath) {
@@ -77,4 +72,17 @@ export function projectScriptRuntimeEnv(
 
 export function setupProjectScript(scripts: readonly ProjectScript[]): ProjectScript | null {
   return scripts.find((script) => script.runOnWorktreeCreate) ?? null;
+}
+
+/** Menu label naming the lifecycle roles a script runs in, e.g. "Clean (on settle)". */
+export function projectScriptMenuLabel(script: ProjectScript): string {
+  const roles = [
+    ...(script.runOnWorktreeCreate ? ["setup"] : []),
+    ...(script.runOnSettle ? ["on settle"] : []),
+  ];
+  return roles.length === 0 ? script.name : `${script.name} (${roles.join(", ")})`;
+}
+
+export function settleProjectScript(scripts: readonly ProjectScript[]): ProjectScript | null {
+  return scripts.find((script) => script.runOnSettle === true) ?? null;
 }

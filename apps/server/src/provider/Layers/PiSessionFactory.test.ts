@@ -6,25 +6,11 @@ import * as NodeOS from "node:os";
 import * as NodePath from "node:path";
 
 import { assert, it } from "@effect/vitest";
-import * as NodeServices from "@effect/platform-node/NodeServices";
-
-import { ServerConfig } from "../../config.ts";
-import * as Deferred from "effect/Deferred";
 import * as DateTime from "effect/DateTime";
-import * as Effect from "effect/Effect";
-import * as Layer from "effect/Layer";
-import * as Schema from "effect/Schema";
-import * as Stream from "effect/Stream";
-import {
-  ApprovalRequestId,
-  PiSettings,
-  ThreadId,
-  type ProviderRuntimeEvent,
-} from "@rove-code/contracts";
+import { ThreadId } from "@rove-code/contracts";
 import { ModelRuntime, SessionManager, SettingsManager } from "@earendil-works/pi-coding-agent";
 import * as PiSdk from "@earendil-works/pi-coding-agent";
 import { EnvironmentId, ProviderInstanceId } from "@rove-code/contracts";
-import * as McpProviderSession from "../../mcp/McpProviderSession.ts";
 import * as PiRoveTools from "./PiRoveTools.ts";
 import { afterEach, beforeEach, describe, expect, vi } from "vite-plus/test";
 
@@ -35,16 +21,9 @@ import {
   resolvePiModelForSession,
   resolvePiSessionResume,
 } from "./PiSessionFactory.ts";
-import {
-  makePiAdapter,
-  parsePiResumeCursor,
-  type PiSessionEventLike,
-  type PiSessionLike,
-} from "./PiAdapter.ts";
+import { type PiSessionEventLike, type PiSessionLike } from "./PiAdapter.ts";
 
 vi.mock("@earendil-works/pi-coding-agent", { spy: true });
-
-const decodePiSettings = Schema.decodeSync(PiSettings);
 
 describe("headless Pi extensions", () => {
   let root: string;
@@ -72,7 +51,6 @@ describe("headless Pi extensions", () => {
     vi.useRealTimers();
     for (const session of sessions.splice(0)) await session.dispose();
     vi.restoreAllMocks();
-    McpProviderSession.clearAllMcpProviderSessions();
     vi.unstubAllEnvs();
     NodeFS.rmSync(root, { recursive: true, force: true });
   });
@@ -101,9 +79,9 @@ describe("headless Pi extensions", () => {
       providerSessionId: "test-session",
       endpoint: "http://127.0.0.1:12345/mcp",
       authorizationHeader: "Bearer test-secret",
+      browserToolsAvailable: false,
       capabilities: new Set<string>(),
     };
-    McpProviderSession.setMcpProviderSession(config);
     const dispose = vi.fn(async () => {});
     const bridge = vi.spyOn(PiRoveTools, "createPiRoveTools").mockResolvedValue({
       tools: [
@@ -126,7 +104,7 @@ describe("headless Pi extensions", () => {
         thinkingLevel: undefined,
         resumeSessionId: undefined,
       },
-      { extensions: false },
+      { extensions: false, mcpProviderSession: config },
     );
     sessions.push(session);
     expect(bridge).toHaveBeenCalledWith(config);
@@ -150,7 +128,7 @@ describe("headless Pi extensions", () => {
           thinkingLevel: undefined,
           resumeSessionId: undefined,
         },
-        { extensions: false },
+        { extensions: false, mcpProviderSession: config },
       ),
     ).rejects.toThrow("SDK startup failed");
     expect(dispose).toHaveBeenCalledOnce();
@@ -914,7 +892,6 @@ describe("headless Pi extensions", () => {
         question: "Edit",
         options: [],
         allowCustomAnswer: true,
-        inputMode: "multiline",
         initialAnswer: "Original text",
       },
     ]);
@@ -1073,172 +1050,6 @@ describe("headless Pi extensions", () => {
     assert.deepStrictEqual(preflight, [false]);
     assert.isFalse(events.some((event) => event.type === "prompt_error"));
   });
-
-  it.effect("completes a real extension command through the Rove adapter", () =>
-    Effect.gen(function* () {
-      const adapter = yield* makePiAdapter(decodePiSettings({}), {
-        createSession: createPiSession,
-      });
-      yield* Effect.addFinalizer(() => adapter.stopAll().pipe(Effect.orDie));
-      const completion = yield* Deferred.make<ProviderRuntimeEvent>();
-      const question =
-        yield* Deferred.make<Extract<ProviderRuntimeEvent, { type: "user-input.requested" }>>();
-      const resolved = yield* Deferred.make<void>();
-      yield* adapter.streamEvents.pipe(
-        Stream.runForEach((event) =>
-          event.type === "turn.completed"
-            ? Deferred.succeed(completion, event)
-            : event.type === "user-input.requested"
-              ? Deferred.succeed(question, event)
-              : event.type === "user-input.resolved"
-                ? Deferred.succeed(resolved, undefined)
-                : Effect.void,
-        ),
-        Effect.forkChild({ startImmediately: true }),
-      );
-      const threadId = ThreadId.make("pi-extension-integration");
-      yield* adapter.startSession({ threadId, cwd, runtimeMode: "full-access" });
-      const turn = yield* adapter.sendTurn({ threadId, input: "/count" });
-      const requested = yield* Deferred.await(question);
-      assert.strictEqual(requested.turnId, turn.turnId);
-      assert.strictEqual(requested.payload.questions[0]?.allowCustomAnswer, false);
-      assert.isFalse(yield* Deferred.isDone(completion));
-      yield* adapter.respondToUserInput(threadId, ApprovalRequestId.make(requested.requestId!), {
-        answer: "0",
-      });
-      yield* Deferred.await(resolved);
-      const completed = yield* Deferred.await(completion);
-      assert.strictEqual(completed.turnId, turn.turnId);
-      assert.strictEqual(completed.type, "turn.completed");
-      if (completed.type === "turn.completed")
-        assert.strictEqual(completed.payload.state, "completed");
-      assert.include(log(), "start:true:rpc\n");
-      assert.include(log(), "command:1:true\n");
-    }).pipe(
-      Effect.scoped,
-      Effect.provide(
-        ServerConfig.layerTest(process.cwd(), { prefix: "rove-pi-session-factory-" }).pipe(
-          Layer.provideMerge(NodeServices.layer),
-        ),
-      ),
-    ),
-  );
-
-  it.effect("Stop dismisses a real extension question and continuation uses a new runtime", () =>
-    Effect.gen(function* () {
-      const adapter = yield* makePiAdapter(decodePiSettings({}), {
-        createSession: createPiSession,
-      });
-      yield* Effect.addFinalizer(() => adapter.stopAll().pipe(Effect.orDie));
-      const question =
-        yield* Deferred.make<Extract<ProviderRuntimeEvent, { type: "user-input.requested" }>>();
-      const exited = yield* Deferred.make<void>();
-      const events: ProviderRuntimeEvent[] = [];
-      yield* adapter.streamEvents.pipe(
-        Stream.runForEach((event) => {
-          events.push(event);
-          return event.type === "user-input.requested"
-            ? Deferred.succeed(question, event)
-            : event.type === "session.exited"
-              ? Deferred.succeed(exited, undefined)
-              : Effect.void;
-        }),
-        Effect.forkChild({ startImmediately: true }),
-      );
-      const threadId = ThreadId.make("pi-stop-question");
-      yield* adapter.startSession({ threadId, cwd, runtimeMode: "full-access" });
-      const turn = yield* adapter.sendTurn({ threadId, input: "/count" });
-      const requested = yield* Deferred.await(question);
-      const blocked = yield* adapter
-        .sendTurn({ threadId, input: "overlapping prompt" })
-        .pipe(Effect.flip);
-      assert.include(blocked.detail, "pending Pi extension question");
-      yield* adapter.interruptTurn(threadId, turn.turnId);
-      yield* Deferred.await(exited);
-      assert.isFalse(yield* adapter.hasSession(threadId));
-      assert.isTrue(
-        events.some(
-          (event) =>
-            event.type === "user-input.resolved" && event.requestId === requested.requestId,
-        ),
-      );
-      assert.strictEqual(events.filter((event) => event.type === "turn.aborted").length, 1);
-      yield* adapter.startSession({
-        threadId,
-        cwd,
-        runtimeMode: "full-access",
-        resumeCursor: turn.resumeCursor,
-      });
-      const stale = yield* adapter
-        .respondToUserInput(threadId, ApprovalRequestId.make(requested.requestId!), { answer: "0" })
-        .pipe(Effect.flip);
-      assert.include(stale.detail, "Unknown pending user-input request");
-      const next = yield* adapter.sendTurn({ threadId, input: "handled" });
-      assert.notStrictEqual(next.turnId, turn.turnId);
-    }).pipe(
-      Effect.scoped,
-      Effect.provide(
-        ServerConfig.layerTest(process.cwd(), { prefix: "rove-pi-session-ui-" }).pipe(
-          Layer.provideMerge(NodeServices.layer),
-        ),
-      ),
-    ),
-  );
-
-  it.effect("recovers the same conversation after a missing-file failure and restoration", () =>
-    Effect.gen(function* () {
-      const adapter = yield* makePiAdapter(
-        decodePiSettings({ model: "rove-extension-test/fixture" }),
-        { createSession: createPiSession },
-      );
-      yield* Effect.addFinalizer(() => adapter.stopAll().pipe(Effect.orDie));
-      const completion = yield* Deferred.make<ProviderRuntimeEvent>();
-      yield* adapter.streamEvents.pipe(
-        Stream.runForEach((event) =>
-          event.type === "turn.completed" ? Deferred.succeed(completion, event) : Effect.void,
-        ),
-        Effect.forkChild({ startImmediately: true }),
-      );
-      const threadId = ThreadId.make("pi-recovery-integration");
-      const session = yield* adapter.startSession({ threadId, cwd, runtimeMode: "full-access" });
-      yield* adapter.sendTurn({ threadId, input: "Remember this conversation" });
-      const completed = yield* Deferred.await(completion);
-      assert.strictEqual(completed.type, "turn.completed");
-      if (completed.type === "turn.completed")
-        assert.strictEqual(completed.payload.state, "completed");
-      const before = yield* adapter.readThread(threadId);
-      yield* adapter.stopSession(threadId);
-      const cursor = parsePiResumeCursor(session.resumeCursor)!;
-      const path = cursor.sessionFile!;
-      const history = NodeFS.readFileSync(path, "utf8");
-      NodeFS.unlinkSync(path);
-      const error = yield* adapter
-        .startSession({ threadId, cwd, runtimeMode: "full-access", resumeCursor: cursor })
-        .pipe(Effect.flip);
-      assert.include(error.message, "missing");
-      assert.include(error.message, "create a new thread");
-      assert.isFalse(yield* adapter.hasSession(threadId));
-      assert.isFalse(NodeFS.existsSync(path));
-      NodeFS.writeFileSync(path, history);
-      const recovered = yield* adapter.startSession({
-        threadId,
-        cwd,
-        runtimeMode: "full-access",
-        resumeCursor: cursor,
-      });
-      assert.deepStrictEqual(recovered.resumeCursor, cursor);
-      const after = yield* adapter.readThread(threadId);
-      const encodeJson = Schema.encodeEffect(Schema.fromJsonString(Schema.Unknown));
-      assert.strictEqual(yield* encodeJson(after.turns), yield* encodeJson(before.turns));
-    }).pipe(
-      Effect.scoped,
-      Effect.provide(
-        ServerConfig.layerTest(process.cwd(), { prefix: "rove-pi-session-factory-" }).pipe(
-          Layer.provideMerge(NodeServices.layer),
-        ),
-      ),
-    ),
-  );
 
   it("loads a local Pi package configured in project settings", async () => {
     const packageDir = NodePath.join(root, "package");

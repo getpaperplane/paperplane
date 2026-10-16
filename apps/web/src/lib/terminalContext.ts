@@ -1,6 +1,8 @@
 import type { ThreadId } from "@rove-code/contracts";
-import { formatComposerContextReference } from "@rove-code/shared/composerContextReferences";
-import { toKindScopedComposerContextId } from "./composerContextReferences";
+import {
+  formatComposerContextReference,
+  toKindScopedComposerContextId,
+} from "@rove-code/shared/composerContextReferences";
 
 export interface TerminalContextSelection {
   terminalId: string;

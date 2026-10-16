@@ -1,3 +1,4 @@
+import { ProviderInstanceIcon } from "../chat/ProviderInstanceIcon";
 import type { UsageProviderKind } from "@rove-code/contracts";
 import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
 
@@ -9,17 +10,22 @@ import {
   formatTokens,
   formatUsd,
 } from "@rove-code/shared/usageFormat";
+import { cn } from "~/lib/utils";
 import { PROVIDER_ORDER, PROVIDER_PRESENTATION } from "./usageProviders";
+import { observeResize } from "~/lib/observeResize";
 
 const VIEW_WIDTH = 960;
 const VIEW_HEIGHT = 260;
 const TICK_COUNT = 4;
 const PLOT_TOP = 8;
+const NONE_LOADING: ReadonlySet<UsageProviderKind> = new Set();
 
 export type UsageChartMetric = "tokens" | "cost";
 
 interface UsageProviderChartProps {
   readonly providers: readonly UsageProviderKind[];
+  /** Providers whose figures are still coming in: their lines are muted. */
+  readonly loadingProviders?: ReadonlySet<UsageProviderKind>;
   readonly days: readonly string[];
   readonly daily: readonly DailyTotals[];
   readonly hours: readonly string[];
@@ -28,9 +34,8 @@ interface UsageProviderChartProps {
   readonly referenceTime: string | undefined;
   readonly resolution: "day" | "hour";
   readonly timeZone: string;
-  /** Inclusive focused period keys, drawn as a band over the plot. */
-  readonly selection: UsagePeriodRange | null;
-  readonly onSelectionChange: (selection: UsagePeriodRange | null) => void;
+  readonly selection?: UsagePeriodRange | null;
+  readonly onSelectionChange?: (selection: UsagePeriodRange | null) => void;
 }
 
 export interface UsagePeriodRange {
@@ -38,10 +43,7 @@ export interface UsagePeriodRange {
   readonly end: string;
 }
 
-/**
- * Resolves a click or drag between two period indexes. Clicking the period that
- * is already the whole selection clears it, so a click is its own way out.
- */
+/** A range is inclusive; clicking an already focused single period clears it. */
 export function resolvePeriodSelection(
   periods: readonly string[],
   anchor: number,
@@ -172,6 +174,10 @@ function curvePath(segments: readonly CurveSegment[]): string {
   return path;
 }
 
+function areaPath(line: string) {
+  return line === "" ? "" : `${line} L${VIEW_WIDTH},${VIEW_HEIGHT} L0,${VIEW_HEIGHT} Z`;
+}
+
 /**
  * Builds a scale whose maximum is a readable 1/2/5 x 10^n step at or above the
  * peak.
@@ -180,7 +186,7 @@ function curvePath(segments: readonly CurveSegment[]): string {
  * peak leaves the tallest day drawn past the top of the plot, where it is
  * clipped.
  */
-export function niceScale(peak: number, count: number) {
+export function niceScale(peak: number, count: number): { max: number; ticks: readonly number[] } {
   if (peak <= 0) return { max: 0, ticks: [0] };
 
   const rawStep = peak / count;
@@ -194,8 +200,71 @@ export function niceScale(peak: number, count: number) {
   return { max, ticks };
 }
 
+const PLACEHOLDER_TICKS = Array.from({ length: TICK_COUNT + 1 }, (_, index) => index);
+
+/**
+ * Scales to the largest single provider-period. With nothing to show yet while
+ * providers load, unlabeled placeholder gridlines hold their usual spacing so
+ * nothing shifts on arrival.
+ */
+export function chartScale(
+  columns: readonly DayColumn[],
+  loadingProviders: ReadonlySet<UsageProviderKind>,
+) {
+  // Not the sum: layered series each measure from zero, so a combined peak
+  // would leave the plot permanently half empty.
+  const peak = columns.reduce(
+    (max, column) => column.bands.reduce((inner, band) => Math.max(inner, band.value), max),
+    0,
+  );
+  return peak === 0 && loadingProviders.size > 0
+    ? { max: TICK_COUNT, ticks: PLACEHOLDER_TICKS, labeled: false }
+    : { ...niceScale(peak, TICK_COUNT), labeled: true };
+}
+
+// Leave room above the top gridline so the constant-width stroke is not
+// clipped when a series reaches the peak.
+function valueToY(value: number, max: number) {
+  return max === 0 ? VIEW_HEIGHT : VIEW_HEIGHT - (value / max) * (VIEW_HEIGHT - PLOT_TOP);
+}
+
+/** Per-provider paths in paint order, heaviest first. */
+function buildChart(
+  periods: readonly string[],
+  byPeriod: ReadonlyMap<string, DailyTotals | HourlyTotals>,
+  metric: UsageChartMetric,
+  providers: readonly UsageProviderKind[],
+  loadingProviders: ReadonlySet<UsageProviderKind>,
+) {
+  const columns = buildPeriodColumns(periods, byPeriod, metric);
+  const scale = chartScale(columns, loadingProviders);
+  const stepX = periods.length < 2 ? 0 : VIEW_WIDTH / (periods.length - 1);
+  const paths = providers.map((provider) => {
+    const slot = PROVIDER_ORDER.indexOf(provider);
+    const line = curvePath(
+      smoothCurve(
+        columns.map((column, periodIndex) => ({
+          x: periodIndex * stepX,
+          y: valueToY(column.bands[slot]?.value ?? 0, scale.max),
+        })),
+      ),
+    );
+    return {
+      provider,
+      loading: loadingProviders.has(provider),
+      total: columns.reduce((sum, column) => sum + (column.bands[slot]?.value ?? 0), 0),
+      line,
+      area: areaPath(line),
+    };
+  });
+
+  // Paint the heavier series first so the lighter one is not buried.
+  return { columns, scale, stepX, paths: paths.toSorted((a, b) => b.total - a.total) };
+}
+
 export function UsageProviderChart({
   providers,
+  loadingProviders = NONE_LOADING,
   days,
   daily,
   hours,
@@ -204,7 +273,7 @@ export function UsageProviderChart({
   referenceTime,
   resolution,
   timeZone,
-  selection,
+  selection = null,
   onSelectionChange,
 }: UsageProviderChartProps) {
   const periods = resolution === "hour" ? hours : days;
@@ -221,59 +290,14 @@ export function UsageProviderChart({
   const hoverPositionRef = useRef<{ x: number; y: number } | null>(null);
   const [drag, setDrag] = useState<{ anchor: number; current: number } | null>(null);
 
-  const { paths, ticks, stepX, toY, series } = useMemo(() => {
-    if (periods.length === 0) {
-      return {
-        paths: [],
-        series: [] as readonly DayColumn[],
-        stepX: 0,
-        ticks: [0] as readonly number[],
-        toY: () => VIEW_HEIGHT,
-      };
-    }
-
-    const columns = buildPeriodColumns(periods, byPeriod, metric);
-    // The scale tops out at the largest single provider-period, not the sum:
-    // layered series each measure from zero, so a combined peak would leave
-    // the plot permanently half empty.
-    const peak = columns.reduce(
-      (max, column) => column.bands.reduce((inner, band) => Math.max(inner, band.value), max),
-      0,
-    );
-    const { max, ticks: tickValues } = niceScale(peak, TICK_COUNT);
-    const step = periods.length === 1 ? 0 : VIEW_WIDTH / (periods.length - 1);
-    // Leave room above the top gridline so the constant-width stroke is not
-    // clipped when a series reaches the peak.
-    const toY = (value: number) =>
-      max === 0 ? VIEW_HEIGHT : VIEW_HEIGHT - (value / max) * (VIEW_HEIGHT - PLOT_TOP);
-
-    const built = providers.map((provider) => {
-      const providerIndex = PROVIDER_ORDER.indexOf(provider);
-      const line = curvePath(
-        smoothCurve(
-          columns.map((column, periodIndex) => ({
-            x: periodIndex * step,
-            y: toY(column.bands[providerIndex]?.value ?? 0),
-          })),
-        ),
-      );
-      return {
-        provider,
-        total: columns.reduce((sum, column) => sum + (column.bands[providerIndex]?.value ?? 0), 0),
-        area: line === "" ? "" : `${line} L${VIEW_WIDTH},${VIEW_HEIGHT} L0,${VIEW_HEIGHT} Z`,
-        line,
-      };
-    });
-
-    // Paint the heavier series first so the lighter one is not buried.
-    return {
-      paths: built.toSorted((a, b) => b.total - a.total),
-      series: columns,
-      stepX: step,
-      ticks: tickValues,
-      toY,
-    };
-  }, [byPeriod, metric, periods, providers]);
+  const { columns, scale, paths, stepX } = useMemo(
+    () => buildChart(periods, byPeriod, metric, providers, loadingProviders),
+    [byPeriod, loadingProviders, metric, periods, providers],
+  );
+  const toY = (value: number) => valueToY(value, scale.max);
+  // The delay keeps a quick answer from flashing, as with the page's figures.
+  const seriesClassName = (loading: boolean) =>
+    cn("transition-opacity", loading && "opacity-40 delay-150");
 
   const format = metric === "tokens" ? formatTokens : formatUsd;
 
@@ -308,12 +332,9 @@ export function UsageProviderChart({
 
     const plot = plotRef.current;
     const tooltip = tooltipRef.current;
-    if (plot === null || tooltip === null || typeof ResizeObserver === "undefined") return;
+    if (plot === null || tooltip === null) return;
 
-    const observer = new ResizeObserver(positionTooltip);
-    observer.observe(plot);
-    observer.observe(tooltip);
-    return () => observer.disconnect();
+    return observeResize([plot, tooltip], positionTooltip);
   }, [hoverIndex, positionTooltip]);
 
   const indexAt = useCallback(
@@ -322,92 +343,67 @@ export function UsageProviderChart({
       if (plot === null || periods.length === 0) return null;
       const bounds = plot.getBoundingClientRect();
       if (bounds.width === 0) return null;
-      const localX = Math.min(bounds.width, Math.max(0, clientX - bounds.left));
-      const localY = Math.min(bounds.height, Math.max(0, clientY - bounds.top));
-      hoverPositionRef.current = { x: localX, y: localY };
-      const index = Math.round((localX / bounds.width) * (periods.length - 1));
-      return Math.min(periods.length - 1, Math.max(0, index));
+      const x = Math.min(bounds.width, Math.max(0, clientX - bounds.left));
+      const y = Math.min(bounds.height, Math.max(0, clientY - bounds.top));
+      hoverPositionRef.current = { x, y };
+      return Math.min(
+        periods.length - 1,
+        Math.max(0, Math.round((x / bounds.width) * (periods.length - 1))),
+      );
     },
     [periods.length],
   );
-
   const showIndex = (index: number) => {
     positionTooltip();
     setHoverIndex(index);
   };
-
-  const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
-    if (event.button !== 0) return;
-    const index = indexAt(event.clientX, event.clientY);
-    if (index === null) return;
-    event.currentTarget.setPointerCapture(event.pointerId);
-    setDrag({ anchor: index, current: index });
-    showIndex(index);
-  };
-
-  const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
-    const index = indexAt(event.clientX, event.clientY);
-    if (index === null) return;
-    if (drag !== null && drag.current !== index) setDrag({ anchor: drag.anchor, current: index });
-    showIndex(index);
-  };
-
-  const handlePointerUp = () => {
-    if (drag === null) return;
-    onSelectionChange(resolvePeriodSelection(periods, drag.anchor, drag.current, selection));
-    setDrag(null);
-  };
-
-  /** Arrow keys move the readout; Enter focuses it; Shift extends the focus. */
   const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
     const plot = plotRef.current;
     if (plot === null || periods.length === 0) return;
     const last = periods.length - 1;
     const from = hoverIndex ?? (selection ? periods.indexOf(selection.end) : last);
     const step = { ArrowLeft: -1, ArrowRight: 1 }[event.key];
-    let next: number | null = null;
-    if (step !== undefined) next = Math.min(last, Math.max(0, from + step));
-    else if (event.key === "Home") next = 0;
-    else if (event.key === "End") next = last;
-
+    const next =
+      step !== undefined
+        ? Math.min(last, Math.max(0, from + step))
+        : event.key === "Home"
+          ? 0
+          : event.key === "End"
+            ? last
+            : null;
     if (next !== null) {
       event.preventDefault();
-      hoverPositionRef.current = {
-        x: last === 0 ? 0 : (next / last) * plot.clientWidth,
-        y: 0,
-      };
+      hoverPositionRef.current = { x: last === 0 ? 0 : (next / last) * plot.clientWidth, y: 0 };
       showIndex(next);
       if (event.shiftKey) {
-        // Keep the edge opposite the cursor fixed so Shift+arrows can grow or shrink.
         const start = selection ? periods.indexOf(selection.start) : -1;
         const end = selection ? periods.indexOf(selection.end) : -1;
         const anchor = start < 0 || end < 0 ? from : from === start ? end : start;
-        onSelectionChange(resolvePeriodSelection(periods, anchor, next, null));
+        onSelectionChange?.(resolvePeriodSelection(periods, anchor, next, null));
       }
-      return;
-    }
-    if ((event.key === "Enter" || event.key === " ") && hoverIndex !== null) {
+    } else if ((event.key === "Enter" || event.key === " ") && hoverIndex !== null) {
       event.preventDefault();
-      onSelectionChange(resolvePeriodSelection(periods, hoverIndex, hoverIndex, selection));
+      onSelectionChange?.(resolvePeriodSelection(periods, hoverIndex, hoverIndex, selection));
     }
   };
-
-  const band = (() => {
-    const range =
-      drag !== null
-        ? { lo: Math.min(drag.anchor, drag.current), hi: Math.max(drag.anchor, drag.current) }
-        : selection === null
-          ? null
-          : { lo: periods.indexOf(selection.start), hi: periods.indexOf(selection.end) };
-    if (range === null || range.lo < 0 || range.hi < 0) return null;
-    const half = periods.length === 1 ? VIEW_WIDTH / 2 : stepX / 2;
-    const x1 = Math.max(0, range.lo * stepX - half);
-    const x2 = Math.min(VIEW_WIDTH, range.hi * stepX + half);
-    return { x: x1, width: Math.max(0, x2 - x1) };
-  })();
+  const range =
+    drag !== null
+      ? { lo: Math.min(drag.anchor, drag.current), hi: Math.max(drag.anchor, drag.current) }
+      : selection === null
+        ? null
+        : { lo: periods.indexOf(selection.start), hi: periods.indexOf(selection.end) };
+  const half = periods.length === 1 ? VIEW_WIDTH / 2 : stepX / 2;
+  const band =
+    range === null || range.lo < 0 || range.hi < 0
+      ? null
+      : {
+          x: Math.max(0, range.lo * stepX - half),
+          end: Math.min(VIEW_WIDTH, range.hi * stepX + half),
+        };
 
   const hoveredPeriod = hoverIndex === null ? undefined : periods[hoverIndex];
-  const hoveredColumn = hoverIndex === null ? undefined : series[hoverIndex];
+  const hoveredColumn = hoverIndex === null ? undefined : columns[hoverIndex];
+  const partial = providers.some((provider) => loadingProviders.has(provider));
   const formatPeriod = (period: string) =>
     resolution === "hour" ? formatHourShort(period, timeZone) : formatDayShort(period);
   const formatTooltipPeriod = (period: string) =>
@@ -420,15 +416,17 @@ export function UsageProviderChart({
       <div className="flex gap-2">
         {/* Axis labels sit outside the plot so they stay aligned to gridlines. */}
         <div className="relative h-56 w-14 shrink-0">
-          {ticks.map((tick) => (
-            <span
-              key={tick}
-              className="absolute right-0 -translate-y-1/2 text-3xs text-muted-foreground tabular-nums"
-              style={{ top: `${(toY(tick) / VIEW_HEIGHT) * 100}%` }}
-            >
-              {tick === 0 ? "0" : format(tick)}
-            </span>
-          ))}
+          {scale.labeled
+            ? scale.ticks.map((tick) => (
+                <span
+                  key={tick}
+                  className="absolute right-0 -translate-y-1/2 text-3xs text-muted-foreground tabular-nums"
+                  style={{ top: `${(toY(tick) / VIEW_HEIGHT) * 100}%` }}
+                >
+                  {tick === 0 ? "0" : format(tick)}
+                </span>
+              ))
+            : null}
         </div>
 
         <div
@@ -436,10 +434,29 @@ export function UsageProviderChart({
           role="group"
           tabIndex={0}
           aria-label="Usage over time. Click or drag to focus a period. Use arrow keys to inspect, Enter to focus, and Shift with arrows to extend."
-          className="relative h-56 flex-1 cursor-crosshair touch-pan-y rounded-sm outline-none select-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-          onPointerDown={handlePointerDown}
-          onPointerMove={handlePointerMove}
-          onPointerUp={handlePointerUp}
+          className="relative h-56 flex-1 cursor-crosshair touch-pan-y rounded-sm outline-none select-none focus-visible:ring-2 focus-visible:ring-ring"
+          onPointerDown={(event) => {
+            if (event.button !== 0 || !onSelectionChange) return;
+            const index = indexAt(event.clientX, event.clientY);
+            if (index === null) return;
+            event.currentTarget.setPointerCapture(event.pointerId);
+            setDrag({ anchor: index, current: index });
+            showIndex(index);
+          }}
+          onPointerMove={(event) => {
+            const index = indexAt(event.clientX, event.clientY);
+            if (index === null) return;
+            if (drag !== null && drag.current !== index)
+              setDrag({ anchor: drag.anchor, current: index });
+            showIndex(index);
+          }}
+          onPointerUp={() => {
+            if (drag === null) return;
+            onSelectionChange?.(
+              resolvePeriodSelection(periods, drag.anchor, drag.current, selection),
+            );
+            setDrag(null);
+          }}
           onPointerCancel={() => setDrag(null)}
           onPointerLeave={(event) => {
             if (event.currentTarget.hasPointerCapture(event.pointerId)) return;
@@ -459,7 +476,7 @@ export function UsageProviderChart({
             role="img"
             aria-label={`${resolution === "hour" ? "Hourly" : "Daily"} ${metric === "tokens" ? "processed tokens" : "cost"} by provider`}
           >
-            {ticks.map((tick) => {
+            {scale.ticks.map((tick) => {
               const y = toY(tick);
               return (
                 <line
@@ -480,7 +497,7 @@ export function UsageProviderChart({
               <rect
                 x={band.x}
                 y={0}
-                width={band.width}
+                width={Math.max(0, band.end - band.x)}
                 height={VIEW_HEIGHT}
                 fill="currentColor"
                 className="text-foreground"
@@ -489,18 +506,20 @@ export function UsageProviderChart({
             )}
 
             {/* Fills first, then every stroke, so no series covers another's line. */}
-            {paths.map(({ provider, area }) => (
+            {paths.map(({ provider, loading, area }) => (
               <path
                 key={provider}
                 d={area}
+                className={seriesClassName(loading)}
                 fill={PROVIDER_PRESENTATION[provider].color}
                 fillOpacity={0.12}
               />
             ))}
-            {paths.map(({ provider, line }) => (
+            {paths.map(({ provider, loading, line }) => (
               <path
                 key={provider}
                 d={line}
+                className={seriesClassName(loading)}
                 fill="none"
                 stroke={PROVIDER_PRESENTATION[provider].color}
                 strokeWidth={2}
@@ -533,14 +552,25 @@ export function UsageProviderChart({
             >
               <div className="mb-1 text-muted-foreground">{formatTooltipPeriod(hoveredPeriod)}</div>
               {providers.map((provider) => {
-                const { label, mark: Mark } = PROVIDER_PRESENTATION[provider];
+                const { label, driverKind } = PROVIDER_PRESENTATION[provider];
                 return (
                   <div key={provider} className="flex items-center justify-between gap-3">
                     <span className="flex items-center gap-1.5 text-muted-foreground">
-                      <Mark className="size-3 shrink-0" aria-hidden />
+                      <ProviderInstanceIcon
+                        driverKind={driverKind}
+                        displayName={label}
+                        iconClassName="size-3"
+                      />
                       {label}
                     </span>
-                    <span className="text-foreground tabular-nums">
+                    <span
+                      className={cn(
+                        "tabular-nums",
+                        loadingProviders.has(provider)
+                          ? "text-muted-foreground"
+                          : "text-foreground",
+                      )}
+                    >
                       {format(
                         hoveredColumn?.bands.find((band) => band.provider === provider)?.value ?? 0,
                       )}
@@ -550,7 +580,12 @@ export function UsageProviderChart({
               })}
               <div className="mt-1 flex items-center justify-between gap-3 border-t border-border pt-1">
                 <span className="text-muted-foreground">Total</span>
-                <span className="text-foreground tabular-nums">
+                <span
+                  className={cn(
+                    "tabular-nums",
+                    partial ? "text-muted-foreground" : "text-foreground",
+                  )}
+                >
                   {format(hoveredColumn?.total ?? 0)}
                 </span>
               </div>

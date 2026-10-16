@@ -5,7 +5,7 @@ import type {
 } from "@rove-code/contracts";
 import * as DateTime from "effect/DateTime";
 import * as Option from "effect/Option";
-import { bench, describe } from "vite-plus/test";
+import { it, describe } from "vite-plus/test";
 
 import { buildResourceTelemetryHistory } from "./ResourceTelemetryHistory.ts";
 
@@ -130,12 +130,10 @@ describe("resource history replay", () => {
       health,
       snapshots,
     };
-    bench(
-      scenario.name,
-      () => {
+    it(scenario.name, async ({ bench }) => {
+      await bench(scenario.name, () => {
         buildResourceTelemetryHistory(input);
-      },
-      { warmupTime: 1_000, time: 1_500 },
-    );
+      }).run({ warmupTime: 1_000, time: 1_500 });
+    });
   }
 });

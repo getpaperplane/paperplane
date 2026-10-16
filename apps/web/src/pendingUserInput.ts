@@ -1,4 +1,19 @@
-import type { UserInputQuestion } from "@rove-code/contracts";
+import type { ThreadContextRecord, UserInputQuestion } from "@rove-code/contracts";
+import { replaceComposerContextReferences } from "@rove-code/shared/composerContextReferences";
+import { formatThreadLink } from "@rove-code/shared/threadLinks";
+
+/** Question responses carry text, so send thread chips as links with the actual thread IDs. */
+export function projectPendingUserInputAnswer(
+  answer: unknown,
+  threadContexts: ReadonlyArray<ThreadContextRecord>,
+) {
+  if (typeof answer !== "string" || threadContexts.length === 0) return answer;
+  const recordsById = new Map(threadContexts.map((record) => [record.contextId, record]));
+  return replaceComposerContextReferences(answer, (reference) => {
+    const record = reference.kind === "thread" ? recordsById.get(reference.contextId) : undefined;
+    return record ? formatThreadLink(record.threadId, reference.label) : reference.source;
+  });
+}
 
 export interface PendingUserInputDraftAnswer {
   selectedOptionValues?: string[];
@@ -21,12 +36,10 @@ export interface PendingUserInputProgress {
   canAdvance: boolean;
 }
 
-function normalizeDraftAnswer(
-  question: UserInputQuestion,
-  value: string | undefined,
-): string | null {
-  if (question.inputMode === "multiline") return value ?? question.initialAnswer ?? "";
-  if (value === undefined) return null;
+function normalizeDraftAnswer(value: string | undefined): string | null {
+  if (typeof value !== "string") {
+    return null;
+  }
 
   const trimmed = value.trim();
   return trimmed.length > 0 ? trimmed : null;
@@ -49,8 +62,10 @@ export function resolvePendingUserInputAnswer(
   const customAnswer =
     question.allowCustomAnswer === false
       ? null
-      : normalizeDraftAnswer(question, draft?.customAnswer);
-  if (customAnswer !== null) {
+      : question.initialAnswer !== undefined
+        ? (draft?.customAnswer ?? question.initialAnswer)
+        : normalizeDraftAnswer(draft?.customAnswer);
+  if (customAnswer !== null && customAnswer.length > 0) {
     return customAnswer;
   }
 
@@ -60,13 +75,13 @@ export function resolvePendingUserInputAnswer(
   if (question.multiSelect) {
     return selectedOptionValues.length > 0
       ? selectedOptionValues
-      : question.allowCustomAnswer !== false && (draft?.attachmentCount ?? 0) > 0
-        ? ""
-        : null;
+      : (customAnswer ??
+          (question.allowCustomAnswer !== false && (draft?.attachmentCount ?? 0) > 0 ? "" : null));
   }
 
   return (
     selectedOptionValues[0] ??
+    customAnswer ??
     (question.allowCustomAnswer !== false && (draft?.attachmentCount ?? 0) > 0 ? "" : null)
   );
 }
@@ -74,9 +89,10 @@ export function resolvePendingUserInputAnswer(
 export function setPendingUserInputCustomAnswer(
   draft: PendingUserInputDraftAnswer | undefined,
   customAnswer: string,
+  question?: Pick<UserInputQuestion, "initialAnswer">,
 ): PendingUserInputDraftAnswer {
   const selectedOptionValues =
-    customAnswer.trim().length > 0
+    question?.initialAnswer !== undefined || customAnswer.trim().length > 0
       ? undefined
       : normalizeSelectedOptionValues(draft?.selectedOptionValues);
 
@@ -161,6 +177,17 @@ export function countAnsweredPendingUserInputQuestions(
   }, 0);
 }
 
+export function findFirstUnansweredPendingUserInputQuestionIndex(
+  questions: ReadonlyArray<UserInputQuestion>,
+  draftAnswers: Record<string, PendingUserInputDraftAnswer>,
+): number {
+  const unansweredIndex = questions.findIndex(
+    (question) => resolvePendingUserInputAnswer(question, draftAnswers[question.id]) === null,
+  );
+
+  return unansweredIndex === -1 ? Math.max(questions.length - 1, 0) : unansweredIndex;
+}
+
 export function derivePendingUserInputProgress(
   questions: ReadonlyArray<UserInputQuestion>,
   draftAnswers: Record<string, PendingUserInputDraftAnswer>,
@@ -174,7 +201,9 @@ export function derivePendingUserInputProgress(
     ? resolvePendingUserInputAnswer(activeQuestion, activeDraft)
     : null;
   const customAnswer =
-    activeQuestion?.allowCustomAnswer === false ? "" : (activeDraft?.customAnswer ?? "");
+    activeQuestion?.allowCustomAnswer === false
+      ? ""
+      : (activeDraft?.customAnswer ?? activeQuestion?.initialAnswer ?? "");
   const answeredQuestionCount = countAnsweredPendingUserInputQuestions(questions, draftAnswers);
   const isLastQuestion =
     questions.length === 0 ? true : normalizedQuestionIndex >= questions.length - 1;
@@ -187,9 +216,8 @@ export function derivePendingUserInputProgress(
     customAnswer,
     resolvedAnswer,
     usingCustomAnswer:
-      activeQuestion?.inputMode === "multiline" && activeQuestion.allowCustomAnswer !== false
-        ? resolvedAnswer !== null
-        : customAnswer.trim().length > 0,
+      activeQuestion?.allowCustomAnswer !== false &&
+      (activeQuestion?.initialAnswer !== undefined || customAnswer.trim().length > 0),
     answeredQuestionCount,
     isLastQuestion,
     isComplete: buildPendingUserInputAnswers(questions, draftAnswers) !== null,

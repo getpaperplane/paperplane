@@ -4,12 +4,14 @@ import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
 import * as Deferred from "effect/Deferred";
 import * as Fiber from "effect/Fiber";
+import * as TestClock from "effect/testing/TestClock";
+import * as HttpClientError from "effect/http/HttpClientError";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as Schema from "effect/Schema";
-import * as HttpClient from "effect/unstable/http/HttpClient";
-import * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
-import { HostProcessArchitecture, HostProcessPlatform } from "@rove-code/shared/hostProcess";
+import * as HttpClient from "effect/http/HttpClient";
+import * as HttpClientResponse from "effect/http/HttpClientResponse";
+import * as HostProcess from "@rove-code/shared/HostProcess";
 import * as ServerConfig from "../config.ts";
 import * as ServerSettings from "../serverSettings.ts";
 import * as AnalyticsService from "./AnalyticsService.ts";
@@ -57,8 +59,8 @@ function fixture(
     Layer.provide(
       Layer.mergeAll(
         Layer.succeed(HttpClient.HttpClient, httpClient),
-        Layer.succeed(HostProcessPlatform, "linux"),
-        Layer.succeed(HostProcessArchitecture, "arm64"),
+        Layer.succeed(HostProcess.Platform, "linux"),
+        Layer.succeed(HostProcess.Architecture, "arm64"),
         ConfigProvider.layer(ConfigProvider.fromUnknown(options.env ?? {})),
       ),
     ),
@@ -66,7 +68,87 @@ function fixture(
   return { requests, layer };
 }
 
+const SentBatch = Schema.fromJsonString(
+  Schema.Struct({
+    batch: Schema.Array(Schema.Struct({ uuid: Schema.String })),
+  }),
+);
+
+/**
+ * HTTP client that reads each batch, then fails as if the connection dropped
+ * before the response arrived. PostHog stores these batches, so the server
+ * must not send them forever.
+ */
+const layerAcceptThenFailClient = (batches: Array<ReadonlyArray<{ readonly uuid: string }>>) =>
+  Layer.succeed(
+    HttpClient.HttpClient,
+    HttpClient.make((request) =>
+      Effect.gen(function* () {
+        if (request.body._tag === "Uint8Array") {
+          const body = yield* Schema.decodeEffect(SentBatch)(
+            new TextDecoder().decode(request.body.body),
+          ).pipe(Effect.orDie);
+          batches.push(body.batch);
+        }
+        return yield* new HttpClientError.HttpClientError({
+          reason: new HttpClientError.TransportError({ request, cause: "connection reset" }),
+        });
+      }),
+    ),
+  );
+
+it("retryDelayMs doubles from 2s and stays under the 5 minute cap", () => {
+  assert.equal(AnalyticsService.retryDelayMs(1, 0), 1_000);
+  assert.equal(AnalyticsService.retryDelayMs(2, 0.999_999), 4_000);
+  assert.equal(AnalyticsService.retryDelayMs(30, 0), 150_000);
+  assert.equal(AnalyticsService.retryDelayMs(30, 0.999_999), 300_000);
+});
+
 it.layer(NodeServices.layer)("AnalyticsService", (it) => {
+  it.effect("a batch that keeps failing is retried with backoff, then dropped", () =>
+    Effect.gen(function* () {
+      const batches: Array<ReadonlyArray<{ readonly uuid: string }>> = [];
+      const layerRuntime = AnalyticsService.layer.pipe(
+        Layer.provide(ServerSettings.layerTest()),
+        Layer.provideMerge(
+          ServerConfig.layerTest(process.cwd(), { prefix: "rove-telemetry-retry-" }),
+        ),
+        Layer.provide(
+          ConfigProvider.layer(
+            ConfigProvider.fromUnknown({
+              ROVE_TELEMETRY_ENABLED: true,
+              ROVE_POSTHOG_KEY: "phc_test_key",
+              ROVE_POSTHOG_HOST: "http://localhost",
+            }),
+          ),
+        ),
+        Layer.provide(
+          Layer.mergeAll(
+            Layer.succeed(HostProcess.Platform, "win32"),
+            Layer.succeed(HostProcess.Architecture, "x64"),
+            layerAcceptThenFailClient(batches),
+          ),
+        ),
+      );
+
+      yield* Effect.gen(function* () {
+        const analytics = yield* AnalyticsService.AnalyticsService;
+        for (let index = 0; index < 20; index += 1) {
+          yield* analytics.record("server.boot.heartbeat", { threadCount: index });
+        }
+        // Before the fix this loop sent the batch about once a second.
+        for (let second = 0; second < 600; second += 1) {
+          yield* TestClock.adjust("1 second");
+        }
+      }).pipe(Effect.provide(layerRuntime));
+
+      assert.equal(batches.length, 5);
+      const uuids = batches.map((batch) => batch.map((event) => event.uuid).join(","));
+      assert.equal(new Set(uuids).size, 1, "every retry carries the same uuids");
+      assert.equal(new Set(batches[0]?.map((event) => event.uuid)).size, 20);
+    }),
+  );
+
   it.effect("sends anonymous allowlisted metadata to Rove's ingestion host", () => {
     const f = fixture({ env: { ROVE_ANALYTICS_ENVIRONMENT: "test" } });
     return Effect.gen(function* () {

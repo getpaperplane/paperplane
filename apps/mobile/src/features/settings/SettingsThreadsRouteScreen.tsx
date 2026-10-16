@@ -1,14 +1,16 @@
+import { AuthSettingsWriteScope } from "@rove-code/contracts";
+import { readEnvironmentScope, useEnvironmentsWithScope } from "../../state/session";
 import { AutoSettleDaysField } from "./components/AutoSettleDaysField";
-import { ScreenScrollView as ScrollView } from "../../components/ScreenScrollView";
+import { ScreenScrollView as ScrollView } from "../../components/ui/ScreenScrollView";
 import { useAtomSet, useAtomValue } from "@effect/atom-react";
-import { AsyncResult } from "effect/unstable/reactivity";
+import { AsyncResult } from "effect/reactivity";
 import { useRef, useState } from "react";
 import { Pressable, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { DEFAULT_SERVER_SETTINGS } from "@rove-code/contracts";
 import { supportsSharedSettingsSync } from "@rove-code/client-runtime/state/shared-settings";
-import { AppText as Text } from "../../components/AppText";
+import { AppText as Text } from "../../components/ui/AppText";
 import { mobilePreferencesAtom, updateMobilePreferencesAtom } from "../../state/preferences";
 import { serverEnvironment } from "../../state/server";
 import { useAtomCommand } from "../../state/use-atom-command";
@@ -26,6 +28,7 @@ import {
   planMobileScopedSettingsClear,
   planMobileScopedSettingsPatch,
   resolveMobileSettingsTargets,
+  uniformMobileSetting,
   type ScopedMobileSettingsTarget,
 } from "./settings-scoped-server";
 
@@ -43,79 +46,12 @@ export function SettingsThreadsRouteScreen() {
           contentContainerClassName="gap-6 px-5 pt-4"
           contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 18) + 18 }}
         >
-          <ResponseFormatSettingsRow />
-          <LimitRecoverySettingsRow />
           <AutoSettleSettingsRows />
+          <BetaSettingsSection />
           <LegacySettingsSection />
         </ScrollView>
       </SettingsScreen>
     </>
-  );
-}
-
-/** Interactive pages or the plain Markdown replies from before them, per environment. */
-function ResponseFormatSettingsRow() {
-  const { selectedTargets, selectedProjectKey } = useSettingsEnvironmentFilter();
-  const update = useAtomCommand(serverEnvironment.updateSettings, "response format settings");
-  const [busy, setBusy] = useState(false);
-  const targets = selectedTargets.filter((target) => target.serverConfig !== null);
-  if (selectedProjectKey !== null || targets.length === 0) return null;
-  return (
-    <SettingsSection title="Responses">
-      <SettingsSwitchRow
-        icon="text.bubble"
-        label="Interactive responses"
-        subtitle="Let agents answer with interactive pages such as charts, galleries, and videos. Each page uses more tokens than a text reply. Off keeps replies in plain Markdown. Applies when an agent session next starts."
-        value={
-          targets[0]?.serverConfig?.settings.enableRichResponses ??
-          DEFAULT_SERVER_SETTINGS.enableRichResponses
-        }
-        disabled={busy}
-        onValueChange={(value) => {
-          setBusy(true);
-          void Promise.allSettled(
-            targets.map((target) =>
-              update({
-                environmentId: target.environmentId,
-                input: { patch: { enableRichResponses: value } },
-              }),
-            ),
-          ).finally(() => setBusy(false));
-        }}
-      />
-    </SettingsSection>
-  );
-}
-
-function LimitRecoverySettingsRow() {
-  const { selectedTargets, selectedProjectKey } = useSettingsEnvironmentFilter();
-  const update = useAtomCommand(serverEnvironment.updateSettings, "usage-limit recovery settings");
-  const [busy, setBusy] = useState(false);
-  const targets = selectedTargets.filter(
-    (target) => target.serverConfig?.environment.capabilities.threadUsageLimitRecovery === true,
-  );
-  if (selectedProjectKey !== null || targets.length === 0) return null;
-  return (
-    <SettingsSection title="Usage limits">
-      <SettingsSwitchRow
-        icon="clock"
-        label="Auto-resume limited threads"
-        subtitle="Resume at a known reset time after checking fresh quota. Turning this off cancels pending schedules."
-        value={targets[0]?.serverConfig.settings.autoResumeLimitedThreads ?? false}
-        disabled={busy}
-        onValueChange={(value) => {
-          setBusy(true);
-          void Promise.allSettled(
-            targets.map((target) =>
-              update({
-                environmentId: target.environmentId,
-                input: { patch: { autoResumeLimitedThreads: value } },
-              }),
-            ),
-          ).finally(() => setBusy(false));
-        }}
-      />
-    </SettingsSection>
   );
 }
 
@@ -127,6 +63,7 @@ const AUTO_SETTLE_DEFAULT_DAYS = DEFAULT_SERVER_SETTINGS.sidebarAutoSettleAfterD
 function AutoSettleSettingsRows() {
   const { selectedTargets, projectGroups, selectedProjectKey } = useSettingsEnvironmentFilter();
   const selectedProject = projectGroups.find((group) => group.key === selectedProjectKey);
+  const writableEnvironments = useEnvironmentsWithScope(selectedTargets, AuthSettingsWriteScope);
   const projectSelected = selectedProjectKey !== null;
   const [pendingWrites, setPendingWrites] = useState(0);
   const writeInFlight = useRef(false);
@@ -143,6 +80,9 @@ function AutoSettleSettingsRows() {
     syncEnvironments,
     projectSelected ? (selectedProject?.members.map((member) => member.project) ?? []) : null,
   );
+  const canWriteSettings =
+    syncTargets.length > 0 &&
+    syncTargets.every((target) => writableEnvironments.has(target.environment.environmentId));
   const displayTargets =
     pendingWrites > 0 && pendingTargets !== null ? pendingTargets : syncTargets;
   const reference = displayTargets[0] ?? null;
@@ -152,8 +92,19 @@ function AutoSettleSettingsRows() {
     return null;
   }
 
-  const writeToAll = (patch: Partial<AutoSettleSettings>) => {
-    if (writeInFlight.current) return;
+  const writeToAll = (
+    patch: Partial<AutoSettleSettings> & {
+      autoResumeLimitedThreads?: boolean;
+      snoozeLimitedThreads?: boolean;
+    },
+  ) => {
+    if (
+      writeInFlight.current ||
+      !syncTargets.every((target) =>
+        readEnvironmentScope(target.environment.environmentId, AuthSettingsWriteScope),
+      )
+    )
+      return;
     const writes = planMobileScopedSettingsPatch(syncTargets, projectSelected, patch);
     if (writes.length === 0) return;
     writeInFlight.current = true;
@@ -188,7 +139,8 @@ function AutoSettleSettingsRows() {
     (target) =>
       target.environment.serverConfig.environment.capabilities.projectSettingsOverrides === true,
   );
-  const disabled = pendingWrites > 0 || (projectSelected && !supportsProjectOverrides);
+  const disabled =
+    !canWriteSettings || pendingWrites > 0 || (projectSelected && !supportsProjectOverrides);
   const hasProjectOverrides =
     projectSelected &&
     syncTargets.some(
@@ -197,7 +149,13 @@ function AutoSettleSettingsRows() {
         target.sources.sidebarAutoSettleAfterDays === "project",
     );
   const clearProjectOverrides = () => {
-    if (writeInFlight.current) return;
+    if (
+      writeInFlight.current ||
+      !syncTargets.every((target) =>
+        readEnvironmentScope(target.environment.environmentId, AuthSettingsWriteScope),
+      )
+    )
+      return;
     const writes = planMobileScopedSettingsClear(syncTargets, [
       "sidebarAutoSettleOnMerge",
       "sidebarAutoSettleAfterDays",
@@ -227,8 +185,27 @@ function AutoSettleSettingsRows() {
           hasOverrides={hasProjectOverrides}
           supportsOverrides={supportsProjectOverrides}
           pending={pendingWrites > 0}
+          disabled={!canWriteSettings}
           onClear={clearProjectOverrides}
         />
+      ) : null}
+      {!projectSelected ? (
+        <SettingsSection title="Usage limits">
+          <SettingsSwitchRow
+            icon="clock"
+            label="Auto-resume limited threads"
+            value={uniformMobileSetting(displayTargets, "autoResumeLimitedThreads")}
+            disabled={disabled}
+            onValueChange={(value) => writeToAll({ autoResumeLimitedThreads: value })}
+          />
+          <SettingsSwitchRow
+            icon="clock"
+            label="Snooze limited threads"
+            value={uniformMobileSetting(displayTargets, "snoozeLimitedThreads")}
+            disabled={disabled}
+            onValueChange={(value) => writeToAll({ snoozeLimitedThreads: value })}
+          />
+        </SettingsSection>
       ) : null}
       <SettingsSection title="Auto-settle">
         <SettingsSwitchRow
@@ -279,6 +256,35 @@ function AutoSettleSettingsRows() {
           </View>
         </SettingsSection>
       ) : null}
+    </View>
+  );
+}
+
+/**
+ * Device-local beta toggles, the counterpart of web's Working section (beta)
+ * in Settings → General.
+ */
+function BetaSettingsSection() {
+  const savePreferences = useAtomSet(updateMobilePreferencesAtom);
+  const preferences = useAtomValue(mobilePreferencesAtom);
+  const workingShelfEnabled =
+    AsyncResult.isSuccess(preferences) && preferences.value.workingShelfEnabled === true;
+
+  return (
+    <View className="gap-3">
+      <SettingsSection title="Beta">
+        <SettingsSwitchRow
+          icon="bolt.circle"
+          label="Working section"
+          value={workingShelfEnabled}
+          onValueChange={(value) => savePreferences({ workingShelfEnabled: value })}
+        />
+      </SettingsSection>
+      <Text className="px-2 text-sm text-foreground-muted">
+        Fold working and monitoring threads into a Working section. They return to the top of the
+        list when they need you. While this is on, active threads are ordered by time and cannot be
+        moved.
+      </Text>
     </View>
   );
 }

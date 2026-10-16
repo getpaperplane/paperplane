@@ -79,7 +79,7 @@ it.effect("preserves catalog capabilities and defaults without adding tiers", ()
     assert.strictEqual(snapshot.version, VERSION);
     assert.strictEqual(snapshot.status, "ready");
     assert.strictEqual(snapshot.auth.status, "authenticated");
-    assert.strictEqual(snapshot.runtimeModeSelectable, false);
+    assert.deepEqual(snapshot.supportedRuntimeModes, ["full-access"]);
     assert.strictEqual(snapshot.reportsContextWindow, true);
   }),
 );
@@ -91,7 +91,7 @@ it.effect("does not advertise reasoning for unknown custom models before discove
     );
     assert.strictEqual(snapshot.models[0]?.capabilities, null);
     assert.strictEqual(snapshot.version, VERSION);
-    assert.strictEqual(snapshot.runtimeModeSelectable, false);
+    assert.deepEqual(snapshot.supportedRuntimeModes, ["full-access"]);
   }),
 );
 

@@ -1,16 +1,17 @@
 import { expect, it } from "@effect/vitest";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { EnvironmentId, ProviderInstanceId, ThreadId } from "@rove-code/contracts";
-import { HostProcessPlatform } from "@rove-code/shared/hostProcess";
+import { Platform as HostProcessPlatform } from "@rove-code/shared/HostProcess";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Schema from "effect/Schema";
-import { McpSchema, McpServer } from "effect/unstable/ai";
+import { McpSchema, McpServer } from "effect/ai";
 
 import * as CuaDriver from "../../../computerUse/CuaDriver.ts";
 import * as ServerSettings from "../../../serverSettings.ts";
 import * as McpInvocationContext from "../../McpInvocationContext.ts";
-import { ComputerUseToolsRegistrationLive } from "./handlers.ts";
+import { layerComputerUseToolkit } from "../../McpHttpServer.ts";
+import * as McpToolAccessTestkit from "../../McpToolAccess.testkit.ts";
 
 const decodeCapture = Schema.decodeUnknownSync(Schema.Struct({ capture_id: Schema.String }));
 const decodeError = Schema.decodeUnknownSync(Schema.Struct({ code: Schema.String }));
@@ -39,10 +40,14 @@ it.live.skipIf(
       const call = (threadId: ThreadId, tool: string, args: CuaDriver.CuaArguments = {}) =>
         server.callTool({ name: "computer_call", arguments: { tool, arguments: args } }).pipe(
           Effect.provideService(McpInvocationContext.McpInvocationContext, {
-            threadId,
             environmentId: EnvironmentId.make("native-cua-verification"),
-            providerSessionId: "native-verification",
-            providerInstanceId: ProviderInstanceId.make("pi"),
+            requestNamespace: "native-verification",
+            thread: {
+              threadId,
+              providerSessionId: "native-verification",
+              providerInstanceId: ProviderInstanceId.make("codex"),
+            },
+            client: undefined,
             capabilities: new Set<McpInvocationContext.McpCapability>(),
             issuedAt: 1,
           }),
@@ -89,8 +94,9 @@ it.live.skipIf(
     }).pipe(
       Effect.scoped,
       Effect.provide(
-        ComputerUseToolsRegistrationLive.pipe(
+        layerComputerUseToolkit.pipe(
           Layer.provideMerge(McpServer.McpServer.layer),
+          Layer.provide(McpToolAccessTestkit.liveThreadsLayer),
           Layer.provide(CuaDriver.layer),
           Layer.provide(ServerSettings.layerTest({ enableAgentComputerUse: true })),
           Layer.provide(NodeServices.layer),

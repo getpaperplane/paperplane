@@ -5,10 +5,10 @@ import * as NodePath from "node:path";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 import {
-  HostProcessEnvironment,
-  HostProcessPlatform,
-  HostProcessUserId,
-} from "@rove-code/shared/hostProcess";
+  Environment as HostProcessEnvironment,
+  Platform as HostProcessPlatform,
+  UserId as HostProcessUserId,
+} from "@rove-code/shared/HostProcess";
 
 const MemoryMiB = Schema.NumberFromString.check(
   Schema.isInt(),

@@ -14,7 +14,7 @@ const labels = new Map([
 function project(
   id: string,
   environmentId = nucbox,
-  canonicalKey: string | null = "github.com/rovecode/rove",
+  canonicalKey: string | null = "github.com/pingdotgg/t3code",
 ) {
   return {
     id: ProjectId.make(id),
@@ -61,7 +61,7 @@ describe("pull request project filter choices", () => {
 
   it("matches canonical repositories regardless of casing", () => {
     const main = project("main");
-    const worktree = project("worktree", nucbox, "GitHub.com/RoveCode/Rove");
+    const worktree = project("worktree", nucbox, "GitHub.com/PingDotGG/T3Code");
 
     expect(pullRequestFilterProjects([main, worktree], labels)).toEqual([main]);
   });
@@ -89,7 +89,7 @@ describe("pull request project filter choices", () => {
 
   it("keeps repositories on different hosts separate", () => {
     const choices = pullRequestFilterProjects(
-      [project("github"), project("enterprise", nucbox, "git.example.com/rovecode/rove")],
+      [project("github"), project("enterprise", nucbox, "git.example.com/pingdotgg/t3code")],
       labels,
     );
 

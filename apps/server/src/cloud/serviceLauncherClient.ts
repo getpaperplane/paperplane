@@ -1,6 +1,5 @@
 import type { ServerSelfUpdateOutcome } from "@rove-code/contracts";
-import { HostProcessEnvironment } from "@rove-code/shared/hostProcess";
-import { LEGACY_SERVICE_LAUNCHER_CONTEXT_ENV } from "@rove-code/shared/roveMigration";
+import * as HostProcess from "@rove-code/shared/HostProcess";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -35,7 +34,7 @@ export class ServiceLauncherClientError extends Schema.TaggedError<ServiceLaunch
       case "decode-context":
         return "The service launcher supplied invalid startup context.";
       case "version-mismatch":
-        return "The service launcher started a different Rove Code version.";
+        return "The service launcher started a different rove version.";
       case "ipc-unavailable":
         return "The service launcher IPC channel is unavailable.";
       case "unmanaged":
@@ -79,7 +78,7 @@ interface ServiceLauncherProcess {
 }
 
 export const ServiceLauncherHostProcess = Context.Reference<ServiceLauncherProcess>(
-  "@rove-code/server/cloud/serviceLauncherHostProcess",
+  "@rove-code/server/cloud/serviceLauncherClient/serviceLauncherHostProcess",
   {
     defaultValue: () => ({
       connected: process.connected && process.send !== undefined,
@@ -115,10 +114,9 @@ export class ServiceLauncherClient extends Context.Service<
 const resolveStartup = Effect.fn("cloud.service_launcher_client.resolve_startup")(
   function* (options?: { readonly currentVersion?: string }) {
     const host = yield* ServiceLauncherHostProcess;
-    const environment = yield* HostProcessEnvironment;
+    const environment = yield* HostProcess.Environment;
     const currentVersion = options?.currentVersion ?? packageJson.version;
-    const rawContext =
-      environment[SERVICE_LAUNCHER_CONTEXT_ENV] ?? environment[LEGACY_SERVICE_LAUNCHER_CONTEXT_ENV];
+    const rawContext = environment[SERVICE_LAUNCHER_CONTEXT_ENV];
     const context = rawContext === undefined ? undefined : decodeServiceLauncherContext(rawContext);
 
     if (rawContext !== undefined && context === undefined) {
@@ -134,6 +132,13 @@ const resolveStartup = Effect.fn("cloud.service_launcher_client.resolve_startup"
     }
 
     return { host, context, managed };
+  },
+);
+
+export const resolveServiceLauncherMode = Effect.fn("cloud.service_launcher_client.resolve_mode")(
+  function* () {
+    const { managed } = yield* resolveStartup();
+    return { managed };
   },
 );
 

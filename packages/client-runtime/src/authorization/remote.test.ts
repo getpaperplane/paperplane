@@ -18,8 +18,7 @@ import {
   resolveRemoteWebSocketConnectionUrl,
 } from "./remote.ts";
 import { fetchRemoteEnvironmentDescriptor } from "../environment/descriptor.ts";
-import { remoteHttpClientLayer } from "../rpc/http.ts";
-import * as RuntimePredicate from "effect/Predicate";
+import * as RpcHttp from "../rpc/http.ts";
 
 const isEnvironmentAuthInvalidError = Schema.is(EnvironmentAuthInvalidError);
 
@@ -50,7 +49,8 @@ const hangingFetch = () => {
   return { fetchFn, calls };
 };
 
-const provideRemoteHttp = (fetchFn: typeof fetch) => Effect.provide(remoteHttpClientLayer(fetchFn));
+const provideRemoteHttp = (fetchFn: typeof fetch) =>
+  Effect.provide(RpcHttp.layerRemoteHttpClient(fetchFn));
 
 const expectFetchCall = (
   calls: ReadonlyArray<FetchCall>,
@@ -79,7 +79,7 @@ const expectFetchCall = (
 
   if ("body" in expected) {
     const body = init.body;
-    if (RuntimePredicate.isString(body)) {
+    if (typeof body === "string") {
       expect(body).toBe(expected.body);
     } else if (body instanceof Uint8Array) {
       expect(new TextDecoder().decode(body)).toBe(expected.body);
@@ -148,7 +148,7 @@ describe("remote environment authorization", () => {
         credential: "one-time-credential",
         dpopProof: "token-proof",
         clientMetadata: {
-          label: "Rove Mobile",
+          label: "Rove Code Mobile",
           deviceType: "mobile",
           os: "iOS",
         },
@@ -163,7 +163,7 @@ describe("remote environment authorization", () => {
         url: "https://remote.example.com/oauth/token",
         method: "POST",
         headers: { dpop: "token-proof", "content-type": "application/x-www-form-urlencoded" },
-        body: "grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Atoken-exchange&subject_token=one-time-credential&subject_token_type=urn%3Arove%3Aparams%3Aoauth%3Atoken-type%3Aenvironment-bootstrap&requested_token_type=urn%3Aietf%3Aparams%3Aoauth%3Atoken-type%3Aaccess_token&client_label=Rove+Mobile&client_device_type=mobile&client_os=iOS",
+        body: "grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Atoken-exchange&subject_token=one-time-credential&subject_token_type=urn%3Arove%3Aparams%3Aoauth%3Atoken-type%3Aenvironment-bootstrap&requested_token_type=urn%3Aietf%3Aparams%3Aoauth%3Atoken-type%3Aaccess_token&client_label=Rove+Code+Mobile&client_device_type=mobile&client_os=iOS",
       });
       expectFetchCall(fetch.calls, 2, {
         url: "https://remote.example.com/api/auth/websocket-ticket",
@@ -196,7 +196,7 @@ describe("remote environment authorization", () => {
         httpBaseUrl: "https://remote.example.com/",
         credential: "pairing-token",
         clientMetadata: {
-          label: "Rove Mobile",
+          label: "Rove Code Mobile",
           deviceType: "mobile",
           os: "iOS",
         },
@@ -205,7 +205,7 @@ describe("remote environment authorization", () => {
       expectFetchCall(fetch.calls, 1, {
         url: "https://remote.example.com/oauth/token",
         method: "POST",
-        body: "grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Atoken-exchange&subject_token=pairing-token&subject_token_type=urn%3Arove%3Aparams%3Aoauth%3Atoken-type%3Aenvironment-bootstrap&requested_token_type=urn%3Aietf%3Aparams%3Aoauth%3Atoken-type%3Aaccess_token&client_label=Rove+Mobile&client_device_type=mobile&client_os=iOS",
+        body: "grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Atoken-exchange&subject_token=pairing-token&subject_token_type=urn%3Arove%3Aparams%3Aoauth%3Atoken-type%3Aenvironment-bootstrap&requested_token_type=urn%3Aietf%3Aparams%3Aoauth%3Atoken-type%3Aaccess_token&client_label=Rove+Code+Mobile&client_device_type=mobile&client_os=iOS",
       });
     }),
   );

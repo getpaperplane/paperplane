@@ -153,9 +153,16 @@ export function useLocalStorage<T, E>(
   const setValue = useCallback(
     (value: T | ((val: T) => T)) => {
       try {
-        const currentValue = getLocalStorageItem(key, schema) ?? initialValue;
         let valueToStore: T;
         if (RuntimePredicate.isFunction(value)) {
+          // Like the read path, treat an unreadable stored value as the initial
+          // value, so a corrupt blob cannot block every later write.
+          let currentValue = initialValue;
+          try {
+            currentValue = getLocalStorageItem(key, schema) ?? initialValue;
+          } catch (error) {
+            console.error("[LOCALSTORAGE] Could not read stored value.", error);
+          }
           try {
             // SAFETY: The surrounding adapter boundary establishes the asserted runtime contract.
             valueToStore = (value as (val: T) => T)(currentValue);

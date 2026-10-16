@@ -14,15 +14,18 @@ Rove Code is an independent fork of an upstream coding-agent control surface. Th
 - [Appearance and themes](./user/appearance.md)
 - [Keyboard shortcuts](./user/keybindings.md)
 - [SnapShots](./user/snap-shot.md)
+- [Visual replies](./user/html-renders.md)
 - [Import browser sessions](./user/browser-import.md)
+- [Use Rove Code as your default browser](./user/default-browser.md)
 - [Devices](./user/devices.md)
 - [Computer use](./user/computer-use.md)
 - [Usage and limits](./user/usage.md)
 - [Product usage data](./user/telemetry.md)
 - [Remote access](./user/remote-access.md)
+- [Outside agents (MCP)](./user/outside-agents.md)
 - [Running in the background](./user/background-service.md)
 - [Updating Rove Code](./user/updating.md)
-- Provider guides: [Codex](./user/providers-codex.md) · [Claude](./user/providers-claude.md) · [OpenCode](./user/providers-opencode.md) · [Antigravity](./user/providers-antigravity.md)
+- Provider guides: [Codex](./user/providers-codex.md) · [Claude](./user/providers-claude.md) · [OpenCode](./user/providers-opencode.md) · [Antigravity](./user/providers-antigravity.md) · [Pi](./user/providers-pi.md) · [Muse Code](./user/providers-muse.md)
 
 ---
 
@@ -36,9 +39,11 @@ source alone does not explain. Most code changes do not need an internal documen
 [documentation rules](../AGENTS.md#documentation) before adding one.
 
 - [Architecture overview](./internals/overview.md)
+- [Features deferred by the orchestration V2 cutover](./internals/v2-deferred-features.md)
 - [Glossary](./internals/glossary.md)
 - [Connection runtime](./internals/connection-runtime.md)
 - [Providers](./internals/providers.md)
+- [Adding a provider](./internals/adding-a-provider.md)
 - [Pull request file revisions](./internals/pull-request-file-revisions.md)
 - [Model classification](./internals/model-manifest.md)
 - [Remote environments](./internals/remote.md)

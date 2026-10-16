@@ -48,13 +48,24 @@ it.effect("rejects an injected relay URL with a non-origin path", () =>
   makeRelayUrlConfig("https://embedded.example.test/path").pipe(provideEnv({}), Effect.flip),
 );
 
+it.effect("defaults hosted links to Rove without supplying relay or OAuth configuration", () =>
+  Effect.gen(function* () {
+    assert.equal(yield* hostedAppUrlConfig.pipe(provideEnv({})), "https://rove.hafiezulzikry.com");
+    yield* makeRelayUrlConfig("").pipe(provideEnv({}), Effect.flip);
+    yield* makeCloudCliOAuthConfig({
+      clerkPublishableKeyFallback: "",
+      clerkCliOAuthClientIdFallback: "",
+    }).pipe(provideEnv({}), Effect.flip);
+  }),
+);
+
 it.effect("normalizes the hosted app URL to an absolute origin", () =>
   Effect.gen(function* () {
     assert.equal(
       yield* hostedAppUrlConfig.pipe(
-        provideEnv({ ROVE_HOSTED_APP_URL: "https://nightly.app.rove.codes" }),
+        provideEnv({ ROVE_HOSTED_APP_URL: "https://nightly.app.t3.codes" }),
       ),
-      "https://nightly.app.rove.codes",
+      "https://nightly.app.t3.codes",
     );
     assert.equal(
       yield* hostedAppUrlConfig.pipe(provideEnv({ ROVE_HOSTED_APP_URL: "http://localhost:5733" })),
@@ -66,10 +77,10 @@ it.effect("normalizes the hosted app URL to an absolute origin", () =>
 it.effect("rejects malformed or insecure hosted app URLs", () =>
   Effect.gen(function* () {
     for (const value of [
-      "app.rove.codes",
-      "http://app.rove.codes",
-      "https://app.rove.codes/nested",
-      "https://app.rove.codes?alias=true",
+      "app.t3.codes",
+      "http://app.t3.codes",
+      "https://app.t3.codes/nested",
+      "https://app.t3.codes?alias=true",
     ]) {
       const result = yield* hostedAppUrlConfig.pipe(
         provideEnv({ ROVE_HOSTED_APP_URL: value }),

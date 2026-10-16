@@ -35,9 +35,9 @@ type UntrustedSection<T> = {
 };
 
 type ExpoExtra =
-  | {
+  | ({
       readonly [Section in keyof CloudPublicConfig]?: UntrustedSection<CloudPublicConfig[Section]>;
-    }
+    } & { readonly cloudReady?: Schema.Json })
   | undefined;
 
 function trimNonEmpty(value: unknown): string | null {
@@ -58,13 +58,14 @@ function normalizeSecureUrl(value: unknown): string | null {
 }
 
 export function resolveCloudPublicConfig(extra: ExpoExtra = Constants.expoConfig?.extra) {
+  const cloudReady = extra?.cloudReady === true;
   return {
     clerk: {
-      publishableKey: trimNonEmpty(extra?.clerk?.publishableKey),
-      jwtTemplate: trimNonEmpty(extra?.clerk?.jwtTemplate),
+      publishableKey: cloudReady ? trimNonEmpty(extra?.clerk?.publishableKey) : null,
+      jwtTemplate: cloudReady ? trimNonEmpty(extra?.clerk?.jwtTemplate) : null,
     },
     relay: {
-      url: normalizeSecureRelayUrl(trimNonEmpty(extra?.relay?.url) ?? ""),
+      url: cloudReady ? normalizeSecureRelayUrl(trimNonEmpty(extra?.relay?.url) ?? "") : null,
     },
     observability: {
       tracesUrl: normalizeSecureUrl(extra?.observability?.tracesUrl),

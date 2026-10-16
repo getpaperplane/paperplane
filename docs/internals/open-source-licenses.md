@@ -3,7 +3,7 @@
 License notices are generated independently for the client that ships them:
 
 - The web build emits `third-party-licenses.json` beside `index.html`. The Settings page loads that
-  static file, so the same artifact works in hosted web, the client bundled with `npx @rove-code/cli`, and
+  static file, so the same artifact works in hosted web, the client bundled with `npx rove`, and
   desktop.
 - The mobile Metro config generates an ignored virtual module before each development, native, or
   over-the-air JavaScript bundle. Mobile loads and decodes that module only when a license screen
@@ -60,6 +60,10 @@ relative to the config file. `bundles` controls which generated manifests includ
 supplies the label shown to users. Use `includeInBundles` when those differ, such as an optional
 server tool that should appear in both client manifests but is not bundled into either client.
 
+The `agent-device` and `expo-device-hub` custom notices take their versions from the
+[installer pins](../../apps/server/src/device/deviceToolVersions.json). Keep their package names
+in the config; their versions do not need manual updates.
+
 Use `packageOverrides` only when an installed npm archive omits its notice or has incorrect
 metadata:
 
@@ -75,6 +79,8 @@ metadata:
   "sourceUrl": "https://example.com/package-name"
 }
 ```
+
+For packages containing separately licensed code, use `generatedNotices` with an array of templates instead of `generatedNotice`. The generator includes every notice in the package row.
 
 `version`, `license`, and `sourceUrl` are optional. Omitting `version` applies the override to every
 installed version of that package. An override can use `repositoryUrl` instead of `name` when

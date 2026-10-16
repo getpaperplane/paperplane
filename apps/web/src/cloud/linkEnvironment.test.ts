@@ -12,18 +12,18 @@ import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
 import * as Stream from "effect/Stream";
 import * as SubscriptionRef from "effect/SubscriptionRef";
-import { HttpClient } from "effect/unstable/http";
+import { HttpClient } from "effect/http";
 import { afterEach, beforeEach, vi } from "vite-plus/test";
 import {
   AVAILABLE_CONNECTION_STATE,
-  EnvironmentSupervisor,
   type PreparedConnection,
   PrimaryConnectionTarget,
+  EnvironmentSupervisor,
 } from "@rove-code/client-runtime/connection";
 import { type RpcSession } from "@rove-code/client-runtime/rpc";
 import { EnvironmentRegistry } from "@rove-code/client-runtime/connection";
 import { ManagedRelay } from "@rove-code/client-runtime/relay";
-import { remoteHttpClientLayer } from "@rove-code/client-runtime/rpc";
+import { layerRemoteHttpClient } from "@rove-code/client-runtime/rpc";
 import { __resetDesktopPrimaryAuthForTests } from "../environments/primary/desktopAuth";
 
 import {
@@ -54,7 +54,7 @@ vi.mock("./relayClientInstallDialog", () => ({
 }));
 
 const createProof = vi.fn(() => Effect.succeed("dpop-proof"));
-const dpopSignerLayer = Layer.succeed(
+const layerDpopSigner = Layer.succeed(
   ManagedRelay.ManagedRelayDpopSigner,
   ManagedRelay.ManagedRelayDpopSigner.of({
     thumbprint: Effect.succeed("thumbprint"),
@@ -62,23 +62,23 @@ const dpopSignerLayer = Layer.succeed(
   }),
 );
 
-function relayLayer() {
-  const http = remoteHttpClientLayer(globalThis.fetch);
+function layerRelay() {
+  const layerHttp = layerRemoteHttpClient(globalThis.fetch);
   return Layer.mergeAll(
-    http,
+    layerHttp,
     ManagedRelay.layer({
       relayUrl: "https://relay.example.test",
       clientId: RelayWebClientId,
-    }).pipe(Layer.provideMerge(dpopSignerLayer), Layer.provide(http)),
+    }).pipe(Layer.provideMerge(layerDpopSigner), Layer.provide(layerHttp)),
   );
 }
 
-function registryLayer(options?: {
+function layerRegistry(options?: {
   readonly status?: { readonly status: "available"; readonly version: string };
   readonly installEvents?: ReadonlyArray<RelayClientInstallProgressEvent>;
 }) {
   return Layer.effect(
-    EnvironmentRegistry,
+    EnvironmentRegistry.EnvironmentRegistry,
     Effect.gen(function* () {
       const client = testDouble<RpcSession["client"]>({
         [WS_METHODS.cloudGetRelayClientStatus]: () =>
@@ -100,7 +100,7 @@ function registryLayer(options?: {
         httpBaseUrl: TARGET.httpBaseUrl,
         wsBaseUrl: TARGET.wsBaseUrl,
       });
-      const supervisor = EnvironmentSupervisor.of({
+      const supervisor = EnvironmentSupervisor.EnvironmentSupervisor.of({
         target,
         state: yield* SubscriptionRef.make(AVAILABLE_CONNECTION_STATE),
         session: yield* SubscriptionRef.make(Option.some(session)),
@@ -108,31 +108,33 @@ function registryLayer(options?: {
         connect: Effect.void,
         disconnect: Effect.void,
         retryNow: Effect.void,
-      } satisfies EnvironmentSupervisor["Service"]);
+      } satisfies EnvironmentSupervisor.EnvironmentSupervisor["Service"]);
       const registry = {
         run: <A, E, R>(_environmentId: EnvironmentId, effect: Effect.Effect<A, E, R>) =>
-          Effect.provideService(effect, EnvironmentSupervisor, supervisor),
+          Effect.provideService(effect, EnvironmentSupervisor.EnvironmentSupervisor, supervisor),
         runStream: <A, E, R>(_environmentId: EnvironmentId, stream: Stream.Stream<A, E, R>) =>
-          Stream.provideService(stream, EnvironmentSupervisor, supervisor),
-      } as EnvironmentRegistry["Service"];
-      return EnvironmentRegistry.of(registry);
+          Stream.provideService(stream, EnvironmentSupervisor.EnvironmentSupervisor, supervisor),
+      } as unknown as EnvironmentRegistry.EnvironmentRegistry["Service"];
+      return EnvironmentRegistry.EnvironmentRegistry.of(registry);
     }),
   );
 }
 
-function services(options?: Parameters<typeof registryLayer>[0]) {
-  return Layer.mergeAll(relayLayer(), registryLayer(options));
+function layerServices(options?: Parameters<typeof layerRegistry>[0]) {
+  return Layer.mergeAll(layerRelay(), layerRegistry(options));
 }
 
 function withServices<A, E>(
   effect: Effect.Effect<
     A,
     E,
-    HttpClient.HttpClient | ManagedRelay.ManagedRelayClient | EnvironmentRegistry
+    | HttpClient.HttpClient
+    | ManagedRelay.ManagedRelayClient
+    | EnvironmentRegistry.EnvironmentRegistry
   >,
-  options?: Parameters<typeof registryLayer>[0],
+  options?: Parameters<typeof layerRegistry>[0],
 ) {
-  return effect.pipe(Effect.provide(services(options)));
+  return effect.pipe(Effect.provide(layerServices(options)));
 }
 
 function bodyText(body: BodyInit | null | undefined): string {
@@ -239,7 +241,6 @@ describe("web cloud link environment client", () => {
         "http://127.0.0.1:3000/api/connect/preferences",
       );
       expect(fetchMock.mock.calls[0]?.[1]?.method).toBe("POST");
-      // @effect-diagnostics-next-line preferSchemaOverJson:off
       expect(JSON.parse(bodyText(fetchMock.mock.calls[0]?.[1]?.body))).toEqual({
         publishAgentActivity: true,
       });
@@ -289,7 +290,6 @@ describe("web cloud link environment client", () => {
       expect(String(fetchMock.mock.calls[1]?.[0])).toBe(
         "http://127.0.0.1:3000/api/connect/link-proof",
       );
-      // @effect-diagnostics-next-line preferSchemaOverJson:off
       expect(JSON.parse(bodyText(fetchMock.mock.calls[1]?.[1]?.body))).toMatchObject({
         challenge: "challenge",
         endpoint: {
@@ -340,11 +340,9 @@ describe("web cloud link environment client", () => {
         }),
       );
 
-      // @effect-diagnostics-next-line preferSchemaOverJson:off
       expect(JSON.parse(bodyText(fetchMock.mock.calls[0]?.[1]?.body))).toMatchObject({
         managedTunnelsEnabled: false,
       });
-      // @effect-diagnostics-next-line preferSchemaOverJson:off
       expect(JSON.parse(bodyText(fetchMock.mock.calls[1]?.[1]?.body))).toMatchObject({
         endpoint: { providerKind: "manual" },
       });

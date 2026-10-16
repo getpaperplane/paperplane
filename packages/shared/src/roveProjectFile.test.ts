@@ -8,23 +8,6 @@ import {
 } from "./roveProjectFile.ts";
 
 const decodeJson = Schema.decodeUnknownSync(RoveProjectFileFromJson);
-const decodeProjectJsonSchema = Schema.decodeUnknownSync(
-  Schema.Struct({
-    properties: Schema.Record(
-      Schema.String,
-      Schema.Struct({
-        description: Schema.optional(Schema.String),
-        items: Schema.optional(
-          Schema.Struct({
-            properties: Schema.Record(Schema.String, Schema.Unknown),
-            required: Schema.Array(Schema.String),
-          }),
-        ),
-      }),
-    ),
-    required: Schema.optional(Schema.Array(Schema.String)),
-  }),
-);
 
 describe("buildRoveProjectFileJsonSchema", () => {
   it("emits a draft 2020-12 schema with the published $id", () => {
@@ -37,7 +20,16 @@ describe("buildRoveProjectFileJsonSchema", () => {
   });
 
   it("documents every supported field", () => {
-    const schema = decodeProjectJsonSchema(buildRoveProjectFileJsonSchema());
+    const schema = buildRoveProjectFileJsonSchema() as {
+      properties: Record<
+        string,
+        {
+          description?: string;
+          items?: { properties: Record<string, unknown>; required: ReadonlyArray<string> };
+        }
+      >;
+      required?: ReadonlyArray<string>;
+    };
 
     expect(Object.keys(schema.properties).sort()).toEqual([
       "$schema",
@@ -59,6 +51,7 @@ describe("buildRoveProjectFileJsonSchema", () => {
       "icon",
       "name",
       "previewUrl",
+      "runOnSettle",
       "runOnWorktreeCreate",
     ]);
   });

@@ -1,5 +1,5 @@
+import { scopeProjectRef } from "@rove-code/client-runtime/environment";
 import { requestCustomSnooze } from "../components/CustomSnoozeDialog";
-import { scopeProjectRef, scopedThreadKey } from "@rove-code/client-runtime/environment";
 import {
   type AtomCommandResult,
   isAtomCommandInterrupted,
@@ -7,18 +7,24 @@ import {
   squashAtomCommandFailure,
 } from "@rove-code/client-runtime/state/runtime";
 import { canSnooze, effectiveSnoozed } from "@rove-code/client-runtime/state/thread-settled";
-import type { ScopedThreadRef, ThreadId } from "@rove-code/contracts";
+import {
+  AuthOrchestrationOperateScope,
+  type ScopedThreadRef,
+  type ThreadId,
+} from "@rove-code/contracts";
 import { useRouter } from "@tanstack/react-router";
 import { useCallback, useMemo } from "react";
 
 import { resolveSnoozePresets } from "../components/Sidebar.snooze";
 import {
   buildThreadActionMenuItems,
+  threadActionRequiresOperate,
   type ThreadActionMenuId,
 } from "../components/threadActionMenu.logic";
 import { stackedThreadToast, toastManager } from "../components/ui/toast";
 import { threadEnvironment } from "../state/threads";
-import { useAtomCommand } from "../state/use-atom-command";
+import { useOrchestrationCommand } from "../state/use-orchestration-command";
+import { readEnvironmentScope } from "../state/session";
 import {
   readEnvironmentSupportsAutoSettleOptOut,
   readEnvironmentSupportsPinning,
@@ -36,8 +42,7 @@ import {
   selectProjectGroupingSettings,
 } from "../logicalProject";
 import { buildPhysicalToLogicalProjectKeyMap } from "../sidebarProjectGrouping";
-import { useUiStateStore } from "../uiStateStore";
-import { useContinueThreadOnEnvironment } from "./useContinueThreadOnEnvironment";
+import { threadRuntimeCanArchive } from "@rove-code/client-runtime/state/models";
 import { useCopyToClipboard } from "./useCopyToClipboard";
 import { useNewThreadHandler } from "./useHandleNewThread";
 import { useClientSettings } from "./useSettings";
@@ -68,10 +73,8 @@ export function useThreadActionMenu(input: {
   /** Fallback for "Copy path" when the thread has no worktree. */
   readonly projectCwd: string | null;
   readonly onStartRename: () => void;
-  readonly supportsPotetoMode?: boolean;
-  readonly onOpenPotetoMode?: (() => void) | undefined;
 }) {
-  const { threadRef, projectCwd, onStartRename, supportsPotetoMode, onOpenPotetoMode } = input;
+  const { threadRef, projectCwd, onStartRename } = input;
   const router = useRouter();
   const projects = useProjects();
   const primaryEnvironmentId = usePrimaryEnvironmentId();
@@ -95,13 +98,12 @@ export function useThreadActionMenu(input: {
     setThreadAutoSettle,
     archiveThread,
     deleteThread,
+    markThreadUnread,
   } = useThreadActions();
-  const updateThreadMetadata = useAtomCommand(threadEnvironment.updateMetadata, {
+  const updateThreadMetadata = useOrchestrationCommand(threadEnvironment.updateMetadata, {
     reportFailure: false,
   });
   const handleNewThread = useNewThreadHandler();
-  const continueThread = useContinueThreadOnEnvironment();
-  const markThreadUnread = useUiStateStore((s) => s.markThreadUnread);
   const confirmThreadDelete = useClientSettings((s) => s.confirmThreadDelete);
   const confirmThreadArchive = useClientSettings((s) => s.confirmThreadArchive);
   const timestampFormat = useClientSettings((s) => s.timestampFormat);
@@ -142,17 +144,12 @@ export function useThreadActionMenu(input: {
           snooze: readEnvironmentSupportsSnooze(threadRef.environmentId),
           pinning: readEnvironmentSupportsPinning(threadRef.environmentId),
           titleRegeneration: readEnvironmentSupportsTitleRegeneration(threadRef.environmentId),
-          potetoMode: supportsPotetoMode === true,
         };
         const isRegeneratingTitle = thread.titleRegeneration != null;
         const snoozePresets = resolveSnoozePresets(now, timestampFormat);
-        const continueTargets = continueThread.resolveTargets(threadRef);
         const items = buildThreadActionMenuItems({
+          canOperate: readEnvironmentScope(threadRef.environmentId, AuthOrchestrationOperateScope),
           branch: thread.branch ?? null,
-          continueTargets,
-          hasProject: thread.projectId !== null,
-          // The chat header has no project-scoped thread list behind the
-          // menu, so the "Filter by project" affordance is sidebar-only.
           projectFilter: null,
           isPinned: thread.pinnedAt != null,
           isSettled: supports.settlement && thread.settledOverride === "settled",
@@ -160,18 +157,21 @@ export function useThreadActionMenu(input: {
           isSnoozed: supports.snooze && effectiveSnoozed(thread, { now: now.toISOString() }),
           canSnoozeNow: canSnooze(thread, { now: now.toISOString() }),
           isRegeneratingTitle,
-          isRunning: thread.session?.status === "running" && thread.session.activeTurnId != null,
+          isRunning: !threadRuntimeCanArchive(thread.runtime),
           supports,
           snoozePresets,
         });
         const clicked = await settlePromise(() => api.contextMenu.show(items, position));
         if (clicked._tag === "Failure" || clicked.value === null) return;
         const action: ThreadActionMenuId = clicked.value;
-        if (action.startsWith("continue-on:")) {
-          const target = continueTargets.find(
-            (candidate) => `continue-on:${candidate.environmentId}` === action,
+        if (
+          threadActionRequiresOperate(action) &&
+          !readEnvironmentScope(threadRef.environmentId, AuthOrchestrationOperateScope)
+        ) {
+          failureToast(
+            "Thread action unavailable",
+            new Error("This connection cannot change threads."),
           );
-          if (target) await continueThread.continueOn(threadRef, target);
           return;
         }
         if (action.startsWith("snooze:")) {
@@ -253,9 +253,6 @@ export function useThreadActionMenu(input: {
           case "rename":
             onStartRename();
             return;
-          case "poteto-mode":
-            onOpenPotetoMode?.();
-            return;
           case "regenerate-title":
             if (isRegeneratingTitle) return;
             await reportFailure("Failed to regenerate thread title", () =>
@@ -266,10 +263,10 @@ export function useThreadActionMenu(input: {
             );
             return;
           case "mark-unread":
-            markThreadUnread(scopedThreadKey(threadRef), thread.latestTurn?.completedAt);
+            markThreadUnread(threadRef);
             return;
           case "copy-path": {
-            const workspacePath = thread.worktreePath ?? thread.workspacePath ?? projectCwd;
+            const workspacePath = thread.worktreePath ?? projectCwd;
             if (!workspacePath) {
               toastManager.add(
                 stackedThreadToast({
@@ -329,6 +326,9 @@ export function useThreadActionMenu(input: {
             if (
               deleted._tag === "Failure" &&
               !isAtomCommandInterrupted(deleted) &&
+              // A failure with the thread already gone is worktree cleanup
+              // failing after a successful delete — deleteThread has toasted
+              // that itself, and "Failed to delete thread" would be a lie.
               readThreadShell(threadRef) !== null
             ) {
               failureToast("Failed to delete thread", squashAtomCommandFailure(deleted));
@@ -345,7 +345,6 @@ export function useThreadActionMenu(input: {
       confirmThreadArchive,
       confirmThreadDelete,
       confirmAndUnpinThread,
-      continueThread,
       copyBranchToClipboard,
       copyPathToClipboard,
       copyThreadIdToClipboard,
@@ -353,7 +352,6 @@ export function useThreadActionMenu(input: {
       handleNewThread,
       logicalProjectKeyByPhysicalKey,
       markThreadUnread,
-      onOpenPotetoMode,
       onStartRename,
       pinThread,
       projectCwd,
@@ -363,7 +361,6 @@ export function useThreadActionMenu(input: {
       setThreadAutoSettle,
       settleThread,
       snoozeThread,
-      supportsPotetoMode,
       threadRef,
       timestampFormat,
       unsettleThread,
