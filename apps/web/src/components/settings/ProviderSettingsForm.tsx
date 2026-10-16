@@ -29,7 +29,7 @@ import type { ProviderClientDefinition } from "@rove-code/provider-core/client";
 export type SettingsFormDefinition = Pick<ProviderClientDefinition, "settingsSchema"> & {
   readonly driverKind?: ProviderClientDefinition["driverKind"];
 };
-import { PiSubagentSettings } from "./PiSubagentSettings";
+import { PI_MODEL_SETTING_KEYS, PI_MODEL_SETTING_SCOPES, PiModelSettings } from "./PiModelSettings";
 import { SettingsRow } from "./settingsLayout";
 
 export interface ProviderSettingsFieldModel {
@@ -565,108 +565,6 @@ function ProviderSettingsFieldRow({
   );
 }
 
-export function resolvePiThinkingSetting(
-  value: unknown,
-  models: ReadonlyArray<ServerProviderModel>,
-) {
-  const slug = readProviderConfigString(value, "model").trim();
-  const model = slug
-    ? models.find((candidate) => candidate.slug === slug)
-    : models.find((candidate) => candidate.isDefault);
-  const descriptor = model?.capabilities?.optionDescriptors?.find(
-    (candidate) => candidate.id === "thinkingLevel" && candidate.type === "select",
-  );
-  const options = descriptor?.type === "select" ? descriptor.options : [];
-  const selected = readProviderConfigString(value, "thinkingLevel").trim();
-  return {
-    options,
-    selected,
-    unavailable: selected !== "" && !options.some((option) => option.id === selected),
-  };
-}
-
-const EMPTY_PI_MODELS: ReadonlyArray<ServerProviderModel> = [];
-
-function PiThinkingSettingsField({
-  field,
-  value,
-  models = EMPTY_PI_MODELS,
-  idPrefix,
-  variant,
-  onChange,
-}: ProviderSettingsFieldRowProps & { models?: ReadonlyArray<ServerProviderModel> | undefined }) {
-  const { options, selected, unavailable } = resolvePiThinkingSetting(value, models);
-  const id = `${idPrefix}-${field.key}`;
-  const triggerLabel =
-    selected === ""
-      ? "Use Pi default"
-      : unavailable
-        ? `${selected} (unavailable)`
-        : (options.find((option) => option.id === selected)?.label ?? selected);
-  const hint =
-    options.length === 0
-      ? "Reasoning choices are available once the selected model is in this provider's catalog."
-      : unavailable
-        ? "The saved override is not supported by this model. Choose a supported level or use Pi default."
-        : "Choices follow the selected model. Use Pi default to clear the override.";
-  const select = (
-    <div
-      className={cn(
-        variant === "settings" ? "w-full max-w-full @min-[32rem]/settings-row:w-56" : "w-full",
-        variant === "card" && "mt-1.5",
-      )}
-    >
-      <Select
-        value={selected}
-        onValueChange={(next) => {
-          if (next !== null && (next === "" || options.some((option) => option.id === next))) {
-            onChange(nextProviderConfigWithFieldValue(value, field, next));
-          }
-        }}
-      >
-        <SelectTrigger id={id} size="sm" aria-label={field.label}>
-          <SelectValue>{triggerLabel}</SelectValue>
-        </SelectTrigger>
-        <SelectPopup align="start" alignItemWithTrigger={false}>
-          <SelectItem value="">Use Pi default</SelectItem>
-          {unavailable ? (
-            <SelectItem value={selected} disabled>
-              {selected} (unavailable)
-            </SelectItem>
-          ) : null}
-          {options.map((option) => (
-            <SelectItem key={option.id} value={option.id}>
-              {option.label}
-            </SelectItem>
-          ))}
-        </SelectPopup>
-      </Select>
-    </div>
-  );
-  if (variant === "settings") {
-    return (
-      <SettingsRow
-        title={<label htmlFor={id}>{field.label}</label>}
-        description={hint}
-        control={select}
-      />
-    );
-  }
-  return (
-    <FieldFrame variant={variant}>
-      <label htmlFor={id} className="text-xs font-medium text-foreground">
-        {field.label}
-      </label>
-      {select}
-      <p
-        className={cn("mt-1 text-muted-foreground", variant === "dialog" ? "text-2xs" : "text-xs")}
-      >
-        {hint}
-      </p>
-    </FieldFrame>
-  );
-}
-
 export function ProviderSettingsForm({
   definition,
   value,
@@ -690,48 +588,40 @@ export function ProviderSettingsForm({
     return null;
   }
 
-  const subagentModelField =
+  // Pi pairs each model with its thinking level in one row.
+  const piModelPairs =
     definition.driverKind === "pi"
-      ? fields.find((field) => field.key === "subagentModel")
-      : undefined;
-  const subagentThinkingField =
-    definition.driverKind === "pi"
-      ? fields.find((field) => field.key === "subagentThinkingLevel")
-      : undefined;
+      ? PI_MODEL_SETTING_SCOPES.flatMap((scope) => {
+          const keys = PI_MODEL_SETTING_KEYS[scope];
+          const modelField = fields.find((field) => field.key === keys.model);
+          const thinkingField = fields.find((field) => field.key === keys.thinking);
+          return modelField && thinkingField ? [{ scope, modelField, thinkingField }] : [];
+        })
+      : [];
 
   return (
     <>
-      {fields.map((field) =>
-        subagentModelField && subagentThinkingField && field.key === "subagentModel" ? (
-          <PiSubagentSettings
+      {fields.map((field) => {
+        if (piModelPairs.some((pair) => pair.thinkingField.key === field.key)) return null;
+        const pair = piModelPairs.find((candidate) => candidate.modelField.key === field.key);
+        return pair ? (
+          <PiModelSettings
             key={field.key}
+            scope={pair.scope}
             environmentId={environmentId}
             provider={provider}
             models={models}
-            modelField={subagentModelField}
-            thinkingField={subagentThinkingField}
+            modelField={pair.modelField}
+            thinkingField={pair.thinkingField}
             value={value}
             idPrefix={idPrefix}
             variant={variant}
             onModelChange={(next) =>
-              onChange(nextProviderConfigWithFieldValue(value, subagentModelField, next))
+              onChange(nextProviderConfigWithFieldValue(value, pair.modelField, next))
             }
             onThinkingChange={(next) =>
-              onChange(nextProviderConfigWithFieldValue(value, subagentThinkingField, next))
+              onChange(nextProviderConfigWithFieldValue(value, pair.thinkingField, next))
             }
-          />
-        ) : subagentModelField &&
-          subagentThinkingField &&
-          field.key === "subagentThinkingLevel" ? null : definition.driverKind === "pi" &&
-          field.key === "thinkingLevel" ? (
-          <PiThinkingSettingsField
-            key={field.key}
-            field={field}
-            value={value}
-            models={models}
-            idPrefix={idPrefix}
-            variant={variant}
-            onChange={onChange}
           />
         ) : (
           <ProviderSettingsFieldRow
@@ -742,8 +632,8 @@ export function ProviderSettingsForm({
             variant={variant}
             onChange={onChange}
           />
-        ),
-      )}
+        );
+      })}
       {isLocalAcp ? <ProviderCommandArguments value={value} onChange={onChange} /> : null}
     </>
   );

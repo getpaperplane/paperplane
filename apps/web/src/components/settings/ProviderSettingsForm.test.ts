@@ -2,11 +2,10 @@ import { describe, expect, it } from "vite-plus/test";
 import { ProviderDriverKind, type ServerProviderModel } from "@rove-code/contracts";
 
 import { providerClients } from "./providerDriverMeta";
-import { resolvePiSubagentSettings } from "./PiSubagentSettings";
+import { resolvePiModelSettings } from "./PiModelSettings";
 import {
   deriveProviderSettingsFields,
   nextProviderConfigWithFieldValue,
-  resolvePiThinkingSetting,
 } from "./ProviderSettingsForm";
 
 describe("ProviderSettingsForm helpers", () => {
@@ -50,17 +49,18 @@ describe("ProviderSettingsForm helpers", () => {
   ];
 
   it("preserves subagent inheritance and unavailable overrides without altering the thread model", () => {
-    expect(resolvePiSubagentSettings({}, piModels)).toMatchObject({
+    expect(resolvePiModelSettings({}, piModels, "subagent")).toMatchObject({
       model: "",
       thinking: "",
       thinkingUnavailable: false,
     });
-    const missing = resolvePiSubagentSettings(
+    const missing = resolvePiModelSettings(
       {
         subagentModel: "missing/model",
         subagentThinkingLevel: "max",
       },
       piModels,
+      "subagent",
     );
     expect(missing).toMatchObject({ model: "missing/model", thinkingUnavailable: true });
     expect(missing.modelOptions.at(-1)).toMatchObject({
@@ -80,15 +80,25 @@ describe("ProviderSettingsForm helpers", () => {
 
   it("distinguishes an unsupported Pi thinking override from the provider default", () => {
     expect(
-      resolvePiThinkingSetting({ model: "local/plain", thinkingLevel: "max" }, piModels),
-    ).toMatchObject({ selected: "max", unavailable: true });
-    expect(resolvePiThinkingSetting({}, piModels).options.map((option) => option.id)).toEqual([
-      "low",
-      "max",
-    ]);
+      resolvePiModelSettings({ model: "local/plain", thinkingLevel: "max" }, piModels, "default"),
+    ).toMatchObject({ thinking: "max", thinkingUnavailable: true });
     expect(
-      resolvePiThinkingSetting({ model: "missing/model", thinkingLevel: "max" }, piModels),
-    ).toMatchObject({ options: [], selected: "max", unavailable: true });
+      resolvePiModelSettings({}, piModels, "default").thinkingOptions.map((option) => option.id),
+    ).toEqual(["low", "max"]);
+    const missing = resolvePiModelSettings(
+      { model: "missing/model", thinkingLevel: "max" },
+      piModels,
+      "default",
+    );
+    expect(missing).toMatchObject({
+      thinkingOptions: [],
+      thinking: "max",
+      thinkingUnavailable: true,
+    });
+    expect(missing.modelOptions.at(-1)).toMatchObject({
+      slug: "missing/model",
+      isUnavailable: true,
+    });
   });
 
   it("hides unsupported Pi workload controls without clearing saved policy", () => {
@@ -120,9 +130,9 @@ describe("ProviderSettingsForm helpers", () => {
       "",
     );
     expect(next).toEqual({ model: "local/plain" });
-    expect(resolvePiThinkingSetting(next, piModels)).toMatchObject({
-      selected: "",
-      unavailable: false,
+    expect(resolvePiModelSettings(next, piModels, "default")).toMatchObject({
+      thinking: "",
+      thinkingUnavailable: false,
     });
   });
   it("derives visible provider config fields from the client definition schema", () => {
