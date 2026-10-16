@@ -3447,12 +3447,18 @@ it.layer(layerTest)("ProjectionStoreV2", (it) => {
       yield* sql`UPDATE orchestration_v2_projection_threads
         SET payload_json = json_set(payload_json, '$.limitRecovery', json(${encodeUnknownJsonString(recovery)}))
         WHERE thread_id = ${threadId}`;
-      // Armed future retries need no state decoding until they become due.
+      // Normal due reads omit future retries; the scheduler explicitly includes
+      // their deadlines without reading transcript or fork history.
       assert.isUndefined(
         (yield* store.getLimitRecoveryCandidates({ ...recoveryOptions, autoResume: true })).find(
           (row) => row.id === threadId,
         ),
       );
+      const future = (yield* store.getLimitRecoveryCandidates({
+        ...recoveryOptions,
+        includeFuture: true,
+      })).find((row) => row.id === threadId);
+      assert.deepEqual(future?.limitRecovery, recovery);
       const due = (yield* store.getLimitRecoveryCandidates({
         ...recoveryOptions,
         now: reset,
@@ -3463,6 +3469,11 @@ it.layer(layerTest)("ProjectionStoreV2", (it) => {
         VALUES ('limit-shell:pending-request', ${threadId}, ${original.rootNodeId}, 'approval', 'pending', ${DateTime.formatIso(now)}, '{}')`;
       assert.isUndefined(
         (yield* store.getLimitRecoveryCandidates({ ...recoveryOptions, now: reset })).find(
+          (row) => row.id === threadId,
+        ),
+      );
+      assert.isUndefined(
+        (yield* store.getLimitRecoveryCandidates({ ...recoveryOptions, includeFuture: true })).find(
           (row) => row.id === threadId,
         ),
       );

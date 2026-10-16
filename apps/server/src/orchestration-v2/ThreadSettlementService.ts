@@ -15,7 +15,7 @@ import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
-import * as Schedule from "effect/Schedule";
+import { makePeriodicWork } from "../background/periodicWork.ts";
 import type * as Scope from "effect/Scope";
 import * as Stream from "effect/Stream";
 
@@ -305,6 +305,7 @@ export function autoSettlementSettingsKey(
 }
 
 export const make = Effect.gen(function* () {
+  const periodicWork = yield* makePeriodicWork;
   const orchestrator = yield* Orchestrator.OrchestratorV2;
   const projections = yield* ProjectionStore.ProjectionStoreV2;
   const projectStore = yield* ProjectStore.ProjectStoreV2;
@@ -645,10 +646,12 @@ export const make = Effect.gen(function* () {
     const initialSettings = yield* settingsService.getSettings.pipe(Effect.orDie);
     let lastSettlementSettings = autoSettlementSettingsKey(initialSettings);
     yield* forkParked(
-      Effect.gen(function* () {
-        yield* worker.enqueue(undefined);
-        yield* worker.drain;
-      }).pipe(Effect.repeat(Schedule.spaced("1 minute")), Effect.asVoid),
+      periodicWork(
+        Effect.gen(function* () {
+          yield* worker.enqueue(undefined);
+          yield* worker.drain;
+        }),
+      ),
     );
     yield* forkParked(
       Stream.runForEach(settingsChanges, (settings) => {

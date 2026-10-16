@@ -646,6 +646,34 @@ it.effect("keeps a max-attempt replay-safe failure terminal when fail settlement
   }),
 );
 
+it.effect(
+  "the default idle daemon checks only every fifteen minutes and still wakes on notifications",
+  () =>
+    Effect.gen(function* () {
+      const available = yield* Queue.unbounded<void>();
+      const attempts = yield* Queue.unbounded<void>();
+      const worker = EffectWorker.OrchestrationEffectWorkerV2.of({
+        awaitWork: Queue.take(available),
+        runRecoveryOnce: Effect.succeed(false),
+        runOnce: Queue.offer(attempts, undefined).pipe(Effect.as(false)),
+        nextClaimableAt: Effect.succeed(Option.none()),
+        drain: () => Effect.succeed(0),
+      });
+      yield* EffectWorker.runDaemon.pipe(
+        Effect.provideService(EffectWorker.OrchestrationEffectWorkerV2, worker),
+        Effect.forkScoped,
+      );
+      for (let index = 0; index < 4; index++) yield* Queue.take(attempts);
+      yield* TestClock.adjust("14 minutes");
+      assert.equal(yield* Queue.size(attempts), 0);
+      yield* TestClock.adjust("1 minute");
+      for (let index = 0; index < 4; index++) yield* Queue.take(attempts);
+      yield* Queue.offer(available, undefined);
+      yield* Queue.take(attempts);
+      assert.equal(yield* Queue.size(attempts), 0);
+    }),
+);
+
 it.effect("uses durable deadlines, notifications, and a slow liveness poll", () =>
   Effect.gen(function* () {
     const attempts = yield* Ref.make(0);

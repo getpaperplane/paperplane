@@ -9,6 +9,7 @@ import * as Stream from "effect/Stream";
 import * as TestClock from "effect/testing/TestClock";
 import * as SqlClient from "effect/sql/SqlClient";
 
+import { layerPolicy } from "../background/testkit.ts";
 import * as ServerConfig from "../config.ts";
 import * as EventStore from "../orchestration-v2/EventStore.ts";
 import * as ProjectionMaintenance from "../orchestration-v2/ProjectionMaintenance.ts";
@@ -28,6 +29,7 @@ const storageLayer = <E>(
   config: Layer.Layer<ServerConfig.ServerConfig, E, FileSystem.FileSystem | Path.Path>,
 ) =>
   DatabaseStorage.layer.pipe(
+    Layer.provide(layerPolicy()),
     Layer.provide(ProjectionMaintenance.layer),
     Layer.provide(Layer.merge(EventStore.layer, ProjectionStore.layer)),
     Layer.provideMerge(Sqlite.layerMemory),

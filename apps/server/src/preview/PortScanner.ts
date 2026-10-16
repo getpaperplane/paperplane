@@ -37,7 +37,7 @@ import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
 import * as PlatformError from "effect/PlatformError";
 import * as Ref from "effect/Ref";
-import * as Schedule from "effect/Schedule";
+import * as Queue from "effect/Queue";
 import * as Scope from "effect/Scope";
 import * as Semaphore from "effect/Semaphore";
 import { FetchHttpClient, HttpClient } from "effect/http";
@@ -849,18 +849,28 @@ export const make = Effect.gen(function* PortDiscoveryMake() {
     ),
   );
 
-  // Single layer-scoped polling fiber. Ticks skip the scan and its span when no
-  // client is currently retained, so the cost is one Ref.get every POLL_INTERVAL.
-  const pollIfRetained = Ref.get(stateRef).pipe(
-    Effect.flatMap((state) => (state.retainCount > 0 ? pollTick() : Effect.void)),
-  );
-  yield* Effect.forkScoped(pollIfRetained.pipe(Effect.repeat(Schedule.spaced(POLL_INTERVAL))));
+  // Discovery is leased. With no retainers, park instead of waking every three seconds.
+  const retentionChanges = yield* Queue.sliding<void>(1);
+  yield* Effect.forever(
+    Effect.gen(function* () {
+      if ((yield* Ref.get(stateRef)).retainCount === 0) {
+        yield* Queue.take(retentionChanges);
+        return;
+      }
+      const timed = yield* Effect.raceFirst(
+        Queue.take(retentionChanges).pipe(Effect.as(false)),
+        Effect.sleep(POLL_INTERVAL).pipe(Effect.as(true)),
+      );
+      if (timed && (yield* Ref.get(stateRef)).retainCount > 0) yield* pollTick();
+    }),
+  ).pipe(Effect.forkScoped);
 
   const acquireRetention = Effect.fn("PortDiscovery.retain")(function* () {
     const wasIdle = yield* Ref.modify(stateRef, (state) => [
       state.retainCount === 0,
       { ...state, retainCount: state.retainCount + 1 },
     ]);
+    yield* Queue.offer(retentionChanges, undefined);
     if (wasIdle) {
       // Run an immediate scan + broadcast so the new retainer doesn't have
       // to wait up to POLL_INTERVAL for the first emission.
@@ -872,7 +882,7 @@ export const make = Effect.gen(function* PortDiscoveryMake() {
     Ref.update(stateRef, (state) => ({
       ...state,
       retainCount: Math.max(0, state.retainCount - 1),
-    })),
+    })).pipe(Effect.andThen(Queue.offer(retentionChanges, undefined))),
   );
 
   const subscribe: PortDiscovery["Service"]["subscribe"] = Effect.fn("PortDiscovery.subscribe")(

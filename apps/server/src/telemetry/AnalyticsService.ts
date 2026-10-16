@@ -20,6 +20,7 @@ import * as Exit from "effect/Exit";
 import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
 import * as Random from "effect/Random";
+import * as Queue from "effect/Queue";
 import * as Ref from "effect/Ref";
 import * as Result from "effect/Result";
 import * as Stream from "effect/Stream";
@@ -327,6 +328,7 @@ export const make = Effect.gen(function* () {
     Effect.flatMap((enabled) => (enabled ? flushBatches : discardBufferedEvents)),
   );
 
+  const pending = yield* Queue.sliding<void>(1);
   const flushWhenDue = Effect.gen(function* () {
     const { retryAt } = yield* Ref.get(deliveryRef);
     if ((yield* Clock.currentTimeMillis) >= retryAt) {
@@ -355,6 +357,7 @@ export const make = Effect.gen(function* () {
         eventGeneration,
         safeProperties,
       );
+      yield* Queue.offer(pending, undefined);
       if (enqueueResult.dropped) {
         yield* Effect.logDebug("analytics buffer full; dropping oldest event", {
           size: enqueueResult.size,
@@ -365,16 +368,17 @@ export const make = Effect.gen(function* () {
   );
 
   yield* Effect.forever(
-    Effect.sleep(FLUSH_INTERVAL_MS).pipe(
-      Effect.flatMap(() => Ref.get(bufferRef)),
-      Effect.flatMap((events) =>
-        Ref.get(deliveryRef).pipe(
-          Effect.flatMap((delivery) =>
-            events.length === 0 && delivery.failedBatch.length === 0 ? Effect.void : flushWhenDue,
-          ),
-        ),
-      ),
-    ),
+    Effect.gen(function* () {
+      const events = yield* Ref.get(bufferRef);
+      const delivery = yield* Ref.get(deliveryRef);
+      if (events.length === 0 && delivery.failedBatch.length === 0) {
+        yield* Queue.take(pending);
+        return;
+      }
+      const now = yield* Clock.currentTimeMillis;
+      yield* Effect.sleep(Math.max(FLUSH_INTERVAL_MS, delivery.retryAt - now));
+      yield* flushWhenDue;
+    }),
     {
       disableYield: true,
     },

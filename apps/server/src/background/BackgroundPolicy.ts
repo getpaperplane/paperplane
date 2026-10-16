@@ -17,6 +17,7 @@ import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as PubSub from "effect/PubSub";
+import * as Queue from "effect/Queue";
 import * as Ref from "effect/Ref";
 import * as Scope from "effect/Scope";
 import * as Semaphore from "effect/Semaphore";
@@ -213,6 +214,7 @@ export const make = Effect.fn("background.policy.make")(function* () {
   const hostPowerMonitor = yield* HostPowerMonitor.HostPowerMonitor;
   const serverSettings = yield* ServerSettings.ServerSettingsService;
   const leasesRef = yield* Ref.make(new Map<string, ClientActivityLease>());
+  const leaseChanges = yield* Queue.sliding<void>(1);
   const changes = yield* PubSub.sliding<BackgroundPolicySnapshot>(1);
   const publishMutex = yield* Semaphore.make(1);
 
@@ -266,6 +268,7 @@ export const make = Effect.fn("background.policy.make")(function* () {
           expiresAt,
         };
         yield* Ref.update(leasesRef, (leases) => upsertClientActivityLease(leases, lease, now));
+        yield* Queue.offer(leaseChanges, undefined);
         yield* publishSnapshotUnlocked;
       }),
     );
@@ -283,7 +286,11 @@ export const make = Effect.fn("background.policy.make")(function* () {
           }
         }
         return next;
-      }).pipe(Effect.andThen(publishSnapshotUnlocked), Effect.asVoid),
+      }).pipe(
+        Effect.andThen(Queue.offer(leaseChanges, undefined)),
+        Effect.andThen(publishSnapshotUnlocked),
+        Effect.asVoid,
+      ),
     );
 
   const hasDemand: BackgroundPolicy["Service"]["hasDemand"] = (scope) =>
@@ -313,25 +320,27 @@ export const make = Effect.fn("background.policy.make")(function* () {
   );
 
   yield* Effect.forever(
-    Effect.sleep("15 seconds").pipe(
-      Effect.andThen(
-        publishMutex.withPermits(1)(
-          Effect.gen(function* () {
-            const now = yield* DateTime.now;
-            yield* Ref.update(leasesRef, (leases) => {
-              const next = new Map(leases);
-              for (const [key, lease] of next) {
-                if (!isLeaseActive(lease, now)) {
-                  next.delete(key);
-                }
-              }
-              return next;
-            });
-            yield* publishSnapshotUnlocked;
-          }),
-        ),
-      ),
-    ),
+    Effect.gen(function* () {
+      // No leases means nothing to expire: no timer, settings reads or publications.
+      if ((yield* Ref.get(leasesRef)).size === 0) {
+        yield* Queue.take(leaseChanges);
+        return;
+      }
+      yield* Effect.raceFirst(Queue.take(leaseChanges), Effect.sleep("15 seconds"));
+      yield* publishMutex.withPermits(1)(
+        Effect.gen(function* () {
+          const now = yield* DateTime.now;
+          yield* Ref.update(leasesRef, (leases) => {
+            const next = new Map(leases);
+            for (const [key, lease] of next) {
+              if (!isLeaseActive(lease, now)) next.delete(key);
+            }
+            return next;
+          });
+          yield* publishSnapshotUnlocked;
+        }),
+      );
+    }),
   ).pipe(Effect.forkScoped);
 
   return BackgroundPolicy.of({

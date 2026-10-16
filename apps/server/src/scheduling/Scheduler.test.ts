@@ -1,4 +1,5 @@
 import { assert, it } from "@effect/vitest";
+import * as Clock from "effect/Clock";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
@@ -19,7 +20,7 @@ it.effect("keeps other sources running after a source defects", () =>
     );
     yield* scheduler.register("healthy", Queue.offer(receipts, "healthy").pipe(Effect.asVoid));
     for (let tick = 0; tick < 3; tick += 1) {
-      if (tick > 0) yield* TestClock.adjust("5 seconds");
+      if (tick > 0) yield* TestClock.adjust("15 minutes");
       assert.deepEqual([yield* Queue.take(receipts), yield* Queue.take(receipts)].sort(), [
         "broken",
         "healthy",
@@ -45,12 +46,12 @@ it.effect("does not overlap slow work or hold up another source", () =>
     yield* scheduler.register("healthy", Queue.offer(receipts, undefined).pipe(Effect.asVoid));
     yield* Deferred.await(started);
     yield* Queue.take(receipts);
-    yield* TestClock.adjust("10 seconds");
+    yield* TestClock.adjust("30 minutes");
     yield* Queue.take(receipts);
     yield* Queue.take(receipts);
     assert.equal(yield* Ref.get(runs), 1);
     yield* Deferred.succeed(release, undefined);
-    yield* TestClock.adjust("5 seconds");
+    yield* TestClock.adjust("15 minutes");
     yield* Queue.take(receipts);
     assert.equal(yield* Ref.get(runs), 2);
   }).pipe(Effect.provide(Scheduler.layer)),
@@ -80,9 +81,53 @@ it.effect("unregisters closed sources and interrupts their in-flight work", () =
     const receipts = yield* Queue.unbounded<void>();
     yield* scheduler.register("remaining", Queue.offer(receipts, undefined).pipe(Effect.asVoid));
     yield* Queue.take(receipts);
-    yield* TestClock.adjust("5 seconds");
+    yield* TestClock.adjust("15 minutes");
     yield* Queue.take(receipts);
     assert.equal(yield* Ref.get(runs), 1);
+  }).pipe(Effect.provide(Scheduler.layer)),
+);
+
+it.effect("sleeps until a durable deadline and wakes early when that deadline changes", () =>
+  Effect.gen(function* () {
+    const scheduler = yield* Scheduler.Scheduler;
+    const now = yield* Clock.currentTimeMillis;
+    const next = yield* Ref.make<number | null>(now + 60_000);
+    const receipts = yield* Queue.unbounded<void>();
+    const { wake } = yield* scheduler.register(
+      "deadline",
+      Queue.offer(receipts, undefined).pipe(Effect.asVoid),
+      Ref.get(next),
+    );
+    yield* Queue.take(receipts);
+    yield* TestClock.adjust("59 seconds");
+    assert.equal(yield* Queue.size(receipts), 0);
+    yield* TestClock.adjust("1 second");
+    yield* Queue.take(receipts);
+    yield* Ref.set(next, now + 3600_000);
+    yield* wake;
+    yield* Queue.take(receipts);
+    yield* TestClock.adjust("14 minutes");
+    assert.equal(yield* Queue.size(receipts), 0);
+    // The safety pass bounds lateness after suspend or an unreported wall-clock jump.
+    yield* TestClock.adjust("1 minute");
+    yield* Queue.take(receipts);
+  }).pipe(Effect.provide(Scheduler.layer)),
+);
+
+it.effect("retains an early wake that arrives while its source is running", () =>
+  Effect.gen(function* () {
+    const scheduler = yield* Scheduler.Scheduler;
+    const receipts = yield* Queue.unbounded<void>();
+    const release = yield* Deferred.make<void>();
+    const { wake } = yield* scheduler.register(
+      "dirty-during-read",
+      Queue.offer(receipts, undefined).pipe(Effect.andThen(Deferred.await(release))),
+    );
+    yield* Queue.take(receipts);
+    yield* wake;
+    yield* Deferred.succeed(release, undefined);
+    yield* Queue.take(receipts);
+    assert.equal(yield* Queue.size(receipts), 0);
   }).pipe(Effect.provide(Scheduler.layer)),
 );
 

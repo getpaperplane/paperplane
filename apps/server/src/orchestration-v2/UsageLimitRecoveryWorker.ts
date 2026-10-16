@@ -2,6 +2,10 @@ import { CommandId, MessageId, type OrchestrationV2Command } from "@rove-code/co
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as Ref from "effect/Ref";
+import * as Stream from "effect/Stream";
+import { forkParked } from "../serverActivation.ts";
+import * as Orchestrator from "./Orchestrator.ts";
 import * as Scheduler from "../scheduling/Scheduler.ts";
 import * as ServerSettings from "../serverSettings.ts";
 import * as ProjectionStore from "./ProjectionStore.ts";
@@ -75,16 +79,25 @@ const makeSweep = Effect.gen(function* () {
   const projections = yield* ProjectionStore.ProjectionStoreV2;
   const threads = yield* ThreadManagement.ThreadManagementService;
   const settings = yield* ServerSettings.ServerSettingsService;
-  return Effect.fn("UsageLimitRecoveryWorker.sweep")(function* () {
+  const nextDueAt = yield* Ref.make<number | null>(null);
+  const sweep = Effect.fn("UsageLimitRecoveryWorker.sweep")(function* () {
     const preferences = yield* settings.getSettings;
     const now = yield* DateTime.now;
     const candidates = yield* projections.getLimitRecoveryCandidates({
       now,
       autoResume: preferences.autoResumeLimitedThreads,
       snooze: preferences.snoozeLimitedThreads,
+      includeFuture: true,
     });
     const nowMs = DateTime.toEpochMillis(now);
+    let next: number | null = null;
     for (const thread of candidates) {
+      const resetMs = Date.parse(thread.usageLimitResetAt ?? "");
+      const due = Math.max(
+        resetMs,
+        thread.snoozedUntil == null ? 0 : DateTime.toEpochMillis(thread.snoozedUntil),
+      );
+      if (Number.isFinite(due) && due > nowMs) next = Math.min(next ?? Infinity, due);
       const command = limitRecoveryCommand(
         thread,
         preferences.autoResumeLimitedThreads,
@@ -101,15 +114,41 @@ const makeSweep = Effect.gen(function* () {
         ),
       );
     }
+    yield* Ref.set(nextDueAt, next);
   });
+  return { sweep, nextDueAt: Ref.get(nextDueAt) };
 });
 
 // The shared scheduler derives due work from persisted failures and recovery
 // choices, so restarts need no timer restoration or connected client.
 export const layer = Layer.effectDiscard(
   Effect.gen(function* () {
-    const sweep = yield* makeSweep;
+    const { sweep, nextDueAt } = yield* makeSweep;
     const scheduler = yield* Scheduler.Scheduler;
-    yield* scheduler.register("usage-limit-recovery", sweep());
+    const engine = yield* Orchestrator.OrchestratorV2;
+    const settings = yield* ServerSettings.ServerSettingsService;
+    const { wake } = yield* scheduler.register("usage-limit-recovery", sweep(), nextDueAt);
+    yield* forkParked(
+      Stream.runForEach(engine.streamDomainEvents, (event) => {
+        switch (event.type) {
+          case "run.updated":
+            return event.payload.status === "failed" ? wake : Effect.void;
+          // Root failure details may land after the run status, and recovery choices
+          // or snooze changes may move the deadline while its old timer is asleep.
+          case "turn-item.updated":
+            return event.payload.type === "error" ? wake : Effect.void;
+          case "thread.metadata-updated":
+          case "thread.snoozed":
+          case "thread.unsnoozed":
+          case "thread.unarchived":
+          case "thread.unsettled":
+          case "runtime-request.updated":
+            return wake;
+          default:
+            return Effect.void;
+        }
+      }),
+    );
+    yield* forkParked(Stream.runForEach(settings.streamChanges, () => wake));
   }),
 );
