@@ -222,7 +222,8 @@ local work, resolve it yourself before automatic pulls can resume.
 ## Choose the repository remote
 
 When a checkout has both an `origin` and an `upstream` remote, **Repository remote** in Source
-Control decides which repository the pull request page reads and thread links resolve against. It
+Control decides which repository new pull requests open against, which one the pull request page
+reads, and which one thread links resolve against. It overrides `gh repo set-default`. It
 defaults to `origin`, the usual choice when you open pull requests on your own fork; pick `upstream`
 if your pull requests target the repository you forked from. If the chosen remote is missing, the
 other one is used.

@@ -36,6 +36,7 @@ import {
 } from "./gitHubPullRequests.ts";
 import {
   gitHubApiHostForRemote,
+  gitHubRepositoryForContextRemote,
   parseFetchRemotes,
   parseGitHubRepositorySelector,
   parsePullRequestReference,
@@ -498,8 +499,7 @@ export const make = Effect.gen(function* () {
     });
 
   /**
-   * Uses GH_REPO, then gh's remote selection on the detected host. The provider context is
-   * a fallback when the checkout's remotes cannot resolve that repository.
+   * Uses GH_REPO, then the remote Rove's repository-remote setting chose, ahead of gh's ranking.
    */
   const resolveRepository = Effect.fn("GitHubSourceControlProvider.resolveRepository")(
     function* (input: {
@@ -514,6 +514,10 @@ export const make = Effect.gen(function* () {
         const locator = parseGitHubRepositorySelector(envRepository, defaultHost);
         if (locator !== null) return locator;
       }
+      if (input.context) {
+        const locator = gitHubRepositoryForContextRemote(input.context.remoteUrl, hostHint);
+        if (locator !== null) return locator;
+      }
       const [remotes, resolved] = yield* Effect.all([
         gitRead(input.cwd, ["remote", "-v"]),
         gitRead(input.cwd, ["config", "--get-regexp", "^remote\\..*\\.gh-resolved$"]),
@@ -525,14 +529,6 @@ export const make = Effect.gen(function* () {
         defaultHost,
       });
       if (locator !== null) return locator;
-      if (input.context) {
-        const remote = normalizeGitRemoteUrl(input.context.remoteUrl);
-        const fallback = parseGitHubRepositorySelector(
-          `${host}/${remote.slice(remote.indexOf("/") + 1)}`,
-          host,
-        );
-        if (fallback !== null) return fallback;
-      }
       return yield* failure(
         `No GitHub repository on ${host} was found among this checkout's git remotes.`,
       );
@@ -586,8 +582,7 @@ export const make = Effect.gen(function* () {
 
   /**
    * Pull requests whose head is `headSelector` (a branch, or `owner:branch` for a fork), in the
-   * repository `gh pr list` would read in `cwd`. Lookups on one repository that arrive together
-   * share one GraphQL document.
+   * resolved repository. Lookups arriving together share one GraphQL document.
    */
   const listByHead = Effect.fn("GitHubSourceControlProvider.listByHead")(function* (input: {
     readonly cwd: string;

@@ -175,6 +175,7 @@ function harness(input: {
   readonly gitFailure?: unknown;
 }) {
   const git: Array<readonly [string, unknown]> = [];
+  const processCalls: SourceControlHost.SourceControlProcessInput[] = [];
   const graphqlCalls: Array<GraphQlCall> = [];
   const record =
     <A>(name: string, value: A) =>
@@ -209,11 +210,12 @@ function harness(input: {
     git: hostGit,
     process: {
       run: (args) =>
-        Effect.succeed(
-          args.args[0] === "remote"
+        Effect.sync(() => {
+          processCalls.push(args);
+          return args.args[0] === "remote"
             ? processOutput(input.remotes)
-            : processOutput(input.resolved ?? "", input.resolved ? 0 : 1),
-        ),
+            : processOutput(input.resolved ?? "", input.resolved ? 0 : 1);
+        }),
     },
   });
   const graphql =
@@ -248,7 +250,7 @@ function harness(input: {
     Layer.succeed(HttpClient.HttpClient, graphQlHttp(graphql, graphqlCalls)),
     NodeServices.layer,
   );
-  return { layer, git, graphqlCalls };
+  return { layer, git, processCalls, graphqlCalls };
 }
 
 /** The provider context for a checkout whose remote is on `host`. */
@@ -292,6 +294,120 @@ describe("GitHubSourceControlProvider repository resolution", () => {
       assert.strictEqual(yield* gh.getDefaultBranch({ cwd: "/repo" }), "trunk");
       assert.deepStrictEqual(paths, ["github.com repos/acme/web"]);
     }).pipe(Effect.provide(layer));
+  });
+
+  it.effect.each([
+    { remoteName: "origin", repository: "me/web", remoteHost: "github.com", host: "github.com" },
+    {
+      remoteName: "upstream",
+      repository: "acme/web",
+      remoteHost: "github.com",
+      host: "github.com",
+    },
+    {
+      remoteName: "origin",
+      repository: "team/project",
+      remoteHost: "code.example.test",
+      host: "code.example.test:8443",
+    },
+    {
+      remoteName: "origin",
+      repository: "team/project",
+      remoteHost: "ssh.example.test",
+      host: "api.example.test:8443",
+    },
+  ])(
+    "creates a same-repository PR on Rove's selected $remoteName remote via $host",
+    ({ remoteName, repository, remoteHost, host }) => {
+      const requests: GitHubRest.GitHubRestInput[] = [];
+      const { layer, processCalls } = harness({
+        remotes: remotesOutput(
+          ["origin", "git@github.com:me/web.git"],
+          ["upstream", "git@github.com:acme/web.git"],
+        ),
+        api: {
+          rest: (input) =>
+            Effect.sync(() => {
+              requests.push(input);
+              return restResponse({});
+            }),
+        },
+      });
+      return Effect.gen(function* () {
+        const provider = yield* GitHubSourceControlProvider.make;
+        const fs = yield* FileSystem.FileSystem;
+        const bodyFile = yield* fs.makeTempFileScoped();
+        yield* fs.writeFileString(bodyFile, "Body");
+        yield* provider.createChangeRequest({
+          cwd: "/repo",
+          context: {
+            ...githubContext(host),
+            remoteName,
+            remoteUrl: `git@${remoteHost}:${repository}.git`,
+          },
+          baseRefName: "main",
+          headSelector: "feature",
+          title: "PR",
+          bodyFile,
+        });
+        assert.deepStrictEqual(
+          requests.map(({ host, method, path, body }) => ({ host, method, path, body })),
+          [
+            {
+              host,
+              method: "POST",
+              path: `repos/${repository}/pulls`,
+              body: {
+                base: "main",
+                head: "feature",
+                title: "PR",
+                body: "Body",
+                maintainer_can_modify: true,
+              },
+            },
+          ],
+        );
+        assert.deepStrictEqual(processCalls, []);
+      }).pipe(
+        Effect.provide(layer),
+        Effect.provideService(HostProcess.Environment, {}),
+        Effect.scoped,
+      );
+    },
+  );
+
+  it.effect("uses gh remote selection when the context URL has no repository", () => {
+    const paths: string[] = [];
+    const { layer, processCalls } = harness({
+      remotes: remotesOutput(
+        ["origin", "git@github.com:me/web.git"],
+        ["upstream", "git@github.com:acme/web.git"],
+      ),
+      api: {
+        rest: (input) =>
+          Effect.sync(() => {
+            paths.push(`${input.host} ${input.path}`);
+            return restResponse({
+              full_name: "acme/web",
+              html_url: "https://github.com/acme/web",
+              ssh_url: "git@github.com:acme/web.git",
+              default_branch: "main",
+            });
+          }),
+      },
+    });
+    return Effect.gen(function* () {
+      const provider = yield* GitHubSourceControlProvider.make;
+      assert.strictEqual(
+        yield* provider.getDefaultBranch({
+          cwd: "/repo",
+          context: { ...githubContext("github.com"), remoteUrl: "not-a-remote" },
+        }),
+        "main",
+      );
+      assert.deepStrictEqual(paths, ["github.com repos/acme/web"]);
+      assert.strictEqual(processCalls.length, 2);
+    }).pipe(Effect.provide(layer), Effect.provideService(HostProcess.Environment, {}));
   });
 
   it.effect("reads an SSH alias remote through github.com", () => {
@@ -1244,8 +1360,8 @@ it.live.each([
 });
 
 it.effect.each([
-  { host: "github.com", resolved: "", envRepository: "", expected: "acme/web" },
-  { host: "code.example.test", resolved: "", envRepository: "", expected: "acme/web" },
+  { host: "github.com", resolved: "", envRepository: "", expected: "me/web" },
+  { host: "code.example.test", resolved: "", envRepository: "", expected: "me/web" },
   {
     host: "github.com",
     resolved: "remote.origin.gh-resolved base",
@@ -1262,13 +1378,13 @@ it.effect.each([
     host: "github.com",
     resolved: "remote.upstream.gh-resolved acme/other",
     envRepository: "",
-    expected: "acme/other",
+    expected: "me/web",
   },
   {
     host: "code.example.test",
     resolved: "remote.upstream.gh-resolved acme/other",
     envRepository: "",
-    expected: "acme/other",
+    expected: "me/web",
   },
   { host: "github.com", resolved: "", envRepository: "chosen/repo", expected: "chosen/repo" },
   {
@@ -1278,7 +1394,7 @@ it.effect.each([
     expected: "chosen/repo",
   },
 ])(
-  "preserves repository precedence on $host: $resolved $envRepository",
+  "prefers GH_REPO, then Rove's context on $host: $resolved $envRepository",
   ({ host, resolved, envRepository, expected }) => {
     const targets: string[] = [];
     const { layer } = harness({
