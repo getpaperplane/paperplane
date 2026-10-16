@@ -2,24 +2,28 @@
 // @effect-diagnostics nodeBuiltinImport:off globalTimers:off globalDate:off globalConsole:off - Standalone benchmark that samples its own server process.
 // Run from the repository root: node scripts/perf/server-idle.ts --seconds 120
 // Uses a new empty home, TCP readiness (HTTP readiness can hang), and only its own child PID.
-import { spawn, execFileSync } from "node:child_process";
-import { mkdtempSync, rmSync, readFileSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
-import { createServer, createConnection } from "node:net";
-import { setTimeout as delay } from "node:timers/promises";
+import * as NodeChildProcess from "node:child_process";
+import * as NodeFS from "node:fs";
+import * as NodeNet from "node:net";
+import * as NodeOS from "node:os";
+import * as NodePath from "node:path";
+import * as NodeTimersPromises from "node:timers/promises";
+
+const delay = NodeTimersPromises.setTimeout;
+// oxlint-disable-next-line rove/no-global-process-runtime -- Standalone benchmark has no Effect runtime.
+const platform = NodeOS.platform();
 
 const secondsIndex = process.argv.indexOf("--seconds");
 const seconds = secondsIndex < 0 ? 120 : Number(process.argv[secondsIndex + 1]);
 if (!Number.isFinite(seconds) || seconds <= 0) throw new Error("--seconds must be positive");
-const reservation = createServer();
+const reservation = NodeNet.createServer();
 await new Promise<void>((resolve) => reservation.listen(0, "127.0.0.1", resolve));
 const address = reservation.address();
 if (address === null || typeof address === "string") throw new Error("No TCP port");
 const port = address.port;
 await new Promise<void>((resolve) => reservation.close(() => resolve()));
-const home = mkdtempSync(join(tmpdir(), "rove-idle-"));
-const child = spawn(
+const home = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "rove-idle-"));
+const child = NodeChildProcess.spawn(
   process.execPath,
   [
     "apps/server/src/bin.ts",
@@ -48,14 +52,14 @@ const exited = new Promise<void>((resolve) => child.once("exit", () => resolve()
 function counters() {
   if (child.exitCode !== null || child.signalCode !== null)
     throw new Error(`Server exited during measurement:\n${log}`);
-  const time = execFileSync("ps", ["-p", String(child.pid), "-o", "time="], {
+  const time = NodeChildProcess.execFileSync("ps", ["-p", String(child.pid), "-o", "time="], {
     encoding: "utf8",
   }).trim();
   const parts = time.split(":").map(Number);
   const cpuSeconds = parts.reduce((total, part) => total * 60 + part, 0);
   let contextSwitches: number | null = null;
-  if (process.platform === "linux") {
-    const status = readFileSync(`/proc/${child.pid}/status`, "utf8");
+  if (platform === "linux") {
+    const status = NodeFS.readFileSync(`/proc/${child.pid}/status`, "utf8");
     contextSwitches = [...status.matchAll(/(?:non)?voluntary_ctxt_switches:\s+(\d+)/g)].reduce(
       (sum, match) => sum + Number(match[1]),
       0,
@@ -70,7 +74,7 @@ try {
     if (child.exitCode !== null || child.signalCode !== null)
       throw new Error(`Server exited before readiness:\n${log}`);
     const ready = await new Promise<boolean>((resolve) => {
-      const socket = createConnection({ port, host: "127.0.0.1" });
+      const socket = NodeNet.createConnection({ port, host: "127.0.0.1" });
       socket.once("connect", () => {
         socket.destroy();
         resolve(true);
@@ -98,7 +102,7 @@ try {
             ? null
             : after.contextSwitches - before.contextSwitches,
         fixture: "empty isolated home, no clients",
-        platform: process.platform,
+        platform,
       },
       null,
       2,
@@ -113,5 +117,5 @@ try {
       await exited;
     }
   }
-  rmSync(home, { recursive: true, force: true });
+  NodeFS.rmSync(home, { recursive: true, force: true });
 }
