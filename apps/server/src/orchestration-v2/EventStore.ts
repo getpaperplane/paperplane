@@ -51,6 +51,7 @@ export interface EventStoreV2Shape {
   readonly append: (input: {
     readonly commandId?: CommandId;
     readonly events: ReadonlyArray<OrchestrationV2DomainEvent>;
+    readonly onEncodedPayload?: (event: OrchestrationV2DomainEvent, payloadJson: string) => void;
   }) => Effect.Effect<ReadonlyArray<OrchestrationV2StoredEvent>, EventStoreV2Error>;
   readonly appendProjectEvent: (
     event: OrchestrationEventStore.UnsequencedProjectEvent,

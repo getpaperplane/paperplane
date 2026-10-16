@@ -64,6 +64,8 @@ export class OrchestrationEventStore extends Context.Service<
     readonly appendAgentEvents: (input: {
       readonly commandId?: CommandId;
       readonly events: ReadonlyArray<OrchestrationV2DomainEvent>;
+      /** Reuse the full encoded payload in the surrounding projection transaction. */
+      readonly onEncodedPayload?: (event: OrchestrationV2DomainEvent, payloadJson: string) => void;
     }) => Effect.Effect<ReadonlyArray<OrchestrationV2StoredEvent>, OrchestrationEventStoreError>;
 
     /**
@@ -492,6 +494,7 @@ const makeEventStore = Effect.gen(function* () {
           const promptKey = subagent === undefined ? undefined : `${event.type}:${subagent.id}`;
           const hint = promptKey === undefined ? undefined : promptHints.get(promptKey);
           const payloadJson = yield* encodeJson(encoded.payload);
+          input.onEncodedPayload?.(event, payloadJson);
           // Progress ticks repeat an unchanged prompt, so store it once and point
           // later rows at it. Keep an empty prompt so older servers still decode
           // the row. ProjectionMaintenance never deletes these anchor rows. The

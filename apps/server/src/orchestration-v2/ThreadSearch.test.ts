@@ -164,7 +164,7 @@ it.layer(layerTest)("ThreadSearch", (it) => {
         thread(ThreadId.make("thread:orphaned"), deletedProject),
         message(ThreadId.make("thread:orphaned"), "orphaned", "user", "needle orphaned"),
       ];
-      yield* Effect.forEach(events, projections.apply, { discard: true });
+      yield* Effect.forEach(events, (event) => projections.apply(event), { discard: true });
 
       const result = yield* search.search({ query: "NEEDLE", limit: 20 });
       assert.deepEqual(
@@ -190,7 +190,7 @@ it.layer(layerTest)("ThreadSearch", (it) => {
       yield* createProject(project);
       yield* Effect.forEach(
         [thread(threadId, project), message(threadId, "corrupt", "user", "20260927")],
-        projections.apply,
+        (event) => projections.apply(event),
         { discard: true },
       );
       yield* sql`
@@ -228,7 +228,7 @@ it.effect("searches on the reader worker while the writer is busy", () =>
       yield* createProject(project);
       yield* Effect.forEach(
         [thread(threadId, project), message(threadId, "reader", "user", "needle on the reader")],
-        projections.apply,
+        (event) => projections.apply(event),
         { discard: true },
       );
 

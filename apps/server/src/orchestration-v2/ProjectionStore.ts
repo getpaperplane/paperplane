@@ -407,9 +407,13 @@ export interface ProjectionStoreV2Shape {
     filter?: ProjectionRecordFilter,
   ) => Effect.Effect<ProjectionRecords<K>, ProjectionStoreV2Error>;
 
+  /** encodedPayloadJson is the full event payload encoded by the event store, not wire JSON. */
   readonly apply: (
     event: OrchestrationV2DomainEvent,
+    encodedPayloadJson?: string,
   ) => Effect.Effect<void, ProjectionStoreV2Error>;
+  /** Maintenance that replaces canonical rows must invalidate deduplication hints first. */
+  readonly clearNodeCache: Effect.Effect<void>;
   readonly getShellSnapshot: (
     options?: ShellSnapshotOptions,
   ) => Effect.Effect<OrchestrationV2ThreadShellSnapshot, ProjectionStoreV2Error>;
@@ -1861,6 +1865,48 @@ export const layer: Layer.Layer<ProjectionStoreV2, never, SqlClient.SqlClient> =
   ProjectionStoreV2,
   Effect.gen(function* () {
     const sql = yield* SqlClient.SqlClient;
+    // Hints are populated only by committed, non-transactional reads. apply
+    // invalidates before AND after a write, including failures. A read racing a
+    // write must not put its old result back after that invalidation.
+    const nodePayloads = new Map<NodeId, { payloadJson: string; runId: RunId | null }>();
+    let nodeCacheGeneration = 0;
+    let nodeCacheChars = 0;
+    const forgetNode = (id: NodeId) => {
+      const cached = nodePayloads.get(id);
+      if (cached !== undefined) nodeCacheChars -= cached.payloadJson.length;
+      nodePayloads.delete(id);
+    };
+    const clearNodeCache = Effect.sync(() => {
+      nodeCacheGeneration++;
+      nodePayloads.clear();
+      nodeCacheChars = 0;
+    });
+    const invalidateNodeEvent = (event: OrchestrationV2DomainEvent) => {
+      if (event.type === "node.updated") {
+        nodeCacheGeneration++;
+        forgetNode(event.payload.id);
+      } else if (
+        (event.type === "run.created" || event.type === "run.updated") &&
+        !activeRunStatuses.has(event.payload.status)
+      ) {
+        nodeCacheGeneration++;
+        for (const [id, cached] of nodePayloads) {
+          if (cached.runId === event.payload.id) forgetNode(id);
+        }
+      }
+    };
+    const rememberNode = (node: OrchestrationV2ExecutionNode, payloadJson: string) => {
+      if (settledNodeStatuses.has(node.status) || payloadJson.length > 16_384) return;
+      forgetNode(node.id);
+      nodePayloads.set(node.id, { payloadJson, runId: node.runId });
+      nodeCacheChars += payloadJson.length;
+      // Bound both count and retained text, even if native refs are unusually large.
+      while (nodePayloads.size > 4096 || nodeCacheChars > 1_048_576) {
+        const oldest = nodePayloads.keys().next().value;
+        if (oldest === undefined) break;
+        forgetNode(oldest);
+      }
+    };
 
     // For run upserts: a snapshot without `path` keeps the value another event recorded there.
     const keepRecordedRunField = (payload: Statement.Fragment, path: string) => sql`
@@ -1876,8 +1922,9 @@ export const layer: Layer.Layer<ProjectionStoreV2, never, SqlClient.SqlClient> =
       END
     `;
 
-    const apply: ProjectionStoreV2Shape["apply"] = (event) =>
+    const apply: ProjectionStoreV2Shape["apply"] = (event, encodedPayloadJson) =>
       Effect.gen(function* () {
+        invalidateNodeEvent(event);
         switch (event.type) {
           case "thread.pull-request-link-updated": {
             const thread = yield* getThread(event.threadId);
@@ -2422,8 +2469,7 @@ export const layer: Layer.Layer<ProjectionStoreV2, never, SqlClient.SqlClient> =
             break;
           }
           case "message.updated": {
-            const payloadJson = yield* encodeMessagePayload(event.payload);
-            const payload = parseEncodedPayload(payloadJson);
+            const payloadJson = encodedPayloadJson ?? (yield* encodeMessagePayload(event.payload));
             yield* sql`
               INSERT INTO orchestration_v2_projection_messages (
                 message_id,
@@ -2443,8 +2489,8 @@ export const layer: Layer.Layer<ProjectionStoreV2, never, SqlClient.SqlClient> =
                 ${event.payload.nodeId},
                 ${event.payload.role},
                 ${booleanInt(event.payload.streaming)},
-                ${stringField(payload, "createdAt")},
-                ${stringField(payload, "updatedAt")},
+                ${DateTime.formatIso(event.payload.createdAt)},
+                ${DateTime.formatIso(event.payload.updatedAt)},
                 ${payloadJson}
               )
               ON CONFLICT(message_id)
@@ -2493,8 +2539,7 @@ export const layer: Layer.Layer<ProjectionStoreV2, never, SqlClient.SqlClient> =
             break;
           }
           case "turn-item.updated": {
-            const payloadJson = yield* encodeTurnItemPayload(event.payload);
-            const payload = parseEncodedPayload(payloadJson);
+            const payloadJson = encodedPayloadJson ?? (yield* encodeTurnItemPayload(event.payload));
             yield* sql`
               INSERT INTO orchestration_v2_projection_turn_items (
                 turn_item_id,
@@ -2521,7 +2566,7 @@ export const layer: Layer.Layer<ProjectionStoreV2, never, SqlClient.SqlClient> =
                 ${event.payload.ordinal},
                 ${event.payload.type},
                 ${event.payload.status},
-                ${stringField(payload, "updatedAt")},
+                ${DateTime.formatIso(event.payload.updatedAt)},
                 ${payloadJson}
               )
               ON CONFLICT(turn_item_id)
@@ -2753,6 +2798,7 @@ export const layer: Layer.Layer<ProjectionStoreV2, never, SqlClient.SqlClient> =
           `;
         }
       }).pipe(
+        Effect.ensuring(Effect.sync(() => invalidateNodeEvent(event))),
         Effect.mapError(
           (cause) =>
             new ProjectionStoreApplyEventError({
@@ -4509,10 +4555,23 @@ export const layer: Layer.Layer<ProjectionStoreV2, never, SqlClient.SqlClient> =
     const isNodeStored: ProjectionStoreV2Shape["isNodeStored"] = (node) =>
       Effect.gen(function* () {
         const payloadJson = yield* encodeNodePayload(node);
-        const rows = yield* sql<PayloadRow>`
+        // A transaction may read its own uncommitted write, or later roll back
+        // a savepoint. Neither lookup nor population may use global hints there.
+        const inTransaction = (yield* Effect.serviceOption(sql.transactionService))._tag === "Some";
+        if (!inTransaction && nodePayloads.get(node.id)?.payloadJson === payloadJson) return true;
+        const generation = nodeCacheGeneration;
+        const read = sql<PayloadRow>`
           SELECT payload_json FROM orchestration_v2_projection_nodes WHERE node_id = ${node.id}
         `;
-        return rows[0]?.payload_json === payloadJson;
+        // A cold hint must come from a successfully committed read transaction.
+        // In particular, never cache dirty rows if a failed SQLite COMMIT left
+        // its transaction open: BEGIN fails until the connection is recovered.
+        const rows = yield* inTransaction ? read : sql.withTransaction(read);
+        const matches = rows[0]?.payload_json === payloadJson;
+        if (!inTransaction && generation === nodeCacheGeneration && matches) {
+          rememberNode(node, payloadJson);
+        }
+        return matches;
       }).pipe(Effect.mapError(controlReadError(node.threadId)));
 
     const getRuntimeRequest: ProjectionStoreV2Shape["getRuntimeRequest"] = (threadId, requestId) =>
@@ -6101,6 +6160,7 @@ export const layer: Layer.Layer<ProjectionStoreV2, never, SqlClient.SqlClient> =
 
     return {
       apply,
+      clearNodeCache,
       getShellSnapshot,
       readShellSnapshot,
       getThreadShell,
@@ -6150,6 +6210,7 @@ export const layerMemory: Layer.Layer<ProjectionStoreV2> = Layer.effect(
     const sequence = yield* Ref.make(0);
 
     const service: ProjectionStoreV2Shape = {
+      clearNodeCache: Effect.void,
       apply: (event) =>
         Effect.gen(function* () {
           const result = yield* Ref.modify(replayState, (existing) => {
