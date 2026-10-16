@@ -32,7 +32,10 @@ const RUNS_EVERYTHING = [
 // through relative imports rather than a package.json dependency.
 const EXTRA_OWNERS = [
   // Vite configs and tsconfigs of these apps import scripts/lib directly.
-  [/^scripts\/lib\//, ["@rove-code/desktop", "@rove-code/mobile", "@rove-code/web", "rove"]],
+  [
+    /^scripts\/lib\//,
+    ["@rove-code/desktop", "@rove-code/mobile", "@rove-code/web", "@rove-code/server"],
+  ],
   // scripts/build-desktop-artifact.ts reads the GNOME extension manifest.
   [/^apps\/desktop\/gnome-extension\//, ["@rove-code/scripts"]],
   [/^native\/browser-secret\//, ["@rove-code/desktop"]],
@@ -49,7 +52,7 @@ const TEST_ONLY_DEPS = {
     "@rove-code/desktop",
     "@rove-code/mobile",
     "@rove-code/web",
-    "rove",
+    "@rove-code/server",
     "@rove-code/provider-cursor",
   ],
 };
@@ -64,7 +67,7 @@ const MOBILE_NATIVE =
   /^apps\/mobile\/.*\.(swift|kt|kts)$|^apps\/mobile\/(\.swiftlint\.yml|detekt\.yml|\.editorconfig|Brewfile)$|^scripts\/mobile-native-static-check\.ts$|^package\.json$|^\.github\/workflows\/ci\.yml$|^\.github\/scripts\/ci-changes\.cjs$|^\.github\/actions\/ci-changes\//;
 
 // Jobs that test every package except these, which have jobs of their own.
-const OWN_TEST_JOB = new Set(["rove", "@rove-code/web", "@rove-code/monorepo"]);
+const OWN_TEST_JOB = new Set(["@rove-code/server", "@rove-code/web", "@rove-code/monorepo"]);
 
 function readWorkspace() {
   const patterns = [];
@@ -171,12 +174,12 @@ function decide(files, packages, full) {
     affected: [...affected].sort(),
     outputs: {
       typecheck: affected.size > 0,
-      build: has("@rove-code/desktop") || has("rove") || has("@rove-code/web"),
+      build: has("@rove-code/desktop") || has("@rove-code/server") || has("@rove-code/web"),
       test: tested.length > 0,
       // Empty means every package the Test job covers.
       test_packages: everything ? "" : tested.map((pkg) => pkg.name).join(" "),
       test_web: has("@rove-code/web"),
-      test_server: has("rove"),
+      test_server: has("@rove-code/server"),
       rust: everything || rust,
       release_smoke: scriptsChanged,
       mobile_native: files === null || files.some((file) => MOBILE_NATIVE.test(file)),
