@@ -648,26 +648,32 @@ export const makePiAdapterV2 = Effect.fn("makePiAdapterV2")(function* (
               active.error = piTrimmed(message.errorMessage) ?? "Pi assistant response failed.";
             if (message.stopReason === "aborted") active.interrupted = true;
             const key = `message:${active.messageIndex}`;
-            const text = contentText(message.content);
-            const base = baseItem(key, at);
-            active.items.set(key, {
-              ...base,
-              type: "assistant_message",
-              messageId: ids.derive.messageFromProviderItem({
-                driver: PI_PROVIDER,
-                nativeItemId: base.nativeItemRef!.nativeId,
-              }),
-              text,
-              streaming: false,
-              status: "completed",
-              completedAt: at,
-            });
-            yield* textCoalescer.complete({
-              turnId: active.turn.id,
-              itemId: key,
-              finalText: text,
-              emitEmpty: true,
-            });
+            // Tool-only and thinking-only assistant messages carry no text blocks.
+            // Only publish a message item when there is text, or one already streamed.
+            const streamed = active.items.get(key);
+            const text =
+              contentText(message.content) ||
+              (streamed?.type === "assistant_message" ? streamed.text : "");
+            if (text.length > 0) {
+              const base = baseItem(key, at);
+              active.items.set(key, {
+                ...base,
+                type: "assistant_message",
+                messageId: ids.derive.messageFromProviderItem({
+                  driver: PI_PROVIDER,
+                  nativeItemId: base.nativeItemRef!.nativeId,
+                }),
+                text,
+                streaming: false,
+                status: "completed",
+                completedAt: at,
+              });
+              yield* textCoalescer.complete({
+                turnId: active.turn.id,
+                itemId: key,
+                finalText: text,
+              });
+            }
             const reasoningKey = `reasoning:${active.messageIndex}`;
             const reasoning = active.items.get(reasoningKey);
             if (reasoning?.type === "reasoning")

@@ -275,6 +275,44 @@ it.effect("maps raw SDK messages/tools and finishes only at settlement, after ch
     );
   }).pipe(Effect.scoped, Effect.provide(layer)),
 );
+it.effect("does not publish empty assistant messages for tool-only SDK messages", () =>
+  Effect.gen(function* () {
+    const h = yield* setup();
+    h.raw.emit({ type: "message_start", message: { role: "assistant" } });
+    h.raw.emit({
+      type: "message_update",
+      assistantMessageEvent: { type: "thinking_delta", delta: "Plan" },
+    });
+    h.raw.emit({
+      type: "message_end",
+      message: {
+        role: "assistant",
+        content: [
+          { type: "thinking", thinking: "Plan" },
+          { type: "toolCall", id: "bash", name: "bash", arguments: { command: "pwd" } },
+        ],
+        stopReason: "toolUse",
+      },
+    });
+    h.raw.settle();
+    yield* Deferred.await(h.terminal);
+    assert.isFalse(
+      h.events.some(
+        (event) =>
+          (event.type === "turn_item.updated" && event.turnItem.type === "assistant_message") ||
+          event.type === "message.updated",
+      ),
+    );
+    assert.isTrue(
+      h.events.some(
+        (event) =>
+          event.type === "turn_item.updated" &&
+          event.turnItem.type === "reasoning" &&
+          event.turnItem.text === "Plan",
+      ),
+    );
+  }).pipe(Effect.scoped, Effect.provide(layer)),
+);
 it.effect("routes multiline extension questions through live V2 request ids", () =>
   Effect.gen(function* () {
     const h = yield* setup();
