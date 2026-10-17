@@ -7,10 +7,12 @@ import {
   type VcsListRefsResult,
 } from "@rove-code/contracts";
 import { describe, expect, it } from "@effect/vitest";
+import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
 import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
+import * as Queue from "effect/Queue";
 import * as Ref from "effect/Ref";
 import * as Stream from "effect/Stream";
 import * as SubscriptionRef from "effect/SubscriptionRef";
@@ -345,6 +347,85 @@ describe("cached VCS refs", () => {
         expect(AsyncResult.isSuccess(refreshResult)).toBe(true);
         expect(yield* Ref.get(clears)).toBe(2);
         expect(registry.get(vcsRefsCacheStateAtom(TARGET)).revision).toBe(2);
+      }),
+    ),
+  );
+
+  it.effect("coalesces queued status refreshes without crossing a mutation barrier", () =>
+    Effect.scoped(
+      Effect.gen(function* () {
+        const events: string[] = [];
+        const starts = yield* Queue.unbounded<string>();
+        const gates = yield* Queue.unbounded<Deferred.Deferred<void>>();
+        const gated = (name: string) =>
+          Effect.gen(function* () {
+            const gate = yield* Deferred.make<void>();
+            events.push(name);
+            yield* Queue.offer(gates, gate);
+            yield* Queue.offer(starts, name);
+            yield* Deferred.await(gate);
+          });
+        const client = {
+          [WS_METHODS.vcsRefreshStatus]: () => gated("refresh"),
+          [WS_METHODS.vcsPull]: () => gated("pull"),
+        };
+        const supervisor = EnvironmentSupervisor.EnvironmentSupervisor.of({
+          target: TARGET,
+          state: yield* SubscriptionRef.make(CONNECTED_CONNECTION_STATE),
+          session: yield* SubscriptionRef.make(Option.some(session(client))),
+          prepared: yield* SubscriptionRef.make(Option.none<PreparedConnection>()),
+          connect: Effect.void,
+          disconnect: Effect.void,
+          retryNow: Effect.void,
+        } satisfies EnvironmentSupervisor.EnvironmentSupervisor["Service"]);
+        const run: EnvironmentRegistry.EnvironmentRegistry["Service"]["run"] = (
+          _environmentId,
+          effect,
+        ) => Effect.provideService(effect, EnvironmentSupervisor.EnvironmentSupervisor, supervisor);
+        const runtime = Atom.runtime(
+          Layer.merge(
+            Layer.succeed(
+              EnvironmentRegistry.EnvironmentRegistry,
+              EnvironmentRegistry.EnvironmentRegistry.of({
+                run,
+              } as EnvironmentRegistry.EnvironmentRegistry["Service"]),
+            ),
+            Layer.succeed(Persistence.EnvironmentCacheStore, cacheWithRefs(Option.none())),
+          ),
+        );
+        const atoms = createVcsEnvironmentAtoms(runtime);
+        const registry = yield* Effect.acquireRelease(Effect.sync(AtomRegistry.make), (registry) =>
+          Effect.sync(() => registry.dispose()),
+        );
+        const target = { environmentId: TARGET.environmentId, input: { cwd: "/repo" } };
+        // Wait for the next RPC to start, then let it finish.
+        const finishNext = Effect.gen(function* () {
+          const name = yield* Queue.take(starts);
+          yield* Deferred.succeed(yield* Queue.take(gates), undefined);
+          return name;
+        });
+
+        // refresh running + three queued => exactly two RPCs
+        const first = atoms.refreshStatus.run(registry, target);
+        const queued = [1, 2, 3].map(() => atoms.refreshStatus.run(registry, target));
+        expect(yield* finishNext).toBe("refresh");
+        expect(yield* finishNext).toBe("refresh");
+        yield* Effect.promise(() => Promise.all([first, ...queued]));
+        expect(events).toEqual(["refresh", "refresh"]);
+
+        // Queued refreshes before and after a pull cannot merge across it.
+        events.length = 0;
+        const a = atoms.refreshStatus.run(registry, target);
+        const beforePull = atoms.refreshStatus.run(registry, target);
+        const pull = atoms.pull.run(registry, target);
+        const b = atoms.refreshStatus.run(registry, target);
+        const c = atoms.refreshStatus.run(registry, target);
+        expect(yield* finishNext).toBe("refresh");
+        expect(yield* finishNext).toBe("refresh");
+        expect(yield* finishNext).toBe("pull");
+        expect(yield* finishNext).toBe("refresh");
+        yield* Effect.promise(() => Promise.all([a, beforePull, pull, b, c]));
+        expect(events).toEqual(["refresh", "refresh", "pull", "refresh"]);
       }),
     ),
   );

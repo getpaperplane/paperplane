@@ -38,6 +38,7 @@ import {
   executeAtomQuery,
   isAtomCommandInterrupted,
   mapAtomCommandResult,
+  type AtomCommandResult,
   runAtomCommand,
   settleAsyncResult,
   settlePromise,
@@ -1014,6 +1015,74 @@ describe("runtime command runner", () => {
     expect(events).toEqual(["first:start", "first:end", "second:start"]);
     registry.dispose();
   });
+
+  it.effect(
+    "coalesces adjacent pending serial commands without sharing active runs or crossing barriers",
+    () =>
+      Effect.gen(function* () {
+        const scheduler = createAtomCommandScheduler();
+        const registry = AtomRegistry.make();
+        const starts = yield* Queue.unbounded<string>();
+        const releases = new Map<string, () => void>();
+        const events: string[] = [];
+        const gated = (name: string) => () =>
+          new Promise<AtomCommandResult<string, never>>((resolve) => {
+            events.push(name);
+            releases.set(name, () => resolve(AsyncResult.success(name)));
+            Queue.offerUnsafe(starts, name);
+          });
+        const lane = (key: string, coalesceKey?: string) => {
+          const serial = { mode: "serial" as const, key: () => key };
+          return coalesceKey === undefined ? serial : { ...serial, coalesceKey };
+        };
+        const release = (name: string) => Effect.sync(() => releases.get(name)!());
+        const schedule = (key: string, coalesceKey: string | undefined, name: string) =>
+          scheduler.schedule(registry, lane(key, coalesceKey), undefined, gated(name));
+
+        // r1 active; r2..r4 pending collapse into one follow-up using the newest execute.
+        const r1 = schedule("a", "r", "r1");
+        const r2 = schedule("a", "r", "r2");
+        const r3 = schedule("a", "r", "r3");
+        const r4 = schedule("a", "r", "r4");
+        const other = schedule("b", "r", "other"); // independent lane
+        expect(r3).toBe(r2);
+        expect(r4).toBe(r2);
+        expect(r2).not.toBe(r1);
+        expect([yield* Queue.take(starts), yield* Queue.take(starts)]).toEqual(["r1", "other"]);
+
+        yield* release("r1");
+        expect(yield* Queue.take(starts)).toBe("r4");
+        // A request arriving while r4 runs must not share it.
+        const r5 = schedule("a", "r", "r5");
+        expect(r5).not.toBe(r4);
+        yield* release("r4");
+        expect(yield* Queue.take(starts)).toBe("r5");
+        yield* release("r5");
+        yield* release("other");
+        yield* Effect.promise(() => Promise.all([r1, r2, r3, r4, r5, other]));
+        expect(events).toEqual(["r1", "other", "r4", "r5"]);
+
+        // Pending refreshes on opposite sides of a mutation must remain separate.
+        events.length = 0;
+        const a = schedule("a", "r", "a");
+        const beforeMutation = schedule("a", "r", "before-mutation");
+        const m = schedule("a", undefined, "m");
+        const b = schedule("a", "r", "b");
+        const c = schedule("a", "r", "c");
+        expect(c).toBe(b);
+        expect(yield* Queue.take(starts)).toBe("a");
+        yield* release("a");
+        expect(yield* Queue.take(starts)).toBe("before-mutation");
+        yield* release("before-mutation");
+        expect(yield* Queue.take(starts)).toBe("m");
+        yield* release("m");
+        expect(yield* Queue.take(starts)).toBe("c");
+        yield* release("c");
+        yield* Effect.promise(() => Promise.all([a, beforeMutation, m, b, c]));
+        expect(events).toEqual(["a", "before-mutation", "m", "c"]);
+        registry.dispose();
+      }),
+  );
 
   it.effect("releases a shared scheduler lane before the outer command finishes", () =>
     Effect.gen(function* () {
