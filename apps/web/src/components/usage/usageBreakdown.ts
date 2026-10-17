@@ -10,23 +10,33 @@ import type { ShareSegment } from "./UsageShareBar";
 
 export type ModelSortKey = "cost" | "tokens" | "responses" | "cacheHit";
 
+/** Options for the model breakdown sort, in menu order. */
+export const MODEL_SORT_OPTIONS = [
+  { value: "cost", label: "Cost" },
+  { value: "tokens", label: "Tokens" },
+  { value: "responses", label: "Responses" },
+  { value: "cacheHit", label: "Cache hit" },
+] as const satisfies readonly { value: ModelSortKey; label: string }[];
+
+/** A model's figure for the sort key; unknown cost and no input rank below zero. */
+export function modelSortValue(model: ModelTotals, key: ModelSortKey): number {
+  switch (key) {
+    case "cost":
+      return isModelCostUnknown(model) ? -1 : model.costUsd;
+    case "tokens":
+      return model.totalTokens;
+    case "responses":
+      return model.records;
+    case "cacheHit":
+      return cacheHitRate(model) ?? -1;
+  }
+}
+
 /** Descending by the selected column, with stable token/cost tie breakers. */
 export function sortModels(models: readonly ModelTotals[], key: ModelSortKey) {
-  const value = (model: ModelTotals) => {
-    switch (key) {
-      case "cost":
-        return isModelCostUnknown(model) ? -1 : model.costUsd;
-      case "tokens":
-        return model.totalTokens;
-      case "responses":
-        return model.records;
-      case "cacheHit":
-        return cacheHitRate(model) ?? -1;
-    }
-  };
   return models.toSorted(
     (left, right) =>
-      value(right) - value(left) ||
+      modelSortValue(right, key) - modelSortValue(left, key) ||
       right.totalTokens - left.totalTokens ||
       right.costUsd - left.costUsd,
   );

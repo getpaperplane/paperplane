@@ -5,6 +5,7 @@ import {
   cacheHitRate,
   costPerMillionTokens,
   modelShare,
+  modelSortValue,
   sortModels,
   sortModelsByTokens,
 } from "./usageBreakdown";
@@ -113,5 +114,40 @@ describe("model rates", () => {
     expect(cacheHitRate(mixed)).toBe(0.25);
     expect(costPerMillionTokens(mixed)).toBe(2);
     expect(costPerMillionTokens({ ...mixed, unpricedRecords: 4 })).toBeNull();
+  });
+});
+
+describe("modelSortValue", () => {
+  it("reads the figure each sort key ranks by", () => {
+    const m = model("a", 100, 2, {
+      records: 7,
+      tokens: {
+        uncachedInputTokens: 25,
+        cachedInputTokens: 75,
+        cacheCreationTokens: 0,
+        outputTokens: 0,
+        reasoningTokens: 0,
+      },
+    });
+    expect(modelSortValue(m, "cost")).toBe(2);
+    expect(modelSortValue(m, "tokens")).toBe(100);
+    expect(modelSortValue(m, "responses")).toBe(7);
+    expect(modelSortValue(m, "cacheHit")).toBe(0.75);
+  });
+
+  it("ranks unknown cost and missing input below zero", () => {
+    const m = model("a", 0, 0, {
+      records: 1,
+      unpricedRecords: 1,
+      tokens: {
+        uncachedInputTokens: 0,
+        cachedInputTokens: 0,
+        cacheCreationTokens: 0,
+        outputTokens: 0,
+        reasoningTokens: 0,
+      },
+    });
+    expect(modelSortValue(m, "cost")).toBe(-1);
+    expect(modelSortValue(m, "cacheHit")).toBe(-1);
   });
 });
