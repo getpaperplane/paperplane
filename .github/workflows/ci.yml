@@ -93,8 +93,31 @@ jobs:
             exit 1
           fi
 
+      # Rust checks ride on Lint's runner, in the background from the start:
+      # as their own job they pushed a full CI run past the 20 concurrent jobs a
+      # free account gets, so later jobs queued ~60-80s. The runner image ships
+      # stable Rust with rustfmt.
+      - name: Start Rust checks
+        if: ${{ !cancelled() && needs.changes.outputs.rust != 'false' }}
+        run: |
+          cat > "$RUNNER_TEMP/rust.sh" <<'SCRIPT'
+          set -euo pipefail
+          for crate in resource-monitor kde-snap-shot hyprland-snap-shot; do
+            cargo fmt --manifest-path "native/$crate/Cargo.toml" -- --check
+          done
+          for crate in resource-monitor kde-snap-shot hyprland-snap-shot; do
+            cargo test --locked --manifest-path "native/$crate/Cargo.toml"
+          done
+          SCRIPT
+          bash .github/scripts/background-start.sh rust bash "$RUNNER_TEMP/rust.sh"
+
       - name: Setup Vite+
         uses: ./.github/actions/setup-ci-deps
+
+      # Same reason as Rust: shares Lint's install instead of taking a runner.
+      - name: Start release smoke checks
+        if: ${{ !cancelled() && needs.changes.outputs.release_smoke != 'false' }}
+        run: bash .github/scripts/background-start.sh release-smoke node scripts/release-smoke.ts
 
       - name: Ensure Electron runtime is installed
         run: vp run --filter @rove-code/desktop ensure:electron
@@ -109,32 +132,15 @@ jobs:
       - name: Check
         run: vp check
 
-      # Rust and the release smoke test ride on Lint's runner and install:
-      # as their own jobs they pushed a full CI run past the 20 concurrent
-      # GitHub-hosted jobs a free account gets, so later jobs queued ~60-80s.
-      - name: Exercise release-only workflow steps
+      - name: Finish release smoke checks
         if: ${{ !cancelled() && needs.changes.outputs.release_smoke != 'false' }}
-        run: node scripts/release-smoke.ts
+        timeout-minutes: 5
+        run: bash .github/scripts/background-join.sh release-smoke
 
-      - name: Setup Rust
+      - name: Finish Rust checks
         if: ${{ !cancelled() && needs.changes.outputs.rust != 'false' }}
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          components: rustfmt
-
-      - name: Check Rust formatting
-        if: ${{ !cancelled() && needs.changes.outputs.rust != 'false' }}
-        run: |
-          for crate in resource-monitor kde-snap-shot hyprland-snap-shot; do
-            cargo fmt --manifest-path "native/$crate/Cargo.toml" -- --check
-          done
-
-      - name: Test Rust crates
-        if: ${{ !cancelled() && needs.changes.outputs.rust != 'false' }}
-        run: |
-          for crate in resource-monitor kde-snap-shot hyprland-snap-shot; do
-            cargo test --locked --manifest-path "native/$crate/Cargo.toml"
-          done
+        timeout-minutes: 5
+        run: bash .github/scripts/background-join.sh rust
 
   build:
     name: Build and Typecheck
