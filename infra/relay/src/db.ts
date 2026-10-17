@@ -66,6 +66,7 @@ export const RelayHyperdrive = Effect.gen(function* () {
     caching: {
       disabled: true,
     },
-    originConnectionLimit: 40,
+    // Cloudflare caps our plan at 20; preserve this on sync (upstream uses 40).
+    originConnectionLimit: 20,
   });
 });
