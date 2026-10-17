@@ -47,6 +47,10 @@ export const ProviderAdapterRegistryV2Error = Schema.Union([
 export type ProviderAdapterRegistryV2Error = typeof ProviderAdapterRegistryV2Error.Type;
 
 export interface ProviderAdapterRegistryV2Shape {
+  /**
+   * Returns the same adapter reference until the instance is rebuilt or removed.
+   * ProviderSessionManagerV2 reopens cached sessions whose adapter reference changed.
+   */
   readonly get: (
     instanceId: ProviderInstanceId,
   ) => Effect.Effect<ProviderAdapter.ProviderAdapterV2["Service"], ProviderAdapterRegistryV2Error>;
