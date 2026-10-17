@@ -1,6 +1,7 @@
 // @effect-diagnostics nodeBuiltinImport:off - realpathSync.native resolves Windows 8.3 short names, which the Effect realPath does not.
 import * as NodeFS from "node:fs";
 import * as NodeServices from "@effect/platform-node/NodeServices";
+import { SelectedGitHubAccount } from "@rove-code/source-control-github/server/GitHubCredentials";
 import * as HostProcess from "@rove-code/shared/HostProcess";
 import { assert, it, describe } from "@effect/vitest";
 import * as Deferred from "effect/Deferred";
@@ -33,11 +34,31 @@ import * as ServerConfig from "../config.ts";
 import { gitCommandDuration } from "../observability/Metrics.ts";
 import {
   makeGitVcsDriverCore,
+  selectedAccountCredentialArgs,
   parseGitCheckoutProgressLine,
   splitNullSeparatedGitStdoutPaths,
   windowsLongPathConfigEnv,
 } from "./GitVcsDriverCore.ts";
 import * as GitVcsDriver from "./GitVcsDriver.ts";
+
+describe("selected GitHub account credentials", () => {
+  it("resets ambient HTTPS helpers and resolves the selected login without putting tokens in argv", () => {
+    const args = selectedAccountCredentialArgs({ host: "github.com", login: "work-login" });
+    assert.deepStrictEqual(args.slice(0, 3), ["-c", "credential.https://github.com.helper=", "-c"]);
+    assert.include(args[3]!, "gh auth token --hostname github.com --user work-login");
+    assert.include(args[3]!, 'test "$1" = get || exit 0');
+  });
+  it("leaves ambient credentials alone without a selection and rejects shell metacharacters", () => {
+    for (const selection of [
+      null,
+      { host: "github.com;bad", login: "work" },
+      { host: "github.com", login: "work$(bad)" },
+      { host: "github.com", login: "-work" },
+    ]) {
+      assert.deepStrictEqual(selectedAccountCredentialArgs(selection), []);
+    }
+  });
+});
 
 const encodeGitCommandError = Schema.encodeEffect(Schema.fromJsonString(GitCommandError));
 
@@ -297,6 +318,46 @@ it.effect.each(["root", "nested", "worktree"] as const)(
       assert.isFalse(status.hasWorkingTreeChanges);
       assert.include(yield* fs.readFileString(runsPath), "clean");
     }).pipe(Effect.provide(layerTest)),
+);
+
+it.effect(
+  "applies selected-account helpers to remote git commands, including git-dir fetches",
+  () => {
+    const commands: Array<ReadonlyArray<string>> = [];
+    const spawner = ChildProcessSpawner.make((command) =>
+      Effect.sync(() => {
+        if (!ChildProcess.isStandardCommand(command)) return assert.fail("expected git command");
+        commands.push(command.args);
+        return makeSuccessfulHandle("");
+      }),
+    );
+    const layer = GitVcsDriver.layer.pipe(
+      Layer.provide(layerServerConfig),
+      Layer.provideMerge(
+        Layer.merge(
+          NodeServices.layer,
+          Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, spawner),
+        ),
+      ),
+    );
+    const selection = { host: "github.com", login: "work" };
+    return Effect.gen(function* () {
+      const driver = yield* GitVcsDriver.GitVcsDriver;
+      const remoteCommands = [
+        ["push"],
+        ["pull", "--ff-only"],
+        ["--git-dir", "/repo/.git", "fetch", "origin"],
+      ];
+      for (const args of remoteCommands) {
+        yield* driver.execute({ operation: "test.remote", cwd: "/repo", args });
+      }
+      yield* driver.execute({ operation: "test.local", cwd: "/repo", args: ["status"] });
+      assert.deepStrictEqual(commands, [
+        ...remoteCommands.map((args) => [...selectedAccountCredentialArgs(selection), ...args]),
+        ["status"],
+      ]);
+    }).pipe(Effect.provide(layer), Effect.provideService(SelectedGitHubAccount, selection));
+  },
 );
 
 it.effect("uses stable diagnostics for every parsed non-repository command", () => {

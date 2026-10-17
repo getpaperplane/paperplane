@@ -95,6 +95,59 @@ describe("GitHubCredentials", () => {
     }).pipe(Effect.provide(layer));
   });
 
+  it.effect("scopes project accounts by host and caches each login independently", () => {
+    const { layer, calls } = harness({ "github.com": { account: "personal" } });
+    return Effect.gen(function* () {
+      const credentials = yield* GitHubCredentials.GitHubCredentials;
+      const read = (login: string, host = "github.com") =>
+        credentials
+          .get(host)
+          .pipe(
+            Effect.provideService(GitHubCredentials.SelectedGitHubAccount, {
+              host: "github.com",
+              login,
+            }),
+          );
+      const work = yield* read("work");
+      const other = yield* read("other");
+      expect(Redacted.value(work.token)).toBe("token-for-work");
+      expect(Redacted.value(other.token)).toBe("token-for-other");
+      expect(work.fingerprint).not.toBe(other.fingerprint);
+      yield* read("work");
+      expect(calls).toHaveLength(2);
+      expect(Redacted.value((yield* read("work", "enterprise.test")).token)).toBe("active-token");
+      yield* credentials
+        .invalidate("github.com")
+        .pipe(
+          Effect.provideService(GitHubCredentials.SelectedGitHubAccount, {
+            host: "github.com",
+            login: "work",
+          }),
+        );
+      yield* read("work");
+      expect(calls).toHaveLength(4);
+    }).pipe(Effect.provide(layer));
+  });
+
+  it.effect("never falls back to an unrelated active login for a missing project account", () => {
+    const { layer, calls } = harness({}, ["gone"]);
+    return Effect.gen(function* () {
+      const credentials = yield* GitHubCredentials.GitHubCredentials;
+      const error = yield* Effect.flip(
+        credentials
+          .get("github.com")
+          .pipe(
+            Effect.provideService(GitHubCredentials.SelectedGitHubAccount, {
+              host: "github.com",
+              login: "gone",
+            }),
+          ),
+      );
+      expect(error._tag).toBe("GitHubNotSignedInError");
+      expect(calls).toEqual([["auth", "token", "--hostname", "github.com", "--user", "gone"]]);
+    }).pipe(Effect.provide(layer));
+  });
+
   it.effect("fails a host turned off in Settings without asking gh", () => {
     const { layer, calls } = harness({ "github.com": { enabled: false } });
     return Effect.gen(function* () {
@@ -160,12 +213,39 @@ describe("GitHubCredentials", () => {
     }).pipe(Effect.provide(layer));
   });
 
+  it.effect(
+    "keeps an explicit project login above environment tokens, as the former gh wrapper did",
+    () => {
+      vi.stubEnv("GH_TOKEN", "env-token");
+      const { layer } = harness();
+      return Effect.gen(function* () {
+        const credentials = yield* GitHubCredentials.GitHubCredentials;
+        const credential = yield* credentials
+          .get("github.com")
+          .pipe(
+            Effect.provideService(GitHubCredentials.SelectedGitHubAccount, {
+              host: "github.com",
+              login: "work",
+            }),
+          );
+        expect(Redacted.value(credential.token)).toBe("token-for-work");
+      }).pipe(Effect.provide(layer));
+    },
+  );
+
   it.effect("uses a token saved in Settings before GH_TOKEN and gh", () => {
     vi.stubEnv("GH_TOKEN", "env-token");
     const { layer, calls } = harness({}, [], { "github.com": "saved-token" });
     return Effect.gen(function* () {
       const credentials = yield* GitHubCredentials.GitHubCredentials;
-      const credential = yield* credentials.get("github.com");
+      const credential = yield* credentials
+        .get("github.com")
+        .pipe(
+          Effect.provideService(GitHubCredentials.SelectedGitHubAccount, {
+            host: "github.com",
+            login: "project",
+          }),
+        );
       expect(Redacted.value(credential.token)).toBe("saved-token");
       expect(credential.source).toBe("settings");
       expect(calls).toEqual([]);

@@ -353,7 +353,7 @@ export const make = Effect.gen(function* () {
     invalidateStatus: gitManager.invalidateStatus,
     pullCurrentBranch: (cwd) =>
       ensureGitCommand("GitWorkflowService.pullCurrentBranch", cwd).pipe(
-        Effect.andThen(git.pullCurrentBranch(cwd)),
+        Effect.andThen(gitManager.withProjectGitHubAccount({ cwd }, git.pullCurrentBranch(cwd))),
       ),
     runStackedAction: (input, options) =>
       ensureGit("GitWorkflowService.runStackedAction", input.cwd).pipe(
@@ -370,7 +370,9 @@ export const make = Effect.gen(function* () {
     listRefs: (input) =>
       detectGitRepositoryForCommand("GitWorkflowService.listRefs", input.cwd).pipe(
         Effect.flatMap((isGitRepository) =>
-          isGitRepository ? git.listRefs(input) : Effect.succeed(nonRepositoryListRefs()),
+          isGitRepository
+            ? gitManager.withProjectGitHubAccount(input, git.listRefs(input))
+            : Effect.succeed(nonRepositoryListRefs()),
         ),
       ),
     createWorktree: (input, options) =>
@@ -383,7 +385,7 @@ export const make = Effect.gen(function* () {
       ),
     fetchRemote: (input) =>
       ensureGitCommand("GitWorkflowService.fetchRemote", input.cwd).pipe(
-        Effect.andThen(git.fetchRemote(input)),
+        Effect.andThen(gitManager.withProjectGitHubAccount(input, git.fetchRemote(input))),
       ),
     remoteExists: (input) =>
       ensureGitCommand("GitWorkflowService.remoteExists", input.cwd).pipe(
@@ -395,7 +397,9 @@ export const make = Effect.gen(function* () {
       ),
     resolveRemoteTrackingCommit: (input) =>
       ensureGitCommand("GitWorkflowService.resolveRemoteTrackingCommit", input.cwd).pipe(
-        Effect.andThen(git.resolveRemoteTrackingCommit(input)),
+        Effect.andThen(
+          gitManager.withProjectGitHubAccount(input, git.resolveRemoteTrackingCommit(input)),
+        ),
       ),
     removeWorktree: (input) =>
       ensureGitCommand("GitWorkflowService.removeWorktree", input.cwd).pipe(

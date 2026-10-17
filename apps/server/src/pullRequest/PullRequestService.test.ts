@@ -582,6 +582,75 @@ function makeService(input: {
   );
 }
 
+it.effect("isolates project accounts, viewers, and batched searches on the same GitHub host", () =>
+  Effect.gen(function* () {
+    const viewers: Array<string | null> = [];
+    const batches: Array<{
+      repositories: ReadonlyArray<string>;
+      viewer: string;
+      login: string | null;
+    }> = [];
+    const calls: Array<{ repository: string; viewer: string; login: string | null }> = [];
+    const service = yield* makeService({
+      projects: [
+        project({ id: "p1", title: "work", workspaceRoot: "/a", repository: "acme/web" }),
+        project({ id: "p2", title: "personal", workspaceRoot: "/b", repository: "octo/dots" }),
+      ],
+      settings: {
+        ...DEFAULT_SERVER_SETTINGS,
+        projectSettingsOverrides: {
+          ["p1" as ProjectId]: { githubAccount: { host: "github.com", login: "work" } },
+        },
+      },
+      providers: [
+        fakeProvider(SourceControlProviderKind.make("github"), {
+          getViewer: () =>
+            Effect.gen(function* () {
+              const login = (yield* GitHubCredentials.SelectedGitHubAccount)?.login ?? null;
+              viewers.push(login);
+              return login ?? "personal";
+            }),
+          listChangeRequestsAcross: (input) =>
+            Effect.gen(function* () {
+              batches.push({
+                repositories: input.repositories,
+                viewer: input.viewer,
+                login: (yield* GitHubCredentials.SelectedGitHubAccount)?.login ?? null,
+              });
+              return { items: [], truncated: false, continues: false };
+            }),
+          listChangeRequests: (input) =>
+            Effect.gen(function* () {
+              calls.push({
+                repository: input.repository,
+                viewer: input.viewer,
+                login: (yield* GitHubCredentials.SelectedGitHubAccount)?.login ?? null,
+              });
+              return { items: [], truncated: false, continues: false };
+            }),
+        }),
+      ],
+    });
+    const result = yield* service.list({ state: "open" });
+    assert.deepStrictEqual(viewers.toSorted(), [null, "work"].toSorted());
+    assert.deepStrictEqual(
+      batches.toSorted((a, b) => a.viewer.localeCompare(b.viewer)),
+      [
+        { repositories: ["octo/dots"], viewer: "personal", login: null },
+        { repositories: ["acme/web"], viewer: "work", login: "work" },
+      ],
+    );
+    assert.strictEqual(calls.length, 2);
+    assert.ok(calls.every((call) => call.viewer === (call.login ?? "personal")));
+    assert.strictEqual(result.providers.length, 1);
+    assert.strictEqual(result.providers[0]?.configured, true);
+    assert.deepStrictEqual(Object.keys(result.viewers), ["github.com"]);
+    // A different listing is a new page read, not a new host/account identity read.
+    yield* service.list({ state: "closed" });
+    assert.strictEqual(viewers.length, 2);
+  }),
+);
+
 it.effect("lists GitHub Enterprise PRs for a stored unknown repository after host discovery", () =>
   Effect.gen(function* () {
     const service = yield* makeService({

@@ -14,6 +14,7 @@
  */
 import * as Cause from "effect/Cause";
 import * as Clock from "effect/Clock";
+import { SelectedGitHubAccount } from "@rove-code/source-control-github/server/GitHubCredentials";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -398,6 +399,14 @@ const make = Effect.gen(function* () {
       stack,
       runId,
     ).pipe(
+      Effect.provideService(
+        SelectedGitHubAccount,
+        detail.provider === "github" &&
+          projectSettings.githubAccount?.host.toLowerCase() ===
+            new URL(detail.url).host.toLowerCase()
+          ? projectSettings.githubAccount
+          : null,
+      ),
       Effect.flatMap((checkout) =>
         Effect.all(
           {
