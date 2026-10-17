@@ -626,7 +626,7 @@ jobs:
       # resources/elevate.exe is allowed to be x86 (and must be exactly x86).
       # Do not set npm_config_arch globally: repo build tools run on the host;
       # build-desktop-artifact.ts scopes it to target production installs.
-      - name: Build desktop artifact and verify packaged architecture
+      - name: Build desktop artifact
         if: inputs.desktop
         shell: bash
         env:
