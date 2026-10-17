@@ -14,6 +14,7 @@ import { resolveHostCliCommand } from "../cli/invocation.ts";
 import * as ServerConfig from "../config.ts";
 import * as ProjectionMaintenance from "../orchestration-v2/ProjectionMaintenance.ts";
 import { forkParked } from "../serverActivation.ts";
+import * as LegacyV1StorageMaintenance from "./LegacyV1StorageMaintenance.ts";
 
 /** Pages returned per reclaim pass; one minute of churn, not a backlog. */
 const RECLAIM_PAGES_PER_PASS = 1024;
@@ -39,6 +40,7 @@ const make = Effect.gen(function* () {
   const periodicWork = yield* makePeriodicWork;
   const sql = yield* SqlClient.SqlClient;
   const maintenance = yield* ProjectionMaintenance.ProjectionMaintenanceV2;
+  const legacyStorage = yield* LegacyV1StorageMaintenance.LegacyV1StorageMaintenance;
   const config = yield* ServerConfig.ServerConfig;
   const path = yield* Path.Path;
   const statusRef = yield* SubscriptionRef.make<DatabaseStorageStatus | null>(null);
@@ -92,6 +94,17 @@ const make = Effect.gen(function* () {
     Effect.catch((cause) => Effect.logWarning("Database space reclamation failed", { cause })),
   );
 
+  const retireLegacyTables = legacyStorage.retire(config.dbPath).pipe(
+    Effect.tap((changed) =>
+      changed
+        ? Effect.logInfo(
+            "Retired imported v1 tables; run rove doctor offline to reclaim free pages",
+          )
+        : Effect.void,
+    ),
+    Effect.catch((cause) => Effect.logWarning("Legacy database cleanup deferred", { cause })),
+  );
+
   const compact = maintenance.compactEventStore.pipe(
     Effect.tap((result) =>
       result.deletedEventCount > 0 || result.deletedReceiptCount > 0
@@ -106,7 +119,11 @@ const make = Effect.gen(function* () {
   yield* forkParked(
     Effect.sleep("1 minute").pipe(
       Effect.andThen(
-        compact.pipe(Effect.andThen(publishStatus), Effect.repeat(Schedule.spaced("6 hours"))),
+        retireLegacyTables.pipe(
+          Effect.andThen(compact),
+          Effect.andThen(publishStatus),
+          Effect.repeat(Schedule.spaced("6 hours")),
+        ),
       ),
     ),
   );
@@ -122,4 +139,6 @@ const make = Effect.gen(function* () {
   return DatabaseStorage.of({ reclaim, status: SubscriptionRef.changes(statusRef) });
 });
 
-export const layer = Layer.effect(DatabaseStorage, make);
+export const layer = Layer.effect(DatabaseStorage, make).pipe(
+  Layer.provide(LegacyV1StorageMaintenance.layer),
+);

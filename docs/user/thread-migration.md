@@ -36,6 +36,14 @@ Before continuing a long or important thread, read the recent transcript and inc
 requirements the agent still needs in your next message. Starting a new thread and pasting a short
 handoff is also a good choice when the old conversation contains conflicting instructions.
 
+## Reclaiming migration space
+
+After all legacy threads finish importing, background maintenance removes unused legacy history
+from `statev2.sqlite`. Keep `state.sqlite` as your original recovery source. Older databases may
+retain the freed space inside the file: stop the desktop app and server, then run `rove doctor`
+on the host to reclaim it. Settings → Storage shows the command for your environment. Allow extra
+free disk space for the rebuild; future cleanup can then return space automatically.
+
 ## Keeping a recovery copy
 
 Rove Code does not currently have a whole-thread export command. Before a major server update, stop
