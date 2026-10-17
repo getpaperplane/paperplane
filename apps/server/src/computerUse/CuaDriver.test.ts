@@ -21,6 +21,7 @@ import * as Schema from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as TestClock from "effect/testing/TestClock";
 
+import * as ServerConfig from "../config.ts";
 import * as ProcessRunner from "../processRunner.ts";
 import * as ServerSettings from "../serverSettings.ts";
 import * as CuaDriver from "./CuaDriver.ts";
@@ -262,10 +263,14 @@ const withDriver = <A, E>(
     return yield* body({ driver, stateDir, runs, settingsChanges });
   }).pipe(
     Effect.provideService(HostProcessPlatform, options.platform ?? "darwin"),
-    Effect.provide(ProcessRunner.layer),
     Effect.scoped,
     Effect.updateService(FileSystem.FileSystem, withLinuxProcessFiles),
-    Effect.provide(NodeServices.layer),
+    Effect.provide(
+      Layer.mergeAll(
+        ProcessRunner.layer,
+        ServerConfig.layerTest(process.cwd(), { prefix: "rove-cua-config-" }),
+      ).pipe(Layer.provideMerge(NodeServices.layer)),
+    ),
   );
 
 it.effect("installs through Cua's official installer and keeps Cua's usage data off", () =>
@@ -290,6 +295,20 @@ it.effect("installs through Cua's official installer and keeps Cua's usage data 
       expect(yield* driver.control({ action: "set-telemetry", enabled: true })).toMatchObject({
         telemetry: true,
       });
+    }),
+  ),
+);
+
+it.effect("does not deliver guest-authorized input to a host transport after a mode change", () =>
+  withDriver({ installed: true }, ({ driver }) =>
+    Effect.gen(function* () {
+      const error = yield* driver
+        .call("click", { delivery_mode: "foreground", x: 10, y: 20 }, threadId, "isolated-desktop")
+        .pipe(Effect.flip);
+      expect(error.detail).toContain("mode changed");
+      expect(
+        (yield* driver.call("click", { pid: 42 }, threadId, "background-only")).isError,
+      ).not.toBe(true);
     }),
   ),
 );
@@ -370,7 +389,7 @@ it.effect("quits its daemon as soon as agent computer use is turned off", () =>
 it.effect("forwards calls, keeps image content, and reconnects after an idle release", () =>
   withDriver({ installed: true }, ({ driver }) =>
     Effect.gen(function* () {
-      const catalog = yield* driver.catalog;
+      const catalog = yield* driver.catalog();
       expect(catalog.instructions).toBe("Snapshot, then act.");
       expect(catalog.tools.map((tool) => [tool.name, tool.readOnly])).toEqual([
         ["check_permissions", false],
@@ -610,7 +629,7 @@ it.effect("reports guest health failures and rejects unreadable or empty reports
 it.effect("keeps Linux captures private to each thread and permits guest-only menus", () =>
   withDriver({ installed: true, platform: "linux" }, ({ driver }) =>
     Effect.gen(function* () {
-      const catalog = yield* driver.catalog;
+      const catalog = yield* driver.catalog();
       expect(catalog.policy).toBe("isolated-desktop");
       expect(catalog.tools.map((tool) => tool.name)).toContain("invoke_menu");
       expect(catalog.tools.map((tool) => tool.name)).not.toContain("check_permissions");
@@ -649,20 +668,22 @@ it.effect("closes Linux connections when computer use is disabled", () =>
   ),
 );
 
-it.effect("is unsupported off macOS and Linux", () =>
+it.effect("is unsupported off macOS, Windows, and Linux", () =>
   Effect.gen(function* () {
     const driver = yield* CuaDriver.make();
-    expect(yield* driver.status).toEqual({ status: "unsupported", platform: "win32" });
+    expect(yield* driver.status).toEqual({ status: "unsupported", platform: "freebsd" });
   }).pipe(
-    Effect.provideService(HostProcessPlatform, "win32"),
+    Effect.provideService(HostProcessPlatform, "freebsd"),
     Effect.scoped,
     Effect.provide(
       Layer.mergeAll(
         Layer.mock(ServerSettings.ServerSettingsService)({
+          getSettings: Effect.succeed(DEFAULT_SERVER_SETTINGS),
           streamChanges: Stream.empty,
           subscribeChanges: Effect.succeed(Stream.empty),
         }),
         ProcessRunner.layer,
+        ServerConfig.layerTest(process.cwd(), { prefix: "rove-cua-config-" }),
       ).pipe(Layer.provideMerge(NodeServices.layer)),
     ),
   ),

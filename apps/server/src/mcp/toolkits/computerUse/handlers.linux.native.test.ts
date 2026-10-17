@@ -20,6 +20,7 @@ import * as Stream from "effect/Stream";
 import * as TestClock from "effect/testing/TestClock";
 import { McpSchema, McpServer } from "effect/ai";
 
+import * as ServerConfig from "../../../config.ts";
 import * as CuaDriver from "../../../computerUse/CuaDriver.ts";
 import * as ProcessRunner from "../../../processRunner.ts";
 import * as ServerSettings from "../../../serverSettings.ts";
@@ -62,6 +63,7 @@ const settingsLayer = Layer.effect(
 const services = CuaDriver.layer.pipe(
   Layer.provideMerge(settingsLayer),
   Layer.provideMerge(ProcessRunner.layer),
+  Layer.provide(ServerConfig.layerTest(process.cwd(), { prefix: "rove-cua-native-" })),
   Layer.provideMerge(NodeServices.layer),
 );
 const Window = Schema.Struct({ pid: Schema.Int, window_id: Schema.Int, title: Schema.String });

@@ -738,8 +738,24 @@ export const SETTINGS_SEARCH_ITEMS = [
     to: "/settings/integrations",
     targetId: "computer-use",
     searchTerms: [
-      "cua driver desktop native apps macos linux wsl headless private isolated sandbox control click type screenshot allow",
+      "cua driver desktop native apps macos windows linux wsl headless private isolated sandbox control click type screenshot allow",
     ],
+  },
+  {
+    id: "computer-use-macos-mode",
+    title: "Mac computer use",
+    to: "/settings/integrations",
+    targetId: "computer-use",
+    searchTerms: [
+      "isolated vm virtual machine lume macos private sandbox this mac background apple silicon disk cua driver",
+    ],
+  },
+  {
+    id: "computer-use-pixel-input",
+    title: "Allow pixel input",
+    to: "/settings/integrations",
+    targetId: "computer-use",
+    searchTerms: ["computer use pixel coordinates click screen position focus macos windows"],
   },
   {
     id: "cua-driver",
@@ -747,7 +763,7 @@ export const SETTINGS_SEARCH_ITEMS = [
     to: "/settings/integrations",
     targetId: "computer-use",
     searchTerms: [
-      "computer use install reinstall prepare accessibility screen recording permissions grant linux wsl headless private desktop podman at-spi diagnostics",
+      "computer use install reinstall prepare accessibility screen recording start retry permissions grant windows linux wsl headless private desktop podman at-spi diagnostics",
     ],
   },
   {
