@@ -91,8 +91,11 @@ import { UsageProviderChart, type UsagePeriodRange } from "./UsageProviderChart"
 import { SpeedPremium, UsageModelDialog } from "./UsageModelDialog";
 import { UsageShareBar } from "./UsageShareBar";
 import {
+  cacheHitRate,
   costTypeSegments,
+  MODEL_SORT_OPTIONS,
   modelShare,
+  modelSortValue,
   sortModels,
   type ModelSortKey,
   speedCostSegments,
@@ -319,9 +322,13 @@ export function UsagePage() {
     () => (shownHourly ? chartUsage.hourly : chartUsage.daily).toReversed(),
     [shownHourly, chartUsage.daily, chartUsage.hourly],
   );
+  const activeSort: ModelSortKey = modelSort ?? (metric === "tokens" ? "tokens" : "cost");
+  const sortOption =
+    MODEL_SORT_OPTIONS.find((option) => option.value === activeSort) ?? MODEL_SORT_OPTIONS[0];
+  const sortColumn = activeSort === "responses" || activeSort === "cacheHit" ? sortOption : null;
   const breakdownModels = useMemo(
-    () => sortModels(modelUsage.models, modelSort ?? (metric === "tokens" ? "tokens" : "cost")),
-    [modelUsage.models, modelSort, metric],
+    () => sortModels(modelUsage.models, activeSort),
+    [modelUsage.models, activeSort],
   );
   const providersWithData = useMemo(
     () => providersWithUsage(unscoped.providers),
@@ -349,7 +356,7 @@ export function UsagePage() {
       ? undefined
       : modelUsage.models.find((model) => `${model.provider}:${model.model}` === selectedModelKey);
   const breakdownPeak = breakdownModels.reduce(
-    (peak, model) => Math.max(peak, metric === "tokens" ? model.totalTokens : model.costUsd),
+    (peak, model) => Math.max(peak, modelSortValue(model, activeSort)),
     0,
   );
   const summaryRows: Array<
@@ -904,18 +911,47 @@ export function UsagePage() {
                     />
                     <Metric
                       loading={loading.partial}
-                      label="Cached input"
-                      value={formatTokens(merged.cachedInputTokens)}
-                    />
-                    <Metric
-                      loading={loading.partial}
                       label="Uncached input"
                       value={formatTokens(merged.uncachedInputTokens)}
                     />
                     <Metric
                       loading={loading.partial}
+                      label="Cached input"
+                      value={formatTokens(merged.cachedInputTokens)}
+                    />
+                    <Metric
+                      loading={loading.partial}
+                      label="Cache write"
+                      value={formatTokens(merged.cacheCreationTokens)}
+                    />
+                    <Metric
+                      loading={loading.partial}
                       label="Output"
                       value={formatTokens(merged.outputTokens)}
+                    />
+                    <Metric
+                      loading={loading.partial}
+                      label="Reasoning"
+                      value={formatTokens(merged.reasoningTokens)}
+                    />
+                    <Metric
+                      loading={loading.partial}
+                      label="Responses"
+                      value={merged.records.toLocaleString()}
+                    />
+                    <Metric
+                      loading={loading.partial}
+                      label="Cache hit rate"
+                      value={formatRate(cacheHitRate(merged))}
+                    />
+                    <Metric
+                      loading={loading.partial}
+                      label="Avg cost / 1M tokens"
+                      value={
+                        merged.totalTokens > 0
+                          ? formatUsd((merged.costUsd / merged.totalTokens) * 1_000_000)
+                          : "—"
+                      }
                     />
                     <Metric
                       loading={loading.partial}
@@ -928,7 +964,10 @@ export function UsagePage() {
                 {merged.totalTokens > 0 ? (
                   <section
                     className={cn(
-                      "grid gap-x-12 gap-y-8 lg:grid-cols-2",
+                      "grid gap-x-12 gap-y-8",
+                      metric !== "tokens" &&
+                        merged.speedCost.fast + merged.speedCost.ultrafast > 0 &&
+                        "lg:grid-cols-2",
                       figureClass(loading.partial),
                     )}
                   >
@@ -963,7 +1002,7 @@ export function UsagePage() {
                     <h2 className="text-sm font-medium text-foreground">Breakdown</h2>
                     {breakdown === "model" ? (
                       <Select
-                        value={modelSort ?? (metric === "tokens" ? "tokens" : "cost")}
+                        value={activeSort}
                         onValueChange={(next) => {
                           if (
                             next === "cost" ||
@@ -975,13 +1014,14 @@ export function UsagePage() {
                         }}
                       >
                         <SelectTrigger size="sm" aria-label="Sort usage models">
-                          <SelectValue />
+                          <SelectValue>{sortOption.label}</SelectValue>
                         </SelectTrigger>
                         <SelectPopup align="end" alignItemWithTrigger={false}>
-                          <SelectItem value="cost">Cost</SelectItem>
-                          <SelectItem value="tokens">Tokens</SelectItem>
-                          <SelectItem value="responses">Responses</SelectItem>
-                          <SelectItem value="cacheHit">Cache hit rate</SelectItem>
+                          {MODEL_SORT_OPTIONS.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
                         </SelectPopup>
                       </Select>
                     ) : null}
@@ -1016,19 +1056,27 @@ export function UsagePage() {
                           <th className="py-2 pl-6 font-normal">Cost</th>
                           <th className="hidden py-2 pl-6 font-normal sm:table-cell">Share</th>
                           <th className="py-2 pl-6 font-normal">Tokens</th>
+                          {sortColumn ? (
+                            <th className="py-2 pl-6 font-normal text-foreground">
+                              {sortColumn.label}
+                            </th>
+                          ) : null}
                         </tr>
                       </thead>
                       <tbody>
                         {breakdownModels.length === 0 ? (
                           <tr>
-                            <td colSpan={5} className="py-6 text-center text-muted-foreground">
+                            <td
+                              colSpan={sortColumn ? 6 : 5}
+                              className="py-6 text-center text-muted-foreground"
+                            >
                               No activity in this window.
                             </td>
                           </tr>
                         ) : (
                           breakdownModels.map((model, index) => {
                             const key = `${model.provider}:${model.model}`;
-                            const value = metric === "tokens" ? model.totalTokens : model.costUsd;
+                            const value = Math.max(0, modelSortValue(model, activeSort));
                             const share = modelShare(
                               model,
                               metric === "tokens" ? "tokens" : "cost",
@@ -1091,7 +1139,13 @@ export function UsagePage() {
                                     />
                                   </div>
                                 </td>
-                                <td className={cn("py-2.5 pl-6 text-foreground", rowFigures)}>
+                                <td
+                                  className={cn(
+                                    "py-2.5 pl-6",
+                                    activeSort === "cost" && "text-foreground",
+                                    rowFigures,
+                                  )}
+                                >
                                   {isModelCostUnknown(model) ? (
                                     <span className="text-muted-foreground">Unpriced</span>
                                   ) : (
@@ -1101,9 +1155,22 @@ export function UsagePage() {
                                 <td className={cn("hidden py-2.5 pl-6 sm:table-cell", rowFigures)}>
                                   {share === null ? "" : formatPercent(share)}
                                 </td>
-                                <td className={cn("py-2.5 pl-6", rowFigures)}>
+                                <td
+                                  className={cn(
+                                    "py-2.5 pl-6",
+                                    activeSort === "tokens" && "text-foreground",
+                                    rowFigures,
+                                  )}
+                                >
                                   {formatTokens(model.totalTokens)}
                                 </td>
+                                {sortColumn ? (
+                                  <td className={cn("py-2.5 pl-6 text-foreground", rowFigures)}>
+                                    {activeSort === "responses"
+                                      ? model.records.toLocaleString()
+                                      : formatRate(cacheHitRate(model))}
+                                  </td>
+                                ) : null}
                               </tr>
                             );
                           })
@@ -1413,6 +1480,8 @@ function figureClass(loading: boolean) {
   return cn("transition-opacity", loading && "opacity-40 delay-150");
 }
 
+const formatRate = (rate: number | null) => (rate === null ? "—" : formatPercent(rate));
+
 function Metric({
   label,
   value,
@@ -1719,11 +1788,22 @@ function UsageSkeleton() {
       <section className="flex flex-col gap-2">
         <h2 className="text-sm font-medium text-foreground">Totals</h2>
         <MetricSkeletons
-          labels={["Processed tokens", "Cached input", "Uncached input", "Output", "Cache savings"]}
+          labels={[
+            "Processed tokens",
+            "Uncached input",
+            "Cached input",
+            "Cache write",
+            "Output",
+            "Reasoning",
+            "Responses",
+            "Cache hit rate",
+            "Avg cost / 1M tokens",
+            "Cache savings",
+          ]}
         />
       </section>
 
-      <section className="grid gap-x-12 gap-y-8 lg:grid-cols-2">
+      <section className="grid gap-x-12 gap-y-8">
         <div className="flex flex-col gap-2.5">
           <Skeleton className="h-5 w-28" />
           <Skeleton className="h-2" />
