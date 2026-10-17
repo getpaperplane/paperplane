@@ -3,6 +3,10 @@ import type {
   GitStackedAction,
   VcsStatusResult,
 } from "@rove-code/contracts";
+import {
+  linkedPullRequestStateFor,
+  type LinkedPullRequestContext,
+} from "@rove-code/shared/threadPullRequests";
 
 export type GitActionIconName = "commit" | "push" | "pr";
 
@@ -46,12 +50,14 @@ export function buildMenuItems(
   gitStatus: VcsStatusResult | null,
   isBusy: boolean,
   hasOriginRemote = true,
+  linkedPr: LinkedPullRequestContext | null = null,
 ): GitActionMenuItem[] {
   if (!gitStatus) return [];
 
   const hasBranch = gitStatus.refName !== null;
   const hasChanges = gitStatus.hasWorkingTreeChanges;
   const hasOpenPr = gitStatus.pr?.state === "open";
+  const hasLinkedOpenPr = linkedPullRequestStateFor(linkedPr, gitStatus.refName) === "open";
   const isBehind = gitStatus.behindCount > 0;
   const canPushWithoutUpstream = hasOriginRemote && !gitStatus.hasUpstream;
   const canCommit = !isBusy && hasChanges;
@@ -66,6 +72,7 @@ export function buildMenuItems(
     !isBusy &&
     hasBranch &&
     !hasOpenPr &&
+    !hasLinkedOpenPr &&
     (gitStatus.aheadOfDefaultCount ?? gitStatus.aheadCount) > 0 &&
     !isBehind &&
     (gitStatus.hasUpstream || canPushWithoutUpstream);
@@ -112,6 +119,7 @@ export function resolveQuickAction(
   isBusy: boolean,
   isDefaultBranch = false,
   hasOriginRemote = true,
+  linkedPr: LinkedPullRequestContext | null = null,
 ): GitQuickAction {
   if (isBusy) {
     return { label: "Commit", disabled: true, kind: "show_hint", hint: "Git action in progress." };
@@ -129,6 +137,8 @@ export function resolveQuickAction(
   const hasBranch = gitStatus.refName !== null;
   const hasChanges = gitStatus.hasWorkingTreeChanges;
   const hasOpenPr = gitStatus.pr?.state === "open";
+  // A linked PR in any state means the thread already has one; don't suggest creating another.
+  const hasLinkedPr = linkedPullRequestStateFor(linkedPr, gitStatus.refName) !== null;
   const isAhead = gitStatus.aheadCount > 0;
   const isBehind = gitStatus.behindCount > 0;
   const isDiverged = isAhead && isBehind;
@@ -146,7 +156,7 @@ export function resolveQuickAction(
     if (!gitStatus.hasUpstream && !hasOriginRemote) {
       return { label: "Commit", disabled: false, kind: "run_action", action: "commit" };
     }
-    if (hasOpenPr || isDefaultBranch) {
+    if (hasOpenPr || hasLinkedPr || isDefaultBranch) {
       return { label: "Commit & push", disabled: false, kind: "run_action", action: "commit_push" };
     }
     return {
@@ -180,7 +190,7 @@ export function resolveQuickAction(
         hint: "No local commits to push.",
       };
     }
-    if (hasOpenPr || isDefaultBranch) {
+    if (hasOpenPr || hasLinkedPr || isDefaultBranch) {
       return {
         label: "Push",
         disabled: false,
@@ -214,7 +224,7 @@ export function resolveQuickAction(
   }
 
   if (isAhead) {
-    if (hasOpenPr || isDefaultBranch) {
+    if (hasOpenPr || hasLinkedPr || isDefaultBranch) {
       return {
         label: "Push",
         disabled: false,

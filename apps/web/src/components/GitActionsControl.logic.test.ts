@@ -1245,3 +1245,56 @@ describe("resolveAutoFeatureBranchName", () => {
     assert.equal(ref, "feature/update");
   });
 });
+
+describe("when: the thread has a linked PR the server status does not know about", () => {
+  const ahead = status({
+    hasUpstream: true,
+    aheadCount: 0,
+    aheadOfDefaultCount: 2,
+    behindCount: 0,
+  });
+
+  it("an open linked PR omits Create PR and rests the quick action", () => {
+    const linkedPr = { state: "open", headBranch: "feature/test" } as const;
+    assert.deepEqual(
+      buildMenuItems(ahead, false, true, linkedPr).map((item) => item.id),
+      ["commit", "push"],
+    );
+    const quick = resolveQuickAction(ahead, false, false, true, linkedPr);
+    assert.equal(quick.disabled, true);
+    assert.equal(quick.kind, "show_hint");
+  });
+
+  it("an unsynced link (unknown head branch) counts as open", () => {
+    const quick = resolveQuickAction(ahead, false, false, true, {
+      state: "open",
+      headBranch: null,
+    });
+    assert.equal(quick.disabled, true);
+  });
+
+  it("a merged linked PR stops suggesting Create PR but keeps the menu escape hatch", () => {
+    const linkedPr = { state: "merged", headBranch: "feature/test" } as const;
+    assert.notEqual(resolveQuickAction(ahead, false, false, true, linkedPr).action, "create_pr");
+    assert.equal(
+      buildMenuItems(ahead, false, true, linkedPr).some((item) => item.id === "pr"),
+      true,
+    );
+    const pushable = status({ hasUpstream: true, aheadCount: 1, aheadOfDefaultCount: 3 });
+    const push = resolveQuickAction(pushable, false, false, true, linkedPr);
+    assert.equal(push.action, "push");
+    const dirty = status({ hasWorkingTreeChanges: true, hasUpstream: true });
+    assert.equal(resolveQuickAction(dirty, false, false, true, linkedPr).action, "commit_push");
+  });
+
+  it("ignores a linked PR for a different head branch", () => {
+    const linkedPr = { state: "merged", headBranch: "other-branch" } as const;
+    assert.equal(resolveQuickAction(ahead, false, false, true, linkedPr).action, "create_pr");
+    assert.equal(
+      buildMenuItems(ahead, false, true, { state: "open", headBranch: "other-branch" }).some(
+        (item) => item.id === "pr",
+      ),
+      true,
+    );
+  });
+});

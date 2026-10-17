@@ -151,6 +151,34 @@ export function resolveThreadCurrentPullRequestLink(
   return current.kind === "single" ? current.link : current.top;
 }
 
+/** What the git action surfaces need to know about the thread's linked PR. */
+export interface LinkedPullRequestContext {
+  readonly state: "open" | "merged" | "closed";
+  readonly headBranch: string | null;
+}
+
+/** Unsynced links count as open, matching `isOpen`; their head branch is unknown. */
+export function linkedPullRequestContextOf(
+  link: ThreadPullRequestLink | null,
+): LinkedPullRequestContext | null {
+  if (link === null) return null;
+  return link.snapshot === null
+    ? { state: "open", headBranch: null }
+    : { state: link.snapshot.state, headBranch: link.snapshot.headBranch };
+}
+
+/**
+ * The linked PR's state if it describes `refName`, else null. A PR for another head
+ * branch says nothing about the checked-out ref.
+ */
+export function linkedPullRequestStateFor(
+  linkedPr: LinkedPullRequestContext | null | undefined,
+  refName: string | null,
+): LinkedPullRequestContext["state"] | null {
+  if (!linkedPr) return null;
+  return linkedPr.headBranch === null || linkedPr.headBranch === refName ? linkedPr.state : null;
+}
+
 /** Legacy clients can only route links belonging to the thread's own repository. */
 export function legacyLinkedPullRequestOf(
   links: ReadonlyArray<ThreadPullRequestLink>,

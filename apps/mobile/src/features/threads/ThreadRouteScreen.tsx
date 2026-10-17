@@ -1,3 +1,7 @@
+import {
+  linkedPullRequestContextOf,
+  resolveThreadCurrentPullRequestLink,
+} from "@rove-code/shared/threadPullRequests";
 import * as Dialog from "../../components/ui/Dialog";
 import { useOpenPullRequest } from "../../native/useOpenPullRequest";
 import { makeTurnCommandMetadata } from "../../lib/commandMetadata";
@@ -807,6 +811,9 @@ function ThreadRouteContent(
     currentBranch: selectedThread?.branch ?? null,
     gitStatus: gitStatus.data,
     gitOperationLabel: gitState.gitOperationLabel,
+    linkedPr: linkedPullRequestContextOf(
+      resolveThreadCurrentPullRequestLink(selectedThread?.pullRequests ?? []),
+    ),
     canOpenTerminal:
       Boolean(selectedThreadProject?.workspaceRoot) && (canReadTerminal || canOperateTerminal),
     canOperateTerminal,

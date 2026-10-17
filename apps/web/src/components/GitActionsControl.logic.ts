@@ -4,6 +4,10 @@ import type {
   VcsStatusResult,
 } from "@rove-code/contracts";
 import { isTemporaryWorktreeBranch } from "@rove-code/shared/git";
+import {
+  linkedPullRequestStateFor,
+  type LinkedPullRequestContext,
+} from "@rove-code/shared/threadPullRequests";
 import { sourceControlClients } from "@rove-code/client-runtime/source-control-clients";
 import type { ChangeRequestTerminology } from "@rove-code/client-runtime/source-control-clients";
 
@@ -159,13 +163,16 @@ export function buildMenuItems(
   gitStatus: VcsStatusResult | null,
   isBusy: boolean,
   hasPrimaryRemote = true,
+  linkedPr: LinkedPullRequestContext | null = null,
 ): GitActionMenuItem[] {
   if (!gitStatus) return [];
   const terminology = resolveChangeRequestTerminology(gitStatus);
 
   const hasBranch = gitStatus.refName !== null;
   const hasChanges = gitStatus.hasWorkingTreeChanges;
-  const hasOpenPr = gitStatus.pr?.state === "open";
+  const hasOpenPr =
+    gitStatus.pr?.state === "open" ||
+    linkedPullRequestStateFor(linkedPr, gitStatus.refName) === "open";
   const isBehind = gitStatus.behindCount > 0;
   const hasDefaultBranchDelta = (gitStatus.aheadOfDefaultCount ?? gitStatus.aheadCount) > 0;
   const canPushWithoutUpstream = hasPrimaryRemote && !gitStatus.hasUpstream;
@@ -231,6 +238,7 @@ export function resolveQuickAction(
   isBusy: boolean,
   isDefaultRef = false,
   hasPrimaryRemote = true,
+  linkedPr: LinkedPullRequestContext | null = null,
 ): GitQuickAction {
   if (isBusy) {
     return { label: "Commit", disabled: true, kind: "show_hint", hint: "Git action in progress." };
@@ -247,7 +255,11 @@ export function resolveQuickAction(
 
   const hasBranch = gitStatus.refName !== null;
   const hasChanges = gitStatus.hasWorkingTreeChanges;
-  const hasOpenPr = gitStatus.pr?.state === "open";
+  // A merged/closed linked PR is not open, but the branch still sits ahead of the
+  // default after a squash merge, so it must not keep suggesting a new PR.
+  const hasOpenPr =
+    gitStatus.pr?.state === "open" ||
+    linkedPullRequestStateFor(linkedPr, gitStatus.refName) !== null;
   const isAhead = gitStatus.aheadCount > 0;
   const hasDefaultBranchDelta = (gitStatus.aheadOfDefaultCount ?? gitStatus.aheadCount) > 0;
   const isBehind = gitStatus.behindCount > 0;

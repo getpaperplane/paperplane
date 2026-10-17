@@ -7,6 +7,8 @@ import {
   requiresDefaultBranchConfirmation,
 } from "@rove-code/client-runtime/state/vcs";
 import {
+  linkedPullRequestContextOf,
+  resolveThreadCurrentPullRequestLink,
   resolveThreadPullRequestChains,
   threadPullRequestKeyOf,
 } from "@rove-code/shared/threadPullRequests";
@@ -88,6 +90,15 @@ function GitOverviewSheetContent(props: GitOverviewSheetProps) {
       ),
     [selectedThread?.pullRequests, supportsLinkedPrSnapshots],
   );
+  const linkedPr = useMemo(
+    () =>
+      linkedPullRequestContextOf(
+        resolveThreadCurrentPullRequestLink(
+          supportsLinkedPrSnapshots ? (selectedThread?.pullRequests ?? []) : [],
+        ),
+      ),
+    [selectedThread?.pullRequests, supportsLinkedPrSnapshots],
+  );
   const gitState = useSelectedThreadGitState();
   const gitActions = useSelectedThreadGitActions();
   const { canWriteSourceControl, canChangeThreadBranch } = gitActions;
@@ -114,8 +125,8 @@ function GitOverviewSheetContent(props: GitOverviewSheetProps) {
   const isDefaultRef = gitStatus.data?.isDefaultRef ?? false;
 
   const menuItems = useMemo(
-    () => (isRepo ? buildMenuItems(gitStatus.data, busy, hasPrimaryRemote) : []),
-    [busy, gitStatus.data, hasPrimaryRemote, isRepo],
+    () => (isRepo ? buildMenuItems(gitStatus.data, busy, hasPrimaryRemote, linkedPr) : []),
+    [busy, gitStatus.data, hasPrimaryRemote, isRepo, linkedPr],
   );
 
   const sheetMenuItems = useMemo(
