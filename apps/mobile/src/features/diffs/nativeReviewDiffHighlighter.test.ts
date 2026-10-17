@@ -19,7 +19,13 @@ vi.mock("@shikijs/core", async (importOriginal) => {
         ...highlighter,
         codeToTokensBase: (...input: Parameters<typeof highlighter.codeToTokensBase>) => {
           tokenization.calls.push(input[0]);
-          const result = highlighter.codeToTokensBase(...input);
+          // Cold JS regex compilation can exhaust Shiki's 500ms default on CI.
+          // Test token correctness independently of that wall-clock budget; keep
+          // the production chunking and cancellation budgets under test below.
+          const result = highlighter.codeToTokensBase(input[0], {
+            ...input[1],
+            tokenizeTimeLimit: 0,
+          });
           tokenization.afterCall?.();
           return result;
         },
@@ -35,6 +41,7 @@ vi.mock("react-native-shiki-engine", async () => {
 });
 
 afterEach(() => {
+  vi.restoreAllMocks();
   tokenization.calls = [];
   tokenization.afterCall = undefined;
 });
@@ -90,6 +97,9 @@ describe("highlightNativeReviewDiffVisibleRows", () => {
   ])(
     "preserves $scheme token content and colors across engines",
     async ({ scheme, keywordColor }) => {
+      // Simulate a cold regex match exceeding the default tokenization deadline.
+      let clockReads = 0;
+      vi.spyOn(Date, "now").mockImplementation(() => (clockReads++ < 2 ? 0 : 501));
       const row = makeLine({
         id: "theme-colors",
         content: "export const answer = 42;",
@@ -98,6 +108,7 @@ describe("highlightNativeReviewDiffVisibleRows", () => {
         newLineNumber: 1,
       });
       for (const engine of ["javascript", "native"] as const) {
+        clockReads = 0;
         const result = await highlightNativeReviewDiffVisibleRows({
           rows: [row],
           files: [TYPESCRIPT_FILE],
