@@ -111,29 +111,30 @@ const makeLayer = (options: {
     CuaDriver.CuaDriver.of({
       status: Effect.die("unused"),
       control: () => Effect.die("unused"),
-      catalog: options.unavailable
-        ? Effect.fail(unavailable)
-        : Effect.succeed({
-            ...catalog,
-            policy: options.policy ?? catalog.policy,
-            platform: options.platform ?? "darwin",
-            tools: [
-              ...(options.clickAcceptsDelivery
-                ? catalog.tools.map((tool) =>
-                    tool.name === "click"
-                      ? {
-                          ...tool,
-                          inputSchema: {
-                            ...tool.inputSchema,
-                            properties: { ...tool.inputSchema.properties, delivery_mode: {} },
-                          },
-                        }
-                      : tool,
-                  )
-                : catalog.tools),
-              ...(options.extraTools ?? []),
-            ],
-          }),
+      catalog: () =>
+        options.unavailable
+          ? Effect.fail(unavailable)
+          : Effect.succeed({
+              ...catalog,
+              policy: options.policy ?? catalog.policy,
+              platform: options.platform ?? "darwin",
+              tools: [
+                ...(options.clickAcceptsDelivery
+                  ? catalog.tools.map((tool) =>
+                      tool.name === "click"
+                        ? {
+                            ...tool,
+                            inputSchema: {
+                              ...tool.inputSchema,
+                              properties: { ...tool.inputSchema.properties, delivery_mode: {} },
+                            },
+                          }
+                        : tool,
+                    )
+                  : catalog.tools),
+                ...(options.extraTools ?? []),
+              ],
+            }),
       call: (name, args, thread) =>
         Effect.sync(() => {
           options.threads?.push(thread);
@@ -212,7 +213,15 @@ it.effect("permits guest input only under the server-provided desktop policy", (
       expect((yield* callTool("computer_call", input)).isError).toBe(true);
     expect(calls).toHaveLength(4);
   }).pipe(
-    Effect.provide(makeLayer({ enabled: true, policy: "isolated-desktop", calls, extraTools })),
+    Effect.provide(
+      makeLayer({
+        enabled: true,
+        platform: "linux",
+        policy: "isolated-desktop",
+        calls,
+        extraTools,
+      }),
+    ),
   );
 });
 

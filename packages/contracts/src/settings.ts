@@ -1284,6 +1284,9 @@ export type StorageCleanupSettings = typeof StorageCleanupSettings.Type;
 export const ServerSettings = Schema.Struct({
   telemetryEnabled: Schema.Boolean.pipe(Schema.withDecodingDefault(Effect.succeed(true))),
   enableAgentComputerUse: Schema.Boolean.pipe(Schema.withDecodingDefault(Effect.succeed(false))),
+  computerUseMacosMode: Schema.Literals(["host", "isolated-vm"]).pipe(
+    Schema.withDecodingDefault(Effect.succeed("host")),
+  ),
   computerUseAllowPixelInput: Schema.Boolean.pipe(
     Schema.withDecodingDefault(Effect.succeed(false)),
   ),
@@ -1700,6 +1703,7 @@ const PiSettingsPatch = Schema.Struct({
 export const ServerSettingsPatch = Schema.Struct({
   telemetryEnabled: Schema.optionalKey(Schema.Boolean),
   enableAgentComputerUse: Schema.optionalKey(Schema.Boolean),
+  computerUseMacosMode: Schema.optionalKey(Schema.Literals(["host", "isolated-vm"])),
   computerUseAllowPixelInput: Schema.optionalKey(Schema.Boolean),
   providers: Schema.optionalKey(Schema.Struct({ pi: Schema.optionalKey(PiSettingsPatch) })),
   githubAccount: Schema.optionalKey(GitHubAccountSelection),

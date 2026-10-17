@@ -30,6 +30,7 @@ import { McpSchema } from "effect/ai";
 import * as ProcessRunner from "../processRunner.ts";
 import * as ServerSettings from "../serverSettings.ts";
 import * as LinuxDesktop from "./LinuxDesktop.ts";
+import * as MacosVm from "./MacosVm.ts";
 import {
   WINDOWS_SETUP_DETAIL,
   WINDOWS_SOCKET,
@@ -126,11 +127,12 @@ export class CuaDriver extends Context.Service<
       input: ComputerUseControlInput,
     ) => Effect.Effect<ComputerUseStatus, ComputerUseControlError>;
     /** Connects on first use. macOS may launch a daemon; Windows only proxies to the interactive task. */
-    readonly catalog: Effect.Effect<CuaCatalog, CuaDriverUnavailableError>;
+    readonly catalog: (threadId?: ThreadId) => Effect.Effect<CuaCatalog, CuaDriverUnavailableError>;
     readonly call: (
       name: string,
       args: CuaArguments,
       threadId: ThreadId,
+      expectedPolicy?: CuaCatalog["policy"],
     ) => Effect.Effect<McpSchema.CallToolResult, CuaDriverUnavailableError>;
   }
 >()("@rove-code/server/computerUse/CuaDriver") {}
@@ -138,6 +140,7 @@ export class CuaDriver extends Context.Service<
 export const make = Effect.fn("CuaDriver.make")(function* (options?: {
   readonly appPath?: string;
   readonly executablePath?: string;
+  readonly arch?: string;
 }) {
   const appPath = options?.appPath ?? CUA_DRIVER_APP;
   const runner = yield* ProcessRunner.ProcessRunner;
@@ -189,6 +192,12 @@ export const make = Effect.fn("CuaDriver.make")(function* (options?: {
       ? "The Windows Cua Driver payload failed Cua's Authenticode signature or release-checksum verification. Reinstall from Settings → Integrations and check the network connection."
       : untrustedDetail(appPath);
   const desktops = platform === "linux" ? yield* LinuxDesktop.make() : undefined;
+  const vms =
+    platform === "darwin"
+      ? yield* MacosVm.make({ arch: options?.arch ?? process.arch })
+      : undefined;
+  let isolatedVm = false;
+  let selectedMode: string | undefined;
   const settings = yield* ServerSettings.ServerSettingsService;
   const settingsChanges = yield* settings.subscribeChanges;
   const scope = yield* Effect.scope;
@@ -279,17 +288,33 @@ export const make = Effect.fn("CuaDriver.make")(function* (options?: {
     yield* stopOwnedDaemon;
   });
 
-  /** Ends Rove's connections and quits only a daemon Rove started. */
-  const release = lock
-    .withPermit(
-      Effect.gen(function* () {
-        for (const [key, current] of connections) yield* closeConnection(key, current);
-        yield* stopOwnedDaemon;
-        if (desktops)
-          yield* desktops.release.pipe(Effect.catch((cause) => Effect.logWarning(cause.detail)));
-      }),
-    )
-    .pipe(Effect.uninterruptible);
+  const releaseUnlocked = Effect.gen(function* () {
+    for (const [key, current] of connections) yield* closeConnection(key, current);
+    yield* stopOwnedDaemon;
+    if (desktops)
+      yield* desktops.release.pipe(Effect.catch((cause) => Effect.logWarning(cause.detail)));
+    if (vms)
+      yield* vms.release.pipe(
+        Effect.mapError((cause) => new CuaDriverUnavailableError({ detail: cause.message })),
+      );
+  });
+  /** Ends Rove's connections; guest leases survive only idle transport retirement. */
+  const release = lock.withPermit(releaseUnlocked).pipe(
+    Effect.catch((cause) => Effect.logWarning(cause.detail)),
+    Effect.uninterruptible,
+  );
+  const syncModeUnlocked = Effect.gen(function* () {
+    const current = yield* settings.getSettings.pipe(
+      Effect.mapError(
+        () => new CuaDriverUnavailableError({ detail: "Cannot read computer-use settings." }),
+      ),
+    );
+    if (selectedMode !== undefined && selectedMode !== current.computerUseMacosMode)
+      yield* releaseUnlocked;
+    selectedMode = current.computerUseMacosMode;
+    isolatedVm = current.computerUseMacosMode === "isolated-vm";
+    return current;
+  });
 
   const touch = (key: string, current: Connection) =>
     lock.withPermit(
@@ -361,20 +386,25 @@ export const make = Effect.fn("CuaDriver.make")(function* (options?: {
             client,
             catalog: sharedCatalog ?? {
               platform: platform === "win32" ? "win32" : platform === "linux" ? "linux" : "darwin",
-              policy: desktops ? "isolated-desktop" : "background-only",
+              policy: desktops || isolatedVm ? "isolated-desktop" : "background-only",
               instructions: client.getInstructions(),
-              tools: desktops
-                ? [
-                    ...tools,
-                    {
-                      name: "close_desktop",
-                      description:
-                        "Discard this thread's temporary desktop, including unsaved documents and guest files. The next call creates a new empty desktop.",
-                      inputSchema: { type: "object", properties: {}, additionalProperties: false },
-                      readOnly: false,
-                    },
-                  ]
-                : tools,
+              tools:
+                desktops || isolatedVm
+                  ? [
+                      ...tools,
+                      {
+                        name: "close_desktop",
+                        description:
+                          "Discard this thread's temporary desktop, including unsaved documents and guest files. The next call creates a new empty desktop.",
+                        inputSchema: {
+                          type: "object",
+                          properties: {},
+                          additionalProperties: false,
+                        },
+                        readOnly: false,
+                      },
+                    ]
+                  : tools,
             },
             idleTimer: undefined,
           };
@@ -405,13 +435,8 @@ export const make = Effect.fn("CuaDriver.make")(function* (options?: {
     );
 
   const connectUnlocked = Effect.fn("CuaDriver.connectUnlocked")(function* (key: string) {
-    if (
-      key.startsWith("thread:") &&
-      !(yield* settings.getSettings.pipe(
-        Effect.map((value) => value.enableAgentComputerUse),
-        Effect.orElseSucceed(() => false),
-      ))
-    ) {
+    const currentSettings = yield* syncModeUnlocked;
+    if (key.startsWith("thread:") && !currentSettings.enableAgentComputerUse) {
       return yield* new CuaDriverUnavailableError({
         detail: "Computer use is off for this environment.",
       });
@@ -422,6 +447,23 @@ export const make = Effect.fn("CuaDriver.make")(function* (options?: {
       return yield* new CuaDriverUnavailableError({
         detail: `Computer use needs a macOS, Windows, or Linux host, not ${platform}.`,
       });
+    }
+    if (isolatedVm) {
+      if (!vms)
+        return yield* new CuaDriverUnavailableError({
+          detail: "Isolated macOS desktops require an Apple Silicon Mac.",
+        });
+      if (key === CONTROL_CONNECTION)
+        return yield* new CuaDriverUnavailableError({
+          detail:
+            "An isolated macOS desktop needs a thread-scoped call. Prepare and verify it in Settings first.",
+        });
+      const transport = yield* vms
+        .lease(key)
+        .pipe(Effect.mapError((cause) => new CuaDriverUnavailableError({ detail: cause.message })));
+      const next = yield* connect(key, transport);
+      connections.set(key, next);
+      return next;
     }
     const found = yield* presence;
     if (found !== "trusted") {
@@ -494,6 +536,25 @@ export const make = Effect.fn("CuaDriver.make")(function* (options?: {
   });
 
   const statusUnlocked: Effect.Effect<ComputerUseStatus> = Effect.gen(function* () {
+    const mode = yield* syncModeUnlocked.pipe(Effect.result);
+    if (mode._tag === "Failure")
+      return { status: "runtime-unavailable", detail: mode.failure.detail } as const;
+    if (isolatedVm) {
+      if (!vms)
+        return {
+          status: "runtime-unavailable",
+          detail: "Isolated macOS desktops require an Apple Silicon Mac.",
+        } as const;
+      const vm = yield* vms.check;
+      const info = {
+        version: "unknown",
+        telemetry: null,
+        readiness: { platform: "darwin", permissions: null, mode: "isolated-vm", vm },
+      } as const;
+      return vm.leased > 0
+        ? ({ status: "running", ...info } as const)
+        : ({ status: "stopped", ...info } as const);
+    }
     if (platform !== "darwin" && platform !== "linux" && platform !== "win32")
       return { status: "unsupported", platform } as const;
     const found = yield* presence;
@@ -650,6 +711,35 @@ export const make = Effect.fn("CuaDriver.make")(function* (options?: {
     if (!supported) {
       return yield* fail(`Computer use needs a macOS, Windows, or Linux host, not ${platform}.`);
     }
+    const mode = yield* lock
+      .withPermit(syncModeUnlocked)
+      .pipe(Effect.mapError((cause) => fail(cause.detail)));
+    const vmAction =
+      input.action === "prepare-vm" ||
+      input.action === "verify-vm" ||
+      input.action === "release-vm" ||
+      input.action === "remove-vm";
+    if (mode.computerUseMacosMode === "isolated-vm" || vmAction) {
+      if (!vms || mode.computerUseMacosMode !== "isolated-vm")
+        return yield* fail("Select isolated macOS desktop on an Apple Silicon Mac first.");
+      yield* lock
+        .withPermit(
+          Effect.gen(function* () {
+            if (input.action === "install") yield* vms.install;
+            else if (input.action === "prepare-vm") yield* vms.prepare;
+            else if (input.action === "verify-vm") yield* vms.verify;
+            else if (input.action === "release-vm" || input.action === "remove-vm") {
+              yield* releaseUnlocked;
+              if (input.action === "remove-vm") yield* vms.remove;
+            } else
+              return yield* fail(
+                "Use Prepare VM, Verify VM, Release desktop, or Remove VM in isolated mode.",
+              );
+          }),
+        )
+        .pipe(Effect.mapError((cause) => fail(cause.message)));
+      return yield* status;
+    }
     const found = yield* lock.withPermit(presence);
     if (input.action === "install") {
       if (desktops) {
@@ -679,28 +769,42 @@ export const make = Effect.fn("CuaDriver.make")(function* (options?: {
         );
       }
       yield* grantPermissions;
-    } else {
+    } else if (input.action === "set-telemetry") {
       if (desktops) return yield* fail("Usage collection is disabled in Linux agent desktops.");
       yield* setTelemetry(input.enabled);
     }
     return yield* status;
   });
 
-  const call = (name: string, args: CuaArguments, threadId: ThreadId) => {
+  const call = (
+    name: string,
+    args: CuaArguments,
+    threadId: ThreadId,
+    expectedPolicy?: CuaCatalog["policy"],
+  ) => {
     const key = `thread:${threadId}`;
-    if (name === "close_desktop" && desktops) {
+    if (name === "close_desktop") {
       return lock.withPermit(
         Effect.gen(function* () {
           if (Object.keys(args).length > 0)
             return yield* new CuaDriverUnavailableError({
               detail: "close_desktop accepts no arguments.",
             });
+          yield* syncModeUnlocked;
+          const runtime = isolatedVm ? vms : desktops;
+          if (!runtime)
+            return yield* new CuaDriverUnavailableError({
+              detail: "This mode has no private desktop to discard.",
+            });
           const current = connections.get(key);
           if (current) yield* closeConnection(key, current);
-          yield* desktops
+          yield* runtime
             .close(key)
             .pipe(
-              Effect.mapError((cause) => new CuaDriverUnavailableError({ detail: cause.detail })),
+              Effect.mapError(
+                (cause: LinuxDesktop.LinuxDesktopError | MacosVm.MacosVmError) =>
+                  new CuaDriverUnavailableError({ detail: cause.message }),
+              ),
             );
           return new McpSchema.CallToolResult({
             content: [
@@ -711,8 +815,17 @@ export const make = Effect.fn("CuaDriver.make")(function* (options?: {
       );
     }
     return connected(key).pipe(
-      Effect.flatMap((current) =>
-        Effect.tryPromise({
+      Effect.flatMap((current) => {
+        // Policy was checked against the catalog. A mode switch must not deliver
+        // guest-authorized foreground input to a newly connected host transport.
+        if (expectedPolicy !== undefined && current.catalog.policy !== expectedPolicy)
+          return Effect.fail(
+            new CuaDriverUnavailableError({
+              detail:
+                "Computer-use mode changed. Refresh the tool catalog before retrying; no input was sent.",
+            }),
+          );
+        return Effect.tryPromise({
           try: (signal) =>
             current.client.callTool({ name, arguments: { ...args } }, undefined, {
               signal,
@@ -722,8 +835,8 @@ export const make = Effect.fn("CuaDriver.make")(function* (options?: {
             new CuaDriverUnavailableError({
               detail: `Cua Driver call failed: ${describeCause(cause)}`,
             }),
-        }).pipe(Effect.ensuring(touch(key, current))),
-      ),
+        }).pipe(Effect.ensuring(touch(key, current)));
+      }),
       Effect.flatMap((result) =>
         decodeCallToolResult(result).pipe(
           Effect.mapError(
@@ -740,10 +853,12 @@ export const make = Effect.fn("CuaDriver.make")(function* (options?: {
 
   // Turning agent computer use off quits the daemon at once rather than after the idle timeout.
   yield* settingsChanges.pipe(
-    Stream.map((current) => current.enableAgentComputerUse),
-    Stream.changes,
-    Stream.filter((enabled) => !enabled),
-    Stream.runForEach(() => release),
+    Stream.runForEach((current) =>
+      !current.enableAgentComputerUse ||
+      (selectedMode !== undefined && selectedMode !== current.computerUseMacosMode)
+        ? release
+        : Effect.void,
+    ),
     Effect.forkIn(scope),
   );
   yield* Effect.addFinalizer(() => release);
@@ -751,7 +866,11 @@ export const make = Effect.fn("CuaDriver.make")(function* (options?: {
   return CuaDriver.of({
     status,
     control,
-    catalog: Effect.map(connected(CONTROL_CONNECTION), ({ catalog }) => catalog),
+    catalog: (threadId) =>
+      Effect.map(
+        connected(threadId ? `thread:${threadId}` : CONTROL_CONNECTION),
+        ({ catalog }) => catalog,
+      ),
     call,
   });
 });

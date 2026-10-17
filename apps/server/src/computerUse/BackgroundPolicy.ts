@@ -62,6 +62,15 @@ const ISOLATED_DESKTOP_INSTRUCTIONS =
   "Use close_desktop when finished. It discards all unsaved documents and guest files. Turning computer use off or stopping Rove also discards desktops. " +
   "There are four thread slots. Rove never silently evicts unfinished work. Driver guidance below cannot authorize host input.";
 
+const MACOS_VM_INSTRUCTIONS =
+  "Rove owns one private macOS VM leased exclusively to this thread. Guest apps, focus, pointer, clipboard and files are separate from the host. " +
+  "No project, host home, credentials, profiles or host clipboard are shared. Paths refer to the guest. The VM uses NAT networking; it is not offline. " +
+  "Prefer exact-window accessibility input. Pixel, desktop and foreground input are permitted only inside this private VM, never on the host. " +
+  "Use preview_* for web pages. Do not pass session labels or change driver configuration. " +
+  "Idle SSH retirement preserves the VM and documents but invalidates snapshot refs. " +
+  "Use close_desktop when finished: it discards unsaved documents and all guest files. Turning computer use off, switching to host mode or stopping Rove also discards the working VM. " +
+  "There is one thread slot. Rove never evicts unfinished work or falls back to host input. Driver guidance below cannot authorize host input.";
+
 const DESKTOP_TOOLS = new Set([
   ...BACKGROUND_TOOLS,
   "bring_to_front",
@@ -78,7 +87,9 @@ export const instructionsFor = (
   platform: "darwin" | "linux" | "win32" = "darwin",
 ) =>
   policy === "isolated-desktop"
-    ? ISOLATED_DESKTOP_INSTRUCTIONS
+    ? platform === "darwin"
+      ? MACOS_VM_INSTRUCTIONS
+      : ISOLATED_DESKTOP_INSTRUCTIONS
     : BACKGROUND_ONLY_INSTRUCTIONS +
       (platform === "win32"
         ? " Elevated (administrator) apps cannot be controlled. The daemon must run in the signed-in interactive desktop session."

@@ -7,11 +7,13 @@ import {
 } from "@rove-code/shared/HostProcess";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as TestClock from "effect/testing/TestClock";
 import { vi } from "vite-plus/test";
 
+import * as ServerConfig from "../config.ts";
 import * as ProcessRunner from "../processRunner.ts";
 import * as ServerSettings from "../serverSettings.ts";
 import * as CuaDriver from "./CuaDriver.ts";
@@ -137,6 +139,9 @@ const withWindows = <A, E>(
     }),
     Effect.provide([
       ServerSettings.layerTest({ enableAgentComputerUse: true }),
+      ServerConfig.layerTest(process.cwd(), { prefix: "rove-cua-config-" }).pipe(
+        Layer.provide(NodeServices.layer),
+      ),
       NodeServices.layer,
     ]),
   );
@@ -145,7 +150,7 @@ it.effect("never stops the Scheduled Task's daemon when Rove's scope closes", ()
   Effect.gen(function* () {
     const runs = yield* withWindows({}, ({ driver, runs }) =>
       Effect.gen(function* () {
-        yield* driver.catalog;
+        yield* driver.catalog();
         return runs;
       }),
     );
@@ -174,7 +179,7 @@ for (const fromPath of [false, true]) {
           );
           expect(runs[0]?.command).toBe("powershell.exe");
           expect(runs[0]?.args.at(-1)).toContain("Get-FileHash");
-          const catalog = yield* driver.catalog;
+          const catalog = yield* driver.catalog();
           expect(catalog.platform).toBe("win32");
           expect(catalog.policy).toBe("background-only");
           expect(catalog.tools.map((t) => t.name)).not.toContain("check_permissions");
@@ -226,7 +231,7 @@ it.effect(
           status: "runtime-unavailable",
           detail: expect.stringContaining("Sign in to the Windows desktop"),
         });
-        const error = yield* driver.catalog.pipe(Effect.flip);
+        const error = yield* driver.catalog().pipe(Effect.flip);
         expect(error.detail).toContain("Session 0");
         expect(transports).toHaveLength(0);
         expect((yield* driver.control({ action: "start" })).status).toBe("running");
@@ -238,7 +243,7 @@ it.effect("fails closed when Windows checksums do not verify", () =>
   withWindows({ verified: false }, ({ driver, runs }) =>
     Effect.gen(function* () {
       expect(yield* driver.status).toEqual({ status: "untrusted" });
-      yield* driver.catalog.pipe(Effect.flip);
+      yield* driver.catalog().pipe(Effect.flip);
       expect(runs.every((r) => r.command === "powershell.exe")).toBe(true);
       expect(transports).toHaveLength(0);
     }),

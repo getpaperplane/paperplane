@@ -1,13 +1,32 @@
 import * as Schema from "effect/Schema";
 import { describe, expect, it } from "@effect/vitest";
 
-import { ComputerUseStatus } from "./computerUse.ts";
+import { ComputerUseStatus, ComputerUseControlInput } from "./computerUse.ts";
 
 const decode = Schema.decodeUnknownSync(ComputerUseStatus);
 
 const installed = { status: "running", version: "1.2.3", telemetry: false };
 
 describe("computer use status", () => {
+  it("carries opt-in macOS VM setup without changing host readiness", () => {
+    const vm = {
+      state: "needs-consent",
+      leased: 0,
+      capacity: 1,
+      owners: [],
+      installCommand: "install lume",
+      requiredDiskBytes: 150_000_000_000,
+      setupCommand: "public key setup",
+    };
+    const status = {
+      ...installed,
+      readiness: { platform: "darwin", permissions: null, mode: "isolated-vm", vm },
+    };
+    expect(decode(status)).toEqual(status);
+    const control = Schema.decodeUnknownSync(ComputerUseControlInput);
+    for (const action of ["prepare-vm", "verify-vm", "release-vm", "remove-vm"])
+      expect(control({ action })).toEqual({ action });
+  });
   it("distinguishes runtime setup from image preparation and validates slot counts", () => {
     expect(decode({ status: "runtime-unavailable", detail: "Podman unavailable" })).toEqual({
       status: "runtime-unavailable",

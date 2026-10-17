@@ -7,6 +7,7 @@ import * as Layer from "effect/Layer";
 import * as Schema from "effect/Schema";
 import { McpSchema, McpServer } from "effect/ai";
 
+import * as ServerConfig from "../../../config.ts";
 import * as CuaDriver from "../../../computerUse/CuaDriver.ts";
 import * as ServerSettings from "../../../serverSettings.ts";
 import * as McpInvocationContext from "../../McpInvocationContext.ts";
@@ -73,6 +74,7 @@ it.live.skipIf(
           Layer.provide(McpToolAccessTestkit.liveThreadsLayer),
           Layer.provide(CuaDriver.layer),
           Layer.provide(ServerSettings.layerTest({ enableAgentComputerUse: true })),
+          Layer.provide(ServerConfig.layerTest(process.cwd(), { prefix: "rove-cua-native-" })),
           Layer.provide(NodeServices.layer),
         ),
       ),

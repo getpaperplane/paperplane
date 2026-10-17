@@ -112,7 +112,10 @@ const make = Effect.gen(function* () {
   return {
     computer_describe: McpToolAccess.readsAsCaller((input) =>
       whenEnabled(
-        driver.catalog.pipe(
+        Effect.gen(function* () {
+          const scope = yield* McpInvocationContext.McpInvocationContext;
+          return yield* driver.catalog(scope.thread?.threadId);
+        }).pipe(
           Effect.map((catalog) => {
             const instructions = instructionsFor(catalog.policy, catalog.platform);
             if (input.tool == null) {
@@ -152,7 +155,7 @@ const make = Effect.gen(function* () {
         Effect.gen(function* () {
           const scope = yield* McpInvocationContext.McpInvocationContext;
           const invocation = yield* McpInvocationContext.requireThreadScope(scope, "Computer use");
-          const catalog = yield* driver.catalog;
+          const catalog = yield* driver.catalog(invocation.thread.threadId);
           const tool = catalog.tools.find((candidate) => candidate.name === input.tool);
           if (!tool)
             return textResult(
@@ -175,7 +178,7 @@ const make = Effect.gen(function* () {
             args = decision.args;
           }
           const result = yield* driver
-            .call(tool.name, args, invocation.thread.threadId)
+            .call(tool.name, args, invocation.thread.threadId, catalog.policy)
             .pipe(Effect.map(withStructuredText));
           if (catalog.policy !== "background-only" || (catalog.platform ?? "darwin") !== "darwin")
             return result;

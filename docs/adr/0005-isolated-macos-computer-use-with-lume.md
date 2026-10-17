@@ -1,6 +1,6 @@
 # Isolated macOS computer use uses a leased Lume VM
 
-Status: Proposed.
+Status: Accepted.
 
 Linux computer use already runs in a per-thread private rootless-Podman desktop.
 macOS instead drives host windows under the background-only policy. That protects
@@ -22,9 +22,14 @@ transport over SSH, following Cua's [VM and remote guide](https://cua.ai/docs/cu
 ssh -T lume@<ip> /Users/lume/.local/bin/cua-driver mcp
 ```
 
-Rove generates a dedicated SSH key, keeps the private key on the host, and copies
-only the public key into the guest. The guest uses the existing
-`isolated-desktop` policy: foreground and pixel input are permitted there, never
+Rove generates a dedicated SSH key under its environment state directory and keeps
+the private key on the host. Settings returns the exact public-key authorization
+command for the user to run inside the guest display. Lume's documented `ssh` and
+`cp` commands automate password SSH, not a separate guest-exec channel; Rove does
+not use the image's default password non-interactively. Each environment uses an
+explicit, private Lume storage directory to avoid colliding with other servers.
+The guest uses the existing `isolated-desktop` policy: foreground and pixel input
+are permitted there, never
 on the host. Policy guidance must describe the actual guest rather than assume
 Linux tools, four slots, or an offline transport. No project, host home,
 credentials, or host clipboard is shared by default, matching Linux isolation.
@@ -32,28 +37,37 @@ credentials, or host clipboard is shared by default, matching Linux isolation.
 Use one prepared golden VM per environment and, by default, one working VM with
 an exclusive per-thread lease, not a VM for every thread. Reset the working VM
 from the stopped golden image with `lume clone` between leases so guest files do
-not leak to the next thread. Optional capacity may reach two running macOS VMs,
-never more: Apple's limit is two concurrent macOS guests per host, including
-those outside Rove. Refuse acquisition when capacity is occupied; never evict
+not leak to the next thread. Capacity is fixed at one working VM for now. Any
+future increase must respect Apple's limit of two concurrent macOS guests per host, including those outside
+Rove. Refuse acquisition when capacity is occupied; never evict
 unfinished work or fall back to host input. Idle SSH retirement preserves the
 lease and documents. Explicit `close_desktop` releases and discards the working
-VM, like Linux; disabling computer use or stopping Rove releases owned leases.
+VM, like Linux; disabling computer use, switching to host mode or stopping Rove
+releases owned leases.
 
 ## Consequences
 
 First-run consent requires the user in the VM display, not SSH: Accessibility,
 Screen Recording, automation of System Events, and direct screen capture must
-all be approved and verified before sealing the golden image. `lume clone`
-preserves these TCC grants only while `CuaDriver.app` retains its release signing
+all be approved. The setup commands exercise app listing and direct capture;
+the user reruns both until they finish without prompts. Verification checks
+`permissions status --json` over key-only SSH for Accessibility, Screen Recording
+and `source.attribution: "driver-daemon"` before stopping and sealing the image.
+Those status flags do not independently attest System Events or direct-capture
+consent. Preparation uses the VNC display: Lume's native viewer automatically
+shares the host clipboard. Working VMs run detached with no display or VNC
+listener. `lume clone` preserves these TCC grants only while `CuaDriver.app` retains its release signing
 identity; an ad-hoc build requires fresh consent. Keep the golden image free of
 personal files, tokens, and private keys. Clone support is not permission bypass.
 
 macOS guests cost substantially more disk and RAM than Linux containers. Published
 images use roughly 150 GB sparse disks; allocated disk usage can grow and each
-running guest reserves RAM. Settings must show required/free disk space, actual
-allocated storage versus virtual disk size, configured guest RAM, and lease
-owner/capacity before provisioning and while in use, with explicit release and
-image removal. Guest unavailability is a visible failure, not host escalation.
+running guest reserves RAM. Settings must show approximate required disk space
+and free space before provisioning. Once the image exists, it also reports actual allocated storage
+versus virtual disk size, configured guest RAM, and lease owner/capacity, with
+explicit release and image removal. The Lume image cache is not removed by VM
+removal; `lume prune` is a separate user decision. Guest unavailability is a
+visible failure, not host escalation.
 
 ## Rejected alternatives
 

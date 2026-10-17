@@ -27,6 +27,17 @@ it("gives platform-specific background guidance", () => {
   expect(instructionsFor("isolated-desktop", "linux")).toContain("private, offline Linux desktop");
 });
 
+it("describes the actual macOS guest and never promises Linux tools or offline networking", () => {
+  const instructions = instructionsFor("isolated-desktop", "darwin");
+  expect(instructions).toContain("private macOS VM");
+  expect(instructions).toContain("one thread slot");
+  expect(instructions).toContain("NAT networking");
+  expect(instructions).toContain("close_desktop");
+  expect(instructions).toContain("No project, host home");
+  expect(instructions).not.toContain("Mousepad");
+  expect(instructions).not.toContain("four thread slots");
+});
+
 const off = { allowPixelInput: false };
 const on = { allowPixelInput: true };
 const windowTarget = { kind: "window", pid: 4, window_id: 42 };

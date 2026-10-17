@@ -26,6 +26,19 @@ const decodeClaudeSettings = Schema.decodeUnknownSync(ClaudeSettings);
 const decodePiSettings = Schema.decodeUnknownSync(PiSettings);
 const encodePiSettings = Schema.encodeSync(PiSettings);
 
+describe("ServerSettings macOS computer use mode", () => {
+  it("keeps existing environments on the host and round-trips an opt-in", () => {
+    expect(decodeServerSettings({}).computerUseMacosMode).toBe("host");
+    expect(DEFAULT_SERVER_SETTINGS.computerUseMacosMode).toBe("host");
+    for (const computerUseMacosMode of ["host", "isolated-vm"]) {
+      const preference = { computerUseMacosMode };
+      expect(decodeServerSettingsPatch(preference)).toEqual(preference);
+      expect(encodeServerSettings(decodeServerSettings(preference))).toMatchObject(preference);
+    }
+    expect(() => decodeServerSettingsPatch({ computerUseMacosMode: "vm" })).toThrow();
+  });
+});
+
 describe("ServerSettings computer use pixel input", () => {
   it("defaults existing installations to pixel input off", () => {
     expect(decodeServerSettings({}).computerUseAllowPixelInput).toBe(false);
