@@ -3,6 +3,7 @@ import {
   isAtomCommandInterrupted,
   squashAtomCommandFailure,
 } from "@rove-code/client-runtime/state/runtime";
+import * as Schema from "effect/Schema";
 import { CheckIcon, ChevronRightIcon, CopyIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
@@ -33,6 +34,8 @@ import { useSettingsScope } from "./SettingsScopeContext";
 import { useScopedSettings, useUpdateScopedSettings } from "./useScopedSettings";
 
 type Action = ComputerUseControlInput["action"];
+
+const isControlError = Schema.is(ComputerUseControlError);
 
 const PENDING_LABELS = {
   install: "Installing…",
@@ -107,7 +110,7 @@ export function ComputerUseSettings() {
           type: "error",
           title: controlFailureTitle(input.action),
           description:
-            error instanceof ComputerUseControlError && error.detail.length > 0
+            isControlError(error) && error.detail.length > 0
               ? error.detail
               : error instanceof Error
                 ? error.message
