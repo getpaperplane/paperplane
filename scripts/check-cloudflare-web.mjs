@@ -39,7 +39,7 @@ export async function checkDeployedProjectFileSchema(
   expectedSchema = buildRoveProjectFileJsonSchema(),
 ) {
   const url = new URL("/schema/rove.json", origin);
-  // A new custom domain can take time to resolve after Wrangler reports success.
+  // DNS and schema content can take time to propagate after Wrangler reports success.
   for (let attempt = 1; attempt <= DEPLOY_CHECK_ATTEMPTS; attempt++) {
     let failure;
     const signal = AbortSignal.timeout(10_000);
@@ -63,6 +63,7 @@ export async function checkDeployedProjectFileSchema(
       }
     } catch (error) {
       if (
+        !(error instanceof NodeAssert.AssertionError) &&
         error.name !== "TimeoutError" &&
         !(signal.aborted && signal.reason?.name === "TimeoutError") &&
         !RETRYABLE_NETWORK_CODES.has(error.cause?.code)
@@ -74,7 +75,7 @@ export async function checkDeployedProjectFileSchema(
     if (attempt === DEPLOY_CHECK_ATTEMPTS) throw failure;
     const retryDelay = Math.min(5_000 * 2 ** (attempt - 1), 30_000);
     console.warn(
-      `Schema check attempt ${attempt}/${DEPLOY_CHECK_ATTEMPTS} failed: ${failure.cause?.code ?? failure.message}. Retrying in ${retryDelay / 1_000}s.`,
+      `Schema check attempt ${attempt}/${DEPLOY_CHECK_ATTEMPTS} failed: ${failure instanceof NodeAssert.AssertionError ? "served schema does not match yet" : (failure.cause?.code ?? failure.message)}. Retrying in ${retryDelay / 1_000}s.`,
     );
     await new Promise((resolve) => setTimeout(resolve, retryDelay));
   }
