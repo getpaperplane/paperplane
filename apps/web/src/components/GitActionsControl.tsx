@@ -108,6 +108,10 @@ import { useAtomCommand } from "~/state/use-atom-command";
 import { vcsActionManager, vcsEnvironment } from "~/state/vcs";
 import { randomUUID } from "~/lib/utils";
 import { resolvePathLinkTarget } from "@rove-code/shared/fileLinks";
+import {
+  linkedPullRequestContextOf,
+  resolveThreadCurrentPullRequestLink,
+} from "@rove-code/shared/threadPullRequests";
 import { type DraftId, useComposerDraftStore } from "~/composerDraftStore";
 import {
   THREAD_DETAILS_PANEL_CHEVRON_CLASS,
@@ -1192,14 +1196,29 @@ export default function GitActionsControl({
     return gitStatusForActions?.isDefaultRef ?? false;
   }, [gitStatusForActions?.isDefaultRef]);
 
+  const activeThreadPullRequests = activeServerThread?.pullRequests;
+  const linkedPr = useMemo(
+    () =>
+      linkedPullRequestContextOf(
+        resolveThreadCurrentPullRequestLink(activeThreadPullRequests ?? []),
+      ),
+    [activeThreadPullRequests],
+  );
+
   const gitActionMenuItems = useMemo(
-    () => buildMenuItems(gitStatusForActions, isGitActionRunning, hasPrimaryRemote),
-    [gitStatusForActions, hasPrimaryRemote, isGitActionRunning],
+    () => buildMenuItems(gitStatusForActions, isGitActionRunning, hasPrimaryRemote, linkedPr),
+    [gitStatusForActions, hasPrimaryRemote, isGitActionRunning, linkedPr],
   );
   const quickAction = useMemo(
     () =>
-      resolveQuickAction(gitStatusForActions, isGitActionRunning, isDefaultRef, hasPrimaryRemote),
-    [gitStatusForActions, hasPrimaryRemote, isDefaultRef, isGitActionRunning],
+      resolveQuickAction(
+        gitStatusForActions,
+        isGitActionRunning,
+        isDefaultRef,
+        hasPrimaryRemote,
+        linkedPr,
+      ),
+    [gitStatusForActions, hasPrimaryRemote, isDefaultRef, isGitActionRunning, linkedPr],
   );
   const quickActionDisabledReason = !canWriteSourceControl
     ? "This connection cannot change source control."

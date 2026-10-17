@@ -27,6 +27,7 @@ import {
   type TerminalMenuSession,
 } from "../terminal/terminalMenu";
 import { projectScriptMenuLabel } from "@rove-code/shared/projectScripts";
+import type { LinkedPullRequestContext } from "@rove-code/shared/threadPullRequests";
 
 function truncateMiddle(value: string, maxLength: number): string {
   if (value.length <= maxLength) {
@@ -89,6 +90,8 @@ export type ThreadGitMenuProps = {
   readonly currentBranch: string | null;
   readonly gitStatus: VcsStatusResult | null;
   readonly gitOperationLabel: string | null;
+  /** The thread's current linked PR; keeps the quick action from offering a duplicate PR. */
+  readonly linkedPr?: LinkedPullRequestContext | null;
   readonly onOpenFilesInspector?: () => void;
   readonly onOpenGitInspector?: () => void;
   /** Present only on a thread whose work can be merged into the one it came from. */
@@ -140,7 +143,13 @@ function useThreadGitControlModel(props: ThreadGitMenuProps) {
         hint: "This workspace is not a git repository.",
       };
     }
-    const action = resolveQuickAction(gitStatus, busy, isDefaultRef, hasPrimaryRemote);
+    const action = resolveQuickAction(
+      gitStatus,
+      busy,
+      isDefaultRef,
+      hasPrimaryRemote,
+      props.linkedPr,
+    );
     return !canWriteSourceControl && (action.kind === "run_pull" || action.kind === "run_action")
       ? {
           ...action,
