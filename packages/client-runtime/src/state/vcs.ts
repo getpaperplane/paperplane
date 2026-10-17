@@ -334,7 +334,8 @@ export function createVcsEnvironmentAtoms<R, E>(
       label: "environment-data:vcs:refresh-status",
       tag: WS_METHODS.vcsRefreshStatus,
       scheduler: vcsCommandScheduler,
-      concurrency: vcsCommandConcurrency,
+      // Queued focus refreshes behind a running scan collapse into one follow-up scan.
+      concurrency: { ...vcsCommandConcurrency, coalesceKey: WS_METHODS.vcsRefreshStatus },
       onSettled: invalidateRefs,
     }),
     createWorktree: createEnvironmentRpcCommand(runtime, {

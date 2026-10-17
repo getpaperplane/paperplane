@@ -115,17 +115,38 @@ export type AtomCommandConcurrency<W> =
   | { readonly mode: "parallel" }
   | {
       /**
-       * `serial` preserves every invocation in FIFO order, `singleFlight` shares an active
-       * invocation, and `latest` coalesces queued invocations to the newest input.
+       * `singleFlight` shares an active invocation, and `latest` coalesces queued invocations
+       * to the newest input.
        */
-      readonly mode: "serial" | "singleFlight" | "latest";
+      readonly mode: "singleFlight" | "latest";
       readonly key: (input: W) => string;
+    }
+  | {
+      /** `serial` preserves every invocation in FIFO order. */
+      readonly mode: "serial";
+      readonly key: (input: W) => string;
+      /**
+       * Adjacent, not-yet-started invocations in the same lane that share this key collapse into
+       * one run using the newest `execute`. A different command in between, or a run that has
+       * already started, is never merged, so mutation ordering and fresh-scan semantics hold.
+       * Use a command-specific key: callers sharing it must have the same result type.
+       */
+      readonly coalesceKey?: string;
     };
 
 interface AtomCommandSchedulerState {
-  readonly serial: Map<string, Promise<unknown>>;
+  readonly serial: Map<string, AtomCommandSerialTail>;
   readonly singleFlight: Map<string, Promise<unknown>>;
   readonly latest: Map<string, AtomCommandLatestLane>;
+}
+
+interface AtomCommandSerialTail {
+  readonly result: Promise<unknown>;
+  readonly batch: {
+    execute: () => Promise<AtomCommandResult<unknown, unknown>>;
+    started: boolean;
+    readonly coalesceKey: string | undefined;
+  };
 }
 
 interface AtomCommandLatestBatch {
@@ -212,21 +233,35 @@ export function createAtomCommandScheduler(): AtomCommandScheduler {
       }
 
       if (concurrency.mode === "serial") {
-        const previous = state.serial.get(key);
-        const current = previous === undefined ? execute() : previous.then(execute, execute);
-        state.serial.set(key, current);
-        void current.then(
-          () => {
-            if (state.serial.get(key) === current) {
-              state.serial.delete(key);
-            }
-          },
-          () => {
-            if (state.serial.get(key) === current) {
-              state.serial.delete(key);
-            }
-          },
-        );
+        const tail = state.serial.get(key);
+        const coalesceKey = concurrency.coalesceKey;
+        if (
+          tail !== undefined &&
+          coalesceKey !== undefined &&
+          tail.batch.coalesceKey === coalesceKey &&
+          !tail.batch.started
+        ) {
+          tail.batch.execute = execute;
+          // SAFETY: matching command-specific coalesce keys identify the same result type.
+          return tail.result as Promise<AtomCommandResult<A, E>>;
+        }
+        const batch = {
+          execute,
+          started: false,
+          coalesceKey,
+        };
+        const run = () => {
+          batch.started = true;
+          return batch.execute();
+        };
+        const current = tail === undefined ? run() : tail.result.then(run, run);
+        state.serial.set(key, { result: current, batch });
+        const release = () => {
+          if (state.serial.get(key)?.result === current) {
+            state.serial.delete(key);
+          }
+        };
+        void current.then(release, release);
         return current;
       }
 

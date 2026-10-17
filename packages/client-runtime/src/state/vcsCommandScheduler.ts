@@ -4,10 +4,10 @@ import { createAtomCommandScheduler, type AtomCommandConcurrency } from "./runti
 
 export const vcsCommandScheduler = createAtomCommandScheduler();
 
-export const vcsCommandConcurrency: AtomCommandConcurrency<{
-  readonly environmentId: EnvironmentId;
-  readonly input: { readonly cwd: string };
-}> = {
+export const vcsCommandConcurrency = {
   mode: "serial",
   key: ({ environmentId, input }) => JSON.stringify([environmentId, input.cwd]),
-};
+} as const satisfies AtomCommandConcurrency<{
+  readonly environmentId: EnvironmentId;
+  readonly input: { readonly cwd: string };
+}>;
