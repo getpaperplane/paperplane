@@ -135,7 +135,7 @@ export function describeVm(vm: ComputerUseMacosVm): string {
       return `Download Cua's macOS image (about ${Math.round(vm.requiredDiskBytes / 1e9)} GB on disk${free}) and open it so you can approve permissions.`;
     }
     case "needs-consent":
-      return "Rove installs the driver automatically. Open the VM, approve the permission prompts, then select Verify. If setup did not complete or prompts are missing, use Manual setup in the VM's Terminal.";
+      return "Open the VM and approve the permission prompts, then select Verify. Rove installed the driver automatically.";
     case "ready": {
       const owners = vm.owners.length === 0 ? "" : ` by ${vm.owners.join(", ")}`;
       const disk =
@@ -147,10 +147,41 @@ export function describeVm(vm: ComputerUseMacosVm): string {
   }
 }
 
+const REMOVE_VM: VmAction = { input: { action: "remove-vm" }, label: "Remove VM" };
+
+/** Remove is an escape hatch for a reset, so it never leads the action list. */
+export function isRemoveAction(input: ComputerUseControlInput): boolean {
+  return input.action === "remove-vm";
+}
+
+/** Toast title when a control action fails. */
+export function controlFailureTitle(action: ComputerUseControlInput["action"]): string {
+  switch (action) {
+    case "install":
+      return "Couldn't install";
+    case "start":
+      return "Couldn't check Cua Driver";
+    case "grant-permissions":
+      return "Couldn't grant permissions";
+    case "set-telemetry":
+      return "Couldn't save the setting";
+    case "prepare-vm":
+      return "Couldn't prepare the VM";
+    case "verify-vm":
+      return "Couldn't verify the VM";
+    case "open-vm-display":
+      return "Couldn't open the VM";
+    case "release-vm":
+      return "Couldn't release the VM";
+    case "remove-vm":
+      return "Couldn't remove the VM";
+  }
+}
+
 export function vmActions(vm: ComputerUseMacosVm): VmAction[] {
   switch (vm.state) {
     case "unavailable":
-      return [];
+      return vm.lumeVersion === undefined ? [] : [REMOVE_VM];
     case "missing-lume":
       return [{ input: { action: "install" }, label: "Install Lume" }];
     case "needs-image":
@@ -159,13 +190,14 @@ export function vmActions(vm: ComputerUseMacosVm): VmAction[] {
       return [
         { input: { action: "open-vm-display" }, label: "Open VM" },
         { input: { action: "verify-vm" }, label: "Verify" },
+        REMOVE_VM,
       ];
     case "ready":
       return [
         ...(vm.leased > 0
           ? [{ input: { action: "release-vm" as const }, label: "Release VM" }]
           : []),
-        { input: { action: "remove-vm" }, label: "Remove VM" },
+        REMOVE_VM,
       ];
   }
 }

@@ -83,13 +83,13 @@ export class MacosVmError extends Schema.TaggedError<MacosVmError>()("MacosVmErr
       case "ownership":
         return "Another Rove server owns these VMs, or ownership cannot be verified. Nothing was removed.";
       case "consent":
-        return "The VM needs consent. Open the VM, approve the permission prompts, then verify again. If setup did not complete or prompts are missing, use Manual setup in the VM's Terminal. The driver daemon must report Accessibility and Screen Recording grants.";
+        return "The VM hasn't granted Accessibility and Screen Recording yet. Open the VM, approve the prompts (or run Manual setup in its Terminal), then verify again.";
       case "capacity":
         return "The private macOS VM slot is occupied. Use close_desktop in the finished thread or Release desktop in Settings. Rove never evicts work or falls back to the host.";
       case "not-ready":
         return "Prepare and verify the isolated macOS desktop in Settings before using it. No host input was sent.";
       case "display":
-        return "Open VM display requires a running golden VM awaiting consent and a valid vnc:// URL on loopback or the Lume NAT network (192.168.64.0/24).";
+        return "Couldn't open the VM display. The VM didn't start or Lume didn't report a local VNC address. Try again, or remove the VM and prepare it again.";
       case "runtime":
         return "The Lume VM operation failed. Check Lume, available disk/RAM and Apple's two-guest host limit. No host input was sent.";
     }
@@ -260,6 +260,36 @@ export const make = Effect.fn("MacosVm.make")(function* (options?: { readonly ar
       yield* saveOwner;
     }
   }).pipe(Effect.mapError(wrap));
+  const bootGolden = Effect.gen(function* () {
+    preparing = true;
+    yield* saveOwner;
+    if ((yield* get(GOLDEN)).status === "running") return;
+    // VNC needs explicit SSH clipboard sync for the manual setup fallback.
+    yield* lume([
+      "run",
+      GOLDEN,
+      "--storage",
+      storage,
+      "--detach",
+      "--display",
+      "vnc",
+      "--clipboard",
+      "--network",
+      "nat",
+    ]);
+  });
+  const displayAddress = Effect.gen(function* () {
+    while (true) {
+      const vm = yield* get(GOLDEN);
+      if (vm.status === "running" && vm.vncUrl) return vm.vncUrl;
+      yield* Effect.sleep("1 second");
+    }
+  }).pipe(
+    Effect.timeoutOrElse({
+      duration: "2 minutes",
+      orElse: () => Effect.fail(new MacosVmError({ reason: "display" })),
+    }),
+  );
   const ssh = (ip: string, args: ReadonlyArray<string>): Transport => ({
     command: "/usr/bin/ssh",
     args: [
@@ -385,9 +415,11 @@ export const make = Effect.fn("MacosVm.make")(function* (options?: { readonly ar
   const openDisplay = Effect.gen(function* () {
     if ((yield* check).state !== "needs-consent")
       return yield* new MacosVmError({ reason: "display" });
-    const vm = yield* get(GOLDEN);
+    yield* claim;
+    yield* bootGolden;
+    const vncUrl = yield* displayAddress;
     const url = yield* Effect.try({
-      try: () => new URL(vm.vncUrl ?? ""),
+      try: () => new URL(vncUrl),
       catch: () => new MacosVmError({ reason: "display" }),
     });
     const host = url.hostname;
@@ -395,13 +427,17 @@ export const make = Effect.fn("MacosVm.make")(function* (options?: { readonly ar
       host === "localhost" ||
       host === "[::1]" ||
       (NodeNet.isIP(host) === 4 && (host.startsWith("127.") || host.startsWith("192.168.64.")));
-    if (vm.status !== "running" || url.protocol !== "vnc:" || !local)
-      return yield* new MacosVmError({ reason: "display" });
+    if (url.protocol !== "vnc:" || !local) return yield* new MacosVmError({ reason: "display" });
     // Keep credentials on the host; never include the URL or process failure in RPC errors.
-    yield* checked("/usr/bin/open", [vm.vncUrl!]).pipe(
-      Effect.mapError(() => new MacosVmError({ reason: "display" })),
-    );
-  });
+    yield* checked("/usr/bin/open", [vncUrl]);
+  }).pipe(
+    // Ownership is actionable; anything else may carry the credentialed URL, so it stays generic.
+    Effect.mapError((cause) =>
+      Schema.is(MacosVmError)(cause) && cause.reason === "ownership"
+        ? cause
+        : new MacosVmError({ reason: "display" }),
+    ),
+  );
   const prepare = Effect.gen(function* () {
     yield* claim;
     if (leaseKey) return yield* new MacosVmError({ reason: "capacity" });
@@ -421,22 +457,7 @@ export const make = Effect.fn("MacosVm.make")(function* (options?: { readonly ar
     yield* fs.remove(sealedPath, { force: true });
     if (!(yield* list).some((vm) => vm.name === GOLDEN))
       yield* lume(["pull", IMAGE, GOLDEN, "--storage", storage], "60 minutes");
-    preparing = true;
-    yield* saveOwner;
-    yield* stop(GOLDEN);
-    // VNC needs explicit SSH clipboard sync for the manual setup fallback.
-    yield* lume([
-      "run",
-      GOLDEN,
-      "--storage",
-      storage,
-      "--detach",
-      "--display",
-      "vnc",
-      "--clipboard",
-      "--network",
-      "nat",
-    ]);
+    yield* bootGolden;
     yield* Effect.gen(function* () {
       yield* address(GOLDEN);
       // Lume 0.6.1 joins command argv with spaces. Pass one shell script unchanged;
@@ -456,6 +477,7 @@ export const make = Effect.fn("MacosVm.make")(function* (options?: { readonly ar
   const verify = Effect.gen(function* () {
     yield* claim;
     if (leaseKey) return yield* new MacosVmError({ reason: "capacity" });
+    if (!(yield* fs.exists(sealedPath))) yield* bootGolden;
     const transport = ssh(yield* address(GOLDEN), ["permissions", "status", "--json"]);
     const result = yield* run(transport.command, transport.args);
     if (result.code !== 0 || Option.isNone(decodeConsent(result.stdout)))

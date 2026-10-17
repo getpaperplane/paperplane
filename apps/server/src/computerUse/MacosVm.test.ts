@@ -105,6 +105,7 @@ const harness = <A, E>(
     setIp: (value: string | null) => void;
     setSetupExitCode: (value: number) => void;
     waitForBoot: Effect.Effect<void>;
+    waitForDisplay: Effect.Effect<void>;
     processes: Map<number, string>;
     change: (patch: Partial<Settings>) => Effect.Effect<void>;
   }) => Effect.Effect<
@@ -122,6 +123,7 @@ const harness = <A, E>(
     yield* fs.writeFileString(bin, "fake");
     const vms = new Map<string, Vm>();
     const bootRequested = yield* Deferred.make<void>();
+    const displayRequested = yield* Deferred.make<void>();
     const runs: Array<ProcessRunner.ProcessRunInput> = [];
     const processes = new Map([[process.pid, "today\n"]]);
     let ip: string | null = "192.168.64.2";
@@ -167,6 +169,12 @@ const harness = <A, E>(
             case "ssh":
               return output("", setupExitCode);
             case "get":
+              if (
+                args[1] === golden &&
+                vms.get(golden)?.status === "running" &&
+                !vms.get(golden)?.vncUrl
+              )
+                yield* Deferred.succeed(displayRequested, undefined);
               if (args[1] === work && ip === null)
                 yield* Deferred.succeed(bootRequested, undefined);
               return output(json(vms.has(args[1]!) ? [vms.get(args[1]!)] : []));
@@ -232,6 +240,7 @@ const harness = <A, E>(
       stateDir,
       processes,
       waitForBoot: Deferred.await(bootRequested),
+      waitForDisplay: Deferred.await(displayRequested),
       setConsent: (value) => {
         consent = value;
       },
@@ -340,33 +349,34 @@ it.effect("installs Lume only on explicit control and never falls back to the ho
   ),
 );
 
-it.effect("opens the credentialed display only for a running golden VM awaiting consent", () =>
+it.effect("boots and opens the credentialed display only for a golden VM awaiting consent", () =>
   harness(({ runtime, vms, runs }) =>
     Effect.gen(function* () {
       expect((yield* runtime.openDisplay.pipe(Effect.flip)).reason).toBe("display");
       const vm = record(golden);
       vm.vncUrl = "vnc://user:secret@127.0.0.1:5900?password=secret#secret";
       vms.set(golden, vm);
-      expect((yield* runtime.openDisplay.pipe(Effect.flip)).reason).toBe("display");
-      vm.status = "running";
       yield* runtime.openDisplay;
+      expect(vm.status).toBe("running");
+      expect(runs.filter((run) => run.args[0] === "run")).toHaveLength(1);
       expect(runs.filter((run) => run.command === "/usr/bin/open")).toMatchObject([
         { args: [vm.vncUrl] },
       ]);
       expect(yield* runtime.check).not.toHaveProperty("displayUrl");
       for (const url of [
-        undefined,
-        null,
         "invalid",
         "https://127.0.0.1",
         "vnc://example.com",
         "vnc://192.168.65.2",
         "vnc://192.168.64.2.evil.test",
       ]) {
-        if (url === undefined) delete vm.vncUrl;
-        else vm.vncUrl = url;
-        expect((yield* runtime.openDisplay.pipe(Effect.flip)).reason).toBe("display");
+        vm.vncUrl = url;
+        const error = yield* runtime.openDisplay.pipe(Effect.flip);
+        expect(error.reason).toBe("display");
+        expect(error).not.toHaveProperty("cause");
+        expect(error.message).not.toContain("secret");
       }
+      expect(runs.filter((run) => run.args[0] === "run")).toHaveLength(1);
       expect(runs.filter((run) => run.command === "/usr/bin/open")).toHaveLength(1);
       for (const host of ["localhost", "[::1]", "127.0.0.2", "192.168.64.2"]) {
         vm.vncUrl = `vnc://:secret@${host}:5900`;
@@ -381,6 +391,89 @@ it.effect("opens the credentialed display only for a running golden VM awaiting 
     }),
   ),
 );
+
+for (const vncUrl of [undefined, null]) {
+  it.effect(`bounds the display wait when Lume reports ${vncUrl}`, () =>
+    harness(({ runtime, vms, runs, waitForDisplay }) =>
+      Effect.gen(function* () {
+        vms.set(golden, { ...record(golden), ...(vncUrl === null ? { vncUrl } : {}) });
+        const opening = yield* runtime.openDisplay.pipe(Effect.flip, Effect.forkChild);
+        yield* waitForDisplay;
+        yield* TestClock.adjust("2 minutes");
+        const error = yield* Fiber.join(opening);
+        expect(error.reason).toBe("display");
+        expect(error).not.toHaveProperty("cause");
+        expect(runs.some((run) => run.command === "/usr/bin/open")).toBe(false);
+        yield* runtime.release;
+      }),
+    ),
+  );
+}
+
+it.effect(
+  "waits for Lume to publish the golden display after boot and records crash ownership",
+  () =>
+    harness(({ runtime, vms, runs, stateDir, waitForDisplay }) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const vm = record(golden);
+        vms.set(golden, vm);
+        const opening = yield* runtime.openDisplay.pipe(Effect.forkChild);
+        yield* waitForDisplay;
+        expect(runs.some((run) => run.command === "/usr/bin/open")).toBe(false);
+        expect(
+          JSON.parse(yield* fs.readFileString(`${stateDir}/computer-use/macos/owner.json`)),
+        ).toMatchObject({ preparing: true });
+        vm.vncUrl = "vnc://:secret@192.168.64.2:5900";
+        yield* TestClock.adjust("1 second");
+        yield* Fiber.join(opening);
+        expect(runs.at(-1)).toMatchObject({ command: "/usr/bin/open", args: [vm.vncUrl] });
+        yield* runtime.release;
+        expect(vm.status).toBe("stopped");
+      }),
+    ),
+);
+
+it.effect("verify boots an unsealed stopped golden VM before checking consent", () =>
+  harness(({ runtime, vms, runs, setConsent }) =>
+    Effect.gen(function* () {
+      vms.set(golden, record(golden));
+      setConsent({ accessibility: false, screen_recording: false });
+      expect((yield* runtime.verify.pipe(Effect.flip)).reason).toBe("consent");
+      expect(vms.get(golden)?.status).toBe("running");
+      const boot = runs.findIndex((run) => run.args[0] === "run");
+      expect(boot).toBeGreaterThan(-1);
+      expect(runs.findIndex((run) => run.command === "/usr/bin/ssh")).toBeGreaterThan(boot);
+      yield* runtime.release;
+      expect(vms.get(golden)?.status).toBe("stopped");
+    }),
+  ),
+);
+
+for (const status of ["running", "stopped"]) {
+  it.effect(`removes a ${status} golden VM awaiting consent, including unrecorded work`, () =>
+    harness(({ runtime, vms, runs }) =>
+      Effect.gen(function* () {
+        for (const unrecorded of [false, true]) {
+          vms.set(golden, { ...record(golden), status });
+          if (unrecorded) vms.set(work, { ...record(work), status: "running" });
+          expect(yield* runtime.check).toMatchObject({
+            state: unrecorded ? "unavailable" : "needs-consent",
+          });
+          yield* runtime.remove;
+          expect(vms.size).toBe(0);
+          expect(yield* runtime.check).toMatchObject({ state: "needs-image" });
+        }
+        expect(runs.filter((run) => run.args[0] === "delete").map((run) => run.args[1])).toEqual([
+          golden,
+          work,
+          golden,
+        ]);
+        yield* runtime.release;
+      }),
+    ),
+  );
+}
 
 it.effect("does not discard unrecorded clones during ordinary status or shutdown", () =>
   harness(({ runtime, vms }) =>
@@ -437,7 +530,10 @@ it.effect(
         expect(status.setupCommand).toContain("call get_desktop_state '{}'");
         expect(script).not.toContain("list_apps");
         const bootAddress = runs.findIndex(
-          (run) => run.args[0] === "get" && run.args[1] === golden,
+          (run, index) =>
+            run.args[0] === "get" &&
+            run.args[1] === golden &&
+            index > runs.findIndex((entry) => entry.args[0] === "run"),
         );
         expect(bootAddress).toBeGreaterThan(runs.findIndex((run) => run.args[0] === "run"));
         expect(runs.indexOf(setup!)).toBeGreaterThan(bootAddress);
@@ -602,7 +698,7 @@ it.effect(
         yield* driver.control({ action: "verify-vm" });
         expect(
           (yield* driver.control({ action: "open-vm-display" }).pipe(Effect.flip)).detail,
-        ).toContain("awaiting consent");
+        ).toContain("Couldn't open the VM display");
         expect(runs.filter((run) => run.command === "/usr/bin/open")).toHaveLength(1);
         const thread = ThreadId.make("vm-thread");
         const catalog = yield* driver.catalog(thread);

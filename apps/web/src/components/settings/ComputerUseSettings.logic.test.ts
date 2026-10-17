@@ -2,6 +2,7 @@ import type { ComputerUseMacosVm, ComputerUseStatus } from "@rove-code/contracts
 import { describe, expect, it } from "vite-plus/test";
 
 import {
+  controlFailureTitle,
   describeDriver,
   describeVm,
   isMacStatus,
@@ -213,11 +214,12 @@ describe("isolated macOS VM setup", () => {
       setupCommand: "cua-setup",
     } satisfies ComputerUseMacosVm;
     expect(describeVm(vm)).toBe(
-      "Rove installs the driver automatically. Open the VM, approve the permission prompts, then select Verify. If setup did not complete or prompts are missing, use Manual setup in the VM's Terminal.",
+      "Open the VM and approve the permission prompts, then select Verify. Rove installed the driver automatically.",
     );
     expect(vmActions(vm).map((action) => action.input.action)).toEqual([
       "open-vm-display",
       "verify-vm",
+      "remove-vm",
     ]);
   });
 
@@ -251,6 +253,16 @@ describe("isolated macOS VM setup", () => {
       "Intel Mac.",
     );
     expect(vmActions({ ...vmBase, state: "unavailable" })).toEqual([]);
+    expect(
+      vmActions({ ...vmBase, state: "unavailable", lumeVersion: "0.3.0" }).map(
+        (action) => action.input.action,
+      ),
+    ).toEqual(["remove-vm"]);
+  });
+
+  it("titles each failed action", () => {
+    expect(controlFailureTitle("open-vm-display")).toBe("Couldn't open the VM");
+    expect(controlFailureTitle("remove-vm")).toBe("Couldn't remove the VM");
   });
 
   it("confirms only the destructive VM actions", () => {

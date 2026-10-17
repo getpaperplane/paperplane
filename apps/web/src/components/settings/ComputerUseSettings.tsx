@@ -1,4 +1,10 @@
-import type { ComputerUseControlInput } from "@rove-code/contracts";
+import { ComputerUseControlError, type ComputerUseControlInput } from "@rove-code/contracts";
+import {
+  isAtomCommandInterrupted,
+  squashAtomCommandFailure,
+} from "@rove-code/client-runtime/state/runtime";
+import * as Schema from "effect/Schema";
+import { CheckIcon, ChevronRightIcon, CopyIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 import { computerUseEnvironment } from "~/state/computerUse";
@@ -9,9 +15,12 @@ import { Button } from "../ui/button";
 import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from "../ui/collapsible";
 import { Select, SelectItem, SelectPopup, SelectTrigger, SelectValue } from "../ui/select";
 import { Switch } from "../ui/switch";
+import { toastManager } from "../ui/toast";
 import {
+  controlFailureTitle,
   describeDriver,
   describeVm,
+  isRemoveAction,
   isMacStatus,
   primaryAction,
   vmActions,
@@ -25,6 +34,8 @@ import { useSettingsScope } from "./SettingsScopeContext";
 import { useScopedSettings, useUpdateScopedSettings } from "./useScopedSettings";
 
 type Action = ComputerUseControlInput["action"];
+
+const isControlError = Schema.is(ComputerUseControlError);
 
 const PENDING_LABELS = {
   install: "Installing…",
@@ -50,7 +61,10 @@ export function ComputerUseSettings() {
   const driver = useEnvironmentQuery(
     environmentId === null ? null : computerUseEnvironment.status({ environmentId, input: {} }),
   );
-  const control = useAtomCommand(computerUseEnvironment.control, "Cua Driver");
+  const control = useAtomCommand(computerUseEnvironment.control, {
+    label: "Cua Driver",
+    reportFailure: false,
+  });
   const [pending, setPending] = useState<Action | null>(null);
   const status = driver.data;
   const busy = pending !== null || driver.isPending;
@@ -59,6 +73,19 @@ export function ComputerUseSettings() {
   const telemetry =
     status?.status === "stopped" || status?.status === "running" ? status.telemetry : null;
   const [copied, setCopied] = useState(false);
+  const copiedTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(
+    () => () => {
+      if (copiedTimeout.current !== null) clearTimeout(copiedTimeout.current);
+    },
+    [],
+  );
+  const copySetup = (text: string) => {
+    void navigator.clipboard.writeText(text);
+    setCopied(true);
+    if (copiedTimeout.current !== null) clearTimeout(copiedTimeout.current);
+    copiedTimeout.current = setTimeout(() => setCopied(false), 2000);
+  };
   // Status depends on the Mac mode, so re-read it when the mode changes here or on another client.
   const refreshDriver = useRef(driver.refresh);
   refreshDriver.current = driver.refresh;
@@ -76,7 +103,20 @@ export function ComputerUseSettings() {
     if (confirmation !== null && !window.confirm(confirmation)) return;
     setPending(input.action);
     try {
-      await control({ environmentId, input });
+      const result = await control({ environmentId, input });
+      if (result._tag === "Failure" && !isAtomCommandInterrupted(result)) {
+        const error = squashAtomCommandFailure(result);
+        toastManager.add({
+          type: "error",
+          title: controlFailureTitle(input.action),
+          description:
+            isControlError(error) && error.detail.length > 0
+              ? error.detail
+              : error instanceof Error
+                ? error.message
+                : "The operation failed.",
+        });
+      }
     } finally {
       setPending(null);
       driver.refresh();
@@ -165,39 +205,61 @@ export function ComputerUseSettings() {
                 <Button
                   key={action.input.action}
                   size="sm"
-                  variant={index === 0 ? "outline" : "ghost"}
+                  variant={
+                    isRemoveAction(action.input)
+                      ? "destructive-outline"
+                      : index === 0
+                        ? "outline"
+                        : "ghost"
+                  }
                   disabled={busy || environmentId === null}
                   onClick={() => void run(action.input)}
                 >
-                  {pending === action.input.action ? "Working…" : action.label}
+                  {pending === action.input.action
+                    ? PENDING_LABELS[action.input.action]
+                    : action.label}
                 </Button>
               ))}
             </div>
           }
         >
           {vm.state === "needs-consent" && vm.setupCommand !== undefined ? (
-            <Collapsible>
-              <CollapsibleTrigger render={<Button size="sm" variant="ghost" />}>
-                Manual setup
-              </CollapsibleTrigger>
-              <CollapsiblePanel>
-                <div className="flex items-start gap-2">
-                  <pre className="min-w-0 flex-1 overflow-x-auto rounded-md bg-muted px-3 py-2 font-mono text-xs">
-                    {vm.setupCommand}
-                  </pre>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => {
-                      void navigator.clipboard.writeText(vm.setupCommand ?? "");
-                      setCopied(true);
-                    }}
-                  >
-                    {copied ? "Copied" : "Copy"}
-                  </Button>
-                </div>
-              </CollapsiblePanel>
-            </Collapsible>
+            <div className="pt-1 pb-2">
+              <Collapsible>
+                <CollapsibleTrigger className="group flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
+                  <ChevronRightIcon
+                    aria-hidden
+                    className="size-3 shrink-0 transition-transform group-data-panel-open:rotate-90 motion-reduce:transition-none"
+                  />
+                  <span className="font-medium text-foreground">Manual setup</span>
+                  <span>If automatic setup didn't finish</span>
+                </CollapsibleTrigger>
+                <CollapsiblePanel>
+                  <div className="space-y-2 pt-2">
+                    <ol className="list-decimal space-y-0.5 pl-8 text-xs text-muted-foreground">
+                      <li>Open the VM and launch Terminal.</li>
+                      <li>Paste and run this script.</li>
+                      <li>Approve the Accessibility and Screen Recording prompts.</li>
+                      <li>Select Verify.</li>
+                    </ol>
+                    <div className="relative">
+                      <pre className="max-h-48 overflow-auto rounded-lg border border-border bg-muted/40 py-2 pr-10 pl-3 font-mono text-xs">
+                        {vm.setupCommand}
+                      </pre>
+                      <Button
+                        className="absolute top-1.5 right-1.5"
+                        size="icon-xs"
+                        variant="ghost-muted"
+                        aria-label={copied ? "Copied" : "Copy setup script"}
+                        onClick={() => copySetup(vm.setupCommand ?? "")}
+                      >
+                        {copied ? <CheckIcon /> : <CopyIcon />}
+                      </Button>
+                    </div>
+                  </div>
+                </CollapsiblePanel>
+              </Collapsible>
+            </div>
           ) : null}
         </SettingsRow>
       ) : (
