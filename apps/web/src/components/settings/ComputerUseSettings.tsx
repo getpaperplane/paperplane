@@ -1,5 +1,5 @@
 import type { ComputerUseControlInput } from "@rove-code/contracts";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { computerUseEnvironment } from "~/state/computerUse";
 import { useEnvironmentQuery } from "~/state/query";
@@ -58,6 +58,16 @@ export function ComputerUseSettings() {
   const telemetry =
     status?.status === "stopped" || status?.status === "running" ? status.telemetry : null;
   const [copied, setCopied] = useState(false);
+  // Status depends on the Mac mode, so re-read it when the mode changes here or on another client.
+  const refreshDriver = useRef(driver.refresh);
+  refreshDriver.current = driver.refresh;
+  const macosMode = settings.computerUseMacosMode;
+  const shownMode = useRef(macosMode);
+  useEffect(() => {
+    if (shownMode.current === macosMode) return;
+    shownMode.current = macosMode;
+    refreshDriver.current();
+  }, [macosMode]);
 
   const run = async (input: ComputerUseControlInput) => {
     if (environmentId === null) return;
