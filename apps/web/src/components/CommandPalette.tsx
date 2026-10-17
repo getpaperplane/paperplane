@@ -1242,7 +1242,7 @@ function OpenCommandPaletteDialog(props: {
     ],
   );
 
-  const projectThreadItems = useMemo(() => {
+  const projectThreadView = useMemo(() => {
     const isScratch = (project: CommandPaletteProject) =>
       isScratchProject(project, scratchWorkspaceRootFor(project.environmentId));
     const projectItems = enumerateCommandPaletteItems(
@@ -1300,26 +1300,28 @@ function OpenCommandPaletteDialog(props: {
         },
       }),
     );
-    if (scratchTargetEnvironmentId === null) return projectItems;
+    if (scratchTargetEnvironmentId === null) {
+      return { items: projectItems, defaultItemValue: undefined };
+    }
 
-    // "No project" goes right after the current project: visible without
-    // scrolling past every project, while Enter still starts in the current
-    // one. When the current thread has no project, it is the current entry and
-    // goes first. It keeps its own shortcut, so the projects' mod+1..9 hold.
-    const noProjectIndex = pickerProjects[0] !== undefined && isScratch(pickerProjects[0]) ? 0 : 1;
-    return [
-      ...projectItems.slice(0, noProjectIndex),
-      {
-        kind: "action" as const,
-        value: "new-thread-in:no-project",
-        searchTerms: ["no project", "without project", "none"],
-        title: "No project",
-        icon: <MessageSquareDashedIcon className={ITEM_ICON_CLASS} />,
-        shortcutCommand: "chat.newWithoutProject" as const,
-        run: () => startScratchThread(scratchTargetEnvironmentId),
-      },
-      ...projectItems.slice(noProjectIndex),
-    ];
+    // "No project" always leads the list so it sits in a predictable spot. It
+    // keeps its own shortcut, so the projects' mod+1..9 hold.
+    const noProjectItem = {
+      kind: "action" as const,
+      value: "new-thread-in:no-project",
+      searchTerms: ["no project", "without project", "none"],
+      title: "No project",
+      icon: <MessageSquareDashedIcon className={ITEM_ICON_CLASS} />,
+      shortcutCommand: "chat.newWithoutProject" as const,
+      run: () => startScratchThread(scratchTargetEnvironmentId),
+    };
+    // Enter should still start in the current project, which is the first
+    // project row. Skip it when the current entry is the no-project home.
+    const currentIsScratch = pickerProjects[0] !== undefined && isScratch(pickerProjects[0]);
+    return {
+      items: [noProjectItem, ...projectItems],
+      defaultItemValue: currentIsScratch ? undefined : projectItems[0]?.value,
+    };
   }, [
     contextualProjectRef,
     handleNewThread,
@@ -1424,6 +1426,7 @@ function OpenCommandPaletteDialog(props: {
           addonIcon: view.addonIcon,
           groups: view.groups,
           ...(view.initialQuery ? { initialQuery: view.initialQuery } : undefined),
+          ...(view.defaultItemValue ? { defaultItemValue: view.defaultItemValue } : undefined),
         },
       ]);
       highlightClearedRef.current = true;
@@ -1438,6 +1441,7 @@ function OpenCommandPaletteDialog(props: {
       addonIcon: item.addonIcon,
       groups: item.groups,
       ...(item.initialQuery ? { initialQuery: item.initialQuery } : undefined),
+      ...(item.defaultItemValue ? { defaultItemValue: item.defaultItemValue } : undefined),
     });
   }
 
@@ -1790,7 +1794,7 @@ function OpenCommandPaletteDialog(props: {
   useLayoutEffect(() => {
     if (
       openIntent?.kind !== "new-thread-in" ||
-      (projectThreadItems.length === 0 && environments.length === 0)
+      (projectThreadView.items.length === 0 && environments.length === 0)
     ) {
       return;
     }
@@ -1800,12 +1804,15 @@ function OpenCommandPaletteDialog(props: {
     setNewProjectFlow(null);
     setViewStack([]);
     setQuery("");
-    // projectThreadItems already lists the current project first.
+    // "No project" leads the list; defaultItemValue keeps Enter on the current project.
     pushPaletteView({
       addonIcon: <SquarePenIcon className={ADDON_ICON_CLASS} />,
-      groups: [{ value: "projects", label: "Projects", items: projectThreadItems }],
+      groups: [{ value: "projects", label: "Projects", items: projectThreadView.items }],
+      ...(projectThreadView.defaultItemValue
+        ? { defaultItemValue: projectThreadView.defaultItemValue }
+        : undefined),
     });
-  }, [clearOpenIntent, browseNavigation, openIntent, projectThreadItems, pushPaletteView]);
+  }, [clearOpenIntent, browseNavigation, openIntent, projectThreadView, pushPaletteView]);
 
   const actionItems: Array<CommandPaletteActionItem | CommandPaletteSubmenuItem> = [];
 
@@ -1844,7 +1851,10 @@ function OpenCommandPaletteDialog(props: {
       title: "New thread in...",
       icon: <SquarePenIcon className={ITEM_ICON_CLASS} />,
       addonIcon: <SquarePenIcon className={ADDON_ICON_CLASS} />,
-      groups: [{ value: "projects", label: "Projects", items: projectThreadItems }],
+      groups: [{ value: "projects", label: "Projects", items: projectThreadView.items }],
+      ...(projectThreadView.defaultItemValue
+        ? { defaultItemValue: projectThreadView.defaultItemValue }
+        : undefined),
     });
   }
 
@@ -3214,8 +3224,21 @@ function OpenCommandPaletteDialog(props: {
     if (event.ctrlKey || event.shiftKey || event.altKey || event.metaKey) return;
     // Base UI only keeps a hidden highlight on the first row when it auto-highlights.
     const firstItemValue = autoHighlightsFirstRow ? resultRows.itemValues[0] : undefined;
+    // Only valid as exactly row 1 of the unfiltered list, where Base UI's
+    // hidden row-0 highlight is one ArrowDown away.
+    const viewDefaultItemValue = currentView?.defaultItemValue;
+    const defaultItemValue =
+      autoHighlightsFirstRow && query === "" && viewDefaultItemValue === resultRows.itemValues[1]
+        ? viewDefaultItemValue
+        : undefined;
+    // With a default, ArrowDown is left to Base UI: it steps the hidden row-0
+    // highlight to row 1 (the default) and reports it through onItemHighlighted.
+    // ArrowUp lands on row 0, where the hidden highlight already is.
+    const landsOnFirstItem =
+      event.key === "ArrowDown" ? defaultItemValue === undefined : defaultItemValue !== undefined;
     if (
-      event.key === "ArrowDown" &&
+      (event.key === "ArrowDown" || event.key === "ArrowUp") &&
+      landsOnFirstItem &&
       highlightClearedRef.current &&
       firstItemValue &&
       !event.nativeEvent.isComposing
@@ -3236,7 +3259,7 @@ function OpenCommandPaletteDialog(props: {
     if (event.key === "Enter" && !event.nativeEvent.isComposing && event.keyCode !== 229) {
       const highlightedItem = findHighlightedCommandPaletteItem(
         displayedGroups,
-        highlightedItemValue ?? firstItemValue ?? null,
+        highlightedItemValue ?? defaultItemValue ?? firstItemValue ?? null,
       );
       if (highlightedItem) {
         (event as typeof event & { preventBaseUIHandler?: () => void }).preventBaseUIHandler?.();

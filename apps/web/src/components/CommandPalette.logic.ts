@@ -158,6 +158,11 @@ export interface CommandPaletteSubmenuItem extends CommandPaletteItem {
   readonly addonIcon: ReactNode;
   readonly groups: ReadonlyArray<CommandPaletteGroup>;
   readonly initialQuery?: string;
+  /**
+   * The row Enter runs, and the first arrow key lands near, before the user
+   * navigates. Must be the second row of the unfiltered list.
+   */
+  readonly defaultItemValue?: string;
 }
 
 export interface CommandPaletteGroup {
@@ -170,6 +175,11 @@ export interface CommandPaletteView {
   readonly addonIcon: ReactNode;
   readonly groups: ReadonlyArray<CommandPaletteGroup>;
   readonly initialQuery?: string;
+  /**
+   * The row Enter runs, and the first arrow key lands near, before the user
+   * navigates. Must be the second row of the unfiltered list.
+   */
+  readonly defaultItemValue?: string;
 }
 
 export type CommandPaletteRow =
