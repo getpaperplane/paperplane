@@ -1142,6 +1142,14 @@ export interface DesktopBridge {
   // info (omits instances whose backend hasn't produced a config yet).
   // The primary backend is identified by id === PRIMARY_LOCAL_ENVIRONMENT_ID.
   getLocalEnvironmentBootstraps: () => readonly DesktopEnvironmentBootstrap[];
+  /**
+   * Pushes the full bootstrap list whenever it changes (a backend registered,
+   * went away, restarted, or rotated its token). Optional: when absent the
+   * renderer re-reads `getLocalEnvironmentBootstraps` instead of caching it.
+   */
+  onLocalEnvironmentBootstrapsChanged?: (
+    listener: (bootstraps: readonly DesktopEnvironmentBootstrap[]) => void,
+  ) => () => void;
   getLocalEnvironmentEnabled?: () => boolean;
   setLocalEnvironmentEnabled?: (enabled: boolean) => Promise<void>;
   getLocalEnvironmentBearerToken: () => Promise<string>;

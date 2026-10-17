@@ -97,8 +97,10 @@ Command palette results keep live VCS and linked pull-request queries leased to 
 viewport, including a small overscan region. Cached badges remain available while leases are
 released. Local Git status reads skip divergence calculations; callers that need ahead/behind
 counts keep the full status path. Cached fetch failures share the existing backoff and log only
-the actual failed attempt. Unchanged desktop environment bootstrap reads retain their array
-identity so polling does not invalidate subscribers.
+the actual failed attempt. The desktop pushes environment bootstrap changes to the renderer, which caches them
+after one synchronous seed read; renderer code never polls synchronous IPC, and unchanged
+pushes retain their array identity so subscribers are not invalidated. Fast successful
+`desktop.ipc.*` spans are not written to the desktop trace file.
 
 Local trace records and provider event logs use asynchronous, serialized file writes and rotation.
 Batching synchronous appends still stalls the server event loop on slow storage, especially on

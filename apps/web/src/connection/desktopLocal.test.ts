@@ -179,3 +179,97 @@ describe("desktop local topology reads", () => {
     expect(reader.readSnapshot()).toBe(removedSnapshot);
   });
 });
+
+describe("desktop local topology pushes", () => {
+  const secondary: DesktopEnvironmentBootstrap = {
+    id: "wsl:default",
+    label: "WSL",
+    runningDistro: "Ubuntu",
+    httpBaseUrl: "http://127.0.0.1:4000",
+    wsBaseUrl: "ws://127.0.0.1:4000",
+    bootstrapToken: "bootstrap-1",
+  };
+  const primary: DesktopEnvironmentBootstrap = {
+    id: PRIMARY_LOCAL_ENVIRONMENT_ID,
+    label: "This device",
+    runningDistro: null,
+    httpBaseUrl: "http://127.0.0.1:3000",
+    wsBaseUrl: "ws://127.0.0.1:3000",
+  };
+
+  function makePushingReader(initial: ReadonlyArray<DesktopEnvironmentBootstrap>) {
+    let push: (list: ReadonlyArray<DesktopEnvironmentBootstrap>) => void = () => {};
+    let syncReads = 0;
+    const reader = createDesktopSecondaryBootstrapsReader(() => ({
+      getLocalEnvironmentBootstraps: () => {
+        syncReads += 1;
+        return initial;
+      },
+      onLocalEnvironmentBootstrapsChanged: (listener) => {
+        push = listener;
+        return () => {};
+      },
+    }));
+    return {
+      reader,
+      push: (list: ReadonlyArray<DesktopEnvironmentBootstrap>) => push(list),
+      reads: () => syncReads,
+    };
+  }
+
+  it("seeds with one synchronous read, then follows pushes without more", () => {
+    const { reader, push, reads } = makePushingReader([primary]);
+    const notified: number[] = [];
+    reader.subscribe(() => notified.push(1));
+
+    expect(reader.readSnapshot()).toEqual([]);
+    push([primary, secondary]);
+    expect(reader.readSnapshot()).toEqual([secondary]);
+    expect(reader.readAll()).toEqual([primary, secondary]);
+    expect(notified).toHaveLength(1);
+
+    // An identical push keeps identity and does not notify.
+    const before = reader.readSnapshot();
+    push([primary, { ...secondary }]);
+    expect(reader.readSnapshot()).toBe(before);
+    expect(notified).toHaveLength(1);
+
+    // A WSL backend going away is authoritative.
+    push([primary]);
+    expect(reader.readSnapshot()).toEqual([]);
+    expect(notified).toHaveLength(2);
+
+    reader.readResult();
+    expect(reads()).toBe(1);
+  });
+
+  it("retries the seed read after a failure and keeps the previous snapshot", () => {
+    let fail = false;
+    const reader = createDesktopSecondaryBootstrapsReader(() => ({
+      getLocalEnvironmentBootstraps: () => {
+        if (fail) throw new Error("IPC unavailable");
+        return [primary, secondary];
+      },
+      onLocalEnvironmentBootstrapsChanged: () => () => {},
+    }));
+    expect(reader.readSnapshot()).toEqual([secondary]);
+    // Seeded and subscribed: later failures cannot occur because no read happens.
+    fail = true;
+    expect(reader.readResult()).toEqual({ _tag: "Success", bootstraps: [secondary] });
+
+    const failing = createDesktopSecondaryBootstrapsReader(() => ({
+      getLocalEnvironmentBootstraps: () => {
+        throw new Error("boom");
+      },
+      onLocalEnvironmentBootstrapsChanged: () => () => {},
+    }));
+    expect(failing.readResult()._tag).toBe("Failure");
+    expect(failing.readSnapshot()).toEqual([]);
+  });
+
+  it("does nothing without a bridge", () => {
+    const reader = createDesktopSecondaryBootstrapsReader(() => undefined);
+    expect(reader.readSnapshot()).toEqual([]);
+    expect(reader.readAll()).toEqual([]);
+  });
+});

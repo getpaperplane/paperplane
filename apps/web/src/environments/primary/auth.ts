@@ -19,6 +19,7 @@ import {
   stripPairingTokenFromUrl as stripPairingTokenUrl,
 } from "../../pairingUrl";
 
+import { readDesktopBootstraps } from "../../connection/desktopLocal";
 import { PrimaryEnvironmentHttpClient } from "./httpClient";
 import { runPrimaryHttp } from "../../lib/runtime";
 import * as RuntimePredicate from "effect/Predicate";
@@ -172,7 +173,7 @@ function getDesktopBootstrapCredential(): string | null {
   // Both backends share the same bootstrap token (DesktopBackendConfiguration
   // mints one tokenRef and feeds it to both resolvers), so picking the
   // primary entry is fine even when the WSL backend is also registered.
-  const bootstraps = window.desktopBridge?.getLocalEnvironmentBootstraps() ?? [];
+  const bootstraps = readDesktopBootstraps();
   const primary = bootstraps.find((entry) => entry.id === PRIMARY_LOCAL_ENVIRONMENT_ID);
   return RuntimePredicate.isString(primary?.bootstrapToken) && primary.bootstrapToken.length > 0
     ? primary.bootstrapToken

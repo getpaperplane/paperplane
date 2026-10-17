@@ -94,7 +94,7 @@ import {
 import type { LegendListRef } from "@legendapp/list/react";
 import { useAtomValue } from "@effect/atom-react";
 
-import { isDesktopLocalConnectionTarget } from "../connection/desktopLocal";
+import { isDesktopLocalConnectionTarget, readDesktopBootstraps } from "../connection/desktopLocal";
 import { useDesktopLocalBootstraps } from "../connection/useDesktopLocalBootstraps";
 import { useHandleNewThread } from "../hooks/useHandleNewThread";
 import { useOpenPanelPullRequestUrl } from "../hooks/useOpenPanelPullRequestUrl";
@@ -3348,10 +3348,8 @@ function OpenCommandPaletteDialog(props: {
       let primaryRunningDistro: string | null = null;
       try {
         primaryRunningDistro =
-          window.desktopBridge
-            ?.getLocalEnvironmentBootstraps()
-            .find((bootstrap) => bootstrap.id === PRIMARY_LOCAL_ENVIRONMENT_ID)?.runningDistro ??
-          null;
+          readDesktopBootstraps().find((bootstrap) => bootstrap.id === PRIMARY_LOCAL_ENVIRONMENT_ID)
+            ?.runningDistro ?? null;
       } catch {
         // Keep UNC routing strict when the live primary identity cannot be read.
       }

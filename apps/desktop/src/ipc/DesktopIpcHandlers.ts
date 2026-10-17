@@ -40,6 +40,7 @@ import {
 import {
   getAppBranding,
   getLocalEnvironmentBootstraps,
+  installLocalEnvironmentBootstrapForwarding,
   getLocalEnvironmentBearerToken,
   getSystemLocale,
   getWindowFullscreenState,
@@ -86,6 +87,7 @@ export const installDesktopIpcHandlers = Effect.fn("desktop.ipc.installHandlers"
   const ipc = yield* DesktopIpc.DesktopIpc;
   yield* installNotificationBadge();
   yield* PreviewIpc.installPreviewEventForwarding();
+  yield* installLocalEnvironmentBootstrapForwarding();
 
   yield* ipc.handle(AppActivationIpc.setReady);
   yield* ipc.handle(AppActivationIpc.complete);
