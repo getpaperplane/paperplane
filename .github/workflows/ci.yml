@@ -61,16 +61,18 @@ jobs:
   # Typecheck shares the build's install. Lint always runs: it formats every
   # file, docs included. The `Check` job at the end of this file passes only
   # when every other job passes or was skipped by `changes`.
+  # Lint gates its own Rust and release smoke steps, like the server shards:
+  # waiting for `changes` let the shards fill every runner slot first.
   lint:
     name: Lint
-    needs: changes
-    if: ${{ !cancelled() }}
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
+      # Depth 2 brings the base commit the change is diffed against.
       - name: Checkout
         uses: actions/checkout@v6
         with:
+          fetch-depth: 2
           sparse-checkout: |
             /*
             !/.repos/
@@ -93,12 +95,16 @@ jobs:
             exit 1
           fi
 
+      - name: Detect affected jobs
+        id: changes
+        uses: ./.github/actions/ci-changes
+
       # Rust checks ride on Lint's runner, in the background from the start:
       # as their own job they pushed a full CI run past the 20 concurrent jobs a
       # free account gets, so later jobs queued ~60-80s. The runner image ships
       # stable Rust with rustfmt.
       - name: Start Rust checks
-        if: ${{ !cancelled() && needs.changes.outputs.rust != 'false' }}
+        if: ${{ !cancelled() && steps.changes.outputs.rust != 'false' }}
         run: |
           cat > "$RUNNER_TEMP/rust.sh" <<'SCRIPT'
           set -euo pipefail
@@ -116,7 +122,7 @@ jobs:
 
       # Same reason as Rust: shares Lint's install instead of taking a runner.
       - name: Start release smoke checks
-        if: ${{ !cancelled() && needs.changes.outputs.release_smoke != 'false' }}
+        if: ${{ !cancelled() && steps.changes.outputs.release_smoke != 'false' }}
         run: bash .github/scripts/background-start.sh release-smoke node scripts/release-smoke.ts
 
       - name: Ensure Electron runtime is installed
@@ -133,12 +139,12 @@ jobs:
         run: vp check
 
       - name: Finish release smoke checks
-        if: ${{ !cancelled() && needs.changes.outputs.release_smoke != 'false' }}
+        if: ${{ !cancelled() && steps.changes.outputs.release_smoke != 'false' }}
         timeout-minutes: 5
         run: bash .github/scripts/background-join.sh release-smoke
 
       - name: Finish Rust checks
-        if: ${{ !cancelled() && needs.changes.outputs.rust != 'false' }}
+        if: ${{ !cancelled() && steps.changes.outputs.rust != 'false' }}
         timeout-minutes: 5
         run: bash .github/scripts/background-join.sh rust
 
