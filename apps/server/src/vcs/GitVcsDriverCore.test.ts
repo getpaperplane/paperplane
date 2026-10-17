@@ -40,6 +40,7 @@ import {
   windowsLongPathConfigEnv,
 } from "./GitVcsDriverCore.ts";
 import * as GitVcsDriver from "./GitVcsDriver.ts";
+import { gitRepositoryFixture } from "../testUtils/gitRepositoryFixture.ts";
 
 describe("selected GitHub account credentials", () => {
   it("resets ambient HTTPS helpers and resolves the selected login without putting tokens in argv", () => {
@@ -152,6 +153,12 @@ const git = (
     return result.stdout.trim();
   });
 
+const copyRepository = gitRepositoryFixture({
+  files: { "README.md": "# test\n" },
+  user: { name: "Test", email: "test@test.com" },
+  message: "initial commit",
+});
+
 const initRepoWithCommit = (
   cwd: string,
 ): Effect.Effect<
@@ -159,16 +166,9 @@ const initRepoWithCommit = (
   GitCommandError | PlatformError.PlatformError,
   GitVcsDriver.GitVcsDriver | FileSystem.FileSystem | Path.Path
 > =>
-  Effect.gen(function* () {
-    const driver = yield* GitVcsDriver.GitVcsDriver;
-    yield* driver.initRepo({ cwd });
-    yield* git(cwd, ["config", "user.email", "test@test.com"]);
-    yield* git(cwd, ["config", "user.name", "Test"]);
-    yield* writeTextFile(cwd, "README.md", "# test\n");
-    yield* git(cwd, ["add", "."]);
-    yield* git(cwd, ["commit", "-m", "initial commit"]);
-    const initialBranch = yield* git(cwd, ["branch", "--show-current"]);
-    return { initialBranch };
+  Effect.sync(() => {
+    copyRepository(cwd);
+    return { initialBranch: "main" };
   });
 
 it.effect("bounds Git bursts across drivers without timing out queued commands", () =>

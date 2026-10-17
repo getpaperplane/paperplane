@@ -535,9 +535,11 @@ describe("isolated Pi instance runtime", () => {
     vi.useFakeTimers();
     const abort = stuck.abort().catch((error: unknown) => error);
     await vi.advanceTimersByTimeAsync(4_000);
-    vi.useRealTimers();
     expect(await abort).toMatchObject({ message: expect.stringMatching(/abort timed out/) });
-    await stuck.dispose();
+    const disposal = stuck.dispose();
+    await vi.advanceTimersByTimeAsync(4_000);
+    await disposal;
+    vi.useRealTimers();
     await expectInstanceAlive(runtime, agentDir);
   });
 
@@ -564,6 +566,13 @@ describe("isolated Pi instance runtime", () => {
     vi.useRealTimers();
     expect(settled).toBe(false);
     await expectInstanceAlive(runtime, agentDir);
+    // The deliberately stuck compaction also blocks shutdown. Exercise the
+    // parent's shutdown deadline without spending four wall-clock seconds.
+    vi.useFakeTimers();
+    const disposal = runtime.dispose();
+    await vi.advanceTimersByTimeAsync(4_000);
+    await disposal;
+    vi.useRealTimers();
   });
 
   it("accepts a resumed prompt once pre-prompt compaction starts", async () => {
@@ -609,6 +618,11 @@ describe("isolated Pi instance runtime", () => {
     vi.useRealTimers();
     expect(order.slice(0, 2)).toEqual(["compaction_start", "pre:true"]);
     await expectInstanceAlive(runtime, agentDir);
+    vi.useFakeTimers();
+    const disposal = runtime.dispose();
+    await vi.advanceTimersByTimeAsync(4_000);
+    await disposal;
+    vi.useRealTimers();
   });
 
   it("accepts a long-running extension command before it finishes", async () => {

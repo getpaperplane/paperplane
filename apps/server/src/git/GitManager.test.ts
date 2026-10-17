@@ -75,6 +75,7 @@ import * as ProviderRegistry from "../provider/ProviderRegistry.ts";
 import * as ServerSettings from "../serverSettings.ts";
 import { SelectedGitHubAccount } from "@rove-code/source-control-github/server/GitHubCredentials";
 import * as GitManager from "./GitManager.ts";
+import { gitRepositoryFixture } from "../testUtils/gitRepositoryFixture.ts";
 
 const encodeCliJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 const decodeForgejoPullRequest = Schema.decodeEffect(ForgejoPullRequestSchema);
@@ -262,6 +263,12 @@ function runGit(
   });
 }
 
+const copyRepository = gitRepositoryFixture({
+  files: { "README.md": "hello\n" },
+  user: { name: "Test User", email: "test@example.com" },
+  message: "Initial commit",
+});
+
 function initRepo(
   cwd: string,
 ): Effect.Effect<
@@ -269,20 +276,7 @@ function initRepo(
   PlatformError.PlatformError | GitCommandError,
   FileSystem.FileSystem | Scope.Scope | GitVcsDriver.GitVcsDriver
 > {
-  return Effect.gen(function* () {
-    const fs = yield* FileSystem.FileSystem;
-    yield* runGit(cwd, ["init", "--initial-branch=main"]);
-    yield* runGit(cwd, ["config", "user.email", "test@example.com"]);
-    yield* runGit(cwd, ["config", "user.name", "Test User"]);
-    // Hermetic line endings: machine-global `core.autocrlf=true` on Windows
-    // makes Git check out CRLF, which breaks exact-content assertions that
-    // write LF with Node. Local config overrides the global so the fixture
-    // (and its linked worktrees, which share config) always checks out LF.
-    yield* runGit(cwd, ["config", "core.autocrlf", "false"]);
-    yield* fs.writeFileString(NodePath.join(cwd, "README.md"), "hello\n");
-    yield* runGit(cwd, ["add", "README.md"]);
-    yield* runGit(cwd, ["commit", "-m", "Initial commit"]);
-  });
+  return Effect.sync(() => copyRepository(cwd));
 }
 
 function createBareRemote(): Effect.Effect<

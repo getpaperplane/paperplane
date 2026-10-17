@@ -4536,7 +4536,7 @@ describe("AcpAdapterV2", () => {
     }).pipe(Effect.provide(layerTest), Effect.scoped),
   );
 
-  it.live("bounds a missing pending permission response acknowledgement", () =>
+  it.effect("bounds a missing pending permission response acknowledgement", () =>
     Effect.gen(function* () {
       const childProcessSpawner = yield* ChildProcessSpawner.ChildProcessSpawner;
       const path = yield* Path.Path;
@@ -4547,6 +4547,7 @@ describe("AcpAdapterV2", () => {
       const responseEnqueued = yield* Deferred.make<void>();
       const releaseNativeHook = yield* Deferred.make<void>();
       const responseLifecycle: Array<string> = [];
+      const lateNoop = yield* Deferred.make<void>();
       const protocolEvents = yield* Queue.bounded<EffectAcpProtocol.AcpProtocolLogEvent>(256);
       const instanceId = ProviderInstanceId.make("acp-test-pending-response-timeout");
       const adapter = yield* makeAcpAdapterV2({
@@ -4586,7 +4587,11 @@ describe("AcpAdapterV2", () => {
           onNativeResponseLifecycle: (event) =>
             Effect.sync(() => {
               responseLifecycle.push(event.type);
-            }),
+            }).pipe(
+              Effect.andThen(
+                event.type === "late_noop" ? Deferred.succeed(lateNoop, undefined) : Effect.void,
+              ),
+            ),
         },
       });
       const threadId = ThreadId.make("thread-acp-pending-response-timeout");
@@ -4637,9 +4642,12 @@ describe("AcpAdapterV2", () => {
       ) {
         return yield* Effect.die("Expected a pending permission request");
       }
-      const responseExit = yield* runtime
+      const responseFiber = yield* runtime
         .respondToRuntimeRequest({ requestId: pending.runtimeRequest.id, decision: "accept" })
-        .pipe(Effect.exit);
+        .pipe(Effect.exit, Effect.forkScoped);
+      yield* Deferred.await(responseEnqueued);
+      yield* TestClock.adjust("2 seconds");
+      const responseExit = yield* Fiber.join(responseFiber);
       if (Exit.isSuccess(responseExit)) {
         assert.fail("missing native response acknowledgement must fail the pending response");
       }
@@ -4663,14 +4671,14 @@ describe("AcpAdapterV2", () => {
         requestRuntimeRestart: true,
       });
       assert.isTrue(yield* Deferred.isDone(releaseNativeHook));
-      yield* Effect.sleep("50 millis");
+      yield* Deferred.await(lateNoop);
       assert.include(responseLifecycle, "late_noop");
       yield* Scope.close(sessionScope, Exit.void);
       assert.notInclude(yield* pollProtocolMethods(protocolEvents), "session/close");
     }).pipe(Effect.provide(layerTest), Effect.scoped),
   );
 
-  it.live("defers caller cancellation until a pending response acknowledgement is bounded", () =>
+  it.effect("defers caller cancellation until a pending response acknowledgement is bounded", () =>
     Effect.gen(function* () {
       const childProcessSpawner = yield* ChildProcessSpawner.ChildProcessSpawner;
       const path = yield* Path.Path;
@@ -4768,11 +4776,12 @@ describe("AcpAdapterV2", () => {
           requestRuntimeRestart: true,
         })
         .pipe(Effect.forkScoped);
-      yield* Effect.sleep("100 millis");
+      yield* TestClock.adjust("100 millis");
       assert.isUndefined(cancellationFiber.pollUnsafe());
       assert.isUndefined(interruptFiber.pollUnsafe());
       assert.isFalse(yield* Deferred.isDone(releaseNativeHook));
 
+      yield* TestClock.adjust("2 seconds");
       yield* Fiber.join(cancellationFiber);
       yield* Fiber.join(interruptFiber);
       assert.isTrue(yield* Deferred.isDone(releaseNativeHook));
@@ -4965,7 +4974,7 @@ describe("AcpAdapterV2", () => {
     }).pipe(Effect.provide(layerTest), Effect.scoped),
   );
 
-  it.live("bounds a missing immediate response acknowledgement before hard teardown", () =>
+  it.effect("bounds a missing immediate response acknowledgement before hard teardown", () =>
     Effect.gen(function* () {
       const childProcessSpawner = yield* ChildProcessSpawner.ChildProcessSpawner;
       const idAllocator = yield* IdAllocator.IdAllocatorV2;
@@ -5039,20 +5048,24 @@ describe("AcpAdapterV2", () => {
         .pipe(Effect.forkDetach);
       yield* Deferred.await(responseEnqueued);
       const startedAt = yield* Clock.currentTimeMillis;
-      yield* runtime.interruptTurn({
-        providerThread,
-        providerTurnId: idAllocator.derive.providerTurn({
-          driver: ACP_TEST_DRIVER,
-          nativeTurnId: acpScopedNativeId(instanceId, "mock-session-1:turn:1"),
-        }),
-        requestRuntimeRestart: true,
-      });
+      const interruptFiber = yield* runtime
+        .interruptTurn({
+          providerThread,
+          providerTurnId: idAllocator.derive.providerTurn({
+            driver: ACP_TEST_DRIVER,
+            nativeTurnId: acpScopedNativeId(instanceId, "mock-session-1:turn:1"),
+          }),
+          requestRuntimeRestart: true,
+        })
+        .pipe(Effect.forkScoped);
+      yield* TestClock.adjust("2 seconds");
+      yield* Fiber.join(interruptFiber);
       assert.isAtLeast((yield* Clock.currentTimeMillis) - startedAt, 1_500);
       yield* Fiber.interrupt(turnFiber).pipe(Effect.forkDetach);
     }).pipe(Effect.provide(layerTest), Effect.scoped),
   );
 
-  it.live("rejects an elicitation response when hard teardown wins admission", () =>
+  it.effect("rejects an elicitation response when hard teardown wins admission", () =>
     Effect.gen(function* () {
       const childProcessSpawner = yield* ChildProcessSpawner.ChildProcessSpawner;
       const path = yield* Path.Path;
@@ -5138,6 +5151,7 @@ describe("AcpAdapterV2", () => {
           requestRuntimeRestart: true,
         })
         .pipe(Effect.forkScoped);
+      yield* TestClock.adjust("2 seconds");
       yield* Deferred.await(teardownStarted);
       const responseFiber = yield* runtime
         .respondToRuntimeRequest({
