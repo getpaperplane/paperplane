@@ -20,20 +20,20 @@ const shardModuleIds = (count: number) =>
   );
 
 describe("WeightedShardSequencer", () => {
-  it("runs every file in exactly one shard", async () => {
-    const shards = await shardModuleIds(6);
+  it.each([8, 10, 12])("runs every file in exactly one of %i shards", async (count) => {
+    const shards = await shardModuleIds(count);
 
     expect(shards.flat().toSorted()).toEqual(specs.map((spec) => spec.moduleId).toSorted());
   });
 
-  it("puts each of the slowest files in a different shard", async () => {
+  it.each([8, 10, 12])("puts each of the %i slowest files in a different shard", async (count) => {
     const slowest = new Set(
       recorded
         .toSorted((a, b) => (recordedSeconds[b] ?? 0) - (recordedSeconds[a] ?? 0))
-        .slice(0, 6)
+        .slice(0, count)
         .map((file) => `${root}/${file}`),
     );
-    const shards = await shardModuleIds(6);
+    const shards = await shardModuleIds(count);
 
     for (const shard of shards) {
       expect(shard.filter((moduleId) => slowest.has(moduleId))).toHaveLength(1);

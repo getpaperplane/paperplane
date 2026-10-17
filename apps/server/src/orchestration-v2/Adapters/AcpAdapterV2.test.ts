@@ -356,6 +356,8 @@ function cleanupPublishedDetachedFixture(path: string): void {
   }
 }
 
+// Compiling and starting the native fixture can be slow on a loaded CI host.
+// This remains a readiness wait: successful publication returns immediately.
 const waitForPublishedProcessIds = (
   fileSystem: FileSystem.FileSystem,
   path: string,
@@ -373,7 +375,7 @@ const waitForPublishedProcessIds = (
       }
       yield* Effect.sleep("10 millis");
     }
-  }).pipe(Effect.timeoutOption("2 seconds"));
+  }).pipe(Effect.timeoutOption("10 seconds"));
 
 function makeMockRuntime(input: {
   readonly childProcessSpawner: ChildProcessSpawner.ChildProcessSpawner["Service"];
