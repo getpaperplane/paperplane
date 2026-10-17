@@ -189,7 +189,9 @@ jobs:
     name: Test ${{ matrix.shard }}
     needs: changes
     if: ${{ !cancelled() && needs.changes.outputs.test != 'false' }}
-    runs-on: ubuntu-24.04
+    # Free arm64 runners ran these import-bound suites 27-37% faster than x64
+    # in paired benchmarks; server shards and the desktop build were not faster.
+    runs-on: ubuntu-24.04-arm
     timeout-minutes: 10
     strategy:
       fail-fast: false
@@ -275,7 +277,9 @@ jobs:
     name: Test Web ${{ matrix.shard }}
     needs: changes
     if: ${{ !cancelled() && needs.changes.outputs.test_web != 'false' }}
-    runs-on: ubuntu-24.04
+    # Free arm64 runners ran these import-bound suites 27-37% faster than x64
+    # in paired benchmarks; server shards and the desktop build were not faster.
+    runs-on: ubuntu-24.04-arm
     timeout-minutes: 10
     strategy:
       fail-fast: false

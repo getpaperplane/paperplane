@@ -247,7 +247,7 @@ const publishCmd = Command.make(
           assetPath: path.join(scopeDir, "cli-<platform>.tgz"),
         });
       }
-      if (!(yield* fs.exists(launcherTarball))) {
+      if (config.only !== "platforms" && !(yield* fs.exists(launcherTarball))) {
         return yield* new ServerCliBuildAssetMissingError({ assetPath: launcherTarball });
       }
 

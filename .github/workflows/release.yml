@@ -837,12 +837,22 @@ jobs:
   # gates every upload. A later desktop failure may leave unused platform
   # versions on npm, but no launcher is published until all builds pass.
   publish_cli_platforms:
-    name: Publish CLI platform packages to npm
-    needs: [preflight, quality, package_cli]
-    if: ${{ !inputs.build_only && !failure() && !cancelled() && needs.preflight.result == 'success' && needs.quality.result == 'success' && needs.package_cli.result == 'success' }}
+    name: Publish CLI ${{ matrix.platform }} to npm
+    needs: [preflight, quality]
+    if: ${{ !inputs.build_only && !failure() && !cancelled() && needs.preflight.result == 'success' && needs.quality.result == 'success' }}
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { platform: linux-x64, artifact: cli-linux-x64, producer: Build Linux x64 }
+          - { platform: linux-arm64, artifact: cli-linux-arm64, producer: Build Linux arm64 }
+          - { platform: darwin-arm64, artifact: cli-mac-arm64, producer: Build macOS arm64 }
+          - { platform: win32-x64, artifact: cli-win-x64, producer: Build Windows x64 }
+          - { platform: win32-arm64, artifact: cli-win-arm64, producer: Build Windows arm64 CLI }
     permissions:
+      actions: read
       contents: read
       id-token: write
     steps:
@@ -865,11 +875,20 @@ jobs:
               - --filter=@rove-code/server...
               - --filter=@rove-code/scripts...
 
-      - name: Download npm packages
+      - name: Wait for this platform's CLI archive
+        uses: ./.github/actions/wait-for-artifact
+        with:
+          name: ${{ matrix.artifact }}
+          job: ${{ matrix.producer }}
+
+      - name: Download this platform's CLI archive
         uses: actions/download-artifact@v8
         with:
-          name: npm-packages
-          path: npm-packages/@rove-code
+          name: ${{ matrix.artifact }}
+          path: release-cli
+
+      - name: Build this platform's npm package
+        run: node scripts/build-npm-platform-packages.ts --archives-dir release-cli --version "${{ needs.preflight.outputs.version }}" --platform "${{ matrix.platform }}" --output-dir npm-packages
 
       - name: Publish platform packages
         run: node apps/server/scripts/cli.ts publish --only platforms --packages-dir npm-packages --tag "${{ needs.preflight.outputs.cli_dist_tag }}" --provenance --verbose

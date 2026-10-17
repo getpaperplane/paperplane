@@ -297,7 +297,18 @@ const packAndPlace = Effect.fn("packAndPlace")(function* (input: {
   const fs = yield* FileSystem.FileSystem;
   yield* fs.remove(input.tarball, { force: true });
   yield* runCommand(
-    ChildProcess.make(yield* hostTar, ["-czf", input.tarball, "-C", input.stageDir, "package"]),
+    ChildProcess.make(yield* hostTar, [
+      // Release packaging runs on Linux. Normalize generated file metadata so
+      // early single-platform builds match the full inspection artifact byte for byte.
+      ...((yield* HostProcess.Platform) === "linux"
+        ? ["--sort=name", "--mtime=@0", "--owner=0", "--group=0", "--numeric-owner"]
+        : []),
+      "-czf",
+      input.tarball,
+      "-C",
+      input.stageDir,
+      "package",
+    ]),
     `tar (${input.tarball})`,
   );
   yield* fs.remove(input.packageDir, { recursive: true, force: true });
@@ -403,20 +414,21 @@ export const buildNpmPlatformPackages = Effect.fn("buildNpmPlatformPackages")(fu
   readonly version: string;
   readonly outputDir: string;
   readonly allowMissing: boolean;
+  readonly platform?: CliArchivePlatformKey | "all";
 }) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
 
+  const platformKeys =
+    input.platform && input.platform !== "all" ? [input.platform] : CLI_ARCHIVE_PLATFORM_KEYS;
   const present = yield* fs.readDirectory(input.archivesDir);
-  const archives = CLI_ARCHIVE_PLATFORM_KEYS.flatMap((key) => {
+  const archives = platformKeys.flatMap((key) => {
     const fileName = cliArchiveFileName(input.version, key);
     return present.includes(fileName)
       ? [{ key, archive: path.join(input.archivesDir, fileName) }]
       : [];
   });
-  const missing = CLI_ARCHIVE_PLATFORM_KEYS.filter(
-    (key) => !archives.some((entry) => entry.key === key),
-  );
+  const missing = platformKeys.filter((key) => !archives.some((entry) => entry.key === key));
   if (missing.length > 0 && (!input.allowMissing || archives.length === 0)) {
     return yield* new NpmPackagesArchivesMissingError({ archivesDir: input.archivesDir, missing });
   }
@@ -432,14 +444,17 @@ export const buildNpmPlatformPackages = Effect.fn("buildNpmPlatformPackages")(fu
       stagePlatformPackage({ key, archive, outputDir: input.outputDir, version: input.version }),
     { concurrency: "unbounded" },
   );
-  const outputs = [
-    ...platformOutputs,
-    yield* stageLauncherPackage({
-      outputDir: input.outputDir,
-      version: input.version,
-      platformKeys: archives.map((entry) => entry.key),
-    }),
-  ];
+  const outputs = [...platformOutputs];
+  // A single-platform build is only for early publication, never a partial launcher.
+  if (!input.platform || input.platform === "all") {
+    outputs.push(
+      yield* stageLauncherPackage({
+        outputDir: input.outputDir,
+        version: input.version,
+        platformKeys: archives.map((entry) => entry.key),
+      }),
+    );
+  }
 
   for (const output of outputs) {
     yield* Effect.log(`[npm-packages] Wrote ${output.packageDir} and ${output.tarball}`);
@@ -464,6 +479,10 @@ const command = Command.make(
       ),
     ),
     outputDir: Flag.String("output-dir").pipe(Flag.withDefault("npm-packages")),
+    platform: Flag.Literals("platform", ["all", ...CLI_ARCHIVE_PLATFORM_KEYS]).pipe(
+      Flag.withDefault("all"),
+      Flag.withDescription("Build only this platform package, without a launcher."),
+    ),
     allowMissing: Flag.Boolean("allow-missing").pipe(
       Flag.withDefault(false),
       Flag.withDescription("Build a launcher that lists only the platforms present."),
