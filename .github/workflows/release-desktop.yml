@@ -143,13 +143,17 @@ jobs:
           set -euo pipefail
           git init .
           git remote add origin "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}.git"
+          # Fetch trees first, then only the blobs selected by sparse checkout.
+          # Otherwise even excluded .repos and mobile static libraries transfer.
+          git config remote.origin.promisor true
+          git config remote.origin.partialclonefilter blob:none
           for attempt in 1 2 3 4; do
-            if git fetch --no-tags --depth=1 origin "$CHECKOUT_REF"; then break; fi
+            if git fetch --filter=blob:none --no-tags --depth=1 origin "$CHECKOUT_REF"; then break; fi
             echo "git fetch attempt $attempt/4 failed" >&2
             if [ "$attempt" -eq 4 ]; then exit 1; fi
             sleep $((5 * 2 ** (attempt - 1)))
           done
-          git sparse-checkout set --no-cone '/*' '!/.repos/'
+          git sparse-checkout set --no-cone '/*' '!/.repos/' '!/apps/mobile/modules/rove-terminal/Vendor/**/*.a'
           git -c checkout.workers=0 checkout --detach FETCH_HEAD
 
       # Only the desktop build needs these, but Ubuntu mirrors sometimes stall
@@ -212,12 +216,6 @@ jobs:
             throw "Windows ARM builds must use the pinned PowerShell runtime"
           }
 
-      # Windows installs straight from the registry. There, linking the packages
-      # takes the time, not downloading them, so a ~700 MB package cache did not
-      # pay for its own restore. Across recent nightlies, restore plus install
-      # took 183-233s on arm64 and 116-172s on x64, while a plain install took
-      # 142-210s and 84-160s. The arm64 entries also filled 4 GB of the
-      # repository's 10 GB Actions cache.
       - name: Test Windows signing
         if: inputs.platform == 'win'
         shell: pwsh
@@ -230,26 +228,37 @@ jobs:
           cache: false
           run-install: false
 
-      # setup-vp v1 has no restore-only input. Match its pinned implementation's
-      # cache path/key, without its expensive post-job save. CI owns cache writes;
-      # on a miss, install still fetches and verifies dependencies normally.
+      # Previous Windows caches cost more to restore than they saved (linking
+      # dominated install). Keep the store on the workspace filesystem so pnpm
+      # can hard-link instead of copying from C: onto the ARM Dev Drive. Use a
+      # separate key namespace to benchmark this layout against that baseline.
+      - name: Put Windows pnpm store on the workspace drive
+        if: inputs.platform == 'win'
+        shell: pwsh
+        run: |
+          "pnpm_config_store_dir=$env:GITHUB_WORKSPACE\.pnpm-store" >> $env:GITHUB_ENV
+
+      # In this Vite+ version `vp pm cache dir` resolves the pnpm content store,
+      # including its version suffix; `vp pm store path` is not supported.
       - name: Locate Vite+ dependency cache
-        if: inputs.platform != 'win'
         id: vp_cache
         shell: bash
         run: |
           echo "path=$(vp pm cache dir)" >> "$GITHUB_OUTPUT"
           echo "arch=$(node -p 'process.arch')" >> "$GITHUB_OUTPUT"
 
-      - name: Restore Vite+ dependencies (no save)
-        if: inputs.platform != 'win'
-        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+      # actions/cache saves only on an exact-key miss, including prefix hits.
+      # macOS has no CI writer, so restore-only would leave every new lockfile
+      # permanently falling back to an old cache. Windows desktop/CLI jobs share
+      # the same install filters and key; at most one wins a concurrent save.
+      - name: Cache Vite+ dependencies
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
         with:
           path: ${{ steps.vp_cache.outputs.path }}
-          key: vite-plus-${{ runner.os }}-${{ steps.vp_cache.outputs.arch }}-pnpm-${{ hashFiles('pnpm-lock.yaml') }}
+          key: ${{ inputs.platform == 'win' && 'windows-release-store-v2' || 'vite-plus' }}-${{ runner.os }}-${{ steps.vp_cache.outputs.arch }}-pnpm-${{ hashFiles('pnpm-lock.yaml') }}
           restore-keys: |
-            vite-plus-${{ runner.os }}-${{ steps.vp_cache.outputs.arch }}-pnpm-
-            vite-plus-${{ runner.os }}-${{ steps.vp_cache.outputs.arch }}-
+            ${{ inputs.platform == 'win' && 'windows-release-store-v2' || 'vite-plus' }}-${{ runner.os }}-${{ steps.vp_cache.outputs.arch }}-pnpm-
+            ${{ inputs.platform == 'win' && 'windows-release-store-v2' || 'vite-plus' }}-${{ runner.os }}-${{ steps.vp_cache.outputs.arch }}-
 
       # pnpm checks the lockfile and policy before reusing this result. A missing
       # artifact leaves the cache empty, so installation runs the checks again.
