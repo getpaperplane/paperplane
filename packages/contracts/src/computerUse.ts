@@ -29,7 +29,6 @@ export const ComputerUseMacosVm = Schema.Struct({
   memoryBytes: Schema.optionalKey(Schema.Number),
   lumeVersion: Schema.optionalKey(Schema.String),
   setupCommand: Schema.optionalKey(Schema.String),
-  displayUrl: Schema.optionalKey(Schema.String),
   detail: Schema.optionalKey(Schema.String),
 });
 export type ComputerUseMacosVm = typeof ComputerUseMacosVm.Type;
@@ -94,6 +93,7 @@ export const ComputerUseControlInput = Schema.Union([
   Schema.Struct({ action: Schema.Literal("start") }),
   Schema.Struct({ action: Schema.Literal("prepare-vm") }),
   Schema.Struct({ action: Schema.Literal("verify-vm") }),
+  Schema.Struct({ action: Schema.Literal("open-vm-display") }),
   Schema.Struct({ action: Schema.Literal("release-vm") }),
   Schema.Struct({ action: Schema.Literal("remove-vm") }),
   Schema.Struct({ action: Schema.Literal("grant-permissions") }),
@@ -108,6 +108,7 @@ export const ComputerUseAction = Schema.Literals([
   "set-telemetry",
   "prepare-vm",
   "verify-vm",
+  "open-vm-display",
   "release-vm",
   "remove-vm",
 ]);

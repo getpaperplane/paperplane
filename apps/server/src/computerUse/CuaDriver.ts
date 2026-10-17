@@ -717,6 +717,7 @@ export const make = Effect.fn("CuaDriver.make")(function* (options?: {
     const vmAction =
       input.action === "prepare-vm" ||
       input.action === "verify-vm" ||
+      input.action === "open-vm-display" ||
       input.action === "release-vm" ||
       input.action === "remove-vm";
     if (mode.computerUseMacosMode === "isolated-vm" || vmAction) {
@@ -728,6 +729,7 @@ export const make = Effect.fn("CuaDriver.make")(function* (options?: {
             if (input.action === "install") yield* vms.install;
             else if (input.action === "prepare-vm") yield* vms.prepare;
             else if (input.action === "verify-vm") yield* vms.verify;
+            else if (input.action === "open-vm-display") yield* vms.openDisplay;
             else if (input.action === "release-vm" || input.action === "remove-vm") {
               yield* releaseUnlocked;
               if (input.action === "remove-vm") yield* vms.remove;

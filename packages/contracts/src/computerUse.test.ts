@@ -23,19 +23,8 @@ describe("computer use status", () => {
       readiness: { platform: "darwin", permissions: null, mode: "isolated-vm", vm },
     };
     expect(decode(status)).toEqual(status);
-    const withDisplay = {
-      ...status,
-      readiness: { ...status.readiness, vm: { ...vm, displayUrl: "vnc://127.0.0.1:5900" } },
-    };
-    expect(decode(withDisplay)).toEqual(withDisplay);
-    expect(() =>
-      decode({
-        ...status,
-        readiness: { ...status.readiness, vm: { ...vm, displayUrl: 5900 } },
-      }),
-    ).toThrow();
     const control = Schema.decodeUnknownSync(ComputerUseControlInput);
-    for (const action of ["prepare-vm", "verify-vm", "release-vm", "remove-vm"])
+    for (const action of ["prepare-vm", "verify-vm", "open-vm-display", "release-vm", "remove-vm"])
       expect(control({ action })).toEqual({ action });
   });
   it("distinguishes runtime setup from image preparation and validates slot counts", () => {

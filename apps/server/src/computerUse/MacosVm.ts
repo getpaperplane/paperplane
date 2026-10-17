@@ -70,6 +70,7 @@ export class MacosVmError extends Schema.TaggedError<MacosVmError>()("MacosVmErr
     "consent",
     "capacity",
     "not-ready",
+    "display",
   ]),
   cause: Schema.optionalKey(Schema.Defect()),
 }) {
@@ -87,6 +88,8 @@ export class MacosVmError extends Schema.TaggedError<MacosVmError>()("MacosVmErr
         return "The private macOS VM slot is occupied. Use close_desktop in the finished thread or Release desktop in Settings. Rove never evicts work or falls back to the host.";
       case "not-ready":
         return "Prepare and verify the isolated macOS desktop in Settings before using it. No host input was sent.";
+      case "display":
+        return "Open VM display requires a running golden VM awaiting consent and a valid vnc:// URL on loopback or the Lume NAT network (192.168.64.0/24).";
       case "runtime":
         return "The Lume VM operation failed. Check Lume, available disk/RAM and Apple's two-guest host limit. No host input was sent.";
     }
@@ -100,6 +103,7 @@ export class MacosVm extends Context.Service<
     readonly install: Effect.Effect<void, MacosVmError>;
     readonly prepare: Effect.Effect<void, MacosVmError>;
     readonly verify: Effect.Effect<void, MacosVmError>;
+    readonly openDisplay: Effect.Effect<void, MacosVmError>;
     readonly lease: (key: string) => Effect.Effect<Transport, MacosVmError>;
     readonly close: (key: string) => Effect.Effect<void, MacosVmError>;
     readonly release: Effect.Effect<void, MacosVmError>;
@@ -341,21 +345,9 @@ export const make = Effect.fn("MacosVm.make")(function* (options?: { readonly ar
       const records = yield* list;
       const vm = records.find((entry) => entry.name === GOLDEN);
       const unrecorded = !workOwned && records.some((entry) => entry.name === WORK);
-      // Lume URLs may embed a VNC password. computerUse.status allows orchestration:read,
-      // so expose only the VNC endpoint, never credentials (including query/fragment data).
-      let displayUrl: string | undefined;
-      if (!unrecorded && vm?.status === "running" && vm.vncUrl) {
-        try {
-          const url = new URL(vm.vncUrl);
-          if (url.protocol === "vnc:" && url.host) displayUrl = `vnc://${url.host}`;
-        } catch {
-          // An invalid display URL must not make VM status unavailable.
-        }
-      }
       return {
         ...base,
         lumeVersion: found.success,
-        ...(displayUrl ? { displayUrl } : {}),
         ...(Number.isFinite(free) ? { freeDiskBytes: free } : {}),
         ...(vm?.diskSize
           ? { diskBytes: vm.diskSize.allocated, virtualDiskBytes: vm.diskSize.total }
@@ -382,6 +374,26 @@ export const make = Effect.fn("MacosVm.make")(function* (options?: { readonly ar
           lumeVersion: found.success,
           detail: result.failure.message,
         } satisfies ComputerUseMacosVm);
+  });
+  const openDisplay = Effect.gen(function* () {
+    if ((yield* check).state !== "needs-consent")
+      return yield* new MacosVmError({ reason: "display" });
+    const vm = yield* get(GOLDEN);
+    const url = yield* Effect.try({
+      try: () => new URL(vm.vncUrl ?? ""),
+      catch: () => new MacosVmError({ reason: "display" }),
+    });
+    const host = url.hostname;
+    const local =
+      host === "localhost" ||
+      host === "[::1]" ||
+      (NodeNet.isIP(host) === 4 && (host.startsWith("127.") || host.startsWith("192.168.64.")));
+    if (vm.status !== "running" || url.protocol !== "vnc:" || !local)
+      return yield* new MacosVmError({ reason: "display" });
+    // Keep credentials on the host; never include the URL or process failure in RPC errors.
+    yield* checked("/usr/bin/open", [vm.vncUrl!]).pipe(
+      Effect.mapError(() => new MacosVmError({ reason: "display" })),
+    );
   });
   const prepare = Effect.gen(function* () {
     yield* claim;
@@ -498,5 +510,15 @@ export const make = Effect.fn("MacosVm.make")(function* (options?: { readonly ar
     yield* checked("/bin/bash", ["-c", INSTALL_SCRIPT], "10 minutes");
     yield* discover;
   });
-  return MacosVm.of({ check, prepare, verify, lease, close, release, remove, install });
+  return MacosVm.of({
+    check,
+    prepare,
+    verify,
+    openDisplay,
+    lease,
+    close,
+    release,
+    remove,
+    install,
+  });
 });

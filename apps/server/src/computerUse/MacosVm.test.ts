@@ -154,6 +154,7 @@ const harness = <A, E>(
             return output();
           }
           if (input.command === "/usr/bin/ssh") return output(json(consent));
+          if (input.command === "/usr/bin/open") return output();
           if (!input.command.endsWith("/lume"))
             throw new Error(`Unexpected command ${input.command}`);
           switch (args[0]) {
@@ -332,28 +333,44 @@ it.effect("installs Lume only on explicit control and never falls back to the ho
   ),
 );
 
-it.effect("exposes only a credential-free display endpoint during running consent setup", () =>
-  harness(({ runtime, vms }) =>
+it.effect("opens the credentialed display only for a running golden VM awaiting consent", () =>
+  harness(({ runtime, vms, runs }) =>
     Effect.gen(function* () {
-      expect(yield* runtime.check).not.toHaveProperty("displayUrl");
+      expect((yield* runtime.openDisplay.pipe(Effect.flip)).reason).toBe("display");
       const vm = record(golden);
       vm.vncUrl = "vnc://user:secret@127.0.0.1:5900?password=secret#secret";
       vms.set(golden, vm);
-      expect(yield* runtime.check).not.toHaveProperty("displayUrl");
+      expect((yield* runtime.openDisplay.pipe(Effect.flip)).reason).toBe("display");
       vm.status = "running";
-      expect(yield* runtime.check).toMatchObject({
-        state: "needs-consent",
-        displayUrl: "vnc://127.0.0.1:5900",
-      });
-      for (const url of [undefined, null, "invalid", "https://example.com"]) {
+      yield* runtime.openDisplay;
+      expect(runs.filter((run) => run.command === "/usr/bin/open")).toMatchObject([
+        { args: [vm.vncUrl] },
+      ]);
+      expect(yield* runtime.check).not.toHaveProperty("displayUrl");
+      for (const url of [
+        undefined,
+        null,
+        "invalid",
+        "https://127.0.0.1",
+        "vnc://example.com",
+        "vnc://192.168.65.2",
+        "vnc://192.168.64.2.evil.test",
+      ]) {
         if (url === undefined) delete vm.vncUrl;
         else vm.vncUrl = url;
-        expect(yield* runtime.check).not.toHaveProperty("displayUrl");
+        expect((yield* runtime.openDisplay.pipe(Effect.flip)).reason).toBe("display");
+      }
+      expect(runs.filter((run) => run.command === "/usr/bin/open")).toHaveLength(1);
+      for (const host of ["localhost", "[::1]", "127.0.0.2", "192.168.64.2"]) {
+        vm.vncUrl = `vnc://:secret@${host}:5900`;
+        yield* runtime.openDisplay;
+        expect(runs.at(-1)).toMatchObject({ command: "/usr/bin/open", args: [vm.vncUrl] });
       }
       vm.vncUrl = "vnc://:secret@127.0.0.1:5900";
       vms.set(work, record(work));
       expect(yield* runtime.check).toMatchObject({ state: "unavailable" });
-      expect(yield* runtime.check).not.toHaveProperty("displayUrl");
+      expect((yield* runtime.openDisplay.pipe(Effect.flip)).reason).toBe("display");
+      expect(runs.filter((run) => run.command === "/usr/bin/open")).toHaveLength(5);
     }),
   ),
 );
@@ -527,11 +544,20 @@ it.effect(
 it.effect(
   "routes Cua over SSH with isolated policy, preserves idle leases, closes explicitly and releases on mode switch/off/shutdown",
   () =>
-    harness(({ makeDriver, vms, change }) =>
+    harness(({ makeDriver, vms, change, runs }) =>
       Effect.gen(function* () {
         const driver = yield* makeDriver();
         yield* driver.control({ action: "prepare-vm" });
+        vms.get(golden)!.vncUrl = "vnc://:secret@127.0.0.1:5900";
+        yield* driver.control({ action: "open-vm-display" });
+        expect(runs.filter((run) => run.command === "/usr/bin/open")).toMatchObject([
+          { args: ["vnc://:secret@127.0.0.1:5900"] },
+        ]);
         yield* driver.control({ action: "verify-vm" });
+        expect(
+          (yield* driver.control({ action: "open-vm-display" }).pipe(Effect.flip)).detail,
+        ).toContain("awaiting consent");
+        expect(runs.filter((run) => run.command === "/usr/bin/open")).toHaveLength(1);
         const thread = ThreadId.make("vm-thread");
         const catalog = yield* driver.catalog(thread);
         expect(catalog.policy).toBe("isolated-desktop");
