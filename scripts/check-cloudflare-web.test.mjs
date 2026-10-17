@@ -54,21 +54,18 @@ it("accepts a PR schema change without comparing it to the base branch", async (
   NodeAssert.throws(() => checkCloudflareWeb(directory));
   NodeAssert.equal(checkCloudflareWeb(directory, builtSchema).files, 2);
 
-  const server = NodeHttp.createServer((request, response) => {
-    response.setHeader("content-type", "application/schema+json");
-    response.end(JSON.stringify(previewSchema));
-  });
-  server.listen(0, "127.0.0.1");
-  await NodeEvents.once(server, "listening");
-  try {
-    const origin = `http://127.0.0.1:${server.address().port}`;
-    await checkDeployedProjectFileSchema(origin, builtSchema);
-    previewSchema.description = "A stale deployment.";
-    await NodeAssert.rejects(checkDeployedProjectFileSchema(origin, builtSchema));
-  } finally {
-    server.close();
-    await NodeEvents.once(server, "close");
-  }
+  const fetchMock = mockDeploymentFetch();
+  fetchMock.mockImplementation(async () => schemaResponse(previewSchema));
+  const origin = "https://preview.example.com";
+  await checkDeployedProjectFileSchema(origin, builtSchema);
+  previewSchema.description = "A stale deployment.";
+  const rejected = NodeAssert.rejects(
+    checkDeployedProjectFileSchema(origin, builtSchema),
+    NodeAssert.AssertionError,
+  );
+  await vi.advanceTimersByTimeAsync(95_000);
+  await rejected;
+  NodeAssert.equal(fetchMock.mock.calls.length, 7);
 });
 
 it.each([{ $id: "https://wrong.example/schema" }, { $schema: "wrong" }, { type: "string" }])(
@@ -162,6 +159,23 @@ it.each([429, 503, 522])("retries transient HTTP %s", async (status) => {
   NodeAssert.equal(fetchMock.mock.calls.length, 2);
 });
 
+it("retries a stale deployed schema until the expected schema propagates", async () => {
+  const fetchMock = mockDeploymentFetch();
+  fetchMock
+    .mockResolvedValueOnce(schemaResponse({ type: "object" }))
+    .mockResolvedValueOnce(schemaResponse());
+  const check = checkDeployedProjectFileSchema("https://nightly.example.com");
+  await vi.advanceTimersByTimeAsync(4_999);
+  NodeAssert.equal(fetchMock.mock.calls.length, 1);
+  NodeAssert.equal(
+    console.warn.mock.calls[0][0],
+    "Schema check attempt 1/6 failed: served schema does not match yet. Retrying in 5s.",
+  );
+  await vi.advanceTimersByTimeAsync(1);
+  await check;
+  NodeAssert.equal(fetchMock.mock.calls.length, 2);
+});
+
 it("retries a request timeout", async () => {
   const fetchMock = mockDeploymentFetch();
   fetchMock
@@ -217,7 +231,6 @@ it.each([
   new Response("not found", { status: 404 }),
   new Response("<html></html>", { headers: { "content-type": "text/html" } }),
   new Response("invalid JSON", { headers: { "content-type": "application/json" } }),
-  schemaResponse({ type: "object" }),
 ])("does not retry invalid schema responses: %s", async (response) => {
   const fetchMock = mockDeploymentFetch();
   fetchMock.mockResolvedValueOnce(response);
@@ -238,13 +251,14 @@ it("still rejects an incorrect schema after DNS recovers", async () => {
   const fetchMock = mockDeploymentFetch();
   fetchMock
     .mockRejectedValueOnce(new TypeError("fetch failed", { cause: { code: "ENOTFOUND" } }))
-    .mockResolvedValueOnce(schemaResponse({ type: "object" }));
+    .mockImplementation(async () => schemaResponse({ type: "object" }));
   const rejected = NodeAssert.rejects(
     checkDeployedProjectFileSchema("https://nightly.example.com"),
+    NodeAssert.AssertionError,
   );
-  await vi.advanceTimersByTimeAsync(5_000);
+  await vi.advanceTimersByTimeAsync(95_000);
   await rejected;
-  NodeAssert.equal(fetchMock.mock.calls.length, 2);
+  NodeAssert.equal(fetchMock.mock.calls.length, 6);
 });
 
 it("rejects an asset larger than 25 MiB", () => {
