@@ -493,7 +493,7 @@ importers:
         specifier: ~58.0.3
         version: 58.0.3(expo@58.0.11)(react@19.3.0)
       expo-notifications:
-        specifier: ~58.1.4
+        specifier: 58.1.4
         version: 58.1.4(patch_hash=033ef4dd82ad67b474fd26c87b878950b8420ee6b16432ec2a1cd8a65798ba99)(expo@58.0.11)(react-native@0.88.0(@babel/core@7.29.7)(@react-native/metro-config@0.88.0(@babel/core@7.29.7)(bufferutil@4.1.0)(utf-8-validate@6.0.6))(@types/react@19.3.0)(bufferutil@4.1.0)(react@19.3.0)(utf-8-validate@6.0.6))(react@19.3.0)(typescript@7.0.2)
       expo-paste-input:
         specifier: ^0.1.15
@@ -544,7 +544,7 @@ importers:
         specifier: file:deps/react-native-enriched-markdown-1.2.0-t3.13.tgz
         version: file:apps/mobile/deps/react-native-enriched-markdown-1.2.0-t3.13.tgz(katex@0.16.47)(react-native@0.88.0(@babel/core@7.29.7)(@react-native/metro-config@0.88.0(@babel/core@7.29.7)(bufferutil@4.1.0)(utf-8-validate@6.0.6))(@types/react@19.3.0)(bufferutil@4.1.0)(react@19.3.0)(utf-8-validate@6.0.6))(react@19.3.0)
       react-native-gesture-handler:
-        specifier: ~3.3.0
+        specifier: 3.3.0
         version: 3.3.0(patch_hash=abe20e1d1c23549297cbbc818e14fe479b41455930d9663135d6b40fe359b626)(react-native@0.88.0(@babel/core@7.29.7)(@react-native/metro-config@0.88.0(@babel/core@7.29.7)(bufferutil@4.1.0)(utf-8-validate@6.0.6))(@types/react@19.3.0)(bufferutil@4.1.0)(react@19.3.0)(utf-8-validate@6.0.6))(react@19.3.0)
       react-native-image-viewing:
         specifier: ^0.2.2

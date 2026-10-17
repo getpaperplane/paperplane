@@ -39,6 +39,7 @@ import { loadRepoEnv } from "./lib/public-config.ts";
 import { selectDesktopRuntimeExternalDependencies } from "./lib/desktop-external-packages.ts";
 import { resolveCatalogDependencies } from "./lib/resolve-catalog.ts";
 import { WindowsSigningModeConfig } from "./lib/windows-signing.ts";
+import { verifyWindowsPeArchitecture } from "./lib/windows-pe.ts";
 
 import * as NodeRuntime from "@effect/platform-node/NodeRuntime";
 import * as NodeServices from "@effect/platform-node/NodeServices";
@@ -736,6 +737,7 @@ const WindowsPackagedPayloadValidationReason = Schema.Literals([
   "wsl-runtime-missing",
   "wsl-runtime-invalid",
   "file-limit-exceeded",
+  "architecture-invalid",
 ]);
 
 export class WindowsPackagedPayloadValidationError extends Schema.TaggedError<WindowsPackagedPayloadValidationError>()(
@@ -750,6 +752,9 @@ export class WindowsPackagedPayloadValidationError extends Schema.TaggedError<Wi
   },
 ) {
   override get message(): string {
+    if (this.reason === "architecture-invalid") {
+      return `Windows packaged payload contains an invalid target binary: ${String(this.cause)}`;
+    }
     if (this.reason === "file-limit-exceeded") {
       return `Windows packaged payload contains ${String(this.fileCount)} files; expected at most ${String(this.fileLimit)}.`;
     }
@@ -967,6 +972,19 @@ interface StagePackageJson {
 }
 
 export const STAGE_INSTALL_ARGS = ["install", "--prod"] as const;
+
+// supportedArchitectures selects optional packages, but lifecycle scripts (in
+// particular node-pty's ConPTY copy) need npm_config_arch as well. Keep this
+// out of the repository install: build tools must still run on the host CPU.
+export function stageNativeInstallEnv(
+  platform: typeof BuildPlatform.Type,
+  arch: typeof BuildArch.Type,
+) {
+  return platform === "win"
+    ? { npm_config_arch: arch, pnpm_config_side_effects_cache: "false" }
+    : {};
+}
+
 export const DESKTOP_ELECTRON_LANGUAGES = ["en-US"] as const;
 export const DESKTOP_FILE_EXCLUSIONS = [
   // Cursor finds platform assets by walking up from argv[1]. Keep them outside
@@ -1062,6 +1080,12 @@ export function resolveWindowsServerAsarIgnoreGlobs(arch: typeof BuildArch.Type)
 
   return [
     ...WINDOWS_SERVER_ASAR_IGNORE_GLOBS,
+    // These packages publish multiple platforms in one tarball. The Windows
+    // runtime never loads the other prebuilds; exclude them rather than hide
+    // non-target native binaries from the packaged architecture check.
+    "**/node_modules/node-pty/prebuilds/{darwin,linux}-*{,/**}",
+    "**/node_modules/@earendil-works/pi-tui/native/{darwin,linux}{,/**}",
+    `**/node_modules/@earendil-works/pi-tui/native/win32/prebuilds/win32-${unusedArch}{,/**}`,
     unusedPrebuild,
     `${unusedPrebuild}/**`,
     unusedConpty,
@@ -3185,6 +3209,7 @@ export const stageWindowsServerSidecar = Effect.fn("stageWindowsServerSidecar")(
     ChildProcess.make(installCommand.command, installCommand.args, {
       cwd: serverStageDir,
       shell: installCommand.shell,
+      env: { ...process.env, ...stageNativeInstallEnv("win", input.arch) },
     }),
     { label: "vp install --prod (server sidecar)", verbose: input.verbose },
   );
@@ -3264,7 +3289,12 @@ export const verifyWindowsPrimaryFffNativeLoad = Effect.fn(
       output: "The unpacked application does not contain its expected primary executable.",
     });
   }
-  if (hostPlatform !== "win32" || hostArchitecture !== input.targetArch) return;
+  if (hostPlatform !== "win32" || hostArchitecture !== input.targetArch) {
+    yield* Effect.log(
+      `[desktop-artifact] Skipping Windows primary native-load probe: ${input.targetArch} cannot execute on ${hostPlatform}/${hostArchitecture}. PE architecture validation still runs; test the installer on native hardware before publishing.`,
+    );
+    return;
+  }
 
   const probeRoot = yield* fs.makeTempDirectoryScoped({
     prefix: "rove-windows-primary-native-probe-",
@@ -3545,6 +3575,21 @@ export const validateWindowsPackagedPayload = Effect.fn(
       fileCount,
       fileLimit,
     });
+  }
+
+  if (input.targetArch === "arm64") {
+    const checked = yield* Effect.tryPromise({
+      try: () => verifyWindowsPeArchitecture(packagedAppDir, "arm64"),
+      catch: (cause) =>
+        new WindowsPackagedPayloadValidationError({
+          reason: "architecture-invalid",
+          packagedAppDir,
+          cause,
+        }),
+    });
+    yield* Effect.log(
+      `[desktop-artifact] Verified ARM64 PE architecture (${checked} binaries, including ASAR contents).`,
+    );
   }
 
   yield* verifyWindowsPrimaryFffNativeLoad({
@@ -3956,6 +4001,7 @@ const buildDesktopArtifact = Effect.fn("buildDesktopArtifact")(function* (
     ChildProcess.make(installCommand.command, installCommand.args, {
       cwd: stageAppDir,
       shell: installCommand.shell,
+      env: { ...process.env, ...stageNativeInstallEnv(options.platform, options.arch) },
     }),
     { label: "vp install --prod", verbose: options.verbose },
   );

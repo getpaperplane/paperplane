@@ -124,7 +124,7 @@ jobs:
       # build stages the packaged app there, and staging inside the repo would
       # resolve the repo's node_modules.
       - name: Mount Dev Drive over the workspace
-        if: inputs.platform == 'win' && inputs.arch == 'arm64'
+        if: inputs.platform == 'win' && runner.arch == 'ARM64'
         uses: samypr100/setup-dev-drive@562171fe8df7401fdf582d766cd3b6ab80d5b1a0 # v4.1.0
         with:
           drive-size: 40GB
@@ -143,13 +143,17 @@ jobs:
           set -euo pipefail
           git init .
           git remote add origin "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}.git"
+          # Fetch trees first, then only the blobs selected by sparse checkout.
+          # Otherwise even excluded .repos and mobile static libraries transfer.
+          git config remote.origin.promisor true
+          git config remote.origin.partialclonefilter blob:none
           for attempt in 1 2 3 4; do
-            if git fetch --no-tags --depth=1 origin "$CHECKOUT_REF"; then break; fi
+            if git fetch --filter=blob:none --no-tags --depth=1 origin "$CHECKOUT_REF"; then break; fi
             echo "git fetch attempt $attempt/4 failed" >&2
             if [ "$attempt" -eq 4 ]; then exit 1; fi
             sleep $((5 * 2 ** (attempt - 1)))
           done
-          git sparse-checkout set --no-cone '/*' '!/.repos/'
+          git sparse-checkout set --no-cone '/*' '!/.repos/' '!/apps/mobile/modules/rove-terminal/Vendor/**/*.a'
           git -c checkout.workers=0 checkout --detach FETCH_HEAD
 
       # Only the desktop build needs these, but Ubuntu mirrors sometimes stall
@@ -173,8 +177,17 @@ jobs:
           SCRIPT
           bash .github/scripts/background-start.sh apt bash "$RUNNER_TEMP/apt.sh"
 
+      # The ARM host's PowerShell 7.6/.NET 10 can crash during signing
+      # (dotnet/runtime#131636). This is a host workaround, not a target need.
+      - name: Cache pinned Windows ARM PowerShell archive
+        if: inputs.platform == 'win' && runner.arch == 'ARM64'
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          path: ${{ runner.temp }}/PowerShell-7.4.20-win-arm64.zip
+          key: powershell-win-arm64-7.4.20-67eff749d5dae357501c95a3eec1dcd93f669824e3ca2b1d2adcdecdebf04f35
+
       - name: Use PowerShell 7.4 for Windows ARM builds
-        if: inputs.platform == 'win' && inputs.arch == 'arm64'
+        if: inputs.platform == 'win' && runner.arch == 'ARM64'
         shell: powershell
         run: |
           $ErrorActionPreference = "Stop"
@@ -182,9 +195,11 @@ jobs:
           $version = "7.4.20"
           $archive = Join-Path $env:RUNNER_TEMP "PowerShell-$version-win-arm64.zip"
           $installDir = Join-Path $env:RUNNER_TEMP "powershell-$version-arm64"
-          Invoke-WebRequest -UseBasicParsing `
-            -Uri "https://github.com/PowerShell/PowerShell/releases/download/v$version/PowerShell-$version-win-arm64.zip" `
-            -OutFile $archive
+          if (!(Test-Path $archive)) {
+            Invoke-WebRequest -UseBasicParsing `
+              -Uri "https://github.com/PowerShell/PowerShell/releases/download/v$version/PowerShell-$version-win-arm64.zip" `
+              -OutFile $archive
+          }
           $expectedHash = "67eff749d5dae357501c95a3eec1dcd93f669824e3ca2b1d2adcdecdebf04f35"
           if ((Get-FileHash $archive -Algorithm SHA256).Hash -ne $expectedHash) {
             throw "PowerShell archive checksum mismatch"
@@ -195,7 +210,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Verify Windows ARM PowerShell selection
-        if: inputs.platform == 'win' && inputs.arch == 'arm64'
+        if: inputs.platform == 'win' && runner.arch == 'ARM64'
         shell: pwsh
         run: |
           $expectedPath = Join-Path $env:RUNNER_TEMP "powershell-7.4.20-arm64\pwsh.exe"
@@ -203,12 +218,6 @@ jobs:
             throw "Windows ARM builds must use the pinned PowerShell runtime"
           }
 
-      # Windows installs straight from the registry. There, linking the packages
-      # takes the time, not downloading them, so a ~700 MB package cache did not
-      # pay for its own restore. Across recent nightlies, restore plus install
-      # took 183-233s on arm64 and 116-172s on x64, while a plain install took
-      # 142-210s and 84-160s. The arm64 entries also filled 4 GB of the
-      # repository's 10 GB Actions cache.
       - name: Test Windows signing
         if: inputs.platform == 'win'
         shell: pwsh
@@ -218,8 +227,41 @@ jobs:
         uses: voidzero-dev/setup-vp@250f29ce396baf5e8f24498e17c0dfdebabc26eb # v1
         with:
           node-version-file: package.json
-          cache: ${{ inputs.platform != 'win' }}
+          cache: false
           run-install: false
+
+      # Windows installs without a package cache: linking, not downloading, is
+      # the cost there. Measured on this branch, a warm windows-11-arm restore
+      # took 146s plus a 90s install, against a 170s cold install; earlier
+      # nightlies showed the same on both Windows images. The store still lives
+      # on the workspace drive so pnpm hard-links onto the ARM Dev Drive.
+      - name: Put Windows pnpm store on the workspace drive
+        if: inputs.platform == 'win'
+        shell: pwsh
+        run: |
+          "pnpm_config_store_dir=$env:GITHUB_WORKSPACE\.pnpm-store" >> $env:GITHUB_ENV
+
+      # In this Vite+ version `vp pm cache dir` resolves the pnpm content store,
+      # including its version suffix; `vp pm store path` is not supported.
+      - name: Locate Vite+ dependency cache
+        if: inputs.platform != 'win'
+        id: vp_cache
+        shell: bash
+        run: |
+          echo "path=$(vp pm cache dir)" >> "$GITHUB_OUTPUT"
+          echo "arch=$(node -p 'process.arch')" >> "$GITHUB_OUTPUT"
+
+      # actions/cache saves only on an exact-key miss. macOS has no CI writer, so
+      # restore-only would leave every new lockfile falling back to a stale cache.
+      - name: Cache Vite+ dependencies
+        if: inputs.platform != 'win'
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          path: ${{ steps.vp_cache.outputs.path }}
+          key: vite-plus-${{ runner.os }}-${{ steps.vp_cache.outputs.arch }}-pnpm-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            vite-plus-${{ runner.os }}-${{ steps.vp_cache.outputs.arch }}-pnpm-
+            vite-plus-${{ runner.os }}-${{ steps.vp_cache.outputs.arch }}-
 
       # pnpm checks the lockfile and policy before reusing this result. A missing
       # artifact leaves the cache empty, so installation runs the checks again.
@@ -252,7 +294,10 @@ jobs:
       - name: Install desktop dependencies
         env:
           pnpm_config_cache_dir: ${{ runner.temp }}/pnpm-metadata
-        run: vp install --filter=@rove-code/desktop... --filter=@rove-code/server... --filter=@rove-code/scripts...
+        # CLI-only jobs (desktop: false) build the server executable and archive
+        # from scripts/ and apps/server; skipping the desktop graph saves linking
+        # time on the windows-11-arm runner, where linking dominates install.
+        run: vp install ${{ inputs.desktop && '--filter=@rove-code/desktop... ' || '' }}--filter=@rove-code/server... --filter=@rove-code/scripts...
 
       # Desktop staging, CLI archive staging, and the smoke test's runtime copy
       # each write tens of thousands of files under TEMP, which sits on the
@@ -335,7 +380,9 @@ jobs:
           name: js-bundle
           path: apps
 
-      - name: Ensure Spectre-mitigated MSVC libs
+      # windows-2025 normally includes both components. Check the target tools
+      # too: Spectre runtime libraries alone do not provide the ARM64 compiler.
+      - name: Ensure target MSVC tools and Spectre-mitigated libs
         if: inputs.platform == 'win' && steps.resource_monitor_cache.outputs.cache-hit != 'true'
         shell: pwsh
         run: |
@@ -345,13 +392,15 @@ jobs:
           $msvcToolset = Get-ChildItem (Join-Path $installPath 'VC\Tools\MSVC') -Directory |
             Sort-Object { [version]$_.Name } -Descending | Select-Object -First 1
           $spectreArch = "${{ inputs.arch }}"
-          if ($msvcToolset -and (Test-Path (Join-Path $msvcToolset.FullName "lib\spectre\$spectreArch\libcmt.lib"))) {
-            Write-Host "Spectre-mitigated MSVC libraries already installed for $spectreArch."
+          $toolsComponent = "Microsoft.VisualStudio.Component.VC.Tools.${{ inputs.arch == 'arm64' && 'ARM64' || 'x86.x64' }}"
+          $targetTools = & $vswhere -products * -latest -requires $toolsComponent -property installationPath
+          if ($targetTools -eq $installPath -and $msvcToolset -and (Test-Path (Join-Path $msvcToolset.FullName "lib\spectre\$spectreArch\libcmt.lib"))) {
+            Write-Host "MSVC tools and Spectre-mitigated libraries already installed for $spectreArch."
             exit 0
           }
           $setupExe = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\setup.exe"
           $proc = Start-Process -FilePath $setupExe `
-            -ArgumentList "modify", "--installPath", "`"$installPath`"", "--add", `
+            -ArgumentList "modify", "--installPath", "`"$installPath`"", "--add", $toolsComponent, "--add", `
             "Microsoft.VisualStudio.Component.VC.Runtimes.${{ inputs.arch == 'arm64' && 'ARM64' || 'x86.x64' }}.Spectre", "--quiet", "--norestart" `
             -Wait -PassThru -NoNewWindow
           if ($null -eq $proc -or $proc.ExitCode -ne 0) {
@@ -575,6 +624,11 @@ jobs:
           name: cli-linux-${{ inputs.arch }}
           path: wsl-runtime
 
+      # Packaging validates .node/.exe/.dll PE headers in the unpacked ARM64
+      # app and both ASARs before copying/uploading release assets. Only NSIS's
+      # resources/elevate.exe is allowed to be x86 (and must be exactly x86).
+      # Do not set npm_config_arch globally: repo build tools run on the host;
+      # build-desktop-artifact.ts scopes it to target production installs.
       - name: Build desktop artifact
         if: inputs.desktop
         shell: bash

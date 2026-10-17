@@ -145,11 +145,17 @@ jobs:
         run: node scripts/check-release-identity.mjs
 
       - name: Setup Vite+
-        uses: voidzero-dev/setup-vp@v1
+        uses: voidzero-dev/setup-vp@68f39c78aaf39be468cabd2afb09c162574c84af # v1.21.2; cache-save requires newer than v1
         with:
           node-version-file: package.json
           cache: true
-          run-install: true
+          cache-save: false
+          # Both release metadata scripts import only Effect/Node services from
+          # the scripts workspace; desktop/server dependencies are not needed. Not --prod:
+          # the root prepare script runs effect-tsgo, a dev dependency.
+          run-install: |
+            args:
+              - --filter=@rove-code/scripts...
         env:
           pnpm_config_cache_dir: ${{ runner.temp }}/pnpm-metadata
 
@@ -404,10 +410,12 @@ jobs:
           sparse-checkout-cone-mode: false
 
       - name: Setup Vite+
-        uses: voidzero-dev/setup-vp@v1
+        uses: voidzero-dev/setup-vp@68f39c78aaf39be468cabd2afb09c162574c84af # v1.21.2
         with:
           node-version-file: package.json
           cache: true
+          cache-save: false
+          # `alchemy state read` needs the relay's installed CLI and its peers.
           run-install: |
             args:
               - --filter=rove-relay...
@@ -716,14 +724,15 @@ jobs:
       relay_url: ${{ needs.relay_public_config.outputs.relay_url }}
       relay_client_tracing: ${{ needs.relay_public_config.result == 'success' }}
       label: Windows arm64
-      runner: windows-11-arm
+      # Electron/native prebuilds are target-selected; Rust cross-compiles.
+      runner: windows-2025
       platform: win
       target: nsis
       arch: arm64
       rust_target: aarch64-pc-windows-msvc
       resource_key: win32-arm64
-      # Its CLI archive builds in desktop_win_arm64_cli: this runner's setup
-      # alone takes about five minutes, and the two builds contend for its CPUs.
+      # Node SEA injection and the CLI smoke test must still run natively in
+      # desktop_win_arm64_cli; only the desktop installer cross-builds.
       cli_archive: false
 
   desktop_win_arm64_cli:
@@ -829,18 +838,79 @@ jobs:
         if: inputs.build_only
         run: node apps/server/scripts/cli.ts publish --packages-dir npm-packages --tag "${{ needs.preflight.outputs.cli_dist_tag }}" --dry-run --verbose
 
+  # Start npm propagation before desktop packaging finishes. Quality still
+  # gates every upload. A later desktop failure may leave unused platform
+  # versions on npm, but no launcher is published until all builds pass.
+  publish_cli_platforms:
+    name: Publish CLI ${{ matrix.platform }} to npm
+    needs: [preflight, quality]
+    if: ${{ !inputs.build_only && !failure() && !cancelled() && needs.preflight.result == 'success' && needs.quality.result == 'success' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { platform: linux-x64, artifact: cli-linux-x64, producer: Build Linux x64 }
+          - { platform: linux-arm64, artifact: cli-linux-arm64, producer: Build Linux arm64 }
+          - { platform: darwin-arm64, artifact: cli-mac-arm64, producer: Build macOS arm64 }
+          - { platform: win32-x64, artifact: cli-win-x64, producer: Build Windows x64 }
+          - { platform: win32-arm64, artifact: cli-win-arm64, producer: Build Windows arm64 CLI }
+    permissions:
+      actions: read
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.preflight.outputs.ref }}
+          sparse-checkout: |
+            /*
+            !/.repos/
+          sparse-checkout-cone-mode: false
+
+      - name: Setup Vite+
+        uses: voidzero-dev/setup-vp@v1
+        with:
+          node-version-file: package.json
+          cache: true
+          run-install: |
+            args:
+              - --filter=@rove-code/server...
+              - --filter=@rove-code/scripts...
+
+      - name: Wait for this platform's CLI archive
+        uses: ./.github/actions/wait-for-artifact
+        with:
+          name: ${{ matrix.artifact }}
+          job: ${{ matrix.producer }}
+
+      - name: Download this platform's CLI archive
+        uses: actions/download-artifact@v8
+        with:
+          name: ${{ matrix.artifact }}
+          path: release-cli
+
+      - name: Build this platform's npm package
+        run: node scripts/build-npm-platform-packages.ts --archives-dir release-cli --version "${{ needs.preflight.outputs.version }}" --platform "${{ matrix.platform }}" --output-dir npm-packages
+
+      - name: Publish platform packages
+        run: node apps/server/scripts/cli.ts publish --only platforms --packages-dir npm-packages --tag "${{ needs.preflight.outputs.cli_dist_tag }}" --provenance --verbose
+
   # Nothing waits on this job. npm can take over an hour to serve freshly
   # published platform packages, and the launcher is held back until it does
   # (see `cli.ts publish`), so the GitHub Release, hosted web app, and
   # announcement go out without it. If it fails, re-run it: published
   # versions are skipped.
   publish_cli:
-    name: Publish CLI to npm
+    name: Publish CLI launcher to npm
     needs:
       [
         preflight,
         quality,
         package_cli,
+        publish_cli_platforms,
         desktop_mac_arm64,
         desktop_mac_x64,
         desktop_linux_x64,
@@ -849,7 +919,7 @@ jobs:
         desktop_win_arm64,
         desktop_win_arm64_cli,
       ]
-    if: ${{ !inputs.build_only && !failure() && !cancelled() && needs.preflight.result == 'success' && needs.quality.result == 'success' && needs.package_cli.result == 'success' && needs.desktop_win_arm64_cli.result == 'success' && needs.desktop_mac_arm64.result == 'success' && needs.desktop_mac_x64.result == 'success' && needs.desktop_linux_x64.result == 'success' && needs.desktop_linux_arm64.result == 'success' && needs.desktop_win_x64.result == 'success' && needs.desktop_win_arm64.result == 'success' }}
+    if: ${{ !inputs.build_only && !failure() && !cancelled() && needs.preflight.result == 'success' && needs.quality.result == 'success' && needs.package_cli.result == 'success' && needs.publish_cli_platforms.result == 'success' && needs.desktop_win_arm64_cli.result == 'success' && needs.desktop_mac_arm64.result == 'success' && needs.desktop_mac_x64.result == 'success' && needs.desktop_linux_x64.result == 'success' && needs.desktop_linux_arm64.result == 'success' && needs.desktop_win_x64.result == 'success' && needs.desktop_win_arm64.result == 'success' }}
     runs-on: ubuntu-24.04
     # Publishing waits up to 120 minutes for npm to serve the platform packages.
     timeout-minutes: 150
@@ -883,8 +953,8 @@ jobs:
           # The artifact root is @rove-code/, the paths' common ancestor.
           path: npm-packages/@rove-code
 
-      - name: Publish CLI packages
-        run: node apps/server/scripts/cli.ts publish --packages-dir npm-packages --tag "${{ needs.preflight.outputs.cli_dist_tag }}" --provenance --verbose
+      - name: Publish CLI launcher after npm serves every platform
+        run: node apps/server/scripts/cli.ts publish --only launcher --packages-dir npm-packages --tag "${{ needs.preflight.outputs.cli_dist_tag }}" --provenance --verbose
 
   # The hosted app is built while the desktop jobs run; deploy_web only ships it.
   build_web:
@@ -898,6 +968,18 @@ jobs:
       channel: ${{ needs.preflight.outputs.release_channel }}
       ref: ${{ needs.preflight.outputs.ref }}
       version: ${{ needs.preflight.outputs.version }}
+
+  # Like hosted web, marketing can build before publication; only deployment
+  # must wait until the GitHub Release exists.
+  build_marketing:
+    name: Build marketing site
+    needs: [preflight]
+    if: ${{ !inputs.build_only && vars.ROVE_MARKETING_RELEASE_READY == 'true' && !cancelled() && needs.preflight.result == 'success' && needs.preflight.outputs.release_channel == 'stable' }}
+    uses: ./.github/workflows/cloudflare-marketing.yml
+    secrets: inherit
+    with:
+      deploy: false
+      ref: ${{ needs.preflight.outputs.ref }}
 
   release:
     name: Publish GitHub Release
@@ -929,11 +1011,16 @@ jobs:
             !/.repos/
           sparse-checkout-cone-mode: false
 
+      # Preview publishes only shell-generated notes/checksums and artifacts;
+      # only stable/nightly run the TypeScript manifest tools below.
       - name: Setup Vite+
-        uses: voidzero-dev/setup-vp@v1
+        if: needs.preflight.outputs.release_channel != 'preview'
+        uses: voidzero-dev/setup-vp@68f39c78aaf39be468cabd2afb09c162574c84af # v1.21.2
         with:
           node-version-file: package.json
           cache: true
+          cache-save: false
+          # Manifest merging and verification import Effect from scripts.
           run-install: |
             args:
               - --filter=@rove-code/scripts...
@@ -1108,12 +1195,13 @@ jobs:
 
   deploy_marketing:
     name: Deploy marketing site
-    needs: [preflight, release]
-    if: ${{ vars.ROVE_MARKETING_RELEASE_READY == 'true' && !failure() && !cancelled() && needs.preflight.result == 'success' && needs.release.result == 'success' && needs.preflight.outputs.release_channel == 'stable' }}
+    needs: [preflight, release, build_marketing]
+    if: ${{ vars.ROVE_MARKETING_RELEASE_READY == 'true' && !failure() && !cancelled() && needs.preflight.result == 'success' && needs.release.result == 'success' && needs.build_marketing.result == 'success' && needs.preflight.outputs.release_channel == 'stable' }}
     uses: ./.github/workflows/cloudflare-marketing.yml
     secrets: inherit
     with:
       deploy: true
+      prebuilt: true
       ref: ${{ needs.preflight.outputs.ref }}
 
   finalize:
@@ -1154,10 +1242,13 @@ jobs:
           echo "email=${user_id}+${APP_SLUG}[bot]@users.noreply.github.com" >> "$GITHUB_OUTPUT"
 
       - name: Setup Vite+
-        uses: voidzero-dev/setup-vp@v1
+        uses: voidzero-dev/setup-vp@68f39c78aaf39be468cabd2afb09c162574c84af # v1.21.2
         with:
           node-version-file: package.json
           cache: true
+          cache-save: false
+          # Version updates import shared/schemaJson; vp fmt loads the root
+          # Vite+ config and lint plugin, so keep the development tooling here.
           run-install: |
             args:
               - --filter=@rove-code/scripts...
@@ -1203,9 +1294,10 @@ jobs:
       needs.preflight.outputs.release_channel != 'preview' &&
       needs.relay_public_config.result != 'failure' &&
       needs.release.result == 'success' &&
-      (needs.deploy_web.result == 'success' || needs.deploy_web.result == 'skipped') &&
-      (needs.finalize.result == 'success' || needs.finalize.result == 'skipped')
-    needs: [preflight, relay_public_config, release, deploy_web, finalize]
+      (needs.deploy_web.result == 'success' || needs.deploy_web.result == 'skipped')
+    # Finalization only prepares the next source version; users can already
+    # install once release + hosted deployment succeed. Do not await that push.
+    needs: [preflight, relay_public_config, release, deploy_web]
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
@@ -1219,10 +1311,12 @@ jobs:
           sparse-checkout-cone-mode: false
 
       - name: Setup Vite+
-        uses: voidzero-dev/setup-vp@v1
+        uses: voidzero-dev/setup-vp@68f39c78aaf39be468cabd2afb09c162574c84af # v1.21.2
         with:
           node-version-file: package.json
           cache: true
+          cache-save: false
+          # notify-discord-release.ts uses Effect CLI/HTTP and Node services.
           run-install: |
             args:
               - --filter=@rove-code/scripts...

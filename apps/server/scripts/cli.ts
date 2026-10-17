@@ -23,6 +23,8 @@ import {
   ServerCliRegistryWaitError,
 } from "./cliErrors.ts";
 
+import { publishPlatformsThenLauncher } from "./publishOrder.ts";
+
 const RepoRoot = Effect.service(Path.Path).pipe(
   Effect.flatMap((path) => path.fromFileUrl(new URL("../../..", import.meta.url))),
 );
@@ -172,7 +174,7 @@ const buildExeCmd = Command.make(
 // taken over an hour to appear. Until then npm silently skips the missing
 // optional dependency and the launcher installs without an executable.
 const REGISTRY_WAIT_MINUTES = 120;
-const REGISTRY_POLL_SECONDS = 30;
+const REGISTRY_POLL_SECONDS = 15;
 const decodePackageManifest = Schema.decodeEffect(
   Schema.fromJsonString(Schema.Struct({ name: Schema.String, version: Schema.String })),
 );
@@ -213,6 +215,12 @@ const publishCmd = Command.make(
     packagesDir: Flag.String("packages-dir").pipe(
       Flag.withDescription("Output dir of scripts/build-npm-platform-packages.ts."),
     ),
+    only: Flag.Literals("only", ["platforms", "launcher", "both"]).pipe(
+      Flag.withDefault("both"),
+      Flag.withDescription(
+        "Publish platforms early, or wait for them and publish only the launcher.",
+      ),
+    ),
     tag: Flag.String("tag").pipe(Flag.withDefault("latest")),
     access: Flag.String("access").pipe(Flag.withDefault("public")),
     provenance: Flag.Boolean("provenance").pipe(Flag.withDefault(false)),
@@ -239,7 +247,7 @@ const publishCmd = Command.make(
           assetPath: path.join(scopeDir, "cli-<platform>.tgz"),
         });
       }
-      if (!(yield* fs.exists(launcherTarball))) {
+      if (config.only !== "platforms" && !(yield* fs.exists(launcherTarball))) {
         return yield* new ServerCliBuildAssetMissingError({ assetPath: launcherTarball });
       }
 
@@ -275,11 +283,8 @@ const publishCmd = Command.make(
         );
       });
 
-      yield* Effect.forEach(platformTarballs, publishTarball, {
-        concurrency: "unbounded",
-        discard: true,
-      });
-      if (!config.dryRun) {
+      const waitForPlatforms = Effect.gen(function* () {
+        if (config.dryRun) return;
         let waiting = yield* Effect.forEach(platformTarballs, specOf);
         const deadline = (yield* Clock.currentTimeMillis) + REGISTRY_WAIT_MINUTES * 60_000;
         while (true) {
@@ -297,8 +302,14 @@ const publishCmd = Command.make(
           yield* Effect.log(`[cli] Waiting for npm to serve ${waiting.join(", ")}`);
           yield* Effect.sleep(`${REGISTRY_POLL_SECONDS} seconds`);
         }
-      }
-      yield* publishTarball(launcherTarball);
+      });
+      yield* publishPlatformsThenLauncher({
+        platformTarballs,
+        launcherTarball,
+        publish: publishTarball,
+        only: config.only,
+        waitForPlatforms,
+      });
     }),
 ).pipe(
   Command.withDescription(
