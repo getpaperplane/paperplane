@@ -83,6 +83,14 @@ jobs:
             exit 1
           fi
 
+      - name: Reject orphaned submodule gitlinks
+        run: |
+          gitlinks="$(git ls-files --stage | awk '$1 == "160000" { print $4 }')"
+          if test -n "$gitlinks"; then
+            printf 'Submodule gitlinks break actions/checkout cleanup; remove them with git rm --cached:\n%s\n' "$gitlinks" >&2
+            exit 1
+          fi
+
       - name: Setup Vite+
         uses: ./.github/actions/setup-ci-deps
 
