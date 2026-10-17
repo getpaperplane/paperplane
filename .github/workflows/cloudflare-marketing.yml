@@ -16,6 +16,10 @@ on:
         description: Commit to build. Defaults to the triggering ref.
         type: string
         default: ""
+      prebuilt:
+        description: Deploy the cloudflare-marketing artifact an earlier call in this run built.
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -27,6 +31,7 @@ concurrency:
 jobs:
   build:
     name: Build marketing site
+    if: ${{ !inputs.prebuilt }}
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
@@ -39,10 +44,11 @@ jobs:
           sparse-checkout-cone-mode: false
 
       - name: Setup Vite+
-        uses: voidzero-dev/setup-vp@v1
+        uses: voidzero-dev/setup-vp@68f39c78aaf39be468cabd2afb09c162574c84af # v1.21.2
         with:
           node-version-file: package.json
           cache: true
+          cache-save: false
           run-install: |
             args:
               - --filter=@rove-code/marketing...
@@ -75,13 +81,15 @@ jobs:
 
   deploy:
     name: Deploy marketing site
-    if: ${{ inputs.deploy }}
+    if: ${{ inputs.deploy && !cancelled() && (needs.build.result == 'success' || (inputs.prebuilt && needs.build.result == 'skipped')) }}
     needs: build
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     environment: cloudflare-web
     steps:
       - uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.ref }}
       - uses: actions/download-artifact@v8
         with:
           name: cloudflare-marketing

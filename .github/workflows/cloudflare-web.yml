@@ -61,10 +61,13 @@ jobs:
           sparse-checkout-cone-mode: false
 
       - name: Setup Vite+
-        uses: voidzero-dev/setup-vp@v1
+        uses: voidzero-dev/setup-vp@68f39c78aaf39be468cabd2afb09c162574c84af # v1.21.2
         with:
           node-version-file: package.json
           cache: true
+          cache-save: false
+          # Hosted tests/build need web tooling; brand assets use Effect and
+          # schema verification imports shared/contracts through scripts.
           run-install: |
             args:
               - --filter=@rove-code/scripts...
@@ -126,13 +129,17 @@ jobs:
           path: apps/web/dist
 
       - name: Setup Vite+
-        uses: voidzero-dev/setup-vp@v1
+        uses: voidzero-dev/setup-vp@68f39c78aaf39be468cabd2afb09c162574c84af # v1.21.2
         with:
           node-version-file: package.json
           cache: true
+          cache-save: false
+          # Wrangler runs via dlx, but post-deploy verification imports
+          # shared/roveProjectFile (and contracts), so this is not install-free.
           run-install: |
             args:
               - --filter=@rove-code/scripts...
+              - --prod
 
       - name: Deploy hosted app and content handler
         env:

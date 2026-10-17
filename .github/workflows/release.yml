@@ -145,15 +145,17 @@ jobs:
         run: node scripts/check-release-identity.mjs
 
       - name: Setup Vite+
-        uses: voidzero-dev/setup-vp@v1
+        uses: voidzero-dev/setup-vp@68f39c78aaf39be468cabd2afb09c162574c84af # v1.21.2; cache-save requires newer than v1
         with:
           node-version-file: package.json
           cache: true
+          cache-save: false
           # Both release metadata scripts import only Effect/Node services from
-          # the scripts workspace; desktop/server dependencies are not needed.
+          # the scripts workspace; desktop/server and dev dependencies are not needed.
           run-install: |
             args:
               - --filter=@rove-code/scripts...
+              - --prod
         env:
           pnpm_config_cache_dir: ${{ runner.temp }}/pnpm-metadata
 
@@ -408,10 +410,12 @@ jobs:
           sparse-checkout-cone-mode: false
 
       - name: Setup Vite+
-        uses: voidzero-dev/setup-vp@v1
+        uses: voidzero-dev/setup-vp@68f39c78aaf39be468cabd2afb09c162574c84af # v1.21.2
         with:
           node-version-file: package.json
           cache: true
+          cache-save: false
+          # `alchemy state read` needs the relay's installed CLI and its peers.
           run-install: |
             args:
               - --filter=rove-relay...
@@ -964,6 +968,18 @@ jobs:
       ref: ${{ needs.preflight.outputs.ref }}
       version: ${{ needs.preflight.outputs.version }}
 
+  # Like hosted web, marketing can build before publication; only deployment
+  # must wait until the GitHub Release exists.
+  build_marketing:
+    name: Build marketing site
+    needs: [preflight]
+    if: ${{ !inputs.build_only && vars.ROVE_MARKETING_RELEASE_READY == 'true' && !cancelled() && needs.preflight.result == 'success' && needs.preflight.outputs.release_channel == 'stable' }}
+    uses: ./.github/workflows/cloudflare-marketing.yml
+    secrets: inherit
+    with:
+      deploy: false
+      ref: ${{ needs.preflight.outputs.ref }}
+
   release:
     name: Publish GitHub Release
     needs:
@@ -994,14 +1010,20 @@ jobs:
             !/.repos/
           sparse-checkout-cone-mode: false
 
+      # Preview publishes only shell-generated notes/checksums and artifacts;
+      # only stable/nightly run the TypeScript manifest tools below.
       - name: Setup Vite+
-        uses: voidzero-dev/setup-vp@v1
+        if: needs.preflight.outputs.release_channel != 'preview'
+        uses: voidzero-dev/setup-vp@68f39c78aaf39be468cabd2afb09c162574c84af # v1.21.2
         with:
           node-version-file: package.json
           cache: true
+          cache-save: false
+          # Manifest merging and verification import Effect from scripts.
           run-install: |
             args:
               - --filter=@rove-code/scripts...
+              - --prod
 
       - name: Download all desktop artifacts
         uses: actions/download-artifact@v8
@@ -1173,12 +1195,13 @@ jobs:
 
   deploy_marketing:
     name: Deploy marketing site
-    needs: [preflight, release]
-    if: ${{ vars.ROVE_MARKETING_RELEASE_READY == 'true' && !failure() && !cancelled() && needs.preflight.result == 'success' && needs.release.result == 'success' && needs.preflight.outputs.release_channel == 'stable' }}
+    needs: [preflight, release, build_marketing]
+    if: ${{ vars.ROVE_MARKETING_RELEASE_READY == 'true' && !failure() && !cancelled() && needs.preflight.result == 'success' && needs.release.result == 'success' && needs.build_marketing.result == 'success' && needs.preflight.outputs.release_channel == 'stable' }}
     uses: ./.github/workflows/cloudflare-marketing.yml
     secrets: inherit
     with:
       deploy: true
+      prebuilt: true
       ref: ${{ needs.preflight.outputs.ref }}
 
   finalize:
@@ -1219,10 +1242,13 @@ jobs:
           echo "email=${user_id}+${APP_SLUG}[bot]@users.noreply.github.com" >> "$GITHUB_OUTPUT"
 
       - name: Setup Vite+
-        uses: voidzero-dev/setup-vp@v1
+        uses: voidzero-dev/setup-vp@68f39c78aaf39be468cabd2afb09c162574c84af # v1.21.2
         with:
           node-version-file: package.json
           cache: true
+          cache-save: false
+          # Version updates import shared/schemaJson; vp fmt loads the root
+          # Vite+ config and lint plugin, so keep the development tooling here.
           run-install: |
             args:
               - --filter=@rove-code/scripts...
@@ -1268,9 +1294,10 @@ jobs:
       needs.preflight.outputs.release_channel != 'preview' &&
       needs.relay_public_config.result != 'failure' &&
       needs.release.result == 'success' &&
-      (needs.deploy_web.result == 'success' || needs.deploy_web.result == 'skipped') &&
-      (needs.finalize.result == 'success' || needs.finalize.result == 'skipped')
-    needs: [preflight, relay_public_config, release, deploy_web, finalize]
+      (needs.deploy_web.result == 'success' || needs.deploy_web.result == 'skipped')
+    # Finalization only prepares the next source version; users can already
+    # install once release + hosted deployment succeed. Do not await that push.
+    needs: [preflight, relay_public_config, release, deploy_web]
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
@@ -1284,13 +1311,16 @@ jobs:
           sparse-checkout-cone-mode: false
 
       - name: Setup Vite+
-        uses: voidzero-dev/setup-vp@v1
+        uses: voidzero-dev/setup-vp@68f39c78aaf39be468cabd2afb09c162574c84af # v1.21.2
         with:
           node-version-file: package.json
           cache: true
+          cache-save: false
+          # notify-discord-release.ts uses Effect CLI/HTTP and Node services.
           run-install: |
             args:
               - --filter=@rove-code/scripts...
+              - --prod
 
       - name: Read published release notes
         if: needs.preflight.outputs.is_prerelease == 'true'
