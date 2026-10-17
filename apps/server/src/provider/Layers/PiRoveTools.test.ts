@@ -27,7 +27,7 @@ const snapshot = {
 const execute = (tool: ToolDefinition, params = {}, signal?: AbortSignal) =>
   tool.execute("call-1", params, signal, undefined, {} as Parameters<ToolDefinition["execute"]>[4]);
 
-function mockEndpoint() {
+function mockEndpoint(firstTool = "preview_status") {
   let revoked = false;
   let failListing = false;
   const methods: string[] = [];
@@ -58,7 +58,7 @@ function mockEndpoint() {
           ? {
               tools: [
                 {
-                  name: request.params.cursor ? "preview_snapshot" : "preview_status",
+                  name: request.params.cursor ? "preview_snapshot" : firstTool,
                   description: "Inspect preview",
                   inputSchema: { type: "object", properties: { tabId: { type: "string" } } },
                 },
@@ -124,6 +124,29 @@ describe("Pi's built-in Rove tools", () => {
       await bridge.dispose();
     }
     expect(endpoint.methods.filter((method) => method === "DELETE")).toHaveLength(1);
+  });
+
+  it("exposes app-owned delegation through the thread MCP session", async () => {
+    const endpoint = mockEndpoint("delegate_task");
+    const bridge = await createPiRoveTools(config);
+    try {
+      const delegate = bridge.tools.find((tool) => tool.name === "mcp__rove__delegate_task")!;
+      await execute(delegate, {
+        task: "Inspect the repo",
+        target: { providerInstanceId: "pi", model: "local/fixture" },
+      });
+      expect(endpoint.calls).toEqual([
+        {
+          name: "delegate_task",
+          arguments: {
+            task: "Inspect the repo",
+            target: { providerInstanceId: "pi", model: "local/fixture" },
+          },
+        },
+      ]);
+    } finally {
+      await bridge.dispose();
+    }
   });
 
   it("rejects calls after credential revocation without bypassing authorization", async () => {

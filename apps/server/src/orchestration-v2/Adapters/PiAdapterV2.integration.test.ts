@@ -28,7 +28,7 @@ import { ServerConfig } from "../../config.ts";
 import { ServerSettingsService } from "../../serverSettings.ts";
 
 it.effect(
-  "runs the bundled SDK worker and sterile subagents through real V2 persistence/checkpointing",
+  "runs the bundled SDK worker through real V2 persistence/checkpointing, rollback, and worker crash recovery",
   () =>
     Effect.gen(function* () {
       const cwd = yield* checkpointWorkspace("pi-sdk-v2");
@@ -36,7 +36,7 @@ it.effect(
       const agentDir = yield* fs.makeTempDirectoryScoped({ prefix: "rove-pi-v2-agent-" });
       const fixture = NodePath.join(agentDir, "fixture.ts");
       NodeFS.copyFileSync(
-        new URL("../../provider/Layers/fixtures/pi-subagent-extension.ts", import.meta.url),
+        new URL("../../provider/Layers/fixtures/pi-instance-extension.ts", import.meta.url),
         fixture,
       );
       NodeFS.writeFileSync(
@@ -44,7 +44,7 @@ it.effect(
         JSON.stringify({ extensions: [fixture] }),
       );
       const instanceId = ProviderInstanceId.make("pi");
-      const selection = { instanceId, model: "rove-subagent-test/fixture" };
+      const selection = { instanceId, model: "instance-fixture/fixture" };
       const registry = Layer.effect(
         ProviderAdapterRegistry.ProviderAdapterRegistryV2,
         Effect.gen(function* () {
@@ -56,10 +56,13 @@ it.effect(
             config: {
               ...PiDriver.defaultConfig(),
               agentDir,
-              subagents: true,
               workloadProtection: "off",
             },
           });
+          const capabilities = yield* instance.orchestrationAdapter.getCapabilities();
+          assert.isFalse(capabilities.subagents.supportsSubagents);
+          assert.isFalse(capabilities.subagents.emitsSubagentLifecycle);
+          assert.isFalse(capabilities.subagents.canWaitForSubagents);
           return ProviderAdapterRegistry.ProviderAdapterRegistryV2.of({
             get: () => Effect.succeed(instance.orchestrationAdapter),
             list: () => Effect.succeed([instanceId]),
@@ -94,12 +97,15 @@ it.effect(
         const threadId = ThreadId.make("sdk-thread");
         const terminal = yield* Deferred.make<void>();
         const secondTerminal = yield* Deferred.make<void>();
+        const crashTerminal = yield* Deferred.make<void>();
+        const recoveryTerminal = yield* Deferred.make<void>();
+        const terminals = [terminal, secondTerminal, crashTerminal, recoveryTerminal];
         yield* orchestrator.streamStoredEvents.pipe(
           Stream.runForEach(({ event }) =>
             event.type === "run.updated" &&
             event.threadId === threadId &&
             ["completed", "failed", "interrupted"].includes(event.payload.status)
-              ? Deferred.succeed(event.payload.ordinal === 1 ? terminal : secondTerminal, undefined)
+              ? Deferred.succeed(terminals[event.payload.ordinal - 1]!, undefined)
               : Effect.void,
           ),
           Effect.forkChild({ startImmediately: true }),
@@ -123,7 +129,7 @@ it.effect(
           commandId: CommandId.make("sdk-message"),
           messageId: MessageId.make("sdk-user"),
           threadId,
-          text: "delegate",
+          text: "workload-hello",
           attachments: [],
           modelSelection: selection,
           dispatchMode: { type: "start_immediately" },
@@ -138,16 +144,10 @@ it.effect(
         assert.isTrue(
           projection.messages.some(
             (message) =>
-              message.role === "assistant" && message.text.includes("parent got: child report"),
+              message.role === "assistant" && message.text === NodePath.basename(agentDir),
           ),
         );
-        assert.lengthOf(projection.subagents, 1);
-        assert.strictEqual(projection.subagents[0]?.status, "completed");
-        assert.isTrue(
-          projection.nodes
-            .filter((node) => node.kind === "subagent")
-            .every((node) => !node.countsForRun),
-        );
+        assert.lengthOf(projection.subagents, 0);
         assert.isNotNull(projection.runs[0]?.checkpointId);
         assert.isTrue(projection.providerThreads[0]?.nativeThreadRef?.nativeId?.endsWith(".jsonl"));
         // Release through the production session lifecycle, then resume the same native file.
@@ -158,7 +158,7 @@ it.effect(
           commandId: CommandId.make("sdk-second"),
           messageId: MessageId.make("sdk-second-user"),
           threadId,
-          text: "delegate",
+          text: "workload-hello",
           attachments: [],
           modelSelection: selection,
           dispatchMode: { type: "start_immediately" },
@@ -174,8 +174,7 @@ it.effect(
           resumed.providerThreads[0]?.nativeThreadRef?.nativeId,
           projection.providerThreads[0]?.nativeThreadRef?.nativeId,
         );
-        // The fixture recognizes its persisted tool result and answers without delegating twice.
-        assert.lengthOf(resumed.subagents, 1);
+        assert.lengthOf(resumed.subagents, 0);
         const checkpoint = resumed.checkpoints.find(
           (checkpoint) => checkpoint.id === projection.runs[0]?.checkpointId,
         )!;
@@ -216,6 +215,40 @@ it.effect(
           }),
         );
         assert.isNull(rolledBack.thread.rollbackFailure);
+        for (const [ordinal, text] of [
+          [3, "/exit-instance"],
+          [4, "hello"],
+        ] as const) {
+          yield* orchestrator.dispatch({
+            type: "message.dispatch",
+            commandId: CommandId.make(`sdk-${ordinal}`),
+            messageId: MessageId.make(`sdk-user-${ordinal}`),
+            threadId,
+            text,
+            attachments: [],
+            modelSelection: selection,
+            dispatchMode: { type: "start_immediately" },
+            createdBy: "user",
+            creationSource: "web",
+          });
+          yield* Deferred.await(terminals[ordinal - 1]!);
+          yield* worker.drain();
+          const after = yield* orchestrator.getThreadProjection(threadId);
+          assert.strictEqual(
+            after.runs.find((run) => run.ordinal === ordinal)?.status,
+            ordinal === 3 ? "failed" : "completed",
+          );
+          assert.strictEqual(after.providerThreads[0]?.id, projection.providerThreads[0]?.id);
+          assert.strictEqual(
+            after.providerThreads[0]?.nativeThreadRef?.nativeId,
+            projection.providerThreads[0]?.nativeThreadRef?.nativeId,
+          );
+          assert.strictEqual(after.providerThreads[0]?.status, ordinal === 3 ? "error" : "idle");
+          assert.strictEqual(
+            after.providerSessions.at(-1)?.status,
+            ordinal === 3 ? "error" : "ready",
+          );
+        }
       }).pipe(Effect.provide(runtime));
     }).pipe(Effect.scoped, Effect.provide(NodeServices.layer)),
 );

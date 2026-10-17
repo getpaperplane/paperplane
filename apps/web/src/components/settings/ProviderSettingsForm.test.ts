@@ -48,47 +48,16 @@ describe("ProviderSettingsForm helpers", () => {
     },
   ];
 
-  it("preserves subagent inheritance and unavailable overrides without altering the thread model", () => {
-    expect(resolvePiModelSettings({}, piModels, "subagent")).toMatchObject({
-      model: "",
-      thinking: "",
-      thinkingUnavailable: false,
-    });
-    const missing = resolvePiModelSettings(
-      {
-        subagentModel: "missing/model",
-        subagentThinkingLevel: "max",
-      },
-      piModels,
-      "subagent",
-    );
-    expect(missing).toMatchObject({ model: "missing/model", thinkingUnavailable: true });
-    expect(missing.modelOptions.at(-1)).toMatchObject({
-      slug: "missing/model",
-      isUnavailable: true,
-    });
-    const pi = providerClients.get(ProviderDriverKind.make("pi"))!;
-    const field = deriveProviderSettingsFields(pi).find((field) => field.key === "subagentModel")!;
-    expect(
-      nextProviderConfigWithFieldValue(
-        { model: "local/reasoning", subagentModel: "missing/model" },
-        field,
-        "",
-      ),
-    ).toEqual({ model: "local/reasoning" });
-  });
-
   it("distinguishes an unsupported Pi thinking override from the provider default", () => {
     expect(
-      resolvePiModelSettings({ model: "local/plain", thinkingLevel: "max" }, piModels, "default"),
+      resolvePiModelSettings({ model: "local/plain", thinkingLevel: "max" }, piModels),
     ).toMatchObject({ thinking: "max", thinkingUnavailable: true });
-    expect(
-      resolvePiModelSettings({}, piModels, "default").thinkingOptions.map((option) => option.id),
-    ).toEqual(["low", "max"]);
+    expect(resolvePiModelSettings({}, piModels).thinkingOptions.map((option) => option.id)).toEqual(
+      ["low", "max"],
+    );
     const missing = resolvePiModelSettings(
       { model: "missing/model", thinkingLevel: "max" },
       piModels,
-      "default",
     );
     expect(missing).toMatchObject({
       thinkingOptions: [],
@@ -130,7 +99,7 @@ describe("ProviderSettingsForm helpers", () => {
       "",
     );
     expect(next).toEqual({ model: "local/plain" });
-    expect(resolvePiModelSettings(next, piModels, "default")).toMatchObject({
+    expect(resolvePiModelSettings(next, piModels)).toMatchObject({
       thinking: "",
       thinkingUnavailable: false,
     });

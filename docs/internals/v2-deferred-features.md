@@ -161,57 +161,27 @@ fences need read-only rendering after transcript import; importing message text 
 the removed decoder. Preserve sandboxing, artifact ownership, local-media retention and copy
 fallbacks, and add a setting only if the new service actually enforces it across providers.
 
-## Pi status, transcripts and remaining subagent gaps
+## Pi extension status and autonomous work
 
-Pi extension `setStatus()` lines appeared above the composer, and users could inspect subagent tasks,
-steps/output, model and token/cost details. Background-work presentation kept hanging children visible
-and let users stop the owning thread's work rather than trust a finished root-turn label.
+Pi extension status collection and
+[PiExtensionStatusSnapshot](../../packages/contracts/src/piCatalog.ts) remain,
+but V2 has no status projection or client consumer. Visible status needs a
+bounded, ephemeral contract, rather than persistence of every update as
+transcript activity. The V1 status selector is recoverable at
+[`cbfe21300f`](https://github.com/hafiezul/rove/blob/cbfe21300f/packages/client-runtime/src/piExtensionStatus.ts).
 
-Origins: [#183](https://github.com/hafiezul/rove/pull/183) (`707e667177`),
-[#255](https://github.com/hafiezul/rove/pull/255) (`09d8824931`; web dialog follow-up `06e6e7a90c`),
-[#265](https://github.com/hafiezul/rove/pull/265) (`9dd5434fa1`),
-[#282](https://github.com/hafiezul/rove/pull/282) (`a033ce4cf8`), and
-[#283](https://github.com/hafiezul/rove/pull/283) (`d0d65dec67`). Recover the server
-[Pi adapter](https://github.com/hafiezul/rove/blob/cbfe21300f/apps/server/src/provider/Layers/PiAdapter.ts)
-and [transcript query](https://github.com/hafiezul/rove/blob/cbfe21300f/apps/server/src/orchestration/agentTranscriptQuery.ts),
-the V1 orchestration contract above,
-[client status selector](https://github.com/hafiezul/rove/blob/cbfe21300f/packages/client-runtime/src/piExtensionStatus.ts)
-and [subagent runtime](https://github.com/hafiezul/rove/blob/cbfe21300f/packages/client-runtime/src/state/subagentRuntime.ts),
-[web Agents panel](https://github.com/hafiezul/rove/blob/cbfe21300f/apps/web/src/components/AgentsPanel.tsx),
-and [mobile thread detail](https://github.com/hafiezul/rove/blob/cbfe21300f/apps/mobile/src/features/threads/ThreadDetailScreen.tsx).
+Pi delegates through app-owned MCP tasks and durable V2 child threads, as
+recorded in [ADR 0004](../adr/0004-pi-delegates-through-rove-mcp.md).
+The former Pi-specific SDK child lifecycle and its settings are removed.
+Old JSONL files under `<stateDir>/agent-transcripts` remain on disk, without a
+V2 transcript-query API or deletion cleanup.
 
-Removed were V1 activity-based status publication/selection, `orchestration.getAgentTranscript`,
-`hasTranscript` handles, activity/task projection and thread-deletion transcript cleanup, web/desktop
-agent-detail/status dialogs, and mobile status strips/background-stop fallbacks. The dropped
-[V1 migration 57](https://github.com/hafiezul/rove/blob/cbfe21300f/apps/server/src/persistence/Migrations/057_ThreadActivitySequence.ts)
-backfilled activity ingestion order; it is not a V2 transcript migration. SDK status collection
-and [PiExtensionStatusSnapshot](../../packages/contracts/src/piCatalog.ts) remain but have no V2
-status projection/client consumer. Visible status needs an explicit bounded, ephemeral/status contract,
-not persistence of every update as transcript activity.
-
-Pi itself was ported, not deferred wholesale. [PiAdapterV2](../../apps/server/src/orchestration-v2/Adapters/PiAdapterV2.ts)
-maps sterile `rove_subagent` SDK children to durable provider-native subagents, non-counting child
-execution nodes and items; child completion cannot complete the root. SDK JSONL transcripts remain
-on disk, and subagent enable/model/thinking settings still work. MCP `delegate_task` creates ordinary
-V2 child threads separately; do not equate those with in-memory native children.
-
-The remaining ports need distinct boundaries:
-
-- **Transcript inspection:** an authorized V2 query keyed by persisted subagent/task or child-thread
-  identity, with bounded reads, explicit availability and deletion cleanup. Clients must not supply
-  filesystem paths or infer identity from processes.
-- **Individual Stop/fork:** explicit provider-native child handles and honest capabilities. Native
-  SDK children currently have no resumable provider-thread id, individual Stop/fork or nested
-  checkpoint support; ordinary portable thread forks do not fill that gap. Preserve parent-stop
-  cleanup and [ADR 0003](../adr/0003-pi-subagents-are-rove-owned.md)'s sterile child boundary;
-  the superseded process-observation approach is not a recovery plan.
-- **Autonomous SDK wake admission:** extensions starting agent work after the owning run settles
-  are currently stopped, not assigned fabricated turns. Integrate
-  [ProviderContinuationRequests](../../packages/provider-core/src/server/ProviderContinuationRequests.ts)
-  with [ProviderContinuationService](../../apps/server/src/orchestration-v2/ProviderContinuationService.ts)
-  so run admission and explicit continuation ownership precede accepting SDK work, with replay/stale
-  wake coverage. Synchronous `rove_subagent`, scheduled tasks and normal MCP delegation already use
-  committed V2 paths; they are not evidence that autonomous native wakes are admitted.
+Extensions starting agent work after the owning run settles are currently
+stopped. Supporting those wakes requires
+[ProviderContinuationRequests](../../packages/provider-core/src/server/ProviderContinuationRequests.ts)
+and [ProviderContinuationService](../../apps/server/src/orchestration-v2/ProviderContinuationService.ts)
+to admit a run before SDK work begins, with coverage for replay and stale wakes.
+Scheduled tasks and MCP delegation already enter through committed V2 paths.
 
 ## Other notes
 

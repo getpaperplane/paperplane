@@ -28,7 +28,6 @@ import { makePiAdapterV2 } from "../../orchestration-v2/Adapters/PiAdapterV2.ts"
 import { makePiTextGeneration } from "../../textGeneration/PiTextGeneration.ts";
 import { acquirePiResource, disposePiResource } from "../Layers/PiLifecycle.ts";
 import { LazyPiRuntime, PiRuntimeProcess } from "../Layers/PiRuntimeProcess.ts";
-import { PI_SUBAGENT_TRANSCRIPTS_ENV } from "../Layers/PiSubagents.ts";
 import { PI_CONFIG_DIR } from "../PiSdkMetadata.ts";
 import {
   buildInitialPiProviderSnapshot,
@@ -62,7 +61,6 @@ export const PiDriver: ProviderDriver<PiSettings, PiDriverEnv> = {
   create: ({ instanceId, displayName, accentColor, environment, enabled, config }) =>
     Effect.gen(function* () {
       const serverSettings = yield* ServerSettingsService;
-      const { stateDir } = yield* ServerConfig;
       const home = yield* HostProcess.HomeDirectory;
       const processEnv = yield* mergeProviderInstanceEnvironment(environment);
       const effectiveConfig = { ...config, enabled };
@@ -89,11 +87,7 @@ export const PiDriver: ProviderDriver<PiSettings, PiDriverEnv> = {
       const executable = yield* HostProcess.IsExecutable;
       const runtime = enabled
         ? new LazyPiRuntime(
-            () =>
-              PiRuntimeProcess.create({ ...effectiveConfig, agentDir }, executable, {
-                ...processEnv,
-                [PI_SUBAGENT_TRANSCRIPTS_ENV]: NodePath.join(stateDir, "agent-transcripts"),
-              }),
+            () => PiRuntimeProcess.create({ ...effectiveConfig, agentDir }, executable, processEnv),
             60_000,
           )
         : undefined;
@@ -130,14 +124,6 @@ export const PiDriver: ProviderDriver<PiSettings, PiDriverEnv> = {
                 ...input,
                 agentDir,
                 disabledExtensions: effectiveConfig.disabledExtensions,
-                ...(effectiveConfig.subagents
-                  ? {
-                      subagents: {
-                        model: effectiveConfig.subagentModel || undefined,
-                        thinkingLevel: effectiveConfig.subagentThinkingLevel ?? undefined,
-                      },
-                    }
-                  : {}),
               },
               false,
               mcp,

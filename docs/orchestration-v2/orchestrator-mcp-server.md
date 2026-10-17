@@ -152,13 +152,11 @@ opening the SDK session. Rove's registered SDK tools bridge authenticated MCP
 calls over HTTP and forward cancellation; project resources remain subject to
 Rove's trust policy.
 
-MCP `delegate_task` uses the shared durable child-thread lifecycle. The native
-`rove_subagent` tool instead creates sterile SDK children
-([ADR 0003](../adr/0003-pi-subagents-are-rove-owned.md)); their
-explicit lifecycle events become provider-native V2 subagent, non-counting child
-node, and turn-item records. Native children do not have resumable provider-thread
-handles, individual Stop/fork, nested checkpoints, or a V2 transcript-query API.
-Do not infer these capabilities from extension output or subprocesses.
+MCP `delegate_task` uses the shared durable child-thread lifecycle for Pi, as
+recorded in [ADR 0004](../adr/0004-pi-delegates-through-rove-mcp.md). Pi has no
+provider-native subagent tool or lifecycle. Its native subagent capability
+flags do not gate app-owned MCP delegation. Extension output and subprocesses
+do not create delegated task records.
 
 ### Provider Support
 
