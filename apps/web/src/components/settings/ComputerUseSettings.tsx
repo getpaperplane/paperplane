@@ -6,6 +6,7 @@ import { useEnvironmentQuery } from "~/state/query";
 import { useAtomCommand } from "~/state/use-atom-command";
 
 import { Button } from "../ui/button";
+import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from "../ui/collapsible";
 import { Select, SelectItem, SelectPopup, SelectTrigger, SelectValue } from "../ui/select";
 import { Switch } from "../ui/switch";
 import {
@@ -175,21 +176,28 @@ export function ComputerUseSettings() {
           }
         >
           {vm.state === "needs-consent" && vm.setupCommand !== undefined ? (
-            <div className="flex items-start gap-2">
-              <pre className="min-w-0 flex-1 overflow-x-auto rounded-md bg-muted px-3 py-2 font-mono text-xs">
-                {vm.setupCommand}
-              </pre>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => {
-                  void navigator.clipboard.writeText(vm.setupCommand ?? "");
-                  setCopied(true);
-                }}
-              >
-                {copied ? "Copied" : "Copy"}
-              </Button>
-            </div>
+            <Collapsible>
+              <CollapsibleTrigger render={<Button size="sm" variant="ghost" />}>
+                Manual setup
+              </CollapsibleTrigger>
+              <CollapsiblePanel>
+                <div className="flex items-start gap-2">
+                  <pre className="min-w-0 flex-1 overflow-x-auto rounded-md bg-muted px-3 py-2 font-mono text-xs">
+                    {vm.setupCommand}
+                  </pre>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      void navigator.clipboard.writeText(vm.setupCommand ?? "");
+                      setCopied(true);
+                    }}
+                  >
+                    {copied ? "Copied" : "Copy"}
+                  </Button>
+                </div>
+              </CollapsiblePanel>
+            </Collapsible>
           ) : null}
         </SettingsRow>
       ) : (

@@ -103,6 +103,7 @@ const harness = <A, E>(
     stateDir: string;
     setConsent: (value: unknown) => void;
     setIp: (value: string | null) => void;
+    setSetupExitCode: (value: number) => void;
     waitForBoot: Effect.Effect<void>;
     processes: Map<number, string>;
     change: (patch: Partial<Settings>) => Effect.Effect<void>;
@@ -124,6 +125,7 @@ const harness = <A, E>(
     const runs: Array<ProcessRunner.ProcessRunInput> = [];
     const processes = new Map([[process.pid, "today\n"]]);
     let ip: string | null = "192.168.64.2";
+    let setupExitCode = 0;
     let consent: unknown = {
       accessibility: true,
       screen_recording: true,
@@ -162,6 +164,8 @@ const harness = <A, E>(
               return output("lume 0.6.1\n");
             case "ls":
               return output(json([...vms.values()]));
+            case "ssh":
+              return output("", setupExitCode);
             case "get":
               if (args[1] === work && ip === null)
                 yield* Deferred.succeed(bootRequested, undefined);
@@ -233,6 +237,9 @@ const harness = <A, E>(
       },
       setIp: (value) => {
         ip = value;
+      },
+      setSetupExitCode: (value) => {
+        setupExitCode = value;
       },
       change: (patch) =>
         Effect.gen(function* () {
@@ -387,9 +394,9 @@ it.effect("does not discard unrecorded clones during ordinary status or shutdown
 );
 
 it.effect(
-  "prepares with a display and public-key-only manual setup, verifies app-owned consent, then seals",
+  "prepares with clipboard and automatic setup, verifies app-owned consent, then seals",
   () =>
-    harness(({ runtime, runs, setConsent, vms }) =>
+    harness(({ runtime, runs, setConsent, vms, stateDir }) =>
       Effect.gen(function* () {
         yield* runtime.prepare;
         expect(runs.find((run) => run.args[0] === "pull")?.args.slice(0, 3)).toEqual([
@@ -398,7 +405,7 @@ it.effect(
           golden,
         ]);
         expect(runs.find((run) => run.args[0] === "run")?.args).toEqual(
-          expect.arrayContaining(["--detach", "--display", "vnc"]),
+          expect.arrayContaining(["--detach", "--display", "vnc", "--clipboard"]),
         );
         const status = yield* runtime.check;
         expect(status).toMatchObject({
@@ -409,9 +416,32 @@ it.effect(
         });
         expect(status.setupCommand).toContain("ssh-ed25519 AAAATEST rove-cua");
         expect(status.setupCommand).toContain("authorized_keys");
-        expect(runs.some((run) => run.args[0] === "ssh" || run.args.includes("--password"))).toBe(
-          false,
+        const setup = runs.find((run) => run.args[0] === "ssh");
+        expect(setup?.args.slice(0, 6)).toEqual([
+          "ssh",
+          golden,
+          "--storage",
+          `${stateDir}/computer-use/macos/vms`,
+          "--timeout",
+          "600",
+        ]);
+        expect(setup?.timeout).toBe("10 minutes");
+        expect(setup?.args).toHaveLength(7);
+        const script = setup!.args[6]!;
+        expect(script).toContain("grep -qxF 'ssh-ed25519 AAAATEST rove-cua'");
+        expect(script).toContain('/bin/bash -c "$(curl -fsSL https://cua.ai/driver/install.sh)"');
+        expect(script).toContain("cua-driver telemetry disable");
+        expect(script).toContain("cua-driver permissions grant");
+        expect(status.setupCommand).toContain(script);
+        expect(status.setupCommand).toContain("list_apps '{}'");
+        expect(status.setupCommand).toContain("call get_desktop_state '{}'");
+        expect(script).not.toContain("list_apps");
+        const bootAddress = runs.findIndex(
+          (run) => run.args[0] === "get" && run.args[1] === golden,
         );
+        expect(bootAddress).toBeGreaterThan(runs.findIndex((run) => run.args[0] === "run"));
+        expect(runs.indexOf(setup!)).toBeGreaterThan(bootAddress);
+        expect(runs.some((run) => run.args.includes("--password"))).toBe(false);
         for (const value of [
           null,
           {},
@@ -438,6 +468,22 @@ it.effect(
         yield* runtime.release;
       }),
     ),
+);
+
+it.effect("keeps preparation awaiting consent with manual setup when Lume SSH fails", () =>
+  harness(({ runtime, runs, setSetupExitCode, vms }) =>
+    Effect.gen(function* () {
+      setSetupExitCode(1);
+      yield* runtime.prepare;
+      expect(runs.some((run) => run.args[0] === "ssh")).toBe(true);
+      expect(yield* runtime.check).toMatchObject({
+        state: "needs-consent",
+        setupCommand: expect.stringContaining("cua-driver permissions grant"),
+      });
+      expect(vms.get(golden)?.status).toBe("running");
+      yield* runtime.release;
+    }),
+  ),
 );
 
 it.effect("leases exclusively, reuses the VM for the same thread, and resets between leases", () =>

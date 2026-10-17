@@ -213,7 +213,7 @@ describe("isolated macOS VM setup", () => {
       setupCommand: "cua-setup",
     } satisfies ComputerUseMacosVm;
     expect(describeVm(vm)).toBe(
-      "Open the VM, run the setup command in its Terminal, approve the permission prompts, then select Verify.",
+      "Rove installs the driver automatically. Open the VM, approve the permission prompts, then select Verify. If setup did not complete or prompts are missing, use Manual setup in the VM's Terminal.",
     );
     expect(vmActions(vm).map((action) => action.input.action)).toEqual([
       "open-vm-display",
