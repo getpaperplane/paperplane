@@ -90,11 +90,18 @@ describe("computer use status", () => {
         readiness: { platform: "linux", diagnostics: null, desktops: 0, capacity: 4 },
       }),
     ).toMatchObject({ status: "stopped" });
+    expect(
+      decode({ ...installed, readiness: { platform: "win32", permissions: null } }),
+    ).toMatchObject({ readiness: { platform: "win32", permissions: null } });
+    expect(decode({ status: "not-installed", platform: "win32" })).toEqual({
+      status: "not-installed",
+      platform: "win32",
+    });
     expect(decode({ status: "not-installed", platform: "linux" })).toEqual({
       status: "not-installed",
       platform: "linux",
     });
-    expect(() => decode({ status: "not-installed", platform: "win32" })).toThrow();
+    expect(() => decode({ status: "not-installed", platform: "freebsd" })).toThrow();
     expect(() =>
       decode({ ...installed, readiness: { platform: "linux", diagnostics: [] } }),
     ).toThrow();

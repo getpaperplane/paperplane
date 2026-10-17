@@ -35,7 +35,7 @@ describe("computer use setup", () => {
       detail: "Install rootless Podman.",
     } satisfies ComputerUseStatus;
     expect(describeDriver(unavailable, null)).toBe("Install rootless Podman.");
-    expect(primaryAction(unavailable)).toBeNull();
+    expect(primaryAction(unavailable)).toEqual({ input: { action: "start" }, label: "Retry" });
     const missingImage = { status: "needs-desktop-image" } satisfies ComputerUseStatus;
     expect(primaryAction(missingImage)).toEqual({
       input: { action: "install" },
@@ -110,10 +110,57 @@ describe("computer use setup", () => {
   });
 
   it("preserves unavailable-host and connection-error messages", () => {
-    expect(describeDriver({ status: "unsupported", platform: "win32" }, null)).toContain(
-      "macOS or Linux host",
+    expect(describeDriver({ status: "unsupported", platform: "freebsd" }, null)).toBe(
+      "Computer use needs a macOS, Windows, or Linux host. This environment runs freebsd.",
     );
-    expect(primaryAction({ status: "unsupported", platform: "win32" })).toBeNull();
+    expect(primaryAction({ status: "unsupported", platform: "freebsd" })).toBeNull();
     expect(describeDriver(null, "Disconnected")).toBe("Disconnected");
+  });
+
+  it("retries a runtime that is unavailable by starting the driver again", () => {
+    const unavailable = {
+      status: "runtime-unavailable",
+      detail: "The interactive desktop daemon is not running.",
+    } satisfies ComputerUseStatus;
+    expect(describeDriver(unavailable, null)).toBe(
+      "The interactive desktop daemon is not running.",
+    );
+    expect(primaryAction(unavailable)).toEqual({
+      input: { action: "start" },
+      label: "Retry",
+    });
+  });
+
+  it("names a Windows PC when Cua Driver is not installed there", () => {
+    const missing = { status: "not-installed", platform: "win32" } satisfies ComputerUseStatus;
+    expect(describeDriver(missing, null)).toContain("Windows PC");
+    expect(primaryAction(missing)?.input).toEqual({ action: "install" });
+  });
+
+  it("describes a stopped and running Windows driver without macOS permissions", () => {
+    const stopped = {
+      status: "stopped",
+      version: "1.2.3",
+      telemetry: null,
+      readiness: { platform: "win32", permissions: null },
+    } satisfies ComputerUseStatus;
+    expect(describeDriver(stopped, null)).toBe(
+      "Cua Driver 1.2.3 is installed. Start it to let agents use apps on this Windows desktop.",
+    );
+    expect(primaryAction(stopped)).toEqual({ input: { action: "start" }, label: "Start" });
+
+    const running = { ...stopped, status: "running" } satisfies ComputerUseStatus;
+    expect(describeDriver(running, null)).toBe(
+      "Cua Driver 1.2.3 is running in your Windows desktop session. Apps running as administrator can't be controlled.",
+    );
+    expect(describeDriver(running, null)).not.toContain("ermission");
+    expect(primaryAction(running)).toBeNull();
+  });
+
+  it("uses platform-neutral wording for an unverified driver", () => {
+    const untrusted = { status: "untrusted" } satisfies ComputerUseStatus;
+    expect(describeDriver(untrusted, null)).toContain("isn't verified as Cua AI, Inc.'s release");
+    expect(describeDriver(untrusted, null)).not.toContain("Mac");
+    expect(primaryAction(untrusted)).toEqual({ input: { action: "install" }, label: "Reinstall" });
   });
 });

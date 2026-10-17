@@ -5,7 +5,7 @@ import * as Layer from "effect/Layer";
 import * as Schema from "effect/Schema";
 import { McpSchema, McpServer } from "effect/ai";
 
-import { BACKGROUND_ONLY_INSTRUCTIONS } from "../../../computerUse/BackgroundPolicy.ts";
+import { instructionsFor } from "../../../computerUse/BackgroundPolicy.ts";
 import * as CuaDriver from "../../../computerUse/CuaDriver.ts";
 import * as ServerSettings from "../../../serverSettings.ts";
 import * as McpInvocationContext from "../../McpInvocationContext.ts";
@@ -94,11 +94,13 @@ const structuredResults = {
 const makeLayer = (options: {
   readonly enabled: boolean;
   readonly policy?: CuaDriver.CuaCatalog["policy"];
+  readonly platform?: CuaDriver.CuaCatalog["platform"];
   readonly extraTools?: ReadonlyArray<CuaDriver.CuaTool>;
   readonly threads?: Array<ThreadId>;
   readonly calls: Array<{ name: string; args: CuaDriver.CuaArguments }>;
   readonly unavailable?: boolean;
   readonly inactive?: boolean;
+  readonly clickAcceptsDelivery?: boolean;
   readonly results?: Readonly<Record<string, McpSchema.CallToolResult>>;
 }) => {
   const unavailable = new CuaDriver.CuaDriverUnavailableError({
@@ -114,7 +116,23 @@ const makeLayer = (options: {
         : Effect.succeed({
             ...catalog,
             policy: options.policy ?? catalog.policy,
-            tools: [...catalog.tools, ...(options.extraTools ?? [])],
+            platform: options.platform ?? "darwin",
+            tools: [
+              ...(options.clickAcceptsDelivery
+                ? catalog.tools.map((tool) =>
+                    tool.name === "click"
+                      ? {
+                          ...tool,
+                          inputSchema: {
+                            ...tool.inputSchema,
+                            properties: { ...tool.inputSchema.properties, delivery_mode: {} },
+                          },
+                        }
+                      : tool,
+                  )
+                : catalog.tools),
+              ...(options.extraTools ?? []),
+            ],
           }),
       call: (name, args, thread) =>
         Effect.sync(() => {
@@ -224,13 +242,13 @@ it.effect("lists operations by summary and describes one operation in full", () 
   Effect.gen(function* () {
     const listing = yield* callTool("computer_describe", { tool: null });
     expect(text(listing)).toBe(
-      `${BACKGROUND_ONLY_INSTRUCTIONS}\n\nSnapshot a window before acting on it.\n\nOperations (run with computer_call):\n- click: Click against a target pid.\n- list_apps: List running apps.\n- list_windows: List windows.\n- hotkey: Press keys.`,
+      `${instructionsFor("background-only", "darwin")}\n\nSnapshot a window before acting on it.\n\nOperations (run with computer_call):\n- click: Click against a target pid.\n- list_apps: List running apps.\n- list_windows: List windows.\n- hotkey: Press keys.`,
     );
 
     const click = yield* callTool("computer_describe", { tool: "click" });
     expect(decodeJsonText(text(click))).toEqual({
       name: "click",
-      description: `${BACKGROUND_ONLY_INSTRUCTIONS}\n\n${catalog.tools[0]?.description}`,
+      description: `${instructionsFor("background-only", "darwin")}\n\n${catalog.tools[0]?.description}`,
       inputSchema: { type: "object", properties: { pid: { type: "number" } }, required: ["pid"] },
     });
 
@@ -245,21 +263,26 @@ it.effect("routes threads to distinct driver connections without named-session i
   const peer = ThreadId.make("peer-cua-thread");
   return Effect.gen(function* () {
     const result = yield* callTool("computer_call", { tool: "click", arguments: { pid: 4 } });
-    expect(result.content).toEqual([
+    expect(result.isError).toBe(true);
+    const accepted = yield* callTool("computer_call", {
+      tool: "click",
+      arguments: { element_token: "s01234567:1" },
+    });
+    expect(accepted.content).toEqual([
       { type: "image", data: new Uint8Array([7]), mimeType: "image/png" },
     ]);
     yield* callTool(
       "computer_call",
       {
         tool: "click",
-        arguments: { pid: 4 },
+        arguments: { element_token: "s01234567:1" },
       },
       { ...invocation, thread: { ...invocation.thread, threadId: peer } },
     );
     yield* callTool("computer_call", { tool: "list_apps", arguments: null });
     expect(calls).toEqual([
-      { name: "click", args: { pid: 4 } },
-      { name: "click", args: { pid: 4 } },
+      { name: "click", args: { element_token: "s01234567:1" } },
+      { name: "click", args: { element_token: "s01234567:1" } },
       { name: "list_apps", args: {} },
     ]);
 
@@ -280,7 +303,7 @@ it.effect("shows the model data Cua returns only as structured content", () =>
 
     const noStructuredData = yield* callTool("computer_call", {
       tool: "hotkey",
-      arguments: { pid: 4 },
+      arguments: { element_token: "s01234567:1" },
     });
     expect(text(noStructuredData)).toBe("Pressed.");
 
@@ -338,11 +361,96 @@ it.effect(
         expect(text(listing)).not.toContain(`- ${name}:`);
         expect((yield* callTool("computer_describe", { tool: name })).isError).toBe(true);
       }
-      const result = yield* callTool("computer_call", { tool: "click", arguments: { pid: 4 } });
+      const result = yield* callTool("computer_call", {
+        tool: "click",
+        arguments: { element_token: "s01234567:1" },
+      });
       expect(result.isError).not.toBe(true);
       expect(calls).toHaveLength(1);
     }).pipe(Effect.provide(makeLayer({ enabled: true, calls, extraTools })));
   },
+);
+
+it.effect("pixel opt-in never enables bare-pid keyboard delivery and is reversible", () => {
+  const calls: Array<{ name: string; args: CuaDriver.CuaArguments }> = [];
+  return Effect.gen(function* () {
+    const settings = yield* ServerSettings.ServerSettingsService;
+    const pixelClick = { tool: "click", arguments: { pid: 4, x: 1, y: 2 } };
+    expect((yield* callTool("computer_call", pixelClick)).isError).toBe(true);
+    yield* settings.updateSettings({ computerUseAllowPixelInput: true });
+    expect((yield* callTool("computer_call", pixelClick)).isError).not.toBe(true);
+    const refused = yield* callTool("computer_call", {
+      tool: "hotkey",
+      arguments: { pid: 4, keys: ["cmd", "c"] },
+    });
+    expect(refused.isError).toBe(true);
+    expect(text(refused)).toContain("bare pid");
+    expect(
+      (yield* callTool("computer_call", {
+        tool: "hotkey",
+        arguments: { pid: 4, window_id: 42, keys: ["cmd", "c"] },
+      })).isError,
+    ).not.toBe(true);
+    yield* settings.updateSettings({ computerUseAllowPixelInput: false });
+    expect((yield* callTool("computer_call", pixelClick)).isError).toBe(true);
+    expect(calls.map(({ name }) => name)).toEqual(["click", "hotkey"]);
+  }).pipe(Effect.provide(makeLayer({ enabled: true, calls })));
+});
+
+it.effect("adds a Spaces note to off-Space driver errors and forces background delivery", () => {
+  const calls: Array<{ name: string; args: CuaDriver.CuaArguments }> = [];
+  return Effect.gen(function* () {
+    const result = yield* callTool("computer_call", {
+      tool: "click",
+      arguments: { element_token: "s01234567:1" },
+    });
+    expect(text(result)).toContain("ax_window_unresolved");
+    expect(text(result)).toContain("another macOS Space");
+    expect(calls[0]?.args).toEqual({ element_token: "s01234567:1", delivery_mode: "background" });
+  }).pipe(
+    Effect.provide(
+      makeLayer({
+        enabled: true,
+        calls,
+        extraTools: [],
+        results: {
+          click: new McpSchema.CallToolResult({
+            isError: true,
+            content: [{ type: "text", text: "ax_window_unresolved" }],
+          }),
+        },
+        clickAcceptsDelivery: true,
+      }),
+    ),
+  );
+});
+
+it.effect("Windows guidance omits Spaces and Windows errors do not gain a macOS note", () =>
+  Effect.gen(function* () {
+    const description = yield* callTool("computer_describe", {});
+    expect(text(description)).toContain("administrator");
+    expect(text(description)).not.toContain("macOS Space");
+    const result = yield* callTool("computer_call", {
+      tool: "click",
+      arguments: { element_token: "s01234567:1" },
+    });
+    expect(text(result)).toContain("ax_window_unresolved");
+    expect(text(result)).not.toContain("Rove note:");
+  }).pipe(
+    Effect.provide(
+      makeLayer({
+        enabled: true,
+        calls: [],
+        platform: "win32",
+        results: {
+          click: new McpSchema.CallToolResult({
+            isError: true,
+            content: [{ type: "text", text: "ax_window_unresolved" }],
+          }),
+        },
+      }),
+    ),
+  ),
 );
 
 it.effect("refuses clients without a Rove thread before contacting Cua", () => {

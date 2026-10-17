@@ -649,12 +649,12 @@ it.effect("closes Linux connections when computer use is disabled", () =>
   ),
 );
 
-it.effect("is unsupported off macOS and Linux", () =>
+it.effect("is unsupported off macOS, Windows, and Linux", () =>
   Effect.gen(function* () {
     const driver = yield* CuaDriver.make();
-    expect(yield* driver.status).toEqual({ status: "unsupported", platform: "win32" });
+    expect(yield* driver.status).toEqual({ status: "unsupported", platform: "freebsd" });
   }).pipe(
-    Effect.provideService(HostProcessPlatform, "win32"),
+    Effect.provideService(HostProcessPlatform, "freebsd"),
     Effect.scoped,
     Effect.provide(
       Layer.mergeAll(

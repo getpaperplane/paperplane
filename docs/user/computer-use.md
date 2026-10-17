@@ -7,13 +7,18 @@ through Rove Code gets the same tools. Computer use is off by default.
 On macOS, agents act on your apps in the background. Desktop input, foreground
 escalation, shared clipboard writes, and driver configuration changes are refused.
 If a GUI step cannot run in the background, the agent can use an app API or report
-that step as blocked. These restrictions apply to Computer Use tools, not shell
+that step as blocked. Agents act through accessibility elements, which never change
+which app has focus. Clicking by screen position is off by default because it can
+briefly change focus while you work; turn on **Allow pixel input** in the same
+settings section if you need it. SwiftUI windows on another Space cannot
+be controlled in the background, though agents can still see them. Move the window to
+the current Space. These restrictions apply to Computer Use tools, not shell
 commands or actions an app takes in response.
 
 On Linux, including WSL, each thread gets a private, headless desktop. Its focus,
 pointer, clipboard, and apps are separate from your desktop and other threads.
 There is no host-desktop fallback. No display, WSLg, or physical monitor is needed.
-macOS does not yet have private desktops. Native Windows apps are not supported.
+macOS and Windows do not yet have private desktops.
 
 For web pages, agents keep using Rove Code's browser panel.
 
@@ -32,6 +37,17 @@ macOS asks on the Mac running the environment, not the device you use to connect
 The installer puts `CuaDriver.app` in `/Applications`. Rove checks that Cua AI, Inc.
 signed the app and refuses to run it otherwise. macOS grants these permissions to
 Cua Driver, not Rove. Revoke them in **System Settings → Privacy & Security**.
+
+### Windows
+
+Install Cua Driver from Settings on the Windows host. Stay signed in to its desktop
+session: the driver runs there through a Scheduled Task, not in SSH or Session 0.
+Use Settings to start it again if the task is stopped. Elevated (administrator)
+apps cannot be controlled. Windows uses the same background-only policy and
+**Allow pixel input** setting as macOS; no Accessibility or Screen Recording grants
+are needed. Rove verifies Cua's Authenticode signatures before running the driver.
+Older unsigned releases are checked against Cua's published release checksums;
+the first verification of those releases needs internet access.
 
 ### Linux and WSL
 
@@ -79,11 +95,12 @@ whose recorded server process has died. Desktops belonging to another live Rove
 server are left alone. Do not expect documents to survive a restart.
 
 On macOS, Rove quits the shared daemon after its connections retire only if Rove
-started it. A separately started daemon is left running.
+started it. A separately started daemon is left running. On Windows, Rove closes
+its connections but never stops the Scheduled Task's daemon.
 
 ## Usage data
 
-Cua's usage collection is disabled inside Linux agent desktops. On macOS, Cua can
+Cua's usage collection is disabled inside Linux agent desktops. On macOS and Windows, Cua can
 send a pseudonymous installation ID and content-free usage counts. Rove turns this
 off when it installs Cua. An existing installation keeps its preference. Change
 that preference with **Share usage data with Cua**.

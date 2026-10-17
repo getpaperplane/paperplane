@@ -1284,6 +1284,9 @@ export type StorageCleanupSettings = typeof StorageCleanupSettings.Type;
 export const ServerSettings = Schema.Struct({
   telemetryEnabled: Schema.Boolean.pipe(Schema.withDecodingDefault(Effect.succeed(true))),
   enableAgentComputerUse: Schema.Boolean.pipe(Schema.withDecodingDefault(Effect.succeed(false))),
+  computerUseAllowPixelInput: Schema.Boolean.pipe(
+    Schema.withDecodingDefault(Effect.succeed(false)),
+  ),
   // Compatibility settings for Rove's in-process Pi driver. Other drivers use providerInstances.
   providers: Schema.Struct({
     pi: PiSettings.pipe(Schema.withDecodingDefault(Effect.succeed({}))),
@@ -1697,6 +1700,7 @@ const PiSettingsPatch = Schema.Struct({
 export const ServerSettingsPatch = Schema.Struct({
   telemetryEnabled: Schema.optionalKey(Schema.Boolean),
   enableAgentComputerUse: Schema.optionalKey(Schema.Boolean),
+  computerUseAllowPixelInput: Schema.optionalKey(Schema.Boolean),
   providers: Schema.optionalKey(Schema.Struct({ pi: Schema.optionalKey(PiSettingsPatch) })),
   githubAccount: Schema.optionalKey(GitHubAccountSelection),
   repositoryRemote: Schema.optionalKey(RepositoryRemotePreference),

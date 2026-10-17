@@ -30,6 +30,11 @@ import { McpSchema } from "effect/ai";
 import * as ProcessRunner from "../processRunner.ts";
 import * as ServerSettings from "../serverSettings.ts";
 import * as LinuxDesktop from "./LinuxDesktop.ts";
+import {
+  WINDOWS_SETUP_DETAIL,
+  WINDOWS_SOCKET,
+  windowsVerificationScript,
+} from "./WindowsDriver.ts";
 
 /** Cua's canonical installer places the app here; its MCP proxy launches the daemon from it. */
 const CUA_DRIVER_APP = "/Applications/CuaDriver.app";
@@ -54,6 +59,7 @@ export interface CuaTool {
 }
 
 export interface CuaCatalog {
+  readonly platform?: "darwin" | "linux" | "win32";
   readonly policy: "background-only" | "isolated-desktop";
   readonly instructions: string | undefined;
   readonly tools: ReadonlyArray<CuaTool>;
@@ -119,7 +125,7 @@ export class CuaDriver extends Context.Service<
     readonly control: (
       input: ComputerUseControlInput,
     ) => Effect.Effect<ComputerUseStatus, ComputerUseControlError>;
-    /** Connects on first use, which launches the Cua daemon when it is not running. */
+    /** Connects on first use. macOS may launch a daemon; Windows only proxies to the interactive task. */
     readonly catalog: Effect.Effect<CuaCatalog, CuaDriverUnavailableError>;
     readonly call: (
       name: string,
@@ -153,8 +159,35 @@ export const make = Effect.fn("CuaDriver.make")(function* (options?: {
           .filter(Boolean)
           .map((directory) => path.join(directory, "cua-driver")),
       ];
+  const windowsExecutable = path.join(
+    environment.LOCALAPPDATA ??
+      path.join(environment.USERPROFILE ?? NodeOS.homedir(), "AppData", "Local"),
+    "Programs",
+    "Cua",
+    "cua-driver",
+    "bin",
+    "cua-driver.exe",
+  );
+  const windowsCandidates = options?.executablePath
+    ? [options.executablePath]
+    : [
+        ...(environment.PATH ?? environment.Path ?? "")
+          .split(";")
+          .filter(Boolean)
+          .map((directory) => path.join(directory.replace(/^"|"$/g, ""), "cua-driver.exe")),
+        windowsExecutable,
+      ];
   let executablePath =
-    platform === "linux" ? linuxExecutable : `${appPath}/Contents/MacOS/cua-driver`;
+    platform === "linux"
+      ? linuxExecutable
+      : platform === "win32"
+        ? windowsExecutable
+        : `${appPath}/Contents/MacOS/cua-driver`;
+  const supported = platform === "darwin" || platform === "linux" || platform === "win32";
+  const trustDetail = () =>
+    platform === "win32"
+      ? "The Windows Cua Driver payload failed Cua's Authenticode signature or release-checksum verification. Reinstall from Settings → Integrations and check the network connection."
+      : untrustedDetail(appPath);
   const desktops = platform === "linux" ? yield* LinuxDesktop.make() : undefined;
   const settings = yield* ServerSettings.ServerSettingsService;
   const settingsChanges = yield* settings.subscribeChanges;
@@ -167,6 +200,7 @@ export const make = Effect.fn("CuaDriver.make")(function* (options?: {
   /** True only when Rove launched the running daemon; Rove never quits one it did not start. */
   let ownsDaemon = false;
   let signatureVerified = false;
+  let verifiedWindowsPath: string | undefined;
 
   const run = (args: ReadonlyArray<string>, timeout: Duration.Input = Duration.seconds(10)) =>
     Effect.suspend(() => runner.run({ command: executablePath, args, timeout, env: environment }));
@@ -177,11 +211,34 @@ export const make = Effect.fn("CuaDriver.make")(function* (options?: {
   );
 
   const presence: Effect.Effect<"missing" | "untrusted" | "trusted"> = Effect.gen(function* () {
-    if (platform === "linux") {
-      for (const candidate of linuxCandidates) {
+    if (platform === "linux" || platform === "win32") {
+      for (const candidate of platform === "win32" ? windowsCandidates : linuxCandidates) {
         if (yield* fileSystem.exists(candidate).pipe(Effect.orElseSucceed(() => false))) {
           executablePath = candidate;
-          return "trusted";
+          if (platform === "linux") return "trusted";
+          const resolved = yield* fileSystem.realPath(candidate).pipe(Effect.option);
+          if (
+            Option.isSome(resolved) &&
+            signatureVerified &&
+            verifiedWindowsPath === resolved.value
+          )
+            return "trusted";
+          const script = Option.isSome(resolved)
+            ? windowsVerificationScript(resolved.value)
+            : undefined;
+          if (!script) return "untrusted";
+          const check = yield* runner
+            .run({
+              command: "powershell.exe",
+              args: ["-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", script],
+              env: environment,
+              timeout: WAIT_FOR_USER_TIMEOUT,
+            })
+            .pipe(Effect.option);
+          signatureVerified = Option.isSome(check) && check.value.code === 0;
+          verifiedWindowsPath =
+            signatureVerified && Option.isSome(resolved) ? resolved.value : undefined;
+          return signatureVerified ? "trusted" : "untrusted";
         }
       }
       return "missing";
@@ -255,7 +312,10 @@ export const make = Effect.fn("CuaDriver.make")(function* (options?: {
 
   const connect = (
     key: string,
-    transport: LinuxDesktop.Transport = { command: executablePath, args: ["mcp"] },
+    transport: LinuxDesktop.Transport = {
+      command: executablePath,
+      args: platform === "win32" ? ["mcp", "--socket", WINDOWS_SOCKET] : ["mcp"],
+    },
   ) =>
     Effect.tryPromise({
       try: async (signal) => {
@@ -286,7 +346,7 @@ export const make = Effect.fn("CuaDriver.make")(function* (options?: {
             do {
               const page = await client.listTools(cursor ? { cursor } : {});
               for (const tool of page.tools) {
-                if (platform === "linux" && tool.name === "check_permissions") continue;
+                if (platform !== "darwin" && tool.name === "check_permissions") continue;
                 tools.push({
                   name: tool.name,
                   description: tool.description ?? tool.name,
@@ -300,6 +360,7 @@ export const make = Effect.fn("CuaDriver.make")(function* (options?: {
           const next: Connection = {
             client,
             catalog: sharedCatalog ?? {
+              platform: platform === "win32" ? "win32" : platform === "linux" ? "linux" : "darwin",
               policy: desktops ? "isolated-desktop" : "background-only",
               instructions: client.getInstructions(),
               tools: desktops
@@ -357,9 +418,9 @@ export const make = Effect.fn("CuaDriver.make")(function* (options?: {
     }
     const current = connections.get(key);
     if (current) return current;
-    if (platform !== "darwin" && platform !== "linux") {
+    if (!supported) {
       return yield* new CuaDriverUnavailableError({
-        detail: `Computer use needs a macOS or Linux host, not ${platform}.`,
+        detail: `Computer use needs a macOS, Windows, or Linux host, not ${platform}.`,
       });
     }
     const found = yield* presence;
@@ -368,10 +429,12 @@ export const make = Effect.fn("CuaDriver.make")(function* (options?: {
         detail:
           found === "missing"
             ? "Cua Driver is not installed. The user can install it from Settings → Integrations."
-            : untrustedDetail(appPath),
+            : trustDetail(),
       });
     }
-    const wasRunning = platform === "darwin" ? yield* daemonRunning : false;
+    const wasRunning = platform !== "linux" ? yield* daemonRunning : false;
+    if (platform === "win32" && !wasRunning)
+      return yield* new CuaDriverUnavailableError({ detail: WINDOWS_SETUP_DETAIL });
     const next = desktops
       ? yield* desktops
           .connect(key, executablePath, (transport) => connect(key, transport))
@@ -431,7 +494,7 @@ export const make = Effect.fn("CuaDriver.make")(function* (options?: {
   });
 
   const statusUnlocked: Effect.Effect<ComputerUseStatus> = Effect.gen(function* () {
-    if (platform !== "darwin" && platform !== "linux")
+    if (platform !== "darwin" && platform !== "linux" && platform !== "win32")
       return { status: "unsupported", platform } as const;
     const found = yield* presence;
     if (found === "missing") return { status: "not-installed", platform } as const;
@@ -446,10 +509,12 @@ export const make = Effect.fn("CuaDriver.make")(function* (options?: {
       [
         run(["--version"]).pipe(Effect.option),
         desktops ? Effect.succeedNone : run(["telemetry", "status", "--json"]).pipe(Effect.option),
-        platform === "darwin" ? daemonRunning : Effect.succeed(connections.size > 0),
+        platform !== "linux" ? daemonRunning : Effect.succeed(connections.size > 0),
       ],
       { concurrency: "unbounded" },
     );
+    if (platform === "win32" && !running)
+      return { status: "runtime-unavailable", detail: WINDOWS_SETUP_DETAIL } as const;
     const version = Option.match(versionOutput, {
       onNone: () => "unknown",
       onSome: ({ stdout }) => /\d+\.\d+\.\d+\S*/.exec(stdout)?.[0] ?? "unknown",
@@ -469,7 +534,9 @@ export const make = Effect.fn("CuaDriver.make")(function* (options?: {
             desktops: desktops?.count() ?? 0,
             capacity: LinuxDesktop.CAPACITY,
           }
-        : { platform, permissions: running ? yield* permissionsUnlocked : null };
+        : platform === "win32"
+          ? { platform, permissions: null }
+          : { platform, permissions: running ? yield* permissionsUnlocked : null };
     return running
       ? ({ status: "running", version, telemetry, readiness } as const)
       : ({ status: "stopped", version, telemetry, readiness } as const);
@@ -500,9 +567,19 @@ export const make = Effect.fn("CuaDriver.make")(function* (options?: {
     // Execute only a fully downloaded script, never a partial pipe.
     const output = yield* runner
       .run({
-        command: "/bin/bash",
-        args: ["-c", `script="$(curl -fsSL ${INSTALL_SCRIPT_URL})" && /bin/bash -c "$script"`],
-        env: installerEnvironment,
+        command: platform === "win32" ? "powershell.exe" : "/bin/bash",
+        args:
+          platform === "win32"
+            ? [
+                "-NoProfile",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-Command",
+                "$ErrorActionPreference = 'Stop'; irm https://cua.ai/driver/install.ps1 | iex",
+              ]
+            : ["-c", `script="$(curl -fsSL ${INSTALL_SCRIPT_URL})" && /bin/bash -c "$script"`],
+        env:
+          platform === "win32" ? { ...environment, ...installerEnvironment } : installerEnvironment,
         timeout: WAIT_FOR_USER_TIMEOUT,
       })
       .pipe(Effect.mapError((cause) => fail(describeCause(cause))));
@@ -515,12 +592,31 @@ export const make = Effect.fn("CuaDriver.make")(function* (options?: {
       return yield* fail(
         found === "missing"
           ? "The Cua installer finished without installing Cua Driver."
-          : untrustedDetail(appPath),
+          : trustDetail(),
       );
     }
     // Clicking Install is not consent to Cua's own usage data; the user can turn it on in Settings.
     yield* run(["telemetry", "disable"]).pipe(Effect.ignore);
   });
+
+  // The Scheduled Task, not Rove, owns the interactive daemon. Never mark it owned.
+  const startWindows = (action: "install" | "start") =>
+    Effect.gen(function* () {
+      const commands =
+        action === "install"
+          ? [
+              ["autostart", "enable"],
+              ["autostart", "kick"],
+            ]
+          : [["autostart", "kick"]];
+      for (const args of commands) {
+        const output = yield* run(args, WAIT_FOR_USER_TIMEOUT).pipe(
+          Effect.mapError((cause) => failWith(action)(describeCause(cause))),
+        );
+        if (output.code !== 0)
+          return yield* failWith(action)(`${WINDOWS_SETUP_DETAIL} ${lastLines(output)}`);
+      }
+    });
 
   const grantPermissions = Effect.gen(function* () {
     const wasRunning = yield* daemonRunning;
@@ -551,8 +647,8 @@ export const make = Effect.fn("CuaDriver.make")(function* (options?: {
 
   const control = Effect.fn("CuaDriver.control")(function* (input: ComputerUseControlInput) {
     const fail = failWith(input.action);
-    if (platform !== "darwin" && platform !== "linux") {
-      return yield* fail(`Computer use needs a macOS or Linux host, not ${platform}.`);
+    if (!supported) {
+      return yield* fail(`Computer use needs a macOS, Windows, or Linux host, not ${platform}.`);
     }
     const found = yield* lock.withPermit(presence);
     if (input.action === "install") {
@@ -565,19 +661,21 @@ export const make = Effect.fn("CuaDriver.make")(function* (options?: {
           .install(executablePath)
           .pipe(Effect.mapError((cause) => fail(cause.detail)));
       } else if (found !== "trusted") yield* install;
+      if (platform === "win32") yield* startWindows(input.action);
       return yield* status;
     }
     if (found !== "trusted") {
-      return yield* fail(
-        found === "missing" ? "Cua Driver is not installed." : untrustedDetail(appPath),
-      );
+      return yield* fail(found === "missing" ? "Cua Driver is not installed." : trustDetail());
     }
     if (input.action === "start") {
+      if (platform === "win32") yield* startWindows(input.action);
       yield* connected(CONTROL_CONNECTION).pipe(Effect.mapError((error) => fail(error.detail)));
     } else if (input.action === "grant-permissions") {
-      if (platform === "linux") {
+      if (platform !== "darwin") {
         return yield* fail(
-          "Linux agent desktops have no macOS permission grants. Use Check desktop to test the private session.",
+          platform === "linux"
+            ? "Linux agent desktops have no macOS permission grants. Use Check desktop to test the private session."
+            : "Windows has no macOS permission grants. Start Cua Driver from Settings instead.",
         );
       }
       yield* grantPermissions;

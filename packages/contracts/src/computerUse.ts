@@ -20,6 +20,11 @@ export const ComputerUseReadiness = Schema.Union([
     platform: Schema.Literal("darwin"),
     permissions: Schema.NullOr(ComputerUsePermissions),
   }),
+  /** Windows has no TCC grants; permissions are not applicable. */
+  Schema.Struct({
+    platform: Schema.Literal("win32"),
+    permissions: Schema.Null,
+  }),
   Schema.Struct({
     platform: Schema.Literal("linux"),
     diagnostics: Schema.NullOr(Schema.NonEmptyArray(ComputerUseDiagnostic)),
@@ -37,11 +42,11 @@ export const ComputerUseStatus = Schema.Union([
   Schema.Struct({ status: Schema.Literal("unsupported"), platform: Schema.String }),
   Schema.Struct({
     status: Schema.Literal("not-installed"),
-    platform: Schema.Literals(["darwin", "linux"]),
+    platform: Schema.Literals(["darwin", "linux", "win32"]),
   }),
   Schema.Struct({ status: Schema.Literal("runtime-unavailable"), detail: Schema.String }),
   Schema.Struct({ status: Schema.Literal("needs-desktop-image") }),
-  /** An app is installed where Cua belongs, but Cua AI, Inc. did not sign it. Rove will not run it. */
+  /** The installed driver failed platform-specific signature or release-checksum verification. */
   Schema.Struct({ status: Schema.Literal("untrusted") }),
   Schema.Struct({
     status: Schema.Literal("stopped"),

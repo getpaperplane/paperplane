@@ -26,6 +26,25 @@ const decodeClaudeSettings = Schema.decodeUnknownSync(ClaudeSettings);
 const decodePiSettings = Schema.decodeUnknownSync(PiSettings);
 const encodePiSettings = Schema.encodeSync(PiSettings);
 
+describe("ServerSettings computer use pixel input", () => {
+  it("defaults existing installations to pixel input off", () => {
+    expect(decodeServerSettings({}).computerUseAllowPixelInput).toBe(false);
+    expect(DEFAULT_SERVER_SETTINGS.computerUseAllowPixelInput).toBe(false);
+  });
+
+  it.each([true, false])("round-trips an explicit pixel preference %s", (allowed) => {
+    const preference = { computerUseAllowPixelInput: allowed };
+    expect(decodeServerSettingsPatch(preference)).toEqual(preference);
+    expect(encodeServerSettings(decodeServerSettings(preference))).toMatchObject(preference);
+  });
+
+  it("rejects non-boolean opt-ins", () => {
+    const preference = { computerUseAllowPixelInput: "true" };
+    expect(() => decodeServerSettings(preference)).toThrow();
+    expect(() => decodeServerSettingsPatch(preference)).toThrow();
+  });
+});
+
 describe("ServerSettings response streaming", () => {
   it("defaults to paragraph buffering", () => {
     expect(decodeServerSettings({}).responseStreamingMode).toBe("paragraph");

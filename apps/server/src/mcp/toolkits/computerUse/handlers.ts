@@ -3,10 +3,11 @@ import * as Schema from "effect/Schema";
 import { McpSchema } from "effect/ai";
 
 import {
-  backgroundRefusal,
+  applyBackgroundPolicy,
   instructionsFor,
   isolatedRefusal,
   isAllowedTool,
+  offSpaceNote,
 } from "../../../computerUse/BackgroundPolicy.ts";
 import * as CuaDriver from "../../../computerUse/CuaDriver.ts";
 import * as ServerSettings from "../../../serverSettings.ts";
@@ -113,7 +114,7 @@ const make = Effect.gen(function* () {
       whenEnabled(
         driver.catalog.pipe(
           Effect.map((catalog) => {
-            const instructions = instructionsFor(catalog.policy);
+            const instructions = instructionsFor(catalog.policy, catalog.platform);
             if (input.tool == null) {
               const operations = catalog.tools
                 .filter((tool) => isAllowedTool(tool, catalog.policy))
@@ -158,15 +159,37 @@ const make = Effect.gen(function* () {
               `Cua Driver has no operation named ${input.tool}. Call computer_describe without arguments to list them.`,
               true,
             );
-          const args = input.arguments ?? {};
-          const refusal =
-            catalog.policy === "isolated-desktop"
-              ? isolatedRefusal(tool, args)
-              : backgroundRefusal(tool, args);
-          if (refusal) return policyRefusalResult(refusal, catalog.policy);
-          return yield* driver
+          const requested = input.arguments ?? {};
+          let args = requested;
+          if (catalog.policy === "isolated-desktop") {
+            const refusal = isolatedRefusal(tool, requested);
+            if (refusal) return policyRefusalResult(refusal, catalog.policy);
+          } else {
+            const allowPixelInput = yield* settings.getSettings.pipe(
+              Effect.map((current) => current.computerUseAllowPixelInput),
+              Effect.orElseSucceed(() => false),
+            );
+            const decision = applyBackgroundPolicy(tool, requested, { allowPixelInput });
+            if (decision.refusal !== undefined)
+              return policyRefusalResult(decision.refusal, catalog.policy);
+            args = decision.args;
+          }
+          const result = yield* driver
             .call(tool.name, args, invocation.thread.threadId)
             .pipe(Effect.map(withStructuredText));
+          if (catalog.policy !== "background-only" || (catalog.platform ?? "darwin") !== "darwin")
+            return result;
+          const note = offSpaceNote({
+            isError: result.isError,
+            text: result.content.flatMap((b) => (b.type === "text" ? [b.text] : [])).join("\n"),
+            structured: result.structuredContent,
+          });
+          return note === undefined
+            ? result
+            : new McpSchema.CallToolResult({
+                ...result,
+                content: [...result.content, { type: "text", text: note }],
+              });
         }).pipe(Effect.catchTags({ CuaDriverUnavailableError: unavailable })),
       ),
     ),

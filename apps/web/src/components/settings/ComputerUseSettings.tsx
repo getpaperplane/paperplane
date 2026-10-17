@@ -60,7 +60,7 @@ export function ComputerUseSettings() {
         {...searchableSetting("agent-computer-use")}
         serverScoped
         settingKeys={["enableAgentComputerUse"]}
-        description="Use Cua Driver for background-only Mac app control or a private, offline Linux desktop per thread. Linux apps and files are temporary and cannot access the project or host desktop. Turning this off discards Linux desktops and quits a Mac daemon Rove started."
+        description="Use Cua Driver for background-only app control on Mac and Windows, or a private, offline Linux desktop per thread. Linux apps and files are temporary and cannot access the project or host desktop. Turning this off discards Linux desktops and quits a Mac daemon Rove started."
         control={
           <ScopedSwitch
             settingKeys={["enableAgentComputerUse"]}
@@ -73,6 +73,27 @@ export function ComputerUseSettings() {
           />
         }
       />
+      {status?.status === "stopped" || status?.status === "running" ? (
+        status.readiness.platform === "darwin" || status.readiness.platform === "win32" ? (
+          <SettingsRow
+            {...searchableSetting("computer-use-pixel-input")}
+            serverScoped
+            settingKeys={["computerUseAllowPixelInput"]}
+            description="Lets agents click by screen position. This can briefly change app focus while you work."
+            control={
+              <ScopedSwitch
+                settingKeys={["computerUseAllowPixelInput"]}
+                checked={settings.computerUseAllowPixelInput}
+                disabled={projectScope || environmentId === null}
+                aria-label="Allow pixel input"
+                onCheckedChange={(checked) =>
+                  updateSettings({ computerUseAllowPixelInput: Boolean(checked) })
+                }
+              />
+            }
+          />
+        ) : null
+      ) : null}
       <SettingsRow
         {...searchableSetting("cua-driver")}
         description={describeDriver(status, driver.error)}
