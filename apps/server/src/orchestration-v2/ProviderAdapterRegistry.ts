@@ -13,6 +13,7 @@ import * as Layer from "effect/Layer";
 import * as Schema from "effect/Schema";
 import * as Scope from "effect/Scope";
 
+import type { ProviderInstance } from "@rove-code/provider-core/server/driver";
 import * as ProviderInstanceRegistry from "../provider/ProviderInstanceRegistry.ts";
 import {
   ProviderAdapterDriverCreateError,
@@ -79,6 +80,10 @@ export const layerFromProviderInstanceRegistry: Layer.Layer<
   ProviderAdapterRegistryV2,
   Effect.gen(function* () {
     const instances = yield* ProviderInstanceRegistry.ProviderInstanceRegistry;
+    const authAdapters = new WeakMap<
+      ProviderInstance,
+      ProviderAdapter.ProviderAdapterV2["Service"]
+    >();
     return ProviderAdapterRegistryV2.of({
       get: (instanceId) =>
         instances.getInstance(instanceId).pipe(
@@ -88,7 +93,9 @@ export const layerFromProviderInstanceRegistry: Layer.Layer<
             const adapter = instance.orchestrationAdapter;
             const auth = instance.auth;
             if (!auth) return Effect.succeed(adapter);
-            return Effect.succeed({
+            const cached = authAdapters.get(instance);
+            if (cached !== undefined) return Effect.succeed(cached);
+            const guarded = {
               ...adapter,
               openSession: (input) => {
                 const open = Effect.gen(function* () {
@@ -134,7 +141,9 @@ export const layerFromProviderInstanceRegistry: Layer.Layer<
                   ),
                 );
               },
-            } satisfies ProviderAdapter.ProviderAdapterV2["Service"]);
+            } satisfies ProviderAdapter.ProviderAdapterV2["Service"];
+            authAdapters.set(instance, guarded);
+            return Effect.succeed(guarded);
           }),
         ),
       list: () =>

@@ -89,6 +89,41 @@ it.effect("routes two configured instances of the same driver independently", ()
   }).pipe(Effect.provide(layerTest)),
 );
 
+it.effect("keeps auth-wrapped adapter identity stable until its instance is rebuilt", () =>
+  Effect.gen(function* () {
+    const unused = () => Effect.die("unused auth operation");
+    const auth: ProviderAuthController = {
+      start: unused,
+      complete: unused,
+      cancel: unused,
+      logout: unused,
+      subscribe: () => Stream.empty,
+    };
+    const instance = { ...instances[0], auth };
+    const current = yield* Ref.make(instance);
+    const registry = yield* Effect.service(ProviderAdapterRegistry.ProviderAdapterRegistryV2).pipe(
+      Effect.provide(
+        ProviderAdapterRegistry.layerFromProviderInstanceRegistry.pipe(
+          Layer.provide(
+            Layer.mock(ProviderInstanceRegistry.ProviderInstanceRegistry)({
+              getInstance: () => Ref.get(current),
+            }),
+          ),
+        ),
+      ),
+    );
+
+    const original = yield* registry.get(personalId);
+    assert.notStrictEqual(original, personalAdapter);
+    assert.strictEqual(yield* registry.get(personalId), original);
+
+    yield* Ref.set(current, { ...instance });
+    const rebuilt = yield* registry.get(personalId);
+    assert.notStrictEqual(rebuilt, original);
+    assert.strictEqual(yield* registry.get(personalId), rebuilt);
+  }),
+);
+
 const lifecycleDriver = ProviderDriverKind.make("lifecycle-test");
 const lifecycleInstanceId = ProviderInstanceId.make("lifecycle-test");
 const lifecycleConfigMap: ProviderInstanceConfigMap = {
