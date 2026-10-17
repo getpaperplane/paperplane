@@ -29,6 +29,7 @@ export const ComputerUseMacosVm = Schema.Struct({
   memoryBytes: Schema.optionalKey(Schema.Number),
   lumeVersion: Schema.optionalKey(Schema.String),
   setupCommand: Schema.optionalKey(Schema.String),
+  displayUrl: Schema.optionalKey(Schema.String),
   detail: Schema.optionalKey(Schema.String),
 });
 export type ComputerUseMacosVm = typeof ComputerUseMacosVm.Type;

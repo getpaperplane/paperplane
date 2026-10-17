@@ -37,6 +37,7 @@ const Vm = Schema.Struct({
   name: Schema.String,
   status: Schema.String,
   ipAddress: Schema.optionalKey(Schema.NullOr(Schema.String)),
+  vncUrl: Schema.optionalKey(Schema.NullOr(Schema.String)),
   diskSize: Schema.optionalKey(Schema.Struct({ allocated: Schema.Number, total: Schema.Number })),
   memorySize: Schema.optionalKey(Schema.Number),
 });
@@ -340,9 +341,21 @@ export const make = Effect.fn("MacosVm.make")(function* (options?: { readonly ar
       const records = yield* list;
       const vm = records.find((entry) => entry.name === GOLDEN);
       const unrecorded = !workOwned && records.some((entry) => entry.name === WORK);
+      // Lume URLs may embed a VNC password. computerUse.status allows orchestration:read,
+      // so expose only the VNC endpoint, never credentials (including query/fragment data).
+      let displayUrl: string | undefined;
+      if (!unrecorded && vm?.status === "running" && vm.vncUrl) {
+        try {
+          const url = new URL(vm.vncUrl);
+          if (url.protocol === "vnc:" && url.host) displayUrl = `vnc://${url.host}`;
+        } catch {
+          // An invalid display URL must not make VM status unavailable.
+        }
+      }
       return {
         ...base,
         lumeVersion: found.success,
+        ...(displayUrl ? { displayUrl } : {}),
         ...(Number.isFinite(free) ? { freeDiskBytes: free } : {}),
         ...(vm?.diskSize
           ? { diskBytes: vm.diskSize.allocated, virtualDiskBytes: vm.diskSize.total }

@@ -69,6 +69,7 @@ interface Vm {
   name: string;
   status: string;
   ipAddress: string | null;
+  vncUrl?: string | null;
   diskSize: { allocated: number; total: number };
   memorySize: number;
 }
@@ -331,6 +332,32 @@ it.effect("installs Lume only on explicit control and never falls back to the ho
   ),
 );
 
+it.effect("exposes only a credential-free display endpoint during running consent setup", () =>
+  harness(({ runtime, vms }) =>
+    Effect.gen(function* () {
+      expect(yield* runtime.check).not.toHaveProperty("displayUrl");
+      const vm = record(golden);
+      vm.vncUrl = "vnc://user:secret@127.0.0.1:5900?password=secret#secret";
+      vms.set(golden, vm);
+      expect(yield* runtime.check).not.toHaveProperty("displayUrl");
+      vm.status = "running";
+      expect(yield* runtime.check).toMatchObject({
+        state: "needs-consent",
+        displayUrl: "vnc://127.0.0.1:5900",
+      });
+      for (const url of [undefined, null, "invalid", "https://example.com"]) {
+        if (url === undefined) delete vm.vncUrl;
+        else vm.vncUrl = url;
+        expect(yield* runtime.check).not.toHaveProperty("displayUrl");
+      }
+      vm.vncUrl = "vnc://:secret@127.0.0.1:5900";
+      vms.set(work, record(work));
+      expect(yield* runtime.check).toMatchObject({ state: "unavailable" });
+      expect(yield* runtime.check).not.toHaveProperty("displayUrl");
+    }),
+  ),
+);
+
 it.effect("does not discard unrecorded clones during ordinary status or shutdown", () =>
   harness(({ runtime, vms }) =>
     Effect.gen(function* () {
@@ -389,6 +416,7 @@ it.effect(
         });
         yield* runtime.verify;
         expect(yield* runtime.check).toMatchObject({ state: "ready" });
+        expect(yield* runtime.check).not.toHaveProperty("displayUrl");
         expect(vms.get(golden)?.status).toBe("stopped");
         yield* runtime.release;
       }),
