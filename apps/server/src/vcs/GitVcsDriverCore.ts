@@ -29,6 +29,7 @@ import {
   type VcsRef,
 } from "@rove-code/contracts";
 import { dedupeRemoteBranchesWithLocalMatches, normalizeGitRemoteUrl } from "@rove-code/shared/git";
+import { SelectedGitHubAccount } from "@rove-code/source-control-github/server/GitHubCredentials";
 import * as HostProcess from "@rove-code/shared/HostProcess";
 import { compactTraceAttributes } from "@rove-code/shared/observability";
 import { decodeJsonResult } from "@rove-code/shared/schemaJson";
@@ -945,6 +946,27 @@ export const windowsLongPathConfigEnv = (
   };
 };
 
+// Rove: reset ambient HTTPS helpers only for the acting project's selected host.
+const GITHUB_LOGIN_PATTERN = /^[a-z0-9][a-z0-9._-]*$/i;
+const GITHUB_HOST_PATTERN = /^[a-z0-9.-]+(?::\d+)?$/i;
+
+export function selectedAccountCredentialArgs(
+  selection: { readonly host: string; readonly login: string } | null,
+): readonly string[] {
+  if (
+    selection === null ||
+    !GITHUB_LOGIN_PATTERN.test(selection.login) ||
+    !GITHUB_HOST_PATTERN.test(selection.host)
+  )
+    return [];
+  const { host, login } = selection;
+  const key = `credential.https://${host}.helper`;
+  const helper =
+    `!f() { test "$1" = get || exit 0; echo username=${login}; ` +
+    `printf 'password=%s\\n' "$(gh auth token --hostname ${host} --user ${login})"; }; f`;
+  return ["-c", `${key}=`, "-c", `${key}=${helper}`];
+}
+
 export const makeGitVcsDriverCore = Effect.fn("makeGitVcsDriverCore")(function* () {
   const fileSystem = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -955,9 +977,15 @@ export const makeGitVcsDriverCore = Effect.fn("makeGitVcsDriverCore")(function* 
 
   const executeRaw: GitVcsDriver.GitVcsDriver["Service"]["execute"] = Effect.fnUntraced(
     function* (input) {
+      const selection = yield* SelectedGitHubAccount;
+      const credentialArgs = input.args.some(
+        (arg) => arg === "fetch" || arg === "pull" || arg === "push",
+      )
+        ? selectedAccountCredentialArgs(selection)
+        : [];
       const commandInput = {
         ...input,
-        args: [...input.args],
+        args: [...credentialArgs, ...input.args],
       } as const;
       const timeoutMs = input.timeoutMs === undefined ? DEFAULT_TIMEOUT_MS : input.timeoutMs;
       const maxOutputBytes = input.maxOutputBytes ?? DEFAULT_MAX_OUTPUT_BYTES;

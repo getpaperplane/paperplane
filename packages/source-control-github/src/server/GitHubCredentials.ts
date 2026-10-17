@@ -15,9 +15,39 @@ import * as HostProcess from "@rove-code/shared/HostProcess";
 
 import * as SourceControlHost from "@rove-code/source-control-core/server/SourceControlHost";
 import { readSourceControlHostSettings } from "@rove-code/source-control-core/client/definition";
-import type { ServerSettings } from "@rove-code/contracts";
+import type { GitHubAccountSelection, ServerSettings } from "@rove-code/contracts";
 
 import * as GitHubClient from "../client/definition.ts";
+
+/** Rove: the acting project's account, independent of gh's active login. */
+export const SelectedGitHubAccount = Context.Reference<GitHubAccountSelection | null>(
+  "@rove-code/source-control-github/SelectedGitHubAccount",
+  { defaultValue: () => null },
+);
+
+/** Keep synchronous provider helpers intact while scoping every effect-returning method. */
+export function provideSelectedGitHubAccount<T extends object>(
+  api: T,
+  selection: GitHubAccountSelection | null,
+): T {
+  if (selection === null) return api;
+  // SAFETY: provider APIs are plain records; keys and non-effect results are preserved, and
+  // providing a defaulted context reference changes neither method arguments nor channels.
+  return Object.fromEntries(
+    Object.entries(api).map(([key, value]) => [
+      key,
+      // oxlint-disable-next-line anti-slop/no-runtime-typeof -- this generic wrapper distinguishes methods from static provider metadata, not untrusted input
+      typeof value === "function"
+        ? (...args: ReadonlyArray<unknown>) => {
+            const result: unknown = value(...args);
+            if (!Effect.isEffect(result)) return result;
+            // @effect-diagnostics-next-line anyUnknownInErrorContext:off -- dynamic wrapping preserves each method's original channels through T
+            return Effect.provideService(result, SelectedGitHubAccount, selection);
+          }
+        : value,
+    ]),
+  ) as T;
+}
 
 /** How long a token is reused before `gh` is asked again, so a `gh auth switch` applies soon. */
 const TOKEN_TTL = Duration.minutes(5);
@@ -205,9 +235,11 @@ export const make = Effect.gen(function* () {
     account === undefined ? host : `${host}\u0000${account}`;
 
   const lookup = Effect.fn("GitHubCredentials.lookup")(function* (key: string) {
-    const [host = key, choice] = key.split("\u0000");
-    // An environment token wins over a pinned account, exactly as it does in gh.
-    const fromEnv = environmentToken(host, environment);
+    const [host = key, choice, selected] = key.split("\u0000");
+    // Rove's project selection historically used `gh auth token --user`, which reads that
+    // login's stored token rather than GH_TOKEN. Keep that explicit selection above the env;
+    // a host-level preference alone still follows gh's usual environment precedence.
+    const fromEnv = selected === "selected" ? null : environmentToken(host, environment);
     // A pinned login gh no longer holds (logged out, expired) falls back to the active one,
     // which is what discovery reports as the account in use.
     const token =
@@ -215,7 +247,9 @@ export const make = Effect.gen(function* () {
       (yield* fromGh(host, choice).pipe(
         Effect.catchTags({
           GitHubNotSignedInError: (error) =>
-            choice === undefined ? Effect.fail(error) : fromGh(host, undefined),
+            choice === undefined || selected === "selected"
+              ? Effect.fail(error)
+              : fromGh(host, undefined),
         }),
       ));
     return {
@@ -247,7 +281,8 @@ export const make = Effect.gen(function* () {
         return yield* new GitHubHostDisabledError({ host });
       }
       // A token saved in Settings is the most deliberate choice, so it comes before the
-      // environment and gh. It is read from the secret store each time, so it needs no cache.
+      // environment and gh (including a project's selected login). It is read from the secret
+      // store each time, so it needs no cache.
       const saved = yield* savedToken(host);
       if (saved !== null) {
         return {
@@ -257,13 +292,27 @@ export const make = Effect.gen(function* () {
           fingerprint: yield* fingerprintOf(host, saved),
         } satisfies GitHubCredential;
       }
-      return yield* Cache.get(cache, cacheKey(host, choice?.account));
+      const selection = yield* SelectedGitHubAccount;
+      const selected = selection !== null && normalizeHost(selection.host) === host;
+      return yield* Cache.get(
+        cache,
+        selected
+          ? `${cacheKey(host, selection.login)}\u0000selected`
+          : cacheKey(host, choice?.account),
+      );
     }),
     invalidate: (rawHost) => {
       const host = normalizeHost(rawHost);
-      return hostChoice(host).pipe(
-        Effect.flatMap((choice) => Cache.invalidate(cache, cacheKey(host, choice?.account))),
-      );
+      return Effect.gen(function* () {
+        const choice = yield* hostChoice(host);
+        const selection = yield* SelectedGitHubAccount;
+        yield* Cache.invalidate(
+          cache,
+          selection !== null && normalizeHost(selection.host) === host
+            ? `${cacheKey(host, selection.login)}\u0000selected`
+            : cacheKey(host, choice?.account),
+        );
+      });
     },
   });
 });

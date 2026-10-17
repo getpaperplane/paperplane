@@ -67,7 +67,11 @@ import {
   threadPullRequestKeyOf,
 } from "@rove-code/shared/threadPullRequests";
 
-import { GitManagerError, GitPullRequestMaterializationError } from "@rove-code/contracts";
+import {
+  DEFAULT_SERVER_SETTINGS,
+  GitManagerError,
+  GitPullRequestMaterializationError,
+} from "@rove-code/contracts";
 import * as TextGeneration from "../textGeneration/TextGeneration.ts";
 import {
   conventionalCommitsTextGenerationPolicy,
@@ -77,6 +81,11 @@ import {
 import * as ProjectionStore from "../orchestration-v2/ProjectionStore.ts";
 import * as ProjectStore from "../orchestration-v2/ProjectStore.ts";
 import * as ProjectSetupScriptRunner from "../project/ProjectSetupScriptRunner.ts";
+import {
+  SelectedGitHubAccount,
+  provideSelectedGitHubAccount,
+} from "@rove-code/source-control-github/server/GitHubCredentials";
+
 import * as ProviderRegistry from "../provider/ProviderRegistry.ts";
 import { extractBranchNameFromRemoteRef } from "./remoteRefs.ts";
 import { detachStackFrame } from "./detachStackFrame.ts";
@@ -118,6 +127,14 @@ interface SourceControlTextGenerationSettings {
 export class GitManager extends Context.Service<
   GitManager,
   {
+    readonly withProjectGitHubAccount: <A, E, R>(
+      input: {
+        readonly cwd: string;
+        readonly threadId?: ThreadId | undefined;
+        readonly projectId?: ProjectId | undefined;
+      },
+      effect: Effect.Effect<A, E, R>,
+    ) => Effect.Effect<A, E, R>;
     readonly createWorktree: (
       input: VcsCreateWorktreeInput,
       options?: GitVcsDriver.CreateWorktreeOptions,
@@ -731,13 +748,17 @@ export const make = Effect.gen(function* () {
   const path = yield* Path.Path;
 
   const sourceControlContext = Effect.fnUntraced(function* (cwd: string) {
-    const preferredRemote = yield* projectSettingsFor({ cwd }).pipe(
-      Effect.map(({ settings }) => settings.repositoryRemote),
-      Effect.orElseSucceed(() => "origin" as const),
+    const settings = yield* projectSettingsFor({ cwd }).pipe(
+      Effect.map(({ settings }) => settings),
+      Effect.orElseSucceed(() => DEFAULT_SERVER_SETTINGS),
     );
+    const preferredRemote = settings.repositoryRemote;
     const handle = yield* sourceControlProviders.resolveHandle({ cwd, preferredRemote });
     return {
-      provider: handle.provider,
+      provider:
+        handle.provider.kind === "github" && (yield* SelectedGitHubAccount) === null
+          ? provideSelectedGitHubAccount(handle.provider, settings.githubAccount ?? null)
+          : handle.provider,
       remoteName: handle.context?.remoteName ?? preferredRemote,
     };
   });
@@ -750,21 +771,42 @@ export const make = Effect.gen(function* () {
   const projectSettingsFor = Effect.fnUntraced(function* (input: {
     readonly cwd: string;
     readonly threadId?: ThreadId | undefined;
+    readonly projectId?: ProjectId | undefined;
   }) {
     const settings = yield* serverSettingsService.getSettings;
     if (!hasProjectSettingsOverrides(settings))
       return { settings, projectId: null as ProjectId | null };
-    const projectId: ProjectId | null = yield* input.threadId !== undefined
-      ? threads.getThreadShell(input.threadId).pipe(
-          Effect.map((thread) => thread?.projectId ?? null),
-          Effect.orElseSucceed(() => null),
-        )
-      : projects.findActiveByWorkspaceRoot(input.cwd).pipe(
-          Effect.map((project) => Option.getOrNull(project)?.projectId ?? null),
-          Effect.orElseSucceed(() => null),
-        );
+    const projectId: ProjectId | null = yield* input.projectId !== undefined
+      ? Effect.succeed(input.projectId)
+      : input.threadId !== undefined
+        ? threads.getThreadShell(input.threadId).pipe(
+            Effect.map((thread) => thread?.projectId ?? null),
+            Effect.orElseSucceed(() => null),
+          )
+        : canonicalizeExistingPath(input.cwd).pipe(
+            Effect.flatMap((cwd) => projects.findActiveByWorkspaceRoot(cwd)),
+            Effect.map((project) => Option.getOrNull(project)?.projectId ?? null),
+            Effect.orElseSucceed(() => null),
+          );
     return { settings: resolveProjectSettings(settings, projectId).settings, projectId };
   });
+  // Rove: project identity scopes API calls and HTTPS git credentials together.
+  const withProjectGitHubAccount = <A, E, R>(
+    input: {
+      readonly cwd: string;
+      readonly threadId?: ThreadId | undefined;
+      readonly projectId?: ProjectId | undefined;
+    },
+    effect: Effect.Effect<A, E, R>,
+  ) =>
+    Effect.gen(function* () {
+      if ((yield* SelectedGitHubAccount) !== null) return yield* effect;
+      const selection = yield* projectSettingsFor(input).pipe(
+        Effect.map(({ settings }) => settings.githubAccount ?? null),
+        Effect.orElseSucceed(() => null),
+      );
+      return yield* Effect.provideService(effect, SelectedGitHubAccount, selection);
+    });
   // Best effort: a settings read failure falls back to the default location.
   const readWorktreesDirectory = serverSettingsService.getSettings.pipe(
     Effect.map((settings) => settings.worktreesDirectory),
@@ -1399,9 +1441,10 @@ export const make = Effect.gen(function* () {
     cwd: string,
     options?: GitRemoteStatusOptions,
   ) {
-    const details = yield* gitCore
-      .statusDetailsRemote(cwd, options)
-      .pipe(Effect.catchIf(isNotGitRepositoryError, () => Effect.succeed(null)));
+    const details = yield* withProjectGitHubAccount(
+      { cwd },
+      gitCore.statusDetailsRemote(cwd, options),
+    ).pipe(Effect.catchIf(isNotGitRepositoryError, () => Effect.succeed(null)));
     if (details === null || !details.isRepo) {
       return null;
     }
@@ -3191,7 +3234,7 @@ export const make = Effect.gen(function* () {
         return result;
       });
 
-      return yield* runAction().pipe(
+      return yield* withProjectGitHubAccount(input, runAction()).pipe(
         Effect.ensuring(invalidateStatus(input.cwd)),
         Effect.tapError((error) =>
           Effect.flatMap(Ref.get(currentPhase), (phase) =>
@@ -3207,7 +3250,9 @@ export const make = Effect.gen(function* () {
   );
 
   return GitManager.of({
-    createWorktree,
+    withProjectGitHubAccount,
+    createWorktree: (input, options) =>
+      withProjectGitHubAccount(input, createWorktree(input, options)),
     localStatus,
     remoteStatus,
     status,
@@ -3215,8 +3260,9 @@ export const make = Effect.gen(function* () {
     invalidateLocalStatus,
     invalidateRemoteStatus,
     invalidateStatus,
-    resolvePullRequest,
-    preparePullRequestThread,
+    resolvePullRequest: (input) => withProjectGitHubAccount(input, resolvePullRequest(input)),
+    preparePullRequestThread: (input) =>
+      withProjectGitHubAccount(input, preparePullRequestThread(input)),
     runStackedAction,
     subscribePullRequestStateChanges: PubSub.subscribe(pullRequestStateChanges).pipe(
       Effect.map((subscription) => Stream.fromSubscription(subscription)),

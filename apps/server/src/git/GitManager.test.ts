@@ -73,6 +73,7 @@ import * as SqlitePersistence from "../persistence/Sqlite.ts";
 import * as ProjectSetupScriptRunner from "../project/ProjectSetupScriptRunner.ts";
 import * as ProviderRegistry from "../provider/ProviderRegistry.ts";
 import * as ServerSettings from "../serverSettings.ts";
+import { SelectedGitHubAccount } from "@rove-code/source-control-github/server/GitHubCredentials";
 import * as GitManager from "./GitManager.ts";
 
 const encodeCliJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
@@ -1074,6 +1075,81 @@ it.layer(layerGitManagerTest)("GitManager", (it) => {
         state: "open",
         updatedAt: null,
       });
+    }),
+  );
+
+  it.effect("status resolves GitHub PRs with the owning project's account", () =>
+    Effect.gen(function* () {
+      const repoDir = yield* makeTempDir("rove-git-manager-");
+      yield* initRepo(repoDir);
+      yield* runGit(repoDir, ["checkout", "-b", "feature/account"]);
+      const remoteDir = yield* createBareRemote();
+      yield* runGit(repoDir, ["remote", "add", "origin", remoteDir]);
+      yield* runGit(repoDir, ["push", "-u", "origin", "feature/account"]);
+      const projectId = ProjectId.make("project:work-account");
+      const accounts: Array<string | null> = [];
+      const { service } = createGitHubProviderWithFakeGh();
+      const { manager } = yield* makeManager({
+        sourceControlProvider: {
+          ...service,
+          listChangeRequests: (input) =>
+            Effect.gen(function* () {
+              accounts.push((yield* SelectedGitHubAccount)?.login ?? null);
+              return yield* service.listChangeRequests(input);
+            }),
+        },
+        serverSettings: {
+          githubAccount: { host: "github.com", login: "personal" },
+          projectSettingsOverrides: {
+            [projectId]: { githubAccount: { host: "github.com", login: "work" } },
+          },
+        },
+        seed: Effect.gen(function* () {
+          yield* (yield* ProjectStore.ProjectStoreV2).apply({
+            sequence: 1,
+            eventId: EventId.make("event:account:project"),
+            aggregateKind: "project",
+            aggregateId: projectId,
+            occurredAt: "2026-09-27T00:00:00.000Z",
+            commandId: null,
+            causationEventId: null,
+            correlationId: null,
+            metadata: {},
+            type: "project.created",
+            payload: {
+              projectId,
+              title: "Work",
+              workspaceRoot: NodeFS.realpathSync(repoDir),
+              defaultModelSelection: null,
+              scripts: [],
+              createdAt: "2026-09-27T00:00:00.000Z",
+              updatedAt: "2026-09-27T00:00:00.000Z",
+            },
+          });
+        }),
+      });
+      yield* manager.status({ cwd: repoDir });
+      expect(accounts.length).toBeGreaterThan(0);
+      expect(new Set(accounts)).toEqual(new Set(["work"]));
+      const selection = yield* manager.withProjectGitHubAccount(
+        { cwd: repoDir },
+        SelectedGitHubAccount,
+      );
+      expect(selection?.login).toBe("work");
+      const explicit = yield* manager.withProjectGitHubAccount(
+        { cwd: "/elsewhere", projectId },
+        SelectedGitHubAccount,
+      );
+      expect(explicit?.login).toBe("work");
+      const inherited = yield* manager
+        .withProjectGitHubAccount({ cwd: repoDir }, SelectedGitHubAccount)
+        .pipe(
+          Effect.provideService(SelectedGitHubAccount, {
+            host: "github.com",
+            login: "thread-account",
+          }),
+        );
+      expect(inherited?.login).toBe("thread-account");
     }),
   );
 
