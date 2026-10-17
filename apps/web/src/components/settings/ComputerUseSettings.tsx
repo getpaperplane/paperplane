@@ -6,8 +6,17 @@ import { useEnvironmentQuery } from "~/state/query";
 import { useAtomCommand } from "~/state/use-atom-command";
 
 import { Button } from "../ui/button";
+import { Select, SelectItem, SelectPopup, SelectTrigger, SelectValue } from "../ui/select";
 import { Switch } from "../ui/switch";
-import { describeDriver, primaryAction } from "./ComputerUseSettings.logic";
+import {
+  describeDriver,
+  describeVm,
+  isMacStatus,
+  primaryAction,
+  vmActions,
+  vmConfirmation,
+  vmOf,
+} from "./ComputerUseSettings.logic";
 import { ScopedSwitch } from "./ScopedSwitch";
 import { SettingsRow, SettingsSection } from "./settingsLayout";
 import { searchableSetting } from "./settingsSearch";
@@ -21,6 +30,11 @@ const PENDING_LABELS = {
   start: "Checking…",
   "grant-permissions": "Waiting for macOS…",
   "set-telemetry": "Saving…",
+  "prepare-vm": "Preparing…",
+  "verify-vm": "Verifying…",
+  "open-vm-display": "Opening…",
+  "release-vm": "Releasing…",
+  "remove-vm": "Removing…",
 } satisfies Record<Action, string>;
 
 export function ComputerUseSettings() {
@@ -39,12 +53,16 @@ export function ComputerUseSettings() {
   const [pending, setPending] = useState<Action | null>(null);
   const status = driver.data;
   const busy = pending !== null || driver.isPending;
-  const primary = primaryAction(status);
+  const vm = vmOf(status);
+  const primary = vm === null ? primaryAction(status) : null;
   const telemetry =
     status?.status === "stopped" || status?.status === "running" ? status.telemetry : null;
+  const [copied, setCopied] = useState(false);
 
   const run = async (input: ComputerUseControlInput) => {
     if (environmentId === null) return;
+    const confirmation = vmConfirmation(input);
+    if (confirmation !== null && !window.confirm(confirmation)) return;
     setPending(input.action);
     try {
       await control({ environmentId, input });
@@ -73,8 +91,39 @@ export function ComputerUseSettings() {
           />
         }
       />
+      {isMacStatus(status) ? (
+        <SettingsRow
+          {...searchableSetting("computer-use-macos-mode")}
+          serverScoped
+          settingKeys={["computerUseMacosMode"]}
+          description="The isolated VM runs apps in a private macOS virtual machine, so agents never touch your desktop. Apple Silicon only. Needs about 150 GB of disk."
+          control={
+            <Select
+              value={settings.computerUseMacosMode}
+              disabled={projectScope || environmentId === null}
+              onValueChange={(value) => {
+                if (value !== "host" && value !== "isolated-vm") return;
+                updateSettings({ computerUseMacosMode: value });
+              }}
+            >
+              <SelectTrigger aria-label="Mac computer use" className="w-56" size="sm">
+                <SelectValue>
+                  {settings.computerUseMacosMode === "isolated-vm"
+                    ? "Isolated macOS VM"
+                    : "This Mac (background)"}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectPopup>
+                <SelectItem value="host">This Mac (background)</SelectItem>
+                <SelectItem value="isolated-vm">Isolated macOS VM</SelectItem>
+              </SelectPopup>
+            </Select>
+          }
+        />
+      ) : null}
       {status?.status === "stopped" || status?.status === "running" ? (
-        status.readiness.platform === "darwin" || status.readiness.platform === "win32" ? (
+        vm === null &&
+        (status.readiness.platform === "darwin" || status.readiness.platform === "win32") ? (
           <SettingsRow
             {...searchableSetting("computer-use-pixel-input")}
             serverScoped
@@ -94,36 +143,77 @@ export function ComputerUseSettings() {
           />
         ) : null
       ) : null}
-      <SettingsRow
-        {...searchableSetting("cua-driver")}
-        description={describeDriver(status, driver.error)}
-        control={
-          primary ? (
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={busy}
-              onClick={() => void run(primary.input)}
-            >
-              {pending === primary.input.action
-                ? PENDING_LABELS[primary.input.action]
-                : primary.label}
-            </Button>
-          ) : status === null ||
-            status.status === "runtime-unavailable" ||
-            (status.status === "running" && status.readiness.platform === "linux") ? (
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={busy || environmentId === null}
-              onClick={driver.refresh}
-            >
-              {driver.isPending ? "Checking…" : "Check again"}
-            </Button>
-          ) : null
-        }
-      />
-      {telemetry !== null ? (
+      {vm !== null ? (
+        <SettingsRow
+          {...searchableSetting("cua-driver")}
+          title="macOS VM"
+          description={describeVm(vm)}
+          control={
+            <div className="flex flex-wrap justify-end gap-2">
+              {vmActions(vm).map((action, index) => (
+                <Button
+                  key={action.input.action}
+                  size="sm"
+                  variant={index === 0 ? "outline" : "ghost"}
+                  disabled={busy || environmentId === null}
+                  onClick={() => void run(action.input)}
+                >
+                  {pending === action.input.action ? "Working…" : action.label}
+                </Button>
+              ))}
+            </div>
+          }
+        >
+          {vm.state === "needs-consent" && vm.setupCommand !== undefined ? (
+            <div className="flex items-start gap-2">
+              <pre className="min-w-0 flex-1 overflow-x-auto rounded-md bg-muted px-3 py-2 font-mono text-xs">
+                {vm.setupCommand}
+              </pre>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  void navigator.clipboard.writeText(vm.setupCommand ?? "");
+                  setCopied(true);
+                }}
+              >
+                {copied ? "Copied" : "Copy"}
+              </Button>
+            </div>
+          ) : null}
+        </SettingsRow>
+      ) : (
+        <SettingsRow
+          {...searchableSetting("cua-driver")}
+          description={describeDriver(status, driver.error)}
+          control={
+            primary ? (
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={busy}
+                onClick={() => void run(primary.input)}
+              >
+                {pending === primary.input.action
+                  ? PENDING_LABELS[primary.input.action]
+                  : primary.label}
+              </Button>
+            ) : status === null ||
+              status.status === "runtime-unavailable" ||
+              (status.status === "running" && status.readiness.platform === "linux") ? (
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={busy || environmentId === null}
+                onClick={driver.refresh}
+              >
+                {driver.isPending ? "Checking…" : "Check again"}
+              </Button>
+            ) : null
+          }
+        />
+      )}
+      {telemetry !== null && vm === null ? (
         <SettingsRow
           {...searchableSetting("cua-telemetry")}
           description="Cua collects a pseudonymous installation ID and content-free usage counts, never prompts, screen contents, or file paths. Rove turns this off when it installs Cua."

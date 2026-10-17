@@ -1,4 +1,8 @@
-import type { ComputerUseControlInput, ComputerUseStatus } from "@rove-code/contracts";
+import type {
+  ComputerUseControlInput,
+  ComputerUseMacosVm,
+  ComputerUseStatus,
+} from "@rove-code/contracts";
 
 function hostName(platform: "darwin" | "linux" | "win32"): string {
   switch (platform) {
@@ -92,6 +96,87 @@ export function primaryAction(
         ? null
         : { input: { action: "grant-permissions" }, label: "Grant permissions" };
     }
+    default:
+      return null;
+  }
+}
+
+type VmAction = { input: ComputerUseControlInput; label: string };
+
+function gigabytes(bytes: number): string {
+  return `${(bytes / 1e9).toFixed(1)} GB`;
+}
+
+/** The Mac row (mode picker) applies to any darwin status, including one not yet installed. */
+export function isMacStatus(status: ComputerUseStatus | null): boolean {
+  if (status === null) return false;
+  if (status.status === "not-installed") return status.platform === "darwin";
+  return (
+    (status.status === "stopped" || status.status === "running") &&
+    status.readiness.platform === "darwin"
+  );
+}
+
+/** The isolated macOS VM state, or null when this status is not in VM mode. */
+export function vmOf(status: ComputerUseStatus | null): ComputerUseMacosVm | null {
+  if (status?.status !== "stopped" && status?.status !== "running") return null;
+  const readiness = status.readiness;
+  return readiness.platform === "darwin" && readiness.mode === "isolated-vm" ? readiness.vm : null;
+}
+
+export function describeVm(vm: ComputerUseMacosVm): string {
+  switch (vm.state) {
+    case "unavailable":
+      return vm.detail ?? "Isolated macOS desktops need an Apple Silicon Mac.";
+    case "missing-lume":
+      return "Install Lume, Cua's open-source VM tool, to create the private macOS VM.";
+    case "needs-image": {
+      const free = vm.freeDiskBytes === undefined ? "" : `, ${gigabytes(vm.freeDiskBytes)} free`;
+      return `Download Cua's macOS image (about ${Math.round(vm.requiredDiskBytes / 1e9)} GB on disk${free}) and open it so you can approve permissions.`;
+    }
+    case "needs-consent":
+      return "Open the VM, run the setup command in its Terminal, approve the permission prompts, then select Verify.";
+    case "ready": {
+      const owners = vm.owners.length === 0 ? "" : ` by ${vm.owners.join(", ")}`;
+      const disk =
+        vm.diskBytes === undefined || vm.virtualDiskBytes === undefined
+          ? ""
+          : ` Disk ${gigabytes(vm.diskBytes)} of ${gigabytes(vm.virtualDiskBytes)}${vm.memoryBytes === undefined ? "" : `, RAM ${gigabytes(vm.memoryBytes)}`}.`;
+      return `Ready. ${vm.leased} of ${vm.capacity} VM in use${owners}.${disk}`;
+    }
+  }
+}
+
+export function vmActions(vm: ComputerUseMacosVm): VmAction[] {
+  switch (vm.state) {
+    case "unavailable":
+      return [];
+    case "missing-lume":
+      return [{ input: { action: "install" }, label: "Install Lume" }];
+    case "needs-image":
+      return [{ input: { action: "prepare-vm" }, label: "Prepare VM" }];
+    case "needs-consent":
+      return [
+        { input: { action: "open-vm-display" }, label: "Open VM" },
+        { input: { action: "verify-vm" }, label: "Verify" },
+      ];
+    case "ready":
+      return [
+        ...(vm.leased > 0
+          ? [{ input: { action: "release-vm" as const }, label: "Release VM" }]
+          : []),
+        { input: { action: "remove-vm" }, label: "Remove VM" },
+      ];
+  }
+}
+
+/** Destructive VM actions confirm first; `null` means run without asking. */
+export function vmConfirmation(input: ComputerUseControlInput): string | null {
+  switch (input.action) {
+    case "release-vm":
+      return "This discards the VM's open apps and unsaved files.";
+    case "remove-vm":
+      return "This deletes the macOS VM image. You'll need to prepare it again.";
     default:
       return null;
   }

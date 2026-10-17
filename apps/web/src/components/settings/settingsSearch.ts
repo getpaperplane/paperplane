@@ -742,6 +742,15 @@ export const SETTINGS_SEARCH_ITEMS = [
     ],
   },
   {
+    id: "computer-use-macos-mode",
+    title: "Mac computer use",
+    to: "/settings/integrations",
+    targetId: "computer-use",
+    searchTerms: [
+      "isolated vm virtual machine lume macos private sandbox this mac background apple silicon disk cua driver",
+    ],
+  },
+  {
     id: "computer-use-pixel-input",
     title: "Allow pixel input",
     to: "/settings/integrations",

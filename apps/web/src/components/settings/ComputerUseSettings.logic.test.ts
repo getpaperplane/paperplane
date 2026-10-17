@@ -1,7 +1,15 @@
-import type { ComputerUseStatus } from "@rove-code/contracts";
+import type { ComputerUseMacosVm, ComputerUseStatus } from "@rove-code/contracts";
 import { describe, expect, it } from "vite-plus/test";
 
-import { describeDriver, primaryAction } from "./ComputerUseSettings.logic";
+import {
+  describeDriver,
+  describeVm,
+  isMacStatus,
+  primaryAction,
+  vmActions,
+  vmConfirmation,
+  vmOf,
+} from "./ComputerUseSettings.logic";
 
 const linux = {
   status: "stopped",
@@ -162,5 +170,111 @@ describe("computer use setup", () => {
     expect(describeDriver(untrusted, null)).toContain("isn't verified as Cua AI, Inc.'s release");
     expect(describeDriver(untrusted, null)).not.toContain("Mac");
     expect(primaryAction(untrusted)).toEqual({ input: { action: "install" }, label: "Reinstall" });
+  });
+});
+
+const vmBase = {
+  leased: 0,
+  capacity: 1,
+  owners: [],
+  installCommand: "brew install lume",
+  requiredDiskBytes: 150e9,
+} satisfies Partial<ComputerUseMacosVm>;
+
+describe("isolated macOS VM setup", () => {
+  it("describes and offers the next step for a missing Lume install", () => {
+    const vm = { ...vmBase, state: "missing-lume" } satisfies ComputerUseMacosVm;
+    expect(describeVm(vm)).toBe(
+      "Install Lume, Cua's open-source VM tool, to create the private macOS VM.",
+    );
+    expect(vmActions(vm)).toEqual([{ input: { action: "install" }, label: "Install Lume" }]);
+  });
+
+  it("explains the disk cost before preparing the image", () => {
+    const vm = {
+      ...vmBase,
+      state: "needs-image",
+      freeDiskBytes: 210.4e9,
+    } satisfies ComputerUseMacosVm;
+    expect(describeVm(vm)).toBe(
+      "Download Cua's macOS image (about 150 GB on disk, 210.4 GB free) and open it so you can approve permissions.",
+    );
+    const { freeDiskBytes: _free, ...unknownFree } = vm;
+    expect(describeVm(unknownFree)).toBe(
+      "Download Cua's macOS image (about 150 GB on disk) and open it so you can approve permissions.",
+    );
+    expect(vmActions(vm)).toEqual([{ input: { action: "prepare-vm" }, label: "Prepare VM" }]);
+  });
+
+  it("walks through consent with the setup command", () => {
+    const vm = {
+      ...vmBase,
+      state: "needs-consent",
+      setupCommand: "cua-setup",
+    } satisfies ComputerUseMacosVm;
+    expect(describeVm(vm)).toBe(
+      "Open the VM, run the setup command in its Terminal, approve the permission prompts, then select Verify.",
+    );
+    expect(vmActions(vm).map((action) => action.input.action)).toEqual([
+      "open-vm-display",
+      "verify-vm",
+    ]);
+  });
+
+  it("reports usage and offers release only while the VM is leased", () => {
+    const idle = {
+      ...vmBase,
+      state: "ready",
+      diskBytes: 42.5e9,
+      virtualDiskBytes: 150e9,
+      memoryBytes: 8e9,
+    } satisfies ComputerUseMacosVm;
+    expect(describeVm(idle)).toBe("Ready. 0 of 1 VM in use. Disk 42.5 GB of 150.0 GB, RAM 8.0 GB.");
+    expect(vmActions(idle)).toEqual([{ input: { action: "remove-vm" }, label: "Remove VM" }]);
+
+    const leased = {
+      ...idle,
+      leased: 1,
+      owners: ["thread-a", "thread-b"],
+    } satisfies ComputerUseMacosVm;
+    expect(describeVm(leased)).toContain("1 of 1 VM in use by thread-a, thread-b.");
+    expect(vmActions(leased).map((action) => action.label)).toEqual(["Release VM", "Remove VM"]);
+    const { diskBytes: _disk, ...noDisk } = idle;
+    expect(describeVm(noDisk)).toBe("Ready. 0 of 1 VM in use.");
+  });
+
+  it("says why isolated desktops are unavailable and offers no action", () => {
+    expect(describeVm({ ...vmBase, state: "unavailable" })).toBe(
+      "Isolated macOS desktops need an Apple Silicon Mac.",
+    );
+    expect(describeVm({ ...vmBase, state: "unavailable", detail: "Intel Mac." })).toBe(
+      "Intel Mac.",
+    );
+    expect(vmActions({ ...vmBase, state: "unavailable" })).toEqual([]);
+  });
+
+  it("confirms only the destructive VM actions", () => {
+    expect(vmConfirmation({ action: "release-vm" })).toBe(
+      "This discards the VM's open apps and unsaved files.",
+    );
+    expect(vmConfirmation({ action: "remove-vm" })).toBe(
+      "This deletes the macOS VM image. You'll need to prepare it again.",
+    );
+    expect(vmConfirmation({ action: "prepare-vm" })).toBeNull();
+  });
+
+  it("finds the VM state only in isolated-vm readiness on darwin", () => {
+    const vm = { ...vmBase, state: "needs-image" } satisfies ComputerUseMacosVm;
+    const isolated = {
+      status: "stopped",
+      version: "1.2.3",
+      telemetry: null,
+      readiness: { platform: "darwin", mode: "isolated-vm", permissions: null, vm },
+    } satisfies ComputerUseStatus;
+    expect(vmOf(isolated)).toBe(vm);
+    expect(vmOf(mac)).toBeNull();
+    expect(isMacStatus(isolated)).toBe(true);
+    expect(isMacStatus({ status: "not-installed", platform: "darwin" })).toBe(true);
+    expect(isMacStatus({ status: "not-installed", platform: "linux" })).toBe(false);
   });
 });
