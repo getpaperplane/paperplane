@@ -151,11 +151,11 @@ jobs:
           cache: true
           cache-save: false
           # Both release metadata scripts import only Effect/Node services from
-          # the scripts workspace; desktop/server and dev dependencies are not needed.
+          # the scripts workspace; desktop/server dependencies are not needed. Not --prod:
+          # the root prepare script runs effect-tsgo, a dev dependency.
           run-install: |
             args:
               - --filter=@rove-code/scripts...
-              - --prod
         env:
           pnpm_config_cache_dir: ${{ runner.temp }}/pnpm-metadata
 
@@ -1023,7 +1023,6 @@ jobs:
           run-install: |
             args:
               - --filter=@rove-code/scripts...
-              - --prod
 
       - name: Download all desktop artifacts
         uses: actions/download-artifact@v8
@@ -1320,7 +1319,6 @@ jobs:
           run-install: |
             args:
               - --filter=@rove-code/scripts...
-              - --prod
 
       - name: Read published release notes
         if: needs.preflight.outputs.is_prerelease == 'true'

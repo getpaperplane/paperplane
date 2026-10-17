@@ -139,7 +139,6 @@ jobs:
           run-install: |
             args:
               - --filter=@rove-code/scripts...
-              - --prod
 
       - name: Deploy hosted app and content handler
         env:
