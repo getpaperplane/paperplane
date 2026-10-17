@@ -2,7 +2,7 @@ import * as Schema from "effect/Schema";
 
 import type { CuaArguments, CuaTool } from "./CuaDriver.ts";
 
-export const BACKGROUND_ONLY_INSTRUCTIONS =
+const BACKGROUND_ONLY_INSTRUCTIONS =
   "Rove Computer Use is background-only. Call get_window_state on an exact app window, then act with the element_token it returns; this never changes focus. " +
   "Pixel (x/y) input is off by default because it can briefly change the user's app focus; the user can enable it in Settings. " +
   'Keyboard input needs an element_token or an exact window target {kind:"window",pid,window_id}. ' +
