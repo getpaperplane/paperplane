@@ -724,14 +724,15 @@ jobs:
       relay_url: ${{ needs.relay_public_config.outputs.relay_url }}
       relay_client_tracing: ${{ needs.relay_public_config.result == 'success' }}
       label: Windows arm64
-      runner: windows-11-arm
+      # Electron/native prebuilds are target-selected; Rust cross-compiles.
+      runner: windows-2025
       platform: win
       target: nsis
       arch: arm64
       rust_target: aarch64-pc-windows-msvc
       resource_key: win32-arm64
-      # Its CLI archive builds in desktop_win_arm64_cli: this runner's setup
-      # alone takes about five minutes, and the two builds contend for its CPUs.
+      # Node SEA injection and the CLI smoke test must still run natively in
+      # desktop_win_arm64_cli; only the desktop installer cross-builds.
       cli_archive: false
 
   desktop_win_arm64_cli:

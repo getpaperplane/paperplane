@@ -3,7 +3,7 @@ import * as NodeCrypto from "node:crypto";
 import * as NodePath from "node:path";
 
 import * as NodeServices from "@effect/platform-node/NodeServices";
-import { extractFile } from "@electron/asar";
+import { listPackage } from "@electron/asar";
 import { assert, it } from "@effect/vitest";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as FileSystem from "effect/FileSystem";
@@ -72,6 +72,7 @@ import {
   stageWslRuntimeArchive,
   bundlesWslRuntime,
   STAGE_INSTALL_ARGS,
+  stageNativeInstallEnv,
   ancestorNodeModulesPaths,
   copyDirectoryPreservingSymlinks,
   LinuxBrowserSecretHostError,
@@ -217,7 +218,12 @@ const makeWindowsPayloadFixture = Effect.fn("test.makeWindowsPayloadFixture")(fu
   yield* fs.makeDirectory(path.dirname(serverEntryPath), { recursive: true });
   yield* fs.makeDirectory(path.dirname(nativePath), { recursive: true });
   yield* fs.writeFileString(serverEntryPath, input.serverEntrySource ?? "console.log('server');\n");
-  yield* fs.writeFileString(nativePath, "MZ native-binary");
+  const binary = Buffer.alloc(256);
+  binary.write("MZ");
+  binary.writeUInt32LE(128, 0x3c);
+  binary.write("PE\0\0", 128);
+  binary.writeUInt16LE(input.targetArch === "arm64" ? 0xaa64 : 0x8664, 132);
+  yield* fs.writeFile(nativePath, binary);
 
   const generatedAsarPath = path.join(tempDir, WINDOWS_SERVER_ASAR_RESOURCE);
   yield* packWindowsServerAsar({ sourceDir, asarPath: generatedAsarPath, arch: "x64" });
@@ -233,13 +239,13 @@ const makeWindowsPayloadFixture = Effect.fn("test.makeWindowsPayloadFixture")(fu
       path.join(resourcesDir, `${WINDOWS_SERVER_ASAR_RESOURCE}.unpacked`),
     );
   }
-  yield* fs.writeFileString(
+  yield* fs.writeFile(
     path.join(resourcesDir, "resource-monitor/rove-resource-monitor.exe"),
-    "monitor",
+    binary,
   );
   const appExecutableName = "rove.exe";
-  yield* fs.writeFileString(path.join(packagedAppDir, appExecutableName), "electron");
-  yield* fs.writeFileString(path.join(packagedAppDir, "chrome_crashpad_handler.exe"), "crashpad");
+  yield* fs.writeFile(path.join(packagedAppDir, appExecutableName), binary);
+  yield* fs.writeFile(path.join(packagedAppDir, "chrome_crashpad_handler.exe"), binary);
 
   if (input.wslRuntime !== undefined) {
     const stem = wslRuntimeArchiveStem(WINDOWS_PAYLOAD_FIXTURE_VERSION, input.targetArch ?? "x64");
@@ -941,9 +947,24 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
     ),
   );
 
-  it("excludes node-pty binaries for the other Windows architecture", () => {
+  it("targets lifecycle scripts without changing host build-tool installs", () => {
+    assert.deepStrictEqual(stageNativeInstallEnv("win", "arm64"), {
+      npm_config_arch: "arm64",
+      pnpm_config_side_effects_cache: "false",
+    });
+    assert.deepStrictEqual(stageNativeInstallEnv("win", "x64"), {
+      npm_config_arch: "x64",
+      pnpm_config_side_effects_cache: "false",
+    });
+    assert.deepStrictEqual(stageNativeInstallEnv("mac", "arm64"), {});
+  });
+
+  it("excludes native prebuilds for other platforms and Windows architectures", () => {
     assert.deepStrictEqual(resolveWindowsServerAsarIgnoreGlobs("x64"), [
       ...WINDOWS_SERVER_ASAR_IGNORE_GLOBS,
+      "**/node_modules/node-pty/prebuilds/{darwin,linux}-*{,/**}",
+      "**/node_modules/@earendil-works/pi-tui/native/{darwin,linux}{,/**}",
+      "**/node_modules/@earendil-works/pi-tui/native/win32/prebuilds/win32-arm64{,/**}",
       "**/node_modules/node-pty/prebuilds/win32-arm64",
       "**/node_modules/node-pty/prebuilds/win32-arm64/**",
       "**/node_modules/node-pty/third_party/conpty/*/win10-arm64",
@@ -951,6 +972,9 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
     ]);
     assert.deepStrictEqual(resolveWindowsServerAsarIgnoreGlobs("arm64"), [
       ...WINDOWS_SERVER_ASAR_IGNORE_GLOBS,
+      "**/node_modules/node-pty/prebuilds/{darwin,linux}-*{,/**}",
+      "**/node_modules/@earendil-works/pi-tui/native/{darwin,linux}{,/**}",
+      "**/node_modules/@earendil-works/pi-tui/native/win32/prebuilds/win32-x64{,/**}",
       "**/node_modules/node-pty/prebuilds/win32-x64",
       "**/node_modules/node-pty/prebuilds/win32-x64/**",
       "**/node_modules/node-pty/third_party/conpty/*/win10-x64",
@@ -974,6 +998,9 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
           "node_modules/node-pty/third_party/conpty/1.0.0/win10-arm64/OpenConsole.exe",
           "node_modules/node-pty/prebuilds/win32-x64/pty.node",
           "node_modules/node-pty/prebuilds/linux-x64/pty.node",
+          "node_modules/@earendil-works/pi-tui/native/darwin/prebuilds/darwin-x64/platform.node",
+          "node_modules/@earendil-works/pi-tui/native/win32/prebuilds/win32-x64/platform.node",
+          "node_modules/@earendil-works/pi-tui/native/win32/prebuilds/win32-arm64/platform.node",
         ];
 
         for (const nativeFile of nativeFiles) {
@@ -999,16 +1026,22 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
             path.join(unpackedRoot, "node_modules/node-pty/prebuilds/win32-x64/pty.node"),
           ),
         );
-        // Signed builds sign every unpacked .node, so the ELF prebuild stays packed.
+        // Non-target prebuilds must be absent, not just hidden in the ASAR.
         assert.isFalse(
           yield* fs.exists(path.join(unpackedRoot, "node_modules/node-pty/prebuilds/linux-x64")),
         );
-        assert.equal(
-          extractFile(
-            asarPath,
-            path.join("node_modules", "node-pty", "prebuilds", "linux-x64", "pty.node"),
-          ).toString(),
-          "\x7fELF",
+        const members = listPackage(asarPath, { isPack: false }).map((member) =>
+          member.replaceAll("\\", "/"),
+        );
+        assert.isFalse(members.some((member) => member.includes("linux-x64")));
+        assert.isFalse(members.some((member) => member.includes("native/darwin")));
+        assert.isFalse(
+          members.some((member) => member.includes("native/win32/prebuilds/win32-arm64")),
+        );
+        assert.isTrue(
+          members.some((member) =>
+            member.endsWith("native/win32/prebuilds/win32-x64/platform.node"),
+          ),
         );
         assert.isFalse(
           yield* fs.exists(path.join(unpackedRoot, "node_modules/node-pty/prebuilds/win32-arm64")),
@@ -1800,7 +1833,10 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
 
     return Effect.scoped(
       Effect.gen(function* () {
-        const fixture = yield* makeWindowsPayloadFixture({ copyUnpackedNatives: true });
+        const fixture = yield* makeWindowsPayloadFixture({
+          copyUnpackedNatives: true,
+          targetArch: "arm64",
+        });
         yield* validateWindowsPackagedPayload({
           stageDistDir: fixture.stageDistDir,
           appExecutableName: fixture.appExecutableName,
@@ -1834,12 +1870,44 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
     );
   });
 
+  it.effect("rejects an x64 resource monitor in an otherwise ARM64 payload", () =>
+    Effect.scoped(
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const fixture = yield* makeWindowsPayloadFixture({
+          copyUnpackedNatives: true,
+          targetArch: "arm64",
+        });
+        const monitor = path.join(
+          fixture.packagedAppDir,
+          "resources/resource-monitor/rove-resource-monitor.exe",
+        );
+        const bytes = yield* fs.readFile(monitor);
+        new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength).setUint16(132, 0x8664, true);
+        yield* fs.writeFile(monitor, bytes);
+        const error = yield* validateWindowsPackagedPayload({
+          stageDistDir: fixture.stageDistDir,
+          appExecutableName: fixture.appExecutableName,
+          targetArch: "arm64",
+          appVersion: WINDOWS_PAYLOAD_FIXTURE_VERSION,
+        }).pipe(Effect.flip);
+        assert.instanceOf(error, WindowsPackagedPayloadValidationError);
+        assert.equal(error.reason, "architecture-invalid");
+        assert.match(String(error.cause), /rove-resource-monitor.exe: expected arm64.*got 0x8664/);
+      }),
+    ),
+  );
+
   it.effect("rejects a cross-architecture Windows payload without its primary executable", () =>
     Effect.scoped(
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const fixture = yield* makeWindowsPayloadFixture({ copyUnpackedNatives: true });
+        const fixture = yield* makeWindowsPayloadFixture({
+          copyUnpackedNatives: true,
+          targetArch: "arm64",
+        });
         const executablePath = path.join(fixture.packagedAppDir, fixture.appExecutableName);
         yield* fs.remove(executablePath);
 

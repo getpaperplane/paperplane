@@ -124,7 +124,7 @@ jobs:
       # build stages the packaged app there, and staging inside the repo would
       # resolve the repo's node_modules.
       - name: Mount Dev Drive over the workspace
-        if: inputs.platform == 'win' && inputs.arch == 'arm64'
+        if: inputs.platform == 'win' && runner.arch == 'ARM64'
         uses: samypr100/setup-dev-drive@562171fe8df7401fdf582d766cd3b6ab80d5b1a0 # v4.1.0
         with:
           drive-size: 40GB
@@ -177,15 +177,17 @@ jobs:
           SCRIPT
           bash .github/scripts/background-start.sh apt bash "$RUNNER_TEMP/apt.sh"
 
+      # The ARM host's PowerShell 7.6/.NET 10 can crash during signing
+      # (dotnet/runtime#131636). This is a host workaround, not a target need.
       - name: Cache pinned Windows ARM PowerShell archive
-        if: inputs.platform == 'win' && inputs.arch == 'arm64'
+        if: inputs.platform == 'win' && runner.arch == 'ARM64'
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
         with:
           path: ${{ runner.temp }}/PowerShell-7.4.20-win-arm64.zip
           key: powershell-win-arm64-7.4.20-67eff749d5dae357501c95a3eec1dcd93f669824e3ca2b1d2adcdecdebf04f35
 
       - name: Use PowerShell 7.4 for Windows ARM builds
-        if: inputs.platform == 'win' && inputs.arch == 'arm64'
+        if: inputs.platform == 'win' && runner.arch == 'ARM64'
         shell: powershell
         run: |
           $ErrorActionPreference = "Stop"
@@ -208,7 +210,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Verify Windows ARM PowerShell selection
-        if: inputs.platform == 'win' && inputs.arch == 'arm64'
+        if: inputs.platform == 'win' && runner.arch == 'ARM64'
         shell: pwsh
         run: |
           $expectedPath = Join-Path $env:RUNNER_TEMP "powershell-7.4.20-arm64\pwsh.exe"
@@ -375,7 +377,9 @@ jobs:
           name: js-bundle
           path: apps
 
-      - name: Ensure Spectre-mitigated MSVC libs
+      # windows-2025 normally includes both components. Check the target tools
+      # too: Spectre runtime libraries alone do not provide the ARM64 compiler.
+      - name: Ensure target MSVC tools and Spectre-mitigated libs
         if: inputs.platform == 'win' && steps.resource_monitor_cache.outputs.cache-hit != 'true'
         shell: pwsh
         run: |
@@ -385,13 +389,15 @@ jobs:
           $msvcToolset = Get-ChildItem (Join-Path $installPath 'VC\Tools\MSVC') -Directory |
             Sort-Object { [version]$_.Name } -Descending | Select-Object -First 1
           $spectreArch = "${{ inputs.arch }}"
-          if ($msvcToolset -and (Test-Path (Join-Path $msvcToolset.FullName "lib\spectre\$spectreArch\libcmt.lib"))) {
-            Write-Host "Spectre-mitigated MSVC libraries already installed for $spectreArch."
+          $toolsComponent = "Microsoft.VisualStudio.Component.VC.Tools.${{ inputs.arch == 'arm64' && 'ARM64' || 'x86.x64' }}"
+          $targetTools = & $vswhere -products * -latest -requires $toolsComponent -property installationPath
+          if ($targetTools -eq $installPath -and $msvcToolset -and (Test-Path (Join-Path $msvcToolset.FullName "lib\spectre\$spectreArch\libcmt.lib"))) {
+            Write-Host "MSVC tools and Spectre-mitigated libraries already installed for $spectreArch."
             exit 0
           }
           $setupExe = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\setup.exe"
           $proc = Start-Process -FilePath $setupExe `
-            -ArgumentList "modify", "--installPath", "`"$installPath`"", "--add", `
+            -ArgumentList "modify", "--installPath", "`"$installPath`"", "--add", $toolsComponent, "--add", `
             "Microsoft.VisualStudio.Component.VC.Runtimes.${{ inputs.arch == 'arm64' && 'ARM64' || 'x86.x64' }}.Spectre", "--quiet", "--norestart" `
             -Wait -PassThru -NoNewWindow
           if ($null -eq $proc -or $proc.ExitCode -ne 0) {
@@ -615,7 +621,12 @@ jobs:
           name: cli-linux-${{ inputs.arch }}
           path: wsl-runtime
 
-      - name: Build desktop artifact
+      # Packaging validates .node/.exe/.dll PE headers in the unpacked ARM64
+      # app and both ASARs before copying/uploading release assets. Only NSIS's
+      # resources/elevate.exe is allowed to be x86 (and must be exactly x86).
+      # Do not set npm_config_arch globally: repo build tools run on the host;
+      # build-desktop-artifact.ts scopes it to target production installs.
+      - name: Build desktop artifact and verify packaged architecture
         if: inputs.desktop
         shell: bash
         env:
