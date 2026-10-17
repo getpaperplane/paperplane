@@ -203,4 +203,6 @@ function main() {
   for (const [key, value] of Object.entries(outputs)) console.log(`${key}=${value}`);
 }
 
-main();
+module.exports = { readWorkspace, OWN_TEST_JOB };
+
+if (require.main === module) main();

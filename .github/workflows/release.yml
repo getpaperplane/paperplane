@@ -149,7 +149,11 @@ jobs:
         with:
           node-version-file: package.json
           cache: true
-          run-install: true
+          # Both release metadata scripts import only Effect/Node services from
+          # the scripts workspace; desktop/server dependencies are not needed.
+          run-install: |
+            args:
+              - --filter=@rove-code/scripts...
         env:
           pnpm_config_cache_dir: ${{ runner.temp }}/pnpm-metadata
 
@@ -829,18 +833,60 @@ jobs:
         if: inputs.build_only
         run: node apps/server/scripts/cli.ts publish --packages-dir npm-packages --tag "${{ needs.preflight.outputs.cli_dist_tag }}" --dry-run --verbose
 
+  # Start npm propagation before desktop packaging finishes. Quality still
+  # gates every upload. A later desktop failure may leave unused platform
+  # versions on npm, but no launcher is published until all builds pass.
+  publish_cli_platforms:
+    name: Publish CLI platform packages to npm
+    needs: [preflight, quality, package_cli]
+    if: ${{ !inputs.build_only && !failure() && !cancelled() && needs.preflight.result == 'success' && needs.quality.result == 'success' && needs.package_cli.result == 'success' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.preflight.outputs.ref }}
+          sparse-checkout: |
+            /*
+            !/.repos/
+          sparse-checkout-cone-mode: false
+
+      - name: Setup Vite+
+        uses: voidzero-dev/setup-vp@v1
+        with:
+          node-version-file: package.json
+          cache: true
+          run-install: |
+            args:
+              - --filter=@rove-code/server...
+              - --filter=@rove-code/scripts...
+
+      - name: Download npm packages
+        uses: actions/download-artifact@v8
+        with:
+          name: npm-packages
+          path: npm-packages/@rove-code
+
+      - name: Publish platform packages
+        run: node apps/server/scripts/cli.ts publish --only platforms --packages-dir npm-packages --tag "${{ needs.preflight.outputs.cli_dist_tag }}" --provenance --verbose
+
   # Nothing waits on this job. npm can take over an hour to serve freshly
   # published platform packages, and the launcher is held back until it does
   # (see `cli.ts publish`), so the GitHub Release, hosted web app, and
   # announcement go out without it. If it fails, re-run it: published
   # versions are skipped.
   publish_cli:
-    name: Publish CLI to npm
+    name: Publish CLI launcher to npm
     needs:
       [
         preflight,
         quality,
         package_cli,
+        publish_cli_platforms,
         desktop_mac_arm64,
         desktop_mac_x64,
         desktop_linux_x64,
@@ -849,7 +895,7 @@ jobs:
         desktop_win_arm64,
         desktop_win_arm64_cli,
       ]
-    if: ${{ !inputs.build_only && !failure() && !cancelled() && needs.preflight.result == 'success' && needs.quality.result == 'success' && needs.package_cli.result == 'success' && needs.desktop_win_arm64_cli.result == 'success' && needs.desktop_mac_arm64.result == 'success' && needs.desktop_mac_x64.result == 'success' && needs.desktop_linux_x64.result == 'success' && needs.desktop_linux_arm64.result == 'success' && needs.desktop_win_x64.result == 'success' && needs.desktop_win_arm64.result == 'success' }}
+    if: ${{ !inputs.build_only && !failure() && !cancelled() && needs.preflight.result == 'success' && needs.quality.result == 'success' && needs.package_cli.result == 'success' && needs.publish_cli_platforms.result == 'success' && needs.desktop_win_arm64_cli.result == 'success' && needs.desktop_mac_arm64.result == 'success' && needs.desktop_mac_x64.result == 'success' && needs.desktop_linux_x64.result == 'success' && needs.desktop_linux_arm64.result == 'success' && needs.desktop_win_x64.result == 'success' && needs.desktop_win_arm64.result == 'success' }}
     runs-on: ubuntu-24.04
     # Publishing waits up to 120 minutes for npm to serve the platform packages.
     timeout-minutes: 150
@@ -883,8 +929,8 @@ jobs:
           # The artifact root is @rove-code/, the paths' common ancestor.
           path: npm-packages/@rove-code
 
-      - name: Publish CLI packages
-        run: node apps/server/scripts/cli.ts publish --packages-dir npm-packages --tag "${{ needs.preflight.outputs.cli_dist_tag }}" --provenance --verbose
+      - name: Publish CLI launcher after npm serves every platform
+        run: node apps/server/scripts/cli.ts publish --only launcher --packages-dir npm-packages --tag "${{ needs.preflight.outputs.cli_dist_tag }}" --provenance --verbose
 
   # The hosted app is built while the desktop jobs run; deploy_web only ships it.
   build_web:

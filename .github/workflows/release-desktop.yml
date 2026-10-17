@@ -173,6 +173,13 @@ jobs:
           SCRIPT
           bash .github/scripts/background-start.sh apt bash "$RUNNER_TEMP/apt.sh"
 
+      - name: Cache pinned Windows ARM PowerShell archive
+        if: inputs.platform == 'win' && inputs.arch == 'arm64'
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          path: ${{ runner.temp }}/PowerShell-7.4.20-win-arm64.zip
+          key: powershell-win-arm64-7.4.20-67eff749d5dae357501c95a3eec1dcd93f669824e3ca2b1d2adcdecdebf04f35
+
       - name: Use PowerShell 7.4 for Windows ARM builds
         if: inputs.platform == 'win' && inputs.arch == 'arm64'
         shell: powershell
@@ -182,9 +189,11 @@ jobs:
           $version = "7.4.20"
           $archive = Join-Path $env:RUNNER_TEMP "PowerShell-$version-win-arm64.zip"
           $installDir = Join-Path $env:RUNNER_TEMP "powershell-$version-arm64"
-          Invoke-WebRequest -UseBasicParsing `
-            -Uri "https://github.com/PowerShell/PowerShell/releases/download/v$version/PowerShell-$version-win-arm64.zip" `
-            -OutFile $archive
+          if (!(Test-Path $archive)) {
+            Invoke-WebRequest -UseBasicParsing `
+              -Uri "https://github.com/PowerShell/PowerShell/releases/download/v$version/PowerShell-$version-win-arm64.zip" `
+              -OutFile $archive
+          }
           $expectedHash = "67eff749d5dae357501c95a3eec1dcd93f669824e3ca2b1d2adcdecdebf04f35"
           if ((Get-FileHash $archive -Algorithm SHA256).Hash -ne $expectedHash) {
             throw "PowerShell archive checksum mismatch"
@@ -218,8 +227,29 @@ jobs:
         uses: voidzero-dev/setup-vp@250f29ce396baf5e8f24498e17c0dfdebabc26eb # v1
         with:
           node-version-file: package.json
-          cache: ${{ inputs.platform != 'win' }}
+          cache: false
           run-install: false
+
+      # setup-vp v1 has no restore-only input. Match its pinned implementation's
+      # cache path/key, without its expensive post-job save. CI owns cache writes;
+      # on a miss, install still fetches and verifies dependencies normally.
+      - name: Locate Vite+ dependency cache
+        if: inputs.platform != 'win'
+        id: vp_cache
+        shell: bash
+        run: |
+          echo "path=$(vp pm cache dir)" >> "$GITHUB_OUTPUT"
+          echo "arch=$(node -p 'process.arch')" >> "$GITHUB_OUTPUT"
+
+      - name: Restore Vite+ dependencies (no save)
+        if: inputs.platform != 'win'
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          path: ${{ steps.vp_cache.outputs.path }}
+          key: vite-plus-${{ runner.os }}-${{ steps.vp_cache.outputs.arch }}-pnpm-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            vite-plus-${{ runner.os }}-${{ steps.vp_cache.outputs.arch }}-pnpm-
+            vite-plus-${{ runner.os }}-${{ steps.vp_cache.outputs.arch }}-
 
       # pnpm checks the lockfile and policy before reusing this result. A missing
       # artifact leaves the cache empty, so installation runs the checks again.
