@@ -63,8 +63,10 @@ jobs:
   # when every other job passes or was skipped by `changes`.
   lint:
     name: Lint
+    needs: changes
+    if: ${{ !cancelled() }}
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -106,6 +108,33 @@ jobs:
 
       - name: Check
         run: vp check
+
+      # Rust and the release smoke test ride on Lint's runner and install:
+      # as their own jobs they pushed a full CI run past the 20 concurrent
+      # GitHub-hosted jobs a free account gets, so later jobs queued ~60-80s.
+      - name: Exercise release-only workflow steps
+        if: ${{ !cancelled() && needs.changes.outputs.release_smoke != 'false' }}
+        run: node scripts/release-smoke.ts
+
+      - name: Setup Rust
+        if: ${{ !cancelled() && needs.changes.outputs.rust != 'false' }}
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+
+      - name: Check Rust formatting
+        if: ${{ !cancelled() && needs.changes.outputs.rust != 'false' }}
+        run: |
+          for crate in resource-monitor kde-snap-shot hyprland-snap-shot; do
+            cargo fmt --manifest-path "native/$crate/Cargo.toml" -- --check
+          done
+
+      - name: Test Rust crates
+        if: ${{ !cancelled() && needs.changes.outputs.rust != 'false' }}
+        run: |
+          for crate in resource-monitor kde-snap-shot hyprland-snap-shot; do
+            cargo test --locked --manifest-path "native/$crate/Cargo.toml"
+          done
 
   build:
     name: Build and Typecheck
@@ -410,41 +439,6 @@ jobs:
           if-no-files-found: ignore
           retention-days: 30
 
-  # Split out of Check and Test: both paid ~7-9s to install a Rust toolchain
-  # for checks that take under 3s, on the critical path of every PR.
-  rust:
-    name: Rust
-    needs: changes
-    if: ${{ !cancelled() && needs.changes.outputs.rust != 'false' }}
-    runs-on: ubuntu-24.04
-    timeout-minutes: 10
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          sparse-checkout: |
-            /*
-            !/.repos/
-            !/apps/mobile/modules/rove-terminal/Vendor/**/*.a
-          sparse-checkout-cone-mode: false
-
-      - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          components: rustfmt
-
-      - name: Check Rust formatting
-        run: |
-          for crate in resource-monitor kde-snap-shot hyprland-snap-shot; do
-            cargo fmt --manifest-path "native/$crate/Cargo.toml" -- --check
-          done
-
-      - name: Test Rust crates
-        run: |
-          for crate in resource-monitor kde-snap-shot hyprland-snap-shot; do
-            cargo test --locked --manifest-path "native/$crate/Cargo.toml"
-          done
-
   mobile_native_static_analysis:
     name: Mobile Native Static Analysis
     needs: changes
@@ -474,30 +468,6 @@ jobs:
 
       - name: Lint mobile native sources
         run: vp run lint:mobile
-
-  release_smoke:
-    name: Release Smoke
-    needs: changes
-    if: ${{ !cancelled() && needs.changes.outputs.release_smoke != 'false' }}
-    runs-on: ubuntu-24.04
-    timeout-minutes: 10
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          sparse-checkout: |
-            /*
-            !/.repos/
-            !/apps/mobile/modules/rove-terminal/Vendor/**/*.a
-          sparse-checkout-cone-mode: false
-
-      # A full install: a filtered one that misses the cache first saves its
-      # partial store under the shared lockfile key for every later job.
-      - name: Setup Vite+
-        uses: ./.github/actions/setup-ci-deps
-
-      - name: Exercise release-only workflow steps
-        run: node scripts/release-smoke.ts
 
   # Rove-only: self-signed Windows payloads and hosted-deployment checks.
   windows_release:
@@ -546,9 +516,7 @@ jobs:
         test,
         test_web,
         test_server,
-        rust,
         mobile_native_static_analysis,
-        release_smoke,
         windows_release,
       ]
     runs-on: ubuntu-24.04
