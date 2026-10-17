@@ -29,7 +29,7 @@ import type { ProviderClientDefinition } from "@rove-code/provider-core/client";
 export type SettingsFormDefinition = Pick<ProviderClientDefinition, "settingsSchema"> & {
   readonly driverKind?: ProviderClientDefinition["driverKind"];
 };
-import { PI_MODEL_SETTING_KEYS, PI_MODEL_SETTING_SCOPES, PiModelSettings } from "./PiModelSettings";
+import { PiModelSettings } from "./PiModelSettings";
 import { SettingsRow } from "./settingsLayout";
 
 export interface ProviderSettingsFieldModel {
@@ -588,26 +588,24 @@ export function ProviderSettingsForm({
     return null;
   }
 
-  // Pi pairs each model with its thinking level in one row.
-  const piModelPairs =
-    definition.driverKind === "pi"
-      ? PI_MODEL_SETTING_SCOPES.flatMap((scope) => {
-          const keys = PI_MODEL_SETTING_KEYS[scope];
-          const modelField = fields.find((field) => field.key === keys.model);
-          const thinkingField = fields.find((field) => field.key === keys.thinking);
-          return modelField && thinkingField ? [{ scope, modelField, thinkingField }] : [];
-        })
-      : [];
+  const piModelField =
+    definition.driverKind === "pi" ? fields.find((field) => field.key === "model") : undefined;
+  const piThinkingField = piModelField
+    ? fields.find((field) => field.key === "thinkingLevel")
+    : undefined;
+  const piModelPair =
+    piModelField && piThinkingField
+      ? { modelField: piModelField, thinkingField: piThinkingField }
+      : undefined;
 
   return (
     <>
       {fields.map((field) => {
-        if (piModelPairs.some((pair) => pair.thinkingField.key === field.key)) return null;
-        const pair = piModelPairs.find((candidate) => candidate.modelField.key === field.key);
+        if (piModelPair?.thinkingField.key === field.key) return null;
+        const pair = piModelPair?.modelField.key === field.key ? piModelPair : undefined;
         return pair ? (
           <PiModelSettings
             key={field.key}
-            scope={pair.scope}
             environmentId={environmentId}
             provider={provider}
             models={models}

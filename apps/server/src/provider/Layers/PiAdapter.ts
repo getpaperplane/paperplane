@@ -1,12 +1,11 @@
 /** Narrow public SDK/worker boundary. Orchestration lives in PiAdapterV2, never V1 ingestion. */
 import type {
-  PiThinkingLevel,
   ProviderUserInputAnswers,
   ThreadId,
   ThreadTokenUsageSnapshot,
 } from "@rove-code/contracts";
 import type { Json } from "effect/Schema";
-import { piRecord, piTrimmed, piBounded } from "./PiValues.ts";
+import { piRecord, piTrimmed } from "./PiValues.ts";
 
 export interface PiImageContentLike {
   readonly type: "image";
@@ -97,10 +96,6 @@ export interface PiCreateSessionInput {
   readonly resumeSessionId: string | undefined;
   readonly resumeSessionFile?: string | undefined;
   readonly disabledExtensions?: ReadonlyArray<string>;
-  readonly subagents?: {
-    readonly model?: string | undefined;
-    readonly thinkingLevel?: PiThinkingLevel | null | undefined;
-  };
 }
 export class PiExtensionLoadError extends Error {
   readonly failedExtensionPaths: ReadonlyArray<string>;

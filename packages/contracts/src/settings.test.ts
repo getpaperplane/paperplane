@@ -1226,7 +1226,6 @@ describe("PiSettings", () => {
     expect(settings.disabledExtensions).toEqual([]);
     expect(settings.model).toBe("");
     expect(settings.thinkingLevel).toBeNull();
-    expect(settings.subagentThinkingLevel).toBeNull();
     expect(settings.customModels).toEqual([]);
     expect(settings.workloadProtection).toBe("auto");
     expect(settings.workloadMemoryMiB).toBe("2048");
@@ -1263,34 +1262,14 @@ describe("PiSettings", () => {
     expect(settings.thinkingLevel).toBe("high");
   });
 
-  it("round-trips subagent thinking overrides independently and clears them to inherit", () => {
-    for (const subagentThinkingLevel of [
-      "off",
-      "minimal",
-      "low",
-      "medium",
-      "high",
-      "xhigh",
-      "max",
-      null,
-    ]) {
-      const settings = decodePiSettings({ thinkingLevel: "high", subagentThinkingLevel });
-      expect(decodePiSettings(encodePiSettings(settings))).toMatchObject({
-        thinkingLevel: "high",
-        subagentThinkingLevel,
-      });
-      const patch = decodeServerSettingsPatch({ providers: { pi: { subagentThinkingLevel } } });
-      expect(patch.providers?.pi?.subagentThinkingLevel).toBe(subagentThinkingLevel);
-      expect(patch.providers?.pi).not.toHaveProperty("thinkingLevel");
-    }
-    expect(decodePiSettings({ subagentThinkingLevel: undefined }).subagentThinkingLevel).toBeNull();
-    expect(decodeServerSettingsPatch({ providers: { pi: {} } }).providers?.pi).not.toHaveProperty(
-      "subagentThinkingLevel",
+  it("decodes legacy Pi delegation settings without retaining removed fields", () => {
+    const legacy = { subagents: true, subagentModel: "old/model", subagentThinkingLevel: "high" };
+    const settings = decodePiSettings({ model: "local/fixture", ...legacy });
+    expect(settings).toEqual(decodePiSettings({ model: "local/fixture" }));
+    expect(decodeServerSettings({ providers: { pi: legacy } }).providers.pi).toEqual(
+      decodePiSettings({}),
     );
-    expect(() => decodePiSettings({ subagentThinkingLevel: "galaxy-brain" })).toThrow();
-    expect(() =>
-      decodeServerSettingsPatch({ providers: { pi: { subagentThinkingLevel: "galaxy-brain" } } }),
-    ).toThrow();
+    expect(decodeServerSettingsPatch({ providers: { pi: legacy } }).providers?.pi).toEqual({});
   });
 
   it("rejects an unknown thinking level", () => {

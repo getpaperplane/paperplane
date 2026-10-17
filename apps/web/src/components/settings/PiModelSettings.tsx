@@ -27,20 +27,10 @@ const THINKING_LABELS = {
   max: "Max",
 } satisfies Record<PiThinkingLevel, string>;
 
-/** Pi settings keys for each model + thinking pair. */
-export const PI_MODEL_SETTING_KEYS = {
-  default: { model: "model", thinking: "thinkingLevel" },
-  subagent: { model: "subagentModel", thinking: "subagentThinkingLevel" },
-} as const;
-export type PiModelSettingsScope = keyof typeof PI_MODEL_SETTING_KEYS;
-export const PI_MODEL_SETTING_SCOPES = ["default", "subagent"] as const;
-
 const decodeSettings = Schema.decodeUnknownOption(
   Schema.Struct({
     model: Schema.optionalKey(Schema.String),
     thinkingLevel: Schema.optionalKey(Schema.NullOr(Schema.String)),
-    subagentModel: Schema.optionalKey(Schema.String),
-    subagentThinkingLevel: Schema.optionalKey(Schema.NullOr(Schema.String)),
   }),
 );
 
@@ -56,24 +46,14 @@ function thinkingDescriptorOptions(model: ServerProviderModel | undefined) {
   return descriptor?.type === "select" ? descriptor.options : [];
 }
 
-export function resolvePiModelSettings(
-  value: unknown,
-  models: ReadonlyArray<ServerProviderModel>,
-  scope: PiModelSettingsScope,
-) {
-  const keys = PI_MODEL_SETTING_KEYS[scope];
+export function resolvePiModelSettings(value: unknown, models: ReadonlyArray<ServerProviderModel>) {
   const settings = Option.getOrUndefined(decodeSettings(value));
-  const model = settings?.[keys.model]?.trim() ?? "";
-  const thinking = settings?.[keys.thinking]?.trim() ?? "";
+  const model = settings?.model?.trim() ?? "";
+  const thinking = settings?.thinkingLevel?.trim() ?? "";
   const selectedModel = models.find((candidate) => candidate.slug === model);
-  // An unset subagent model inherits the caller's model, which provider
-  // settings cannot know; Pi clamps the override at delegation time. An unset
-  // default model resolves to the catalog default.
-  const thinkingOptions = model
-    ? thinkingDescriptorOptions(selectedModel)
-    : scope === "subagent"
-      ? PI_THINKING_LEVELS.map((id) => ({ id, label: THINKING_LABELS[id] }))
-      : thinkingDescriptorOptions(models.find((candidate) => candidate.isDefault));
+  const thinkingOptions = thinkingDescriptorOptions(
+    model ? selectedModel : models.find((candidate) => candidate.isDefault),
+  );
   const modelOptions = [
     ...models,
     ...(model && !selectedModel
@@ -90,22 +70,17 @@ export function resolvePiModelSettings(
   };
 }
 
-function describe(
-  scope: PiModelSettingsScope,
-  {
-    hasProvider,
-    hasThinkingOptions,
-    thinkingUnavailable,
-  }: { hasProvider: boolean; hasThinkingOptions: boolean; thinkingUnavailable: boolean },
-) {
-  const inherit = scope === "default" ? "Pi default" : "thread";
+function describe({
+  hasProvider,
+  hasThinkingOptions,
+  thinkingUnavailable,
+}: {
+  hasProvider: boolean;
+  hasThinkingOptions: boolean;
+  thinkingUnavailable: boolean;
+}) {
   if (thinkingUnavailable) {
-    return `The saved thinking override is not supported by this model. Choose a supported level or use ${inherit} thinking.`;
-  }
-  if (scope === "subagent") {
-    return hasProvider
-      ? "Model and thinking for subagents. Unset choices follow the thread. Changes apply to new Pi sessions."
-      : "Use the thread's model and thinking, or connect this provider to choose a different model.";
+    return `The saved thinking override is not supported by this model. Choose a supported level or use Pi default thinking.`;
   }
   if (!hasProvider) {
     return "Model for new threads, as provider/model-id from your Pi catalog. Unset choices use your Pi default.";
@@ -120,7 +95,6 @@ function describe(
  * catalog picker, scoped to this exact Pi instance.
  */
 export function PiModelSettings({
-  scope,
   environmentId,
   modelField,
   thinkingField,
@@ -132,7 +106,6 @@ export function PiModelSettings({
   onModelChange,
   onThinkingChange,
 }: {
-  scope: PiModelSettingsScope;
   environmentId: EnvironmentId | null;
   modelField: ProviderSettingsFieldModel;
   thinkingField: ProviderSettingsFieldModel;
@@ -145,8 +118,8 @@ export function PiModelSettings({
   onThinkingChange: (thinking: string) => void;
 }) {
   const { model, thinking, modelOptions, thinkingOptions, thinkingUnavailable } = useMemo(
-    () => resolvePiModelSettings(value, models, scope),
-    [value, models, scope],
+    () => resolvePiModelSettings(value, models),
+    [value, models],
   );
   const entries = useMemo(
     () => deriveProviderInstanceEntries(provider ? [provider] : []),
@@ -156,9 +129,8 @@ export function PiModelSettings({
     () => new Map(entries.map((entry) => [entry.instanceId, modelOptions])),
     [entries, modelOptions],
   );
-  const inherit = scope === "default" ? "Pi default" : "thread";
-  const inheritModelLabel = `Use ${inherit} model`;
-  const inheritThinkingLabel = `Use ${inherit} thinking`;
+  const inheritModelLabel = "Use Pi default model";
+  const inheritThinkingLabel = "Use Pi default thinking";
   const modelId = `${idPrefix}-${modelField.key}`;
   const thinkingId = `${idPrefix}-${thinkingField.key}`;
   const thinkingLabel = !thinking
@@ -166,7 +138,7 @@ export function PiModelSettings({
     : thinkingUnavailable
       ? `${thinkingLevelLabel(thinking)} (unavailable)`
       : (thinkingOptions.find((option) => option.id === thinking)?.label ?? thinking);
-  const description = describe(scope, {
+  const description = describe({
     hasProvider: provider !== undefined,
     hasThinkingOptions: thinkingOptions.length > 0,
     thinkingUnavailable,
@@ -191,7 +163,7 @@ export function PiModelSettings({
           }
           onInstanceModelChange={(_instanceId, next) => onModelChange(next)}
         />
-      ) : scope === "default" ? (
+      ) : (
         // Without a live catalog the default model is still typed by hand.
         <DraftInput
           id={modelId}
@@ -203,20 +175,6 @@ export function PiModelSettings({
           onCommit={onModelChange}
           spellCheck={false}
         />
-      ) : (
-        <Select value={model} onValueChange={(next) => next !== null && onModelChange(next)}>
-          <ComposerSelectControl id={modelId} aria-label={modelField.label}>
-            <SelectValue>{model || inheritModelLabel}</SelectValue>
-          </ComposerSelectControl>
-          <SelectPopup align="end" alignItemWithTrigger={false}>
-            <SelectItem value="">{inheritModelLabel}</SelectItem>
-            {model ? (
-              <SelectItem value={model} disabled>
-                {model} (unavailable)
-              </SelectItem>
-            ) : null}
-          </SelectPopup>
-        </Select>
       )}
       <Select
         value={thinking}

@@ -6,7 +6,6 @@ import { PiWorkloads } from "./provider/Layers/PiWorkloads.ts";
 import { PiExtensionLoadError, type PiSessionLike } from "./provider/Layers/PiAdapter.ts";
 import { registerPiBundledOAuthFlows } from "./provider/Drivers/PiOAuth.ts";
 import { exposePiCliEntry } from "./provider/Layers/PiCliEntry.ts";
-import { PI_SUBAGENT_TRANSCRIPTS_ENV } from "./provider/Layers/PiSubagents.ts";
 import {
   compactPiMessageUpdate,
   compactPiToolProgress,
@@ -83,7 +82,6 @@ export async function runPiRuntimeWorker(): Promise<void> {
     number,
     { session: PiSessionLike; update: ReturnType<typeof sessionUpdates>; unsubscribe: () => void }
   >();
-  const subagentTranscriptsRoot = process.env[PI_SUBAGENT_TRANSCRIPTS_ENV];
   const initializing = new Set<Promise<unknown>>();
   const post = (message: PiRuntimeMessage) => {
     if (!process.connected) return;
@@ -160,16 +158,6 @@ export async function runPiRuntimeWorker(): Promise<void> {
                   compatibility,
                   mcpProviderSession: mcp,
                   workloads,
-                  subagentTranscriptsRoot,
-                  onSubagentTask: (task) => {
-                    if (sessions.has(key))
-                      // SAFETY: Task payloads are schema-typed JSON; optional fields are omitted, never undefined.
-                      post({
-                        type: "event",
-                        key,
-                        event: { type: "rove_agent_task", task: task as never },
-                      });
-                  },
                 },
           );
         } catch (error) {

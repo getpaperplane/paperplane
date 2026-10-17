@@ -16,6 +16,8 @@ The Extensions control beside a Pi provider selector opens that instance's globa
 
 Use the model and reasoning pickers to choose capabilities reported by Pi. If an extension model is removed or its reasoning level is unsupported, Rove Code shows the effective selection or a startup error rather than silently keeping an unavailable choice. In provider settings, **Use Pi default** clears the thinking override.
 
+Pi can delegate work through Rove's tools, including tasks that use other providers. Ask the agent to delegate a task and specify the provider or model when needed.
+
 ## Session recovery
 
 Rove saves each Pi session's identity and absolute file location on the server. Sessions remain recoverable when a thread's working directory changes, provided the saved file remains accessible. Older sessions without a saved file location use Pi's working-directory lookup.

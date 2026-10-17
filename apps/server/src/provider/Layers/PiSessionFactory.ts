@@ -38,7 +38,6 @@ import {
   type ExtensionRuntime,
   type InlineExtension,
   type LoadExtensionsResult,
-  type ToolDefinition,
 } from "@earendil-works/pi-coding-agent";
 
 import type { ProviderUsageLimit } from "../PiUsageLimits.ts";
@@ -55,12 +54,6 @@ import {
 
 import type { McpProviderSessionConfig } from "@rove-code/provider-core/server/mcpSession";
 import { createPiRoveTools } from "./PiRoveTools.ts";
-import {
-  createPiSubagentTool,
-  PI_SUBAGENT_INSTRUCTIONS,
-  type PiAgentTaskDescriptor,
-  type PiSubagentSession,
-} from "./PiSubagents.ts";
 import type { PiWorkloads } from "./PiWorkloads.ts";
 import { createPiExtensionUI } from "./PiExtensionUI.ts";
 import { disposePiResource } from "./PiLifecycle.ts";
@@ -745,7 +738,7 @@ export interface CreatePiSessionServicesOptions {
   readonly extensionFactories?: ReadonlyArray<InlineExtension> | undefined;
   /** Whether the session's MCP credential grants `html_render`. */
   readonly richResponses?: boolean | undefined;
-  /** Replaces Rove's thread runtime instructions (subagents get their own). */
+  /** Replaces Rove's thread runtime instructions. */
   readonly runtimeInstructions?: string | undefined;
 }
 
@@ -877,10 +870,6 @@ export async function createPiSession(
     compatibility?: PiUiCompatibility;
     /** Thread authorization passed over the isolated runtime's private IPC channel. */
     mcpProviderSession?: McpProviderSessionConfig | undefined;
-    /** Receives the Agents rows of Rove subagents this thread session starts. */
-    onSubagentTask?: (task: PiAgentTaskDescriptor) => void;
-    /** Root for Rove subagent transcripts; unset keeps rows without transcripts. */
-    subagentTranscriptsRoot?: string | undefined;
   } = {},
 ): Promise<PiSessionLike> {
   const cwd = input.cwd;
@@ -1023,36 +1012,11 @@ export async function createPiSession(
 
   const roveTools = await createPiRoveTools(mcpProviderSession);
   const workloadOwner = input.threadId ?? sessionManager.getSessionId();
-  const subagents =
-    input.subagents !== undefined &&
-    input.threadId !== undefined &&
-    options.onSubagentTask !== undefined &&
-    !options.textGeneration
-      ? createPiSubagentTool({
-          threadId: input.threadId,
-          transcriptsRoot: options.subagentTranscriptsRoot,
-          emit: options.onSubagentTask,
-          startSession: (parent) =>
-            startPiSubagentSession({
-              cwd,
-              agentDir,
-              modelRuntime,
-              model: input.subagents?.model,
-              thinkingLevel: input.subagents?.thinkingLevel,
-              parent,
-              tools: options.workloads?.tools(cwd, workloadOwner) ?? [],
-            }),
-        })
-      : undefined;
   const { session, modelFallbackMessage: sdkModelFallbackMessage } =
     await createAgentSessionFromServices({
       services,
       sessionManager,
-      customTools: [
-        ...roveTools.tools,
-        ...(options.workloads?.tools(cwd, workloadOwner) ?? []),
-        ...(subagents ? [subagents.tool] : []),
-      ],
+      customTools: [...roveTools.tools, ...(options.workloads?.tools(cwd, workloadOwner) ?? [])],
       ...(options.textGeneration ? { noTools: "all" as const } : {}),
       ...(resolved?.model !== undefined ? { model: resolved.model } : undefined),
       ...(requestedThinkingLevel !== undefined
@@ -1088,7 +1052,6 @@ export async function createPiSession(
     startupErrors,
     modelFallbackMessage.length > 0 ? modelFallbackMessage : undefined,
     async () => {
-      await subagents?.dispose();
       await options.workloads?.disposeOwner(workloadOwner);
       await roveTools.dispose();
     },
@@ -1096,62 +1059,4 @@ export async function createPiSession(
     options.compatibility,
     usageLimits.take,
   );
-}
-
-/**
- * A subagent is a fresh, extension-free session in the same workspace: it gets
- * the standard tools and project context, but no extension tools, so it cannot
- * start further agents. It runs on the configured subagent model, or the
- * caller's current model, and inherits the caller's current thinking level
- * unless a subagent override is configured. The SDK clamps it to the child model.
- */
-async function startPiSubagentSession(options: {
-  readonly cwd: string;
-  readonly agentDir: string;
-  readonly modelRuntime: ModelRuntime;
-  readonly model: string | undefined;
-  readonly thinkingLevel: PiThinkingLevel | null | undefined;
-  readonly parent: { readonly model: unknown; readonly thinkingLevel: string | undefined };
-  readonly tools: ToolDefinition[];
-}): Promise<{
-  session: PiSubagentSession;
-  model: string | undefined;
-  thinkingLevel: PiThinkingLevel;
-}> {
-  const settingsManager = SettingsManager.create(options.cwd, options.agentDir);
-  settingsManager.setProjectTrusted(true);
-  const services = await createPiSessionServices({
-    cwd: options.cwd,
-    agentDir: options.agentDir,
-    settingsManager,
-    modelRuntime: options.modelRuntime,
-    noExtensions: true,
-    runtimeInstructions: PI_SUBAGENT_INSTRUCTIONS,
-  });
-  let model = options.parent.model as AgentSession["model"];
-  if (options.model) {
-    const resolved = resolveCliModel({
-      cliModel: options.model,
-      modelRuntime: options.modelRuntime,
-    });
-    if (resolved.error !== undefined || resolved.model === undefined)
-      throw new Error(resolved.error ?? `Unknown subagent model "${options.model}".`);
-    model = resolved.model;
-  }
-  const thinkingLevel = options.thinkingLevel ?? options.parent.thinkingLevel;
-  const { session } = await createAgentSessionFromServices({
-    services,
-    sessionManager: SessionManager.inMemory(options.cwd),
-    customTools: options.tools,
-    ...(model !== undefined ? { model } : undefined),
-    ...(thinkingLevel !== undefined
-      ? // SAFETY: Overrides and the parent report Pi thinking levels; the SDK clamps to the child model.
-        { thinkingLevel: thinkingLevel as PiThinkingLevel }
-      : undefined),
-  });
-  return {
-    session,
-    model: session.model ? `${session.model.provider}/${session.model.id}` : undefined,
-    thinkingLevel: session.thinkingLevel,
-  };
 }

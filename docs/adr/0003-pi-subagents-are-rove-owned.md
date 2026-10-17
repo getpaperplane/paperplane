@@ -1,5 +1,7 @@
 # Pi subagents are Rove-owned sessions, not observed processes
 
+Status: superseded by [ADR 0004](0004-pi-delegates-through-rove-mcp.md).
+
 Supersedes [ADR 0002](0002-pi-subagent-observation.md).
 
 ADR 0002 inferred subagents from what extensions do: it injected a hook into
@@ -13,8 +15,7 @@ could not see still showed nothing.
 
 ## Decision
 
-Rove gives Pi threads its own subagent tool, `rove_subagent`
-(`apps/server/src/provider/Layers/PiSubagents.ts`), much as it owns extension
+Rove gave Pi threads a dedicated SDK subagent tool, much as it owned extension
 dialogs instead of emulating a terminal. Each call creates a fresh SDK session
 in the Pi runtime worker:
 

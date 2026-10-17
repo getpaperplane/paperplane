@@ -829,35 +829,6 @@ export const PiSettings = makeProviderSettingsSchema(
         providerSettingsForm: { placeholder: "2048", clearWhenEmpty: "omit" },
       }),
     ),
-    subagents: Schema.Boolean.pipe(
-      Schema.withDecodingDefault(Effect.succeed(true)),
-      Schema.annotateKey({
-        title: "Subagents",
-        description:
-          "Give Pi threads Rove's subagent tool. Rove runs each subagent and shows it in Agents. Subagents that extensions start appear as ordinary tool calls.",
-        providerSettingsForm: { control: "switch", clearWhenEmpty: "omit" },
-      }),
-    ),
-    subagentModel: TrimmedString.pipe(
-      Schema.withDecodingDefault(Effect.succeed("")),
-      Schema.annotateKey({
-        title: "Subagent model",
-        description:
-          "Model for subagents, as provider/model-id from your Pi catalog. Leave blank to use the thread's current model.",
-        providerSettingsForm: {
-          placeholder: "e.g. anthropic/claude-haiku-5",
-          clearWhenEmpty: "omit",
-        },
-      }),
-    ),
-    subagentThinkingLevel: Schema.NullOr(PiThinkingLevel).pipe(
-      Schema.withDecodingDefault(Effect.succeed(null)),
-      Schema.annotateKey({
-        title: "Subagent thinking level",
-        description: "Leave unset to use the thread's current thinking level.",
-        providerSettingsForm: { clearWhenEmpty: "omit" },
-      }),
-    ),
     // Extension paths blocked from loading in new Pi sessions. Toggled from
     // the provider extensions panel and applied at session creation.
     disabledExtensions: Schema.Array(Schema.String).pipe(
@@ -870,16 +841,7 @@ export const PiSettings = makeProviderSettingsSchema(
     ),
   },
   {
-    order: [
-      "model",
-      "thinkingLevel",
-      "subagents",
-      "subagentModel",
-      "subagentThinkingLevel",
-      "agentDir",
-      "workloadProtection",
-      "workloadMemoryMiB",
-    ],
+    order: ["model", "thinkingLevel", "agentDir", "workloadProtection", "workloadMemoryMiB"],
   },
 ).pipe(
   Schema.annotate({
@@ -1728,7 +1690,6 @@ const PiSettingsPatch = Schema.Struct({
   workloadMemoryMiB: Schema.optionalKey(PiWorkloadMemoryMiB),
   model: Schema.optionalKey(TrimmedString),
   thinkingLevel: Schema.optionalKey(Schema.NullOr(PiThinkingLevel)),
-  subagentThinkingLevel: Schema.optionalKey(Schema.NullOr(PiThinkingLevel)),
   disabledExtensions: Schema.optionalKey(Schema.Array(Schema.String)),
   customModels: Schema.optionalKey(Schema.Array(Schema.String)),
 });
