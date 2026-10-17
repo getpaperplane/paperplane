@@ -215,6 +215,8 @@ interface LiveSessionEntry {
    */
   readonly mcpCredentialIdByThread: ReadonlyMap<ThreadId, string>;
   readonly supportsMultipleProviderThreads: boolean;
+  // Adapter identity ties the runtime to the instance build that owns its resources.
+  readonly adapter: ProviderAdapter.ProviderAdapterV2["Service"];
   readonly runtime: ProviderAdapter.ProviderAdapterV2SessionRuntime;
   readonly exposedRuntime: ProviderAdapter.ProviderAdapterV2SessionRuntime;
   readonly eventSubscribers: Ref.Ref<
@@ -1174,6 +1176,21 @@ export const layerWithOptions = (
             ),
           ),
         );
+
+      const isAdapterCurrent = Effect.fnUntraced(function* (entry: LiveSessionEntry) {
+        const adapter = yield* registry.get(entry.runtime.instanceId).pipe(Effect.option);
+        return Option.isSome(adapter) && adapter.value === entry.adapter;
+      });
+
+      const releaseIfAdapterChanged = Effect.fnUntraced(function* (entry: LiveSessionEntry) {
+        if (yield* isAdapterCurrent(entry)) return false;
+        yield* releaseEntry({
+          providerSessionId: entry.runtime.providerSessionId,
+          reason: "manual_shutdown",
+          detail: `Provider instance ${entry.runtime.instanceId} was reconfigured.`,
+        });
+        return true;
+      });
 
       // Annotated to break the releaseIfStillIdle <-> scheduleIdleReleaseInternal
       // inference cycle introduced by the pin re-arm below.
@@ -2198,7 +2215,7 @@ export const layerWithOptions = (
               }
               const key = sessionKey(input.providerSessionId);
               const existing = (yield* Ref.get(sessions)).get(key);
-              if (existing !== undefined) {
+              if (existing !== undefined && !(yield* releaseIfAdapterChanged(existing))) {
                 const attached = existing.attachedThreadIds.has(input.threadId);
                 if (!attached && !existing.supportsMultipleProviderThreads) {
                   return yield* new ProviderSessionOpenError({
@@ -2312,6 +2329,7 @@ export const layerWithOptions = (
               const exposedRuntime = decorateRuntime(runtime, eventSubscribers);
               const now = yield* Clock.currentTimeMillis;
               const entry: LiveSessionEntry = {
+                adapter,
                 attachedThreadIds: new Set([input.threadId]),
                 loadedProviderThreadKeyByThread: new Map(),
                 mcpCredentialIdByThread:
@@ -2380,7 +2398,7 @@ export const layerWithOptions = (
         get: (providerSessionId) =>
           Effect.gen(function* () {
             const entry = (yield* Ref.get(sessions)).get(sessionKey(providerSessionId));
-            if (entry === undefined) {
+            if (entry === undefined || !(yield* isAdapterCurrent(entry))) {
               return Option.none<ProviderAdapter.ProviderAdapterV2SessionRuntime>();
             }
             yield* touchActivity(providerSessionId);

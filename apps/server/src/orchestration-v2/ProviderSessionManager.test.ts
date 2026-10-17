@@ -498,6 +498,7 @@ function layerTest(input: {
   readonly scopeCloseReached?: Deferred.Deferred<void>;
   readonly serverSettingsLayer?: ReturnType<typeof ServerSettings.layerTest>;
   readonly projectServiceLayer?: Layer.Layer<ProjectService.ProjectService>;
+  readonly adapterRegistryLayer?: Layer.Layer<ProviderAdapterRegistry.ProviderAdapterRegistryV2>;
 }) {
   const layerConfiguredEventSink =
     input.flakyReleaseWrites !== undefined
@@ -509,32 +510,34 @@ function layerTest(input: {
           : input.failReleaseEventWrites
             ? layerFailingReleaseEventSink
             : layerTestEventSink;
-  const layerRegistry = Layer.unwrap(
-    makeProviderAdapter(input.state, {
-      failEventStream: input.failEventStream ?? false,
-      ...(input.capabilities === undefined ? {} : { capabilities: input.capabilities }),
-      ...(input.mcpConfigs === undefined ? {} : { mcpConfigs: input.mcpConfigs }),
-      ...(input.beforeOpen === undefined ? {} : { beforeOpen: input.beforeOpen }),
-      ...(input.hasPendingBackgroundWork === undefined
-        ? {}
-        : { hasPendingBackgroundWork: input.hasPendingBackgroundWork }),
-      ...(input.hasPendingBackgroundWorkForThread === undefined
-        ? {}
-        : { hasPendingBackgroundWorkForThread: input.hasPendingBackgroundWorkForThread }),
-      ...(input.backgroundTasksEndWithProcess === undefined
-        ? {}
-        : { backgroundTasksEndWithProcess: input.backgroundTasksEndWithProcess }),
-      ...(input.hangSessionScopeClose === undefined
-        ? {}
-        : { hangSessionScopeClose: input.hangSessionScopeClose }),
-      ...(input.startTurn === undefined ? {} : { startTurn: input.startTurn }),
-      ...(input.beforeUnload === undefined ? {} : { beforeUnload: input.beforeUnload }),
-      ...(input.spawnBeforeOpen === undefined ? {} : { spawnBeforeOpen: input.spawnBeforeOpen }),
-      ...(input.scopeCloseReached === undefined
-        ? {}
-        : { scopeCloseReached: input.scopeCloseReached }),
-    }).pipe(Effect.map(ProviderAdapterRegistry.layerSingle)),
-  );
+  const layerRegistry =
+    input.adapterRegistryLayer ??
+    Layer.unwrap(
+      makeProviderAdapter(input.state, {
+        failEventStream: input.failEventStream ?? false,
+        ...(input.capabilities === undefined ? {} : { capabilities: input.capabilities }),
+        ...(input.mcpConfigs === undefined ? {} : { mcpConfigs: input.mcpConfigs }),
+        ...(input.beforeOpen === undefined ? {} : { beforeOpen: input.beforeOpen }),
+        ...(input.hasPendingBackgroundWork === undefined
+          ? {}
+          : { hasPendingBackgroundWork: input.hasPendingBackgroundWork }),
+        ...(input.hasPendingBackgroundWorkForThread === undefined
+          ? {}
+          : { hasPendingBackgroundWorkForThread: input.hasPendingBackgroundWorkForThread }),
+        ...(input.backgroundTasksEndWithProcess === undefined
+          ? {}
+          : { backgroundTasksEndWithProcess: input.backgroundTasksEndWithProcess }),
+        ...(input.hangSessionScopeClose === undefined
+          ? {}
+          : { hangSessionScopeClose: input.hangSessionScopeClose }),
+        ...(input.startTurn === undefined ? {} : { startTurn: input.startTurn }),
+        ...(input.beforeUnload === undefined ? {} : { beforeUnload: input.beforeUnload }),
+        ...(input.spawnBeforeOpen === undefined ? {} : { spawnBeforeOpen: input.spawnBeforeOpen }),
+        ...(input.scopeCloseReached === undefined
+          ? {}
+          : { scopeCloseReached: input.scopeCloseReached }),
+      }).pipe(Effect.map(ProviderAdapterRegistry.layerSingle)),
+    );
   const layerConfiguredMcpRegistry =
     input.pauseResolve === undefined
       ? layerTestMcpRegistry
@@ -831,6 +834,119 @@ function makePendingRuntimeRequestEvents(input: {
     ] satisfies ReadonlyArray<ProviderAdapter.ProviderAdapterV2Event>;
     return { events, providerEvents, requestId, nodeId };
   });
+}
+
+for (const scenario of [
+  { change: "rebuilt", operation: "open" },
+  { change: "rebuilt", operation: "get" },
+  { change: "unchanged", operation: "open" },
+  { change: "removed", operation: "get" },
+  { change: "removed", operation: "open" },
+] as const) {
+  it.effect(
+    `ProviderSessionManagerV2 ${scenario.operation} handles a ${scenario.change} adapter`,
+    () =>
+      Effect.gen(function* () {
+        const stateA = yield* Ref.make(emptyState);
+        const stateB = yield* Ref.make(emptyState);
+        const [adapterA, adapterB] = yield* Effect.all([
+          makeProviderAdapter(stateA),
+          makeProviderAdapter(stateB),
+        ]).pipe(Effect.provide(McpProviderSessions.layer));
+        const currentAdapter = yield* Ref.make<
+          ProviderAdapter.ProviderAdapterV2["Service"] | undefined
+        >(adapterA);
+        const adapterRegistryLayer = Layer.succeed(
+          ProviderAdapterRegistry.ProviderAdapterRegistryV2,
+          ProviderAdapterRegistry.ProviderAdapterRegistryV2.of({
+            get: (instanceId) =>
+              Ref.get(currentAdapter).pipe(
+                Effect.flatMap((adapter) =>
+                  adapter === undefined
+                    ? Effect.fail(
+                        new ProviderAdapterRegistry.ProviderAdapterRegistryLookupError({
+                          instanceId,
+                        }),
+                      )
+                    : Effect.succeed(adapter),
+                ),
+              ),
+            list: () => Effect.succeed([modelSelection.instanceId]),
+          }),
+        );
+
+        yield* Effect.gen(function* () {
+          const eventSink = yield* EventSink.EventSinkV2;
+          const eventStore = yield* EventStore.EventStoreV2;
+          const idAllocator = yield* IdAllocator.IdAllocatorV2;
+          const manager = yield* ProviderSessionManager.ProviderSessionManagerV2;
+          const now = yield* DateTime.now;
+          const threadId = ThreadId.make("thread-provider-session-manager-reconfigured");
+          const providerSessionId = yield* idAllocator.allocate.providerSession({
+            providerInstanceId: modelSelection.instanceId,
+            threadId,
+          });
+          yield* eventSink.write({
+            events: [yield* makeThreadCreatedEvent({ idAllocator, threadId, now })],
+          });
+          const input = { threadId, providerSessionId, modelSelection, runtimePolicy };
+          const original = yield* manager.open(input);
+          yield* Ref.set(
+            currentAdapter,
+            scenario.change === "removed"
+              ? undefined
+              : scenario.change === "rebuilt"
+                ? adapterB
+                : adapterA,
+          );
+
+          if (scenario.operation === "get") {
+            assert.isTrue(Option.isNone(yield* manager.get(providerSessionId)));
+            assert.isTrue(yield* manager.isLive(providerSessionId));
+            assert.equal((yield* Ref.get(stateA)).closeCount, 0);
+            const events = yield* eventStore.read({ threadId }).pipe(Stream.runCollect);
+            assert.isFalse(
+              events.some(
+                ({ event }) =>
+                  event.type === "provider-session.updated" && event.payload.status === "stopped",
+              ),
+            );
+          }
+
+          if (scenario.change === "removed") {
+            const error = yield* manager.open(input).pipe(Effect.flip);
+            assert.instanceOf(error, ProviderSessionManager.ProviderSessionOpenError);
+            assert.isFalse(yield* manager.isLive(providerSessionId));
+          } else {
+            const reopened = yield* manager.open(input);
+            if (scenario.change === "unchanged") {
+              assert.strictEqual(reopened, original);
+            } else {
+              assert.notStrictEqual(reopened, original);
+              assert.strictEqual(
+                Option.getOrThrow(yield* manager.get(providerSessionId)),
+                reopened,
+              );
+            }
+          }
+
+          assert.equal((yield* Ref.get(stateA)).openCount, 1);
+          assert.equal(
+            (yield* Ref.get(stateA)).closeCount,
+            scenario.change === "unchanged" ? 0 : 1,
+          );
+          assert.equal((yield* Ref.get(stateB)).openCount, scenario.change === "rebuilt" ? 1 : 0);
+          const events = yield* eventStore.read({ threadId }).pipe(Stream.runCollect);
+          const releases = events.filter(
+            ({ event }) =>
+              event.type === "provider-session.updated" && event.payload.status === "stopped",
+          );
+          assert.lengthOf(releases, scenario.change === "unchanged" ? 0 : 1);
+        }).pipe(
+          Effect.provide(layerTest({ state: stateA, idleTimeoutMs: 60_000, adapterRegistryLayer })),
+        );
+      }),
+  );
 }
 
 it.effect("ProviderSessionManagerV2 opens independent sessions concurrently", () =>
