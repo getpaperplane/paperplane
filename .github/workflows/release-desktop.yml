@@ -228,10 +228,11 @@ jobs:
           cache: false
           run-install: false
 
-      # Previous Windows caches cost more to restore than they saved (linking
-      # dominated install). Keep the store on the workspace filesystem so pnpm
-      # can hard-link instead of copying from C: onto the ARM Dev Drive. Use a
-      # separate key namespace to benchmark this layout against that baseline.
+      # Windows installs without a package cache: linking, not downloading, is
+      # the cost there. Measured on this branch, a warm windows-11-arm restore
+      # took 146s plus a 90s install, against a 170s cold install; earlier
+      # nightlies showed the same on both Windows images. The store still lives
+      # on the workspace drive so pnpm hard-links onto the ARM Dev Drive.
       - name: Put Windows pnpm store on the workspace drive
         if: inputs.platform == 'win'
         shell: pwsh
@@ -241,24 +242,24 @@ jobs:
       # In this Vite+ version `vp pm cache dir` resolves the pnpm content store,
       # including its version suffix; `vp pm store path` is not supported.
       - name: Locate Vite+ dependency cache
+        if: inputs.platform != 'win'
         id: vp_cache
         shell: bash
         run: |
           echo "path=$(vp pm cache dir)" >> "$GITHUB_OUTPUT"
           echo "arch=$(node -p 'process.arch')" >> "$GITHUB_OUTPUT"
 
-      # actions/cache saves only on an exact-key miss, including prefix hits.
-      # macOS has no CI writer, so restore-only would leave every new lockfile
-      # permanently falling back to an old cache. Windows desktop/CLI jobs share
-      # the same install filters and key; at most one wins a concurrent save.
+      # actions/cache saves only on an exact-key miss. macOS has no CI writer, so
+      # restore-only would leave every new lockfile falling back to a stale cache.
       - name: Cache Vite+ dependencies
+        if: inputs.platform != 'win'
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
         with:
           path: ${{ steps.vp_cache.outputs.path }}
-          key: ${{ inputs.platform == 'win' && 'windows-release-store-v2' || 'vite-plus' }}-${{ runner.os }}-${{ steps.vp_cache.outputs.arch }}-pnpm-${{ hashFiles('pnpm-lock.yaml') }}
+          key: vite-plus-${{ runner.os }}-${{ steps.vp_cache.outputs.arch }}-pnpm-${{ hashFiles('pnpm-lock.yaml') }}
           restore-keys: |
-            ${{ inputs.platform == 'win' && 'windows-release-store-v2' || 'vite-plus' }}-${{ runner.os }}-${{ steps.vp_cache.outputs.arch }}-pnpm-
-            ${{ inputs.platform == 'win' && 'windows-release-store-v2' || 'vite-plus' }}-${{ runner.os }}-${{ steps.vp_cache.outputs.arch }}-
+            vite-plus-${{ runner.os }}-${{ steps.vp_cache.outputs.arch }}-pnpm-
+            vite-plus-${{ runner.os }}-${{ steps.vp_cache.outputs.arch }}-
 
       # pnpm checks the lockfile and policy before reusing this result. A missing
       # artifact leaves the cache empty, so installation runs the checks again.
