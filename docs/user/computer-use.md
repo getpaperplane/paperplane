@@ -47,12 +47,14 @@ then **Prepare VM**. The first download is large: the Tahoe image has a roughly
 150 GB sparse disk. Review free space, allocated storage, virtual disk size and
 configured memory before using it. Lume and Cua Driver are MIT-licensed.
 
-Preparation opens the golden VM in a display. Run the setup commands shown in
-Settings **in Terminal inside that VM**, not on your host. They authorize Rove's
-public SSH key, install Cua Driver and request consent. Allow Accessibility,
-Screen Recording, control of System Events and direct screen capture. Rerun the
+Rove automatically authorizes its public SSH key, installs Cua Driver and requests
+permissions in the golden VM. Select **Open VM**, approve the Accessibility,
+Screen Recording, System Events and direct screen capture prompts, then select
+**Verify**. If setup did not complete or prompts are missing, expand **Manual setup**
+and copy its command into **Terminal inside the VM**, not on your host. Rerun its
 app-list and screen-capture commands until they complete without prompts, then
-select **Verify VM**. Rove checks the app-owned daemon's grants over key-only SSH
+verify again. Clipboard sharing is enabled during preparation so you can paste
+this fallback command. Rove checks the app-owned daemon's grants over key-only SSH
 and stops the golden image. Never put personal files, tokens or private keys in
 this image; each working desktop starts as a copy of it.
 

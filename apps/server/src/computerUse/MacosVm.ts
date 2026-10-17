@@ -83,7 +83,7 @@ export class MacosVmError extends Schema.TaggedError<MacosVmError>()("MacosVmErr
       case "ownership":
         return "Another Rove server owns these VMs, or ownership cannot be verified. Nothing was removed.";
       case "consent":
-        return "The VM needs consent. Run the setup commands inside its display, then verify again. The driver daemon must report Accessibility and Screen Recording grants.";
+        return "The VM needs consent. Open the VM, approve the permission prompts, then verify again. If setup did not complete or prompts are missing, use Manual setup in the VM's Terminal. The driver daemon must report Accessibility and Screen Recording grants.";
       case "capacity":
         return "The private macOS VM slot is occupied. Use close_desktop in the finished thread or Release desktop in Settings. Rove never evicts work or falls back to the host.";
       case "not-ready":
@@ -302,14 +302,21 @@ export const make = Effect.fn("MacosVm.make")(function* (options?: { readonly ar
       orElse: () => Effect.fail(new MacosVmError({ reason: "runtime" })),
     }),
   );
-  const setupCommand = Effect.gen(function* () {
+  const setupScript = Effect.gen(function* () {
     const publicKey = (yield* fs.readFileString(`${keyPath}.pub`)).trim();
     if (!/^ssh-ed25519 [A-Za-z0-9+/=]+(?: [^\r\n']*)?$/.test(publicKey))
       return yield* new MacosVmError({ reason: "runtime" });
     return (
-      `umask 077; mkdir -p ~/.ssh; printf '%s\\n' '${publicKey}' >> ~/.ssh/authorized_keys; chmod 600 ~/.ssh/authorized_keys\n` +
-      '/bin/bash -c "$(curl -fsSL https://cua.ai/driver/install.sh)"\n' +
-      `${DRIVER} telemetry disable\n${DRIVER} permissions grant\n${DRIVER} list_apps '{}'\n${DRIVER} call get_desktop_state '{}' > /tmp/desktop.json\n` +
+      `umask 077 && mkdir -p ~/.ssh && touch ~/.ssh/authorized_keys &&\n` +
+      `(grep -qxF '${publicKey}' ~/.ssh/authorized_keys || printf '%s\\n' '${publicKey}' >> ~/.ssh/authorized_keys) &&\n` +
+      `chmod 600 ~/.ssh/authorized_keys &&\n` +
+      '/bin/bash -c "$(curl -fsSL https://cua.ai/driver/install.sh)" &&\n' +
+      `${DRIVER} telemetry disable &&\n${DRIVER} permissions grant`
+    );
+  }).pipe(Effect.mapError(wrap));
+  const setupCommand = Effect.gen(function* () {
+    return (
+      `${yield* setupScript}\n${DRIVER} list_apps '{}'\n${DRIVER} call get_desktop_state '{}' > /tmp/desktop.json\n` +
       `# Approve all prompts, then rerun list_apps and get_desktop_state until no prompts appear.\n${DRIVER} permissions status --json`
     );
   }).pipe(Effect.mapError(wrap));
@@ -417,7 +424,7 @@ export const make = Effect.fn("MacosVm.make")(function* (options?: { readonly ar
     preparing = true;
     yield* saveOwner;
     yield* stop(GOLDEN);
-    // Native Lume display enables shared clipboard automatically; VNC does not.
+    // VNC needs explicit SSH clipboard sync for the manual setup fallback.
     yield* lume([
       "run",
       GOLDEN,
@@ -426,9 +433,25 @@ export const make = Effect.fn("MacosVm.make")(function* (options?: { readonly ar
       "--detach",
       "--display",
       "vnc",
+      "--clipboard",
       "--network",
       "nat",
     ]);
+    yield* Effect.gen(function* () {
+      yield* address(GOLDEN);
+      // Lume 0.6.1 joins command argv with spaces. Pass one shell script unchanged;
+      // the validated public key is single-quoted inside it, not interpolated by the host.
+      yield* lume(
+        ["ssh", GOLDEN, "--storage", storage, "--timeout", "600", yield* setupScript],
+        "10 minutes",
+      );
+    }).pipe(
+      Effect.catch(() =>
+        Effect.logWarning(
+          "Automatic macOS VM setup did not complete. Use Manual setup in the VM's Terminal, then verify permissions.",
+        ),
+      ),
+    );
   }).pipe(Effect.mapError(wrap));
   const verify = Effect.gen(function* () {
     yield* claim;

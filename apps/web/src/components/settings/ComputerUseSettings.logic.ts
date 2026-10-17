@@ -135,7 +135,7 @@ export function describeVm(vm: ComputerUseMacosVm): string {
       return `Download Cua's macOS image (about ${Math.round(vm.requiredDiskBytes / 1e9)} GB on disk${free}) and open it so you can approve permissions.`;
     }
     case "needs-consent":
-      return "Open the VM, run the setup command in its Terminal, approve the permission prompts, then select Verify.";
+      return "Rove installs the driver automatically. Open the VM, approve the permission prompts, then select Verify. If setup did not complete or prompts are missing, use Manual setup in the VM's Terminal.";
     case "ready": {
       const owners = vm.owners.length === 0 ? "" : ` by ${vm.owners.join(", ")}`;
       const disk =
