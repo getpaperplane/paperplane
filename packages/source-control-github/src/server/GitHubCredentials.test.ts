@@ -100,14 +100,12 @@ describe("GitHubCredentials", () => {
     return Effect.gen(function* () {
       const credentials = yield* GitHubCredentials.GitHubCredentials;
       const read = (login: string, host = "github.com") =>
-        credentials
-          .get(host)
-          .pipe(
-            Effect.provideService(GitHubCredentials.SelectedGitHubAccount, {
-              host: "github.com",
-              login,
-            }),
-          );
+        credentials.get(host).pipe(
+          Effect.provideService(GitHubCredentials.SelectedGitHubAccount, {
+            host: "github.com",
+            login,
+          }),
+        );
       const work = yield* read("work");
       const other = yield* read("other");
       expect(Redacted.value(work.token)).toBe("token-for-work");
@@ -116,14 +114,12 @@ describe("GitHubCredentials", () => {
       yield* read("work");
       expect(calls).toHaveLength(2);
       expect(Redacted.value((yield* read("work", "enterprise.test")).token)).toBe("active-token");
-      yield* credentials
-        .invalidate("github.com")
-        .pipe(
-          Effect.provideService(GitHubCredentials.SelectedGitHubAccount, {
-            host: "github.com",
-            login: "work",
-          }),
-        );
+      yield* credentials.invalidate("github.com").pipe(
+        Effect.provideService(GitHubCredentials.SelectedGitHubAccount, {
+          host: "github.com",
+          login: "work",
+        }),
+      );
       yield* read("work");
       expect(calls).toHaveLength(4);
     }).pipe(Effect.provide(layer));
@@ -134,14 +130,12 @@ describe("GitHubCredentials", () => {
     return Effect.gen(function* () {
       const credentials = yield* GitHubCredentials.GitHubCredentials;
       const error = yield* Effect.flip(
-        credentials
-          .get("github.com")
-          .pipe(
-            Effect.provideService(GitHubCredentials.SelectedGitHubAccount, {
-              host: "github.com",
-              login: "gone",
-            }),
-          ),
+        credentials.get("github.com").pipe(
+          Effect.provideService(GitHubCredentials.SelectedGitHubAccount, {
+            host: "github.com",
+            login: "gone",
+          }),
+        ),
       );
       expect(error._tag).toBe("GitHubNotSignedInError");
       expect(calls).toEqual([["auth", "token", "--hostname", "github.com", "--user", "gone"]]);
@@ -220,14 +214,12 @@ describe("GitHubCredentials", () => {
       const { layer } = harness();
       return Effect.gen(function* () {
         const credentials = yield* GitHubCredentials.GitHubCredentials;
-        const credential = yield* credentials
-          .get("github.com")
-          .pipe(
-            Effect.provideService(GitHubCredentials.SelectedGitHubAccount, {
-              host: "github.com",
-              login: "work",
-            }),
-          );
+        const credential = yield* credentials.get("github.com").pipe(
+          Effect.provideService(GitHubCredentials.SelectedGitHubAccount, {
+            host: "github.com",
+            login: "work",
+          }),
+        );
         expect(Redacted.value(credential.token)).toBe("token-for-work");
       }).pipe(Effect.provide(layer));
     },
@@ -238,14 +230,12 @@ describe("GitHubCredentials", () => {
     const { layer, calls } = harness({}, [], { "github.com": "saved-token" });
     return Effect.gen(function* () {
       const credentials = yield* GitHubCredentials.GitHubCredentials;
-      const credential = yield* credentials
-        .get("github.com")
-        .pipe(
-          Effect.provideService(GitHubCredentials.SelectedGitHubAccount, {
-            host: "github.com",
-            login: "project",
-          }),
-        );
+      const credential = yield* credentials.get("github.com").pipe(
+        Effect.provideService(GitHubCredentials.SelectedGitHubAccount, {
+          host: "github.com",
+          login: "project",
+        }),
+      );
       expect(Redacted.value(credential.token)).toBe("saved-token");
       expect(credential.source).toBe("settings");
       expect(calls).toEqual([]);
