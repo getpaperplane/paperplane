@@ -1,15 +1,41 @@
 name: Setup CI dependencies
-description: Install Vite+ and the workspace dependencies from cache.
+description: Restore installed workspace dependencies, falling back to a cached pnpm install.
 runs:
   using: composite
   steps:
     # setup-vp reuses an installed exact version, so restoring its home skips the
     # installer download on every job.
-    - name: Resolve Vite+ version
+    - name: Resolve dependency cache versions
       id: vp
       shell: bash
       run: |
         echo "version=$(sed -nE 's/^  vite-plus: ([0-9][^ ]*)$/\1/p' pnpm-workspace.yaml)" >> "$GITHUB_OUTPUT"
+        # Match setup-vp's package.json node-version-file precedence.
+        node --input-type=commonjs <<'NODE' >> "$GITHUB_OUTPUT"
+        const fs = require('node:fs');
+        const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+        const runtime = [pkg.devEngines?.runtime].flat().find(entry => entry?.name === 'node' && typeof entry.version === 'string');
+        const version = runtime?.version ?? pkg.engines?.node;
+        if (!version) throw new Error('No Node.js version found in package.json');
+        console.log(`node=${version.replace(/^v/i, '')}`);
+        NODE
+
+    # No restore-keys: an installed tree is reusable only for identical inputs.
+    # Include local file: dependencies as well as manifests, patches, and config.
+    - name: Restore installed dependencies
+      id: modules
+      uses: actions/cache/restore@v6
+      with:
+        key: ci-node-modules-v1-${{ runner.os }}-${{ runner.arch }}-${{ steps.vp.outputs.node }}-${{ steps.vp.outputs.version }}-${{ hashFiles('pnpm-lock.yaml', 'pnpm-workspace.yaml', '**/package.json', 'patches/**', '**/.npmrc', '**/.pnpmfile.*', '**/*.tgz', 'apps/mobile/modules/rove-review-diff/**', 'apps/mobile/modules/rove-source-text/**', 'apps/mobile/modules/rove-terminal/**', '.github/actions/setup-ci-deps/action.yml', '!**/node_modules/**', '!.repos/**') }}
+        # Workspace globs from pnpm-workspace.yaml; don't cache .repos or
+        # unrelated nested node_modules. The isolated .pnpm tree is self-contained.
+        path: |
+          node_modules
+          apps/*/node_modules
+          infra/*/node_modules
+          oxlint-plugin-rove/node_modules
+          packages/*/node_modules
+          scripts/node_modules
 
     - name: Cache Vite+
       if: steps.vp.outputs.version != ''
@@ -18,13 +44,28 @@ runs:
         path: ~/.vite-plus
         key: vite-plus-home-v1-${{ runner.os }}-${{ runner.arch }}-${{ steps.vp.outputs.version }}
 
-    # The pnpm store stays a cache tarball on the runner's own disk. A store on a
-    # Blacksmith sticky disk mounts in under a second, but pnpm then copies every
-    # package across filesystems instead of hard-linking it: install took 28-49s
-    # against 9s plus an 11s restore.
+    # Exact hits already passed supply-chain verification for this lockfile in
+    # the non-PR install that produced the cache. prepare's effect-tsgo patch and
+    # dependency postinstalls are baked in; vp config only sets up git hooks.
+    # On misses, keep the pnpm store restore + normal install path.
     - name: Setup Vite+
       uses: voidzero-dev/setup-vp@v1
       with:
         node-version-file: package.json
-        cache: true
-        run-install: true
+        cache: ${{ steps.modules.outputs.cache-hit != 'true' }}
+        run-install: ${{ steps.modules.outputs.cache-hit != 'true' }}
+
+    # Save immediately after install, before builds/tests can mutate node_modules.
+    # PRs may consume main's cache but must not churn the repository cache quota.
+    - name: Save installed dependencies
+      if: steps.modules.outputs.cache-hit != 'true' && github.event_name != 'pull_request'
+      uses: actions/cache/save@v6
+      with:
+        key: ${{ steps.modules.outputs.cache-primary-key }}
+        path: |
+          node_modules
+          apps/*/node_modules
+          infra/*/node_modules
+          oxlint-plugin-rove/node_modules
+          packages/*/node_modules
+          scripts/node_modules
