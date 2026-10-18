@@ -10,6 +10,8 @@ import {
 import { describe, expect, it } from "vite-plus/test";
 import * as DateTime from "effect/DateTime";
 import * as Schema from "effect/Schema";
+import * as Effect from "effect/Effect";
+import * as Stream from "effect/Stream";
 import { boundedSnapshotProjection } from "@rove-code/shared/orchestrationV2BoundedSnapshot";
 
 import {
@@ -17,11 +19,67 @@ import {
   decideThreadResume,
   isThreadReplayRawPayloadSafe,
   threadReplayEncodedBytes,
+  projectThreadLiveTextStream,
   THREAD_RESUME_MAX_RAW_PAYLOAD_BYTES,
   THREAD_RESUME_MAX_REPLAY_ENCODED_BYTES,
   THREAD_RESUME_MAX_REPLAY_EVENTS,
 } from "./ThreadStream.ts";
 import { projectDomainEventForWire } from "./WireProjection.ts";
+import { coalesceThreadLiveStream } from "./ThreadLiveEventCoalescer.ts";
+
+it("resets live text baselines on reconnect and leaves replay full", async () => {
+  const item = {
+    id: TurnItemId.make("reasoning-stream"),
+    threadId: THREAD_ID,
+    runId: null,
+    nodeId: null,
+    providerThreadId: null,
+    providerTurnId: null,
+    nativeItemRef: null,
+    parentItemId: null,
+    ordinal: 1,
+    title: null,
+    startedAt: NOW,
+    completedAt: null,
+    updatedAt: NOW,
+    type: "reasoning" as const,
+    status: "running" as const,
+    streaming: true,
+    text: "Hi",
+  };
+  const first = {
+    kind: "event" as const,
+    sequence: 1,
+    event: {
+      id: EventId.make("text-stream"),
+      type: "turn-item.updated" as const,
+      threadId: THREAD_ID,
+      occurredAt: NOW,
+      payload: item,
+    },
+  };
+  const next = {
+    ...first,
+    sequence: 2,
+    event: { ...first.event, payload: { ...item, text: "Hi!" } },
+  };
+  const live = projectThreadLiveTextStream(
+    Stream.make(first, next).pipe(coalesceThreadLiveStream),
+    true,
+  );
+  for (let reconnect = 0; reconnect < 2; reconnect++) {
+    const output = await Effect.runPromise(live.pipe(Stream.runCollect));
+    expect(output.map((item) => item.kind)).toEqual(["event", "text-append"]);
+    expect(output[0]).toBe(first);
+  }
+  const catchUpThenLive = Stream.concat(Stream.make(first, next), live);
+  const output = await Effect.runPromise(catchUpThenLive.pipe(Stream.runCollect));
+  expect(output.map((item) => item.kind)).toEqual(["event", "event", "event", "text-append"]);
+  const legacy = await Effect.runPromise(
+    projectThreadLiveTextStream(Stream.make(first, next), false).pipe(Stream.runCollect),
+  );
+  expect(legacy).toEqual([first, next]);
+});
 
 const NOW = DateTime.makeUnsafe("2026-09-08T00:00:00.000Z");
 const THREAD_ID = ThreadId.make("thread-stream-test");

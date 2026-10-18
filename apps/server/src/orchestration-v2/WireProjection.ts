@@ -1,7 +1,9 @@
+import { isDeepStrictEqual } from "node:util";
 import type {
   OrchestrationV2DomainEvent,
   OrchestrationV2ContextHandoff,
   OrchestrationV2ThreadProjection,
+  OrchestrationV2ThreadStreamItem,
   OrchestrationV2TurnItem,
 } from "@rove-code/contracts";
 import {
@@ -247,6 +249,81 @@ export function projectThreadProjectionForWire(
       ...row,
       item: project(row.item),
     })),
+  };
+}
+
+type LiveEvent = Extract<OrchestrationV2ThreadStreamItem, { kind: "event" }>;
+type StreamingTextEvent = Extract<
+  OrchestrationV2DomainEvent,
+  { type: "message.updated" | "turn-item.updated" }
+>;
+
+/**
+ * One projector per live subscription, AFTER coalescing and never on replay.
+ * Only updatedAt may differ besides text; any other change gets a full event.
+ * Bound retained baselines independently of the live queue's payload budget.
+ */
+export function makeThreadLiveTextProjector(acceptTextAppends: boolean) {
+  const previous = new Map<string, StreamingTextEvent["payload"]>();
+  const maxCodeUnits = 1_048_576;
+  let retainedCodeUnits = 0;
+  const forget = (key: string) => {
+    const value = previous.get(key);
+    if (value !== undefined && "text" in value) retainedCodeUnits -= value.text.length;
+    previous.delete(key);
+  };
+  return (item: LiveEvent): OrchestrationV2ThreadStreamItem => {
+    if (!acceptTextAppends) return item;
+    const event = item.event;
+    if (event.type !== "message.updated" && event.type !== "turn-item.updated") return item;
+    const payload = event.payload;
+    const key = `${event.threadId}:${event.type}:${payload.id}`;
+    const baseline = previous.get(key);
+    forget(key);
+    if (
+      !("text" in payload) ||
+      !("streaming" in payload) ||
+      !payload.streaming ||
+      ("role" in payload
+        ? payload.role !== "assistant"
+        : (payload.type !== "assistant_message" && payload.type !== "reasoning") ||
+          payload.status !== "running") ||
+      payload.text.length > maxCodeUnits
+    )
+      return item;
+
+    while (previous.size >= 128 || retainedCodeUnits + payload.text.length > maxCodeUnits) {
+      const oldest = previous.keys().next().value;
+      if (oldest === undefined) break;
+      forget(oldest);
+    }
+    previous.set(key, payload);
+    retainedCodeUnits += payload.text.length;
+    if (
+      baseline === undefined ||
+      !("text" in baseline) ||
+      payload.text.length <= baseline.text.length ||
+      !payload.text.startsWith(baseline.text)
+    )
+      return item;
+
+    // Compare metadata only: never stringify or deep-compare the growing text.
+    const { text: _oldText, updatedAt: _oldUpdatedAt, ...oldFields } = baseline;
+    const { text: _text, updatedAt: _updatedAt, ...fields } = payload;
+    if (!isDeepStrictEqual(oldFields, fields)) return item;
+    return {
+      kind: "text-append",
+      sequence: item.sequence,
+      threadId: event.threadId,
+      entity:
+        event.type === "message.updated"
+          ? { type: "message", id: event.payload.id }
+          : { type: "turn-item", id: event.payload.id },
+      offset: baseline.text.length,
+      append: payload.text.slice(baseline.text.length),
+      updatedAt: payload.updatedAt,
+      occurredAt: event.occurredAt,
+    };
   };
 }
 

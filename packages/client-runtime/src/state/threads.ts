@@ -31,7 +31,10 @@ import { runCachePersistence } from "./cachePersistence.ts";
 import * as ManagedRelay from "../relay/managedRelay.ts";
 import { subscribeDynamic } from "../rpc/client.ts";
 import { parseThreadKey, threadKey } from "./entities.ts";
-import { applyOrchestrationV2ProjectionEvent } from "./orchestrationV2Projection.ts";
+import {
+  applyOrchestrationV2ProjectionEvent,
+  applyOrchestrationV2TextAppend,
+} from "./orchestrationV2Projection.ts";
 import { THREAD_SNAPSHOT_IDLE_TTL_MS } from "./threadRetention.ts";
 import { followStreamInEnvironment } from "./runtime.ts";
 import * as ThreadHistoryController from "./threadHistoryController.ts";
@@ -235,6 +238,10 @@ export const makeEnvironmentThreadState = Effect.fn("EnvironmentThreadState.make
   if (resumeCache?.owner === owner) resumeCache.snapshot = committed;
   const awaitingCompletion = yield* Ref.make(false);
   const applyLock = yield* Semaphore.make(1);
+  const resyncRequests = yield* Queue.sliding<void>(1);
+  const needsSnapshot = yield* Ref.make(false);
+  // On a baseline mismatch, prefer compatible full events for this scope.
+  const acceptTextAppends = yield* Ref.make(true);
   // Save only completed data/cursor updates. A canceled scope must not cache
   // a cursor whose event has not reached the data yet.
   const remember = Effect.gen(function* () {
@@ -445,6 +452,7 @@ export const makeEnvironmentThreadState = Effect.fn("EnvironmentThreadState.make
   const applyEventsLocked = Effect.fn("EnvironmentThreadState.applyEventsLocked")(function* (
     items: ReadonlyArray<SequencedItem>,
   ) {
+    if (yield* Ref.get(needsSnapshot)) return;
     const appliedSequence = yield* SubscriptionRef.get(lastSequence);
     let sequence = appliedSequence;
     const fresh: EventItem[] = [];
@@ -572,6 +580,28 @@ export const makeEnvironmentThreadState = Effect.fn("EnvironmentThreadState.make
   const applyItemLocked = Effect.fn("EnvironmentThreadState.applyItemLocked")(function* (
     item: OrchestrationV2ThreadStreamItem,
   ) {
+    // Discard buffered values from the failed baseline until an authoritative
+    // snapshot arrives. Never advance the cursor beyond an unapplied append.
+    if (item.kind !== "snapshot" && (yield* Ref.get(needsSnapshot))) return;
+    if (item.kind === "text-append") {
+      if (item.sequence <= (yield* SubscriptionRef.get(lastSequence))) return;
+      const current = yield* SubscriptionRef.get(state);
+      if (current.status === "deleted") return;
+      const next = applyOrchestrationV2TextAppend(Option.getOrNull(current.data), item);
+      if (next === null) {
+        yield* Ref.set(needsSnapshot, true);
+        yield* Ref.set(acceptTextAppends, false);
+        yield* SubscriptionRef.update(state, (value) => ({
+          ...value,
+          status: "synchronizing" as const,
+        }));
+        yield* Queue.offer(resyncRequests, undefined);
+        return;
+      }
+      yield* SubscriptionRef.set(lastSequence, item.sequence);
+      yield* setThread(next);
+      return;
+    }
     if (item.kind === "synchronized") {
       yield* Ref.set(awaitingCompletion, false);
       yield* SubscriptionRef.update(state, (current) =>
@@ -583,6 +613,7 @@ export const makeEnvironmentThreadState = Effect.fn("EnvironmentThreadState.make
     }
 
     if (item.kind === "snapshot") {
+      yield* Ref.set(needsSnapshot, false);
       yield* SubscriptionRef.set(lastSequence, item.snapshotSequence);
       const hasProgressiveHistory =
         item.historyCursor !== undefined ||
@@ -884,9 +915,11 @@ export const makeEnvironmentThreadState = Effect.fn("EnvironmentThreadState.make
           }));
         }
 
+        const forceSnapshot = yield* Ref.get(needsSnapshot);
         return {
           threadId,
-          ...(canResume ? { afterSequence: sequence } : {}),
+          acceptTextAppends: yield* Ref.get(acceptTextAppends),
+          ...(canResume && !forceSnapshot ? { afterSequence: sequence } : {}),
           ...(supportsCompletionMarker ? { requestCompletionMarker: true as const } : {}),
           ...(acceptBoundedSnapshot
             ? { acceptBoundedSnapshot: true as const, acceptCompactTurnItems: true as const }
@@ -897,7 +930,7 @@ export const makeEnvironmentThreadState = Effect.fn("EnvironmentThreadState.make
         onDefect: () => setStreamError("Could not synchronize the thread."),
         onExpectedFailure: (cause) => setStreamError(formatThreadError(cause)),
         retryExpectedFailureAfter: "250 millis",
-        resubscribe: foregroundResubscriptions,
+        resubscribe: Stream.merge(foregroundResubscriptions, Stream.fromQueue(resyncRequests)),
       },
     ).pipe(Stream.runForEachArray(applyItems)),
   );

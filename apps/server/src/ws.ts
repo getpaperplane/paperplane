@@ -148,6 +148,7 @@ import {
   buildBoundedThreadStreamSnapshot,
   decideThreadResume,
   isThreadReplayRawPayloadSafe,
+  projectThreadLiveTextStream,
   threadReplayEncodedBytes,
   THREAD_RESUME_MAX_REPLAY_EVENTS,
 } from "./orchestration-v2/ThreadStream.ts";
@@ -818,6 +819,7 @@ export const subscribeOrchestrationV2Thread = Effect.fn("ws.orchestrationV2.subs
     readonly requestCompletionMarker?: boolean;
     readonly acceptBoundedSnapshot?: boolean;
     readonly acceptCompactTurnItems?: boolean;
+    readonly acceptTextAppends?: boolean;
   }) {
     const threadManagement = yield* ThreadManagementService.ThreadManagementService;
     const applicationEvents = yield* OrchestrationEventStore.OrchestrationEventStore;
@@ -849,6 +851,7 @@ export const subscribeOrchestrationV2Thread = Effect.fn("ws.orchestrationV2.subs
             event: projectDomainEventForWire(stored.event),
           })),
           coalesceThreadLiveStream,
+          (source) => projectThreadLiveTextStream(source, input.acceptTextAppends === true),
           Stream.mapError(
             (cause) =>
               new OrchestrationV2GetThreadProjectionError({

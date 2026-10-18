@@ -3424,6 +3424,8 @@ export const OrchestrationV2SubscribeThreadInput = Schema.Struct({
    * that repeat local visible rows. See `turnItemsOmitLocalVisible`.
    */
   acceptCompactTurnItems: Schema.optionalKey(Schema.Boolean),
+  /** Allows live-only text appends. Replay and terminal updates remain full events. */
+  acceptTextAppends: Schema.optionalKey(Schema.Boolean),
 });
 export type OrchestrationV2SubscribeThreadInput = typeof OrchestrationV2SubscribeThreadInput.Type;
 
@@ -3538,7 +3540,24 @@ const OrchestrationV2UnknownThreadStreamEvent = Schema.Struct({
   ),
 );
 
+/** Offsets count JavaScript UTF-16 code units, not UTF-8 bytes. Never persisted. */
+export const OrchestrationV2TextAppend = Schema.Struct({
+  kind: Schema.Literal("text-append"),
+  sequence: NonNegativeInt,
+  threadId: ThreadId,
+  entity: Schema.Union([
+    Schema.Struct({ type: Schema.Literal("message"), id: MessageId }),
+    Schema.Struct({ type: Schema.Literal("turn-item"), id: TurnItemId }),
+  ]),
+  offset: NonNegativeInt,
+  append: Schema.String,
+  updatedAt: Schema.DateTimeUtc,
+  occurredAt: Schema.DateTimeUtc,
+});
+export type OrchestrationV2TextAppend = typeof OrchestrationV2TextAppend.Type;
+
 export const OrchestrationV2ThreadStreamItem = Schema.Union([
+  OrchestrationV2TextAppend,
   Schema.Struct({
     kind: Schema.Literal("synchronized"),
   }),

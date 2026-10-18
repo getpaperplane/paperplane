@@ -41,6 +41,8 @@ The v2 checks pin these invariants:
   ingestion, which keeps one bounded tail per running command and throttles each subscriber. Do not
   route output deltas through `turn_item.updated`: a busy command would flood the event store and
   block ingestion for every other thread.
+- Opted-in live thread streams send append-sized assistant/reasoning text updates after a full
+  baseline; terminal updates and resume replay stay full, and offset mismatches force a snapshot.
 - The initial shell contains active navigation rows only. Archived rows use the dedicated archive
   query, and transcript message bodies stay in thread detail regardless of message size.
 - Shell resume sends deltas plus compact repository-enrichment metadata, not another full project

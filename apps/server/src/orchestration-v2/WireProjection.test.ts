@@ -10,6 +10,8 @@ import {
   ThreadId,
   TurnItemId,
   type OrchestrationV2ThreadProjection,
+  type OrchestrationV2ConversationMessage,
+  type OrchestrationV2ThreadStreamItem,
   OrchestrationV2TurnItem,
   OrchestrationV2TurnItemJson,
 } from "@rove-code/contracts";
@@ -21,6 +23,7 @@ import {
   projectTurnItemForWire,
   projectTurnItemForDetail,
   projectDomainEventForWire,
+  makeThreadLiveTextProjector,
 } from "./WireProjection.ts";
 import { threadShellFromProjection } from "./ProjectionStore.ts";
 import { MAX_TOOL_OUTPUT_IMAGES, toolOutputImages } from "@rove-code/shared/toolOutput";
@@ -48,6 +51,153 @@ const base = {
   completedAt: DateTime.makeUnsafe("2026-08-13T00:00:01.000Z"),
   updatedAt: DateTime.makeUnsafe("2026-08-13T00:00:01.000Z"),
 };
+
+const streamingMessage: OrchestrationV2ConversationMessage = {
+  id: MessageId.make("stream-message"),
+  threadId: base.threadId,
+  runId: null,
+  nodeId: null,
+  role: "assistant",
+  createdBy: "agent",
+  creationSource: "provider",
+  text: "Hello 🌍",
+  attachments: [],
+  streaming: true,
+  createdAt: base.startedAt,
+  updatedAt: base.updatedAt,
+};
+
+function textEvent(
+  payload: OrchestrationV2ConversationMessage | OrchestrationV2TurnItem,
+  sequence = 1,
+): Extract<OrchestrationV2ThreadStreamItem, { kind: "event" }> {
+  const envelope = {
+    id: EventId.make(`text-${sequence}`),
+    threadId: payload.threadId,
+    occurredAt: base.updatedAt,
+  };
+  return {
+    kind: "event",
+    sequence,
+    event:
+      "role" in payload
+        ? { ...envelope, type: "message.updated", payload }
+        : { ...envelope, type: "turn-item.updated", payload },
+  };
+}
+
+const streamingReasoning = {
+  id: TurnItemId.make("reasoning"),
+  threadId: base.threadId,
+  runId: null,
+  nodeId: null,
+  providerThreadId: null,
+  providerTurnId: null,
+  nativeItemRef: null,
+  parentItemId: null,
+  ordinal: 2,
+  title: null,
+  startedAt: base.startedAt,
+  completedAt: null,
+  updatedAt: base.updatedAt,
+  type: "reasoning" as const,
+  status: "running" as const,
+  streaming: true,
+  text: "Thinking",
+} satisfies OrchestrationV2TurnItem;
+
+describe("live streaming text projection", () => {
+  it("sends a full baseline, UTF-16 append offsets, and full terminal events", () => {
+    const project = makeThreadLiveTextProjector(true);
+    const first = textEvent(streamingMessage);
+    expect(project(first)).toBe(first);
+    const nextAt = DateTime.makeUnsafe("2026-08-13T00:00:02.000Z");
+    const next = { ...streamingMessage, text: streamingMessage.text + "!", updatedAt: nextAt };
+    const delta = project(textEvent(next, 2));
+    expect(delta).toEqual({
+      kind: "text-append",
+      sequence: 2,
+      threadId: base.threadId,
+      entity: { type: "message", id: streamingMessage.id },
+      offset: streamingMessage.text.length,
+      append: "!",
+      updatedAt: nextAt,
+      occurredAt: base.updatedAt,
+    });
+    const terminal = textEvent({ ...next, streaming: false }, 3);
+    expect(project(terminal)).toBe(terminal);
+    // The finished baseline must not be reused if the id starts streaming again.
+    const restarted = textEvent({ ...next, text: next.text + " more" }, 4);
+    expect(project(restarted)).toBe(restarted);
+    expect(first.event.payload).toBe(streamingMessage);
+  });
+
+  it.each([
+    streamingReasoning,
+    { ...streamingReasoning, type: "assistant_message" as const, messageId: streamingMessage.id },
+  ])("appends assistant and reasoning turn-items without retaining terminal baselines", (item) => {
+    const project = makeThreadLiveTextProjector(true);
+    project(textEvent(item));
+    expect(project(textEvent({ ...item, text: item.text + "…" }, 2))).toMatchObject({
+      kind: "text-append",
+      entity: { type: "turn-item", id: item.id },
+      offset: item.text.length,
+      append: "…",
+    });
+    for (const status of ["completed", "failed", "cancelled", "interrupted"] as const) {
+      const terminal = textEvent({ ...item, text: item.text + "…done", status });
+      expect(project(terminal)).toBe(terminal);
+    }
+  });
+
+  it.each([
+    { text: "Hello" }, // shortened
+    { text: "Edited 🌍!" }, // not a prefix
+    { text: streamingMessage.text }, // duplicate
+    { text: streamingMessage.text + "!", role: "user" as const },
+    {
+      text: streamingMessage.text + "!",
+      attachments: [
+        { type: "image", id: "changed", name: "image.png", mimeType: "image/png", sizeBytes: 1 },
+      ],
+    },
+  ])("falls back for edits, duplicates, and changed metadata: %j", (change) => {
+    const project = makeThreadLiveTextProjector(true);
+    project(textEvent(streamingMessage));
+    const event = textEvent({ ...streamingMessage, ...change });
+    expect(project(event)).toBe(event);
+  });
+
+  it("never appends status changes or a different identity", () => {
+    const project = makeThreadLiveTextProjector(true);
+    project(textEvent(streamingReasoning));
+    for (const change of [{ status: "waiting" as const }, { id: TurnItemId.make("new") }]) {
+      const event = textEvent({ ...streamingReasoning, ...change, text: "Thinking more" });
+      expect(project(event)).toBe(event);
+    }
+  });
+
+  it("keeps old-client delivery unchanged and bounds retained baselines", () => {
+    const legacy = makeThreadLiveTextProjector(false);
+    const enabled = makeThreadLiveTextProjector(true);
+    for (let index = 0; index < 130; index++) {
+      const event = textEvent({ ...streamingMessage, id: MessageId.make(`m-${index}`) });
+      expect(legacy(event)).toBe(event);
+      enabled(event);
+    }
+    const evicted = textEvent({
+      ...streamingMessage,
+      id: MessageId.make("m-0"),
+      text: "Hello 🌍!",
+    });
+    expect(enabled(evicted)).toBe(evicted);
+    const huge = textEvent({ ...streamingMessage, text: "x".repeat(1_048_577) });
+    expect(enabled(huge)).toBe(huge);
+    expect(enabled(textEvent({ ...streamingMessage, text: "x".repeat(1_048_578) })).kind).toBe(
+      "event",
+    );
+  });
+});
 
 describe("orchestration V2 wire projection", () => {
   it("keeps copied handoff transcripts out of activity items and live events", () => {

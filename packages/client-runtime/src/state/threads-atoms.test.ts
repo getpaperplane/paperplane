@@ -555,6 +555,57 @@ it.effect.each([1, 16, 500])("publishes V2 message replay once per batch of %i",
   }),
 );
 
+it.effect(
+  "reduces every text append before publishing state and retains the resulting resume cursor",
+  () =>
+    Effect.gen(function* () {
+      const message = {
+        id: MessageId.make("streamed-message"),
+        threadId: THREAD_ID,
+        runId: null,
+        nodeId: null,
+        role: "assistant" as const,
+        text: "",
+        streaming: true,
+        attachments: [],
+        createdBy: "agent" as const,
+        creationSource: "provider" as const,
+        createdAt: THREAD.updatedAt,
+        updatedAt: THREAD.updatedAt,
+      };
+      const h = yield* makeHarness({
+        snapshot: { snapshotSequence: 7, projection: { ...THREAD, messages: [message] } },
+      });
+      const unmount = h.registry.mount(h.stateAtom);
+      const first = yield* Queue.take(h.subscriptions);
+      const appends: OrchestrationV2ThreadStreamItem[] = Array.from({ length: 50 }, (_, index) => ({
+        kind: "text-append",
+        sequence: 8 + index,
+        threadId: THREAD_ID,
+        entity: { type: "message", id: message.id },
+        offset: index,
+        append: "x",
+        updatedAt: THREAD.updatedAt,
+        occurredAt: THREAD.updatedAt,
+      }));
+      yield* Queue.offerAll(first.events, [...appends, { kind: "synchronized" }]);
+      yield* observeState(
+        h.registry,
+        h.stateAtom,
+        (state) =>
+          state.status === "live" && Option.getOrNull(state.data)?.messages[0]?.text.length === 50,
+      );
+      expect(currentThread(h.registry, h.stateAtom).messages[0]?.text).toBe("x".repeat(50));
+      unmount();
+      yield* Deferred.await(first.closed);
+      const remount = h.registry.mount(h.stateAtom);
+      const next = yield* Queue.take(h.subscriptions);
+      expect(next.afterSequence).toBe(57);
+      remount();
+      yield* Deferred.await(next.closed);
+    }),
+);
+
 it.effect("keeps snapshot boundaries and completion markers ordered inside a replay batch", () =>
   Effect.gen(function* () {
     const h = yield* makeHarness();
