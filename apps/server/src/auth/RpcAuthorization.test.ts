@@ -36,6 +36,12 @@ describe("RPC authorization scopes", () => {
     expect(new Set(Object.keys(RPC_REQUIRED_SCOPES))).toEqual(new Set(WsRpcGroup.requests.keys()));
   });
 
+  it("allows Pi status observation with read-only orchestration access", () => {
+    expect(requiredScopeForRpcMethod(WS_METHODS.piExtensionStatusesSubscribe)).toBe(
+      AuthOrchestrationReadScope,
+    );
+  });
+
   it("requires operate access to stop a workflow", () => {
     expect(requiredScopeForRpcMethod(ORCHESTRATION_V2_WS_METHODS.stopWorkflow)).toBe(
       AuthOrchestrationOperateScope,

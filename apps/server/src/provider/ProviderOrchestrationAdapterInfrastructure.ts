@@ -1,4 +1,5 @@
 import * as Layer from "effect/Layer";
+import * as PiExtensionStatuses from "./PiExtensionStatuses.ts";
 
 import * as ClaudeAdapterV2 from "../orchestration-v2/Adapters/ClaudeAdapterV2.ts";
 import * as CodexAdapterV2 from "../orchestration-v2/Adapters/CodexAdapterV2.ts";
@@ -14,7 +15,8 @@ export type ProviderOrchestrationAdapterInfrastructure =
   | CursorAgentSdk.CursorAgentSdkRunner
   | CursorSdk.CursorSdk
   | CursorKeychain.CursorKeychain
-  | IdAllocator.IdAllocatorV2;
+  | IdAllocator.IdAllocatorV2
+  | PiExtensionStatuses.PiExtensionStatuses;
 
 /**
  * Infrastructure shared by the V2 adapters materialized inside provider
@@ -29,4 +31,5 @@ export const layer = Layer.mergeAll(
   CursorKeychain.layer,
   IdAllocator.layer,
   ProviderContinuationRequests.layer,
+  PiExtensionStatuses.layer,
 );

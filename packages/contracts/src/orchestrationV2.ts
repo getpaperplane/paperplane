@@ -342,6 +342,8 @@ export const OrchestrationV2LimitRecovery = Schema.Struct({
   resetAt: IsoDateTime,
   autoResume: Schema.Boolean,
   snooze: Schema.optional(Schema.Boolean),
+  /** Armed by the recovery worker rather than chosen by a user; only these honor the attempt cap. */
+  automatic: Schema.optional(Schema.Boolean),
 });
 export type OrchestrationV2LimitRecovery = typeof OrchestrationV2LimitRecovery.Type;
 
@@ -351,6 +353,8 @@ export const OrchestrationV2LimitRecoveryUpdate = Schema.Struct({
   resetAt: IsoDateTime,
   autoResume: Schema.optional(Schema.Boolean),
   snooze: Schema.optional(Schema.Boolean),
+  /** Set only by the recovery worker's arm command. An explicit autoResume choice clears it. */
+  automatic: Schema.optional(Schema.Boolean),
 }).check(
   Schema.makeFilter(
     (update) =>
@@ -563,6 +567,8 @@ export const OrchestrationV2Run = Schema.Struct({
   contextHandoffId: Schema.NullOr(ContextHandoffId),
   /** Links server-generated restart continuations to the interrupted run. */
   restartContinuationOfRunId: Schema.optional(RunId),
+  /** Parent of an automatic usage-limit retry; ordinary user sends start a new chain. */
+  usageLimitContinuationOfRunId: Schema.optional(RunId),
   /** The delegated task this run answers, including a follow-up in an existing child thread. */
   delegatedTaskId: Schema.optional(NodeId),
   /**

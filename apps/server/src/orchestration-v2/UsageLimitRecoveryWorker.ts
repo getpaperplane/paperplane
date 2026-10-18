@@ -10,6 +10,7 @@ import * as Scheduler from "../scheduling/Scheduler.ts";
 import * as ServerSettings from "../serverSettings.ts";
 import * as ProjectionStore from "./ProjectionStore.ts";
 import * as ThreadManagement from "./ThreadManagementService.ts";
+import { MAX_LIMIT_RECOVERY_ATTEMPTS } from "./usageLimitRecovery.ts";
 
 /** The persisted run and reset form the identity of one recovery opportunity. */
 export function limitRecoveryCommand(
@@ -35,6 +36,9 @@ export function limitRecoveryCommand(
     resetMs <= DateTime.toEpochMillis(thread.latestRunCompletedAt ?? thread.updatedAt)
   )
     return null;
+  const exhausted = thread.limitRecoveryAttempts >= MAX_LIMIT_RECOVERY_ATTEMPTS;
+  // The cap limits what the worker arms itself; a user's explicit choice is consent.
+  autoResume = autoResume && !exhausted;
   const identity = `${thread.id}:${thread.latestRunId}:${resetMs}`;
   const recovery = thread.limitRecovery;
   if (recovery?.runId !== thread.latestRunId || recovery.resetAt !== thread.usageLimitResetAt) {
@@ -47,11 +51,13 @@ export function limitRecoveryCommand(
         runId: thread.latestRunId,
         resetAt: thread.usageLimitResetAt,
         autoResume,
+        ...(autoResume ? { automatic: true } : {}),
         snooze: snooze && resetMs > nowMs,
       },
     };
   }
   if (
+    (exhausted && recovery.automatic === true) ||
     !recovery.autoResume ||
     resetMs > nowMs ||
     (thread.snoozedUntil != null && DateTime.toEpochMillis(thread.snoozedUntil) > nowMs)

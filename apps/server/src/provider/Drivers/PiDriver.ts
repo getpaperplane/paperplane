@@ -29,6 +29,7 @@ import { makePiTextGeneration } from "../../textGeneration/PiTextGeneration.ts";
 import { acquirePiResource, disposePiResource } from "../Layers/PiLifecycle.ts";
 import { LazyPiRuntime, PiRuntimeProcess } from "../Layers/PiRuntimeProcess.ts";
 import { PI_CONFIG_DIR } from "../PiSdkMetadata.ts";
+import * as PiExtensionStatuses from "../PiExtensionStatuses.ts";
 import {
   buildInitialPiProviderSnapshot,
   checkPiProviderStatus,
@@ -52,6 +53,7 @@ export type PiDriverEnv =
   | ProviderHost.ProviderHost
   | IdAllocator.IdAllocatorV2
   | McpProviderSessions.McpProviderSessions
+  | PiExtensionStatuses.PiExtensionStatuses
   | FileSystem.FileSystem;
 export const PiDriver: ProviderDriver<PiSettings, PiDriverEnv> = {
   driverKind: DRIVER_KIND,

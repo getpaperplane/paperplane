@@ -2,6 +2,7 @@ import { applyThreadPullRequestLinkUpdate } from "@rove-code/shared/threadPullRe
 import { projectTurnItemForWire } from "./WireProjection.ts";
 import * as Stream from "effect/Stream";
 import { makeThreadFind, findProjectedThreadItems } from "./ThreadFind.ts";
+import { limitRecoveryAttempts, MAX_LIMIT_RECOVERY_ATTEMPTS } from "./usageLimitRecovery.ts";
 import type {
   OrchestrationV2SearchThreadInput,
   OrchestrationV2SearchThreadResult,
@@ -173,7 +174,7 @@ export type ProjectionLimitRecoveryCandidate = Pick<
   | "updatedAt"
   | "limitRecovery"
   | "snoozedUntil"
->;
+> & { readonly limitRecoveryAttempts: number };
 
 /** The thread fields pull request sync reads, for a thread with at least one link. */
 export type ProjectionThreadPullRequests = Pick<
@@ -3726,7 +3727,24 @@ export const layer: Layer.Layer<ProjectionStoreV2, never, SqlClient.SqlClient> =
             row.last_error,
           );
           if (summary.lastErrorClass !== "usage_limit") continue;
+          // Follow at most three indexed run identities, never scan transcript history.
+          const chain = yield* sql<{ readonly payload_json: string }>`
+            WITH RECURSIVE chain(payload_json, depth) AS (
+              SELECT payload_json, 1 FROM orchestration_v2_projection_runs
+              WHERE run_id = ${row.run_id} AND thread_id = ${thread.id}
+              UNION ALL
+              SELECT parent.payload_json, chain.depth + 1
+              FROM chain JOIN orchestration_v2_projection_runs parent
+                ON parent.run_id = json_extract(chain.payload_json, '$.usageLimitContinuationOfRunId')
+              WHERE parent.thread_id = ${thread.id} AND chain.depth < ${MAX_LIMIT_RECOVERY_ATTEMPTS}
+            ) SELECT payload_json FROM chain
+          `;
+          const attempts = limitRecoveryAttempts(
+            yield* decodeRows(decodeRunPayload, thread.id)(chain),
+            RunId.make(row.run_id),
+          );
           candidates.push({
+            limitRecoveryAttempts: attempts,
             id: thread.id,
             status: "failed",
             lastErrorClass: summary.lastErrorClass,
@@ -6412,7 +6430,13 @@ export const layerMemory: Layer.Layer<ProjectionStoreV2> = Layer.effect(
                   thread.archivedAt === null &&
                   thread.settledOverride !== "settled",
               )
-              .map(threadShellFromProjection)
+              .map((projection) => {
+                const shell = threadShellFromProjection(projection);
+                return {
+                  ...shell,
+                  limitRecoveryAttempts: limitRecoveryAttempts(projection.runs, shell.latestRunId),
+                };
+              })
               .filter(
                 (thread) =>
                   thread.status === "failed" &&

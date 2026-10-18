@@ -15,12 +15,14 @@ import { ServerConfig } from "../../config.ts";
 import { ServerSettingsService } from "../../serverSettings.ts";
 import { makeSdkDiscoveryClient } from "../Layers/PiDiscovery.ts";
 import { PiDriver } from "./PiDriver.ts";
+import * as PiExtensionStatuses from "../PiExtensionStatuses.ts";
 const testLayer = Layer.mergeAll(
   ServerConfig.layerTest(process.cwd(), { prefix: "rove-pi-driver-" }),
   ServerSettingsService.layerTest(),
   TestProviderHost.layer({ runBackgroundWork: false }),
   IdAllocator.layer,
   McpProviderSessions.layer,
+  PiExtensionStatuses.layer,
 ).pipe(Layer.provideMerge(NodeServices.layer));
 describe("Pi SDK driver", () => {
   let root: string, agentDir: string;

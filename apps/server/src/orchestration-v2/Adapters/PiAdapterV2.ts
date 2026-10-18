@@ -42,6 +42,7 @@ import {
   type PiImageContentLike,
 } from "../../provider/Layers/PiAdapter.ts";
 import { piBounded, piRecord, piTrimmed } from "../../provider/Layers/PiValues.ts";
+import * as PiExtensionStatuses from "../../provider/PiExtensionStatuses.ts";
 
 export const PI_PROVIDER = ProviderDriverKind.make("pi");
 const PiProviderCapabilitiesV2 = {
@@ -173,6 +174,7 @@ export const makePiAdapterV2 = Effect.fn("makePiAdapterV2")(function* (
   const fs = yield* FileSystem.FileSystem;
   const config = yield* ServerConfig;
   const mcpSessions = yield* McpProviderSessions.McpProviderSessions;
+  const extensionStatuses = yield* PiExtensionStatuses.PiExtensionStatuses;
   return ProviderAdapter.ProviderAdapterV2.of({
     instanceId: options.instanceId,
     driver: PI_PROVIDER,
@@ -203,6 +205,8 @@ export const makePiAdapterV2 = Effect.fn("makePiAdapterV2")(function* (
         lastError: null,
       };
       let session: PiSessionLike | undefined;
+      let statusGeneration = 0;
+      let statusPublisher: Effect.Success<ReturnType<typeof extensionStatuses.open>> | undefined;
       let thread: OrchestrationV2ProviderThread | undefined;
       let active:
         | {
@@ -286,6 +290,8 @@ export const makePiAdapterV2 = Effect.fn("makePiAdapterV2")(function* (
             ),
           );
           session = resource;
+          statusPublisher = yield* extensionStatuses.open(input.threadId);
+          ++statusGeneration;
           yield* emit({
             type: "provider_session.updated",
             driver: PI_PROVIDER,
@@ -301,7 +307,13 @@ export const makePiAdapterV2 = Effect.fn("makePiAdapterV2")(function* (
               error: resource.modelFallbackMessage,
             });
           const unsubscribe = resource.subscribe((event) => {
-            if (session === resource) Queue.offerUnsafe(inbound, event);
+            if (session === resource)
+              Queue.offerUnsafe(
+                inbound,
+                event.type === "rove_ui_status"
+                  ? { ...event, roveStatusGeneration: statusGeneration }
+                  : event,
+              );
           });
           yield* Effect.addFinalizer(() => Effect.sync(unsubscribe));
           yield* Effect.addFinalizer(() => disposePiResource(() => resource.dispose()));
@@ -552,7 +564,14 @@ export const makePiAdapterV2 = Effect.fn("makePiAdapterV2")(function* (
       });
       const handle = Effect.fn("PiAdapterV2.handle")(function* (event: PiSessionEventLike) {
         if (closed || !session) return;
+        if (event.type === "rove_ui_status") {
+          if (event.roveStatusGeneration === statusGeneration)
+            yield* statusPublisher?.publish({ statuses: event.statuses }) ?? Effect.void;
+          return;
+        }
         if (event.type === "runtime_exited") {
+          ++statusGeneration;
+          yield* statusPublisher?.clear ?? Effect.void;
           if (active) {
             active.error = piTrimmed(event.error) ?? "Pi SDK worker exited.";
             active.broken = true;
@@ -611,6 +630,7 @@ export const makePiAdapterV2 = Effect.fn("makePiAdapterV2")(function* (
             });
           }
           // V2 requires a committed run before tools execute. Never fabricate V1 turns.
+          // Status belongs to the live session, not the aborted work, so it is left published.
           if (event.type === "agent_start" || event.type === "turn_start")
             yield* disposePiResource(() => session!.abort());
           return;
@@ -945,6 +965,8 @@ export const makePiAdapterV2 = Effect.fn("makePiAdapterV2")(function* (
       yield* Effect.addFinalizer(() =>
         Effect.gen(function* () {
           closed = true;
+          ++statusGeneration;
+          yield* statusPublisher?.clear ?? Effect.void;
           yield* Queue.shutdown(inbound);
           yield* Queue.shutdown(queue);
         }),
@@ -1137,6 +1159,8 @@ export const makePiAdapterV2 = Effect.fn("makePiAdapterV2")(function* (
             current.interrupted = true;
             current.requestedInterrupt = true;
             const interruptedSession = session!;
+            ++statusGeneration;
+            yield* statusPublisher?.clear ?? Effect.void;
             yield* Effect.tryPromise(() => interruptedSession.abort()).pipe(
               Effect.mapError(
                 (cause) =>

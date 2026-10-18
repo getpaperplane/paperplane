@@ -16,6 +16,113 @@ describe("usageLimitFromError", () => {
       ),
     ).toEqual({ resetAt: "2026-10-01T02:04:00.000Z" });
   });
+  it("reads subscription CLI limits generically, including epoch resets", () => {
+    for (const window of ["session", "weekly", "Opus", "weekly Opus"]) {
+      expect(
+        usageLimitFromError(
+          `You've hit your ${window} limit · resets 11:10am (Australia/Sydney)`,
+          now,
+        ),
+      ).toEqual({ resetAt: "2026-10-01T01:10:00.000Z" });
+    }
+    expect(
+      usageLimitFromError(`Claude AI usage limit reached|${Date.parse(now) / 1000 + 3600}`, now),
+    ).toEqual({ resetAt: "2026-10-01T01:00:00.000Z" });
+    expect(usageLimitFromError("You've hit your weekly limit · resets in 2h 30m", now)).toEqual({
+      resetAt: "2026-10-01T02:30:00.000Z",
+    });
+  });
+  it("resolves dated resets and rolls past local times to their next occurrence", () => {
+    expect(
+      usageLimitFromError("You've hit your session limit · resets 9am (Australia/Sydney)", now),
+    ).toEqual({ resetAt: "2026-10-01T23:00:00.000Z" });
+    for (const reset of ["Oct 5, 3pm", "3pm on Oct 5", "Oct 5, 2026, 3pm"]) {
+      expect(
+        usageLimitFromError(
+          `You've hit your weekly limit · resets ${reset} (Australia/Sydney)`,
+          now,
+        ),
+      ).toEqual({ resetAt: "2026-10-05T04:00:00.000Z" });
+    }
+    expect(
+      usageLimitFromError(
+        "You've hit your weekly limit · resets Jan 1, 3pm (UTC)",
+        "2026-12-30T00:00:00.000Z",
+      ),
+    ).toEqual({ resetAt: "2027-01-01T15:00:00.000Z" });
+  });
+  it("rejects resets beyond the weekly horizon, such as a yearless date rolled to next year", () => {
+    expect(
+      usageLimitFromError("You've hit your weekly limit · resets Jan 1, 3pm (UTC)", now),
+    ).toEqual({ resetAt: null });
+    expect(usageLimitFromError("Usage limit reached | 1900000000", now)).toEqual({
+      resetAt: null,
+    });
+  });
+  it("does not roll a time-only reset to tomorrow when it passed under an hour ago", () => {
+    // 11:10am Sydney (UTC+10 in early October) is 01:10Z.
+    expect(
+      usageLimitFromError(
+        "You've hit your session limit · resets 11:10am (Australia/Sydney)",
+        "2026-10-01T01:30:00.000Z",
+      ),
+    ).toEqual({ resetAt: null });
+    expect(
+      usageLimitFromError(
+        "You've hit your session limit · resets 11:10am (Australia/Sydney)",
+        "2026-10-01T02:30:00.000Z",
+      ),
+    ).toEqual({ resetAt: "2026-10-02T01:10:00.000Z" });
+  });
+  it("ignores context-window and token limits", () => {
+    for (const message of [
+      "You've hit your context window limit",
+      "You've hit your token limit for this request",
+      "You've hit your max context length limit",
+      "You've hit your message size limit",
+    ])
+      expect(usageLimitFromError(message, now)).toBeNull();
+  });
+  it("accepts other Claude subscription wordings", () => {
+    for (const message of [
+      "5-hour limit reached ∙ resets 11:10am (Australia/Sydney)",
+      "Weekly limit reached ∙ resets 11:10am (Australia/Sydney)",
+      "Your limit will reset at 11:10am (Australia/Sydney)",
+    ])
+      expect(usageLimitFromError(message, now)).toEqual({ resetAt: "2026-10-01T01:10:00.000Z" });
+  });
+  it("uses the reset day's DST offset and selects a future repeated hour", () => {
+    expect(
+      usageLimitFromError(
+        "You've hit your session limit · resets 9am (America/New_York)",
+        "2026-03-07T15:00:00.000Z",
+      ),
+    ).toEqual({ resetAt: "2026-03-08T13:00:00.000Z" });
+    expect(
+      usageLimitFromError(
+        "You've hit your session limit · resets 1:30am (America/New_York)",
+        "2026-11-01T05:45:00.000Z",
+      ),
+    ).toEqual({ resetAt: "2026-11-01T06:30:00.000Z" });
+  });
+  it("keeps unknown CLI resets classified without inventing timestamps", () => {
+    for (const reset of [
+      "",
+      " · resets soon",
+      " · resets 3pm (Unknown/Zone)",
+      " · resets Feb 30, 3pm (UTC)",
+      " · resets 25:00 (UTC)",
+      " · resets Oct 20, 2025, 3pm (UTC)",
+      " · resets Oct 20, 3pm (UTC)",
+    ]) {
+      expect(usageLimitFromError(`You've hit your Opus limit${reset}`, now)).toEqual({
+        resetAt: null,
+      });
+    }
+    expect(
+      usageLimitFromError("You've hit your session limit. Authentication required", now),
+    ).toBeNull();
+  });
   it("supports weekly and short windows without a fixed duration", () => {
     expect(
       usageLimitFromError("Codex usage limit reached. The weekly limit resets in 5d 5h.", now)

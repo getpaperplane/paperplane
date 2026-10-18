@@ -11074,6 +11074,7 @@ export default function ChatView(props: ChatViewProps) {
     environmentId: activeThread.environmentId,
     threadId: activeThread.id,
     ...(draftId ? { draftId } : {}),
+    showPiExtensionStatus: conversationProviderStatus?.driver === "pi" && isServerThread,
     activeProjectName: activeProject?.title,
     activeProjectScripts: activeProject ? activeProjectScripts : undefined,
     preferredScriptId: activeProject

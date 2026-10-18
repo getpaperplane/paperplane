@@ -7,6 +7,8 @@ import * as DateTime from "effect/DateTime";
 import * as Layer from "effect/Layer";
 import * as Stream from "effect/Stream";
 import * as Schema from "effect/Schema";
+import * as Option from "effect/Option";
+import * as PiExtensionStatuses from "../../provider/PiExtensionStatuses.ts";
 import * as IdAllocator from "@rove-code/provider-core/server/IdAllocator";
 import * as McpProviderSessions from "@rove-code/provider-core/server/McpProviderSessions";
 import * as ProviderAdapter from "@rove-code/provider-core/server/ProviderAdapter";
@@ -40,6 +42,7 @@ const policy = {
 const layer = Layer.mergeAll(
   IdAllocator.layer,
   McpProviderSessions.layer,
+  PiExtensionStatuses.layer,
   ServerConfig.layerTest(process.cwd(), { prefix: "rove-pi-v2-" }),
 ).pipe(Layer.provideMerge(NodeServices.layer));
 const decodeEvent = Schema.decodeUnknownSync(ProviderAdapter.ProviderAdapterV2Event);
@@ -256,6 +259,59 @@ const setup = Effect.fn(function* (text = "hello", initialBranch: PiSessionEntry
   yield* Effect.promise(() => raw.prompted);
   return { raw, runtime, thread, events, terminal, question, waitFor, sessions, creates };
 });
+it.effect(
+  "routes Pi status while active and idle without creating transcript events, then clears on worker exit",
+  () =>
+    Effect.gen(function* () {
+      const h = yield* setup();
+      const statuses = yield* PiExtensionStatuses.PiExtensionStatuses;
+      const awaitText = (text: string) =>
+        statuses.subscribe(threadId).pipe(
+          Stream.filter((snapshot) => snapshot.statuses[0]?.text === text),
+          Stream.runHead,
+        );
+      h.raw.emit({ type: "rove_ui_status", statuses: [{ key: "task", text: "active" }] });
+      yield* awaitText("active");
+      h.raw.settle();
+      yield* Deferred.await(h.terminal);
+      const transcriptEvents = h.events.length;
+      h.raw.emit({ type: "rove_ui_status", statuses: [{ key: "task", text: "idle timer" }] });
+      yield* awaitText("idle timer");
+      assert.strictEqual(h.events.length, transcriptEvents);
+      h.raw.emit({ type: "runtime_exited", error: "worker stopped" });
+      yield* statuses.subscribe(threadId).pipe(
+        Stream.filter((snapshot) => snapshot.statuses.length === 0),
+        Stream.runHead,
+      );
+      assert.deepEqual(
+        Option.getOrThrow(yield* statuses.subscribe(threadId).pipe(Stream.runHead)),
+        { statuses: [] },
+      );
+    }).pipe(Effect.scoped, Effect.provide(layer)),
+);
+
+it.effect("continues to stop autonomous SDK work outside a committed run", () =>
+  Effect.gen(function* () {
+    const h = yield* setup();
+    h.raw.settle();
+    yield* Deferred.await(h.terminal);
+    const startedTurns = h.events.filter((event) => event.type === "provider_turn.updated").length;
+    h.raw.emit({ type: "agent_start" });
+    yield* Effect.promise(() => h.raw.abortAcknowledged);
+    assert.strictEqual(
+      h.events.filter((event) => event.type === "provider_turn.updated").length,
+      startedTurns,
+    );
+    // Aborting stray work must not end the session's status stream.
+    const statuses = yield* PiExtensionStatuses.PiExtensionStatuses;
+    h.raw.emit({ type: "rove_ui_status", statuses: [{ key: "task", text: "after abort" }] });
+    yield* statuses.subscribe(threadId).pipe(
+      Stream.filter((snapshot) => snapshot.statuses[0]?.text === "after abort"),
+      Stream.runHead,
+    );
+  }).pipe(Effect.scoped, Effect.provide(layer)),
+);
+
 it.effect("maps raw SDK messages/tools and finishes only at settlement", () =>
   Effect.gen(function* () {
     const h = yield* setup();
@@ -745,12 +801,21 @@ it.effect("streams bounded worker progress before final command output", () =>
 it.effect("reloads the session for rollback immediately after Stop", () =>
   Effect.gen(function* () {
     const h = yield* setup();
+    const statuses = yield* PiExtensionStatuses.PiExtensionStatuses;
+    h.raw.emit({ type: "rove_ui_status", statuses: [{ key: "task", text: "working" }] });
+    yield* statuses.subscribe(threadId).pipe(
+      Stream.filter((snapshot) => snapshot.statuses.length > 0),
+      Stream.runHead,
+    );
     const turn = (yield* h.runtime.readThreadSnapshot({ providerThread: h.thread }))
       .providerTurns[0]!;
     const interrupted = yield* h.runtime
       .interruptTurn({ providerThread: h.thread, providerTurnId: turn.id })
       .pipe(Effect.forkChild({ startImmediately: true }));
     yield* Effect.promise(() => h.raw.abortAcknowledged);
+    assert.deepEqual(Option.getOrThrow(yield* statuses.subscribe(threadId).pipe(Stream.runHead)), {
+      statuses: [],
+    });
     h.raw.settle();
     yield* Fiber.join(interrupted);
     yield* h.runtime.rollbackThread({

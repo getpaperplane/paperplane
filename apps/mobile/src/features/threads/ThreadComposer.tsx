@@ -95,6 +95,7 @@ import {
   isModelSelectionUnavailable,
 } from "../../lib/modelOptions";
 import { useProviderResources } from "../../state/use-provider-resources";
+import { PiExtensionStatus } from "./PiExtensionStatus";
 import { ProviderExtensions } from "./ProviderExtensions";
 import { useScaledTextRole } from "../settings/appearance/useScaledTextRole";
 import type { RemoteClientConnectionState } from "../../lib/connection";
@@ -819,6 +820,14 @@ export const ThreadComposer = memo(function ThreadComposer(props: ThreadComposer
               onSelect={composerMenu.onSelect}
             />
           </ComposerPopoverAnchor>
+        ) : null}
+
+        {selectedProviderStatus?.driver === "pi" ? (
+          <PiExtensionStatus
+            key={props.selectedThread.id}
+            environmentId={props.environmentId}
+            threadId={props.selectedThread.id}
+          />
         ) : null}
 
         {selectedProviderStatus?.compatibilityAdvisory?.message &&

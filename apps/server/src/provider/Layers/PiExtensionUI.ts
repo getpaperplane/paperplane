@@ -70,7 +70,8 @@ export function createPiExtensionUI(
       const visible: PiExtensionStatusSnapshot["statuses"][number][] = [];
       for (const [statusKey, statusText] of statuses) {
         if (remaining <= statusKey.length) break;
-        const text = statusText.slice(0, remaining - statusKey.length);
+        const text = statusText.slice(0, remaining - statusKey.length).trim();
+        if (!text) continue;
         visible.push({ key: statusKey, text });
         remaining -= statusKey.length + text.length;
       }
