@@ -7,6 +7,7 @@ import * as NodeSqliteClient from "@rove-code/shared/nodeSqliteClient";
 
 import { runMigrations } from "./Migrations.ts";
 import { initializeV2Database } from "./initializeV2Database.ts";
+import * as DatabaseMaintenance from "./DatabaseMaintenance.ts";
 import * as ServerConfig from "../config.ts";
 
 // Size the -wal file is cut back to on the first commit after a WAL reset.
@@ -19,7 +20,7 @@ const layerSetup = Layer.effectDiscard(
     yield* sql`PRAGMA busy_timeout = 5000;`;
     yield* sql`PRAGMA foreign_keys = ON;`;
     // Only an empty file can switch modes here; an existing database needs the
-    // offline VACUUM that `rove doctor` runs, which rebuilds it with pointer maps.
+    // offline VACUUM shared by startup and `rove doctor`, rebuilding pointer maps.
     const tables = yield* sql<{
       readonly count: number;
     }>`SELECT COUNT(*) AS count FROM sqlite_schema WHERE type = 'table'`;
@@ -74,8 +75,16 @@ export const layerMemory = Layer.provideMerge(
 
 export const layerConfig = Layer.unwrap(
   Effect.gen(function* () {
-    const { dbPath } = yield* ServerConfig.ServerConfig;
+    const { dbPath, baseDir } = yield* ServerConfig.ServerConfig;
+    const path = yield* Path.Path;
     yield* initializeV2Database(dbPath);
+    // Only configured userdata, never an implicit dev database or layerFromPath
+    // consumers (tests/CLI). Do this before opening writer/reader/checkpoint workers.
+    if (path.resolve(dbPath) === path.resolve(baseDir, "userdata", path.basename(dbPath))) {
+      yield* Effect.flatMap(DatabaseMaintenance.DatabaseMaintenance, (maintenance) =>
+        maintenance.compactOnStartup(dbPath),
+      ).pipe(Effect.provide(DatabaseMaintenance.layer));
+    }
     return layerFromPath(dbPath);
   }),
 );

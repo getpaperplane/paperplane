@@ -40,9 +40,12 @@ handoff is also a good choice when the old conversation contains conflicting ins
 
 After all legacy threads finish importing, background maintenance removes unused legacy history
 from `statev2.sqlite`. Keep `state.sqlite` as your original recovery source. Older databases may
-retain the freed space inside the file: stop the desktop app and server, then run `rove doctor`
-on the host to reclaim it. Settings → Storage shows the command for your environment. Allow extra
-free disk space for the rebuild; future cleanup can then return space automatically.
+retain the freed space inside the file until the next launch. Rove Code automatically rebuilds
+older databases at startup when the savings are substantial and enough free disk space is available,
+then returns space automatically during future cleanup. This may add a few seconds to that launch.
+If automatic reclamation is deferred, you can stop the desktop app and server and run `rove doctor`
+on the host. Settings → Storage shows the command for your environment. Allow extra free disk space
+for the rebuild.
 
 ## Keeping a recovery copy
 

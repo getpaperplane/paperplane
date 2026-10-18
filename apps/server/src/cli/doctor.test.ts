@@ -23,6 +23,7 @@ it.effect("--fix reclaims space with the service paused, and --dry-run changes n
                 ),
             }),
             Layer.succeed(DatabaseMaintenance, {
+              compactOnStartup: () => Effect.void,
               // An unconverted database: reclaiming space is recommended.
               inspect: () =>
                 Effect.succeed({

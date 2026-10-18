@@ -98,7 +98,7 @@ const make = Effect.gen(function* () {
     Effect.tap((changed) =>
       changed
         ? Effect.logInfo(
-            "Retired imported v1 tables; run rove doctor offline to reclaim free pages",
+            "Retired imported v1 tables; free pages are available for reclamation",
           )
         : Effect.void,
     ),

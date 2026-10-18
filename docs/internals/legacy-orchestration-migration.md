@@ -71,13 +71,16 @@ not on the readiness path. Historical migrations (including settlement repair) h
 restarting uses their existing ledger rather than replaying them against retired tables.
 
 On older databases with `auto_vacuum=NONE`, dropping tables frees pages for reuse but cannot shrink
-the file. Stop the app/server and run `rove doctor` against the same home to reclaim them. Its
-offline VACUUM rebuilds the database with incremental auto-vacuum; subsequent background reclamation
-returns free pages online. Do not VACUUM automatically in the live server: even on a worker it holds
-the writer for the entire rebuild, needs substantial temporary disk space (potentially twice the
-database size), and competes with active readers/checkpoints. Merely setting incremental auto-vacuum
-on an existing file does not avoid that rebuild. The Storage page reports reclaimable space and the
-host-specific doctor command.
+the file. On a subsequent launch, before opening persistence connections or accepting clients,
+startup reuses doctor's exclusive offline VACUUM to enable incremental auto-vacuum. It upgrades
+files below 64 MiB cheaply; larger files require at least 256 MiB and 25% reclaimable space so the
+one-time readiness cost buys meaningful savings. It requires available disk space of twice the current
+database size plus 64 MiB, and skips if another connection holds the database. Failures defer the
+upgrade without preventing startup. Only configured userdata paths are eligible, not implicit dev
+paths. SQLite's transactional VACUUM leaves the original database intact on interruption; the
+retirement pass remains off the readiness path, so its freed pages are considered next launch.
+Subsequent background reclamation returns free pages online. `rove doctor` remains an offline
+fallback for skipped upgrades; the Storage page reports reclaimable space and its host-specific command.
 
 ## Recovery
 
