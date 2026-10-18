@@ -11,6 +11,6 @@ jobs:
     uses: ./.github/workflows/mobile-sideload.yml
     with:
       ref: ${{ github.sha }}
-      version: 0.0.1-sideload.1
+      version: 0.0.2-sideload.1
     secrets: inherit
-# run 2
+# run 3
