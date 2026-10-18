@@ -91,7 +91,7 @@ const harness = <A, E>(
     ) => Effect.Effect<
       MacosVm.MacosVm["Service"],
       never,
-      FileSystem.FileSystem | Path.Path | ServerConfig.ServerConfig
+      Scope.Scope | FileSystem.FileSystem | Path.Path | ServerConfig.ServerConfig
     >;
     makeDriver: () => Effect.Effect<
       CuaDriver.CuaDriver["Service"],
@@ -104,6 +104,9 @@ const harness = <A, E>(
     setConsent: (value: unknown) => void;
     setIp: (value: string | null) => void;
     setSetupExitCode: (value: number) => void;
+    waitForPreparation: Effect.Effect<void>;
+    setPull: (effect: (input: ProcessRunner.ProcessRunInput) => Effect.Effect<void>) => void;
+    setSetup: (effect: Effect.Effect<void>) => void;
     waitForBoot: Effect.Effect<void>;
     waitForDisplay: Effect.Effect<void>;
     processes: Map<number, string>;
@@ -122,6 +125,9 @@ const harness = <A, E>(
     yield* fs.makeDirectory(`${stateDir}/bin`, { recursive: true });
     yield* fs.writeFileString(bin, "fake");
     const vms = new Map<string, Vm>();
+    const setupFiber = yield* Deferred.make<Fiber.Fiber<unknown, unknown>>();
+    let pull: (input: ProcessRunner.ProcessRunInput) => Effect.Effect<void> = () => Effect.void;
+    let setup: Effect.Effect<void> = Effect.void;
     const bootRequested = yield* Deferred.make<void>();
     const displayRequested = yield* Deferred.make<void>();
     const runs: Array<ProcessRunner.ProcessRunInput> = [];
@@ -167,6 +173,8 @@ const harness = <A, E>(
             case "ls":
               return output(json([...vms.values()]));
             case "ssh":
+              yield* Deferred.succeed(setupFiber, yield* Effect.fiber);
+              yield* setup;
               return output("", setupExitCode);
             case "get":
               if (
@@ -179,6 +187,7 @@ const harness = <A, E>(
                 yield* Deferred.succeed(bootRequested, undefined);
               return output(json(vms.has(args[1]!) ? [vms.get(args[1]!)] : []));
             case "pull":
+              yield* pull(input);
               vms.set(args[2]!, record(args[2]!));
               return output();
             case "clone":
@@ -239,6 +248,16 @@ const harness = <A, E>(
       runs,
       stateDir,
       processes,
+      waitForPreparation: Deferred.await(setupFiber).pipe(
+        Effect.flatMap(Fiber.await),
+        Effect.asVoid,
+      ),
+      setPull: (effect) => {
+        pull = effect;
+      },
+      setSetup: (effect) => {
+        setup = effect;
+      },
       waitForBoot: Deferred.await(bootRequested),
       waitForDisplay: Deferred.await(displayRequested),
       setConsent: (value) => {
@@ -266,6 +285,248 @@ const harness = <A, E>(
       ),
     ),
   );
+
+it("parses Lume download, ETA and image assembly output without exposing raw output", () => {
+  expect(
+    MacosVm.parseLumeProgress("\x1b[32m[████░░░] 42% | Current: 50 MB/s | ETA: 1:02:03\x1b[0m"),
+  ).toEqual({
+    phase: "downloading",
+    percent: 42,
+    etaSeconds: 3723,
+  });
+  expect(
+    MacosVm.parseLumeProgress("[░░░] 0% | Initializing downloads... | ETA: calculating..."),
+  ).toEqual({ phase: "downloading", percent: 0 });
+  expect(MacosVm.parseLumeProgress("[██░] 80% | ETA: 2:03")).toEqual({
+    phase: "downloading",
+    percent: 80,
+    etaSeconds: 123,
+  });
+  expect(MacosVm.parseLumeProgress("[███] 100% | ETA: 0:00")).toEqual({
+    phase: "unpacking",
+    percent: 100,
+  });
+  for (const message of [
+    "Decompressing disk image (gzip, sparse-aware)…",
+    "Reassembling disk",
+    "Copying OCI image",
+  ])
+    expect(MacosVm.parseLumeProgress(`[2026-10-18T00:00:00Z] INFO: ${message}`)).toEqual({
+      phase: "unpacking",
+    });
+  expect(MacosVm.parseLumeProgress("unrelated output")).toBeUndefined();
+});
+
+it.effect(
+  "returns immediately, streams split UTF-8/ANSI progress and polls without processes",
+  () =>
+    harness(({ runtime, runs, setPull, waitForPreparation }) =>
+      Effect.gen(function* () {
+        const entered = yield* Deferred.make<void>();
+        const finish = yield* Deferred.make<void>();
+        const unpack = yield* Deferred.make<void>();
+        const unpacked = yield* Deferred.make<void>();
+        setPull((input) =>
+          Effect.gen(function* () {
+            const bytes = new TextEncoder().encode(
+              "\r\x1b[32m[████░░] 42% | Current: 50.1 MB/s | ETA: 1:02:03\x1b[0m\r",
+            );
+            for (let i = 0; i < bytes.length; i++) input.onStdoutChunk?.(bytes.slice(i, i + 1));
+            yield* Deferred.succeed(entered, undefined);
+            yield* Deferred.await(unpack);
+            input.onStdoutChunk?.(
+              new TextEncoder().encode("[██] 100% | ETA: 0:00\nINFO: Decompressing disk image…\r"),
+            );
+            yield* Deferred.succeed(unpacked, undefined);
+            yield* Deferred.await(finish);
+          }),
+        );
+        yield* runtime.check;
+        yield* runtime.prepare;
+        yield* Deferred.await(entered);
+        const count = runs.length;
+        expect(yield* runtime.check).toMatchObject({
+          state: "preparing",
+          lumeVersion: "lume 0.6.1",
+          freeDiskBytes: 819_200_000_000,
+          progress: {
+            phase: "downloading",
+            percent: 42,
+            etaSeconds: 3723,
+            startedAt: expect.any(Number),
+          },
+        });
+        yield* runtime.prepare;
+        expect((yield* runtime.verify.pipe(Effect.flip)).reason).toBe("preparing");
+        expect((yield* runtime.openDisplay.pipe(Effect.flip)).reason).toBe("preparing");
+        expect((yield* runtime.lease("a").pipe(Effect.flip)).reason).toBe("preparing");
+        expect(runs).toHaveLength(count);
+        expect(runs.find((run) => run.args[0] === "pull")).toMatchObject({
+          outputMode: "truncate",
+          timeout: "12 hours",
+        });
+        yield* Deferred.succeed(unpack, undefined);
+        yield* Deferred.await(unpacked);
+        expect(yield* runtime.check).toMatchObject({
+          state: "preparing",
+          progress: { phase: "unpacking" },
+        });
+        yield* Deferred.succeed(finish, undefined);
+        yield* waitForPreparation;
+        expect(yield* runtime.check).toMatchObject({ state: "needs-consent" });
+        expect(yield* runtime.check).not.toHaveProperty("progress");
+        yield* runtime.release;
+      }),
+    ),
+);
+
+it.effect("retains a safe background failure until a new preparation succeeds", () =>
+  harness(({ runtime, setPull, waitForPreparation }) =>
+    Effect.gen(function* () {
+      const pulling = yield* Deferred.make<Fiber.Fiber<unknown, unknown>>();
+      setPull(() =>
+        Effect.gen(function* () {
+          yield* Deferred.succeed(pulling, yield* Effect.fiber);
+          return yield* Effect.die("https://user:secret@example.test/private raw process output");
+        }),
+      );
+      yield* runtime.prepare;
+      yield* Fiber.await(yield* Deferred.await(pulling));
+      const error = new MacosVm.MacosVmError({ reason: "runtime" }).message;
+      expect(yield* runtime.check).toMatchObject({ state: "needs-image", lastError: error });
+      expect((yield* runtime.check).lastError).not.toContain("secret");
+      setPull(() => Effect.void);
+      yield* runtime.prepare;
+      expect(yield* runtime.check).not.toHaveProperty("lastError");
+      yield* waitForPreparation;
+      expect(yield* runtime.check).not.toHaveProperty("lastError");
+      yield* runtime.release;
+    }),
+  ),
+);
+
+it.effect("cancels a pull, releases its process effect and allows another preparation", () =>
+  harness(({ runtime, setPull, waitForPreparation }) =>
+    Effect.gen(function* () {
+      const entered = yield* Deferred.make<void>();
+      const interrupted = yield* Deferred.make<void>();
+      setPull(() =>
+        Deferred.succeed(entered, undefined).pipe(
+          Effect.andThen(Effect.never),
+          Effect.onInterrupt(() => Deferred.succeed(interrupted, undefined)),
+        ),
+      );
+      yield* runtime.prepare;
+      yield* Deferred.await(entered);
+      yield* runtime.cancel;
+      expect(yield* Deferred.isDone(interrupted)).toBe(true);
+      expect(yield* runtime.check).toMatchObject({ state: "needs-image" });
+      expect(yield* runtime.check).not.toHaveProperty("lastError");
+      setPull(() => Effect.void);
+      yield* runtime.prepare;
+      yield* waitForPreparation;
+      yield* runtime.cancel;
+      expect(yield* runtime.check).toMatchObject({ state: "needs-consent" });
+      yield* runtime.release;
+    }),
+  ),
+);
+
+it.effect("cancel stops a booted golden VM and remove cancels driver installation", () =>
+  harness(({ runtime, setSetup, vms, stateDir }) =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const entered = yield* Deferred.make<void>();
+      const interrupted = yield* Deferred.make<void>();
+      setSetup(
+        Deferred.succeed(entered, undefined).pipe(
+          Effect.andThen(Effect.never),
+          Effect.onInterrupt(() => Deferred.succeed(interrupted, undefined)),
+        ),
+      );
+      yield* runtime.prepare;
+      yield* Deferred.await(entered);
+      expect(yield* runtime.check).toMatchObject({
+        state: "preparing",
+        progress: { phase: "installing-driver" },
+      });
+      yield* runtime.cancel;
+      expect(yield* Deferred.isDone(interrupted)).toBe(true);
+      expect(vms.get(golden)?.status).toBe("stopped");
+      expect(
+        JSON.parse(yield* fs.readFileString(`${stateDir}/computer-use/macos/owner.json`)),
+      ).toMatchObject({ preparing: false });
+      yield* runtime.prepare;
+      yield* runtime.remove;
+      expect(vms.size).toBe(0);
+      expect(yield* runtime.check).toMatchObject({ state: "needs-image" });
+      yield* runtime.release;
+    }),
+  ),
+);
+
+it.effect("service scope shutdown interrupts preparation without recording a failure", () =>
+  harness(({ makeRuntime, setPull }) =>
+    Effect.gen(function* () {
+      const entered = yield* Deferred.make<void>();
+      const interrupted = yield* Deferred.make<void>();
+      setPull(() =>
+        Deferred.succeed(entered, undefined).pipe(
+          Effect.andThen(Effect.never),
+          Effect.onInterrupt(() => Deferred.succeed(interrupted, undefined)),
+        ),
+      );
+      yield* Effect.scoped(
+        Effect.gen(function* () {
+          const scoped = yield* makeRuntime();
+          yield* scoped.prepare;
+          yield* Deferred.await(entered);
+        }),
+      );
+      expect(yield* Deferred.isDone(interrupted)).toBe(true);
+    }),
+  ),
+);
+
+it.effect("ProcessRunner interruption terminates the child it spawned", () =>
+  Effect.gen(function* () {
+    const runner = yield* ProcessRunner.make();
+    const started = yield* Deferred.make<number>();
+    let text = "";
+    const fiber = yield* runner
+      .run({
+        command: process.execPath,
+        args: ["-e", "console.log(process.pid); setInterval(() => {}, 1000)"],
+        onStdoutChunk: (chunk) => {
+          text += new TextDecoder().decode(chunk);
+          if (text.includes("\n"))
+            Deferred.doneUnsafe(started, Effect.succeed(Number(text.trim())));
+        },
+      })
+      .pipe(Effect.forkChild);
+    const pid = yield* Deferred.await(started);
+    yield* Fiber.interrupt(fiber);
+    // The PID is captured from our own child; never inspect or signal an unrelated process.
+    expect(() => process.kill(pid, 0)).toThrow();
+  }).pipe(Effect.scoped, Effect.provide(NodeServices.layer)),
+);
+
+it.effect(
+  "prepare control returns preparing and cancel control does not wait for the download",
+  () =>
+    harness(({ makeDriver, setPull }) =>
+      Effect.gen(function* () {
+        setPull(() => Effect.never);
+        const driver = yield* makeDriver();
+        expect(yield* driver.control({ action: "prepare-vm" })).toMatchObject({
+          readiness: { vm: { state: "preparing" } },
+        });
+        expect(yield* driver.control({ action: "cancel-prepare-vm" })).toMatchObject({
+          readiness: { vm: { state: "needs-image" } },
+        });
+      }),
+    ),
+);
 
 it.effect(
   "discovers Lume, reports image requirements and rejects Intel without running anything",
@@ -489,9 +750,10 @@ it.effect("does not discard unrecorded clones during ordinary status or shutdown
 it.effect(
   "prepares with clipboard and automatic setup, verifies app-owned consent, then seals",
   () =>
-    harness(({ runtime, runs, setConsent, vms, stateDir }) =>
+    harness(({ runtime, runs, setConsent, vms, stateDir, waitForPreparation }) =>
       Effect.gen(function* () {
         yield* runtime.prepare;
+        yield* waitForPreparation;
         expect(runs.find((run) => run.args[0] === "pull")?.args.slice(0, 3)).toEqual([
           "pull",
           "macos-tahoe-cua:26.5.2",
@@ -567,10 +829,11 @@ it.effect(
 );
 
 it.effect("keeps preparation awaiting consent with manual setup when Lume SSH fails", () =>
-  harness(({ runtime, runs, setSetupExitCode, vms }) =>
+  harness(({ runtime, runs, setSetupExitCode, vms, waitForPreparation }) =>
     Effect.gen(function* () {
       setSetupExitCode(1);
       yield* runtime.prepare;
+      yield* waitForPreparation;
       expect(runs.some((run) => run.args[0] === "ssh")).toBe(true);
       expect(yield* runtime.check).toMatchObject({
         state: "needs-consent",
@@ -583,10 +846,11 @@ it.effect("keeps preparation awaiting consent with manual setup when Lume SSH fa
 );
 
 it.effect("leases exclusively, reuses the VM for the same thread, and resets between leases", () =>
-  harness(({ runtime, vms, runs }) =>
+  harness(({ runtime, vms, runs, waitForPreparation }) =>
     Effect.gen(function* () {
       expect((yield* runtime.lease("a").pipe(Effect.flip)).reason).toBe("not-ready");
       yield* runtime.prepare;
+      yield* waitForPreparation;
       yield* runtime.verify;
       const transport = yield* runtime.lease("a");
       expect(transport.command).toBe("/usr/bin/ssh");
@@ -617,9 +881,10 @@ it.effect("leases exclusively, reuses the VM for the same thread, and resets bet
 it.effect(
   "bounds boot address waits with the Effect clock; explicit release discards a partial lease",
   () =>
-    harness(({ runtime, setIp, vms, waitForBoot }) =>
+    harness(({ runtime, setIp, vms, waitForBoot, waitForPreparation }) =>
       Effect.gen(function* () {
         yield* runtime.prepare;
+        yield* waitForPreparation;
         yield* runtime.verify;
         setIp(null);
         const boot = yield* runtime.lease("a").pipe(Effect.flip, Effect.forkChild);
@@ -686,10 +951,11 @@ it.effect(
 it.effect(
   "routes Cua over SSH with isolated policy, preserves idle leases, closes explicitly and releases on mode switch/off/shutdown",
   () =>
-    harness(({ makeDriver, vms, change, runs }) =>
+    harness(({ makeDriver, vms, change, runs, waitForPreparation }) =>
       Effect.gen(function* () {
         const driver = yield* makeDriver();
         yield* driver.control({ action: "prepare-vm" });
+        yield* waitForPreparation;
         vms.get(golden)!.vncUrl = "vnc://:secret@127.0.0.1:5900";
         yield* driver.control({ action: "open-vm-display" });
         expect(runs.filter((run) => run.command === "/usr/bin/open")).toMatchObject([

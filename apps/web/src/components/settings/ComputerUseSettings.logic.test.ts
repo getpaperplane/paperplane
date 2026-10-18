@@ -5,11 +5,14 @@ import {
   controlFailureTitle,
   describeDriver,
   describeVm,
+  describeVmProgress,
+  formatDuration,
   isMacStatus,
   primaryAction,
   vmActions,
   vmConfirmation,
   vmOf,
+  vmSetupStep,
 } from "./ComputerUseSettings.logic";
 
 const linux = {
@@ -198,11 +201,11 @@ describe("isolated macOS VM setup", () => {
       freeDiskBytes: 210.4e9,
     } satisfies ComputerUseMacosVm;
     expect(describeVm(vm)).toBe(
-      "Download Cua's macOS image (about 150 GB on disk, 210.4 GB free) and open it so you can approve permissions.",
+      "Downloads Cua's macOS image (about 150 GB on disk, 210.4 GB free) and sets it up in the background.",
     );
     const { freeDiskBytes: _free, ...unknownFree } = vm;
     expect(describeVm(unknownFree)).toBe(
-      "Download Cua's macOS image (about 150 GB on disk) and open it so you can approve permissions.",
+      "Downloads Cua's macOS image (about 150 GB on disk) and sets it up in the background.",
     );
     expect(vmActions(vm)).toEqual([{ input: { action: "prepare-vm" }, label: "Prepare VM" }]);
   });
@@ -213,9 +216,8 @@ describe("isolated macOS VM setup", () => {
       state: "needs-consent",
       setupCommand: "cua-setup",
     } satisfies ComputerUseMacosVm;
-    expect(describeVm(vm)).toBe(
-      "Open the VM and approve the permission prompts, then select Verify. Rove installed the driver automatically.",
-    );
+    expect(describeVm(vm)).toBe("Open the VM, approve the permission prompts, then select Verify.");
+    expect(vmSetupStep(vm)).toBe("permissions");
     expect(vmActions(vm).map((action) => action.input.action)).toEqual([
       "open-vm-display",
       "verify-vm",
@@ -258,6 +260,73 @@ describe("isolated macOS VM setup", () => {
         (action) => action.input.action,
       ),
     ).toEqual(["remove-vm"]);
+  });
+
+  it("offers only Cancel while preparing and retry after a failed preparation", () => {
+    const preparing = {
+      ...vmBase,
+      state: "preparing",
+      progress: { phase: "downloading", percent: 42, startedAt: 0 },
+    } satisfies ComputerUseMacosVm;
+    expect(vmActions(preparing)).toEqual([
+      { input: { action: "cancel-prepare-vm" }, label: "Cancel" },
+    ]);
+    expect(vmConfirmation({ action: "cancel-prepare-vm" })).toContain("progress is lost");
+    expect(controlFailureTitle("cancel-prepare-vm")).toBe("Couldn't cancel preparing the VM");
+    const failed = {
+      ...vmBase,
+      state: "needs-image",
+      lastError: "Disk full",
+    } satisfies ComputerUseMacosVm;
+    expect(vmActions(failed)).toEqual([{ input: { action: "prepare-vm" }, label: "Try again" }]);
+  });
+
+  it("places each state on the setup checklist", () => {
+    const at = (vm: ComputerUseMacosVm) => vmSetupStep(vm);
+    expect(at({ ...vmBase, state: "needs-image" })).toBe("download");
+    expect(at({ ...vmBase, state: "preparing" })).toBe("download");
+    expect(
+      at({ ...vmBase, state: "preparing", progress: { phase: "unpacking", startedAt: 0 } }),
+    ).toBe("download");
+    expect(
+      at({ ...vmBase, state: "preparing", progress: { phase: "booting", startedAt: 0 } }),
+    ).toBe("driver");
+    expect(
+      at({ ...vmBase, state: "preparing", progress: { phase: "installing-driver", startedAt: 0 } }),
+    ).toBe("driver");
+    expect(at({ ...vmBase, state: "ready" })).toBeNull();
+    expect(at({ ...vmBase, state: "missing-lume" })).toBeNull();
+  });
+
+  it("formats download progress with an ETA and other phases with elapsed time", () => {
+    expect(
+      describeVmProgress(
+        { phase: "downloading", percent: 42.7, etaSeconds: 3720, startedAt: 0 },
+        0,
+      ),
+    ).toEqual({ text: "Downloading macOS image · 42% · about 1 h 2 min left", percent: 42 });
+    expect(describeVmProgress({ phase: "downloading", startedAt: 0 }, 10_000)).toEqual({
+      text: "Downloading macOS image · just started",
+      percent: null,
+    });
+    expect(
+      describeVmProgress({ phase: "unpacking", percent: 80, startedAt: 0 }, 50 * 60_000),
+    ).toEqual({ text: "Unpacking image · started 50 min ago", percent: null });
+    expect(
+      describeVmProgress({ phase: "downloading", percent: 99, etaSeconds: 20, startedAt: 0 }, 0)
+        .text,
+    ).toBe("Downloading macOS image · 99% · less than a minute left");
+    expect(describeVmProgress(undefined, 0)).toEqual({ text: "Starting…", percent: null });
+    expect(
+      describeVmProgress({ phase: "downloading", percent: 140, startedAt: 0 }, 0).percent,
+    ).toBe(100);
+  });
+
+  it("rounds durations to readable units", () => {
+    expect(formatDuration(30)).toBe("less than a minute");
+    expect(formatDuration(12 * 60)).toBe("12 min");
+    expect(formatDuration(2 * 3600)).toBe("2 h");
+    expect(formatDuration(3600 + 125)).toBe("1 h 2 min");
   });
 
   it("titles each failed action", () => {

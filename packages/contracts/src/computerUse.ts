@@ -15,9 +15,31 @@ export const ComputerUseDiagnostic = Schema.Struct({
 });
 export type ComputerUseDiagnostic = typeof ComputerUseDiagnostic.Type;
 
+/** A background VM preparation the server is running; it survives client navigation and reconnects. */
+export const ComputerUseMacosVmProgress = Schema.Struct({
+  phase: Schema.Literals(["downloading", "unpacking", "booting", "installing-driver"]),
+  /** 0-100 within the download; absent while Lume has not reported a figure yet. */
+  percent: Schema.optionalKey(Schema.Number),
+  etaSeconds: Schema.optionalKey(Schema.Number),
+  /** Epoch milliseconds when this preparation started. */
+  startedAt: Schema.Number,
+});
+export type ComputerUseMacosVmProgress = typeof ComputerUseMacosVmProgress.Type;
+
 /** Lume's version is reported separately from the guest driver. Sizes are bytes. */
 export const ComputerUseMacosVm = Schema.Struct({
-  state: Schema.Literals(["unavailable", "missing-lume", "needs-image", "needs-consent", "ready"]),
+  state: Schema.Literals([
+    "unavailable",
+    "missing-lume",
+    "needs-image",
+    "preparing",
+    "needs-consent",
+    "ready",
+  ]),
+  /** Present only while `state` is `preparing`. */
+  progress: Schema.optionalKey(ComputerUseMacosVmProgress),
+  /** Why the last background preparation failed; cleared by the next prepare. */
+  lastError: Schema.optionalKey(Schema.String),
   leased: Schema.Int.check(Schema.isGreaterThanOrEqualTo(0)),
   capacity: Schema.Int.check(Schema.isGreaterThanOrEqualTo(1)),
   owners: Schema.Array(Schema.String),
@@ -92,6 +114,7 @@ export const ComputerUseControlInput = Schema.Union([
   Schema.Struct({ action: Schema.Literal("install") }),
   Schema.Struct({ action: Schema.Literal("start") }),
   Schema.Struct({ action: Schema.Literal("prepare-vm") }),
+  Schema.Struct({ action: Schema.Literal("cancel-prepare-vm") }),
   Schema.Struct({ action: Schema.Literal("verify-vm") }),
   Schema.Struct({ action: Schema.Literal("open-vm-display") }),
   Schema.Struct({ action: Schema.Literal("release-vm") }),
@@ -107,6 +130,7 @@ export const ComputerUseAction = Schema.Literals([
   "grant-permissions",
   "set-telemetry",
   "prepare-vm",
+  "cancel-prepare-vm",
   "verify-vm",
   "open-vm-display",
   "release-vm",
