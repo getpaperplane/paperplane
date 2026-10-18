@@ -26,6 +26,8 @@ import {
 } from "@rove-code/shared/nodeRuntime";
 import * as NetService from "@rove-code/shared/Net";
 import { isCommandAvailable } from "@rove-code/shared/shell";
+// @effect-diagnostics-next-line nodeBuiltinImport:off -- FileSystem.stat follows symlinks and has no lstat equivalent.
+import * as NodeFSP from "node:fs/promises";
 import * as Clock from "effect/Clock";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -85,6 +87,9 @@ const AgentDeviceDaemonFile = Schema.Struct({
   version: Schema.optional(Schema.String),
 });
 const decodeDaemonFile = Schema.decodeUnknownEffect(Schema.fromJsonString(AgentDeviceDaemonFile));
+const decodeLegacyDaemonLock = Schema.decodeUnknownEffect(
+  Schema.fromJsonString(Schema.Struct({ pid: Schema.Int })),
+);
 
 const decodeAgentDeviceFailure = Schema.decodeUnknownOption(
   Schema.fromJsonString(
@@ -321,8 +326,9 @@ export const make = Effect.fn("LocalDeviceHost.make")(function* () {
       try {
         process.kill(pid, 0);
         return true;
-      } catch {
-        return false;
+      } catch (error) {
+        // Permission errors do not prove that the process is gone.
+        return !(error instanceof Error && "code" in error && error.code === "ESRCH");
       }
     });
 
@@ -560,66 +566,99 @@ export const make = Effect.fn("LocalDeviceHost.make")(function* () {
       if (alive) return toEndpoint(existing.value);
       yield* fs.remove(daemonFilePath(), { force: true }).pipe(Effect.ignore);
     }
-    // There is no `daemon start`; the first command in a state dir spawns the
-    // daemon and blocks until it answers. `devices` is the cheapest one.
-    const runResult = yield* runner
-      .run({
-        command: nodePath,
-        args: [agentTool.entryPath, "devices", "--json"],
-        env: daemonEnvironment,
-        timeout: Duration.millis(DAEMON_READY_TIMEOUT_MS),
-        timeoutBehavior: "timedOutResult",
-      })
-      .pipe(Effect.result);
-    // Discovery can fail after the daemon starts. A published endpoint still
-    // lets agents connect; absent one, preserve the CLI failure instead of polling.
-    const started = yield* readDaemonFile().pipe(Effect.option);
-    if (started._tag === "Some") return toEndpoint(started.value);
-    if (runResult._tag === "Failure") {
-      return yield* new DeviceHost.DeviceHostError({
-        hostId,
-        step: "starting agent tools",
-        cause: runResult.failure,
-      });
-    }
-    const result = runResult.success;
-    if (result.timedOut) {
-      return yield* new DeviceHost.DeviceHostTimeoutError({
-        hostId,
-        timeoutMs: DAEMON_READY_TIMEOUT_MS,
-      });
-    }
-    if (result.code !== 0) {
-      const failure = decodeAgentDeviceFailure(result.stdout);
-      const details = Option.isSome(failure) ? failure.value.error.details : undefined;
-      const reason =
-        details?.reason === "daemon_registration_unproven"
-          ? details.inspection?.reason === "non-directory"
-            ? "daemon_lock_not_directory"
-            : "daemon_registration_unproven"
-          : details?.reason === "daemon_retirement_unconfirmed"
-            ? "daemon_retirement_unconfirmed"
-            : "command_failed";
-      return yield* new DeviceHost.AgentDeviceStartError({
-        hostId,
-        stateDir,
-        exitCode: result.code === null ? null : Number(result.code),
-        reason,
-        cause: result,
-      });
-    }
-    const deadline = (yield* Clock.currentTimeMillis) + DAEMON_READY_TIMEOUT_MS;
-    while (true) {
-      const file = yield* readDaemonFile().pipe(Effect.option);
-      if (file._tag === "Some") return toEndpoint(file.value);
-      if ((yield* Clock.currentTimeMillis) > deadline) {
+    const recoverLegacyLock = Effect.gen(function* () {
+      const lockPath = path.join(stateDir, "daemon.lock");
+      // Effect's stat follows symlinks; only migrate an actual regular file.
+      const stat = yield* Effect.tryPromise(() => NodeFSP.lstat(lockPath));
+      if (!stat.isFile()) return false;
+      const lock = yield* fs.readFileString(lockPath).pipe(Effect.flatMap(decodeLegacyDaemonLock));
+      if (lock.pid <= 0 || (yield* isProcessAlive(lock.pid))) return false;
+      const backupPath = `${lockPath}.legacy-${yield* Clock.currentTimeMillis}`;
+      yield* fs.rename(lockPath, backupPath);
+      yield* Effect.logWarning(
+        "Retained a stale legacy agent-device lock before retrying startup",
+        {
+          pid: lock.pid,
+          backupPath,
+        },
+      );
+      return true;
+    }).pipe(Effect.orElseSucceed(() => false));
+
+    const start = Effect.gen(function* () {
+      // There is no `daemon start`; the first command in a state dir spawns the
+      // daemon and blocks until it answers. `devices` is the cheapest one.
+      const runResult = yield* runner
+        .run({
+          command: nodePath,
+          args: [agentTool.entryPath, "devices", "--json"],
+          env: daemonEnvironment,
+          timeout: Duration.millis(DAEMON_READY_TIMEOUT_MS),
+          timeoutBehavior: "timedOutResult",
+        })
+        .pipe(Effect.result);
+      // Discovery can fail after the daemon starts. A published endpoint still
+      // lets agents connect; absent one, preserve the CLI failure instead of polling.
+      const started = yield* readDaemonFile().pipe(Effect.option);
+      if (started._tag === "Some") return toEndpoint(started.value);
+      if (runResult._tag === "Failure") {
+        return yield* new DeviceHost.DeviceHostError({
+          hostId,
+          step: "starting agent tools",
+          cause: runResult.failure,
+        });
+      }
+      const result = runResult.success;
+      if (result.timedOut) {
         return yield* new DeviceHost.DeviceHostTimeoutError({
           hostId,
           timeoutMs: DAEMON_READY_TIMEOUT_MS,
         });
       }
-      yield* Effect.sleep(Duration.millis(DAEMON_POLL_MS));
-    }
+      if (result.code !== 0) {
+        const failure = decodeAgentDeviceFailure(result.stdout);
+        const details = Option.isSome(failure) ? failure.value.error.details : undefined;
+        const reason =
+          details?.reason === "daemon_registration_unproven"
+            ? details.inspection?.reason === "non-directory"
+              ? "daemon_lock_not_directory"
+              : "daemon_registration_unproven"
+            : details?.reason === "daemon_retirement_unconfirmed"
+              ? "daemon_retirement_unconfirmed"
+              : "command_failed";
+        return yield* new DeviceHost.AgentDeviceStartError({
+          hostId,
+          stateDir,
+          exitCode: result.code === null ? null : Number(result.code),
+          reason,
+          cause: result,
+        });
+      }
+      const deadline = (yield* Clock.currentTimeMillis) + DAEMON_READY_TIMEOUT_MS;
+      while (true) {
+        const file = yield* readDaemonFile().pipe(Effect.option);
+        if (file._tag === "Some") return toEndpoint(file.value);
+        if ((yield* Clock.currentTimeMillis) > deadline) {
+          return yield* new DeviceHost.DeviceHostTimeoutError({
+            hostId,
+            timeoutMs: DAEMON_READY_TIMEOUT_MS,
+          });
+        }
+        yield* Effect.sleep(Duration.millis(DAEMON_POLL_MS));
+      }
+    });
+    return yield* start.pipe(
+      Effect.catchTags({
+        AgentDeviceStartError: (error) =>
+          Effect.gen(function* () {
+            if (error.reason !== "daemon_lock_not_directory" || !(yield* recoverLegacyLock)) {
+              return yield* error;
+            }
+            // Do not catch the retry's failure or attempt another migration.
+            return yield* start;
+          }),
+      }),
+    );
   });
 
   const stopAgentDeviceDaemon = (
