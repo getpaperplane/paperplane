@@ -6,7 +6,7 @@
 
 using namespace facebook::react;
 
-@interface RoveSourceTextRun () <RCTT3SourceTextRunViewProtocol>
+@interface RoveSourceTextRun () <RCTRoveSourceTextRunViewProtocol>
 
 @end
 
