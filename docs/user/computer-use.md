@@ -44,14 +44,17 @@ Cua Driver, not Rove. Revoke them in **System Settings → Privacy & Security**.
 Host background-only mode remains the default. On an Apple Silicon Mac, select
 **Isolated macOS desktop** in Computer use settings. Install Lume when prompted,
 then **Prepare VM**. The first download is large: the Tahoe image has a roughly
-150 GB sparse disk. Review free space, allocated storage, virtual disk size and
+150 GB sparse disk. Preparation runs in the background on the environment, so you
+can leave Settings or disconnect; come back to see its progress. **Cancel** stops it
+and discards the partial download. If it fails, the reason appears in the row with
+**Try again**. Review free space, allocated storage, virtual disk size and
 configured memory before using it. Lume and Cua Driver are MIT-licensed.
 
 Rove automatically authorizes its public SSH key, installs Cua Driver and requests
 permissions in the golden VM. Select **Open VM**, approve the Accessibility,
 Screen Recording, System Events and direct screen capture prompts, then select
-**Verify**. If setup did not complete or prompts are missing, expand **Manual setup**
-and copy its command into **Terminal inside the VM**, not on your host. Rerun its
+**Verify**. If setup did not complete or prompts are missing, select **Set up
+manually** and run its script in **Terminal inside the VM**, not on your host. Rerun its
 app-list and screen-capture commands until they complete without prompts, then
 verify again. Clipboard sharing is enabled during preparation so you can paste
 this fallback command. Rove checks the app-owned daemon's grants over key-only SSH

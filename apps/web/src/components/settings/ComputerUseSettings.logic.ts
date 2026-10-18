@@ -1,6 +1,7 @@
 import type {
   ComputerUseControlInput,
   ComputerUseMacosVm,
+  ComputerUseMacosVmProgress,
   ComputerUseStatus,
 } from "@rove-code/contracts";
 
@@ -132,10 +133,12 @@ export function describeVm(vm: ComputerUseMacosVm): string {
       return "Install Lume, Cua's open-source VM tool, to create the private macOS VM.";
     case "needs-image": {
       const free = vm.freeDiskBytes === undefined ? "" : `, ${gigabytes(vm.freeDiskBytes)} free`;
-      return `Download Cua's macOS image (about ${Math.round(vm.requiredDiskBytes / 1e9)} GB on disk${free}) and open it so you can approve permissions.`;
+      return `Downloads Cua's macOS image (about ${Math.round(vm.requiredDiskBytes / 1e9)} GB on disk${free}) and sets it up in the background.`;
     }
+    case "preparing":
+      return "Setting up in the background. You can leave this page.";
     case "needs-consent":
-      return "Open the VM and approve the permission prompts, then select Verify. Rove installed the driver automatically.";
+      return "Open the VM, approve the permission prompts, then select Verify.";
     case "ready": {
       const owners = vm.owners.length === 0 ? "" : ` by ${vm.owners.join(", ")}`;
       const disk =
@@ -145,6 +148,72 @@ export function describeVm(vm: ComputerUseMacosVm): string {
       return `Ready. ${vm.leased} of ${vm.capacity} VM in use${owners}.${disk}`;
     }
   }
+}
+
+export const VM_SETUP_STEPS = [
+  { id: "download", label: "Download image" },
+  { id: "driver", label: "Install driver" },
+  { id: "permissions", label: "Approve permissions" },
+  { id: "verify", label: "Verify" },
+] as const;
+export type VmSetupStep = (typeof VM_SETUP_STEPS)[number]["id"];
+
+/** The setup step the VM is on, or null outside setup (ready, or blocked before it starts). */
+export function vmSetupStep(vm: ComputerUseMacosVm): VmSetupStep | null {
+  switch (vm.state) {
+    case "needs-image":
+      return "download";
+    case "preparing":
+      return vm.progress?.phase === "booting" || vm.progress?.phase === "installing-driver"
+        ? "driver"
+        : "download";
+    case "needs-consent":
+      return "permissions";
+    default:
+      return null;
+  }
+}
+
+/** "about 1 h 2 min", "12 min", "less than a minute". */
+export function formatDuration(seconds: number): string {
+  if (seconds < 60) return "less than a minute";
+  const minutes = Math.round(seconds / 60);
+  if (minutes < 60) return `${minutes} min`;
+  const hours = Math.floor(minutes / 60);
+  const rest = minutes % 60;
+  return rest === 0 ? `${hours} h` : `${hours} h ${rest} min`;
+}
+
+const PHASE_LABELS = {
+  downloading: "Downloading macOS image",
+  unpacking: "Unpacking image",
+  booting: "Starting the VM",
+  "installing-driver": "Installing Cua Driver",
+} satisfies Record<ComputerUseMacosVmProgress["phase"], string>;
+
+/**
+ * What a background preparation is doing. `percent` is set only while the download reports one,
+ * so callers draw a determinate bar then and plain text otherwise. `now` is epoch milliseconds.
+ */
+export function describeVmProgress(progress: ComputerUseMacosVmProgress | undefined, now: number) {
+  if (progress === undefined) return { text: "Starting…", percent: null };
+  const parts: string[] = [PHASE_LABELS[progress.phase]];
+  const percent =
+    progress.phase === "downloading" && progress.percent !== undefined
+      ? Math.min(100, Math.max(0, Math.floor(progress.percent)))
+      : null;
+  if (percent !== null) parts.push(`${percent}%`);
+  if (percent !== null && progress.etaSeconds !== undefined && progress.etaSeconds > 0) {
+    parts.push(
+      progress.etaSeconds < 60
+        ? "less than a minute left"
+        : `about ${formatDuration(progress.etaSeconds)} left`,
+    );
+  } else {
+    const elapsed = Math.max(0, (now - progress.startedAt) / 1000);
+    parts.push(elapsed < 60 ? "just started" : `started ${formatDuration(elapsed)} ago`);
+  }
+  return { text: parts.join(" · "), percent };
 }
 
 const REMOVE_VM: VmAction = { input: { action: "remove-vm" }, label: "Remove VM" };
@@ -167,6 +236,8 @@ export function controlFailureTitle(action: ComputerUseControlInput["action"]): 
       return "Couldn't save the setting";
     case "prepare-vm":
       return "Couldn't prepare the VM";
+    case "cancel-prepare-vm":
+      return "Couldn't cancel preparing the VM";
     case "verify-vm":
       return "Couldn't verify the VM";
     case "open-vm-display":
@@ -185,7 +256,14 @@ export function vmActions(vm: ComputerUseMacosVm): VmAction[] {
     case "missing-lume":
       return [{ input: { action: "install" }, label: "Install Lume" }];
     case "needs-image":
-      return [{ input: { action: "prepare-vm" }, label: "Prepare VM" }];
+      return [
+        {
+          input: { action: "prepare-vm" },
+          label: vm.lastError === undefined ? "Prepare VM" : "Try again",
+        },
+      ];
+    case "preparing":
+      return [{ input: { action: "cancel-prepare-vm" }, label: "Cancel" }];
     case "needs-consent":
       return [
         { input: { action: "open-vm-display" }, label: "Open VM" },
@@ -209,6 +287,8 @@ export function vmConfirmation(input: ComputerUseControlInput): string | null {
       return "This discards the VM's open apps and unsaved files.";
     case "remove-vm":
       return "This deletes the macOS VM image. You'll need to prepare it again.";
+    case "cancel-prepare-vm":
+      return "Stop preparing the VM? Download progress is lost.";
     default:
       return null;
   }

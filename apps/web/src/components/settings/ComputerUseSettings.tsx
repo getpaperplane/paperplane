@@ -1,18 +1,33 @@
-import { ComputerUseControlError, type ComputerUseControlInput } from "@rove-code/contracts";
+import {
+  ComputerUseControlError,
+  type ComputerUseControlInput,
+  type ComputerUseMacosVm,
+} from "@rove-code/contracts";
 import {
   isAtomCommandInterrupted,
   squashAtomCommandFailure,
 } from "@rove-code/client-runtime/state/runtime";
 import * as Schema from "effect/Schema";
-import { CheckIcon, ChevronRightIcon, CopyIcon } from "lucide-react";
+import { CheckIcon, CopyIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
+import { useCopyToClipboard } from "~/hooks/useCopyToClipboard";
+import { cn } from "~/lib/utils";
 import { computerUseEnvironment } from "~/state/computerUse";
 import { useEnvironmentQuery } from "~/state/query";
 import { useAtomCommand } from "~/state/use-atom-command";
 
 import { Button } from "../ui/button";
-import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from "../ui/collapsible";
+import {
+  Dialog,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogPanel,
+  DialogPopup,
+  DialogTitle,
+} from "../ui/dialog";
+import { Progress } from "../ui/progress";
 import { Select, SelectItem, SelectPopup, SelectTrigger, SelectValue } from "../ui/select";
 import { Switch } from "../ui/switch";
 import { toastManager } from "../ui/toast";
@@ -20,12 +35,15 @@ import {
   controlFailureTitle,
   describeDriver,
   describeVm,
+  describeVmProgress,
   isRemoveAction,
   isMacStatus,
   primaryAction,
   vmActions,
   vmConfirmation,
   vmOf,
+  vmSetupStep,
+  VM_SETUP_STEPS,
 } from "./ComputerUseSettings.logic";
 import { ScopedSwitch } from "./ScopedSwitch";
 import { SettingsRow, SettingsSection } from "./settingsLayout";
@@ -42,12 +60,15 @@ const PENDING_LABELS = {
   start: "Checking…",
   "grant-permissions": "Waiting for macOS…",
   "set-telemetry": "Saving…",
-  "prepare-vm": "Preparing…",
+  "prepare-vm": "Starting…",
+  "cancel-prepare-vm": "Cancelling…",
   "verify-vm": "Verifying…",
   "open-vm-display": "Opening…",
   "release-vm": "Releasing…",
   "remove-vm": "Removing…",
 } satisfies Record<Action, string>;
+
+const VM_PROGRESS_POLL_MS = 2_000;
 
 export function ComputerUseSettings() {
   const { scope, environment } = useSettingsScope();
@@ -67,25 +88,15 @@ export function ComputerUseSettings() {
   });
   const [pending, setPending] = useState<Action | null>(null);
   const status = driver.data;
-  const busy = pending !== null || driver.isPending;
   const vm = vmOf(status);
+  const preparing = vm?.state === "preparing";
+  // Progress polling refreshes status constantly; that must not flicker the Cancel button.
+  const busy = pending !== null || (driver.isPending && !preparing);
   const primary = vm === null ? primaryAction(status) : null;
   const telemetry =
     status?.status === "stopped" || status?.status === "running" ? status.telemetry : null;
-  const [copied, setCopied] = useState(false);
-  const copiedTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(
-    () => () => {
-      if (copiedTimeout.current !== null) clearTimeout(copiedTimeout.current);
-    },
-    [],
-  );
-  const copySetup = (text: string) => {
-    void navigator.clipboard.writeText(text);
-    setCopied(true);
-    if (copiedTimeout.current !== null) clearTimeout(copiedTimeout.current);
-    copiedTimeout.current = setTimeout(() => setCopied(false), 2000);
-  };
+  const [manualSetupOpen, setManualSetupOpen] = useState(false);
+  const [now, setNow] = useState(() => Date.now());
   // Status depends on the Mac mode, so re-read it when the mode changes here or on another client.
   const refreshDriver = useRef(driver.refresh);
   refreshDriver.current = driver.refresh;
@@ -96,6 +107,22 @@ export function ComputerUseSettings() {
     shownMode.current = macosMode;
     refreshDriver.current();
   }, [macosMode]);
+  // Preparation runs on the server whether or not this page is open, so follow it from status.
+  // A cached status may be stale when the page is revisited, so read it once on mount too.
+  const driverPending = useRef(driver.isPending);
+  driverPending.current = driver.isPending;
+  useEffect(() => {
+    if (!driverPending.current) refreshDriver.current();
+  }, []);
+  useEffect(() => {
+    if (!preparing) return;
+    const timer = setInterval(() => {
+      setNow(Date.now());
+      // Skip a tick rather than stack requests behind a slow one.
+      if (!driverPending.current) refreshDriver.current();
+    }, VM_PROGRESS_POLL_MS);
+    return () => clearInterval(timer);
+  }, [preparing]);
 
   const run = async (input: ComputerUseControlInput) => {
     if (environmentId === null) return;
@@ -223,44 +250,12 @@ export function ComputerUseSettings() {
             </div>
           }
         >
-          {vm.state === "needs-consent" && vm.setupCommand !== undefined ? (
-            <div className="pt-1 pb-2">
-              <Collapsible>
-                <CollapsibleTrigger className="group flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
-                  <ChevronRightIcon
-                    aria-hidden
-                    className="size-3 shrink-0 transition-transform group-data-panel-open:rotate-90 motion-reduce:transition-none"
-                  />
-                  <span className="font-medium text-foreground">Manual setup</span>
-                  <span>If automatic setup didn't finish</span>
-                </CollapsibleTrigger>
-                <CollapsiblePanel>
-                  <div className="space-y-2 pt-2">
-                    <ol className="list-decimal space-y-0.5 pl-8 text-xs text-muted-foreground">
-                      <li>Open the VM and launch Terminal.</li>
-                      <li>Paste and run this script.</li>
-                      <li>Approve the Accessibility and Screen Recording prompts.</li>
-                      <li>Select Verify.</li>
-                    </ol>
-                    <div className="relative">
-                      <pre className="max-h-48 overflow-auto rounded-lg border border-border bg-muted/40 py-2 pr-10 pl-3 font-mono text-xs">
-                        {vm.setupCommand}
-                      </pre>
-                      <Button
-                        className="absolute top-1.5 right-1.5"
-                        size="icon-xs"
-                        variant="ghost-muted"
-                        aria-label={copied ? "Copied" : "Copy setup script"}
-                        onClick={() => copySetup(vm.setupCommand ?? "")}
-                      >
-                        {copied ? <CheckIcon /> : <CopyIcon />}
-                      </Button>
-                    </div>
-                  </div>
-                </CollapsiblePanel>
-              </Collapsible>
-            </div>
-          ) : null}
+          <VmSetupDetails
+            vm={vm}
+            now={now}
+            busy={busy || environmentId === null}
+            onManualSetup={() => setManualSetupOpen(true)}
+          />
         </SettingsRow>
       ) : (
         <SettingsRow
@@ -309,6 +304,166 @@ export function ComputerUseSettings() {
           }
         />
       ) : null}
+      {vm?.setupCommand !== undefined ? (
+        <VmManualSetupDialog
+          open={manualSetupOpen && vm.state === "needs-consent"}
+          setupCommand={vm.setupCommand}
+          busy={busy || environmentId === null}
+          onOpenChange={setManualSetupOpen}
+          onOpenVm={() => void run({ action: "open-vm-display" })}
+          onVerify={() => {
+            setManualSetupOpen(false);
+            void run({ action: "verify-vm" });
+          }}
+        />
+      ) : null}
     </SettingsSection>
+  );
+}
+
+/** The VM's setup checklist, background progress, and the last preparation error. */
+function VmSetupDetails({
+  vm,
+  now,
+  busy,
+  onManualSetup,
+}: {
+  vm: ComputerUseMacosVm;
+  now: number;
+  busy: boolean;
+  onManualSetup: () => void;
+}) {
+  const current = vmSetupStep(vm);
+  if (current === null && vm.lastError === undefined) return null;
+  const currentIndex = VM_SETUP_STEPS.findIndex((step) => step.id === current);
+  const progress = vm.state === "preparing" ? describeVmProgress(vm.progress, now) : null;
+  return (
+    <div className="space-y-2 pt-1 pb-3">
+      {current !== null ? (
+        <ol className="space-y-1.5" aria-label="VM setup">
+          {VM_SETUP_STEPS.map((step, index) => {
+            const done = index < currentIndex;
+            const active = index === currentIndex;
+            return (
+              <li
+                key={step.id}
+                aria-current={active ? "step" : undefined}
+                className="flex min-w-0 gap-2 text-xs"
+              >
+                <span
+                  aria-hidden
+                  className={cn(
+                    "grid size-4 shrink-0 place-items-center rounded-full text-2xs font-medium ring-1",
+                    done
+                      ? "bg-primary text-primary-foreground ring-primary"
+                      : active
+                        ? "bg-primary/10 text-primary ring-primary/30"
+                        : "text-muted-foreground ring-border",
+                  )}
+                >
+                  {done ? <CheckIcon className="size-3" /> : index + 1}
+                </span>
+                <div className="min-w-0 flex-1 space-y-1.5">
+                  <div className="flex min-h-4 items-center justify-between gap-2">
+                    <span
+                      className={cn(
+                        active ? "font-medium text-foreground" : "text-muted-foreground",
+                      )}
+                    >
+                      {step.label}
+                      {done ? <span className="sr-only">, done</span> : null}
+                    </span>
+                    {active && step.id === "permissions" && vm.setupCommand !== undefined ? (
+                      <Button
+                        size="xs"
+                        variant="ghost-muted"
+                        disabled={busy}
+                        onClick={onManualSetup}
+                      >
+                        Set up manually
+                      </Button>
+                    ) : null}
+                  </div>
+                  {active && progress !== null ? (
+                    <div className="max-w-sm space-y-1.5">
+                      <p role="status" className="tabular-nums text-muted-foreground">
+                        {progress.text}
+                      </p>
+                      {progress.percent !== null ? (
+                        <Progress label="VM preparation" value={progress.percent} />
+                      ) : null}
+                    </div>
+                  ) : null}
+                </div>
+              </li>
+            );
+          })}
+        </ol>
+      ) : null}
+      {vm.lastError !== undefined ? (
+        <p role="alert" className="text-xs break-words text-destructive-foreground">
+          Last setup attempt failed: {vm.lastError}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
+/** Fallback for the permissions step when Rove's automatic setup inside the VM didn't finish. */
+function VmManualSetupDialog({
+  open,
+  setupCommand,
+  busy,
+  onOpenChange,
+  onOpenVm,
+  onVerify,
+}: {
+  open: boolean;
+  setupCommand: string;
+  busy: boolean;
+  onOpenChange: (open: boolean) => void;
+  onOpenVm: () => void;
+  onVerify: () => void;
+}) {
+  const { copyToClipboard, isCopied } = useCopyToClipboard({ target: "setup script" });
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogPopup className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Set up the VM manually</DialogTitle>
+          <DialogDescription>
+            Use this if Verify still fails after you approve the prompts.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogPanel>
+          <div className="space-y-3 text-sm">
+            <ol className="list-decimal space-y-1 pl-5 text-muted-foreground">
+              <li>Open the VM and launch Terminal there, not on this Mac.</li>
+              <li>Paste and run the script below.</li>
+              <li>Approve every Accessibility and Screen Recording prompt.</li>
+              <li>Select Verify.</li>
+            </ol>
+            <pre className="max-h-48 overflow-auto whitespace-pre-wrap break-all rounded-xl bg-muted/50 p-3 font-mono text-xs">
+              {setupCommand}
+            </pre>
+            <Button size="sm" variant="outline" onClick={() => copyToClipboard(setupCommand)}>
+              {isCopied ? <CheckIcon /> : <CopyIcon />}
+              {isCopied ? "Copied" : "Copy script"}
+            </Button>
+          </div>
+        </DialogPanel>
+        <DialogFooter variant="bare">
+          <Button variant="ghost" onClick={() => onOpenChange(false)}>
+            Close
+          </Button>
+          <Button variant="outline" disabled={busy} onClick={onOpenVm}>
+            Open VM
+          </Button>
+          <Button disabled={busy} onClick={onVerify}>
+            Verify
+          </Button>
+        </DialogFooter>
+      </DialogPopup>
+    </Dialog>
   );
 }

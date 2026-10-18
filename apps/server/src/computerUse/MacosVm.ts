@@ -1,17 +1,21 @@
-// @effect-diagnostics nodeBuiltinImport:off -- Validate Lume IPs and identify this server's ownership record.
+// @effect-diagnostics nodeBuiltinImport:off -- Validate Lume IPs, strip terminal escapes and identify this server's ownership record.
 import * as NodeCrypto from "node:crypto";
 import * as NodeNet from "node:net";
 import * as NodeOS from "node:os";
+import * as NodeUtil from "node:util";
 
 import type { ComputerUseMacosVm } from "@rove-code/contracts";
 import {
   Environment as HostProcessEnvironment,
   Platform as HostProcessPlatform,
 } from "@rove-code/shared/HostProcess";
+import * as Cause from "effect/Cause";
+import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import * as Fiber from "effect/Fiber";
 import * as Option from "effect/Option";
 import * as Path from "effect/Path";
 import * as Schema from "effect/Schema";
@@ -61,6 +65,23 @@ const decodeConsent = Schema.decodeUnknownOption(
   ),
 );
 
+/** Parse complete Lume output lines. Chunk framing and UTF-8 decoding stay at the stream boundary. */
+export const parseLumeProgress = (line: string) => {
+  const text = NodeUtil.stripVTControlCharacters(line);
+  const percentMatch = /(?:^|\s)(\d{1,3})%/.exec(text);
+  const percent = percentMatch ? Math.min(100, Number(percentMatch[1])) : undefined;
+  const eta = /ETA:\s*(\d+(?::\d{2}){1,2})(?![\d:])/.exec(text)?.[1];
+  const etaSeconds = eta?.split(":").reduce((total, part) => total * 60 + Number(part), 0);
+  if (/Decompressing|Reassembling|Copying OCI image/i.test(text) || percent === 100)
+    return { phase: "unpacking" as const, ...(percent !== undefined ? { percent } : {}) };
+  if (percent === undefined) return undefined;
+  return {
+    phase: "downloading" as const,
+    percent,
+    ...(etaSeconds !== undefined ? { etaSeconds } : {}),
+  };
+};
+
 export class MacosVmError extends Schema.TaggedError<MacosVmError>()("MacosVmError", {
   reason: Schema.Literals([
     "unavailable",
@@ -70,6 +91,7 @@ export class MacosVmError extends Schema.TaggedError<MacosVmError>()("MacosVmErr
     "consent",
     "capacity",
     "not-ready",
+    "preparing",
     "display",
   ]),
   cause: Schema.optionalKey(Schema.Defect()),
@@ -86,6 +108,8 @@ export class MacosVmError extends Schema.TaggedError<MacosVmError>()("MacosVmErr
         return "The VM hasn't granted Accessibility and Screen Recording yet. Open the VM, approve the prompts (or run Manual setup in its Terminal), then verify again.";
       case "capacity":
         return "The private macOS VM slot is occupied. Use close_desktop in the finished thread or Release desktop in Settings. Rove never evicts work or falls back to the host.";
+      case "preparing":
+        return "The macOS VM is still being prepared. Wait for it to finish or cancel it in Settings.";
       case "not-ready":
         return "Prepare and verify the isolated macOS desktop in Settings before using it. No host input was sent.";
       case "display":
@@ -102,6 +126,7 @@ export class MacosVm extends Context.Service<
     readonly check: Effect.Effect<ComputerUseMacosVm>;
     readonly install: Effect.Effect<void, MacosVmError>;
     readonly prepare: Effect.Effect<void, MacosVmError>;
+    readonly cancel: Effect.Effect<void, MacosVmError>;
     readonly verify: Effect.Effect<void, MacosVmError>;
     readonly openDisplay: Effect.Effect<void, MacosVmError>;
     readonly lease: (key: string) => Effect.Effect<Transport, MacosVmError>;
@@ -113,6 +138,7 @@ export class MacosVm extends Context.Service<
 
 /** CuaDriver serializes this runtime with its transport lock. Idle MCP retirement does not close leases. */
 export const make = Effect.fn("MacosVm.make")(function* (options?: { readonly arch?: string }) {
+  const scope = yield* Effect.scope;
   const runner = yield* ProcessRunner.ProcessRunner;
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -130,6 +156,11 @@ export const make = Effect.fn("MacosVm.make")(function* (options?: { readonly ar
   let leaseKey: string | undefined;
   let workOwned = false;
   let executable: string | undefined;
+  let preparation: Fiber.Fiber<void> | undefined;
+  let progress: ComputerUseMacosVm["progress"];
+  let lastError: string | undefined;
+  let lumeVersion: string | undefined;
+  let freeDiskBytes: number | undefined;
   const wrap = (cause: unknown) =>
     Schema.is(MacosVmError)(cause) ? cause : new MacosVmError({ reason: "runtime", cause });
   const supported = platform === "darwin" && (options?.arch ?? process.arch) === "arm64";
@@ -163,7 +194,8 @@ export const make = Effect.fn("MacosVm.make")(function* (options?: { readonly ar
       const version = yield* run(candidate, ["--version"]).pipe(Effect.option);
       if (Option.isSome(version) && version.value.code === 0) {
         executable = candidate;
-        return version.value.stdout.trim().slice(0, 100);
+        lumeVersion = version.value.stdout.trim().slice(0, 100);
+        return lumeVersion;
       }
     }
     return yield* new MacosVmError({ reason: "missing-lume" });
@@ -358,7 +390,12 @@ export const make = Effect.fn("MacosVm.make")(function* (options?: { readonly ar
       owners: leaseKey ? [leaseKey] : [],
       installCommand: INSTALL_COMMAND,
       requiredDiskBytes: REQUIRED_DISK,
+      ...(lastError ? { lastError } : {}),
+      ...(lumeVersion !== undefined ? { lumeVersion } : {}),
+      ...(freeDiskBytes !== undefined ? { freeDiskBytes } : {}),
     };
+    // Preparation owns Lume until it finishes; polling must not spawn processes or claim ownership.
+    if (progress) return { ...base, state: "preparing", progress } satisfies ComputerUseMacosVm;
     if (!supported)
       return {
         ...base,
@@ -379,6 +416,7 @@ export const make = Effect.fn("MacosVm.make")(function* (options?: { readonly ar
         Option.isSome(df) && df.value.code === 0
           ? Number(df.value.stdout.trim().split("\n").at(-1)?.trim().split(/\s+/)[3]) * 1024
           : NaN;
+      freeDiskBytes = Number.isFinite(free) ? free : undefined;
       const records = yield* list;
       const vm = records.find((entry) => entry.name === GOLDEN);
       const unrecorded = !workOwned && records.some((entry) => entry.name === WORK);
@@ -413,6 +451,7 @@ export const make = Effect.fn("MacosVm.make")(function* (options?: { readonly ar
         } satisfies ComputerUseMacosVm);
   });
   const openDisplay = Effect.gen(function* () {
+    if (progress) return yield* new MacosVmError({ reason: "preparing" });
     if ((yield* check).state !== "needs-consent")
       return yield* new MacosVmError({ reason: "display" });
     yield* claim;
@@ -433,14 +472,13 @@ export const make = Effect.fn("MacosVm.make")(function* (options?: { readonly ar
   }).pipe(
     // Ownership is actionable; anything else may carry the credentialed URL, so it stays generic.
     Effect.mapError((cause) =>
-      Schema.is(MacosVmError)(cause) && cause.reason === "ownership"
+      Schema.is(MacosVmError)(cause) &&
+      (cause.reason === "ownership" || cause.reason === "preparing")
         ? cause
         : new MacosVmError({ reason: "display" }),
     ),
   );
-  const prepare = Effect.gen(function* () {
-    yield* claim;
-    if (leaseKey) return yield* new MacosVmError({ reason: "capacity" });
+  const prepareWork = Effect.gen(function* () {
     if (!(yield* fs.exists(keyPath)))
       yield* checked("/usr/bin/ssh-keygen", [
         "-t",
@@ -455,11 +493,40 @@ export const make = Effect.fn("MacosVm.make")(function* (options?: { readonly ar
     yield* fs.chmod(directory, 0o700);
     yield* fs.chmod(keyPath, 0o600);
     yield* fs.remove(sealedPath, { force: true });
-    if (!(yield* list).some((vm) => vm.name === GOLDEN))
-      yield* lume(["pull", IMAGE, GOLDEN, "--storage", storage], "60 minutes");
+    if (!(yield* list).some((vm) => vm.name === GOLDEN)) {
+      const decoder = new TextDecoder();
+      let pending = "";
+      const consume = (text: string) => {
+        pending += text;
+        const lines = pending.split(/[\r\n]/);
+        pending = lines.pop() ?? "";
+        for (const line of lines) {
+          const update = parseLumeProgress(line);
+          if (update && progress) {
+            // Lume can emit a late download line after beginning image assembly.
+            if (progress.phase === "unpacking" && update.phase === "downloading") continue;
+            progress = { startedAt: progress.startedAt, ...update };
+          }
+        }
+      };
+      const result = yield* runner
+        .run({
+          command: executable ?? "lume",
+          args: ["pull", IMAGE, GOLDEN, "--storage", storage],
+          env: environment,
+          timeout: "12 hours",
+          outputMode: "truncate",
+          onStdoutChunk: (chunk) => consume(decoder.decode(chunk, { stream: true })),
+        })
+        .pipe(Effect.mapError(wrap));
+      consume(decoder.decode() + "\n");
+      if (result.code !== 0) return yield* new MacosVmError({ reason: "runtime" });
+    }
+    if (progress) progress = { phase: "booting", startedAt: progress.startedAt };
     yield* bootGolden;
     yield* Effect.gen(function* () {
       yield* address(GOLDEN);
+      if (progress) progress = { phase: "installing-driver", startedAt: progress.startedAt };
       // Lume 0.6.1 joins command argv with spaces. Pass one shell script unchanged;
       // the validated public key is single-quoted inside it, not interpolated by the host.
       yield* lume(
@@ -474,7 +541,46 @@ export const make = Effect.fn("MacosVm.make")(function* (options?: { readonly ar
       ),
     );
   }).pipe(Effect.mapError(wrap));
+  const prepare = Effect.gen(function* () {
+    if (progress) return;
+    yield* claim;
+    if (leaseKey) return yield* new MacosVmError({ reason: "capacity" });
+    lastError = undefined;
+    progress = { phase: "downloading", startedAt: yield* Clock.currentTimeMillis };
+    // Not forkChild: an RPC's completion must not interrupt the download.
+    preparation = yield* prepareWork.pipe(
+      Effect.catchCause((cause) =>
+        Effect.sync(() => {
+          if (!Cause.hasInterrupts(cause)) {
+            const error = Cause.findErrorOption(cause);
+            lastError = Option.isSome(error)
+              ? wrap(error.value).message
+              : new MacosVmError({ reason: "runtime" }).message;
+          }
+        }),
+      ),
+      Effect.ensuring(
+        Effect.sync(() => {
+          progress = undefined;
+          preparation = undefined;
+        }),
+      ),
+      Effect.forkIn(scope),
+    );
+  }).pipe(Effect.mapError(wrap));
+  const cancel = Effect.gen(function* () {
+    if (preparation) yield* Fiber.interrupt(preparation);
+    progress = undefined;
+    preparation = undefined;
+    if (owned && preparing) {
+      yield* assertOwner;
+      yield* stop(GOLDEN);
+      preparing = false;
+      yield* saveOwner;
+    }
+  }).pipe(Effect.mapError(wrap));
   const verify = Effect.gen(function* () {
+    if (progress) return yield* new MacosVmError({ reason: "preparing" });
     yield* claim;
     if (leaseKey) return yield* new MacosVmError({ reason: "capacity" });
     if (!(yield* fs.exists(sealedPath))) yield* bootGolden;
@@ -496,6 +602,7 @@ export const make = Effect.fn("MacosVm.make")(function* (options?: { readonly ar
     yield* saveOwner;
   });
   const release = Effect.gen(function* () {
+    yield* cancel;
     if (!owned) return;
     yield* assertOwner;
     // Also discard a partial clone left by an interrupted or failed acquisition.
@@ -510,6 +617,7 @@ export const make = Effect.fn("MacosVm.make")(function* (options?: { readonly ar
     owned = false;
   }).pipe(Effect.mapError(wrap));
   const lease = Effect.fn("MacosVm.lease")(function* (key: string) {
+    if (progress) return yield* new MacosVmError({ reason: "preparing" });
     yield* claim;
     if (leaseKey && leaseKey !== key) return yield* new MacosVmError({ reason: "capacity" });
     if (!leaseKey) {
@@ -541,6 +649,7 @@ export const make = Effect.fn("MacosVm.make")(function* (options?: { readonly ar
     return ssh(yield* address(WORK), ["mcp"]);
   }, Effect.mapError(wrap));
   const remove = Effect.gen(function* () {
+    yield* cancel;
     yield* claim;
     yield* discard(WORK);
     leaseKey = undefined;
@@ -558,6 +667,7 @@ export const make = Effect.fn("MacosVm.make")(function* (options?: { readonly ar
   return MacosVm.of({
     check,
     prepare,
+    cancel,
     verify,
     openDisplay,
     lease,

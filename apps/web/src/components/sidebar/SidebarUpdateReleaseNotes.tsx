@@ -10,6 +10,7 @@ import {
 import { cn } from "../../lib/utils";
 import { openDesktopUpdateReleaseNotes } from "../desktopUpdate.toast";
 import { Button } from "../ui/button";
+import { Progress } from "../ui/progress";
 import {
   formatDesktopUpdateVersion,
   getDesktopUpdatePopoverTitle,
@@ -114,19 +115,7 @@ export function SidebarUpdateReleaseNotes({
         ) : null}
       </header>
       {isDownloading ? (
-        <div
-          aria-label="Download progress"
-          aria-valuemax={100}
-          aria-valuemin={0}
-          aria-valuenow={Math.floor(percent)}
-          className="mx-4 mb-3 h-0.5 shrink-0 overflow-hidden rounded-full bg-foreground/10"
-          role="progressbar"
-        >
-          <div
-            className="h-full origin-left bg-primary transition-transform duration-300 ease-out motion-reduce:transition-none"
-            style={{ transform: `scaleX(${percent / 100})` }}
-          />
-        </div>
+        <Progress className="mx-4 mb-3" label="Download progress" size="thin" value={percent} />
       ) : null}
       {errorMessage ? (
         <p className="-mt-1 shrink-0 px-4 pb-3 text-xs leading-4 text-destructive-foreground">
