@@ -35,6 +35,10 @@ const DESKTOP_LOG_FILE_MAX_BYTES = 10 * 1024 * 1024;
 const DESKTOP_LOG_FILE_MAX_FILES = 10;
 const DESKTOP_BACKEND_CHILD_LOG_FIBER_ID = "#backend-child";
 const DESKTOP_TRACE_BATCH_WINDOW_MS = 1_000;
+// Renderer IPC chatter (snapshot reads, settings getters) runs dozens of times a
+// minute and finishes in well under a millisecond; recording each one rotated
+// the trace files several times a day. Failures and slow calls are still kept.
+const DESKTOP_TRACE_DROP_FAST_SUCCESS = [{ namePrefix: "desktop.ipc.", belowMs: 5 }] as const;
 const DESKTOP_BACKEND_OUTPUT_BUFFER_MAX_BYTES = 1024 * 1024;
 const DESKTOP_BACKEND_OUTPUT_BUFFER_MAX_CHUNKS = 256;
 
@@ -700,6 +704,7 @@ const layerTelemetry = Layer.unwrap(
           maxFiles: DESKTOP_LOG_FILE_MAX_FILES,
           batchWindowMs: DESKTOP_TRACE_BATCH_WINDOW_MS,
           sink,
+          dropFastSuccess: DESKTOP_TRACE_DROP_FAST_SUCCESS,
           ...(delegate ? { delegate } : {}),
         });
 

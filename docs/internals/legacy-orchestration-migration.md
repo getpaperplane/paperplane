@@ -4,8 +4,8 @@ Orchestration v2 snapshots `state.sqlite` into `statev2.sqlite` before opening w
 on its first launch. Only the copy receives v2 migrations; the original remains available to v1.
 Subsequent launches reuse the copy without refreshing it from v1. It creates v2 thread shell events first and imports
 the complete user and assistant transcript lazily when a client reads or continues the thread. The
-v1 projection tables remain the import source and provide a read-only recovery source if an import
-needs investigation.
+v1 shell and message projections remain the import source. The untouched `state.sqlite`, not the
+v1 tables inside `statev2.sqlite`, is the recovery source if an import needs investigation.
 
 ## Imported data
 
@@ -52,6 +52,35 @@ requested migration at id 55 or later without its expected name. Earlier name cl
 warnings for compatibility with site-local migrations. There is no safe id range for a fork inside
 this ledger: any id at or below a future upstream id masks it forever, so fork schema changes belong
 in a separate migration table or outside the migrator entirely.
+
+## Retiring copied v1 data
+
+[`LegacyV1StorageMaintenance`](../../apps/server/src/persistence/LegacyV1StorageMaintenance.ts)
+runs in background storage maintenance, outside the shared migration ledger. It checks for both
+unimported shells and unfinished transcripts before atomically dropping unused v1 activities, turns,
+approvals, plans, projector state, and checkpoint diff blobs (including their indexes). Shell and
+message projections and pull request links remain for importer reconciliation; `projection_projects`
+is still the shared project read model, and session projections remain for settings provider history. The shared `orchestration_events` and
+`orchestration_command_receipts` tables must not be dropped: v2 uses them too. Existing history
+compaction removes imported v1 thread events and receipts in bounded batches.
+
+DROPs run on a worker while reserving the server writer without a transaction, so foreground writes
+wait asynchronously and WAL readers continue. The worker checks eligibility and drops in one
+transaction; interruption rolls it back and a later pass retries. This work starts after activation,
+not on the readiness path. Historical migrations (including settlement repair) have already run;
+restarting uses their existing ledger rather than replaying them against retired tables.
+
+On older databases with `auto_vacuum=NONE`, dropping tables frees pages for reuse but cannot shrink
+the file. On a subsequent launch, before opening persistence connections or accepting clients,
+startup reuses doctor's exclusive offline VACUUM to enable incremental auto-vacuum. It upgrades
+files below 64 MiB cheaply; larger files require at least 256 MiB and 25% reclaimable space so the
+one-time readiness cost buys meaningful savings. It requires available disk space of twice the current
+database size plus 64 MiB, and skips if another connection holds the database. Failures defer the
+upgrade without preventing startup. Only configured userdata paths are eligible, not implicit dev
+paths. SQLite's transactional VACUUM leaves the original database intact on interruption; the
+retirement pass remains off the readiness path, so its freed pages are considered next launch.
+Subsequent background reclamation returns free pages online. `rove doctor` remains an offline
+fallback for skipped upgrades; the Storage page reports reclaimable space and its host-specific command.
 
 ## Recovery
 

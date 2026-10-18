@@ -287,7 +287,11 @@ describe("orchestration V2 merge-back provider replay", () => {
             projectId,
           });
           const forkThreadId = ThreadId.make(`thread-merge-back-${variant.driver}-fork`);
-          const forkRunId = ids.derive.run({ threadId: forkThreadId, ordinal: 1 });
+          const forkRunId = ids.derive.run({
+            idDerivationVersion: 2,
+            threadId: forkThreadId,
+            ordinal: 1,
+          });
           const commands = [
             makeCreateCommand({
               commandId: yield* ids.allocate.command({
@@ -485,8 +489,16 @@ describe("orchestration V2 merge-back provider replay", () => {
           });
           const firstForkThreadId = ThreadId.make(`${fixtureName}-first-fork`);
           const secondForkThreadId = ThreadId.make(`${fixtureName}-second-fork`);
-          const firstForkRunId = ids.derive.run({ threadId: firstForkThreadId, ordinal: 1 });
-          const secondForkRunId = ids.derive.run({ threadId: secondForkThreadId, ordinal: 1 });
+          const firstForkRunId = ids.derive.run({
+            idDerivationVersion: 2,
+            threadId: firstForkThreadId,
+            ordinal: 1,
+          });
+          const secondForkRunId = ids.derive.run({
+            idDerivationVersion: 2,
+            threadId: secondForkThreadId,
+            ordinal: 1,
+          });
           const commandId = (commandName: string) =>
             ids.allocate.command({ fixtureName, commandName });
           const commands = [

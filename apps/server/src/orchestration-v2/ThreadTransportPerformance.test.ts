@@ -1,5 +1,6 @@
 import {
   EventId,
+  MessageId,
   OrchestrationV2RpcSchemas,
   ProjectId,
   ProviderInstanceId,
@@ -12,13 +13,14 @@ import {
   type OrchestrationV2TurnItem,
 } from "@rove-code/contracts";
 import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 import type * as RpcMessage from "effect/rpc/RpcMessage";
 import { describe, expect, it } from "vite-plus/test";
 
 import { buildBoundedThreadStreamSnapshot } from "./ThreadStream.ts";
 import { buildBoundedThreadProjection } from "./threadHistoryPaging.ts";
-import { projectDomainEventForWire } from "./WireProjection.ts";
+import { makeThreadLiveTextProjector, projectDomainEventForWire } from "./WireProjection.ts";
 
 const SNAPSHOT_SEQUENCE = 600;
 const ROW_COUNT = 600;
@@ -58,7 +60,7 @@ function encodedThreadStreamChunkBytes(value: OrchestrationV2ThreadStreamItem): 
   return encodedBytes(response);
 }
 
-function makeCommandItem(index: number): OrchestrationV2TurnItem {
+function makeCommandItem(index: number) {
   return {
     id: TurnItemId.make(`item-${index}`),
     type: "command_execution",
@@ -78,7 +80,7 @@ function makeCommandItem(index: number): OrchestrationV2TurnItem {
     startedAt: NOW,
     completedAt: NOW,
     updatedAt: NOW,
-  };
+  } satisfies OrchestrationV2TurnItem;
 }
 
 function makeProjection(): OrchestrationV2ThreadProjection {
@@ -155,6 +157,76 @@ function makeTurnItemEvent(item: OrchestrationV2TurnItem): OrchestrationV2Domain
 }
 
 describe("thread transport payload budget", () => {
+  it.each(["message", "assistant_message", "reasoning"] as const)(
+    "streams a 20 KiB %s reply with append-sized frames at 50 ms flushes",
+    (entityType) => {
+      // 20 characters per 50 ms flush: 400 characters/sec for 51.2 seconds.
+      const reply = "x".repeat(20 * 1024);
+      const project = makeThreadLiveTextProjector(true);
+      const {
+        type: _type,
+        input: _input,
+        output: _output,
+        exitCode: _exitCode,
+        ...common
+      } = makeCommandItem(0);
+      let before = 0;
+      let after = 0;
+      let appends = 0;
+      for (let frame = 1; frame <= 1025; frame++) {
+        const terminal = frame === 1025;
+        const text = reply.slice(0, Math.min(frame * 20, reply.length));
+        const updatedAt = DateTime.add(NOW, { milliseconds: frame * 50 });
+        const messageId = MessageId.make("reply-message");
+        const event: OrchestrationV2DomainEvent =
+          entityType === "message"
+            ? {
+                id: EventId.make(`reply-${frame}`),
+                type: "message.updated",
+                threadId: THREAD_ID,
+                occurredAt: updatedAt,
+                payload: {
+                  id: messageId,
+                  threadId: THREAD_ID,
+                  runId: null,
+                  nodeId: null,
+                  role: "assistant",
+                  text,
+                  attachments: [],
+                  streaming: !terminal,
+                  createdBy: "agent",
+                  creationSource: "provider",
+                  createdAt: NOW,
+                  updatedAt,
+                },
+              }
+            : makeTurnItemEvent({
+                ...common,
+                type: entityType,
+                ...(entityType === "assistant_message" ? { messageId } : {}),
+                status: terminal ? "completed" : "running",
+                completedAt: terminal ? updatedAt : null,
+                text,
+                streaming: !terminal,
+                updatedAt,
+              } as OrchestrationV2TurnItem);
+        const full = { kind: "event" as const, sequence: frame, event };
+        const compact = project(full);
+        before += encodedThreadStreamChunkBytes(full);
+        after += encodedThreadStreamChunkBytes(compact);
+        if (compact.kind === "text-append") appends++;
+        if (frame === 1 || terminal) expect(compact).toBe(full);
+      }
+      expect(appends).toBe(1023);
+      expect(after).toBeLessThan(400_000);
+      expect(after / before).toBeLessThan(0.04);
+      Effect.runSync(
+        Effect.logInfo(
+          `20KiB ${entityType}: full=${before} append=${after} bytes (${(100 * (1 - after / before)).toFixed(2)}% less)`,
+        ),
+      );
+    },
+  );
   it("records full, bounded, and payload-omitting snapshot improvements", () => {
     const projection = makeProjection();
     const historicalFullSnapshot: OrchestrationV2ThreadStreamItem = {

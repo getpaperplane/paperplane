@@ -1,8 +1,13 @@
+// @effect-diagnostics-next-line nodeBuiltinImport:off -- Effect FileSystem has no statfs API.
+import * as NodeFSP from "node:fs/promises";
+
 import * as NodeSqliteClient from "@rove-code/shared/nodeSqliteClient";
 import * as Context from "effect/Context";
+import * as Clock from "effect/Clock";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
+import * as Path from "effect/Path";
 import * as Schema from "effect/Schema";
 import * as SqlClient from "effect/sql/SqlClient";
 import { isSqlError } from "effect/sql/SqlError";
@@ -56,10 +61,12 @@ export class DatabaseCompactError extends Schema.TaggedError<DatabaseCompactErro
   }
 }
 
-/** Offline inspection and repair of a Rove state database, for `rove doctor`. */
+/** Offline inspection and repair, shared by startup and `rove doctor`. */
 export class DatabaseMaintenance extends Context.Service<
   DatabaseMaintenance,
   {
+    /** Best-effort offline upgrade before the server opens any persistence connections. */
+    readonly compactOnStartup: (databasePath: string) => Effect.Effect<void>;
     readonly inspect: (databasePath: string) => Effect.Effect<
       {
         readonly databaseBytes: number;
@@ -104,6 +111,7 @@ const readStorage = Effect.gen(function* () {
 
 const make = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
 
   const locate = Effect.fn("DatabaseMaintenance.locate")(function* (databasePath: string) {
     if (!(yield* fs.exists(databasePath))) {
@@ -183,7 +191,44 @@ const make = Effect.gen(function* () {
       ),
   );
 
-  return DatabaseMaintenance.of({ inspect, compact });
+  const compactOnStartup = Effect.fn("DatabaseMaintenance.compactOnStartup")(
+    function* (databasePath: string) {
+      if (databasePath === ":memory:" || databasePath === "") return;
+      if (!(yield* fs.exists(databasePath))) return;
+      const status = yield* inspect(databasePath);
+      if (status.incrementalVacuumEnabled) return;
+      // Avoid a rebuild for modest savings. Tiny databases are cheap to upgrade
+      // now, before they grow into databases that need an offline rebuild.
+      const worthwhile =
+        status.databaseBytes < 64 * 1024 ** 2 ||
+        status.reclaimableBytes >= Math.max(256 * 1024 ** 2, status.databaseBytes / 4);
+      if (!worthwhile) return;
+      const disk = yield* Effect.tryPromise(() =>
+        NodeFSP.statfs(path.dirname(databasePath), { bigint: true }),
+      );
+      // Budget twice the CURRENT size (not the smaller final estimate) for temp
+      // and WAL, plus 64 MiB of headroom. Fail closed if statfs is unavailable.
+      const requiredBytes = BigInt(status.databaseBytes) * 2n + 64n * 1024n ** 2n;
+      if (disk.bavail * disk.bsize < requiredBytes) {
+        yield* Effect.logInfo("Startup database compaction deferred: insufficient disk space");
+        return;
+      }
+      const started = yield* Clock.currentTimeMillis;
+      // compact rechecks exclusivity and retains SQLite's lock through VACUUM;
+      // a separate CLI/server connection cannot race the inspection above.
+      const result = yield* compact(databasePath);
+      const finished = yield* Clock.currentTimeMillis;
+      yield* Effect.logInfo("Compacted database at startup", {
+        durationMs: finished - started,
+        reclaimedBytes: Math.max(0, result.beforeBytes - result.afterBytes),
+        beforeBytes: result.beforeBytes,
+        afterBytes: result.afterBytes,
+      });
+    },
+    Effect.catch((cause) => Effect.logWarning("Startup database compaction deferred", { cause })),
+  );
+
+  return DatabaseMaintenance.of({ inspect, compact, compactOnStartup });
 });
 
 export const layer = Layer.effect(DatabaseMaintenance, make);

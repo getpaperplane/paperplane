@@ -2104,7 +2104,8 @@ layer("ProviderEventIngestorV2", (it) => {
         { title: "Review checkout", modelSelection },
         { title: "Review checkout", modelSelection: { ...modelSelection, model: "gpt-6.1-sol" } },
       ]) {
-        const updated = yield* ingest({ ...offered, ...metadata });
+        // A newer adapter must not retrofit a saved child's identity namespace.
+        const updated = yield* ingest({ ...offered, ...metadata, idDerivationVersion: 2 });
         assert.deepEqual(
           updated.map((stored) => stored.event.type),
           ["thread.metadata-updated"],

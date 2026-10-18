@@ -147,6 +147,8 @@ it.effect("keeps a fork awake when its source thread is snoozed", () =>
 
     assert.isNull(result.targetThread.snoozedUntil);
     assert.isNull(result.targetThread.snoozedAt);
+    assert.equal(result.targetThread.idDerivationVersion, 2);
+    assert.isUndefined(sourceThread.idDerivationVersion);
     assert.equal(result.targetThread.projectId, sourceThread.projectId);
     assert.equal(result.targetThread.providerInstanceId, sourceThread.providerInstanceId);
     assert.deepEqual(result.targetThread.modelSelection, sourceThread.modelSelection);

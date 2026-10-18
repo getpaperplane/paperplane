@@ -1678,7 +1678,10 @@ const makeOrchestrator = Effect.fn("orchestrationV2.Orchestrator.layer")(functio
       };
       const userTurnItem: OrchestrationV2TurnItem = {
         ...(legacyQueuedTurnItem ?? {
-          id: idAllocator.derive.userTurnItem({ messageId: queuedMessage.id }),
+          id: idAllocator.derive.userTurnItem({
+            idDerivationVersion: projection.thread.idDerivationVersion,
+            messageId: queuedMessage.id,
+          }),
           threadId,
           runId: queuedRun.id,
           nodeId: rootNodeId,
@@ -2254,6 +2257,7 @@ const makeOrchestrator = Effect.fn("orchestrationV2.Orchestrator.layer")(functio
     const now = yield* DateTime.now;
     const emitEvent = emit(events, command);
     const thread: OrchestrationV2AppThread = {
+      idDerivationVersion: 2,
       createdBy: command.createdBy,
       creationSource: command.creationSource,
       id: command.threadId,
@@ -4047,7 +4051,10 @@ const makeOrchestrator = Effect.fn("orchestrationV2.Orchestrator.layer")(functio
               ? {}
               : { scheduledTaskId: input.scheduledTaskId }),
             ...(input.senderThreadId === undefined ? {} : { senderThreadId: input.senderThreadId }),
-            id: idAllocator.derive.userTurnItem({ messageId: input.messageId }),
+            id: idAllocator.derive.userTurnItem({
+              idDerivationVersion: input.projection.thread.idDerivationVersion,
+              messageId: input.messageId,
+            }),
             threadId: input.command.threadId,
             runId: messageInput.runId,
             nodeId: messageInput.nodeId,
@@ -4171,10 +4178,12 @@ const makeOrchestrator = Effect.fn("orchestrationV2.Orchestrator.layer")(functio
             .map((candidate) => candidate.attemptOrdinal),
         ) + 1;
       const nextAttemptId = idAllocator.derive.runAttempt({
+        idDerivationVersion: input.projection.thread.idDerivationVersion,
         runId: targetRun.id,
         attemptOrdinal,
       });
       const nextRootNodeId = idAllocator.derive.rootNodeAttempt({
+        idDerivationVersion: input.projection.thread.idDerivationVersion,
         runId: targetRun.id,
         attemptOrdinal,
       });
@@ -5006,7 +5015,11 @@ const makeOrchestrator = Effect.fn("orchestrationV2.Orchestrator.layer")(functio
         }
         const now = yield* DateTime.now;
         const ordinal = nextRunOrdinal(projection);
-        const runId = idAllocator.derive.run({ threadId: command.threadId, ordinal });
+        const runId = idAllocator.derive.run({
+          idDerivationVersion: projection.thread.idDerivationVersion,
+          threadId: command.threadId,
+          ordinal,
+        });
         const targetProviderThread =
           modelSelection.instanceId === queueProviderThread.providerInstanceId
             ? queueProviderThread
@@ -5052,8 +5065,15 @@ const makeOrchestrator = Effect.fn("orchestrationV2.Orchestrator.layer")(functio
           createdAt: now,
           updatedAt: now,
         };
-        const attemptId = idAllocator.derive.runAttempt({ runId, attemptOrdinal: 1 });
-        const rootNodeId = idAllocator.derive.rootNode({ runId });
+        const attemptId = idAllocator.derive.runAttempt({
+          idDerivationVersion: projection.thread.idDerivationVersion,
+          runId,
+          attemptOrdinal: 1,
+        });
+        const rootNodeId = idAllocator.derive.rootNode({
+          idDerivationVersion: projection.thread.idDerivationVersion,
+          runId,
+        });
         const checkpointScope =
           queueBehindRun.status === "preparing" || worktreeMissingRun !== undefined
             ? null
@@ -5300,7 +5320,11 @@ const makeOrchestrator = Effect.fn("orchestrationV2.Orchestrator.layer")(functio
         });
       }
       const ordinal = nextRunOrdinal(projection);
-      const runId = idAllocator.derive.run({ threadId: command.threadId, ordinal });
+      const runId = idAllocator.derive.run({
+        idDerivationVersion: projection.thread.idDerivationVersion,
+        threadId: command.threadId,
+        ordinal,
+      });
       const latestCompletedRun = projection.runs.findLast((run) => run.status === "completed");
       const latestHandoffRun = projection.runs.findLast(isHandoffSourceRun);
       const legacyImportItems =
@@ -5406,8 +5430,15 @@ const makeOrchestrator = Effect.fn("orchestrationV2.Orchestrator.layer")(functio
                 ),
                 updatedAt: now,
               };
-        const attemptId = idAllocator.derive.runAttempt({ runId, attemptOrdinal: 1 });
-        const rootNodeId = idAllocator.derive.rootNode({ runId });
+        const attemptId = idAllocator.derive.runAttempt({
+          idDerivationVersion: projection.thread.idDerivationVersion,
+          runId,
+          attemptOrdinal: 1,
+        });
+        const rootNodeId = idAllocator.derive.rootNode({
+          idDerivationVersion: projection.thread.idDerivationVersion,
+          runId,
+        });
         const checkpointScope =
           dispatchMode.type === "defer_start"
             ? null
@@ -5522,7 +5553,10 @@ const makeOrchestrator = Effect.fn("orchestrationV2.Orchestrator.layer")(functio
           ...(command.senderThreadId === undefined
             ? {}
             : { senderThreadId: command.senderThreadId }),
-          id: idAllocator.derive.userTurnItem({ messageId: command.messageId }),
+          id: idAllocator.derive.userTurnItem({
+            idDerivationVersion: projection.thread.idDerivationVersion,
+            messageId: command.messageId,
+          }),
           threadId: command.threadId,
           runId,
           nodeId: rootNodeId,
@@ -6002,8 +6036,15 @@ const makeOrchestrator = Effect.fn("orchestrationV2.Orchestrator.layer")(functio
         updatedAt: now,
       };
 
-      const attemptId = idAllocator.derive.runAttempt({ runId, attemptOrdinal: 1 });
-      const rootNodeId = idAllocator.derive.rootNode({ runId });
+      const attemptId = idAllocator.derive.runAttempt({
+        idDerivationVersion: projection.thread.idDerivationVersion,
+        runId,
+        attemptOrdinal: 1,
+      });
+      const rootNodeId = idAllocator.derive.rootNode({
+        idDerivationVersion: projection.thread.idDerivationVersion,
+        runId,
+      });
       const emitEvent = emit(events, command);
       const mergeBackSourceProjection =
         pendingMergeBackTransfer === undefined
@@ -6212,7 +6253,10 @@ const makeOrchestrator = Effect.fn("orchestrationV2.Orchestrator.layer")(functio
           ? {}
           : { scheduledTaskId: command.scheduledTaskId }),
         ...(command.senderThreadId === undefined ? {} : { senderThreadId: command.senderThreadId }),
-        id: idAllocator.derive.userTurnItem({ messageId: command.messageId }),
+        id: idAllocator.derive.userTurnItem({
+          idDerivationVersion: projection.thread.idDerivationVersion,
+          messageId: command.messageId,
+        }),
         threadId: command.threadId,
         runId,
         nodeId: rootNodeId,
@@ -6673,16 +6717,21 @@ const makeOrchestrator = Effect.fn("orchestrationV2.Orchestrator.layer")(functio
       );
 
       const now = command.createdAt ?? (yield* DateTime.now);
+      const namespace = { idDerivationVersion: parentProjection.thread.idDerivationVersion };
       const taskNodeId = idAllocator.derive.delegatedTaskNode({
+        ...namespace,
         commandId: command.commandId,
       });
       const childThreadId = idAllocator.derive.delegatedTaskThread({
+        ...namespace,
         commandId: command.commandId,
       });
       const childMessageId = idAllocator.derive.delegatedTaskMessage({
+        ...namespace,
         commandId: command.commandId,
       });
       const taskTurnItemId = idAllocator.derive.delegatedTaskTurnItem({
+        ...namespace,
         commandId: command.commandId,
       });
       const taskTitle = subagentThreadTitle({
@@ -6704,6 +6753,7 @@ const makeOrchestrator = Effect.fn("orchestrationV2.Orchestrator.layer")(functio
           createdBy: command.createdBy,
           creationSource: command.creationSource,
         }),
+        idDerivationVersion: 2,
         runtimeMode: command.runtimeMode,
         interactionMode: command.interactionMode,
         ...(command.workspaceStrategy === undefined ? {} : { branch: null, worktreePath: null }),
@@ -6940,7 +6990,10 @@ const makeOrchestrator = Effect.fn("orchestrationV2.Orchestrator.layer")(functio
     if (owner === null || owner.rootNodeId === null) return;
     const now = message.createdAt;
     const adapter = yield* providerAdapters.get(run.providerInstanceId);
-    const taskId = idAllocator.derive.delegatedTaskNode({ commandId: command.commandId });
+    const taskId = idAllocator.derive.delegatedTaskNode({
+      idDerivationVersion: parent.thread.idDerivationVersion,
+      commandId: command.commandId,
+    });
     const task: OrchestrationV2Subagent = {
       ...original,
       createdBy: command.createdBy,
@@ -6981,7 +7034,10 @@ const makeOrchestrator = Effect.fn("orchestrationV2.Orchestrator.layer")(functio
       completedAt: null,
     };
     const turnItem: OrchestrationV2TurnItem = {
-      id: idAllocator.derive.delegatedTaskTurnItem({ commandId: command.commandId }),
+      id: idAllocator.derive.delegatedTaskTurnItem({
+        idDerivationVersion: parent.thread.idDerivationVersion,
+        commandId: command.commandId,
+      }),
       threadId: parentThreadId,
       runId: owner.id,
       nodeId: taskId,
@@ -7231,7 +7287,10 @@ const makeOrchestrator = Effect.fn("orchestrationV2.Orchestrator.layer")(functio
       const now = yield* DateTime.now;
       const parentProviderTurn = providerTurnForRun(parentProjection, parentRun);
       const turnItem: OrchestrationV2TurnItem = {
-        id: idAllocator.derive.createdThreadTurnItem({ commandId: command.commandId }),
+        id: idAllocator.derive.createdThreadTurnItem({
+          idDerivationVersion: parentProjection.thread.idDerivationVersion,
+          commandId: command.commandId,
+        }),
         threadId: command.parentThreadId,
         runId: command.parentRunId,
         nodeId: command.parentNodeId,

@@ -5,6 +5,7 @@ import {
   type OrchestrationV2Run,
   type OrchestrationV2ThreadProjection,
   type OrchestrationV2TurnItem,
+  type OrchestrationV2TextAppend,
   MessageId,
   ProjectId,
   ProviderInstanceId,
@@ -17,7 +18,10 @@ import {
 } from "@rove-code/contracts";
 import * as DateTime from "effect/DateTime";
 
-import { applyOrchestrationV2ProjectionEvent } from "./orchestrationV2Projection.ts";
+import {
+  applyOrchestrationV2ProjectionEvent,
+  applyOrchestrationV2TextAppend,
+} from "./orchestrationV2Projection.ts";
 
 const now = DateTime.makeUnsafe("2026-06-20T00:00:00.000Z");
 const threadId = ThreadId.make("thread-reducer");
@@ -40,7 +44,7 @@ const run = {
   contextHandoffId: null,
 } satisfies OrchestrationV2Run;
 
-function commandItem(id: string, output = "done", ordinal = 1): OrchestrationV2TurnItem {
+function commandItem(id: string, output = "done", ordinal = 1) {
   return {
     id: TurnItemId.make(id),
     threadId,
@@ -60,7 +64,7 @@ function commandItem(id: string, output = "done", ordinal = 1): OrchestrationV2T
     input: "pwd",
     output,
     exitCode: 0,
-  };
+  } satisfies OrchestrationV2TurnItem;
 }
 const emptyProjection = {
   thread: {
@@ -104,6 +108,109 @@ const emptyProjection = {
   visibleTurnItems: [],
   updatedAt: now,
 } as OrchestrationV2ThreadProjection;
+
+describe("applyOrchestrationV2TextAppend", () => {
+  const append = {
+    kind: "text-append",
+    sequence: 2,
+    threadId,
+    entity: { type: "turn-item", id: TurnItemId.make("reply") },
+    offset: "Hi 🌍".length,
+    append: "!",
+    occurredAt: now,
+    updatedAt: now,
+  } satisfies OrchestrationV2TextAppend;
+  const reasoning = {
+    ...commandItem("reply"),
+    type: "reasoning" as const,
+    status: "running" as const,
+    streaming: true,
+    text: "Hi 🌍",
+  };
+
+  it.each([
+    reasoning,
+    { ...reasoning, type: "assistant_message" as const, messageId: MessageId.make("message") },
+  ])("updates both the canonical text and local visible row for $type", (item) => {
+    const inherited = {
+      position: 0,
+      visibility: "inherited" as const,
+      sourceThreadId: ThreadId.make("parent"),
+      sourceItemId: item.id,
+      item,
+    };
+    const projection = {
+      ...emptyProjection,
+      turnItems: [item],
+      visibleTurnItems: [
+        inherited,
+        { ...inherited, position: 1, visibility: "local" as const, sourceThreadId: threadId },
+      ],
+    };
+    const next = applyOrchestrationV2TextAppend(projection, append);
+    expect(next?.turnItems[0]).toMatchObject({ text: "Hi 🌍!", streaming: true });
+    expect(next?.visibleTurnItems[1]?.item).toBe(next?.turnItems[0]);
+    expect(next?.visibleTurnItems[0]).toBe(inherited);
+    expect(projection.turnItems[0]?.text).toBe("Hi 🌍");
+    expect(applyOrchestrationV2TextAppend(next, append)).toBeNull(); // duplicate offset
+    const terminal = applyOrchestrationV2ProjectionEvent(next, {
+      id: "finished" as OrchestrationV2DomainEvent["id"],
+      type: "turn-item.updated",
+      threadId,
+      occurredAt: now,
+      payload: { ...item, text: "Authoritative final", streaming: false, status: "completed" },
+    });
+    expect(terminal?.turnItems[0]).toMatchObject({
+      text: "Authoritative final",
+      status: "completed",
+    });
+    expect(terminal?.visibleTurnItems[1]?.item).toBe(terminal?.turnItems[0]);
+  });
+
+  it("applies conversation messages and rejects missing, stale or terminal baselines", () => {
+    const message = {
+      id: MessageId.make("message"),
+      threadId,
+      runId: null,
+      nodeId: null,
+      role: "assistant" as const,
+      text: "Hi 🌍",
+      streaming: true,
+      attachments: [],
+      createdBy: "agent" as const,
+      creationSource: "provider" as const,
+      createdAt: now,
+      updatedAt: now,
+    };
+    const projection = { ...emptyProjection, messages: [message] };
+    const delta = { ...append, entity: { type: "message" as const, id: message.id } };
+    expect(applyOrchestrationV2TextAppend(projection, delta)?.messages[0]?.text).toBe("Hi 🌍!");
+    expect(applyOrchestrationV2TextAppend(projection, { ...delta, offset: 99 })).toBeNull();
+    expect(applyOrchestrationV2TextAppend(emptyProjection, delta)).toBeNull();
+    expect(applyOrchestrationV2TextAppend(null, delta)).toBeNull();
+    expect(
+      applyOrchestrationV2TextAppend(projection, { ...delta, threadId: ThreadId.make("other") }),
+    ).toBeNull();
+    expect(
+      applyOrchestrationV2TextAppend(
+        { ...projection, messages: [{ ...message, streaming: false }] },
+        delta,
+      ),
+    ).toBeNull();
+    expect(
+      applyOrchestrationV2TextAppend(
+        { ...emptyProjection, turnItems: [commandItem("reply")] },
+        append,
+      ),
+    ).toBeNull();
+    expect(
+      applyOrchestrationV2TextAppend(
+        { ...emptyProjection, turnItems: [{ ...reasoning, status: "completed" }] },
+        append,
+      ),
+    ).toBeNull();
+  });
+});
 
 describe("applyOrchestrationV2ProjectionEvent", () => {
   it("applies a compact PR sync without replacing other links or thread metadata", () => {

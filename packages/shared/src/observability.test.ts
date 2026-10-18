@@ -24,6 +24,7 @@ import {
   decodeOtlpTraceRecords,
   errorTag,
   makeLocalFileTracer,
+  shouldWriteTraceRecord,
   makeTraceSink,
   type EffectTraceRecord,
   type TraceRecord,
@@ -189,6 +190,34 @@ describe("decodeOtlpTraceRecords", () => {
 
     assert.equal(record?.attributes["payload"], clamped);
     assert.equal(record?.events[0]?.attributes["effect.cause"], clamped);
+  });
+});
+
+describe("shouldWriteTraceRecord", () => {
+  const rules = [{ namePrefix: "desktop.ipc.", belowMs: 5 }];
+  const record = (
+    name: string,
+    durationMs: number,
+    exit: EffectTraceRecord["exit"] = { _tag: "Success" },
+  ) => ({ name, durationMs, exit }) as EffectTraceRecord;
+
+  it("drops only fast successful spans under a matching prefix", () => {
+    assert.isFalse(shouldWriteTraceRecord(record("desktop.ipc.invokeSync", 0.4), rules));
+    assert.isTrue(shouldWriteTraceRecord(record("desktop.ipc.invokeSync", 5), rules));
+    assert.isTrue(shouldWriteTraceRecord(record("desktop.window.activate", 0.1), rules));
+    assert.isTrue(
+      shouldWriteTraceRecord(
+        record("desktop.ipc.invoke", 0.1, { _tag: "Failure", cause: "x" }),
+        rules,
+      ),
+    );
+    assert.isTrue(
+      shouldWriteTraceRecord(
+        record("desktop.ipc.invoke", 0.1, { _tag: "Interrupted", cause: "x" }),
+        rules,
+      ),
+    );
+    assert.isTrue(shouldWriteTraceRecord(record("desktop.ipc.invokeSync", 0.4), undefined));
   });
 });
 

@@ -1,3 +1,6 @@
+// @effect-diagnostics-next-line nodeBuiltinImport:off -- Derivation is pure and synchronous; Effect Crypto requires an asynchronous service.
+import * as NodeCrypto from "node:crypto";
+
 import {
   CheckpointId,
   CheckpointScopeId,
@@ -126,31 +129,50 @@ export interface IdAllocatorV2Allocate {
   }) => Effect.Effect<PlanId, IdAllocatorV2Error>;
 }
 
+/** Missing means legacy. Only app-owned derivations opt into this namespace version. */
+interface IdNamespace {
+  readonly idDerivationVersion?: 2 | undefined;
+}
+
 export interface IdAllocatorV2Derive {
   readonly providerSession: (input: {
     readonly providerInstanceId: ProviderInstanceId;
   }) => ProviderSessionId;
-  readonly delegatedTaskNode: (input: { readonly commandId: CommandId }) => NodeId;
-  readonly delegatedTaskThread: (input: { readonly commandId: CommandId }) => ThreadId;
-  readonly delegatedTaskMessage: (input: { readonly commandId: CommandId }) => MessageId;
-  readonly delegatedTaskTurnItem: (input: { readonly commandId: CommandId }) => TurnItemId;
-  readonly createdThreadTurnItem: (input: { readonly commandId: CommandId }) => TurnItemId;
+  readonly delegatedTaskNode: (input: IdNamespace & { readonly commandId: CommandId }) => NodeId;
+  readonly delegatedTaskThread: (
+    input: IdNamespace & { readonly commandId: CommandId },
+  ) => ThreadId;
+  readonly delegatedTaskMessage: (
+    input: IdNamespace & { readonly commandId: CommandId },
+  ) => MessageId;
+  readonly delegatedTaskTurnItem: (
+    input: IdNamespace & { readonly commandId: CommandId },
+  ) => TurnItemId;
+  readonly createdThreadTurnItem: (
+    input: IdNamespace & { readonly commandId: CommandId },
+  ) => TurnItemId;
   readonly threadFromProviderThread: (input: {
     readonly driver: ProviderDriverKind;
     readonly nativeThreadId: string;
     readonly providerInstanceId?: ProviderInstanceId;
   }) => ThreadId;
-  readonly run: (input: { readonly threadId: ThreadId; readonly ordinal: number }) => RunId;
-  readonly runAttempt: (input: {
-    readonly runId: RunId;
-    readonly attemptOrdinal: number;
-  }) => RunAttemptId;
-  readonly rootNode: (input: { readonly runId: RunId }) => NodeId;
-  readonly rootNodeAttempt: (input: {
-    readonly runId: RunId;
-    readonly attemptOrdinal: number;
-  }) => NodeId;
-  readonly userTurnItem: (input: { readonly messageId: MessageId }) => TurnItemId;
+  readonly run: (
+    input: IdNamespace & { readonly threadId: ThreadId; readonly ordinal: number },
+  ) => RunId;
+  readonly runAttempt: (
+    input: IdNamespace & {
+      readonly runId: RunId;
+      readonly attemptOrdinal: number;
+    },
+  ) => RunAttemptId;
+  readonly rootNode: (input: IdNamespace & { readonly runId: RunId }) => NodeId;
+  readonly rootNodeAttempt: (
+    input: IdNamespace & {
+      readonly runId: RunId;
+      readonly attemptOrdinal: number;
+    },
+  ) => NodeId;
+  readonly userTurnItem: (input: IdNamespace & { readonly messageId: MessageId }) => TurnItemId;
   readonly runSignalTurnItem: (input: {
     readonly runId: RunId;
     readonly signal: string;
@@ -192,6 +214,20 @@ const encodePart = (part: string | number): string => encodeURIComponent(String(
 
 const joinId = (prefix: string, ...parts: ReadonlyArray<string | number>): string =>
   [prefix, ...parts.map(encodePart)].join(":");
+
+// JSON arrays preserve part boundaries and types (unlike delimiter joining). Keep
+// semantic prefixes outside the digest: callers classify delegated threads by prefix.
+const joinVersionedId = (
+  input: IdNamespace,
+  prefix: string,
+  semantic: string,
+  ...parts: ReadonlyArray<string | number>
+): string =>
+  input.idDerivationVersion === 2
+    ? `${prefix}:${semantic}:v2:${NodeCrypto.createHash("sha256")
+        .update(JSON.stringify([prefix, semantic, ...parts]))
+        .digest("base64url")}`
+    : joinId(prefix, semantic, ...parts);
 
 export function deriveThreadFromProviderThread(input: {
   readonly driver: ProviderDriverKind;
@@ -257,23 +293,30 @@ export const derive: IdAllocatorV2Derive = {
     ProviderSessionId.make(
       joinId("provider-session", "provider-instance", input.providerInstanceId, "shared"),
     ),
-  delegatedTaskNode: (input) => NodeId.make(joinId("node", "delegated-task", input.commandId)),
+  delegatedTaskNode: (input) =>
+    NodeId.make(joinVersionedId(input, "node", "delegated-task", input.commandId)),
   delegatedTaskThread: (input) =>
-    ThreadId.make(joinId("thread", "delegated-task", input.commandId)),
+    ThreadId.make(joinVersionedId(input, "thread", "delegated-task", input.commandId)),
   delegatedTaskMessage: (input) =>
-    MessageId.make(joinId("message", "delegated-task", input.commandId)),
+    MessageId.make(joinVersionedId(input, "message", "delegated-task", input.commandId)),
   delegatedTaskTurnItem: (input) =>
-    TurnItemId.make(joinId("turn-item", "delegated-task", input.commandId)),
+    TurnItemId.make(joinVersionedId(input, "turn-item", "delegated-task", input.commandId)),
   createdThreadTurnItem: (input) =>
-    TurnItemId.make(joinId("turn-item", "created-thread", input.commandId)),
+    TurnItemId.make(joinVersionedId(input, "turn-item", "created-thread", input.commandId)),
   threadFromProviderThread: deriveThreadFromProviderThread,
-  run: (input) => RunId.make(joinId("run", "thread", input.threadId, "ordinal", input.ordinal)),
+  run: (input) =>
+    RunId.make(joinVersionedId(input, "run", "thread", input.threadId, "ordinal", input.ordinal)),
   runAttempt: (input) =>
-    RunAttemptId.make(joinId("run-attempt", "run", input.runId, "attempt", input.attemptOrdinal)),
-  rootNode: (input) => NodeId.make(joinId("node", "run", input.runId, "root")),
+    RunAttemptId.make(
+      joinVersionedId(input, "run-attempt", "run", input.runId, "attempt", input.attemptOrdinal),
+    ),
+  rootNode: (input) => NodeId.make(joinVersionedId(input, "node", "run", input.runId, "root")),
   rootNodeAttempt: (input) =>
-    NodeId.make(joinId("node", "run", input.runId, "attempt", input.attemptOrdinal, "root")),
-  userTurnItem: (input) => TurnItemId.make(joinId("turn-item", "message", input.messageId)),
+    NodeId.make(
+      joinVersionedId(input, "node", "run", input.runId, "attempt", input.attemptOrdinal, "root"),
+    ),
+  userTurnItem: (input) =>
+    TurnItemId.make(joinVersionedId(input, "turn-item", "message", input.messageId)),
   runSignalTurnItem: (input) =>
     TurnItemId.make(joinId("turn-item", "run", input.runId, "signal", input.signal)),
   providerThread: deriveProviderThread,

@@ -536,7 +536,11 @@ export function materializeFixtureInput(input: {
     const activeRunDispatchKeys = new Set<string>();
 
     const runIdFor = (runOrdinal: number) =>
-      idAllocator.derive.run({ threadId: ids.threadId, ordinal: runOrdinal });
+      idAllocator.derive.run({
+        idDerivationVersion: 2,
+        threadId: ids.threadId,
+        ordinal: runOrdinal,
+      });
 
     const pushDispatch = (
       command: OrchestrationV2Command,

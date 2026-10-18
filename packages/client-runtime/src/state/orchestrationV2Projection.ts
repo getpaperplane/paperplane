@@ -3,6 +3,7 @@ import type {
   OrchestrationV2DomainEvent,
   OrchestrationV2Run,
   OrchestrationV2ThreadProjection,
+  OrchestrationV2TextAppend,
   OrchestrationV2TurnItem,
 } from "@rove-code/contracts";
 import {
@@ -188,6 +189,55 @@ function upsertVisibleTurnItem(
   );
   updated.splice(insertionIndex === -1 ? updated.length : insertionIndex, 0, next);
   return renumberVisibleItems(updated);
+}
+
+/** Null means the baseline is missing or inconsistent: request a fresh snapshot. */
+export function applyOrchestrationV2TextAppend(
+  projection: OrchestrationV2ThreadProjection | null,
+  item: OrchestrationV2TextAppend,
+): OrchestrationV2ThreadProjection | null {
+  if (projection === null || projection.thread.id !== item.threadId) return null;
+  if (item.entity.type === "message") {
+    const previous = projection.messages.find((message) => message.id === item.entity.id);
+    if (
+      previous === undefined ||
+      previous.role !== "assistant" ||
+      !previous.streaming ||
+      previous.text.length !== item.offset
+    )
+      return null;
+    return {
+      ...projection,
+      updatedAt: item.occurredAt,
+      messages: upsertEntity(projection.messages, {
+        ...previous,
+        text: previous.text + item.append,
+        updatedAt: item.updatedAt,
+      }),
+    };
+  }
+  const previous = projection.turnItems.find((candidate) => candidate.id === item.entity.id);
+  if (
+    previous === undefined ||
+    (previous.type !== "assistant_message" && previous.type !== "reasoning") ||
+    !previous.streaming ||
+    previous.status !== "running" ||
+    previous.text.length !== item.offset
+  )
+    return null;
+  const next = { ...previous, text: previous.text + item.append, updatedAt: item.updatedAt };
+  return {
+    ...projection,
+    updatedAt: item.occurredAt,
+    turnItems: upsertEntity(projection.turnItems, next),
+    visibleTurnItems: projection.visibleTurnItems.map((row) =>
+      row.visibility === "local" &&
+      row.sourceThreadId === item.threadId &&
+      row.sourceItemId === next.id
+        ? { ...row, item: next }
+        : row,
+    ),
+  };
 }
 
 /** Applies one committed event to a matching thread projection. */

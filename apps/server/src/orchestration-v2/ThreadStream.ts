@@ -2,6 +2,7 @@ import type {
   OrchestrationV2ThreadProjection,
   OrchestrationV2ThreadStreamItem,
 } from "@rove-code/contracts";
+import * as Stream from "effect/Stream";
 
 import { omitLocalVisibleTurnItems } from "@rove-code/shared/orchestrationV2BoundedSnapshot";
 
@@ -9,7 +10,25 @@ import {
   buildBoundedThreadProjection,
   type BoundedProjectionResult,
 } from "./threadHistoryPaging.ts";
-import { projectThreadProjectionForWire } from "./WireProjection.ts";
+import { makeThreadLiveTextProjector, projectThreadProjectionForWire } from "./WireProjection.ts";
+
+/**
+ * New baselines for every subscription/run; catch-up must bypass this. Apply
+ * after the coalescer so retained full events still count against its budget.
+ */
+export function projectThreadLiveTextStream<E, R>(
+  source: Stream.Stream<
+    Extract<OrchestrationV2ThreadStreamItem, { kind: "event" | "synchronized" }>,
+    E,
+    R
+  >,
+  acceptTextAppends: boolean,
+) {
+  return Stream.suspend(() => {
+    const project = makeThreadLiveTextProjector(acceptTextAppends);
+    return source.pipe(Stream.map((item) => (item.kind === "event" ? project(item) : item)));
+  });
+}
 
 /** Maximum number of reducer applications allowed during a thread resume. */
 export const THREAD_RESUME_MAX_REPLAY_EVENTS = 128;

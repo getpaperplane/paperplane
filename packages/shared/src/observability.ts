@@ -156,9 +156,31 @@ export interface TraceSink {
   close: () => Effect.Effect<void>;
 }
 
+/**
+ * Successful spans whose name starts with `namePrefix` and that finished in
+ * under `belowMs` are not written to the local trace file. Failures,
+ * interruptions, and slower spans are always kept.
+ */
+export interface TraceSampleRule {
+  readonly namePrefix: string;
+  readonly belowMs: number;
+}
+
+export function shouldWriteTraceRecord(
+  record: EffectTraceRecord,
+  dropFastSuccess: ReadonlyArray<TraceSampleRule> | undefined,
+): boolean {
+  if (dropFastSuccess === undefined || record.exit._tag !== "Success") return true;
+  return !dropFastSuccess.some(
+    (rule) => record.name.startsWith(rule.namePrefix) && record.durationMs < rule.belowMs,
+  );
+}
+
 export interface LocalFileTracerOptions extends TraceSinkOptions {
   readonly delegate?: Tracer.Tracer;
   readonly sink?: TraceSink;
+  /** Keeps high-frequency, trivially fast spans out of the local trace file. */
+  readonly dropFastSuccess?: ReadonlyArray<TraceSampleRule>;
 }
 
 type OtlpSpan = OtlpTracer.ScopeSpan["spans"][number];
@@ -614,9 +636,14 @@ export const makeLocalFileTracer = Effect.fn("makeLocalFileTracer")(function* (
       span: (spanOptions) => new Tracer.NativeSpan(spanOptions),
     });
 
+  const dropFastSuccess = options.dropFastSuccess;
+  const push = (record: EffectTraceRecord) => {
+    if (shouldWriteTraceRecord(record, dropFastSuccess)) sink.push(record);
+  };
+
   return Tracer.make({
     span(spanOptions) {
-      return new LocalFileSpan(spanOptions, delegate.span(spanOptions), sink.push);
+      return new LocalFileSpan(spanOptions, delegate.span(spanOptions), push);
     },
     ...(delegate.context ? { context: delegate.context } : {}),
   });

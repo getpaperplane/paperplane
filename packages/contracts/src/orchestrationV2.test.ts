@@ -350,6 +350,31 @@ describe("orchestration V2 contracts", () => {
     ).toThrow();
   });
 
+  it("negotiates live text appends without changing older peers or persisted events", () => {
+    const input = { threadId: "thread-1", acceptTextAppends: true };
+    expect(decodeOrchestrationV2SubscribeThreadInput(input).acceptTextAppends).toBe(true);
+    expect(
+      decodeOrchestrationV2SubscribeThreadInput({ threadId: "thread-1" }).acceptTextAppends,
+    ).toBeUndefined();
+    expect(decodeLegacySubscribeThreadInput(input)).not.toHaveProperty("acceptTextAppends");
+    const append = {
+      kind: "text-append",
+      threadId: "thread-1",
+      sequence: 2,
+      entity: { type: "message", id: "message-1" },
+      offset: 5,
+      append: " 🌍",
+      updatedAt: DateTime.makeUnsafe("2026-06-20T00:00:00.000Z"),
+      occurredAt: DateTime.makeUnsafe("2026-06-20T00:00:00.000Z"),
+    };
+    expect(decodeOrchestrationV2ThreadStreamItem(append)).toMatchObject({
+      offset: 5,
+      append: " 🌍",
+    });
+    expect(() => decodeOrchestrationV2ThreadStreamItem({ ...append, offset: -1 })).toThrow();
+    expect(() => decodeOrchestrationV2ThreadStreamItem({ ...append, offset: 0.5 })).toThrow();
+  });
+
   it("negotiates bounded socket snapshots as an optional capability", () => {
     expect(
       decodeOrchestrationV2SubscribeThreadInput({

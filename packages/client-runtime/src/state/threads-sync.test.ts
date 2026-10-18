@@ -6,6 +6,7 @@ import {
   ThreadId,
   TurnItemId,
   type OrchestrationV2ThreadDetailSnapshot,
+  type OrchestrationV2SubscribeThreadInput,
   type OrchestrationV2ThreadProjection,
   type OrchestrationV2ThreadStreamItem,
   type OrchestrationV2TurnItem,
@@ -118,6 +119,7 @@ const makeHarness = Effect.fn("TestEnvironmentThreads.makeHarness")(function* (o
   const latest = yield* Ref.make<EnvironmentThreadState>(EMPTY_ENVIRONMENT_THREAD_STATE);
   const retryCount = yield* Ref.make(0);
   const subscriptionCount = yield* Ref.make(0);
+  const subscriptions = yield* Queue.unbounded<OrchestrationV2SubscribeThreadInput>();
   const loaderCalls = yield* Ref.make(0);
   const lastSubscribeAfterSequence = yield* Ref.make<number | undefined>(undefined);
   const lastRequestCompletionMarker = yield* Ref.make(false);
@@ -136,20 +138,26 @@ const makeHarness = Effect.fn("TestEnvironmentThreads.makeHarness")(function* (o
       ),
     );
   const client = {
-    [ORCHESTRATION_V2_WS_METHODS.subscribeThread]: (input: {
-      readonly afterSequence?: number;
-      readonly requestCompletionMarker?: true;
-      readonly acceptBoundedSnapshot?: true;
-      readonly acceptCompactTurnItems?: true;
-    }) =>
+    [ORCHESTRATION_V2_WS_METHODS.subscribeThread]: (input: OrchestrationV2SubscribeThreadInput) =>
       Stream.unwrap(
         Ref.updateAndGet(subscriptionCount, (count) => count + 1).pipe(
           Effect.andThen(Ref.set(lastSubscribeAfterSequence, input.afterSequence)),
           Effect.andThen(
             Ref.set(lastRequestCompletionMarker, input.requestCompletionMarker === true),
           ),
-          Effect.andThen(Ref.set(lastAcceptBoundedSnapshot, input.acceptBoundedSnapshot)),
-          Effect.andThen(Ref.set(lastAcceptCompactTurnItems, input.acceptCompactTurnItems)),
+          Effect.andThen(
+            Ref.set(
+              lastAcceptBoundedSnapshot,
+              input.acceptBoundedSnapshot === true ? true : undefined,
+            ),
+          ),
+          Effect.andThen(
+            Ref.set(
+              lastAcceptCompactTurnItems,
+              input.acceptCompactTurnItems === true ? true : undefined,
+            ),
+          ),
+          Effect.andThen(Queue.offer(subscriptions, input)),
           Effect.as(streamFrom(inputs)),
         ),
       ),
@@ -261,6 +269,7 @@ const makeHarness = Effect.fn("TestEnvironmentThreads.makeHarness")(function* (o
     latest,
     retryCount,
     subscriptionCount,
+    subscriptions,
     loaderCalls,
     lastSubscribeAfterSequence,
     lastRequestCompletionMarker,
@@ -320,6 +329,83 @@ const deleted = (sequence = 3): OrchestrationV2ThreadStreamItem => {
 };
 
 describe("EnvironmentThreads", () => {
+  it.effect("negotiates text appends and resubscribes for a snapshot on offset mismatch", () =>
+    Effect.gen(function* () {
+      const now = BASE_PROJECTION.updatedAt;
+      const message = {
+        id: MessageId.make("stream-reply"),
+        threadId: THREAD_ID,
+        runId: null,
+        nodeId: null,
+        role: "assistant" as const,
+        text: "Hello",
+        attachments: [],
+        streaming: true,
+        createdBy: "agent" as const,
+        creationSource: "provider" as const,
+        createdAt: now,
+        updatedAt: now,
+      };
+      const h = yield* makeHarness({ cached: { ...BASE_PROJECTION, messages: [message] } });
+      const initial = yield* Queue.take(h.subscriptions);
+      expect(initial.acceptTextAppends).toBe(true);
+      expect(initial.afterSequence).toBe(CACHED_SNAPSHOT_SEQUENCE);
+      const delta = {
+        kind: "text-append" as const,
+        sequence: CACHED_SNAPSHOT_SEQUENCE + 1,
+        threadId: THREAD_ID,
+        entity: { type: "message" as const, id: message.id },
+        offset: 5,
+        append: " world",
+        occurredAt: now,
+        updatedAt: now,
+      };
+      yield* Queue.offer(h.inputs, delta);
+      yield* awaitThreadState(
+        h.observed,
+        (state) => Option.getOrNull(state.data)?.messages[0]?.text === "Hello world",
+      );
+      yield* Queue.offer(h.inputs, {
+        ...delta,
+        sequence: delta.sequence + 1,
+        offset: 999,
+        append: "CORRUPT",
+      });
+      const resync = yield* Queue.take(h.subscriptions);
+      expect(resync.afterSequence).toBeUndefined();
+      expect(resync.acceptTextAppends).toBe(false);
+      expect(
+        Option.getOrNull((yield* SubscriptionRef.get(h.threadState)).data)?.messages[0]?.text,
+      ).toBe("Hello world");
+      // Old buffered items cannot advance the cursor or corrupt the baseline.
+      yield* Queue.offer(h.inputs, { ...delta, sequence: delta.sequence + 2, offset: 11 });
+      yield* Queue.offer(
+        h.inputs,
+        snapshot({ ...BASE_PROJECTION, messages: [{ ...message, text: "Resynchronized" }] }, 20),
+      );
+      yield* awaitThreadState(
+        h.observed,
+        (state) => Option.getOrNull(state.data)?.messages[0]?.text === "Resynchronized",
+      );
+      yield* Queue.offer(h.inputs, {
+        kind: "event",
+        sequence: 21,
+        event: {
+          id: EventId.make("reply-terminal"),
+          type: "message.updated",
+          threadId: THREAD_ID,
+          occurredAt: now,
+          payload: { ...message, text: "Final authoritative reply", streaming: false },
+        },
+      });
+      yield* awaitThreadState(
+        h.observed,
+        (state) => Option.getOrNull(state.data)?.messages[0]?.text === "Final authoritative reply",
+      );
+      yield* h.replaceSession;
+      expect((yield* Queue.take(h.subscriptions)).afterSequence).toBe(21);
+    }).pipe(Effect.scoped),
+  );
   it.effect("loads the server thread when its local cache read fails", () =>
     Effect.gen(function* () {
       const h = yield* makeHarness({
