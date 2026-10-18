@@ -363,6 +363,8 @@ export type OrchestrationV2LimitRecoveryUpdate = typeof OrchestrationV2LimitReco
 
 export const OrchestrationV2AppThread = Schema.Struct({
   ...OrchestrationV2CreationFields,
+  /** Immutable app-owned id namespace. Missing is legacy, never a default to upgrade. */
+  idDerivationVersion: Schema.optional(Schema.Literal(2)),
   id: ThreadId,
   projectId: ProjectId,
   title: TrimmedNonEmptyString,

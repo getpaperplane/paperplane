@@ -70,6 +70,16 @@ Persisted events must remain decodable on replay. Changing a schema affects old 
 startup as well as live RPC traffic. Compatibility work must account for stored history, not just
 what the newest client sends.
 
+App-owned ID derivation is pinned by `thread.created.payload.idDerivationVersion`: missing means
+legacy forever, including completed or mid-run threads. Fresh app-created threads, delegation
+children and forks use v2 SHA-256 IDs for delegation artifacts, runs, attempts, root nodes and user
+items; delegation artifacts use the **parent** namespace, not the child's. Never infer a version
+from an ID or upgrade one on resume. Native-provider children and provider/history IDs remain
+legacy: import can rediscover a native thread before an app namespace is known. MCP stable request
+IDs, run signals and checkpoint IDs/refs also retain their existing derivation; changing any of
+these requires proving every replay, retry and existing-row lookup uses the same namespace first.
+The optional field lives in event/projection JSON, not the shared SQL migration ledger.
+
 ## Turn completion and checkpoints
 
 A provider turn ending and its follow-up work settling are separate milestones. Orchestration

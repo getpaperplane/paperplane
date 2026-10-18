@@ -478,7 +478,11 @@ describe("orchestration V2 thread fork", () => {
           projectId,
         });
         const targetThreadId = ThreadId.make("thread-fork-native-prior-turn-target");
-        const firstRunId = ids.derive.run({ threadId: sourceThreadId, ordinal: 1 });
+        const firstRunId = ids.derive.run({
+          idDerivationVersion: 2,
+          threadId: sourceThreadId,
+          ordinal: 1,
+        });
 
         const commands = [
           {
@@ -657,7 +661,11 @@ describe("orchestration V2 thread fork", () => {
           projectId,
         });
         const targetThreadId = ThreadId.make("thread-fork-native-prior-turn-target");
-        const firstRunId = ids.derive.run({ threadId: sourceThreadId, ordinal: 1 });
+        const firstRunId = ids.derive.run({
+          idDerivationVersion: 2,
+          threadId: sourceThreadId,
+          ordinal: 1,
+        });
 
         const commands = [
           {
@@ -811,8 +819,16 @@ describe("orchestration V2 thread fork", () => {
         const targetThreadId = ThreadId.make(
           "thread-fork-native-prior-turn-source-rollback-target",
         );
-        const firstRunId = ids.derive.run({ threadId: sourceThreadId, ordinal: 1 });
-        const secondRunId = ids.derive.run({ threadId: sourceThreadId, ordinal: 2 });
+        const firstRunId = ids.derive.run({
+          idDerivationVersion: 2,
+          threadId: sourceThreadId,
+          ordinal: 1,
+        });
+        const secondRunId = ids.derive.run({
+          idDerivationVersion: 2,
+          threadId: sourceThreadId,
+          ordinal: 2,
+        });
         const checkpointScopeId = yield* ids.allocate.checkpointScope({
           threadId: sourceThreadId,
           name: "root",
@@ -1018,7 +1034,11 @@ describe("orchestration V2 thread fork", () => {
           projectId,
         });
         const targetThreadId = ThreadId.make("thread-fork-native-fork-local-rollback-target");
-        const targetSecondRunId = ids.derive.run({ threadId: targetThreadId, ordinal: 2 });
+        const targetSecondRunId = ids.derive.run({
+          idDerivationVersion: 2,
+          threadId: targetThreadId,
+          ordinal: 2,
+        });
         const targetCheckpointScopeId = yield* ids.allocate.checkpointScope({
           threadId: targetThreadId,
           name: "root",

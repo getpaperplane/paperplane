@@ -638,6 +638,7 @@ describe("OpenCode 2 through the orchestrator", () => {
           sourcePoint: {
             type: "run",
             runId: (yield* IdAllocator.IdAllocatorV2).derive.run({
+              idDerivationVersion: 2,
               threadId: source.threadId,
               ordinal: 1,
             }),
@@ -690,7 +691,8 @@ describe("OpenCode 2 through the orchestrator", () => {
         dispatchMode: { type: "queue_after_active" },
       });
       const ids = yield* IdAllocator.IdAllocatorV2;
-      const run = (ordinal: number) => ids.derive.run({ threadId: thread.threadId, ordinal });
+      const run = (ordinal: number) =>
+        ids.derive.run({ idDerivationVersion: 2, threadId: thread.threadId, ordinal });
       // The first turn is held open until the queue has been changed: its end
       // is the last event, after the cancel.
       const [first, second, third] = [thread.message("first"), queued("second"), queued("third")];
@@ -813,7 +815,8 @@ describe("OpenCode 2 through the orchestrator", () => {
     });
     const thread = threadCommands({ name: input.name, worktreePath: cwd });
     const ids = yield* IdAllocator.IdAllocatorV2;
-    const run = (ordinal: number) => ids.derive.run({ threadId: thread.threadId, ordinal });
+    const run = (ordinal: number) =>
+      ids.derive.run({ idDerivationVersion: 2, threadId: thread.threadId, ordinal });
     const result = yield* runOrchestratorV2ProviderReplayScenario(
       {
         name: input.name,
@@ -1094,7 +1097,11 @@ describe("OpenCode 2 through the orchestrator", () => {
               {
                 type: "await_run_status",
                 threadId: thread.threadId,
-                runId: ids.derive.run({ threadId: thread.threadId, ordinal: 1 }),
+                runId: ids.derive.run({
+                  idDerivationVersion: 2,
+                  threadId: thread.threadId,
+                  ordinal: 1,
+                }),
                 status: "completed",
               },
               { type: "await_thread_idle", threadId: thread.threadId },

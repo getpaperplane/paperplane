@@ -56,6 +56,9 @@ export function makeSubagentChildThread(input: {
 }): OrchestrationV2AppThread {
   return {
     ...input.parentThread,
+    // Native child identities can be rediscovered from imported provider history.
+    // App-owned delegation explicitly opts its fresh child namespace into v2.
+    idDerivationVersion: undefined,
     createdBy: input.createdBy,
     creationSource: input.creationSource,
     id: input.childThreadId,
