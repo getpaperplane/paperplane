@@ -97,9 +97,7 @@ const make = Effect.gen(function* () {
   const retireLegacyTables = legacyStorage.retire(config.dbPath).pipe(
     Effect.tap((changed) =>
       changed
-        ? Effect.logInfo(
-            "Retired imported v1 tables; free pages are available for reclamation",
-          )
+        ? Effect.logInfo("Retired imported v1 tables; free pages are available for reclamation")
         : Effect.void,
     ),
     Effect.catch((cause) => Effect.logWarning("Legacy database cleanup deferred", { cause })),
