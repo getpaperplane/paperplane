@@ -17,6 +17,11 @@ const configuredKeys = [
   "ROVE_EXPO_OWNER",
   "ROVE_MOBILE_UPDATES_ENABLED",
   "ROVE_APPLE_TEAM_ID",
+  "ROVE_IOS_UNSIGNED",
+  "ROVE_IOS_PERSONAL_TEAM",
+  "ROVE_IOS_PERSONAL_TEAM_BUNDLE_ID",
+  "ROVE_MOBILE_VERSION",
+  "ROVE_MOBILE_BUILD_NUMBER",
   "ROVE_CLERK_RELYING_PARTY_DOMAIN",
 ];
 
@@ -94,6 +99,84 @@ describe("source-built mobile identity", () => {
     expect(config.ios?.bundleIdentifier).toBe(id);
     expect(config.android?.package).toBe(id);
   });
+
+  it("configures an unsigned production IPA without paid-team capabilities", async () => {
+    const config = await configFor({ APP_VARIANT: "production", ROVE_IOS_UNSIGNED: "1" });
+    expect(config.ios?.bundleIdentifier).toBe("dev.rove.app");
+    expect(config.android?.package).toBe("dev.rove.app");
+    expect(config.ios?.entitlements).toEqual({});
+    expect(config.extra?.iosPersonalTeamBuild).toBe(true);
+    expect(config.extra?.cloudReady).toBe(false);
+    expect(config.updates?.enabled).toBe(false);
+    expect(config.plugins).toContain("./plugins/withoutIosPersonalTeamCapabilities.cjs");
+    expect(config.plugins).not.toContain("./plugins/withShareExtensionDisplayName.cjs");
+    expect(
+      config.plugins?.some((plugin) => Array.isArray(plugin) && plugin[0] === "expo-widgets"),
+    ).toBe(false);
+    expect(config.plugins).toContainEqual([
+      "@clerk/expo",
+      { theme: "./clerk-theme.json", appleSignIn: false },
+    ]);
+    const sharing = config.plugins?.find(
+      (plugin) => Array.isArray(plugin) && plugin[0] === "expo-sharing",
+    );
+    expect(sharing).toEqual([
+      "expo-sharing",
+      expect.objectContaining({ ios: expect.objectContaining({ enabled: false }) }),
+    ]);
+  });
+
+  it("allows an explicit unsigned bundle ID but still validates it", async () => {
+    const config = await configFor({
+      ROVE_IOS_UNSIGNED: "1",
+      ROVE_IOS_PERSONAL_TEAM_BUNDLE_ID: "com.example.sideload",
+    });
+    expect(config.ios?.bundleIdentifier).toBe("com.example.sideload");
+    await expect(
+      configFor({
+        ROVE_IOS_UNSIGNED: "1",
+        ROVE_IOS_PERSONAL_TEAM_BUNDLE_ID: "not an identifier",
+      }),
+    ).rejects.toThrow("ROVE_IOS_PERSONAL_TEAM_BUNDLE_ID");
+  });
+
+  it("keeps local Personal Team builds explicit and uses their default keychain group", async () => {
+    await expect(configFor({ ROVE_IOS_PERSONAL_TEAM: "1" })).rejects.toThrow(
+      "ROVE_IOS_PERSONAL_TEAM_BUNDLE_ID",
+    );
+    const config = await configFor({
+      ROVE_IOS_PERSONAL_TEAM: "1",
+      ROVE_IOS_PERSONAL_TEAM_BUNDLE_ID: "com.example.rove",
+    });
+    expect(config.ios?.bundleIdentifier).toBe("com.example.rove");
+    expect(config.ios?.entitlements).toEqual({});
+    const regular = await configFor({});
+    expect(regular.ios?.entitlements?.["keychain-access-groups"]).toEqual([
+      "$(AppIdentifierPrefix)dev.rove.app",
+    ]);
+  });
+
+  it("uses the release version and a shared monotonic native build number", async () => {
+    const config = await configFor({
+      ROVE_MOBILE_VERSION: "2.1.0",
+      ROVE_MOBILE_BUILD_NUMBER: "205000001",
+    });
+    expect(config.version).toBe("2.1.0");
+    expect(config.ios?.buildNumber).toBe("205000001");
+    expect(config.android?.versionCode).toBe(205000001);
+    const unconfigured = await configFor({});
+    expect(unconfigured.ios?.buildNumber).toBeUndefined();
+    expect(unconfigured.android?.versionCode).toBeUndefined();
+  });
+
+  it.each(["0", "-1", "1.5", "abc", "2100000001", ""])(
+    "rejects invalid build number %s",
+    async (value) => {
+      await expect(configFor({ ROVE_MOBILE_BUILD_NUMBER: value })).rejects.toThrow(
+        "ROVE_MOBILE_BUILD_NUMBER",
+      );
+    },
+  );
 
   it("refuses OTA updates without a project ID", async () => {
     await expect(configFor({ ROVE_MOBILE_UPDATES_ENABLED: "1" })).rejects.toThrow(

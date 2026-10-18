@@ -26,6 +26,14 @@ const surfaces = [
     paths: ["apps/web/vercel.ts"],
   },
   {
+    name: "mobile sideload",
+    readiness: "ROVE_MOBILE_SIDELOAD_READY",
+    paths: [
+      "apps/mobile/app.config.ts",
+      "apps/mobile/src/features/settings/lib/legal-document-url.ts",
+    ],
+  },
+  {
     name: "mobile stores",
     readiness: "ROVE_MOBILE_STORES_READY",
     paths: [
