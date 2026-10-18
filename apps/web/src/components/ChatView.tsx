@@ -424,7 +424,6 @@ import { threadEnvironment } from "../state/threads";
 import { workspacePreparationRetryRunIds } from "@rove-code/client-runtime/state/turn-item-presentation";
 import { resolveProviderSkillsForCwd } from "@rove-code/client-runtime/providerSkills";
 import { vcsEnvironment } from "../state/vcs";
-import { PiExtensionStatus } from "./chat/PiExtensionStatus";
 import { sourceControlEnvironment } from "../state/sourceControl";
 import { useProjectClone } from "../state/projectClones";
 import { projectCloneDisplayName, projectCloneProgressSummary } from "@rove-code/contracts";
@@ -11075,6 +11074,7 @@ export default function ChatView(props: ChatViewProps) {
     environmentId: activeThread.environmentId,
     threadId: activeThread.id,
     ...(draftId ? { draftId } : {}),
+    showPiExtensionStatus: conversationProviderStatus?.driver === "pi" && isServerThread,
     activeProjectName: activeProject?.title,
     activeProjectScripts: activeProject ? activeProjectScripts : undefined,
     preferredScriptId: activeProject
@@ -11534,15 +11534,6 @@ export default function ChatView(props: ChatViewProps) {
                         : undefined
                     }
                   >
-                    {conversationProviderStatus?.driver === "pi" &&
-                    isServerThread &&
-                    activeThread ? (
-                      <PiExtensionStatus
-                        key={activeThread.id}
-                        environmentId={activeThread.environmentId}
-                        threadId={activeThread.id}
-                      />
-                    ) : null}
                     <ComposerSurface.Shell
                       contextStrip={showComposerContextStrip || showComposerModelStrip}
                     >
