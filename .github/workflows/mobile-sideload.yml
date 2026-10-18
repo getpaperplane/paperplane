@@ -1,0 +1,240 @@
+name: Mobile sideload binaries
+
+on:
+  workflow_call:
+    inputs:
+      ref:
+        required: true
+        type: string
+      version:
+        required: true
+        type: string
+    secrets:
+      ROVE_ANDROID_KEYSTORE_BASE64:
+        required: false
+      ROVE_ANDROID_KEYSTORE_PASSWORD:
+        required: false
+      ROVE_ANDROID_KEY_ALIAS:
+        required: false
+      ROVE_ANDROID_KEY_PASSWORD:
+        required: false
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Commit or tag to build (must contain this workflow's build support)
+        required: true
+        type: string
+      version:
+        description: Release version without v (for example 2.1.0 or 2.1.0-preview.1)
+        required: true
+        type: string
+      release_tag:
+        description: Existing GitHub Release tag to attach assets to; blank uploads Actions artifacts only
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+# No cloud configuration, Firebase credentials, or OTA enrollment in these binaries.
+env:
+  APP_VARIANT: production
+  # Native version strings must be numeric (iOS rejects 2.1.0-preview.1); the
+  # asset file name keeps the full release version.
+  RELEASE_VERSION: ${{ inputs.version }}
+  ROVE_MOBILE_UPDATES_ENABLED: "0"
+  EXPO_NO_DOTENV: "1"
+  CI: "1"
+  NODE_OPTIONS: --max-old-space-size=8192
+
+jobs:
+  prepare:
+    if: vars.ROVE_MOBILE_SIDELOAD_READY == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      native_version: ${{ steps.prepare.outputs.native_version }}
+      android_ready: ${{ steps.prepare.outputs.android_ready }}
+      build_number: ${{ steps.prepare.outputs.build_number }}
+    steps:
+      - id: prepare
+        name: Validate version and check signing credentials
+        env:
+          KEYSTORE: ${{ secrets.ROVE_ANDROID_KEYSTORE_BASE64 }}
+          STORE_PASSWORD: ${{ secrets.ROVE_ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ROVE_ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ROVE_ANDROID_KEY_PASSWORD }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$RELEASE_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]] || { echo 'Invalid release version' >&2; exit 1; }
+          echo "native_version=${RELEASE_VERSION%%-*}" >> "$GITHUB_OUTPUT"
+          # Seconds since 2020: increases across both calling workflows and reruns,
+          # remains below Android's 2100000000 ceiling until 2086.
+          echo "build_number=$(( $(date +%s) - 1577836800 ))" >> "$GITHUB_OUTPUT"
+          if [[ -n "$KEYSTORE" && -n "$STORE_PASSWORD" && -n "$KEY_ALIAS" && -n "$KEY_PASSWORD" ]]; then
+            echo 'android_ready=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'android_ready=false' >> "$GITHUB_OUTPUT"
+            echo '::notice::Android APK skipped: all four ROVE_ANDROID_KEYSTORE_BASE64, ROVE_ANDROID_KEYSTORE_PASSWORD, ROVE_ANDROID_KEY_ALIAS, and ROVE_ANDROID_KEY_PASSWORD secrets are required. No debug-key fallback.'
+            echo 'Android APK skipped: missing release signing secrets. The unsigned iOS build can still run.' >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+  android:
+    needs: prepare
+    if: needs.prepare.outputs.android_ready == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    env:
+      ROVE_MOBILE_BUILD_NUMBER: ${{ needs.prepare.outputs.build_number }}
+      ROVE_MOBILE_VERSION: ${{ needs.prepare.outputs.native_version }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.ref }}
+      - name: Check public identity
+        run: ROVE_MOBILE_SIDELOAD_READY=true node scripts/check-release-identity.mjs
+      - uses: voidzero-dev/setup-vp@68f39c78aaf39be468cabd2afb09c162574c84af # v1.21.2
+        with:
+          node-version-file: package.json
+          cache: true
+          run-install: |
+            args:
+              - --filter=@rove-code/mobile...
+              - --filter=@rove-code/scripts...
+      - name: Expose pnpm for Expo autolinking
+        shell: bash
+        run: |
+          pnpm_version="$(node --print "require('./package.json').packageManager.split('@').pop()")"
+          echo "$HOME/.vite-plus/package_manager/pnpm/$pnpm_version/pnpm/bin" >> "$GITHUB_PATH"
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v5
+      - name: Generate native Android project
+        working-directory: apps/mobile
+        run: vp exec expo prebuild --clean --platform android --no-install
+      - name: Build unsigned release APK
+        working-directory: apps/mobile/android
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Expo's template otherwise signs release with its bundled debug key.
+          cat > "$RUNNER_TEMP/unsigned.gradle" <<'EOF'
+          gradle.beforeProject { project ->
+            project.pluginManager.withPlugin('com.android.application') {
+              project.androidComponents.finalizeDsl { android ->
+                android.buildTypes.getByName('release').signingConfig = null
+              }
+            }
+          }
+          EOF
+          ./gradlew --no-daemon --init-script "$RUNNER_TEMP/unsigned.gradle" :app:assembleRelease
+          test -f app/build/outputs/apk/release/app-release-unsigned.apk
+      - name: Sign and verify APK with the persistent release key
+        env:
+          KEYSTORE: ${{ secrets.ROVE_ANDROID_KEYSTORE_BASE64 }}
+          STORE_PASSWORD: ${{ secrets.ROVE_ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ROVE_ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ROVE_ANDROID_KEY_PASSWORD }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          trap 'rm -f "$RUNNER_TEMP/rove-release.keystore"' EXIT
+          printf '%s' "$KEYSTORE" | base64 --decode > "$RUNNER_TEMP/rove-release.keystore"
+          tools="$(find "$ANDROID_HOME/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -1)"
+          mkdir -p release-assets
+          "$tools/zipalign" -f -P 16 4 apps/mobile/android/app/build/outputs/apk/release/app-release-unsigned.apk "$RUNNER_TEMP/aligned.apk"
+          apk="release-assets/Rove-Code-$RELEASE_VERSION.apk"
+          "$tools/apksigner" sign --ks "$RUNNER_TEMP/rove-release.keystore" --ks-pass env:STORE_PASSWORD --ks-key-alias "$KEY_ALIAS" --key-pass env:KEY_PASSWORD --out "$apk" "$RUNNER_TEMP/aligned.apk"
+          "$tools/apksigner" verify --verbose --print-certs "$apk"
+          rm -f release-assets/*.idsig
+      - uses: actions/upload-artifact@v7
+        with:
+          name: mobile-sideload-android
+          path: release-assets/*.apk
+          if-no-files-found: error
+
+  ios:
+    needs: prepare
+    runs-on: macos-26
+    timeout-minutes: 90
+    env:
+      ROVE_MOBILE_BUILD_NUMBER: ${{ needs.prepare.outputs.build_number }}
+      ROVE_MOBILE_VERSION: ${{ needs.prepare.outputs.native_version }}
+      ROVE_IOS_PERSONAL_TEAM: "1"
+      ROVE_IOS_UNSIGNED: "1"
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.ref }}
+      - name: Check public identity
+        run: ROVE_MOBILE_SIDELOAD_READY=true node scripts/check-release-identity.mjs
+      - uses: voidzero-dev/setup-vp@68f39c78aaf39be468cabd2afb09c162574c84af # v1.21.2
+        with:
+          node-version-file: package.json
+          cache: true
+          run-install: |
+            args:
+              - --filter=@rove-code/mobile...
+              - --filter=@rove-code/scripts...
+      - name: Expose pnpm for Expo autolinking
+        shell: bash
+        run: |
+          pnpm_version="$(node --print "require('./package.json').packageManager.split('@').pop()")"
+          echo "$HOME/.vite-plus/package_manager/pnpm/$pnpm_version/pnpm/bin" >> "$GITHUB_PATH"
+      - name: Generate native iOS project and install Pods
+        working-directory: apps/mobile
+        run: |
+          vp exec expo prebuild --clean --platform ios --no-install
+          cd ios
+          pod install
+      - name: Archive without signing and package IPA
+        shell: bash
+        run: |
+          set -euo pipefail
+          workspace="$(find apps/mobile/ios -maxdepth 1 -name '*.xcworkspace' -print -quit)"
+          scheme="$(basename "$workspace" .xcworkspace)"
+          xcodebuild -workspace "$workspace" -scheme "$scheme" -configuration Release \
+            -destination 'generic/platform=iOS' -archivePath "$RUNNER_TEMP/Rove.xcarchive" \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO archive
+          mkdir -p "$RUNNER_TEMP/ipa/Payload" release-assets
+          cp -R "$RUNNER_TEMP/Rove.xcarchive/Products/Applications/"*.app "$RUNNER_TEMP/ipa/Payload/"
+          cd "$RUNNER_TEMP/ipa"
+          /usr/bin/zip -qry "$GITHUB_WORKSPACE/release-assets/Rove-Code-$RELEASE_VERSION-unsigned.ipa" Payload
+      - uses: actions/upload-artifact@v7
+        with:
+          name: mobile-sideload-ios
+          path: release-assets/*.ipa
+          if-no-files-found: error
+
+  attach_manual:
+    needs: [android, ios]
+    if: ${{ !failure() && !cancelled() && github.event_name == 'workflow_dispatch' && inputs.release_tag != '' && needs.ios.result == 'success' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: mobile-sideload-*
+          merge-multiple: true
+          path: release-assets
+      - name: Attach to existing release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
+        working-directory: release-assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh release view "$RELEASE_TAG" > /dev/null
+          shopt -s nullglob
+          assets=( *.apk *.ipa )
+          sha256sum "${assets[@]}" > MOBILE-SHA256SUMS
+          gh release upload "$RELEASE_TAG" ./*.ipa MOBILE-SHA256SUMS
+          if compgen -G '*.apk' > /dev/null; then gh release upload "$RELEASE_TAG" ./*.apk; fi

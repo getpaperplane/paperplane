@@ -26,6 +26,8 @@ import {
 } from "@rove-code/shared/nodeRuntime";
 import * as NetService from "@rove-code/shared/Net";
 import { isCommandAvailable } from "@rove-code/shared/shell";
+// @effect-diagnostics-next-line nodeBuiltinImport:off -- FileSystem.stat follows symlinks and has no lstat equivalent.
+import * as NodeFSP from "node:fs/promises";
 import * as Clock from "effect/Clock";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -85,6 +87,9 @@ const AgentDeviceDaemonFile = Schema.Struct({
   version: Schema.optional(Schema.String),
 });
 const decodeDaemonFile = Schema.decodeUnknownEffect(Schema.fromJsonString(AgentDeviceDaemonFile));
+const decodeLegacyDaemonLock = Schema.decodeUnknownEffect(
+  Schema.fromJsonString(Schema.Struct({ pid: Schema.Int })),
+);
 
 const decodeAgentDeviceFailure = Schema.decodeUnknownOption(
   Schema.fromJsonString(
@@ -137,7 +142,7 @@ const platformReason = Effect.fn("LocalDeviceHost.platformReason")(function* (
   return null;
 });
 
-/** Resolve the SDK once for both diagnostics and the environment passed to helpers. */
+/** Resolve the current SDK for diagnostics and the environment passed to helpers. */
 const androidSdk = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -243,8 +248,16 @@ export const make = Effect.fn("LocalDeviceHost.make")(function* () {
   const httpClient = yield* HttpClient.HttpClient;
   const environment = yield* HostProcess.Environment;
   const hostPlatform = yield* HostProcess.Platform;
-  const sdk = yield* androidSdk;
-  const hostEnvironment = deviceHostEnvironment(environment, sdk.root, hostPlatform, path);
+  // Re-run these effects at use time: the SDK can be installed while Rove is running.
+  const currentSdk = androidSdk.pipe(
+    Effect.provideService(FileSystem.FileSystem, fs),
+    Effect.provideService(Path.Path, path),
+    Effect.provideService(HostProcess.Environment, environment),
+    Effect.provideService(HostProcess.Platform, hostPlatform),
+  );
+  const hostEnvironment = currentSdk.pipe(
+    Effect.map((sdk) => deviceHostEnvironment(environment, sdk.root, hostPlatform, path)),
+  );
   const startLock = yield* Semaphore.make(1);
   const runningRef = yield* Ref.make<RunningHost | null>(null);
   const restartDelayRef = yield* Ref.make(0);
@@ -256,6 +269,8 @@ export const make = Effect.fn("LocalDeviceHost.make")(function* () {
     const reason = yield* platformReason(platform).pipe(
       Effect.provideService(FileSystem.FileSystem, fs),
       Effect.provideService(Path.Path, path),
+      Effect.provideService(HostProcess.Environment, environment),
+      Effect.provideService(HostProcess.Platform, hostPlatform),
     );
     return reason === null ? { platform, available: true } : { platform, available: false, reason };
   });
@@ -311,8 +326,9 @@ export const make = Effect.fn("LocalDeviceHost.make")(function* () {
       try {
         process.kill(pid, 0);
         return true;
-      } catch {
-        return false;
+      } catch (error) {
+        // Permission errors do not prove that the process is gone.
+        return !(error instanceof Error && "code" in error && error.code === "ESRCH");
       }
     });
 
@@ -411,7 +427,7 @@ export const make = Effect.fn("LocalDeviceHost.make")(function* () {
               shell: false,
               stdout: "pipe",
               stderr: "pipe",
-              env: yield* hubEnvironment(hostEnvironment).pipe(
+              env: yield* hubEnvironment(yield* hostEnvironment).pipe(
                 Effect.provideService(FileSystem.FileSystem, fs),
                 Effect.provideService(HostProcess.Platform, hostPlatform),
               ),
@@ -519,7 +535,7 @@ export const make = Effect.fn("LocalDeviceHost.make")(function* () {
     yield* fs.makeDirectory(stateDir, { recursive: true }).pipe(Effect.ignore);
     const existing = yield* readDaemonFile().pipe(Effect.option);
     const daemonEnvironment: NodeJS.ProcessEnv = {
-      ...hostEnvironment,
+      ...(yield* hostEnvironment),
       AGENT_DEVICE_STATE_DIR: stateDir,
       AGENT_DEVICE_DAEMON_SERVER_MODE: "http",
       // The daemon idles out after five minutes by default; the server owns
@@ -550,74 +566,107 @@ export const make = Effect.fn("LocalDeviceHost.make")(function* () {
       if (alive) return toEndpoint(existing.value);
       yield* fs.remove(daemonFilePath(), { force: true }).pipe(Effect.ignore);
     }
-    // There is no `daemon start`; the first command in a state dir spawns the
-    // daemon and blocks until it answers. `devices` is the cheapest one.
-    const runResult = yield* runner
-      .run({
-        command: nodePath,
-        args: [agentTool.entryPath, "devices", "--json"],
-        env: daemonEnvironment,
-        timeout: Duration.millis(DAEMON_READY_TIMEOUT_MS),
-        timeoutBehavior: "timedOutResult",
-      })
-      .pipe(Effect.result);
-    // Discovery can fail after the daemon starts. A published endpoint still
-    // lets agents connect; absent one, preserve the CLI failure instead of polling.
-    const started = yield* readDaemonFile().pipe(Effect.option);
-    if (started._tag === "Some") return toEndpoint(started.value);
-    if (runResult._tag === "Failure") {
-      return yield* new DeviceHost.DeviceHostError({
-        hostId,
-        step: "starting agent tools",
-        cause: runResult.failure,
-      });
-    }
-    const result = runResult.success;
-    if (result.timedOut) {
-      return yield* new DeviceHost.DeviceHostTimeoutError({
-        hostId,
-        timeoutMs: DAEMON_READY_TIMEOUT_MS,
-      });
-    }
-    if (result.code !== 0) {
-      const failure = decodeAgentDeviceFailure(result.stdout);
-      const details = Option.isSome(failure) ? failure.value.error.details : undefined;
-      const reason =
-        details?.reason === "daemon_registration_unproven"
-          ? details.inspection?.reason === "non-directory"
-            ? "daemon_lock_not_directory"
-            : "daemon_registration_unproven"
-          : details?.reason === "daemon_retirement_unconfirmed"
-            ? "daemon_retirement_unconfirmed"
-            : "command_failed";
-      return yield* new DeviceHost.AgentDeviceStartError({
-        hostId,
-        stateDir,
-        exitCode: result.code === null ? null : Number(result.code),
-        reason,
-        cause: result,
-      });
-    }
-    const deadline = (yield* Clock.currentTimeMillis) + DAEMON_READY_TIMEOUT_MS;
-    while (true) {
-      const file = yield* readDaemonFile().pipe(Effect.option);
-      if (file._tag === "Some") return toEndpoint(file.value);
-      if ((yield* Clock.currentTimeMillis) > deadline) {
+    const recoverLegacyLock = Effect.gen(function* () {
+      const lockPath = path.join(stateDir, "daemon.lock");
+      // Effect's stat follows symlinks; only migrate an actual regular file.
+      const stat = yield* Effect.tryPromise(() => NodeFSP.lstat(lockPath));
+      if (!stat.isFile()) return false;
+      const lock = yield* fs.readFileString(lockPath).pipe(Effect.flatMap(decodeLegacyDaemonLock));
+      if (lock.pid <= 0 || (yield* isProcessAlive(lock.pid))) return false;
+      const backupPath = `${lockPath}.legacy-${yield* Clock.currentTimeMillis}`;
+      yield* fs.rename(lockPath, backupPath);
+      yield* Effect.logWarning(
+        "Retained a stale legacy agent-device lock before retrying startup",
+        {
+          pid: lock.pid,
+          backupPath,
+        },
+      );
+      return true;
+    }).pipe(Effect.orElseSucceed(() => false));
+
+    const start = Effect.gen(function* () {
+      // There is no `daemon start`; the first command in a state dir spawns the
+      // daemon and blocks until it answers. `devices` is the cheapest one.
+      const runResult = yield* runner
+        .run({
+          command: nodePath,
+          args: [agentTool.entryPath, "devices", "--json"],
+          env: daemonEnvironment,
+          timeout: Duration.millis(DAEMON_READY_TIMEOUT_MS),
+          timeoutBehavior: "timedOutResult",
+        })
+        .pipe(Effect.result);
+      // Discovery can fail after the daemon starts. A published endpoint still
+      // lets agents connect; absent one, preserve the CLI failure instead of polling.
+      const started = yield* readDaemonFile().pipe(Effect.option);
+      if (started._tag === "Some") return toEndpoint(started.value);
+      if (runResult._tag === "Failure") {
+        return yield* new DeviceHost.DeviceHostError({
+          hostId,
+          step: "starting agent tools",
+          cause: runResult.failure,
+        });
+      }
+      const result = runResult.success;
+      if (result.timedOut) {
         return yield* new DeviceHost.DeviceHostTimeoutError({
           hostId,
           timeoutMs: DAEMON_READY_TIMEOUT_MS,
         });
       }
-      yield* Effect.sleep(Duration.millis(DAEMON_POLL_MS));
-    }
+      if (result.code !== 0) {
+        const failure = decodeAgentDeviceFailure(result.stdout);
+        const details = Option.isSome(failure) ? failure.value.error.details : undefined;
+        const reason =
+          details?.reason === "daemon_registration_unproven"
+            ? details.inspection?.reason === "non-directory"
+              ? "daemon_lock_not_directory"
+              : "daemon_registration_unproven"
+            : details?.reason === "daemon_retirement_unconfirmed"
+              ? "daemon_retirement_unconfirmed"
+              : "command_failed";
+        return yield* new DeviceHost.AgentDeviceStartError({
+          hostId,
+          stateDir,
+          exitCode: result.code === null ? null : Number(result.code),
+          reason,
+          cause: result,
+        });
+      }
+      const deadline = (yield* Clock.currentTimeMillis) + DAEMON_READY_TIMEOUT_MS;
+      while (true) {
+        const file = yield* readDaemonFile().pipe(Effect.option);
+        if (file._tag === "Some") return toEndpoint(file.value);
+        if ((yield* Clock.currentTimeMillis) > deadline) {
+          return yield* new DeviceHost.DeviceHostTimeoutError({
+            hostId,
+            timeoutMs: DAEMON_READY_TIMEOUT_MS,
+          });
+        }
+        yield* Effect.sleep(Duration.millis(DAEMON_POLL_MS));
+      }
+    });
+    return yield* start.pipe(
+      Effect.catchTags({
+        AgentDeviceStartError: (error) =>
+          Effect.gen(function* () {
+            if (error.reason !== "daemon_lock_not_directory" || !(yield* recoverLegacyLock)) {
+              return yield* error;
+            }
+            // Do not catch the retry's failure or attempt another migration.
+            return yield* start;
+          }),
+      }),
+    );
   });
 
   const stopAgentDeviceDaemon = (
     agentTool: { readonly entryPath: string; readonly nodePath: string } | null,
   ) =>
     agentTool
-      ? runner
-          .run({
+      ? Effect.gen(function* () {
+          return yield* runner.run({
             command: agentTool.nodePath,
             args: [
               agentTool.entryPath,
@@ -626,11 +675,11 @@ export const make = Effect.fn("LocalDeviceHost.make")(function* () {
               "--state-dir",
               agentDeviceStateDir(path, config.stateDir),
             ],
-            env: { ...hostEnvironment, AGENT_DEVICE_NO_UPDATE_NOTIFIER: "1" },
+            env: { ...(yield* hostEnvironment), AGENT_DEVICE_NO_UPDATE_NOTIFIER: "1" },
             timeout: Duration.seconds(10),
             timeoutBehavior: "timedOutResult",
-          })
-          .pipe(Effect.ignore)
+          });
+        }).pipe(Effect.ignore)
       : Effect.void;
 
   let agentToolRef: { readonly entryPath: string; readonly nodePath: string } | null = null;
@@ -644,7 +693,10 @@ export const make = Effect.fn("LocalDeviceHost.make")(function* () {
       if (alive) return running;
       yield* Ref.set(runningRef, null);
     }
-    const nodePath = yield* resolveNodeExecutable("Local device support", hostEnvironment).pipe(
+    const nodePath = yield* resolveNodeExecutable(
+      "Local device support",
+      yield* hostEnvironment,
+    ).pipe(
       Effect.provideService(FileSystem.FileSystem, fs),
       Effect.provideService(Path.Path, path),
       Effect.provideService(HostProcess.Platform, hostPlatform),
@@ -772,8 +824,9 @@ export const make = Effect.fn("LocalDeviceHost.make")(function* () {
   };
 
   const run: DeviceHost.DeviceHostReady["run"] = (command, args, options) =>
-    runner
-      .run({
+    Effect.gen(function* () {
+      const sdk = yield* currentSdk;
+      return yield* runner.run({
         command:
           command === "emulator" && sdk.root
             ? path.join(
@@ -783,19 +836,19 @@ export const make = Effect.fn("LocalDeviceHost.make")(function* () {
               )
             : command,
         args,
-        env: hostEnvironment,
+        env: deviceHostEnvironment(environment, sdk.root, hostPlatform, path),
         timeout: Duration.millis(options?.timeoutMs ?? 20_000),
         timeoutBehavior: "timedOutResult",
         ...(options?.stdin === undefined ? {} : { stdin: options.stdin }),
-      })
-      .pipe(
-        Effect.map((result) => ({
-          stdout: result.stdout,
-          stderr: result.stderr,
-          code: Number(result.code),
-        })),
-        Effect.catch((cause) => Effect.succeed({ stdout: "", stderr: String(cause), code: 127 })),
-      );
+      });
+    }).pipe(
+      Effect.map((result) => ({
+        stdout: result.stdout,
+        stderr: result.stderr,
+        code: Number(result.code),
+      })),
+      Effect.catch((cause) => Effect.succeed({ stdout: "", stderr: String(cause), code: 127 })),
+    );
 
   const toReady = (running: RunningHost): DeviceHost.DeviceHostReady => ({
     hub: { origin: running.hub.origin } satisfies DeviceHost.DeviceHubEndpoint,

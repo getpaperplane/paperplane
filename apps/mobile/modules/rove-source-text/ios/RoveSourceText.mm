@@ -117,7 +117,7 @@ RoveSourceTextOutsideTapCoordinatorForWindow(UIWindow *window) {
   return coordinator;
 }
 
-@interface RoveSourceText () <RCTT3SourceTextViewProtocol, UITextViewDelegate,
+@interface RoveSourceText () <RCTRoveSourceTextViewProtocol, UITextViewDelegate,
                             RoveSourceTextOutsideTapTarget>
 @end
 

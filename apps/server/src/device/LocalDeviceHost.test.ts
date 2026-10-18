@@ -1,4 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
+// @effect-diagnostics-next-line nodeBuiltinImport:off -- Reap a real child synchronously to obtain a dead PID without sleeps.
+import { spawnSync } from "node:child_process";
 import * as NodePath from "@effect/platform-node/NodePath";
 import * as HostProcess from "@rove-code/shared/HostProcess";
 import * as Effect from "effect/Effect";
@@ -52,6 +54,7 @@ const agentFixture = Effect.fn("agentFixture")(function* (
     yield* fs.writeFileString(entryPath, "");
     yield* fs.writeFileString(path.join(installDir, ".install-complete"), version!);
   }
+  const commands: ProcessRunner.ProcessRunInput[] = [];
   const host = yield* LocalDeviceHost.make().pipe(
     Effect.provide(Layer.mergeAll(ServerConfig.layerTest(baseDir, baseDir), NetService.layer)),
     Effect.provideService(HostProcess.Environment, { HOME: baseDir, PATH: "" }),
@@ -78,8 +81,12 @@ const agentFixture = Effect.fn("agentFixture")(function* (
       ),
     ),
     Effect.provideService(ProcessRunner.ProcessRunner, {
-      run: (input) =>
-        input.args.includes("devices") ? startup(stateDir) : Effect.succeed(processOutput(0)),
+      run: (input) => {
+        commands.push(input);
+        return input.args.includes("devices")
+          ? startup(stateDir)
+          : Effect.succeed(processOutput(0));
+      },
     }),
     Effect.provideService(
       HttpClient.HttpClient,
@@ -89,28 +96,76 @@ const agentFixture = Effect.fn("agentFixture")(function* (
     ),
   );
   yield* host.ensureReady(() => Effect.void);
-  return { host, fs, stateDir };
+  return { host, fs, stateDir, baseDir, commands };
+});
+
+const incompatibleLockResult = processOutput(
+  1,
+  JSON.stringify({
+    success: false,
+    error: {
+      message: "private command output",
+      details: {
+        reason: "daemon_registration_unproven",
+        inspection: { state: "unproven", reason: "non-directory" },
+      },
+    },
+  }),
+);
+
+const deadLegacyOwner = Effect.sync(() => {
+  // spawnSync has reaped this child before returning; no polling or sleeps.
+  const child = spawnSync(process.execPath, ["-e", ""]);
+  expect(child.status).toBe(0);
+  return JSON.stringify({
+    pid: child.pid,
+    version: "0.21.12",
+    startedAt: 123,
+    processStartTime: "old start time",
+  });
 });
 
 describe("AgentDevice startup", () => {
-  it.effect("reports an incompatible lock immediately and retains it for manual repair", () =>
+  it.effect("renames a dead legacy owner's lock and retries startup once", () =>
     Effect.gen(function* () {
-      const result = processOutput(
-        1,
-        JSON.stringify({
-          success: false,
-          error: {
-            message: "private command output",
-            details: {
-              reason: "daemon_registration_unproven",
-              inspection: { state: "unproven", reason: "non-directory" },
-            },
-          },
-        }),
+      const fs = yield* FileSystem.FileSystem;
+      let attempts = 0;
+      const { host, stateDir } = yield* agentFixture((dir) =>
+        Effect.gen(function* () {
+          attempts++;
+          if (attempts === 1) return incompatibleLockResult;
+          expect(yield* fs.exists(`${dir}/daemon.lock`)).toBe(false);
+          yield* fs
+            .writeFileString(
+              `${dir}/daemon.json`,
+              JSON.stringify({ httpPort: 12345, token: "test-token" }),
+            )
+            .pipe(Effect.orDie);
+          return processOutput(0);
+        }).pipe(Effect.orDie),
       );
-      const { host, fs, stateDir } = yield* agentFixture(() => Effect.succeed(result));
+      const legacyOwner = yield* deadLegacyOwner;
+      yield* fs.writeFileString(`${stateDir}/daemon.lock`, legacyOwner);
+      const ready = yield* host.ensureAgentReady(() => Effect.void);
+      expect(ready.agentDevice).toMatchObject({
+        baseUrl: "http://127.0.0.1:12345",
+        token: "test-token",
+      });
+      const backups = (yield* fs.readDirectory(stateDir)).filter((name) =>
+        name.startsWith("daemon.lock.legacy-"),
+      );
+      expect(backups).toHaveLength(1);
+      expect(yield* fs.readFileString(`${stateDir}/${backups[0]}`)).toBe(legacyOwner);
+      expect(attempts).toBe(2);
+    }).pipe(Effect.scoped, Effect.provide(NodeServices.layer)),
+  );
+
+  it.effect("retains a live legacy owner's lock and reports the original error", () =>
+    Effect.gen(function* () {
+      const result = incompatibleLockResult;
+      const { host, fs, stateDir, commands } = yield* agentFixture(() => Effect.succeed(result));
       const lock = `${stateDir}/daemon.lock`;
-      const legacyOwner = JSON.stringify({ pid: 85669, processStartTime: "old start time" });
+      const legacyOwner = JSON.stringify({ pid: process.pid, processStartTime: "old start time" });
       yield* fs.writeFileString(lock, legacyOwner);
       const error = yield* host.ensureAgentReady(() => Effect.void).pipe(Effect.flip);
       expect(error).toMatchObject({
@@ -125,7 +180,63 @@ describe("AgentDevice startup", () => {
       expect(error.message).toContain("original CLI");
       expect(error.message).not.toContain("private command output");
       expect(yield* fs.readFileString(lock)).toBe(legacyOwner);
+      expect(commands.filter((command) => command.args.includes("devices"))).toHaveLength(1);
       expect(yield* host.current).not.toBeNull();
+    }).pipe(Effect.scoped, Effect.provide(NodeServices.layer)),
+  );
+
+  for (const contents of ["not JSON", JSON.stringify({ version: "unknown" })]) {
+    it.effect(`retains an unrecognized lock file: ${contents}`, () =>
+      Effect.gen(function* () {
+        const { host, fs, stateDir, commands } = yield* agentFixture(() =>
+          Effect.succeed(incompatibleLockResult),
+        );
+        const lock = `${stateDir}/daemon.lock`;
+        yield* fs.writeFileString(lock, contents);
+        const error = yield* host.ensureAgentReady(() => Effect.void).pipe(Effect.flip);
+        expect(error).toMatchObject({
+          _tag: "AgentDeviceStartError",
+          reason: "daemon_lock_not_directory",
+          cause: incompatibleLockResult,
+        });
+        expect(yield* fs.readFileString(lock)).toBe(contents);
+        expect(commands.filter((command) => command.args.includes("devices"))).toHaveLength(1);
+      }).pipe(Effect.scoped, Effect.provide(NodeServices.layer)),
+    );
+  }
+
+  it.effect("surfaces the retry's failure without retrying again", () =>
+    Effect.gen(function* () {
+      let attempts = 0;
+      const retryResult = processOutput(2);
+      const { host, fs, stateDir } = yield* agentFixture(() =>
+        Effect.sync(() => (++attempts === 1 ? incompatibleLockResult : retryResult)),
+      );
+      yield* fs.writeFileString(`${stateDir}/daemon.lock`, yield* deadLegacyOwner);
+      const error = yield* host.ensureAgentReady(() => Effect.void).pipe(Effect.flip);
+      expect(error).toMatchObject({
+        _tag: "AgentDeviceStartError",
+        reason: "command_failed",
+        cause: retryResult,
+      });
+      expect(attempts).toBe(2);
+    }).pipe(Effect.scoped, Effect.provide(NodeServices.layer)),
+  );
+
+  it.effect("does not migrate a symlink to a dead legacy owner's lock", () =>
+    Effect.gen(function* () {
+      const { host, fs, stateDir, commands } = yield* agentFixture(() =>
+        Effect.succeed(incompatibleLockResult),
+      );
+      const target = `${stateDir}/legacy-lock`;
+      const contents = yield* deadLegacyOwner;
+      yield* fs.writeFileString(target, contents);
+      yield* fs.symlink(target, `${stateDir}/daemon.lock`);
+      const error = yield* host.ensureAgentReady(() => Effect.void).pipe(Effect.flip);
+      expect(error).toMatchObject({ reason: "daemon_lock_not_directory" });
+      expect(yield* fs.readLink(`${stateDir}/daemon.lock`)).toBe(target);
+      expect(yield* fs.readFileString(target)).toBe(contents);
+      expect(commands.filter((command) => command.args.includes("devices"))).toHaveLength(1);
     }).pipe(Effect.scoped, Effect.provide(NodeServices.layer)),
   );
 
@@ -255,6 +366,42 @@ const diagnose = (
   );
 
 describe("Android SDK availability", () => {
+  it.effect("uses an SDK installed after host construction for emulator commands", () =>
+    Effect.gen(function* () {
+      const { host, fs, baseDir, commands } = yield* agentFixture(() =>
+        Effect.succeed(processOutput(0)),
+      );
+      expect(yield* host.platformAvailability("android")).toMatchObject({ available: false });
+      const ready = yield* host.current;
+      if (!ready) return yield* Effect.die("Expected a ready host");
+      yield* ready.run("emulator", ["-list-avds"]);
+      expect(commands.at(-1)?.command).toBe("emulator");
+      const root = `${baseDir}/Library/Android/sdk`;
+      for (const file of [
+        "platform-tools/adb",
+        "emulator/emulator",
+        "cmdline-tools/latest/bin/avdmanager",
+      ]) {
+        const target = `${root}/${file}`;
+        const path = yield* Path.Path;
+        yield* fs.makeDirectory(path.dirname(target), { recursive: true });
+        yield* fs.writeFileString(target, "");
+      }
+      expect(yield* host.platformAvailability("android")).toMatchObject({ available: true });
+      yield* ready.run("emulator", ["-list-avds"]);
+      expect(commands.at(-1)).toMatchObject({
+        command: `${root}/emulator/emulator`,
+        args: ["-list-avds"],
+        env: {
+          ANDROID_HOME: root,
+          PATH: `${root}/platform-tools:${root}/emulator:`,
+        },
+      });
+      yield* ready.run("node", ["helper.js"]);
+      expect(commands.at(-1)?.env?.ANDROID_HOME).toBe(root);
+    }).pipe(Effect.scoped, Effect.provide(NodeServices.layer)),
+  );
+
   it.effect("uses the standard Windows SDK without probing PATH", () =>
     Effect.gen(function* () {
       const root = "C:\\Users\\test\\AppData\\Local\\Android\\Sdk";

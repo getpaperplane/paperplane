@@ -12,7 +12,7 @@ npm can take over an hour to serve a large platform package it has already accep
 
 A release skips its own quality checks when CI has already passed on a push of the same commit, which is the usual case for nightlies built from `main`.
 
-The first release is **self-hosted desktop and persistent CLI hosts, with local, LAN, Tailscale, and desktop SSH connections**. Leave `ROVE_CLOUD_READY` unset: relay deployment and configuration are skipped, and desktop/CLI builds omit Rove Connect. Apple and Azure signing credentials may be omitted for unsigned builds. Signed macOS previews require `ROVE_MACOS_SIGNING_READY=true`; mobile production requires `ROVE_MOBILE_STORES_READY=true` because store distribution needs paid developer accounts. Hosted web and marketing retain separate readiness controls; those controls indicate release readiness, not necessarily a paid service.
+The first release is **self-hosted desktop and persistent CLI hosts, with local, LAN, Tailscale, and desktop SSH connections**. Leave `ROVE_CLOUD_READY` unset: relay deployment and configuration are skipped, and desktop/CLI builds omit Rove Connect. Apple and Azure signing credentials may be omitted for unsigned builds. Signed macOS previews require `ROVE_MACOS_SIGNING_READY=true`; mobile store distribution requires `ROVE_MOBILE_STORES_READY=true` and paid developer accounts. Free APK/unsigned IPA distribution has a separate `ROVE_MOBILE_SIDELOAD_READY` gate. Hosted web and marketing retain separate readiness controls; those controls indicate release readiness, not necessarily a paid service.
 
 The static browser app deploys to Cloudflare. See the [Cloudflare deployment procedure](./cloudflare-web.md). When `ROVE_CLOUDFLARE_WEB_READY=true`, stable releases deploy to `rove.hafiezulzikry.com` and nightlies deploy to the separate `rove-nightly.hafiezulzikry.com` origin. Preview releases deploy neither. Marketing deploys only on stable releases when `ROVE_MARKETING_RELEASE_READY=true`. These deployments do not require the relay gate.
 
@@ -31,7 +31,7 @@ Updates from the previous orchestration system preserve transcripts but cannot c
 ## Before enabling publication
 
 1. Confirm that the repository, domains, npm scope, signing accounts, vulnerability reporting, and legal/support contacts belong to this project. Preserve upstream MIT attribution. In particular, verify ownership of the `@rove-code` npm scope and configure trusted publishing for `@rove-code/cli` and every `@rove-code/cli-<platform>` package; a package-name lookup alone does not prove control.
-2. Run `node scripts/check-release-identity.mjs` and triage each finding. The check scans public marketing, hosted-web, and mobile-store identity; it reports gated channels but blocks a channel only when its release-readiness variable is enabled. Saved-data and protocol identifiers require explicit migrations, not bulk replacements; package names, public URLs, downloads, and legal claims must point to Rove-owned resources or be removed.
+2. Run `node scripts/check-release-identity.mjs` and triage each finding. The check scans public marketing, hosted-web, and mobile store/sideload identity; it reports gated channels but blocks a channel only when its release-readiness variable is enabled. Saved-data and protocol identifiers require explicit migrations, not bulk replacements; package names, public URLs, downloads, and legal claims must point to Rove-owned resources or be removed.
 3. Keep the source server workspace package (`apps/server/package.json`, `name: @rove-code/server`) private. Its name is used by Effect's deterministic service keys; it is **not** the published CLI. `scripts/build-npm-platform-packages.ts` produces the separate `@rove-code/cli` launcher, its `rove` command, and the platform packages. The source package must never be published.
 4. Verify the installer, archive, npm launcher, SSH runtime, WSL payload, desktop identity, and background service resolve to the **same** Rove artifact and isolated state paths. The fork defaults to `~/.rove-code`, not inherited `~/.rove`. An import from inherited data is not yet available; never point a release at the live inherited directory to simulate one.
 5. Keep `ROVE_CLOUD_READY`, `ROVE_MOBILE_STORES_READY`, and `ROVE_MACOS_SIGNING_READY` off until their paid infrastructure or credentials are available. Keep hosted web (`ROVE_CLOUDFLARE_WEB_READY`) and marketing (`ROVE_MARKETING_RELEASE_READY`) off until their independent deployment review is complete. The source-only marketing page uses this repository's free GitHub build guides; set `ROVE_MARKETING_SITE_URL` to a verified deployed origin before publishing for canonical and social URLs. Without it those tags are omitted. Review and replace the inherited legal pages and desktop screenshot before enabling marketing; the text check cannot inspect image assets.
@@ -40,6 +40,61 @@ Updates from the previous orchestration system preserve transcripts but cannot c
 8. Review the result with a maintainer before enabling the release variable, tag/schedule triggers, or any publisher. Publish only the paths that passed staging. Keep disabled channels disabled.
 
 No credentials or production databases should be copied into a worktree for verification. Use isolated development state. Do not publish to npm or create a GitHub Release while investigating failures.
+
+## Publish mobile sideload binaries without store accounts
+
+The repository Actions variable `ROVE_MOBILE_SIDELOAD_READY=true` enables `.github/workflows/mobile-sideload.yml` from
+stable/preview releases (including build-only runs), not nightlies, to avoid daily
+macOS runner costs. `ROVE_MOBILE_STORES_READY` remains unchanged and can stay off.
+No Apple, Play Console, Expo/EAS, or cloud credentials are needed. These builds
+leave `ROVE_CLOUD_READY` unset and OTA updates off.
+
+1. Generate an Android release key **outside the repository**, once:
+
+   ```sh
+   mkdir -p "$HOME/.config/rove-release-signing"
+   keytool -genkeypair -v -storetype PKCS12 \
+     -keystore "$HOME/.config/rove-release-signing/android.p12" \
+     -alias rove-release -keyalg RSA -keysize 3072 -validity 10000
+   ```
+
+2. **Back up the keystore and password securely.** Reuse the same key for every
+   release: losing or changing it prevents Android updates over existing installs.
+   Add these repository Actions secrets (never print or commit their values):
+   - `ROVE_ANDROID_KEYSTORE_BASE64`: Base64 of the keystore file.
+   - `ROVE_ANDROID_KEYSTORE_PASSWORD`: its store password.
+   - `ROVE_ANDROID_KEY_ALIAS`: `rove-release` from the command above.
+   - `ROVE_ANDROID_KEY_PASSWORD`: the key password (same as the store password for
+     this PKCS12 command).
+     If any is missing, Android is explicitly skipped; iOS still builds. Invalid
+     credentials fail the Android build. Published APKs never use a debug key.
+3. Push the workflow/config changes to the source ref, enable the sideload gate,
+   then dispatch **Mobile sideload binaries** with `ref` and `version` (without
+   `v`). Leave `release_tag` blank for staging Actions artifacts. Verify on actual
+   phones, including a two-version Android upgrade and iOS signing/refresh.
+4. Stable/preview `release.yml` runs include `Rove-Code-<version>.apk` and
+   `Rove-Code-<version>-unsigned.ipa` in the same GitHub Release and `SHA256SUMS`.
+   For manual attachment, supply an **existing** `release_tag`; this uploads the
+   binaries and a separate `MOBILE-SHA256SUMS` without replacing desktop checksums.
+   It refuses existing asset names rather than silently replacing a published key
+   or build. Build-only runs upload Actions artifacts without publishing.
+
+Both platforms use the numeric part of the release version as `ROVE_MOBILE_VERSION`
+(iOS rejects prerelease suffixes; file names keep the full version) and
+`ROVE_MOBILE_BUILD_NUMBER` (seconds since 2020, generated at workflow preparation)
+for native build numbering across workflows. Re-running failed jobs reuses the
+preparation job's number; a new run generates a new one. Do not publish concurrent
+manual builds out of order or dispatch builds within the same second.
+
+The unsigned device archive uses `ROVE_IOS_UNSIGNED=1` with
+`ROVE_IOS_PERSONAL_TEAM=1`; the unsigned mode defaults its bundle ID to
+`dev.rove.app`. It strips push, App Groups, Sign in with Apple, widgets, the share
+extension, and explicit keychain groups. Sideload signers supply their own default
+keychain group; changing signing identity/bundle ID can lose access to saved
+credentials. Normal signed builds retain their keychain entitlement. An unsigned
+IPA is not directly installable: users re-sign it with their own Apple ID. Test
+LiveContainer separately; its container execution is not equivalent to a normal
+iOS installation. No full native build or device test is implied by config tests.
 
 ## Build self-signed macOS artifacts without Apple membership
 

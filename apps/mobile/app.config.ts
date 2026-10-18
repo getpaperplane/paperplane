@@ -9,12 +9,22 @@ const repoEnv = loadRepoEnv();
 Object.assign(process.env, repoEnv);
 
 const APP_VARIANT = resolveAppVariant(repoEnv.APP_VARIANT);
-const isIosPersonalTeamBuild = repoEnv.ROVE_IOS_PERSONAL_TEAM === "1";
+const isIosUnsignedBuild = repoEnv.ROVE_IOS_UNSIGNED === "1";
+const isIosPersonalTeamBuild = repoEnv.ROVE_IOS_PERSONAL_TEAM === "1" || isIosUnsignedBuild;
+const mobileBuildNumber = repoEnv.ROVE_MOBILE_BUILD_NUMBER;
+if (
+  mobileBuildNumber !== undefined &&
+  (!/^[1-9]\d*$/.test(mobileBuildNumber) || Number(mobileBuildNumber) > 2_100_000_000)
+) {
+  throw new Error("ROVE_MOBILE_BUILD_NUMBER must be an integer from 1 to 2100000000.");
+}
 const runtimeVersionPolicy =
   process.env.MOBILE_VERSION_POLICY ??
   (APP_VARIANT === "development" ? "appVersion" : "fingerprint");
 
-const personalTeamBundleIdentifier = repoEnv.ROVE_IOS_PERSONAL_TEAM_BUNDLE_ID?.trim();
+const personalTeamBundleIdentifier =
+  repoEnv.ROVE_IOS_PERSONAL_TEAM_BUNDLE_ID?.trim() ||
+  (isIosUnsignedBuild ? "dev.rove.app" : undefined);
 const expoProjectId = repoEnv.ROVE_EXPO_PROJECT_ID?.trim();
 const mobileUpdatesEnabled = repoEnv.ROVE_MOBILE_UPDATES_ENABLED === "1";
 const cloudReady = repoEnv.ROVE_CLOUD_READY === "1";
@@ -260,13 +270,16 @@ const config: ExpoConfig = {
     // showcase capture build requires full screen (see infoPlist below).
     requireFullScreen: process.env.ROVE_SHOWCASE_CAPTURE_BUILD === "1",
     bundleIdentifier: iosBundleIdentifier,
+    buildNumber: mobileBuildNumber,
     appleTeamId: repoEnv.ROVE_APPLE_TEAM_ID?.trim() || undefined,
     associatedDomains: clerkRelyingParty
       ? [`applinks:${clerkRelyingParty}`, `webcredentials:${clerkRelyingParty}`]
       : [],
-    entitlements: {
-      "keychain-access-groups": [`$(AppIdentifierPrefix)${variant.iosBundleIdentifier}`],
-    },
+    // Re-signing changes the team prefix and often the bundle ID. Reduced-capability
+    // builds use the signer's default keychain group, not a group tied to our identity.
+    entitlements: isIosPersonalTeamBuild
+      ? {}
+      : { "keychain-access-groups": [`$(AppIdentifierPrefix)${variant.iosBundleIdentifier}`] },
     infoPlist: {
       UISupportedInterfaceOrientations: [
         "UIInterfaceOrientationPortrait",
@@ -303,6 +316,7 @@ const config: ExpoConfig = {
   android: {
     icon: variant.assets.appIcon,
     package: variant.androidPackage,
+    versionCode: mobileBuildNumber ? Number(mobileBuildNumber) : undefined,
     ...(repoEnv.ROVE_ANDROID_GOOGLE_SERVICES_FILE
       ? { googleServicesFile: repoEnv.ROVE_ANDROID_GOOGLE_SERVICES_FILE }
       : {}),
@@ -325,6 +339,9 @@ const config: ExpoConfig = {
     favicon: variant.assets.appIcon,
   },
   plugins: [
+    // Same-type mods run last-registered-first. Register the stripping mod first
+    // so it removes capabilities after notifications and other plugins add them.
+    ...(isIosPersonalTeamBuild ? ["./plugins/withoutIosPersonalTeamCapabilities.cjs"] : []),
     "expo-asset",
     [
       "expo-font",
@@ -363,8 +380,7 @@ const config: ExpoConfig = {
         mode: APP_VARIANT === "development" ? "development" : "production",
       },
     ],
-    // appleSignIn must be gated here: withoutIosPersonalTeamCapabilities.cjs runs before
-    // plugins earlier in this array, so it cannot strip the entitlement Clerk would add.
+    // Do not configure native Apple sign-in at all for free provisioning.
     [
       "@clerk/expo",
       { theme: "./clerk-theme.json", appleSignIn: cloudReady && !isIosPersonalTeamBuild },
@@ -473,7 +489,6 @@ const config: ExpoConfig = {
     "./plugins/withAndroidModernAlertDialog.cjs",
     "./plugins/withAndroidPredictiveBackCompat.cjs",
     "./plugins/withAndroidTabletOrientation.cjs",
-    ...(isIosPersonalTeamBuild ? ["./plugins/withoutIosPersonalTeamCapabilities.cjs"] : []),
   ],
   extra: {
     appVariant: APP_VARIANT,

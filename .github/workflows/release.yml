@@ -142,6 +142,7 @@ jobs:
           ROVE_MARKETING_RELEASE_READY: ${{ vars.ROVE_MARKETING_RELEASE_READY }}
           ROVE_HOSTED_RELEASE_READY: ${{ vars.ROVE_HOSTED_RELEASE_READY }}
           ROVE_MOBILE_STORES_READY: ${{ vars.ROVE_MOBILE_STORES_READY }}
+          ROVE_MOBILE_SIDELOAD_READY: ${{ vars.ROVE_MOBILE_SIDELOAD_READY }}
         run: node scripts/check-release-identity.mjs
 
       - name: Setup Vite+
@@ -981,6 +982,19 @@ jobs:
       deploy: false
       ref: ${{ needs.preflight.outputs.ref }}
 
+  mobile_sideload:
+    name: Build mobile sideload binaries
+    needs: [preflight]
+    # No daily macOS build: mobile ships on stable/preview, or by manual dispatch.
+    if: ${{ vars.ROVE_MOBILE_SIDELOAD_READY == 'true' && contains(fromJSON('["stable", "preview"]'), needs.preflight.outputs.release_channel) }}
+    uses: ./.github/workflows/mobile-sideload.yml
+    permissions:
+      contents: write
+    with:
+      ref: ${{ needs.preflight.outputs.ref }}
+      version: ${{ needs.preflight.outputs.version }}
+    secrets: inherit
+
   release:
     name: Publish GitHub Release
     needs:
@@ -995,6 +1009,7 @@ jobs:
         desktop_win_arm64_cli,
         quality,
         package_cli,
+        mobile_sideload,
       ]
     if: ${{ !inputs.build_only && !failure() && !cancelled() && needs.preflight.result == 'success' && needs.desktop_win_arm64_cli.result == 'success' && needs.desktop_mac_arm64.result == 'success' && needs.desktop_mac_x64.result == 'success' && needs.desktop_linux_x64.result == 'success' && needs.desktop_linux_arm64.result == 'success' && needs.desktop_win_x64.result == 'success' && needs.desktop_win_arm64.result == 'success' && needs.quality.result == 'success' && needs.package_cli.result == 'success' }}
     runs-on: ubuntu-24.04
@@ -1039,6 +1054,14 @@ jobs:
           merge-multiple: true
           path: release-assets
 
+      - name: Download mobile sideload artifacts
+        if: needs.mobile_sideload.result == 'success'
+        uses: actions/download-artifact@v8
+        with:
+          pattern: mobile-sideload-*
+          merge-multiple: true
+          path: release-assets
+
       # Installers verify archives against this file, so it is written from the
       # signed bytes that get uploaded, never from an earlier stage.
       - name: Write CLI archive checksums
@@ -1052,7 +1075,8 @@ jobs:
             echo "No CLI archives were produced." >&2
             exit 1
           fi
-          sha256sum "${archives[@]}" > SHA256SUMS
+          mobile=(Rove-Code-*.apk Rove-Code-*-unsigned.ipa)
+          sha256sum "${archives[@]}" "${mobile[@]}" > SHA256SUMS
           cat SHA256SUMS
 
       # The desktop build omits the publish config for preview versions, so
@@ -1127,6 +1151,12 @@ jobs:
               echo 'release-assets/*.yml'
             fi
             echo 'release-assets/*.tar.gz'
+            if compgen -G 'release-assets/*.apk' > /dev/null; then
+              echo 'release-assets/*.apk'
+            fi
+            if compgen -G 'release-assets/*.ipa' > /dev/null; then
+              echo 'release-assets/*.ipa'
+            fi
             echo 'release-assets/SHA256SUMS'
             echo 'EOF'
           } >> "$GITHUB_OUTPUT"

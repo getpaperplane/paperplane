@@ -400,35 +400,39 @@ export const makeWithHosts = Effect.fn("DeviceService.makeWithHosts")(function* 
       physical: device.physical,
     });
     const devices = [...list.simulators, ...list.emulators].map(toSummary);
+    const errors = list.errors?.map((error) => error.message) ?? [];
     const host = yield* resolveHost(ready.hostId);
     if ((yield* host.platformAvailability("android")).available) {
       const avds = yield* ready.run("emulator", ["-list-avds"]);
       if (avds.code !== 0) {
-        return yield* new DeviceOperationError({
-          operation: "list",
-          reason: "command_failed",
-          exitCode: avds.code,
-          cause: avds,
-        });
-      }
-      for (const name of avds.stdout
-        .split(/\r?\n/)
-        .map((line) => line.trim())
-        .filter(Boolean)) {
-        if (!devices.some((device) => device.platform === "android" && device.name === name)) {
-          devices.push({
-            hostId: ready.hostId,
-            id: name,
-            name,
-            platform: "android",
-            version: "Android",
-            booted: false,
-            physical: false,
-          });
+        errors.push(
+          new DeviceOperationError({
+            operation: "list",
+            reason: "command_failed",
+            exitCode: avds.code,
+            cause: avds,
+          }).message,
+        );
+      } else {
+        for (const name of avds.stdout
+          .split(/\r?\n/)
+          .map((line) => line.trim())
+          .filter(Boolean)) {
+          if (!devices.some((device) => device.platform === "android" && device.name === name)) {
+            devices.push({
+              hostId: ready.hostId,
+              id: name,
+              name,
+              platform: "android",
+              version: "Android",
+              booted: false,
+              physical: false,
+            });
+          }
         }
       }
     }
-    return { devices, detail: list.errors?.map((error) => error.message).join("\n") || undefined };
+    return { devices, detail: errors.join("\n") || undefined };
   });
 
   const refresh = Effect.fn("DeviceService.refresh")(function* (ready: DeviceReadiness) {

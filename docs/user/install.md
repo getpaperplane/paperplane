@@ -87,12 +87,32 @@ This trusts code signed by that certificate. Do not import a certificate from an
 
 To remove that trust, use `certmgr.msc` to remove the same certificate from **Trusted Root Certification Authorities** and **Trusted Publishers**. Updates signed by it then fail verification.
 
-## Mobile app (source builds only)
+## Mobile app
 
-There are no App Store or Google Play releases from this project. To try the
-mobile client, build the development client from source (see
-`apps/mobile/README.md`) and pair it with a server on your LAN following
-[remote access](./remote-access.md#pair-over-a-lan-or-private-network).
+Download `Rove-Code-<version>.apk` (Android) or
+`Rove-Code-<version>-unsigned.ipa` (iOS) from the
+[GitHub Release assets](https://github.com/hafiezul/rove/releases) when available.
+Mobile binaries accompany stable and preview releases, not daily nightlies.
+There are no App Store or Google Play releases from this project.
+
+- **Android:** open the APK on your phone and allow **Install unknown apps** for
+  the browser or file manager you use. Install future APKs over the existing app
+  to keep your settings; they must come from the same signing key.
+- **iOS:** the unsigned IPA cannot be installed directly. Import it into AltStore,
+  SideStore, or Sideloadly and sign it with your free Apple ID, or import it into
+  an already installed LiveContainer. Free Apple ID provisioning normally needs
+  re-signing every 7 days and allows 3 active sideloaded apps. LiveContainer has
+  its own compatibility and setup requirements; importing an IPA there is not a
+  guarantee it will run. No paid Apple membership is needed.
+
+The iOS sideload build omits push notifications, widgets, and the share extension.
+Android push notifications need Firebase configuration and Rove Connect, neither
+of which is included in these downloads.
+
+**The phone is a client, not an agent host.** The host machine running the desktop
+app or `rove serve` must stay running and reachable over LAN, Tailscale, or SSH.
+Pair it using [remote access](./remote-access.md#pair-over-a-lan-or-private-network).
+For source builds, see `apps/mobile/README.md`.
 
 If the app crashes during launch, open Settings → Diagnostics on the next launch
 that succeeds. It lists startup crashes from the last 7 days with the error and
