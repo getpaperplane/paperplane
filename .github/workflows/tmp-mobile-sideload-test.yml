@@ -13,3 +13,4 @@ jobs:
       ref: ${{ github.sha }}
       version: 0.0.1-sideload.1
     secrets: inherit
+# run 2
