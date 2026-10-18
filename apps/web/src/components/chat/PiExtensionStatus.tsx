@@ -1,13 +1,20 @@
 import type { EnvironmentId, ThreadId } from "@rove-code/contracts";
+import { PuzzleIcon } from "lucide-react";
 
+import { cn } from "../../lib/utils";
 import { piExtensionStatusEnvironment } from "../../state/piExtensionStatus";
 import { useEnvironmentQuery } from "../../state/query";
+import {
+  THREAD_DETAILS_PANEL_ICON_CLASS,
+  THREAD_DETAILS_PANEL_LABEL_CLASS,
+  THREAD_DETAILS_PANEL_LOCKED_ROW_CLASS,
+} from "./threadDetailsPanelStyles";
 import { ThreadDetailsSection } from "./ThreadDetailsSection";
 
 /**
- * Pi extension status lines (what Pi's TUI shows in its footer), as a thread
- * details section. Subscribes only while mounted for a Pi thread; renders
- * nothing while empty, loading, or failed.
+ * Pi extension status lines (what Pi's TUI shows in its footer), one read-only
+ * row per extension status key in the thread details card. Subscribes only while
+ * mounted for a Pi thread; renders nothing while empty, loading, or failed.
  */
 export function PiExtensionStatus({
   environmentId,
@@ -29,13 +36,20 @@ export function PiExtensionStatus({
       showHeading={false}
       data-pi-extension-status="true"
     >
-      <div className="flex flex-col gap-0.5 px-1.5 text-xs">
+      <ul className="flex flex-col">
         {statuses.map(({ key, text }) => (
-          <div key={key} title={text} className="truncate text-muted-foreground">
-            {text.split("\n")[0]}
-          </div>
+          <li
+            key={key}
+            title={`${key}\n${text}`}
+            className={cn("flex items-center", THREAD_DETAILS_PANEL_LOCKED_ROW_CLASS)}
+          >
+            <PuzzleIcon className={THREAD_DETAILS_PANEL_ICON_CLASS} aria-hidden />
+            <span className={cn("min-w-0 flex-1 truncate", THREAD_DETAILS_PANEL_LABEL_CLASS)}>
+              {text.split("\n")[0]}
+            </span>
+          </li>
         ))}
-      </div>
+      </ul>
     </ThreadDetailsSection>
   );
 }
