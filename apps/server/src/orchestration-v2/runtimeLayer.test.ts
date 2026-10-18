@@ -77,6 +77,9 @@ import * as ThreadManagementService from "./ThreadManagementService.ts";
 import * as ThreadCommandExecutor from "./ThreadCommandExecutor.ts";
 import type * as ProviderAdapter from "@rove-code/provider-core/server/ProviderAdapter";
 
+/** Shell snapshots carry no run chain; these scenarios start a fresh allowance. */
+const asCandidate = <T extends object>(shell: T) => ({ ...shell, limitRecoveryAttempts: 0 });
+
 const layerPlatformTest = Layer.merge(
   NodeServices.layer,
   Layer.mock(SourceControlProviderRegistry.SourceControlProviderRegistry)({
@@ -5239,12 +5242,12 @@ it.layer(layerTest)("usage-limit recovery", (it) => {
             (thread) => thread.id === threadId,
           )!;
           yield* orchestrator.dispatch(
-            limitRecoveryCommand(shell, true, DateTime.toEpochMillis(now))!,
+            limitRecoveryCommand(asCandidate(shell), true, DateTime.toEpochMillis(now))!,
           );
           const armed = (yield* orchestrator.getShellSnapshot()).threads.find(
             (thread) => thread.id === threadId,
           )!;
-          scheduledResume = limitRecoveryCommand(armed, true, Date.parse(resetAt));
+          scheduledResume = limitRecoveryCommand(asCandidate(armed), true, Date.parse(resetAt));
           assert.isNotNull(scheduledResume);
         }
         const resume = (suffix: string) => ({
@@ -5294,6 +5297,7 @@ it.layer(layerTest)("usage-limit recovery", (it) => {
     "cancel-resume-keep-snooze",
     "wake-preserve-resume",
     "independent-patches",
+    "attempt-cap",
     "expired-snooze",
     "wake",
   ] as const)("guards a scheduled usage-limit continuation against %s", (scenario) =>
@@ -5426,7 +5430,7 @@ it.layer(layerTest)("usage-limit recovery", (it) => {
       const shell = (yield* orchestrator.getShellSnapshot()).threads.find(
         (thread) => thread.id === threadId,
       )!;
-      assert.isNull(limitRecoveryCommand(shell, false, DateTime.toEpochMillis(now)));
+      assert.isNull(limitRecoveryCommand(asCandidate(shell), false, DateTime.toEpochMillis(now)));
       if (scenario === "invalid-snooze") {
         const result = yield* orchestrator
           .dispatch({
@@ -5451,7 +5455,12 @@ it.layer(layerTest)("usage-limit recovery", (it) => {
         "wake-preserve-resume",
       ].includes(scenario);
       const autoResume = scenario !== "snooze-only" && scenario !== "wake";
-      const arm = limitRecoveryCommand(shell, autoResume, DateTime.toEpochMillis(now), snooze);
+      const arm = limitRecoveryCommand(
+        asCandidate(shell),
+        autoResume,
+        DateTime.toEpochMillis(now),
+        snooze,
+      );
       assert.isNotNull(arm);
       yield* orchestrator.dispatch(arm!);
       let armedShell = (yield* orchestrator.getShellSnapshot()).threads.find(
@@ -5461,9 +5470,132 @@ it.layer(layerTest)("usage-limit recovery", (it) => {
         runId: run.id,
         resetAt,
         autoResume,
+        ...(autoResume ? { automatic: true } : {}),
         snooze,
         requestId: arm!.commandId,
       });
+      if (scenario === "attempt-cap") {
+        const projections = yield* ProjectionStore.ProjectionStoreV2;
+        let previousRun = run;
+        let nextReset = resetAt;
+        const failureItem = (yield* orchestrator.getThreadProjection(threadId)).turnItems.find(
+          (item) => item.type === "error",
+        )!;
+        assert.equal(failureItem.type, "error");
+        if (failureItem.type !== "error") return;
+        for (let attempt = 1; attempt <= 3; attempt++) {
+          yield* TestClock.setTime(Date.parse(nextReset));
+          const shell = (yield* orchestrator.getShellSnapshot()).threads.find(
+            (thread) => thread.id === threadId,
+          )!;
+          yield* orchestrator.dispatch(
+            limitRecoveryCommand(asCandidate(shell), true, Date.parse(nextReset))!,
+          );
+          const current = yield* orchestrator.getThreadProjection(threadId);
+          const continued = current.runs.at(-1)!;
+          assert.equal(current.runs.length, attempt + 1);
+          assert.equal(continued.usageLimitContinuationOfRunId, previousRun.id);
+          const completedAt = yield* DateTime.now;
+          nextReset = DateTime.formatIso(DateTime.add(completedAt, { minutes: 1 }));
+          yield* events.write({
+            events: [
+              {
+                id: EventId.make(`cap:failed:${attempt}`),
+                type: "run.updated",
+                threadId,
+                occurredAt: completedAt,
+                payload: { ...continued, status: "failed", completedAt },
+              },
+              {
+                id: EventId.make(`cap:error:${attempt}`),
+                type: "turn-item.updated",
+                threadId,
+                occurredAt: completedAt,
+                payload: {
+                  ...failureItem,
+                  id: TurnItemId.make(`cap:error:${attempt}`),
+                  runId: continued.id,
+                  nodeId: continued.rootNodeId,
+                  updatedAt: completedAt,
+                  completedAt,
+                  failure: { ...failureItem.failure, resetAt: nextReset },
+                },
+              },
+            ],
+          });
+          const candidate = (yield* projections.getLimitRecoveryCandidates({
+            now: completedAt,
+            autoResume: true,
+            snooze: false,
+          })).find((thread) => thread.id === threadId)!;
+          assert.equal(candidate.limitRecoveryAttempts, attempt);
+          const armNext = limitRecoveryCommand(
+            candidate,
+            true,
+            DateTime.toEpochMillis(completedAt),
+          );
+          if (attempt < 3) yield* orchestrator.dispatch(armNext!);
+          else {
+            assert.isNull(armNext);
+            // An automatic arm cannot bypass the authoritative dispatch guard.
+            yield* orchestrator.dispatch({
+              type: "thread.metadata.update",
+              commandId: CommandId.make("cap:auto-arm"),
+              threadId,
+              limitRecovery: {
+                runId: continued.id,
+                resetAt: nextReset,
+                autoResume: true,
+                automatic: true,
+              },
+            });
+            yield* TestClock.setTime(Date.parse(nextReset));
+            const armed = (yield* orchestrator.getShellSnapshot()).threads.find(
+              (thread) => thread.id === threadId,
+            )!;
+            yield* orchestrator.dispatch(
+              limitRecoveryCommand(
+                { ...armed, limitRecoveryAttempts: 0 },
+                true,
+                Date.parse(nextReset),
+              )!,
+            );
+            assert.equal((yield* orchestrator.getThreadProjection(threadId)).runs.length, 4);
+            // An explicit user Resume after exhaustion is consent and continues.
+            yield* orchestrator.dispatch({
+              type: "thread.metadata.update",
+              commandId: CommandId.make("cap:user-resume"),
+              threadId,
+              limitRecovery: { runId: continued.id, resetAt: nextReset, autoResume: true },
+            });
+            const chosen = (yield* orchestrator.getShellSnapshot()).threads.find(
+              (thread) => thread.id === threadId,
+            )!;
+            yield* orchestrator.dispatch(
+              limitRecoveryCommand(asCandidate(chosen), true, Date.parse(nextReset))!,
+            );
+            const resumed = (yield* orchestrator.getThreadProjection(threadId)).runs;
+            assert.equal(resumed.length, 5);
+            assert.equal(resumed.at(-1)!.usageLimitContinuationOfRunId, continued.id);
+            yield* orchestrator.dispatch({
+              type: "message.dispatch",
+              commandId: CommandId.make("cap:manual"),
+              threadId,
+              messageId: MessageId.make("cap:manual"),
+              text: "Try again manually",
+              attachments: [],
+              dispatchMode: { type: "defer_start" },
+              createdBy: "user",
+              creationSource: "web",
+            });
+            const manual = (yield* orchestrator.getThreadProjection(threadId)).runs.at(-1)!;
+            assert.isUndefined(manual.usageLimitContinuationOfRunId);
+            assert.equal((yield* orchestrator.getThreadProjection(threadId)).runs.length, 6);
+          }
+          previousRun = continued;
+        }
+        return;
+      }
       if (snooze)
         assert.equal(DateTime.toEpochMillis(armedShell.snoozedUntil!), Date.parse(resetAt));
       if (scenario === "cancel-resume-keep-snooze" || scenario === "wake-preserve-resume") {
@@ -5572,7 +5704,9 @@ it.layer(layerTest)("usage-limit recovery", (it) => {
         });
         assert.isNull((yield* orchestrator.getThreadProjection(threadId)).thread.snoozedUntil);
       }
-      assert.isNull(limitRecoveryCommand(armedShell, true, DateTime.toEpochMillis(now)));
+      assert.isNull(
+        limitRecoveryCommand(asCandidate(armedShell), true, DateTime.toEpochMillis(now)),
+      );
       yield* orchestrator.dispatch({
         type: "message.dispatch",
         commandId: CommandId.make(`recovery:early:${scenario}`),
@@ -5591,7 +5725,7 @@ it.layer(layerTest)("usage-limit recovery", (it) => {
       );
       yield* TestClock.adjust("1 minute");
       const resume = limitRecoveryCommand(
-        armedShell,
+        asCandidate(armedShell),
         true,
         DateTime.toEpochMillis(yield* DateTime.now),
       );
@@ -5612,7 +5746,7 @@ it.layer(layerTest)("usage-limit recovery", (it) => {
           (thread) => thread.id === threadId,
         )!;
         const freshResume = limitRecoveryCommand(
-          current,
+          asCandidate(current),
           true,
           DateTime.toEpochMillis(yield* DateTime.now),
         );
@@ -5707,7 +5841,7 @@ it.layer(layerTest)("usage-limit recovery", (it) => {
           (thread) => thread.id === threadId,
         )!;
         const freshResume = limitRecoveryCommand(
-          rearmedShell,
+          asCandidate(rearmedShell),
           true,
           DateTime.toEpochMillis(yield* DateTime.now),
         );

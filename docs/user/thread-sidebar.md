@@ -207,6 +207,8 @@ behavior** on mobile, to schedule limit stops by default.
 The environment must be running when the reset arrives; it resumes overdue
 continuations after a restart. Sending a new message, archiving, or settling the
 thread prevents a pending continuation from starting.
+Automatic resumes stop after three in a row. Sending a message starts a new
+allowance, and choosing **Resume at reset** yourself still resumes the thread.
 
 Choose **Snooze until reset** to hide the thread until its allowance returns.
 Snooze and auto-resume are independent: snooze alone wakes the thread without

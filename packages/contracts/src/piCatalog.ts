@@ -1,5 +1,5 @@
 import * as Schema from "effect/Schema";
-import { TrimmedNonEmptyString } from "./baseSchemas.ts";
+import { ThreadId, TrimmedNonEmptyString } from "./baseSchemas.ts";
 import { ProviderInstanceId } from "./providerInstance.ts";
 
 export const PiCatalogInput = Schema.Struct({
@@ -36,10 +36,24 @@ export class PiCatalogError extends Schema.TaggedError<PiCatalogError>()("PiCata
   message: Schema.String,
 }) {}
 
-/** Extension status lines Pi shows above the composer (`runtime.ui.status` events). */
+export const PiExtensionStatusesSubscribeInput = Schema.Struct({ threadId: ThreadId });
+export type PiExtensionStatusesSubscribeInput = typeof PiExtensionStatusesSubscribeInput.Type;
+
+/** Bounded, ephemeral status lines for one subscribed thread, not transcript history. */
 export const PiExtensionStatusSnapshot = Schema.Struct({
   statuses: Schema.Array(
-    Schema.Struct({ key: TrimmedNonEmptyString, text: TrimmedNonEmptyString }),
+    Schema.Struct({
+      key: TrimmedNonEmptyString.check(Schema.isMaxLength(120)),
+      text: TrimmedNonEmptyString.check(Schema.isMaxLength(4096)),
+    }),
+  ).check(Schema.isMaxLength(64)),
+}).check(
+  Schema.makeFilter(
+    (snapshot) =>
+      snapshot.statuses.reduce(
+        (length, status) => length + status.key.length + status.text.length,
+        0,
+      ) <= 8192,
   ),
-});
+);
 export type PiExtensionStatusSnapshot = typeof PiExtensionStatusSnapshot.Type;

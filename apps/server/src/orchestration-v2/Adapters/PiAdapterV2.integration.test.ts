@@ -24,6 +24,7 @@ import * as Orchestrator from "../Orchestrator.ts";
 import * as EffectWorker from "../EffectWorker.ts";
 import { layerWithRegistry } from "../testkit/ProviderReplayHarness.ts";
 import { PiDriver } from "../../provider/Drivers/PiDriver.ts";
+import * as PiExtensionStatuses from "../../provider/PiExtensionStatuses.ts";
 import { ServerConfig } from "../../config.ts";
 import { ServerSettingsService } from "../../serverSettings.ts";
 
@@ -84,6 +85,7 @@ it.effect(
             ServerSettingsService.layerTest(),
             TestProviderHost.layer({ cwd, runBackgroundWork: false }),
             IdAllocator.layer,
+            PiExtensionStatuses.layer,
           ).pipe(Layer.provideMerge(NodeServices.layer)),
         ),
       );

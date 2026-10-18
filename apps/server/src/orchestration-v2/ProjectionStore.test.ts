@@ -1,4 +1,5 @@
 import { assert, it, vi } from "@effect/vitest";
+import { limitRecoveryCommand } from "./UsageLimitRecoveryWorker.ts";
 import {
   EnvironmentId,
   EventId,
@@ -3265,6 +3266,7 @@ it.layer(layerTest)("ProjectionStoreV2", (it) => {
         const candidate = candidates.find((row) => row.id === threadId);
         if (lastErrorClass === "usage_limit") {
           assert.deepEqual(candidate, {
+            limitRecoveryAttempts: 0,
             id: sqlShell.id,
             status: sqlShell.status,
             lastErrorClass: sqlShell.lastErrorClass,
@@ -3401,6 +3403,100 @@ it.layer(layerTest)("ProjectionStoreV2", (it) => {
       });
       yield* assertSummary("Plan limit reached.", "usage_limit");
       const sql = yield* SqlClient.SqlClient;
+      // Persisted continuation links survive restarts; only three ancestors are needed.
+      for (let depth = 1; depth <= 3; depth++) {
+        const parentId = RunId.make(`limit-cap:ancestor:${depth}`);
+        yield* store.apply({
+          id: EventId.make(`limit-cap:ancestor:${depth}`),
+          type: "run.created",
+          threadId,
+          runId: parentId,
+          occurredAt: now,
+          payload: {
+            ...original,
+            id: parentId,
+            ordinal: original.ordinal + 10 + depth,
+            status: "failed",
+            completedAt: DateTime.subtract(now, { hours: depth }),
+            ...(depth === 1
+              ? {}
+              : { usageLimitContinuationOfRunId: RunId.make(`limit-cap:ancestor:${depth - 1}`) }),
+          },
+        });
+        yield* store.apply({
+          id: EventId.make(`limit-cap:latest:${depth}`),
+          type: "run.updated",
+          threadId,
+          runId: original.id,
+          occurredAt: now,
+          payload: { ...original, status: "failed", usageLimitContinuationOfRunId: parentId },
+        });
+        const candidate = (yield* store.getLimitRecoveryCandidates({
+          now,
+          autoResume: true,
+          snooze: false,
+        })).find((row) => row.id === threadId)!;
+        assert.equal(candidate.limitRecoveryAttempts, depth);
+        assert.equal(
+          limitRecoveryCommand(candidate, true, DateTime.toEpochMillis(now))?.type ?? null,
+          depth === 3 ? null : "thread.metadata.update",
+        );
+        if (depth === 3) {
+          const snooze = limitRecoveryCommand(candidate, true, DateTime.toEpochMillis(now), true);
+          assert.isTrue(
+            snooze?.type === "thread.metadata.update" &&
+              snooze.limitRecovery?.autoResume === false &&
+              snooze.limitRecovery.snooze === true,
+          );
+          assert.isNull(
+            limitRecoveryCommand(
+              {
+                ...candidate,
+                limitRecovery: {
+                  runId: original.id,
+                  resetAt: candidate.usageLimitResetAt!,
+                  autoResume: true,
+                  automatic: true,
+                },
+              },
+              true,
+              Date.parse(candidate.usageLimitResetAt!),
+            ),
+          );
+          // The user's explicit Resume choice is consent beyond the automatic cap.
+          assert.equal(
+            limitRecoveryCommand(
+              {
+                ...candidate,
+                limitRecovery: {
+                  runId: original.id,
+                  resetAt: candidate.usageLimitResetAt!,
+                  autoResume: true,
+                },
+              },
+              true,
+              Date.parse(candidate.usageLimitResetAt!),
+            )?.type,
+            "message.dispatch",
+          );
+        }
+      }
+      // A manual send has no continuation parent and therefore a fresh allowance.
+      yield* store.apply({
+        id: EventId.make("limit-cap:manual"),
+        type: "run.updated",
+        threadId,
+        runId: original.id,
+        occurredAt: now,
+        payload: { ...original, status: "failed" },
+      });
+      assert.equal(
+        (yield* store.getLimitRecoveryCandidates({ now, autoResume: true, snooze: false })).find(
+          (row) => row.id === threadId,
+        )?.limitRecoveryAttempts,
+        0,
+      );
+      yield* sql`DELETE FROM orchestration_v2_projection_runs WHERE run_id LIKE 'limit-cap:ancestor:%'`;
       // The rest of this case treats the failed run as the latest run.
       yield* sql`DELETE FROM orchestration_v2_projection_runs WHERE run_id = ${aheadRunId}`;
       yield* sql`DELETE FROM orchestration_v2_projection_runs WHERE run_id = ${queuedRunId}`;

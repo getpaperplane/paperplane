@@ -134,6 +134,11 @@ import {
   ThreadForkServiceV2,
 } from "./ThreadForkService.ts";
 import { planThreadDeletion } from "./ThreadDeletion.ts";
+import {
+  limitRecoveryAttempts,
+  MAX_LIMIT_RECOVERY_ATTEMPTS,
+  usageLimitChain,
+} from "./usageLimitRecovery.ts";
 import type * as ProviderAdapter from "@rove-code/provider-core/server/ProviderAdapter";
 import * as ServerSettings from "../serverSettings.ts";
 
@@ -3017,6 +3022,12 @@ const makeOrchestrator = Effect.fn("orchestrationV2.Orchestrator.layer")(functio
                     autoResume:
                       command.limitRecovery.autoResume ?? previousRecovery?.autoResume ?? false,
                     snooze: command.limitRecovery.snooze ?? previousRecovery?.snooze ?? false,
+                    // Choosing autoResume is consent that outlives the automatic-attempt cap.
+                    ...((command.limitRecovery.automatic ??
+                    (command.limitRecovery.autoResume === undefined &&
+                      previousRecovery?.automatic === true))
+                      ? { automatic: true }
+                      : {}),
                     requestId: command.commandId,
                   };
           return {
@@ -4617,6 +4628,9 @@ const makeOrchestrator = Effect.fn("orchestrationV2.Orchestrator.layer")(functio
           failure?.class !== "usage_limit" ||
           threadShellFromProjection(projection).lastErrorClass !== "usage_limit" ||
           !recovery?.autoResume ||
+          (recovery.automatic === true &&
+            limitRecoveryAttempts(projection.runs, run?.id ?? null) >=
+              MAX_LIMIT_RECOVERY_ATTEMPTS) ||
           recovery.requestId !== command.usageLimitRecoveryRequestId ||
           recovery.runId !== run.id ||
           recovery.resetAt !== failure.resetAt ||
@@ -5134,6 +5148,7 @@ const makeOrchestrator = Effect.fn("orchestrationV2.Orchestrator.layer")(functio
           ...(command.restartContinuationOfRunId === undefined
             ? {}
             : { restartContinuationOfRunId: command.restartContinuationOfRunId }),
+          ...usageLimitChain(projection.runs, command),
           ...(continuedTaskId === undefined ? {} : { delegatedTaskId: continuedTaskId }),
         };
         const attempt: OrchestrationV2RunAttempt = {
@@ -5485,6 +5500,7 @@ const makeOrchestrator = Effect.fn("orchestrationV2.Orchestrator.layer")(functio
           ...(command.restartContinuationOfRunId === undefined
             ? {}
             : { restartContinuationOfRunId: command.restartContinuationOfRunId }),
+          ...usageLimitChain(projection.runs, command),
           ...(dispatchMode.type === "defer_start" && dispatchMode.workspaceStrategy !== undefined
             ? { workspacePreparation: dispatchMode.workspaceStrategy }
             : {}),
@@ -6192,6 +6208,7 @@ const makeOrchestrator = Effect.fn("orchestrationV2.Orchestrator.layer")(functio
         ...(command.restartContinuationOfRunId === undefined
           ? {}
           : { restartContinuationOfRunId: command.restartContinuationOfRunId }),
+        ...usageLimitChain(projection.runs, command),
         ...(continuedTaskId === undefined ? {} : { delegatedTaskId: continuedTaskId }),
         ...wakeWorkStartedAt(projection.runs, command),
       };

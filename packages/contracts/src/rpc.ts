@@ -22,7 +22,13 @@ import {
   ComputerUseControlInput,
   ComputerUseStatus,
 } from "./computerUse.ts";
-import { PiCatalogInput, PiCatalogSnapshot, PiCatalogError } from "./piCatalog.ts";
+import {
+  PiCatalogInput,
+  PiCatalogSnapshot,
+  PiCatalogError,
+  PiExtensionStatusesSubscribeInput,
+  PiExtensionStatusSnapshot,
+} from "./piCatalog.ts";
 import {
   OrchestrationV2SearchThreadError,
   OrchestrationV2SearchThreadInput,
@@ -615,6 +621,7 @@ export const WS_METHODS = {
   // Streaming subscriptions
   subscribeVcsStatus: "subscribeVcsStatus",
   subscribeWorktreeSetup: "subscribeWorktreeSetup",
+  piExtensionStatusesSubscribe: "pi.extensionStatuses.subscribe",
   worktreeSetupCancel: "worktreeSetup.cancel",
   subscribeTerminalEvents: "subscribeTerminalEvents",
   subscribeTerminalMetadata: "subscribeTerminalMetadata",
@@ -1420,6 +1427,13 @@ const WsSubscribeWorktreeSetupRpc = Rpc.make(WS_METHODS.subscribeWorktreeSetup, 
   stream: true,
 });
 
+const WsPiExtensionStatusesSubscribeRpc = Rpc.make(WS_METHODS.piExtensionStatusesSubscribe, {
+  payload: PiExtensionStatusesSubscribeInput,
+  success: PiExtensionStatusSnapshot,
+  error: EnvironmentAuthorizationError,
+  stream: true,
+});
+
 const WsWorktreeSetupCancelRpc = Rpc.make(WS_METHODS.worktreeSetupCancel, {
   payload: WorktreeSetupCancelInput,
   success: WorktreeSetupCancelResult,
@@ -2146,6 +2160,7 @@ export const WsRpcGroup = RpcGroup.make(
   WsProviderUploadFeedbackRpc,
   WsSubscribeVcsStatusRpc,
   WsSubscribeWorktreeSetupRpc,
+  WsPiExtensionStatusesSubscribeRpc,
   WsWorktreeSetupCancelRpc,
   WsVcsPullRpc,
   WsVcsRefreshStatusRpc,

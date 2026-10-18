@@ -107,32 +107,19 @@ detail-pending state.
 
 ## Usage-limit auto-resume
 
-Limited threads could resume at the provider's reset time without an open client. Users could
-schedule/cancel recovery per thread or snooze until reset; attempts were bounded and tied to the
-failed turn and model so stale limit evidence could not undo Stop.
+V2 recovery runs through the persisted-state
+[UsageLimitRecoveryWorker](../../apps/server/src/orchestration-v2/UsageLimitRecoveryWorker.ts)
+and the shared scheduler. Extend that lifecycle; do not restore the V1 reactor or its
+`projection_threads.limit_recovery_json` column.
 
-Origin: [#214](https://github.com/hafiezul/rove/pull/214) (`62653a1c69`). Recover the server
-[recovery reactor](https://github.com/hafiezul/rove/blob/cbfe21300f/apps/server/src/orchestration/UsageLimitRecoveryReactor.ts),
-[recovery contract](https://github.com/hafiezul/rove/blob/cbfe21300f/packages/contracts/src/usageLimitRecovery.ts),
-[client command atoms](https://github.com/hafiezul/rove/blob/cbfe21300f/packages/client-runtime/src/state/threadCommands.ts),
-[web banner](https://github.com/hafiezul/rove/blob/cbfe21300f/apps/web/src/components/chat/UsageLimitRecoveryNotice.tsx),
-and [mobile notice](https://github.com/hafiezul/rove/blob/cbfe21300f/apps/mobile/src/features/threads/UsageLimitRecoveryNotice.tsx).
+Still deferred: native per-instance quota-snapshot enrichment of reset times.
 
-Removed were Rove's V1 recovery state, record/checked/set commands, completion payload extraction,
-capability gate `threadUsageLimitRecovery`, client shell/detail merges and custom notices/statuses.
-The dropped [migration 55](https://github.com/hafiezul/rove/blob/cbfe21300f/apps/server/src/persistence/Migrations/055_ProjectionThreadLimitRecovery.ts)
-added `projection_threads.limit_recovery_json` and its due-time index. That legacy column may remain
-in copied databases but has no V2 consumer and is not imported.
-
-Do not mistake removal of Rove's implementation for absence of recovery: `autoResumeLimitedThreads`
-is still active, not an unused preference. Upstream's
-[UsageLimitRecoveryWorker](../../apps/server/src/orchestration-v2/UsageLimitRecoveryWorker.ts) uses
-persisted failed runs, `usage_limit` / `resetAt` evidence, V2 `limitRecovery` metadata, the shared
-scheduler and idempotent message dispatch; `snoozeLimitedThreads` also remains. Port only gaps such
-as Rove's bounded attempts, per-instance admission or cancellation semantics onto that lifecycle,
-with run/request identity and late-evidence tests, rather than install a second worker. Pi reset
-parsing survives in [PiUsageLimits](../../apps/server/src/provider/PiUsageLimits.ts); native
-per-instance quota-snapshot enrichment is still deferred.
+Constraints worth knowing: the three-attempt cap counts only the worker's automatic
+continuations (a run's `usageLimitContinuationOfRunId` chain), and applies only to recoveries
+the worker armed itself (`automatic`). An explicit user Resume or a manual send is consent and
+starts a fresh allowance. Restart continuations inherit the link so a crash cannot reset the
+count. Runs without a recorded parent begin a new chain. Missing or implausible reset evidence
+(beyond a week, or a time that just passed) classifies a limit but never schedules a retry.
 
 ## Rove's rich-response renderer
 
@@ -163,25 +150,20 @@ fallbacks, and add a setting only if the new service actually enforces it across
 
 ## Pi extension status and autonomous work
 
-Pi extension status collection and
-[PiExtensionStatusSnapshot](../../packages/contracts/src/piCatalog.ts) remain,
-but V2 has no status projection or client consumer. Visible status needs a
-bounded, ephemeral contract, rather than persistence of every update as
-transcript activity. The V1 status selector is recoverable at
-[`cbfe21300f`](https://github.com/hafiezul/rove/blob/cbfe21300f/packages/client-runtime/src/piExtensionStatus.ts).
+Extension status is ephemeral session state, never transcript or projection data. It outlives
+aborted work and is cleared only when the session ends or is replaced. Pi delegates through
+app-owned MCP tasks and durable V2 child threads ([ADR 0004](../adr/0004-pi-delegates-through-rove-mcp.md));
+old `<stateDir>/agent-transcripts` JSONL files remain on disk with no V2 query or cleanup.
 
-Pi delegates through app-owned MCP tasks and durable V2 child threads, as
-recorded in [ADR 0004](../adr/0004-pi-delegates-through-rove-mcp.md).
-The former Pi-specific SDK child lifecycle and its settings are removed.
-Old JSONL files under `<stateDir>/agent-transcripts` remain on disk, without a
-V2 transcript-query API or deletion cleanup.
-
-Extensions starting agent work after the owning run settles are currently
-stopped. Supporting those wakes requires
-[ProviderContinuationRequests](../../packages/provider-core/src/server/ProviderContinuationRequests.ts)
-and [ProviderContinuationService](../../apps/server/src/orchestration-v2/ProviderContinuationService.ts)
-to admit a run before SDK work begins, with coverage for replay and stale wakes.
-Scheduled tasks and MCP delegation already enter through committed V2 paths.
+Still deferred: extension-started work after the owning run settles stays stopped. Pi 1.2's
+`agent_start` is too late for admission, since prompt preparation can already compact or run
+extension hooks and custom-message turns bypass `prompt()`; its synchronous preflight callback
+cannot hold work for V2 admission. Supporting wakes needs an awaited, cancellable worker-IPC
+admission boundary covering user and custom messages, tied to the originating session/run and
+invalidated by Stop or replacement, before
+[ProviderContinuationService](../../apps/server/src/orchestration-v2/ProviderContinuationService.ts)
+admits a committed run. Do not use Claude's `adapter_buffered` mode to justify already-started
+work; replay and stale-wake coverage come first.
 
 ## Other notes
 

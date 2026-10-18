@@ -191,6 +191,10 @@
       "types": "./src/state/presentation.ts",
       "default": "./src/state/presentation.ts"
     },
+    "./state/pi-extension-status": {
+      "types": "./src/state/piExtensionStatus.ts",
+      "default": "./src/state/piExtensionStatus.ts"
+    },
     "./state/computer-use": {
       "types": "./src/state/computerUse.ts",
       "default": "./src/state/computerUse.ts"
