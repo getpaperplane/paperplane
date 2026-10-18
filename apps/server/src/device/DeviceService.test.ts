@@ -83,6 +83,7 @@ const fixture = Effect.fn("fixture")(function* (
     | DeviceHost.AgentDeviceStartError,
   inspectError = false,
   installTool?: Parameters<typeof DeviceService.makeWithHosts>[3],
+  failAvdList = false,
 ) {
   const settings = yield* Ref.make(DEFAULT_SERVER_SETTINGS);
   const starts: string[] = [];
@@ -95,7 +96,12 @@ const fixture = Effect.fn("fixture")(function* (
     nodePath: process.execPath,
     hub: { origin: "http://device.test" },
     helpers: { serveSimAxSettings: null, serveSimCli: null },
-    run: () => Effect.succeed({ code: 0, stdout: "Pixel_API_35\n", stderr: "" }),
+    run: () =>
+      Effect.succeed({
+        code: failAvdList ? 127 : 0,
+        stdout: "Pixel_API_35\n",
+        stderr: failAvdList ? "emulator not found" : "",
+      }),
   };
   const host: DeviceHost.DeviceHost["Service"] = {
     ...(inspectError
@@ -209,19 +215,32 @@ const fixture = Effect.fn("fixture")(function* (
           return HttpClientResponse.fromWeb(
             request,
             Response.json({
-              simulators: [],
-              emulators: booted
+              ...(failAvdList ? { errors: [{ message: "Hub discovery warning" }] } : {}),
+              simulators: failAvdList
                 ? [
                     {
-                      id: "emulator-5554",
-                      name: "Pixel_API_35",
-                      platform: "android",
-                      version: "Android 15",
+                      id: "ios-simulator",
+                      name: "iPhone",
+                      platform: "ios",
+                      version: "iOS 18",
                       booted: true,
                       physical: false,
                     },
                   ]
                 : [],
+              emulators:
+                booted || failAvdList
+                  ? [
+                      {
+                        id: "emulator-5554",
+                        name: "Pixel_API_35",
+                        platform: "android",
+                        version: "Android 15",
+                        booted: true,
+                        physical: false,
+                      },
+                    ]
+                  : [],
             }),
           );
         }),
@@ -232,6 +251,27 @@ const fixture = Effect.fn("fixture")(function* (
 });
 
 describe("device setup consent", () => {
+  it.effect("keeps hub devices and diagnostics when listing Android AVDs fails", () =>
+    Effect.gen(function* () {
+      const { service } = yield* fixture(
+        Effect.void,
+        undefined,
+        false,
+        undefined,
+        false,
+        undefined,
+        true,
+      );
+      const state = yield* service.configure({ enabled: true });
+      expect(state.devices.map((device) => device.id)).toEqual(["ios-simulator", "emulator-5554"]);
+      expect(state.hostStatus).toBe("ready");
+      expect(state.hostStatusDetail).toBe(
+        "Hub discovery warning\nDevice list failed: The device command failed (exit code 127).",
+      );
+      expect(state.hostStatuses.local).toEqual({ status: "ready", detail: state.hostStatusDetail });
+    }).pipe(Effect.scoped),
+  );
+
   it.effect("exposes daemon startup diagnostics through agent readiness and host status", () =>
     Effect.gen(function* () {
       const startupError = new DeviceHost.AgentDeviceStartError({

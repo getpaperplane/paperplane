@@ -137,7 +137,7 @@ const platformReason = Effect.fn("LocalDeviceHost.platformReason")(function* (
   return null;
 });
 
-/** Resolve the SDK once for both diagnostics and the environment passed to helpers. */
+/** Resolve the current SDK for diagnostics and the environment passed to helpers. */
 const androidSdk = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -243,8 +243,16 @@ export const make = Effect.fn("LocalDeviceHost.make")(function* () {
   const httpClient = yield* HttpClient.HttpClient;
   const environment = yield* HostProcess.Environment;
   const hostPlatform = yield* HostProcess.Platform;
-  const sdk = yield* androidSdk;
-  const hostEnvironment = deviceHostEnvironment(environment, sdk.root, hostPlatform, path);
+  // Re-run these effects at use time: the SDK can be installed while Rove is running.
+  const currentSdk = androidSdk.pipe(
+    Effect.provideService(FileSystem.FileSystem, fs),
+    Effect.provideService(Path.Path, path),
+    Effect.provideService(HostProcess.Environment, environment),
+    Effect.provideService(HostProcess.Platform, hostPlatform),
+  );
+  const hostEnvironment = currentSdk.pipe(
+    Effect.map((sdk) => deviceHostEnvironment(environment, sdk.root, hostPlatform, path)),
+  );
   const startLock = yield* Semaphore.make(1);
   const runningRef = yield* Ref.make<RunningHost | null>(null);
   const restartDelayRef = yield* Ref.make(0);
@@ -256,6 +264,8 @@ export const make = Effect.fn("LocalDeviceHost.make")(function* () {
     const reason = yield* platformReason(platform).pipe(
       Effect.provideService(FileSystem.FileSystem, fs),
       Effect.provideService(Path.Path, path),
+      Effect.provideService(HostProcess.Environment, environment),
+      Effect.provideService(HostProcess.Platform, hostPlatform),
     );
     return reason === null ? { platform, available: true } : { platform, available: false, reason };
   });
@@ -411,7 +421,7 @@ export const make = Effect.fn("LocalDeviceHost.make")(function* () {
               shell: false,
               stdout: "pipe",
               stderr: "pipe",
-              env: yield* hubEnvironment(hostEnvironment).pipe(
+              env: yield* hubEnvironment(yield* hostEnvironment).pipe(
                 Effect.provideService(FileSystem.FileSystem, fs),
                 Effect.provideService(HostProcess.Platform, hostPlatform),
               ),
@@ -519,7 +529,7 @@ export const make = Effect.fn("LocalDeviceHost.make")(function* () {
     yield* fs.makeDirectory(stateDir, { recursive: true }).pipe(Effect.ignore);
     const existing = yield* readDaemonFile().pipe(Effect.option);
     const daemonEnvironment: NodeJS.ProcessEnv = {
-      ...hostEnvironment,
+      ...(yield* hostEnvironment),
       AGENT_DEVICE_STATE_DIR: stateDir,
       AGENT_DEVICE_DAEMON_SERVER_MODE: "http",
       // The daemon idles out after five minutes by default; the server owns
@@ -616,8 +626,8 @@ export const make = Effect.fn("LocalDeviceHost.make")(function* () {
     agentTool: { readonly entryPath: string; readonly nodePath: string } | null,
   ) =>
     agentTool
-      ? runner
-          .run({
+      ? Effect.gen(function* () {
+          return yield* runner.run({
             command: agentTool.nodePath,
             args: [
               agentTool.entryPath,
@@ -626,11 +636,11 @@ export const make = Effect.fn("LocalDeviceHost.make")(function* () {
               "--state-dir",
               agentDeviceStateDir(path, config.stateDir),
             ],
-            env: { ...hostEnvironment, AGENT_DEVICE_NO_UPDATE_NOTIFIER: "1" },
+            env: { ...(yield* hostEnvironment), AGENT_DEVICE_NO_UPDATE_NOTIFIER: "1" },
             timeout: Duration.seconds(10),
             timeoutBehavior: "timedOutResult",
-          })
-          .pipe(Effect.ignore)
+          });
+        }).pipe(Effect.ignore)
       : Effect.void;
 
   let agentToolRef: { readonly entryPath: string; readonly nodePath: string } | null = null;
@@ -644,7 +654,10 @@ export const make = Effect.fn("LocalDeviceHost.make")(function* () {
       if (alive) return running;
       yield* Ref.set(runningRef, null);
     }
-    const nodePath = yield* resolveNodeExecutable("Local device support", hostEnvironment).pipe(
+    const nodePath = yield* resolveNodeExecutable(
+      "Local device support",
+      yield* hostEnvironment,
+    ).pipe(
       Effect.provideService(FileSystem.FileSystem, fs),
       Effect.provideService(Path.Path, path),
       Effect.provideService(HostProcess.Platform, hostPlatform),
@@ -772,8 +785,9 @@ export const make = Effect.fn("LocalDeviceHost.make")(function* () {
   };
 
   const run: DeviceHost.DeviceHostReady["run"] = (command, args, options) =>
-    runner
-      .run({
+    Effect.gen(function* () {
+      const sdk = yield* currentSdk;
+      return yield* runner.run({
         command:
           command === "emulator" && sdk.root
             ? path.join(
@@ -783,19 +797,19 @@ export const make = Effect.fn("LocalDeviceHost.make")(function* () {
               )
             : command,
         args,
-        env: hostEnvironment,
+        env: deviceHostEnvironment(environment, sdk.root, hostPlatform, path),
         timeout: Duration.millis(options?.timeoutMs ?? 20_000),
         timeoutBehavior: "timedOutResult",
         ...(options?.stdin === undefined ? {} : { stdin: options.stdin }),
-      })
-      .pipe(
-        Effect.map((result) => ({
-          stdout: result.stdout,
-          stderr: result.stderr,
-          code: Number(result.code),
-        })),
-        Effect.catch((cause) => Effect.succeed({ stdout: "", stderr: String(cause), code: 127 })),
-      );
+      });
+    }).pipe(
+      Effect.map((result) => ({
+        stdout: result.stdout,
+        stderr: result.stderr,
+        code: Number(result.code),
+      })),
+      Effect.catch((cause) => Effect.succeed({ stdout: "", stderr: String(cause), code: 127 })),
+    );
 
   const toReady = (running: RunningHost): DeviceHost.DeviceHostReady => ({
     hub: { origin: running.hub.origin } satisfies DeviceHost.DeviceHubEndpoint,

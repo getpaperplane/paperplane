@@ -52,6 +52,7 @@ const agentFixture = Effect.fn("agentFixture")(function* (
     yield* fs.writeFileString(entryPath, "");
     yield* fs.writeFileString(path.join(installDir, ".install-complete"), version!);
   }
+  const commands: ProcessRunner.ProcessRunInput[] = [];
   const host = yield* LocalDeviceHost.make().pipe(
     Effect.provide(Layer.mergeAll(ServerConfig.layerTest(baseDir, baseDir), NetService.layer)),
     Effect.provideService(HostProcess.Environment, { HOME: baseDir, PATH: "" }),
@@ -78,8 +79,12 @@ const agentFixture = Effect.fn("agentFixture")(function* (
       ),
     ),
     Effect.provideService(ProcessRunner.ProcessRunner, {
-      run: (input) =>
-        input.args.includes("devices") ? startup(stateDir) : Effect.succeed(processOutput(0)),
+      run: (input) => {
+        commands.push(input);
+        return input.args.includes("devices")
+          ? startup(stateDir)
+          : Effect.succeed(processOutput(0));
+      },
     }),
     Effect.provideService(
       HttpClient.HttpClient,
@@ -89,7 +94,7 @@ const agentFixture = Effect.fn("agentFixture")(function* (
     ),
   );
   yield* host.ensureReady(() => Effect.void);
-  return { host, fs, stateDir };
+  return { host, fs, stateDir, baseDir, commands };
 });
 
 describe("AgentDevice startup", () => {
@@ -255,6 +260,42 @@ const diagnose = (
   );
 
 describe("Android SDK availability", () => {
+  it.effect("uses an SDK installed after host construction for emulator commands", () =>
+    Effect.gen(function* () {
+      const { host, fs, baseDir, commands } = yield* agentFixture(() =>
+        Effect.succeed(processOutput(0)),
+      );
+      expect(yield* host.platformAvailability("android")).toMatchObject({ available: false });
+      const ready = yield* host.current;
+      if (!ready) return yield* Effect.die("Expected a ready host");
+      yield* ready.run("emulator", ["-list-avds"]);
+      expect(commands.at(-1)?.command).toBe("emulator");
+      const root = `${baseDir}/Library/Android/sdk`;
+      for (const file of [
+        "platform-tools/adb",
+        "emulator/emulator",
+        "cmdline-tools/latest/bin/avdmanager",
+      ]) {
+        const target = `${root}/${file}`;
+        const path = yield* Path.Path;
+        yield* fs.makeDirectory(path.dirname(target), { recursive: true });
+        yield* fs.writeFileString(target, "");
+      }
+      expect(yield* host.platformAvailability("android")).toMatchObject({ available: true });
+      yield* ready.run("emulator", ["-list-avds"]);
+      expect(commands.at(-1)).toMatchObject({
+        command: `${root}/emulator/emulator`,
+        args: ["-list-avds"],
+        env: {
+          ANDROID_HOME: root,
+          PATH: `${root}/platform-tools:${root}/emulator:`,
+        },
+      });
+      yield* ready.run("node", ["helper.js"]);
+      expect(commands.at(-1)?.env?.ANDROID_HOME).toBe(root);
+    }).pipe(Effect.scoped, Effect.provide(NodeServices.layer)),
+  );
+
   it.effect("uses the standard Windows SDK without probing PATH", () =>
     Effect.gen(function* () {
       const root = "C:\\Users\\test\\AppData\\Local\\Android\\Sdk";
