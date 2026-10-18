@@ -3142,14 +3142,14 @@ export const layer: Layer.Layer<ProjectionStoreV2, never, SqlClient.SqlClient> =
             SELECT payload_json
             FROM orchestration_v2_projection_run_attempts
             WHERE thread_id = ${threadId}
-            ORDER BY run_id ASC, attempt_ordinal ASC
+            ORDER BY (SELECT run.ordinal FROM orchestration_v2_projection_runs AS run WHERE run.run_id = orchestration_v2_projection_run_attempts.run_id) ASC, run_id ASC, attempt_ordinal ASC
           `
               : sql<PayloadRow>`
             SELECT payload_json FROM orchestration_v2_projection_run_attempts
             WHERE thread_id = ${threadId}
               AND (status IN ('pending','starting','running','waiting')
                 OR run_id IN (SELECT value FROM json_each(${cohortRunIds})))
-            ORDER BY run_id ASC, attempt_ordinal ASC
+            ORDER BY (SELECT run.ordinal FROM orchestration_v2_projection_runs AS run WHERE run.run_id = orchestration_v2_projection_run_attempts.run_id) ASC, run_id ASC, attempt_ordinal ASC
           `,
           fields !== undefined && !fields.includes("nodes")
             ? Effect.succeed([])
@@ -4071,7 +4071,7 @@ export const layer: Layer.Layer<ProjectionStoreV2, never, SqlClient.SqlClient> =
             `.pipe(Effect.flatMap(decodeRows(decodeRunPayload, threadId)));
             const attempts = yield* sql<PayloadRow>`
               SELECT payload_json FROM orchestration_v2_projection_run_attempts
-              WHERE thread_id = ${threadId} ORDER BY run_id ASC, attempt_ordinal ASC
+              WHERE thread_id = ${threadId} ORDER BY (SELECT run.ordinal FROM orchestration_v2_projection_runs AS run WHERE run.run_id = orchestration_v2_projection_run_attempts.run_id) ASC, run_id ASC, attempt_ordinal ASC
             `.pipe(Effect.flatMap(decodeRows(decodeRunAttemptPayload, threadId)));
             const nodes = yield* sql<PayloadRow>`
               SELECT payload_json FROM orchestration_v2_projection_nodes
@@ -4243,7 +4243,7 @@ export const layer: Layer.Layer<ProjectionStoreV2, never, SqlClient.SqlClient> =
                   WHERE thread_id = ${threadId}
                     AND status IN ('queued', 'preparing', 'starting', 'running', 'waiting')
                 )
-              ORDER BY attempt.run_id ASC, attempt.attempt_ordinal ASC
+              ORDER BY (SELECT run.ordinal FROM orchestration_v2_projection_runs AS run WHERE run.run_id = attempt.run_id) ASC, attempt.run_id ASC, attempt.attempt_ordinal ASC
             `,
           sql<PayloadRow>`
               SELECT node.payload_json FROM orchestration_v2_projection_nodes AS node

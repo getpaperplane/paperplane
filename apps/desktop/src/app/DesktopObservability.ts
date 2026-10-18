@@ -38,9 +38,7 @@ const DESKTOP_TRACE_BATCH_WINDOW_MS = 1_000;
 // Renderer IPC chatter (snapshot reads, settings getters) runs dozens of times a
 // minute and finishes in well under a millisecond; recording each one rotated
 // the trace files several times a day. Failures and slow calls are still kept.
-export const DESKTOP_TRACE_DROP_FAST_SUCCESS = [
-  { namePrefix: "desktop.ipc.", belowMs: 5 },
-] as const;
+const DESKTOP_TRACE_DROP_FAST_SUCCESS = [{ namePrefix: "desktop.ipc.", belowMs: 5 }] as const;
 const DESKTOP_BACKEND_OUTPUT_BUFFER_MAX_BYTES = 1024 * 1024;
 const DESKTOP_BACKEND_OUTPUT_BUFFER_MAX_CHUNKS = 256;
 
