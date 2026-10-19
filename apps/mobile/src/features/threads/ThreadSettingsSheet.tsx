@@ -79,6 +79,8 @@ import {
 } from "../layout/native-mail-search-toolbar";
 import { useNativeMailSearchToolbar } from "../../native/use-native-mail-search-toolbar";
 import { ModelRow, ChoiceRow } from "./ThreadSettingsRows";
+import { useProviderResources } from "../../state/use-provider-resources";
+import { ProviderExtensionsContent, summarizeProviderExtensions } from "./ProviderExtensions";
 import {
   compatibleRuntimeModeForChoices,
   runtimeModeChoicesForSupportedModes,
@@ -881,9 +883,32 @@ function useThreadSettingsCatalogItems(
   );
 }
 
+/** Pi-only row: opens the extension catalog for the displayed model's provider. */
+function ThreadSettingsPiSection(props: {
+  readonly instanceId: ProviderInstanceId;
+  readonly onOpen: (instanceId: ProviderInstanceId) => void;
+}) {
+  const session = useThreadSettingsSession();
+  const resources = useProviderResources(session.environmentId, props.instanceId);
+  return (
+    <>
+      <Text className="px-5 pb-2 pt-7 text-sm font-rove-medium text-foreground-muted">Pi</Text>
+      <View className="mx-4 overflow-hidden rounded-2xl bg-grouped-card">
+        <DisclosureRow
+          isLast
+          label="Extensions"
+          value={summarizeProviderExtensions(resources)}
+          onPress={() => props.onOpen(props.instanceId)}
+        />
+      </View>
+    </>
+  );
+}
+
 function ThreadSettingsOptionsItem(props: {
   readonly animationsReady: boolean;
   readonly onOpenSubmenu: (submenu: ThreadSettingsSubmenuPage) => void;
+  readonly onOpenPiExtensions: (instanceId: ProviderInstanceId) => void;
 }) {
   const insets = useSafeAreaInsets();
   const session = useThreadSettingsSession();
@@ -893,6 +918,18 @@ function ThreadSettingsOptionsItem(props: {
         .get(session.environmentId)
         ?.providers.find((provider) => provider.instanceId === session.providerInstanceId) ?? null)
     : null;
+  const displayedInstanceId =
+    session.displayedModelSelection?.instanceId ?? session.providerInstanceId ?? null;
+  const displayedProvider =
+    session.environmentId && displayedInstanceId
+      ? (configs
+          .get(session.environmentId)
+          ?.providers.find((provider) => provider.instanceId === displayedInstanceId) ?? null)
+      : null;
+  const piInstanceId =
+    displayedProvider?.driver === "pi" && displayedProvider.enabled
+      ? displayedProvider.instanceId
+      : null;
   const usesNativeMailSearchToolbar = useNativeMailSearchToolbar();
   const bottomToolbarInset = usesNativeMailSearchToolbar
     ? NATIVE_MAIL_SEARCH_TOOLBAR_CONTENT_INSET
@@ -957,6 +994,10 @@ function ThreadSettingsOptionsItem(props: {
         </Animated.View>
       </Animated.View>
 
+      {piInstanceId ? (
+        <ThreadSettingsPiSection instanceId={piInstanceId} onOpen={props.onOpenPiExtensions} />
+      ) : null}
+
       <Text className="px-5 pb-2 pt-7 text-sm font-rove-medium text-foreground-muted">Catalog</Text>
       <View className="mx-4 overflow-hidden rounded-2xl bg-grouped-card">
         <SwitchRow
@@ -981,6 +1022,7 @@ function ThreadSettingsOptionsItem(props: {
 /** One native scroll owner for the model catalog and its related settings. */
 function ThreadSettingsMainContent(props: {
   readonly onOpenSubmenu: (submenu: ThreadSettingsSubmenuPage) => void;
+  readonly onOpenPiExtensions: (instanceId: ProviderInstanceId) => void;
 }) {
   const session = useThreadSettingsSession();
   const refreshProvidersCommand = useAtomCommand(serverEnvironment.refreshProviders, {
@@ -1046,6 +1088,7 @@ function ThreadSettingsMainContent(props: {
           <ThreadSettingsOptionsItem
             animationsReady={animationsReady}
             onOpenSubmenu={props.onOpenSubmenu}
+            onOpenPiExtensions={props.onOpenPiExtensions}
           />
         );
       }
@@ -1064,6 +1107,7 @@ function ThreadSettingsMainContent(props: {
       animationsReady,
       hasActiveCatalogFilter,
       props.onOpenSubmenu,
+      props.onOpenPiExtensions,
       session.providerFilter,
       session.searchQuery,
     ],
@@ -1236,6 +1280,7 @@ function ThreadSettingsChoiceContent(props: {
 type ThreadSettingsPickerStackParams = {
   ThreadSettingsModels: undefined;
   ThreadSettingsChoice: ThreadSettingsSubmenuPage & { readonly title: string };
+  ThreadSettingsPiExtensions: { readonly instanceId: ProviderInstanceId };
 };
 
 type ThreadSettingsPickerPresentation = {
@@ -1410,6 +1455,9 @@ function ThreadSettingsModelsScreen() {
                   )?.label ?? "Option");
             navigation.navigate("ThreadSettingsChoice", { ...submenu, title });
           }}
+          onOpenPiExtensions={(instanceId) =>
+            navigation.navigate("ThreadSettingsPiExtensions", { instanceId })
+          }
         />
       </ScreenContent>
       <Toolbar placement="left">
@@ -1501,6 +1549,30 @@ function ThreadSettingsChoiceScreen() {
   );
 }
 
+function ThreadSettingsPiExtensionsScreen() {
+  const navigation = useNavigation<NativeStackNavigationProp<ThreadSettingsPickerStackParams>>();
+  const route =
+    useRoute<RouteProp<ThreadSettingsPickerStackParams, "ThreadSettingsPiExtensions">>();
+  const session = useThreadSettingsSession();
+  const resources = useProviderResources(session.environmentId, route.params.instanceId);
+
+  return (
+    <>
+      <NativeStackScreenOptions options={{ headerShown: Platform.OS !== "android" }} />
+      {Platform.OS === "android" ? (
+        <AndroidScreenHeader
+          title="Pi extensions"
+          onBack={() => navigation.goBack()}
+          hideBottomBorder
+        />
+      ) : null}
+      <ScreenContent>
+        <ProviderExtensionsContent {...resources} />
+      </ScreenContent>
+    </>
+  );
+}
+
 function ThreadSettingsPickerNavigator(props: ThreadSettingsPickerPresentation) {
   const theme = useUniwindTheme();
   const solidSheetBackground = theme["--color-sheet-solid"];
@@ -1544,6 +1616,11 @@ function ThreadSettingsPickerNavigator(props: ThreadSettingsPickerPresentation) 
           name="ThreadSettingsChoice"
           component={ThreadSettingsChoiceScreen}
           options={({ route }) => ({ title: route.params.title })}
+        />
+        <ThreadSettingsPickerStack.Screen
+          name="ThreadSettingsPiExtensions"
+          component={ThreadSettingsPiExtensionsScreen}
+          options={{ title: "Pi extensions" }}
         />
       </ThreadSettingsPickerStack.Navigator>
     </ThreadSettingsPickerPresentationContext.Provider>

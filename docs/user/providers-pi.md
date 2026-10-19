@@ -12,7 +12,7 @@ Rove Code uses Pi's model catalog and supported reasoning levels. It does not ru
 
 ## Models and extension catalog
 
-The Extensions control beside a Pi provider selector opens that instance's global catalog on web and mobile. Refresh re-reads its global extensions and model catalog from the server; project-local extensions load only in their project's threads. Disabling an extension excludes its tools and models from new sessions, is saved per instance, and takes effect after running turns finish.
+On web, the Extensions control beside a Pi provider selector opens that instance's global catalog. On mobile, open the model settings sheet and choose Pi → Extensions. Refresh re-reads its global extensions and model catalog from the server; project-local extensions load only in their project's threads. Disabling an extension excludes its tools and models from new sessions, is saved per instance, and takes effect after running turns finish.
 
 Use the model and reasoning pickers to choose capabilities reported by Pi. If an extension model is removed or its reasoning level is unsupported, Rove Code shows the effective selection or a startup error rather than silently keeping an unavailable choice. In provider settings, **Use Pi default** clears the thinking override.
 

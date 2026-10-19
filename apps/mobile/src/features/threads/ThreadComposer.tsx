@@ -94,9 +94,7 @@ import {
   groupByProvider,
   isModelSelectionUnavailable,
 } from "../../lib/modelOptions";
-import { useProviderResources } from "../../state/use-provider-resources";
 import { PiExtensionStatus } from "./PiExtensionStatus";
-import { ProviderExtensions } from "./ProviderExtensions";
 import { useScaledTextRole } from "../settings/appearance/useScaledTextRole";
 import type { RemoteClientConnectionState } from "../../lib/connection";
 import { resolveProviderOptionDescriptors } from "../../lib/providerOptions";
@@ -454,11 +452,6 @@ export const ThreadComposer = memo(function ThreadComposer(props: ThreadComposer
       ) ?? null
     );
   }, [props.serverConfig, props.selectedThread.modelSelection.instanceId]);
-  const showPiCatalog = selectedProviderStatus?.driver === "pi" && selectedProviderStatus.enabled;
-  const piCatalog = useProviderResources(
-    props.environmentId,
-    showPiCatalog ? currentModelSelection.instanceId : null,
-  );
   const composerOwnerKey = scopedThreadKey(props.environmentId, props.selectedThread.id);
   // Content lives under the edit's own draft while a queued message is open;
   // the owner key still identifies this composer for settings and dictation.
@@ -1168,7 +1161,6 @@ export const ThreadComposer = memo(function ThreadComposer(props: ThreadComposer
                       onPickFiles={props.onPickDraftFiles}
                     />
                     <View className="min-w-0 shrink">
-                      {showPiCatalog ? <ProviderExtensions {...piCatalog} /> : null}
                       <ComposerInlineControl
                         accessibilityLabel="Model and reasoning settings"
                         emphasized
