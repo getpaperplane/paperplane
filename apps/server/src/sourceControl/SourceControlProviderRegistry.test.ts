@@ -179,6 +179,30 @@ it.effect("routes GitHub remotes to the GitHub provider", () =>
   }),
 );
 
+it.effect("routes SSH host aliases to the provider of their configured HostName", () =>
+  Effect.gen(function* () {
+    const registry = yield* makeRegistry({
+      remotes: [{ name: "origin", url: "git@github-work:acme/project.git" }],
+      process: {
+        run: (input) =>
+          Effect.succeed(
+            processOutput(
+              input.command === "ssh" && input.args.join(" ") === "-G github-work"
+                ? "user git\nhostname github.com\nport 22\n"
+                : "",
+            ),
+          ),
+      },
+    });
+
+    const handle = yield* registry.resolveHandle({ cwd: "/repo" });
+
+    assert.strictEqual(handle.provider.kind, "github");
+    assert.strictEqual(handle.context?.provider.baseUrl, "https://github.com");
+    assert.strictEqual(handle.context?.remoteUrl, "git@github-work:acme/project.git");
+  }),
+);
+
 it.effect("routes directly by provider kind for remote-first workflows", () =>
   Effect.gen(function* () {
     const registry = yield* makeRegistry({
@@ -559,6 +583,7 @@ it.effect("asks once for every checkout of a server no integration claims", () =
     const once = asked.slice();
     // glab is asked about the remote's host as the remote spells it.
     assert.sameMembers(once, [
+      "ssh -G Git.Example.Internal",
       "credential git.example.internal",
       "glab auth status --hostname Git.Example.Internal",
       "fj",
@@ -579,7 +604,8 @@ it.effect("asks again after a check that could not answer", () =>
       remotes: [],
       process: {
         run: ({ command, cwd }) => {
-          asks += 1;
+          // The SSH alias lookup is best effort; count only integration checks.
+          if (command !== "ssh") asks += 1;
           return Effect.fail(
             new VcsProcessTimeoutError({ operation: "test", command, cwd, timeoutMs: 1 }),
           );

@@ -17,6 +17,10 @@ import * as Option from "effect/Option";
 import * as PlatformError from "effect/PlatformError";
 import * as Result from "effect/Result";
 import * as Schema from "effect/Schema";
+import {
+  detectSourceControlProviderFromRemoteUrl,
+  isSshRemoteUrl,
+} from "@rove-code/shared/sourceControl";
 
 import type * as SourceControlProvider from "./SourceControlProvider.ts";
 import type * as SourceControlHost from "./SourceControlHost.ts";
@@ -367,6 +371,49 @@ function refineWithSpec(input: {
     );
 }
 
+const SCP_SSH_HOST_PATTERN = /^[^@/\s]+@([^:/]+):/u;
+const SSH_ALIAS_PATTERN = /^[a-z0-9][a-z0-9._-]*$/iu;
+
+function sshRemoteHost(remoteUrl: string): string | null {
+  const trimmed = remoteUrl.trim();
+  if (!isSshRemoteUrl(trimmed)) return null;
+  const scp = SCP_SSH_HOST_PATTERN.exec(trimmed)?.[1];
+  if (scp !== undefined) return scp;
+  return URL.parse(trimmed)?.hostname || null;
+}
+
+/**
+ * Multi-account setups point remotes at `~/.ssh/config` aliases such as
+ * `git@github-work:org/repo.git`. `ssh -G` prints the alias's effective `hostname` without
+ * connecting, so the real forge host can be detected. Rove-specific: keep across upstream syncs.
+ */
+function resolveSshHostAliasProvider(input: {
+  readonly process: SourceControlHost.SourceControlHost["Service"]["process"];
+  readonly cwd: string;
+  readonly remoteUrl: string;
+}): Effect.Effect<SourceControlProviderInfo | null> {
+  const alias = sshRemoteHost(input.remoteUrl);
+  if (alias === null || !SSH_ALIAS_PATTERN.test(alias)) return Effect.succeed(null);
+  return input.process
+    .run({
+      operation: "source-control.discovery.resolve-ssh-host-alias",
+      command: "ssh",
+      args: ["-G", alias],
+      cwd: input.cwd,
+      timeoutMs: DEFAULT_PROBE_TIMEOUT_MS,
+      maxOutputBytes: 16_000,
+    })
+    .pipe(
+      Effect.map((result) => {
+        const hostname = /^hostname\s+(\S+)\s*$/imu.exec(result.stdout)?.[1]?.toLowerCase();
+        if (hostname === undefined || hostname === alias.toLowerCase()) return null;
+        const provider = detectSourceControlProviderFromRemoteUrl(`ssh://${hostname}`);
+        return provider && provider.kind !== "unknown" ? provider : null;
+      }),
+      Effect.orElseSucceed(() => null),
+    );
+}
+
 /** Asks every integration whether it holds the remote's server; the first claim wins. */
 export const refineUnknownRemoteProvider = Effect.fn("refineUnknownRemoteProvider")(
   function* (input: {
@@ -375,6 +422,13 @@ export const refineUnknownRemoteProvider = Effect.fn("refineUnknownRemoteProvide
     readonly cwd: string;
     readonly context: SourceControlProvider.SourceControlProviderContext;
   }): Effect.fn.Return<UnknownRemoteVerdict> {
+    const aliased = yield* resolveSshHostAliasProvider({
+      process: input.process,
+      cwd: input.cwd,
+      remoteUrl: input.context.remoteUrl,
+    });
+    if (aliased !== null) return { provider: aliased, settled: true };
+
     const results = yield* Effect.forEach(input.specs, (spec) =>
       refineWithSpec({ ...input, spec }).pipe(Effect.result),
     );
