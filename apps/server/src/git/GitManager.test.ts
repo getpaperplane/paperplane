@@ -1147,6 +1147,100 @@ it.layer(layerGitManagerTest)("GitManager", (it) => {
     }),
   );
 
+  it.effect("cwd-only worktree lookups use the owning project's GitHub account", () =>
+    Effect.gen(function* () {
+      const repoDir = NodeFS.realpathSync(yield* makeTempDir("rove-git-manager-"));
+      yield* initRepo(repoDir);
+      yield* runGit(repoDir, ["checkout", "-b", "feature/worktree-account"]);
+      const remoteDir = yield* createBareRemote();
+      yield* runGit(repoDir, ["remote", "add", "origin", remoteDir]);
+      yield* runGit(repoDir, ["push", "-u", "origin", "feature/worktree-account"]);
+      const projectId = ProjectId.make("project:worktree-account");
+      const threadId = ThreadId.make("thread:worktree-account");
+      const providerInstanceId = ProviderInstanceId.make("codex");
+      const createdAt = DateTime.makeUnsafe("2026-09-27T00:00:00.000Z");
+      const accounts: Array<string | null> = [];
+      const { service } = createGitHubProviderWithFakeGh();
+      const { manager } = yield* makeManager({
+        sourceControlProvider: {
+          ...service,
+          listChangeRequests: (input) =>
+            Effect.gen(function* () {
+              accounts.push((yield* SelectedGitHubAccount)?.login ?? null);
+              return yield* service.listChangeRequests(input);
+            }),
+        },
+        serverSettings: {
+          githubAccount: { host: "github.com", login: "personal" },
+          projectSettingsOverrides: {
+            [projectId]: { githubAccount: { host: "github.com", login: "work" } },
+          },
+        },
+        seed: Effect.gen(function* () {
+          yield* (yield* ProjectStore.ProjectStoreV2).apply({
+            sequence: 1,
+            eventId: EventId.make("event:worktree-account:project"),
+            aggregateKind: "project",
+            aggregateId: projectId,
+            occurredAt: DateTime.formatIso(createdAt),
+            commandId: null,
+            causationEventId: null,
+            correlationId: null,
+            metadata: {},
+            type: "project.created",
+            payload: {
+              projectId,
+              title: "Work",
+              workspaceRoot: "/elsewhere",
+              defaultModelSelection: null,
+              scripts: [],
+              createdAt: DateTime.formatIso(createdAt),
+              updatedAt: DateTime.formatIso(createdAt),
+            },
+          });
+          yield* (yield* ProjectionStore.ProjectionStoreV2).apply({
+            id: EventId.make("event:worktree-account:thread"),
+            type: "thread.created",
+            threadId,
+            providerInstanceId,
+            occurredAt: createdAt,
+            payload: {
+              createdBy: "user",
+              creationSource: "web",
+              id: threadId,
+              projectId,
+              title: "Work",
+              providerInstanceId,
+              modelSelection: { instanceId: providerInstanceId, model: "gpt-5" },
+              runtimeMode: "full-access",
+              interactionMode: "default",
+              branch: null,
+              worktreePath: repoDir,
+              activeProviderThreadId: null,
+              lineage: { parentThreadId: null, relationshipToParent: null, rootThreadId: threadId },
+              forkedFrom: null,
+              createdAt,
+              updatedAt: createdAt,
+              archivedAt: null,
+              settledOverride: null,
+              settledAt: null,
+              lastVisitedAt: null,
+              deletedAt: null,
+            },
+          });
+        }),
+      });
+      const selection = yield* manager.withProjectGitHubAccount(
+        { cwd: repoDir },
+        SelectedGitHubAccount,
+      );
+      expect(selection?.login).toBe("work");
+      yield* manager.status({ cwd: repoDir });
+      expect(accounts.length).toBeGreaterThan(0);
+      expect(new Set(accounts)).toEqual(new Set(["work"]));
+    }),
+  );
+
   it.effect("status ignores invalid gh pr list entries and keeps valid ones", () =>
     Effect.gen(function* () {
       const repoDir = yield* makeTempDir("rove-git-manager-");

@@ -784,8 +784,19 @@ export const make = Effect.gen(function* () {
             Effect.orElseSucceed(() => null),
           )
         : canonicalizeExistingPath(input.cwd).pipe(
-            Effect.flatMap((cwd) => projects.findActiveByWorkspaceRoot(cwd)),
-            Effect.map((project) => Option.getOrNull(project)?.projectId ?? null),
+            Effect.flatMap((cwd) =>
+              Effect.gen(function* () {
+                const project = yield* projects.findActiveByWorkspaceRoot(cwd);
+                if (Option.isSome(project)) return project.value.projectId;
+                // Rove: thread worktrees are not project roots.
+                const worktrees = yield* threads.getThreadWorktreePaths();
+                const worktree = worktrees.find(
+                  ({ worktreePath }) => worktreePath === input.cwd || worktreePath === cwd,
+                );
+                if (!worktree) return null;
+                return (yield* threads.getThreadShell(worktree.threadId))?.projectId ?? null;
+              }),
+            ),
             Effect.orElseSucceed(() => null),
           );
     return { settings: resolveProjectSettings(settings, projectId).settings, projectId };
