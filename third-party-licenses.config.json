@@ -129,7 +129,7 @@
       "generatedNotices": [
         {
           "licenseId": "Apache-2.0",
-          "copyrights": ["Copyright 2009, 2010, 2013 Andr\u00e9 Berg"]
+          "copyrights": ["Copyright 2009, 2010, 2013 André Berg"]
         }
       ]
     },
@@ -648,7 +648,7 @@
     },
     {
       "repositoryUrl": "https://github.com/earendil-works/pi",
-      "sourceUrl": "https://github.com/earendil-works/pi/blob/v1.0.2/LICENSE",
+      "sourceUrl": "https://github.com/earendil-works/pi/blob/v1.3.0/LICENSE",
       "generatedNotice": {
         "licenseId": "MIT",
         "copyrights": ["Copyright (c) 2025 Mario Zechner"]
