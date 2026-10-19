@@ -985,8 +985,7 @@ jobs:
   mobile_sideload:
     name: Build mobile sideload binaries
     needs: [preflight]
-    # No daily macOS build: mobile ships on stable/preview, or by manual dispatch.
-    if: ${{ vars.ROVE_MOBILE_SIDELOAD_READY == 'true' && contains(fromJSON('["stable", "preview"]'), needs.preflight.outputs.release_channel) }}
+    if: ${{ vars.ROVE_MOBILE_SIDELOAD_READY == 'true' && contains(fromJSON('["stable", "nightly", "preview"]'), needs.preflight.outputs.release_channel) }}
     uses: ./.github/workflows/mobile-sideload.yml
     permissions:
       contents: write

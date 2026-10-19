@@ -44,8 +44,8 @@ No credentials or production databases should be copied into a worktree for veri
 ## Publish mobile sideload binaries without store accounts
 
 The repository Actions variable `ROVE_MOBILE_SIDELOAD_READY=true` enables `.github/workflows/mobile-sideload.yml` from
-stable/preview releases (including build-only runs), not nightlies, to avoid daily
-macOS runner costs. `ROVE_MOBILE_STORES_READY` remains unchanged and can stay off.
+stable/nightly/preview releases (including build-only runs).
+`ROVE_MOBILE_STORES_READY` remains unchanged and can stay off.
 No Apple, Play Console, Expo/EAS, or cloud credentials are needed. These builds
 leave `ROVE_CLOUD_READY` unset and OTA updates off.
 
