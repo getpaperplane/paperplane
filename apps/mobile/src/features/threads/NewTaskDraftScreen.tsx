@@ -84,8 +84,6 @@ import {
   useThreadSettingsSheetPresentation,
   type NavigationWithFinishTransitioning,
 } from "./use-thread-settings-sheet-presentation";
-import { useProviderResources } from "../../state/use-provider-resources";
-import { ProviderExtensions } from "./ProviderExtensions";
 import { makeTurnCommandMetadata } from "../../lib/commandMetadata";
 import {
   convertPastedImagesToAttachments,
@@ -247,12 +245,6 @@ export function NewTaskDraftScreen(props: {
   const taskPermissionReason =
     environmentConnected && !canOperate ? "This connection cannot start tasks." : null;
   const modelUnavailable = environmentConnected && flow.selectedModelOption?.isUnavailable === true;
-  const showPiCatalog =
-    flow.selectedProviderStatus?.driver === "pi" && flow.selectedProviderStatus.enabled;
-  const piCatalog = useProviderResources(
-    flow.selectedEnvironmentId,
-    showPiCatalog ? (flow.selectedModel?.instanceId ?? null) : null,
-  );
   // A project added by cloning exists before its files do: the prompt can be
   // written meanwhile, but Start waits for the clone.
   const projectCloneState = useProjectClone(
@@ -1603,7 +1595,6 @@ export function NewTaskDraftScreen(props: {
         </View>
       </View>
 
-      {showPiCatalog ? <ProviderExtensions {...piCatalog} /> : null}
       {environmentControl}
     </View>
   );

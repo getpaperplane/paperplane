@@ -333,12 +333,19 @@ function DevicePreviewScreen({
           accessibilityRole="button"
           accessibilityLabel="Show device controls"
           accessibilityHint="Shaking the phone also shows them"
-          hitSlop={12}
-          className="absolute h-6 w-16 items-center justify-center self-center"
-          style={{ top: Math.max(insets.top - 18, 4) }}
+          hitSlop={16}
+          className="absolute self-center"
+          style={{ top: insets.top + 4 }}
           onPress={() => setControlsVisible(true)}
         >
-          <View className="h-1.5 w-10 rounded-full bg-white/40" />
+          <GlassSurface className="h-7 w-14 items-center justify-center">
+            <SymbolView
+              name="chevron.down"
+              size={12}
+              tintColorClassName="accent-icon-subtle"
+              type="monochrome"
+            />
+          </GlassSurface>
         </Pressable>
       )}
     </View>
