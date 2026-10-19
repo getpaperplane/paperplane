@@ -39,8 +39,6 @@ export function DeviceStreamWebView({
   ref,
   ...props
 }: DeviceStreamConfiguration & NativeStreamBridge) {
-  const [attempt, setAttempt] = useState(0);
-  const processRetried = useRef(false);
   const configuration = JSON.stringify({
     access: props.access,
     platform: props.platform,
@@ -48,15 +46,62 @@ export function DeviceStreamWebView({
     colors: props.colors,
   });
   return (
-    <DeviceStreamDocumentView
-      key={`${attempt}:${configuration}`}
+    <StreamWebView
       ref={ref}
+      script={deviceStreamScript}
+      globalName="RoveDeviceStream"
+      subject="device"
       configuration={configuration}
       background={props.colors.background}
       onUnauthorized={props.onUnauthorized}
       onInputConnected={props.onInputConnected}
+    />
+  );
+}
+
+/**
+ * Hosts one generated browser script in a WebView and owns its recovery: a
+ * remount per retry, one automatic remount when the WebView process dies, and
+ * the bootstrap watchdog. Devices and desktops share it.
+ */
+export function StreamWebView({
+  ref,
+  script,
+  globalName,
+  subject,
+  configuration,
+  background,
+  onRetry,
+  ...props
+}: NativeStreamBridge & {
+  readonly script: string;
+  readonly globalName: string;
+  readonly subject: "device" | "desktop";
+  readonly configuration: string;
+  readonly background: string;
+  /**
+   * Owns user-initiated retries when provided: the stream remounts only when
+   * the owner's configuration changes, so one retry is one reconnect. Without
+   * it, a retry remounts locally and refreshes access through `onUnauthorized`.
+   */
+  readonly onRetry?: () => void;
+}) {
+  const [attempt, setAttempt] = useState(0);
+  const processRetried = useRef(false);
+  return (
+    <DeviceStreamDocumentView
+      key={`${attempt}:${configuration}`}
+      ref={ref}
+      script={script}
+      globalName={globalName}
+      subject={subject}
+      configuration={configuration}
+      background={background}
+      onUnauthorized={props.onUnauthorized}
+      onInputConnected={props.onInputConnected}
       onRetry={() => {
         processRetried.current = false;
+        if (onRetry) return onRetry();
         setAttempt((attempt) => attempt + 1);
         void props.onUnauthorized();
       }}
@@ -76,6 +121,9 @@ export function DeviceStreamWebView({
 
 function DeviceStreamDocumentView({
   ref,
+  script,
+  globalName,
+  subject,
   configuration,
   background,
   onUnauthorized,
@@ -84,6 +132,9 @@ function DeviceStreamDocumentView({
   onStreaming,
   onRecoverProcess,
 }: NativeStreamBridge & {
+  readonly script: string;
+  readonly globalName: string;
+  readonly subject: "device" | "desktop";
   readonly configuration: string;
   readonly background: string;
   readonly onRetry: () => void;
@@ -100,13 +151,13 @@ function DeviceStreamDocumentView({
     if (!active.current || failed.current) return;
     failed.current = true;
     void onInputConnected(false);
-    webView.current?.injectJavaScript("window.RoveDeviceStream?.stop(); true;");
+    webView.current?.injectJavaScript(`window.${globalName}?.stop(); true;`);
     setError(message);
     setStatus("error");
   };
   // The shared transport owns video timeouts once the document acknowledges startup.
   const bootstrapTimedOut = useEffectEvent(() =>
-    fail("Device viewer could not start. Reconnect to try again."),
+    fail(`The ${subject} viewer could not start. Reconnect to try again.`),
   );
   useEffect(() => {
     if (started) return;
@@ -115,15 +166,15 @@ function DeviceStreamDocumentView({
   }, [started]);
   const source = useMemo(
     () => ({
-      html: deviceStreamDocument(configuration, deviceStreamScript),
+      html: deviceStreamDocument(configuration, script, globalName),
       // Android WebCodecs needs a secure document; streams still use the environment's URLs.
       baseUrl: Platform.OS === "android" ? "https://localhost/" : "file:///",
     }),
-    [configuration],
+    [configuration, script, globalName],
   );
   const command = (button: keyof DeviceStreamRef) => {
     webView.current?.injectJavaScript(
-      `window.RoveDeviceStream?.command(${JSON.stringify(button)}); true;`,
+      `window.${globalName}?.command(${JSON.stringify(button)}); true;`,
     );
   };
   useImperativeHandle(ref, () => ({
@@ -139,13 +190,13 @@ function DeviceStreamDocumentView({
     const view = webView.current;
     return () => {
       active.current = false;
-      view?.injectJavaScript("window.RoveDeviceStream?.stop(); true;");
+      view?.injectJavaScript(`window.${globalName}?.stop(); true;`);
     };
   }, []);
   const processTerminated = () => {
     if (!active.current || failed.current) return;
     void onInputConnected(false);
-    if (!onRecoverProcess()) fail("Device viewer stopped. Reconnect to try again.");
+    if (!onRecoverProcess()) fail(`The ${subject} viewer stopped. Reconnect to try again.`);
   };
   return (
     <View className="flex-1" style={{ backgroundColor: background }}>
@@ -160,8 +211,8 @@ function DeviceStreamDocumentView({
         contentInsetAdjustmentBehavior="never"
         setSupportMultipleWindows={false}
         style={{ flex: 1, backgroundColor: background }}
-        onError={() => fail("Device viewer could not load. Reconnect to try again.")}
-        onHttpError={() => fail("Device viewer could not load. Reconnect to try again.")}
+        onError={() => fail(`The ${subject} viewer could not load. Reconnect to try again.`)}
+        onHttpError={() => fail(`The ${subject} viewer could not load. Reconnect to try again.`)}
         onContentProcessDidTerminate={processTerminated}
         onRenderProcessGone={processTerminated}
         onShouldStartLoadWithRequest={(request) =>
@@ -175,7 +226,7 @@ function DeviceStreamDocumentView({
           else if (message?.type === "retry") onRetry();
           else if (message?.type === "status") {
             setStarted(true);
-            if (message.status === "error") fail(message.detail ?? "Device stream failed.");
+            if (message.status === "error") fail(message.detail ?? `The ${subject} stream failed.`);
             else {
               setStatus(message.status);
               if (message.status === "streaming") onStreaming();
@@ -193,7 +244,7 @@ function DeviceStreamDocumentView({
             accessibilityLiveRegion="polite"
             className="text-center text-sm text-foreground-muted"
           >
-            {status === "error" ? error : "Connecting to device..."}
+            {status === "error" ? error : `Connecting to ${subject}...`}
           </AppText>
           {status === "error" ? (
             <Pressable

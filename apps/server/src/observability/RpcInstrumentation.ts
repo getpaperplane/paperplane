@@ -43,6 +43,8 @@ const RPC_AGGREGATES = {
   [WS_METHODS.sandboxLink]: "sandbox",
   [WS_METHODS.computerUseStatus]: "computerUse",
   [WS_METHODS.computerUseControl]: "computerUse",
+  [WS_METHODS.subscribeComputerDesktops]: "computerUse",
+  [WS_METHODS.computerDesktopViewer]: "computerUse",
   [WS_METHODS.piGetCatalog]: "provider",
   [WS_METHODS.piRefreshCatalog]: "provider",
   [WS_METHODS.serverProbe]: "server",

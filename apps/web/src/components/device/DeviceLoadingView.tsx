@@ -9,6 +9,8 @@ export function DeviceLoadingView(props: {
   readonly stage: "opening" | "stream";
   readonly message: string;
   readonly error?: boolean;
+  /** Defaults to a phone; computer desktops pass a monitor. */
+  readonly icon?: ReactNode;
   readonly children?: ReactNode;
 }) {
   return (
@@ -18,7 +20,7 @@ export function DeviceLoadingView(props: {
     >
       <div className="flex max-w-sm flex-col items-center gap-3 text-center">
         <div className="grid size-12 place-items-center rounded-xl border bg-muted/30">
-          <Smartphone className="size-6 text-muted-foreground" />
+          {props.icon ?? <Smartphone className="size-6 text-muted-foreground" />}
         </div>
         <div className="space-y-1">
           <p className="text-sm font-medium">{props.name}</p>

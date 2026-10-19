@@ -1,4 +1,9 @@
-import type { ComputerUseMacosVm, ComputerUseStatus } from "@rove-code/contracts";
+import {
+  type ComputerDesktop,
+  type ComputerUseMacosVm,
+  type ComputerUseStatus,
+  ThreadId,
+} from "@rove-code/contracts";
 import { describe, expect, it } from "vite-plus/test";
 
 import {
@@ -6,9 +11,12 @@ import {
   describeDriver,
   describeVm,
   describeVmProgress,
+  isDiskBlocked,
   formatDuration,
   isMacStatus,
   primaryAction,
+  setupDesktopOf,
+  singleLineShellCommand,
   vmActions,
   vmConfirmation,
   vmOf,
@@ -210,13 +218,36 @@ describe("isolated macOS VM setup", () => {
     expect(vmActions(vm)).toEqual([{ input: { action: "prepare-vm" }, label: "Prepare VM" }]);
   });
 
+  it("blocks Prepare when free disk is below the requirement", () => {
+    const base = { ...vmBase, state: "needs-image" } satisfies ComputerUseMacosVm;
+    const short = { ...base, freeDiskBytes: 80.25e9 } satisfies ComputerUseMacosVm;
+    expect(describeVm(short)).toBe(
+      "Needs about 150 GB of free disk, but only 80.3 GB is free. Free up space, then check again.",
+    );
+    expect(vmActions(short)).toEqual([
+      { input: { action: "prepare-vm" }, label: "Prepare VM", disabled: true },
+    ]);
+    expect(isDiskBlocked(short)).toBe(true);
+
+    for (const free of [150e9, 400e9]) {
+      const enough = { ...base, freeDiskBytes: free } satisfies ComputerUseMacosVm;
+      expect(vmActions(enough)).toEqual([{ input: { action: "prepare-vm" }, label: "Prepare VM" }]);
+      expect(isDiskBlocked(enough)).toBe(false);
+    }
+    // Unknown free space never blocks; the server decides.
+    expect(vmActions(base)).toEqual([{ input: { action: "prepare-vm" }, label: "Prepare VM" }]);
+    expect(isDiskBlocked(base)).toBe(false);
+  });
+
   it("walks through consent with the setup command", () => {
     const vm = {
       ...vmBase,
       state: "needs-consent",
       setupCommand: "cua-setup",
     } satisfies ComputerUseMacosVm;
-    expect(describeVm(vm)).toBe("Open the VM, approve the permission prompts, then select Verify.");
+    expect(describeVm(vm)).toBe(
+      "Open the setup desktop, approve the permission prompts inside the VM, then select Verify.",
+    );
     expect(vmSetupStep(vm)).toBe("permissions");
     expect(vmActions(vm).map((action) => action.input.action)).toEqual([
       "open-vm-display",
@@ -262,7 +293,22 @@ describe("isolated macOS VM setup", () => {
     ).toEqual(["remove-vm"]);
   });
 
-  it("offers only Cancel while preparing and retry after a failed preparation", () => {
+  it("opens the setup desktop during driver installation only", () => {
+    for (const phase of ["downloading", "unpacking", "booting", "installing-driver"] as const) {
+      const vm = {
+        ...vmBase,
+        state: "preparing",
+        progress: { phase, startedAt: 0 },
+      } satisfies ComputerUseMacosVm;
+      expect(vmActions(vm).map((action) => action.input.action)).toEqual(
+        phase === "installing-driver"
+          ? ["open-vm-display", "cancel-prepare-vm"]
+          : ["cancel-prepare-vm"],
+      );
+    }
+  });
+
+  it("offers only Cancel before driver installation and retry after a failed preparation", () => {
     const preparing = {
       ...vmBase,
       state: "preparing",
@@ -330,7 +376,7 @@ describe("isolated macOS VM setup", () => {
   });
 
   it("titles each failed action", () => {
-    expect(controlFailureTitle("open-vm-display")).toBe("Couldn't open the VM");
+    expect(controlFailureTitle("open-vm-display")).toBe("Couldn't open the setup desktop");
     expect(controlFailureTitle("remove-vm")).toBe("Couldn't remove the VM");
   });
 
@@ -357,5 +403,42 @@ describe("isolated macOS VM setup", () => {
     expect(isMacStatus(isolated)).toBe(true);
     expect(isMacStatus({ status: "not-installed", platform: "darwin" })).toBe(true);
     expect(isMacStatus({ status: "not-installed", platform: "linux" })).toBe(false);
+  });
+});
+
+describe("setup desktop", () => {
+  const desktop = (overrides: Partial<ComputerDesktop>): ComputerDesktop => ({
+    id: "vm:rove-cua-golden",
+    kind: "macos-vm",
+    role: "setup",
+    threadId: null,
+    name: "macOS desktop setup",
+    startedAt: "2026-01-01T00:00:00.000Z",
+    ...overrides,
+  });
+
+  it("finds only the macOS setup desktop, not thread desktops", () => {
+    const thread = desktop({ id: "vm:work", role: "thread", threadId: ThreadId.make("t") });
+    const setup = desktop({});
+    expect(setupDesktopOf({ mode: "isolated", revision: 1, desktops: [thread] })).toBeNull();
+    expect(setupDesktopOf({ mode: "isolated", revision: 2, desktops: [thread, setup] })).toBe(
+      setup,
+    );
+  });
+
+  it("joins the setup script into one line the shell runs the same way", () => {
+    const script = [
+      "umask 077 && mkdir -p ~/.ssh &&",
+      "chmod 600 ~/.ssh/authorized_keys &&",
+      "driver permissions grant",
+      "driver list_apps '{}'",
+      "# Approve all prompts, then rerun.",
+      "",
+      "driver permissions status --json",
+    ].join("\n");
+    expect(singleLineShellCommand(script)).toBe(
+      "umask 077 && mkdir -p ~/.ssh && chmod 600 ~/.ssh/authorized_keys && driver permissions grant; driver list_apps '{}'; driver permissions status --json",
+    );
+    expect(singleLineShellCommand("a \\\n  b\r\nc |\nd")).toBe("a b; c | d");
   });
 });

@@ -68,6 +68,7 @@ describe("command permissions", () => {
     [WS_METHODS.sandboxLink, AuthAccessWriteScope],
     [WS_METHODS.worktreeInventoryRemove, AuthOrchestrationOperateScope],
     [WS_METHODS.computerUseControl, AuthOrchestrationOperateScope],
+    [WS_METHODS.computerDesktopViewer, AuthOrchestrationOperateScope],
     [WS_METHODS.piRefreshCatalog, AuthProvidersManageScope],
   ] as const)("checks destination grants and revocation for %s", ([method, scope]) =>
     Effect.scoped(

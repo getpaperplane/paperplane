@@ -42,32 +42,43 @@ Cua Driver, not Rove. Revoke them in **System Settings → Privacy & Security**.
 ### Isolated macOS desktop (Apple Silicon)
 
 Host background-only mode remains the default. On an Apple Silicon Mac, select
-**Isolated macOS desktop** in Computer use settings. Install Lume when prompted,
+**Isolated macOS VM** in Computer use settings. Install Lume when prompted,
 then **Prepare VM**. The first download is large: the Tahoe image has a roughly
-150 GB sparse disk. Preparation runs in the background on the environment, so you
+150 GB sparse disk, so **Prepare VM** stays unavailable (with **Check again**) until that much space is free. Preparation runs in the background on the environment, so you
 can leave Settings or disconnect; come back to see its progress. **Cancel** stops it
 and discards the partial download. If it fails, the reason appears in the row with
 **Try again**. Review free space, allocated storage, virtual disk size and
 configured memory before using it. Lume and Cua Driver are MIT-licensed.
 
 Rove automatically authorizes its public SSH key, installs Cua Driver and requests
-permissions in the golden VM. Select **Open VM**, approve the Accessibility,
-Screen Recording, System Events and direct screen capture prompts, then select
-**Verify**. If setup did not complete or prompts are missing, select **Set up
-manually** and run its script in **Terminal inside the VM**, not on your host. Rerun its
-app-list and screen-capture commands until they complete without prompts, then
-verify again. Clipboard sharing is enabled during preparation so you can paste
-this fallback command. Rove checks the app-owned daemon's grants over key-only SSH
-and stops the golden image. Never put personal files, tokens or private keys in
-this image; each working desktop starts as a copy of it.
+permissions in the golden VM. Select **Open setup desktop** in Settings. The VM's
+screen opens inside Rove, from any connected device; click it to type into the VM.
+Approve the Accessibility, Screen Recording, System Events and direct screen
+capture prompts there, then select **Verify**. The setup desktop is also listed in
+the Device panel while it runs.
 
-One thread can lease the desktop at a time. Pixel and foreground input are allowed
-inside the VM only. No project folder, host home, credentials or host clipboard
-is shared. The VM has NAT networking; unlike the Linux desktop, it is not offline.
+If no prompts appear, open Terminal **inside the VM**, click its window, and select
+**Type setup command**. Rove types the command into the VM without running it;
+press Return in the VM to run it. Approve the prompts, then verify again. Your
+clipboard is not shared with the VM. Rove checks the app-owned daemon's grants over
+key-only SSH and stops the golden image. Never put personal files, tokens or
+private keys in this image; each working desktop starts as a copy of it.
+
+One thread can lease the desktop at a time. Watch and use it from the thread's
+Device panel like a Linux desktop. Agents act on apps inside the VM, never your
+host apps. Pixel and foreground input are allowed inside the VM only. Your project
+folders, home folder, credentials and clipboard are not shared with it; Lume only
+mounts its own read-only configuration. The VM has NAT networking; unlike the Linux
+desktop, it is not offline.
+
+The VM's screen is served by Lume's VNC server, protected by a new password each
+time the VM starts. Lume may also make that server reachable from this Mac's
+network, so use isolated mode only on trusted networks. Rove's viewer connects to
+it locally and reaches you over your existing connection to the environment.
 There is no host fallback when the VM is unavailable or occupied. Apple permits
 only two running macOS guests in total, including VMs outside Rove.
 
-Ask the agent to call `close_desktop`, or select **Release desktop** in Settings,
+Ask the agent to call `close_desktop`, or select **Release VM** in Settings,
 to discard the working copy and its documents. Idle SSH retirement preserves the
 lease. Turning computer use off, switching to host mode or stopping Rove discards
 it. **Remove VM** also removes the prepared golden image; Lume's download cache
@@ -92,7 +103,8 @@ run `sudo apt install podman uidmap` yourself. Run Rove as an unprivileged user,
 check that `podman info` works for that user. Rove does not ask for a sudo password
 or use a remote Podman connection.
 
-Select **Install** or **Prepare desktop** to build the private desktop image. The
+Select **Install** or **Prepare desktop** to build the private desktop image. After
+updating Rove, select **Prepare desktop** again, because the image changed. The
 first build needs internet access and downloads Ubuntu desktop packages. Rove
 includes the installed Cua executable in an image identified by its contents.
 Updating that executable may require preparing another image. The driver is
@@ -115,6 +127,15 @@ Use shell tools for project work and the browser panel for web tasks.
 
 Rove allows four thread desktops at once. A fifth thread is refused until a slot
 is explicitly released. Rove does not silently evict unfinished documents.
+
+## Watch the desktop
+
+The Device panel lists a thread's computer-use desktop under **Computers** once an
+agent uses computer use in that thread. You can watch it and type or click inside it,
+including from a remote connection. Closing the tab only stops watching; the desktop
+keeps running until it is released, as described below. Like other devices, it can
+float over the chat, and it opens automatically when an agent starts using it, following
+the **Auto-show floating preview** setting. Isolated macOS VMs work the same way.
 
 ## Lifetime and stopping
 

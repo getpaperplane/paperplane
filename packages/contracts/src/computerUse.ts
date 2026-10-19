@@ -1,4 +1,39 @@
 import * as Schema from "effect/Schema";
+import { ThreadId } from "./baseSchemas.ts";
+
+export const ComputerDesktop = Schema.Struct({
+  id: Schema.String,
+  kind: Schema.Literals(["linux", "macos-vm"]),
+  role: Schema.Literals(["thread", "setup"]),
+  threadId: Schema.NullOr(ThreadId),
+  name: Schema.String,
+  startedAt: Schema.String,
+});
+export type ComputerDesktop = typeof ComputerDesktop.Type;
+
+export const ComputerDesktopsState = Schema.Struct({
+  mode: Schema.Literals(["host", "isolated", "unavailable"]),
+  desktops: Schema.Array(ComputerDesktop),
+  revision: Schema.Int,
+});
+export type ComputerDesktopsState = typeof ComputerDesktopsState.Type;
+
+export const ComputerDesktopViewerInput = Schema.Struct({ desktopId: Schema.String });
+export type ComputerDesktopViewerInput = typeof ComputerDesktopViewerInput.Type;
+export const ComputerDesktopViewer = Schema.Struct({
+  path: Schema.String,
+  password: Schema.NullOr(Schema.String),
+});
+export type ComputerDesktopViewer = typeof ComputerDesktopViewer.Type;
+
+export class ComputerDesktopViewerError extends Schema.TaggedError<ComputerDesktopViewerError>()(
+  "ComputerDesktopViewerError",
+  { desktopId: Schema.String },
+) {
+  override get message(): string {
+    return "This private desktop cannot be viewed. It may have closed or not be ready yet.";
+  }
+}
 
 /** Cua Driver's own macOS grants, read from its daemon; `null` when the daemon did not answer. */
 export const ComputerUsePermissions = Schema.Struct({

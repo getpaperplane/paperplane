@@ -1,8 +1,8 @@
 # Devices
 
-The Device panel shows a live iOS Simulator or Android Emulator next to a
-thread, so you can watch an agent verify mobile work and tap the device
-yourself. Agents get the same device through `device_*` tools and the
+The Device panel shows a live iOS Simulator, Android Emulator, or computer-use
+desktop next to a thread, so you can watch an agent verify its work and use the
+device yourself. Agents get the same device through `device_*` tools and the
 `agent-device` command line, which Rove Code sets up for them.
 
 ## Open a device
@@ -46,6 +46,17 @@ to the other screen switches the live display and touch input to that screen.
 **Restore 3D view** returns the device to a screen-facing position.
 On supported Android foldables, use **Fold device** and **Unfold device** beside
 the screen to change its posture in either view.
+
+## Computer-use desktops
+
+Once an agent starts using computer use in a thread, the device picker lists that
+thread's desktop under **Computers**. On Linux and WSL this is the thread's private
+desktop; on an Apple Silicon Mac in isolated macOS mode, it is the VM, including the
+setup VM while you approve its permissions. Viewing it needs no simulator setup, and you can
+type and click inside it from remote connections too. Closing the tab only stops
+watching; the desktop keeps running until an agent calls `close_desktop`, you select
+**Release VM** in isolated macOS mode, or you turn off computer use. In host mode on macOS and on
+Windows, agents act on your own apps, so there is no separate desktop to show.
 
 ## Tools
 

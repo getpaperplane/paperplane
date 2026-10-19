@@ -4,11 +4,11 @@ export const DESKTOP_FILES = {
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y --no-install-recommends \\
     xvfb openbox xcompmgr dbus-x11 at-spi2-core libatk-adaptor libxi6 libxkbcommon0 \\
-    libxtst6 mousepad fonts-dejavu-core x11-utils procps \\
+    libxtst6 mousepad fonts-dejavu-core x11-utils x11vnc procps \\
     && rm -rf /var/lib/apt/lists/* \\
     && useradd --create-home --uid 1001 agent
 COPY --chmod=755 cua-driver /usr/local/bin/cua-driver
-COPY --chmod=755 entrypoint.sh desktop.sh mcp.sh wm-ready.sh /usr/local/bin/
+COPY --chmod=755 entrypoint.sh desktop.sh mcp.sh vnc.sh wm-ready.sh /usr/local/bin/
 ENV HOME=/tmp/agent XDG_RUNTIME_DIR=/tmp/agent/.runtime \\
     GDK_BACKEND=x11 QT_QPA_PLATFORM=xcb NO_AT_BRIDGE=0 \\
     CUA_DRIVER_RS_ENABLE_WAYLAND=0 CUA_DRIVER_RS_TELEMETRY_ENABLED=false
@@ -48,6 +48,11 @@ exec sleep infinity
   "wm-ready.sh": `#!/bin/bash
 set -euo pipefail
 printf 'ready\\n' >"$XDG_RUNTIME_DIR/wm-ready"
+`,
+  "vnc.sh": `#!/bin/bash
+set -euo pipefail
+source "$XDG_RUNTIME_DIR/desktop.env"
+exec x11vnc -inetd -display "$DISPLAY" -nopw -quiet -shared -noxdamage
 `,
   "mcp.sh": `#!/bin/bash
 set -euo pipefail

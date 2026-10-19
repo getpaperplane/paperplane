@@ -39,6 +39,25 @@ Stream responses carry `Cache-Control: no-transform`; the compression
 middleware would otherwise buffer an MJPEG body that never ends. In browser dev,
 the Vite proxy must forward WebSocket upgrades for `/api`, not only `/ws`.
 
+## Private computer desktops
+
+Computer-use desktops use a separate authenticated binary RFB WebSocket through
+[DesktopViewerProxy](../../apps/server/src/computerUse/DesktopViewerProxy.ts),
+not a host-side VNC application. Linux containers keep `--network=none`: RFB
+travels through `podman exec` stdin/stdout. VM viewers connect only to loopback
+VNC destinations. Lume 0.6.1 uses Apple's private VNC server without a bind-address
+control: a localhost URL does not prove a loopback-only listener, nor is wildcard
+binding universal. Setup and work VMs enable password-protected VNC with a fresh
+random password per boot and suppress the host viewer (`--display none`). Rove
+does not change the firewall; direct network exposure depends on Lume and the host.
+Traditional VNC uses only eight password bytes (48 random bits here). Credentials
+stay out of Rove's public state/errors, but Lume can log credentialed URLs locally.
+Lume receives `--vnc-password` on its argv, visible to local users via `ps` while running.
+Desktop lifecycle snapshots never contain VNC passwords; an operate-scoped RPC
+returns credentials separately. The socket also requires operate scope because
+RFB permits input. Closing or releasing a desktop revokes its live viewers.
+Host macOS/Windows sessions are never listed or viewable.
+
 ## Device settings never go through the hub
 
 serve-sim's preview drives its Tools panel by sending shell commands over that

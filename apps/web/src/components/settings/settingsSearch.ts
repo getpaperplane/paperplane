@@ -738,7 +738,7 @@ export const SETTINGS_SEARCH_ITEMS = [
     to: "/settings/integrations",
     targetId: "computer-use",
     searchTerms: [
-      "cua driver desktop native apps macos windows linux wsl headless private isolated sandbox control click type screenshot allow",
+      "cua driver desktop native apps macos windows linux wsl headless private isolated sandbox control click type screenshot allow watch view vnc device panel",
     ],
   },
   {
@@ -747,7 +747,7 @@ export const SETTINGS_SEARCH_ITEMS = [
     to: "/settings/integrations",
     targetId: "computer-use",
     searchTerms: [
-      "isolated vm virtual machine lume macos private sandbox this mac background apple silicon disk cua driver",
+      "isolated vm virtual machine lume macos private sandbox this mac background apple silicon disk cua driver setup desktop vnc network",
     ],
   },
   {

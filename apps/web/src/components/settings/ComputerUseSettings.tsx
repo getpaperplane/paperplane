@@ -7,26 +7,17 @@ import {
   isAtomCommandInterrupted,
   squashAtomCommandFailure,
 } from "@rove-code/client-runtime/state/runtime";
+import { useAtomValue } from "@effect/atom-react";
 import * as Schema from "effect/Schema";
-import { CheckIcon, CopyIcon } from "lucide-react";
+import { CheckIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
-import { useCopyToClipboard } from "~/hooks/useCopyToClipboard";
 import { cn } from "~/lib/utils";
 import { computerUseEnvironment } from "~/state/computerUse";
 import { useEnvironmentQuery } from "~/state/query";
 import { useAtomCommand } from "~/state/use-atom-command";
 
 import { Button } from "../ui/button";
-import {
-  Dialog,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogPanel,
-  DialogPopup,
-  DialogTitle,
-} from "../ui/dialog";
 import { Progress } from "../ui/progress";
 import { Select, SelectItem, SelectPopup, SelectTrigger, SelectValue } from "../ui/select";
 import { Switch } from "../ui/switch";
@@ -36,6 +27,7 @@ import {
   describeDriver,
   describeVm,
   describeVmProgress,
+  isDiskBlocked,
   isRemoveAction,
   isMacStatus,
   primaryAction,
@@ -50,6 +42,7 @@ import { SettingsRow, SettingsSection } from "./settingsLayout";
 import { searchableSetting } from "./settingsSearch";
 import { useSettingsScope } from "./SettingsScopeContext";
 import { useScopedSettings, useUpdateScopedSettings } from "./useScopedSettings";
+import { VmSetupDesktopDialog } from "./VmSetupDesktopDialog";
 
 type Action = ComputerUseControlInput["action"];
 
@@ -95,7 +88,16 @@ export function ComputerUseSettings() {
   const primary = vm === null ? primaryAction(status) : null;
   const telemetry =
     status?.status === "stopped" || status?.status === "running" ? status.telemetry : null;
-  const [manualSetupOpen, setManualSetupOpen] = useState(false);
+  const [setupDesktopOpen, setSetupDesktopOpen] = useState(false);
+  // Opening the setup desktop and viewing it need the same grant as the other VM controls.
+  const canOperate = useAtomValue(computerUseEnvironment.control.permissionAtom(environmentId));
+  const setupDesktopVisible =
+    setupDesktopOpen &&
+    environmentId !== null &&
+    (vm?.state === "needs-consent" || (preparing && vm?.progress?.phase === "installing-driver"));
+  useEffect(() => {
+    if (!setupDesktopVisible) setSetupDesktopOpen(false);
+  }, [setupDesktopVisible]);
   const [now, setNow] = useState(() => Date.now());
   // Status depends on the Mac mode, so re-read it when the mode changes here or on another client.
   const refreshDriver = useRef(driver.refresh);
@@ -124,30 +126,39 @@ export function ComputerUseSettings() {
     return () => clearInterval(timer);
   }, [preparing]);
 
-  const run = async (input: ComputerUseControlInput) => {
-    if (environmentId === null) return;
-    const confirmation = vmConfirmation(input);
-    if (confirmation !== null && !window.confirm(confirmation)) return;
+  /** Runs one control action; resolves with its failure message, or `null`. */
+  const send = async (input: ComputerUseControlInput): Promise<string | null> => {
+    if (environmentId === null) return "This environment isn't connected.";
     setPending(input.action);
     try {
       const result = await control({ environmentId, input });
-      if (result._tag === "Failure" && !isAtomCommandInterrupted(result)) {
-        const error = squashAtomCommandFailure(result);
-        toastManager.add({
-          type: "error",
-          title: controlFailureTitle(input.action),
-          description:
-            isControlError(error) && error.detail.length > 0
-              ? error.detail
-              : error instanceof Error
-                ? error.message
-                : "The operation failed.",
-        });
-      }
+      if (result._tag === "Success" || isAtomCommandInterrupted(result)) return null;
+      const error = squashAtomCommandFailure(result);
+      return isControlError(error) && error.detail.length > 0
+        ? error.detail
+        : error instanceof Error
+          ? error.message
+          : "The operation failed.";
     } finally {
       setPending(null);
       driver.refresh();
     }
+  };
+  const run = async (input: ComputerUseControlInput) => {
+    // The setup desktop opens in Rove; the dialog starts the VM and shows its errors.
+    if (input.action === "open-vm-display") {
+      setSetupDesktopOpen(true);
+      return;
+    }
+    const confirmation = vmConfirmation(input);
+    if (confirmation !== null && !window.confirm(confirmation)) return;
+    const failure = await send(input);
+    if (failure !== null)
+      toastManager.add({
+        type: "error",
+        title: controlFailureTitle(input.action),
+        description: failure,
+      });
   };
 
   return (
@@ -156,7 +167,7 @@ export function ComputerUseSettings() {
         {...searchableSetting("agent-computer-use")}
         serverScoped
         settingKeys={["enableAgentComputerUse"]}
-        description="Use Cua Driver for background-only app control on Mac and Windows, or a private, offline Linux desktop per thread. Linux apps and files are temporary and cannot access the project or host desktop. Turning this off discards Linux desktops and quits a Mac daemon Rove started."
+        description="Use Cua Driver for background-only app control on Mac and Windows, or a private, offline Linux desktop per thread. Linux apps and files are temporary and cannot access the project or host desktop; watch them in the thread's Device panel. Turning this off discards Linux desktops and quits a Mac daemon Rove started."
         control={
           <ScopedSwitch
             settingKeys={["enableAgentComputerUse"]}
@@ -174,7 +185,7 @@ export function ComputerUseSettings() {
           {...searchableSetting("computer-use-macos-mode")}
           serverScoped
           settingKeys={["computerUseMacosMode"]}
-          description="The isolated VM runs apps in a private macOS virtual machine, so agents never touch your desktop. Apple Silicon only. Needs about 150 GB of disk."
+          description="The isolated VM runs apps in a private macOS virtual machine, so agents never touch your desktop. Apple Silicon only. Needs about 150 GB of disk. Lume's password-protected VNC server may also be reachable on this Mac's network. Rove connects locally; use only on trusted networks."
           control={
             <Select
               value={settings.computerUseMacosMode}
@@ -239,7 +250,12 @@ export function ComputerUseSettings() {
                         ? "outline"
                         : "ghost"
                   }
-                  disabled={busy || environmentId === null}
+                  disabled={
+                    busy ||
+                    environmentId === null ||
+                    action.disabled === true ||
+                    (action.input.action === "open-vm-display" && !canOperate)
+                  }
                   onClick={() => void run(action.input)}
                 >
                   {pending === action.input.action
@@ -247,15 +263,20 @@ export function ComputerUseSettings() {
                     : action.label}
                 </Button>
               ))}
+              {isDiskBlocked(vm) ? (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  disabled={busy || environmentId === null}
+                  onClick={driver.refresh}
+                >
+                  {driver.isPending ? "Checking…" : "Check again"}
+                </Button>
+              ) : null}
             </div>
           }
         >
-          <VmSetupDetails
-            vm={vm}
-            now={now}
-            busy={busy || environmentId === null}
-            onManualSetup={() => setManualSetupOpen(true)}
-          />
+          <VmSetupDetails vm={vm} now={now} />
         </SettingsRow>
       ) : (
         <SettingsRow
@@ -304,15 +325,17 @@ export function ComputerUseSettings() {
           }
         />
       ) : null}
-      {vm?.setupCommand !== undefined ? (
-        <VmManualSetupDialog
-          open={manualSetupOpen && vm.state === "needs-consent"}
+      {vm !== null && environmentId !== null ? (
+        <VmSetupDesktopDialog
+          open={setupDesktopVisible}
+          environmentId={environmentId}
           setupCommand={vm.setupCommand}
-          busy={busy || environmentId === null}
-          onOpenChange={setManualSetupOpen}
-          onOpenVm={() => void run({ action: "open-vm-display" })}
+          preparing={preparing}
+          busy={busy}
+          onOpenChange={setSetupDesktopOpen}
+          onStart={() => send({ action: "open-vm-display" })}
           onVerify={() => {
-            setManualSetupOpen(false);
+            setSetupDesktopOpen(false);
             void run({ action: "verify-vm" });
           }}
         />
@@ -322,17 +345,7 @@ export function ComputerUseSettings() {
 }
 
 /** The VM's setup checklist, background progress, and the last preparation error. */
-function VmSetupDetails({
-  vm,
-  now,
-  busy,
-  onManualSetup,
-}: {
-  vm: ComputerUseMacosVm;
-  now: number;
-  busy: boolean;
-  onManualSetup: () => void;
-}) {
+function VmSetupDetails({ vm, now }: { vm: ComputerUseMacosVm; now: number }) {
   const current = vmSetupStep(vm);
   if (current === null && vm.lastError === undefined) return null;
   const currentIndex = VM_SETUP_STEPS.findIndex((step) => step.id === current);
@@ -373,16 +386,6 @@ function VmSetupDetails({
                       {step.label}
                       {done ? <span className="sr-only">, done</span> : null}
                     </span>
-                    {active && step.id === "permissions" && vm.setupCommand !== undefined ? (
-                      <Button
-                        size="xs"
-                        variant="ghost-muted"
-                        disabled={busy}
-                        onClick={onManualSetup}
-                      >
-                        Set up manually
-                      </Button>
-                    ) : null}
                   </div>
                   {active && progress !== null ? (
                     <div className="max-w-sm space-y-1.5">
@@ -406,64 +409,5 @@ function VmSetupDetails({
         </p>
       ) : null}
     </div>
-  );
-}
-
-/** Fallback for the permissions step when Rove's automatic setup inside the VM didn't finish. */
-function VmManualSetupDialog({
-  open,
-  setupCommand,
-  busy,
-  onOpenChange,
-  onOpenVm,
-  onVerify,
-}: {
-  open: boolean;
-  setupCommand: string;
-  busy: boolean;
-  onOpenChange: (open: boolean) => void;
-  onOpenVm: () => void;
-  onVerify: () => void;
-}) {
-  const { copyToClipboard, isCopied } = useCopyToClipboard({ target: "setup script" });
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogPopup className="max-w-lg">
-        <DialogHeader>
-          <DialogTitle>Set up the VM manually</DialogTitle>
-          <DialogDescription>
-            Use this if Verify still fails after you approve the prompts.
-          </DialogDescription>
-        </DialogHeader>
-        <DialogPanel>
-          <div className="space-y-3 text-sm">
-            <ol className="list-decimal space-y-1 pl-5 text-muted-foreground">
-              <li>Open the VM and launch Terminal there, not on this Mac.</li>
-              <li>Paste and run the script below.</li>
-              <li>Approve every Accessibility and Screen Recording prompt.</li>
-              <li>Select Verify.</li>
-            </ol>
-            <pre className="max-h-48 overflow-auto whitespace-pre-wrap break-all rounded-xl bg-muted/50 p-3 font-mono text-xs">
-              {setupCommand}
-            </pre>
-            <Button size="sm" variant="outline" onClick={() => copyToClipboard(setupCommand)}>
-              {isCopied ? <CheckIcon /> : <CopyIcon />}
-              {isCopied ? "Copied" : "Copy script"}
-            </Button>
-          </div>
-        </DialogPanel>
-        <DialogFooter variant="bare">
-          <Button variant="ghost" onClick={() => onOpenChange(false)}>
-            Close
-          </Button>
-          <Button variant="outline" disabled={busy} onClick={onOpenVm}>
-            Open VM
-          </Button>
-          <Button disabled={busy} onClick={onVerify}>
-            Verify
-          </Button>
-        </DialogFooter>
-      </DialogPopup>
-    </Dialog>
   );
 }

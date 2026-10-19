@@ -568,6 +568,8 @@ const CoreWsRpcGroup = ServerWsRpcGroup.omit(
   WS_METHODS.sandboxLink,
   WS_METHODS.computerUseStatus,
   WS_METHODS.computerUseControl,
+  WS_METHODS.subscribeComputerDesktops,
+  WS_METHODS.computerDesktopViewer,
   WS_METHODS.worktreeInventoryList,
   WS_METHODS.worktreeInventoryInspect,
   WS_METHODS.worktreeInventoryMeasure,
@@ -593,6 +595,13 @@ const layerRoveWsRpc = Layer.unwrap(
       ServerWsRpcGroup.toLayerHandler(WS_METHODS.sandboxCreate, (input) => sandboxes.create(input)),
       ServerWsRpcGroup.toLayerHandler(WS_METHODS.sandboxAction, (input) => sandboxes.action(input)),
       ServerWsRpcGroup.toLayerHandler(WS_METHODS.sandboxLink, (input) => sandboxes.link(input)),
+      ServerWsRpcGroup.toLayerHandler(
+        WS_METHODS.subscribeComputerDesktops,
+        () => cuaDriver.desktopChanges,
+      ),
+      ServerWsRpcGroup.toLayerHandler(WS_METHODS.computerDesktopViewer, (input) =>
+        cuaDriver.desktopViewer(input.desktopId),
+      ),
       ServerWsRpcGroup.toLayerHandler(WS_METHODS.computerUseStatus, () => cuaDriver.status),
       ServerWsRpcGroup.toLayerHandler(WS_METHODS.computerUseControl, (input) =>
         cuaDriver.control(input),

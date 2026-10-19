@@ -16,6 +16,7 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
+import * as Option from "effect/Option";
 import * as Queue from "effect/Queue";
 import * as Schema from "effect/Schema";
 import * as Stream from "effect/Stream";
@@ -649,6 +650,38 @@ it.effect("keeps Linux captures private to each thread and permits guest-only me
       expect(
         (yield* driver.call("parse_visual_regions", { capture_id: captureId }, threadId)).isError,
       ).toBe(true);
+    }),
+  ),
+);
+
+it.effect("revokes thread viewers and streams removal when computer use is disabled", () =>
+  withDriver({ installed: true, platform: "linux" }, ({ driver, settingsChanges }) =>
+    Effect.scoped(
+      Effect.gen(function* () {
+        const pull = yield* Stream.toPull(driver.desktopChanges);
+        expect((yield* pull)[0]).toMatchObject({ mode: "isolated", desktops: [] });
+        yield* driver.catalog(threadId);
+        const id = (yield* pull)[0]!.desktops[0]!.id;
+        const connection = yield* driver.desktopConnection(id);
+        yield* Queue.offer(settingsChanges, {
+          ...DEFAULT_SERVER_SETTINGS,
+          enableAgentComputerUse: false,
+        });
+        yield* connection.closed;
+        expect((yield* pull)[0]!.desktops).toEqual([]);
+        expect((yield* driver.desktopViewer(id).pipe(Effect.flip))._tag).toBe(
+          "ComputerDesktopViewerError",
+        );
+      }),
+    ),
+  ),
+);
+
+it.effect("reports host mode without a viewable desktop on macOS", () =>
+  withDriver({ installed: true }, ({ driver }) =>
+    Effect.gen(function* () {
+      const state = yield* Stream.runHead(driver.desktopChanges);
+      expect(Option.getOrThrow(state)).toMatchObject({ mode: "host", desktops: [] });
     }),
   ),
 );

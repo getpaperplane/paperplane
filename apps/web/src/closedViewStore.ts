@@ -78,10 +78,15 @@ const isClosedViewEntry = (entry: unknown): entry is ClosedViewEntry => {
         (surface.title === undefined || typeof surface.title === "string") &&
         (surface.target === undefined ||
           (surface.target !== null &&
-            typeof surface.target.hostId === "string" &&
-            typeof surface.target.deviceId === "string" &&
             typeof surface.target.name === "string" &&
-            (surface.target.platform === "ios" || surface.target.platform === "android")))
+            (surface.target.kind === "computer"
+              ? typeof surface.target.desktopId === "string" &&
+                (surface.target.desktopKind === "linux" ||
+                  surface.target.desktopKind === "macos-vm")
+              : (surface.target.kind === undefined || surface.target.kind === "simulator") &&
+                typeof surface.target.hostId === "string" &&
+                typeof surface.target.deviceId === "string" &&
+                (surface.target.platform === "ios" || surface.target.platform === "android"))))
       );
     case "pull-request":
       return (
