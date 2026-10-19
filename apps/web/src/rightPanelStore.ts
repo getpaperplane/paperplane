@@ -52,7 +52,7 @@ export interface ComputerTabTarget {
 
 export type DeviceTabTarget = SimulatorTabTarget | ComputerTabTarget;
 
-export function isDeviceTabTarget(value: unknown): value is DeviceTabTarget {
+function isDeviceTabTarget(value: unknown): value is DeviceTabTarget {
   if (!value || typeof value !== "object") return false;
   const target = value as Record<string, unknown>;
   if (typeof target.name !== "string") return false;
@@ -73,7 +73,7 @@ export function isDeviceTabTarget(value: unknown): value is DeviceTabTarget {
  * One tab per simulator or desktop. `@` is always escaped by
  * `encodeURIComponent`, so a desktop id can never collide with a host id.
  */
-export function deviceSurfaceId(target: DeviceTabTarget): `device:${string}` {
+function deviceSurfaceId(target: DeviceTabTarget): `device:${string}` {
   return target.kind === "computer"
     ? `device:@computer:${encodeURIComponent(target.desktopId)}`
     : `device:${encodeURIComponent(target.hostId)}:${encodeURIComponent(target.deviceId)}`;
