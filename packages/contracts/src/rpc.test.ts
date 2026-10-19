@@ -46,6 +46,8 @@ describe("WebSocket RPC contracts", () => {
         WS_METHODS.worktreeInventoryRemove,
         WS_METHODS.computerUseStatus,
         WS_METHODS.computerUseControl,
+        WS_METHODS.subscribeComputerDesktops,
+        WS_METHODS.computerDesktopViewer,
         WS_METHODS.piGetCatalog,
         WS_METHODS.piRefreshCatalog,
       ]),

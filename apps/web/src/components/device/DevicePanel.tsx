@@ -5,20 +5,32 @@ import type {
   DeviceSummary,
   ScopedThreadRef,
 } from "@rove-code/contracts";
-import { Smartphone, X } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { threadComputerDesktops } from "@rove-code/client-runtime/state/computer-use";
+import { Monitor, Smartphone, X } from "lucide-react";
+import { useAtomValue } from "@effect/atom-react";
 import { useEffect, useMemo, useState } from "react";
 
-import { usePreviewMiniPlayerStore } from "~/previewMiniPlayerStore";
-import { useRightPanelStore, type RightPanelSurface } from "~/rightPanelStore";
+import { useEnvironmentSettings } from "~/hooks/useSettings";
+
+import { deviceMiniPlayerSource, usePreviewMiniPlayerStore } from "~/previewMiniPlayerStore";
+import {
+  type ComputerTabTarget,
+  useRightPanelStore,
+  type RightPanelSurface,
+} from "~/rightPanelStore";
 import { Button } from "~/components/ui/button";
 import { DiscoveryList, DiscoveryListRow } from "~/components/ui/discovery-list";
 import { Dialog } from "~/components/ui/dialog";
 import { WizardPopup } from "~/components/ui/wizard";
 import { Spinner } from "~/components/ui/spinner";
 import { cn } from "~/lib/utils";
+import { computerUseEnvironment, useComputerDesktops } from "~/state/computerUse";
 import { deviceEnvironment, useDeviceState } from "~/state/device";
 import { formatEnvironmentQueryError } from "~/state/query";
 import { useAtomCommand } from "~/state/use-atom-command";
+import { ComputerDesktopView } from "./ComputerDesktopView";
+import { computerPickerNote, computerTabTarget } from "./computerDesktops.logic";
 import { DeviceLoadingView } from "./DeviceLoadingView";
 import { DeviceSetup, deviceHubReadiness } from "./DeviceSetup";
 import { DeviceWorkspace } from "./DeviceWorkspace";
@@ -30,16 +42,87 @@ const platformLabel = (platform: DevicePlatform) =>
 const deviceKey = (device: Pick<DeviceSummary, "hostId" | "id">) =>
   `${device.hostId}\u0000${device.id}`;
 
-/** Each surface owns one host/device; only the visible surface streams. */
-export function DevicePanel(props: {
+type DevicePanelProps = {
   readonly mode: PreviewPanelMode;
   readonly threadRef: ScopedThreadRef;
   readonly surface: Extract<RightPanelSurface, { kind: "device" }>;
   readonly visible: boolean;
   readonly onDismissSetup: () => void;
-}) {
+};
+
+/** Each surface owns one host/device or computer desktop; only the visible surface streams. */
+export function DevicePanel(props: DevicePanelProps) {
+  const target = props.surface.target;
+  return target?.kind === "computer" ? (
+    <ComputerDesktopSurface {...props} target={target} />
+  ) : (
+    <SimulatorPanel {...props} />
+  );
+}
+
+/**
+ * A desktop tab. It renders while the desktop is listed; once the stream drops
+ * it, ChatView closes the tab, so there is no "missing desktop" state here.
+ */
+function ComputerDesktopSurface(props: DevicePanelProps & { readonly target: ComputerTabTarget }) {
+  const { environmentId } = props.threadRef;
+  const canView = useAtomValue(computerUseEnvironment.viewer.permissionAtom(environmentId));
+  const floatDesktop = () => {
+    usePreviewMiniPlayerStore
+      .getState()
+      .open(props.threadRef, deviceMiniPlayerSource(props.target));
+    useRightPanelStore.getState().close(props.threadRef);
+  };
+  return (
+    <PreviewPanelShell mode={props.mode}>
+      <div className="flex items-center gap-2 border-b px-3 py-1.5 text-xs text-muted-foreground">
+        <Monitor className="size-3.5 shrink-0" />
+        <span className="min-w-0 flex-1 truncate">
+          {props.target.desktopKind === "linux"
+            ? "Private Linux desktop. Click the screen to type."
+            : "Isolated macOS VM. Click the screen to type."}
+        </span>
+        <Button size="xs" variant="ghost" onClick={floatDesktop}>
+          Float over chat
+        </Button>
+      </div>
+      <div className="relative flex min-h-0 flex-1">
+        {canView ? (
+          <ComputerDesktopView
+            environmentId={environmentId}
+            desktopId={props.target.desktopId}
+            desktopKind={props.target.desktopKind}
+            name={props.surface.title ?? props.target.name}
+            visible={props.visible}
+          />
+        ) : (
+          <p className="p-3 text-xs text-muted-foreground">Needs operate access to view</p>
+        )}
+      </div>
+    </PreviewPanelShell>
+  );
+}
+
+function SimulatorPanel(props: DevicePanelProps) {
   const { environmentId, threadId } = props.threadRef;
+  const canView = useAtomValue(computerUseEnvironment.viewer.permissionAtom(environmentId));
   const { state, loaded } = useDeviceState(environmentId);
+  const { state: computerState } = useComputerDesktops(environmentId);
+  const computerUseEnabled = useEnvironmentSettings(
+    environmentId,
+    (settings) => settings.enableAgentComputerUse,
+  );
+  const desktops = useMemo(
+    () => threadComputerDesktops(computerState, threadId),
+    [computerState, threadId],
+  );
+  const computerNote = computerPickerNote({
+    mode: computerState.mode,
+    enabled: computerUseEnabled,
+    desktopCount: desktops.length,
+  });
+  // Desktops don't need the device hub, so a Linux host with no simulators can still watch them.
+  const [simulatorSetupOpen, setSimulatorSetupOpen] = useState(false);
   const list = useAtomCommand(deviceEnvironment.list, { reportFailure: false });
   const open = useAtomCommand(deviceEnvironment.open);
   const close = useAtomCommand(deviceEnvironment.close);
@@ -48,6 +131,7 @@ export function DevicePanel(props: {
   const pendingDeviceKey = pendingDevice ? deviceKey(pendingDevice) : null;
 
   const hostDisabled = state.hostStatus === "disabled";
+  const hubNeedsSetup = loaded && (!state.onboardingCompleted || hostDisabled);
 
   // Opening setup never grants permission to install or start helpers.
   useEffect(() => {
@@ -59,11 +143,10 @@ export function DevicePanel(props: {
     () => state.sessions.filter((session) => session.threadId === threadId),
     [state.sessions, threadId],
   );
-  const activeSession = props.surface.target
+  const target = props.surface.target?.kind === "computer" ? undefined : props.surface.target;
+  const activeSession = target
     ? sessions.find(
-        (session) =>
-          session.deviceId === props.surface.target?.deviceId &&
-          session.hostId === props.surface.target.hostId,
+        (session) => session.deviceId === target.deviceId && session.hostId === target.hostId,
       )
     : undefined;
   const activeDevice = activeSession
@@ -73,6 +156,9 @@ export function DevicePanel(props: {
     : undefined;
 
   const grouped = useMemo(() => groupDevices(state), [state]);
+
+  const openDesktop = (desktop: (typeof desktops)[number]) =>
+    useRightPanelStore.getState().openDevice(props.threadRef, computerTabTarget(desktop));
 
   const selectDevice = async (value: string) => {
     const device = state.devices.find((candidate) => deviceKey(candidate) === value);
@@ -105,13 +191,15 @@ export function DevicePanel(props: {
   // Floating the device closes the panel, like the browser's floating preview.
   const floatActive = () => {
     if (!activeDevice) return;
-    usePreviewMiniPlayerStore.getState().open(props.threadRef, {
-      kind: "device",
-      hostId: activeDevice.hostId,
-      deviceId: activeDevice.id,
-      platform: activeDevice.platform,
-      name: activeDevice.name,
-    });
+    usePreviewMiniPlayerStore.getState().open(
+      props.threadRef,
+      deviceMiniPlayerSource({
+        hostId: activeDevice.hostId,
+        deviceId: activeDevice.id,
+        platform: activeDevice.platform,
+        name: activeDevice.name,
+      }),
+    );
     useRightPanelStore.getState().close(props.threadRef);
   };
 
@@ -145,7 +233,54 @@ export function DevicePanel(props: {
       .map((platform) => ({ ...platform, hostId: host.id, hostLabel: host.label })),
   );
 
-  if (loaded && (!state.onboardingCompleted || hostDisabled)) {
+  const computersSection =
+    desktops.length > 0 || computerNote !== null ? (
+      <section className="w-full space-y-3 text-left">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Monitor className="size-4 shrink-0" />
+          <h3 className="font-medium">Computers</h3>
+        </div>
+        {desktops.length > 0 && !canView ? (
+          <p className="text-xs text-muted-foreground">Needs operate access to view</p>
+        ) : desktops.length > 0 ? (
+          <DiscoveryList>
+            {desktops.map((desktop) => (
+              <DiscoveryListRow
+                key={desktop.id}
+                icon={
+                  <span className="grid size-8 shrink-0 place-items-center rounded-md border border-border/60">
+                    <Monitor className="size-4" />
+                  </span>
+                }
+                title={desktop.name}
+                description={`${desktop.kind === "linux" ? "Private Linux desktop" : "Isolated macOS VM"} · ${desktop.role === "setup" ? "Setup" : "This thread"}`}
+                aria-label={`Open ${desktop.name}`}
+                onClick={() => openDesktop(desktop)}
+                action={<span className="text-xs text-muted-foreground">Open</span>}
+              />
+            ))}
+          </DiscoveryList>
+        ) : computerNote === "host" ? (
+          <p className="text-xs">
+            Computer use acts on this Mac's apps in the background, so there's no separate desktop
+            to show.{" "}
+            <Link
+              to="/settings/integrations"
+              hash="computer-use"
+              className="underline underline-offset-4 hover:text-foreground"
+            >
+              Computer use settings
+            </Link>
+          </p>
+        ) : (
+          <p className="text-xs">
+            A desktop appears here once an agent uses computer use in this thread.
+          </p>
+        )}
+      </section>
+    ) : null;
+
+  if (hubNeedsSetup && desktops.length === 0) {
     return (
       <Dialog
         open={props.visible}
@@ -157,6 +292,36 @@ export function DevicePanel(props: {
           <DeviceSetup environmentId={environmentId} state={state} />
         </WizardPopup>
       </Dialog>
+    );
+  }
+
+  if (hubNeedsSetup) {
+    return (
+      <PreviewPanelShell mode={props.mode}>
+        <div className="scrollbar-gutter-both flex size-full flex-col overflow-y-auto px-5 py-8 text-sm text-muted-foreground">
+          <div className="mx-auto flex w-full max-w-xl flex-col gap-6">
+            {computersSection}
+            <Button
+              className="self-start"
+              variant="ghost"
+              size="sm"
+              onClick={() => setSimulatorSetupOpen(true)}
+            >
+              <Smartphone />
+              Set up simulators
+            </Button>
+          </div>
+        </div>
+        <Dialog open={props.visible && simulatorSetupOpen} onOpenChange={setSimulatorSetupOpen}>
+          <WizardPopup>
+            <DeviceSetup
+              environmentId={environmentId}
+              state={state}
+              onComplete={() => setSimulatorSetupOpen(false)}
+            />
+          </WizardPopup>
+        </Dialog>
+      </PreviewPanelShell>
     );
   }
 
@@ -231,13 +396,14 @@ export function DevicePanel(props: {
             <div
               className={cn(
                 "mx-auto flex w-full max-w-xl flex-col gap-6",
-                grouped.length === 0 && "my-auto items-center text-center",
+                grouped.length === 0 && !computersSection && "my-auto items-center text-center",
               )}
             >
+              {computersSection}
               {grouped.length === 0 ? (
                 <>
-                  <Smartphone className="size-6 opacity-60" />
-                  <p className="max-w-sm">
+                  {computersSection ? null : <Smartphone className="size-6 opacity-60" />}
+                  <p className={computersSection ? "text-xs" : "max-w-sm"}>
                     {state.hostStatus === "failed"
                       ? (state.hostStatusDetail ?? "The device hub failed to start.")
                       : "No simulators or emulators were found on this environment."}
@@ -292,8 +458,8 @@ export function DevicePanel(props: {
               ) : null}
               {loaded && !hostBusy ? (
                 <Button
-                  className={grouped.length > 0 ? "self-start" : "self-center"}
-                  variant={grouped.length > 0 ? "ghost" : "outline"}
+                  className={grouped.length > 0 || computersSection ? "self-start" : "self-center"}
+                  variant={grouped.length > 0 || computersSection ? "ghost" : "outline"}
                   size="sm"
                   onClick={() => void list({ environmentId, input: {} })}
                 >

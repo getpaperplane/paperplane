@@ -2,6 +2,8 @@ import { scopedThreadKey } from "@rove-code/client-runtime/environment";
 import type { DevicePlatform, ScopedThreadRef } from "@rove-code/contracts";
 import { create } from "zustand";
 
+import type { DeviceTabTarget } from "./rightPanelStore";
+
 export interface PreviewMiniPlayerPosition {
   readonly x: number;
   readonly y: number;
@@ -12,7 +14,7 @@ export interface PreviewMiniPlayerSize {
   readonly height: number;
 }
 
-/** What the floating player mirrors: a browser tab or a device stream. */
+/** What the floating player mirrors: a browser tab, a device stream, or a computer desktop. */
 export type PreviewMiniPlayerSource =
   | { readonly kind: "browser"; readonly tabId: string }
   | {
@@ -20,6 +22,12 @@ export type PreviewMiniPlayerSource =
       readonly hostId: string;
       readonly deviceId: string;
       readonly platform: DevicePlatform;
+      readonly name: string;
+    }
+  | {
+      readonly kind: "computer";
+      readonly desktopId: string;
+      readonly desktopKind: "linux" | "macos-vm";
       readonly name: string;
     };
 
@@ -51,9 +59,51 @@ interface PreviewMiniPlayerStoreState {
 }
 
 export function previewMiniPlayerSourceKey(source: PreviewMiniPlayerSource): string {
-  return source.kind === "browser"
-    ? `browser:${source.tabId}`
-    : `device:${encodeURIComponent(source.hostId)}:${encodeURIComponent(source.deviceId)}`;
+  switch (source.kind) {
+    case "browser":
+      return `browser:${source.tabId}`;
+    case "device":
+      return `device:${encodeURIComponent(source.hostId)}:${encodeURIComponent(source.deviceId)}`;
+    case "computer":
+      return `computer:${encodeURIComponent(source.desktopId)}`;
+  }
+}
+
+/** Floats the simulator or desktop a Device panel tab shows. */
+export function deviceMiniPlayerSource(target: DeviceTabTarget): PreviewMiniPlayerSource {
+  return target.kind === "computer"
+    ? {
+        kind: "computer",
+        desktopId: target.desktopId,
+        desktopKind: target.desktopKind,
+        name: target.name,
+      }
+    : {
+        kind: "device",
+        hostId: target.hostId,
+        deviceId: target.deviceId,
+        platform: target.platform,
+        name: target.name,
+      };
+}
+
+/** The Device panel tab target for a floating device or desktop. */
+export function deviceTabTargetOfMiniPlayerSource(
+  source: Exclude<PreviewMiniPlayerSource, { kind: "browser" }>,
+): DeviceTabTarget {
+  return source.kind === "computer"
+    ? {
+        kind: "computer",
+        desktopId: source.desktopId,
+        desktopKind: source.desktopKind,
+        name: source.name,
+      }
+    : {
+        hostId: source.hostId,
+        deviceId: source.deviceId,
+        platform: source.platform,
+        name: source.name,
+      };
 }
 
 export const browserMiniPlayerSource = (tabId: string): PreviewMiniPlayerSource => ({

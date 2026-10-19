@@ -18,6 +18,7 @@ const licenseGeneratorSource = path.join(
 const escapedWorkspaceRoot = workspaceRoot.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 const mobileShikiRoot = path.dirname(require.resolve("shiki/package.json", { paths: [__dirname] }));
 const generatedDeviceStreamRoot = path.join(__dirname, ".generated", "device-stream");
+const generatedDesktopStreamRoot = path.join(__dirname, ".generated", "desktop-stream");
 const generatedPreviewStreamRoot = path.join(__dirname, ".generated", "preview-stream");
 const resolveShikiDependencyRoot = (packageName) => {
   const entryPath = require.resolve(packageName, { paths: [mobileShikiRoot] });
@@ -49,6 +50,7 @@ config.resolver = {
     ...config.resolver?.extraNodeModules,
     "@rove-code/mobile-third-party-licenses": generatedLicenseModuleRoot,
     "@rove-code/mobile-device-stream": generatedDeviceStreamRoot,
+    "@rove-code/mobile-desktop-stream": generatedDesktopStreamRoot,
     "@rove-code/mobile-preview-stream": generatedPreviewStreamRoot,
     shiki: mobileShikiRoot,
     "@shikijs/core": resolveShikiDependencyRoot("@shikijs/core"),
@@ -98,11 +100,14 @@ async function generateMobileThirdPartyLicenses() {
 }
 
 async function prepareStreamScripts() {
-  const { generateDeviceStreamScript, generatePreviewStreamScript } = await import(
-    pathToFileURL(path.join(__dirname, "scripts", "generate-device-stream.mts")).href
-  );
+  const { generateDeviceStreamScript, generateDesktopStreamScript, generatePreviewStreamScript } =
+    await import(pathToFileURL(path.join(__dirname, "scripts", "generate-device-stream.mts")).href);
   const generateAll = () =>
-    Promise.all([generateDeviceStreamScript(), generatePreviewStreamScript()]);
+    Promise.all([
+      generateDeviceStreamScript(),
+      generateDesktopStreamScript(),
+      generatePreviewStreamScript(),
+    ]);
   await generateAll();
   if (process.env.NODE_ENV !== "production") {
     let rebuild = Promise.resolve();
@@ -111,6 +116,11 @@ async function prepareStreamScripts() {
         "apps/mobile/src/features/devices",
         ["device-stream.browser.ts"],
         generateDeviceStreamScript,
+      ],
+      [
+        "apps/mobile/src/features/devices",
+        ["desktop-stream.browser.ts"],
+        generateDesktopStreamScript,
       ],
       [
         "apps/mobile/src/features/browser",

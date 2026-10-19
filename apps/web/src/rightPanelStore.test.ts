@@ -173,6 +173,83 @@ describe("rightPanelStore", () => {
     ).toHaveLength(0);
   });
 
+  it("keys computer desktops apart from simulators and drops their tabs when they vanish", () => {
+    const store = useRightPanelStore.getState();
+    const desktop = {
+      kind: "computer",
+      desktopId: "abc",
+      desktopKind: "linux",
+      name: "Linux desktop",
+    } as const;
+    // A host literally named "@computer" still gets its own tab.
+    store.openDevice(refA, {
+      hostId: "@computer",
+      deviceId: "abc",
+      name: "Pixel",
+      platform: "android",
+    });
+    store.openDevice(refA, desktop);
+    const ids = () =>
+      selectThreadRightPanelState(useRightPanelStore.getState().byThreadKey, refA).surfaces.map(
+        (surface) => surface.id,
+      );
+    expect(ids()).toEqual(["device:%40computer:abc", "device:@computer:abc"]);
+
+    store.closeSurface(refA, "device:@computer:abc");
+    store.openDevice(refA, desktop, true);
+    expect(ids()).toEqual(["device:%40computer:abc"]);
+
+    store.openDevice(refA, desktop);
+    store.reconcileComputerSurfaces(refA, new Set(["abc"]));
+    expect(ids()).toHaveLength(2);
+    store.reconcileComputerSurfaces(refA, new Set());
+    const state = selectThreadRightPanelState(useRightPanelStore.getState().byThreadKey, refA);
+    expect(state.surfaces.map((surface) => surface.id)).toEqual(["device:%40computer:abc"]);
+    expect(state.activeSurfaceId).toBe("device:%40computer:abc");
+  });
+
+  it("prunes vanished desktop dismissals even when no open tab is removed", () => {
+    const store = useRightPanelStore.getState();
+    const desktop = {
+      kind: "computer",
+      desktopId: "gone:desktop",
+      desktopKind: "linux",
+      name: "Linux desktop",
+    } as const;
+    store.openDevice(refA, desktop);
+    const id = "device:@computer:gone%3Adesktop";
+    store.closeSurface(refA, id);
+    const state = () =>
+      selectThreadRightPanelState(useRightPanelStore.getState().byThreadKey, refA);
+    expect(state().dismissedDeviceSurfaceIds).toContain(id);
+    store.reconcileComputerSurfaces(refA, new Set([desktop.desktopId]));
+    expect(state().dismissedDeviceSurfaceIds).toContain(id);
+    store.reconcileComputerSurfaces(refA, new Set());
+    expect(state().dismissedDeviceSurfaceIds ?? []).not.toContain(id);
+    expect(state().surfaces).toEqual([]);
+  });
+
+  it("restores persisted simulator targets without a kind and drops malformed targets", () => {
+    const legacy = { hostId: "nucbox", deviceId: "emu", name: "Pixel", platform: "android" };
+    const { byThreadKey } = migratePersistedRightPanelState({
+      byThreadKey: {
+        "env-1:thread-A": {
+          isOpen: true,
+          activeSurfaceId: "device:nucbox:emu",
+          surfaces: [
+            { id: "device:nucbox:emu", kind: "device", target: legacy },
+            { id: "device:@computer:x", kind: "device", target: { kind: "computer", name: "?" } },
+            { id: "device", kind: "device" },
+          ],
+        },
+      },
+    });
+    expect(byThreadKey["env-1:thread-A"]?.surfaces).toEqual([
+      { id: "device:nucbox:emu", kind: "device", target: legacy },
+      { id: "device", kind: "device" },
+    ]);
+  });
+
   it.each(["one", "all", "others", "right"])(
     "keeps device tabs dismissed across reload after closing %s",
     (mode) => {

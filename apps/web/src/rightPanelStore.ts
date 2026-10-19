@@ -33,11 +33,50 @@ const RIGHT_PANEL_KINDS = [
 ] as const;
 export type RightPanelKind = (typeof RIGHT_PANEL_KINDS)[number];
 
-export interface DeviceTabTarget {
+/** A simulator or emulator. Persisted targets from before computer desktops have no `kind`. */
+export interface SimulatorTabTarget {
+  kind?: "simulator";
   hostId: string;
   deviceId: string;
   platform: "ios" | "android";
   name: string;
+}
+
+/** A computer-use private desktop. Closing its tab never stops the desktop. */
+export interface ComputerTabTarget {
+  kind: "computer";
+  desktopId: string;
+  desktopKind: "linux" | "macos-vm";
+  name: string;
+}
+
+export type DeviceTabTarget = SimulatorTabTarget | ComputerTabTarget;
+
+export function isDeviceTabTarget(value: unknown): value is DeviceTabTarget {
+  if (!value || typeof value !== "object") return false;
+  const target = value as Record<string, unknown>;
+  if (typeof target.name !== "string") return false;
+  if (target.kind === "computer")
+    return (
+      typeof target.desktopId === "string" &&
+      (target.desktopKind === "linux" || target.desktopKind === "macos-vm")
+    );
+  return (
+    (target.kind === undefined || target.kind === "simulator") &&
+    typeof target.hostId === "string" &&
+    typeof target.deviceId === "string" &&
+    (target.platform === "ios" || target.platform === "android")
+  );
+}
+
+/**
+ * One tab per simulator or desktop. `@` is always escaped by
+ * `encodeURIComponent`, so a desktop id can never collide with a host id.
+ */
+export function deviceSurfaceId(target: DeviceTabTarget): `device:${string}` {
+  return target.kind === "computer"
+    ? `device:@computer:${encodeURIComponent(target.desktopId)}`
+    : `device:${encodeURIComponent(target.hostId)}:${encodeURIComponent(target.deviceId)}`;
 }
 
 export type RightPanelSurface =
@@ -208,6 +247,8 @@ interface RightPanelStoreState {
     hiddenTabIds?: ReadonlySet<string>,
   ) => void;
   reconcileFileSurfaces: (ref: ScopedThreadRef, workspaceAvailable: boolean) => void;
+  /** Drops tabs whose computer desktop is no longer listed. Never stops a desktop. */
+  reconcileComputerSurfaces: (ref: ScopedThreadRef, liveDesktopIds: ReadonlySet<string>) => void;
   show: (ref: ScopedThreadRef) => void;
   close: (ref: ScopedThreadRef) => void;
   setMaximized: (ref: ScopedThreadRef, maximized: boolean) => void;
@@ -535,6 +576,12 @@ export function migratePersistedRightPanelState(persistedState: unknown): {
                         }),
                       ];
                     }
+                    if (surface.kind === "device") {
+                      // Targets from before computer desktops have no kind: they are simulators.
+                      return surface.target === undefined || isDeviceTabTarget(surface.target)
+                        ? [surface]
+                        : [];
+                    }
                     if (surface.kind !== "terminal") return [surface];
                     if (
                       !("resourceId" in surface) ||
@@ -681,8 +728,7 @@ export const useRightPanelStore = create<RightPanelStoreState>()(
       openDevice: (ref, target, automatic = false) =>
         set((state) =>
           (automatic ? automaticUpdate : userAction)(state, scopedThreadKey(ref), (current) => {
-            const id =
-              `device:${encodeURIComponent(target.hostId)}:${encodeURIComponent(target.deviceId)}` as const;
+            const id = deviceSurfaceId(target);
             if (automatic && current.dismissedDeviceSurfaceIds?.includes(id)) return current;
             const surface: RightPanelSurface = { id, kind: "device", target };
             const existing = current.surfaces.find((entry) => entry.id === id);
@@ -994,6 +1040,40 @@ export const useRightPanelStore = create<RightPanelStoreState>()(
               activeSurfaceId: activeStillExists
                 ? current.activeSurfaceId
                 : (fallbackBrowser?.id ?? surfaces[0]?.id ?? null),
+            };
+          }),
+        ),
+      reconcileComputerSurfaces: (ref, liveDesktopIds) =>
+        set((state) =>
+          automaticUpdate(state, scopedThreadKey(ref), (current) => {
+            const surfaces = current.surfaces.filter(
+              (surface) =>
+                surface.kind !== "device" ||
+                surface.target?.kind !== "computer" ||
+                liveDesktopIds.has(surface.target.desktopId),
+            );
+            // Desktop ids are never reused, so their dismissals can go too.
+            const dismissedDeviceSurfaceIds = current.dismissedDeviceSurfaceIds?.filter(
+              (id) =>
+                !id.startsWith("device:@computer:") ||
+                liveDesktopIds.has(decodeURIComponent(id.slice("device:@computer:".length))),
+            );
+            if (
+              surfaces.length === current.surfaces.length &&
+              dismissedDeviceSurfaceIds?.length === current.dismissedDeviceSurfaceIds?.length
+            )
+              return current;
+            const activeStillExists = surfaces.some(
+              (surface) => surface.id === current.activeSurfaceId,
+            );
+            return {
+              ...current,
+              isOpen: surfaces.length > 0 ? current.isOpen : false,
+              surfaces,
+              ...(dismissedDeviceSurfaceIds ? { dismissedDeviceSurfaceIds } : {}),
+              activeSurfaceId: activeStillExists
+                ? current.activeSurfaceId
+                : (surfaces[surfaces.length - 1]?.id ?? null),
             };
           }),
         ),

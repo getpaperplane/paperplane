@@ -99,9 +99,10 @@ import type { DraftComposerAttachment } from "../../lib/composerImages";
 import { RenderErrorBoundary, RenderFailureView } from "../../components/RenderErrorBoundary";
 import { CHAT_CONTENT_MAX_WIDTH, type LayoutVariant } from "../../lib/layout";
 import { editPendingThreadMessage } from "../../state/edit-pending-thread-message";
+import { useComputerDesktops } from "../../state/computer-use";
 import { deviceEnvironment } from "../../state/device";
 import { useEnvironmentQuery } from "../../state/query";
-import { threadDevicePreviews } from "../devices/threadDevicePreviews";
+import { threadPreviews } from "../devices/threadDevicePreviews";
 import { ThreadBrowserFloat } from "../browser/ThreadBrowserFloat";
 import { useThreadServerBrowserTabs } from "../../state/preview";
 import type { QueuedThreadMessage } from "../../state/thread-outbox-model";
@@ -343,9 +344,10 @@ export const ThreadDetailScreen = memo(function ThreadDetailScreen(props: Thread
   const deviceState = useEnvironmentQuery(
     deviceEnvironment.state({ environmentId: props.environmentId, input: {} }),
   );
+  const computerDesktops = useComputerDesktops(props.environmentId);
   const devicePreviews = useMemo(
-    () => threadDevicePreviews(deviceState.data, props.selectedThread.id),
-    [deviceState.data, props.selectedThread.id],
+    () => threadPreviews(deviceState.data, computerDesktops.state, props.selectedThread.id),
+    [deviceState.data, computerDesktops.state, props.selectedThread.id],
   );
   const openDevicePreview = useCallback(() => {
     Keyboard.dismiss();

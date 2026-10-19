@@ -5,6 +5,8 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
 import * as Schema from "effect/Schema";
+import * as Stream from "effect/Stream";
+import * as ComputerDesktops from "./ComputerDesktops.ts";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
 import * as ProcessRunner from "../processRunner.ts";
@@ -36,6 +38,7 @@ const output = (stdout = "", code = 0, stderr = ""): ProcessRunner.ProcessRunOut
 const withRuntime = <A, E>(
   body: (harness: {
     runtime: LinuxDesktop.Runtime;
+    registry: ComputerDesktops.ComputerDesktops["Service"];
     executable: string;
     runs: Array<ReadonlyArray<string>>;
     containers: Map<
@@ -45,6 +48,7 @@ const withRuntime = <A, E>(
     launch: (transport: LinuxDesktop.Transport) => Effect.Effect<string>;
     setRootless: (enabled: boolean) => void;
     setImage: (enabled: boolean) => void;
+    setRemovalFailure: (enabled: boolean) => void;
   }) => Effect.Effect<A, E, FileSystem.FileSystem | Path.Path>,
 ) =>
   Effect.gen(function* () {
@@ -59,6 +63,7 @@ const withRuntime = <A, E>(
     >();
     let rootless = true;
     let image = true;
+    let removalFailure = false;
     const runner = ProcessRunner.ProcessRunner.of({
       run: ({ args }) =>
         Effect.sync(() => {
@@ -79,6 +84,7 @@ const withRuntime = <A, E>(
               return record ? output(encodeJson([record])) : output("", 1, "no such container");
             }
             case "rm":
+              if (removalFailure) return output("", 1, "removal failed");
               containers.delete(args[3] ?? "");
               return output();
             default:
@@ -86,7 +92,10 @@ const withRuntime = <A, E>(
           }
         }),
     });
+    const registry = yield* ComputerDesktops.make;
+    yield* registry.setMode("isolated");
     const runtime = yield* LinuxDesktop.make().pipe(
+      Effect.provideService(ComputerDesktops.ComputerDesktops, registry),
       Effect.provideService(ProcessRunner.ProcessRunner, runner),
     );
     const launch = (transport: LinuxDesktop.Transport) =>
@@ -108,12 +117,16 @@ const withRuntime = <A, E>(
       });
     return yield* body({
       runtime,
+      registry,
       executable,
       runs,
       containers,
       launch,
       setRootless: (enabled) => {
         rootless = enabled;
+      },
+      setRemovalFailure: (enabled) => {
+        removalFailure = enabled;
       },
       setImage: (enabled) => {
         image = enabled;
@@ -261,6 +274,7 @@ it.effect("reconciles dead boot owners but preserves live servers and unknown ow
           }),
       });
       const restarted = yield* LinuxDesktop.make().pipe(
+        Effect.provide(ComputerDesktops.layer),
         Effect.provideService(ProcessRunner.ProcessRunner, runner),
       );
       yield* restarted.preflight;
@@ -273,5 +287,98 @@ it.effect("reconciles dead boot owners but preserves live servers and unknown ow
       expect(containers.has("foreign-namespace")).toBe(true);
       expect(runs.filter((args) => args[1] === "rm" && args[3] === "dead")).toHaveLength(1);
     }),
+  ),
+);
+
+it.effect("streams thread desktop creation, close and release, excluding control transports", () =>
+  withRuntime(({ runtime, registry, executable, launch, containers }) =>
+    Effect.scoped(
+      Effect.gen(function* () {
+        const pull = yield* Stream.toPull(registry.changes);
+        expect((yield* pull)[0]).toMatchObject({ mode: "isolated", desktops: [], revision: 1 });
+        yield* runtime.connect("control", executable, launch);
+        yield* runtime.connect("thread:one", executable, launch);
+        const created = (yield* pull)[0]!;
+        expect(created.desktops).toHaveLength(1);
+        expect(created.desktops[0]).toMatchObject({
+          kind: "linux",
+          role: "thread",
+          threadId: "one",
+        });
+        const id = created.desktops[0]!.id;
+        expect(id).toMatch(/^[a-zA-Z0-9-]+$/);
+        const viewer = yield* registry.viewer(id);
+        expect(viewer).toEqual({ path: `/api/computer-use/desktops/${id}/vnc`, password: null });
+        const connection = yield* registry.connection(id);
+        expect(yield* connection.endpoint).toMatchObject({
+          kind: "process",
+          transport: {
+            command: "podman",
+            args: [
+              "--remote=false",
+              "exec",
+              "--interactive",
+              expect.any(String),
+              "/usr/local/bin/vnc.sh",
+            ],
+          },
+        });
+        yield* runtime.close("thread:one");
+        yield* connection.closed;
+        expect((yield* pull)[0]).toMatchObject({ desktops: [], revision: created.revision + 1 });
+        expect((yield* registry.viewer(id).pipe(Effect.flip))._tag).toBe(
+          "ComputerDesktopViewerError",
+        );
+        yield* runtime.connect("thread:two", executable, launch);
+        expect((yield* pull)[0]!.desktops[0]).toMatchObject({ threadId: "two" });
+        yield* runtime.release;
+        expect((yield* pull)[0]!.desktops).toEqual([]);
+        expect(containers.size).toBe(0);
+      }),
+    ),
+  ),
+);
+
+it.effect("retains a desktop and its viewers when container removal fails", () =>
+  withRuntime(({ runtime, registry, executable, launch, containers, setRemovalFailure }) =>
+    Effect.gen(function* () {
+      const pull = yield* Stream.toPull(registry.changes);
+      yield* pull;
+      yield* runtime.connect("thread:one", executable, launch);
+      const desktop = (yield* pull)[0]!.desktops[0]!;
+      const connection = yield* registry.connection(desktop.id);
+      setRemovalFailure(true);
+      expect((yield* runtime.close("thread:one").pipe(Effect.flip)).detail).toContain(
+        "Cannot remove owned desktop",
+      );
+      expect(runtime.count()).toBe(1);
+      expect(containers.size).toBe(1);
+      expect(yield* registry.viewer(desktop.id)).toMatchObject({ password: null });
+      expect(yield* connection.endpoint).toMatchObject({ kind: "process" });
+      setRemovalFailure(false);
+      yield* runtime.close("thread:one");
+      yield* connection.closed;
+      expect((yield* pull)[0]!.desktops).toEqual([]);
+      expect(runtime.count()).toBe(0);
+      expect(containers.size).toBe(0);
+    }).pipe(Effect.scoped),
+  ),
+);
+
+it.effect("rechecks container ownership and running state before opening a viewer", () =>
+  withRuntime(({ runtime, registry, executable, launch, containers }) =>
+    Effect.scoped(
+      Effect.gen(function* () {
+        const pull = yield* Stream.toPull(registry.changes);
+        yield* pull;
+        const name = yield* runtime.connect("thread:one", executable, launch);
+        const id = (yield* pull)[0]!.desktops[0]!.id;
+        containers.get(name)!.Config.Labels["io.rove.cua.owner"] = "another-server";
+        expect(yield* registry.viewer(id).pipe(Effect.flip)).toMatchObject({
+          _tag: "ComputerDesktopViewerError",
+          desktopId: id,
+        });
+      }),
+    ),
   ),
 );

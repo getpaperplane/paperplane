@@ -25,6 +25,7 @@
     "@formkit/auto-animate": "^0.9.0",
     "@legendapp/list": "catalog:",
     "@noble/hashes": "catalog:",
+    "@novnc/novnc": "^1.7.0",
     "@pierre/diffs": "catalog:",
     "@pierre/trees": "1.0.0-beta.6",
     "@rove-code/client-runtime": "workspace:*",

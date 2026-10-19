@@ -29,6 +29,7 @@ import { McpSchema } from "effect/ai";
 
 import * as ProcessRunner from "../processRunner.ts";
 import * as ServerSettings from "../serverSettings.ts";
+import * as ComputerDesktops from "./ComputerDesktops.ts";
 import * as LinuxDesktop from "./LinuxDesktop.ts";
 import * as MacosVm from "./MacosVm.ts";
 import {
@@ -122,6 +123,9 @@ const untrustedDetail = (appPath: string) =>
 export class CuaDriver extends Context.Service<
   CuaDriver,
   {
+    readonly desktopChanges: ComputerDesktops.ComputerDesktops["Service"]["changes"];
+    readonly desktopViewer: ComputerDesktops.ComputerDesktops["Service"]["viewer"];
+    readonly desktopConnection: ComputerDesktops.ComputerDesktops["Service"]["connection"];
     readonly status: Effect.Effect<ComputerUseStatus>;
     readonly control: (
       input: ComputerUseControlInput,
@@ -191,10 +195,18 @@ export const make = Effect.fn("CuaDriver.make")(function* (options?: {
     platform === "win32"
       ? "The Windows Cua Driver payload failed Cua's Authenticode signature or release-checksum verification. Reinstall from Settings → Integrations and check the network connection."
       : untrustedDetail(appPath);
-  const desktops = platform === "linux" ? yield* LinuxDesktop.make() : undefined;
+  const registry = yield* ComputerDesktops.make;
+  const desktops =
+    platform === "linux"
+      ? yield* LinuxDesktop.make().pipe(
+          Effect.provideService(ComputerDesktops.ComputerDesktops, registry),
+        )
+      : undefined;
   const vms =
     platform === "darwin"
-      ? yield* MacosVm.make({ arch: options?.arch ?? process.arch })
+      ? yield* MacosVm.make({ arch: options?.arch ?? process.arch }).pipe(
+          Effect.provideService(ComputerDesktops.ComputerDesktops, registry),
+        )
       : undefined;
   let isolatedVm = false;
   let selectedMode: string | undefined;
@@ -289,6 +301,7 @@ export const make = Effect.fn("CuaDriver.make")(function* (options?: {
   });
 
   const releaseUnlocked = Effect.gen(function* () {
+    yield* registry.clear;
     for (const [key, current] of connections) yield* closeConnection(key, current);
     yield* stopOwnedDaemon;
     if (desktops)
@@ -312,7 +325,14 @@ export const make = Effect.fn("CuaDriver.make")(function* (options?: {
     if (selectedMode !== undefined && selectedMode !== current.computerUseMacosMode)
       yield* releaseUnlocked;
     selectedMode = current.computerUseMacosMode;
-    isolatedVm = current.computerUseMacosMode === "isolated-vm";
+    isolatedVm = platform === "darwin" && current.computerUseMacosMode === "isolated-vm";
+    yield* registry.setMode(
+      !supported || (isolatedVm && (options?.arch ?? process.arch) !== "arm64")
+        ? "unavailable"
+        : desktops || isolatedVm
+          ? "isolated"
+          : "host",
+    );
     return current;
   });
 
@@ -737,7 +757,7 @@ export const make = Effect.fn("CuaDriver.make")(function* (options?: {
               if (input.action === "remove-vm") yield* vms.remove;
             } else
               return yield* fail(
-                "Use Prepare VM, Verify VM, Release desktop, or Remove VM in isolated mode.",
+                "Use Prepare VM, Verify VM, Release VM, or Remove VM in isolated mode.",
               );
           }),
         )
@@ -856,18 +876,26 @@ export const make = Effect.fn("CuaDriver.make")(function* (options?: {
   };
 
   // Turning agent computer use off quits the daemon at once rather than after the idle timeout.
+  yield* lock.withPermit(syncModeUnlocked).pipe(Effect.ignore);
   yield* settingsChanges.pipe(
     Stream.runForEach((current) =>
-      !current.enableAgentComputerUse ||
-      (selectedMode !== undefined && selectedMode !== current.computerUseMacosMode)
-        ? release
-        : Effect.void,
+      lock
+        .withPermit(
+          Effect.gen(function* () {
+            if (!current.enableAgentComputerUse) yield* releaseUnlocked;
+            yield* syncModeUnlocked;
+          }),
+        )
+        .pipe(Effect.catch((cause) => Effect.logWarning(cause.detail))),
     ),
     Effect.forkIn(scope),
   );
   yield* Effect.addFinalizer(() => release);
 
   return CuaDriver.of({
+    desktopChanges: registry.changes,
+    desktopViewer: registry.viewer,
+    desktopConnection: registry.connection,
     status,
     control,
     catalog: (threadId) =>

@@ -1,7 +1,15 @@
-import { ThreadId, type DeviceServiceState } from "@rove-code/contracts";
+import {
+  ThreadId,
+  type ComputerDesktopsState,
+  type DeviceServiceState,
+} from "@rove-code/contracts";
 import { describe, expect, it } from "vite-plus/test";
 
-import { selectedThreadDevicePreview, threadDevicePreviews } from "./threadDevicePreviews";
+import {
+  selectedThreadDevicePreview,
+  threadDevicePreviews,
+  threadPreviews,
+} from "./threadDevicePreviews";
 
 const threadId = ThreadId.make("thread");
 const state: DeviceServiceState = {
@@ -102,5 +110,58 @@ describe("thread device previews", () => {
   it("offers no devices before state arrives or in a thread without sessions", () => {
     expect(threadDevicePreviews(null, threadId)).toEqual([]);
     expect(threadDevicePreviews(state, ThreadId.make("empty-thread"))).toEqual([]);
+  });
+});
+
+describe("thread previews with computer desktops", () => {
+  const desktops: ComputerDesktopsState = {
+    mode: "isolated",
+    revision: 1,
+    desktops: [
+      {
+        id: "setup",
+        kind: "macos-vm",
+        role: "setup",
+        threadId: null,
+        name: "Setup VM",
+        startedAt: "2026-09-18T00:00:00Z",
+      },
+      {
+        id: "mine",
+        kind: "linux",
+        role: "thread",
+        threadId,
+        name: "Desktop",
+        startedAt: "2026-09-18T00:00:01Z",
+      },
+      {
+        id: "other",
+        kind: "linux",
+        role: "thread",
+        threadId: ThreadId.make("another-thread"),
+        name: "Other",
+        startedAt: "2026-09-18T00:00:02Z",
+      },
+    ],
+  };
+
+  it("lists devices first, then the thread's desktops, and hides other threads' desktops", () => {
+    const previews = threadPreviews(state, desktops, threadId);
+    expect(previews.map((preview) => preview.kind)).toEqual([
+      "device",
+      "device",
+      "desktop",
+      "desktop",
+    ]);
+    expect(previews.slice(2).map((preview) => preview.name)).toEqual(["Desktop", "Setup VM"]);
+    expect(previews[3]?.description).toBe("Isolated macOS VM");
+  });
+
+  it("offers a desktop alone, with distinct selectable keys", () => {
+    const previews = threadPreviews(null, desktops, threadId);
+    expect(previews).toHaveLength(2);
+    expect(new Set(previews.map((preview) => preview.key)).size).toBe(2);
+    expect(selectedThreadDevicePreview(previews, previews[1]!.key)?.name).toBe("Setup VM");
+    expect(threadPreviews(null, { ...desktops, desktops: [] }, threadId)).toEqual([]);
   });
 });

@@ -30,13 +30,16 @@ export function refreshDeviceHubAccess(environmentId: EnvironmentId) {
   appAtomRegistry.refresh(deviceHubAccessAtom(environmentId));
 }
 
-export function useDeviceHubAccess(environmentId: EnvironmentId, hostId: string) {
+/** `hostId` selects a device host; omit it for streams that are not host-scoped (desktops). */
+export function useDeviceHubAccess(environmentId: EnvironmentId, hostId?: string) {
   const prepared = usePreparedConnection(environmentId);
   const query = useEnvironmentQuery(deviceHubAccessAtom(environmentId));
   const access = useMemo(
     () =>
       query.data && query.error === null && Option.isSome(prepared)
-        ? { ...query.data, query: { ...query.data.query, hostId } }
+        ? hostId === undefined
+          ? query.data
+          : { ...query.data, query: { ...query.data.query, hostId } }
         : null,
     [query.data, query.error, prepared, hostId],
   );

@@ -26,13 +26,15 @@ import {
 } from "../../components/ui/headerMenu.android";
 import type { AppBarMenuItem } from "../../components/ui/AppBar.types";
 import { deviceEnvironment, refreshDeviceHubAccess, useDeviceHubAccess } from "../../state/device";
+import { useComputerDesktops } from "../../state/computer-use";
 import { useEnvironmentQuery } from "../../state/query";
 import { useAtomCommand } from "../../state/use-atom-command";
 import { useAppearancePreferences } from "../settings/appearance/AppearancePreferencesProvider";
 import { DeviceStreamWebView, type DeviceStreamRef } from "./DeviceStreamWebView";
+import { DesktopStreamView } from "./DesktopStreamView";
 import {
   selectedThreadDevicePreview,
-  threadDevicePreviews,
+  threadPreviews,
   type ThreadDevicePreview,
 } from "./threadDevicePreviews";
 import { createShakeDetector } from "./shakeDetector";
@@ -87,11 +89,15 @@ function DevicePreviewScreen({
   const shutdown = useAtomCommand(deviceEnvironment.shutdown, { reportFailure: false });
   const streamRef = useRef<DeviceStreamRef>(null);
   const state = useEnvironmentQuery(deviceEnvironment.state({ environmentId, input: {} }));
+  const desktops = useComputerDesktops(environmentId);
   const previews = useMemo(
-    () => threadDevicePreviews(state.data, threadId),
-    [state.data, threadId],
+    () => threadPreviews(state.data, desktops.state, threadId),
+    [state.data, desktops.state, threadId],
   );
   const preview = selectedThreadDevicePreview(previews, selectedKey);
+  // Narrowed once so device-only controls and shutdown never see a desktop.
+  const devicePreview = preview?.kind === "device" ? preview : null;
+  const isDesktop = preview?.kind === "desktop";
   const onInputConnected = useCallback(async (connected: boolean) => {
     setInputConnected(connected);
     // Controls greet the user while connecting, then get out of the stream's way.
@@ -104,8 +110,9 @@ function DevicePreviewScreen({
     return () => subscription.remove();
   }, []);
   useEffect(() => {
-    if (focused && state.data !== null && previews.length === 0) onClose();
-  }, [focused, state.data, previews.length, onClose]);
+    // Wait for both sources: a desktop snapshot may land after the device state.
+    if (focused && state.data !== null && desktops.settled && previews.length === 0) onClose();
+  }, [focused, state.data, desktops.settled, previews.length, onClose]);
   useEffect(() => {
     if (!focused || !foreground) return;
     const shaken = createShakeDetector();
@@ -128,7 +135,8 @@ function DevicePreviewScreen({
   }, [controlsVisible]);
 
   const shutDownDevice = async () => {
-    if (!preview || shuttingDown) return;
+    if (!devicePreview || shuttingDown) return;
+    const preview = devicePreview;
     setShuttingDown(true);
     try {
       const result = await shutdown({
@@ -147,7 +155,7 @@ function DevicePreviewScreen({
     }
   };
 
-  const controls: AppBarMenuItem[] = [
+  const deviceControls: AppBarMenuItem[] = [
     ...(state.data?.hosts
       .filter(
         (host) =>
@@ -183,16 +191,16 @@ function DevicePreviewScreen({
           deviceToolUpdateOwnership +
             "\n\n" +
             deviceToolUpdatePolicy(
-              state.data?.hosts.find((host) => host.id === preview?.session.hostId)?.tools,
+              state.data?.hosts.find((host) => host.id === devicePreview?.session.hostId)?.tools,
             ) +
             "\n\n" +
             deviceToolVersionLabels(
-              state.data?.hosts.find((host) => host.id === preview?.session.hostId)?.tools,
+              state.data?.hosts.find((host) => host.id === devicePreview?.session.hostId)?.tools,
             ).join("\n") +
             "\n" +
-            (state.data?.hosts.find((host) => host.id === preview?.session.hostId)
+            (state.data?.hosts.find((host) => host.id === devicePreview?.session.hostId)
               ?.toolInspectionError ??
-              state.data?.hostStatuses[preview?.session.hostId ?? ""]?.detail ??
+              state.data?.hostStatuses[devicePreview?.session.hostId ?? ""]?.detail ??
               ""),
         ),
     },
@@ -200,13 +208,13 @@ function DevicePreviewScreen({
       id: "reload",
       title: "Reload stream",
       icon: "arrow.clockwise" as const,
-      disabled: !preview || shuttingDown,
+      disabled: !devicePreview || shuttingDown,
       onPress: () => {
         setInputConnected(false);
         setStreamAttempt((attempt) => attempt + 1);
       },
     },
-    ...(preview?.session.platform === "android"
+    ...(devicePreview?.session.platform === "android"
       ? [
           {
             id: "back",
@@ -224,7 +232,7 @@ function DevicePreviewScreen({
       disabled: !inputConnected,
       onPress: () => streamRef.current?.appSwitcher(),
     },
-    ...(preview?.session.platform === "ios"
+    ...(devicePreview?.session.platform === "ios"
       ? [
           {
             id: "rotate",
@@ -239,10 +247,22 @@ function DevicePreviewScreen({
       id: "shutdown",
       title: shuttingDown ? "Shutting down…" : "Shut down device",
       icon: "power",
-      disabled: !preview || shuttingDown,
+      disabled: !devicePreview || shuttingDown,
       onPress: () => void shutDownDevice(),
     },
   ];
+  const reloadControl: AppBarMenuItem = {
+    id: "reload",
+    title: "Reload stream",
+    icon: "arrow.clockwise",
+    disabled: !preview || shuttingDown,
+    onPress: () => {
+      setInputConnected(false);
+      setStreamAttempt((attempt) => attempt + 1);
+    },
+  };
+  // A desktop has no hardware buttons, tools, or power state to manage here.
+  const controls: AppBarMenuItem[] = isDesktop ? [reloadControl] : deviceControls;
   const pressHome = () => streamRef.current?.home();
   const menuItems: AppBarMenuItem[] = [
     ...(previews.length > 1
@@ -267,13 +287,21 @@ function DevicePreviewScreen({
     <View className="flex-1" style={{ backgroundColor: themeVariables["--color-sheet-solid"] }}>
       <StatusBar hidden animated />
       {preview && focused && foreground ? (
-        <OpenDevicePreview
-          key={`${preview.key}:${streamAttempt}`}
-          environmentId={environmentId}
-          preview={preview}
-          streamRef={streamRef}
-          onInputConnected={onInputConnected}
-        />
+        preview.kind === "desktop" ? (
+          <DesktopStreamView
+            key={`${preview.key}:${streamAttempt}`}
+            environmentId={environmentId}
+            preview={preview}
+          />
+        ) : (
+          <OpenDevicePreview
+            key={`${preview.key}:${streamAttempt}`}
+            environmentId={environmentId}
+            preview={preview}
+            streamRef={streamRef}
+            onInputConnected={onInputConnected}
+          />
+        )
       ) : (
         <View className="flex-1 items-center justify-center gap-4 px-6">
           {state.error ? (
@@ -318,12 +346,14 @@ function DevicePreviewScreen({
               <AppText numberOfLines={1} className="flex-1 text-center font-rove-medium text-base">
                 {preview?.name ?? "Devices"}
               </AppText>
-              <ControlPill
-                accessibilityLabel="Home"
-                icon="house"
-                disabled={!inputConnected}
-                onPress={pressHome}
-              />
+              {isDesktop ? null : (
+                <ControlPill
+                  accessibilityLabel="Home"
+                  icon="house"
+                  disabled={!inputConnected}
+                  onPress={pressHome}
+                />
+              )}
               <DeviceOptionsMenu items={menuItems} />
             </GlassSurface>
           </View>

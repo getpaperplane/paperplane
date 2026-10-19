@@ -14,6 +14,7 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as Queue from "effect/Queue";
+import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Fiber from "effect/Fiber";
@@ -28,6 +29,7 @@ import * as ProcessRunner from "../processRunner.ts";
 import * as ServerSettings from "../serverSettings.ts";
 import * as CuaDriver from "./CuaDriver.ts";
 import * as MacosVm from "./MacosVm.ts";
+import * as ComputerDesktops from "./ComputerDesktops.ts";
 
 const { transports } = vi.hoisted(() => ({
   transports: [] as Array<{ command: string; args: string[] }>,
@@ -86,6 +88,7 @@ const record = (name: string): Vm => ({
 const harness = <A, E>(
   body: (h: {
     runtime: MacosVm.MacosVm["Service"];
+    registry: ComputerDesktops.ComputerDesktops["Service"];
     makeRuntime: (
       arch?: string,
     ) => Effect.Effect<
@@ -104,11 +107,14 @@ const harness = <A, E>(
     setConsent: (value: unknown) => void;
     setIp: (value: string | null) => void;
     setSetupExitCode: (value: number) => void;
+    setBootFailure: (value: boolean) => void;
+    setMalformedOutput: (command: "ls" | "get" | null) => void;
+    /** Free space `df` reports in KiB, or null to make `df` fail. */
+    setFreeKib: (kib: number | null) => void;
     waitForPreparation: Effect.Effect<void>;
     setPull: (effect: (input: ProcessRunner.ProcessRunInput) => Effect.Effect<void>) => void;
     setSetup: (effect: Effect.Effect<void>) => void;
     waitForBoot: Effect.Effect<void>;
-    waitForDisplay: Effect.Effect<void>;
     processes: Map<number, string>;
     change: (patch: Partial<Settings>) => Effect.Effect<void>;
   }) => Effect.Effect<
@@ -129,19 +135,31 @@ const harness = <A, E>(
     let pull: (input: ProcessRunner.ProcessRunInput) => Effect.Effect<void> = () => Effect.void;
     let setup: Effect.Effect<void> = Effect.void;
     const bootRequested = yield* Deferred.make<void>();
-    const displayRequested = yield* Deferred.make<void>();
     const runs: Array<ProcessRunner.ProcessRunInput> = [];
     const processes = new Map([[process.pid, "today\n"]]);
     let ip: string | null = "192.168.64.2";
     let setupExitCode = 0;
+    let bootFailure = false;
+    let malformedOutput: "ls" | "get" | null = null;
+    let freeKib: number | null = 800_000_000;
     let consent: unknown = {
       accessibility: true,
       screen_recording: true,
       source: { attribution: "driver-daemon" },
     };
     const runner = ProcessRunner.ProcessRunner.of({
-      run: (input) =>
-        Effect.gen(function* () {
+      run: (input) => {
+        if (bootFailure && input.args[0] === "run") {
+          runs.push(input);
+          return Effect.fail(
+            new ProcessRunner.ProcessSpawnError({
+              command: input.command,
+              argumentCount: input.args.length,
+              cause: new Error(input.args.join(" ")),
+            }),
+          );
+        }
+        return Effect.gen(function* () {
           runs.push(input);
           const args = input.args;
           if (input.command === "/bin/ps")
@@ -150,9 +168,11 @@ const harness = <A, E>(
               processes.has(Number(args[1])) ? 0 : 1,
             );
           if (input.command === "/bin/df")
-            return output(
-              "Filesystem 1024-blocks Used Available Capacity Mounted on\ndisk 900000000 100000000 800000000 10% /\n",
-            );
+            return freeKib === null
+              ? output("", 1)
+              : output(
+                  `Filesystem 1024-blocks Used Available Capacity Mounted on\ndisk 900000000 100000000 ${freeKib} 10% /\n`,
+                );
           if (input.command === "/usr/bin/ssh-keygen") {
             const key = args[args.indexOf("-f") + 1];
             yield* fs.writeFileString(key!, "private");
@@ -164,9 +184,12 @@ const harness = <A, E>(
             return output();
           }
           if (input.command === "/usr/bin/ssh") return output(json(consent));
-          if (input.command === "/usr/bin/open") return output();
           if (!input.command.endsWith("/lume"))
             throw new Error(`Unexpected command ${input.command}`);
+          if (args[0] === malformedOutput)
+            return output(
+              json([{ name: golden, status: 42, vncUrl: "vnc://:decode-secret@127.0.0.1:5900" }]),
+            );
           switch (args[0]) {
             case "--version":
               return output("lume 0.6.1\n");
@@ -177,12 +200,6 @@ const harness = <A, E>(
               yield* setup;
               return output("", setupExitCode);
             case "get":
-              if (
-                args[1] === golden &&
-                vms.get(golden)?.status === "running" &&
-                !vms.get(golden)?.vncUrl
-              )
-                yield* Deferred.succeed(displayRequested, undefined);
               if (args[1] === work && ip === null)
                 yield* Deferred.succeed(bootRequested, undefined);
               return output(json(vms.has(args[1]!) ? [vms.get(args[1]!)] : []));
@@ -197,6 +214,7 @@ const harness = <A, E>(
               const vm = vms.get(args[1]!)!;
               vm.status = "running";
               vm.ipAddress = ip;
+              vm.vncUrl = `vnc://:${args[args.indexOf("--vnc-password") + 1]}@127.0.0.1:5900`;
               return output();
             }
             case "stop": {
@@ -211,7 +229,8 @@ const harness = <A, E>(
             default:
               throw new Error(`Unexpected Lume command ${args.join(" ")}`);
           }
-        }).pipe(Effect.orDie),
+        }).pipe(Effect.orDie);
+      },
     });
     let settings: Settings = {
       ...DEFAULT_SERVER_SETTINGS,
@@ -230,8 +249,11 @@ const harness = <A, E>(
       getSettings: Effect.sync(() => settings),
       subscribeChanges: Effect.succeed(changes),
     });
+    const registry = yield* ComputerDesktops.make;
+    yield* registry.setMode("isolated");
     const provide = <A2, E2, R>(effect: Effect.Effect<A2, E2, R>) =>
       effect.pipe(
+        Effect.provideService(ComputerDesktops.ComputerDesktops, registry),
         Effect.provideService(ProcessRunner.ProcessRunner, runner),
         Effect.provideService(HostProcessEnvironment, { HOME: stateDir, PATH: `${stateDir}/bin` }),
         Effect.provideService(HostProcessPlatform, "darwin"),
@@ -242,6 +264,7 @@ const harness = <A, E>(
       provide(CuaDriver.make({ arch: "arm64" })).pipe(Effect.provide(settingsLayer));
     return yield* body({
       runtime,
+      registry,
       makeRuntime,
       makeDriver,
       vms,
@@ -259,7 +282,6 @@ const harness = <A, E>(
         setup = effect;
       },
       waitForBoot: Deferred.await(bootRequested),
-      waitForDisplay: Deferred.await(displayRequested),
       setConsent: (value) => {
         consent = value;
       },
@@ -268,6 +290,15 @@ const harness = <A, E>(
       },
       setSetupExitCode: (value) => {
         setupExitCode = value;
+      },
+      setMalformedOutput: (command) => {
+        malformedOutput = command;
+      },
+      setFreeKib: (kib) => {
+        freeKib = kib;
+      },
+      setBootFailure: (value) => {
+        bootFailure = value;
       },
       change: (patch) =>
         Effect.gen(function* () {
@@ -285,6 +316,55 @@ const harness = <A, E>(
       ),
     ),
   );
+
+it.effect(
+  "streams setup and leased desktops and revokes viewers on verify, close and release",
+  () =>
+    harness(({ runtime, registry, waitForPreparation, vms }) =>
+      Effect.scoped(
+        Effect.gen(function* () {
+          const pull = yield* Stream.toPull(registry.changes);
+          yield* pull;
+          yield* runtime.prepare;
+          yield* waitForPreparation;
+          const setup = (yield* pull)[0]!.desktops[0]!;
+          expect(setup).toMatchObject({ kind: "macos-vm", role: "setup", threadId: null });
+          vms.get(golden)!.vncUrl = "vnc://:secret@127.0.0.1:5900";
+          expect(yield* registry.viewer(setup.id)).toEqual({
+            path: `/api/computer-use/desktops/${setup.id}/vnc`,
+            password: "secret",
+          });
+          const connection = yield* registry.connection(setup.id);
+          yield* runtime.verify;
+          yield* connection.closed;
+          expect((yield* pull)[0]!.desktops).toEqual([]);
+          yield* runtime.lease("thread:one");
+          const leased = (yield* pull)[0]!.desktops[0]!;
+          expect(leased).toMatchObject({ kind: "macos-vm", role: "thread", threadId: "one" });
+          expect(yield* registry.viewer(leased.id)).toEqual({
+            path: `/api/computer-use/desktops/${leased.id}/vnc`,
+            password: new URL(vms.get(work)!.vncUrl!).password,
+          });
+          const leasedConnection = yield* registry.connection(leased.id);
+          yield* runtime.close("thread:one");
+          yield* leasedConnection.closed;
+          expect((yield* registry.viewer(leased.id).pipe(Effect.flip))._tag).toBe(
+            "ComputerDesktopViewerError",
+          );
+          expect((yield* pull)[0]!.desktops).toEqual([]);
+          yield* runtime.lease("thread:two");
+          const second = (yield* pull)[0]!.desktops[0]!;
+          const secondConnection = yield* registry.connection(second.id);
+          yield* runtime.release;
+          yield* secondConnection.closed;
+          expect((yield* pull)[0]!.desktops).toEqual([]);
+          expect((yield* registry.viewer(second.id).pipe(Effect.flip))._tag).toBe(
+            "ComputerDesktopViewerError",
+          );
+        }),
+      ),
+    ),
+);
 
 it("parses Lume download, ETA and image assembly output without exposing raw output", () => {
   expect(
@@ -371,6 +451,7 @@ it.effect(
           state: "preparing",
           progress: { phase: "unpacking" },
         });
+        expect((yield* runtime.openDisplay.pipe(Effect.flip)).reason).toBe("preparing");
         yield* Deferred.succeed(finish, undefined);
         yield* waitForPreparation;
         expect(yield* runtime.check).toMatchObject({ state: "needs-consent" });
@@ -430,6 +511,41 @@ it.effect("cancels a pull, releases its process effect and allows another prepar
       yield* runtime.release;
     }),
   ),
+);
+
+it.effect(
+  "opens only the owned running setup desktop during driver installation without sealing or rebooting",
+  () =>
+    harness(({ runtime, registry, setSetup, vms, runs, stateDir, waitForPreparation }) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const entered = yield* Deferred.make<void>();
+        const finish = yield* Deferred.make<void>();
+        setSetup(Deferred.succeed(entered, undefined).pipe(Effect.andThen(Deferred.await(finish))));
+        yield* runtime.prepare;
+        yield* Deferred.await(entered);
+        yield* runtime.openDisplay;
+        yield* runtime.openDisplay;
+        const desktop = Option.getOrThrow(yield* Stream.runHead(registry.changes)).desktops[0]!;
+        expect((yield* registry.viewer(desktop.id)).password).toBeTruthy();
+        expect((yield* runtime.verify.pipe(Effect.flip)).reason).toBe("preparing");
+        expect(yield* fs.exists(`${stateDir}/computer-use/macos/sealed`)).toBe(false);
+        expect(runs.filter((run) => run.args[0] === "run")).toHaveLength(1);
+        expect(runs.some((run) => run.args[0] === "stop" || run.args[0] === "delete")).toBe(false);
+        vms.get(golden)!.status = "stopped";
+        expect((yield* runtime.openDisplay.pipe(Effect.flip)).reason).toBe("display");
+        vms.get(golden)!.status = "running";
+        const ownerPath = `${stateDir}/computer-use/macos/owner.json`;
+        const owner = yield* fs.readFileString(ownerPath);
+        yield* fs.writeFileString(ownerPath, json({ ...JSON.parse(owner), token: "not-ours" }));
+        expect((yield* runtime.openDisplay.pipe(Effect.flip)).reason).toBe("ownership");
+        yield* fs.writeFileString(ownerPath, owner);
+        yield* Deferred.succeed(finish, undefined);
+        yield* waitForPreparation;
+        expect(yield* runtime.check).toMatchObject({ state: "needs-consent" });
+        yield* runtime.release;
+      }),
+    ),
 );
 
 it.effect("cancel stops a booted golden VM and remove cancels driver installation", () =>
@@ -548,6 +664,55 @@ it.effect(
     ),
 );
 
+it.effect("refuses to prepare below the required free disk unless the golden VM exists", () =>
+  harness(({ runtime, vms, runs, setFreeKib, waitForPreparation }) =>
+    Effect.gen(function* () {
+      // 100 GB free, 150 GB required.
+      setFreeKib(100_000_000_000 / 1024);
+      const refused = yield* runtime.prepare.pipe(Effect.flip);
+      expect(refused.reason).toBe("disk");
+      expect(refused.message).toContain("needs about 150 GB; 100.0 GB is free");
+      expect(runs.some((run) => run.args[0] === "pull")).toBe(false);
+      expect((yield* runtime.check).progress).toBeUndefined();
+
+      // Exactly the requirement is enough.
+      setFreeKib(150_000_000_000 / 1024);
+      yield* runtime.prepare;
+      yield* waitForPreparation;
+      expect(runs.some((run) => run.args[0] === "pull")).toBe(true);
+
+      // Re-preparing an existing golden VM never pulls, so it needs no extra space.
+      expect(vms.has(golden)).toBe(true);
+      setFreeKib(1);
+      yield* runtime.prepare;
+    }),
+  ),
+);
+
+it.effect("prepares when free disk cannot be read", () =>
+  harness(({ runtime, runs, setFreeKib, waitForPreparation }) =>
+    Effect.gen(function* () {
+      setFreeKib(null);
+      expect((yield* runtime.check).freeDiskBytes).toBeUndefined();
+      yield* runtime.prepare;
+      yield* waitForPreparation;
+      expect(runs.some((run) => run.args[0] === "pull")).toBe(true);
+    }),
+  ),
+);
+
+it.effect("reports a disk shortage through the prepare control", () =>
+  harness(({ makeDriver, setFreeKib }) =>
+    Effect.gen(function* () {
+      setFreeKib(1_000_000);
+      const driver = yield* makeDriver();
+      expect((yield* driver.control({ action: "prepare-vm" }).pipe(Effect.flip)).detail).toContain(
+        "Not enough free disk space",
+      );
+    }),
+  ),
+);
+
 it.effect("reports missing Lume and discovers the home and Homebrew fallbacks", () =>
   harness(({ runtime, makeRuntime, stateDir, runs }) =>
     Effect.gen(function* () {
@@ -610,90 +775,107 @@ it.effect("installs Lume only on explicit control and never falls back to the ho
   ),
 );
 
-it.effect("boots and opens the credentialed display only for a golden VM awaiting consent", () =>
-  harness(({ runtime, vms, runs }) =>
+it.effect("open display boots/registers setup inline; viewer validates private credentials", () =>
+  harness(({ runtime, registry, vms, runs, stateDir }) =>
     Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
       expect((yield* runtime.openDisplay.pipe(Effect.flip)).reason).toBe("display");
       const vm = record(golden);
-      vm.vncUrl = "vnc://user:secret@127.0.0.1:5900?password=secret#secret";
       vms.set(golden, vm);
+      yield* runtime.openDisplay;
       yield* runtime.openDisplay;
       expect(vm.status).toBe("running");
       expect(runs.filter((run) => run.args[0] === "run")).toHaveLength(1);
-      expect(runs.filter((run) => run.command === "/usr/bin/open")).toMatchObject([
-        { args: [vm.vncUrl] },
-      ]);
-      expect(yield* runtime.check).not.toHaveProperty("displayUrl");
+      expect(runs.some((run) => run.command === "/usr/bin/open")).toBe(false);
+      expect(
+        JSON.parse(yield* fs.readFileString(`${stateDir}/computer-use/macos/owner.json`)),
+      ).toMatchObject({ preparing: true });
+      const desktop = Option.getOrThrow(yield* Stream.runHead(registry.changes)).desktops[0]!;
+      expect((yield* registry.viewer(desktop.id)).password).toBeTruthy();
       for (const url of [
+        undefined,
+        null,
         "invalid",
-        "https://127.0.0.1",
-        "vnc://example.com",
-        "vnc://192.168.65.2",
-        "vnc://192.168.64.2.evil.test",
+        "https://:secret@127.0.0.1:5900",
+        "vnc://:secret@example.com:5900",
+        "vnc://:secret@192.168.64.2:5900",
+        "vnc://:secret@127.0.0.1.evil.test:5900",
+        "vnc://127.0.0.1:5900",
+        "vnc://:secret@127.0.0.1",
+        "vnc://:secret@127.0.0.1:0",
+        "vnc://:secret@127.0.0.1:65536",
+        "vnc://:%ZZ@127.0.0.1:5900",
       ]) {
-        vm.vncUrl = url;
-        const error = yield* runtime.openDisplay.pipe(Effect.flip);
-        expect(error.reason).toBe("display");
+        vm.vncUrl = url ?? null;
+        const error = yield* registry.viewer(desktop.id).pipe(Effect.flip);
+        expect(error._tag).toBe("ComputerDesktopViewerError");
         expect(error).not.toHaveProperty("cause");
-        expect(error.message).not.toContain("secret");
+        expect(JSON.stringify(error)).not.toContain("secret");
       }
-      expect(runs.filter((run) => run.args[0] === "run")).toHaveLength(1);
-      expect(runs.filter((run) => run.command === "/usr/bin/open")).toHaveLength(1);
-      for (const host of ["localhost", "[::1]", "127.0.0.2", "192.168.64.2"]) {
+      for (const host of ["localhost", "[::1]", "127.0.0.2"]) {
         vm.vncUrl = `vnc://:secret@${host}:5900`;
-        yield* runtime.openDisplay;
-        expect(runs.at(-1)).toMatchObject({ command: "/usr/bin/open", args: [vm.vncUrl] });
+        expect((yield* registry.viewer(desktop.id)).password).toBe("secret");
+        const connection = yield* registry.connection(desktop.id);
+        expect(yield* connection.endpoint).toEqual({
+          kind: "tcp",
+          host: host === "[::1]" ? "::1" : host,
+          port: 5900,
+          password: "secret",
+        });
       }
-      vm.vncUrl = "vnc://:secret@127.0.0.1:5900";
-      vms.set(work, record(work));
-      expect(yield* runtime.check).toMatchObject({ state: "unavailable" });
-      expect((yield* runtime.openDisplay.pipe(Effect.flip)).reason).toBe("display");
-      expect(runs.filter((run) => run.command === "/usr/bin/open")).toHaveLength(5);
+      yield* fs.writeFileString(`${stateDir}/computer-use/macos/owner.json`, "{}");
+      expect((yield* registry.viewer(desktop.id).pipe(Effect.flip))._tag).toBe(
+        "ComputerDesktopViewerError",
+      );
     }),
   ),
 );
 
-for (const vncUrl of [undefined, null]) {
-  it.effect(`bounds the display wait when Lume reports ${vncUrl}`, () =>
-    harness(({ runtime, vms, runs, waitForDisplay }) =>
+it.effect("does not propagate credentialed process failures from setup or work boots", () =>
+  harness(({ runtime, vms, runs, setBootFailure, waitForPreparation }) =>
+    Effect.gen(function* () {
+      vms.set(golden, record(golden));
+      setBootFailure(true);
+      const setupError = yield* runtime.openDisplay.pipe(Effect.flip);
+      expect(setupError.reason).toBe("display");
+      expect(setupError).not.toHaveProperty("cause");
+      setBootFailure(false);
+      yield* runtime.prepare;
+      yield* waitForPreparation;
+      yield* runtime.verify;
+      setBootFailure(true);
+      const workError = yield* runtime.lease("thread:failure").pipe(Effect.flip);
+      expect(workError.reason).toBe("runtime");
+      expect(workError).not.toHaveProperty("cause");
+      const publicErrors = JSON.stringify({ setupError, workError, status: yield* runtime.check });
+      for (const run of runs.filter((run) => run.args[0] === "run")) {
+        const password = run.args[run.args.indexOf("--vnc-password") + 1]!;
+        expect(publicErrors).not.toContain(password);
+      }
+      yield* runtime.release;
+    }),
+  ),
+);
+
+for (const command of ["ls", "get"] as const) {
+  it.effect(`does not retain credentialed Lume ${command} decode failures`, () =>
+    harness(({ runtime, vms, setMalformedOutput, waitForPreparation }) =>
       Effect.gen(function* () {
-        vms.set(golden, { ...record(golden), ...(vncUrl === null ? { vncUrl } : {}) });
-        const opening = yield* runtime.openDisplay.pipe(Effect.flip, Effect.forkChild);
-        yield* waitForDisplay;
-        yield* TestClock.adjust("2 minutes");
-        const error = yield* Fiber.join(opening);
-        expect(error.reason).toBe("display");
+        vms.set(golden, record(golden));
+        yield* runtime.prepare;
+        yield* waitForPreparation;
+        yield* runtime.verify;
+        setMalformedOutput(command);
+        const error = yield* runtime.lease("thread:decode").pipe(Effect.flip);
+        expect(error.reason).toBe("runtime");
         expect(error).not.toHaveProperty("cause");
-        expect(runs.some((run) => run.command === "/usr/bin/open")).toBe(false);
+        expect(JSON.stringify(error)).not.toContain("decode-secret");
+        setMalformedOutput(null);
         yield* runtime.release;
       }),
     ),
   );
 }
-
-it.effect(
-  "waits for Lume to publish the golden display after boot and records crash ownership",
-  () =>
-    harness(({ runtime, vms, runs, stateDir, waitForDisplay }) =>
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const vm = record(golden);
-        vms.set(golden, vm);
-        const opening = yield* runtime.openDisplay.pipe(Effect.forkChild);
-        yield* waitForDisplay;
-        expect(runs.some((run) => run.command === "/usr/bin/open")).toBe(false);
-        expect(
-          JSON.parse(yield* fs.readFileString(`${stateDir}/computer-use/macos/owner.json`)),
-        ).toMatchObject({ preparing: true });
-        vm.vncUrl = "vnc://:secret@192.168.64.2:5900";
-        yield* TestClock.adjust("1 second");
-        yield* Fiber.join(opening);
-        expect(runs.at(-1)).toMatchObject({ command: "/usr/bin/open", args: [vm.vncUrl] });
-        yield* runtime.release;
-        expect(vm.status).toBe("stopped");
-      }),
-    ),
-);
 
 it.effect("verify boots an unsealed stopped golden VM before checking consent", () =>
   harness(({ runtime, vms, runs, setConsent }) =>
@@ -748,7 +930,7 @@ it.effect("does not discard unrecorded clones during ordinary status or shutdown
 );
 
 it.effect(
-  "prepares with clipboard and automatic setup, verifies app-owned consent, then seals",
+  "prepares without host clipboard and with automatic setup, verifies app-owned consent, then seals",
   () =>
     harness(({ runtime, runs, setConsent, vms, stateDir, waitForPreparation }) =>
       Effect.gen(function* () {
@@ -760,7 +942,7 @@ it.effect(
           golden,
         ]);
         expect(runs.find((run) => run.args[0] === "run")?.args).toEqual(
-          expect.arrayContaining(["--detach", "--display", "vnc", "--clipboard"]),
+          expect.arrayContaining(["--detach", "--display", "none", "--vnc", "enabled"]),
         );
         const status = yield* runtime.check;
         expect(status).toMatchObject({
@@ -769,6 +951,7 @@ it.effect(
           virtualDiskBytes: 150_000_000_000,
           memoryBytes: 8_589_934_592,
         });
+        expect(runs.some((run) => run.args.includes("--clipboard"))).toBe(false);
         expect(status.setupCommand).toContain("ssh-ed25519 AAAATEST rove-cua");
         expect(status.setupCommand).toContain("authorized_keys");
         const setup = runs.find((run) => run.args[0] === "ssh");
@@ -846,7 +1029,7 @@ it.effect("keeps preparation awaiting consent with manual setup when Lume SSH fa
 );
 
 it.effect("leases exclusively, reuses the VM for the same thread, and resets between leases", () =>
-  harness(({ runtime, vms, runs, waitForPreparation }) =>
+  harness(({ runtime, registry, vms, runs, stateDir, waitForPreparation }) =>
     Effect.gen(function* () {
       expect((yield* runtime.lease("a").pipe(Effect.flip)).reason).toBe("not-ready");
       yield* runtime.prepare;
@@ -871,6 +1054,36 @@ it.effect("leases exclusively, reuses the VM for the same thread, and resets bet
       expect(vms.has(work)).toBe(false);
       yield* runtime.lease("b");
       expect(runs.filter((run) => run.args[0] === "clone")).toHaveLength(2);
+      const boots = runs.filter((run) => run.args[0] === "run");
+      const passwords = boots.map((run) => run.args[run.args.indexOf("--vnc-password") + 1]!);
+      expect(boots).toHaveLength(3);
+      expect(new Set(passwords).size).toBe(boots.length);
+      for (const run of boots) {
+        expect(run.args).toEqual(
+          expect.arrayContaining([
+            "--detach",
+            "--display",
+            "none",
+            "--vnc",
+            "enabled",
+            "--network",
+            "nat",
+          ]),
+        );
+        expect(run.args).not.toContain("--clipboard");
+        expect(run.args).not.toContain("--vnc-port");
+      }
+      const fs = yield* FileSystem.FileSystem;
+      const publicState = JSON.stringify({
+        status: yield* runtime.check,
+        desktops: Option.getOrThrow(yield* Stream.runHead(registry.changes)),
+        owner: yield* fs.readFileString(`${stateDir}/computer-use/macos/owner.json`),
+      });
+      for (const password of passwords) {
+        expect(password).toMatch(/^[A-Za-z0-9_-]{24}$/);
+        expect(publicState).not.toContain(password);
+        expect(publicState).not.toContain(password.slice(0, 8));
+      }
       yield* runtime.release;
       expect(vms.has(work)).toBe(false);
       expect(vms.has(golden)).toBe(true);
@@ -958,14 +1171,12 @@ it.effect(
         yield* waitForPreparation;
         vms.get(golden)!.vncUrl = "vnc://:secret@127.0.0.1:5900";
         yield* driver.control({ action: "open-vm-display" });
-        expect(runs.filter((run) => run.command === "/usr/bin/open")).toMatchObject([
-          { args: ["vnc://:secret@127.0.0.1:5900"] },
-        ]);
+        expect(runs.some((run) => run.command === "/usr/bin/open")).toBe(false);
         yield* driver.control({ action: "verify-vm" });
         expect(
           (yield* driver.control({ action: "open-vm-display" }).pipe(Effect.flip)).detail,
         ).toContain("Couldn't open the VM display");
-        expect(runs.filter((run) => run.command === "/usr/bin/open")).toHaveLength(1);
+        expect(runs.filter((run) => run.command === "/usr/bin/open")).toHaveLength(0);
         const thread = ThreadId.make("vm-thread");
         const catalog = yield* driver.catalog(thread);
         expect(catalog.policy).toBe("isolated-desktop");

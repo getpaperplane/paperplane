@@ -26,6 +26,7 @@ import { restrictToFirstScrollableAncestor, restrictToHorizontalAxis } from "@dn
 import { horizontalListSortingStrategy, SortableContext, useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import {
+  Monitor,
   Smartphone,
   ChevronDown,
   ChevronLeft,
@@ -403,7 +404,7 @@ function RightPanelEmptyState(props: {
     },
     {
       label: "Device",
-      description: "Watch an iOS Simulator or Android Emulator.",
+      description: "Watch a simulator, emulator, or an agent's private desktop.",
       icon: Smartphone,
       shortcut: "M",
       available: props.deviceAvailable,
@@ -702,7 +703,9 @@ function SurfaceIcon({
     case "pull-requests":
       return <PullRequestGlyph.link className="size-3 shrink-0" />;
     case "device":
-      return surface.target?.platform === "ios" ? (
+      return surface.target?.kind === "computer" ? (
+        <Monitor className="size-3 shrink-0" />
+      ) : surface.target?.platform === "ios" ? (
         <AppleIcon className="size-3 shrink-0" />
       ) : surface.target?.platform === "android" ? (
         <AndroidIcon className="size-3 shrink-0" />
@@ -1504,7 +1507,8 @@ function DeviceTabTooltip(props: {
   environmentId: EnvironmentId | null;
   title: string;
 }) {
-  const target = props.surface.target;
+  const target = props.surface.target?.kind === "computer" ? undefined : props.surface.target;
+  const computer = props.surface.target?.kind === "computer" ? props.surface.target : undefined;
   const { state } = useDeviceState(target ? props.environmentId : null);
   const device = target
     ? state.devices.find((entry) => entry.hostId === target.hostId && entry.id === target.deviceId)
@@ -1513,6 +1517,11 @@ function DeviceTabTooltip(props: {
   return (
     <div className="flex flex-col gap-0.5">
       <span>{props.title}</span>
+      {computer ? (
+        <span className="text-muted-foreground">
+          {computer.desktopKind === "linux" ? "Private Linux desktop" : "Isolated macOS VM"}
+        </span>
+      ) : null}
       {target ? (
         <span className="text-muted-foreground">
           {host?.label ?? "Device host"} ·{" "}

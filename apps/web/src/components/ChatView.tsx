@@ -283,6 +283,7 @@ import { getConfiguredPreviewUrls } from "./preview/previewEmptyStateLogic";
 
 import {
   browserMiniPlayerSource,
+  deviceMiniPlayerSource,
   previewMiniPlayerSourceKey,
   selectThreadPreviewMiniPlayer,
   usePreviewMiniPlayerStore,
@@ -297,6 +298,9 @@ import { RightPanelTabs } from "./RightPanelTabs";
 import { LinkPullRequestDialogHost } from "./pullRequest/LinkPullRequestDialog";
 import { ThreadPullRequestsPanel } from "./pullRequest/ThreadPullRequestsPanel";
 import { useDeviceState } from "~/state/device";
+import { computerUseEnvironment, useComputerDesktops } from "~/state/computerUse";
+import { threadComputerDesktops } from "@rove-code/client-runtime/state/computer-use";
+import { computerTabTarget, newComputerDesktops } from "./device/computerDesktops.logic";
 import { Dialog } from "./ui/dialog";
 import { WizardPopup } from "./ui/wizard";
 import { BranchToolbar, type BranchToolbarHandle } from "./BranchToolbar";
@@ -759,6 +763,7 @@ const TYPE_TO_FOCUS_INTERACTIVE_SELECTOR = [
   '[role="radio"]',
   '[role="switch"]',
   '[role="tab"]',
+  "[data-computer-desktop-screen]",
 ].join(",");
 // Popups match only while open or closing: some stay mounted when closed,
 // such as the chat header actions menu.
@@ -5447,10 +5452,24 @@ export default function ChatView(props: ChatViewProps) {
   const { state: deviceState, loaded: deviceStateLoaded } = useDeviceState(
     activeThreadRef?.environmentId ?? null,
   );
+  const { state: computerDesktopsState, loaded: computerDesktopsLoaded } = useComputerDesktops(
+    activeThreadRef?.environmentId ?? null,
+  );
+  const activeThreadDesktops = useMemo(
+    () =>
+      activeThreadRef
+        ? threadComputerDesktops(computerDesktopsState, activeThreadRef.threadId)
+        : [],
+    [activeThreadRef, computerDesktopsState],
+  );
   const [deviceSetupThread, setDeviceSetupThread] = useState<ScopedThreadRef | null>(null);
   const addDeviceSurface = () => {
     if (!activeThreadRef) return;
-    if (!deviceState.onboardingCompleted || deviceState.hostStatus === "disabled") {
+    // The panel lists desktops without the device hub, and offers simulator setup itself.
+    if (
+      activeThreadDesktops.length === 0 &&
+      (!deviceState.onboardingCompleted || deviceState.hostStatus === "disabled")
+    ) {
       setDeviceSetupThread(activeThreadRef);
       return;
     }
@@ -5493,7 +5512,7 @@ export default function ChatView(props: ChatViewProps) {
         name: device.name,
       };
       if (autoShowFloatingPreview) {
-        usePreviewMiniPlayerStore.getState().open(activeThreadRef, { kind: "device", ...target });
+        usePreviewMiniPlayerStore.getState().open(activeThreadRef, deviceMiniPlayerSource(target));
         continue;
       }
       const existing = useRightPanelStore
@@ -5501,7 +5520,9 @@ export default function ChatView(props: ChatViewProps) {
         .byThreadKey[scopedThreadKey(activeThreadRef)]?.surfaces.some(
           (surface) =>
             surface.kind === "device" &&
-            surface.target?.hostId === session.hostId &&
+            surface.target !== undefined &&
+            surface.target.kind !== "computer" &&
+            surface.target.hostId === session.hostId &&
             surface.target.deviceId === session.deviceId,
         );
       if (existing) continue;
@@ -5514,6 +5535,52 @@ export default function ChatView(props: ChatViewProps) {
     shouldUsePlanSidebarSheet,
     deviceState.sessions,
     deviceState.devices,
+  ]);
+  // A desktop appears when an agent starts using computer use in this thread.
+  // It floats or opens a tab like an agent-opened device, with the same
+  // first-snapshot baseline so closed desktops are never resurrected. The
+  // panel's dismissed list covers desktops the user closed as tabs.
+  const canViewComputerDesktop = useAtomValue(
+    computerUseEnvironment.viewer.permissionAtom(environmentId),
+  );
+  const previousComputerDesktops = useRef(new Map<string, Set<string>>());
+  useEffect(() => {
+    if (!activeThreadRef || !computerDesktopsLoaded) return;
+    const threadKey = scopedThreadKey(activeThreadRef);
+    const desktops = activeThreadDesktops.filter((desktop) => desktop.role === "thread");
+    const previous = previousComputerDesktops.current.get(threadKey);
+    previousComputerDesktops.current.set(threadKey, new Set(desktops.map((desktop) => desktop.id)));
+    if (shouldUsePlanSidebarSheet || !canViewComputerDesktop) return;
+    for (const desktop of newComputerDesktops(previous, desktops)) {
+      const target = computerTabTarget(desktop);
+      if (autoShowFloatingPreview) {
+        usePreviewMiniPlayerStore.getState().open(activeThreadRef, deviceMiniPlayerSource(target));
+        continue;
+      }
+      useRightPanelStore.getState().openDevice(activeThreadRef, target, true);
+    }
+  }, [
+    activeThreadDesktops,
+    activeThreadRef,
+    autoShowFloatingPreview,
+    canViewComputerDesktop,
+    computerDesktopsLoaded,
+    shouldUsePlanSidebarSheet,
+  ]);
+  // Desktop tabs and floating desktops follow the stream: a closed or released
+  // desktop has nothing left to show. Closing a tab never stops the desktop.
+  useEffect(() => {
+    if (!activeThreadRef || !computerDesktopsLoaded) return;
+    const live = new Set(computerDesktopsState.desktops.map((desktop) => desktop.id));
+    const source = activePreviewMiniPlayer?.source;
+    if (source?.kind === "computer" && !live.has(source.desktopId))
+      usePreviewMiniPlayerStore.getState().close(activeThreadRef);
+    useRightPanelStore.getState().reconcileComputerSurfaces(activeThreadRef, live);
+  }, [
+    activePreviewMiniPlayer,
+    activeThreadRef,
+    computerDesktopsLoaded,
+    computerDesktopsState.desktops,
   ]);
   // Baseline loaded tabs so reloads never reopen previews the user dismissed.
   const previousServerPreviewTabs = useRef(new Map<string, Map<string, string | undefined>>());
@@ -5851,7 +5918,7 @@ export default function ChatView(props: ChatViewProps) {
       } else if (activeRightPanelSurface?.kind === "device" && activeRightPanelSurface.target) {
         usePreviewMiniPlayerStore
           .getState()
-          .open(activeThreadRef, { kind: "device", ...activeRightPanelSurface.target });
+          .open(activeThreadRef, deviceMiniPlayerSource(activeRightPanelSurface.target));
       }
       useRightPanelStore.getState().setMaximized(activeThreadRef, false);
       useRightPanelStore.getState().close(activeThreadRef);
@@ -7925,6 +7992,8 @@ export default function ChatView(props: ChatViewProps) {
 
   useEffect(() => {
     const handler = (event: globalThis.KeyboardEvent) => {
+      // The remote desktop owns its keystrokes, including configured chat shortcuts.
+      if (eventPathContainsSelector(event, "[data-computer-desktop-screen]")) return;
       if (preventRepeatedTerminalCloseShortcut(event, keybindings)) {
         event.stopPropagation();
         return;
@@ -11817,7 +11886,7 @@ export default function ChatView(props: ChatViewProps) {
             {activeThreadRef &&
             activePreviewMiniPlayer &&
             previewMiniPlayerVisible &&
-            (activePreviewMiniPlayer.source.kind === "device" || canOperatePreview) ? (
+            (activePreviewMiniPlayer.source.kind !== "browser" || canOperatePreview) ? (
               <ThreadPreviewMiniPlayer
                 key={`${activeThreadKey}:${previewMiniPlayerSourceKey(activePreviewMiniPlayer.source)}`}
                 threadRef={activeThreadRef}

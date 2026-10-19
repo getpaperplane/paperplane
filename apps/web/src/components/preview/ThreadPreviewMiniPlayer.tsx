@@ -36,6 +36,7 @@ import { Tooltip, TooltipPopup, TooltipTrigger } from "~/components/ui/tooltip";
 import { cn } from "~/lib/utils";
 import { useThreadPreviewState } from "~/previewStateStore";
 import {
+  deviceTabTargetOfMiniPlayerSource,
   type PreviewMiniPlayerSize,
   type PreviewMiniPlayerSource,
   type PreviewMiniPlayerState,
@@ -45,6 +46,7 @@ import {
 import { useRightPanelStore } from "~/rightPanelStore";
 import { useDeviceState } from "~/state/device";
 
+import { ComputerDesktopView } from "../device/ComputerDesktopView";
 import { DeviceStreamView } from "../device/DeviceStreamView";
 import type { DeviceScreenSize } from "@rove-code/client-runtime/device/stream";
 import type { PreviewStreamViewport } from "@rove-code/client-runtime/preview/server-browser-stream";
@@ -97,7 +99,7 @@ const RESIZE_HANDLES: ReadonlyArray<{
   { direction: "southeast", className: "-bottom-2 -right-2 size-4 cursor-nwse-resize" },
 ];
 
-/** Floats the thread's browser tab or device stream over chat. */
+/** Floats the thread's browser tab, device stream, or computer desktop over chat. */
 export function ThreadPreviewMiniPlayer({ threadRef, miniPlayer }: Props) {
   const { source } = miniPlayer;
   return source.kind === "browser" ? (
@@ -105,6 +107,13 @@ export function ThreadPreviewMiniPlayer({ threadRef, miniPlayer }: Props) {
       key={source.tabId}
       threadRef={threadRef}
       tabId={source.tabId}
+      miniPlayer={miniPlayer}
+    />
+  ) : source.kind === "computer" ? (
+    <ComputerMiniPlayer
+      key={previewMiniPlayerSourceKey(source)}
+      threadRef={threadRef}
+      source={source}
       miniPlayer={miniPlayer}
     />
   ) : (
@@ -274,12 +283,7 @@ function DeviceMiniPlayer({
 
   const openInPanel = () => {
     usePreviewMiniPlayerStore.getState().close(threadRef);
-    useRightPanelStore.getState().openDevice(threadRef, {
-      hostId: source.hostId,
-      deviceId: source.deviceId,
-      platform: source.platform,
-      name: source.name,
-    });
+    useRightPanelStore.getState().openDevice(threadRef, deviceTabTargetOfMiniPlayerSource(source));
   };
 
   return (
@@ -306,6 +310,45 @@ function DeviceMiniPlayer({
             deviceDescription={`${hostLabel} · ${device?.version ?? source.platform}`}
             visible
             onScreen={setScreen}
+          />
+        </div>
+      )}
+    </MiniPlayerShell>
+  );
+}
+
+// Linux desktops are 1280x800; VMs vary, and noVNC scales inside whatever frame it gets.
+const COMPUTER_MINI_PLAYER_SOURCE_SIZE: PreviewMiniPlayerSize = { width: 1280, height: 800 };
+
+function ComputerMiniPlayer({
+  threadRef,
+  source,
+  miniPlayer,
+}: Props & { readonly source: Extract<PreviewMiniPlayerSource, { kind: "computer" }> }) {
+  const openInPanel = () => {
+    usePreviewMiniPlayerStore.getState().close(threadRef);
+    useRightPanelStore.getState().openDevice(threadRef, deviceTabTargetOfMiniPlayerSource(source));
+  };
+  return (
+    <MiniPlayerShell
+      threadRef={threadRef}
+      miniPlayer={miniPlayer}
+      sourceSize={COMPUTER_MINI_PLAYER_SOURCE_SIZE}
+      label="Floating computer desktop"
+      onOpenInPanel={openInPanel}
+    >
+      {() => (
+        <div
+          className="pointer-events-auto absolute inset-0 overflow-hidden rounded-[inherit]"
+          style={{ zIndex: PREVIEW_MINI_PLAYER_WEBVIEW_Z_INDEX }}
+        >
+          <ComputerDesktopView
+            environmentId={threadRef.environmentId}
+            desktopId={source.desktopId}
+            desktopKind={source.desktopKind}
+            name={source.name}
+            visible
+            compact
           />
         </div>
       )}

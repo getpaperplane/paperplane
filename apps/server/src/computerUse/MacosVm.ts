@@ -4,7 +4,12 @@ import * as NodeNet from "node:net";
 import * as NodeOS from "node:os";
 import * as NodeUtil from "node:util";
 
-import type { ComputerUseMacosVm } from "@rove-code/contracts";
+import {
+  ComputerDesktopViewerError,
+  ThreadId,
+  type ComputerUseMacosVm,
+} from "@rove-code/contracts";
+import * as ComputerDesktops from "./ComputerDesktops.ts";
 import {
   Environment as HostProcessEnvironment,
   Platform as HostProcessPlatform,
@@ -93,8 +98,11 @@ export class MacosVmError extends Schema.TaggedError<MacosVmError>()("MacosVmErr
     "not-ready",
     "preparing",
     "display",
+    "disk",
   ]),
   cause: Schema.optionalKey(Schema.Defect()),
+  /** Free bytes measured when `reason` is "disk". */
+  freeBytes: Schema.optionalKey(Schema.Number),
 }) {
   override get message(): string {
     switch (this.reason) {
@@ -105,15 +113,19 @@ export class MacosVmError extends Schema.TaggedError<MacosVmError>()("MacosVmErr
       case "ownership":
         return "Another Rove server owns these VMs, or ownership cannot be verified. Nothing was removed.";
       case "consent":
-        return "The VM hasn't granted Accessibility and Screen Recording yet. Open the VM, approve the prompts (or run Manual setup in its Terminal), then verify again.";
+        return "The VM hasn't granted Accessibility and Screen Recording yet. Open setup desktop in Settings, approve the prompts (or use Type setup command in its Terminal), then verify again.";
       case "capacity":
-        return "The private macOS VM slot is occupied. Use close_desktop in the finished thread or Release desktop in Settings. Rove never evicts work or falls back to the host.";
+        return "The private macOS VM slot is occupied. Use close_desktop in the finished thread or Release VM in Settings. Rove never evicts work or falls back to the host.";
       case "preparing":
         return "The macOS VM is still being prepared. Wait for it to finish or cancel it in Settings.";
       case "not-ready":
         return "Prepare and verify the isolated macOS desktop in Settings before using it. No host input was sent.";
       case "display":
         return "Couldn't open the VM display. The VM didn't start or Lume didn't report a local VNC address. Try again, or remove the VM and prepare it again.";
+      case "disk":
+        return this.freeBytes === undefined
+          ? "Not enough free disk space for the macOS VM. Free up space, then try again."
+          : `Not enough free disk space for the macOS VM. It needs about ${Math.round(REQUIRED_DISK / 1e9)} GB; ${(this.freeBytes / 1e9).toFixed(1)} GB is free. Free up space, then try again.`;
       case "runtime":
         return "The Lume VM operation failed. Check Lume, available disk/RAM and Apple's two-guest host limit. No host input was sent.";
     }
@@ -139,6 +151,7 @@ export class MacosVm extends Context.Service<
 /** CuaDriver serializes this runtime with its transport lock. Idle MCP retirement does not close leases. */
 export const make = Effect.fn("MacosVm.make")(function* (options?: { readonly arch?: string }) {
   const scope = yield* Effect.scope;
+  const registry = yield* ComputerDesktops.ComputerDesktops;
   const runner = yield* ProcessRunner.ProcessRunner;
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -168,7 +181,11 @@ export const make = Effect.fn("MacosVm.make")(function* (options?: { readonly ar
     command: string,
     args: ReadonlyArray<string>,
     timeout: Duration.Input = "30 seconds",
-  ) => runner.run({ command, args, env: environment, timeout }).pipe(Effect.mapError(wrap));
+  ) =>
+    runner.run({ command, args, env: environment, timeout }).pipe(
+      // Spawn failures can retain argv, including boot credentials. Do not propagate them.
+      Effect.mapError(() => new MacosVmError({ reason: "runtime" })),
+    );
   const checked = Effect.fn("MacosVm.checked")(function* (
     command: string,
     args: ReadonlyArray<string>,
@@ -177,6 +194,15 @@ export const make = Effect.fn("MacosVm.make")(function* (options?: { readonly ar
     const output = yield* run(command, args, timeout);
     if (output.code !== 0) return yield* new MacosVmError({ reason: "runtime" });
     return output.stdout;
+  });
+  /** Free bytes on the VM storage volume, or undefined when `df` can't be read. */
+  const measureFreeDisk = Effect.gen(function* () {
+    const df = yield* run("/bin/df", ["-kP", storage]).pipe(Effect.option);
+    const free =
+      Option.isSome(df) && df.value.code === 0
+        ? Number(df.value.stdout.trim().split("\n").at(-1)?.trim().split(/\s+/)[3]) * 1024
+        : NaN;
+    return Number.isFinite(free) ? free : undefined;
   });
   const discover = Effect.gen(function* () {
     if (!supported) return yield* new MacosVmError({ reason: "unavailable" });
@@ -204,17 +230,22 @@ export const make = Effect.fn("MacosVm.make")(function* (options?: { readonly ar
     checked(executable ?? "lume", args, timeout);
   const list = Effect.gen(function* () {
     const output = yield* lume(["ls", "--storage", storage, "--format", "json"]);
-    return yield* decodeVms(output).pipe(Effect.mapError(wrap));
+    return yield* decodeVms(output).pipe(
+      Effect.mapError(() => new MacosVmError({ reason: "runtime" })),
+    );
   });
   const get = Effect.fn("MacosVm.get")(function* (name: string) {
     const output = yield* lume(["get", name, "--storage", storage, "--format", "json"]);
-    const records = yield* decodeVms(output).pipe(Effect.mapError(wrap));
+    const records = yield* decodeVms(output).pipe(
+      Effect.mapError(() => new MacosVmError({ reason: "runtime" })),
+    );
     const record = records.find((vm) => vm.name === name);
     if (!record) return yield* new MacosVmError({ reason: "runtime" });
     return record;
   });
   const stop = Effect.fn("MacosVm.stop")(function* (name: string) {
     const vm = (yield* list).find((entry) => entry.name === name);
+    yield* registry.remove(`vm:${name}`);
     if (vm && vm.status !== "stopped") yield* lume(["stop", name, "--storage", storage]);
   });
   const discard = Effect.fn("MacosVm.discard")(function* (name: string) {
@@ -292,36 +323,73 @@ export const make = Effect.fn("MacosVm.make")(function* (options?: { readonly ar
       yield* saveOwner;
     }
   }).pipe(Effect.mapError(wrap));
+  const registerDesktop = (name: string, key?: string) =>
+    registry.register(
+      `vm:${name}`,
+      {
+        kind: "macos-vm",
+        role: key ? "thread" : "setup",
+        threadId: key?.startsWith("thread:") ? ThreadId.make(key.slice(7)) : null,
+        name: key ? "macOS desktop" : "macOS desktop setup",
+      },
+      Effect.gen(function* () {
+        yield* assertOwner;
+        const vm = yield* get(name);
+        if (vm.status !== "running" || !vm.vncUrl)
+          return yield* new MacosVmError({ reason: "display" });
+        const url = yield* Effect.try({ try: () => new URL(vm.vncUrl!), catch: wrap });
+        const host = url.hostname;
+        if (
+          url.protocol !== "vnc:" ||
+          !(
+            host === "localhost" ||
+            host === "[::1]" ||
+            (NodeNet.isIP(host) === 4 && host.startsWith("127."))
+          )
+        )
+          return yield* new MacosVmError({ reason: "display" });
+        const port = Number(url.port);
+        if (!Number.isInteger(port) || port < 1 || port > 65535 || !url.password)
+          return yield* new MacosVmError({ reason: "display" });
+        const password = yield* Effect.try({
+          try: () => decodeURIComponent(url.password),
+          catch: () => new MacosVmError({ reason: "display" }),
+        });
+        return {
+          kind: "tcp" as const,
+          host: host === "[::1]" ? "::1" : host,
+          port,
+          password,
+        };
+      }).pipe(Effect.mapError(() => new ComputerDesktopViewerError({ desktopId: name }))),
+    );
+  const boot = (name: string) =>
+    Effect.suspend(() =>
+      lume([
+        "run",
+        name,
+        "--storage",
+        storage,
+        "--detach",
+        "--display",
+        "none",
+        "--vnc",
+        "enabled",
+        // Base64url gives the first eight ASCII bytes 48 bits of entropy even
+        // with traditional VNC's eight-byte truncation. Never persist this in Rove.
+        "--vnc-password",
+        NodeCrypto.randomBytes(18).toString("base64url"),
+        "--network",
+        "nat",
+      ]).pipe(Effect.asVoid),
+    );
   const bootGolden = Effect.gen(function* () {
     preparing = true;
     yield* saveOwner;
-    if ((yield* get(GOLDEN)).status === "running") return;
-    // VNC needs explicit SSH clipboard sync for the manual setup fallback.
-    yield* lume([
-      "run",
-      GOLDEN,
-      "--storage",
-      storage,
-      "--detach",
-      "--display",
-      "vnc",
-      "--clipboard",
-      "--network",
-      "nat",
-    ]);
+    if ((yield* get(GOLDEN)).status === "running") return yield* registerDesktop(GOLDEN);
+    yield* boot(GOLDEN);
+    yield* registerDesktop(GOLDEN);
   });
-  const displayAddress = Effect.gen(function* () {
-    while (true) {
-      const vm = yield* get(GOLDEN);
-      if (vm.status === "running" && vm.vncUrl) return vm.vncUrl;
-      yield* Effect.sleep("1 second");
-    }
-  }).pipe(
-    Effect.timeoutOrElse({
-      duration: "2 minutes",
-      orElse: () => Effect.fail(new MacosVmError({ reason: "display" })),
-    }),
-  );
   const ssh = (ip: string, args: ReadonlyArray<string>): Transport => ({
     command: "/usr/bin/ssh",
     args: [
@@ -411,19 +479,14 @@ export const make = Effect.fn("MacosVm.make")(function* (options?: { readonly ar
       } satisfies ComputerUseMacosVm;
     const result = yield* Effect.gen(function* () {
       yield* claim;
-      const df = yield* run("/bin/df", ["-kP", storage]).pipe(Effect.option);
-      const free =
-        Option.isSome(df) && df.value.code === 0
-          ? Number(df.value.stdout.trim().split("\n").at(-1)?.trim().split(/\s+/)[3]) * 1024
-          : NaN;
-      freeDiskBytes = Number.isFinite(free) ? free : undefined;
+      freeDiskBytes = yield* measureFreeDisk;
       const records = yield* list;
       const vm = records.find((entry) => entry.name === GOLDEN);
       const unrecorded = !workOwned && records.some((entry) => entry.name === WORK);
       return {
         ...base,
         lumeVersion: found.success,
-        ...(Number.isFinite(free) ? { freeDiskBytes: free } : {}),
+        ...(freeDiskBytes !== undefined ? { freeDiskBytes } : {}),
         ...(vm?.diskSize
           ? { diskBytes: vm.diskSize.allocated, virtualDiskBytes: vm.diskSize.total }
           : {}),
@@ -451,24 +514,22 @@ export const make = Effect.fn("MacosVm.make")(function* (options?: { readonly ar
         } satisfies ComputerUseMacosVm);
   });
   const openDisplay = Effect.gen(function* () {
-    if (progress) return yield* new MacosVmError({ reason: "preparing" });
+    if (progress) {
+      if (progress.phase !== "installing-driver")
+        return yield* new MacosVmError({ reason: "preparing" });
+      // Provisioning can wait for consent. Only view the golden VM already booted
+      // by preparation; never start another boot while preparation owns it.
+      yield* assertOwner;
+      if ((yield* get(GOLDEN)).status !== "running")
+        return yield* new MacosVmError({ reason: "display" });
+      return yield* registerDesktop(GOLDEN);
+    }
     if ((yield* check).state !== "needs-consent")
       return yield* new MacosVmError({ reason: "display" });
     yield* claim;
     yield* bootGolden;
-    const vncUrl = yield* displayAddress;
-    const url = yield* Effect.try({
-      try: () => new URL(vncUrl),
-      catch: () => new MacosVmError({ reason: "display" }),
-    });
-    const host = url.hostname;
-    const local =
-      host === "localhost" ||
-      host === "[::1]" ||
-      (NodeNet.isIP(host) === 4 && (host.startsWith("127.") || host.startsWith("192.168.64.")));
-    if (url.protocol !== "vnc:" || !local) return yield* new MacosVmError({ reason: "display" });
-    // Keep credentials on the host; never include the URL or process failure in RPC errors.
-    yield* checked("/usr/bin/open", [vncUrl]);
+    // Compatibility action: the client opens the registered setup desktop inline.
+    // Viewer credentials are resolved privately on demand, not returned by this action.
   }).pipe(
     // Ownership is actionable; anything else may carry the credentialed URL, so it stays generic.
     Effect.mapError((cause) =>
@@ -536,7 +597,7 @@ export const make = Effect.fn("MacosVm.make")(function* (options?: { readonly ar
     }).pipe(
       Effect.catch(() =>
         Effect.logWarning(
-          "Automatic macOS VM setup did not complete. Use Manual setup in the VM's Terminal, then verify permissions.",
+          "Automatic macOS VM setup did not complete. Open the setup desktop, run the setup command in the VM's Terminal, then verify permissions.",
         ),
       ),
     );
@@ -545,6 +606,13 @@ export const make = Effect.fn("MacosVm.make")(function* (options?: { readonly ar
     if (progress) return;
     yield* claim;
     if (leaseKey) return yield* new MacosVmError({ reason: "capacity" });
+    // Only a pull needs the full image size; an existing golden VM re-prepares in place.
+    // An unreadable df fails open, as check does.
+    if (!(yield* list).some((vm) => vm.name === GOLDEN)) {
+      const free = yield* measureFreeDisk;
+      if (free !== undefined && free < REQUIRED_DISK)
+        return yield* new MacosVmError({ reason: "disk", freeBytes: free });
+    }
     lastError = undefined;
     progress = { phase: "downloading", startedAt: yield* Clock.currentTimeMillis };
     // Not forkChild: an RPC's completion must not interrupt the download.
@@ -596,6 +664,7 @@ export const make = Effect.fn("MacosVm.make")(function* (options?: { readonly ar
   const close = Effect.fn("MacosVm.close")(function* (key: string) {
     if (key !== leaseKey) return;
     yield* assertOwner;
+    yield* registry.remove(`vm:${WORK}`);
     if (workOwned) yield* discard(WORK);
     leaseKey = undefined;
     workOwned = false;
@@ -605,6 +674,8 @@ export const make = Effect.fn("MacosVm.make")(function* (options?: { readonly ar
     yield* cancel;
     if (!owned) return;
     yield* assertOwner;
+    yield* registry.remove(`vm:${WORK}`);
+    yield* registry.remove(`vm:${GOLDEN}`);
     // Also discard a partial clone left by an interrupted or failed acquisition.
     if (workOwned) yield* discard(WORK);
     leaseKey = undefined;
@@ -633,20 +704,11 @@ export const make = Effect.fn("MacosVm.make")(function* (options?: { readonly ar
         ["clone", GOLDEN, WORK, "--source-storage", storage, "--dest-storage", storage],
         "5 minutes",
       );
-      yield* lume([
-        "run",
-        WORK,
-        "--storage",
-        storage,
-        "--detach",
-        "--no-display",
-        "--vnc",
-        "disabled",
-        "--network",
-        "nat",
-      ]);
+      yield* boot(WORK);
     }
-    return ssh(yield* address(WORK), ["mcp"]);
+    const ip = yield* address(WORK);
+    yield* registerDesktop(WORK, key);
+    return ssh(ip, ["mcp"]);
   }, Effect.mapError(wrap));
   const remove = Effect.gen(function* () {
     yield* cancel;

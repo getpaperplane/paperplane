@@ -107,10 +107,15 @@ export function shouldRenderPreviewMiniPlayer(
       renderedRightPanelSurface.resourceId === source.tabId
     );
   }
+  const target =
+    renderedRightPanelSurface?.kind === "device" ? renderedRightPanelSurface.target : undefined;
+  if (!target) return true;
+  if (source.kind === "computer")
+    return !(target.kind === "computer" && target.desktopId === source.desktopId);
   return !(
-    renderedRightPanelSurface?.kind === "device" &&
-    renderedRightPanelSurface.target?.hostId === source.hostId &&
-    renderedRightPanelSurface.target.deviceId === source.deviceId
+    target.kind !== "computer" &&
+    target.hostId === source.hostId &&
+    target.deviceId === source.deviceId
   );
 }
 

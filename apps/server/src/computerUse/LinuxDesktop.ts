@@ -1,6 +1,8 @@
 // @effect-diagnostics nodeBuiltinImport:off -- Podman image hashing and process-scoped container names use synchronous Node crypto.
 import * as NodeCrypto from "node:crypto";
 
+import { ComputerDesktopViewerError, ThreadId } from "@rove-code/contracts";
+import * as ComputerDesktops from "./ComputerDesktops.ts";
 import { Environment as HostProcessEnvironment } from "@rove-code/shared/HostProcess";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -90,6 +92,7 @@ export const make = Effect.fn("LinuxDesktop.make")(function* () {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const environment = yield* HostProcessEnvironment;
+  const registry = yield* ComputerDesktops.ComputerDesktops;
   const owner = NodeCrypto.randomUUID();
   const desktops = new Map<string, string>();
   const references = new Map<string, { stamp: string; image: string }>();
@@ -276,6 +279,7 @@ export const make = Effect.fn("LinuxDesktop.make")(function* () {
     const name = desktops.get(key);
     if (!name) return;
     yield* remove(name);
+    yield* registry.remove(`linux:${key}`);
     desktops.delete(key);
   });
 
@@ -359,6 +363,39 @@ export const make = Effect.fn("LinuxDesktop.make")(function* () {
           close(key).pipe(Effect.catch((cause) => Effect.logWarning(cause.detail))),
         ),
       );
+      if (key.startsWith("thread:")) {
+        yield* registry.register(
+          `linux:${key}`,
+          {
+            kind: "linux",
+            role: "thread",
+            threadId: ThreadId.make(key.slice(7)),
+            name: "Linux desktop",
+          },
+          Effect.gen(function* () {
+            const output = yield* run(["inspect", name]);
+            const records = yield* decodeInspection(output.stdout).pipe(
+              Effect.mapError(() => error("Cannot verify desktop ownership.")),
+            );
+            const record = records[0];
+            if (
+              output.code !== 0 ||
+              !record ||
+              record.Config.Labels[OWNER_LABEL] !== owner ||
+              !record.State.Running
+            )
+              return yield* error("The private desktop is no longer owned and running.");
+            return {
+              kind: "process" as const,
+              password: null,
+              transport: {
+                command: "podman",
+                args: ["--remote=false", "exec", "--interactive", name, "/usr/local/bin/vnc.sh"],
+              },
+            };
+          }).pipe(Effect.mapError(() => new ComputerDesktopViewerError({ desktopId: key }))),
+        );
+      }
       return result;
     });
 

@@ -5,6 +5,7 @@ import * as Layer from "effect/Layer";
 import * as Schema from "effect/Schema";
 import { McpSchema, McpServer } from "effect/ai";
 
+import * as Stream from "effect/Stream";
 import { instructionsFor } from "../../../computerUse/BackgroundPolicy.ts";
 import * as CuaDriver from "../../../computerUse/CuaDriver.ts";
 import * as ServerSettings from "../../../serverSettings.ts";
@@ -109,6 +110,9 @@ const makeLayer = (options: {
   const driver = Layer.succeed(
     CuaDriver.CuaDriver,
     CuaDriver.CuaDriver.of({
+      desktopChanges: Stream.empty,
+      desktopViewer: () => Effect.die("unused"),
+      desktopConnection: () => Effect.die("unused"),
       status: Effect.die("unused"),
       control: () => Effect.die("unused"),
       catalog: () =>

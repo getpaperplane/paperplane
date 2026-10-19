@@ -55,6 +55,8 @@ export const RPC_REQUIRED_SCOPES = {
   [WS_METHODS.sandboxLink]: AuthAccessWriteScope,
   [WS_METHODS.computerUseStatus]: AuthOrchestrationReadScope,
   [WS_METHODS.computerUseControl]: AuthOrchestrationOperateScope,
+  [WS_METHODS.subscribeComputerDesktops]: AuthOrchestrationReadScope,
+  [WS_METHODS.computerDesktopViewer]: AuthOrchestrationOperateScope,
   [WS_METHODS.piGetCatalog]: AuthProvidersManageScope,
   [WS_METHODS.piRefreshCatalog]: AuthProvidersManageScope,
   [ORCHESTRATION_V2_WS_METHODS.dispatchCommand]: AuthOrchestrationOperateScope,

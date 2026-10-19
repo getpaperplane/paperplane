@@ -1,4 +1,6 @@
 import type {
+  ComputerDesktop,
+  ComputerDesktopsState,
   ComputerUseControlInput,
   ComputerUseMacosVm,
   ComputerUseMacosVmProgress,
@@ -102,10 +104,20 @@ export function primaryAction(
   }
 }
 
-type VmAction = { input: ComputerUseControlInput; label: string };
+type VmAction = { input: ComputerUseControlInput; label: string; disabled?: true };
 
 function gigabytes(bytes: number): string {
   return `${(bytes / 1e9).toFixed(1)} GB`;
+}
+
+/** Whether the volume is known to be too small for the image. Unknown free space never blocks. */
+function lacksDisk(vm: ComputerUseMacosVm): boolean {
+  return vm.freeDiskBytes !== undefined && vm.freeDiskBytes < vm.requiredDiskBytes;
+}
+
+/** Prepare is unavailable until space is freed; the row offers "Check again" to re-measure. */
+export function isDiskBlocked(vm: ComputerUseMacosVm): boolean {
+  return vm.state === "needs-image" && lacksDisk(vm);
 }
 
 /** The Mac row (mode picker) applies to any darwin status, including one not yet installed. */
@@ -132,13 +144,15 @@ export function describeVm(vm: ComputerUseMacosVm): string {
     case "missing-lume":
       return "Install Lume, Cua's open-source VM tool, to create the private macOS VM.";
     case "needs-image": {
+      if (vm.freeDiskBytes !== undefined && lacksDisk(vm))
+        return `Needs about ${Math.round(vm.requiredDiskBytes / 1e9)} GB of free disk, but only ${gigabytes(vm.freeDiskBytes)} is free. Free up space, then check again.`;
       const free = vm.freeDiskBytes === undefined ? "" : `, ${gigabytes(vm.freeDiskBytes)} free`;
       return `Downloads Cua's macOS image (about ${Math.round(vm.requiredDiskBytes / 1e9)} GB on disk${free}) and sets it up in the background.`;
     }
     case "preparing":
       return "Setting up in the background. You can leave this page.";
     case "needs-consent":
-      return "Open the VM, approve the permission prompts, then select Verify.";
+      return "Open the setup desktop, approve the permission prompts inside the VM, then select Verify.";
     case "ready": {
       const owners = vm.owners.length === 0 ? "" : ` by ${vm.owners.join(", ")}`;
       const disk =
@@ -241,7 +255,7 @@ export function controlFailureTitle(action: ComputerUseControlInput["action"]): 
     case "verify-vm":
       return "Couldn't verify the VM";
     case "open-vm-display":
-      return "Couldn't open the VM";
+      return "Couldn't open the setup desktop";
     case "release-vm":
       return "Couldn't release the VM";
     case "remove-vm":
@@ -255,18 +269,24 @@ export function vmActions(vm: ComputerUseMacosVm): VmAction[] {
       return vm.lumeVersion === undefined ? [] : [REMOVE_VM];
     case "missing-lume":
       return [{ input: { action: "install" }, label: "Install Lume" }];
-    case "needs-image":
-      return [
-        {
-          input: { action: "prepare-vm" },
-          label: vm.lastError === undefined ? "Prepare VM" : "Try again",
-        },
-      ];
+    case "needs-image": {
+      const prepare: VmAction = {
+        input: { action: "prepare-vm" },
+        label: vm.lastError === undefined ? "Prepare VM" : "Try again",
+      };
+      if (lacksDisk(vm)) prepare.disabled = true;
+      return [prepare];
+    }
     case "preparing":
-      return [{ input: { action: "cancel-prepare-vm" }, label: "Cancel" }];
+      return [
+        ...(vm.progress?.phase === "installing-driver"
+          ? [{ input: { action: "open-vm-display" as const }, label: "Open setup desktop" }]
+          : []),
+        { input: { action: "cancel-prepare-vm" }, label: "Cancel" },
+      ];
     case "needs-consent":
       return [
-        { input: { action: "open-vm-display" }, label: "Open VM" },
+        { input: { action: "open-vm-display" }, label: "Open setup desktop" },
         { input: { action: "verify-vm" }, label: "Verify" },
         REMOVE_VM,
       ];
@@ -292,4 +312,30 @@ export function vmConfirmation(input: ComputerUseControlInput): string | null {
     default:
       return null;
   }
+}
+
+/**
+ * A multi-line shell script as one line the user can type into Terminal and
+ * run with a single Return. Comment lines are dropped, lines ending in an
+ * operator continue, and other line breaks become `;`, as the shell treats them.
+ */
+export function singleLineShellCommand(script: string): string {
+  let command = "";
+  for (const raw of script.split(/\r?\n/)) {
+    const line = raw.trim();
+    if (line === "" || line.startsWith("#")) continue;
+    if (command === "") command = line;
+    else if (/(?:&&|\|\||\|)$/.test(command)) command += ` ${line}`;
+    else if (command.endsWith("\\")) command = `${command.slice(0, -1).trimEnd()} ${line}`;
+    else command += `; ${line}`;
+  }
+  return command;
+}
+
+/** The VM's setup desktop, once the server has started and registered it. */
+export function setupDesktopOf(state: ComputerDesktopsState): ComputerDesktop | null {
+  return (
+    state.desktops.find((desktop) => desktop.role === "setup" && desktop.kind === "macos-vm") ??
+    null
+  );
 }

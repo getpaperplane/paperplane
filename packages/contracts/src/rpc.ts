@@ -21,6 +21,10 @@ import {
   ComputerUseControlError,
   ComputerUseControlInput,
   ComputerUseStatus,
+  ComputerDesktopsState,
+  ComputerDesktopViewerInput,
+  ComputerDesktopViewer,
+  ComputerDesktopViewerError,
 } from "./computerUse.ts";
 import {
   PiCatalogInput,
@@ -415,6 +419,8 @@ export const WS_METHODS = {
   worktreeInventoryRemove: "worktreeInventory.remove",
   computerUseStatus: "computerUse.status",
   computerUseControl: "computerUse.control",
+  subscribeComputerDesktops: "subscribeComputerDesktops",
+  computerDesktopViewer: "computerUse.desktopViewer",
   piGetCatalog: "pi.getCatalog",
   piRefreshCatalog: "pi.refreshCatalog",
   // Project registry methods
@@ -1950,6 +1956,19 @@ const WsPiRefreshCatalogRpc = Rpc.make(WS_METHODS.piRefreshCatalog, {
   error: Schema.Union([PiCatalogError, EnvironmentAuthorizationError]),
 });
 
+const WsSubscribeComputerDesktopsRpc = Rpc.make(WS_METHODS.subscribeComputerDesktops, {
+  payload: Schema.Struct({}),
+  success: ComputerDesktopsState,
+  error: EnvironmentAuthorizationError,
+  stream: true,
+});
+
+const WsComputerDesktopViewerRpc = Rpc.make(WS_METHODS.computerDesktopViewer, {
+  payload: ComputerDesktopViewerInput,
+  success: ComputerDesktopViewer,
+  error: Schema.Union([ComputerDesktopViewerError, EnvironmentAuthorizationError]),
+});
+
 const WsComputerUseStatusRpc = Rpc.make(WS_METHODS.computerUseStatus, {
   payload: Schema.Struct({}),
   success: ComputerUseStatus,
@@ -2027,6 +2046,8 @@ export const WsRpcGroup = RpcGroup.make(
   WsPiRefreshCatalogRpc,
   WsComputerUseStatusRpc,
   WsComputerUseControlRpc,
+  WsSubscribeComputerDesktopsRpc,
+  WsComputerDesktopViewerRpc,
   WsWorktreeInventoryListRpc,
   WsWorktreeInventoryInspectRpc,
   WsWorktreeInventoryMeasureRpc,
