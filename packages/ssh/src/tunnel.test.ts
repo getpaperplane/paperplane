@@ -4,6 +4,7 @@ import { assert, describe, it } from "@effect/vitest";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import * as NetService from "@rove-code/shared/Net";
 import * as HostProcess from "@rove-code/shared/HostProcess";
+import * as Data from "effect/Data";
 import * as Deferred from "effect/Deferred";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -12,6 +13,7 @@ import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
 import * as Result from "effect/Result";
+import * as Schedule from "effect/Schedule";
 import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
 import { TestClock } from "effect/testing";
@@ -1243,8 +1245,42 @@ server.listen(Number(flag("--port")), "127.0.0.1", () => {
             yield* parent.stdout.pipe(Stream.decodeText(), Stream.splitLines, Stream.runHead),
           ),
         );
+        // OS exec and signal delivery require bounded polling with the live clock.
+        class ProcessStateNotReady extends Data.TaggedError("ProcessStateNotReady")<{
+          message: string;
+        }> {}
+        const waitForProcessState = (
+          targetPid: number,
+          column: "comm" | "stat",
+          matches: (stdout: string) => boolean,
+          description: string,
+        ) =>
+          runScript(home, ["-c", `ps -o ${column}= -p ${targetPid}`]).pipe(
+            Effect.flatMap(({ stdout }) =>
+              matches(stdout.trim())
+                ? Effect.void
+                : Effect.fail(
+                    new ProcessStateNotReady({
+                      message: `Timed out waiting for ${description}; ps reported ${JSON.stringify(stdout)}`,
+                    }),
+                  ),
+            ),
+            Effect.retry({ schedule: Schedule.spaced("20 millis"), times: 250 }),
+            TestClock.withLive,
+          );
+        yield* waitForProcessState(
+          parent.pid,
+          "comm",
+          (stdout) => stdout === "sleep",
+          `parent ${parent.pid} to exec sleep`,
+        );
         process.kill(zombie, "SIGKILL");
-        assert.include((yield* runScript(home, ["-c", `ps -o stat= -p ${zombie}`])).stdout, "Z");
+        yield* waitForProcessState(
+          zombie,
+          "stat",
+          (stdout) => stdout.includes("Z"),
+          `child ${zombie} to become a zombie`,
+        );
         yield* fs.writeFileString(`${stateDir}/pid`, `${zombie}\n`);
         yield* fs.writeFileString(
           `${home}/.rove-code/userdata/server-runtime.json`,
