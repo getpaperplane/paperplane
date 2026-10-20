@@ -4,6 +4,8 @@ import * as NodeChildProcess from "node:child_process";
 import * as NodeCrypto from "node:crypto";
 import * as NodePath from "node:path";
 import * as NodeOS from "node:os";
+import * as NodeFSP from "node:fs/promises";
+import { RAISE_OOM_SCORE_LINE } from "@rove-code/shared/AgentScope";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 import { Environment as HostProcessEnvironment } from "@rove-code/shared/HostProcess";
@@ -55,23 +57,20 @@ type Job = {
 /**
  * One foreground shell and one managed service per OS user, across Pi instances and servers.
  * OS-owned locks, not JS semaphores: backgrounding in a shell cannot evade the lease.
- * Foreground and service pools reserve 2/3 and 1/3 of the total, so one cannot OOM the other.
+ * Commands and services share one pool beneath the aggregate Rove memory ceiling.
  */
 export class PiWorkloads {
   private readonly lifetime = new AbortController();
   private readonly jobs = new Map<string, Job>();
   private readonly running = new Set<Promise<unknown>>();
   private readonly pool: string;
-  private readonly foregroundMemory: number;
-  private readonly backgroundMemory: number;
+
   private readonly runtimeDirectory: string;
   private readonly config: PiWorkloadConfig;
 
   private constructor(config: PiWorkloadConfig) {
     this.config = config;
-    this.pool = config.pool ?? "rove-command-workloads.slice";
-    this.backgroundMemory = Math.floor(config.memoryMiB / 3);
-    this.foregroundMemory = config.memoryMiB - this.backgroundMemory;
+    this.pool = config.pool ?? "app-rove-workloads.slice";
     this.runtimeDirectory = process.env.XDG_RUNTIME_DIR ?? `/run/user/${process.getuid!()}`;
   }
 
@@ -167,7 +166,7 @@ export class PiWorkloads {
         Buffer.from("[Rove: queued for the host's shell slot; heavy commands run sequentially.]\n"),
       );
     const lease = await this.acquireLease(kind, signal);
-    let budget: ReturnType<typeof makeManagedProcess> | undefined;
+    let budget: (ReturnType<typeof makeManagedProcess> & { memoryMiB: number }) | undefined;
     // The scope's exit, including its orphan descendants, is awaited before releasing the OS lease.
     try {
       signal.throwIfAborted();
@@ -175,9 +174,9 @@ export class PiWorkloads {
       budget = await Effect.runPromise(
         prepareBudgetedProcess(
           shell.shell,
-          [...shell.args, command],
-          kind === "foreground" ? this.foregroundMemory : this.backgroundMemory,
-          this.pool.replace(/\.slice$/, `-${kind}.slice`),
+          [...shell.args, `${RAISE_OOM_SCORE_LINE}\n${command}`],
+          this.config.memoryMiB,
+          this.pool,
           deadline,
           {
             collect: false,
@@ -238,9 +237,26 @@ export class PiWorkloads {
             exit.code ?? (exit.signal ? 128 + (NodeOS.constants.signals[exit.signal] ?? 1) : 1);
           if (result === "oom-kill") {
             exitCode = 137;
+            // Read before cleanup removes the failed scope's cgroup.
+            const controlGroup = await executeProcessControl("systemctl", [
+              "--user",
+              "show",
+              ownedBudget.unit,
+              "--property=ControlGroup",
+              "--value",
+            ]).catch(() => "");
+            const peak = controlGroup
+              ? await NodeFSP.readFile(
+                  NodePath.join("/sys/fs/cgroup", controlGroup, "memory.peak"),
+                  "utf8",
+                ).catch(() => "")
+              : "";
+            const peakMiB = /^\d+$/.test(peak.trim())
+              ? Math.ceil(Number(peak) / 1024 ** 2)
+              : "unknown";
             data(
               Buffer.from(
-                `\n[Rove: command exceeded its ${kind === "foreground" ? this.foregroundMemory : this.backgroundMemory} MiB memory budget. Pi remains connected. Reduce the workload; do not blindly retry.]\n`,
+                `\nCommand killed: exceeded the host's ${ownedBudget.memoryMiB} MiB workload limit (peak ${peakMiB} MiB). Retry with less parallelism (e.g. \`--maxWorkers=2\`) or split the job.\n`,
               ),
             );
           } else if (timeout?.aborted) {
@@ -341,7 +357,7 @@ export class PiWorkloads {
         name: "workload_start",
         label: "Start background service",
         description:
-          "Start one managed background service (e.g. a dev server), separate from the host's foreground shell queue. It has a reserved memory budget, remains owned by this thread, and stops when its session/runtime ends. Run the service in the foreground inside command; do not use '&' or nohup. Returns an id; use workload_list for output and workload_stop to stop it. Only one background service can run per OS user.",
+          "Start one managed background service (e.g. a dev server), separate from the host's foreground shell queue. It shares the host's workload memory limit, remains owned by this thread, and stops when its session/runtime ends. Run the service in the foreground inside command; do not use '&' or nohup. Returns an id; use workload_list for output and workload_stop to stop it. Only one background service can run per OS user.",
         parameters: commandInput,
         execute: async (_id, input, signal) =>
           text(

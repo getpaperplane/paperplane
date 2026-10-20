@@ -3,7 +3,11 @@ import * as FileSystem from "effect/FileSystem";
 import * as Option from "effect/Option";
 import { Platform as HostProcessPlatform } from "@rove-code/shared/HostProcess";
 
-const PROVIDER_WORKLOAD_POOL_SEGMENT = "/rove-provider-workloads.slice/";
+const WORKLOAD_POOL_SEGMENTS = [
+  "/app-rove-workloads.slice/",
+  // Older guarded commands can still be draining after an upgrade.
+  "/rove-provider-workloads.slice/",
+];
 const TERMINATE_GRACE_MS = 3_000;
 const EXIT_CHECK_INTERVAL_MS = 100;
 
@@ -22,7 +26,7 @@ function parseUnifiedCgroup(contents: string): string | undefined {
  */
 export function isServerOwnedCgroup(candidate: string, server: string): boolean {
   if (server === "/" || candidate === server || candidate.startsWith(`${server}/`)) return true;
-  return candidate.includes(PROVIDER_WORKLOAD_POOL_SEGMENT);
+  return WORKLOAD_POOL_SEGMENTS.some((segment) => candidate.includes(segment));
 }
 
 /** True when a `/proc/<pid>/cwd` link target sits inside one of `roots`, even after deletion. */

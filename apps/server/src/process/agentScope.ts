@@ -17,11 +17,13 @@ import * as Path from "effect/Path";
 
 import * as ServerConfig from "../config.ts";
 import * as ProcessRunner from "../processRunner.ts";
+import { roveMemoryBudget } from "./roveMemoryBudget.ts";
+import { configureSlice, withSliceLock } from "./systemdSlice.ts";
 
 /**
- * Agents and terminals share this slice. It sits in app.slice next to the
- * server's own unit, so the server's CPUWeight and IOWeight compete with the
- * agents directly.
+ * Agents and terminals share this child of app-rove.slice. The parent also
+ * contains guarded commands and sits beside the server's own unit in app.slice,
+ * keeping the control plane outside their aggregate memory ceiling.
  */
 const AGENT_SLICE = "app-rove-agents.slice";
 
@@ -37,20 +39,35 @@ export function ownedAgentSlice(stateDir: string): string {
   return `app-rove-agents-${hash}.slice`;
 }
 
-const GiB = 1024 ** 3;
-
-/**
- * Memory limits for the agents slice. Agents together leave about 6 GB free
- * before they are throttled and 4 GB before the kernel kills one, so the
- * server, sshd, and tailscaled keep working. Small machines still give agents
- * at least half of RAM before throttling and three quarters before a kill.
- */
-export function agentSliceMemoryLimits(totalBytes: number) {
-  return {
-    high: Math.max(totalBytes - 6 * GiB, Math.floor(totalBytes / 2)),
-    max: Math.max(totalBytes - 4 * GiB, Math.floor(totalBytes * 0.75)),
-  };
-}
+/** Shared by agents and Pi commands, including hosts that only run Pi. */
+export const ensureRoveParentSlice = Effect.fn("ensureRoveParentSlice")(function* (
+  ownedSlice?: string,
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const environment = yield* HostProcess.Environment;
+  const uid = yield* HostProcess.UserId;
+  const runtimeDir = environment.XDG_RUNTIME_DIR ?? `/run/user/${uid}`;
+  const meminfo = yield* fs.readFileString("/proc/meminfo").pipe(Effect.orElseSucceed(() => ""));
+  const swap = Number(/^SwapTotal:\s+(\d+)/m.exec(meminfo)?.[1] ?? 0) * 1024;
+  const requested = roveMemoryBudget(NodeOS.totalmem(), swap);
+  return yield* withSliceLock(
+    runtimeDir,
+    "app-rove.slice",
+    Effect.gen(function* () {
+      const limits = yield* configureSlice("app-rove.slice", requested, [
+        `MemorySwapMax=${requested.swapMax}`,
+        "CPUWeight=100",
+        "CPUQuota=",
+      ]);
+      // Clear limits left by older servers. The parent now owns the aggregate ceiling.
+      yield* configureSlice(AGENT_SLICE, { max: Infinity }, ["CPUQuota="]);
+      if (ownedSlice !== undefined) {
+        yield* configureSlice(ownedSlice, { max: Infinity }, ["CPUQuota="]);
+      }
+      return { ...limits, swapMax: requested.swapMax };
+    }),
+  );
+});
 
 export interface ScopeState {
   readonly loadState: string;
@@ -201,22 +218,19 @@ export const make = Effect.gen(function* () {
         yield* Effect.logInfo("Agent scopes are off: no systemd user manager");
         return undefined;
       }
-      const limits = agentSliceMemoryLimits(NodeOS.totalmem());
-      const limited = yield* run(systemctl, [
-        "--user",
-        "set-property",
-        "--runtime",
-        AGENT_SLICE,
-        `MemoryHigh=${limits.high}`,
-        `MemoryMax=${limits.max}`,
-      ]);
-      if (limited._tag === "None" || limited.value.code !== 0) {
-        yield* Effect.logWarning("Could not set memory limits on the agents slice", {
-          stderr: limited._tag === "Some" ? limited.value.stderr.trim() : undefined,
-        });
-      }
+      const limits = yield* ensureRoveParentSlice(ownedSlice).pipe(
+        Effect.provideService(ProcessRunner.ProcessRunner, runner),
+        Effect.provideService(FileSystem.FileSystem, fileSystem),
+        Effect.provideService(HostProcess.Environment, hostEnvironment),
+        Effect.catch((cause) =>
+          Effect.logWarning("Could not configure Rove memory limits", { cause }).pipe(
+            Effect.as(undefined),
+          ),
+        ),
+      );
       yield* Effect.logInfo("Agent scopes are on", {
         slice: AGENT_SLICE,
+        parent: "app-rove.slice",
         ...limits,
         oomPolicy: scopeOptions.length > 0,
       });

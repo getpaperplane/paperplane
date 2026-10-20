@@ -753,18 +753,21 @@ export const PI_THINKING_LEVELS = [
 export const PiThinkingLevel = Schema.Literals(PI_THINKING_LEVELS);
 export type PiThinkingLevel = typeof PiThinkingLevel.Type;
 
-const PiWorkloadMemoryMiB = Schema.NumberFromString.check(
-  Schema.isInt(),
-  Schema.isBetween({ minimum: 384, maximum: 1_048_576 }),
-).pipe(
-  Schema.decodeTo(
-    Schema.String,
-    SchemaTransformation.transform({
-      decode: (value) => String(value),
-      encode: (value) => Number(value),
-    }),
+const PiWorkloadMemoryMiB = Schema.Union([
+  Schema.Literal("auto"),
+  Schema.NumberFromString.check(
+    Schema.isInt(),
+    Schema.isBetween({ minimum: 384, maximum: 1_048_576 }),
+  ).pipe(
+    Schema.decodeTo(
+      Schema.String,
+      SchemaTransformation.transform({
+        decode: (value) => String(value),
+        encode: (value) => Number(value),
+      }),
+    ),
   ),
-);
+]);
 
 export const PiSettings = makeProviderSettingsSchema(
   {
@@ -821,12 +824,12 @@ export const PiSettings = makeProviderSettingsSchema(
       }),
     ),
     workloadMemoryMiB: PiWorkloadMemoryMiB.pipe(
-      Schema.withDecodingDefault(Effect.succeed("2048")),
+      Schema.withDecodingDefault(Effect.succeed("auto")),
       Schema.annotateKey({
         title: "Workload memory (MiB)",
         description:
-          "Shared across protected Pi instances for this OS user, not per thread. Two thirds is reserved for one foreground command, one third for one managed background service. Commands that exceed their share fail without disconnecting Pi. Minimum 384 MiB; leave RAM for the OS and server. Auto caps this at half host RAM. All instances must resolve to the same budget. A configured pool must be stopped before resizing. ROVE_PI_MEMORY_BUDGET_MIB takes precedence.",
-        providerSettingsForm: { placeholder: "2048", clearWhenEmpty: "omit" },
+          "Use auto to share the host's Rove memory budget with agents, leaving RAM for the OS and server and allowing bounded swap. The largest command stops only when both budgets are exhausted. An integer of at least 384 MiB adds a shared hard cap without swap for Pi commands and background services, capped by the host budget. CPU is not capped. Lower hard limits apply when current usage permits. ROVE_PI_MEMORY_BUDGET_MIB takes precedence.",
+        providerSettingsForm: { placeholder: "auto", clearWhenEmpty: "omit" },
       }),
     ),
     // Extension paths blocked from loading in new Pi sessions. Toggled from

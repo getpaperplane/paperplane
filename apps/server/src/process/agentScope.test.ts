@@ -12,15 +12,14 @@ import { ChildProcessSpawner } from "effect/process";
 
 import * as ServerConfig from "../config.ts";
 import * as ProcessRunner from "../processRunner.ts";
-import {
-  agentSliceMemoryLimits,
-  classifyScope,
-  make,
-  ownedAgentSlice,
-  type ScopeState,
-} from "./agentScope.ts";
+import { classifyScope, make, ownedAgentSlice, type ScopeState } from "./agentScope.ts";
 
-const GiB = 1024 ** 3;
+import { vi } from "vite-plus/test";
+vi.mock("./systemdSlice.ts", async (original) => ({
+  ...(await original<typeof import("./systemdSlice.ts")>()),
+  // The fake manager needs no cross-process lease; exercise real locking separately.
+  withSliceLock: (_runtime: string, _unit: string, body: Effect.Effect<unknown>) => body,
+}));
 
 const running: ScopeState = {
   loadState: "loaded",
@@ -49,16 +48,6 @@ describe("classifyScope", () => {
     expect(classifyScope({ ...running, loadState: "not-found", activeState: "inactive" })).toBe(
       "gone",
     );
-  });
-});
-
-describe("agentSliceMemoryLimits", () => {
-  it("leaves 6 GB before throttling and 4 GB before a kill on large machines", () => {
-    expect(agentSliceMemoryLimits(64 * GiB)).toEqual({ high: 58 * GiB, max: 60 * GiB });
-  });
-
-  it("still gives agents most of a small machine", () => {
-    expect(agentSliceMemoryLimits(8 * GiB)).toEqual({ high: 4 * GiB, max: 6 * GiB });
   });
 });
 
@@ -187,6 +176,34 @@ describe("AgentScope service", () => {
         expect(sliceOf(terminal)).toBe("app-rove-agents.slice");
         // Only the first launch looks for leftovers.
         expect(calls.filter(([, verb]) => verb === "stop")).toHaveLength(1);
+      }),
+    ),
+  );
+
+  it.effect("moves agent limits to the common parent and resets both child slices", () =>
+    withFakeSystemd(({ scope, calls, stateDir }) =>
+      Effect.gen(function* () {
+        yield* scope.wrap({ command: "agent", args: [], name: "t" });
+        const properties = calls.filter(([, verb]) => verb === "set-property");
+        expect(
+          properties.some(
+            (args) =>
+              args.includes("app-rove.slice") &&
+              args.includes("CPUWeight=100") &&
+              args.includes("MemoryHigh=infinity") &&
+              args.includes("CPUQuota="),
+          ),
+        ).toBe(true);
+        for (const unit of ["app-rove-agents.slice", ownedAgentSlice(stateDir)]) {
+          expect(
+            properties.some(
+              (args) =>
+                args.includes(unit) &&
+                args.includes("MemoryHigh=infinity") &&
+                args.includes("MemoryMax=infinity"),
+            ),
+          ).toBe(true);
+        }
       }),
     ),
   );

@@ -1260,10 +1260,12 @@ describe("PiSettings", () => {
     expect(settings.thinkingLevel).toBeNull();
     expect(settings.customModels).toEqual([]);
     expect(settings.workloadProtection).toBe("auto");
-    expect(settings.workloadMemoryMiB).toBe("2048");
+    expect(settings.workloadMemoryMiB).toBe("auto");
   });
 
-  it("persists workload policy and rejects memory limits that cannot reserve both slots", () => {
+  it("persists auto or explicit workload limits and rejects limits below 384 MiB", () => {
+    expect(decodePiSettings({ workloadMemoryMiB: "auto" }).workloadMemoryMiB).toBe("auto");
+    expect(decodePiSettings({ workloadMemoryMiB: "4096" }).workloadMemoryMiB).toBe("4096");
     const settings = decodePiSettings({ workloadProtection: "on", workloadMemoryMiB: "3072" });
     expect(decodePiSettings(encodePiSettings(settings))).toMatchObject({
       workloadProtection: "on",

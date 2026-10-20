@@ -1,8 +1,12 @@
 // @effect-diagnostics nodeBuiltinImport:off
 import * as NodeChildProcess from "node:child_process";
 import * as NodeCrypto from "node:crypto";
-import * as NodePath from "node:path";
+import * as NodeServices from "@effect/platform-node/NodeServices";
+import * as ProcessRunner from "../processRunner.ts";
+import { ensureRoveParentSlice } from "../process/agentScope.ts";
+import { configureSlice, withSliceLock } from "../process/systemdSlice.ts";
 import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as Schema from "effect/Schema";
 import {
   Environment as HostProcessEnvironment,
@@ -15,7 +19,7 @@ const MemoryMiB = Schema.NumberFromString.check(
   Schema.isBetween({ minimum: 128, maximum: 1_048_576 }),
 );
 
-const PROVIDER_BUDGET_POOL = "rove-provider-workloads.slice";
+const PROVIDER_BUDGET_POOL = "app-rove-workloads.slice";
 
 const decodeMemoryMiB = Schema.decodeUnknownSync(MemoryMiB);
 const decodeTimeoutSeconds = Schema.decodeUnknownSync(
@@ -55,37 +59,15 @@ export function executeProcessControl(
   });
 }
 
-// Serialize setup across environments, not just across instances in this server.
-// Once configured, a shared pool cannot silently change an existing worker's budget.
-const SETUP_POOL = `
-set -eu
-pool="$1"
-bytes="$2"
-systemctl --user start "$pool"
-current=$(systemctl --user show "$pool" --property=MemoryMax --value)
-if [ "$current" = infinity ]; then
-  systemctl --user set-property --runtime "$pool" "MemoryMax=$bytes" MemorySwapMax=0 CPUQuota=200%
-elif [ "$current" != "$bytes" ]; then
-  echo "Workload pool already has a different memory budget ($current bytes). Stop guarded workloads before reconfiguring the pool." >&2
-  exit 1
-fi
-swap=$(systemctl --user show "$pool" --property=MemorySwapMax --value)
-cpu=$(systemctl --user show "$pool" --property=CPUQuotaPerSecUSec --value)
-if [ "$swap" != 0 ] || [ "$cpu" != 2s ]; then
-  echo "Workload pool must have MemorySwapMax=0 and CPUQuota=200%." >&2
-  exit 1
-fi
-`;
-
 /**
  * A Linux user-systemd scope preserves PID, stdio and inherited IPC descriptors.
- * All guarded instances share one memory/CPU budget; the server stays outside it.
+ * All guarded instances share one memory budget; the server stays outside it.
  * Unsupported hosts fail closed rather than silently launching an unguarded worker.
  */
 export const prepareBudgetedProcess = Effect.fn("prepareBudgetedProcess")(function* (
   command: string,
   args: ReadonlyArray<string>,
-  memoryMiB: number,
+  memoryMiB: number | "auto",
   pool = PROVIDER_BUDGET_POOL,
   timeoutSeconds?: number,
   scopeOptions?: { readonly properties?: ReadonlyArray<string>; readonly collect?: boolean },
@@ -99,7 +81,8 @@ export const prepareBudgetedProcess = Effect.fn("prepareBudgetedProcess")(functi
     });
   }
   const bytes = yield* Effect.try({
-    try: () => parseProcessBudgetMiB(String(memoryMiB)) * 1024 * 1024,
+    try: () =>
+      memoryMiB === "auto" ? Infinity : parseProcessBudgetMiB(String(memoryMiB)) * 1024 * 1024,
     catch: (cause) => new ProcessBudgetError({ detail: "Invalid process memory budget.", cause }),
   });
   const deadline = yield* Effect.try({
@@ -110,30 +93,35 @@ export const prepareBudgetedProcess = Effect.fn("prepareBudgetedProcess")(functi
     catch: (cause) => new ProcessBudgetError({ detail: "Invalid process deadline.", cause }),
   });
   const runtimeDirectory = environment.XDG_RUNTIME_DIR ?? `/run/user/${uid}`;
-  yield* Effect.tryPromise({
-    try: () =>
-      executeProcessControl("flock", [
-        "--exclusive",
-        "--close",
-        NodePath.join(runtimeDirectory, `${pool}.lock`),
-        "sh",
-        "-c",
-        SETUP_POOL,
-        "rove-process-budget",
-        pool,
-        String(bytes),
+  const limits = yield* Effect.gen(function* () {
+    // Only the production pool owns the shared host ceiling. Isolated pools (tests,
+    // diagnostics) must never resize limits a live server on this OS user relies on.
+    const parent =
+      pool === PROVIDER_BUDGET_POOL ? yield* ensureRoveParentSlice() : { max: Infinity };
+    const max = Math.min(bytes, parent.max);
+    const poolLimits = yield* withSliceLock(
+      runtimeDirectory,
+      pool,
+      configureSlice(pool, { max: memoryMiB === "auto" ? Infinity : max }, [
+        "CPUQuota=",
+        `MemorySwapMax=${memoryMiB === "auto" ? "infinity" : "0"}`,
       ]),
-    catch: (cause) =>
-      new ProcessBudgetError({ detail: `Workload pool setup failed: ${String(cause)}`, cause }),
-  });
-  return makeManagedProcess(command, args, pool, deadline, scopeOptions);
+    );
+    return { memoryMiB: Math.floor(Math.min(parent.max, poolLimits.max) / 1024 ** 2) };
+  }).pipe(
+    Effect.provide(ProcessRunner.layer.pipe(Layer.provideMerge(NodeServices.layer))),
+    Effect.mapError(
+      (cause) => new ProcessBudgetError({ detail: "Workload pool setup failed.", cause }),
+    ),
+  );
+  return { ...makeManagedProcess(command, args, pool, deadline, scopeOptions), ...limits };
 });
 
-/** An uncapped control-plane scope gives separately contained tools a durable owner. */
+/** An owner outside the command pool, still governed by the aggregate Rove budget. */
 export function makeManagedProcess(
   command: string,
   args: ReadonlyArray<string>,
-  pool = "app.slice",
+  pool = "app-rove-agents.slice",
   deadline: ReadonlyArray<string> = [],
   options?: { readonly properties?: ReadonlyArray<string>; readonly collect?: boolean },
 ) {

@@ -28,6 +28,18 @@ it("treats only the server's cgroup subtree and guarded workloads as server-owne
   );
   expect(
     isServerOwnedCgroup(
+      "/user.slice/user@1000.service/app.slice/app-rove.slice/app-rove-workloads.slice/rove-budget-x.scope",
+      server,
+    ),
+  ).toBe(true);
+  expect(
+    isServerOwnedCgroup(
+      "/user.slice/user@1000.service/app.slice/app-rove.slice/app-rove-workloads-other.slice/rove-budget-x.scope",
+      server,
+    ),
+  ).toBe(false);
+  expect(
+    isServerOwnedCgroup(
       "/user.slice/user@1000.service/rove.slice/rove-provider.slice/rove-provider-workloads.slice/rove-budget-x.scope",
       server,
     ),

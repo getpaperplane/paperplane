@@ -38,7 +38,7 @@ describe.skipIf(!supported)("Pi command isolation on Linux", () => {
   const servers: NodeNet.Server[] = [];
 
   beforeEach(async () => {
-    pool = `rove-workload-test-${NodeCrypto.randomUUID()}.slice`;
+    pool = `app-rove-workloadtest${NodeCrypto.randomUUID().replaceAll("-", "")}.slice`;
     directory = await NodeFSP.mkdtemp(NodePath.join(NodeOS.tmpdir(), "rove-workload-test-"));
   });
   afterEach(async () => {
@@ -89,6 +89,19 @@ describe.skipIf(!supported)("Pi command isolation on Linux", () => {
     );
     return { command, ready };
   }
+
+  it("raises shell OOM priority to the agent score", async () => {
+    const { workloads } = await manager();
+    let output = "";
+    expect(
+      await workloads.exec("cat /proc/self/oom_score_adj", directory, {
+        onData: (chunk) => {
+          output += chunk;
+        },
+      }),
+    ).toEqual({ exitCode: 0 });
+    expect(output).toMatch(/\n800\n/);
+  });
 
   it("uses one foreground lease across instances, while the queued call remains cancellable", async () => {
     const first = await manager();
@@ -146,17 +159,22 @@ describe.skipIf(!supported)("Pi command isolation on Linux", () => {
     expect(await bRun).toEqual({ exitCode: 0 });
   }, 20_000);
 
-  it("contains a command OOM without terminating its owner or another instance, then admits new work", async () => {
+  it("contains a command OOM without terminating Pi, then admits new work", async () => {
     const first = await manager();
     const second = await manager();
-    const service = await gate();
-    const background = await first.workloads.start(service.command, directory, "service-thread");
-    if (!("id" in background)) throw new Error("Missing background id");
-    await service.ready;
+    const properties = await executeProcessControl("systemctl", [
+      "--user",
+      "show",
+      pool,
+      "--property=MemoryHigh,MemoryMax,MemorySwapMax",
+    ]);
+    expect(properties).toContain("MemoryHigh=infinity");
+    expect(properties).toContain(`MemoryMax=${384 * 1024 ** 2}`);
+    expect(properties).toContain("MemorySwapMax=0");
     let output = "";
     expect(
       await first.workloads.exec(
-        node("const b=[];for(let i=0;i<512;i++)b.push(Buffer.alloc(1024*1024,1));"),
+        node("const b=[];for(;;)b.push(Buffer.alloc(1024*1024,1));"),
         directory,
         {
           onData: (chunk) => {
@@ -165,15 +183,15 @@ describe.skipIf(!supported)("Pi command isolation on Linux", () => {
         },
       ),
     ).toEqual({ exitCode: 137 });
-    expect(output).toContain("memory budget");
+    expect(output).toContain("384 MiB workload limit (peak ");
+    expect(output).toContain("--maxWorkers=2");
     expect(first.child.exitCode).toBeNull();
     expect(first.child.signalCode).toBeNull();
     expect(second.child.exitCode).toBeNull();
-    expect(first.workloads.list("service-thread")[0]?.exitCode).toBeUndefined();
+
     expect(await second.workloads.exec("echo recovered", directory, { onData: () => {} })).toEqual({
       exitCode: 0,
     });
-    await first.workloads.stop(background.id, "service-thread");
   }, 20_000);
 
   it("keeps a background service accounted for without occupying the foreground slot", async () => {
@@ -267,7 +285,7 @@ describe.skipIf(!supported)("Pi command isolation on Linux", () => {
   it("honours the inherited override even when settings say off", async () => {
     expect(
       await resolvePiWorkloadMemory("off", "3072", { ROVE_PI_MEMORY_BUDGET_MIB: "2048" }),
-    ).toBe(2048);
+    ).toEqual({ kind: "explicit", mib: 2048 });
     await expect(resolvePiWorkloadMemory("on", "128", {})).rejects.toThrow("384");
   });
 });
