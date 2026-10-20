@@ -145,7 +145,19 @@ describe("isolated Pi instance runtime", () => {
       try {
         const current = await session(runtime, agentDir);
         await current.prompt("workload-oom");
-        expect(JSON.stringify(current.messages)).toContain("memory budget");
+        expect(current.messages).toContainEqual(
+          expect.objectContaining({
+            role: "toolResult",
+            toolName: "bash",
+            isError: true,
+            content: [
+              expect.objectContaining({
+                type: "text",
+                text: expect.stringContaining("384 MiB workload limit"),
+              }),
+            ],
+          }),
+        );
         await current.prompt("workload-recovered");
         expect(JSON.stringify(current.messages)).toContain(
           "Pi survived and next command completed",
@@ -577,7 +589,7 @@ describe("isolated Pi instance runtime", () => {
 
   it("accepts a resumed prompt once pre-prompt compaction starts", async () => {
     const agentDir = withCompaction(directory("prompt-compaction"), {
-      reserveTokens: 9_999,
+      reserveTokens: 1,
       keepRecentTokens: 1,
     });
     const runtime = await create(agentDir);
@@ -590,6 +602,9 @@ describe("isolated Pi instance runtime", () => {
     await aborted;
     const cursor = { sessionId: stopped.sessionId, sessionFile: stopped.sessionFile };
     await stopped.dispose();
+    // Lower the threshold only after recording the aborted turn. Otherwise "hello"
+    // can compact first, and its boundary can share the aborted message's timestamp.
+    withCompaction(agentDir, { reserveTokens: 9_999, keepRecentTokens: 1 });
     const resumed = await runtime.createSession({
       cwd: root,
       agentDir,

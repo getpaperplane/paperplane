@@ -4,14 +4,14 @@ const GIB = 1024 ** 3;
 const MIB = 1024 ** 2;
 
 /** Formats a used/total pair in the total's unit, e.g. "2.1 / 4.3 GiB". */
-export function formatBytePair(used: number, total: number): string {
+function formatBytePair(used: number, total: number): string {
   const [divisor, unit] = total >= GIB ? [GIB, "GiB"] : [MIB, "MiB"];
   const digits = divisor === GIB ? 1 : 0;
   return `${(used / divisor).toFixed(digits)} / ${(total / divisor).toFixed(digits)} ${unit}`;
 }
 
 /** Formats a single host-memory amount, e.g. "1.2 GiB" or "640 MiB". */
-export function formatMemoryBytes(bytes: number): string {
+function formatMemoryBytes(bytes: number): string {
   return bytes >= GIB ? `${(bytes / GIB).toFixed(1)} GiB` : `${Math.round(bytes / MIB)} MiB`;
 }
 
