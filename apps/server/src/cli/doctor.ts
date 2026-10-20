@@ -1,10 +1,14 @@
 import { DATABASE_COMPACTION_RECOMMENDED_BYTES } from "@rove-code/contracts";
+import * as Cause from "effect/Cause";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import { Command, Flag, GlobalFlag, Prompt } from "effect/cli";
 
 import * as BootService from "../cloud/bootService.ts";
+import * as HostHealth from "../diagnostics/HostHealth.ts";
+import * as HostResources from "../resourceTelemetry/HostResources.ts";
+import * as ServerConfig from "../config.ts";
 import * as DatabaseMaintenance from "../persistence/DatabaseMaintenance.ts";
 import { projectLocationFlags, resolveCliAuthConfig } from "./config.ts";
 import * as CliService from "./service.ts";
@@ -20,6 +24,33 @@ export const runDoctor = Effect.fn("runDoctor")(function* (
   databasePath: string,
   options: { readonly fix: boolean; readonly dryRun: boolean; readonly interactive?: boolean },
 ) {
+  const health = yield* HostHealth.HostHealth;
+  yield* Effect.gen(function* () {
+    const host = yield* health.read;
+    yield* Console.log(
+      `Host:\n  Memory: ${formatBytes(host.availableMemoryBytes)} available / ${formatBytes(host.totalMemoryBytes)} total`,
+    );
+    yield* Console.log(
+      host.swapTotalBytes === null || host.swapFreeBytes === null
+        ? "  Swap: unavailable"
+        : `  Swap: ${formatBytes(host.swapFreeBytes)} free / ${formatBytes(host.swapTotalBytes)} total`,
+    );
+    yield* Console.log(
+      host.roveMemory === null
+        ? "  Rove ceiling: unavailable (no systemd memory ceiling)"
+        : `  Rove ceiling: ${formatBytes(host.roveMemory.currentBytes)} current / ${host.roveMemory.limitBytes === null ? "unlimited" : formatBytes(host.roveMemory.limitBytes)}`,
+    );
+    for (const finding of host.findings) {
+      yield* Console.log(`  [${finding.severity}] ${finding.message}`);
+      if (finding.fix !== undefined) yield* Console.log(`    Fix: ${finding.fix}`);
+    }
+  }).pipe(
+    Effect.catchCauseIf(
+      (cause) => !Cause.hasInterrupts(cause),
+      () => Console.log("Host: health checks unavailable."),
+    ),
+  );
+  // Host advice is read-only and remains useful even if database inspection fails.
   const maintenance = yield* DatabaseMaintenance.DatabaseMaintenance;
   const status = yield* maintenance.inspect(databasePath);
   yield* Console.log(
@@ -107,14 +138,23 @@ export const doctorCommand = Command.make("doctor", {
   ),
 }).pipe(
   Command.withDescription(
-    "Inspect this Rove Code data directory and repair it. Pauses and restarts the background service as needed.",
+    "Check host memory health and inspect this Rove Code data directory. Repairs pause and restart the background service as needed.",
   ),
   Command.withHandler((flags) =>
     Effect.gen(function* () {
       const logLevel = yield* GlobalFlag.LogLevel;
       const config = yield* resolveCliAuthConfig(flags, logLevel);
       yield* runDoctor(config.dbPath, { fix: flags.fix, dryRun: flags.dryRun }).pipe(
-        Effect.provide(Layer.merge(DatabaseMaintenance.layer, CliService.layer(config))),
+        Effect.provide(
+          Layer.mergeAll(
+            DatabaseMaintenance.layer,
+            CliService.layer(config),
+            HostHealth.layerForDoctor.pipe(
+              Layer.provide(HostResources.layer),
+              Layer.provide(Layer.succeed(ServerConfig.ServerConfig, config)),
+            ),
+          ),
+        ),
       );
     }),
   ),

@@ -16,6 +16,42 @@ export const HostResourcesSnapshot = Schema.Struct({
 });
 export type HostResourcesSnapshot = typeof HostResourcesSnapshot.Type;
 
+/** One actionable host problem. `id` stays an open string so older clients tolerate new checks. */
+export const HostHealthFinding = Schema.Struct({
+  id: TrimmedNonEmptyString,
+  severity: Schema.Literals(["warning", "info"]),
+  message: TrimmedNonEmptyString,
+  fix: Schema.optionalKey(TrimmedNonEmptyString),
+});
+export type HostHealthFinding = typeof HostHealthFinding.Type;
+
+/** Usage of the shared cgroup ceiling all Rove-spawned work runs under (Linux user systemd). */
+export const RoveMemoryUsage = Schema.Struct({
+  /** Null when the ceiling is unlimited. */
+  limitBytes: Schema.NullOr(NonNegativeInt),
+  currentBytes: NonNegativeInt,
+  swapLimitBytes: Schema.NullOr(NonNegativeInt),
+  swapCurrentBytes: Schema.NullOr(NonNegativeInt),
+  /** Kernel OOM kills inside the ceiling since it was created. */
+  oomKills: NonNegativeInt,
+});
+export type RoveMemoryUsage = typeof RoveMemoryUsage.Type;
+
+/** Host memory health shared by `rove doctor`, the composer notice, and Diagnostics. */
+export const HostHealthReport = Schema.Struct({
+  sampledAt: NonNegativeInt,
+  totalMemoryBytes: NonNegativeInt,
+  availableMemoryBytes: NonNegativeInt,
+  /** Null where swap is not reported (non-Linux). */
+  swapTotalBytes: Schema.NullOr(NonNegativeInt),
+  swapFreeBytes: Schema.NullOr(NonNegativeInt),
+  memoryPressure: Schema.Boolean,
+  /** Null when Rove's memory ceiling does not exist on this host. */
+  roveMemory: Schema.NullOr(RoveMemoryUsage),
+  findings: Schema.Array(HostHealthFinding),
+});
+export type HostHealthReport = typeof HostHealthReport.Type;
+
 export const ResourceTelemetryIoSemantics = Schema.Literals([
   "storage",
   "logical",
