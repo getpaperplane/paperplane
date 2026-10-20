@@ -34,6 +34,7 @@ import { Toggle, ToggleGroup } from "../ui/toggle-group";
 import { Tooltip, TooltipPopup, TooltipTrigger } from "../ui/tooltip";
 import { toastManager } from "../ui/toast";
 import { ExpandableText } from "./ExpandableText";
+import { HostHealthSection } from "./HostHealthSection";
 import { ResourceTelemetryDiagnostics } from "./ResourceTelemetryDiagnostics";
 import { SettingsPageContainer, SettingsSection } from "./settingsLayout";
 import { useRelativeTimeTick } from "../../hooks/useRelativeTimeTick";
@@ -933,9 +934,18 @@ export function DiagnosticsSettingsPanel() {
     ? Option.getOrElse(data.partialFailure, () => false)
     : false;
 
+  // Host health needs only orchestration read, so it shows even without diagnostics access.
+  const hostHealth =
+    environmentId !== null &&
+    environment?.connection.phase === "connected" &&
+    environment.serverConfig?.environment.capabilities.hostHealth === true ? (
+      <HostHealthSection environmentId={environmentId} />
+    ) : null;
+
   if (!canReadDiagnostics) {
     return (
       <SettingsPageContainer>
+        {hostHealth}
         <p className="text-sm text-muted-foreground">
           {environmentId === null
             ? "Connect an environment to see diagnostics."
@@ -949,6 +959,7 @@ export function DiagnosticsSettingsPanel() {
 
   return (
     <SettingsPageContainer width="expanded" className="gap-10">
+      {hostHealth}
       <ResourceTelemetryDiagnostics environmentId={environmentId} />
 
       <SettingsSection

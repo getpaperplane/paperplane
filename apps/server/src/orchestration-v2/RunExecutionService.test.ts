@@ -1,4 +1,5 @@
 import { assert, it, vi } from "@effect/vitest";
+import { AgentScope } from "@rove-code/shared/AgentScope";
 import {
   CheckpointScopeId,
   ChatAttachmentId,
@@ -3771,6 +3772,41 @@ it.effect("refreshes pull requests after a provider stream exits with an error",
     );
     const error = written.find((item) => item.type === "error");
     assert.include(error?.failure.message ?? "", "provider event stream closed unexpectedly");
+  }),
+);
+
+it.effect("labels a failed provider stream with a likely memory kill", () =>
+  Effect.gen(function* () {
+    const agentScope = yield* AgentScope;
+    const checkedThreads: string[] = [];
+    const { written } = yield* captureRootRunTermination({
+      key: "stream-error:likely-oom",
+      shouldFinalizeRun: () => Effect.succeed(true),
+      events: () =>
+        Stream.fail(
+          new ProviderAdapter.ProviderAdapterEventStreamError({
+            driver,
+            providerSessionId: ProviderSessionId.make("session:oom-exited"),
+            cause: { _tag: "CodexAppServerProcessExitedError", signal: "SIGKILL" },
+          }),
+        ),
+    }).pipe(
+      Effect.provideService(AgentScope, {
+        ...agentScope,
+        oomKill: (threadId) =>
+          Effect.sync(() => {
+            checkedThreads.push(threadId);
+            return "likely" as const;
+          }),
+      }),
+    );
+    assert.deepEqual(checkedThreads, [backgroundScenarioIds("stream-error:likely-oom").threadId]);
+    const error = written.find((item) => item.type === "error");
+    assert.equal(error?.failure.code, "oom_kill");
+    assert.equal(
+      error?.failure.message,
+      'Likely killed: the host ran out of memory. Run fewer agents at once or add swap (see "Small or WSL hosts" in the Rove Code docs).',
+    );
   }),
 );
 

@@ -8,6 +8,7 @@ import { Platform as HostProcessPlatform } from "@rove-code/shared/HostProcess";
 import { it } from "@effect/vitest";
 import { afterAll, describe, expect } from "vite-plus/test";
 import {
+  executeProcessControl,
   parseProcessBudgetMiB,
   parseProcessBudgetTimeout,
   prepareBudgetedProcess,
@@ -43,7 +44,7 @@ it.effect("fails closed on unsupported hosts", () =>
 );
 
 describe.skipIf(!hasUserSystemd)("Linux process budget integration", () => {
-  const pool = `rove-budget-test-${NodeCrypto.randomUUID()}.slice`;
+  const pool = `app-rove-budgettest${NodeCrypto.randomUUID().replaceAll("-", "")}.slice`;
   afterAll(async () => {
     await new Promise<void>((resolve, reject) => {
       NodeChildProcess.execFile("systemctl", ["--user", "stop", pool], (error) =>
@@ -117,9 +118,21 @@ describe.skipIf(!hasUserSystemd)("Linux process budget integration", () => {
 
   it.effect("contains a worker OOM and still permits the next worker to complete", () =>
     Effect.gen(function* () {
+      yield* prepareBudgetedProcess(process.execPath, [], 128, pool);
+      const properties = yield* Effect.promise(() =>
+        executeProcessControl("systemctl", [
+          "--user",
+          "show",
+          pool,
+          "--property=MemoryHigh,MemoryMax,MemorySwapMax",
+        ]),
+      );
+      expect(properties).toContain("MemoryHigh=infinity");
+      expect(properties).toContain(`MemoryMax=${128 * 1024 ** 2}`);
+      expect(properties).toContain("MemorySwapMax=0");
       const exhausted = yield* launch(`
       const chunks=[];
-      for(let i=0;i<512;i++) chunks.push(Buffer.alloc(1024*1024, 1));
+      for(;;) chunks.push(Buffer.alloc(1024*1024, 1));
       process.send({unexpected:'allocation escaped budget'});
     `);
       try {
@@ -154,6 +167,11 @@ describe.skipIf(!hasUserSystemd)("Linux process budget integration", () => {
       );
       const second = yield* launch(source);
       try {
+        for (const budget of [first.budget, second.budget]) {
+          expect(budget.args).toContain(`--slice=${pool}`);
+          expect(budget.memoryMiB).toBe(128);
+        }
+        // Two 64 MiB workers plus Node overhead exceed one shared 128 MiB pool.
         const exited = yield* Effect.promise(() => Promise.race([first.exit, second.exit]));
         expect(exited.signal).toBe("SIGKILL");
       } finally {
@@ -187,15 +205,36 @@ describe.skipIf(!hasUserSystemd)("Linux process budget integration", () => {
     }),
   );
 
-  it.effect("refuses to change a pool budget while other instances rely on it", () =>
+  it.effect("uses the parent ceiling in auto mode without a pool CPU or swap restriction", () =>
     Effect.gen(function* () {
-      const error = yield* prepareBudgetedProcess(
+      const budget = yield* prepareBudgetedProcess(process.execPath, [], "auto", pool);
+      const properties = yield* Effect.promise(() =>
+        executeProcessControl("systemctl", [
+          "--user",
+          "show",
+          pool,
+          "--property=MemoryHigh,MemoryMax,MemorySwapMax,CPUQuotaPerSecUSec",
+        ]),
+      );
+      expect(properties).toContain("MemoryHigh=infinity");
+      expect(properties).toContain("MemoryMax=infinity");
+      expect(properties).toContain("MemorySwapMax=infinity");
+      expect(properties).toContain("CPUQuotaPerSecUSec=infinity");
+      expect(budget.memoryMiB).toBeGreaterThan(0);
+    }),
+  );
+
+  it.effect("raises a configured pool without requiring it to stop", () =>
+    Effect.gen(function* () {
+      const budget = yield* prepareBudgetedProcess(
         process.execPath,
         ["-e", "process.exit(0)"],
         256,
         pool,
-      ).pipe(Effect.flip);
-      expect(error.message).toContain("different memory budget");
+      );
+      expect(budget.memoryMiB).toBe(256);
+      const restored = yield* prepareBudgetedProcess(process.execPath, [], 128, pool);
+      expect(restored.memoryMiB).toBe(128);
     }),
   );
 });

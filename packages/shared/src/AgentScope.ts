@@ -33,11 +33,11 @@ export interface AgentScopeShape {
     readonly survivesRestart?: boolean | undefined;
   }) => Effect.Effect<AgentScopeCommand>;
   /**
-   * Whether the latest agent scope of this thread was killed because the
-   * machine or the agents slice ran out of memory. The answer holds until the
-   * thread launches its next agent, so a retried failure reads the same.
+   * Memory-kill evidence for this thread's latest agent: confirmed by systemd,
+   * or likely when an unscoped Linux agent exits as the host OOM count rises.
+   * A verdict holds until the next launch or clear, so retries read the same.
    */
-  readonly oomKilled: (threadId: string) => Effect.Effect<boolean>;
+  readonly oomKill: (threadId: string) => Effect.Effect<"confirmed" | "likely" | null>;
   /**
    * Forgets the thread's scope. The session manager calls it before it opens
    * a provider session, so a scope only answers for the session that launched
@@ -54,7 +54,7 @@ export interface AgentScopeCommand {
 export const AgentScope = Context.Reference<AgentScopeShape>("@rove-code/shared/AgentScope", {
   defaultValue: () => ({
     wrap: ({ command, args }) => Effect.succeed({ command, args }),
-    oomKilled: () => Effect.succeed(false),
+    oomKill: () => Effect.succeed(null),
     clear: () => Effect.void,
   }),
 });
@@ -78,6 +78,12 @@ export const AGENT_OOM_SCORE_ADJ = 800;
 export const RAISE_OOM_SCORE_LINE = `{ echo ${AGENT_OOM_SCORE_ADJ} >/proc/self/oom_score_adj; } 2>/dev/null`;
 
 const LAUNCH_SCRIPT = [RAISE_OOM_SCORE_LINE, 'exec "$@"'].join("\n");
+const PIDFILE_LAUNCH_SCRIPT = [
+  RAISE_OOM_SCORE_LINE,
+  '{ echo $$ >"$1"; } 2>/dev/null',
+  "shift",
+  'exec "$@"',
+].join("\n");
 
 // systemd-run needs XDG_RUNTIME_DIR to reach the user manager. Fill it in when
 // the agent environment does not carry it; it is the same user either way.
@@ -108,10 +114,17 @@ export function agentScopeCommand(input: {
   readonly command: string;
   readonly args: ReadonlyArray<string>;
   readonly scope?: AgentSystemdScope | undefined;
+  readonly pidfile?: string | undefined;
 }): AgentScopeCommand {
   const { command, args, scope } = input;
   if (scope === undefined) {
-    return { command: "/bin/sh", args: ["-c", LAUNCH_SCRIPT, "rove-agent", command, ...args] };
+    return {
+      command: "/bin/sh",
+      args:
+        input.pidfile === undefined
+          ? ["-c", LAUNCH_SCRIPT, "rove-agent", command, ...args]
+          : ["-c", PIDFILE_LAUNCH_SCRIPT, "rove-agent", input.pidfile, command, ...args],
+    };
   }
   return {
     command: "/bin/sh",

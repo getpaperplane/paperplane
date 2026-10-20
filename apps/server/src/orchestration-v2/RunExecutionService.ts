@@ -1,5 +1,7 @@
 import { makeAssistantStreamingFilter } from "./assistantStreaming.ts";
 import { resolveProjectSettings } from "@rove-code/shared/projectSettings";
+import { AgentScope } from "@rove-code/shared/AgentScope";
+import { labelOutOfMemory } from "../process/outOfMemoryFailure.ts";
 import {
   isOrchestrationV2WorkActive,
   CommandId,
@@ -591,6 +593,7 @@ export const layer: Layer.Layer<
 > = Layer.effect(
   RunExecutionServiceV2,
   Effect.gen(function* () {
+    const agentScope = yield* AgentScope;
     const checkpointService = yield* CheckpointService.CheckpointServiceV2;
     const eventSink = yield* EventSink.EventSinkV2;
     const idAllocator = yield* IdAllocator.IdAllocatorV2;
@@ -784,7 +787,12 @@ export const layer: Layer.Layer<
                       providerThreadId: input.terminal.providerThreadId,
                       providerTurnId: input.terminal.providerTurnId,
                       itemOrdinal: input.terminal.failureItemOrdinal,
-                      failure: input.terminal.failure,
+                      // Stream failures retain typed SIGKILL evidence in their
+                      // normalized code; host-counter verdicts alone cannot label them.
+                      failure: labelOutOfMemory(
+                        input.terminal.failure,
+                        yield* agentScope.oomKill(input.run.threadId),
+                      ),
                       occurredAt: completedAt,
                     }),
                   },

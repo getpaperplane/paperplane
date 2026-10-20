@@ -1005,6 +1005,11 @@ export function createServerEnvironmentAtoms<R, E>(
       tag: WS_METHODS.serverGetDatabaseStorage,
       idleTtlMs: 0,
     }),
+    hostHealth: createEnvironmentRpcSubscriptionAtomFamily(runtime, {
+      label: "environment-data:server:host-health",
+      tag: WS_METHODS.serverSubscribeHostHealth,
+      idleTtlMs: 0,
+    }),
     storageCleanupReport: createEnvironmentRpcSubscriptionAtomFamily(runtime, {
       label: "environment-data:server:storage-cleanup-report",
       tag: WS_METHODS.serverGetStorageCleanupReport,

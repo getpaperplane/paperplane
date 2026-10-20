@@ -8,19 +8,26 @@ import { describe, expect, it } from "@effect/vitest";
 import * as HostProcess from "@rove-code/shared/HostProcess";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as FileSystem from "effect/FileSystem";
+import * as PlatformError from "effect/PlatformError";
 import { ChildProcessSpawner } from "effect/process";
 
 import * as ServerConfig from "../config.ts";
 import * as ProcessRunner from "../processRunner.ts";
 import {
-  agentSliceMemoryLimits,
   classifyScope,
+  classifyUnscopedExit,
   make,
   ownedAgentSlice,
   type ScopeState,
 } from "./agentScope.ts";
 
-const GiB = 1024 ** 3;
+import { vi } from "vite-plus/test";
+vi.mock("./systemdSlice.ts", async (original) => ({
+  ...(await original<typeof import("./systemdSlice.ts")>()),
+  // The fake manager needs no cross-process lease; exercise real locking separately.
+  withSliceLock: (_runtime: string, _unit: string, body: Effect.Effect<unknown>) => body,
+}));
 
 const running: ScopeState = {
   loadState: "loaded",
@@ -29,6 +36,19 @@ const running: ScopeState = {
   oomKills: 0,
   populated: true,
 };
+
+describe("classifyUnscopedExit", () => {
+  it("requires both a dead agent and an increased, readable host counter", () => {
+    expect(classifyUnscopedExit({ baseline: 3, current: 4, alive: false })).toBe("likely");
+    for (const alive of [true, undefined]) {
+      expect(classifyUnscopedExit({ baseline: 3, current: 4, alive })).toBeNull();
+    }
+    expect(classifyUnscopedExit({ baseline: 3, current: 3, alive: false })).toBeNull();
+    expect(classifyUnscopedExit({ baseline: 3, current: 2, alive: false })).toBeNull();
+    expect(classifyUnscopedExit({ baseline: undefined, current: 4, alive: false })).toBeNull();
+    expect(classifyUnscopedExit({ baseline: 3, current: undefined, alive: false })).toBeNull();
+  });
+});
 
 describe("classifyScope", () => {
   it("reports an OOM kill only once systemd records it", () => {
@@ -49,16 +69,6 @@ describe("classifyScope", () => {
     expect(classifyScope({ ...running, loadState: "not-found", activeState: "inactive" })).toBe(
       "gone",
     );
-  });
-});
-
-describe("agentSliceMemoryLimits", () => {
-  it("leaves 6 GB before throttling and 4 GB before a kill on large machines", () => {
-    expect(agentSliceMemoryLimits(64 * GiB)).toEqual({ high: 58 * GiB, max: 60 * GiB });
-  });
-
-  it("still gives agents most of a small machine", () => {
-    expect(agentSliceMemoryLimits(8 * GiB)).toEqual({ high: 4 * GiB, max: 6 * GiB });
   });
 });
 
@@ -129,6 +139,135 @@ const unitOf = (launch: { readonly args: ReadonlyArray<string> }) =>
 const sliceOf = (launch: { readonly args: ReadonlyArray<string> }) =>
   launch.args.find((arg) => arg.startsWith("--slice="))?.slice("--slice=".length) ?? "";
 
+describe("AgentScope without systemd", () => {
+  it.effect("tracks pidfiles and vmstat, caches likely, and removes stale launch evidence", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const { stateDir } = yield* ServerConfig.ServerConfig;
+      const pidDir = NodePath.join(stateDir, "agent-pids");
+      const files = new Map<string, string>([[`${pidDir}/stale.pid`, "10"]]);
+      const removed: string[] = [];
+      const missing = (path: string) =>
+        PlatformError.systemError({
+          _tag: "NotFound",
+          module: "FileSystem",
+          method: "readFileString",
+          pathOrDescriptor: path,
+        });
+      const fakeFs = FileSystem.makeNoop({
+        ...fs,
+        readFileString: (path) =>
+          Effect.suspend(() => {
+            if (!path.startsWith("/proc/") && !path.startsWith(pidDir))
+              return fs.readFileString(path);
+            const text = files.get(path);
+            return text === undefined ? Effect.fail(missing(path)) : Effect.succeed(text);
+          }),
+        makeDirectory: () => Effect.void,
+        remove: (path) =>
+          Effect.sync(() => {
+            removed.push(path);
+            for (const key of files.keys())
+              if (key === path || key.startsWith(`${path}/`)) files.delete(key);
+          }),
+      });
+      const scope = yield* make.pipe(
+        Effect.provideService(FileSystem.FileSystem, fakeFs),
+        Effect.provideService(
+          ProcessRunner.ProcessRunner,
+          ProcessRunner.ProcessRunner.of({
+            run: () => Effect.die("No systemd command should run"),
+          }),
+        ),
+        Effect.provideService(HostProcess.Platform, "linux"),
+        Effect.provideService(HostProcess.Environment, {}),
+      );
+      expect(removed).toEqual([pidDir]);
+      expect(files.has(`${pidDir}/stale.pid`)).toBe(false);
+      files.set("/proc/vmstat", "oom_kill 7\n");
+      const launch = yield* scope.wrap({
+        command: "/bin/sh",
+        args: ["-c", "true"],
+        name: "test",
+        threadId: "a",
+      });
+      const pidfile = launch.args.find((arg) => arg.startsWith(pidDir))!;
+      expect(pidfile).toMatch(/agent-pids\/[\w-]+\.pid$/);
+      expect(launch.args[1]).toContain('echo $$ >"$1"');
+      expect(launch.args[1]).toContain('exec "$@"');
+      files.set("/proc/vmstat", "oom_kill 8\n");
+      // A launch whose script has not run is not evidence of a dead agent.
+      expect(yield* scope.oomKill("a")).toBeNull();
+      files.set(pidfile, "123\n");
+      files.set("/proc/123/stat", "123 (agent (worker)) S 1 2");
+      expect(yield* scope.oomKill("a")).toBeNull();
+      files.set("/proc/123/stat", "123 (agent (worker)) Z 1 2");
+      expect(yield* scope.oomKill("a")).toBe("likely");
+      files.set("/proc/vmstat", "oom_kill 0\n");
+      expect(yield* scope.oomKill("a")).toBe("likely");
+      yield* scope.wrap({ command: "/bin/sh", args: [], name: "test", threadId: "a" });
+      expect(files.has(pidfile)).toBe(false);
+      expect(yield* scope.oomKill("a")).toBeNull();
+      const newestPidfile = `${pidDir}/`;
+      yield* scope.clear("a");
+      expect(removed.filter((path) => path.startsWith(newestPidfile))).toHaveLength(2);
+      expect(yield* scope.oomKill("a")).toBeNull();
+
+      // A missing proc entry also proves exit, but only after the counter rises.
+      files.set("/proc/vmstat", "oom_kill 20\n");
+      const gone = yield* scope.wrap({
+        command: "/bin/sh",
+        args: [],
+        name: "test",
+        threadId: "gone",
+      });
+      files.set(
+        gone.args.find((arg) => arg.startsWith(pidDir))!,
+        "456\n",
+      );
+      expect(yield* scope.oomKill("gone")).toBeNull();
+      files.set("/proc/vmstat", "oom_kill 21\n");
+      // A known-dead launch keeps its null verdict despite an unrelated later OOM.
+      expect(yield* scope.oomKill("gone")).toBeNull();
+      const replacement = yield* scope.wrap({
+        command: "/bin/sh",
+        args: [],
+        name: "test",
+        threadId: "gone",
+      });
+      files.set(
+        replacement.args.find((arg) => arg.startsWith(pidDir))!,
+        "789\n",
+      );
+      files.set("/proc/vmstat", "oom_kill 22\n");
+      expect(yield* scope.oomKill("gone")).toBe("likely");
+      const oldestPidfile = replacement.args.find((arg) => arg.startsWith(pidDir))!;
+      for (let index = 0; index < 500; index++) {
+        const next = yield* scope.wrap({
+          command: "/bin/sh",
+          args: [],
+          name: "test",
+          threadId: `bounded-${index}`,
+        });
+        files.set(
+          next.args.find((arg) => arg.startsWith(pidDir))!,
+          "999\n",
+        );
+      }
+      expect(files.has(oldestPidfile)).toBe(false);
+      expect(yield* scope.oomKill("gone")).toBeNull();
+      expect([...files.keys()].filter((key) => key.startsWith(pidDir))).toHaveLength(500);
+    }).pipe(
+      Effect.scoped,
+      Effect.provide(
+        ServerConfig.layerTest(process.cwd(), { prefix: "rove-unscoped-" }).pipe(
+          Layer.provideMerge(NodeServices.layer),
+        ),
+      ),
+    ),
+  );
+});
+
 describe("AgentScope service", () => {
   it.effect("labels a thread from its newest scope until its next session clears it", () =>
     withFakeSystemd(({ scope, units }) =>
@@ -138,17 +277,17 @@ describe("AgentScope service", () => {
         const second = yield* scope.wrap({ command: "agent", args: [], name: "t", threadId: "a" });
         units.set(unitOf(second), { activeState: "active", result: "success" });
         // The older scope was OOM-killed, but the newest one is still running.
-        expect(yield* scope.oomKilled("a")).toBe(false);
+        expect(yield* scope.oomKill("a")).toBe(null);
 
         units.set(unitOf(second), { activeState: "failed", result: "oom-kill" });
-        expect(yield* scope.oomKilled("a")).toBe(true);
+        expect(yield* scope.oomKill("a")).toBe("confirmed");
         // A retried failure reads the same, even after the failed unit is reset.
         units.delete(unitOf(second));
-        expect(yield* scope.oomKilled("a")).toBe(true);
+        expect(yield* scope.oomKill("a")).toBe("confirmed");
 
         // The next session may run without a scope, for example on Cursor.
         yield* scope.clear("a");
-        expect(yield* scope.oomKilled("a")).toBe(false);
+        expect(yield* scope.oomKill("a")).toBe(null);
       }),
     ),
   );
@@ -162,7 +301,7 @@ describe("AgentScope service", () => {
           yield* scope.wrap({ command: "agent", args: [], name: "t", threadId: `other-${index}` });
         }
         units.set(unitOf(live), { activeState: "failed", result: "oom-kill" });
-        expect(yield* scope.oomKilled("live")).toBe(true);
+        expect(yield* scope.oomKill("live")).toBe("confirmed");
       }),
     ),
   );
@@ -187,6 +326,34 @@ describe("AgentScope service", () => {
         expect(sliceOf(terminal)).toBe("app-rove-agents.slice");
         // Only the first launch looks for leftovers.
         expect(calls.filter(([, verb]) => verb === "stop")).toHaveLength(1);
+      }),
+    ),
+  );
+
+  it.effect("moves agent limits to the common parent and resets both child slices", () =>
+    withFakeSystemd(({ scope, calls, stateDir }) =>
+      Effect.gen(function* () {
+        yield* scope.wrap({ command: "agent", args: [], name: "t" });
+        const properties = calls.filter(([, verb]) => verb === "set-property");
+        expect(
+          properties.some(
+            (args) =>
+              args.includes("app-rove.slice") &&
+              args.includes("CPUWeight=100") &&
+              args.includes("MemoryHigh=infinity") &&
+              args.includes("CPUQuota="),
+          ),
+        ).toBe(true);
+        for (const unit of ["app-rove-agents.slice", ownedAgentSlice(stateDir)]) {
+          expect(
+            properties.some(
+              (args) =>
+                args.includes(unit) &&
+                args.includes("MemoryHigh=infinity") &&
+                args.includes("MemoryMax=infinity"),
+            ),
+          ).toBe(true);
+        }
       }),
     ),
   );

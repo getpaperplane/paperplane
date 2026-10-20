@@ -123,6 +123,7 @@ import type {
 } from "../../lib/threadActivity";
 import { PendingApprovalCard } from "./PendingApprovalCard";
 import { ComposerErrorNotice } from "./ComposerErrorNotice";
+import { HostMemoryNotice } from "./HostMemoryNotice";
 import { ComposerFeedback } from "./ComposerFeedback";
 import { ComposerUsageLimits } from "./ComposerUsageLimits";
 import { PendingUserInputCard } from "./PendingUserInputCard";
@@ -1303,6 +1304,13 @@ export const ThreadDetailScreen = memo(function ThreadDetailScreen(props: Thread
                       onDismiss={() => props.onDismissFeedback(submission.id)}
                     />
                   ))}
+                  {props.connectionStateLabel === "connected" &&
+                  props.serverConfig?.environment.capabilities.hostHealth === true ? (
+                    <HostMemoryNotice
+                      environmentId={props.environmentId}
+                      environmentLabel={props.environmentLabel ?? "This environment"}
+                    />
+                  ) : null}
                   {composerError !== null ? (
                     <Animated.View
                       className="shrink-0"

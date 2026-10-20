@@ -17,11 +17,13 @@ import * as Path from "effect/Path";
 
 import * as ServerConfig from "../config.ts";
 import * as ProcessRunner from "../processRunner.ts";
+import { roveMemoryBudget } from "./roveMemoryBudget.ts";
+import { configureSlice, withSliceLock } from "./systemdSlice.ts";
 
 /**
- * Agents and terminals share this slice. It sits in app.slice next to the
- * server's own unit, so the server's CPUWeight and IOWeight compete with the
- * agents directly.
+ * Agents and terminals share this child of app-rove.slice. The parent also
+ * contains guarded commands and sits beside the server's own unit in app.slice,
+ * keeping the control plane outside their aggregate memory ceiling.
  */
 const AGENT_SLICE = "app-rove-agents.slice";
 
@@ -37,20 +39,35 @@ export function ownedAgentSlice(stateDir: string): string {
   return `app-rove-agents-${hash}.slice`;
 }
 
-const GiB = 1024 ** 3;
-
-/**
- * Memory limits for the agents slice. Agents together leave about 6 GB free
- * before they are throttled and 4 GB before the kernel kills one, so the
- * server, sshd, and tailscaled keep working. Small machines still give agents
- * at least half of RAM before throttling and three quarters before a kill.
- */
-export function agentSliceMemoryLimits(totalBytes: number) {
-  return {
-    high: Math.max(totalBytes - 6 * GiB, Math.floor(totalBytes / 2)),
-    max: Math.max(totalBytes - 4 * GiB, Math.floor(totalBytes * 0.75)),
-  };
-}
+/** Shared by agents and Pi commands, including hosts that only run Pi. */
+export const ensureRoveParentSlice = Effect.fn("ensureRoveParentSlice")(function* (
+  ownedSlice?: string,
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const environment = yield* HostProcess.Environment;
+  const uid = yield* HostProcess.UserId;
+  const runtimeDir = environment.XDG_RUNTIME_DIR ?? `/run/user/${uid}`;
+  const meminfo = yield* fs.readFileString("/proc/meminfo").pipe(Effect.orElseSucceed(() => ""));
+  const swap = Number(/^SwapTotal:\s+(\d+)/m.exec(meminfo)?.[1] ?? 0) * 1024;
+  const requested = roveMemoryBudget(NodeOS.totalmem(), swap);
+  return yield* withSliceLock(
+    runtimeDir,
+    "app-rove.slice",
+    Effect.gen(function* () {
+      const limits = yield* configureSlice("app-rove.slice", requested, [
+        `MemorySwapMax=${requested.swapMax}`,
+        "CPUWeight=100",
+        "CPUQuota=",
+      ]);
+      // Clear limits left by older servers. The parent now owns the aggregate ceiling.
+      yield* configureSlice(AGENT_SLICE, { max: Infinity }, ["CPUQuota="]);
+      if (ownedSlice !== undefined) {
+        yield* configureSlice(ownedSlice, { max: Infinity }, ["CPUQuota="]);
+      }
+      return { ...limits, swapMax: requested.swapMax };
+    }),
+  );
+});
 
 export interface ScopeState {
   readonly loadState: string;
@@ -81,6 +98,21 @@ export function classifyScope(state: ScopeState): "oom-killed" | "gone" | "runni
     return "stopping";
   }
   return "running";
+}
+
+/** A host-wide counter is only a candidate verdict; the failure label also requires SIGKILL. */
+export function classifyUnscopedExit({
+  baseline,
+  current,
+  alive,
+}: {
+  readonly baseline: number | undefined;
+  readonly current: number | undefined;
+  readonly alive: boolean | undefined;
+}): "likely" | null {
+  return alive === false && baseline !== undefined && current !== undefined && current > baseline
+    ? "likely"
+    : null;
 }
 
 function parseKeyValues(text: string): Map<string, string> {
@@ -118,6 +150,26 @@ export const make = Effect.gen(function* () {
   const { stateDir } = yield* ServerConfig.ServerConfig;
   const ownedSlice = ownedAgentSlice(stateDir);
   const layerScope = yield* Effect.scope;
+  const pidDir = path.join(stateDir, "agent-pids");
+  // PIDs from an earlier server can have been reused; never trust them.
+  yield* fileSystem.remove(pidDir, { recursive: true, force: true }).pipe(Effect.ignore);
+  yield* fileSystem.makeDirectory(pidDir, { recursive: true }).pipe(Effect.ignore);
+  const unscopedByThread = new Map<
+    string,
+    { pidfile: string; baseline: number | undefined; verdict: "likely" | null | undefined }
+  >();
+  const readOomKills = fileSystem.readFileString("/proc/vmstat").pipe(
+    Effect.map((text) => parseCgroupCounter(text, "oom_kill")),
+    Effect.orElseSucceed(() => undefined),
+  );
+  const clearUnscoped = (threadId: string) =>
+    Effect.gen(function* () {
+      const tracked = unscopedByThread.get(threadId);
+      unscopedByThread.delete(threadId);
+      if (tracked !== undefined) {
+        yield* fileSystem.remove(tracked.pidfile, { force: true }).pipe(Effect.ignore);
+      }
+    });
 
   const resolve = (command: string, env: NodeJS.ProcessEnv) =>
     resolveCommandPath(command, { env }).pipe(
@@ -201,22 +253,19 @@ export const make = Effect.gen(function* () {
         yield* Effect.logInfo("Agent scopes are off: no systemd user manager");
         return undefined;
       }
-      const limits = agentSliceMemoryLimits(NodeOS.totalmem());
-      const limited = yield* run(systemctl, [
-        "--user",
-        "set-property",
-        "--runtime",
-        AGENT_SLICE,
-        `MemoryHigh=${limits.high}`,
-        `MemoryMax=${limits.max}`,
-      ]);
-      if (limited._tag === "None" || limited.value.code !== 0) {
-        yield* Effect.logWarning("Could not set memory limits on the agents slice", {
-          stderr: limited._tag === "Some" ? limited.value.stderr.trim() : undefined,
-        });
-      }
+      const limits = yield* ensureRoveParentSlice(ownedSlice).pipe(
+        Effect.provideService(ProcessRunner.ProcessRunner, runner),
+        Effect.provideService(FileSystem.FileSystem, fileSystem),
+        Effect.provideService(HostProcess.Environment, hostEnvironment),
+        Effect.catch((cause) =>
+          Effect.logWarning("Could not configure Rove memory limits", { cause }).pipe(
+            Effect.as(undefined),
+          ),
+        ),
+      );
       yield* Effect.logInfo("Agent scopes are on", {
         slice: AGENT_SLICE,
+        parent: "app-rove.slice",
         ...limits,
         oomPolicy: scopeOptions.length > 0,
       });
@@ -306,36 +355,65 @@ export const make = Effect.gen(function* () {
       if (scopeByThread.size > MAX_TRACKED_THREADS) yield* evictOldest(systemctl);
     });
 
-  const oomKilled: AgentScopeShape["oomKilled"] = (threadId) =>
+  const oomKill: AgentScopeShape["oomKill"] = (threadId) =>
     Effect.gen(function* () {
+      const unscoped = unscopedByThread.get(threadId);
+      if (unscoped !== undefined) {
+        if (unscoped.verdict !== undefined) return unscoped.verdict;
+        const pid = yield* fileSystem.readFileString(unscoped.pidfile).pipe(
+          Effect.map((text) => (/^\d+$/.test(text.trim()) ? Number(text.trim()) : undefined)),
+          Effect.orElseSucceed(() => undefined),
+        );
+        if (pid === undefined || pid <= 0) return null;
+        const alive = yield* fileSystem.readFileString(`/proc/${pid}/stat`).pipe(
+          // The comm field can contain spaces and parentheses. State follows its last ')'.
+          Effect.map((text) => {
+            const state = /^\s+([A-Z])\s/.exec(text.slice(text.lastIndexOf(")") + 1))?.[1];
+            return state === undefined ? undefined : state !== "Z" && state !== "X";
+          }),
+          Effect.catch((error) =>
+            Effect.succeed(error.reason._tag === "NotFound" ? false : undefined),
+          ),
+        );
+        const verdict = classifyUnscopedExit({
+          baseline: unscoped.baseline,
+          current: yield* readOomKills,
+          alive,
+        });
+        // Once exit is known, a later host OOM must not relabel this old launch.
+        if (alive === false && unscopedByThread.get(threadId) === unscoped)
+          unscoped.verdict = verdict;
+        return verdict;
+      }
       const tracked = scopeByThread.get(threadId);
-      if (tracked === undefined) return false;
-      if (tracked.oomKilled) return true;
+      if (tracked === undefined) return null;
+      if (tracked.oomKilled) return "confirmed";
       const scope = yield* systemd;
-      if (scope === undefined) return false;
+      if (scope === undefined) return null;
       for (let attempt = 0; attempt < STOPPING_POLL_ATTEMPTS; attempt++) {
         const state = yield* readScope(scope.systemctl, tracked.unit);
-        if (state === undefined) return false;
+        if (state === undefined) return null;
         const status = classifyScope(state);
-        if (status === "running") return false;
+        if (status === "running") return null;
         if (status === "stopping") {
           yield* Effect.sleep(STOPPING_POLL_INTERVAL);
           continue;
         }
         yield* forget(scope.systemctl, tracked.unit);
-        if (status === "gone") return false;
+        if (status === "gone") return null;
         yield* Effect.logWarning("Agent scope was killed: out of memory", {
           threadId,
           unit: tracked.unit,
         });
         tracked.oomKilled = true;
-        return true;
+        return "confirmed";
       }
-      return false;
+      return null;
     });
 
   const clear: AgentScopeShape["clear"] = (threadId) =>
     Effect.gen(function* () {
+      yield* clearUnscoped(threadId);
       if (!scopeByThread.has(threadId)) return;
       const scope = yield* systemd;
       if (scope !== undefined) yield* track(scope.systemctl, threadId, undefined);
@@ -350,11 +428,22 @@ export const make = Effect.gen(function* () {
       env,
       survivesRestart,
     }) {
+      if (threadId !== undefined) yield* clearUnscoped(threadId);
       const resolved = yield* resolve(command, env ?? hostEnvironment);
       // Leave unresolved commands alone so the spawn reports the missing binary.
       if (resolved === null) return { command, args };
       const scope = yield* systemd;
-      if (scope === undefined) return agentScopeCommand({ command: resolved, args });
+      if (scope === undefined) {
+        if (threadId === undefined) return agentScopeCommand({ command: resolved, args });
+        const pidfile = path.join(pidDir, `${NodeCrypto.randomUUID()}.pid`);
+        const baseline = yield* readOomKills;
+        unscopedByThread.set(threadId, { pidfile, baseline, verdict: undefined });
+        if (unscopedByThread.size > MAX_TRACKED_THREADS) {
+          const oldest = unscopedByThread.keys().next();
+          if (!oldest.done) yield* clearUnscoped(oldest.value);
+        }
+        return agentScopeCommand({ command: resolved, args, pidfile });
+      }
       const unit = `rove-${name}-${NodeCrypto.randomUUID().slice(0, 8)}.scope`;
       if (threadId !== undefined) yield* track(scope.systemctl, threadId, unit);
       const systemdScope: AgentSystemdScope = {
@@ -368,7 +457,7 @@ export const make = Effect.gen(function* () {
       };
       return agentScopeCommand({ command: resolved, args, scope: systemdScope });
     }),
-    oomKilled,
+    oomKill,
     clear,
   } satisfies AgentScopeShape;
 });

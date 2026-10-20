@@ -52,6 +52,8 @@ import * as ProviderEventIngestor from "./ProviderEventIngestor.ts";
 import * as ProviderAdapter from "@rove-code/provider-core/server/ProviderAdapter";
 import * as ProviderAdapterRegistry from "./ProviderAdapterRegistry.ts";
 import * as ProjectionStore from "./ProjectionStore.ts";
+import * as HostResources from "../resourceTelemetry/HostResources.ts";
+import { idleTimeoutForHost, isUnderMemoryPressure } from "./providerSessionPressure.ts";
 
 const DEFAULT_IDLE_TIMEOUT_MS = 30 * 60 * 1000;
 const DEFAULT_MAX_IDLE_PIN_MS = 4 * 60 * 60 * 1000;
@@ -258,6 +260,13 @@ type ProviderSessionEventSignal =
 
 export interface ProviderSessionManagerV2LayerOptions {
   readonly idleTimeoutMs?: number;
+  readonly memory?: Effect.Effect<
+    {
+      readonly totalMemoryBytes: number;
+      readonly availableMemoryBytes: number;
+    },
+    Cause.UnknownError
+  >;
   /** Cap on how long idle release may be deferred for pending background work. */
   readonly maxIdlePinMs?: number;
   /** Test replay harnesses can omit Rove's MCP server from provider protocol fixtures. */
@@ -438,7 +447,22 @@ export const layerWithOptions = (
         readonly providerSessionId: ProviderSessionId;
         readonly threadId: ThreadId;
       }) => `${input.providerSessionId}\u0000${input.threadId}`;
-      const idleTimeoutMs = Math.max(1, options.idleTimeoutMs ?? DEFAULT_IDLE_TIMEOUT_MS);
+      // Optional for isolated replay harnesses; production provides HostResources.
+      const hostResources = yield* Effect.serviceOption(HostResources.HostResources);
+      const memory =
+        options.memory ??
+        (Option.isSome(hostResources)
+          ? hostResources.value.readMemory
+          : Effect.fail(new Cause.UnknownError("HostResources unavailable")));
+      const hostIdleTimeoutMs =
+        options.idleTimeoutMs === undefined
+          ? yield* memory.pipe(
+              Effect.map(({ totalMemoryBytes }) => idleTimeoutForHost(totalMemoryBytes)),
+              Effect.catchCause(() => Effect.succeed(DEFAULT_IDLE_TIMEOUT_MS)),
+            )
+          : options.idleTimeoutMs;
+      const idleTimeoutMs = Math.max(1, hostIdleTimeoutMs);
+      const openingSessions = new Set<ProviderSessionId>();
       const maxIdlePinMs = Math.max(0, options.maxIdlePinMs ?? DEFAULT_MAX_IDLE_PIN_MS);
       interface PreparedMcpCredential {
         readonly mcpCredentialId: string | undefined;
@@ -999,6 +1023,7 @@ export const layerWithOptions = (
               if (
                 input.onlyIfIdleGeneration !== undefined &&
                 (existing.busyTurns.size > 0 ||
+                  openingSessions.has(input.providerSessionId) ||
                   existing.idleGeneration !== input.onlyIfIdleGeneration)
               ) {
                 return ["kept", current] as const;
@@ -1197,6 +1222,7 @@ export const layerWithOptions = (
       const releaseIfStillIdle = (input: {
         readonly providerSessionId: ProviderSessionId;
         readonly generation: number;
+        readonly pressure?: boolean;
       }): Effect.Effect<void> =>
         Effect.gen(function* () {
           const current = yield* Ref.get(sessions);
@@ -1205,6 +1231,7 @@ export const layerWithOptions = (
           if (
             entry === undefined ||
             entry.busyTurns.size > 0 ||
+            openingSessions.has(input.providerSessionId) ||
             entry.idleGeneration !== input.generation
           ) {
             return;
@@ -1216,9 +1243,19 @@ export const layerWithOptions = (
             probedRuntime.hasPendingBackgroundWork === undefined
               ? false
               : yield* probedRuntime.hasPendingBackgroundWork.pipe(
-                  Effect.catchCause(() => Effect.succeed(false)),
+                  Effect.catchCause((cause) =>
+                    input.pressure
+                      ? Effect.logWarning(
+                          "orchestration-v2.driver-session.pending-work-probe-failed",
+                          { cause },
+                        ).pipe(Effect.as(true))
+                      : Effect.succeed(false),
+                  ),
                 );
           if (hasPendingWork) {
+            // Pressure relief never waits for or interrupts background work.
+            // The normal idle timer still owns the bounded pin policy.
+            if (input.pressure) return;
             const now = yield* Clock.currentTimeMillis;
             const pinnedSinceMs = entry.pinnedSinceMs ?? now;
             if (now - pinnedSinceMs < maxIdlePinMs) {
@@ -1263,7 +1300,7 @@ export const layerWithOptions = (
           yield* releaseEntry({
             providerSessionId: input.providerSessionId,
             reason: "idle_timeout",
-            cancelIdleFiber: false,
+            cancelIdleFiber: input.pressure === true,
             onlyIfIdleGeneration: input.generation,
           }).pipe(
             Effect.catchCause((cause) =>
@@ -1274,6 +1311,30 @@ export const layerWithOptions = (
             ),
           );
         });
+
+      const relieveMemoryPressure = Effect.fnUntraced(
+        function* (opening: ProviderSessionId) {
+          if (!isUnderMemoryPressure(yield* memory)) return;
+          const candidates = [...(yield* Ref.get(sessions)).values()]
+            .filter(
+              (entry) => entry.runtime.providerSessionId !== opening && entry.busyTurns.size === 0,
+            )
+            .sort((a, b) => a.lastActivityAtMs - b.lastActivityAtMs);
+          for (const entry of candidates) {
+            yield* releaseIfStillIdle({
+              providerSessionId: entry.runtime.providerSessionId,
+              generation: entry.idleGeneration,
+              pressure: true,
+            });
+            if (!isUnderMemoryPressure(yield* memory)) break;
+          }
+        },
+        Effect.catchCause((cause) =>
+          Effect.logWarning("orchestration-v2.driver-session.memory-pressure-relief-failed", {
+            cause,
+          }),
+        ),
+      );
 
       const withActivityError = <A, E, R>(
         providerSessionId: ProviderSessionId,
@@ -2200,6 +2261,9 @@ export const layerWithOptions = (
           sessionOpen.withLock(
             input.providerSessionId,
             Effect.gen(function* () {
+              // Protects the entire open/attach, including MCP setup and rollback,
+              // from memory-pressure release.
+              openingSessions.add(input.providerSessionId);
               const cwd = input.runtimePolicy.cwd;
               if (cwd !== null) {
                 const workspaceIsDirectory = yield* fileSystem.stat(cwd).pipe(
@@ -2265,6 +2329,7 @@ export const layerWithOptions = (
               // The previous session's agent scope must not explain this
               // session's failures, even when this provider runs without one.
               yield* agentScope.clear(input.threadId);
+              yield* relieveMemoryPressure(input.providerSessionId);
               const runtime = yield* adapter
                 .openSession({
                   threadId: input.threadId,
@@ -2389,7 +2454,13 @@ export const layerWithOptions = (
               yield* startEventPump(entry);
               yield* scheduleIdleRelease(input.providerSessionId);
               return exposedRuntime;
-            }),
+            }).pipe(
+              Effect.ensuring(
+                Effect.sync(() => {
+                  openingSessions.delete(input.providerSessionId);
+                }),
+              ),
+            ),
           ),
         isLive: (providerSessionId) =>
           Ref.get(sessions).pipe(

@@ -5,35 +5,74 @@ vi.mock("./ProcessBudget.ts", async (original) => ({
   ...(await original<typeof import("./ProcessBudget.ts")>()),
   executeProcessControl: control,
 }));
-import { resolvePiWorkloadMemory } from "./PiWorkloadPolicy.ts";
+import { foregroundSlots, resolvePiWorkloadMemory } from "./PiWorkloadPolicy.ts";
 
 const gib = 1024 ** 3;
 describe("Pi workload policy", () => {
-  it("leaves larger, unsupported and explicitly disabled hosts alone", async () => {
+  it.each([
+    // CPU floor, RAM floor, and both clamps, including the 2 GiB boundaries.
+    [0, 0, 1],
+    [1, 16 * gib, 1],
+    [3, 16 * gib, 1],
+    [4, 16 * gib, 2],
+    [7, 16 * gib, 3],
+    [8, 16 * gib, 4],
+    [64, 64 * gib, 4],
+    [16, 384 * 1024 ** 2, 1],
+    [16, 2 * gib, 1],
+    [16, 4 * gib - 1, 1],
+    [16, 4 * gib, 2],
+    [16, 6 * gib - 1, 2],
+    [16, 6 * gib, 3],
+    [16, 8 * gib - 1, 3],
+    [16, 8 * gib, 4],
+    [4, 6 * gib, 2],
+  ])("sizes foreground slots for %i CPUs and %i bytes to %i", (cpus, ceiling, slots) => {
+    expect(foregroundSlots({ cpus, ceilingBytes: ceiling })).toBe(slots);
+  });
+
+  it("leaves larger, unsupported, too-small and explicitly disabled hosts alone", async () => {
     control.mockReset();
-    expect(await resolvePiWorkloadMemory("auto", "2048", {}, "linux", 16 * gib)).toBeUndefined();
-    expect(await resolvePiWorkloadMemory("auto", "2048", {}, "darwin", 4 * gib)).toBeUndefined();
-    expect(await resolvePiWorkloadMemory("off", "2048", {}, "linux", 4 * gib)).toBeUndefined();
+    expect(await resolvePiWorkloadMemory("auto", "auto", {}, "linux", 16 * gib)).toBeUndefined();
+    expect(
+      await resolvePiWorkloadMemory("auto", "auto", {}, "linux", 512 * 1024 ** 2),
+    ).toBeUndefined();
+    expect(await resolvePiWorkloadMemory("auto", "auto", {}, "darwin", 4 * gib)).toBeUndefined();
+    expect(await resolvePiWorkloadMemory("off", "auto", {}, "linux", 4 * gib)).toBeUndefined();
     expect(control).not.toHaveBeenCalled();
   });
 
-  it("reserves half a small host for the OS and Pi while respecting smaller configured limits", async () => {
+  it("shares the parent for auto and migrates the former saved default", async () => {
     control.mockReset().mockResolvedValue("");
-    expect(await resolvePiWorkloadMemory("auto", "2048", {}, "linux", 2 * gib)).toBe(1024);
-    expect(await resolvePiWorkloadMemory("auto", "384", {}, "linux", 2 * gib)).toBe(384);
-    expect(await resolvePiWorkloadMemory("auto", "2048", {}, "linux", 8 * gib)).toBe(2048);
+    for (const mode of [undefined, "auto"] as const) {
+      for (const value of ["auto", "2048"]) {
+        expect(await resolvePiWorkloadMemory(mode, value, {}, "linux", 2 * gib)).toEqual({
+          kind: "auto",
+        });
+      }
+    }
+    expect(await resolvePiWorkloadMemory("auto", "auto", {}, "linux", 8 * gib)).toEqual({
+      kind: "auto",
+    });
+    expect(await resolvePiWorkloadMemory("on", "auto", {}, "linux", 16 * gib)).toEqual({
+      kind: "auto",
+    });
+    expect(await resolvePiWorkloadMemory("auto", "384", {}, "linux", 2 * gib)).toEqual({
+      kind: "explicit",
+      mib: 384,
+    });
   });
 
   it("fails closed for explicit protection when the manager is unavailable", async () => {
     control.mockReset().mockRejectedValue(new Error("user systemd unavailable"));
-    expect(await resolvePiWorkloadMemory("auto", "2048", {}, "linux", 4 * gib)).toBeUndefined();
+    expect(await resolvePiWorkloadMemory("auto", "auto", {}, "linux", 4 * gib)).toBeUndefined();
     await expect(resolvePiWorkloadMemory("on", "2048", {}, "linux", 4 * gib)).rejects.toThrow(
       "unavailable",
     );
     await expect(
       resolvePiWorkloadMemory(
         "off",
-        "2048",
+        "auto",
         { ROVE_PI_MEMORY_BUDGET_MIB: "384" },
         "linux",
         4 * gib,
@@ -41,20 +80,33 @@ describe("Pi workload policy", () => {
     ).rejects.toThrow("unavailable");
   });
 
-  it("preserves explicit memory settings and environment precedence", async () => {
+  it("preserves explicit settings and environment precedence", async () => {
     control.mockReset().mockResolvedValue("");
-    expect(await resolvePiWorkloadMemory("on", "2048", {}, "linux", 2 * gib)).toBe(2048);
+    expect(await resolvePiWorkloadMemory("on", "2048", {}, "linux", 2 * gib)).toEqual({
+      kind: "explicit",
+      mib: 2048,
+    });
     expect(
       await resolvePiWorkloadMemory(
         "off",
-        "2048",
+        "auto",
         { ROVE_PI_MEMORY_BUDGET_MIB: "384" },
         "linux",
         2 * gib,
       ),
-    ).toBe(384);
+    ).toEqual({ kind: "explicit", mib: 384 });
+    await expect(resolvePiWorkloadMemory("on", "383", {}, "linux", 4 * gib)).rejects.toThrow("384");
     await expect(resolvePiWorkloadMemory("on", "2048", {}, "darwin", 4 * gib)).rejects.toThrow(
       "Linux",
     );
+    await expect(
+      resolvePiWorkloadMemory(
+        "off",
+        "auto",
+        { ROVE_PI_MEMORY_BUDGET_MIB: "auto" },
+        "linux",
+        4 * gib,
+      ),
+    ).rejects.toThrow();
   });
 });

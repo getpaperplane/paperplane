@@ -121,19 +121,13 @@ On Linux with a systemd user manager and `flock`, run verification inside a shar
 vp run guarded -- vp run --filter @rove-code/server typecheck
 ```
 
-Guarded commands share 2048 MiB of memory and two CPU cores across worktrees and environments for the same OS user, with no workload swap. Commands have a 120-second deadline; set `--timeout-seconds` before the separator to change it (up to 86400 seconds). A job can be killed for running out of memory or time; the purpose is to keep the environment reachable, not to make a large typecheck fit. Background descendants are stopped when their owning command exits. This is opt-in; ordinary commands and other users' processes are unaffected.
+Guarded commands default to a shared 2048 MiB memory ceiling across worktrees and environments for the same OS user, capped by the host's aggregate Rove budget. Explicit limits are hard caps without swap; CPU is not capped. In auto mode, Rove reserves RAM for the system and server and lets agent work use bounded swap, stopping the largest command only when both budgets are exhausted. Commands have a 120-second deadline; set `--timeout-seconds` before the separator to change it (up to 86400 seconds). A job can be killed for running out of memory or time; the purpose is to keep the environment reachable, not to make a large typecheck fit. Background descendants are stopped when their owning command exits. This is opt-in; ordinary commands and other users' processes are unaffected.
 
-Pi's built-in shell tools have separate, persisted workload protection in provider Settings, enabled automatically on small supported Linux/WSL hosts. `ROVE_PI_MEMORY_BUDGET_MIB` overrides that policy and enables it even when Settings says Off. Pi stays outside the command pool: an oversized shell command fails without disconnecting its runtime. Shell calls serialize across instances; managed background services use a separate reserved share. Use `workload_start`, `workload_list`, and `workload_stop` for a dev server; ordinary shell-backgrounded children are stopped when the call ends. This uses `rove-command-workloads.slice`, distinct from the opt-in guarded wrapper's pool. Do not nest the guarded wrapper inside an already protected shell call. See [Pi resource limits](../user/providers-pi.md#resource-limits-on-linux-and-wsl) for limits, overrides, resizing, and extension coverage.
+Pi's built-in shell tools have separate, persisted workload protection in provider Settings, enabled automatically on small supported Linux/WSL hosts. `ROVE_PI_MEMORY_BUDGET_MIB` overrides that policy and enables it even when Settings says Off. Pi stays outside the command pool: an oversized shell command fails without disconnecting its runtime. Shell calls serialize across instances; managed background services share their memory pool. Use `workload_start`, `workload_list`, and `workload_stop` for a dev server; ordinary shell-backgrounded children are stopped when the call ends. This uses `app-rove-workloads.slice`, shared with the opt-in guarded wrapper beneath the aggregate `app-rove.slice` budget. Do not nest the guarded wrapper inside an already protected shell call. See [Pi resource limits](../user/providers-pi.md#resource-limits-on-linux-and-wsl) for limits, overrides, resizing, and extension coverage.
 
-Use `--memory-mib` before the command separator to request another budget. A pool already configured with a different budget refuses the launch. After stopping all guarded commands and Pi instances, reconfigure it explicitly:
+Use `--memory-mib` before the command separator to request another budget, for example `vp run guarded --memory-mib 3072 -- <command>`. Setup raises limits immediately. A lower hard limit is deferred, with a warning, if live usage is at or above it; the next setup tries again. Use consistent settings across instances because the pool is shared. Old command slices drain naturally and are never reconfigured by the new setup.
 
-```sh
-systemctl --user set-property --runtime rove-provider-workloads.slice \
-  MemoryMax=3072M MemorySwapMax=0 CPUQuota=200%
-vp run guarded --memory-mib 3072 -- <command>
-```
-
-The pool configuration is runtime-only and disappears with the user manager. Do not increase it without reserving RAM for the server, the OS, and other applications.
+The pool configuration is runtime-only and disappears with the user manager. The parent budget always reserves RAM for the server and OS.
 
 Use `vp run lint:mobile` for native mobile changes. CI owns the full suite; see
 [ci.yml](../../.github/workflows/ci.yml) for its current jobs.

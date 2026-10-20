@@ -124,7 +124,7 @@ export class PiRuntimeProcess {
     const args = executable ? ["__pi-runtime"] : [entry];
     const memoryMiB = await resolvePiWorkloadMemory(
       options.workloadProtection ?? "off",
-      options.workloadMemoryMiB ?? "2048",
+      options.workloadMemoryMiB ?? "auto",
       environment,
     );
     // Pi is the control plane, never a candidate for a command-pool OOM. The owner scope
@@ -134,7 +134,7 @@ export class PiRuntimeProcess {
       budget === undefined || memoryMiB === undefined
         ? undefined
         : {
-            memoryMiB,
+            memoryMiB: memoryMiB.kind === "auto" ? "auto" : memoryMiB.mib,
             ownerUnit: budget.unit,
             ...(options.workloadPool ? { pool: options.workloadPool } : {}),
           };

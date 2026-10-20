@@ -23,6 +23,10 @@
       "types": "./src/device/hubAccess.ts",
       "default": "./src/device/hubAccess.ts"
     },
+    "./host-health": {
+      "types": "./src/hostHealth.ts",
+      "default": "./src/hostHealth.ts"
+    },
     "./worktree-inventory": {
       "types": "./src/worktreeInventory.ts",
       "default": "./src/worktreeInventory.ts"

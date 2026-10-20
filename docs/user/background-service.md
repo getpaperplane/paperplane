@@ -105,8 +105,11 @@ and turns on automatic shrinking. Settings > Storage (web and desktop) or
 Settings > Maintenance (mobile) suggests the repair when at least 1 GiB can be
 reclaimed.
 
-Run `rove doctor` on the machine that hosts the environment. It reports the
-database size and the space it can reclaim, then asks which repairs to run;
+Run `rove doctor` on the machine that hosts the environment. It first reports
+available memory, swap, Rove's memory ceiling when present, and host health
+findings with suggested fixes. These checks are advisory: `--fix` does not change
+host memory settings. It then reports the database size and the space it can
+reclaim and asks which repairs to run;
 pass `--fix` to run the recommended ones without a prompt (for scripts), or
 `--dry-run` to only report. An installed background service for the same data
 directory is stopped for the repair and started again afterwards, also when
