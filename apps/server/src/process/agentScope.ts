@@ -100,6 +100,21 @@ export function classifyScope(state: ScopeState): "oom-killed" | "gone" | "runni
   return "running";
 }
 
+/** A host-wide counter is only a candidate verdict; the failure label also requires SIGKILL. */
+export function classifyUnscopedExit({
+  baseline,
+  current,
+  alive,
+}: {
+  readonly baseline: number | undefined;
+  readonly current: number | undefined;
+  readonly alive: boolean | undefined;
+}): "likely" | null {
+  return alive === false && baseline !== undefined && current !== undefined && current > baseline
+    ? "likely"
+    : null;
+}
+
 function parseKeyValues(text: string): Map<string, string> {
   const values = new Map<string, string>();
   for (const line of text.split("\n")) {
@@ -135,6 +150,26 @@ export const make = Effect.gen(function* () {
   const { stateDir } = yield* ServerConfig.ServerConfig;
   const ownedSlice = ownedAgentSlice(stateDir);
   const layerScope = yield* Effect.scope;
+  const pidDir = path.join(stateDir, "agent-pids");
+  // PIDs from an earlier server can have been reused; never trust them.
+  yield* fileSystem.remove(pidDir, { recursive: true, force: true }).pipe(Effect.ignore);
+  yield* fileSystem.makeDirectory(pidDir, { recursive: true }).pipe(Effect.ignore);
+  const unscopedByThread = new Map<
+    string,
+    { pidfile: string; baseline: number | undefined; verdict: "likely" | null | undefined }
+  >();
+  const readOomKills = fileSystem.readFileString("/proc/vmstat").pipe(
+    Effect.map((text) => parseCgroupCounter(text, "oom_kill")),
+    Effect.orElseSucceed(() => undefined),
+  );
+  const clearUnscoped = (threadId: string) =>
+    Effect.gen(function* () {
+      const tracked = unscopedByThread.get(threadId);
+      unscopedByThread.delete(threadId);
+      if (tracked !== undefined) {
+        yield* fileSystem.remove(tracked.pidfile, { force: true }).pipe(Effect.ignore);
+      }
+    });
 
   const resolve = (command: string, env: NodeJS.ProcessEnv) =>
     resolveCommandPath(command, { env }).pipe(
@@ -320,36 +355,65 @@ export const make = Effect.gen(function* () {
       if (scopeByThread.size > MAX_TRACKED_THREADS) yield* evictOldest(systemctl);
     });
 
-  const oomKilled: AgentScopeShape["oomKilled"] = (threadId) =>
+  const oomKill: AgentScopeShape["oomKill"] = (threadId) =>
     Effect.gen(function* () {
+      const unscoped = unscopedByThread.get(threadId);
+      if (unscoped !== undefined) {
+        if (unscoped.verdict !== undefined) return unscoped.verdict;
+        const pid = yield* fileSystem.readFileString(unscoped.pidfile).pipe(
+          Effect.map((text) => (/^\d+$/.test(text.trim()) ? Number(text.trim()) : undefined)),
+          Effect.orElseSucceed(() => undefined),
+        );
+        if (pid === undefined || pid <= 0) return null;
+        const alive = yield* fileSystem.readFileString(`/proc/${pid}/stat`).pipe(
+          // The comm field can contain spaces and parentheses. State follows its last ')'.
+          Effect.map((text) => {
+            const state = /^\s+([A-Z])\s/.exec(text.slice(text.lastIndexOf(")") + 1))?.[1];
+            return state === undefined ? undefined : state !== "Z" && state !== "X";
+          }),
+          Effect.catch((error) =>
+            Effect.succeed(error.reason._tag === "NotFound" ? false : undefined),
+          ),
+        );
+        const verdict = classifyUnscopedExit({
+          baseline: unscoped.baseline,
+          current: yield* readOomKills,
+          alive,
+        });
+        // Once exit is known, a later host OOM must not relabel this old launch.
+        if (alive === false && unscopedByThread.get(threadId) === unscoped)
+          unscoped.verdict = verdict;
+        return verdict;
+      }
       const tracked = scopeByThread.get(threadId);
-      if (tracked === undefined) return false;
-      if (tracked.oomKilled) return true;
+      if (tracked === undefined) return null;
+      if (tracked.oomKilled) return "confirmed";
       const scope = yield* systemd;
-      if (scope === undefined) return false;
+      if (scope === undefined) return null;
       for (let attempt = 0; attempt < STOPPING_POLL_ATTEMPTS; attempt++) {
         const state = yield* readScope(scope.systemctl, tracked.unit);
-        if (state === undefined) return false;
+        if (state === undefined) return null;
         const status = classifyScope(state);
-        if (status === "running") return false;
+        if (status === "running") return null;
         if (status === "stopping") {
           yield* Effect.sleep(STOPPING_POLL_INTERVAL);
           continue;
         }
         yield* forget(scope.systemctl, tracked.unit);
-        if (status === "gone") return false;
+        if (status === "gone") return null;
         yield* Effect.logWarning("Agent scope was killed: out of memory", {
           threadId,
           unit: tracked.unit,
         });
         tracked.oomKilled = true;
-        return true;
+        return "confirmed";
       }
-      return false;
+      return null;
     });
 
   const clear: AgentScopeShape["clear"] = (threadId) =>
     Effect.gen(function* () {
+      yield* clearUnscoped(threadId);
       if (!scopeByThread.has(threadId)) return;
       const scope = yield* systemd;
       if (scope !== undefined) yield* track(scope.systemctl, threadId, undefined);
@@ -364,11 +428,22 @@ export const make = Effect.gen(function* () {
       env,
       survivesRestart,
     }) {
+      if (threadId !== undefined) yield* clearUnscoped(threadId);
       const resolved = yield* resolve(command, env ?? hostEnvironment);
       // Leave unresolved commands alone so the spawn reports the missing binary.
       if (resolved === null) return { command, args };
       const scope = yield* systemd;
-      if (scope === undefined) return agentScopeCommand({ command: resolved, args });
+      if (scope === undefined) {
+        if (threadId === undefined) return agentScopeCommand({ command: resolved, args });
+        const pidfile = path.join(pidDir, `${NodeCrypto.randomUUID()}.pid`);
+        const baseline = yield* readOomKills;
+        unscopedByThread.set(threadId, { pidfile, baseline, verdict: undefined });
+        if (unscopedByThread.size > MAX_TRACKED_THREADS) {
+          const oldest = unscopedByThread.keys().next();
+          if (!oldest.done) yield* clearUnscoped(oldest.value);
+        }
+        return agentScopeCommand({ command: resolved, args, pidfile });
+      }
       const unit = `rove-${name}-${NodeCrypto.randomUUID().slice(0, 8)}.scope`;
       if (threadId !== undefined) yield* track(scope.systemctl, threadId, unit);
       const systemdScope: AgentSystemdScope = {
@@ -382,7 +457,7 @@ export const make = Effect.gen(function* () {
       };
       return agentScopeCommand({ command: resolved, args, scope: systemdScope });
     }),
-    oomKilled,
+    oomKill,
     clear,
   } satisfies AgentScopeShape;
 });

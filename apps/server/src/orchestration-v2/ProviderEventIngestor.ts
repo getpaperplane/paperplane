@@ -27,6 +27,7 @@ import * as Layer from "effect/Layer";
 import * as Schema from "effect/Schema";
 
 import { AgentScope } from "@rove-code/shared/AgentScope";
+import { labelOutOfMemory } from "../process/outOfMemoryFailure.ts";
 import { isTemporaryWorktreeBranch } from "@rove-code/shared/git";
 import { getModelSelectionStringOptionValue, modelSelectionsEqual } from "@rove-code/shared/model";
 import * as AnalyticsService from "../telemetry/AnalyticsService.ts";
@@ -703,11 +704,12 @@ export const layer: Layer.Layer<
               return dismissed;
             }
             const occurredAt = yield* DateTime.now;
-            // A turn that failed because systemd killed the agent's scope for
-            // memory would otherwise read as a plain provider crash.
-            const failure = (yield* agentScope.oomKilled(input.threadId))
-              ? { ...input.event.failure, message: "Killed: out of memory.", code: "oom_kill" }
-              : input.event.failure;
+            // Confirmed scope kills are authoritative. A host-counter verdict
+            // only labels failures retaining typed SIGKILL evidence from stdio.
+            const failure = labelOutOfMemory(
+              input.event.failure,
+              yield* agentScope.oomKill(input.threadId),
+            );
             return [
               ...dismissed,
               yield* makeDomainEvent(input, {

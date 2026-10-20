@@ -12,6 +12,7 @@ import type {
 } from "@rove-code/contracts";
 import * as DateTime from "effect/DateTime";
 import * as Cause from "effect/Cause";
+import * as Option from "effect/Option";
 
 import * as IdAllocator from "./IdAllocator.ts";
 import * as Schema from "effect/Schema";
@@ -144,6 +145,41 @@ function boundedText(value: string, maxLength: number): string {
   return `${redacted.slice(0, end)}…`;
 }
 
+// Retain only kill evidence from the stdio adapters, not arbitrary provider text.
+const processExitEvidence = Schema.decodeUnknownOption(
+  Schema.Struct({
+    _tag: Schema.Literals(["CodexAppServerProcessExitedError", "AcpProcessExitedError"]),
+    code: Schema.optional(Schema.Number),
+    signal: Schema.optional(Schema.String),
+  }),
+);
+const wrappedCause = Schema.decodeUnknownOption(Schema.Struct({ cause: Schema.Unknown }));
+
+function killedProcessCode(cause: unknown): string | undefined {
+  const seen = new Set<unknown>();
+  for (let depth = 0; depth < 16 && cause != null && !seen.has(cause); depth++) {
+    seen.add(cause);
+    try {
+      if (Cause.isCause(cause)) {
+        cause = Cause.squash(cause);
+        continue;
+      }
+      const evidence = processExitEvidence(cause);
+      if (
+        Option.isSome(evidence) &&
+        (evidence.value.signal === "SIGKILL" || evidence.value.code === 137)
+      )
+        return "process_exit_sigkill";
+      const wrapped = wrappedCause(cause);
+      if (Option.isNone(wrapped)) break;
+      cause = wrapped.value.cause;
+    } catch {
+      break;
+    }
+  }
+  return undefined;
+}
+
 export function makeProviderFailure(input: {
   readonly cause?: unknown;
   readonly message?: string | undefined;
@@ -154,7 +190,11 @@ export function makeProviderFailure(input: {
 }): OrchestrationV2ProviderFailure {
   const rawMessage = input.message ?? causeMessage(input.cause) ?? DEFAULT_PROVIDER_FAILURE_MESSAGE;
   const message = boundedText(rawMessage, MAX_PROVIDER_FAILURE_MESSAGE_LENGTH);
-  const rawCode = input.code ?? stringField(input.cause, "code") ?? null;
+  const rawCode =
+    (input.class === "usage_limit" ? undefined : killedProcessCode(input.cause)) ??
+    input.code ??
+    stringField(input.cause, "code") ??
+    null;
   const code =
     rawCode === null ? null : boundedText(rawCode, MAX_PROVIDER_FAILURE_CODE_LENGTH) || null;
 

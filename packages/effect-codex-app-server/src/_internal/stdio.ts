@@ -54,11 +54,15 @@ export const makeTerminationError = (
   handle: ChildProcessTerminationHandle,
 ): Effect.Effect<CodexError.CodexAppServerError> =>
   Effect.match(handle.exitCode, {
-    onFailure: (cause) =>
-      new CodexError.CodexAppServerTransportError({
-        operation: "read-process-exit-status",
-        pid: handle.pid,
-        cause,
-      }),
+    onFailure: (cause) => {
+      const signal = /receipt of signal: '(\w+)'/.exec(cause.message)?.[1];
+      return signal !== undefined
+        ? new CodexError.CodexAppServerProcessExitedError({ signal, pid: handle.pid })
+        : new CodexError.CodexAppServerTransportError({
+            operation: "read-process-exit-status",
+            pid: handle.pid,
+            cause,
+          });
+    },
     onSuccess: (code) => new CodexError.CodexAppServerProcessExitedError({ code, pid: handle.pid }),
   });

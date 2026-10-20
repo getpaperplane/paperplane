@@ -1263,7 +1263,8 @@ it.effect(
       const oomKilledThreads = new Set<string>([owner, joiner]);
       const agentScope = {
         ...AgentScope.defaultValue(),
-        oomKilled: (id: string) => Effect.sync(() => oomKilledThreads.has(id)),
+        oomKill: (id: string) =>
+          Effect.sync(() => (oomKilledThreads.has(id) ? ("confirmed" as const) : null)),
         clear: (id: string) => Effect.sync(() => void oomKilledThreads.delete(id)),
       };
 
@@ -1283,15 +1284,15 @@ it.effect(
           ],
         });
         yield* manager.open({ threadId: owner, providerSessionId, modelSelection, runtimePolicy });
-        assert.isFalse(yield* agentScope.oomKilled(owner));
+        assert.isNull(yield* agentScope.oomKill(owner));
 
         yield* manager.open({ threadId: joiner, providerSessionId, modelSelection, runtimePolicy });
-        assert.isFalse(yield* agentScope.oomKilled(joiner));
+        assert.isNull(yield* agentScope.oomKill(joiner));
 
         // Reopening a session the thread already uses keeps its answer.
         oomKilledThreads.add(owner);
         yield* manager.open({ threadId: owner, providerSessionId, modelSelection, runtimePolicy });
-        assert.isTrue(yield* agentScope.oomKilled(owner));
+        assert.equal(yield* agentScope.oomKill(owner), "confirmed");
         assert.equal((yield* Ref.get(state)).openCount, 1);
       });
 

@@ -32,6 +32,7 @@ import * as Fiber from "effect/Fiber";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
+import { AgentScope } from "@rove-code/shared/AgentScope";
 import * as SqlClient from "effect/sql/SqlClient";
 import * as Stream from "effect/Stream";
 import * as TestClock from "effect/testing/TestClock";
@@ -1445,80 +1446,109 @@ layer("ProviderEventIngestorV2", (it) => {
       ),
   );
 
-  it.effect("persists a failed provider terminal as one expected error item", () =>
-    Effect.gen(function* () {
-      const now = yield* DateTime.now;
-      const retryStartedAt = DateTime.makeUnsafe(DateTime.toEpochMillis(now) - 5_000);
-      const eventSink = yield* EventSink.EventSinkV2;
-      const projectionStore = yield* ProjectionStore.ProjectionStoreV2;
-      const ingestor = yield* ProviderEventIngestor.ProviderEventIngestorV2;
-      const idAllocator = yield* IdAllocator.IdAllocatorV2;
-      const threadEvent = yield* threadCreatedEvent(now);
-      const providerSessionId = yield* idAllocator.allocate.providerSession({
-        providerInstanceId: modelSelection.instanceId,
-        threadId: threadEvent.threadId,
-      });
-      const providerThreadId = idAllocator.derive.providerThread({
-        driver: CODEX_DRIVER,
-        nativeThreadId: "native-thread-failed",
-      });
-      const providerTurnId = idAllocator.derive.providerTurn({
-        driver: CODEX_DRIVER,
-        nativeTurnId: "native-turn-failed",
-      });
-
-      yield* eventSink.write({ events: [threadEvent] });
-      const stored = yield* ingestor.ingestNormalized({
-        providerSessionId,
-        providerInstanceId: modelSelection.instanceId,
-        threadId: threadEvent.threadId,
-        event: {
-          type: "turn.terminal",
+  it.effect.each([null, "confirmed", "likely"] as const)(
+    "persists a failed provider terminal with memory verdict %s",
+    (verdict) =>
+      Effect.gen(function* () {
+        const now = yield* DateTime.now;
+        const retryStartedAt = DateTime.makeUnsafe(DateTime.toEpochMillis(now) - 5_000);
+        const eventSink = yield* EventSink.EventSinkV2;
+        const projectionStore = yield* ProjectionStore.ProjectionStoreV2;
+        const agentScope = yield* AgentScope;
+        const ingestor = yield* ProviderEventIngestor.ProviderEventIngestorV2.pipe(
+          Effect.provide(
+            Layer.fresh(ProviderEventIngestor.layer).pipe(
+              Layer.provide(
+                Layer.succeed(AgentScope, {
+                  ...agentScope,
+                  oomKill: () => Effect.succeed(verdict),
+                }),
+              ),
+            ),
+          ),
+        );
+        const idAllocator = yield* IdAllocator.IdAllocatorV2;
+        const threadEvent = yield* threadCreatedEvent(now);
+        const providerSessionId = yield* idAllocator.allocate.providerSession({
+          providerInstanceId: modelSelection.instanceId,
+          threadId: threadEvent.threadId,
+        });
+        const providerThreadId = idAllocator.derive.providerThread({
           driver: CODEX_DRIVER,
-          providerThreadId,
-          providerTurnId,
-          runOrdinal: 1,
-          failureItemOrdinal: 102,
-          status: "failed",
-          failure: makeProviderFailure({
-            message: "Invalid reasoning effort.",
-            code: "invalid_request",
-            class: "validation_error",
-          }),
-          retry: {
-            attempt: 3,
-            maxAttempts: 3,
-            retryDelayMs: 2_000,
+          nativeThreadId: "native-thread-failed",
+        });
+        const providerTurnId = idAllocator.derive.providerTurn({
+          driver: CODEX_DRIVER,
+          nativeTurnId: "native-turn-failed",
+        });
+
+        yield* eventSink.write({ events: [threadEvent] });
+        const stored = yield* ingestor.ingestNormalized({
+          providerSessionId,
+          providerInstanceId: modelSelection.instanceId,
+          threadId: threadEvent.threadId,
+          event: {
+            type: "turn.terminal",
+            driver: CODEX_DRIVER,
+            providerThreadId,
+            providerTurnId,
+            runOrdinal: 1,
+            failureItemOrdinal: 102,
+            status: "failed",
+            failure: makeProviderFailure({
+              message: "Invalid reasoning effort.",
+              code: "invalid_request",
+              ...(verdict === "likely"
+                ? {
+                    cause: { _tag: "CodexAppServerProcessExitedError", signal: "SIGKILL" },
+                  }
+                : {}),
+              class: "validation_error",
+            }),
+            retry: {
+              attempt: 3,
+              maxAttempts: 3,
+              retryDelayMs: 2_000,
+            },
+            retryStartedAt,
+            threadDisposition: "reusable",
           },
-          retryStartedAt,
-          threadDisposition: "reusable",
-        },
-      });
+        });
 
-      const projection = yield* projectionStore.getThreadProjection(threadEvent.threadId);
-      const errorItems = projection.visibleTurnItems.filter(
-        (candidate) => candidate.item.type === "error",
-      );
+        const projection = yield* projectionStore.getThreadProjection(threadEvent.threadId);
+        const errorItems = projection.visibleTurnItems.filter(
+          (candidate) => candidate.item.type === "error",
+        );
 
-      assert.equal(stored.length, 1);
-      assert.equal(stored[0]?.event.type, "turn-item.updated");
-      assert.equal(errorItems.length, 1);
-      const errorItem = errorItems[0]?.item;
-      assert.equal(errorItem?.type, "error");
-      if (errorItem?.type !== "error") return;
-      assert.equal(errorItem.failure.message, "Invalid reasoning effort.");
-      assert.equal(errorItem.failure.code, "invalid_request");
-      assert.deepEqual(errorItem.retry, {
-        attempt: 3,
-        maxAttempts: 3,
-        retryDelayMs: 2_000,
-      });
-      const errorStartedAt = errorItem.startedAt;
-      assert.ok(errorStartedAt);
-      assert.equal(DateTime.toEpochMillis(errorStartedAt), DateTime.toEpochMillis(retryStartedAt));
-      assert.equal(errorItem.providerThreadId, providerThreadId);
-      assert.equal(errorItem.providerTurnId, providerTurnId);
-    }),
+        assert.equal(stored.length, 1);
+        assert.equal(stored[0]?.event.type, "turn-item.updated");
+        assert.equal(errorItems.length, 1);
+        const errorItem = errorItems[0]?.item;
+        assert.equal(errorItem?.type, "error");
+        if (errorItem?.type !== "error") return;
+        assert.equal(
+          errorItem.failure.message,
+          verdict === null
+            ? "Invalid reasoning effort."
+            : verdict === "confirmed"
+              ? "Killed: out of memory."
+              : 'Likely killed: the host ran out of memory. Run fewer agents at once or add swap (see "Small or WSL hosts" in the Rove Code docs).',
+        );
+        assert.equal(errorItem.failure.code, verdict === null ? "invalid_request" : "oom_kill");
+        assert.deepEqual(errorItem.retry, {
+          attempt: 3,
+          maxAttempts: 3,
+          retryDelayMs: 2_000,
+        });
+        const errorStartedAt = errorItem.startedAt;
+        assert.ok(errorStartedAt);
+        assert.equal(
+          DateTime.toEpochMillis(errorStartedAt),
+          DateTime.toEpochMillis(retryStartedAt),
+        );
+        assert.equal(errorItem.providerThreadId, providerThreadId);
+        assert.equal(errorItem.providerTurnId, providerTurnId);
+      }),
   );
 
   it.effect("stores tool image bytes only where a tool-output-image asset serves them", () =>
