@@ -40,6 +40,7 @@ import {
 } from "@rove-code/shared/usageLimits";
 import { feedbackBannerItem } from "./chat/ComposerFeedback";
 import { usageLimitsBannerItem } from "./chat/ComposerUsageLimits";
+import { useHostMemoryBannerItem } from "./chat/HostMemoryNotice";
 import { getTerminalLabel } from "@rove-code/shared/terminalLabels";
 import * as Schema from "effect/Schema";
 import {
@@ -7802,6 +7803,16 @@ export default function ChatView(props: ChatViewProps) {
           },
         })
       : null;
+  const hostMemoryBannerItem = useHostMemoryBannerItem(
+    activeEnvironment === null || activeEnvironmentConnectionPhase !== "connected"
+      ? null
+      : {
+          environmentId: activeEnvironment.environmentId,
+          label: activeEnvironment.label,
+          supportsHostHealth:
+            activeEnvironment.serverConfig?.environment.capabilities.hostHealth === true,
+        },
+  );
   const composerBannerItems = useMemo<ComposerBannerStackItem[]>(() => {
     const limitRecoveryItems = limitRecoveryBanner === null ? [] : [limitRecoveryBanner];
     const backgroundWorkItems = [
@@ -7812,6 +7823,7 @@ export default function ChatView(props: ChatViewProps) {
     // The user asked for this one, so it leads the notice tier instead of trailing it.
     const usageLimitsItems = usageLimitsBanner === null ? [] : [usageLimitsBanner];
     const projectCloneItems = projectCloneBannerItem === null ? [] : [projectCloneBannerItem];
+    const hostMemoryItems = hostMemoryBannerItem === null ? [] : [hostMemoryBannerItem];
     if (!localCheckoutBranchMismatch || !showBranchMismatchBanner || !activeBranchMismatchKey) {
       return [
         ...feedbackBannerItems,
@@ -7819,6 +7831,7 @@ export default function ChatView(props: ChatViewProps) {
         ...usageLimitsItems,
         ...projectCloneItems,
         ...systemComposerBannerItems,
+        ...hostMemoryItems,
         ...backgroundWorkItems,
       ];
     }
@@ -7828,6 +7841,7 @@ export default function ChatView(props: ChatViewProps) {
       ...usageLimitsItems,
       ...projectCloneItems,
       ...systemComposerBannerItems,
+      ...hostMemoryItems,
       ...backgroundWorkItems,
       {
         id: `branch-mismatch:${activeBranchMismatchKey}`,
@@ -7877,6 +7891,7 @@ export default function ChatView(props: ChatViewProps) {
     feedbackBannerItems,
     limitRecoveryBanner,
     handleRestoreThreadBranchStable,
+    hostMemoryBannerItem,
     isRestoringThreadBranch,
     backgroundWorkBannerItem,
     childInputBannerItem,

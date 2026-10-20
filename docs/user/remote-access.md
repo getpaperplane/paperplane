@@ -169,7 +169,13 @@ scheme uses HTTP, so include `https://` when your server uses HTTPS.
 
 On hosts with 8 GB of RAM or less, Rove Code releases idle agent processes after 5 minutes
 instead of 30, and frees idle agents before starting a new one when memory runs low. A
-released thread resumes on its next message.
+released thread resumes on its next message. When available memory is low, the
+composer shows a notice. On web and desktop, Settings → Diagnostics shows host
+memory health and suggested fixes; on mobile, open the environment's detail screen
+in Settings. Run `rove doctor` on the host for the same checks without connecting a client.
+An agent that exited with SIGKILL while the host recorded an out-of-memory kill may
+be labeled **"Likely killed: the host ran out of memory."** Only SIGKILLed agents
+get this likely label; it is a diagnosis, not proof that memory caused that particular kill.
 
 WSL uses half of Windows RAM by default. To give it a fixed budget, set these under `[wsl2]`
 in `%UserProfile%\.wslconfig`, then run `wsl --shutdown`:

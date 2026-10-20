@@ -36,6 +36,15 @@ describe("RPC authorization scopes", () => {
     expect(new Set(Object.keys(RPC_REQUIRED_SCOPES))).toEqual(new Set(WsRpcGroup.requests.keys()));
   });
 
+  it("allows host health subscriptions under the host resource read scope", () => {
+    expect(requiredScopeForRpcMethod(WS_METHODS.serverSubscribeHostHealth)).toBe(
+      AuthOrchestrationReadScope,
+    );
+    expect(requiredScopeForRpcMethod(WS_METHODS.serverSubscribeHostHealth)).toBe(
+      requiredScopeForRpcMethod(WS_METHODS.serverGetHostResources),
+    );
+  });
+
   it("allows Pi status observation with read-only orchestration access", () => {
     expect(requiredScopeForRpcMethod(WS_METHODS.piExtensionStatusesSubscribe)).toBe(
       AuthOrchestrationReadScope,

@@ -6,8 +6,10 @@ import {
   ThreadId,
   type OrchestrationV2ThreadShell,
 } from "@rove-code/contracts";
+import * as Cause from "effect/Cause";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as Fiber from "effect/Fiber";
 import * as Layer from "effect/Layer";
 import * as Ref from "effect/Ref";
@@ -15,6 +17,7 @@ import * as Stream from "effect/Stream";
 import { McpSchema, McpServer } from "effect/ai";
 
 import * as Environment from "../../../environment/ServerEnvironment.ts";
+import * as HostHealth from "../../../diagnostics/HostHealth.ts";
 import * as ThreadCommandExecutor from "../../../orchestration-v2/ThreadCommandExecutor.ts";
 import * as ThreadManagement from "../../../orchestration-v2/ThreadManagementService.ts";
 import * as Settings from "../../../serverSettings.ts";
@@ -48,6 +51,68 @@ const layerEnvironment = Layer.mock(Environment.ServerEnvironment)({
     capabilities: { repositoryIdentity: false },
   }),
 });
+
+for (const available of [true, false, "interrupted"] as const) {
+  it.effect(
+    `reads environment preferences with host health ${available === true ? "available" : available === false ? "unavailable" : "interrupted"}`,
+    () =>
+      Effect.gen(function* () {
+        const toolkit = yield* EnvironmentToolkit;
+        const read = toolkit
+          .handle("rove_environment_read", {})
+          .pipe(Stream.unwrap, Stream.runCollect);
+        if (available === "interrupted") {
+          const result = yield* Effect.exit(read);
+          expect(Exit.isFailure(result) && Cause.hasInterrupts(result.cause)).toBe(true);
+          return;
+        }
+        const messages = yield* read;
+        const result = messages.at(-1)?.result;
+        expect(result).toMatchObject({
+          environmentId,
+          preferences: {
+            newWorktreesStartFromOrigin: DEFAULT_SERVER_SETTINGS.newWorktreesStartFromOrigin,
+          },
+        });
+        if (available) expect(result).toHaveProperty("hostHealth.totalMemoryBytes", 1024);
+        else expect(result).not.toHaveProperty("hostHealth");
+      }).pipe(
+        Effect.provide(
+          McpToolAccess.HandlersLayer.layer(EnvironmentHandlers.layer).pipe(
+            Layer.provideMerge(
+              Layer.mergeAll(
+                layerEnvironment,
+                ThreadCommandExecutor.layer,
+                Settings.layerTest(),
+                Layer.succeed(McpInvocationContext.McpInvocationContext, caller),
+                Layer.mock(ThreadManagement.ThreadManagementService)({
+                  getThreadShell: (id) => Effect.succeed(liveThreadShell(id)),
+                }),
+                Layer.succeed(HostHealth.HostHealth, {
+                  read:
+                    available === true
+                      ? Effect.succeed({
+                          sampledAt: 0,
+                          totalMemoryBytes: 1024,
+                          availableMemoryBytes: 512,
+                          swapTotalBytes: null,
+                          swapFreeBytes: null,
+                          memoryPressure: false,
+                          roveMemory: null,
+                          findings: [],
+                        })
+                      : available === "interrupted"
+                        ? Effect.interrupt
+                        : Effect.die("host check failed"),
+                  changes: Stream.empty,
+                }),
+              ),
+            ),
+          ),
+        ),
+      ),
+  );
+}
 
 it.effect("updates preferences for a thread caller through the /mcp registration", () =>
   Effect.gen(function* () {
@@ -87,6 +152,7 @@ it.effect("updates preferences for a thread caller through the /mcp registration
           }),
         ),
         Layer.provide(layerEnvironment),
+        Layer.provide(Layer.mock(HostHealth.HostHealth)({})),
         Layer.provide(Settings.layerTest()),
       ),
     ),
@@ -101,6 +167,7 @@ it.effect("refuses a preferences update when the caller's turn ends while it wai
     const checked = yield* Deferred.make<void>();
     const layerDependencies = Layer.mergeAll(
       ThreadCommandExecutor.layer,
+      Layer.mock(HostHealth.HostHealth)({}),
       Layer.succeed(McpInvocationContext.McpInvocationContext, {
         environmentId,
         requestNamespace: "provider:preferences",

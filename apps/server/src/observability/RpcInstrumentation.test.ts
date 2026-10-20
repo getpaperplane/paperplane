@@ -102,6 +102,40 @@ const requestDuration = (snapshots: ReadonlyArray<Metric.Metric.Snapshot>, metho
   )?.state;
 
 describe("WS RPC instrumentation middleware", () => {
+  it.effect("observes host health as an instrumented server stream with read-only access", () =>
+    withTelemetry((ended) =>
+      Effect.gen(function* () {
+        const group = groupOf(WS_METHODS.serverSubscribeHostHealth);
+        const report = {
+          sampledAt: 0,
+          totalMemoryBytes: 1024,
+          availableMemoryBytes: 512,
+          swapTotalBytes: null,
+          swapFreeBytes: null,
+          memoryPressure: false,
+          roveMemory: null,
+          findings: [],
+        };
+        const client = yield* RpcTest.makeClient(group).pipe(
+          Effect.provide(
+            Layer.merge(
+              group.toLayerHandler(WS_METHODS.serverSubscribeHostHealth, () => Stream.make(report)),
+              readOnlyConnection,
+            ),
+          ),
+        );
+        const reports = yield* client[WS_METHODS.serverSubscribeHostHealth]({}).pipe(
+          Stream.runCollect,
+        );
+        assert.deepStrictEqual(reports, [report]);
+        const span = rpcSpans(ended).find((span) =>
+          span.name.endsWith(WS_METHODS.serverSubscribeHostHealth),
+        );
+        assert.isDefined(span);
+        assert.equal(span?.attributes.get("rpc.aggregate"), "server");
+      }),
+    ),
+  );
   it.effect("records one span and request metric per call, including rejected calls", () =>
     withTelemetry((ended) =>
       Effect.gen(function* () {

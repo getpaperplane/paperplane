@@ -2,6 +2,7 @@ import {
   BackgroundActivityProfile,
   BackgroundActivityProfileSelection,
   ExecutionEnvironmentDescriptor,
+  HostHealthReport,
   OrchestratorMcpFailure,
   ServerSettings,
   ServerSettingsPatch,
@@ -9,6 +10,7 @@ import {
 import * as Schema from "effect/Schema";
 import { Tool, Toolkit } from "effect/ai";
 import * as ServerEnvironment from "../../../environment/ServerEnvironment.ts";
+import * as HostHealth from "../../../diagnostics/HostHealth.ts";
 import * as ThreadCommandExecutor from "../../../orchestration-v2/ThreadCommandExecutor.ts";
 import * as ThreadManagementService from "../../../orchestration-v2/ThreadManagementService.ts";
 import * as Settings from "../../../serverSettings.ts";
@@ -40,13 +42,15 @@ const shared = {
 const EnvironmentReadTool = Tool.make("rove_environment_read", {
   ...shared,
   description:
-    "Read this server's identity and selected environment preferences. Provider/model availability is exposed by orchestrator_capabilities. Writing instructions are limited to 4,000 characters.",
+    "Read this server's identity, selected environment preferences, and host memory health when available. Provider/model availability is exposed by orchestrator_capabilities. Writing instructions are limited to 4,000 characters.",
+  dependencies: [...shared.dependencies, HostHealth.HostHealth],
   success: Schema.Struct({
     environmentId: ExecutionEnvironmentDescriptor.fields.environmentId,
     label: Schema.String,
     serverVersion: Schema.String,
     platform: ExecutionEnvironmentDescriptor.fields.platform,
     preferences: Schema.Struct(PreferenceFields),
+    hostHealth: Schema.optionalKey(HostHealthReport),
   }),
 })
   .annotate(Tool.Readonly, true)

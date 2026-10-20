@@ -3,6 +3,7 @@ import * as ProjectionStore from "../../../orchestration-v2/ProjectionStore.ts";
 import * as CuaDriver from "../../../computerUse/CuaDriver.ts";
 import * as DeviceService from "../../../device/DeviceService.ts";
 import * as ServerConfig from "../../../config.ts";
+import * as HostHealth from "../../../diagnostics/HostHealth.ts";
 import { expect, it } from "@effect/vitest";
 import { NodeHttpServer } from "@effect/platform-node";
 import * as NodeServices from "@effect/platform-node/NodeServices";
@@ -38,6 +39,7 @@ import * as PreviewBrowser from "../../../preview/PreviewBrowser.ts";
 
 const layerStubServices = Layer.mergeAll(
   Layer.mock(Orchestrator.OrchestratorV2)({}),
+  Layer.mock(HostHealth.HostHealth)({}),
   Layer.mock(ProjectionStore.ProjectionStoreV2)({}),
   Layer.mock(CuaDriver.CuaDriver)({}),
   Layer.mock(DeviceService.DeviceService)({}),

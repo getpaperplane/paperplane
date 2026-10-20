@@ -26,6 +26,7 @@ import { EnvironmentRoutesSection } from "./EnvironmentRoutesSection";
 import { SettingsActionRow } from "./components/SettingsActionRow";
 import { SettingsScreen } from "./components/SettingsScreen";
 import { RemoteSandboxesSection } from "./components/RemoteSandboxesSection";
+import { HostHealthSection } from "./components/HostHealthSection";
 import { SettingsSection } from "./components/SettingsSection";
 import {
   canMaintainEnvironment,
@@ -208,6 +209,9 @@ function EnvironmentDetail({ environmentId }: { readonly environmentId: Environm
                 })
               }
             />
+            {connected && capabilities?.hostHealth === true ? (
+              <HostHealthSection environmentId={environmentId} />
+            ) : null}
             {connected && capabilities?.remoteSandboxes ? (
               <RemoteSandboxesSection environmentId={environmentId} allowed={connected} />
             ) : null}
