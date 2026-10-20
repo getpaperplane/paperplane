@@ -467,7 +467,8 @@ const makeProviderAdapter = Effect.fnUntraced(function* (
 
 function layerTest(input: {
   readonly state: Ref.Ref<TestProviderRuntimeState>;
-  readonly idleTimeoutMs: number;
+  readonly idleTimeoutMs?: number;
+  readonly memory?: ProviderSessionManager.ProviderSessionManagerV2LayerOptions["memory"];
   readonly maxIdlePinMs?: number;
   readonly failEventStream?: boolean;
   readonly capabilities?: OrchestrationV2ProviderCapabilities;
@@ -562,7 +563,10 @@ function layerTest(input: {
     layerConfiguredMcpRegistry,
     McpProviderSessions.layer,
     ProviderSessionManager.layerWithOptions({
-      idleTimeoutMs: input.idleTimeoutMs,
+      ...(input.idleTimeoutMs === undefined ? {} : { idleTimeoutMs: input.idleTimeoutMs }),
+      memory:
+        input.memory ??
+        Effect.succeed({ totalMemoryBytes: 16 * 1024 ** 3, availableMemoryBytes: 8 * 1024 ** 3 }),
       ...(input.maxIdlePinMs === undefined ? {} : { maxIdlePinMs: input.maxIdlePinMs }),
     }).pipe(
       Layer.provide(
@@ -3162,6 +3166,209 @@ it.effect("ProviderSessionManagerV2 keeps a provider update that lands while rel
     );
   }),
 );
+
+const openPressureTestSession = Effect.fnUntraced(function* (fixtureName: string) {
+  const eventSink = yield* EventSink.EventSinkV2;
+  const idAllocator = yield* IdAllocator.IdAllocatorV2;
+  const manager = yield* ProviderSessionManager.ProviderSessionManagerV2;
+  const now = yield* DateTime.now;
+  const projectId = yield* idAllocator.allocate.project({ fixtureName });
+  const threadId = yield* idAllocator.allocate.thread({ fixtureName, projectId });
+  const providerSessionId = yield* idAllocator.allocate.providerSession({
+    providerInstanceId: modelSelection.instanceId,
+    threadId,
+  });
+  yield* eventSink.write({
+    events: [yield* makeThreadCreatedEvent({ idAllocator, threadId, now })],
+  });
+  const runtime = yield* manager.open({
+    threadId,
+    providerSessionId,
+    modelSelection,
+    runtimePolicy,
+  });
+  return { threadId, providerSessionId, runtime, now };
+});
+
+it.effect(
+  "ProviderSessionManagerV2 pressure releases the oldest idle session first and stops when relieved",
+  () =>
+    Effect.gen(function* () {
+      const state = yield* Ref.make(emptyState);
+      const pressure = yield* Ref.make(false);
+      const memory = Effect.gen(function* () {
+        const relieved = (yield* Ref.get(state)).closeCount > 0;
+        return {
+          totalMemoryBytes: 8 * 1024 ** 3,
+          availableMemoryBytes: (yield* Ref.get(pressure)) && !relieved ? 0 : 4 * 1024 ** 3,
+        };
+      });
+      yield* Effect.gen(function* () {
+        const manager = yield* ProviderSessionManager.ProviderSessionManagerV2;
+        const oldest = yield* openPressureTestSession("pressure-oldest");
+        yield* TestClock.adjust("1 second");
+        const newer = yield* openPressureTestSession("pressure-newer");
+        // Refreshing the first session makes the second one the oldest.
+        yield* TestClock.adjust("1 second");
+        yield* manager.get(oldest.providerSessionId);
+        yield* Ref.set(pressure, true);
+        const opened = yield* openPressureTestSession("pressure-new");
+        assert.isTrue(yield* manager.isLive(oldest.providerSessionId));
+        assert.isFalse(yield* manager.isLive(newer.providerSessionId));
+        assert.isTrue(yield* manager.isLive(opened.providerSessionId));
+        assert.equal((yield* Ref.get(state)).closeCount, 1);
+      }).pipe(Effect.provide(layerTest({ state, memory })));
+    }),
+);
+
+it.effect("ProviderSessionManagerV2 pressure preserves sessions with pending background work", () =>
+  Effect.gen(function* () {
+    const state = yield* Ref.make(emptyState);
+    yield* Effect.gen(function* () {
+      const manager = yield* ProviderSessionManager.ProviderSessionManagerV2;
+      const first = yield* openPressureTestSession("pressure-pending");
+      const second = yield* openPressureTestSession("pressure-pending-new");
+      assert.isTrue(yield* manager.isLive(first.providerSessionId));
+      assert.isTrue(yield* manager.isLive(second.providerSessionId));
+      assert.equal((yield* Ref.get(state)).closeCount, 0);
+    }).pipe(
+      Effect.provide(
+        layerTest({
+          state,
+          memory: Effect.succeed({ totalMemoryBytes: 8 * 1024 ** 3, availableMemoryBytes: 0 }),
+          hasPendingBackgroundWork: Effect.succeed(true),
+        }),
+      ),
+    );
+  }),
+);
+
+it.effect(
+  "ProviderSessionManagerV2 pressure skips busy sessions and releases the next idle entry",
+  () =>
+    Effect.gen(function* () {
+      const state = yield* Ref.make(emptyState);
+      const pressure = yield* Ref.make(false);
+      yield* Effect.gen(function* () {
+        const manager = yield* ProviderSessionManager.ProviderSessionManagerV2;
+        const idAllocator = yield* IdAllocator.IdAllocatorV2;
+        const projectionStore = yield* ProjectionStore.ProjectionStoreV2;
+        const busy = yield* openPressureTestSession("pressure-busy");
+        const { threadId, providerSessionId, runtime, now } = busy;
+        yield* runtime.events.pipe(Stream.runDrain, Effect.forkScoped);
+        const providerThread = makeProviderThread({
+          idAllocator,
+          threadId,
+          providerSessionId,
+          now,
+        });
+        const runId = idAllocator.derive.run({ threadId, ordinal: 1 });
+        yield* runtime.startTurn({
+          appThread: (yield* projectionStore.getThreadProjection(threadId)).thread,
+          threadId,
+          runId,
+          runOrdinal: 1,
+          providerTurnOrdinal: 1,
+          attemptId: idAllocator.derive.runAttempt({ runId, attemptOrdinal: 1 }),
+          rootNodeId: idAllocator.derive.rootNode({ runId }),
+          providerThread,
+          message: {
+            createdBy: "user",
+            creationSource: "web",
+            messageId: yield* idAllocator.allocate.message({ threadId, ordinal: 1 }),
+            text: "busy",
+            attachments: [],
+          },
+          modelSelection,
+          runtimePolicy,
+        });
+        const idle = yield* openPressureTestSession("pressure-idle-after-busy");
+        yield* Ref.set(pressure, true);
+        yield* openPressureTestSession("pressure-open-after-busy");
+        assert.isTrue(yield* manager.isLive(busy.providerSessionId));
+        assert.isFalse(yield* manager.isLive(idle.providerSessionId));
+        assert.equal((yield* Ref.get(state)).closeCount, 1);
+      }).pipe(
+        Effect.provide(
+          layerTest({
+            state,
+            memory: Ref.get(pressure).pipe(
+              Effect.map((underPressure) => ({
+                totalMemoryBytes: 8 * 1024 ** 3,
+                availableMemoryBytes: underPressure ? 0 : 4 * 1024 ** 3,
+              })),
+            ),
+          }),
+        ),
+      );
+    }),
+);
+
+it.effect("ProviderSessionManagerV2 does not release sessions without memory pressure", () =>
+  Effect.gen(function* () {
+    const state = yield* Ref.make(emptyState);
+    yield* Effect.gen(function* () {
+      yield* openPressureTestSession("pressure-healthy");
+      yield* openPressureTestSession("pressure-healthy-new");
+      assert.equal((yield* Ref.get(state)).closeCount, 0);
+    }).pipe(Effect.provide(layerTest({ state })));
+  }),
+);
+
+it.effect(
+  "ProviderSessionManagerV2 probe failure keeps opening and falls back to thirty minutes",
+  () =>
+    Effect.gen(function* () {
+      const state = yield* Ref.make(emptyState);
+      yield* Effect.gen(function* () {
+        const manager = yield* ProviderSessionManager.ProviderSessionManagerV2;
+        const first = yield* openPressureTestSession("pressure-probe-failure");
+        const second = yield* openPressureTestSession("pressure-probe-failure-new");
+        yield* TestClock.adjust("5 minutes");
+        assert.isTrue(yield* manager.isLive(first.providerSessionId));
+        assert.isTrue(yield* manager.isLive(second.providerSessionId));
+        yield* TestClock.adjust("25 minutes");
+        yield* Effect.yieldNow;
+        assert.isFalse(yield* manager.isLive(first.providerSessionId));
+        assert.isFalse(yield* manager.isLive(second.providerSessionId));
+      }).pipe(
+        Effect.provide(
+          layerTest({ state, memory: Effect.fail(new Cause.UnknownError("probe failed")) }),
+        ),
+      );
+    }),
+);
+
+for (const totalGiB of [4, 16]) {
+  it.effect(`ProviderSessionManagerV2 derives the idle timeout for a ${totalGiB} GiB host`, () =>
+    Effect.gen(function* () {
+      const state = yield* Ref.make(emptyState);
+      yield* Effect.gen(function* () {
+        const manager = yield* ProviderSessionManager.ProviderSessionManagerV2;
+        const session = yield* openPressureTestSession(`pressure-timeout-${totalGiB}`);
+        yield* TestClock.adjust("5 minutes");
+        yield* Effect.yieldNow;
+        if (totalGiB > 8) {
+          assert.isTrue(yield* manager.isLive(session.providerSessionId));
+          yield* TestClock.adjust("25 minutes");
+          yield* Effect.yieldNow;
+        }
+        assert.isFalse(yield* manager.isLive(session.providerSessionId));
+        assert.equal((yield* Ref.get(state)).closeCount, 1);
+      }).pipe(
+        Effect.provide(
+          layerTest({
+            state,
+            memory: Effect.succeed({
+              totalMemoryBytes: totalGiB * 1024 ** 3,
+              availableMemoryBytes: 2 * 1024 ** 3,
+            }),
+          }),
+        ),
+      );
+    }),
+  );
+}
 
 it.effect("ProviderSessionManagerV2 defers idle release while background work is pending", () =>
   Effect.gen(function* () {
