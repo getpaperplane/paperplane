@@ -5,10 +5,32 @@ vi.mock("./ProcessBudget.ts", async (original) => ({
   ...(await original<typeof import("./ProcessBudget.ts")>()),
   executeProcessControl: control,
 }));
-import { resolvePiWorkloadMemory } from "./PiWorkloadPolicy.ts";
+import { foregroundSlots, resolvePiWorkloadMemory } from "./PiWorkloadPolicy.ts";
 
 const gib = 1024 ** 3;
 describe("Pi workload policy", () => {
+  it.each([
+    // CPU floor, RAM floor, and both clamps, including the 2 GiB boundaries.
+    [0, 0, 1],
+    [1, 16 * gib, 1],
+    [3, 16 * gib, 1],
+    [4, 16 * gib, 2],
+    [7, 16 * gib, 3],
+    [8, 16 * gib, 4],
+    [64, 64 * gib, 4],
+    [16, 384 * 1024 ** 2, 1],
+    [16, 2 * gib, 1],
+    [16, 4 * gib - 1, 1],
+    [16, 4 * gib, 2],
+    [16, 6 * gib - 1, 2],
+    [16, 6 * gib, 3],
+    [16, 8 * gib - 1, 3],
+    [16, 8 * gib, 4],
+    [4, 6 * gib, 2],
+  ])("sizes foreground slots for %i CPUs and %i bytes to %i", (cpus, ceiling, slots) => {
+    expect(foregroundSlots({ cpus, ceilingBytes: ceiling })).toBe(slots);
+  });
+
   it("leaves larger, unsupported, too-small and explicitly disabled hosts alone", async () => {
     control.mockReset();
     expect(await resolvePiWorkloadMemory("auto", "auto", {}, "linux", 16 * gib)).toBeUndefined();

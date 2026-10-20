@@ -6,8 +6,21 @@ import { SMALL_HOST_BYTES } from "../process/roveMemoryBudget.ts";
 export interface PiWorkloadConfig {
   readonly memoryMiB: number | "auto";
   readonly ownerUnit: string;
+  /** Override automatic slot sizing, primarily for isolated integration tests. */
+  readonly foregroundSlots?: number;
   /** Isolated integration tests use a separate pool. Production shares one OS-user pool. */
   readonly pool?: string;
+}
+
+/** Bound concurrent shells by both CPU capacity and the shared RAM ceiling. */
+export function foregroundSlots({
+  cpus,
+  ceilingBytes,
+}: {
+  readonly cpus: number;
+  readonly ceilingBytes: number;
+}) {
+  return Math.max(1, Math.min(4, Math.floor(cpus / 2), Math.floor(ceilingBytes / (2 * 1024 ** 3))));
 }
 
 /** Explicit settings fail closed. Auto only enables on small, systemd-capable Linux hosts. */

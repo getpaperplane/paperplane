@@ -54,7 +54,7 @@ describe.skipIf(!supported)("Pi command isolation on Linux", () => {
     await NodeFSP.rm(directory, { recursive: true, force: true });
   });
 
-  async function manager() {
+  async function manager(foregroundSlots = 1) {
     const owner = makeManagedProcess(process.execPath, [
       "-e",
       "process.send('ready'); process.on('message',()=>{})",
@@ -67,7 +67,12 @@ describe.skipIf(!supported)("Pi command isolation on Linux", () => {
       child.once("message", () => resolve());
       child.once("error", reject);
     });
-    const workloads = await PiWorkloads.create({ memoryMiB: 384, ownerUnit: owner.unit, pool });
+    const workloads = await PiWorkloads.create({
+      memoryMiB: 384,
+      ownerUnit: owner.unit,
+      pool,
+      foregroundSlots,
+    });
     managers.push(workloads);
     return { workloads, child, owner };
   }
@@ -90,6 +95,79 @@ describe.skipIf(!supported)("Pi command isolation on Linux", () => {
     return { command, ready };
   }
 
+  it("honors the legacy foreground lock for slot zero", async () => {
+    const { workloads } = await manager();
+    const runtime = process.env.XDG_RUNTIME_DIR ?? `/run/user/${process.getuid!()}`;
+    const holder = NodeChildProcess.spawn(
+      "sh",
+      [
+        "-c",
+        'exec 9>"$1"; flock 9 || exit 2; printf "ready\\n"; read -r release',
+        "legacy-lease",
+        NodePath.join(runtime, `${pool}.foreground.lock`),
+      ],
+      { stdio: ["pipe", "pipe", "pipe"] },
+    );
+    const exited = new Promise<void>((resolve) => holder.once("exit", () => resolve()));
+    try {
+      await new Promise<void>((resolve, reject) => {
+        holder.stdout.once("data", () => resolve());
+        holder.once("error", reject);
+      });
+      const queued = Promise.withResolvers<void>();
+      const abort = new AbortController();
+      const output: string[] = [];
+      const waiting = workloads.exec("echo should-not-run", directory, {
+        signal: abort.signal,
+        onData: (chunk) => {
+          output.push(chunk.toString());
+          queued.resolve();
+        },
+      });
+      const cancelled = expect(waiting).rejects.toThrow("aborted");
+      await queued.promise;
+      abort.abort();
+      await cancelled;
+      expect(output).toEqual(["[Rove: all 1 shell slots are busy; queued.]\n"]);
+    } finally {
+      holder.stdin.end("release\n");
+      await exited;
+    }
+    expect(await workloads.exec("true", directory, { onData: () => {} })).toEqual({ exitCode: 0 });
+  }, 20_000);
+
+  it.each([1, 2])(
+    "fails flock errors without queueing with %s slots",
+    async (slots) => {
+      const { workloads } = await manager(slots);
+      const originalPath = process.env.PATH;
+      const bin = NodePath.join(directory, "bin");
+      await NodeFSP.mkdir(bin);
+      const flock = NodePath.join(bin, "flock");
+      // Admit the queue lock, but fail slot flock with a non-contention status.
+      await NodeFSP.writeFile(flock, '#!/bin/sh\n[ "$2" = 8 ] && exit 0\nexit 2\n', {
+        mode: 0o755,
+      });
+      const output: string[] = [];
+      try {
+        process.env.PATH = `${bin}:${originalPath}`;
+        await expect(
+          workloads.exec("true", directory, { onData: (chunk) => output.push(chunk.toString()) }),
+        ).rejects.toThrow("flock failed");
+        expect(output).toEqual([]);
+        // A queue-lock failure must not print queued either.
+        await NodeFSP.writeFile(flock, "#!/bin/sh\nexit 2\n", { mode: 0o755 });
+        await expect(
+          workloads.exec("true", directory, { onData: (chunk) => output.push(chunk.toString()) }),
+        ).rejects.toThrow("flock failed");
+        expect(output).toEqual([]);
+      } finally {
+        process.env.PATH = originalPath;
+      }
+    },
+    20_000,
+  );
+
   it("raises shell OOM priority to the agent score", async () => {
     const { workloads } = await manager();
     let output = "";
@@ -100,7 +178,7 @@ describe.skipIf(!supported)("Pi command isolation on Linux", () => {
         },
       }),
     ).toEqual({ exitCode: 0 });
-    expect(output).toMatch(/\n800\n/);
+    expect(output.trim()).toBe("800");
   });
 
   it("uses one foreground lease across instances, while the queued call remains cancellable", async () => {
@@ -157,6 +235,76 @@ describe.skipIf(!supported)("Pi command isolation on Linux", () => {
     const bConnection = await b.ready;
     bConnection.write("release");
     expect(await bRun).toEqual({ exitCode: 0 });
+  }, 20_000);
+
+  it("shares two slots across instances, cancels a third, and admits queued work on release", async () => {
+    const first = await manager(2);
+    const second = await manager(2);
+    const a = await gate();
+    const b = await gate();
+    const cancelledGate = await gate();
+    const next = await gate();
+    const output: string[] = [];
+    const aRun = first.workloads.exec(a.command, directory, {
+      onData: (chunk) => output.push(chunk.toString()),
+    });
+    const aConnection = await a.ready;
+    const bRun = second.workloads.exec(b.command, directory, {
+      onData: (chunk) => output.push(chunk.toString()),
+    });
+    const bConnection = await b.ready;
+    // Both commands entered their sockets without a queue banner or a release.
+    expect(output).toEqual([]);
+
+    let cancelledEntered = false;
+    void cancelledGate.ready.then(() => {
+      cancelledEntered = true;
+    });
+    const abort = new AbortController();
+    const cancelledQueue = Promise.withResolvers<void>();
+    const cancelledOutput: string[] = [];
+    const third = second.workloads.exec(cancelledGate.command, directory, {
+      signal: abort.signal,
+      onData: (chunk) => {
+        cancelledOutput.push(chunk.toString());
+        cancelledQueue.resolve();
+      },
+    });
+    const cancelled = expect(third).rejects.toThrow("aborted");
+    await cancelledQueue.promise;
+    abort.abort();
+    await cancelled;
+    expect(cancelledOutput).toEqual(["[Rove: all 2 shell slots are busy; queued.]\n"]);
+    expect(cancelledEntered).toBe(false);
+
+    const nextQueue = Promise.withResolvers<void>();
+    const nextOutput: string[] = [];
+    let nextEntered = false;
+    void next.ready.then(() => {
+      nextEntered = true;
+    });
+    const nextRun = first.workloads.exec(next.command, directory, {
+      onData: (chunk) => {
+        nextOutput.push(chunk.toString());
+        nextQueue.resolve();
+      },
+    });
+    await nextQueue.promise;
+    expect(nextEntered).toBe(false);
+    aConnection.write("release");
+    expect(await aRun).toEqual({ exitCode: 0 });
+    const nextConnection = await next.ready;
+    expect(cancelledEntered).toBe(false);
+    expect(nextOutput).toEqual(["[Rove: all 2 shell slots are busy; queued.]\n"]);
+    // The remaining original scope is still active; only one slot was released.
+    expect(bConnection.destroyed).toBe(false);
+    nextConnection.write("release");
+    bConnection.write("release");
+    expect(await nextRun).toEqual({ exitCode: 0 });
+    expect(await bRun).toEqual({ exitCode: 0 });
+    expect(await second.workloads.exec("true", directory, { onData: () => {} })).toEqual({
+      exitCode: 0,
+    });
   }, 20_000);
 
   it("contains a command OOM without terminating Pi, then admits new work", async () => {
