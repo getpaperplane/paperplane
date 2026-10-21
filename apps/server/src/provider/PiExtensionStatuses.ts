@@ -15,7 +15,12 @@ import * as Stream from "effect/Stream";
 const EMPTY: PiExtensionStatusSnapshot = { statuses: [] };
 const decodeSnapshot = Schema.decodeUnknownOption(Snapshot);
 
-/** Live session state only: never part of the transcript or a persisted projection. */
+/**
+ * Live session state only: never part of the transcript or a persisted projection. It outlives
+ * aborted work and clears only when the session ends or is replaced. Work an extension starts
+ * after the owning run settles stays stopped: Pi's `agent_start` is too late for V2 admission
+ * and its synchronous preflight callback cannot hold a turn, so no wake path exists.
+ */
 export class PiExtensionStatuses extends Context.Service<
   PiExtensionStatuses,
   {
