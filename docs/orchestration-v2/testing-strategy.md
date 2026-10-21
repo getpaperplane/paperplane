@@ -176,7 +176,7 @@ V2 should start with roughly ten strong tests:
 4. `turn_interrupt`: interrupt acknowledgement does not complete the run until the provider terminal event arrives.
 5. `steering_restart_fallback`: a provider without native steering interrupts the active attempt and creates a replacement attempt under the same run.
 6. `subagent`: child provider turns create nested execution nodes and never complete the parent run.
-7. `subagent_checkpoint`: child/subagent nodes create nested checkpoint scopes without advancing the app run count.
+7. `subagent_checkpoint`: subagent nodes create no checkpoint scope and do not advance the app run count.
 8. `thread_rollback`: rollback targets checkpoint scopes and reconciles provider rollback snapshots.
 9. `approval_request`: provider approval callbacks become durable runtime requests and are resolved through the real adapter path.
 10. `provider_switch_return`: switching away from a provider creates a context handoff, and switching back resumes the prior provider thread with a delta handoff.
@@ -206,7 +206,7 @@ Good assertions:
 - active/final run attempt.
 - execution node parent/child structure.
 - provider thread and provider turn correlation.
-- checkpoint scope hierarchy.
+- checkpoint scopes.
 - pending/resolved runtime requests.
 - handoff coverage and strategy.
 - replay transcript frame count and normalized event count when relevant.

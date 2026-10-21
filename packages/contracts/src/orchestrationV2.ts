@@ -287,6 +287,10 @@ export type OrchestrationV2ContextCapabilities = typeof OrchestrationV2ContextCa
 
 export const OrchestrationV2CheckpointCapabilities = Schema.Struct({
   appCanCheckpointFilesystem: Schema.Boolean,
+  /**
+   * Always false: only root-run checkpoint scopes exist. Nothing reads it; it
+   * stays on the wire because released clients decode it as required.
+   */
   supportsNestedCheckpointScopes: Schema.Boolean,
   providerCanRollbackConversation: Schema.Boolean,
   providerRollbackReturnsSnapshot: Schema.Boolean,
@@ -802,6 +806,9 @@ export function isOrchestrationV2WorkActive(
   return status === "pending" || status === "running" || status === "waiting";
 }
 
+// Only `root_run` scopes with no parent are created today; subagents get their
+// own thread and root scopes. The hierarchy fields stay because they are
+// persisted in events and projection columns.
 export const OrchestrationV2CheckpointScope = Schema.Struct({
   id: CheckpointScopeId,
   threadId: ThreadId,

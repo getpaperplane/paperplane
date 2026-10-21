@@ -311,7 +311,7 @@ export const CodexProviderCapabilitiesV2 = {
   },
   checkpointing: {
     appCanCheckpointFilesystem: true,
-    supportsNestedCheckpointScopes: true,
+    supportsNestedCheckpointScopes: false,
     providerCanRollbackConversation: true,
     providerRollbackReturnsSnapshot: true,
     providerCanReadConversationSnapshot: true,

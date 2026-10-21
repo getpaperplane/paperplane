@@ -288,7 +288,7 @@ The root node of a run is the only node allowed to complete the run. Subagent no
 
 ## CheckpointScope
 
-A `CheckpointScope` describes a unit of filesystem state that can be checkpointed. Root runs and child execution nodes can both have checkpoint scopes.
+A `CheckpointScope` describes a unit of filesystem state that can be checkpointed. Only root runs have one today.
 
 ```ts
 type CheckpointScope = {
@@ -306,7 +306,7 @@ type CheckpointScope = {
 };
 ```
 
-Root run scopes have `advancesAppRunCount = true`. Child scopes, such as subagents, have `advancesAppRunCount = false` and are nested under the parent run's scope.
+Every scope is created as `kind = "root_run"`, `parentScopeId = null`, and `advancesAppRunCount = true`. The other kinds and the hierarchy fields are persisted but unused: subagent nodes have no scope, and delegated tasks checkpoint as root runs of their own child thread.
 
 ## ProviderSession
 
@@ -527,7 +527,7 @@ Codex `turn/plan/updated` maps to a `todo_list` artifact. Plan-mode final plan i
 
 ## Checkpoint
 
-Checkpoints attach to checkpoint scopes. A root run checkpoint is the user-visible conversation checkpoint. A child checkpoint records nested filesystem state for a subagent, tool, or provider thread without advancing the parent run count.
+Checkpoints attach to checkpoint scopes. A root run checkpoint is the user-visible conversation checkpoint. There are no child checkpoints.
 
 ```ts
 type Checkpoint = {

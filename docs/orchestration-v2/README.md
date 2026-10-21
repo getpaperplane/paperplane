@@ -33,7 +33,7 @@ V2 is designed around the real provider behavior observed in the Codex app-serve
 1. App ids are primary. Provider ids are refs.
 2. Provider events are never rewritten to look like another provider event.
 3. Child execution completion never closes the parent run.
-4. Checkpoints attach to checkpointable execution scopes. Root-run checkpoints advance app run history; child/subagent checkpoints are nested and do not advance the parent run count.
+4. Checkpoints attach to root-run scopes and advance app run history. There are no nested scopes; a delegated task checkpoints in its own child thread.
 5. Rollback is expressed in app run count and reconciled with provider conversation state.
 6. Every command targets app ids; adapters translate to provider refs at the edge.
 7. Missing provider capability is represented explicitly and handled by policy.

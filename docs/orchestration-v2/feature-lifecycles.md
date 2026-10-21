@@ -360,7 +360,7 @@ If the provider cannot fork native threads, V2 may synthesize a fork by creating
 
 ## Checkpointing
 
-Checkpoints attach to checkpoint scopes. Root runs and child execution nodes can both be checkpointed.
+Checkpoints attach to checkpoint scopes. Every scope is a `root_run` scope: one per run, with no parent scope. Nested scopes do not exist.
 
 Pre-run baseline:
 
@@ -379,24 +379,15 @@ root node terminal
   -> mark run terminal with checkpoint
 ```
 
-Child/subagent checkpoint:
+Subagents:
 
-```text
-child checkpointable node starts
-  -> create child CheckpointScope under parent scope
-child node terminal
-  -> drain/finalize child streams/items
-  -> capture child checkpoint for that scope
-  -> compute diff from parent/previous child checkpoint
-  -> mark child node checkpointed
-```
+- A delegated task runs in its own child app thread. Its runs get that thread's own root checkpoints and advance only the child's run count.
+- Provider-native subagent nodes inside a run have no checkpoint scope. Their file changes land in the parent run's root checkpoint.
 
 Interrupted/failed runs:
 
 - If filesystem state is meaningful and safe to capture, capture with status reflecting terminal state.
 - If not, store a missing/error checkpoint summary.
-- Child/subagent checkpoints are allowed, but they do not advance the parent app run count.
-- Root run checkpointing should include or reference child checkpoint summaries so the run has a complete audit trail.
 
 Rollback:
 
@@ -412,17 +403,7 @@ rollback.toRun(threadId, targetRunOrdinal)
 
 Codex `thread/rollback` returns an authoritative provider thread snapshot. Other providers may require a synthetic provider thread restart from context.
 
-Nested rollback:
-
-```text
-rollback.node(nodeId, checkpointId)
-  -> restore child checkpoint if scope cwd/ref is available
-  -> roll back provider thread for that child scope if supported
-  -> mark descendant child checkpoints stale/rolled_back
-  -> preserve parent run checkpoint history unless parent filesystem state changed
-```
-
-If a child checkpoint mutates the same workspace as the parent, restoring it may dirty the parent run's workspace state. The UI/API should make that explicit.
+Rollback always targets a root-run checkpoint. There is no rollback to a subagent node.
 
 ## Approvals
 
