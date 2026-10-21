@@ -138,6 +138,28 @@ it.layer(NodeServices.layer)("rove-sqlite-state", (it) => {
           { sharedHome: baseDir },
         ).pipe(Effect.flip);
         assert.equal(aliasError._tag, "SqliteStateSharedHomeMutationError");
+
+        // Both live homes are refused; an unrelated worktree `.rove` is allowed.
+        const otherHome = yield* fs.makeTempDirectoryScoped({ prefix: "rove-sqlite-state-home-" });
+        yield* createFixtureDatabase(otherHome);
+        for (const target of [aliasBaseDir, otherHome]) {
+          const refused = yield* runSqliteState(
+            { operation: "exec", baseDir: target, sql: "DELETE FROM fixtures" },
+            { sharedHome: [baseDir, otherHome] },
+          ).pipe(Effect.flip);
+          assert.equal(refused._tag, "SqliteStateSharedHomeMutationError");
+        }
+        const worktreeBase = path.join(
+          yield* fs.makeTempDirectoryScoped({ prefix: "rove-sqlite-state-wt-" }),
+          ".rove",
+        );
+        yield* fs.makeDirectory(worktreeBase);
+        yield* createFixtureDatabase(worktreeBase);
+        const allowed = yield* runSqliteState(
+          { operation: "exec", baseDir: worktreeBase, sql: "DELETE FROM fixtures" },
+          { sharedHome: [baseDir, otherHome] },
+        );
+        assert.equal(allowed.operation, "exec");
       }),
   );
 });

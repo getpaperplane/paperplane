@@ -258,6 +258,7 @@ export const make = Effect.gen(function* () {
       environmentThemes: true,
       usageLimitSources: true,
       usagePriceOverrides: true,
+      piWorkloadProtection: true,
       usageModelAliases: true,
       threadPinning: true,
       threadPinReorder: true,

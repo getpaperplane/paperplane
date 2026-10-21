@@ -62,7 +62,7 @@ export class SqliteStateSharedHomeMutationError extends Schema.TaggedError<Sqlit
   {},
 ) {
   override get message(): string {
-    return "Refusing to mutate the shared ~/.rove database. Use an isolated --base-dir.";
+    return "Refusing to mutate the live ~/.rove-code (or upstream ~/.rove) database. Use an isolated --base-dir.";
   }
 }
 
@@ -124,7 +124,8 @@ export interface RunSqliteStateInput {
 }
 
 export interface RunSqliteStateOptions {
-  readonly sharedHome?: string | undefined;
+  /** Live homes `exec` refuses to touch. Defaults to `~/.rove-code` and upstream's `~/.rove`. */
+  readonly sharedHome?: string | readonly string[] | undefined;
 }
 
 const resolveSqlSource = Effect.fn("resolveSqliteStateSqlSource")(function* (
@@ -181,7 +182,13 @@ export const runSqliteState = Effect.fn("runSqliteState")(function* (
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const baseDir = path.resolve(input.baseDir);
-  const sharedHome = path.resolve(options.sharedHome ?? path.join(NodeOS.homedir(), ".rove"));
+  const sharedHomes = (
+    options.sharedHome === undefined
+      ? [path.join(NodeOS.homedir(), ".rove-code"), path.join(NodeOS.homedir(), ".rove")]
+      : typeof options.sharedHome === "string"
+        ? [options.sharedHome]
+        : options.sharedHome
+  ).map((home) => path.resolve(home));
   const databasePath = path.join(baseDir, "userdata", "statev2.sqlite");
   const source = yield* resolveSqlSource(input.sql, input.file);
 
@@ -189,11 +196,13 @@ export const runSqliteState = Effect.fn("runSqliteState")(function* (
     return yield* new SqliteStateDatabaseMissingError({ databasePath });
   }
   if (input.operation === "exec") {
-    const [canonicalBaseDir, canonicalSharedHome] = yield* Effect.all([
+    const [canonicalBaseDir, canonicalSharedHomes] = yield* Effect.all([
       fs.realPath(baseDir),
-      fs.realPath(sharedHome).pipe(Effect.orElseSucceed(() => sharedHome)),
+      Effect.all(
+        sharedHomes.map((home) => fs.realPath(home).pipe(Effect.orElseSucceed(() => home))),
+      ),
     ]);
-    if (canonicalBaseDir === canonicalSharedHome) {
+    if (canonicalSharedHomes.includes(canonicalBaseDir)) {
       return yield* new SqliteStateSharedHomeMutationError();
     }
   }

@@ -61,7 +61,7 @@ import {
   ROVE_CODE_ORCHESTRATION_INSTRUCTIONS,
   ROVE_CODE_BROWSER_TOOL_INSTRUCTIONS,
 } from "@rove-code/provider-core/server/orchestrationInstructions";
-import { buildRuntimeInstructions } from "../RuntimeInstructions.ts";
+import { buildRuntimeInstructions } from "@rove-code/provider-core/server/runtimeInstructions";
 import { readPiSubscriptionStatus } from "../PiUsageLimits.ts";
 import type { UsageLimitStatus } from "../usageLimitStatus.ts";
 import {
