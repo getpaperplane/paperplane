@@ -111,3 +111,38 @@ export const stopWorktreeProcesses = Effect.fn("stopWorktreeProcesses")(function
   );
   return targets;
 });
+
+/**
+ * Roots to match for a removed worktree: the path as given plus its resolved
+ * form (computed before removal, while symlinks still resolve), without
+ * trailing separators. A filesystem root is never a worktree and is dropped so
+ * a bad input can't widen the match to the whole machine.
+ */
+export function worktreeProcessRoots(paths: ReadonlyArray<string>): ReadonlyArray<string> {
+  const roots = new Set<string>();
+  for (const path of paths) {
+    const trimmed = path.replace(/[\\/]+$/, "");
+    if (trimmed !== "" && !/^[A-Za-z]:$/.test(trimmed)) roots.add(trimmed);
+  }
+  return [...roots];
+}
+
+/**
+ * Every worktree removal path calls this after Git has removed (or found
+ * already gone) the checkout. It runs after, not before, because the cwd match
+ * handles deleted directories and a removal Git refuses (dirty, locked) must
+ * not have already killed the user's dev servers. Failures only log: the
+ * checkout is gone by now, so failing the removal would misreport it.
+ */
+export const stopWorktreeProcessesAfterRemoval = Effect.fn("stopWorktreeProcessesAfterRemoval")(
+  function* (worktreePath: string, resolvedPath?: string) {
+    const roots = worktreeProcessRoots(
+      resolvedPath === undefined ? [worktreePath] : [worktreePath, resolvedPath],
+    );
+    yield* stopWorktreeProcesses(roots).pipe(
+      Effect.catchCause((cause) =>
+        Effect.logWarning("Could not stop processes left in a removed worktree.", { cause }),
+      ),
+    );
+  },
+);

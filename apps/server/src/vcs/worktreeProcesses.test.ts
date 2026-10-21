@@ -8,7 +8,12 @@ import * as Effect from "effect/Effect";
 import { Platform as HostProcessPlatform } from "@rove-code/shared/HostProcess";
 import { it } from "@effect/vitest";
 import { describe, expect } from "vite-plus/test";
-import { isCwdInside, isServerOwnedCgroup, stopWorktreeProcesses } from "./worktreeProcesses.ts";
+import {
+  isCwdInside,
+  isServerOwnedCgroup,
+  stopWorktreeProcesses,
+  worktreeProcessRoots,
+} from "./worktreeProcesses.ts";
 
 it("matches deleted worktree directories without matching sibling paths", () => {
   const roots = ["/w/rove-a"];
@@ -16,6 +21,13 @@ it("matches deleted worktree directories without matching sibling paths", () => 
   expect(isCwdInside("/w/rove-a/apps/web (deleted)", roots)).toBe(true);
   expect(isCwdInside("/w/rove-ab/apps/web", roots)).toBe(false);
   expect(isCwdInside("/w", roots)).toBe(false);
+});
+
+it("normalizes removal roots and refuses filesystem roots", () => {
+  expect(worktreeProcessRoots(["/w/a/", "/w/a", "/real/a"])).toEqual(["/w/a", "/real/a"]);
+  expect(worktreeProcessRoots(["/", "//", "C:\\", ""])).toEqual([]);
+  expect(isCwdInside("/w/a-b", worktreeProcessRoots(["/w/a/"]))).toBe(false);
+  expect(isCwdInside("/w/a/src", worktreeProcessRoots(["/w/a/"]))).toBe(true);
 });
 
 it("treats only the server's cgroup subtree and guarded workloads as server-owned", () => {

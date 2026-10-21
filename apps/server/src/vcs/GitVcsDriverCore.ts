@@ -38,6 +38,7 @@ import { parseRoveProjectFile } from "@rove-code/shared/roveProjectFile";
 import { resolveProjectFileBackedSetting } from "@rove-code/shared/projectSettings";
 import { gitCommandDuration, gitCommandsTotal, withMetrics } from "../observability/Metrics.ts";
 import * as GitVcsDriver from "./GitVcsDriver.ts";
+import { stopWorktreeProcessesAfterRemoval } from "./worktreeProcesses.ts";
 import { resolveWorktreesDirectory } from "../worktreesDirectory.ts";
 import {
   parseRemoteNames,
@@ -3885,6 +3886,15 @@ export const makeGitVcsDriverCore = Effect.fn("makeGitVcsDriverCore")(function* 
   const removeWorktree: GitVcsDriver.GitVcsDriver["Service"]["removeWorktree"] = Effect.fn(
     "removeWorktree",
   )(function* (input) {
+    // Resolve before removal; afterwards a symlinked path no longer resolves.
+    const resolvedPath = yield* fileSystem.realPath(input.path).pipe(Effect.option);
+    const stopLeftoverProcesses = stopWorktreeProcessesAfterRemoval(
+      input.path,
+      Option.getOrUndefined(resolvedPath),
+    ).pipe(
+      Effect.provideService(FileSystem.FileSystem, fileSystem),
+      Effect.provideService(HostProcess.Platform, hostPlatform),
+    );
     // Git refuses to remove a worktree with untracked files unless forced, but
     // its check honors `status.showUntrackedFiles=no` and would delete them.
     const args = ["-c", "status.showUntrackedFiles=normal", "worktree", "remove"];
@@ -3925,6 +3935,7 @@ export const makeGitVcsDriverCore = Effect.fn("makeGitVcsDriverCore")(function* 
           detail:
             "Worktree files remain after Git removed it. Stop processes using them, then retry.",
         });
+      yield* stopLeftoverProcesses;
       return;
     }
     // Threads can share a worktree path, and worktrees get removed or pruned
@@ -3936,6 +3947,7 @@ export const makeGitVcsDriverCore = Effect.fn("makeGitVcsDriverCore")(function* 
       !(yield* fileSystem.exists(input.path).pipe(Effect.orElseSucceed(() => false)));
     if (alreadyGone) {
       yield* pruneWorktrees({ cwd: input.cwd });
+      yield* stopLeftoverProcesses;
       return;
     }
     // Raw stderr stays out of both the wire error and the log (it can carry

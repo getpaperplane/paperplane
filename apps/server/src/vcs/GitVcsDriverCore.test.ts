@@ -1,4 +1,5 @@
 // @effect-diagnostics nodeBuiltinImport:off - realpathSync.native resolves Windows 8.3 short names, which the Effect realPath does not.
+import * as NodeChildProcess from "node:child_process";
 import * as NodeFS from "node:fs";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { SelectedGitHubAccount } from "@rove-code/source-control-github/server/GitHubCredentials";
@@ -4383,3 +4384,53 @@ describe("Windows long path configuration", () => {
     }
   });
 });
+
+// Live clock: process shutdown polling sleeps for real.
+it.live.runIf(HostProcess.Platform.defaultValue() === "linux")(
+  "stops processes left in a worktree after removing it, sparing a sibling path",
+  () =>
+    Effect.gen(function* () {
+      const cwd = yield* makeTmpDir();
+      const { initialBranch } = yield* initRepoWithCommit(cwd);
+      const pathService = yield* Path.Path;
+      const root = yield* makeTmpDir("git-worktrees-");
+      const worktreePath = pathService.join(root, "foo");
+      const sibling = pathService.join(root, "foo-bar");
+      const fileSystem = yield* FileSystem.FileSystem;
+      const driver = yield* GitVcsDriver.GitVcsDriver;
+      yield* driver.createWorktree({
+        cwd,
+        path: worktreePath,
+        refName: initialBranch,
+        newRefName: "feature/foo",
+      });
+      yield* fileSystem.makeDirectory(sibling);
+      const spawnIdle = (dir: string) =>
+        NodeChildProcess.spawn(process.execPath, ["-e", "setInterval(() => {}, 1e6)"], {
+          cwd: dir,
+          stdio: "ignore",
+        });
+      const leftover = spawnIdle(worktreePath);
+      const bystander = spawnIdle(sibling);
+      yield* Effect.addFinalizer(() =>
+        Effect.sync(() => {
+          leftover.kill("SIGKILL");
+          bystander.kill("SIGKILL");
+        }),
+      );
+      yield* Effect.promise(() =>
+        Promise.all(
+          [leftover, bystander].map(
+            (child) => new Promise((resolve) => child.once("spawn", resolve)),
+          ),
+        ),
+      );
+      const exited = new Promise<void>((resolve) => leftover.once("exit", () => resolve()));
+
+      yield* driver.removeWorktree({ cwd, path: worktreePath });
+
+      yield* Effect.promise(() => exited);
+      assert.equal(bystander.exitCode, null);
+      assert.equal(bystander.signalCode, null);
+    }).pipe(Effect.scoped, Effect.provide(layerTest)),
+);
