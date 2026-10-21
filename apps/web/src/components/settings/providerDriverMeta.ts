@@ -12,8 +12,7 @@ import { grokClient } from "@rove-code/provider-grok/client";
 import { museClient } from "@rove-code/provider-muse/client";
 import { openCodeClient } from "@rove-code/provider-opencode/client";
 
-// Rove runs Pi in-process through its SDK (ADR 0001), so its client definition
-// stays here on Rove's own PiSettings instead of upstream's RPC provider-pi package.
+// The SDK driver's settings live in contracts, shared with the server and mobile.
 const piClient = defineProviderClient({
   driverKind: ProviderDriverKind.make("pi"),
   label: "Pi",

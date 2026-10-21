@@ -27,7 +27,7 @@ capabilities, never the driver kind.
   at runtime is a bug.
 - **Permission modes.** Offer only modes the provider enforces natively, through
   `supportedRuntimeModes` in the provider presentation ([Grok](../../packages/provider-grok/src/server/status.ts)
-  and [Pi](../../packages/provider-pi/src/server/status.ts) are examples). Do not imitate a missing
+  and [Cursor](../../packages/provider-cursor/src/server/status.ts) are examples). Do not imitate a missing
   mode by answering approvals in Rove: Rove's check is weaker than the agent's own enforcement. The
   server runs an unoffered stored mode as Supervised
   ([`RuntimePolicy.ts`](../../apps/server/src/orchestration-v2/RuntimePolicy.ts)).
@@ -104,7 +104,7 @@ produce catches them.
 ## Where a driver plugs in
 
 A provider lives in its own `packages/provider-<name>` package, with
-[Pi](../../packages/provider-pi) as the reference. Drivers not moved yet still live in
+[OpenCode](../../packages/provider-opencode) as the reference. Drivers not moved yet still live in
 [`provider/Drivers`](../../apps/server/src/provider/Drivers).
 
 - **Package exports.** `./settings` holds the instance settings schema, built with

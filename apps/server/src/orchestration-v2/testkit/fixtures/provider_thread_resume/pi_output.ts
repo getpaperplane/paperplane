@@ -19,28 +19,23 @@ function field(value: unknown, key: string): unknown {
 }
 
 /**
- * Pi's durable native thread id is its session file. After the idle release,
- * the respawned process must `switch_session` to the file the first turn
- * wrote, and the resumed model still sees the first exchange.
+ * Pi's durable native thread id is its session file. After idle release,
+ * the SDK session factory must receive that cursor, and the resumed model
+ * still sees the first exchange.
  */
 export function assertPiProviderThreadResumeOutput(
   result: OrchestratorV2ScenarioResult,
   transcript: ProviderReplayTranscript,
 ) {
-  const processStarts = transcript.entries.filter(
-    (entry) => entry.type === "expect_outbound" && field(entry.frame, "type") === "process_start",
-  );
-  assert.lengthOf(processStarts, 2, "the idle release must retire the first Pi process");
-  const switches = transcript.entries.flatMap((entry) =>
-    entry.type === "expect_outbound" && field(entry.frame, "type") === "switch_session"
-      ? [entry]
+  const creates = transcript.entries.flatMap((entry) =>
+    entry.type === "expect_outbound" && field(entry.frame, "method") === "createSession"
+      ? [field(entry.frame, "input")]
       : [],
   );
-  assert.deepEqual(
-    switches.map((entry) => [entry.label, field(entry.frame, "sessionPath")]),
-    [["switch_session@p2", "/pi-sessions/session-1.jsonl"]],
-    "the respawned process must resume the first session file",
-  );
+  assert.lengthOf(creates, 2, "idle release must dispose and reopen the SDK session");
+  assert.equal(field(creates[0], "resumeSessionFile"), undefined);
+  assert.equal(field(creates[1], "resumeSessionFile"), "/pi-sessions/session-1.jsonl");
+  assert.equal(field(creates[1], "resumeSessionId"), "session-1");
 
   assertBaseProjection({
     result,

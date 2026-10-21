@@ -21,14 +21,14 @@ function field(value: unknown, key: string): unknown {
 
 function outboundOfType(transcript: ProviderReplayTranscript, type: string) {
   return transcript.entries.flatMap((entry) =>
-    entry.type === "expect_outbound" && field(entry.frame, "type") === type ? [entry.frame] : [],
+    entry.type === "expect_outbound" && field(entry.frame, "method") === type ? [entry.frame] : [],
   );
 }
 
 /**
- * Stop terminates Pi (Stop-with-restart), so the stopped turn's session-tree
- * user entry has to be read before the kill. Rolling back to turn 1 then forks
- * at that entry, which discards the stopped turn and everything after it.
+ * Stop disposes the SDK session after settlement. The mirrored tree preserves
+ * the stopped turn's strong user-entry cursor; rollback navigates to its parent
+ * in the resumed session, discarding the stopped turn and everything after it.
  */
 export function assertPiThreadRollbackAfterStopOutput(
   result: OrchestratorV2ScenarioResult,
@@ -52,19 +52,30 @@ export function assertPiThreadRollbackAfterStopOutput(
   assert.equal(stoppedTurn?.nativeTurnRef?.strength, "strong");
 
   const stopIndex = transcript.entries.findIndex(
-    (entry) => entry.type === "expect_outbound" && field(entry.frame, "type") === "abort",
+    (entry) => entry.type === "expect_outbound" && field(entry.frame, "method") === "abort",
   );
   const captureIndex = transcript.entries.findIndex(
     (entry, index) =>
       index > stopIndex &&
       entry.type === "expect_outbound" &&
-      field(entry.frame, "type") === "get_entries",
+      field(entry.frame, "method") === "dispose",
   );
-  assert.isAbove(captureIndex, stopIndex, "Stop must read the session tree before terminating Pi");
+  assert.isAbove(captureIndex, stopIndex, "Stop must settle before disposing the SDK session");
+  assert.equal(stoppedTurn?.nativeTurnRef?.nativeId, "u2");
+  const resumes = outboundOfType(transcript, "createSession");
+  assert.lengthOf(resumes, 2);
+  assert.equal(
+    field(field(resumes[1], "input"), "resumeSessionFile"),
+    "/pi-sessions/session-1.jsonl",
+  );
 
   const forks = outboundOfType(transcript, "fork");
   assert.lengthOf(forks, 1, "rollback must fork the Pi session tree exactly once");
-  assert.equal(field(forks[0], "entryId"), stoppedTurn?.nativeTurnRef?.nativeId);
+  assert.deepEqual(field(forks[0], "args"), ["a1"], "navigate to the stopped user's parent");
+  assert.equal(
+    projection.providerThreads[0]?.nativeThreadRef?.nativeId,
+    "/pi-sessions/session-1.jsonl",
+  );
 
   assertVisibleUserMessagesInclude(projection, [
     THREAD_ROLLBACK_FIRST_PROMPT,
