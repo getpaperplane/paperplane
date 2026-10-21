@@ -6,7 +6,7 @@ import * as Path from "effect/Path";
 import * as SqlClient from "effect/sql/SqlClient";
 
 import * as NodeSqliteClient from "@rove-code/shared/nodeSqliteClient";
-import { DEFAULT_SHARED_HOME_NAMES, runSqliteState } from "./rove-sqlite-state.ts";
+import { runSqliteState } from "./rove-sqlite-state.ts";
 import * as HostProcess from "@rove-code/shared/HostProcess";
 import { symlinksSupported } from "@rove-code/shared/testing/symlinks";
 
@@ -139,16 +139,7 @@ it.layer(NodeServices.layer)("rove-sqlite-state", (it) => {
         ).pipe(Effect.flip);
         assert.equal(aliasError._tag, "SqliteStateSharedHomeMutationError");
 
-        // Both live homes are refused; an unrelated worktree `.rove` is allowed.
-        const otherHome = yield* fs.makeTempDirectoryScoped({ prefix: "rove-sqlite-state-home-" });
-        yield* createFixtureDatabase(otherHome);
-        for (const target of [aliasBaseDir, otherHome]) {
-          const refused = yield* runSqliteState(
-            { operation: "exec", baseDir: target, sql: "DELETE FROM fixtures" },
-            { sharedHome: [baseDir, otherHome] },
-          ).pipe(Effect.flip);
-          assert.equal(refused._tag, "SqliteStateSharedHomeMutationError");
-        }
+        // A worktree's own `.rove` dev state is not the live home.
         const worktreeBase = path.join(
           yield* fs.makeTempDirectoryScoped({ prefix: "rove-sqlite-state-wt-" }),
           ".rove",
@@ -157,13 +148,25 @@ it.layer(NodeServices.layer)("rove-sqlite-state", (it) => {
         yield* createFixtureDatabase(worktreeBase);
         const allowed = yield* runSqliteState(
           { operation: "exec", baseDir: worktreeBase, sql: "DELETE FROM fixtures" },
-          { sharedHome: [baseDir, otherHome] },
+          { sharedHome: baseDir },
         );
         assert.equal(allowed.operation, "exec");
       }),
   );
 
-  it("defaults to refusing the live Rove home and upstream's home", () => {
-    assert.deepEqual([...DEFAULT_SHARED_HOME_NAMES], [".rove-code", ".rove"]);
-  });
+  it.effect("refuses the Rove Code home by default", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const home = yield* fs.makeTempDirectoryScoped({ prefix: "rove-sqlite-state-user-" });
+      const roveHome = path.join(home, ".rove-code");
+      yield* createFixtureDatabase(roveHome);
+      const error = yield* runSqliteState({
+        operation: "exec",
+        baseDir: roveHome,
+        sql: "DELETE FROM fixtures",
+      }).pipe(Effect.provideService(HostProcess.HomeDirectory, home), Effect.flip);
+      assert.equal(error._tag, "SqliteStateSharedHomeMutationError");
+    }),
+  );
 });

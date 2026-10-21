@@ -40,9 +40,7 @@ Contributor source setup lives in the [development guide](../operations/developm
 It is not the installation or update procedure for a persistent host.
 
 Outside a development worktree, Rove Code uses `~/.rove-code` for its data.
-The inherited installation's `~/.rove` is left untouched. Do not point both
-applications at the same data directory. Importing an existing installation
-is not yet supported.
+Importing data from another installation is not yet supported.
 
 ## Desktop command line
 
