@@ -765,10 +765,13 @@ it.effect("does not cancel or resume a run that completes while shutdown intent 
   }),
 );
 
-const continuationDispatches = (projection: OrchestrationV2ThreadProjection) =>
+const continuationDispatches = (
+  projection: OrchestrationV2ThreadProjection,
+  requestedByUpdate?: true,
+) =>
   Effect.gen(function* () {
     const dispatches: Array<Extract<OrchestrationV2Command, { type: "message.dispatch" }>> = [];
-    yield* continueRestartedRun({ threadId, sourceRunId: runId }).pipe(
+    yield* continueRestartedRun({ threadId, sourceRunId: runId, requestedByUpdate }).pipe(
       Effect.provide(
         Layer.merge(
           Layer.mock(ThreadManagementService.ThreadManagementService)({
@@ -779,7 +782,7 @@ const continuationDispatches = (projection: OrchestrationV2ThreadProjection) =>
               return Effect.succeed({} as never);
             },
           }),
-          ServerSettings.layerTest({ continueThreadsAfterServerUpdate: true }),
+          ServerSettings.layerTest({ continueThreadsAfterServerUpdate: !requestedByUpdate }),
         ),
       ),
     );
@@ -867,6 +870,28 @@ it.effect("continues a resumed queued run that ran after an earlier continuation
       runs: [...cut.runs, finishedContinuation],
     } as unknown as OrchestrationV2ThreadProjection);
     assert.deepEqual(texts, ["Continue where you left off."]);
+  }),
+);
+
+it.effect("update consent bypasses only the preference, not lifecycle safety checks", () =>
+  Effect.gen(function* () {
+    const cut = cutMidTurn();
+    assert.lengthOf(yield* continuationDispatches(cut, true), 1);
+    const blocked = [
+      { ...cut, runs: [{ ...cut.runs[0]!, status: "completed" }] },
+      { ...cut, thread: { ...cut.thread, archivedAt: now } },
+      { ...cut, thread: { ...cut.thread, settledOverride: "settled" } },
+      { ...cut, thread: { ...cut.thread, providerInstanceId: ProviderInstanceId.make("other") } },
+      { ...cut, turnItems: [{ type: "run_interrupt_request", runId }] },
+      { ...cut, turnItems: [{ type: "secret_request", runId, secretStatus: "pending" }] },
+      { ...cut, runs: [...cut.runs, { ...cut.runs[0]!, id: RunId.make("newer"), ordinal: 2 }] },
+      { ...cut, messages: [{ id: MessageId.make(`message:restart-continuation:${runId}`) }] },
+    ];
+    for (const projection of blocked)
+      assert.lengthOf(
+        yield* continuationDispatches(projection as OrchestrationV2ThreadProjection, true),
+        0,
+      );
   }),
 );
 
@@ -1021,6 +1046,7 @@ it.effect("stops continuing after three automatic restart continuations in a row
       ),
     } as unknown as OrchestrationV2ThreadProjection;
     assert.lengthOf(yield* continuationTexts(withThreeLinks), 0);
+    assert.lengthOf(yield* continuationDispatches(withThreeLinks, true), 0);
   }),
 );
 
@@ -1062,6 +1088,7 @@ it.effect.each([
         runtimeRequests,
       } as unknown as OrchestrationV2ThreadProjection;
       assert.lengthOf(yield* continuationTexts(cut), shouldContinue ? 1 : 0);
+      assert.lengthOf(yield* continuationDispatches(cut, true), shouldContinue ? 1 : 0);
     }),
 );
 

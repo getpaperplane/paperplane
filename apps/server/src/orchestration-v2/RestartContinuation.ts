@@ -195,10 +195,14 @@ export function restartContinuationRun(
 }
 
 export const continueRestartedRun = Effect.fn("RestartContinuation.continueRestartedRun")(
-  function* (input: { readonly threadId: ThreadId; readonly sourceRunId: RunId }) {
+  function* (input: {
+    readonly threadId: ThreadId;
+    readonly sourceRunId: RunId;
+    readonly requestedByUpdate?: true | undefined;
+  }) {
     const settings = yield* ServerSettings.ServerSettingsService;
     const enabled = yield* settings.getSettings.pipe(Effect.orElseSucceed(() => null));
-    if (!enabled) return;
+    if (!enabled && !input.requestedByUpdate) return;
     const threads = yield* ThreadManagementService.ThreadManagementService;
     const messageId = MessageId.make(`message:restart-continuation:${input.sourceRunId}`);
     const projection = yield* threads.getThreadRecords(
@@ -207,8 +211,10 @@ export const continueRestartedRun = Effect.fn("RestartContinuation.continueResta
       { messageIds: [messageId], turnItemTypes: ["secret_request"] },
     );
     if (
-      !resolveProjectSettings(enabled, projection.thread.projectId).settings
-        .continueThreadsAfterServerUpdate
+      !input.requestedByUpdate &&
+      (enabled === null ||
+        !resolveProjectSettings(enabled, projection.thread.projectId).settings
+          .continueThreadsAfterServerUpdate)
     )
       return;
     if (projection.messages.some((message) => message.id === messageId)) return;

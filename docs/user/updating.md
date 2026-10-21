@@ -128,6 +128,10 @@ the machine instead.
 
 The same page lets you refresh provider status and update supported providers.
 These controls require a connected environment and permission to operate it.
+If restart continuation is off, supported hosts offer **Update and continue threads**
+for this update only. This does not change your restart preference. Only eligible
+active threads resume; threads waiting for your approval or a secret stay stopped.
+
 Provider update checks and restart continuation preferences are in
 **Settings → Maintenance**. If provider update checks are disabled, enable them
 there before refreshing to find newer versions. The same setting controls whether

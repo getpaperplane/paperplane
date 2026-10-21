@@ -70,6 +70,13 @@ export class ProviderRuntimeRecoveryService extends Context.Service<
       trigger: "startup" | "shutdown",
     ) => Effect.Effect<ProviderRuntimeReconciliationSummary, ProviderRuntimeRecoveryError>;
     readonly prepareForShutdown: Effect.Effect<void, ProviderRuntimeRecoveryError>;
+    readonly prepareForServerUpdate: Effect.Effect<
+      ReadonlyArray<ThreadId>,
+      ProviderRuntimeRecoveryError
+    >;
+    readonly cancelServerUpdate: (
+      threadIds: ReadonlyArray<ThreadId>,
+    ) => Effect.Effect<void, ProviderRuntimeRecoveryError>;
     readonly recover: Effect.Effect<ProviderRuntimeRecoverySummary, ProviderRuntimeRecoveryError>;
   }
 >()("@rove-code/server/orchestration-v2/ProviderRuntimeRecoveryService") {}
@@ -777,11 +784,54 @@ export const make = Effect.gen(function* () {
     Effect.mapError((cause) => new ProviderRuntimeRecoveryError({ operation: "reconcile", cause })),
   );
 
+  const prepareForServerUpdate = Effect.gen(function* () {
+    const threadIds = yield* projections.getRecoveryThreadIds("runtime");
+    const effects: Array<EffectOutbox.PendingOrchestrationEffectV2> = [];
+    const now = yield* DateTime.now;
+    for (const threadId of threadIds) {
+      const projection = yield* projections.getRuntimeRecoveryProjection(threadId);
+      const run = restartContinuationRun(projection, now);
+      if (!run) continue;
+      effects.push({
+        id: `effect:restart-continuation:${run.id}`,
+        commandId: CommandId.make(`command:update-prepare:${run.id}`),
+        threadId,
+        request: {
+          type: "provider-runtime.continue",
+          sourceRunId: run.id,
+          requestedByUpdate: true,
+          waitForRestart: true,
+        },
+      });
+    }
+    // All markers commit together. A failed preparation must not leave some
+    // threads authorized to continue after an unrelated future restart.
+    yield* eventSink.writeWithEffects({ events: [], effects });
+    return effects.map((effect) => effect.threadId);
+  }).pipe(
+    Effect.mapError((cause) => new ProviderRuntimeRecoveryError({ operation: "reconcile", cause })),
+  );
+
+  const cancelServerUpdate = (threadIds: ReadonlyArray<ThreadId>) =>
+    outbox
+      .discardPreparedUpdate(threadIds)
+      .pipe(
+        Effect.mapError(
+          (cause) => new ProviderRuntimeRecoveryError({ operation: "reconcile", cause }),
+        ),
+      );
+
   const recover = Effect.gen(function* () {
     return (yield* reconcile("startup")) satisfies ProviderRuntimeRecoverySummary;
   });
 
-  return ProviderRuntimeRecoveryService.of({ reconcile, prepareForShutdown, recover });
+  return ProviderRuntimeRecoveryService.of({
+    reconcile,
+    prepareForShutdown,
+    prepareForServerUpdate,
+    cancelServerUpdate,
+    recover,
+  });
 });
 
 export const layer = Layer.effect(ProviderRuntimeRecoveryService, make);

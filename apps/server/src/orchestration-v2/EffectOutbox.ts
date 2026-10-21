@@ -32,6 +32,10 @@ export const OrchestrationEffectRequestV2 = Schema.Union([
   Schema.Struct({
     type: Schema.Literal("provider-runtime.continue"),
     sourceRunId: RunId,
+    /** One-shot consent from an update request, independent of the persistent preference. */
+    requestedByUpdate: Schema.optional(Schema.Literal(true)),
+    /** Held while this process is live; reconciliation releases it after providers stop. */
+    waitForRestart: Schema.optional(Schema.Literal(true)),
   }),
   Schema.Struct({
     type: Schema.Literal("provider-session.detach"),
@@ -226,6 +230,10 @@ export interface EffectOutboxV2Shape {
   readonly clearCancellation: (effectId: string) => Effect.Effect<void>;
   /** Resolves once the effect is neither pending nor running, or right away when it does not exist. */
   readonly awaitSettled: (effectId: string) => Effect.Effect<void, EffectOutboxError>;
+  /** Removes only update intents that have not crossed the restart boundary. */
+  readonly discardPreparedUpdate: (
+    threadIds: ReadonlyArray<ThreadId>,
+  ) => Effect.Effect<void, EffectOutboxError>;
   readonly reconcileAfterProcessLoss: Effect.Effect<
     { readonly requeued: number; readonly cancelled: number },
     EffectOutboxError
@@ -343,10 +351,12 @@ export const layer: Layer.Layer<EffectOutboxV2, never, SqlClient.SqlClient> = La
             : sql`candidate.available_at <= ${availableBefore}`
         }
         AND candidate.status = 'pending'
+        AND json_extract(candidate.payload_json, '$.waitForRestart') IS NOT 1
         AND NOT EXISTS (
           SELECT 1
           FROM orchestration_v2_effect_outbox AS active
           WHERE active.thread_id = candidate.thread_id
+            AND json_extract(active.payload_json, '$.waitForRestart') IS NOT 1
             AND (
               active.status = 'running'
               OR (
@@ -514,6 +524,23 @@ export const layer: Layer.Layer<EffectOutboxV2, never, SqlClient.SqlClient> = La
           // Settled already: release every waiter that shares this signal.
           yield* signalSettled([effectId]);
         }),
+      discardPreparedUpdate: (threadIds) =>
+        Effect.gen(function* () {
+          if (threadIds.length === 0) return;
+          const removed = yield* sql<{ readonly effect_id: string }>`
+            DELETE FROM orchestration_v2_effect_outbox
+            WHERE thread_id IN ${sql.in(threadIds)}
+              AND status = 'pending'
+              AND effect_type = 'provider-runtime.continue'
+              AND json_extract(payload_json, '$.waitForRestart') = 1
+            RETURNING effect_id
+          `;
+          yield* signalSettled(removed.map((row) => row.effect_id));
+        }).pipe(
+          Effect.mapError(
+            (cause) => new EffectOutboxError({ operation: "discard-prepared-update", cause }),
+          ),
+        ),
       reconcileAfterProcessLoss: Effect.gen(function* () {
         const now = DateTime.formatIso(yield* DateTime.now);
         const cancelledRows = yield* sql<{ readonly effect_id: string }>`
@@ -542,8 +569,19 @@ export const layer: Layer.Layer<EffectOutboxV2, never, SqlClient.SqlClient> = La
             AND effect_type IN ${sql.in(REPLAY_SAFE_EFFECT_TYPES_AFTER_PROCESS_LOSS)}
           RETURNING effect_id
         `;
-        if (requeuedRows.length > 0) yield* notifyAvailable(requeuedRows.length);
-        return { requeued: requeuedRows.length, cancelled: cancelledRows.length };
+        // Called only after providers and the worker have stopped, or before
+        // they start on boot. A prepared update cannot run in the old process.
+        const releasedRows = yield* sql<{ readonly effect_id: string }>`
+          UPDATE orchestration_v2_effect_outbox
+          SET payload_json = json_remove(payload_json, '$.waitForRestart'), updated_at = ${now}
+          WHERE status = 'pending'
+            AND effect_type = 'provider-runtime.continue'
+            AND json_extract(payload_json, '$.waitForRestart') = 1
+          RETURNING effect_id
+        `;
+        const requeued = requeuedRows.length + releasedRows.length;
+        if (requeued > 0) yield* notifyAvailable(requeued);
+        return { requeued, cancelled: cancelledRows.length };
       }).pipe(
         Effect.mapError(
           (cause) => new EffectOutboxError({ operation: "reconcile-process-loss", cause }),

@@ -8,6 +8,8 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Fiber from "effect/Fiber";
 import * as Path from "effect/Path";
+import * as Layer from "effect/Layer";
+import * as ProviderRuntimeRecovery from "../orchestration-v2/ProviderRuntimeRecoveryService.ts";
 import { HttpClient, HttpClientResponse } from "effect/http";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
@@ -24,6 +26,7 @@ interface HarnessOptions {
   readonly preflight?: "ready" | "blocked";
   readonly requestUpdate?: ServiceLauncherClient.ServiceLauncherClient["Service"]["requestUpdate"];
   readonly desktopAppUpdate?: DesktopAppUpdate.DesktopAppUpdate["Service"];
+  readonly continuationEvents?: string[];
 }
 
 // The staged runtime is a release archive: the fake client serves SHA256SUMS
@@ -112,6 +115,18 @@ const makeHarness = Effect.fn("test.make_self_update_harness")(function* (
     Effect.provide(ServerConfig.layerTest(process.cwd(), baseDir)),
   );
   const selfUpdate = yield* ServerSelfUpdate.make().pipe(
+    Effect.provide(
+      Layer.mock(ProviderRuntimeRecovery.ProviderRuntimeRecoveryService)({
+        prepareForServerUpdate: Effect.sync(() => {
+          options.continuationEvents?.push("prepare");
+          return [ThreadId.make("thread:running")];
+        }),
+        cancelServerUpdate: (ids) =>
+          Effect.sync(() => {
+            if (ids.length > 0) options.continuationEvents?.push("clear");
+          }),
+      }),
+    ),
     Effect.provideService(ProcessRunner.ProcessRunner, runner),
     Effect.provideService(ServiceLauncherClient.ServiceLauncherClient, launcher),
     Effect.provideService(
@@ -343,6 +358,59 @@ it.layer(NodeServices.layer)("server self update", (it) => {
       }
       expect(events).toEqual(["clear"]);
     }),
+  );
+
+  it.effect("wires update consent into V2 preparation and clears it on a rejected handoff", () =>
+    Effect.gen(function* () {
+      const events: string[] = [];
+      const accepted = yield* makeHarness({ continuationEvents: events });
+      yield* accepted.selfUpdate.update({ targetVersion: "1.1.0", continueRunningThreads: true });
+      expect(events).toEqual(["prepare"]);
+      const rejected = yield* makeHarness({
+        continuationEvents: events,
+        requestUpdate: () =>
+          Effect.fail(
+            new ServiceLauncherClient.ServiceLauncherRejectedError({
+              reason: "not ready",
+              targetVersion: "1.1.0",
+            }),
+          ),
+      });
+      yield* rejected.selfUpdate
+        .update({ targetVersion: "1.1.0", continueRunningThreads: true })
+        .pipe(Effect.exit);
+      expect(events).toEqual(["prepare", "prepare", "clear"]);
+      const optedOut = yield* makeHarness({ continuationEvents: events });
+      yield* optedOut.selfUpdate.update({ targetVersion: "1.1.0" });
+      expect(events).toEqual(["prepare", "prepare", "clear"]);
+    }),
+  );
+
+  it.effect(
+    "prepares V2 desktop intent at commit, not download, and retains it after acceptance",
+    () =>
+      Effect.gen(function* () {
+        const events: string[] = [];
+        const { selfUpdate } = yield* makeHarness({
+          mode: "desktop",
+          continuationEvents: events,
+          desktopAppUpdate: {
+            available: true,
+            run: () =>
+              Effect.succeed({
+                targetVersion: "1.1.0",
+                method: "desktop-app",
+                desktopUpdateToken: "token",
+              }),
+            commit: (_id, accepted = () => Effect.void) =>
+              accepted().pipe(Effect.andThen(Effect.interrupt)),
+          },
+        });
+        yield* selfUpdate.update({ targetVersion: "1.1.0", continueRunningThreads: true });
+        expect(events).toEqual([]);
+        yield* selfUpdate.commitDesktopUpdate("token").pipe(Effect.exit);
+        expect(events).toEqual(["prepare"]);
+      }),
   );
 
   it.effect("stages and preflights before asking the launcher for an update ID", () =>

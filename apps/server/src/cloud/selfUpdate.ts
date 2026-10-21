@@ -25,6 +25,7 @@ import { CLI_RELEASE_BASE_URL_ENV } from "@rove-code/shared/cliRelease";
 import * as ServerConfig from "../config.ts";
 import * as DesktopAppUpdate from "../desktopUpdate/DesktopAppUpdate.ts";
 import * as ProcessRunner from "../processRunner.ts";
+import * as ProviderRuntimeRecovery from "../orchestration-v2/ProviderRuntimeRecoveryService.ts";
 import {
   ensurePinnedRuntimeInstalled,
   pinnedRuntimeCommand,
@@ -111,6 +112,7 @@ export const withRunningThreadContinuation = Effect.fn(
                     }),
                   ),
                   Effect.asVoid,
+                  Effect.uninterruptible,
                 )
               : Effect.void
             ).pipe(Effect.andThen(reportProgress(stage))),
@@ -148,7 +150,16 @@ export const withRunningThreadContinuation = Effect.fn(
         let continuationThreadIds: ReadonlyArray<ThreadId> = [];
         return yield* clearOnError(
           Effect.gen(function* () {
-            continuationThreadIds = shouldContinue ? yield* input.prepare : [];
+            if (shouldContinue) {
+              yield* input.prepare.pipe(
+                Effect.tap((threadIds) =>
+                  Effect.sync(() => {
+                    continuationThreadIds = threadIds;
+                  }),
+                ),
+                Effect.uninterruptible,
+              );
+            }
             return yield* input.selfUpdate.commitDesktopUpdate(requestId, () =>
               Effect.sync(() => {
                 handoffAccepted = true;
@@ -171,6 +182,7 @@ export const withRunningThreadContinuation = Effect.fn(
 
 export const make = Effect.fn("cloud.server_self_update.make")(function* () {
   const serverConfig = yield* ServerConfig.ServerConfig;
+  const recovery = yield* ProviderRuntimeRecovery.ProviderRuntimeRecoveryService;
   const desktopAppUpdate = yield* DesktopAppUpdate.DesktopAppUpdate;
   const launcher = yield* ServiceLauncherClient.ServiceLauncherClient;
   const runner = yield* ProcessRunner.ProcessRunner;
@@ -334,10 +346,26 @@ export const make = Effect.fn("cloud.server_self_update.make")(function* () {
     }).pipe(Effect.onError(() => Ref.set(inFlight, false)));
   });
 
-  return ServerSelfUpdate.of({
-    update,
-    commitDesktopUpdate: (requestId, onHandoffAccepted) =>
-      desktopAppUpdate.commit(requestId, onHandoffAccepted),
+  return yield* withRunningThreadContinuation({
+    mode: serverConfig.mode,
+    selfUpdate: ServerSelfUpdate.of({
+      update,
+      commitDesktopUpdate: (requestId, onHandoffAccepted) =>
+        desktopAppUpdate.commit(requestId, onHandoffAccepted),
+    }),
+    prepare: recovery.prepareForServerUpdate.pipe(
+      Effect.mapError((cause) =>
+        failWith("Could not prepare running threads for the update.", cause),
+      ),
+    ),
+    clear: (threadIds) =>
+      recovery
+        .cancelServerUpdate(threadIds)
+        .pipe(
+          Effect.mapError((cause) =>
+            failWith("Could not clear update continuation intent.", cause),
+          ),
+        ),
   });
 });
 
