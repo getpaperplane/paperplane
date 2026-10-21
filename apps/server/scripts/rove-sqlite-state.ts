@@ -3,7 +3,6 @@
 import * as NodeRuntime from "@effect/platform-node/NodeRuntime";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import * as NodeOS from "node:os";
-import * as NodePath from "node:path";
 import { fromJsonStringPretty } from "@rove-code/shared/schemaJson";
 import * as Console from "effect/Console";
 import * as DateTime from "effect/DateTime";
@@ -124,10 +123,8 @@ export interface RunSqliteStateInput {
   readonly file?: string | undefined;
 }
 
-/** The live Rove home and upstream T3 Code's home, which `exec` refuses by default. */
-export function defaultSharedHomes(homeDir: string = NodeOS.homedir()): ReadonlyArray<string> {
-  return [NodePath.join(homeDir, ".rove-code"), NodePath.join(homeDir, ".rove")];
-}
+/** The live Rove home and upstream T3 Code's home, relative to the user's home directory. */
+export const DEFAULT_SHARED_HOME_NAMES = [".rove-code", ".rove"] as const;
 
 export interface RunSqliteStateOptions {
   /** Live homes `exec` refuses to touch. Defaults to `~/.rove-code` and upstream's `~/.rove`. */
@@ -190,7 +187,7 @@ export const runSqliteState = Effect.fn("runSqliteState")(function* (
   const baseDir = path.resolve(input.baseDir);
   const sharedHomes = (
     options.sharedHome === undefined
-      ? defaultSharedHomes()
+      ? DEFAULT_SHARED_HOME_NAMES.map((name) => path.join(NodeOS.homedir(), name))
       : typeof options.sharedHome === "string"
         ? [options.sharedHome]
         : options.sharedHome
