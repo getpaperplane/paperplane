@@ -6,7 +6,7 @@ import * as Path from "effect/Path";
 import * as SqlClient from "effect/sql/SqlClient";
 
 import * as NodeSqliteClient from "@rove-code/shared/nodeSqliteClient";
-import { runSqliteState } from "./rove-sqlite-state.ts";
+import { defaultSharedHomes, runSqliteState } from "./rove-sqlite-state.ts";
 import * as HostProcess from "@rove-code/shared/HostProcess";
 import { symlinksSupported } from "@rove-code/shared/testing/symlinks";
 
@@ -162,4 +162,8 @@ it.layer(NodeServices.layer)("rove-sqlite-state", (it) => {
         assert.equal(allowed.operation, "exec");
       }),
   );
+
+  it("defaults to refusing the live Rove home and upstream's home", () => {
+    assert.deepEqual(defaultSharedHomes("/home/me"), ["/home/me/.rove-code", "/home/me/.rove"]);
+  });
 });
