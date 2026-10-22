@@ -27,6 +27,8 @@ import {
 } from "./components/SettingsEnvironmentFilterHeader";
 import { BranchNamingSettings } from "./components/BranchNamingSettings";
 import { DatabaseStorageNotice } from "./components/DatabaseStorageNotice";
+import { OtlpEndpointSettings } from "./components/OtlpEndpointSettings";
+import { StorageCleanupSettings } from "./components/StorageCleanupSettings";
 import { SettingsChoiceRow } from "./components/SettingsChoiceRow";
 import { SettingsSection } from "./components/SettingsSection";
 import { SettingsSwitchRow } from "./components/SettingsSwitchRow";
@@ -461,6 +463,20 @@ function ServerSettingsDetail(props: { readonly page: SettingsPage }) {
                         />
                       ))}
                     </SettingsSection>
+                  ) : null}
+                  {!projectSelected ? (
+                    <>
+                      <StorageCleanupSettings
+                        targets={selectedTargets}
+                        disabled={disabled}
+                        write={write}
+                      />
+                      {selectedTargets.length === 1 &&
+                      selectedTargets[0]!.serverConfig.environment.capabilities
+                        .otlpEndpointCheck === true ? (
+                        <OtlpEndpointSettings target={selectedTargets[0]!} />
+                      ) : null}
+                    </>
                   ) : null}
                   <SettingsSection title="Privacy">
                     <SettingsSwitchRow

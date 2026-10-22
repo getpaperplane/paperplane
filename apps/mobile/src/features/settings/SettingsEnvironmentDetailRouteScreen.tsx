@@ -26,6 +26,7 @@ import { EnvironmentRoutesSection } from "./EnvironmentRoutesSection";
 import { SettingsActionRow } from "./components/SettingsActionRow";
 import { SettingsScreen } from "./components/SettingsScreen";
 import { RemoteSandboxesSection } from "./components/RemoteSandboxesSection";
+import { EnvironmentIconSettings } from "./components/EnvironmentIconSettings";
 import { HostHealthSection } from "./components/HostHealthSection";
 import { SettingsSection } from "./components/SettingsSection";
 import {
@@ -209,6 +210,9 @@ function EnvironmentDetail({ environmentId }: { readonly environmentId: Environm
                 })
               }
             />
+            {connected && capabilities?.environmentIcon === true ? (
+              <EnvironmentIconSettings environmentId={environmentId} serverConfig={config} />
+            ) : null}
             {connected && capabilities?.hostHealth === true ? (
               <HostHealthSection environmentId={environmentId} />
             ) : null}

@@ -27,6 +27,10 @@
       "types": "./src/hostHealth.ts",
       "default": "./src/hostHealth.ts"
     },
+    "./environment-admin": {
+      "types": "./src/environmentAdmin.ts",
+      "default": "./src/environmentAdmin.ts"
+    },
     "./worktree-inventory": {
       "types": "./src/worktreeInventory.ts",
       "default": "./src/worktreeInventory.ts"

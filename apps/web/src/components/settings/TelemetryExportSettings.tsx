@@ -1,5 +1,10 @@
 import { useAtomValue } from "@effect/atom-react";
-import type { OtlpEndpointCheckResult, OtlpSignal } from "@rove-code/contracts";
+import type { OtlpSignal } from "@rove-code/contracts";
+import {
+  describeOtlpEndpointStatus,
+  isOtlpHttpUrl,
+  type OtlpEndpointCheck,
+} from "@rove-code/client-runtime/environment-admin";
 import { useEffect, useEffectEvent, useState } from "react";
 
 import { serverEnvironment } from "../../state/server";
@@ -21,24 +26,20 @@ const SIGNALS = [
 
 type SignalKey = (typeof SIGNALS)[number]["key"];
 
-/** The latest check for a signal; it describes the field only while `url` is still its value. */
-type EndpointCheck = { readonly url: string; readonly result: OtlpEndpointCheckResult | null };
+type EndpointCheck = OtlpEndpointCheck;
+const isHttpUrl = isOtlpHttpUrl;
 
-const isHttpUrl = (url: string) => /^https?:\/\/./i.test(url);
+const STATUS_DOTS = {
+  off: "bg-muted-foreground/40",
+  idle: "bg-muted-foreground/40",
+  pending: "bg-warning",
+  success: "bg-success",
+  failure: "bg-destructive",
+} as const;
 
 function endpointStatus(url: string, check: EndpointCheck | undefined) {
-  if (url === "") return { label: "Off", dot: "bg-muted-foreground/40" };
-  if (check?.url !== url) return { label: "Not checked", dot: "bg-muted-foreground/40" };
-  const { result } = check;
-  if (result === null) return { label: "Checking…", dot: "bg-warning" };
-  switch (result._tag) {
-    case "Accepted":
-      return { label: `Connected · ${Math.round(result.latencyMs)} ms`, dot: "bg-success" };
-    case "Rejected":
-      return { label: `Rejected · HTTP ${result.status}`, dot: "bg-destructive" };
-    case "Unreachable":
-      return { label: result.timedOut ? "Timed out" : "Unreachable", dot: "bg-destructive" };
-  }
+  const { label, tone } = describeOtlpEndpointStatus(url, check);
+  return { label, dot: STATUS_DOTS[tone] };
 }
 
 export function TelemetryExportSettings() {
