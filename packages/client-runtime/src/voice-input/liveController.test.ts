@@ -103,6 +103,21 @@ describe("LiveVoiceInputController", () => {
     expect(t.controller.currentState.error).toContain("draft changed");
   });
 
+  it("reports an error instead of silently dropping a transcript the draft rejects", async () => {
+    const t = setup();
+    t.commitDraft.mockReturnValueOnce(false);
+    await t.controller.start();
+    t.events().onResult("kept", true);
+    const stopping = t.controller.stop();
+    t.events().onEnd();
+    await stopping;
+    expect(t.commitDraft).toHaveBeenCalledOnce();
+    expect(t.controller.currentState).toMatchObject({
+      phase: "error",
+      error: "The draft can no longer accept this transcript. It was not added.",
+    });
+  });
+
   it("reports empty input", async () => {
     const t = setup();
     await t.controller.start();

@@ -16,6 +16,19 @@ const PRIVACY_ACK_KEY = "rove:web-dictation-privacy-ack";
 
 export const isComposerDictationSupported = isWebVoiceRecognitionSupported;
 
+/**
+ * Dictation inserts text into the draft, so it is offered only where the draft accepts
+ * custom text. A dictation already running stays stoppable; if the question changes
+ * underneath it, the commit is rejected and reported instead of dropped.
+ */
+export function isComposerDictationOffered(input: {
+  readonly canOperateThread: boolean;
+  readonly customAnswerAllowed: boolean;
+  readonly dictationBusy: boolean;
+}): boolean {
+  return input.canOperateThread && (input.customAnswerAllowed || input.dictationBusy);
+}
+
 async function acknowledgePrivacy(): Promise<boolean> {
   try {
     if (window.localStorage.getItem(PRIVACY_ACK_KEY) === "1") return true;
@@ -37,7 +50,8 @@ async function acknowledgePrivacy(): Promise<boolean> {
 export function useComposerDictation(input: {
   readonly ownerKey: string;
   readonly readDraft: () => { text: string; selection: { start: number; end: number } } | null;
-  readonly commit: (text: string, cursor: number) => void;
+  /** Returns `false` when the draft rejected the text. */
+  readonly commit: (text: string, cursor: number) => boolean;
 }) {
   const latest = useRef(input);
   latest.current = input;

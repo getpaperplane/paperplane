@@ -48,10 +48,11 @@ export type LiveVoiceRecognizer = {
 export type LiveVoiceInputDependencies = {
   readonly getRecognizer: () => LiveVoiceRecognizer | null;
   readonly readDraft: () => VoiceDraftSnapshot | null;
+  /** Return `false` when the draft cannot take the transcript; the run then reports an error. */
   readonly commitDraft: (
     text: string,
     selection: { readonly start: number; readonly end: number },
-  ) => void;
+  ) => boolean | void;
   readonly onStateChange: (state: VoiceInputState) => void;
 };
 
@@ -318,7 +319,14 @@ export class LiveVoiceInputController implements VoiceInputRunner {
       this.setState(errorState("no-speech"));
       return;
     }
-    this.dependencies.commitDraft(result.text, result.selection);
+    if (this.dependencies.commitDraft(result.text, result.selection) === false) {
+      this.setState({
+        phase: "error",
+        error: "The draft can no longer accept this transcript. It was not added.",
+        errorAction: "retry",
+      });
+      return;
+    }
     this.setState(IDLE_STATE);
   }
 

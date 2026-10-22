@@ -29,7 +29,8 @@ reuses `resolveTranscriptCommit` for draft ownership and staleness, but its
 cancellation rule is the same one stated above, applied to the engine: cancel
 invalidates results immediately, and a module-level claim on the microphone is held
 until the recognizer reports `onEnd`, so a restart cannot overlap a stopping
-engine. Adapters must call `onEnd` exactly once (Android falls back after a
-timeout). Android uses `expo-speech-recognition`, autolinked on Android only. The
+engine. Adapters must call `onEnd` exactly once, only when the native engine has
+actually stopped; no adapter may release the claim on a timer. A `commitDraft`
+that returns `false` surfaces an error instead of dropping the transcript. Android uses `expo-speech-recognition`, autolinked on Android only. The
 web adapter is hidden in Electron, whose Chromium has no speech backend, and in
 browsers without the API.

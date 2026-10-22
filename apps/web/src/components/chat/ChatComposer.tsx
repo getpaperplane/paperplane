@@ -1114,7 +1114,11 @@ import {
 } from "lucide-react";
 import { proposedPlanTitle } from "@rove-code/shared/proposedPlanText";
 import { hasProviderSetup } from "./ProviderStatusBanner";
-import { isComposerDictationSupported, useComposerDictation } from "./useComposerDictation";
+import {
+  isComposerDictationOffered,
+  isComposerDictationSupported,
+  useComposerDictation,
+} from "./useComposerDictation";
 import {
   applyProviderInstanceSettings,
   deriveProviderInstanceEntries,
@@ -3977,11 +3981,10 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
         selection: selection ?? { start: promptRef.current.length, end: promptRef.current.length },
       };
     },
-    commit: (text, cursor) => {
+    commit: (text, cursor) =>
       applyPromptReplacementStable(0, promptRef.current.length, text, {
         expandedCursorAfterReplace: cursor,
-      });
-    },
+      }),
   });
 
   const readComposerSnapshot = (): {
@@ -7633,7 +7636,12 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
                       </Tooltip>
                     </>
                   ) : null}
-                  {isComposerDictationSupported() && canOperateThread ? (
+                  {isComposerDictationSupported() &&
+                  isComposerDictationOffered({
+                    canOperateThread,
+                    customAnswerAllowed: !isChoiceOnlyPendingQuestion,
+                    dictationBusy: dictation.isBusy,
+                  }) ? (
                     <>
                       <Tooltip>
                         <TooltipTrigger

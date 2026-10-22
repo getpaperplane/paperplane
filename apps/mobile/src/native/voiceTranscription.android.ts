@@ -6,9 +6,6 @@ import type {
   VoiceTranscriber,
 } from "@rove-code/client-runtime/voice-input";
 
-/** If the engine never reports `end` after stop/abort, release the microphone claim anyway. */
-const ENGINE_END_TIMEOUT_MS = 5_000;
-
 export function getLocalVoiceTranscriber(): VoiceTranscriber | null {
   return null;
 }
@@ -44,7 +41,6 @@ export function getLiveVoiceRecognizer(): LiveVoiceRecognizer | null {
     },
     start: (events) => {
       let ended = false;
-      let endTimer: ReturnType<typeof setTimeout> | null = null;
       const subscriptions = [
         ExpoSpeechRecognitionModule.addListener("result", (event) => {
           const transcript = event.results[0]?.transcript;
@@ -59,12 +55,8 @@ export function getLiveVoiceRecognizer(): LiveVoiceRecognizer | null {
       const finish = () => {
         if (ended) return;
         ended = true;
-        if (endTimer) clearTimeout(endTimer);
         for (const subscription of subscriptions) subscription.remove();
         events.onEnd();
-      };
-      const expectEnd = () => {
-        endTimer ??= setTimeout(finish, ENGINE_END_TIMEOUT_MS);
       };
       try {
         ExpoSpeechRecognitionModule.start({
@@ -78,14 +70,9 @@ export function getLiveVoiceRecognizer(): LiveVoiceRecognizer | null {
         throw error;
       }
       return {
-        stop: () => {
-          expectEnd();
-          ExpoSpeechRecognitionModule.stop();
-        },
-        abort: () => {
-          expectEnd();
-          ExpoSpeechRecognitionModule.abort();
-        },
+        // Only the native `end` event releases the subscriptions and the microphone claim.
+        stop: () => ExpoSpeechRecognitionModule.stop(),
+        abort: () => ExpoSpeechRecognitionModule.abort(),
       };
     },
   };

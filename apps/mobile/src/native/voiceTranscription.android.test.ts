@@ -90,15 +90,35 @@ describe("Android live recognizer", () => {
     expect(c.currentState.phase).toBe("recording");
   });
 
-  it("releases the microphone claim if the engine never reports end after abort", async () => {
+  it("keeps the microphone claim past any fallback window until the native end event", async () => {
     vi.useFakeTimers();
     const { controller: c } = controller();
     await c.start();
     c.cancel();
     const restarting = c.start();
-    await vi.advanceTimersByTimeAsync(5_000);
+    await vi.advanceTimersByTimeAsync(60_000);
+    expect(native.abort).toHaveBeenCalledOnce();
+    expect(native.start).toHaveBeenCalledTimes(1);
+    expect(listenerCount()).toBe(3);
+    emit("end");
     await restarting;
     expect(native.start).toHaveBeenCalledTimes(2);
+  });
+
+  it("keeps a late final result after stop until the native end event", async () => {
+    vi.useFakeTimers();
+    const { controller: c, commit } = controller();
+    await c.start();
+    const stopping = c.stop();
+    expect(native.stop).toHaveBeenCalledOnce();
+    await vi.advanceTimersByTimeAsync(60_000);
+    expect(c.currentState.phase).toBe("transcribing");
+    expect(commit).not.toHaveBeenCalled();
+    result("late words", true);
+    emit("end");
+    await stopping;
+    expect(commit).toHaveBeenCalledWith("hi late words", { start: 13, end: 13 });
+    expect(listenerCount()).toBe(0);
   });
 
   it("commits the transcript when stopped, and reports speech timeouts as empty input", async () => {
