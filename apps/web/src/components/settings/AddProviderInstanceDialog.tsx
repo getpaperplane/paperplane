@@ -52,49 +52,19 @@ import { AddProviderInstanceWizardSteps } from "./AddProviderInstanceWizardSteps
 import { AcpRegistrySearchStep } from "./AcpRegistrySearchStep";
 import { ProviderWizardAuthenticationStep } from "./ProviderWizardAuthenticationStep";
 import { resolveOfficialAcpRegistryIconUrl } from "./AcpRegistryIcon";
+import {
+  deriveProviderInstanceId,
+  validateProviderInstanceId,
+} from "@rove-code/client-runtime/state/provider-instance-settings";
 import { AddManagedCodexAccountDialog } from "./CodexSetupSection";
 import { ProviderEnvironmentSection } from "./ProviderInstanceCard";
 
-/**
- * Normalize a user-provided label into a slug suffix for the instance id.
- * The full id is formed by prefixing the driver slug. For example, label "Work" on
- * driver "codex" becomes `codex_work`. Output is trimmed to 48 chars so the
- * final composed id stays under the 64-char slug cap enforced by
- * `ProviderInstanceId` in `@rove-code/contracts`.
- */
-function slugifyLabel(value: string): string {
-  return value
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "_")
-    .replace(/^_+|_+$/g, "")
-    .slice(0, 48);
-}
-
-function deriveInstanceId(driver: ProviderDriverKind, label: string): string {
-  const slug = slugifyLabel(label);
-  return slug ? `${driver}_${slug}` : "";
-}
-
-const INSTANCE_ID_PATTERN = /^[a-zA-Z][a-zA-Z0-9_-]*$/;
+const deriveInstanceId = deriveProviderInstanceId;
 const DEFAULT_DRIVER_KIND = ProviderDriverKind.make("codex");
 const ACP_REGISTRY_DRIVER_KIND = ProviderDriverKind.make("acpRegistry");
 const DEFAULT_DRIVER_OPTION = providerClients.definitions[0]!;
 const EMPTY_CONFIG_DRAFT: Record<string, unknown> = {};
-/**
- * Validate an instance id against the same slug rules the server applies in
- * `ProviderInstanceId` (see `packages/contracts/src/providerInstance.ts`).
- * Returns a user-facing error string, or `null` if valid.
- */
-function validateInstanceId(id: string, existing: ReadonlySet<string>): string | null {
-  if (id.length === 0) return "Instance ID is required.";
-  if (id.length > 64) return "Instance ID must be 64 characters or fewer.";
-  if (!INSTANCE_ID_PATTERN.test(id)) {
-    return "Instance ID must start with a letter and use only letters, digits, '-', or '_'.";
-  }
-  if (existing.has(id)) return `An instance named '${id}' already exists.`;
-  return null;
-}
+const validateInstanceId = validateProviderInstanceId;
 
 interface AddProviderInstanceDialogProps {
   readonly open: boolean;

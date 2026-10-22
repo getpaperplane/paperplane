@@ -14,6 +14,10 @@ import { ScreenScrollView } from "../../components/ui/ScreenScrollView";
 import { useEnvironmentQuery } from "../../state/query";
 import { serverEnvironment } from "../../state/server";
 import { useAtomCommand } from "../../state/use-atom-command";
+import {
+  ProjectProviderOverrides,
+  ProviderInstanceAdmin,
+} from "./components/ProviderInstanceAdmin";
 import { SettingsActionRow } from "./components/SettingsActionRow";
 import {
   AndroidSettingsEnvironmentFilter,
@@ -24,7 +28,8 @@ import { SettingsSection } from "./components/SettingsSection";
 import { useSettingsEnvironmentFilter, type SettingsTarget } from "./settings-environment-filter";
 
 export function SettingsProviderAccountsRouteScreen() {
-  const { selectedTargets } = useSettingsEnvironmentFilter();
+  const { selectedTargets, projectGroups, selectedProjectKey } = useSettingsEnvironmentFilter();
+  const selectedProject = projectGroups.find((group) => group.key === selectedProjectKey);
   const insets = useSafeAreaInsets();
   return (
     <>
@@ -40,30 +45,48 @@ export function SettingsProviderAccountsRouteScreen() {
             <Text className="text-foreground-muted">Select a connected environment.</Text>
           ) : (
             selectedTargets.map((environment) => (
-              <SettingsSection key={environment.environmentId} title={environment.label}>
-                {environment.serverConfig.providers
-                  .filter(
+              <View key={environment.environmentId} className="gap-6">
+                <SettingsSection title={`${environment.label} · Providers`}>
+                  <ProviderInstanceAdmin environment={environment} />
+                </SettingsSection>
+                {selectedProject ? (
+                  <SettingsSection title={`${environment.label} · ${selectedProject.label}`}>
+                    <ProjectProviderOverrides
+                      environment={environment}
+                      projectLabel={selectedProject.label}
+                      projectIds={selectedProject.members
+                        .filter(
+                          (member) => member.project.environmentId === environment.environmentId,
+                        )
+                        .map((member) => member.project.id)}
+                    />
+                  </SettingsSection>
+                ) : null}
+                <SettingsSection title={`${environment.label} · Accounts`}>
+                  {environment.serverConfig.providers
+                    .filter(
+                      (provider) =>
+                        provider.setup?.canAuthenticate ||
+                        (provider.driver === "acpRegistry" && provider.installed),
+                    )
+                    .map((provider) => (
+                      <ProviderAccount
+                        key={provider.instanceId}
+                        environment={environment}
+                        provider={provider}
+                      />
+                    ))}
+                  {!environment.serverConfig.providers.some(
                     (provider) =>
                       provider.setup?.canAuthenticate ||
                       (provider.driver === "acpRegistry" && provider.installed),
-                  )
-                  .map((provider) => (
-                    <ProviderAccount
-                      key={provider.instanceId}
-                      environment={environment}
-                      provider={provider}
-                    />
-                  ))}
-                {!environment.serverConfig.providers.some(
-                  (provider) =>
-                    provider.setup?.canAuthenticate ||
-                    (provider.driver === "acpRegistry" && provider.installed),
-                ) ? (
-                  <Text className="p-4 text-foreground-muted">
-                    Configure a provider with in-app sign-in in web or desktop Settings.
-                  </Text>
-                ) : null}
-              </SettingsSection>
+                  ) ? (
+                    <Text className="p-4 text-foreground-muted">
+                      No configured provider offers in-app sign-in.
+                    </Text>
+                  ) : null}
+                </SettingsSection>
+              </View>
             ))
           )}
         </ScreenScrollView>

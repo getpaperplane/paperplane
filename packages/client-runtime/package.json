@@ -223,6 +223,10 @@
       "types": "./src/state/projects.ts",
       "default": "./src/state/projects.ts"
     },
+    "./state/provider-instance-settings": {
+      "types": "./src/state/providerInstanceSettings.ts",
+      "default": "./src/state/providerInstanceSettings.ts"
+    },
     "./state/provider-instance-display": {
       "types": "./src/state/providerInstanceDisplay.ts",
       "default": "./src/state/providerInstanceDisplay.ts"
