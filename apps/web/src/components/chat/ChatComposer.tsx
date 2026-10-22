@@ -2492,6 +2492,10 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
   const [isDragOverComposer, setIsDragOverComposer] = useState(false);
   const [isComposerFooterCompact, setIsComposerFooterCompact] = useState(false);
   const [isComposerPrimaryActionsCompact, setIsComposerPrimaryActionsCompact] = useState(false);
+  // Mirrors the two compactness states. Setting an unchanged value from the
+  // layout effect still queues a sync update that a later passive-effect render
+  // skips, forcing an extra composer render on every thread switch.
+  const footerCompactnessRef = useRef({ footerCompact: false, primaryActionsCompact: false });
   const [isComposerModelPickerOpen, setIsComposerModelPickerOpen] = useState(false);
   const isMobileViewport = useMediaQuery("max-sm");
   const {
@@ -3642,20 +3646,19 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
       };
     };
 
-    const initialCompactness = measureFooterCompactness();
-    setIsComposerPrimaryActionsCompact(initialCompactness.primaryActionsCompact);
-    setIsComposerFooterCompact(initialCompactness.footerCompact);
-    return observeResize(composerForm, () => {
-      const nextCompactness = measureFooterCompactness();
-      setIsComposerPrimaryActionsCompact((previous) =>
-        previous === nextCompactness.primaryActionsCompact
-          ? previous
-          : nextCompactness.primaryActionsCompact,
-      );
-      setIsComposerFooterCompact((previous) =>
-        previous === nextCompactness.footerCompact ? previous : nextCompactness.footerCompact,
-      );
-    });
+    const applyFooterCompactness = (next: ReturnType<typeof measureFooterCompactness>) => {
+      const current = footerCompactnessRef.current;
+      if (current.primaryActionsCompact !== next.primaryActionsCompact) {
+        setIsComposerPrimaryActionsCompact(next.primaryActionsCompact);
+      }
+      if (current.footerCompact !== next.footerCompact) {
+        setIsComposerFooterCompact(next.footerCompact);
+      }
+      footerCompactnessRef.current = next;
+    };
+
+    applyFooterCompactness(measureFooterCompactness());
+    return observeResize(composerForm, () => applyFooterCompactness(measureFooterCompactness()));
   }, [
     activeThreadId,
     composerFooterActionLayoutKey,
