@@ -1,5 +1,6 @@
 import type { EnvironmentId, RoveProjectFileScript, ThreadId } from "@rove-code/contracts";
 import { renderToStaticMarkup } from "react-dom/server";
+import { act, create, type ReactTestRenderer } from "react-test-renderer";
 import { PopoverCreateHandle } from "../ui/popover";
 import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
@@ -90,5 +91,57 @@ describe("ThreadDetailsPanel", () => {
         fileScripts,
       }),
     );
+  });
+
+  it("skips re-rendering for unchanged props and updates when thread metadata changes", () => {
+    testState.useRoveProjectFileScripts.mockReturnValue([]);
+    const props: ThreadDetailsPanelProps = {
+      anchor: { current: null },
+      handle: PopoverCreateHandle(),
+      onPresentationChange: vi.fn(),
+      environmentId: "environment:thread-details" as EnvironmentId,
+      threadId: "thread:thread-details" as ThreadId,
+      activeProjectName: undefined,
+      activeProjectScripts: [],
+      preferredScriptId: null,
+      keybindings: [],
+      availableEditors: [],
+      showOpenInPicker: false,
+      gitCwd: "/tmp/thread-details-project",
+      isGitRepo: false,
+      envLocked: false,
+      availableEnvironments: [],
+      onEnvironmentChange: vi.fn(),
+      onEnvModeChange: vi.fn(),
+      envMode: "local",
+      startFromOrigin: false,
+      onStartFromOriginChange: vi.fn(),
+      onComposerFocusRequest: vi.fn(),
+      onRunProjectScript: vi.fn(),
+      onAddProjectScript: vi.fn() as ThreadDetailsPanelProps["onAddProjectScript"],
+      onUpdateProjectScript: vi.fn() as ThreadDetailsPanelProps["onUpdateProjectScript"],
+      onDeleteProjectScript: vi.fn() as ThreadDetailsPanelProps["onDeleteProjectScript"],
+    };
+
+    let renderer: ReactTestRenderer | undefined;
+    act(() => {
+      renderer = create(<ThreadDetailsPanel {...props} />);
+    });
+    const rendersAfterMount = testState.projectScriptsControl.mock.calls.length;
+
+    // Parent re-renders (as ChatView does on every streamed chunk) with equal values.
+    act(() => {
+      renderer?.update(<ThreadDetailsPanel {...{ ...props }} />);
+    });
+    expect(testState.projectScriptsControl.mock.calls.length).toBe(rendersAfterMount);
+
+    act(() => {
+      renderer?.update(<ThreadDetailsPanel {...props} preferredScriptId="script:check" />);
+    });
+    expect(testState.projectScriptsControl.mock.calls.length).toBeGreaterThan(rendersAfterMount);
+    expect(testState.projectScriptsControl).toHaveBeenLastCalledWith(
+      expect.objectContaining({ preferredScriptId: "script:check" }),
+    );
+    act(() => renderer?.unmount());
   });
 });
