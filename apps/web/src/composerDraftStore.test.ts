@@ -3567,3 +3567,23 @@ describe("composerDraftStore attachment references", () => {
     );
   });
 });
+
+describe("composerDraftStore clearPersistedAttachments", () => {
+  const threadId = ThreadId.make("thread-clear-persisted");
+  const threadRef = scopeThreadRef(TEST_ENVIRONMENT_ID, threadId);
+
+  beforeEach(() => {
+    resetComposerDraftStore();
+  });
+
+  it("does not notify subscribers when there are no attachments to clear", () => {
+    useComposerDraftStore.getState().setPrompt(threadRef, "draft text");
+    const listener = vi.fn();
+    const unsubscribe = useComposerDraftStore.subscribe(listener);
+
+    useComposerDraftStore.getState().clearPersistedAttachments(threadRef);
+
+    unsubscribe();
+    expect(listener).not.toHaveBeenCalled();
+  });
+});
