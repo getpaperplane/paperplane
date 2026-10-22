@@ -96,3 +96,7 @@ async function transcribeVoiceRecording(
     throw wrapError("transcription-failed", "Voice transcription failed.", error);
   }
 }
+
+export function getLiveVoiceRecognizer(): null {
+  return null;
+}

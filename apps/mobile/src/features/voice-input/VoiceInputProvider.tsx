@@ -29,17 +29,22 @@ import {
   preferredMicrophoneInput,
   rememberMicrophones,
 } from "../../lib/microphonePriority";
-import { getLocalVoiceTranscriber } from "../../native/voiceTranscription";
+import { getLiveVoiceRecognizer, getLocalVoiceTranscriber } from "../../native/voiceTranscription";
 import { mobilePreferencesAtom, updateMobilePreferencesAtom } from "../../state/preferences";
 import { getNativeShowcaseScene } from "../showcase/nativeShowcaseScene";
 import {
   VOICE_RECORDING_LIMIT_SECONDS,
   voiceInputBlocksSubmission,
+  type VoiceInputRunner,
   type VoiceInputState,
 } from "@rove-code/client-runtime/voice-input";
 import { createLazyVoiceRecorder, type LazyVoiceRecorder } from "./lazyVoiceRecorder";
 import { normalizeVoiceInputDecibels, VOICE_WAVEFORM_SAMPLE_COUNT } from "./voiceInputMetering";
-import { VoiceInputSession } from "./voiceInputSession";
+import {
+  LiveVoiceInputSession,
+  VoiceInputSession,
+  type VoiceInputTargetSession,
+} from "./voiceInputSession";
 
 const INITIAL_STATE: VoiceInputState = { phase: "idle", error: null, errorAction: null };
 const VOICE_METERING_INTERVAL_MS = 80;
@@ -123,7 +128,8 @@ function useVoiceInputRuntime() {
   const elapsedSecondsRef = useRef(0);
   const audioLevelsRef = useRef(Array<number>(VOICE_WAVEFORM_SAMPLE_COUNT).fill(0));
   const audioLevels = useSharedValue(audioLevelsRef.current);
-  const sessionRef = useRef<VoiceInputSession | null>(null);
+  const sessionRef = useRef<VoiceInputTargetSession<VoiceInputRunner> | null>(null);
+  const recordedSessionRef = useRef<VoiceInputSession | null>(null);
   const recorderRef = useRef<LazyVoiceRecorder<RecorderState> | null>(null);
 
   if (!sessionRef.current || !recorderRef.current) {
@@ -131,7 +137,7 @@ function useVoiceInputRuntime() {
     const recorder = createLazyVoiceRecorder({
       create: () => new AudioModule.AudioRecorder(VOICE_RECORDING_OPTIONS),
       onStatus: (status: RecordingStatus) => {
-        sessionRef.current?.controller.handleRecorderStatus({
+        recordedSessionRef.current?.controller.handleRecorderStatus({
           isFinished: status.isFinished,
           hasError: status.hasError || status.mediaServicesDidReset === true,
           error: status.error,
@@ -155,23 +161,35 @@ function useVoiceInputRuntime() {
       },
     });
     recorderRef.current = recorder;
-    sessionRef.current = new VoiceInputSession({
-      recorder,
-      getTranscriber: getLocalVoiceTranscriber,
-      requestPermission: async () => {
-        const permission = await requestRecordingPermissionsAsync();
-        return { granted: permission.granted, canAskAgain: permission.canAskAgain };
-      },
-      configureRecording: configureVoiceRecordingAudio,
-      releaseRecording: releaseVoiceRecordingAudio,
-      deleteRecording: (uri) => new File(uri).delete(),
-      onStateChange: (nextState) =>
-        setState({
-          state: nextState,
-          ownerKey: sessionRef.current?.ownerKey ?? null,
-          label: sessionRef.current?.label ?? null,
-        }),
-    });
+    const onStateChange = (nextState: VoiceInputState) =>
+      setState({
+        state: nextState,
+        ownerKey: sessionRef.current?.ownerKey ?? null,
+        label: sessionRef.current?.label ?? null,
+      });
+    // Android listens live through its speech service, which owns the microphone and
+    // yields no audio file. iOS records, then transcribes the file.
+    const live = Platform.OS === "android" ? getLiveVoiceRecognizer() : null;
+    if (live) {
+      sessionRef.current = new LiveVoiceInputSession({
+        getRecognizer: getLiveVoiceRecognizer,
+        onStateChange,
+      });
+    } else {
+      recordedSessionRef.current = new VoiceInputSession({
+        recorder,
+        getTranscriber: getLocalVoiceTranscriber,
+        requestPermission: async () => {
+          const permission = await requestRecordingPermissionsAsync();
+          return { granted: permission.granted, canAskAgain: permission.canAskAgain };
+        },
+        configureRecording: configureVoiceRecordingAudio,
+        releaseRecording: releaseVoiceRecordingAudio,
+        deleteRecording: (uri) => new File(uri).delete(),
+        onStateChange,
+      });
+      sessionRef.current = recordedSessionRef.current;
+    }
   }
 
   const session = sessionRef.current;
@@ -222,10 +240,23 @@ function useVoiceInputRuntime() {
     }
     if (state.phase !== "recording") return;
 
+    const startedAt = Date.now();
     const sampleRecording = () => {
       if (controller.currentState.phase !== "recording") return;
       const status = recorder.getStatus();
-      if (!status?.isRecording) return;
+      if (!status) {
+        // Live recognition has no recorder: show elapsed time, with a flat waveform.
+        const seconds = Math.min(
+          VOICE_RECORDING_LIMIT_SECONDS,
+          Math.floor((Date.now() - startedAt) / 1_000),
+        );
+        if (seconds !== elapsedSecondsRef.current) {
+          elapsedSecondsRef.current = seconds;
+          setElapsedSeconds(seconds);
+        }
+        return;
+      }
+      if (!status.isRecording) return;
 
       const level = normalizeVoiceInputDecibels(status.metering);
       const history = audioLevelsRef.current;
@@ -256,7 +287,10 @@ function useVoiceInputRuntime() {
   return {
     // Store screenshots show the dictation button even on simulators, whose
     // on-device transcription is unavailable.
-    isAvailable: getLocalVoiceTranscriber() !== null || getNativeShowcaseScene() !== null,
+    isAvailable:
+      getLocalVoiceTranscriber() !== null ||
+      getLiveVoiceRecognizer() !== null ||
+      getNativeShowcaseScene() !== null,
     state,
     audioLevels,
     elapsedSeconds,

@@ -111,6 +111,7 @@
     "expo-secure-store": "~58.0.2",
     "expo-sensors": "~58.0.4",
     "expo-sharing": "58.0.18",
+    "expo-speech-recognition": "58.0.0",
     "expo-splash-screen": "~58.0.9",
     "expo-sqlite": "~58.0.13",
     "expo-symbols": "~58.0.4",
@@ -173,6 +174,11 @@
         "react-native-reanimated",
         "@react-native-menu/menu",
         "expo-audio"
+      ]
+    },
+    "ios": {
+      "exclude": [
+        "expo-speech-recognition"
       ]
     }
   },

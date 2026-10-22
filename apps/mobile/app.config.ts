@@ -420,6 +420,13 @@ const config: ExpoConfig = {
         recordAudioAndroid: false,
       },
     ],
+    [
+      "expo-speech-recognition",
+      {
+        microphonePermission: "Allow Rove Code to use your microphone for voice input.",
+        speechRecognitionPermission: "Allow Rove Code to use speech recognition for voice input.",
+      },
+    ],
     ["expo-image-picker", { photosPermission: false, microphonePermission: false }],
     [
       "expo-splash-screen",
