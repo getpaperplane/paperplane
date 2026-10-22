@@ -3,7 +3,12 @@ import { act } from "react";
 import { create, type ReactTestRenderer } from "react-test-renderer";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
-import { DraftId, useComposerDraftStore } from "../../composerDraftStore";
+import {
+  DraftId,
+  type ComposerFileAttachment,
+  type ComposerImageAttachment,
+  useComposerDraftStore,
+} from "../../composerDraftStore";
 import { useSidebarDraftComposers } from "./useSidebarDraftComposers";
 
 const environmentId = EnvironmentId.make("sidebar-drafts-test");
@@ -15,6 +20,31 @@ const projectKeys = new Set([`${environmentId}:${projectId}`]);
 let renderer: ReactTestRenderer | null = null;
 let observed: ReturnType<typeof useSidebarDraftComposers>[] = [];
 let wholeMapRenders = 0;
+
+function makeImage(id: string): ComposerImageAttachment {
+  const file = new File([new Uint8Array(4)], `${id}.png`, { type: "image/png" });
+  return {
+    type: "image",
+    id,
+    name: file.name,
+    mimeType: file.type,
+    sizeBytes: file.size,
+    previewUrl: `blob:${id}`,
+    file,
+  };
+}
+
+function makeFile(id: string): ComposerFileAttachment {
+  const file = new File(["report"], `${id}.pdf`, { type: "application/pdf" });
+  return {
+    type: "file",
+    id,
+    name: file.name,
+    mimeType: file.type,
+    sizeBytes: file.size,
+    file,
+  };
+}
 
 function WholeMapProbe() {
   useComposerDraftStore((store) => store.draftsByThreadKey);
@@ -99,6 +129,21 @@ describe("sidebar live draft subscription", () => {
     await render(inactive);
     expect(Object.keys(observed.at(-1)!)).toEqual([active]);
     expect(observed.at(-1)?.[active]?.prompt).toBe("Typing 39");
+  });
+
+  it("surfaces an inactive draft that holds only attachments", async () => {
+    await render(active);
+    const store = useComposerDraftStore.getState();
+    await act(() => store.setPrompt(inactive, ""));
+    expect(observed.at(-1)?.[inactive]).toBeUndefined();
+
+    await act(() => store.addImages(inactive, [makeImage("image-1")]));
+    expect(observed.at(-1)?.[inactive]?.prompt).toBe("");
+    expect(observed.at(-1)?.[inactive]?.images.map((image) => image.id)).toEqual(["image-1"]);
+
+    await act(() => store.addFiles(inactive, [makeFile("file-1")], { appendReference: false }));
+    expect(observed.at(-1)?.[inactive]?.files.map((file) => file.id)).toEqual(["file-1"]);
+    expect(observed.at(-1)?.[inactive]?.images.map((image) => image.id)).toEqual(["image-1"]);
   });
 
   it("observes clearing content and removes promoted drafts", async () => {
