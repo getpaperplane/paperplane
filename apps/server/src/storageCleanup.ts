@@ -848,12 +848,13 @@ const make = Effect.gen(function* () {
         // edit arrives after our last status check.
         if (settings.worktreeKeepWhen === "tracked-changes")
           yield* cleanupGit(worktreePath, ["clean", "-ffdx"], "git clean");
+        const resolvedPath = yield* fs.realPath(worktreePath);
         yield* cleanupGit(
           project.workspaceRoot,
           ["-c", "status.showUntrackedFiles=normal", "worktree", "remove", worktreePath],
           "git worktree remove",
         );
-        yield* stopWorktreeProcessesAfterRemoval(worktreePath).pipe(
+        yield* stopWorktreeProcessesAfterRemoval(worktreePath, resolvedPath).pipe(
           Effect.provideService(FileSystem.FileSystem, fs),
           Effect.provideService(HostProcess.Platform, yield* HostProcess.Platform),
         );

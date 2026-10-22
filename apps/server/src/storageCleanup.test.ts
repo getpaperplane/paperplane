@@ -1228,6 +1228,55 @@ describe("storage cleanup reports and local file policies", () => {
       }),
     ),
   );
+  it.live("matches physical cwd paths after removing a worktree under a symlinked parent", () =>
+    runCleanupTest(
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const config = yield* ServerConfig.ServerConfig;
+        const base = yield* fs.makeTempDirectoryScoped();
+        yield* fs.makeDirectory(`${base}/real`);
+        yield* fs.symlink(`${base}/real`, `${base}/alias`);
+        let physicalPath = "";
+        let checkedPhysicalCwd = false;
+        const fixture = yield* cleanupFixture().pipe(
+          Effect.provideService(ServerConfig.ServerConfig, {
+            ...config,
+            worktreesDir: `${base}/alias`,
+          }),
+          Effect.provideService(HostProcess.Platform, "linux"),
+          Effect.provideService(FileSystem.FileSystem, {
+            ...fs,
+            readDirectory: (directory, options) =>
+              directory === "/proc"
+                ? Effect.succeed(["900002"])
+                : fs.readDirectory(directory, options),
+            readLink: (target) =>
+              target === "/proc/900002/cwd"
+                ? Effect.succeed(`${physicalPath} (deleted)`)
+                : fs.readLink(target),
+            readFileString: (target, options) => {
+              if (target === "/proc/self/cgroup")
+                return Effect.succeed("0::/system.slice/rove.service");
+              if (target === `/proc/${process.pid}/stat`)
+                return Effect.succeed(`${process.pid} (server) S 0`);
+              if (target === "/proc/900002/cgroup") {
+                checkedPhysicalCwd = true;
+                // Unowned candidate: no real processes or signals in this test.
+                return Effect.succeed("0::/user.slice/session-42.scope");
+              }
+              return fs.readFileString(target, options);
+            },
+          }),
+        );
+        physicalPath = yield* fs.realPath(fixture.worktree);
+        expect(physicalPath).not.toBe(fixture.worktree);
+        const report = yield* fixture.service.runNow;
+        expect(report.entries[0]).toMatchObject({ outcome: "removed" });
+        expect(checkedPhysicalCwd).toBe(true);
+        expect(yield* fs.exists(physicalPath)).toBe(false);
+      }),
+    ),
+  );
   it.live("still removes a worktree when measuring its size fails", () =>
     runCleanupTest(
       Effect.gen(function* () {
