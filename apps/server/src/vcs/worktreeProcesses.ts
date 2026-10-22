@@ -25,8 +25,14 @@ function parseUnifiedCgroup(contents: string): string | undefined {
  * guarded provider workload scope.
  */
 export function isServerOwnedCgroup(candidate: string, server: string): boolean {
-  if (server === "/" || candidate === server || candidate.startsWith(`${server}/`)) return true;
-  return WORKLOAD_POOL_SEGMENTS.some((segment) => candidate.includes(segment));
+  if (WORKLOAD_POOL_SEGMENTS.some((segment) => candidate.includes(segment))) return true;
+  // A login scope contains the user's shell, editor and other unrelated peers.
+  // Root/slice groups likewise establish no server-specific ownership boundary.
+  const unit = server.slice(server.lastIndexOf("/") + 1);
+  const dedicatedUnit =
+    /^(?:app-)?rove(?:[-@.]|$)/.test(unit) &&
+    (unit.endsWith(".service") || unit.endsWith(".scope"));
+  return dedicatedUnit && (candidate === server || candidate.startsWith(`${server}/`));
 }
 
 /** True when a `/proc/<pid>/cwd` link target sits inside one of `roots`, even after deletion. */
