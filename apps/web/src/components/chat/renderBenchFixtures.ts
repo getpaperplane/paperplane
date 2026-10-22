@@ -1,4 +1,10 @@
-import { DEFAULT_SERVER_SETTINGS, type ScopedThreadRef } from "@rove-code/contracts";
+import {
+  DEFAULT_SERVER_SETTINGS,
+  ProviderDriverKind,
+  ProviderInstanceId,
+  type ScopedThreadRef,
+  type ServerProvider,
+} from "@rove-code/contracts";
 import { createRef } from "react";
 
 import { getClientSettings, mergeEnvironmentSettings } from "../../hooks/useSettings";
@@ -7,8 +13,55 @@ import type { ChatComposerProps } from "./ChatComposer";
 
 const noop = () => {};
 
-/** Stable, idle-thread props. No provider, attachment, or workspace I/O is requested. */
-export function makeRenderBenchComposerProps(ref: ScopedThreadRef): ChatComposerProps {
+/**
+ * One ready codex provider with two models. The reasoning descriptor makes the
+ * traits control render, and two runtime modes exercise the mode filter.
+ */
+const readyCodexProvider: ServerProvider = {
+  instanceId: ProviderInstanceId.make("codex"),
+  driver: ProviderDriverKind.make("codex"),
+  enabled: true,
+  installed: true,
+  version: "1.0.0",
+  status: "ready",
+  auth: { status: "authenticated", label: "ChatGPT" },
+  checkedAt: "2026-10-01T00:00:00.000Z",
+  supportedRuntimeModes: ["approval-required", "full-access"],
+  models: [
+    {
+      slug: "gpt-5.4",
+      name: "GPT-5.4",
+      isCustom: false,
+      capabilities: {
+        optionDescriptors: [
+          {
+            id: "reasoningEffort",
+            label: "Reasoning",
+            type: "select",
+            options: [
+              { id: "low", label: "Low" },
+              { id: "high", label: "High", isDefault: true },
+            ],
+            currentValue: "high",
+          },
+        ],
+      },
+    },
+    { slug: "gpt-5.4-mini", name: "GPT-5.4 Mini", isCustom: false, capabilities: null },
+  ],
+  slashCommands: [],
+  skills: [],
+};
+
+/**
+ * Stable, idle-thread props. No attachment or workspace I/O is requested.
+ * `providerReady` adds one available provider so the picker, traits and
+ * runtime-mode controls mount. The default keeps the no-provider baseline.
+ */
+export function makeRenderBenchComposerProps(
+  ref: ScopedThreadRef,
+  options: { providerReady?: boolean } = {},
+): ChatComposerProps {
   const thread = makeThreadFixture({ environmentId: ref.environmentId, id: ref.threadId });
   return {
     composerDraftTarget: ref,
@@ -62,7 +115,7 @@ export function makeRenderBenchComposerProps(ref: ScopedThreadRef): ChatComposer
     runtimeMode: "full-access",
     interactionMode: "default",
     lockedProvider: null,
-    providerStatuses: [],
+    providerStatuses: options.providerReady ? [readyCodexProvider] : [],
     providerCatalogKnown: true,
     activeProjectDefaultModelSelection: null,
     activeThreadModelSelection: thread.modelSelection,

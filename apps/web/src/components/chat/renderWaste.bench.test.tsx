@@ -23,6 +23,16 @@
  * Nested durations overlap. jsdom/dev timings exclude layout, paint, real
  * editor cost, transport batching, CPU utilization and retained heap. Compare
  * counts first; use this baseline only against the same harness/configuration.
+ *
+ * Leaf groups (`leaf:*`) wrap real, separately exported composer leaves in a
+ * React.memo wrapper with the same props as the real component and a Profiler
+ * inside it. A commit is therefore a prop change that reached the leaf; the
+ * real leaf may still bail out internally, which shows up as a small actualMs.
+ * Leaves defined inside ChatComposer.tsx (ComposerFooterModeControls,
+ * ComposerFooterPrimaryActions) cannot be wrapped from a test without editing
+ * product code, so they are not reported separately. Their wrapped children
+ * (CompactComposerControlsMenu, ComposerPrimaryActions) are reported instead.
+ * `provider-ready typing` mounts an available provider so these controls exist.
  */
 
 import * as NodeProcess from "node:process";
@@ -63,6 +73,7 @@ import {
   useMemo,
   useRef,
   type ComponentProps,
+  type ComponentType,
   type ReactNode,
 } from "react";
 import { createRoot } from "react-dom/client";
@@ -90,6 +101,44 @@ const instrument = vi.hoisted<{
   ownerRenders: 0,
 }));
 
+// Keep each real leaf; only observe its committed prop-change renders.
+function profileLeaf<Props extends object>(id: string, Leaf: ComponentType<Props>) {
+  return memo(function ProfiledLeaf(props: Props) {
+    return (
+      <Profiler id={`leaf:${id}`} onRender={instrument.onRender}>
+        <Leaf {...props} />
+      </Profiler>
+    );
+  });
+}
+vi.mock("./ProviderModelPicker", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("./ProviderModelPicker")>();
+  return {
+    ...actual,
+    ProviderModelPicker: profileLeaf("ProviderModelPicker", actual.ProviderModelPicker),
+  };
+});
+vi.mock("./TraitsPicker", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("./TraitsPicker")>();
+  return { ...actual, TraitsPicker: profileLeaf("TraitsPicker", actual.TraitsPicker) };
+});
+vi.mock("./CompactComposerControlsMenu", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("./CompactComposerControlsMenu")>();
+  return {
+    ...actual,
+    CompactComposerControlsMenu: profileLeaf(
+      "CompactComposerControlsMenu",
+      actual.CompactComposerControlsMenu,
+    ),
+  };
+});
+vi.mock("./ComposerPrimaryActions", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("./ComposerPrimaryActions")>();
+  return {
+    ...actual,
+    ComposerPrimaryActions: profileLeaf("ComposerPrimaryActions", actual.ComposerPrimaryActions),
+  };
+});
 vi.mock("../ComposerPromptEditor", () => ({
   ComposerPromptEditor(props: ComposerPromptEditorProps) {
     instrument.editorRenders++;
@@ -141,9 +190,23 @@ const THREADS = 24;
 const noop = () => {};
 const environmentId = EnvironmentId.make("render-bench");
 const timestamp = DateTime.makeUnsafe("2026-10-01T00:00:00Z");
-const scenarios = ["background stream", "typing", "open stream", "switch threads"] as const;
+const scenarios = [
+  "background stream",
+  "typing",
+  "open stream",
+  "switch threads",
+  "provider-ready typing",
+] as const;
 type Scenario = (typeof scenarios)[number];
 type Metric = { commits: number; actualMs: number };
+// Leaves that must mount in the provider-ready scenario. Otherwise the
+// provider-ready timing would measure the same no-provider path.
+const providerReadyLeaves = [
+  "leaf:ProviderModelPicker",
+  "leaf:TraitsPicker",
+  "leaf:CompactComposerControlsMenu",
+  "leaf:ComposerPrimaryActions",
+];
 
 let MessagesTimeline: typeof import("./MessagesTimeline").MessagesTimeline;
 let ChatComposer: typeof import("./ChatComposer").ChatComposer;
@@ -171,7 +234,7 @@ function makeProjection(id: ThreadId): OrchestrationV2ThreadProjection {
   };
 }
 
-function makeHarness() {
+function makeHarness(providerReady: boolean) {
   const registry = AtomRegistry.make();
   const refs = Array.from({ length: THREADS }, (_, i) => ({
     environmentId,
@@ -238,7 +301,9 @@ function makeHarness() {
     snapshotAtom: () => snapshot,
   });
   const selected = Atom.make(first);
-  const composerProps = new Map(refs.map((ref) => [ref.threadId, makeComposerProps(ref)]));
+  const composerProps = new Map(
+    refs.map((ref) => [ref.threadId, makeComposerProps(ref, { providerReady })]),
+  );
   const notifications: Record<string, number> = {};
   const identities: Record<string, number> = {};
   const disposers: Array<() => void> = [];
@@ -266,7 +331,7 @@ function makeHarness() {
   let serializedDrafts = JSON.stringify(drafts);
   notifications["draft store"] = 0;
   notifications["semantically unchanged draft writes"] = 0;
-  identities["draft map (SidebarDraftBlock)"] = 0;
+  identities["raw draft map identity"] = 0;
   disposers.push(
     useComposerDraftStore.subscribe((state) => {
       notifications["draft store"]! += 1;
@@ -277,7 +342,7 @@ function makeHarness() {
         notifications["semantically unchanged draft writes"]! += 1;
       }
       serializedDrafts = nextSerialized;
-      if (drafts !== state.draftsByThreadKey) identities["draft map (SidebarDraftBlock)"]! += 1;
+      if (drafts !== state.draftsByThreadKey) identities["raw draft map identity"]! += 1;
       drafts = state.draftsByThreadKey;
     }),
   );
@@ -454,7 +519,7 @@ function makeHarness() {
       expect(instrument.editor?.value).toBe(index % 2 === 0 ? "" : "a");
     },
     check(scenario: Scenario, container: HTMLElement) {
-      if (scenario === "typing") {
+      if (scenario === "typing" || scenario === "provider-ready typing") {
         expect(useComposerDraftStore.getState().getComposerDraft(first)?.prompt).toBe(
           "a".repeat(INPUTS + 1),
         );
@@ -478,6 +543,7 @@ function makeHarness() {
 
 type Sample = {
   scenario: Scenario;
+  mountedLeaves: string[];
   groups: Record<string, Metric>;
   notifications: Record<string, number>;
   identities: Record<string, number>;
@@ -497,6 +563,7 @@ function report() {
     const first = matching[0]!;
     return {
       scenario,
+      mountedLeaves: first.mountedLeaves,
       ownerRenders: summarize(matching.map((sample) => sample.ownerRenders)),
       editorRenders: summarize(matching.map((sample) => sample.editorRenders)),
       groups: Object.fromEntries(
@@ -588,7 +655,8 @@ describe.skipIf(!enabled)("render waste baseline (five warmed repetitions)", () 
       for (let repeat = 0; repeat <= REPEATS; repeat++) {
         for (const scenario of scenarios) {
           useComposerDraftStore.setState(initialDraftState, true);
-          const harness = makeHarness();
+          const providerReady = scenario === "provider-ready typing";
+          const harness = makeHarness(providerReady);
           const container = document.createElement("div");
           document.body.append(container);
           const root = createRoot(container);
@@ -614,6 +682,14 @@ describe.skipIf(!enabled)("render waste baseline (five warmed repetitions)", () 
                 </RegistryContext.Provider>,
               ),
             );
+            // Leaves that mounted and committed during the initial render.
+            const mountedLeaves = Object.keys(groups).filter((key) => key.startsWith("leaf:"));
+            if (providerReady) {
+              expect(mountedLeaves.toSorted()).toEqual(providerReadyLeaves.toSorted());
+            } else {
+              // Send actions do not depend on a provider; picker, traits and menu do.
+              expect(mountedLeaves).toEqual(["leaf:ComposerPrimaryActions"]);
+            }
             // Start with a non-empty draft so first-character visibility is not
             // mixed into the steady typing result. Mount effects are excluded.
             await act(async () =>
@@ -635,6 +711,7 @@ describe.skipIf(!enabled)("render waste baseline (five warmed repetitions)", () 
             if (repeat > 0)
               samples.push({
                 scenario,
+                mountedLeaves,
                 groups,
                 notifications: { ...harness.notifications },
                 identities: { ...harness.identities },
