@@ -2,31 +2,48 @@ import { useAtomValue } from "@effect/atom-react";
 import {
   isAtomCommandInterrupted,
   squashAtomCommandFailure,
-  type AtomCommandResult,
 } from "@rove-code/client-runtime/state/runtime";
 import {
+  asProviderConfigBlob,
   buildProviderInstanceOverridePatch,
   deriveProviderInstanceId,
   deriveProviderSettingsFields,
+  newEnvironmentRow,
   nextProviderConfigWithFieldValue,
+  nextProviderEnvironmentWithFieldValue,
+  readProviderCommandArgs,
   readProviderConfigBoolean,
   readProviderConfigString,
+  readProviderEnvironmentVariable,
+  setEnvironmentRowSensitive,
+  setEnvironmentRowValue,
+  validateAcpRegistryConfig,
+  validateProviderEnvironment,
   validateProviderInstanceId,
+  withProviderCommandArgs,
+  type ProviderConfigBlob,
   type ProviderSettingsFieldModel,
 } from "@rove-code/client-runtime/state/provider-instance-settings";
 import {
   resolveProjectProviderInstanceEnabled,
+  type AcpRegistrySearchAgent,
   type ProjectId,
+  type ProviderInstanceConfig,
+  type ProviderInstanceEnvironmentVariable,
   type ProviderInstanceMutation,
 } from "@rove-code/contracts";
-import { useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { TextInput, View } from "react-native";
 
 import { AppText as Text } from "../../../components/ui/AppText";
 import { getProviderClient, providerClientDefinitions } from "../../../lib/providerClients";
+import { useEnvironmentQuery } from "../../../state/query";
 import { serverEnvironment } from "../../../state/server";
 import { useAtomCommand } from "../../../state/use-atom-command";
 import {
+  draftFromProviderInstance,
+  providerDraftChanged,
+  type ProviderInstanceDraft,
   listProviderInstanceRows,
   providerInstanceCreateMutation,
   providerInstanceEnabled,
@@ -55,10 +72,10 @@ function useProviderInstanceMutation(environmentId: SettingsTarget["environmentI
     setError(null);
     let ok = false;
     try {
-      const result = (await update({
+      const result = await update({
         environmentId,
         input: { patch: {}, providerInstanceMutation: mutation },
-      })) as AtomCommandResult<unknown, unknown>;
+      });
       if (result._tag === "Success") ok = true;
       else if (!isAtomCommandInterrupted(result)) {
         const failure = squashAtomCommandFailure(result);
@@ -75,9 +92,9 @@ function useProviderInstanceMutation(environmentId: SettingsTarget["environmentI
 
 function FieldInputs(props: {
   readonly fields: ReadonlyArray<ProviderSettingsFieldModel>;
-  readonly config: Record<string, unknown> | undefined;
+  readonly config: ProviderConfigBlob | undefined;
   readonly disabled: boolean;
-  readonly onChange: (next: Record<string, unknown> | undefined) => void;
+  readonly onChange: (next: ProviderConfigBlob | undefined) => void;
 }) {
   return (
     <>
@@ -91,7 +108,11 @@ function FieldInputs(props: {
               disabled={props.disabled}
               value={readProviderConfigBoolean(props.config, field.key, field.defaultBooleanValue)}
               onValueChange={(value) =>
-                props.onChange(nextProviderConfigWithFieldValue(props.config, field, value))
+                props.onChange(
+                  asProviderConfigBlob(
+                    nextProviderConfigWithFieldValue(props.config, field, value),
+                  ),
+                )
               }
             />
           );
@@ -111,10 +132,12 @@ function FieldInputs(props: {
                   disabled={props.disabled}
                   onPress={() =>
                     props.onChange(
-                      nextProviderConfigWithFieldValue(
-                        props.config,
-                        field,
-                        option.value === fallback ? "" : option.value,
+                      asProviderConfigBlob(
+                        nextProviderConfigWithFieldValue(
+                          props.config,
+                          field,
+                          option.value === fallback ? "" : option.value,
+                        ),
                       ),
                     )
                   }
@@ -123,37 +146,396 @@ function FieldInputs(props: {
             </View>
           );
         }
-        // A saved secret arrives redacted; show an empty box and only replace it on input.
+        // A saved secret arrives redacted; keep the box empty and replace it only on input.
         const configured = field.secret && readProviderConfigString(props.config, field.key) !== "";
-        const secret = field.secret || field.control === "password";
         return (
-          <View key={field.key} className="gap-1 px-4 py-2">
-            <Text className="text-sm text-foreground-muted">{field.label}</Text>
-            <TextInput
-              accessibilityLabel={field.label}
-              className={FIELD_CLASS}
-              placeholderTextColorClassName="accent-foreground-muted"
-              placeholder={
-                configured ? "Saved. Enter a new value to replace." : (field.placeholder ?? "")
-              }
-              secureTextEntry={secret}
-              autoCapitalize="none"
-              autoCorrect={false}
-              editable={!props.disabled}
-              multiline={field.control === "textarea"}
-              defaultValue={field.secret ? "" : readProviderConfigString(props.config, field.key)}
-              onChangeText={(value) => {
-                if (field.secret && value === "") return;
-                props.onChange(nextProviderConfigWithFieldValue(props.config, field, value));
-              }}
-            />
-            {field.description ? (
-              <Text className="text-xs text-foreground-muted">{field.description}</Text>
-            ) : null}
-          </View>
+          <LabeledInput
+            key={field.key}
+            label={field.label}
+            description={field.description}
+            placeholder={
+              configured ? "Saved. Enter a new value to replace." : (field.placeholder ?? "")
+            }
+            secure={field.secret === true || field.control === "password"}
+            multiline={field.control === "textarea"}
+            disabled={props.disabled}
+            value={field.secret ? "" : readProviderConfigString(props.config, field.key)}
+            onChangeText={(value) => {
+              if (field.secret && value === "") return;
+              props.onChange(
+                asProviderConfigBlob(nextProviderConfigWithFieldValue(props.config, field, value)),
+              );
+            }}
+          />
         );
       })}
     </>
+  );
+}
+
+function LabeledInput(props: {
+  readonly label: string;
+  readonly description?: string | undefined;
+  readonly placeholder: string;
+  readonly value: string;
+  readonly disabled: boolean;
+  readonly secure?: boolean;
+  readonly multiline?: boolean;
+  readonly mono?: boolean;
+  readonly onChangeText: (value: string) => void;
+}) {
+  return (
+    <View className="gap-1 px-4 py-2">
+      <Text className="text-sm text-foreground-muted">{props.label}</Text>
+      <TextInput
+        accessibilityLabel={props.label}
+        className={FIELD_CLASS}
+        placeholderTextColorClassName="accent-foreground-muted"
+        placeholder={props.placeholder}
+        secureTextEntry={props.secure}
+        autoCapitalize="none"
+        autoCorrect={false}
+        editable={!props.disabled}
+        multiline={props.multiline}
+        value={props.value}
+        onChangeText={props.onChangeText}
+      />
+      {props.description ? (
+        <Text className="text-xs text-foreground-muted">{props.description}</Text>
+      ) : null}
+    </View>
+  );
+}
+
+/** Stable React keys for editable rows, so typing in a row never remounts its input. */
+function useRowKeys(count: number) {
+  const ids = useRef<string[]>([]);
+  const next = useRef(0);
+  while (ids.current.length < count) ids.current.push(`row-${next.current++}`);
+  ids.current.length = count;
+  return {
+    keyAt: (index: number) => ids.current[index],
+    removeAt: (index: number) => ids.current.splice(index, 1),
+  };
+}
+
+function EnvironmentEditor(props: {
+  readonly rows: ReadonlyArray<ProviderInstanceEnvironmentVariable>;
+  readonly dedicatedNames: ReadonlySet<string>;
+  readonly disabled: boolean;
+  readonly onChange: (rows: ReadonlyArray<ProviderInstanceEnvironmentVariable>) => void;
+}) {
+  const dedicated = props.rows.filter((row) => props.dedicatedNames.has(row.name));
+  const generic = props.rows.filter((row) => !props.dedicatedNames.has(row.name));
+  const keys = useRowKeys(generic.length);
+  const publish = (next: ReadonlyArray<ProviderInstanceEnvironmentVariable>) =>
+    props.onChange([...dedicated, ...next]);
+  const update = (index: number, row: ProviderInstanceEnvironmentVariable) =>
+    publish(generic.map((entry, i) => (i === index ? row : entry)));
+  return (
+    <View>
+      <Text className="px-4 pt-3 text-sm font-rove-medium text-foreground">Variables</Text>
+      <Text className="px-4 text-xs text-foreground-muted">
+        API keys, base URLs and other per-instance settings. Sensitive values stay on the
+        environment and are never shown again.
+      </Text>
+      {generic.map((row, index) => (
+        <View key={keys.keyAt(index)} className="gap-1 px-4 py-2">
+          <TextInput
+            accessibilityLabel={`Variable name ${index + 1}`}
+            className={FIELD_CLASS}
+            placeholderTextColorClassName="accent-foreground-muted"
+            placeholder="VARIABLE_NAME"
+            autoCapitalize="none"
+            autoCorrect={false}
+            editable={!props.disabled}
+            value={row.name}
+            onChangeText={(name) => update(index, { ...row, name })}
+          />
+          <TextInput
+            accessibilityLabel={`Variable value ${index + 1}`}
+            className={FIELD_CLASS}
+            placeholderTextColorClassName="accent-foreground-muted"
+            placeholder={row.valueRedacted ? "Saved. Enter a new value to replace." : "value"}
+            secureTextEntry={row.sensitive}
+            autoCapitalize="none"
+            autoCorrect={false}
+            editable={!props.disabled}
+            value={row.valueRedacted ? "" : row.value}
+            onChangeText={(value) => update(index, setEnvironmentRowValue(row, value))}
+          />
+          <SettingsSwitchRow
+            label="Sensitive"
+            value={row.sensitive}
+            disabled={props.disabled}
+            onValueChange={(sensitive) => update(index, setEnvironmentRowSensitive(row, sensitive))}
+          />
+          <SettingsActionRow
+            icon="trash"
+            label={`Remove variable ${row.name || index + 1}`}
+            tone="danger"
+            disabled={props.disabled}
+            onPress={() => {
+              keys.removeAt(index);
+              publish(generic.filter((_, i) => i !== index));
+            }}
+          />
+        </View>
+      ))}
+      <SettingsActionRow
+        icon="plus"
+        label="Add variable"
+        disabled={props.disabled}
+        onPress={() => publish([...generic, newEnvironmentRow()])}
+      />
+    </View>
+  );
+}
+
+function CommandArguments(props: {
+  readonly config: ProviderConfigBlob | undefined;
+  readonly disabled: boolean;
+  readonly onChange: (next: ProviderConfigBlob | undefined) => void;
+}) {
+  const args = readProviderCommandArgs(props.config);
+  const keys = useRowKeys(args.length);
+  const publish = (next: ReadonlyArray<string>) =>
+    props.onChange(withProviderCommandArgs(props.config, next));
+  return (
+    <View>
+      <Text className="px-4 pt-3 text-sm font-rove-medium text-foreground">Arguments</Text>
+      <Text className="px-4 text-xs text-foreground-muted">
+        One literal argument per row, in launch order.
+      </Text>
+      {args.map((argument, index) => (
+        <View key={keys.keyAt(index)} className="gap-1 px-4 py-2">
+          <TextInput
+            accessibilityLabel={`Argument ${index + 1}`}
+            className={FIELD_CLASS}
+            autoCapitalize="none"
+            autoCorrect={false}
+            editable={!props.disabled}
+            value={argument}
+            onChangeText={(value) => publish(args.map((entry, i) => (i === index ? value : entry)))}
+          />
+          <SettingsActionRow
+            icon="trash"
+            label={`Remove argument ${index + 1}`}
+            tone="danger"
+            disabled={props.disabled}
+            onPress={() => {
+              keys.removeAt(index);
+              publish(args.filter((_, i) => i !== index));
+            }}
+          />
+        </View>
+      ))}
+      <SettingsActionRow
+        icon="plus"
+        label="Add argument"
+        disabled={props.disabled}
+        onPress={() => publish([...args, ""])}
+      />
+    </View>
+  );
+}
+
+/** Registry search and install for a new ACP instance, via the existing server flow. */
+function AcpRegistryPicker(props: {
+  readonly environmentId: SettingsTarget["environmentId"];
+  readonly disabled: boolean;
+  readonly onPrepared: (agent: AcpRegistrySearchAgent) => void;
+}) {
+  const [query, setQuery] = useState("");
+  const [submitted, setSubmitted] = useState("");
+  const [preparing, setPreparing] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const search = useEnvironmentQuery(
+    serverEnvironment.searchAcpRegistry({
+      environmentId: props.environmentId,
+      input: { query: submitted },
+    }),
+  );
+  const prepare = useAtomCommand(serverEnvironment.prepareAcpRegistryAgent, {
+    reportFailure: false,
+    reportDefect: false,
+  });
+  async function choose(agent: AcpRegistrySearchAgent) {
+    if (preparing !== null) return;
+    setPreparing(agent.id);
+    setError(null);
+    try {
+      const result = await prepare({
+        environmentId: props.environmentId,
+        input: { agentId: agent.id },
+      });
+      if (result._tag === "Success") {
+        props.onPrepared({
+          ...agent,
+          id: result.value.agentId,
+          version: result.value.version,
+          distribution: result.value.distribution,
+        });
+      } else if (!isAtomCommandInterrupted(result)) {
+        const failure = squashAtomCommandFailure(result);
+        setError(failure instanceof Error ? failure.message : "Could not install this agent.");
+      }
+    } catch {
+      setError("Could not install this agent.");
+    }
+    setPreparing(null);
+  }
+  const busy = props.disabled || preparing !== null;
+  return (
+    <View>
+      <LabeledInput
+        label="Search ACP Registry"
+        placeholder="Search agents"
+        value={query}
+        disabled={busy}
+        onChangeText={setQuery}
+      />
+      <SettingsActionRow
+        icon="magnifyingglass"
+        label="Search"
+        disabled={busy}
+        loading={search.isPending}
+        onPress={() => setSubmitted(query.trim())}
+      />
+      {search.error ? (
+        <Text accessibilityRole="alert" className="px-4 text-danger-foreground">
+          {search.error}
+        </Text>
+      ) : null}
+      {(search.data?.agents ?? []).map((agent) => (
+        <SettingsActionRow
+          key={agent.id}
+          icon="arrow.down.circle"
+          label={`${agent.name} v${agent.version}`}
+          description={agent.description || `Install ${agent.id} on this environment`}
+          disabled={busy}
+          loading={preparing === agent.id}
+          onPress={() => void choose(agent)}
+        />
+      ))}
+      {error ? (
+        <Text accessibilityRole="alert" className="px-4 text-danger-foreground">
+          {error}
+        </Text>
+      ) : null}
+    </View>
+  );
+}
+
+/**
+ * The shared edit/create form: name, schema fields, ACP local command arguments,
+ * and environment variables. Reports whether it holds unsaved edits.
+ */
+function InstanceForm(props: {
+  readonly environmentId: SettingsTarget["environmentId"];
+  readonly driver: ProviderInstanceConfig["driver"];
+  readonly initial: ProviderInstanceDraft;
+  readonly supportsPiWorkloadProtection: boolean;
+  readonly extraError: string | null;
+  readonly pending: boolean;
+  readonly submitLabel: string;
+  readonly header?: ReactNode;
+  readonly footer?: ReactNode;
+  readonly onSubmit: (draft: ProviderInstanceDraft) => void;
+  readonly onDirtyChange: (dirty: boolean) => void;
+  readonly onCancel: () => void;
+}) {
+  const definition = getProviderClient(props.driver);
+  const [draft, setDraft] = useState(props.initial);
+  const [attempted, setAttempted] = useState(false);
+  const dirty = providerDraftChanged(props.initial, draft);
+  const { onDirtyChange } = props;
+  useEffect(() => {
+    onDirtyChange(dirty);
+    return () => onDirtyChange(false);
+  }, [dirty, onDirtyChange]);
+  const fields = definition
+    ? deriveProviderSettingsFields(definition, draft.config, props.supportsPiWorkloadProtection)
+    : [];
+  const isLocalAcp =
+    props.driver === "acpRegistry" && readProviderConfigString(draft.config, "source") === "local";
+  const environmentFields = definition?.environmentFields ?? [];
+  const dedicatedNames = new Set(environmentFields.map((field) => field.name));
+  const problem =
+    validateProviderEnvironment(draft.environment) ??
+    (props.driver === "acpRegistry" ? validateAcpRegistryConfig(draft.config) : null);
+  return (
+    <View className="gap-1 py-2">
+      {props.header}
+      <LabeledInput
+        label="Name"
+        placeholder={definition?.label ?? String(props.driver)}
+        value={draft.displayName}
+        disabled={props.pending}
+        onChangeText={(displayName) => setDraft({ ...draft, displayName })}
+      />
+      <FieldInputs
+        fields={fields}
+        config={draft.config}
+        disabled={props.pending}
+        onChange={(config) => setDraft({ ...draft, config })}
+      />
+      {isLocalAcp ? (
+        <CommandArguments
+          config={draft.config}
+          disabled={props.pending}
+          onChange={(config) => setDraft({ ...draft, config })}
+        />
+      ) : null}
+      {environmentFields.map((field) => (
+        <LabeledInput
+          key={field.name}
+          label={field.label}
+          description={field.description}
+          placeholder={
+            readProviderEnvironmentVariable(draft.environment, field.name)?.valueRedacted
+              ? "Saved. Enter a new value to replace."
+              : (field.placeholder ?? "")
+          }
+          secure={field.sensitive !== false}
+          disabled={props.pending}
+          value={
+            readProviderEnvironmentVariable(draft.environment, field.name)?.valueRedacted
+              ? ""
+              : (readProviderEnvironmentVariable(draft.environment, field.name)?.value ?? "")
+          }
+          onChangeText={(value) =>
+            setDraft({
+              ...draft,
+              environment: nextProviderEnvironmentWithFieldValue(draft.environment, field, value),
+            })
+          }
+        />
+      ))}
+      <EnvironmentEditor
+        rows={draft.environment}
+        dedicatedNames={dedicatedNames}
+        disabled={props.pending}
+        onChange={(environment) => setDraft({ ...draft, environment })}
+      />
+      {props.footer}
+      {(attempted && problem) || props.extraError ? (
+        <Text accessibilityRole="alert" className="px-4 text-danger-foreground">
+          {props.extraError ?? problem}
+        </Text>
+      ) : null}
+      <SettingsActionRow
+        icon="checkmark"
+        label={props.submitLabel}
+        loading={props.pending}
+        onPress={() => {
+          setAttempted(true);
+          if (problem) return;
+          props.onSubmit(draft);
+        }}
+      />
+      <SettingsActionRow icon="xmark" label="Cancel" onPress={props.onCancel} />
+    </View>
   );
 }
 
@@ -161,99 +543,73 @@ function InstanceEditor(props: {
   readonly environment: SettingsTarget;
   readonly row: ProviderInstanceRow;
   readonly supportsPiWorkloadProtection: boolean;
+  readonly onDirtyChange: (dirty: boolean) => void;
   readonly onDone: () => void;
 }) {
   const { environment, row } = props;
   const mutation = useProviderInstanceMutation(environment.environmentId);
-  const definition = getProviderClient(row.instance.driver);
-  const [displayName, setDisplayName] = useState(row.instance.displayName ?? "");
-  const [config, setConfig] = useState(
-    row.instance.config !== null && typeof row.instance.config === "object"
-      ? (row.instance.config as Record<string, unknown>)
-      : undefined,
-  );
-  const fields = definition
-    ? deriveProviderSettingsFields(definition, config, props.supportsPiWorkloadProtection)
-    : [];
+  const initial = useMemo(() => draftFromProviderInstance(row.instance), [row.instance]);
+  const remove = () =>
+    void mutation
+      .run({ operation: "remove", instanceId: row.instanceId })
+      .then((ok) => ok && props.onDone());
   return (
-    <View className="gap-1 border-t border-border-subtle py-2">
-      <View className="gap-1 px-4 py-2">
-        <Text className="text-sm text-foreground-muted">Name</Text>
-        <TextInput
-          accessibilityLabel="Name"
-          className={FIELD_CLASS}
-          placeholderTextColorClassName="accent-foreground-muted"
-          placeholder={definition?.label ?? String(row.instance.driver)}
-          value={displayName}
-          onChangeText={setDisplayName}
-          editable={!mutation.pending}
-        />
-      </View>
-      <FieldInputs
-        fields={fields}
-        config={config}
-        disabled={mutation.pending}
-        onChange={setConfig}
-      />
-      {mutation.error ? (
-        <Text accessibilityRole="alert" className="px-4 text-danger-foreground">
-          {mutation.error}
-        </Text>
-      ) : null}
-      <SettingsActionRow
-        icon="checkmark"
-        label="Save"
-        loading={mutation.pending}
-        onPress={() => {
+    <View className="border-t border-border-subtle">
+      <InstanceForm
+        environmentId={environment.environmentId}
+        driver={row.instance.driver}
+        initial={initial}
+        supportsPiWorkloadProtection={props.supportsPiWorkloadProtection}
+        extraError={mutation.error}
+        pending={mutation.pending}
+        submitLabel="Save"
+        onDirtyChange={props.onDirtyChange}
+        onCancel={props.onDone}
+        onSubmit={(draft) =>
           void mutation
-            .run(providerInstanceSaveMutation(row, { displayName, config }))
-            .then((ok) => ok && props.onDone());
-        }}
+            .run(providerInstanceSaveMutation(row, draft))
+            .then((ok) => ok && props.onDone())
+        }
+        footer={
+          row.isDefault && !row.configured ? null : (
+            <SettingsActionRow
+              icon={row.isDefault ? "arrow.clockwise" : "trash"}
+              label={row.isDefault ? "Reset to defaults" : "Delete instance"}
+              tone="danger"
+              disabled={mutation.pending}
+              onPress={remove}
+            />
+          )
+        }
       />
-      {row.isDefault && row.configured ? (
-        <SettingsActionRow
-          icon="arrow.clockwise"
-          label="Reset to defaults"
-          tone="danger"
-          disabled={mutation.pending}
-          onPress={() => {
-            void mutation
-              .run({ operation: "remove", instanceId: row.instanceId })
-              .then((ok) => ok && props.onDone());
-          }}
-        />
-      ) : !row.isDefault ? (
-        <SettingsActionRow
-          icon="trash"
-          label="Delete instance"
-          tone="danger"
-          disabled={mutation.pending}
-          onPress={() => {
-            void mutation
-              .run({ operation: "remove", instanceId: row.instanceId })
-              .then((ok) => ok && props.onDone());
-          }}
-        />
-      ) : null}
-      <SettingsActionRow icon="xmark" label="Cancel" onPress={props.onDone} />
     </View>
   );
 }
+
+type AddStep =
+  | { readonly kind: "driver" }
+  | { readonly kind: "acp-source" }
+  | {
+      readonly kind: "form";
+      readonly driver: ProviderInstanceConfig["driver"];
+      readonly label: string;
+      readonly config: ProviderConfigBlob | undefined;
+      readonly acpName: string | null;
+    };
 
 function AddInstance(props: {
   readonly environment: SettingsTarget;
   readonly existingIds: ReadonlySet<string>;
   readonly supportsPiWorkloadProtection: boolean;
+  readonly onDirtyChange: (dirty: boolean) => void;
   readonly onDone: () => void;
 }) {
-  const mutation = useProviderInstanceMutation(props.environment.environmentId);
-  const [driver, setDriver] = useState<string | null>(null);
-  const [displayName, setDisplayName] = useState("");
+  const { environmentId } = props.environment;
+  const mutation = useProviderInstanceMutation(environmentId);
+  const [step, setStep] = useState<AddStep>({ kind: "driver" });
   const [idOverride, setIdOverride] = useState<string | null>(null);
-  const [config, setConfig] = useState<Record<string, unknown> | undefined>(undefined);
-  const [attempted, setAttempted] = useState(false);
-  const definition = providerClientDefinitions.find((entry) => entry.driverKind === driver);
-  if (!definition) {
+  const [idError, setIdError] = useState<string | null>(null);
+  if (step.kind === "driver") {
     return (
       <View>
         {providerClientDefinitions.map((entry) => (
@@ -261,86 +617,108 @@ function AddInstance(props: {
             key={entry.driverKind}
             label={entry.label}
             selected={false}
-            onPress={() => setDriver(entry.driverKind)}
+            onPress={() =>
+              entry.driverKind === "acpRegistry"
+                ? setStep({ kind: "acp-source" })
+                : setStep({
+                    kind: "form",
+                    driver: entry.driverKind,
+                    label: entry.label,
+                    config: undefined,
+                    acpName: null,
+                  })
+            }
           />
         ))}
         <SettingsActionRow icon="xmark" label="Cancel" onPress={props.onDone} />
       </View>
     );
   }
-  const instanceId = idOverride ?? deriveProviderInstanceId(definition.driverKind, displayName);
-  const idError = validateProviderInstanceId(instanceId, props.existingIds);
-  const fields = deriveProviderSettingsFields(
-    definition,
-    config,
-    props.supportsPiWorkloadProtection,
-  );
-  return (
-    <View className="gap-1 py-2">
-      <Text className="px-4 text-base font-semibold text-foreground">{definition.label}</Text>
-      <View className="gap-1 px-4 py-2">
-        <Text className="text-sm text-foreground-muted">Name</Text>
-        <TextInput
-          accessibilityLabel="Name"
-          className={FIELD_CLASS}
-          placeholderTextColorClassName="accent-foreground-muted"
-          placeholder="e.g. Work"
-          value={displayName}
-          onChangeText={setDisplayName}
-          editable={!mutation.pending}
-        />
-        <Text className="pt-2 text-sm text-foreground-muted">Instance ID</Text>
-        <TextInput
-          accessibilityLabel="Instance ID"
-          className={FIELD_CLASS}
-          autoCapitalize="none"
-          autoCorrect={false}
-          value={instanceId}
-          onChangeText={setIdOverride}
-          editable={!mutation.pending}
-        />
-        {attempted && idError ? (
-          <Text accessibilityRole="alert" className="text-danger-foreground">
-            {idError}
-          </Text>
-        ) : null}
-      </View>
-      <FieldInputs
-        fields={fields}
-        config={config}
-        disabled={mutation.pending}
-        onChange={setConfig}
-      />
-      {mutation.error ? (
-        <Text accessibilityRole="alert" className="px-4 text-danger-foreground">
-          {mutation.error}
+  if (step.kind === "acp-source") {
+    const acp = providerClientDefinitions.find((entry) => entry.driverKind === "acpRegistry");
+    return (
+      <View>
+        <Text className="px-4 pt-3 text-xs text-foreground-muted">
+          Registry agents are installed on the environment before they are added. Sign in from the
+          Accounts section once the agent is added.
         </Text>
-      ) : null}
-      <SettingsActionRow
-        icon="plus"
-        label="Add provider"
-        loading={mutation.pending}
-        onPress={() => {
-          setAttempted(true);
-          if (idError) return;
-          void mutation
-            .run(
-              providerInstanceCreateMutation({
-                driver: definition.driverKind,
-                instanceId,
-                draft: { displayName, config },
-              }),
-            )
-            .then((ok) => ok && props.onDone());
-        }}
-      />
-      <SettingsActionRow icon="xmark" label="Cancel" onPress={props.onDone} />
-    </View>
+        <AcpRegistryPicker
+          environmentId={environmentId}
+          disabled={false}
+          onPrepared={(agent) =>
+            acp &&
+            setStep({
+              kind: "form",
+              driver: acp.driverKind,
+              label: agent.name,
+              config: { agentId: agent.id, distribution: "auto" },
+              acpName: agent.name,
+            })
+          }
+        />
+        {acp ? (
+          <SettingsActionRow
+            icon="terminal"
+            label="Local ACP command"
+            onPress={() =>
+              setStep({
+                kind: "form",
+                driver: acp.driverKind,
+                label: "Local ACP",
+                config: { source: "local", commandArgs: [] },
+                acpName: null,
+              })
+            }
+          />
+        ) : null}
+        <SettingsActionRow icon="xmark" label="Cancel" onPress={props.onDone} />
+      </View>
+    );
+  }
+  const initial: ProviderInstanceDraft = {
+    displayName: step.acpName ?? "",
+    config: step.config,
+    environment: [],
+  };
+  return (
+    <InstanceForm
+      environmentId={environmentId}
+      driver={step.driver}
+      initial={initial}
+      supportsPiWorkloadProtection={props.supportsPiWorkloadProtection}
+      extraError={mutation.error ?? idError}
+      pending={mutation.pending}
+      submitLabel="Add provider"
+      header={
+        <LabeledInput
+          label="Instance ID"
+          placeholder={deriveProviderInstanceId(step.driver, step.label)}
+          value={idOverride ?? ""}
+          disabled={mutation.pending}
+          onChangeText={(value) => setIdOverride(value === "" ? null : value)}
+        />
+      }
+      onDirtyChange={props.onDirtyChange}
+      onCancel={props.onDone}
+      onSubmit={(draft) => {
+        const base = draft.displayName.trim() || step.label;
+        const instanceId = idOverride ?? deriveProviderInstanceId(step.driver, base);
+        const error = validateProviderInstanceId(instanceId, props.existingIds);
+        setIdError(error);
+        if (error) return;
+        void mutation
+          .run(providerInstanceCreateMutation({ driver: step.driver, instanceId, draft }))
+          .then((ok) => ok && props.onDone());
+      }}
+    />
   );
 }
 
 /** Provider-instance administration for one environment. Writes need `providers:manage`. */
-export function ProviderInstanceAdmin(props: { readonly environment: SettingsTarget }) {
+export function ProviderInstanceAdmin(props: {
+  readonly environment: SettingsTarget;
+  readonly onDirtyChange: (environmentId: SettingsTarget["environmentId"], dirty: boolean) => void;
+}) {
   const { environment } = props;
   const environmentId = environment.environmentId;
   const settings = environment.serverConfig.settings;
@@ -353,6 +731,11 @@ export function ProviderInstanceAdmin(props: { readonly environment: SettingsTar
   const toggle = useProviderInstanceMutation(environmentId);
   const [editing, setEditing] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
+  const { onDirtyChange: reportDirty } = props;
+  const onDirtyChange = useCallback(
+    (dirty: boolean) => reportDirty(environmentId, dirty),
+    [reportDirty, environmentId],
+  );
   const rows = listProviderInstanceRows(settings, providerClientDefinitions);
   const existingIds = new Set(Object.keys(settings.providerInstances));
   return (
@@ -378,9 +761,10 @@ export function ProviderInstanceAdmin(props: { readonly environment: SettingsTar
               environment={environment}
               row={row}
               supportsPiWorkloadProtection={supportsPiWorkloadProtection}
+              onDirtyChange={onDirtyChange}
               onDone={() => setEditing(null)}
             />
-          ) : canManage ? (
+          ) : canManage && editing === null && !adding ? (
             <SettingsActionRow
               icon="slider.horizontal.3"
               label={`Edit ${providerInstanceLabel(row, getProviderClient(row.instance.driver))}`}
@@ -402,9 +786,10 @@ export function ProviderInstanceAdmin(props: { readonly environment: SettingsTar
           environment={environment}
           existingIds={existingIds}
           supportsPiWorkloadProtection={supportsPiWorkloadProtection}
+          onDirtyChange={onDirtyChange}
           onDone={() => setAdding(false)}
         />
-      ) : canManage ? (
+      ) : canManage && editing === null ? (
         <SettingsActionRow
           icon="plus"
           label="Add provider instance"

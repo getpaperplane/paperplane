@@ -3,6 +3,8 @@ import { describe, expect, it } from "vite-plus/test";
 
 import {
   applyProviderInstanceDraft,
+  draftFromProviderInstance,
+  providerDraftChanged,
   listProviderInstanceRows,
   providerInstanceEnabledMutation,
 } from "./provider-instances";
@@ -45,8 +47,37 @@ describe("provider instance mutations", () => {
     expect(
       applyProviderInstanceDraft(
         { driver: codex, displayName: "Old", config: { a: 1 } },
-        { displayName: " ", config: undefined },
+        {
+          displayName: " ",
+          config: undefined,
+          environment: [{ name: "", value: "", sensitive: true }],
+        },
       ),
     ).toEqual({ driver: codex });
+  });
+});
+
+describe("provider draft round trip", () => {
+  const instance = {
+    driver: acp,
+    displayName: "Agent",
+    config: { source: "local", commandPath: "dsh", commandArgs: ["-x"], customModels: ["m"] },
+    environment: [{ name: "TOKEN", value: "", sensitive: true, valueRedacted: true }],
+  };
+
+  it("preserves hidden config and redacted secrets on an unchanged save", () => {
+    expect(applyProviderInstanceDraft(instance, draftFromProviderInstance(instance))).toEqual(
+      instance,
+    );
+  });
+
+  it("is dirty only for real edits, not an added blank variable", () => {
+    const initial = draftFromProviderInstance(instance);
+    const blank = {
+      ...initial,
+      environment: [...initial.environment, { name: "", value: "", sensitive: true }],
+    };
+    expect(providerDraftChanged(initial, blank)).toBe(false);
+    expect(providerDraftChanged(initial, { ...initial, displayName: "Other" })).toBe(true);
   });
 });

@@ -5,7 +5,8 @@ import {
   type AtomCommandResult,
 } from "@rove-code/client-runtime/state/runtime";
 import type { ProviderAuthResponse, ServerProvider } from "@rove-code/contracts";
-import { useRef, useState } from "react";
+import { useNavigation, usePreventRemove } from "@react-navigation/native";
+import { useCallback, useRef, useState } from "react";
 import { Linking, Pressable, ScrollView, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -31,6 +32,27 @@ export function SettingsProviderAccountsRouteScreen() {
   const { selectedTargets, projectGroups, selectedProjectKey } = useSettingsEnvironmentFilter();
   const selectedProject = projectGroups.find((group) => group.key === selectedProjectKey);
   const insets = useSafeAreaInsets();
+  const [dirtyEnvironments, setDirtyEnvironments] = useState<ReadonlySet<string>>(new Set());
+  const setDirty = useCallback((environmentId: string, dirty: boolean) => {
+    setDirtyEnvironments((current) => {
+      if (current.has(environmentId) === dirty) return current;
+      const next = new Set(current);
+      if (dirty) next.add(environmentId);
+      else next.delete(environmentId);
+      return next;
+    });
+  }, []);
+  const navigation = useNavigation();
+  usePreventRemove(dirtyEnvironments.size > 0, ({ data }) => {
+    Dialog.alert("Discard changes?", "Your unsaved changes will be lost.", [
+      { text: "Keep editing", style: "cancel" },
+      {
+        text: "Discard changes",
+        style: "destructive",
+        onPress: () => navigation.dispatch(data.action),
+      },
+    ]);
+  });
   return (
     <>
       <SettingsEnvironmentFilterHeader />
@@ -47,7 +69,7 @@ export function SettingsProviderAccountsRouteScreen() {
             selectedTargets.map((environment) => (
               <View key={environment.environmentId} className="gap-6">
                 <SettingsSection title={`${environment.label} · Providers`}>
-                  <ProviderInstanceAdmin environment={environment} />
+                  <ProviderInstanceAdmin environment={environment} onDirtyChange={setDirty} />
                 </SettingsSection>
                 {selectedProject ? (
                   <SettingsSection title={`${environment.label} · ${selectedProject.label}`}>

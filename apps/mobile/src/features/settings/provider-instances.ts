@@ -3,9 +3,15 @@ import {
   ProviderInstanceId,
   resolveProviderInstanceEnabled,
   type ProviderInstanceConfig,
+  type ProviderInstanceEnvironmentVariable,
   type ProviderInstanceMutation,
   type ServerSettings,
 } from "@rove-code/contracts";
+import {
+  asProviderConfigBlob,
+  finalizeProviderEnvironment,
+  type ProviderConfigBlob,
+} from "@rove-code/client-runtime/state/provider-instance-settings";
 import type { ProviderClientDefinition } from "@rove-code/provider-core/client";
 
 export interface ProviderInstanceRow {
@@ -66,7 +72,31 @@ export function providerInstanceEnabledMutation(
 
 export interface ProviderInstanceDraft {
   readonly displayName: string;
-  readonly config: Record<string, unknown> | undefined;
+  readonly config: ProviderConfigBlob | undefined;
+  readonly environment: ReadonlyArray<ProviderInstanceEnvironmentVariable>;
+}
+
+/** The draft an editor starts from; hidden config fields and redacted values ride along. */
+export function draftFromProviderInstance(instance: ProviderInstanceConfig): ProviderInstanceDraft {
+  return {
+    displayName: instance.displayName ?? "",
+    config: asProviderConfigBlob(instance.config),
+    environment: instance.environment ?? [],
+  };
+}
+
+/** Whether saving would change anything, ignoring blank rows the user added but never filled. */
+export function providerDraftChanged(
+  initial: ProviderInstanceDraft,
+  current: ProviderInstanceDraft,
+): boolean {
+  const normalize = (draft: ProviderInstanceDraft) =>
+    JSON.stringify([
+      draft.displayName.trim(),
+      draft.config ?? null,
+      finalizeProviderEnvironment(draft.environment),
+    ]);
+  return normalize(initial) !== normalize(current);
 }
 
 /** Applies an edit draft to an instance; an empty name or config is omitted, not stored blank. */
@@ -74,14 +104,16 @@ export function applyProviderInstanceDraft(
   instance: ProviderInstanceConfig,
   draft: ProviderInstanceDraft,
 ): ProviderInstanceConfig {
-  const { displayName: _name, config: _config, ...rest } = instance;
+  const { displayName: _name, config: _config, environment: _env, ...rest } = instance;
   const name = draft.displayName.trim();
+  const environment = finalizeProviderEnvironment(draft.environment);
   const hasConfig = draft.config !== undefined && Object.keys(draft.config).length > 0;
-  return {
-    ...rest,
-    ...(name.length > 0 ? { displayName: name } : {}),
-    ...(hasConfig ? { config: draft.config } : {}),
-  };
+  return Object.assign(
+    rest,
+    name.length > 0 ? { displayName: name } : undefined,
+    hasConfig ? { config: draft.config } : undefined,
+    environment.length > 0 ? { environment } : undefined,
+  );
 }
 
 export function providerInstanceSaveMutation(
