@@ -1609,7 +1609,101 @@ const makeOrchestrator = Effect.fn("orchestrationV2.Orchestrator.layer")(functio
                 ),
               )
           : null;
-      const activeHandoff = handoff ?? legacyImportRecoveryHandoff;
+      // Merge-back transfers are consumed when the queued run starts, under the
+      // thread lock, in the same batch that marks them consumed. A cancelled
+      // queued run never reaches here, and a later queued run sees them consumed.
+      const pendingMergeBackTransfers = pendingMergeBackTransfersForThread(projection);
+      if (new Set(pendingMergeBackTransfers.map((transfer) => transfer.sourceThreadId)).size > 1) {
+        return yield* new OrchestratorDispatchError({
+          commandId,
+          commandType: "message.dispatch",
+          cause: `Thread ${threadId} has pending merge-back transfers from multiple forks.`,
+        });
+      }
+      const mergeBackTransfer = latestContextTransfer(pendingMergeBackTransfers);
+      const supersededMergeBackTransfers = pendingMergeBackTransfers.filter(
+        (transfer) => transfer.id !== mergeBackTransfer?.id,
+      );
+      const mapQueuedError = Effect.mapError(
+        (cause: unknown) =>
+          new OrchestratorDispatchError({ commandId, commandType: "message.dispatch", cause }),
+      );
+      const mergeBackSourceProjection =
+        mergeBackTransfer === undefined
+          ? null
+          : yield* projectionStore
+              .getThreadRecords(mergeBackTransfer.sourceThreadId, [
+                "runs",
+                "attempts",
+                "providerThreads",
+                "providerTurns",
+              ])
+              .pipe(mapQueuedError);
+      const mergeBackSourceRun =
+        mergeBackTransfer?.sourcePoint.runId === undefined || mergeBackSourceProjection === null
+          ? null
+          : (mergeBackSourceProjection.runs.find(
+              (candidate) => candidate.id === mergeBackTransfer.sourcePoint.runId,
+            ) ?? null);
+      const mergeBackSourceProviderThread =
+        mergeBackSourceProjection === null || mergeBackSourceRun === null
+          ? undefined
+          : providerThreadForRun(mergeBackSourceProjection, mergeBackSourceRun);
+      if (
+        mergeBackTransfer !== undefined &&
+        (mergeBackSourceRun === null || mergeBackSourceProviderThread === undefined)
+      ) {
+        return yield* new OrchestratorDispatchError({
+          commandId,
+          commandType: "message.dispatch",
+          cause: `Pending merge-back transfer ${mergeBackTransfer.id} has no resolvable source run or provider thread.`,
+        });
+      }
+      if (mergeBackTransfer !== undefined) {
+        yield* commandPolicy
+          .ensureContextHandoff({
+            commandId,
+            threadId,
+            providerInstanceId: queuedRun.providerInstanceId,
+            capabilities: targetCapabilities,
+            strategy: "fork_delta_context",
+          })
+          .pipe(mapQueuedError);
+      }
+      const mergeBackDeltaItems =
+        mergeBackSourceProjection === null || mergeBackSourceRun === null
+          ? []
+          : yield* readHandoffItems(
+              mergeBackSourceProjection.thread.id,
+              mergeBackSourceProjection.runs
+                .filter((run) => run.ordinal <= mergeBackSourceRun.ordinal)
+                .map((run) => run.id),
+            );
+      const mergeBackHandoff =
+        mergeBackTransfer === undefined ||
+        mergeBackSourceProjection === null ||
+        mergeBackSourceRun === null ||
+        mergeBackSourceProviderThread === undefined
+          ? null
+          : yield* contextHandoffService
+              .prepareForkDelta({
+                sourceThreadId: mergeBackTransfer.sourceThreadId,
+                targetThreadId: threadId,
+                targetRunId: queuedRun.id,
+                transferId: mergeBackTransfer.id,
+                fromProviderThreadIds: [mergeBackSourceProviderThread.id],
+                toProviderThreadId: queuedProviderThread.id,
+                fromProviderInstanceId: mergeBackSourceRun.providerInstanceId,
+                toProviderInstanceId: queuedRun.providerInstanceId,
+                coveredRunOrdinals: visibleDeltaRunOrdinals(
+                  mergeBackSourceProjection,
+                  mergeBackDeltaItems,
+                ),
+                deltaItems: mergeBackDeltaItems,
+                createdAt: now,
+              })
+              .pipe(mapQueuedError);
+      const activeHandoff = mergeBackHandoff ?? handoff ?? legacyImportRecoveryHandoff;
       const checkpointScope =
         storedCheckpointScope ??
         (yield* runtimePolicy
@@ -1664,7 +1758,10 @@ const makeOrchestrator = Effect.fn("orchestrationV2.Orchestrator.layer")(functio
         firstRunOrdinal: queuedProviderThread.firstRunOrdinal ?? queuedRun.ordinal,
         lastRunOrdinal: queuedRun.ordinal,
         handoffIds: appendContextHandoffId(
-          appendContextHandoffId(queuedProviderThread.handoffIds, handoff?.id ?? null),
+          appendContextHandoffId(
+            appendContextHandoffId(queuedProviderThread.handoffIds, handoff?.id ?? null),
+            mergeBackHandoff?.id ?? null,
+          ),
           legacyImportRecoveryHandoff?.id ?? null,
         ),
         updatedAt: now,
@@ -1733,7 +1830,12 @@ const makeOrchestrator = Effect.fn("orchestrationV2.Orchestrator.layer")(functio
               parentItemId: null,
               ordinal: queuedRun.ordinal * 100 - 1,
               status: "completed",
-              title: handoff === null ? "Imported context" : "Provider handoff",
+              title:
+                mergeBackHandoff !== null
+                  ? "Merge-back context"
+                  : handoff === null
+                    ? "Imported context"
+                    : "Provider handoff",
               startedAt: now,
               completedAt: now,
               updatedAt: now,
@@ -1742,12 +1844,20 @@ const makeOrchestrator = Effect.fn("orchestrationV2.Orchestrator.layer")(functio
               fromProviderThreadIds: activeHandoff.fromProviderThreadIds,
               toProviderThreadId: activeHandoff.toProviderThreadId,
               fromProviderInstanceIds: Array.from(
-                new Set(coveredRuns.map((run) => run.providerInstanceId)),
+                new Set(
+                  (mergeBackHandoff !== null && mergeBackSourceRun !== null
+                    ? [mergeBackSourceRun]
+                    : coveredRuns
+                  ).map((run) => run.providerInstanceId),
+                ),
               ),
               toProviderInstanceId: queuedRun.providerInstanceId,
               fromModelSelections: Array.from(
                 new Map(
-                  coveredRuns.map((run) => [
+                  (mergeBackHandoff !== null && mergeBackSourceRun !== null
+                    ? [mergeBackSourceRun]
+                    : coveredRuns
+                  ).map((run) => [
                     `${run.modelSelection.instanceId}\0${run.modelSelection.model}`,
                     run.modelSelection,
                   ]),
@@ -1850,6 +1960,58 @@ const makeOrchestrator = Effect.fn("orchestrationV2.Orchestrator.layer")(functio
                   providerInstanceId: queuedRun.providerInstanceId,
                   occurredAt: now,
                   payload: handoff,
+                },
+              ]),
+          ...(mergeBackHandoff === null
+            ? []
+            : [
+                {
+                  type: "context-handoff.updated" as const,
+                  threadId,
+                  runId: queuedRun.id,
+                  providerInstanceId: queuedRun.providerInstanceId,
+                  occurredAt: now,
+                  payload: mergeBackHandoff,
+                },
+              ]),
+          ...supersededMergeBackTransfers.map((transfer) => ({
+            type: "context-transfer.updated" as const,
+            threadId,
+            runId: queuedRun.id,
+            providerInstanceId: queuedRun.providerInstanceId,
+            occurredAt: now,
+            payload: {
+              ...transfer,
+              status: "superseded" as const,
+              error:
+                mergeBackTransfer === undefined
+                  ? "Superseded while consuming merge-back transfer."
+                  : `Superseded by merge-back transfer ${mergeBackTransfer.id}.`,
+              updatedAt: now,
+            },
+          })),
+          ...(mergeBackTransfer === undefined || mergeBackHandoff === null
+            ? []
+            : [
+                {
+                  type: "context-transfer.updated" as const,
+                  threadId,
+                  runId: queuedRun.id,
+                  providerInstanceId: queuedRun.providerInstanceId,
+                  occurredAt: now,
+                  payload: {
+                    ...mergeBackTransfer,
+                    targetProviderInstanceId: queuedRun.providerInstanceId,
+                    targetRunId: queuedRun.id,
+                    status: "consumed" as const,
+                    resolution: {
+                      strategy: "fork_delta_context" as const,
+                      contextHandoffId: mergeBackHandoff.id,
+                    },
+                    error: null,
+                    updatedAt: now,
+                    consumedAt: now,
+                  },
                 },
               ]),
           ...(legacyImportRecoveryHandoff === null
@@ -5008,13 +5170,6 @@ const makeOrchestrator = Effect.fn("orchestrationV2.Orchestrator.layer")(functio
           dispatchMode.type === "start_immediately" ||
           dispatchMode.type === "queue_after_active");
       if (shouldQueue) {
-        if (pendingMergeBackTransfers.length > 0) {
-          return yield* new OrchestratorDispatchError({
-            commandId: command.commandId,
-            commandType: command.type,
-            cause: `Thread ${command.threadId} has a pending merge-back transfer; queued merge-back consumption is not implemented yet.`,
-          });
-        }
         const queueProviderThread =
           activeProviderThread ??
           projection.providerThreads.find(
