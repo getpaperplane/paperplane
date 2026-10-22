@@ -27,6 +27,10 @@
       "types": "./src/hostHealth.ts",
       "default": "./src/hostHealth.ts"
     },
+    "./environment-admin": {
+      "types": "./src/environmentAdmin.ts",
+      "default": "./src/environmentAdmin.ts"
+    },
     "./worktree-inventory": {
       "types": "./src/worktreeInventory.ts",
       "default": "./src/worktreeInventory.ts"
@@ -222,6 +226,10 @@
     "./state/projects": {
       "types": "./src/state/projects.ts",
       "default": "./src/state/projects.ts"
+    },
+    "./state/provider-instance-settings": {
+      "types": "./src/state/providerInstanceSettings.ts",
+      "default": "./src/state/providerInstanceSettings.ts"
     },
     "./state/provider-instance-display": {
       "types": "./src/state/providerInstanceDisplay.ts",

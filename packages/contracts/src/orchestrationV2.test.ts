@@ -517,7 +517,7 @@ describe("orchestration V2 contracts", () => {
       },
       checkpointing: {
         appCanCheckpointFilesystem: true,
-        supportsNestedCheckpointScopes: true,
+        supportsNestedCheckpointScopes: false,
         providerCanRollbackConversation: true,
         providerRollbackReturnsSnapshot: true,
         providerCanReadConversationSnapshot: false,

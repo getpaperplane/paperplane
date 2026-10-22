@@ -1,4 +1,7 @@
 import {
+  LiveVoiceInputController,
+  type LiveVoiceInputDependencies,
+  type VoiceInputRunner,
   VoiceInputController,
   voiceInputBlocksSubmission,
   type VoiceDraftSnapshot,
@@ -43,23 +46,32 @@ export function createVoiceInputTarget(
   };
 }
 
-export class VoiceInputSession {
-  readonly controller: VoiceInputController;
+type TargetHooks = {
+  readonly readDraft: () => VoiceDraftSnapshot | null;
+  readonly commitDraft: VoiceInputControllerDependencies["commitDraft"];
+  readonly onStateChange: VoiceInputControllerDependencies["onStateChange"];
+};
+
+/** Binds one controller to the draft it is dictating into, whichever capture it uses. */
+export class VoiceInputTargetSession<C extends VoiceInputRunner> {
+  readonly controller: C;
   private target: VoiceInputTarget | null = null;
   private unsubscribe: (() => void) | null = null;
 
-  constructor(dependencies: Omit<VoiceInputControllerDependencies, "readDraft" | "commitDraft">) {
-    this.controller = new VoiceInputController({
-      ...dependencies,
+  constructor(
+    createController: (hooks: TargetHooks) => C,
+    onStateChange: VoiceInputControllerDependencies["onStateChange"],
+  ) {
+    this.controller = createController({
+      readDraft: () => this.target?.readDraft() ?? null,
+      commitDraft: (text, selection) => this.target?.commitDraft(text, selection),
       onStateChange: (state) => {
         if (!voiceInputBlocksSubmission(state)) {
           this.unsubscribe?.();
           this.unsubscribe = null;
         }
-        dependencies.onStateChange(state);
+        onStateChange(state);
       },
-      readDraft: () => this.target?.readDraft() ?? null,
-      commitDraft: (text, selection) => this.target?.commitDraft(text, selection),
     });
   }
 
@@ -84,5 +96,23 @@ export class VoiceInputSession {
     this.target = target;
     this.unsubscribe = target.subscribe();
     return this.controller.start();
+  }
+}
+
+export class VoiceInputSession extends VoiceInputTargetSession<VoiceInputController> {
+  constructor(dependencies: Omit<VoiceInputControllerDependencies, "readDraft" | "commitDraft">) {
+    super(
+      (hooks) => new VoiceInputController({ ...dependencies, ...hooks }),
+      dependencies.onStateChange,
+    );
+  }
+}
+
+export class LiveVoiceInputSession extends VoiceInputTargetSession<LiveVoiceInputController> {
+  constructor(dependencies: Omit<LiveVoiceInputDependencies, "readDraft" | "commitDraft">) {
+    super(
+      (hooks) => new LiveVoiceInputController({ ...dependencies, ...hooks }),
+      dependencies.onStateChange,
+    );
   }
 }

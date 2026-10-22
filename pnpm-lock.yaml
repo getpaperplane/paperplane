@@ -510,6 +510,9 @@ importers:
       expo-sharing:
         specifier: 58.0.18
         version: 58.0.18(patch_hash=d0ca151b2a4eec8bb28df547c8663e4b803acd981ace492c6b401bcb279f524a)(expo@58.0.11)(react-native@0.88.0(@babel/core@7.29.7)(@react-native/metro-config@0.88.0(@babel/core@7.29.7)(bufferutil@4.1.0)(utf-8-validate@6.0.6))(@types/react@19.3.0)(bufferutil@4.1.0)(react@19.3.0)(utf-8-validate@6.0.6))(react@19.3.0)(typescript@7.0.2)
+      expo-speech-recognition:
+        specifier: 58.0.0
+        version: 58.0.0(expo@58.0.11)(react-native@0.88.0(@babel/core@7.29.7)(@react-native/metro-config@0.88.0(@babel/core@7.29.7)(bufferutil@4.1.0)(utf-8-validate@6.0.6))(@types/react@19.3.0)(bufferutil@4.1.0)(react@19.3.0)(utf-8-validate@6.0.6))(react@19.3.0)
       expo-splash-screen:
         specifier: ~58.0.9
         version: 58.0.9(expo@58.0.11)(typescript@7.0.2)
@@ -1486,22 +1489,13 @@ importers:
       '@rove-code/provider-core':
         specifier: workspace:*
         version: link:../provider-core
-      '@rove-code/shared':
-        specifier: workspace:*
-        version: link:../shared
       effect:
         specifier: 4.0.5
         version: 4.0.5
     devDependencies:
-      '@effect/platform-node':
-        specifier: 4.0.5
-        version: 4.0.5(bufferutil@4.1.0)(effect@4.0.5)(redis@6.2.1)(utf-8-validate@6.0.6)
       '@effect/vitest':
         specifier: 4.0.5
         version: 4.0.5(patch_hash=2731c9c3761c595f25ddc625a7d61ca376b389d5b3049ecb837c8940f21cfa02)(@types/node@24.12.4)(@vitest/ui@5.0.1)(bufferutil@4.1.0)(effect@4.0.5)(esbuild@0.28.2)(jiti@2.7.0)(jsdom@30.1.2(@noble/hashes@1.8.0))(msw@2.12.11(@types/node@24.12.4)(typescript@7.0.2))(terser@5.48.0)(typescript@7.0.2)(unrun@0.2.39)(utf-8-validate@6.0.6)(yaml@2.9.0)
-      '@rove-code/provider-testing':
-        specifier: workspace:*
-        version: link:../provider-testing
       '@types/node':
         specifier: 24.12.4
         version: 24.12.4
@@ -9206,6 +9200,13 @@ packages:
 
   expo-sharing@58.0.18:
     resolution: {integrity: sha512-GqL1dJ5v+zgqdgDG6KApBV+hvOsTmLKK0ZaoZo1mWo9Krxxanl6W7dV92PQ2xQLcLMjH2hpOsDNehr1Onmk9VQ==}
+    peerDependencies:
+      expo: '*'
+      react: '*'
+      react-native: '*'
+
+  expo-speech-recognition@58.0.0:
+    resolution: {integrity: sha512-EchjKQWQ0H+rDg8ku1Lk2kOkiRXbSha7xouMYJKSeINMDs+OhVRjoamBSeBxmYmwWOVZLbUVzoDfHPhHcGRv9A==}
     peerDependencies:
       expo: '*'
       react: '*'
@@ -20352,6 +20353,12 @@ snapshots:
       - supports-color
       - typescript
 
+  expo-speech-recognition@58.0.0(expo@58.0.11)(react-native@0.88.0(@babel/core@7.29.7)(@react-native/metro-config@0.88.0(@babel/core@7.29.7)(bufferutil@4.1.0)(utf-8-validate@6.0.6))(@types/react@19.3.0)(bufferutil@4.1.0)(react@19.3.0)(utf-8-validate@6.0.6))(react@19.3.0):
+    dependencies:
+      expo: 58.0.11(1106b1d11fc0fad6d0556b6a93329d99)
+      react: 19.3.0
+      react-native: 0.88.0(@babel/core@7.29.7)(@react-native/metro-config@0.88.0(@babel/core@7.29.7)(bufferutil@4.1.0)(utf-8-validate@6.0.6))(@types/react@19.3.0)(bufferutil@4.1.0)(react@19.3.0)(utf-8-validate@6.0.6)
+
   expo-splash-screen@58.0.9(expo@58.0.11)(typescript@7.0.2):
     dependencies:
       '@expo/config-plugins': 58.0.9(typescript@7.0.2)
@@ -24550,7 +24557,7 @@ snapshots:
       oxlint: 1.85.0(oxlint-tsgolint@7.0.2003)(vite-plus@1.0.0(@types/node@24.12.4)(@vitest/ui@5.0.1)(bufferutil@4.1.0)(esbuild@0.28.2)(jiti@2.7.0)(jsdom@30.1.2(@noble/hashes@1.8.0))(msw@2.12.11(@types/node@24.12.4)(typescript@7.0.2))(terser@5.48.0)(typescript@7.0.2)(unrun@0.2.39)(utf-8-validate@6.0.6)(yaml@2.9.0))
       oxlint-tsgolint: 7.0.2003
       vite: '@voidzero-dev/vite-plus-core@1.0.0(@types/node@24.12.4)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.48.0)(typescript@7.0.2)(unrun@0.2.39)(yaml@2.9.0)'
-      vitest: 5.0.1(@types/node@24.12.4)(@vitest/browser-preview@5.0.1(@voidzero-dev/vite-plus-core@1.0.0(@types/node@24.12.4)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.48.0)(typescript@7.0.2)(unrun@0.2.39)(yaml@2.9.0))(bufferutil@4.1.0)(msw@2.12.11(@types/node@24.12.4)(typescript@7.0.2))(utf-8-validate@6.0.6)(vitest@5.0.1))(@vitest/ui@5.0.1(vitest@5.0.1))(@voidzero-dev/vite-plus-core@1.0.0(@types/node@24.12.4)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.48.0)(typescript@7.0.2)(unrun@0.2.39)(yaml@2.9.0))(jsdom@30.1.0(@noble/hashes@1.8.0))(msw@2.12.11(@types/node@24.12.4)(typescript@7.0.2))
+      vitest: 5.0.1(@types/node@24.12.4)(@vitest/browser-preview@5.0.1)(@vitest/ui@5.0.1(vitest@5.0.1))(@voidzero-dev/vite-plus-core@1.0.0(@types/node@24.12.4)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.48.0)(typescript@7.0.2)(unrun@0.2.39)(yaml@2.9.0))(jsdom@30.1.0(@noble/hashes@1.8.0))(msw@2.12.11(@types/node@24.12.4)(typescript@7.0.2))
     optionalDependencies:
       '@voidzero-dev/vite-plus-darwin-arm64': 1.0.0
       '@voidzero-dev/vite-plus-darwin-x64': 1.0.0
@@ -24704,7 +24711,7 @@ snapshots:
     optionalDependencies:
       vite: '@voidzero-dev/vite-plus-core@1.0.0(@types/node@24.12.4)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.48.0)(typescript@6.0.3)(unrun@0.2.39)(yaml@2.9.0)'
 
-  vitest@5.0.1(@types/node@24.12.4)(@vitest/browser-preview@5.0.1(@voidzero-dev/vite-plus-core@1.0.0(@types/node@24.12.4)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.48.0)(typescript@7.0.2)(unrun@0.2.39)(yaml@2.9.0))(bufferutil@4.1.0)(msw@2.12.11(@types/node@24.12.4)(typescript@7.0.2))(utf-8-validate@6.0.6)(vitest@5.0.1))(@vitest/ui@5.0.1(vitest@5.0.1))(@voidzero-dev/vite-plus-core@1.0.0(@types/node@24.12.4)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.48.0)(typescript@7.0.2)(unrun@0.2.39)(yaml@2.9.0))(jsdom@30.1.0(@noble/hashes@1.8.0))(msw@2.12.11(@types/node@24.12.4)(typescript@7.0.2)):
+  vitest@5.0.1(@types/node@24.12.4)(@vitest/browser-preview@5.0.1)(@vitest/ui@5.0.1(vitest@5.0.1))(@voidzero-dev/vite-plus-core@1.0.0(@types/node@24.12.4)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.48.0)(typescript@7.0.2)(unrun@0.2.39)(yaml@2.9.0))(jsdom@30.1.0(@noble/hashes@1.8.0))(msw@2.12.11(@types/node@24.12.4)(typescript@7.0.2)):
     dependencies:
       '@types/chai': 5.2.3
       '@vitest/mocker': 5.0.1(@voidzero-dev/vite-plus-core@1.0.0(@types/node@24.12.4)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.48.0)(typescript@7.0.2)(unrun@0.2.39)(yaml@2.9.0))(msw@2.12.11(@types/node@24.12.4)(typescript@7.0.2))

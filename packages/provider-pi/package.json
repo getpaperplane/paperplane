@@ -7,14 +7,6 @@
       "types": "./src/client.ts",
       "import": "./src/client.ts"
     },
-    "./settings": {
-      "types": "./src/settings.ts",
-      "import": "./src/settings.ts"
-    },
-    "./server": {
-      "types": "./src/server.ts",
-      "import": "./src/server.ts"
-    },
     "./server/usage": {
       "types": "./src/server/usage.ts",
       "import": "./src/server/usage.ts"
@@ -27,13 +19,10 @@
   "dependencies": {
     "@rove-code/contracts": "workspace:*",
     "@rove-code/provider-core": "workspace:*",
-    "@rove-code/shared": "workspace:*",
     "effect": "catalog:"
   },
   "devDependencies": {
-    "@effect/platform-node": "catalog:",
     "@effect/vitest": "catalog:",
-    "@rove-code/provider-testing": "workspace:*",
     "@types/node": "catalog:",
     "vite-plus": "catalog:"
   }

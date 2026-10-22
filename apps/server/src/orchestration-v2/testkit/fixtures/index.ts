@@ -655,7 +655,7 @@ export const ORCHESTRATOR_REPLAY_FIXTURES: ReadonlyArray<OrchestratorReplayFixtu
       },
       {
         driver: ProviderDriverKind.make("pi"),
-        transcriptFile: new URL("./simple/pi_transcript.ndjson", import.meta.url),
+        transcriptFile: new URL("./simple/pi_sdk_transcript.ndjson", import.meta.url),
         modelSelection: PI_MODEL_SELECTION,
         assertOutput: assertPiSimpleOutput,
       },
@@ -1232,7 +1232,7 @@ export const ORCHESTRATOR_REPLAY_FIXTURES: ReadonlyArray<OrchestratorReplayFixtu
       },
       {
         driver: ProviderDriverKind.make("pi"),
-        transcriptFile: new URL("./multi_turn/pi_transcript.ndjson", import.meta.url),
+        transcriptFile: new URL("./multi_turn/pi_sdk_transcript.ndjson", import.meta.url),
         modelSelection: PI_MODEL_SELECTION,
         assertOutput: assertPiMultiTurnOutput,
       },
@@ -1303,7 +1303,7 @@ export const ORCHESTRATOR_REPLAY_FIXTURES: ReadonlyArray<OrchestratorReplayFixtu
     providers: [
       {
         driver: ProviderDriverKind.make("pi"),
-        transcriptFile: new URL("./pi_compaction/pi_transcript.ndjson", import.meta.url),
+        transcriptFile: new URL("./pi_compaction/pi_sdk_transcript.ndjson", import.meta.url),
         modelSelection: PI_MODEL_SELECTION,
         assertOutput: assertPiCompactionOutput,
       },
@@ -1315,7 +1315,10 @@ export const ORCHESTRATOR_REPLAY_FIXTURES: ReadonlyArray<OrchestratorReplayFixtu
     providers: [
       {
         driver: ProviderDriverKind.make("pi"),
-        transcriptFile: new URL("./provider_thread_resume/pi_transcript.ndjson", import.meta.url),
+        transcriptFile: new URL(
+          "./provider_thread_resume/pi_sdk_transcript.ndjson",
+          import.meta.url,
+        ),
         modelSelection: PI_MODEL_SELECTION,
         assertOutput: assertPiProviderThreadResumeOutput,
       },
@@ -1516,7 +1519,7 @@ export const ORCHESTRATOR_REPLAY_FIXTURES: ReadonlyArray<OrchestratorReplayFixtu
       },
       {
         driver: ProviderDriverKind.make("pi"),
-        transcriptFile: new URL("./message_steering/pi_transcript.ndjson", import.meta.url),
+        transcriptFile: new URL("./message_steering/pi_sdk_transcript.ndjson", import.meta.url),
         modelSelection: PI_MODEL_SELECTION,
         assertOutput: assertPiMessageSteeringOutput,
       },
@@ -1630,7 +1633,10 @@ export const ORCHESTRATOR_REPLAY_FIXTURES: ReadonlyArray<OrchestratorReplayFixtu
       },
       {
         driver: ProviderDriverKind.make("pi"),
-        transcriptFile: new URL("./turn_interrupt_mid_tool/pi_transcript.ndjson", import.meta.url),
+        transcriptFile: new URL(
+          "./turn_interrupt_mid_tool/pi_sdk_transcript.ndjson",
+          import.meta.url,
+        ),
         modelSelection: PI_MODEL_SELECTION,
         assertOutput: assertTurnInterruptMidToolPiOutput,
       },
@@ -1670,7 +1676,7 @@ export const ORCHESTRATOR_REPLAY_FIXTURES: ReadonlyArray<OrchestratorReplayFixtu
       },
       {
         driver: ProviderDriverKind.make("pi"),
-        transcriptFile: new URL("./thread_rollback/pi_transcript.ndjson", import.meta.url),
+        transcriptFile: new URL("./thread_rollback/pi_sdk_transcript.ndjson", import.meta.url),
         modelSelection: PI_MODEL_SELECTION,
         assertOutput: assertPiThreadRollbackOutput,
       },
@@ -1698,7 +1704,7 @@ export const ORCHESTRATOR_REPLAY_FIXTURES: ReadonlyArray<OrchestratorReplayFixtu
       {
         driver: ProviderDriverKind.make("pi"),
         transcriptFile: new URL(
-          "./thread_rollback_after_stop/pi_transcript.ndjson",
+          "./thread_rollback_after_stop/pi_sdk_transcript.ndjson",
           import.meta.url,
         ),
         modelSelection: PI_MODEL_SELECTION,

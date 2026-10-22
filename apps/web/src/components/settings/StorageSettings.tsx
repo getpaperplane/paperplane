@@ -3,6 +3,11 @@ import type {
   StorageCleanupSettings,
   WorktreeCleanupRules,
 } from "@rove-code/contracts";
+import {
+  describeStorageCleanupCounts,
+  hasEnabledCleanupRules,
+  storageCleanupEntryName,
+} from "@rove-code/client-runtime/environment-admin";
 import { resolveWorktreeCleanup } from "@rove-code/shared/projectSettings";
 import { useMemo, useRef, useState } from "react";
 import { useAtomValue } from "@effect/atom-react";
@@ -198,14 +203,7 @@ function CleanupResults({
   return (
     <>
       {report.entries.map((entry, index) => {
-        const name =
-          entry.kind === "worktree"
-            ? ((entry.threadId === null
-                ? entry.path
-                : entry.path?.split(/[\\/]/).findLast(Boolean)) ?? "Worktrees")
-            : entry.kind === "logs"
-              ? "Rotated logs"
-              : "Browser artifacts";
+        const name = storageCleanupEntryName(entry);
         return (
           <SettingsRow
             key={`${entry.path ?? entry.kind}:${entry.threadId ?? index}`}
@@ -288,25 +286,11 @@ function CleanupSection() {
       [connectedEnvironments],
     ),
   );
-  const hasRules = supported.some((environment) => {
-    const settings = environment.serverConfig?.settings;
-    if (!settings) return false;
-    const enabled = (rules: WorktreeCleanupRules) =>
-      rules.worktreeAfterDays !== null ||
-      rules.worktreeSettledAfterDays !== null ||
-      rules.worktreeOnMerge ||
-      rules.worktreeOnDelete ||
-      rules.worktreeUnchanged;
-    return (
-      settings.storageCleanup.browserArtifactsAfterDays !== null ||
-      settings.storageCleanup.logsAfterDays !== null ||
-      enabled(resolveWorktreeCleanup(settings, null)) ||
-      Object.values(settings.projectSettingsOverrides).some(
-        (override) =>
-          override.worktreeCleanup?.mode === "custom" && enabled(override.worktreeCleanup.rules),
-      )
-    );
-  });
+  const hasRules = supported.some(
+    (environment) =>
+      environment.serverConfig?.settings !== undefined &&
+      hasEnabledCleanupRules(environment.serverConfig.settings),
+  );
   if (supported.length === 0) return null;
   const summaries = supported.map((environment) => {
     const query = state.find((entry) => entry.environmentId === environment.environmentId);
@@ -315,9 +299,7 @@ function CleanupSection() {
       environment,
       report,
       label: settingsScopeEnvironmentLabel(environment, connectedEnvironments),
-      counts: report
-        ? `${report.counts.removed} removed, ${report.counts.kept} kept${report.counts.failed > 0 ? `, ${report.counts.failed} failed` : ""}`
-        : "",
+      counts: report ? describeStorageCleanupCounts(report.counts) : "",
       description: report
         ? `Last run ${formatRelativeTimeLabel(report.finishedAt)}. ${formatBytes(report.bytesFreed)} recovered.${report.counts.failed > 0 ? ` ${report.counts.failed} ${report.counts.failed === 1 ? "item" : "items"} couldn't be removed.` : ""}`
         : query?.failed

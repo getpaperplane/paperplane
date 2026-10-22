@@ -51,14 +51,14 @@ Most contributions are made through Rove Code itself, often remotely. Be careful
 - **project** means an environment-local workspace record rooted at a directory.
 - **thread** means the durable conversation and work history.
 - **turn** means one user-to-agent cycle, including follow-up work such as checkpointing.
-- **Rove Code home** means the base data directory, `~/.rove-code` by default. Runtime state lives in its `userdata` directory. The upstream install's `~/.rove` is a different app; leave it alone.
+- **Rove Code home** means the base data directory, `~/.rove-code` by default. Runtime state lives in its `userdata` directory. A linked worktree's gitignored `.rove` directory is separate dev state, not the Rove Code home.
 
 Provider-integration terms (driver, thread memory, sterile Pi, fork-as-rollback) are defined in [`CONTEXT.md`](CONTEXT.md). The full glossary with file links is in [`docs/internals/glossary.md`](docs/internals/glossary.md).
 
 ## Three ways to hurt yourself
 
 1. **Killing by pattern.** Never use `pkill -f` or `pgrep | kill`, and never `kill` a PID you found by matching a name, path, or worktree string. Your own agent process has this worktree's path in its argv, and this machine runs several other dev servers. Kill only a PID you captured at spawn, or the process that owns your port after confirming its working directory is your worktree. On Linux, find that owner with `ss -H -ltnp` and `/proc/<pid>/cwd`. On macOS, use `lsof -nP -iTCP:<port> -sTCP:LISTEN` and `lsof -a -p <pid> -d cwd`.
-2. **Writing to the live install.** `~/.rove-code/userdata` is the developer's real Rove Code database, in use while you work. You may read and copy it (see [Test data](#test-data)). Never start a server against it, open it read-write, or clean it up. The same rule applies to `~/.rove/userdata` if an upstream install exists.
+2. **Writing to the live install.** `~/.rove-code/userdata` is the developer's real Rove Code database, in use while you work. You may read and copy it (see [Test data](#test-data)). Never start a server against it, open it read-write, or clean it up.
 3. **Baking in origins.** Never set `VITE_HTTP_URL` or `VITE_WS_URL` for dev. Dev is single-origin, and Vite proxies `/api`, `/ws`, `/oauth`, and `/.well-known`. Setting these variables bakes localhost into the bundle and silently breaks every remote browser.
 
 ## Hit every surface

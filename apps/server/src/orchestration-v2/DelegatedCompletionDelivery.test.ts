@@ -820,6 +820,7 @@ const seedRestartCancelledChild = (input: {
   readonly name: string;
   readonly completionWake: "always" | "settled_only";
   readonly continuationPending: boolean;
+  readonly preparedUpdate?: true;
   /** "completed" seeds a settled turn whose background work the restart cancelled. */
   readonly runStatus?: "cancelled" | "completed";
   /** Background work the restart cancelled on the child's run. */
@@ -924,7 +925,13 @@ const seedRestartCancelledChild = (input: {
               id: `effect:restart-continuation:${childRunId}`,
               commandId: reconcileCommandId(input.name),
               threadId: childThreadId,
-              request: { type: "provider-runtime.continue", sourceRunId: childRunId },
+              request: {
+                type: "provider-runtime.continue",
+                sourceRunId: childRunId,
+                ...(input.preparedUpdate
+                  ? ({ requestedByUpdate: true, waitForRestart: true } as const)
+                  : {}),
+              },
             },
           ]
         : [],
@@ -1450,6 +1457,43 @@ it.layer(layerTest)("delegated tasks across a server restart", (it) => {
       const settled = yield* orchestrator.getThreadProjection(threadId);
       const task = settled.subagents.find((row) => row.id === child.taskId);
       assert.equal(task?.status, "cancelled");
+      assert.equal(task?.completionDelivery?.state, "claimed");
+    }),
+  );
+
+  it.effect("delivers a naturally completed child while update consent is only prepared", () =>
+    Effect.gen(function* () {
+      const orchestrator = yield* Orchestrator.OrchestratorV2;
+      const now = yield* DateTime.now;
+      const threadId = ThreadId.make("thread:prepared-update-parent");
+      const projectId = ProjectId.make("project:prepared-update-parent");
+      const runId = RunId.make("run:prepared-update-parent");
+      const rootNodeId = NodeId.make("node:prepared-update-parent");
+      yield* seedParentWithTerminalTask({
+        threadId,
+        projectId,
+        runId,
+        rootNodeId,
+        taskId: NodeId.make("node:prepared-update-parent-settled"),
+        deliveryState: "delivered",
+        now,
+      });
+      const child = yield* seedRestartCancelledChild({
+        parentThreadId: threadId,
+        projectId,
+        parentRunId: runId,
+        rootNodeId,
+        name: "prepared-update-child",
+        completionWake: "always",
+        continuationPending: true,
+        preparedUpdate: true,
+        runStatus: "completed",
+        now,
+      });
+      yield* orchestrator.recoverDelegatedTasks;
+      const settled = yield* orchestrator.getThreadProjection(threadId);
+      const task = settled.subagents.find((row) => row.id === child.taskId);
+      assert.equal(task?.status, "completed");
       assert.equal(task?.completionDelivery?.state, "claimed");
     }),
   );

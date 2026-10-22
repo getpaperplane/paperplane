@@ -78,7 +78,7 @@ export const BUILT_IN_DRIVERS: ReadonlyArray<AnyProviderDriver<BuiltInDriversEnv
   AcpRegistryDriver,
 ];
 
-/** Native Pi's SDK settings own its agent directory, independently of the RPC Pi driver. */
+/** Native Pi's SDK settings own its agent directory. */
 export const resolvePiUsageAgentDir = Effect.fn("resolvePiUsageAgentDir")(function* (
   instance: Pick<ProviderUsageInstance<{ readonly agentDir?: string }>, "config" | "environment">,
 ) {

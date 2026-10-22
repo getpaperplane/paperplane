@@ -27,6 +27,11 @@ import {
 } from "./components/SettingsEnvironmentFilterHeader";
 import { BranchNamingSettings } from "./components/BranchNamingSettings";
 import { DatabaseStorageNotice } from "./components/DatabaseStorageNotice";
+import { OtlpEndpointSettings } from "./components/OtlpEndpointSettings";
+import {
+  StorageCleanupSettings,
+  ProjectWorktreeCleanupSettings,
+} from "./components/StorageCleanupSettings";
 import { SettingsChoiceRow } from "./components/SettingsChoiceRow";
 import { SettingsSection } from "./components/SettingsSection";
 import { SettingsSwitchRow } from "./components/SettingsSwitchRow";
@@ -60,7 +65,7 @@ const PAGE_PROJECT_KEYS: Record<SettingsPage, readonly ProjectScopedServerSettin
     "branchNameInstructions",
   ],
   "agent-behavior": ["responseStreamingMode", "enableAgentBrowserAccess"],
-  maintenance: ["continueThreadsAfterServerUpdate"],
+  maintenance: ["continueThreadsAfterServerUpdate", "worktreeCleanup"],
 };
 
 const SUBMODULE_CHOICES: ReadonlyArray<{
@@ -195,7 +200,7 @@ function ServerSettingsDetail(props: { readonly page: SettingsPage }) {
       setPendingWrites((count) => count - 1);
     });
   };
-  const clearProjectOverrides = () => {
+  const clearProjectOverrides = (keys = PAGE_PROJECT_KEYS[props.page]) => {
     if (
       writeInFlight.current ||
       !targets.every((target) =>
@@ -203,7 +208,7 @@ function ServerSettingsDetail(props: { readonly page: SettingsPage }) {
       )
     )
       return;
-    const writes = planMobileScopedSettingsClear(targets, PAGE_PROJECT_KEYS[props.page]);
+    const writes = planMobileScopedSettingsClear(targets, keys);
     if (writes.length === 0) return;
     writeInFlight.current = true;
     setPendingTargets(targets);
@@ -272,7 +277,7 @@ function ServerSettingsDetail(props: { readonly page: SettingsPage }) {
                   supportsOverrides={supportsProjectOverrides}
                   pending={pendingWrites > 0}
                   disabled={!canWriteSettings}
-                  onClear={clearProjectOverrides}
+                  onClear={() => clearProjectOverrides()}
                 />
               ) : null}
               {props.page === "new-threads" ? (
@@ -432,6 +437,14 @@ function ServerSettingsDetail(props: { readonly page: SettingsPage }) {
 
               {props.page === "maintenance" ? (
                 <>
+                  {projectSelected ? (
+                    <ProjectWorktreeCleanupSettings
+                      targets={displayTargets}
+                      disabled={disabled}
+                      write={write}
+                      inherit={() => clearProjectOverrides(["worktreeCleanup"])}
+                    />
+                  ) : null}
                   {!projectSelected &&
                     selectedTargets
                       .filter(
@@ -461,6 +474,20 @@ function ServerSettingsDetail(props: { readonly page: SettingsPage }) {
                         />
                       ))}
                     </SettingsSection>
+                  ) : null}
+                  {!projectSelected ? (
+                    <>
+                      <StorageCleanupSettings
+                        targets={selectedTargets}
+                        disabled={disabled}
+                        write={write}
+                      />
+                      {selectedTargets.length === 1 &&
+                      selectedTargets[0]!.serverConfig.environment.capabilities
+                        .otlpEndpointCheck === true ? (
+                        <OtlpEndpointSettings target={selectedTargets[0]!} />
+                      ) : null}
+                    </>
                   ) : null}
                   <SettingsSection title="Privacy">
                     <SettingsSwitchRow

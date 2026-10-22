@@ -23,15 +23,13 @@ function field(value: unknown, key: string): unknown {
 
 function outboundOfType(transcript: ProviderReplayTranscript, type: string) {
   return transcript.entries.flatMap((entry) =>
-    entry.type === "expect_outbound" && field(entry.frame, "type") === type ? [entry.frame] : [],
+    entry.type === "expect_outbound" && field(entry.frame, "method") === type ? [entry.frame] : [],
   );
 }
 
 /**
- * Pi rolls back by re-rooting its session tree with `fork(entryId)` at the
- * first user entry of the earliest discarded turn. That id is the discarded
- * turn's strong native ref, captured from `get_entries` when the turn settled.
- * The fork writes a new session file, and the next turn resumes that file.
+ * SDK rollback navigates to the parent of the earliest discarded user entry.
+ * It persists the new leaf in the same session file, without a CLI fork or reload.
  */
 export function assertPiThreadRollbackOutput(
   result: OrchestratorV2ScenarioResult,
@@ -46,7 +44,7 @@ export function assertPiThreadRollbackOutput(
   const projection = projectionFor(result, transcript.scenario);
   assertSemanticProjectionIntegrity(projection);
   assertRunOrdinals(projection, [1, 2, 3]);
-  const turn = ["user_message", "reasoning", "assistant_message", "checkpoint"] as const;
+  const turn = ["user_message", "assistant_message", "reasoning", "checkpoint"] as const;
   assertTurnItemTypeSequence(projection, [...turn, ...turn, ...turn]);
   assertVisibleTurnItemTypeSequence(projection, [...turn, ...turn]);
   assertUserMessagesInclude(projection, [
@@ -64,17 +62,15 @@ export function assertPiThreadRollbackOutput(
   assert.lengthOf(forks, 1, "rollback must fork the Pi session tree exactly once");
   const discardedTurn = projection.providerTurns.find((providerTurn) => providerTurn.ordinal === 2);
   assert.equal(discardedTurn?.nativeTurnRef?.strength, "strong");
-  assert.equal(field(forks[0], "entryId"), discardedTurn?.nativeTurnRef?.nativeId);
+  const forkArgs = field(forks[0], "args");
+  assert.deepEqual(forkArgs, ["a1"], "navigate to the parent of discarded user entry u2");
+  assert.equal(discardedTurn?.nativeTurnRef?.nativeId, "u2");
 
-  // The fork moved the thread to a new session file; the post-rollback turn
-  // resumes that file, never the pre-rollback one.
+  // The SDK navigates the same file and retains one provider thread.
   const [providerThread] = projection.providerThreads;
   assert.lengthOf(projection.providerThreads, 1);
-  assert.equal(providerThread?.nativeThreadRef?.nativeId, "/pi-sessions/session-2.jsonl");
-  assert.deepEqual(
-    outboundOfType(transcript, "switch_session").map((frame) => field(frame, "sessionPath")),
-    ["/pi-sessions/session-2.jsonl"],
-  );
+  assert.equal(providerThread?.nativeThreadRef?.nativeId, "/pi-sessions/session-1.jsonl");
+  assert.lengthOf(outboundOfType(transcript, "createSession"), 1);
 
   // The model has only the surviving branch: the discarded exchange is gone.
   const finalAnswer = projection.turnItems.findLast((item) => item.type === "assistant_message");

@@ -483,6 +483,7 @@ const config: ExpoConfig = {
     // target (which must exist before the compile phase can be attached).
     ...(!isIosPersonalTeamBuild ? ["./plugins/withWidgetLogoAsset.cjs", widgetsPlugin] : []),
     "./plugins/withAndroidCleartextTraffic.cjs",
+    "./plugins/withAndroidSpeechRecognition.cjs",
     "./plugins/withAndroidGradleHeap.cjs",
     "./plugins/withAndroidInputBackground.cjs",
     "./plugins/withAndroidModernPopupMenu.cjs",

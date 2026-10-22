@@ -1,6 +1,14 @@
 import type { EnvironmentId } from "@rove-code/contracts";
 import { buildProjectGroups } from "@rove-code/client-runtime/state/project-grouping";
-import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useMemo,
+  useRef,
+  useCallback,
+  useState,
+  type ReactNode,
+} from "react";
 
 import { useEnvironments, type EnvironmentPresentation } from "../../state/environments";
 import { useProjects } from "../../state/entities";
@@ -26,11 +34,20 @@ const SettingsEnvironmentFilterContext = createContext<{
   readonly selectableProjectGroups: ReturnType<typeof buildProjectGroups>;
   readonly selectedProjectKey: string | null;
   readonly selectProject: (projectKey: string | null) => void;
+  readonly setSwitchGuard: (guard: ((proceed: () => void) => void) | null) => void;
   readonly selectAll: () => void;
   readonly toggleEnvironment: (environmentId: EnvironmentId) => void;
 } | null>(null);
 
 export function SettingsEnvironmentFilterProvider(props: { readonly children: ReactNode }) {
+  const switchGuard = useRef<((proceed: () => void) => void) | null>(null);
+  const setSwitchGuard = useCallback((guard: ((proceed: () => void) => void) | null) => {
+    switchGuard.current = guard;
+  }, []);
+  const switchSelection = useCallback((proceed: () => void) => {
+    if (switchGuard.current) switchGuard.current(proceed);
+    else proceed();
+  }, []);
   const { environments } = useEnvironments();
   const projects = useProjects();
   const groupingSettings = useMobileProjectGroupingSettings();
@@ -70,11 +87,14 @@ export function SettingsEnvironmentFilterProvider(props: { readonly children: Re
       projectGroups,
       selectableProjectGroups,
       selectedProjectKey,
-      selectProject: setSelectedProjectKey,
-      selectAll: () => setSelectedIds(null),
+      setSwitchGuard,
+      selectProject: (key: string | null) => switchSelection(() => setSelectedProjectKey(key)),
+      selectAll: () => switchSelection(() => setSelectedIds(null)),
       toggleEnvironment: (environmentId: EnvironmentId) =>
-        setSelectedIds((current) =>
-          toggleSettingsEnvironment(current, availableTargets, environmentId),
+        switchSelection(() =>
+          setSelectedIds((current) =>
+            toggleSettingsEnvironment(current, availableTargets, environmentId),
+          ),
         ),
     }),
     [
@@ -84,6 +104,8 @@ export function SettingsEnvironmentFilterProvider(props: { readonly children: Re
       projectGroups,
       selectableProjectGroups,
       selectedProjectKey,
+      setSwitchGuard,
+      switchSelection,
     ],
   );
   return (

@@ -9,7 +9,11 @@ import {
   type ProviderInteractionMode,
   type ServerSettings,
 } from "@rove-code/contracts";
-import { parseMaxDeliveryAge } from "@rove-code/client-runtime/scheduled-task-webhook";
+import {
+  WEBHOOK_SIGNATURE_DEFAULTS,
+  parseMaxDeliveryAge,
+  webhookSignatureForUpsert,
+} from "@rove-code/client-runtime/scheduled-task-webhook";
 
 import {
   resolveProjectSettings,
@@ -83,29 +87,20 @@ export interface DraftState {
   readonly maxDeliveryAgeMinutes: string;
 }
 
-/** GitHub's signature settings, the most common sender. */
-export const WEBHOOK_SIGNATURE_DEFAULTS = {
-  signatureHeader: "x-hub-signature-256",
-  signatureEncoding: "hex",
-  signaturePrefix: "sha256=",
-} as const;
-
 /** Null when the draft's webhook age limit is invalid; the caller reports it and does not save. */
 export function scheduleFromDraft(draft: DraftState): ScheduledTaskUpsertSchedule | null {
   if (draft.scheduleMode === "webhook") {
     const maxDeliveryAgeMinutes = parseMaxDeliveryAge(draft.maxDeliveryAgeMinutes);
     if (maxDeliveryAgeMinutes === undefined) return null;
-    const secret = draft.signatureSecret.trim();
     return {
       type: "webhook",
-      signature: draft.signatureEnabled
-        ? {
-            header: draft.signatureHeader.trim(),
-            encoding: draft.signatureEncoding,
-            prefix: draft.signaturePrefix,
-            ...(secret ? { secret } : {}),
-          }
-        : null,
+      signature: webhookSignatureForUpsert({
+        enabled: draft.signatureEnabled,
+        header: draft.signatureHeader,
+        encoding: draft.signatureEncoding,
+        prefix: draft.signaturePrefix,
+        secret: draft.signatureSecret,
+      }),
       maxDeliveryAgeMinutes,
     };
   }

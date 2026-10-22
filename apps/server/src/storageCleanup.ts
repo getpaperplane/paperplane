@@ -45,6 +45,7 @@ import * as Settings from "./serverSettings.ts";
 import * as TerminalManager from "./terminal/Manager.ts";
 import { isFilesystemRoot, managedWorktreesDirectories } from "./worktreesDirectory.ts";
 import * as GitVcsDriver from "./vcs/GitVcsDriver.ts";
+import { stopWorktreeProcessesAfterRemoval } from "./vcs/worktreeProcesses.ts";
 import { withWorkspaceLease } from "./workspace/workspaceLease.ts";
 import * as HostProcess from "@rove-code/shared/HostProcess";
 import * as NodeSqliteClient from "@rove-code/shared/nodeSqliteClient";
@@ -847,10 +848,15 @@ const make = Effect.gen(function* () {
         // edit arrives after our last status check.
         if (settings.worktreeKeepWhen === "tracked-changes")
           yield* cleanupGit(worktreePath, ["clean", "-ffdx"], "git clean");
+        const resolvedPath = yield* fs.realPath(worktreePath);
         yield* cleanupGit(
           project.workspaceRoot,
           ["-c", "status.showUntrackedFiles=normal", "worktree", "remove", worktreePath],
           "git worktree remove",
+        );
+        yield* stopWorktreeProcessesAfterRemoval(worktreePath, resolvedPath).pipe(
+          Effect.provideService(FileSystem.FileSystem, fs),
+          Effect.provideService(HostProcess.Platform, yield* HostProcess.Platform),
         );
         entries.push({ ...entry, outcome: "removed", reason: sentence(removalReason), bytes });
         yield* gitManager.invalidateStatus(project.workspaceRoot);

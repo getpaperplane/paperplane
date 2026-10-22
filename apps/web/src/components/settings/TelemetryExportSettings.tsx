@@ -1,5 +1,11 @@
 import { useAtomValue } from "@effect/atom-react";
-import type { OtlpEndpointCheckResult, OtlpSignal } from "@rove-code/contracts";
+import type { OtlpSignal } from "@rove-code/contracts";
+import {
+  describeOtlpEndpointStatus,
+  isOtlpHttpUrl,
+  isOtlpEndpointInputValid,
+  type OtlpEndpointCheck,
+} from "@rove-code/client-runtime/environment-admin";
 import { useEffect, useEffectEvent, useState } from "react";
 
 import { serverEnvironment } from "../../state/server";
@@ -21,24 +27,20 @@ const SIGNALS = [
 
 type SignalKey = (typeof SIGNALS)[number]["key"];
 
-/** The latest check for a signal; it describes the field only while `url` is still its value. */
-type EndpointCheck = { readonly url: string; readonly result: OtlpEndpointCheckResult | null };
+type EndpointCheck = OtlpEndpointCheck;
+const isHttpUrl = isOtlpHttpUrl;
 
-const isHttpUrl = (url: string) => /^https?:\/\/./i.test(url);
+const STATUS_DOTS = {
+  off: "bg-muted-foreground/40",
+  idle: "bg-muted-foreground/40",
+  pending: "bg-warning",
+  success: "bg-success",
+  failure: "bg-destructive",
+} as const;
 
 function endpointStatus(url: string, check: EndpointCheck | undefined) {
-  if (url === "") return { label: "Off", dot: "bg-muted-foreground/40" };
-  if (check?.url !== url) return { label: "Not checked", dot: "bg-muted-foreground/40" };
-  const { result } = check;
-  if (result === null) return { label: "Checking…", dot: "bg-warning" };
-  switch (result._tag) {
-    case "Accepted":
-      return { label: `Connected · ${Math.round(result.latencyMs)} ms`, dot: "bg-success" };
-    case "Rejected":
-      return { label: `Rejected · HTTP ${result.status}`, dot: "bg-destructive" };
-    case "Unreachable":
-      return { label: result.timedOut ? "Timed out" : "Unreachable", dot: "bg-destructive" };
-  }
+  const { label, tone } = describeOtlpEndpointStatus(url, check);
+  return { label, dot: STATUS_DOTS[tone] };
 }
 
 export function TelemetryExportSettings() {
@@ -84,6 +86,7 @@ function TelemetryExportForm() {
   const values = { ...saved, ...draft };
   const changedSignals = SIGNALS.filter(({ key }) => values[key].trim() !== saved[key]);
   const changed = changedSignals.length > 0;
+  const valid = changedSignals.every(({ key }) => isOtlpEndpointInputValid(values[key]));
   const running = environment?.serverConfig?.observability;
 
   const sendCheck = async (key: SignalKey, signal: OtlpSignal, url: string) => {
@@ -122,7 +125,7 @@ function TelemetryExportForm() {
         className="grid gap-4 px-4 py-4 sm:px-5"
         onSubmit={async (event) => {
           event.preventDefault();
-          if (!environment || saving) return;
+          if (!environment || saving || !valid) return;
           setSaving(true);
           setMessage(null);
           try {
@@ -231,7 +234,7 @@ function TelemetryExportForm() {
             >
               Discard
             </Button>
-            <Button type="submit" size="xs" disabled={!changed || saving || !canEdit}>
+            <Button type="submit" size="xs" disabled={!changed || saving || !canEdit || !valid}>
               {saving ? "Saving…" : "Save"}
             </Button>
           </div>

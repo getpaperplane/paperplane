@@ -258,6 +258,7 @@ export const make = Effect.gen(function* () {
       environmentThemes: true,
       usageLimitSources: true,
       usagePriceOverrides: true,
+      piWorkloadProtection: true,
       usageModelAliases: true,
       threadPinning: true,
       threadPinReorder: true,
@@ -275,10 +276,8 @@ export const make = Effect.gen(function* () {
       projectCloneTracking: true,
       ...(serverSelfUpdate === null ? {} : { serverSelfUpdate }),
       ...(serverInstallation === null ? {} : { serverInstallation }),
-      // V2 restart recovery uses the environment-owned opt-in. The old
-      // per-update request flag is not wired into the V2 update RPC path.
       ...(serverSelfUpdate === "boot-service" || desktopAppUpdate
-        ? { serverSelfUpdateProgress: true }
+        ? { serverSelfUpdateProgress: true, serverUpdateThreadContinuation: true }
         : {}),
       ...(desktopAppUpdate ? { desktopAppUpdate: true } : {}),
       serverBrowser: true,

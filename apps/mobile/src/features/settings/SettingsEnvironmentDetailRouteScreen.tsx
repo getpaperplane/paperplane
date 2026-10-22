@@ -26,6 +26,7 @@ import { EnvironmentRoutesSection } from "./EnvironmentRoutesSection";
 import { SettingsActionRow } from "./components/SettingsActionRow";
 import { SettingsScreen } from "./components/SettingsScreen";
 import { RemoteSandboxesSection } from "./components/RemoteSandboxesSection";
+import { EnvironmentIconSettings } from "./components/EnvironmentIconSettings";
 import { HostHealthSection } from "./components/HostHealthSection";
 import { SettingsSection } from "./components/SettingsSection";
 import {
@@ -114,6 +115,27 @@ function EnvironmentDetail({ environmentId }: { readonly environmentId: Environm
     const targetVersion = checkedRelease?.targetVersion;
     if (disabled || !targetVersion || !capabilities || !supportsEnvironmentUpdate(capabilities))
       return;
+    const performUpdate = (continueRunningThreads: boolean) =>
+      void run("server", async () => {
+        if (
+          AsyncResult.isFailure(
+            appAtomRegistry.get(environmentSession.sessionStateAtom(environmentId)),
+          ) ||
+          !canMaintainEnvironment(
+            appAtomRegistry.get(environmentSession.sessionStateValueAtom(environmentId)),
+            connected,
+          )
+        )
+          return;
+        const input =
+          capabilities.serverUpdateThreadContinuation && continueRunningThreads
+            ? { targetVersion, continueRunningThreads: true }
+            : { targetVersion };
+        const result = await updateServer({ environmentId, input });
+        if (AsyncResult.isFailure(result)) throw squashAtomCommandFailure(result);
+        setRelease(null);
+        setNotice(`Updated to ${result.value.targetVersion}.`);
+      });
     Dialog.alert(
       `Update ${environment?.environmentLabel ?? "environment"}?`,
       `Install Rove Code ${targetVersion}. ${capabilities.serverSelfUpdate === "desktop-managed" ? "The desktop app will close and relaunch." : "The server will restart and reconnect."} Running threads may be interrupted.`,
@@ -121,33 +143,12 @@ function EnvironmentDetail({ environmentId }: { readonly environmentId: Environm
         { text: "Cancel", style: "cancel" },
         {
           text: "Update",
-          onPress: () =>
-            void run("server", async () => {
-              if (
-                AsyncResult.isFailure(
-                  appAtomRegistry.get(environmentSession.sessionStateAtom(environmentId)),
-                ) ||
-                !canMaintainEnvironment(
-                  appAtomRegistry.get(environmentSession.sessionStateValueAtom(environmentId)),
-                  connected,
-                )
-              )
-                return;
-              const result = await updateServer({
-                environmentId,
-                input: {
-                  targetVersion,
-                  ...(capabilities.serverUpdateThreadContinuation &&
-                  config?.settings.continueThreadsAfterServerUpdate
-                    ? { continueRunningThreads: true }
-                    : {}),
-                },
-              });
-              if (AsyncResult.isFailure(result)) throw squashAtomCommandFailure(result);
-              setRelease(null);
-              setNotice(`Updated to ${result.value.targetVersion}.`);
-            }),
+          onPress: () => performUpdate(config?.settings.continueThreadsAfterServerUpdate === true),
         },
+        ...(capabilities.serverUpdateThreadContinuation &&
+        !config?.settings.continueThreadsAfterServerUpdate
+          ? [{ text: "Update and continue threads", onPress: () => performUpdate(true) }]
+          : []),
       ],
     );
   }
@@ -209,6 +210,9 @@ function EnvironmentDetail({ environmentId }: { readonly environmentId: Environm
                 })
               }
             />
+            {connected && capabilities?.environmentIcon === true ? (
+              <EnvironmentIconSettings environmentId={environmentId} serverConfig={config} />
+            ) : null}
             {connected && capabilities?.hostHealth === true ? (
               <HostHealthSection environmentId={environmentId} />
             ) : null}

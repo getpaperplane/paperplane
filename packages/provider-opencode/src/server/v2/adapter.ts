@@ -184,7 +184,7 @@ const OpenCode2ProviderCapabilities = {
   },
   checkpointing: {
     appCanCheckpointFilesystem: true,
-    supportsNestedCheckpointScopes: true,
+    supportsNestedCheckpointScopes: false,
     providerCanRollbackConversation: true,
     providerRollbackReturnsSnapshot: true,
     providerCanReadConversationSnapshot: true,

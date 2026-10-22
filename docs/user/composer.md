@@ -189,6 +189,23 @@ microphone.
 Transcription runs on your device. Rove Code deletes the temporary audio after
 transcription or cancellation; only the message text is sent when you submit.
 
+### Android
+
+On Android, the microphone dictates live through the phone's speech service
+(usually Google). Tap it, speak, then tap again to insert the text. Depending on
+the device and language, recognition may be sent to that service. Rove Code stores
+no audio. Allow microphone and speech access when asked; if you denied it
+permanently, the error offers a shortcut to system settings.
+
+## Voice input in the browser
+
+In browsers that support speech recognition (Chrome, Edge, Safari), the composer
+shows a microphone next to **Attach files**. Tap it, speak, then tap again to
+insert the text at your cursor; it never sends the message. The first use asks you
+to confirm that the browser sends your audio to its vendor's speech service
+(Rove Code never receives it). The button is hidden in Firefox and the desktop app,
+where recognition is unavailable.
+
 ## Queued messages
 
 On web and desktop, the composer shows **Interrupt** while the agent is working and the draft is

@@ -51,7 +51,14 @@ never receives this build's migration at that id. After repairing supported V2 p
 requested migration at id 55 or later without its expected name. Earlier name clashes remain
 warnings for compatibility with site-local migrations. There is no safe id range for a fork inside
 this ledger: any id at or below a future upstream id masks it forever, so fork schema changes belong
-in a separate migration table or outside the migrator entirely.
+in a separate migration table or outside the migrator entirely. The ledger recognizes shipped Rove
+names at 55–57; the three removed V1 feature migrations were dropped, not reserved. Upstream ids
+need collision review before adoption. V1 migration 56 (nullable `projection_threads.project_id`)
+must not be re-registered.
+
+Legacy threads with a null or blank project import under an existing project matching their
+`workspace_path`, or a new project named after that directory. Threads without a usable absolute
+path are skipped with a counted warning; their V1 rows stay in `state.sqlite`.
 
 ## Retiring copied v1 data
 

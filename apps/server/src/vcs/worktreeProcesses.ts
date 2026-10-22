@@ -25,8 +25,14 @@ function parseUnifiedCgroup(contents: string): string | undefined {
  * guarded provider workload scope.
  */
 export function isServerOwnedCgroup(candidate: string, server: string): boolean {
-  if (server === "/" || candidate === server || candidate.startsWith(`${server}/`)) return true;
-  return WORKLOAD_POOL_SEGMENTS.some((segment) => candidate.includes(segment));
+  if (WORKLOAD_POOL_SEGMENTS.some((segment) => candidate.includes(segment))) return true;
+  // A login scope contains the user's shell, editor and other unrelated peers.
+  // Root/slice groups likewise establish no server-specific ownership boundary.
+  const unit = server.slice(server.lastIndexOf("/") + 1);
+  const dedicatedUnit =
+    /^(?:app-)?rove(?:[-@.]|$)/.test(unit) &&
+    (unit.endsWith(".service") || unit.endsWith(".scope"));
+  return dedicatedUnit && (candidate === server || candidate.startsWith(`${server}/`));
 }
 
 /** True when a `/proc/<pid>/cwd` link target sits inside one of `roots`, even after deletion. */
@@ -111,3 +117,38 @@ export const stopWorktreeProcesses = Effect.fn("stopWorktreeProcesses")(function
   );
   return targets;
 });
+
+/**
+ * Roots to match for a removed worktree: the path as given plus its resolved
+ * form (computed before removal, while symlinks still resolve), without
+ * trailing separators. A filesystem root is never a worktree and is dropped so
+ * a bad input can't widen the match to the whole machine.
+ */
+export function worktreeProcessRoots(paths: ReadonlyArray<string>): ReadonlyArray<string> {
+  const roots = new Set<string>();
+  for (const path of paths) {
+    const trimmed = path.replace(/[\\/]+$/, "");
+    if (trimmed !== "" && !/^[A-Za-z]:$/.test(trimmed)) roots.add(trimmed);
+  }
+  return [...roots];
+}
+
+/**
+ * Every worktree removal path calls this after Git has removed (or found
+ * already gone) the checkout. It runs after, not before, because the cwd match
+ * handles deleted directories and a removal Git refuses (dirty, locked) must
+ * not have already killed the user's dev servers. Failures only log: the
+ * checkout is gone by now, so failing the removal would misreport it.
+ */
+export const stopWorktreeProcessesAfterRemoval = Effect.fn("stopWorktreeProcessesAfterRemoval")(
+  function* (worktreePath: string, resolvedPath?: string) {
+    const roots = worktreeProcessRoots(
+      resolvedPath === undefined ? [worktreePath] : [worktreePath, resolvedPath],
+    );
+    yield* stopWorktreeProcesses(roots).pipe(
+      Effect.catchCause((cause) =>
+        Effect.logWarning("Could not stop processes left in a removed worktree.", { cause }),
+      ),
+    );
+  },
+);

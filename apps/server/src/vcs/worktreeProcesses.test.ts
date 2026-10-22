@@ -1,14 +1,14 @@
-// @effect-diagnostics nodeBuiltinImport:off
-import * as NodeChildProcess from "node:child_process";
-import * as NodeFSP from "node:fs/promises";
-import * as NodeOS from "node:os";
-import * as NodePath from "node:path";
-import * as NodeServices from "@effect/platform-node/NodeServices";
 import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import { Platform as HostProcessPlatform } from "@rove-code/shared/HostProcess";
 import { it } from "@effect/vitest";
-import { describe, expect } from "vite-plus/test";
-import { isCwdInside, isServerOwnedCgroup, stopWorktreeProcesses } from "./worktreeProcesses.ts";
+import { expect, vi } from "vite-plus/test";
+import {
+  isCwdInside,
+  isServerOwnedCgroup,
+  stopWorktreeProcesses,
+  worktreeProcessRoots,
+} from "./worktreeProcesses.ts";
 
 it("matches deleted worktree directories without matching sibling paths", () => {
   const roots = ["/w/rove-a"];
@@ -18,87 +18,98 @@ it("matches deleted worktree directories without matching sibling paths", () => 
   expect(isCwdInside("/w", roots)).toBe(false);
 });
 
-it("treats only the server's cgroup subtree and guarded workloads as server-owned", () => {
-  const server = "/user.slice/user@1000.service/app.slice/rove.service";
-  expect(isServerOwnedCgroup(server, server)).toBe(true);
-  expect(isServerOwnedCgroup(`${server}/tools`, server)).toBe(true);
-  expect(isServerOwnedCgroup(`${server}2`, server)).toBe(false);
-  expect(isServerOwnedCgroup("/user.slice/user@1000.service/app.slice/tmux.scope", server)).toBe(
-    false,
-  );
+it("normalizes removal roots and refuses filesystem roots", () => {
+  expect(worktreeProcessRoots(["/w/a/", "/w/a", "/real/a"])).toEqual(["/w/a", "/real/a"]);
+  expect(worktreeProcessRoots(["/", "//", "C:\\", ""])).toEqual([]);
+  expect(isCwdInside("/w/a-b", worktreeProcessRoots(["/w/a/"]))).toBe(false);
+  expect(isCwdInside("/w/a/src", worktreeProcessRoots(["/w/a/"]))).toBe(true);
+});
+
+const workload =
+  "/user.slice/user@1000.service/app.slice/app-rove.slice/app-rove-workloads.slice/rove-budget-x.scope";
+const service = "/user.slice/user@1000.service/app.slice/rove.service";
+
+it("fails closed for root, slices, shared services and SSH login scopes", () => {
+  for (const server of [
+    "/",
+    "/user.slice",
+    "/system.slice/sshd.service",
+    "/user.slice/user@1000.service",
+    "/user.slice/user-1000.slice/session-42.scope",
+  ]) {
+    expect(isServerOwnedCgroup(server, server)).toBe(false);
+    expect(isServerOwnedCgroup(`${server}/shell`, server)).toBe(false);
+    expect(isServerOwnedCgroup(service, server)).toBe(false);
+    expect(isServerOwnedCgroup(workload, server)).toBe(true);
+  }
+});
+
+it("recognizes dedicated Rove units and guarded workloads, not adjacent groups", () => {
+  expect(isServerOwnedCgroup(service, service)).toBe(true);
+  expect(isServerOwnedCgroup(`${service}/tools`, service)).toBe(true);
+  expect(isServerOwnedCgroup(`${service}2`, service)).toBe(false);
   expect(
-    isServerOwnedCgroup(
-      "/user.slice/user@1000.service/app.slice/app-rove.slice/app-rove-workloads.slice/rove-budget-x.scope",
-      server,
-    ),
+    isServerOwnedCgroup("/app.slice/rove-server.scope/tools", "/app.slice/rove-server.scope"),
   ).toBe(true);
+  expect(isServerOwnedCgroup("/app.slice/tmux.scope", service)).toBe(false);
+  expect(isServerOwnedCgroup(workload, service)).toBe(true);
   expect(
     isServerOwnedCgroup(
-      "/user.slice/user@1000.service/app.slice/app-rove.slice/app-rove-workloads-other.slice/rove-budget-x.scope",
-      server,
+      workload.replace("app-rove-workloads.slice", "app-rove-workloads-other.slice"),
+      service,
     ),
   ).toBe(false);
   expect(
     isServerOwnedCgroup(
       "/user.slice/user@1000.service/rove.slice/rove-provider.slice/rove-provider-workloads.slice/rove-budget-x.scope",
-      server,
+      service,
     ),
   ).toBe(true);
 });
 
 it.effect("does nothing off Linux", () =>
-  Effect.gen(function* () {
-    const stopped = yield* stopWorktreeProcesses(["/"]).pipe(
-      Effect.provideService(HostProcessPlatform, "darwin"),
-    );
-    expect(stopped).toEqual([]);
-  }).pipe(Effect.provide(NodeServices.layer)),
+  stopWorktreeProcesses(["/w"]).pipe(
+    Effect.tap((stopped) => Effect.sync(() => expect(stopped).toEqual([]))),
+    Effect.provideService(HostProcessPlatform, "darwin"),
+    Effect.provideService(FileSystem.FileSystem, FileSystem.makeNoop({})),
+  ),
 );
 
-const spawnIdle = (cwd: string) => {
-  const child = NodeChildProcess.spawn(process.execPath, ["-e", "setInterval(() => {}, 1e6)"], {
-    cwd,
-    stdio: "ignore",
-  });
-  const exited = new Promise<void>((resolve) => child.once("exit", () => resolve()));
-  const spawned = new Promise<void>((resolve) => child.once("spawn", () => resolve()));
-  return { child, exited, spawned };
-};
-
-describe.runIf(HostProcessPlatform.defaultValue() === "linux")(
-  "Linux worktree process cleanup",
-  () => {
-    it.live("stops processes left in a removed worktree and spares others", () =>
-      Effect.gen(function* () {
-        const base = yield* Effect.promise(() =>
-          NodeFSP.mkdtemp(NodePath.join(NodeOS.tmpdir(), "rove-worktree-processes-")),
-        );
-        const worktree = NodePath.join(base, "worktree");
-        const nested = NodePath.join(worktree, "apps", "web");
-        const outside = NodePath.join(base, "worktree-sibling");
-        yield* Effect.promise(() => NodeFSP.mkdir(nested, { recursive: true }));
-        yield* Effect.promise(() => NodeFSP.mkdir(outside));
-        const leftover = spawnIdle(nested);
-        const bystander = spawnIdle(outside);
-        yield* Effect.addFinalizer(() =>
-          Effect.promise(async () => {
-            bystander.child.kill("SIGKILL");
-            leftover.child.kill("SIGKILL");
-            await NodeFSP.rm(base, { recursive: true, force: true });
-          }),
-        );
-        // Wait until both children have chdir'd before deleting their directories.
-        yield* Effect.promise(() => Promise.all([leftover.spawned, bystander.spawned]));
-        yield* Effect.promise(() => NodeFSP.rm(worktree, { recursive: true, force: true }));
-
-        const stopped = yield* stopWorktreeProcesses([worktree]);
-
-        expect(stopped).toEqual([leftover.child.pid]);
-        yield* Effect.promise(() => leftover.exited);
-        expect(leftover.child.signalCode).toBe("SIGTERM");
-        expect(bystander.child.exitCode).toBeNull();
-        expect(bystander.child.signalCode).toBeNull();
-      }).pipe(Effect.scoped, Effect.provide(NodeServices.layer)),
+// Synthetic /proc and intercepted signals: this must never scan or kill real user processes.
+it.live("protects the server chain and cwd boundary even in a dedicated unit", () =>
+  Effect.gen(function* () {
+    const kill = vi.spyOn(process, "kill").mockImplementation((_pid, signal) => {
+      if (signal === 0) throw new Error("exited");
+      return true;
+    });
+    yield* Effect.addFinalizer(() => Effect.sync(() => kill.mockRestore()));
+    const parent = 900001;
+    const owned = 900002;
+    const sibling = 900003;
+    const peer = 900004;
+    const stopped = yield* stopWorktreeProcesses(["/w/checkout"]).pipe(
+      Effect.provideService(HostProcessPlatform, "linux"),
+      Effect.provideService(
+        FileSystem.FileSystem,
+        FileSystem.makeNoop({
+          readDirectory: () =>
+            Effect.succeed([process.pid, parent, owned, sibling, peer].map(String)),
+          readLink: (path) =>
+            Effect.succeed(
+              path.includes(String(sibling)) ? "/w/checkout-other" : "/w/checkout (deleted)",
+            ),
+          readFileString: (path) =>
+            Effect.succeed(
+              path.endsWith("/stat")
+                ? `${process.pid} (server) S ${path.includes(String(process.pid)) ? parent : 0} 0`
+                : `0::${path.includes(String(peer)) ? "/user.slice/session-42.scope" : service}\n`,
+            ),
+        }),
+      ),
     );
-  },
+    expect(stopped).toEqual([owned]);
+    expect(kill.mock.calls.filter(([, signal]) => signal === "SIGTERM")).toEqual([
+      [owned, "SIGTERM"],
+    ]);
+  }).pipe(Effect.scoped),
 );

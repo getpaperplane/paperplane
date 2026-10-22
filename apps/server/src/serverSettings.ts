@@ -12,6 +12,7 @@
  */
 import {
   DEFAULT_SERVER_SETTINGS,
+  PiSettings,
   ModelSelection,
   ProjectId,
   ProjectScript,
@@ -132,6 +133,13 @@ const normalizeServerSettings = (
 ): Effect.Effect<ServerSettings, ServerSettingsError> =>
   encodeServerSettings(settings).pipe(
     Effect.flatMap(decodeServerSettings),
+    Effect.tap((next) =>
+      Effect.forEach(Object.values(next.providerInstances), (instance) =>
+        instance.driver === "pi"
+          ? Schema.decodeUnknownEffect(PiSettings)(instance.config ?? {})
+          : Effect.void,
+      ),
+    ),
     Effect.map(foldProviderInstanceEnabledFlags),
     Effect.map((next) => ({ ...next, ...deriveLegacyProjectOverrides(next) })),
     Effect.mapError(

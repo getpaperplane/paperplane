@@ -56,7 +56,7 @@ describe("decodeProviderReplayNdjson", () => {
 
       const transcript = yield* decodeProviderReplayNdjson(entry, {
         provider: "pi",
-        protocol: "pi.rpc-jsonl",
+        protocol: "pi.sdk-session",
         version: "1",
         scenario: "fallback",
       });

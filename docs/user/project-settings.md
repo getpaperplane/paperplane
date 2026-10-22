@@ -92,11 +92,14 @@ For GitHub, turn on **Require signature**, keep the header
 `x-hub-signature-256`, hex encoding and the `sha256=` prefix, and enter the
 same secret in the repository's webhook settings with content type
 `application/json`. Requests without a valid signature are rejected. Set this
-up on desktop or web; mobile keeps an existing signature check but can't turn
-one on.
+up in the task editor on any client. On mobile, turn on **Require signature**,
+then enter the header, prefix, encoding and secret. The secret is write-only:
+leave it blank when editing to keep the stored one, enter a new one to replace
+it, or turn the signature off to remove the check.
 
-On desktop and web, pick **Deliveries** from a task's menu to see recent
-requests and the prompt each one produced.
+To see recent requests and the prompt each one produced, pick **Deliveries**
+from a task's menu on desktop or web, or open **Deliveries** in the task's
+editor on mobile. Credential headers are redacted.
 
 If the environment is offline, the sender gets an error and nothing runs;
 redeliver from the sender, such as GitHub's **Recent Deliveries**, once it is
@@ -151,9 +154,10 @@ to Rove-managed worktrees. Stop active sessions and terminals, and save local ch
 files other than `node_modules`, before removing a checkout. Shared worktrees, project workspaces,
 locked worktrees, and detached checkouts cannot be removed here.
 
-On Linux, background processes Rove Code started inside a removed checkout, such as dev servers an
-agent left running, are stopped so they don't keep holding memory. Processes started outside Rove Code
-are left alone.
+On Linux, once a checkout is removed, background processes Rove Code started inside it, such as dev
+servers an agent left running, are stopped so they don't keep holding memory. Processes started outside
+Rove Code are left alone. macOS and Windows don't do this: Windows refuses to delete a directory that
+is in use, and on macOS leftover processes keep running until you stop them.
 
 ## Worktree location
 

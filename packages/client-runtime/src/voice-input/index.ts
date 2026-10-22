@@ -18,3 +18,12 @@ export {
   type VoiceTranscriptionErrorCode,
   type VoiceTranscriptionOptions,
 } from "./transcription.ts";
+export {
+  LiveVoiceInputController,
+  type LiveVoiceErrorCode,
+  type LiveVoiceInputDependencies,
+  type LiveVoiceRecognition,
+  type LiveVoiceRecognitionEvents,
+  type LiveVoiceRecognizer,
+  type VoiceInputRunner,
+} from "./liveController.ts";

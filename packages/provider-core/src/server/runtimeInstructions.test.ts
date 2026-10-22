@@ -8,6 +8,8 @@ describe("buildRuntimeInstructions", () => {
     expect(instructions).toContain("with the full PR URL immediately after creating a PR");
     expect(instructions).toContain("For a stack, call it for every layer");
     expect(instructions).toContain("call list_thread_pull_requests and link any PR");
+    expect(instructions).toContain("watch_pull_request is available, call it and end your turn");
+    expect(instructions).toContain("call unwatch_pull_request first");
   });
 
   it("describes html_render only when the session grants rich responses", () => {

@@ -825,47 +825,49 @@ it.effect("safely retries after replacement cleanup succeeds and start fails", (
   }),
 );
 
-it.effect("settles a delegated child once its restart continuation fails for good", () =>
-  Effect.gen(function* () {
-    const timestamp = DateTime.formatIso(yield* DateTime.now);
-    const events = yield* Ref.make<ReadonlyArray<string>>([]);
-    const recovered = yield* Ref.make<ReadonlyArray<ThreadId>>([]);
-    const layer = layerExecutorFor({
-      events,
-      continueAfterRestart: true,
-      threads: {
-        getThreadRecords: () => Effect.fail(new Error("provider instance removed") as never),
-        recoverDelegatedTask: (childThreadId) =>
-          Ref.update(recovered, (ids) => [...ids, childThreadId]),
-      },
-    });
-    const effect: EffectOutbox.OrchestrationEffectV2 = {
-      id: `effect:restart-continuation:${runId}`,
-      commandId: CommandId.make("command:restart-continuation-failure"),
-      threadId,
-      request: { type: "provider-runtime.continue", sourceRunId: runId },
-      status: "running",
-      attemptCount: 1,
-      availableAt: timestamp,
-      leaseOwner: "test-worker",
-      leaseExpiresAt: timestamp,
-      createdAt: timestamp,
-      updatedAt: timestamp,
-      completedAt: null,
-      lastError: null,
-    };
-    yield* Effect.gen(function* () {
-      const executor = yield* EffectWorker.OrchestrationEffectExecutorV2;
-      assert.isTrue(
-        Exit.isFailure(yield* Effect.exit(executor.execute(effect, { willRetry: true }))),
-      );
-      assert.deepEqual(yield* Ref.get(recovered), []);
-      assert.isTrue(
-        Exit.isFailure(yield* Effect.exit(executor.execute(effect, { willRetry: false }))),
-      );
-      assert.deepEqual(yield* Ref.get(recovered), [threadId]);
-    }).pipe(Effect.provide(layer));
-  }),
+it.effect.each([undefined, true] as const)(
+  "settles a delegated child once its restart continuation fails for good (update consent: %s)",
+  (requestedByUpdate) =>
+    Effect.gen(function* () {
+      const timestamp = DateTime.formatIso(yield* DateTime.now);
+      const events = yield* Ref.make<ReadonlyArray<string>>([]);
+      const recovered = yield* Ref.make<ReadonlyArray<ThreadId>>([]);
+      const layer = layerExecutorFor({
+        events,
+        continueAfterRestart: !requestedByUpdate,
+        threads: {
+          getThreadRecords: () => Effect.fail(new Error("provider instance removed") as never),
+          recoverDelegatedTask: (childThreadId) =>
+            Ref.update(recovered, (ids) => [...ids, childThreadId]),
+        },
+      });
+      const effect: EffectOutbox.OrchestrationEffectV2 = {
+        id: `effect:restart-continuation:${runId}`,
+        commandId: CommandId.make("command:restart-continuation-failure"),
+        threadId,
+        request: { type: "provider-runtime.continue", sourceRunId: runId, requestedByUpdate },
+        status: "running",
+        attemptCount: 1,
+        availableAt: timestamp,
+        leaseOwner: "test-worker",
+        leaseExpiresAt: timestamp,
+        createdAt: timestamp,
+        updatedAt: timestamp,
+        completedAt: null,
+        lastError: null,
+      };
+      yield* Effect.gen(function* () {
+        const executor = yield* EffectWorker.OrchestrationEffectExecutorV2;
+        assert.isTrue(
+          Exit.isFailure(yield* Effect.exit(executor.execute(effect, { willRetry: true }))),
+        );
+        assert.deepEqual(yield* Ref.get(recovered), []);
+        assert.isTrue(
+          Exit.isFailure(yield* Effect.exit(executor.execute(effect, { willRetry: false }))),
+        );
+        assert.deepEqual(yield* Ref.get(recovered), [threadId]);
+      }).pipe(Effect.provide(layer));
+    }),
 );
 
 it.effect.each(["confirmed", "unconfirmed", "failed"] as const)(

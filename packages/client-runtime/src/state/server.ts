@@ -28,6 +28,7 @@ import {
   createEnvironmentRpcCommand,
   createEnvironmentQueryAtomFamily,
   createEnvironmentRpcQueryAtomFamily,
+  createEnvironmentGuardedRpcQueryAtomFamily,
   createEnvironmentRpcSubscriptionAtomFamily,
   createEnvironmentSubscriptionAtomFamily,
   createRuntimeCommand,
@@ -1108,11 +1109,11 @@ export function createServerEnvironmentAtoms<R, E>(
       label: "environment-data:server:process-resource-history",
       tag: WS_METHODS.serverGetProcessResourceHistory,
     }),
-    scheduledTaskWebhookDeliveries: createEnvironmentRpcQueryAtomFamily(runtime, {
+    scheduledTaskWebhookDeliveries: createEnvironmentGuardedRpcQueryAtomFamily(runtime, {
       label: "environment-data:server:scheduled-task:webhook-deliveries",
       tag: WS_METHODS.scheduledTasksListWebhookDeliveries,
     }),
-    scheduledTaskWebhookDelivery: createEnvironmentRpcQueryAtomFamily(runtime, {
+    scheduledTaskWebhookDelivery: createEnvironmentGuardedRpcQueryAtomFamily(runtime, {
       label: "environment-data:server:scheduled-task:webhook-delivery",
       tag: WS_METHODS.scheduledTasksGetWebhookDelivery,
     }),

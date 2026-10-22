@@ -1,12 +1,16 @@
 import {
   AuthSettingsWriteScope,
   ENVIRONMENT_MACHINE_KINDS,
-  isEnvironmentMachineKind,
   resolveEnvironmentMachineKind,
   type EnvironmentId,
   type ServerConfig,
 } from "@rove-code/contracts";
 
+import {
+  detectedEnvironmentMachineKind,
+  planEnvironmentIconSetting,
+  resolveEnvironmentIconPickerLock,
+} from "@rove-code/client-runtime/environment-admin";
 import { useUpdateEnvironmentSettings } from "../../hooks/useSettings";
 import { useEnvironmentScope } from "../../state/session";
 import { ENVIRONMENT_MACHINE_KIND_LABELS, EnvironmentMachineIcon } from "../EnvironmentMachineIcon";
@@ -20,25 +24,7 @@ import {
   MenuSubTrigger,
 } from "../ui/menu";
 
-/**
- * Why the picker is inert, in the order the user can do something about it.
- * Null means it can be changed.
- */
-export function resolveEnvironmentIconPickerLock(input: {
-  readonly serverConfig: ServerConfig | null;
-  readonly operateAccess: "granted" | "denied" | "pending";
-}): string | null {
-  if (input.serverConfig === null) {
-    return "Connect to this environment to change its icon.";
-  }
-  if (input.serverConfig.environment.capabilities.environmentIcon !== true) {
-    return "This environment's server is too old to keep an icon. Update it to choose one.";
-  }
-  if (input.operateAccess !== "granted") {
-    return "Your session on this environment cannot change its settings.";
-  }
-  return null;
-}
+export { resolveEnvironmentIconPickerLock };
 
 /**
  * "Icon" submenu for an environment's row menu. Lists the machine kinds with
@@ -59,9 +45,7 @@ export function EnvironmentIconMenu({
     ? "granted"
     : "denied";
   const lock = resolveEnvironmentIconPickerLock({ serverConfig, operateAccess });
-  // With no detection the server falls back to "server", so picking that
-  // kind clears the override the same way picking the detected kind does.
-  const detected = serverConfig?.environment.platform.machine ?? "server";
+  const detected = detectedEnvironmentMachineKind(serverConfig);
   const resolved = resolveEnvironmentMachineKind(serverConfig);
 
   return (
@@ -82,8 +66,9 @@ export function EnvironmentIconMenu({
         <MenuRadioGroup
           value={resolved}
           onValueChange={(next) => {
-            if (lock !== null || !isEnvironmentMachineKind(next)) return;
-            updateSettings({ environmentIcon: next === detected ? null : next });
+            const environmentIcon = planEnvironmentIconSetting(serverConfig, next);
+            if (lock !== null || environmentIcon === undefined) return;
+            updateSettings({ environmentIcon });
           }}
         >
           {ENVIRONMENT_MACHINE_KINDS.map((kind) => (

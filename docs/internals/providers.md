@@ -29,12 +29,13 @@ configuration changes. OpenCode stores "always" approval grants for the whole pr
 full-access replies use `once` so they cannot widen a supervised thread's permissions on a shared
 server. On 2.x, a session-wide approval also replies `once` and becomes Rove's own rule on that session.
 
-Pi runs the user's own `pi` install in RPC mode and owns native extension, package, and project
-trust discovery. Rove injects only its namespaced MCP bridge, so a Pi session behaves as it does in
-the Pi TUI. Pi session files back native resume, rollback, and same-instance thread forks.
-Forks use Pi's CLI in the destination directory because RPC session switching retains the source
-session's cwd. Provider switches still use portable handoff summaries.
-See the [adapter](../../packages/provider-pi/src/server/adapter.ts).
+Pi uses the bundled SDK in one isolated worker process per driver instance, not the user's
+`pi` executable or its RPC protocol. The instance's agent directory is fixed before the SDK and
+extensions load; thread sessions and the catalog share that worker. Private typed IPC mirrors
+session state and carries SDK events to the [adapter](../../apps/server/src/orchestration-v2/Adapters/PiAdapterV2.ts).
+Session files back resume and rollback through SDK tree navigation. Cross-thread forks and provider
+switches use portable context rather than native CLI forks. See [ADR 0001](../adr/0001-pi-provider-uses-sdk-in-process.md)
+for the isolation and lifecycle constraints.
 
 Antigravity separates account profiles per instance while sharing installed executables across the
 environment. It forces file-based credential storage because the native macOS keychain entry would

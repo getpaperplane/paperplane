@@ -39,7 +39,6 @@ source alone does not explain. Most code changes do not need an internal documen
 [documentation rules](../AGENTS.md#documentation) before adding one.
 
 - [Architecture overview](./internals/overview.md)
-- [Features deferred by the orchestration V2 cutover](./internals/v2-deferred-features.md)
 - [Glossary](./internals/glossary.md)
 - [Connection runtime](./internals/connection-runtime.md)
 - [Providers](./internals/providers.md)

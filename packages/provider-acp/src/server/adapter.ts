@@ -616,7 +616,7 @@ export const AcpProviderCapabilitiesV2 = {
   },
   checkpointing: {
     appCanCheckpointFilesystem: true,
-    supportsNestedCheckpointScopes: true,
+    supportsNestedCheckpointScopes: false,
     // ACP defines no conversation truncation, so rollback resets the provider
     // conversation: Rove restores checkpointed state and the next turn starts a
     // fresh agent session without the rolled-back context.

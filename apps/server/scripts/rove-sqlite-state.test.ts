@@ -138,6 +138,35 @@ it.layer(NodeServices.layer)("rove-sqlite-state", (it) => {
           { sharedHome: baseDir },
         ).pipe(Effect.flip);
         assert.equal(aliasError._tag, "SqliteStateSharedHomeMutationError");
+
+        // A worktree's own `.rove` dev state is not the live home.
+        const worktreeBase = path.join(
+          yield* fs.makeTempDirectoryScoped({ prefix: "rove-sqlite-state-wt-" }),
+          ".rove",
+        );
+        yield* fs.makeDirectory(worktreeBase);
+        yield* createFixtureDatabase(worktreeBase);
+        const allowed = yield* runSqliteState(
+          { operation: "exec", baseDir: worktreeBase, sql: "DELETE FROM fixtures" },
+          { sharedHome: baseDir },
+        );
+        assert.equal(allowed.operation, "exec");
       }),
+  );
+
+  it.effect("refuses the Rove Code home by default", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const home = yield* fs.makeTempDirectoryScoped({ prefix: "rove-sqlite-state-user-" });
+      const roveHome = path.join(home, ".rove-code");
+      yield* createFixtureDatabase(roveHome);
+      const error = yield* runSqliteState({
+        operation: "exec",
+        baseDir: roveHome,
+        sql: "DELETE FROM fixtures",
+      }).pipe(Effect.provideService(HostProcess.HomeDirectory, home), Effect.flip);
+      assert.equal(error._tag, "SqliteStateSharedHomeMutationError");
+    }),
   );
 });

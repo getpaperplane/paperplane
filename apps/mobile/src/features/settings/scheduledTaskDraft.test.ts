@@ -66,6 +66,45 @@ describe("scheduleDraftForTask", () => {
     expect(saved).toEqual({ type: "webhook", signature, maxDeliveryAgeMinutes: null });
     expect(saved?.type === "webhook" && saved.signature && "secret" in saved.signature).toBe(false);
   });
+
+  it("sets, keeps, rotates and removes a signature secret", () => {
+    const signature = { header: "x-sig", encoding: "base64" as const, prefix: "" };
+    const stored = scheduleDraftForTask({ schedule: { type: "webhook", signature } });
+    expect(stored.signatureSecret).toBe("");
+    // A typed secret is sent trimmed, once; blank keeps the stored one.
+    expect(scheduleFromDraft({ ...stored, signatureSecret: " new " })).toMatchObject({
+      signature: { ...signature, secret: "new" },
+    });
+    // Disabling sends null even if a secret was typed, so nothing is retained.
+    expect(scheduleFromDraft({ ...stored, signatureEnabled: false, signatureSecret: "x" })).toEqual(
+      { type: "webhook", signature: null, maxDeliveryAgeMinutes: null },
+    );
+    // Enabling on a task with no check starts from GitHub's settings.
+    const fresh = scheduleDraftForTask({ schedule: { type: "webhook", signature: null } });
+    expect(fresh).toMatchObject({
+      signatureEnabled: false,
+      signatureHeader: "x-hub-signature-256",
+      signatureEncoding: "hex",
+      signaturePrefix: "sha256=",
+    });
+    expect(
+      scheduleFromDraft({ ...fresh, signatureEnabled: true, signatureSecret: "s" }),
+    ).toMatchObject({
+      signature: {
+        header: "x-hub-signature-256",
+        encoding: "hex",
+        prefix: "sha256=",
+        secret: "s",
+      },
+    });
+  });
+
+  it("counts a typed secret as an unsaved change without comparing its value", () => {
+    const initial = createDraft(null, null);
+    const edited = { ...initial, schedule: { ...initial.schedule, signatureSecret: "abc" } };
+    expect(hasScheduledTaskDraftChanges(initial, edited)).toBe(true);
+    expect(JSON.stringify(edited.schedule.signatureSecret)).not.toBe("");
+  });
 });
 
 describe("hasScheduledTaskDraftChanges", () => {

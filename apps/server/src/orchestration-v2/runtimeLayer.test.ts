@@ -1484,6 +1484,378 @@ it.layer(layerTest)("OrchestrationV2LayerLive", (it) => {
   );
 });
 
+it.layer(layerTest)("OrchestrationV2 queued merge-back", (it) => {
+  const setup = (name: string, switchProvider = false) =>
+    Effect.gen(function* () {
+      const orchestrator = yield* Orchestrator.OrchestratorV2;
+      const eventSink = yield* EventSink.EventSinkV2;
+      const now = yield* DateTime.now;
+      const targetThreadId = ThreadId.make(`queued-merge-${name}-target`);
+      const sourceThreadId = ThreadId.make(`queued-merge-${name}-source`);
+      const baseRunId = RunId.make(`queued-merge-${name}-base-run`);
+      const sourceRunId = RunId.make(`queued-merge-${name}-source-run`);
+      const sourceProviderThreadId = ProviderThreadId.make(`queued-merge-${name}-provider-thread`);
+      const dispatchMessage = (
+        id: string,
+        mode: "start_immediately" | "queue_after_active",
+        selection = modelSelection,
+      ) =>
+        orchestrator.dispatch({
+          type: "message.dispatch",
+          createdBy: "user",
+          creationSource: "web",
+          commandId: CommandId.make(`queued-merge-${name}-${id}`),
+          threadId: targetThreadId,
+          messageId: MessageId.make(`queued-merge-${name}-${id}`),
+          text: id,
+          attachments: [],
+          modelSelection: selection,
+          dispatchMode: { type: mode },
+        });
+      yield* orchestrator.dispatch({
+        type: "thread.create",
+        createdBy: "user",
+        creationSource: "web",
+        commandId: CommandId.make(`queued-merge-${name}-create`),
+        threadId: targetThreadId,
+        projectId: ProjectId.make(`queued-merge-${name}-project`),
+        title: "Queued merge target",
+        modelSelection,
+        runtimeMode: "full-access",
+        interactionMode: "default",
+        branch: null,
+        worktreePath: process.cwd(),
+      });
+      const target = yield* orchestrator.getThreadProjection(targetThreadId);
+      yield* eventSink.write({
+        commandId: CommandId.make(`queued-merge-${name}-seed`),
+        events: [
+          {
+            id: EventId.make(`queued-merge-${name}-source-thread-event`),
+            type: "thread.created",
+            threadId: sourceThreadId,
+            providerInstanceId: modelSelection.instanceId,
+            occurredAt: now,
+            payload: {
+              ...target.thread,
+              id: sourceThreadId,
+              title: "Queued merge source",
+              activeProviderThreadId: null,
+              lineage: {
+                parentThreadId: targetThreadId,
+                relationshipToParent: "fork",
+                rootThreadId: targetThreadId,
+              },
+              forkedFrom: { type: "run", threadId: targetThreadId, runId: baseRunId },
+              createdAt: now,
+              updatedAt: now,
+            },
+          },
+          {
+            id: EventId.make(`queued-merge-${name}-fork-transfer-event`),
+            type: "context-transfer.created",
+            threadId: sourceThreadId,
+            providerInstanceId: modelSelection.instanceId,
+            occurredAt: now,
+            payload: {
+              id: ContextTransferId.make(`queued-merge-${name}-fork-transfer`),
+              type: "fork",
+              sourceThreadId: targetThreadId,
+              targetThreadId: sourceThreadId,
+              sourcePoint: { threadId: targetThreadId, runId: baseRunId },
+              basePoint: null,
+              sourceProviderInstanceId: modelSelection.instanceId,
+              targetProviderInstanceId: modelSelection.instanceId,
+              targetRunId: null,
+              status: "consumed",
+              resolution: null,
+              createdBy: "user",
+              error: null,
+              createdAt: now,
+              updatedAt: now,
+              consumedAt: now,
+            },
+          },
+          {
+            id: EventId.make(`queued-merge-${name}-provider-thread-event`),
+            type: "provider-thread.updated",
+            threadId: sourceThreadId,
+            driver,
+            providerInstanceId: modelSelection.instanceId,
+            occurredAt: now,
+            payload: {
+              id: sourceProviderThreadId,
+              driver,
+              providerInstanceId: modelSelection.instanceId,
+              providerSessionId: null,
+              appThreadId: sourceThreadId,
+              ownerNodeId: null,
+              nativeThreadRef: { driver, nativeId: `native-${name}`, strength: "strong" },
+              nativeConversationHeadRef: null,
+              status: "idle",
+              firstRunOrdinal: 1,
+              lastRunOrdinal: 1,
+              handoffIds: [],
+              forkedFrom: null,
+              createdAt: now,
+              updatedAt: now,
+            },
+          },
+          {
+            id: EventId.make(`queued-merge-${name}-source-run-event`),
+            type: "run.created",
+            threadId: sourceThreadId,
+            runId: sourceRunId,
+            providerInstanceId: modelSelection.instanceId,
+            occurredAt: now,
+            payload: {
+              id: sourceRunId,
+              threadId: sourceThreadId,
+              ordinal: 1,
+              providerInstanceId: modelSelection.instanceId,
+              modelSelection,
+              providerThreadId: sourceProviderThreadId,
+              userMessageId: MessageId.make(`queued-merge-${name}-source-message`),
+              rootNodeId: null,
+              activeAttemptId: null,
+              status: "waiting",
+              queuePosition: null,
+              requestedAt: now,
+              startedAt: now,
+              completedAt: null,
+              checkpointId: null,
+              contextHandoffId: null,
+            },
+          },
+        ],
+      });
+      yield* dispatchMessage("active", "start_immediately");
+      if (switchProvider) {
+        const history = yield* orchestrator.getThreadProjection(targetThreadId);
+        const run = history.runs[0]!;
+        const providerThread = history.providerThreads.find((p) => p.id === run.providerThreadId)!;
+        yield* eventSink.write({
+          events: [
+            {
+              id: EventId.make(`queued-merge-${name}-history-completed`),
+              type: "run.updated",
+              threadId: targetThreadId,
+              runId: run.id,
+              providerInstanceId: run.providerInstanceId,
+              occurredAt: now,
+              payload: { ...run, status: "completed", completedAt: now },
+            },
+            {
+              id: EventId.make(`queued-merge-${name}-history-native`),
+              type: "provider-thread.updated",
+              threadId: targetThreadId,
+              driver,
+              providerInstanceId: run.providerInstanceId,
+              occurredAt: now,
+              payload: {
+                ...providerThread,
+                nativeThreadRef: { driver, nativeId: `history-${name}`, strength: "strong" },
+              },
+            },
+          ],
+        });
+        yield* dispatchMessage("alternate", "start_immediately", {
+          ...modelSelection,
+          instanceId: alternateInstanceId,
+        });
+      }
+      yield* orchestrator.dispatch({
+        type: "thread.merge_back",
+        createdBy: "user",
+        creationSource: "web",
+        commandId: CommandId.make(`queued-merge-${name}-merge`),
+        sourceThreadId,
+        targetThreadId,
+        sourcePoint: { type: "run", runId: sourceRunId },
+        createdAt: now,
+      });
+      yield* dispatchMessage("first", "queue_after_active");
+      yield* dispatchMessage("second", "queue_after_active");
+      const completeActive = Effect.gen(function* () {
+        const projection = yield* orchestrator.getThreadProjection(targetThreadId);
+        const activeRun = projection.runs.find((run) => run.status === "starting");
+        assert.isDefined(activeRun);
+        const completedAt = yield* DateTime.now;
+        yield* eventSink.write({
+          events: [
+            {
+              id: EventId.make(`queued-merge-${name}-${activeRun.id}-completed`),
+              type: "run.updated",
+              threadId: targetThreadId,
+              runId: activeRun.id,
+              providerInstanceId: activeRun.providerInstanceId,
+              occurredAt: completedAt,
+              payload: { ...activeRun, status: "completed", completedAt },
+            },
+          ],
+        });
+      });
+      return { orchestrator, eventSink, targetThreadId, completeActive };
+    });
+
+  it.effect("consumes a pending merge-back once when the first queued run starts", () =>
+    Effect.gen(function* () {
+      const { orchestrator, eventSink, targetThreadId, completeActive } = yield* setup("start");
+      const before = yield* orchestrator.getThreadProjection(targetThreadId);
+      const queued = before.runs
+        .filter((run) => run.status === "queued")
+        .toSorted((left, right) => left.ordinal - right.ordinal);
+      assert.lengthOf(queued, 2);
+      assert.equal(
+        before.contextTransfers.find((transfer) => transfer.type === "merge_back")?.status,
+        "pending",
+      );
+
+      const started = yield* Queue.unbounded<RunId>();
+      const afterSequence = yield* orchestrator.getThreadEventSequence(targetThreadId);
+      yield* eventSink.stream({ threadId: targetThreadId, afterSequence }).pipe(
+        Stream.runForEach((stored) =>
+          stored.event.type === "run.updated" && stored.event.payload.status === "starting"
+            ? Queue.offer(started, stored.event.payload.id)
+            : Effect.void,
+        ),
+        Effect.forkScoped,
+      );
+      yield* Effect.yieldNow;
+      yield* completeActive;
+      assert.equal(yield* Queue.take(started), queued[0]!.id);
+
+      const after = yield* orchestrator.getThreadProjection(targetThreadId);
+      const transfers = after.contextTransfers.filter((transfer) => transfer.type === "merge_back");
+      assert.lengthOf(transfers, 1);
+      assert.equal(transfers[0]!.status, "consumed");
+      assert.equal(transfers[0]!.targetRunId, queued[0]!.id);
+      assert.equal(transfers[0]!.resolution?.strategy, "fork_delta_context");
+      const first = after.runs.find((run) => run.id === queued[0]!.id);
+      const second = after.runs.find((run) => run.id === queued[1]!.id);
+      assert.isNotNull(first?.contextHandoffId);
+      assert.equal(second?.status, "queued");
+      assert.isNull(second?.contextHandoffId);
+    }),
+  );
+
+  it.effect("preserves full provider history alongside a queued merge-back exactly once", () =>
+    Effect.gen(function* () {
+      const { orchestrator, eventSink, targetThreadId, completeActive } = yield* setup(
+        "switch",
+        true,
+      );
+      const before = yield* orchestrator.getThreadProjection(targetThreadId);
+      const queued = before.runs.filter((run) => run.status === "queued");
+      const started = yield* Queue.unbounded<RunId>();
+      const afterSequence = yield* orchestrator.getThreadEventSequence(targetThreadId);
+      yield* eventSink.stream({ threadId: targetThreadId, afterSequence }).pipe(
+        Stream.runForEach((stored) =>
+          stored.event.type === "run.updated" && stored.event.payload.status === "starting"
+            ? Queue.offer(started, stored.event.payload.id)
+            : Effect.void,
+        ),
+        Effect.forkScoped,
+      );
+      yield* Effect.yieldNow;
+      yield* completeActive;
+      assert.equal(yield* Queue.take(started), queued[0]!.id);
+      const after = yield* orchestrator.getThreadProjection(targetThreadId);
+      const providerHandoff = after.contextHandoffs.find(
+        (handoff) =>
+          handoff.targetRunId === queued[0]!.id && handoff.strategy === "full_thread_summary",
+      );
+      assert.isDefined(providerHandoff);
+      assert.deepEqual(providerHandoff.coveredRunOrdinals, { from: 1, to: 2 });
+      assert.include(providerHandoff.summaryText, "active");
+      assert.include(providerHandoff.summaryText, "alternate");
+      const merge = after.contextTransfers.find((transfer) => transfer.type === "merge_back")!;
+      assert.equal(merge.status, "consumed");
+      assert.equal(merge.targetRunId, queued[0]!.id);
+      assert.equal(merge.resolution?.strategy, "fork_delta_context");
+      const mergeHandoff = after.contextHandoffs.find((handoff) => handoff.transferId === merge.id);
+      assert.isDefined(mergeHandoff);
+      const providerThread = after.providerThreads.find(
+        (thread) => thread.id === queued[0]!.providerThreadId,
+      )!;
+      assert.includeMembers([...providerThread.handoffIds], [providerHandoff.id, mergeHandoff.id]);
+      const item = after.turnItems.find(
+        (item) => item.type === "handoff" && item.runId === queued[0]!.id,
+      );
+      assert.isDefined(item);
+      assert.equal(item.type, "handoff");
+      if (item.type !== "handoff") return;
+      assert.sameMembers(
+        [...item.fromProviderInstanceIds],
+        [modelSelection.instanceId, alternateInstanceId],
+      );
+      yield* completeActive;
+      assert.equal(yield* Queue.take(started), queued[1]!.id);
+      const final = yield* orchestrator.getThreadProjection(targetThreadId);
+      assert.equal(
+        final.contextTransfers.find((transfer) => transfer.id === merge.id)?.targetRunId,
+        queued[0]!.id,
+      );
+      assert.isNull(final.runs.find((run) => run.id === queued[1]!.id)?.contextHandoffId);
+    }),
+  );
+
+  it.effect("keeps a pending merge-back when the queued run is cancelled", () =>
+    Effect.gen(function* () {
+      const { orchestrator, eventSink, targetThreadId, completeActive } = yield* setup("cancel");
+      const before = yield* orchestrator.getThreadProjection(targetThreadId);
+      const queued = before.runs
+        .filter((run) => run.status === "queued")
+        .toSorted((left, right) => left.ordinal - right.ordinal);
+      yield* orchestrator.dispatch({
+        type: "queued-run.cancel",
+        commandId: CommandId.make("queued-merge-cancel-cancel-first"),
+        threadId: targetThreadId,
+        runId: queued[0]!.id,
+      });
+      const started = yield* Queue.unbounded<RunId>();
+      const afterSequence = yield* orchestrator.getThreadEventSequence(targetThreadId);
+      yield* eventSink.stream({ threadId: targetThreadId, afterSequence }).pipe(
+        Stream.runForEach((stored) =>
+          stored.event.type === "run.updated" && stored.event.payload.status === "starting"
+            ? Queue.offer(started, stored.event.payload.id)
+            : Effect.void,
+        ),
+        Effect.forkScoped,
+      );
+      yield* Effect.yieldNow;
+      yield* completeActive;
+      // The surviving queued run consumes it, not the cancelled one.
+      assert.equal(yield* Queue.take(started), queued[1]!.id);
+      const after = yield* orchestrator.getThreadProjection(targetThreadId);
+      const transfer = after.contextTransfers.find((candidate) => candidate.type === "merge_back");
+      assert.equal(transfer?.status, "consumed");
+      assert.equal(transfer?.targetRunId, queued[1]!.id);
+      assert.equal(after.runs.find((run) => run.id === queued[0]!.id)?.status, "cancelled");
+    }),
+  );
+
+  it.effect("does not consume a pending merge-back when every queued run is cancelled", () =>
+    Effect.gen(function* () {
+      const { orchestrator, targetThreadId, completeActive } = yield* setup("cancelall");
+      const before = yield* orchestrator.getThreadProjection(targetThreadId);
+      for (const run of before.runs.filter((candidate) => candidate.status === "queued")) {
+        yield* orchestrator.dispatch({
+          type: "queued-run.cancel",
+          commandId: CommandId.make(`queued-merge-cancelall-cancel-${run.id}`),
+          threadId: targetThreadId,
+          runId: run.id,
+        });
+      }
+      yield* completeActive;
+      const after = yield* orchestrator.getThreadProjection(targetThreadId);
+      const transfer = after.contextTransfers.find((candidate) => candidate.type === "merge_back");
+      assert.equal(transfer?.status, "pending");
+      assert.isNull(transfer?.targetRunId);
+    }),
+  );
+});
+
 it.layer(layerLegacyImportTest)("OrchestrationV2 legacy import", (it) => {
   it.effect("hydrates imported transcripts before commands and propagates hydration failures", () =>
     Effect.gen(function* () {

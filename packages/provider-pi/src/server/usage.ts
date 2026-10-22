@@ -1,20 +1,14 @@
 /** Native Pi session usage, including calls billed outside the main conversation. */
-import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
-import * as Path from "effect/Path";
 import * as Schema from "effect/Schema";
 
-import { expandHomePath } from "@rove-code/provider-core/server/pathExpansion";
 import {
   parseTimestampMs,
   tokenCount,
   totalTokens,
-  type ProviderUsageReader,
   type TranscriptUsageFormat,
   type UsageRecord,
 } from "@rove-code/provider-core/server/usage";
-import * as HostProcess from "@rove-code/shared/HostProcess";
-import type { PiSettings } from "../settings.ts";
 
 const PiScanState = Schema.Struct({ sessionId: Schema.mutableKey(Schema.String) });
 const Usage = Schema.Struct({
@@ -105,7 +99,7 @@ function parseRecord(parsed: unknown, state: typeof PiScanState.Type): readonly 
   ];
 }
 
-export const piUsageFormat: TranscriptUsageFormat<typeof PiScanState.Type> = {
+export const piUsageFormat = {
   selectFields: {
     type: true,
     id: true,
@@ -127,25 +121,4 @@ export const piUsageFormat: TranscriptUsageFormat<typeof PiScanState.Type> = {
   },
   parseProjected: parseRecord,
   state: { initial: () => ({ sessionId: "" }), schema: PiScanState },
-};
-
-export const piUsageReader: ProviderUsageReader<PiSettings, Path.Path> = {
-  kind: "transcripts",
-  provider: "pi",
-  format: piUsageFormat,
-  directories: Effect.fn("piUsageReader.directories")(function* ({ environment }) {
-    const path = yield* Path.Path;
-    const home = yield* HostProcess.HomeDirectory;
-    const sessionDir = environment.PI_CODING_AGENT_SESSION_DIR?.trim();
-    if (sessionDir) return [{ dir: path.resolve(expandHomePath(sessionDir, home)) }];
-    const agentDir = environment.PI_CODING_AGENT_DIR?.trim();
-    return [
-      {
-        dir: path.resolve(
-          agentDir ? expandHomePath(agentDir, home) : path.join(home, ".pi", "agent"),
-          "sessions",
-        ),
-      },
-    ];
-  }),
-};
+} satisfies TranscriptUsageFormat<typeof PiScanState.Type>;

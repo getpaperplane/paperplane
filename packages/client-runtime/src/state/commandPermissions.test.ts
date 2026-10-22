@@ -15,6 +15,7 @@ import {
   ThreadId,
   EnvironmentId,
   ScheduledTaskId,
+  ScheduledTaskWebhookDeliveryId,
   WS_METHODS,
   type AuthSessionState,
 } from "@rove-code/contracts";
@@ -70,6 +71,8 @@ describe("command permissions", () => {
     [WS_METHODS.computerUseControl, AuthOrchestrationOperateScope],
     [WS_METHODS.computerDesktopViewer, AuthOrchestrationOperateScope],
     [WS_METHODS.piRefreshCatalog, AuthProvidersManageScope],
+    [WS_METHODS.scheduledTasksListWebhookDeliveries, AuthOrchestrationOperateScope],
+    [WS_METHODS.scheduledTasksGetWebhookDelivery, AuthOrchestrationOperateScope],
   ] as const)("checks destination grants and revocation for %s", ([method, scope]) =>
     Effect.scoped(
       Effect.gen(function* () {
@@ -340,6 +343,16 @@ it.effect("rejects protected unary and streamed RPCs outside a guarded command",
       id: ScheduledTaskId.make("task"),
     }).pipe(Effect.provideService(EnvironmentSupervisor, supervisor), Effect.flip);
     expect(unary._tag).toBe("EnvironmentAuthorizationError");
+    for (const method of [
+      WS_METHODS.scheduledTasksListWebhookDeliveries,
+      WS_METHODS.scheduledTasksGetWebhookDelivery,
+    ] as const) {
+      const deniedRead = yield* requestGuarded(method, {
+        id: ScheduledTaskId.make("task"),
+        deliveryId: ScheduledTaskWebhookDeliveryId.make("delivery"),
+      }).pipe(Effect.provideService(EnvironmentSupervisor, supervisor), Effect.flip);
+      expect(deniedRead._tag).toBe("EnvironmentAuthorizationError");
+    }
     const streamed = yield* runStreamGuarded(WS_METHODS.gitRunStackedAction, {
       actionId: "test-action",
       cwd: "/repo",

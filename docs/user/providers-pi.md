@@ -30,7 +30,7 @@ New sessions are saved before the first prompt, so restarting before the first a
 
 ## Resource limits on Linux and WSL
 
-Heavy tools such as concurrent builds and typechecks can exhaust RAM and cause disk saturation from swapping, making a remote server unreachable. In web or desktop **Settings → Providers → Pi**, choose **Workload protection** and a shared **Workload memory (MiB)** limit. Auto enables protection on Linux or WSL hosts with 768 MiB–8 GiB RAM, a systemd user manager, and `flock`. On requires that support; Off opts out. Settings survive server restarts. If an existing instance has not picked up a change, disable and re-enable it when no threads are running.
+Heavy tools such as concurrent builds and typechecks can exhaust RAM and cause disk saturation from swapping, making a remote server unreachable. In web or desktop **Settings → Providers → Pi**, or mobile **Settings → Provider accounts**, choose **Workload protection** and a shared **Workload memory (MiB)** limit. Auto enables protection on Linux or WSL hosts with 768 MiB–8 GiB RAM, a systemd user manager, and `flock`. On requires that support; Off opts out. Settings survive server restarts. If an existing instance has not picked up a change, disable and re-enable it when no threads are running.
 
 Protected Pi shell calls run up to 4 commands at once, fewer on small hosts. Threads, instances, and Rove environments running as the same OS user share these slots. Calls queue only when the slots are busy. Reads, edits, and model responses do not wait for a shell slot. Shell calls have a default 600-second deadline, including queue time; the tool's timeout can override it. Parallel commands inside one shell still share its budget.
 

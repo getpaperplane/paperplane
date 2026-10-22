@@ -5,8 +5,7 @@ import { assertPiSettledTokenUsage } from "../simple/pi_output.ts";
 import { assertMultiTurnOutput } from "./codex_output.ts";
 
 /**
- * The second turn's settled usage is the session total from
- * `get_session_stats`, which differs from its last streamed message usage.
+ * Each turn keeps its SDK context total rather than the last turn's usage.
  */
 export function assertPiMultiTurnOutput(
   result: OrchestratorV2ScenarioResult,

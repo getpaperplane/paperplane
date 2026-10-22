@@ -159,7 +159,7 @@ export const CursorProviderCapabilitiesV2 = {
   },
   checkpointing: {
     appCanCheckpointFilesystem: true,
-    supportsNestedCheckpointScopes: true,
+    supportsNestedCheckpointScopes: false,
     providerCanRollbackConversation: false,
     providerRollbackReturnsSnapshot: false,
     providerCanReadConversationSnapshot: true,

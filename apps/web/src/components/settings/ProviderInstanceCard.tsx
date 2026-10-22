@@ -15,6 +15,11 @@ import {
   XIcon,
 } from "lucide-react";
 import { Lock as LockGlyph, LockOpen } from "lucide";
+import {
+  nextProviderEnvironmentWithFieldValue,
+  providerEnvironmentWithoutNames,
+  readProviderEnvironmentVariable,
+} from "@rove-code/client-runtime/state/provider-instance-settings";
 import * as Arr from "effect/Array";
 import * as Result from "effect/Result";
 import { useEffect, useRef, useState, type ReactElement, type ReactNode } from "react";
@@ -213,55 +218,6 @@ function ProviderAuthEmail(props: { readonly email: string | undefined }) {
       className="max-w-full truncate"
     />
   );
-}
-
-export function readProviderEnvironmentVariable(
-  environment: ReadonlyArray<ProviderInstanceEnvironmentVariable> | undefined,
-  name: string,
-): ProviderInstanceEnvironmentVariable | undefined {
-  return environment?.find((variable) => variable.name === name);
-}
-
-export function providerEnvironmentWithoutNames(
-  environment: ReadonlyArray<ProviderInstanceEnvironmentVariable> | undefined,
-  names: ReadonlySet<string>,
-): ReadonlyArray<ProviderInstanceEnvironmentVariable> {
-  return (environment ?? []).filter((variable) => !names.has(variable.name));
-}
-
-export function nextProviderEnvironmentWithFieldValue(
-  environment: ReadonlyArray<ProviderInstanceEnvironmentVariable> | undefined,
-  field: ProviderEnvironmentField,
-  value: string,
-): ReadonlyArray<ProviderInstanceEnvironmentVariable> {
-  const trimmed = value.trim();
-  const next: ProviderInstanceEnvironmentVariable[] = [];
-  let found = false;
-
-  for (const variable of environment ?? []) {
-    if (variable.name !== field.name) {
-      next.push(variable);
-      continue;
-    }
-    found = true;
-    if (trimmed.length > 0) {
-      next.push({
-        name: variable.name,
-        value: trimmed,
-        sensitive: field.sensitive ?? true,
-      });
-    }
-  }
-
-  if (!found && trimmed.length > 0) {
-    next.push({
-      name: field.name,
-      value: trimmed,
-      sensitive: field.sensitive ?? true,
-    });
-  }
-
-  return next;
 }
 
 function ProviderEnvironmentFieldRow(props: {
@@ -1353,3 +1309,9 @@ export function ProviderInstanceCard({
     </>
   );
 }
+
+export {
+  nextProviderEnvironmentWithFieldValue,
+  providerEnvironmentWithoutNames,
+  readProviderEnvironmentVariable,
+};

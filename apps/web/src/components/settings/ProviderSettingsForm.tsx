@@ -1,14 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import * as Option from "effect/Option";
-import * as Schema from "effect/Schema";
 import {
-  isSecretSetting,
-  type ProviderSettingsFormAnnotation,
-  type ProviderSettingsFormControl,
-  type ProviderSettingsFormOption,
-  type ProviderSettingsFormSchemaAnnotation,
   type EnvironmentId,
   type ServerProvider,
   type ServerProviderModel,
@@ -29,132 +22,18 @@ import type { ProviderClientDefinition } from "@rove-code/provider-core/client";
 export type SettingsFormDefinition = Pick<ProviderClientDefinition, "settingsSchema"> & {
   readonly driverKind?: ProviderClientDefinition["driverKind"];
 };
+import {
+  deriveProviderSettingsFields,
+  nextProviderConfigWithFieldValue,
+  readProviderConfigBoolean,
+  readProviderConfigString,
+  type ProviderSettingsFieldModel,
+} from "@rove-code/client-runtime/state/provider-instance-settings";
 import { PiModelSettings } from "./PiModelSettings";
 import { SettingsRow } from "./settingsLayout";
 
-export interface ProviderSettingsFieldModel {
-  readonly key: string;
-  readonly control: ProviderSettingsFormControl;
-  readonly label: string;
-  readonly description?: string | undefined;
-  readonly placeholder?: string | undefined;
-  readonly clearWhenEmpty: "omit" | "persist";
-  /** Kept in the server's secret store: a saved value arrives as `SECRET_REDACTED` and never shows. */
-  readonly secret?: boolean | undefined;
-  readonly defaultBooleanValue?: boolean | undefined;
-  /** Choices for a `select` control. The first entry is the default. */
-  readonly options?: ReadonlyArray<ProviderSettingsFormOption> | undefined;
-}
-
-function titleizeFieldKey(key: string): string {
-  return key
-    .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
-    .replace(/[-_]+/g, " ")
-    .replace(/^./, (char) => char.toUpperCase());
-}
-
-function readFieldAnnotations(
-  fieldSchema: ProviderClientDefinition["settingsSchema"]["fields"][string],
-) {
-  return Schema.resolveAnnotationsKey(fieldSchema) ?? Schema.resolveAnnotations(fieldSchema);
-}
-
-function readFieldAnnotationString(
-  fieldSchema: ProviderClientDefinition["settingsSchema"]["fields"][string],
-  key: "title" | "description",
-): string | undefined {
-  const annotations = readFieldAnnotations(fieldSchema);
-  const value = annotations?.[key];
-  return typeof value === "string" ? value : undefined;
-}
-
-function readProviderSettingsFormAnnotation(
-  fieldSchema: ProviderClientDefinition["settingsSchema"]["fields"][string],
-): ProviderSettingsFormAnnotation {
-  const annotation = readFieldAnnotations(fieldSchema)?.providerSettingsForm;
-  return annotation ?? {};
-}
-
-function readProviderSettingsFormSchemaAnnotation(
-  definition: SettingsFormDefinition,
-): ProviderSettingsFormSchemaAnnotation {
-  return Schema.resolveAnnotations(definition.settingsSchema)?.providerSettingsFormSchema ?? {};
-}
-
-function readFieldBooleanDefault(
-  fieldSchema: ProviderClientDefinition["settingsSchema"]["fields"][string],
-): boolean | undefined {
-  const decodeDefault = Schema.decodeUnknownOption(fieldSchema as Schema.Decoder<unknown>);
-  const decoded = decodeDefault(undefined);
-  return Option.isSome(decoded) && typeof decoded.value === "boolean" ? decoded.value : undefined;
-}
-
-export function deriveProviderSettingsFields(
-  definition: SettingsFormDefinition,
-  value?: unknown,
-  supportsPiWorkloadProtection = true,
-): ReadonlyArray<ProviderSettingsFieldModel> {
-  const isLocalAcp =
-    definition.driverKind === "acpRegistry" &&
-    readProviderConfigString(value, "source") === "local";
-  const schemaAnnotation = readProviderSettingsFormSchemaAnnotation(definition);
-  const orderedKeys = new Map(
-    (schemaAnnotation.order ?? []).map((key, index) => [key, index] as const),
-  );
-  const orderFallbackOffset = orderedKeys.size;
-
-  return Object.keys(definition.settingsSchema.fields)
-    .map((key, index) => ({ key, index }))
-    .toSorted((left, right) => {
-      return (
-        (orderedKeys.get(left.key) ?? orderFallbackOffset + left.index) -
-        (orderedKeys.get(right.key) ?? orderFallbackOffset + right.index)
-      );
-    })
-    .flatMap(({ key }) => {
-      const fieldSchema = definition.settingsSchema.fields[key]!;
-      const formAnnotation = readProviderSettingsFormAnnotation(fieldSchema);
-      if (formAnnotation.hidden) return [];
-      if (isLocalAcp && key !== "source" && key !== "commandPath") return [];
-      if (
-        definition.driverKind === "pi" &&
-        !supportsPiWorkloadProtection &&
-        (key === "workloadProtection" || key === "workloadMemoryMiB")
-      )
-        return [];
-
-      const annotatedTitle = readFieldAnnotationString(fieldSchema, "title");
-      const annotatedDescription = readFieldAnnotationString(fieldSchema, "description");
-      return [
-        {
-          key,
-          control: formAnnotation.control ?? "text",
-          label:
-            isLocalAcp && key === "commandPath"
-              ? "Executable"
-              : (annotatedTitle ?? titleizeFieldKey(key)),
-          ...(isLocalAcp && key === "commandPath"
-            ? { description: "Executable name or path on this environment." }
-            : annotatedDescription !== undefined
-              ? { description: annotatedDescription }
-              : {}),
-          ...(isLocalAcp && key === "commandPath"
-            ? { placeholder: "e.g. dsh" }
-            : formAnnotation.placeholder !== undefined
-              ? { placeholder: formAnnotation.placeholder }
-              : {}),
-          clearWhenEmpty: formAnnotation.clearWhenEmpty ?? "omit",
-          ...(isSecretSetting(fieldSchema) ? { secret: true } : {}),
-          ...(formAnnotation.control === "switch"
-            ? { defaultBooleanValue: readFieldBooleanDefault(fieldSchema) }
-            : {}),
-          ...(formAnnotation.control === "select" && formAnnotation.options
-            ? { options: formAnnotation.options }
-            : {}),
-        } satisfies ProviderSettingsFieldModel,
-      ];
-    });
-}
+export { deriveProviderSettingsFields, nextProviderConfigWithFieldValue };
+export type { ProviderSettingsFieldModel };
 
 let commandArgumentDraftId = 0;
 const makeCommandArgumentDraftRow = (value: string) => ({
@@ -260,45 +139,6 @@ function ProviderCommandArguments({
       ) : null}
     </SettingsRow>
   );
-}
-
-function readProviderConfigString(config: unknown, key: string): string {
-  if (config === null || typeof config !== "object") return "";
-  const value = (config as Record<string, unknown>)[key];
-  return typeof value === "string" ? value : "";
-}
-
-function readProviderConfigBoolean(config: unknown, key: string, defaultValue = false): boolean {
-  if (config === null || typeof config !== "object") return defaultValue;
-  const value = (config as Record<string, unknown>)[key];
-  return typeof value === "boolean" ? value : defaultValue;
-}
-
-export function nextProviderConfigWithFieldValue(
-  config: unknown,
-  field: ProviderSettingsFieldModel,
-  value: string | boolean,
-): Record<string, unknown> | undefined {
-  const base: Record<string, unknown> =
-    config !== null && typeof config === "object" ? { ...(config as Record<string, unknown>) } : {};
-
-  if (typeof value === "boolean") {
-    const emptyBooleanValue = field.defaultBooleanValue ?? false;
-    if (field.clearWhenEmpty === "omit" && value === emptyBooleanValue) {
-      delete base[field.key];
-    } else {
-      base[field.key] = value;
-    }
-    return Object.keys(base).length > 0 ? base : undefined;
-  }
-
-  const trimmed = value.trim();
-  if (field.clearWhenEmpty === "omit" && trimmed.length === 0) {
-    delete base[field.key];
-  } else {
-    base[field.key] = value;
-  }
-  return Object.keys(base).length > 0 ? base : undefined;
 }
 
 interface ProviderSettingsFormProps {

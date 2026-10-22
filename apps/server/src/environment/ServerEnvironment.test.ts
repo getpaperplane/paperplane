@@ -20,6 +20,11 @@ import {
   RELAY_URL_SECRET,
 } from "../cloud/config.ts";
 import * as ServerConfig from "../config.ts";
+import * as ServiceLauncherClient from "../cloud/serviceLauncherClient.ts";
+import {
+  SERVICE_LAUNCHER_CONTEXT_ENV,
+  SERVICE_LAUNCHER_PROTOCOL,
+} from "../cloud/serviceProtocol.ts";
 import * as ServerEnvironment from "./ServerEnvironment.ts";
 
 const isServerEnvironmentIdPersistenceError = Schema.is(
@@ -229,6 +234,7 @@ it.layer(NodeServices.layer)("ServerEnvironmentLive", (it) => {
       expect(second.capabilities.worktreeInventory).toBe(true);
       expect(second.capabilities.requiredWorktreeBootstrap).toBe(true);
       expect(second.capabilities.usagePriceOverrides).toBe(true);
+      expect(second.capabilities.piWorkloadProtection).toBe(true);
       expect(second.capabilities.threadActiveReorder).toBe(true);
       expect(second.capabilities.threadTitleRegeneration).toBe(true);
       expect(second.capabilities.threadPullRequests).toBe(true);
@@ -318,9 +324,7 @@ it.layer(NodeServices.layer)("ServerEnvironmentLive", (it) => {
       expect(withFd.capabilities.serverSelfUpdate).toBe("desktop-managed");
       expect(withFd.capabilities.desktopAppUpdate).toBe(true);
       expect(withFd.capabilities.serverSelfUpdateProgress).toBe(true);
-      // v2 recovery terminalizes running runs on restart, so continuation
-      // stays unadvertised until the v2 runtime carries the markers.
-      expect(withFd.capabilities.serverUpdateThreadContinuation).toBeUndefined();
+      expect(withFd.capabilities.serverUpdateThreadContinuation).toBe(true);
 
       const withoutFd = yield* describeWith({ mode: "desktop" });
       expect(withoutFd.capabilities.serverSelfUpdate).toBe("desktop-managed");
@@ -330,6 +334,23 @@ it.layer(NodeServices.layer)("ServerEnvironmentLive", (it) => {
 
       const web = yield* describeWith({ mode: "web", desktopTelemetryControlFd: 5 });
       expect(web.capabilities.desktopAppUpdate).toBeUndefined();
+      expect(web.capabilities.serverUpdateThreadContinuation).toBeUndefined();
+
+      const host = yield* ServiceLauncherClient.ServiceLauncherHostProcess;
+      const bootService = yield* describeWith({ mode: "web" }).pipe(
+        Effect.provideService(ServiceLauncherClient.ServiceLauncherHostProcess, {
+          ...host,
+          connected: true,
+        }),
+        Effect.provideService(HostProcess.Environment, {
+          [SERVICE_LAUNCHER_CONTEXT_ENV]: JSON.stringify({
+            protocol: SERVICE_LAUNCHER_PROTOCOL,
+            childVersion: web.serverVersion,
+          }),
+        }),
+      );
+      expect(bootService.capabilities.serverSelfUpdate).toBe("boot-service");
+      expect(bootService.capabilities.serverUpdateThreadContinuation).toBe(true);
     }),
   );
 

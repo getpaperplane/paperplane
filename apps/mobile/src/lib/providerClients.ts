@@ -1,4 +1,10 @@
-import { isProviderDriverKind } from "@rove-code/contracts";
+import {
+  AntigravitySettings,
+  ClaudeSettings,
+  CodexSettings,
+  isProviderDriverKind,
+  ProviderDriverKind,
+} from "@rove-code/contracts";
 import { acpRegistryClient } from "@rove-code/provider-acp-registry/client";
 import { makeProviderClientRegistry } from "@rove-code/provider-core/client";
 import { cursorClient } from "@rove-code/provider-cursor/client";
@@ -9,8 +15,19 @@ import { piClient } from "@rove-code/provider-pi/client";
 
 /** The provider client definitions this mobile build ships. */
 const providerClients = makeProviderClientRegistry([
+  { driverKind: ProviderDriverKind.make("codex"), label: "Codex", settingsSchema: CodexSettings },
+  {
+    driverKind: ProviderDriverKind.make("claudeAgent"),
+    label: "Claude",
+    settingsSchema: ClaudeSettings,
+  },
   cursorClient,
   grokClient,
+  {
+    driverKind: ProviderDriverKind.make("antigravity"),
+    label: "Antigravity",
+    settingsSchema: AntigravitySettings,
+  },
   museClient,
   openCodeClient,
   piClient,
@@ -21,3 +38,6 @@ const providerClients = makeProviderClientRegistry([
 export function getProviderClient(driver: string | null | undefined) {
   return isProviderDriverKind(driver) ? providerClients.get(driver) : undefined;
 }
+
+/** Every driver definition this build can configure, in presentation order. */
+export const providerClientDefinitions = providerClients.definitions;

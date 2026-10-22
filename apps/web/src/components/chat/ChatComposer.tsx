@@ -1105,6 +1105,7 @@ import {
   FileIcon,
   BotIcon,
   CircleAlertIcon,
+  MicIcon,
   PaperclipIcon,
   PencilRulerIcon,
   PlayIcon,
@@ -1113,6 +1114,11 @@ import {
 } from "lucide-react";
 import { proposedPlanTitle } from "@rove-code/shared/proposedPlanText";
 import { hasProviderSetup } from "./ProviderStatusBanner";
+import {
+  isComposerDictationOffered,
+  isComposerDictationSupported,
+  useComposerDictation,
+} from "./useComposerDictation";
 import {
   applyProviderInstanceSettings,
   deriveProviderInstanceEntries,
@@ -3965,6 +3971,22 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
   };
   const applyPromptReplacementStable = useStableCallback(applyPromptReplacement);
 
+  // Dictation edits the draft at the selection it started with and never sends.
+  const dictation = useComposerDictation({
+    ownerKey: composerDraftTargetKey,
+    readDraft: () => {
+      const selection = composerEditorRef.current?.readSelectionRange();
+      return {
+        text: promptRef.current,
+        selection: selection ?? { start: promptRef.current.length, end: promptRef.current.length },
+      };
+    },
+    commit: (text, cursor) =>
+      applyPromptReplacementStable(0, promptRef.current.length, text, {
+        expandedCursorAfterReplace: cursor,
+      }),
+  });
+
   const readComposerSnapshot = (): {
     value: string;
     cursor: number;
@@ -4196,6 +4218,7 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
     submissionIntent?: ComposerSubmissionIntent,
   ) => {
     if (
+      dictation.isBusy ||
       noProviderAvailable ||
       isSendDisabled ||
       !readEnvironmentScope(environmentId, AuthOrchestrationOperateScope)
@@ -7610,6 +7633,48 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
                           <PaperclipIcon />
                         </TooltipTrigger>
                         <TooltipPopup>Attach files</TooltipPopup>
+                      </Tooltip>
+                    </>
+                  ) : null}
+                  {isComposerDictationSupported() &&
+                  isComposerDictationOffered({
+                    canOperateThread,
+                    customAnswerAllowed: !isChoiceOnlyPendingQuestion,
+                    dictationBusy: dictation.isBusy,
+                  }) ? (
+                    <>
+                      <Tooltip>
+                        <TooltipTrigger
+                          render={
+                            <Button
+                              type="button"
+                              variant={dictation.isBusy ? "default" : "ghost"}
+                              size="icon-sm"
+                              onPointerDown={(event) => event.preventDefault()}
+                              onClick={() =>
+                                dictation.state.phase === "recording"
+                                  ? void dictation.stop()
+                                  : void dictation.start()
+                              }
+                              disabled={
+                                dictation.state.phase === "preparing" ||
+                                dictation.state.phase === "transcribing"
+                              }
+                              aria-label={
+                                dictation.state.phase === "recording"
+                                  ? "Stop dictation"
+                                  : "Start dictation"
+                              }
+                              aria-pressed={dictation.state.phase === "recording"}
+                            />
+                          }
+                        >
+                          <MicIcon />
+                        </TooltipTrigger>
+                        <TooltipPopup>
+                          {dictation.state.error ??
+                            (dictation.state.phase === "recording" ? "Stop dictation" : "Dictate")}
+                        </TooltipPopup>
                       </Tooltip>
                     </>
                   ) : null}

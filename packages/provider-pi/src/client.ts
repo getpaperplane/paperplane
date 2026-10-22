@@ -4,10 +4,8 @@
  *
  * @module provider-pi/client
  */
-import { ProviderDriverKind } from "@rove-code/contracts";
+import { PiSettings, ProviderDriverKind } from "@rove-code/contracts";
 import { defineProviderClient } from "@rove-code/provider-core/client";
-
-import { PiSettings } from "./settings.ts";
 
 export const piClient = defineProviderClient({
   driverKind: ProviderDriverKind.make("pi"),
