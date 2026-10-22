@@ -1495,6 +1495,10 @@ const makeOrchestrator = Effect.fn("orchestrationV2.Orchestrator.layer")(functio
         projection,
         queuedProviderThread.id,
       );
+      const pendingMergeBackTransfers = pendingMergeBackTransfersForThread(projection);
+      const requiresFullProviderSwitchContext =
+        latestHandoffRun?.providerInstanceId !== queuedRun.providerInstanceId &&
+        pendingMergeBackTransfers.length > 0;
       const coveredRuns =
         canResumeAcrossInstances ||
         latestHandoffRun === undefined ||
@@ -1503,10 +1507,14 @@ const makeOrchestrator = Effect.fn("orchestrationV2.Orchestrator.layer")(functio
           : projection.runs.filter(
               (run) =>
                 isHandoffSourceRun(run) &&
-                run.ordinal > (targetLastCompletedRun?.ordinal ?? 0) &&
+                run.ordinal >
+                  (requiresFullProviderSwitchContext
+                    ? 0
+                    : (targetLastCompletedRun?.ordinal ?? 0)) &&
                 run.ordinal <= latestHandoffRun.ordinal,
             );
-      const needsFullContext = deliveryProviderThread.nativeThreadRef === null;
+      const needsFullContext =
+        deliveryProviderThread.nativeThreadRef === null || requiresFullProviderSwitchContext;
       const legacyImportItems =
         projection.thread.historyOrigin === "v1_import"
           ? yield* readHandoffItems(threadId, [null])
@@ -1612,7 +1620,6 @@ const makeOrchestrator = Effect.fn("orchestrationV2.Orchestrator.layer")(functio
       // Merge-back transfers are consumed when the queued run starts, under the
       // thread lock, in the same batch that marks them consumed. A cancelled
       // queued run never reaches here, and a later queued run sees them consumed.
-      const pendingMergeBackTransfers = pendingMergeBackTransfersForThread(projection);
       if (new Set(pendingMergeBackTransfers.map((transfer) => transfer.sourceThreadId)).size > 1) {
         return yield* new OrchestratorDispatchError({
           commandId,
@@ -1704,6 +1711,10 @@ const makeOrchestrator = Effect.fn("orchestrationV2.Orchestrator.layer")(functio
               })
               .pipe(mapQueuedError);
       const activeHandoff = mergeBackHandoff ?? handoff ?? legacyImportRecoveryHandoff;
+      const handoffSourceRuns = [
+        ...coveredRuns,
+        ...(mergeBackSourceRun === null ? [] : [mergeBackSourceRun]),
+      ];
       const checkpointScope =
         storedCheckpointScope ??
         (yield* runtimePolicy
@@ -1841,23 +1852,20 @@ const makeOrchestrator = Effect.fn("orchestrationV2.Orchestrator.layer")(functio
               updatedAt: now,
               type: "handoff",
               contextHandoffId: activeHandoff.id,
-              fromProviderThreadIds: activeHandoff.fromProviderThreadIds,
+              fromProviderThreadIds: Array.from(
+                new Set([
+                  ...(handoff?.fromProviderThreadIds ?? []),
+                  ...activeHandoff.fromProviderThreadIds,
+                ]),
+              ),
               toProviderThreadId: activeHandoff.toProviderThreadId,
               fromProviderInstanceIds: Array.from(
-                new Set(
-                  (mergeBackHandoff !== null && mergeBackSourceRun !== null
-                    ? [mergeBackSourceRun]
-                    : coveredRuns
-                  ).map((run) => run.providerInstanceId),
-                ),
+                new Set(handoffSourceRuns.map((run) => run.providerInstanceId)),
               ),
               toProviderInstanceId: queuedRun.providerInstanceId,
               fromModelSelections: Array.from(
                 new Map(
-                  (mergeBackHandoff !== null && mergeBackSourceRun !== null
-                    ? [mergeBackSourceRun]
-                    : coveredRuns
-                  ).map((run) => [
+                  handoffSourceRuns.map((run) => [
                     `${run.modelSelection.instanceId}\0${run.modelSelection.model}`,
                     run.modelSelection,
                   ]),
