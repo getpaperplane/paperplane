@@ -32,7 +32,8 @@ import {
   type ProviderInstanceEnvironmentVariable,
   type ProviderInstanceMutation,
 } from "@rove-code/contracts";
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import * as Dialog from "../../../components/ui/Dialog";
 import { TextInput, View } from "react-native";
 
 import { AppText as Text } from "../../../components/ui/AppText";
@@ -96,6 +97,7 @@ function FieldInputs(props: {
   readonly disabled: boolean;
   readonly onChange: (next: ProviderConfigBlob | undefined) => void;
 }) {
+  const [secrets, setSecrets] = useState<Record<string, string>>({});
   return (
     <>
       {props.fields.map((field) => {
@@ -159,9 +161,16 @@ function FieldInputs(props: {
             secure={field.secret === true || field.control === "password"}
             multiline={field.control === "textarea"}
             disabled={props.disabled}
-            value={field.secret ? "" : readProviderConfigString(props.config, field.key)}
+            value={
+              field.secret
+                ? (secrets[field.key] ?? "")
+                : readProviderConfigString(props.config, field.key)
+            }
             onChangeText={(value) => {
-              if (field.secret && value === "") return;
+              if (field.secret) {
+                setSecrets((current) => ({ ...current, [field.key]: value }));
+                if (value === "") return;
+              }
               props.onChange(
                 asProviderConfigBlob(nextProviderConfigWithFieldValue(props.config, field, value)),
               );
@@ -435,6 +444,7 @@ function InstanceForm(props: {
   readonly environmentId: SettingsTarget["environmentId"];
   readonly driver: ProviderInstanceConfig["driver"];
   readonly initial: ProviderInstanceDraft;
+  readonly extraDirty?: boolean;
   readonly supportsPiWorkloadProtection: boolean;
   readonly extraError: string | null;
   readonly pending: boolean;
@@ -446,9 +456,11 @@ function InstanceForm(props: {
   readonly onCancel: () => void;
 }) {
   const definition = getProviderClient(props.driver);
-  const [draft, setDraft] = useState(props.initial);
+  // A server refresh must not turn an untouched form dirty or overwrite in-progress edits.
+  const [initial] = useState(props.initial);
+  const [draft, setDraft] = useState(initial);
   const [attempted, setAttempted] = useState(false);
-  const dirty = providerDraftChanged(props.initial, draft);
+  const dirty = props.extraDirty === true || providerDraftChanged(initial, draft);
   const { onDirtyChange } = props;
   useEffect(() => {
     onDirtyChange(dirty);
@@ -474,6 +486,29 @@ function InstanceForm(props: {
         disabled={props.pending}
         onChangeText={(displayName) => setDraft({ ...draft, displayName })}
       />
+      {props.driver === "codex" ? (
+        <View>
+          <Text className="px-4 pt-3 text-sm text-foreground-muted">Codex setup</Text>
+          {(["managed", "existing"] as const).map((mode) => (
+            <SettingsChoiceRow
+              key={mode}
+              label={
+                mode === "managed" ? "Managed ChatGPT account" : "Use existing Codex installation"
+              }
+              description={
+                mode === "managed"
+                  ? "Sign in from Accounts after saving. Rove manages the CLI and credentials."
+                  : "Use the environment's installed CLI and its existing credentials."
+              }
+              selected={
+                (readProviderConfigString(draft.config, "setupMode") || "existing") === mode
+              }
+              disabled={props.pending}
+              onPress={() => setDraft({ ...draft, config: { ...draft.config, setupMode: mode } })}
+            />
+          ))}
+        </View>
+      ) : null}
       <FieldInputs
         fields={fields}
         config={draft.config}
@@ -534,7 +569,20 @@ function InstanceForm(props: {
           props.onSubmit(draft);
         }}
       />
-      <SettingsActionRow icon="xmark" label="Cancel" onPress={props.onCancel} />
+      <SettingsActionRow
+        icon="xmark"
+        label="Cancel"
+        onPress={() => {
+          if (!dirty) {
+            props.onCancel();
+            return;
+          }
+          Dialog.alert("Discard changes?", "Your unsaved changes will be lost.", [
+            { text: "Keep editing", style: "cancel" },
+            { text: "Discard changes", style: "destructive", onPress: props.onCancel },
+          ]);
+        }}
+      />
     </View>
   );
 }
@@ -548,11 +596,48 @@ function InstanceEditor(props: {
 }) {
   const { environment, row } = props;
   const mutation = useProviderInstanceMutation(environment.environmentId);
-  const initial = useMemo(() => draftFromProviderInstance(row.instance), [row.instance]);
+  const [initial] = useState(() => draftFromProviderInstance(row.instance));
+  const uninstall = useAtomCommand(serverEnvironment.uninstallAcpRegistryManagedBinary, {
+    reportFailure: false,
+    reportDefect: false,
+  });
   const remove = () =>
-    void mutation
-      .run({ operation: "remove", instanceId: row.instanceId })
-      .then((ok) => ok && props.onDone());
+    Dialog.alert(
+      row.isDefault ? "Reset provider?" : "Delete provider instance?",
+      "This removes the instance settings. Managed agent files are removed only when no other instance uses them. Local commands are not deleted.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: row.isDefault ? "Reset" : "Delete",
+          style: "destructive",
+          onPress: () => {
+            void (async () => {
+              if (!(await mutation.run({ operation: "remove", instanceId: row.instanceId })))
+                return;
+              const agentId = readProviderConfigString(row.instance.config, "agentId");
+              if (
+                row.instance.driver === "acpRegistry" &&
+                readProviderConfigString(row.instance.config, "source") !== "local" &&
+                agentId
+              ) {
+                // The service checks the latest settings for shared installations, not this snapshot.
+                const result = await uninstall({
+                  environmentId: environment.environmentId,
+                  input: { agentId },
+                });
+                if (result._tag === "Failure" && !isAtomCommandInterrupted(result)) {
+                  Dialog.alert(
+                    "Provider deleted, but managed files remain",
+                    String(squashAtomCommandFailure(result)),
+                  );
+                }
+              }
+              props.onDone();
+            })();
+          },
+        },
+      ],
+    );
   return (
     <View className="border-t border-border-subtle">
       <InstanceForm
@@ -624,7 +709,7 @@ function AddInstance(props: {
                     kind: "form",
                     driver: entry.driverKind,
                     label: entry.label,
-                    config: undefined,
+                    config: entry.driverKind === "codex" ? { setupMode: "managed" } : undefined,
                     acpName: null,
                   })
             }
@@ -685,6 +770,7 @@ function AddInstance(props: {
       environmentId={environmentId}
       driver={step.driver}
       initial={initial}
+      extraDirty={idOverride !== null}
       supportsPiWorkloadProtection={props.supportsPiWorkloadProtection}
       extraError={mutation.error ?? idError}
       pending={mutation.pending}

@@ -7,6 +7,7 @@ import {
   providerDraftChanged,
   listProviderInstanceRows,
   providerInstanceEnabledMutation,
+  providerInstanceCreateMutation,
 } from "./provider-instances";
 
 const codex = ProviderDriverKind.make("codex");
@@ -26,6 +27,32 @@ describe("listProviderInstanceRows", () => {
 });
 
 describe("provider instance mutations", () => {
+  it("creates an enabled managed Codex account and can switch setup without dropping secrets", () => {
+    const secret = { name: "TOKEN", value: "", sensitive: true, valueRedacted: true };
+    const draft = {
+      displayName: "Work",
+      config: { setupMode: "managed", apiKey: "REDACTED" },
+      environment: [secret],
+    };
+    const create = providerInstanceCreateMutation({
+      driver: codex,
+      instanceId: "codex_work",
+      draft,
+    });
+    expect(create).toMatchObject({
+      operation: "create",
+      instance: { enabled: true, config: { setupMode: "managed" }, environment: [secret] },
+    });
+    const saved = applyProviderInstanceDraft(
+      { driver: codex, enabled: true, config: draft.config, environment: draft.environment },
+      { ...draft, config: { ...draft.config, setupMode: "existing" } },
+    );
+    expect(saved).toMatchObject({
+      enabled: true,
+      config: { setupMode: "existing", apiKey: "REDACTED" },
+      environment: [secret],
+    });
+  });
   it("preserves credentials and other fields when toggling", () => {
     const row = {
       instanceId: "codex_work" as never,

@@ -1,3 +1,4 @@
+import { useAtomValue } from "@effect/atom-react";
 import * as Dialog from "../../components/ui/Dialog";
 import {
   isAtomCommandInterrupted,
@@ -6,7 +7,7 @@ import {
 } from "@rove-code/client-runtime/state/runtime";
 import type { ProviderAuthResponse, ServerProvider } from "@rove-code/contracts";
 import { useNavigation, usePreventRemove } from "@react-navigation/native";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Linking, Pressable, ScrollView, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -29,7 +30,9 @@ import { SettingsSection } from "./components/SettingsSection";
 import { useSettingsEnvironmentFilter, type SettingsTarget } from "./settings-environment-filter";
 
 export function SettingsProviderAccountsRouteScreen() {
-  const { selectedTargets, projectGroups, selectedProjectKey } = useSettingsEnvironmentFilter();
+  const { selectedTargets, projectGroups, selectedProjectKey, setSwitchGuard } =
+    useSettingsEnvironmentFilter();
+  const [editorSession, setEditorSession] = useState(0);
   const selectedProject = projectGroups.find((group) => group.key === selectedProjectKey);
   const insets = useSafeAreaInsets();
   const [dirtyEnvironments, setDirtyEnvironments] = useState<ReadonlySet<string>>(new Set());
@@ -42,6 +45,27 @@ export function SettingsProviderAccountsRouteScreen() {
       return next;
     });
   }, []);
+  useEffect(() => {
+    setSwitchGuard((proceed) => {
+      if (dirtyEnvironments.size === 0) {
+        proceed();
+        return;
+      }
+      Dialog.alert("Discard changes?", "Your unsaved changes will be lost.", [
+        { text: "Keep editing", style: "cancel" },
+        {
+          text: "Discard changes",
+          style: "destructive",
+          onPress: () => {
+            setDirtyEnvironments(new Set());
+            setEditorSession((current) => current + 1);
+            proceed();
+          },
+        },
+      ]);
+    });
+    return () => setSwitchGuard(null);
+  }, [dirtyEnvironments, setSwitchGuard]);
   const navigation = useNavigation();
   usePreventRemove(dirtyEnvironments.size > 0, ({ data }) => {
     Dialog.alert("Discard changes?", "Your unsaved changes will be lost.", [
@@ -69,7 +93,11 @@ export function SettingsProviderAccountsRouteScreen() {
             selectedTargets.map((environment) => (
               <View key={environment.environmentId} className="gap-6">
                 <SettingsSection title={`${environment.label} · Providers`}>
-                  <ProviderInstanceAdmin environment={environment} onDirtyChange={setDirty} />
+                  <ProviderInstanceAdmin
+                    key={editorSession}
+                    environment={environment}
+                    onDirtyChange={setDirty}
+                  />
                 </SettingsSection>
                 {selectedProject ? (
                   <SettingsSection title={`${environment.label} · ${selectedProject.label}`}>
@@ -89,6 +117,7 @@ export function SettingsProviderAccountsRouteScreen() {
                     .filter(
                       (provider) =>
                         provider.setup?.canAuthenticate ||
+                        provider.setup?.canInstall ||
                         (provider.driver === "acpRegistry" && provider.installed),
                     )
                     .map((provider) => (
@@ -101,6 +130,7 @@ export function SettingsProviderAccountsRouteScreen() {
                   {!environment.serverConfig.providers.some(
                     (provider) =>
                       provider.setup?.canAuthenticate ||
+                      provider.setup?.canInstall ||
                       (provider.driver === "acpRegistry" && provider.installed),
                   ) ? (
                     <Text className="p-4 text-foreground-muted">
@@ -128,6 +158,24 @@ function ProviderAccount({
   const instanceId = provider.instanceId;
   const target = { environmentId, input: { instanceId } };
   const auth = useEnvironmentQuery(serverEnvironment.providerAuthState(target));
+  const install = useEnvironmentQuery(
+    provider.driver === "codex" && provider.setup?.canInstall
+      ? serverEnvironment.providerInstallState(target)
+      : null,
+  );
+  const canInstall = useAtomValue(
+    serverEnvironment.startProviderInstall.permissionAtom(environmentId),
+  );
+  const startInstall = useAtomCommand(serverEnvironment.startProviderInstall, {
+    reportFailure: false,
+  });
+  const cancelInstall = useAtomCommand(serverEnvironment.cancelProviderInstall, {
+    reportFailure: false,
+  });
+  const installing =
+    install.data?.phase === "downloading" ||
+    install.data?.phase === "extracting" ||
+    install.data?.phase === "verifying";
   const options = { reportFailure: false, reportDefect: false };
   const start = useAtomCommand(serverEnvironment.startProviderAuth, options);
   const respond = useAtomCommand(serverEnvironment.respondProviderAuth, options);
@@ -343,6 +391,40 @@ function ProviderAccount({
             })().catch(() => setError("Could not open the sign-in page."));
           }}
         />
+      ) : null}
+      {provider.driver === "codex" && provider.setup?.canInstall && !provider.installed ? (
+        <View>
+          <Text className="px-4 text-sm text-foreground-muted">
+            {install.error ??
+              install.data?.message ??
+              "Install the managed Codex CLI, then sign in below."}
+          </Text>
+          {installing ? (
+            <SettingsActionRow
+              icon="xmark"
+              label="Cancel installation"
+              disabled={pending || !canInstall || !install.data?.operationId}
+              onPress={() => {
+                if (install.data?.operationId)
+                  void run(() =>
+                    cancelInstall({
+                      environmentId,
+                      input: { instanceId, operationId: install.data!.operationId! },
+                    }),
+                  );
+              }}
+            />
+          ) : (
+            <SettingsActionRow
+              icon="arrow.down.circle"
+              label="Install Codex"
+              disabled={pending || !canInstall || !provider.enabled}
+              onPress={() => {
+                void run(() => startInstall(target));
+              }}
+            />
+          )}
+        </View>
       ) : null}
       {needsExternalSetup && provider.setup?.documentationUrl ? (
         <SettingsActionRow
