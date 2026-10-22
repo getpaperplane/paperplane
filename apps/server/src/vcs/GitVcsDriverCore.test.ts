@@ -5,6 +5,7 @@ import * as NodeServices from "@effect/platform-node/NodeServices";
 import { SelectedGitHubAccount } from "@rove-code/source-control-github/server/GitHubCredentials";
 import * as HostProcess from "@rove-code/shared/HostProcess";
 import { assert, it, describe } from "@effect/vitest";
+import { vi } from "vite-plus/test";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -42,6 +43,7 @@ import {
 } from "./GitVcsDriverCore.ts";
 import * as GitVcsDriver from "./GitVcsDriver.ts";
 import { gitRepositoryFixture } from "../testUtils/gitRepositoryFixture.ts";
+import { isServerOwnedCgroup } from "./worktreeProcesses.ts";
 
 describe("selected GitHub account credentials", () => {
   it("resets ambient HTTPS helpers and resolves the selected login without putting tokens in argv", () => {
@@ -4385,9 +4387,19 @@ describe("Windows long path configuration", () => {
   });
 });
 
-// Live clock: process shutdown polling sleeps for real.
-it.live.runIf(HostProcess.Platform.defaultValue() === "linux")(
-  "stops processes left in a worktree after removing it, sparing a sibling path",
+// Real signalling requires a dedicated ownership boundary, not merely Linux.
+const hasDedicatedProcessCgroup = () => {
+  if (HostProcess.Platform.defaultValue() !== "linux") return false;
+  try {
+    const cgroup = NodeFS.readFileSync("/proc/self/cgroup", "utf8").match(/^0::(.+)$/m)?.[1];
+    return cgroup !== undefined && isServerOwnedCgroup(cgroup, cgroup);
+  } catch {
+    return false;
+  }
+};
+
+it.live.runIf(hasDedicatedProcessCgroup())(
+  "stops real worktree children in a dedicated Rove cgroup, sparing a sibling",
   () =>
     Effect.gen(function* () {
       const cwd = yield* makeTmpDir();
@@ -4406,31 +4418,138 @@ it.live.runIf(HostProcess.Platform.defaultValue() === "linux")(
       });
       yield* fileSystem.makeDirectory(sibling);
       const spawnIdle = (dir: string) =>
-        NodeChildProcess.spawn(process.execPath, ["-e", "setInterval(() => {}, 1e6)"], {
-          cwd: dir,
-          stdio: "ignore",
-        });
-      const leftover = spawnIdle(worktreePath);
-      const bystander = spawnIdle(sibling);
-      yield* Effect.addFinalizer(() =>
-        Effect.sync(() => {
-          leftover.kill("SIGKILL");
-          bystander.kill("SIGKILL");
-        }),
-      );
-      yield* Effect.promise(() =>
-        Promise.all(
-          [leftover, bystander].map(
-            (child) => new Promise((resolve) => child.once("spawn", resolve)),
-          ),
-        ),
-      );
-      const exited = new Promise<void>((resolve) => leftover.once("exit", () => resolve()));
+        Effect.acquireRelease(
+          Effect.sync(() => {
+            const child = NodeChildProcess.spawn(
+              process.execPath,
+              ["-e", "setInterval(() => {}, 1e6)"],
+              {
+                cwd: dir,
+                stdio: "ignore",
+              },
+            );
+            // Register immediately so early exits and spawn failures cannot
+            // leave either the test or its finalizer waiting for a missed event.
+            const exited = new Promise<void>((resolve) => {
+              child.once("exit", () => resolve());
+              child.once("error", () => resolve());
+            });
+            const spawned = new Promise<void>((resolve, reject) => {
+              child.once("spawn", resolve);
+              child.once("error", reject);
+            });
+            return { child, exited, spawned };
+          }),
+          ({ child, exited }) =>
+            Effect.promise(async () => {
+              if (child.exitCode === null && child.signalCode === null) child.kill("SIGKILL");
+              await exited;
+            }),
+        );
+      const leftover = yield* spawnIdle(worktreePath);
+      yield* Effect.promise(() => leftover.spawned);
+      const bystander = yield* spawnIdle(sibling);
+      yield* Effect.promise(() => bystander.spawned);
 
       yield* driver.removeWorktree({ cwd, path: worktreePath });
-
-      yield* Effect.promise(() => exited);
-      assert.equal(bystander.exitCode, null);
-      assert.equal(bystander.signalCode, null);
+      yield* Effect.promise(() => leftover.exited);
+      assert.equal(bystander.child.exitCode, null);
+      assert.equal(bystander.child.signalCode, null);
     }).pipe(Effect.scoped, Effect.provide(layerTest)),
 );
+
+// A test runner need not own a dedicated Rove cgroup (CI often shares a login
+// scope or the root group). Real Git + synthetic /proc makes the ownership and
+// removal-order assertions portable, without waiting for a deliberately spared
+// child to exit or ever scanning/signalling the host's processes.
+for (const scenario of ["removed", "already gone", "refused", "shared cgroup"] as const) {
+  it.effect(`worktree process cleanup: ${scenario}`, () =>
+    Effect.gen(function* () {
+      const cwd = yield* makeTmpDir();
+      const { initialBranch } = yield* initRepoWithCommit(cwd);
+      const pathService = yield* Path.Path;
+      const root = yield* makeTmpDir("git-worktrees-");
+      const worktreePath = pathService.join(root, "foo");
+      const sibling = pathService.join(root, "foo-bar");
+      const fileSystem = yield* FileSystem.FileSystem;
+      const leftover = 900002;
+      const bystander = 900003;
+      const service = scenario === "shared cgroup" ? "/" : "/app.slice/rove.service";
+      const scanned = yield* Deferred.make<void>();
+      const realKill = process.kill.bind(process);
+      const kill = vi.spyOn(process, "kill").mockImplementation((pid, signal) => {
+        // The real Git spawner cleans up its captured process groups. Only
+        // positive PIDs belong to the synthetic /proc scan in this test.
+        if (pid < 0) return realKill(pid, signal);
+        assert.isFalse(NodeFS.existsSync(worktreePath), "signal only after removal");
+        if (signal === 0) throw new Error("exited");
+        return true;
+      });
+      yield* Effect.addFinalizer(() => Effect.sync(() => kill.mockRestore()));
+      const driver = yield* makeGitVcsDriverCore().pipe(
+        Effect.provideService(HostProcess.Platform, "linux"),
+        Effect.provideService(FileSystem.FileSystem, {
+          ...fileSystem,
+          readDirectory: (path, options) =>
+            path === "/proc"
+              ? Effect.gen(function* () {
+                  assert.isFalse(NodeFS.existsSync(worktreePath), "scan only after removal");
+                  yield* Deferred.succeed(scanned, undefined);
+                  return [process.pid, leftover, bystander].map(String);
+                })
+              : fileSystem.readDirectory(path, options),
+          readLink: (path) =>
+            path.startsWith("/proc/")
+              ? Effect.succeed(
+                  path === `/proc/${bystander}/cwd` ? sibling : `${worktreePath} (deleted)`,
+                )
+              : fileSystem.readLink(path),
+          readFileString: (path, encoding) =>
+            path.startsWith("/proc/")
+              ? Effect.succeed(
+                  path.endsWith("/stat") ? `${process.pid} (server) S 0 0` : `0::${service}\n`,
+                )
+              : fileSystem.readFileString(path, encoding),
+        }),
+        Effect.provide(layerServerConfig),
+      );
+      yield* driver.createWorktree({
+        cwd,
+        path: worktreePath,
+        refName: initialBranch,
+        newRefName: "feature/foo",
+      });
+      if (scenario === "already gone") {
+        yield* fileSystem.remove(worktreePath, { recursive: true });
+      } else if (scenario === "refused") {
+        yield* writeTextFile(worktreePath, "untracked.txt", "keep me\n");
+      }
+
+      const removal = driver.removeWorktree({ cwd, path: worktreePath });
+      if (scenario === "refused") {
+        assert.isTrue(Result.isFailure(yield* Effect.result(removal)));
+        assert.equal(yield* fileSystem.exists(worktreePath), true);
+        assert.isFalse(yield* Deferred.isDone(scanned));
+        assert.deepEqual(
+          kill.mock.calls.filter(([pid]) => pid > 0),
+          [],
+        );
+      } else {
+        const fiber = yield* removal.pipe(Effect.forkChild({ startImmediately: true }));
+        yield* Deferred.await(scanned);
+        yield* TestClock.adjust("100 millis");
+        yield* Fiber.join(fiber);
+        assert.equal(yield* fileSystem.exists(worktreePath), false);
+        assert.deepEqual(
+          kill.mock.calls.filter(([pid]) => pid > 0),
+          scenario === "shared cgroup"
+            ? []
+            : [
+                [leftover, "SIGTERM"],
+                [leftover, 0],
+              ],
+        );
+      }
+    }).pipe(Effect.scoped, Effect.provide(layerTest)),
+  );
+}
