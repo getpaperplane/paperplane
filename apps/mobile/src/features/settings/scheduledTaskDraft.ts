@@ -5,11 +5,14 @@ import type {
   RuntimeMode,
   ScheduledTask,
   ScheduledTaskUpsertSchedule,
-  ScheduledTaskWebhookSignature,
 } from "@rove-code/contracts";
 
 import { DEFAULT_SERVER_SETTINGS } from "@rove-code/contracts";
-import { parseMaxDeliveryAge } from "@rove-code/client-runtime/scheduled-task-webhook";
+import {
+  WEBHOOK_SIGNATURE_DEFAULTS,
+  parseMaxDeliveryAge,
+  webhookSignatureForUpsert,
+} from "@rove-code/client-runtime/scheduled-task-webhook";
 import {
   resolveProjectSettings,
   type LegacyProjectSettingsFields,
@@ -48,8 +51,12 @@ export type ScheduleDraft = {
   readonly timeOfDay: string;
   readonly weekdays: ReadonlyArray<number>;
   readonly intervalMinutes: string;
-  /** A webhook signature check configured elsewhere; mobile keeps it but does not edit it. */
-  readonly signature: ScheduledTaskWebhookSignature | null;
+  readonly signatureEnabled: boolean;
+  readonly signatureHeader: string;
+  readonly signatureEncoding: "hex" | "base64";
+  readonly signaturePrefix: string;
+  /** Write-only and in memory only: empty keeps the secret already stored on the server. */
+  readonly signatureSecret: string;
   /** Minutes as typed; empty runs every held request regardless of age. */
   readonly maxDeliveryAgeMinutes: string;
 };
@@ -59,7 +66,9 @@ export const DEFAULT_SCHEDULE: ScheduleDraft = {
   timeOfDay: "09:00",
   weekdays: [1, 2, 3, 4, 5],
   intervalMinutes: "15",
-  signature: null,
+  signatureEnabled: false,
+  ...WEBHOOK_SIGNATURE_DEFAULTS,
+  signatureSecret: "",
   maxDeliveryAgeMinutes: "",
 };
 
@@ -83,7 +92,14 @@ export function scheduleDraftForTask(task: Pick<ScheduledTask, "schedule">): Sch
       return {
         ...DEFAULT_SCHEDULE,
         mode: "webhook",
-        signature: task.schedule.signature,
+        ...(task.schedule.signature
+          ? {
+              signatureEnabled: true,
+              signatureHeader: task.schedule.signature.header,
+              signatureEncoding: task.schedule.signature.encoding,
+              signaturePrefix: task.schedule.signature.prefix,
+            }
+          : {}),
         maxDeliveryAgeMinutes:
           task.schedule.maxDeliveryAgeMinutes == null
             ? ""
@@ -96,17 +112,15 @@ export function scheduleFromDraft(draft: ScheduleDraft): ScheduledTaskUpsertSche
   if (draft.mode === "webhook") {
     const maxDeliveryAgeMinutes = parseMaxDeliveryAge(draft.maxDeliveryAgeMinutes);
     if (maxDeliveryAgeMinutes === undefined) return null;
-    // No secret is sent, so the server keeps the stored one.
     return {
       type: "webhook",
-      signature:
-        draft.signature === null
-          ? null
-          : {
-              header: draft.signature.header,
-              encoding: draft.signature.encoding,
-              prefix: draft.signature.prefix,
-            },
+      signature: webhookSignatureForUpsert({
+        enabled: draft.signatureEnabled,
+        header: draft.signatureHeader,
+        encoding: draft.signatureEncoding,
+        prefix: draft.signaturePrefix,
+        secret: draft.signatureSecret,
+      }),
       maxDeliveryAgeMinutes,
     };
   }
@@ -163,6 +177,12 @@ function draftSignature(draft: ScheduledTaskDraft): string {
     [...draft.schedule.weekdays].sort((a, b) => a - b),
     draft.schedule.intervalMinutes,
     draft.schedule.maxDeliveryAgeMinutes,
+    draft.schedule.signatureEnabled,
+    draft.schedule.signatureHeader,
+    draft.schedule.signatureEncoding,
+    draft.schedule.signaturePrefix,
+    // Only whether a secret was typed; the value itself is never copied into the comparison.
+    draft.schedule.signatureSecret !== "",
     draft.workspace,
     draft.baseRef,
     draft.checkoutPath,

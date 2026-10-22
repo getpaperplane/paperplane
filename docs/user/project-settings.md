@@ -92,11 +92,14 @@ For GitHub, turn on **Require signature**, keep the header
 `x-hub-signature-256`, hex encoding and the `sha256=` prefix, and enter the
 same secret in the repository's webhook settings with content type
 `application/json`. Requests without a valid signature are rejected. Set this
-up on desktop or web; mobile keeps an existing signature check but can't turn
-one on.
+up in the task editor on any client. On mobile, turn on **Require signature**,
+then enter the header, prefix, encoding and secret. The secret is write-only:
+leave it blank when editing to keep the stored one, enter a new one to replace
+it, or turn the signature off to remove the check.
 
-On desktop and web, pick **Deliveries** from a task's menu to see recent
-requests and the prompt each one produced.
+To see recent requests and the prompt each one produced, pick **Deliveries**
+from a task's menu on desktop or web, or open **Deliveries** in the task's
+editor on mobile. Credential headers are redacted.
 
 If the environment is offline, the sender gets an error and nothing runs;
 redeliver from the sender, such as GitHub's **Recent Deliveries**, once it is

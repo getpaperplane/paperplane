@@ -10,6 +10,8 @@ import type {
   ProjectId,
   ScheduledTask,
   ScheduledTaskUpsertInput,
+  ScheduledTaskWebhookDeliveryId,
+  ScheduledTaskWebhookDeliverySummary,
 } from "@rove-code/contracts";
 import {
   MAX_WEBHOOK_DELIVERY_AGE_MINUTES,
@@ -24,7 +26,12 @@ import {
 } from "@rove-code/client-runtime/state/runtime";
 import {
   DEFAULT_WEBHOOK_PROMPT,
+  WEBHOOK_DELIVERY_OUTCOME_LABELS,
   parseMaxDeliveryAge,
+  webhookDeliveryHeaderLines,
+  webhookDeliveryOutcomeTone,
+  webhookSignatureForUpsert,
+  webhookSignatureIncomplete,
 } from "@rove-code/client-runtime/scheduled-task-webhook";
 import {
   useCallback,
@@ -149,6 +156,7 @@ function FormField(props: {
   readonly keyboardType?: "decimal-pad" | "number-pad";
   readonly disabled?: boolean;
   readonly placeholder?: string;
+  readonly secret?: boolean;
   readonly borderTop?: boolean;
 }) {
   return (
@@ -165,6 +173,10 @@ function FormField(props: {
         onChangeText={props.onChange}
         textAlignVertical="center"
         keyboardType={props.keyboardType}
+        secureTextEntry={props.secret}
+        autoCapitalize={props.secret ? "none" : undefined}
+        autoCorrect={props.secret ? false : undefined}
+        spellCheck={props.secret ? false : undefined}
         placeholder={props.placeholder}
         placeholderTextColorClassName="accent-foreground-muted"
         className="min-h-8 font-sans text-base text-foreground"
@@ -624,14 +636,8 @@ function TaskForm({
       environmentUnavailable
     )
       return;
-    // Signatures are edited on desktop and web; send the task's current one,
-    // not the copy taken when this form opened, so a newer edit survives.
     const liveTask = tasks.data?.tasks.find((task) => task.id === draft.task?.id);
-    const schedule = scheduleFromDraft(
-      draft.schedule.mode === "webhook" && liveTask?.schedule.type === "webhook"
-        ? { ...draft.schedule, signature: liveTask.schedule.signature }
-        : draft.schedule,
-    );
+    const schedule = scheduleFromDraft(draft.schedule);
     if (
       draft.schedule.mode === "webhook" &&
       parseMaxDeliveryAge(draft.schedule.maxDeliveryAgeMinutes) === undefined
@@ -639,6 +645,19 @@ function TaskForm({
       Dialog.alert(
         "Invalid age limit",
         `Enter whole minutes from 1 to ${MAX_WEBHOOK_DELIVERY_AGE_MINUTES}, or leave it blank.`,
+      );
+      return;
+    }
+    if (
+      schedule?.type === "webhook" &&
+      webhookSignatureIncomplete(
+        schedule.signature ?? null,
+        liveTask?.schedule.type === "webhook" && liveTask.webhook?.hasSecret === true,
+      )
+    ) {
+      Dialog.alert(
+        "Signing secret is required",
+        "Enter the signature header and secret, or turn the signature check off.",
       );
       return;
     }
@@ -966,7 +985,8 @@ function TaskForm({
                     ? (tasks.data.tasks.find((task) => task.id === draft.task?.id) ?? null)
                     : draft.task
                 }
-                signatureConfigured={draft.schedule.signature !== null}
+                schedule={draft.schedule}
+                onChangeSchedule={(schedule) => setDraft({ ...draft, schedule })}
                 disabled={!canOperate || saving || environmentUnavailable}
               />
               <FormField
@@ -1036,12 +1056,14 @@ function TaskForm({
 function WebhookScheduleDetails({
   environmentId,
   task,
-  signatureConfigured,
+  schedule,
+  onChangeSchedule,
   disabled,
 }: {
   readonly environmentId: EnvironmentId;
   readonly task: ScheduledTask | null;
-  readonly signatureConfigured: boolean;
+  readonly schedule: Draft["schedule"];
+  readonly onChangeSchedule: (schedule: Draft["schedule"]) => void;
   readonly disabled: boolean;
 }) {
   const [rotating, setRotating] = useState(false);
@@ -1118,11 +1140,224 @@ function WebhookScheduleDetails({
           </Pressable>
         </>
       )}
-      {signatureConfigured ? (
-        <Text className="text-sm text-foreground-muted">
-          Signature check configured on desktop/web.
-        </Text>
+      <View className="min-h-11 flex-row items-center gap-3">
+        <View className="min-w-0 flex-1">
+          <Text className="text-lg text-foreground">Require signature</Text>
+          <Text className="text-sm text-foreground-muted">
+            Reject requests without a valid HMAC-SHA256 signature of the body.
+          </Text>
+        </View>
+        <ThemedSwitch
+          accessibilityLabel="Require signature"
+          value={schedule.signatureEnabled}
+          disabled={disabled}
+          onValueChange={(signatureEnabled) =>
+            onChangeSchedule({ ...schedule, signatureEnabled, signatureSecret: "" })
+          }
+        />
+      </View>
+      {schedule.signatureEnabled ? (
+        <View className="-mx-4">
+          <FormField
+            label="Header"
+            value={schedule.signatureHeader}
+            disabled={disabled}
+            borderTop
+            onChange={(signatureHeader) => onChangeSchedule({ ...schedule, signatureHeader })}
+          />
+          <FormField
+            label="Prefix"
+            value={schedule.signaturePrefix}
+            placeholder="None"
+            disabled={disabled}
+            borderTop
+            onChange={(signaturePrefix) => onChangeSchedule({ ...schedule, signaturePrefix })}
+          />
+          <View className="border-t border-border-subtle px-4 py-3">
+            <SegmentedControl
+              options={[
+                { value: "hex", label: "hex" },
+                { value: "base64", label: "base64" },
+              ]}
+              selected={schedule.signatureEncoding}
+              onSelect={(signatureEncoding) => onChangeSchedule({ ...schedule, signatureEncoding })}
+            />
+          </View>
+          <FormField
+            label="Secret"
+            secret
+            value={schedule.signatureSecret}
+            placeholder={webhook?.hasSecret ? "Unchanged" : "Shared secret"}
+            disabled={disabled}
+            borderTop
+            onChange={(signatureSecret) => onChangeSchedule({ ...schedule, signatureSecret })}
+          />
+        </View>
       ) : null}
+      {task !== null && webhook ? (
+        <WebhookDeliveries
+          environmentId={environmentId}
+          task={task}
+          signatureHeader={schedule.signatureEnabled ? schedule.signatureHeader : null}
+        />
+      ) : null}
+    </View>
+  );
+}
+
+function WebhookDeliveries({
+  environmentId,
+  task,
+  signatureHeader,
+}: {
+  readonly environmentId: EnvironmentId;
+  readonly task: ScheduledTask;
+  readonly signatureHeader: string | null;
+}) {
+  const [open, setOpen] = useState(false);
+  const [selectedId, setSelectedId] = useState<ScheduledTaskWebhookDeliveryId | null>(null);
+  const list = useEnvironmentQuery(
+    open
+      ? serverEnvironment.scheduledTaskWebhookDeliveries({ environmentId, input: { id: task.id } })
+      : null,
+  );
+  const detail = useEnvironmentQuery(
+    open && selectedId !== null
+      ? serverEnvironment.scheduledTaskWebhookDelivery({
+          environmentId,
+          input: { id: task.id, deliveryId: selectedId },
+        })
+      : null,
+  );
+  const deliveries = list.data?.deliveries ?? null;
+  const selected = detail.data?.delivery ?? null;
+  const toneClass = (outcome: ScheduledTaskWebhookDeliverySummary["outcome"]) => {
+    const tone = webhookDeliveryOutcomeTone(outcome);
+    return tone === "success"
+      ? "text-success-foreground"
+      : tone === "warning"
+        ? "text-warning-foreground"
+        : "text-danger-foreground";
+  };
+  const retry = selectedId === null ? list.refresh : detail.refresh;
+  const error = selectedId === null ? list.error : detail.error;
+  return (
+    <View className="gap-2 border-t border-border-subtle pt-3">
+      <Pressable
+        accessibilityRole="button"
+        accessibilityState={{ expanded: open }}
+        onPress={() => {
+          setOpen((value) => !value);
+          setSelectedId(null);
+        }}
+        className="min-h-11 flex-row items-center justify-between active:opacity-70"
+      >
+        <Text className="text-lg text-foreground">Deliveries</Text>
+        <Text className="text-base text-foreground-muted">{open ? "Hide" : "Show"}</Text>
+      </Pressable>
+      {open ? (
+        <>
+          {error ? (
+            <View className="gap-1">
+              <Text className="text-sm text-danger-foreground">{error}</Text>
+              <Pressable
+                accessibilityRole="button"
+                onPress={retry}
+                className="min-h-11 justify-center active:opacity-70"
+              >
+                <Text className="text-base text-foreground">Retry</Text>
+              </Pressable>
+            </View>
+          ) : selectedId !== null ? (
+            selected === null ? (
+              <Text className="text-sm text-foreground-muted">Loading delivery…</Text>
+            ) : (
+              <View className="gap-2">
+                <Text className={`text-base ${toneClass(selected.outcome)}`}>
+                  {WEBHOOK_DELIVERY_OUTCOME_LABELS[selected.outcome]} · {selected.method} ·{" "}
+                  {new Date(selected.receivedAt).toLocaleString()}
+                  {selected.signatureVerified ? " · Signature verified" : ""}
+                </Text>
+                {selected.error ? (
+                  <Text className="text-sm text-danger-foreground">{selected.error}</Text>
+                ) : null}
+                <DeliveryBlock title="Prompt sent to the agent">
+                  {selected.renderedPrompt ?? "No run was started for this request."}
+                </DeliveryBlock>
+                {selected.missingFields.length > 0 ? (
+                  <Text className="text-sm text-foreground-muted">
+                    Empty placeholders: {selected.missingFields.join(", ")}
+                  </Text>
+                ) : null}
+                <DeliveryBlock title="Headers">
+                  {webhookDeliveryHeaderLines(selected.headers, signatureHeader).join("\n")}
+                </DeliveryBlock>
+                {selected.query ? (
+                  <DeliveryBlock title="Query">{selected.query}</DeliveryBlock>
+                ) : null}
+                <DeliveryBlock title={selected.bodyTruncated ? "Body (truncated)" : "Body"}>
+                  {selected.body || "(empty)"}
+                </DeliveryBlock>
+              </View>
+            )
+          ) : deliveries === null ? (
+            <Text className="text-sm text-foreground-muted">Loading deliveries…</Text>
+          ) : deliveries.length === 0 ? (
+            <Text className="text-sm text-foreground-muted">No requests yet.</Text>
+          ) : (
+            deliveries.map((delivery) => (
+              <Pressable
+                key={delivery.id}
+                accessibilityRole="button"
+                onPress={() => setSelectedId(delivery.id)}
+                className="min-h-11 justify-center active:opacity-70"
+              >
+                <Text className="text-base text-foreground">
+                  <Text className={toneClass(delivery.outcome)}>
+                    {WEBHOOK_DELIVERY_OUTCOME_LABELS[delivery.outcome]}
+                  </Text>
+                  {` · ${delivery.method} · ${new Date(delivery.receivedAt).toLocaleString()}`}
+                </Text>
+                {delivery.error ? (
+                  <Text className="text-sm text-danger-foreground" numberOfLines={2}>
+                    {delivery.error}
+                  </Text>
+                ) : null}
+              </Pressable>
+            ))
+          )}
+          <View className="flex-row gap-4">
+            {selectedId !== null ? (
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => setSelectedId(null)}
+                className="min-h-11 justify-center active:opacity-70"
+              >
+                <Text className="text-base text-foreground">Back</Text>
+              </Pressable>
+            ) : null}
+            <Pressable
+              accessibilityRole="button"
+              disabled={(selectedId === null ? list : detail).isPending}
+              onPress={retry}
+              className="min-h-11 justify-center active:opacity-70 disabled:opacity-50"
+            >
+              <Text className="text-base text-foreground">Refresh</Text>
+            </Pressable>
+          </View>
+        </>
+      ) : null}
+    </View>
+  );
+}
+
+function DeliveryBlock({ title, children }: { title: string; children: string }) {
+  return (
+    <View className="gap-1">
+      <Text className="text-sm text-foreground-muted">{title}</Text>
+      <Text className="font-mono text-xs text-foreground" selectable>
+        {children}
+      </Text>
     </View>
   );
 }
