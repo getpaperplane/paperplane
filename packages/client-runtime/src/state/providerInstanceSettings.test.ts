@@ -20,9 +20,24 @@ import {
   withProviderCommandArgs,
   nextProviderConfigWithFieldValue,
   validateProviderInstanceId,
+  validateProviderSettingsConfig,
 } from "./providerInstanceSettings.ts";
 
 const pi = { driverKind: ProviderDriverKind.make("pi"), settingsSchema: PiSettings };
+
+describe("schema validation before serialized save", () => {
+  it("rejects invalid Pi memory and accepts auto and the boundary", () => {
+    const field = deriveProviderSettingsFields(pi).find(
+      (entry) => entry.key === "workloadMemoryMiB",
+    )!;
+    for (const value of ["garbage", "383", "384.5", "auto", "384", "4096"]) {
+      const config = JSON.parse(JSON.stringify(nextProviderConfigWithFieldValue({}, field, value)));
+      expect(validateProviderSettingsConfig(pi, config) === null).toBe(
+        ["auto", "384", "4096"].includes(value),
+      );
+    }
+  });
+});
 
 describe("deriveProviderSettingsFields", () => {
   it("shows Pi workload fields only when the host supports them", () => {

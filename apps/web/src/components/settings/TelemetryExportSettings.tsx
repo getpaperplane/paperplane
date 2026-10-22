@@ -3,6 +3,7 @@ import type { OtlpSignal } from "@rove-code/contracts";
 import {
   describeOtlpEndpointStatus,
   isOtlpHttpUrl,
+  isOtlpEndpointInputValid,
   type OtlpEndpointCheck,
 } from "@rove-code/client-runtime/environment-admin";
 import { useEffect, useEffectEvent, useState } from "react";
@@ -85,6 +86,7 @@ function TelemetryExportForm() {
   const values = { ...saved, ...draft };
   const changedSignals = SIGNALS.filter(({ key }) => values[key].trim() !== saved[key]);
   const changed = changedSignals.length > 0;
+  const valid = changedSignals.every(({ key }) => isOtlpEndpointInputValid(values[key]));
   const running = environment?.serverConfig?.observability;
 
   const sendCheck = async (key: SignalKey, signal: OtlpSignal, url: string) => {
@@ -123,7 +125,7 @@ function TelemetryExportForm() {
         className="grid gap-4 px-4 py-4 sm:px-5"
         onSubmit={async (event) => {
           event.preventDefault();
-          if (!environment || saving) return;
+          if (!environment || saving || !valid) return;
           setSaving(true);
           setMessage(null);
           try {
@@ -232,7 +234,7 @@ function TelemetryExportForm() {
             >
               Discard
             </Button>
-            <Button type="submit" size="xs" disabled={!changed || saving || !canEdit}>
+            <Button type="submit" size="xs" disabled={!changed || saving || !canEdit || !valid}>
               {saving ? "Saving…" : "Save"}
             </Button>
           </div>

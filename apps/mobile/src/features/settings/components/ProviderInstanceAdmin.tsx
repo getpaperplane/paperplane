@@ -19,6 +19,7 @@ import {
   setEnvironmentRowValue,
   validateAcpRegistryConfig,
   validateProviderEnvironment,
+  validateProviderSettingsConfig,
   validateProviderInstanceId,
   withProviderCommandArgs,
   type ProviderConfigBlob,
@@ -481,6 +482,7 @@ function InstanceForm(props: {
   const dedicatedNames = new Set(environmentFields.map((field) => field.name));
   const problem =
     validateProviderEnvironment(draft.environment) ??
+    (definition ? validateProviderSettingsConfig(definition, draft.config) : null) ??
     (props.driver === "acpRegistry" ? validateAcpRegistryConfig(draft.config) : null);
   return (
     <View className="gap-1 py-2">

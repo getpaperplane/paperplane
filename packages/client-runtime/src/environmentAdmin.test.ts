@@ -3,6 +3,7 @@ import { describe, expect, it } from "vite-plus/test";
 
 import {
   describeOtlpEndpointStatus,
+  isOtlpEndpointInputValid,
   describeStorageCleanupCounts,
   hasEnabledCleanupRules,
   parseRetentionDays,
@@ -16,6 +17,23 @@ const config = (machine?: string, ...[environmentIcon = true]: [boolean?]) =>
   ({
     environment: { capabilities: { environmentIcon }, platform: { machine } },
   }) as unknown as ServerConfig;
+
+describe("OTLP endpoint syntax", () => {
+  it("allows blank reset and unreachable HTTP(S), not malformed URLs", () => {
+    for (const value of ["", "  ", "http://127.0.0.1:1", "HTTPS://collector.invalid/v1/traces"]) {
+      expect(isOtlpEndpointInputValid(value)).toBe(true);
+    }
+    for (const value of [
+      "not-a-url",
+      "http://",
+      "https://[",
+      "ftp://collector.invalid",
+      "http://host:65536",
+    ]) {
+      expect(isOtlpEndpointInputValid(value)).toBe(false);
+    }
+  });
+});
 
 describe("environment icon", () => {
   it("explains the first blocker the user can act on", () => {

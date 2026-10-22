@@ -3,6 +3,7 @@ import type { OtlpSignal } from "@rove-code/contracts";
 import {
   describeOtlpEndpointStatus,
   isOtlpHttpUrl,
+  isOtlpEndpointInputValid,
   type OtlpEndpointCheck,
 } from "@rove-code/client-runtime/environment-admin";
 import { squashAtomCommandFailure } from "@rove-code/client-runtime/state/runtime";
@@ -68,8 +69,9 @@ function OtlpEndpointForm({ target }: { readonly target: SettingsTarget }) {
       setFailure(`Could not test ${signal}: ${String(squashAtomCommandFailure(response))}`);
   };
 
+  const valid = changed.every(({ key }) => isOtlpEndpointInputValid(values[key]));
   const save = async () => {
-    if (saving || !canEdit || changed.length === 0) return;
+    if (saving || !canEdit || changed.length === 0 || !valid) return;
     setSaving(true);
     setMessage(null);
     setFailure(null);
@@ -169,7 +171,7 @@ function OtlpEndpointForm({ target }: { readonly target: SettingsTarget }) {
       <SettingsActionRow
         icon="arrow.uturn.backward"
         label="Discard changes"
-        disabled={changed.length === 0 || saving || !canEdit}
+        disabled={changed.length === 0 || saving || !canEdit || !valid}
         onPress={() => {
           setDraft({});
           setMessage(null);

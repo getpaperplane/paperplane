@@ -140,6 +140,25 @@ export function deriveProviderSettingsFields(
     });
 }
 
+/** Validate editable fields with the same schemas that supply their form metadata. */
+export function validateProviderSettingsConfig(
+  definition: ProviderSettingsFormDefinition,
+  config: unknown,
+): string | null {
+  const values = asProviderConfigBlob(config) ?? {};
+  for (const field of deriveProviderSettingsFields(definition, config)) {
+    const schema = definition.settingsSchema.fields[field.key]!;
+    if (
+      Option.isNone(
+        Schema.decodeUnknownOption(schema as Schema.Decoder<unknown>)(values[field.key]),
+      )
+    ) {
+      return `${field.label}: ${field.description ?? "Invalid value."}`;
+    }
+  }
+  return null;
+}
+
 type MutableFieldModel = {
   -readonly [K in keyof ProviderSettingsFieldModel]: ProviderSettingsFieldModel[K];
 };

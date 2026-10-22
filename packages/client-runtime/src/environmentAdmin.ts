@@ -75,7 +75,21 @@ export function planWorktreesDirectoryChange(
 
 // --- OTLP endpoint check ----------------------------------------------------
 
-export const isOtlpHttpUrl = (url: string) => /^https?:\/\/./i.test(url);
+export const isOtlpHttpUrl = (url: string) => {
+  if (!/^https?:\/\/./i.test(url)) return false;
+  try {
+    const parsed = new URL(url);
+    return (
+      (parsed.protocol === "http:" || parsed.protocol === "https:") && parsed.hostname.length > 0
+    );
+  } catch {
+    return false;
+  }
+};
+
+/** Empty disables export; reachability is deliberately not a save requirement. */
+export const isOtlpEndpointInputValid = (url: string) =>
+  url.trim() === "" || isOtlpHttpUrl(url.trim());
 
 export type OtlpEndpointStatusTone = "off" | "idle" | "pending" | "success" | "failure";
 

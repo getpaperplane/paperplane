@@ -489,6 +489,28 @@ it.layer(NodeServices.layer)("server settings", (it) => {
     }).pipe(Effect.provide(layerServerSettings())),
   );
 
+  it.effect("rejects invalid Pi memory on provider mutations and settings patches", () =>
+    Effect.gen(function* () {
+      const service = yield* ServerSettingsModule.ServerSettingsService;
+      const instanceId = ProviderInstanceId.make("pi_boundary");
+      for (const value of ["invalid", "383", "384.5", "auto", "384"]) {
+        const instance = {
+          driver: ProviderDriverKind.make("pi"),
+          config: { workloadMemoryMiB: value },
+        };
+        const valid = value === "auto" || value === "384";
+        const mutation = yield* service
+          .updateProviderInstance({ operation: "upsert", instanceId, instance })
+          .pipe(Effect.result);
+        assert.equal(mutation._tag === "Success", valid);
+        const patch = yield* service
+          .updateSettings({ providerInstances: { [instanceId]: instance } })
+          .pipe(Effect.result);
+        assert.equal(patch._tag === "Success", valid);
+      }
+    }).pipe(Effect.provide(layerServerSettings())),
+  );
+
   it.effect("creates provider instances atomically without overwriting a concurrent add", () =>
     Effect.gen(function* () {
       const serverSettings = yield* ServerSettingsModule.ServerSettingsService;
