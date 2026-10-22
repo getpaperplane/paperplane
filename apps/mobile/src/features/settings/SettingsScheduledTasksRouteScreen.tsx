@@ -1066,6 +1066,9 @@ function WebhookScheduleDetails({
   readonly onChangeSchedule: (schedule: Draft["schedule"]) => void;
   readonly disabled: boolean;
 }) {
+  const canReadDeliveries = useAtomValue(
+    serverEnvironment.scheduledTaskWebhookDeliveries.permissionAtom(environmentId),
+  );
   const [rotating, setRotating] = useState(false);
   const rotate = useAtomCommand(serverEnvironment.rotateScheduledTaskWebhookToken, {
     label: "scheduled task rotate webhook token",
@@ -1194,7 +1197,7 @@ function WebhookScheduleDetails({
           />
         </View>
       ) : null}
-      {task !== null && webhook ? (
+      {task !== null && webhook && canReadDeliveries ? (
         <WebhookDeliveries
           environmentId={environmentId}
           task={task}
@@ -1214,15 +1217,21 @@ function WebhookDeliveries({
   readonly task: ScheduledTask;
   readonly signatureHeader: string | null;
 }) {
+  const canList = useAtomValue(
+    serverEnvironment.scheduledTaskWebhookDeliveries.permissionAtom(environmentId),
+  );
+  const canDetail = useAtomValue(
+    serverEnvironment.scheduledTaskWebhookDelivery.permissionAtom(environmentId),
+  );
   const [open, setOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<ScheduledTaskWebhookDeliveryId | null>(null);
   const list = useEnvironmentQuery(
-    open
+    open && canList
       ? serverEnvironment.scheduledTaskWebhookDeliveries({ environmentId, input: { id: task.id } })
       : null,
   );
   const detail = useEnvironmentQuery(
-    open && selectedId !== null
+    open && canDetail && selectedId !== null
       ? serverEnvironment.scheduledTaskWebhookDelivery({
           environmentId,
           input: { id: task.id, deliveryId: selectedId },

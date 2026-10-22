@@ -525,6 +525,9 @@ function ScheduledTaskRow({
     serverEnvironment.upsertScheduledTask.permissionAtom(environmentId),
   );
   const [busy, setBusy] = useState(false);
+  const canReadDeliveries = useAtomValue(
+    serverEnvironment.scheduledTaskWebhookDeliveries.permissionAtom(environmentId),
+  );
   const [deliveriesOpen, setDeliveriesOpen] = useState(false);
   const isWebhook = task.schedule.type === "webhook";
   const toggle = useAtomCommand(serverEnvironment.setScheduledTaskEnabled, {
@@ -622,7 +625,7 @@ function ScheduledTaskRow({
               </MenuItem>
             </MenuPopup>
           </Menu>
-          {deliveriesOpen ? (
+          {deliveriesOpen && canReadDeliveries ? (
             <WebhookDeliveriesDialog
               environmentId={environmentId}
               task={task}
@@ -644,14 +647,22 @@ function WebhookDeliveriesDialog({
   readonly task: ScheduledTask;
   readonly onClose: () => void;
 }) {
+  const canList = useAtomValue(
+    serverEnvironment.scheduledTaskWebhookDeliveries.permissionAtom(environmentId),
+  );
+  const canDetail = useAtomValue(
+    serverEnvironment.scheduledTaskWebhookDelivery.permissionAtom(environmentId),
+  );
   const deliveriesQuery = useEnvironmentQuery(
-    serverEnvironment.scheduledTaskWebhookDeliveries({ environmentId, input: { id: task.id } }),
+    canList
+      ? serverEnvironment.scheduledTaskWebhookDeliveries({ environmentId, input: { id: task.id } })
+      : null,
   );
   const [selectedId, setSelectedId] = useState<ScheduledTaskWebhookDeliverySummary["id"] | null>(
     null,
   );
   const selectedQuery = useEnvironmentQuery(
-    selectedId === null
+    selectedId === null || !canDetail
       ? null
       : serverEnvironment.scheduledTaskWebhookDelivery({
           environmentId,

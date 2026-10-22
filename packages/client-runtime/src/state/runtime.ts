@@ -748,6 +748,31 @@ export function createEnvironmentCommand<R, ER, Input, A, E>(
   });
 }
 
+/** Protected reads share the command permission boundary, including execution-time revocation. */
+export function createEnvironmentGuardedRpcQueryAtomFamily<
+  R,
+  ER,
+  TTag extends Extract<EnvironmentUnaryRpcTag, ClientGuardedRpcTag>,
+>(
+  runtime: Atom.AtomRuntime<EnvironmentRegistry.EnvironmentRegistry | R, ER>,
+  options: { readonly label: string; readonly tag: TTag },
+) {
+  const permissions = createCommandPermissions(runtime, options.tag);
+  const query = createEnvironmentQueryAtomFamily(runtime, {
+    label: options.label,
+    execute: (input: EnvironmentRpcInput<TTag>) =>
+      Effect.gen(function* () {
+        const registry = yield* AtomRegistry.AtomRegistry;
+        return yield* requestGuarded(options.tag, input).pipe(
+          Effect.provideService(RpcPermissionGuard, {
+            authorize: (id, _method, payload) => permissions.authorize(registry, id, payload),
+          }),
+        );
+      }),
+  });
+  return Object.assign(query, { permissionAtom: permissions.permissionAtom });
+}
+
 export function createEnvironmentRpcQueryAtomFamily<
   R,
   ER,
