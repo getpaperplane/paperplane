@@ -337,6 +337,10 @@ export const make = Effect.fn("cloud.server_self_update.make")(function* () {
         ),
       );
 
+      // Acceptance schedules beginTrial, which terminates the active child before
+      // backup/activation. Trial failures boot the previous version; launcher
+      // transition failures also terminate the child. Thus accepted consent must
+      // survive shutdown, including rollback, rather than be cleared on return.
       yield* Effect.logInfo("Server update prepared; handing off to the service launcher.", {
         updateId,
         targetVersion,

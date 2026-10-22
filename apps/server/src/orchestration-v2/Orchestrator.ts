@@ -10147,13 +10147,17 @@ const makeOrchestrator = Effect.fn("orchestrationV2.Orchestrator.layer")(functio
    * RestartContinuation recovers the thread when it declines to continue.
    */
   const awaitsRestartContinuation = (run: OrchestrationV2Run) =>
-    effectOutbox
-      .get(`effect:restart-continuation:${run.id}`)
-      .pipe(
-        Effect.map(
-          Option.exists((effect) => effect.status === "pending" || effect.status === "running"),
+    effectOutbox.get(`effect:restart-continuation:${run.id}`).pipe(
+      Effect.map(
+        Option.exists(
+          (effect) =>
+            (effect.status === "pending" || effect.status === "running") &&
+            // Prepared consent is not recovery work until a process boundary.
+            // A live provider can still finish naturally before the handoff.
+            !(effect.request.type === "provider-runtime.continue" && effect.request.waitForRestart),
         ),
-      );
+      ),
+    );
 
   /**
    * A delegated child's result is held while its result run, or a run after it
