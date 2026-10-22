@@ -43,6 +43,7 @@ import { serverEnvironment } from "../../../state/server";
 import { useAtomCommand } from "../../../state/use-atom-command";
 import {
   draftFromProviderInstance,
+  nextProviderDraftConfigWithFieldValue,
   providerDraftChanged,
   type ProviderInstanceDraft,
   listProviderInstanceRows,
@@ -94,6 +95,7 @@ function useProviderInstanceMutation(environmentId: SettingsTarget["environmentI
 function FieldInputs(props: {
   readonly fields: ReadonlyArray<ProviderSettingsFieldModel>;
   readonly config: ProviderConfigBlob | undefined;
+  readonly initialConfig: ProviderConfigBlob | undefined;
   readonly disabled: boolean;
   readonly onChange: (next: ProviderConfigBlob | undefined) => void;
 }) {
@@ -169,10 +171,14 @@ function FieldInputs(props: {
             onChangeText={(value) => {
               if (field.secret) {
                 setSecrets((current) => ({ ...current, [field.key]: value }));
-                if (value === "") return;
               }
               props.onChange(
-                asProviderConfigBlob(nextProviderConfigWithFieldValue(props.config, field, value)),
+                nextProviderDraftConfigWithFieldValue(
+                  props.config,
+                  props.initialConfig,
+                  field,
+                  value,
+                ),
               );
             }}
           />
@@ -512,6 +518,7 @@ function InstanceForm(props: {
       <FieldInputs
         fields={fields}
         config={draft.config}
+        initialConfig={initial.config}
         disabled={props.pending}
         onChange={(config) => setDraft({ ...draft, config })}
       />

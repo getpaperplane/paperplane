@@ -1,4 +1,8 @@
 import { ProviderDriverKind } from "@rove-code/contracts";
+import {
+  nextProviderEnvironmentWithFieldValue,
+  type ProviderSettingsFieldModel,
+} from "@rove-code/client-runtime/state/provider-instance-settings";
 import { describe, expect, it } from "vite-plus/test";
 
 import {
@@ -8,6 +12,8 @@ import {
   listProviderInstanceRows,
   providerInstanceEnabledMutation,
   providerInstanceCreateMutation,
+  providerInstanceSaveMutation,
+  nextProviderDraftConfigWithFieldValue,
 } from "./provider-instances";
 
 const codex = ProviderDriverKind.make("codex");
@@ -81,6 +87,107 @@ describe("provider instance mutations", () => {
         },
       ),
     ).toEqual({ driver: codex });
+  });
+});
+
+describe("secret replacement cancellation", () => {
+  const replacement = "test-only-replacement";
+
+  it.each(["omit", "persist"] as const)(
+    "restores a saved secret after typing then erasing (%s)",
+    (clearWhenEmpty) => {
+      const field: ProviderSettingsFieldModel = {
+        key: "apiKey",
+        label: "API key",
+        control: "password",
+        secret: true,
+        clearWhenEmpty,
+      };
+      const row = {
+        instanceId: "codex_work" as never,
+        instance: { driver: codex, config: { apiKey: "REDACTED", hidden: true } },
+      };
+      const initial = draftFromProviderInstance(row.instance);
+      const typed = nextProviderDraftConfigWithFieldValue(
+        initial.config,
+        initial.config,
+        field,
+        replacement,
+      );
+      expect(typed?.apiKey).toBe(replacement);
+      const config = nextProviderDraftConfigWithFieldValue(
+        { ...typed, otherEdit: "kept" },
+        initial.config,
+        field,
+        "",
+      );
+      const serialized = JSON.stringify(providerInstanceSaveMutation(row, { ...initial, config }));
+      expect(serialized).not.toContain(replacement);
+      expect(JSON.parse(serialized)).toMatchObject({
+        operation: "upsert",
+        instance: { config: { apiKey: "REDACTED", hidden: true, otherEdit: "kept" } },
+      });
+      expect(row.instance.config.apiKey).toBe("REDACTED");
+    },
+  );
+
+  it.each(["omit", "persist"] as const)(
+    "omits a new secret after typing then erasing (%s)",
+    (clearWhenEmpty) => {
+      const field: ProviderSettingsFieldModel = {
+        key: "apiKey",
+        label: "API key",
+        control: "password",
+        secret: true,
+        clearWhenEmpty,
+      };
+      const initial = draftFromProviderInstance({ driver: codex });
+      const typed = nextProviderDraftConfigWithFieldValue(
+        initial.config,
+        initial.config,
+        field,
+        replacement,
+      );
+      expect(typed?.apiKey).toBe(replacement);
+      const config = nextProviderDraftConfigWithFieldValue(typed, initial.config, field, "");
+      const serialized = JSON.stringify(
+        providerInstanceCreateMutation({
+          driver: codex,
+          instanceId: "codex_work",
+          draft: { ...initial, config },
+        }),
+      );
+      expect(serialized).not.toContain(replacement);
+      expect(JSON.parse(serialized)).toEqual({
+        operation: "create",
+        instanceId: "codex_work",
+        instance: { driver: codex, enabled: true },
+      });
+    },
+  );
+
+  it("does not retain a cleared driver environment replacement", () => {
+    const row = {
+      instanceId: "codex_work" as never,
+      instance: {
+        driver: codex,
+        environment: [{ name: "TOKEN", value: "", sensitive: true, valueRedacted: true }],
+      },
+    };
+    const initial = draftFromProviderInstance(row.instance);
+    const field = { name: "TOKEN", sensitive: true };
+    const typed = nextProviderEnvironmentWithFieldValue(initial.environment, field, replacement);
+    expect(typed[0]?.value).toBe(replacement);
+    const environment = nextProviderEnvironmentWithFieldValue(typed, field, "");
+    const serialized = JSON.stringify(
+      providerInstanceSaveMutation(row, { ...initial, environment }),
+    );
+    expect(serialized).not.toContain(replacement);
+    expect(JSON.parse(serialized)).toEqual({
+      operation: "upsert",
+      instanceId: "codex_work",
+      instance: { driver: codex },
+    });
   });
 });
 

@@ -10,7 +10,9 @@ import {
 import {
   asProviderConfigBlob,
   finalizeProviderEnvironment,
+  nextProviderConfigWithFieldValue,
   type ProviderConfigBlob,
+  type ProviderSettingsFieldModel,
 } from "@rove-code/client-runtime/state/provider-instance-settings";
 import type { ProviderClientDefinition } from "@rove-code/provider-core/client";
 
@@ -83,6 +85,25 @@ export function draftFromProviderInstance(instance: ProviderInstanceConfig): Pro
     config: asProviderConfigBlob(instance.config),
     environment: instance.environment ?? [],
   };
+}
+
+/** An empty secret input cancels its replacement, retaining only the original saved value. */
+export function nextProviderDraftConfigWithFieldValue(
+  config: ProviderConfigBlob | undefined,
+  initialConfig: ProviderConfigBlob | undefined,
+  field: ProviderSettingsFieldModel,
+  value: string | boolean,
+): ProviderConfigBlob | undefined {
+  if (field.secret && value === "") {
+    const next = { ...config };
+    if (initialConfig && Object.hasOwn(initialConfig, field.key)) {
+      next[field.key] = initialConfig[field.key];
+    } else {
+      delete next[field.key];
+    }
+    return Object.keys(next).length > 0 ? next : undefined;
+  }
+  return nextProviderConfigWithFieldValue(config, field, value);
 }
 
 /** Whether saving would change anything, ignoring blank rows the user added but never filled. */
