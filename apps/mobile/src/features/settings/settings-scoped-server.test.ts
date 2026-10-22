@@ -66,6 +66,60 @@ function environment(environmentId: EnvironmentId, settings: ServerSettings): Se
 }
 
 describe("mobile project settings scope", () => {
+  it("merges custom cleanup edits with each checkout's effective rules and resets only cleanup", () => {
+    const settings: ServerSettings = {
+      ...DEFAULT_SERVER_SETTINGS,
+      storageCleanup: {
+        ...DEFAULT_SERVER_SETTINGS.storageCleanup,
+        worktreeAfterDays: 17,
+        worktreeOnMerge: true,
+      },
+      projectSettingsOverrides: {
+        [firstProject]: { defaultAutoPull: true, worktreeCleanup: { mode: "off" } },
+      },
+    };
+    const targets = resolveMobileSettingsTargets(
+      [environment(firstId, settings)],
+      [
+        { environmentId: firstId, id: firstProject },
+        { environmentId: firstId, id: secondProject },
+      ],
+    );
+    const writes = planMobileScopedSettingsPatch(targets, true, {
+      worktreeCleanup: { mode: "custom", rules: { worktreeOnDelete: true } },
+    });
+    expect(writes).toHaveLength(1);
+    const overrides = writes[0]!.patch.projectSettingsOverrides!;
+    expect(overrides[firstProject]).toMatchObject({
+      defaultAutoPull: true,
+      worktreeCleanup: {
+        mode: "custom",
+        rules: { worktreeAfterDays: null, worktreeOnMerge: false, worktreeOnDelete: true },
+      },
+    });
+    expect(overrides[secondProject]).toMatchObject({
+      worktreeCleanup: {
+        mode: "custom",
+        rules: { worktreeAfterDays: 17, worktreeOnMerge: true, worktreeOnDelete: true },
+      },
+    });
+    expect(writes[0]!.patch.storageCleanup).toBeUndefined();
+    expect(
+      planMobileScopedSettingsPatch(targets, true, { storageCleanup: { logsAfterDays: 30 } }),
+    ).toEqual([]);
+    expect(
+      planMobileScopedSettingsPatch(targets, true, { worktreesDirectory: "/tmp/elsewhere" }),
+    ).toEqual([]);
+    expect(
+      planMobileScopedSettingsClear(targets, ["worktreeCleanup"])[0]!.patch
+        .projectSettingsOverrides,
+    ).toEqual({
+      [firstProject]: { defaultAutoPull: true },
+      [secondProject]: null,
+    });
+    expect(settings.storageCleanup.worktreeAfterDays).toBe(17);
+    expect(settings.projectSettingsOverrides[firstProject]?.worktreeCleanup?.mode).toBe("off");
+  });
   it("edits each checkout's own override without changing either environment default", () => {
     const firstSettings: ServerSettings = {
       ...DEFAULT_SERVER_SETTINGS,

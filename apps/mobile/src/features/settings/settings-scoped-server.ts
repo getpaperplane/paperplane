@@ -10,6 +10,7 @@ import {
 import {
   clearProjectSettingsOverrides,
   resolveProjectSettings,
+  resolveWorktreeCleanup,
 } from "@rove-code/shared/projectSettings";
 
 import type { SettingsTarget } from "./settings-environment-filter";
@@ -72,6 +73,16 @@ export function planMobileScopedSettingsPatch(
       target.environment.serverConfig.settings.projectSettingsOverrides[target.projectId] ?? {};
     const next: Record<string, unknown> = { ...current };
     for (const [key, value] of Object.entries(patch)) {
+      if (key === "worktreeCleanup" && patch.worktreeCleanup?.mode === "custom") {
+        next[key] = {
+          mode: "custom",
+          rules: {
+            ...resolveWorktreeCleanup(target.environment.serverConfig.settings, target.projectId),
+            ...patch.worktreeCleanup.rules,
+          },
+        };
+        continue;
+      }
       // A picker's "Inherit" sends null; for keys whose override cannot
       // store null that means remove the override.
       if (

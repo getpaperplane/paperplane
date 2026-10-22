@@ -3,6 +3,7 @@ import type {
   ServerSettingsPatch,
   StorageCleanupReport,
   WorktreeKeepWhen,
+  WorktreeCleanupRules,
 } from "@rove-code/contracts";
 import {
   describeStorageCleanupCounts,
@@ -12,6 +13,8 @@ import {
   storageCleanupEntryName,
   uniformValue,
 } from "@rove-code/client-runtime/environment-admin";
+import { resolveWorktreeCleanup } from "@rove-code/shared/projectSettings";
+import type { ScopedMobileSettingsTarget } from "../settings-scoped-server";
 import { squashAtomCommandFailure } from "@rove-code/client-runtime/state/runtime";
 import { Atom, AsyncResult } from "effect/reactivity";
 import { useMemo, useRef, useState } from "react";
@@ -262,6 +265,126 @@ export function StorageCleanupSettings(props: {
         </>
       )}
     </>
+  );
+}
+
+/** Only worktree rules are project-scoped; storage retention and manual runs are not. */
+export function ProjectWorktreeCleanupSettings(props: {
+  readonly targets: readonly ScopedMobileSettingsTarget[];
+  readonly disabled: boolean;
+  readonly write: (patch: ServerSettingsPatch) => void;
+  readonly inherit: () => void;
+}) {
+  const { targets, disabled, write } = props;
+  const supported =
+    targets.length > 0 &&
+    targets.every(
+      (target) =>
+        target.environment.serverConfig.environment.capabilities.projectWorktreeCleanup === true &&
+        target.environment.serverConfig.environment.capabilities.storageCleanup === true,
+    );
+  if (!supported)
+    return (
+      <Text className="px-2 text-sm text-foreground-muted">
+        Update the selected environments to configure project worktree cleanup.
+      </Text>
+    );
+  const modes = targets.map((target) =>
+    target.sources.worktreeCleanup === "project"
+      ? (target.settings.worktreeCleanup?.mode ?? "inherit")
+      : "inherit",
+  );
+  const mode = uniformValue(modes);
+  const rules = targets.map((target) =>
+    resolveWorktreeCleanup(target.environment.serverConfig.settings, target.projectId),
+  );
+  const values = <K extends keyof WorktreeCleanupRules>(key: K) => rules.map((entry) => entry[key]);
+  const patch = (rules: Partial<WorktreeCleanupRules>) =>
+    write({ worktreeCleanup: { mode: "custom", rules } });
+  return (
+    <SettingsSection title="Automatic worktree cleanup">
+      {(["inherit", "off", "custom"] as const).map((choice) => (
+        <SettingsChoiceRow
+          key={choice}
+          label={
+            choice === "inherit"
+              ? "Use environment defaults"
+              : choice === "off"
+                ? "Off"
+                : "Custom project rules"
+          }
+          description={
+            choice === "off"
+              ? "Keep this project's worktrees until you delete them manually."
+              : undefined
+          }
+          selected={mode === choice}
+          disabled={disabled}
+          onPress={() =>
+            choice === "inherit"
+              ? props.inherit()
+              : write({
+                  worktreeCleanup:
+                    choice === "off" ? { mode: "off" } : { mode: "custom", rules: {} },
+                })
+          }
+        />
+      ))}
+      {mode === "custom" ? (
+        <>
+          <SettingsSwitchRow
+            label="Delete worktrees with deleted threads"
+            value={uniformValue(values("worktreeOnDelete")) ?? null}
+            disabled={disabled}
+            onValueChange={(worktreeOnDelete) => patch({ worktreeOnDelete })}
+          />
+          <RetentionRow
+            label="Delete inactive worktrees"
+            subtitle="Remove worktrees after their threads have been inactive for this many days."
+            values={values("worktreeAfterDays")}
+            disabled={disabled}
+            onChange={(worktreeAfterDays) => patch({ worktreeAfterDays })}
+          />
+          {targets.every(
+            (target) =>
+              target.environment.serverConfig.environment.capabilities.settledWorktreeCleanup ===
+              true,
+          ) ? (
+            <RetentionRow
+              label="Delete settled worktrees"
+              subtitle="Remove worktrees this many days after their thread settles."
+              values={values("worktreeSettledAfterDays")}
+              minimum={0}
+              disabled={disabled}
+              onChange={(worktreeSettledAfterDays) => patch({ worktreeSettledAfterDays })}
+            />
+          ) : null}
+          <SettingsSwitchRow
+            label="Delete merged worktrees"
+            value={uniformValue(values("worktreeOnMerge")) ?? null}
+            disabled={disabled}
+            onValueChange={(worktreeOnMerge) => patch({ worktreeOnMerge })}
+          />
+          <SettingsSwitchRow
+            label="Delete unchanged worktrees"
+            value={uniformValue(values("worktreeUnchanged")) ?? null}
+            disabled={disabled}
+            onValueChange={(worktreeUnchanged) => patch({ worktreeUnchanged })}
+          />
+          <Text className="px-4 pt-3 text-sm text-foreground-muted">Keep worktrees with</Text>
+          {KEEP_WHEN.map((choice) => (
+            <SettingsChoiceRow
+              key={choice.value}
+              label={choice.label}
+              description={choice.description}
+              selected={uniformValue(values("worktreeKeepWhen")) === choice.value}
+              disabled={disabled}
+              onPress={() => patch({ worktreeKeepWhen: choice.value })}
+            />
+          ))}
+        </>
+      ) : null}
+    </SettingsSection>
   );
 }
 
