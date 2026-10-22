@@ -8,31 +8,43 @@ type SpeechRecognitionResultLike = {
   readonly isFinal: boolean;
   readonly 0?: { readonly transcript: string };
 };
-type SpeechRecognitionLike = {
+type SpeechRecognitionResultEventLike = {
+  resultIndex: number;
+  results: ArrayLike<SpeechRecognitionResultLike>;
+};
+interface SpeechRecognitionLike extends EventTarget {
   lang: string;
   continuous: boolean;
   interimResults: boolean;
   maxAlternatives: number;
-  onresult:
-    | ((event: { resultIndex: number; results: ArrayLike<SpeechRecognitionResultLike> }) => void)
-    | null;
-  onerror: ((event: { error: string }) => void) | null;
-  onend: (() => void) | null;
   start(): void;
   stop(): void;
   abort(): void;
-};
+}
 type SpeechRecognitionConstructor = new () => SpeechRecognitionLike;
+
+/** Web Speech events are not in lib.dom, so read their fields by shape. */
+function readResultEvent(event: Event): SpeechRecognitionResultEventLike {
+  // SAFETY: "result" events are SpeechRecognitionEvent; absent fields fall back below.
+  const { resultIndex, results } = event as Event & Partial<SpeechRecognitionResultEventLike>;
+  return { resultIndex: resultIndex ?? 0, results: results ?? [] };
+}
+
+function readErrorName(event: Event): string {
+  // SAFETY: "error" events are SpeechRecognitionErrorEvent; absent fields fall back.
+  return (event as Event & { error?: string }).error ?? "unknown";
+}
 
 function recognitionConstructor(): SpeechRecognitionConstructor | null {
   if (typeof window === "undefined") return null;
   // Electron ships Chromium without Google's speech service keys, so recognition
   // there fails with a network error. Treat the desktop shell as unsupported.
   if (window.desktopBridge !== undefined) return null;
-  const candidate = window as unknown as {
+  // lib.dom has no recognition globals, so read them by name.
+  const candidate: Window & {
     SpeechRecognition?: SpeechRecognitionConstructor;
     webkitSpeechRecognition?: SpeechRecognitionConstructor;
-  };
+  } = window;
   return candidate.SpeechRecognition ?? candidate.webkitSpeechRecognition ?? null;
 }
 
@@ -78,7 +90,8 @@ export function createWebVoiceRecognizer(): LiveVoiceRecognizer | null {
       recognition.continuous = true;
       recognition.interimResults = true;
       recognition.maxAlternatives = 1;
-      recognition.onresult = (event) => {
+      const onResult = (domEvent: Event) => {
+        const event = readResultEvent(domEvent);
         let finalText = "";
         let interimText = "";
         for (let index = event.resultIndex; index < event.results.length; index += 1) {
@@ -90,16 +103,19 @@ export function createWebVoiceRecognizer(): LiveVoiceRecognizer | null {
         if (finalText) events.onResult(finalText, true);
         if (interimText) events.onResult(interimText, false);
       };
-      recognition.onerror = (event) => {
-        const code = mapError(event.error);
+      const onError = (domEvent: Event) => {
+        const code = mapError(readErrorName(domEvent));
         if (code) events.onError(code);
       };
-      recognition.onend = () => {
-        recognition.onresult = null;
-        recognition.onerror = null;
-        recognition.onend = null;
+      const onEnd = () => {
+        recognition.removeEventListener("result", onResult);
+        recognition.removeEventListener("error", onError);
+        recognition.removeEventListener("end", onEnd);
         events.onEnd();
       };
+      recognition.addEventListener("result", onResult);
+      recognition.addEventListener("error", onError);
+      recognition.addEventListener("end", onEnd);
       recognition.start();
       return { stop: () => recognition.stop(), abort: () => recognition.abort() };
     },

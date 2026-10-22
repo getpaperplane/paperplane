@@ -174,12 +174,12 @@
         "react-native-reanimated",
         "@react-native-menu/menu",
         "expo-audio"
-      ]
-    },
-    "ios": {
-      "exclude": [
-        "expo-speech-recognition"
-      ]
+      ],
+      "ios": {
+        "exclude": [
+          "expo-speech-recognition"
+        ]
+      }
     }
   },
   "reanimated": {

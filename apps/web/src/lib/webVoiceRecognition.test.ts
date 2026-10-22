@@ -2,24 +2,28 @@ import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 
 import { createWebVoiceRecognizer, isWebVoiceRecognitionSupported } from "./webVoiceRecognition";
 
-class FakeRecognition {
+class FakeRecognition extends EventTarget {
   static instance: FakeRecognition | null = null;
   lang = "";
   continuous = false;
   interimResults = false;
   maxAlternatives = 1;
-  onresult: ((event: never) => void) | null = null;
-  onerror: ((event: { error: string }) => void) | null = null;
-  onend: (() => void) | null = null;
   start = vi.fn();
   stop = vi.fn();
   abort = vi.fn();
   constructor() {
+    super();
     FakeRecognition.instance = this;
+  }
+  emit(type: string, detail: Record<string, number | string | unknown[]> = {}) {
+    this.dispatchEvent(Object.assign(new Event(type), detail));
   }
 }
 
-function stubWindow(extra: Record<string, unknown>) {
+function stubWindow(extra: {
+  desktopBridge?: string;
+  webkitSpeechRecognition?: typeof FakeRecognition;
+}) {
   vi.stubGlobal("window", extra);
   vi.stubGlobal("navigator", { language: "en-US" });
 }
@@ -30,7 +34,7 @@ describe("web voice recognition", () => {
   it("is unavailable without the API and inside the desktop shell", () => {
     stubWindow({});
     expect(isWebVoiceRecognitionSupported()).toBe(false);
-    stubWindow({ webkitSpeechRecognition: FakeRecognition, desktopBridge: {} });
+    stubWindow({ webkitSpeechRecognition: FakeRecognition, desktopBridge: "yes" });
     expect(createWebVoiceRecognizer()).toBeNull();
   });
 
@@ -42,23 +46,28 @@ describe("web voice recognition", () => {
     const fake = FakeRecognition.instance!;
     expect(fake.start).toHaveBeenCalledOnce();
 
-    fake.onresult?.({
+    fake.emit("result", {
       resultIndex: 0,
       results: [
         { isFinal: true, 0: { transcript: "hello" } },
         { isFinal: false, 0: { transcript: " wor" } },
       ],
-    } as never);
+    });
     expect(events.onResult).toHaveBeenNthCalledWith(1, "hello", true);
     expect(events.onResult).toHaveBeenNthCalledWith(2, " wor", false);
 
     recognition.abort();
-    fake.onerror?.({ error: "aborted" });
+    fake.emit("error", { error: "aborted" });
     expect(events.onError).not.toHaveBeenCalled();
-    fake.onerror?.({ error: "not-allowed" });
+    fake.emit("error", { error: "not-allowed" });
     expect(events.onError).toHaveBeenCalledWith("not-allowed");
-    fake.onend?.();
+    fake.emit("end");
+    fake.emit("result", {
+      resultIndex: 0,
+      results: [{ isFinal: true, 0: { transcript: "late" } }],
+    });
+    fake.emit("end");
     expect(events.onEnd).toHaveBeenCalledOnce();
-    expect(fake.onend).toBeNull();
+    expect(events.onResult).toHaveBeenCalledTimes(2);
   });
 });

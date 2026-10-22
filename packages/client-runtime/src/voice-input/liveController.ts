@@ -1,3 +1,4 @@
+// @effect-diagnostics globalTimers:off - The recording limit runs in the client, outside an Effect runtime.
 import {
   resolveTranscriptCommit,
   VOICE_RECORDING_LIMIT_SECONDS,
@@ -82,6 +83,13 @@ type LiveRun = {
 /** Only one engine owns the microphone. A cancelled run holds it until `onEnd`. */
 let activeEngine: Promise<void> | null = null;
 
+async function waitForEngine(): Promise<void> {
+  const engine = activeEngine;
+  if (!engine) return;
+  await engine;
+  await waitForEngine();
+}
+
 const IDLE_STATE: VoiceInputState = { phase: "idle", error: null, errorAction: null };
 
 function errorState(code: LiveVoiceErrorCode): VoiceInputState {
@@ -122,7 +130,11 @@ export class LiveVoiceInputController implements VoiceInputRunner {
   private operationToken = 0;
   private run: LiveRun | null = null;
 
-  constructor(private readonly dependencies: LiveVoiceInputDependencies) {}
+  private readonly dependencies: LiveVoiceInputDependencies;
+
+  constructor(dependencies: LiveVoiceInputDependencies) {
+    this.dependencies = dependencies;
+  }
 
   get currentState(): VoiceInputState {
     return this.state;
@@ -148,10 +160,9 @@ export class LiveVoiceInputController implements VoiceInputRunner {
     this.setState({ phase: "preparing", error: null, errorAction: null });
 
     try {
-      while (activeEngine) {
-        await activeEngine;
-        if (token !== this.operationToken) return;
-      }
+      // A cancelled run still owns the microphone. Wait for its `onEnd`, not a timer.
+      await waitForEngine();
+      if (token !== this.operationToken) return;
       const permission = await recognizer.requestPermission();
       if (token !== this.operationToken) return;
       if (!permission.granted) {

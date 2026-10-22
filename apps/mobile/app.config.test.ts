@@ -1,3 +1,4 @@
+import * as NodeFS from "node:fs";
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 
 const configEnv = vi.hoisted(() => ({ current: {} }));
@@ -188,5 +189,24 @@ describe("source-built mobile identity", () => {
     await expect(
       configFor({ ROVE_CLOUD_READY: "1", ROVE_CLERK_RELYING_PARTY_DOMAIN: "clerk.t3.codes" }),
     ).rejects.toThrow("must belong to this project");
+  });
+});
+
+describe("speech recognition platform config", () => {
+  const pkg = JSON.parse(NodeFS.readFileSync(new URL("./package.json", import.meta.url), "utf8"));
+
+  it("links expo-speech-recognition on Android only", () => {
+    expect(pkg.expo.autolinking.ios.exclude).toEqual(["expo-speech-recognition"]);
+    expect(pkg.expo.autolinking.android).toBeUndefined();
+  });
+
+  it("applies only the Android half of the speech plugin, leaving iOS plist untouched", async () => {
+    const config = await configFor({});
+    const pluginNames = (config.plugins ?? []).map((plugin) =>
+      Array.isArray(plugin) ? plugin[0] : plugin,
+    );
+    expect(pluginNames).toContain("./plugins/withAndroidSpeechRecognition.cjs");
+    expect(pluginNames).not.toContain("expo-speech-recognition");
+    expect(config.ios?.infoPlist?.NSSpeechRecognitionUsageDescription).toBeUndefined();
   });
 });
