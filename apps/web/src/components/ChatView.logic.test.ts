@@ -727,6 +727,67 @@ describe("hasServerAcknowledgedLocalDispatch", () => {
     ).toBe(true);
   });
 
+  it("does not treat transcript timestamps as send acknowledgements", () => {
+    for (const running of [false, true]) {
+      const latestRun = running
+        ? { ...completedTurn, status: "running" as const, completedAt: null }
+        : completedTurn;
+      const runtime = running
+        ? { ...readySession, status: "running" as const, activeRunId: latestRun.runId }
+        : readySession;
+      const localDispatch = createLocalDispatchSnapshot(makeThread({ latestRun, runtime }), {
+        latestUserMessageId: MessageId.make("previous-user"),
+      });
+      expect(
+        hasServerAcknowledgedLocalDispatch({
+          localDispatch,
+          phase: running ? "running" : "ready",
+          latestRun,
+          latestUserMessageId: MessageId.make("previous-user"),
+          runtime: { ...runtime, updatedAt: "2026-03-29T00:09:00.000Z" },
+          hasPendingApproval: false,
+          hasPendingUserInput: false,
+          threadError: null,
+        }),
+      ).toBe(false);
+    }
+  });
+
+  it("acknowledges a queued user message without needing a runtime timestamp change", () => {
+    const previousUser = MessageId.make("previous-user");
+    const localDispatch = createLocalDispatchSnapshot(
+      makeThread({ latestRun: completedTurn, runtime: readySession }),
+      { latestUserMessageId: previousUser },
+    );
+    expect(
+      hasServerAcknowledgedLocalDispatch({
+        localDispatch,
+        phase: "ready",
+        latestRun: completedTurn,
+        latestUserMessageId: MessageId.make("queued-user"),
+        runtime: readySession,
+        hasPendingApproval: false,
+        hasPendingUserInput: false,
+        threadError: null,
+      }),
+    ).toBe(true);
+  });
+
+  it("acknowledges a first send that failed before its run started", () => {
+    const localDispatch = createLocalDispatchSnapshot(makeThread());
+    expect(
+      hasServerAcknowledgedLocalDispatch({
+        localDispatch,
+        phase: "ready",
+        latestRun: { ...completedTurn, status: "failed", startedAt: null },
+        runtime: { ...readySession, status: "failed" },
+        hasPendingApproval: false,
+        hasPendingUserInput: false,
+        threadError: "Provider failed to start",
+      }),
+    ).toBe(true);
+  });
+
   it("acknowledges pending user interaction and errors immediately", () => {
     const localDispatch = createLocalDispatchSnapshot(makeThread());
     const common = {
