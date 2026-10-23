@@ -55,7 +55,7 @@ const ROW_BOTTOM_MARGIN = 8;
 // what it relays with a secret only it holds, and React Native drops anything
 // else. The bridge belongs to the captured document: once the app frame loads
 // a second time (it navigated itself), the outer page stops relaying and says
-// so, rather than letting a page Rove never served pose as the app. This is not
+// so, rather than letting a page Paperplane never served pose as the app. This is not
 // a confidentiality boundary: a frame can always navigate itself, so the app
 // could carry anything it read out in a URL either way.
 function outerDocument(src: string, allow: string, secret: string) {
@@ -362,7 +362,7 @@ export function ThreadMcpApp(props: {
       },
       openLink: async (url) => {
         // A WebView cannot tell whether the reader just tapped the app, so it
-        // asks, rather than letting an app leave Rove on a timer.
+        // asks, rather than letting an app leave Paperplane on a timer.
         if (!(await confirm(`Open a link from ${app.server}?`, url, "Open"))) {
           throw new McpAppHostRefusal("Declined by the user.");
         }

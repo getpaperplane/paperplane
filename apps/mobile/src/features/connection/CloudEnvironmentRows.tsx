@@ -35,15 +35,15 @@ interface CloudEnvironmentRowsProps {
   readonly showcaseAvailableEnvironments?: ReadonlyArray<RelayEnvironmentView>;
   readonly showcaseSignedIn?: boolean;
   /**
-   * Hide the "Rove Connect" section title when the host provides its own header.
+   * Hide the "Paperplane Connect" section title when the host provides its own header.
    */
   readonly showHeader?: boolean;
 }
 
 /**
- * "Rove Connect" section: every environment published to the signed-in account,
+ * "Paperplane Connect" section: every environment published to the signed-in account,
  * with connect switches, availability status, and loading/error
- * states. Shared between the Settings environments screen and the Rove Connect
+ * states. Shared between the Settings environments screen and the Paperplane Connect
  * onboarding sheet.
  *
  * Already-connected relay environments render even without cloud config or a
@@ -114,7 +114,7 @@ function CloudEnvironmentRowsContent(
       {showHeader ? (
         <View className="px-1">
           <Text className="text-sm font-rove-bold uppercase text-foreground-muted">
-            Rove Connect
+            Paperplane Connect
           </Text>
         </View>
       ) : null}
@@ -172,7 +172,7 @@ function CloudEnvironmentRowsContent(
       !controller.relayDiscovery.isRefreshing ? (
         <View collapsable={false} className="gap-3 rounded-[24px] bg-grouped-card p-5">
           <Text className="text-base font-rove-bold text-foreground">
-            Could not load Rove Connect environments
+            Could not load Paperplane Connect environments
           </Text>
           <Text className="text-sm text-foreground-muted">{controller.relayDiscovery.error}</Text>
           {controller.relayDiscovery.errorTraceId ? (
@@ -194,7 +194,7 @@ function CloudEnvironmentRowsContent(
 }
 
 /**
- * A saved Rove Connect environment. The switch turns it on or off; off keeps the
+ * A saved Paperplane Connect environment. The switch turns it on or off; off keeps the
  * registration and cache but drops the connection and hides its errors.
  * Long-press removes it from this device.
  */

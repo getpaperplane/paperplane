@@ -37,12 +37,12 @@ function endpointLabel(environment: RelayClientEnvironmentRecord): string {
 
 function confirmDeregister(environment: RelayClientEnvironmentRecord, onConfirm: () => void) {
   const title = "Deregister server?";
-  const message = `“${environment.label}” will be removed from this account. Rove Connect access will be revoked, any managed tunnel will be removed, and a host space will become available. Local connections on your devices are not changed.`;
+  const message = `“${environment.label}” will be removed from this account. Paperplane Connect access will be revoked, any managed tunnel will be removed, and a host space will become available. Local connections on your devices are not changed.`;
   Dialog.confirm({ title, message, confirmText: "Deregister", destructive: true, onConfirm });
 }
 
 /**
- * The "Rove Connect" custom page inside Clerk's native user profile: every
+ * The "Paperplane Connect" custom page inside Clerk's native user profile: every
  * environment registered to the signed-in account, with account-level
  * deregistration. Mirrors the web UserButton page; connections on this device
  * are managed in Settings instead.
@@ -139,7 +139,7 @@ export function RoveConnectProfilePage() {
       {environmentsState.error ? (
         <>
           <ClerkRow
-            title="Could not load Rove Connect environments"
+            title="Could not load Paperplane Connect environments"
             subtitle={environmentsState.error}
           />
           {errorTraceId ? (
@@ -199,7 +199,7 @@ export function RoveConnectProfilePage() {
       ) : (
         <ClerkRow
           title="No servers registered"
-          subtitle="Link a server from its local Settings to reach it through Rove Connect."
+          subtitle="Link a server from its local Settings to reach it through Paperplane Connect."
         />
       )}
 

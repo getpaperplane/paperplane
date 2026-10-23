@@ -65,7 +65,7 @@ final class RoveNativeVideoPresentation: NSObject, AVPlayerViewControllerDelegat
     do {
       try audioSession.setCategory(.playback, mode: .moviePlayback)
     } catch {
-      NSLog("Rove video audio session: %@", error.localizedDescription)
+      NSLog("Paperplane video audio session: %@", error.localizedDescription)
     }
     // AVKit exposes programmatic inline-to-full-screen entry through this selector.
     // This is the same guarded entry point used by expo-video's enterFullscreen().

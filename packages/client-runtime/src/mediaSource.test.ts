@@ -130,7 +130,7 @@ describe("resolveMediaSource", () => {
     );
   });
 
-  it("serves Rove attachment files in place like any other host path", () => {
+  it("serves Paperplane attachment files in place like any other host path", () => {
     const path = `/home/demo/.rove/userdata/attachments/${attachmentId}.mp4`;
     expect(resolveMediaSource(path, { threadId, workspaceRoot: "/repo" })).toMatchObject({
       kind: "video",

@@ -107,7 +107,7 @@ export function useServerUpdate() {
           description:
             selfUpdate === "desktop-managed"
               ? `Desktop app relaunched on ${result.value.targetVersion}.`
-              : `Reconnected on Rove Code ${result.value.targetVersion}.`,
+              : `Reconnected on Paperplane ${result.value.targetVersion}.`,
         });
       }
       return { status: "updated" };
@@ -157,7 +157,7 @@ export function ServerUpdatesAction({
       if (desktopTargets.length > 0) {
         const confirmed =
           (await requestConfirmDialog(
-            `Update the Rove Code desktop apps on ${desktopTargets.map((target) => target.serverLabel).join(", ")}? They will close and relaunch on those machines.`,
+            `Update the Paperplane desktop apps on ${desktopTargets.map((target) => target.serverLabel).join(", ")}? They will close and relaunch on those machines.`,
           )) ?? true;
         if (!confirmed) return;
       }
@@ -279,7 +279,7 @@ export function ServerUpdateAction({
       // remote machine installs without asking anyone there.
       const confirmed =
         (await requestConfirmDialog(
-          `Update the Rove Code desktop app that runs the ${serverLabel}? It will close and relaunch on that machine.`,
+          `Update the Paperplane desktop app that runs the ${serverLabel}? It will close and relaunch on that machine.`,
         )) ?? true;
       if (!confirmed) {
         return;
@@ -387,7 +387,7 @@ export function OutdatedServerUpdateAction({
       toastManager.add({
         type: "success",
         title: `${serverLabel} updated`,
-        description: `Reconnected on Rove Code ${result.value.targetVersion}.`,
+        description: `Reconnected on Paperplane ${result.value.targetVersion}.`,
       });
     } catch (error) {
       toastManager.add({

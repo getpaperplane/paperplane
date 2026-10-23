@@ -58,7 +58,7 @@ function ConfiguredRoveConnectSidebarSignIn() {
         <SidebarMenuItem>
           <SidebarMenuButton onClick={openAuthPrompt}>
             <LogInIcon />
-            <span>Sign in to Rove Connect</span>
+            <span>Sign in to Paperplane Connect</span>
           </SidebarMenuButton>
         </SidebarMenuItem>
       </SidebarMenu>

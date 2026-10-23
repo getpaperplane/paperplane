@@ -1,15 +1,15 @@
 # Product usage data
 
-The Rove Code server sends product usage events to Rove's PostHog project, associated with a
+The Paperplane server sends product usage events to Paperplane's PostHog project, associated with a
 hashed random installation identifier. Provider account IDs are not used. Events include the
 provider, model, reasoning effort, permission mode, turn result, duration, and main-agent token
-totals when available. Rove also measures explicit feature operations (such as opening a terminal,
+totals when available. Paperplane also measures explicit feature operations (such as opening a terminal,
 reviewing a diff, searching, or creating a worktree), their outcomes, and their durations. Events
 include app version and coarse client/platform metadata; development and test traffic is labeled
 separately from production.
 
 Production client activity creates a minimal PostHog profile keyed only by that random installation
-identifier, so Rove can measure returning installations. No name, email, or provider account identity
+identifier, so Paperplane can measure returning installations. No name, email, or provider account identity
 is attached, and location enrichment is disabled. An installation can serve several clients or
 people, and one person can use several installations; these counts are not a census of unique people.
 Background-only hosts and development/test traffic do not create profiles.

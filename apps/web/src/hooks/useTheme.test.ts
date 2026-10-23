@@ -70,7 +70,7 @@ describe("theme failure handling", () => {
     }
   });
 
-  it("reads the persisted Rove Chat theme preference", async () => {
+  it("reads the persisted Paperplane Chat theme preference", async () => {
     vi.stubGlobal("window", {
       localStorage: createStorage({
         getItem: () => "plum",

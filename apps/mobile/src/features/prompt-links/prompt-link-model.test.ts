@@ -10,7 +10,7 @@ import {
 } from "./prompt-link-model";
 
 describe("promptLinkSearchFromParams", () => {
-  it("opens the default shared link on Rove's hosted client", () => {
+  it("opens the default shared link on Paperplane's hosted client", () => {
     const url = new URL(buildNewThreadLink({ prompt: "Fix the bug & add tests" }));
     expect(url.origin).toBe("https://rove.hafiezulzikry.com");
     expect(url.pathname).toBe("/new");

@@ -475,7 +475,7 @@ export async function persistScopedSettingsPatch(
       return [
         {
           ...environment,
-          message: "This environment does not support this setting. Update Rove Code on it.",
+          message: "This environment does not support this setting. Update Paperplane on it.",
         },
       ];
     }

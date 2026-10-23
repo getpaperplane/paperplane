@@ -6,21 +6,21 @@ Pi has no subagent API. Each subagent extension invents its own: some relaunch
 the Pi CLI, some start a detached runner that launches Pi later, some run an
 agent inside the parent process, some call a model directly, and some start
 another agent CLI such as `claude` or `codex`. Their tool results all have
-different shapes. Rove Code used to read one extension's result shape, which
+different shapes. Paperplane used to read one extension's result shape, which
 showed nothing for every other extension, and a second shape-reader was removed
 because it parsed notification text and broke whenever the extension changed.
 
-Rove Code instead watches what every subagent extension must do: start an agent
+Paperplane instead watches what every subagent extension must do: start an agent
 somewhere. It never reads an extension's own result format.
 
-## What Rove Code hooks
+## What Paperplane hooks
 
-All of this lives in Rove Code; nothing is installed into extensions or Pi.
+All of this lives in Paperplane; nothing is installed into extensions or Pi.
 
 - **Tool-call context.** In the Pi runtime worker, every tool of a thread's
   agent runs inside an `AsyncLocalStorage` context naming the thread and the
   tool call (`PiAgentObserver.ts`). Agents run tools through `agent.state.tools`,
-  so Rove Code wraps what that property returns.
+  so Paperplane wraps what that property returns.
 - **Process starts.** The agent hook (`PiAgentHook.ts`) wraps `child_process` in
   the worker. A process started inside a tool call gets `ROVE_AGENT_PARENT`
   (thread and tool call) and `NODE_OPTIONS=--require <hook>`. The hook therefore
@@ -49,7 +49,7 @@ Every observation is one transcript entry. Its writer appends it synchronously
 to `<stateDir>/agent-transcripts/<threadId>/<agentId>.jsonl`, then sends it to
 the worker over a local socket for live status. When a process exits, the
 worker replays that agent's file, so entries still in flight are not lost. The
-files survive Rove Code restarts and are removed with the thread.
+files survive Paperplane restarts and are removed with the thread.
 `PiAgentRoster.ts` folds entries into ordinary `task.*` rows; a tool call that
 starts two or more agents becomes a group. The client reads a transcript only
 through `orchestration.getAgentTranscript`, which takes a thread and task id,
@@ -60,7 +60,7 @@ never a path.
 - Agents on another machine (SSH, remote runners): only the local client
   process is visible.
 - Agents that are not Node programs and are not recognized agent CLIs, or agent
-  CLIs started from a script file rather than a command line: Rove Code cannot
+  CLIs started from a script file rather than a command line: Paperplane cannot
   tell them from any other program.
 - Processes started with `spawnSync` from the worker report only their exit,
   because the worker is blocked while they run.

@@ -34,7 +34,7 @@ export function CompactBrandTitle(
   return (
     <View
       aria-level={1}
-      accessibilityLabel={props.accessibilityLabel ?? "Rove Code, Threads"}
+      accessibilityLabel={props.accessibilityLabel ?? "Paperplane, Threads"}
       accessible
       role="heading"
       className="flex-row items-center gap-1.5"
@@ -46,7 +46,7 @@ export function CompactBrandTitle(
         className="font-rove-medium text-foreground-muted"
         style={{ fontSize: 21 * scale, letterSpacing: -0.5 * scale }}
       >
-        Code
+        Paperplane
       </Text>
       <View
         className="rounded-full bg-subtle px-1.5 py-0.5"

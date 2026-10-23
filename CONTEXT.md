@@ -1,6 +1,6 @@
-# Rove Code
+# Paperplane
 
-Rove Code is a minimal GUI for coding agents: a WebSocket server wraps provider runtimes and serves web, desktop, and mobile clients. This glossary covers terms that are specific to Rove Code's provider-integration domain.
+Paperplane is a minimal GUI for coding agents: a WebSocket server wraps provider runtimes and serves web, desktop, and mobile clients. This glossary covers terms that are specific to Paperplane's provider-integration domain.
 
 ## Language
 
@@ -16,11 +16,11 @@ A hidden git ref captured at each turn boundary. Reverting a checkpoint resets w
 _Avoid_: snapshot, savepoint
 
 **Sterile Pi**:
-A Pi session with extensions disabled. Rove uses this for auxiliary text generation. Thread sessions load headless extensions with tools, commands, and hooks enabled, but no extension UI. A separate catalog host loads global extensions once per Pi instance so extension models reach the provider snapshot.
+A Pi session with extensions disabled. Paperplane uses this for auxiliary text generation. Thread sessions load headless extensions with tools, commands, and hooks enabled, but no extension UI. A separate catalog host loads global extensions once per Pi instance so extension models reach the provider snapshot.
 _Avoid_: clean Pi, sandboxed Pi
 
 **Fork-as-rollback**:
-Rove Code's thread rollback realized as a Pi session-tree fork: the session is forked N turns back and the fork becomes the thread's live session. User-facing copy says "Fork Pi session", not "Rollback", because the semantics differ from other providers' rollback.
+Paperplane's thread rollback realized as a Pi session-tree fork: the session is forked N turns back and the fork becomes the thread's live session. User-facing copy says "Fork Pi session", not "Rollback", because the semantics differ from other providers' rollback.
 _Avoid_: Pi rollback
 
 **Driver**:

@@ -143,7 +143,7 @@ export function StorageCleanupSettings(props: {
       {withDirectory ? (
         <SettingsSection
           title="Worktree location"
-          footer="Folder where new worktrees are created, such as ~/worktrees. Existing worktrees stay where they are. Leave empty to use the Rove home folder. The environment checks the path."
+          footer="Folder where new worktrees are created, such as ~/worktrees. Existing worktrees stay where they are. Leave empty to use the Paperplane home folder. The environment checks the path."
         >
           <View className="gap-2 px-4 py-3">
             <AppTextInput

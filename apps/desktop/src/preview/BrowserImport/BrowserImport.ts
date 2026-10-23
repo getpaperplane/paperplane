@@ -1,6 +1,6 @@
 /**
  * Browser import service - lists importable sources and writes their cookies
- * into a Rove Code browser profile's Electron partition.
+ * into a Paperplane browser profile's Electron partition.
  *
  * @module BrowserImport
  */

@@ -872,7 +872,7 @@ function WebhookEndpointField({
 }
 
 /**
- * Whether Rove Connect forwards requests live or holds them while the
+ * Whether Paperplane Connect forwards requests live or holds them while the
  * environment is offline. The setting is per environment and only readable
  * for this machine's own environment, so other environments show nothing.
  */

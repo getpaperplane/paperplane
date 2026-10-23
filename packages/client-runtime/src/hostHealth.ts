@@ -33,7 +33,7 @@ export function formatHostSwap(report: HostHealthReport): string | null {
   return `${formatBytePair(report.swapFreeBytes ?? 0, report.swapTotalBytes)} free`;
 }
 
-/** Usage of Rove's shared memory ceiling, or null when the host has no ceiling. */
+/** Usage of Paperplane's shared memory ceiling, or null when the host has no ceiling. */
 export function formatRoveCeiling(report: HostHealthReport): string | null {
   const memory = report.roveMemory;
   if (memory === null) return null;
@@ -49,7 +49,7 @@ export function formatRoveCeiling(report: HostHealthReport): string | null {
   return `${used} · swap ${swap}`;
 }
 
-/** Percent of Rove's ceiling in use (0-100), or null when there is no finite ceiling. */
+/** Percent of Paperplane's ceiling in use (0-100), or null when there is no finite ceiling. */
 export function roveCeilingPercent(report: HostHealthReport): number | null {
   const memory = report.roveMemory;
   if (memory === null || memory.limitBytes === null || memory.limitBytes === 0) return null;

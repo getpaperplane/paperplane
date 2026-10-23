@@ -1,6 +1,6 @@
-# Deploy the Rove browser app for free
+# Deploy the Paperplane browser app for free
 
-Deploy the stable browser app at `https://rove.hafiezulzikry.com` and the nightly app at `https://rove-nightly.hafiezulzikry.com` with Cloudflare Workers Static Assets. A small Worker handles public content negotiation, documentation, and errors; these deployments contain no agent backend. Users pair their own running Rove environments. The two origins keep separate browser connections and settings.
+Deploy the stable browser app at `https://rove.hafiezulzikry.com` and the nightly app at `https://rove-nightly.hafiezulzikry.com` with Cloudflare Workers Static Assets. A small Worker handles public content negotiation, documentation, and errors; these deployments contain no agent backend. Users pair their own running Paperplane environments. The two origins keep separate browser connections and settings.
 
 Use Cloudflare's free plan. Static asset requests are [free and unlimited](https://developers.cloudflare.com/workers/static-assets/billing-and-limitations/). Bundled `/assets/*` requests stay asset-first; page, documentation, and error requests invoke the Worker and count toward the Workers request quota. You still pay for domain renewal and any coding-agent subscriptions or API usage.
 
@@ -78,15 +78,15 @@ Register a free `workers.dev` subdomain in the account's Workers settings. Produ
 
 Add `preview:web` to a same-repository pull request. The workflow builds the PR without deployment credentials, then uploads its static assets to a separate `rove-web-pr-<number>` Worker with the trusted base checkout's content handler. Trusted base-branch jobs use the existing `cloudflare-web` environment, so its `main` branch restriction can stay in place. Fork pull requests do not deploy.
 
-The PR comment links the preview. Pair your own HTTPS Rove environment to use it. Each new push replaces that PR's preview without changing production. Closing the PR or removing `preview:web` deletes its Worker and marks the preview removed.
+The PR comment links the preview. Pair your own HTTPS Paperplane environment to use it. Each new push replaces that PR's preview without changing production. Closing the PR or removing `preview:web` deletes its Worker and marks the preview removed.
 
 If deployment fails, check the account's Worker limit and API token permissions. Previews need the same Workers script permissions as production and permission to read the account's `workers.dev` subdomain.
 
 ## Connect your own computer
 
-Keep the Rove backend private until you are ready to expose it. The backend provides access to repositories, terminals, and installed coding agents.
+Keep the Paperplane backend private until you are ready to expose it. The backend provides access to repositories, terminals, and installed coding agents.
 
-1. Install a published Rove CLI or a verified staged executable and authenticate at least one provider following [the installation guide](../user/install.md#install-a-cli-host).
+1. Install a published Paperplane CLI or a verified staged executable and authenticate at least one provider following [the installation guide](../user/install.md#install-a-cli-host).
 2. Install the persistent host on loopback:
 
    ```sh
@@ -100,7 +100,7 @@ Keep the Rove backend private until you are ready to expose it. The backend prov
    ```
 
 4. In Cloudflare, create a named [Cloudflare Tunnel](https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/).
-5. Install and run `cloudflared` on the computer running Rove using the connector command provided by Cloudflare. Treat the connector token as a secret.
+5. Install and run `cloudflared` on the computer running Paperplane using the connector command provided by Cloudflare. Treat the connector token as a secret.
 6. Add a published application route for `rove-host.hafiezulzikry.com` with service URL `http://127.0.0.1:3773`.
 7. Create a one-time pairing code on the host:
 
@@ -112,7 +112,7 @@ Keep the Rove backend private until you are ready to expose it. The backend prov
 9. Enter `https://rove-host.hafiezulzikry.com` as the host and paste the pairing code.
 10. Confirm that your projects load. Start a thread and verify streaming responses from your provider.
 
-Keep the Rove service, `cloudflared`, and the computer running while you work. Update the host with `rove update`. The static website stays available when the computer is off, but its environment is offline. Keep pairing authentication enabled. Do not give visitors a pairing code for your own computer.
+Keep the Paperplane service, `cloudflared`, and the computer running while you work. Update the host with `rove update`. The static website stays available when the computer is off, but its environment is offline. Keep pairing authentication enabled. Do not give visitors a pairing code for your own computer.
 
 Users of the public browser app connect their own environments. They do not need your tunnel or domain. A private Tailscale HTTPS endpoint also works for devices on the same tailnet. A plain HTTP LAN endpoint cannot be used from the public HTTPS app.
 

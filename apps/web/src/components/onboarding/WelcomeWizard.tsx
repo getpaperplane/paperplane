@@ -232,13 +232,10 @@ export function WelcomeWizard({
         initialFocus={() => document.getElementById("onboarding-pairing-url") ?? true}
       >
         <WizardHeader
-          title="Set up Rove Code"
+          title="Set up Paperplane"
           identity={
-            <div className="flex items-baseline gap-1.5" role="img" aria-label="Rove Code">
-              <span className="text-2xl font-medium tracking-tight">Rove</span>
-              <span className="text-2xl font-medium tracking-tight text-muted-foreground">
-                Code
-              </span>
+            <div className="flex items-baseline gap-1.5" role="img" aria-label="Paperplane">
+              <span className="text-2xl font-medium tracking-tight">Paperplane</span>
             </div>
           }
         >
@@ -431,7 +428,7 @@ function ConnectionStep({
       ) : null}
       <div className="mt-6 flex flex-col-reverse gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
         <p className="min-w-0 text-xs leading-relaxed text-muted-foreground">
-          Rove Code collects anonymous usage data to help us improve it. To read more about how your
+          Paperplane collects anonymous usage data to help us improve it. To read more about how your
           data is used and how to opt out, see our{" "}
           <a
             className="underline underline-offset-2 hover:text-foreground"
@@ -493,7 +490,7 @@ function ConnectAccountOption({
           }
         >
           <CloudIcon className="size-4 text-muted-foreground" />
-          <span className="flex-1 text-left">Rove Connect</span>
+          <span className="flex-1 text-left">Paperplane Connect</span>
           <span className="text-xs text-muted-foreground">
             {!isLoaded
               ? "Loading sign-in…"
@@ -529,7 +526,7 @@ function ConnectAccountOption({
             </p>
             <CommandBlock command="npx rove connect" className="mt-3" />
             <p className="mt-3 text-xs text-muted-foreground">
-              Keep Rove Code running. Select the computers you want to set up above.
+              Keep Paperplane running. Select the computers you want to set up above.
             </p>
           </div>
         </CollapsiblePanel>
@@ -643,7 +640,7 @@ function PairingForm({
             </p>
             <CommandBlock command="npx rove pair" className="mt-2" />
             <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
-              Start Rove Code first, or run <code className="font-mono">npx rove serve</code>. Add{" "}
+              Start Paperplane first, or run <code className="font-mono">npx rove serve</code>. Add{" "}
               <code className="font-mono">--tailscale</code> to use your tailnet.
             </p>
           </CollapsiblePanel>

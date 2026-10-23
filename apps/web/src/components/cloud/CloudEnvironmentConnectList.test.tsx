@@ -172,7 +172,7 @@ describe("cloud environment offline reasons", () => {
 
     discovery.listEnvironments.mockResolvedValue(new Map([[newMachineId, offlineEntry()]]));
     await mount();
-    expect(rowText()).toContain("Rove Connect · Not added · Relay offline");
+    expect(rowText()).toContain("Paperplane Connect · Not added · Relay offline");
 
     await act(async () => {
       publish({

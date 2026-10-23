@@ -1,4 +1,4 @@
-# Rove Mobile Terminal Native Module
+# Paperplane Mobile Terminal Native Module
 
 This local Expo module owns the native terminal surface for the mobile app.
 

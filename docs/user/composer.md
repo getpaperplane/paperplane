@@ -45,7 +45,7 @@ before an upload finishes requires you to attach that file again.
 You can drag or paste images into the web or desktop composer. HEIC and HEIF
 photos are converted to JPEG there and when selected from the mobile photo
 library; photos over the image limit are also resized to fit. On mobile, you can
-also send files to Rove Code through another app's system share sheet.
+also send files to Paperplane through another app's system share sheet.
 
 See [images and videos](#images-and-videos-in-messages) for previewing and saving media.
 
@@ -102,7 +102,7 @@ instance:
 
 ## Model defaults
 
-Rove Code remembers your provider, model, and model options for new threads. A
+Paperplane remembers your provider, model, and model options for new threads. A
 project's configured model takes precedence; resetting that project setting
 returns to the remembered selection.
 
@@ -186,14 +186,14 @@ for example, put **Other Bluetooth** above your AirPods so a new headset is pref
 while the AirPods microphone stays low. By default, CarPlay comes after the built-in
 microphone.
 
-Transcription runs on your device. Rove Code deletes the temporary audio after
+Transcription runs on your device. Paperplane deletes the temporary audio after
 transcription or cancellation; only the message text is sent when you submit.
 
 ### Android
 
 On Android, the microphone dictates live through the phone's speech service
 (usually Google). Tap it, speak, then tap again to insert the text. Depending on
-the device and language, recognition may be sent to that service. Rove Code stores
+the device and language, recognition may be sent to that service. Paperplane stores
 no audio. Allow microphone and speech access when asked; if you denied it
 permanently, the error offers a shortcut to system settings.
 
@@ -203,7 +203,7 @@ In browsers that support speech recognition (Chrome, Edge, Safari), the composer
 shows a microphone next to **Attach files**. Tap it, speak, then tap again to
 insert the text at your cursor; it never sends the message. The first use asks you
 to confirm that the browser sends your audio to its vendor's speech service
-(Rove Code never receives it). The button is hidden in Firefox and the desktop app,
+(Paperplane never receives it). The button is hidden in Firefox and the desktop app,
 where recognition is unavailable.
 
 ## Queued messages
@@ -243,7 +243,7 @@ After you add or change skills, plugins, or MCP servers, use **Restart agent
 session** in the command palette on web and desktop. The conversation continues,
 and your next message starts the agent again with the new setup.
 
-Provider commands must start the message to run. Rove Code commands such as
+Provider commands must start the message to run. Paperplane commands such as
 `/model` and `/plan`, and skill mentions, work on any line.
 
 Send `/compact` in an existing conversation to reduce context usage when the
@@ -301,7 +301,7 @@ exist only as chips: deleting a file's last chip removes the file from the messa
 Copy text that holds chips and paste it into another draft, in the same thread or another one,
 and the chips come along with what they point to. Images and files are fetched again from the
 environment they came from; while that happens the chip shows a dashed outline, and if it cannot
-complete Rove Code tells you and leaves the chip for you to remove or replace. A chip whose
+complete Paperplane tells you and leaves the chip for you to remove or replace. A chip whose
 context is no longer available shows the same dashed outline; hover it for what to do.
 
 Copying a message with the copy button, or copying text out of it, gives other apps readable
@@ -348,7 +348,7 @@ styles, or images from neighboring files.
 
 On web and desktop, HTML and PDF files open as rendered pages. Switch an HTML
 file to source view to read its markup; a link to a specific line opens source
-automatically. HTML previews cannot access your Rove Code session.
+automatically. HTML previews cannot access your Paperplane session.
 
 The file viewer recognizes images, HTML, and PDF files by their filename extension,
 including filenames or folders containing `#` or `?`.

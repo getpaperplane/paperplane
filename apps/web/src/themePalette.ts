@@ -321,7 +321,7 @@ function legacyThemeMode(theme: ThemePreference): ThemeAppearance | null {
 }
 
 /**
- * The standard Rove Code look as a theme palette, for seeding a new theme when
+ * The standard Paperplane look as a theme palette, for seeding a new theme when
  * no theme is installed. Distinct from {@link getDefaultThemeColors}, which
  * carries the Plum palette used to fill roles omitted by theme
  * files.
@@ -586,7 +586,7 @@ function solveOklchLightness(
 }
 
 /**
- * The status colors Rove Code shows without a theme, read from the app's own
+ * The status colors Paperplane shows without a theme, read from the app's own
  * tokens (red-500 / amber-500 families). Generated palettes fall back to
  * these instead of the flagship theme's, so an imported or created theme
  * never inherits a brand tint on destructive buttons and warnings.

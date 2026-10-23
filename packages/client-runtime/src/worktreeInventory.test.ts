@@ -5,7 +5,7 @@ import { filterWorktrees, formatWorktreeSize } from "./worktreeInventory.ts";
 
 const entry: WorktreeInventoryEntry = {
   projectId: ProjectId.make("project-1"),
-  projectTitle: "Rove",
+  projectTitle: "Paperplane",
   workspaceRoot: "/repo",
   path: "/worktrees/feature",
   branch: "feature/storage",

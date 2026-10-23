@@ -29,7 +29,7 @@ type OpenState =
   | { readonly kind: "failed"; readonly reason: string };
 
 /**
- * The VM's setup desktop inside Rove, for approving the permission prompts.
+ * The VM's setup desktop inside Paperplane, for approving the permission prompts.
  * Opening asks the server to start the setup VM; the viewer then follows the
  * environment's desktop list like the Device panel does.
  */

@@ -97,8 +97,8 @@ export function ConnectCliAuthorizeSurface() {
         title="Connecting your terminal"
         description={
           isSignedIn
-            ? "Redirecting to authorize Rove Connect for your CLI…"
-            : "Sign in to continue authorizing Rove Connect for your CLI."
+            ? "Redirecting to authorize Paperplane Connect for your CLI…"
+            : "Sign in to continue authorizing Paperplane Connect for your CLI."
         }
       />
       {isLoaded && !isSignedIn ? (

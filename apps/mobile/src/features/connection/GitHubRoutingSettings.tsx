@@ -62,7 +62,7 @@ export function GitHubRoutingSettings() {
                     {entry.target.label}
                   </Text>
                   <Text className="text-xs text-foreground-muted" numberOfLines={1}>
-                    {connectionCatalogDisplayUrl(entry) ?? "Rove Connect"}
+                    {connectionCatalogDisplayUrl(entry) ?? "Paperplane Connect"}
                   </Text>
                 </View>
                 <Text className="text-sm text-foreground-muted">

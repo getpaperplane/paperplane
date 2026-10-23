@@ -177,7 +177,7 @@ export const layer = Layer.effect(
                 Ref.set(
                   preflightErrorRef,
                   Option.some(
-                    "Another Rove Code server is using this distro's Rove home. Stop it, or pair with it instead.",
+                    "Another Paperplane server is using this distro's Paperplane home. Stop it, or pair with it instead.",
                   ),
                 ),
               ),

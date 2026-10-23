@@ -94,7 +94,7 @@ function EmptyMobileClients() {
       <EmptyHeader>
         <EmptyTitle>No mobile clients</EmptyTitle>
         <EmptyDescription>
-          Install Rove Code on your phone and sign in to Rove Connect to get push notifications and
+          Install Paperplane on your phone and sign in to Paperplane Connect to get push notifications and
           Live Activities.
         </EmptyDescription>
       </EmptyHeader>

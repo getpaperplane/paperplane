@@ -6,7 +6,7 @@ const path = "/api/hooks/scheduled-task%3Ahook/token";
 const endpoint = (url: string | null) => ({ path, url, hasSecret: false });
 
 describe("webhookAddress", () => {
-  it("uses the Rove Connect URL when the server has one", () => {
+  it("uses the Paperplane Connect URL when the server has one", () => {
     expect(webhookAddress(endpoint("https://relay.t3.codes/v1/hooks/k/t/x"), null)).toEqual({
       address: "https://relay.t3.codes/v1/hooks/k/t/x",
       copyable: true,
@@ -14,7 +14,7 @@ describe("webhookAddress", () => {
     });
   });
 
-  it("builds a direct URL on the environment's address without Rove Connect", () => {
+  it("builds a direct URL on the environment's address without Paperplane Connect", () => {
     const result = webhookAddress(endpoint(null), "https://mac.tail1234.ts.net/");
     expect(result.address).toBe(`https://mac.tail1234.ts.net${path}`);
     expect(result.copyable).toBe(true);

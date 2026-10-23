@@ -6,18 +6,18 @@ import * as Option from "effect/Option";
 import * as ElectronWindow from "../electron/ElectronWindow.ts";
 import { WEB_LINK_OPEN_CHANNEL } from "../ipc/channels.ts";
 
-/** An http(s) link the operating system handed to Rove Code as the default browser. */
+/** An http(s) link the operating system handed to Paperplane as the default browser. */
 export const isWebLink = (value: string) => {
   if (!URL.canParse(value)) return false;
   const { protocol } = new URL(value);
   return protocol === "http:" || protocol === "https:";
 };
 
-/** An HTML file the operating system asked Rove Code to open, as browsers are asked to. */
+/** An HTML file the operating system asked Paperplane to open, as browsers are asked to. */
 export const isWebPageFile = (path: string) => /\.x?html?$/i.test(path);
 
 /**
- * Web links and HTML files macOS opens with Rove Code once it is the default
+ * Web links and HTML files macOS opens with Paperplane once it is the default
  * browser, plus `rove://` prompt and thread links on every platform. Files
  * arrive as file:// URLs. They can
  * arrive before the app is ready (the link that launched it) or while the web

@@ -1,8 +1,8 @@
 # Observability
 
-> For maintainers. Using Rove Code? See [docs/user](../user/).
+> For maintainers. Using Paperplane? See [docs/user](../user/).
 
-Rove Code has one server-side observability model:
+Paperplane has one server-side observability model:
 
 - pretty logs go to stdout for humans
 - completed spans go to a local NDJSON trace file
@@ -418,7 +418,7 @@ Webhooks have their own families:
 
 `ScheduledTaskService.triggerWebhook` spans carry the same outcome per request, and each run
 started from a delivery is its own `ScheduledTaskService.runWebhookDelivery` trace. For a request
-the relay forwarded, the span also goes to the Rove Connect trace export as a child of the relay's
+the relay forwarded, the span also goes to the Paperplane Connect trace export as a child of the relay's
 span; requests that reach the environment directly never join a sender's trace.
 
 Use metrics when the question is:
@@ -685,7 +685,7 @@ pid="$(jq .pid "${ROVE_HOME:-$HOME/.rove-code}/userdata/server-runtime.json")"
 ps -p "$pid" -o command=
 ```
 
-If `ps` shows the Rove Code server, send the signal:
+If `ps` shows the Paperplane server, send the signal:
 
 ```bash
 kill -USR2 "$pid"

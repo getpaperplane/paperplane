@@ -1203,7 +1203,7 @@ function renderFeedEntry(
             </Text>
           ) : presentation.attribution === "rove" ? (
             <Text className="mb-1 pr-1 font-rove-medium text-2xs text-foreground-muted opacity-60">
-              Sent by Rove Code
+              Sent by Paperplane
             </Text>
           ) : presentation.attribution === "agent" ? (
             <AgentMessageAttribution

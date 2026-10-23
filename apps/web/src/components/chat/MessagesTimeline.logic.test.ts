@@ -796,7 +796,7 @@ describe("deriveMessagesTimelineRows", () => {
       toolSource: { key: "mcp:node_repl", name: "node repl", kind: "integration" as const },
       input: {
         title: "Restrict the breakpoint to Git actions",
-        code: "await sky.type_text({app:'Rove Code (Nightly)',text:'debug(ga.run)'});",
+        code: "await sky.type_text({app:'Paperplane (Nightly)',text:'debug(ga.run)'});",
       },
     };
     const entries = deriveTimelineEntriesFromVisibleTurnItems({
@@ -3611,21 +3611,21 @@ describe("computeStableMessagesTimelineRows", () => {
 });
 
 describe("resolveTimelineToolPresentation", () => {
-  it("pretty prints Claude and Cursor Rove MCP tool names", () => {
+  it("pretty prints Claude and Cursor Paperplane MCP tool names", () => {
     expect(resolveTimelineToolPresentation("mcp__rove__rove_thread_read")).toEqual({
-      displayName: "Read a Rove thread",
+      displayName: "Read a Paperplane thread",
       logo: "rove",
     });
   });
 
-  it("pretty prints Codex Rove MCP tool names", () => {
+  it("pretty prints Codex Paperplane MCP tool names", () => {
     expect(resolveTimelineToolPresentation("rove.create_threads")).toEqual({
-      displayName: "Create Rove threads",
+      displayName: "Create Paperplane threads",
       logo: "rove",
     });
   });
 
-  it("pretty prints bare Rove MCP toolkit names", () => {
+  it("pretty prints bare Paperplane MCP toolkit names", () => {
     expect(resolveTimelineToolPresentation("list_scheduled_tasks")).toEqual({
       displayName: "List scheduled tasks",
       logo: "rove",

@@ -34,7 +34,7 @@ async function acknowledgePrivacy(): Promise<boolean> {
     if (window.localStorage.getItem(PRIVACY_ACK_KEY) === "1") return true;
   } catch {}
   const confirmed = await ensureLocalApi().dialogs.confirm(
-    "Dictation sends your microphone audio to your browser's speech service (for example Google for Chrome, Apple for Safari) to be transcribed. Rove Code does not receive the audio. Continue?",
+    "Dictation sends your microphone audio to your browser's speech service (for example Google for Chrome, Apple for Safari) to be transcribed. Paperplane does not receive the audio. Continue?",
   );
   if (!confirmed) return false;
   try {

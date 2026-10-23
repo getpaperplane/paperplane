@@ -55,8 +55,8 @@ describe("resolveUserMessagePresentation", () => {
     }
   });
 
-  it("attributes older server-sent restart continuations to Rove Code, not another agent", () => {
-    const text = "Note: the Rove server restarted.";
+  it("attributes older server-sent restart continuations to Paperplane, not another agent", () => {
+    const text = "Note: the Paperplane server restarted.";
     expect(
       resolveUserMessagePresentation({
         role: "user",

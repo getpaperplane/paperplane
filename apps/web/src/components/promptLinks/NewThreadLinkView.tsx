@@ -99,7 +99,7 @@ export function NewThreadLinkView({ link }: { readonly link: NewThreadLink }) {
       replace: true,
     }).catch(() => null);
     if (opened === null) {
-      setState({ status: "failed", message: "Rove Code could not open a new thread." });
+      setState({ status: "failed", message: "Paperplane could not open a new thread." });
       return;
     }
     setState({ status: "opened" });
@@ -169,7 +169,7 @@ export function NewThreadLinkView({ link }: { readonly link: NewThreadLink }) {
       setState({
         status: "failed",
         message:
-          "This machine cannot clone from a link. Update Rove Code on it, or clone the repository from the command palette.",
+          "This machine cannot clone from a link. Update Paperplane on it, or clone the repository from the command palette.",
       });
       return;
     }

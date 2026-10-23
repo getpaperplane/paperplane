@@ -22,9 +22,9 @@ const defaultEnvironmentInput = {
   platform: "darwin",
   processArch: "arm64",
   appVersion: "1.2.3",
-  appPath: "/Applications/Rove Code.app/Contents/Resources/app.asar",
+  appPath: "/Applications/Paperplane.app/Contents/Resources/app.asar",
   isPackaged: true,
-  resourcesPath: "/Applications/Rove Code.app/Contents/Resources",
+  resourcesPath: "/Applications/Paperplane.app/Contents/Resources",
   runningUnderArm64Translation: false,
 } satisfies DesktopEnvironment.MakeDesktopEnvironmentInput;
 
@@ -41,7 +41,7 @@ interface ElectronAppCalls {
 const layerElectronApp = (calls: ElectronAppCalls) =>
   Layer.succeed(ElectronApp.ElectronApp, {
     metadata: Effect.die("unexpected metadata read"),
-    name: Effect.succeed("Rove Code"),
+    name: Effect.succeed("Paperplane"),
     systemLocale: Effect.succeed("en-US"),
     whenReady: Effect.void,
     quit: Effect.void,
@@ -218,7 +218,7 @@ describe("DesktopAppIdentity", () => {
         yield* identity.configure;
 
         assert.deepEqual(calls.setName, ["Rove Code Beta"]);
-        assert.equal(calls.setAboutPanelOptions[0]?.applicationName, "Rove Code (Beta)");
+        assert.equal(calls.setAboutPanelOptions[0]?.applicationName, "Paperplane (Beta)");
         assert.equal(calls.setAboutPanelOptions[0]?.applicationVersion, "1.2.3");
         assert.equal(calls.setAboutPanelOptions[0]?.version, "0123456789ab");
         // Packaged: the bundle's own icon stands, so a custom one the user
@@ -264,7 +264,7 @@ describe("DesktopAppIdentity", () => {
         assert.equal(runtimeName, `Rove Code ${stage}`);
         // RFC 9110's token grammar, after Electron removes ASCII spaces.
         assert.match(runtimeName.replaceAll(" ", ""), /^[!#$%&'*+\-.^_`|~0-9A-Za-z]+$/);
-        assert.equal(calls.setAboutPanelOptions[0]?.applicationName, `Rove Code (${stage})`);
+        assert.equal(calls.setAboutPanelOptions[0]?.applicationName, `Paperplane (${stage})`);
       }),
       { calls, environment },
     );

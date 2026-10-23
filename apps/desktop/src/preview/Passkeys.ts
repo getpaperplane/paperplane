@@ -44,7 +44,7 @@ export class PreviewPasskeysConfigureError extends Schema.TaggedError<PreviewPas
  * only when its entitlement is present:
  *
  * - Touch ID: Electron's built-in platform authenticator. Passkeys it creates
- *   stay on this Mac, in Rove Code's keychain group.
+ *   stay on this Mac, in Paperplane's keychain group.
  * - Browser passkeys: Apple's managed browser entitlement lets the system sheet
  *   (iCloud Keychain, password managers, phones, security keys) serve any
  *   site. The guest preload hands each ceremony to this process, which pins

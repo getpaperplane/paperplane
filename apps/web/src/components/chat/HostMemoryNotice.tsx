@@ -42,7 +42,7 @@ export function useHostMemoryBannerItem(
       priority: "notice",
       icon: <MemoryStickIcon />,
       title: `${label} is low on memory (${freeLabel})`,
-      description: "Rove releases idle agents first; new work may be slow or killed.",
+      description: "Paperplane releases idle agents first; new work may be slow or killed.",
       actions: (
         <Button
           size="xs"

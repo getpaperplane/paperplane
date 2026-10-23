@@ -1,6 +1,6 @@
 # Outside agents
 
-Agents that Rove Code did not start can work with an environment through its MCP
+Agents that Paperplane did not start can work with an environment through its MCP
 server. They can read projects and threads, start and message threads, and
 check which providers and models are available. This covers Claude Code or
 Codex in your own terminal, ChatGPT, and bots that support MCP. Each agent signs
@@ -20,10 +20,10 @@ The copied URL uses the route this device is connected over, so an agent on the
 same device can reach it.
 
 - **An agent on your own computers** can use any address that computer reaches
-  the environment at: a LAN or Tailscale address, Rove Connect, or `localhost` on
+  the environment at: a LAN or Tailscale address, Paperplane Connect, or `localhost` on
   the host. See [remote access](./remote-access.md).
 - **A hosted agent**, such as ChatGPT or a bot running in the cloud, must reach
-  the environment from the internet. Use the Rove Connect address. A Tailscale
+  the environment from the internet. Use the Paperplane Connect address. A Tailscale
   address only works from your own tailnet.
 
 ## Approve a sign-in
@@ -76,7 +76,7 @@ codex mcp login rove
 Add the environment as a custom MCP app in ChatGPT's apps settings:
 
 1. Create a new app or plugin with a custom MCP server.
-2. Set the server URL to `https://<environment-address>/mcp`, using the Rove
+2. Set the server URL to `https://<environment-address>/mcp`, using the Paperplane
    Connect address.
 3. Choose **OAuth** for authentication. ChatGPT discovers the rest; you do not
    need a client ID or secret.

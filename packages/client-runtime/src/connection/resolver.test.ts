@@ -200,7 +200,7 @@ describe("ConnectionResolver", () => {
       const error = yield* Effect.flip(broker.prepare(catalogEntry(target)));
 
       expect(error).toMatchObject({ reason: "unsupported" });
-      expect(error.message).toContain("Update Rove Code on Compatible environment");
+      expect(error.message).toContain("Update Paperplane on Compatible environment");
     }),
   );
 

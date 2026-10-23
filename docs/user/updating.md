@@ -1,4 +1,4 @@
-# Updating Rove Code
+# Updating Paperplane
 
 The app you use and the server running your agents can be on different machines.
 When a server is behind your web or desktop app, an update notice appears in the
@@ -28,7 +28,7 @@ desktop apps do not wait for npm. The confirmation lists each machine it skips
 and why, such as a machine that is offline or needs a manual update. Use the
 notice or **Settings → Connections** for those.
 
-If a desktop app restarts on its old version, Rove Code tells you the update did
+If a desktop app restarts on its old version, Paperplane tells you the update did
 not apply. It does not install that version again on its own, even when another
 device asks. Use the update button on that machine to retry.
 
@@ -46,7 +46,7 @@ It resumes supported active threads after an update, crash, or machine
 restart. Changes are saved to connected environments that support this setting;
 update older servers first. If a supported environment was offline or has a
 different value, use **Apply to all** in Settings after it connects.
-Rove Code must start again on that machine;
+Paperplane must start again on that machine;
 the setting does not enable automatic startup. Terminal commands may still be
 interrupted, and threads without saved provider resume state need a new message.
 A thread that finished its turn to wait on a monitor, subagent, or background task
@@ -57,7 +57,7 @@ while it is archived, snoozed, or settled. After three automatic resumes in a ro
 the thread waits for your next message.
 
 Updates from the previous orchestration system preserve conversation transcripts but cannot carry
-every kind of runtime history forward. Read [Threads from older Rove Code versions](./thread-migration.md)
+every kind of runtime history forward. Read [Threads from older Paperplane versions](./thread-migration.md)
 before continuing an important older thread.
 
 ## When versions don't match
@@ -66,7 +66,7 @@ A client and server must speak the same orchestration protocol. If they do not, 
 refused rather than running half-upgraded:
 
 - An app newer than the server is blocked before connecting, with a notice telling you to update
-  Rove Code on the machine named in the notice.
+  Paperplane on the machine named in the notice.
 - A server newer than your app refuses the connection with an update message.
 
 Update the side the notice names, then reconnect.
@@ -107,7 +107,7 @@ update can roll back to the previous version. If the update still fails:
 2. Check that you updated the server's machine, not only the device you are using.
 3. For a command-line server, stop it and relaunch the exact version shown in the notice.
 
-Only one server can use a Rove home directory at a time. If startup reports that
+Only one server can use a Paperplane home directory at a time. If startup reports that
 another server owns it, stop that server before retrying, or use a separate home
 directory and pair with the running server.
 
@@ -135,7 +135,7 @@ active threads resume; threads waiting for your approval or a secret stay stoppe
 Provider update checks and restart continuation preferences are in
 **Settings → Maintenance**. If provider update checks are disabled, enable them
 there before refreshing to find newer versions. The same setting controls whether
-Rove Code downloads model catalog updates, so with it off new models may not appear
+Paperplane downloads model catalog updates, so with it off new models may not appear
 until you enable it and refresh provider status.
 
 The mobile client is source-only; there are no App Store or Google Play releases from this project. Update it by rebuilding and installing the development client as described in the [mobile README](../../apps/mobile/README.md).

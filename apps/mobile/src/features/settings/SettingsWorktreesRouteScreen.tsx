@@ -52,7 +52,7 @@ export function SettingsWorktreesRouteScreen() {
         >
           <Text className="text-sm text-foreground-muted">
             Review checkouts without deleting branches or thread history. Last activity only
-            reflects work in Rove, not use in other apps.
+            reflects work in Paperplane, not use in other apps.
           </Text>
           <AppTextInput
             accessibilityLabel="Search worktrees"
@@ -260,7 +260,7 @@ function WorktreeRow({
         <Text className="text-xs text-foreground-muted">
           {entry.lastActivityAt === null
             ? "Activity unknown"
-            : `Last activity in Rove ${new Date(entry.lastActivityAt).toLocaleDateString()}`}
+            : `Last activity in Paperplane ${new Date(entry.lastActivityAt).toLocaleDateString()}`}
         </Text>
         <Text className="text-xs text-foreground-muted">
           {!entry.managed
@@ -343,7 +343,7 @@ function WorktreeRow({
             ))
           ) : (
             <Text className="text-xs text-foreground-muted">
-              Review this checkout before removing it. Rove cannot detect every use outside the app.
+              Review this checkout before removing it. Paperplane cannot detect every use outside the app.
             </Text>
           )}
           <Pressable

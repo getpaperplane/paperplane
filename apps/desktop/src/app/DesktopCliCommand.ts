@@ -13,7 +13,7 @@ import * as DesktopCliShim from "./DesktopCliShim.ts";
 import * as DesktopEnvironment from "./DesktopEnvironment.ts";
 
 // Settings → Install `rove` command, like VS Code's "Install 'code' command".
-// The app's launcher (see DesktopCliShim) lives in the Rove home and is off PATH
+// The app's launcher (see DesktopCliShim) lives in the Paperplane home and is off PATH
 // by default. Installing links it into a folder on the user's PATH, or on
 // Windows adds the launcher's folder to the user's PATH. Removing undoes only
 // what installing did: a link that points at one of the app's launchers, or a
@@ -95,7 +95,7 @@ export const make = Effect.gen(function* () {
 
   /**
    * A link to one of the app's launchers, by the marker the launcher carries.
-   * This also finds links made under a previous Rove home, so Remove can clean
+   * This also finds links made under a previous Paperplane home, so Remove can clean
    * them up and Install does not add a second.
    */
   const isOurLink = (link: string) =>
@@ -216,7 +216,7 @@ export const make = Effect.gen(function* () {
     if (Option.isSome(existing)) {
       const target = yield* fs.readLink(existing.value).pipe(Effect.option);
       if (Option.getOrUndefined(target) === launcher) return yield* state;
-      // A link to a previous Rove home's launcher: point it at this one instead.
+      // A link to a previous Paperplane home's launcher: point it at this one instead.
       yield* fs
         .remove(existing.value)
         .pipe(Effect.mapError(() => fail(`Could not replace ${existing.value}.`)));

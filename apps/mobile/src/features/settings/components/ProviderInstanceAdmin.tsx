@@ -505,7 +505,7 @@ function InstanceForm(props: {
               }
               description={
                 mode === "managed"
-                  ? "Sign in from Accounts after saving. Rove manages the CLI and credentials."
+                  ? "Sign in from Accounts after saving. Paperplane manages the CLI and credentials."
                   : "Use the environment's installed CLI and its existing credentials."
               }
               selected={

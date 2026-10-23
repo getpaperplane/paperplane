@@ -5,7 +5,7 @@ package = JSON.parse(File.read(File.join(__dir__, 'package.json')))
 Pod::Spec.new do |s|
   s.name = 'RoveReviewDiffNative'
   s.version = package['version']
-  s.summary = 'Native review diff debug surface for Rove Code mobile.'
+  s.summary = 'Native review diff debug surface for Paperplane mobile.'
   s.description = 'Native iOS review diff renderer used to prototype fast mobile review scrolling.'
   s.homepage = 'https://rove.hafiezulzikry.com'
   s.license = { :type => 'UNLICENSED' }

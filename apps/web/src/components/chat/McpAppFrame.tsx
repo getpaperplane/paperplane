@@ -250,7 +250,7 @@ export function McpAppFrame(props: {
     };
   }, [props.environmentId, props.threadId, props.itemId, app.tool]);
   // The bridge belongs to the captured document. A frame that navigates keeps
-  // its window, so a second load stops the app rather than letting a page Rove
+  // its window, so a second load stops the app rather than letting a page Paperplane
   // never served pose as it. This is not a confidentiality boundary: a frame
   // can always navigate itself, so the app could carry anything it read out
   // in a URL either way.
@@ -298,14 +298,14 @@ export function McpAppFrame(props: {
       };
     };
     // Approvals render in the page, beneath the top layer a full-screen app
-    // occupies, so the app returns inline before Rove asks.
+    // occupies, so the app returns inline before Paperplane asks.
     const ask = async (message: string) => {
       flushSync(() => setDisplayMode("inline"));
       const approved = await requestConfirmDialog(message);
       // No dialog host is mounted, so nobody was asked; say so rather than
       // reporting that the user declined.
       if (approved === undefined) {
-        throw new McpAppHostRefusal("Rove could not ask for approval here.");
+        throw new McpAppHostRefusal("Paperplane could not ask for approval here.");
       }
       return approved;
     };

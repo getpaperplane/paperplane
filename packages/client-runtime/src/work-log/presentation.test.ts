@@ -311,7 +311,7 @@ describe("summarizeToolGroup", () => {
 });
 
 describe("resolveWorkEntryToolPresentation", () => {
-  it("presents and summarizes every Rove tool using the same structured identity", () => {
+  it("presents and summarizes every Paperplane tool using the same structured identity", () => {
     for (const tool of ROVE_MCP_TOOL_NAMES) {
       const entry: WorkLogPresentationEntry = {
         id: tool,
@@ -321,13 +321,13 @@ describe("resolveWorkEntryToolPresentation", () => {
         toolData: { server: "rove", tool },
         toolLifecycleStatus: "completed",
         itemType: "dynamic_tool",
-        toolSource: { key: "rove", name: "Rove Code", kind: "integration" },
+        toolSource: { key: "rove", name: "Paperplane", kind: "integration" },
       };
       const presentation = resolveWorkEntryToolPresentation(entry);
       expect(presentation, tool).not.toBeNull();
       expect(presentation?.displayName, tool).not.toContain(tool);
       const summary = summarizeToolGroup([entry]);
-      expect(summary.summary, tool).not.toMatch(/Used (?:1 tool|Rove Code integration)/);
+      expect(summary.summary, tool).not.toMatch(/Used (?:1 tool|Paperplane integration)/);
       expect(summary.hasFailure, tool).toBe(false);
       const failed = { ...entry, toolLifecycleStatus: "failed" as const };
       expect(resolveWorkEntryToolPresentation(failed)?.displayName, tool).toMatch(/^Failed to /);
@@ -433,7 +433,7 @@ describe("resolveWorkEntryToolPresentation", () => {
     });
   });
 
-  it("does not summarize a foreign structured identity as Rove work", () => {
+  it("does not summarize a foreign structured identity as Paperplane work", () => {
     const entry: WorkLogPresentationEntry = {
       id: "foreign",
       createdAt: "2026-09-19T00:00:00.000Z",
@@ -558,8 +558,8 @@ describe("resolveWorkEntryToolPresentation", () => {
       "Stopping recording the preview browser",
       "Stopped recording the preview browser",
     ],
-    ["rove_thread_read", "Reading a Rove thread", "Read a Rove thread"],
-    ["rove_thread_send", "Sending to a Rove thread", "Sent to a Rove thread"],
+    ["rove_thread_read", "Reading a Paperplane thread", "Read a Paperplane thread"],
+    ["rove_thread_send", "Sending to a Paperplane thread", "Sent to a Paperplane thread"],
     [
       "rove_worktree_handoff",
       "Handing off thread to a git worktree",
@@ -576,7 +576,7 @@ describe("resolveWorkEntryToolPresentation", () => {
     ).toBe(completed);
   });
 
-  it("keeps Rove branding for non-browser tools and falls back to the original tool label", () => {
+  it("keeps Paperplane branding for non-browser tools and falls back to the original tool label", () => {
     expect(
       resolveWorkEntryToolPresentation({
         label: "mcp__rove__task_status",
@@ -966,7 +966,7 @@ describe("pull request tool presentation", () => {
       tone: "tool",
       itemType: "dynamic_tool",
       toolLifecycleStatus: "completed",
-      toolSource: { key: "rove", name: "Rove Code", kind: "integration" },
+      toolSource: { key: "rove", name: "Paperplane", kind: "integration" },
     };
     const list: WorkLogPresentationEntry = {
       ...link,
@@ -1033,7 +1033,7 @@ describe("device group summaries", () => {
     expect(workEntryViewedImagePath(entry)).toBe("/workspace/device.png");
   });
 
-  it("does not classify another server's tools as Rove device controls", () => {
+  it("does not classify another server's tools as Paperplane device controls", () => {
     expect(
       summarizeToolGroup([
         {

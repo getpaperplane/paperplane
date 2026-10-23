@@ -43,7 +43,7 @@ describe("Pierre file icons", () => {
     );
   });
 
-  it("extends Pierre with Rove-specific exact filename icons", () => {
+  it("extends Pierre with Paperplane-specific exact filename icons", () => {
     assert.equal(resolvePierreIconForEntry("AGENTS.md", "file")?.name, "rove-file-icon-agents");
     assert.equal(resolvePierreIconForEntry("pnpm-lock.yaml", "file")?.name, "rove-file-icon-pnpm");
     assert.equal(

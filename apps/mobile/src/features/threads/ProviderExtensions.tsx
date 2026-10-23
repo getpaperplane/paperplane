@@ -61,7 +61,7 @@ export function ProviderExtensionsContent(props: ProviderResources) {
     >
       <Text className="px-1 text-sm leading-5 text-foreground-muted">
         Global Pi extensions found on the server. Project extensions load in their threads and are
-        not listed here. Standard questions work in Rove, but Pi terminal components do not.
+        not listed here. Standard questions work in Paperplane, but Pi terminal components do not.
       </Text>
 
       <View className="rounded-2xl bg-grouped-card px-4 py-3">
@@ -239,7 +239,7 @@ export function ProviderExtensionsContent(props: ProviderResources) {
       </Pressable>
       <Text className="px-1 text-xs leading-5 text-foreground-muted">
         {compatibilityWarnings.length === 0
-          ? "Found does not mean every extension feature works in Rove. Pi terminal UI stays in Pi. "
+          ? "Found does not mean every extension feature works in Paperplane. Pi terminal UI stays in Pi. "
           : ""}
         Disabling an extension stops loading it in new Pi sessions; existing sessions reload on
         their next turn.

@@ -86,16 +86,16 @@ describe("resolveSidebarRowAccessibility", () => {
     {
       title: "Can you audit the UI?",
       statusLabel: "Working",
-      projectDisplayName: "Rove Code",
+      projectDisplayName: "Paperplane",
       isActive: true,
-      expected: { label: "Can you audit the UI?, Working, Rove Code", current: "page" },
+      expected: { label: "Can you audit the UI?, Working, Paperplane", current: "page" },
     },
     {
       title: "The audit is done",
       statusLabel: null,
-      projectDisplayName: "Rove Code",
+      projectDisplayName: "Paperplane",
       isActive: false,
-      expected: { label: "The audit is done, Rove Code", current: undefined },
+      expected: { label: "The audit is done, Paperplane", current: undefined },
     },
     {
       title: "Untitled task",

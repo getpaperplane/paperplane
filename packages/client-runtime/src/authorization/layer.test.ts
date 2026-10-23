@@ -212,7 +212,7 @@ const makeHarness = Effect.fn("TestRemoteAuthorization.makeHarness")(function* (
           ClientCapabilities.ClientPresentation,
           ClientCapabilities.ClientPresentation.of({
             metadata: {
-              label: "Rove Code Test",
+              label: "Paperplane Test",
               deviceType: "mobile",
               os: "test",
             },
@@ -349,7 +349,7 @@ describe("RemoteEnvironmentAuthorization", () => {
     }),
   );
 
-  it.effect("uses the Rove Connect token on a learned direct address without the relay", () =>
+  it.effect("uses the Paperplane Connect token on a learned direct address without the relay", () =>
     Effect.gen(function* () {
       const cached = new TokenStore.RemoteDpopAccessToken({
         environmentId: ENVIRONMENT_ID,
@@ -412,7 +412,7 @@ describe("RemoteEnvironmentAuthorization", () => {
       expect(harness.fetch.calls.map(([url]) => String(url))).toEqual([
         "http://192.168.1.10:3773/.well-known/rove/environment",
       ]);
-      // The token stays saved for the Rove Connect route.
+      // The token stays saved for the Paperplane Connect route.
       expect((yield* Ref.get(harness.tokens)).get(ENVIRONMENT_ID)?.accessToken).toBe(
         "cached-access-token",
       );
@@ -567,7 +567,7 @@ describe("RemoteEnvironmentAuthorization", () => {
         for (const [, init] of exchanges) {
           expect(Object.fromEntries(tokenFields(init))).toMatchObject({
             subject_token: BOOTSTRAP.credential,
-            client_label: "Rove Code Test",
+            client_label: "Paperplane Test",
             client_device_type: "mobile",
             client_os: "test",
           });

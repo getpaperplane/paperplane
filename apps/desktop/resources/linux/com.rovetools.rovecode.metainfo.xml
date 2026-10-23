@@ -3,14 +3,14 @@
   <id>io.github.hafiezul.rove</id>
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>MIT</project_license>
-  <name>Rove Code</name>
+  <name>Paperplane</name>
   <summary>Desktop GUI for coding agents</summary>
   <developer id="io.github.hafiezul">
     <name>Hafiezul Zikry</name>
   </developer>
   <description>
     <p>
-      Rove Code is an open-source desktop app for coding agents. Work with your
+      Paperplane is an open-source desktop app for coding agents. Work with your
       existing agent subscriptions, review code changes, and run commands in
       your projects.
     </p>

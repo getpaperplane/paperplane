@@ -66,7 +66,7 @@ export interface SettingsSearchItem {
   readonly localBackendManagementOnly?: boolean;
   readonly localEnvironmentOnly?: boolean;
   readonly wslAvailableOnly?: boolean;
-  // Its row only renders while this environment's Rove Connect managed tunnel is on.
+  // Its row only renders while this environment's Paperplane Connect managed tunnel is on.
   readonly managedTunnelOnly?: boolean;
   /**
    * Sorts after every other match. Keybinding commands mirror rows on other
@@ -842,7 +842,7 @@ export const SETTINGS_SEARCH_ITEMS = [
   },
   {
     id: "pull-request-links-open-in-app",
-    title: "Open pull requests in Rove Code",
+    title: "Open pull requests in Paperplane",
     to: "/settings/integrations",
     searchTerms: ["pr links github browser external click default pull request view panel"],
   },
@@ -1032,7 +1032,7 @@ export const SETTINGS_SEARCH_ITEMS = [
   {
     id: "rove-connect",
     localEnvironmentOnly: true,
-    title: "Rove Connect",
+    title: "Paperplane Connect",
     to: "/settings/connections",
     targetId: "connections-environment",
     searchTerms: ["managed tunnel cloud other devices remote"],

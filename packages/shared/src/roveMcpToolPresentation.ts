@@ -148,18 +148,18 @@ const ROVE_MCP_TOOLS: Readonly<Record<string, RoveMcpToolDefinition>> = {
     "schedule-delete",
   ),
   request_secret: tool(["Ask for", "Asking for", "Asked for", "a secret"], "secret-request"),
-  create_threads: tool(["Create", "Creating", "Created", "Rove threads"], "thread-create"),
-  rove_thread_start: tool(["Start", "Starting", "Started", "a Rove thread"], "thread-create"),
-  rove_thread_list: tool(["List", "Listing", "Listed", "Rove threads"], "thread-list"),
-  rove_thread_read: tool(["Read", "Reading", "Read", "a Rove thread"], "thread-read"),
-  rove_thread_send: tool(["Send", "Sending", "Sent", "to a Rove thread"], "thread-send"),
-  rove_thread_wait: tool(["Wait", "Waiting", "Waited", "for a Rove thread"], "thread-wait"),
+  create_threads: tool(["Create", "Creating", "Created", "Paperplane threads"], "thread-create"),
+  rove_thread_start: tool(["Start", "Starting", "Started", "a Paperplane thread"], "thread-create"),
+  rove_thread_list: tool(["List", "Listing", "Listed", "Paperplane threads"], "thread-list"),
+  rove_thread_read: tool(["Read", "Reading", "Read", "a Paperplane thread"], "thread-read"),
+  rove_thread_send: tool(["Send", "Sending", "Sent", "to a Paperplane thread"], "thread-send"),
+  rove_thread_wait: tool(["Wait", "Waiting", "Waited", "for a Paperplane thread"], "thread-wait"),
   rove_workflow_stop: tool(
     ["Stop", "Stopping", "Requested a stop for", "a workflow"],
     "workflow-stop",
   ),
   rove_thread_interrupt: tool(
-    ["Interrupt", "Interrupting", "Requested an interrupt of", "a Rove thread"],
+    ["Interrupt", "Interrupting", "Requested an interrupt of", "a Paperplane thread"],
     "thread-interrupt",
   ),
   rove_worktree_handoff: tool(
@@ -315,7 +315,7 @@ const ROVE_MCP_TOOLS: Readonly<Record<string, RoveMcpToolDefinition>> = {
     "thread-organize",
   ),
   rove_thread_update: tool(
-    ["Update", "Updating", "Updated", "Rove thread metadata"],
+    ["Update", "Updating", "Updated", "Paperplane thread metadata"],
     "thread-update",
   ),
   rove_worktree_list: tool(["List", "Listing", "Listed", "workspace branches"], "worktree-list"),
@@ -356,7 +356,7 @@ const ROVE_MCP_TOOLS: Readonly<Record<string, RoveMcpToolDefinition>> = {
 };
 
 /**
- * The Rove orchestration tool inventory, used to gate loose name matching on
+ * The Paperplane orchestration tool inventory, used to gate loose name matching on
  * both the server (ACP MCP identity recovery) and the client (logo branding).
  */
 export const ROVE_MCP_TOOL_NAMES: ReadonlySet<string> = new Set(Object.keys(ROVE_MCP_TOOLS));
@@ -366,7 +366,7 @@ function normalizeRoveMcpToolLabel(value: string): string {
 }
 
 /**
- * ACP agents disagree on how the injected Rove server prefixes its tools:
+ * ACP agents disagree on how the injected Paperplane server prefixes its tools:
  * `mcp__rove__x` (Claude/Cursor/Pi), `rove.x` (Codex), plus single
  * underscore, colon, slash, dash, and space separators seen from registry
  * agents. The prefix match is deliberately loose because the display-name
@@ -406,7 +406,7 @@ function resolveRoveMcpToolName(value: string): string | null {
   return longest;
 }
 
-/** The bare Rove tool name (`html_render`) for any provider's spelling of it. */
+/** The bare Paperplane tool name (`html_render`) for any provider's spelling of it. */
 export function resolveRoveMcpToolId(toolName: string | null | undefined): string | null {
   const name = toolName == null ? null : resolveRoveMcpToolName(toolName);
   return name !== null && Object.hasOwn(ROVE_MCP_TOOLS, name) ? name : null;

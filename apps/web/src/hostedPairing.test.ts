@@ -12,7 +12,7 @@ describe("hostedPairing", () => {
     vi.unstubAllEnvs();
   });
 
-  it("uses Rove's hosted origin without configuration, not an upstream origin", () => {
+  it("uses Paperplane's hosted origin without configuration, not an upstream origin", () => {
     vi.stubEnv("VITE_HOSTED_APP_URL", "");
     vi.stubEnv("VITE_HOSTED_APP_CHANNEL", "");
     vi.stubEnv("VITE_HTTP_URL", "");

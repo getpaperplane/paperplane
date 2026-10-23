@@ -32,7 +32,7 @@ function layerElectronApp(
 
   return Layer.succeed(ElectronApp.ElectronApp, {
     metadata: Effect.die("unexpected metadata read"),
-    name: Effect.succeed("Rove Code"),
+    name: Effect.succeed("Paperplane"),
     systemLocale: Effect.succeed("en-US"),
     whenReady: Effect.void,
     quit,

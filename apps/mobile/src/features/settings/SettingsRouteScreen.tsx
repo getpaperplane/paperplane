@@ -80,7 +80,7 @@ function ConfiguredSettingsRouteScreen() {
         <SettingsSection title="Connections">
           <SettingsRow
             icon="person.crop.circle"
-            label="Rove Account"
+            label="Paperplane Account"
             value={accountLabel}
             disabled={!isLoaded}
             onPress={() => navigation.navigate("SettingsSheet", { screen: "SettingsAuth" })}
@@ -222,7 +222,7 @@ function SettingsIndexSections() {
 
       <SettingsSection title="App">
         <SettingsRow icon="chart.bar.xaxis" label="Usage" target="SettingsUsage" />
-        <SettingsRow icon="info.circle" label="About Rove Code" target="SettingsAbout" />
+        <SettingsRow icon="info.circle" label="About Paperplane" target="SettingsAbout" />
       </SettingsSection>
     </>
   );

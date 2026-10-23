@@ -2,20 +2,20 @@
 
 ## Purpose
 
-Rove exposes V2 orchestration through its app-owned MCP endpoint. A provider
+Paperplane exposes V2 orchestration through its app-owned MCP endpoint. A provider
 agent can use this endpoint to:
 
 - create an app-owned sub-agent on any supported provider instance;
 - wait for or poll the sub-agent's durable result;
 - cancel an active delegated task; and
-- create one or more ordinary top-level Rove threads;
+- create one or more ordinary top-level Paperplane threads;
 - list a project's threads and incrementally read any thread;
 - rename threads, regenerate titles, and link or unlink pull requests;
 - send or steer follow-up messages; and
 - wait for or interrupt ordinary thread runs.
 
-These are Rove orchestration operations, not provider-native sub-agent APIs.
-Delegated tasks always create a Rove child thread and run. The child receives
+These are Paperplane orchestration operations, not provider-native sub-agent APIs.
+Delegated tasks always create a Paperplane child thread and run. The child receives
 only the supplied task prompt, plus an optional role instruction supplied in
 the same tool call. Parent conversation history is not copied into the child.
 
@@ -40,8 +40,8 @@ preview toolkit and the orchestration toolkit.
 Before `ProviderSessionManager` opens a new V2 provider session, it asks
 `McpSessionRegistry` for a credential scoped to:
 
-- the Rove environment;
-- the parent Rove thread;
+- the Paperplane environment;
+- the parent Paperplane thread;
 - the concrete provider instance; and
 - the provider session.
 
@@ -145,12 +145,12 @@ provider-specific extensions; those remain in flavors such as Grok.
 
 ### Pi V2
 
-Rove runs Pi through its bundled SDK inside an isolated instance worker, not
+Paperplane runs Pi through its bundled SDK inside an isolated instance worker, not
 `pi --mode rpc` ([ADR 0001](../adr/0001-pi-provider-uses-sdk-in-process.md)).
 The session factory receives the V2 MCP endpoint and scoped credential before
-opening the SDK session. Rove's registered SDK tools bridge authenticated MCP
+opening the SDK session. Paperplane's registered SDK tools bridge authenticated MCP
 calls over HTTP and forward cancellation; project resources remain subject to
-Rove's trust policy.
+Paperplane's trust policy.
 
 MCP `delegate_task` uses the shared durable child-thread lifecycle for Pi, as
 recorded in [ADR 0004](../adr/0004-pi-delegates-through-rove-mcp.md). Pi has no
@@ -188,7 +188,7 @@ adapter support, disabled state, missing executable, or missing authentication.
 
 ### `delegate_task`
 
-Creates a Rove-owned child thread and immediately dispatches the supplied task
+Creates a Paperplane-owned child thread and immediately dispatches the supplied task
 prompt.
 
 ```ts
@@ -290,7 +290,7 @@ optional cancellation reason.
 
 ### `create_threads`
 
-Creates between one and twenty ordinary top-level Rove threads:
+Creates between one and twenty ordinary top-level Paperplane threads:
 
 ```ts
 type CreateThreadsInput = {

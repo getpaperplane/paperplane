@@ -79,7 +79,7 @@ function makeWindowsRevealWindow() {
     show: vi.fn(),
     moveTop: vi.fn(),
     focus: vi.fn(),
-    getTitle: vi.fn(() => "Rove Code (Dev)"),
+    getTitle: vi.fn(() => "Paperplane (Dev)"),
     getBounds: vi.fn(() => ({ x: 100, y: 50, width: 1_200, height: 800 })),
     getContentBounds: vi.fn(() => ({ x: 108, y: 50, width: 1_184, height: 792 })),
     getNativeWindowHandle: vi.fn(() => Buffer.from([41, 0, 0, 0])),
@@ -116,7 +116,7 @@ describe("ElectronWindow", () => {
         throw cause;
       });
       const options = {
-        title: "Rove Code",
+        title: "Paperplane",
         width: 1100,
         height: 780,
         minWidth: 840,
@@ -143,7 +143,7 @@ describe("ElectronWindow", () => {
 
       assert.instanceOf(error, ElectronWindow.ElectronWindowCreateError);
       assert.deepEqual(error.options, {
-        title: "Rove Code",
+        title: "Paperplane",
         width: 1100,
         height: 780,
         minWidth: 840,
@@ -168,7 +168,7 @@ describe("ElectronWindow", () => {
       assert.strictEqual(error.cause, cause);
       assert.equal(
         error.message,
-        'Failed to create Electron BrowserWindow "Rove Code" (1100x780).',
+        'Failed to create Electron BrowserWindow "Paperplane" (1100x780).',
       );
       assert.notInclude(error.message, cause.message);
       assert.deepEqual(browserWindowMock.mock.calls, [[options]]);
@@ -268,7 +268,7 @@ describe("ElectronWindow", () => {
     }).pipe(Effect.provide(layerTestFor("win32"))),
   );
 
-  it.effect("focuses the exact Rove window before activating from a shell-hosted app", () =>
+  it.effect("focuses the exact Paperplane window before activating from a shell-hosted app", () =>
     Effect.gen(function* () {
       const operations: Array<string> = [];
       shellHostedForegroundMock.mockResolvedValue(true);
@@ -305,7 +305,7 @@ describe("ElectronWindow", () => {
           {
             windowId: 41,
             processId: process.pid,
-            title: "Rove Code (Dev)",
+            title: "Paperplane (Dev)",
             bounds: { x: 100, y: 50, width: 1_200, height: 800 },
             contentBounds: { x: 108, y: 50, width: 1_184, height: 792 },
           },
@@ -314,7 +314,7 @@ describe("ElectronWindow", () => {
     }).pipe(Effect.provide(layerTestFor("win32"))),
   );
 
-  it.effect("prepares the exact Rove window before a capture overlay", () =>
+  it.effect("prepares the exact Paperplane window before a capture overlay", () =>
     Effect.gen(function* () {
       windowsForegroundPrepareMock.mockResolvedValue(true);
       const window = makeWindowsRevealWindow();
@@ -330,7 +330,7 @@ describe("ElectronWindow", () => {
           {
             windowId: 41,
             processId: process.pid,
-            title: "Rove Code (Dev)",
+            title: "Paperplane (Dev)",
             bounds: { x: 100, y: 50, width: 1_200, height: 800 },
             contentBounds: { x: 108, y: 50, width: 1_184, height: 792 },
           },

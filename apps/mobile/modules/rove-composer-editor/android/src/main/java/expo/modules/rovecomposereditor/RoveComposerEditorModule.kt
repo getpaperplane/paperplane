@@ -18,7 +18,7 @@ internal object RoveComposerClipboard {
     }
     val records = payload?.optJSONArray("records")
     if (payload == null || records == null) {
-      clipboard.setPrimaryClip(ClipData.newPlainText("Rove Code", text))
+      clipboard.setPrimaryClip(ClipData.newPlainText("Paperplane", text))
       return
     }
     val all = (0 until records.length()).map { records.getJSONObject(it) }
@@ -36,12 +36,12 @@ internal object RoveComposerClipboard {
     clipboard.setPrimaryClip(
       if (selected.isEmpty()) {
         ClipData.newPlainText(
-          "Rove Code",
+          "Paperplane",
           text
         )
       } else {
         ClipData.newHtmlText(
-          "Rove Code",
+          "Paperplane",
           text,
           "<pre data-rove-context-fragment=\"$encoded\">$escaped</pre>"
         )

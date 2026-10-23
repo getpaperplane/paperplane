@@ -77,7 +77,7 @@ export const updateOutdatedHost = Effect.fn("clientRuntime.connection.updateOutd
     ) {
       return yield* new OutdatedHostUpdateError({
         environmentId,
-        message: `Update Rove Code on ${descriptor.label} manually; it cannot update itself.`,
+        message: `Update Paperplane on ${descriptor.label} manually; it cannot update itself.`,
       });
     }
 
@@ -189,7 +189,7 @@ export const updateOutdatedHost = Effect.fn("clientRuntime.connection.updateOutd
     if (Option.isNone(resumed)) {
       return yield* new OutdatedHostUpdateError({
         environmentId,
-        message: `${descriptor.label} did not come back on a compatible Rove Code version.`,
+        message: `${descriptor.label} did not come back on a compatible Paperplane version.`,
       });
     }
 

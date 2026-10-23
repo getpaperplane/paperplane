@@ -16,7 +16,7 @@ import { validateScheduledTasksSearch } from "./scheduledTasksSettings.logic";
 const checkoutSearch = {
   project: "repository:rove",
   machine: "remote-server",
-  checkout: "remote-server:/home/user/Rove Code",
+  checkout: "remote-server:/home/user/Paperplane",
 };
 
 function createSettingsRouter(initialEntry = "/settings/general") {

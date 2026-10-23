@@ -80,7 +80,7 @@ export function usePrimaryCloudLinkState() {
         : null,
     [primary],
   );
-  // Builds without Rove Connect have no link to read; skip the request.
+  // Builds without Paperplane Connect have no link to read; skip the request.
   const atom =
     target && hasCloudPublicConfig() && canReadRelay
       ? primaryCloudLinkStateAtom(targetKey(target))
@@ -92,7 +92,7 @@ export function usePrimaryCloudLinkState() {
   let error: string | null = null;
   if (result._tag === "Failure") {
     const cause = Cause.squash(result.cause);
-    error = cause instanceof Error ? cause.message : "Could not read Rove Connect link state.";
+    error = cause instanceof Error ? cause.message : "Could not read Paperplane Connect link state.";
   }
 
   return {

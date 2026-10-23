@@ -448,7 +448,7 @@ export const ClientSettingsSchema = Schema.Struct({
     PullRequestMergeMethod,
   ).pipe(Schema.withDecodingDefault(Effect.succeed({}))),
   /**
-   * Whether clicking a pull request link opens Rove Code's pull request view.
+   * Whether clicking a pull request link opens Paperplane's pull request view.
    * When false, pull request links open like any other link, so they reach
    * GitHub or the repository's other host.
    */
@@ -828,7 +828,7 @@ export const PiSettings = makeProviderSettingsSchema(
       Schema.annotateKey({
         title: "Workload memory (MiB)",
         description:
-          "Use auto to share the host's Rove memory budget with agents, leaving RAM for the OS and server and allowing bounded swap. The largest command stops only when both budgets are exhausted. An integer of at least 384 MiB adds a shared hard cap without swap for Pi commands and background services, capped by the host budget. CPU is not capped. Lower hard limits apply when current usage permits. ROVE_PI_MEMORY_BUDGET_MIB takes precedence.",
+          "Use auto to share the host's Paperplane memory budget with agents, leaving RAM for the OS and server and allowing bounded swap. The largest command stops only when both budgets are exhausted. An integer of at least 384 MiB adds a shared hard cap without swap for Pi commands and background services, capped by the host budget. CPU is not capped. Lower hard limits apply when current usage permits. ROVE_PI_MEMORY_BUDGET_MIB takes precedence.",
         providerSettingsForm: { placeholder: "auto", clearWhenEmpty: "omit" },
       }),
     ),
@@ -1293,7 +1293,7 @@ export const ServerSettings = Schema.Struct({
   computerUseAllowPixelInput: Schema.Boolean.pipe(
     Schema.withDecodingDefault(Effect.succeed(false)),
   ),
-  // Compatibility settings for Rove's in-process Pi driver. Other drivers use providerInstances.
+  // Compatibility settings for Paperplane's in-process Pi driver. Other drivers use providerInstances.
   providers: Schema.Struct({
     pi: PiSettings.pipe(Schema.withDecodingDefault(Effect.succeed({}))),
   }).pipe(Schema.withDecodingDefault(Effect.succeed({}))),
@@ -1314,7 +1314,7 @@ export const ServerSettings = Schema.Struct({
   ),
   /**
    * Absolute directory new worktrees are created under, e.g. `D:\worktrees`
-   * or `~/worktrees`. Empty uses `<Rove home>/worktrees`.
+   * or `~/worktrees`. Empty uses `<Paperplane home>/worktrees`.
    */
   worktreesDirectory: TrimmedString.pipe(Schema.withDecodingDefault(Effect.succeed(""))),
   /**
@@ -1389,7 +1389,7 @@ export const ServerSettings = Schema.Struct({
    */
   enableAgentDeviceAccess: Schema.Boolean.pipe(Schema.withDecodingDefault(Effect.succeed(false))),
   /**
-   * Whether this server may install and run Rove's device helper processes.
+   * Whether this server may install and run Paperplane's device helper processes.
    * Kept separate from agent access so enabling the user's Device panel does
    * not also grant providers control of simulators and emulators.
    */

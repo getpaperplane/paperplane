@@ -202,7 +202,7 @@ describe("resolveOnboardingTargetEnvironment", () => {
 });
 
 describe("isOnboardingRelayEnvironment", () => {
-  it("includes only Rove Connect relay targets", () => {
+  it("includes only Paperplane Connect relay targets", () => {
     expect(
       [olderRelay, pairedRemote, sshEnvironment, desktopLocalEnvironment].filter(
         isOnboardingRelayEnvironment,

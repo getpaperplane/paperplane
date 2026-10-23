@@ -256,7 +256,7 @@ describe("scoped settings writes", () => {
     const unsupported = [
       {
         label: server.label,
-        message: "This environment does not support this setting. Update Rove Code on it.",
+        message: "This environment does not support this setting. Update Paperplane on it.",
       },
     ];
 

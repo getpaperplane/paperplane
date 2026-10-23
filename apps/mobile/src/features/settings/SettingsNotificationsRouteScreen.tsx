@@ -68,7 +68,7 @@ export function SettingsNotificationsRouteScreen() {
           contentContainerClassName="px-5 pt-4"
         >
           <Text className="text-base text-foreground-muted">
-            Notifications require Rove Connect in this app build.
+            Notifications require Paperplane Connect in this app build.
           </Text>
         </ScrollView>
       </SettingsScreen>
@@ -179,7 +179,7 @@ function ConfiguredSettingsNotificationsRouteScreen() {
       } else {
         Dialog.alert(
           "Couldn't finish enabling notifications",
-          "Notification access was granted, but this device could not be registered with Rove Connect. Notifications will start once registration succeeds.",
+          "Notification access was granted, but this device could not be registered with Paperplane Connect. Notifications will start once registration succeeds.",
         );
       }
       return;
@@ -209,8 +209,8 @@ function ConfiguredSettingsNotificationsRouteScreen() {
 
   const promptSignIn = useCallback(() => {
     Dialog.alert(
-      "Sign in to Rove Connect",
-      "Live Activity updates require Rove Connect so relay can deliver updates to this device.",
+      "Sign in to Paperplane Connect",
+      "Live Activity updates require Paperplane Connect so relay can deliver updates to this device.",
       [
         { text: "Cancel", style: "cancel" },
         {
@@ -313,7 +313,7 @@ function ConfiguredSettingsNotificationsRouteScreen() {
     } else {
       Dialog.alert(
         "Couldn't finish enabling activity updates",
-        "This device could not be registered with Rove Connect, so activity updates won't appear yet. They'll start once registration succeeds.",
+        "This device could not be registered with Paperplane Connect, so activity updates won't appear yet. They'll start once registration succeeds.",
       );
     }
   }, [
@@ -339,7 +339,7 @@ function ConfiguredSettingsNotificationsRouteScreen() {
 
       Dialog.alert(
         "Disable notifications",
-        "Open system Settings to disable notifications for Rove Code.",
+        "Open system Settings to disable notifications for Paperplane.",
         [
           { text: "Cancel", style: "cancel" },
           { text: "Open Settings", onPress: () => void Linking.openSettings() },
@@ -493,7 +493,7 @@ function ConfiguredSettingsNotificationsRouteScreen() {
                 void openAndroidLiveUpdateSettings().catch(() => {
                   Dialog.alert(
                     "Couldn't open Settings",
-                    "Open Android Settings, select Rove Code, then enable Live Updates in Notifications.",
+                    "Open Android Settings, select Paperplane, then enable Live Updates in Notifications.",
                   );
                 });
               }}

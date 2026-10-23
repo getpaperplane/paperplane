@@ -55,7 +55,7 @@ function isManagedTunnelActive(
 }
 
 /**
- * Drives the primary environment's Rove Connect link. Rove Connect (managed
+ * Drives the primary environment's Paperplane Connect link. Paperplane Connect (managed
  * tunnel) and agent-activity publishing are independent capabilities backed by
  * a single relay link, so consumers express the full desired state and
  * `reconcileCloudState` applies it: unlink when neither is wanted, otherwise
@@ -88,13 +88,13 @@ export function useCloudLinkController() {
 
   const reportUpdateFailure = (cause: unknown) => {
     const message =
-      cause instanceof Error ? cause.message : "Could not update Rove Connect access.";
+      cause instanceof Error ? cause.message : "Could not update Paperplane Connect access.";
     const traceId = findErrorTraceId(cause);
-    console.error("[rove-connect] Could not update Rove Connect", { message, traceId, cause });
+    console.error("[rove-connect] Could not update Paperplane Connect", { message, traceId, cause });
     setOperationError(traceId ? `${message} Trace ID: ${traceId}` : message);
     toastManager.add({
       type: "error",
-      title: "Could not update Rove Connect",
+      title: "Could not update Paperplane Connect",
       description: message,
       data: traceId
         ? {
@@ -112,7 +112,7 @@ export function useCloudLinkController() {
   const linkRevoked = linkData?.linkRevoked ?? false;
   const managedTunnelActive = linkData ? isManagedTunnelActive(linkData, relayProviderKind) : false;
   // Local state says managed but the relay holds a publish-only link. Turning
-  // Rove Connect on relinks as managed, which repairs it.
+  // Paperplane Connect on relinks as managed, which repairs it.
   const managedTunnelOutOfSync =
     linkData !== null && !managedTunnelActive && isManagedTunnelActive(linkData, undefined);
   const publishAgentActivity = primaryCloudLinkState.data?.publishAgentActivity ?? false;
@@ -133,7 +133,7 @@ export function useCloudLinkController() {
         !readEnvironmentScope(environmentId, AuthRelayWriteScope)
       ) {
         reportUpdateFailure(
-          new Error("This connection needs permission to view and manage Rove Connect settings."),
+          new Error("This connection needs permission to view and manage Paperplane Connect settings."),
         );
         return false;
       }
@@ -142,7 +142,7 @@ export function useCloudLinkController() {
     const readLinkState = () => {
       const state = readCachedPrimaryCloudLinkState(target);
       if (state === null) {
-        reportUpdateFailure(new Error("Wait until the current Rove Connect settings can be read."));
+        reportUpdateFailure(new Error("Wait until the current Paperplane Connect settings can be read."));
       }
       return state;
     };
@@ -158,7 +158,7 @@ export function useCloudLinkController() {
     // actually holds now.
     if (!wantsLink) {
       // Unlink works without a relay token — a failed token read must not
-      // leave the user unable to turn Rove Connect off.
+      // leave the user unable to turn Paperplane Connect off.
       const unlinkResult = await unlinkPrimaryEnvironment({
         target,
         clerkToken: tokenResult._tag === "Success" ? (tokenResult.value ?? null) : null,
@@ -179,7 +179,7 @@ export function useCloudLinkController() {
       }
       const clerkToken = tokenResult.value;
       if (!clerkToken) {
-        reportUpdateFailure(new Error("Sign in to Rove Connect before enabling this."));
+        reportUpdateFailure(new Error("Sign in to Paperplane Connect before enabling this."));
         return false;
       }
       const currentManagedTunnel = isManagedTunnelActive(currentLinkState, relayProviderKind);

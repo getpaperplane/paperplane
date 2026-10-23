@@ -15,7 +15,7 @@ export const ROVE_CONNECT_ACCOUNT_PAGES = [
     content: <MobileClientsUserProfilePage />,
   },
   {
-    label: "Rove Connect",
+    label: "Paperplane Connect",
     url: "rove-connect",
     icon: <ServerIcon className="size-4" />,
     content: <RoveConnectUserProfilePage />,
@@ -25,7 +25,7 @@ export const ROVE_CONNECT_ACCOUNT_PAGES = [
 type PortalTargets = Readonly<Record<string, HTMLDivElement | undefined>>;
 
 /**
- * Opens the Clerk account modal on the Rove Connect page from outside the
+ * Opens the Clerk account modal on the Paperplane Connect page from outside the
  * UserButton. Clerk mounts custom pages into DOM nodes it owns, so the caller
  * must keep `portals` rendered for as long as the modal can be open.
  */

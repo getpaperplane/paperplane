@@ -48,7 +48,7 @@ function versionCore(version: string): string {
 }
 
 /**
- * The skew a user can act on: the connected server runs an older Rove Code than
+ * The skew a user can act on: the connected server runs an older Paperplane than
  * this client (or than `clientVersion`, the version this client is about to
  * update to), so the server is the side that needs updating.
  *
@@ -87,7 +87,7 @@ export function resolveVersionMismatch(
   return {
     clientVersion: normalizedClientVersion,
     serverVersion: normalizedServerVersion,
-    hint: "Version mismatch. Try syncing the client and server to the same Rove Code version.",
+    hint: "Version mismatch. Try syncing the client and server to the same Paperplane version.",
   };
 }
 

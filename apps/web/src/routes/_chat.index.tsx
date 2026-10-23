@@ -138,7 +138,7 @@ function HostedStaticOnboardingState() {
   const description = localEnvironmentOff
     ? "The local environment is turned off. Connect a remote environment, or turn the local environment back on in Connections."
     : cloudEnabled
-      ? "Enable Rove Connect on that machine, then open Connections here to sign in with the same account. You can also add the machine using a pairing link."
+      ? "Enable Paperplane Connect on that machine, then open Connections here to sign in with the same account. You can also add the machine using a pairing link."
       : "Open Connections and add that machine using its pairing link. This app must be able to reach it.";
 
   return (
@@ -158,9 +158,9 @@ function HostedStaticOnboardingState() {
               <div className="mx-auto mb-5 flex size-11 items-center justify-center rounded-xl border border-border/70 bg-background/70 text-muted-foreground">
                 <LinkIcon className="size-5" />
               </div>
-              <EmptyTitle>Connect to a computer running Rove Code</EmptyTitle>
+              <EmptyTitle>Connect to a computer running Paperplane</EmptyTitle>
               <EmptyDescription>
-                This app connects to Rove Code running on your computer or a server. Start the Rove
+                This app connects to Paperplane running on your computer or a server. Start the Paperplane
                 Code desktop app or command-line server on that machine and keep it running.
               </EmptyDescription>
               <EmptyDescription>{description}</EmptyDescription>

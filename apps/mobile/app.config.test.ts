@@ -72,7 +72,7 @@ describe("source-built mobile identity", () => {
   });
 
   it.each([undefined, "0", "1"])(
-    "gates configured Rove Connect infrastructure (%s)",
+    "gates configured Paperplane Connect infrastructure (%s)",
     async (gate) => {
       const config = await configFor({
         ...(gate ? { ROVE_CLOUD_READY: gate } : undefined),
@@ -91,10 +91,10 @@ describe("source-built mobile identity", () => {
   );
 
   it.each([
-    ["development", "Rove Code Dev", "dev.rove.app.dev"],
-    ["preview", "Rove Code Preview", "dev.rove.app.preview"],
-    ["production", "Rove Code", "dev.rove.app"],
-  ])("retains the %s Rove app identity", async (variant, name, id) => {
+    ["development", "Paperplane Dev", "dev.rove.app.dev"],
+    ["preview", "Paperplane Preview", "dev.rove.app.preview"],
+    ["production", "Paperplane", "dev.rove.app"],
+  ])("retains the %s Paperplane app identity", async (variant, name, id) => {
     const config = await configFor({ APP_VARIANT: variant });
     expect(config.name).toBe(name);
     expect(config.ios?.bundleIdentifier).toBe(id);

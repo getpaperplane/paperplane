@@ -1,7 +1,7 @@
-# Install Rove Code
+# Install Paperplane
 
-Download desktop installers from [Rove Code releases](https://github.com/hafiezul/rove/releases).
-Use Rove-owned CLI packages. Do not substitute an upstream package.
+Download desktop installers from [Paperplane releases](https://github.com/hafiezul/rove/releases).
+Use Paperplane-owned CLI packages. Do not substitute an upstream package.
 
 ## Command line
 
@@ -39,7 +39,7 @@ Update a packaged host with `rove update`, or
 Contributor source setup lives in the [development guide](../operations/development.md).
 It is not the installation or update procedure for a persistent host.
 
-Outside a development worktree, Rove Code uses `~/.rove-code` for its data.
+Outside a development worktree, Paperplane uses `~/.rove-code` for its data.
 Importing data from another installation is not yet supported.
 
 ## Desktop command line
@@ -56,10 +56,10 @@ Only if you trust the artifact you downloaded, remove the download quarantine
 for that app:
 
 ```sh
-xattr -dr com.apple.quarantine "/Applications/Rove Code (Alpha).app"
+xattr -dr com.apple.quarantine "/Applications/Paperplane (Alpha).app"
 ```
 
-For a nightly build, use `/Applications/Rove Code (Nightly).app` instead. This
+For a nightly build, use `/Applications/Paperplane (Nightly).app` instead. This
 bypasses Gatekeeper's download check for that app; it does not verify the app is
 safe. Do not disable Gatekeeper system-wide. If you do not trust the artifact,
 do not run this command.
@@ -81,7 +81,7 @@ Import-Certificate -FilePath .\rove-windows-signing.cer -CertStoreLocation Cert:
 Import-Certificate -FilePath .\rove-windows-signing.cer -CertStoreLocation Cert:\CurrentUser\TrustedPublisher
 ```
 
-This trusts code signed by that certificate. Do not import a certificate from an untrusted download. Rove Code keeps signature verification enabled for updates. An older unsigned installation may need one manual reinstall before following signed updates.
+This trusts code signed by that certificate. Do not import a certificate from an untrusted download. Paperplane keeps signature verification enabled for updates. An older unsigned installation may need one manual reinstall before following signed updates.
 
 To remove that trust, use `certmgr.msc` to remove the same certificate from **Trusted Root Certification Authorities** and **Trusted Publishers**. Updates signed by it then fail verification.
 
@@ -104,7 +104,7 @@ There are no App Store or Google Play releases from this project.
   guarantee it will run. No paid Apple membership is needed.
 
 The iOS sideload build omits push notifications, widgets, and the share extension.
-Android push notifications need Firebase configuration and Rove Connect, neither
+Android push notifications need Firebase configuration and Paperplane Connect, neither
 of which is included in these downloads.
 
 **The phone is a client, not an agent host.** The host machine running the desktop
@@ -132,24 +132,24 @@ computer.
 | Cursor      | Install [Cursor CLI](https://cursor.com/cli), then run `agent login`.                                                                                     |
 | Grok Build  | Install [Grok Build CLI](https://x.ai/cli), then run `grok login`.                                                                                        |
 | OpenCode    | Install [OpenCode](https://opencode.ai), then run `opencode auth login`.                                                                                  |
-| Pi          | Rove Code embeds Pi through its SDK. Authenticate Pi on the server and enable it in provider settings; see [Pi](./providers-pi.md).                       |
+| Pi          | Paperplane embeds Pi through its SDK. Authenticate Pi on the server and enable it in provider settings; see [Pi](./providers-pi.md).                       |
 | Muse Code   | Install [Muse Code](https://dev.meta.ai/docs/muse-code) on the server, run `muse login`, then enable it in Settings → Providers.                          |
-| Antigravity | Install and sign in with Google from Rove Code's provider settings.                                                                                       |
+| Antigravity | Install and sign in with Google from Paperplane's provider settings.                                                                                       |
 
-Provider CLIs must be on the server's `PATH`. If Rove Code cannot find one, set its
+Provider CLIs must be on the server's `PATH`. If Paperplane cannot find one, set its
 **Binary path** in provider settings, especially when using a version manager.
 Cursor's executable is `cursor-agent`, although its login command is
 `agent login`. Codex connected through ChatGPT and Antigravity can use their
 managed runtimes without a `PATH` entry.
 
-Rove Code warns when a provider version has known compatibility problems with your
+Paperplane warns when a provider version has known compatibility problems with your
 release. Check **Settings → Providers** on that environment for the recommended
 version or range. When its package manager supports installing a specific version,
 you can install the recommendation there. Otherwise use the provider's installer
 on the environment's machine. An unlisted version is unverified.
 
 When a provider CLI is behind its latest release, its provider card shows the
-available version. **Update now** appears only when Rove Code can tell which
+available version. **Update now** appears only when Paperplane can tell which
 installer owns the CLI (its own update command, Homebrew, or a global npm, pnpm,
 bun, or Vite+ install) and runs that installer. Otherwise update the CLI the same
 way you installed it. Homebrew installs compare against the version Homebrew
@@ -157,7 +157,7 @@ offers, which can trail the npm release by a few hours.
 
 Add another provider instance for a separate account or configuration. Each
 instance can have its own environment variables, such as API keys or a custom
-base URL. Mark secret values as sensitive; after saving, Rove Code does not display
+base URL. Mark secret values as sensitive; after saving, Paperplane does not display
 their original values.
 
 For provider-specific setup and accounts, see [Codex](./providers-codex.md),
@@ -170,4 +170,4 @@ For provider-specific setup and accounts, see [Codex](./providers-codex.md),
 - [Permission modes](./permission-modes.md): choose when agents ask before acting.
 - [Remote access](./remote-access.md): connect from another device.
 - [Running in the background](./background-service.md): keep a Linux or macOS host available.
-- [Updating Rove Code](./updating.md): update the app and connected servers.
+- [Updating Paperplane](./updating.md): update the app and connected servers.

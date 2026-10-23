@@ -72,7 +72,7 @@ export function PullRequestToolbar(props: { readonly onRequestVisibility?: () =>
               brand={
                 <CompactBrandTitle
                   allowFontScaling={false}
-                  accessibilityLabel="Rove Code, Pull requests"
+                  accessibilityLabel="Paperplane, Pull requests"
                 />
               }
               onPress={() =>

@@ -15,7 +15,7 @@ import { RoveConnectProfilePage } from "../cloud/RoveConnectProfilePage";
 const USER_PROFILE_CUSTOM_PAGES = [
   {
     path: "rove-connect",
-    label: "Rove Connect",
+    label: "Paperplane Connect",
     icon: "globe",
     content: <RoveConnectProfilePage />,
   },

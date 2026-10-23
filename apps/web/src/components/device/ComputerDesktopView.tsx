@@ -116,7 +116,7 @@ export function ComputerDesktopView(props: {
         Rfb = await loadRfb();
       } catch {
         if (!cancelled)
-          setStatus({ kind: "error", reason: "The desktop viewer failed to load. Reload Rove." });
+          setStatus({ kind: "error", reason: "The desktop viewer failed to load. Reload Paperplane." });
         return;
       }
       if (cancelled) return;
@@ -152,11 +152,11 @@ export function ComputerDesktopView(props: {
         else
           setStatus({
             kind: "error",
-            reason: "The desktop asked for a password Rove doesn't have.",
+            reason: "The desktop asked for a password Paperplane doesn't have.",
           });
       });
       rfb.addEventListener("securityfailure", () => {
-        setStatus({ kind: "error", reason: "The desktop rejected Rove's credentials." });
+        setStatus({ kind: "error", reason: "The desktop rejected Paperplane's credentials." });
       });
       rfb.addEventListener("disconnect", () => {
         rfb = null;

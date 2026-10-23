@@ -2499,7 +2499,7 @@ function UserTimelineRow({ row }: { row: Extract<TimelineRow, { kind: "message" 
         </p>
       ) : userMessage.attribution === "rove" ? (
         <p className="me-1 text-2xs text-muted-foreground/70" data-user-message-attribution="rove">
-          Sent by Rove Code
+          Sent by Paperplane
         </p>
       ) : userMessage.attribution === "agent" ? (
         <p className="me-1 text-2xs text-muted-foreground/70" data-user-message-attribution="agent">
@@ -2874,7 +2874,7 @@ function AssistantTimelineRow({ row }: { row: Extract<TimelineRow, { kind: "mess
   return (
     <>
       <div className="relative min-w-0 px-1 py-0.5">
-        <MessageAuthorHeading>Rove Code</MessageAuthorHeading>
+        <MessageAuthorHeading>Paperplane</MessageAuthorHeading>
         <div data-thread-find-text="true">
           <AssistantCitationSource
             messageId={row.message.id}

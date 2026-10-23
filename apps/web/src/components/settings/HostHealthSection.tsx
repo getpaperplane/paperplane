@@ -15,7 +15,7 @@ import { Progress } from "../ui/progress";
 import { SettingsGroup } from "./SettingsGroup";
 import { SettingsRow, SettingsSection } from "./settingsLayout";
 
-/** Host memory, swap, Rove's memory ceiling, and setup findings for one environment. */
+/** Host memory, swap, Paperplane's memory ceiling, and setup findings for one environment. */
 export function HostHealthSection({ environmentId }: { readonly environmentId: EnvironmentId }) {
   const result = useAtomValue(serverEnvironment.hostHealth({ environmentId, input: {} }));
   const { copyToClipboard } = useCopyToClipboard({ target: "command" });
@@ -31,7 +31,7 @@ export function HostHealthSection({ environmentId }: { readonly environmentId: E
           title="Memory"
           description={
             report.memoryPressure
-              ? "Low on memory. Rove releases idle agents first; new work may be slow or killed."
+              ? "Low on memory. Paperplane releases idle agents first; new work may be slow or killed."
               : undefined
           }
           status={formatHostMemory(report)}
@@ -39,17 +39,17 @@ export function HostHealthSection({ environmentId }: { readonly environmentId: E
         {swap === null ? null : <SettingsRow title="Swap" status={swap} />}
         {ceiling === null || report.roveMemory === null ? null : (
           <SettingsRow
-            title="Rove memory ceiling"
+            title="Paperplane memory ceiling"
             description={
               report.roveMemory.oomKills > 0
                 ? `${report.roveMemory.oomKills} out-of-memory kill${report.roveMemory.oomKills === 1 ? "" : "s"} since the memory ceiling was created.`
-                : "Shared by every agent and terminal Rove starts."
+                : "Shared by every agent and terminal Paperplane starts."
             }
             status={ceiling}
           >
             {ceilingPercent === null ? null : (
               <div className="pt-1 pb-2">
-                <Progress value={ceilingPercent} label="Rove memory ceiling usage" />
+                <Progress value={ceilingPercent} label="Paperplane memory ceiling usage" />
               </div>
             )}
           </SettingsRow>

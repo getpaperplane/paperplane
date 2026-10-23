@@ -2517,7 +2517,7 @@ describe("MessagesTimeline", () => {
     expect(markup).toContain("Received 1 update and ran 1 command");
   });
 
-  it("renders Rove MCP dynamic tools with the product logo and pretty name", async () => {
+  it("renders Paperplane MCP dynamic tools with the product logo and pretty name", async () => {
     activityTestState.expanded = true;
     const { MessagesTimeline } = await import("./MessagesTimeline");
     const item = {
@@ -2586,9 +2586,9 @@ describe("MessagesTimeline", () => {
       />,
     );
 
-    // Rove MCP calls use the branded app icon instead of the generic tool icon.
+    // Paperplane MCP calls use the branded app icon instead of the generic tool icon.
     expect(markup).toContain('src="/favicon-32x32.png"');
-    expect(markup).toContain("Read a Rove thread");
+    expect(markup).toContain("Read a Paperplane thread");
     expect(markup).not.toContain("mcp__rove__rove_thread_read");
   });
 

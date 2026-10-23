@@ -94,21 +94,21 @@ const RELEASE_ASSETS = {
 
 const VARIANT_CONFIG = {
   development: {
-    appName: "Rove Code Dev",
+    appName: "Paperplane Dev",
     scheme: "rove-dev",
     iosBundleIdentifier: "dev.rove.app.dev",
     androidPackage: "dev.rove.app.dev",
     assets: DEVELOPMENT_ASSETS,
   },
   preview: {
-    appName: "Rove Code Preview",
+    appName: "Paperplane Preview",
     scheme: "rove-preview",
     iosBundleIdentifier: "dev.rove.app.preview",
     androidPackage: "dev.rove.app.preview",
     assets: PREVIEW_ASSETS,
   },
   production: {
-    appName: "Rove Code",
+    appName: "Paperplane",
     scheme: "rove",
     iosBundleIdentifier: "dev.rove.app",
     androidPackage: "dev.rove.app",
@@ -152,7 +152,7 @@ const widgetsPlugin: NonNullable<ExpoConfig["plugins"]>[number] = [
       {
         name: "SubscriptionUsage",
         displayName: "Subscription usage",
-        description: "Subscription quotas from your connected Rove Code environments.",
+        description: "Subscription quotas from your connected Paperplane environments.",
         ios: {
           configuration: {
             title: "Subscription usage",
@@ -203,7 +203,7 @@ const widgetsPlugin: NonNullable<ExpoConfig["plugins"]>[number] = [
       {
         name: "AgentActivity",
         displayName: "Agent Activity",
-        description: "Shows the current state of active Rove Code agents.",
+        description: "Shows the current state of active Paperplane agents.",
         // Live Activity companion; there is no Android presentation for it.
         android: null,
         ios: { supportedFamilies: ["systemSmall", "systemMedium", "accessoryRectangular"] },
@@ -290,8 +290,8 @@ const config: ExpoConfig = {
         NSAllowsArbitraryLoads: true,
       },
       NSLocalNetworkUsageDescription:
-        "Allow Rove Code to connect to Rove Code servers on your local network or tailnet.",
-      NSPhotoLibraryAddUsageDescription: "Allow Rove Code to save images to your photo library.",
+        "Allow Paperplane to connect to Paperplane servers on your local network or tailnet.",
+      NSPhotoLibraryAddUsageDescription: "Allow Paperplane to save images to your photo library.",
       // "Audio, AirPlay, and Picture in Picture": the browser screen's system
       // picture in picture needs it to start and to stay up outside the app.
       UIBackgroundModes: ["audio"],
@@ -405,7 +405,7 @@ const config: ExpoConfig = {
     [
       "expo-audio",
       {
-        microphonePermission: "Allow Rove Code to use your microphone for voice input.",
+        microphonePermission: "Allow Paperplane to use your microphone for voice input.",
         recordAudioAndroid: false,
         enableBackgroundPlayback: false,
         enableBackgroundRecording: false,
@@ -414,7 +414,7 @@ const config: ExpoConfig = {
     [
       "expo-camera",
       {
-        cameraPermission: "Allow Rove Code to access your camera so you can scan pairing QR codes.",
+        cameraPermission: "Allow Paperplane to access your camera so you can scan pairing QR codes.",
         microphonePermission: false,
         barcodeScannerEnabled: true,
         recordAudioAndroid: false,

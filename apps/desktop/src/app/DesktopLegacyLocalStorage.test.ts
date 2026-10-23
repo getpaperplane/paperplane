@@ -86,7 +86,7 @@ const makeImporter = (appDataDirectory: string, development: boolean) =>
   );
 
 it.effect.each([false, true])(
-  "imports only the matching Rove V1 profile without modifying it (development: %s)",
+  "imports only the matching Paperplane V1 profile without modifying it (development: %s)",
   (development) =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;

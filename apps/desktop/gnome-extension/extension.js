@@ -73,7 +73,7 @@ function takeSnapshot(animate) {
     try {
       content = window.get_compositor_private().paint_to_content(null);
     } catch (error) {
-      console.warn(`Rove capture preview unavailable: ${error.message}`);
+      console.warn(`Paperplane capture preview unavailable: ${error.message}`);
     }
   }
   const metadata = JSON.stringify({

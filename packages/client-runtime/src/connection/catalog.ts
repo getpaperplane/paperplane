@@ -29,7 +29,7 @@ export class BearerConnectionProfile extends Schema.TaggedClass<BearerConnection
      */
     learned: Schema.optionalKey(Schema.Literal(true)),
     /**
-     * "rove-connect" when the route authenticates with the environment's Rove
+     * "rove-connect" when the route authenticates with the environment's Paperplane
      * Connect credential instead of a stored bearer token.
      */
     authorization: Schema.optionalKey(Schema.Literal("rove-connect")),
@@ -52,7 +52,7 @@ export class SshConnectionProfile extends Schema.TaggedClass<SshConnectionProfil
 export const ConnectionProfile = Schema.Union([BearerConnectionProfile, SshConnectionProfile]);
 export type ConnectionProfile = typeof ConnectionProfile.Type;
 
-/** One way to reach an environment: Rove Connect, a direct URL, or SSH. */
+/** One way to reach an environment: Paperplane Connect, a direct URL, or SSH. */
 export interface ConnectionRoute {
   readonly target: ConnectionTarget;
   readonly profile: Option.Option<ConnectionProfile>;

@@ -2,7 +2,7 @@ import type { ScheduledTaskWebhookEndpoint } from "@rove-code/contracts";
 import { isLocalLoopbackHost } from "@rove-code/shared/hostClassification";
 
 /**
- * Where a sender can call a webhook task, as a client shows it. With Rove
+ * Where a sender can call a webhook task, as a client shows it. With Paperplane
  * Connect the server returns a public URL; without it the path is resolved on
  * the address this client reaches the environment at.
  */
@@ -11,7 +11,7 @@ export interface WebhookAddress {
   readonly address: string;
   /** Whether `address` is a full URL a sender can call. */
   readonly copyable: boolean;
-  /** One line on who can reach `address`; null for a Rove Connect URL. */
+  /** One line on who can reach `address`; null for a Paperplane Connect URL. */
   readonly note: string | null;
 }
 
@@ -26,7 +26,7 @@ export function webhookAddress(
     return {
       address: endpoint.path,
       copyable: false,
-      note: "Link this environment to Rove Connect for a public URL.",
+      note: "Link this environment to Paperplane Connect for a public URL.",
     };
   }
   const url = new URL(endpoint.path, httpBaseUrl);
@@ -34,7 +34,7 @@ export function webhookAddress(
     address: url.href,
     copyable: true,
     note: isLocalLoopbackHost(url.hostname)
-      ? "Only this computer can call this address. Link Rove Connect for a public URL."
-      : "Works wherever this environment's address is reachable, for example over Tailscale or your own proxy. Link Rove Connect for a public URL.",
+      ? "Only this computer can call this address. Link Paperplane Connect for a public URL."
+      : "Works wherever this environment's address is reachable, for example over Tailscale or your own proxy. Link Paperplane Connect for a public URL.",
   };
 }

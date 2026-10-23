@@ -142,7 +142,7 @@ function errorResponse(request, status, code, message, hint, jsonOnly = false) {
       ? JSON.stringify({ error })
       : type === "text/markdown"
         ? `# ${status} — ${code}\n\n${message}\n\n${hint}\n\nSee the [connection guide](/docs), [agent guide](/llms.txt), or [sitemap](/sitemap.xml).\n`
-        : `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>${status} — Rove Code</title></head><body><main><h1>${status} — ${code}</h1><p>${escapeHtml(message)}</p><p>${escapeHtml(hint)}</p><p><a href="/docs">Connection guide</a> · <a href="/llms.txt">Agent guide</a> · <a href="/">Rove Code</a></p></main></body></html>`;
+        : `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>${status} — Paperplane</title></head><body><main><h1>${status} — ${code}</h1><p>${escapeHtml(message)}</p><p>${escapeHtml(hint)}</p><p><a href="/docs">Connection guide</a> · <a href="/llms.txt">Agent guide</a> · <a href="/">Paperplane</a></p></main></body></html>`;
   const headers = new Headers({
     "Content-Type": `${type}; charset=utf-8`,
     Vary: "Accept",
@@ -185,7 +185,7 @@ export default {
         404,
         "HOST_REQUIRED",
         "This hosted browser app has no public agent execution API.",
-        "Pair your own HTTPS Rove environment in Settings → Connections. Do not send credentials to this origin.",
+        "Pair your own HTTPS Paperplane environment in Settings → Connections. Do not send credentials to this origin.",
         true,
       );
     }
@@ -238,7 +238,7 @@ export default {
       request,
       404,
       "NOT_FOUND",
-      "The requested resource does not exist on this Rove Code site.",
+      "The requested resource does not exist on this Paperplane site.",
       "Check the URL or discover available resources in /docs, /llms.txt, and /sitemap.xml.",
     );
   },

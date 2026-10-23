@@ -8,7 +8,7 @@ import { makeComponentLogger } from "./DesktopObservability.ts";
 
 // A desktop install puts no `rove` on PATH, so commands the server asks a person
 // to run (`sudo rove browser setup`) had nothing to call. The app keeps a small
-// launcher for its bundled CLI in the Rove home, which is never on PATH and so
+// launcher for its bundled CLI in the Paperplane home, which is never on PATH and so
 // never shadows another `rove`, and the server names it by absolute path in those
 // commands through ROVE_CLI_PATH. An AppImage mounts somewhere new each run,
 // so its launcher mounts the AppImage itself instead of pointing into it.
@@ -24,7 +24,7 @@ const shellWord = (value: string) => `'${value.replaceAll("'", `'"'"'`)}'`;
 const cmdText = (value: string) => value.replaceAll("%", "%%");
 const cmdWord = (value: string) => `"${cmdText(value)}"`;
 
-const MOVED = "Rove Code has moved or been removed. Open the app once to update this command.";
+const MOVED = "Paperplane has moved or been removed. Open the app once to update this command.";
 
 export type CliShimTarget =
   | { readonly kind: "appimage"; readonly appImage: string; readonly executableName: string }
@@ -34,7 +34,7 @@ export type CliShimTarget =
 /**
  * The launcher script. Electron runs the server as plain Node with
  * `ELECTRON_RUN_AS_NODE`, which reads the entry from inside the asar archive.
- * The launcher's own path and the app's Rove home are written in, so the command
+ * The launcher's own path and the app's Paperplane home are written in, so the command
  * the server shows is absolute and `sudo`, which clears the environment, still
  * runs against this install's home.
  */
@@ -125,7 +125,7 @@ export const renderCliShim = (input: {
   ].join("\n");
 };
 
-/** Where the packaged app keeps its launcher: `<Rove home>/bin/rove`, `rove.cmd` on Windows. */
+/** Where the packaged app keeps its launcher: `<Paperplane home>/bin/rove`, `rove.cmd` on Windows. */
 export const launcherPath = (environment: DesktopEnvironment.DesktopEnvironment["Service"]) =>
   environment.path.join(
     environment.baseDir,
@@ -134,7 +134,7 @@ export const launcherPath = (environment: DesktopEnvironment.DesktopEnvironment[
   );
 
 /**
- * Writes the packaged app's launcher to `<Rove home>/bin` and returns its path
+ * Writes the packaged app's launcher to `<Paperplane home>/bin` and returns its path
  * for the backend's ROVE_CLI_PATH. Development builds run from a checkout
  * and get none.
  */

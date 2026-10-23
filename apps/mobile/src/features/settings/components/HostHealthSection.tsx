@@ -16,7 +16,7 @@ import { serverEnvironment } from "../../../state/server";
 import { SettingsActionRow } from "./SettingsActionRow";
 import { SettingsSection } from "./SettingsSection";
 
-/** Host memory, swap, Rove's memory ceiling, and setup findings for one environment. */
+/** Host memory, swap, Paperplane's memory ceiling, and setup findings for one environment. */
 export function HostHealthSection({ environmentId }: { readonly environmentId: EnvironmentId }) {
   const result = useAtomValue(serverEnvironment.hostHealth({ environmentId, input: {} }));
   const report = result._tag === "Success" ? result.value : null;
@@ -31,16 +31,16 @@ export function HostHealthSection({ environmentId }: { readonly environmentId: E
         <Text className="text-base text-foreground">Memory {formatHostMemory(report)}</Text>
         {report.memoryPressure ? (
           <Text className="text-sm text-warning-foreground">
-            Low on memory. Rove releases idle agents first; new work may be slow or killed.
+            Low on memory. Paperplane releases idle agents first; new work may be slow or killed.
           </Text>
         ) : null}
         {swap === null ? null : <Text className="text-sm text-foreground-muted">Swap {swap}</Text>}
       </View>
       {ceiling === null ? null : (
         <View className="gap-2 px-4 pb-4">
-          <Text className="text-sm text-foreground-muted">Rove ceiling {ceiling}</Text>
+          <Text className="text-sm text-foreground-muted">Paperplane ceiling {ceiling}</Text>
           {ceilingPercent === null ? null : (
-            <Progress value={ceilingPercent / 100} label="Rove memory ceiling usage" />
+            <Progress value={ceilingPercent / 100} label="Paperplane memory ceiling usage" />
           )}
           {oomKills > 0 ? (
             <Text className="text-sm text-warning-foreground">

@@ -23,7 +23,7 @@ export async function publishSubscriptionUsage(snapshot: SubscriptionUsageSnapsh
   }
   widget.updateSnapshot(snapshot);
   // Android has no timeline; an alarm re-renders the stored snapshot at each
-  // deadline so stale readings flip to "Open Rove to refresh" unattended.
+  // deadline so stale readings flip to "Open Paperplane to refresh" unattended.
   requireOptionalNativeModule<{ schedule: (name: string, deadlines: number[]) => void }>(
     "RoveWidgetExpiry",
   )?.schedule(

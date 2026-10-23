@@ -85,20 +85,20 @@ it("shows only the structured path in expanded mobile read details", () => {
   expect(withoutPath?.canExpand).toBe(false);
 });
 
-it("expands a Rove Code notice to the prompt the agent got", () => {
+it("expands a Paperplane notice to the prompt the agent got", () => {
   const item = {
     ...base("restart-notice", "2026-06-20T00:00:03.000Z", 2),
     type: "notification",
     source: { kind: "system" },
     outcome: "updated",
-    summary: "Rove Code restarted and resumed this turn",
+    summary: "Paperplane restarted and resumed this turn",
     detail: "Continue where you left off.",
   } as OrchestrationV2TurnItem;
   const [activity] = buildThreadFeed([projected(item, 0)]).flatMap((entry) =>
     entry.type === "activity-group" ? entry.activities : [],
   );
 
-  expect(activity?.summary).toBe("Rove Code restarted and resumed this turn");
+  expect(activity?.summary).toBe("Paperplane restarted and resumed this turn");
   expect(activity?.canExpand).toBe(true);
   expect(activity?.getFullDetail()).toBe("Continue where you left off.");
 });
@@ -1433,7 +1433,7 @@ describe("buildThreadFeed", () => {
     expect(activity?.workEntry.viewedImagePath).toBe("/workspace/reference.png");
   });
 
-  it("pretty prints Rove MCP dynamic tool activities and attaches the product logo", () => {
+  it("pretty prints Paperplane MCP dynamic tool activities and attaches the product logo", () => {
     const toolItem: OrchestrationV2TurnItem = {
       ...base("item-rove-tool", "2026-06-20T00:00:04.000Z", 3),
       type: "dynamic_tool",
@@ -1445,9 +1445,9 @@ describe("buildThreadFeed", () => {
     const feed = buildThreadFeed([projected(toolItem, 0)]);
     const activity = feed[0]?.type === "activity-group" ? feed[0].activities[0] : null;
 
-    expect(activity?.summary).toBe("Read a Rove thread");
+    expect(activity?.summary).toBe("Read a Paperplane thread");
     expect(activity?.logo).toBe("rove");
-    expect(activity?.getCopyText().split("\n")[0]).toBe("Read a Rove thread");
+    expect(activity?.getCopyText().split("\n")[0]).toBe("Read a Paperplane thread");
   });
 
   it.each(["cua_repl.js", "node_repl.js", "js"])(
@@ -1471,7 +1471,7 @@ describe("buildThreadFeed", () => {
   it.each([
     [
       "failed",
-      "await sky.type_text({app:'Rove Code (Nightly)',text:'debug(ga.run)'});",
+      "await sky.type_text({app:'Paperplane (Nightly)',text:'debug(ga.run)'});",
       "Restrict the breakpoint to Git actions",
       "computer",
     ],
@@ -1500,7 +1500,7 @@ describe("buildThreadFeed", () => {
     );
   });
 
-  it("uses canonical Rove orchestration summaries in compact work groups", () => {
+  it("uses canonical Paperplane orchestration summaries in compact work groups", () => {
     const rows = [
       projected(command("2026-06-20T00:00:01.000Z"), 0),
       ...["mcp__rove__rove_thread_send", "rove_code.rove_thread_send", "rove_thread_send"].map(

@@ -33,7 +33,7 @@ export interface EnvironmentConnectionLease {
 }
 
 /**
- * The result of an unauthenticated reachability check. Rove Connect and SSH
+ * The result of an unauthenticated reachability check. Paperplane Connect and SSH
  * routes have no cheap check, so they are "unchecked".
  */
 export type RouteCheck = "answered" | "silent" | "unchecked";
@@ -71,7 +71,7 @@ export class ConnectionDriver extends Context.Service<
  * so a reachable LAN address connects without waiting on a silent tailnet
  * one. A silent route is skipped on the first pass so a LAN address from
  * another network costs one short check, not a connection timeout. A route
- * that fails to connect moves on to the next: a signed-out Rove Connect must
+ * that fails to connect moves on to the next: a signed-out Paperplane Connect must
  * not hide a working LAN. Silent routes are tried last, since a check is not
  * proof.
  *

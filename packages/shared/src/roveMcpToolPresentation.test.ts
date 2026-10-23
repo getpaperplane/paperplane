@@ -3,7 +3,7 @@ import { describe, expect, it } from "vite-plus/test";
 import { ROVE_MCP_TOOL_NAMES, resolveRoveMcpToolPresentation } from "./roveMcpToolPresentation.ts";
 
 describe("resolveRoveMcpToolPresentation", () => {
-  it("recognizes every Rove tool across provider prefixes and completion suffixes", () => {
+  it("recognizes every Paperplane tool across provider prefixes and completion suffixes", () => {
     for (const tool of ROVE_MCP_TOOL_NAMES) {
       const presentation = resolveRoveMcpToolPresentation(tool);
       for (const prefix of [
@@ -27,35 +27,35 @@ describe("resolveRoveMcpToolPresentation", () => {
       expect(resolveRoveMcpToolPresentation(`mcp__another-server__${tool}`), tool).toBeNull();
     }
   });
-  it("pretty prints Claude and Cursor Rove MCP tool names", () => {
+  it("pretty prints Claude and Cursor Paperplane MCP tool names", () => {
     expect(resolveRoveMcpToolPresentation("mcp__rove__rove_thread_read")).toEqual({
-      displayName: "Read a Rove thread",
+      displayName: "Read a Paperplane thread",
       logo: "rove",
     });
   });
 
-  it("pretty prints Codex Rove MCP tool names", () => {
+  it("pretty prints Codex Paperplane MCP tool names", () => {
     expect(resolveRoveMcpToolPresentation("rove.create_threads")).toEqual({
-      displayName: "Create Rove threads",
+      displayName: "Create Paperplane threads",
       logo: "rove",
     });
   });
 
   it("pretty prints thread metadata updates", () => {
     expect(resolveRoveMcpToolPresentation("mcp__rove__rove_thread_update")).toEqual({
-      displayName: "Update Rove thread metadata",
+      displayName: "Update Paperplane thread metadata",
       logo: "rove",
     });
   });
 
-  it("pretty prints bare Rove MCP toolkit names", () => {
+  it("pretty prints bare Paperplane MCP toolkit names", () => {
     expect(resolveRoveMcpToolPresentation("list_scheduled_tasks")).toEqual({
       displayName: "List scheduled tasks",
       logo: "rove",
     });
   });
 
-  it("pretty prints worktree Rove MCP tool names", () => {
+  it("pretty prints worktree Paperplane MCP tool names", () => {
     expect(resolveRoveMcpToolPresentation("mcp__rove__rove_worktree_handoff")).toEqual({
       displayName: "Hand off thread to a git worktree",
       logo: "rove",
@@ -66,7 +66,7 @@ describe("resolveRoveMcpToolPresentation", () => {
     });
   });
 
-  it("pretty prints preview Rove MCP tool names", () => {
+  it("pretty prints preview Paperplane MCP tool names", () => {
     expect(resolveRoveMcpToolPresentation("Rove-code.preview_open")).toEqual({
       displayName: "Open a page in the preview browser",
       logo: "rove",

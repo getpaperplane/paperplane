@@ -37,7 +37,7 @@ export function HostMemoryNotice(props: {
       }
     >
       <Notice
-        message={`${props.environmentLabel} is low on memory (${notice.freeLabel}). Rove releases idle agents first; new work may be slow or killed.`}
+        message={`${props.environmentLabel} is low on memory (${notice.freeLabel}). Paperplane releases idle agents first; new work may be slow or killed.`}
         icon="exclamationmark.triangle"
         floating
       />

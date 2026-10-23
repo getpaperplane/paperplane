@@ -44,7 +44,7 @@ function makeProject(
 function makeScope(projects: ReadonlyArray<EnvironmentProject>): HomeProjectScope {
   return {
     key: "github.com/rovetools/rove",
-    title: "Rove Code",
+    title: "Paperplane",
     representative: projects[0]!,
     projects,
     projectRefs: projects.map((project) => ({
@@ -167,7 +167,7 @@ describe("filterProjectScopes", () => {
   });
 
   it("matches logical names and workspace names or paths without case sensitivity", () => {
-    expect(filterProjectScopes(scopes, "  Rove CODE ")).toEqual([code]);
+    expect(filterProjectScopes(scopes, "  Paperplane CODE ")).toEqual([code]);
     expect(filterProjectScopes(scopes, "DESKTOP")).toEqual([code]);
     expect(filterProjectScopes(scopes, "REMOTE-WORKSPACE")).toEqual([code]);
     expect(filterProjectScopes(scopes, "documentation")).toEqual([docs]);

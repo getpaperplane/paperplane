@@ -13,7 +13,7 @@ import { Button, InlineButton } from "../ui/button";
 import { useRoveConnectAccountPage } from "./RoveConnectAccountPages";
 
 /**
- * Confirms removing a Rove Connect environment from this device. Removal here
+ * Confirms removing a Paperplane Connect environment from this device. Removal here
  * leaves the account registration (and its host space) in place, so the dialog
  * says so and links to the account page where it can be deregistered.
  */
@@ -48,7 +48,7 @@ export function RemoveRoveConnectEnvironmentDialog({
               This forgets its pairing, credentials, and cached threads here.
             </AlertDialogDescription>
             <AlertDialogDescription>
-              It stays on your Rove Connect account and keeps its host space. Deregister it in{" "}
+              It stays on your Paperplane Connect account and keeps its host space. Deregister it in{" "}
               {openAccountPage ? (
                 <InlineButton
                   onClick={() => {
@@ -56,10 +56,10 @@ export function RemoveRoveConnectEnvironmentDialog({
                     openAccountPage();
                   }}
                 >
-                  Rove Connect settings
+                  Paperplane Connect settings
                 </InlineButton>
               ) : (
-                "Rove Connect settings"
+                "Paperplane Connect settings"
               )}{" "}
               to free it.
             </AlertDialogDescription>

@@ -44,7 +44,7 @@ describe("external chat link context menu", () => {
 
     expect(harness.showContextMenu).toHaveBeenCalledWith(
       [
-        { id: "open-in-preview", label: "Open in Rove Code" },
+        { id: "open-in-preview", label: "Open in Paperplane" },
         { id: "open-external", label: "Open in default browser" },
         { id: "copy-link", label: "Copy link" },
       ],

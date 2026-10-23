@@ -1,15 +1,15 @@
 # Pi provider uses the bundled SDK in an isolated instance process
 
-Rove Code controls the Pi SDK version as a normal dependency rather than invoking
+Paperplane controls the Pi SDK version as a normal dependency rather than invoking
 the user's installed `pi --mode rpc`. The SDK supplies extension loading, typed
 events, model implementations, session history, and tree navigation.
 
-Each Pi driver instance owns one Rove child process. Its environment receives the
+Each Pi driver instance owns one Paperplane child process. Its environment receives the
 instance's resolved `PI_CODING_AGENT_DIR` at spawn, before loading the SDK or any
 extensions. The server never changes its own agent-directory environment. This
 matters because extensions can create SDK sessions with default settings, read
 the environment themselves, or spawn another Pi process. Passing `agentDir` only
-to Rove's parent session does not configure those paths. Extension-specific launch
+to Paperplane's parent session does not configure those paths. Extension-specific launch
 metadata cannot fix extensions that do not consume it.
 
 A subprocess rather than a worker thread also supports extensions that use
@@ -27,7 +27,7 @@ but an extension crash or hang affects all sessions in that instance. Other Pi
 instances and the server remain independent.
 
 The driver communicates through private typed IPC, not stdout (which extensions
-may write to). Thread-authorized Rove tools retain their existing HTTP/MCP channel;
+may write to). Thread-authorized Paperplane tools retain their existing HTTP/MCP channel;
 only their scoped configuration crosses IPC. The server mirrors session state for
 the adapter's synchronous reads. History updates carry changed suffixes, assistant
 streaming events omit cumulative snapshots, and tool progress is sampled and bounded

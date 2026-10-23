@@ -145,7 +145,7 @@ export class EnvironmentRegistry extends Context.Service<
       | ConnectionBlockedError
     >;
     /**
-     * Drops the Rove Connect route of every environment, after a cloud sign-out
+     * Drops the Paperplane Connect route of every environment, after a cloud sign-out
      * or account change. Environments with no other route are removed.
      */
     readonly removeRelayEnvironments: () => Effect.Effect<

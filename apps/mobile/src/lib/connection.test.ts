@@ -40,7 +40,7 @@ describe("mobile remote connection records", () => {
 
   it("identifies mobile token exchanges for authorized-client presentation", () => {
     expect(authClientMetadata()).toEqual({
-      label: "Rove Code Mobile",
+      label: "Paperplane Mobile",
       deviceType: "mobile",
       os: "iOS",
       osMajorVersion: 18,

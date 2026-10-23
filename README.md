@@ -1,8 +1,8 @@
-# Rove Code
+# Paperplane
 
-Rove Code is an open-source app for running coding agents on web, desktop, and mobile. Run it on the machine where your agents live, or connect to that machine from another device.
+Paperplane is an open-source app for running coding agents on web, desktop, and mobile. Run it on the machine where your agents live, or connect to that machine from another device.
 
-You bring your own subscriptions. If a provider is set up on the host, Rove Code can drive it:
+You bring your own subscriptions. If a provider is set up on the host, Paperplane can drive it:
 
 - Codex
 - Claude Code
@@ -15,7 +15,7 @@ You bring your own subscriptions. If a provider is set up on the host, Rove Code
 
 ## Install
 
-**Desktop:** download a build for macOS, Windows, or Linux from [Releases](https://github.com/hafiezul/rove/releases). Stable and nightly channels are available; nightlies publish daily when there are new commits. macOS builds are self-signed rather than notarized, so you will need to approve the first install. See [Install Rove Code](./docs/user/install.md).
+**Desktop:** download a build for macOS, Windows, or Linux from [Releases](https://github.com/hafiezul/rove/releases). Stable and nightly channels are available; nightlies publish daily when there are new commits. macOS builds are self-signed rather than notarized, so you will need to approve the first install. See [Install Paperplane](./docs/user/install.md).
 
 **CLI host** (headless server for LAN, Tailscale, or SSH access):
 
@@ -56,7 +56,7 @@ Open the pairing URL the dev runner prints. The bare origin will not authenticat
 | `packages/client-runtime` | Client logic shared by web and mobile                      |
 | `packages/provider-*`     | Shared provider adapters and protocols                     |
 | `packages/shared`         | Shared runtime utilities                                   |
-| `infra/relay`             | Rove Connect relay (off unless cloud is configured)        |
+| `infra/relay`             | Paperplane Connect relay (off unless cloud is configured)        |
 
 ## Documentation
 
@@ -71,6 +71,6 @@ Start at the [documentation index](./docs). Good entry points:
 
 ## Origins and license
 
-Rove Code is a fork of [T3 Code](https://github.com/pingdotgg/t3code) with its own repository, releases, and roadmap. We still pull in upstream changes and keep T3 Tools' original copyright notice under the [MIT License](./LICENSE). Rove Code is not affiliated with or endorsed by T3 Tools or Ping Labs.
+Paperplane is a fork of [T3 Code](https://github.com/pingdotgg/t3code) with its own repository, releases, and roadmap. We still pull in upstream changes and keep T3 Tools' original copyright notice under the [MIT License](./LICENSE). Paperplane is not affiliated with or endorsed by T3 Tools or Ping Labs.
 
 If a change would also help T3 Code users, consider proposing it upstream.

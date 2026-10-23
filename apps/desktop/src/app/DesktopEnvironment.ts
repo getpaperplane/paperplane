@@ -93,7 +93,7 @@ export class DesktopEnvironment extends Context.Service<
   }
 >()("@rove-code/desktop/app/DesktopEnvironment") {}
 
-const APP_BASE_NAME = "Rove Code";
+const APP_BASE_NAME = "Paperplane";
 
 function resolveDesktopAppStageLabel(input: {
   readonly isDevelopment: boolean;

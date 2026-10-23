@@ -938,9 +938,9 @@ it.effect.each(["win32", "darwin", "linux"] as const)(
     const bounds = { x: 10, y: 20, width: 800, height: 600 };
     const rove = {
       id: 42,
-      title: "Rove Code",
+      title: "Paperplane",
       appIdentifier: "com.hafiezulzikry.rove.RoveCode.desktop",
-      owner: { name: "Rove Code", processId: 123 },
+      owner: { name: "Paperplane", processId: 123 },
       bounds,
       png: Buffer.from([1, 2, 3]),
     };
@@ -1614,7 +1614,7 @@ it.effect(
     focusedWindowMock.mockReturnValue(undefined);
     const destination = {
       getBounds: () => ({ x: 0, y: 0, width: 1000, height: 800 }),
-      getTitle: () => "Rove Code",
+      getTitle: () => "Paperplane",
       isDestroyed: () => false,
       isVisible: () => true,
       isMinimized: () => false,
@@ -1630,7 +1630,7 @@ it.effect(
         const warning = logs.find(
           (message) =>
             Array.isArray(message) &&
-            message[0] === "The compositor could not activate Rove Code after the snapshot",
+            message[0] === "The compositor could not activate Paperplane after the snapshot",
         );
         assert.strictEqual(Array.isArray(warning) ? warning[1] : undefined, activationFailure);
         const pending = yield* decodePendingMetadata(saved);
@@ -3161,7 +3161,7 @@ it.effect("flags revoked macOS permissions on read and re-registers once they re
       const revoked = yield* service.state;
       assert.equal(
         revoked.message,
-        "Allow Screen Recording in System Settings, then restart Rove Code.",
+        "Allow Screen Recording in System Settings, then restart Paperplane.",
       );
       assert.deepEqual(revoked.macPermissions, { screenRecording: false, accessibility: true });
 
@@ -3174,7 +3174,7 @@ it.effect("flags revoked macOS permissions on read and re-registers once they re
       const blocked = yield* service.state;
       assert.equal(
         blocked.message,
-        "Allow Screen Recording in System Settings, then restart Rove Code.",
+        "Allow Screen Recording in System Settings, then restart Paperplane.",
       );
       assert.isFalse(blocked.shortcutRegistered);
 
@@ -3880,7 +3880,7 @@ it.effect.each([false, true])(
       platform: "macos",
       id: 42,
       title: "Setup",
-      owner: { name: "Rove Code", processId: 123, path: "/Applications/Rove Code.app" },
+      owner: { name: "Paperplane", processId: 123, path: "/Applications/Paperplane.app" },
       bounds: { x: 0, y: 0, width: 800, height: 600 },
     };
     activeWindowMock.mockReset().mockResolvedValue(active);

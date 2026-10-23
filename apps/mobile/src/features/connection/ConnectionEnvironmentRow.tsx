@@ -157,7 +157,7 @@ export function ConnectionEnvironmentRow(props: {
         >
           {props.environment.isRelayManaged ? (
             <Text className="text-sm text-foreground-muted">
-              Managed by Rove Connect. Tunnel details update automatically.
+              Managed by Paperplane Connect. Tunnel details update automatically.
             </Text>
           ) : (
             <>

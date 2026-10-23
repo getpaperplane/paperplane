@@ -498,7 +498,7 @@ function ServerSettingsDetail(props: { readonly page: SettingsPage }) {
                           ? "Environment-wide setting. Select All projects to change it."
                           : !supportsTelemetryControls
                             ? "Update selected environments to control product usage data."
-                            : "Share feature usage, outcomes, timings, and agent token counts with Rove via PostHog, using a random installation ID. No name, email, prompts, responses, code, paths, commands, or recordings. Applies to all clients on these environments. ROVE_TELEMETRY_ENABLED=false overrides this preference."
+                            : "Share feature usage, outcomes, timings, and agent token counts with Paperplane via PostHog, using a random installation ID. No name, email, prompts, responses, code, paths, commands, or recordings. Applies to all clients on these environments. ROVE_TELEMETRY_ENABLED=false overrides this preference."
                       }
                       value={uniform("telemetryEnabled")}
                       disabled={disabledFor("telemetryEnabled") || !supportsTelemetryControls}

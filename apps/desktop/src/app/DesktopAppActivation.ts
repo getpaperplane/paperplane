@@ -171,7 +171,7 @@ export async function startDesktopAppControlServer(input: {
       activeRequestId = parsed.requestId;
       void input.handle(parsed).then(finish, () => {
         finish(
-          invalidResponse(parsed.requestId, "Rove Code could not process the desktop app request."),
+          invalidResponse(parsed.requestId, "Paperplane could not process the desktop app request."),
         );
       });
     });

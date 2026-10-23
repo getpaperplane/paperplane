@@ -1,15 +1,15 @@
 # Remote access
 
-Rove Code releases support local, LAN, Tailscale, SSH, and the hosted browser app at [rove.hafiezulzikry.com](https://rove.hafiezulzikry.com). Rove Connect is disabled unless a maintainer configures the cloud deployment; its instructions below apply only to those builds. Mobile clients are available as sideloadable APK/IPA downloads on supported [GitHub Releases](https://github.com/hafiezul/rove/releases), or as source builds, not store apps. The phone is a client: its desktop or `rove serve` host must remain running and reachable over LAN, Tailscale, or SSH. See [mobile installation](./install.md#mobile-app).
+Paperplane releases support local, LAN, Tailscale, SSH, and the hosted browser app at [rove.hafiezulzikry.com](https://rove.hafiezulzikry.com). Paperplane Connect is disabled unless a maintainer configures the cloud deployment; its instructions below apply only to those builds. Mobile clients are available as sideloadable APK/IPA downloads on supported [GitHub Releases](https://github.com/hafiezul/rove/releases), or as source builds, not store apps. The phone is a client: its desktop or `rove serve` host must remain running and reachable over LAN, Tailscale, or SSH. See [mobile installation](./install.md#mobile-app).
 
-Connect a phone, browser, or another desktop app to Rove Code running on a different
+Connect a phone, browser, or another desktop app to Paperplane running on a different
 machine. That machine must stay running and reachable while you work.
 
-## Rove Connect
+## Paperplane Connect
 
-Rove Connect makes an environment available to your other devices without setting
+Paperplane Connect makes an environment available to your other devices without setting
 up router forwarding. In the desktop app on the host, open **Settings →
-Connections**, sign in, and enable **Rove Connect** for that environment.
+Connections**, sign in, and enable **Paperplane Connect** for that environment.
 
 For a command-line host, run:
 
@@ -22,12 +22,12 @@ Follow the sign-in instructions. Setup offers a
 server with `rove serve`. Saving your sign-in alone does not make the machine
 reachable.
 
-On your other device, sign in to the same Rove Connect account and choose the
+On your other device, sign in to the same Paperplane Connect account and choose the
 environment. Over SSH, the CLI prints a browser link and a short code. Open the
 link on any device, confirm the code matches, and approve. The CLI continues on
 its own, so you do not need to forward an OAuth callback port.
 
-Rove Connect renews access credentials when needed without disconnecting a healthy
+Paperplane Connect renews access credentials when needed without disconnecting a healthy
 connection. Pull request diffs and provider settings keep working after the
 previous credential expires. A failed renewal affects that request; it does not
 disconnect an otherwise healthy conversation.
@@ -73,40 +73,40 @@ another link to share.
 ### Reach one machine several ways
 
 A machine can have more than one route: LAN, Tailscale, another VPN, a public
-URL, SSH, or Rove Connect. Tailscale shares its `100.64.0.0/10` address range with
+URL, SSH, or Paperplane Connect. Tailscale shares its `100.64.0.0/10` address range with
 other VPNs such as Cloudflare WARP, so an address in that range shows as VPN
 unless the machine confirms it is on Tailscale. To add a route, choose **Add
-route** in the machine's route list, or next to it in the Rove Connect list.
+route** in the machine's route list, or next to it in the Paperplane Connect list.
 Pairing the same machine again over another address also adds a route instead
 of a second machine. A new route is placed by speed, in that order, and you can
 reorder routes at any time.
 
-While connected through Rove Connect or a paired address, Rove Code also learns the
+While connected through Paperplane Connect or a paired address, Paperplane also learns the
 machine's current LAN and Tailscale addresses and adds them as routes, so
-pairing once through Rove Connect is enough to use the LAN at home. When the
+pairing once through Paperplane Connect is enough to use the LAN at home. When the
 machine's LAN address changes, for example after it joins another Wi-Fi network,
 the learned route follows it. The machine must allow network access for its LAN
 address to be learned. You can reorder a learned route, but not remove it; it
 goes away with the route it was learned through, or when the machine stops
 reporting that address.
 
-Rove Code connects over the first route that answers. Away from home, a LAN
+Paperplane connects over the first route that answers. Away from home, a LAN
 address that does not answer is checked briefly and skipped. It is only tried
 again, after the other routes, if none of them connect. While connected over a
-later route, Rove Code checks the earlier ones when your network changes, when you
+later route, Paperplane checks the earlier ones when your network changes, when you
 return to the app, and every minute, and moves back as soon as one works.
 
 On web and desktop, select the route count under the machine's name in
 **Settings → Connections** to see its routes. Drag a route to change the order,
 or remove it. On mobile, open the machine under **Settings → Environments** and
-choose **Edit**. Signing out of Rove Connect removes only that route; a machine
+choose **Edit**. Signing out of Paperplane Connect removes only that route; a machine
 you can still reach another way stays saved.
 
 Open **Permissions** next to **Routes** in web or desktop, or **Your permissions**
 in the mobile route details, to see what your current connection can do on that
 environment. For a remote environment, this is in its route details. Permissions
 shown there apply only to the route marked **In use**; other routes are not
-checked. Direct pairing and Rove Connect have separate sessions and may grant
+checked. Direct pairing and Paperplane Connect have separate sessions and may grant
 different permissions.
 
 ### Balance new threads across machines
@@ -167,7 +167,7 @@ scheme uses HTTP, so include `https://` when your server uses HTTPS.
 
 ## Small or WSL hosts
 
-On hosts with 8 GB of RAM or less, Rove Code releases idle agent processes after 5 minutes
+On hosts with 8 GB of RAM or less, Paperplane releases idle agent processes after 5 minutes
 instead of 30, and frees idle agents before starting a new one when memory runs low. A
 released thread resumes on its next message. When available memory is low, the
 composer shows a notice. On web and desktop, Settings → Diagnostics shows host
@@ -188,7 +188,7 @@ autoMemoryReclaim=gradual
 ```
 
 Enable systemd in WSL by adding `systemd=true` under `[boot]` in `/etc/wsl.conf`, run
-`wsl --shutdown`, then run `loginctl enable-linger $USER` inside WSL. With systemd, Rove
+`wsl --shutdown`, then run `loginctl enable-linger $USER` inside WSL. With systemd, Paperplane
 Code can contain agent memory and label out-of-memory kills. See [background hosting](./background-service.md#platform-support).
 
 To reduce background work, choose **Battery saver** in **Settings → General → Background
@@ -198,13 +198,13 @@ process per provider instead of one per thread, so it is lighter on small hosts.
 ## Desktop-managed SSH
 
 In the desktop app, open **Settings → Connections → Add environment**, choose
-**SSH**, and enter a host or SSH alias such as `user@example.com`. Rove Code starts
+**SSH**, and enter a host or SSH alias such as `user@example.com`. Paperplane starts
 or reuses a server there and opens the port forward for you. Projects, provider
 credentials, and agent work stay on the remote machine.
 
 The remote host must be Linux or an Apple Silicon Mac with `curl` or `wget`,
 `tar`, `sha256sum` or `shasum`, and [provider setup](./install.md#providers).
-The first launch downloads Rove Code's server to `~/.rove-code/runtime` on the host, so
+The first launch downloads Paperplane's server to `~/.rove-code/runtime` on the host, so
 it takes longer than later ones.
 Provider CLIs must be on the `PATH` of a non-interactive login shell there;
 check with:
@@ -225,15 +225,15 @@ For Antigravity's Google callback on a remote host, see
 
 On web and desktop, open **Settings → Integrations → Remote sandboxes**. Sandboxes belong to the primary environment unless you select another one. On mobile, open **Settings → Environments**, select the managing environment, and use **Remote sandboxes**. Administrative access to that environment is required.
 
-Add your own Boat API key or Modal token ID and secret. Credentials stay on the managing environment. Saving checks them with the vendor but does not start compute. Creating or resuming a sandbox starts billing on your infrastructure account. Free credits, storage charges, and retention depend on the vendor. Boat requires trial/subscription checkout before starting compute. Rove currently requests unlimited runtime, which Boat trial accounts do not support; use a paid Boat plan or Modal instead.
+Add your own Boat API key or Modal token ID and secret. Credentials stay on the managing environment. Saving checks them with the vendor but does not start compute. Creating or resuming a sandbox starts billing on your infrastructure account. Free credits, storage charges, and retention depend on the vendor. Boat requires trial/subscription checkout before starting compute. Paperplane currently requests unlimited runtime, which Boat trial accounts do not support; use a paid Boat plan or Modal instead.
 
-Choose **Forward sign-ins** to copy your Codex, Claude, Pi, OpenCode, or GitHub sign-in from the managing environment into the sandbox, so agents there use your existing subscriptions. Rove installs the matching command-line tool in the sandbox and copies fresh sign-ins on every resume. Clearing a checkbox removes that sign-in from the sandbox. Anyone with access to the sandbox can use forwarded sign-ins. Claude and Pi refresh their sign-ins independently on each machine; if one machine is signed out, sign in again there and forward again.
+Choose **Forward sign-ins** to copy your Codex, Claude, Pi, OpenCode, or GitHub sign-in from the managing environment into the sandbox, so agents there use your existing subscriptions. Paperplane installs the matching command-line tool in the sandbox and copies fresh sign-ins on every resume. Clearing a checkbox removes that sign-in from the sandbox. Anyone with access to the sandbox can use forwarded sign-ins. Claude and Pi refresh their sign-ins independently on each machine; if one machine is signed out, sign in again there and forward again.
 
 Modal sandboxes run wherever Modal has capacity unless you pick a region when creating one. Pinning a region costs 1.15 times Modal's base price, and you can't change it later. Distance to the sandbox adds delay to every click and keystroke.
 
 **Settling a thread does not stop billing in this preview.** Pause its sandbox manually after work finishes. Pausing interrupts running agents, builds, and terminals; resuming restores files and persisted conversations, not running processes. Modal ends each run after 24 hours, and changes made since the last pause are lost, so pause before then. Boat retention is governed by your account's policy. A paused environment is offline, including its transcripts, until resumed.
 
-The managing environment must be online for lifecycle controls. Explicit deletion removes the remote workspace and recovery data irreversibly; removing a client connection does not delete or pause compute. If provisioning fails without a resource ID, check the vendor dashboard for orphaned resources before deleting the saved failure record. If credentials expire or vendor-side cleanup prevents deletion through Rove, clean up in the vendor dashboard, then forget the failed record. Forgetting removes only Rove's tracking and recovery handles; it does not stop billing.
+The managing environment must be online for lifecycle controls. Explicit deletion removes the remote workspace and recovery data irreversibly; removing a client connection does not delete or pause compute. If provisioning fails without a resource ID, check the vendor dashboard for orphaned resources before deleting the saved failure record. If credentials expire or vendor-side cleanup prevents deletion through Paperplane, clean up in the vendor dashboard, then forget the failed record. Forgetting removes only Paperplane's tracking and recovery handles; it does not stop billing.
 
 ## Browser on a remote environment
 
@@ -243,7 +243,7 @@ directly. Every other device, and the desktop app for other environments,
 streams them from the host. Agents keep using them while no device is
 connected, and `localhost` addresses reach servers on the host.
 
-The first tab downloads a headless Chrome, about 120 MB, into the Rove home. It
+The first tab downloads a headless Chrome, about 120 MB, into the Paperplane home. It
 is the same browser [HTML renders](html-renders.md) use, so a host downloads it
 only once. Some Linux hosts need [setup](#browser-host-setup) before it can
 start.
@@ -286,7 +286,7 @@ set `ROVE_SERVER_BROWSER_SANDBOX=0` for the environment to run without it.
 
 ## Connect an outside agent
 
-Claude Code, Codex, ChatGPT and other agents Rove Code did not start can drive
+Claude Code, Codex, ChatGPT and other agents Paperplane did not start can drive
 threads on an environment through its MCP server. See
 [outside agents](./outside-agents.md) for setup.
 
@@ -340,27 +340,27 @@ a client's permissions.
 local changes. Add `filesystem:write` to allow editing files or saving plans to
 the workspace. These scopes control direct file access from the client.
 
-To remove an environment from Rove Connect, open your account menu's **Rove Connect**
-page, or **Settings → Rove Connect** on mobile, and choose **Deregister**. This
+To remove an environment from Paperplane Connect, open your account menu's **Paperplane Connect**
+page, or **Settings → Paperplane Connect** on mobile, and choose **Deregister**. This
 revokes its cloud access and frees its host space even when the environment is
-offline or has been wiped. When Rove Connect rejects a host's link, the host
-shows that it was removed from Rove Connect. To link it again, turn on
-**Rove Connect** in **Settings → Connections** on a desktop host, or run
-`rove connect link` on a command-line host and then restart Rove Code there. A
+offline or has been wiped. When Paperplane Connect rejects a host's link, the host
+shows that it was removed from Paperplane Connect. To link it again, turn on
+**Paperplane Connect** in **Settings → Connections** on a desktop host, or run
+`rove connect link` on a command-line host and then restart Paperplane there. A
 command-line host that released its tunnel when it last stopped may link itself
 again on its next start; run `rove connect unlink` on that host to keep it off.
 Removing an environment from a device's connection settings only forgets it on
 that device; it stays registered to your account.
 
-When idle tunnel cleanup is enabled, Rove Connect removes a linked environment's
+When idle tunnel cleanup is enabled, Paperplane Connect removes a linked environment's
 tunnel after it stays offline for several minutes. The environment stays linked
-and keeps the same address. When the host starts again or wakes, Rove Connect
+and keeps the same address. When the host starts again or wakes, Paperplane Connect
 creates a replacement tunnel on its own. You do not need to pair again. Cleanup
 usually runs five to ten minutes after the tunnel goes down.
 
-Rove Connect also removes the tunnel of an environment running an older version of
-Rove Code once it has been offline for seven days. That environment shows a message
-asking you to update. Start Rove Code on that computer and update it to the latest
+Paperplane Connect also removes the tunnel of an environment running an older version of
+Paperplane once it has been offline for seven days. That environment shows a message
+asking you to update. Start Paperplane on that computer and update it to the latest
 version; it reconnects at the same address without pairing again.
 
 On a command-line host, `rove connect unlink` disables exposure while retaining
@@ -370,7 +370,7 @@ your login; `rove connect logout` also clears that login. Background-service
 Treat pairing URLs and authorization codes as passwords. Do not include them in
 screenshots, logs, or bug reports.
 
-## Rove Connect troubleshooting
+## Paperplane Connect troubleshooting
 
 Run `rove connect status` on the host to inspect saved authorization and link
 configuration. It is not a live reachability check. If the environment appears
@@ -379,9 +379,9 @@ when SSH closes, see [background-service troubleshooting](./background-service.m
 
 | Error                                                     | Recovery                                                                                                                                          |
 | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `environment_link_limit_exceeded` or managed tunnel limit | Deregister an unused environment, then restart Rove Code on the host.                                                                             |
+| `environment_link_limit_exceeded` or managed tunnel limit | Deregister an unused environment, then restart Paperplane on the host.                                                                             |
 | `auth_invalid` or `invalid_bearer`                        | Run `rove connect login`. If credentials were revoked, run `rove connect logout`, then `rove connect` again. Restart the server after signing in. |
-| Expired or invalid link proof                             | Check the host's date and time, update Rove Code, then restart it.                                                                                |
+| Expired or invalid link proof                             | Check the host's date and time, update Paperplane, then restart it.                                                                                |
 | HTTP 403 without a recognized error                       | Check relay access, proxies, and firewall rules. Keep any Cloudflare Ray ID for a bug report.                                                     |
 | HTTP 408, 429, or 5xx                                     | Check network and relay availability. Startup retries temporary failures for up to ten minutes.                                                   |
 
@@ -391,15 +391,15 @@ foreground server, stop it and run `rove serve` again with your usual options.
 Include the diagnostic message and trace ID when reporting a persistent failure.
 
 For a connection that still fails after linking, check the date and time on both
-devices. For server version warnings, follow [Updating Rove Code](./updating.md).
+devices. For server version warnings, follow [Updating Paperplane](./updating.md).
 
 ## Using the Desktop App as a Remote Only
 
 If a computer should only drive work running elsewhere, turn off its local environment. In the
 desktop app, open **Settings → Connections** and switch off **Local
-environment**. Rove Code restarts without a local server: no local agents or terminals run, WSL
+environment**. Paperplane restarts without a local server: no local agents or terminals run, WSL
 backends stay off, and other devices can no longer connect to this computer. Your projects,
-history, and saved connections are kept, and you keep working through pairing, Rove Connect, or SSH.
+history, and saved connections are kept, and you keep working through pairing, Paperplane Connect, or SSH.
 
 Switch **Local environment** back on in the same place to restart with your previous local
 settings.

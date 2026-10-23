@@ -213,10 +213,10 @@ it("returns explanatory HTML and bodyless HEAD errors", async () => {
 
 it("rejects insufficient or poorly headed raw HTML", () => {
   NodeAssert.throws(() =>
-    checkHomepageHtml("<body><h1>Rove</h1><script>" + "x".repeat(600) + "</script></body>"),
+    checkHomepageHtml("<body><h1>Paperplane</h1><script>" + "x".repeat(600) + "</script></body>"),
   );
   NodeAssert.throws(() =>
-    checkHomepageHtml(`<body><h1>Rove</h1><h3>Skipped</h3><p>${"content ".repeat(100)}</p></body>`),
+    checkHomepageHtml(`<body><h1>Paperplane</h1><h3>Skipped</h3><p>${"content ".repeat(100)}</p></body>`),
   );
 });
 

@@ -1,4 +1,4 @@
-// This file mostly exists because we want dev mode to say "Rove Code (Dev)" instead of "electron"
+// This file mostly exists because we want dev mode to say "Paperplane (Dev)" instead of "electron"
 
 import * as NodeChildProcess from "node:child_process";
 import * as NodeFS from "node:fs";
@@ -16,6 +16,7 @@ const repoRoot = NodePath.resolve(desktopDir, "..", "..");
 const devBundleIdSuffix = NodePath.basename(repoRoot)
   .toLowerCase()
   .replaceAll(/[^a-z0-9]+/g, "");
+// Keep the bundle name stable until the Electron keychain identity is migrated.
 const APP_DISPLAY_NAME = isDevelopment ? "Rove Code (Dev)" : "Rove Code (Beta)";
 const APP_BUNDLE_ID = isDevelopment
   ? `io.github.hafiezul.rove.dev.${devBundleIdSuffix || "local"}`
@@ -271,8 +272,8 @@ export function resolveMacBundleInfoPlistStrings(executableName) {
     CFBundleExecutable: executableName,
     CFBundleIconFile: "icon.icns",
     NSScreenCaptureUsageDescription:
-      "Rove Code captures the active window when you use the snapshot shortcut.",
-    NSDocumentsFolderUsageDescription: "Rove Code reads project files you open in the desktop app.",
+      "Paperplane captures the active window when you use the snapshot shortcut.",
+    NSDocumentsFolderUsageDescription: "Paperplane reads project files you open in the desktop app.",
   };
 }
 
@@ -405,7 +406,7 @@ function buildMacLauncher(electronBinaryPath) {
   if (isDevelopment) {
     // Keep Electron's native executable inside the branded bundle. Launching the
     // node_modules copy makes macOS associate the process (and Dock label) with
-    // Electron.app even though this bundle's Info.plist has the Rove Code name.
+    // Electron.app even though this bundle's Info.plist has the Paperplane name.
     // Its conventional executable name also keeps Electron's default-app runtime
     // in development mode instead of making app.isPackaged report true.
     writeDevelopmentEnvironmentScript();

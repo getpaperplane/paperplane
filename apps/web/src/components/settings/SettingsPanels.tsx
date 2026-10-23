@@ -2900,7 +2900,7 @@ export function GeneralSettingsPanel() {
               ? "Update selected environments to control product usage data."
               : undefined
           }
-          description="Share feature usage, outcomes, timings, and agent token counts with Rove via PostHog, using a random installation ID. No name, email, prompts, responses, code, paths, commands, or recordings. Applies to all clients on the selected environments. ROVE_TELEMETRY_ENABLED=false overrides this preference."
+          description="Share feature usage, outcomes, timings, and agent token counts with Paperplane via PostHog, using a random installation ID. No name, email, prompts, responses, code, paths, commands, or recordings. Applies to all clients on the selected environments. ROVE_TELEMETRY_ENABLED=false overrides this preference."
           control={
             <ScopedSwitch
               settingKeys={["telemetryEnabled"]}
@@ -3386,7 +3386,7 @@ export function GeneralSettingsPanel() {
         )}
         <SettingsRow
           {...searchableSetting("telemetry-privacy")}
-          description="What product usage data Rove Code collects and how to opt out."
+          description="What product usage data Paperplane collects and how to opt out."
           control={
             <Button
               render={<a href={TELEMETRY_PRIVACY_URL} target="_blank" rel="noreferrer noopener" />}
@@ -3420,7 +3420,7 @@ export function GeneralSettingsPanel() {
         />
         <SettingsRow
           {...searchableSetting("open-source-licenses")}
-          description="Notices for dependencies, assets, and optional tools used by Rove Code."
+          description="Notices for dependencies, assets, and optional tools used by Paperplane."
           control={
             <Button
               render={<Link to="/settings/open-source-licenses" />}

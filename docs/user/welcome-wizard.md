@@ -1,10 +1,10 @@
 # Welcome wizard
 
-Rove Code shows a setup flow when you open a new installation. Existing workspaces skip this flow.
+Paperplane shows a setup flow when you open a new installation. Existing workspaces skip this flow.
 
 ## Connect your computers
 
-Select one or more computers to set up. If you opened Rove Code directly from a
+Select one or more computers to set up. If you opened Paperplane directly from a
 server or the desktop app, that computer is already connected and selected.
 It is identified by its name, which may differ from the device running your
 browser.
@@ -12,7 +12,7 @@ browser.
 To add another computer on your LAN or tailnet, create a pairing link in
 **Settings → Connections** on that computer and paste it into **Add a computer**.
 With a headless source build, start the server and run
-`node apps/server/src/bin.ts pair` from the checkout instead. Rove Connect is
+`node apps/server/src/bin.ts pair` from the checkout instead. Paperplane Connect is
 not part of the self-hosted release.
 
 Saved computers are selected by
@@ -20,16 +20,16 @@ default. Uncheck any you do not want to set up; this does not disconnect them.
 Continue when your selected computers are connected. Setup checks
 agents across the selected computers, then offers project import grouped by computer.
 
-If Rove Code cannot confirm the workspace during startup, the setup flow shows
+If Paperplane cannot confirm the workspace during startup, the setup flow shows
 **Still connecting** instead of opening the app. Select **Reload** to try again.
 
-If Rove Code cannot read your saved settings, it shows **Could not read settings**.
+If Paperplane cannot read your saved settings, it shows **Could not read settings**.
 Select **Retry** after storage becomes available. Setup does not replace
 unreadable settings with defaults.
 
 ## Check your agents
 
-Rove Code checks each selected computer for Claude Code and Codex. If an agent is
+Paperplane checks each selected computer for Claude Code and Codex. If an agent is
 not installed or signed in, select its action to open a terminal with the
 correct command ready to run. Install uses the vendor's own installer, which
 keeps **Update now** working in Settings. Other providers can be enabled in
@@ -41,7 +41,7 @@ terminal metadata while the terminal process can use them.
 
 ## Import your projects
 
-Rove Code finds directories that Claude Code or Codex has used. Git repositories
+Paperplane finds directories that Claude Code or Codex has used. Git repositories
 are listed first, newest activity on top. When the remote is on GitHub, the
 group shows the repository as `owner/name`. Clones with the same remote share
 one group. Directories that are not git repositories sit under "Other folders".
@@ -52,18 +52,18 @@ with at least three conversations. Use the checkboxes, or "Select all" and
 directories under `Documents/Codex`, and anything under `Downloads` are not
 offered.
 
-A large or malformed history can reach the scan limit. Rove Code keeps the
+A large or malformed history can reach the scan limit. Paperplane keeps the
 projects it found and warns when projects or conversations may be missing.
 
 Imported projects include Codex and Claude conversations active within the last
-30 days. You can continue those conversations in Rove Code.
+30 days. You can continue those conversations in Paperplane.
 
-Conversation import is best effort. Rove Code keeps the first user prompt and the
+Conversation import is best effort. Paperplane keeps the first user prompt and the
 newest remaining visible user and assistant messages, with 200 messages total.
 It omits tool activity and attachments. For Codex, it omits generated setup
 context only when a canonical user event and a valid shared turn ID identify the
 same user turn. Ambiguous legacy or response-only context stays in the imported
-conversation so Rove Code does not remove user text. It reads one conversation at
+conversation so Paperplane does not remove user text. It reads one conversation at
 a time and skips files larger than 16 MiB. It ignores malformed records and skips
 unreadable or unparseable conversations.
 

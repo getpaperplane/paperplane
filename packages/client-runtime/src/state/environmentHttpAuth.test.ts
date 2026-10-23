@@ -739,7 +739,7 @@ describe("authenticated environment HTTP requests", () => {
 });
 
 describe("relay request tracing", () => {
-  it.effect("starts an exported trace for a Rove Connect request", () =>
+  it.effect("starts an exported trace for a Paperplane Connect request", () =>
     Effect.gen(function* () {
       const productSpans: Array<{ readonly name: string; readonly root: boolean }> = [];
       const productTracer = Tracer.make({

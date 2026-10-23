@@ -31,7 +31,7 @@ export class DesktopUserDataInitializationError extends Schema.TaggedError<Deskt
   }
 }
 
-/** Select Electron's profile independently of the server's Rove home. */
+/** Select Electron's profile independently of the server's Paperplane home. */
 export const resolveUserDataPath = Effect.fn("desktop.userData.resolveUserDataPath")(
   function* (input: {
     readonly appDataDirectory: string;
@@ -54,7 +54,7 @@ export const resolveUserDataPath = Effect.fn("desktop.userData.resolveUserDataPa
           ),
         );
     // Chromium databases require their own profile for each running version,
-    // including development: never point Electron at the legacy Rove profile.
+    // including development: never point Electron at the legacy Paperplane profile.
     if (input.platform !== "win32") return destinationPath;
     const destinationState = path.join(destinationPath, "Local State");
     if (yield* inspect(destinationState)) return destinationPath;

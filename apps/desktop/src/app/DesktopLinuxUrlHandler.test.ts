@@ -28,7 +28,7 @@ const makeEnvironment = (path: Path.Path, overrides: Record<string, unknown> = {
     platform: "linux",
     isPackaged: true,
     isDevelopment: false,
-    displayName: "Rove Code (Alpha)",
+    displayName: "Paperplane (Alpha)",
     linuxDesktopEntryName: "io.github.hafiezul.rove.desktop",
     linuxWmClass: "rove",
     linuxApplicationsDir: "/home/alice/.local/share/applications",
@@ -160,14 +160,14 @@ const emptyRecording = (): RecordedRegistration => ({
 describe("DesktopLinuxUrlHandler", () => {
   it("renders a scheme-handler desktop entry with freedesktop Exec quoting", () => {
     const entry = DesktopLinuxUrlHandler.renderUrlHandlerDesktopEntry({
-      displayName: "Rove Code (Nightly)",
+      displayName: "Paperplane (Nightly)",
       execTarget: '/home/al ice/Apps/Rove "100%" $HOME\\x.AppImage',
       scheme: "rove",
       iconPath: "/home/al ice/icons/Rove\\x.png",
     });
 
     assert.include(entry, "[Desktop Entry]");
-    assert.include(entry, "Name=Rove Code (Nightly)");
+    assert.include(entry, "Name=Paperplane (Nightly)");
     // Exec composes both escaping layers: a literal backslash becomes four
     // backslashes in the file, a quote three characters, a dollar sign two
     // backslashes plus the sign.
@@ -260,7 +260,7 @@ describe("DesktopLinuxUrlHandler", () => {
     return Effect.gen(function* () {
       yield* runRegister(recorded, {
         existingEntry: DesktopLinuxUrlHandler.renderUrlHandlerDesktopEntry({
-          displayName: "Rove Code (Alpha)",
+          displayName: "Paperplane (Alpha)",
           execTarget: "/home/alice/Applications/Rove-Code.AppImage",
           scheme: "rove",
           iconPath: "/home/alice/.local/share/icons/io.github.hafiezul.rove.desktop.png",
@@ -289,7 +289,7 @@ describe("DesktopLinuxUrlHandler", () => {
       yield* runRegister(recorded, {
         iconSource: "/tmp/.mount_Rove/resources/icon.png",
         existingEntry: DesktopLinuxUrlHandler.renderUrlHandlerDesktopEntry({
-          displayName: "Rove Code (Alpha)",
+          displayName: "Paperplane (Alpha)",
           execTarget: "/home/alice/Applications/Rove-Code.AppImage",
           scheme: "rove",
           iconPath,

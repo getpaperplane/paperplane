@@ -124,7 +124,7 @@ export function findProjectOnChangeRequestHost(
  * should still be reading it afterwards. Any change request opens there, not only the thread's
  * own, since the panel is told which one to show.
  *
- * With "Open pull requests in Rove Code" turned off, every link is left alone.
+ * With "Open pull requests in Paperplane" turned off, every link is left alone.
  */
 /** Cmd/Ctrl-click and middle-click send a pull request to the browser instead of the panel. */
 export function shouldOpenPullRequestExternally(

@@ -271,7 +271,7 @@ export function RemoteSandboxesSection({
               confirm(
                 kind === "pause" ? "Pause sandbox?" : "Start billed compute?",
                 kind === "pause"
-                  ? "This stops Rove and interrupts agents, builds, and terminals. Files and persisted conversations are retained."
+                  ? "This stops Paperplane and interrupts agents, builds, and terminals. Files and persisted conversations are retained."
                   : "Resuming starts compute billing on your account.",
                 async () => {
                   value(

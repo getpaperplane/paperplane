@@ -224,7 +224,7 @@ describe("ServerUpdateAction", () => {
     expect(testState.toast).toHaveBeenCalledWith({
       type: "success",
       title: "Test server updated",
-      description: "Reconnected on Rove Code 0.0.31.",
+      description: "Reconnected on Paperplane 0.0.31.",
     });
   });
 
@@ -259,7 +259,7 @@ describe("ServerUpdateAction", () => {
     expect(testState.toast).not.toHaveBeenCalled();
   });
 
-  it("offers the Rove CLI relaunch command, not the unrelated unscoped npm package", () => {
+  it("offers the Paperplane CLI relaunch command, not the unrelated unscoped npm package", () => {
     const element = ServerUpdateAction({
       environmentId: "env-test" as EnvironmentId,
       serverLabel: "Test server",

@@ -81,7 +81,7 @@ export function RoveConnectEnvironmentRow(props: {
                 “{environment.label}” will be removed from this account.
               </p>
               <p className="mt-4 max-w-xl text-xs leading-4.5 text-muted-foreground">
-                Rove Connect access will be revoked, any managed tunnel will be removed, and a host
+                Paperplane Connect access will be revoked, any managed tunnel will be removed, and a host
                 space will become available. Local connections on your devices are not changed.
               </p>
               <div className="mt-4 flex justify-end gap-2">
@@ -150,7 +150,7 @@ export function RoveConnectUserProfilePage() {
       toastManager.add({
         type: "success",
         title: "Server deregistered",
-        description: "Rove Connect access was revoked and a host space is now available.",
+        description: "Paperplane Connect access was revoked and a host space is now available.",
       });
       return;
     }
@@ -193,7 +193,7 @@ export function RoveConnectUserProfilePage() {
 
   return (
     <ClerkUserProfilePage
-      title="Rove Connect"
+      title="Paperplane Connect"
       description="Environments registered to your account. Connections on this device are managed in Settings."
       action={
         <ClerkUserProfileRefreshButton
@@ -207,7 +207,7 @@ export function RoveConnectUserProfilePage() {
         {environmentsState.error ? (
           <div className="mb-4 border-t border-destructive/35 py-3 text-xs" role="alert">
             <p className="font-medium text-destructive-foreground">
-              Could not load Rove Connect environments
+              Could not load Paperplane Connect environments
             </p>
             <p className="mt-1 text-xs text-muted-foreground">{environmentsState.error}</p>
           </div>
@@ -239,9 +239,9 @@ export function RoveConnectUserProfilePage() {
                 <ServerIcon />
               </EmptyMedia>
               <EmptyHeader>
-                <EmptyTitle>No Rove Connect environments</EmptyTitle>
+                <EmptyTitle>No Paperplane Connect environments</EmptyTitle>
                 <EmptyDescription>
-                  Link an environment from its local Settings to make it available through Rove
+                  Link an environment from its local Settings to make it available through Paperplane
                   Connect.
                 </EmptyDescription>
               </EmptyHeader>

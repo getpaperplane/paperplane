@@ -15,17 +15,17 @@ on Apple's Virtualization.framework. Host background-only remains the default;
 Intel Macs do not support the isolated mode. Lume installation is user-initiated
 from Settings → Integrations → Computer use, never triggered by an agent call.
 
-Cua Driver runs inside the logged-in guest. Rove carries its existing stdio MCP
+Cua Driver runs inside the logged-in guest. Paperplane carries its existing stdio MCP
 transport over SSH, following Cua's [VM and remote guide](https://cua.ai/docs/cua-driver/guides/vms-and-remote):
 
 ```sh
 ssh -T lume@<ip> /Users/lume/.local/bin/cua-driver mcp
 ```
 
-Rove generates a dedicated SSH key under its environment state directory and keeps
+Paperplane generates a dedicated SSH key under its environment state directory and keeps
 the private key on the host. Settings returns the exact public-key authorization
 command for the user to run inside the guest display. Lume's documented `ssh` and
-`cp` commands automate password SSH, not a separate guest-exec channel; Rove does
+`cp` commands automate password SSH, not a separate guest-exec channel; Paperplane does
 not use the image's default password non-interactively. Each environment uses an
 explicit, private Lume storage directory to avoid colliding with other servers.
 The guest uses the existing `isolated-desktop` policy: foreground and pixel input
@@ -39,10 +39,10 @@ an exclusive per-thread lease, not a VM for every thread. Reset the working VM
 from the stopped golden image with `lume clone` between leases so guest files do
 not leak to the next thread. Capacity is fixed at one working VM for now. Any
 future increase must respect Apple's limit of two concurrent macOS guests per host, including those outside
-Rove. Refuse acquisition when capacity is occupied; never evict
+Paperplane. Refuse acquisition when capacity is occupied; never evict
 unfinished work or fall back to host input. Idle SSH retirement preserves the
 lease and documents. Explicit `close_desktop` releases and discards the working
-VM, like Linux; disabling computer use, switching to host mode or stopping Rove
+VM, like Linux; disabling computer use, switching to host mode or stopping Paperplane
 releases owned leases.
 
 ## Consequences
@@ -73,7 +73,7 @@ visible failure, not host escalation.
 
 - **Cua Spaces:** source-available FSL-1.1-MIT, not open source, and requires an
   account/relay instead of local environment ownership.
-- **Tart:** Fair Source licensing does not fit Rove's open-core requirement.
+- **Tart:** Fair Source licensing does not fit Paperplane's open-core requirement.
 - **UTM:** Apache-2.0, but GUI-oriented with a poorer automation fit than Lume.
 - **Per-thread VMs:** the two-guest host limit and roughly 150 GB sparse images
   make Linux's one-desktop-per-thread model unsuitable for macOS.

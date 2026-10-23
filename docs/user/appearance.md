@@ -38,7 +38,7 @@ without replaying its transitions.
 
 ## Custom themes
 
-On web and desktop, choose **Create theme** to adjust a palette, or import a Rove Code or VS Code
+On web and desktop, choose **Create theme** to adjust a palette, or import a Paperplane or VS Code
 theme. The theme editor's color picker lets you select an area of the app to find the color to
 change. Export your theme as JSON to share it.
 
@@ -49,7 +49,7 @@ main local environment. Other connections do not use them.
 
 Select a published theme in **Settings → Appearance** to follow its palette as the server updates
 it. **Duplicate** makes an independent copy you can edit. A saved custom theme with the same ID
-takes precedence. If the server stops publishing the selected theme, Rove Code falls back to its
+takes precedence. If the server stops publishing the selected theme, Paperplane falls back to its
 standard theme.
 
 Run this on the server to set a default and switch connected clients to it:
@@ -67,7 +67,7 @@ the default and published themes.
 
 ### Publish a theme
 
-Save a theme exported from Rove Code into `~/.rove-code/userdata/themes/` on the server, or the `themes`
+Save a theme exported from Paperplane into `~/.rove-code/userdata/themes/` on the server, or the `themes`
 directory under your custom state directory. The filename supplies the theme ID: `nightfall.json`
 can be selected with `rove theme set nightfall`. Keep the filename stable when updating its colors.
 Do not use `system`, `light`, `dark`, or a built-in theme's ID.
@@ -87,7 +87,7 @@ For an integration that generates a palette, this shorter format also works:
 }
 ```
 
-Set `appearance` to `light` or `dark` and supply hex colors for `canvas` and `accent`. Rove Code
+Set `appearance` to `light` or `dark` and supply hex colors for `canvas` and `accent`. Paperplane
 generates the rest. The optional `colors` overrides use the names in the theme editor's advanced
 view.
 

@@ -1,13 +1,13 @@
-# Rove Connect setup
+# Paperplane Connect setup
 
-Deployment and client configuration for Rove Connect. The [architecture note](../internals/rove-connect.md)
+Deployment and client configuration for Paperplane Connect. The [architecture note](../internals/rove-connect.md)
 explains the trust boundaries; the [relay README](../../infra/relay/README.md#deployment) owns relay
 provisioning instructions.
 
 ## Public application configuration
 
-Rove Connect is disabled in a fresh clone. Copy the repository-root example to configure a
-Rove-owned Clerk instance and relay; the placeholders do not enable cloud features:
+Paperplane Connect is disabled in a fresh clone. Copy the repository-root example to configure a
+Paperplane-owned Clerk instance and relay; the placeholders do not enable cloud features:
 
 ```sh
 cp .env.example .env
@@ -40,7 +40,7 @@ writes the resulting relay URL back to the root `.env`.
 
 In Clerk's OAuth applications settings:
 
-1. Create a public OAuth application for the Rove Code CLI, using authorization-code exchange with PKCE.
+1. Create a public OAuth application for the Paperplane CLI, using authorization-code exchange with PKCE.
 2. Allow the redirect URI `http://127.0.0.1:34338/callback`.
 3. Enable the `openid`, `profile`, `email`, and `offline_access` scopes.
 4. Enable **Device authorization grant** on the application. Headless and SSH authorization use
@@ -99,7 +99,7 @@ For a production macOS app with bundle ID `dev.rove.app`:
    This setting also configures Electron/macOS passkeys.
 4. Check `https://<frontend-api>/.well-known/apple-app-site-association`. Its
    `webcredentials.apps` must include `<TEAM_ID>.dev.rove.app`.
-5. Apple provisioning is separate from [Rove's self-signed release mode](./release.md#build-self-signed-macos-artifacts-without-apple-membership), which does not enable native passkeys or notarization. Use Developer ID signing with the Apple credentials and provisioning profile when testing this setup.
+5. Apple provisioning is separate from [Paperplane's self-signed release mode](./release.md#build-self-signed-macos-artifacts-without-apple-membership), which does not enable native passkeys or notarization. Use Developer ID signing with the Apple credentials and provisioning profile when testing this setup.
 
 Local signed builds additionally use:
 

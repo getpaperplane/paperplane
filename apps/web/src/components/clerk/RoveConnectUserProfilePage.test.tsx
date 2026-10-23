@@ -34,7 +34,7 @@ function renderRow({
   );
 }
 
-describe("Rove Connect environment row", () => {
+describe("Paperplane Connect environment row", () => {
   it("keeps deregistration confirmation inline and collapsed by default", () => {
     const markup = renderRow();
 

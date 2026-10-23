@@ -78,7 +78,7 @@ Leaving an edited form asks before discarding unsaved changes.
 In **Settings → Scheduled tasks**, choose **On webhook**
 as a task's schedule to run it whenever another service calls its URL, such as
 GitHub on a new pull request or a CI job that failed. A public URL needs a
-[Rove Connect](remote-access.md) managed tunnel; after you save the task, copy
+[Paperplane Connect](remote-access.md) managed tunnel; after you save the task, copy
 its URL from the editor. Without one, the editor shows only the URL's path.
 **Rotate** replaces the URL and the old one stops working.
 
@@ -103,9 +103,9 @@ editor on mobile. Credential headers are redacted.
 
 If the environment is offline, the sender gets an error and nothing runs;
 redeliver from the sender, such as GitHub's **Recent Deliveries**, once it is
-back. To have Rove Connect keep requests instead, turn on **Hold webhooks while
-offline** in **Settings → Connections**. Rove Connect then stores requests to a
-Rove Connect URL for up to 24 hours and delivers them when the environment
+back. To have Paperplane Connect keep requests instead, turn on **Hold webhooks while
+offline** in **Settings → Connections**. Paperplane Connect then stores requests to a
+Paperplane Connect URL for up to 24 hours and delivers them when the environment
 returns. Leave it off if you don't want request bodies stored outside your
 machine. To skip requests that waited too long, set **Skip requests older
 than** on the task.
@@ -144,24 +144,24 @@ Open **Settings → Storage** on web or desktop, or **Settings → Worktrees** o
 linked worktrees in your projects' repositories on connected environments. Use the project and
 environment filters to narrow the list. Worktrees in those repositories with no linked thread still appear.
 
-Last activity reflects conversations and agent turns in Rove Code, not use in other apps.
+Last activity reflects conversations and agent turns in Paperplane, not use in other apps.
 Calculate a worktree's size when you need an estimate. The estimate excludes shared Git history
 and symbolic links, and may differ from the disk space recovered.
 
-Review the checkout before choosing **Remove worktree**. Rove Code keeps the branch, commits, and
+Review the checkout before choosing **Remove worktree**. Paperplane keeps the branch, commits, and
 thread history. Starting another turn recreates a linked thread's checkout. Removal is limited
-to Rove-managed worktrees. Stop active sessions and terminals, and save local changes or ignored
+to Paperplane-managed worktrees. Stop active sessions and terminals, and save local changes or ignored
 files other than `node_modules`, before removing a checkout. Shared worktrees, project workspaces,
 locked worktrees, and detached checkouts cannot be removed here.
 
-On Linux, once a checkout is removed, background processes Rove Code started inside it, such as dev
+On Linux, once a checkout is removed, background processes Paperplane started inside it, such as dev
 servers an agent left running, are stopped so they don't keep holding memory. Processes started outside
-Rove Code are left alone. macOS and Windows don't do this: Windows refuses to delete a directory that
+Paperplane are left alone. macOS and Windows don't do this: Windows refuses to delete a directory that
 is in use, and on macOS leftover processes keep running until you stop them.
 
 ## Worktree location
 
-New worktrees go in the `worktrees` folder of the Rove home directory. To put them somewhere else,
+New worktrees go in the `worktrees` folder of the Paperplane home directory. To put them somewhere else,
 such as another drive, set **Settings → Storage → Worktree location** to an absolute path like
 `D:\worktrees` or `~/worktrees`. The setting is per machine. Existing worktrees stay where they
 are, and cleanup covers both the default folder and the custom one.
@@ -179,7 +179,7 @@ captures and log retention remain machine-wide.
 
 Worktrees can be removed after a chosen number of inactive days, after a thread settles, after
 merging, or when they have no commits beyond the default branch. Set settled retention to 0 days
-to remove a worktree at the next cleanup after settlement. Only Rove-managed worktrees are eligible.
+to remove a worktree at the next cleanup after settlement. Only Paperplane-managed worktrees are eligible.
 Active sessions and shared worktrees prevent removal. **Keep worktrees with local changes** defaults
 to **Uncommitted changes**, which protects tracked edits and untracked files but deletes ignored
 files such as `.env` and build output. **Any local files** also protects ignored files other than
@@ -205,7 +205,7 @@ working. Current logs, message attachments, and browser profiles are kept.
 
 Select the project and open Project to choose an icon, emoji, monogram, or image. The choice applies to
 every checkout in the project group and appears on connected clients. Choose **Automatic** to let
-Rove Code detect an icon again.
+Paperplane detect an icon again.
 
 Choose **Monogram** in the icon picker to set one or two letters or numbers and a color.
 
@@ -219,7 +219,7 @@ In Source Control, enable **Automatically pull** to keep the default-branch chec
 with its configured upstream. Choose an environment to set the default or a project to override it.
 On mobile, use **Settings → Source control** to change selected environment defaults or project overrides.
 
-Rove Code only pulls when it can fast-forward and the checkout has no changed files, untracked files,
+Paperplane only pulls when it can fast-forward and the checkout has no changed files, untracked files,
 or local commits. It skips checkouts on another branch or without an upstream. If a checkout has
 local work, resolve it yourself before automatic pulls can resume.
 

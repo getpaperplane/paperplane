@@ -110,7 +110,7 @@ const WSL_FORWARDED_ENV_NAMES = [
   "ROVE_OTLP_HEADERS",
   "ROVE_OTLP_PROTOCOL",
   // Forwarded without a WSLENV flag, so the values arrive untranslated. The
-  // server prefers an OTEL endpoint over the bootstrap envelope, so the Rove URLs
+  // server prefers an OTEL endpoint over the bootstrap envelope, so the Paperplane URLs
   // travel as variables to keep winning inside the distro as they do on Windows.
   "ROVE_OTLP_TRACES_URL",
   "ROVE_OTLP_METRICS_URL",
@@ -251,7 +251,7 @@ const readPersistedBackendObservabilitySettings = Effect.gen(function* () {
 });
 
 // The bootstrap carries the OTLP endpoints to every backend, including a WSL
-// child that lacks the variables. The Rove URLs also travel as variables in
+// child that lacks the variables. The Paperplane URLs also travel as variables in
 // WSL_FORWARDED_ENV_NAMES so they outrank a forwarded OTEL endpoint. Env beats
 // the persisted settings file, matching the precedence resolveServerConfig and
 // DesktopObservability apply.
