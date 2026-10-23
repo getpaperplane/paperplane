@@ -1,0 +1,176 @@
+import {
+  DEFAULT_SERVER_SETTINGS,
+  ProviderDriverKind,
+  ProviderInstanceId,
+  type ScopedThreadRef,
+  type ServerProvider,
+} from "@rove-code/contracts";
+import { createRef } from "react";
+
+import { getClientSettings, mergeEnvironmentSettings } from "../../hooks/useSettings";
+import { makeThreadFixture } from "../../test-fixtures";
+import type { ChatComposerProps } from "./ChatComposer";
+
+const noop = () => {};
+
+/**
+ * One ready codex provider with two models. The reasoning descriptor makes the
+ * traits control render, and two runtime modes exercise the mode filter.
+ */
+const readyCodexProvider: ServerProvider = {
+  instanceId: ProviderInstanceId.make("codex"),
+  driver: ProviderDriverKind.make("codex"),
+  enabled: true,
+  installed: true,
+  version: "1.0.0",
+  status: "ready",
+  auth: { status: "authenticated", label: "ChatGPT" },
+  checkedAt: "2026-10-01T00:00:00.000Z",
+  supportedRuntimeModes: ["approval-required", "full-access"],
+  models: [
+    {
+      slug: "gpt-5.4",
+      name: "GPT-5.4",
+      isCustom: false,
+      capabilities: {
+        optionDescriptors: [
+          {
+            id: "reasoningEffort",
+            label: "Reasoning",
+            type: "select",
+            options: [
+              { id: "low", label: "Low" },
+              { id: "high", label: "High", isDefault: true },
+            ],
+            currentValue: "high",
+          },
+        ],
+      },
+    },
+    { slug: "gpt-5.4-mini", name: "GPT-5.4 Mini", isCustom: false, capabilities: null },
+  ],
+  slashCommands: [],
+  skills: [],
+};
+
+/**
+ * Stable, idle-thread props. No attachment or workspace I/O is requested.
+ * `providerReady` adds one available provider so the picker, traits and
+ * runtime-mode controls mount. The default keeps the no-provider baseline.
+ */
+export function makeRenderBenchComposerProps(
+  ref: ScopedThreadRef,
+  options: { providerReady?: boolean } = {},
+): ChatComposerProps {
+  const thread = makeThreadFixture({ environmentId: ref.environmentId, id: ref.threadId });
+  return {
+    composerDraftTarget: ref,
+    environmentId: ref.environmentId,
+    canOperateThread: true,
+    attachmentUploadsCapabilityKnown: true,
+    supportsAttachmentUploads: false,
+    supportsQuestionAttachments: false,
+    maxFileAttachmentBytes: null,
+    routeKind: "server",
+    routeThreadRef: ref,
+    draftId: null,
+    multipleModelSelections: null,
+    supportsMultipleModels: false,
+    onMultipleModelSelectionsChange: noop,
+    activeThreadId: ref.threadId,
+    activeThreadEnvironmentId: ref.environmentId,
+    activeThread: thread,
+    activeThreadShell: thread,
+    getPromptHistoryMessages: () => [],
+    isServerThread: true,
+    isLocalDraftThread: false,
+    forceExpandedOnMobile: false,
+    projectSelectionRequired: false,
+    phase: "ready",
+    canInterrupt: false,
+    isConnecting: false,
+    isSendBusy: false,
+    canResume: false,
+    sendDisabledReason: null,
+    isPreparingWorktree: false,
+    bannerItems: [],
+    resumeCompactionTokens: null,
+    keepFullHistory: false,
+    onToggleKeepFullHistory: noop,
+    environmentUnavailable: null,
+    activePendingApproval: null,
+    pendingApprovals: [],
+    pendingUserInputs: [],
+    activePendingProgress: null,
+    activePendingResolvedAnswers: null,
+    activePendingIsResponding: false,
+    activePendingDraftAnswers: {},
+    activePendingQuestionIndex: 0,
+    respondingRequestIds: [],
+    showPlanFollowUpPrompt: false,
+    activeProposedPlan: null,
+    activeTasksProgress: null,
+    activeTaskSteps: null,
+    threadSyncPhase: null,
+    runtimeMode: "full-access",
+    interactionMode: "default",
+    lockedProvider: null,
+    providerStatuses: options.providerReady ? [readyCodexProvider] : [],
+    providerCatalogKnown: true,
+    activeProjectDefaultModelSelection: null,
+    activeThreadModelSelection: thread.modelSelection,
+    activeProjectId: null,
+    activeContextWindow: null,
+    compactThreadUnavailable: true,
+    compactDisabled: true,
+    compactDisabledReason: null,
+    resolvedTheme: "dark",
+    settings: mergeEnvironmentSettings(DEFAULT_SERVER_SETTINGS, getClientSettings()),
+    keybindings: [],
+    terminalOpen: false,
+    gitCwd: null,
+    pullRequestProjectId: null,
+    pullRequestRepository: null,
+    threadPullRequests: undefined,
+    restingControlsHost: null,
+    restingControlsHaveLeadingContext: false,
+    onRestingControlsVisibilityChange: noop,
+    getTimelineScrollableNode: () => null,
+    isTimelineAtLogicalEnd: () => true,
+    timelineOverflows: false,
+    onComposerOverlayHeightChange: noop,
+    onRestingChange: noop,
+    promptRef: { current: "" },
+    composerImagesRef: { current: [] },
+    composerFilesRef: { current: [] },
+    composerTerminalContextsRef: { current: [] },
+    composerRef: createRef(),
+    onPageScrollKeyDown: noop,
+    onPageScrollKeyUp: noop,
+    onPageScrollRelease: noop,
+    editingQueuedAttachments: null,
+    onRemoveEditingQueuedAttachment: noop,
+    onCompactContext: noop,
+    onSend: noop,
+    onResume: noop,
+    onInterrupt: noop,
+    onImplementPlanInNewThread: noop,
+    onRespondToApproval: async () => undefined,
+    onSelectActivePendingUserInputOption: noop,
+    onAdvanceActivePendingUserInput: noop,
+    onDismissActivePendingUserInput: noop,
+    onPreviousActivePendingUserInputQuestion: noop,
+    onChangeActivePendingUserInputCustomAnswer: noop,
+    onProviderModelSelect: noop,
+    onOpenProviderSetup: noop,
+    getModelDisabledReason: () => null,
+    toggleInteractionMode: noop,
+    handleRuntimeModeChange: noop,
+    handleInteractionModeChange: noop,
+    focusComposer: noop,
+    scheduleComposerFocus: noop,
+    setThreadError: noop,
+    onExpandImage: noop,
+    onFileOpen: noop,
+  };
+}

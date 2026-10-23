@@ -1182,7 +1182,7 @@ export interface LocalDispatchSnapshot {
   latestRunStartedAt: string | null;
   latestRunCompletedAt: string | null;
   runtimeStatus: NonNullable<Thread["runtime"]>["status"] | null;
-  runtimeUpdatedAt: string | null;
+  runtimeActiveRunId: RunId | null;
 }
 
 export function createLocalDispatchSnapshot(
@@ -1205,7 +1205,7 @@ export function createLocalDispatchSnapshot(
     latestRunStartedAt: latestRun?.startedAt ?? null,
     latestRunCompletedAt: latestRun?.completedAt ?? null,
     runtimeStatus: runtime?.status ?? null,
-    runtimeUpdatedAt: runtime?.updatedAt ?? null,
+    runtimeActiveRunId: runtime?.activeRunId ?? null,
   };
 }
 
@@ -1279,9 +1279,10 @@ export function hasServerAcknowledgedLocalDispatch(input: {
   }
 
   return (
+    latestUserMessageChanged ||
     latestRunChanged ||
     input.localDispatch.runtimeStatus !== (runtime?.status ?? null) ||
-    input.localDispatch.runtimeUpdatedAt !== (runtime?.updatedAt ?? null)
+    input.localDispatch.runtimeActiveRunId !== (runtime?.activeRunId ?? null)
   );
 }
 

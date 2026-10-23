@@ -67,7 +67,9 @@ export interface ThreadDetailsPanelProps extends Pick<
   onDeleteProjectScript: (scriptId: string) => Promise<ProjectScriptActionResult>;
 }
 
-export function ThreadDetailsPanel(props: ThreadDetailsPanelProps) {
+// ChatView re-renders on every streamed text chunk. Memoizing here keeps the details
+// panel out of that path: its props only change when thread metadata actually changes.
+export const ThreadDetailsPanel = memo(function ThreadDetailsPanel(props: ThreadDetailsPanelProps) {
   const fileScripts = useRoveProjectFileScripts(
     props.environmentId,
     props.activeProjectScripts ? props.gitCwd : null,
@@ -197,4 +199,4 @@ export function ThreadDetailsPanel(props: ThreadDetailsPanelProps) {
       )}
     </ThreadDetailsCard>
   );
-}
+});

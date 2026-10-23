@@ -10,6 +10,13 @@ import {
 import { useThreadFind } from "./useThreadFind";
 import { ThreadFindBar } from "./ThreadFindBar";
 import { ChatCanvas } from "./ChatCanvas";
+import type { ScopedThreadRef } from "@rove-code/contracts";
+import { useThreadProjection } from "../../state/entities";
+
+type FindOptions = Omit<Parameters<typeof useThreadFind>[0], "content"> & {
+  content?: Parameters<typeof useThreadFind>[0]["content"];
+  contentThreadRef?: ScopedThreadRef | null;
+};
 
 type Find = ReturnType<typeof useThreadFind>;
 export type ThreadFindControls = Pick<Find, "open" | "close">;
@@ -22,7 +29,7 @@ export function ThreadFindCanvas({
   onOpenChange,
   ...canvasProps
 }: ComponentProps<typeof ChatCanvas> & {
-  findOptions: Parameters<typeof useThreadFind>[0];
+  findOptions: FindOptions;
   controlsRef: Ref<ThreadFindControls>;
   onOpenChange: (open: boolean) => void;
 }) {
@@ -38,13 +45,24 @@ export function ThreadFindProvider({
   controlsRef,
   onOpenChange,
   children,
+  contentThreadRef,
   ...options
-}: Parameters<typeof useThreadFind>[0] & {
+}: FindOptions & {
   controlsRef: Ref<ThreadFindControls>;
   onOpenChange: (open: boolean) => void;
   children: ReactNode;
 }) {
-  const find = useThreadFind(options);
+  const connected = useThreadProjection(contentThreadRef ?? null);
+  const find = useThreadFind(
+    contentThreadRef === undefined
+      ? { ...options, content: options.content }
+      : {
+          ...options,
+          content: connected?.projection,
+          // A held paint from another thread is never searchable as this thread.
+          enabled: options.enabled && connected !== null,
+        },
+  );
   useImperativeHandle(controlsRef, () => ({ open: find.open, close: find.close }), [
     find.open,
     find.close,

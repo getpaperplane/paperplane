@@ -287,7 +287,21 @@ function planItemTime(projection: OrchestrationV2ThreadProjection, planId: PlanI
       (candidate.type === "proposed_plan" || candidate.type === "todo_list") &&
       candidate.planId === planId,
   );
-  return DateTime.formatIso(item?.updatedAt ?? projection.updatedAt);
+  // A paged detail can contain the artifact without its turn item. The
+  // projection clock advances on unrelated text, so fall back to its owning
+  // work's timestamps, never to the last transcript event.
+  const plan = projection.plans.find((candidate) => candidate.id === planId);
+  const node = projection.nodes.find((candidate) => candidate.id === plan?.nodeId);
+  const run = projection.runs.find((candidate) => candidate.id === plan?.runId);
+  return DateTime.formatIso(
+    item?.updatedAt ??
+      node?.completedAt ??
+      node?.startedAt ??
+      run?.completedAt ??
+      run?.startedAt ??
+      run?.requestedAt ??
+      projection.thread.createdAt,
+  );
 }
 
 function toLatestProposedPlanState(
@@ -1066,7 +1080,7 @@ export function deriveRevertTurnCountByUserMessageId(input: {
   return byUserMessageId;
 }
 
-export function derivePhase(runtime: ThreadRuntimeSummary | null): SessionPhase {
+export function derivePhase(runtime: Pick<ThreadRuntimeSummary, "status"> | null): SessionPhase {
   if (runtime === null) return "disconnected";
   if (
     runtime.status === "preparing" ||
@@ -1086,7 +1100,7 @@ export function derivePhase(runtime: ThreadRuntimeSummary | null): SessionPhase 
  */
 export function deriveCanInterruptRunningThread(
   hasActiveThread: boolean,
-  runtime: ThreadRuntimeSummary | null,
+  runtime: Pick<ThreadRuntimeSummary, "status" | "activeRunId"> | null,
 ): boolean {
   return (
     hasActiveThread &&

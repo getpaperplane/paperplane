@@ -32,6 +32,16 @@ export function resolvePendingHandoff(
     (run) => run.startedAt !== null && run.status !== "rolled_back",
   )?.modelSelection;
   if (from === undefined || selection == null) return null;
+  return resolvePendingHandoffFromModel(from, selection, providers);
+}
+
+/** Resolve a preview from semantic thread metadata, without retaining the transcript. */
+export function resolvePendingHandoffFromModel(
+  from: ModelSelection | null | undefined,
+  selection: ModelSelection | null | undefined,
+  providers: ReadonlyArray<ServerProvider>,
+) {
+  if (from == null || selection == null) return null;
   const source = providers.find((provider) => provider.instanceId === from.instanceId);
   const target = providers.find((provider) => provider.instanceId === selection.instanceId);
   const needsHandoff =

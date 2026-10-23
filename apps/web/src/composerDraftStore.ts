@@ -4138,7 +4138,11 @@ const composerDraftStore = create<ComposerDraftStoreState>()(
           }
           set((state) => {
             const current = state.draftsByThreadKey[threadKey];
-            if (!current) {
+            if (
+              !current ||
+              (current.persistedAttachments.length === 0 &&
+                current.nonPersistedImageIds.length === 0)
+            ) {
               return state;
             }
             const nextDraft: ComposerThreadDraftState = {

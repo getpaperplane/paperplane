@@ -2233,10 +2233,14 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
   const selectedProvider: ProviderDriverKind =
     selectedProviderEntry?.driverKind ?? requestedDriverKind;
   const supportedRuntimeModes = selectedProviderEntry?.snapshot.supportedRuntimeModes;
-  const compatibleRuntimeModeOptions =
-    supportedRuntimeModes && supportedRuntimeModes.length > 0
-      ? runtimeModeOptions.filter((option) => supportedRuntimeModes.includes(option.mode))
-      : runtimeModeOptions;
+  // Memoized so the footer menus keep their identity across keystrokes.
+  const compatibleRuntimeModeOptions = useMemo(
+    () =>
+      supportedRuntimeModes && supportedRuntimeModes.length > 0
+        ? runtimeModeOptions.filter((option) => supportedRuntimeModes.includes(option.mode))
+        : runtimeModeOptions,
+    [supportedRuntimeModes],
+  );
   // Older threads can contain a mode their current provider no longer offers.
   // Display the provider's first supported mode, which is also its safe legacy
   // fallback, without mutating persisted state until the user makes a choice.
@@ -2492,6 +2496,10 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
   const [isDragOverComposer, setIsDragOverComposer] = useState(false);
   const [isComposerFooterCompact, setIsComposerFooterCompact] = useState(false);
   const [isComposerPrimaryActionsCompact, setIsComposerPrimaryActionsCompact] = useState(false);
+  // Mirrors the two compactness states. Setting an unchanged value from the
+  // layout effect still queues a sync update that a later passive-effect render
+  // skips, forcing an extra composer render on every thread switch.
+  const footerCompactnessRef = useRef({ footerCompact: false, primaryActionsCompact: false });
   const [isComposerModelPickerOpen, setIsComposerModelPickerOpen] = useState(false);
   const isMobileViewport = useMediaQuery("max-sm");
   const {
@@ -3642,20 +3650,19 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
       };
     };
 
-    const initialCompactness = measureFooterCompactness();
-    setIsComposerPrimaryActionsCompact(initialCompactness.primaryActionsCompact);
-    setIsComposerFooterCompact(initialCompactness.footerCompact);
-    return observeResize(composerForm, () => {
-      const nextCompactness = measureFooterCompactness();
-      setIsComposerPrimaryActionsCompact((previous) =>
-        previous === nextCompactness.primaryActionsCompact
-          ? previous
-          : nextCompactness.primaryActionsCompact,
-      );
-      setIsComposerFooterCompact((previous) =>
-        previous === nextCompactness.footerCompact ? previous : nextCompactness.footerCompact,
-      );
-    });
+    const applyFooterCompactness = (next: ReturnType<typeof measureFooterCompactness>) => {
+      const current = footerCompactnessRef.current;
+      if (current.primaryActionsCompact !== next.primaryActionsCompact) {
+        setIsComposerPrimaryActionsCompact(next.primaryActionsCompact);
+      }
+      if (current.footerCompact !== next.footerCompact) {
+        setIsComposerFooterCompact(next.footerCompact);
+      }
+      footerCompactnessRef.current = next;
+    };
+
+    applyFooterCompactness(measureFooterCompactness());
+    return observeResize(composerForm, () => applyFooterCompactness(measureFooterCompactness()));
   }, [
     activeThreadId,
     composerFooterActionLayoutKey,
@@ -5403,6 +5410,42 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
   const hiddenRestingBlockIds = restingBlockDefs
     .slice(restingBlockDefs.length - restingHiddenBlockCount)
     .map((def) => def.id);
+  // Stable identities keep ProviderModelPicker from re-rendering on each
+  // keystroke. Both read the latest selection and props when they are called.
+  const handleInstanceModelChange = useStableCallback(
+    (instanceId: ProviderInstanceId, model: string) => {
+      setMultipleModelSelections(null);
+      onProviderModelSelect(instanceId, model);
+    },
+  );
+  const handleToggleModel = useStableCallback((instanceId: ProviderInstanceId, model: string) => {
+    const current = multipleModelSelections ?? [selectedModelSelection];
+    const matchesModel = (selection: ModelSelection) => {
+      if (selection.instanceId !== instanceId) return false;
+      const entry = providerInstanceEntries.find(
+        (entry) => entry.instanceId === selection.instanceId,
+      );
+      const resolvedModel = resolveModelPickerSelectedModel({
+        driverKind: entry?.driverKind,
+        model: selection.model,
+        options: modelOptionsByInstance.get(selection.instanceId) ?? [],
+      });
+      return (resolvedModel?.slug ?? selection.model) === model;
+    };
+    const exists = current.some(matchesModel);
+    const next = exists
+      ? current.filter((selection) => !matchesModel(selection))
+      : [...current, createModelSelection(instanceId, model)];
+    if (next.length > 1) {
+      setMultipleModelSelections(next);
+    } else {
+      setMultipleModelSelections(null);
+      const remaining = next[0] ?? selectedModelSelection;
+      onProviderModelSelect(remaining.instanceId, remaining.model, {
+        focusComposer: false,
+      });
+    }
+  });
   const composerControls = showProviderUnavailable ? (
     <ComposerControl
       type="button"
@@ -5439,34 +5482,7 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
               ...(multipleModelSelections !== null
                 ? { selectedModels: multipleModelSelections }
                 : {}),
-              onToggleModel: (instanceId: ProviderInstanceId, model: string) => {
-                const current = multipleModelSelections ?? [selectedModelSelection];
-                const matchesModel = (selection: ModelSelection) => {
-                  if (selection.instanceId !== instanceId) return false;
-                  const entry = providerInstanceEntries.find(
-                    (entry) => entry.instanceId === selection.instanceId,
-                  );
-                  const resolvedModel = resolveModelPickerSelectedModel({
-                    driverKind: entry?.driverKind,
-                    model: selection.model,
-                    options: modelOptionsByInstance.get(selection.instanceId) ?? [],
-                  });
-                  return (resolvedModel?.slug ?? selection.model) === model;
-                };
-                const exists = current.some(matchesModel);
-                const next = exists
-                  ? current.filter((selection) => !matchesModel(selection))
-                  : [...current, createModelSelection(instanceId, model)];
-                if (next.length > 1) {
-                  setMultipleModelSelections(next);
-                } else {
-                  setMultipleModelSelections(null);
-                  const remaining = next[0] ?? selectedModelSelection;
-                  onProviderModelSelect(remaining.instanceId, remaining.model, {
-                    focusComposer: false,
-                  });
-                }
-              },
+              onToggleModel: handleToggleModel,
             }
           : {})}
         activeInstanceId={
@@ -5513,10 +5529,7 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
           : {})}
         onOpenChange={setIsComposerModelPickerOpen}
         getModelDisabledReason={getModelDisabledReason}
-        onInstanceModelChange={(instanceId, model) => {
-          setMultipleModelSelections(null);
-          onProviderModelSelect(instanceId, model);
-        }}
+        onInstanceModelChange={handleInstanceModelChange}
         onOpenProviderSetup={onOpenProviderSetup}
       />
 

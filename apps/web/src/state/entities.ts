@@ -161,6 +161,17 @@ export function useThreadVisibleTurnItems(
   );
 }
 
+/** Read current detail for an action without subscribing its owner to text deltas. */
+export function readThreadProjection(ref: ScopedThreadRef | null): EnvironmentThread | null {
+  return ref === null ? null : appAtomRegistry.get(environmentThreadDetails.threadAtom(ref));
+}
+
+export function readThreadVisibleTurnItems(ref: ScopedThreadRef | null) {
+  return ref === null
+    ? EMPTY_VISIBLE_TURN_ITEMS
+    : appAtomRegistry.get(environmentThreadDetails.visibleTurnItemsAtom(ref));
+}
+
 export function readProject(ref: ScopedProjectRef): EnvironmentProject | null {
   return appAtomRegistry.get(environmentProjects.projectAtom(ref));
 }
