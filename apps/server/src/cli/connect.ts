@@ -710,8 +710,8 @@ export const connectCommand = Command.make("connect", {
           const platform = yield* HostProcess.Platform;
           yield* Console.log(
             platform === "darwin"
-              ? "\n✓ Background service ready\n\nRove Code is set to run while you are logged in to this Mac. The server establishes the Paperplane Connect link on startup."
-              : "\n✓ Background service ready\n\nRove Code is set to keep running after you log out. The server establishes the Paperplane Connect link on startup.",
+              ? "\n✓ Background service ready\n\nPaperplane is set to run while you are logged in to this Mac. The server establishes the Paperplane Connect link on startup."
+              : "\n✓ Background service ready\n\nPaperplane is set to keep running after you log out. The server establishes the Paperplane Connect link on startup.",
           );
           return;
         }

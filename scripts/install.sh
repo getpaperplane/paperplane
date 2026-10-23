@@ -40,7 +40,7 @@ step() {
   else printf '  %s\n' "$1" >&2; fi
 }
 if "$interactive"; then
-  printf '\n  %sRove Code%s %sCLI installer%s\n\n' "$bold" "$reset" "$muted" "$reset" >&2
+  printf '\n  %sPaperplane%s %sCLI installer%s\n\n' "$bold" "$reset" "$muted" "$reset" >&2
 fi
 step "Finding your release..."
 
