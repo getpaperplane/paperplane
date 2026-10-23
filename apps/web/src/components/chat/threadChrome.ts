@@ -33,7 +33,7 @@ import { hasDismissedResumeCompaction } from "./ContextWindowMeter.logic";
 
 /** Only finished, semantic outputs belong here. Never retain a text-bearing
  * projection or compare the raw transcript to suppress notifications. */
-export function deriveThreadChrome(
+function deriveThreadChrome(
   projection: OrchestrationV2ThreadProjection | null,
   visible: OrchestrationV2ThreadProjection["visibleTurnItems"],
 ) {
@@ -168,7 +168,7 @@ export function deriveThreadChrome(
 }
 
 /** Equality happens inside the atom, before React subscribers are notified. */
-export function createThreadChromeAtom(
+function createThreadChromeAtom(
   projectionAtom: Atom.Atom<OrchestrationV2ThreadProjection | null>,
   visibleItemsAtom: Atom.Atom<OrchestrationV2ThreadProjection["visibleTurnItems"]>,
 ) {
