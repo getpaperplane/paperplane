@@ -70,7 +70,7 @@ describe("headless Pi extensions", () => {
   };
   const log = () => NodeFS.readFileSync(NodePath.join(cwd, "extension.log"), "utf8");
 
-  it("installs thread-authorized Rove tools even with user extensions disabled", async () => {
+  it("installs thread-authorized Paperplane tools even with user extensions disabled", async () => {
     const threadId = ThreadId.make("pi-rove-tools");
     const config = {
       threadId,
@@ -134,7 +134,7 @@ describe("headless Pi extensions", () => {
     expect(dispose).toHaveBeenCalledOnce();
   });
 
-  it("creates tool-free in-memory metadata sessions with Rove runtime instructions", async () => {
+  it("creates tool-free in-memory metadata sessions with Paperplane runtime instructions", async () => {
     const createSdkSession = vi.spyOn(PiSdk, "createAgentSessionFromServices").mockClear();
     const session = await createPiSession(
       { cwd, model: undefined, thinkingLevel: undefined, resumeSessionId: undefined },
@@ -148,7 +148,7 @@ describe("headless Pi extensions", () => {
     expect(sdkSession.getActiveToolNames()).toEqual([]);
     // Pi 0.87 replays the prompt from the transcript; the session getter is the
     // effective prompt, including changes not yet sent to the model.
-    expect(sdkSession.systemPrompt).toContain("running in Rove Code through the Pi harness");
+    expect(sdkSession.systemPrompt).toContain("running in Paperplane through the Pi harness");
     expect(sdkSession.systemPrompt).toContain("link_pull_request");
     expect(NodeFS.existsSync(NodePath.join(cwd, "extension.log"))).toBe(false);
   });
@@ -948,7 +948,7 @@ describe("headless Pi extensions", () => {
     expect(session.hasPendingUserInput).toBe(false);
   });
 
-  it("still disposes the SDK and Rove tools when an extension shutdown hook never resolves", async () => {
+  it("still disposes the SDK and Paperplane tools when an extension shutdown hook never resolves", async () => {
     NodeFS.writeFileSync(
       NodePath.join(cwd, ".pi", "extensions", "stuck-shutdown.ts"),
       `
@@ -1081,7 +1081,7 @@ export default function (pi) {
   pi.on("before_agent_start", (event, ctx) => {
     NodeFS.appendFileSync(
       NodePath.join(ctx.cwd, "disabled-note-probe.log"),
-      event.systemPrompt.includes("Rove Code disables") ? "note:present" : "note:absent",
+      event.systemPrompt.includes("Paperplane disables") ? "note:present" : "note:absent",
     );
   });
 }`,
@@ -1103,7 +1103,7 @@ export default function (pi) {
     assert.isFalse(NodeFS.existsSync(NodePath.join(cwd, "extension.log")));
 
     // A session keeping the fixture but blocking another extension still
-    // tells the model, in its system prompt, which extension Rove removed.
+    // tells the model, in its system prompt, which extension Paperplane removed.
     const noteSession = await createPiSession({
       cwd,
       model: "rove-extension-test/fixture",
@@ -1232,7 +1232,7 @@ export default function (pi) {
     );
   });
 
-  it("rejects extension session replacement without changing Rove's session identity", async () => {
+  it("rejects extension session replacement without changing Paperplane's session identity", async () => {
     const session = await create();
     const sessionId = session.sessionId;
     const events: PiSessionEventLike[] = [];
@@ -1242,7 +1242,7 @@ export default function (pi) {
     assert.isTrue(
       events.some(
         (event) =>
-          event.type === "extension_error" && String(event.error).includes("not supported in Rove"),
+          event.type === "extension_error" && String(event.error).includes("not supported in Paperplane"),
       ),
     );
     assert.strictEqual(events.at(-1)?.type, "agent_settled");

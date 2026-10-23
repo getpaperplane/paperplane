@@ -34,7 +34,7 @@ describe("runMigrations", () => {
     }).pipe(Effect.provide(NodeSqliteClient.layer({ filename: ":memory:" }))),
   );
 
-  it.effect("reconciles copied Rove V1 migration ids without re-running removed features", () =>
+  it.effect("reconciles copied Paperplane V1 migration ids without re-running removed features", () =>
     Effect.gen(function* () {
       const sql = yield* SqlClient.SqlClient;
       yield* runMigrations({ toMigrationInclusive: 54 });
@@ -46,7 +46,7 @@ describe("runMigrations", () => {
       `;
       const legacyHistory = yield* history;
 
-      // Legacy-only callers must not rewrite the recorded Rove history.
+      // Legacy-only callers must not rewrite the recorded Paperplane history.
       assert.deepStrictEqual(yield* runMigrations({ toMigrationInclusive: 54 }), []);
       assert.deepStrictEqual(yield* history, legacyHistory);
       assert.deepStrictEqual(yield* runMigrations(), v2Migrations);
@@ -56,7 +56,7 @@ describe("runMigrations", () => {
     }).pipe(Effect.provide(NodeSqliteClient.layer({ filename: ":memory:" }))),
   );
 
-  it.effect("keeps Rove history intact when an unrelated migration still blocks V2", () =>
+  it.effect("keeps Paperplane history intact when an unrelated migration still blocks V2", () =>
     Effect.gen(function* () {
       const sql = yield* SqlClient.SqlClient;
       yield* runMigrations({ toMigrationInclusive: 54 });

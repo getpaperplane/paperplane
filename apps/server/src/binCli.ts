@@ -34,7 +34,7 @@ import { triageCommand } from "./cli/triage.ts";
 const layerCliRuntime = Layer.mergeAll(NodeServices.layer, NetService.layer);
 
 const connectPublicConfigMissingMessage =
-  "Rove Connect commands are unavailable: this build is missing Rove Connect public configuration.";
+  "Paperplane Connect commands are unavailable: this build is missing Paperplane Connect public configuration.";
 
 class ConnectPublicConfigMissingError extends CliError.UserError {
   override get message() {
@@ -45,7 +45,7 @@ class ConnectPublicConfigMissingError extends CliError.UserError {
 const connectUnavailableCommand = Command.make("connect", {
   command: Argument.String("command").pipe(Argument.variadic),
 }).pipe(
-  Command.withDescription("Rove Connect is unavailable in builds without public configuration."),
+  Command.withDescription("Paperplane Connect is unavailable in builds without public configuration."),
   Command.unlisted,
   Command.withHandler(() =>
     Effect.fail(
@@ -64,7 +64,7 @@ const cloudReady =
 
 export const makeCli = ({ cloudEnabled = cloudReady && hasCloudPublicConfig } = {}) =>
   Command.make("rove", { ...sharedServerCommandFlags }).pipe(
-    Command.withDescription("Run the Rove Code server."),
+    Command.withDescription("Run the Paperplane server."),
     Command.withHandler(runDefaultServerCommand),
     Command.withSubcommands([
       Command.make("help").pipe(

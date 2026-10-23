@@ -1,5 +1,5 @@
 /**
- * The Rove Connect link lifecycle of this environment: linking it to the relay,
+ * The Paperplane Connect link lifecycle of this environment: linking it to the relay,
  * applying and reading the link, unlinking, answering the relay's signed health
  * and mint requests, and keeping the managed tunnel registered, recovered and
  * released. HTTP handlers, server startup and shutdown all go through it.
@@ -180,7 +180,7 @@ export class CloudLinkNotLinkedError extends Schema.TaggedError<CloudLinkNotLink
   {},
 ) {
   override get message(): string {
-    return "Link this environment to Rove Connect first.";
+    return "Link this environment to Paperplane Connect first.";
   }
 }
 
@@ -260,14 +260,14 @@ const INTERNAL_OPERATION_MESSAGES = {
   "persist-relay-config": "Could not persist environment relay configuration.",
   "register-endpoint-origin": "Could not register the managed endpoint origin.",
   "resolve-server-origin": "Could not resolve the local server origin.",
-  "persist-desired-link": "Could not persist desired Rove Connect link state.",
+  "persist-desired-link": "Could not persist desired Paperplane Connect link state.",
   "sign-recovery-proof": "Could not sign the managed tunnel recovery request.",
   "unsupported-recovered-tunnel":
-    "Rove Connect returned an unsupported managed tunnel configuration.",
+    "Paperplane Connect returned an unsupported managed tunnel configuration.",
   "persist-recovered-tunnel": "Could not persist the recovered managed tunnel configuration.",
   "read-relay-config": "Could not read environment relay configuration.",
   "remove-relay-config": "Could not remove environment relay configuration.",
-  "update-webhook-settings": "Could not update Rove Connect webhook settings.",
+  "update-webhook-settings": "Could not update Paperplane Connect webhook settings.",
   "read-preferences": "Could not read environment cloud preferences.",
   "persist-preferences": "Could not persist environment cloud preferences.",
   "answer-health": "Could not answer cloud health request.",
@@ -316,7 +316,7 @@ export const shouldRetryCloudLink = (error: unknown): boolean =>
 
 /** A failed rollback leaves a setting changed; it is logged, not hidden. */
 const rollbackFailed = (cause: unknown) =>
-  Effect.logWarning("Could not roll back a Rove Connect preference", { cause });
+  Effect.logWarning("Could not roll back a Paperplane Connect preference", { cause });
 
 const requireRelayUrl = relayUrlConfig.pipe(
   Effect.mapError(
@@ -432,7 +432,7 @@ type CloudLinkBackgroundError =
   | PlatformError.PlatformError;
 
 // "revoked" means the relay rejected this environment's credential, as after
-// the environment is deregistered from Rove Connect.
+// the environment is deregistered from Paperplane Connect.
 type ManagedTunnelRegistration =
   | { readonly status: "not_linked" | "superseded" | "revoked" }
   | { readonly status: "recovery_required"; readonly config: RelayManagedEndpointRuntimeConfig }
@@ -476,7 +476,7 @@ export class CloudLink extends Context.Service<
     /** Stops the tunnel and forgets the link, including the CLI's wish to keep it. */
     readonly unlink: () => Effect.Effect<EnvironmentCloudRelayConfigResult, CloudLinkInternalError>;
     /**
-     * Saves this environment's Rove Connect preferences, all or nothing, and
+     * Saves this environment's Paperplane Connect preferences, all or nothing, and
      * returns the link state. The activity setting is saved first. Holding
      * webhooks while offline is decided by the relay, so the relay is told
      * before the local copy is saved. If either step fails, the activity
@@ -1036,7 +1036,7 @@ const make = Effect.gen(function* () {
           return false;
         }
         yield* Effect.logWarning(
-          "Rove Connect no longer accepts this environment's link. Link it again to restore remote access.",
+          "Paperplane Connect no longer accepts this environment's link. Link it again to restore remote access.",
           { cause },
         );
         yield* secrets.set(CLOUD_LINK_REVOKED, stringToBytes("true"));
@@ -1680,7 +1680,7 @@ const make = Effect.gen(function* () {
         scopes: AuthStandardClientScopes,
         subject: "cloud-connect",
         ttl: Duration.minutes(2),
-        label: "Rove Connect connect",
+        label: "Paperplane Connect connect",
         proofKeyThumbprint: proof.clientProofKeyThumbprint,
       });
       const responsePayload = {

@@ -93,7 +93,7 @@ export interface ProviderInstance {
     cwd: string,
   ) => Effect.Effect<ProviderWorkspaceSnapshot, ProviderDriverError>;
   readonly refreshModels?: () => Effect.Effect<void, ProviderDriverError>;
-  /** Invalidate Rove-owned discovery caches before an explicit provider refresh. */
+  /** Invalidate Paperplane-owned discovery caches before an explicit provider refresh. */
   readonly invalidateCaches?: Effect.Effect<void>;
   /**
    * Redeem one banked rate-limit reset credit on the signed-in account, then
@@ -104,7 +104,7 @@ export interface ProviderInstance {
     ProviderConsumeResetCreditOutcome,
     ProviderDriverError
   >;
-  /** Rove's in-process Pi resource catalog; never the upstream RPC runtime. */
+  /** Paperplane's in-process Pi resource catalog; never the upstream RPC runtime. */
   readonly piCatalog?: {
     readonly getCatalog: () => Effect.Effect<PiCatalogSnapshot, PiCatalogError>;
     readonly refreshCatalog: () => Effect.Effect<PiCatalogSnapshot, PiCatalogError>;

@@ -53,7 +53,7 @@ export class SqliteStateDatabaseMissingError extends Schema.TaggedError<SqliteSt
   },
 ) {
   override get message(): string {
-    return `Database does not exist at '${this.databasePath}'. Start Rove Code once to run migrations.`;
+    return `Database does not exist at '${this.databasePath}'. Start Paperplane once to run migrations.`;
   }
 }
 
@@ -124,7 +124,7 @@ export interface RunSqliteStateInput {
 }
 
 export interface RunSqliteStateOptions {
-  /** Live home `exec` refuses to touch. Defaults to the Rove Code home, `~/.rove-code`. */
+  /** Live home `exec` refuses to touch. Defaults to the Paperplane home, `~/.rove-code`. */
   readonly sharedHome?: string | undefined;
 }
 
@@ -256,7 +256,7 @@ const roveSqliteStateCommand = Command.make(
       Argument.withDescription("Run a read-only query or a backed-up fixture mutation."),
     ),
     baseDir: Flag.String("base-dir").pipe(
-      Flag.withDescription("Explicit Rove Code base directory containing userdata/statev2.sqlite."),
+      Flag.withDescription("Explicit Paperplane base directory containing userdata/statev2.sqlite."),
     ),
     sql: Flag.String("sql").pipe(
       Flag.optional,
@@ -276,7 +276,7 @@ const roveSqliteStateCommand = Command.make(
     }).pipe(Effect.flatMap(encodeSqliteStateResult), Effect.flatMap(Console.log)),
 ).pipe(
   Command.withDescription(
-    "Inspect or seed an isolated Rove Code SQLite database with automatic backups for writes.",
+    "Inspect or seed an isolated Paperplane SQLite database with automatic backups for writes.",
   ),
 );
 

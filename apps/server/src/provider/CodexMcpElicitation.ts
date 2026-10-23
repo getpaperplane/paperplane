@@ -171,7 +171,7 @@ export function describeMcpElicitation(
   };
 }
 
-/** Converts a Rove approval decision into the MCP elicitation wire response. */
+/** Converts a Paperplane approval decision into the MCP elicitation wire response. */
 export function toMcpElicitationResponse(
   payload: EffectCodexSchema.McpServerElicitationRequestParams,
   decision: ProviderApprovalDecision,

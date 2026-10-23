@@ -277,7 +277,7 @@ try {
   );
   assertContains(
     nightlyReleaseMetadata,
-    "name=Rove Code Nightly 9.9.10-nightly.20260413.321 (abcdef123456)",
+    "name=Paperplane Nightly 9.9.10-nightly.20260413.321 (abcdef123456)",
     "Expected nightly metadata to include the short commit SHA in the release name.",
   );
 

@@ -2,7 +2,7 @@
 /**
  * Worktree setup, run by the rove.json "Setup Worktree" action as
  * `node scripts/setup-worktree.ts`. Plain Node keeps one command working in
- * every shell Rove Code spawns (zsh, bash, fish, PowerShell): it installs
+ * every shell Paperplane spawns (zsh, bash, fish, PowerShell): it installs
  * dependencies, links the main checkout's gitignored env files into this
  * worktree, then warms the web dependency cache.
  */

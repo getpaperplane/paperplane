@@ -87,7 +87,7 @@ it("retrying accepted Boat deletion polls the saved receipt rather than re-delet
   expect(transport.mock.calls[0]?.[1]?.method).toBe("GET");
 });
 
-it("Boat hosting is public at the proxy but remains protected by Rove authentication", async () => {
+it("Boat hosting is public at the proxy but remains protected by Paperplane authentication", async () => {
   const transport = vi
     .fn<typeof fetch>()
     .mockImplementation(async (url) =>
@@ -113,7 +113,7 @@ it("bootstrap failures explain which stage failed without forwarding command out
       ),
     );
   const result = makeBoatDriver({ token: "key", tokenId: "" }, transport).exec(handle, "start");
-  await expect(result).rejects.toThrow("Could not install Rove in the sandbox.");
+  await expect(result).rejects.toThrow("Could not install Paperplane in the sandbox.");
   await expect(result).rejects.not.toThrow("secret-output");
 });
 

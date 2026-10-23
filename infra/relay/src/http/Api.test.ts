@@ -378,7 +378,7 @@ const linkedEnvironmentRecord = {
 } as const;
 
 describe("relay managed tunnel recovery", () => {
-  it.effect("binds recovery requests to the host, cloud user, and Rove service origin", () =>
+  it.effect("binds recovery requests to the host, cloud user, and Paperplane service origin", () =>
     Effect.gen(function* () {
       const keyPair = NodeCrypto.generateKeyPairSync("ed25519", {
         privateKeyEncoding: { format: "pem", type: "pkcs8" },

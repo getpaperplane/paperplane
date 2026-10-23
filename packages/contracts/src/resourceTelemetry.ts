@@ -6,7 +6,7 @@ import { DesktopUpdateStateSchema } from "./ipc.ts";
 
 export const RESOURCE_MONITOR_PROTOCOL_VERSION = 3 as const;
 
-/** Whole-host capacity, independent of Rove's process diagnostics. */
+/** Whole-host capacity, independent of Paperplane's process diagnostics. */
 export const HostResourcesSnapshot = Schema.Struct({
   sampledAt: NonNegativeInt,
   cpuUtilization: Schema.NullOr(Schema.Number.check(Schema.isBetween({ minimum: 0, maximum: 1 }))),
@@ -25,7 +25,7 @@ export const HostHealthFinding = Schema.Struct({
 });
 export type HostHealthFinding = typeof HostHealthFinding.Type;
 
-/** Usage of the shared cgroup ceiling all Rove-spawned work runs under (Linux user systemd). */
+/** Usage of the shared cgroup ceiling all Paperplane-spawned work runs under (Linux user systemd). */
 export const RoveMemoryUsage = Schema.Struct({
   /** Null when the ceiling is unlimited. */
   limitBytes: Schema.NullOr(NonNegativeInt),
@@ -46,7 +46,7 @@ export const HostHealthReport = Schema.Struct({
   swapTotalBytes: Schema.NullOr(NonNegativeInt),
   swapFreeBytes: Schema.NullOr(NonNegativeInt),
   memoryPressure: Schema.Boolean,
-  /** Null when Rove's memory ceiling does not exist on this host. */
+  /** Null when Paperplane's memory ceiling does not exist on this host. */
   roveMemory: Schema.NullOr(RoveMemoryUsage),
   findings: Schema.Array(HostHealthFinding),
 });

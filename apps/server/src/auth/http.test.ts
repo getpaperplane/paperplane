@@ -162,7 +162,7 @@ it.effect("sets the selected browser session cookies through the HTTP route", ()
   }).pipe(Effect.provide(NodeServices.layer)),
 );
 
-it.effect("exports only verified Rove Connect requests", () =>
+it.effect("exports only verified Paperplane Connect requests", () =>
   Effect.gen(function* () {
     const productSpans: Array<string> = [];
     const localSpans: Array<string> = [];
@@ -173,7 +173,7 @@ it.effect("exports only verified Rove Connect requests", () =>
           return new Tracer.NativeSpan(options);
         },
       });
-    // "DPoP connect" is a Rove Connect session; any other DPoP token is rejected.
+    // "DPoP connect" is a Paperplane Connect session; any other DPoP token is rejected.
     const environmentAuth = {
       authenticateHttpRequest: (request: HttpServerRequest.HttpServerRequest) =>
         (request.headers.authorization === "DPoP forged"

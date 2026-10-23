@@ -11,7 +11,7 @@ class SystemdSliceError extends Schema.TaggedError<SystemdSliceError>()("Systemd
   exitCode: Schema.NullOr(Schema.Number),
 }) {
   override get message() {
-    return "Could not configure Rove's systemd slice.";
+    return "Could not configure Paperplane's systemd slice.";
   }
 }
 
@@ -100,7 +100,7 @@ export const configureSlice = Effect.fn("configureSlice")(function* (
     memoryCurrent: usage.trim() === "" ? Infinity : Number(usage),
   });
   if (next.deferred)
-    yield* Effect.logWarning("Rove slice memory ceiling reduction deferred until usage falls", {
+    yield* Effect.logWarning("Paperplane slice memory ceiling reduction deferred until usage falls", {
       unit,
       requestedMax: requested.max,
       retainedMax: next.max,

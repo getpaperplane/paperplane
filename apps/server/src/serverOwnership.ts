@@ -30,7 +30,7 @@ export class ServerAlreadyRunningError extends Schema.TaggedError<ServerAlreadyR
   override readonly [Runtime.errorExitCode] = SERVER_EXIT_CODE_STATE_DIR_OWNED;
 
   override get message(): string {
-    return `A Rove Code server already owns ${this.stateDir}. Stop that server, or use a separate Rove home and pair with it, then retry. No server was stopped.`;
+    return `A Paperplane server already owns ${this.stateDir}. Stop that server, or use a separate Paperplane home and pair with it, then retry. No server was stopped.`;
   }
 }
 

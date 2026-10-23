@@ -145,9 +145,9 @@ process.stdin.on('end', () => {
 `);
 
 /**
- * Names the sandbox's Rove environment after the sandbox: Rove on Linux labels
+ * Names the sandbox's Paperplane environment after the sandbox: Paperplane on Linux labels
  * itself from PRETTY_HOSTNAME, otherwise every sandbox shows its vendor hostname.
- * Read at startup, so run it before Rove starts. Best effort; needs root.
+ * Read at startup, so run it before Paperplane starts. Best effort; needs root.
  */
 export const sandboxLabelCommand = (label: string) =>
   `printf 'PRETTY_HOSTNAME=%s\\n' ${quote(label.replace(/[\r\n]+/g, " "))} > /etc/machine-info 2>/dev/null || true`;
@@ -158,13 +158,13 @@ export const sandboxPairCommand = `${WRAPPER} auth pairing create --base-dir "$H
 export function sandboxCommandFailure(exitCode: number): string | undefined {
   switch (exitCode) {
     case SANDBOX_INSTALL_FAILED:
-      return "Could not install Rove in the sandbox. Check its network access, then resume to retry. The install log is at ~/.rove-sandbox/install.log in the sandbox.";
+      return "Could not install Paperplane in the sandbox. Check its network access, then resume to retry. The install log is at ~/.rove-sandbox/install.log in the sandbox.";
     case SANDBOX_UNOWNED_SERVER:
-      return "Another Rove server is using the sandbox's port without a matching process record. Stop it from the vendor dashboard, then resume.";
+      return "Another Paperplane server is using the sandbox's port without a matching process record. Stop it from the vendor dashboard, then resume.";
     case SANDBOX_NOT_READY:
-      return "Rove started in the sandbox but did not become ready. Resume to retry. The server log is at ~/.rove-sandbox/server.log in the sandbox.";
+      return "Paperplane started in the sandbox but did not become ready. Resume to retry. The server log is at ~/.rove-sandbox/server.log in the sandbox.";
     case SANDBOX_STILL_RUNNING:
-      return "Rove is still shutting down in the sandbox. Pause was refused to protect its data; try again shortly.";
+      return "Paperplane is still shutting down in the sandbox. Pause was refused to protect its data; try again shortly.";
     case SANDBOX_CREDENTIALS_FAILED:
       return "Could not save the forwarded sign-ins in the sandbox. Try forwarding them again.";
     case SANDBOX_TOOLS_FAILED:

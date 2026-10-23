@@ -77,7 +77,7 @@ const state: RelayAgentActivityState = {
 };
 
 const aggregate: RelayAgentActivityAggregateState = {
-  title: "Rove Code",
+  title: "Paperplane",
   subtitle: "Agent work in progress",
   activeCount: 1,
   updatedAt: state.updatedAt,

@@ -244,7 +244,7 @@ describe("OtelEnvironment", () => {
         warnings: [],
       },
       {
-        name: "an exporter Rove Code does not have is ignored with a warning",
+        name: "an exporter Paperplane does not have is ignored with a warning",
         env: {
           OTEL_EXPORTER_OTLP_ENDPOINT: "https://collector:4318",
           OTEL_METRICS_EXPORTER: "prometheus",
@@ -253,7 +253,7 @@ describe("OtelEnvironment", () => {
         metrics: "https://collector:4318/v1/metrics",
         logs: "https://collector:4318/v1/logs",
         warnings: [
-          "OTEL_METRICS_EXPORTER names prometheus, which Rove Code does not export to, so it was ignored",
+          "OTEL_METRICS_EXPORTER names prometheus, which Paperplane does not export to, so it was ignored",
         ],
       },
       {
@@ -267,8 +267,8 @@ describe("OtelEnvironment", () => {
         metrics: "https://collector:4318/v1/metrics",
         logs: "https://collector:4318/v1/logs",
         warnings: [
-          "OTEL_TRACES_EXPORTER names console, which Rove Code does not export to, so it was ignored",
-          "OTEL_LOGS_EXPORTER names console, otlpp, which Rove Code does not export to, so they were ignored",
+          "OTEL_TRACES_EXPORTER names console, which Paperplane does not export to, so it was ignored",
+          "OTEL_LOGS_EXPORTER names console, otlpp, which Paperplane does not export to, so they were ignored",
         ],
       },
     ])("$name", ({ env, traces, metrics, logs, warnings }) =>

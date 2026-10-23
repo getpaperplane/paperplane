@@ -19,7 +19,7 @@ import type { GitHubAccountSelection, ServerSettings } from "@rove-code/contract
 
 import * as GitHubClient from "../client/definition.ts";
 
-/** Rove: the acting project's account, independent of gh's active login. */
+/** Paperplane: the acting project's account, independent of gh's active login. */
 export const SelectedGitHubAccount = Context.Reference<GitHubAccountSelection | null>(
   "@rove-code/source-control-github/SelectedGitHubAccount",
   { defaultValue: () => null },
@@ -236,7 +236,7 @@ export const make = Effect.gen(function* () {
 
   const lookup = Effect.fn("GitHubCredentials.lookup")(function* (key: string) {
     const [host = key, choice, selected] = key.split("\u0000");
-    // Rove's project selection historically used `gh auth token --user`, which reads that
+    // Paperplane's project selection historically used `gh auth token --user`, which reads that
     // login's stored token rather than GH_TOKEN. Keep that explicit selection above the env;
     // a host-level preference alone still follows gh's usual environment precedence.
     const fromEnv = selected === "selected" ? null : environmentToken(host, environment);

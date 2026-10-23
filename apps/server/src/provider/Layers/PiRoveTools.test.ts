@@ -92,7 +92,7 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe("Pi's built-in Rove tools", () => {
+describe("Pi's built-in Paperplane tools", () => {
   it("does nothing without a thread credential", async () => {
     const fetch = vi.fn();
     vi.stubGlobal("fetch", fetch);

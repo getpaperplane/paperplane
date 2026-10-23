@@ -188,7 +188,7 @@ export const makeOpenCodeTextGeneration = Effect.fn("makeOpenCodeTextGeneration"
         const session = yield* Effect.tryPromise({
           try: () =>
             client.session.create({
-              title: `Rove Code ${input.operation}`,
+              title: `Paperplane ${input.operation}`,
               permission: [{ permission: "*", pattern: "*", action: "deny" }],
             }),
           catch: (cause) =>

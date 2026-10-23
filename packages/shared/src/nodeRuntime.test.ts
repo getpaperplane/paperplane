@@ -55,7 +55,7 @@ describe("Node runtime selection", () => {
     }).pipe(Effect.provide(NodeServices.layer)),
   );
 
-  it.effect("uses installed Node instead of the standalone Rove executable", () =>
+  it.effect("uses installed Node instead of the standalone Paperplane executable", () =>
     Effect.gen(function* () {
       const path = yield* Path.Path;
       expect(

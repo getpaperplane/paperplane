@@ -19,7 +19,7 @@ import {
 /**
  * The steer goes out as `delivery: "steer"` into the running turn, which the
  * shell call's step boundary delivers: one provider turn answers both, and it
- * ends with its execution. Rove keeps the queue, so the queued message is a
+ * ends with its execution. Paperplane keeps the queue, so the queued message is a
  * second turn and the cancelled one never reaches OpenCode.
  */
 export function assertOpenCode2InboxOutput(

@@ -285,7 +285,7 @@ describe("Pi catalog host", () => {
       second.reportUnsupportedUI();
       const active = await host.getCatalog();
       assert.deepEqual(active.compatibilityWarnings, [
-        "A Pi extension in an active thread requested terminal-only controls. These controls do not work in Rove. Use Pi's terminal UI to access them.",
+        "A Pi extension in an active thread requested terminal-only controls. These controls do not work in Paperplane. Use Pi's terminal UI to access them.",
       ]);
       assert.deepEqual(active.warnings, []);
       assert.strictEqual(changes, 1);

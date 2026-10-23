@@ -113,7 +113,7 @@ it.effect("prints host advice before a database failure without attempting repai
     assert.deepEqual(lines, [
       "Host:\n  Memory: 512.0 MiB available / 8.00 GiB total",
       "  Swap: 3.00 GiB free / 4.00 GiB total",
-      "  Rove ceiling: 2.00 GiB current / 6.00 GiB",
+      "  Paperplane ceiling: 2.00 GiB current / 6.00 GiB",
       "  [warning] Low memory.",
       "    Fix: Run fewer agents.",
     ]);

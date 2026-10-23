@@ -692,7 +692,7 @@ export const makeWithHosts = Effect.fn("DeviceService.makeWithHosts")(function* 
         return yield* new DeviceNotFoundError({ hostId: host.id, deviceId: bootedId });
       }
     } else if (device.platform === "ios" && device.booted) {
-      // A simulator booted outside Rove has no helper attached yet.
+      // A simulator booted outside Paperplane has no helper attached yet.
       yield* HttpClientRequest.post(
         `${ready.hub.origin}${vendorPrefix("ios")}/grid/api/start`,
       ).pipe(

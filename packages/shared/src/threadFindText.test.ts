@@ -133,9 +133,9 @@ it("indexes skill labels in prose but leaves links and code literal", () => {
         text: "Use $test-rove-app now.\n\n`$test-rove-app`\n\n[$test-rove-app](https://example.com)",
       },
       undefined,
-      [{ name: "test-rove-app", displayName: "Rove App Testing" }],
+      [{ name: "test-rove-app", displayName: "Paperplane App Testing" }],
     ),
-  ).toEqual(["Use Rove App Testing now.", "$test-rove-app", "$test-rove-app"]);
+  ).toEqual(["Use Paperplane App Testing now.", "$test-rove-app", "$test-rove-app"]);
 });
 
 it("indexes the citation chip label instead of its link text", () => {

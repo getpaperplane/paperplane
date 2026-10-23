@@ -1,14 +1,14 @@
 #!/bin/sh
-# Installs the Rove Code CLI from a GitHub Release archive. Needs only sh, tar,
+# Installs the Paperplane CLI from a GitHub Release archive. Needs only sh, tar,
 # sha256sum or shasum, and curl or wget; no Node, npm, or compiler.
 #
-# This installer is not available until Rove publishes its own CLI archives.
+# This installer is not available until Paperplane publishes its own CLI archives.
 #
 # Environment:
 #   ROVE_CHANNEL           release train to follow: stable, nightly, or preview
 #                            (default: stable; preview is a maintainers' test train)
 #   ROVE_VERSION           exact version to install (overrides ROVE_CHANNEL)
-#   ROVE_HOME              Rove home directory (default: ~/.rove-code)
+#   ROVE_HOME              Paperplane home directory (default: ~/.rove-code)
 #   ROVE_INSTALL_BIN_DIR   where the `rove` symlink goes (default: ~/.local/bin)
 #   ROVE_RELEASE_BASE_URL  mirror for releases/download (default: GitHub)
 #
@@ -182,7 +182,7 @@ else
   trap 'printf "\n" >&2; exit 143' TERM
 
   if "$interactive"; then printf '\r\033[2K' >&2; fi
-  printf '  %sInstalling%s Rove Code %s%s%s\n\n' "$muted" "$reset" "$bold" "$version" "$reset" >&2
+  printf '  %sInstalling%s Paperplane %s%s%s\n\n' "$muted" "$reset" "$bold" "$version" "$reset" >&2
   step "Downloading..."
   fetch_status=0
   fetch "${base_url}/v${version}/SHA256SUMS" "${staging}/SHA256SUMS" || fetch_status=$?
@@ -199,7 +199,7 @@ else
   actual="$(checksum "${staging}/${archive}")"
   [ "$actual" = "$expected" ] || fail "checksum mismatch for ${archive}"
 
-  step "Extracting Rove Code..."
+  step "Extracting Paperplane..."
   tar -xzf "${staging}/${archive}" -C "$staging" --strip-components=1
   rm -f "${staging}/${archive}" "${staging}/SHA256SUMS"
   "${staging}/rove" --version >/dev/null || fail "the downloaded executable does not run"
@@ -213,7 +213,7 @@ fi
 step "Setting up the rove command..."
 mkdir -p "$bin_dir"
 if [ -e "${bin_dir}/rove" ] || [ -L "${bin_dir}/rove" ]; then
-  [ -L "${bin_dir}/rove" ] || fail "${bin_dir}/rove exists and is not a Rove installer link"
+  [ -L "${bin_dir}/rove" ] || fail "${bin_dir}/rove exists and is not a Paperplane installer link"
   case "$(readlink "${bin_dir}/rove")" in
     "${versions_dir}"/*/rove) ;;
     *) fail "${bin_dir}/rove points to a different installation; refusing to replace it" ;;
@@ -221,7 +221,7 @@ if [ -e "${bin_dir}/rove" ] || [ -L "${bin_dir}/rove" ]; then
 fi
 ln -sfn "${target_dir}/rove" "${bin_dir}/rove"
 if "$interactive"; then printf '\r\033[2K' >&2; fi
-printf '  %sInstalled Rove Code %s%s\n\n' "$green" "$version" "$reset" >&2
+printf '  %sInstalled Paperplane %s%s\n\n' "$green" "$version" "$reset" >&2
 case ":${PATH}:" in
   *":${bin_dir}:"*) printf '  Run %srove%s to get started.\n\n' "$bold" "$reset" ;;
   *) printf '  Add %s to your PATH, then run %srove%s.\n\n' "$bin_dir" "$bold" "$reset" ;;

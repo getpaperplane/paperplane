@@ -153,7 +153,7 @@ const make = Effect.gen(function* () {
     if (threadId === undefined) {
       return yield* failure(
         "target_required",
-        "Pass threadId: this MCP client is not running inside a Rove thread.",
+        "Pass threadId: this MCP client is not running inside a Paperplane thread.",
       );
     }
     const shell = yield* threadManagement

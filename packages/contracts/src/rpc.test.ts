@@ -32,7 +32,7 @@ describe("subscribeServerConfig payload compatibility", () => {
 });
 
 describe("WebSocket RPC contracts", () => {
-  it("retains independent Rove feature RPCs on the V2 transport", () => {
+  it("retains independent Paperplane feature RPCs on the V2 transport", () => {
     expect([...WsRpcGroup.requests.keys()]).toEqual(
       expect.arrayContaining([
         WS_METHODS.sandboxInventory,

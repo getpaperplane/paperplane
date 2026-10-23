@@ -36,7 +36,7 @@ const layerTest = ApnsClient.layer.pipe(
 describe("ApnsClient", () => {
   const now = DateTime.makeUnsafe(0);
   const state: RelayAgentActivityAggregateState = {
-    title: "Rove Code",
+    title: "Paperplane",
     subtitle: "Agent work in progress",
     activeCount: 1,
     updatedAt: DateTime.formatIso(now),

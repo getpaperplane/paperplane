@@ -1156,7 +1156,7 @@ it.layer(NodeServices.layer)("cli config resolution", (it) => {
         );
 
         // ROVE_OTLP_TRACES_URL wins over the OTEL variable for the same
-        // signal, and keeps Rove Code's own headers since Rove Code still owns it.
+        // signal, and keeps Paperplane's own headers since Paperplane still owns it.
         expect(resolved.otlpTracesUrl).toBe("http://rove:4318/v1/traces");
         expect(resolved.otlpTracesExport.headers).toEqual({ "x-key": "secret" });
         // Metrics named no ROVE_OTLP_METRICS_URL, so the OTEL endpoint wins
@@ -1167,7 +1167,7 @@ it.layer(NodeServices.layer)("cli config resolution", (it) => {
           protocol: "http/protobuf",
           headers: { "x-key": "otel" },
         });
-        // Logs named no Rove or OTEL endpoint and a blank bootstrap value, so
+        // Logs named no Paperplane or OTEL endpoint and a blank bootstrap value, so
         // Settings answers, and logs keep the shared headers since no OTEL
         // endpoint claimed them.
         expect(resolved.otlpLogsUrl).toBe("http://settings:4318/v1/logs");
@@ -1223,7 +1223,7 @@ it.layer(NodeServices.layer)("cli config resolution", (it) => {
         // ROVE_OTLP_TRACES_URL still wins outright.
         expect(resolved.otlpTracesUrl).toBe("http://rove:4318/v1/traces");
         // The OTEL endpoint claimed metrics and logs, so neither the bootstrap
-        // envelope nor Settings receives them with Rove Code's headers.
+        // envelope nor Settings receives them with Paperplane's headers.
         expect(resolved.otlpMetricsUrl).toBeUndefined();
         expect(resolved.otlpLogsUrl).toBeUndefined();
       }),

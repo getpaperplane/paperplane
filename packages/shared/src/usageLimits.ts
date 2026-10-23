@@ -612,7 +612,7 @@ export function formatResetsIn(window: ServerProviderUsageWindow, now: number): 
   return `resets in ${formatDuration(resetsAt - now)}`;
 }
 
-/** Limit commands are served by Rove from the same snapshots as Usage → Limits. */
+/** Limit commands are served by Paperplane from the same snapshots as Usage → Limits. */
 export const USAGE_LIMITS_COMMAND = {
   name: "usage-limits",
   description: "Show this provider's usage limits",

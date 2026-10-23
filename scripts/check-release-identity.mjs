@@ -7,7 +7,7 @@ const repoRoot = NodePath.resolve(NodePath.dirname(NodeURL.fileURLToPath(import.
 const upstreamPublicIdentity =
   /t3\.codes|T3 Tools|@t3dotgg|\bnpx\s+t3(?:@|\b)|\bpingdotgg\b|d763fcb8-d37c-41ea-a773-b54a0ab4a454|ARK85ZXQ4Z|\b6787819824\b/i;
 
-// This exact link credits the upstream project; it is not Rove's public identity.
+// This exact link credits the upstream project; it is not Paperplane's public identity.
 const upstreamAttributionLink = '<a href="https://github.com/pingdotgg/t3code">T3 Code</a>';
 
 const surfaces = [

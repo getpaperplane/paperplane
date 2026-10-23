@@ -1532,7 +1532,7 @@ layer("ProviderEventIngestorV2", (it) => {
             ? "Invalid reasoning effort."
             : verdict === "confirmed"
               ? "Killed: out of memory."
-              : 'Likely killed: the host ran out of memory. Run fewer agents at once or add swap (see "Small or WSL hosts" in the Rove Code docs).',
+              : 'Likely killed: the host ran out of memory. Run fewer agents at once or add swap (see "Small or WSL hosts" in the Paperplane docs).',
         );
         assert.equal(errorItem.failure.code, verdict === null ? "invalid_request" : "oom_kill");
         assert.deepEqual(errorItem.retry, {

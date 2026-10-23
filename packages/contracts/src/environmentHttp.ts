@@ -420,11 +420,11 @@ export const EnvironmentCloudLinkStateResult = Schema.Struct({
   // Optional so newer clients tolerate older environment servers.
   managedTunnelActive: Schema.optional(Schema.Boolean),
   publishAgentActivity: Schema.Boolean,
-  // Opt-in: Rove Connect holds webhook requests while this environment is
+  // Opt-in: Paperplane Connect holds webhook requests while this environment is
   // offline. Optional so newer clients tolerate older environment servers.
   holdWebhooksWhileOffline: Schema.optional(Schema.Boolean),
   // The relay rejected this link's credential, usually because the environment
-  // was deregistered from Rove Connect. The link stays stored until it is linked
+  // was deregistered from Paperplane Connect. The link stays stored until it is linked
   // again. Optional so newer clients tolerate older environment servers.
   linkRevoked: Schema.optional(Schema.Boolean),
 });

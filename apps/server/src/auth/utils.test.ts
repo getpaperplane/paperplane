@@ -40,14 +40,14 @@ describe("deriveAuthClientMetadata", () => {
         },
       } as never,
       presented: {
-        label: "Rove Code Mobile",
+        label: "Paperplane Mobile",
         deviceType: "mobile",
         os: "iOS",
       },
     });
 
     expect(metadata).toMatchObject({
-      label: "Rove Code Mobile",
+      label: "Paperplane Mobile",
       browser: "Electron",
       deviceType: "mobile",
       ipAddress: "192.168.213.72",

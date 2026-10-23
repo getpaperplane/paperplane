@@ -89,7 +89,7 @@ export function buildInitialGrokProviderSnapshot(
           version: null,
           status: "warning",
           auth: { status: "unknown" },
-          message: "Grok is disabled in Rove Code settings.",
+          message: "Grok is disabled in Paperplane settings.",
         },
       });
     }
@@ -333,7 +333,7 @@ export function grokSlashCommandsFromInitialize(
     if (Option.isNone(decoded)) continue;
     const command = decoded.value;
     const name = command.name.trim();
-    // Permission changes must go through Rove so the client and provider agree.
+    // Permission changes must go through Paperplane so the client and provider agree.
     if (!name || name.toLowerCase() === "always-approve") continue;
     // Grok advertises /context, but its ACP handler completes without emitting output.
     if (name.toLowerCase() === "context") continue;
@@ -393,7 +393,7 @@ export const checkGrokProviderStatus = Effect.fn("checkGrokProviderStatus")(func
         version: null,
         status: "warning",
         auth: { status: "unknown" },
-        message: "Grok is disabled in Rove Code settings.",
+        message: "Grok is disabled in Paperplane settings.",
       },
     });
   }

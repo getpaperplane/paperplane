@@ -6,7 +6,7 @@
  * database, then confirms the process is actually answering by fetching its
  * public environment descriptor. Inside a linked git worktree the worktree's
  * own `.rove` is checked first (matching dev-runner precedence); otherwise the
- * shared Rove Code home. `--tailscale` publishes the server over Tailscale Serve
+ * shared Paperplane home. `--tailscale` publishes the server over Tailscale Serve
  * HTTPS and pairs through the tailnet URL instead.
  */
 import {
@@ -76,7 +76,7 @@ export class NoRunningServerError extends Schema.TaggedError<NoRunningServerErro
 ) {
   override get message(): string {
     return [
-      "No running Rove Code server found.",
+      "No running Paperplane server found.",
       ...this.checkedStatePaths.map((statePath) => `  checked ${statePath}`),
       "Start one with `rove serve` on the server machine and pair over its local or LAN address.",
     ].join("\n");
@@ -108,7 +108,7 @@ export class ServesOtherEnvironmentError extends Schema.TaggedError<ServesOtherE
   { servePort: Schema.Number },
 ) {
   override get message(): string {
-    return `Tailscale Serve on HTTPS port ${String(this.servePort)} already fronts a different Rove Code server. Pass --tailscale-serve-port to publish this one on another port.`;
+    return `Tailscale Serve on HTTPS port ${String(this.servePort)} already fronts a different Paperplane server. Pass --tailscale-serve-port to publish this one on another port.`;
   }
 }
 
@@ -126,7 +126,7 @@ export class ServePortOccupiedError extends Schema.TaggedError<ServePortOccupied
   { servePort: Schema.Number },
 ) {
   override get message(): string {
-    return `HTTPS port ${String(this.servePort)} on the tailnet already serves something that is not a Rove Code server. Pass --tailscale-serve-port to publish this one on another port.`;
+    return `HTTPS port ${String(this.servePort)} on the tailnet already serves something that is not a Paperplane server. Pass --tailscale-serve-port to publish this one on another port.`;
   }
 }
 
@@ -193,9 +193,9 @@ const formatPairOutput = (input: {
   ].join("\n");
 
 /**
- * Three outcomes, because they drive different decisions: a Rove descriptor
+ * Three outcomes, because they drive different decisions: a Paperplane descriptor
  * (pair with it), nothing answering (safe to configure Tailscale Serve), or
- * something answering that is not a Rove server (do NOT overwrite its mapping).
+ * something answering that is not a Paperplane server (do NOT overwrite its mapping).
  */
 type EnvironmentProbeResult =
   | { readonly _tag: "descriptor"; readonly descriptor: ExecutionEnvironmentDescriptor }
@@ -375,7 +375,7 @@ const resolveTailscalePairingBase = Effect.fn("pair.resolveTailscalePairingBase"
     });
 
     // Only an unreachable port, or a mapping already fronting this exact
-    // environment, is safe to (re)configure. Any other responder — Rove or not
+    // environment, is safe to (re)configure. Any other responder — Paperplane or not
     // — must not have its mapping silently replaced.
     const existing = yield* probeEnvironmentDescriptor(baseUrl);
     if (existing._tag === "descriptor") {
@@ -485,7 +485,7 @@ export const pairCommand = Command.make("pair", {
   tailscaleServePort: tailscaleServePortFlag,
 }).pipe(
   Command.withDescription(
-    "Mint a pairing token for a running Rove Code server and print it as a QR code.",
+    "Mint a pairing token for a running Paperplane server and print it as a QR code.",
   ),
   Command.withHandler((flags) =>
     Effect.gen(function* () {

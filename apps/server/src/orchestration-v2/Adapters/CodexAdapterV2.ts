@@ -799,7 +799,7 @@ export function buildCodexTurnStartParams(input: {
       cwd: input.runtimePolicy.cwd,
       model: input.modelSelection.model,
       // Model catalogues can default summaries to "none". Request them on every
-      // turn, including resumed threads, for Rove's reasoning timeline.
+      // turn, including resumed threads, for Paperplane's reasoning timeline.
       summary: "detailed",
       // Always explicit: omitting this on resume leaves Codex's previous
       // reviewer sticky after switching away from Auto mode.
@@ -1313,7 +1313,7 @@ export class CodexAppServerClientFactory extends Context.Service<
  * Config overrides sent with every `thread/start`, `thread/resume` and `thread/fork`.
  * Codex layers these above the user's and project's `config.toml`.
  *
- * - Codex 0.152 made the `update_plan` checklist tool opt-in; Rove renders it as
+ * - Codex 0.152 made the `update_plan` checklist tool opt-in; Paperplane renders it as
  *   the todo list.
  * - Codex waits this long for MCP servers before the first model request and
  *   leaves out any server still starting (default 1 s, too short for cold
@@ -1325,7 +1325,7 @@ export const CODEX_THREAD_CONFIG = {
   mcp_optional_startup_grace_ms: 10_000,
 } as const;
 
-// Rove wait tools can block for up to an hour. Keep Codex's MCP timeout above
+// Paperplane wait tools can block for up to an hour. Keep Codex's MCP timeout above
 // that limit so the server's own wait timeout ends a long call.
 const CODEX_T3_MCP_TOOL_TIMEOUT_SEC = 65 * 60;
 
@@ -1693,7 +1693,7 @@ export interface CodexAdapterV2Options {
   readonly onUsageLimits?: ManagedServerProvider["applyUsageLimits"];
   /**
    * Resolves launch settings when each session opens, replacing `settings` and
-   * `environment`. Managed ChatGPT sign-in uses it to launch the Rove-installed
+   * `environment`. Managed ChatGPT sign-in uses it to launch the Paperplane-installed
    * Codex with a current access token.
    */
   readonly resolveRuntime?: Effect.Effect<CodexEffectiveRuntime, ProviderSetupError, Scope.Scope>;
@@ -6480,7 +6480,7 @@ export const makeCodexAdapterV2 = Effect.fn("makeCodexAdapterV2")(function* (
           );
 
         // MCP Apps reach their server through Codex's own MCP client, so any
-        // server the user configured for Codex works without Rove connecting to it.
+        // server the user configured for Codex works without Paperplane connecting to it.
         const mcpAppsError = (detail: string) => (cause: unknown) =>
           new ProviderAdapter.ProviderAdapterProtocolError({
             driver: CODEX_PROVIDER,

@@ -76,7 +76,7 @@ const layerTestPortDiscovery = PortScanner.layer.pipe(
 
 const LSOF_TEST_PORT = 43_123;
 
-/** The scanner with `processIds` registered to a Rove terminal, so their listeners get probes. */
+/** The scanner with `processIds` registered to a Paperplane terminal, so their listeners get probes. */
 const ownedScanner = (processIds: ReadonlyArray<number> = [1234]) =>
   Effect.tap(PortScanner.PortDiscovery, (scanner) =>
     scanner.registerTerminalProcesses({
@@ -541,7 +541,7 @@ effectIt.effect("falls back to HTTPS and does not follow redirects while probing
   }).pipe(Effect.provide(layer));
 });
 
-effectIt.effect("probes a port only while Rove terminals own every listener on it", () => {
+effectIt.effect("probes a port only while Paperplane terminals own every listener on it", () => {
   const owned = `p1234\ncnode\nn[::1]:${LSOF_TEST_PORT}\n`;
   const unowned = `p5678\ncrpc\nn127.0.0.1:${LSOF_TEST_PORT}\n`;
   let stdout = unowned;

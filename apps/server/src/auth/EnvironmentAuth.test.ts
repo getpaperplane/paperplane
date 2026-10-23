@@ -484,7 +484,7 @@ it.layer(NodeServices.layer)("EnvironmentAuth.layer", (it) => {
       const paired = yield* serverAuth.exchangeBootstrapCredentialForAccessToken(
         pairing.credential,
         undefined,
-        { ...requestMetadata, label: "Rove Code Desktop" },
+        { ...requestMetadata, label: "Paperplane Desktop" },
       );
       const first = yield* serverAuth.exchangeBootstrapCredentialForAccessToken(
         "desktop-bootstrap-token",

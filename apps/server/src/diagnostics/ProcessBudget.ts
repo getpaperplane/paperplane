@@ -117,7 +117,7 @@ export const prepareBudgetedProcess = Effect.fn("prepareBudgetedProcess")(functi
   return { ...makeManagedProcess(command, args, pool, deadline, scopeOptions), ...limits };
 });
 
-/** An owner outside the command pool, still governed by the aggregate Rove budget. */
+/** An owner outside the command pool, still governed by the aggregate Paperplane budget. */
 export function makeManagedProcess(
   command: string,
   args: ReadonlyArray<string>,

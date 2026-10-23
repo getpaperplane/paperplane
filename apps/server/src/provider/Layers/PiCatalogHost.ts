@@ -58,7 +58,7 @@ export interface PiCatalogHostOptions {
 
 const MAX_WARNINGS = 50;
 const TERMINAL_UI_NOTICE =
-  "A Pi extension in an active thread requested terminal-only controls. These controls do not work in Rove. Use Pi's terminal UI to access them.";
+  "A Pi extension in an active thread requested terminal-only controls. These controls do not work in Paperplane. Use Pi's terminal UI to access them.";
 
 function pushWarning(warnings: Array<string>, warning: string): void {
   // Repeated refreshes would otherwise stack the same message.

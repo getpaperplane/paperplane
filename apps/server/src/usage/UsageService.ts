@@ -3,7 +3,7 @@
  * buckets.
  *
  * Each built-in driver with a `usage` reader contributes its sources, including
- * work driven outside Rove Code. A `transcripts` reader names JSONL directories
+ * work driven outside Paperplane. A `transcripts` reader names JSONL directories
  * that this service streams itself; a `scan` reader reads its own sources.
  *
  * JSONL transcripts are append-only, so parsed records are memoised per file by

@@ -177,7 +177,7 @@ export const MuseDelta = Schema.Struct({
   field: Schema.optional(Schema.String),
 });
 
-/** The Rove decision for one native Muse choice, or none when Rove has no equivalent. */
+/** The Paperplane decision for one native Muse choice, or none when Paperplane has no equivalent. */
 export function museApprovalDecision(
   choice: Pick<MuseApproval["availableChoices"][number], "decision" | "scope">,
 ): ProviderApprovalDecision | undefined {

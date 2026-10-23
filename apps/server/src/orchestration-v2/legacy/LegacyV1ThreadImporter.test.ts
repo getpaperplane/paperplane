@@ -37,7 +37,7 @@ const layerTest = Layer.mergeAll(
   layerProjectionMaintenanceProvided,
 );
 
-// Reproduce Rove migration 056's nullable ownership without re-registering it.
+// Reproduce Paperplane migration 056's nullable ownership without re-registering it.
 const standaloneLegacySchema = Effect.gen(function* () {
   const sql = yield* SqlClient.SqlClient;
   const columns = yield* sql<{ readonly name: string }>`PRAGMA table_info(projection_threads)`;
@@ -79,7 +79,7 @@ const seedLegacyThread = (input: {
   `;
   });
 
-it.layer(layerTest)("Rove V1 compatibility", (it) => {
+it.layer(layerTest)("Paperplane V1 compatibility", (it) => {
   it.effect("preserves standalone history under existing or replayable workspace projects", () =>
     Effect.gen(function* () {
       const sql = yield* SqlClient.SqlClient;

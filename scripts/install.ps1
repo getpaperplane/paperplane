@@ -1,13 +1,13 @@
-# Installs the Rove Code CLI from a GitHub Release archive on Windows. Needs
+# Installs the Paperplane CLI from a GitHub Release archive on Windows. Needs
 # only PowerShell 5.1+; no Node, npm, or compiler.
 #
-# This installer is not available until Rove publishes its own CLI archives.
+# This installer is not available until Paperplane publishes its own CLI archives.
 #
 # Environment:
 #   ROVE_CHANNEL           release train to follow: stable, nightly, or preview
 #                            (default: stable; preview is a maintainers' test train)
 #   ROVE_VERSION           exact version to install (overrides ROVE_CHANNEL)
-#   ROVE_HOME              Rove home directory (default: ~\.rove-code)
+#   ROVE_HOME              Paperplane home directory (default: ~\.rove-code)
 #   ROVE_INSTALL_BIN_DIR   where rove.cmd is linked (default: ~\.local\bin)
 #   ROVE_RELEASE_BASE_URL  mirror for releases/download (default: GitHub)
 #
@@ -99,7 +99,7 @@ function Fetch([string] $uri, [string] $destination, [switch] $progress) {
   }
 }
 if ($interactive) {
-  [Console]::Error.WriteLine("`n  ${bold}Rove Code$reset ${muted}CLI installer$reset`n")
+  [Console]::Error.WriteLine("`n  ${bold}Paperplane$reset ${muted}CLI installer$reset`n")
 }
 Step "Finding your release..."
 
@@ -151,7 +151,7 @@ if ((Test-Path $marker) -and ((Get-Content $marker -Raw).Trim() -eq $version)) {
   New-Item -ItemType Directory -Path $staging | Out-Null
   try {
     if ($interactive) { [Console]::Error.Write("`r$esc[2K") }
-    [Console]::Error.WriteLine("  ${muted}Installing$reset Rove Code $bold$version$reset`n")
+    [Console]::Error.WriteLine("  ${muted}Installing$reset Paperplane $bold$version$reset`n")
     Step "Downloading..."
     try {
       Fetch "$baseUrl/v$version/SHA256SUMS" (Join-Path $staging "SHA256SUMS")
@@ -172,7 +172,7 @@ if ((Test-Path $marker) -and ((Get-Content $marker -Raw).Trim() -eq $version)) {
     $actual = (Get-FileHash -Algorithm SHA256 (Join-Path $staging $archive)).Hash.ToLowerInvariant()
     if ($actual -ne $expected) { Fail "checksum mismatch for $archive" }
 
-    Step "Extracting Rove Code..."
+    Step "Extracting Paperplane..."
     # The archive module reads the global preference, not the caller's local scope.
     $savedProgress = $global:ProgressPreference
     try {
@@ -205,7 +205,7 @@ if ((Test-Path $shim) -and -not (Get-Content $shim -Raw).Contains($versionsDir))
 # non-ASCII characters in the user's home path.
 [System.IO.File]::WriteAllText($shim, "@echo off`r`n`"$(Join-Path $targetDir 'rove.exe')`" %*", (New-Object System.Text.UTF8Encoding $false))
 if ($interactive) { [Console]::Error.Write("`r$esc[2K") }
-[Console]::Error.WriteLine("  ${green}Installed Rove Code $version$reset`n")
+[Console]::Error.WriteLine("  ${green}Installed Paperplane $version$reset`n")
 if (($env:PATH -split ";") -notcontains $binDir) {
   Write-Host "  Add $binDir to your PATH, then run ${bold}rove$reset.`n"
 } else {

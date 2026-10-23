@@ -499,7 +499,7 @@ export const make = Effect.gen(function* () {
     });
 
   /**
-   * Uses GH_REPO, then the remote Rove's repository-remote setting chose, ahead of gh's ranking.
+   * Uses GH_REPO, then the remote Paperplane's repository-remote setting chose, ahead of gh's ranking.
    */
   const resolveRepository = Effect.fn("GitHubSourceControlProvider.resolveRepository")(
     function* (input: {

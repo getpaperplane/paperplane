@@ -92,7 +92,7 @@ const makeCheckpointWorkspace = Effect.gen(function* () {
   const path = yield* Path.Path;
   const cwd = yield* fs.makeTempDirectory({ prefix: "rove-orchestrator-v2-thread-fork-" });
   yield* runGit(cwd, ["init"]);
-  yield* runGit(cwd, ["config", "user.name", "Rove Code Test"]);
+  yield* runGit(cwd, ["config", "user.name", "Paperplane Test"]);
   yield* runGit(cwd, ["config", "user.email", "rove-test@example.com"]);
   yield* fs.writeFileString(path.join(cwd, "README.md"), "# thread fork\n");
   yield* runGit(cwd, ["add", "README.md"]);

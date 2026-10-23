@@ -26,7 +26,7 @@ interface Frame {
 // Grok's Auto mode runs routine commands on its own classifier's say-so and
 // asks about the ones it holds, but only a client declaring a prompting type
 // gets asked; any other client gets a silent "Auto mode blocked this action".
-// Rove must then leave that question to the user instead of answering it by
+// Paperplane must then leave that question to the user instead of answering it by
 // its own policy, which would approve it in Auto mode.
 export function assertGrokAutoBlockedCommandOutput(
   result: OrchestratorV2ScenarioResult,
@@ -44,7 +44,7 @@ export function assertGrokAutoBlockedCommandOutput(
   assert.deepEqual(
     frames.find(({ frame }) => frame.method === "initialize")?.frame.params?._meta,
     { clientType: "extension" },
-    "Rove must tell Grok it can show permission prompts",
+    "Paperplane must tell Grok it can show permission prompts",
   );
 
   const commands = projection.turnItems.flatMap((item) =>

@@ -80,7 +80,7 @@ const policyRefusalResult = (reason: string, policy: CuaDriver.CuaCatalog["polic
         text:
           policy === "background-only"
             ? `${reason} No action was executed. Retry with a background window action or use an app API. For web pages, use preview_*. If no safe route exists, continue other work and report the GUI step as blocked. Do not retry through foreground input or shell automation.`
-            : `${reason} No action was executed. Use an allowed private-desktop operation. Rove owns sessions and target selection. Do not retry against the host desktop.`,
+            : `${reason} No action was executed. Use an allowed private-desktop operation. Paperplane owns sessions and target selection. Do not retry against the host desktop.`,
       },
     ],
   });

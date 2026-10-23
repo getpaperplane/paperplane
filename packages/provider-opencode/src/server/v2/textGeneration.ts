@@ -25,7 +25,7 @@ const isTextGenerationError = Schema.is(TextGenerationError);
 const GENERATION_TIMEOUT = "3 minutes";
 
 /**
- * Nothing in a text generation needs a tool, so every tool asks and Rove is not
+ * Nothing in a text generation needs a tool, so every tool asks and Paperplane is not
  * there to answer. Denying `shell` or `read` outright gets the whole session
  * refused on OpenCode's free models, and an ask that is never answered would
  * hang, so asks are rejected as they arrive.
@@ -127,7 +127,7 @@ const runOnServer = (
       Effect.forkScoped,
     );
     const session = yield* client.session.create({
-      title: `Rove Code ${input.operation}`,
+      title: `Paperplane ${input.operation}`,
       location: Location.PublicRef.make({ directory: AbsolutePath.make(input.cwd) }),
       model: Model.Ref.make({
         providerID: Provider.ID.make(parsed.providerID),

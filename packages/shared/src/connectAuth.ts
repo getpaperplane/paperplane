@@ -10,8 +10,8 @@ const CONNECT_AUTHORIZE_PATH = "/connect";
 /**
  * The CLI prints URLs against this origin and the web bundle uses it to
  * decide whether it is the hosted deployment — the two must agree, so the
- * default lives here. This is Rove's static hosted client, not the relay;
- * using it does not enable Rove Connect or configure its credentials.
+ * default lives here. This is Paperplane's static hosted client, not the relay;
+ * using it does not enable Paperplane Connect or configure its credentials.
  */
 export const DEFAULT_HOSTED_APP_URL = "https://rove.hafiezulzikry.com";
 

@@ -1,5 +1,5 @@
 /**
- * The Rove MCP credential each thread's provider session should expose to its
+ * The Paperplane MCP credential each thread's provider session should expose to its
  * agent. The session manager writes it before a session starts; adapters read
  * it when they build provider launch options.
  *

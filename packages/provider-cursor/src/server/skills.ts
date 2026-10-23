@@ -277,7 +277,7 @@ export const probeCursorSkills = Effect.fn("probeCursorSkills")(function* (
   return inspection.skills;
 });
 
-/** Cursor invokes Agent Skills with `/name`; Rove composers insert `$name`. */
+/** Cursor invokes Agent Skills with `/name`; Paperplane composers insert `$name`. */
 export function hasCursorSkillMention(prompt: string): boolean {
   return HAS_SKILL_MENTION_PATTERN.test(prompt);
 }

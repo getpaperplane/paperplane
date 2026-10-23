@@ -12,7 +12,7 @@ import {
 } from "../shared.ts";
 
 /**
- * Stop while Muse works on a `sleep 30` request: Rove sends `turn/interrupt`, Muse
+ * Stop while Muse works on a `sleep 30` request: Paperplane sends `turn/interrupt`, Muse
  * ends the turn as cancelled, and the run, every row and the session settle.
  */
 export function assertMuseTurnInterruptOutput(

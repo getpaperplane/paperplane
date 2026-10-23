@@ -555,7 +555,7 @@ function toPullRequestError(
         });
 }
 
-/** Rove: the service-level backoff is per selected account; REST quotas retain token fingerprints. */
+/** Paperplane: the service-level backoff is per selected account; REST quotas retain token fingerprints. */
 function withAccountBackoff<A, E, R>(
   selection: GitHubAccountSelection | null,
   effect: Effect.Effect<A, E, R>,
@@ -1095,7 +1095,7 @@ export const make = Effect.gen(function* () {
       projectId: project.project.id,
       host: project.host,
       repository: project.repository,
-      // Rove: cached and persisted viewer-dependent reads must not survive an account switch.
+      // Paperplane: cached and persisted viewer-dependent reads must not survive an account switch.
       ...(project.selectedAccount === null ? {} : { [credentialNamespace]: project.viewerKey }),
     };
   });
@@ -3194,7 +3194,7 @@ export const make = Effect.gen(function* () {
         input.cursors === undefined
           ? null
           : Object.entries(input.cursors).toSorted(([left], [right]) => left.localeCompare(right)),
-        // Rove: a settings change cannot reuse a page read as a different account.
+        // Paperplane: a settings change cannot reuse a page read as a different account.
         settings.githubAccount,
         Object.entries(settings.projectSettingsOverrides).map(([id, overrides]) => [
           id,

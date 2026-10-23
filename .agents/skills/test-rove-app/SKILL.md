@@ -1,11 +1,11 @@
 ---
 name: test-rove-app
-description: Test Rove Code's web and desktop UI through its built-in Browser panel against isolated development state. Use for browser verification, browser pairing recovery, and test fixtures. Use test-rove-mobile for native mobile verification.
+description: Test Paperplane's web and desktop UI through its built-in Browser panel against isolated development state. Use for browser verification, browser pairing recovery, and test fixtures. Use test-rove-mobile for native mobile verification.
 ---
 
-# Test Rove web and desktop
+# Test Paperplane web and desktop
 
-Use Rove's built-in Browser panel for verification. If its tools are absent or
+Use Paperplane's built-in Browser panel for verification. If its tools are absent or
 the panel reports unavailable, explain the blocker and stop verification.
 Do not install or switch to another automation system. For native mobile
 testing, use [test-rove-mobile](../test-rove-mobile/SKILL.md).
@@ -25,7 +25,7 @@ inspecting or seeding SQLite. Stop the test server before direct fixture writes.
 
 Call `preview_status`, then `preview_open` if the Browser panel is
 closed. Navigate to the complete startup pairing URL once with
-`preview_navigate`, then use `preview_snapshot` and Rove's interaction tools.
+`preview_navigate`, then use `preview_snapshot` and Paperplane's interaction tools.
 If the token was consumed or expired, run `node apps/server/src/bin.ts pair`
 for a fresh one. Keep using the same tab.
 

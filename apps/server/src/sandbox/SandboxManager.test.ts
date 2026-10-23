@@ -364,7 +364,7 @@ it.effect("a failed pairing reports the problem without marking a running sandbo
     yield* Effect.flip(manager.action({ id: sandbox.id, action: "pair", confirmed: true }));
     expect((yield* manager.inventory).sandboxes[0]).toMatchObject({
       phase: "running",
-      detail: "Rove returned an invalid pairing response.",
+      detail: "Paperplane returned an invalid pairing response.",
     });
   }),
 );
@@ -482,7 +482,7 @@ it("wire contracts require explicit acknowledgement of compute cost and destruct
   expect(() => decodeActionInput({ id: "one", action: "delete", confirmed: false })).toThrow();
 });
 
-it.effect("forwarded sign-ins reach the sandbox over stdin before Rove starts", () =>
+it.effect("forwarded sign-ins reach the sandbox over stdin before Paperplane starts", () =>
   Effect.gen(function* () {
     const f = fixture();
     const manager = yield* f.make;
@@ -555,7 +555,7 @@ it.effect("changing sign-ins applies now when running and on resume when paused"
     expect(paused.sandbox).toMatchObject({ phase: "paused", credentials: [] });
     expect(f.credentials.payload).not.toHaveBeenCalled();
     yield* manager.action(decodeActionInput({ id: sandbox.id, action: "resume", confirmed: true }));
-    // Resuming removes the deselected sign-ins before Rove restarts.
+    // Resuming removes the deselected sign-ins before Paperplane restarts.
     expect(f.credentials.payload).toHaveBeenLastCalledWith([]);
   }),
 );

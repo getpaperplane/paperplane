@@ -8,7 +8,7 @@ import { assert, it } from "@effect/vitest";
 
 import { stageRuntimePackageFixture } from "../../../../../scripts/lib/runtime-package-fixture.ts";
 
-it("boots foreground and background Pi runtimes from a relocated Rove installation", () => {
+it("boots foreground and background Pi runtimes from a relocated Paperplane installation", () => {
   const root = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "pi-extension-bundle-test-"));
   const serverRoot = NodePath.resolve(import.meta.dirname, "../../..");
   const distDir = NodePath.join(root, "dist");

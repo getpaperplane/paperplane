@@ -154,7 +154,7 @@ it.layer(NodeServices.layer)("rove-sqlite-state", (it) => {
       }),
   );
 
-  it.effect("refuses the Rove Code home by default", () =>
+  it.effect("refuses the Paperplane home by default", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;

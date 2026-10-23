@@ -10,7 +10,7 @@ import {
   readMigratedRoveStorage,
 } from "./roveMigration.ts";
 
-describe("Rove saved-state migration", () => {
+describe("Paperplane saved-state migration", () => {
   it("canonicalizes owned fields without rewriting labels, text, or credentials", () => {
     const migrated = migrateRoveSavedState({
       t3Home: "/custom/home",

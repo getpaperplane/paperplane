@@ -199,7 +199,7 @@ const HTTP_ROUTER_CONFIG = {
 } as const;
 
 // Effect's default preemptive shutdown waits 20s before finalizing request scopes.
-// Rove's primary transport is long-lived WebSocket RPC, whose Effect scope finalizer
+// Paperplane's primary transport is long-lived WebSocket RPC, whose Effect scope finalizer
 // already closes the websocket gracefully. Do not add an artificial drain before
 // those finalizers get a chance to run.
 const HTTP_PREEMPTIVE_SHUTDOWN_GRACE_MS = 0;
@@ -559,7 +559,7 @@ const layerProviderInstallationRefresh = Layer.effectDiscard(
 
 const layerRuntimeCoreDependenciesBase = Layer.mergeAll(
   AgentAwarenessRelay.layer,
-  // Asks Rove Connect to deliver webhooks it held while this environment was offline.
+  // Asks Paperplane Connect to deliver webhooks it held while this environment was offline.
   HeldHooksWaker.layer,
   layerThreadSettlementWorker,
   StorageCleanup.layer.pipe(Layer.provide(ProjectionStoreV2.layer)),
@@ -778,7 +778,7 @@ const layerMakeRoutes = Layer.mergeAll(
 const layerMakeServer = Layer.unwrap(
   Effect.gen(function* () {
     const config = yield* ServerConfig.ServerConfig;
-    // Before anything opens the database: one server per Rove home.
+    // Before anything opens the database: one server per Paperplane home.
     const ownership = yield* ServerOwnership.acquireServerOwnership(config.serverRuntimeStatePath);
     const activation = yield* Deferred.make<void>();
     const awaitActivation = Deferred.await(activation);
@@ -945,13 +945,13 @@ const layerMakeServer = Layer.unwrap(
                   }),
                   Effect.tap((recovered) =>
                     recovered
-                      ? Effect.logInfo("Rove Connect managed tunnel recovered")
+                      ? Effect.logInfo("Paperplane Connect managed tunnel recovered")
                       : Effect.void,
                   ),
                   Effect.catchCause((cause) =>
                     Cause.hasInterrupts(cause)
                       ? Effect.interrupt
-                      : Effect.logWarning("Failed to recover the Rove Connect managed tunnel", {
+                      : Effect.logWarning("Failed to recover the Paperplane Connect managed tunnel", {
                           cause,
                         }),
                   ),
@@ -970,7 +970,7 @@ const layerMakeServer = Layer.unwrap(
             const wantsCliLink = hasCloudPublicConfig
               ? yield* CloudCliState.readCliDesiredCloudLink.pipe(
                   Effect.catch((cause) =>
-                    Effect.logWarning("Failed to read the desired Rove Connect link", {
+                    Effect.logWarning("Failed to read the desired Paperplane Connect link", {
                       cause,
                     }).pipe(Effect.as(false)),
                   ),
@@ -982,7 +982,7 @@ const layerMakeServer = Layer.unwrap(
             const desiredCliLinkMode = wantsCliLink
               ? yield* CloudCliState.readCliDesiredLinkMode.pipe(
                   Effect.catch((cause) =>
-                    Effect.logWarning("Failed to read the desired Rove Connect link mode", {
+                    Effect.logWarning("Failed to read the desired Paperplane Connect link mode", {
                       cause,
                     }).pipe(Effect.as("managed" as const)),
                   ),
@@ -995,7 +995,7 @@ const layerMakeServer = Layer.unwrap(
                 ? false
                 : yield* cloudLink.startManagedTunnelIfOriginConfirmed(localOrigin).pipe(
                     Effect.catch((cause) =>
-                      Effect.logWarning("Failed to start the confirmed Rove Connect tunnel", {
+                      Effect.logWarning("Failed to start the confirmed Paperplane Connect tunnel", {
                         cause,
                       }).pipe(Effect.as(false)),
                     ),
@@ -1008,12 +1008,12 @@ const layerMakeServer = Layer.unwrap(
                 Effect.tap((started) =>
                   started
                     ? Effect.logWarning(
-                        "Rove Connect started the stored tunnel without relay confirmation",
+                        "Paperplane Connect started the stored tunnel without relay confirmation",
                       )
                     : Effect.void,
                 ),
                 Effect.catch((cause) =>
-                  Effect.logWarning("Failed to start the stored Rove Connect tunnel", { cause }),
+                  Effect.logWarning("Failed to start the stored Paperplane Connect tunnel", { cause }),
                 ),
                 Effect.asVoid,
               );
@@ -1028,13 +1028,13 @@ const layerMakeServer = Layer.unwrap(
             ).pipe(
               Effect.tap((result) =>
                 result.status === "ready"
-                  ? Effect.logInfo("Rove Connect managed tunnel recovery registered")
+                  ? Effect.logInfo("Paperplane Connect managed tunnel recovery registered")
                   : Effect.void,
               ),
               Effect.catchCause((cause) =>
                 Cause.hasInterrupts(cause)
                   ? Effect.interrupt
-                  : Effect.logWarning("Failed to register Rove Connect managed tunnel recovery", {
+                  : Effect.logWarning("Failed to register Paperplane Connect managed tunnel recovery", {
                       cause,
                     }).pipe(Effect.as({ status: "unavailable" as const })),
               ),
@@ -1079,10 +1079,10 @@ const layerMakeServer = Layer.unwrap(
                   Effect.tap((mode) =>
                     mode === null
                       ? Effect.void
-                      : Effect.logInfo("Rove Connect desired link reconciled on startup"),
+                      : Effect.logInfo("Paperplane Connect desired link reconciled on startup"),
                   ),
                   Effect.catch((cause) =>
-                    Effect.logWarning("Failed to reconcile Rove Connect desired link on startup", {
+                    Effect.logWarning("Failed to reconcile Paperplane Connect desired link on startup", {
                       cause,
                     }).pipe(Effect.as(null)),
                   ),

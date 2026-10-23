@@ -1501,7 +1501,7 @@ it.layer(layerGitManagerTest)("GitManager", (it) => {
   );
 
   it.effect(
-    "a branch PR lookup sees an upstream change on request, after a Rove git action, or after the TTL",
+    "a branch PR lookup sees an upstream change on request, after a Paperplane git action, or after the TTL",
     () =>
       Effect.gen(function* () {
         const repoDir = yield* makeTempDir("rove-git-manager-");
@@ -1545,19 +1545,19 @@ it.layer(layerGitManagerTest)("GitManager", (it) => {
         );
         expect(reread?.number).toBe(236);
 
-        // Rove's own git actions end in invalidateStatus.
+        // Paperplane's own git actions end in invalidateStatus.
         yield* runGit(repoDir, ["branch", "--set-upstream-to=origin/feature/moving-upstream"]);
         yield* manager.invalidateStatus(repoDir);
         expect((yield* lookup)?.number).toBe(235);
 
-        // A change made outside Rove shows once the remembered state expires.
+        // A change made outside Paperplane shows once the remembered state expires.
         yield* runGit(repoDir, ["branch", "--set-upstream-to=origin/feature/other-head"]);
         yield* TestClock.adjust("5 minutes");
         expect((yield* lookup)?.number).toBe(236);
       }),
   );
 
-  it.effect("a git read in flight during a Rove git action does not outlive it", () =>
+  it.effect("a git read in flight during a Paperplane git action does not outlive it", () =>
     Effect.gen(function* () {
       const repoDir = yield* makeTempDir("rove-git-manager-");
       yield* initRepo(repoDir);
@@ -1598,7 +1598,7 @@ it.layer(layerGitManagerTest)("GitManager", (it) => {
         branch: "feature/racing-upstream",
       });
 
-      // The branch read has exited with the old upstream; a Rove git action
+      // The branch read has exited with the old upstream; a Paperplane git action
       // changes it before the lookup gets that output.
       const inFlight = yield* Effect.forkChild(lookup);
       yield* Deferred.await(gate.reached);

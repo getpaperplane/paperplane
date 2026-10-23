@@ -92,10 +92,10 @@ export const threadTitleEvaluationCases = [
   {
     id: "research",
     source: "Maintainer title generation request",
-    request: "How can we improve title generation in Rove Code?",
+    request: "How can we improve title generation in Paperplane?",
     previousTitle: "Research title gen improvements",
     messages: [
-      { role: "user", text: "How can we improve title gen further in Rove Code?" },
+      { role: "user", text: "How can we improve title gen further in Paperplane?" },
       {
         role: "assistant",
         text: "Prioritize user messages, refine vague titles once, and resolve PR subjects.",

@@ -34,7 +34,7 @@ it("reports the installed service version and host paths", () => {
   assert.equal(
     formatServiceStatus(status, "0.0.29"),
     [
-      "Rove Code service",
+      "Paperplane service",
       "  Status: installed · rove@0.0.29",
       "  Unit: /home/me/.config/systemd/user/rove.service",
       "  Logs: /home/me/.rove/userdata/logs/boot-service.log",

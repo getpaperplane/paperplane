@@ -15,7 +15,7 @@ export interface CodexEffectiveRuntime {
   readonly revision: string;
 }
 const decodeSettings = Schema.decodeSync(CodexSettings);
-// Managed sign-in stores tokens in Rove's credential store and never writes native auth.json.
+// Managed sign-in stores tokens in Paperplane's credential store and never writes native auth.json.
 const managedCodexLaunchArgs = [
   'model_provider="openai_token_sharing"',
   'model_providers.openai_token_sharing.name="OpenAI Token Sharing"',
@@ -89,7 +89,7 @@ export const makeCodexManagedRuntime = Effect.fn("makeCodexManagedRuntime")(func
           }),
       ),
     );
-    // Ambient CLI overrides cannot redirect a Rove-owned token to a different provider.
+    // Ambient CLI overrides cannot redirect a Paperplane-owned token to a different provider.
     const environment: NodeJS.ProcessEnv = {
       ...options.environment,
       ACCESS_TOKEN: credentials.accessToken,

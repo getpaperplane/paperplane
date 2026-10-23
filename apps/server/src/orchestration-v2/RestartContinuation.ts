@@ -303,8 +303,8 @@ export const continueRestartedRun = Effect.fn("RestartContinuation.continueResta
           source: { kind: "system" },
           outcome: "updated",
           summary: note.settled
-            ? "Rove Code restarted and stopped background work"
-            : "Rove Code restarted and resumed this turn",
+            ? "Paperplane restarted and stopped background work"
+            : "Paperplane restarted and resumed this turn",
           detail: text,
         },
         attachments: [],

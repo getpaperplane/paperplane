@@ -78,7 +78,7 @@ describe("hostHealthFindings", () => {
     expect(
       HostHealth.hostHealthFindings({ ...healthy, roveMemory }, { now, oomBaseline: 2 })[0]
         ?.message,
-    ).toContain("2 out-of-memory kills under the Rove memory ceiling");
+    ).toContain("2 out-of-memory kills under the Paperplane memory ceiling");
     expect(
       HostHealth.hostHealthFindings({ ...healthy, roveMemory }, { now, oomBaseline: 5 }),
     ).toEqual([]);

@@ -1,6 +1,6 @@
 import { isLoopbackHost } from "./preview.ts";
 
-/** Only return to a local client or the hosted Rove client, never an arbitrary OAuth-supplied URL. */
+/** Only return to a local client or the hosted Paperplane client, never an arbitrary OAuth-supplied URL. */
 export function providerAuthReturnUrl(value: string | undefined): string | undefined {
   if (!value) return undefined;
   try {

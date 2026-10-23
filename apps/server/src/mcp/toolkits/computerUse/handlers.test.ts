@@ -448,7 +448,7 @@ it.effect("Windows guidance omits Spaces and Windows errors do not gain a macOS 
       arguments: { element_token: "s01234567:1" },
     });
     expect(text(result)).toContain("ax_window_unresolved");
-    expect(text(result)).not.toContain("Rove note:");
+    expect(text(result)).not.toContain("Paperplane note:");
   }).pipe(
     Effect.provide(
       makeLayer({
@@ -466,7 +466,7 @@ it.effect("Windows guidance omits Spaces and Windows errors do not gain a macOS 
   ),
 );
 
-it.effect("refuses clients without a Rove thread before contacting Cua", () => {
+it.effect("refuses clients without a Paperplane thread before contacting Cua", () => {
   const calls: Array<{ name: string; args: CuaDriver.CuaArguments }> = [];
   return Effect.gen(function* () {
     const external = {
@@ -481,7 +481,7 @@ it.effect("refuses clients without a Rove thread before contacting Cua", () => {
     for (const name of ["computer_describe", "computer_call"]) {
       const refused = yield* callTool(name, { tool: "list_apps" }, external);
       expect(refused.isError).toBe(true);
-      expect(text(refused)).toContain("needs an agent running inside Rove Code");
+      expect(text(refused)).toContain("needs an agent running inside Paperplane");
     }
     expect(calls).toHaveLength(0);
   }).pipe(Effect.provide(makeLayer({ enabled: true, calls })));

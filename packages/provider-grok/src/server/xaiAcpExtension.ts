@@ -93,7 +93,7 @@ export function xAiPromptCompleteFromSessionUpdate(
 
 /**
  * Grok answers a finished background command in its own turn, tagging every
- * frame with a `task-completed-*` prompt id instead of the one Rove sent.
+ * frame with a `task-completed-*` prompt id instead of the one Paperplane sent.
  */
 export function isXAiTaskCompletedWakeNotification(
   notification: EffectAcpSchema.SessionNotification,
@@ -1049,8 +1049,8 @@ export interface XAiExitPlanModeResponse {
 }
 
 /**
- * Client captured the plan for Rove's proposed-plan card. Abandon the native
- * Grok plan-approval gate so the turn unblocks; the user implements via Rove UI.
+ * Client captured the plan for Paperplane's proposed-plan card. Abandon the native
+ * Grok plan-approval gate so the turn unblocks; the user implements via Paperplane UI.
  */
 export function makeXAiExitPlanModeCapturedResponse(feedback?: string): XAiExitPlanModeResponse {
   return {
@@ -1151,7 +1151,7 @@ export function isGrokPlanMarkdownPath(
 
 /**
  * Extract plan markdown from a Grok write/edit tool call targeting plan.md.
- * Used so Rove can show the plan while plan mode is still active (before exit).
+ * Used so Paperplane can show the plan while plan mode is still active (before exit).
  */
 export function extractGrokPlanMarkdownFromToolCallData(
   data: Record<string, unknown> | undefined,
@@ -1563,7 +1563,7 @@ const rememberCompletedXAiPromptId = (
  * - `x.ai/session/prompt_complete` (open-source fire-and-forget signal)
  * - `_x.ai/session/prompt_complete` (released-build alias)
  *
- * Pending entries are keyed by root sessionId + Rove-injected promptId, so
+ * Pending entries are keyed by root sessionId + Paperplane-injected promptId, so
  * foreign/child sessions and `task-completed-*` ids do not settle the root turn.
  */
 export const makeXAiPromptCompletionRuntime = Effect.fn("makeXAiPromptCompletionRuntime")(

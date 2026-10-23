@@ -718,7 +718,7 @@ elif [ -n "$REMOTE_PID" ] && [ -n "$REMOTE_PORT" ] && server_running "$REMOTE_PI
     REMOTE_PORT=""
     REMOTE_MANAGED=""
   elif ! wait_ready "@@ROVE_READY_TIMEOUT_MS@@"; then
-    printf 'Remote Rove Code server is still running but did not become ready. Retry the connection; the server was left running.\\n' >&2
+    printf 'Remote Paperplane server is still running but did not become ready. Retry the connection; the server was left running.\\n' >&2
     exit 1
   fi
 else
@@ -742,7 +742,7 @@ if [ -z "$REMOTE_PORT" ]; then
   printf '%s\\n' "$REMOTE_PORT" >"$PORT_FILE"
   printf 'managed\\n' >"$MANAGED_FILE"
   if ! wait_ready "@@ROVE_READY_TIMEOUT_MS@@"; then
-    printf 'Remote Rove Code server did not become ready on 127.0.0.1:%s.\\n' "$REMOTE_PORT" >&2
+    printf 'Remote Paperplane server did not become ready on 127.0.0.1:%s.\\n' "$REMOTE_PORT" >&2
     if [ -s "$LOG_FILE" ]; then
       tail -n 80 "$LOG_FILE" >&2 2>/dev/null || true
     else
@@ -779,7 +779,7 @@ if [ -z "$RUNTIME_INFO" ] || ! "$RUNNER_FILE" __ssh-helper wait-ready "\${RUNTIM
     *) "$RUNNER_FILE" service install --base-dir "$DEFAULT_SERVER_HOME" >&2 ;;
   esac
   if ! RUNTIME_INFO="$("$RUNNER_FILE" __ssh-helper wait-service "$DEFAULT_RUNTIME_FILE" "@@ROVE_READY_TIMEOUT_MS@@" "@@ROVE_READY_PROBE_TIMEOUT_MS@@")"; then
-    printf 'The persistent Rove service did not become ready. Run rove service status and rove triage on the host. SSH requires a loopback-reachable server.\\n' >&2
+    printf 'The persistent Paperplane service did not become ready. Run rove service status and rove triage on the host. SSH requires a loopback-reachable server.\\n' >&2
     exit 1
   fi
 fi
@@ -818,7 +818,7 @@ if [ "$REMOTE_MANAGED" != "external" ] && [ -n "$REMOTE_PID" ] && kill -0 "$REMO
     sleep 0.1
   done
   if kill -0 "$REMOTE_PID" 2>/dev/null; then
-    printf 'Remote Rove Code server with PID %s did not stop within 2 seconds. Its ownership files were kept.\\n' "$REMOTE_PID" >&2
+    printf 'Remote Paperplane server with PID %s did not stop within 2 seconds. Its ownership files were kept.\\n' "$REMOTE_PID" >&2
     exit 1
   fi
 fi

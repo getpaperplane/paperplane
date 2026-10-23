@@ -851,7 +851,7 @@ export const PreviewAutomationResponse = Schema.Struct({
 });
 export type PreviewAutomationResponse = typeof PreviewAutomationResponse.Type;
 
-// Thread fields are absent when the caller signed in from outside a Rove thread.
+// Thread fields are absent when the caller signed in from outside a Paperplane thread.
 const McpCapabilityErrorFields = {
   environmentId: EnvironmentId,
   threadId: Schema.optional(ThreadId),

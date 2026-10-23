@@ -17,7 +17,7 @@ export function toPiRoveToolResult(result: CallToolResult) {
       result.content
         .filter((part) => part.type === "text")
         .map((part) => part.text)
-        .join("\n") || "Rove tool failed.",
+        .join("\n") || "Paperplane tool failed.",
     );
   }
   return {
@@ -32,7 +32,7 @@ export function toPiRoveToolResult(result: CallToolResult) {
   };
 }
 
-/** Only connects to the Rove-owned endpoint supplied by the provider session registry. */
+/** Only connects to the Paperplane-owned endpoint supplied by the provider session registry. */
 export async function createPiRoveTools(config: McpProviderSessionConfig | undefined) {
   if (!config) return { tools: [], dispose: async () => {} };
 

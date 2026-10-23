@@ -21,7 +21,7 @@ export interface SandboxHandle {
   /** Modal only; resumed sandboxes stay in the region they were created in. */
   region?: SandboxRegion;
 }
-// Bootstrap installs Rove and waits for it to become ready; both can be slow.
+// Bootstrap installs Paperplane and waits for it to become ready; both can be slow.
 const COMMAND_TIMEOUT_SECONDS = 600;
 
 export interface SandboxDriver {
@@ -191,8 +191,8 @@ export function makeBoatDriver(
     exec,
     expose: async (handle) => {
       await ready(handle);
-      // Boat's proxy token isn't compatible with Rove's pairing/WebSocket URLs.
-      // Rove's own authentication, not an ungated agent endpoint, owns access.
+      // Boat's proxy token isn't compatible with Paperplane's pairing/WebSocket URLs.
+      // Paperplane's own authentication, not an ungated agent endpoint, owns access.
       const result = decodeBoatHost(
         await request(`${path(handle)}/host`, { port: SANDBOX_PORT, public: true }),
       );
@@ -214,7 +214,7 @@ export const makeSandboxDriver: SandboxDriverFactory = async (provider, credenti
   const client = new ModalClient({ tokenId: credentials.tokenId, tokenSecret: credentials.token });
   // State lives on the sandbox filesystem and persists through pause snapshots,
   // as Modal recommends for work beyond its 24-hour run limit. Modal volumes
-  // can't hold it: they reject hard links, which npm and Rove's atomic writes need.
+  // can't hold it: they reject hard links, which npm and Paperplane's atomic writes need.
   // `name` (stored as volumeName for older records) finds unrecorded sandboxes.
   const create = async (
     name: string,

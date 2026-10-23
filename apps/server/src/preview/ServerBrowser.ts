@@ -2478,7 +2478,7 @@ const make = Effect.gen(function* () {
     (yield* PreviewBrowserHost.sandboxBlocked)
   ) {
     yield* Effect.logWarning(
-      `This host blocks the sandbox Rove's browser runs in, so browser tabs and HTML previews will not start. Run \`${setupCommand}\` once to allow it.`,
+      `This host blocks the sandbox Paperplane's browser runs in, so browser tabs and HTML previews will not start. Run \`${setupCommand}\` once to allow it.`,
     );
   }
   // The desktop took its page back (closed, swapped, crashed, or devtools opened).

@@ -72,7 +72,7 @@ it.layer(NodeServices.layer)("Muse status", (it) => {
       expect(snapshot.installed).toBe(false);
       expect(snapshot.status).toBe("error");
       expect(snapshot.message).toContain("muse login");
-      expect(snapshot.message).toContain("this Rove server host");
+      expect(snapshot.message).toContain("this Paperplane server host");
     }),
   );
 

@@ -164,7 +164,7 @@ export type ScheduledTaskRunStatus = typeof ScheduledTaskRunStatus.Type;
 export const ScheduledTaskWebhookEndpoint = Schema.Struct({
   /** Environment-relative path including the secret token; works on any origin that reaches the environment. */
   path: TrimmedNonEmptyString,
-  /** Public Rove Connect URL, or null when the environment is not linked to Rove Connect. */
+  /** Public Paperplane Connect URL, or null when the environment is not linked to Paperplane Connect. */
   url: Schema.NullOr(TrimmedNonEmptyString),
   hasSecret: Schema.Boolean,
 });

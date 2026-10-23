@@ -21,7 +21,7 @@ import * as NodeCrypto from "node:crypto";
 import * as ServerConfig from "../config.ts";
 import { openZipArchive } from "../zipArchive.ts";
 
-// The one browser Rove installs on a host. HTML render previews and server
+// The one browser Paperplane installs on a host. HTML render previews and server
 // browser tabs both run this pinned Chrome for Testing headless shell, so a host
 // downloads it once; neither uses a browser the user installed. To bump the pin, pick a version
 // from https://googlechromelabs.github.io/chrome-for-testing/known-good-versions-with-downloads.json,
@@ -101,7 +101,7 @@ export class PreviewBrowserInstallError extends Schema.TaggedError<PreviewBrowse
   { detail: Schema.String, cause: Schema.optional(Schema.Defect()) },
 ) {
   override get message(): string {
-    return `Rove could not install its headless browser: ${this.detail} Try again.`;
+    return `Paperplane could not install its headless browser: ${this.detail} Try again.`;
   }
 }
 const isInstallError = Schema.is(PreviewBrowserInstallError);
@@ -114,7 +114,7 @@ export class PreviewBrowserInstallingError extends Schema.TaggedError<PreviewBro
     const progress = this.unpacking
       ? "unpacking"
       : `${megabytes(this.downloadedBytes)} of ${megabytes(this.totalBytes)} MB downloaded`;
-    return `Rove is installing its headless browser (${progress}). Try again in a minute.`;
+    return `Paperplane is installing its headless browser (${progress}). Try again in a minute.`;
   }
 }
 
@@ -123,7 +123,7 @@ export class PreviewBrowserUnsupportedError extends Schema.TaggedError<PreviewBr
   { platform: Schema.String, arch: Schema.String },
 ) {
   override get message(): string {
-    return `Rove's headless browser is not available on ${this.platform}-${this.arch}: Chrome for Testing has no headless shell for it.`;
+    return `Paperplane's headless browser is not available on ${this.platform}-${this.arch}: Chrome for Testing has no headless shell for it.`;
   }
 }
 
@@ -312,7 +312,7 @@ export const makePreviewBrowser = Effect.fn("PreviewBrowser.make")(function* (
     },
     Effect.scoped,
     Effect.mapError(
-      wrapFailure("Could not unpack the browser. Check free disk space in Rove's home directory."),
+      wrapFailure("Could not unpack the browser. Check free disk space in Paperplane's home directory."),
     ),
   );
 
@@ -363,7 +363,7 @@ export const makePreviewBrowser = Effect.fn("PreviewBrowser.make")(function* (
       );
       return path.join(installRoot, release.version, executableName);
     },
-    Effect.mapError(wrapFailure("Could not save the browser in Rove's home directory.")),
+    Effect.mapError(wrapFailure("Could not save the browser in Paperplane's home directory.")),
   );
 
   // Joins the current install or starts one. A failure is reported once, then cleared.

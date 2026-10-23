@@ -4,7 +4,7 @@ import { expandHomePath } from "@rove-code/provider-core/server/pathExpansion";
 
 /**
  * Directory new worktrees are created under: the `worktreesDirectory`
- * setting (`~` expands to `home`), or `defaultDir` (`<Rove home>/worktrees`)
+ * setting (`~` expands to `home`), or `defaultDir` (`<Paperplane home>/worktrees`)
  * when it is empty. Null when
  * the setting is not an absolute path on this machine, such as `D:\worktrees`
  * configured for a Windows server and synced to a Linux one, or when it is a
@@ -28,7 +28,7 @@ export function isFilesystemRoot(directory: string, path: Path.Path): boolean {
   return path.dirname(directory) === directory;
 }
 
-/** Every directory that holds Rove-managed worktrees on this machine. */
+/** Every directory that holds Paperplane-managed worktrees on this machine. */
 export function managedWorktreesDirectories(
   settings: {
     readonly worktreesDirectory: string;

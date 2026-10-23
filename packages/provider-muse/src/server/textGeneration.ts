@@ -112,7 +112,7 @@ async function generateMuseText(
       await host.connection.command("userInput/cancel", {
         sessionId,
         userInputId: request.userInputId,
-        reason: "Rove Code text generation cannot request user input.",
+        reason: "Paperplane text generation cannot request user input.",
       });
     }
   };
@@ -156,7 +156,7 @@ async function generateMuseText(
   });
   host.connection.onProtocolError(rejectCompletion);
   host.connection.onServerRequest(async () => {
-    const error = new Error("Rove Code text generation cannot approve interactive requests.");
+    const error = new Error("Paperplane text generation cannot approve interactive requests.");
     rejectCompletion(error);
     throw error;
   });
@@ -269,7 +269,7 @@ export const makeMuseTextGeneration = Effect.fn("makeMuseTextGeneration")(functi
           new TextGenerationError({
             operation,
             detail:
-              "Muse Code text generation failed. Check Muse login and availability on this Rove server host.",
+              "Muse Code text generation failed. Check Muse login and availability on this Paperplane server host.",
             cause,
           }),
       ),

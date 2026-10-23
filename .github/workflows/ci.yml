@@ -481,7 +481,7 @@ jobs:
       - name: Lint mobile native sources
         run: vp run lint:mobile
 
-  # Rove-only: self-signed Windows payloads and hosted-deployment checks.
+  # Paperplane-only: self-signed Windows payloads and hosted-deployment checks.
   windows_release:
     name: Windows release checks ${{ matrix.runner }}
     strategy:

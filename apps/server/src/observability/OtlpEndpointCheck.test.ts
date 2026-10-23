@@ -72,7 +72,7 @@ const check = (input: Parameters<OtlpEndpointCheck.OtlpEndpointCheck["Service"][
   });
 
 describe("OtlpEndpointCheck", () => {
-  it.effect("posts an empty export for the signal with the Rove headers", () => {
+  it.effect("posts an empty export for the signal with the Paperplane headers", () => {
     const { requests, layer } = checkWith(200, {
       otlpMetricsUrl: "http://collector:4318/v1/metrics",
       otlpMetricsExport: { ...DEFAULT_SIGNAL_EXPORT, headers: { authorization: "Bearer rove" } },
@@ -88,7 +88,7 @@ describe("OtlpEndpointCheck", () => {
     }).pipe(Effect.provide(layer));
   });
 
-  it.effect("keeps Rove credentials paired with each running signal endpoint", () => {
+  it.effect("keeps Paperplane credentials paired with each running signal endpoint", () => {
     const signalExport = { ...DEFAULT_SIGNAL_EXPORT, headers: { "x-api-key": "secret" } };
     const { requests, layer } = checkWith(200, {
       otlpTracesUrl: "https://collector.example.com/v1/traces",

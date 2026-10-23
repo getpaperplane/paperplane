@@ -168,7 +168,7 @@ const makeMigrationLoader = (throughId?: number) =>
 // V2's schema migrations start at 55 after the legacy schema migrations.
 const FIRST_V2_MIGRATION_ID = 55;
 
-// Rove builds recorded V1-only migrations at ids 55-57 before V2 claimed them.
+// Paperplane builds recorded V1-only migrations at ids 55-57 before V2 claimed them.
 // Their columns are not used by the V1 importer. Reconcile only these exact ledger
 // rows on the copied database so V2 runs normally; never re-run the V1 migrations.
 const ROVE_LEGACY_MIGRATIONS = [

@@ -161,7 +161,7 @@ describe("AcpRegistryAdapterV2", () => {
     });
 
     // A scripted ACP v1 agent: initialize, session/new answered with `setup`,
-    // then the frames Rove must send (and the agent's answers) to apply the
+    // then the frames Paperplane must send (and the agent's answers) to apply the
     // user's stored pick from the agent's mode picker.
     const openWithStoredModePick = Effect.fn("openWithStoredModePick")(function* (input: {
       readonly setup: unknown;

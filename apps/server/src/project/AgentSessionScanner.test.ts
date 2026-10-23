@@ -798,7 +798,7 @@ it.layer(NodeServices.layer)("AgentSessionScanner", (it) => {
       }),
     );
 
-    it.effect("excludes the home directory, temporary root, and Rove data directory", () =>
+    it.effect("excludes the home directory, temporary root, and Paperplane data directory", () =>
       Effect.gen(function* () {
         const path = yield* Path.Path;
         const claudeHomePath = yield* makeTempDir("rove-claude-home-");
@@ -825,7 +825,7 @@ it.layer(NodeServices.layer)("AgentSessionScanner", (it) => {
       }),
     );
 
-    it.effect("excludes Rove-managed worktree sandboxes", () =>
+    it.effect("excludes Paperplane-managed worktree sandboxes", () =>
       Effect.gen(function* () {
         const path = yield* Path.Path;
         const claudeHomePath = yield* makeTempDir("rove-claude-home-");
@@ -2374,7 +2374,7 @@ it.layer(NodeServices.layer)("AgentSessionScanner", (it) => {
       }),
     );
 
-    it.effect("does not import sessions from a Rove-managed worktree", () =>
+    it.effect("does not import sessions from a Paperplane-managed worktree", () =>
       Effect.gen(function* () {
         const path = yield* Path.Path;
         const fileSystem = yield* FileSystem.FileSystem;

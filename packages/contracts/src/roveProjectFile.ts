@@ -5,7 +5,7 @@ import { ThreadEnvMode, WorktreeSubmodules } from "./environment.ts";
 import { ProjectScriptIcon } from "./project.ts";
 import type { ProjectScopedServerSettingKey, ServerSettings } from "./settings.ts";
 
-/** File name of the checked-in Rove project file, resolved at the workspace root. */
+/** File name of the checked-in Paperplane project file, resolved at the workspace root. */
 export const ROVE_PROJECT_FILE_NAME = "rove.json";
 
 /** Public URL of the published JSON Schema for {@link RoveProjectFile}. */
@@ -27,10 +27,10 @@ const trimmedNonEmpty = (annotations: { readonly description: string }, maxLengt
 
 export const RoveProjectFileScript = Schema.Struct({
   name: trimmedNonEmpty({
-    description: "Display name for the script, shown in the Rove Code scripts menu.",
+    description: "Display name for the script, shown in the Paperplane scripts menu.",
   }),
   command: trimmedNonEmpty({
-    description: "Shell command executed in a Rove Code terminal at the project root.",
+    description: "Shell command executed in a Paperplane terminal at the project root.",
   }),
   icon: Schema.optionalKey(
     ProjectScriptIcon.annotate({
@@ -68,7 +68,7 @@ export const RoveProjectFileScript = Schema.Struct({
     }),
   ),
 }).annotate({
-  description: "A project script that team members can import into Rove Code.",
+  description: "A project script that team members can import into Paperplane.",
 });
 export type RoveProjectFileScript = typeof RoveProjectFileScript.Type;
 
@@ -82,7 +82,7 @@ export const RoveProjectFile = Schema.Struct({
     trimmedNonEmpty(
       {
         description:
-          'Workspace-relative path to the project icon (e.g. "assets/logo.svg"). Checked before Rove Code\'s built-in icon locations.',
+          'Workspace-relative path to the project icon (e.g. "assets/logo.svg"). Checked before Paperplane\'s built-in icon locations.',
       },
       ROVE_PROJECT_FILE_PATH_MAX_LENGTH,
     ),
@@ -90,26 +90,26 @@ export const RoveProjectFile = Schema.Struct({
   defaultThreadEnvMode: Schema.optionalKey(
     ThreadEnvMode.annotate({
       description:
-        'Where new threads start for this repository: "worktree" for a fresh git worktree, "local" for the current checkout. A per-project setting in Rove Code overrides this; when neither is set, the global default applies.',
+        'Where new threads start for this repository: "worktree" for a fresh git worktree, "local" for the current checkout. A per-project setting in Paperplane overrides this; when neither is set, the global default applies.',
     }),
   ),
   worktreeSubmodules: Schema.optionalKey(
     WorktreeSubmodules.annotate({
       description:
-        'How new worktrees populate git submodules: "recursive" (the default) initializes nested submodules too, "top-level" initializes only those declared by this repository, and "none" leaves every submodule empty for a setup script to handle. A project or environment setting in Rove Code overrides this.',
+        'How new worktrees populate git submodules: "recursive" (the default) initializes nested submodules too, "top-level" initializes only those declared by this repository, and "none" leaves every submodule empty for a setup script to handle. A project or environment setting in Paperplane overrides this.',
     }),
   ),
   scripts: Schema.optionalKey(
     Schema.Array(RoveProjectFileScript)
       .annotate({
-        description: "Project scripts shared with everyone who opens this repository in Rove Code.",
+        description: "Project scripts shared with everyone who opens this repository in Paperplane.",
       })
       .check(Schema.isMaxLength(ROVE_PROJECT_FILE_MAX_SCRIPTS)),
   ),
 }).annotate({
-  title: "Rove project file",
+  title: "Paperplane project file",
   description:
-    "Checked-in project configuration for Rove Code (rove.json at the repository root). See https://github.com/hafiezul/rove/blob/main/docs/user/project-settings.md for documentation.",
+    "Checked-in project configuration for Paperplane (rove.json at the repository root). See https://github.com/hafiezul/rove/blob/main/docs/user/project-settings.md for documentation.",
 });
 export type RoveProjectFile = typeof RoveProjectFile.Type;
 

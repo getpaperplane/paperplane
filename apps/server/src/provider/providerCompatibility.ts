@@ -8,7 +8,7 @@ import {
 import { satisfiesSemverRange } from "@rove-code/shared/semver";
 import * as Schema from "effect/Schema";
 
-// Manifest gates describe upstream adapter generations, not Rove's independent
+// Manifest gates describe upstream adapter generations, not Paperplane's independent
 // release numbering. This V2 port implements the 0.0.46 adapter generation;
 // keep reported server/release versions honest and advance this with future ports.
 export const PROVIDER_COMPATIBILITY_BASELINE = "0.0.46";
@@ -90,11 +90,11 @@ export function resolveProviderCompatibility(
       : "unknown";
   const message =
     status === "broken"
-      ? "This provider version is known to be incompatible with this Rove Code release."
+      ? "This provider version is known to be incompatible with this Paperplane release."
       : status === "unsupported"
-        ? "This provider version is outside the supported range for this Rove Code release."
+        ? "This provider version is outside the supported range for this Paperplane release."
         : status === "graceful"
-          ? "This provider version has limited compatibility with this Rove Code release."
+          ? "This provider version has limited compatibility with this Paperplane release."
           : null;
   const recommendedVersion = policy.recommendedVersion ?? null;
   const recommendedRange = policy.recommendedRange ?? null;

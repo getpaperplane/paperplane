@@ -258,7 +258,7 @@ export const make = Effect.gen(function* () {
         Effect.provideService(FileSystem.FileSystem, fileSystem),
         Effect.provideService(HostProcess.Environment, hostEnvironment),
         Effect.catch((cause) =>
-          Effect.logWarning("Could not configure Rove memory limits", { cause }).pipe(
+          Effect.logWarning("Could not configure Paperplane memory limits", { cause }).pipe(
             Effect.as(undefined),
           ),
         ),

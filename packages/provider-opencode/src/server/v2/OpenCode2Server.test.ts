@@ -180,7 +180,7 @@ describe("OpenCode2Server passwords", () => {
     }).pipe(Effect.provide(NodeServices.layer)),
   );
 
-  it("hands the spawned server only the Rove password", () => {
+  it("hands the spawned server only the Paperplane password", () => {
     const password = Redacted.make("rove-generated");
     const environment = OpenCode2Server.serverEnvironment(
       { PATH: "/bin", OPENCODE_SERVER_PASSWORD: "ambient", OPENCODE_PASSWORD: "ambient" },
@@ -192,7 +192,7 @@ describe("OpenCode2Server passwords", () => {
 
 // Serves /api/info only with the password from OPENCODE_PASSWORD, like 2.x, and
 // prints the 2.x banner (plus the generated-password line 2.x prints when no
-// password is set, which Rove must never need).
+// password is set, which Paperplane must never need).
 const FAKE_SERVER = `import { createServer } from "node:http";
 const expected = "Basic " + Buffer.from("opencode:" + process.env.OPENCODE_PASSWORD).toString("base64");
 const server = createServer((request, response) => {

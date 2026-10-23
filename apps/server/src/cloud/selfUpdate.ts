@@ -216,12 +216,12 @@ export const make = Effect.fn("cloud.server_self_update.make")(function* () {
         return yield* desktopAppUpdate.run(reportProgress);
       }
       return yield* failWith(
-        "This server is managed by the Rove Code desktop app on its machine; update the desktop app to update it.",
+        "This server is managed by the Paperplane desktop app on its machine; update the desktop app to update it.",
       );
     }
     if (capability === null) {
       return yield* failWith(
-        "Remote updates require the Rove Code background service. Run `rove service install` on the server machine.",
+        "Remote updates require the Paperplane background service. Run `rove service install` on the server machine.",
       );
     }
 

@@ -121,7 +121,7 @@ export const resolveNightlyReleaseMetadata = (
     baseVersion,
     version,
     tag: `v${version}`,
-    name: `Rove Code ${CHANNEL_RELEASE_LABELS[channel]} ${version} (${shortSha})`,
+    name: `Paperplane ${CHANNEL_RELEASE_LABELS[channel]} ${version} (${shortSha})`,
     shortSha,
   };
 };

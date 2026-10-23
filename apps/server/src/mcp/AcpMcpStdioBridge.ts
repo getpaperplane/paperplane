@@ -10,11 +10,11 @@ import * as Stream from "effect/Stream";
 import { discardResponseBody, responsePayloads } from "@rove-code/shared/mcpResponsePayloads";
 
 /**
- * Stdio-to-HTTP bridge for Rove's MCP endpoint.
+ * Stdio-to-HTTP bridge for Paperplane's MCP endpoint.
  *
  * ACP agents must support stdio MCP servers, while optional http/sse support
  * is unevenly implemented. `rove acp-mcp-bridge` runs as the stdio MCP server an
- * ACP agent spawns and forwards each JSON-RPC line to Rove's authenticated
+ * ACP agent spawns and forwards each JSON-RPC line to Paperplane's authenticated
  * streamable-HTTP endpoint: single JSON responses and SSE streams are written
  * back as newline-delimited JSON-RPC, notification acknowledgements (202/204)
  * produce no output, and the `mcp-session-id` / negotiated protocol version
@@ -110,7 +110,7 @@ export function callAcpMcpTool(
         if (!response.ok) {
           yield* discardResponseBody(response);
           return yield* Effect.fail(
-            new AcpMcpBridgeError(`Rove Code MCP endpoint responded with HTTP ${response.status}.`),
+            new AcpMcpBridgeError(`Paperplane MCP endpoint responded with HTTP ${response.status}.`),
           );
         }
         const payloads = yield* Stream.runCollect(responsePayloads(response, bridgeError));
@@ -134,7 +134,7 @@ export function callAcpMcpTool(
     const initializeResponse = initialized.find((entry) => asEnvelope(entry)?.id === initializeId);
     if (initializeResponse === undefined || asEnvelope(initializeResponse)?.error !== undefined) {
       return yield* Effect.fail(
-        new AcpMcpBridgeError("Rove Code MCP endpoint rejected initialization."),
+        new AcpMcpBridgeError("Paperplane MCP endpoint rejected initialization."),
       );
     }
     yield* send({ jsonrpc: "2.0", method: "notifications/initialized" });
@@ -151,7 +151,7 @@ export function callAcpMcpTool(
     if (envelope === null || envelope.error !== undefined) {
       return yield* Effect.fail(
         new AcpMcpBridgeError(
-          `Rove Code MCP tool call failed${envelope?.error === undefined ? "." : `: ${JSON.stringify(envelope.error)}`}`,
+          `Paperplane MCP tool call failed${envelope?.error === undefined ? "." : `: ${JSON.stringify(envelope.error)}`}`,
         ),
       );
     }
@@ -215,7 +215,7 @@ export function runAcpMcpStdioBridge(options: AcpMcpStdioBridgeOptions): Effect.
           if (envelope.id !== undefined) {
             yield* respondWithError(
               envelope.id,
-              `Rove Code MCP endpoint responded with HTTP ${response.status}.`,
+              `Paperplane MCP endpoint responded with HTTP ${response.status}.`,
             );
           }
           return yield* discardResponseBody(response);
@@ -227,7 +227,7 @@ export function runAcpMcpStdioBridge(options: AcpMcpStdioBridgeOptions): Effect.
           const error = Cause.squash(cause);
           return respondWithError(
             envelope.id,
-            `Rove Code MCP bridge request failed: ${error instanceof Error ? error.message : String(error)}`,
+            `Paperplane MCP bridge request failed: ${error instanceof Error ? error.message : String(error)}`,
           );
         }),
       );

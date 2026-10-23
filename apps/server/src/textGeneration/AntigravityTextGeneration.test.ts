@@ -507,7 +507,7 @@ it.layer(NodeServices.layer)("AntigravityTextGeneration", (it) => {
     }).pipe(Effect.scoped),
   );
 
-  it.effect("uses the native default without sending Rove's default selection as a model ID", () =>
+  it.effect("uses the native default without sending Paperplane's default selection as a model ID", () =>
     Effect.gen(function* () {
       const fixture = yield* makeFixture();
       const result = yield* fixture.textGeneration.generateThreadTitle({

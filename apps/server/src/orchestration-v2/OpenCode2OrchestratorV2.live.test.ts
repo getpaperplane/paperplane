@@ -13,7 +13,7 @@
  * `opencode/big-pickle` model; `OPENCODE2_MODEL` picks another (its provider's
  * key comes from the test's environment, which the spawned server inherits).
  * A second run covers plan mode, a workspace command and skill, and `/compact`;
- * a third a generated title, Rove's MCP server (`OPENCODE2_MCP_URL` names a
+ * a third a generated title, Paperplane's MCP server (`OPENCODE2_MCP_URL` names a
  * stand-in one) and a turn cut off by a killed server. Each step waits up to
  * `OPENCODE2_STEP_WAIT` seconds (120 by default).
  */
@@ -98,7 +98,7 @@ const layerSpawnedServers = Layer.succeed(
 );
 
 /**
- * Credentials for Rove's MCP server. `OPENCODE2_MCP_URL` points them at a stand-in
+ * Credentials for Paperplane's MCP server. `OPENCODE2_MCP_URL` points them at a stand-in
  * MCP server the run can see called; without it they point nowhere, as in replay.
  */
 const MCP_URL = process.env.OPENCODE2_MCP_URL ?? "http://127.0.0.1/mcp";
@@ -645,7 +645,7 @@ describe.runIf(binaryPath !== undefined && ROOT !== "")("OpenCode 2 live orchest
         );
 
         // Background: when the child ends after run 1, OpenCode wakes the parent
-        // and Rove opens run 2 for that execution. A child that ends while run 1
+        // and Paperplane opens run 2 for that execution. A child that ends while run 1
         // still runs has its report delivered into run 1 instead, which then
         // answers it, and no continuation run opens. Either way the subagent
         // completes and nothing is left running.
@@ -685,7 +685,7 @@ describe.runIf(binaryPath !== undefined && ROOT !== "")("OpenCode 2 live orchest
         );
 
         // Stop while a background child runs: OpenCode keeps a background
-        // child running past a parent Stop, so Rove stops it, and nothing wakes.
+        // child running past a parent Stop, so Paperplane stops it, and nothing wakes.
         const stopThread = yield* thread("stop");
         yield* send(
           stopThread,
@@ -890,7 +890,7 @@ describe.runIf(binaryPath !== undefined && ROOT !== "")("OpenCode 2 live orchest
         assert.include(assistantText(forked, forked.runs[0]!.id).toUpperCase(), "NO");
 
         // 4. Roll the source back to the first turn: OpenCode's history drops the
-        // later turns and Rove's checkpoint puts ALPHA back.
+        // later turns and Paperplane's checkpoint puts ALPHA back.
         const checkpoint = drained.checkpoints.find(
           (candidate) => candidate.appRunOrdinal === 1 && candidate.status === "ready",
         );
@@ -1039,7 +1039,7 @@ describe.runIf(binaryPath !== undefined && ROOT !== "")("OpenCode 2 live orchest
   );
 
   it.live(
-    "generates a title, calls Rove's MCP server, and reconciles a turn cut off by a killed server",
+    "generates a title, calls Paperplane's MCP server, and reconciles a turn cut off by a killed server",
     () =>
       Effect.gen(function* () {
         const work = `${ROOT}/work`;
@@ -1076,12 +1076,12 @@ describe.runIf(binaryPath !== undefined && ROOT !== "")("OpenCode 2 live orchest
         const runs = (count: number) => (projection: OrchestrationV2ThreadProjection) =>
           projection.runs.length === count && settled(projection);
 
-        // Rove's MCP server for this thread: the stand-in's one tool answers a marker.
+        // Paperplane's MCP server for this thread: the stand-in's one tool answers a marker.
         if (process.env.OPENCODE2_MCP_URL !== undefined) {
           yield* send(
             threadId,
             "restart-mcp",
-            "Call the echo_marker tool from the Rove Code MCP server with word 'kiwi', then reply with its exact output and nothing else.",
+            "Call the echo_marker tool from the Paperplane MCP server with word 'kiwi', then reply with its exact output and nothing else.",
           );
           const called = yield* waitFor(threadId, runs(1));
           assert.equal(called.runs[0]?.status, "completed");
@@ -1090,7 +1090,7 @@ describe.runIf(binaryPath !== undefined && ROOT !== "")("OpenCode 2 live orchest
         }
         const before = (yield* orchestrator.getThreadProjection(threadId)).runs.length;
 
-        // The spawned server dies mid-command; Rove restarts it and settles the turn.
+        // The spawned server dies mid-command; Paperplane restarts it and settles the turn.
         yield* send(
           threadId,
           "restart-killed",
@@ -1169,7 +1169,7 @@ describe.runIf(binaryPath !== undefined && ROOT !== "")("OpenCode 2 live orchest
         assert.equal(shell?.status, "completed");
         const reply = done.turnItems.findLast((item) => item.type === "assistant_message");
         assert.include(reply?.type === "assistant_message" ? reply.text : "", "AFTER_DROP");
-        // The thread's Rove MCP server is registered on the external server for now.
+        // The thread's Paperplane MCP server is registered on the external server for now.
         const opencode = yield* OpenCode2Client.make.pipe(Effect.provide(FetchHttpClient.layer));
         const api = yield* opencode.connect({
           baseUrl: process.env.OPENCODE2_SERVER_URL!,
@@ -1179,7 +1179,7 @@ describe.runIf(binaryPath !== undefined && ROOT !== "")("OpenCode 2 live orchest
         assert.deepEqual(
           servers.data.map((server) => server.name),
           [],
-          "an external server gets no Rove MCP server, as with 1.x",
+          "an external server gets no Paperplane MCP server, as with 1.x",
         );
       }).pipe(Effect.provide(Layer.merge(layerLive, NodeServices.layer)), Effect.scoped),
     360_000,

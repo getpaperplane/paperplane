@@ -36,7 +36,7 @@ const boatErrorMessages = new Map([
   ],
   [
     "trial_auto_stop_required",
-    "Boat trial accounts require auto-stop within two hours. Rove currently requests unlimited runtime; use a paid Boat plan or Modal instead.",
+    "Boat trial accounts require auto-stop within two hours. Paperplane currently requests unlimited runtime; use a paid Boat plan or Modal instead.",
   ],
   [
     "trial_machine_class_not_allowed",

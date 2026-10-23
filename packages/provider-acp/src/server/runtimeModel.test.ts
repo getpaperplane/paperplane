@@ -1425,7 +1425,7 @@ describe("extractMcpToolCallIdentity", () => {
     });
   });
 
-  it("recovers Rove identity from acp-mcp-call fallback commands", () => {
+  it("recovers Paperplane identity from acp-mcp-call fallback commands", () => {
     const toolCall = toolCallFromUpdate({
       sessionUpdate: "tool_call",
       toolCallId: "exec-1",
@@ -1443,7 +1443,7 @@ describe("extractMcpToolCallIdentity", () => {
     ).toEqual({ server: "rove", tool: "delegate_task", input: { task: "x" } });
   });
 
-  it("recovers Rove identity from pi-acp title-only fallback execs", () => {
+  it("recovers Paperplane identity from pi-acp title-only fallback execs", () => {
     // Captured verbatim from pi-acp 0.0.33 2026-08-14: rawInput is null and
     // the command line only appears as the verbatim title, which the
     // presentation layer summarizes into "Ran command".
@@ -1471,7 +1471,7 @@ describe("extractMcpToolCallIdentity", () => {
     });
   });
 
-  it("recovers Rove identity from server-namespaced titles across titleless updates", () => {
+  it("recovers Paperplane identity from server-namespaced titles across titleless updates", () => {
     // Captured verbatim from Kilo 7.4.22 2026-08-15: the initial tool_call
     // titles the MCP function "<server>_<tool>" with kind "other", and the
     // completed update carries no title at all, so the merged presentation
@@ -1499,7 +1499,7 @@ describe("extractMcpToolCallIdentity", () => {
     });
   });
 
-  it("recovers Rove identity from Gemini and qwen MCP-server title templates", () => {
+  it("recovers Paperplane identity from Gemini and qwen MCP-server title templates", () => {
     // Gemini CLI 0.55.1: "<tool> (<server> MCP Server)"; qwen-code 0.21.12
     // appends ": <args json>" to the same template.
     const gemini = toolCallFromUpdate({
@@ -1525,7 +1525,7 @@ describe("extractMcpToolCallIdentity", () => {
     expect(extractMcpToolCallIdentity(qwen)).toEqual({ server: "rove", tool: "task_status" });
   });
 
-  it("recovers Rove identity across the registry agents' naming conventions", () => {
+  it("recovers Paperplane identity across the registry agents' naming conventions", () => {
     // One representative per surveyed convention (2026-08 registry builds):
     // droid triple underscore, Copilot hyphen, Amp mangled server + detail
     // tail, cline args tail, Auggie tool-first suffix.
@@ -1556,7 +1556,7 @@ describe("extractMcpToolCallIdentity", () => {
     }
   });
 
-  it("recovers Rove identity from goose _meta despite LLM-rewritten titles", () => {
+  it("recovers Paperplane identity from goose _meta despite LLM-rewritten titles", () => {
     // goose enriches titles asynchronously, so only _meta.goose.toolCall is
     // stable; shape from crates/goose/src/acp/server/tool_calls/conversion.rs.
     const toolCall = toolCallFromUpdate({
@@ -1578,7 +1578,7 @@ describe("extractMcpToolCallIdentity", () => {
     });
   });
 
-  it("recovers Rove identity from qwen serverId meta regardless of prefix format", () => {
+  it("recovers Paperplane identity from qwen serverId meta regardless of prefix format", () => {
     // qwen-code 0.21.12 emits _meta.serverId + _meta.toolName; serverId is an
     // explicit origin assertion, so a known tool suffix suffices even if the
     // prefix format changes.
@@ -1634,7 +1634,7 @@ describe("extractMcpToolCallIdentity", () => {
     },
   );
 
-  it("uses the asserted server instead of a misleading Rove title", () => {
+  it("uses the asserted server instead of a misleading Paperplane title", () => {
     const toolCall = toolCallFromUpdate({
       sessionUpdate: "tool_call",
       toolCallId: "foreign-1",

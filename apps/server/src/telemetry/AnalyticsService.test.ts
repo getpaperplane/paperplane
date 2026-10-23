@@ -149,7 +149,7 @@ it.layer(NodeServices.layer)("AnalyticsService", (it) => {
     }),
   );
 
-  it.effect("sends anonymous allowlisted metadata to Rove's ingestion host", () => {
+  it.effect("sends anonymous allowlisted metadata to Paperplane's ingestion host", () => {
     const f = fixture({ env: { ROVE_ANALYTICS_ENVIRONMENT: "test" } });
     return Effect.gen(function* () {
       const analytics = yield* AnalyticsService.AnalyticsService;

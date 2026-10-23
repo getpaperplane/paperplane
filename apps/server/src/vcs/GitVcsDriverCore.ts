@@ -947,7 +947,7 @@ export const windowsLongPathConfigEnv = (
   };
 };
 
-// Rove: reset ambient HTTPS helpers only for the acting project's selected host.
+// Paperplane: reset ambient HTTPS helpers only for the acting project's selected host.
 const GITHUB_LOGIN_PATTERN = /^[a-z0-9][a-z0-9._-]*$/i;
 const GITHUB_HOST_PATTERN = /^[a-z0-9.-]+(?::\d+)?$/i;
 

@@ -128,7 +128,7 @@ describe.skipIf(!supported)("Pi command isolation on Linux", () => {
       await queued.promise;
       abort.abort();
       await cancelled;
-      expect(output).toEqual(["[Rove: all 1 shell slots are busy; queued.]\n"]);
+      expect(output).toEqual(["[Paperplane: all 1 shell slots are busy; queued.]\n"]);
     } finally {
       holder.stdin.end("release\n");
       await exited;
@@ -274,7 +274,7 @@ describe.skipIf(!supported)("Pi command isolation on Linux", () => {
     await cancelledQueue.promise;
     abort.abort();
     await cancelled;
-    expect(cancelledOutput).toEqual(["[Rove: all 2 shell slots are busy; queued.]\n"]);
+    expect(cancelledOutput).toEqual(["[Paperplane: all 2 shell slots are busy; queued.]\n"]);
     expect(cancelledEntered).toBe(false);
 
     const nextQueue = Promise.withResolvers<void>();
@@ -295,7 +295,7 @@ describe.skipIf(!supported)("Pi command isolation on Linux", () => {
     expect(await aRun).toEqual({ exitCode: 0 });
     const nextConnection = await next.ready;
     expect(cancelledEntered).toBe(false);
-    expect(nextOutput).toEqual(["[Rove: all 2 shell slots are busy; queued.]\n"]);
+    expect(nextOutput).toEqual(["[Paperplane: all 2 shell slots are busy; queued.]\n"]);
     // The remaining original scope is still active; only one slot was released.
     expect(bConnection.destroyed).toBe(false);
     nextConnection.write("release");

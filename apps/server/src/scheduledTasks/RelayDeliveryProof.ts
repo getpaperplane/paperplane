@@ -61,7 +61,7 @@ const make = Effect.gen(function* () {
       );
       const relayUrl = text(yield* secrets.get(RELAY_URL_SECRET));
       const relayIssuer = Option.isSome(issuer) ? issuer : relayUrl;
-      // Not linked to Rove Connect: no relay can be delivering to us.
+      // Not linked to Paperplane Connect: no relay can be delivering to us.
       if (Option.isNone(publicKey) || Option.isNone(relayIssuer)) return Option.none();
       const environmentId = yield* environment.getEnvironmentId;
       const payload = yield* verifyRelayJwt({

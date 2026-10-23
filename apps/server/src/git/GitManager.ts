@@ -788,7 +788,7 @@ export const make = Effect.gen(function* () {
               Effect.gen(function* () {
                 const project = yield* projects.findActiveByWorkspaceRoot(cwd);
                 if (Option.isSome(project)) return project.value.projectId;
-                // Rove: thread worktrees are not project roots.
+                // Paperplane: thread worktrees are not project roots.
                 const worktrees = yield* threads.getThreadWorktreePaths();
                 const worktree = worktrees.find(
                   ({ worktreePath }) => worktreePath === input.cwd || worktreePath === cwd,
@@ -801,7 +801,7 @@ export const make = Effect.gen(function* () {
           );
     return { settings: resolveProjectSettings(settings, projectId).settings, projectId };
   });
-  // Rove: project identity scopes API calls and HTTPS git credentials together.
+  // Paperplane: project identity scopes API calls and HTTPS git credentials together.
   const withProjectGitHubAccount = <A, E, R>(
     input: {
       readonly cwd: string;
@@ -2429,8 +2429,8 @@ export const make = Effect.gen(function* () {
   // each minute, and most calls find the PR answer already cached. The git
   // state around that answer (remotes, the branch's upstream, the remote HEAD,
   // remote URLs) is remembered per checkout for PR_LOOKUP_GIT_STATE_TTL, so
-  // those calls start no git process. Rove's own git actions (invalidateStatus)
-  // and `refresh` read it again, and a change made outside Rove shows within the
+  // those calls start no git process. Paperplane's own git actions (invalidateStatus)
+  // and `refresh` read it again, and a change made outside Paperplane shows within the
   // TTL. A merged or closed answer can settle a thread or remove its worktree,
   // so branchPullRequest confirms one against fresh reads, and discovery asks
   // for fresh reads (`freshGitState`) before it persists an answer.
@@ -2455,7 +2455,7 @@ export const make = Effect.gen(function* () {
       ) {
         return remembered.value;
       }
-      // invalidateStatus bumps the epoch. A read that started before a Rove git
+      // invalidateStatus bumps the epoch. A read that started before a Paperplane git
       // action, or before a newer read finished, must not replace their state.
       const epoch = prLookupEpoch(cwd);
       const value = yield* read;

@@ -130,7 +130,7 @@ jobs:
             const marker = '<!-- web-preview-deploy -->';
             const body = [marker, '### Web preview', '',
               `${process.env.PREVIEW_ORIGIN} for ${process.env.HEAD_SHA.slice(0, 7)}`,
-              '', 'Pair your own HTTPS Rove environment to use this preview.',
+              '', 'Pair your own HTTPS Paperplane environment to use this preview.',
             ].join('\n');
             const params = { ...context.repo, issue_number: context.issue.number };
             const comments = await github.paginate(github.rest.issues.listComments, params);

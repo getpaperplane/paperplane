@@ -44,7 +44,7 @@ it("fails closed for root, slices, shared services and SSH login scopes", () => 
   }
 });
 
-it("recognizes dedicated Rove units and guarded workloads, not adjacent groups", () => {
+it("recognizes dedicated Paperplane units and guarded workloads, not adjacent groups", () => {
   expect(isServerOwnedCgroup(service, service)).toBe(true);
   expect(isServerOwnedCgroup(`${service}/tools`, service)).toBe(true);
   expect(isServerOwnedCgroup(`${service}2`, service)).toBe(false);

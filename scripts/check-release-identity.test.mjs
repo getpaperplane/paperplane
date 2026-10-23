@@ -58,10 +58,10 @@ it("reports all public claims but only blocks enabled release surfaces", () => {
     expect(checkReleaseIdentity(root, { ROVE_HOSTED_RELEASE_READY: "true" })).toBe(false);
     expect(checkReleaseIdentity(root, { ROVE_MOBILE_STORES_READY: "true" })).toBe(false);
     expect(checkReleaseIdentity(root, { ROVE_MOBILE_SIDELOAD_READY: "true" })).toBe(false);
-    NodeFS.writeFileSync(NodePath.join(root, "apps/mobile/app.config.ts"), "// Rove\n");
+    NodeFS.writeFileSync(NodePath.join(root, "apps/mobile/app.config.ts"), "// Paperplane\n");
     NodeFS.writeFileSync(
       NodePath.join(root, "apps/mobile/src/features/settings/lib/legal-document-url.ts"),
-      "// Rove\n",
+      "// Paperplane\n",
     );
     // Store-only EAS metadata does not block sideload builds or enable stores.
     expect(checkReleaseIdentity(root, { ROVE_MOBILE_SIDELOAD_READY: "true" })).toBe(true);

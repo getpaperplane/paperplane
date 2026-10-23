@@ -3805,7 +3805,7 @@ it.effect("labels a failed provider stream with a likely memory kill", () =>
     assert.equal(error?.failure.code, "oom_kill");
     assert.equal(
       error?.failure.message,
-      'Likely killed: the host ran out of memory. Run fewer agents at once or add swap (see "Small or WSL hosts" in the Rove Code docs).',
+      'Likely killed: the host ran out of memory. Run fewer agents at once or add swap (see "Small or WSL hosts" in the Paperplane docs).',
     );
   }),
 );

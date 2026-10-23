@@ -72,7 +72,7 @@ const event = (type: string, data: Record<string, unknown>): ProviderReplayEntry
 const labelled = (entry: ProviderReplayEntry, label: string): ProviderReplayEntry =>
   entry.type === "runtime_exit" ? entry : { ...entry, label };
 /**
- * Rove's own rules after a mode's: every thread's Rove MCP server is denied, and
+ * Paperplane's own rules after a mode's: every thread's Paperplane MCP server is denied, and
  * then this thread's own is allowed again (last match wins).
  */
 const mcpRules = (name: string) => [
@@ -104,7 +104,7 @@ const agentInfo = (id: string, description: string, permissions: ReadonlyArray<u
   hidden: false,
   permissions,
 });
-/** `/api/agent` trimmed to the two agents a Rove session runs. */
+/** `/api/agent` trimmed to the two agents a Paperplane session runs. */
 const agentList = (directory: string) => ({
   location: { directory },
   data: [
@@ -164,7 +164,7 @@ const sessionInfo = (directory: string, permissions: ReadonlyArray<unknown>, tit
     permissions,
   },
 });
-/** Rove's instructions entry, written before a thread's first prompt and whenever it changes. */
+/** Paperplane's instructions entry, written before a thread's first prompt and whenever it changes. */
 const instructionsWritten: ReadonlyArray<ProviderReplayEntry> = [
   out("session.instructions.entry.put", { sessionID: SESSION, key: "rove", value: "<any>" }),
   reply("session.instructions.entry.put", null),
@@ -432,7 +432,7 @@ describe("OpenCode 2 through the orchestrator", () => {
     }).pipe(Effect.scoped),
   );
 
-  it.effect("gives a session made with older rules Rove's rules before its next prompt", () =>
+  it.effect("gives a session made with older rules Paperplane's rules before its next prompt", () =>
     Effect.gen(function* () {
       const name = "opencode2-resume-rules";
       const before = yield* checkpointWorkspace(`${name}-before`);
@@ -669,7 +669,7 @@ describe("OpenCode 2 through the orchestrator", () => {
         recorded.metadata?.["forkedNativeSessionId"],
       );
       // The fork keeps the first turn and drops the second: the model answers
-      // from the first alone, and Rove shows the inherited turn but not the other.
+      // from the first alone, and Paperplane shows the inherited turn but not the other.
       assert.deepEqual(
         forked.runs.map((run) => run.status),
         ["completed"],
@@ -769,7 +769,7 @@ describe("OpenCode 2 through the orchestrator", () => {
   /**
    * The recorded background run (`opencode2_background`): the parent's turn
    * ends while its subagent runs, then the subagent's report wakes the parent
-   * and Rove opens a continuation run for that follow-up. `reconnect` replaces
+   * and Paperplane opens a continuation run for that follow-up. `reconnect` replaces
    * the recording from `cut` on with a stream drop, a restarted stream and
    * what the server answers then.
    */

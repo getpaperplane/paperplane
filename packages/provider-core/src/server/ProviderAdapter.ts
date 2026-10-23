@@ -92,7 +92,7 @@ export const ProviderAdapterV2Event = Schema.Union([
     driver: ProviderDriverKind,
     providerThread: OrchestrationV2ProviderThread,
     /**
-     * Set when the provider rewound its own conversation outside Rove, for
+     * Set when the provider rewound its own conversation outside Paperplane, for
      * example a Pi extension moving the session-tree leaf back. Lists every
      * native turn id still on the active branch; the ingestor rolls back
      * earlier runs whose turns fell off it.

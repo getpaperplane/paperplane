@@ -119,19 +119,19 @@ const decodeInspection = Schema.decodeUnknownSync(
 );
 
 it.live.skipIf(!enabled)(
-  "prepares the actual Rove private-desktop image",
+  "prepares the actual Paperplane private-desktop image",
   () =>
     Effect.gen(function* () {
       const driver = yield* CuaDriver.CuaDriver;
       const status = yield* driver.control({ action: "install" });
       expect(status.status).toBe("stopped");
-      yield* Effect.log("PASS. Rove prepared the private desktop image.");
+      yield* Effect.log("PASS. Paperplane prepared the private desktop image.");
     }).pipe(Effect.scoped, Effect.provide(services)),
   600_000,
 );
 
 it.effect.skipIf(!enabled)(
-  "uses Rove MCP for guest input, concurrent isolation, reconnection and explicit disposal",
+  "uses Paperplane MCP for guest input, concurrent isolation, reconnection and explicit disposal",
   () =>
     Effect.gen(function* () {
       const server = yield* McpServer.McpServer;
@@ -262,8 +262,8 @@ it.effect.skipIf(!enabled)(
       });
       const targets = yield* Effect.all(
         [
-          open(first, "Rove private desktop one", false),
-          open(second, "Rove private desktop two", true),
+          open(first, "Paperplane private desktop one", false),
+          open(second, "Paperplane private desktop two", true),
         ],
         { concurrency: 2 },
       );
@@ -356,7 +356,7 @@ it.effect.skipIf(!enabled)(
         expect(
           decodeState(fresh.structuredContent).elements.find((element) => element.role === "text")
             ?.value,
-        ).toBe(index === 0 ? "Rove private desktop one" : "Rove private desktop two");
+        ).toBe(index === 0 ? "Paperplane private desktop one" : "Paperplane private desktop two");
       }
       yield* succeed(first, "close_desktop");
       expect(yield* driver.status).toMatchObject({ readiness: { desktops: 1 } });
@@ -367,14 +367,14 @@ it.effect.skipIf(!enabled)(
       expect(
         decodeState(peer.structuredContent).elements.find((element) => element.role === "text")
           ?.value,
-      ).toBe("Rove private desktop two");
+      ).toBe("Paperplane private desktop two");
       const settings = yield* ServerSettings.ServerSettingsService;
       yield* settings.updateSettings({ enableAgentComputerUse: false });
       expect((yield* call(second, "list_windows")).isError).toBe(true);
       yield* driver.status;
       expect(yield* ownedContainers).toHaveLength(0);
       yield* Effect.log(
-        "PASS. Rove MCP verified fresh text, guest pixel input, two isolated threads, idle reconnect and explicit discard.",
+        "PASS. Paperplane MCP verified fresh text, guest pixel input, two isolated threads, idle reconnect and explicit discard.",
       );
     }).pipe(
       Effect.scoped,

@@ -269,7 +269,7 @@ export interface ProviderSessionManagerV2LayerOptions {
   >;
   /** Cap on how long idle release may be deferred for pending background work. */
   readonly maxIdlePinMs?: number;
-  /** Test replay harnesses can omit Rove's MCP server from provider protocol fixtures. */
+  /** Test replay harnesses can omit Paperplane's MCP server from provider protocol fixtures. */
   readonly configureMcp?: boolean;
 }
 
@@ -2143,7 +2143,7 @@ export const layerWithOptions = (
                 Effect.gen(function* () {
                   // Some providers can block before a run subscriber exists
                   // (project trust, login, or session-switch hooks). Persist
-                  // their runless request artifacts directly so the normal Rove
+                  // their runless request artifacts directly so the normal Paperplane
                   // request UI can answer them and unblock session setup.
                   const threadId = sessionScopedRuntimeRequestThreadId(event);
                   if (threadId !== undefined) {

@@ -37,8 +37,8 @@ export const runDoctor = Effect.fn("runDoctor")(function* (
     );
     yield* Console.log(
       host.roveMemory === null
-        ? "  Rove ceiling: unavailable (no systemd memory ceiling)"
-        : `  Rove ceiling: ${formatBytes(host.roveMemory.currentBytes)} current / ${host.roveMemory.limitBytes === null ? "unlimited" : formatBytes(host.roveMemory.limitBytes)}`,
+        ? "  Paperplane ceiling: unavailable (no systemd memory ceiling)"
+        : `  Paperplane ceiling: ${formatBytes(host.roveMemory.currentBytes)} current / ${host.roveMemory.limitBytes === null ? "unlimited" : formatBytes(host.roveMemory.limitBytes)}`,
     );
     for (const finding of host.findings) {
       yield* Console.log(`  [${finding.severity}] ${finding.message}`);
@@ -138,7 +138,7 @@ export const doctorCommand = Command.make("doctor", {
   ),
 }).pipe(
   Command.withDescription(
-    "Check host memory health and inspect this Rove Code data directory. Repairs pause and restart the background service as needed.",
+    "Check host memory health and inspect this Paperplane data directory. Repairs pause and restart the background service as needed.",
   ),
   Command.withHandler((flags) =>
     Effect.gen(function* () {

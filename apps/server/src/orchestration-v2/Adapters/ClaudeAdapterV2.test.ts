@@ -7506,7 +7506,7 @@ describe("ClaudeAdapterV2 background wake turns", () => {
         );
         yield* awaitUntil(() => harness.terminalEvents().length === 1, "first turn terminal");
 
-        // A native wake turn launches a new subagent while Rove has no turn.
+        // A native wake turn launches a new subagent while Paperplane has no turn.
         const idleFrames = [
           makeSubagentTaskStartedFrame({
             taskId: TASK_ID,

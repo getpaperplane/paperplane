@@ -88,7 +88,7 @@ describe("shouldBundleCliDependency", () => {
       "jiti",
       "typebox/compile",
       // Pi's @google/genai optional peer is externalized even though a clean
-      // production install only includes it when Rove declares it directly.
+      // production install only includes it when Paperplane declares it directly.
       "@modelcontextprotocol/sdk/client/index.js",
       "@modelcontextprotocol/sdk/client/streamableHttp.js",
       "@modelcontextprotocol/sdk/client/stdio.js",
@@ -493,7 +493,7 @@ describe("findEsmImportsOfExternalPackages", () => {
   });
 });
 
-it("loads Rove's MCP clients from an isolated runtime sidecar", () => {
+it("loads Paperplane's MCP clients from an isolated runtime sidecar", () => {
   const selected = selectCliRuntimeExternalDependencies(serverPackageJson.dependencies);
   assert.strictEqual(selected["@modelcontextprotocol/sdk"], "1.29.0");
   const stage = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "rove-mcp-sidecar-"));

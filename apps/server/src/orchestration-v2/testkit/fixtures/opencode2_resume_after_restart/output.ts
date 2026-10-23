@@ -14,7 +14,7 @@ import {
 
 /**
  * The server stops mid-command and its event stream ends with no execution
- * end. Rove reconnects to the restarted server, finds the session idle with no
+ * end. Paperplane reconnects to the restarted server, finds the session idle with no
  * outcome, backfills the shell call the history shows cancelled, and ends the
  * turn as interrupted. The next turn runs on the same session.
  */

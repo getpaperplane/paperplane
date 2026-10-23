@@ -21,7 +21,7 @@ export class DatabaseMissingError extends Schema.TaggedError<DatabaseMissingErro
   { path: Schema.String },
 ) {
   override get message() {
-    return "No existing Rove Code database was found in this data directory.";
+    return "No existing Paperplane database was found in this data directory.";
   }
 }
 
@@ -30,7 +30,7 @@ export class DatabaseInUseError extends Schema.TaggedError<DatabaseInUseError>()
   { path: Schema.String, cause: Schema.Defect() },
 ) {
   override get message() {
-    return "Stop the Rove Code server and desktop app before compacting the database.";
+    return "Stop the Paperplane server and desktop app before compacting the database.";
   }
 }
 
@@ -39,7 +39,7 @@ export class DatabaseProjectionsInvalidError extends Schema.TaggedError<Database
   { path: Schema.String },
 ) {
   override get message() {
-    return "Database projections need repair before compaction. Start Rove Code once so it rebuilds them, then run doctor again. If this CLI is older than the one that wrote the database, update Rove Code first.";
+    return "Database projections need repair before compaction. Start Paperplane once so it rebuilds them, then run doctor again. If this CLI is older than the one that wrote the database, update Paperplane first.";
   }
 }
 

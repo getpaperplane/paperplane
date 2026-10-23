@@ -59,7 +59,7 @@ const answerHealthWith = async (failure: HealthFailure, cloudEnabled = true) => 
 };
 
 describe("connect routes", () => {
-  it("rejects relay requests when Rove Connect is gated off", async () => {
+  it("rejects relay requests when Paperplane Connect is gated off", async () => {
     const response = await answerHealthWith(
       new CloudLink.CloudLinkProofRejectedError({ request: "health" }),
       false,
@@ -68,7 +68,7 @@ describe("connect routes", () => {
       status: 403,
       body: {
         _tag: "EnvironmentHttpForbiddenError",
-        message: "Rove Connect is not enabled in this build.",
+        message: "Paperplane Connect is not enabled in this build.",
       },
     });
   });

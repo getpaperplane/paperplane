@@ -8,7 +8,7 @@ import { EVENT_CODE_SHORTCUT_KEYS } from "./keybindings.ts";
 
 /**
  * Agent-authored HTML pages ("HTML renders") are self-contained documents an
- * agent publishes into a thread with Rove's `html_render` MCP tool. The server
+ * agent publishes into a thread with Paperplane's `html_render` MCP tool. The server
  * stores each one as a thread attachment with a small bootstrap injected into
  * its head; clients show it in a sandboxed iframe (web, desktop) or WebView
  * (mobile) and hand it the active theme as CSS custom properties.
@@ -329,7 +329,7 @@ export function htmlRenderTheme(
 
 /** Agent-facing reference for the injected variables, used in tool descriptions. */
 export const HTML_RENDER_THEME_GUIDE = [
-  "Rove injects its active theme as CSS custom properties on :root, and they follow the user's theme and light/dark mode live:",
+  "Paperplane injects its active theme as CSS custom properties on :root, and they follow the user's theme and light/dark mode live:",
   "--background (page background, identical to the thread around the frame), --foreground, --muted, --muted-foreground,",
   "--card, --card-foreground, --popover, --popover-foreground, --secondary, --secondary-foreground, --border, --input, --ring,",
   "--primary, --primary-foreground (solid buttons), --accent, --accent-foreground (brand accent), --accent-surface, --accent-surface-foreground,",

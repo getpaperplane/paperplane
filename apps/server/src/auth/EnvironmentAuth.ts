@@ -72,7 +72,7 @@ export interface IssuedBearerSession {
 }
 
 /**
- * Sessions an MCP client (an agent Rove Code did not launch) obtains through
+ * Sessions an MCP client (an agent Paperplane did not launch) obtains through
  * OAuth. They are accepted only by `/mcp`, where every action is capped by the
  * access the user approved; the HTTP API and WebSocket reject them so an agent
  * token cannot reach the full RPC surface around that cap.
@@ -574,7 +574,7 @@ export class EnvironmentAuth extends Context.Service<
     /**
      * Spends a one-time pairing code as approval for an MCP client with the
      * given access; the code must hold every scope that access grants.
-     * Proof-bound codes (Rove Connect) are refused without being spent, and
+     * Proof-bound codes (Paperplane Connect) are refused without being spent, and
      * desktop bootstrap grants never qualify.
      */
     readonly consumeMcpApprovalCode: (
@@ -1342,7 +1342,7 @@ export const make = Effect.gen(function* () {
     code,
     access,
   ) =>
-    // No proof key: a code bound to a Rove Connect client's key fails without being spent.
+    // No proof key: a code bound to a Paperplane Connect client's key fails without being spent.
     resolveBootstrapGrant(code.trim()).pipe(
       Effect.catchTags({
         ServerAuthInvalidCredentialError: () =>

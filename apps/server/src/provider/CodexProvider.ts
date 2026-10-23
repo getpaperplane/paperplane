@@ -355,7 +355,7 @@ const readCodexModelsCacheFetchedAt = Effect.fn("readCodexModelsCacheFetchedAt")
 });
 
 /**
- * Lists the ChatGPT model catalog as fetched for Rove Code.
+ * Lists the ChatGPT model catalog as fetched for Paperplane.
  *
  * `model/list` serves `CODEX_HOME/models_cache.json` while it is under five
  * minutes old. Every Codex client on the machine shares that file, and the
@@ -389,7 +389,7 @@ const requestCodexChatGptModels = Effect.fn("requestCodexChatGptModels")(functio
 });
 
 /**
- * Environment for every `codex app-server` Rove Code spawns.
+ * Environment for every `codex app-server` Paperplane spawns.
  *
  * Codex sends its client name as the `originator` header, and the backend
  * tailors the model catalog to it. App-server starts its catalog refresh
@@ -582,7 +582,7 @@ const makePendingCodexProvider = (
           version: null,
           status: "warning",
           auth: { status: "unknown" },
-          message: "Codex is disabled in Rove Code settings.",
+          message: "Codex is disabled in Paperplane settings.",
         },
       });
     }
@@ -675,7 +675,7 @@ export const checkCodexProviderStatus = Effect.fn("checkCodexProviderStatus")(fu
         version: null,
         status: "warning",
         auth: { status: "unknown" },
-        message: "Codex is disabled in Rove Code settings.",
+        message: "Codex is disabled in Paperplane settings.",
       },
     });
   }

@@ -109,7 +109,7 @@ export const make = Effect.fn("LinuxDesktop.make")(function* () {
   const processStart = Effect.fn("LinuxDesktop.processStart")(function* (pid: number) {
     const stat = yield* fs.readFileString(`/proc/${pid}/stat`);
     return yield* decodeStart(stat.slice(stat.lastIndexOf(")") + 2).split(" ")[19]).pipe(
-      Effect.mapError(() => error("Cannot read the Rove process identity.")),
+      Effect.mapError(() => error("Cannot read the Paperplane process identity.")),
     );
   });
   const identity = yield* Effect.cached(
@@ -175,14 +175,14 @@ export const make = Effect.fn("LinuxDesktop.make")(function* () {
     const output = yield* run(["info", "--format", "json"]);
     if (output.code !== 0)
       return yield* error(
-        "Rootless Podman is unavailable. Install podman and uidmap, then run podman info as the user running Rove.",
+        "Rootless Podman is unavailable. Install podman and uidmap, then run podman info as the user running Paperplane.",
       );
     const info = yield* decodeInfo(output.stdout).pipe(
       Effect.mapError(() => error("Podman returned unreadable runtime information.")),
     );
     if (!info.host.security.rootless)
       return yield* error(
-        "Linux computer use requires rootless Podman. Run Rove as an unprivileged user.",
+        "Linux computer use requires rootless Podman. Run Paperplane as an unprivileged user.",
       );
     yield* reconcile;
   }).pipe(
@@ -268,7 +268,7 @@ export const make = Effect.fn("LinuxDesktop.make")(function* () {
     );
     if (!inspection || inspection.Config.Labels[OWNER_LABEL] !== owner)
       return yield* error(
-        "Desktop ownership does not match this Rove server. Nothing was removed.",
+        "Desktop ownership does not match this Paperplane server. Nothing was removed.",
       );
     const removed = yield* run(["rm", "--force", inspection.Id]);
     if (removed.code !== 0)

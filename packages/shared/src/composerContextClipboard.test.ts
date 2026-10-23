@@ -20,7 +20,7 @@ describe("composerContextClipboard", () => {
     expect(html).toContain(rich);
     expect(decodeComposerContextClipboardHtml(html)).toEqual(JSON.parse(fragment));
   });
-  it("reads historical HTML metadata while writing only the Rove attribute", () => {
+  it("reads historical HTML metadata while writing only the Paperplane attribute", () => {
     const fragment = { version: 1, source: { environmentId: "env" }, records: [] };
     const historical = `<pre data-t3-context-fragment="${encodeURIComponent(JSON.stringify(fragment))}">old selection</pre>`;
     expect(decodeComposerContextClipboardHtml(historical)).toEqual(fragment);

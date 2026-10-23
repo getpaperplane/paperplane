@@ -104,7 +104,7 @@ export function renderBootServiceUnit(plan: BootServicePlan): string {
   // The user manager has no reliable network-online target; server networking retries itself.
   return [
     "[Unit]",
-    "Description=Rove Code server",
+    "Description=Paperplane server",
     "StartLimitIntervalSec=300",
     "StartLimitBurst=5",
     "",
@@ -455,7 +455,7 @@ export class BootServiceInstallError extends Schema.TaggedError<BootServiceInsta
   { cause: Schema.Defect() },
 ) {
   override get message(): string {
-    return "Could not set up the Rove Code background service.";
+    return "Could not set up the Paperplane background service.";
   }
 }
 
@@ -473,11 +473,11 @@ type BootServiceProblem = typeof BootServiceProblem.Type;
 export function formatBootServiceProblem(problem: BootServiceProblem): string {
   switch (problem) {
     case "user-manager-unavailable":
-      return "Cannot reach the systemd user manager. Run `systemctl --user status` in a login session for the service user. Install your distribution's systemd user-session support if it is missing; do not run Rove Code with sudo.";
+      return "Cannot reach the systemd user manager. Run `systemctl --user status` in a login session for the service user. Install your distribution's systemd user-session support if it is missing; do not run Paperplane with sudo.";
     case "linger-unavailable":
       return 'Cannot check whether this user can run services after logout. Run `loginctl show-user "$(id -un)" --property=Linger` and check that systemd-logind is available.';
     case "linger-disabled":
-      return 'Lingering is disabled. Rove Code will stop when your last login session ends and will not start at boot. Run `sudo loginctl enable-linger "$(id -un)"` on this machine, then retry the service command as your normal user.';
+      return 'Lingering is disabled. Paperplane will stop when your last login session ends and will not start at boot. Run `sudo loginctl enable-linger "$(id -un)"` on this machine, then retry the service command as your normal user.';
     case "service-disabled":
       return "The service is not enabled to start automatically. Run `rove service install` to repair it.";
     case "service-stopped":
@@ -531,7 +531,7 @@ export interface BootServiceStatus {
   readonly current: boolean;
   readonly installedVersion?: string;
   /**
-   * The Rove Code home the installed unit serves. The unit name is fixed per user,
+   * The Paperplane home the installed unit serves. The unit name is fixed per user,
    * so a caller working against another base dir must not treat this service
    * as its own; `rove update --base-dir` learned that by restarting the live
    * server of the machine it ran on.
@@ -837,7 +837,7 @@ export const make = Effect.fn("cloud.boot_service.make")(function* (input: {
             Effect.mapError(
               (cause) =>
                 new PinnedRuntimeInstallError({
-                  step: "verifying the pinned Rove Code runtime",
+                  step: "verifying the pinned Paperplane runtime",
                   cause,
                 }),
             ),
@@ -847,7 +847,7 @@ export const make = Effect.fn("cloud.boot_service.make")(function* (input: {
                 ? Effect.void
                 : Effect.fail(
                     new PinnedRuntimeInstallError({
-                      step: "verifying the pinned Rove Code runtime",
+                      step: "verifying the pinned Paperplane runtime",
                       exitCode: Number(result.code),
                       stdoutLength: result.stdout.length,
                       stderrLength: result.stderr.length,

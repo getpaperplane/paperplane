@@ -94,7 +94,7 @@ export const make = Effect.fn("makeProcessDiagnostics")(function* () {
           pid: input.pid,
           signal: input.signal,
           signaled: false,
-          message: Option.some("Refusing to signal the Rove server process."),
+          message: Option.some("Refusing to signal the Paperplane server process."),
         };
       }
       const current = yield* telemetry.refresh.pipe(Effect.option);
@@ -127,7 +127,7 @@ export const make = Effect.fn("makeProcessDiagnostics")(function* () {
           pid: input.pid,
           signal: input.signal,
           signaled: false,
-          message: Option.some(`Process ${input.pid} is not a signalable Rove backend descendant.`),
+          message: Option.some(`Process ${input.pid} is not a signalable Paperplane backend descendant.`),
         };
       }
       return yield* Effect.try({

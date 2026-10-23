@@ -242,7 +242,7 @@ const make = Effect.gen(function* () {
       if (worktree.main) blockers.push("The main checkout cannot be removed.");
       if (!summary.managed)
         blockers.push(
-          "This worktree is outside Rove's managed worktree directory. Remove it with Git.",
+          "This worktree is outside Paperplane's managed worktree directory. Remove it with Git.",
         );
       if (worktree.locked) blockers.push("This worktree is locked in Git.");
       if (worktree.prunable || !(yield* fs.exists(worktreePath)))
@@ -512,7 +512,7 @@ const make = Effect.gen(function* () {
             );
           const managedRoot = yield* fs.realPath(config.worktreesDir);
           if (!inside(managedRoot, entry.path))
-            return yield* error("Only Rove-managed worktrees can be removed here.");
+            return yield* error("Only Paperplane-managed worktrees can be removed here.");
           const latest = yield* inspect(worktree, project, yield* context());
           if (latest.removalBlockers.length > 0)
             return yield* error(latest.removalBlockers.join(" "));

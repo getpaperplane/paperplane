@@ -1053,7 +1053,7 @@ export interface AcpMcpToolCallIdentity {
   readonly input?: Record<string, unknown>;
 }
 
-/** Matches an invocation of Rove's `acp-mcp-call` bridge fallback CLI. */
+/** Matches an invocation of Paperplane's `acp-mcp-call` bridge fallback CLI. */
 const ACP_MCP_FALLBACK_CALL = /(?:^|[\s"'=])acp-mcp-call[\s"']+([A-Za-z0-9_.-]+)(?:\s+(.+?))?\s*$/u;
 
 function acpMcpFallbackInput(value: string | undefined): Record<string, unknown> | undefined {
@@ -1081,9 +1081,9 @@ function acpMcpFallbackInput(value: string | undefined): Record<string, unknown>
  * shared convention (survey of the 2026-08 registry builds): Kilo and
  * opencode use `rove_<tool>`, claude-acp and qwen `mcp__rove__<tool>`,
  * droid `rove___<tool>`, Copilot `rove-<tool>`, cline appends `: <args json>`.
- * Legacy rove-code/rove_code titles remain readable. Rove always injects
+ * Legacy rove-code/rove_code titles remain readable. Paperplane always injects
  * its server as "rove", and matches are additionally gated on the known
- * Rove tool inventory, so the separator match can stay loose.
+ * Paperplane tool inventory, so the separator match can stay loose.
  */
 const ROVE_MCP_TITLE_CALL =
   /^(?:mcp[-_]{1,2})?rove(?:[-_ ]?code)?[-_.:/ ]{1,3}(?<tool>[A-Za-z0-9][A-Za-z0-9_.-]*)(?::.*)?$/i;
@@ -1099,7 +1099,7 @@ const ROVE_MCP_TITLE_SUFFIX_CALL =
 /**
  * glm-acp-agent and Kimi CLI register injected MCP tools under their bare
  * names; Kimi additionally appends ": <raw args json>". Safe only because the
- * match is gated on the known Rove tool inventory.
+ * match is gated on the known Paperplane tool inventory.
  */
 const ROVE_MCP_BARE_TITLE_CALL = /^(?<tool>[A-Za-z0-9_]+)(?::\s|$)/;
 
@@ -1108,7 +1108,7 @@ const ROVE_MCP_BARE_TITLE_CALL = /^(?<tool>[A-Za-z0-9_]+)(?::\s|$)/;
  *
  * ACP has no typed MCP tool-call item, so agents surface MCP calls in
  * agent-specific shapes: codex-acp tags execute calls with
- * `rawInput.server`/`rawInput.tool`, while agents on Rove's terminal fallback
+ * `rawInput.server`/`rawInput.tool`, while agents on Paperplane's terminal fallback
  * run the `acp-mcp-call <tool>` CLI through their command or an embedded
  * client terminal. Recovered identity lets the projection render the same
  * branded MCP item that native providers produce.
@@ -1160,7 +1160,7 @@ export function extractMcpToolCallIdentity(
   const assertsForeignOrigin =
     (metaServerId.length > 0 && !/^rove(?:[-_ ]?code)?$/i.test(metaServerId)) ||
     (gooseExtension.length > 0 && !/^rove(?:[-_ ]?code)?$/i.test(gooseExtension));
-  // A foreign origin never brands as Rove. qwen's serverId marks a real MCP
+  // A foreign origin never brands as Paperplane. qwen's serverId marks a real MCP
   // server, but goose reports its built-in extensions (developer__shell,
   // edits) the same way as user MCP servers, so goose stays unclassified and
   // keeps its command and file-change projections.
@@ -1201,8 +1201,8 @@ export function extractMcpToolCallIdentity(
   for (const command of commands) {
     const match = ACP_MCP_FALLBACK_CALL.exec(command);
     if (match?.[1] !== undefined) {
-      // The acp-mcp-call CLI exists only as Rove's bridge fallback, so the
-      // server identity is Rove's by construction.
+      // The acp-mcp-call CLI exists only as Paperplane's bridge fallback, so the
+      // server identity is Paperplane's by construction.
       const input = acpMcpFallbackInput(match[2]);
       return {
         server: ROVE_MCP_SERVER_NAME,

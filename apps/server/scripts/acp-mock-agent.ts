@@ -1133,7 +1133,7 @@ const program = Effect.gen(function* () {
             rawOutput: {
               action: {
                 type: "search",
-                query: "rove code",
+                query: "paperplane",
                 sources: [
                   { type: "url", url: "https://t3.codes" },
                   { type: "url", url: "https://t3.codes" },
@@ -1153,9 +1153,9 @@ const program = Effect.gen(function* () {
             rawInput: { variant: "WebFetch", url: "https://t3.codes" },
             rawOutput: {
               type: "WebFetch",
-              Content: { url: "https://t3.codes", content: "Rove Code page" },
+              Content: { url: "https://t3.codes", content: "Paperplane page" },
             },
-            content: [{ type: "content", content: { type: "text", text: "Rove Code page" } }],
+            content: [{ type: "content", content: { type: "text", text: "Paperplane page" } }],
           },
           {
             sessionUpdate: "tool_call_update",

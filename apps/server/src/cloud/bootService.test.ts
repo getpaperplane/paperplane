@@ -44,7 +44,7 @@ it("runs the pinned runtime's own executable as the systemd launcher", () => {
   expect(unit).not.toContain("node");
 });
 
-it("reads the served Rove Code home back out of a rendered unit or plist", () => {
+it("reads the served Paperplane home back out of a rendered unit or plist", () => {
   const plan = (baseDir: string) => ({
     program: [`${baseDir}/runtime/versions/1.2.3/rove`, "__service-launcher"],
     baseDir,
@@ -715,7 +715,7 @@ it.layer(NodeServices.layer)("boot service install", (it) => {
     }),
   );
 
-  it.effect("restart leaves a service that serves another Rove Code home alone", () =>
+  it.effect("restart leaves a service that serves another Paperplane home alone", () =>
     Effect.gen(function* () {
       const { service, fs, commands, makeService } = yield* makeHarness();
       yield* service.install();

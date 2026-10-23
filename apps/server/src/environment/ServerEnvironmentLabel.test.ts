@@ -288,13 +288,13 @@ describe("resolveServerEnvironmentLabel", () => {
     }),
   );
 
-  it.effect("uses Rove Code for an unnamed environment", () =>
+  it.effect("uses Paperplane for an unnamed environment", () =>
     Effect.gen(function* () {
       const result = yield* ServerEnvironmentLabel.resolveServerEnvironmentLabel({
         cwdBaseName: "",
       }).pipe(Effect.provide(withHostPlatform(layerTest, "win32", "   ")));
 
-      expect(result).toBe("Rove Code environment");
+      expect(result).toBe("Paperplane environment");
     }),
   );
 });

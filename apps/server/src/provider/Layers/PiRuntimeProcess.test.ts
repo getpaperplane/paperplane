@@ -351,7 +351,7 @@ describe("isolated Pi instance runtime", () => {
     expect(helper.messages.at(-1)).toMatchObject({ content: [{ type: "text", text: "helpers" }] });
   });
 
-  it("keeps thread-authorized Rove tools working across the process boundary", async () => {
+  it("keeps thread-authorized Paperplane tools working across the process boundary", async () => {
     const requests: string[] = [];
     const headers: Array<string | undefined> = [];
     const decode = Schema.decodeUnknownSync(
@@ -430,7 +430,7 @@ describe("isolated Pi instance runtime", () => {
         false,
         mcp,
       );
-      await current.prompt("use the Rove tool");
+      await current.prompt("use the Paperplane tool");
       expect(current.messages).toContainEqual(
         expect.objectContaining({
           role: "toolResult",

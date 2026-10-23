@@ -58,7 +58,7 @@ type Job = {
 /**
  * Bounded foreground shells and one managed service per OS user, across Pi instances and servers.
  * OS-owned locks, not JS semaphores: backgrounding in a shell cannot evade the lease.
- * Commands and services share one pool beneath the aggregate Rove memory ceiling.
+ * Commands and services share one pool beneath the aggregate Paperplane memory ceiling.
  */
 export class PiWorkloads {
   private readonly lifetime = new AbortController();
@@ -233,7 +233,7 @@ read -r release`,
       ...(timeout ? [timeout] : []),
     ]);
     const lease = await this.acquireLease(kind, this.slots, signal, () =>
-      options.onData(Buffer.from(`[Rove: all ${this.slots} shell slots are busy; queued.]\n`)),
+      options.onData(Buffer.from(`[Paperplane: all ${this.slots} shell slots are busy; queued.]\n`)),
     );
     let budget: (ReturnType<typeof makeManagedProcess> & { memoryMiB: number }) | undefined;
     // The scope's exit, including its orphan descendants, is awaited before releasing the OS lease.
@@ -330,7 +330,7 @@ read -r release`,
             );
           } else if (timeout?.aborted) {
             exitCode = 124;
-            data(Buffer.from(`\n[Rove: command deadline ${deadline}s exceeded.]\n`));
+            data(Buffer.from(`\n[Paperplane: command deadline ${deadline}s exceeded.]\n`));
           }
           job.exitCode = exitCode;
           return { exitCode };
@@ -416,7 +416,7 @@ read -r release`,
         name: bash.name,
         label: bash.label,
         parameters: bash.parameters,
-        description: `${bash.description} Rove limits concurrent shell calls across the host and isolates each command's memory. Background descendants are stopped when the command returns. Use workload_start for a dev server, not shell '&' or nohup.`,
+        description: `${bash.description} Paperplane limits concurrent shell calls across the host and isolates each command's memory. Background descendants are stopped when the command returns. Use workload_start for a dev server, not shell '&' or nohup.`,
         ...(bash.promptSnippet ? { promptSnippet: bash.promptSnippet } : {}),
         ...(bash.promptGuidelines ? { promptGuidelines: bash.promptGuidelines } : {}),
         execute: (id, input, signal, onUpdate, ctx) =>

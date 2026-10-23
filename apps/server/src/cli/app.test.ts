@@ -193,7 +193,7 @@ describe("rove server command safety", () => {
             ),
             Effect.flip,
           );
-          expect(String(error)).toContain("A Rove Code server is already running");
+          expect(String(error)).toContain("A Paperplane server is already running");
           expect(yield* Effect.promise(() => NodeFSP.readFile(statePath, "utf8"))).toBe(record);
           expect(yield* pathExists(newDirectory)).toBe(false);
           expect(yield* Effect.promise(() => NodeFSP.readdir(stateDir))).toEqual([
@@ -253,7 +253,7 @@ describe("rove app", () => {
           _tag: "DesktopAppUnreachableError",
           candidateAddresses: [expect.any(String)],
           workspaceRoot: yield* HostProcess.WorkingDirectory,
-          message: expect.stringContaining("Could not reach the Rove Code desktop app."),
+          message: expect.stringContaining("Could not reach the Paperplane desktop app."),
           cause: { code: "ENOENT" },
         });
         expect(yield* pathExists(baseDir)).toBe(false);
@@ -312,7 +312,7 @@ describe("rove app", () => {
     ),
   );
 
-  it.effect("never searches a dev state directory for an explicit Rove home", () =>
+  it.effect("never searches a dev state directory for an explicit Paperplane home", () =>
     withTempDirectory("rove-app-explicit-test-", (root) =>
       Effect.gen(function* () {
         const baseDir = NodePath.join(root, ".rove-code");

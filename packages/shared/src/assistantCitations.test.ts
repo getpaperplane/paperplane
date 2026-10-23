@@ -59,7 +59,7 @@ describe("assistant citation references", () => {
     expect(serializeAssistantCitation(legacyCitation)).toBe(`[Assistant quote](${legacyHref})`);
   });
 
-  it("reads saved citation links with the historical scheme and emits only Rove links", () => {
+  it("reads saved citation links with the historical scheme and emits only Paperplane links", () => {
     const historical =
       "t3-citation://v1/a/b/c?text=A+quote+%26+a+newline.%0A&start=0&end=21&prefix=&suffix=+Next.";
     expect(parseAssistantCitationHref(historical)).toEqual(legacyCitation);

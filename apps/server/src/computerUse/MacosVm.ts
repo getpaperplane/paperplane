@@ -29,7 +29,7 @@ import * as ServerConfig from "../config.ts";
 import * as ProcessRunner from "../processRunner.ts";
 import type { Transport } from "./LinuxDesktop.ts";
 
-// Apple permits two concurrent macOS guests TOTAL, including guests outside Rove.
+// Apple permits two concurrent macOS guests TOTAL, including guests outside Paperplane.
 // Reserve only one working slot; Lume enforces the host-wide limit at boot.
 const CAPACITY = 1;
 const GOLDEN = "rove-cua-golden";
@@ -111,11 +111,11 @@ export class MacosVmError extends Schema.TaggedError<MacosVmError>()("MacosVmErr
       case "missing-lume":
         return "Lume is missing. Install it from Settings → Integrations → Computer use.";
       case "ownership":
-        return "Another Rove server owns these VMs, or ownership cannot be verified. Nothing was removed.";
+        return "Another Paperplane server owns these VMs, or ownership cannot be verified. Nothing was removed.";
       case "consent":
         return "The VM hasn't granted Accessibility and Screen Recording yet. Open setup desktop in Settings, approve the prompts (or use Type setup command in its Terminal), then verify again.";
       case "capacity":
-        return "The private macOS VM slot is occupied. Use close_desktop in the finished thread or Release VM in Settings. Rove never evicts work or falls back to the host.";
+        return "The private macOS VM slot is occupied. Use close_desktop in the finished thread or Release VM in Settings. Paperplane never evicts work or falls back to the host.";
       case "preparing":
         return "The macOS VM is still being prepared. Wait for it to finish or cancel it in Settings.";
       case "not-ready":
@@ -376,7 +376,7 @@ export const make = Effect.fn("MacosVm.make")(function* (options?: { readonly ar
         "--vnc",
         "enabled",
         // Base64url gives the first eight ASCII bytes 48 bits of entropy even
-        // with traditional VNC's eight-byte truncation. Never persist this in Rove.
+        // with traditional VNC's eight-byte truncation. Never persist this in Paperplane.
         "--vnc-password",
         NodeCrypto.randomBytes(18).toString("base64url"),
         "--network",

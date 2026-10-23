@@ -219,7 +219,7 @@ export const makeSandboxManager = Effect.fn("SandboxManager.make")(function* (
         }),
     });
   // Copies fresh sign-ins from this environment, and removes deselected ones,
-  // before Rove (re)starts so its provider probes see the tools and logins.
+  // before Paperplane (re)starts so its provider probes see the tools and logins.
   const forwardCredentials = (
     driver: SandboxDriver,
     handle: SandboxHandle,
@@ -322,11 +322,11 @@ export const makeSandboxManager = Effect.fn("SandboxManager.make")(function* (
           const forwardError = yield* forwardOnStart(driver, handle, record);
           yield* operation(
             () => driver.exec(handle, sandboxStartCommand),
-            "Rove setup failed. The sandbox may still be billing; resume to repair or delete it.",
+            "Paperplane setup failed. The sandbox may still be billing; resume to repair or delete it.",
           );
           const url = yield* operation(
             () => driver.expose(handle),
-            "Could not expose Rove. The sandbox may still be billing; resume to repair or delete it.",
+            "Could not expose Paperplane. The sandbox may still be billing; resume to repair or delete it.",
           );
           record = { ...record, phase: "running", url, detail: forwardError };
           yield* replace(record);
@@ -423,11 +423,11 @@ export const makeSandboxManager = Effect.fn("SandboxManager.make")(function* (
             const forwardError = yield* forwardOnStart(driver, resumed, current);
             yield* operation(
               () => driver.exec(resumed, sandboxStartCommand),
-              "Rove restart failed. Resume again to repair, or delete the sandbox.",
+              "Paperplane restart failed. Resume again to repair, or delete the sandbox.",
             );
             const url = yield* operation(
               () => driver.expose(resumed),
-              "Could not expose the resumed Rove server.",
+              "Could not expose the resumed Paperplane server.",
             );
             current = { ...current, url, phase: "running", detail: forwardError };
           } else if (input.action === "credentials") {
@@ -441,7 +441,7 @@ export const makeSandboxManager = Effect.fn("SandboxManager.make")(function* (
             if (current.phase === "paused") return { sandbox: publicRecord(current), pairingUrl };
             yield* operation(
               () => driver.exec(handle, sandboxStopCommand),
-              "Rove did not shut down cleanly. Pause was refused to protect its data.",
+              "Paperplane did not shut down cleanly. Pause was refused to protect its data.",
             );
             untouched = false;
             // Snapshot handles must commit before the driver terminates compute.
@@ -485,7 +485,7 @@ export const makeSandboxManager = Effect.fn("SandboxManager.make")(function* (
             );
             const credential = yield* decodePairingOutput(output).pipe(
               Effect.mapError(
-                () => new SandboxError({ message: "Rove returned an invalid pairing response." }),
+                () => new SandboxError({ message: "Paperplane returned an invalid pairing response." }),
               ),
             );
             const url = new URL("/pair", current.url);

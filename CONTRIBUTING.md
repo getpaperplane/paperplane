@@ -1,11 +1,11 @@
-# Contributing to Rove Code
+# Contributing to Paperplane
 
 ## Developer Setup
 
 See the [development runbook](docs/operations/development.md#first-checkout) for the initial checkout,
 development commands, tests, and platform-specific desktop packaging prerequisites.
 
-Rove Code is an independent fork with its own roadmap. Its contribution process is still taking shape.
+Paperplane is an independent fork with its own roadmap. Its contribution process is still taking shape.
 
 ## Before starting
 

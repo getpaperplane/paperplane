@@ -1619,7 +1619,7 @@ const layerCoreWsRpc = (
               if (racedImport !== null) return { threadId, imported: false } as const;
               return yield* new AcpRegistryOperationError({
                 reason: "session_import_failed",
-                message: "Could not create a Rove thread for the ACP session.",
+                message: "Could not create a Paperplane thread for the ACP session.",
                 cause: launched.failure,
               });
             }
@@ -1660,7 +1660,7 @@ const layerCoreWsRpc = (
             if (importedThread !== null) {
               return yield* new AcpRegistryOperationError({
                 reason: "session_delete_failed",
-                message: "Delete the imported Rove thread before deleting its native ACP session.",
+                message: "Delete the imported Paperplane thread before deleting its native ACP session.",
               });
             }
             yield* manager.deleteSession({
@@ -2290,7 +2290,7 @@ const layerCoreWsRpc = (
           ),
         [WS_METHODS.serverRefreshProviders]: (input) =>
           Effect.gen(function* () {
-            // Only explicit catalog refreshes bypass Rove's caches. Workspace
+            // Only explicit catalog refreshes bypass Paperplane's caches. Workspace
             // discovery and background status checks retain their timers.
             if (input.refreshModels) {
               yield* modelManifest.forceRefresh;

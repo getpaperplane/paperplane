@@ -146,7 +146,7 @@ const withWindows = <A, E>(
     ]),
   );
 
-it.effect("never stops the Scheduled Task's daemon when Rove's scope closes", () =>
+it.effect("never stops the Scheduled Task's daemon when Paperplane's scope closes", () =>
   Effect.gen(function* () {
     const runs = yield* withWindows({}, ({ driver, runs }) =>
       Effect.gen(function* () {

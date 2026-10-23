@@ -52,7 +52,7 @@ export interface ModelTotals {
   readonly unpricedTokens: number;
   readonly costShare: number;
   readonly tokenShare: number;
-  /** Flat counters retained for Rove usage visualizations predating `tokens`. */
+  /** Flat counters retained for Paperplane usage visualizations predating `tokens`. */
   readonly uncachedInputTokens: number;
   readonly cachedInputTokens: number;
   readonly cacheCreationTokens: number;

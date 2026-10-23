@@ -293,7 +293,7 @@ function nativeThreadId(providerThread: OrchestrationV2ProviderThread): string {
  * plugins. The SDK loads none of them when `settingSources` is omitted.
  * Sandbox policy files are read either way, and hooks can only deny or ask
  * (which local SDK runs reject), so these layers do not loosen the sandbox or
- * approval mode Rove sets.
+ * approval mode Paperplane sets.
  */
 const CURSOR_AGENT_SETTING_SOURCES = [
   "project",
@@ -314,7 +314,7 @@ export function makeCursorAgentOptions(input: {
   const mcpServers = cursorMcpServers(input.mcpSession);
   return {
     model: cursorSdkModelSelection(input.modelSelection),
-    name: `Rove Code ${input.threadId}`,
+    name: `Paperplane ${input.threadId}`,
     mode: input.runtimePolicy.interactionMode === "plan" ? "plan" : "agent",
     ...(input.apiKey === undefined ? {} : { apiKey: input.apiKey }),
     local: {

@@ -223,7 +223,7 @@ jobs:
             echo "release_channel=stable" >> "$GITHUB_OUTPUT"
             echo "version=$version" >> "$GITHUB_OUTPUT"
             echo "tag=v$version" >> "$GITHUB_OUTPUT"
-            echo "name=Rove Code v$version" >> "$GITHUB_OUTPUT"
+            echo "name=Paperplane v$version" >> "$GITHUB_OUTPUT"
             echo "cli_dist_tag=latest" >> "$GITHUB_OUTPUT"
             if [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
               echo "is_prerelease=false" >> "$GITHUB_OUTPUT"
@@ -373,11 +373,11 @@ jobs:
         run: vp run --filter @rove-code/server test --shard ${{ matrix.shard }}/${{ matrix.shards }}
 
   relay_public_config:
-    name: Resolve Rove Connect public config
+    name: Resolve Paperplane Connect public config
     # Consumes only the release commit, not preflight's resolved version, so it
     # runs alongside preflight instead of after it. The condition mirrors preflight's.
     # Gated behind ROVE_CLOUD_READY: forks without Clerk/Cloudflare skip this
-    # job and produce a community build (no Rove Connect baked in).
+    # job and produce a community build (no Paperplane Connect baked in).
     needs: [resolve_commit]
     if: |
       vars.ROVE_CLOUD_READY == 'true' &&
@@ -488,7 +488,7 @@ jobs:
   build_bundle:
     name: Build JS bundle
     # Runs alongside preflight. When relay_public_config is skipped (no cloud
-    # config), the bundle is built without Rove Connect — a community build.
+    # config), the bundle is built without Paperplane Connect — a community build.
     needs: [preflight, relay_public_config]
     if: ${{ !cancelled() && needs.preflight.result == 'success' && needs.relay_public_config.result != 'failure' }}
     runs-on: ubuntu-24.04
@@ -1173,7 +1173,7 @@ jobs:
           > [!WARNING]
           > **This is a preview build. Do not install it unless you know exactly why you are here.**
           >
-          > Preview builds are cut by maintainers from unreleased branches to exercise the release pipeline. They can be broken, receive no fixes, are never offered as updates, and are not supported. If you want Rove Code, install the [latest release](https://github.com/hafiezul/rove/releases/latest) or a nightly instead.
+          > Preview builds are cut by maintainers from unreleased branches to exercise the release pipeline. They can be broken, receive no fixes, are never offered as updates, and are not supported. If you want Paperplane, install the [latest release](https://github.com/hafiezul/rove/releases/latest) or a nightly instead.
 
           Built from `${{ needs.preflight.outputs.ref }}`.
           EOF

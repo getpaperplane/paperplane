@@ -1,4 +1,4 @@
-/** Rove's V2 Pi adapter. Only the injected SDK session boundary crosses IPC (ADR 0001). */
+/** Paperplane's V2 Pi adapter. Only the injected SDK session boundary crosses IPC (ADR 0001). */
 import type {
   OrchestrationV2ConversationMessage,
   ModelSelection,

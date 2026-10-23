@@ -87,7 +87,7 @@ const readClaudeSubagentResumeTranscript = Effect.fn("readClaudeSubagentResumeTr
  * The same session with the math.ts subagent's first run removed: the root
  * turn settles while the subagent still works, and the server restarts
  * before it reports, so recovery cancels it. The resumed turn then carries
- * the restart note, as Rove sends it.
+ * the restart note, as Paperplane sends it.
  */
 const readClaudeCancelledSubagentResumeTranscript = Effect.fn(
   "readClaudeCancelledSubagentResumeTranscript",
@@ -130,7 +130,7 @@ const readClaudeCancelledSubagentResumeTranscript = Effect.fn(
             message: {
               ...frame.message.message,
               content: [
-                "Note: the Rove server restarted, and this background work was cancelled before it finished. It will not report back:",
+                "Note: the Paperplane server restarted, and this background work was cancelled before it finished. It will not report back:",
                 "- subagent: Audit src/math.ts",
                 "",
                 "User message:",

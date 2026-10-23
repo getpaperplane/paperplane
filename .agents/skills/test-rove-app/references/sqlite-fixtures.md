@@ -1,6 +1,6 @@
 # SQLite fixtures
 
-Load this reference only when inspecting or seeding local Rove state directly.
+Load this reference only when inspecting or seeding local Paperplane state directly.
 
 ## Select the correct database
 

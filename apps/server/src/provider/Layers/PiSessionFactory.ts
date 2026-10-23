@@ -3,8 +3,8 @@
  *
  * Wires `@earendil-works/pi-coding-agent` per the settled provider design:
  *   - Tools, commands, and hooks load through the SDK. Thread sessions expose
- *     RPC-style dialogs through Rove; terminal rendering remains unavailable.
- *   - Always-trust: project-local resources are trusted, matching Rove Code's
+ *     RPC-style dialogs through Paperplane; terminal rendering remains unavailable.
+ *   - Always-trust: project-local resources are trusted, matching Paperplane's
  *     full-access stance and avoiding silent divergence from terminal `pi`.
  *   - Resume: the cursor holds the session id and absolute file path.
  *     ID-only cursors from older versions use cwd-based lookup.
@@ -114,14 +114,14 @@ export async function readPiModelUsageLimit(
 }
 
 /**
- * System-prompt note telling the model which Pi extensions Rove blocks in
+ * System-prompt note telling the model which Pi extensions Paperplane blocks in
  * this session. The model otherwise answers "which extensions are loaded"
  * from Pi's settings.json filters and reports extensions that are not
  * actually bound in the session.
  */
 function disabledExtensionsPromptNote(disabled: ReadonlyArray<string>): string {
   return [
-    "Rove Code disables these Pi extensions for this session, so they are NOT loaded:",
+    "Paperplane disables these Pi extensions for this session, so they are NOT loaded:",
     ...disabled.map((path) => `- ${path}`),
     "Every other extension from the user's Pi configuration is loaded normally.",
   ].join("\n");
@@ -199,7 +199,7 @@ async function toPiSessionLike(
   let settlementPending = false;
   // SDK settlement is emitted from a finally block, before prompt() rejects.
   // Hold it until the Promise outcome is known so a thrown provider/extension
-  // failure cannot first be projected as a successful Rove turn.
+  // failure cannot first be projected as a successful Paperplane turn.
   const unsubscribeSdk = session.subscribe((event) => {
     if (event.type === "agent_settled" && activePrompts > 0) {
       settlementPending = true;
@@ -221,7 +221,7 @@ async function toPiSessionLike(
   const abort = async () => {
     stopped = true;
     extensionUI?.stop();
-    // Pi abort deliberately continues queued messages. Rove Stop must discard
+    // Pi abort deliberately continues queued messages. Paperplane Stop must discard
     // them before aborting, or a queued follow-up can execute more tools.
     session.clearQueue();
     // Pi 1.2 invokes its preflight callback outside _startRun's finally block.
@@ -268,7 +268,7 @@ async function toPiSessionLike(
 
   const unsupportedSessionControl = async (): Promise<never> => {
     throw new Error(
-      "Pi extension session replacement and reload are not supported in Rove. Use Rove's thread controls.",
+      "Pi extension session replacement and reload are not supported in Paperplane. Use Paperplane's thread controls.",
     );
   };
   let binding: Promise<void> | undefined;
@@ -568,7 +568,7 @@ interface DefaultResourceLoaderInternalAccess {
 }
 
 /**
- * Rove filters extensions through unexported loader members. A Pi SDK bump that
+ * Paperplane filters extensions through unexported loader members. A Pi SDK bump that
  * renames them would silently stop disabling extensions, so fail loudly instead.
  */
 function getLoaderInternals(loader: DefaultResourceLoader): DefaultResourceLoaderInternalAccess {
@@ -738,7 +738,7 @@ export interface CreatePiSessionServicesOptions {
   readonly extensionFactories?: ReadonlyArray<InlineExtension> | undefined;
   /** Whether the session's MCP credential grants `html_render`. */
   readonly richResponses?: boolean | undefined;
-  /** Replaces Rove's thread runtime instructions. */
+  /** Replaces Paperplane's thread runtime instructions. */
   readonly runtimeInstructions?: string | undefined;
 }
 
@@ -893,7 +893,7 @@ export async function createPiSession(
     );
   }
   if (!outcome.resumed && !options.textGeneration) {
-    // Pi defers persistence until an assistant response. Rove saves a cursor at startup.
+    // Pi defers persistence until an assistant response. Paperplane saves a cursor at startup.
     const sessionFile = sessionManager.getSessionFile()!;
     NodeFS.writeFileSync(sessionFile, `${JSON.stringify(sessionManager.getHeader())}\n`, {
       flag: "wx",

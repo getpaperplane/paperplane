@@ -231,7 +231,7 @@ interface PendingRequest {
   request: OrchestrationV2RuntimeRequest;
   node: OrchestrationV2ExecutionNode;
   item: OrchestrationV2TurnItem;
-  /** What Rove answered, recorded on the request once Muse confirms it. */
+  /** What Paperplane answered, recorded on the request once Muse confirms it. */
   response?: Pick<OrchestrationV2RuntimeRequest, "decision" | "answers">;
 }
 
@@ -264,7 +264,7 @@ const INFORMATIONAL_NOTIFICATIONS = new Set([
   "session/todoListChanged",
   "turn/retryScheduled",
 ]);
-// Tools whose results already show as their own rows: Rove's todo list and question
+// Tools whose results already show as their own rows: Paperplane's todo list and question
 // rows, and the workflow item a `workflow` call launches.
 const TOOLS_WITH_NATIVE_ROWS = new Set(["write_todos", "request_user_input", "workflow"]);
 const responseAnswerSchema = Schema.Union([Schema.String, Schema.Array(Schema.String)]);
@@ -355,7 +355,7 @@ export const makeMuseAdapterV2 = Effect.fn("makeMuseAdapterV2")(function* (
       const agentTitles = new Map<string, string>();
       // Background work that finished since the last turn, reported to the turn Muse starts for it.
       const finishedBackground: Array<BackgroundWorkReport> = [];
-      // A turn Muse started on its own, held until the continuation run Rove opens for it takes it.
+      // A turn Muse started on its own, held until the continuation run Paperplane opens for it takes it.
       let wake:
         | { readonly nativeId: string; readonly events: Array<[string, unknown]> }
         | undefined;
@@ -974,7 +974,7 @@ export const makeMuseAdapterV2 = Effect.fn("makeMuseAdapterV2")(function* (
         const completedAt = yield* DateTime.now;
         for (const item of turn.items.values()) {
           // Workflows and subagents outlive a completed turn. A stopped or failed
-          // turn ends them in Rove too, as the orchestrator stops following them.
+          // turn ends them in Paperplane too, as the orchestrator stops following them.
           if (
             (item.kind === "subagent" || item.kind === "workflow") &&
             item.status === "inProgress" &&
@@ -1071,7 +1071,7 @@ export const makeMuseAdapterV2 = Effect.fn("makeMuseAdapterV2")(function* (
       });
       const owns = (turn: ActiveTurn, turnId: string) =>
         turnId === turn.nativeId || turn.joined.has(turnId);
-      /** Sends Rove's decision for a pending approval to Muse. */
+      /** Sends Paperplane's decision for a pending approval to Muse. */
       const decideApproval = Effect.fnUntraced(function* (
         entry: PendingRequest,
         decision: ProviderApprovalDecision | undefined,
@@ -1089,9 +1089,9 @@ export const makeMuseAdapterV2 = Effect.fn("makeMuseAdapterV2")(function* (
         }).pipe(Effect.tapError(() => Effect.sync(() => delete entry.response)));
       });
       /**
-       * Shows a Muse approval or question as a Rove request. A workflow child's approval
+       * Shows a Muse approval or question as a Paperplane request. A workflow child's approval
        * is runless: the turn that started the workflow may end long before the child
-       * asks, and Rove keeps a runless request on the thread until Muse settles it.
+       * asks, and Paperplane keeps a runless request on the thread until Muse settles it.
        */
       const publishRequest = Effect.fnUntraced(function* (native: PendingRequest["native"]) {
         const child = native.type === "approval" && native.value.subagentOrigin !== undefined;
@@ -1231,7 +1231,7 @@ export const makeMuseAdapterV2 = Effect.fn("makeMuseAdapterV2")(function* (
         yield* emit({ type: "turn_item.updated", driver: MUSE_PROVIDER, turnItem: item });
         yield* updateSession("waiting");
         // Muse does not give workflow children the session's allowAll mode, so in full
-        // access Rove approves for them. If Muse rejects that, the request waits for the user.
+        // access Paperplane approves for them. If Muse rejects that, the request waits for the user.
         if (child && input.runtimePolicy.runtimeMode === "full-access")
           yield* decideApproval(entry, "accept").pipe(Effect.ignore, Effect.forkIn(scope));
       });
@@ -1273,7 +1273,7 @@ export const makeMuseAdapterV2 = Effect.fn("makeMuseAdapterV2")(function* (
               (candidate) => candidate.request.nativeRequestRef?.nativeId === id,
             );
             if (entry) {
-              // An approval settled outside Rove still shows Muse's own decision.
+              // An approval settled outside Paperplane still shows Muse's own decision.
               const native =
                 method === "approval/resolved" && typeof params.decision === "string"
                   ? museApprovalDecision({ decision: params.decision, scope: "once" })
@@ -1781,7 +1781,7 @@ export const makeMuseAdapterV2 = Effect.fn("makeMuseAdapterV2")(function* (
           const config = mcpSession
             ? {
                 mcpServers: {
-                  // Muse defaults to "required", which fails the whole run when Rove's
+                  // Muse defaults to "required", which fails the whole run when Paperplane's
                   // tools cannot be reached. The agent should still work without them.
                   [ROVE_MCP_SERVER_NAME]: {
                     transport: "streamableHttp",
@@ -1799,7 +1799,7 @@ export const makeMuseAdapterV2 = Effect.fn("makeMuseAdapterV2")(function* (
           const result = yield* request(
             requestedId ? "session/resume" : "session/start",
             requestedId
-              ? // Rove already has the transcript; skip Muse's history payload.
+              ? // Paperplane already has the transcript; skip Muse's history payload.
                 { excludeItems: true, ...(config ? { config } : {}), permissionProfile }
               : {
                   workspaceRoot: cwd,
@@ -2036,7 +2036,7 @@ export const makeMuseAdapterV2 = Effect.fn("makeMuseAdapterV2")(function* (
                 ],
                 displayText: turnInput.message.text || "Image attachment",
                 // A resumed session keeps the root it was created with; pin it to
-                // this thread's current checkout so edits land where Rove tracks them.
+                // this thread's current checkout so edits land where Paperplane tracks them.
                 workspaceRoots: [workspaceRoot],
                 ifBusy: "queue",
                 ...(effort ? { reasoningEffort: effort } : {}),
@@ -2063,7 +2063,7 @@ export const makeMuseAdapterV2 = Effect.fn("makeMuseAdapterV2")(function* (
           }),
         );
       });
-      // Only messages are read back; Rove owns turn and item history.
+      // Only messages are read back; Paperplane owns turn and item history.
       const snapshot = Effect.fnUntraced(function* (
         current: OrchestrationV2ProviderThread,
       ): Effect.fn.Return<
@@ -2309,7 +2309,7 @@ export const makeMuseAdapterV2 = Effect.fn("makeMuseAdapterV2")(function* (
                 }),
             ),
           ),
-        // Muse rejects forks at completed-turn boundaries (InvalidCut), so Rove uses
+        // Muse rejects forks at completed-turn boundaries (InvalidCut), so Paperplane uses
         // portable context handoff for forks and does not rewind Muse conversations.
         rollbackThread: (args) =>
           Effect.fail(
@@ -2317,7 +2317,7 @@ export const makeMuseAdapterV2 = Effect.fn("makeMuseAdapterV2")(function* (
               driver: MUSE_PROVIDER,
               providerThreadId: args.providerThread.id,
               checkpointId: args.target.checkpointId,
-              cause: "Muse Code does not support conversation rollback in Rove Code.",
+              cause: "Muse Code does not support conversation rollback in Paperplane.",
             }),
           ),
         forkThread: (args) =>
@@ -2325,7 +2325,7 @@ export const makeMuseAdapterV2 = Effect.fn("makeMuseAdapterV2")(function* (
             new ProviderAdapter.ProviderAdapterForkThreadError({
               driver: MUSE_PROVIDER,
               providerThreadId: args.sourceProviderThread.id,
-              cause: "Muse Code does not support native forks in Rove Code.",
+              cause: "Muse Code does not support native forks in Paperplane.",
             }),
           ),
       };

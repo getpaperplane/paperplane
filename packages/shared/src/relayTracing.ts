@@ -39,7 +39,7 @@ class LocalTracer extends Context.Reference("@rove-code/shared/relayTracing/Loca
 
 /**
  * Exports every span `effect` creates through the product tracer. Use it only
- * around Rove Connect work; wrap local work inside it with
+ * around Paperplane Connect work; wrap local work inside it with
  * {@link withLocalTracing} so it stays off the product tracer.
  */
 export const withRelayClientTracing = <A, E, R>(

@@ -43,7 +43,7 @@ export async function checkAgentReadiness(origin) {
   const html = await request("/", "text/html", 200, "text/html");
   const characters = checkHomepageHtml(html.body);
   const markdown = await request("/", "text/markdown", 200, "text/markdown");
-  NodeAssert.match(markdown.body, /^# Rove Code/);
+  NodeAssert.match(markdown.body, /^# Paperplane/);
   NodeAssert.ok(markdown.body.length >= 500);
   await request("/", "text/html;q=0.2, text/markdown;q=0.9", 200, "text/markdown");
   await request("/", "text/markdown;q=0, text/*;q=1", 200, "text/html");
@@ -69,7 +69,7 @@ export async function checkAgentReadiness(origin) {
         NodeAssert.ok(value.paths["/"]?.get?.responses["200"]?.content["text/markdown"]);
       } else NodeAssert.equal(value.type, "object");
     }
-    if (path === "/llms.txt") NodeAssert.match(body, /^# Rove Code\n\n> /);
+    if (path === "/llms.txt") NodeAssert.match(body, /^# Paperplane\n\n> /);
     if (path === "/robots.txt")
       NodeAssert.ok(body.includes(`Sitemap: ${new URL("/sitemap.xml", origin)}`));
     if (path === "/sitemap.xml")
@@ -77,7 +77,7 @@ export async function checkAgentReadiness(origin) {
   }
   for (const type of ["text/html", "text/markdown"]) {
     const { body } = await request("/docs", type, 200, type);
-    NodeAssert.ok(body.includes("Connect to Rove Code"));
+    NodeAssert.ok(body.includes("Connect to Paperplane"));
   }
   for (const path of [
     "/some-path-that-does-not-exist",

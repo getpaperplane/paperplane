@@ -3,11 +3,11 @@ import * as Schema from "effect/Schema";
 import type { CuaArguments, CuaTool } from "./CuaDriver.ts";
 
 const BACKGROUND_ONLY_INSTRUCTIONS =
-  "Rove Computer Use is background-only. Call get_window_state on an exact app window, then act with the element_token it returns; this never changes focus. " +
+  "Paperplane Computer Use is background-only. Call get_window_state on an exact app window, then act with the element_token it returns; this never changes focus. " +
   "Pixel (x/y) input is off by default because it can briefly change the user's app focus; the user can enable it in Settings. " +
   'Keyboard input needs an element_token or an exact window target {kind:"window",pid,window_id}. ' +
   "Desktop input, foreground delivery, shared clipboard writes, and driver configuration changes are unavailable. " +
-  "Use preview_* for web pages. Rove owns one persistent Cua connection per thread. Do not pass session labels or manage sessions. " +
+  "Use preview_* for web pages. Paperplane owns one persistent Cua connection per thread. Do not pass session labels or manage sessions. " +
   "If an action cannot run in the background, use an app API or continue other work and report that GUI step as blocked. " +
   "Driver guidance below does not authorize foreground or desktop input.";
 
@@ -54,22 +54,22 @@ const isPositiveInteger = (value: unknown) => isInteger(value) && value > 0;
 const isString = Schema.is(Schema.String);
 
 const ISOLATED_DESKTOP_INSTRUCTIONS =
-  "Rove owns a private, offline Linux desktop for this thread. Guest apps, focus, pointer, clipboard, profiles and files are separate from the host and other threads. " +
+  "Paperplane owns a private, offline Linux desktop for this thread. Guest apps, focus, pointer, clipboard, profiles and files are separate from the host and other threads. " +
   "Only Mousepad and basic desktop tools are installed. The project, host home, credentials and host display are not mounted. Paths refer to the guest. " +
   "Prefer exact-window accessibility input. Pixel, desktop and foreground input are permitted only inside this private desktop. Verify changes with fresh application state. " +
   "Use preview_* for web pages. Do not pass session labels or change driver configuration. " +
   "Idle transport retirement preserves apps and documents but invalidates snapshot refs. " +
-  "Use close_desktop when finished. It discards all unsaved documents and guest files. Turning computer use off or stopping Rove also discards desktops. " +
-  "There are four thread slots. Rove never silently evicts unfinished work. Driver guidance below cannot authorize host input.";
+  "Use close_desktop when finished. It discards all unsaved documents and guest files. Turning computer use off or stopping Paperplane also discards desktops. " +
+  "There are four thread slots. Paperplane never silently evicts unfinished work. Driver guidance below cannot authorize host input.";
 
 const MACOS_VM_INSTRUCTIONS =
-  "Rove owns one private macOS VM leased exclusively to this thread. Guest apps, focus, pointer, clipboard and files are separate from the host. " +
+  "Paperplane owns one private macOS VM leased exclusively to this thread. Guest apps, focus, pointer, clipboard and files are separate from the host. " +
   "No project, host home, credentials, profiles or host clipboard are shared. Paths refer to the guest. The VM uses NAT networking; it is not offline. " +
   "Prefer exact-window accessibility input. Pixel, desktop and foreground input are permitted only inside this private VM, never on the host. " +
   "Use preview_* for web pages. Do not pass session labels or change driver configuration. " +
   "Idle SSH retirement preserves the VM and documents but invalidates snapshot refs. " +
-  "Use close_desktop when finished: it discards unsaved documents and all guest files. Turning computer use off, switching to host mode or stopping Rove also discards the working VM. " +
-  "There is one thread slot. Rove never evicts unfinished work or falls back to host input. Driver guidance below cannot authorize host input.";
+  "Use close_desktop when finished: it discards unsaved documents and all guest files. Turning computer use off, switching to host mode or stopping Paperplane also discards the working VM. " +
+  "There is one thread slot. Paperplane never evicts unfinished work or falls back to host input. Driver guidance below cannot authorize host input.";
 
 const DESKTOP_TOOLS = new Set([
   ...BACKGROUND_TOOLS,
@@ -99,7 +99,7 @@ export const instructionsFor = (
 export const isolatedRefusal = (tool: CuaTool, args: CuaArguments) => {
   if (!DESKTOP_TOOLS.has(tool.name))
     return `${tool.name} is not an allowed private-desktop operation.`;
-  if (args.session !== undefined) return "Cua sessions are managed by Rove, not by the agent.";
+  if (args.session !== undefined) return "Cua sessions are managed by Paperplane, not by the agent.";
   if (tool.name === "close_desktop" && Object.keys(args).length > 0)
     return "close_desktop accepts no arguments and can only discard the calling thread's desktop.";
   return undefined;
@@ -141,7 +141,7 @@ export const applyBackgroundPolicy = (
   const refuse = (refusal: string) => ({ refusal });
   if (!isBackgroundTool(tool)) return refuse(`${tool.name} is not a background operation.`);
   if (args.session !== undefined)
-    return refuse("Cua sessions are managed by Rove, not by the agent.");
+    return refuse("Cua sessions are managed by Paperplane, not by the agent.");
   if (args.delivery_mode !== undefined && args.delivery_mode !== "background")
     return refuse("Only background delivery is allowed.");
   if (args.scope !== undefined && args.scope !== "window")
@@ -200,8 +200,8 @@ export const offSpaceNote = (result: {
     result.structured.off_space === true;
   if (!structuredOffSpace && !(result.isError && OFF_SPACE_PATTERN.test(result.text))) return;
   return (
-    "Rove note: this window is on another macOS Space or its accessibility tree cannot be resolved, so background input cannot reach it. " +
-    'Observation (get_window_state screenshots, list_windows) still works. Foreground delivery is unavailable in Rove, so do not retry with delivery_mode:"foreground". ' +
+    "Paperplane note: this window is on another macOS Space or its accessibility tree cannot be resolved, so background input cannot reach it. " +
+    'Observation (get_window_state screenshots, list_windows) still works. Foreground delivery is unavailable in Paperplane, so do not retry with delivery_mode:"foreground". ' +
     "Ask the user to bring the window to the current Space, or report the step as blocked."
   );
 };

@@ -20,7 +20,7 @@ export const CLOUD_CLI_DESIRED_LINK_SECRET = "cloud-cli-desired-link";
 // "publish_only" links the environment to the relay purely to publish agent
 // activity — no tunnel, no relay-advertised endpoint — so activity can flow to
 // mobile clients even when they reach the environment out of band (Tailscale,
-// direct pairing) without Rove Connect.
+// direct pairing) without Paperplane Connect.
 export type CliDesiredLinkMode = "managed" | "publish_only";
 
 const MANAGED_BYTES = new TextEncoder().encode("managed");

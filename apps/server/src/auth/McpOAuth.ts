@@ -40,10 +40,10 @@ import {
 
 /**
  * The OAuth authorization server MCP clients (Claude Code, Codex, any agent
- * Rove Code did not launch) use to sign in to this environment's `/mcp`.
+ * Paperplane did not launch) use to sign in to this environment's `/mcp`.
  *
  * Every URL is derived from the request's own origin, so the same server
- * answers correctly over loopback, Tailscale Serve and a Rove Connect tunnel.
+ * answers correctly over loopback, Tailscale Serve and a Paperplane Connect tunnel.
  * Client registration is stateless: a client id is its signed metadata, so
  * an unauthenticated caller cannot grow server state. Redirects go to a
  * loopback address (a CLI agent on the user's machine) or any https address
@@ -88,7 +88,7 @@ export const protectedResourceMetadata = (
   authorization_servers: [urls.issuer],
   scopes_supported: MCP_OAUTH_SCOPES,
   bearer_methods_supported: ["header"],
-  resource_name: "Rove Code",
+  resource_name: "Paperplane",
 });
 
 export const authorizationServerMetadata = (

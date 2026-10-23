@@ -53,7 +53,7 @@ async function main() {
     });
     if (code !== 0) {
       process.stderr.write(
-        `Guarded command exited with ${code}. Workloads share a ${memoryMiB} MiB memory ceiling capped by the host's Rove budget; command deadline ${timeoutSeconds}s. Check for a deadline or contained OOM before retrying.\n`,
+        `Guarded command exited with ${code}. Workloads share a ${memoryMiB} MiB memory ceiling capped by the host's Paperplane budget; command deadline ${timeoutSeconds}s. Check for a deadline or contained OOM before retrying.\n`,
       );
     }
     process.exitCode = cancellationCode ?? code;

@@ -1,5 +1,5 @@
 /**
- * Pure checks behind Rove Connect link proofs and relay requests: which local
+ * Pure checks behind Paperplane Connect link proofs and relay requests: which local
  * origin a link may point at, and which scopes and lifetimes a proof claims and
  * accepts.
  */

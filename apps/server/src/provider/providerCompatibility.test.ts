@@ -51,11 +51,11 @@ const provider: ServerProvider = {
   slashCommands: [],
 };
 
-// This is the adopted adapter generation, not Rove's release version.
+// This is the adopted adapter generation, not Paperplane's release version.
 const V2_RELEASE = PROVIDER_COMPATIBILITY_BASELINE;
 
 describe("provider compatibility", () => {
-  it("uses the V2 adapter generation independently of Rove release numbering", () => {
+  it("uses the V2 adapter generation independently of Paperplane release numbering", () => {
     const opencode = ProviderDriverKind.make("opencode");
     const advisory = resolveProviderCompatibility(
       ModelManifest.BUNDLED_MODEL_MANIFEST.compatibility,
@@ -245,7 +245,7 @@ describe("provider compatibility", () => {
     }
   });
 
-  it("applies policies only within their Rove Code version range", () => {
+  it("applies policies only within their Paperplane version range", () => {
     const scopedPolicy = { ...policy, roveCodeRange: ">=0.0.42 <0.1.0" };
     for (const version of ["0.0.42", "0.0.45"]) {
       assert.strictEqual(

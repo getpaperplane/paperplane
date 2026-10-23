@@ -277,7 +277,7 @@ export function decodeScanCache(
       const speed = typeof speedIndex === "number" ? SPEEDS[speedIndex] : undefined;
 
       const model = typeof modelIndex === "number" ? models[modelIndex] : undefined;
-      // Rove's v4 cache stored the rate-model string directly, before upstream interned it.
+      // Paperplane's v4 cache stored the rate-model string directly, before upstream interned it.
       // Keep saved native Pi usage even when its transcript has already been cleaned up.
       const legacyRateModel = version === 4 && typeof row[11] === "string" ? row[11] : undefined;
       const rateModel =

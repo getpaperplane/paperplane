@@ -281,7 +281,7 @@ describe("ssh tunnel scripts", () => {
     assert.include(launch, '"$RUNNER_FILE" serve --host 127.0.0.1');
     assert.include(launch, '--base-dir "$DEFAULT_SERVER_HOME"');
     assert.notInclude(launch, "server-home");
-    assert.include(launch, "Remote Rove Code server did not become ready");
+    assert.include(launch, "Remote Paperplane server did not become ready");
     assert.include(launch, 'wait_ready "60000"');
     assert.include(launch, 'if [ -s "$LOG_FILE" ]; then');
     assert.include(launch, "It wrote nothing to %s");
@@ -592,7 +592,7 @@ describe("ssh tunnel scripts", () => {
                 exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(1)),
                 stderr: Stream.make(
                   new TextEncoder().encode(
-                    "Remote Rove Code server did not stop within 2 seconds.\n",
+                    "Remote Paperplane server did not stop within 2 seconds.\n",
                   ),
                 ),
               };
@@ -635,7 +635,7 @@ describe("ssh tunnel scripts", () => {
             assert.instanceOf(disconnected.failure, SshCommandError);
             assert.equal(
               disconnected.failure.message,
-              "Remote Rove Code server did not stop within 2 seconds.",
+              "Remote Paperplane server did not stop within 2 seconds.",
             );
           }
         } else {
@@ -1028,7 +1028,7 @@ server.listen(Number(flag("--port")), "127.0.0.1", () => {
 
   // Writes the launch script for a fake server into a temporary HOME. The
   // seeded remembered port keeps the test off the default 3773, which a live
-  // Rove on this machine may own.
+  // Paperplane on this machine may own.
   const prepareLaunch = Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem;
     const root = yield* fs.makeTempDirectoryScoped({ prefix: "rove-launch-script-" });

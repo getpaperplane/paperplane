@@ -1,5 +1,5 @@
 /**
- * ManagedProjectFolders - the project folders Rove Code makes for the user under
+ * ManagedProjectFolders - the project folders Paperplane makes for the user under
  * its data dir, rather than ones the user picks:
  *
  * - `<baseDir>/scratch`: the Scratch project ("No project"), with a folder of
@@ -208,7 +208,7 @@ function namedProjectReadme(name: string): string {
     "",
     `# ${name}`,
     "",
-    "Created in [Rove Code](https://rove.hafiezulzikry.com).",
+    "Created in [Paperplane](https://rove.hafiezulzikry.com).",
     "",
   ].join("\n");
 }

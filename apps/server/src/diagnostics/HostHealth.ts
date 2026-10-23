@@ -40,7 +40,7 @@ export function hostHealthFindings(
       id: "wsl_without_systemd",
       severity: "warning",
       message:
-        "WSL is running without a systemd user manager; Rove's memory ceiling is unavailable.",
+        "WSL is running without a systemd user manager; Paperplane's memory ceiling is unavailable.",
       fix: "Under `[boot]` in /etc/wsl.conf set `systemd=true`, run `wsl --shutdown` in Windows, then run `loginctl enable-linger $USER` in WSL.",
     });
   }
@@ -79,8 +79,8 @@ export function hostHealthFindings(
     findings.push({
       id: "rove_oom_kills",
       severity: "warning",
-      message: `${plural(facts.roveMemory.oomKills - oomBaseline, "out-of-memory kill")} under the Rove memory ceiling since the server started.`,
-      fix: "Run fewer agents at once or raise the Rove memory ceiling.",
+      message: `${plural(facts.roveMemory.oomKills - oomBaseline, "out-of-memory kill")} under the Paperplane memory ceiling since the server started.`,
+      fix: "Run fewer agents at once or raise the Paperplane memory ceiling.",
     });
   } else if (facts.roveMemory === null && facts.hostOomKills > 0) {
     findings.push({

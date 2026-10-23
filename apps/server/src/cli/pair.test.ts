@@ -271,7 +271,7 @@ describe("rove pair", () => {
       const rendered = String(
         typeof error === "object" && error !== null && "cause" in error ? error.cause : error,
       );
-      assert.include(rendered, "No running Rove Code server found.");
+      assert.include(rendered, "No running Paperplane server found.");
       assert.include(rendered, "rove serve");
       assert.notInclude(rendered, "rove connect");
     }).pipe(Effect.provide(NodeServices.layer)),
@@ -302,7 +302,7 @@ describe("rove pair", () => {
         const rendered = String(
           typeof error === "object" && error !== null && "cause" in error ? error.cause : error,
         );
-        assert.include(rendered, "No running Rove Code server found.");
+        assert.include(rendered, "No running Paperplane server found.");
       }),
     ).pipe(Effect.provide(NodeServices.layer)),
   );
@@ -328,7 +328,7 @@ describe("rove pair", () => {
       const rendered = String(
         typeof error === "object" && error !== null && "cause" in error ? error.cause : error,
       );
-      assert.include(rendered, "No running Rove Code server found.");
+      assert.include(rendered, "No running Paperplane server found.");
     }).pipe(Effect.provide(NodeServices.layer)),
   );
 });

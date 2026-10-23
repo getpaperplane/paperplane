@@ -317,7 +317,7 @@ describe("GitHubSourceControlProvider repository resolution", () => {
       host: "api.example.test:8443",
     },
   ])(
-    "creates a same-repository PR on Rove's selected $remoteName remote via $host",
+    "creates a same-repository PR on Paperplane's selected $remoteName remote via $host",
     ({ remoteName, repository, remoteHost, host }) => {
       const requests: GitHubRest.GitHubRestInput[] = [];
       const { layer, processCalls } = harness({
@@ -1394,7 +1394,7 @@ it.effect.each([
     expected: "chosen/repo",
   },
 ])(
-  "prefers GH_REPO, then Rove's context on $host: $resolved $envRepository",
+  "prefers GH_REPO, then Paperplane's context on $host: $resolved $envRepository",
   ({ host, resolved, envRepository, expected }) => {
     const targets: string[] = [];
     const { layer } = harness({

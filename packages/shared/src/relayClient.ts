@@ -536,7 +536,7 @@ export const makeCloudflaredRelayClient = Effect.fn("cloudflared.make")(function
     if (!releaseAsset) {
       return yield* new RelayClientInstallError({
         reason: "unsupported_platform",
-        message: `Rove Code does not provide a managed relay client binary for ${platform}-${arch}.`,
+        message: `Paperplane does not provide a managed relay client binary for ${platform}-${arch}.`,
       });
     }
 

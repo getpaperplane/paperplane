@@ -494,7 +494,7 @@ export const make = Effect.fn("ProviderMaintenanceRunner.make")(function* () {
                   message:
                     targetVersion !== undefined
                       ? "This version is no longer recommended or this installer cannot install a specific version. Refresh provider settings."
-                      : "The latest provider version is incompatible with this Rove Code release. Review provider settings.",
+                      : "The latest provider version is incompatible with this Paperplane release. Review provider settings.",
                 }),
               );
             }
@@ -546,9 +546,9 @@ export const make = Effect.fn("ProviderMaintenanceRunner.make")(function* () {
                 startedAt,
                 finishedAt,
                 message: couldNotVerify
-                  ? "Update command completed, but Rove Code could not verify the provider version."
+                  ? "Update command completed, but Paperplane could not verify the provider version."
                   : stillOutdated
-                    ? "Update command completed, but Rove Code still detects an outdated provider version."
+                    ? "Update command completed, but Paperplane still detects an outdated provider version."
                     : "Provider updated.",
                 output: commandOutput(result),
               }),

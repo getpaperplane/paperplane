@@ -200,7 +200,7 @@ const emptyAcpRegistryAvailableCommands = (): AcpRegistryAvailableCommands => ({
   skills: [],
 });
 
-/** Splits the latest ACP command advertisement into Rove's `/` and `$` menus. */
+/** Splits the latest ACP command advertisement into Paperplane's `/` and `$` menus. */
 export function normalizeAcpRegistryCommands(
   commands: ReadonlyArray<EffectAcpSchema.AvailableCommand>,
 ): AcpRegistryAvailableCommands {

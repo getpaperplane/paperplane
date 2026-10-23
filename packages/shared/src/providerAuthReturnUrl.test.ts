@@ -13,7 +13,7 @@ describe("provider auth return destinations", () => {
       ).toBe(`${scheme}://app/settings/providers?instanceId=work`);
     },
   );
-  it("returns to the hosted Rove client and strips OAuth credentials", () => {
+  it("returns to the hosted Paperplane client and strips OAuth credentials", () => {
     expect(
       providerAuthReturnUrl(
         "https://rove.hafiezulzikry.com/settings/providers?environmentId=remote&instanceId=work&code=secret#token",

@@ -385,7 +385,7 @@ function sshRemoteHost(remoteUrl: string): string | null {
 /**
  * Multi-account setups point remotes at `~/.ssh/config` aliases such as
  * `git@github-work:org/repo.git`. `ssh -G` prints the alias's effective `hostname` without
- * connecting, so the real forge host can be detected. Rove-specific: keep across upstream syncs.
+ * connecting, so the real forge host can be detected. Paperplane-specific: keep across upstream syncs.
  */
 function resolveSshHostAliasProvider(input: {
   readonly process: SourceControlHost.SourceControlHost["Service"]["process"];

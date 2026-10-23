@@ -37,7 +37,7 @@ const requireCloudReady = CloudReady.pipe(
       ? Effect.void
       : Effect.fail(
           new EnvironmentHttpForbiddenError({
-            message: "Rove Connect is not enabled in this build.",
+            message: "Paperplane Connect is not enabled in this build.",
           }),
         ),
   ),

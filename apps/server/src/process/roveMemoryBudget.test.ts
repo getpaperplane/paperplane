@@ -2,7 +2,7 @@ import { describe, expect, it } from "vite-plus/test";
 import { nextSliceLimits, roveMemoryBudget } from "./roveMemoryBudget.ts";
 
 const MiB = 1024 ** 2;
-describe("Rove memory budget", () => {
+describe("Paperplane memory budget", () => {
   it.each([
     [2048, 512, 1024],
     [5928, 4392, 2964],

@@ -4399,7 +4399,7 @@ const hasDedicatedProcessCgroup = () => {
 };
 
 it.live.runIf(hasDedicatedProcessCgroup())(
-  "stops real worktree children in a dedicated Rove cgroup, sparing a sibling",
+  "stops real worktree children in a dedicated Paperplane cgroup, sparing a sibling",
   () =>
     Effect.gen(function* () {
       const cwd = yield* makeTmpDir();
@@ -4458,7 +4458,7 @@ it.live.runIf(hasDedicatedProcessCgroup())(
     }).pipe(Effect.scoped, Effect.provide(layerTest)),
 );
 
-// A test runner need not own a dedicated Rove cgroup (CI often shares a login
+// A test runner need not own a dedicated Paperplane cgroup (CI often shares a login
 // scope or the root group). Real Git + synthetic /proc makes the ownership and
 // removal-order assertions portable, without waiting for a deliberately spared
 // child to exit or ever scanning/signalling the host's processes.

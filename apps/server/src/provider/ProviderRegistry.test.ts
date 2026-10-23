@@ -3106,7 +3106,7 @@ it.layer(
             assert.strictEqual(cursorProvider?.status, "disabled");
             assert.strictEqual(
               cursorProvider?.message,
-              "Cursor is disabled in Rove Code settings.",
+              "Cursor is disabled in Paperplane settings.",
             );
             const museProvider = providers.find((provider) => provider.driver === "muse");
             assert.strictEqual(museProvider?.enabled, false);
@@ -3124,7 +3124,7 @@ it.layer(
         assert.strictEqual(status.enabled, false);
         assert.strictEqual(status.status, "disabled");
         assert.strictEqual(status.installed, false);
-        assert.strictEqual(status.message, "Codex is disabled in Rove Code settings.");
+        assert.strictEqual(status.message, "Codex is disabled in Paperplane settings.");
       }),
     );
   });

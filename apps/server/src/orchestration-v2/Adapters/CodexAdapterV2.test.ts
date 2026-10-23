@@ -394,7 +394,7 @@ describe("CodexAdapterV2 assistant message streaming", () => {
 });
 
 describe("CodexAdapterV2 runtime policy", () => {
-  it.effect("derives concrete Codex turn policies from every Rove runtime mode", () =>
+  it.effect("derives concrete Codex turn policies from every Paperplane runtime mode", () =>
     Effect.gen(function* () {
       const build = (
         runtimeMode: "approval-required" | "auto-accept-edits" | "auto" | "full-access",
@@ -473,7 +473,7 @@ describe("CodexAdapterV2 runtime policy", () => {
       assert.deepEqual(alone.additionalContext, {
         "mcp_app_todos_list_todos_item-1": { kind: "untrusted", value: "Filtered to overdue" },
       });
-      // Alongside Rove's own context, both are kept.
+      // Alongside Paperplane's own context, both are kept.
       const withRove = yield* CodexAdapterV2.buildCodexTurnStartParams({
         nativeThreadId: "native-app-context",
         codexInput: [{ type: "text", text: "what's on my list?" }],
@@ -490,7 +490,7 @@ describe("CodexAdapterV2 runtime policy", () => {
     }),
   );
 
-  it.effect("adds default-mode developer instructions when the Rove MCP server is attached", () =>
+  it.effect("adds default-mode developer instructions when the Paperplane MCP server is attached", () =>
     Effect.gen(function* () {
       const params = yield* CodexAdapterV2.buildCodexTurnStartParams({
         nativeThreadId: "native-orchestration-instructions",
@@ -519,7 +519,7 @@ describe("CodexAdapterV2 runtime policy", () => {
     }),
   );
 
-  it.effect("omits default-mode collaboration settings without the Rove MCP server", () =>
+  it.effect("omits default-mode collaboration settings without the Paperplane MCP server", () =>
     Effect.gen(function* () {
       const params = yield* CodexAdapterV2.buildCodexTurnStartParams({
         nativeThreadId: "native-default-without-rove-mcp",
@@ -540,7 +540,7 @@ describe("CodexAdapterV2 runtime policy", () => {
     }),
   );
 
-  it.effect("adds Rove plan-mode developer instructions when the Rove MCP server is attached", () =>
+  it.effect("adds Paperplane plan-mode developer instructions when the Paperplane MCP server is attached", () =>
     Effect.gen(function* () {
       const params = yield* CodexAdapterV2.buildCodexTurnStartParams({
         nativeThreadId: "native-plan-with-rove-mcp",
@@ -566,7 +566,7 @@ describe("CodexAdapterV2 runtime policy", () => {
     }),
   );
 
-  it.effect("keeps Codex in plan mode without referencing unavailable Rove MCP tools", () =>
+  it.effect("keeps Codex in plan mode without referencing unavailable Paperplane MCP tools", () =>
     Effect.gen(function* () {
       const params = yield* CodexAdapterV2.buildCodexTurnStartParams({
         nativeThreadId: "native-plan-without-rove-mcp",
@@ -844,7 +844,7 @@ describe("CodexAdapterV2 dynamic tool projection", () => {
         status: "failed",
         arguments: {
           title: "Restrict the breakpoint to Git actions",
-          code: "await sky.type_text({app:'Rove Code (Nightly)',text:'debug(ga.run)'});",
+          code: "await sky.type_text({app:'Paperplane (Nightly)',text:'debug(ga.run)'});",
         },
         result: { content: [{ type: "text", text: "Illegal Unicode escape sequence" }] },
       });
@@ -2998,7 +2998,7 @@ describe("CodexAdapterV2 post-settle continuation", () => {
     ),
   );
 
-  it.effect("preserves Rove context on the wire and restores it after compaction", () =>
+  it.effect("preserves Paperplane context on the wire and restores it after compaction", () =>
     Effect.scoped(
       Effect.gen(function* () {
         const nativeThreadId = "context-thread";
@@ -4692,7 +4692,7 @@ describe("CodexAdapterV2 post-settle continuation", () => {
       ),
   );
 
-  // "thread_unloaded": the thread was settled, so Rove unsubscribed and Codex
+  // "thread_unloaded": the thread was settled, so Paperplane unsubscribed and Codex
   // unloaded it (killing its terminals) before Stop arrived.
   const backgroundStopCases = [true, false, "still_running", "thread_unloaded"] as const;
   const makeBackgroundStopTranscript = (terminated: (typeof backgroundStopCases)[number]) => {

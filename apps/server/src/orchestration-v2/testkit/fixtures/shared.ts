@@ -1396,7 +1396,7 @@ export function assertConversationMessageRoles(
 }
 
 /**
- * ACP agents run their own file and shell work: Rove advertises neither
+ * ACP agents run their own file and shell work: Paperplane advertises neither
  * capability (the transcript pins its initialize) and the agent never asks.
  */
 export function assertNoAcpClientFileOrTerminalRequests(transcript: ProviderReplayTranscript) {
@@ -1408,7 +1408,7 @@ export function assertNoAcpClientFileOrTerminalRequests(transcript: ProviderRepl
   assert.deepInclude(
     frames.find((frame) => frame.method === "initialize")?.params?.clientCapabilities ?? {},
     { fs: { readTextFile: false, writeTextFile: false }, terminal: false },
-    "Rove must not advertise client fs or terminals",
+    "Paperplane must not advertise client fs or terminals",
   );
   assert.deepEqual(
     frames.flatMap((frame) =>
@@ -1417,7 +1417,7 @@ export function assertNoAcpClientFileOrTerminalRequests(transcript: ProviderRepl
         : [],
     ),
     [],
-    "the agent must not route file or terminal work through Rove",
+    "the agent must not route file or terminal work through Paperplane",
   );
 }
 

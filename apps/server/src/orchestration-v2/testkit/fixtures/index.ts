@@ -586,7 +586,7 @@ export const ORCHESTRATOR_REPLAY_FIXTURES: ReadonlyArray<OrchestratorReplayFixtu
     buildInput: planQuestionsInput,
     providers: [
       // Grok Build still elicits with the pre-1.0 session/elicitation wire
-      // method the current spec removed; Rove supports standard ACP only, so
+      // method the current spec removed; Paperplane supports standard ACP only, so
       // the scenario covers the registry driver until Grok ships
       // elicitation/create.
       {

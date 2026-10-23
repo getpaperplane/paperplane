@@ -189,7 +189,7 @@ it.layer(NodeServices.layer)("service state persistence", (it) => {
     }),
   );
 
-  it.effect("stays idle instead of exiting when another server owns the Rove home", () =>
+  it.effect("stays idle instead of exiting when another server owns the Paperplane home", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
@@ -211,7 +211,7 @@ it.layer(NodeServices.layer)("service state persistence", (it) => {
       yield* Effect.acquireRelease(
         Effect.sync(() =>
           vi.spyOn(process.stderr, "write").mockImplementation((chunk) => {
-            if (String(chunk).includes("owns this Rove home")) refused.resolve();
+            if (String(chunk).includes("owns this Paperplane home")) refused.resolve();
             return true;
           }),
         ),

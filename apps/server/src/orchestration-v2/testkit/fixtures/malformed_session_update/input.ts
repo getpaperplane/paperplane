@@ -5,7 +5,7 @@ export const MALFORMED_SESSION_UPDATE_PROMPT =
 
 /**
  * An agent sends a `usage_update` without the required `used` and `size`
- * mid-turn, the way clanka did (reported 2026-10-15). Rove drops that one
+ * mid-turn, the way clanka did (reported 2026-10-15). Paperplane drops that one
  * update and the turn completes with the text and usage that follow it.
  */
 export function malformedSessionUpdateInput(): OrchestratorFixtureInput {

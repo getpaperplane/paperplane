@@ -277,7 +277,7 @@ describe("ProcessDiagnostics", () => {
         pid: 4_242,
         signal: "SIGKILL",
         signaled: false,
-        message: Option.some("Process 4242 is not a signalable Rove backend descendant."),
+        message: Option.some("Process 4242 is not a signalable Paperplane backend descendant."),
       });
 
       const diagnostics = yield* Effect.service(ProcessDiagnostics.ProcessDiagnostics).pipe(

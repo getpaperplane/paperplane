@@ -4,7 +4,7 @@
  * adapter and the real `@muse-code/sdk` `Connection` run unchanged; only the
  * stdio pipe underneath is replayed.
  *
- * Transcript entries are MSP JSON-RPC lines. `expect_outbound` is one line Rove
+ * Transcript entries are MSP JSON-RPC lines. `expect_outbound` is one line Paperplane
  * wrote to Muse's stdin and `emit_inbound` is one line Muse wrote to stdout.
  * Every host begins with a synthetic `host_start` outbound record carrying its
  * `muse serve` arguments; records of the Nth host (N > 1) carry an `@hN` label
@@ -365,7 +365,7 @@ class MuseReplayController {
       if (host === undefined) return emitted;
       this.cursor += 1;
       emitted = true;
-      // Output a host wrote after Rove released it was never observed.
+      // Output a host wrote after Paperplane released it was never observed.
       if (!host.open) continue;
       const frame = entry.frame;
       // Responses carry the client's request id; server requests carry their own.

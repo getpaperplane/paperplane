@@ -531,7 +531,7 @@ const layer = (options: AcpRegistryCatalogOptions) =>
 /**
  * The server-lifetime catalog, with the runtime coordinator built alongside
  * it so setup, snapshots, and turn launch share one of each. Its cache lives
- * in the host's provider status cache and installed agents under the Rove
+ * in the host's provider status cache and installed agents under the Paperplane
  * home's `tools` directory.
  */
 export const layerFromHost = Layer.merge(

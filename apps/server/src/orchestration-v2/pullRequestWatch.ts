@@ -193,12 +193,12 @@ export function pullRequestWatchMessage(input: {
     commit: input.headSha === null ? "" : ` on ${input.headSha.slice(0, 7)}`,
   };
   const text = [
-    `Update on pull request #${input.number} (${input.url}), which Rove Code is watching for you:`,
+    `Update on pull request #${input.number} (${input.url}), which Paperplane is watching for you:`,
     ...changes.flatMap((change) => changeLines(change, context)),
     "",
     exhausted
-      ? `Rove Code stopped watching after ${PULL_REQUEST_WATCH_WAKE_LIMIT} comment-only updates in a row. Call watch_pull_request to watch it again.`
-      : "Look into each item and act on it as your task requires. Rove Code keeps watching and wakes you on the next change, so end your turn when you are done. When you hand the work back to the user, call unwatch_pull_request first so the thread returns to their inbox.",
+      ? `Paperplane stopped watching after ${PULL_REQUEST_WATCH_WAKE_LIMIT} comment-only updates in a row. Call watch_pull_request to watch it again.`
+      : "Look into each item and act on it as your task requires. Paperplane keeps watching and wakes you on the next change, so end your turn when you are done. When you hand the work back to the user, call unwatch_pull_request first so the thread returns to their inbox.",
   ].join("\n");
   const failed = changes.some(
     (change) => change.kind === "checks-failed" || change.kind === "conflicting",

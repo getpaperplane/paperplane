@@ -96,7 +96,7 @@ export const PiDriver: ProviderDriver<PiSettings, PiDriverEnv> = {
       const host = () =>
         runtime
           ? runtime.get()
-          : Promise.reject(new Error("Pi is disabled in Rove Code settings."));
+          : Promise.reject(new Error("Pi is disabled in Paperplane settings."));
       if (runtime)
         yield* Effect.acquireRelease(
           acquirePiResource(

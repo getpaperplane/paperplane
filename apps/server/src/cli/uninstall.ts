@@ -29,7 +29,7 @@ export class CliUninstallError extends Schema.TaggedError<CliUninstallError>()(
 }
 
 /**
- * What `rove uninstall` would remove for one Rove home. Computed before anything
+ * What `rove uninstall` would remove for one Paperplane home. Computed before anything
  * is touched so the user sees the whole plan in one place.
  */
 export interface UninstallPlan {
@@ -214,5 +214,5 @@ const runUninstall = Effect.fn("cli.uninstall.run")(function* (input: {
     }
   }
   yield* Console.log("");
-  yield* Console.log("rove is uninstalled. Thanks for trying Rove Code.");
+  yield* Console.log("rove is uninstalled. Thanks for trying Paperplane.");
 });

@@ -115,7 +115,7 @@ describe("scan cache round trip", () => {
     expect(restored.get("/codex.jsonl")).toEqual(original.get("/codex.jsonl"));
   });
 
-  it("migrates Rove v4 Pi records with string rate models and separate reducer state", () => {
+  it("migrates Paperplane v4 Pi records with string rate models and separate reducer state", () => {
     const document = {
       version: 4,
       models: ["custom/model"],

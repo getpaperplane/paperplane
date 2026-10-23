@@ -301,7 +301,7 @@ describe("Grok permission prompts", () => {
   ).permissionDisposition;
 
   // grok_auto_blocked_command replays Auto end to end. When an explicit policy
-  // launches Grok asking instead, Rove's policy still answers its prompts.
+  // launches Grok asking instead, Paperplane's policy still answers its prompts.
   it("leaves Auto prompts to the user unless an explicit policy launched Grok asking", () => {
     assert.equal(
       disposition?.(runtimePolicy({ runtimeMode: "auto" }), permissionRequest("read")),

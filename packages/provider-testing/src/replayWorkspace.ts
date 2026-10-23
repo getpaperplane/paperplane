@@ -52,7 +52,7 @@ const makeCheckpointWorkspaceEffect = Effect.fn("makeCheckpointWorkspace")(funct
     prefix: `rove-orchestrator-v2-${fixtureName}-`,
   });
   yield* runGit(cwd, ["init"]);
-  yield* runGit(cwd, ["config", "user.name", "Rove Code Test"]);
+  yield* runGit(cwd, ["config", "user.name", "Paperplane Test"]);
   yield* runGit(cwd, ["config", "user.email", "rove-test@example.com"]);
   yield* fs.writeFileString(path.join(cwd, "README.md"), `# ${fixtureName}\n`);
   for (const [relativePath, contents] of Object.entries(files)) {

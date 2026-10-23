@@ -1262,7 +1262,7 @@ export interface DesktopBridge {
   };
   /** Present when the desktop shell accepts `rove app` activation requests. */
   /**
-   * Web links the OS opens with Rove Code as the default browser (macOS). The
+   * Web links the OS opens with Paperplane as the default browser (macOS). The
    * renderer reports when it listens; links queue in the main process until then.
    */
   webLinks?: {

@@ -7,10 +7,10 @@ import {
   roveOrchestrationSystemPrompt,
 } from "./orchestrationInstructions.ts";
 
-describe("Rove orchestration provider instructions", () => {
+describe("Paperplane orchestration provider instructions", () => {
   it("distinguishes delegated subagents from ordinary top-level threads", () => {
     assert.include(ROVE_CODE_ORCHESTRATION_INSTRUCTIONS, "Use `delegate_task`");
-    assert.include(ROVE_CODE_ORCHESTRATION_INSTRUCTIONS, "ordinary top-level Rove conversations");
+    assert.include(ROVE_CODE_ORCHESTRATION_INSTRUCTIONS, "ordinary top-level Paperplane conversations");
     assert.include(ROVE_CODE_ORCHESTRATION_INSTRUCTIONS, "Never use them merely");
     assert.include(ROVE_CODE_ORCHESTRATION_INSTRUCTIONS, "cross-provider");
     assert.include(ROVE_CODE_ORCHESTRATION_INSTRUCTIONS, "call `delegate_task` again");
@@ -46,7 +46,7 @@ describe("Rove orchestration provider instructions", () => {
     );
   });
 
-  it("only exposes the system prompt when the Rove MCP server is attached", () => {
+  it("only exposes the system prompt when the Paperplane MCP server is attached", () => {
     assert.equal(roveOrchestrationSystemPrompt(false), undefined);
     assert.equal(roveOrchestrationSystemPrompt(true), ROVE_CODE_ORCHESTRATION_INSTRUCTIONS);
   });
@@ -57,9 +57,9 @@ describe("Rove orchestration provider instructions", () => {
       state: { interactionMode: "default", hasRoveMcp: true },
     });
 
-    assert.include(injected, "Rove Code interaction mode: Default");
-    assert.include(injected, "Rove Code collaborative browser");
-    assert.include(injected, "Rove Code orchestration");
+    assert.include(injected, "Paperplane interaction mode: Default");
+    assert.include(injected, "Paperplane collaborative browser");
+    assert.include(injected, "Paperplane orchestration");
     assert.include(injected, "<user_request>\nInspect the repository.\n</user_request>");
   });
 
@@ -77,14 +77,14 @@ describe("Rove orchestration provider instructions", () => {
         state: { ...defaultState, interactionMode: "plan" },
         previousState: defaultState,
       }),
-      "Rove Code interaction mode: Plan",
+      "Paperplane interaction mode: Plan",
     );
     const withoutMcp = roveAcpPromptWithInstructions({
       prompt,
       state: { interactionMode: "default", hasRoveMcp: false },
     });
-    assert.include(withoutMcp, "Rove Code interaction mode: Default");
-    assert.notInclude(withoutMcp, "Rove Code collaborative browser");
-    assert.notInclude(withoutMcp, "Rove Code orchestration");
+    assert.include(withoutMcp, "Paperplane interaction mode: Default");
+    assert.notInclude(withoutMcp, "Paperplane collaborative browser");
+    assert.notInclude(withoutMcp, "Paperplane orchestration");
   });
 });

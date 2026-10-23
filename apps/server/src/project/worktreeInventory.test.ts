@@ -703,7 +703,7 @@ describe("worktree inventory", () => {
           expectedBranch: entry.branch,
         })
         .pipe(Effect.flip);
-      assert.include(failure.detail, "outside Rove");
+      assert.include(failure.detail, "outside Paperplane");
       assert.isTrue(yield* fs.exists(external));
     }).pipe(Effect.provide(TestLayer)),
   );

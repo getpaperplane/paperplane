@@ -16,7 +16,7 @@
  *
  * A `subagent` call runs in a child session shown as a subagent thread. A
  * background one outlives its turn; when it ends, OpenCode starts a parent
- * execution Rove did not ask for, which waits here for the continuation turn Rove
+ * execution Paperplane did not ask for, which waits here for the continuation turn Paperplane
  * opens for it.
  *
  * @module orchestration-v2/Adapters/OpenCode2AdapterV2
@@ -128,7 +128,7 @@ const OpenCode2ProviderCapabilities = {
     supportsInterrupt: true,
     supportsActiveSteering: true,
     supportsSteeringByInterruptRestart: true,
-    // Rove holds queued messages and starts each as its own turn once the one
+    // Paperplane holds queued messages and starts each as its own turn once the one
     // before it ends, so OpenCode's own `queue` delivery is never used.
     supportsQueuedMessages: true,
     terminalStatusQuality: "strong",
@@ -235,7 +235,7 @@ interface ActiveTurn {
   lastStep: Tokens | undefined;
   /**
    * The history item this turn's execution follows, for a turn with no prompt
-   * id of Rove's: the session's newest item before a `/name` command (null when
+   * id of Paperplane's: the session's newest item before a `/name` command (null when
    * the history was empty), since `session.command` takes no id and answers
    * without one; the report a continuation turn's execution answers; or, on a
    * subagent's session, the first item queued for its turn. A reconnect
@@ -302,9 +302,9 @@ interface SubagentCall {
 }
 
 /**
- * An execution OpenCode ran on a thread's session without Rove asking: the
+ * An execution OpenCode ran on a thread's session without Paperplane asking: the
  * parent's answer once a background subagent ended. Its events are held until
- * the continuation turn Rove opens for it takes them.
+ * the continuation turn Paperplane opens for it takes them.
  */
 interface Wake {
   /** The message its continuation run starts from, which names the wake in that turn's input. */
@@ -345,7 +345,7 @@ interface ThreadState {
   /**
    * Set when a turn ended here while OpenCode may still be running it: a Stop
    * that timed out, a prompt whose request failed without a clear answer, or a
-   * request Rove could not answer. Execution events carry only the session id,
+   * request Paperplane could not answer. Execution events carry only the session id,
    * so the next execution end belongs to that run; it clears this and ends no turn.
    */
   unsettled: boolean;
@@ -362,12 +362,12 @@ interface ThreadState {
    * rules stay in force, and a changed mode switches it before prompting.
    */
   agent: string;
-  /** The native session's title as Rove last read or wrote it. */
+  /** The native session's title as Paperplane last read or wrote it. */
   title: string | undefined;
-  /** The native session's rules as Rove last read or wrote them, and the policy they are for. */
+  /** The native session's rules as Paperplane last read or wrote them, and the policy they are for. */
   rules: ReadonlyArray<Rule> | undefined;
   policy: RulesPolicy;
-  /** "Allow … this session" answers, kept in the session's rules while Rove has it open. */
+  /** "Allow … this session" answers, kept in the session's rules while Paperplane has it open. */
   readonly grants: Array<Rule>;
   /** The session's `subagent` calls still running, by tool call id. */
   readonly calls: Map<string, SubagentCall>;
@@ -406,7 +406,7 @@ interface ThreadState {
     }
   >;
   /**
-   * Background subagent sessions Rove stopped. OpenCode wakes the parent to
+   * Background subagent sessions Paperplane stopped. OpenCode wakes the parent to
    * report them; a wake that reports only these is stopped as well.
    */
   readonly stoppedChildren: Set<string>;
@@ -415,7 +415,7 @@ interface ThreadState {
    * inbox, where the next prompt would deliver them first, so it cancels them.
    */
   readonly strandedSteers: Set<string>;
-  /** Rove's MCP server as registered for this thread, and the instructions entry sent with it. */
+  /** Paperplane's MCP server as registered for this thread, and the instructions entry sent with it. */
   mcp:
     | { readonly name: string; readonly directory: string; readonly credential: string }
     | undefined;
@@ -443,7 +443,7 @@ interface PendingRequest {
   readonly turn: ActiveTurn;
   /** The session that asked: the thread's own, or one of its subagents'. */
   readonly sessionId: string;
-  /** Set once Rove sends its answer; the orchestrator has already recorded it. */
+  /** Set once Paperplane sends its answer; the orchestrator has already recorded it. */
   answering: boolean;
   readonly native:
     | {
@@ -466,7 +466,7 @@ const rule = (action: string, effect: Rule["effect"]): Rule => ({ action, resour
  * otherwise override; `grants` are "Always allow this session" answers.
  */
 /**
- * Rove's MCP server is registered per directory, not per session, so each thread
+ * Paperplane's MCP server is registered per directory, not per session, so each thread
  * gets its own `rove-<thread>` entry with its own credential. OpenCode names
  * an MCP tool's permission `<server>_<tool>` (non-alphanumerics become `_`).
  * OpenCode skips every tool of a server whose name is over 64 characters (its
@@ -484,8 +484,8 @@ export const roveMcpServerName = Effect.fn("roveMcpServerName")(function* (threa
 });
 
 /**
- * The rules that keep Rove's MCP servers to their own thread, after the mode's:
- * the last matching rule wins, so every thread's Rove server is denied and then
+ * The rules that keep Paperplane's MCP servers to their own thread, after the mode's:
+ * the last matching rule wins, so every thread's Paperplane server is denied and then
  * this thread's own is allowed again, in every mode. A subagent's session
  * inherits the thread's.
  */
@@ -549,7 +549,7 @@ const sessionGrantLabel = (action: string, save: ReadonlyArray<string>) =>
 const text = (value: string | undefined, fallback: string) => value?.trim() || fallback;
 
 /**
- * A form's fields as Rove questions, or why Rove cannot ask them: a link to open,
+ * A form's fields as Paperplane questions, or why Paperplane cannot ask them: a link to open,
  * a field shown only for another answer, a hidden field, or a number or yes/no
  * value. OpenCode's question tool only asks text and multi-select fields.
  */
@@ -583,7 +583,7 @@ const formQuestions = (
   return { questions };
 };
 
-/** Rove's answers in OpenCode's shape: a list for a multi-select, text otherwise. */
+/** Paperplane's answers in OpenCode's shape: a list for a multi-select, text otherwise. */
 const formAnswer = (form: NativeForm, answers: Readonly<Record<string, unknown>>) => {
   const answer: Record<string, string | ReadonlyArray<string>> = {};
   for (const field of form.fields) {
@@ -615,7 +615,7 @@ const formGone = {
   SessionNotFoundError: () => Effect.void,
 };
 
-/** The session rules an agent keeps for its own directories, which Rove's blanket rules would override. */
+/** The session rules an agent keeps for its own directories, which Paperplane's blanket rules would override. */
 const agentPaths = (rules: ReadonlyArray<Rule>) =>
   rules.filter(
     (entry) =>
@@ -673,7 +673,7 @@ const isWakeTurn = (turn: OrchestrationV2ProviderTurn) =>
   turn.nativeTurnRef?.nativeId?.includes(":wake:") === true;
 
 const INTERRUPT_TIMEOUT = "10 seconds";
-/** The session instructions entry Rove writes its per-turn system prompt to. */
+/** The session instructions entry Paperplane writes its per-turn system prompt to. */
 const INSTRUCTIONS_KEY = "rove";
 /** A lost event stream is resubscribed this many times, this far apart, before the session breaks. */
 const RECONNECT_ATTEMPTS = 5;
@@ -683,7 +683,7 @@ const RECONCILE_TIMEOUT = "15 seconds";
 const RECONNECT_WAIT = "30 seconds";
 /** A background subagent's result when its end was lost with the event stream. */
 const LOST_BACKGROUND =
-  "Rove Code lost its connection to OpenCode while this subagent ran, so its result is not shown.";
+  "Paperplane lost its connection to OpenCode while this subagent ran, so its result is not shown.";
 /** How long a turn waits on the directory's commands or skills before sending the text as is. */
 const INVENTORY_TIMEOUT = "5 seconds";
 const ACTIVE_CHECK_TIMEOUT = "5 seconds";
@@ -712,12 +712,12 @@ const deliver = <E>(answer: Effect.Effect<void, E>) =>
 type ModelRef = ReturnType<typeof Model.Ref.make>;
 
 /**
- * The user message ids Rove prompts under. OpenCode takes a client id (it must
+ * The user message ids Paperplane prompts under. OpenCode takes a client id (it must
  * start with `msg_`) and answers a repeat of one in the same session with the
  * item it already has, so a retried request never queues a second message,
  * and a turn knows the message fork and rollback cut at before OpenCode
  * answers. The id is unique across the whole server, which refuses it in any
- * other session (409), so it names the session: another Rove database or
+ * other session (409), so it names the session: another Paperplane database or
  * environment on the same server repeats thread ids and run ordinals, never
  * session ids. A turn keeps its id in `nativeTurnRef`.
  */
@@ -727,7 +727,7 @@ const steerPromptId = (sessionId: string, messageId: string) =>
   SessionMessage.ID.make(`msg_rove_steer_${sessionId}:${messageId}`);
 
 /**
- * The user message a turn prompted with. Turns from before Rove chose prompt ids
+ * The user message a turn prompted with. Turns from before Paperplane chose prompt ids
  * recorded `<session>:attempt:<id>`, which is no message.
  */
 const promptOf = (turn: OrchestrationV2ProviderTurn) => {
@@ -742,7 +742,7 @@ const promptOf = (turn: OrchestrationV2ProviderTurn) => {
  * prompt, or for a continuation the report it answers. A turn refused before
  * it prompted is not in the session and is passed over, and so is a
  * continuation that took no report. `null` means nothing follows, so there is
- * no cut; a later turn from before Rove chose prompt ids has no known message,
+ * no cut; a later turn from before Paperplane chose prompt ids has no known message,
  * so no cut is safe.
  */
 const boundaryAfter = (
@@ -763,7 +763,7 @@ const boundaryAfter = (
       new ProviderAdapter.ProviderAdapterProtocolError({
         driver: OPENCODE_PROVIDER,
         detail:
-          "This OpenCode conversation has turns from an earlier Rove Code version, so it can't be cut there.",
+          "This OpenCode conversation has turns from an earlier Paperplane version, so it can't be cut there.",
       }),
     );
   }
@@ -779,7 +779,7 @@ const isProviderAdapterError = Schema.is(ProviderAdapter.ProviderAdapterV2Error)
 /**
  * The model OpenCode should run for a `provider/model` slug and its reasoning
  * variant, or undefined for any other slug: sending none would run OpenCode's
- * default while Rove records the requested model.
+ * default while Paperplane records the requested model.
  */
 const modelRef = (selection: ProviderAdapter.ProviderAdapterV2TurnInput["modelSelection"]) => {
   const parsed = OpenCodeRuntime.parseOpenCodeModelSlug(selection.model);
@@ -798,7 +798,7 @@ const sameModel = (left: ModelRef, right: ModelRef | undefined) =>
   left.id === right?.id &&
   (left.variant ?? "default") === (right?.variant ?? "default");
 
-/** OpenCode's own agents for Rove's interaction modes; plan mode is its read-only `plan` agent. */
+/** OpenCode's own agents for Paperplane's interaction modes; plan mode is its read-only `plan` agent. */
 const agentFor = (input: ProviderAdapter.ProviderAdapterV2TurnInput) =>
   input.runtimePolicy.interactionMode === "plan" ? "plan" : "build";
 
@@ -892,7 +892,7 @@ export const make = Effect.fn("OpenCode2Adapter.make")(function* (instanceId: Pr
     // OpenCode config can change a model's limits, and this one runtime serves
     // the instance's threads in every directory.
     const contextWindows = new Map<string, Map<string, number>>();
-    /** A thread without a worktree runs where Rove does, as its session is created. */
+    /** A thread without a worktree runs where Paperplane does, as its session is created. */
     const directoryOf = (cwd: string | null | undefined) => cwd ?? host.paths.cwd;
     const windowOf = (cwd: string | null | undefined, model: string) =>
       contextWindows.get(directoryOf(cwd))?.get(model);
@@ -943,7 +943,7 @@ export const make = Effect.fn("OpenCode2Adapter.make")(function* (instanceId: Pr
     const emit = (event: ProviderAdapter.ProviderAdapterV2Event) =>
       Queue.offer(events, event).pipe(Effect.asVoid);
     const ownerOf = (sessionId: string) => childOwners.get(sessionId) ?? threads.get(sessionId);
-    /** Marks a run Rove ended while OpenCode may still run it (see `unsettled`). */
+    /** Marks a run Paperplane ended while OpenCode may still run it (see `unsettled`). */
     const markUnsettled = (state: ThreadState) => {
       state.unsettled = true;
       state.unsettledStarted = busy.has(state.sessionId);
@@ -1805,7 +1805,7 @@ export const make = Effect.fn("OpenCode2Adapter.make")(function* (instanceId: Pr
             }),
       });
       // A subagent's session is its call's to settle: a turn there is runless,
-      // and Rove has no terminal to wait on.
+      // and Paperplane has no terminal to wait on.
       if (state.subagent !== undefined) {
         const call = state.subagent.call;
         if (!call.background && terminal.status !== "completed") {
@@ -1856,7 +1856,7 @@ export const make = Effect.fn("OpenCode2Adapter.make")(function* (instanceId: Pr
     });
 
     /**
-     * Ends the turn a request Rove could not answer would block, and stops the
+     * Ends the turn a request Paperplane could not answer would block, and stops the
      * session: OpenCode waits on an unanswered request forever. The stopped
      * run's end is its own, not the next turn's.
      */
@@ -1869,7 +1869,7 @@ export const make = Effect.fn("OpenCode2Adapter.make")(function* (instanceId: Pr
       yield* finishTurn(state, {
         status: "failed",
         failure: makeProviderFailure({
-          message: "OpenCode is waiting on a request Rove Code couldn't answer.",
+          message: "OpenCode is waiting on a request Paperplane couldn't answer.",
           class: "provider_error",
         }),
       });
@@ -1888,7 +1888,7 @@ export const make = Effect.fn("OpenCode2Adapter.make")(function* (instanceId: Pr
     });
 
     /**
-     * Settles a request OpenCode answered or dropped on its own. Rove's own
+     * Settles a request OpenCode answered or dropped on its own. Paperplane's own
      * answers are only forgotten: the orchestrator already recorded them.
      */
     const settleRequest = Effect.fnUntraced(function* (
@@ -1917,7 +1917,7 @@ export const make = Effect.fn("OpenCode2Adapter.make")(function* (instanceId: Pr
     });
 
     /**
-     * Stops a run no turn of Rove's waits on (one a Stop left running, or one
+     * Stops a run no turn of Paperplane's waits on (one a Stop left running, or one
      * found asking after a reconnect): a reject without a message and a
      * cancelled form both end OpenCode's execution. Its end is not a turn's.
      */
@@ -1947,7 +1947,7 @@ export const make = Effect.fn("OpenCode2Adapter.make")(function* (instanceId: Pr
 
     /**
      * Stops what a session still waits on when this runtime first loads it:
-     * Rove shows none of those requests (a restart or a closed session expired
+     * Paperplane shows none of those requests (a restart or a closed session expired
      * them), and OpenCode would wait on them forever.
      */
     const stopLeftoverRequests = Effect.fnUntraced(function* (state: ThreadState) {
@@ -1974,7 +1974,7 @@ export const make = Effect.fn("OpenCode2Adapter.make")(function* (instanceId: Pr
     /**
      * Shows a permission ask or question form on the thread whose session (or
      * subagent session) asked, under that thread's running turn. A request no
-     * turn of Rove's is waiting on is left for OpenCode's own clients.
+     * turn of Paperplane's is waiting on is left for OpenCode's own clients.
      */
     const showRequest = Effect.fnUntraced(function* (
       sessionId: string,
@@ -2104,7 +2104,7 @@ export const make = Effect.fn("OpenCode2Adapter.make")(function* (instanceId: Pr
           requestKind: openCodePermissionRequestKind(data.action, toolName),
           prompt: data.resources.length === 0 ? data.action : data.resources.join("\n"),
           // "Always" in OpenCode saves a grant for the whole project, so the
-          // session-wide choice is Rove's own rule on this session instead.
+          // session-wide choice is Paperplane's own rule on this session instead.
           options: [
             { decision: "cancel", label: "Cancel" },
             { decision: "decline", label: "Decline" },
@@ -2136,7 +2136,7 @@ export const make = Effect.fn("OpenCode2Adapter.make")(function* (instanceId: Pr
       }
       // Cancelling ends OpenCode's execution as a user stop, so the turn is
       // failed here with the reason and that stop's end is skipped.
-      yield* Effect.logWarning("Declined an OpenCode form Rove Code cannot show.", {
+      yield* Effect.logWarning("Declined an OpenCode form Paperplane cannot show.", {
         reason: mapped.unsupported,
       });
       const cancelled = yield* deliver(
@@ -2151,7 +2151,7 @@ export const make = Effect.fn("OpenCode2Adapter.make")(function* (instanceId: Pr
       yield* finishTurn(asker, {
         status: "failed",
         failure: makeProviderFailure({
-          message: `OpenCode asked for ${mapped.unsupported}, which Rove Code can't show. The question was declined.`,
+          message: `OpenCode asked for ${mapped.unsupported}, which Paperplane can't show. The question was declined.`,
           class: "provider_error",
         }),
       });
@@ -2376,7 +2376,7 @@ export const make = Effect.fn("OpenCode2Adapter.make")(function* (instanceId: Pr
     });
 
     /**
-     * An execution OpenCode started on a thread's session with no turn of Rove's
+     * An execution OpenCode started on a thread's session with no turn of Paperplane's
      * running: the parent's answer to a background subagent's report. It is
      * held for the continuation turn it asks for, or stopped when it only
      * reports subagents a Stop ended.
@@ -2511,7 +2511,7 @@ export const make = Effect.fn("OpenCode2Adapter.make")(function* (instanceId: Pr
       const sessionId = sessionOfEvent(event);
       // `revert.clear` wakes the session into an empty execution of its own
       // (2.0.18's `Session.revert.clear` ends with a wake). It is no run of
-      // Rove's, and no follow-up to a subagent either.
+      // Paperplane's, and no follow-up to a subagent either.
       const cleared = sessionId === undefined ? undefined : clearing.get(sessionId);
       if (cleared !== undefined) {
         if (event.type === "unreadable.execution.ended" || executionEnd(event.type)) {
@@ -2634,7 +2634,7 @@ export const make = Effect.fn("OpenCode2Adapter.make")(function* (instanceId: Pr
         return yield* onAsked({ type: "form", form: event.data.form });
       // Answered in another OpenCode client, or dropped by OpenCode: a reject
       // it sends on its own (a Stop, or another reject in the same session)
-      // cancels the request. Rove's own answers are settled where they are sent.
+      // cancels the request. Paperplane's own answers are settled where they are sent.
       if (
         event.type === "permission.replied" ||
         event.type === "form.replied" ||
@@ -2727,7 +2727,7 @@ export const make = Effect.fn("OpenCode2Adapter.make")(function* (instanceId: Pr
     // execution it lost. So a lost stream reconnects, then reconciles each
     // running turn from the server's own state (see `reconcile`). Only when
     // reconnecting keeps failing are the turns failed and the session broken,
-    // so Rove reopens it. Set first, so a turn starting meanwhile waits or refuses.
+    // so Paperplane reopens it. Set first, so a turn starting meanwhile waits or refuses.
     let streamFailure: string | undefined;
     let reconnected = yield* Deferred.make<void>();
     const failAll = Effect.fnUntraced(function* (message: string) {
@@ -2750,7 +2750,7 @@ export const make = Effect.fn("OpenCode2Adapter.make")(function* (instanceId: Pr
      * Emits what a running turn missed while the stream was down, from the
      * session's history since the turn began: text, reasoning and tools, each
      * under the same native id its live events would have used, so nothing
-     * already shown is duplicated. A turn begins at its prompt, whose id Rove
+     * already shown is duplicated. A turn begins at its prompt, whose id Paperplane
      * chose (`nativeTurnRef`), or after `before` for a `/name` command or a
      * continuation.
      * Returns how that history says the turn's execution ended: the `idle` item
@@ -2881,7 +2881,7 @@ export const make = Effect.fn("OpenCode2Adapter.make")(function* (instanceId: Pr
                   status: "failed",
                   failure: makeProviderFailure({
                     message:
-                      "OpenCode ended the turn with an error while Rove Code was reconnecting.",
+                      "OpenCode ended the turn with an error while Paperplane was reconnecting.",
                     class: "provider_error",
                   }),
                 }
@@ -2907,7 +2907,7 @@ export const make = Effect.fn("OpenCode2Adapter.make")(function* (instanceId: Pr
         yield* Effect.forkIn(stopStrays(thread), sessionScope);
       }
       // A request asked while the stream was down was never shown, and the
-      // run waits on it; one Rove shows that OpenCode no longer lists was
+      // run waits on it; one Paperplane shows that OpenCode no longer lists was
       // answered elsewhere or dropped with its execution. A session that
       // stopped dropped its requests.
       const listed = new Map<string, Set<string>>();
@@ -2952,7 +2952,7 @@ export const make = Effect.fn("OpenCode2Adapter.make")(function* (instanceId: Pr
       client = next.client;
       currentScope = scope;
       yield* Scope.close(previous, Exit.void);
-      // A restarted server forgot Rove's MCP servers; the next turn adds them again.
+      // A restarted server forgot Paperplane's MCP servers; the next turn adds them again.
       for (const state of threads.values()) state.mcp = undefined;
       yield* lock.withPermit(reconcile).pipe(Effect.timeout(RECONCILE_TIMEOUT));
       return stream;
@@ -3000,7 +3000,7 @@ export const make = Effect.fn("OpenCode2Adapter.make")(function* (instanceId: Pr
     // Subscribed before any session or prompt call, so no event of theirs is missed.
     yield* follow(yield* connection.events).pipe(Effect.forkScoped);
 
-    // A server Rove did not start keeps running after Rove stops, so stop the turns
+    // A server Paperplane did not start keeps running after Paperplane stops, so stop the turns
     // it would otherwise finish unseen. A spawned server stops with its owner.
     if (connection.external) {
       yield* Effect.addFinalizer(() =>
@@ -3108,7 +3108,7 @@ export const make = Effect.fn("OpenCode2Adapter.make")(function* (instanceId: Pr
 
     /** Writes the session's rules for `policy` when they differ from what it has. */
     const writeRules = Effect.fnUntraced(function* (state: ThreadState, policy: RulesPolicy) {
-      // A subagent's session may use its thread's Rove server, the root's.
+      // A subagent's session may use its thread's Paperplane server, the root's.
       const rules = yield* rulesFor(state, policy, rootOf(state).providerThread.appThreadId);
       if (!sameRules(state.rules, rules)) {
         yield* client.session.update({
@@ -3162,10 +3162,10 @@ export const make = Effect.fn("OpenCode2Adapter.make")(function* (instanceId: Pr
 
     /**
      * Refuses to cut or copy a session's history while something writes to
-     * it: a turn of Rove's, an execution seen running on the stream (a held
+     * it: a turn of Paperplane's, an execution seen running on the stream (a held
      * follow-up), or a run on the server this runtime does not own: one a
      * timed-out Stop or an unanswered request left behind, or any run on a
-     * session loaded after the server outlived Rove. Only that last case asks
+     * session loaded after the server outlived Paperplane. Only that last case asks
      * the server. A rollback also waits for background subagents, whose
      * reports wake the session into the history it would cut.
      */
@@ -3215,7 +3215,7 @@ export const make = Effect.fn("OpenCode2Adapter.make")(function* (instanceId: Pr
 
     /**
      * Clears a staged revert and waits out the empty execution `clear` runs,
-     * which is no turn of Rove's. 2.0.18 wakes the session after every clear,
+     * which is no turn of Paperplane's. 2.0.18 wakes the session after every clear,
      * with or without a stage (seen live), so that execution always comes.
      */
     const clearRevert = Effect.fnUntraced(function* (sessionId: string) {
@@ -3236,7 +3236,7 @@ export const make = Effect.fn("OpenCode2Adapter.make")(function* (instanceId: Pr
      * revert, then commits it. If either fails or is interrupted the stage is
      * cleared, since OpenCode commits a staged revert on the next prompt; a
      * clear that fails too is tried again before that prompt. Files stay where
-     * they are: Rove restores its own checkpoint when the user asked for files,
+     * they are: Paperplane restores its own checkpoint when the user asked for files,
      * and a rewind without files must not touch them.
      */
     const rollBackTo = Effect.fnUntraced(function* (
@@ -3280,7 +3280,7 @@ export const make = Effect.fn("OpenCode2Adapter.make")(function* (instanceId: Pr
         ),
       );
 
-    /** The session's history as V2 messages, read after any change Rove made to it. */
+    /** The session's history as V2 messages, read after any change Paperplane made to it. */
     const snapshotOf = Effect.fnUntraced(function* (
       providerThread: OrchestrationV2ProviderThread,
       sessionId: string,
@@ -3349,7 +3349,7 @@ export const make = Effect.fn("OpenCode2Adapter.make")(function* (instanceId: Pr
         client.mcp.remove({ server: mcp.name, location: { directory: mcp.directory } }),
       ).pipe(Effect.timeout("5 seconds"), Effect.ignore({ log: true }));
 
-    // Rove's MCP registrations outlive a session only on an external server; a
+    // Paperplane's MCP registrations outlive a session only on an external server; a
     // spawned one forgets them when it stops.
     yield* Effect.addFinalizer(() =>
       Effect.forEach(
@@ -3360,7 +3360,7 @@ export const make = Effect.fn("OpenCode2Adapter.make")(function* (instanceId: Pr
     );
 
     /**
-     * Rove's MCP server for this thread, and the per-turn instructions. The MCP
+     * Paperplane's MCP server for this thread, and the per-turn instructions. The MCP
      * server is registered for the session's directory under the thread's own
      * name and credential (the session rules allow only it), and removed when
      * the thread unloads or the session closes. OpenCode 2 has no per-prompt
@@ -3375,7 +3375,7 @@ export const make = Effect.fn("OpenCode2Adapter.make")(function* (instanceId: Pr
       const mcpSession = yield* mcpSessions.read(turnInput.threadId);
       const directory = turnInput.runtimePolicy.cwd ?? host.paths.cwd;
       const name = yield* mcpServerNameFor(turnInput.threadId);
-      // An external server may not reach Rove's MCP endpoint, as with 1.x.
+      // An external server may not reach Paperplane's MCP endpoint, as with 1.x.
       const wanted =
         mcpSession === undefined || connection.external
           ? undefined
@@ -3389,7 +3389,7 @@ export const make = Effect.fn("OpenCode2Adapter.make")(function* (instanceId: Pr
         yield* removeMcp(state.mcp);
         state.mcp = undefined;
       }
-      // Rove's tools are an addition: a server that cannot add them still runs the turn.
+      // Paperplane's tools are an addition: a server that cannot add them still runs the turn.
       if (wanted !== undefined && state.mcp === undefined) {
         const added = yield* client.mcp
           .add({
@@ -3406,7 +3406,7 @@ export const make = Effect.fn("OpenCode2Adapter.make")(function* (instanceId: Pr
             Effect.timeout(INVENTORY_TIMEOUT),
             Effect.as(true),
             Effect.catchCause((cause) =>
-              Effect.logWarning("Could not add Rove Code's MCP server to OpenCode.", cause).pipe(
+              Effect.logWarning("Could not add Paperplane's MCP server to OpenCode.", cause).pipe(
                 Effect.as(false),
               ),
             ),
@@ -3435,7 +3435,7 @@ export const make = Effect.fn("OpenCode2Adapter.make")(function* (instanceId: Pr
         if (turn !== undefined) turn.before = before;
       });
 
-    /** Installs a turn Rove started; every path after it ends the turn with a terminal. */
+    /** Installs a turn Paperplane started; every path after it ends the turn with a terminal. */
     const beginTurn = (
       state: ThreadState,
       turnInput: ProviderAdapter.ProviderAdapterV2TurnInput,
@@ -3513,7 +3513,7 @@ export const make = Effect.fn("OpenCode2Adapter.make")(function* (instanceId: Pr
         retired.add(childId);
         // OpenCode reports its end to the session that called it; that
         // report answers no turn, so the execution it wakes is stopped. A
-        // deeper one reports to a stray, which Rove does not track.
+        // deeper one reports to a stray, which Paperplane does not track.
         threads.get(info.parentID ?? "")?.stoppedChildren.add(childId);
       };
       for (const wake of wakes) {
@@ -3728,7 +3728,7 @@ export const make = Effect.fn("OpenCode2Adapter.make")(function* (instanceId: Pr
           Effect.orElseSucceed(() => []),
         );
         if (commands.some((entry) => entry.name === command.name)) {
-          // `session.command` takes no id of Rove's and its answer carries none,
+          // `session.command` takes no id of Paperplane's and its answer carries none,
           // so the turn remembers where the history stood before it.
           const newest = yield* client.message.list({ sessionID, order: "desc", limit: 1 });
           yield* markBefore(sessionId, newest.data[0]?.id ?? null);
@@ -3866,7 +3866,7 @@ export const make = Effect.fn("OpenCode2Adapter.make")(function* (instanceId: Pr
             yield* readModelsOnce(threadInput.runtimePolicy.cwd);
           }
           // 1.x session ids survive the upgrade; a server without this session
-          // fails the resume, so Rove recreates the thread with a handoff.
+          // fails the resume, so Paperplane recreates the thread with a handoff.
           const native = yield* client.session.get({ sessionID: Session.ID.make(sessionId) });
           const providerThread: OrchestrationV2ProviderThread = {
             ...threadInput.providerThread,
@@ -3878,7 +3878,7 @@ export const make = Effect.fn("OpenCode2Adapter.make")(function* (instanceId: Pr
           const loaded = threads.has(sessionId);
           const state = register(providerThread, native, cwd ?? native.location.directory);
           // OpenCode keeps no request across its own restart, but a server that
-          // outlived Rove may still wait on one Rove no longer shows.
+          // outlived Paperplane may still wait on one Paperplane no longer shows.
           if (!loaded) yield* stopLeftoverRequests(state);
           // The session gets the rules for this thread's mode: it may have run
           // another mode, or been made by 1.x or an earlier build.
@@ -3974,7 +3974,7 @@ export const make = Effect.fn("OpenCode2Adapter.make")(function* (instanceId: Pr
                   }),
                 });
               }
-              // A turn Rove will not run still starts and fails, so the refusal is what
+              // A turn Paperplane will not run still starts and fails, so the refusal is what
               // the user reads.
               const model = modelRef(turnInput.modelSelection);
               if (model === undefined) {
@@ -4036,7 +4036,7 @@ export const make = Effect.fn("OpenCode2Adapter.make")(function* (instanceId: Pr
           if (started === undefined) return;
           const { state, sessionId, turn } = started;
           yield* submit(sessionId, turnInput, state, turn).pipe(
-            // Deleted outside Rove: the thread is broken, and forgetting it makes
+            // Deleted outside Paperplane: the thread is broken, and forgetting it makes
             // the next turn resume, fail, and recreate it with a handoff.
             Effect.catchTags({
               SessionNotFoundError: () =>
@@ -4353,7 +4353,7 @@ export const make = Effect.fn("OpenCode2Adapter.make")(function* (instanceId: Pr
             yield* rollBackTo(sessionId, SessionMessage.ID.make(boundary));
           }
           // The turns after the target left the history with their messages.
-          // The snapshot lists the ones kept as Rove recorded them, which a
+          // The snapshot lists the ones kept as Paperplane recorded them, which a
           // runtime that loaded the session after they ran never saw.
           const keptOrdinal = target.type === "provider_turn" ? target.providerTurn.ordinal : 0;
           const loaded = threads.get(sessionId);
@@ -4412,7 +4412,7 @@ export const make = Effect.fn("OpenCode2Adapter.make")(function* (instanceId: Pr
                   yield* userMessages(sourceId),
                 );
           // A fork copies the source's history, model, location and rules; its
-          // message ids are new, so it has no turns Rove could cut at yet.
+          // message ids are new, so it has no turns Paperplane could cut at yet.
           const forked = yield* client.session.fork({
             sessionID: Session.ID.make(sourceId),
             ...(before === null ? {} : { before: SessionMessage.ID.make(before) }),

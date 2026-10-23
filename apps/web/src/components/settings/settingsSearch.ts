@@ -1045,7 +1045,7 @@ export const SETTINGS_SEARCH_ITEMS = [
     title: "Hold webhooks while offline",
     to: "/settings/connections",
     targetId: "connections-environment",
-    searchTerms: ["webhook automations offline queue mailbox rove connect"],
+    searchTerms: ["webhook automations offline queue mailbox paperplane connect"],
     cloudOnly: true,
     managedTunnelOnly: true,
   },
@@ -1070,7 +1070,7 @@ export const SETTINGS_SEARCH_ITEMS = [
     id: "remote-environments",
     title: "Environments",
     to: "/settings/connections",
-    searchTerms: ["add pair backend host code ssh config agent tunnel saved rove connect"],
+    searchTerms: ["add pair backend host code ssh config agent tunnel saved paperplane connect"],
   },
   {
     id: "load-balancing",
