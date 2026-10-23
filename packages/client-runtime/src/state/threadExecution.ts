@@ -281,7 +281,7 @@ export function deriveThreadRuntime(
 }
 
 export function threadRuntimeHasInterruptibleRun(
-  runtime: ThreadRuntimeSummary | null | undefined,
+  runtime: Pick<ThreadRuntimeSummary, "status" | "activeRunId"> | null | undefined,
 ): boolean {
   return (
     threadRuntimeIsActive(runtime) &&

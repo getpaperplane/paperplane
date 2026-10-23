@@ -1,5 +1,6 @@
 import type { EnvironmentId, RoveProjectFileScript, ThreadId } from "@rove-code/contracts";
 import { renderToStaticMarkup } from "react-dom/server";
+import { AsyncResult } from "effect/reactivity";
 import { act, create, type ReactTestRenderer } from "react-test-renderer";
 import { PopoverCreateHandle } from "../ui/popover";
 import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
@@ -76,9 +77,15 @@ describe("ThreadDetailsPanel", () => {
       onStartFromOriginChange: vi.fn(),
       onComposerFocusRequest: vi.fn(),
       onRunProjectScript: vi.fn(),
-      onAddProjectScript: vi.fn() as ThreadDetailsPanelProps["onAddProjectScript"],
-      onUpdateProjectScript: vi.fn() as ThreadDetailsPanelProps["onUpdateProjectScript"],
-      onDeleteProjectScript: vi.fn() as ThreadDetailsPanelProps["onDeleteProjectScript"],
+      onAddProjectScript: vi
+        .fn<ThreadDetailsPanelProps["onAddProjectScript"]>()
+        .mockResolvedValue(AsyncResult.success(undefined)),
+      onUpdateProjectScript: vi
+        .fn<ThreadDetailsPanelProps["onUpdateProjectScript"]>()
+        .mockResolvedValue(AsyncResult.success(undefined)),
+      onDeleteProjectScript: vi
+        .fn<ThreadDetailsPanelProps["onDeleteProjectScript"]>()
+        .mockResolvedValue(AsyncResult.success(undefined)),
     };
 
     renderToStaticMarkup(<ThreadDetailsPanel {...props} />);
@@ -118,9 +125,15 @@ describe("ThreadDetailsPanel", () => {
       onStartFromOriginChange: vi.fn(),
       onComposerFocusRequest: vi.fn(),
       onRunProjectScript: vi.fn(),
-      onAddProjectScript: vi.fn() as ThreadDetailsPanelProps["onAddProjectScript"],
-      onUpdateProjectScript: vi.fn() as ThreadDetailsPanelProps["onUpdateProjectScript"],
-      onDeleteProjectScript: vi.fn() as ThreadDetailsPanelProps["onDeleteProjectScript"],
+      onAddProjectScript: vi
+        .fn<ThreadDetailsPanelProps["onAddProjectScript"]>()
+        .mockResolvedValue(AsyncResult.success(undefined)),
+      onUpdateProjectScript: vi
+        .fn<ThreadDetailsPanelProps["onUpdateProjectScript"]>()
+        .mockResolvedValue(AsyncResult.success(undefined)),
+      onDeleteProjectScript: vi
+        .fn<ThreadDetailsPanelProps["onDeleteProjectScript"]>()
+        .mockResolvedValue(AsyncResult.success(undefined)),
     };
 
     let renderer: ReactTestRenderer | undefined;
@@ -129,7 +142,7 @@ describe("ThreadDetailsPanel", () => {
     });
     const rendersAfterMount = testState.projectScriptsControl.mock.calls.length;
 
-    // Parent re-renders (as ChatView does on every streamed chunk) with equal values.
+    // Isolated memo contract only; the connected transcript test covers stream isolation.
     act(() => {
       renderer?.update(<ThreadDetailsPanel {...{ ...props }} />);
     });
