@@ -1,8 +1,19 @@
+import { readMigratedClientStorageAsync } from "@getpaperplane/shared/clientMigration";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Schema from "effect/Schema";
 import * as SecureStore from "expo-secure-store";
+
+export const getSecureItemAsync = (key: string) =>
+  readMigratedClientStorageAsync(
+    {
+      getItem: SecureStore.getItemAsync,
+      setItem: SecureStore.setItemAsync,
+      removeItem: SecureStore.deleteItemAsync,
+    },
+    key,
+  );
 
 const MobileSecureStorageOperation = Schema.Literals(["read", "write", "delete"]);
 
@@ -31,7 +42,7 @@ export class MobileSecureStorage extends Context.Service<
 export const make = MobileSecureStorage.of({
   getItem: Effect.fn("MobileSecureStorage.getItem")((key) =>
     Effect.tryPromise({
-      try: () => SecureStore.getItemAsync(key),
+      try: () => getSecureItemAsync(key),
       catch: (cause) => new MobileSecureStorageError({ operation: "read", key, cause }),
     }),
   ),

@@ -3,9 +3,12 @@ import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
 import { vi } from "vite-plus/test";
 
-const openDatabaseAsync = vi.hoisted(() => vi.fn());
+const { openDatabaseAsync, deleteDatabaseAsync } = vi.hoisted(() => ({
+  openDatabaseAsync: vi.fn(),
+  deleteDatabaseAsync: vi.fn(),
+}));
 
-vi.mock("expo-sqlite", () => ({ openDatabaseAsync }));
+vi.mock("expo-sqlite", () => ({ openDatabaseAsync, deleteDatabaseAsync }));
 
 import * as MobileDatabase from "./mobile-database";
 
@@ -79,7 +82,9 @@ describe("offline pull request cache", () => {
   async function sqliteDatabase() {
     const { DatabaseSync } = await import("node:sqlite");
     const sqlite = new DatabaseSync(":memory:");
-    sqlite.exec("PRAGMA user_version = 1");
+    sqlite.exec(
+      "PRAGMA user_version = 1; CREATE TABLE paperplane_name_migration (completed INTEGER)",
+    );
     const database = {
       execAsync: async (sql: string) => {
         sqlite.exec(sql);
@@ -154,3 +159,71 @@ describe("offline pull request cache", () => {
       ),
   );
 });
+
+it.effect("keeps native preferences while retiring old transcript caches once", () =>
+  Effect.gen(function* () {
+    const { DatabaseSync } = yield* Effect.promise(() => import("node:sqlite"));
+    const fs = yield* Effect.promise(() => import("node:fs"));
+    const os = yield* Effect.promise(() => import("node:os"));
+    const path = yield* Effect.promise(() => import("node:path"));
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), "paperplane-native-cache-"));
+    const previous = new DatabaseSync(path.join(root, "rove-client.db"));
+    previous.exec(`CREATE TABLE client_preferences (singleton INTEGER PRIMARY KEY, payload TEXT, updated_at INTEGER);
+    INSERT INTO client_preferences VALUES (1, '{"themeId":"rove","lightThemeId":"iris"}', 123);
+    CREATE TABLE client_cache (payload TEXT);
+    INSERT INTO client_cache VALUES ('[old](rove-thread://v1/thread-1)');`);
+    previous.close();
+    openDatabaseAsync.mockImplementation(async (name: string) => {
+      const sqlite = new DatabaseSync(path.join(root, name));
+      const database = {
+        execAsync: async (sql: string) => {
+          sqlite.exec(sql);
+        },
+        runAsync: async (sql: string, ...args: (string | number | null)[]) =>
+          sqlite.prepare(sql).run(...args),
+        getFirstAsync: async (sql: string, ...args: (string | number | null)[]) =>
+          sqlite.prepare(sql).get(...args) ?? null,
+        getAllAsync: async (sql: string, ...args: (string | number | null)[]) =>
+          sqlite.prepare(sql).all(...args),
+        closeAsync: async () => {
+          sqlite.close();
+        },
+        withExclusiveTransactionAsync: async (run: (transaction: unknown) => Promise<void>) => {
+          sqlite.exec("BEGIN IMMEDIATE");
+          try {
+            await run(database);
+            sqlite.exec("COMMIT");
+          } catch (error) {
+            sqlite.exec("ROLLBACK");
+            throw error;
+          }
+        },
+      };
+      return database;
+    });
+    deleteDatabaseAsync.mockImplementation(async (name: string) =>
+      fs.rmSync(path.join(root, name)),
+    );
+    try {
+      for (let attempt = 0; attempt < 2; attempt++) {
+        yield* Effect.scoped(
+          Effect.gen(function* () {
+            const database = yield* MobileDatabase.make;
+            expect(yield* database.loadPreferencesJson).toEqual(
+              Option.some({
+                payload: '{"themeId":"paperplane","lightThemeId":"iris"}',
+                updatedAt: 123,
+              }),
+            );
+            expect(yield* database.inspectCaches).toEqual([]);
+          }),
+        );
+        expect(fs.existsSync(path.join(root, "rove-client.db"))).toBe(false);
+      }
+    } finally {
+      openDatabaseAsync.mockReset();
+      deleteDatabaseAsync.mockReset();
+      fs.rmSync(root, { recursive: true, force: true });
+    }
+  }),
+);

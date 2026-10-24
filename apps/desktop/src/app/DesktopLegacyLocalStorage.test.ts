@@ -100,7 +100,7 @@ it.effect.each([false, true])(
       yield* writeProfile(root, "Rove Code (Alpha)", development);
       const destination = path.join(root, development ? "rove-dev" : "rove-v2");
       yield* fs.makeDirectory(destination);
-      const marker = path.join(destination, "v1-local-storage-imported");
+      const marker = path.join(destination, "paperplane-local-storage-imported");
       const importer = yield* makeImporter(root, development);
       yield* importer.load(destination);
       assert.deepEqual(yield* importer.take, Option.some({ "prompt-draft": `draft-from-${name}` }));
@@ -114,7 +114,7 @@ it.effect.each([false, true])(
         "V1 owns this database",
       );
       assert.deepEqual((yield* fs.readDirectory(destination)).sort(), [
-        "v1-local-storage-imported",
+        "paperplane-local-storage-imported",
       ]);
       const nextLaunch = yield* makeImporter(root, development);
       yield* nextLaunch.load(destination);
@@ -131,7 +131,7 @@ it.effect("retries an unreadable legacy database without marking it imported", (
     yield* fs.writeFileString(path.join(source.directory, "CURRENT"), "corrupt");
     const destination = path.join(root, "rove-v2");
     yield* fs.makeDirectory(destination);
-    const marker = path.join(destination, "v1-local-storage-imported");
+    const marker = path.join(destination, "paperplane-local-storage-imported");
     const importer = yield* makeImporter(root, false);
     yield* importer.load(destination);
     assert.deepEqual(yield* importer.take, Option.none());

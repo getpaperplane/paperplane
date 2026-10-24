@@ -2,7 +2,7 @@ import { ClientSettingsSchema, type ClientSettings } from "@getpaperplane/contra
 
 import { getLocalStorageItem, setLocalStorageItem } from "./hooks/useLocalStorage";
 
-const CLIENT_SETTINGS_STORAGE_KEY = "rove:client-settings:v1";
+const CLIENT_SETTINGS_STORAGE_KEY = "paperplane:client-settings:v1";
 
 function hasWindow(): boolean {
   return typeof window !== "undefined";

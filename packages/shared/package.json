@@ -518,6 +518,10 @@
     "./legacyEnvironment": {
       "types": "./src/legacyEnvironment.ts",
       "import": "./src/legacyEnvironment.ts"
+    },
+    "./clientMigration": {
+      "types": "./src/clientMigration.ts",
+      "import": "./src/clientMigration.ts"
     }
   },
   "scripts": {
@@ -547,6 +551,7 @@
     "@effect/platform-node": "catalog:",
     "@effect/vitest": "catalog:",
     "@types/node": "catalog:",
+    "fake-indexeddb": "^6.2.6",
     "micromark-util-types": "catalog:",
     "vite-plus": "catalog:"
   }

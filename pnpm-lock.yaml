@@ -223,9 +223,6 @@ importers:
       '@effect/platform-node':
         specifier: 4.0.5
         version: 4.0.5(bufferutil@4.1.0)(effect@4.0.5)(redis@6.2.1)(utf-8-validate@6.0.6)
-      '@napi-rs/keyring':
-        specifier: ^1.3.0
-        version: 1.3.0
       '@getpaperplane/client-runtime':
         specifier: workspace:*
         version: link:../../packages/client-runtime
@@ -241,6 +238,9 @@ importers:
       '@getpaperplane/tailscale':
         specifier: workspace:*
         version: link:../../packages/tailscale
+      '@napi-rs/keyring':
+        specifier: ^1.3.0
+        version: 1.3.0
       dbus-next:
         specifier: 0.10.2
         version: 0.10.2(patch_hash=a6685837f25aa068349cef4bedb8512a72b6cfd5c3a5cf3f5ae7c2ba781f6089)
@@ -333,33 +333,6 @@ importers:
       '@expo/ui':
         specifier: 58.0.18
         version: 58.0.18(patch_hash=11c3297659830464ef138e4e2b22b790350c901f57f5f01de07bcb70c43e32fc)(@babel/core@7.29.7)(expo@58.0.11)(react-dom@19.3.0(react@19.3.0))(react-native-worklets@0.13.0(@babel/core@7.29.7)(@react-native/metro-config@0.88.0(@babel/core@7.29.7)(bufferutil@4.1.0)(utf-8-validate@6.0.6))(react-native@0.88.0(@babel/core@7.29.7)(@react-native/metro-config@0.88.0(@babel/core@7.29.7)(bufferutil@4.1.0)(utf-8-validate@6.0.6))(@types/react@19.3.0)(bufferutil@4.1.0)(react@19.3.0)(utf-8-validate@6.0.6))(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.7)(@react-native/metro-config@0.88.0(@babel/core@7.29.7)(bufferutil@4.1.0)(utf-8-validate@6.0.6))(@types/react@19.3.0)(bufferutil@4.1.0)(react@19.3.0)(utf-8-validate@6.0.6))(react@19.3.0)
-      '@legendapp/list':
-        specifier: 'catalog:'
-        version: 3.3.5(patch_hash=680cc6a5c5b4a4032e467e7b3fde22f89a84c0ee2e6eac6fda737d6277cc0806)(react-dom@19.3.0(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.7)(@react-native/metro-config@0.88.0(@babel/core@7.29.7)(bufferutil@4.1.0)(utf-8-validate@6.0.6))(@types/react@19.3.0)(bufferutil@4.1.0)(react@19.3.0)(utf-8-validate@6.0.6))(react@19.3.0)
-      '@material/material-color-utilities':
-        specifier: 0.3.0
-        version: 0.3.0
-      '@noble/curves':
-        specifier: 'catalog:'
-        version: 1.9.1
-      '@pierre/diffs':
-        specifier: 'catalog:'
-        version: 1.5.2(patch_hash=373cf188bf5d13f9e419401258d6933d030f879bb4a5c2c63245ccabe9b4f708)(@shikijs/themes@4.2.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
-      '@react-native-ai/apple':
-        specifier: 0.12.0
-        version: 0.12.0(patch_hash=2d09870c2848d185cb05b53ed823a46e12dba519324d8dd8e584e28731990f9d)(react-native@0.88.0(@babel/core@7.29.7)(@react-native/metro-config@0.88.0(@babel/core@7.29.7)(bufferutil@4.1.0)(utf-8-validate@6.0.6))(@types/react@19.3.0)(bufferutil@4.1.0)(react@19.3.0)(utf-8-validate@6.0.6))
-      '@react-native-menu/menu':
-        specifier: ^2.0.0
-        version: 2.0.0(patch_hash=a4866ecfcd44f318043de839d20110c17e14909004900f002ffe12050376f2ba)(react-native@0.88.0(@babel/core@7.29.7)(@react-native/metro-config@0.88.0(@babel/core@7.29.7)(bufferutil@4.1.0)(utf-8-validate@6.0.6))(@types/react@19.3.0)(bufferutil@4.1.0)(react@19.3.0)(utf-8-validate@6.0.6))(react@19.3.0)
-      '@react-navigation/elements':
-        specifier: 2.9.45
-        version: 2.9.45(da16e244bd876bd7d4e1e8899c8eabfd)
-      '@react-navigation/native':
-        specifier: 7.5.1
-        version: 7.5.1(react-native@0.88.0(@babel/core@7.29.7)(@react-native/metro-config@0.88.0(@babel/core@7.29.7)(bufferutil@4.1.0)(utf-8-validate@6.0.6))(@types/react@19.3.0)(bufferutil@4.1.0)(react@19.3.0)(utf-8-validate@6.0.6))(react@19.3.0)
-      '@react-navigation/native-stack':
-        specifier: 7.21.0
-        version: 7.21.0(patch_hash=caae6552051bce91a85f567f3a08f9c8d25ce4c53f65a9391a67f016bb1d798e)(f7bd434a41a50f5d33209f0baf5b709c)
       '@getpaperplane/client-runtime':
         specifier: workspace:*
         version: link:../../packages/client-runtime
@@ -399,6 +372,33 @@ importers:
       '@getpaperplane/shared':
         specifier: workspace:*
         version: link:../../packages/shared
+      '@legendapp/list':
+        specifier: 'catalog:'
+        version: 3.3.5(patch_hash=680cc6a5c5b4a4032e467e7b3fde22f89a84c0ee2e6eac6fda737d6277cc0806)(react-dom@19.3.0(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.7)(@react-native/metro-config@0.88.0(@babel/core@7.29.7)(bufferutil@4.1.0)(utf-8-validate@6.0.6))(@types/react@19.3.0)(bufferutil@4.1.0)(react@19.3.0)(utf-8-validate@6.0.6))(react@19.3.0)
+      '@material/material-color-utilities':
+        specifier: 0.3.0
+        version: 0.3.0
+      '@noble/curves':
+        specifier: 'catalog:'
+        version: 1.9.1
+      '@pierre/diffs':
+        specifier: 'catalog:'
+        version: 1.5.2(patch_hash=373cf188bf5d13f9e419401258d6933d030f879bb4a5c2c63245ccabe9b4f708)(@shikijs/themes@4.2.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      '@react-native-ai/apple':
+        specifier: 0.12.0
+        version: 0.12.0(patch_hash=2d09870c2848d185cb05b53ed823a46e12dba519324d8dd8e584e28731990f9d)(react-native@0.88.0(@babel/core@7.29.7)(@react-native/metro-config@0.88.0(@babel/core@7.29.7)(bufferutil@4.1.0)(utf-8-validate@6.0.6))(@types/react@19.3.0)(bufferutil@4.1.0)(react@19.3.0)(utf-8-validate@6.0.6))
+      '@react-native-menu/menu':
+        specifier: ^2.0.0
+        version: 2.0.0(patch_hash=a4866ecfcd44f318043de839d20110c17e14909004900f002ffe12050376f2ba)(react-native@0.88.0(@babel/core@7.29.7)(@react-native/metro-config@0.88.0(@babel/core@7.29.7)(bufferutil@4.1.0)(utf-8-validate@6.0.6))(@types/react@19.3.0)(bufferutil@4.1.0)(react@19.3.0)(utf-8-validate@6.0.6))(react@19.3.0)
+      '@react-navigation/elements':
+        specifier: 2.9.45
+        version: 2.9.45(da16e244bd876bd7d4e1e8899c8eabfd)
+      '@react-navigation/native':
+        specifier: 7.5.1
+        version: 7.5.1(react-native@0.88.0(@babel/core@7.29.7)(@react-native/metro-config@0.88.0(@babel/core@7.29.7)(bufferutil@4.1.0)(utf-8-validate@6.0.6))(@types/react@19.3.0)(bufferutil@4.1.0)(react@19.3.0)(utf-8-validate@6.0.6))(react@19.3.0)
+      '@react-navigation/native-stack':
+        specifier: 7.21.0
+        version: 7.21.0(patch_hash=caae6552051bce91a85f567f3a08f9c8d25ce4c53f65a9391a67f016bb1d798e)(f7bd434a41a50f5d33209f0baf5b709c)
       '@shikijs/core':
         specifier: 4.2.0
         version: 4.2.0
@@ -649,18 +649,6 @@ importers:
       '@ff-labs/fff-node':
         specifier: 0.11.0
         version: 0.11.0(patch_hash=46c3efd7b4bf66a335cd3ac84ace835ed192420304d000c1a405e4b15eb2d480)
-      '@modelcontextprotocol/sdk':
-        specifier: 1.29.0
-        version: 1.29.0(zod@4.6.5)
-      '@muse-code/sdk':
-        specifier: 1.4.6
-        version: 1.4.6(@types/node@24.12.4)
-      '@napi-rs/keyring':
-        specifier: ^1.3.0
-        version: 1.3.0
-      '@opencode-ai/sdk':
-        specifier: ^1.3.15
-        version: 1.15.13
       '@getpaperplane/provider-acp':
         specifier: workspace:*
         version: link:../../packages/provider-acp
@@ -706,6 +694,18 @@ importers:
       '@getpaperplane/source-control-gitlab':
         specifier: workspace:*
         version: link:../../packages/source-control-gitlab
+      '@modelcontextprotocol/sdk':
+        specifier: 1.29.0
+        version: 1.29.0(zod@4.6.5)
+      '@muse-code/sdk':
+        specifier: 1.4.6
+        version: 1.4.6(@types/node@24.12.4)
+      '@napi-rs/keyring':
+        specifier: ^1.3.0
+        version: 1.3.0
+      '@opencode-ai/sdk':
+        specifier: ^1.3.15
+        version: 1.15.13
       cbor-x:
         specifier: 1.6.6
         version: 1.6.6
@@ -830,21 +830,6 @@ importers:
       '@formkit/auto-animate':
         specifier: ^0.9.0
         version: 0.9.0
-      '@legendapp/list':
-        specifier: 'catalog:'
-        version: 3.3.5(patch_hash=680cc6a5c5b4a4032e467e7b3fde22f89a84c0ee2e6eac6fda737d6277cc0806)(react-dom@19.2.6(react@19.2.6))(react-native@0.88.0(@babel/core@7.29.7)(@react-native/metro-config@0.88.0(@babel/core@7.29.7)(bufferutil@4.1.0)(utf-8-validate@6.0.6))(@types/react@19.3.0)(bufferutil@4.1.0)(react@19.2.6)(utf-8-validate@6.0.6))(react@19.2.6)
-      '@noble/hashes':
-        specifier: 'catalog:'
-        version: 1.8.0
-      '@novnc/novnc':
-        specifier: ^1.7.0
-        version: 1.7.0
-      '@pierre/diffs':
-        specifier: 'catalog:'
-        version: 1.5.2(patch_hash=373cf188bf5d13f9e419401258d6933d030f879bb4a5c2c63245ccabe9b4f708)(@shikijs/themes@4.3.0)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
-      '@pierre/trees':
-        specifier: 1.0.0-beta.6
-        version: 1.0.0-beta.6(@pierre/theme@1.1.0)(@shikijs/themes@4.3.0)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(shiki@4.2.0)
       '@getpaperplane/client-runtime':
         specifier: workspace:*
         version: link:../../packages/client-runtime
@@ -872,6 +857,21 @@ importers:
       '@getpaperplane/shared':
         specifier: workspace:*
         version: link:../../packages/shared
+      '@legendapp/list':
+        specifier: 'catalog:'
+        version: 3.3.5(patch_hash=680cc6a5c5b4a4032e467e7b3fde22f89a84c0ee2e6eac6fda737d6277cc0806)(react-dom@19.2.6(react@19.2.6))(react-native@0.88.0(@babel/core@7.29.7)(@react-native/metro-config@0.88.0(@babel/core@7.29.7)(bufferutil@4.1.0)(utf-8-validate@6.0.6))(@types/react@19.3.0)(bufferutil@4.1.0)(react@19.2.6)(utf-8-validate@6.0.6))(react@19.2.6)
+      '@noble/hashes':
+        specifier: 'catalog:'
+        version: 1.8.0
+      '@novnc/novnc':
+        specifier: ^1.7.0
+        version: 1.7.0
+      '@pierre/diffs':
+        specifier: 'catalog:'
+        version: 1.5.2(patch_hash=373cf188bf5d13f9e419401258d6933d030f879bb4a5c2c63245ccabe9b4f708)(@shikijs/themes@4.3.0)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+      '@pierre/trees':
+        specifier: 1.0.0-beta.6
+        version: 1.0.0-beta.6(@pierre/theme@1.1.0)(@shikijs/themes@4.3.0)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(shiki@4.2.0)
       '@tanstack/react-pacer':
         specifier: ^0.19.4
         version: 0.19.4(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
@@ -1056,12 +1056,6 @@ importers:
       '@effect/sql-sqlite-do':
         specifier: 'catalog:'
         version: 4.0.5(effect@4.0.5)
-      '@noble/curves':
-        specifier: 'catalog:'
-        version: 1.9.1
-      '@noble/hashes':
-        specifier: 'catalog:'
-        version: 1.8.0
       '@getpaperplane/client-runtime':
         specifier: workspace:*
         version: link:../../packages/client-runtime
@@ -1071,6 +1065,12 @@ importers:
       '@getpaperplane/shared':
         specifier: workspace:*
         version: link:../../packages/shared
+      '@noble/curves':
+        specifier: 'catalog:'
+        version: 1.9.1
+      '@noble/hashes':
+        specifier: 'catalog:'
+        version: 1.8.0
       alchemy:
         specifier: 2.0.0-beta.80
         version: 2.0.0-beta.80(patch_hash=bea1b6c0c0b23157fd5f439a1d7feff430f28ac1621ba135d8a13eeec60ccacd)(587fe9389b482cf88ddcc93dec2ae984)
@@ -1127,9 +1127,6 @@ importers:
 
   packages/client-runtime:
     dependencies:
-      '@pierre/diffs':
-        specifier: 'catalog:'
-        version: 1.5.2(patch_hash=373cf188bf5d13f9e419401258d6933d030f879bb4a5c2c63245ccabe9b4f708)(@shikijs/themes@4.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       '@getpaperplane/contracts':
         specifier: workspace:*
         version: link:../contracts
@@ -1157,6 +1154,9 @@ importers:
       '@getpaperplane/source-control-gitlab':
         specifier: workspace:*
         version: link:../source-control-gitlab
+      '@pierre/diffs':
+        specifier: 'catalog:'
+        version: 1.5.2(patch_hash=373cf188bf5d13f9e419401258d6933d030f879bb4a5c2c63245ccabe9b4f708)(@shikijs/themes@4.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       effect:
         specifier: 4.0.5
         version: 4.0.5
@@ -1267,9 +1267,6 @@ importers:
 
   packages/provider-acp-registry:
     dependencies:
-      '@noble/hashes':
-        specifier: 'catalog:'
-        version: 1.8.0
       '@getpaperplane/contracts':
         specifier: workspace:*
         version: link:../contracts
@@ -1282,6 +1279,9 @@ importers:
       '@getpaperplane/shared':
         specifier: workspace:*
         version: link:../shared
+      '@noble/hashes':
+        specifier: 'catalog:'
+        version: 1.8.0
       effect:
         specifier: 4.0.5
         version: 4.0.5
@@ -1335,9 +1335,6 @@ importers:
       '@cursor/sdk':
         specifier: 1.0.35
         version: 1.0.35
-      '@napi-rs/keyring':
-        specifier: ^1.3.0
-        version: 1.3.0
       '@getpaperplane/contracts':
         specifier: workspace:*
         version: link:../contracts
@@ -1347,6 +1344,9 @@ importers:
       '@getpaperplane/shared':
         specifier: workspace:*
         version: link:../shared
+      '@napi-rs/keyring':
+        specifier: ^1.3.0
+        version: 1.3.0
       effect:
         specifier: 4.0.5
         version: 4.0.5
@@ -1409,9 +1409,6 @@ importers:
 
   packages/provider-muse:
     dependencies:
-      '@muse-code/sdk':
-        specifier: 1.4.6
-        version: 1.4.6(@types/node@24.12.4)
       '@getpaperplane/contracts':
         specifier: workspace:*
         version: link:../contracts
@@ -1421,6 +1418,9 @@ importers:
       '@getpaperplane/shared':
         specifier: workspace:*
         version: link:../shared
+      '@muse-code/sdk':
+        specifier: 1.4.6
+        version: 1.4.6(@types/node@24.12.4)
       effect:
         specifier: 4.0.5
         version: 4.0.5
@@ -1443,6 +1443,15 @@ importers:
 
   packages/provider-opencode:
     dependencies:
+      '@getpaperplane/contracts':
+        specifier: workspace:*
+        version: link:../contracts
+      '@getpaperplane/provider-core':
+        specifier: workspace:*
+        version: link:../provider-core
+      '@getpaperplane/shared':
+        specifier: workspace:*
+        version: link:../shared
       '@opencode-ai/sdk':
         specifier: ^1.3.15
         version: 1.15.13
@@ -1455,15 +1464,6 @@ importers:
       '@opencode/schema':
         specifier: 2.0.28
         version: 2.0.28
-      '@getpaperplane/contracts':
-        specifier: workspace:*
-        version: link:../contracts
-      '@getpaperplane/provider-core':
-        specifier: workspace:*
-        version: link:../provider-core
-      '@getpaperplane/shared':
-        specifier: workspace:*
-        version: link:../shared
       effect:
         specifier: 4.0.5
         version: 4.0.5
@@ -1536,15 +1536,15 @@ importers:
 
   packages/shared:
     dependencies:
+      '@getpaperplane/contracts':
+        specifier: workspace:*
+        version: link:../contracts
       '@noble/curves':
         specifier: 'catalog:'
         version: 1.9.1
       '@noble/hashes':
         specifier: 'catalog:'
         version: 1.8.0
-      '@getpaperplane/contracts':
-        specifier: workspace:*
-        version: link:../contracts
       effect:
         specifier: 4.0.5
         version: 4.0.5
@@ -1597,6 +1597,9 @@ importers:
       '@types/node':
         specifier: 24.12.4
         version: 24.12.4
+      fake-indexeddb:
+        specifier: ^6.2.6
+        version: 6.2.6
       micromark-util-types:
         specifier: 'catalog:'
         version: 2.0.2
@@ -4132,6 +4135,18 @@ packages:
   '@formkit/auto-animate@0.9.0':
     resolution: {integrity: sha512-VhP4zEAacXS3dfTpJpJ88QdLqMTcabMg0jwpOSxZ/VzfQVfl3GkZSCZThhGC5uhq/TxPHPzW0dzr4H9Bb1OgKA==}
 
+  '@getpaperplane/mobile-review-diff-native@file:apps/mobile/modules/rove-review-diff':
+    resolution: {directory: apps/mobile/modules/rove-review-diff, type: directory}
+
+  '@getpaperplane/mobile-source-text@file:apps/mobile/modules/rove-source-text':
+    resolution: {directory: apps/mobile/modules/rove-source-text, type: directory}
+    peerDependencies:
+      react: '*'
+      react-native: '*'
+
+  '@getpaperplane/mobile-terminal-native@file:apps/mobile/modules/rove-terminal':
+    resolution: {directory: apps/mobile/modules/rove-terminal, type: directory}
+
   '@google/genai@2.21.0':
     resolution: {integrity: sha512-+PDtco2/Z0ONdzCGekCoCT+O1VJS9xJQNN4XzQpXG/t3El/SWWMkCWlFRO1KmivOHPa4Q0VjUYu1HBKCZ/v33Q==}
     engines: {node: '>=20.0.0'}
@@ -6087,18 +6102,6 @@ packages:
 
   '@rolldown/pluginutils@1.0.1':
     resolution: {integrity: sha512-2j9bGt5Jh8hj+vPtgzPtl72j0yRxHAyumoo6TNfAjsLB04UtpSvPbPcDcBMxz7n+9CYB0c1GxQFxYRg2jimqGw==}
-
-  '@getpaperplane/mobile-review-diff-native@file:apps/mobile/modules/rove-review-diff':
-    resolution: {directory: apps/mobile/modules/rove-review-diff, type: directory}
-
-  '@getpaperplane/mobile-source-text@file:apps/mobile/modules/rove-source-text':
-    resolution: {directory: apps/mobile/modules/rove-source-text, type: directory}
-    peerDependencies:
-      react: '*'
-      react-native: '*'
-
-  '@getpaperplane/mobile-terminal-native@file:apps/mobile/modules/rove-terminal':
-    resolution: {directory: apps/mobile/modules/rove-terminal, type: directory}
 
   '@shadcn/lint@0.1.5':
     resolution: {integrity: sha512-EkKJfJqSrx8lHgsxw9m304//l2cc/bHLH1vjZz1KwPBEv5uU+TQY1UHuzs03+/FiydNtAb5NX9sW4VrV/udNfQ==}
@@ -9317,6 +9320,10 @@ packages:
 
   extend@3.0.2:
     resolution: {integrity: sha512-fjquC59cD7CyW6urNXK0FBufkZcoiGG80wTuPujX590cB5Ttln20E2UB4S/WARVqhXffZl2LNgS+gQdPIIim/g==}
+
+  fake-indexeddb@6.2.6:
+    resolution: {integrity: sha512-ihhmr0KoET51jT8R4YhbUYuLLvr1qqO6INISygtN16i8loR8kAxtAUr4+EKHTSMjL+lggaAn4OC7DRqzrNgnuQ==}
+    engines: {node: '>=18'}
 
   fast-deep-equal@3.1.3:
     resolution: {integrity: sha512-f3qQ9oQy9j2AhBe/H9VC91wLmKBCCU/gDOnKNAYG5hswO7BLKj09Hc5HYNz9cGI++xlpDCIgDaitVs03ATR84Q==}
@@ -15667,6 +15674,15 @@ snapshots:
 
   '@formkit/auto-animate@0.9.0': {}
 
+  '@getpaperplane/mobile-review-diff-native@file:apps/mobile/modules/rove-review-diff': {}
+
+  '@getpaperplane/mobile-source-text@file:apps/mobile/modules/rove-source-text(react-native@0.88.0(@babel/core@7.29.7)(@react-native/metro-config@0.88.0(@babel/core@7.29.7)(bufferutil@4.1.0)(utf-8-validate@6.0.6))(@types/react@19.3.0)(bufferutil@4.1.0)(react@19.3.0)(utf-8-validate@6.0.6))(react@19.3.0)':
+    dependencies:
+      react: 19.3.0
+      react-native: 0.88.0(@babel/core@7.29.7)(@react-native/metro-config@0.88.0(@babel/core@7.29.7)(bufferutil@4.1.0)(utf-8-validate@6.0.6))(@types/react@19.3.0)(bufferutil@4.1.0)(react@19.3.0)(utf-8-validate@6.0.6)
+
+  '@getpaperplane/mobile-terminal-native@file:apps/mobile/modules/rove-terminal': {}
+
   '@google/genai@2.21.0(@modelcontextprotocol/sdk@1.29.0(zod@4.6.5))(bufferutil@4.1.0)(utf-8-validate@6.0.6)':
     dependencies:
       google-auth-library: 10.9.1
@@ -17195,15 +17211,6 @@ snapshots:
     optional: true
 
   '@rolldown/pluginutils@1.0.1': {}
-
-  '@getpaperplane/mobile-review-diff-native@file:apps/mobile/modules/rove-review-diff': {}
-
-  '@getpaperplane/mobile-source-text@file:apps/mobile/modules/rove-source-text(react-native@0.88.0(@babel/core@7.29.7)(@react-native/metro-config@0.88.0(@babel/core@7.29.7)(bufferutil@4.1.0)(utf-8-validate@6.0.6))(@types/react@19.3.0)(bufferutil@4.1.0)(react@19.3.0)(utf-8-validate@6.0.6))(react@19.3.0)':
-    dependencies:
-      react: 19.3.0
-      react-native: 0.88.0(@babel/core@7.29.7)(@react-native/metro-config@0.88.0(@babel/core@7.29.7)(bufferutil@4.1.0)(utf-8-validate@6.0.6))(@types/react@19.3.0)(bufferutil@4.1.0)(react@19.3.0)(utf-8-validate@6.0.6)
-
-  '@getpaperplane/mobile-terminal-native@file:apps/mobile/modules/rove-terminal': {}
 
   '@shadcn/lint@0.1.5':
     dependencies:
@@ -20531,6 +20538,8 @@ snapshots:
       - supports-color
 
   extend@3.0.2: {}
+
+  fake-indexeddb@6.2.6: {}
 
   fast-deep-equal@3.1.3: {}
 
@@ -24563,7 +24572,7 @@ snapshots:
       oxlint: 1.85.0(oxlint-tsgolint@7.0.2003)(vite-plus@1.0.0(@types/node@24.12.4)(@vitest/ui@5.0.1)(bufferutil@4.1.0)(esbuild@0.28.2)(jiti@2.7.0)(jsdom@30.1.2(@noble/hashes@1.8.0))(msw@2.12.11(@types/node@24.12.4)(typescript@7.0.2))(terser@5.48.0)(typescript@7.0.2)(unrun@0.2.39)(utf-8-validate@6.0.6)(yaml@2.9.0))
       oxlint-tsgolint: 7.0.2003
       vite: '@voidzero-dev/vite-plus-core@1.0.0(@types/node@24.12.4)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.48.0)(typescript@7.0.2)(unrun@0.2.39)(yaml@2.9.0)'
-      vitest: 5.0.1(@types/node@24.12.4)(@vitest/browser-preview@5.0.1)(@vitest/ui@5.0.1(vitest@5.0.1))(@voidzero-dev/vite-plus-core@1.0.0(@types/node@24.12.4)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.48.0)(typescript@7.0.2)(unrun@0.2.39)(yaml@2.9.0))(jsdom@30.1.0(@noble/hashes@1.8.0))(msw@2.12.11(@types/node@24.12.4)(typescript@7.0.2))
+      vitest: 5.0.1(@types/node@24.12.4)(@vitest/browser-preview@5.0.1(@voidzero-dev/vite-plus-core@1.0.0(@types/node@24.12.4)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.48.0)(typescript@7.0.2)(unrun@0.2.39)(yaml@2.9.0))(bufferutil@4.1.0)(msw@2.12.11(@types/node@24.12.4)(typescript@7.0.2))(utf-8-validate@6.0.6)(vitest@5.0.1))(@vitest/ui@5.0.1(vitest@5.0.1))(@voidzero-dev/vite-plus-core@1.0.0(@types/node@24.12.4)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.48.0)(typescript@7.0.2)(unrun@0.2.39)(yaml@2.9.0))(jsdom@30.1.0(@noble/hashes@1.8.0))(msw@2.12.11(@types/node@24.12.4)(typescript@7.0.2))
     optionalDependencies:
       '@voidzero-dev/vite-plus-darwin-arm64': 1.0.0
       '@voidzero-dev/vite-plus-darwin-x64': 1.0.0
@@ -24717,7 +24726,7 @@ snapshots:
     optionalDependencies:
       vite: '@voidzero-dev/vite-plus-core@1.0.0(@types/node@24.12.4)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.48.0)(typescript@6.0.3)(unrun@0.2.39)(yaml@2.9.0)'
 
-  vitest@5.0.1(@types/node@24.12.4)(@vitest/browser-preview@5.0.1)(@vitest/ui@5.0.1(vitest@5.0.1))(@voidzero-dev/vite-plus-core@1.0.0(@types/node@24.12.4)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.48.0)(typescript@7.0.2)(unrun@0.2.39)(yaml@2.9.0))(jsdom@30.1.0(@noble/hashes@1.8.0))(msw@2.12.11(@types/node@24.12.4)(typescript@7.0.2)):
+  vitest@5.0.1(@types/node@24.12.4)(@vitest/browser-preview@5.0.1(@voidzero-dev/vite-plus-core@1.0.0(@types/node@24.12.4)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.48.0)(typescript@7.0.2)(unrun@0.2.39)(yaml@2.9.0))(bufferutil@4.1.0)(msw@2.12.11(@types/node@24.12.4)(typescript@7.0.2))(utf-8-validate@6.0.6)(vitest@5.0.1))(@vitest/ui@5.0.1(vitest@5.0.1))(@voidzero-dev/vite-plus-core@1.0.0(@types/node@24.12.4)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.48.0)(typescript@7.0.2)(unrun@0.2.39)(yaml@2.9.0))(jsdom@30.1.0(@noble/hashes@1.8.0))(msw@2.12.11(@types/node@24.12.4)(typescript@7.0.2)):
     dependencies:
       '@types/chai': 5.2.3
       '@vitest/mocker': 5.0.1(@voidzero-dev/vite-plus-core@1.0.0(@types/node@24.12.4)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.48.0)(typescript@7.0.2)(unrun@0.2.39)(yaml@2.9.0))(msw@2.12.11(@types/node@24.12.4)(typescript@7.0.2))

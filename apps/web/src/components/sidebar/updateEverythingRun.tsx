@@ -167,7 +167,7 @@ export function postponeUpdateRestart(): void {
   decideRestart?.(false);
 }
 
-const SAVED_RESULT_KEY = "rove:update-everything-result:v1";
+const SAVED_RESULT_KEY = "paperplane:update-everything-result:v1";
 // A result older than this belongs to an install that never relaunched the app.
 const SAVED_RESULT_MAX_AGE_MS = 10 * 60 * 1000;
 // Covers a background service's 30-minute trial start, like the server update itself.

@@ -29,7 +29,7 @@ it.effect("round-trips and clears persisted managed relay access tokens", () =>
     const entries = [
       {
         accountId: "user-1",
-        clientId: "rove-mobile",
+        clientId: "paperplane-mobile",
         relayUrl: "https://relay.example.test",
         thumbprint: "thumbprint",
         scopes: ["environment:connect"],
@@ -46,33 +46,19 @@ it.effect("round-trips and clears persisted managed relay access tokens", () =>
   }),
 );
 
-it.effect("discards historical signed client claims without losing canonical cache entries", () =>
+it.effect("discards signed token caches under the old storage name", () =>
   Effect.gen(function* () {
     secureStore.clear();
-    secureStore.set(
-      "rove.cloud.relay-access-tokens",
-      `{
-      "version": 1,
-      "entries": [
-        {"accountId":"user-1","clientId":"t3-mobile","relayUrl":"https://relay.example.test","thumbprint":"key","scopes":["environment:connect"],"accessToken":"historical-signed-token","expiresAtMillis":1800000},
-        {"accountId":"user-1","clientId":"rove-mobile","relayUrl":"https://relay.example.test","thumbprint":"key","scopes":["environment:connect"],"accessToken":"canonical-signed-token","expiresAtMillis":1800000}
-      ]
-    }`,
-    );
-    const entries = yield* managedRelayAccessTokenStore.load;
-    expect(entries.map((entry) => entry.accessToken)).toEqual(["canonical-signed-token"]);
-    yield* managedRelayAccessTokenStore.save(entries);
-    expect(yield* managedRelayAccessTokenStore.load).toEqual(entries);
-    expect(secureStore.get("rove.cloud.relay-access-tokens")).not.toContain(
-      "historical-signed-token",
-    );
+    secureStore.set("rove.cloud.relay-access-tokens", '{"version":1,"entries":[]}');
+    expect(yield* managedRelayAccessTokenStore.load).toEqual([]);
+    expect(secureStore.has("rove.cloud.relay-access-tokens")).toBe(false);
   }),
 );
 
 it.effect("falls back to an empty cache when persisted data is invalid", () =>
   Effect.gen(function* () {
     secureStore.clear();
-    secureStore.set("rove.cloud.relay-access-tokens", "not-json");
+    secureStore.set("paperplane.cloud.relay-access-tokens", "not-json");
 
     expect(yield* managedRelayAccessTokenStore.load).toEqual([]);
   }),
@@ -101,7 +87,7 @@ it.effect("logs structured storage failures before falling back to an empty cach
     expect(context.cause).toBeInstanceOf(ManagedRelayTokenStoreError);
     expect(context.cause).toMatchObject({
       operation: "read",
-      storageKey: "rove.cloud.relay-access-tokens",
+      storageKey: "paperplane.cloud.relay-access-tokens",
       cause,
     });
     expect(context.cause.message).not.toContain(cause.message);

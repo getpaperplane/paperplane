@@ -20,13 +20,10 @@ import { isMicrophoneKind, type MicrophoneEntry } from "../lib/microphonePriorit
 import { MOBILE_THEME_IDS, type MobileThemeId, type MobileThemeMode } from "../lib/mobileTheme";
 import * as MobileDatabase from "./mobile-database";
 import * as MobileSecureStorage from "./mobile-secure-storage";
-import { migrateRoveSavedState } from "@getpaperplane/shared/roveMigration";
 import { MobileStorageDecodeError, MobileStorageEncodeError } from "./mobile-storage";
 
-const decodeMigrationJson = Schema.decodeUnknownSync(Schema.Json);
-
-const PREFERENCES_KEY = "rove.preferences";
-const PREFERENCES_FALLBACK_KEY = "rove.preferences.fallback";
+const PREFERENCES_KEY = "paperplane.preferences";
+const PREFERENCES_FALLBACK_KEY = "paperplane.preferences.fallback";
 
 /** The pull request list's filters and sort for one environment scope. */
 export const PullRequestListControls = Schema.Struct({
@@ -462,19 +459,7 @@ export const make = Effect.fn("MobilePreferencesStore.make")(function* () {
     }
 
     if (parsed === null) return {};
-    const migrated = migrateRoveSavedState(decodeMigrationJson(parsed));
-    if (migrated !== parsed) {
-      yield* encode(PREFERENCES_KEY, migrated).pipe(
-        Effect.flatMap((payload) => saveJson(payload)),
-        Effect.catch((cause) =>
-          Effect.logWarning("Could not persist migrated mobile preferences.").pipe(
-            Effect.annotateLogs({ cause }),
-          ),
-        ),
-      );
-    }
-    // SAFETY: Migration preserves the preference object; the sanitizer validates its fields.
-    return sanitizePreferences(migrated as Preferences);
+    return sanitizePreferences(parsed as Preferences);
   });
 
   const load = lock

@@ -139,10 +139,10 @@ interface FilePreviewPanelProps {
   workspaceMutationId: string | null;
 }
 
-const FILE_EXPLORER_STORAGE_KEY = "rove.fileExplorerOpen";
-const RENDER_MARKDOWN_STORAGE_KEY = "rove.renderMarkdown";
-const RENDER_BROWSER_FILE_STORAGE_KEY = "rove.renderBrowserFile";
-const RENDER_TABLE_STORAGE_KEY = "rove.renderTable";
+const FILE_EXPLORER_STORAGE_KEY = "paperplane.fileExplorerOpen";
+const RENDER_MARKDOWN_STORAGE_KEY = "paperplane.renderMarkdown";
+const RENDER_BROWSER_FILE_STORAGE_KEY = "paperplane.renderBrowserFile";
+const RENDER_TABLE_STORAGE_KEY = "paperplane.renderTable";
 // Shared by the read-only and annotated surfaces, so it is generic over annotation metadata.
 type FilePostRender = <LAnnotation>(
   fileContainer: HTMLElement,

@@ -12,7 +12,7 @@ import {
 } from "../../lib/webVoiceRecognition";
 
 const IDLE: VoiceInputState = { phase: "idle", error: null, errorAction: null };
-const PRIVACY_ACK_KEY = "rove:web-dictation-privacy-ack";
+const PRIVACY_ACK_KEY = "paperplane:web-dictation-privacy-ack";
 
 export const isComposerDictationSupported = isWebVoiceRecognitionSupported;
 

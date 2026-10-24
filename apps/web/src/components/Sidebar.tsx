@@ -308,9 +308,9 @@ const EMPTY_THREADS: readonly EnvironmentThreadShell[] = [];
 const SETTLED_TAIL_INITIAL_COUNT = 10;
 const SETTLED_TAIL_PAGE_COUNT = 25;
 // Fresh keys deliberately reset both shelves to collapsed for existing users.
-const SETTLED_SHELF_EXPANDED_KEY = "rove:sidebar:settled-expanded";
-const SNOOZED_SHELF_EXPANDED_KEY = "rove:sidebar:snoozed-expanded";
-const WORKING_SHELF_EXPANDED_KEY = "rove:sidebar:working-expanded";
+const SETTLED_SHELF_EXPANDED_KEY = "paperplane:sidebar:settled-expanded";
+const SNOOZED_SHELF_EXPANDED_KEY = "paperplane:sidebar:snoozed-expanded";
+const WORKING_SHELF_EXPANDED_KEY = "paperplane:sidebar:working-expanded";
 
 // Working beta: when this client saw each thread leave the Working shelf.
 // Module scope keeps the inbox order across routes that unmount the sidebar.

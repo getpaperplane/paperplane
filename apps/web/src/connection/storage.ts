@@ -1,3 +1,4 @@
+import { prepareBrowserDatabases } from "@getpaperplane/shared/clientMigration";
 import {
   ConnectionCatalogDocument,
   type ConnectionCatalogDocument as ConnectionCatalogDocumentType,
@@ -35,12 +36,11 @@ import * as Option from "effect/Option";
 import * as Ref from "effect/Ref";
 import * as Queue from "effect/Queue";
 import * as Schema from "effect/Schema";
-import { decodeMigratedRoveJson } from "@getpaperplane/shared/roveMigration";
 import * as Semaphore from "effect/Semaphore";
 import * as Stream from "effect/Stream";
 import { projectFaviconCache } from "../assets/projectFaviconCache";
 
-const DATABASE_NAME = "rove:connection-runtime";
+const DATABASE_NAME = "paperplane:connection-runtime";
 const DATABASE_VERSION = 4;
 const CATALOG_STORE_NAME = "catalog";
 const SHELL_STORE_NAME = "shell";
@@ -66,13 +66,17 @@ const StoredVcsRefs = Schema.Struct({
 });
 const StoredVcsRefsJson = Schema.fromJsonString(StoredVcsRefs);
 const ConnectionCatalogDocumentJson = Schema.fromJsonString(ConnectionCatalogDocument);
-const decodeConnectionCatalogDocument = decodeMigratedRoveJson(ConnectionCatalogDocument);
+const decodeConnectionCatalogDocument = Schema.decodeUnknownEffect(
+  Schema.fromJsonString(ConnectionCatalogDocument),
+);
 const encodeConnectionCatalogDocument = Schema.encodeEffect(ConnectionCatalogDocumentJson);
 const decodeStoredShellSnapshot = Schema.decodeUnknownEffect(StoredShellSnapshotJson);
 const encodeStoredShellSnapshot = Schema.encodeEffect(StoredShellSnapshotJson);
 const decodeStoredThreadSnapshot = Schema.decodeUnknownEffect(StoredThreadSnapshotJson);
 const encodeStoredThreadSnapshot = Schema.encodeEffect(StoredThreadSnapshotJson);
-const decodeStoredServerConfig = decodeMigratedRoveJson(StoredServerConfig);
+const decodeStoredServerConfig = Schema.decodeUnknownEffect(
+  Schema.fromJsonString(StoredServerConfig),
+);
 const encodeStoredServerConfig = Schema.encodeEffect(StoredServerConfigJson);
 const decodeStoredVcsRefs = Schema.decodeUnknownEffect(StoredVcsRefsJson);
 const encodeStoredVcsRefs = Schema.encodeEffect(StoredVcsRefsJson);
@@ -113,6 +117,11 @@ function persistenceError(
 }
 
 const openDatabase = Effect.fn("web.connectionStorage.openDatabase")(function* () {
+  if (typeof indexedDB !== "undefined")
+    yield* Effect.tryPromise({
+      try: () => prepareBrowserDatabases(indexedDB),
+      catch: (cause) => catalogError("migrate", cause),
+    });
   return yield* Effect.callback<IDBDatabase, ConnectionTransientError>((resume) => {
     if (typeof indexedDB === "undefined") {
       resume(
@@ -501,8 +510,8 @@ export const makeCatalogStore = Effect.fn("web.connectionStorage.makeCatalogStor
   return { read, update } satisfies CatalogStore;
 });
 
-const GITHUB_ROUTING_KEY_PREFIX = "rove:github-routing:";
-const GITHUB_ROUTING_CHANGED = "rove:github-routing-changed";
+const GITHUB_ROUTING_KEY_PREFIX = "paperplane:github-routing:";
+const GITHUB_ROUTING_CHANGED = "paperplane:github-routing-changed";
 const isStoredGitHubRoutingPermission = Schema.is(StoredGitHubRoutingPermission);
 const encodeStoredGitHubRoutingPermission = Schema.encodeSync(
   Schema.fromJsonString(StoredGitHubRoutingPermission),

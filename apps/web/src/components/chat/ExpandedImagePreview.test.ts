@@ -16,8 +16,8 @@ describe("resolveMarkdownMediaPreview", () => {
   });
 
   it.each([
-    ["rove:", "https:"],
-    ["rove-dev:", "https:"],
+    ["paperplane:", "https:"],
+    ["paperplane-dev:", "https:"],
     ["http:", "http:"],
     ["https:", "https:"],
   ])(

@@ -7,6 +7,8 @@ import * as NodeOS from "node:os";
 import * as NodeModule from "node:module";
 import type { DataType } from "ffi-rs";
 import * as Schema from "effect/Schema";
+import * as Effect from "effect/Effect";
+import { migrateStoredClientValue } from "./clientMigration.ts";
 
 const requireNative = NodeModule.createRequire(import.meta.url);
 
@@ -543,4 +545,42 @@ export function migrateDefaultHome(input: {
     oldOwner?.close();
     guard.close();
   }
+}
+
+/** Read old Chromium origins without registering them or opening their profile in Electron. */
+export function prepareDesktopStorageMigration<E, R>(input: {
+  userDataPath: string;
+  appDataDirectory: string;
+  development: boolean;
+  read: (directory: string, origin: string) => Effect.Effect<ReadonlyMap<string, string>, E, R>;
+}) {
+  const marker = NodePath.join(input.userDataPath, "paperplane-local-storage-imported");
+  const complete = Effect.try(() => NodeFS.writeFileSync(marker, "", { mode: 0o600 })).pipe(
+    Effect.catch((cause) =>
+      Effect.logWarning("Could not record the desktop storage conversion.", cause),
+    ),
+  );
+  return Effect.gen(function* () {
+    if (exists(marker)) return undefined;
+    const origin = `${input.development ? "rove-dev" : "rove"}://app`;
+    const profiles = [input.userDataPath];
+    if (!exists(NodePath.join(input.userDataPath, "v1-local-storage-imported"))) {
+      profiles.push(
+        NodePath.join(input.appDataDirectory, input.development ? "rove-code-dev" : "rove-code"),
+      );
+    }
+    const items: Record<string, string> = {};
+    for (const profile of profiles) {
+      const directory = NodePath.join(profile, "Local Storage", "leveldb");
+      if (!exists(directory)) continue;
+      const entries = yield* input.read(directory, origin);
+      for (const [key, value] of entries) {
+        // Per-install identity must not be shared with the retired V1 client.
+        if (profile !== input.userDataPath && key === "rove.backgroundActivity.clientId") continue;
+        const next = key.replace(/^rove(?=[.:])/, "paperplane");
+        if (!(next in items)) items[next] = migrateStoredClientValue(value, next);
+      }
+    }
+    return { items, complete };
+  });
 }

@@ -5,7 +5,7 @@ import {
   PROJECT_FAVICON_THUMBNAIL_SIZE,
 } from "@getpaperplane/client-runtime/project-favicon-cache";
 
-const DATABASE_NAME = "rove:project-favicons";
+const DATABASE_NAME = "paperplane:project-favicons";
 const DATABASE_VERSION = 2;
 const STORE_NAME = "images";
 let database: Promise<IDBDatabase> | undefined;

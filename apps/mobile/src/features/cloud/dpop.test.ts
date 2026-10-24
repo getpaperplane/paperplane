@@ -34,6 +34,9 @@ vi.mock("expo-crypto", () => ({
 const secureStore = new Map<string, string>();
 vi.mock("expo-secure-store", () => ({
   getItemAsync: (key: string) => Promise.resolve(secureStore.get(key) ?? null),
+  deleteItemAsync: async (key: string) => {
+    secureStore.delete(key);
+  },
   setItemAsync: (key: string, value: string) => {
     secureStore.set(key, value);
     return Promise.resolve();
@@ -89,7 +92,7 @@ describe("mobile DPoP", () => {
 
   it.effect("rejects malformed persisted proof keys", () =>
     Effect.gen(function* () {
-      secureStore.set("rove.cloud.dpop-proof-key", `{"kty":"EC","crv":"P-256","d":42}`);
+      secureStore.set("paperplane.cloud.dpop-proof-key", `{"kty":"EC","crv":"P-256","d":42}`);
 
       const error = yield* loadOrCreateDpopProofKeyPair().pipe(Effect.flip);
 
