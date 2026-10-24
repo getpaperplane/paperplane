@@ -154,19 +154,23 @@ it.layer(NodeServices.layer)("rove-sqlite-state", (it) => {
       }),
   );
 
-  it.effect("refuses the Paperplane home by default", () =>
+  it.effect("refuses the Paperplane home and its Rove Code backup by default", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const home = yield* fs.makeTempDirectoryScoped({ prefix: "rove-sqlite-state-user-" });
-      const roveHome = path.join(home, ".rove-code");
-      yield* createFixtureDatabase(roveHome);
-      const error = yield* runSqliteState({
-        operation: "exec",
-        baseDir: roveHome,
-        sql: "DELETE FROM fixtures",
-      }).pipe(Effect.provideService(HostProcess.HomeDirectory, home), Effect.flip);
-      assert.equal(error._tag, "SqliteStateSharedHomeMutationError");
+      for (const name of [".paperplane", ".rove-code"]) {
+        const sharedHome = path.join(home, name);
+        yield* createFixtureDatabase(sharedHome);
+        const error = yield* runSqliteState({
+          operation: "exec",
+          baseDir: sharedHome,
+          sql: "DELETE FROM fixtures",
+        }).pipe(Effect.provideService(HostProcess.HomeDirectory, home), Effect.flip);
+        assert.equal(error._tag, "SqliteStateSharedHomeMutationError");
+      }
+      // Guarding must not migrate the old home as a side effect.
+      assert.isFalse(yield* fs.exists(path.join(home, ".paperplane", "home-migration.json")));
     }),
   );
 });

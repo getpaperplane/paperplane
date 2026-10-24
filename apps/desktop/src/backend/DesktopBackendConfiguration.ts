@@ -749,7 +749,7 @@ const resolveWslStartConfig = Effect.fn("desktop.backendConfiguration.resolveWsl
 
   // Build an explicit copy of process.env minus PAPERPLANE_HOME (dev-runner
   // exports the Windows-side base dir for the primary; if it leaks into
-  // the WSL backend the Linux side ends up sharing C:\Users\...\.rove-code via
+  // the WSL backend the Linux side ends up sharing C:\Users\...\.paperplane via
   // /mnt/c, which means both backends read/write the same database and
   // their env-ids collide).
   const parentEnvWithoutRoveHome: Record<string, string | undefined> = {};

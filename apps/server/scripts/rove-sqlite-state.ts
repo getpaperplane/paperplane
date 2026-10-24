@@ -14,7 +14,8 @@ import * as SqlClient from "effect/sql/SqlClient";
 import { Argument, Command, Flag } from "effect/cli";
 
 import * as NodeSqliteClient from "@getpaperplane/shared/nodeSqliteClient";
-import { resolveBaseDir } from "../src/os-jank.ts";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
+import { PAPERPLANE_HOME_NAME } from "@getpaperplane/shared/homeMigration";
 
 export const SqliteStateOperation = Schema.Literals(["query", "exec"]);
 export type SqliteStateOperation = typeof SqliteStateOperation.Type;
@@ -62,7 +63,7 @@ export class SqliteStateSharedHomeMutationError extends Schema.TaggedError<Sqlit
   {},
 ) {
   override get message(): string {
-    return "Refusing to mutate the live ~/.rove-code database. Use an isolated --base-dir.";
+    return "Refusing to mutate the shared ~/.paperplane database or its ~/.rove-code backup. Use an isolated --base-dir.";
   }
 }
 
@@ -124,7 +125,7 @@ export interface RunSqliteStateInput {
 }
 
 export interface RunSqliteStateOptions {
-  /** Live home `exec` refuses to touch. Defaults to the Paperplane home, `~/.rove-code`. */
+  /** Live home `exec` refuses to touch. Defaults to `~/.paperplane` and its `~/.rove-code` backup. */
   readonly sharedHome?: string | undefined;
 }
 
@@ -182,7 +183,13 @@ export const runSqliteState = Effect.fn("runSqliteState")(function* (
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const baseDir = path.resolve(input.baseDir);
-  const sharedHome = path.resolve(options.sharedHome ?? (yield* resolveBaseDir(undefined)));
+  // Computed, not resolved: resolving the default home would run the home migration.
+  // Drop the `.rove-code` entry together with the one-time home migration.
+  const homeDirectory = yield* HostProcess.HomeDirectory;
+  const sharedHomes =
+    options.sharedHome === undefined
+      ? [path.join(homeDirectory, PAPERPLANE_HOME_NAME), path.join(homeDirectory, ".rove-code")]
+      : [path.resolve(options.sharedHome)];
   const databasePath = path.join(baseDir, "userdata", "statev2.sqlite");
   const source = yield* resolveSqlSource(input.sql, input.file);
 
@@ -190,11 +197,11 @@ export const runSqliteState = Effect.fn("runSqliteState")(function* (
     return yield* new SqliteStateDatabaseMissingError({ databasePath });
   }
   if (input.operation === "exec") {
-    const [canonicalBaseDir, canonicalSharedHome] = yield* Effect.all([
-      fs.realPath(baseDir),
-      fs.realPath(sharedHome).pipe(Effect.orElseSucceed(() => sharedHome)),
-    ]);
-    if (canonicalBaseDir === canonicalSharedHome) {
+    const canonicalBaseDir = yield* fs.realPath(baseDir);
+    const canonicalSharedHomes = yield* Effect.forEach(sharedHomes, (home) =>
+      fs.realPath(home).pipe(Effect.orElseSucceed(() => home)),
+    );
+    if (canonicalSharedHomes.includes(canonicalBaseDir)) {
       return yield* new SqliteStateSharedHomeMutationError();
     }
   }

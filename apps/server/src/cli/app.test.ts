@@ -285,7 +285,7 @@ describe("paperplane app", () => {
   it.effect("prefers the installed desktop app when a dev desktop is also running", () =>
     withTempDirectory("rove-app-preferred-test-", (root) =>
       Effect.gen(function* () {
-        const baseDir = NodePath.join(root, ".rove-code");
+        const baseDir = NodePath.join(root, ".paperplane");
         const desktop = yield* fakeDesktop({ baseDir });
         const development = yield* fakeDesktop({ baseDir, stateSubdirectory: "dev" });
 
@@ -300,7 +300,7 @@ describe("paperplane app", () => {
   it.effect("finds the dev desktop when the default desktop socket is absent", () =>
     withTempDirectory("rove-app-dev-test-", (root) =>
       Effect.gen(function* () {
-        const baseDir = NodePath.join(root, ".rove-code");
+        const baseDir = NodePath.join(root, ".paperplane");
         const development = yield* fakeDesktop({ baseDir, stateSubdirectory: "dev" });
 
         yield* runCli(["app"]);
@@ -315,7 +315,7 @@ describe("paperplane app", () => {
   it.effect("never searches a dev state directory for an explicit Paperplane home", () =>
     withTempDirectory("rove-app-explicit-test-", (root) =>
       Effect.gen(function* () {
-        const baseDir = NodePath.join(root, ".rove-code");
+        const baseDir = NodePath.join(root, ".paperplane");
         const development = yield* fakeDesktop({ baseDir, stateSubdirectory: "dev" });
 
         const flagError = yield* runCli(["app", "--base-dir", baseDir]).pipe(Effect.flip);
@@ -333,7 +333,7 @@ describe("paperplane app", () => {
     (responseKind) =>
       withTempDirectory("rove-app-response-test-", (root) =>
         Effect.gen(function* () {
-          const baseDir = NodePath.join(root, ".rove-code");
+          const baseDir = NodePath.join(root, ".paperplane");
           const desktop = yield* fakeDesktop({
             baseDir,
             reply: (request) =>
