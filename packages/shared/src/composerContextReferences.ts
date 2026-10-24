@@ -8,20 +8,18 @@ import {
 } from "@getpaperplane/contracts";
 
 /**
- * Canonical inline reference: `[label](rove-context://v1/<kind>/<contextId>)`, or the image
+ * Canonical inline reference: `[label](paperplane-context://v1/<kind>/<contextId>)`, or the image
  * form `![label](...)`. The link carries position and identity only; the payload lives in the
  * message's context records. Labels are display text and never identity.
  */
 
-const CONTEXT_PROTOCOL = "rove-context:";
+const CONTEXT_PROTOCOL = "paperplane-context:";
 const COMPOSER_CONTEXT_HREF_PREFIX = `${CONTEXT_PROTOCOL}//v1/`;
-// Read historic inline links without emitting the retired scheme.
-const LEGACY_COMPOSER_CONTEXT_HREF_PREFIX = "t3-context://v1/";
 const CONTEXT_KIND_PATTERN = /^[a-z][a-z0-9-]{0,39}$/;
 const CONTEXT_ID_PATTERN = /^[a-z0-9_-]{1,128}$/i;
 const MAX_LINK_LABEL_LENGTH = 512;
 const CONTEXT_LINK = new RegExp(
-  String.raw`(!?)\[([^\]\n]{0,${MAX_LINK_LABEL_LENGTH}})\]\(((?:rove|t3)-context://v1/[^\s)]{1,200})\)`,
+  String.raw`(!?)\[([^\]\n]{0,${MAX_LINK_LABEL_LENGTH}})\]\((paperplane-context://v1/[^\s)]{1,200})\)`,
   "g",
 );
 
@@ -73,9 +71,7 @@ export function formatComposerContextHref(kind: ComposerContextKind, contextId: 
 export function parseComposerContextHref(
   href: string,
 ): { kind: ComposerContextKind; contextId: ComposerContextId } | null {
-  const prefix = href.startsWith(COMPOSER_CONTEXT_HREF_PREFIX)
-    ? COMPOSER_CONTEXT_HREF_PREFIX
-    : LEGACY_COMPOSER_CONTEXT_HREF_PREFIX;
+  const prefix = COMPOSER_CONTEXT_HREF_PREFIX;
   if (!href.startsWith(prefix)) return null;
   const rest = href.slice(prefix.length);
   const parts = rest.split("/");
@@ -122,7 +118,7 @@ export function collectComposerContextReferences(
   const occurrences: ComposerContextReferenceOccurrence[] = [];
   // No link can match without the protocol prefix; skip the scan entirely on
   // plain prose so long messages never pay for a regex walk per `[`.
-  if (!text.includes("](rove-context:") && !text.includes("](t3-context:")) return occurrences;
+  if (!text.includes("](paperplane-context:")) return occurrences;
   for (const match of text.matchAll(CONTEXT_LINK)) {
     const parsed = parseComposerContextHref(match[3]!);
     if (!parsed) continue;

@@ -19,7 +19,7 @@ import { Button } from "../ui/button";
 import { Checkbox } from "../ui/checkbox";
 import { StandalonePage, StandalonePageHeader } from "../ui/standalone-page";
 
-const OPENER_STORAGE_KEY = "rove:prompt-link-opener";
+const OPENER_STORAGE_KEY = "paperplane:prompt-link-opener";
 const Opener = Schema.NullOr(Schema.Literals(["app", "browser"]));
 const DOWNLOAD_URL = "https://github.com/hafiezul/rove/releases";
 
@@ -62,7 +62,7 @@ function summarize(
 
 /**
  * On rove.hafiezulzikry.com a prompt link first asks where to open: the installed desktop or mobile app
- * (through `rove://`), this browser when it is connected to a machine, or the download page.
+ * (through `paperplane://`), this browser when it is connected to a machine, or the download page.
  * Returns that page, or null when the link should open in this browser as usual.
  */
 export function useHostedPromptLinkLanding(enabled: boolean): ReactNode | null {

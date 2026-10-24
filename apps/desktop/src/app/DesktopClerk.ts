@@ -189,7 +189,7 @@ export const make = Effect.gen(function* () {
         );
         return true;
       };
-      // Prompt links and thread links (`rove://new?…`, `rove://threads/…`) reach the
+      // Prompt links and thread links (`paperplane://new?…`, `paperplane://threads/…`) reach the
       // renderer through the same queue as web links; it routes them in the app.
       const openAppLink = (value: string | undefined) => {
         if (!value || promptLinkAppPath(value) === null) return false;

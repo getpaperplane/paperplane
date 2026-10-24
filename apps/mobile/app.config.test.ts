@@ -58,7 +58,7 @@ describe("source-built mobile identity", () => {
       PAPERPLANE_EXPO_OWNER: "rove-test",
       PAPERPLANE_MOBILE_UPDATES_ENABLED: "1",
       PAPERPLANE_APPLE_TEAM_ID: "ABCDE12345",
-      PAPERPLANE_CLERK_RELYING_PARTY_DOMAIN: "rove.example.test",
+      PAPERPLANE_CLERK_RELYING_PARTY_DOMAIN: "paperplane.example.test",
     });
     expect(config.updates?.enabled).toBe(true);
     expect(config.updates?.url).toBe("https://u.expo.dev/00000000-0000-4000-8000-000000000000");
@@ -66,8 +66,8 @@ describe("source-built mobile identity", () => {
     expect(config.owner).toBe("rove-test");
     expect(config.ios?.appleTeamId).toBe("ABCDE12345");
     expect(config.ios?.associatedDomains).toEqual([
-      "applinks:rove.example.test",
-      "webcredentials:rove.example.test",
+      "applinks:paperplane.example.test",
+      "webcredentials:paperplane.example.test",
     ]);
   });
 

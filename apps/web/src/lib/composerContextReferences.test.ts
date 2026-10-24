@@ -13,8 +13,8 @@ import {
 
 const review = { kind: "review-comment", contextId: "rc-1", label: "a.ts L4" };
 const preview = { kind: "preview-annotation", contextId: "pa-1", label: "Checkout" };
-const reviewLink = "[a.ts L4](rove-context://v1/review-comment/rc-1)";
-const previewLink = "[Checkout](rove-context://v1/preview-annotation/pa-1)";
+const reviewLink = "[a.ts L4](paperplane-context://v1/review-comment/rc-1)";
+const previewLink = "[Checkout](paperplane-context://v1/preview-annotation/pa-1)";
 
 describe("composerContextReferences", () => {
   it.each([

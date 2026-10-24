@@ -5,7 +5,7 @@ export function providerAuthReturnUrl(value: string | undefined): string | undef
   if (!value) return undefined;
   try {
     const url = new URL(value);
-    const desktop = ["rove:", "rove-dev:"].includes(url.protocol) && url.host === "app";
+    const desktop = ["paperplane:", "paperplane-dev:"].includes(url.protocol) && url.host === "app";
     const web =
       ["http:", "https:"].includes(url.protocol) &&
       (isLoopbackHost(url.hostname) || url.origin === "https://rove.hafiezulzikry.com");

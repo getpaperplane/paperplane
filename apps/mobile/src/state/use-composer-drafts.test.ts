@@ -233,7 +233,9 @@ function contextDraft(start: number, count: number): ComposerDraft {
     name: "skill",
   }));
   return {
-    text: records.map((record) => `[Skill](rove-context://v1/skill/${record.contextId})`).join(" "),
+    text: records
+      .map((record) => `[Skill](paperplane-context://v1/skill/${record.contextId})`)
+      .join(" "),
     context: { version: 1, records },
     attachments: [],
   };
@@ -297,7 +299,9 @@ describe("mobile composer drafts", () => {
       const restored = archived
         ? decoded.cloudDrafts.signedOut.account?.drafts.thread
         : decoded.drafts.thread;
-      expect(restored?.text).toBe("Review these [notes.txt](rove-context://v1/file/legacy-file) ");
+      expect(restored?.text).toBe(
+        "Review these [notes.txt](paperplane-context://v1/file/legacy-file) ",
+      );
       expect(restored?.attachments).toEqual(legacy.attachments);
       expect(restored?.context?.records).toEqual([
         expect.objectContaining({ kind: "file", attachmentId: file.id }),
@@ -343,7 +347,7 @@ describe("mobile composer drafts", () => {
       expect(restored?.context?.records).toHaveLength(2);
       expect(restored?.context?.records).toContainEqual(skill);
       expect(restored?.text).toBe(
-        `[notes.txt](rove-context://v1/file/${records.length === 2 ? "original" : "file_2"}) `,
+        `[notes.txt](paperplane-context://v1/file/${records.length === 2 ? "original" : "file_2"}) `,
       );
     }
   });
@@ -537,9 +541,9 @@ describe("mobile composer drafts", () => {
     const existing = contextDraft(0, 2);
     const incoming = contextDraft(2, 2);
     const merged = mergeComposerDraftContentState(
-      { key: { ...existing, text: "[Skill](rove-context://v1/skill/skill-0)" } },
+      { key: { ...existing, text: "[Skill](paperplane-context://v1/skill/skill-0)" } },
       "key",
-      { ...incoming, text: "[Skill](rove-context://v1/skill/skill-2)" },
+      { ...incoming, text: "[Skill](paperplane-context://v1/skill/skill-2)" },
     );
     expect(merged.key?.context?.records.map((record) => record.contextId)).toEqual([
       "skill-0",
@@ -634,7 +638,7 @@ describe("mobile composer drafts", () => {
     appAtomRegistry.set(composerDraftsAtom, {
       [key]: {
         text: records
-          .map((record) => `[Skill](rove-context://v1/skill/${record.contextId})`)
+          .map((record) => `[Skill](paperplane-context://v1/skill/${record.contextId})`)
           .join(" "),
         context: { version: 1, records },
         attachments: [],
@@ -682,7 +686,7 @@ describe("mobile composer drafts", () => {
       write.resolve(file);
       expect(await pending).toBe(0);
       const draft = getComposerDraftSnapshot(key);
-      expect(draft.text).toBe("before [pasted-text.txt](rove-context://v1/file/paste) after");
+      expect(draft.text).toBe("before [pasted-text.txt](paperplane-context://v1/file/paste) after");
       expect(draft.attachments).toEqual([file]);
     },
   );
@@ -719,7 +723,7 @@ describe("mobile composer drafts", () => {
         fileUri: `file:///notes-${index}.txt`,
       }));
       appendComposerDraftAttachments(key, files, { appendReference: true });
-      const firstLink = "[notes-0.txt](rove-context://v1/file/file-0)";
+      const firstLink = "[notes-0.txt](paperplane-context://v1/file/file-0)";
       const insertion = captureComposerDraftInsertion(key, { start: 0, end: firstLink.length });
       expect(countComposerDraftAttachmentsAfterSelection(key, insertion)).toBe(99);
       expect(getComposerDraftAfterSelection(key, insertion).context?.records).toHaveLength(99);
@@ -789,7 +793,7 @@ describe("mobile composer drafts", () => {
       fileUri: `file:///notes-${index}.txt`,
     }));
     appendComposerDraftAttachments(key, files, { appendReference: true });
-    const firstLink = "[notes-0.txt](rove-context://v1/file/existing-0)";
+    const firstLink = "[notes-0.txt](paperplane-context://v1/file/existing-0)";
     const insertion = captureComposerDraftInsertion(key, { start: 0, end: firstLink.length });
     setComposerDraftText(key, `New edit ${insertion.text}`);
     const edited = getComposerDraftSnapshot(key);
@@ -857,7 +861,7 @@ describe("mobile composer drafts", () => {
       lineEnd: 1,
       text: "Build failed",
     };
-    const reference = "[Build output](rove-context://v1/terminal/context-terminal)";
+    const reference = "[Build output](paperplane-context://v1/terminal/context-terminal)";
     setComposerDraftText(draftKey, "Fix this next");
     rememberComposerDraftSelection(draftKey, "Fix this next", { start: 4, end: 8 });
     insertComposerDraftContext(draftKey, {
@@ -903,7 +907,7 @@ describe("mobile composer drafts", () => {
       }).drafts,
     ).toEqual({
       "environment-1:thread-1": {
-        text: "Review this file [report.pdf](rove-context://v1/file/file-1) ",
+        text: "Review this file [report.pdf](paperplane-context://v1/file/file-1) ",
         attachments: [file],
         context: {
           version: 1,
@@ -1242,7 +1246,7 @@ describe("mobile composer drafts", () => {
         type === "image"
           ? { text: "Unsent notes", attachments: [file] }
           : {
-              text: "Unsent notes [notes.pdf](rove-context://v1/file/local-notes) ",
+              text: "Unsent notes [notes.pdf](paperplane-context://v1/file/local-notes) ",
               attachments: [file],
               context: {
                 version: 1,
@@ -1264,7 +1268,7 @@ describe("mobile composer drafts", () => {
       expect(getComposerDraftSnapshot("pending-task:queued-1").text).toBe(
         type === "image"
           ? "Edited queued task"
-          : "Edited queued task [notes.pdf](rove-context://v1/file/local-notes) ",
+          : "Edited queued task [notes.pdf](paperplane-context://v1/file/local-notes) ",
       );
       expect(enqueue).toHaveBeenCalledExactlyOnceWith(queued);
       expect(appAtomRegistry.get(composerCloudDraftsAtom).signedOut).toEqual({});
@@ -2735,7 +2739,7 @@ describe("mobile composer drafts", () => {
 
     expect(freshRegistry.get(fresh.composerDraftsAtom)).toEqual({
       "environment-1:thread-1": {
-        text: "Persisted draft [report.pdf](rove-context://v1/file/file-cold-start) ",
+        text: "Persisted draft [report.pdf](paperplane-context://v1/file/file-cold-start) ",
         attachments: [file],
         context: {
           version: 1,

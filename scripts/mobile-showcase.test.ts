@@ -59,7 +59,7 @@ const config: ShowcaseConfig = {
       platform: "ios",
       simulator: "iPhone Test",
       appearance: "dark",
-      theme: "rove",
+      theme: "paperplane",
       scenes: ["thread", "review"],
       storeAsset: appleSpec,
     },
@@ -68,7 +68,7 @@ const config: ShowcaseConfig = {
       platform: "android",
       avd: "Pixel_Test",
       appearance: "light",
-      theme: "rove",
+      theme: "paperplane",
       scenes: ["thread", "terminal"],
       storeAsset: googleSpec,
     },
@@ -174,11 +174,11 @@ it("expands both appearances into independent upload-ready directories", () => {
     [
       {
         appearance: "light",
-        directory: NodePath.join("/captures", "apple", "iphone-test", "light", "rove"),
+        directory: NodePath.join("/captures", "apple", "iphone-test", "light", "paperplane"),
       },
       {
         appearance: "dark",
-        directory: NodePath.join("/captures", "apple", "iphone-test", "dark", "rove"),
+        directory: NodePath.join("/captures", "apple", "iphone-test", "dark", "paperplane"),
       },
     ],
   );
@@ -271,7 +271,7 @@ it("enforces store screenshot count limits", () => {
 });
 
 it("defaults every device to the app's own palette", () => {
-  assert.equal(DEFAULT_SHOWCASE_THEME, "rove");
+  assert.equal(DEFAULT_SHOWCASE_THEME, "paperplane");
   assert.equal(
     showcaseConfig.devices.every((device) => device.theme === DEFAULT_SHOWCASE_THEME),
     true,

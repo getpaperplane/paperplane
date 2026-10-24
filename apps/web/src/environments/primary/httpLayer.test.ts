@@ -42,7 +42,7 @@ describe("primary environment HTTP layer", { concurrent: false }, () => {
     Object.defineProperty(globalThis, "window", {
       configurable: true,
       value: {
-        location: { origin: "rove://app" },
+        location: { origin: "paperplane://app" },
         desktopBridge: testDouble<DesktopBridge>({
           getLocalEnvironmentBootstrap: () => ({
             label: "Local environment",

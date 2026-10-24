@@ -13,7 +13,7 @@ import {
 const THREAD_LINK_KEYS = ["prompt"];
 
 /**
- * Applies the `prompt` of a `rove://threads/<environmentId>/<threadId>?prompt=…` link to that
+ * Applies the `prompt` of a `paperplane://threads/<environmentId>/<threadId>?prompt=…` link to that
  * thread's composer draft, once per link. Used by `ThreadRouteScreen`.
  */
 export function useThreadPromptLink(

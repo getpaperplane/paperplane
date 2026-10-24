@@ -97,21 +97,21 @@ const RELEASE_ASSETS = {
 const VARIANT_CONFIG = {
   development: {
     appName: "Paperplane Dev",
-    scheme: "rove-dev",
+    scheme: "paperplane-dev",
     iosBundleIdentifier: "dev.rove.app.dev",
     androidPackage: "dev.rove.app.dev",
     assets: DEVELOPMENT_ASSETS,
   },
   preview: {
     appName: "Paperplane Preview",
-    scheme: "rove-preview",
+    scheme: "paperplane-preview",
     iosBundleIdentifier: "dev.rove.app.preview",
     androidPackage: "dev.rove.app.preview",
     assets: PREVIEW_ASSETS,
   },
   production: {
     appName: "Paperplane",
-    scheme: "rove",
+    scheme: "paperplane",
     iosBundleIdentifier: "dev.rove.app",
     androidPackage: "dev.rove.app",
     assets: RELEASE_ASSETS,

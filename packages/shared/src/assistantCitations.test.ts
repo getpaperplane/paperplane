@@ -32,7 +32,7 @@ const citation: AssistantCitation = {
 };
 
 const legacyHref =
-  "rove-citation://v1/a/b/c?text=A+quote+%26+a+newline.%0A&start=0&end=21&prefix=&suffix=+Next.";
+  "paperplane-citation://v1/a/b/c?text=A+quote+%26+a+newline.%0A&start=0&end=21&prefix=&suffix=+Next.";
 const legacyCitation: AssistantCitation = {
   version: 1,
   environmentId: EnvironmentId.make("a"),
@@ -59,10 +59,10 @@ describe("assistant citation references", () => {
     expect(serializeAssistantCitation(legacyCitation)).toBe(`[Assistant quote](${legacyHref})`);
   });
 
-  it("reads saved citation links with the historical scheme and emits only Paperplane links", () => {
+  it("rejects unknown citation schemes", () => {
     const historical =
-      "t3-citation://v1/a/b/c?text=A+quote+%26+a+newline.%0A&start=0&end=21&prefix=&suffix=+Next.";
-    expect(parseAssistantCitationHref(historical)).toEqual(legacyCitation);
+      "unsupported-citation://v1/a/b/c?text=A+quote+%26+a+newline.%0A&start=0&end=21&prefix=&suffix=+Next.";
+    expect(parseAssistantCitationHref(historical)).toBeNull();
     expect(formatAssistantCitationHref(legacyCitation)).toBe(legacyHref);
   });
 
@@ -70,7 +70,7 @@ describe("assistant citation references", () => {
     const href = formatAssistantCitationHref(citation);
     expect(parseAssistantCitationHref(href)).toEqual(citation);
     expect(href).toMatch(
-      /^rove-citation:\/\/v1\/environment%2Fremote\/thread%3Aone\/assistant%3Fone\?/,
+      /^paperplane-citation:\/\/v1\/environment%2Fremote\/thread%3Aone\/assistant%3Fone\?/,
     );
     expect(href).not.toContain("localhost");
     const marker = serializeAssistantCitation(citation);
@@ -97,21 +97,21 @@ describe("assistant citation references", () => {
 
   it.each([
     "https://example.com/quote",
-    "rove-citation://v2/a/b/c?text=quote&start=0&end=5&prefix=&suffix=",
-    "rove-citation://v1/%ZZ/b/c?text=quote&start=0&end=5&prefix=&suffix=",
-    "rove-citation://v1/a/b/c?text=quote&start=NaN&end=5&prefix=&suffix=",
-    "rove-citation://v1/a/b/c?text=quote&start=5&end=0&prefix=&suffix=",
-    "rove-citation://v1/a/b/c?text=quote&start=0&end=9007199254740992&prefix=&suffix=",
-    "rove-citation://v1/a/b/c?text=quote&start=0&end=5&prefix=&suffix=&text=other",
-    "rove-citation://v1/a/b/c?text=quote&start=0&end=5&prefix=&suffix=&unknown=value",
-    "rove-citation://v1/a/b/c?text=quote&start=0&end=5&prefix=&suffix=&comment=note&unknown=value",
-    "rove-citation://v1/a/b/c?text=quote&start=0&end=5&prefix=&suffix=&comment=one&comment=two",
-    "rove-citation://v1/a/b/c?text=quote&start=0&end=5&prefix=&suffix=&comment=&comment=",
-    "rove-citation://v1/a/b/c?text=quote&start=0&end=5&prefix=&suffix=&comment=one&%63omment=two",
-    "rove-citation://v1/a/b/c?text=quote&start=0&end=5&prefix=&comment=note",
-    "rove-citation://v1/a/b/c?text=quote&start=0&end=5&prefix=&suffix=&text=other&comment=note",
-    "rove-citation://v1/a/b/c?text=&start=0&end=5&prefix=&suffix=",
-    "rove-citation://v1/a/b/c?text=quote&start=0&end=5&prefix=&suffix=#unexpected",
+    "paperplane-citation://v2/a/b/c?text=quote&start=0&end=5&prefix=&suffix=",
+    "paperplane-citation://v1/%ZZ/b/c?text=quote&start=0&end=5&prefix=&suffix=",
+    "paperplane-citation://v1/a/b/c?text=quote&start=NaN&end=5&prefix=&suffix=",
+    "paperplane-citation://v1/a/b/c?text=quote&start=5&end=0&prefix=&suffix=",
+    "paperplane-citation://v1/a/b/c?text=quote&start=0&end=9007199254740992&prefix=&suffix=",
+    "paperplane-citation://v1/a/b/c?text=quote&start=0&end=5&prefix=&suffix=&text=other",
+    "paperplane-citation://v1/a/b/c?text=quote&start=0&end=5&prefix=&suffix=&unknown=value",
+    "paperplane-citation://v1/a/b/c?text=quote&start=0&end=5&prefix=&suffix=&comment=note&unknown=value",
+    "paperplane-citation://v1/a/b/c?text=quote&start=0&end=5&prefix=&suffix=&comment=one&comment=two",
+    "paperplane-citation://v1/a/b/c?text=quote&start=0&end=5&prefix=&suffix=&comment=&comment=",
+    "paperplane-citation://v1/a/b/c?text=quote&start=0&end=5&prefix=&suffix=&comment=one&%63omment=two",
+    "paperplane-citation://v1/a/b/c?text=quote&start=0&end=5&prefix=&comment=note",
+    "paperplane-citation://v1/a/b/c?text=quote&start=0&end=5&prefix=&suffix=&text=other&comment=note",
+    "paperplane-citation://v1/a/b/c?text=&start=0&end=5&prefix=&suffix=",
+    "paperplane-citation://v1/a/b/c?text=quote&start=0&end=5&prefix=&suffix=#unexpected",
   ])("leaves invalid or unsupported references unchanged: %s", (href) => {
     expect(parseAssistantCitationHref(href)).toBeNull();
     const prompt = `[Assistant quote](${href})`;
@@ -271,7 +271,7 @@ describe("assistant citation references", () => {
     expect(expanded).toContain("citation.comment is a user-authored request or comment");
     expect(expanded.match(/<\/assistant_citations>/g)).toHaveLength(1);
     expect(expanded).not.toContain("<other>");
-    expect(expanded).not.toContain("rove-citation://");
+    expect(expanded).not.toContain("paperplane-citation://");
   });
 
   it("gives multiple quotes distinct inline references", () => {
@@ -323,7 +323,7 @@ describe("assistant citation references", () => {
     const rendered = renderAssistantCitationsAsText(serializeAssistantCitation(citation));
     expect(rendered).toContain("> Assistant quote:");
     expect(rendered).toContain("日本語 🚀");
-    expect(rendered).not.toContain("rove-citation:");
+    expect(rendered).not.toContain("paperplane-citation:");
     expect(rendered).not.toContain("</assistant_citations>");
   });
 

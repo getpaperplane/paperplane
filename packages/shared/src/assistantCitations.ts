@@ -6,10 +6,9 @@ import {
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 
-const CITATION_PROTOCOL = "rove-citation:";
+const CITATION_PROTOCOL = "paperplane-citation:";
 const CITATION_HREF_PREFIX = `${CITATION_PROTOCOL}//v1/`;
-// Historical schemes are read-only compatibility for stored messages and clipboards.
-const CITATION_HREF_PATTERN = "(?:rove|t3)-citation://v1/";
+const CITATION_HREF_PATTERN = "paperplane-citation://v1/";
 // Percent encoding needs up to nine characters per UTF-16 code unit; 16k covers selectors.
 const MAX_CITATION_HREF_LENGTH =
   9 * (ASSISTANT_CITATION_MAX_TEXT_LENGTH + ASSISTANT_CITATION_MAX_COMMENT_LENGTH) + 16_000;
@@ -53,17 +52,14 @@ export function formatAssistantCitationHref(citation: AssistantCitation): string
 }
 
 export function parseAssistantCitationHref(href: string): AssistantCitation | null {
-  if (
-    (!href.startsWith(CITATION_HREF_PREFIX) && !href.startsWith("t3-citation://v1/")) ||
-    href.length > MAX_CITATION_HREF_LENGTH
-  ) {
+  if (!href.startsWith(CITATION_HREF_PREFIX) || href.length > MAX_CITATION_HREF_LENGTH) {
     return null;
   }
   try {
     const url = new URL(href);
     const parts = url.pathname.slice(1).split("/");
     if (
-      (url.protocol !== CITATION_PROTOCOL && url.protocol !== "t3-citation:") ||
+      url.protocol !== CITATION_PROTOCOL ||
       url.hostname !== "v1" ||
       parts.length !== 3 ||
       url.username ||

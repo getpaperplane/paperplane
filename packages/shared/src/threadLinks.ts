@@ -3,15 +3,15 @@ import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 
 /**
- * Agents mention another thread in Markdown as `[title](rove-thread://v1/<threadId>)`. The id is
+ * Agents mention another thread in Markdown as `[title](paperplane-thread://v1/<threadId>)`. The id is
  * the reference and resolves in the environment of the message that holds it. Titles change, so
  * clients show the thread's current title; the label only stands in for a thread they cannot see.
  */
-export const THREAD_LINK_PROTOCOL = "rove-thread";
+export const THREAD_LINK_PROTOCOL = "paperplane-thread";
 const THREAD_LINK_HREF_PREFIX = `${THREAD_LINK_PROTOCOL}://v1/`;
 // Code comes first in the alternation so a link written inside a code span or fence is skipped.
 const THREAD_LINK_OUTSIDE_CODE =
-  /(?<fence>(`{3,}|~{3,})[\s\S]*?(?:\2|$))|(?<span>(`+)[^\n]*?\4)|\[[^\]\n]*\]\((?<href>rove-thread:\/\/v1\/[^\s)]+)\)/g;
+  /(?<fence>(`{3,}|~{3,})[\s\S]*?(?:\2|$))|(?<span>(`+)[^\n]*?\4)|\[[^\]\n]*\]\((?<href>paperplane-thread:\/\/v1\/[^\s)]+)\)/g;
 
 const decodeThreadId = Schema.decodeUnknownOption(ThreadId);
 

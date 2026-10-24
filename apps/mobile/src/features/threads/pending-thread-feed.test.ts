@@ -29,7 +29,7 @@ describe("pending timeline messages", () => {
       path: "src/Checkout.tsx",
     };
     const context = { version: 1 as const, records: [record] };
-    const text = "[Checkout.tsx](rove-context://v1/mention/setup-file)";
+    const text = "[Checkout.tsx](paperplane-context://v1/mention/setup-file)";
     const entries = appendPendingThreadMessages([], [], [{ ...pending("context"), text, context }]);
     const entry = entries[0];
     expect(entry?.type).toBe("message");

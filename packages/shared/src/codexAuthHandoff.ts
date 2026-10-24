@@ -85,7 +85,7 @@ export function codexCallbackUrl(value: string, redirectUri: string, state: stri
 }
 
 export function codexAuthHandoffUrl(input: CodexAuthHandoff, development = false) {
-  const url = new URL(`${development ? "rove-dev" : "rove"}://auth/codex`);
+  const url = new URL(`${development ? "paperplane-dev" : "paperplane"}://auth/codex`);
   url.searchParams.set("request", encodeHandoff(input));
   return url.toString();
 }
@@ -95,7 +95,7 @@ export function readCodexAuthHandoff(value: string, development: boolean) {
     const url = new URL(value);
     if (
       value.length > 32_768 ||
-      url.protocol !== (development ? "rove-dev:" : "rove:") ||
+      url.protocol !== (development ? "paperplane-dev:" : "paperplane:") ||
       url.host !== "auth" ||
       url.pathname !== "/codex" ||
       url.username ||

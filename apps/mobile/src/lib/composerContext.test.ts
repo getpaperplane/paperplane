@@ -304,7 +304,7 @@ describe("host context compatibility", () => {
             worktreeBranchName: "unused",
           }).message;
     expect(message).not.toHaveProperty("context");
-    expect(message.text).not.toContain("rove-context://");
+    expect(message.text).not.toContain("paperplane-context://");
     expect(
       upgradeLegacyContextMessage(message.text).records.find(
         (record) => record.kind === "terminal",

@@ -12,6 +12,6 @@ export function shouldHandleAppLink(url: string): boolean {
   return (
     !url.includes("expo-development-client") &&
     !url.includes("://expo-sharing") &&
-    !/^rove(-dev|-preview)?:\/*$/.test(url)
+    !/^paperplane(-dev|-preview)?:\/*$/.test(url)
   );
 }

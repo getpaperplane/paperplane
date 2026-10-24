@@ -78,7 +78,7 @@ function makeFakeBrowserWindow() {
     copyImageAt: vi.fn(),
     focus: vi.fn(),
     isDestroyed: vi.fn(() => false),
-    getURL: vi.fn(() => "rove-dev://app/"),
+    getURL: vi.fn(() => "paperplane-dev://app/"),
     getZoomLevel: vi.fn(() => zoomLevel),
     getZoomFactor: vi.fn(() => 1.2 ** zoomLevel),
     setZoomLevel: vi.fn((level: number) => {
@@ -618,19 +618,19 @@ describe("DesktopWindow", () => {
   it("recognizes only same-origin renderer navigations", () => {
     assert.isTrue(
       DesktopWindow.isSameOriginRendererNavigation({
-        applicationUrl: "rove://app/",
-        navigationUrl: "rove://app/settings/connections",
+        applicationUrl: "paperplane://app/",
+        navigationUrl: "paperplane://app/settings/connections",
       }),
     );
     assert.isFalse(
       DesktopWindow.isSameOriginRendererNavigation({
-        applicationUrl: "rove://app/",
+        applicationUrl: "paperplane://app/",
         navigationUrl: "https://accounts.microsoft.com/oauth",
       }),
     );
     assert.isFalse(
       DesktopWindow.isSameOriginRendererNavigation({
-        applicationUrl: "rove://app/",
+        applicationUrl: "paperplane://app/",
         navigationUrl: "not a url",
       }),
     );
@@ -663,7 +663,7 @@ describe("DesktopWindow", () => {
         assert.isTrue(createdWindowOptions[0]?.disableAutoHideCursor);
         assert.isFalse(createdWindowOptions[0]?.webPreferences?.backgroundThrottling);
         assert.deepEqual(fakeWindow.setAutoHideCursor.mock.calls, [[false]]);
-        assert.deepEqual(fakeWindow.loadURL.mock.calls[0], ["rove-dev://app/"]);
+        assert.deepEqual(fakeWindow.loadURL.mock.calls[0], ["paperplane-dev://app/"]);
         assert.equal(fakeWindow.openDevTools.mock.calls.length, 1);
       }).pipe(Effect.provide(layer));
     }),
@@ -1371,14 +1371,17 @@ describe("DesktopWindow", () => {
           return yield* Effect.die("renderer load listeners were not registered");
         }
 
-        didFailLoad({}, -9, "ERR_UNEXPECTED", "rove-dev://app/", true);
+        didFailLoad({}, -9, "ERR_UNEXPECTED", "paperplane-dev://app/", true);
         assert.equal(fakeWindow.loadURL.mock.calls.length, 1);
 
         yield* TestClock.adjust(100);
-        assert.deepEqual(fakeWindow.loadURL.mock.calls, [["rove-dev://app/"], ["rove-dev://app/"]]);
+        assert.deepEqual(fakeWindow.loadURL.mock.calls, [
+          ["paperplane-dev://app/"],
+          ["paperplane-dev://app/"],
+        ]);
         assert.equal(fakeWindow.reload.mock.calls.length, 0);
 
-        didFailLoad({}, -9, "ERR_UNEXPECTED", "rove-dev://app/", true);
+        didFailLoad({}, -9, "ERR_UNEXPECTED", "paperplane-dev://app/", true);
         didFinishLoad();
         yield* TestClock.adjust(250);
         assert.equal(fakeWindow.loadURL.mock.calls.length, 2);
@@ -1390,23 +1393,23 @@ describe("DesktopWindow", () => {
   it("retries only transient failures for the development renderer", () => {
     assert.isTrue(
       DesktopWindow.isRetryableDevelopmentRendererLoadFailure({
-        applicationUrl: "rove-dev://app/",
+        applicationUrl: "paperplane-dev://app/",
         errorCode: -102,
         isMainFrame: true,
-        validatedUrl: "rove-dev://app/",
+        validatedUrl: "paperplane-dev://app/",
       }),
     );
     assert.isFalse(
       DesktopWindow.isRetryableDevelopmentRendererLoadFailure({
-        applicationUrl: "rove-dev://app/",
+        applicationUrl: "paperplane-dev://app/",
         errorCode: -3,
         isMainFrame: true,
-        validatedUrl: "rove-dev://app/",
+        validatedUrl: "paperplane-dev://app/",
       }),
     );
     assert.isFalse(
       DesktopWindow.isRetryableDevelopmentRendererLoadFailure({
-        applicationUrl: "rove-dev://app/",
+        applicationUrl: "paperplane-dev://app/",
         errorCode: -102,
         isMainFrame: true,
         validatedUrl: "https://example.com/",

@@ -42,12 +42,12 @@ describe("ElectronProtocol", () => {
       });
       const protocol = yield* ElectronProtocol.ElectronProtocol;
       yield* protocol.registerDesktopProtocol({
-        scheme: "rove",
+        scheme: "paperplane",
         assetDirectory: directory,
         clerkFrontendApiHostname: undefined,
       });
       const request = (pathname: string, init?: RequestInit) =>
-        Effect.promise(() => handler!(new Request(`rove://app${pathname}`, init)));
+        Effect.promise(() => handler!(new Request(`paperplane://app${pathname}`, init)));
 
       // SPA routes fall back to index.html, including ones containing dots.
       const page = yield* request("/settings/connections");
@@ -82,7 +82,7 @@ describe("ElectronProtocol", () => {
         Effect.gen(function* () {
           const protocol = yield* ElectronProtocol.ElectronProtocol;
           yield* protocol.registerDesktopProtocol({
-            scheme: "rove-dev",
+            scheme: "paperplane-dev",
             targetOrigin: new URL("http://127.0.0.1:3773/"),
             clerkFrontendApiHostname: "clerk.t3.codes",
           });
@@ -90,11 +90,11 @@ describe("ElectronProtocol", () => {
 
           const response = yield* Effect.promise(() =>
             handler!(
-              new Request("rove-dev://app/api/health?verbose=1", {
+              new Request("paperplane-dev://app/api/health?verbose=1", {
                 headers: {
                   accept: "application/json",
-                  origin: "rove-dev://app",
-                  referer: "rove-dev://app/",
+                  origin: "paperplane-dev://app",
+                  referer: "paperplane-dev://app/",
                   "sec-fetch-site": "same-origin",
                 },
               }),
@@ -111,18 +111,18 @@ describe("ElectronProtocol", () => {
           );
           assert.include(
             response.headers.get("content-security-policy") ?? "",
-            "img-src 'self' rove-dev: blob: data: http: https:",
+            "img-src 'self' paperplane-dev: blob: data: http: https:",
           );
           assert.include(
             response.headers.get("content-security-policy") ?? "",
-            "font-src 'self' rove-dev: data:",
+            "font-src 'self' paperplane-dev: data:",
           );
         }),
       );
 
       assert.deepEqual(
         handleMock.mock.calls.map((call) => call[0]),
-        ["rove-dev"],
+        ["paperplane-dev"],
       );
       assert.equal(netFetchMock.mock.calls[0]?.[0], "http://127.0.0.1:3773/api/health?verbose=1");
       const forwardedHeaders = new Headers(netFetchMock.mock.calls[0]?.[1]?.headers);
@@ -130,7 +130,7 @@ describe("ElectronProtocol", () => {
       assert.isNull(forwardedHeaders.get("origin"));
       assert.isNull(forwardedHeaders.get("referer"));
       assert.isNull(forwardedHeaders.get("sec-fetch-site"));
-      assert.deepEqual(unhandleMock.mock.calls, [["rove-dev"]]);
+      assert.deepEqual(unhandleMock.mock.calls, [["paperplane-dev"]]);
     }).pipe(Effect.provide(layerProtocol)),
   );
 
@@ -145,11 +145,11 @@ describe("ElectronProtocol", () => {
         Effect.gen(function* () {
           const protocol = yield* ElectronProtocol.ElectronProtocol;
           yield* protocol.registerDesktopProtocol({
-            scheme: "rove",
+            scheme: "paperplane",
             targetOrigin: new URL("http://127.0.0.1:3773/"),
             clerkFrontendApiHostname: undefined,
           });
-          return yield* Effect.promise(() => handler!(new Request("rove://other/")));
+          return yield* Effect.promise(() => handler!(new Request("paperplane://other/")));
         }),
       );
 
@@ -172,12 +172,12 @@ describe("ElectronProtocol", () => {
         Effect.gen(function* () {
           const protocol = yield* ElectronProtocol.ElectronProtocol;
           yield* protocol.registerDesktopProtocol({
-            scheme: "rove-dev",
+            scheme: "paperplane-dev",
             targetOrigin: new URL("http://127.0.0.1:5733/"),
             clerkFrontendApiHostname: undefined,
           });
           const fiber = yield* Effect.forkChild(
-            Effect.promise(() => handler!(new Request("rove-dev://app/"))),
+            Effect.promise(() => handler!(new Request("paperplane-dev://app/"))),
           );
           yield* TestClock.adjust("50 millis");
           return yield* Fiber.join(fiber);
@@ -205,13 +205,13 @@ describe("ElectronProtocol", () => {
         Effect.gen(function* () {
           const protocol = yield* ElectronProtocol.ElectronProtocol;
           yield* protocol.registerDesktopProtocol({
-            scheme: "rove-dev",
+            scheme: "paperplane-dev",
             targetOrigin: new URL("http://127.0.0.1:5733/"),
             clerkFrontendApiHostname: undefined,
           });
           const fiber = yield* Effect.forkChild(
             Effect.promise(() =>
-              handler!(new Request("rove-dev://app/")).then(
+              handler!(new Request("paperplane-dev://app/")).then(
                 () => null,
                 (error: unknown) => error,
               ),
@@ -243,16 +243,16 @@ describe("ElectronProtocol", () => {
       const protocol = yield* ElectronProtocol.ElectronProtocol;
       const error = yield* Effect.scoped(
         protocol.registerDesktopProtocol({
-          scheme: "rove-dev",
+          scheme: "paperplane-dev",
           targetOrigin: new URL("http://127.0.0.1:3773/"),
           clerkFrontendApiHostname: undefined,
         }),
       ).pipe(Effect.flip);
 
       assert.instanceOf(error, ElectronProtocol.ElectronProtocolRegistrationError);
-      assert.equal(error.scheme, "rove-dev");
+      assert.equal(error.scheme, "paperplane-dev");
       assert.strictEqual(error.cause, cause);
-      assert.equal(error.message, 'Failed to register Electron protocol scheme "rove-dev".');
+      assert.equal(error.message, 'Failed to register Electron protocol scheme "paperplane-dev".');
     }).pipe(Effect.provide(layerProtocol)),
   );
 
@@ -267,7 +267,7 @@ describe("ElectronProtocol", () => {
       const exit = yield* Effect.exit(
         Effect.scoped(
           protocol.registerDesktopProtocol({
-            scheme: "rove",
+            scheme: "paperplane",
             targetOrigin: new URL("http://127.0.0.1:3773/"),
             clerkFrontendApiHostname: undefined,
           }),
@@ -278,16 +278,16 @@ describe("ElectronProtocol", () => {
       if (exit._tag === "Failure") {
         const error = Cause.squash(exit.cause);
         assert.instanceOf(error, ElectronProtocol.ElectronProtocolUnregistrationError);
-        assert.equal(error.scheme, "rove");
+        assert.equal(error.scheme, "paperplane");
         assert.strictEqual(error.cause, cause);
-        assert.equal(error.message, 'Failed to unregister Electron protocol scheme "rove".');
+        assert.equal(error.message, 'Failed to unregister Electron protocol scheme "paperplane".');
       }
     }).pipe(Effect.provide(layerProtocol)),
   );
 
   it("keeps executable sources host-restricted while allowing runtime network resources", () => {
     const policy = ElectronProtocol.makeDesktopContentSecurityPolicy({
-      scheme: "rove",
+      scheme: "paperplane",
       targetOrigin: new URL("http://127.0.0.1:3773/"),
       clerkFrontendApiHostname: "clerk.t3.codes",
     });
@@ -315,14 +315,20 @@ describe("ElectronProtocol", () => {
     ]);
     assert.deepEqual(directives["img-src"], [
       "'self'",
-      "rove:",
+      "paperplane:",
       "blob:",
       "data:",
       "http:",
       "https:",
     ]);
-    assert.deepEqual(directives["media-src"], ["'self'", "rove:", "blob:", "http:", "https:"]);
+    assert.deepEqual(directives["media-src"], [
+      "'self'",
+      "paperplane:",
+      "blob:",
+      "http:",
+      "https:",
+    ]);
     assert.deepEqual(directives["frame-src"], ["'self'", "blob:", "http:", "https:"]);
-    assert.deepEqual(directives["font-src"], ["'self'", "rove:", "data:"]);
+    assert.deepEqual(directives["font-src"], ["'self'", "paperplane:", "data:"]);
   });
 });

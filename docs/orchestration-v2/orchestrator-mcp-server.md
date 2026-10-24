@@ -353,7 +353,7 @@ and `creationSource: "mcp"`; provider output uses `creationSource: "provider"`.
 Actor and ingress are separate so agent-authored user-role messages remain
 distinguishable from human-authored messages.
 
-Agents mention another thread as `[title](rove-thread://v1/<threadId>)`. The
+Agents mention another thread as `[title](paperplane-thread://v1/<threadId>)`. The
 link carries only the id, which resolves in the environment of the message that
 holds it. Clients show the thread's current title rather than the label, so a
 rename never leaves a stale link.

@@ -21,7 +21,7 @@ const APP_DISPLAY_NAME = isDevelopment ? "Rove Code (Dev)" : "Rove Code (Beta)";
 const APP_BUNDLE_ID = isDevelopment
   ? `io.github.hafiezul.rove.dev.${devBundleIdSuffix || "local"}`
   : "io.github.hafiezul.rove";
-const APP_PROTOCOL_SCHEMES = isDevelopment ? ["rove-dev"] : ["rove"];
+const APP_PROTOCOL_SCHEMES = isDevelopment ? ["paperplane-dev"] : ["paperplane"];
 const LAUNCHER_VERSION = 20;
 const developmentMacIconPngPath = NodePath.join(
   repoRoot,

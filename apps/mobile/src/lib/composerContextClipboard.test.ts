@@ -67,7 +67,7 @@ const terminal = {
   text: "Build failed",
 };
 const clipboard = {
-  text: "![Checkout](rove-context://v1/image/image-source) [Build](rove-context://v1/terminal/terminal-source)",
+  text: "![Checkout](paperplane-context://v1/image/image-source) [Build](paperplane-context://v1/terminal/terminal-source)",
   fragment: encodeComposerContextFragment({
     version: 1,
     source: { environmentId: EnvironmentId.make("source") },

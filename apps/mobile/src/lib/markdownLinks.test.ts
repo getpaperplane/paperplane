@@ -15,7 +15,7 @@ describe("resolveMarkdownLinkIcon", () => {
 
 describe("resolveMarkdownLinkPresentation", () => {
   it("keeps thread-link hrefs for in-app navigation", () => {
-    const href = "rove-thread://v1/thread-1";
+    const href = "paperplane-thread://v1/thread-1";
     expect(resolveMarkdownLinkPresentation(href)).toEqual({ kind: "link", href });
   });
 

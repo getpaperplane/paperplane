@@ -6,12 +6,12 @@ import { DEFAULT_HOSTED_APP_URL } from "./connectAuth.ts";
  * cannot pick a runtime mode, branch, or worktree. Those stay the user's own defaults.
  *
  * Shared links are https on the hosted app, because that is what Twitter and GitHub make
- * clickable. The `rove://` scheme carries the same paths into desktop and mobile:
+ * clickable. The `paperplane://` scheme carries the same paths into desktop and mobile:
  *
  *   https://rove.hafiezulzikry.com/new?prompt=…&repo=owner/name&provider=codex&model=gpt-5
  *   https://rove.hafiezulzikry.com/new?pr=owner/name/123&prompt=…
  *   https://rove.hafiezulzikry.com/<environmentId>/<threadId>?prompt=…
- *   rove://new?…   rove://threads/<environmentId>/<threadId>?…
+ *   paperplane://new?…   paperplane://threads/<environmentId>/<threadId>?…
  */
 
 /** URLs stay well under the limits browsers and link shorteners apply. */
@@ -212,12 +212,12 @@ export function buildNewThreadLink(input: {
   return url.toString();
 }
 
-const APP_SCHEME = /^rove(?:-[a-z]+)?:$/;
+const APP_SCHEME = /^paperplane(?:-(?:dev|preview))?:$/;
 const THREAD_PATH = /^\/([^/]+)\/([^/]+)\/?$/;
 
 /**
  * The in-app path a prompt link or thread deep link opens, or null for any other URL.
- * Desktop uses it for links the OS hands over, both `rove://` ones and, as the default
+ * Desktop uses it for links the OS hands over, both `paperplane://` ones and, as the default
  * browser on macOS, hosted-app ones.
  */
 export function promptLinkAppPath(
@@ -241,8 +241,8 @@ export function promptLinkAppPath(
   return thread ? `/${thread[1]}/${thread[2]}${url.search}` : null;
 }
 
-/** The `rove://` link that hands an in-app path to an installed desktop or mobile app. */
-export function promptLinkDeepLink(appPath: string, scheme = "rove"): string {
+/** The `paperplane://` link that hands an in-app path to an installed desktop or mobile app. */
+export function promptLinkDeepLink(appPath: string, scheme = "paperplane"): string {
   const url = new URL(appPath, "https://app.invalid");
   const host = url.pathname === "/new" ? "new" : `threads${url.pathname}`;
   return `${scheme}://${host}${url.search}`;

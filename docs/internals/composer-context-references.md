@@ -44,11 +44,11 @@ rejects direct `crypto.randomUUID()` there.
 [`composerContextReferences.ts`][shared] owns the grammar:
 
 ```text
-[label](rove-context://v1/<kind>/<contextId>)
-![label](rove-context://v1/image/<contextId>)
+[label](paperplane-context://v1/<kind>/<contextId>)
+![label](paperplane-context://v1/image/<contextId>)
 ```
 
-The parser accepts exactly the `rove-context:` scheme, the `v1` host, one kind segment matching
+The parser accepts exactly the `paperplane-context:` scheme, the `v1` host, one kind segment matching
 `[a-z][a-z0-9-]{0,39}`, and one id segment matching `[a-z0-9_-]{1,128}` case-insensitively. Query
 strings, fragments, credentials, and extra segments are rejected. Labels are sanitized to survive
 a Markdown link (no brackets or line breaks, at most 200 characters, never empty). Links that fail
@@ -133,7 +133,7 @@ attachments use the same caret-first behavior. Removing a chip in the editor rem
 removing a preview screenshot thumbnail removes its annotation and chip.
 
 The transcript resolves a message with `resolveUserMessageContext`: structured context is used as
-is, older messages are upgraded in memory. `ChatMarkdown` renders `rove-context://` links through
+is, older messages are upgraded in memory. `ChatMarkdown` renders `paperplane-context://` links through
 `renderContextReference`, which the timeline maps to chips through the web context-presentation
 registry. The registry declares compact, details, and expanded capabilities for every known kind,
 rejects duplicate surface handlers, and provides the unresolved fallback. Terminal excerpts,

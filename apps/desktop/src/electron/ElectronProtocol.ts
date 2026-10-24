@@ -13,8 +13,8 @@ import * as Scope from "effect/Scope";
 import * as Electron from "electron";
 
 export const DESKTOP_HOST = "app";
-const DESKTOP_PRODUCTION_SCHEME = "rove";
-const DESKTOP_DEVELOPMENT_SCHEME = "rove-dev";
+const DESKTOP_PRODUCTION_SCHEME = "paperplane";
+const DESKTOP_DEVELOPMENT_SCHEME = "paperplane-dev";
 
 export function getDesktopScheme(isDevelopment: boolean): string {
   return isDevelopment ? DESKTOP_DEVELOPMENT_SCHEME : DESKTOP_PRODUCTION_SCHEME;

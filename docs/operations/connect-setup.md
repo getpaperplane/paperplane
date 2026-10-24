@@ -67,12 +67,12 @@ URL selects the deployment.
 Enable Clerk's Native API and add the desktop redirects to its SSO redirect allowlist:
 
 ```text
-rove-dev://app/
-rove://app/
+paperplane-dev://app/
+paperplane://app/
 ```
 
 Add the corresponding origin to the Clerk instance's Backend API `allowed_origins` array.
-Development uses `rove-dev://app`; production uses `rove://app`. Update the array with
+Development uses `paperplane-dev://app`; production uses `paperplane://app`. Update the array with
 `PATCH https://api.clerk.com/v1/instance` using the Clerk secret key, preserving existing entries.
 The Clerk Electron integration handles token
 persistence and system-browser callback delivery.
@@ -87,7 +87,7 @@ Clerk's native Android SDK uses `clerk://<applicationId>.callback`. In the Clerk
 | Preview     | `clerk://dev.rove.app.preview.callback` |
 | Production  | `clerk://dev.rove.app.callback`         |
 
-Preserve existing entries. These callbacks are separate from the `rove-dev` / `rove-preview` / `rove` navigation schemes. A private development build using the production Clerk key still needs its development callback allowed by that instance's administrator; rebuilding the same package does not change the allowlist.
+Preserve existing entries. These callbacks are separate from the `paperplane-dev` / `paperplane-preview` / `paperplane` navigation schemes. A private development build using the production Clerk key still needs its development callback allowed by that instance's administrator; rebuilding the same package does not change the allowlist.
 
 ## Desktop passkeys
 

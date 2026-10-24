@@ -1155,7 +1155,7 @@ describe("asking about a change rather than working on it", () => {
     expect(legacyText).toContain(base.url);
     expect(legacyText).toContain(prose);
     expect(legacyText).not.toContain("PLEASE IMPLEMENT THIS PLAN");
-    expect(legacyText).not.toContain("rove-context://");
+    expect(legacyText).not.toContain("paperplane-context://");
   });
 
   it("builds a neutral composer reference without prescribing an action", () => {
@@ -2025,7 +2025,7 @@ describe("cached pull request detail", () => {
 
   it("shrugs off corrupt storage and no storage at all", () => {
     const storage = makeStorage();
-    storage.setItem("rove.pullRequests.detail:env-1:project-1:acme/web#7", "{not json");
+    storage.setItem("paperplane.pullRequests.detail:env-1:project-1:acme/web#7", "{not json");
     expect(readPullRequestDetailSnapshot(storage, "env-1", reference)).toBeNull();
     expect(readPullRequestDetailSnapshot(undefined, "env-1", reference)).toBeNull();
     const hosted = { ...reference, host: "github.com" };

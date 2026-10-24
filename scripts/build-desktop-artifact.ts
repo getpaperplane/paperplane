@@ -2875,7 +2875,7 @@ export const createBuildConfig = Effect.fn("createBuildConfig")(function* (
       protocols: [
         {
           name: "Paperplane",
-          schemes: ["rove", "rove-dev"],
+          schemes: ["paperplane", "paperplane-dev"],
         },
         // Lets people choose Paperplane as their default web browser, which opens
         // each link in a new thread's browser panel.
@@ -2947,11 +2947,11 @@ export const createBuildConfig = Effect.fn("createBuildConfig")(function* (
       maintainer: "Paperplane Contributors <rove@users.noreply.github.com>",
       // electron-builder turns these into MimeType=x-scheme-handler/<scheme>;
       // in the .desktop entry (Exec already gets %U), so browsers can hand
-      // rove:// OAuth callbacks to the app.
+      // paperplane:// OAuth callbacks to the app.
       protocols: [
         {
           name: "Paperplane",
-          schemes: ["rove", "rove-dev"],
+          schemes: ["paperplane", "paperplane-dev"],
         },
       ],
       desktop: {

@@ -12,10 +12,6 @@ import {
   remarkCodexDirectives,
 } from "./codexMarkdownDirectives.ts";
 import { isWindowsDrivePathHref } from "./markdownLinks.ts";
-import {
-  ASSISTANT_CITATION_READ_PROTOCOLS,
-  COMPOSER_CONTEXT_READ_PROTOCOLS,
-} from "./roveMigration.ts";
 import { THREAD_LINK_PROTOCOL } from "./threadLinks.ts";
 
 type MarkdownImageHastNode = {
@@ -165,11 +161,11 @@ const CHAT_MARKDOWN_SANITIZE_SCHEMA = {
     href: [
       ...(defaultSchema.protocols?.href ?? []),
       "file",
-      ...ASSISTANT_CITATION_READ_PROTOCOLS,
-      ...COMPOSER_CONTEXT_READ_PROTOCOLS,
+      "paperplane-citation",
+      "paperplane-context",
       THREAD_LINK_PROTOCOL,
     ],
-    src: [...(defaultSchema.protocols?.src ?? []), "file", ...COMPOSER_CONTEXT_READ_PROTOCOLS],
+    src: [...(defaultSchema.protocols?.src ?? []), "file", "paperplane-context"],
   },
 } satisfies Parameters<typeof rehypeSanitize>[0];
 

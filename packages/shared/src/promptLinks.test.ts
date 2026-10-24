@@ -108,8 +108,8 @@ describe("link round trips", () => {
   });
 
   it("maps app scheme and hosted links to in-app paths, and nothing else", () => {
-    expect(promptLinkAppPath("rove://new?prompt=hi")).toBe("/new?prompt=hi");
-    expect(promptLinkAppPath("rove-dev://threads/env-1/thread-1")).toBe("/env-1/thread-1");
+    expect(promptLinkAppPath("paperplane://new?prompt=hi")).toBe("/new?prompt=hi");
+    expect(promptLinkAppPath("paperplane-dev://threads/env-1/thread-1")).toBe("/env-1/thread-1");
     expect(
       promptLinkAppPath(
         "https://rove.hafiezulzikry.com/env-1/thread-1?prompt=go",
@@ -133,13 +133,13 @@ describe("link round trips", () => {
     expect(promptLinkAppPath("http://rove.hafiezulzikry.com/new?prompt=hi")).toBeNull();
     expect(promptLinkAppPath("https://rove.hafiezulzikry.com/settings/general")).toBeNull();
     expect(promptLinkAppPath("https://evil.test/new?prompt=hi")).toBeNull();
-    expect(promptLinkAppPath("rove://app/index.html")).toBeNull();
+    expect(promptLinkAppPath("paperplane://app/index.html")).toBeNull();
   });
 
   it("hands an in-app path to the installed app", () => {
-    expect(promptLinkDeepLink("/new?prompt=hi")).toBe("rove://new?prompt=hi");
+    expect(promptLinkDeepLink("/new?prompt=hi")).toBe("paperplane://new?prompt=hi");
     expect(promptLinkDeepLink("/env-1/thread-1?prompt=hi")).toBe(
-      "rove://threads/env-1/thread-1?prompt=hi",
+      "paperplane://threads/env-1/thread-1?prompt=hi",
     );
   });
 });

@@ -4251,7 +4251,7 @@ describe("streaming v2 row projection", () => {
         {
           runId: source.historyRunId,
           checkpointTurnCount: 1,
-          checkpointRef: CheckpointRef.make("refs/rove/checkpoints/history"),
+          checkpointRef: CheckpointRef.make("refs/paperplane/checkpoints/history"),
           status: "ready",
           files: [],
           assistantMessageId: MessageId.make("history-assistant"),
@@ -5495,7 +5495,7 @@ describe("shouldCollapseUserMessage", () => {
       (_, index) =>
         `[file${index}.ts](/workspace/projects/example/packages/some/deeply/nested/directory/file${index}.ts)`,
     );
-    const text = `Compare ${links.join(", ")} with [terminal 1](rove-context://v1/terminal/${"a".repeat(36)}).`;
+    const text = `Compare ${links.join(", ")} with [terminal 1](paperplane-context://v1/terminal/${"a".repeat(36)}).`;
 
     expect(text.length).toBeGreaterThan(600);
     expect(shouldCollapseUserMessage(text)).toBe(false);

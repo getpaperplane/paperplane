@@ -162,7 +162,7 @@ describe("DesktopLinuxUrlHandler", () => {
     const entry = DesktopLinuxUrlHandler.renderUrlHandlerDesktopEntry({
       displayName: "Paperplane (Nightly)",
       execTarget: '/home/al ice/Apps/Rove "100%" $HOME\\x.AppImage',
-      scheme: "rove",
+      scheme: "paperplane",
       iconPath: "/home/al ice/icons/Rove\\x.png",
     });
 
@@ -177,20 +177,20 @@ describe("DesktopLinuxUrlHandler", () => {
     );
     assert.include(entry, "NoDisplay=true");
     assert.notInclude(entry, "StartupWMClass=");
-    assert.include(entry, "MimeType=x-scheme-handler/rove;");
+    assert.include(entry, "MimeType=x-scheme-handler/paperplane;");
     assert.include(entry, "Icon=/home/al ice/icons/Rove\\\\x.png");
   });
 
   it("carries structured context on registration errors", () => {
     const writeError = new DesktopLinuxUrlHandler.DesktopLinuxUrlHandlerRegistrationError({
       step: "write-desktop-entry",
-      scheme: "rove",
+      scheme: "paperplane",
       desktopEntryPath: "/home/alice/.local/share/applications/io.github.hafiezul.rove.desktop",
       cause: new Error("boom"),
     });
     assert.equal(
       writeError.message,
-      "Failed to register the rove:// URL handler (step: write-desktop-entry).",
+      "Failed to register the paperplane:// URL handler (step: write-desktop-entry).",
     );
     assert.equal(
       writeError.desktopEntryPath,
@@ -199,12 +199,12 @@ describe("DesktopLinuxUrlHandler", () => {
 
     const exitError = new DesktopLinuxUrlHandler.DesktopLinuxUrlHandlerRegistrationError({
       step: "set-default-handler",
-      scheme: "rove",
+      scheme: "paperplane",
       exitCode: 4,
     });
     assert.equal(
       exitError.message,
-      "Failed to register the rove:// URL handler (step: set-default-handler, xdg-mime exit code 4).",
+      "Failed to register the paperplane:// URL handler (step: set-default-handler, xdg-mime exit code 4).",
     );
   });
 
@@ -226,7 +226,7 @@ describe("DesktopLinuxUrlHandler", () => {
           recorded.files[0]?.content,
           'Exec="/home/alice/Applications/Rove-Code.AppImage" %U',
         );
-        assert.include(recorded.files[0]?.content, "MimeType=x-scheme-handler/rove;");
+        assert.include(recorded.files[0]?.content, "MimeType=x-scheme-handler/paperplane;");
         assert.deepEqual(recorded.commands, [
           {
             command: "update-desktop-database",
@@ -234,7 +234,7 @@ describe("DesktopLinuxUrlHandler", () => {
           },
           {
             command: "xdg-mime",
-            args: ["default", "io.github.hafiezul.rove.desktop", "x-scheme-handler/rove"],
+            args: ["default", "io.github.hafiezul.rove.desktop", "x-scheme-handler/paperplane"],
           },
         ]);
       });
@@ -262,7 +262,7 @@ describe("DesktopLinuxUrlHandler", () => {
         existingEntry: DesktopLinuxUrlHandler.renderUrlHandlerDesktopEntry({
           displayName: "Paperplane (Alpha)",
           execTarget: "/home/alice/Applications/Rove-Code.AppImage",
-          scheme: "rove",
+          scheme: "paperplane",
           iconPath: "/home/alice/.local/share/icons/io.github.hafiezul.rove.desktop.png",
         }),
       });
@@ -276,7 +276,7 @@ describe("DesktopLinuxUrlHandler", () => {
         },
         {
           command: "xdg-mime",
-          args: ["default", "io.github.hafiezul.rove.desktop", "x-scheme-handler/rove"],
+          args: ["default", "io.github.hafiezul.rove.desktop", "x-scheme-handler/paperplane"],
         },
       ]);
     });
@@ -291,7 +291,7 @@ describe("DesktopLinuxUrlHandler", () => {
         existingEntry: DesktopLinuxUrlHandler.renderUrlHandlerDesktopEntry({
           displayName: "Paperplane (Alpha)",
           execTarget: "/home/alice/Applications/Rove-Code.AppImage",
-          scheme: "rove",
+          scheme: "paperplane",
           iconPath,
         }),
       });

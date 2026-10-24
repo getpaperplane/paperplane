@@ -2369,7 +2369,7 @@ it.effect("shared intake preserves durable attachment bytes after a lost launch 
       ...launchInput({ command: "intake-launch", thread: "intake-thread" }),
       initialMessage: {
         messageId: MessageId.make("intake-first"),
-        text: "First [file](rove-context://v1/file/intake-file)",
+        text: "First [file](paperplane-context://v1/file/intake-file)",
         context: {
           version: 1 as const,
           records: [

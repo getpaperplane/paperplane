@@ -95,7 +95,7 @@ describe("paperplane/no-raw-mcp-registration", () => {
   rule.invalid(
     "reports McpServer.resource and McpServer.prompt",
     `
-      export const resource = McpServer.resource({ uri: "rove://x", name: "x", content: "x" });
+      export const resource = McpServer.resource({ uri: "paperplane://x", name: "x", content: "x" });
       export const prompt = McpServer.prompt({ name: "x", content: () => "x" });
     `,
   );

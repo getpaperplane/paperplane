@@ -30,7 +30,7 @@ it("excludes structured context chips without joining text across them", () => {
     searchableMessageSegments({
       role: "user",
       streaming: false,
-      text: "before[hidden label](rove-context://v1/terminal/terminal_1)after",
+      text: "before[hidden label](paperplane-context://v1/terminal/terminal_1)after",
       context: { version: 1, records: [] },
     }),
   ).toEqual(["before", "after"]);
@@ -55,9 +55,9 @@ it("keeps context reference syntax inside code searchable", () => {
     searchableMessageSegments({
       role: "user",
       streaming: false,
-      text: "`[label](rove-context://v1/terminal/terminal_1)`",
+      text: "`[label](paperplane-context://v1/terminal/terminal_1)`",
     }),
-  ).toEqual(["[label](rove-context://v1/terminal/terminal_1)"]);
+  ).toEqual(["[label](paperplane-context://v1/terminal/terminal_1)"]);
 });
 
 it("excludes repeated legacy attachments containing literal context tags", () => {

@@ -12,7 +12,7 @@ import {
 /**
  * Inline context records: the typed payload behind every composer chip.
  * A message's `text` carries position through canonical reference links
- * (`[label](rove-context://v1/<kind>/<contextId>)`, see
+ * (`[label](paperplane-context://v1/<kind>/<contextId>)`, see
  * `@getpaperplane/shared/composerContextReferences`); these records carry the payload,
  * keyed by `contextId`. Bytes never live here: image and file records bind to a
  * `ChatAttachment` by id.

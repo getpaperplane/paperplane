@@ -1000,16 +1000,16 @@ it.effect("returns successful desktop sign-in to the original Welcome step", () 
   provision(
     Effect.gen(function* () {
       const h = yield* makeHarness;
-      h.setReturnUrl("rove-dev://app/welcome#agents:test-environment");
+      h.setReturnUrl("paperplane-dev://app/welcome#agents:test-environment");
       yield* h.signIn;
       yield* h.phase("succeeded");
       assert.include(
         h.callbackResponses[0]!.body,
-        'content="1;url=rove-dev://app/welcome#agents:test-environment"',
+        'content="1;url=paperplane-dev://app/welcome#agents:test-environment"',
       );
       assert.include(
         h.callbackResponses[0]!.body,
-        'href="rove-dev://app/welcome#agents:test-environment"',
+        'href="paperplane-dev://app/welcome#agents:test-environment"',
       );
     }),
   ),

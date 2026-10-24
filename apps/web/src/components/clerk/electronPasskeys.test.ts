@@ -15,7 +15,7 @@ const stubNativePasskeys = () => {
     error: { code: "cancelled", message: "user cancelled" },
   });
 
-  vi.stubGlobal("location", { protocol: "rove:", hostname: "app" });
+  vi.stubGlobal("location", { protocol: "paperplane:", hostname: "app" });
   vi.stubGlobal("window", {
     PublicKeyCredential: vi.fn(),
     __clerk_internal_electron_passkeys: {

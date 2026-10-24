@@ -39,7 +39,7 @@ import { filterProjectScopes, getProjectScopeSelectionTarget } from "./new-task-
 
 type NewTaskRouteParams = {
   readonly incomingShareId?: string | string[];
-  // A `rove://new?…` prompt link. See usePromptLinkResolver.
+  // A `paperplane://new?…` prompt link. See usePromptLinkResolver.
   readonly prompt?: string | string[];
   readonly repo?: string | string[];
   readonly pr?: string | string[];

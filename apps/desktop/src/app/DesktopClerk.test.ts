@@ -108,7 +108,7 @@ describe("DesktopClerk", () => {
           {
             storage: storageAdapter,
             passkeys: true,
-            renderer: { scheme: "rove-dev", host: "app" },
+            renderer: { scheme: "paperplane-dev", host: "app" },
           },
         ],
       ]);
@@ -289,17 +289,19 @@ it.effect(
       const clerk = yield* DesktopClerk.DesktopClerk;
       yield* clerk.configure;
       const event = { preventDefault: vi.fn() };
-      listeners.get("open-url")!(event, "rove-dev://app/auth/callback?code=clerk-code");
-      listeners.get("open-url")!(event, "rove://app/welcome");
+      listeners.get("open-url")!(event, "paperplane-dev://app/auth/callback?code=clerk-code");
+      listeners.get("open-url")!(event, "paperplane://app/welcome");
       assert.equal(loadURL.mock.calls.length, 0);
       assert.equal(event.preventDefault.mock.calls.length, 0);
       listeners.get("second-instance")!({}, [
         "rove",
-        "rove-dev://app/settings/providers?instanceId=work&code=never-forward",
+        "paperplane-dev://app/settings/providers?instanceId=work&code=never-forward",
       ]);
       yield* Effect.promise(() => revealed.promise);
-      assert.deepEqual(loadURL.mock.calls, [["rove-dev://app/settings/providers?instanceId=work"]]);
-      listeners.get("open-url")!(event, "rove-dev://app/welcome#agents:machine-id");
+      assert.deepEqual(loadURL.mock.calls, [
+        ["paperplane-dev://app/settings/providers?instanceId=work"],
+      ]);
+      listeners.get("open-url")!(event, "paperplane-dev://app/welcome#agents:machine-id");
       assert.equal(event.preventDefault.mock.calls.length, 1);
     }).pipe(
       Effect.scoped,
@@ -422,17 +424,17 @@ it.effect("hands web and app links to the renderer and leaves other links alone"
       assert.strictEqual(open("https://example.com/page"), 1);
       assert.strictEqual(open("http://localhost:3000/"), 1);
       // Prompt and thread links ride the same queue; the renderer routes them in the app.
-      assert.strictEqual(open("rove://new?prompt=hi"), 1);
-      assert.strictEqual(open("rove://threads/env-1/thread-1"), 1);
+      assert.strictEqual(open("paperplane://new?prompt=hi"), 1);
+      assert.strictEqual(open("paperplane://threads/env-1/thread-1"), 1);
       // Anything else is not a web page; Electron keeps its own handling.
       assert.strictEqual(open("mailto:hello@example.com"), 0);
-      assert.strictEqual(open("rove://somewhere-else"), 0);
+      assert.strictEqual(open("paperplane://somewhere-else"), 0);
       yield* Effect.yieldNow;
       assert.deepStrictEqual(received, [
         "https://example.com/page",
         "http://localhost:3000/",
-        "rove://new?prompt=hi",
-        "rove://threads/env-1/thread-1",
+        "paperplane://new?prompt=hi",
+        "paperplane://threads/env-1/thread-1",
       ]);
     }).pipe(
       Effect.provide(layerDesktopClerk(true, [], "darwin")),
