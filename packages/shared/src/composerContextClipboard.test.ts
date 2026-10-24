@@ -20,13 +20,13 @@ describe("composerContextClipboard", () => {
     expect(html).toContain(rich);
     expect(decodeComposerContextClipboardHtml(html)).toEqual(JSON.parse(fragment));
   });
-  it("reads historical HTML metadata while writing only the Paperplane attribute", () => {
+  it("ignores retired HTML metadata while writing only the app attribute", () => {
     const fragment = { version: 1, source: { environmentId: "env" }, records: [] };
-    const historical = `<pre data-t3-context-fragment="${encodeURIComponent(JSON.stringify(fragment))}">old selection</pre>`;
-    expect(decodeComposerContextClipboardHtml(historical)).toEqual(fragment);
+    const historical = `<pre data-retired-context-fragment="${encodeURIComponent(JSON.stringify(fragment))}">old selection</pre>`;
+    expect(decodeComposerContextClipboardHtml(historical)).toBeNull();
     const html = encodeComposerContextClipboardHtml("selection", JSON.stringify(fragment));
     expect(html).toContain("data-rove-context-fragment=");
-    expect(html).not.toContain("data-t3-context-fragment=");
+    expect(html).not.toContain("data-retired-context-fragment=");
   });
   it("round-trips selections larger than two million characters", () => {
     const fragment = {

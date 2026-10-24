@@ -122,10 +122,6 @@ checkouts and removal. Actions belong to a project: editing them creates the pro
 on each selected environment, and reset returns to the environment's shared list. A project's
 `rove.json` actions can be imported there.
 
-The server also reads the historical `t3.json` filename when `rove.json` is absent.
-To update a repository, rename its configuration file to `rove.json`. If both files exist,
-only `rove.json` applies. An invalid `rove.json` does not fall back to the older file.
-
 Settings a repository can also declare in `rove.json`, such as the workspace for new threads,
 resolve in one order: a project override, then the environment setting, then `rove.json`, then the
 built-in default. Leave a setting on **Inherit** to let the next tier decide.

@@ -515,7 +515,6 @@ export function NewTaskFlowProvider(props: React.PropsWithChildren) {
           input: {
             cwd: selectedProject.workspaceRoot,
             relativePath: ROVE_PROJECT_FILE_NAME,
-            allowLegacyProjectFile: true,
           },
         })
       : null,

@@ -16,7 +16,7 @@ export { isKdeCaptureSession } from "./linuxCaptureSession.ts";
 
 export const KDE_CAPTURE_EXECUTABLE = "rove-kde-snap-shot";
 const DESKTOP_FILE = "io.github.hafiezul.rove.KdeCapture.desktop";
-import { CAPTURE_HELPER_READ_MARKERS } from "@getpaperplane/shared/roveMigration";
+const CAPTURE_HELPER_READ_MARKERS = ["X-RoveCode-Capture-Helper=true"];
 
 const MARKER = "X-RoveCode-Capture-Helper=true";
 const decodeCapabilities = Schema.decodeUnknownSync(

@@ -38,7 +38,7 @@ export function decodeComposerContextClipboardHtml(
   // `encodeURIComponent` expands one non-ASCII code unit to up to nine characters, so a
   // fragment just under the limit must still survive the round trip through the attribute.
   if (!html || html.length > MAX_FRAGMENT_CHARS * 9 + HTML_WRAPPER_SLACK_CHARS) return null;
-  const encoded = /data-(?:rove|t3)-context-fragment=["']([^"']+)["']/.exec(html)?.[1];
+  const encoded = /data-rove-context-fragment=["']([^"']+)["']/.exec(html)?.[1];
   if (!encoded) return null;
   try {
     return decodeComposerContextFragment(decodeURIComponent(encoded));

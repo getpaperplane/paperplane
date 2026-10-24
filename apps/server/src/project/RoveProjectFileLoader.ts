@@ -17,7 +17,6 @@ import * as Path from "effect/Path";
 import * as Schema from "effect/Schema";
 
 import { ROVE_PROJECT_FILE_NAME, type RoveProjectFile } from "@getpaperplane/contracts";
-import { LEGACY_PROJECT_FILE_NAME } from "@getpaperplane/shared/roveMigration";
 import { RoveProjectFileFromJson } from "@getpaperplane/shared/roveProjectFile";
 
 const decodeRoveProjectFileJson = Schema.decodeEffect(RoveProjectFileFromJson);
@@ -67,7 +66,7 @@ export const make = Effect.gen(function* () {
 
   const load: RoveProjectFileLoader["Service"]["load"] = Effect.fn("RoveProjectFileLoader.load")(
     function* (workspaceRoot) {
-      for (const fileName of [ROVE_PROJECT_FILE_NAME, LEGACY_PROJECT_FILE_NAME]) {
+      for (const fileName of [ROVE_PROJECT_FILE_NAME]) {
         const filePath = path.join(workspaceRoot, fileName);
         const raw = yield* Effect.result(fileSystem.readFileString(filePath));
         if (raw._tag === "Failure") {

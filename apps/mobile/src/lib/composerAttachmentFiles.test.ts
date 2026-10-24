@@ -24,16 +24,6 @@ describe("owned attachment paths", () => {
     );
   });
 
-  it("resolves legacy attachment directories after a container move without relocating the file", () => {
-    const oldUri = `file:///var/mobile/Containers/Data/Application/${OLD_CONTAINER}/Documents/t3-composer-attachments/${FILE_NAME}`;
-    const documentUri = `file:///var/mobile/Containers/Data/Application/${CURRENT_CONTAINER}/Documents/`;
-    const currentUri = `${documentUri}t3-composer-attachments/${FILE_NAME}`;
-    expect(resolveOwnedComposerAttachmentFileUri(oldUri, documentUri)).toBe(currentUri);
-    expect(composerAttachmentFileReferenceKey(oldUri)).toBe(
-      composerAttachmentFileReferenceKey(currentUri),
-    );
-  });
-
   it("recognizes the private/var alias without changing the stored filename", () => {
     const oldUri = `file:///private/var/mobile/Containers/Data/Application/${OLD_CONTAINER}/Documents/rove-composer-attachments/${FILE_NAME}`;
     const documentUri = `file:///var/mobile/Containers/Data/Application/${CURRENT_CONTAINER}/Documents/`;
