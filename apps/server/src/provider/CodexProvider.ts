@@ -71,7 +71,7 @@ type CodexRateLimitsProbe =
 const CODEX_APP_SERVER_PROBE_FORCE_KILL_AFTER = "2 seconds" as const;
 const CODEX_CATALOG_REFRESH_TIMEOUT = "3 seconds" as const;
 const CODEX_CATALOG_REFRESH_POLL = "100 millis" as const;
-const CODEX_CLIENT_NAME = "Rove Code";
+const CODEX_CLIENT_NAME = "Paperplane";
 
 const CODEX_PRESENTATION = {
   displayName: "Codex",

@@ -1,6 +1,26 @@
 import { assert, it } from "@effect/vitest";
 
-import { applyPreferredCodexDefaultModel, mapCodexModelCapabilities } from "./CodexProvider.ts";
+import {
+  applyPreferredCodexDefaultModel,
+  buildCodexInitializeParams,
+  codexAppServerEnvironment,
+  mapCodexModelCapabilities,
+} from "./CodexProvider.ts";
+
+it("identifies the handshake and default model-catalog originator as Paperplane", () => {
+  const { clientInfo } = buildCodexInitializeParams();
+  assert.strictEqual(clientInfo.name, "Paperplane");
+  assert.strictEqual(clientInfo.title, "Paperplane");
+  assert.strictEqual(
+    codexAppServerEnvironment(undefined).CODEX_INTERNAL_ORIGINATOR_OVERRIDE,
+    "Paperplane",
+  );
+  assert.strictEqual(
+    codexAppServerEnvironment({ CODEX_INTERNAL_ORIGINATOR_OVERRIDE: "custom-client" })
+      .CODEX_INTERNAL_ORIGINATOR_OVERRIDE,
+    "custom-client",
+  );
+});
 
 it("maps current Codex model capability fields", () => {
   const capabilities = mapCodexModelCapabilities({

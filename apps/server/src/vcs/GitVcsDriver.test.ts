@@ -119,6 +119,52 @@ const makeCheckpointFixture = Effect.fn("makeCheckpointFixture")(function* (
   return { git, checkpointRef };
 });
 
+it.effect(
+  "uses Paperplane for new checkpoints and still diffs and restores old-author checkpoints",
+  () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const driver = yield* GitVcsDriver.makeVcsDriverShape();
+      const cwd = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-checkpoint-identity-" });
+      const { git, checkpointRef } = yield* makeCheckpointFixture(driver, cwd);
+      yield* git([
+        "-c",
+        "user.name=Rove Code",
+        "-c",
+        "user.email=rove@users.noreply.github.com",
+        "commit",
+        "-am",
+        "old checkpoint",
+      ]);
+      const previous = CheckpointRef.make("refs/paperplane/checkpoints/previous");
+      yield* git(["update-ref", previous, "HEAD"]);
+      yield* fs.writeFileString(path.join(cwd, "file.txt"), "new contents\n");
+      yield* driver.checkpoints.captureCheckpoint({ cwd, checkpointRef });
+      assert.strictEqual(
+        (yield* git(["show", "-s", "--format=%an <%ae>|%cn <%ce>", checkpointRef])).stdout.trim(),
+        "Paperplane <paperplane@users.noreply.github.com>|Paperplane <paperplane@users.noreply.github.com>",
+      );
+      assert.include(
+        yield* driver.checkpoints.diffCheckpoints({
+          cwd,
+          fromCheckpointRef: previous,
+          toCheckpointRef: checkpointRef,
+          ignoreWhitespace: false,
+        }),
+        "+new contents",
+      );
+      assert.isTrue(
+        yield* driver.checkpoints.restoreCheckpoint({
+          cwd,
+          checkpointRef: previous,
+          fallbackToHead: false,
+        }),
+      );
+      assert.strictEqual(yield* fs.readFileString(path.join(cwd, "file.txt")), "unstaged\n");
+    }).pipe(Effect.scoped, Effect.provide(layerGitContract)),
+);
+
 it.effect("checkpoint capture skips untracked nested repositories without a commit", () =>
   Effect.gen(function* () {
     const fileSystem = yield* FileSystem.FileSystem;
