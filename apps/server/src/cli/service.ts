@@ -123,6 +123,8 @@ const runServiceCommand = Effect.fn("cli.service.run")(function* <A, E>(
   replaceOld = false,
 ) {
   if (replaceOld && Option.isNone(flags.baseDir)) {
+    // Runs the real systemctl/launchctl against the real home: on a machine with the old
+    // service, a test that reaches this without --base-dir stops the developer's live server.
     yield* retireOldService.pipe(Effect.provide(ProcessRunner.layer));
   }
   const logLevel = yield* GlobalFlag.LogLevel;
