@@ -163,7 +163,7 @@ function session(scopes: ReadonlyArray<AuthEnvironmentScope>): AuthSessionState 
       policy: "remote-reachable",
       bootstrapMethods: ["one-time-token"],
       sessionMethods: ["bearer-access-token"],
-      sessionCookieName: "rove_session",
+      sessionCookieName: "paperplane_session",
     },
   };
 }

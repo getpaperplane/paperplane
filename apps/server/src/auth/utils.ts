@@ -10,7 +10,7 @@ import * as Base64Url from "effect/encoding/Base64Url";
 import * as Result from "effect/Result";
 import * as RuntimePredicate from "effect/Predicate";
 
-const SESSION_COOKIE_NAME = "rove_session";
+const SESSION_COOKIE_NAME = "paperplane_session";
 
 /**
  * Cookies are scoped by host but *not* by port, so any two servers that can be

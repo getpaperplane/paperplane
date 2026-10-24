@@ -20,7 +20,7 @@ import {
 } from "@getpaperplane/contracts";
 import type { AuthEnvironmentScope, DpopFailureReason } from "@getpaperplane/contracts";
 import { parseOAuthScope } from "@getpaperplane/shared/oauthScope";
-import { legacyRoveCookieName } from "@getpaperplane/shared/roveMigration";
+import { previousPaperplaneCookieNames } from "@getpaperplane/shared/homeMigration";
 import { causeErrorTag } from "@getpaperplane/shared/observability";
 import * as Clock from "effect/Clock";
 import * as DateTime from "effect/DateTime";
@@ -200,23 +200,6 @@ export function failEnvironmentInternal(reason: EnvironmentInternalErrorReason, 
   });
 }
 
-const appendSessionCookie = (cookieName: string, token: string, expiresAt: DateTime.DateTime) =>
-  Effect.fromResult(
-    Cookies.set(Cookies.empty, cookieName, token, {
-      expires: DateTime.toDate(expiresAt),
-      httpOnly: true,
-      path: "/",
-      sameSite: "lax",
-    }),
-  ).pipe(
-    Effect.catch(() => failEnvironmentInternal("browser_session_cookie_failed")),
-    Effect.flatMap((cookies) =>
-      HttpEffect.appendPreResponseHandler((_request, response) =>
-        Effect.succeed(HttpServerResponse.mergeCookies(response, cookies)),
-      ),
-    ),
-  );
-
 export const requireEnvironmentScope = Effect.fn("environment.auth.requireScope")(function* (
   scope: AuthEnvironmentScope,
 ) {
@@ -275,20 +258,7 @@ export const layer = HttpApiBuilder.group(
             yield* annotateEnvironmentRequest(args.endpoint.name);
             const request = yield* HttpServerRequest.HttpServerRequest;
             const result = yield* serverAuth.getSessionState(request);
-            const credential = EnvironmentAuth.selectRequestCredential(
-              request,
-              sessions.cookieName,
-              sessions.legacyCookieName,
-            );
-            if (
-              credential?.source === "legacy-cookie" &&
-              result.authenticated &&
-              result.sessionMethod === "browser-session-cookie" &&
-              result.expiresAt
-            ) {
-              yield* appendSessionCookie(sessions.cookieName, credential.token, result.expiresAt);
-              yield* appendCredentialResponseHeaders;
-            }
+
             return result;
           },
           Effect.catchIf(EnvironmentAuth.isServerAuthInternalError, (error) =>
@@ -328,11 +298,7 @@ export const layer = HttpApiBuilder.group(
             if (result.expireNormalCookie) {
               const names = new Set([
                 sessions.cookieName,
-                legacyRoveCookieName(sessions.cookieName),
-                sessions.legacyCookieName,
-                sessions.legacyCookieName
-                  ? legacyRoveCookieName(sessions.legacyCookieName)
-                  : undefined,
+                ...previousPaperplaneCookieNames(sessions.cookieName, sessions.legacyCookieName),
               ]);
               for (const name of names) {
                 if (name === undefined) continue;

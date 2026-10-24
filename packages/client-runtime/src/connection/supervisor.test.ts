@@ -1534,7 +1534,7 @@ describe("EnvironmentSupervisor", () => {
                   policy: "loopback-browser",
                   bootstrapMethods: ["one-time-token"],
                   sessionMethods: ["dpop-access-token"],
-                  sessionCookieName: "rove_session_test",
+                  sessionCookieName: "paperplane_session_test",
                 },
                 scopes: AuthStandardClientScopes,
               }),

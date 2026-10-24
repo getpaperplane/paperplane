@@ -90,7 +90,7 @@ const legacyAuth = {
   policy: "remote-reachable",
   bootstrapMethods: ["one-time-token"],
   sessionMethods: ["bearer-access-token"],
-  sessionCookieName: "rove_session",
+  sessionCookieName: "paperplane_session",
 } as const;
 
 const currentSession = {

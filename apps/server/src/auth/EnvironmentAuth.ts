@@ -34,7 +34,11 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
-import { legacyRoveCookieName } from "@getpaperplane/shared/roveMigration";
+import {
+  previousPaperplaneCookieNames,
+  handoffPaperplaneCookie,
+  PaperplaneCookieMigrationError,
+} from "@getpaperplane/shared/homeMigration";
 import * as HttpServerRequest from "effect/http/HttpServerRequest";
 
 import * as ServerEnvironment from "../environment/ServerEnvironment.ts";
@@ -356,6 +360,7 @@ export class ServerAuthCloudMintJwtSigningError extends Schema.TaggedError<Serve
 }
 
 export const ServerAuthInternalError = Schema.Union([
+  PaperplaneCookieMigrationError,
   ServerAuthBootstrapCredentialValidationError,
   ServerAuthSessionCredentialValidationError,
   ServerAuthAuthenticatedSessionIssueError,
@@ -665,6 +670,7 @@ export function selectRequestCredential(
   request: HttpServerRequest.HttpServerRequest,
   cookieName: string,
   legacyCookieName: string | undefined,
+  instanceKey?: string,
 ) {
   const cookieToken = request.cookies[cookieName];
   if (cookieToken !== undefined) {
@@ -681,12 +687,7 @@ export function selectRequestCredential(
     return { token: dpopToken, source: "dpop" } as const;
   }
 
-  const previousScopedName = legacyRoveCookieName(cookieName);
-  const legacyNames = [
-    previousScopedName,
-    legacyCookieName,
-    legacyCookieName ? legacyRoveCookieName(legacyCookieName) : undefined,
-  ];
+  const legacyNames = previousPaperplaneCookieNames(cookieName, legacyCookieName, instanceKey);
   for (const name of legacyNames) {
     const legacyToken = name === undefined ? undefined : request.cookies[name];
     if (legacyToken !== undefined) return { token: legacyToken, source: "legacy-cookie" } as const;
@@ -780,9 +781,12 @@ export const make = Effect.gen(function* () {
       request,
       sessions.cookieName,
       sessions.legacyCookieName,
+      config.stateDir,
     );
     const hasAuthorization = request.headers.authorization !== undefined;
-    const previousDevCookieName = devAuth ? legacyRoveCookieName(devAuth.cookieName) : undefined;
+    const previousDevCookieName = devAuth
+      ? previousPaperplaneCookieNames(devAuth.cookieName)[0]
+      : undefined;
     const devCookieToken = devAuth
       ? (request.cookies[devAuth.cookieName] ??
         (previousDevCookieName ? request.cookies[previousDevCookieName] : undefined))
@@ -852,6 +856,24 @@ export const make = Effect.gen(function* () {
           );
         }
         return Effect.succeed(session);
+      }),
+      Effect.tap((session) => {
+        const cookieName =
+          credential.source === "dev-cookie" ? devAuth?.cookieName : sessions.cookieName;
+        if (
+          !isBrowserCookieCredential(credential.source) ||
+          cookieName === undefined ||
+          !session.expiresAt
+        )
+          return Effect.void;
+        return handoffPaperplaneCookie({
+          request,
+          cookieName,
+          instanceKey: config.stateDir,
+          unscopedName: credential.source === "dev-cookie" ? undefined : sessions.legacyCookieName,
+          token: credential.token,
+          expiresAt: session.expiresAt,
+        });
       }),
     );
   };

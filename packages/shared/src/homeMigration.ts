@@ -1,4 +1,5 @@
 // @effect-diagnostics nodeBuiltinImport:off - Node-only migration runs before either app's runtime and before Electron may yield.
+import * as NodeCrypto from "node:crypto";
 import * as NodeFS from "node:fs";
 import * as NodePath from "node:path";
 import * as NodeSqlite from "node:sqlite";
@@ -8,6 +9,11 @@ import * as NodeModule from "node:module";
 import type { DataType } from "ffi-rs";
 import * as Schema from "effect/Schema";
 import * as Effect from "effect/Effect";
+import * as DateTime from "effect/DateTime";
+import * as Cookies from "effect/http/Cookies";
+import * as HttpEffect from "effect/http/HttpEffect";
+import * as HttpServerRequest from "effect/http/HttpServerRequest";
+import * as HttpServerResponse from "effect/http/HttpServerResponse";
 import {
   migrateSavedAppJson,
   migrateStoredClientValue,
@@ -646,6 +652,78 @@ export const rewriteSavedDataStep: HomeMigrationStep = {
     visit(stagedHome);
   },
 };
+
+/** Only the legacy-name lookup lives here. Callers accept no upstream cookie aliases. */
+export function previousPaperplaneCookieNames(
+  cookieName: string,
+  unscopedName?: string,
+  instanceKey?: string,
+): string[] {
+  const previous = (name: string) =>
+    name.replace(/^paperplane(?=_(?:session(?:_|$)|dev_session_))/, "rove");
+  const hash = (key: string) =>
+    NodeCrypto.createHash("sha256").update(key).digest("hex").slice(0, 12);
+  const oldInstance = instanceKey?.replace(/([/\\])\.paperplane(?=[/\\]|$)/, "$1.rove-code");
+  const movedHomeCookie =
+    instanceKey !== undefined &&
+    oldInstance !== undefined &&
+    oldInstance !== instanceKey &&
+    cookieName.endsWith(`_${hash(instanceKey)}`)
+      ? previous(cookieName).replace(new RegExp(`${hash(instanceKey)}$`), hash(oldInstance))
+      : undefined;
+  return [
+    ...new Set([
+      previous(cookieName),
+      movedHomeCookie,
+      unscopedName,
+      unscopedName === undefined ? undefined : previous(unscopedName),
+    ]),
+  ].filter((name): name is string => name !== undefined && name !== cookieName);
+}
+
+export class PaperplaneCookieMigrationError extends Schema.TaggedError<PaperplaneCookieMigrationError>()(
+  "PaperplaneCookieMigrationError",
+  { cause: Schema.Defect() },
+) {}
+
+/** Attach the handoff to whichever authenticated HTTP endpoint received the old cookie. */
+export function handoffPaperplaneCookie(input: {
+  request: HttpServerRequest.HttpServerRequest;
+  cookieName: string;
+  unscopedName?: string | undefined;
+  instanceKey?: string | undefined;
+  token: string;
+  expiresAt: DateTime.DateTime;
+}) {
+  const previous = previousPaperplaneCookieNames(
+    input.cookieName,
+    input.unscopedName,
+    input.instanceKey,
+  ).filter((name) => input.request.cookies[name] !== undefined);
+  if (previous.length === 0) return Effect.void;
+  const options = { httpOnly: true, path: "/", sameSite: "lax" } as const;
+  return Effect.gen(function* () {
+    let cookies = yield* Effect.fromResult(
+      Cookies.set(Cookies.empty, input.cookieName, input.token, {
+        ...options,
+        expires: DateTime.toDate(input.expiresAt),
+      }),
+    );
+    for (const name of previous)
+      cookies = yield* Effect.fromResult(Cookies.expireCookie(cookies, name, options));
+    yield* HttpEffect.appendPreResponseHandler((_request, response) =>
+      Effect.succeed(
+        HttpServerResponse.setHeaders(HttpServerResponse.mergeCookies(response, cookies), {
+          "cache-control": "no-store",
+          pragma: "no-cache",
+        }),
+      ),
+    );
+  }).pipe(
+    Effect.mapError((cause) => new PaperplaneCookieMigrationError({ cause })),
+    Effect.provideService(HttpServerRequest.HttpServerRequest, input.request),
+  );
+}
 
 /** Read old Chromium origins without registering them or opening their profile in Electron. */
 export function prepareDesktopStorageMigration<E, R>(input: {
