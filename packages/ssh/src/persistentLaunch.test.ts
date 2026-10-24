@@ -50,7 +50,7 @@ it.effect.each([
   Effect.gen(function* () {
     const stateKey = yield* remoteStateKey(target);
     yield* Effect.sync(() => {
-      const home = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "rove-persistent-ssh-"));
+      const home = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "paperplane-persistent-ssh-"));
       try {
         const runtime = NodePath.join(home, ".paperplane/runtime/versions", runner.archiveVersion);
         NodeFS.mkdirSync(runtime, { recursive: true });

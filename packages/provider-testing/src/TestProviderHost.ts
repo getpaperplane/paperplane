@@ -43,7 +43,7 @@ export const layer = (
       const fileSystem = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const baseDir = yield* fileSystem
-        .makeTempDirectoryScoped({ prefix: "rove-provider-host-" })
+        .makeTempDirectoryScoped({ prefix: "paperplane-provider-host-" })
         .pipe(Effect.orDie);
       const stateDir = path.join(baseDir, "userdata");
       const providerStatusCacheDir = path.join(baseDir, "caches");

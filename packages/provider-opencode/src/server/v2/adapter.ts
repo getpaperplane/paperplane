@@ -679,7 +679,7 @@ const isWakeTurn = (turn: OrchestrationV2ProviderTurn) =>
 
 const INTERRUPT_TIMEOUT = "10 seconds";
 /** The session instructions entry Paperplane writes its per-turn system prompt to. */
-const INSTRUCTIONS_KEY = "rove";
+const INSTRUCTIONS_KEY = "paperplane";
 /** A lost event stream is resubscribed this many times, this far apart, before the session breaks. */
 const RECONNECT_ATTEMPTS = 5;
 const RECONNECT_DELAY = "2 seconds";

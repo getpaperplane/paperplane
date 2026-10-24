@@ -18,24 +18,24 @@ import {
 
 describe("normalizeGitRemoteUrl", () => {
   it("canonicalizes equivalent GitHub remotes across protocol variants", () => {
-    expect(normalizeGitRemoteUrl("git@github.com:RoveTools/Rove.git")).toBe(
-      "github.com/rovetools/rove",
+    expect(normalizeGitRemoteUrl("git@github.com:PaperplaneTools/Paperplane.git")).toBe(
+      "github.com/paperplanetools/paperplane",
     );
-    expect(normalizeGitRemoteUrl("https://github.com/RoveTools/Rove.git")).toBe(
-      "github.com/rovetools/rove",
+    expect(normalizeGitRemoteUrl("https://github.com/PaperplaneTools/Paperplane.git")).toBe(
+      "github.com/paperplanetools/paperplane",
     );
-    expect(normalizeGitRemoteUrl("ssh://git@github.com/RoveTools/Rove")).toBe(
-      "github.com/rovetools/rove",
+    expect(normalizeGitRemoteUrl("ssh://git@github.com/PaperplaneTools/Paperplane")).toBe(
+      "github.com/paperplanetools/paperplane",
     );
   });
 
   it("preserves nested group paths for providers like GitLab", () => {
-    expect(normalizeGitRemoteUrl("git@gitlab.com:RoveTools/platform/Rove.git")).toBe(
-      "gitlab.com/rovetools/platform/rove",
+    expect(normalizeGitRemoteUrl("git@gitlab.com:PaperplaneTools/platform/Paperplane.git")).toBe(
+      "gitlab.com/paperplanetools/platform/paperplane",
     );
-    expect(normalizeGitRemoteUrl("https://gitlab.com/RoveTools/platform/Rove.git")).toBe(
-      "gitlab.com/rovetools/platform/rove",
-    );
+    expect(
+      normalizeGitRemoteUrl("https://gitlab.com/PaperplaneTools/platform/Paperplane.git"),
+    ).toBe("gitlab.com/paperplanetools/platform/paperplane");
   });
 
   it("drops explicit ports from URL-shaped remotes", () => {
@@ -57,34 +57,40 @@ describe("normalizeGitRemoteUrl", () => {
   });
 
   it("gives an Azure DevOps repository the same key over SSH as over HTTPS", () => {
-    expect(normalizeGitRemoteUrl("git@ssh.dev.azure.com:v3/RoveTools/Platform/Rove")).toBe(
-      "dev.azure.com/rovetools/platform/_git/rove",
-    );
-    expect(normalizeGitRemoteUrl("ssh://git@ssh.dev.azure.com:22/v3/RoveTools/Platform/Rove")).toBe(
-      "dev.azure.com/rovetools/platform/_git/rove",
-    );
     expect(
-      normalizeGitRemoteUrl("https://RoveTools@dev.azure.com/RoveTools/Platform/_git/Rove"),
-    ).toBe("dev.azure.com/rovetools/platform/_git/rove");
+      normalizeGitRemoteUrl("git@ssh.dev.azure.com:v3/PaperplaneTools/Platform/Paperplane"),
+    ).toBe("dev.azure.com/paperplanetools/platform/_git/paperplane");
+    expect(
+      normalizeGitRemoteUrl(
+        "ssh://git@ssh.dev.azure.com:22/v3/PaperplaneTools/Platform/Paperplane",
+      ),
+    ).toBe("dev.azure.com/paperplanetools/platform/_git/paperplane");
+    expect(
+      normalizeGitRemoteUrl(
+        "https://PaperplaneTools@dev.azure.com/PaperplaneTools/Platform/_git/Paperplane",
+      ),
+    ).toBe("dev.azure.com/paperplanetools/platform/_git/paperplane");
   });
 
   it("puts the organization back in the host on the name dev.azure.com replaced", () => {
     expect(
-      normalizeGitRemoteUrl("RoveTools@vs-ssh.visualstudio.com:v3/RoveTools/Platform/Rove"),
-    ).toBe("rovetools.visualstudio.com/platform/_git/rove");
-    expect(normalizeGitRemoteUrl("https://RoveTools.visualstudio.com/Platform/_git/Rove")).toBe(
-      "rovetools.visualstudio.com/platform/_git/rove",
-    );
+      normalizeGitRemoteUrl(
+        "PaperplaneTools@vs-ssh.visualstudio.com:v3/PaperplaneTools/Platform/Paperplane",
+      ),
+    ).toBe("paperplanetools.visualstudio.com/platform/_git/paperplane");
+    expect(
+      normalizeGitRemoteUrl("https://PaperplaneTools.visualstudio.com/Platform/_git/Paperplane"),
+    ).toBe("paperplanetools.visualstudio.com/platform/_git/paperplane");
   });
 
   it("leaves an Azure SSH host it cannot read as the path it was given", () => {
     // Not `v3`, and not four segments: rewriting either would invent a repository that the web
     // spelling has no name for, so the remote stands as it arrived.
-    expect(normalizeGitRemoteUrl("git@ssh.dev.azure.com:v4/RoveTools/Platform/Rove")).toBe(
-      "ssh.dev.azure.com/v4/rovetools/platform/rove",
-    );
-    expect(normalizeGitRemoteUrl("git@ssh.dev.azure.com:v3/RoveTools/Rove")).toBe(
-      "ssh.dev.azure.com/v3/rovetools/rove",
+    expect(
+      normalizeGitRemoteUrl("git@ssh.dev.azure.com:v4/PaperplaneTools/Platform/Paperplane"),
+    ).toBe("ssh.dev.azure.com/v4/paperplanetools/platform/paperplane");
+    expect(normalizeGitRemoteUrl("git@ssh.dev.azure.com:v3/PaperplaneTools/Paperplane")).toBe(
+      "ssh.dev.azure.com/v3/paperplanetools/paperplane",
     );
   });
 });
@@ -158,14 +164,20 @@ describe("parseOriginUrlFromGitConfig", () => {
 describe("parseGitHubRepositoryNameWithOwnerFromRemoteUrl", () => {
   it("extracts the owner and repository from common GitHub remote shapes", () => {
     expect(
-      parseGitHubRepositoryNameWithOwnerFromRemoteUrl("git@github.com:RoveTools/Rove.git"),
-    ).toBe("RoveTools/Rove");
+      parseGitHubRepositoryNameWithOwnerFromRemoteUrl(
+        "git@github.com:PaperplaneTools/Paperplane.git",
+      ),
+    ).toBe("PaperplaneTools/Paperplane");
     expect(
-      parseGitHubRepositoryNameWithOwnerFromRemoteUrl("https://github.com/RoveTools/Rove.git"),
-    ).toBe("RoveTools/Rove");
+      parseGitHubRepositoryNameWithOwnerFromRemoteUrl(
+        "https://github.com/PaperplaneTools/Paperplane.git",
+      ),
+    ).toBe("PaperplaneTools/Paperplane");
     expect(
-      parseGitHubRepositoryNameWithOwnerFromRemoteUrl("ssh://github.com/RoveTools/Rove.git"),
-    ).toBe("RoveTools/Rove");
+      parseGitHubRepositoryNameWithOwnerFromRemoteUrl(
+        "ssh://github.com/PaperplaneTools/Paperplane.git",
+      ),
+    ).toBe("PaperplaneTools/Paperplane");
   });
 });
 
@@ -194,8 +206,8 @@ describe("isTemporaryWorktreeBranch", () => {
   });
 
   it("matches legacy rove temporary worktree refs", () => {
-    expect(isTemporaryWorktreeBranch("paperplane/deadbeef")).toBe(true);
-    expect(isTemporaryWorktreeBranch("paperplane-deadbeef")).toBe(true);
+    expect(isTemporaryWorktreeBranch("rove/deadbeef")).toBe(true);
+    expect(isTemporaryWorktreeBranch("rove-deadbeef")).toBe(true);
     expect(isTemporaryWorktreeBranch("rove/f4ae4e0e-f971-4d48-b4f2-9cf0aa54ab12")).toBe(true);
     expect(
       isTemporaryWorktreeBranch(`${WORKTREE_BRANCH_PREFIX}/f4ae4e0e-f971-4d48-b4f2-9cf0aa54ab12`),
@@ -213,7 +225,7 @@ describe("isTemporaryWorktreeBranch", () => {
     );
   });
 
-  it("matches the flat fallback used when a plain rove branch exists", () => {
+  it("matches the flat fallback used when a plain paperplane branch exists", () => {
     const flat = flattenTemporaryWorktreeBranchName(`${WORKTREE_BRANCH_PREFIX}/deadbeef`);
     expect(flat).toBe(`${WORKTREE_BRANCH_PREFIX}-deadbeef`);
     expect(isTemporaryWorktreeBranch(flat)).toBe(true);

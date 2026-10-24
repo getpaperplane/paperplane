@@ -106,10 +106,10 @@ function layerProviderHost(input: {
     ProviderHost.ProviderHost.of({
       paths: {
         cwd: process.cwd(),
-        baseDir: "/rove",
-        stateDir: "/rove/userdata",
-        providerStatusCacheDir: "/rove/caches",
-        attachmentsDir: "/rove/userdata/attachments",
+        baseDir: "/paperplane",
+        stateDir: "/paperplane/userdata",
+        providerStatusCacheDir: "/paperplane/caches",
+        attachmentsDir: "/paperplane/userdata/attachments",
       },
       settings: input.settings ?? {
         get: Effect.succeed(DEFAULT_SERVER_SETTINGS),

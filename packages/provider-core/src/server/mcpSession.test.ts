@@ -7,7 +7,7 @@ describe("device CLI environment", () => {
       { PATH: "/provider/bin:/usr/bin", PROVIDER_KEY: "fixture" },
       {
         agentDeviceEnvironment: {
-          PATH: "/rove/device/bin",
+          PATH: "/paperplane/device/bin",
           PATH_SEPARATOR: ":",
           AGENT_DEVICE_DAEMON_BASE_URL: "http://127.0.0.1:9000",
           AGENT_DEVICE_DAEMON_AUTH_TOKEN: "fixture-device",
@@ -15,7 +15,7 @@ describe("device CLI environment", () => {
       },
     );
     expect(environment).toEqual({
-      PATH: "/rove/device/bin:/provider/bin:/usr/bin",
+      PATH: "/paperplane/device/bin:/provider/bin:/usr/bin",
       PROVIDER_KEY: "fixture",
       AGENT_DEVICE_DAEMON_BASE_URL: "http://127.0.0.1:9000",
       AGENT_DEVICE_DAEMON_AUTH_TOKEN: "fixture-device",

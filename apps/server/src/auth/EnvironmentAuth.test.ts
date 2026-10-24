@@ -353,7 +353,7 @@ it.layer(NodeServices.layer)("EnvironmentAuth.layer", (it) => {
       const sessions = yield* SessionStore.SessionStore;
       const pairing = yield* serverAuth.issuePairingCredential();
       const browser = yield* serverAuth.createBrowserSession(pairing.credential, requestMetadata);
-      const oldName = sessions.cookieName.replace(/^rove_session/, "rove_session");
+      const oldName = sessions.cookieName.replace(/^paperplane_session/, "rove_session");
       const verified = yield* serverAuth.authenticateHttpRequest(
         makeCookieRequest(oldName, browser.sessionToken),
       );

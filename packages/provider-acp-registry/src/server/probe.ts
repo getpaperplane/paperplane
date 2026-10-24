@@ -342,7 +342,7 @@ export const probeAcpRegistryConfiguration = Effect.fn("AcpRegistryProbe.probeCo
             fs: { readTextFile: false, writeTextFile: false },
             terminal: false,
           },
-          clientInfo: { name: "rove-provider-test", version: "0.0.0" },
+          clientInfo: { name: "paperplane-provider-test", version: "0.0.0" },
           authenticateOnAuthRequired: false,
           onInitialized: (initializeResult) =>
             Ref.set(
@@ -475,7 +475,7 @@ const makeAcpRegistryManagementRuntime = Effect.fn("AcpRegistryProbe.makeManagem
           fs: { readTextFile: false, writeTextFile: false },
           terminal: false,
         },
-        clientInfo: { name: "rove-session-manager", version: "0.0.0" },
+        clientInfo: { name: "paperplane-session-manager", version: "0.0.0" },
         authenticateOnAuthRequired: false,
         ...(input.settings.authMethodId ? { authMethodId: input.settings.authMethodId } : {}),
       }).pipe(

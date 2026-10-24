@@ -43,7 +43,7 @@ describe("resolveCloudPublicConfig", () => {
     expect(
       resolveCloudPublicConfig({
         cloudReady: true,
-        clerk: { publishableKey: "  pk_test_example  ", jwtTemplate: "  rove-relay  " },
+        clerk: { publishableKey: "  pk_test_example  ", jwtTemplate: "  paperplane-relay  " },
         relay: { url: " https://relay.example.test/// " },
         observability: {
           tracesUrl: " https://api.axiom.co/v1/traces ",
@@ -54,7 +54,7 @@ describe("resolveCloudPublicConfig", () => {
     ).toEqual({
       clerk: {
         publishableKey: "pk_test_example",
-        jwtTemplate: "rove-relay",
+        jwtTemplate: "paperplane-relay",
       },
       relay: {
         url: "https://relay.example.test",
@@ -71,13 +71,13 @@ describe("resolveCloudPublicConfig", () => {
     expect(
       resolveCloudPublicConfig({
         cloudReady: true,
-        clerk: { publishableKey: "pk_test_example", jwtTemplate: "rove-relay" },
+        clerk: { publishableKey: "pk_test_example", jwtTemplate: "paperplane-relay" },
         relay: { url: "http://relay.example.test" },
       }),
     ).toEqual({
       clerk: {
         publishableKey: "pk_test_example",
-        jwtTemplate: "rove-relay",
+        jwtTemplate: "paperplane-relay",
       },
       relay: {
         url: null,
@@ -95,7 +95,7 @@ describe("resolveCloudPublicConfig", () => {
     (cloudReady) => {
       const config = resolveCloudPublicConfig({
         cloudReady,
-        clerk: { publishableKey: "pk_test_example", jwtTemplate: "rove-relay" },
+        clerk: { publishableKey: "pk_test_example", jwtTemplate: "paperplane-relay" },
         relay: { url: "https://relay.example.test" },
       });
       expect(config.clerk.publishableKey).toBe(cloudReady === true ? "pk_test_example" : null);

@@ -108,7 +108,7 @@ fn script(connection: &Connection, directory: &Path, body: &str) -> Result<Strin
         },
     )?;
     let path = directory.join("window.js");
-    let name = format!("rove-capture-{}", std::process::id());
+    let name = format!("paperplane-capture-{}", std::process::id());
     let destination = serde_json::to_string(
         connection
             .unique_name()
@@ -192,7 +192,7 @@ fn check(connection: &Connection) -> Result<()> {
     let reply: zbus::Result<HashMap<String, OwnedValue>> = proxy.call(
         "CaptureWindow",
         &(
-            "rove-permission-check-not-a-window",
+            "paperplane-permission-check-not-a-window",
             HashMap::<&str, Value<'_>>::new(),
             Fd::from(sink.as_fd()),
         ),

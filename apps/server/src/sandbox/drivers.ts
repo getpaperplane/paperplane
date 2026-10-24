@@ -263,6 +263,7 @@ export const makeSandboxDriver: SandboxDriverFactory = async (provider, credenti
       }
       return {
         ...(await create(
+          // Older saved handles omitted the name; it identifies an existing remote resource.
           handle.volumeName ?? `rove-${handle.remoteId}`,
           handle.region,
           handle.snapshotIds.at(-1),
@@ -282,7 +283,8 @@ export const makeSandboxDriver: SandboxDriverFactory = async (provider, credenti
       try {
         const sandbox = handle.remoteId
           ? await client.sandboxes.fromId(handle.remoteId)
-          : await client.sandboxes.fromName("rove-thread-sandboxes", handle.volumeName ?? "");
+          : // Only historical handles lack remoteId; current ones always remove by ID.
+            await client.sandboxes.fromName("rove-thread-sandboxes", handle.volumeName ?? "");
         await sandbox.terminate({ wait: true });
       } catch (error) {
         if (!(error instanceof NotFoundError)) throw error;

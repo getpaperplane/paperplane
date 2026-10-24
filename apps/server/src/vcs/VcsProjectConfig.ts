@@ -72,6 +72,8 @@ export const make = Effect.gen(function* () {
   const findConfigPath = Effect.fn("VcsProjectConfig.findConfigPath")(function* (cwd: string) {
     let current = cwd;
     while (true) {
+      // User-maintained repository configuration cannot be moved by home migration.
+      // Keep its on-disk identity; renaming it silently would discard existing rules.
       const candidate = path.join(current, ".rove", "vcs.json");
       const exists = yield* fileSystem.exists(candidate).pipe(
         Effect.mapError(

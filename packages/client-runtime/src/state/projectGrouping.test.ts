@@ -248,8 +248,8 @@ describe("buildProjectGroups", () => {
   it("preserves every physical clone as a selectable member in repository modes", () => {
     const projects = [
       makeProject("paperplane", "/work/paperplane"),
-      makeProject("rove-2", "/work/rove-2"),
-      makeProject("rove-3", "/work/rove-3"),
+      makeProject("paperplane-2", "/work/paperplane-2"),
+      makeProject("paperplane-3", "/work/paperplane-3"),
     ];
 
     for (const mode of ["repository", "repository_path"] as const) {
@@ -257,8 +257,8 @@ describe("buildProjectGroups", () => {
       expect(groups).toHaveLength(1);
       expect(groups[0]?.members.map((member) => member.project.id)).toEqual([
         "paperplane",
-        "rove-2",
-        "rove-3",
+        "paperplane-2",
+        "paperplane-3",
       ]);
       expect(groups[0]?.memberProjectRefs).toHaveLength(3);
     }
@@ -267,7 +267,7 @@ describe("buildProjectGroups", () => {
   it("uses a shared custom title as the repository group's label", () => {
     const projects = [
       makeProject("first", "/work/paperplane", { title: "Custom project" }),
-      makeProject("second", "/work/rove-2", { title: "Custom project" }),
+      makeProject("second", "/work/paperplane-2", { title: "Custom project" }),
     ];
 
     expect(buildProjectGroups({ projects, settings: settings("repository") })[0]?.label).toBe(
@@ -278,7 +278,7 @@ describe("buildProjectGroups", () => {
   it("keeps the repository label when shared titles match its repository name", () => {
     const projects = [
       makeProject("first", "/work/paperplane", { title: "paperplane" }),
-      makeProject("second", "/work/rove-2", { title: "paperplane" }),
+      makeProject("second", "/work/paperplane-2", { title: "paperplane" }),
     ];
 
     expect(buildProjectGroups({ projects, settings: settings("repository") })[0]?.label).toBe(
@@ -328,20 +328,24 @@ describe("buildProjectGroups", () => {
   it("keeps physical clones in separate groups when requested", () => {
     const projects = [
       makeProject("paperplane", "/work/paperplane"),
-      makeProject("rove-2", "/work/rove-2"),
-      makeProject("rove-3", "/work/rove-3"),
+      makeProject("paperplane-2", "/work/paperplane-2"),
+      makeProject("paperplane-3", "/work/paperplane-3"),
     ];
 
     const groups = buildProjectGroups({ projects, settings: settings("separate") });
     expect(groups).toHaveLength(3);
     expect(groups.flatMap((group) => group.members)).toHaveLength(3);
-    expect(groups.map((group) => group.label)).toEqual(["paperplane", "rove-2", "rove-3"]);
+    expect(groups.map((group) => group.label)).toEqual([
+      "paperplane",
+      "paperplane-2",
+      "paperplane-3",
+    ]);
   });
 
   it("applies a physical-project override without dropping its siblings", () => {
     const first = makeProject("paperplane", "/work/paperplane");
-    const second = makeProject("rove-2", "/work/rove-2");
-    const third = makeProject("rove-3", "/work/rove-3");
+    const second = makeProject("paperplane-2", "/work/paperplane-2");
+    const third = makeProject("paperplane-3", "/work/paperplane-3");
     const groups = buildProjectGroups({
       projects: [first, second, third],
       settings: settings("repository", {
@@ -352,8 +356,8 @@ describe("buildProjectGroups", () => {
     expect(groups).toHaveLength(2);
     expect(groups.flatMap((group) => group.members.map((member) => member.project.id))).toEqual([
       "paperplane",
-      "rove-3",
-      "rove-2",
+      "paperplane-3",
+      "paperplane-2",
     ]);
   });
 
@@ -384,7 +388,7 @@ describe("buildProjectGroups", () => {
       repositoryIdentity: null,
       updatedAt: "2026-07-02T00:00:00.000Z",
     });
-    const sibling = makeProject("sibling", "/work/rove-2");
+    const sibling = makeProject("sibling", "/work/paperplane-2");
 
     const groups = buildProjectGroups({
       projects: [identified, freshUnidentified, sibling],
@@ -408,7 +412,7 @@ describe("buildProjectGroups", () => {
     const fresh = makeProject("fresh", "/work/paperplane/", {
       updatedAt: "2026-07-02T00:00:00.000Z",
     });
-    const sibling = makeProject("sibling", "/work/rove-2");
+    const sibling = makeProject("sibling", "/work/paperplane-2");
 
     const groups = buildProjectGroups({
       projects: [stale, fresh, sibling],
@@ -436,7 +440,7 @@ describe("buildProjectGroups", () => {
       repositoryIdentity: null,
       updatedAt: "2026-07-03T00:00:00.000Z",
     });
-    const sibling = makeProject("sibling", "/work/rove-2");
+    const sibling = makeProject("sibling", "/work/paperplane-2");
 
     const groups = buildProjectGroups({
       projects: [staleIdentified, freshIdentified, winner, sibling],

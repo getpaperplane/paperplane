@@ -71,7 +71,7 @@ if (mode === "load-failure") {
   await Effect.runPromise(Scope.close(scope, Exit.void));
   process.exit(0);
 }
-const missingCwd = join(tmpdir(), "rove-missing-cwd-" + process.pid);
+const missingCwd = join(tmpdir(), "paperplane-missing-cwd-" + process.pid);
 
 if (mode === "cursor-shell") {
   const child = spawn("/bin/zsh", ["-c", "dump_zsh_state >&4", "--", "true"], {

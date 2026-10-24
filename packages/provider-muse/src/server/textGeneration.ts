@@ -236,7 +236,7 @@ export const makeMuseTextGeneration = Effect.fn("makeMuseTextGeneration")(functi
     );
     const response = yield* Effect.gen(function* () {
       // Metadata requests already include their context and do not need checkout configuration.
-      const cwd = yield* fileSystem.makeTempDirectoryScoped({ prefix: "rove-muse-text-" });
+      const cwd = yield* fileSystem.makeTempDirectoryScoped({ prefix: "paperplane-muse-text-" });
       const host = yield* Effect.acquireRelease(
         createMuseSdkHostEffect(
           {

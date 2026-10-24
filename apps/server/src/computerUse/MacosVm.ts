@@ -32,6 +32,8 @@ import type { Transport } from "./LinuxDesktop.ts";
 // Apple permits two concurrent macOS guests TOTAL, including guests outside Paperplane.
 // Reserve only one working slot; Lume enforces the host-wide limit at boot.
 const CAPACITY = 1;
+// Installed Tart VM names are durable storage identities, not display names.
+// Retain them so an upgrade reuses the provisioned image and its permission grants.
 const GOLDEN = "rove-cua-golden";
 const WORK = "rove-cua-work-1";
 const DRIVER = "/Users/lume/.local/bin/cua-driver";

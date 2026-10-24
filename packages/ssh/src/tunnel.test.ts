@@ -124,7 +124,7 @@ describe("ssh tunnel scripts", () => {
     assert.include(script, 'exec "$PAPERPLANE_RUNTIME_DIR/paperplane" "$@"');
     assert.notInclude(script, "npx");
     assert.notInclude(script, "npm exec");
-    assert.notInclude(script, "rove@latest");
+    assert.notInclude(script, "paperplane@latest");
     assert.notInclude(script, 'exec paperplane "$@"');
     // Concurrent launches serialize on a per-version mkdir lock and recheck
     // the completion marker after acquiring it.
@@ -162,9 +162,9 @@ describe("ssh tunnel scripts", () => {
 
     const launch = SshTunnel.buildRemoteLaunchScript({
       ...ARCHIVE,
-      releaseBaseUrl: "https://mirror.example/rove/",
+      releaseBaseUrl: "https://mirror.example/paperplane/",
     });
-    assert.include(launch, "PAPERPLANE_RELEASE_BASE_URL='https://mirror.example/rove'");
+    assert.include(launch, "PAPERPLANE_RELEASE_BASE_URL='https://mirror.example/paperplane'");
     assert.include(launch, '"$RUNNER_FILE" __ssh-helper wait-service "$DEFAULT_RUNTIME_FILE"');
     assert.include(launch, '"$RUNNER_FILE" __ssh-helper runtime-port "$DEFAULT_RUNTIME_FILE"');
     assert.include(SshTunnel.buildRemoteLaunchScript(NODE_SCRIPT), "PAPERPLANE_ARCHIVE_MODE=0");
@@ -806,7 +806,7 @@ describe("remote port picker", () => {
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
-      const root = yield* fs.makeTempDirectoryScoped({ prefix: "rove-pick-port-" });
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-pick-port-" });
       yield* fs.writeFileString(`${root}/preload.cjs`, MACOS_BIND_PRELOAD);
       yield* fs.writeFileString(`${root}/pick-port.cjs`, SshTunnel.REMOTE_PICK_PORT_SCRIPT);
       const holder = yield* holdWildcardPort;
@@ -915,7 +915,7 @@ describe("archive runner script", () => {
     () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
-        const root = yield* fs.makeTempDirectoryScoped({ prefix: "rove-archive-runner-" });
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-archive-runner-" });
         const releaseBaseUrl = yield* makeMirror(root);
         const runner = `${root}/run-paperplane.sh`;
         yield* fs.writeFileString(
@@ -1031,10 +1031,10 @@ server.listen(Number(flag("--port")), "127.0.0.1", () => {
   // Paperplane on this machine may own.
   const prepareLaunch = Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem;
-    const root = yield* fs.makeTempDirectoryScoped({ prefix: "rove-launch-script-" });
+    const root = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-launch-script-" });
     const home = `${root}/home`;
     const stateDir = `${home}/.paperplane/ssh-launch/test-state`;
-    const fakeServer = `${root}/fake-rove.cjs`;
+    const fakeServer = `${root}/fake-paperplane.cjs`;
     const launch = `${root}/launch.sh`;
     yield* fs.makeDirectory(stateDir, { recursive: true });
     yield* fs.writeFileString(`${stateDir}/port`, `${yield* freeLoopbackPort}\n`);

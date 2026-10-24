@@ -64,7 +64,7 @@ export const cascadeRebaseStack = Effect.fn("cascadeRebaseStack")(function* (inp
   const first = input.layers[0];
   if (first === undefined) return 0;
   const directory = yield* fileSystem
-    .makeTempDirectoryScoped({ prefix: "rove-stack-rebase-" })
+    .makeTempDirectoryScoped({ prefix: "paperplane-stack-rebase-" })
     .pipe(
       Effect.mapError(
         (cause) =>

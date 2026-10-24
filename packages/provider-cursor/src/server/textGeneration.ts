@@ -97,11 +97,13 @@ export const makeCursorTextGeneration = Effect.fn("makeCursorTextGeneration")(fu
             "Cursor text generation cannot enforce workspace isolation with a custom ~/.cursor/sandbox.json. Use another text-generation provider.",
         });
       }
-      const cwd = yield* fs.makeTempDirectoryScoped({ prefix: "rove-cursor-text-" });
+      const cwd = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-cursor-text-" });
       // The SDK keeps SQLite handles open after `agent.close()` and only releases
       // them from a store the caller disposes. Its state lives outside `cwd` so the
       // agent's workspace stays empty.
-      const stateRoot = yield* fs.makeTempDirectoryScoped({ prefix: "rove-cursor-text-state-" });
+      const stateRoot = yield* fs.makeTempDirectoryScoped({
+        prefix: "paperplane-cursor-text-state-",
+      });
       const store = yield* Effect.acquireRelease(
         Effect.tryPromise(() => sdk.SqliteLocalAgentStore.open({ workspaceRef: cwd, stateRoot })),
         (store) => Effect.tryPromise(() => store.dispose()).pipe(Effect.ignore({ log: true })),

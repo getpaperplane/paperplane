@@ -366,14 +366,14 @@ describe("composer file attachments", () => {
             name: "clip.mov",
             mimeType: "video/quicktime",
             sizeBytes: video.fileSize,
-            fileUri: "file:///documents/rove-composer-attachments/attachment-id-clip.mov",
+            fileUri: "file:///documents/paperplane-composer-attachments/attachment-id-clip.mov",
           },
         ],
         error: null,
       });
       expect(mocks.copy).toHaveBeenCalledWith(
         video.uri,
-        "file:///documents/rove-composer-attachments/attachment-id-clip.mov",
+        "file:///documents/paperplane-composer-attachments/attachment-id-clip.mov",
       );
       expect(mocks.delete).not.toHaveBeenCalled();
     });
@@ -468,7 +468,7 @@ describe("composer file attachments", () => {
         });
         if (stored === 0) {
           expect(mocks.delete).toHaveBeenCalledWith(
-            "file:///documents/rove-composer-attachments/attachment-id-clip.mov",
+            "file:///documents/paperplane-composer-attachments/attachment-id-clip.mov",
           );
         }
       },
@@ -520,14 +520,14 @@ describe("composer file attachments", () => {
           name: "report.pdf",
           mimeType: "application/pdf",
           sizeBytes: 42,
-          fileUri: "file:///documents/rove-composer-attachments/attachment-id-report.pdf",
+          fileUri: "file:///documents/paperplane-composer-attachments/attachment-id-report.pdf",
         },
       ],
       error: null,
     });
     expect(mocks.copy).toHaveBeenCalledWith(
       "file:///downloads/report.pdf",
-      "file:///documents/rove-composer-attachments/attachment-id-report.pdf",
+      "file:///documents/paperplane-composer-attachments/attachment-id-report.pdf",
     );
   });
 
@@ -555,7 +555,8 @@ describe("composer file attachments", () => {
           name: "preview-h264.mp4",
           mimeType: "video/mp4",
           sizeBytes: 620_992,
-          fileUri: "file:///documents/rove-composer-attachments/attachment-id-preview-h264.mp4",
+          fileUri:
+            "file:///documents/paperplane-composer-attachments/attachment-id-preview-h264.mp4",
         },
       ],
       error: null,
@@ -563,7 +564,7 @@ describe("composer file attachments", () => {
     expect(mocks.pickFile).toHaveBeenCalledWith({ multiple: true, copyToCacheDirectory: true });
     expect(mocks.copy).toHaveBeenCalledWith(
       uri,
-      "file:///documents/rove-composer-attachments/attachment-id-preview-h264.mp4",
+      "file:///documents/paperplane-composer-attachments/attachment-id-preview-h264.mp4",
     );
     expect(mocks.delete).not.toHaveBeenCalled();
   });
@@ -593,7 +594,8 @@ describe("composer file attachments", () => {
     expect(result.files).toEqual([
       expect.objectContaining({
         name: "Cloud recording.mp4",
-        fileUri: "file:///documents/rove-composer-attachments/attachment-id-Cloud recording.mp4",
+        fileUri:
+          "file:///documents/paperplane-composer-attachments/attachment-id-Cloud recording.mp4",
       }),
     ]);
     expect(mocks.copy).toHaveBeenCalledWith(cachedUri, result.files[0]!.fileUri);
@@ -741,7 +743,7 @@ describe("composer file attachments", () => {
     expect(source.close).toHaveBeenCalledOnce();
     expect(destination.close).toHaveBeenCalledOnce();
     expect(mocks.delete).toHaveBeenCalledWith(
-      "file:///documents/rove-composer-attachments/attachment-id-large.bin",
+      "file:///documents/paperplane-composer-attachments/attachment-id-large.bin",
     );
     expect(mocks.copy).not.toHaveBeenCalled();
   });
@@ -760,7 +762,7 @@ describe("composer file attachments", () => {
 
     expect(mocks.copy).toHaveBeenCalledOnce();
     expect(mocks.delete).toHaveBeenCalledWith(
-      "file:///documents/rove-composer-attachments/attachment-id-liar.bin",
+      "file:///documents/paperplane-composer-attachments/attachment-id-liar.bin",
     );
   });
 
@@ -815,7 +817,7 @@ describe("composer file attachments", () => {
           name: "report.pdf",
           mimeType: "application/pdf",
           sizeBytes: 42,
-          fileUri: "file:///documents/rove-composer-attachments/attachment-id-report.pdf",
+          fileUri: "file:///documents/paperplane-composer-attachments/attachment-id-report.pdf",
         },
       ],
       error: null,
@@ -856,7 +858,7 @@ describe("composer file attachments", () => {
     ).rejects.toThrow("disk full");
 
     expect(mocks.delete).toHaveBeenCalledWith(
-      "file:///documents/rove-composer-attachments/attachment-id-report.pdf",
+      "file:///documents/paperplane-composer-attachments/attachment-id-report.pdf",
     );
   });
 
@@ -921,7 +923,7 @@ describe("composer file attachments", () => {
 
     expect(mocks.copy).toHaveBeenCalledWith(
       sourceUri,
-      `${mocks.documentUri}/rove-composer-attachments/attachment-id-report.pdf`,
+      `${mocks.documentUri}/paperplane-composer-attachments/attachment-id-report.pdf`,
     );
     expect(mocks.delete).not.toHaveBeenCalled();
   });

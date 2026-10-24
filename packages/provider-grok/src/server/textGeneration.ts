@@ -38,7 +38,7 @@ export const makeGrokTextGeneration = Effect.fn("makeGrokTextGeneration")(functi
         grokSettings,
         environment,
         cwd,
-        clientInfo: { name: "rove-git-text", version: "0.0.0" },
+        clientInfo: { name: "paperplane-git-text", version: "0.0.0" },
       }).pipe(
         Effect.provideService(Crypto.Crypto, crypto),
         Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, commandSpawner),

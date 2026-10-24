@@ -60,7 +60,7 @@ export interface SshChildEnvironmentOptions {
   readonly authSecret?: string | null;
 }
 
-const SSH_ASKPASS_DIR_NAME = "rove-ssh-askpass";
+const SSH_ASKPASS_DIR_NAME = "paperplane-ssh-askpass";
 
 function joinSshAskpassPath(
   directory: string,
@@ -103,7 +103,7 @@ const getDefaultSshAskpassDirectory = Effect.fn("ssh/auth.getDefaultSshAskpassDi
   function* () {
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
-    const parentDirectory = yield* fs.makeTempDirectory({ prefix: "rove-ssh-runtime-" });
+    const parentDirectory = yield* fs.makeTempDirectory({ prefix: "paperplane-ssh-runtime-" });
     return path.join(parentDirectory, SSH_ASKPASS_DIR_NAME);
   },
 );
@@ -200,7 +200,7 @@ export const buildSshChildEnvironment = Effect.fn("ssh/auth.buildSshChildEnviron
     ...(input.authSecret === undefined
       ? {}
       : { PAPERPLANE_SSH_AUTH_SECRET: input.authSecret ?? "" }),
-    ...(platform === "win32" || baseEnv.DISPLAY || hostDisplay ? {} : { DISPLAY: "rove" }),
+    ...(platform === "win32" || baseEnv.DISPLAY || hostDisplay ? {} : { DISPLAY: "paperplane" }),
   };
 });
 

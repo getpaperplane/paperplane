@@ -128,10 +128,10 @@ describe("acpPermissionDisposition", () => {
       const fileSystem = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const workspace = yield* fileSystem.makeTempDirectoryScoped({
-        prefix: "rove-acp-permission-workspace-",
+        prefix: "paperplane-acp-permission-workspace-",
       });
       const outside = yield* fileSystem.makeTempDirectoryScoped({
-        prefix: "rove-acp-permission-outside-",
+        prefix: "paperplane-acp-permission-outside-",
       });
       const outsideFile = path.join(outside, "existing.ts");
       yield* fileSystem.writeFileString(outsideFile, "outside");
@@ -180,10 +180,10 @@ describe("acpPermissionDisposition", () => {
       const fileSystem = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const workspace = yield* fileSystem.makeTempDirectoryScoped({
-        prefix: "rove-acp-permission-workspace-",
+        prefix: "paperplane-acp-permission-workspace-",
       });
       const workspaceLinkParent = yield* fileSystem.makeTempDirectoryScoped({
-        prefix: "rove-acp-permission-link-parent-",
+        prefix: "paperplane-acp-permission-link-parent-",
       });
       const workspaceLink = path.join(workspaceLinkParent, "workspace-link");
       yield* fileSystem.makeDirectory(path.join(workspace, "src"), { recursive: true });

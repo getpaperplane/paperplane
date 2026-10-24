@@ -23,7 +23,7 @@ const makeProbeRuntime = makeGrokAcpRuntime({
   grokSettings: { binaryPath: "grok" },
   environment: process.env,
   cwd: process.cwd(),
-  clientInfo: { name: "rove-grok-probe", version: "0.0.0" },
+  clientInfo: { name: "paperplane-grok-probe", version: "0.0.0" },
 });
 
 describe.runIf(process.env.PAPERPLANE_GROK_ACP_PROBE === "1")("Grok ACP CLI probe", () => {
@@ -78,7 +78,7 @@ describe.runIf(process.env.PAPERPLANE_GROK_ACP_PROBE === "1")("Grok ACP CLI prob
           environment: process.env,
           cwd,
           runtimeMode: "approval-required",
-          clientInfo: { name: "rove-grok-probe", version: "0.0.0" },
+          clientInfo: { name: "paperplane-grok-probe", version: "0.0.0" },
         });
         yield* runtime.start();
         const chunks: string[] = [];

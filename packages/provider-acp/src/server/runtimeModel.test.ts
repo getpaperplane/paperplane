@@ -1437,7 +1437,7 @@ describe("extractMcpToolCallIdentity", () => {
     expect(
       extractMcpToolCallIdentity(toolCall, {
         embeddedTerminalCommands: [
-          '/usr/bin/node /srv/rove/bin.ts acp-mcp-call delegate_task {"task":"x"}',
+          '/usr/bin/node /srv/paperplane/bin.ts acp-mcp-call delegate_task {"task":"x"}',
         ],
       }),
     ).toEqual({ server: "paperplane", tool: "delegate_task", input: { task: "x" } });
@@ -1707,12 +1707,12 @@ describe("embeddedTerminalIdsFromSessionUpdate", () => {
           toolCallId: "call_1",
           status: "in_progress",
           content: [
-            { type: "terminal", terminalId: "rove-term-9" },
+            { type: "terminal", terminalId: "paperplane-term-9" },
             { type: "content", content: { type: "text", text: "noise" } },
           ],
         },
       }),
-    ).toEqual({ toolCallId: "call_1", terminalIds: ["rove-term-9"] });
+    ).toEqual({ toolCallId: "call_1", terminalIds: ["paperplane-term-9"] });
     expect(
       embeddedTerminalIdsFromSessionUpdate({
         sessionId: "session-1",

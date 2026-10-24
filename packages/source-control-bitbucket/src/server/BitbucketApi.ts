@@ -529,7 +529,7 @@ function checkoutBranchName(input: {
     return input.headBranch;
   }
 
-  return `rove/pr-${input.pullRequestId}/${sanitizeBranchFragment(input.headBranch)}`;
+  return `paperplane/pr-${input.pullRequestId}/${sanitizeBranchFragment(input.headBranch)}`;
 }
 
 function repositoryNameWithOwner(

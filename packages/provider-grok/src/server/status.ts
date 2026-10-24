@@ -361,7 +361,7 @@ const discoverGrokMetadataViaAcpInitialize = (
       grokSettings,
       environment,
       cwd: process.cwd(),
-      clientInfo: { name: "rove-provider-probe", version: "0.0.0" },
+      clientInfo: { name: "paperplane-provider-probe", version: "0.0.0" },
     });
     const initialized = yield* acp.initialize();
     return {
