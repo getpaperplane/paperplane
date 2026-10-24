@@ -11,6 +11,8 @@ import type { DataType } from "ffi-rs";
 import * as Schema from "effect/Schema";
 import * as Effect from "effect/Effect";
 import * as DateTime from "effect/DateTime";
+import * as Arr from "effect/Array";
+import { PAPERPLANE_MCP_TOOL_NAMES } from "./roveMcpToolPresentation.ts";
 import * as Cookies from "effect/http/Cookies";
 import * as HttpEffect from "effect/http/HttpEffect";
 import * as HttpServerRequest from "effect/http/HttpServerRequest";
@@ -562,7 +564,90 @@ export function migrateDefaultHome(input: {
   }
 }
 
-// Phase 3b-2: all server-side saved-data conversions are confined to this deletable pipeline.
+// All server-side saved-data conversions are confined to this deletable pipeline.
+const oldMcpServers = new Set(["rove", "rove-code", "rove_code"]);
+const oldMcpTools = new Map(
+  [...PAPERPLANE_MCP_TOOL_NAMES, "computer_describe", "computer_call"].map((name) => [
+    name.replace(/^paperplane_/, "rove_"),
+    name,
+  ]),
+);
+
+/** Match whole tool identifiers only, never mentions in messages, arguments or output. */
+function rewriteSavedToolIdentifier(value: string): string {
+  const bare = oldMcpTools.get(value);
+  if (bare !== undefined) return bare;
+  const mcp = /^mcp__(rove|rove-code|rove_code)__(.+)$/i.exec(value);
+  const namespaced = /^(rove|rove-code|rove_code)(?:[.:/]| · )(.+)$/i.exec(value);
+  const prefixed = /^(?:mcp[-_]{1,2})?rove(?:[-_ ]?code)?[-_.:/ ]{1,3}(.+)$/i.exec(value);
+  const candidate = mcp?.[2] ?? namespaced?.[2] ?? prefixed?.[1];
+  const tool = candidate === undefined ? undefined : oldMcpTools.get(candidate);
+  if (tool !== undefined) return `mcp__paperplane__${tool}`;
+  // OpenCode registers an injected server per thread; keep that server's suffix.
+  if (/^rove-/i.test(value)) {
+    for (const [old, next] of [...oldMcpTools].sort((a, b) => b[0].length - a[0].length)) {
+      if (value.endsWith(`_${old}`)) {
+        const server = value.slice(0, -(old.length + 1));
+        if (/^rove-[\w:-]+$/i.test(server)) return `paperplane-${server.slice(5)}_${next}`;
+      }
+    }
+  }
+  return value;
+}
+
+const toolIdentityKeys = new Set(["toolName", "tool_name", "tool"]);
+const mcpServerKeys = new Set(["server", "serverName", "server_name", "mcpServer", "mcp_server"]);
+const opaqueToolKeys = new Set([
+  "input",
+  "output",
+  "arguments",
+  "args",
+  "params",
+  "parameters",
+  "toolInput",
+  "toolOutput",
+  "rawInput",
+  "rawOutput",
+]);
+const nativeToolTypes = new Set(["tool_use", "function_call", "mcp_tool_call"]);
+
+function rewriteSavedToolNames(value: Schema.Json): Schema.Json {
+  if (Arr.isArray<Schema.Json>(value)) return value.map(rewriteSavedToolNames);
+  if (value === null || typeof value !== "object") return value;
+  const server =
+    value.server ?? value.serverName ?? value.server_name ?? value.mcpServer ?? value.mcp_server;
+  const foreignServer =
+    typeof server === "string" &&
+    !oldMcpServers.has(server.toLowerCase()) &&
+    !/^rove-[\w:-]+$/i.test(server);
+  const nativeTool = typeof value.type === "string" && nativeToolTypes.has(value.type);
+  const hasToolIdentity = [
+    value.toolName,
+    value.tool_name,
+    value.tool,
+    nativeTool ? value.name : null,
+  ].some(
+    (name) =>
+      typeof name === "string" &&
+      (oldMcpTools.has(name) || rewriteSavedToolIdentifier(name) !== name),
+  );
+  return Object.fromEntries(
+    Object.entries(value).map(([key, entry]) => {
+      if (typeof entry === "string") {
+        if (hasToolIdentity && mcpServerKeys.has(key) && oldMcpServers.has(entry.toLowerCase()))
+          return [key, "paperplane"];
+        if (hasToolIdentity && mcpServerKeys.has(key) && /^rove-[\w:-]+$/i.test(entry))
+          return [key, `paperplane-${entry.slice(5)}`];
+        if (!foreignServer && (toolIdentityKeys.has(key) || (key === "name" && nativeTool))) {
+          return [key, rewriteSavedToolIdentifier(entry)];
+        }
+        return [key, entry];
+      }
+      return [key, opaqueToolKeys.has(key) ? entry : rewriteSavedToolNames(entry)];
+    }),
+  );
+}
+
 const quoteSqlIdentifier = (name: string) => `"${name.replaceAll('"', '""')}"`;
 const decodeJson = Schema.decodeUnknownSync(Schema.fromJsonString(Schema.Json));
 
@@ -581,11 +666,17 @@ export function rewriteStagedDatabase(
     database.function("paperplane_json", (value) => {
       if (typeof value !== "string") return value;
       try {
-        return JSON.stringify(migrateSavedAppJson(decodeJson(value)));
+        return JSON.stringify(rewriteSavedToolNames(migrateSavedAppJson(decodeJson(value))));
       } catch {
         return rewriteSavedLinks(value);
       }
     });
+    database.function("paperplane_tool", (value) =>
+      typeof value === "string" ? rewriteSavedToolIdentifier(value) : value,
+    );
+    database.function("paperplane_mcp_server", (value) =>
+      typeof value === "string" && oldMcpServers.has(value.toLowerCase()) ? "paperplane" : value,
+    );
     database.exec("BEGIN IMMEDIATE");
     const tables = database
       .prepare("SELECT name FROM sqlite_schema WHERE type = 'table' AND name NOT LIKE 'sqlite_%'")
@@ -593,10 +684,20 @@ export function rewriteStagedDatabase(
     for (const table of tables) {
       if (typeof table.name !== "string") continue;
       const name = quoteSqlIdentifier(table.name);
-      for (const column of database.prepare(`PRAGMA table_xinfo(${name})`).all()) {
+      const columns = database.prepare(`PRAGMA table_xinfo(${name})`).all();
+      const toolTable = columns.some(
+        (column) => typeof column.name === "string" && toolIdentityKeys.has(column.name),
+      );
+      for (const column of columns) {
         if (typeof column.name !== "string" || column.hidden !== 0) continue;
         const field = quoteSqlIdentifier(column.name);
-        const transform = column.name.endsWith("_json") ? "paperplane_json" : "paperplane_links";
+        const transform = column.name.endsWith("_json")
+          ? "paperplane_json"
+          : toolIdentityKeys.has(column.name)
+            ? "paperplane_tool"
+            : toolTable && mcpServerKeys.has(column.name)
+              ? "paperplane_mcp_server"
+              : "paperplane_links";
         const result = database
           .prepare(
             `UPDATE ${name} SET ${field} = ${transform}(${field}) WHERE typeof(${field}) = 'text' AND instr(lower(${field}), 'rove') > 0 AND ${field} != ${transform}(${field})`,
@@ -648,7 +749,9 @@ export const rewriteSavedDataStep: HomeMigrationStep = {
         } else if (entry.isFile() && savedJsonFiles.has(entry.name)) {
           const raw = NodeFS.readFileSync(path, "utf8");
           // Invalid app-owned JSON fails the stage instead of silently publishing unmigrated data.
-          const next = JSON.stringify(migrateSavedAppJson(decodeJson(raw)), null, 2) + "\n";
+          const next =
+            JSON.stringify(rewriteSavedToolNames(migrateSavedAppJson(decodeJson(raw))), null, 2) +
+            "\n";
           if (next !== raw) NodeFS.writeFileSync(path, next);
         }
       }

@@ -114,6 +114,99 @@ it("converts app JSON on the staged home and leaves opaque files and source data
   );
 });
 
+it("converts whole MCP identities in events, projections and approvals, not recorded prose or tool arguments", () => {
+  const file = NodePath.join(directory, "statev2.sqlite");
+  const db = new NodeSqlite.DatabaseSync(file);
+  const tables = [
+    "orchestration_events",
+    "orchestration_v2_projection_turn_items",
+    "orchestration_v2_projection_runtime_requests",
+  ];
+  const oldName = "mcp__rove__rove_thread_read";
+  const item = {
+    type: "dynamic_tool",
+    toolName: oldName,
+    title: oldName,
+    label: oldName,
+    text: `Use ${oldName}`,
+    input: { toolName: oldName, server: "rove" },
+    output: { toolName: oldName, matches: [oldName] },
+    args: '{"toolName":"mcp__rove__rove_thread_read"}',
+    toolData: { server: "rove", tool: "rove_thread_read" },
+    suggestions: [{ rules: [{ toolName: oldName }] }],
+    native: { type: "tool_use", name: "mcp__rove__preview_click" },
+    foreign: { server: "other", tool: "rove_thread_read" },
+    arguments: { toolName: oldName, server: "rove" },
+    params: { toolName: oldName, server: "rove" },
+    unrelated: { name: oldName, title: oldName, description: oldName, server: "rove" },
+    unknown: { toolName: "mcp__rove__custom_tool" },
+    retired: { toolName: "rove_thread_start" },
+  };
+  for (const table of tables) {
+    db.exec(`CREATE TABLE ${table} (id INTEGER PRIMARY KEY, payload_json TEXT)`);
+    db.prepare(`INSERT INTO ${table} VALUES (1, ?)`).run(JSON.stringify(item));
+  }
+  db.exec("CREATE TABLE old_tool_rows (tool_name TEXT, server_name TEXT, text TEXT)");
+  db.prepare("INSERT INTO old_tool_rows VALUES (?, ?, ?)").run("rove_thread_read", "rove", oldName);
+  db.close();
+  expect(rewriteStagedDatabase(file)).toHaveLength(5);
+  const result = new NodeSqlite.DatabaseSync(file);
+  for (const table of tables) {
+    const row = result.prepare(`SELECT payload_json FROM ${table}`).get();
+    expect(JSON.parse(String(row?.payload_json))).toEqual({
+      ...item,
+      toolName: "mcp__paperplane__paperplane_thread_read",
+      toolData: { server: "paperplane", tool: "paperplane_thread_read" },
+      suggestions: [{ rules: [{ toolName: "mcp__paperplane__paperplane_thread_read" }] }],
+      native: { type: "tool_use", name: "mcp__paperplane__preview_click" },
+    });
+    expect(result.prepare(`SELECT count(*) n FROM ${table}`).get()?.n).toBe(1);
+  }
+  expect(result.prepare("SELECT * FROM old_tool_rows").get()).toEqual({
+    tool_name: "paperplane_thread_read",
+    server_name: "paperplane",
+    text: oldName,
+  });
+  result.close();
+  expect(rewriteStagedDatabase(file)).toEqual([]);
+});
+
+it.each([
+  ["rove_thread_read", "paperplane_thread_read"],
+  ["mcp__rove__rove_thread_read", "mcp__paperplane__paperplane_thread_read"],
+  ["mcp__rove_code__preview_click", "mcp__paperplane__preview_click"],
+  ["mcp__rove-code__delegate_task", "mcp__paperplane__delegate_task"],
+  ["Rove-code.rove_project_clone", "mcp__paperplane__paperplane_project_clone"],
+  ["rove_code/preview_open", "mcp__paperplane__preview_open"],
+  ["rove · task_status", "mcp__paperplane__task_status"],
+  ["mcp_rove_preview_click", "mcp__paperplane__preview_click"],
+  [
+    "rove-thread:v2:id_with_underscores_rove_thread_read",
+    "paperplane-thread:v2:id_with_underscores_paperplane_thread_read",
+  ],
+  ["mcp__other__rove_thread_read", "mcp__other__rove_thread_read"],
+  ["prefix mcp__rove__rove_thread_read suffix", "prefix mcp__rove__rove_thread_read suffix"],
+  ["mcp__rove__rove_thread_read_extra", "mcp__rove__rove_thread_read_extra"],
+  ["rove_thread_start", "rove_thread_start"],
+])("converts only a recognized whole identifier: %s", (before, after) => {
+  const file = NodePath.join(directory, "statev2.sqlite");
+  const db = new NodeSqlite.DatabaseSync(file);
+  db.exec("CREATE TABLE orchestration_events (payload_json TEXT)");
+  db.prepare("INSERT INTO orchestration_events VALUES (?)").run(
+    JSON.stringify({ toolName: before, text: before }),
+  );
+  db.close();
+  rewriteStagedDatabase(file);
+  const result = new NodeSqlite.DatabaseSync(file);
+  expect(
+    JSON.parse(
+      String(result.prepare("SELECT payload_json FROM orchestration_events").get()?.payload_json),
+    ),
+  ).toEqual({ toolName: after, text: before });
+  result.close();
+  expect(rewriteStagedDatabase(file)).toEqual([]);
+});
+
 describe("lazy repository refs", () => {
   const git = (args: string[], cwd = directory) =>
     NodeChildProcess.execFileSync("git", args, { cwd, encoding: "utf8" }).trim();
