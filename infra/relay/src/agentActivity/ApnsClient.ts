@@ -173,7 +173,7 @@ function makeLiveActivityRequest(input: MakeLiveActivityRequestInput): ApnsLiveA
 function notificationThreadId(notification: ApnsNotificationPayload): string {
   return notification.threadId.length > 0
     ? `${notification.environmentId}/${notification.threadId}`
-    : "rove-agent-alerts";
+    : "paperplane-agent-alerts";
 }
 
 function makePushNotificationRequest(input: {

@@ -77,8 +77,8 @@ describe("managed endpoint names", () => {
     expect(managedEndpointHostname("dev_julius", ".example.com.", hash)).toBe(
       "dev-julius-abcdef0123456789.example.com",
     );
-    expect(managedEndpointHostname("prod", "roverelay.com", hash)).toBe(
-      "prod-abcdef0123456789.roverelay.com",
+    expect(managedEndpointHostname("prod", "paperplanerelay.com", hash)).toBe(
+      "prod-abcdef0123456789.paperplanerelay.com",
     );
     expect(managedEndpointTunnelName("dev_julius", hash)).toBe(
       "roverelay-managedendpoint-dev-julius-abcdef0123456789",

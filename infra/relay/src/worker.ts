@@ -485,7 +485,7 @@ export const layer = Api.make(
           Layer.unwrap(
             Effect.map(RelayObservability, (observability) =>
               Axiom.Telemetry({
-                serviceName: "rove-relay",
+                serviceName: "paperplane-relay",
                 token: observability.workerIngestToken,
                 traces: observability.traces,
               }),

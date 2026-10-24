@@ -78,7 +78,7 @@ describe("source-built mobile identity", () => {
         ...(gate ? { PAPERPLANE_CLOUD_READY: gate } : undefined),
         PAPERPLANE_RELAY_URL: "https://relay.example.test",
         EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY: "pk_test_example",
-        EXPO_PUBLIC_CLERK_JWT_TEMPLATE: "rove-relay",
+        EXPO_PUBLIC_CLERK_JWT_TEMPLATE: "paperplane-relay",
         EXPO_PUBLIC_CLERK_GOOGLE_WEB_CLIENT_ID: "google-web",
       });
       expect(config.extra?.cloudReady).toBe(gate === "1");

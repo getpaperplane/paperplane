@@ -27,7 +27,7 @@ const config = RelayConfiguration.RelayConfiguration.of({
   apnsDeliveryJobSigningSecret: Redacted.make("job-secret"),
   clerkSecretKey: Redacted.make("clerk-secret"),
   clerkPublishableKey: "pk_test_test",
-  clerkJwtAudience: "rove-relay",
+  clerkJwtAudience: "paperplane-relay",
   cloudMintPrivateKey: Redacted.make(keyPair.privateKey),
   cloudMintPublicKey: keyPair.publicKey,
   managedEndpointBaseDomain: undefined,
@@ -146,7 +146,7 @@ describe("RelayTokens", () => {
       const relayTokens = yield* RelayTokens.RelayTokens;
       const token = yield* signRelayJwt({
         privateKey: keyPair.privateKey,
-        typ: "rove-relay-dpop-access+jwt",
+        typ: "paperplane-relay-dpop-access+jwt",
         payload: {
           iss: "https://relay.example.test",
           aud: "https://relay.example.test",
@@ -169,7 +169,7 @@ describe("RelayTokens", () => {
       const relayTokens = yield* RelayTokens.RelayTokens;
       const token = yield* signRelayJwt({
         privateKey: keyPair.privateKey,
-        typ: "rove-relay-dpop-access+jwt",
+        typ: "paperplane-relay-dpop-access+jwt",
         payload: {
           iss: "https://relay.example.test",
           aud: "https://relay.example.test",

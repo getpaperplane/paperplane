@@ -60,7 +60,7 @@ describe("EnvironmentCredentials", () => {
 
   it.effect("does not retain credential tokens when lookup persistence fails", () => {
     const cause = new Error("database unavailable");
-    const token = "roveenv_sensitive-credential-token";
+    const token = "paperplaneenv_sensitive-credential-token";
     const whereConditions: Array<unknown> = [];
     const fakeDb = testDouble<RelayDb.RelayDb["Service"]>({
       select: () => ({
@@ -154,7 +154,7 @@ describe("EnvironmentCredentials", () => {
         });
         const [, credentialId, secret] = token.split("_");
 
-        expect(token).toMatch(/^roveenv_[0-9a-f]{64}_[0-9a-f]{96}$/);
+        expect(token).toMatch(/^paperplaneenv_[0-9a-f]{64}_[0-9a-f]{96}$/);
         expect(credentialId).toHaveLength(64);
         expect(secret).toHaveLength(96);
         expect(insertedValues).toHaveLength(1);
@@ -217,9 +217,9 @@ describe("EnvironmentCredentials", () => {
       expect(
         Option.getOrNull(yield* credentials.authenticate("t3env_existing_opaque-secret")),
       ).toEqual(existing);
-      expect(Option.isNone(yield* credentials.authenticate("roveenv_existing_opaque-secret"))).toBe(
-        true,
-      );
+      expect(
+        Option.isNone(yield* credentials.authenticate("paperplaneenv_existing_opaque-secret")),
+      ).toBe(true);
     }).pipe(
       Effect.provide(
         EnvironmentCredentials.layer.pipe(

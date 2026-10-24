@@ -50,7 +50,7 @@ const settings: RelayConfiguration.RelayConfiguration["Service"] = {
   apns: null,
   clerkSecretKey: Redacted.make("clerk-secret-key"),
   clerkPublishableKey: "pk_test_test",
-  clerkJwtAudience: "rove-relay",
+  clerkJwtAudience: "paperplane-relay",
   apnsDeliveryJobSigningSecret: Redacted.make("apns-delivery-secret"),
   cloudMintPrivateKey: Redacted.make(mintKeys.privateKey),
   cloudMintPublicKey: mintKeys.publicKey,

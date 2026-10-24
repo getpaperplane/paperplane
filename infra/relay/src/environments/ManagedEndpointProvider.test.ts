@@ -24,10 +24,10 @@ const config = RelayConfiguration.RelayConfiguration.of({
   apnsDeliveryJobSigningSecret: Redacted.make("job-secret"),
   clerkSecretKey: Redacted.make("clerk-secret"),
   clerkPublishableKey: "pk_test_test",
-  clerkJwtAudience: "rove-relay",
+  clerkJwtAudience: "paperplane-relay",
   cloudMintPrivateKey: Redacted.make("cloud-private-key"),
   cloudMintPublicKey: "cloud-public-key",
-  managedEndpointBaseDomain: "rove.test",
+  managedEndpointBaseDomain: "paperplane.test",
   managedEndpointNamespace: "dev_julius",
 });
 
@@ -379,7 +379,7 @@ function expectedManagedEndpointHash(environmentId: string, userId: string): str
 }
 
 function expectedManagedHostname(environmentId: string, userId = "user_ABC"): string {
-  return `dev-julius-${expectedManagedEndpointHash(environmentId, userId)}.rove.test`;
+  return `dev-julius-${expectedManagedEndpointHash(environmentId, userId)}.paperplane.test`;
 }
 
 function expectedManagedTunnelName(environmentId: string, userId = "user_ABC"): string {
@@ -594,7 +594,7 @@ describe("ManagedEndpointProvider", () => {
       expect(configBody).toMatchObject({
         ingress: [
           {
-            hostname: expect.stringMatching(/^dev-julius-[a-f0-9]{16}\.rove\.test$/),
+            hostname: expect.stringMatching(/^dev-julius-[a-f0-9]{16}\.paperplane\.test$/),
           },
           { service: "http_status:404" },
         ],
@@ -1298,7 +1298,7 @@ describe("ManagedEndpointProvider", () => {
           origin: { localHttpHost: "127.0.0.1", localHttpPort: 3773 },
           endpoint: {
             ...provisioned.endpoint,
-            httpBaseUrl: "https://different-host.rove.test/",
+            httpBaseUrl: "https://different-host.paperplane.test/",
           },
         }),
       );

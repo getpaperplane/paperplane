@@ -192,7 +192,7 @@ describe("FCM delivery", () => {
             android: {
               priority: "HIGH",
               ttl: "300s",
-              collapse_key: "rove-agent-activity",
+              collapse_key: "paperplane-agent-activity",
               restricted_package_name: input.packageName,
             },
           },

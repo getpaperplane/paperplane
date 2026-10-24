@@ -23,8 +23,8 @@ import * as Schema from "effect/Schema";
 
 import * as RelayConfiguration from "../Config.ts";
 
-const LINK_CHALLENGE_TYP = "rove-link-challenge+jwt";
-const ACCESS_TOKEN_TYP = "rove-relay-dpop-access+jwt";
+const LINK_CHALLENGE_TYP = "paperplane-link-challenge+jwt";
+const ACCESS_TOKEN_TYP = "paperplane-relay-dpop-access+jwt";
 const LINK_CHALLENGE_KIND = "environment_link_challenge";
 export const RELAY_DPOP_ACCESS_TOKEN_TTL = "30 minutes";
 

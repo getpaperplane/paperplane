@@ -74,7 +74,7 @@ const settings = RelayConfiguration.RelayConfiguration.of({
   apnsDeliveryJobSigningSecret: Redacted.make("job-secret"),
   clerkSecretKey: Redacted.make("clerk-secret"),
   clerkPublishableKey: "pk_test_test",
-  clerkJwtAudience: "rove-relay",
+  clerkJwtAudience: "paperplane-relay",
   cloudMintPrivateKey: Redacted.make(cloudKeyPair.privateKey),
   cloudMintPublicKey: cloudKeyPair.publicKey,
   managedEndpointBaseDomain: "example.test",

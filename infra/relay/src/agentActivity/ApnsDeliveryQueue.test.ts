@@ -20,7 +20,7 @@ const config: RelayConfiguration.RelayConfiguration["Service"] = {
   },
   clerkSecretKey: Redacted.make("clerk-secret"),
   clerkPublishableKey: "pk_test_test",
-  clerkJwtAudience: "rove-relay",
+  clerkJwtAudience: "paperplane-relay",
   apnsDeliveryJobSigningSecret: Redacted.make("apns-job-secret"),
   cloudMintPrivateKey: Redacted.make("cloud-private-key"),
   cloudMintPublicKey: "cloud-public-key",

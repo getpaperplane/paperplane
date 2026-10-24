@@ -96,7 +96,7 @@ const make = Effect.gen(function* () {
     const secret = yield* randomTokenPart(3);
     return {
       credentialId,
-      token: `roveenv_${credentialId}_${secret}`,
+      token: `paperplaneenv_${credentialId}_${secret}`,
     };
   });
 

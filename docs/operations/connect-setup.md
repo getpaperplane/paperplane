@@ -1,6 +1,6 @@
 # Paperplane Connect setup
 
-Deployment and client configuration for Paperplane Connect. The [architecture note](../internals/rove-connect.md)
+Deployment and client configuration for Paperplane Connect. The [architecture note](../internals/paperplane-connect.md)
 explains the trust boundaries; the [relay README](../../infra/relay/README.md#deployment) owns relay
 provisioning instructions.
 
@@ -51,14 +51,14 @@ In Clerk's OAuth applications settings:
 
 ## JWT template
 
-Create a Clerk JWT template named `rove-relay` with claims:
+Create a Clerk JWT template named `paperplane-relay` with claims:
 
 ```json
-{ "aud": "rove-relay" }
+{ "aud": "paperplane-relay" }
 ```
 
-Set `PAPERPLANE_CLERK_JWT_TEMPLATE=rove-relay` for clients and
-`CLERK_JWT_AUDIENCE=rove-relay` for the relay. The production relay deployment environment
+Set `PAPERPLANE_CLERK_JWT_TEMPLATE=paperplane-relay` for clients and
+`CLERK_JWT_AUDIENCE=paperplane-relay` for the relay. The production relay deployment environment
 also defines `CLERK_JWT_TEMPLATE`. The audience stays the same across relay stages; the relay
 URL selects the deployment.
 

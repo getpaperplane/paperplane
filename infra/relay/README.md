@@ -9,7 +9,7 @@ optional mobile notifications and Live Activities.
 
 The relay is intentionally not in the hot path for normal Paperplane traffic. After a client connects,
 regular API and WebSocket traffic goes directly between that client and the selected environment.
-See the [Paperplane Connect architecture note](../../docs/internals/rove-connect.md) for the larger system
+See the [Paperplane Connect architecture note](../../docs/internals/paperplane-connect.md) for the larger system
 design.
 
 ## Responsibilities
@@ -189,4 +189,4 @@ See:
 
 - [Paperplane Connect setup](../../docs/operations/connect-setup.md) for Clerk keys, JWT templates, and sign-up restrictions.
 - [Relay Observability](../../docs/operations/relay-observability.md) for deployment tracing and diagnostics.
-- [Paperplane Connect architecture](../../docs/internals/rove-connect.md) for environment linking and trust boundaries.
+- [Paperplane Connect architecture](../../docs/internals/paperplane-connect.md) for environment linking and trust boundaries.
