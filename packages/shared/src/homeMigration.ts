@@ -711,38 +711,51 @@ export function cleanupHomeMigrationGuard(homeDirectory: string): void {
     NodeFS.rmSync(path + suffix, { force: true });
 }
 
-const migratedRepositoryPaths = new Set<string>();
+type RefMigrationResult = { converted: number; conflicts: string[] };
+const repositoryRefMigrations = new Map<string, Promise<RefMigrationResult>>();
 
-/** Lazy, shared-repository conversion. Never call this from home migration: the old version may still own those refs. */
-export function migrateRepositoryCheckpointRefs(cwd: string): {
-  converted: number;
-  conflicts: string[];
-} {
-  if (migratedRepositoryPaths.has(cwd)) return { converted: 0, conflicts: [] };
-  const git = (args: string[], input?: string) =>
-    NodeChildProcess.execFileSync("git", args, {
-      cwd,
-      encoding: "utf8",
-      input,
-      timeout: 20_000,
-      maxBuffer: 32 * 1024 * 1024,
-      stdio: ["pipe", "pipe", "pipe"],
-    }).trim();
-  const commonDirectory = git(["rev-parse", "--path-format=absolute", "--git-common-dir"]);
-  const marker = NodePath.join(commonDirectory, "paperplane-ref-migration.json");
-  if (exists(marker)) {
-    migratedRepositoryPaths.add(cwd);
+/**
+ * Lazy conversion of `refs/rove/*` to `refs/paperplane/*`, once per path per process,
+ * before the first Git operation there. Only the first caller gets the result;
+ * later callers wait for it and get nothing new. A failure moves no ref and
+ * retries on the next start. Never call this from home migration: the old
+ * version may still own those refs.
+ */
+export async function migrateRepositoryCheckpointRefs(cwd: string): Promise<RefMigrationResult> {
+  const pending = repositoryRefMigrations.get(cwd);
+  if (pending !== undefined) {
+    await pending.catch(() => {});
     return { converted: 0, conflicts: [] };
   }
-  // CAS on both sides makes concurrent callers from linked worktrees safe. A crash
-  // after commit only leaves a marker to write; no individual ref can be lost.
-  for (let attempt = 0; attempt < 3; attempt++) {
-    if (exists(marker)) {
-      migratedRepositoryPaths.add(cwd);
-      return { converted: 0, conflicts: [] };
-    }
+  const migration = convertRepositoryCheckpointRefs(cwd);
+  repositoryRefMigrations.set(cwd, migration);
+  return migration;
+}
+
+async function convertRepositoryCheckpointRefs(cwd: string): Promise<RefMigrationResult> {
+  const git = (args: string[], input = "") =>
+    new Promise<string>((resolve, reject) => {
+      const child = NodeChildProcess.execFile(
+        "git",
+        args,
+        { cwd, encoding: "utf8", timeout: 20_000, maxBuffer: 32 * 1024 * 1024 },
+        (error, stdout) => (error ? reject(error) : resolve(stdout.trim())),
+      );
+      // Git can exit before reading its input; the callback reports that failure.
+      child.stdin?.on("error", () => {});
+      child.stdin?.end(input);
+    });
+  // CAS on both sides makes concurrent callers from linked worktrees safe: the
+  // loser's transaction fails, and its retry finds nothing left to move.
+  for (let attempt = 0; ; attempt++) {
+    const listed = await git([
+      "for-each-ref",
+      "--format=%(refname) %(objectname) %(symref)",
+      "refs/rove/",
+      "refs/paperplane/",
+    ]);
     const refs = new Map(
-      git(["for-each-ref", "--format=%(refname) %(objectname) %(symref)"])
+      listed
         .split("\n")
         .filter(Boolean)
         .map((line) => {
@@ -773,26 +786,15 @@ export function migrateRepositoryCheckpointRefs(cwd: string): {
       commands.push(`delete ${name} ${ref.oid}`);
       converted++;
     }
+    if (converted === 0) return { converted, conflicts };
     commands.push("prepare", "commit", "");
     try {
-      if (converted > 0)
-        git(["-c", "core.fsync=reference", "update-ref", "--stdin"], commands.join("\n"));
+      await git(["-c", "core.fsync=reference", "update-ref", "--stdin"], commands.join("\n"));
+      return { converted, conflicts };
     } catch (error) {
-      if (attempt < 2) continue;
-      throw error;
+      if (attempt >= 2) throw error;
     }
-    try {
-      NodeFS.writeFileSync(marker, JSON.stringify({ converted, conflicts }) + "\n", {
-        flag: "wx",
-        mode: 0o600,
-      });
-    } catch (error) {
-      if (!(error instanceof Error && "code" in error && error.code === "EEXIST")) throw error;
-    }
-    migratedRepositoryPaths.add(cwd);
-    return { converted, conflicts };
   }
-  throw new HomeMigrationError("Could not atomically migrate checkpoint refs.");
 }
 
 export class PaperplaneCookieMigrationError extends Schema.TaggedError<PaperplaneCookieMigrationError>()(

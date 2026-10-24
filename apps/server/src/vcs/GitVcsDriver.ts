@@ -798,18 +798,9 @@ export const makeVcsDriverShape = Effect.fn("makeGitVcsDriverShape")(function* (
       ...(env !== undefined ? { env } : {}),
     }).pipe(Effect.map((result) => result.exitCode === 0));
 
+  // A failed conversion moves no ref; Git keeps working and the next start retries.
   const migrateCheckpointRefs = (cwd: string) =>
-    Effect.try({
-      try: () => migrateRepositoryCheckpointRefs(cwd),
-      catch: (cause) =>
-        new VcsProcessExitError({
-          operation: "GitVcsDriver.migrateCheckpointRefs",
-          command: "git update-ref --stdin",
-          cwd,
-          exitCode: 1,
-          detail: String(cause),
-        }),
-    }).pipe(
+    Effect.tryPromise(() => migrateRepositoryCheckpointRefs(cwd)).pipe(
       Effect.flatMap((result) =>
         result.conflicts.length === 0
           ? Effect.void
@@ -817,6 +808,9 @@ export const makeVcsDriverShape = Effect.fn("makeGitVcsDriverShape")(function* (
               cwd,
               conflicts: result.conflicts,
             }),
+      ),
+      Effect.catch((cause) =>
+        Effect.logWarning("Checkpoint ref migration failed.", { cwd, cause }),
       ),
     );
 

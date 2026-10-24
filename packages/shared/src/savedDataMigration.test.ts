@@ -126,7 +126,7 @@ describe("lazy repository refs", () => {
     git(["commit", "--quiet", "-m", "one"]);
     return git(["rev-parse", "HEAD"]);
   };
-  it("uses one shared completion marker across linked worktrees and moves every namespace", () => {
+  it("moves every namespace once, starting from a linked worktree", async () => {
     const oid = seed();
     for (const suffix of [
       "checkpoints/a",
@@ -137,23 +137,26 @@ describe("lazy repository refs", () => {
       git(["update-ref", `refs/rove/${suffix}`, oid]);
     const linked = NodePath.join(directory, "linked");
     git(["worktree", "add", "--quiet", "--detach", linked]);
-    expect(migrateRepositoryCheckpointRefs(linked)).toEqual({ converted: 4, conflicts: [] });
+    expect(await migrateRepositoryCheckpointRefs(linked)).toEqual({ converted: 4, conflicts: [] });
     expect(git(["for-each-ref", "--format=%(refname)", "refs/rove/"])).toBe("");
     expect(git(["rev-parse", "refs/paperplane/checkpoints/a"])).toBe(oid);
-    expect(migrateRepositoryCheckpointRefs(directory)).toEqual({ converted: 0, conflicts: [] });
-    expect(migrateRepositoryCheckpointRefs(linked)).toEqual({ converted: 0, conflicts: [] });
+    expect(await migrateRepositoryCheckpointRefs(directory)).toEqual({
+      converted: 0,
+      conflicts: [],
+    });
+    expect(await migrateRepositoryCheckpointRefs(linked)).toEqual({ converted: 0, conflicts: [] });
   });
-  it("retains a symbolic ref and its target intact", () => {
+  it("retains a symbolic ref and its target intact", async () => {
     const oid = seed();
     git(["update-ref", "refs/rove/checkpoints/target", oid]);
     git(["symbolic-ref", "refs/rove/checkpoints/alias", "refs/rove/checkpoints/target"]);
-    const result = migrateRepositoryCheckpointRefs(directory);
+    const result = await migrateRepositoryCheckpointRefs(directory);
     expect(result.converted).toBe(0);
     expect(result.conflicts).toHaveLength(2);
     expect(git(["rev-parse", "refs/rove/checkpoints/alias"])).toBe(oid);
     expect(git(["rev-parse", "refs/rove/checkpoints/target"])).toBe(oid);
   });
-  it("preserves conflicting values and safely deduplicates identical refs", () => {
+  it("preserves conflicting values and safely deduplicates identical refs", async () => {
     const first = seed();
     NodeFS.writeFileSync(NodePath.join(directory, "file"), "two");
     git(["commit", "--quiet", "-am", "two"]);
@@ -162,7 +165,7 @@ describe("lazy repository refs", () => {
     git(["update-ref", "refs/paperplane/checkpoints/conflict", second]);
     git(["update-ref", "refs/rove/checkpoints/same", first]);
     git(["update-ref", "refs/paperplane/checkpoints/same", first]);
-    expect(migrateRepositoryCheckpointRefs(directory)).toEqual({
+    expect(await migrateRepositoryCheckpointRefs(directory)).toEqual({
       converted: 1,
       conflicts: ["refs/rove/checkpoints/conflict -> refs/paperplane/checkpoints/conflict"],
     });
@@ -170,7 +173,10 @@ describe("lazy repository refs", () => {
     expect(git(["rev-parse", "refs/paperplane/checkpoints/conflict"])).toBe(second);
     expect(git(["for-each-ref", "--format=%(refname)", "refs/rove/checkpoints/same"])).toBe("");
     expect(git(["rev-parse", "refs/paperplane/checkpoints/same"])).toBe(first);
-    expect(migrateRepositoryCheckpointRefs(directory)).toEqual({ converted: 0, conflicts: [] });
+    expect(await migrateRepositoryCheckpointRefs(directory)).toEqual({
+      converted: 0,
+      conflicts: [],
+    });
   });
   it("converges when two processes open linked worktrees together", async () => {
     const oid = seed();
@@ -186,7 +192,7 @@ describe("lazy repository refs", () => {
           [
             "--input-type=module",
             "-e",
-            `import { migrateRepositoryCheckpointRefs } from ${JSON.stringify(moduleUrl)}; console.log(JSON.stringify(migrateRepositoryCheckpointRefs(process.cwd())));`,
+            `import { migrateRepositoryCheckpointRefs } from ${JSON.stringify(moduleUrl)}; console.log(JSON.stringify(await migrateRepositoryCheckpointRefs(process.cwd())));`,
           ],
           { cwd, encoding: "utf8" },
           (error, stdout) => (error ? reject(error) : resolve(stdout.trim())),
