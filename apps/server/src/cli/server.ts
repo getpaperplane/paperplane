@@ -1,4 +1,5 @@
 import * as HostProcess from "@getpaperplane/shared/HostProcess";
+import { enableCheckpointRefMigration } from "@getpaperplane/shared/homeMigration";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Option from "effect/Option";
@@ -23,6 +24,7 @@ const runServerCommand = (
   Effect.gen(function* () {
     const logLevel = yield* GlobalFlag.LogLevel;
     const config = yield* resolveServerConfig(flags, logLevel, options);
+    yield* Effect.sync(() => enableCheckpointRefMigration(config.baseDir));
     return yield* runServer.pipe(Effect.provideService(ServerConfig.ServerConfig, config));
   });
 

@@ -816,6 +816,22 @@ export function cleanupHomeMigrationGuard(homeDirectory: string): void {
 
 type RefMigrationResult = { converted: number; conflicts: string[] };
 const repositoryRefMigrations = new Map<string, Promise<RefMigrationResult>>();
+let checkpointRefMigrationEnabled = false;
+
+/**
+ * Arms the lazy ref conversion when the serving home was migrated from Rove Code.
+ * Other homes (tests, worktree dev state, fresh installs) leave refs alone: their
+ * repositories can still belong to a running Rove Code install, which reads only
+ * `refs/rove/*`.
+ */
+export function enableCheckpointRefMigration(baseDir: string): void {
+  try {
+    const report = NodeFS.readFileSync(NodePath.join(baseDir, HOME_MIGRATION_REPORT), "utf8");
+    checkpointRefMigrationEnabled = decodeReport(report).status === "migrated";
+  } catch {
+    checkpointRefMigrationEnabled = false;
+  }
+}
 
 /**
  * Lazy conversion of `refs/rove/*` to `refs/paperplane/*`, once per path per process,
@@ -825,6 +841,7 @@ const repositoryRefMigrations = new Map<string, Promise<RefMigrationResult>>();
  * version may still own those refs.
  */
 export async function migrateRepositoryCheckpointRefs(cwd: string): Promise<RefMigrationResult> {
+  if (!checkpointRefMigrationEnabled) return { converted: 0, conflicts: [] };
   const pending = repositoryRefMigrations.get(cwd);
   if (pending !== undefined) {
     await pending.catch(() => {});

@@ -7,6 +7,7 @@ import * as NodeChildProcess from "node:child_process";
 import { afterEach, beforeEach, describe, expect, it } from "vite-plus/test";
 import {
   cleanupHomeMigrationGuard,
+  enableCheckpointRefMigration,
   HOME_MIGRATION_REPORT,
   migrateDefaultHome,
   migrateRepositoryCheckpointRefs,
@@ -208,6 +209,18 @@ it.each([
 });
 
 describe("lazy repository refs", () => {
+  let migratedHome: string;
+  beforeEach(() => {
+    const home = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "paperplane-ref-home-"));
+    NodeFS.mkdirSync(NodePath.join(home, ".rove-code", "userdata"), { recursive: true });
+    expect(migrateDefaultHome({ homeDirectory: home, log: () => {} }).kind).toBe("migrated");
+    migratedHome = NodePath.join(home, ".paperplane");
+    enableCheckpointRefMigration(migratedHome);
+  });
+  afterEach(() => {
+    enableCheckpointRefMigration(directory);
+    NodeFS.rmSync(NodePath.dirname(migratedHome), { recursive: true, force: true });
+  });
   const git = (args: string[], cwd = directory) =>
     NodeChildProcess.execFileSync("git", args, { cwd, encoding: "utf8" }).trim();
   const seed = () => {
@@ -238,6 +251,16 @@ describe("lazy repository refs", () => {
       conflicts: [],
     });
     expect(await migrateRepositoryCheckpointRefs(linked)).toEqual({ converted: 0, conflicts: [] });
+  });
+  it("leaves refs alone unless the serving home was migrated from Rove Code", async () => {
+    const oid = seed();
+    git(["update-ref", "refs/rove/checkpoints/a", oid]);
+    enableCheckpointRefMigration(directory);
+    expect(await migrateRepositoryCheckpointRefs(directory)).toEqual({
+      converted: 0,
+      conflicts: [],
+    });
+    expect(git(["rev-parse", "refs/rove/checkpoints/a"])).toBe(oid);
   });
   it("retains a symbolic ref and its target intact", async () => {
     const oid = seed();
@@ -285,7 +308,7 @@ describe("lazy repository refs", () => {
           [
             "--input-type=module",
             "-e",
-            `import { migrateRepositoryCheckpointRefs } from ${JSON.stringify(moduleUrl)}; console.log(JSON.stringify(await migrateRepositoryCheckpointRefs(process.cwd())));`,
+            `import { enableCheckpointRefMigration, migrateRepositoryCheckpointRefs } from ${JSON.stringify(moduleUrl)}; enableCheckpointRefMigration(${JSON.stringify(migratedHome)}); console.log(JSON.stringify(await migrateRepositoryCheckpointRefs(process.cwd())));`,
           ],
           { cwd, encoding: "utf8" },
           (error, stdout) => (error ? reject(error) : resolve(stdout.trim())),
