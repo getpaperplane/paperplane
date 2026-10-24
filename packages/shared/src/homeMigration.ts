@@ -122,6 +122,14 @@ const exists = (path: string): boolean => {
 const isBusy = (error: unknown) =>
   error instanceof Error && "errcode" in error && (error.errcode === 5 || error.errcode === 6);
 
+/** One-time recovery guidance; Windows never shipped a managed CLI service. */
+export function oldServiceStopInstruction(platform: NodeJS.Platform): string {
+  if (platform === "linux") return "Run `systemctl --user disable --now rove.service`.";
+  if (platform === "darwin")
+    return "Run `launchctl bootout --wait gui/$(id -u)/io.github.hafiezul.rove.service && launchctl disable gui/$(id -u)/io.github.hafiezul.rove.service`.";
+  return "Windows has no managed CLI service; close the terminal running `rove serve`.";
+}
+
 /** A read transaction conflicts with the old server's BEGIN EXCLUSIVE without writing its lock file. */
 function lockOldServer(source: string): NodeSqlite.DatabaseSync | undefined {
   const path = NodePath.join(source, "userdata", "server-owner.sqlite");
@@ -134,7 +142,9 @@ function lockOldServer(source: string): NodeSqlite.DatabaseSync | undefined {
     database.close();
     if (isBusy(error)) {
       throw new HomeMigrationError(
-        "Quit Rove Code and stop the rove background service, then start Paperplane again. " +
+        "Quit Rove Code. " +
+          oldServiceStopInstruction(process.platform) +
+          " Or run `paperplane service install` to replace a recognized old service automatically. For an SSH or WSL host, run the stop command on that host (or stop its old `rove serve` terminal), then reconnect. Start Paperplane again. " +
           `A running Rove Code server holds ${path}; the home has not been migrated.`,
       );
     }

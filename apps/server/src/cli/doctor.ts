@@ -6,6 +6,7 @@ import * as Layer from "effect/Layer";
 import { Command, Flag, GlobalFlag, Prompt } from "effect/cli";
 
 import * as BootService from "../cloud/bootService.ts";
+import { findOldService } from "../cloud/installedStateMigration.ts";
 import * as HostHealth from "../diagnostics/HostHealth.ts";
 import * as HostResources from "../resourceTelemetry/HostResources.ts";
 import * as ServerConfig from "../config.ts";
@@ -143,6 +144,11 @@ export const doctorCommand = Command.make("doctor", {
   Command.withHandler((flags) =>
     Effect.gen(function* () {
       const logLevel = yield* GlobalFlag.LogLevel;
+      const old = yield* findOldService;
+      if (old)
+        yield* Console.warn(
+          `Leftover old service: ${old.filename}. ${old.ours ? "Run paperplane service install to replace it." : "Unrecognized launcher; inspect it manually. Paperplane will leave it untouched."}`,
+        );
       const config = yield* resolveCliAuthConfig(flags, logLevel);
       yield* runDoctor(config.dbPath, { fix: flags.fix, dryRun: flags.dryRun }).pipe(
         Effect.provide(

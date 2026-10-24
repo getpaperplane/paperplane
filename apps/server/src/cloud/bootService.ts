@@ -41,11 +41,11 @@ import {
   type ServiceState,
 } from "./serviceProtocol.ts";
 
-const BOOT_SERVICE_NAME = "rove";
+const BOOT_SERVICE_NAME = "paperplane";
 const BOOT_SERVICE_UNIT_FILE = `${BOOT_SERVICE_NAME}.service`;
 // `.service` suffix keeps the label distinct from the desktop app's bundle id
-// (io.github.hafiezul.rove), so launchd and TCC records never collide.
-const BOOT_SERVICE_LAUNCHD_LABEL = "io.github.hafiezul.rove.service";
+// (io.github.getpaperplane.paperplane), so launchd and TCC records never collide.
+const BOOT_SERVICE_LAUNCHD_LABEL = "io.github.getpaperplane.paperplane.service";
 const BOOT_SERVICE_PLIST_FILE = `${BOOT_SERVICE_LAUNCHD_LABEL}.plist`;
 const BOOT_SERVICE_UNIT_ENV = "PAPERPLANE_BOOT_SERVICE_UNIT";
 /** File in the logs dir that receives the service's stdout and stderr. `paperplane triage` points agents at it. */
@@ -481,7 +481,7 @@ export function formatBootServiceProblem(problem: BootServiceProblem): string {
     case "service-disabled":
       return "The service is not enabled to start automatically. Run `paperplane service install` to repair it.";
     case "service-stopped":
-      return "The service is not running. Check the service log and `systemctl --user status rove.service`, then run `paperplane service install`.";
+      return "The service is not running. Check the service log and `systemctl --user status paperplane.service`, then run `paperplane service install`.";
     case "restart-pending":
       return "A newer version is installed but the service is still running the previous one. Run `paperplane service restart` to switch.";
   }

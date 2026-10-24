@@ -40,6 +40,21 @@ downloaded versions after showing you the list and asking once. Your projects,
 threads, and settings under `~/.paperplane/userdata` are kept. Pass `--yes` from a
 script.
 
+## Upgrading from Rove Code
+
+Install the Paperplane CLI, then run `paperplane service install`. It stops, disables,
+and removes the old `rove.service` or `io.github.hafiezul.rove.service` launch agent
+only when its launcher is recognizably Rove Code. Saved host/port settings and the
+provider PATH are imported once; existing Paperplane settings win. Other unit
+environment settings are reported for you to reapply with their `PAPERPLANE_*` names.
+Custom systemd drop-ins must be moved manually before conversion.
+
+If the old server blocks the first start, on Linux run
+`systemctl --user disable --now rove.service`; on macOS run
+`launchctl bootout --wait gui/$(id -u)/io.github.hafiezul.rove.service && launchctl disable gui/$(id -u)/io.github.hafiezul.rove.service`.
+Quit the old desktop app too. For SSH or WSL, stop the old service or `rove serve`
+terminal on that host, then reconnect. Windows has no managed CLI service.
+
 ## Platform support
 
 Linux needs systemd user services. Setup enables lingering so Paperplane starts at
@@ -84,14 +99,14 @@ that session open.
 | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
 | `linger-unavailable`                    | Run `loginctl show-user "$(id -un)" --property=Linger` and check that systemd-logind is available.                             |
 | `user-manager-unavailable`              | Run `systemctl --user status` in a login session for the service user; check your distribution's systemd user-session support. |
-| `service-disabled` or `service-stopped` | Read the log and `systemctl --user status rove.service`, then use the repair command printed by Paperplane.                    |
+| `service-disabled` or `service-stopped` | Read the log and `systemctl --user status paperplane.service`, then use the repair command printed by Paperplane.              |
 | `restart-pending`                       | A newer version is installed but the service still runs the previous one. Run `paperplane service restart`.                    |
 
 On macOS, check **System Settings → General → Login Items** if the service no
 longer starts at login. If agent work cannot access Desktop, Documents, or
 Downloads, it may need Full Disk Access for the `paperplane` executable listed in
 `ProgramArguments` in
-`~/Library/LaunchAgents/dev.rove.app.service.plist`.
+`~/Library/LaunchAgents/io.github.getpaperplane.paperplane.service.plist`.
 
 For failures after signing in to Paperplane Connect, see
 [connection troubleshooting](./remote-access.md#paperplane-connect-troubleshooting).

@@ -26,7 +26,7 @@ const status = {
   supported: true,
   installed: true,
   current: true,
-  unitPath: "/home/me/.config/systemd/user/rove.service",
+  unitPath: "/home/me/.config/systemd/user/paperplane.service",
   logPath: "/home/me/.rove/userdata/logs/boot-service.log",
 } as const;
 
@@ -36,7 +36,7 @@ it("reports the installed service version and host paths", () => {
     [
       "Paperplane service",
       "  Status: installed · paperplane@0.0.29",
-      "  Unit: /home/me/.config/systemd/user/rove.service",
+      "  Unit: /home/me/.config/systemd/user/paperplane.service",
       "  Logs: /home/me/.rove/userdata/logs/boot-service.log",
     ].join("\n"),
   );

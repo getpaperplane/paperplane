@@ -9,6 +9,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vite-plus/test";
 
 import {
   HOME_MIGRATION_REPORT,
+  oldServiceStopInstruction,
   migrateDefaultHome,
   publishHomeMigration,
   type HomeMigrationStep,
@@ -76,6 +77,17 @@ function snapshot(root: string): SnapshotEntry[] {
       };
     });
 }
+
+it.each([
+  ["linux", "systemctl --user disable --now rove.service"],
+  [
+    "darwin",
+    "launchctl bootout --wait gui/$(id -u)/io.github.hafiezul.rove.service && launchctl disable",
+  ],
+  ["win32", "close the terminal running `rove serve`"],
+] as const)("gives actionable old-service recovery on %s", (platform, command) => {
+  expect(oldServiceStopInstruction(platform)).toContain(command);
+});
 
 describe("default home migration", () => {
   it("atomically refuses an empty destination at the native publication boundary", () => {
@@ -500,7 +512,7 @@ describe("default home migration", () => {
     db.exec("BEGIN EXCLUSIVE;");
     try {
       expect(() => migrate()).toThrow(
-        /Quit Rove Code and stop the rove background service, then start Paperplane again/,
+        /Quit Rove Code.*systemctl --user disable --now rove.service/,
       );
       expect(NodeFS.existsSync(destination)).toBe(false);
     } finally {

@@ -10,6 +10,7 @@ import { FetchHttpClient } from "effect/http";
 
 import packageJson from "../../package.json" with { type: "json" };
 import * as BootService from "../cloud/bootService.ts";
+import { retireOldService } from "../cloud/installedStateMigration.ts";
 import { compareExactServiceVersions } from "../cloud/serviceProtocol.ts";
 import type * as ServerConfig from "../config.ts";
 import * as ProcessRunner from "../processRunner.ts";
@@ -119,7 +120,11 @@ export function formatServiceStatus(
 const runServiceCommand = Effect.fn("cli.service.run")(function* <A, E>(
   flags: { readonly baseDir: Parameters<typeof resolveCliAuthConfig>[0]["baseDir"] },
   run: Effect.Effect<A, E, BootService.BootService>,
+  replaceOld = false,
 ) {
+  if (replaceOld && Option.isNone(flags.baseDir)) {
+    yield* retireOldService.pipe(Effect.provide(ProcessRunner.layer));
+  }
   const logLevel = yield* GlobalFlag.LogLevel;
   const config = yield* resolveCliAuthConfig(flags, logLevel);
   return yield* run.pipe(Effect.provide(layer(config)));
@@ -166,6 +171,7 @@ const serviceInstallCommand = Command.make("install", {
           `${result.previouslyInstalled ? "Updated" : "Installed"} Paperplane service with paperplane@${packageJson.version}.\nLogs: ${result.plan.logPath}`,
         );
       }),
+      true,
     ),
   ),
 );
