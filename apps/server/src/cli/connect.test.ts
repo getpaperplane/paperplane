@@ -195,7 +195,7 @@ it.effect("keeps disconnect causes in structured logs and out of console warning
 });
 
 it.effect(
-  "suggests rove connect unlink after a failed revocation when authorization remains",
+  "suggests paperplane connect unlink after a failed revocation when authorization remains",
   () => {
     const warnings: ReadonlyArray<unknown>[] = [];
     const testConsole = {
@@ -214,7 +214,7 @@ it.effect(
       Effect.provide(Logger.layer([Logger.make(() => undefined)], { mergeWithExisting: false })),
       Effect.tap(() =>
         Effect.sync(() => {
-          assert.include(warnings.flat().map(String).join("\n"), "Run `rove connect unlink` again");
+          assert.include(warnings.flat().map(String).join("\n"), "Run `paperplane connect unlink` again");
         }),
       ),
     );

@@ -61,7 +61,7 @@ export class DatabaseCompactError extends Schema.TaggedError<DatabaseCompactErro
   }
 }
 
-/** Offline inspection and repair, shared by startup and `rove doctor`. */
+/** Offline inspection and repair, shared by startup and `paperplane doctor`. */
 export class DatabaseMaintenance extends Context.Service<
   DatabaseMaintenance,
   {

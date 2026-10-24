@@ -459,15 +459,15 @@ if [ -n "$ROVE_NODE_SCRIPT_PATH" ]; then
 fi
 ROVE_ARCHIVE_VERSION=@@ROVE_ARCHIVE_VERSION@@
 if [ -z "$ROVE_ARCHIVE_VERSION" ]; then
-  printf 'No rove release version was provided for the remote runtime.\\n' >&2
+  printf 'No paperplane release version was provided for the remote runtime.\\n' >&2
   exit 1
 fi
 # Self-contained release archive: no Node, npm, or compiler on the remote.
-# Unpacked into the pinned-runtime layout so \`rove service install\` reuses it.
+# Unpacked into the pinned-runtime layout so \`paperplane service install\` reuses it.
 ROVE_RELEASE_BASE_URL=@@ROVE_RELEASE_BASE_URL@@
 ROVE_RUNTIME_DIR="$HOME/.rove-code/runtime/versions/$ROVE_ARCHIVE_VERSION"
 rove_runtime_ready() {
-  [ -x "$ROVE_RUNTIME_DIR/rove" ] && [ "$(cat "$ROVE_RUNTIME_DIR/.install-complete" 2>/dev/null)" = "$ROVE_ARCHIVE_VERSION" ]
+  [ -x "$ROVE_RUNTIME_DIR/paperplane" ] && [ "$(cat "$ROVE_RUNTIME_DIR/.install-complete" 2>/dev/null)" = "$ROVE_ARCHIVE_VERSION" ]
 }
 if ! rove_runtime_ready; then
   mkdir -p "$HOME/.rove-code/runtime/versions"
@@ -500,7 +500,7 @@ if ! rove_runtime_ready; then
       fi
     fi
     if [ "$ROVE_LOCK_WAITED" -ge @@ROVE_ARCHIVE_LOCK_WAIT_SECONDS@@ ]; then
-      printf 'Another rove %s installation has held %s for too long.\\n' "$ROVE_ARCHIVE_VERSION" "$ROVE_LOCK" >&2
+      printf 'Another paperplane %s installation has held %s for too long.\\n' "$ROVE_ARCHIVE_VERSION" "$ROVE_LOCK" >&2
       exit 1
     fi
     sleep 1
@@ -513,12 +513,12 @@ if ! rove_runtime_ready; then
   case "$(uname -s)" in
     Darwin) ROVE_PLATFORM="darwin" ;;
     Linux) ROVE_PLATFORM="linux" ;;
-    *) printf 'Remote host %s has no rove release archive.\\n' "$(uname -s)" >&2; exit 1 ;;
+    *) printf 'Remote host %s has no paperplane release archive.\\n' "$(uname -s)" >&2; exit 1 ;;
   esac
   case "$(uname -m)" in
     arm64 | aarch64) ROVE_ARCH="arm64" ;;
     x86_64 | amd64) ROVE_ARCH="x64" ;;
-    *) printf 'Remote host %s has no rove release archive.\\n' "$(uname -m)" >&2; exit 1 ;;
+    *) printf 'Remote host %s has no paperplane release archive.\\n' "$(uname -m)" >&2; exit 1 ;;
   esac
   ROVE_ARCHIVE="rove-$ROVE_ARCHIVE_VERSION-$ROVE_PLATFORM-$ROVE_ARCH.tar.gz"
   ROVE_STAGING="$(mktemp -d "$HOME/.rove-code/runtime/versions/.staging-XXXXXX")"
@@ -544,8 +544,8 @@ if ! rove_runtime_ready; then
   rm -f "$ROVE_STAGING/$ROVE_ARCHIVE" "$ROVE_STAGING/SHA256SUMS"
   # Prove the binary runs here (libc, arch) before marking it ready, or every
   # later launch would exec a broken install instead of retrying.
-  if ! "$ROVE_STAGING/rove" --version >/dev/null 2>&1; then
-    printf 'The rove %s executable does not run on this host.\\n' "$ROVE_ARCHIVE_VERSION" >&2; exit 1
+  if ! "$ROVE_STAGING/paperplane" --version >/dev/null 2>&1; then
+    printf 'The paperplane %s executable does not run on this host.\\n' "$ROVE_ARCHIVE_VERSION" >&2; exit 1
   fi
   printf '%s\\n' "$ROVE_ARCHIVE_VERSION" > "$ROVE_STAGING/.install-complete"
   rm -rf "$ROVE_RUNTIME_DIR"
@@ -555,7 +555,7 @@ if [ -n "\${ROVE_LOCK:-}" ]; then
   rm -rf "$ROVE_LOCK"
   trap - EXIT
 fi
-exec "$ROVE_RUNTIME_DIR/rove" "$@"
+exec "$ROVE_RUNTIME_DIR/paperplane" "$@"
 `;
 
 const REMOTE_LAUNCH_SCRIPT = `set -eu
@@ -779,7 +779,7 @@ if [ -z "$RUNTIME_INFO" ] || ! "$RUNNER_FILE" __ssh-helper wait-ready "\${RUNTIM
     *) "$RUNNER_FILE" service install --base-dir "$DEFAULT_SERVER_HOME" >&2 ;;
   esac
   if ! RUNTIME_INFO="$("$RUNNER_FILE" __ssh-helper wait-service "$DEFAULT_RUNTIME_FILE" "@@ROVE_READY_TIMEOUT_MS@@" "@@ROVE_READY_PROBE_TIMEOUT_MS@@")"; then
-    printf 'The persistent Paperplane service did not become ready. Run rove service status and rove triage on the host. SSH requires a loopback-reachable server.\\n' >&2
+    printf 'The persistent Paperplane service did not become ready. Run paperplane service status and paperplane triage on the host. SSH requires a loopback-reachable server.\\n' >&2
     exit 1
   fi
 fi
@@ -839,7 +839,7 @@ export class SshInvalidArchiveVersionError extends Schema.TaggedError<SshInvalid
   { archiveVersion: Schema.String },
 ) {
   override get message(): string {
-    return `'${this.archiveVersion}' is not an exact rove version and cannot name a runtime directory.`;
+    return `'${this.archiveVersion}' is not an exact paperplane version and cannot name a runtime directory.`;
   }
 }
 
@@ -854,7 +854,7 @@ export class SshMissingRunnerError extends Schema.TaggedError<SshMissingRunnerEr
   {},
 ) {
   override get message(): string {
-    return "A remote rove runner needs an archive version or a node script path.";
+    return "A remote paperplane runner needs an archive version or a node script path.";
   }
 }
 

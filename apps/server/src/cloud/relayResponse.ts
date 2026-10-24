@@ -42,7 +42,7 @@ function recoveryHint(error: RelayProtectedError): string {
     case "RelayEnvironmentLinkLimitExceededError":
       return "Unlink an unused environment in Paperplane Connect, then restart Paperplane on this machine.";
     case "RelayAuthInvalidError":
-      return "Run `rove connect login` to check this machine's authorization. If the stored credential was revoked, sign out with `rove connect logout`, then run `rove connect` again. Restart Paperplane after signing in.";
+      return "Run `paperplane connect login` to check this machine's authorization. If the stored credential was revoked, sign out with `paperplane connect logout`, then run `paperplane connect` again. Restart Paperplane after signing in.";
     case "RelayEnvironmentLinkProofExpiredError":
     case "RelayEnvironmentLinkProofInvalidError":
       return "Check this machine's date and time, update Paperplane, then restart it.";

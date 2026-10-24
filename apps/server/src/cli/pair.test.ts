@@ -144,7 +144,7 @@ const withDescriptorServer = <A, E, R>(run: (origin: string) => Effect.Effect<A,
     (server) => Effect.sync(() => server.close()),
   );
 
-describe("rove pair", () => {
+describe("paperplane pair", () => {
   it.effect("mints a token and prints a QR pairing URL for a live server", () =>
     withDescriptorServer((origin) =>
       Effect.gen(function* () {
@@ -179,7 +179,7 @@ describe("rove pair", () => {
           readonly scopes: ReadonlyArray<string>;
         }>;
         assert.equal(credentials.length, 1);
-        assert.equal(credentials[0]?.label, "rove pair");
+        assert.equal(credentials[0]?.label, "paperplane pair");
         assert.deepEqual(credentials[0]?.scopes, AuthStandardClientScopes);
       }),
     ).pipe(
@@ -260,7 +260,7 @@ describe("rove pair", () => {
     ).pipe(Effect.provide(NodeServices.layer)),
   );
 
-  it.effect("directs to rove serve when no server is running", () =>
+  it.effect("directs to paperplane serve when no server is running", () =>
     Effect.gen(function* () {
       const baseDir = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "rove-pair-none-test-"));
 
@@ -272,8 +272,8 @@ describe("rove pair", () => {
         typeof error === "object" && error !== null && "cause" in error ? error.cause : error,
       );
       assert.include(rendered, "No running Paperplane server found.");
-      assert.include(rendered, "rove serve");
-      assert.notInclude(rendered, "rove connect");
+      assert.include(rendered, "paperplane serve");
+      assert.notInclude(rendered, "paperplane connect");
     }).pipe(Effect.provide(NodeServices.layer)),
   );
 
@@ -392,7 +392,7 @@ describe("auth scope options", () => {
       if (!CliError.isCliError(error) || error._tag !== "ShowHelp") {
         assert.fail(`Expected ShowHelp, got ${String(error)}`);
       }
-      assert.deepEqual(error.commandPath, ["rove", ...command]);
+      assert.deepEqual(error.commandPath, ["paperplane", ...command]);
       const scopeError = error.errors[0];
       if (scopeError?._tag !== "InvalidValue") {
         assert.fail(`Expected InvalidValue, got ${String(scopeError?._tag)}`);

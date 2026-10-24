@@ -662,7 +662,7 @@ function negotiatedCapabilities(
     },
     tools: {
       ...base.tools,
-      // The stdio bridge (`rove acp-mcp-bridge`) makes the rove MCP toolkit
+      // The stdio bridge (`paperplane acp-mcp-bridge`) makes the rove MCP toolkit
       // available regardless of the agent's optional http/sse MCP support.
       supportsMcpTools: true,
     },
@@ -691,7 +691,7 @@ function acpMcpContext(
   // Stdio is ACP's required baseline MCP transport. Agents that advertise
   // optional http support still routinely fail to wire injected http servers
   // through to their backend (codex-acp 1.2.0 and pi-acp both drop them), so
-  // every ACP session gets the `rove acp-mcp-bridge` stdio server, which
+  // every ACP session gets the `paperplane acp-mcp-bridge` stdio server, which
   // forwards JSON-RPC to Paperplane's authenticated MCP endpoint. The credential
   // travels via environment variables, never the command line.
   return {

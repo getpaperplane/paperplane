@@ -60,7 +60,7 @@ export const setCliDesiredCloudLink = Effect.fn("cloud.cli_state.set_desired")(f
 
 /**
  * Drops a link the relay rejected, keeping the sign-in and preferences, so the
- * next start links this environment again. `rove connect link` calls it: the
+ * next start links this environment again. `paperplane connect link` calls it: the
  * server never relinks a revoked link on its own. Returns whether it dropped one.
  */
 export const dropRevokedCloudLink = Effect.gen(function* () {

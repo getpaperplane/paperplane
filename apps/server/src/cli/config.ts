@@ -92,7 +92,7 @@ export const serviceLaunchFlags = {
   tailscaleServePort: tailscaleServePortFlag,
 };
 
-// Trace file location, shared by the server and `rove trace summary`.
+// Trace file location, shared by the server and `paperplane trace summary`.
 export const traceFileConfig = Config.String("ROVE_TRACE_FILE").pipe(
   Config.option,
   Config.map(Option.getOrUndefined),

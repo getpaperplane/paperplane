@@ -16,7 +16,7 @@ const SANDBOX_TOOLS_FAILED = 15;
 // Clients recognize sandboxes by the workspace below (SANDBOX_WORKSPACE_DIR).
 const ROOT = `"$HOME/.rove-sandbox"`;
 const RUNTIME = `"$HOME/.rove-sandbox/runtime"`;
-const WRAPPER = `"$HOME/.rove-sandbox/runtime/node_modules/.bin/rove"`;
+const WRAPPER = `"$HOME/.rove-sandbox/runtime/node_modules/.bin/paperplane"`;
 
 // Only this deployment's captured PID may be signalled. Boot identity and process
 // start time also prevent a restored PID file from targeting a different process.
@@ -43,7 +43,7 @@ const responding = async () => {
 
 // The npm wrapper runs the platform binary as a child and does not forward
 // signals, so the server is spawned from the platform package directly.
-const resolveBinary = `require('node:path').join(require('node:path').dirname(require.resolve('@getpaperplane/cli-' + process.platform + '-' + process.arch + '/package.json', { paths: [process.env.ROVE_SANDBOX_RUNTIME_DIR] })), 'rove')`;
+const resolveBinary = `require('node:path').join(require('node:path').dirname(require.resolve('@getpaperplane/cli-' + process.platform + '-' + process.arch + '/package.json', { paths: [process.env.ROVE_SANDBOX_RUNTIME_DIR] })), 'paperplane')`;
 
 export const sandboxStartCommand = `set -u
 ROOT=${ROOT}

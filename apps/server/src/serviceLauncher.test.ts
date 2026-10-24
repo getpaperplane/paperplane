@@ -107,7 +107,7 @@ it("rejects contradictory service state", () => {
   );
 });
 
-// A pinned runtime is an executable at <versionDir>/rove. The tests stand one up
+// A pinned runtime is an executable at <versionDir>/paperplane. The tests stand one up
 // as a Node shebang script so the launcher spawns it the way it spawns the
 // real single-executable, IPC channel included.
 const writeFakeRuntime = (
@@ -117,7 +117,7 @@ const writeFakeRuntime = (
   childSource: string,
 ) =>
   Effect.gen(function* () {
-    const entryPath = path.join(versionDir, "rove");
+    const entryPath = path.join(versionDir, "paperplane");
     yield* fs.makeDirectory(versionDir, { recursive: true });
     yield* fs.writeFileString(entryPath, `#!${process.execPath}\n${childSource}`);
     yield* fs.chmod(entryPath, 0o755);
@@ -145,7 +145,7 @@ it.layer(NodeServices.layer)("service state persistence", (it) => {
     }),
   );
 
-  it.effect("a fresh launcher clears a restart deferred by rove update", () =>
+  it.effect("a fresh launcher clears a restart deferred by paperplane update", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;

@@ -4,7 +4,7 @@ import { Argument, Command } from "effect/cli";
 import { runAcpMcpCliFastPath } from "../mcp/AcpMcpStdioBridge.ts";
 
 /**
- * `rove acp-mcp-bridge` — internal stdio MCP server that ACP agents spawn.
+ * `paperplane acp-mcp-bridge` — internal stdio MCP server that ACP agents spawn.
  *
  * The Paperplane server injects this command (with per-session endpoint and
  * credential environment variables) into `session/new` so every ACP agent

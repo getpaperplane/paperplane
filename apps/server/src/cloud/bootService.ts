@@ -48,7 +48,7 @@ const BOOT_SERVICE_UNIT_FILE = `${BOOT_SERVICE_NAME}.service`;
 const BOOT_SERVICE_LAUNCHD_LABEL = "io.github.hafiezul.rove.service";
 const BOOT_SERVICE_PLIST_FILE = `${BOOT_SERVICE_LAUNCHD_LABEL}.plist`;
 const BOOT_SERVICE_UNIT_ENV = "ROVE_BOOT_SERVICE_UNIT";
-/** File in the logs dir that receives the service's stdout and stderr. `rove triage` points agents at it. */
+/** File in the logs dir that receives the service's stdout and stderr. `paperplane triage` points agents at it. */
 export const BOOT_SERVICE_LOG_FILE = "boot-service.log";
 
 /** systemd expands `%` specifiers, including in unquoted append-log paths. */
@@ -479,11 +479,11 @@ export function formatBootServiceProblem(problem: BootServiceProblem): string {
     case "linger-disabled":
       return 'Lingering is disabled. Paperplane will stop when your last login session ends and will not start at boot. Run `sudo loginctl enable-linger "$(id -un)"` on this machine, then retry the service command as your normal user.';
     case "service-disabled":
-      return "The service is not enabled to start automatically. Run `rove service install` to repair it.";
+      return "The service is not enabled to start automatically. Run `paperplane service install` to repair it.";
     case "service-stopped":
-      return "The service is not running. Check the service log and `systemctl --user status rove.service`, then run `rove service install`.";
+      return "The service is not running. Check the service log and `systemctl --user status rove.service`, then run `paperplane service install`.";
     case "restart-pending":
-      return "A newer version is installed but the service is still running the previous one. Run `rove service restart` to switch.";
+      return "A newer version is installed but the service is still running the previous one. Run `paperplane service restart` to switch.";
   }
 }
 
@@ -513,7 +513,7 @@ export class BootServiceDowngradeRefusedError extends Schema.TaggedError<BootSer
   },
 ) {
   override get message(): string {
-    return `Refusing to replace rove@${this.installedVersion} with older rove@${this.targetVersion}. Run the command again with --allow-downgrade to continue.`;
+    return `Refusing to replace paperplane@${this.installedVersion} with older paperplane@${this.targetVersion}. Run the command again with --allow-downgrade to continue.`;
   }
 }
 
@@ -533,7 +533,7 @@ export interface BootServiceStatus {
   /**
    * The Paperplane home the installed unit serves. The unit name is fixed per user,
    * so a caller working against another base dir must not treat this service
-   * as its own; `rove update --base-dir` learned that by restarting the live
+   * as its own; `paperplane update --base-dir` learned that by restarting the live
    * server of the machine it ran on.
    */
   readonly installedBaseDir?: string;
@@ -550,8 +550,8 @@ export class BootService extends Context.Service<
       readonly allowDowngrade?: boolean;
       /**
        * Write the unit for this version but leave the service on whatever it
-       * is running now. `rove update` uses this when the user declines the
-       * restart, so a later `rove service restart` lands on the new version.
+       * is running now. `paperplane update` uses this when the user declines the
+       * restart, so a later `paperplane service restart` lands on the new version.
        */
       readonly start?: boolean;
       readonly launch?: ServiceLaunchPatch;

@@ -8,15 +8,15 @@ import * as HostProcess from "@getpaperplane/shared/HostProcess";
 
 import { repointLauncher, resolveLauncherPath } from "./update.ts";
 
-it.layer(NodeServices.layer)("rove update launcher", (it) => {
+it.layer(NodeServices.layer)("paperplane update launcher", (it) => {
   it.effect("repoints a symlink that lives in a runtime versions tree", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const root = yield* fs.makeTempDirectoryScoped({ prefix: "rove-update-" });
-      const oldExe = path.join(root, "runtime/versions/1.0.0/rove");
-      const newExe = path.join(root, "runtime/versions/2.0.0/rove");
-      const launcher = path.join(root, "bin/rove");
+      const oldExe = path.join(root, "runtime/versions/1.0.0/paperplane");
+      const newExe = path.join(root, "runtime/versions/2.0.0/paperplane");
+      const launcher = path.join(root, "bin/paperplane");
       for (const file of [oldExe, newExe]) {
         yield* fs.makeDirectory(path.dirname(file), { recursive: true });
         yield* fs.writeFileString(file, "");
@@ -40,13 +40,13 @@ it.layer(NodeServices.layer)("rove update launcher", (it) => {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const root = yield* fs.makeTempDirectoryScoped({ prefix: "rove-update-" });
-      const newExe = path.join(root, "runtime/versions/2.0.0/rove");
-      const copy = path.join(root, "copy/rove");
-      const foreign = path.join(root, "foreign/rove");
-      const elsewhere = path.join(root, "elsewhere/rove");
+      const newExe = path.join(root, "runtime/versions/2.0.0/paperplane");
+      const copy = path.join(root, "copy/paperplane");
+      const foreign = path.join(root, "foreign/paperplane");
+      const elsewhere = path.join(root, "elsewhere/paperplane");
       // Another install's versions tree: same shape, different home.
-      const otherHome = path.join(root, "other/runtime/versions/1.0.0/rove");
-      const otherLauncher = path.join(root, "other/bin/rove");
+      const otherHome = path.join(root, "other/runtime/versions/1.0.0/paperplane");
+      const otherLauncher = path.join(root, "other/bin/paperplane");
       for (const file of [newExe, copy, elsewhere, otherHome]) {
         yield* fs.makeDirectory(path.dirname(file), { recursive: true });
         yield* fs.writeFileString(file, "");
@@ -74,24 +74,24 @@ it.layer(NodeServices.layer)("rove update launcher", (it) => {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const root = yield* fs.makeTempDirectoryScoped({ prefix: "rove-update-" });
-      const launcher = path.join(root, "bin/rove");
+      const launcher = path.join(root, "bin/paperplane");
       yield* fs.makeDirectory(path.dirname(launcher), { recursive: true });
       yield* fs.writeFileString(launcher, "");
 
       const bare = yield* resolveLauncherPath.pipe(
-        Effect.provideService(HostProcess.InvokedAs, "rove"),
+        Effect.provideService(HostProcess.InvokedAs, "paperplane"),
         Effect.provideService(HostProcess.Environment, {
           PATH: `${path.join(root, "missing")}:${path.join(root, "bin")}`,
         }),
         Effect.provideService(HostProcess.WorkingDirectory, root),
       );
       const relative = yield* resolveLauncherPath.pipe(
-        Effect.provideService(HostProcess.InvokedAs, "./bin/rove"),
+        Effect.provideService(HostProcess.InvokedAs, "./bin/paperplane"),
         Effect.provideService(HostProcess.Environment, { PATH: "" }),
         Effect.provideService(HostProcess.WorkingDirectory, root),
       );
       const absent = yield* resolveLauncherPath.pipe(
-        Effect.provideService(HostProcess.InvokedAs, "rove"),
+        Effect.provideService(HostProcess.InvokedAs, "paperplane"),
         Effect.provideService(HostProcess.Environment, { PATH: path.join(root, "missing") }),
         Effect.provideService(HostProcess.WorkingDirectory, root),
       );

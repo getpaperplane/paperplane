@@ -103,7 +103,7 @@ it.effect("single-platform builds match full packaging and publish without a lau
     const stage = path.join(root, "stage");
     yield* fs.makeDirectory(archivesDir);
     yield* fs.makeDirectory(path.join(stage, "package/node_modules"), { recursive: true });
-    yield* fs.writeFileString(path.join(stage, "package/rove"), "#!/bin/sh\nexit 0\n");
+    yield* fs.writeFileString(path.join(stage, "package/paperplane"), "#!/bin/sh\nexit 0\n");
     const tar = yield* spawner.spawn(
       ChildProcess.make("tar", [
         "-czf",

@@ -21,7 +21,7 @@ import {
 import * as ProcessRunner from "../processRunner.ts";
 
 /**
- * A pinned runtime is an exact rove release archive unpacked into
+ * A pinned runtime is an exact paperplane release archive unpacked into
  * <baseDir>/runtime/versions/<version>: the self-contained executable, the
  * web client, and the native packages beside it. The boot service points its
  * unit or launch agent at the executable, and server self-update installs the
@@ -65,7 +65,7 @@ export function pinnedRuntimePaths(
   const versionDir = path.join(pinnedRuntimeVersionsDir(path, baseDir), version);
   return {
     versionDir,
-    entryPath: path.join(versionDir, platform === "win32" ? "rove.exe" : "rove"),
+    entryPath: path.join(versionDir, platform === "win32" ? "paperplane.exe" : "paperplane"),
     sentinelPath: path.join(versionDir, ".install-complete"),
   };
 }
@@ -104,7 +104,7 @@ export type PinnedRuntimeProgress =
   | { readonly stage: "verify" | "extract" | "validate" | "cached" };
 
 /**
- * Installs the rove release archive for `version` into the pinned runtime
+ * Installs the paperplane release archive for `version` into the pinned runtime
  * directory unless a complete install is already there, and returns its
  * paths. The sentinel is written only after extraction and validation
  * succeed; checking the entry file alone is not enough, since tar writes the
@@ -189,7 +189,7 @@ const installFromArchive = Effect.fn("cloud.pinned_runtime.install_archive")(fun
   const platformKey = cliArchivePlatformKey(input.platform, input.arch);
   if (platformKey === undefined) {
     return yield* new PinnedRuntimeInstallError({
-      step: `selecting a rove release archive for ${input.platform}-${input.arch}`,
+      step: `selecting a paperplane release archive for ${input.platform}-${input.arch}`,
     });
   }
   const httpClient = input.httpClient;
@@ -202,31 +202,31 @@ const installFromArchive = Effect.fn("cloud.pinned_runtime.install_archive")(fun
       yield* fetchReleaseAsset(
         httpClient,
         `${baseUrl}/${CLI_RELEASE_CHECKSUMS_FILE}`,
-        "downloading the rove release checksums",
+        "downloading the paperplane release checksums",
       ),
     ),
   );
   const expected = checksums.get(fileName);
   if (expected === undefined) {
     return yield* new PinnedRuntimeInstallError({
-      step: `finding ${fileName} in the rove release checksums`,
+      step: `finding ${fileName} in the paperplane release checksums`,
     });
   }
   const archive = yield* fetchReleaseAsset(
     httpClient,
     `${baseUrl}/${fileName}`,
-    "downloading the rove release archive",
+    "downloading the paperplane release archive",
     input.onProgress,
   );
   input.onProgress?.({ stage: "verify" });
   const digest = yield* Effect.tryPromise({
     try: () => crypto.subtle.digest("SHA-256", archive),
     catch: (cause) =>
-      new PinnedRuntimeInstallError({ step: "verifying the rove release archive", cause }),
+      new PinnedRuntimeInstallError({ step: "verifying the paperplane release archive", cause }),
   });
   if (Hex.encode(new Uint8Array(digest)) !== expected) {
     return yield* new PinnedRuntimeInstallError({
-      step: "verifying the rove release archive checksum",
+      step: "verifying the paperplane release archive checksum",
     });
   }
 
@@ -236,13 +236,13 @@ const installFromArchive = Effect.fn("cloud.pinned_runtime.install_archive")(fun
     .pipe(
       Effect.mapError(
         (cause) =>
-          new PinnedRuntimeInstallError({ step: "writing the rove release archive", cause }),
+          new PinnedRuntimeInstallError({ step: "writing the paperplane release archive", cause }),
       ),
     );
   input.onProgress?.({ stage: "extract" });
-  const extractStep = "extracting the rove release archive";
+  const extractStep = "extracting the paperplane release archive";
   // The archive wraps everything in one directory named after its stem;
-  // strip it so the executable lands at <versionDir>/rove.
+  // strip it so the executable lands at <versionDir>/paperplane.
   yield* input.runner
     .run({
       command: cliArchiveTarCommand(input.platform, process.env),

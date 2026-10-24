@@ -45,7 +45,7 @@ export const runDefaultServerCommand = (flags: CliServerFlags) =>
       ) {
         return yield* new CliError.UserError({
           cause: cwd,
-          userMessage: `Unknown command ${yield* encodeCommand(cwd)}. Use "rove --help" for commands or an explicit path such as "rove ./my-project" for a new directory.`,
+          userMessage: `Unknown command ${yield* encodeCommand(cwd)}. Use "paperplane --help" for commands or an explicit path such as "paperplane ./my-project" for a new directory.`,
         });
       }
     }

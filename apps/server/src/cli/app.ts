@@ -32,7 +32,7 @@ export class DesktopAppSshUnsupportedError extends Schema.TaggedError<DesktopApp
   {},
 ) {
   override get message(): string {
-    return "`rove app` only controls a desktop app on the same machine. It cannot run over SSH.";
+    return "`paperplane app` only controls a desktop app on the same machine. It cannot run over SSH.";
   }
 }
 
@@ -41,7 +41,7 @@ export class DesktopAppPlatformUnsupportedError extends Schema.TaggedError<Deskt
   { platform: Schema.String },
 ) {
   override get message(): string {
-    return `\`rove app\` is not supported on ${this.platform}.`;
+    return `\`paperplane app\` is not supported on ${this.platform}.`;
   }
 }
 
@@ -55,7 +55,7 @@ export class DesktopAppUnreachableError extends Schema.TaggedError<DesktopAppUnr
   },
 ) {
   override get message(): string {
-    return "Could not reach the Paperplane desktop app. Start or update the desktop app on this machine, then run `rove app` again. A running Paperplane server is not enough.";
+    return "Could not reach the Paperplane desktop app. Start or update the desktop app on this machine, then run `paperplane app` again. A running Paperplane server is not enough.";
   }
 }
 

@@ -2,10 +2,10 @@
 // move exact directory entries with rename, which the FileSystem service does
 // not expose atomically.
 /**
- * `rove theme` - inspect and set the environment's theme. Connected web and
+ * `paperplane theme` - inspect and set the environment's theme. Connected web and
  * desktop clients switch when it is set; mobile keeps its own appearance
  * settings. Each client applies one set once, so a theme the user picks in
- * Settings afterwards sticks until the next `rove theme set`.
+ * Settings afterwards sticks until the next `paperplane theme set`.
  *
  * Writes `defaultTheme` (and `defaultThemeSetAt`, so a re-set of the same
  * value still acts) into the environment's `settings.json`. A running server
@@ -174,7 +174,7 @@ export class ThemeTargetMissingError extends Schema.TaggedError<ThemeTargetMissi
   {},
 ) {
   override get message(): string {
-    return "Provide a theme id or file, or run `rove theme clear` to remove the theme.";
+    return "Provide a theme id or file, or run `paperplane theme clear` to remove the theme.";
   }
 }
 
@@ -485,7 +485,7 @@ const themeSetCommand = Command.make("set", {
       // a well-formed id, so a typo cannot be written as a theme no client
       // will ever resolve.
       // Path-shaped first, existence second. Deciding on existence alone would
-      // make `rove theme set ocean` publish ./ocean whenever the cwd happens to
+      // make `paperplane theme set ocean` publish ./ocean whenever the cwd happens to
       // hold a file by that name, instead of selecting the built-in.
       const looksLikePath =
         target.endsWith(".json") ||

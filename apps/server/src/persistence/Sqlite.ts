@@ -20,7 +20,7 @@ const layerSetup = Layer.effectDiscard(
     yield* sql`PRAGMA busy_timeout = 5000;`;
     yield* sql`PRAGMA foreign_keys = ON;`;
     // Only an empty file can switch modes here; an existing database needs the
-    // offline VACUUM shared by startup and `rove doctor`, rebuilding pointer maps.
+    // offline VACUUM shared by startup and `paperplane doctor`, rebuilding pointer maps.
     const tables = yield* sql<{
       readonly count: number;
     }>`SELECT COUNT(*) AS count FROM sqlite_schema WHERE type = 'table'`;

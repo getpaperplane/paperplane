@@ -121,11 +121,11 @@ describe("ssh tunnel scripts", () => {
       'ROVE_ARCHIVE="rove-$ROVE_ARCHIVE_VERSION-$ROVE_PLATFORM-$ROVE_ARCH.tar.gz"',
     );
     assert.include(script, "SHA256SUMS");
-    assert.include(script, 'exec "$ROVE_RUNTIME_DIR/rove" "$@"');
+    assert.include(script, 'exec "$ROVE_RUNTIME_DIR/paperplane" "$@"');
     assert.notInclude(script, "npx");
     assert.notInclude(script, "npm exec");
     assert.notInclude(script, "rove@latest");
-    assert.notInclude(script, 'exec rove "$@"');
+    assert.notInclude(script, 'exec paperplane "$@"');
     // Concurrent launches serialize on a per-version mkdir lock and recheck
     // the completion marker after acquiring it.
     assert.include(
@@ -145,7 +145,7 @@ describe("ssh tunnel scripts", () => {
     assert.notInclude(script, "-mmin");
     assert.equal(script.split("if ! rove_runtime_ready; then").length - 1, 2);
     assert.isBelow(
-      script.indexOf('"$ROVE_STAGING/rove" --version'),
+      script.indexOf('"$ROVE_STAGING/paperplane" --version'),
       script.indexOf('> "$ROVE_STAGING/.install-complete"'),
     );
     // Node discovery is defined for the dev path but only ever invoked inside
@@ -164,7 +164,7 @@ describe("ssh tunnel scripts", () => {
       ...ARCHIVE,
       releaseBaseUrl: "https://mirror.example/rove/",
     });
-    assert.include(launch, "ROVE_RELEASE_BASE_URL='https://mirror.example/rove'");
+    assert.include(launch, "ROVE_RELEASE_BASE_URL='https://mirror.example/paperplane'");
     assert.include(launch, '"$RUNNER_FILE" __ssh-helper wait-service "$DEFAULT_RUNTIME_FILE"');
     assert.include(launch, '"$RUNNER_FILE" __ssh-helper runtime-port "$DEFAULT_RUNTIME_FILE"');
     assert.include(SshTunnel.buildRemoteLaunchScript(NODE_SCRIPT), "ROVE_ARCHIVE_MODE=0");
@@ -209,7 +209,7 @@ describe("ssh tunnel scripts", () => {
     assert.notInclude(script, TEST_NODE_ENGINE_RANGE);
   });
 
-  it("builds the remote rove runner with a node script override", () => {
+  it("builds the remote paperplane runner with a node script override", () => {
     const script = SshTunnel.buildRemoteRoveRunnerScript({
       ...NODE_SCRIPT,
       nodeEngineRange: TEST_NODE_ENGINE_RANGE,
@@ -900,8 +900,8 @@ describe("archive runner script", () => {
     const script = [
       "set -eu",
       `mkdir -p '${stage}' '${release}'`,
-      `printf '#!/bin/sh\\necho rove v${archiveVersion}\\n' > '${stage}/rove'`,
-      `chmod +x '${stage}/rove'`,
+      `printf '#!/bin/sh\\necho paperplane v${archiveVersion}\\n' > '${stage}/paperplane'`,
+      `chmod +x '${stage}/paperplane'`,
       `tar -czf '${release}/${stem}.tar.gz' -C '${root}/stage' '${stem}'`,
       `cd '${release}' && (sha256sum '${stem}.tar.gz' 2>/dev/null || shasum -a 256 '${stem}.tar.gz') > SHA256SUMS`,
     ].join("\n");
@@ -931,7 +931,7 @@ describe("archive runner script", () => {
         );
         for (const result of results) {
           assert.equal(result.exitCode, 0, result.stderr);
-          assert.include(result.stdout, `rove v${archiveVersion}`);
+          assert.include(result.stdout, `paperplane v${archiveVersion}`);
         }
         const versionsDir = `${home}/.rove-code/runtime/versions`;
         assert.deepEqual(yield* fs.readDirectory(versionsDir), [archiveVersion]);
@@ -961,7 +961,7 @@ describe("archive runner script", () => {
 
 // Reuse decisions also live in generated shell. Drive the real launch script
 // against a fake server that answers readiness probes and writes the default
-// runtime file the way `rove serve` does.
+// runtime file the way `paperplane serve` does.
 describe("launch script", () => {
   const windowsHost = HostProcess.Platform.defaultValue() === "win32";
   const FAKE_SERVER = `const fs = require("node:fs");

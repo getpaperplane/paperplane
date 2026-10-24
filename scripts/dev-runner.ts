@@ -335,9 +335,9 @@ export function createDevRunnerEnv({
     }
 
     // A dev-runner server is never launcher-managed. When the shell that runs
-    // this script was itself spawned by the machine's managed rove service (an
+    // this script was itself spawned by the machine's managed paperplane service (an
     // agent working inside Paperplane), these leak through and the child server
-    // fails startup with "The service launcher started a different rove version"
+    // fails startup with "The service launcher started a different paperplane version"
     // (serviceLauncherClient.ts resolveStartup).
     delete output.ROVE_SERVICE_LAUNCHER_CONTEXT;
     delete output.ROVE_BOOT_SERVICE_UNIT;

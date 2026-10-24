@@ -8,11 +8,11 @@
 #                            (default: stable; preview is a maintainers' test train)
 #   ROVE_VERSION           exact version to install (overrides ROVE_CHANNEL)
 #   ROVE_HOME              Paperplane home directory (default: ~\.rove-code)
-#   ROVE_INSTALL_BIN_DIR   where rove.cmd is linked (default: ~\.local\bin)
+#   ROVE_INSTALL_BIN_DIR   where paperplane.cmd is linked (default: ~\.local\bin)
 #   ROVE_RELEASE_BASE_URL  mirror for releases/download (default: GitHub)
 #
 # The archive is unpacked into $ROVE_HOME\runtime\versions\<version>, the
-# same layout `rove service install` uses, so the service reuses this download.
+# same layout `paperplane service install` uses, so the service reuses this download.
 $ErrorActionPreference = "Stop"
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
@@ -22,7 +22,7 @@ $roveHome = if ($env:ROVE_HOME) { $env:ROVE_HOME } else { Join-Path $HOME ".rove
 $binDir = if ($env:ROVE_INSTALL_BIN_DIR) { $env:ROVE_INSTALL_BIN_DIR } else { Join-Path $HOME ".local\bin" }
 
 function Fail([string] $message) {
-  Write-Error "rove install: $message"
+  Write-Error "paperplane install: $message"
   exit 1
 }
 
@@ -131,7 +131,7 @@ if (-not $version) {
   $version = $tag.Substring(1)
 }
 if ($version -match '-preview\.') {
-  Write-Warning "rove $version is a preview build. Preview builds are cut by maintainers from unreleased branches to exercise the release pipeline. They can be broken, receive no fixes, and are never offered as updates. Set ROVE_CHANNEL=stable (the default) for a supported build."
+  Write-Warning "paperplane $version is a preview build. Preview builds are cut by maintainers from unreleased branches to exercise the release pipeline. They can be broken, receive no fixes, and are never offered as updates. Set ROVE_CHANNEL=stable (the default) for a supported build."
   if ($channel -ne "preview" -and -not $env:ROVE_VERSION) {
     Fail "refusing a preview build that was not explicitly requested"
   }
@@ -158,7 +158,7 @@ if ((Test-Path $marker) -and ((Get-Content $marker -Raw).Trim() -eq $version)) {
     } catch {
       $status = $_.Exception.Response.StatusCode.value__
       if ($status -eq 404) {
-        Fail "rove $version has no release archive for win32-$arch in this fork"
+        Fail "paperplane $version has no release archive for win32-$arch in this fork"
       }
       throw
     }
@@ -183,7 +183,7 @@ if ((Test-Path $marker) -and ((Get-Content $marker -Raw).Trim() -eq $version)) {
     Get-ChildItem (Join-Path $staging $stem) | Move-Item -Destination $staging
     Remove-Item (Join-Path $staging $stem), (Join-Path $staging $archive), (Join-Path $staging "SHA256SUMS") -Recurse -Force
 
-    & (Join-Path $staging "rove.exe") --version | Out-Null
+    & (Join-Path $staging "paperplane.exe") --version | Out-Null
     if ($LASTEXITCODE -ne 0) { Fail "the downloaded executable does not run" }
     Set-Content -Path (Join-Path $staging ".install-complete") -Value $version -NoNewline
 
@@ -195,19 +195,19 @@ if ((Test-Path $marker) -and ((Get-Content $marker -Raw).Trim() -eq $version)) {
   }
 }
 
-Step "Setting up the rove command..."
+Step "Setting up the paperplane command..."
 New-Item -ItemType Directory -Force -Path $binDir | Out-Null
-$shim = Join-Path $binDir "rove.cmd"
+$shim = Join-Path $binDir "paperplane.cmd"
 if ((Test-Path $shim) -and -not (Get-Content $shim -Raw).Contains($versionsDir)) {
   Fail "$shim belongs to another installation; refusing to replace it"
 }
 # UTF-8 without a BOM: cmd.exe reads the shim as-is, and ASCII would corrupt
 # non-ASCII characters in the user's home path.
-[System.IO.File]::WriteAllText($shim, "@echo off`r`n`"$(Join-Path $targetDir 'rove.exe')`" %*", (New-Object System.Text.UTF8Encoding $false))
+[System.IO.File]::WriteAllText($shim, "@echo off`r`n`"$(Join-Path $targetDir 'paperplane.exe')`" %*", (New-Object System.Text.UTF8Encoding $false))
 if ($interactive) { [Console]::Error.Write("`r$esc[2K") }
 [Console]::Error.WriteLine("  ${green}Installed Paperplane $version$reset`n")
 if (($env:PATH -split ";") -notcontains $binDir) {
-  Write-Host "  Add $binDir to your PATH, then run ${bold}rove$reset.`n"
+  Write-Host "  Add $binDir to your PATH, then run ${bold}paperplane$reset.`n"
 } else {
-  Write-Host "  Run ${bold}rove$reset to get started.`n"
+  Write-Host "  Run ${bold}paperplane$reset to get started.`n"
 }

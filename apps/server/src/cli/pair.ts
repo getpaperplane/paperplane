@@ -1,5 +1,5 @@
 /**
- * `rove pair` - mint a pairing token for an already-running server and print it
+ * `paperplane pair` - mint a pairing token for an already-running server and print it
  * as a QR code, without restarting anything.
  *
  * Discovery reads the `server-runtime.json` a live server persists next to its
@@ -78,7 +78,7 @@ export class NoRunningServerError extends Schema.TaggedError<NoRunningServerErro
     return [
       "No running Paperplane server found.",
       ...this.checkedStatePaths.map((statePath) => `  checked ${statePath}`),
-      "Start one with `rove serve` on the server machine and pair over its local or LAN address.",
+      "Start one with `paperplane serve` on the server machine and pair over its local or LAN address.",
     ].join("\n");
   }
 }
@@ -215,7 +215,7 @@ const probeEnvironmentDescriptor = (
     );
     // Bad-gateway family means a proxy (Tailscale Serve) answered for a
     // backend that is gone — a stale mapping, not a live occupant. Treating
-    // it as unreachable lets `rove pair --tailscale` repair its own mapping
+    // it as unreachable lets `paperplane pair --tailscale` repair its own mapping
     // after the server's port changed.
     if (response.status === 502 || response.status === 503 || response.status === 504) {
       return { _tag: "unreachable" } as const;
@@ -244,7 +244,7 @@ const discoverPairTarget = Effect.fn("pair.discoverPairTarget")(function* (
     bases.push(yield* resolveBaseDir(explicitBaseDir));
   } else {
     // Same precedence as dev-runner: inside a linked worktree its own `.rove`
-    // outranks the shared home, so `rove pair` in a worktree pairs with the dev
+    // outranks the shared home, so `paperplane pair` in a worktree pairs with the dev
     // server under test rather than the daily-driver install.
     const worktreeHome = yield* resolveWorktreeRoveHome(process.cwd());
     if (worktreeHome !== undefined) {
@@ -437,7 +437,7 @@ const mintPairingLink = Effect.fn("pair.mintPairingLink")(function* (input: {
     return yield* environmentAuth.createPairingLink({
       scopes: input.scopes,
       subject: "one-time-token",
-      label: Option.getOrElse(input.label, () => "rove pair"),
+      label: Option.getOrElse(input.label, () => "paperplane pair"),
       ...(Option.isSome(input.ttl) ? { ttl: input.ttl.value } : undefined),
     });
   }).pipe(

@@ -286,7 +286,7 @@ export const make = Effect.gen(function* () {
 
   return ServerEnvironment.of({
     getEnvironmentId: Effect.succeed(environmentId),
-    // The publish opt-in and relay link change at runtime (`rove connect
+    // The publish opt-in and relay link change at runtime (`paperplane connect
     // publish`, the client settings toggle), so the capability is read per
     // descriptor request rather than baked in at startup.
     getDescriptor: ServerEnvironmentCloudReady.pipe(

@@ -26,9 +26,9 @@ const writeExecutable = (path: string, content: string) => {
   NodeFS.writeFileSync(path, content, { mode: 0o755 });
 };
 
-/** Writes the launcher for `target` at `<root>/bin/rove`, with `<root>/home` as its Paperplane home. */
+/** Writes the launcher for `target` at `<root>/bin/paperplane`, with `<root>/home` as its Paperplane home. */
 const writeShim = (root: string, target: CliShimTarget) => {
-  const shim = NodePath.join(root, "bin", "rove");
+  const shim = NodePath.join(root, "bin", "paperplane");
   writeExecutable(shim, renderCliShim({ target, shimPath: shim, roveHome: `${root}/home` }));
   return shim;
 };
@@ -52,7 +52,7 @@ const REPORTER =
 const fakeAppImage = (canMount = true) => {
   const root = tempRoot();
   const image = NodePath.join(root, "image");
-  writeExecutable(NodePath.join(image, "rove"), REPORTER);
+  writeExecutable(NodePath.join(image, "paperplane"), REPORTER);
   const appImage = NodePath.join(root, "Paperplane.AppImage");
   writeExecutable(
     appImage,
@@ -67,7 +67,7 @@ const fakeAppImage = (canMount = true) => {
       "",
     ].join("\n"),
   );
-  const shim = writeShim(root, { kind: "appimage", appImage, executableName: "rove" });
+  const shim = writeShim(root, { kind: "appimage", appImage, executableName: "paperplane" });
   return { root, image, appImage, shim };
 };
 
@@ -114,13 +114,13 @@ describe("renderCliShim", () => {
     expect(run(shim, []).stdout).toContain(`home=${root}/home`);
     expect(run(shim, [], { ROVE_HOME: "/elsewhere" }).stdout).toContain("home=/elsewhere");
     // Run by a relative path, it still names itself absolutely.
-    const relative = NodeChildProcess.spawnSync("./bin/rove", [], { cwd: root, encoding: "utf8" });
+    const relative = NodeChildProcess.spawnSync("./bin/paperplane", [], { cwd: root, encoding: "utf8" });
     expect(relative.stdout).toContain(`cli=${shim}`);
   });
 
   it("runs an installed app's server directly", () => {
     const root = tempRoot();
-    const executable = NodePath.join(root, "opt", "Paperplane", "rove");
+    const executable = NodePath.join(root, "opt", "Paperplane", "paperplane");
     writeExecutable(executable, REPORTER);
     const shim = writeShim(root, {
       kind: "direct",
@@ -151,7 +151,7 @@ describe("renderCliShim", () => {
     const executable = "C:\\Apps\\R&whoami&X 100%\\!CHANNEL!\\Paperplane.exe";
     const script = renderCliShim({
       target: { kind: "windows", executable, entry: "C:\\Apps\\server.asar\\bin.mjs" },
-      shimPath: "C:\\Users\\José\\.rove-code\\bin\\rove.cmd",
+      shimPath: "C:\\Users\\José\\.rove-code\\bin\\paperplane.cmd",
       roveHome: "C:\\Users\\José\\.rove-code",
     });
     const lines = script.split("\r\n");
@@ -165,7 +165,7 @@ describe("renderCliShim", () => {
       (line) => line.includes("whoami") && !/"[^"]*whoami[^"]*"/.test(line),
     );
     expect(bare).toEqual([]);
-    expect(lines).toContain('set "ROVE_CLI_PATH=C:\\Users\\José\\.rove-code\\bin\\rove.cmd"');
+    expect(lines).toContain('set "ROVE_CLI_PATH=C:\\Users\\José\\.rove-code\\bin\\paperplane.cmd"');
   });
 
   it("switches the Windows console to UTF-8 only when a path needs it", () => {
@@ -175,7 +175,7 @@ describe("renderCliShim", () => {
         executable: "C:\\Paperplane\\Paperplane.exe",
         entry: "C:\\Paperplane\\bin.mjs",
       },
-      shimPath: "C:\\Users\\me\\.rove-code\\bin\\rove.cmd",
+      shimPath: "C:\\Users\\me\\.rove-code\\bin\\paperplane.cmd",
       roveHome: "C:\\Users\\me\\.rove-code",
     });
     // A Ctrl-C that ends the batch would leave the console switched.

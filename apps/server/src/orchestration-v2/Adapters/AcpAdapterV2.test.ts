@@ -2566,7 +2566,7 @@ describe("AcpAdapterV2", () => {
             name: "rove",
             command: process.execPath,
             args: [
-              process.argv[1] === undefined ? "rove" : NodePath.resolve(process.argv[1]),
+              process.argv[1] === undefined ? "paperplane" : NodePath.resolve(process.argv[1]),
               "acp-mcp-bridge",
             ],
             env: [

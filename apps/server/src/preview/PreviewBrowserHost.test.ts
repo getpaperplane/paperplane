@@ -64,7 +64,7 @@ const diagnose = (input: {
   return PreviewBrowserHost.diagnoseLaunchFailure({
     executable: "/home/me/.rove/tools/chrome-headless-shell/linux64/154/chrome-headless-shell",
     output: input.output,
-    setupCommand: "sudo rove browser setup",
+    setupCommand: "sudo paperplane browser setup",
   }).pipe(
     Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
     Effect.provideService(HostProcess.Platform, input.platform),
@@ -81,7 +81,7 @@ describe("diagnoseLaunchFailure", () => {
         ldd: "",
       });
       expect(error?._tag).toBe("PreviewBrowserSandboxError");
-      expect(error?.message).toContain("Run `sudo rove browser setup` on the host");
+      expect(error?.message).toContain("Run `sudo paperplane browser setup` on the host");
       expect(commands).toEqual([]);
     }),
   );
@@ -97,7 +97,7 @@ describe("diagnoseLaunchFailure", () => {
         _tag: "PreviewBrowserLibrariesError",
         libraries: ["libglib-2.0.so.0", "libnss3.so", "libX11.so.6"],
       });
-      expect(error?.message).toContain("Run `sudo rove browser setup` on the host");
+      expect(error?.message).toContain("Run `sudo paperplane browser setup` on the host");
     }),
   );
 

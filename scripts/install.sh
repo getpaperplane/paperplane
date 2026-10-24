@@ -9,11 +9,11 @@
 #                            (default: stable; preview is a maintainers' test train)
 #   ROVE_VERSION           exact version to install (overrides ROVE_CHANNEL)
 #   ROVE_HOME              Paperplane home directory (default: ~/.rove-code)
-#   ROVE_INSTALL_BIN_DIR   where the `rove` symlink goes (default: ~/.local/bin)
+#   ROVE_INSTALL_BIN_DIR   where the `paperplane` symlink goes (default: ~/.local/bin)
 #   ROVE_RELEASE_BASE_URL  mirror for releases/download (default: GitHub)
 #
 # The archive is unpacked into $ROVE_HOME/runtime/versions/<version>, the
-# same layout `rove service install` uses, so the service reuses this download
+# same layout `paperplane service install` uses, so the service reuses this download
 # instead of fetching the release again.
 set -eu
 
@@ -23,7 +23,7 @@ rove_home="${ROVE_HOME:-$HOME/.rove-code}"
 bin_dir="${ROVE_INSTALL_BIN_DIR:-$HOME/.local/bin}"
 
 fail() {
-  printf '\nrove install: %s\n' "$1" >&2
+  printf '\npaperplane install: %s\n' "$1" >&2
   exit 1
 }
 
@@ -156,7 +156,7 @@ fi
 case "$version" in
   *-preview.*)
     printf '%s\n' \
-      "rove ${version} is a preview build." \
+      "paperplane ${version} is a preview build." \
       "  Preview builds are cut by maintainers from unreleased branches to exercise the release" \
       "  pipeline. They can be broken, receive no fixes, and are never offered as updates." \
       "  Set ROVE_CHANNEL=stable (the default) for a supported build." >&2
@@ -187,7 +187,7 @@ else
   fetch_status=0
   fetch "${base_url}/v${version}/SHA256SUMS" "${staging}/SHA256SUMS" || fetch_status=$?
   if [ "$fetch_status" -eq 44 ]; then
-    fail "rove ${version} has no release archive for ${platform}-${arch} in this fork"
+    fail "paperplane ${version} has no release archive for ${platform}-${arch} in this fork"
   elif [ "$fetch_status" -ne 0 ]; then
     fail "could not download the release checksums"
   fi
@@ -202,7 +202,7 @@ else
   step "Extracting Paperplane..."
   tar -xzf "${staging}/${archive}" -C "$staging" --strip-components=1
   rm -f "${staging}/${archive}" "${staging}/SHA256SUMS"
-  "${staging}/rove" --version >/dev/null || fail "the downloaded executable does not run"
+  "${staging}/paperplane" --version >/dev/null || fail "the downloaded executable does not run"
   printf '%s\n' "$version" > "${staging}/.install-complete"
 
   { [ ! -e "$target_dir" ] && [ ! -L "$target_dir" ]; } || fail "${target_dir} already exists; refusing to replace an existing installation"
@@ -210,19 +210,19 @@ else
   trap - EXIT
 fi
 
-step "Setting up the rove command..."
+step "Setting up the paperplane command..."
 mkdir -p "$bin_dir"
-if [ -e "${bin_dir}/rove" ] || [ -L "${bin_dir}/rove" ]; then
-  [ -L "${bin_dir}/rove" ] || fail "${bin_dir}/rove exists and is not a Paperplane installer link"
-  case "$(readlink "${bin_dir}/rove")" in
-    "${versions_dir}"/*/rove) ;;
-    *) fail "${bin_dir}/rove points to a different installation; refusing to replace it" ;;
+if [ -e "${bin_dir}/paperplane" ] || [ -L "${bin_dir}/paperplane" ]; then
+  [ -L "${bin_dir}/paperplane" ] || fail "${bin_dir}/paperplane exists and is not a Paperplane installer link"
+  case "$(readlink "${bin_dir}/paperplane")" in
+    "${versions_dir}"/*/paperplane) ;;
+    *) fail "${bin_dir}/paperplane points to a different installation; refusing to replace it" ;;
   esac
 fi
-ln -sfn "${target_dir}/rove" "${bin_dir}/rove"
+ln -sfn "${target_dir}/paperplane" "${bin_dir}/paperplane"
 if "$interactive"; then printf '\r\033[2K' >&2; fi
 printf '  %sInstalled Paperplane %s%s\n\n' "$green" "$version" "$reset" >&2
 case ":${PATH}:" in
-  *":${bin_dir}:"*) printf '  Run %srove%s to get started.\n\n' "$bold" "$reset" ;;
-  *) printf '  Add %s to your PATH, then run %srove%s.\n\n' "$bin_dir" "$bold" "$reset" ;;
+  *":${bin_dir}:"*) printf '  Run %spaperplane%s to get started.\n\n' "$bold" "$reset" ;;
+  *) printf '  Add %s to your PATH, then run %spaperplane%s.\n\n' "$bin_dir" "$bold" "$reset" ;;
 esac

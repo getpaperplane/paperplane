@@ -89,7 +89,7 @@ if (process.env.AGENT_DEVICE_DAEMON_BASE_URL) process.exit(2);`,
     }).pipe(
       Effect.scoped,
       Effect.provideService(HostProcess.IsExecutable, true),
-      Effect.provideService(HostProcess.ExecutablePath, "/packaged/rove"),
+      Effect.provideService(HostProcess.ExecutablePath, "/packaged/paperplane"),
       Effect.provide(NodeServices.layer),
     ),
   );

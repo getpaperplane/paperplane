@@ -86,7 +86,7 @@ database size plus 64 MiB, and skips if another connection holds the database. F
 upgrade without preventing startup. Only configured userdata paths are eligible, not implicit dev
 paths. SQLite's transactional VACUUM leaves the original database intact on interruption; the
 retirement pass remains off the readiness path, so its freed pages are considered next launch.
-Subsequent background reclamation returns free pages online. `rove doctor` remains an offline
+Subsequent background reclamation returns free pages online. `paperplane doctor` remains an offline
 fallback for skipped upgrades; the Storage page reports reclaimable space and its host-specific command.
 
 ## Recovery

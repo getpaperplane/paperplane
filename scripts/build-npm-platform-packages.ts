@@ -11,7 +11,7 @@
  *
  *   @getpaperplane/cli-<platformKey>/     archive contents flattened + package.json
  *   @getpaperplane/cli-<platformKey>.tgz  the same tree as an npm tarball
- *   @getpaperplane/cli/                   launcher: package.json, bin/rove.js, README.md
+ *   @getpaperplane/cli/                   launcher: package.json, bin/paperplane.js, README.md
  *   @getpaperplane/cli.tgz                the launcher as an npm tarball
  *
  * The tarballs are what gets published. `npm publish <dir>` always drops
@@ -111,7 +111,7 @@ export function npmPlatformPackageManifest(
     repository: serverPackageJson.repository,
     os: [os],
     cpu: [cpu],
-    files: ["rove", "rove.exe", "client", "resource-monitor", "node_modules"],
+    files: ["paperplane", "paperplane.exe", "client", "resource-monitor", "node_modules"],
     preferUnplugged: true,
     dependencies: Object.fromEntries(bundleDependencies.map((name) => [name, bundled[name]])),
     bundleDependencies,
@@ -167,7 +167,7 @@ export function npmPlatformPackageReadme(platformKey: CliArchivePlatformKey): st
   ].join("\n");
 }
 
-/** package.json for the `rove` launcher. No engines: bin/rove.js is trivial CJS. */
+/** package.json for the `paperplane` launcher. No engines: bin/paperplane.js is trivial CJS. */
 export function npmLauncherPackageManifest(
   version: string,
   platformKeys: ReadonlyArray<CliArchivePlatformKey>,
@@ -178,7 +178,7 @@ export function npmLauncherPackageManifest(
     description: "Paperplane CLI. Installs the self-contained executable for this platform.",
     license: serverPackageJson.license,
     repository: serverPackageJson.repository,
-    bin: { rove: "./bin/rove.js" },
+    bin: { paperplane: "./bin/paperplane.js" },
     files: ["bin"],
     optionalDependencies: Object.fromEntries(
       platformKeys.map((key) => [npmPlatformPackageName(key), version]),
@@ -206,7 +206,7 @@ try {
 } catch {
   process.stderr.write(
     [
-      "rove: no Paperplane CLI build is available for this platform (" + key + ").",
+      "paperplane: no Paperplane CLI build is available for this platform (" + key + ").",
       "Supported platforms: " + SUPPORTED.join(", ") + ".",
       "If yours is listed, reinstall @getpaperplane/cli so npm fetches its optional dependency.",
       "The desktop app and release archives are at https://github.com/hafiezul/rove/releases",
@@ -216,10 +216,10 @@ try {
   process.exit(1);
 }
 
-const executable = join(packageDir, process.platform === "win32" ? "rove.exe" : "rove");
+const executable = join(packageDir, process.platform === "win32" ? "paperplane.exe" : "paperplane");
 const result = spawnSync(executable, process.argv.slice(2), { stdio: "inherit" });
 if (result.error) {
-  process.stderr.write("rove: failed to start " + executable + ": " + result.error.message + "\\n");
+  process.stderr.write("paperplane: failed to start " + executable + ": " + result.error.message + "\\n");
   process.exit(1);
 }
 // A child killed by a signal has no status; report it the way a shell would.
@@ -342,7 +342,7 @@ const stagePlatformPackage = Effect.fn("stagePlatformPackage")(function* (input:
   const extractDir = path.join(scratch, "extract");
   yield* fs.makeDirectory(extractDir);
   const contentDir = yield* extractArchive(input.archive, extractDir);
-  const executableName = input.key.startsWith("win32") ? "rove.exe" : "rove";
+  const executableName = input.key.startsWith("win32") ? "paperplane.exe" : "paperplane";
   const executable = path.join(contentDir, executableName);
   if (!(yield* fs.exists(executable))) {
     return yield* new NpmPackagesArchiveLayoutError({
@@ -351,7 +351,7 @@ const stagePlatformPackage = Effect.fn("stagePlatformPackage")(function* (input:
     });
   }
   // The tarball carries the on-disk mode, so the bit must be set before packing.
-  if (executableName === "rove") {
+  if (executableName === "paperplane") {
     yield* fs.chmod(executable, 0o755);
   }
   const bundled = yield* readBundledPackages(path.join(contentDir, "node_modules"));
@@ -375,7 +375,7 @@ const stagePlatformPackage = Effect.fn("stagePlatformPackage")(function* (input:
   return output;
 }, Effect.scoped);
 
-/** Writes the launcher package (package.json, bin/rove.js, README) and its tarball. */
+/** Writes the launcher package (package.json, bin/paperplane.js, README) and its tarball. */
 const stageLauncherPackage = Effect.fn("stageLauncherPackage")(function* (input: {
   readonly outputDir: string;
   readonly version: string;
@@ -393,7 +393,7 @@ const stageLauncherPackage = Effect.fn("stageLauncherPackage")(function* (input:
     path.join(stageDir, "package.json"),
     `${yield* encodePackageJson(npmLauncherPackageManifest(input.version, input.platformKeys))}\n`,
   );
-  const launcherScript = path.join(stageDir, "bin/rove.js");
+  const launcherScript = path.join(stageDir, "bin/paperplane.js");
   yield* fs.writeFileString(launcherScript, NPM_LAUNCHER_SCRIPT);
   yield* fs.chmod(launcherScript, 0o755);
   const readme = yield* path.fromFileUrl(new URL("../apps/server/README.md", import.meta.url));
@@ -491,7 +491,7 @@ const command = Command.make(
   buildNpmPlatformPackages,
 ).pipe(
   Command.withDescription(
-    "Build the rove launcher and @getpaperplane/cli-<platform> npm packages from CLI release archives.",
+    "Build the paperplane launcher and @getpaperplane/cli-<platform> npm packages from CLI release archives.",
   ),
 );
 

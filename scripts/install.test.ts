@@ -22,8 +22,8 @@ describe.skipIf(HostProcess.Platform.defaultValue() !== "linux")("installer term
       let output = "";
       await NodeFSP.mkdir(NodePath.join(root, stem));
       await NodeFSP.writeFile(
-        NodePath.join(root, stem, "rove"),
-        "#!/bin/sh\necho 'rove v1.2.3'\n",
+        NodePath.join(root, stem, "paperplane"),
+        "#!/bin/sh\necho 'paperplane v1.2.3'\n",
         {
           mode: 0o755,
         },
@@ -102,10 +102,10 @@ describe.skipIf(HostProcess.Platform.defaultValue() !== "linux")("installer term
             await NodeFSP.readFile(NodePath.join(versions, version, ".install-complete"), "utf8"),
           ).toBe("1.2.3\n");
           expect(
-            NodeChildProcess.execFileSync(NodePath.join(root, "bin/rove"), ["--version"], {
+            NodeChildProcess.execFileSync(NodePath.join(root, "bin/paperplane"), ["--version"], {
               encoding: "utf8",
             }).trim(),
-          ).toBe("rove v1.2.3");
+          ).toBe("paperplane v1.2.3");
           expect(await NodeFSP.readdir(versions)).toEqual([version]);
         }
       } finally {

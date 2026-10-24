@@ -86,7 +86,7 @@ export function formatServiceStatus(
     return "Paperplane service\n  Status: unavailable on this machine\n  Supported on: Linux with systemd, macOS with launchd";
   }
   if (!status.installed) {
-    return "Paperplane service\n  Status: not installed\n  Next: Run `rove service install`.";
+    return "Paperplane service\n  Status: not installed\n  Next: Run `paperplane service install`.";
   }
   const installedVersion = status.installedVersion ?? cliVersion;
   const problems = (status.problems ?? []).map(
@@ -99,20 +99,20 @@ export function formatServiceStatus(
   ) {
     return [
       "Paperplane service",
-      `  Status: installed · rove@${installedVersion} (newer than this rove@${cliVersion} CLI)`,
+      `  Status: installed · paperplane@${installedVersion} (newer than this paperplane@${cliVersion} CLI)`,
       `  Unit: ${status.unitPath}`,
       `  Logs: ${status.logPath}`,
       ...problems,
-      `  Next: Run \`rove update ${installedVersion}\` to match it, or pass \`--allow-downgrade\` to \`rove service install\` explicitly.`,
+      `  Next: Run \`paperplane update ${installedVersion}\` to match it, or pass \`--allow-downgrade\` to \`paperplane service install\` explicitly.`,
     ].join("\n");
   }
   return [
     "Paperplane service",
-    `  Status: ${status.current ? `installed · rove@${installedVersion}` : "needs an update or repair"}`,
+    `  Status: ${status.current ? `installed · paperplane@${installedVersion}` : "needs an update or repair"}`,
     `  Unit: ${status.unitPath}`,
     `  Logs: ${status.logPath}`,
     ...problems,
-    ...(status.current ? [] : ["  Next: Run `rove service install` to repair it."]),
+    ...(status.current ? [] : ["  Next: Run `paperplane service install` to repair it."]),
   ].join("\n");
 }
 
@@ -158,37 +158,37 @@ const serviceInstallCommand = Command.make("install", {
         });
         if (!result.changed) {
           yield* Console.log(
-            `Paperplane service is already installed with rove@${packageJson.version}.`,
+            `Paperplane service is already installed with paperplane@${packageJson.version}.`,
           );
           return;
         }
         yield* Console.log(
-          `${result.previouslyInstalled ? "Updated" : "Installed"} Paperplane service with rove@${packageJson.version}.\nLogs: ${result.plan.logPath}`,
+          `${result.previouslyInstalled ? "Updated" : "Installed"} Paperplane service with paperplane@${packageJson.version}.\nLogs: ${result.plan.logPath}`,
         );
       }),
     ),
   ),
 );
 
-// Keep the deprecated alias for old scripts. `rove update` changes releases;
-// `rove service update` only repairs the installed service.
+// Keep the deprecated alias for old scripts. `paperplane update` changes releases;
+// `paperplane service update` only repairs the installed service.
 const serviceUpdateCommand = Command.make("update", serviceReconcileFlags).pipe(
-  Command.withDescription("Deprecated. Run `rove update` to move to a newer release."),
+  Command.withDescription("Deprecated. Run `paperplane update` to move to a newer release."),
   Command.unlisted,
   Command.withHandler((flags) =>
     runServiceCommand(
       flags,
       Effect.gen(function* () {
         yield* Console.log(
-          "`rove service update` is deprecated: run `rove update` to move to a newer release, or `rove service install` to repair the service. Repairing now.",
+          "`paperplane service update` is deprecated: run `paperplane update` to move to a newer release, or `paperplane service install` to repair the service. Repairing now.",
         );
         const result = yield* reconcileService({ allowDowngrade: flags.allowDowngrade });
         if (!result.changed) {
-          yield* Console.log(`Paperplane service is already using rove@${packageJson.version}.`);
+          yield* Console.log(`Paperplane service is already using paperplane@${packageJson.version}.`);
           return;
         }
         yield* Console.log(
-          `${result.previouslyInstalled ? "Updated" : "Installed"} Paperplane service with rove@${packageJson.version}.\nLogs: ${result.plan.logPath}`,
+          `${result.previouslyInstalled ? "Updated" : "Installed"} Paperplane service with paperplane@${packageJson.version}.\nLogs: ${result.plan.logPath}`,
         );
       }),
     ),
@@ -197,7 +197,7 @@ const serviceUpdateCommand = Command.make("update", serviceReconcileFlags).pipe(
 
 const serviceRestartCommand = Command.make("restart", projectLocationFlags).pipe(
   Command.withDescription(
-    "Restart the background service. Picks up a version installed by `rove update` that was not restarted at the time.",
+    "Restart the background service. Picks up a version installed by `paperplane update` that was not restarted at the time.",
   ),
   Command.withHandler((flags) =>
     runServiceCommand(
@@ -208,7 +208,7 @@ const serviceRestartCommand = Command.make("restart", projectLocationFlags).pipe
         const restarted = yield* service.restart;
         yield* Console.log(
           restarted
-            ? `Restarted the Paperplane service${status.installedVersion === undefined ? "" : ` on rove@${status.installedVersion}`}.`
+            ? `Restarted the Paperplane service${status.installedVersion === undefined ? "" : ` on paperplane@${status.installedVersion}`}.`
             : "Paperplane service is not installed.",
         );
       }),
@@ -275,7 +275,7 @@ export const offerServiceDuringOnboarding = Effect.gen(function* () {
     compareExactServiceVersions(status.installedVersion, packageJson.version) > 0
   ) {
     yield* Console.log(
-      `A newer rove@${status.installedVersion} background service is installed. Leaving it unchanged.`,
+      `A newer paperplane@${status.installedVersion} background service is installed. Leaving it unchanged.`,
     );
     // This CLI cannot verify the newer service. Keep the manual fallback available.
     return false;

@@ -71,12 +71,12 @@ request.
 
 #### Summarize the trace file
 
-`rove trace summary` reads the trace file and its rotated backups directly, so it works while the
+`paperplane trace summary` reads the trace file and its rotated backups directly, so it works while the
 server is stalled or stopped. It prints counts, rates, and latency percentiles per span name. Use
 it to measure background work or to compare two builds.
 
 ```bash
-rove trace summary --since 30m --limit 40
+paperplane trace summary --since 30m --limit 40
 ```
 
 It reads `ROVE_TRACE_FILE` if set, else `<home>/userdata/logs/server.trace.ndjson` for

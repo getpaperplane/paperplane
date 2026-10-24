@@ -324,7 +324,7 @@ export const DesktopUpdateStateSchema = Schema.Struct({
   notAppliedVersion: Schema.optionalKey(Schema.String),
 });
 
-/** The desktop app's `rove` command on PATH, managed from Settings. */
+/** The desktop app's `paperplane` command on PATH, managed from Settings. */
 export const DesktopCliCommandStateSchema = Schema.Struct({
   /** Only installed builds have a launcher to put on PATH. */
   supported: Schema.Boolean,
@@ -1254,13 +1254,13 @@ export interface DesktopBridge {
   downloadUpdate: () => Promise<DesktopUpdateActionResult>;
   installUpdate: () => Promise<DesktopUpdateActionResult>;
   onUpdateState: (listener: (state: DesktopUpdateState) => void) => () => void;
-  /** Settings → `rove` command. Optional: older desktop builds lack it. */
+  /** Settings → `paperplane` command. Optional: older desktop builds lack it. */
   cliCommand?: {
     getState: () => Promise<DesktopCliCommandState>;
     install: () => Promise<DesktopCliCommandState>;
     uninstall: () => Promise<DesktopCliCommandState>;
   };
-  /** Present when the desktop shell accepts `rove app` activation requests. */
+  /** Present when the desktop shell accepts `paperplane app` activation requests. */
   /**
    * Web links the OS opens with Paperplane as the default browser (macOS). The
    * renderer reports when it listens; links queue in the main process until then.

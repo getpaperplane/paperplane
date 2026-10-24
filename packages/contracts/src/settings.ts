@@ -260,14 +260,14 @@ export const FontFamilyPreference = Schema.String.check(Schema.isMaxLength(200))
 export type FontFamilyPreference = typeof FontFamilyPreference.Type;
 
 /**
- * The environment's theme, set with `rove theme set <id>`. Each client applies
+ * The environment's theme, set with `paperplane theme set <id>`. Each client applies
  * it once per value — live when connected, on its next connect otherwise — so
  * setting it switches every client, while a theme a user picks in Settings
  * afterwards sticks until the next set. Empty means "no environment theme",
  * which is also how it is cleared.
  */
 export const DefaultThemePreference = Schema.String.check(Schema.isMaxLength(64));
-// Deliberately absent from ServerSettingsPatch: `rove theme set` checks that an
+// Deliberately absent from ServerSettingsPatch: `paperplane theme set` checks that an
 // id is syntactically valid and actually resolvable, and a generic RPC patch
 // would let a client write a theme no client can resolve, bypassing both.
 export type DefaultThemePreference = typeof DefaultThemePreference.Type;
@@ -1221,7 +1221,7 @@ const NULLABLE_PROJECT_SETTINGS_OVERRIDES: ReadonlySet<ProjectScopedServerSettin
   "sidebarAutoSettleAfterDays",
 ]);
 
-/** Reclaimable bytes from which the offline `rove doctor` repair is worth suggesting. */
+/** Reclaimable bytes from which the offline `paperplane doctor` repair is worth suggesting. */
 export const DATABASE_COMPACTION_RECOMMENDED_BYTES = 1024 ** 3;
 
 /** Live SQLite file accounting for the environment's state database. */
@@ -1229,7 +1229,7 @@ export const DatabaseStorageStatus = Schema.Struct({
   databaseBytes: Schema.Number,
   /** Free pages inside the file that an offline VACUUM (or incremental auto_vacuum) returns to disk. */
   reclaimableBytes: Schema.Number,
-  /** False on databases created before incremental auto_vacuum; `rove doctor` converts them. */
+  /** False on databases created before incremental auto_vacuum; `paperplane doctor` converts them. */
   incrementalVacuumEnabled: Schema.Boolean,
   /** Command to run on the host to reclaim the space offline. */
   compactCommand: Schema.String,
@@ -1425,7 +1425,7 @@ export const ServerSettings = Schema.Struct({
   defaultTheme: DefaultThemePreference.pipe(Schema.withDecodingDefault(Effect.succeed(""))),
   /**
    * When the environment's theme was last set, so clients can tell a re-set
-   * of the same value from one they already applied: `rove theme set` must act
+   * of the same value from one they already applied: `paperplane theme set` must act
    * even when it names the theme it named before. Empty on environments
    * provisioned by builds that predate it, where clients fall back to
    * applying once per value.

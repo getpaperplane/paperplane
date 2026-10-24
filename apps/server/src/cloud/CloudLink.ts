@@ -193,13 +193,13 @@ export class CloudLinkAccountMismatchError extends Schema.TaggedError<CloudLinkA
   }
 }
 
-/** Linking from the CLI needs the authorization `rove connect link` stores. */
+/** Linking from the CLI needs the authorization `paperplane connect link` stores. */
 export class CloudLinkAuthorizationMissingError extends Schema.TaggedError<CloudLinkAuthorizationMissingError>()(
   "CloudLinkAuthorizationMissingError",
   {},
 ) {
   override get message(): string {
-    return "Run `rove connect link` to authorize this environment.";
+    return "Run `paperplane connect link` to authorize this environment.";
   }
 }
 

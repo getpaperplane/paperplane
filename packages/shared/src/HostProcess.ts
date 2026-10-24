@@ -59,7 +59,7 @@ export const Arguments = Context.Reference<ReadonlyArray<string>>(
 
 /**
  * The command the shell was given, before Node resolved it to the binary:
- * `rove` for a PATH lookup, `./rove` or the launcher symlink for an explicit
+ * `paperplane` for a PATH lookup, `./paperplane` or the launcher symlink for an explicit
  * path. `process.argv[0]` and `execPath` are always the resolved binary.
  */
 export const InvokedAs = Context.Reference<string>("@getpaperplane/shared/HostProcess/InvokedAs", {

@@ -59,11 +59,11 @@ it.effect.each([
           `${runner.archiveVersion}\n`,
         );
         NodeFS.writeFileSync(
-          NodePath.join(runtime, "rove"),
+          NodePath.join(runtime, "paperplane"),
           `#!/bin/sh
 set -eu
 case "$1" in
-  --version) printf 'rove v1.2.3\\n' ;;
+  --version) printf 'paperplane v1.2.3\\n' ;;
   __ssh-helper)
     case "$2" in
       runtime-port) ${running ? "printf '42 3773'" : "exit 1"} ;;
@@ -109,7 +109,7 @@ esac
           expect(
             NodeFS.existsSync(actions) ? NodeFS.readFileSync(actions, "utf8").trim() : "",
           ).toBe(action);
-          expect(NodeFS.existsSync(NodePath.join(runtime, "rove"))).toBe(true);
+          expect(NodeFS.existsSync(NodePath.join(runtime, "paperplane"))).toBe(true);
         } else {
           expect(
             NodeFS.existsSync(NodePath.join(home, ".rove-code/ssh-launch", stateKey, "managed")),

@@ -524,7 +524,7 @@ function ConnectAccountOption({
             <p className="text-sm text-muted-foreground">
               Run this on each computer you want to connect.
             </p>
-            <CommandBlock command="npx rove connect" className="mt-3" />
+            <CommandBlock command="npx @getpaperplane/cli connect" className="mt-3" />
             <p className="mt-3 text-xs text-muted-foreground">
               Keep Paperplane running. Select the computers you want to set up above.
             </p>
@@ -638,9 +638,9 @@ function PairingForm({
             <p className="pt-3 text-sm text-muted-foreground">
               Run this on the computer with your code.
             </p>
-            <CommandBlock command="npx rove pair" className="mt-2" />
+            <CommandBlock command="npx @getpaperplane/cli pair" className="mt-2" />
             <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
-              Start Paperplane first, or run <code className="font-mono">npx rove serve</code>. Add{" "}
+              Start Paperplane first, or run <code className="font-mono">npx @getpaperplane/cli serve</code>. Add{" "}
               <code className="font-mono">--tailscale</code> to use your tailnet.
             </p>
           </CollapsiblePanel>

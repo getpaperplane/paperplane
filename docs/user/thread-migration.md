@@ -43,7 +43,7 @@ from `statev2.sqlite`. Keep `state.sqlite` as your original recovery source. Old
 retain the freed space inside the file until the next launch. Paperplane automatically rebuilds
 older databases at startup when the savings are substantial and enough free disk space is available,
 then returns space automatically during future cleanup. This may add a few seconds to that launch.
-If automatic reclamation is deferred, you can stop the desktop app and server and run `rove doctor`
+If automatic reclamation is deferred, you can stop the desktop app and server and run `paperplane doctor`
 on the host. Settings → Storage shows the command for your environment. Allow extra free disk space
 for the rebuild.
 

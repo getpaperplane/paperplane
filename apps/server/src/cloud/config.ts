@@ -19,7 +19,7 @@ export const PUBLISH_AGENT_ACTIVITY_SECRET = "cloud-publish-agent-activity";
 export const HOLD_WEBHOOKS_WHILE_OFFLINE_SECRET = "cloud-hold-webhooks-while-offline";
 // Set when the relay rejects this environment's credential (401), as after the
 // environment is deregistered from Paperplane Connect. The link stays stored; the mark
-// tells `rove connect status` and clients to offer a relink. Linking, unlinking,
+// tells `paperplane connect status` and clients to offer a relink. Linking, unlinking,
 // or a later successful tunnel registration clears it.
 export const CLOUD_LINK_REVOKED = "cloud-link-revoked";
 

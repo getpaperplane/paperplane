@@ -50,7 +50,7 @@ const connectUnavailableCommand = Command.make("connect", {
   Command.withHandler(() =>
     Effect.fail(
       new CliError.ShowHelp({
-        commandPath: ["rove", "connect"],
+        commandPath: ["paperplane", "connect"],
         errors: [new ConnectPublicConfigMissingError({ cause: connectPublicConfigMissingMessage })],
       }),
     ),
@@ -63,14 +63,14 @@ const cloudReady =
   (typeof __ROVE_BUILD_CLOUD_READY__ !== "undefined" && __ROVE_BUILD_CLOUD_READY__);
 
 export const makeCli = ({ cloudEnabled = cloudReady && hasCloudPublicConfig } = {}) =>
-  Command.make("rove", { ...sharedServerCommandFlags }).pipe(
+  Command.make("paperplane", { ...sharedServerCommandFlags }).pipe(
     Command.withDescription("Run the Paperplane server."),
     Command.withHandler(runDefaultServerCommand),
     Command.withSubcommands([
       Command.make("help").pipe(
         Command.withDescription("Show command help."),
         Command.withHandler(() =>
-          Effect.fail(new CliError.ShowHelp({ commandPath: ["rove"], errors: [] })),
+          Effect.fail(new CliError.ShowHelp({ commandPath: ["paperplane"], errors: [] })),
         ),
       ),
       acpMcpBridgeCommand,

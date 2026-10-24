@@ -37,7 +37,7 @@ export const RoveMemoryUsage = Schema.Struct({
 });
 export type RoveMemoryUsage = typeof RoveMemoryUsage.Type;
 
-/** Host memory health shared by `rove doctor`, the composer notice, and Diagnostics. */
+/** Host memory health shared by `paperplane doctor`, the composer notice, and Diagnostics. */
 export const HostHealthReport = Schema.Struct({
   sampledAt: NonNegativeInt,
   totalMemoryBytes: NonNegativeInt,

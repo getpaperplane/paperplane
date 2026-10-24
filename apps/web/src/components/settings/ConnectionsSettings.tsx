@@ -1942,7 +1942,7 @@ function ConfiguredCloudLinkRow({ canManageRelay }: { readonly canManageRelay: b
       ) : linkRevoked ? (
         <SettingsRow
           title={searchableSetting("rove-connect").title}
-          description="This environment was removed from Paperplane Connect. Run `rove connect link` on the host to link it again."
+          description="This environment was removed from Paperplane Connect. Run `paperplane connect link` on the host to link it again."
         />
       ) : null}
       <SettingsRow

@@ -11,7 +11,7 @@ import type { SettingsTarget } from "../settings-environment-filter";
 import { SettingsActionRow } from "./SettingsActionRow";
 import { SettingsSection } from "./SettingsSection";
 
-/** Suggests `rove doctor` for a database that still holds at least 1 GiB of freed pages. */
+/** Suggests `paperplane doctor` for a database that still holds at least 1 GiB of freed pages. */
 export function DatabaseStorageNotice({ target }: { readonly target: SettingsTarget }) {
   const result = useAtomValue(
     serverEnvironment.databaseStorage({ environmentId: target.environmentId, input: {} }),

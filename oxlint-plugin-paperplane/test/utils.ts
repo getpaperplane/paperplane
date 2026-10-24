@@ -112,7 +112,7 @@ export const createOxlintRuleHarness = (
     yield* fs.writeFileString(
       configPath,
       yield* encodeOxlintConfig({
-        jsPlugins: [{ name: "rove", specifier: pluginPath }],
+        jsPlugins: [{ name: "paperplane", specifier: pluginPath }],
         rules: { [ruleName]: ["error", ...(options.ruleOptions ?? [])] },
       }),
     );

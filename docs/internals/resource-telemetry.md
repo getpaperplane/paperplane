@@ -32,7 +32,7 @@ unconstrained states. Headless servers leave unavailable power data unknown.
 
 Host health is separate from process telemetry: it reads host memory and Linux
 cgroup and vmstat counters directly, without requiring the native monitor. It
-samples while subscribed or on a direct read (`rove doctor` and MCP); it does not
+samples while subscribed or on a direct read (`paperplane doctor` and MCP); it does not
 keep an idle polling loop. OOM counters describe a group or host, not a particular
 process. A likely-OOM label requires the provider PID to be dead; memory pressure
 alone must never relabel a live process.

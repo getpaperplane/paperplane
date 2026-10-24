@@ -253,8 +253,8 @@ export function ServerUpdateAction({
           installation?.kind === "npm-global" ? "Update command copied" : "Relaunch command copied",
         description:
           installation?.kind === "npm-global"
-            ? `Run \`${command}\` on ${serverLabel}, then restart rove with your usual options.`
-            : `Stop rove on ${serverLabel}, then relaunch with \`${command}\` using the same subcommand and options. This does not update an installed rove command.`,
+            ? `Run \`${command}\` on ${serverLabel}, then restart paperplane with your usual options.`
+            : `Stop paperplane on ${serverLabel}, then relaunch with \`${command}\` using the same subcommand and options. This does not update an installed paperplane command.`,
       });
     },
     onError: (error) => {

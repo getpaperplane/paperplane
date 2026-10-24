@@ -48,7 +48,7 @@ const extractingRunner = (fs: FileSystem.FileSystem, path: Path.Path, commands: 
         if (input.command !== "tar" || stagingDir === undefined) {
           return yield* Effect.die(`unexpected command ${input.command}`);
         }
-        yield* fs.writeFileString(path.join(stagingDir, "rove"), "#!/bin/sh\n").pipe(Effect.orDie);
+        yield* fs.writeFileString(path.join(stagingDir, "paperplane"), "#!/bin/sh\n").pipe(Effect.orDie);
         return {
           stdout: "",
           stderr: "",
@@ -86,7 +86,7 @@ it.layer(NodeServices.layer)("ensurePinnedRuntimeInstalled", (it) => {
             Effect.orDie,
           ),
       });
-      assert.equal(paths.entryPath, path.join(paths.versionDir, "rove"));
+      assert.equal(paths.entryPath, path.join(paths.versionDir, "paperplane"));
       assert.deepEqual(pinnedRuntimeCommand(paths), { command: paths.entryPath, args: [] });
       assert.deepEqual(requests, [
         `https://releases.example/download/v${version}/SHA256SUMS`,
@@ -236,7 +236,7 @@ it.layer(NodeServices.layer)("ensurePinnedRuntimeInstalled", (it) => {
         validate: () => Effect.die("must not validate an unverified archive"),
       }).pipe(Effect.flip);
       assert.instanceOf(error, PinnedRuntimeInstallError);
-      assert.equal(error.step, "verifying the rove release archive checksum");
+      assert.equal(error.step, "verifying the paperplane release archive checksum");
       assert.deepEqual(commands, []);
       assert.deepEqual(yield* fs.readDirectory(path.join(baseDir, "runtime", "versions")), []);
     }),

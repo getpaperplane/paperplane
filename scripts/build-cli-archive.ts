@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Packages the server single-executable into a self-contained per-platform
- * archive: the `rove` binary, the web client, the resource monitor, and a
+ * archive: the `paperplane` binary, the web client, the resource monitor, and a
  * production install of the native packages the bundle keeps external. The
  * archive is the unit every runtime installer downloads, so nothing in it may
  * require Node, npm, or a compiler on the machine that unpacks it.
@@ -9,7 +9,7 @@
  * Layout inside the archive (a single top-level directory named after the
  * archive stem):
  *
- *   rove | rove.exe      the single-executable
+ *   paperplane | paperplane.exe      the single-executable
  *   client/              web app served by the server
  *   resource-monitor/    per-platform Rust helper, same paths as the npm package
  *   node_modules/        runtime externals (node-pty, msgpackr-extract, fff)
@@ -414,7 +414,7 @@ const signMacArchiveContents = Effect.fn("signMacArchiveContents")(function* (in
     ]),
     "notarytool submit",
   ).pipe(Effect.ensuring(fs.remove(notarizeZip, { force: true }).pipe(Effect.ignore)));
-  yield* Effect.log("[cli-archive] Notarized rove.");
+  yield* Effect.log("[cli-archive] Notarized paperplane.");
 });
 
 const WindowsSigningConfig = Config.all({
@@ -517,9 +517,9 @@ const signWindowsExecutable = Effect.fn("signWindowsExecutable")(function* (
   ].join(" ");
   yield* runCommand(
     ChildProcess.make("pwsh", ["-NoProfile", "-NonInteractive", "-Command", script]),
-    "Invoke-TrustedSigning rove.exe",
+    "Invoke-TrustedSigning paperplane.exe",
   );
-  yield* Effect.log("[cli-archive] Signed rove.exe (Azure Trusted Signing).");
+  yield* Effect.log("[cli-archive] Signed paperplane.exe (Azure Trusted Signing).");
 });
 
 const buildCliArchive = Effect.fn("buildCliArchive")(function* (input: {
@@ -533,14 +533,14 @@ const buildCliArchive = Effect.fn("buildCliArchive")(function* (input: {
   const path = yield* Path.Path;
   const repoRoot = yield* RepoRoot;
   const serverDir = path.join(repoRoot, "apps/server");
-  const executableName = input.platform === "win" ? "rove.exe" : "rove";
-  // tsdown suffixes cross-built executables with their target (rove-darwin-x64);
-  // a host build is plain rove. Prefer the exact target when both exist.
+  const executableName = input.platform === "win" ? "paperplane.exe" : "paperplane";
+  // tsdown suffixes cross-built executables with their target (paperplane-darwin-x64);
+  // a host build is plain paperplane. Prefer the exact target when both exist.
   const targetKey = `${input.platform === "mac" ? "darwin" : input.platform}-${input.arch}`;
   const targetExecutable = path.join(
     serverDir,
     "dist-exe",
-    `rove-${targetKey}${input.platform === "win" ? ".exe" : ""}`,
+    `paperplane-${targetKey}${input.platform === "win" ? ".exe" : ""}`,
   );
   // The unsuffixed host build is only a valid stand-in when it was built for
   // this platform and architecture; otherwise a missing target must fail.
@@ -650,7 +650,7 @@ const command = Command.make(
     ),
   },
   (input) => buildCliArchive(input).pipe(Effect.scoped),
-).pipe(Command.withDescription("Package the rove single-executable into a per-platform archive."));
+).pipe(Command.withDescription("Package the paperplane single-executable into a per-platform archive."));
 
 if (import.meta.main) {
   Command.run(command, { version: "0.0.0" }).pipe(

@@ -1,6 +1,6 @@
 # Paperplane documentation
 
-Paperplane is an independent fork of an upstream coding-agent control surface. The CLI is `rove`, and installed applications store state under `~/.rove-code` by default. Internal names such as the `@getpaperplane/*` npm scope and compatibility-sensitive files such as `rove.json` remain until a migration has a clear user benefit.
+Paperplane is an independent fork of an upstream coding-agent control surface. The CLI is `paperplane`, and installed applications store state under `~/.rove-code` by default. Workspace packages use the `@getpaperplane/*` npm scope. Compatibility-sensitive files such as `rove.json` remain until their migration is ready.
 
 ## Using the application
 

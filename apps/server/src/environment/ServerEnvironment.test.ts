@@ -98,9 +98,9 @@ it.layer(NodeServices.layer)("ServerEnvironmentLive", (it) => {
       yield* fs.writeFileString(entry, "");
       yield* fs.writeFileString(
         `${installPrefix}/lib/node_modules/@getpaperplane/cli/package.json`,
-        '{"name":"@getpaperplane/cli","version":"0.0.45","bin":{"rove":"./dist/bin.mjs"}}',
+        '{"name":"@getpaperplane/cli","version":"0.0.45","bin":{"paperplane":"./dist/bin.mjs"}}',
       );
-      yield* fs.symlink(entry, `${installPrefix}/bin/rove`);
+      yield* fs.symlink(entry, `${installPrefix}/bin/paperplane`);
       const prefix = yield* fs.realPath(`${baseDir}/node`);
       const config = yield* makeServerConfig(baseDir);
       yield* fs.makeDirectory(config.stateDir, { recursive: true });

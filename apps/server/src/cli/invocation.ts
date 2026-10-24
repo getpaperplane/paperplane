@@ -22,7 +22,7 @@ export type CliRunner = "npx" | "pnpm dlx" | "bunx";
  *   bunx     ~/.bun/install/cache/... or $TMPDIR/bunx-<uid>-<spec>/...
  *
  * Global installs and repo checkouts match none of these and return null.
- * Detection is best-effort; callers must fail closed to a plain `rove` command.
+ * Detection is best-effort; callers must fail closed to a plain `paperplane` command.
  */
 function detectCliRunner(entryPath: string): CliRunner | null {
   const path = entryPath.replaceAll("\\", "/");
@@ -45,7 +45,7 @@ function detectCliRunner(entryPath: string): CliRunner | null {
 const InstallManifest = Schema.Struct({
   name: Schema.String,
   version: Schema.String,
-  bin: Schema.optionalKey(Schema.Struct({ rove: Schema.String })),
+  bin: Schema.optionalKey(Schema.Struct({ paperplane: Schema.String })),
   optionalDependencies: Schema.optionalKey(Schema.Record(Schema.String, Schema.String)),
 });
 const decodeInstallManifest = Schema.decodeUnknownEffect(Schema.fromJsonString(InstallManifest));
@@ -60,7 +60,7 @@ export const resolveServerInstallation = Effect.gen(function* () {
   const platform = yield* HostProcess.Platform;
   const entry = yield* fs.realPath(executable ? executablePath : (args[1] ?? ""));
   const match =
-    /^(.*)\/lib\/node_modules\/@getpaperplane\/cli\/(?:dist\/bin\.mjs|bin\/rove\.js|node_modules\/@rove\/rove-[^/]+\/rove)$/.exec(
+    /^(.*)\/lib\/node_modules\/@getpaperplane\/cli\/(?:dist\/bin\.mjs|bin\/paperplane\.js|node_modules\/@getpaperplane\/cli-[^/]+\/paperplane)$/.exec(
       entry,
     );
   if (!match) {
@@ -85,15 +85,15 @@ export const resolveServerInstallation = Effect.gen(function* () {
     .readFileString(path.join(packageRoot, "package.json"))
     .pipe(Effect.flatMap(decodeInstallManifest));
   if (manifest.name !== "@getpaperplane/cli" || !manifest.bin) return null;
-  const bin = yield* fs.realPath(path.join(packageRoot, manifest.bin.rove));
-  const globalBin = yield* fs.realPath(path.join(prefix, "bin/rove"));
+  const bin = yield* fs.realPath(path.join(packageRoot, manifest.bin.paperplane));
+  const globalBin = yield* fs.realPath(path.join(prefix, "bin/paperplane"));
   if (globalBin !== bin) return null;
   if (executable) {
     const nativeManifest = yield* fs
       .readFileString(path.join(path.dirname(entry), "package.json"))
       .pipe(Effect.flatMap(decodeInstallManifest));
     if (
-      manifest.bin.rove !== "./bin/rove.js" ||
+      manifest.bin.paperplane !== "./bin/paperplane.js" ||
       manifest.optionalDependencies?.[nativeManifest.name] !== nativeManifest.version ||
       nativeManifest.version !== manifest.version
     )
@@ -116,9 +116,9 @@ function suggestedPackageSpec(version: string): string {
 }
 
 /**
- * Render a `rove <subcommand>` suggestion that matches how this process was
+ * Render a `paperplane <subcommand>` suggestion that matches how this process was
  * launched, so copy/pasting it works: `npx @getpaperplane/cli connect` suggests
- * `npx @getpaperplane/cli serve`, a global install suggests `rove serve`, and a nightly build
+ * `npx @getpaperplane/cli serve`, a global install suggests `paperplane serve`, and a nightly build
  * keeps the `@nightly` tag.
  */
 export function formatCliCommand(input: {
@@ -128,7 +128,7 @@ export function formatCliCommand(input: {
 }): string {
   const runner = detectCliRunner(input.entryPath);
   if (runner === null) {
-    return `rove ${input.subcommand}`;
+    return `paperplane ${input.subcommand}`;
   }
   return `${runner} ${suggestedPackageSpec(input.version)} ${input.subcommand}`;
 }
@@ -164,10 +164,10 @@ const hostShellWord = (platform: NodeJS.Platform, value: string) =>
   platform === "win32" ? powershellWord(value) : shellWord(value);
 
 /**
- * The launcher a person can type to run this install when `rove` is not on
- * PATH: the desktop app's `rove` shim, which the app and the shim itself name in
+ * The launcher a person can type to run this install when `paperplane` is not on
+ * PATH: the desktop app's `paperplane` shim, which the app and the shim itself name in
  * `ROVE_CLI_PATH`, or a standalone binary's own path. Script installs (a
- * repo checkout) have no single launcher and keep plain `rove`.
+ * repo checkout) have no single launcher and keep plain `paperplane`.
  */
 const resolveInstallLauncher = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
@@ -181,7 +181,7 @@ const resolveInstallLauncher = Effect.gen(function* () {
 });
 
 /**
- * `rove <subcommand> <args>` for a person to run on this host: `rove` when it is
+ * `paperplane <subcommand> <args>` for a person to run on this host: `paperplane` when it is
  * on PATH, the package runner this process came from, or else the absolute
  * path of the launcher for this install, such as the one the desktop app
  * installs. `args` are quoted for the host's shell: POSIX, or PowerShell on
@@ -193,8 +193,8 @@ export const resolveHostCliCommand = (subcommand: string, args: ReadonlyArray<st
     const withArgs = (prefix: string) =>
       [prefix, ...args.map((arg) => hostShellWord(platform, arg))].join(" ");
     const command = yield* resolveCliCommand(subcommand);
-    if (command !== `rove ${subcommand}`) return { command: withArgs(command), launcher: false };
-    if (yield* isCommandAvailable("rove")) return { command: withArgs(command), launcher: false };
+    if (command !== `paperplane ${subcommand}`) return { command: withArgs(command), launcher: false };
+    if (yield* isCommandAvailable("paperplane")) return { command: withArgs(command), launcher: false };
     const launcher = yield* resolveInstallLauncher;
     if (Option.isNone(launcher)) return { command: withArgs(command), launcher: false };
     // PowerShell runs a quoted path only through the call operator.
@@ -204,9 +204,9 @@ export const resolveHostCliCommand = (subcommand: string, args: ReadonlyArray<st
   });
 
 /**
- * `rove <subcommand>` as root, for setup a person runs once on the host. `sudo`
+ * `paperplane <subcommand>` as root, for setup a person runs once on the host. `sudo`
  * resets PATH on most distributions, which drops a user-installed Node (nvm,
- * fnm, a tarball) and with it `npx` or a global `rove`, so the command carries
+ * fnm, a tarball) and with it `npx` or a global `paperplane`, so the command carries
  * PATH through unless Node is on root's PATH too. An absolute launcher needs
  * neither.
  */

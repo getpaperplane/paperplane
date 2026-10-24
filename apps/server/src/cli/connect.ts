@@ -187,11 +187,11 @@ function formatCloudStatus(status: CloudCliStatus, options?: { readonly json?: b
         ? "pending server startup"
         : "not provisioned";
   const nextStep = !status.authenticated
-    ? "Run `rove connect link` to authorize and enable Paperplane Connect."
+    ? "Run `paperplane connect link` to authorize and enable Paperplane Connect."
     : status.revoked
-      ? "Run `rove connect link` to link this environment again."
+      ? "Run `paperplane connect link` to link this environment again."
       : !status.desired
-        ? "Run `rove connect link` to enable Paperplane Connect."
+        ? "Run `paperplane connect link` to enable Paperplane Connect."
         : !status.linked
           ? "Start Paperplane to provision the environment link and launch its managed tunnel."
           : undefined;
@@ -205,7 +205,7 @@ function formatCloudStatus(status: CloudCliStatus, options?: { readonly json?: b
     `  Publish agent activity: ${status.publishAgentActivity ? "enabled" : "disabled"}`,
     ...formatRelayClientStatus(status.relayClient),
     "",
-    "This is saved setup, not a live connection check. Check the background service with `rove service status`.",
+    "This is saved setup, not a live connection check. Check the background service with `paperplane service status`.",
     ...(nextStep ? ["", `Next: ${nextStep}`] : []),
   ].join("\n");
 }
@@ -272,7 +272,7 @@ const withCloudCliSessionToken = <A, E, R>(
     environmentAuth.issueSession({
       scopes: [AuthRelayWriteScope],
       subject: "cloud-cli",
-      label: "rove connect cli",
+      label: "paperplane connect cli",
     }),
     (issued) => run(issued.token),
     (issued) => environmentAuth.revokeSession(issued.sessionId).pipe(Effect.ignore({ log: true })),
@@ -381,7 +381,7 @@ export const reportCloudDisconnectResults = Effect.fn("cloud.cli.report_disconne
       yield* Console.warn(
         input.clearAuthorization
           ? "Could not revoke the relay-side environment record before signing out.\nThe stored CLI authorization was still removed locally."
-          : "Could not revoke the relay-side environment record yet.\nRun `rove connect unlink` again when the relay is reachable.",
+          : "Could not revoke the relay-side environment record yet.\nRun `paperplane connect unlink` again when the relay is reachable.",
       );
     } else if (input.relayResult.value.status === "revoked") {
       yield* Console.log("Revoked the relay-side environment record.");
@@ -410,7 +410,7 @@ const disconnectCloud = Effect.fn("cloud.cli.disconnect")(function* (options: {
 
   if (options.clearAuthorization) {
     yield* Console.log(
-      "Signed out of Paperplane Connect locally.\nThe background service is managed separately with `rove service`.",
+      "Signed out of Paperplane Connect locally.\nThe background service is managed separately with `paperplane service`.",
     );
   }
 });
@@ -643,11 +643,11 @@ const connectPublishCommand = Command.make("publish", {
         // out of band without Paperplane Connect.
         if (!(yield* tokens.hasCredential)) {
           yield* Console.log(
-            "Run `rove connect login` first so this environment can be authorized to publish.",
+            "Run `paperplane connect login` first so this environment can be authorized to publish.",
           );
           return;
         }
-        // A link may already be desired (e.g. `rove connect link` before the
+        // A link may already be desired (e.g. `paperplane connect link` before the
         // server's first start). Never downgrade it: a desired managed link
         // also covers publishing, so only request a publish-only link when no
         // link is pending at all.

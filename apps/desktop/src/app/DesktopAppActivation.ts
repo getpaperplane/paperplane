@@ -107,7 +107,7 @@ function closeServer(server: NodeNet.Server): Promise<void> {
 }
 
 /**
- * Serves `rove app` requests on the local control address until `close`.
+ * Serves `paperplane app` requests on the local control address until `close`.
  *
  * Two desktop apps can share one state dir, for example nightly and a preview
  * build. They share one socket path, so on Unix:

@@ -496,7 +496,7 @@ describe("DesktopBackendConfiguration", () => {
             "--exec",
             "env",
             `PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:${resolvedPath}`,
-            `${linuxAppRoot}/rove`,
+            `${linuxAppRoot}/paperplane`,
             "--bootstrap-fd",
             "0",
           ]);
@@ -539,9 +539,9 @@ describe("DesktopBackendConfiguration", () => {
 
           assert.deepEqual(observedRuntimeIds, [`sha256-${firstHash}`, `sha256-${secondHash}`]);
           assert.equal(first.wslRuntimeId, observedRuntimeIds[0]);
-          assert.include(first.args, `/runtime/sha256-${firstHash}/rove`);
+          assert.include(first.args, `/runtime/sha256-${firstHash}/paperplane`);
           assert.equal(second.wslRuntimeId, observedRuntimeIds[1]);
-          assert.include(second.args, `/runtime/sha256-${secondHash}/rove`);
+          assert.include(second.args, `/runtime/sha256-${secondHash}/paperplane`);
           assert.isUndefined(invalidIdentity.wslRuntimeId);
           assert.include(invalidIdentity.args, "/usr/bin/node");
           assert.include(invalidIdentity.args, `${mountedAppRoot}/apps/server/dist/bin.mjs`);
@@ -594,7 +594,7 @@ describe("DesktopBackendConfiguration", () => {
             }),
           probeRuntime: (_distro, root) => {
             observedProbeRoots.push(root);
-            return { ok: false, reason: `${root}/rove --version failed (exit 127)` };
+            return { ok: false, reason: `${root}/paperplane --version failed (exit 127)` };
           },
           ensureNodePty: (_distro, root) => {
             observedNodePtyRoots.push(root);
@@ -611,7 +611,7 @@ describe("DesktopBackendConfiguration", () => {
           assert.deepEqual(observedNodePtyRoots, [mountedAppRoot]);
           assert.include(config.args, "/usr/bin/node");
           assert.include(config.args, `${mountedAppRoot}/apps/server/dist/bin.mjs`);
-          assert.notInclude(config.args, `${stagedAppRoot}/rove`);
+          assert.notInclude(config.args, `${stagedAppRoot}/paperplane`);
           assert.equal(config.entryPath, mountedEntryPath);
           assert.isUndefined(config.wslRuntimeId);
           assert.isTrue(Option.isNone(config.preflightFailure));
@@ -668,7 +668,7 @@ describe("DesktopBackendConfiguration", () => {
             Effect.sync(() => {
               invalidatedRuntimeIds.push(runtimeId);
             }),
-          probeRuntime: () => ({ ok: false, reason: "rove --version failed (exit 1)" }),
+          probeRuntime: () => ({ ok: false, reason: "paperplane --version failed (exit 1)" }),
           ensureNodePty: () => ({
             ok: false,
             reason: "WSL backend preflight timed out while probing for Node.js.",
@@ -704,7 +704,7 @@ describe("DesktopBackendConfiguration", () => {
         yield* fileSystem.writeFileString(entryPath, "");
 
         const nodePath = "/home/test user's/.nvm/versions/node/v22.0.0/bin/node";
-        const linuxAppRoot = "/tmp/rove code's launch";
+        const linuxAppRoot = "/tmp/paperplane code's launch";
         const linuxEntryPath = `${linuxAppRoot}/apps/server/dist/bin.mjs`;
         const resolvedPath = "/home/test user/bin:/opt/test's tools/bin:/usr/bin:/bin";
         const devServerUrl = "http://127.0.0.1:5733/dev%20assets/?label=hello%20world";

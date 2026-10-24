@@ -9,7 +9,7 @@
     "directory": "apps/server"
   },
   "bin": {
-    "rove": "./dist/bin.mjs"
+    "paperplane": "./dist/bin.mjs"
   },
   "files": [
     "dist"

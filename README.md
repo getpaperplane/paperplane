@@ -21,8 +21,8 @@ You bring your own subscriptions. If a provider is set up on the host, Paperplan
 
 ```sh
 npm install -g @getpaperplane/cli
-rove service install
-rove pair --tailscale   # or connect over LAN; see remote access docs
+paperplane service install
+paperplane pair --tailscale   # or connect over LAN; see remote access docs
 ```
 
 **Browser:** open [rove.hafiezulzikry.com](https://rove.hafiezulzikry.com) and pair it with a host you run. Every CLI host also serves the web client locally.

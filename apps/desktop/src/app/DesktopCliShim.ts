@@ -6,10 +6,10 @@ import * as Option from "effect/Option";
 import * as DesktopEnvironment from "./DesktopEnvironment.ts";
 import { makeComponentLogger } from "./DesktopObservability.ts";
 
-// A desktop install puts no `rove` on PATH, so commands the server asks a person
-// to run (`sudo rove browser setup`) had nothing to call. The app keeps a small
+// A desktop install puts no `paperplane` on PATH, so commands the server asks a person
+// to run (`sudo paperplane browser setup`) had nothing to call. The app keeps a small
 // launcher for its bundled CLI in the Paperplane home, which is never on PATH and so
-// never shadows another `rove`, and the server names it by absolute path in those
+// never shadows another `paperplane`, and the server names it by absolute path in those
 // commands through ROVE_CLI_PATH. An AppImage mounts somewhere new each run,
 // so its launcher mounts the AppImage itself instead of pointing into it.
 const { logInfo, logWarning } = makeComponentLogger("desktop-cli-shim");
@@ -125,12 +125,12 @@ export const renderCliShim = (input: {
   ].join("\n");
 };
 
-/** Where the packaged app keeps its launcher: `<Paperplane home>/bin/rove`, `rove.cmd` on Windows. */
+/** Where the packaged app keeps its launcher: `<Paperplane home>/bin/paperplane`, `paperplane.cmd` on Windows. */
 export const launcherPath = (environment: DesktopEnvironment.DesktopEnvironment["Service"]) =>
   environment.path.join(
     environment.baseDir,
     "bin",
-    environment.platform === "win32" ? "rove.cmd" : "rove",
+    environment.platform === "win32" ? "paperplane.cmd" : "paperplane",
   );
 
 /**
@@ -162,23 +162,23 @@ export const install = Effect.gen(function* () {
   return yield* Effect.gen(function* () {
     const existing = yield* fs.readFileString(shimPath).pipe(Effect.option);
     if (Option.isSome(existing) && !existing.value.includes(MARKER)) {
-      // Someone else's file; leave it, and let commands fall back to plain `rove`.
-      yield* logWarning("leaving a rove launcher the app did not write", { shimPath });
+      // Someone else's file; leave it, and let commands fall back to plain `paperplane`.
+      yield* logWarning("leaving a paperplane launcher the app did not write", { shimPath });
       return Option.none<string>();
     }
     if (Option.getOrUndefined(existing) !== content) {
       yield* fs.makeDirectory(path.dirname(shimPath), { recursive: true });
-      // Written beside the launcher and renamed over it, so a running `rove` never reads half a file.
+      // Written beside the launcher and renamed over it, so a running `paperplane` never reads half a file.
       const staging = `${shimPath}.${process.pid}.tmp`;
       yield* fs.writeFileString(staging, content, { mode: 0o755 });
       yield* fs.rename(staging, shimPath);
-      yield* logInfo("installed rove launcher", { shimPath });
+      yield* logInfo("installed paperplane launcher", { shimPath });
     }
     return Option.some(shimPath);
   }).pipe(
-    // Best-effort: nothing here may block the backend's start; commands then fall back to plain `rove`.
+    // Best-effort: nothing here may block the backend's start; commands then fall back to plain `paperplane`.
     Effect.catchCause((cause) =>
-      logWarning("could not install rove launcher", { shimPath, cause: Cause.pretty(cause) }).pipe(
+      logWarning("could not install paperplane launcher", { shimPath, cause: Cause.pretty(cause) }).pipe(
         Effect.as(Option.none<string>()),
       ),
     ),

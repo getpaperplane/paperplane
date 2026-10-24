@@ -97,9 +97,9 @@ const readField = (stdout: string, field: string) => {
   return line.slice(field.length + 1).trim();
 };
 
-// Stands in for the release's self-contained `rove` executable: the install
+// Stands in for the release's self-contained `paperplane` executable: the install
 // script only asks it for `--version`.
-const SERVER_ENTRY_SOURCE = '#!/bin/sh\necho "rove wsl runtime test server 0.0.0"\n';
+const SERVER_ENTRY_SOURCE = '#!/bin/sh\necho "paperplane wsl runtime test server 0.0.0"\n';
 
 const makeDistroListSpawner = (result: { readonly stdout?: string; readonly exitCode?: number }) =>
   ChildProcessSpawner.make(() =>
@@ -200,7 +200,7 @@ describe("WSL runtime cache", () => {
     expect(script).toContain('mv -T "$runtime_root" "$runtime_stale"');
     expect(script).toContain('mktemp -d "$runtime_parent/.1.2.3-x64.tmp.XXXXXX"');
     // The release archive wraps everything in one `rove-<version>-linux-x64/`
-    // directory; stripping it puts the executable at `$runtime_root/rove`.
+    // directory; stripping it puts the executable at `$runtime_root/paperplane`.
     expect(script).toContain(
       "tar -xzf '/mnt/c/Program Files/Paperplane/wsl-runtime.tar.gz' -C \"$runtime_tmp\" --strip-components=1",
     );
@@ -284,7 +284,7 @@ describe("WSL runtime cache", () => {
     // The same proof the SSH runner and CLI installers use: executable, and
     // `--version` exits 0. That is what decides arch and loadability, so no
     // separate native probe is needed.
-    expect(script).toContain('  [ -x "$1/rove" ] && "$1/rove" --version >/dev/null 2>&1');
+    expect(script).toContain('  [ -x "$1/paperplane" ] && "$1/paperplane" --version >/dev/null 2>&1');
 
     // Readiness gates the short-circuit, so a cache whose executable broke
     // reinstalls from the archive instead of being reused forever.
@@ -296,7 +296,7 @@ describe("WSL runtime cache", () => {
     expect(readinessDefined).toBeLessThan(readyShortCircuit);
   });
 
-  // A swapped or half-written `rove` can still exist and even still answer
+  // A swapped or half-written `paperplane` can still exist and even still answer
   // `--version`, and launch then runs something this install never verified.
   // The digest the install records is what turns that into a miss.
   it("re-hashes the executable against the digest the install recorded", () => {
@@ -306,7 +306,7 @@ describe("WSL runtime cache", () => {
       "b".repeat(64),
     );
 
-    expect(script).toContain(`  sha256sum "$1/rove" 2>/dev/null | cut -d ' ' -f 1`);
+    expect(script).toContain(`  sha256sum "$1/paperplane" 2>/dev/null | cut -d ' ' -f 1`);
     expect(script).toContain(
       '    [ "$recorded_entry_digest" = "$(runtime_server_entry_digest "$runtime_root")" ]',
     );
@@ -370,7 +370,7 @@ describe("WSL runtime cache", () => {
   it("never deletes a runtime another backend is running from", () => {
     const script = buildWslRuntimePruneScript("1.2.3/x64");
 
-    // The running backend's argv holds `<runtime>/rove`, so
+    // The running backend's argv holds `<runtime>/paperplane`, so
     // the process itself is the lease and exiting releases it. Nothing has to be
     // registered up front, which is what makes this cover backends already
     // running from an older version that knows nothing about pruning.
@@ -435,8 +435,8 @@ describe.skipIf(posixShellRunner === null)("WSL runtime install script (executed
         // holds the executable and its native addons.
         'stage="$work/stage/rove-0.0.0-linux-x64"',
         'mkdir -p "$stage/node_modules/node-pty/build/Release" "$work/home"',
-        `printf '%s' ${sh(SERVER_ENTRY_SOURCE)} > "$stage/rove"`,
-        'chmod +x "$stage/rove"',
+        `printf '%s' ${sh(SERVER_ENTRY_SOURCE)} > "$stage/paperplane"`,
+        'chmod +x "$stage/paperplane"',
         `printf '%s' 'pty-native-payload' > "$stage/node_modules/node-pty/build/Release/pty.node"`,
         `tar -czf "$work/wsl-runtime.tar.gz" -C "$work/stage" rove-0.0.0-linux-x64`,
         `printf 'work:%s\\n' "$work"`,
@@ -465,7 +465,7 @@ describe.skipIf(posixShellRunner === null)("WSL runtime install script (executed
       runtimeId,
       runtimeParent: `${work}/home/.rove-code/wsl-runtime`,
       runtimeRoot: `${work}/home/.rove-code/wsl-runtime/${runtimeId}`,
-      serverEntry: `${work}/home/.rove-code/wsl-runtime/${runtimeId}/rove`,
+      serverEntry: `${work}/home/.rove-code/wsl-runtime/${runtimeId}/paperplane`,
       installScript,
       install: (archive?: string, sha?: string) => runShell(installScript(archive, sha)),
     };
@@ -736,7 +736,7 @@ describe.skipIf(posixShellRunner === null)("WSL runtime install script (executed
         `runtime_root=${sh(fixture.runtimeRoot)}`,
         `runtime_parent=${sh(fixture.runtimeParent)}`,
         'rm "$runtime_root/.rove-wsl-runtime-ready"',
-        holdRuntimeBusy('"$runtime_root/rove"'),
+        holdRuntimeBusy('"$runtime_root/paperplane"'),
         fixture.installScript(),
         'stale=$(find "$runtime_parent" -maxdepth 1 -type d -name ".sha256-*.stale.*" -print -quit)',
         'test -n "$stale"',
@@ -770,7 +770,7 @@ describe.skipIf(posixShellRunner === null)("WSL runtime install script (executed
         'touch -d "4 minutes ago" "$runtime_parent/sha256-active"',
         'touch -d "3 minutes ago" "$runtime_parent/sha256-old"',
         'touch -d "2 minutes ago" "$runtime_parent/sha256-locked"',
-        holdRuntimeBusy('"$runtime_parent/sha256-active/rove"'),
+        holdRuntimeBusy('"$runtime_parent/sha256-active/paperplane"'),
         holdInstallLock('"$runtime_parent/.sha256-locked.install.lock"'),
         `HOME="$home"`,
         "export HOME",

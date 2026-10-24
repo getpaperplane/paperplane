@@ -66,7 +66,7 @@ const makeHarness = Effect.fn("test.make_self_update_harness")(function* (
           const stagingDir = input.args[input.args.indexOf("-C") + 1];
           if (stagingDir === undefined) return yield* Effect.die("missing tar target");
           yield* fs
-            .writeFileString(path.join(stagingDir, "rove"), "#!/bin/sh\n")
+            .writeFileString(path.join(stagingDir, "paperplane"), "#!/bin/sh\n")
             .pipe(Effect.orDie);
           return {
             stdout: "",
@@ -430,7 +430,7 @@ it.layer(NodeServices.layer)("server self update", (it) => {
       const web = yield* makeHarness();
       expect(
         (yield* web.selfUpdate.update({ targetVersion: "latest" }).pipe(Effect.flip)).reason,
-      ).toBe("'latest' is not an exact rove version.");
+      ).toBe("'latest' is not an exact paperplane version.");
       const desktop = yield* makeHarness({ mode: "desktop" });
       expect(
         (yield* desktop.selfUpdate.update({ targetVersion: "1.1.0" }).pipe(Effect.flip)).reason,

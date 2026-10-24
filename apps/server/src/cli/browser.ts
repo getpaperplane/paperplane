@@ -1,5 +1,5 @@
 /**
- * `rove browser setup` - prepares a Linux host for Paperplane's headless browser, which
+ * `paperplane browser setup` - prepares a Linux host for Paperplane's headless browser, which
  * server browser tabs and HTML render previews share. It is the fix every
  * browser host error names, so it does the whole job in one run:
  *

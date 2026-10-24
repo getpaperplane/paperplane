@@ -46,7 +46,7 @@ it("context file carries every path the playbook depends on", () => {
     cliVersion: "0.0.33",
     os: "linux x64 (7.0.0)",
     nodeVersion: "v24.0.0",
-    launchedAs: "npx rove triage",
+    launchedAs: "npx @getpaperplane/cli triage",
     server: "running (pid 42, http://127.0.0.1:4501)",
     paths: {
       stateDir: "/home/u/.rove/userdata",
@@ -70,18 +70,18 @@ it("context file carries every path the playbook depends on", () => {
   assert.include(context, "/home/u/.rove/userdata/logs/provider/events.log");
   assert.include(context, "/home/u/.rove/userdata/secrets");
   assert.include(context, "/home/u/.rove/source");
-  assert.include(context, "npx rove triage");
+  assert.include(context, "npx @getpaperplane/cli triage");
 });
 
 it("context file labels the CLI version as the CLI's, not the user's build", () => {
-  // `npx rove triage` can resolve a different `rove` than the app the bug
+  // `npx @getpaperplane/cli triage` can resolve a different `paperplane` than the app the bug
   // happened on (#13337), so the agent must not read it as the user's version.
   const context = buildTriageContext({
     generatedAt: "2026-09-24T00:00:00.000Z",
     cliVersion: "0.0.42",
     os: "linux x64 (7.2.0)",
     nodeVersion: "v26.8.2",
-    launchedAs: "npx rove triage",
+    launchedAs: "npx @getpaperplane/cli triage",
     server: "running (pid 42, http://127.0.0.1:3773, version 0.0.43-nightly.20260923.2173)",
     paths: {
       stateDir: "/home/u/.rove/userdata",

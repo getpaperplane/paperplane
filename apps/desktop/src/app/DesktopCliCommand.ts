@@ -12,7 +12,7 @@ import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as DesktopCliShim from "./DesktopCliShim.ts";
 import * as DesktopEnvironment from "./DesktopEnvironment.ts";
 
-// Settings → Install `rove` command, like VS Code's "Install 'code' command".
+// Settings → Install `paperplane` command, like VS Code's "Install 'code' command".
 // The app's launcher (see DesktopCliShim) lives in the Paperplane home and is off PATH
 // by default. Installing links it into a folder on the user's PATH, or on
 // Windows adds the launcher's folder to the user's PATH. Removing undoes only
@@ -101,7 +101,7 @@ export const make = Effect.gen(function* () {
   const isOurLink = (link: string) =>
     Effect.gen(function* () {
       yield* fs.readLink(link);
-      // The launcher is a few KB; never read a large binary another `rove` links to.
+      // The launcher is a few KB; never read a large binary another `paperplane` links to.
       const info = yield* fs.stat(link);
       if (info.type !== "File" || Number(info.size) > 16_384) return false;
       const content = yield* fs.readFileString(link);
@@ -137,16 +137,16 @@ export const make = Effect.gen(function* () {
       Effect.mapError(() => fail("Could not update your PATH.")),
     );
 
-  /** The `rove` a new shell runs, by PATH order, or none. */
+  /** The `paperplane` a new shell runs, by PATH order, or none. */
   const firstOnPath = Effect.gen(function* () {
     for (const directory of pathEntries(process.env.PATH, ":")) {
-      const candidate = path.join(directory, "rove");
+      const candidate = path.join(directory, "paperplane");
       if (yield* exists(candidate)) return Option.some(candidate);
     }
     return Option.none<string>();
   });
 
-  /** The `rove` a new shell runs when it is not this app's, on Unix. */
+  /** The `paperplane` a new shell runs when it is not this app's, on Unix. */
   const foreignFirstOnPath = Effect.gen(function* () {
     if (windows) return Option.none<string>();
     const first = yield* firstOnPath;
@@ -164,7 +164,7 @@ export const make = Effect.gen(function* () {
         : Option.none<string>();
     }
     for (const directory of unixCandidates(environment.homeDirectory, environment.platform)) {
-      const link = path.join(directory, "rove");
+      const link = path.join(directory, "paperplane");
       if (yield* isOurLink(link)) return Option.some(link);
     }
     return Option.none<string>();
@@ -181,7 +181,7 @@ export const make = Effect.gen(function* () {
       return { supported: true, installedPath: null, onPath: false, ...shadow };
     }
     // On Windows only terminals opened after the change see it. On Unix the
-    // first `rove` on PATH must be ours; a `rove` earlier on PATH would shadow it.
+    // first `paperplane` on PATH must be ours; a `paperplane` earlier on PATH would shadow it.
     const first = yield* firstOnPath;
     const onPath = windows || (Option.isSome(first) && (yield* isOurLink(first.value)));
     return { supported: true, installedPath: installed.value, onPath, ...shadow };
@@ -193,14 +193,14 @@ export const make = Effect.gen(function* () {
     Effect.provideService(FileSystem.FileSystem, fs),
     Effect.flatMap(
       Option.match({
-        onNone: () => Effect.fail(fail(`Could not set up the rove launcher at ${launcher}.`)),
+        onNone: () => Effect.fail(fail(`Could not set up the paperplane launcher at ${launcher}.`)),
         onSome: () => Effect.void,
       }),
     ),
   );
 
   const install: DesktopCliCommand["Service"]["install"] = Effect.gen(function* () {
-    if (!environment.isPackaged) return yield* fail("The rove command needs an installed app.");
+    if (!environment.isPackaged) return yield* fail("The paperplane command needs an installed app.");
     yield* ensureLauncher;
     if (windows) {
       const entries = pathEntries(yield* readUserPath, ";");
@@ -208,7 +208,7 @@ export const make = Effect.gen(function* () {
         yield* writeUserPath([...entries, binDirectory].join(";"));
         yield* fs
           .writeFileString(ownedPathMarker, `${binDirectory}\n`)
-          .pipe(Effect.mapError(() => fail("Added rove to your PATH but could not record it.")));
+          .pipe(Effect.mapError(() => fail("Added paperplane to your PATH but could not record it.")));
       }
       return yield* state;
     }
@@ -221,11 +221,11 @@ export const make = Effect.gen(function* () {
         .remove(existing.value)
         .pipe(Effect.mapError(() => fail(`Could not replace ${existing.value}.`)));
     }
-    // A link behind another `rove` never runs, so installing one would only hide the problem.
+    // A link behind another `paperplane` never runs, so installing one would only hide the problem.
     const shadowedBy = yield* foreignFirstOnPath;
     if (Option.isSome(shadowedBy)) {
       return yield* fail(
-        `Another rove at ${shadowedBy.value} runs first in a new terminal. Remove it, or run the launcher directly at ${launcher}.`,
+        `Another paperplane at ${shadowedBy.value} runs first in a new terminal. Remove it, or run the launcher directly at ${launcher}.`,
       );
     }
     const onPath = pathEntries(process.env.PATH, ":");
@@ -235,7 +235,7 @@ export const make = Effect.gen(function* () {
       ...candidates.filter((candidate) => onPath.includes(candidate)),
       ...candidates.filter((candidate) => !onPath.includes(candidate)),
     ]) {
-      const link = path.join(directory, "rove");
+      const link = path.join(directory, "paperplane");
       const created = (yield* exists(directory))
         ? yield* writableDirectory(directory)
         : yield* fs.makeDirectory(directory, { recursive: true }).pipe(
@@ -251,7 +251,7 @@ export const make = Effect.gen(function* () {
       if (linked) return yield* state;
     }
     return yield* fail(
-      `Another rove command is already installed, or no folder on your PATH is writable. Run the launcher directly at ${launcher}.`,
+      `Another paperplane command is already installed, or no folder on your PATH is writable. Run the launcher directly at ${launcher}.`,
     );
   }).pipe(Effect.withSpan("desktop.cliCommand.install"));
 
@@ -266,7 +266,7 @@ export const make = Effect.gen(function* () {
       return yield* state;
     }
     for (const directory of unixCandidates(environment.homeDirectory, environment.platform)) {
-      const link = path.join(directory, "rove");
+      const link = path.join(directory, "paperplane");
       if (yield* isOurLink(link)) {
         yield* fs.remove(link).pipe(Effect.mapError(() => fail(`Could not remove ${link}.`)));
       }

@@ -90,13 +90,13 @@ Keep the Paperplane backend private until you are ready to expose it. The backen
 2. Install the persistent host on loopback:
 
    ```sh
-   rove service install --host 127.0.0.1 --port 3773
+   paperplane service install --host 127.0.0.1 --port 3773
    ```
 
 3. Confirm that the host is running:
 
    ```sh
-   rove service status
+   paperplane service status
    ```
 
 4. In Cloudflare, create a named [Cloudflare Tunnel](https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/).
@@ -105,14 +105,14 @@ Keep the Paperplane backend private until you are ready to expose it. The backen
 7. Create a one-time pairing code on the host:
 
    ```sh
-   rove auth pairing create
+   paperplane auth pairing create
    ```
 
 8. Open `https://rove.hafiezulzikry.com` and add an environment under **Settings → Connections**.
 9. Enter `https://rove-host.hafiezulzikry.com` as the host and paste the pairing code.
 10. Confirm that your projects load. Start a thread and verify streaming responses from your provider.
 
-Keep the Paperplane service, `cloudflared`, and the computer running while you work. Update the host with `rove update`. The static website stays available when the computer is off, but its environment is offline. Keep pairing authentication enabled. Do not give visitors a pairing code for your own computer.
+Keep the Paperplane service, `cloudflared`, and the computer running while you work. Update the host with `paperplane update`. The static website stays available when the computer is off, but its environment is offline. Keep pairing authentication enabled. Do not give visitors a pairing code for your own computer.
 
 Users of the public browser app connect their own environments. They do not need your tunnel or domain. A private Tailscale HTTPS endpoint also works for devices on the same tailnet. A plain HTTP LAN endpoint cannot be used from the public HTTPS app.
 

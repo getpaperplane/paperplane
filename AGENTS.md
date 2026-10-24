@@ -152,7 +152,7 @@ Architecture and constraints: [`docs/internals/overview.md`](docs/internals/over
 
 ## Where code lives
 
-- `apps/server` - WebSocket server, orchestration, providers, checkpointing, and the `rove` CLI. Effect-heavy: read [Effect services](docs/internals/effect-services.md) before adding server code, and `.repos/effect-smol/LLMS.md` for the Effect library itself.
+- `apps/server` - WebSocket server, orchestration, providers, checkpointing, and the `paperplane` CLI. Effect-heavy: read [Effect services](docs/internals/effect-services.md) before adding server code, and `.repos/effect-smol/LLMS.md` for the Effect library itself.
 - `apps/web` - React/Vite UI. `apps/desktop` wraps it in Electron, `apps/mobile` is React Native, and `apps/marketing` is the landing page.
 - `packages/contracts` - Effect/Schema contracts and small derived helpers. No heavy runtime logic.
 - `packages/shared` - shared runtime utilities with subpath exports and no barrel.

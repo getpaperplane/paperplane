@@ -179,13 +179,13 @@ describe("ServerUpdateAction", () => {
       { kind: "npx" },
       "npx @getpaperplane/cli@0.0.45",
       "Relaunch command copied",
-      "This does not update an installed rove command.",
+      "This does not update an installed paperplane command.",
     ],
     [
       undefined,
       "npx @getpaperplane/cli@0.0.45",
       "Relaunch command copied",
-      "This does not update an installed rove command.",
+      "This does not update an installed paperplane command.",
     ],
   ] satisfies ReadonlyArray<readonly [ServerInstallation | undefined, string, string, string]>)(
     "copies an honest manual command for %j without invoking remote update",

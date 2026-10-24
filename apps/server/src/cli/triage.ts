@@ -1,5 +1,5 @@
 /**
- * `rove triage` - hand a misbehaving install to the user's own coding agent.
+ * `paperplane triage` - hand a misbehaving install to the user's own coding agent.
  *
  * The command is deliberately thin: it writes a `context.md` with machine facts
  * (versions, paths, server liveness), then launches claude or codex
@@ -175,7 +175,7 @@ export const triageCommand = Command.make("triage", {
 
       // Triage is a user-facing feature: always the userdata state, never dev.
       // --base-dir wins; ROVE_HOME is its documented env equivalent (same
-      // precedence as `rove pair`).
+      // precedence as `paperplane pair`).
       const explicitBaseDir = Option.getOrUndefined(flags.baseDir);
       const envHome = yield* Config.String("ROVE_HOME").pipe(Config.option);
       const baseDir = yield* resolveBaseDir(explicitBaseDir ?? Option.getOrUndefined(envHome));

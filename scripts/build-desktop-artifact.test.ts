@@ -131,7 +131,7 @@ const makeLinuxCliArchiveFixture = Effect.fn("test.makeLinuxCliArchiveFixture")(
   const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
   const contentRoot = path.join(input.root, "content");
   const members = [
-    `${input.stem}/rove`,
+    `${input.stem}/paperplane`,
     `${input.stem}/client/index.html`,
     `${input.stem}/node_modules/node-pty/package.json`,
     `${input.stem}/node_modules/node-pty/build/Release/pty.node`,
@@ -252,7 +252,7 @@ const makeWindowsPayloadFixture = Effect.fn("test.makeWindowsPayloadFixture")(fu
     const sourceArchivePath =
       input.wslRuntime === "loose-server-tree"
         ? // The old hand-rolled runtime: apps/server/dist + node_modules at the
-          // archive root, no single stem directory, no `rove` executable.
+          // archive root, no single stem directory, no `paperplane` executable.
           yield* makeLinuxCliArchiveFixture({
             root: path.join(tempDir, "wsl-runtime"),
             stem: "apps",
@@ -2565,9 +2565,9 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
   it("parses Windows bsdtar member listings with CRLF line endings", () => {
     assert.deepStrictEqual(
       parseWslRuntimeArchiveMembers(
-        "./rove-1.2.3-linux-x64/rove\r\nrove-1.2.3-linux-x64/client/\r\n",
+        "./rove-1.2.3-linux-x64/paperplane\r\nrove-1.2.3-linux-x64/client/\r\n",
       ),
-      ["rove-1.2.3-linux-x64/rove", "rove-1.2.3-linux-x64/client"],
+      ["rove-1.2.3-linux-x64/paperplane", "rove-1.2.3-linux-x64/client"],
     );
   });
 

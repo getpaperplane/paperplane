@@ -9,8 +9,8 @@ With Node.js and npm available for installation, run:
 
 ```sh
 npm install -g @getpaperplane/cli
-rove service install
-rove service status
+paperplane service install
+paperplane service status
 ```
 
 The npm package contains the platform executable. Service installation places
@@ -33,7 +33,7 @@ and Apple Silicon macOS with launchd. Intel macOS CLI archives and native Window
 background services are not supported. Desktop clients have a separate platform matrix. See [background hosting](./background-service.md)
 for prerequisites, restart, and removal.
 
-Update a packaged host with `rove update`, or
+Update a packaged host with `paperplane update`, or
 `npx @getpaperplane/cli@latest update`. See [updates](./updating.md).
 
 Contributor source setup lives in the [development guide](../operations/development.md).
@@ -44,9 +44,9 @@ Importing data from another installation is not yet supported.
 
 ## Desktop command line
 
-The desktop app includes the `rove` command. In **Settings → General → About**, choose **Install** next to **rove command**, then open a new terminal. **Remove** takes it off your PATH again. An existing npm installation stays unchanged.
+The desktop app includes the `paperplane` command. In **Settings → General → About**, choose **Install** next to **paperplane command**, then open a new terminal. **Remove** takes it off your PATH again. An existing npm installation stays unchanged.
 
-With the desktop app running, `rove app` opens a new thread for the current directory. Pass a path, such as `rove app ../my-project`, to use another directory. This requires the desktop app; a standalone server or SSH session is not enough.
+With the desktop app running, `paperplane app` opens a new thread for the current directory. Pass a path, such as `paperplane app ../my-project`, to use another directory. This requires the desktop app; a standalone server or SSH session is not enough.
 
 ## Test an unsigned macOS build
 
@@ -108,7 +108,7 @@ Android push notifications need Firebase configuration and Paperplane Connect, n
 of which is included in these downloads.
 
 **The phone is a client, not an agent host.** The host machine running the desktop
-app or `rove serve` must stay running and reachable over LAN, Tailscale, or SSH.
+app or `paperplane serve` must stay running and reachable over LAN, Tailscale, or SSH.
 Pair it using [remote access](./remote-access.md#pair-over-a-lan-or-private-network).
 For source builds, see `apps/mobile/README.md`.
 

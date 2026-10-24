@@ -188,7 +188,7 @@ export type PreviewRuntime = typeof PreviewRuntime.Type;
  */
 export const PreviewStreamHostSetup = Schema.Struct({
   need: Schema.Literals(["sandbox", "libraries"]),
-  /** For example `sudo npx rove browser setup`, matching how the server was launched. */
+  /** For example `sudo npx @getpaperplane/cli browser setup`, matching how the server was launched. */
   command: Schema.String,
 });
 export type PreviewStreamHostSetup = typeof PreviewStreamHostSetup.Type;

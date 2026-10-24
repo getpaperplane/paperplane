@@ -222,7 +222,7 @@ const withProjectCliSessionToken = <A, E, R>(
   Effect.acquireUseRelease(
     environmentAuth.issueSession({
       scopes: AuthAdministrativeScopes,
-      label: "rove project cli",
+      label: "paperplane project cli",
     }),
     (issued) => run(issued.token),
     (issued) => environmentAuth.revokeSession(issued.sessionId).pipe(Effect.ignore({ log: true })),

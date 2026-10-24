@@ -92,7 +92,7 @@ export function useUpdateEverything(localUpdateVersion: string | null) {
       .map((server) => ({
         environmentId: server.environmentId,
         label: server.serverLabel,
-        reason: `rove@${targetVersion} is not on npm yet`,
+        reason: `@getpaperplane/cli@${targetVersion} is not on npm yet`,
       })),
   ];
   const restarts = collectRestartingMachines(machines, servers, localUpdateVersion !== null);

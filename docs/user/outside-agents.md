@@ -37,7 +37,7 @@ The page names the agent and where its access goes:
   Anyone who runs that service gets the access.
 
 Only approve a sign-in you just started. To approve, enter a pairing code from
-**Settings → Connections** or from `rove auth pairing create` on the host. A
+**Settings → Connections** or from `paperplane auth pairing create` on the host. A
 browser already signed in to the environment as an administrator can approve
 without a code.
 
@@ -64,7 +64,7 @@ once you approve.
 ## Codex
 
 ```sh
-codex mcp add rove --url https://<environment-address>/mcp
+codex mcp add paperplane --url https://<environment-address>/mcp
 codex mcp login rove
 ```
 

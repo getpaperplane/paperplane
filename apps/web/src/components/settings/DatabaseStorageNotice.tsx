@@ -9,7 +9,7 @@ import { Button } from "../ui/button";
 import { SettingsGroup } from "./SettingsGroup";
 import { SettingsRow, SettingsSection } from "./settingsLayout";
 
-/** Suggests `rove doctor` for a database that still holds at least 1 GiB of freed pages. */
+/** Suggests `paperplane doctor` for a database that still holds at least 1 GiB of freed pages. */
 export function DatabaseStorageNotice({
   environmentId,
   label,

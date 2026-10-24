@@ -1,6 +1,6 @@
 # Remote access
 
-Paperplane releases support local, LAN, Tailscale, SSH, and the hosted browser app at [rove.hafiezulzikry.com](https://rove.hafiezulzikry.com). Paperplane Connect is disabled unless a maintainer configures the cloud deployment; its instructions below apply only to those builds. Mobile clients are available as sideloadable APK/IPA downloads on supported [GitHub Releases](https://github.com/hafiezul/rove/releases), or as source builds, not store apps. The phone is a client: its desktop or `rove serve` host must remain running and reachable over LAN, Tailscale, or SSH. See [mobile installation](./install.md#mobile-app).
+Paperplane releases support local, LAN, Tailscale, SSH, and the hosted browser app at [rove.hafiezulzikry.com](https://rove.hafiezulzikry.com). Paperplane Connect is disabled unless a maintainer configures the cloud deployment; its instructions below apply only to those builds. Mobile clients are available as sideloadable APK/IPA downloads on supported [GitHub Releases](https://github.com/hafiezul/rove/releases), or as source builds, not store apps. The phone is a client: its desktop or `paperplane serve` host must remain running and reachable over LAN, Tailscale, or SSH. See [mobile installation](./install.md#mobile-app).
 
 Connect a phone, browser, or another desktop app to Paperplane running on a different
 machine. That machine must stay running and reachable while you work.
@@ -14,12 +14,12 @@ Connections**, sign in, and enable **Paperplane Connect** for that environment.
 For a command-line host, run:
 
 ```bash
-rove connect
+paperplane connect
 ```
 
 Follow the sign-in instructions. Setup offers a
 [background service](./background-service.md); if you decline it, start the
-server with `rove serve`. Saving your sign-in alone does not make the machine
+server with `paperplane serve`. Saving your sign-in alone does not make the machine
 reachable.
 
 On your other device, sign in to the same Paperplane Connect account and choose the
@@ -44,19 +44,19 @@ On a desktop host, open **Settings → Connections**, enable **Network access**,
 then create a pairing link using an address the other device can reach. Changing
 network access restarts the desktop app. You can turn it off in the same place.
 
-For a persistent command-line host, use `rove service install --host <private-ip> --port 3773`, then `rove pair`. Its connection settings survive restarts and updates; the machine must stay awake.
+For a persistent command-line host, use `paperplane service install --host <private-ip> --port 3773`, then `paperplane pair`. Its connection settings survive restarts and updates; the machine must stay awake.
 
 For a command-line host started by hand, replace `<private-ip>` with the host's LAN or tailnet
 address:
 
 ```bash
-rove serve --host <private-ip>
+paperplane serve --host <private-ip>
 ```
 
 If a server is already running, generate a fresh link without restarting it:
 
 ```bash
-rove pair
+paperplane pair
 ```
 
 Scan the QR code on your phone or paste the pairing URL into **Add environment**
@@ -135,13 +135,13 @@ HTTPS** in **Settings → Connections**. Turn it off there to remove that route.
 To start a command-line server with Tailscale HTTPS:
 
 ```bash
-rove serve --tailscale-serve
+paperplane serve --tailscale-serve
 ```
 
 For an already-running server:
 
 ```bash
-rove pair --tailscale
+paperplane pair --tailscale
 ```
 
 The pairing link uses an address such as `https://machine.tailnet.ts.net/`.
@@ -155,7 +155,7 @@ tailscale serve --https=443 off
 Both devices must belong to the tailnet. Tailscale must run where the server and its loopback endpoint are reachable; installing it on Windows alone does not establish that WSL owns the Windows Tailscale address.
 
 If that port is already in use, choose another with
-`--tailscale-serve-port`. See `rove pair --help` for other pairing options.
+`--tailscale-serve-port`. See `paperplane pair --help` for other pairing options.
 
 ### Direct HTTP connections
 
@@ -172,7 +172,7 @@ instead of 30, and frees idle agents before starting a new one when memory runs 
 released thread resumes on its next message. When available memory is low, the
 composer shows a notice. On web and desktop, Settings → Diagnostics shows host
 memory health and suggested fixes; on mobile, open the environment's detail screen
-in Settings. Run `rove doctor` on the host for the same checks without connecting a client.
+in Settings. Run `paperplane doctor` on the host for the same checks without connecting a client.
 An agent that exited with SIGKILL while the host recorded an out-of-memory kill may
 be labeled **"Likely killed: the host ran out of memory."** Only SIGKILLed agents
 get this likely label; it is a diagnosis, not proof that memory caused that particular kill.
@@ -271,7 +271,7 @@ the server says so at startup, and browser tabs and HTML previews show the
 command to run on the host:
 
 ```sh
-sudo rove browser setup
+sudo paperplane browser setup
 ```
 
 The server shows the exact line for how you started it, such as
@@ -295,7 +295,7 @@ threads on an environment through its MCP server. See
 On the host, **Settings → Connections** lets authorized administrators create
 pairing links and revoke client sessions. Revoking an unused link prevents new
 pairings; revoke a device's session to remove its existing access. Command-line
-management is available through `rove auth --help`.
+management is available through `paperplane auth --help`.
 
 A session with an open connection stays listed after its access credential
 expires.
@@ -346,9 +346,9 @@ revokes its cloud access and frees its host space even when the environment is
 offline or has been wiped. When Paperplane Connect rejects a host's link, the host
 shows that it was removed from Paperplane Connect. To link it again, turn on
 **Paperplane Connect** in **Settings → Connections** on a desktop host, or run
-`rove connect link` on a command-line host and then restart Paperplane there. A
+`paperplane connect link` on a command-line host and then restart Paperplane there. A
 command-line host that released its tunnel when it last stopped may link itself
-again on its next start; run `rove connect unlink` on that host to keep it off.
+again on its next start; run `paperplane connect unlink` on that host to keep it off.
 Removing an environment from a device's connection settings only forgets it on
 that device; it stays registered to your account.
 
@@ -363,8 +363,8 @@ Paperplane once it has been offline for seven days. That environment shows a mes
 asking you to update. Start Paperplane on that computer and update it to the latest
 version; it reconnects at the same address without pairing again.
 
-On a command-line host, `rove connect unlink` disables exposure while retaining
-your login; `rove connect logout` also clears that login. Background-service
+On a command-line host, `paperplane connect unlink` disables exposure while retaining
+your login; `paperplane connect logout` also clears that login. Background-service
 [removal](./background-service.md#manage-the-service) is separate.
 
 Treat pairing URLs and authorization codes as passwords. Do not include them in
@@ -372,22 +372,22 @@ screenshots, logs, or bug reports.
 
 ## Paperplane Connect troubleshooting
 
-Run `rove connect status` on the host to inspect saved authorization and link
+Run `paperplane connect status` on the host to inspect saved authorization and link
 configuration. It is not a live reachability check. If the environment appears
-offline, run `rove service status` and read the displayed log. If it disappears
+offline, run `paperplane service status` and read the displayed log. If it disappears
 when SSH closes, see [background-service troubleshooting](./background-service.md#troubleshooting).
 
 | Error                                                     | Recovery                                                                                                                                          |
 | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `environment_link_limit_exceeded` or managed tunnel limit | Deregister an unused environment, then restart Paperplane on the host.                                                                             |
-| `auth_invalid` or `invalid_bearer`                        | Run `rove connect login`. If credentials were revoked, run `rove connect logout`, then `rove connect` again. Restart the server after signing in. |
+| `auth_invalid` or `invalid_bearer`                        | Run `paperplane connect login`. If credentials were revoked, run `paperplane connect logout`, then `paperplane connect` again. Restart the server after signing in. |
 | Expired or invalid link proof                             | Check the host's date and time, update Paperplane, then restart it.                                                                                |
 | HTTP 403 without a recognized error                       | Check relay access, proxies, and firewall rules. Keep any Cloudflare Ray ID for a bug report.                                                     |
 | HTTP 408, 429, or 5xx                                     | Check network and relay availability. Startup retries temporary failures for up to ten minutes.                                                   |
 
 After fixing a permanent rejection, restart the host's server. On Linux, use
 `systemctl --user restart rove.service` for the background service. For a
-foreground server, stop it and run `rove serve` again with your usual options.
+foreground server, stop it and run `paperplane serve` again with your usual options.
 Include the diagnostic message and trace ID when reporting a persistent failure.
 
 For a connection that still fails after linking, check the date and time on both

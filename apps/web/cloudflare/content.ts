@@ -34,11 +34,11 @@ const docs = {
   sections: [
     {
       title: "Install and start your host",
-      text: "Install the Paperplane desktop app or CLI using the installation guide. Authenticate at least one supported provider on that computer. For a persistent CLI host, run `rove service install --host 127.0.0.1 --port 3773`, then check it with `rove service status`. Keep pairing authentication enabled. Do not publish someone else's pairing code or expose their host.",
+      text: "Install the Paperplane desktop app or CLI using the installation guide. Authenticate at least one supported provider on that computer. For a persistent CLI host, run `paperplane service install --host 127.0.0.1 --port 3773`, then check it with `paperplane service status`. Keep pairing authentication enabled. Do not publish someone else's pairing code or expose their host.",
     },
     {
       title: "Pair the browser app",
-      text: "Make your host reachable through a trusted HTTPS endpoint, such as a private Tailscale endpoint or your own Cloudflare Tunnel. Create a one-time code with `rove auth pairing create`. In the browser app, open Settings → Connections, add the environment's HTTPS address, and enter that code. A plain HTTP LAN address cannot be used from the public HTTPS app. Keep the host and any tunnel running while you work.",
+      text: "Make your host reachable through a trusted HTTPS endpoint, such as a private Tailscale endpoint or your own Cloudflare Tunnel. Create a one-time code with `paperplane auth pairing create`. In the browser app, open Settings → Connections, add the environment's HTTPS address, and enter that code. A plain HTTP LAN address cannot be used from the public HTTPS app. Keep the host and any tunnel running while you work.",
     },
     {
       title: "Discover public content",

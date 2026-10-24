@@ -123,7 +123,7 @@ const withTempDirectory = <A, E, R>(
     (root) => Effect.promise(() => NodeFSP.rm(root, { recursive: true, force: true })),
   );
 
-describe("rove server command safety", () => {
+describe("paperplane server command safety", () => {
   it.effect("rejects unknown command words without creating a home or project", () =>
     withTempDirectory("rove-cli-unknown-", (root) =>
       Effect.gen(function* () {
@@ -153,7 +153,7 @@ describe("rove server command safety", () => {
       Effect.gen(function* () {
         const baseDir = NodePath.join(root, "home");
         const help = yield* runCli(["help"], { ROVE_HOME: baseDir }).pipe(Effect.flip);
-        expect(help).toMatchObject({ _tag: "ShowHelp", commandPath: ["rove"], errors: [] });
+        expect(help).toMatchObject({ _tag: "ShowHelp", commandPath: ["paperplane"], errors: [] });
         expect(yield* pathExists(baseDir)).toBe(false);
       }),
     ),
@@ -205,7 +205,7 @@ describe("rove server command safety", () => {
   );
 });
 
-describe("rove app", () => {
+describe("paperplane app", () => {
   it.effect("rejects SSH before it tries to reach a desktop app", () =>
     withTempDirectory("rove-app-ssh-test-", (root) =>
       Effect.gen(function* () {
@@ -217,7 +217,7 @@ describe("rove app", () => {
         expect(error).toMatchObject({
           _tag: "DesktopAppSshUnsupportedError",
           message:
-            "`rove app` only controls a desktop app on the same machine. It cannot run over SSH.",
+            "`paperplane app` only controls a desktop app on the same machine. It cannot run over SSH.",
         });
         expect(yield* pathExists(baseDir)).toBe(false);
       }),
@@ -236,7 +236,7 @@ describe("rove app", () => {
         expect(error).toMatchObject({
           _tag: "DesktopAppPlatformUnsupportedError",
           platform: "freebsd",
-          message: "`rove app` is not supported on freebsd.",
+          message: "`paperplane app` is not supported on freebsd.",
         });
         expect(yield* pathExists(baseDir)).toBe(false);
       }),

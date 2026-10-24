@@ -472,7 +472,7 @@ const decodeHostSetup = (reason: string): PreviewStreamHostSetup => {
       return { need: value.need, command: value.command };
     }
   } catch {}
-  return { need: "sandbox", command: "sudo npx rove browser setup" };
+  return { need: "sandbox", command: "sudo npx @getpaperplane/cli browser setup" };
 };
 
 /** What a viewer tells the person; `command` is shown beside it, ready to copy. */

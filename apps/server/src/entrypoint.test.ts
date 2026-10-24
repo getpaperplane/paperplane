@@ -51,7 +51,7 @@ describe("isEntrypoint", () => {
     () => {
       const dir = makeTempDir();
       const real = NodePath.join(dir, "bin.mjs");
-      const link = NodePath.join(dir, "rove");
+      const link = NodePath.join(dir, "paperplane");
       NodeFS.writeFileSync(real, "");
       NodeFS.symlinkSync(real, link);
 
