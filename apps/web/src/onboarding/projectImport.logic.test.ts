@@ -89,12 +89,12 @@ describe("partitionOnboardingProjects", () => {
 
 describe("groupOnboardingProjects", () => {
   it("groups clones by origin, keeps local repos separate, and folds non-git folders away", () => {
-    const main = candidate("/code/rove", {
+    const main = candidate("/code/paperplane", {
       git: github("pingdotgg/t3code"),
       threadCount: 79,
       lastActiveAt: "2026-08-21T12:00:00.000Z",
     });
-    const clone = candidate("/code/clones/rove-2", {
+    const clone = candidate("/code/clones/paperplane-2", {
       git: github("pingdotgg/t3code"),
       threadCount: 13,
       lastActiveAt: "2026-08-10T12:00:00.000Z",
@@ -126,7 +126,7 @@ describe("groupOnboardingProjects", () => {
       },
       {
         label: "pingdotgg/t3code",
-        paths: ["/code/rove", "/code/clones/rove-2"],
+        paths: ["/code/paperplane", "/code/clones/paperplane-2"],
         threadCount: 92,
         lastActiveAt: "2026-08-21T12:00:00.000Z",
       },
@@ -357,25 +357,28 @@ describe("projects on multiple computers", () => {
 
 describe("splitOnboardingProjectPath", () => {
   it("keeps sibling checkouts that share a prefix distinguishable by name", () => {
-    const left = splitOnboardingProjectPath("/Users/me/Projects/clients/acme/rove");
-    const right = splitOnboardingProjectPath("/Users/me/Projects/clients/acme/rove-worktree");
-    expect(left).toEqual({ name: "rove", parent: "/Users/me/Projects/clients/acme/" });
-    expect(right).toEqual({ name: "rove-worktree", parent: "/Users/me/Projects/clients/acme/" });
+    const left = splitOnboardingProjectPath("/Users/me/Projects/clients/acme/paperplane");
+    const right = splitOnboardingProjectPath("/Users/me/Projects/clients/acme/paperplane-worktree");
+    expect(left).toEqual({ name: "paperplane", parent: "/Users/me/Projects/clients/acme/" });
+    expect(right).toEqual({
+      name: "paperplane-worktree",
+      parent: "/Users/me/Projects/clients/acme/",
+    });
     expect(left.name).not.toBe(right.name);
   });
 
   it("splits Windows paths and ignores a trailing separator", () => {
-    expect(splitOnboardingProjectPath("C:\\Users\\me\\rove\\")).toEqual({
-      name: "rove",
+    expect(splitOnboardingProjectPath("C:\\Users\\me\\paperplane\\")).toEqual({
+      name: "paperplane",
       parent: "C:\\Users\\me\\",
     });
   });
 
   it("keeps a root or bare name whole", () => {
     expect(splitOnboardingProjectPath("/")).toEqual({ name: "/", parent: "" });
-    expect(splitOnboardingProjectPath("/rove")).toEqual({ name: "rove", parent: "/" });
-    expect(splitOnboardingProjectPath("rove")).toEqual({ name: "rove", parent: "" });
-    expect(splitOnboardingProjectPath("rove/")).toEqual({ name: "rove", parent: "" });
+    expect(splitOnboardingProjectPath("/paperplane")).toEqual({ name: "paperplane", parent: "/" });
+    expect(splitOnboardingProjectPath("paperplane")).toEqual({ name: "paperplane", parent: "" });
+    expect(splitOnboardingProjectPath("paperplane/")).toEqual({ name: "paperplane", parent: "" });
   });
 
   it.each(["C:\\", "C:/", "\\\\server\\share", "\\\\server\\share\\", "//server/share/"])(

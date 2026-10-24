@@ -221,10 +221,10 @@
           const LEGACY_THEME_IDS = {
             "plum-dark": "plum",
           };
-          const isLegacyRoveChatDark = storedTheme === "plum-dark";
+          const isLegacyPaperplaneChatDark = storedTheme === "plum-dark";
           const themeId =
             storedTheme === null ? "" : (LEGACY_THEME_IDS[storedTheme] ?? storedTheme);
-          const legacyMode = isLegacyRoveChatDark ? "dark" : null;
+          const legacyMode = isLegacyPaperplaneChatDark ? "dark" : null;
           const builtInModes = BUILT_IN_THEME_MODES[themeId] ?? null;
           const customTheme = builtInModes ? null : findCustomTheme(themeId);
           const themeModes =

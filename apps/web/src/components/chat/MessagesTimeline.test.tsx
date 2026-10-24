@@ -2521,7 +2521,7 @@ describe("MessagesTimeline", () => {
     activityTestState.expanded = true;
     const { MessagesTimeline } = await import("./MessagesTimeline");
     const item = {
-      id: "tool-rove-thread-read",
+      id: "tool-paperplane-thread-read",
       threadId: "thread-source",
       runId: null,
       nodeId: null,
@@ -2621,16 +2621,18 @@ describe("MessagesTimeline", () => {
               tone: "tool",
               itemType: "file_change",
               toolLifecycleStatus: "completed",
-              changedFiles: ["C:/Users/mike/dev-stuff/rove/apps/web/src/session-logic.ts"],
+              changedFiles: ["C:/Users/mike/dev-stuff/paperplane/apps/web/src/session-logic.ts"],
             },
           },
         ]}
-        workspaceRoot="C:/Users/mike/dev-stuff/rove"
+        workspaceRoot="C:/Users/mike/dev-stuff/paperplane"
       />,
     );
 
-    expect(markup).toContain("rove/apps/web/src/session-logic.ts");
-    expect(markup).not.toContain("C:/Users/mike/dev-stuff/rove/apps/web/src/session-logic.ts");
+    expect(markup).toContain("paperplane/apps/web/src/session-logic.ts");
+    expect(markup).not.toContain(
+      "C:/Users/mike/dev-stuff/paperplane/apps/web/src/session-logic.ts",
+    );
   });
 
   it("renders review comment contexts as structured cards instead of raw tags", () => {

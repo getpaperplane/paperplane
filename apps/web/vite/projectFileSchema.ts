@@ -4,7 +4,7 @@ import { buildPaperplaneProjectFileJsonSchema } from "@getpaperplane/shared/pape
 export function projectFileSchemaPlugin(): Plugin {
   const source = `${JSON.stringify(buildPaperplaneProjectFileJsonSchema(), null, 2)}\n`;
   return {
-    name: "rove-project-file-schema",
+    name: "paperplane-project-file-schema",
     configureServer(server) {
       server.middlewares.use((request, response, next) => {
         if (request.method !== "GET" || request.url?.split("?")[0] !== "/schema/paperplane.json") {

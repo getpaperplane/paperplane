@@ -275,7 +275,7 @@ describe("environmentBootstrap", () => {
 
   it("preserves an unsupported window-origin protocol", () => {
     vi.stubGlobal("window", {
-      location: { origin: "file:///tmp/rove/" },
+      location: { origin: "file:///tmp/paperplane/" },
       history: { replaceState: vi.fn() },
     });
 

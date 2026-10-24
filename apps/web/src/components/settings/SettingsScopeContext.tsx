@@ -6,7 +6,7 @@ import { AsyncResult, Atom } from "effect/reactivity";
 import { createContext, type ReactNode, useContext, useMemo } from "react";
 
 import { useEnvironments, usePrimaryEnvironmentId } from "../../state/environments";
-import { getProjectConfigQueryAtom } from "../../hooks/useRoveProjectFileScripts";
+import { getProjectConfigQueryAtom } from "../../hooks/usePaperplaneProjectFileScripts";
 import { useSettingsProjectGroups } from "./useSettingsProjectGroups";
 import { resolveScopedSettingsTargets, selectScopedSettingsEnvironments } from "./scopedSettings";
 import { resolveSettingsScope, type SettingsScopeSearch } from "./settingsScope";

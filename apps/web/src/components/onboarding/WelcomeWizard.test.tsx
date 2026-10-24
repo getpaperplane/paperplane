@@ -78,7 +78,9 @@ vi.mock("../../onboarding/useProjectScans", () => ({
 }));
 vi.mock("../../connection/onboarding", () => ({ connectPairing: vi.fn() }));
 vi.mock("../../state/terminal", () => ({ terminalEnvironment: {} }));
-vi.mock("../clerk/useRoveConnectAuthPrompt", () => ({ useRoveConnectAuthPrompt: vi.fn() }));
+vi.mock("../clerk/usePaperplaneConnectAuthPrompt", () => ({
+  usePaperplaneConnectAuthPrompt: vi.fn(),
+}));
 vi.mock("../../cloud/publicConfig", () => ({ hasCloudPublicConfig: () => false }));
 vi.mock("../ThreadTerminalDrawer", () => ({ TerminalViewport: () => null }));
 vi.mock("../settings/ChatGptWelcomeCoordinator", () => ({ ChatGptWelcomeCoordinator: () => null }));

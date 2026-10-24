@@ -63,7 +63,7 @@ function entry(
     provider: "github",
     host: "github.com",
     projectId: "project-1",
-    projectTitle: "rove",
+    projectTitle: "paperplane",
     repository: "pingdotgg/t3code",
     title: "Add the pull requests page",
     url: `https://github.com/pingdotgg/t3code/pull/${overrides.number}`,

@@ -135,7 +135,7 @@ const devProxyTarget = resolveDevProxyTarget(process.env.PAPERPLANE_PORT, config
 // (quality 11) would trade the transfer stall for an equally long encode stall.
 function devCompressionPlugin(): Plugin {
   return {
-    name: "rove:dev-compression",
+    name: "paperplane:dev-compression",
     apply: "serve",
     configureServer(server) {
       // compression() is typed against Express's req/res, which extend the

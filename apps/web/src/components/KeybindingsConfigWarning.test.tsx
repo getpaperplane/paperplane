@@ -83,7 +83,7 @@ it("updates a visible warning on revocation and blocks its retained action until
       <RegistryContext.Provider value={state.registry!}>
         <KeybindingsConfigWarning
           environmentId={environmentId}
-          configPath="/rove/keybindings.json"
+          configPath="/paperplane/keybindings.json"
           availableEditors={["vscode"]}
           message="Invalid shortcut"
         />
@@ -114,6 +114,6 @@ it("updates a visible warning on revocation and blocks its retained action until
   await act(async () => open());
   expect(state.run).toHaveBeenCalledExactlyOnceWith({
     environmentId,
-    input: { cwd: "/rove/keybindings.json", editor: "vscode" },
+    input: { cwd: "/paperplane/keybindings.json", editor: "vscode" },
   });
 });

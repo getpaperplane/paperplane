@@ -31,20 +31,20 @@ describe("resolvePreviousWorktreeSeed", () => {
       resolvePreviousWorktreeSeed({
         threads: [
           {
-            branch: "rove/older",
-            worktreePath: "/repo/.rove/worktrees/older",
+            branch: "paperplane/older",
+            worktreePath: "/repo/.paperplane/worktrees/older",
             updatedAt: "2026-07-20T00:00:00.000Z",
           },
           {
-            branch: "rove/newer",
-            worktreePath: "/repo/.rove/worktrees/newer",
+            branch: "paperplane/newer",
+            worktreePath: "/repo/.paperplane/worktrees/newer",
             updatedAt: "2026-07-22T00:00:00.000Z",
           },
           { branch: "main", worktreePath: null, updatedAt: "2026-07-23T00:00:00.000Z" },
         ],
         currentWorktreePath: null,
       }),
-    ).toEqual({ branch: "rove/newer", worktreePath: "/repo/.rove/worktrees/newer" });
+    ).toEqual({ branch: "paperplane/newer", worktreePath: "/repo/.paperplane/worktrees/newer" });
   });
 
   it("skips the worktree the composer already points at", () => {
@@ -52,12 +52,12 @@ describe("resolvePreviousWorktreeSeed", () => {
       resolvePreviousWorktreeSeed({
         threads: [
           {
-            branch: "rove/current",
-            worktreePath: "/repo/.rove/worktrees/current",
+            branch: "paperplane/current",
+            worktreePath: "/repo/.paperplane/worktrees/current",
             updatedAt: "2026-07-22T00:00:00.000Z",
           },
         ],
-        currentWorktreePath: "/repo/.rove/worktrees/current",
+        currentWorktreePath: "/repo/.paperplane/worktrees/current",
       }),
     ).toBeNull();
   });
@@ -76,34 +76,34 @@ describe("resolvePreviousWorktreeSeed", () => {
       resolvePreviousWorktreeSeed({
         threads: [
           {
-            branch: "rove/archived",
-            worktreePath: "/repo/.rove/worktrees/archived",
+            branch: "paperplane/archived",
+            worktreePath: "/repo/.paperplane/worktrees/archived",
             updatedAt: "2026-07-23T00:00:00.000Z",
             archivedAt: "2026-07-23T01:00:00.000Z",
           },
           {
-            branch: "rove/garbage-timestamp",
-            worktreePath: "/repo/.rove/worktrees/garbage",
+            branch: "paperplane/garbage-timestamp",
+            worktreePath: "/repo/.paperplane/worktrees/garbage",
             updatedAt: "not-a-date",
           },
           {
-            branch: "rove/live",
-            worktreePath: "/repo/.rove/worktrees/live",
+            branch: "paperplane/live",
+            worktreePath: "/repo/.paperplane/worktrees/live",
             updatedAt: "2026-07-21T00:00:00.000Z",
             archivedAt: null,
           },
         ],
         currentWorktreePath: null,
       }),
-    ).toEqual({ branch: "rove/live", worktreePath: "/repo/.rove/worktrees/live" });
+    ).toEqual({ branch: "paperplane/live", worktreePath: "/repo/.paperplane/worktrees/live" });
   });
 });
 
 describe("resolvePreviousWorktreeLabel", () => {
   it("includes the branch when known", () => {
-    expect(resolvePreviousWorktreeLabel({ branch: "rove/fix-thing", worktreePath: "/wt" })).toBe(
-      "Previous worktree (rove/fix-thing)",
-    );
+    expect(
+      resolvePreviousWorktreeLabel({ branch: "paperplane/fix-thing", worktreePath: "/wt" }),
+    ).toBe("Previous worktree (paperplane/fix-thing)");
     expect(resolvePreviousWorktreeLabel({ branch: null, worktreePath: "/wt" })).toBe(
       "Previous worktree",
     );
@@ -115,7 +115,7 @@ describe("resolveDraftEnvModeAfterBranchChange", () => {
     expect(
       resolveDraftEnvModeAfterBranchChange({
         nextWorktreePath: null,
-        currentWorktreePath: "/repo/.rove/worktrees/feature-a",
+        currentWorktreePath: "/repo/.paperplane/worktrees/feature-a",
         effectiveEnvMode: "worktree",
       }),
     ).toBe("local");
@@ -134,7 +134,7 @@ describe("resolveDraftEnvModeAfterBranchChange", () => {
   it("uses worktree mode when selecting a ref already attached to a worktree", () => {
     expect(
       resolveDraftEnvModeAfterBranchChange({
-        nextWorktreePath: "/repo/.rove/worktrees/feature-a",
+        nextWorktreePath: "/repo/.paperplane/worktrees/feature-a",
         currentWorktreePath: null,
         effectiveEnvMode: "local",
       }),
@@ -331,7 +331,7 @@ describe("resolveLocalCheckoutBranchMismatch", () => {
     expect(
       resolveLocalCheckoutBranchMismatch({
         effectiveEnvMode: "worktree",
-        activeWorktreePath: "/repo/.rove/worktrees/feature-thread",
+        activeWorktreePath: "/repo/.paperplane/worktrees/feature-thread",
         activeThreadBranch: "feature/thread",
         currentGitBranch: "feature/current",
       }),
@@ -498,7 +498,7 @@ describe("resolveEffectiveEnvMode", () => {
   it("treats draft threads already attached to a worktree as current-checkout mode", () => {
     expect(
       resolveEffectiveEnvMode({
-        activeWorktreePath: "/repo/.rove/worktrees/feature-a",
+        activeWorktreePath: "/repo/.paperplane/worktrees/feature-a",
         hasServerThread: false,
         draftThreadEnvMode: "worktree",
       }),
@@ -547,7 +547,7 @@ describe("resolveCurrentWorkspaceLabel", () => {
   });
 
   it("describes the active checkout as a worktree when one is attached", () => {
-    expect(resolveCurrentWorkspaceLabel("/repo/.rove/worktrees/feature-a")).toBe(
+    expect(resolveCurrentWorkspaceLabel("/repo/.paperplane/worktrees/feature-a")).toBe(
       "Current worktree",
     );
   });
@@ -559,7 +559,7 @@ describe("resolveLockedWorkspaceLabel", () => {
   });
 
   it("uses a shorter label for an attached worktree", () => {
-    expect(resolveLockedWorkspaceLabel("/repo/.rove/worktrees/feature-a", "worktree")).toBe(
+    expect(resolveLockedWorkspaceLabel("/repo/.paperplane/worktrees/feature-a", "worktree")).toBe(
       "Worktree",
     );
   });
@@ -697,15 +697,15 @@ describe("resolveBranchSelectionTarget", () => {
     expect(
       resolveBranchSelectionTarget({
         activeProjectCwd: "/repo",
-        activeWorktreePath: "/repo/.rove/worktrees/feature-a",
+        activeWorktreePath: "/repo/.paperplane/worktrees/feature-a",
         refName: {
           isDefault: false,
-          worktreePath: "/repo/.rove/worktrees/feature-b",
+          worktreePath: "/repo/.paperplane/worktrees/feature-b",
         },
       }),
     ).toEqual({
-      checkoutCwd: "/repo/.rove/worktrees/feature-b",
-      nextWorktreePath: "/repo/.rove/worktrees/feature-b",
+      checkoutCwd: "/repo/.paperplane/worktrees/feature-b",
+      nextWorktreePath: "/repo/.paperplane/worktrees/feature-b",
       reuseExistingWorktree: true,
     });
   });
@@ -714,7 +714,7 @@ describe("resolveBranchSelectionTarget", () => {
     expect(
       resolveBranchSelectionTarget({
         activeProjectCwd: "/repo",
-        activeWorktreePath: "/repo/.rove/worktrees/feature-a",
+        activeWorktreePath: "/repo/.paperplane/worktrees/feature-a",
         refName: {
           isDefault: true,
           worktreePath: "/repo",
@@ -731,7 +731,7 @@ describe("resolveBranchSelectionTarget", () => {
     expect(
       resolveBranchSelectionTarget({
         activeProjectCwd: "/repo",
-        activeWorktreePath: "/repo/.rove/worktrees/feature-a",
+        activeWorktreePath: "/repo/.paperplane/worktrees/feature-a",
         refName: {
           isDefault: true,
           worktreePath: null,
@@ -748,15 +748,15 @@ describe("resolveBranchSelectionTarget", () => {
     expect(
       resolveBranchSelectionTarget({
         activeProjectCwd: "/repo",
-        activeWorktreePath: "/repo/.rove/worktrees/feature-a",
+        activeWorktreePath: "/repo/.paperplane/worktrees/feature-a",
         refName: {
           isDefault: false,
           worktreePath: null,
         },
       }),
     ).toEqual({
-      checkoutCwd: "/repo/.rove/worktrees/feature-a",
-      nextWorktreePath: "/repo/.rove/worktrees/feature-a",
+      checkoutCwd: "/repo/.paperplane/worktrees/feature-a",
+      nextWorktreePath: "/repo/.paperplane/worktrees/feature-a",
       reuseExistingWorktree: false,
     });
   });

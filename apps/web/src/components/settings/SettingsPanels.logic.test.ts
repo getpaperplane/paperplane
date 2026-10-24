@@ -200,7 +200,7 @@ describe("buildProviderInstanceUpdatePatch", () => {
     const nextInstance = {
       driver: ProviderDriverKind.make("codex"),
       enabled: true,
-      config: { binaryPath: "/opt/rove/codex" },
+      config: { binaryPath: "/opt/paperplane/codex" },
     } satisfies ProviderInstanceConfig;
 
     const patch = buildProviderInstanceUpdatePatch({

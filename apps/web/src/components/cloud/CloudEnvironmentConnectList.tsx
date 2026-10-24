@@ -182,7 +182,11 @@ export function CloudEnvironmentConnectRows({
         ? cause.message
         : "Could not connect the Paperplane Connect environment.";
     const traceId = findErrorTraceId(cause);
-    console.error("[rove-connect] Could not connect environment", { message, traceId, cause });
+    console.error("[paperplane-connect] Could not connect environment", {
+      message,
+      traceId,
+      cause,
+    });
     toastManager.add({
       type: "error",
       title: "Could not connect environment",

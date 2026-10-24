@@ -3,22 +3,22 @@ import { LogInIcon } from "lucide-react";
 
 import { hasCloudPublicConfig } from "../../cloud/publicConfig";
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "../ui/sidebar";
-import { ROVE_CONNECT_ACCOUNT_PAGES } from "./RoveConnectAccountPages";
-import { useRoveConnectAuthPrompt } from "./useRoveConnectAuthPrompt";
+import { PAPERPLANE_CONNECT_ACCOUNT_PAGES } from "./PaperplaneConnectAccountPages";
+import { usePaperplaneConnectAuthPrompt } from "./usePaperplaneConnectAuthPrompt";
 
-export function RoveConnectSidebarSignIn() {
+export function PaperplaneConnectSidebarSignIn() {
   if (!hasCloudPublicConfig()) return null;
 
-  return <ConfiguredRoveConnectSidebarSignIn />;
+  return <ConfiguredPaperplaneConnectSidebarSignIn />;
 }
 
-export function RoveConnectSidebarAvatar() {
+export function PaperplaneConnectSidebarAvatar() {
   if (!hasCloudPublicConfig()) return null;
 
-  return <ConfiguredRoveConnectSidebarAvatar />;
+  return <ConfiguredPaperplaneConnectSidebarAvatar />;
 }
 
-function ConfiguredRoveConnectSidebarAvatar() {
+function ConfiguredPaperplaneConnectSidebarAvatar() {
   const { isLoaded, isSignedIn } = useAuth();
 
   if (!isLoaded || !isSignedIn) return null;
@@ -32,7 +32,7 @@ function ConfiguredRoveConnectSidebarAvatar() {
         },
       }}
     >
-      {ROVE_CONNECT_ACCOUNT_PAGES.map((page) => (
+      {PAPERPLANE_CONNECT_ACCOUNT_PAGES.map((page) => (
         <UserButton.UserProfilePage
           key={page.url}
           label={page.label}
@@ -46,9 +46,9 @@ function ConfiguredRoveConnectSidebarAvatar() {
   );
 }
 
-function ConfiguredRoveConnectSidebarSignIn() {
+function ConfiguredPaperplaneConnectSidebarSignIn() {
   const { isLoaded, isSignedIn } = useAuth();
-  const { authPrompt, openAuthPrompt } = useRoveConnectAuthPrompt();
+  const { authPrompt, openAuthPrompt } = usePaperplaneConnectAuthPrompt();
 
   if (!isLoaded || isSignedIn) return null;
 

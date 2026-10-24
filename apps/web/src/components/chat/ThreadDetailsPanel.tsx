@@ -7,7 +7,7 @@ import type {
 } from "@getpaperplane/contracts";
 
 import type { DraftId } from "../../composerDraftStore";
-import { useRoveProjectFileState } from "../../hooks/useRoveProjectFileScripts";
+import { usePaperplaneProjectFileState } from "../../hooks/usePaperplaneProjectFileScripts";
 import { type EnvMode, type EnvironmentOption } from "../BranchToolbar.logic";
 import { BranchToolbar } from "../BranchToolbar";
 import BaseGitActionsControl from "../GitActionsControl";
@@ -70,7 +70,7 @@ export interface ThreadDetailsPanelProps extends Pick<
 // ChatView re-renders on every streamed text chunk. Memoizing here keeps the details
 // panel out of that path: its props only change when thread metadata actually changes.
 export const ThreadDetailsPanel = memo(function ThreadDetailsPanel(props: ThreadDetailsPanelProps) {
-  const projectFile = useRoveProjectFileState(
+  const projectFile = usePaperplaneProjectFileState(
     props.environmentId,
     props.activeProjectScripts ? props.gitCwd : null,
   );

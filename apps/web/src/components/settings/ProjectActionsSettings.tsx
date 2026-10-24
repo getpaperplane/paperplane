@@ -8,7 +8,7 @@ import {
 import { DEFAULT_RESOLVED_KEYBINDINGS } from "@getpaperplane/shared/keybindings";
 import { ChevronDownIcon, PlusIcon } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
-import { useRoveProjectFileState } from "../../hooks/useRoveProjectFileScripts";
+import { usePaperplaneProjectFileState } from "../../hooks/usePaperplaneProjectFileScripts";
 import { useEnvironments } from "../../state/environments";
 import {
   EMPTY_PROJECT_SCRIPT_INPUT,
@@ -91,13 +91,13 @@ export function ProjectActionsSettings() {
   // A project's paperplane.json can declare actions to import. Read it from the
   // representative checkout; the imported action still fans out.
   const representativeMember = target?.projectId ? memberById.get(target.projectId) : undefined;
-  const roveFile = useRoveProjectFileState(
+  const paperplaneFile = usePaperplaneProjectFileState(
     representativeMember?.environmentId ?? EnvironmentId.make("none"),
     representativeMember?.workspaceRoot ?? null,
   );
   const importableScripts = useMemo(
     () =>
-      roveFile.scripts.filter(
+      paperplaneFile.scripts.filter(
         (fileScript) =>
           !scripts.some(
             (script) =>
@@ -105,7 +105,7 @@ export function ProjectActionsSettings() {
               script.name.toLowerCase() === fileScript.name.toLowerCase(),
           ),
       ),
-    [scripts, roveFile.scripts],
+    [scripts, paperplaneFile.scripts],
   );
   const importFileScript = useCallback(
     async (fileScript: PaperplaneProjectFileScript) => {
@@ -210,14 +210,14 @@ export function ProjectActionsSettings() {
           onEdit={(script) => setRequest(editorRequestForScript(script, keybindings))}
         />
       )}
-      {roveFile.notice ? (
+      {paperplaneFile.notice ? (
         <SettingsRow
           title={
-            roveFile.status === "legacy-only"
+            paperplaneFile.status === "legacy-only"
               ? "Rename the project file"
               : "paperplane.json is invalid"
           }
-          description={roveFile.notice}
+          description={paperplaneFile.notice}
           className="text-warning"
         />
       ) : null}

@@ -21,29 +21,29 @@ html[data-mobile-composer-route-transition="true"]::view-transition-new(root) {
   animation: none;
 }
 
-html[data-mobile-composer-route-transition="true"]::view-transition-group(rove-mobile-composer) {
+html[data-mobile-composer-route-transition="true"]::view-transition-group(paperplane-mobile-composer) {
   animation-duration: var(--mobile-composer-transition-duration);
   animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-html[data-mobile-composer-route-transition="true"]::view-transition-image-pair(rove-mobile-composer) {
+html[data-mobile-composer-route-transition="true"]::view-transition-image-pair(paperplane-mobile-composer) {
   isolation: isolate;
 }
 
-html[data-mobile-composer-route-transition="true"]::view-transition-old(rove-mobile-composer) {
-  animation: rove-mobile-composer-old var(--mobile-composer-transition-duration) linear both;
+html[data-mobile-composer-route-transition="true"]::view-transition-old(paperplane-mobile-composer) {
+  animation: paperplane-mobile-composer-old var(--mobile-composer-transition-duration) linear both;
   mix-blend-mode: normal;
 }
 
-html[data-mobile-composer-route-transition="true"]::view-transition-new(rove-mobile-composer) {
-  animation: rove-mobile-composer-new var(--mobile-composer-transition-duration) linear both;
+html[data-mobile-composer-route-transition="true"]::view-transition-new(paperplane-mobile-composer) {
+  animation: paperplane-mobile-composer-new var(--mobile-composer-transition-duration) linear both;
   mix-blend-mode: normal;
 }
 
 /* The expanded and compact composers have different internal layouts. Use a
    brief crossfade while their shared wrapper moves so the layout change does
    not read as a single-frame cut. */
-@keyframes rove-mobile-composer-old {
+@keyframes paperplane-mobile-composer-old {
   0%,
   35% {
     opacity: 1;
@@ -54,7 +54,7 @@ html[data-mobile-composer-route-transition="true"]::view-transition-new(rove-mob
   }
 }
 
-@keyframes rove-mobile-composer-new {
+@keyframes paperplane-mobile-composer-new {
   0%,
   35% {
     opacity: 0;
@@ -65,17 +65,17 @@ html[data-mobile-composer-route-transition="true"]::view-transition-new(rove-mob
   }
 }
 
-html[data-mobile-composer-route-transition="true"]::view-transition-group(rove-mobile-draft-headline) {
+html[data-mobile-composer-route-transition="true"]::view-transition-group(paperplane-mobile-draft-headline) {
   animation-duration: var(--mobile-composer-transition-duration);
 }
 
-html[data-mobile-composer-route-transition="true"]::view-transition-old(rove-mobile-draft-headline) {
-  animation: rove-mobile-draft-headline-exit var(--mobile-composer-transition-duration)
+html[data-mobile-composer-route-transition="true"]::view-transition-old(paperplane-mobile-draft-headline) {
+  animation: paperplane-mobile-draft-headline-exit var(--mobile-composer-transition-duration)
     cubic-bezier(0.4, 0, 1, 1) both;
   mix-blend-mode: normal;
 }
 
-@keyframes rove-mobile-draft-headline-exit {
+@keyframes paperplane-mobile-draft-headline-exit {
   from {
     opacity: 1;
     transform: translateY(0);
@@ -374,7 +374,7 @@ html[data-mobile-composer-route-transition="true"]::view-transition-old(rove-mob
 }
 
 /* Paint find results without changing rendered markdown or copied text. */
-::highlight(rove-thread-find) {
+::highlight(paperplane-thread-find) {
   color: var(--app-theme-search-match-foreground, oklch(0.216164 0.028283 77.423));
   background-color: var(--app-theme-search-match-background, oklch(0.915 0.11 85));
 
@@ -384,7 +384,7 @@ html[data-mobile-composer-route-transition="true"]::view-transition-old(rove-mob
   }
 }
 
-::highlight(rove-thread-find-active) {
+::highlight(paperplane-thread-find-active) {
   color: var(--app-theme-search-match-active-foreground, oklch(0.216164 0.028283 77.423));
   background-color: var(
     --app-theme-search-match-active-background,
@@ -636,14 +636,14 @@ html[data-mobile-composer-route-transition="true"]::view-transition-old(rove-mob
 }
 
 @layer base {
-  ::highlight(rove-assistant-citation) {
+  ::highlight(paperplane-assistant-citation) {
     background-color: color-mix(
       in oklab,
       var(--primary) calc(var(--assistant-citation-highlight-opacity) * 100%),
       transparent
     );
   }
-  ::highlight(rove-assistant-citation-comment) {
+  ::highlight(paperplane-assistant-citation-comment) {
     background-color: color-mix(in oklab, var(--primary) 45%, transparent);
   }
   :root {

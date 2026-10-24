@@ -18,10 +18,10 @@ import { APP_VERSION } from "~/branding";
 
 const DEFAULT_EXPORT_INTERVAL_MS = 1_000;
 const CLIENT_TRACING_RESOURCE = {
-  serviceName: "rove-web",
+  serviceName: "paperplane-web",
   attributes: {
-    "service.namespace": "rove",
-    "service.runtime": "rove-web",
+    "service.namespace": "paperplane",
+    "service.runtime": "paperplane-web",
     "service.mode": isElectron ? "electron" : "browser",
     "service.version": APP_VERSION,
   },

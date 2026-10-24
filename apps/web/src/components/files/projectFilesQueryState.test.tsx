@@ -100,7 +100,7 @@ vi.mock("~/state/queries", () => ({
 }));
 
 import { useWorkspaceMutationRefresh } from "~/hooks/useWorkspaceMutationRefresh";
-import { useRoveProjectFileState } from "~/hooks/useRoveProjectFileScripts";
+import { usePaperplaneProjectFileState } from "~/hooks/usePaperplaneProjectFileScripts";
 import { useProjectEntriesQuery, useProjectFileQuery } from "./projectFilesQueryState";
 
 const environmentId = EnvironmentId.make("environment-1");
@@ -202,14 +202,14 @@ describe("project query refresh", () => {
         error: null,
         isPending: true,
       });
-      expect(useRoveProjectFileState(environmentId, "/repo").status).toBe("loading");
+      expect(usePaperplaneProjectFileState(environmentId, "/repo").status).toBe("loading");
       expect(projectMocks.readFile).not.toHaveBeenCalled();
       expect(projectMocks.listEntries).not.toHaveBeenCalled();
 
       authorizationMocks.sessionAtom = Atom.make(
         AsyncResult.success({ authenticated: true, scopes: [AuthFilesystemReadScope] }),
       );
-      expect(useRoveProjectFileState(environmentId, "/repo")).toEqual({
+      expect(usePaperplaneProjectFileState(environmentId, "/repo")).toEqual({
         status: "valid",
         file: config,
         scripts: config.scripts,
@@ -254,7 +254,7 @@ describe("project query refresh", () => {
           error: null,
           isPending: true,
         });
-        expect(useRoveProjectFileState(environmentId, "/repo")).toEqual({
+        expect(usePaperplaneProjectFileState(environmentId, "/repo")).toEqual({
           status: "valid",
           file: config,
           scripts: config.scripts,
@@ -308,7 +308,7 @@ describe("project query refresh", () => {
       Atom.make(AsyncResult.success({ status: "legacy-only" })),
     );
     try {
-      const state = useRoveProjectFileState(environmentId, "/repo");
+      const state = usePaperplaneProjectFileState(environmentId, "/repo");
       expect(state.status).toBe("legacy-only");
       expect(state.file).toBeNull();
       expect(state.scripts).toEqual([]);
@@ -331,7 +331,7 @@ describe("project query refresh", () => {
         error: null,
         isPending: false,
       });
-      expect(useRoveProjectFileState(environmentId, null).status).toBe("missing");
+      expect(usePaperplaneProjectFileState(environmentId, null).status).toBe("missing");
       expect(projectMocks.readFile).not.toHaveBeenCalled();
     } finally {
       registry.dispose();

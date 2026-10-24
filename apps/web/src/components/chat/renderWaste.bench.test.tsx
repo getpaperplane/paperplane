@@ -592,7 +592,7 @@ function report() {
     })}\n`,
   );
   if (NodeProcess.env.PAPERPLANE_RENDER_BENCH_JSON === "1") {
-    NodeProcess.stdout.write(`ROVE_RENDER_BASELINE ${JSON.stringify(samples)}\n`);
+    NodeProcess.stdout.write(`PAPERPLANE_RENDER_BASELINE ${JSON.stringify(samples)}\n`);
   }
 }
 

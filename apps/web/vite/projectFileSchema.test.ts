@@ -17,7 +17,7 @@ it.layer(NodeServices.layer)("project file schema publication", (it) => {
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const root = yield* fs.makeTempDirectoryScoped({ prefix: "rove-schema-build-" });
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-schema-build-" });
         yield* fs.writeFileString(
           path.join(root, "index.html"),
           "<!doctype html><title>Build fixture</title>",

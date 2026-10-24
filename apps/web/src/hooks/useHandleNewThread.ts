@@ -43,7 +43,7 @@ import {
   resolveNewDraftStartFromOrigin,
   resolveNewThreadModelSelectionOverride,
 } from "../lib/chatThreadActions";
-import { readRoveProjectFile } from "../lib/roveProjectFileDefaults";
+import { readPaperplaneProjectFile } from "../lib/paperplaneProjectFileDefaults";
 import { environmentServerConfigsAtom } from "../state/server";
 import { resolveThreadRouteTarget } from "../threadRoutes";
 import { legacyProjectCwdPreferenceKey, useUiStateStore } from "../uiStateStore";
@@ -170,7 +170,7 @@ export function useNewThreadHandler() {
         const consultProjectFile =
           project !== undefined && projectSettings.settings.defaultThreadEnvMode === null;
         const projectFile = consultProjectFile
-          ? await readRoveProjectFile(project.environmentId, project.workspaceRoot)
+          ? await readPaperplaneProjectFile(project.environmentId, project.workspaceRoot)
           : null;
         return resolveNewThreadEnvMode({
           projectSettings: resolveProjectSettings(

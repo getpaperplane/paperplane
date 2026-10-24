@@ -408,7 +408,7 @@ describe("isolated macOS VM setup", () => {
 
 describe("setup desktop", () => {
   const desktop = (overrides: Partial<ComputerDesktop>): ComputerDesktop => ({
-    id: "vm:rove-cua-golden",
+    id: "vm:paperplane-cua-golden",
     kind: "macos-vm",
     role: "setup",
     threadId: null,

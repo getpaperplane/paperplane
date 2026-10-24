@@ -286,7 +286,7 @@ export function McpAppFrame(props: {
         platform: isElectron ? "desktop" : "web",
         locale: navigator.language,
         timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-        userAgent: `rove/${APP_VERSION}`,
+        userAgent: `paperplane/${APP_VERSION}`,
         deviceCapabilities: {
           touch: window.matchMedia("(pointer: coarse)").matches,
           hover: window.matchMedia("(hover: hover)").matches,

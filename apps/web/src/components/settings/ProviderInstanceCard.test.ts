@@ -132,7 +132,7 @@ describe("deriveProviderModelsForDisplay", () => {
     const instanceId = ProviderInstanceId.make("codex_work");
     const driver = ProviderDriverKind.make("codex");
     const message =
-      "Codex app-server provider probe failed: Cannot create Codex shadow home entry 'auth.json' because '/home/me/.codex-rove/work/auth.json' already exists and is not a symlink.";
+      "Codex app-server provider probe failed: Cannot create Codex shadow home entry 'auth.json' because '/home/me/.codex-paperplane/work/auth.json' already exists and is not a symlink.";
     const liveProvider: ServerProvider = {
       instanceId,
       driver,

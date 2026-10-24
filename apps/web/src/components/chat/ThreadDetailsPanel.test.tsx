@@ -10,13 +10,13 @@ import { PopoverCreateHandle } from "../ui/popover";
 import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 const testState = vi.hoisted(() => ({
-  useRoveProjectFileState: vi.fn(),
+  usePaperplaneProjectFileState: vi.fn(),
   projectScriptsControl: vi.fn(),
 }));
 
-vi.mock("../../hooks/useRoveProjectFileScripts", () => ({
-  useRoveProjectFileState: (...args: ReadonlyArray<unknown>) =>
-    testState.useRoveProjectFileState(...args),
+vi.mock("../../hooks/usePaperplaneProjectFileScripts", () => ({
+  usePaperplaneProjectFileState: (...args: ReadonlyArray<unknown>) =>
+    testState.usePaperplaneProjectFileState(...args),
 }));
 vi.mock("../BranchToolbar", () => ({
   BranchToolbar: () => null,
@@ -42,7 +42,7 @@ import { ThreadDetailsPanel, type ThreadDetailsPanelProps } from "./ThreadDetail
 
 describe("ThreadDetailsPanel", () => {
   beforeEach(() => {
-    testState.useRoveProjectFileState.mockReset();
+    testState.usePaperplaneProjectFileState.mockReset();
     testState.projectScriptsControl.mockReset();
   });
 
@@ -56,7 +56,7 @@ describe("ThreadDetailsPanel", () => {
         icon: "test",
       },
     ] satisfies ReadonlyArray<PaperplaneProjectFileScript>;
-    testState.useRoveProjectFileState.mockReturnValue({ scripts: fileScripts, notice: null });
+    testState.usePaperplaneProjectFileState.mockReturnValue({ scripts: fileScripts, notice: null });
 
     const props: ThreadDetailsPanelProps = {
       anchor: { current: null },
@@ -94,7 +94,7 @@ describe("ThreadDetailsPanel", () => {
 
     renderToStaticMarkup(<ThreadDetailsPanel {...props} />);
 
-    expect(testState.useRoveProjectFileState).toHaveBeenCalledWith(environmentId, gitCwd);
+    expect(testState.usePaperplaneProjectFileState).toHaveBeenCalledWith(environmentId, gitCwd);
     expect(testState.projectScriptsControl).toHaveBeenCalledWith(
       expect.objectContaining({
         displayMode: "panel",
@@ -105,7 +105,7 @@ describe("ThreadDetailsPanel", () => {
   });
 
   it("skips re-rendering for unchanged props and updates when thread metadata changes", () => {
-    testState.useRoveProjectFileState.mockReturnValue({ scripts: [], notice: null });
+    testState.usePaperplaneProjectFileState.mockReturnValue({ scripts: [], notice: null });
     const props: ThreadDetailsPanelProps = {
       anchor: { current: null },
       handle: PopoverCreateHandle(),

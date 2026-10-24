@@ -77,12 +77,12 @@ describe("buildCommandPaletteProjectMetadata", () => {
         {
           environmentId: localEnvironmentId,
           title: "Paperplane",
-          workspaceRoot: "/Users/theo/Projects/rove",
+          workspaceRoot: "/Users/theo/Projects/paperplane",
         },
         {
           environmentId: remoteEnvironmentId,
-          title: "rove",
-          workspaceRoot: "/srv/rove",
+          title: "paperplane",
+          workspaceRoot: "/srv/paperplane",
         },
       ],
       locationByEnvironmentId: locations,
@@ -90,10 +90,10 @@ describe("buildCommandPaletteProjectMetadata", () => {
 
     expect(metadata.searchTerms).toEqual([
       "Paperplane",
-      "/Users/theo/Projects/rove",
+      "/Users/theo/Projects/paperplane",
       "Local",
-      "rove",
-      "/srv/rove",
+      "paperplane",
+      "/srv/paperplane",
       "Build box",
     ]);
     expect(metadata.environmentLabels).toEqual(["Local", "Build box"]);
@@ -105,7 +105,7 @@ describe("buildCommandPaletteProjectMetadata", () => {
       projectSearchItems: [
         {
           kind: "action",
-          value: "project:rove",
+          value: "project:paperplane",
           title: "Paperplane",
           searchTerms: metadata.searchTerms,
           icon: null,
@@ -123,12 +123,12 @@ describe("buildCommandPaletteProjectMetadata", () => {
         {
           environmentId: remoteEnvironmentId,
           title: "Paperplane",
-          workspaceRoot: "/srv/rove",
+          workspaceRoot: "/srv/paperplane",
         },
         {
           environmentId: remoteEnvironmentId,
           title: "Paperplane worktree",
-          workspaceRoot: "/srv/rove-feature",
+          workspaceRoot: "/srv/paperplane-feature",
         },
       ],
       locationByEnvironmentId: locations,
@@ -144,12 +144,12 @@ describe("buildCommandPaletteProjectMetadata", () => {
         {
           environmentId: remoteEnvironmentId,
           title: "Paperplane",
-          workspaceRoot: "/srv/rove",
+          workspaceRoot: "/srv/paperplane",
         },
         {
           environmentId: secondRemoteEnvironmentId,
           title: "Paperplane mirror",
-          workspaceRoot: "/srv/mirror/rove",
+          workspaceRoot: "/srv/mirror/paperplane",
         },
       ],
       locationByEnvironmentId: new Map([
@@ -167,7 +167,7 @@ describe("buildCommandPaletteProjectMetadata", () => {
         {
           environmentId: remoteEnvironmentId,
           title: "Paperplane",
-          workspaceRoot: "/srv/rove",
+          workspaceRoot: "/srv/paperplane",
         },
       ],
       locationByEnvironmentId: new Map(),
@@ -780,45 +780,47 @@ describe("filterPinnedBrowseEntries", () => {
   });
 });
 
-it.each(["#10839", "10839", "rovecode/rove#10839", "https://github.com/rovecode/rove/pull/10839"])(
-  "finds linked threads from PR query %s",
-  (query) => {
-    const items = buildThreadActionItems({
-      threads: [
-        makeThread({
-          title: "Implementation",
-          pullRequests: [
-            {
-              host: "github.com",
-              repository: "rovecode/rove",
-              number: 10839,
-              url: "https://github.com/rovecode/rove/pull/10839",
-              source: "manual",
-              linkedAt: "2026-09-08T00:00:00Z",
-              snapshot: null,
-              stack: null,
-            },
-          ],
-        }),
-        makeThread({ id: ThreadId.make("unrelated"), title: "Other work" }),
-      ],
-      projectTitleById: new Map(),
-      sortOrder: "updated_at",
-      icon: null,
-      runThread: async () => undefined,
-    });
-    const groups = filterCommandPaletteGroups({
-      activeGroups: [],
-      query,
-      isInSubmenu: false,
-      projectSearchItems: [],
-      threadSearchItems: items,
-    });
-    expect(groups.flatMap((group) => group.items.map((item) => item.title))).toEqual([
-      "Implementation",
-    ]);
-  },
-);
+it.each([
+  "#10839",
+  "10839",
+  "paperplane/paperplane#10839",
+  "https://github.com/paperplane/paperplane/pull/10839",
+])("finds linked threads from PR query %s", (query) => {
+  const items = buildThreadActionItems({
+    threads: [
+      makeThread({
+        title: "Implementation",
+        pullRequests: [
+          {
+            host: "github.com",
+            repository: "paperplane/paperplane",
+            number: 10839,
+            url: "https://github.com/paperplane/paperplane/pull/10839",
+            source: "manual",
+            linkedAt: "2026-09-08T00:00:00Z",
+            snapshot: null,
+            stack: null,
+          },
+        ],
+      }),
+      makeThread({ id: ThreadId.make("unrelated"), title: "Other work" }),
+    ],
+    projectTitleById: new Map(),
+    sortOrder: "updated_at",
+    icon: null,
+    runThread: async () => undefined,
+  });
+  const groups = filterCommandPaletteGroups({
+    activeGroups: [],
+    query,
+    isInSubmenu: false,
+    projectSearchItems: [],
+    threadSearchItems: items,
+  });
+  expect(groups.flatMap((group) => group.items.map((item) => item.title))).toEqual([
+    "Implementation",
+  ]);
+});
 
 describe("filterCommandPaletteGroups", () => {
   it("sorts secondary settings results after other matches", () => {

@@ -87,16 +87,16 @@ describe("getOrphanedWorktreePathForThread", () => {
 describe("formatWorktreePathForDisplay", () => {
   it("shows only the last path segment for unix-like paths", () => {
     const result = formatWorktreePathForDisplay(
-      "/Users/julius/.rove/worktrees/rove-mvp/rove-4e609bb8",
+      "/Users/julius/.paperplane/worktrees/paperplane-mvp/paperplane-4e609bb8",
     );
-    expect(result).toBe("rove-4e609bb8");
+    expect(result).toBe("paperplane-4e609bb8");
   });
 
   it("normalizes windows separators before selecting the final segment", () => {
     const result = formatWorktreePathForDisplay(
-      "C:\\Users\\julius\\.rove\\worktrees\\rove-mvp\\rove-4e609bb8",
+      "C:\\Users\\julius\\.paperplane\\worktrees\\paperplane-mvp\\paperplane-4e609bb8",
     );
-    expect(result).toBe("rove-4e609bb8");
+    expect(result).toBe("paperplane-4e609bb8");
   });
 
   it("uses the final segment even when outside ~/.rove-code/worktrees", () => {

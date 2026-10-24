@@ -579,7 +579,7 @@ describe("project overrides at environment scope", () => {
   const laptop = EnvironmentId.make("laptop");
   const desk = EnvironmentId.make("desk");
   const fleet = ProjectId.make("fleet");
-  const rove = ProjectId.make("rove");
+  const paperplane = ProjectId.make("paperplane");
   const environment = (
     environmentId: EnvironmentId,
     overrides: ServerSettings["projectSettingsOverrides"],
@@ -598,7 +598,7 @@ describe("project overrides at environment scope", () => {
       [
         environment(laptop, {
           [fleet]: { defaultAutoPull: true, defaultThreadEnvMode: "local" },
-          [rove]: { defaultThreadEnvMode: "local" },
+          [paperplane]: { defaultThreadEnvMode: "local" },
         }),
         environment(desk, { [fleet]: { defaultAutoPull: false } }),
       ],
@@ -615,12 +615,12 @@ describe("project overrides at environment scope", () => {
       [
         environment(laptop, {
           [fleet]: { defaultAutoPull: true, defaultThreadEnvMode: "local" },
-          [rove]: { defaultAutoPull: true },
+          [paperplane]: { defaultAutoPull: true },
         }),
       ],
       [
         { environmentId: laptop, projectId: fleet },
-        { environmentId: laptop, projectId: rove },
+        { environmentId: laptop, projectId: paperplane },
       ],
       ["defaultAutoPull"],
     );
@@ -630,7 +630,10 @@ describe("project overrides at environment scope", () => {
         label: laptop,
         previous: expect.anything(),
         patch: {
-          projectSettingsOverrides: { [fleet]: { defaultThreadEnvMode: "local" }, [rove]: null },
+          projectSettingsOverrides: {
+            [fleet]: { defaultThreadEnvMode: "local" },
+            [paperplane]: null,
+          },
         },
       },
     ]);

@@ -135,20 +135,20 @@ describe("pullRequestCandidateUrlFromReferenceAutolink", () => {
   it("turns GitHub's shared issue route into a pull request candidate", () => {
     expect(
       pullRequestCandidateUrlFromReferenceAutolink(
-        "https://github.com/rovecode/rove/issues/8600#issuecomment-1",
+        "https://github.com/paperplane/paperplane/issues/8600#issuecomment-1",
       ),
-    ).toBe("https://github.com/rovecode/rove/pull/8600#issuecomment-1");
+    ).toBe("https://github.com/paperplane/paperplane/pull/8600#issuecomment-1");
   });
 
   it("does not reinterpret other issue hosts or malformed references", () => {
     expect(
       pullRequestCandidateUrlFromReferenceAutolink(
-        "https://gitlab.com/rovecode/rove/-/issues/8600",
+        "https://gitlab.com/paperplane/paperplane/-/issues/8600",
       ),
     ).toBeNull();
     expect(
       pullRequestCandidateUrlFromReferenceAutolink(
-        "https://github.com/rovecode/rove/issues/not-a-number",
+        "https://github.com/paperplane/paperplane/issues/not-a-number",
       ),
     ).toBeNull();
   });
@@ -157,16 +157,16 @@ describe("pullRequestCandidateUrlFromReferenceAutolink", () => {
 describe("matchesLinkedPullRequestUrl", () => {
   const linkedPullRequest = {
     projectId: ProjectId.make("project-1"),
-    repository: "rovecode/rove",
+    repository: "paperplane/paperplane",
     number: 42,
-    url: "https://github.com/rovecode/rove/pull/42",
+    url: "https://github.com/paperplane/paperplane/pull/42",
   };
 
   it("matches the same pull request without looking up its project", () => {
     expect(
       matchesLinkedPullRequestUrl(
         linkedPullRequest,
-        "https://github.com/RoveCode/Rove/pull/42/files",
+        "https://github.com/Paperplane/Paperplane/pull/42/files",
       ),
     ).toBe(true);
   });
@@ -188,7 +188,7 @@ describe("matchesLinkedPullRequestUrl", () => {
     expect(
       matchesLinkedPullRequestUrl(
         linkedPullRequest,
-        "https://github.com:8443/rovecode/rove/pull/42",
+        "https://github.com:8443/paperplane/paperplane/pull/42",
       ),
     ).toBe(true);
   });
@@ -204,12 +204,15 @@ describe("matchesLinkedPullRequestUrl", () => {
 
   it("rejects a different pull request or host", () => {
     expect(
-      matchesLinkedPullRequestUrl(linkedPullRequest, "https://github.com/rovecode/rove/pull/43"),
+      matchesLinkedPullRequestUrl(
+        linkedPullRequest,
+        "https://github.com/paperplane/paperplane/pull/43",
+      ),
     ).toBe(false);
     expect(
       matchesLinkedPullRequestUrl(
         linkedPullRequest,
-        "https://github.example.com/rovecode/rove/pull/42",
+        "https://github.example.com/paperplane/paperplane/pull/42",
       ),
     ).toBe(false);
   });
@@ -366,20 +369,20 @@ describe("findProjectForChangeRequest", () => {
 
   it("matches a nested GitLab group by the whole path below the host", () => {
     // The server identifies a repository by `displayName`, which keeps every group segment; the
-    // two-segment owner/name form would look for `rovetools/rove` and find nothing.
+    // two-segment owner/name form would look for `paperplanetools/paperplane` and find nothing.
     const projects = [
       project({
-        canonicalKey: "gitlab.com/rovetools/platform/rove",
+        canonicalKey: "gitlab.com/paperplanetools/platform/paperplane",
         provider: "gitlab",
-        displayName: "rovetools/platform/rove",
-        owner: "rovetools",
-        name: "rove",
+        displayName: "paperplanetools/platform/paperplane",
+        owner: "paperplanetools",
+        name: "paperplane",
       }),
     ];
     expect(
       findProjectForChangeRequest(projects, {
         host: "gitlab.com",
-        repository: "rovetools/platform/rove",
+        repository: "paperplanetools/platform/paperplane",
         number: 42,
       }),
     ).toBe(projects[0]);
@@ -388,16 +391,16 @@ describe("findProjectForChangeRequest", () => {
   it("keeps two hosts apart, so an Enterprise link does not open the public one", () => {
     const projects = [
       project({
-        canonicalKey: "github.com/rovecode/rove",
+        canonicalKey: "github.com/paperplane/paperplane",
         provider: "github",
         owner: "pingdotgg",
-        name: "rove",
+        name: "paperplane",
       }),
     ];
     expect(
       findProjectForChangeRequest(projects, {
         host: "github.acme.test",
-        repository: "rovecode/rove",
+        repository: "paperplane/paperplane",
         number: 1,
       }),
     ).toBeUndefined();
@@ -411,21 +414,21 @@ describe("findProjectForChangeRequest", () => {
     // Derived from the SSH remote the way the server derives it rather than written out, so the
     // day that normalization stops reaching the web spelling this fails here too.
     const canonicalKey = normalizeGitRemoteUrl(
-      "git@ssh.dev.azure.com:v3/RoveTools/Platform/RoveCode",
+      "git@ssh.dev.azure.com:v3/PaperplaneTools/Platform/Paperplane",
     );
     const projects = [
       project({
         canonicalKey,
         provider: "azure-devops",
         displayName: canonicalKey.split("/").slice(1).join("/"),
-        owner: "rovetools",
-        name: "rovecode",
+        owner: "paperplanetools",
+        name: "paperplane",
       }),
     ];
     expect(
       findProjectForChangeRequest(projects, {
         host: "dev.azure.com",
-        repository: "rovetools/platform/_git/rovecode",
+        repository: "paperplanetools/platform/_git/paperplane",
         number: 1,
       }),
     ).toBe(projects[0]);
@@ -434,16 +437,16 @@ describe("findProjectForChangeRequest", () => {
   it("claims nothing for a lookalike host, which is what keeps a link a link", () => {
     const projects = [
       project({
-        canonicalKey: "github.com/rovecode/rove",
+        canonicalKey: "github.com/paperplane/paperplane",
         provider: "github",
         owner: "pingdotgg",
-        name: "rove",
+        name: "paperplane",
       }),
     ];
     expect(
       findProjectForChangeRequest(projects, {
         host: "github.com-evil.test",
-        repository: "rovecode/rove",
+        repository: "paperplane/paperplane",
         number: 1,
       }),
     ).toBeUndefined();

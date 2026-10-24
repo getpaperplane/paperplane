@@ -3,7 +3,7 @@ import type { RelayClientEnvironmentRecord } from "@getpaperplane/contracts/rela
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vite-plus/test";
 
-import { RoveConnectEnvironmentRow } from "./RoveConnectUserProfilePage";
+import { PaperplaneConnectEnvironmentRow } from "./PaperplaneConnectUserProfilePage";
 
 const environment: RelayClientEnvironmentRecord = {
   environmentId: "environment-1" as EnvironmentId,
@@ -24,7 +24,7 @@ function renderRow({
   readonly mutationPending?: boolean;
 } = {}) {
   return renderToStaticMarkup(
-    <RoveConnectEnvironmentRow
+    <PaperplaneConnectEnvironmentRow
       environment={environment}
       confirmationOpen={confirmationOpen}
       mutationPending={mutationPending}

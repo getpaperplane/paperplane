@@ -10,14 +10,14 @@ import {
   AlertDialogTitle,
 } from "../ui/alert-dialog";
 import { Button, InlineButton } from "../ui/button";
-import { useRoveConnectAccountPage } from "./RoveConnectAccountPages";
+import { usePaperplaneConnectAccountPage } from "./PaperplaneConnectAccountPages";
 
 /**
  * Confirms removing a Paperplane Connect environment from this device. Removal here
  * leaves the account registration (and its host space) in place, so the dialog
  * says so and links to the account page where it can be deregistered.
  */
-export function RemoveRoveConnectEnvironmentDialog({
+export function RemovePaperplaneConnectEnvironmentDialog({
   environmentLabel,
   onCancel,
   onConfirm,
@@ -27,7 +27,7 @@ export function RemoveRoveConnectEnvironmentDialog({
   readonly onCancel: () => void;
   readonly onConfirm: () => void;
 }) {
-  const accountPage = useRoveConnectAccountPage();
+  const accountPage = usePaperplaneConnectAccountPage();
   // Keep the label through the close animation.
   const [shownLabel, setShownLabel] = useState(environmentLabel);
   if (environmentLabel !== null && environmentLabel !== shownLabel) setShownLabel(environmentLabel);

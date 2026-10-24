@@ -155,7 +155,7 @@ import {
   supportsServerUpdateThreadContinuation,
 } from "~/versionSkew";
 import { hasCloudPublicConfig } from "~/cloud/publicConfig";
-import { RemoveRoveConnectEnvironmentDialog } from "../clerk/RemoveRoveConnectEnvironmentDialog";
+import { RemovePaperplaneConnectEnvironmentDialog } from "../clerk/RemovePaperplaneConnectEnvironmentDialog";
 import { useCloudLinkController } from "~/cloud/useCloudLinkController";
 import { authEnvironment } from "~/state/auth";
 import { environmentCatalog } from "~/connection/catalog";
@@ -2815,12 +2815,12 @@ export function ConnectionsSettings() {
   // device. Switching off is the reversible path, so removal always confirms.
   // Paperplane Connect environments get their own dialog: removing one here leaves its
   // account registration, so it points to where that can be deregistered.
-  const [pendingRoveConnectRemoval, setPendingRoveConnectRemoval] =
+  const [pendingPaperplaneConnectRemoval, setPendingPaperplaneConnectRemoval] =
     useState<EnvironmentPresentation | null>(null);
   const handleRemoveSavedBackend = useCallback(
     async (environment: EnvironmentPresentation) => {
       if (environment.relayManaged && hasCloudPublicConfig()) {
-        setPendingRoveConnectRemoval(environment);
+        setPendingPaperplaneConnectRemoval(environment);
         return;
       }
       // Fail closed: no mounted confirm host means no removal.
@@ -4165,13 +4165,13 @@ export function ConnectionsSettings() {
         />
       </SettingsSection>
       {hasCloudPublicConfig() ? (
-        <RemoveRoveConnectEnvironmentDialog
-          environmentLabel={pendingRoveConnectRemoval?.label ?? null}
-          onCancel={() => setPendingRoveConnectRemoval(null)}
+        <RemovePaperplaneConnectEnvironmentDialog
+          environmentLabel={pendingPaperplaneConnectRemoval?.label ?? null}
+          onCancel={() => setPendingPaperplaneConnectRemoval(null)}
           onConfirm={() => {
-            if (!pendingRoveConnectRemoval) return;
-            setPendingRoveConnectRemoval(null);
-            void removeSavedBackend(pendingRoveConnectRemoval);
+            if (!pendingPaperplaneConnectRemoval) return;
+            setPendingPaperplaneConnectRemoval(null);
+            void removeSavedBackend(pendingPaperplaneConnectRemoval);
           }}
         />
       ) : null}

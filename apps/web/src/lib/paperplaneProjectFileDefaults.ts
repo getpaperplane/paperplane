@@ -1,11 +1,11 @@
 import type { EnvironmentId, PaperplaneProjectFile } from "@getpaperplane/contracts";
 import { executeAtomQuery } from "@getpaperplane/client-runtime/state/runtime";
 
-import { getProjectConfigQueryAtom } from "~/hooks/useRoveProjectFileScripts";
+import { getProjectConfigQueryAtom } from "~/hooks/usePaperplaneProjectFileScripts";
 import { appAtomRegistry } from "~/rpc/atomRegistry";
 
 /** Read the owning server's accepted project configuration for new-thread defaults. */
-export async function readRoveProjectFile(
+export async function readPaperplaneProjectFile(
   environmentId: EnvironmentId,
   workspaceRoot: string,
 ): Promise<PaperplaneProjectFile | null> {

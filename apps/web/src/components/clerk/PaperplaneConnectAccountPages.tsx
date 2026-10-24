@@ -4,10 +4,10 @@ import { type ReactNode, useCallback, useState } from "react";
 import { createPortal } from "react-dom";
 
 import { MobileClientsUserProfilePage } from "./MobileClientsUserProfilePage";
-import { RoveConnectUserProfilePage } from "./RoveConnectUserProfilePage";
+import { PaperplaneConnectUserProfilePage } from "./PaperplaneConnectUserProfilePage";
 
 /** Custom pages in the Clerk account modal, in menu order. */
-export const ROVE_CONNECT_ACCOUNT_PAGES = [
+export const PAPERPLANE_CONNECT_ACCOUNT_PAGES = [
   {
     label: "Mobile clients",
     url: "mobile-clients",
@@ -18,7 +18,7 @@ export const ROVE_CONNECT_ACCOUNT_PAGES = [
     label: "Paperplane Connect",
     url: "paperplane-connect",
     icon: <ServerIcon className="size-4" />,
-    content: <RoveConnectUserProfilePage />,
+    content: <PaperplaneConnectUserProfilePage />,
   },
 ] as const;
 
@@ -29,7 +29,7 @@ type PortalTargets = Readonly<Record<string, HTMLDivElement | undefined>>;
  * UserButton. Clerk mounts custom pages into DOM nodes it owns, so the caller
  * must keep `portals` rendered for as long as the modal can be open.
  */
-export function useRoveConnectAccountPage(): {
+export function usePaperplaneConnectAccountPage(): {
   readonly open: (() => void) | null;
   readonly portals: ReactNode;
 } {
@@ -41,8 +41,8 @@ export function useRoveConnectAccountPage(): {
     const setTarget = (key: string, element: HTMLDivElement | undefined) =>
       setTargets((current) => ({ ...current, [key]: element }));
     clerk.openUserProfile({
-      __experimental_startPath: "/rove-connect",
-      customPages: ROVE_CONNECT_ACCOUNT_PAGES.map((page) => ({
+      __experimental_startPath: "/paperplane-connect",
+      customPages: PAPERPLANE_CONNECT_ACCOUNT_PAGES.map((page) => ({
         label: page.label,
         url: page.url,
         mount: (element: HTMLDivElement) => setTarget(`content:${page.url}`, element),
@@ -53,7 +53,7 @@ export function useRoveConnectAccountPage(): {
     });
   }, [clerk]);
 
-  const portals = ROVE_CONNECT_ACCOUNT_PAGES.flatMap((page) => {
+  const portals = PAPERPLANE_CONNECT_ACCOUNT_PAGES.flatMap((page) => {
     const content = targets[`content:${page.url}`];
     const icon = targets[`icon:${page.url}`];
     return [

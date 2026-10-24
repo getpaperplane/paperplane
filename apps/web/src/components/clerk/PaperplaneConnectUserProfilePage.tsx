@@ -38,7 +38,7 @@ function endpointLabel(environment: RelayClientEnvironmentRecord): string {
     : "Activity publishing only";
 }
 
-export function RoveConnectEnvironmentRow(props: {
+export function PaperplaneConnectEnvironmentRow(props: {
   readonly environment: RelayClientEnvironmentRecord;
   readonly confirmationOpen: boolean;
   readonly mutationPending: boolean;
@@ -110,7 +110,7 @@ export function RoveConnectEnvironmentRow(props: {
   );
 }
 
-export function RoveConnectUserProfilePage() {
+export function PaperplaneConnectUserProfilePage() {
   const environmentsState = useManagedRelayEnvironments();
   const deregisterEnvironment = useAtomCommand(deregisterManagedRelayEnvironmentCommand, {
     reportFailure: false,
@@ -159,7 +159,7 @@ export function RoveConnectUserProfilePage() {
     const cause = squashAtomCommandFailure(result);
     const message = cause instanceof Error ? cause.message : "Could not deregister the server.";
     const traceId = findErrorTraceId(cause);
-    console.error("[rove-connect] Could not deregister environment", {
+    console.error("[paperplane-connect] Could not deregister environment", {
       environmentId: environment.environmentId,
       message,
       traceId,
@@ -220,7 +220,7 @@ export function RoveConnectUserProfilePage() {
         ) : environments.length > 0 ? (
           <ul className="border-t">
             {environments.map((environment) => (
-              <RoveConnectEnvironmentRow
+              <PaperplaneConnectEnvironmentRow
                 key={environment.environmentId}
                 environment={environment}
                 confirmationOpen={confirmingEnvironmentId === environment.environmentId}

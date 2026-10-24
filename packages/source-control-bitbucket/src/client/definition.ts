@@ -82,7 +82,7 @@ export const definition = defineSourceControlClient({
     headRepositoryNameWithOwner &&
     repositoryName.test(headRepositoryNameWithOwner) &&
     safeShellArgument.test(headBranch)
-      ? `git clone --single-branch --branch ${headBranch} https://bitbucket.org/${headRepositoryNameWithOwner}.git rove-pr-${number}`
+      ? `git clone --single-branch --branch ${headBranch} https://bitbucket.org/${headRepositoryNameWithOwner}.git paperplane-pr-${number}`
       : null,
   authorProfileUrl: () => null,
   referenceAutolinkRepositoryUrl: () => null,

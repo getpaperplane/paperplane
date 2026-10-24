@@ -155,8 +155,8 @@ vi.mock("../lib/chatThreadActions", async (importOriginal) => ({
   hasExplicitComposerModelSelection: () => false,
   resolveNewThreadModelSelectionOverride: () => null,
 }));
-vi.mock("../lib/roveProjectFileDefaults", () => ({
-  readRoveProjectFile: () => testState.projectFileRead,
+vi.mock("../lib/paperplaneProjectFileDefaults", () => ({
+  readPaperplaneProjectFile: () => testState.projectFileRead,
 }));
 vi.mock("../lib/utils", () => ({
   newDraftId: () => "draft-delayed",

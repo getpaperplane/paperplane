@@ -79,7 +79,7 @@ export function useUpdateEverything(localUpdateVersion: string | null) {
     targetVersion,
   );
   // A desktop-managed server installs from its own app's update feed, so only
-  // servers that download rove from npm wait for npm to publish the version.
+  // servers that download paperplane from npm wait for npm to publish the version.
   const needsNpm = behindServers.some((server) => server.selfUpdate !== "desktop-managed");
   const published = useNpmReleasePublished(needsNpm ? targetVersion : null);
   const servers = published

@@ -128,7 +128,7 @@ function categoryLabel(category: ResourceTelemetryProcessCategory): string {
       return "Electron utility";
     case "resource-monitor":
       return "Monitor";
-    case "unknown-rove":
+    case "unknown-paperplane":
       return "Paperplane process";
   }
 }

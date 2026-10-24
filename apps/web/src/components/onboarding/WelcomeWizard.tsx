@@ -38,7 +38,7 @@ import { TYPOGRAPHY_ADVANCED_STORAGE_KEY } from "../../appearanceFonts";
 import { useLocalStorage } from "../../hooks/useLocalStorage";
 import { hasCloudPublicConfig } from "../../cloud/publicConfig";
 import { TELEMETRY_PRIVACY_URL } from "../../legalLinks";
-import { useRoveConnectAuthPrompt } from "../clerk/useRoveConnectAuthPrompt";
+import { usePaperplaneConnectAuthPrompt } from "../clerk/usePaperplaneConnectAuthPrompt";
 import { useCompleteOnboarding } from "../../onboarding/firstRun";
 import {
   groupOnboardingProjects,
@@ -468,7 +468,7 @@ function ConnectAccountOption({
 }) {
   const { environments } = useEnvironments();
   const { isLoaded, isSignedIn } = useAuth({ treatPendingAsSignedOut: false });
-  const { openAuthPrompt } = useRoveConnectAuthPrompt();
+  const { openAuthPrompt } = usePaperplaneConnectAuthPrompt();
   const [expanded, setExpanded] = useState(true);
   const [discoveryReady, setDiscoveryReady] = useState(false);
   const onDiscoveryReady = useCallback(() => setDiscoveryReady(true), []);

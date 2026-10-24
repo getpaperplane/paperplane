@@ -69,7 +69,7 @@ export function useManagedRelayEnvironments() {
   const snapshot = readManagedRelaySnapshotState(result);
   useEffect(() => {
     if (snapshot.error) {
-      console.error("[rove-cloud] Relay environment listing failed", {
+      console.error("[paperplane-cloud] Relay environment listing failed", {
         message: snapshot.error,
         traceId: snapshot.errorTraceId,
       });
@@ -96,7 +96,7 @@ export function useManagedRelayDevices() {
   const snapshot = readManagedRelaySnapshotState(result);
   useEffect(() => {
     if (snapshot.error) {
-      console.error("[rove-cloud] Relay device listing failed", {
+      console.error("[paperplane-cloud] Relay device listing failed", {
         message: snapshot.error,
         traceId: snapshot.errorTraceId,
       });

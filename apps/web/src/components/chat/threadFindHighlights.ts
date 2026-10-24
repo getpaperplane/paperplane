@@ -2,8 +2,8 @@ import { findThreadSearchOccurrences } from "@getpaperplane/shared/threadSearch"
 import { useEffect, useLayoutEffect, useRef } from "react";
 import { THREAD_FIND_BLOCK_TAGS } from "@getpaperplane/shared/threadFindText";
 
-const THREAD_FIND_HIGHLIGHT_NAME = "rove-thread-find";
-const THREAD_FIND_ACTIVE_HIGHLIGHT_NAME = "rove-thread-find-active";
+const THREAD_FIND_HIGHLIGHT_NAME = "paperplane-thread-find";
+const THREAD_FIND_ACTIVE_HIGHLIGHT_NAME = "paperplane-thread-find-active";
 
 const THREAD_FIND_TEXT_SELECTOR = "[data-thread-find-text]";
 const THREAD_FIND_IGNORE_SELECTOR = "[data-thread-find-ignore]";

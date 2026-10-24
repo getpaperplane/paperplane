@@ -63,14 +63,14 @@ const SnapShotIcon = createLucideIcon("snap-shot", [
   ["circle", { cx: "12", cy: "12", r: "1.5", key: "lens" }],
 ]);
 
-const RoveConnectSidebarSignIn = lazy(() =>
-  import("../clerk/RoveConnectSidebarSignIn").then((module) => ({
-    default: module.RoveConnectSidebarSignIn,
+const PaperplaneConnectSidebarSignIn = lazy(() =>
+  import("../clerk/PaperplaneConnectSidebarSignIn").then((module) => ({
+    default: module.PaperplaneConnectSidebarSignIn,
   })),
 );
-const RoveConnectSidebarAvatar = lazy(() =>
-  import("../clerk/RoveConnectSidebarSignIn").then((module) => ({
-    default: module.RoveConnectSidebarAvatar,
+const PaperplaneConnectSidebarAvatar = lazy(() =>
+  import("../clerk/PaperplaneConnectSidebarSignIn").then((module) => ({
+    default: module.PaperplaneConnectSidebarAvatar,
   })),
 );
 
@@ -365,14 +365,14 @@ export function SettingsSidebarNav({ pathname }: { pathname: string }) {
       </SidebarContent>
       <SidebarFooter>
         <Suspense fallback={null}>
-          <RoveConnectSidebarSignIn />
+          <PaperplaneConnectSidebarSignIn />
         </Suspense>
         <div className="flex items-center gap-1">
           <div className="min-w-0 flex-1">
             <SidebarUtilityMenu />
           </div>
           <Suspense fallback={null}>
-            <RoveConnectSidebarAvatar />
+            <PaperplaneConnectSidebarAvatar />
           </Suspense>
         </div>
       </SidebarFooter>

@@ -9,7 +9,7 @@ import { type RefObject, useEffect, useEffectEvent, useSyncExternalStore } from 
  * re-render the ghost.
  */
 
-export const THREAD_CONTEXT_DROP_EVENT = "rove-thread-context-drop";
+export const THREAD_CONTEXT_DROP_EVENT = "paperplane-thread-context-drop";
 
 export function useThreadContextDrop(
   targetRef: RefObject<EventTarget | null>,

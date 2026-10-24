@@ -14,7 +14,7 @@ export function getProjectConfigQueryAtom(environmentId: EnvironmentId, cwd: str
 }
 
 /** Server-decoded paperplane.json state, including a filename-only legacy notice. */
-export function useRoveProjectFileState(environmentId: EnvironmentId, cwd: string | null) {
+export function usePaperplaneProjectFileState(environmentId: EnvironmentId, cwd: string | null) {
   const access = useFilesystemReadAccess(environmentId);
   const result = useAtomValue(
     cwd !== null && access.canReadFiles

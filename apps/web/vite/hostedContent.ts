@@ -3,7 +3,7 @@ import { homepage, htmlContent, publicFiles } from "../cloudflare/content";
 
 export function hostedContentPlugin(origin: string): Plugin {
   return {
-    name: "rove-hosted-content",
+    name: "paperplane-hosted-content",
     transformIndexHtml(html) {
       // Real raw-HTML content, removed synchronously before paint for the existing
       // JS splash. Without JS, the overview remains visible instead of a dead logo.

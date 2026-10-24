@@ -90,7 +90,7 @@ export function useCloudLinkController() {
     const message =
       cause instanceof Error ? cause.message : "Could not update Paperplane Connect access.";
     const traceId = findErrorTraceId(cause);
-    console.error("[rove-connect] Could not update Paperplane Connect", {
+    console.error("[paperplane-connect] Could not update Paperplane Connect", {
       message,
       traceId,
       cause,

@@ -263,7 +263,7 @@ describe("ChatMarkdown favicon privacy", () => {
       expect(renderer!.root.findAllByType("img")).toHaveLength(1);
       // GitHub links draw the brand mark in currentColor instead of fetching a favicon.
       await act(async () => {
-        renderer!.update(markdown("https://github.com/rovecode/rove/pull/1"));
+        renderer!.update(markdown("https://github.com/paperplane/paperplane/pull/1"));
       });
       expect(renderer!.root.findAllByType("img")).toHaveLength(0);
       expect(renderer!.root.findAllByType(GitHubIcon)).toHaveLength(1);
@@ -1252,16 +1252,16 @@ it("opens a disclosure only when find selects a match inside it", async () => {
     expect(openStates()).toEqual(["false", "false", "false"]);
     expect(container.textContent).toContain("nothing here");
     expect(
-      [...(highlights.get("rove-thread-find-active") ?? [])].map((range) => range.toString()),
+      [...(highlights.get("paperplane-thread-find-active") ?? [])].map((range) => range.toString()),
     ).toEqual(["needle"]);
-    expect(highlights.get("rove-thread-find")?.size).toBe(0);
+    expect(highlights.get("paperplane-thread-find")?.size).toBe(0);
 
     await act(() => root.render(<Probe activeOccurrence={1} />));
     await frame();
     await frame();
     // Stepping to the folded match opens its two ancestors, not the unrelated one.
     expect(openStates()).toEqual(["false", "true", "true"]);
-    expect(highlights.get("rove-thread-find-active")?.size).toBe(1);
+    expect(highlights.get("paperplane-thread-find-active")?.size).toBe(1);
   } finally {
     await act(() => root.unmount());
     container.remove();
@@ -1316,7 +1316,7 @@ it("keeps Mermaid diagrams rendered until find selects a match in their source",
     // Only the diagram holding the selected match switches to source.
     expect(diagrams()).toBe(1);
     expect(
-      [...(highlights.get("rove-thread-find-active") ?? [])].map((range) => range.toString()),
+      [...(highlights.get("paperplane-thread-find-active") ?? [])].map((range) => range.toString()),
     ).toEqual(["Alpha"]);
   } finally {
     await act(() => root.unmount());
@@ -1339,7 +1339,7 @@ it.each([
   },
   { text: '```ts title="src/needle.ts"\nconst a = 1;\n```', query: "needle", count: 0 },
   { text: "```weirdlang\nconst a = 1;\n```", query: "weirdlang", count: 0 },
-  { text: "Use $test-rove-app now", query: "Paperplane App Testing", count: 1 },
+  { text: "Use $test-paperplane-app now", query: "Paperplane App Testing", count: 1 },
   { text: "`/tmp/file.ts:42`", query: "file.ts · L42", count: 1, user: true, lineBreaks: true },
   { text: "> [!NOTE]\n> Searchable alert", query: "Searchable alert", count: 1 },
   {
@@ -1354,7 +1354,7 @@ it.each([
 ])(
   "highlights the indexed occurrences of $query in $text",
   async ({ text, query, count, lineBreaks, user, useTemplate }) => {
-    const skills = [{ name: "test-rove-app", displayName: "Paperplane App Testing" }];
+    const skills = [{ name: "test-paperplane-app", displayName: "Paperplane App Testing" }];
     const highlights = new Map<string, Set<Range>>();
     vi.stubGlobal(
       "Highlight",

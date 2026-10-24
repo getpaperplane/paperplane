@@ -57,21 +57,21 @@ function group(
   };
 }
 
-const groups = [group("rove", [first, second, third]), group("other", [other])];
+const groups = [group("paperplane", [first, second, third]), group("other", [other])];
 
 describe("settings scope search", () => {
   it("ignores the retired scope key from older links", () => {
-    expect(validateSettingsScopeSearch({ scope: "device", project: "rove" })).toEqual({
-      project: "rove",
+    expect(validateSettingsScopeSearch({ scope: "device", project: "paperplane" })).toEqual({
+      project: "paperplane",
     });
     expect(validateSettingsScopeSearch({ scope: "all" })).toEqual({});
   });
 
   it("retains legacy project and machine links without inventing an explicit broad scope", () => {
     expect(
-      validateSettingsScopeSearch({ project: "rove", machine: laptopId, unused: true }),
+      validateSettingsScopeSearch({ project: "paperplane", machine: laptopId, unused: true }),
     ).toEqual({
-      project: "rove",
+      project: "paperplane",
       machine: laptopId,
     });
   });
@@ -107,7 +107,7 @@ describe("settings scope resolution", () => {
   });
 
   it("keeps all physical members in a project aggregate, including several on one environment", () => {
-    expect(resolveSettingsScope({ project: "rove" }, groups, environments)).toMatchObject({
+    expect(resolveSettingsScope({ project: "paperplane" }, groups, environments)).toMatchObject({
       kind: "project",
       environmentId: null,
       members: [first, second, third],
@@ -117,11 +117,11 @@ describe("settings scope resolution", () => {
 
   it("preserves legacy project plus machine aggregates with multiple checkouts", () => {
     expect(
-      resolveSettingsScope({ project: "rove", machine: laptopId }, groups, environments),
+      resolveSettingsScope({ project: "paperplane", machine: laptopId }, groups, environments),
     ).toMatchObject({
       kind: "project",
       environmentId: laptopId,
-      label: "rove / Laptop",
+      label: "paperplane / Laptop",
       members: [first, second],
       environmentIds: [laptopId],
     });
@@ -130,7 +130,7 @@ describe("settings scope resolution", () => {
   it("narrows a checkout target to exactly one member, deriving its environment when omitted", () => {
     expect(
       resolveSettingsScope(
-        { project: "rove", checkout: second.physicalProjectKey },
+        { project: "paperplane", checkout: second.physicalProjectKey },
         groups,
         environments,
       ),
@@ -138,7 +138,7 @@ describe("settings scope resolution", () => {
       kind: "checkout",
       checkout: second,
       environmentId: laptopId,
-      label: "rove / Laptop · /repos/second",
+      label: "paperplane / Laptop · /repos/second",
       members: [second],
       environmentIds: [laptopId],
     });
@@ -147,11 +147,11 @@ describe("settings scope resolution", () => {
   it.each([
     { project: "missing" },
     { machine: "removed" },
-    { project: "rove", machine: "removed" },
-    { project: "rove", checkout: "deleted" },
+    { project: "paperplane", machine: "removed" },
+    { project: "paperplane", checkout: "deleted" },
     { project: "other", machine: laptopId },
     { project: "other", checkout: first.physicalProjectKey },
-    { project: "rove", machine: serverId, checkout: first.physicalProjectKey },
+    { project: "paperplane", machine: serverId, checkout: first.physicalProjectKey },
   ])("never widens an invalid or stale target: %j", (search) => {
     expect(resolveSettingsScope(search, groups, environments)).toMatchObject({
       kind: "unavailable",
@@ -162,7 +162,7 @@ describe("settings scope resolution", () => {
 
   it("leaves a removed checkout unavailable while sibling checkouts remain", () => {
     const search = {
-      project: "rove",
+      project: "paperplane",
       machine: laptopId,
       checkout: first.physicalProjectKey,
     };
@@ -171,17 +171,19 @@ describe("settings scope resolution", () => {
       members: [first],
     });
     expect(
-      resolveSettingsScope(search, [group("rove", [second, third])], environments),
+      resolveSettingsScope(search, [group("paperplane", [second, third])], environments),
     ).toMatchObject({ kind: "unavailable", members: [], environmentIds: [] });
   });
 
   it("does not select another environment after removing a project's last local checkout", () => {
-    const search = { project: "rove", machine: laptopId };
+    const search = { project: "paperplane", machine: laptopId };
     expect(resolveSettingsScope(search, groups, environments)).toMatchObject({
       kind: "project",
       members: [first, second],
     });
-    expect(resolveSettingsScope(search, [group("rove", [third])], environments)).toMatchObject({
+    expect(
+      resolveSettingsScope(search, [group("paperplane", [third])], environments),
+    ).toMatchObject({
       kind: "unavailable",
       members: [],
       environmentIds: [],
@@ -191,7 +193,7 @@ describe("settings scope resolution", () => {
   it("rejects a cached checkout whose environment was removed", () => {
     expect(
       resolveSettingsScope(
-        { project: "rove", checkout: third.physicalProjectKey },
+        { project: "paperplane", checkout: third.physicalProjectKey },
         groups,
         environments.slice(0, 1),
       ),
