@@ -36,7 +36,7 @@ const owned = () => {
   } catch { return null; }
 };
 const responding = async () => {
-  try { return (await fetch('http://127.0.0.1:${SANDBOX_PORT}/.well-known/rove/environment', { signal: AbortSignal.timeout(1000) })).ok; }
+  try { return (await fetch('http://127.0.0.1:${SANDBOX_PORT}/.well-known/paperplane/environment', { signal: AbortSignal.timeout(1000) })).ok; }
   catch { return false; }
 };
 `;

@@ -135,7 +135,7 @@ jobs:
           cache: true
           cache-save: false
           # Wrangler runs via dlx, but post-deploy verification imports
-          # shared/roveProjectFile (and contracts), so this is not install-free.
+          # shared/paperplaneProjectFile (and contracts), so this is not install-free.
           run-install: |
             args:
               - --filter=@getpaperplane/scripts...

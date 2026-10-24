@@ -2,7 +2,7 @@ import { describe, expect, it } from "vite-plus/test";
 
 import { ThreadId, TurnItemId, type OrchestrationV2TurnItem } from "@getpaperplane/contracts";
 import * as DateTime from "effect/DateTime";
-import { PAPERPLANE_MCP_TOOL_NAMES } from "@getpaperplane/shared/roveMcpToolPresentation";
+import { PAPERPLANE_MCP_TOOL_NAMES } from "@getpaperplane/shared/paperplaneMcpToolPresentation";
 
 import {
   commandDetailRepeatsCommand,
@@ -586,7 +586,7 @@ describe("resolveWorkEntryToolPresentation", () => {
         label: "mcp__paperplane__task_status",
         toolTitle: "Check the child task",
       }),
-    ).toEqual({ displayName: "Getting delegated task status", icon: "rove" });
+    ).toEqual({ displayName: "Getting delegated task status", icon: "paperplane" });
   });
 
   it("does not brand unknown tools or another server's matching tool name", () => {

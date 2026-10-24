@@ -707,7 +707,7 @@ internal class SelectionAwareEditText(context: Context) : EditText(context) {
 
   private fun pasteContextOrImages(): Boolean {
     val payload = RoveComposerClipboard.read(context)
-    if (payload["html"]?.contains("data-rove-context-fragment=") == true) {
+    if (payload["html"]?.contains("data-paperplane-context-fragment=") == true) {
       pasteContextListener?.invoke(payload)
       return true
     }

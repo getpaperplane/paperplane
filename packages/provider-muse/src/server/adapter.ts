@@ -39,7 +39,7 @@ import * as Scope from "effect/Scope";
 import * as Stream from "effect/Stream";
 
 import * as ProviderHost from "@getpaperplane/provider-core/server/ProviderHost";
-import { PAPERPLANE_MCP_SERVER_NAME } from "@getpaperplane/shared/roveMcp";
+import { PAPERPLANE_MCP_SERVER_NAME } from "@getpaperplane/shared/paperplaneMcp";
 import * as McpProviderSession from "@getpaperplane/provider-core/server/mcpSession";
 import * as McpProviderSessions from "@getpaperplane/provider-core/server/McpProviderSessions";
 import { buildRuntimeInstructions } from "@getpaperplane/provider-core/server/runtimeInstructions";

@@ -14,7 +14,7 @@ import { RoveConnectProfilePage } from "../cloud/RoveConnectProfilePage";
 // Custom rows in Clerk's native profile. Mirrors the web UserButton pages.
 const USER_PROFILE_CUSTOM_PAGES = [
   {
-    path: "rove-connect",
+    path: "paperplane-connect",
     label: "Paperplane Connect",
     icon: "globe",
     content: <RoveConnectProfilePage />,

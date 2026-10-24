@@ -3,7 +3,7 @@ import type { ProviderInteractionMode } from "@getpaperplane/contracts";
 import {
   PAPERPLANE_MCP_SERVER_NAME,
   PAPERPLANE_MCP_TOOL_PREFIX,
-} from "@getpaperplane/shared/roveMcp";
+} from "@getpaperplane/shared/paperplaneMcp";
 
 export const PAPERPLANE_ORCHESTRATION_INSTRUCTIONS = `
 

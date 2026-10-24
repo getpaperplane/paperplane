@@ -113,7 +113,7 @@ describe("WS RPC instrumentation middleware", () => {
           swapTotalBytes: null,
           swapFreeBytes: null,
           memoryPressure: false,
-          roveMemory: null,
+          paperplaneMemory: null,
           findings: [],
         };
         const client = yield* RpcTest.makeClient(group).pipe(

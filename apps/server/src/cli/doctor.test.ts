@@ -20,7 +20,7 @@ const hostReport: HostHealthReport = {
   swapTotalBytes: 4 * 1024 ** 3,
   swapFreeBytes: 3 * 1024 ** 3,
   memoryPressure: true,
-  roveMemory: {
+  paperplaneMemory: {
     currentBytes: 2 * 1024 ** 3,
     limitBytes: 6 * 1024 ** 3,
     swapCurrentBytes: 0,
@@ -150,12 +150,12 @@ for (const ceiling of ["unlimited", "no systemd", "121 KiB current"] as const) {
                 ...hostReport,
                 swapTotalBytes: null,
                 swapFreeBytes: null,
-                roveMemory:
+                paperplaneMemory:
                   ceiling === "no systemd"
                     ? null
                     : ceiling === "unlimited"
-                      ? { ...hostReport.roveMemory!, limitBytes: null }
-                      : { ...hostReport.roveMemory!, currentBytes: 123456 },
+                      ? { ...hostReport.paperplaneMemory!, limitBytes: null }
+                      : { ...hostReport.paperplaneMemory!, currentBytes: 123456 },
               }),
               changes: Stream.empty,
             }),

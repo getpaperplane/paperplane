@@ -61,7 +61,7 @@ import * as Rpc from "effect/rpc/Rpc";
 import * as RpcGroup from "effect/rpc/RpcGroup";
 import * as RpcMiddleware from "effect/rpc/RpcMiddleware";
 import { NonNegativeInt, TrimmedNonEmptyString } from "./baseSchemas.ts";
-import { ProjectConfigState } from "./roveProjectFile.ts";
+import { ProjectConfigState } from "./paperplaneProjectFile.ts";
 import {
   CodexAuthCallbackInput,
   CodexAuthCallbackState,

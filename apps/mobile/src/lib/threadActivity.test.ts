@@ -1446,7 +1446,7 @@ describe("buildThreadFeed", () => {
     const activity = feed[0]?.type === "activity-group" ? feed[0].activities[0] : null;
 
     expect(activity?.summary).toBe("Read a Paperplane thread");
-    expect(activity?.logo).toBe("rove");
+    expect(activity?.logo).toBe("paperplane");
     expect(activity?.getCopyText().split("\n")[0]).toBe("Read a Paperplane thread");
   });
 
@@ -1579,7 +1579,7 @@ describe("buildThreadFeed", () => {
     expect(workEntryRowLabel(activities[0]!.workEntry)).toBe("Listed projects");
     expect(workEntryRowLabel(activities[1]!.workEntry)).toBe("Cloned a repository");
     expect(workEntryRowLabel(activities[2]!.workEntry)).toBe("Failed to clone a repository");
-    expect(activities.every((activity) => activity.logo === "rove")).toBe(true);
+    expect(activities.every((activity) => activity.logo === "paperplane")).toBe(true);
     const presented = deriveThreadFeedPresentation(
       feed,
       { runId, status: "running", startedAt: null, completedAt: null },
@@ -2758,7 +2758,7 @@ describe("MCP apps", () => {
     type: "dynamic_tool",
     toolName: "weather.get_weather",
     input: { city: "Oslo" },
-    output: { roveMcpApp: app, result: { content: [] } },
+    output: { paperplaneMcpApp: app, result: { content: [] } },
   });
   const feed = (status: OrchestrationV2TurnItem["status"]) =>
     buildThreadFeed([

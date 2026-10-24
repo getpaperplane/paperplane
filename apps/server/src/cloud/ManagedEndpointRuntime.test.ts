@@ -538,19 +538,19 @@ describe("CloudManagedEndpointRuntime", () => {
         providerKind: "cloudflare_tunnel",
         connectorToken: "token-1",
         tunnelId: "tunnel-1",
-        tunnelName: "rove-env-1",
+        tunnelName: "paperplane-env-1",
       });
       yield* runtime.applyConfig({
         providerKind: "cloudflare_tunnel",
         connectorToken: "token-1",
         tunnelId: "tunnel-1",
-        tunnelName: "rove-env-1",
+        tunnelName: "paperplane-env-1",
       });
       yield* runtime.applyConfig({
         providerKind: "cloudflare_tunnel",
         connectorToken: "token-2",
         tunnelId: "tunnel-1",
-        tunnelName: "rove-env-1",
+        tunnelName: "paperplane-env-1",
       });
       const stopped = yield* runtime.applyConfig(null);
 

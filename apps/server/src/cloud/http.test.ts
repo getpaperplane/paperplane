@@ -46,7 +46,7 @@ const answerHealthWith = async (failure: HealthFailure, cloudEnabled = true) => 
   });
   try {
     const response = await handler(
-      new Request("http://127.0.0.1/api/rove-connect/health", {
+      new Request("http://127.0.0.1/api/paperplane-connect/health", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ proof: "proof" }),

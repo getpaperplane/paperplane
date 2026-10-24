@@ -29,10 +29,10 @@ export class BearerConnectionProfile extends Schema.TaggedClass<BearerConnection
      */
     learned: Schema.optionalKey(Schema.Literal(true)),
     /**
-     * "rove-connect" when the route authenticates with the environment's Paperplane
+     * "paperplane-connect" when the route authenticates with the environment's Paperplane
      * Connect credential instead of a stored bearer token.
      */
-    authorization: Schema.optionalKey(Schema.Literal("rove-connect")),
+    authorization: Schema.optionalKey(Schema.Literal("paperplane-connect")),
     /**
      * "tailscale" on a learned route the server found on its Tailscale
      * interface. A bare 100.64.0.0/10 address could belong to any VPN.

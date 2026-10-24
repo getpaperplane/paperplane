@@ -97,7 +97,7 @@ class ComposerPasteTest {
       ClipData.newHtmlText(
         "test",
         "plain text",
-        "<pre data-rove-context-fragment=\"x\">plain text</pre>"
+        "<pre data-paperplane-context-fragment=\"x\">plain text</pre>"
       )
     )
     editor.setSelection(0)

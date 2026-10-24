@@ -59,8 +59,8 @@ const DROPPED_REQUEST_HEADERS = new Set([
   "cookie",
   "x-real-ip",
   // Only the relay may set this; a sender could otherwise collide delivery ids.
-  "x-rove-relay-delivery-id",
-  "x-rove-relay-received-at",
+  "x-paperplane-relay-delivery-id",
+  "x-paperplane-relay-received-at",
   RELAY_HOOK_DELIVERY_HEADER,
   // The environment trusts trace context only from the relay, which sets its own.
   "traceparent",
@@ -256,7 +256,7 @@ const make = Effect.gen(function* () {
         typ: RELAY_HOOK_DELIVERY_TYP,
         payload: {
           iss: normalizeRelayIssuer(settings.relayIssuer),
-          aud: `rove-env:${input.environmentId}`,
+          aud: `paperplane-env:${input.environmentId}`,
           sub: input.environmentId,
           jti: input.jti,
           iat: now,

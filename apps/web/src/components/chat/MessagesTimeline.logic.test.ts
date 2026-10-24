@@ -869,7 +869,7 @@ describe("deriveMessagesTimelineRows", () => {
     expect(
       resolveTimelineToolPresentation(items[1]!.type === "dynamic_tool" ? items[1].toolName : null)
         ?.logo,
-    ).toBe("rove");
+    ).toBe("paperplane");
     const rows = deriveMessagesTimelineRows({
       timelineEntries: entries,
       isWorking: false,
@@ -3618,21 +3618,21 @@ describe("resolveTimelineToolPresentation", () => {
   it("pretty prints Claude and Cursor Paperplane MCP tool names", () => {
     expect(resolveTimelineToolPresentation("mcp__paperplane__paperplane_thread_read")).toEqual({
       displayName: "Read a Paperplane thread",
-      logo: "rove",
+      logo: "paperplane",
     });
   });
 
   it("pretty prints Codex Paperplane MCP tool names", () => {
     expect(resolveTimelineToolPresentation("paperplane.create_threads")).toEqual({
       displayName: "Create Paperplane threads",
-      logo: "rove",
+      logo: "paperplane",
     });
   });
 
   it("pretty prints bare Paperplane MCP toolkit names", () => {
     expect(resolveTimelineToolPresentation("list_scheduled_tasks")).toEqual({
       displayName: "List scheduled tasks",
-      logo: "rove",
+      logo: "paperplane",
     });
   });
 

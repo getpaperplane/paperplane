@@ -520,7 +520,7 @@ export function NewTaskFlowProvider(props: React.PropsWithChildren) {
     roveProjectFileQuery.data as ProjectConfigState | null,
     roveProjectFileQuery.isPending,
   );
-  const roveProjectFile = projectConfig.file;
+  const paperplaneProjectFile = projectConfig.file;
   // Environment settings with the project's overrides and its paperplane.json
   // applied; the aggregate's own legacy fields still count until the server
   // folds them.
@@ -530,9 +530,9 @@ export function NewTaskFlowProvider(props: React.PropsWithChildren) {
         selectedEnvironmentServerConfig?.settings ?? DEFAULT_SERVER_SETTINGS,
         selectedProject?.id ?? null,
         selectedProject,
-        roveProjectFile,
+        paperplaneProjectFile,
       ),
-    [selectedEnvironmentServerConfig?.settings, selectedProject, roveProjectFile],
+    [selectedEnvironmentServerConfig?.settings, selectedProject, paperplaneProjectFile],
   );
   // A thread without a project runs in a plain folder, so worktree mode
   // would leave it unsendable: it is always local and offers no choice.

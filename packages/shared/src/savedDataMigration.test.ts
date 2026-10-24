@@ -208,6 +208,38 @@ it.each([
   expect(rewriteStagedDatabase(file)).toEqual([]);
 });
 
+it("converts Pi leaf references, saved MCP app markers and connection authorization exactly once", () => {
+  const file = NodePath.join(directory, "statev2.sqlite");
+  const db = new NodeSqlite.DatabaseSync(file);
+  const before = {
+    nativeTurnRef: { driver: "pi", nativeId: "rove:leaf:answer", strength: "strong" },
+    unrelatedRef: { driver: "codex", nativeId: "rove:leaf:answer" },
+    text: "rove:leaf:answer",
+    nativeId: "rove:leaf:untyped",
+    output: { roveMcpApp: { resourceUri: "ui://app/view" } },
+    connection: { authorization: "rove-connect" },
+  };
+  for (const table of ["orchestration_events", "orchestration_v2_projection_checkpoints"]) {
+    db.exec(`CREATE TABLE ${table} (payload_json TEXT)`);
+    db.prepare(`INSERT INTO ${table} VALUES (?)`).run(JSON.stringify(before));
+  }
+  db.close();
+  expect(rewriteStagedDatabase(file)).toHaveLength(2);
+  const result = new NodeSqlite.DatabaseSync(file);
+  for (const table of ["orchestration_events", "orchestration_v2_projection_checkpoints"]) {
+    const row = result.prepare(`SELECT payload_json FROM ${table}`).get();
+    expect(JSON.parse(String(row?.payload_json))).toEqual({
+      ...before,
+      nativeTurnRef: { driver: "pi", nativeId: "paperplane:leaf:answer", strength: "strong" },
+      output: { paperplaneMcpApp: { resourceUri: "ui://app/view" } },
+      connection: { authorization: "paperplane-connect" },
+    });
+    expect(result.prepare(`SELECT count(*) n FROM ${table}`).get()?.n).toBe(1);
+  }
+  result.close();
+  expect(rewriteStagedDatabase(file)).toEqual([]);
+});
+
 describe("lazy repository refs", () => {
   let migratedHome: string;
   beforeEach(() => {

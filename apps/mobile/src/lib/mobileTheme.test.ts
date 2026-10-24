@@ -3,8 +3,8 @@ import {
   BUILT_IN_THEME_IDS,
   BUILT_IN_THEMES,
   PLUM_THEME,
-  ROVE_CODE_LIGHT_THEME_COLORS,
-  ROVE_CODE_DARK_THEME_COLORS,
+  PAPERPLANE_CODE_LIGHT_THEME_COLORS,
+  PAPERPLANE_CODE_DARK_THEME_COLORS,
   MOBILE_THEME_IDS,
   getThemeColorsForAppearance,
 } from "@getpaperplane/shared/themePalettes";
@@ -85,8 +85,8 @@ describe("mobile themes", () => {
       const colors = theme
         ? getThemeColorsForAppearance(theme, appearance)!
         : appearance === "dark"
-          ? ROVE_CODE_DARK_THEME_COLORS
-          : ROVE_CODE_LIGHT_THEME_COLORS;
+          ? PAPERPLANE_CODE_DARK_THEME_COLORS
+          : PAPERPLANE_CODE_LIGHT_THEME_COLORS;
       const variables =
         themeId === DEFAULT_MOBILE_THEME_ID
           ? readDefaultMobileThemeVariables(appearance)
@@ -320,7 +320,9 @@ describe("mobile themes", () => {
     (appearance) => {
       const variables = getMobileThemeVariables("paperplane", appearance);
       const desktop =
-        appearance === "dark" ? ROVE_CODE_DARK_THEME_COLORS : ROVE_CODE_LIGHT_THEME_COLORS;
+        appearance === "dark"
+          ? PAPERPLANE_CODE_DARK_THEME_COLORS
+          : PAPERPLANE_CODE_LIGHT_THEME_COLORS;
       const bubbleContrast = contrastRatio(
         variables["--color-user-bubble"],
         variables["--color-screen"],

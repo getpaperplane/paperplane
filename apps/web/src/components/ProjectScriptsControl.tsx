@@ -3,7 +3,7 @@ import {
   AuthSettingsWriteScope,
   type EnvironmentId,
   type ProjectScript,
-  type RoveProjectFileScript,
+  type PaperplaneProjectFileScript,
   type ResolvedKeybindingsConfig,
 } from "@getpaperplane/contracts";
 import { useAtomValue } from "@effect/atom-react";
@@ -57,7 +57,7 @@ import {
 
 export type { NewProjectScriptInput, ProjectScriptActionResult };
 
-const NO_FILE_SCRIPTS: ReadonlyArray<RoveProjectFileScript> = [];
+const NO_FILE_SCRIPTS: ReadonlyArray<PaperplaneProjectFileScript> = [];
 
 interface ProjectScriptsControlProps {
   displayMode?: "toolbar" | "panel";
@@ -66,7 +66,7 @@ interface ProjectScriptsControlProps {
   environmentId: EnvironmentId;
   scripts: ReadonlyArray<ProjectScript>;
   /** Scripts declared in the project's checked-in paperplane.json, offered for import. */
-  fileScripts?: ReadonlyArray<RoveProjectFileScript>;
+  fileScripts?: ReadonlyArray<PaperplaneProjectFileScript>;
   projectFileNotice?: string | null;
   preferredScriptId?: string | null;
   onRunScript?: ((script: ProjectScript) => void) | undefined;
@@ -144,7 +144,7 @@ export default function ProjectScriptsControl({
     [onAddScript, onUpdateScript],
   );
 
-  const importFileScript = async (fileScript: RoveProjectFileScript) => {
+  const importFileScript = async (fileScript: PaperplaneProjectFileScript) => {
     const payload: NewProjectScriptInput = {
       name: fileScript.name,
       command: fileScript.command,

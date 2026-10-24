@@ -25,7 +25,7 @@ describe("composerContextClipboard", () => {
     const historical = `<pre data-retired-context-fragment="${encodeURIComponent(JSON.stringify(fragment))}">old selection</pre>`;
     expect(decodeComposerContextClipboardHtml(historical)).toBeNull();
     const html = encodeComposerContextClipboardHtml("selection", JSON.stringify(fragment));
-    expect(html).toContain("data-rove-context-fragment=");
+    expect(html).toContain("data-paperplane-context-fragment=");
     expect(html).not.toContain("data-retired-context-fragment=");
   });
   it("round-trips selections larger than two million characters", () => {
@@ -80,7 +80,7 @@ describe("composerContextClipboard", () => {
     expect(html).not.toContain("<script>");
     expect(decodeComposerContextClipboardHtml(html)).toEqual(JSON.parse(raw));
     expect(
-      decodeComposerContextClipboardHtml('<pre data-rove-context-fragment="%ZZ">bad</pre>'),
+      decodeComposerContextClipboardHtml('<pre data-paperplane-context-fragment="%ZZ">bad</pre>'),
     ).toBeNull();
     expect(decodeComposerContextClipboardHtml("<p>Ordinary clipboard</p>")).toBeNull();
   });

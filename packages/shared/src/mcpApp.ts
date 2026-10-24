@@ -15,7 +15,7 @@ export const MCP_APP_MIME_TYPE = "text/html;profile=mcp-app";
 export const MCP_APP_EXTENSION_ID = "io.modelcontextprotocol/ui";
 export const MCP_APP_RESOURCE_SCHEME = "ui://";
 /** Where Paperplane records the app reference inside a tool item's output object. */
-export const MCP_APP_OUTPUT_KEY = "roveMcpApp";
+export const MCP_APP_OUTPUT_KEY = "paperplaneMcpApp";
 
 const MCP_APP_MIN_HEIGHT = 80;
 export const MCP_APP_DEFAULT_HEIGHT = 320;

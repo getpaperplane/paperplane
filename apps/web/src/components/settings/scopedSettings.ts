@@ -8,7 +8,7 @@ import {
   type ProjectScopedServerSettingKey,
   type ProjectSettingsOverrides,
   ServerSettings,
-  type RoveProjectFile,
+  type PaperplaneProjectFile,
   type ServerSettingsPatch,
 } from "@getpaperplane/contracts";
 import type { EnvironmentConnectionPhase } from "@getpaperplane/client-runtime/connection";
@@ -90,7 +90,7 @@ export function resolveScopedSettingsTargets(
   connectedEnvironments: readonly ScopedSettingsEnvironment[],
   // Each member's decoded paperplane.json, keyed by physical project key, once read.
   // A member absent here has no file tier yet; null is a missing or invalid file.
-  projectFiles?: ReadonlyMap<string, RoveProjectFile | null>,
+  projectFiles?: ReadonlyMap<string, PaperplaneProjectFile | null>,
 ): readonly ScopedSettingsTarget[] {
   const byId = new Map(
     connectedEnvironments.map((environment) => [environment.environmentId, environment]),

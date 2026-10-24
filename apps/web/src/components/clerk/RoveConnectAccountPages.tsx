@@ -16,7 +16,7 @@ export const ROVE_CONNECT_ACCOUNT_PAGES = [
   },
   {
     label: "Paperplane Connect",
-    url: "rove-connect",
+    url: "paperplane-connect",
     icon: <ServerIcon className="size-4" />,
     content: <RoveConnectUserProfilePage />,
   },

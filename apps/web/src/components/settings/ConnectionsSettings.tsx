@@ -1913,7 +1913,7 @@ function ConfiguredCloudLinkRow({ canManageRelay }: { readonly canManageRelay: b
     <>
       {window.desktopBridge ? (
         <SettingsRow
-          title={searchableSetting("rove-connect").title}
+          title={searchableSetting("paperplane-connect").title}
           description={
             linkRevoked
               ? "This environment was removed from Paperplane Connect. Turn it on to link it again."
@@ -1941,7 +1941,7 @@ function ConfiguredCloudLinkRow({ canManageRelay }: { readonly canManageRelay: b
         />
       ) : linkRevoked ? (
         <SettingsRow
-          title={searchableSetting("rove-connect").title}
+          title={searchableSetting("paperplane-connect").title}
           description="This environment was removed from Paperplane Connect. Run `paperplane connect link` on the host to link it again."
         />
       ) : null}

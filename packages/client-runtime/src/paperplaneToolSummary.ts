@@ -1,6 +1,6 @@
-import type { RoveMcpToolSummaryAction } from "@getpaperplane/shared/roveMcpToolPresentation";
+import type { PaperplaneMcpToolSummaryAction } from "@getpaperplane/shared/paperplaneMcpToolPresentation";
 
-export interface RoveToolSummaryCall {
+export interface PaperplaneToolSummaryCall {
   readonly input: unknown;
   readonly output: unknown;
   readonly outcome: "completed" | "failed" | "unfinished";
@@ -65,7 +65,7 @@ function readInput(value: unknown): Record<string, unknown> | undefined {
 }
 
 /** MCP errors can be returned as data even when the provider completed the tool call. */
-export function roveToolResultIndicatesFailure(output: unknown): boolean {
+export function paperplaneToolResultIndicatesFailure(output: unknown): boolean {
   return readResult(output).failed;
 }
 
@@ -81,9 +81,9 @@ function quantity(count: number, noun: string, plural = `${noun}s`): string {
 }
 
 /** Counts successful effects separately from failed or unfinished tool calls. */
-export function summarizeRoveToolCalls(
-  action: RoveMcpToolSummaryAction,
-  calls: ReadonlyArray<RoveToolSummaryCall>,
+export function summarizePaperplaneToolCalls(
+  action: PaperplaneMcpToolSummaryAction,
+  calls: ReadonlyArray<PaperplaneToolSummaryCall>,
 ): { label: string; failedCount: number } {
   const results = calls.map((call) => {
     const result = readResult(call.output);

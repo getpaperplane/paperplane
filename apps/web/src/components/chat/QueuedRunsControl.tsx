@@ -40,7 +40,7 @@ interface QueuedRowThumbnail {
   readonly url: string | null;
 }
 
-const QUEUED_RUN_DRAG_TYPE = "application/x-rove-queued-run";
+const QUEUED_RUN_DRAG_TYPE = "application/x-paperplane-queued-run";
 
 export interface QueuedRunsControlHandle {
   steerNext: (repeat: boolean) => boolean;

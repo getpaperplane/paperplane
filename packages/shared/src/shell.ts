@@ -200,11 +200,11 @@ export function mergePathEntries(
 }
 
 function envCaptureStart(name: string): string {
-  return `__ROVE_ENV_${name}_START__`;
+  return `__PAPERPLANE_ENV_${name}_START__`;
 }
 
 function envCaptureEnd(name: string): string {
-  return `__ROVE_ENV_${name}_END__`;
+  return `__PAPERPLANE_ENV_${name}_END__`;
 }
 
 function buildEnvironmentCaptureCommand(names: ReadonlyArray<string>): string {

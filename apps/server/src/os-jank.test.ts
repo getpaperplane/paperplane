@@ -140,7 +140,9 @@ effectIt.effect("hydrates PATH when the desktop handoff is absent", () =>
     Effect.sync(() =>
       vi
         .spyOn(NodeChildProcess, "execFileSync")
-        .mockReturnValue("__ROVE_ENV_PATH_START__\n/opt/tools/bin\n__ROVE_ENV_PATH_END__\n"),
+        .mockReturnValue(
+          "__PAPERPLANE_ENV_PATH_START__\n/opt/tools/bin\n__PAPERPLANE_ENV_PATH_END__\n",
+        ),
     ),
     (probe) =>
       Effect.gen(function* () {
@@ -166,12 +168,12 @@ effectIt.effect("keeps mise's PATH record with the login shell PATH", () =>
         .spyOn(NodeChildProcess, "execFileSync")
         .mockReturnValue(
           [
-            "__ROVE_ENV_PATH_START__",
+            "__PAPERPLANE_ENV_PATH_START__",
             "/home/me/.local/bin:/mise/installs/claude/latest:/mise/shims",
-            "__ROVE_ENV_PATH_END__",
-            "__ROVE_ENV___MISE_DIFF_START__",
+            "__PAPERPLANE_ENV_PATH_END__",
+            "__PAPERPLANE_ENV___MISE_DIFF_START__",
             "mise-diff",
-            "__ROVE_ENV___MISE_DIFF_END__",
+            "__PAPERPLANE_ENV___MISE_DIFF_END__",
           ].join("\n"),
         ),
     ),

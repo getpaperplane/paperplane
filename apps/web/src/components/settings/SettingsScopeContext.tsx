@@ -1,4 +1,4 @@
-import { type RoveProjectFile } from "@getpaperplane/contracts";
+import { type PaperplaneProjectFile } from "@getpaperplane/contracts";
 import { resolveProjectConfigState } from "@getpaperplane/client-runtime/project-config";
 import { useAtomValue } from "@effect/atom-react";
 import * as Option from "effect/Option";
@@ -23,7 +23,7 @@ function useMemberProjectFiles(scope: ReturnType<typeof resolveSettingsScope>) {
     useMemo(
       () =>
         Atom.make((get) => {
-          const files = new Map<string, RoveProjectFile | null>();
+          const files = new Map<string, PaperplaneProjectFile | null>();
           const notices: Array<{ key: string; workspaceRoot: string; message: string }> = [];
           for (const member of members) {
             const result = get(

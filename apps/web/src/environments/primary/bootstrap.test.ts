@@ -122,8 +122,8 @@ describe("environmentBootstrap", () => {
     await installDescriptorApi();
 
     await expect(resolveInitialPrimaryEnvironmentDescriptor()).resolves.toEqual(BASE_ENVIRONMENT);
-    expect(resolvePrimaryEnvironmentHttpUrl("/.well-known/rove/environment")).toBe(
-      "https://remote.example.com/.well-known/rove/environment",
+    expect(resolvePrimaryEnvironmentHttpUrl("/.well-known/paperplane/environment")).toBe(
+      "https://remote.example.com/.well-known/paperplane/environment",
     );
   });
 
@@ -132,8 +132,8 @@ describe("environmentBootstrap", () => {
     await installDescriptorApi();
 
     await expect(resolveInitialPrimaryEnvironmentDescriptor()).resolves.toEqual(BASE_ENVIRONMENT);
-    expect(resolvePrimaryEnvironmentHttpUrl("/.well-known/rove/environment")).toBe(
-      "https://remote.example.com/.well-known/rove/environment",
+    expect(resolvePrimaryEnvironmentHttpUrl("/.well-known/paperplane/environment")).toBe(
+      "https://remote.example.com/.well-known/paperplane/environment",
     );
     expect(getPrimaryKnownEnvironment()?.target).toEqual({
       httpBaseUrl: "https://remote.example.com/",
@@ -146,8 +146,8 @@ describe("environmentBootstrap", () => {
     await installDescriptorApi();
 
     await expect(resolveInitialPrimaryEnvironmentDescriptor()).resolves.toEqual(BASE_ENVIRONMENT);
-    expect(resolvePrimaryEnvironmentHttpUrl("/.well-known/rove/environment")).toBe(
-      "https://remote.example.com/.well-known/rove/environment",
+    expect(resolvePrimaryEnvironmentHttpUrl("/.well-known/paperplane/environment")).toBe(
+      "https://remote.example.com/.well-known/paperplane/environment",
     );
     expect(getPrimaryKnownEnvironment()?.target).toEqual({
       httpBaseUrl: "https://remote.example.com/",
@@ -178,8 +178,8 @@ describe("environmentBootstrap", () => {
     await installDescriptorApi();
 
     await expect(resolveInitialPrimaryEnvironmentDescriptor()).resolves.toEqual(BASE_ENVIRONMENT);
-    expect(resolvePrimaryEnvironmentHttpUrl("/.well-known/rove/environment")).toBe(
-      "http://localhost:5735/.well-known/rove/environment",
+    expect(resolvePrimaryEnvironmentHttpUrl("/.well-known/paperplane/environment")).toBe(
+      "http://localhost:5735/.well-known/paperplane/environment",
     );
   });
 
@@ -205,8 +205,8 @@ describe("environmentBootstrap", () => {
     await installDescriptorApi();
 
     await expect(resolveInitialPrimaryEnvironmentDescriptor()).resolves.toEqual(BASE_ENVIRONMENT);
-    expect(resolvePrimaryEnvironmentHttpUrl("/.well-known/rove/environment")).toBe(
-      "http://127.0.0.1:5733/.well-known/rove/environment",
+    expect(resolvePrimaryEnvironmentHttpUrl("/.well-known/paperplane/environment")).toBe(
+      "http://127.0.0.1:5733/.well-known/paperplane/environment",
     );
   });
 

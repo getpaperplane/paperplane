@@ -31,11 +31,11 @@ import {
   type WorkLogToolLifecycleStatus,
 } from "@getpaperplane/client-runtime/work-log/presentation";
 import {
-  resolveRoveMcpToolDefinition,
-  resolveRoveMcpToolPresentation,
-  type RoveMcpToolLogo,
-  type RoveMcpToolPresentation,
-} from "@getpaperplane/shared/roveMcpToolPresentation";
+  resolvePaperplaneMcpToolDefinition,
+  resolvePaperplaneMcpToolPresentation,
+  type PaperplaneMcpToolLogo,
+  type PaperplaneMcpToolPresentation,
+} from "@getpaperplane/shared/paperplaneMcpToolPresentation";
 import type {
   ChatAttachment,
   MessageId,
@@ -111,7 +111,7 @@ export interface ThreadFeedActivity {
     | "warning"
     | "wrench"
     | "zap";
-  readonly logo: RoveMcpToolLogo | null;
+  readonly logo: PaperplaneMcpToolLogo | null;
   readonly toolLike: boolean;
   readonly prominent: boolean;
   readonly status: "success" | "failure" | "neutral" | null;
@@ -212,7 +212,7 @@ type ThreadFeedEntryContent =
       readonly summaryKind: ToolGroupSummaryKind;
       readonly toolSurface?: WorkLogPresentationEntry["toolSurface"];
       readonly toolIcon?: WorkLogPresentationEntry["toolIcon"];
-      readonly summaryToolIcon?: "browser" | "device" | "rove" | "pull-request";
+      readonly summaryToolIcon?: "browser" | "device" | "paperplane" | "pull-request";
       readonly hasFailure: boolean;
       readonly live: boolean;
       readonly shimmer: boolean;
@@ -585,18 +585,19 @@ function itemIcon(item: OrchestrationV2TurnItem): ThreadFeedActivity["icon"] {
   }
 }
 
-function itemToolPresentation(item: OrchestrationV2TurnItem): RoveMcpToolPresentation | null {
+function itemToolPresentation(item: OrchestrationV2TurnItem): PaperplaneMcpToolPresentation | null {
   if (item.type !== "dynamic_tool") {
     return null;
   }
   return (
-    resolveRoveMcpToolPresentation(item.toolName) ?? resolveRoveMcpToolPresentation(item.title)
+    resolvePaperplaneMcpToolPresentation(item.toolName) ??
+    resolvePaperplaneMcpToolPresentation(item.title)
   );
 }
 
 function itemSummary(
   item: OrchestrationV2TurnItem,
-  toolPresentation: RoveMcpToolPresentation | null = null,
+  toolPresentation: PaperplaneMcpToolPresentation | null = null,
 ): string {
   if (item.type === "notification") return item.summary;
   if (item.type === "system_notice") return item.message;
@@ -931,7 +932,7 @@ function groupAdjacentActivities(entries: ReadonlyArray<RawThreadFeedEntry>): Th
         item.type === "dynamic_tool" &&
         item.runId !== null &&
         (item.status === "running" || item.status === "completed") &&
-        resolveRoveMcpToolDefinition(item.toolName)?.summaryAction === "delegate" &&
+        resolvePaperplaneMcpToolDefinition(item.toolName)?.summaryAction === "delegate" &&
         !workEntryDisplayIndicatesToolFailure(entry.activity.workEntry)
       ) {
         const output = compactDynamicToolOutput(item.output);

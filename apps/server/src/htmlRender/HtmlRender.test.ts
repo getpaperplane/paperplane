@@ -8,7 +8,7 @@ import {
   HTML_RENDER_MEASURE_WIDTHS,
   htmlRenderTheme,
 } from "@getpaperplane/shared/htmlRender";
-import { ROVE_CODE_DARK_THEME_COLORS } from "@getpaperplane/shared/themePalettes";
+import { PAPERPLANE_CODE_DARK_THEME_COLORS } from "@getpaperplane/shared/themePalettes";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Base64 from "effect/encoding/Base64";
@@ -277,7 +277,7 @@ describe("HtmlRender", () => {
               { level: "info", text: HTML_RENDER_MEASURE_FONTS.sans },
               {
                 level: "warning",
-                text: htmlRenderTheme(ROVE_CODE_DARK_THEME_COLORS, "dark").variables[
+                text: htmlRenderTheme(PAPERPLANE_CODE_DARK_THEME_COLORS, "dark").variables[
                   "--background"
                 ],
               },

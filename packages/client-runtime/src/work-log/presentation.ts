@@ -9,10 +9,10 @@ import {
   type ThreadId,
 } from "@getpaperplane/contracts";
 import {
-  resolveRoveMcpToolDefinition,
-  type RoveMcpToolDefinition,
-  type RoveMcpToolSummaryAction,
-} from "@getpaperplane/shared/roveMcpToolPresentation";
+  resolvePaperplaneMcpToolDefinition,
+  type PaperplaneMcpToolDefinition,
+  type PaperplaneMcpToolSummaryAction,
+} from "@getpaperplane/shared/paperplaneMcpToolPresentation";
 import { classifyMarkdownImageSource } from "@getpaperplane/client-runtime/markdown-images";
 import { resolveMediaSource } from "@getpaperplane/client-runtime/media-source";
 import { parseChangeRequestUrl } from "@getpaperplane/shared/changeRequestUrl";
@@ -22,10 +22,10 @@ import { classifyToolActivity } from "@getpaperplane/shared/toolActivity";
 import { toolOutputIndicatesFailure } from "@getpaperplane/shared/toolOutput";
 
 import {
-  summarizeRoveToolCalls,
-  roveToolResultIndicatesFailure,
-  type RoveToolSummaryCall,
-} from "@getpaperplane/client-runtime/roveToolSummary";
+  summarizePaperplaneToolCalls,
+  paperplaneToolResultIndicatesFailure,
+  type PaperplaneToolSummaryCall,
+} from "@getpaperplane/client-runtime/paperplaneToolSummary";
 
 export type WorkLogToolLifecycleStatus = RuntimeItemStatus | "stopped" | "idle";
 
@@ -125,7 +125,7 @@ function workEntryToolName(
     return `${data.server}.${data.tool}`;
   }
   if (typeof data?.toolName === "string") return data.toolName;
-  return resolveRoveMcpToolDefinition(entry.toolTitle) ? entry.toolTitle : entry.label;
+  return resolvePaperplaneMcpToolDefinition(entry.toolTitle) ? entry.toolTitle : entry.label;
 }
 
 function workEntryToolOutput(
@@ -138,8 +138,8 @@ function workEntryToolOutput(
     : (data?.output ?? data?.result ?? data?.rawOutput ?? data?.content);
 }
 
-function resolveRoveMcpToolPresentation(
-  definition: RoveMcpToolDefinition | null,
+function resolvePaperplaneMcpToolPresentation(
+  definition: PaperplaneMcpToolDefinition | null,
   status: string | undefined,
   data?: unknown,
 ) {
@@ -203,11 +203,13 @@ export function resolveWorkEntryToolPresentation(
   >,
   fallbackStatus?: "inProgress" | "completed",
 ) {
-  const definition = resolveRoveMcpToolDefinition(workEntryToolName(entry));
+  const definition = resolvePaperplaneMcpToolDefinition(workEntryToolName(entry));
   const status = entry.toolLifecycleStatus ?? fallbackStatus;
-  return resolveRoveMcpToolPresentation(
+  return resolvePaperplaneMcpToolPresentation(
     definition,
-    definition && roveToolResultIndicatesFailure(workEntryToolOutput(entry)) ? "failed" : status,
+    definition && paperplaneToolResultIndicatesFailure(workEntryToolOutput(entry))
+      ? "failed"
+      : status,
     entry.toolData,
   );
 }
@@ -373,8 +375,8 @@ function workEntryIndicatesToolFailureFromOutput(
   }
   if (!workLogEntryIsToolLike(entry)) return false;
   if (
-    resolveRoveMcpToolDefinition(workEntryToolName(entry)) &&
-    roveToolResultIndicatesFailure(workEntryToolOutput(entry))
+    resolvePaperplaneMcpToolDefinition(workEntryToolName(entry)) &&
+    paperplaneToolResultIndicatesFailure(workEntryToolOutput(entry))
   ) {
     return true;
   }
@@ -577,7 +579,7 @@ function toolGroupActionLabel(action: ToolGroupAction, count: number): string {
   }
 }
 
-function roveToolSummaryCall(entry: WorkLogPresentationEntry): RoveToolSummaryCall {
+function paperplaneToolSummaryCall(entry: WorkLogPresentationEntry): PaperplaneToolSummaryCall {
   const item = entry.structuredPayload;
   const data =
     entry.toolData !== null && typeof entry.toolData === "object"
@@ -600,7 +602,7 @@ function roveToolSummaryCall(entry: WorkLogPresentationEntry): RoveToolSummaryCa
   };
 }
 
-function summaryActionPriority(action: ToolGroupAction | RoveMcpToolSummaryAction): number {
+function summaryActionPriority(action: ToolGroupAction | PaperplaneMcpToolSummaryAction): number {
   switch (action) {
     case "command":
     case "edit":
@@ -656,33 +658,36 @@ export function summarizeToolGroup(entries: ReadonlyArray<WorkLogPresentationEnt
   }
   entries = toolEntries;
   const groups = new Map<
-    ToolGroupAction | RoveMcpToolSummaryAction,
+    ToolGroupAction | PaperplaneMcpToolSummaryAction,
     {
       action: ToolGroupAction;
-      roveAction: RoveMcpToolSummaryAction | null;
+      paperplaneAction: PaperplaneMcpToolSummaryAction | null;
       entries: WorkLogPresentationEntry[];
     }
   >();
   const sources = new Map<string, ToolActivitySource>();
   for (const entry of entries) {
-    const roveAction =
-      resolveRoveMcpToolDefinition(workEntryToolName(entry))?.summaryAction ?? null;
-    if (entry.toolSource && roveAction === null) {
+    const paperplaneAction =
+      resolvePaperplaneMcpToolDefinition(workEntryToolName(entry))?.summaryAction ?? null;
+    if (entry.toolSource && paperplaneAction === null) {
       sources.set(entry.toolSource.key, entry.toolSource);
       continue;
     }
     const action = toolGroupAction(entry);
-    const key = roveAction ?? action;
+    const key = paperplaneAction ?? action;
     const group = groups.get(key);
     if (group) group.entries.push(entry);
-    else groups.set(key, { action, roveAction, entries: [entry] });
+    else groups.set(key, { action, paperplaneAction, entries: [entry] });
   }
   const summaries = [...groups].map(([action, group], index) => ({
     index,
     count: group.entries.length,
     priority: summaryActionPriority(action),
-    ...(group.roveAction
-      ? summarizeRoveToolCalls(group.roveAction, group.entries.map(roveToolSummaryCall))
+    ...(group.paperplaneAction
+      ? summarizePaperplaneToolCalls(
+          group.paperplaneAction,
+          group.entries.map(paperplaneToolSummaryCall),
+        )
       : {
           label: toolGroupActionLabel(
             group.action,
@@ -713,7 +718,7 @@ export function summarizeToolGroup(entries: ReadonlyArray<WorkLogPresentationEnt
   const sourcedCount = entries.filter(
     (entry) =>
       entry.toolSource !== undefined &&
-      resolveRoveMcpToolDefinition(workEntryToolName(entry)) === null,
+      resolvePaperplaneMcpToolDefinition(workEntryToolName(entry)) === null,
   ).length;
   const remainingCount =
     entries.length - sourcedCount - selected.reduce((count, group) => count + group.count, 0);

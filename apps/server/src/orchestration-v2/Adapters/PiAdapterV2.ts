@@ -148,7 +148,7 @@ export interface PiAdapterV2Options {
 }
 const decodeQuestions = Schema.decodeUnknownSync(Schema.Array(OrchestrationV2UserInputQuestion));
 // Turns without a user entry retain their starting cursor, including an empty branch.
-const LEAF_TURN_REF_PREFIX = "rove:leaf:";
+const LEAF_TURN_REF_PREFIX = "paperplane:leaf:";
 const contentText = (value: unknown): string => {
   if (typeof value === "string") return value;
   if (!Array.isArray(value)) return "";

@@ -99,7 +99,7 @@ describe("learned routes", () => {
     expect(ids(routes)).toEqual([`learned:${ENVIRONMENT_ID}:http://192.168.1.10:3773`, "relay"]);
     expect(profileOf(routes![0]!)).toMatchObject({
       learned: true,
-      authorization: "rove-connect",
+      authorization: "paperplane-connect",
       wsBaseUrl: "ws://192.168.1.10:3773/",
     });
   });
@@ -334,7 +334,7 @@ describe("learned routes", () => {
       allowInsecure: true,
     })!;
     for (const route of next.filter((candidate) => connectionRouteKind(candidate) !== "relay")) {
-      expect(profileOf(route)).toMatchObject({ authorization: "rove-connect" });
+      expect(profileOf(route)).toMatchObject({ authorization: "paperplane-connect" });
       expect(connectionRouteId(route.target)).not.toContain("@");
     }
   });

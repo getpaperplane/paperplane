@@ -6,7 +6,7 @@ import * as NodeOS from "node:os";
 import * as NodePath from "node:path";
 import { afterEach, beforeEach, it, vi } from "@effect/vitest";
 
-import { buildRoveProjectFileJsonSchema } from "@getpaperplane/shared/roveProjectFile";
+import { buildPaperplaneProjectFileJsonSchema } from "@getpaperplane/shared/paperplaneProjectFile";
 import {
   checkCloudflareWeb,
   checkDeployedProjectFileSchema,
@@ -20,7 +20,7 @@ beforeEach(() => {
   NodeFS.mkdirSync(NodePath.join(directory, "schema"));
   NodeFS.writeFileSync(
     NodePath.join(directory, "schema/paperplane.json"),
-    JSON.stringify(buildRoveProjectFileJsonSchema()),
+    JSON.stringify(buildPaperplaneProjectFileJsonSchema()),
   );
 });
 afterEach(() => {
@@ -48,7 +48,10 @@ it.each(["<html></html>", '{"type":"object"}'])("rejects incorrect schema conten
 });
 
 it("accepts a PR schema change without comparing it to the base branch", async () => {
-  const previewSchema = { ...buildRoveProjectFileJsonSchema(), description: "A PR schema change." };
+  const previewSchema = {
+    ...buildPaperplaneProjectFileJsonSchema(),
+    description: "A PR schema change.",
+  };
   NodeFS.writeFileSync(
     NodePath.join(directory, "schema/paperplane.json"),
     JSON.stringify(previewSchema),
@@ -76,7 +79,7 @@ it.each([{ $id: "https://wrong.example/schema" }, { $schema: "wrong" }, { type: 
   (change) => {
     NodeFS.writeFileSync(
       NodePath.join(directory, "schema/paperplane.json"),
-      JSON.stringify({ ...buildRoveProjectFileJsonSchema(), ...change }),
+      JSON.stringify({ ...buildPaperplaneProjectFileJsonSchema(), ...change }),
     );
     NodeAssert.throws(() => readBuiltProjectFileSchema(directory));
   },
@@ -105,7 +108,9 @@ it.each([true, false])(
     const server = NodeHttp.createServer((request, response) => {
       NodeAssert.equal(request.url, "/schema/paperplane.json");
       response.setHeader("content-type", isSchema ? "application/json" : "text/html");
-      response.end(isSchema ? JSON.stringify(buildRoveProjectFileJsonSchema()) : "<html></html>");
+      response.end(
+        isSchema ? JSON.stringify(buildPaperplaneProjectFileJsonSchema()) : "<html></html>",
+      );
     });
     server.listen(0, "127.0.0.1");
     await NodeEvents.once(server, "listening");
@@ -129,7 +134,7 @@ function mockDeploymentFetch() {
   return fetchMock;
 }
 
-function schemaResponse(schema = buildRoveProjectFileJsonSchema()) {
+function schemaResponse(schema = buildPaperplaneProjectFileJsonSchema()) {
   return new Response(JSON.stringify(schema), {
     headers: { "content-type": "application/json" },
   });

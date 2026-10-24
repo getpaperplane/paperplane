@@ -1,24 +1,27 @@
 import * as Exit from "effect/Exit";
 import * as Schema from "effect/Schema";
 
-import { RoveProjectFile, PAPERPLANE_PROJECT_FILE_SCHEMA_URL } from "@getpaperplane/contracts";
+import {
+  PaperplaneProjectFile,
+  PAPERPLANE_PROJECT_FILE_SCHEMA_URL,
+} from "@getpaperplane/contracts";
 
 import { fromLenientJson } from "./schemaJson.ts";
 
 /**
  * Codec between the raw `paperplane.json` file contents (lenient JSONC string) and the
- * decoded {@link RoveProjectFile}.
+ * decoded {@link PaperplaneProjectFile}.
  */
-export const RoveProjectFileFromJson = fromLenientJson(RoveProjectFile);
+export const PaperplaneProjectFileFromJson = fromLenientJson(PaperplaneProjectFile);
 
-const decodeRoveProjectFile = Schema.decodeExit(RoveProjectFileFromJson);
+const decodePaperplaneProjectFile = Schema.decodeExit(PaperplaneProjectFileFromJson);
 
 /**
  * Decode raw `paperplane.json` contents, treating invalid or malformed files as
  * absent. Used when resolving the configuration of a newly checked-out worktree.
  */
-export function parseRoveProjectFile(contents: string): RoveProjectFile | null {
-  const decoded = decodeRoveProjectFile(contents);
+export function parsePaperplaneProjectFile(contents: string): PaperplaneProjectFile | null {
+  const decoded = decodePaperplaneProjectFile(contents);
   return Exit.isSuccess(decoded) ? decoded.value : null;
 }
 
@@ -28,10 +31,12 @@ export function parseRoveProjectFile(contents: string): RoveProjectFile | null {
  * Served from the marketing site at {@link PAPERPLANE_PROJECT_FILE_SCHEMA_URL} so
  * editors get LSP support via a `$schema` reference.
  */
-export function buildRoveProjectFileJsonSchema(): Record<string, unknown> {
+export function buildPaperplaneProjectFileJsonSchema(): Record<string, unknown> {
   // Closed objects, as before effect rc.113 changed the generator default;
   // editors then flag unknown keys in paperplane.json.
-  const document = Schema.toJsonSchemaDocument(RoveProjectFile, { onExcessProperty: "error" });
+  const document = Schema.toJsonSchemaDocument(PaperplaneProjectFile, {
+    onExcessProperty: "error",
+  });
   const jsonSchema: Record<string, unknown> = {
     $schema: "https://json-schema.org/draft/2020-12/schema",
     $id: PAPERPLANE_PROJECT_FILE_SCHEMA_URL,

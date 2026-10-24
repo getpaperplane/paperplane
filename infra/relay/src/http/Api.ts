@@ -590,7 +590,7 @@ export const verifyEnvironmentTunnelRecoveryProof = Effect.fn(
     publicKey: input.environmentPublicKey,
     token: input.proof,
     typ: RELAY_MANAGED_TUNNEL_RECOVERY_TYP,
-    issuer: `rove-env:${input.environmentId}`,
+    issuer: `paperplane-env:${input.environmentId}`,
     audience: normalizeRelayIssuer(config.relayIssuer),
     nowEpochSeconds: Math.floor(now.epochMilliseconds / 1_000),
   }).pipe(

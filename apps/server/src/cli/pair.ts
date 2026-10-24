@@ -15,7 +15,7 @@ import {
   ExecutionEnvironmentDescriptor,
   PortSchema,
 } from "@getpaperplane/contracts";
-import { resolveWorktreeRoveHome } from "@getpaperplane/shared/devHome";
+import { resolveWorktreePaperplaneHome } from "@getpaperplane/shared/devHome";
 import { DEFAULT_SIGNAL_EXPORT } from "@getpaperplane/shared/observability";
 import * as OtelEnvironment from "@getpaperplane/shared/otelEnvironment";
 import {
@@ -55,7 +55,7 @@ import {
 import { authScopesFlag } from "./authScopes.ts";
 import { baseDirFlag, DurationFromString } from "./config.ts";
 
-const WELL_KNOWN_ENVIRONMENT_PATH = "/.well-known/rove/environment";
+const WELL_KNOWN_ENVIRONMENT_PATH = "/.well-known/paperplane/environment";
 const PAIR_PROBE_TIMEOUT = Duration.millis(2_500);
 // Tailscale provisions an HTTPS certificate on the first request to a fresh
 // serve mapping, which can take a few seconds.
@@ -246,7 +246,7 @@ const discoverPairTarget = Effect.fn("pair.discoverPairTarget")(function* (
     // Same precedence as dev-runner: inside a linked worktree its own `.rove`
     // outranks the shared home, so `paperplane pair` in a worktree pairs with the dev
     // server under test rather than the daily-driver install.
-    const worktreeHome = yield* resolveWorktreeRoveHome(process.cwd());
+    const worktreeHome = yield* resolveWorktreePaperplaneHome(process.cwd());
     if (worktreeHome !== undefined) {
       bases.push(worktreeHome);
     }

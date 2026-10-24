@@ -417,19 +417,19 @@ describe("OtelEnvironment", () => {
       {
         name: "PAPERPLANE_OTLP_*_URL wins over an OTEL endpoint",
         otel: withLogs(otelExport),
-        roveUrl: "http://rove:4318/v1/logs",
+        paperplaneUrl: "http://rove:4318/v1/logs",
         expected: { url: "http://rove:4318/v1/logs", export: roveExport },
       },
       {
         name: "PAPERPLANE_OTLP_*_URL wins over a signal the OTEL variables turned off",
         otel: withLogs(OtelEnvironment.OtelSignal.Off()),
-        roveUrl: "http://rove:4318/v1/logs",
+        paperplaneUrl: "http://rove:4318/v1/logs",
         expected: { url: "http://rove:4318/v1/logs", export: roveExport },
       },
       {
         name: "an OTEL endpoint brings its headers and protocol over the fallback",
         otel: withLogs(otelExport),
-        roveUrl: " ",
+        paperplaneUrl: " ",
         expected: {
           url: "http://otel:4318/v1/logs",
           export: {
@@ -442,27 +442,27 @@ describe("OtelEnvironment", () => {
       {
         name: "a signal the OTEL variables turned off does not fall through",
         otel: withLogs(OtelEnvironment.OtelSignal.Off()),
-        roveUrl: undefined,
+        paperplaneUrl: undefined,
         expected: undefined,
       },
       {
         name: "an unset signal takes the first non-blank fallback",
         otel: withLogs(OtelEnvironment.OtelSignal.Unset()),
-        roveUrl: undefined,
+        paperplaneUrl: undefined,
         expected: { url: "http://settings:4318/v1/logs", export: roveExport },
       },
       {
         name: "the kill switch wins over everything",
         otel: withLogs(otelExport, true),
-        roveUrl: "http://rove:4318/v1/logs",
+        paperplaneUrl: "http://rove:4318/v1/logs",
         expected: undefined,
       },
-    ])("$name", ({ otel, roveUrl, expected }) => {
+    ])("$name", ({ otel, paperplaneUrl, expected }) => {
       assert.deepStrictEqual(
         OtelEnvironment.resolveSignalEndpoint(
           otel,
           "logs",
-          { url: roveUrl, export: roveExport },
+          { url: paperplaneUrl, export: roveExport },
           "",
           "http://settings:4318/v1/logs",
         ),

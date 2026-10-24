@@ -8,6 +8,7 @@ const propertyNames = new Map([
   ["roveHome", "paperplaneHome"],
   ["roveCodeRange", "paperplaneCodeRange"],
   ["allRove", "allPaperplane"],
+  ["roveMcpApp", "paperplaneMcpApp"],
 ]);
 const valueNames = new Map([
   ["providerKind", new Map([["rove_relay", "paperplane_relay"]])],
@@ -21,6 +22,7 @@ const valueNames = new Map([
     ]),
   ],
   ["branchNamePrefix", new Map([["rove", "paperplane"]])],
+  ["authorization", new Map([["rove-connect", "paperplane-connect"]])],
   ...["themeId", "lightThemeId", "darkThemeId", "theme", "light", "dark"].map(
     (field) =>
       [
@@ -72,11 +74,18 @@ export function migrateSavedAppJson(value: Json): Json {
     const name = propertyNames.get(field) ?? field;
     if (name !== field && Object.hasOwn(value, name)) continue;
     result[name] =
-      name === "payload" && typeof entry === "string"
-        ? migrateStoredClientValue(entry)
-        : typeof entry === "string"
-          ? (valueNames.get(name)?.get(entry) ?? migrateSavedAppJson(entry))
-          : migrateSavedAppJson(entry);
+      // Pi leaf cursors are opaque native references, not links or message prose.
+      name === "nativeId" &&
+      "driver" in value &&
+      value.driver === "pi" &&
+      typeof entry === "string" &&
+      entry.startsWith("rove:leaf:")
+        ? `paperplane:leaf:${entry.slice("rove:leaf:".length)}`
+        : name === "payload" && typeof entry === "string"
+          ? migrateStoredClientValue(entry)
+          : typeof entry === "string"
+            ? (valueNames.get(name)?.get(entry) ?? migrateSavedAppJson(entry))
+            : migrateSavedAppJson(entry);
   }
   return result;
 }

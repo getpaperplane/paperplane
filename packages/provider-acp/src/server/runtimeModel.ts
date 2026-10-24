@@ -10,8 +10,8 @@ import {
   deriveToolActivityPresentation,
   mergeToolActivityData,
 } from "@getpaperplane/shared/toolActivity";
-import { PAPERPLANE_MCP_SERVER_NAME } from "@getpaperplane/shared/roveMcp";
-import { PAPERPLANE_MCP_TOOL_NAMES } from "@getpaperplane/shared/roveMcpToolPresentation";
+import { PAPERPLANE_MCP_SERVER_NAME } from "@getpaperplane/shared/paperplaneMcp";
+import { PAPERPLANE_MCP_TOOL_NAMES } from "@getpaperplane/shared/paperplaneMcpToolPresentation";
 import type {
   OrchestrationV2ProviderThreadNativeMetadata,
   ThreadTokenUsageSnapshot,

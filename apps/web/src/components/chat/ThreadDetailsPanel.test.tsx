@@ -1,4 +1,8 @@
-import type { EnvironmentId, RoveProjectFileScript, ThreadId } from "@getpaperplane/contracts";
+import type {
+  EnvironmentId,
+  PaperplaneProjectFileScript,
+  ThreadId,
+} from "@getpaperplane/contracts";
 import { renderToStaticMarkup } from "react-dom/server";
 import { AsyncResult } from "effect/reactivity";
 import { act, create, type ReactTestRenderer } from "react-test-renderer";
@@ -51,7 +55,7 @@ describe("ThreadDetailsPanel", () => {
         command: "vp check",
         icon: "test",
       },
-    ] satisfies ReadonlyArray<RoveProjectFileScript>;
+    ] satisfies ReadonlyArray<PaperplaneProjectFileScript>;
     testState.useRoveProjectFileState.mockReturnValue({ scripts: fileScripts, notice: null });
 
     const props: ThreadDetailsPanelProps = {

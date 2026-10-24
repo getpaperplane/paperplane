@@ -56,10 +56,10 @@ import {
 } from "@getpaperplane/contracts";
 import type { ThreadRunSummary } from "@getpaperplane/client-runtime/state/shell";
 import {
-  resolveRoveMcpToolDefinition,
-  resolveRoveMcpToolPresentation,
-  type RoveMcpToolPresentation,
-} from "@getpaperplane/shared/roveMcpToolPresentation";
+  resolvePaperplaneMcpToolDefinition,
+  resolvePaperplaneMcpToolPresentation,
+  type PaperplaneMcpToolPresentation,
+} from "@getpaperplane/shared/paperplaneMcpToolPresentation";
 import { compactDynamicToolOutput } from "@getpaperplane/shared/toolOutput";
 import {
   htmlRenderReferencesEqual,
@@ -188,7 +188,8 @@ export function workEntryDisplayLabel(entry: WorkLogEntry, workspaceRoot: string
 export function threadReadTargetId(entry: Pick<WorkLogEntry, "structuredPayload">) {
   const item = entry.structuredPayload;
   if (item?.type !== "dynamic_tool") return null;
-  if (resolveRoveMcpToolDefinition(item.toolName)?.summaryAction !== "thread-read") return null;
+  if (resolvePaperplaneMcpToolDefinition(item.toolName)?.summaryAction !== "thread-read")
+    return null;
   const input = item.input;
   const threadId =
     input !== null && typeof input === "object" && "threadId" in input ? input.threadId : null;
@@ -574,7 +575,7 @@ type MessagesTimelineRowContent =
       summaryKind: ToolGroupSummaryKind;
       toolSurface?: WorkLogEntry["toolSurface"];
       toolIcon?: WorkLogEntry["toolIcon"];
-      summaryToolIcon?: "browser" | "device" | "rove" | "pull-request";
+      summaryToolIcon?: "browser" | "device" | "paperplane" | "pull-request";
       hasFailure: boolean;
     }
   | {
@@ -681,8 +682,8 @@ function workGroupId(timelineEntryId: string): string {
   return `work-group:${timelineEntryId}`;
 }
 
-export type TimelineToolPresentation = RoveMcpToolPresentation;
-export const resolveTimelineToolPresentation = resolveRoveMcpToolPresentation;
+export type TimelineToolPresentation = PaperplaneMcpToolPresentation;
+export const resolveTimelineToolPresentation = resolvePaperplaneMcpToolPresentation;
 
 function expandedWorkGroupRow(
   groupId: string,
@@ -1336,7 +1337,7 @@ function withoutSubagentDelegationRows(entries: ReadonlyArray<TimelineEntry>) {
       item?.type !== "dynamic_tool" ||
       item.runId === null ||
       (item.status !== "running" && item.status !== "completed") ||
-      resolveRoveMcpToolDefinition(item.toolName)?.summaryAction !== "delegate"
+      resolvePaperplaneMcpToolDefinition(item.toolName)?.summaryAction !== "delegate"
     )
       return true;
     const output = compactDynamicToolOutput(item.output);

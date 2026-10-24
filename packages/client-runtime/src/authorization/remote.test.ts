@@ -360,7 +360,7 @@ describe("remote environment authorization", () => {
       });
 
       expectFetchCall(fetch.calls, 1, {
-        url: "https://remote.example.com/.well-known/rove/environment",
+        url: "https://remote.example.com/.well-known/paperplane/environment",
         method: "GET",
       });
       expectFetchCall(fetch.calls, 2, {
@@ -394,7 +394,7 @@ describe("remote environment authorization", () => {
 
       expect(error).toBeInstanceOf(RemoteEnvironmentAuthTimeoutError);
       expect(error.message).toBe(
-        "Remote environment endpoint http://remote.example.com/.well-known/rove/environment timed out after 25ms.",
+        "Remote environment endpoint http://remote.example.com/.well-known/paperplane/environment timed out after 25ms.",
       );
     }).pipe(Effect.provide(TestClock.layer())),
   );

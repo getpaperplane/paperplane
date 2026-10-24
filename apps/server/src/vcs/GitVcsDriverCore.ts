@@ -37,7 +37,7 @@ import * as HostProcess from "@getpaperplane/shared/HostProcess";
 import { compactTraceAttributes } from "@getpaperplane/shared/observability";
 import { decodeJsonResult } from "@getpaperplane/shared/schemaJson";
 import { resolveSpawnCommand } from "@getpaperplane/shared/shell";
-import { parseRoveProjectFile } from "@getpaperplane/shared/roveProjectFile";
+import { parsePaperplaneProjectFile } from "@getpaperplane/shared/paperplaneProjectFile";
 import { resolveProjectFileBackedSetting } from "@getpaperplane/shared/projectSettings";
 import { gitCommandDuration, gitCommandsTotal, withMetrics } from "../observability/Metrics.ts";
 import * as GitVcsDriver from "./GitVcsDriver.ts";
@@ -3565,7 +3565,7 @@ export const makeGitVcsDriverCore = Effect.fn("makeGitVcsDriverCore")(function* 
                 .readFileString(path.join(worktreePath, PAPERPLANE_PROJECT_FILE_NAME))
                 .pipe(
                   Effect.flatMap((contents) => {
-                    const file = parseRoveProjectFile(contents);
+                    const file = parsePaperplaneProjectFile(contents);
                     return file === null
                       ? Effect.logWarning(
                           "paperplane.json is invalid; initializing submodules recursively",

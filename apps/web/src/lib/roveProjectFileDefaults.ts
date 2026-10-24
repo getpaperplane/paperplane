@@ -1,4 +1,4 @@
-import type { EnvironmentId, RoveProjectFile } from "@getpaperplane/contracts";
+import type { EnvironmentId, PaperplaneProjectFile } from "@getpaperplane/contracts";
 import { executeAtomQuery } from "@getpaperplane/client-runtime/state/runtime";
 
 import { getProjectConfigQueryAtom } from "~/hooks/useRoveProjectFileScripts";
@@ -8,7 +8,7 @@ import { appAtomRegistry } from "~/rpc/atomRegistry";
 export async function readRoveProjectFile(
   environmentId: EnvironmentId,
   workspaceRoot: string,
-): Promise<RoveProjectFile | null> {
+): Promise<PaperplaneProjectFile | null> {
   const result = await executeAtomQuery(
     appAtomRegistry,
     getProjectConfigQueryAtom(environmentId, workspaceRoot),

@@ -234,7 +234,7 @@ export function MobileEnrichedMarkdownText(props: SelectableMarkdownTextProps) {
     return {
       linkTextByUrl,
       htmlAttributes: {
-        "data-rove-context-fragment": encodeURIComponent(props.contextClipboardFragment!),
+        "data-paperplane-context-fragment": encodeURIComponent(props.contextClipboardFragment!),
       },
       mimeTypes: { "app.rove.context-fragment": props.contextClipboardFragment! },
     };

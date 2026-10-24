@@ -26,7 +26,7 @@ export const HostHealthFinding = Schema.Struct({
 export type HostHealthFinding = typeof HostHealthFinding.Type;
 
 /** Usage of the shared cgroup ceiling all Paperplane-spawned work runs under (Linux user systemd). */
-export const RoveMemoryUsage = Schema.Struct({
+export const PaperplaneMemoryUsage = Schema.Struct({
   /** Null when the ceiling is unlimited. */
   limitBytes: Schema.NullOr(NonNegativeInt),
   currentBytes: NonNegativeInt,
@@ -35,7 +35,7 @@ export const RoveMemoryUsage = Schema.Struct({
   /** Kernel OOM kills inside the ceiling since it was created. */
   oomKills: NonNegativeInt,
 });
-export type RoveMemoryUsage = typeof RoveMemoryUsage.Type;
+export type PaperplaneMemoryUsage = typeof PaperplaneMemoryUsage.Type;
 
 /** Host memory health shared by `paperplane doctor`, the composer notice, and Diagnostics. */
 export const HostHealthReport = Schema.Struct({
@@ -47,7 +47,7 @@ export const HostHealthReport = Schema.Struct({
   swapFreeBytes: Schema.NullOr(NonNegativeInt),
   memoryPressure: Schema.Boolean,
   /** Null when Paperplane's memory ceiling does not exist on this host. */
-  roveMemory: Schema.NullOr(RoveMemoryUsage),
+  paperplaneMemory: Schema.NullOr(PaperplaneMemoryUsage),
   findings: Schema.Array(HostHealthFinding),
 });
 export type HostHealthReport = typeof HostHealthReport.Type;

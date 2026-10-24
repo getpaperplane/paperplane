@@ -228,7 +228,7 @@ const smokeCliArchive = Effect.fn("smokeCliArchive")(function* (input: {
   }
   const origin = `http://127.0.0.1:${port}`;
   const readDescriptor = httpClient
-    .execute(HttpClientRequest.get(`${origin}/.well-known/rove/environment`))
+    .execute(HttpClientRequest.get(`${origin}/.well-known/paperplane/environment`))
     .pipe(
       Effect.flatMap(HttpClientResponse.filterStatusOk),
       Effect.flatMap(HttpClientResponse.schemaBodyJson(descriptorSchema)),
@@ -252,7 +252,7 @@ const smokeCliArchive = Effect.fn("smokeCliArchive")(function* (input: {
     HttpClientRequest.bodyUrlParams({
       grant_type: "urn:ietf:params:oauth:grant-type:token-exchange",
       subject_token: credential.credential,
-      subject_token_type: "urn:rove:params:oauth:token-type:environment-bootstrap",
+      subject_token_type: "urn:paperplane:params:oauth:token-type:environment-bootstrap",
       requested_token_type: "urn:ietf:params:oauth:token-type:access_token",
     }),
   );

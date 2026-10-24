@@ -1,13 +1,16 @@
 import * as Schema from "effect/Schema";
 import { describe, expect, it } from "vite-plus/test";
 
-import { RoveProjectFile, type RoveProjectFile as RoveProjectFileType } from "./roveProjectFile.ts";
+import {
+  PaperplaneProjectFile,
+  type PaperplaneProjectFile as RoveProjectFileType,
+} from "./paperplaneProjectFile.ts";
 
-const decode = Schema.decodeUnknownSync(RoveProjectFile as never) as (
+const decode = Schema.decodeUnknownSync(PaperplaneProjectFile as never) as (
   input: unknown,
 ) => RoveProjectFileType;
 
-describe("RoveProjectFile", () => {
+describe("PaperplaneProjectFile", () => {
   it("decodes a full project file", () => {
     const decoded = decode({
       $schema: "https://paperplane.hafiezulzikry.com/schema/paperplane.json",

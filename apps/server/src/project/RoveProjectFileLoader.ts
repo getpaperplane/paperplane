@@ -19,11 +19,11 @@ import * as Schema from "effect/Schema";
 import {
   PAPERPLANE_PROJECT_FILE_NAME,
   type ProjectConfigState,
-  type RoveProjectFile,
+  type PaperplaneProjectFile,
 } from "@getpaperplane/contracts";
-import { RoveProjectFileFromJson } from "@getpaperplane/shared/roveProjectFile";
+import { PaperplaneProjectFileFromJson } from "@getpaperplane/shared/paperplaneProjectFile";
 
-const decodeRoveProjectFileJson = Schema.decodeEffect(RoveProjectFileFromJson);
+const decodeRoveProjectFileJson = Schema.decodeEffect(PaperplaneProjectFileFromJson);
 
 export class RoveProjectFileLoadError extends Schema.TaggedError<RoveProjectFileLoadError>()(
   "RoveProjectFileLoadError",
@@ -49,7 +49,7 @@ export class RoveProjectFileLoader extends Context.Service<
      * Never fails: missing, unreadable, or invalid files resolve to
      * `Option.none` (invalid files are logged as warnings).
      */
-    readonly load: (workspaceRoot: string) => Effect.Effect<Option.Option<RoveProjectFile>>;
+    readonly load: (workspaceRoot: string) => Effect.Effect<Option.Option<PaperplaneProjectFile>>;
     /** Report missing, invalid, or legacy-only configuration without parsing the legacy file. */
     readonly loadState: (workspaceRoot: string) => Effect.Effect<ProjectConfigState>;
   }

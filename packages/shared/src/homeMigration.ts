@@ -12,7 +12,7 @@ import * as Schema from "effect/Schema";
 import * as Effect from "effect/Effect";
 import * as DateTime from "effect/DateTime";
 import * as Arr from "effect/Array";
-import { PAPERPLANE_MCP_TOOL_NAMES } from "./roveMcpToolPresentation.ts";
+import { PAPERPLANE_MCP_TOOL_NAMES } from "./paperplaneMcpToolPresentation.ts";
 import * as Cookies from "effect/http/Cookies";
 import * as HttpEffect from "effect/http/HttpEffect";
 import * as HttpServerRequest from "effect/http/HttpServerRequest";

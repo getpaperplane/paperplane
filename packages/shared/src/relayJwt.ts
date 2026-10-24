@@ -4,16 +4,16 @@ import * as Effect from "effect/Effect";
 import * as Predicate from "effect/Predicate";
 import * as Schema from "effect/Schema";
 
-export const RELAY_LINK_PROOF_TYP = "rove-env-link+jwt";
-export const RELAY_MINT_REQUEST_TYP = "rove-cloud-mint+jwt";
-export const RELAY_HEALTH_REQUEST_TYP = "rove-cloud-health+jwt";
-export const RELAY_MINT_RESPONSE_TYP = "rove-env-mint+jwt";
-export const RELAY_HEALTH_RESPONSE_TYP = "rove-env-health+jwt";
-export const RELAY_ACTIVITY_PUBLISH_TYP = "rove-env-activity+jwt";
-export const RELAY_MANAGED_TUNNEL_RECOVERY_TYP = "rove-env-managed-tunnel-recovery+jwt";
-export const RELAY_HOOK_DELIVERY_TYP = "rove-relay-hook-delivery+jwt";
+export const RELAY_LINK_PROOF_TYP = "paperplane-env-link+jwt";
+export const RELAY_MINT_REQUEST_TYP = "paperplane-cloud-mint+jwt";
+export const RELAY_HEALTH_REQUEST_TYP = "paperplane-cloud-health+jwt";
+export const RELAY_MINT_RESPONSE_TYP = "paperplane-env-mint+jwt";
+export const RELAY_HEALTH_RESPONSE_TYP = "paperplane-env-health+jwt";
+export const RELAY_ACTIVITY_PUBLISH_TYP = "paperplane-env-activity+jwt";
+export const RELAY_MANAGED_TUNNEL_RECOVERY_TYP = "paperplane-env-managed-tunnel-recovery+jwt";
+export const RELAY_HOOK_DELIVERY_TYP = "paperplane-relay-hook-delivery+jwt";
 /** Header carrying the signed proof that a webhook request came from the relay. */
-export const RELAY_HOOK_DELIVERY_HEADER = "x-rove-relay-delivery";
+export const RELAY_HOOK_DELIVERY_HEADER = "x-paperplane-relay-delivery";
 
 export class RelayJwtError extends Schema.TaggedError<RelayJwtError>()("RelayJwtError", {
   operation: Schema.Literals(["sign", "verify"]),

@@ -1,8 +1,8 @@
 import type { Plugin } from "vite-plus";
-import { buildRoveProjectFileJsonSchema } from "@getpaperplane/shared/roveProjectFile";
+import { buildPaperplaneProjectFileJsonSchema } from "@getpaperplane/shared/paperplaneProjectFile";
 
 export function projectFileSchemaPlugin(): Plugin {
-  const source = `${JSON.stringify(buildRoveProjectFileJsonSchema(), null, 2)}\n`;
+  const source = `${JSON.stringify(buildPaperplaneProjectFileJsonSchema(), null, 2)}\n`;
   return {
     name: "rove-project-file-schema",
     configureServer(server) {

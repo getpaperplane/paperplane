@@ -100,8 +100,8 @@ const flag = (
   );
 
 // `Config.Boolean`'s literals, which effect does not export on their own.
-const ROVE_TRUE = ["true", "yes", "on", "1", "y"];
-const ROVE_FALSE = ["false", "no", "off", "0", "n"];
+const PAPERPLANE_TRUE = ["true", "yes", "on", "1", "y"];
+const PAPERPLANE_FALSE = ["false", "no", "off", "0", "n"];
 
 const RESOURCE_ATTRIBUTES = "OTEL_RESOURCE_ATTRIBUTES";
 
@@ -293,8 +293,8 @@ const endpointSignal = (name: OtlpSignalName, own: Settings, generic: Settings):
 export const load: Effect.Effect<OtelEnvironment> = Config.all({
   rove: flag(
     "PAPERPLANE_OTEL_SDK_DISABLED",
-    ROVE_TRUE,
-    ROVE_FALSE,
+    PAPERPLANE_TRUE,
+    PAPERPLANE_FALSE,
     (value) => `PAPERPLANE_OTEL_SDK_DISABLED=${value} is not a yes or a no and was ignored`,
   ),
   // The specification: a boolean it defines is true "only by the
@@ -380,9 +380,9 @@ export const resolveSignalEndpoint = (
   if (otel.disabled) {
     return undefined;
   }
-  const roveUrl = blankAsUnset(rove.url);
-  if (roveUrl !== undefined) {
-    return { url: roveUrl, export: rove.export };
+  const paperplaneUrl = blankAsUnset(rove.url);
+  if (paperplaneUrl !== undefined) {
+    return { url: paperplaneUrl, export: rove.export };
   }
   return OtelSignal.$match(otel[signal], {
     Export: ({ url, protocol, headers }): SignalEndpoint => ({

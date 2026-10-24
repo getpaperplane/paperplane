@@ -1201,7 +1201,7 @@ function renderFeedEntry(
             <Text className="mb-1 pr-1 font-rove-medium text-2xs text-foreground-muted opacity-60">
               Sent by automation
             </Text>
-          ) : presentation.attribution === "rove" ? (
+          ) : presentation.attribution === "paperplane" ? (
             <Text className="mb-1 pr-1 font-rove-medium text-2xs text-foreground-muted opacity-60">
               Sent by Paperplane
             </Text>

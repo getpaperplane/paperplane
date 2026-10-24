@@ -1,7 +1,7 @@
 import type {
   HostHealthFinding,
   HostHealthReport,
-  RoveMemoryUsage,
+  PaperplaneMemoryUsage,
 } from "@getpaperplane/contracts";
 import * as HostProcess from "@getpaperplane/shared/HostProcess";
 import * as Cache from "effect/Cache";
@@ -28,7 +28,7 @@ interface HealthFacts {
   readonly swapTotalBytes: number | null;
   readonly wsl: boolean;
   readonly userManager: boolean;
-  readonly roveMemory: RoveMemoryUsage | null;
+  readonly paperplaneMemory: PaperplaneMemoryUsage | null;
   readonly hostOomKills: number;
   readonly stalls: ReadonlyArray<{ readonly time: number; readonly delayMaxMs: number }>;
 }
@@ -79,14 +79,14 @@ export function hostHealthFindings(
       fix: "Run fewer agents at once and check the host's memory and CPU load.",
     });
   }
-  if (facts.roveMemory !== null && facts.roveMemory.oomKills > oomBaseline) {
+  if (facts.paperplaneMemory !== null && facts.paperplaneMemory.oomKills > oomBaseline) {
     findings.push({
       id: "rove_oom_kills",
       severity: "warning",
-      message: `${plural(facts.roveMemory.oomKills - oomBaseline, "out-of-memory kill")} under the Paperplane memory ceiling since the server started.`,
+      message: `${plural(facts.paperplaneMemory.oomKills - oomBaseline, "out-of-memory kill")} under the Paperplane memory ceiling since the server started.`,
       fix: "Run fewer agents at once or raise the Paperplane memory ceiling.",
     });
-  } else if (facts.roveMemory === null && facts.hostOomKills > 0) {
+  } else if (facts.paperplaneMemory === null && facts.hostOomKills > 0) {
     findings.push({
       id: "host_oom_kills",
       severity: "info",
@@ -169,7 +169,7 @@ const make = Effect.fnUntraced(function* (options: { readonly oomBaseline?: numb
     const now = DateTime.toEpochMillis(yield* DateTime.now);
     let swapTotalBytes: number | null = null;
     let swapFreeBytes: number | null = null;
-    let roveMemory: RoveMemoryUsage | null = null;
+    let paperplaneMemory: PaperplaneMemoryUsage | null = null;
     let wsl = false;
     let userManager = false;
     let hostOomKills = 0;
@@ -192,7 +192,7 @@ const make = Effect.fnUntraced(function* (options: { readonly oomBaseline?: numb
           /^\d+$/.test(text.trim()) && Number.isSafeInteger(Number(text)) ? Number(text) : null;
         const currentBytes = finiteBytes(current);
         if (currentBytes !== null)
-          roveMemory = {
+          paperplaneMemory = {
             limitBytes: finiteBytes(limit),
             currentBytes,
             swapLimitBytes: finiteBytes(swapLimit),
@@ -200,7 +200,7 @@ const make = Effect.fnUntraced(function* (options: { readonly oomBaseline?: numb
             oomKills: counter(yield* readText(`${cgroup}/memory.events`), "oom_kill"),
           };
       }
-      hasRoveMemory = roveMemory !== null;
+      hasRoveMemory = paperplaneMemory !== null;
     }
     const stallPath = `${config.logsDir}/event-loop-stalls.ndjson`;
     const stat = yield* fs.stat(stallPath).pipe(Effect.option);
@@ -212,7 +212,7 @@ const make = Effect.fnUntraced(function* (options: { readonly oomBaseline?: numb
       stallMtime = mtime;
     }
     const findings = hostHealthFindings(
-      { ...memory, swapTotalBytes, roveMemory, wsl, userManager, hostOomKills, stalls },
+      { ...memory, swapTotalBytes, paperplaneMemory, wsl, userManager, hostOomKills, stalls },
       { now, oomBaseline: baseline },
     );
     return {
@@ -222,7 +222,7 @@ const make = Effect.fnUntraced(function* (options: { readonly oomBaseline?: numb
       swapTotalBytes,
       swapFreeBytes,
       memoryPressure: isUnderMemoryPressure(memory),
-      roveMemory,
+      paperplaneMemory,
       findings,
     } satisfies HostHealthReport;
   });

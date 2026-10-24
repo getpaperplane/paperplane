@@ -253,8 +253,8 @@ export function mergeLearnedRoutes(input: {
   const authorization =
     active._tag === "RelayConnectionTarget" ||
     (activeProfile?._tag === "BearerConnectionProfile" &&
-      activeProfile.authorization === "rove-connect")
-      ? ("rove-connect" as const)
+      activeProfile.authorization === "paperplane-connect")
+      ? ("paperplane-connect" as const)
       : undefined;
   const sharedCredential =
     authorization === undefined && active._tag === "BearerConnectionTarget"
@@ -411,7 +411,10 @@ export function routesAfterRemoving(
     if (route === removed) return false;
     if (!isLearned(route)) return true;
     const profile = Option.getOrNull(route.profile);
-    if (profile?._tag === "BearerConnectionProfile" && profile.authorization === "rove-connect") {
+    if (
+      profile?._tag === "BearerConnectionProfile" &&
+      profile.authorization === "paperplane-connect"
+    ) {
       return removed.target._tag !== "RelayConnectionTarget";
     }
     return credentialConnectionId(connectionRouteId(route.target)) !== removedId;

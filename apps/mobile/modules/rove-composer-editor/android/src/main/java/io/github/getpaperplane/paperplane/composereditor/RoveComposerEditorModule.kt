@@ -43,7 +43,7 @@ internal object RoveComposerClipboard {
         ClipData.newHtmlText(
           "Paperplane",
           text,
-          "<pre data-rove-context-fragment=\"$encoded\">$escaped</pre>"
+          "<pre data-paperplane-context-fragment=\"$encoded\">$escaped</pre>"
         )
       }
     )

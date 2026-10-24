@@ -7,7 +7,7 @@ import {
   type CallToolResult,
 } from "@modelcontextprotocol/sdk/types.js";
 
-import { PAPERPLANE_MCP_TOOL_PREFIX } from "@getpaperplane/shared/roveMcp";
+import { PAPERPLANE_MCP_TOOL_PREFIX } from "@getpaperplane/shared/paperplaneMcp";
 import type { McpProviderSessionConfig } from "@getpaperplane/provider-core/server/mcpSession";
 
 /** Keep MCP failures as failed Pi tool executions, not successful text results. */

@@ -1030,7 +1030,7 @@ export const SETTINGS_SEARCH_ITEMS = [
     wslAvailableOnly: true,
   },
   {
-    id: "rove-connect",
+    id: "paperplane-connect",
     localEnvironmentOnly: true,
     title: "Paperplane Connect",
     to: "/settings/connections",

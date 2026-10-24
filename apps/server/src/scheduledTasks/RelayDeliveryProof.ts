@@ -50,8 +50,8 @@ const make = Effect.gen(function* () {
   const verify: RelayDeliveryProof["Service"]["verify"] = (input) =>
     Effect.gen(function* () {
       const proof = input.headers[RELAY_HOOK_DELIVERY_HEADER];
-      const deliveryId = input.headers["x-rove-relay-delivery-id"];
-      const receivedAt = input.headers["x-rove-relay-received-at"];
+      const deliveryId = input.headers["x-paperplane-relay-delivery-id"];
+      const receivedAt = input.headers["x-paperplane-relay-received-at"];
       if (proof === undefined || deliveryId === undefined || receivedAt === undefined) {
         return Option.none();
       }
@@ -69,7 +69,7 @@ const make = Effect.gen(function* () {
         token: proof,
         typ: RELAY_HOOK_DELIVERY_TYP,
         issuer: normalizeRelayIssuer(relayIssuer.value),
-        audience: `rove-env:${environmentId}`,
+        audience: `paperplane-env:${environmentId}`,
         nowEpochSeconds: Math.floor((yield* Clock.currentTimeMillis) / 1_000),
         maxTokenAge: MAX_PROOF_AGE_SECONDS,
       }).pipe(Effect.map(decodePayload), Effect.orElseSucceed(Option.none));

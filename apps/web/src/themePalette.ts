@@ -9,8 +9,8 @@ import {
   IRIS_THEME,
   OCEAN_THEME,
   PLUM_THEME,
-  ROVE_CODE_LIGHT_THEME_COLORS,
-  ROVE_CODE_DARK_THEME_COLORS,
+  PAPERPLANE_CODE_LIGHT_THEME_COLORS,
+  PAPERPLANE_CODE_DARK_THEME_COLORS,
   RESERVED_THEME_IDS,
   THEME_COLOR_ROLES,
   type ThemeAppearance,
@@ -325,9 +325,9 @@ function legacyThemeMode(theme: ThemePreference): ThemeAppearance | null {
  */
 export function getStandardThemeColors(appearance: ThemeAppearance): ThemeColors {
   if (appearance === "dark") {
-    return (standardDarkThemeColors ??= decodeThemeColors(ROVE_CODE_DARK_THEME_COLORS));
+    return (standardDarkThemeColors ??= decodeThemeColors(PAPERPLANE_CODE_DARK_THEME_COLORS));
   }
-  return (standardLightThemeColors ??= decodeThemeColors(ROVE_CODE_LIGHT_THEME_COLORS));
+  return (standardLightThemeColors ??= decodeThemeColors(PAPERPLANE_CODE_LIGHT_THEME_COLORS));
 }
 
 type ThemeRgbColor = {

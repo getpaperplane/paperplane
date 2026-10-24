@@ -1,6 +1,6 @@
-import type { ProjectConfigState, RoveProjectFileScript } from "@getpaperplane/contracts";
+import type { ProjectConfigState, PaperplaneProjectFileScript } from "@getpaperplane/contracts";
 
-const NO_SCRIPTS: ReadonlyArray<RoveProjectFileScript> = [];
+const NO_SCRIPTS: ReadonlyArray<PaperplaneProjectFileScript> = [];
 
 /** Present only the configuration the server accepted, never a legacy file's contents. */
 export function resolveProjectConfigState(data: ProjectConfigState | null, isPending = false) {

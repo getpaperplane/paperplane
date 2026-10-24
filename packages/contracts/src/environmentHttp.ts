@@ -454,7 +454,7 @@ export type AuthOtherClientSessionsRevokeResult = typeof AuthOtherClientSessions
 
 class EnvironmentMetadataHttpApi extends HttpApiGroup.make("metadata")
   .add(
-    HttpApiEndpoint.get("descriptor", "/.well-known/rove/environment", {
+    HttpApiEndpoint.get("descriptor", "/.well-known/paperplane/environment", {
       success: ExecutionEnvironmentDescriptor,
     }),
   )
@@ -734,7 +734,7 @@ class EnvironmentConnectHttpApi extends HttpApiGroup.make("connect")
     }).middleware(EnvironmentAuthenticatedAuth),
   )
   .add(
-    HttpApiEndpoint.post("health", "/api/rove-connect/health", {
+    HttpApiEndpoint.post("health", "/api/paperplane-connect/health", {
       payload: RelayCloudEnvironmentHealthRequest,
       success: RelayEnvironmentHealthResponse,
       error: EnvironmentHttpCloudErrors,
@@ -748,7 +748,7 @@ class EnvironmentConnectHttpApi extends HttpApiGroup.make("connect")
     }),
   )
   .add(
-    HttpApiEndpoint.post("roveMintCredential", "/api/rove-connect/mint-credential", {
+    HttpApiEndpoint.post("paperplaneMintCredential", "/api/paperplane-connect/mint-credential", {
       payload: RelayCloudMintCredentialRequest,
       success: RelayEnvironmentMintResponse,
       error: EnvironmentHttpCloudErrors,

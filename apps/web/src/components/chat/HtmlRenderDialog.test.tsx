@@ -4,7 +4,7 @@ import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, expect, it, vi } from "vite-plus/test";
 import { htmlRenderTheme, HTML_RENDER_DEFAULT_FONTS } from "@getpaperplane/shared/htmlRender";
-import { ROVE_CODE_DARK_THEME_COLORS } from "@getpaperplane/shared/themePalettes";
+import { PAPERPLANE_CODE_DARK_THEME_COLORS } from "@getpaperplane/shared/themePalettes";
 import { EnvironmentId, ThreadId } from "@getpaperplane/contracts";
 
 import { HtmlRenderDialog } from "./HtmlRenderDialog";
@@ -33,7 +33,7 @@ vi.mock("../ui/toast", () => ({ toastManager: { add: showError } }));
 
 vi.mock("~/hooks/useHtmlRenderTheme", () => ({
   useHtmlRenderTheme: () =>
-    htmlRenderTheme(ROVE_CODE_DARK_THEME_COLORS, "dark", HTML_RENDER_DEFAULT_FONTS),
+    htmlRenderTheme(PAPERPLANE_CODE_DARK_THEME_COLORS, "dark", HTML_RENDER_DEFAULT_FONTS),
 }));
 
 let root: Root;

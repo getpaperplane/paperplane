@@ -8,12 +8,12 @@ import type { ProjectScopedServerSettingKey, ServerSettings } from "./settings.t
 /** File name of the checked-in Paperplane project file, resolved at the workspace root. */
 export const PAPERPLANE_PROJECT_FILE_NAME = "paperplane.json";
 
-/** Public URL of the published JSON Schema for {@link RoveProjectFile}. */
+/** Public URL of the published JSON Schema for {@link PaperplaneProjectFile}. */
 export const PAPERPLANE_PROJECT_FILE_SCHEMA_URL =
   "https://paperplane.hafiezulzikry.com/schema/paperplane.json";
 
-const ROVE_PROJECT_FILE_PATH_MAX_LENGTH = 512;
-const ROVE_PROJECT_FILE_MAX_SCRIPTS = 50;
+const PAPERPLANE_PROJECT_FILE_PATH_MAX_LENGTH = 512;
+const PAPERPLANE_PROJECT_FILE_MAX_SCRIPTS = 50;
 
 // Annotations go on the encoded (string) side so they survive into the
 // published JSON Schema; decoding still trims and re-validates non-emptiness.
@@ -26,7 +26,7 @@ const trimmedNonEmpty = (annotations: { readonly description: string }, maxLengt
   return encoded.pipe(Schema.decodeTo(encoded, SchemaTransformation.trim()));
 };
 
-export const RoveProjectFileScript = Schema.Struct({
+export const PaperplaneProjectFileScript = Schema.Struct({
   name: trimmedNonEmpty({
     description: "Display name for the script, shown in the Paperplane scripts menu.",
   }),
@@ -71,9 +71,9 @@ export const RoveProjectFileScript = Schema.Struct({
 }).annotate({
   description: "A project script that team members can import into Paperplane.",
 });
-export type RoveProjectFileScript = typeof RoveProjectFileScript.Type;
+export type PaperplaneProjectFileScript = typeof PaperplaneProjectFileScript.Type;
 
-export const RoveProjectFile = Schema.Struct({
+export const PaperplaneProjectFile = Schema.Struct({
   $schema: Schema.optionalKey(
     Schema.String.annotate({
       description: `URL of the JSON Schema for this file, typically "${PAPERPLANE_PROJECT_FILE_SCHEMA_URL}".`,
@@ -85,7 +85,7 @@ export const RoveProjectFile = Schema.Struct({
         description:
           'Workspace-relative path to the project icon (e.g. "assets/logo.svg"). Checked before Paperplane\'s built-in icon locations.',
       },
-      ROVE_PROJECT_FILE_PATH_MAX_LENGTH,
+      PAPERPLANE_PROJECT_FILE_PATH_MAX_LENGTH,
     ),
   ),
   defaultThreadEnvMode: Schema.optionalKey(
@@ -101,23 +101,23 @@ export const RoveProjectFile = Schema.Struct({
     }),
   ),
   scripts: Schema.optionalKey(
-    Schema.Array(RoveProjectFileScript)
+    Schema.Array(PaperplaneProjectFileScript)
       .annotate({
         description:
           "Project scripts shared with everyone who opens this repository in Paperplane.",
       })
-      .check(Schema.isMaxLength(ROVE_PROJECT_FILE_MAX_SCRIPTS)),
+      .check(Schema.isMaxLength(PAPERPLANE_PROJECT_FILE_MAX_SCRIPTS)),
   ),
 }).annotate({
   title: "Paperplane project file",
   description:
     "Checked-in project configuration for Paperplane (paperplane.json at the repository root). See https://github.com/hafiezul/rove/blob/main/docs/user/project-settings.md for documentation.",
 });
-export type RoveProjectFile = typeof RoveProjectFile.Type;
+export type PaperplaneProjectFile = typeof PaperplaneProjectFile.Type;
 
 /** Server-owned configuration state; the legacy filename is detected, never read. */
 export const ProjectConfigState = Schema.Union([
-  Schema.Struct({ status: Schema.Literal("valid"), file: RoveProjectFile }),
+  Schema.Struct({ status: Schema.Literal("valid"), file: PaperplaneProjectFile }),
   Schema.Struct({ status: Schema.Literals(["missing", "invalid", "legacy-only"]) }),
 ]);
 export type ProjectConfigState = typeof ProjectConfigState.Type;
@@ -140,12 +140,12 @@ export const PROJECT_FILE_BACKED_SETTINGS = {
   // in settings.ts), so it cannot be file-backed and is excluded here.
   readonly [K in ProjectScopedServerSettingKey & keyof ServerSettings]?: {
     readonly field: {
-      readonly [F in keyof RoveProjectFile]: RoveProjectFile[F] extends
+      readonly [F in keyof PaperplaneProjectFile]: PaperplaneProjectFile[F] extends
         | Exclude<ServerSettings[K], null>
         | undefined
         ? F
         : never;
-    }[keyof RoveProjectFile];
+    }[keyof PaperplaneProjectFile];
     readonly builtIn: Exclude<ServerSettings[K], null>;
   };
 };

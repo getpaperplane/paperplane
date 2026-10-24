@@ -1,8 +1,8 @@
 import {
   BUILT_IN_THEMES,
   PLUM_THEME,
-  ROVE_CODE_LIGHT_THEME_COLORS,
-  ROVE_CODE_DARK_THEME_COLORS,
+  PAPERPLANE_CODE_LIGHT_THEME_COLORS,
+  PAPERPLANE_CODE_DARK_THEME_COLORS,
   getThemeColorsForAppearance,
   MOBILE_DEFAULT_THEME_ID,
   MOBILE_THEME_IDS as SHARED_MOBILE_THEME_IDS,
@@ -377,7 +377,9 @@ export function getMobileThemeColors(
   appearance: MobileThemeAppearance,
 ): ThemeColors {
   if (themeId === DEFAULT_MOBILE_THEME_ID) {
-    return appearance === "dark" ? ROVE_CODE_DARK_THEME_COLORS : ROVE_CODE_LIGHT_THEME_COLORS;
+    return appearance === "dark"
+      ? PAPERPLANE_CODE_DARK_THEME_COLORS
+      : PAPERPLANE_CODE_LIGHT_THEME_COLORS;
   }
   const theme = BUILT_IN_THEMES.find((candidate) => candidate.id === themeId) ?? PLUM_THEME;
   return getThemeColorsForAppearance(theme, appearance) ?? theme.colors;

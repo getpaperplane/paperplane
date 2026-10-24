@@ -44,7 +44,7 @@ import * as Stream from "effect/Stream";
 import * as ProviderHost from "@getpaperplane/provider-core/server/ProviderHost";
 import { mcpToolPresentation } from "@getpaperplane/provider-core/server/mcpToolPresentation";
 import * as McpProviderSessions from "@getpaperplane/provider-core/server/McpProviderSessions";
-import { PAPERPLANE_MCP_SERVER_NAME } from "@getpaperplane/shared/roveMcp";
+import { PAPERPLANE_MCP_SERVER_NAME } from "@getpaperplane/shared/paperplaneMcp";
 import * as McpProviderSession from "@getpaperplane/provider-core/server/mcpSession";
 import { CursorTransportFailure } from "./transportFailure.ts";
 import { cursorSdkModelSelection } from "./sdkModel.ts";

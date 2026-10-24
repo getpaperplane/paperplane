@@ -1,6 +1,6 @@
 import { useScopedSettingsWriteAllowed } from "./useScopedSettings";
 import { AuthSettingsWriteScope } from "@getpaperplane/contracts";
-import { EnvironmentId, type RoveProjectFileScript } from "@getpaperplane/contracts";
+import { EnvironmentId, type PaperplaneProjectFileScript } from "@getpaperplane/contracts";
 import {
   isAtomCommandInterrupted,
   squashAtomCommandFailure,
@@ -108,7 +108,7 @@ export function ProjectActionsSettings() {
     [scripts, roveFile.scripts],
   );
   const importFileScript = useCallback(
-    async (fileScript: RoveProjectFileScript) => {
+    async (fileScript: PaperplaneProjectFileScript) => {
       const payload: NewProjectScriptInput = {
         name: fileScript.name,
         command: fileScript.command,

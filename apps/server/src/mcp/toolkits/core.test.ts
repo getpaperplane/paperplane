@@ -75,10 +75,10 @@ const declaredFailure = (result: McpSchema.CallToolResult) => {
 import { PullRequestsToolkit } from "./pullRequests/tools.ts";
 import { HtmlToolkit } from "./html/tools.ts";
 import {
-  resolveRoveMcpToolDefinition,
-  resolveRoveMcpToolPresentation,
-  resolveRoveMcpToolSummaryAction,
-} from "@getpaperplane/shared/roveMcpToolPresentation";
+  resolvePaperplaneMcpToolDefinition,
+  resolvePaperplaneMcpToolPresentation,
+  resolvePaperplaneMcpToolSummaryAction,
+} from "@getpaperplane/shared/paperplaneMcpToolPresentation";
 import { htmlRenderFromToolItem } from "@getpaperplane/shared/toolOutput";
 
 const decodeMcpAttachmentInput = Schema.decodeUnknownEffect(McpAttachmentInput);
@@ -114,15 +114,15 @@ it("publishes unique tool names with reference-free object-root inputs", () => {
       // The published tool catalog must also work with providers without $ref support.
       expect(JSON.stringify(schema), tool.name).not.toContain('"$ref"');
       // Every published tool must have labels for its lifecycle, branding, and a summary.
-      const definition = resolveRoveMcpToolDefinition(tool.name);
+      const definition = resolvePaperplaneMcpToolDefinition(tool.name);
       expect(definition, tool.name).not.toBeNull();
       expect(
         definition?.labels.every((label) => label.trim().length > 0),
         tool.name,
       ).toBe(true);
       for (const name of [tool.name, `mcp__paperplane__${tool.name}`, `paperplane.${tool.name}`]) {
-        expect(resolveRoveMcpToolPresentation(name)?.logo, name).toBe("rove");
-        expect(resolveRoveMcpToolSummaryAction(name), name).not.toBeNull();
+        expect(resolvePaperplaneMcpToolPresentation(name)?.logo, name).toBe("paperplane");
+        expect(resolvePaperplaneMcpToolSummaryAction(name), name).not.toBeNull();
       }
     }
   }

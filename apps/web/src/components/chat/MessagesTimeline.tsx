@@ -2497,8 +2497,11 @@ function UserTimelineRow({ row }: { row: Extract<TimelineRow, { kind: "message" 
             "Sent by automation"
           )}
         </p>
-      ) : userMessage.attribution === "rove" ? (
-        <p className="me-1 text-2xs text-muted-foreground/70" data-user-message-attribution="rove">
+      ) : userMessage.attribution === "paperplane" ? (
+        <p
+          className="me-1 text-2xs text-muted-foreground/70"
+          data-user-message-attribution="paperplane"
+        >
           Sent by Paperplane
         </p>
       ) : userMessage.attribution === "agent" ? (
@@ -4191,7 +4194,7 @@ function toolGroupSummaryIconName(
     case "command":
       return "terminal";
     case "thread-create":
-      return "rove";
+      return "paperplane";
     case "browser":
       return "browser";
     case "device":
@@ -5068,7 +5071,7 @@ type WorkEntryIconName =
   | "square-pen"
   | "terminal"
   | "pull-request"
-  | "rove"
+  | "paperplane"
   | "wrench"
   | "x"
   | "zap";
@@ -5261,7 +5264,7 @@ function WorkEntryIcon({ name, className }: { name: WorkEntryIconName; className
       return <Code2Icon className={className} aria-hidden />;
     case "device":
       return <SmartphoneIcon className={className} aria-hidden />;
-    case "rove":
+    case "paperplane":
       return <img src="/favicon-32x32.png" className={className} alt="" aria-hidden />;
     case "check":
       return <CheckIcon className={className} aria-hidden />;
@@ -5402,7 +5405,7 @@ function workEntryIconName(workEntry: TimelineWorkEntry): WorkEntryIconName {
       case "background_task":
         return "zap";
       case "system":
-        return "rove";
+        return "paperplane";
       default:
         source satisfies never;
         return "zap";

@@ -131,9 +131,9 @@
       "types": "./src/voice-input/index.ts",
       "default": "./src/voice-input/index.ts"
     },
-    "./roveToolSummary": {
-      "types": "./src/roveToolSummary.ts",
-      "default": "./src/roveToolSummary.ts"
+    "./paperplaneToolSummary": {
+      "types": "./src/paperplaneToolSummary.ts",
+      "default": "./src/paperplaneToolSummary.ts"
     },
     "./relay": {
       "types": "./src/relay/index.ts",

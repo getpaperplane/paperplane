@@ -125,7 +125,7 @@ export interface WebhookTriggerRequest extends WebhookRequest {
 /** What the HTTP route should answer. `not_found` covers unknown hooks and wrong tokens alike. */
 /**
  * What happened to one webhook request, as recorded in metrics and spans.
- * Sent back to the relay as `x-rove-hook-outcome`; never request contents.
+ * Sent back to the relay as `x-paperplane-hook-outcome`; never request contents.
  */
 export type WebhookDeliveryOutcome =
   | "accepted"

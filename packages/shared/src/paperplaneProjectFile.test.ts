@@ -2,16 +2,16 @@ import * as Schema from "effect/Schema";
 import { describe, expect, it } from "vite-plus/test";
 
 import {
-  buildRoveProjectFileJsonSchema,
-  parseRoveProjectFile,
-  RoveProjectFileFromJson,
-} from "./roveProjectFile.ts";
+  buildPaperplaneProjectFileJsonSchema,
+  parsePaperplaneProjectFile,
+  PaperplaneProjectFileFromJson,
+} from "./paperplaneProjectFile.ts";
 
-const decodeJson = Schema.decodeUnknownSync(RoveProjectFileFromJson);
+const decodeJson = Schema.decodeUnknownSync(PaperplaneProjectFileFromJson);
 
-describe("buildRoveProjectFileJsonSchema", () => {
+describe("buildPaperplaneProjectFileJsonSchema", () => {
   it("emits a draft 2020-12 schema with the published $id", () => {
-    const schema = buildRoveProjectFileJsonSchema();
+    const schema = buildPaperplaneProjectFileJsonSchema();
 
     expect(schema.$schema).toBe("https://json-schema.org/draft/2020-12/schema");
     expect(schema.$id).toBe("https://paperplane.hafiezulzikry.com/schema/paperplane.json");
@@ -20,7 +20,7 @@ describe("buildRoveProjectFileJsonSchema", () => {
   });
 
   it("documents every supported field", () => {
-    const schema = buildRoveProjectFileJsonSchema() as {
+    const schema = buildPaperplaneProjectFileJsonSchema() as {
       properties: Record<
         string,
         {
@@ -57,12 +57,12 @@ describe("buildRoveProjectFileJsonSchema", () => {
   });
 
   it("stays JSON-serializable", () => {
-    const schema = buildRoveProjectFileJsonSchema();
+    const schema = buildPaperplaneProjectFileJsonSchema();
     expect(JSON.parse(JSON.stringify(schema))).toEqual(schema);
   });
 });
 
-describe("RoveProjectFileFromJson", () => {
+describe("PaperplaneProjectFileFromJson", () => {
   it("decodes lenient JSONC with comments and trailing commas", () => {
     const decoded = decodeJson(`{
       // team scripts
@@ -81,15 +81,15 @@ describe("RoveProjectFileFromJson", () => {
   });
 });
 
-describe("parseRoveProjectFile", () => {
+describe("parsePaperplaneProjectFile", () => {
   it("returns the decoded file for valid contents", () => {
-    expect(parseRoveProjectFile('{ "defaultThreadEnvMode": "worktree" }')).toEqual({
+    expect(parsePaperplaneProjectFile('{ "defaultThreadEnvMode": "worktree" }')).toEqual({
       defaultThreadEnvMode: "worktree",
     });
   });
 
   it("returns null for malformed or invalid contents", () => {
-    expect(parseRoveProjectFile("{ not json")).toBeNull();
-    expect(parseRoveProjectFile('{ "defaultThreadEnvMode": "spaceship" }')).toBeNull();
+    expect(parsePaperplaneProjectFile("{ not json")).toBeNull();
+    expect(parsePaperplaneProjectFile('{ "defaultThreadEnvMode": "spaceship" }')).toBeNull();
   });
 });

@@ -220,7 +220,7 @@ private final class ComposerTextView: UITextView {
     }
     let pasteboard = UIPasteboard.general
     let context = RoveComposerClipboard.read()
-    if !context["fragment", default: ""].isEmpty || context["html", default: ""].contains("data-rove-context-fragment=") {
+    if !context["fragment", default: ""].isEmpty || context["html", default: ""].contains("data-paperplane-context-fragment=") {
       onPasteContext?(context)
       return
     }

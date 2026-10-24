@@ -25,7 +25,11 @@ const isDesktopShellEnvironmentCommandError = Schema.is(
 
 function envOutput(values: Readonly<Record<string, string>>): string {
   return Object.entries(values)
-    .flatMap(([name, value]) => [`__ROVE_ENV_${name}_START__`, value, `__ROVE_ENV_${name}_END__`])
+    .flatMap(([name, value]) => [
+      `__PAPERPLANE_ENV_${name}_START__`,
+      value,
+      `__PAPERPLANE_ENV_${name}_END__`,
+    ])
     .join("\n");
 }
 

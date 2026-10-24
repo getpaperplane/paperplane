@@ -22,7 +22,7 @@ environment stays away. When the tunnel reconnects, the environment asks the
 relay to deliver right away. Requests are deleted once the environment
 answers, after 24 hours, or when no user has the environment linked. The relay
 still never checks the token; delivery goes through the same environment route.
-Every forward carries `x-rove-relay-delivery-id`, so a request that reached the
+Every forward carries `x-paperplane-relay-delivery-id`, so a request that reached the
 environment before a timeout and is delivered again later runs once
 ([inbox object](../../infra/relay/src/hooks/HookInboxObject.ts)).
 

@@ -612,7 +612,7 @@ it.effect.each(["/extension", "/compact"])(
       yield* Deferred.await(h.terminal);
       const target = (yield* h.runtime.readThreadSnapshot({ providerThread: h.thread }))
         .providerTurns[0]!;
-      assert.strictEqual(target.nativeTurnRef?.nativeId, "rove:leaf:old-answer");
+      assert.strictEqual(target.nativeTurnRef?.nativeId, "paperplane:leaf:old-answer");
       const prior = {
         ...target,
         ordinal: 0,

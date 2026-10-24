@@ -5,7 +5,10 @@ import * as NodeOS from "node:os";
 import * as NodeRuntime from "@effect/platform-node/NodeRuntime";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import * as NetService from "@getpaperplane/shared/Net";
-import { resolveGitWorktreePath, resolveWorktreeRoveHome } from "@getpaperplane/shared/devHome";
+import {
+  resolveGitWorktreePath,
+  resolveWorktreePaperplaneHome,
+} from "@getpaperplane/shared/devHome";
 import * as HostProcess from "@getpaperplane/shared/HostProcess";
 import { resolveSpawnCommand } from "@getpaperplane/shared/shell";
 import * as Config from "effect/Config";
@@ -668,7 +671,7 @@ export function runDevRunnerWithInput(input: DevRunnerCliInput) {
     // A dev server started inside a worktree defaults to that worktree's own
     // (gitignored) `.paperplane` — see @getpaperplane/shared/devHome for why this must
     // outrank an ambient PAPERPLANE_HOME. `--home-dir` still wins.
-    const worktreeHome = yield* resolveWorktreeRoveHome(yield* HostProcess.WorkingDirectory);
+    const worktreeHome = yield* resolveWorktreePaperplaneHome(yield* HostProcess.WorkingDirectory);
     // Trim before choosing: `--home-dir ""` is not a selection, and treating it
     // as one would skip the worktree default and land on the shared home —
     // exactly the outcome this precedence exists to prevent.

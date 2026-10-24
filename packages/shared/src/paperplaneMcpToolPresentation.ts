@@ -1,13 +1,13 @@
-import { PAPERPLANE_MCP_SERVER_NAME } from "./roveMcp.ts";
+import { PAPERPLANE_MCP_SERVER_NAME } from "./paperplaneMcp.ts";
 
-export type RoveMcpToolLogo = "rove";
+export type PaperplaneMcpToolLogo = "paperplane";
 
-export interface RoveMcpToolPresentation {
+export interface PaperplaneMcpToolPresentation {
   readonly displayName: string;
-  readonly logo: RoveMcpToolLogo;
+  readonly logo: PaperplaneMcpToolLogo;
 }
 
-export type RoveMcpToolSummaryAction =
+export type PaperplaneMcpToolSummaryAction =
   | "capabilities"
   | "delegate"
   | "task-status"
@@ -68,24 +68,24 @@ export type RoveMcpToolSummaryAction =
   | "html-preview"
   | "html-render";
 
-export interface RoveMcpToolDefinition {
+export interface PaperplaneMcpToolDefinition {
   readonly displayName: string;
   readonly labels: readonly [action: string, running: string, completed: string, detail: string];
-  readonly icon: "rove" | "browser" | "device" | "pull-request";
-  readonly summaryAction: RoveMcpToolSummaryAction;
+  readonly icon: "paperplane" | "browser" | "device" | "pull-request";
+  readonly summaryAction: PaperplaneMcpToolSummaryAction;
 }
 
 function tool(
-  labels: RoveMcpToolDefinition["labels"],
-  summaryAction: RoveMcpToolSummaryAction,
-  icon: RoveMcpToolDefinition["icon"] = "rove",
+  labels: PaperplaneMcpToolDefinition["labels"],
+  summaryAction: PaperplaneMcpToolSummaryAction,
+  icon: PaperplaneMcpToolDefinition["icon"] = "paperplane",
   displayName = `${labels[0]} ${labels[3]}`,
-): RoveMcpToolDefinition {
+): PaperplaneMcpToolDefinition {
   return { displayName, labels, icon, summaryAction };
 }
 
 // Cards, activity rows, summaries, and provider identity recovery share this inventory.
-const PAPERPLANE_MCP_TOOLS: Readonly<Record<string, RoveMcpToolDefinition>> = {
+const PAPERPLANE_MCP_TOOLS: Readonly<Record<string, PaperplaneMcpToolDefinition>> = {
   link_pull_request: tool(
     ["Link", "Linking", "Linked", "a pull request"],
     "link-pr",
@@ -391,7 +391,7 @@ export const PAPERPLANE_MCP_TOOL_NAMES: ReadonlySet<string> = new Set(
   Object.keys(PAPERPLANE_MCP_TOOLS),
 );
 
-function normalizeRoveMcpToolLabel(value: string): string {
+function normalizePaperplaneMcpToolLabel(value: string): string {
   return value.replace(/\s+(?:complete|completed)\s*$/i, "").trim();
 }
 
@@ -402,8 +402,8 @@ function normalizeRoveMcpToolLabel(value: string): string {
  * agents. The prefix match is deliberately loose because the display-name
  * inventory is the real gate; unknown tools stay on the generic renderer.
  */
-function resolveRoveMcpToolName(value: string): string | null {
-  const label = normalizeRoveMcpToolLabel(value);
+function resolvePaperplaneMcpToolName(value: string): string | null {
+  const label = normalizePaperplaneMcpToolLabel(value);
   if (Object.hasOwn(PAPERPLANE_MCP_TOOLS, label)) return label;
   const mcpMatch = /^mcp__(?<server>.+?)__(?<tool>.+)$/i.exec(label);
   if (mcpMatch?.groups) {
@@ -435,29 +435,29 @@ function resolveRoveMcpToolName(value: string): string | null {
 }
 
 /** The bare Paperplane tool name (`html_render`) for any provider's spelling of it. */
-export function resolveRoveMcpToolId(toolName: string | null | undefined): string | null {
-  const name = toolName == null ? null : resolveRoveMcpToolName(toolName);
+export function resolvePaperplaneMcpToolId(toolName: string | null | undefined): string | null {
+  const name = toolName == null ? null : resolvePaperplaneMcpToolName(toolName);
   return name !== null && Object.hasOwn(PAPERPLANE_MCP_TOOLS, name) ? name : null;
 }
 
-export function resolveRoveMcpToolDefinition(
+export function resolvePaperplaneMcpToolDefinition(
   toolName: string | null | undefined,
-): RoveMcpToolDefinition | null {
-  const name = toolName == null ? null : resolveRoveMcpToolName(toolName);
+): PaperplaneMcpToolDefinition | null {
+  const name = toolName == null ? null : resolvePaperplaneMcpToolName(toolName);
   return name !== null && Object.hasOwn(PAPERPLANE_MCP_TOOLS, name)
     ? PAPERPLANE_MCP_TOOLS[name]!
     : null;
 }
 
-export function resolveRoveMcpToolPresentation(
+export function resolvePaperplaneMcpToolPresentation(
   toolName: string | null | undefined,
-): RoveMcpToolPresentation | null {
-  const definition = resolveRoveMcpToolDefinition(toolName);
-  return definition === null ? null : { displayName: definition.displayName, logo: "rove" };
+): PaperplaneMcpToolPresentation | null {
+  const definition = resolvePaperplaneMcpToolDefinition(toolName);
+  return definition === null ? null : { displayName: definition.displayName, logo: "paperplane" };
 }
 
-export function resolveRoveMcpToolSummaryAction(
+export function resolvePaperplaneMcpToolSummaryAction(
   toolName: string | null | undefined,
-): RoveMcpToolSummaryAction | null {
-  return resolveRoveMcpToolDefinition(toolName)?.summaryAction ?? null;
+): PaperplaneMcpToolSummaryAction | null {
+  return resolvePaperplaneMcpToolDefinition(toolName)?.summaryAction ?? null;
 }

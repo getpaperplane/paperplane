@@ -22,11 +22,11 @@ const healthy = {
   swapTotalBytes: 4 * GIB,
   wsl: false,
   userManager: true,
-  roveMemory: null,
+  paperplaneMemory: null,
   hostOomKills: 0,
   stalls: [],
 };
-const roveMemory = {
+const paperplaneMemory = {
   limitBytes: 8 * GIB,
   currentBytes: GIB,
   swapLimitBytes: null,
@@ -40,7 +40,7 @@ describe("hostHealthFindings", () => {
     ["memory_pressure", { availableMemoryBytes: GIB - 1 }],
     ["no_swap", { totalMemoryBytes: 8 * GIB, swapTotalBytes: 0 }],
     ["event_loop_stalls", { stalls: [{ time: now, delayMaxMs: 1000 }] }],
-    ["rove_oom_kills", { roveMemory }],
+    ["rove_oom_kills", { paperplaneMemory }],
     ["host_oom_kills", { hostOomKills: 4 }],
   ])("reports %s", (id, patch) => {
     const findings = HostHealth.hostHealthFindings(
@@ -71,16 +71,16 @@ describe("hostHealthFindings", () => {
   it("uses cgroup deltas and does not attribute host kills when a slice exists", () => {
     expect(
       HostHealth.hostHealthFindings(
-        { ...healthy, roveMemory, hostOomKills: 100 },
+        { ...healthy, paperplaneMemory, hostOomKills: 100 },
         { now, oomBaseline: 4 },
       ),
     ).toEqual([]);
     expect(
-      HostHealth.hostHealthFindings({ ...healthy, roveMemory }, { now, oomBaseline: 2 })[0]
+      HostHealth.hostHealthFindings({ ...healthy, paperplaneMemory }, { now, oomBaseline: 2 })[0]
         ?.message,
     ).toContain("2 out-of-memory kills under the Paperplane memory ceiling");
     expect(
-      HostHealth.hostHealthFindings({ ...healthy, roveMemory }, { now, oomBaseline: 5 }),
+      HostHealth.hostHealthFindings({ ...healthy, paperplaneMemory }, { now, oomBaseline: 5 }),
     ).toEqual([]);
   });
 
@@ -172,8 +172,8 @@ describe("HostHealth service", () => {
           expect(memoryReads).toBe(1);
           expect(first.swapTotalBytes).toBe(4 * GIB);
           expect(first.swapFreeBytes).toBe(2 * GIB);
-          expect(first.roveMemory).toEqual({
-            ...roveMemory,
+          expect(first.paperplaneMemory).toEqual({
+            ...paperplaneMemory,
             currentBytes: GIB + 1,
             swapCurrentBytes: GIB,
             oomKills: 2,
@@ -217,14 +217,14 @@ describe("HostHealth service", () => {
         const slice = "/sys/fs/cgroup/later/user@123.service/app.slice/app-rove.slice";
         yield* Effect.gen(function* () {
           const health = yield* HostHealth.HostHealth;
-          expect((yield* health.read).roveMemory).toBeNull();
+          expect((yield* health.read).paperplaneMemory).toBeNull();
           files.set("/proc/self/cgroup", "0::/later/user@123.service/app.slice/rove.service\n");
           files.set(`${slice}/memory.current`, "1234567");
           files.set(`${slice}/memory.max`, "987654321");
           yield* TestClock.adjust("11 seconds");
           const report = yield* health.read;
-          expect(report.roveMemory?.currentBytes).toBe(1234567);
-          expect(report.roveMemory?.limitBytes).toBe(987654321);
+          expect(report.paperplaneMemory?.currentBytes).toBe(1234567);
+          expect(report.paperplaneMemory?.limitBytes).toBe(987654321);
           expect(report.availableMemoryBytes).toBe(8 * GIB + 1);
         }).pipe(
           Effect.provide(
@@ -265,7 +265,7 @@ describe("HostHealth service", () => {
       const health = yield* HostHealth.HostHealth;
       const report = yield* health.read;
       expect(report.swapTotalBytes).toBeNull();
-      expect(report.roveMemory).toBeNull();
+      expect(report.paperplaneMemory).toBeNull();
       expect(report.findings.map((finding) => finding.id)).toEqual([
         "memory_pressure",
         "event_loop_stalls",

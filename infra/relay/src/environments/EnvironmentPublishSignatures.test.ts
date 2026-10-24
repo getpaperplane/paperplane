@@ -82,7 +82,7 @@ function signTestJwt<TPayload extends JsonWebTokenPayload>(
 const freshRequest = Effect.gen(function* () {
   const now = yield* DateTime.now;
   const payload = {
-    iss: "rove-env:env",
+    iss: "paperplane-env:env",
     aud: "https://relay.example.test",
     sub: "env",
     jti: "publish-jti",

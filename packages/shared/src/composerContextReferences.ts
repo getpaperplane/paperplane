@@ -165,7 +165,7 @@ export function replaceComposerContextReferences(
 // Provider projection
 // ---------------------------------------------------------------------------
 
-const CONTEXT_ENVELOPE_TAG = "rove_context";
+const CONTEXT_ENVELOPE_TAG = "paperplane_context";
 const CONTEXT_ENTRY_TAG = "context";
 
 function kindDisplayName(kind: ComposerContextKind): string {
@@ -187,7 +187,7 @@ export function formatComposerContextProviderMarker(
 }
 
 /**
- * Captured text is data. A terminal line or PR comment that contains `</rove_context>` or
+ * Captured text is data. A terminal line or PR comment that contains `</paperplane_context>` or
  * `</context>` must not be able to close the envelope and forge a record.
  */
 function escapeComposerContextPayloadText(text: string): string {

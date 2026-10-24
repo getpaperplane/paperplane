@@ -3,7 +3,7 @@ import * as NodeFS from "node:fs";
 import * as NodePath from "node:path";
 import * as NodeURL from "node:url";
 
-import { buildRoveProjectFileJsonSchema } from "@getpaperplane/shared/roveProjectFile";
+import { buildPaperplaneProjectFileJsonSchema } from "@getpaperplane/shared/paperplaneProjectFile";
 import { checkAgentReadiness } from "./check-agent-readiness.mjs";
 
 function checkProjectFileSchema(raw, expectedSchema) {
@@ -14,7 +14,7 @@ export function readBuiltProjectFileSchema(directory = defaultDirectory) {
   const schema = JSON.parse(
     NodeFS.readFileSync(NodePath.join(directory, "schema/paperplane.json"), "utf8"),
   );
-  const canonical = buildRoveProjectFileJsonSchema();
+  const canonical = buildPaperplaneProjectFileJsonSchema();
   NodeAssert.equal(schema.$schema, canonical.$schema);
   NodeAssert.equal(schema.$id, canonical.$id);
   NodeAssert.equal(schema.type, "object");
@@ -36,7 +36,7 @@ const DEPLOY_CHECK_ATTEMPTS = 6;
 
 export async function checkDeployedProjectFileSchema(
   origin,
-  expectedSchema = buildRoveProjectFileJsonSchema(),
+  expectedSchema = buildPaperplaneProjectFileJsonSchema(),
 ) {
   const url = new URL("/schema/paperplane.json", origin);
   // DNS and schema content can take time to propagate after Wrangler reports success.
@@ -87,7 +87,7 @@ const MAX_FILES = 20_000;
 
 export function checkCloudflareWeb(
   directory = defaultDirectory,
-  expectedSchema = buildRoveProjectFileJsonSchema(),
+  expectedSchema = buildPaperplaneProjectFileJsonSchema(),
 ) {
   if (!NodeFS.statSync(NodePath.join(directory, "index.html")).isFile()) {
     throw new Error("The hosted build must contain index.html.");
@@ -131,7 +131,7 @@ if (
   const directory = args[0] === "--url" ? defaultDirectory : (args[0] ?? defaultDirectory);
   const expectedSchema = process.argv.includes("--built-schema")
     ? readBuiltProjectFileSchema(directory)
-    : buildRoveProjectFileJsonSchema();
+    : buildPaperplaneProjectFileJsonSchema();
   if (args[0] === "--url") {
     await checkDeployedProjectFileSchema(args[1], expectedSchema);
     const readiness = await checkAgentReadiness(args[1]);

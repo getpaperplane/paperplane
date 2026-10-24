@@ -148,7 +148,7 @@ import {
 import {
   PAPERPLANE_MCP_SERVER_NAME,
   PAPERPLANE_MCP_TOOL_PREFIX,
-} from "@getpaperplane/shared/roveMcp";
+} from "@getpaperplane/shared/paperplaneMcp";
 import * as McpProviderSession from "@getpaperplane/provider-core/server/mcpSession";
 import * as McpProviderSessions from "@getpaperplane/provider-core/server/McpProviderSessions";
 import * as IdAllocator from "@getpaperplane/provider-core/server/IdAllocator";

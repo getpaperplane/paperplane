@@ -37,9 +37,9 @@ export const runDoctor = Effect.fn("runDoctor")(function* (
         : `  Swap: ${formatBytes(host.swapFreeBytes)} free / ${formatBytes(host.swapTotalBytes)} total`,
     );
     yield* Console.log(
-      host.roveMemory === null
+      host.paperplaneMemory === null
         ? "  Paperplane ceiling: unavailable (no systemd memory ceiling)"
-        : `  Paperplane ceiling: ${formatBytes(host.roveMemory.currentBytes)} current / ${host.roveMemory.limitBytes === null ? "unlimited" : formatBytes(host.roveMemory.limitBytes)}`,
+        : `  Paperplane ceiling: ${formatBytes(host.paperplaneMemory.currentBytes)} current / ${host.paperplaneMemory.limitBytes === null ? "unlimited" : formatBytes(host.paperplaneMemory.limitBytes)}`,
     );
     for (const finding of host.findings) {
       yield* Console.log(`  [${finding.severity}] ${finding.message}`);

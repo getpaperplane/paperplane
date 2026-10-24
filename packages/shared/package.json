@@ -3,9 +3,9 @@
   "private": true,
   "type": "module",
   "exports": {
-    "./roveMcp": {
-      "types": "./src/roveMcp.ts",
-      "import": "./src/roveMcp.ts"
+    "./paperplaneMcp": {
+      "types": "./src/paperplaneMcp.ts",
+      "import": "./src/paperplaneMcp.ts"
     },
     "./githubMarkdownLinks": {
       "types": "./src/githubMarkdownLinks.ts",
@@ -159,9 +159,9 @@
       "types": "./src/projectSettings.ts",
       "import": "./src/projectSettings.ts"
     },
-    "./roveProjectFile": {
-      "types": "./src/roveProjectFile.ts",
-      "import": "./src/roveProjectFile.ts"
+    "./paperplaneProjectFile": {
+      "types": "./src/paperplaneProjectFile.ts",
+      "import": "./src/paperplaneProjectFile.ts"
     },
     "./orchestrationTiming": {
       "types": "./src/orchestrationTiming.ts",
@@ -395,9 +395,9 @@
       "types": "./src/orchestrationV2Timeline.ts",
       "import": "./src/orchestrationV2Timeline.ts"
     },
-    "./roveMcpToolPresentation": {
-      "types": "./src/roveMcpToolPresentation.ts",
-      "import": "./src/roveMcpToolPresentation.ts"
+    "./paperplaneMcpToolPresentation": {
+      "types": "./src/paperplaneMcpToolPresentation.ts",
+      "import": "./src/paperplaneMcpToolPresentation.ts"
     },
     "./Array": {
       "types": "./src/Array.ts",

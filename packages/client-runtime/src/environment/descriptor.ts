@@ -14,7 +14,7 @@ export const fetchRemoteEnvironmentDescriptor = Effect.fn(
 )(function* (input: { readonly httpBaseUrl: string; readonly timeoutMs?: number }) {
   const client = yield* makeEnvironmentHttpApiGroupClient(input.httpBaseUrl, "metadata");
   return yield* executeEnvironmentHttpRequest(
-    environmentEndpointUrl(input.httpBaseUrl, "/.well-known/rove/environment"),
+    environmentEndpointUrl(input.httpBaseUrl, "/.well-known/paperplane/environment"),
     input.timeoutMs ?? DEFAULT_REMOTE_REQUEST_TIMEOUT_MS,
     client.descriptor(),
   ).pipe(

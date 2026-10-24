@@ -2,8 +2,8 @@ import { useAtomValue } from "@effect/atom-react";
 import {
   formatHostMemory,
   formatHostSwap,
-  formatRoveCeiling,
-  roveCeilingPercent,
+  formatPaperplaneCeiling,
+  paperplaneCeilingPercent,
 } from "@getpaperplane/client-runtime/host-health";
 import type { EnvironmentId } from "@getpaperplane/contracts";
 import { View } from "react-native";
@@ -22,9 +22,9 @@ export function HostHealthSection({ environmentId }: { readonly environmentId: E
   const report = result._tag === "Success" ? result.value : null;
   if (report === null) return null;
   const swap = formatHostSwap(report);
-  const ceiling = formatRoveCeiling(report);
-  const ceilingPercent = roveCeilingPercent(report);
-  const oomKills = report.roveMemory?.oomKills ?? 0;
+  const ceiling = formatPaperplaneCeiling(report);
+  const ceilingPercent = paperplaneCeilingPercent(report);
+  const oomKills = report.paperplaneMemory?.oomKills ?? 0;
   return (
     <SettingsSection title="Host health">
       <View className="gap-1 p-4">

@@ -273,7 +273,7 @@ describe("threadHtmlRenderAttachmentIds", () => {
         {
           toolName: "weather.get_weather",
           output: {
-            roveMcpApp: {
+            paperplaneMcpApp: {
               attachmentId: app,
               server: "weather",
               tool: "get_weather",

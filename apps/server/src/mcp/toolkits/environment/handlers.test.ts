@@ -98,7 +98,7 @@ for (const available of [true, false, "interrupted"] as const) {
                           swapTotalBytes: null,
                           swapFreeBytes: null,
                           memoryPressure: false,
-                          roveMemory: null,
+                          paperplaneMemory: null,
                           findings: [],
                         })
                       : available === "interrupted"

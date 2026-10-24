@@ -21,7 +21,7 @@ export function resolveUserMessagePresentation(message: {
 }): {
   readonly text: string;
   /** Who sent a user-role message the user did not type. */
-  readonly attribution: "automation" | "agent" | "rove" | null;
+  readonly attribution: "automation" | "agent" | "paperplane" | null;
   readonly scheduledTaskId: ScheduledTaskId | undefined;
 } {
   if (message.role !== "user") {
@@ -49,7 +49,11 @@ export function resolveUserMessagePresentation(message: {
     text: message.text,
     // Restart continuations were sent as the agent before they became notices.
     attribution:
-      message.createdBy !== "agent" ? null : message.creationSource === "server" ? "rove" : "agent",
+      message.createdBy !== "agent"
+        ? null
+        : message.creationSource === "server"
+          ? "paperplane"
+          : "agent",
     scheduledTaskId: undefined,
   };
 }

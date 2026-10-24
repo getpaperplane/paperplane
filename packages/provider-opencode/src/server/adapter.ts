@@ -56,7 +56,7 @@ import * as Stream from "effect/Stream";
 
 import * as ProviderHost from "@getpaperplane/provider-core/server/ProviderHost";
 import { mcpToolPresentation } from "@getpaperplane/provider-core/server/mcpToolPresentation";
-import { PAPERPLANE_MCP_SERVER_NAME } from "@getpaperplane/shared/roveMcp";
+import { PAPERPLANE_MCP_SERVER_NAME } from "@getpaperplane/shared/paperplaneMcp";
 import * as McpProviderSessions from "@getpaperplane/provider-core/server/McpProviderSessions";
 import * as ProviderEventLoggers from "@getpaperplane/provider-core/server/ProviderEventLoggers";
 import {

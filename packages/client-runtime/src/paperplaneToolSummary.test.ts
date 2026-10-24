@@ -1,28 +1,31 @@
 import { describe, expect, it } from "vite-plus/test";
 
-import { summarizeRoveToolCalls, type RoveToolSummaryCall } from "./roveToolSummary.ts";
+import {
+  summarizePaperplaneToolCalls,
+  type PaperplaneToolSummaryCall,
+} from "./paperplaneToolSummary.ts";
 
-function completed(input: unknown, output?: unknown): RoveToolSummaryCall {
+function completed(input: unknown, output?: unknown): PaperplaneToolSummaryCall {
   return { input, output, outcome: "completed" };
 }
 
-describe("summarizeRoveToolCalls", () => {
+describe("summarizePaperplaneToolCalls", () => {
   it("counts registered projects, repository destinations, and accepted thread launches", () => {
     expect(
-      summarizeRoveToolCalls("project-create", [
+      summarizePaperplaneToolCalls("project-create", [
         completed({}, { id: "project-1" }),
         completed({}, { id: "project-1" }),
         completed({}, { id: "project-2" }),
       ]).label,
     ).toBe("Registered 2 projects");
     expect(
-      summarizeRoveToolCalls("project-clone", [
+      summarizePaperplaneToolCalls("project-clone", [
         completed({}, { cwd: "/tmp/first" }),
         completed({}, { cwd: "/tmp/second" }),
       ]).label,
     ).toBe("Cloned 2 repositories");
     expect(
-      summarizeRoveToolCalls("thread-create", [
+      summarizePaperplaneToolCalls("thread-create", [
         completed({}, { threadId: "launched-thread", status: "preparing" }),
       ]).label,
     ).toBe("Created 1 thread");
@@ -33,11 +36,11 @@ describe("summarizeRoveToolCalls", () => {
       guides: outcomes.map((outcome, index) => ({ number: index + 1, outcome })),
     });
     expect(
-      summarizeRoveToolCalls("write-pr-guides", [
+      summarizePaperplaneToolCalls("write-pr-guides", [
         completed({}, guides("started", "running", "failed")),
       ]),
     ).toEqual({ label: "Started 2 review guides, 1 failed", failedCount: 1 });
-    const allFailed = summarizeRoveToolCalls("write-pr-guides", [
+    const allFailed = summarizePaperplaneToolCalls("write-pr-guides", [
       completed({}, guides("failed", "failed")),
     ]);
     expect(allFailed.label).toBe("Could not start 2 review guides");
@@ -52,7 +55,7 @@ describe("summarizeRoveToolCalls", () => {
     ["queue-steer", "Requested steering with 1 queued message"],
   ] as const)("deduplicates the queued run target for %s", (action, label) => {
     expect(
-      summarizeRoveToolCalls(action, [
+      summarizePaperplaneToolCalls(action, [
         completed({ queuedRunId: "queued-1" }),
         completed({ queuedRunId: "queued-1" }),
         { input: { queuedRunId: "queued-2" }, output: undefined, outcome: "unfinished" },
@@ -62,7 +65,7 @@ describe("summarizeRoveToolCalls", () => {
 
   it("counts answered requests rather than pretending every request contains one question", () => {
     expect(
-      summarizeRoveToolCalls("question-respond", [
+      summarizePaperplaneToolCalls("question-respond", [
         completed({ requestId: "request-1", answers: { one: ["Yes"], two: ["No"] } }),
         completed({ requestId: "request-1" }),
         completed({ requestId: "request-2" }),
@@ -79,29 +82,30 @@ describe("summarizeRoveToolCalls", () => {
       { threadId: "thread-2", attachments: [{ id: "one" }] },
       { messageId: "message-2", threadId: "thread-2" },
     );
-    expect(summarizeRoveToolCalls("attachment-send", [first, first, second])).toEqual({
+    expect(summarizePaperplaneToolCalls("attachment-send", [first, first, second])).toEqual({
       label: "Sent 3 attachments to 2 threads",
       failedCount: 0,
     });
     expect(
-      summarizeRoveToolCalls("attachment-send", [first, completed({ threadId: "thread-1" })]).label,
+      summarizePaperplaneToolCalls("attachment-send", [first, completed({ threadId: "thread-1" })])
+        .label,
     ).toBe("Sent attachments to 1 thread 2 times");
   });
 
   it("keeps repeated manual runs separate and describes asynchronous controls as requests", () => {
     expect(
-      summarizeRoveToolCalls("schedule-run", [
+      summarizePaperplaneToolCalls("schedule-run", [
         completed({ taskId: "schedule-1" }, { lastRunStatus: "running" }),
         completed({ taskId: "schedule-1" }, { lastRunStatus: "skipped" }),
       ]).label,
     ).toBe("Requested 2 scheduled task runs");
     expect(
-      summarizeRoveToolCalls("thread-fork", [
+      summarizePaperplaneToolCalls("thread-fork", [
         completed({}, { targetThreadId: "fork", sequence: 3 }),
       ]).label,
     ).toBe("Requested 1 thread fork");
     expect(
-      summarizeRoveToolCalls("thread-merge", [
+      summarizePaperplaneToolCalls("thread-merge", [
         completed({ targetThreadId: "parent" }, { sequence: 4 }),
       ]).label,
     ).toBe("Requested 1 context merge");
@@ -119,7 +123,7 @@ describe("summarizeRoveToolCalls", () => {
         content: { type: "text", text: JSON.stringify({ _tag, message: "Unavailable" }) },
       },
     ];
-    expect(summarizeRoveToolCalls("browser", [completed({}, output)])).toEqual({
+    expect(summarizePaperplaneToolCalls("browser", [completed({}, output)])).toEqual({
       label: "Tried to use browser 1 time",
       failedCount: 1,
     });
@@ -131,7 +135,7 @@ describe("summarizeRoveToolCalls", () => {
         { messageId: `message-${i}`, threadId: `thread-${i % 2}` },
       ),
     );
-    expect(summarizeRoveToolCalls("thread-send", [...calls, calls[0]!])).toEqual({
+    expect(summarizePaperplaneToolCalls("thread-send", [...calls, calls[0]!])).toEqual({
       label: "Sent 5 messages to 2 threads",
       failedCount: 0,
     });
@@ -156,9 +160,11 @@ describe("summarizeRoveToolCalls", () => {
         output,
       ),
     );
-    expect(summarizeRoveToolCalls("thread-send", calls).label).toBe("Sent 1 message to 1 thread");
+    expect(summarizePaperplaneToolCalls("thread-send", calls).label).toBe(
+      "Sent 1 message to 1 thread",
+    );
     expect(
-      summarizeRoveToolCalls("thread-send", [
+      summarizePaperplaneToolCalls("thread-send", [
         completed({ toolName: "paperplane_thread_send", args: { threadId: "input-thread" } }),
         completed({ threadId: "input-thread" }),
       ]).label,
@@ -167,7 +173,7 @@ describe("summarizeRoveToolCalls", () => {
 
   it("falls back to message counts when a destination is missing or a result is malformed", () => {
     expect(
-      summarizeRoveToolCalls("thread-send", [
+      summarizePaperplaneToolCalls("thread-send", [
         completed({ threadId: "known" }),
         completed({ message: '{"threadId":"not-a-destination"}' }, "{truncated"),
         completed(undefined, "Message sent"),
@@ -181,7 +187,7 @@ describe("summarizeRoveToolCalls", () => {
       status: "running",
     }));
     expect(
-      summarizeRoveToolCalls("thread-create", [
+      summarizePaperplaneToolCalls("thread-create", [
         completed(
           {},
           { threads: [...threads, { threadId: "rolled-back", status: "rolled_back" }] },
@@ -190,14 +196,14 @@ describe("summarizeRoveToolCalls", () => {
       ]).label,
     ).toBe("Created 4 threads");
     expect(
-      summarizeRoveToolCalls("thread-create", [
+      summarizePaperplaneToolCalls("thread-create", [
         completed({ threads: [{ title: "Requested, not confirmed" }] }),
       ]).label,
     ).toBe("Requested thread creation 1 time");
   });
 
   it("excludes failed and unfinished sends even if the provider reports completed", () => {
-    const calls: RoveToolSummaryCall[] = [
+    const calls: PaperplaneToolSummaryCall[] = [
       completed({ threadId: "success" }, { messageId: "ok", threadId: "success" }),
       completed(
         { threadId: "failed" },
@@ -208,11 +214,11 @@ describe("summarizeRoveToolCalls", () => {
       ]),
       { input: { threadId: "cancelled" }, output: undefined, outcome: "unfinished" },
     ];
-    expect(summarizeRoveToolCalls("thread-send", calls)).toEqual({
+    expect(summarizePaperplaneToolCalls("thread-send", calls)).toEqual({
       label: "Sent 1 message to 1 thread",
       failedCount: 2,
     });
-    expect(summarizeRoveToolCalls("thread-send", [calls[1]!])).toEqual({
+    expect(summarizePaperplaneToolCalls("thread-send", [calls[1]!])).toEqual({
       label: "Tried to send 1 message to 1 thread",
       failedCount: 1,
     });
@@ -221,19 +227,22 @@ describe("summarizeRoveToolCalls", () => {
   it("does not confuse a child's failure or wait timeout with failure of the orchestration call", () => {
     const failedChild = { taskId: "task-1", status: "failed", summary: "command not found" };
     expect(
-      summarizeRoveToolCalls("delegate", [completed({}, failedChild), completed({}, failedChild)]),
+      summarizePaperplaneToolCalls("delegate", [
+        completed({}, failedChild),
+        completed({}, failedChild),
+      ]),
     ).toEqual({
       label: "Delegated 1 task",
       failedCount: 0,
     });
     expect(
-      summarizeRoveToolCalls(
+      summarizePaperplaneToolCalls(
         "task-status",
         Array.from({ length: 4 }, () => completed({ taskId: "task-1" }, failedChild)),
       ).label,
     ).toBe("Checked task status 4 times");
     expect(
-      summarizeRoveToolCalls("thread-wait", [
+      summarizePaperplaneToolCalls("thread-wait", [
         completed({ threadId: "thread-1" }, { threadId: "thread-1", timedOut: true }),
       ]),
     ).toEqual({
@@ -244,7 +253,7 @@ describe("summarizeRoveToolCalls", () => {
 
   it("describes control requests without claiming that a thread stopped or a task was deleted", () => {
     expect(
-      summarizeRoveToolCalls("thread-interrupt", [
+      summarizePaperplaneToolCalls("thread-interrupt", [
         completed(
           { threadId: "thread-1" },
           { threadId: "thread-1", status: "interrupt_requested" },
@@ -252,12 +261,12 @@ describe("summarizeRoveToolCalls", () => {
       ]).label,
     ).toBe("Requested interrupts for 1 thread");
     expect(
-      summarizeRoveToolCalls("task-cancel", [
+      summarizePaperplaneToolCalls("task-cancel", [
         completed({ taskId: "task-1" }, { taskId: "task-1", status: "cancel_requested" }),
       ]).label,
     ).toBe("Requested cancellation of 1 task");
     expect(
-      summarizeRoveToolCalls("schedule-delete", [
+      summarizePaperplaneToolCalls("schedule-delete", [
         completed(
           { scheduledTaskId: "schedule-1" },
           { scheduledTaskId: "schedule-1", deleted: false },
@@ -270,14 +279,14 @@ describe("summarizeRoveToolCalls", () => {
     const first = completed({ threadId: "parent", subagentId: "workflow-1" }, {});
     const failed = completed({ threadId: "parent", subagentId: "workflow-3" }, { isError: true });
     expect(
-      summarizeRoveToolCalls("workflow-stop", [
+      summarizePaperplaneToolCalls("workflow-stop", [
         first,
         first,
         completed({ threadId: "parent", subagentId: "workflow-2" }, {}),
         failed,
       ]),
     ).toEqual({ label: "Requested stops for 2 workflows", failedCount: 1 });
-    expect(summarizeRoveToolCalls("workflow-stop", [failed])).toEqual({
+    expect(summarizePaperplaneToolCalls("workflow-stop", [failed])).toEqual({
       label: "Tried to stop 1 workflow",
       failedCount: 1,
     });
