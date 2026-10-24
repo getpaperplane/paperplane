@@ -14,8 +14,8 @@ testing, use [test-rove-mobile](../test-rove-mobile/SKILL.md).
 
 Reuse this task's healthy dev server. Otherwise run `vp run dev` from the
 repository root and retain its terminal session. Use the worktree's ignored
-`.rove` state and read the actual ports and pairing URL from the dev-runner output.
-Never run against `~/.rove-code/userdata` or set `VITE_HTTP_URL` or `VITE_WS_URL`.
+`.paperplane` state and read the actual ports and pairing URL from the dev-runner output.
+Never run against `~/.paperplane/userdata` or set `VITE_HTTP_URL` or `VITE_WS_URL`.
 
 Test with meaningful project and thread data. Read
 [references/sqlite-fixtures.md](references/sqlite-fixtures.md) only when

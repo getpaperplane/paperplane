@@ -11,7 +11,7 @@
 
 ## State and safety
 
-`ROVE_HOME` points at the workspace's gitignored `.rove`, so all runtime state stays inside the container workspace, mirroring the worktree default. There is no live install to damage inside a container, but the test-data rule from AGENTS.md still holds: copy data in, never point at shared state.
+`ROVE_HOME` points at the workspace's gitignored `.paperplane`, so all runtime state stays inside the container workspace, mirroring the worktree default. There is no live install to damage inside a container, but the test-data rule from AGENTS.md still holds: copy data in, never point at shared state.
 
 ## Caching
 

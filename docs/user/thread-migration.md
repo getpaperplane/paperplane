@@ -51,7 +51,7 @@ for the rebuild.
 
 Paperplane does not currently have a whole-thread export command. Before a major server update, stop
 the server and copy its `userdata` directory to a safe location. The default is
-`~/.rove-code/userdata`; a server started with `--home-dir <path>` uses `<path>/userdata`.
+`~/.paperplane/userdata`; a server started with `--home-dir <path>` uses `<path>/userdata`.
 
 If a migrated transcript is missing from the app, keep that copy unchanged. You can inspect the
 old transcript without starting a server against it:

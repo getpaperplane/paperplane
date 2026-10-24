@@ -37,7 +37,7 @@ installing one.
 
 `paperplane uninstall` removes the background service, the `paperplane` launcher, and the
 downloaded versions after showing you the list and asking once. Your projects,
-threads, and settings under `~/.rove-code/userdata` are kept. Pass `--yes` from a
+threads, and settings under `~/.paperplane/userdata` are kept. Pass `--yes` from a
 script.
 
 ## Platform support

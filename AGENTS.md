@@ -51,14 +51,14 @@ Most contributions are made through Paperplane itself, often remotely. Be carefu
 - **project** means an environment-local workspace record rooted at a directory.
 - **thread** means the durable conversation and work history.
 - **turn** means one user-to-agent cycle, including follow-up work such as checkpointing.
-- **Paperplane home** means the base data directory, `~/.rove-code` by default. Runtime state lives in its `userdata` directory. A linked worktree's gitignored `.rove` directory is separate dev state, not the Paperplane home.
+- **Paperplane home** means the base data directory, `~/.paperplane` by default. Runtime state lives in its `userdata` directory. A linked worktree's gitignored `.paperplane` directory is separate dev state, not the Paperplane home.
 
 Provider-integration terms (driver, thread memory, sterile Pi, fork-as-rollback) are defined in [`CONTEXT.md`](CONTEXT.md). The full glossary with file links is in [`docs/internals/glossary.md`](docs/internals/glossary.md).
 
 ## Three ways to hurt yourself
 
 1. **Killing by pattern.** Never use `pkill -f` or `pgrep | kill`, and never `kill` a PID you found by matching a name, path, or worktree string. Your own agent process has this worktree's path in its argv, and this machine runs several other dev servers. Kill only a PID you captured at spawn, or the process that owns your port after confirming its working directory is your worktree. On Linux, find that owner with `ss -H -ltnp` and `/proc/<pid>/cwd`. On macOS, use `lsof -nP -iTCP:<port> -sTCP:LISTEN` and `lsof -a -p <pid> -d cwd`.
-2. **Writing to the live install.** `~/.rove-code/userdata` is the developer's real Paperplane database, in use while you work. You may read and copy it (see [Test data](#test-data)). Never start a server against it, open it read-write, or clean it up.
+2. **Writing to the live install.** `~/.paperplane/userdata` is the developer's real Paperplane database, in use while you work. You may read and copy it (see [Test data](#test-data)). Never start a server against it, open it read-write, or clean it up.
 3. **Baking in origins.** Never set `VITE_HTTP_URL` or `VITE_WS_URL` for dev. Dev is single-origin, and Vite proxies `/api`, `/ws`, `/oauth`, and `/.well-known`. Setting these variables bakes localhost into the bundle and silently breaks every remote browser.
 
 ## Hit every surface
@@ -78,7 +78,7 @@ The most common defect in this repo is a change that works on the tested path an
 
 - `vp i` installs dependencies. Worktrees get this from the `rove.json` setup script; if module resolution looks broken, it probably did not run.
 - `vp run dev` starts the server and web client. `vp run dev:desktop` starts Electron.
-- In a linked worktree, state defaults to the worktree's gitignored `.rove`. This deliberately outranks an ambient `ROVE_HOME`, so you cannot land on shared state by accident. The main checkout defaults to `~/.rove-code/dev`. An explicit `--home-dir` always wins.
+- In a linked worktree, state defaults to the worktree's gitignored `.paperplane`. This deliberately outranks an ambient `ROVE_HOME`, so you cannot land on shared state by accident. The main checkout defaults to `~/.paperplane/dev`. An explicit `--home-dir` always wins.
 - Ports derive from the worktree path and stay stable across restarts. Occupied ports can shift them, so read the real ports from the `[dev-runner]` line.
 - To share over the tailnet, run `vp run dev --share` in the background, wait for the `pairingUrl:` line, and give that full URL to an unpaired browser. Do not wire up `tailscale serve` by hand, open the URL yourself, or consume the user's pairing link. A browser with the reusable dev cookie can use the bare origin. If a one-time token was consumed, mint a new one with `node apps/server/src/bin.ts pair`. That token has standard scopes. The startup URL has the admin scopes needed for Connections settings.
 - To reuse web dev auth across worktrees, set one fixed `ROVE_DEV_AUTH_TOKEN` in the main checkout's gitignored `.env`. The `rove.json` setup links that file into worktrees. Never commit or publish the token or a startup URL. See [Reusable dev credential](docs/operations/development.md#reusable-dev-credential).
@@ -86,9 +86,9 @@ The most common defect in this repo is a change that works on the tested path an
 
 ## Test data
 
-An empty database is a bad test. Seed your worktree's `.rove` with a copy of real data instead of pointing at live state:
+An empty database is a bad test. Seed your worktree's `.paperplane` with a copy of real data instead of pointing at live state:
 
-- Run `vp run migrate-dev-db` with your dev server stopped. It rebuilds `<worktree>/.rove/userdata/statev2.sqlite` from a read-only snapshot of `~/.rove-code/userdata/statev2.sqlite`, the developer's real data. It keeps recent projects and their stopped threads, and drops scheduled tasks, pending work, and auth sessions, so your dev server never runs the developer's agents. Raise `--projects` and `--threads-per-project` for more data.
+- Run `vp run migrate-dev-db` with your dev server stopped. It rebuilds `<worktree>/.paperplane/userdata/statev2.sqlite` from a read-only snapshot of `~/.paperplane/userdata/statev2.sqlite`, the developer's real data. It keeps recent projects and their stopped threads, and drops scheduled tasks, pending work, and auth sessions, so your dev server never runs the developer's agents. Raise `--projects` and `--threads-per-project` for more data.
 - Refresh `statev2.sqlite`, not `state.sqlite`. The server copies the V1 `state.sqlite` only when `statev2.sqlite` is missing.
 - Bring `secrets` and `settings.json` only if the flow under test needs them.
 - Copy in, never symlink. Data flows one way: into your sandbox, never back out.
@@ -107,7 +107,7 @@ For authorized mobile verification, a missing or outdated native client is a bui
 ## Upstream
 
 - Before fixing something, check whether upstream already fixed it. Port the upstream fix when it fits.
-- Upstream syncs are their own PRs (`chore: sync upstream updates ...`). Preserve Paperplane branding, `@getpaperplane/*` names, `~/.rove-code` paths, and fork-only features such as the Pi provider when resolving conflicts.
+- Upstream syncs are their own PRs (`chore: sync upstream updates ...`). Preserve Paperplane branding, `@getpaperplane/*` names, `~/.paperplane` paths, and fork-only features such as the Pi provider when resolving conflicts.
 - Saved-data, protocol, and native-module identifiers need explicit migrations, not bulk renames. See [Releasing](docs/operations/release.md).
 
 ## Pull requests

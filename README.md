@@ -29,7 +29,7 @@ paperplane pair --tailscale   # or connect over LAN; see remote access docs
 
 **Mobile:** not on the app stores yet. Build the dev client from source and pair it with a host. See the [mobile README](./apps/mobile/README.md).
 
-Installed apps keep their data in `~/.rove-code`. A T3 Code install in `~/.rove` is left alone, and there is no import from it yet.
+Installed apps keep their data in `~/.paperplane`. A T3 Code install in `~/.rove` is left alone, and there is no import from it yet.
 
 ## Run from source
 
