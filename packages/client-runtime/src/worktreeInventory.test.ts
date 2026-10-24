@@ -17,7 +17,7 @@ const entry: WorktreeInventoryEntry = {
 };
 
 describe("worktree inventory presentation", () => {
-  it.each(["  FEATURE/Storage  ", "/worktrees", "rove", "abandoned"])(
+  it.each(["  FEATURE/Storage  ", "/worktrees", "Paperplane", "abandoned"])(
     "finds worktrees by branch, path, project, and archived thread for %s",
     (query) => expect(filterWorktrees([entry], query)).toEqual([entry]),
   );

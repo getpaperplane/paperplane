@@ -3,6 +3,7 @@ import * as NodeServices from "@effect/platform-node/NodeServices";
 import { ProviderInstanceId } from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as Schema from "effect/Schema";
 
 import * as TestProviderHost from "@getpaperplane/provider-testing/TestProviderHost";
 import * as OpenCode2AdapterV2Testkit from "../orchestration-v2/Adapters/OpenCode2AdapterV2.testkit.ts";
@@ -11,6 +12,21 @@ import * as OpenCode2TextGeneration from "@getpaperplane/provider-opencode/serve
 import { OPENCODE2_TITLE_GENERATION } from "./OpenCode2TextGeneration.fixture.ts";
 
 const layer = TestProviderHost.layer().pipe(Layer.provideMerge(NodeServices.layer));
+const SessionCreateFrame = Schema.Struct({
+  type: Schema.Literal("session.create"),
+  input: Schema.Record(Schema.String, Schema.Unknown),
+});
+const titleGenerationReplay = OPENCODE2_TITLE_GENERATION.map((entry) => {
+  if (entry.type !== "expect_outbound" || entry.label !== "session.create") return entry;
+  const frame = Schema.decodeUnknownSync(SessionCreateFrame)(entry.frame);
+  return {
+    ...entry,
+    frame: {
+      ...frame,
+      input: { ...frame.input, title: "<any>" },
+    },
+  };
+});
 
 it.layer(layer)("OpenCode2TextGeneration", (it) => {
   it.effect("generates a title in a temporary session on the free tier and removes it", () =>
@@ -20,7 +36,7 @@ it.layer(layer)("OpenCode2TextGeneration", (it) => {
         protocol: OpenCode2AdapterV2Testkit.OPENCODE2_HTTP_PROTOCOL,
         version: "2.0.18",
         scenario: "opencode2_title_generation",
-        entries: [...OPENCODE2_TITLE_GENERATION, { type: "runtime_exit", status: "success" }],
+        entries: [...titleGenerationReplay, { type: "runtime_exit", status: "success" }],
       });
       const textGeneration = yield* OpenCode2TextGeneration.make().pipe(
         Effect.provideService(OpenCode2Server.OpenCode2Server, server),
@@ -39,7 +55,7 @@ it.layer(layer)("OpenCode2TextGeneration", (it) => {
 
   it.effect("fails at once when the event stream drops before the reply", () =>
     Effect.gen(function* () {
-      const [subscribe, connected, create, created] = OPENCODE2_TITLE_GENERATION;
+      const [subscribe, connected, create, created] = titleGenerationReplay;
       const sessionId = "ses_f0ec85cf6ffebfalpvV2E9nocu";
       const server = yield* OpenCode2AdapterV2Testkit.replayServer({
         provider: "opencode",
@@ -103,7 +119,7 @@ it.layer(layer)("OpenCode2TextGeneration", (it) => {
 
   it.effect("keeps a provider's own error message out of the caller-visible detail", () =>
     Effect.gen(function* () {
-      const [subscribe, connected, create, created] = OPENCODE2_TITLE_GENERATION;
+      const [subscribe, connected, create, created] = titleGenerationReplay;
       const sessionId = "ses_f0ec85cf6ffebfalpvV2E9nocu";
       // The spike's `text_generation` recording: a deny-all session is refused this way.
       const refusal = {
@@ -187,7 +203,7 @@ it.layer(layer)("OpenCode2TextGeneration", (it) => {
 
   it.effect("ends at once on an execution end this build cannot decode", () =>
     Effect.gen(function* () {
-      const [subscribe, connected, create, created] = OPENCODE2_TITLE_GENERATION;
+      const [subscribe, connected, create, created] = titleGenerationReplay;
       const sessionId = "ses_f0ec85cf6ffebfalpvV2E9nocu";
       const server = yield* OpenCode2AdapterV2Testkit.replayServer({
         provider: "opencode",

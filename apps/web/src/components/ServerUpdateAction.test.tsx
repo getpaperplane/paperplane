@@ -173,7 +173,7 @@ describe("ServerUpdateAction", () => {
       { kind: "npm-global", prefix: "/opt/node" },
       "npm install --global --prefix '/opt/node' @getpaperplane/cli@0.0.45",
       "Update command copied",
-      "then restart rove",
+      "then restart paperplane",
     ],
     [
       { kind: "npx" },

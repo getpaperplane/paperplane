@@ -164,7 +164,7 @@ describe("ssh tunnel scripts", () => {
       ...ARCHIVE,
       releaseBaseUrl: "https://mirror.example/rove/",
     });
-    assert.include(launch, "ROVE_RELEASE_BASE_URL='https://mirror.example/paperplane'");
+    assert.include(launch, "ROVE_RELEASE_BASE_URL='https://mirror.example/rove'");
     assert.include(launch, '"$RUNNER_FILE" __ssh-helper wait-service "$DEFAULT_RUNTIME_FILE"');
     assert.include(launch, '"$RUNNER_FILE" __ssh-helper runtime-port "$DEFAULT_RUNTIME_FILE"');
     assert.include(SshTunnel.buildRemoteLaunchScript(NODE_SCRIPT), "ROVE_ARCHIVE_MODE=0");
