@@ -8,7 +8,11 @@ import * as NodeModule from "node:module";
 import type { DataType } from "ffi-rs";
 import * as Schema from "effect/Schema";
 import * as Effect from "effect/Effect";
-import { migrateStoredClientValue } from "./clientMigration.ts";
+import {
+  migrateSavedAppJson,
+  migrateStoredClientValue,
+  rewriteSavedLinks,
+} from "./clientMigration.ts";
 
 const requireNative = NodeModule.createRequire(import.meta.url);
 
@@ -505,6 +509,7 @@ export function migrateDefaultHome(input: {
                 copyEntry(source, stagedHome, entry, progress);
             },
           },
+          rewriteSavedDataStep,
           ...(input.steps ?? []),
         ];
         for (const step of pipeline) {
@@ -546,6 +551,101 @@ export function migrateDefaultHome(input: {
     guard.close();
   }
 }
+
+// Phase 3b-2: all server-side saved-data conversions are confined to this deletable pipeline.
+const quoteSqlIdentifier = (name: string) => `"${name.replaceAll('"', '""')}"`;
+const decodeJson = Schema.decodeUnknownSync(Schema.fromJsonString(Schema.Json));
+
+/** Enumerate the staged schema, including V1, V2, outbox, attachments, PR and future JSON columns. */
+export function rewriteStagedDatabase(
+  path: string,
+): { table: string; column: string; rows: number }[] {
+  const database = new NodeSqlite.DatabaseSync(path);
+  const changed: { table: string; column: string; rows: number }[] = [];
+  try {
+    database.function("paperplane_links", (value) => {
+      if (typeof value !== "string") return value;
+      const next = migrateSavedAppJson(value);
+      return typeof next === "string" ? next : value;
+    });
+    database.function("paperplane_json", (value) => {
+      if (typeof value !== "string") return value;
+      try {
+        return JSON.stringify(migrateSavedAppJson(decodeJson(value)));
+      } catch {
+        return rewriteSavedLinks(value);
+      }
+    });
+    database.exec("BEGIN IMMEDIATE");
+    const tables = database
+      .prepare("SELECT name FROM sqlite_schema WHERE type = 'table' AND name NOT LIKE 'sqlite_%'")
+      .all();
+    for (const table of tables) {
+      if (typeof table.name !== "string") continue;
+      const name = quoteSqlIdentifier(table.name);
+      for (const column of database.prepare(`PRAGMA table_xinfo(${name})`).all()) {
+        if (typeof column.name !== "string" || column.hidden !== 0) continue;
+        const field = quoteSqlIdentifier(column.name);
+        const transform = column.name.endsWith("_json") ? "paperplane_json" : "paperplane_links";
+        const result = database
+          .prepare(
+            `UPDATE ${name} SET ${field} = ${transform}(${field}) WHERE typeof(${field}) = 'text' AND instr(lower(${field}), 'rove') > 0 AND ${field} != ${transform}(${field})`,
+          )
+          .run();
+        if (result.changes)
+          changed.push({ table: table.name, column: column.name, rows: Number(result.changes) });
+      }
+    }
+    database.exec("COMMIT");
+    return changed;
+  } finally {
+    database.close();
+  }
+}
+
+const savedJsonFiles = new Set([
+  "settings.json",
+  "desktop-settings.json",
+  "client-settings.json",
+  "saved-environments.json",
+  "connection-catalog.json",
+  "model-manifest.json",
+  "service-config.json",
+  "service-state.json",
+]);
+
+export const rewriteSavedDataStep: HomeMigrationStep = {
+  name: "paperplane-saved-data",
+  run: (stagedHome) => {
+    const visit = (directory: string) => {
+      for (const entry of NodeFS.readdirSync(directory, { withFileTypes: true })) {
+        const path = NodePath.join(directory, entry.name);
+        if (entry.isDirectory()) {
+          // Browser profiles, provider credentials, logs and attachment bytes are opaque.
+          if (
+            ![
+              "browser",
+              "browser-profiles",
+              "secrets",
+              "logs",
+              "attachments",
+              "providers",
+            ].includes(entry.name)
+          )
+            visit(path);
+        } else if (entry.isFile() && isDatabase(path)) {
+          rewriteStagedDatabase(path);
+        } else if (entry.isFile() && savedJsonFiles.has(entry.name)) {
+          const raw = NodeFS.readFileSync(path, "utf8");
+          // Invalid app-owned JSON fails the stage instead of silently publishing unmigrated data.
+          const next = JSON.stringify(migrateSavedAppJson(decodeJson(raw)), null, 2) + "\n";
+          if (next !== raw) NodeFS.writeFileSync(path, next);
+        }
+      }
+    };
+    visit(stagedHome);
+  },
+};
 
 /** Read old Chromium origins without registering them or opening their profile in Electron. */
 export function prepareDesktopStorageMigration<E, R>(input: {

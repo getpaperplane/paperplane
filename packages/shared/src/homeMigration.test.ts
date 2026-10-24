@@ -120,7 +120,7 @@ describe("default home migration", () => {
     expect(rows()).toEqual(["hello"]);
     expect(
       NodeFS.readFileSync(NodePath.join(destination, "userdata", "settings.json"), "utf8"),
-    ).toBe('{"theme":"dark"}');
+    ).toBe('{\n  "theme": "dark"\n}\n');
     expect(
       JSON.parse(NodeFS.readFileSync(NodePath.join(destination, HOME_MIGRATION_REPORT), "utf8")),
     ).toMatchObject({
@@ -128,7 +128,7 @@ describe("default home migration", () => {
       destination,
       copied: ["userdata"],
       databases: ["userdata/statev2.sqlite"],
-      steps: ["copy-user-state"],
+      steps: ["copy-user-state", "paperplane-saved-data"],
     });
     expect(messages[0]).toContain("The old home is kept as a backup");
     const before = snapshot(destination);
