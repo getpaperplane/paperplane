@@ -465,16 +465,16 @@ fi
 # Self-contained release archive: no Node, npm, or compiler on the remote.
 # Unpacked into the pinned-runtime layout so \`paperplane service install\` reuses it.
 ROVE_RELEASE_BASE_URL=@@ROVE_RELEASE_BASE_URL@@
-ROVE_RUNTIME_DIR="$HOME/.rove-code/runtime/versions/$ROVE_ARCHIVE_VERSION"
+ROVE_RUNTIME_DIR="$HOME/.paperplane/runtime/versions/$ROVE_ARCHIVE_VERSION"
 rove_runtime_ready() {
   [ -x "$ROVE_RUNTIME_DIR/paperplane" ] && [ "$(cat "$ROVE_RUNTIME_DIR/.install-complete" 2>/dev/null)" = "$ROVE_ARCHIVE_VERSION" ]
 }
 if ! rove_runtime_ready; then
-  mkdir -p "$HOME/.rove-code/runtime/versions"
+  mkdir -p "$HOME/.paperplane/runtime/versions"
   # Concurrent launches (two clients, a retry racing a slow first run) must
   # not both install: mkdir is the atomic lock and the ready check repeats
   # under it.
-  ROVE_LOCK="$HOME/.rove-code/runtime/versions/.$ROVE_ARCHIVE_VERSION.install.lock"
+  ROVE_LOCK="$HOME/.paperplane/runtime/versions/.$ROVE_ARCHIVE_VERSION.install.lock"
   # mkdir is the only portable atomic exclusive create (mv would silently
   # nest a candidate inside an existing lock). The owner publishes its pid
   # right after, so a lock with a live owner is never reclaimed however
@@ -521,7 +521,7 @@ if ! rove_runtime_ready; then
     *) printf 'Remote host %s has no paperplane release archive.\\n' "$(uname -m)" >&2; exit 1 ;;
   esac
   ROVE_ARCHIVE="rove-$ROVE_ARCHIVE_VERSION-$ROVE_PLATFORM-$ROVE_ARCH.tar.gz"
-  ROVE_STAGING="$(mktemp -d "$HOME/.rove-code/runtime/versions/.staging-XXXXXX")"
+  ROVE_STAGING="$(mktemp -d "$HOME/.paperplane/runtime/versions/.staging-XXXXXX")"
   trap 'rm -rf "$ROVE_STAGING" "$ROVE_LOCK"' EXIT
   rove_fetch() {
     if command -v curl >/dev/null 2>&1; then curl -fsSL --connect-timeout 30 --max-time "$3" "$1" -o "$2"
@@ -559,10 +559,12 @@ exec "$ROVE_RUNTIME_DIR/paperplane" "$@"
 `;
 
 const REMOTE_LAUNCH_SCRIPT = `set -eu
+# This connection always uses the remote default home. Let startup migrate it.
+unset ROVE_HOME
 @@ROVE_NODE_ENV_SCRIPT@@
 STATE_KEY="$1"
-STATE_DIR="$HOME/.rove-code/ssh-launch/$STATE_KEY"
-DEFAULT_SERVER_HOME="$HOME/.rove-code"
+STATE_DIR="$HOME/.paperplane/ssh-launch/$STATE_KEY"
+DEFAULT_SERVER_HOME="$HOME/.paperplane"
 DEFAULT_RUNTIME_FILE="$DEFAULT_SERVER_HOME/userdata/server-runtime.json"
 PORT_FILE="$STATE_DIR/port"
 PID_FILE="$STATE_DIR/pid"
@@ -736,7 +738,7 @@ if [ -z "$REMOTE_PORT" ]; then
     fi
     exit 1
   fi
-  nohup env ROVE_NO_BROWSER=1 "$RUNNER_FILE" serve --host 127.0.0.1 --port "$REMOTE_PORT" --base-dir "$DEFAULT_SERVER_HOME" >>"$LOG_FILE" 2>&1 < /dev/null &
+  nohup env ROVE_NO_BROWSER=1 "$RUNNER_FILE" serve --host 127.0.0.1 --port "$REMOTE_PORT" >>"$LOG_FILE" 2>&1 < /dev/null &
   REMOTE_PID="$!"
   printf '%s\\n' "$REMOTE_PID" >"$PID_FILE"
   printf '%s\\n' "$REMOTE_PORT" >"$PORT_FILE"
@@ -758,10 +760,12 @@ printf '{"remotePort":%s,"serverKind":"%s"}\\n' "$REMOTE_PORT" "\${REMOTE_MANAGE
 `;
 
 const REMOTE_SERVICE_LAUNCH_SCRIPT = `set -eu
+# This connection always uses the remote default home. Let startup migrate it.
+unset ROVE_HOME
 @@ROVE_NODE_ENV_SCRIPT@@
 STATE_KEY="$1"
-STATE_DIR="$HOME/.rove-code/ssh-launch/$STATE_KEY"
-DEFAULT_SERVER_HOME="$HOME/.rove-code"
+STATE_DIR="$HOME/.paperplane/ssh-launch/$STATE_KEY"
+DEFAULT_SERVER_HOME="$HOME/.paperplane"
 DEFAULT_RUNTIME_FILE="$DEFAULT_SERVER_HOME/userdata/server-runtime.json"
 RUNNER_FILE="$STATE_DIR/run-rove.sh"
 mkdir -p "$STATE_DIR"
@@ -773,10 +777,10 @@ chmod 700 "$RUNNER_FILE"
 ensure_remote_node_path >/dev/null 2>&1 || true
 RUNTIME_INFO="$("$RUNNER_FILE" __ssh-helper runtime-port "$DEFAULT_RUNTIME_FILE" --service 2>/dev/null || true)"
 if [ -z "$RUNTIME_INFO" ] || ! "$RUNNER_FILE" __ssh-helper wait-ready "\${RUNTIME_INFO#* }" "@@ROVE_REUSE_READY_TIMEOUT_MS@@" "@@ROVE_READY_PROBE_TIMEOUT_MS@@"; then
-  SERVICE_STATUS="$("$RUNNER_FILE" service status --base-dir "$DEFAULT_SERVER_HOME" --json)"
+  SERVICE_STATUS="$("$RUNNER_FILE" service status --json)"
   case "$SERVICE_STATUS" in
-    *'"installed":true'*) "$RUNNER_FILE" service restart --base-dir "$DEFAULT_SERVER_HOME" >&2 ;;
-    *) "$RUNNER_FILE" service install --base-dir "$DEFAULT_SERVER_HOME" >&2 ;;
+    *'"installed":true'*) "$RUNNER_FILE" service restart >&2 ;;
+    *) "$RUNNER_FILE" service install >&2 ;;
   esac
   if ! RUNTIME_INFO="$("$RUNNER_FILE" __ssh-helper wait-service "$DEFAULT_RUNTIME_FILE" "@@ROVE_READY_TIMEOUT_MS@@" "@@ROVE_READY_PROBE_TIMEOUT_MS@@")"; then
     printf 'The persistent Paperplane service did not become ready. Run paperplane service status and paperplane triage on the host. SSH requires a loopback-reachable server.\\n' >&2
@@ -791,20 +795,20 @@ printf '{"remotePort":%s,"serverKind":"external"}\\n' "$REMOTE_PORT"
 `;
 
 const REMOTE_PAIRING_SCRIPT = `set -eu
-STATE_DIR="$HOME/.rove-code/ssh-launch/@@ROVE_STATE_KEY@@"
-DEFAULT_SERVER_HOME="$HOME/.rove-code"
+# This connection always uses the remote default home. Let startup migrate it.
+unset ROVE_HOME
+STATE_DIR="$HOME/.paperplane/ssh-launch/@@ROVE_STATE_KEY@@"
 RUNNER_FILE="$STATE_DIR/run-rove.sh"
 mkdir -p "$STATE_DIR"
 cat >"$RUNNER_FILE" <<'SH'
 @@ROVE_RUNNER_SCRIPT@@
 SH
 chmod 700 "$RUNNER_FILE"
-PAIRING_BASE_DIR="$DEFAULT_SERVER_HOME"
-"$RUNNER_FILE" auth pairing create --base-dir "$PAIRING_BASE_DIR" --json
+"$RUNNER_FILE" auth pairing create --json
 `;
 
 const REMOTE_STOP_SCRIPT = `set -eu
-STATE_DIR="$HOME/.rove-code/ssh-launch/@@ROVE_STATE_KEY@@"
+STATE_DIR="$HOME/.paperplane/ssh-launch/@@ROVE_STATE_KEY@@"
 PID_FILE="$STATE_DIR/pid"
 PORT_FILE="$STATE_DIR/port"
 MANAGED_FILE="$STATE_DIR/managed"
@@ -827,7 +831,7 @@ printf '{"stopped":true}\\n'
 `;
 
 const REMOTE_LOG_TAIL_SCRIPT = `set -eu
-STATE_DIR="$HOME/.rove-code/ssh-launch/@@ROVE_STATE_KEY@@"
+STATE_DIR="$HOME/.paperplane/ssh-launch/@@ROVE_STATE_KEY@@"
 LOG_FILE="$STATE_DIR/server.log"
 if [ -f "$LOG_FILE" ]; then
   tail -n 80 "$LOG_FILE" 2>/dev/null || true

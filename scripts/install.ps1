@@ -7,7 +7,7 @@
 #   ROVE_CHANNEL           release train to follow: stable, nightly, or preview
 #                            (default: stable; preview is a maintainers' test train)
 #   ROVE_VERSION           exact version to install (overrides ROVE_CHANNEL)
-#   ROVE_HOME              Paperplane home directory (default: ~\.rove-code)
+#   ROVE_HOME              Paperplane home directory (default: ~\.paperplane)
 #   ROVE_INSTALL_BIN_DIR   where paperplane.cmd is linked (default: ~\.local\bin)
 #   ROVE_RELEASE_BASE_URL  mirror for releases/download (default: GitHub)
 #
@@ -18,7 +18,7 @@ $ErrorActionPreference = "Stop"
 
 $repo = "hafiezul/rove"
 $baseUrl = if ($env:ROVE_RELEASE_BASE_URL) { $env:ROVE_RELEASE_BASE_URL.TrimEnd("/") } else { "https://github.com/$repo/releases/download" }
-$roveHome = if ($env:ROVE_HOME) { $env:ROVE_HOME } else { Join-Path $HOME ".rove-code" }
+$roveHome = if ($env:ROVE_HOME) { $env:ROVE_HOME } else { Join-Path $HOME ".paperplane" }
 $binDir = if ($env:ROVE_INSTALL_BIN_DIR) { $env:ROVE_INSTALL_BIN_DIR } else { Join-Path $HOME ".local\bin" }
 
 function Fail([string] $message) {

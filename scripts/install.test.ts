@@ -10,11 +10,17 @@ import { describe, expect, it } from "vite-plus/test";
 
 // util-linux's script gives the real installer a terminal without a browser or extra packages.
 describe.skipIf(HostProcess.Platform.defaultValue() !== "linux")("installer terminal", () => {
-  it.each([false, true])(
-    "preserves download and install behavior (HTTP failure: %s)",
-    async (fail) => {
+  it.each([
+    { fail: false, explicitHome: true },
+    { fail: false, explicitHome: false },
+    { fail: true, explicitHome: true },
+  ])(
+    "preserves download and install behavior (HTTP failure: $fail, explicit home: $explicitHome)",
+    async ({ fail, explicitHome }) => {
       const root = await NodeFSP.mkdtemp(NodePath.join(NodeOS.tmpdir(), "rove-install-progress-"));
       const version = "1.2.3";
+      const homeDirectory = NodePath.join(root, "user");
+      await NodeFSP.mkdir(homeDirectory);
       const stem = `rove-${version}-linux-${HostProcess.Architecture.defaultValue()}`;
       const archiveName = `${stem}.tar.gz`;
       let resumeDownload: (() => void) | undefined;
@@ -64,8 +70,9 @@ describe.skipIf(HostProcess.Platform.defaultValue() !== "linux")("installer term
           ...process.env,
           TERM: "xterm",
           NO_COLOR: "1",
+          HOME: homeDirectory,
           ROVE_VERSION: version,
-          ROVE_HOME: NodePath.join(root, "home"),
+          ROVE_HOME: explicitHome ? NodePath.join(root, "home") : "",
           ROVE_INSTALL_BIN_DIR: NodePath.join(root, "bin"),
           ROVE_RELEASE_BASE_URL: `http://127.0.0.1:${address.port}`,
         },
@@ -85,7 +92,10 @@ describe.skipIf(HostProcess.Platform.defaultValue() !== "linux")("installer term
           child.on("error", reject);
           child.on("close", resolve);
         });
-        const versions = NodePath.join(root, "home/runtime/versions");
+        const versions = NodePath.join(
+          explicitHome ? NodePath.join(root, "home") : NodePath.join(homeDirectory, ".paperplane"),
+          "runtime/versions",
+        );
         if (fail) {
           expect(code).not.toBe(0);
           expect(output).toContain("500");

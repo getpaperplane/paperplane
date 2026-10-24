@@ -16,29 +16,39 @@ import { fixPath, hydratePosixHome, resolveBaseDir } from "./os-jank.ts";
 
 vi.mock("node:child_process", { spy: true });
 
-it("migrates the CLI and bundled server default before resolving their home", async () => {
-  const homeDirectory = NodeFS.mkdtempSync(
-    NodePath.join(NodeOS.tmpdir(), "paperplane-server-home-"),
-  );
-  try {
-    const oldState = NodePath.join(homeDirectory, ".rove-code", "userdata");
-    NodeFS.mkdirSync(oldState, { recursive: true });
-    NodeFS.writeFileSync(NodePath.join(oldState, "settings.json"), '{"theme":"dark"}');
-    const baseDir = await Effect.runPromise(
-      resolveBaseDir(undefined).pipe(
-        Effect.provideService(HostProcess.HomeDirectory, homeDirectory),
-        Effect.provide(NodeServices.layer),
-      ),
+it.each(["runtime", "ssh-launch", "bin"])(
+  "migrates the server default after %s was created",
+  async (entry) => {
+    const homeDirectory = NodeFS.mkdtempSync(
+      NodePath.join(NodeOS.tmpdir(), "paperplane-server-home-"),
     );
-    assert.equal(baseDir, NodePath.join(homeDirectory, ".paperplane"));
-    assert.equal(
-      NodeFS.readFileSync(NodePath.join(baseDir, "userdata", "settings.json"), "utf8"),
-      '{"theme":"dark"}',
-    );
-  } finally {
-    NodeFS.rmSync(homeDirectory, { recursive: true, force: true });
-  }
-});
+    try {
+      const oldState = NodePath.join(homeDirectory, ".rove-code", "userdata");
+      NodeFS.mkdirSync(oldState, { recursive: true });
+      NodeFS.writeFileSync(NodePath.join(oldState, "settings.json"), '{"theme":"dark"}');
+      const precreated = NodePath.join(homeDirectory, ".paperplane", entry);
+      NodeFS.mkdirSync(precreated, { recursive: true });
+      NodeFS.writeFileSync(NodePath.join(precreated, "keep"), "new runtime or launch script");
+      const baseDir = await Effect.runPromise(
+        resolveBaseDir(undefined).pipe(
+          Effect.provideService(HostProcess.HomeDirectory, homeDirectory),
+          Effect.provide(NodeServices.layer),
+        ),
+      );
+      assert.equal(baseDir, NodePath.join(homeDirectory, ".paperplane"));
+      assert.equal(
+        NodeFS.readFileSync(NodePath.join(baseDir, "userdata", "settings.json"), "utf8"),
+        '{"theme":"dark"}',
+      );
+      assert.equal(
+        NodeFS.readFileSync(NodePath.join(precreated, "keep"), "utf8"),
+        "new runtime or launch script",
+      );
+    } finally {
+      NodeFS.rmSync(homeDirectory, { recursive: true, force: true });
+    }
+  },
+);
 
 it("does not migrate for an explicit CLI home or disposable development state", async () => {
   const homeDirectory = NodeFS.mkdtempSync(

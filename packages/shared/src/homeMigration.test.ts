@@ -136,24 +136,190 @@ describe("default home migration", () => {
     expect(snapshot(destination)).toEqual(before);
   });
 
-  it.each(["empty", "populated", "file", "symlink"])(
-    "never replaces an existing %s destination",
-    (kind) => {
+  it.each(["file", "symlink"])("never replaces an existing %s destination", (kind) => {
+    seed();
+    if (kind === "file") NodeFS.writeFileSync(destination, "keep");
+    else if (kind === "symlink")
+      NodeFS.symlinkSync(NodePath.join(homeDirectory, "missing"), destination);
+    const before = NodeFS.lstatSync(destination);
+    expect(migrate()).toEqual({ kind: "skipped", reason: "destination-exists" });
+    expect(NodeFS.lstatSync(destination).ino).toBe(before.ino);
+    expect(NodeFS.existsSync(NodePath.join(homeDirectory, ".paperplane-migration.sqlite"))).toBe(
+      false,
+    );
+  });
+
+  it.each(["", "runtime", "ssh-launch", "bin", "tools", "caches", "wsl-runtime", "device"])(
+    "migrates into a home pre-created with %s and keeps its contents",
+    (entry) => {
       seed();
-      if (kind === "file") NodeFS.writeFileSync(destination, "keep");
-      else if (kind === "symlink")
-        NodeFS.symlinkSync(NodePath.join(homeDirectory, "missing"), destination);
-      else {
-        NodeFS.mkdirSync(destination);
-        if (kind === "populated")
-          NodeFS.writeFileSync(NodePath.join(destination, "keep"), "existing");
+      NodeFS.mkdirSync(NodePath.join(destination, entry), { recursive: true });
+      if (entry) {
+        NodeFS.writeFileSync(NodePath.join(destination, entry, "new"), "keep new state");
+        NodeFS.mkdirSync(NodePath.join(source, entry));
+        NodeFS.writeFileSync(NodePath.join(source, entry, "old"), "obsolete cache or runner");
       }
-      const before = NodeFS.lstatSync(destination);
+      const before = entry ? snapshot(NodePath.join(destination, entry)) : [];
+      expect(migrate().kind).toBe("migrated");
+      expect(rows()).toEqual(["hello"]);
+      if (entry) expect(snapshot(NodePath.join(destination, entry))).toEqual(before);
+      const complete = snapshot(destination);
       expect(migrate()).toEqual({ kind: "skipped", reason: "destination-exists" });
-      expect(NodeFS.lstatSync(destination).ino).toBe(before.ino);
-      expect(NodeFS.existsSync(NodePath.join(homeDirectory, ".paperplane-migration.sqlite"))).toBe(
+      expect(snapshot(destination)).toEqual(complete);
+    },
+  );
+
+  it("records that the old home was not migrated when the destination already has userdata", () => {
+    seed();
+    NodeFS.mkdirSync(NodePath.join(destination, "userdata"), { recursive: true });
+    const db = new NodeSqlite.DatabaseSync(
+      NodePath.join(destination, "userdata", "statev2.sqlite"),
+    );
+    db.exec("CREATE TABLE messages (text TEXT); INSERT INTO messages VALUES ('new install');");
+    db.close();
+    const before = snapshot(NodePath.join(destination, "userdata"));
+    const outcome = migrate();
+    expect(outcome).toMatchObject({
+      kind: "skipped",
+      reason: "destination-userdata-exists",
+      report: { status: "skipped", source, destination, copied: [], databases: [] },
+    });
+    expect(
+      JSON.parse(NodeFS.readFileSync(NodePath.join(destination, HOME_MIGRATION_REPORT), "utf8")),
+    ).toMatchObject({
+      status: "skipped",
+      reason: "destination-userdata-exists",
+      source,
+      destination,
+    });
+    expect(rows()).toEqual(["new install"]);
+    expect(snapshot(NodePath.join(destination, "userdata"))).toEqual(before);
+    const complete = snapshot(destination);
+    expect(migrate()).toEqual({ kind: "skipped", reason: "destination-exists" });
+    expect(snapshot(destination)).toEqual(complete);
+  });
+
+  it("keeps existing unknown entries and records only entries actually copied", () => {
+    seed();
+    for (const root of [source, destination]) {
+      NodeFS.mkdirSync(NodePath.join(root, "future-state"), { recursive: true });
+      NodeFS.writeFileSync(NodePath.join(root, "future-state", "keep"), root);
+    }
+    const outcome = migrate();
+    expect(outcome).toMatchObject({
+      kind: "migrated",
+      report: {
+        copied: ["userdata"],
+        skipped: [{ path: "future-state", reason: expect.stringContaining("left untouched") }],
+      },
+    });
+    expect(NodeFS.readFileSync(NodePath.join(destination, "future-state", "keep"), "utf8")).toBe(
+      destination,
+    );
+    expect(rows()).toEqual(["hello"]);
+  });
+
+  // Instrument the real native rename in a separate process. Exiting just
+  // after it succeeds leaves both SQLite locks and the stage as a crash would.
+  function publishInChild(interruptAt: string) {
+    return NodeChildProcess.spawnSync(
+      process.execPath,
+      [
+        "--input-type=module",
+        "-e",
+        `
+      import fs from 'node:fs';
+      import path from 'node:path';
+      import { createRequire } from 'node:module';
+      const migrationUrl = process.argv[2];
+      const ffi = createRequire(migrationUrl)('ffi-rs');
+      const nativeLoad = ffi.load;
+      const destination = path.join(process.argv[1], '.paperplane');
+      ffi.load = function(options) {
+        const target = options.paramsValue[options.paramsValue.length - 2];
+        const name = path.basename(String(target));
+        if (String(target).startsWith(destination + path.sep)) {
+          if (fs.existsSync(path.join(destination, 'home-migration.json'))) throw Error('report published early');
+          if (name === 'home-migration.json' && (!fs.existsSync(path.join(destination, 'userdata', 'statev2.sqlite')) || !fs.existsSync(path.join(destination, 'extra')))) throw Error('incomplete publication');
+        }
+        const result = nativeLoad(options);
+        if (String(target).startsWith(destination + path.sep) && !fs.existsSync(options.paramsValue[options.paramsValue.length - 4] ?? options.paramsValue[0])) {
+          process.stdout.write(name + '\\n');
+          if (name === process.argv[3]) process.exit(37);
+        }
+        return result;
+      };
+      const { migrateDefaultHome } = await import(migrationUrl);
+      migrateDefaultHome({ homeDirectory: process.argv[1], log: () => {} });`,
+        homeDirectory,
+        new URL("./homeMigration.ts", import.meta.url).href,
+        interruptAt,
+      ],
+      { encoding: "utf8", timeout: 10_000 },
+    );
+  }
+
+  it("publishes the report only after every entry in a pre-created home", () => {
+    seed();
+    NodeFS.mkdirSync(destination);
+    NodeFS.writeFileSync(NodePath.join(source, "extra"), "more user state");
+    const child = publishInChild("");
+    expect(child.status, child.stderr).toBe(0);
+    expect(child.stdout.trim().split("\n")).toEqual(["userdata", "extra", HOME_MIGRATION_REPORT]);
+    expect(rows()).toEqual(["hello"]);
+  });
+
+  it.each(["userdata", "extra"])(
+    "resumes after a crash publishing %s without recopying or overwriting newer data",
+    (interruptAt) => {
+      seed();
+      NodeFS.mkdirSync(NodePath.join(destination, "runtime"), { recursive: true });
+      NodeFS.writeFileSync(NodePath.join(source, "extra"), "prepared state");
+      NodeFS.writeFileSync(NodePath.join(source, "last"), "publish on retry");
+      const child = publishInChild(interruptAt);
+      expect(child.status, child.stderr).toBe(37);
+      expect(NodeFS.existsSync(NodePath.join(destination, HOME_MIGRATION_REPORT))).toBe(false);
+      const db = new NodeSqlite.DatabaseSync(
+        NodePath.join(destination, "userdata", "statev2.sqlite"),
+      );
+      db.exec("INSERT INTO messages VALUES ('new Paperplane write');");
+      db.close();
+      // The retry must use the prepared snapshot, even if the source changes.
+      NodeFS.writeFileSync(NodePath.join(source, "extra"), "changed after snapshot");
+      NodeFS.writeFileSync(NodePath.join(destination, "last"), "new file before retry");
+      if (interruptAt === "extra")
+        NodeFS.writeFileSync(NodePath.join(destination, "extra"), "new Paperplane file");
+      expect(
+        migrate([
+          {
+            name: "must-not-run-again",
+            run: () => {
+              throw new Error("recopied");
+            },
+          },
+        ]).kind,
+      ).toBe("migrated");
+      expect(rows()).toEqual(["hello", "new Paperplane write"]);
+      expect(NodeFS.readFileSync(NodePath.join(destination, "extra"), "utf8")).toBe(
+        interruptAt === "extra" ? "new Paperplane file" : "prepared state",
+      );
+      expect(NodeFS.readFileSync(NodePath.join(destination, "last"), "utf8")).toBe(
+        "new file before retry",
+      );
+      expect(
+        JSON.parse(NodeFS.readFileSync(NodePath.join(destination, HOME_MIGRATION_REPORT), "utf8")),
+      ).toMatchObject({
+        status: "migrated",
+        copied: ["extra", "userdata"],
+        skipped: [{ path: "last", reason: expect.stringContaining("left untouched") }],
+      });
+      expect(NodeFS.readdirSync(destination).sort()).toEqual(
+        ["extra", HOME_MIGRATION_REPORT, "last", "runtime", "userdata"].sort(),
+      );
+      expect(NodeFS.existsSync(NodePath.join(homeDirectory, ".paperplane-migration-stage"))).toBe(
         false,
       );
+      expect(migrate()).toEqual({ kind: "skipped", reason: "destination-exists" });
     },
   );
 
@@ -238,6 +404,7 @@ describe("default home migration", () => {
       "bin",
       "ssh-launch",
       "wsl-runtime",
+      "device",
       "userdata/agent-pids",
       "userdata/agent-hook",
       "userdata/opencode-servers",
@@ -348,12 +515,26 @@ describe("default home migration", () => {
     expect(rows()).toEqual(["hello"]);
   });
 
-  it("preserves a destination that appears while transformations run", () => {
+  it("migrates into an empty destination that appears while transformations run", () => {
     seed();
     expect(
       migrate([{ name: "destination-created", run: () => NodeFS.mkdirSync(destination) }]),
-    ).toEqual({ kind: "skipped", reason: "destination-exists" });
-    expect(NodeFS.readdirSync(destination)).toEqual([]);
+    ).toMatchObject({ kind: "migrated" });
+    expect(rows()).toEqual(["hello"]);
+  });
+
+  it("records a skip when userdata appears while transformations run", () => {
+    seed();
+    expect(
+      migrate([
+        {
+          name: "new-install",
+          run: () => NodeFS.mkdirSync(NodePath.join(destination, "userdata"), { recursive: true }),
+        },
+      ]),
+    ).toMatchObject({ kind: "skipped", reason: "destination-userdata-exists" });
+    expect(NodeFS.readdirSync(NodePath.join(destination, "userdata"))).toEqual([]);
+    expect(NodeFS.existsSync(NodePath.join(destination, HOME_MIGRATION_REPORT))).toBe(true);
   });
 
   it("leaves every source byte and permission unchanged", () => {
@@ -363,6 +544,24 @@ describe("default home migration", () => {
     migrate();
     expect(snapshot(source)).toEqual(before);
   });
+
+  // oxlint-disable-next-line paperplane/no-global-process-runtime -- Native file permission semantics depend on the host OS.
+  it.skipIf(NodeOS.platform() === "win32").each([false, true])(
+    "migrates a read-only source home root (destination exists: %s)",
+    (destinationExists) => {
+      seed();
+      if (destinationExists) NodeFS.mkdirSync(destination, { mode: 0o700 });
+      NodeFS.chmodSync(source, 0o500);
+      try {
+        expect(migrate().kind).toBe("migrated");
+        expect(rows()).toEqual(["hello"]);
+        expect(NodeFS.statSync(destination).mode & 0o777).toBe(destinationExists ? 0o700 : 0o500);
+      } finally {
+        NodeFS.chmodSync(source, 0o700);
+        if (NodeFS.existsSync(destination)) NodeFS.chmodSync(destination, 0o700);
+      }
+    },
+  );
 
   // oxlint-disable-next-line paperplane/no-global-process-runtime -- Native file permission semantics depend on the host OS.
   it.skipIf(NodeOS.platform() === "win32")(

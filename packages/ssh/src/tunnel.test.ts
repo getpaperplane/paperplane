@@ -114,7 +114,7 @@ describe("ssh tunnel scripts", () => {
     );
     assert.include(
       script,
-      'ROVE_RUNTIME_DIR="$HOME/.rove-code/runtime/versions/$ROVE_ARCHIVE_VERSION"',
+      'ROVE_RUNTIME_DIR="$HOME/.paperplane/runtime/versions/$ROVE_ARCHIVE_VERSION"',
     );
     assert.include(
       script,
@@ -130,7 +130,7 @@ describe("ssh tunnel scripts", () => {
     // the completion marker after acquiring it.
     assert.include(
       script,
-      'ROVE_LOCK="$HOME/.rove-code/runtime/versions/.$ROVE_ARCHIVE_VERSION.install.lock"',
+      'ROVE_LOCK="$HOME/.paperplane/runtime/versions/.$ROVE_ARCHIVE_VERSION.install.lock"',
     );
     // mkdir is the exclusive create; the pid follows atomically. A dead owner
     // is reclaimed at once, a never-published owner after a short grace.
@@ -243,8 +243,10 @@ describe("ssh tunnel scripts", () => {
 
   it("provisions a persistent service for release SSH connections", () => {
     const launch = SshTunnel.buildRemoteLaunchScript(ARCHIVE);
-    assert.include(launch, 'service install --base-dir "$DEFAULT_SERVER_HOME"');
-    assert.include(launch, 'service restart --base-dir "$DEFAULT_SERVER_HOME"');
+    assert.notInclude(launch, "--base-dir");
+    assert.include(launch, "unset ROVE_HOME");
+    assert.include(launch, "service install >&2");
+    assert.include(launch, "service restart >&2");
     assert.include(launch, '__ssh-helper runtime-port "$DEFAULT_RUNTIME_FILE" --service');
     assert.include(launch, '__ssh-helper wait-service "$DEFAULT_RUNTIME_FILE"');
     assert.include(launch, '"serverKind":"external"');
@@ -279,7 +281,8 @@ describe("ssh tunnel scripts", () => {
     assert.include(launch, 'kill "$REMOTE_PID" 2>/dev/null || true');
     assert.include(launch, "wait_ready");
     assert.include(launch, '"$RUNNER_FILE" serve --host 127.0.0.1');
-    assert.include(launch, '--base-dir "$DEFAULT_SERVER_HOME"');
+    assert.notInclude(launch, "--base-dir");
+    assert.include(launch, "unset ROVE_HOME");
     assert.notInclude(launch, "server-home");
     assert.include(launch, "Remote Paperplane server did not become ready");
     assert.include(launch, 'wait_ready "60000"');
@@ -287,12 +290,9 @@ describe("ssh tunnel scripts", () => {
     assert.include(launch, "It wrote nothing to %s");
     assert.include(
       SshTunnel.buildRemotePairingScript(stateKey, ARCHIVE),
-      '"$RUNNER_FILE" auth pairing create --base-dir "$PAIRING_BASE_DIR" --json',
+      '"$RUNNER_FILE" auth pairing create --json',
     );
-    assert.include(
-      SshTunnel.buildRemotePairingScript(stateKey, ARCHIVE),
-      'PAIRING_BASE_DIR="$DEFAULT_SERVER_HOME"',
-    );
+    assert.include(SshTunnel.buildRemotePairingScript(stateKey, ARCHIVE), "unset ROVE_HOME");
     assert.notInclude(SshTunnel.buildRemotePairingScript(stateKey, ARCHIVE), "server-home");
     assert.include(
       SshTunnel.buildRemotePairingScript(stateKey, ARCHIVE),
@@ -933,7 +933,7 @@ describe("archive runner script", () => {
           assert.equal(result.exitCode, 0, result.stderr);
           assert.include(result.stdout, `paperplane v${archiveVersion}`);
         }
-        const versionsDir = `${home}/.rove-code/runtime/versions`;
+        const versionsDir = `${home}/.paperplane/runtime/versions`;
         assert.deepEqual(yield* fs.readDirectory(versionsDir), [archiveVersion]);
         assert.equal(
           (yield* fs.readFileString(`${versionsDir}/${archiveVersion}/.install-complete`)).trim(),
@@ -983,7 +983,7 @@ const server = http.createServer((_request, response) => {
 });
 server.listen(Number(flag("--port")), "127.0.0.1", () => {
   const port = server.address().port;
-  const userdata = path.join(flag("--base-dir"), "userdata");
+  const userdata = path.join(args.includes("--base-dir") ? flag("--base-dir") : path.join(require("node:os").homedir(), ".paperplane"), "userdata");
   fs.mkdirSync(userdata, { recursive: true });
   fs.writeFileSync(
     path.join(userdata, "server-runtime.json"),
@@ -1033,7 +1033,7 @@ server.listen(Number(flag("--port")), "127.0.0.1", () => {
     const fs = yield* FileSystem.FileSystem;
     const root = yield* fs.makeTempDirectoryScoped({ prefix: "rove-launch-script-" });
     const home = `${root}/home`;
-    const stateDir = `${home}/.rove-code/ssh-launch/test-state`;
+    const stateDir = `${home}/.paperplane/ssh-launch/test-state`;
     const fakeServer = `${root}/fake-rove.cjs`;
     const launch = `${root}/launch.sh`;
     yield* fs.makeDirectory(stateDir, { recursive: true });
@@ -1090,7 +1090,7 @@ server.listen(Number(flag("--port")), "127.0.0.1", () => {
           "--port",
           "0",
           "--base-dir",
-          `${home}/.rove-code`,
+          `${home}/.paperplane`,
           ...flags,
         ];
         const server = yield* spawner.spawn(
@@ -1283,7 +1283,7 @@ server.listen(Number(flag("--port")), "127.0.0.1", () => {
         );
         yield* fs.writeFileString(`${stateDir}/pid`, `${zombie}\n`);
         yield* fs.writeFileString(
-          `${home}/.rove-code/userdata/server-runtime.json`,
+          `${home}/.paperplane/userdata/server-runtime.json`,
           JSON.stringify({
             version: 1,
             pid: zombie,

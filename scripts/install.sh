@@ -8,7 +8,7 @@
 #   ROVE_CHANNEL           release train to follow: stable, nightly, or preview
 #                            (default: stable; preview is a maintainers' test train)
 #   ROVE_VERSION           exact version to install (overrides ROVE_CHANNEL)
-#   ROVE_HOME              Paperplane home directory (default: ~/.rove-code)
+#   ROVE_HOME              Paperplane home directory (default: ~/.paperplane)
 #   ROVE_INSTALL_BIN_DIR   where the `paperplane` symlink goes (default: ~/.local/bin)
 #   ROVE_RELEASE_BASE_URL  mirror for releases/download (default: GitHub)
 #
@@ -19,7 +19,7 @@ set -eu
 
 repo="hafiezul/rove"
 base_url="${ROVE_RELEASE_BASE_URL:-https://github.com/${repo}/releases/download}"
-rove_home="${ROVE_HOME:-$HOME/.rove-code}"
+rove_home="${ROVE_HOME:-$HOME/.paperplane}"
 bin_dir="${ROVE_INSTALL_BIN_DIR:-$HOME/.local/bin}"
 
 fail() {
