@@ -75,7 +75,7 @@ import * as ProviderHost from "@getpaperplane/provider-core/server/ProviderHost"
 import * as OpenCode2Client from "./OpenCode2Client.ts";
 import * as OpenCode2Server from "./OpenCode2Server.ts";
 import * as OpenCodeRuntime from "../OpenCodeRuntime.ts";
-import { ROVE_MCP_SERVER_NAME } from "@getpaperplane/shared/roveMcp";
+import { PAPERPLANE_MCP_SERVER_NAME } from "@getpaperplane/shared/roveMcp";
 import * as McpProviderSessions from "@getpaperplane/provider-core/server/McpProviderSessions";
 import { buildRuntimeInstructions } from "@getpaperplane/provider-core/server/runtimeInstructions";
 import { roveOrchestrationSystemPrompt } from "@getpaperplane/provider-core/server/orchestrationInstructions";
@@ -470,20 +470,20 @@ const rule = (action: string, effect: Rule["effect"]): Rule => ({ action, resour
  */
 /**
  * Paperplane's MCP server is registered per directory, not per session, so each thread
- * gets its own `rove-<thread>` entry with its own credential. OpenCode names
+ * gets its own `paperplane-<thread>` entry with its own credential. OpenCode names
  * an MCP tool's permission `<server>_<tool>` (non-alphanumerics become `_`).
  * OpenCode skips every tool of a server whose name is over 64 characters (its
  * tool namespace limit), and its router rejects adding one over 100, so a
  * thread id that does not fit is replaced by a digest of it.
  */
 export const roveMcpServerName = Effect.fn("roveMcpServerName")(function* (threadId: string) {
-  const name = `${ROVE_MCP_SERVER_NAME}-${threadId.replaceAll(/[^a-zA-Z0-9_-]/g, "_")}`;
+  const name = `${PAPERPLANE_MCP_SERVER_NAME}-${threadId.replaceAll(/[^a-zA-Z0-9_-]/g, "_")}`;
   if (name.length <= 64) return name;
   const crypto = yield* Crypto.Crypto;
   const digest = yield* crypto
     .digest("SHA-256", new TextEncoder().encode(threadId))
     .pipe(Effect.orDie);
-  return `${ROVE_MCP_SERVER_NAME}-${Hex.encode(digest).slice(0, 16)}`;
+  return `${PAPERPLANE_MCP_SERVER_NAME}-${Hex.encode(digest).slice(0, 16)}`;
 });
 
 /**
@@ -496,7 +496,7 @@ const mcpRules = (mcpServerName: string | null): ReadonlyArray<Rule> =>
   mcpServerName === null
     ? []
     : [
-        { action: `${ROVE_MCP_SERVER_NAME}-*`, resource: "*", effect: "deny" },
+        { action: `${PAPERPLANE_MCP_SERVER_NAME}-*`, resource: "*", effect: "deny" },
         { action: `${mcpServerName}_*`, resource: "*", effect: "allow" },
       ];
 

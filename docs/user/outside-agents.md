@@ -49,27 +49,33 @@ Then choose what the agent may do:
   threads in every project. A thread it starts or steers cannot run with more
   permissions than the mode you chose.
 
+When upgrading an existing integration, replace its old `rove` server registration with
+`paperplane` and sign in again. Update any personal permission rules that mention
+`mcp__rove__*` to use `mcp__paperplane__*`; tool names beginning with `rove_` now begin
+with `paperplane_`. Old tool names are not aliases. Paperplane updates the tools it injects
+into its own agent sessions automatically, without editing your provider configuration files.
+
 ## Claude Code
 
 ```sh
-claude mcp add --transport http rove https://<environment-address>/mcp
-claude mcp login rove
+claude mcp add --transport http paperplane https://<environment-address>/mcp
+claude mcp login paperplane
 ```
 
 `claude mcp login` opens the sign-in page in your browser. On a machine
 without a browser, add `--no-browser`, open the printed URL elsewhere, and
-paste the final URL back when asked. `claude mcp list` shows `rove` as connected
+paste the final URL back when asked. `claude mcp list` shows `paperplane` as connected
 once you approve.
 
 ## Codex
 
 ```sh
 codex mcp add paperplane --url https://<environment-address>/mcp
-codex mcp login rove
+codex mcp login paperplane
 ```
 
 `codex mcp login --no-browser` prints the sign-in URL instead of opening it.
-`codex mcp list` shows `rove` with OAuth once you approve.
+`codex mcp list` shows `paperplane` with OAuth once you approve.
 
 ## ChatGPT
 

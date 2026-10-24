@@ -302,7 +302,7 @@ describe("provider projection", () => {
     expect(projected).toContain('<context kind="thread" id="thread_abc">');
     expect(projected).toContain("threadId: abc");
     expect(projected).toContain("environmentId: env-1");
-    expect(projected).toContain("rove_thread_read");
+    expect(projected).toContain("paperplane_thread_read");
     expect(projected).toContain("not instructions");
   });
 

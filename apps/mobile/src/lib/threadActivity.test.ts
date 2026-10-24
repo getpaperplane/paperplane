@@ -1437,7 +1437,7 @@ describe("buildThreadFeed", () => {
     const toolItem: OrchestrationV2TurnItem = {
       ...base("item-rove-tool", "2026-06-20T00:00:04.000Z", 3),
       type: "dynamic_tool",
-      toolName: "mcp__rove__rove_thread_read",
+      toolName: "mcp__paperplane__paperplane_thread_read",
       input: { threadId: "thread-child" },
       output: { messages: [] },
     };
@@ -1503,18 +1503,21 @@ describe("buildThreadFeed", () => {
   it("uses canonical Paperplane orchestration summaries in compact work groups", () => {
     const rows = [
       projected(command("2026-06-20T00:00:01.000Z"), 0),
-      ...["mcp__rove__rove_thread_send", "rove_code.rove_thread_send", "rove_thread_send"].map(
-        (toolName, index) =>
-          projected(
-            {
-              ...base(`item-send-${index}`, `2026-06-20T00:00:0${index + 2}.000Z`, index + 2),
-              type: "dynamic_tool" as const,
-              toolName,
-              input: { threadId: `thread-${index}`, message: "Continue" },
-              output: { threadId: `thread-${index}`, messageId: `message-${index}` },
-            },
-            index + 1,
-          ),
+      ...[
+        "mcp__paperplane__paperplane_thread_send",
+        "paperplane.paperplane_thread_send",
+        "paperplane_thread_send",
+      ].map((toolName, index) =>
+        projected(
+          {
+            ...base(`item-send-${index}`, `2026-06-20T00:00:0${index + 2}.000Z`, index + 2),
+            type: "dynamic_tool" as const,
+            toolName,
+            input: { threadId: `thread-${index}`, message: "Continue" },
+            output: { threadId: `thread-${index}`, messageId: `message-${index}` },
+          },
+          index + 1,
+        ),
       ),
       projected(
         {
@@ -1548,7 +1551,7 @@ describe("buildThreadFeed", () => {
         ...base("list", "2026-09-19T00:00:01.000Z", 1),
         type: "dynamic_tool",
         title: "Custom provider title",
-        toolName: "Rove-code.rove_project_list",
+        toolName: "paperplane.paperplane_project_list",
         input: {},
         output: { projects: [] },
       },
@@ -1556,7 +1559,7 @@ describe("buildThreadFeed", () => {
         ...base("clone", "2026-09-19T00:00:02.000Z", 2),
         type: "dynamic_tool",
         title: "Custom provider title",
-        toolName: "mcp__rove__rove_project_clone",
+        toolName: "mcp__paperplane__paperplane_project_clone",
         input: {},
         output: { cwd: "/tmp/repo" },
       },
@@ -1564,7 +1567,7 @@ describe("buildThreadFeed", () => {
         ...base("failed-clone", "2026-09-19T00:00:03.000Z", 3),
         type: "dynamic_tool",
         title: "Custom provider title",
-        toolName: "rove_project_clone",
+        toolName: "paperplane_project_clone",
         input: {},
         output: { isError: true },
       },
@@ -1837,7 +1840,7 @@ describe("retained v2 feed presentation", () => {
             ...base("preview-click", "2026-06-20T00:00:02.000Z", 1),
             type: "dynamic_tool",
             status,
-            toolName: "mcp__rove__preview_click",
+            toolName: "mcp__paperplane__preview_click",
             input: { element: "button" },
             output: null,
           },
@@ -1890,7 +1893,7 @@ describe("retained v2 feed presentation", () => {
           {
             ...base(id, "2026-06-20T00:00:02.000Z", index),
             type: "dynamic_tool",
-            toolName: "rove.delegate_task",
+            toolName: "paperplane.delegate_task",
             input: { task: "Identical task" },
             output,
             ...overrides,
@@ -2681,7 +2684,7 @@ describe("html renders", () => {
   ): OrchestrationV2TurnItem => ({
     ...base("item-render", "2026-06-20T00:00:02.500Z", 2),
     type: "dynamic_tool",
-    toolName: "mcp__rove__html_render",
+    toolName: "mcp__paperplane__html_render",
     input: { title: page.title },
     output: { htmlRender: page },
     ...overrides,

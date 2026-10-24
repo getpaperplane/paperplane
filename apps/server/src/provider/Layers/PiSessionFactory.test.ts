@@ -86,7 +86,7 @@ describe("headless Pi extensions", () => {
     const bridge = vi.spyOn(PiRoveTools, "createPiRoveTools").mockResolvedValue({
       tools: [
         {
-          name: "mcp__rove__preview_status",
+          name: "mcp__paperplane__preview_status",
           label: "Preview status",
           description: "Inspect preview",
           parameters: { type: "object", properties: {} },
@@ -111,7 +111,7 @@ describe("headless Pi extensions", () => {
     const result = createSdkSession.mock.results[0]!;
     if (result.type !== "return") throw new Error("SDK session creation failed");
     const { session: sdkSession } = await result.value;
-    expect(sdkSession.getActiveToolNames()).toContain("mcp__rove__preview_status");
+    expect(sdkSession.getActiveToolNames()).toContain("mcp__paperplane__preview_status");
     expect(sdkSession.getAllTools().map((tool) => tool.name)).not.toContain("fixture_tool");
     await session.dispose();
     await session.dispose();

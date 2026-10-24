@@ -4037,7 +4037,7 @@ function LiveActivityContent({
   );
 }
 
-/** The thread a `rove_thread_read` call targets, titled from live shell state so renames show. */
+/** The thread a `paperplane_thread_read` call targets, titled from live shell state so renames show. */
 function useThreadReadTarget(entry: TimelineWorkEntry, environmentId: EnvironmentId) {
   const rawThreadId = threadReadTargetId(entry);
   const threadId = rawThreadId === null ? null : ThreadId.make(rawThreadId);

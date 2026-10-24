@@ -1413,14 +1413,14 @@ describe("extractMcpToolCallIdentity", () => {
       sessionUpdate: "tool_call",
       toolCallId: "exec-f4591587-0754-4bb4-990b-f2767894ba93",
       kind: "execute",
-      title: "mcp.rove.orchestrator_capabilities",
+      title: "mcp.paperplane.orchestrator_capabilities",
       status: "in_progress",
-      rawInput: { server: "rove", tool: "orchestrator_capabilities", arguments: {} },
+      rawInput: { server: "paperplane", tool: "orchestrator_capabilities", arguments: {} },
       _meta: { is_mcp_tool_call: true },
     });
 
     expect(extractMcpToolCallIdentity(toolCall)).toEqual({
-      server: "rove",
+      server: "paperplane",
       tool: "orchestrator_capabilities",
     });
   });
@@ -1440,7 +1440,7 @@ describe("extractMcpToolCallIdentity", () => {
           '/usr/bin/node /srv/rove/bin.ts acp-mcp-call delegate_task {"task":"x"}',
         ],
       }),
-    ).toEqual({ server: "rove", tool: "delegate_task", input: { task: "x" } });
+    ).toEqual({ server: "paperplane", tool: "delegate_task", input: { task: "x" } });
   });
 
   it("recovers Paperplane identity from pi-acp title-only fallback execs", () => {
@@ -1465,7 +1465,7 @@ describe("extractMcpToolCallIdentity", () => {
 
     expect(toolCall.title).toBe("Ran command");
     expect(extractMcpToolCallIdentity(toolCall)).toEqual({
-      server: "rove",
+      server: "paperplane",
       tool: "orchestrator_capabilities",
       input: {},
     });
@@ -1480,7 +1480,7 @@ describe("extractMcpToolCallIdentity", () => {
       sessionUpdate: "tool_call",
       toolCallId: "chatcmpl-tool-b2a6142ee1a510a5",
       kind: "other",
-      title: "rove-code_orchestrator_capabilities",
+      title: "paperplane_orchestrator_capabilities",
       status: "pending",
       locations: [],
       rawInput: {},
@@ -1494,7 +1494,7 @@ describe("extractMcpToolCallIdentity", () => {
     const merged = mergeToolCallState(created, completed);
 
     expect(extractMcpToolCallIdentity(merged)).toEqual({
-      server: "rove",
+      server: "paperplane",
       tool: "orchestrator_capabilities",
     });
   });
@@ -1506,23 +1506,23 @@ describe("extractMcpToolCallIdentity", () => {
       sessionUpdate: "tool_call",
       toolCallId: "gemini-1",
       kind: "other",
-      title: "delegate_task (rove MCP Server)",
+      title: "delegate_task (paperplane MCP Server)",
       status: "in_progress",
     });
     const qwen = toolCallFromUpdate({
       sessionUpdate: "tool_call",
       toolCallId: "qwen-1",
       kind: "other",
-      title: 'task_status (rove MCP Server): {"taskId":"node:delegated-task:1"}',
+      title: 'task_status (paperplane MCP Server): {"taskId":"node:delegated-task:1"}',
       status: "pending",
       rawInput: { taskId: "node:delegated-task:1" },
     });
 
     expect(extractMcpToolCallIdentity(gemini)).toEqual({
-      server: "rove",
+      server: "paperplane",
       tool: "delegate_task",
     });
-    expect(extractMcpToolCallIdentity(qwen)).toEqual({ server: "rove", tool: "task_status" });
+    expect(extractMcpToolCallIdentity(qwen)).toEqual({ server: "paperplane", tool: "task_status" });
   });
 
   it("recovers Paperplane identity across the registry agents' naming conventions", () => {
@@ -1534,12 +1534,12 @@ describe("extractMcpToolCallIdentity", () => {
     // tail, cline args tail, Auggie tool-first suffix, fast-agent slash,
     // Kimi bare name with args tail.
     for (const title of [
-      "rove-code___delegate_task",
-      "rove-delegate_task",
-      'mcp__rove_code__delegate_task: {"mode":"async"}',
-      'rove-code__delegate_task: {"mode":"async"}',
-      "delegate_task_rove-code",
-      "rove/delegate_task",
+      "paperplane___delegate_task",
+      "paperplane-delegate_task",
+      'mcp__paperplane__delegate_task: {"mode":"async"}',
+      'paperplane__delegate_task: {"mode":"async"}',
+      "delegate_task_paperplane",
+      "paperplane/delegate_task",
       'delegate_task: {"mode":"async"}',
     ]) {
       const toolCall = toolCallFromUpdate({
@@ -1550,7 +1550,7 @@ describe("extractMcpToolCallIdentity", () => {
         status: "pending",
       });
       expect(extractMcpToolCallIdentity(toolCall), title).toEqual({
-        server: "rove",
+        server: "paperplane",
         tool: "delegate_task",
       });
     }
@@ -1566,14 +1566,14 @@ describe("extractMcpToolCallIdentity", () => {
       status: "in_progress",
       _meta: {
         goose: {
-          toolCall: { toolName: "rove-code__task_status", extensionName: "rove" },
+          toolCall: { toolName: "paperplane__task_status", extensionName: "paperplane" },
           messageId: "message-1",
         },
       },
     });
 
     expect(extractMcpToolCallIdentity(toolCall)).toEqual({
-      server: "rove",
+      server: "paperplane",
       tool: "task_status",
     });
   });
@@ -1588,12 +1588,16 @@ describe("extractMcpToolCallIdentity", () => {
       kind: "other",
       title: "unrelated display title",
       status: "pending",
-      _meta: { toolName: "mcp::rove::rove_thread_send", serverId: "rove", provenance: "mcp" },
+      _meta: {
+        toolName: "mcp::paperplane::paperplane_thread_send",
+        serverId: "paperplane",
+        provenance: "mcp",
+      },
     });
 
     expect(extractMcpToolCallIdentity(toolCall)).toEqual({
-      server: "rove",
-      tool: "rove_thread_send",
+      server: "paperplane",
+      tool: "paperplane_thread_send",
     });
   });
 
@@ -1639,7 +1643,7 @@ describe("extractMcpToolCallIdentity", () => {
       sessionUpdate: "tool_call",
       toolCallId: "foreign-1",
       kind: "other",
-      title: "rove-code_delegate_task",
+      title: "paperplane_delegate_task",
       status: "pending",
       _meta: { toolName: "delegate_task", serverId: "other-orchestrator" },
     });
@@ -1651,7 +1655,7 @@ describe("extractMcpToolCallIdentity", () => {
   });
 
   it("does not brand path-like or unknown-tool titles", () => {
-    for (const title of ["rove/README.md", "rove-code_not_a_real_tool"]) {
+    for (const title of ["paperplane/README.md", "paperplane_not_a_real_tool"]) {
       const toolCall = toolCallFromUpdate({
         sessionUpdate: "tool_call",
         toolCallId: "path-1",

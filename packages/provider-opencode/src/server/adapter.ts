@@ -56,7 +56,7 @@ import * as Stream from "effect/Stream";
 
 import * as ProviderHost from "@getpaperplane/provider-core/server/ProviderHost";
 import { mcpToolPresentation } from "@getpaperplane/provider-core/server/mcpToolPresentation";
-import { ROVE_MCP_SERVER_NAME } from "@getpaperplane/shared/roveMcp";
+import { PAPERPLANE_MCP_SERVER_NAME } from "@getpaperplane/shared/roveMcp";
 import * as McpProviderSessions from "@getpaperplane/provider-core/server/McpProviderSessions";
 import * as ProviderEventLoggers from "@getpaperplane/provider-core/server/ProviderEventLoggers";
 import {
@@ -975,7 +975,7 @@ export const makeOpenCodeAdapterV2 = Effect.fn("makeOpenCodeAdapterV2")(function
         if (hasRoveMcp) {
           yield* OpenCodeRuntime.runOpenCodeSdk("mcp.add", () =>
             client.mcp.add({
-              name: ROVE_MCP_SERVER_NAME,
+              name: PAPERPLANE_MCP_SERVER_NAME,
               config: {
                 type: "remote",
                 url: mcpSession.endpoint,

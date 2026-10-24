@@ -672,7 +672,7 @@ describe("CodexAdapterV2 process spawning", () => {
           // Codex waits up to 10 s, not 1 s, for MCP servers before the first request (#13437).
           mcp_optional_startup_grace_ms: 10_000,
           mcp_servers: {
-            rove: {
+            paperplane: {
               url: "http://127.0.0.1:43123/mcp",
               tool_timeout_sec: 3_900,
               http_headers: {
@@ -1025,7 +1025,7 @@ describe("CodexAdapterV2 dynamic tool projection", () => {
       const projection = yield* CodexAdapterV2.projectCodexDynamicToolItem({
         type: "mcpToolCall",
         id: "call-create-threads",
-        server: "rove",
+        server: "paperplane",
         tool: "create_threads",
         status: "completed",
         arguments: {
@@ -1040,7 +1040,7 @@ describe("CodexAdapterV2 dynamic tool projection", () => {
       });
 
       assert.deepEqual(projection, {
-        toolName: "rove.create_threads",
+        toolName: "paperplane.create_threads",
         input: {
           threads: [{ title: "Fixture child", prompt: "fixture child prompt" }],
         },
@@ -1625,7 +1625,7 @@ function codexReplayPreamble(input: {
         id: 1,
         method: "initialize",
         params: {
-          clientInfo: { name: "Rove Code", title: "Rove Code", version: packageJson.version },
+          clientInfo: { name: "Paperplane", title: "Paperplane", version: packageJson.version },
           capabilities: {
             experimentalApi: true,
             optOutNotificationMethods: ["turn/diff/updated"],
@@ -1642,7 +1642,7 @@ function codexReplayPreamble(input: {
       frame: {
         id: 1,
         result: {
-          userAgent: "Rove Code/0.156.1",
+          userAgent: "Paperplane/0.156.1",
           codexHome: "/tmp/codex-home",
           platformFamily: "unix",
           platformOs: "macos",
@@ -2222,7 +2222,7 @@ describe("CodexAdapterV2 post-settle continuation", () => {
       // version, so pin the whole value here.
       assert.deepEqual(initializeParams, [
         {
-          clientInfo: { name: "Rove Code", title: "Rove Code", version: packageJson.version },
+          clientInfo: { name: "Paperplane", title: "Paperplane", version: packageJson.version },
           capabilities: {
             experimentalApi: true,
             optOutNotificationMethods: ["turn/diff/updated"],
@@ -7211,8 +7211,8 @@ describe("CodexAdapterV2 post-settle continuation", () => {
             item: {
               type: "mcpToolCall",
               id: COMPLETED_WAIT_ITEM,
-              server: "rove",
-              tool: "rove_thread_wait",
+              server: "paperplane",
+              tool: "paperplane_thread_wait",
               status: "inProgress",
               arguments: { threadId: "thread:completed-wait", timeoutMs: 30000 },
             },
@@ -7231,8 +7231,8 @@ describe("CodexAdapterV2 post-settle continuation", () => {
             item: {
               type: "mcpToolCall",
               id: COMPLETED_WAIT_ITEM,
-              server: "rove",
-              tool: "rove_thread_wait",
+              server: "paperplane",
+              tool: "paperplane_thread_wait",
               status: "completed",
               arguments: { threadId: "thread:completed-wait", timeoutMs: 30000 },
               result: { content: [{ type: "text", text: "idle" }] },
@@ -7252,8 +7252,8 @@ describe("CodexAdapterV2 post-settle continuation", () => {
             item: {
               type: "mcpToolCall",
               id: ORPHAN_WAIT_ITEM,
-              server: "rove",
-              tool: "rove_thread_wait",
+              server: "paperplane",
+              tool: "paperplane_thread_wait",
               status: "inProgress",
               arguments: {
                 threadId:

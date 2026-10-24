@@ -7,7 +7,7 @@ import {
   type CallToolResult,
 } from "@modelcontextprotocol/sdk/types.js";
 
-import { ROVE_MCP_TOOL_PREFIX } from "@getpaperplane/shared/roveMcp";
+import { PAPERPLANE_MCP_TOOL_PREFIX } from "@getpaperplane/shared/roveMcp";
 import type { McpProviderSessionConfig } from "@getpaperplane/provider-core/server/mcpSession";
 
 /** Keep MCP failures as failed Pi tool executions, not successful text results. */
@@ -36,7 +36,7 @@ export function toPiRoveToolResult(result: CallToolResult) {
 export async function createPiRoveTools(config: McpProviderSessionConfig | undefined) {
   if (!config) return { tools: [], dispose: async () => {} };
 
-  const client = new Client({ name: "rove-pi", version: "1.0.0" });
+  const client = new Client({ name: "paperplane-pi", version: "1.0.0" });
   const transport = new StreamableHTTPClientTransport(new URL(config.endpoint), {
     requestInit: { headers: { Authorization: config.authorizationHeader } },
     fetch: (url, init) => {
@@ -71,7 +71,7 @@ export async function createPiRoveTools(config: McpProviderSessionConfig | undef
       const page = await client.listTools(cursor ? { cursor } : {}, { timeout: 10_000 });
       for (const tool of page.tools) {
         tools.push({
-          name: `${ROVE_MCP_TOOL_PREFIX}${tool.name}`,
+          name: `${PAPERPLANE_MCP_TOOL_PREFIX}${tool.name}`,
           label: tool.annotations?.title ?? tool.title ?? tool.name,
           description: tool.description ?? tool.name,
           parameters: tool.inputSchema,

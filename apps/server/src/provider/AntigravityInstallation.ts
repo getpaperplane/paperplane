@@ -402,7 +402,7 @@ export const makeAntigravityInstallation = Effect.fn("AntigravityInstallation.ma
                   }),
                 )
               : spawner,
-          clientInfo: { name: "rove", version: "0.0.0" },
+          clientInfo: { name: "paperplane", version: "0.0.0" },
         });
         const initialized = yield* runtime.initialize();
         if (

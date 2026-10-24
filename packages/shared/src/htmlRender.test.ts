@@ -216,9 +216,9 @@ describe("htmlRenderFromToolItem", () => {
 
   it("reads the reference from each provider's result envelope", () => {
     for (const [toolName, output] of [
-      ["mcp__rove__html_render", [{ type: "text", text: JSON.stringify(result) }]],
-      ["rove.html_render", { structuredContent: result, content: [] }],
-      ["rove-thread_1_html_render", JSON.stringify(result)],
+      ["mcp__paperplane__html_render", [{ type: "text", text: JSON.stringify(result) }]],
+      ["paperplane.html_render", { structuredContent: result, content: [] }],
+      ["paperplane-thread_1_html_render", JSON.stringify(result)],
       ["html_render", result],
     ] as const) {
       expect(htmlRenderFromToolItem({ toolName, output })).toEqual(reference);
@@ -226,9 +226,9 @@ describe("htmlRenderFromToolItem", () => {
   });
 
   it("ignores other tools and failed calls", () => {
-    expect(htmlRenderFromToolItem({ toolName: "mcp__rove__html_preview", output: result })).toBe(
-      undefined,
-    );
+    expect(
+      htmlRenderFromToolItem({ toolName: "mcp__paperplane__html_preview", output: result }),
+    ).toBe(undefined);
     expect(htmlRenderFromToolItem({ toolName: "mcp__other__html_render", output: result })).toBe(
       undefined,
     );

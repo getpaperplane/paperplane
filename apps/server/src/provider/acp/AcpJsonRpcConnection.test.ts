@@ -591,7 +591,7 @@ describe("AcpSessionRuntime", () => {
         (event) => event.method === "session/new" && event.status === "started",
       );
       expect(created?.payload).toMatchObject({
-        mcpServers: [{ type: "acp", name: "rove", serverId: "rove" }],
+        mcpServers: [{ type: "acp", name: "paperplane", serverId: "paperplane" }],
       });
     }).pipe(
       Effect.provide(
@@ -604,8 +604,8 @@ describe("AcpSessionRuntime", () => {
           cwd: process.cwd(),
           clientInfo: { name: "rove-test", version: "0.0.0" },
           authMethodId: "test",
-          mcpServers: [{ type: "stdio", name: "rove", command: "/usr/bin/node", args: [] }],
-          acpMcpServers: [{ type: "acp", name: "rove", serverId: "rove" }],
+          mcpServers: [{ type: "stdio", name: "paperplane", command: "/usr/bin/node", args: [] }],
+          acpMcpServers: [{ type: "acp", name: "paperplane", serverId: "paperplane" }],
           requestLogger: (event) =>
             Effect.sync(() => {
               requestEvents.push(event);
@@ -627,7 +627,7 @@ describe("AcpSessionRuntime", () => {
         (event) => event.method === "session/new" && event.status === "started",
       );
       expect(created?.payload).toMatchObject({
-        mcpServers: [{ type: "stdio", name: "rove", command: "/usr/bin/node", args: [] }],
+        mcpServers: [{ type: "stdio", name: "paperplane", command: "/usr/bin/node", args: [] }],
       });
     }).pipe(
       Effect.provide(
@@ -639,8 +639,8 @@ describe("AcpSessionRuntime", () => {
           cwd: process.cwd(),
           clientInfo: { name: "rove-test", version: "0.0.0" },
           authMethodId: "test",
-          mcpServers: [{ type: "stdio", name: "rove", command: "/usr/bin/node", args: [] }],
-          acpMcpServers: [{ type: "acp", name: "rove", serverId: "rove" }],
+          mcpServers: [{ type: "stdio", name: "paperplane", command: "/usr/bin/node", args: [] }],
+          acpMcpServers: [{ type: "acp", name: "paperplane", serverId: "paperplane" }],
           requestLogger: (event) =>
             Effect.sync(() => {
               requestEvents.push(event);

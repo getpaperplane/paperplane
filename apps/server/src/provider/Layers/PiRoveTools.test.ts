@@ -107,8 +107,8 @@ describe("Pi's built-in Paperplane tools", () => {
     const bridge = await createPiRoveTools(config);
     try {
       expect(bridge.tools.map((tool) => tool.name)).toEqual([
-        "mcp__rove__preview_status",
-        "mcp__rove__preview_snapshot",
+        "mcp__paperplane__preview_status",
+        "mcp__paperplane__preview_snapshot",
       ]);
       expect(bridge.tools[1]!.parameters).toEqual({
         type: "object",
@@ -130,7 +130,7 @@ describe("Pi's built-in Paperplane tools", () => {
     const endpoint = mockEndpoint("delegate_task");
     const bridge = await createPiRoveTools(config);
     try {
-      const delegate = bridge.tools.find((tool) => tool.name === "mcp__rove__delegate_task")!;
+      const delegate = bridge.tools.find((tool) => tool.name === "mcp__paperplane__delegate_task")!;
       await execute(delegate, {
         task: "Inspect the repo",
         target: { providerInstanceId: "pi", model: "local/fixture" },

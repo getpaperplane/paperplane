@@ -531,13 +531,13 @@ describe("ClaudeAdapterV2 runtime query policy", () => {
 
 describe("ClaudeAdapterV2 MCP query overrides", () => {
   const ROVE_MCP_SERVERS = {
-    rove: {
+    paperplane: {
       type: "http",
       url: "http://127.0.0.1:43123/mcp",
       headers: {
         Authorization: "Bearer secret-claude-token",
       },
-      timeout: ClaudeAdapterV2.CLAUDE_ROVE_MCP_TOOL_TIMEOUT_MS,
+      timeout: ClaudeAdapterV2.CLAUDE_PAPERPLANE_MCP_TOOL_TIMEOUT_MS,
     },
   } as const;
 
@@ -582,7 +582,7 @@ describe("ClaudeAdapterV2 MCP query overrides", () => {
     });
 
     assert.deepEqual(overrides, {
-      allowedTools: [ClaudeAdapterV2.CLAUDE_ROVE_MCP_TOOL_WILDCARD],
+      allowedTools: [ClaudeAdapterV2.CLAUDE_PAPERPLANE_MCP_TOOL_WILDCARD],
       mcpServers: ROVE_MCP_SERVERS,
     });
   });
@@ -593,11 +593,11 @@ describe("ClaudeAdapterV2 MCP query overrides", () => {
     const overrides = ClaudeAdapterV2.claudeMcpQueryOverrides({
       mcpSession,
       readOnlySandbox: false,
-      allowedTools: ["Read", "mcp__rove__*"],
+      allowedTools: ["Read", "mcp__paperplane__*"],
     });
 
     assert.deepEqual(overrides, {
-      allowedTools: ["Read", "mcp__rove__*"],
+      allowedTools: ["Read", "mcp__paperplane__*"],
       mcpServers: ROVE_MCP_SERVERS,
     });
   });
@@ -614,11 +614,13 @@ describe("ClaudeAdapterV2 MCP query overrides", () => {
     assert.deepEqual(overrides, {
       allowedTools: [
         ...ClaudeAdapterV2.CLAUDE_READ_ONLY_ALLOWED_TOOLS,
-        ...ClaudeAdapterV2.CLAUDE_READ_ONLY_ROVE_MCP_ALLOWED_TOOLS,
+        ...ClaudeAdapterV2.CLAUDE_READ_ONLY_PAPERPLANE_MCP_ALLOWED_TOOLS,
       ],
       mcpServers: ROVE_MCP_SERVERS,
     });
-    assert.isFalse(overrides.allowedTools?.includes(ClaudeAdapterV2.CLAUDE_ROVE_MCP_TOOL_WILDCARD));
+    assert.isFalse(
+      overrides.allowedTools?.includes(ClaudeAdapterV2.CLAUDE_PAPERPLANE_MCP_TOOL_WILDCARD),
+    );
   });
 
   it("pre-approves only read-only rove tools in a read-only sandbox without an allowlist", () => {
@@ -630,7 +632,7 @@ describe("ClaudeAdapterV2 MCP query overrides", () => {
     });
 
     assert.deepEqual(overrides.allowedTools, [
-      ...ClaudeAdapterV2.CLAUDE_READ_ONLY_ROVE_MCP_ALLOWED_TOOLS,
+      ...ClaudeAdapterV2.CLAUDE_READ_ONLY_PAPERPLANE_MCP_ALLOWED_TOOLS,
     ]);
   });
 
@@ -701,11 +703,11 @@ describe("ClaudeAdapterV2 MCP query overrides", () => {
       ...Object.values(HtmlToolkit.tools),
     ]
       .filter((tool) => Context.get(tool.annotations, Tool.Readonly))
-      .map((tool) => `mcp__rove__${tool.name}`)
+      .map((tool) => `mcp__paperplane__${tool.name}`)
       .sort();
 
     assert.deepEqual(
-      [...ClaudeAdapterV2.CLAUDE_READ_ONLY_ROVE_MCP_ALLOWED_TOOLS].sort(),
+      [...ClaudeAdapterV2.CLAUDE_READ_ONLY_PAPERPLANE_MCP_ALLOWED_TOOLS].sort(),
       readOnlyToolNames,
     );
   });
@@ -730,15 +732,15 @@ describe("ClaudeAdapterV2 native protocol logging", () => {
       allowedTools: ["Read"],
     });
     assert.deepEqual(overrides, {
-      allowedTools: ["Read", "mcp__rove__*"],
+      allowedTools: ["Read", "mcp__paperplane__*"],
       mcpServers: {
-        rove: {
+        paperplane: {
           type: "http",
           url: "http://127.0.0.1:43123/mcp",
           headers: {
             Authorization: "Bearer secret-claude-token",
           },
-          timeout: ClaudeAdapterV2.CLAUDE_ROVE_MCP_TOOL_TIMEOUT_MS,
+          timeout: ClaudeAdapterV2.CLAUDE_PAPERPLANE_MCP_TOOL_TIMEOUT_MS,
         },
       },
     });
@@ -2011,7 +2013,7 @@ describe("ClaudeAdapterV2 MCP credential channel", () => {
             resume: false,
             cwd: null,
             environment: { PATH: "/usr/bin" },
-            mcpServers: { rove: roveMcpServer },
+            mcpServers: { paperplane: roveMcpServer },
           }),
           pathToClaudeCodeExecutable: "/opt/claude/cli.js",
           spawnClaudeCodeProcess: cli.spawn,
@@ -2034,7 +2036,7 @@ describe("ClaudeAdapterV2 MCP credential channel", () => {
 
       assert.deepInclude(cli.controlRequests, {
         subtype: "mcp_set_servers",
-        servers: { rove: roveMcpServer },
+        servers: { paperplane: roveMcpServer },
       });
       const spawned = JSON.stringify(cli.spawns);
       assert.notInclude(spawned, "--mcp-config");

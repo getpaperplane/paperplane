@@ -75,7 +75,7 @@ const batch = frame({
       ...statusIds.map((id) => ({
         type: "tool_use",
         id,
-        name: "mcp__rove__task_status",
+        name: "mcp__paperplane__task_status",
         input: { taskId: id },
       })),
     ],

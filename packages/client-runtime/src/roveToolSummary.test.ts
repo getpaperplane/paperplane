@@ -150,7 +150,7 @@ describe("summarizeRoveToolCalls", () => {
     const calls = outputs.map((output) =>
       completed(
         {
-          toolName: "rove_thread_send",
+          toolName: "paperplane_thread_send",
           args: { threadId: "input-thread", message: '{"threadId":"fake"}' },
         },
         output,
@@ -159,7 +159,7 @@ describe("summarizeRoveToolCalls", () => {
     expect(summarizeRoveToolCalls("thread-send", calls).label).toBe("Sent 1 message to 1 thread");
     expect(
       summarizeRoveToolCalls("thread-send", [
-        completed({ toolName: "rove_thread_send", args: { threadId: "input-thread" } }),
+        completed({ toolName: "paperplane_thread_send", args: { threadId: "input-thread" } }),
         completed({ threadId: "input-thread" }),
       ]).label,
     ).toBe("Sent 2 messages to 1 thread");

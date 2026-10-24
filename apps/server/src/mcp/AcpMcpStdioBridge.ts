@@ -130,7 +130,7 @@ export function callAcpMcpTool(
       params: {
         protocolVersion: MCP_PROTOCOL_VERSION,
         capabilities: {},
-        clientInfo: { name: "rove-acp-cli", version: "0.0.0" },
+        clientInfo: { name: "paperplane-acp-cli", version: "0.0.0" },
       },
     });
     const initializeResponse = initialized.find((entry) => asEnvelope(entry)?.id === initializeId);

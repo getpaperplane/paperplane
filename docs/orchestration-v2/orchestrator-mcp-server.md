@@ -34,7 +34,7 @@ The orchestration tools share the existing authenticated HTTP MCP endpoint:
 http://127.0.0.1:<server-port>/mcp
 ```
 
-The provider-visible server key is `rove`. The endpoint registers both the
+The provider-visible server key is `paperplane`. The endpoint registers both the
 preview toolkit and the orchestration toolkit.
 
 Before `ProviderSessionManager` opens a new V2 provider session, it asks
@@ -62,8 +62,8 @@ Codex app-server receives the remote MCP server through command-line config
 overrides:
 
 ```text
--c mcp_servers.rove.url=http://127.0.0.1:<port>/mcp
--c mcp_servers.rove.bearer_token_env_var="PAPERPLANE_MCP_BEARER_TOKEN"
+-c mcp_servers.paperplane.url=http://127.0.0.1:<port>/mcp
+-c mcp_servers.paperplane.bearer_token_env_var="PAPERPLANE_MCP_BEARER_TOKEN"
 ```
 
 The provider-session token is placed in `PAPERPLANE_MCP_BEARER_TOKEN`. Both the
@@ -77,7 +77,7 @@ Claude receives an HTTP MCP server in its query options:
 ```ts
 {
   mcpServers: {
-    "rove": {
+    "paperplane": {
       type: "http",
       url: "http://127.0.0.1:<port>/mcp",
       headers: {
@@ -87,7 +87,7 @@ Claude receives an HTTP MCP server in its query options:
   },
   allowedTools: [
     // existing allowed tools
-    "mcp__rove__*",
+    "mcp__paperplane__*",
   ],
 }
 ```
@@ -227,7 +227,7 @@ Each delegated review round uses a new `delegate_task` call with the original br
 prior findings, responses, and unresolved objections. Track each round by its own `taskId` and use
 a distinct `clientRequestId` per round, stable across retries of that round.
 `childThreadId` is backing storage, not a target for another review round through
-`rove_thread_send`. Ordinary thread messaging remains available for user-requested
+`paperplane_thread_send`. Ordinary thread messaging remains available for user-requested
 conversations; it does not reopen a completed task. There is no task-level follow-up
 API for preserving the same reviewer session.
 
@@ -240,8 +240,8 @@ provider session. The request becomes the V2 command
 the timeout expires. A wait timeout does not cancel the child; the result sets
 `waitTimedOut: true`, and the caller can continue with `task_status`. A pending blocking
 question also ends the wait with `hasPendingQuestion: true` and `waitTimedOut: false`.
-If `hasPendingQuestion`, pass `threadId=childThreadId` to `rove_pending_request_list`,
-`rove_pending_request_read` (with `requestId`) and `rove_pending_request_respond`, or ask
+If `hasPendingQuestion`, pass `threadId=childThreadId` to `paperplane_pending_request_list`,
+`paperplane_pending_request_read` (with `requestId`) and `paperplane_pending_request_respond`, or ask
 the user; the task's completion still wakes this thread. Async questions and approvals
 do not end the wait.
 
@@ -314,7 +314,7 @@ inherit the parent's project, branch, and worktree path, but they have no
 sub-agent lineage. Entries with a prompt immediately dispatch a run; entries
 without a prompt remain idle.
 
-### `rove_thread_launch`
+### `paperplane_thread_launch`
 
 Launches one ordinary top-level thread through the app's launch service. Use an
 explicit `workspaceStrategy` to create a new worktree (`worktree` with `baseRef`),
@@ -330,14 +330,14 @@ its own under the environment's Scratch project. For stacked PRs, use the parent
 interaction modes than the caller. Launch has no retry key, so inspect existing threads after a failed or lost response before
 launching again. `create_threads` remains the batch option for a shared checkout.
 
-### `rove_thread_list`
+### `paperplane_thread_list`
 
 Lists durable thread shells in one project, newest first: `projectId` when
 given, else the calling thread's project. Callers can filter by title, run
 status, and whether app-owned sub-agent threads are included. Results are
 bounded and offset-paginated. Deleted threads are never listed.
 
-### `rove_thread_read`
+### `paperplane_thread_read`
 
 Reads the durable state, recent runs, and visible timeline of any thread in
 the environment by thread ID. A deleted thread returns `thread_not_found`. The
@@ -359,11 +359,11 @@ holds it. Clients show the thread's current title rather than the label, so a
 rename never leaves a stale link.
 
 List and read results report `snoozed` and `snoozedUntil`, and
-`rove_thread_list` filters on `snoozed`. The server's `isSnoozed` follows the
+`paperplane_thread_list` filters on `snoozed`. The server's `isSnoozed` follows the
 client's `effectiveSnoozed`, so agents and the sidebar agree: a snoozed thread
 wakes early when it has a pending request, fails, or completes after the snooze.
 
-### `rove_thread_update`
+### `paperplane_thread_update`
 
 Updates metadata for the calling thread or any other thread in the environment.
 The typed actions are `rename`, `regenerate_title`, `link_pull_request`, and
@@ -377,7 +377,7 @@ resultant title, title-regeneration marker, and linked pull request. Reusing a
 receipt. Thread list and read results expose the linked pull request, and thread
 detail also exposes an in-flight title regeneration.
 
-### `rove_thread_send`
+### `paperplane_thread_send`
 
 Sends a message to any ordinary or delegated thread in the environment:
 
@@ -392,14 +392,14 @@ The target runtime and interaction modes may not be broader than the caller's.
 Stable command and message IDs are derived from `clientRequestId` for
 idempotent retries.
 
-### `rove_thread_wait`
+### `paperplane_thread_wait`
 
 Waits for a selected run to become `completed`, `failed`, `cancelled`,
 `interrupted`, or `rolled_back`. Without `runId`, it pins the latest run at call
 time; an idle thread returns immediately. A timeout reports the latest durable
 status and does not cancel work.
 
-### `rove_thread_interrupt`
+### `paperplane_thread_interrupt`
 
 Interrupts a selected active run through the normal V2 `run.interrupt` command.
 Without `runId`, it selects the newest interruptible run. A terminal run is

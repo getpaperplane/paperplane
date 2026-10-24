@@ -51,7 +51,7 @@ export const layer = McpToolAccess.toLayer(
     // Which caller prepared each pending upload, so only that caller can discard it.
     const uploadOwners = new Map<string, { readonly owner: string; readonly issuedAt: number }>();
     return {
-      rove_attachment_prepare_upload: McpToolAccess.writes((input) =>
+      paperplane_attachment_prepare_upload: McpToolAccess.writes((input) =>
         Effect.gen(function* () {
           const result = yield* Upload.issueAttachmentUploadUrl(input.upload).pipe(
             Effect.mapError(unavailable),
@@ -64,7 +64,7 @@ export const layer = McpToolAccess.toLayer(
           return result;
         }),
       ),
-      rove_attachment_discard: McpToolAccess.writes((input) =>
+      paperplane_attachment_discard: McpToolAccess.writes((input) =>
         Effect.gen(function* () {
           if (uploadOwners.get(input.attachmentId)?.owner !== (yield* uploadOwner)) {
             return yield* new OrchestratorMcpFailure({
@@ -77,7 +77,7 @@ export const layer = McpToolAccess.toLayer(
           return {};
         }),
       ),
-      rove_thread_send_attachments: McpToolAccess.writesThreads(
+      paperplane_thread_send_attachments: McpToolAccess.writesThreads(
         (input) => [input.threadId],
         (input) =>
           Effect.gen(function* () {

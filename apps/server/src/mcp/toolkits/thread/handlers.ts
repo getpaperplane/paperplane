@@ -97,7 +97,7 @@ export const layer = McpToolAccess.toLayer(ThreadToolkit, {
       };
     }),
   ),
-  rove_thread_search: McpToolAccess.reads((input) =>
+  paperplane_thread_search: McpToolAccess.reads((input) =>
     Effect.gen(function* () {
       const { caller } = yield* readCaller();
       const { projectId: requested, ...query } = input;
@@ -114,7 +114,7 @@ export const layer = McpToolAccess.toLayer(ThreadToolkit, {
       };
     }),
   ),
-  rove_thread_fork: writesThread((input) =>
+  paperplane_thread_fork: writesThread((input) =>
     Effect.gen(function* () {
       const { threads, projection } = yield* readThread(input.threadId);
       const commandId = yield* newCommandId();
@@ -134,7 +134,7 @@ export const layer = McpToolAccess.toLayer(ThreadToolkit, {
       return { sequence: result.sequence, targetThreadId };
     }),
   ),
-  rove_thread_merge_back: McpToolAccess.writesThreads(
+  paperplane_thread_merge_back: McpToolAccess.writesThreads(
     (input) => [input.targetThreadId, input.sourceThreadId],
     (input) =>
       Effect.gen(function* () {
@@ -154,7 +154,7 @@ export const layer = McpToolAccess.toLayer(ThreadToolkit, {
         return { sequence: result.sequence, targetThreadId: input.targetThreadId };
       }),
   ),
-  rove_thread_transfers: McpToolAccess.reads((input) =>
+  paperplane_thread_transfers: McpToolAccess.reads((input) =>
     Effect.gen(function* () {
       const { projection } = yield* readThread(input.threadId, ["contextTransfers"]);
       return {
@@ -169,7 +169,7 @@ export const layer = McpToolAccess.toLayer(ThreadToolkit, {
       };
     }),
   ),
-  rove_thread_configuration: McpToolAccess.reads((input) =>
+  paperplane_thread_configuration: McpToolAccess.reads((input) =>
     Effect.gen(function* () {
       const {
         projection: { thread },
@@ -182,7 +182,7 @@ export const layer = McpToolAccess.toLayer(ThreadToolkit, {
       };
     }),
   ),
-  rove_thread_configure: writesThread((input) =>
+  paperplane_thread_configure: writesThread((input) =>
     Effect.gen(function* () {
       const {
         threads,
@@ -200,7 +200,7 @@ export const layer = McpToolAccess.toLayer(ThreadToolkit, {
       return { sequence: result.sequence };
     }),
   ),
-  rove_pending_request_list: McpToolAccess.reads((input) =>
+  paperplane_pending_request_list: McpToolAccess.reads((input) =>
     Effect.gen(function* () {
       const { projection } = yield* readThread(input.threadId, ["runtimeRequests"]);
       return {
@@ -210,13 +210,13 @@ export const layer = McpToolAccess.toLayer(ThreadToolkit, {
       };
     }),
   ),
-  rove_pending_request_read: McpToolAccess.reads((input) =>
+  paperplane_pending_request_read: McpToolAccess.reads((input) =>
     Effect.gen(function* () {
       const { item } = yield* readQuestion(input);
       return { requestId: input.requestId, questions: item.questions };
     }),
   ),
-  rove_pending_request_respond: writesThread((input) =>
+  paperplane_pending_request_respond: writesThread((input) =>
     Effect.gen(function* () {
       const { threads, projection } = yield* readQuestion(input);
       const result = yield* threads
@@ -231,7 +231,7 @@ export const layer = McpToolAccess.toLayer(ThreadToolkit, {
       return { sequence: result.sequence };
     }),
   ),
-  rove_queue_list: McpToolAccess.reads((input) =>
+  paperplane_queue_list: McpToolAccess.reads((input) =>
     Effect.gen(function* () {
       const { projection } = yield* readThread(input.threadId, ["runs", "messages"]);
       const runs = queuedRunsInDeliveryOrder(projection);
@@ -246,7 +246,7 @@ export const layer = McpToolAccess.toLayer(ThreadToolkit, {
       };
     }),
   ),
-  rove_queue_read: McpToolAccess.reads((input) =>
+  paperplane_queue_read: McpToolAccess.reads((input) =>
     Effect.gen(function* () {
       const { projection } = yield* readThread(input.threadId, ["runs", "messages"]);
       const entry = queueEntry(projection, input.queuedRunId, 16000);
@@ -259,7 +259,7 @@ export const layer = McpToolAccess.toLayer(ThreadToolkit, {
       );
     }),
   ),
-  rove_queue_edit: writesThread((input) =>
+  paperplane_queue_edit: writesThread((input) =>
     dispatch(input.threadId, (common) => ({
       ...common,
       type: "queued-run.edit",
@@ -267,14 +267,14 @@ export const layer = McpToolAccess.toLayer(ThreadToolkit, {
       text: input.text,
     })),
   ),
-  rove_queue_cancel: writesThread((input) =>
+  paperplane_queue_cancel: writesThread((input) =>
     dispatch(input.threadId, (common) => ({
       ...common,
       type: "queued-run.cancel",
       runId: input.queuedRunId,
     })),
   ),
-  rove_queue_reorder: writesThread((input) =>
+  paperplane_queue_reorder: writesThread((input) =>
     dispatch(input.threadId, (common) => ({
       ...common,
       type: "queued-run.reorder",
@@ -282,7 +282,7 @@ export const layer = McpToolAccess.toLayer(ThreadToolkit, {
       beforeRunId: input.beforeRunId,
     })),
   ),
-  rove_queue_promote_to_steer: writesThread((input) =>
+  paperplane_queue_promote_to_steer: writesThread((input) =>
     dispatch(input.threadId, (common) => ({
       ...common,
       type: "queued-message.promote-to-steer",
@@ -290,7 +290,7 @@ export const layer = McpToolAccess.toLayer(ThreadToolkit, {
       targetRunId: input.targetRunId,
     })),
   ),
-  rove_thread_organize: writesThread((input) =>
+  paperplane_thread_organize: writesThread((input) =>
     Effect.gen(function* () {
       const { threads, projection, caller } = yield* readThread(input.threadId);
       const common = { commandId: yield* newCommandId(), threadId: projection.thread.id };

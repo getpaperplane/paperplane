@@ -85,8 +85,8 @@ const durable = { durable: { aggregateID: SESSION, seq: 1, version: 1 } };
 
 /** The rules Paperplane gives every session it runs, with only this thread's own Paperplane MCP server allowed. */
 const mcpRules = [
-  { action: "rove-*", resource: "*", effect: "deny" },
-  { action: "rove-thread_opencode2-adapter_*", resource: "*", effect: "allow" },
+  { action: "paperplane-*", resource: "*", effect: "deny" },
+  { action: "paperplane-thread_opencode2-adapter_*", resource: "*", effect: "allow" },
 ];
 const roveRules = [{ action: "*", resource: "*", effect: "allow" }, ...mcpRules];
 /** The thread's title, which the recorded session already carries. */
@@ -3420,7 +3420,7 @@ it.layer(McpProviderSessions.layer)("OpenCode2 adapter", (it) => {
           browserToolsAvailable: false,
         });
         yield* Effect.addFinalizer(() => mcpSessions.clear(threadId));
-        const server = "rove-thread_opencode2-adapter";
+        const server = "paperplane-thread_opencode2-adapter";
         const { runtime, thread } = yield* resumed([
           // Registered for the session's directory under the thread's own name;
           // the session's rules allow only this name's tools (see `roveRules`).
@@ -3454,7 +3454,7 @@ it.layer(McpProviderSessions.layer)("OpenCode2 adapter", (it) => {
       const child = ThreadId.make(
         "thread:delegated-task:command%3Amcp%3A48bef2bf-6d0e-4f7a-9c3b-2e5d8a1f7c40%3Adelegate-task%3Asubproject-b-round1",
       );
-      const server = "rove-aa73fa1e03099934";
+      const server = "paperplane-aa73fa1e03099934";
       const mcpSessions = yield* McpProviderSessions.McpProviderSessions;
       yield* mcpSessions.set({
         environmentId: EnvironmentId.make("environment:opencode2-adapter"),
@@ -3475,7 +3475,7 @@ it.layer(McpProviderSessions.layer)("OpenCode2 adapter", (it) => {
           sessionInfo({
             permissions: [
               { action: "*", resource: "*", effect: "allow" },
-              { action: "rove-*", resource: "*", effect: "deny" },
+              { action: "paperplane-*", resource: "*", effect: "deny" },
               { action: `${server}_*`, resource: "*", effect: "allow" },
             ],
           }),
@@ -3521,13 +3521,13 @@ it.layer(McpProviderSessions.layer)("OpenCode2 adapter", (it) => {
         "thread:delegated-task:command%3Amcp%3A48bef2bf-6d0e-4f7a-9c3b-2e5d8a1f7c40%3Adelegate-task%3Around2",
       ];
       const names = yield* Effect.forEach(ids, roveMcpServerName);
-      for (const name of names) assert.match(name, /^rove-[A-Za-z0-9_-]{1,56}$/);
+      for (const name of names) assert.match(name, /^paperplane-[A-Za-z0-9_-]{1,54}$/);
       assert.equal(new Set(names).size, ids.length);
       assert.deepEqual(yield* Effect.forEach(ids, roveMcpServerName), names);
       // A digested name is the one the synchronous node:crypto version produced.
-      assert.equal(names[0], "rove-63abb5df2b188bdd");
+      assert.equal(names[0], "paperplane-63abb5df2b188bdd");
       // A name that already fits stays readable.
-      assert.equal(yield* roveMcpServerName(threadId), "rove-thread_opencode2-adapter");
+      assert.equal(yield* roveMcpServerName(threadId), "paperplane-thread_opencode2-adapter");
     }).pipe(Effect.provide(NodeCrypto.layer)),
   );
 
@@ -4424,8 +4424,12 @@ it.layer(McpProviderSessions.layer)("OpenCode2 adapter", (it) => {
           sessionID: FORK,
           permissions: [
             { action: "*", resource: "*", effect: "allow" },
-            { action: "rove-*", resource: "*", effect: "deny" },
-            { action: "rove-thread_opencode2-adapter_fork_*", resource: "*", effect: "allow" },
+            { action: "paperplane-*", resource: "*", effect: "deny" },
+            {
+              action: "paperplane-thread_opencode2-adapter_fork_*",
+              resource: "*",
+              effect: "allow",
+            },
           ],
         }),
         reply("session.update", null),

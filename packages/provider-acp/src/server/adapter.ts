@@ -61,7 +61,7 @@ import * as ProviderHost from "@getpaperplane/provider-core/server/ProviderHost"
 import { makeAcpMcpOverAcpBridge, type AcpMcpOverAcpBridge } from "./mcpOverAcpBridge.ts";
 import { mcpToolPresentation } from "@getpaperplane/provider-core/server/mcpToolPresentation";
 import * as McpProviderSessions from "@getpaperplane/provider-core/server/McpProviderSessions";
-import { ROVE_MCP_SERVER_NAME } from "@getpaperplane/shared/roveMcp";
+import { PAPERPLANE_MCP_SERVER_NAME } from "@getpaperplane/shared/roveMcp";
 import * as McpProviderSession from "@getpaperplane/provider-core/server/mcpSession";
 import {
   applyAcpAgentTerminalUpdate,
@@ -662,7 +662,7 @@ function negotiatedCapabilities(
     },
     tools: {
       ...base.tools,
-      // The stdio bridge (`paperplane acp-mcp-bridge`) makes the rove MCP toolkit
+      // The stdio bridge (`paperplane acp-mcp-bridge`) makes the Paperplane MCP toolkit
       // available regardless of the agent's optional http/sse MCP support.
       supportsMcpTools: true,
     },
@@ -697,7 +697,7 @@ function acpMcpContext(
   return {
     servers: [
       {
-        name: ROVE_MCP_SERVER_NAME,
+        name: PAPERPLANE_MCP_SERVER_NAME,
         command: self.command,
         args: [...selfInvocationArgs(self, ["acp-mcp-bridge"])],
         env: [
@@ -707,7 +707,9 @@ function acpMcpContext(
         ],
       },
     ],
-    acpServers: [{ type: "acp", name: ROVE_MCP_SERVER_NAME, serverId: ROVE_MCP_SERVER_NAME }],
+    acpServers: [
+      { type: "acp", name: PAPERPLANE_MCP_SERVER_NAME, serverId: PAPERPLANE_MCP_SERVER_NAME },
+    ],
     endpoint: session.endpoint,
     authorization: session.authorizationHeader,
     processEnvironment: {
@@ -2126,7 +2128,7 @@ export const makeAcpAdapterV2 = Effect.fn("makeAcpAdapterV2")(function* (
               elicitation: { form: {}, ...(flavor.onUrlElicitation ? { url: {} } : {}) },
               ...(flavor.clientCapabilitiesMeta ? { _meta: flavor.clientCapabilitiesMeta } : {}),
             },
-            clientInfo: { name: "rove", version: "0.0.0" },
+            clientInfo: { name: "paperplane", version: "0.0.0" },
             onTermination,
             onOutgoingResponseFailure: (requestId, error) =>
               Ref.modify(nativeResponseAcknowledgements, (current) => {

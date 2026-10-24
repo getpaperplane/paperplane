@@ -118,7 +118,7 @@ import {
 import * as ProviderEventLoggers from "@getpaperplane/provider-core/server/ProviderEventLoggers";
 import { codexAppServerArgs, resolveCodexLaunchArgs } from "../../provider/codexLaunchArgs.ts";
 import { mergeProviderInstanceEnvironment } from "@getpaperplane/provider-core/server/instanceEnvironment";
-import { ROVE_MCP_SERVER_NAME } from "@getpaperplane/shared/roveMcp";
+import { PAPERPLANE_MCP_SERVER_NAME } from "@getpaperplane/shared/roveMcp";
 import * as McpProviderSession from "@getpaperplane/provider-core/server/mcpSession";
 import * as McpProviderSessions from "@getpaperplane/provider-core/server/McpProviderSessions";
 import {
@@ -1351,7 +1351,7 @@ export function codexThreadRuntimeParams(input: {
         ? {}
         : {
             mcp_servers: {
-              [ROVE_MCP_SERVER_NAME]: {
+              [PAPERPLANE_MCP_SERVER_NAME]: {
                 url: mcpSession.endpoint,
                 tool_timeout_sec: CODEX_T3_MCP_TOOL_TIMEOUT_SEC,
                 http_headers: {

@@ -19,7 +19,7 @@ describe("Paperplane orchestration provider instructions", () => {
     assert.include(PAPERPLANE_ORCHESTRATION_INSTRUCTIONS, "call `delegate_task` again");
     assert.include(
       PAPERPLANE_ORCHESTRATION_INSTRUCTIONS,
-      "Do not use `rove_thread_send` on `childThreadId`",
+      "Do not use `paperplane_thread_send` on `childThreadId`",
     );
   });
 

@@ -184,7 +184,7 @@ export function workEntryDisplayLabel(entry: WorkLogEntry, workspaceRoot: string
   return `${heading.charAt(0).toUpperCase()}${heading.slice(1)}`;
 }
 
-/** The trimmed thread id a `rove_thread_read` call targets, or null for any other entry. */
+/** The trimmed thread id a `paperplane_thread_read` call targets, or null for any other entry. */
 export function threadReadTargetId(entry: Pick<WorkLogEntry, "structuredPayload">) {
   const item = entry.structuredPayload;
   if (item?.type !== "dynamic_tool") return null;

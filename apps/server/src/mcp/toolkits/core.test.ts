@@ -108,6 +108,7 @@ it("publishes unique tool names with reference-free object-root inputs", () => {
     for (const tool of Object.values(toolkit.tools)) {
       expect(names.has(tool.name)).toBe(false);
       names.add(tool.name);
+      expect(tool.name.startsWith("rove_"), tool.name).toBe(false);
       const schema = Tool.getJsonSchema(tool);
       expect(schema).toMatchObject({ type: "object" });
       // The published tool catalog must also work with providers without $ref support.
@@ -119,13 +120,14 @@ it("publishes unique tool names with reference-free object-root inputs", () => {
         definition?.labels.every((label) => label.trim().length > 0),
         tool.name,
       ).toBe(true);
-      for (const name of [tool.name, `mcp__rove__${tool.name}`, `Rove.${tool.name}`]) {
+      for (const name of [tool.name, `mcp__paperplane__${tool.name}`, `paperplane.${tool.name}`]) {
         expect(resolveRoveMcpToolPresentation(name)?.logo, name).toBe("rove");
         expect(resolveRoveMcpToolSummaryAction(name), name).not.toBeNull();
       }
     }
   }
-  expect(names.has("rove_thread_launch")).toBe(true);
+  expect(names.has("paperplane_thread_launch")).toBe(true);
+  expect(names.has("paperplane_thread_start")).toBe(false);
   expect(names.has("rove_thread_start")).toBe(false);
 });
 
@@ -158,9 +160,9 @@ const client = McpSchema.McpServerClient.of({
 it.effect("checks capability through the production registration", () =>
   Effect.gen(function* () {
     const server = yield* McpServer.McpServer;
-    expect(server.tools.some(({ tool }) => tool.name === "rove_thread_organize")).toBe(true);
+    expect(server.tools.some(({ tool }) => tool.name === "paperplane_thread_organize")).toBe(true);
     const result = yield* server
-      .callTool({ name: "rove_thread_organize", arguments: { action: "pin" } })
+      .callTool({ name: "paperplane_thread_organize", arguments: { action: "pin" } })
       .pipe(
         Effect.provideService(McpInvocationContext.McpInvocationContext, {
           ...scope,
@@ -186,7 +188,7 @@ it.effect("returns a bounded public failure without serializing storage causes",
   Effect.gen(function* () {
     const server = yield* McpServer.McpServer;
     const result = yield* server
-      .callTool({ name: "rove_thread_organize", arguments: { action: "pin" } })
+      .callTool({ name: "paperplane_thread_organize", arguments: { action: "pin" } })
       .pipe(
         Effect.provideService(McpInvocationContext.McpInvocationContext, scope),
         Effect.provideService(McpSchema.McpServerClient, client),
@@ -203,7 +205,7 @@ it.effect("returns a bounded public failure without serializing storage causes",
         text: '{"_tag":"OrchestratorMcpFailure","code":"orchestration_error","message":"The operation could not be completed."}',
       },
     ]);
-    const definition = server.tools.find(({ tool }) => tool.name === "rove_thread_organize");
+    const definition = server.tools.find(({ tool }) => tool.name === "paperplane_thread_organize");
     expect(definition?.tool.outputSchema).toBeDefined();
     const validate = new AjvJsonSchemaValidator().getValidator(
       definition!.tool.outputSchema! as JsonSchemaType,
@@ -282,12 +284,12 @@ it.effect("returns an HTML render reference that Codex and Claude tool rows both
         Effect.provideService(McpSchema.McpServerClient, client),
       );
     const reference = htmlRenderFromToolItem({
-      toolName: "rove.html_render",
+      toolName: "paperplane.html_render",
       output: result.structuredContent,
     });
     expect(reference).toMatchObject({ title: "Revenue", height: 240 });
     expect(
-      htmlRenderFromToolItem({ toolName: "mcp__rove__html_render", output: result.content }),
+      htmlRenderFromToolItem({ toolName: "mcp__paperplane__html_render", output: result.content }),
     ).toEqual(reference);
   }).pipe(
     Effect.provide(
@@ -320,7 +322,7 @@ it.effect("returns invalid parameter errors through the production registration"
   Effect.gen(function* () {
     const server = yield* McpServer.McpServer;
     const error = yield* server
-      .callTool({ name: "rove_thread_organize", arguments: { action: "invalid" } })
+      .callTool({ name: "paperplane_thread_organize", arguments: { action: "invalid" } })
       .pipe(
         Effect.provideService(McpInvocationContext.McpInvocationContext, scope),
         Effect.provideService(McpSchema.McpServerClient, client),
@@ -342,7 +344,7 @@ it.effect("keeps unexpected handler defects private through the production regis
   Effect.gen(function* () {
     const server = yield* McpServer.McpServer;
     const result = yield* server
-      .callTool({ name: "rove_thread_organize", arguments: { action: "pin" } })
+      .callTool({ name: "paperplane_thread_organize", arguments: { action: "pin" } })
       .pipe(
         Effect.provideService(McpInvocationContext.McpInvocationContext, scope),
         Effect.provideService(McpSchema.McpServerClient, client),
@@ -444,11 +446,15 @@ it.effect("a client caller targets any thread within its ceiling and cannot act 
           Effect.provideService(McpSchema.McpServerClient, client),
         );
 
-    const untargeted = yield* call("rove_thread_organize", { action: "pin" }, clientScope("auto"));
+    const untargeted = yield* call(
+      "paperplane_thread_organize",
+      { action: "pin" },
+      clientScope("auto"),
+    );
     expect(declaredFailure(untargeted)).toMatchObject({ code: "target_required" });
 
     const pinned = yield* call(
-      "rove_thread_organize",
+      "paperplane_thread_organize",
       { action: "pin", threadId: "other-project-thread" },
       clientScope("auto"),
     );
@@ -456,7 +462,7 @@ it.effect("a client caller targets any thread within its ceiling and cannot act 
     expect(pinned.structuredContent).toMatchObject({ sequence: 7 });
 
     const aboveCeiling = yield* call(
-      "rove_thread_organize",
+      "paperplane_thread_organize",
       { action: "pin", threadId: "other-project-thread" },
       clientScope("approval-required"),
     );
@@ -465,7 +471,7 @@ it.effect("a client caller targets any thread within its ceiling and cannot act 
     });
 
     const forked = yield* call(
-      "rove_thread_fork",
+      "paperplane_thread_fork",
       { sourcePoint: { type: "latest_stable" } },
       clientScope("auto"),
     );
@@ -511,20 +517,20 @@ it.effect("a read-only client reads threads and is refused every write before it
           Effect.provideService(McpSchema.McpServerClient, client),
         );
 
-    const configuration = yield* call("rove_thread_configuration", {
+    const configuration = yield* call("paperplane_thread_configuration", {
       threadId: "other-project-thread",
     });
     expect(configuration.isError).toBe(false);
     expect(configuration.structuredContent).toMatchObject({ runtimeMode: "auto" });
 
-    const pinned = yield* call("rove_thread_organize", {
+    const pinned = yield* call("paperplane_thread_organize", {
       action: "pin",
       threadId: "other-project-thread",
     });
     expect(declaredFailure(pinned)).toMatchObject({ code: "capability_denied" });
     expect(dispatched).toEqual([]);
 
-    const configure = yield* call("rove_thread_configure", {
+    const configure = yield* call("paperplane_thread_configure", {
       threadId: "other-project-thread",
       modelSelection: { instanceId: "codex", model: "gpt-5" },
     });
@@ -679,7 +685,7 @@ function scheduledTask(id: string, runtimeMode: "auto" | "full-access"): never {
   } as never;
 }
 
-it.effect.each(["rove_thread_interrupt", "rove_workflow_stop"])(
+it.effect.each(["paperplane_thread_interrupt", "paperplane_workflow_stop"])(
   "a caller cannot use %s on a thread that runs above its own modes",
   (toolName) =>
     Effect.gen(function* () {
@@ -689,7 +695,9 @@ it.effect.each(["rove_thread_interrupt", "rove_workflow_stop"])(
           name: toolName,
           arguments: {
             threadId: "full-access-thread",
-            ...(toolName === "rove_workflow_stop" ? { subagentId: "workflow-coordinator" } : {}),
+            ...(toolName === "paperplane_workflow_stop"
+              ? { subagentId: "workflow-coordinator" }
+              : {}),
           },
         })
         .pipe(
@@ -777,7 +785,7 @@ it.effect("discovers workflow stop targets and requires orchestration capability
     const server = yield* McpServer.McpServer;
     const scope = clientScope("full-access");
     const read = yield* server
-      .callTool({ name: "rove_thread_read", arguments: { threadId, view: "activity" } })
+      .callTool({ name: "paperplane_thread_read", arguments: { threadId, view: "activity" } })
       .pipe(
         Effect.provideService(McpInvocationContext.McpInvocationContext, scope),
         Effect.provideService(McpSchema.McpServerClient, client),
@@ -788,7 +796,7 @@ it.effect("discovers workflow stop targets and requires orchestration capability
     const call = (invocation: McpInvocationContext.McpInvocationScope) =>
       server
         .callTool({
-          name: "rove_workflow_stop",
+          name: "paperplane_workflow_stop",
           arguments: { threadId, subagentId: result.items[0]?.subagentId },
         })
         .pipe(
@@ -844,7 +852,7 @@ it.effect("only the caller that prepared a pending upload can discard it", () =>
           Effect.provideService(McpSchema.McpServerClient, client),
         );
     const prepared = yield* call(
-      "rove_attachment_prepare_upload",
+      "paperplane_attachment_prepare_upload",
       { upload: { name: "shot.png", mimeType: "image/png", sizeBytes: 4 } },
       scope,
     );
@@ -855,21 +863,21 @@ it.effect("only the caller that prepared a pending upload can discard it", () =>
       thread: { ...scope.thread!, threadId: ThreadId.make("other-thread") },
     };
 
-    const refused = yield* call("rove_attachment_discard", { attachmentId }, otherThread);
+    const refused = yield* call("paperplane_attachment_discard", { attachmentId }, otherThread);
     expect(declaredFailure(refused)).toMatchObject({ code: "invalid_request" });
 
     // Another prepare a day later keeps it: the file outlives its URL's 24 hours
     // by as long as the upload took, up to the URL's own lifetime.
     yield* TestClock.adjust(24 * 60 * 60 * 1000 + 5 * 60_000);
     yield* call(
-      "rove_attachment_prepare_upload",
+      "paperplane_attachment_prepare_upload",
       { upload: { name: "later.png", mimeType: "image/png", sizeBytes: 4 } },
       scope,
     );
 
     // A new provider session of the same thread still owns the upload.
     const discarded = yield* call(
-      "rove_attachment_discard",
+      "paperplane_attachment_discard",
       { attachmentId },
       { ...scope, requestNamespace: "mcp-core-session-2" },
     );

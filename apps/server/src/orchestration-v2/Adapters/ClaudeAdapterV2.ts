@@ -145,7 +145,10 @@ import {
   mcpToolPresentation,
   normalizeMcpText,
 } from "@getpaperplane/provider-core/server/mcpToolPresentation";
-import { ROVE_MCP_SERVER_NAME, ROVE_MCP_TOOL_PREFIX } from "@getpaperplane/shared/roveMcp";
+import {
+  PAPERPLANE_MCP_SERVER_NAME,
+  PAPERPLANE_MCP_TOOL_PREFIX,
+} from "@getpaperplane/shared/roveMcp";
 import * as McpProviderSession from "@getpaperplane/provider-core/server/mcpSession";
 import * as McpProviderSessions from "@getpaperplane/provider-core/server/McpProviderSessions";
 import * as IdAllocator from "@getpaperplane/provider-core/server/IdAllocator";
@@ -1213,41 +1216,41 @@ export function makeClaudeQueryOptions(input: {
   return input.cwd === null ? withDirectories : { ...withDirectories, cwd: input.cwd };
 }
 
-export const CLAUDE_ROVE_MCP_TOOL_WILDCARD = `${ROVE_MCP_TOOL_PREFIX}*`;
+export const CLAUDE_PAPERPLANE_MCP_TOOL_WILDCARD = `${PAPERPLANE_MCP_TOOL_PREFIX}*`;
 
 // Must stay in sync with the Tool.Readonly annotations on OrchestratorToolkit;
 // ClaudeAdapterV2.test.ts cross-checks this list against the toolkit.
-export const CLAUDE_READ_ONLY_ROVE_MCP_ALLOWED_TOOLS: ReadonlyArray<string> = [
+export const CLAUDE_READ_ONLY_PAPERPLANE_MCP_ALLOWED_TOOLS: ReadonlyArray<string> = [
   "orchestrator_capabilities",
   "list_scheduled_tasks",
-  "rove_thread_list",
-  "rove_thread_wait",
-  "rove_pending_request_list",
-  "rove_pending_request_read",
-  "rove_thread_configuration",
-  "rove_thread_transfers",
-  "rove_worktree_status",
-  "rove_worktree_list",
-  "rove_project_list",
-  "rove_project_read",
-  "rove_thread_search",
-  "rove_preview_list",
-  "rove_environment_read",
-  "rove_queue_list",
-  "rove_queue_read",
+  "paperplane_thread_list",
+  "paperplane_thread_wait",
+  "paperplane_pending_request_list",
+  "paperplane_pending_request_read",
+  "paperplane_thread_configuration",
+  "paperplane_thread_transfers",
+  "paperplane_worktree_status",
+  "paperplane_worktree_list",
+  "paperplane_project_list",
+  "paperplane_project_read",
+  "paperplane_thread_search",
+  "paperplane_preview_list",
+  "paperplane_environment_read",
+  "paperplane_queue_list",
+  "paperplane_queue_read",
   "html_preview",
   "html_render",
-].map((name) => `${ROVE_MCP_TOOL_PREFIX}${name}`);
+].map((name) => `${PAPERPLANE_MCP_TOOL_PREFIX}${name}`);
 
 // Claude Code aborts an HTTP MCP call after 60 s ("The operation timed out.")
-// unless the server config sets `timeout`. Paperplane's wait tools (rove_thread_wait,
+// unless the server config sets `timeout`. Paperplane's wait tools (paperplane_thread_wait,
 // delegate_task mode=wait) legitimately block for up to an hour
 // (MAX_WAIT_TIMEOUT_MS in OrchestratorMcpService), so the budget sits just
 // above that and the server's own wait timeout is what ends a long call.
-export const CLAUDE_ROVE_MCP_TOOL_TIMEOUT_MS = 65 * 60 * 1_000;
+export const CLAUDE_PAPERPLANE_MCP_TOOL_TIMEOUT_MS = 65 * 60 * 1_000;
 
 // The SDK's `allowedTools` only pre-approves tool calls; availability is the
-// separate `tools` option. Attaching the rove MCP server therefore always
+// separate `tools` option. Attaching the Paperplane MCP server therefore always
 // pre-approves its tools (headless modes like `dontAsk` deny anything that is
 // not pre-approved), but read-only sandboxes pre-approve only the annotated
 // read-only orchestrator tools so a read-only session cannot silently spawn
@@ -1269,18 +1272,18 @@ export function claudeMcpQueryOverrides(input: {
     return input.allowedTools === undefined ? {} : { allowedTools: input.allowedTools };
   }
   const mcpAllowedTools = input.readOnlySandbox
-    ? CLAUDE_READ_ONLY_ROVE_MCP_ALLOWED_TOOLS
-    : [CLAUDE_ROVE_MCP_TOOL_WILDCARD];
+    ? CLAUDE_READ_ONLY_PAPERPLANE_MCP_ALLOWED_TOOLS
+    : [CLAUDE_PAPERPLANE_MCP_TOOL_WILDCARD];
   return {
     allowedTools: Array.from(new Set([...(input.allowedTools ?? []), ...mcpAllowedTools])),
     mcpServers: {
-      [ROVE_MCP_SERVER_NAME]: {
+      [PAPERPLANE_MCP_SERVER_NAME]: {
         type: "http",
         url: session.endpoint,
         headers: {
           Authorization: session.authorizationHeader,
         },
-        timeout: CLAUDE_ROVE_MCP_TOOL_TIMEOUT_MS,
+        timeout: CLAUDE_PAPERPLANE_MCP_TOOL_TIMEOUT_MS,
       },
     },
   };

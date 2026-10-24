@@ -114,7 +114,7 @@ describe("stripUnservedToolOutputImageBytes", () => {
     const mcpImage = { type: "image", data: PADDED_BASE64, mimeType: "image/jpeg" };
     const item = toolItem(
       { content: [{ type: "text", text: "captured" }, claudeImage, mcpImage] },
-      "mcp__rove__device_screenshot",
+      "mcp__paperplane__device_screenshot",
     );
 
     const stripped = stripUnservedToolOutputImageBytes(item);

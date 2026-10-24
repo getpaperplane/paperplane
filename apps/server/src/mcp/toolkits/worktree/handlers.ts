@@ -11,7 +11,7 @@ import * as WorktreeMcpService from "../../WorktreeMcpService.ts";
 import { WorktreeToolkit } from "./tools.ts";
 
 const handlers = {
-  rove_worktree_list: McpToolAccess.reads((input) =>
+  paperplane_worktree_list: McpToolAccess.reads((input) =>
     Effect.gen(function* () {
       const context = yield* McpInvocationContext.McpInvocationContext;
       if (!context.capabilities.has("worktree"))
@@ -36,14 +36,14 @@ const handlers = {
         .pipe(Effect.mapError(unavailable));
     }),
   ),
-  rove_worktree_handoff: McpToolAccess.actsAsCaller((input) =>
+  paperplane_worktree_handoff: McpToolAccess.actsAsCaller((input) =>
     Effect.gen(function* () {
       const scope = yield* McpInvocationContext.McpInvocationContext;
       const service = yield* WorktreeMcpService.WorktreeMcpService;
       return yield* service.handoff(scope, input);
     }),
   ),
-  rove_worktree_status: McpToolAccess.readsAsCaller(() =>
+  paperplane_worktree_status: McpToolAccess.readsAsCaller(() =>
     Effect.gen(function* () {
       const scope = yield* McpInvocationContext.McpInvocationContext;
       const service = yield* WorktreeMcpService.WorktreeMcpService;

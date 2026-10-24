@@ -1,4 +1,4 @@
-import { ROVE_MCP_SERVER_NAME } from "./roveMcp.ts";
+import { PAPERPLANE_MCP_SERVER_NAME } from "./roveMcp.ts";
 
 export type RoveMcpToolLogo = "rove";
 
@@ -84,11 +84,8 @@ function tool(
   return { displayName, labels, icon, summaryAction };
 }
 
-// Legacy spellings are read-only compatibility for saved tool records, not registrations.
-const ROVE_MCP_SERVER_ALIASES = new Set([ROVE_MCP_SERVER_NAME, "rove-code", "rove_code"]);
-
 // Cards, activity rows, summaries, and provider identity recovery share this inventory.
-const ROVE_MCP_TOOLS: Readonly<Record<string, RoveMcpToolDefinition>> = {
+const PAPERPLANE_MCP_TOOLS: Readonly<Record<string, RoveMcpToolDefinition>> = {
   link_pull_request: tool(
     ["Link", "Linking", "Linked", "a pull request"],
     "link-pr",
@@ -149,24 +146,29 @@ const ROVE_MCP_TOOLS: Readonly<Record<string, RoveMcpToolDefinition>> = {
   ),
   request_secret: tool(["Ask for", "Asking for", "Asked for", "a secret"], "secret-request"),
   create_threads: tool(["Create", "Creating", "Created", "Paperplane threads"], "thread-create"),
-  rove_thread_start: tool(["Start", "Starting", "Started", "a Paperplane thread"], "thread-create"),
-  rove_thread_list: tool(["List", "Listing", "Listed", "Paperplane threads"], "thread-list"),
-  rove_thread_read: tool(["Read", "Reading", "Read", "a Paperplane thread"], "thread-read"),
-  rove_thread_send: tool(["Send", "Sending", "Sent", "to a Paperplane thread"], "thread-send"),
-  rove_thread_wait: tool(["Wait", "Waiting", "Waited", "for a Paperplane thread"], "thread-wait"),
-  rove_workflow_stop: tool(
+  paperplane_thread_list: tool(["List", "Listing", "Listed", "Paperplane threads"], "thread-list"),
+  paperplane_thread_read: tool(["Read", "Reading", "Read", "a Paperplane thread"], "thread-read"),
+  paperplane_thread_send: tool(
+    ["Send", "Sending", "Sent", "to a Paperplane thread"],
+    "thread-send",
+  ),
+  paperplane_thread_wait: tool(
+    ["Wait", "Waiting", "Waited", "for a Paperplane thread"],
+    "thread-wait",
+  ),
+  paperplane_workflow_stop: tool(
     ["Stop", "Stopping", "Requested a stop for", "a workflow"],
     "workflow-stop",
   ),
-  rove_thread_interrupt: tool(
+  paperplane_thread_interrupt: tool(
     ["Interrupt", "Interrupting", "Requested an interrupt of", "a Paperplane thread"],
     "thread-interrupt",
   ),
-  rove_worktree_handoff: tool(
+  paperplane_worktree_handoff: tool(
     ["Hand off", "Handing off", "Handed off", "thread to a git worktree"],
     "worktree-handoff",
   ),
-  rove_worktree_status: tool(
+  paperplane_worktree_status: tool(
     ["Get", "Getting", "Got", "thread worktree status"],
     "worktree-status",
   ),
@@ -274,83 +276,109 @@ const ROVE_MCP_TOOLS: Readonly<Record<string, RoveMcpToolDefinition>> = {
     ["Run", "Running", "Requested a run of", "a scheduled task"],
     "schedule-run",
   ),
-  rove_queue_list: tool(["List", "Listing", "Listed", "queued messages"], "queue-list"),
-  rove_queue_read: tool(["Read", "Reading", "Read", "a queued message"], "queue-read"),
-  rove_queue_edit: tool(["Edit", "Editing", "Edited", "a queued message"], "queue-edit"),
-  rove_queue_cancel: tool(
+  paperplane_queue_list: tool(["List", "Listing", "Listed", "queued messages"], "queue-list"),
+  paperplane_queue_read: tool(["Read", "Reading", "Read", "a queued message"], "queue-read"),
+  paperplane_queue_edit: tool(["Edit", "Editing", "Edited", "a queued message"], "queue-edit"),
+  paperplane_queue_cancel: tool(
     ["Cancel", "Canceling", "Requested cancellation of", "a queued run"],
     "queue-cancel",
   ),
-  rove_queue_reorder: tool(["Reorder", "Reordering", "Reordered", "a queued run"], "queue-reorder"),
-  rove_queue_promote_to_steer: tool(
+  paperplane_queue_reorder: tool(
+    ["Reorder", "Reordering", "Reordered", "a queued run"],
+    "queue-reorder",
+  ),
+  paperplane_queue_promote_to_steer: tool(
     ["Steer with", "Steering with", "Requested steering with", "a queued message"],
     "queue-steer",
   ),
-  rove_pending_request_list: tool(
+  paperplane_pending_request_list: tool(
     ["List", "Listing", "Listed", "pending questions"],
     "question-list",
   ),
-  rove_pending_request_read: tool(
+  paperplane_pending_request_read: tool(
     ["Read", "Reading", "Read", "pending questions"],
     "question-read",
   ),
-  rove_pending_request_respond: tool(
+  paperplane_pending_request_respond: tool(
     ["Answer", "Answering", "Answered", "pending questions"],
     "question-respond",
   ),
-  rove_thread_configuration: tool(
+  paperplane_thread_configuration: tool(
     ["Read", "Reading", "Read", "thread configuration"],
     "thread-configuration",
   ),
-  rove_thread_configure: tool(["Set", "Setting", "Set", "thread model"], "thread-configure"),
-  rove_thread_fork: tool(["Fork", "Forking", "Requested a fork of", "this thread"], "thread-fork"),
-  rove_thread_merge_back: tool(
+  paperplane_thread_configure: tool(["Set", "Setting", "Set", "thread model"], "thread-configure"),
+  paperplane_thread_fork: tool(
+    ["Fork", "Forking", "Requested a fork of", "this thread"],
+    "thread-fork",
+  ),
+  paperplane_thread_merge_back: tool(
     ["Merge", "Merging", "Requested a merge of", "thread context"],
     "thread-merge",
   ),
-  rove_thread_search: tool(["Search", "Searching", "Searched", "thread content"], "thread-search"),
-  rove_thread_transfers: tool(["Read", "Reading", "Read", "thread transfers"], "thread-transfers"),
-  rove_thread_organize: tool(
+  paperplane_thread_search: tool(
+    ["Search", "Searching", "Searched", "thread content"],
+    "thread-search",
+  ),
+  paperplane_thread_transfers: tool(
+    ["Read", "Reading", "Read", "thread transfers"],
+    "thread-transfers",
+  ),
+  paperplane_thread_organize: tool(
     ["Organize", "Organizing", "Organized", "a thread"],
     "thread-organize",
   ),
-  rove_thread_update: tool(
+  paperplane_thread_update: tool(
     ["Update", "Updating", "Updated", "Paperplane thread metadata"],
     "thread-update",
   ),
-  rove_worktree_list: tool(["List", "Listing", "Listed", "workspace branches"], "worktree-list"),
-  rove_preview_list: tool(["List", "Listing", "Listed", "preview tabs"], "browser", "browser"),
-  rove_preview_close: tool(["Close", "Closing", "Closed", "a preview tab"], "browser", "browser"),
-  rove_environment_read: tool(
+  paperplane_worktree_list: tool(
+    ["List", "Listing", "Listed", "workspace branches"],
+    "worktree-list",
+  ),
+  paperplane_preview_list: tool(
+    ["List", "Listing", "Listed", "preview tabs"],
+    "browser",
+    "browser",
+  ),
+  paperplane_preview_close: tool(
+    ["Close", "Closing", "Closed", "a preview tab"],
+    "browser",
+    "browser",
+  ),
+  paperplane_environment_read: tool(
     ["Read", "Reading", "Read", "environment preferences"],
     "environment-read",
   ),
-  rove_environment_preferences_update: tool(
+  paperplane_environment_preferences_update: tool(
     ["Update", "Updating", "Updated", "environment preferences"],
     "environment-update",
   ),
-  rove_thread_launch: tool(
+  paperplane_thread_launch: tool(
     ["Launch", "Launching", "Launched", "a project thread"],
     "thread-create",
   ),
-  rove_project_list: tool(["List", "Listing", "Listed", "projects"], "project-list"),
-  rove_project_read: tool(["Read", "Reading", "Read", "a project"], "project-read"),
-  rove_project_create: tool(
+  paperplane_project_list: tool(["List", "Listing", "Listed", "projects"], "project-list"),
+  paperplane_project_read: tool(["Read", "Reading", "Read", "a project"], "project-read"),
+  paperplane_project_create: tool(
     ["Register", "Registering", "Registered", "a project"],
     "project-create",
   ),
-  rove_project_update: tool(["Update", "Updating", "Updated", "a project"], "project-update"),
-  rove_project_delete: tool(["Delete", "Deleting", "Deleted", "a project"], "project-delete"),
-  rove_project_clone: tool(["Clone", "Cloning", "Cloned", "a repository"], "project-clone"),
-  rove_attachment_prepare_upload: tool(
+  paperplane_project_update: tool(["Update", "Updating", "Updated", "a project"], "project-update"),
+  paperplane_project_delete: tool(["Delete", "Deleting", "Deleted", "a project"], "project-delete"),
+  paperplane_project_clone: tool(["Clone", "Cloning", "Cloned", "a repository"], "project-clone"),
+  paperplane_attachment_prepare_upload: tool(
     ["Prepare", "Preparing", "Prepared", "an attachment upload"],
     "attachment-prepare",
   ),
-  rove_attachment_discard: tool(
+  paperplane_attachment_discard: tool(
     ["Discard", "Discarding", "Discarded", "a pending attachment"],
     "attachment-discard",
   ),
-  rove_thread_send_attachments: tool(["Send", "Sending", "Sent", "attachments"], "attachment-send"),
+  paperplane_thread_send_attachments: tool(
+    ["Send", "Sending", "Sent", "attachments"],
+    "attachment-send",
+  ),
   html_preview: tool(["Preview", "Previewing", "Previewed", "an HTML page"], "html-preview"),
   html_render: tool(["Render", "Rendering", "Rendered", "an HTML page"], "html-render"),
 };
@@ -359,7 +387,9 @@ const ROVE_MCP_TOOLS: Readonly<Record<string, RoveMcpToolDefinition>> = {
  * The Paperplane orchestration tool inventory, used to gate loose name matching on
  * both the server (ACP MCP identity recovery) and the client (logo branding).
  */
-export const ROVE_MCP_TOOL_NAMES: ReadonlySet<string> = new Set(Object.keys(ROVE_MCP_TOOLS));
+export const PAPERPLANE_MCP_TOOL_NAMES: ReadonlySet<string> = new Set(
+  Object.keys(PAPERPLANE_MCP_TOOLS),
+);
 
 function normalizeRoveMcpToolLabel(value: string): string {
   return value.replace(/\s+(?:complete|completed)\s*$/i, "").trim();
@@ -367,40 +397,38 @@ function normalizeRoveMcpToolLabel(value: string): string {
 
 /**
  * ACP agents disagree on how the injected Paperplane server prefixes its tools:
- * `mcp__rove__x` (Claude/Cursor/Pi), `rove.x` (Codex), plus single
+ * `mcp__paperplane__x` (Claude/Cursor/Pi), `paperplane.x` (Codex), plus single
  * underscore, colon, slash, dash, and space separators seen from registry
  * agents. The prefix match is deliberately loose because the display-name
  * inventory is the real gate; unknown tools stay on the generic renderer.
  */
 function resolveRoveMcpToolName(value: string): string | null {
   const label = normalizeRoveMcpToolLabel(value);
-  if (Object.hasOwn(ROVE_MCP_TOOLS, label)) return label;
+  if (Object.hasOwn(PAPERPLANE_MCP_TOOLS, label)) return label;
   const mcpMatch = /^mcp__(?<server>.+?)__(?<tool>.+)$/i.exec(label);
   if (mcpMatch?.groups) {
     const { server, tool } = mcpMatch.groups;
     return server !== undefined &&
       tool !== undefined &&
-      ROVE_MCP_SERVER_ALIASES.has(server.toLowerCase())
+      server.toLowerCase() === PAPERPLANE_MCP_SERVER_NAME
       ? tool
       : null;
   }
 
-  const namespaceMatch = /^(?<server>rove|rove-code|rove_code)(?:[.:/]|\s*·\s*)(?<tool>.+)$/i.exec(
-    label,
-  );
+  const namespaceMatch = /^(?<server>paperplane)(?:[.:/]|\s*·\s*)(?<tool>.+)$/i.exec(label);
   if (namespaceMatch?.groups) {
     return namespaceMatch.groups.tool ?? null;
   }
 
-  const prefixed = /^(?:mcp[-_]{1,2})?rove(?:[-_ ]?code)?[-_.:/ ]{1,3}(?<tool>.+)$/i.exec(label);
+  const prefixed = /^(?:mcp[-_]{1,2})?paperplane[-_.:/ ]{1,3}(?<tool>.+)$/i.exec(label);
   const candidate = prefixed?.groups?.tool ?? label;
-  if (Object.hasOwn(ROVE_MCP_TOOLS, candidate)) return candidate;
-  // OpenCode 2 registers one server per thread, `rove-<thread>`, and joins
+  if (Object.hasOwn(PAPERPLANE_MCP_TOOLS, candidate)) return candidate;
+  // OpenCode 2 registers one server per thread, `paperplane-<thread>`, and joins
   // it to the tool with `_`. Thread ids can hold `_` too, so take the longest
   // known tool name that ends the label.
-  if (!/^rove-/i.test(label)) return null;
+  if (!/^paperplane-/i.test(label)) return null;
   let longest: string | null = null;
-  for (const tool of Object.keys(ROVE_MCP_TOOLS)) {
+  for (const tool of Object.keys(PAPERPLANE_MCP_TOOLS)) {
     if (label.endsWith(`_${tool}`) && tool.length > (longest?.length ?? 0)) longest = tool;
   }
   return longest;
@@ -409,14 +437,16 @@ function resolveRoveMcpToolName(value: string): string | null {
 /** The bare Paperplane tool name (`html_render`) for any provider's spelling of it. */
 export function resolveRoveMcpToolId(toolName: string | null | undefined): string | null {
   const name = toolName == null ? null : resolveRoveMcpToolName(toolName);
-  return name !== null && Object.hasOwn(ROVE_MCP_TOOLS, name) ? name : null;
+  return name !== null && Object.hasOwn(PAPERPLANE_MCP_TOOLS, name) ? name : null;
 }
 
 export function resolveRoveMcpToolDefinition(
   toolName: string | null | undefined,
 ): RoveMcpToolDefinition | null {
   const name = toolName == null ? null : resolveRoveMcpToolName(toolName);
-  return name !== null && Object.hasOwn(ROVE_MCP_TOOLS, name) ? ROVE_MCP_TOOLS[name]! : null;
+  return name !== null && Object.hasOwn(PAPERPLANE_MCP_TOOLS, name)
+    ? PAPERPLANE_MCP_TOOLS[name]!
+    : null;
 }
 
 export function resolveRoveMcpToolPresentation(

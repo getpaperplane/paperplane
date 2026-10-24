@@ -431,7 +431,7 @@ describe("orchestration V2 wire projection", () => {
     const item = {
       ...base,
       type: "dynamic_tool" as const,
-      toolName: "mcp__rove__device_screenshot",
+      toolName: "mcp__paperplane__device_screenshot",
       input: { deviceId: "phone" },
       output: {
         content: [{ type: "image", source: { type: "base64", media_type: "image/png", data } }],

@@ -79,10 +79,10 @@ it.effect.each([
         ),
       );
       const listed = yield* toolkit
-        .handle("rove_preview_list", {})
+        .handle("paperplane_preview_list", {})
         .pipe(Stream.unwrap, Stream.runCollect, Effect.provide(layerDependencies));
       const closed = yield* toolkit
-        .handle("rove_preview_close", { tabId: tab.tabId })
+        .handle("paperplane_preview_close", { tabId: tab.tabId })
         .pipe(Stream.unwrap, Stream.runCollect, Effect.provide(layerDependencies));
       if (projectAccess) {
         expect(listed.at(-1)?.result).toMatchObject({ sessions: [tab], nextCursor: null });

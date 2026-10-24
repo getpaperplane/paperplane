@@ -959,7 +959,7 @@ export const layerDeviceToolkit = Layer.mergeAll(
 );
 
 export const layerMcpTransport = McpServer.layerHttp({
-  name: "Rove Code",
+  name: "Paperplane",
   version: packageJson.version,
   path: "/mcp",
   protocols: [McpProtocol.v2025_06_18],

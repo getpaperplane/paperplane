@@ -173,7 +173,7 @@ export default function (pi: ExtensionAPI) {
         workloadTool ||
         hangTool ||
         (getCurrentTools(context.messages).some(
-          (tool) => tool.name === "mcp__rove__preview_status",
+          (tool) => tool.name === "mcp__paperplane__preview_status",
         ) &&
           !context.messages.some((message) => message.role === "toolResult"));
       const message: AssistantMessage = {
@@ -197,7 +197,7 @@ export default function (pi: ExtensionAPI) {
                       : "bash"
                   : hangTool
                     ? "fixture_hang"
-                    : "mcp__rove__preview_status",
+                    : "mcp__paperplane__preview_status",
                 arguments: workloadTool ? workloadArgs : {},
               },
             ]

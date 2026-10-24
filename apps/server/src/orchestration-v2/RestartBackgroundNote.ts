@@ -135,7 +135,7 @@ export function isAwaitedWork(work: Pick<Work, "kind">): boolean {
 
 /**
  * A run's status as its waiter should read it: a delegating parent,
- * `task_status`, or `rove_thread_wait`. A turn that ended to wait on work the
+ * `task_status`, or `paperplane_thread_wait`. A turn that ended to wait on work the
  * restart then cancelled did not finish, so it is "interrupted", not
  * "completed", and its last message is not a final result.
  */

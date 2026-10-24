@@ -736,7 +736,7 @@ function toV2InitializeRequest(
   const capabilities = request.clientCapabilities;
   return {
     protocolVersion: 2,
-    info: request.clientInfo ?? { name: "rove", version: "unknown" },
+    info: request.clientInfo ?? { name: "paperplane", version: "unknown" },
     capabilities: {
       ...(capabilities?.auth?.terminal === true ? { auth: { terminal: {} } } : {}),
       ...(capabilities?.elicitation == null ? {} : { elicitation: capabilities.elicitation }),

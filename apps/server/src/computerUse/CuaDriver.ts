@@ -369,7 +369,7 @@ export const make = Effect.fn("CuaDriver.make")(function* (options?: {
           import("@modelcontextprotocol/sdk/client/stdio.js"),
         ]);
         signal.throwIfAborted();
-        const client = new Client({ name: "rove-code", version: "1.0.0" });
+        const client = new Client({ name: "paperplane", version: "1.0.0" });
         signal.addEventListener("abort", () => void client.close(), { once: true });
         try {
           await client.connect(

@@ -67,7 +67,7 @@ const screenshotItem = {
   ordinal: 1,
   status: "completed" as const,
   title: null,
-  toolName: "mcp__rove__device_screenshot",
+  toolName: "mcp__paperplane__device_screenshot",
   input: { deviceId: "phone" },
   output: {
     content: [

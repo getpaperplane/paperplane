@@ -59,7 +59,7 @@ for (const available of [true, false, "interrupted"] as const) {
       Effect.gen(function* () {
         const toolkit = yield* EnvironmentToolkit;
         const read = toolkit
-          .handle("rove_environment_read", {})
+          .handle("paperplane_environment_read", {})
           .pipe(Stream.unwrap, Stream.runCollect);
         if (available === "interrupted") {
           const result = yield* Effect.exit(read);
@@ -119,7 +119,7 @@ it.effect("updates preferences for a thread caller through the /mcp registration
     const server = yield* McpServer.McpServer;
     const result = yield* server
       .callTool({
-        name: "rove_environment_preferences_update",
+        name: "paperplane_environment_preferences_update",
         arguments: { newWorktreesStartFromOrigin: true },
       })
       .pipe(
@@ -213,7 +213,7 @@ it.effect("refuses a preferences update when the caller's turn ends while it wai
         .pipe(Effect.forkChild);
       yield* Deferred.await(held);
       const update = yield* toolkit
-        .handle("rove_environment_preferences_update", { newWorktreesStartFromOrigin: true })
+        .handle("paperplane_environment_preferences_update", { newWorktreesStartFromOrigin: true })
         .pipe(Stream.unwrap, Stream.runCollect, Effect.forkChild);
       // The update passed its first check and waits for the lock; the turn then ends.
       yield* Deferred.await(checked);

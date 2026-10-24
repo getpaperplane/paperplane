@@ -39,7 +39,7 @@ import * as Scope from "effect/Scope";
 import * as Stream from "effect/Stream";
 
 import * as ProviderHost from "@getpaperplane/provider-core/server/ProviderHost";
-import { ROVE_MCP_SERVER_NAME } from "@getpaperplane/shared/roveMcp";
+import { PAPERPLANE_MCP_SERVER_NAME } from "@getpaperplane/shared/roveMcp";
 import * as McpProviderSession from "@getpaperplane/provider-core/server/mcpSession";
 import * as McpProviderSessions from "@getpaperplane/provider-core/server/McpProviderSessions";
 import { buildRuntimeInstructions } from "@getpaperplane/provider-core/server/runtimeInstructions";
@@ -1783,7 +1783,7 @@ export const makeMuseAdapterV2 = Effect.fn("makeMuseAdapterV2")(function* (
                 mcpServers: {
                   // Muse defaults to "required", which fails the whole run when Paperplane's
                   // tools cannot be reached. The agent should still work without them.
-                  [ROVE_MCP_SERVER_NAME]: {
+                  [PAPERPLANE_MCP_SERVER_NAME]: {
                     transport: "streamableHttp",
                     mode: "optional",
                     url: mcpSession.endpoint,

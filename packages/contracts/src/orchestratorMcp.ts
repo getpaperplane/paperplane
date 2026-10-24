@@ -219,7 +219,7 @@ export const OrchestratorMcpDelegateTaskResult = Schema.Struct({
   resultContextTransferId: Schema.NullOr(ContextTransferId),
   hasPendingQuestion: Schema.Boolean.annotate({
     description:
-      "Blocking question ends mode=wait. Pass threadId=childThreadId to rove_pending_request_list, rove_pending_request_read (with requestId) and rove_pending_request_respond, or ask the user; the task's completion still wakes this thread.",
+      "Blocking question ends mode=wait. Pass threadId=childThreadId to paperplane_pending_request_list, paperplane_pending_request_read (with requestId) and paperplane_pending_request_respond, or ask the user; the task's completion still wakes this thread.",
   }),
   waitTimedOut: Schema.Boolean.annotate({
     description:

@@ -1246,7 +1246,7 @@ describe("HTML renders in the timeline", () => {
     ...base("render", 2),
     status,
     type: "dynamic_tool",
-    toolName: "mcp__rove__html_render",
+    toolName: "mcp__paperplane__html_render",
     input: { title: "Chart", height: 420 },
     ...(output === undefined ? {} : { output }),
   });
