@@ -1,5 +1,6 @@
 #include <libsecret/secret.h>
 #include <stdio.h>
+#include <string.h>
 
 /* Exit codes are consumed by ChromiumKeys.ts. Stdout contains only the secret,
  * with no newline or other framing that could change the derived cookie key. */
@@ -15,16 +16,21 @@ static const SecretSchema chromium_schema = {
 };
 
 int main(int argc, char **argv) {
-    if (argc != 2 || argv[1][0] == '\0') return 64;
-    g_set_application_name("Rove Code");
+    /* Migration may read an already-unlocked item, but must never unlock one.
+     * The existing browser-import mode deliberately retains its consent prompt. */
+    gboolean no_unlock = argc == 3 && strcmp(argv[1], "--no-unlock") == 0;
+    if ((!no_unlock && argc != 2) || argv[argc - 1][0] == '\0') return 64;
+    const char *application = argv[argc - 1];
+    g_set_application_name("Paperplane");
 
-    GHashTable *attributes = secret_attributes_build(&chromium_schema, "application", argv[1], NULL);
+    GHashTable *attributes = secret_attributes_build(&chromium_schema, "application", application, NULL);
     GError *error = NULL;
     /* libsecret keeps the normal desktop unlock prompt. A cancelled unlock can
      * still return a locked item, so check the item before reading its value. */
     GList *items = secret_service_search_sync(
         NULL, &chromium_schema, attributes,
-        SECRET_SEARCH_UNLOCK | SECRET_SEARCH_LOAD_SECRETS, NULL, &error);
+        SECRET_SEARCH_LOAD_SECRETS | (no_unlock ? SECRET_SEARCH_NONE : SECRET_SEARCH_UNLOCK),
+        NULL, &error);
     g_hash_table_unref(attributes);
 
     int status = READ_FAILED;

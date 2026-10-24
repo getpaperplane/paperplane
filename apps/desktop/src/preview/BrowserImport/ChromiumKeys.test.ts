@@ -176,6 +176,24 @@ describe("Linux Chromium secrets", () => {
     );
   });
 
+  it.effect("requests a strictly non-unlocking lookup for desktop migration", () => {
+    let captured: CapturedCommand | undefined;
+    return Effect.gen(function* () {
+      const error = yield* readLinuxSecret("Rove Code Beta", { noUnlock: true }).pipe(Effect.flip);
+      expect(captured?.args).toEqual(["--no-unlock", "Rove Code Beta"]);
+      expect(error.reason).toBe("needsKeychainApproval");
+    }).pipe(
+      Effect.provide(
+        layerHelper({
+          exitCode: 3,
+          capture: (value) => {
+            captured = value;
+          },
+        }),
+      ),
+    );
+  });
+
   it.effect("reports an unavailable Secret Service backend as a read failure", () =>
     Effect.gen(function* () {
       const error = yield* readLinuxSecret("chrome").pipe(Effect.flip);

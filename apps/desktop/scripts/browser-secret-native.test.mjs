@@ -91,6 +91,16 @@ describe.skipIf(hostPlatform !== "linux")("bundled libsecret helper", () => {
     expect(result.status).toBe(code);
     expect(result.stdout.length).toBe(0);
   });
+  it.each([
+    ["success", 0],
+    ["locked", 3],
+    ["missing", 2],
+    ["unavailable", 4],
+  ])("never asks libsecret to unlock during silent migration (%s)", (scenario, status) => {
+    const result = run(["--no-unlock", `silent-${scenario}`]);
+    expect(result.status).toBe(status);
+    if (status !== 0) expect(result.stdout.length).toBe(0);
+  });
   it("rejects invalid arguments before accessing the keyring", () => {
     for (const args of [[], [""], ["chrome", "extra"]]) {
       const result = run(args);

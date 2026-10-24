@@ -12,9 +12,12 @@ GList *__wrap_secret_service_search_sync(SecretService *service, const SecretSch
     g_assert_null(cancellable);
     g_assert_cmpstr(schema->name, ==, "chrome_libsecret_os_crypt_password_v2");
     g_assert_cmpint(schema->flags, ==, SECRET_SCHEMA_DONT_MATCH_NAME);
-    g_assert_cmpint(flags, ==, SECRET_SEARCH_UNLOCK | SECRET_SEARCH_LOAD_SECRETS);
+    g_assert_cmpstr(g_get_application_name(), ==, "Paperplane");
     g_assert_cmpuint(g_hash_table_size(attributes), ==, 1);
-    scenario = g_intern_string(g_hash_table_lookup(attributes, "application"));
+    const char *application = g_hash_table_lookup(attributes, "application");
+    gboolean silent = g_str_has_prefix(application, "silent-");
+    g_assert_cmpint(flags, ==, SECRET_SEARCH_LOAD_SECRETS | (silent ? SECRET_SEARCH_NONE : SECRET_SEARCH_UNLOCK));
+    scenario = g_intern_string(silent ? application + strlen("silent-") : application);
     if (strcmp(scenario, "missing") == 0) return NULL;
     if (strcmp(scenario, "cancelled") == 0) {
         g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_CANCELLED, "cancelled");

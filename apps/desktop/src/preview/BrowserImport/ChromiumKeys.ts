@@ -134,6 +134,7 @@ const readKeychainSecret = Effect.fn("ChromiumKeys.readKeychainSecret")(function
  */
 export const readLinuxSecret = Effect.fn("ChromiumKeys.readLinuxSecret")(function* (
   application: string,
+  options?: { readonly noUnlock: boolean },
 ) {
   return yield* Effect.scoped(
     Effect.gen(function* () {
@@ -144,7 +145,13 @@ export const readLinuxSecret = Effect.fn("ChromiumKeys.readLinuxSecret")(functio
         return yield* new ChromiumKeyError({ reason: "keychainUnavailable" });
       }
       const handle = yield* spawner
-        .spawn(ChildProcess.make(helper, [application], { stdin: "ignore", env: environment }))
+        .spawn(
+          ChildProcess.make(
+            helper,
+            options?.noUnlock ? ["--no-unlock", application] : [application],
+            { stdin: "ignore", env: environment },
+          ),
+        )
         .pipe(
           Effect.mapError(
             (cause) => new ChromiumKeyError({ reason: "keychainUnavailable", cause }),
