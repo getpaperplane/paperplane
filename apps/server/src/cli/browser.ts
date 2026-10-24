@@ -22,6 +22,11 @@ import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
 import * as PreviewBrowserHost from "../preview/PreviewBrowserHost.ts";
+import {
+  findOldBrowserProfile,
+  retireOldBrowserProfile,
+} from "../cloud/installedStateMigration.ts";
+import * as ProcessRunner from "../processRunner.ts";
 import { resolveBaseDir } from "../os-jank.ts";
 import { baseDirFlag } from "./config.ts";
 import { resolveRootCliCommand } from "./invocation.ts";
@@ -115,13 +120,14 @@ const browserSetupCommand = Command.make("setup", { baseDir: baseDirFlag }).pipe
       const setupCommand = yield* resolveRootCliCommand(PreviewBrowserHost.SETUP_SUBCOMMAND);
 
       const needsProfile = yield* PreviewBrowserHost.sandboxBlocked;
+      const oldProfile = yield* findOldBrowserProfile();
       const browser = yield* installedBrowser(yield* setupBaseDir(baseDir));
       const missing = Option.isSome(browser)
         ? yield* PreviewBrowserHost.missingLibraries(browser.value)
         : [];
       const hasApt = yield* fs.exists("/usr/bin/apt-get").pipe(Effect.orElseSucceed(() => false));
 
-      if (!needsProfile && missing.length === 0) {
+      if (!needsProfile && !oldProfile && missing.length === 0) {
         return yield* Console.log(
           Option.isSome(browser)
             ? "This host is ready for Paperplane's browser."
@@ -130,7 +136,7 @@ const browserSetupCommand = Command.make("setup", { baseDir: baseDirFlag }).pipe
       }
 
       if (!isRoot) {
-        if (needsProfile) {
+        if (needsProfile || oldProfile) {
           yield* Console.log(
             `This host blocks the sandbox Paperplane's browser runs in. Setup installs an AppArmor profile at ${PreviewBrowserHost.APPARMOR_PROFILE_PATH} that allows it.`,
           );
@@ -142,6 +148,11 @@ const browserSetupCommand = Command.make("setup", { baseDir: baseDirFlag }).pipe
         }
         return yield* Console.log(`\nThis needs root. Run:\n\n  ${setupCommand}\n`);
       }
+
+      if (oldProfile)
+        yield* retireOldBrowserProfile({ profile: PreviewBrowserHost.APPARMOR_PROFILE }).pipe(
+          Effect.provide(ProcessRunner.layer),
+        );
 
       if (needsProfile) {
         yield* fs

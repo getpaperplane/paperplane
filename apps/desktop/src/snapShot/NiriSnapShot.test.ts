@@ -109,11 +109,11 @@ afterEach(async () => {
 });
 
 it("selects the native adapter without needing a portal or GNOME extension", async () => {
-  expect(await getLinuxCaptureSupport("com.hafiezulzikry.rove.RoveCode")).toEqual({
+  expect(await getLinuxCaptureSupport("io.github.getpaperplane.paperplane")).toEqual({
     linuxBackend: "niri",
     linuxFeedbackAvailable: false,
   });
-  const snapshot = await captureLinuxWindow("com.hafiezulzikry.rove.RoveCode");
+  const snapshot = await captureLinuxWindow("io.github.getpaperplane.paperplane");
   expect(snapshot?.png).toEqual(png);
   expect(snapshot?.window).toMatchObject({
     processId: 123,
@@ -199,7 +199,7 @@ it("rejects compositor errors and cleans up its temporary image", async () => {
       send(socket, { Err: "window disappeared" });
     } else await original(request, socket);
   };
-  await expect(captureLinuxWindow("com.hafiezulzikry.rove.RoveCode")).rejects.toThrow(
+  await expect(captureLinuxWindow("io.github.getpaperplane.paperplane")).rejects.toThrow(
     "window disappeared",
   );
   expect(await NodeFSP.stat(NodePath.dirname(capturePath!)).catch(() => undefined)).toBeUndefined();

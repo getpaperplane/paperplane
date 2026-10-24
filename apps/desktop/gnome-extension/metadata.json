@@ -1,5 +1,5 @@
 {
-  "uuid": "snap-shot@io.github.hafiezul.rove",
+  "uuid": "snap-shot@io.github.getpaperplane.paperplane",
   "name": "Paperplane SnapShots",
   "description": "Allows Paperplane to capture the focused window, identify it for optional accessibility text, and animate it into Paperplane. Disable this extension to revoke access.",
   "shell-version": ["45", "46", "47", "48", "49", "50"],

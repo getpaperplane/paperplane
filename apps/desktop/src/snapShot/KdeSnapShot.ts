@@ -14,11 +14,11 @@ import { readPortalPng } from "./linuxCaptureSession.ts";
 import { startNativeCaptureFeedback } from "./NativeCaptureFeedback.ts";
 export { isKdeCaptureSession } from "./linuxCaptureSession.ts";
 
-export const KDE_CAPTURE_EXECUTABLE = "rove-kde-snap-shot";
-const DESKTOP_FILE = "io.github.hafiezul.rove.KdeCapture.desktop";
-const CAPTURE_HELPER_READ_MARKERS = ["X-RoveCode-Capture-Helper=true"];
+export const KDE_CAPTURE_EXECUTABLE = "paperplane-kde-snap-shot";
+const DESKTOP_FILE = "io.github.getpaperplane.paperplane.KdeCapture.desktop";
+const CAPTURE_HELPER_READ_MARKERS = ["X-Paperplane-Capture-Helper=true"];
 
-const MARKER = "X-RoveCode-Capture-Helper=true";
+const MARKER = "X-Paperplane-Capture-Helper=true";
 const decodeCapabilities = Schema.decodeUnknownSync(
   Schema.fromJsonString(Schema.Struct({ feedbackAvailable: Schema.optional(Schema.Boolean) })),
 );
@@ -26,7 +26,7 @@ export type KdeCapturePaths = { readonly bundle: string; readonly dataHome: stri
 
 export function kdeCapturePaths(paths: KdeCapturePaths) {
   return {
-    executable: NodePath.join(paths.dataHome, "rove", "kde-capture", KDE_CAPTURE_EXECUTABLE),
+    executable: NodePath.join(paths.dataHome, "paperplane", "kde-capture", KDE_CAPTURE_EXECUTABLE),
     desktop: NodePath.join(paths.dataHome, "applications", DESKTOP_FILE),
   };
 }

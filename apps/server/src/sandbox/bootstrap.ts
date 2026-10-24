@@ -14,16 +14,16 @@ const SANDBOX_CREDENTIALS_FAILED = 14;
 const SANDBOX_TOOLS_FAILED = 15;
 
 // Clients recognize sandboxes by the workspace below (SANDBOX_WORKSPACE_DIR).
-const ROOT = `"$HOME/.rove-sandbox"`;
-const RUNTIME = `"$HOME/.rove-sandbox/runtime"`;
-const WRAPPER = `"$HOME/.rove-sandbox/runtime/node_modules/.bin/paperplane"`;
+const ROOT = `"$HOME/.paperplane-sandbox"`;
+const RUNTIME = `"$HOME/.paperplane-sandbox/runtime"`;
+const WRAPPER = `"$HOME/.paperplane-sandbox/runtime/node_modules/.bin/paperplane"`;
 
 // Only this deployment's captured PID may be signalled. Boot identity and process
 // start time also prevent a restored PID file from targeting a different process.
 const identityHelpers = `
 const fs = require('node:fs');
 const path = require('node:path');
-const root = path.join(process.env.HOME, '.rove-sandbox');
+const root = path.join(process.env.HOME, '.paperplane-sandbox');
 const pidFile = path.join(root, 'server.json');
 const bootId = () => fs.readFileSync('/proc/sys/kernel/random/boot_id', 'utf8').trim();
 const stat = pid => fs.readFileSync('/proc/' + pid + '/stat', 'utf8').split(') ')[1].split(' ');
@@ -152,17 +152,17 @@ process.stdin.on('end', () => {
 export const sandboxLabelCommand = (label: string) =>
   `printf 'PRETTY_HOSTNAME=%s\\n' ${quote(label.replace(/[\r\n]+/g, " "))} > /etc/machine-info 2>/dev/null || true`;
 
-export const sandboxPairCommand = `${WRAPPER} auth pairing create --base-dir "$HOME/.rove-sandbox/data" --json`;
+export const sandboxPairCommand = `${WRAPPER} auth pairing create --base-dir "$HOME/.paperplane-sandbox/data" --json`;
 
 /** Product-owned explanations for bootstrap exit codes. */
 export function sandboxCommandFailure(exitCode: number): string | undefined {
   switch (exitCode) {
     case SANDBOX_INSTALL_FAILED:
-      return "Could not install Paperplane in the sandbox. Check its network access, then resume to retry. The install log is at ~/.rove-sandbox/install.log in the sandbox.";
+      return "Could not install Paperplane in the sandbox. Check its network access, then resume to retry. The install log is at ~/.paperplane-sandbox/install.log in the sandbox.";
     case SANDBOX_UNOWNED_SERVER:
       return "Another Paperplane server is using the sandbox's port without a matching process record. Stop it from the vendor dashboard, then resume.";
     case SANDBOX_NOT_READY:
-      return "Paperplane started in the sandbox but did not become ready. Resume to retry. The server log is at ~/.rove-sandbox/server.log in the sandbox.";
+      return "Paperplane started in the sandbox but did not become ready. Resume to retry. The server log is at ~/.paperplane-sandbox/server.log in the sandbox.";
     case SANDBOX_STILL_RUNNING:
       return "Paperplane is still shutting down in the sandbox. Pause was refused to protect its data; try again shortly.";
     case SANDBOX_CREDENTIALS_FAILED:

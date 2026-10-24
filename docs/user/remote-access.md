@@ -204,6 +204,12 @@ credentials, and agent work stay on the remote machine.
 
 The remote host must be Linux or an Apple Silicon Mac with `curl` or `wget`,
 `tar`, `sha256sum` or `shasum`, and [provider setup](./install.md#providers).
+When upgrading an SSH or WSL host from Rove Code, stop its old background service or
+`rove serve` terminal on that host, then reconnect. Paperplane does not kill old remote
+processes automatically. A held old-home lock reports the platform's stop command;
+[background service upgrade instructions](./background-service.md#upgrading-from-rove-code)
+cover service-managed hosts. Old runtime caches and launch scripts are not reused.
+
 The first launch downloads Paperplane's server to `~/.paperplane/runtime` on the host, so
 it takes longer than later ones.
 Provider CLIs must be on the `PATH` of a non-interactive login shell there;
@@ -276,10 +282,13 @@ sudo paperplane browser setup
 
 The server shows the exact line for how you started it, such as
 `sudo npx @getpaperplane/cli browser setup`, and keeps your `PATH` when Node is installed only
-for your user. Where `rove` is not on your `PATH`, such as with only the
-desktop app installed, it names the full path of the app's own `rove` instead. It allows Chrome's sandbox with an AppArmor profile and installs
+for your user. Where `paperplane` is not on your `PATH`, such as with only the
+desktop app installed, it names the full path of the app's own `paperplane` instead. It allows Chrome's sandbox with an AppArmor profile and installs
 any missing libraries with apt. It is safe to run again. Without `sudo`, it
-only reports what it would change.
+only reports what it would change. Setup replaces an unmodified old
+`rove-chrome-headless-shell` AppArmor profile and carries its `local/` overrides
+to `paperplane-chrome-headless-shell`. Customized profiles are left for manual
+review; conflicting local overrides must be merged before retrying.
 
 The browser always runs in Chrome's sandbox. Where you cannot change the host,
 set `PAPERPLANE_SERVER_BROWSER_SANDBOX=0` for the environment to run without it.

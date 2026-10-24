@@ -122,7 +122,7 @@ it.each([true, false])("uses the active config syntax and user bindings (Lua: %s
     "custom bindings",
   );
   const result = await hyprlandCaptureShortcut(
-    "com.hafiezulzikry.rove.RoveCode",
+    "io.github.getpaperplane.paperplane",
     "/home/test",
     directory,
   );
@@ -131,8 +131,8 @@ it.each([true, false])("uses the active config syntax and user bindings (Lua: %s
   );
   expect(result.shortcutBinding).toBe(
     lua
-      ? 'hl.bind("CTRL + SHIFT + 2", hl.dsp.global("com.hafiezulzikry.rove.RoveCode:capture-window"))'
-      : "bind = CTRL SHIFT, 2, global, com.hafiezulzikry.rove.RoveCode:capture-window",
+      ? 'hl.bind("CTRL + SHIFT + 2", hl.dsp.global("io.github.getpaperplane.paperplane:capture-window"))'
+      : "bind = CTRL SHIFT, 2, global, io.github.getpaperplane.paperplane:capture-window",
   );
   expect(await NodeFSP.readFile(result.shortcutConfigPath, "utf8")).toBe("custom bindings");
 });

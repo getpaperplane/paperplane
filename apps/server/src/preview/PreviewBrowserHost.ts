@@ -26,7 +26,7 @@ export const sandboxDisabled = (env: Readonly<Record<string, string | undefined>
 
 /** Set on Ubuntu 23.10+: unprivileged user namespaces need an AppArmor profile. */
 const USERNS_RESTRICTION = "/proc/sys/kernel/apparmor_restrict_unprivileged_userns";
-export const APPARMOR_PROFILE_PATH = "/etc/apparmor.d/rove-chrome-headless-shell";
+export const APPARMOR_PROFILE_PATH = "/etc/apparmor.d/paperplane-chrome-headless-shell";
 
 /**
  * Lets Paperplane's headless browser, in any Paperplane home and at any pinned version, create
@@ -37,10 +37,10 @@ export const APPARMOR_PROFILE = `# Written by \`paperplane browser setup\`: lets
 abi <abi/4.0>,
 include <tunables/global>
 
-profile rove-chrome-headless-shell /**/tools/chrome-headless-shell/*/*/chrome-headless-shell flags=(unconfined) {
+profile paperplane-chrome-headless-shell /**/tools/chrome-headless-shell/*/*/chrome-headless-shell flags=(unconfined) {
   userns,
 
-  include if exists <local/rove-chrome-headless-shell>
+  include if exists <local/paperplane-chrome-headless-shell>
 }
 `;
 

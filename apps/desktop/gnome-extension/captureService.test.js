@@ -28,15 +28,15 @@ it("rejects other clients before looking at the active window", async () => {
   expect(await service.capture(":1.23")).toBe("pixels");
 });
 
-it.each(["io.github.hafiezul.rove.SnapShot", "io.github.hafiezul.rove.dev.SnapShot"])(
-  "accepts the current owner of %s",
-  async (client) => {
-    const { service } = fixture({
-      getNameOwner: async (name) => (name === client ? ":1.23" : null),
-    });
-    expect(await service.capture(":1.23")).toBe("pixels");
-  },
-);
+it.each([
+  "io.github.getpaperplane.paperplane.SnapShot",
+  "io.github.getpaperplane.paperplane.dev.SnapShot",
+])("accepts the current owner of %s", async (client) => {
+  const { service } = fixture({
+    getNameOwner: async (name) => (name === client ? ":1.23" : null),
+  });
+  expect(await service.capture(":1.23")).toBe("pixels");
+});
 
 it("rechecks the name owner on each capture", async () => {
   let owner = ":1.23";

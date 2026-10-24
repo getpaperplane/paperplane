@@ -21,11 +21,86 @@ export class InstalledStateMigrationError extends Schema.TaggedError<InstalledSt
   { step: Schema.String, cause: Schema.optional(Schema.Defect()) },
 ) {
   override get message() {
-    return `Old Rove Code service conversion stopped: ${this.step}. No unrecognized service is removed.`;
+    return `Old Rove Code installed-state conversion stopped: ${this.step}. Unrecognized installed files are never removed.`;
   }
 }
 
 const oldLabel = "io.github.hafiezul.rove.service";
+
+/** Old policy files are removed only when they match a shipped profile byte-for-byte. */
+export const findOldBrowserProfile = (directory = "/etc/apparmor.d") =>
+  Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+    return yield* fs.exists(path.join(directory, "rove-chrome-headless-shell"));
+  });
+
+export const retireOldBrowserProfile = Effect.fn("migration.browserProfile")(function* (input: {
+  readonly profile: string;
+  readonly directory?: string;
+}) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const runner = yield* ProcessRunner.ProcessRunner;
+  const directory = input.directory ?? "/etc/apparmor.d";
+  const old = path.join(directory, "rove-chrome-headless-shell");
+  const destination = path.join(directory, "paperplane-chrome-headless-shell");
+  if (!(yield* fs.exists(old))) return;
+  const contents = yield* fs.readFileString(old);
+  const historical = input.profile.replaceAll(
+    "paperplane-chrome-headless-shell",
+    "rove-chrome-headless-shell",
+  );
+  const recognized = [
+    historical,
+    historical.replace("`paperplane browser setup`", "`rove browser setup`"),
+    historical
+      .replace("Paperplane's", "Rove Code's")
+      .replace("`paperplane browser setup`", "`rove browser setup`"),
+  ];
+  if (
+    !recognized.includes(contents) ||
+    Option.isSome(yield* fs.readLink(old).pipe(Effect.option))
+  ) {
+    yield* Console.warn(
+      `Left ${old} untouched: it is not an unmodified Paperplane/Rove Code browser profile. Review and remove it manually if obsolete.`,
+    );
+    return;
+  }
+  const oldLocal = path.join(directory, "local/rove-chrome-headless-shell");
+  const newLocal = path.join(directory, "local/paperplane-chrome-headless-shell");
+  if (yield* fs.exists(oldLocal)) {
+    if (Option.isSome(yield* fs.readLink(oldLocal).pipe(Effect.option)))
+      return yield* new InstalledStateMigrationError({
+        step: "the old local browser override is a symlink; move it manually",
+      });
+    const overrides = yield* fs.readFileString(oldLocal);
+    if (yield* fs.exists(newLocal)) {
+      if ((yield* fs.readFileString(newLocal)) !== overrides)
+        return yield* new InstalledStateMigrationError({
+          step: "both browser profiles have different local overrides; merge them manually before retrying",
+        });
+    } else yield* fs.writeFileString(newLocal, overrides, { flag: "wx", mode: 0o644 });
+  }
+  if (yield* fs.exists(destination)) {
+    if ((yield* fs.readFileString(destination)) !== input.profile)
+      return yield* new InstalledStateMigrationError({
+        step: "the new browser profile is customized; review the old policy manually",
+      });
+  } else yield* fs.writeFileString(destination, input.profile, { flag: "wx", mode: 0o644 });
+  for (const args of [
+    ["-r", destination],
+    ["-R", old],
+  ]) {
+    const result = yield* runner.run({ command: "apparmor_parser", args });
+    if (result.code !== 0)
+      return yield* new InstalledStateMigrationError({
+        step: "loading the new browser policy or unloading the old policy failed; old files are retained, retry setup",
+      });
+  }
+  yield* fs.remove(old);
+  if (yield* fs.exists(oldLocal)) yield* fs.remove(oldLocal);
+});
 const unescapeXml = (text: string) =>
   text
     .replaceAll("&lt;", "<")

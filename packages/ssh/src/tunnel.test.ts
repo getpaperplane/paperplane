@@ -917,7 +917,7 @@ describe("archive runner script", () => {
         const fs = yield* FileSystem.FileSystem;
         const root = yield* fs.makeTempDirectoryScoped({ prefix: "rove-archive-runner-" });
         const releaseBaseUrl = yield* makeMirror(root);
-        const runner = `${root}/run-rove.sh`;
+        const runner = `${root}/run-paperplane.sh`;
         yield* fs.writeFileString(
           runner,
           SshTunnel.buildRemoteRoveRunnerScript({ archiveVersion, releaseBaseUrl }),
@@ -1215,7 +1215,7 @@ server.listen(Number(flag("--port")), "127.0.0.1", () => {
         const { pid: previousPid } = yield* launchManaged;
 
         // A different runner on disk means the client updated: replace the server.
-        yield* fs.writeFileString(`${stateDir}/run-rove.sh`, "# previous runner\n");
+        yield* fs.writeFileString(`${stateDir}/run-paperplane.sh`, "# previous runner\n");
         assert.equal((yield* runLaunch).serverKind, "managed");
         const replacementPid = yield* readManagedPid;
         assert.notEqual(replacementPid, previousPid);
@@ -1312,7 +1312,7 @@ server.listen(Number(flag("--port")), "127.0.0.1", () => {
         // the runtime file without the managed marker. A changed runner must not
         // turn that into a restart of a server this launcher cannot claim.
         yield* fs.remove(`${stateDir}/managed`);
-        yield* fs.writeFileString(`${stateDir}/run-rove.sh`, "# superseded runner\n");
+        yield* fs.writeFileString(`${stateDir}/run-paperplane.sh`, "# superseded runner\n");
         assert.deepEqual(yield* runLaunch, {
           remotePort: launched.remotePort,
           serverKind: "external",

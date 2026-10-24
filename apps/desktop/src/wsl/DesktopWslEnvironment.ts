@@ -280,8 +280,8 @@ const shellQuote = (value: string): string => `'${value.replaceAll("'", "'\\''")
 // promotes a verified tree. Presence alone only says an install once finished
 // here; the digest is what lets a later launch prove the entry still is what
 // that install wrote.
-const WSL_RUNTIME_READY_MARKER = ".rove-wsl-runtime-ready";
-const WSL_RUNTIME_SELECTED_MARKER = ".rove-wsl-runtime-selected";
+const WSL_RUNTIME_READY_MARKER = ".paperplane-wsl-runtime-ready";
+const WSL_RUNTIME_SELECTED_MARKER = ".paperplane-wsl-runtime-selected";
 const WSL_RUNTIME_SELECTION_GRACE_MINUTES = 5;
 
 const sanitizeWslRuntimeId = (value: string): string => value.replace(/[^A-Za-z0-9._-]/g, "_");

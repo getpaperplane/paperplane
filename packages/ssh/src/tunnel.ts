@@ -570,8 +570,8 @@ PORT_FILE="$STATE_DIR/port"
 PID_FILE="$STATE_DIR/pid"
 MANAGED_FILE="$STATE_DIR/managed"
 LOG_FILE="$STATE_DIR/server.log"
-RUNNER_FILE="$STATE_DIR/run-rove.sh"
-RUNNER_NEXT="$STATE_DIR/run-rove.next.$$"
+RUNNER_FILE="$STATE_DIR/run-paperplane.sh"
+RUNNER_NEXT="$STATE_DIR/run-paperplane.next.$$"
 mkdir -p "$STATE_DIR"
 cleanup_runner_next() {
   rm -f "$RUNNER_NEXT"
@@ -767,7 +767,7 @@ STATE_KEY="$1"
 STATE_DIR="$HOME/.paperplane/ssh-launch/$STATE_KEY"
 DEFAULT_SERVER_HOME="$HOME/.paperplane"
 DEFAULT_RUNTIME_FILE="$DEFAULT_SERVER_HOME/userdata/server-runtime.json"
-RUNNER_FILE="$STATE_DIR/run-rove.sh"
+RUNNER_FILE="$STATE_DIR/run-paperplane.sh"
 mkdir -p "$STATE_DIR"
 cat >"$RUNNER_FILE" <<'SH'
 @@PAPERPLANE_RUNNER_SCRIPT@@
@@ -798,7 +798,7 @@ const REMOTE_PAIRING_SCRIPT = `set -eu
 # This connection always uses the remote default home. Let startup migrate it.
 unset PAPERPLANE_HOME
 STATE_DIR="$HOME/.paperplane/ssh-launch/@@PAPERPLANE_STATE_KEY@@"
-RUNNER_FILE="$STATE_DIR/run-rove.sh"
+RUNNER_FILE="$STATE_DIR/run-paperplane.sh"
 mkdir -p "$STATE_DIR"
 cat >"$RUNNER_FILE" <<'SH'
 @@PAPERPLANE_RUNNER_SCRIPT@@

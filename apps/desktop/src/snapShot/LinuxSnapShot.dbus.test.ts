@@ -58,7 +58,10 @@ it.runIf(hasDbus)("captures through real D-Bus marshalling on a private bus", as
     server = sessionBus({ busAddress: String(address) });
     server.on("error", () => undefined);
     await server.requestName("org.freedesktop.portal.Desktop", NameFlag.DO_NOT_QUEUE);
-    await server.requestName("io.github.hafiezul.rove.ShellSnapShot", NameFlag.DO_NOT_QUEUE);
+    await server.requestName(
+      "io.github.getpaperplane.paperplane.ShellSnapShot",
+      NameFlag.DO_NOT_QUEUE,
+    );
     await server.requestName("org.gnome.Shell", NameFlag.DO_NOT_QUEUE);
     await server.requestName("org.kde.KWin.ScreenShot2", NameFlag.DO_NOT_QUEUE);
     const png = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10, 0]);
@@ -164,13 +167,13 @@ it.runIf(hasDbus)("captures through real D-Bus marshalling on a private bus", as
       setup.close();
     }
     const portal = connect();
-    expect(await portal.backend("com.hafiezulzikry.rove.RoveCode")).toBe("screenshot-portal");
+    expect(await portal.backend("io.github.getpaperplane.paperplane")).toBe("screenshot-portal");
     expect(await portal.capturePortal()).toEqual({ png });
     expect(target).toBe(8);
     portalVersion = 2;
     const extension = connect();
-    expect(await extension.backend("com.hafiezulzikry.rove.RoveCode")).toBe("gnome-extension");
-    expect(await extension.captureExtension("com.hafiezulzikry.rove.RoveCode")).toMatchObject({
+    expect(await extension.backend("io.github.getpaperplane.paperplane")).toBe("gnome-extension");
+    expect(await extension.captureExtension("io.github.getpaperplane.paperplane")).toMatchObject({
       png,
       window: { processId: 42 },
     });
@@ -181,15 +184,15 @@ it.runIf(hasDbus)("captures through real D-Bus marshalling on a private bus", as
         interface: "org.freedesktop.DBus",
         member: "GetNameOwner",
         signature: "s",
-        body: ["com.hafiezulzikry.rove.RoveCode.SnapShot"],
+        body: ["io.github.getpaperplane.paperplane.SnapShot"],
       }),
     );
     expect(owner?.body[0]).toBe(clientName);
     extension.close();
     extensionVersion = 2;
     const updated = connect();
-    expect(await updated.backend("com.hafiezulzikry.rove.RoveCode")).toBe("gnome-extension");
-    const snapshot = await updated.captureExtension("com.hafiezulzikry.rove.RoveCode", {
+    expect(await updated.backend("io.github.getpaperplane.paperplane")).toBe("gnome-extension");
+    const snapshot = await updated.captureExtension("io.github.getpaperplane.paperplane", {
       flash: true,
       animate: true,
     });
@@ -202,14 +205,14 @@ it.runIf(hasDbus)("captures through real D-Bus marshalling on a private bus", as
     expect(animateFrame).toEqual([0.1, 0.8, 0.2, 0.1]);
     vi.stubEnv("XDG_CURRENT_DESKTOP", "KDE");
     const kde = connect();
-    expect(await kde.backend("com.hafiezulzikry.rove.RoveCode")).toBe("kde");
+    expect(await kde.backend("io.github.getpaperplane.paperplane")).toBe("kde");
     expect(kde.feedbackAvailable).toBe(false);
     kde.close();
     const triggered = vi.fn();
     const failed = vi.fn();
     const niriBus = sessionBus({ busAddress: String(address) });
     stopNiriShortcut = await startNiriCaptureShortcut(
-      "com.hafiezulzikry.rove.RoveCode.NiriTest",
+      "io.github.getpaperplane.paperplane.NiriTest",
       triggered,
       failed,
       niriBus,
@@ -218,11 +221,11 @@ it.runIf(hasDbus)("captures through real D-Bus marshalling on a private bus", as
       "call",
       "--session",
       "--dest",
-      "com.hafiezulzikry.rove.RoveCode.NiriTest.SnapShot",
+      "io.github.getpaperplane.paperplane.NiriTest.SnapShot",
       "--object-path",
-      "/io/github/hafiezul/rove/SnapShot",
+      "/io/github/getpaperplane/paperplane/SnapShot",
       "--method",
-      "io.github.hafiezul.rove.SnapShot.Capture",
+      "io.github.getpaperplane.paperplane.SnapShot.Capture",
     ];
     // Exercise the actual command copied to Niri's configuration, including gdbus introspection.
     await new Promise<void>((resolve, reject) => {
@@ -240,9 +243,9 @@ it.runIf(hasDbus)("captures through real D-Bus marshalling on a private bus", as
     expect(failed).not.toHaveBeenCalled();
     const invalid = server.call(
       new Message({
-        destination: "com.hafiezulzikry.rove.RoveCode.NiriTest.SnapShot",
-        path: "/io/github/hafiezul/rove/SnapShot",
-        interface: "io.github.hafiezul.rove.SnapShot",
+        destination: "io.github.getpaperplane.paperplane.NiriTest.SnapShot",
+        path: "/io/github/getpaperplane/paperplane/SnapShot",
+        interface: "io.github.getpaperplane.paperplane.SnapShot",
         member: "Capture",
         signature: "s",
         body: ["not allowed"],
@@ -252,7 +255,7 @@ it.runIf(hasDbus)("captures through real D-Bus marshalling on a private bus", as
     expect(triggered).toHaveBeenCalledOnce();
     await expect(
       startNiriCaptureShortcut(
-        "com.hafiezulzikry.rove.RoveCode.NiriTest",
+        "io.github.getpaperplane.paperplane.NiriTest",
         triggered,
         failed,
         sessionBus({ busAddress: String(address) }),
@@ -260,7 +263,7 @@ it.runIf(hasDbus)("captures through real D-Bus marshalling on a private bus", as
     ).rejects.toThrow("already owns");
     stopNiriShortcut();
     const restarted = await startNiriCaptureShortcut(
-      "com.hafiezulzikry.rove.RoveCode.NiriTest",
+      "io.github.getpaperplane.paperplane.NiriTest",
       triggered,
       failed,
       sessionBus({ busAddress: String(address) }),

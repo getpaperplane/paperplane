@@ -332,8 +332,8 @@ jobs:
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
         with:
           path: |
-            native/kde-snap-shot/target/${{ inputs.rust_target }}/release/rove-kde-snap-shot
-            native/hyprland-snap-shot/target/${{ inputs.rust_target }}/release/rove-hyprland-snap-shot
+            native/kde-snap-shot/target/${{ inputs.rust_target }}/release/paperplane-kde-snap-shot
+            native/hyprland-snap-shot/target/${{ inputs.rust_target }}/release/paperplane-hyprland-snap-shot
           key: linux-capture-helpers-${{ inputs.rust_target }}-${{ hashFiles('native/kde-snap-shot/Cargo.lock', 'native/kde-snap-shot/Cargo.toml', 'native/kde-snap-shot/src/**', 'native/hyprland-snap-shot/Cargo.lock', 'native/hyprland-snap-shot/Cargo.toml', 'native/hyprland-snap-shot/src/**', 'native/hyprland-snap-shot/protocols/**') }}
 
       - name: Setup Rust

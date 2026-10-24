@@ -90,7 +90,11 @@ it("installs offline at a stable path and verifies permissions using the install
   await setup.perform("install-kde-helper");
   const { executable, desktop } = kdeCapturePaths(paths);
   expect(desktop).toBe(
-    NodePath.join(paths.dataHome, "applications", "io.github.hafiezul.rove.KdeCapture.desktop"),
+    NodePath.join(
+      paths.dataHome,
+      "applications",
+      "io.github.getpaperplane.paperplane.KdeCapture.desktop",
+    ),
   );
   expect(await NodeFSP.readFile(executable, "utf8")).toBe("bundled executable");
   expect((await NodeFSP.stat(executable)).mode & 0o777).toBe(0o755);

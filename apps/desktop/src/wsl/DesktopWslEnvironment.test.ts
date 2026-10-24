@@ -316,7 +316,7 @@ describe("WSL runtime cache", () => {
     // which has to be a miss rather than a pass.
     expect(script).toContain('    [ -n "$recorded_entry_digest" ] &&');
     expect(script).toContain(
-      `printf '%s\\n' "$installed_entry_digest" > "$runtime_tmp/.rove-wsl-runtime-ready"`,
+      `printf '%s\\n' "$installed_entry_digest" > "$runtime_tmp/.paperplane-wsl-runtime-ready"`,
     );
 
     // The digest is recorded after extraction and before promotion.
@@ -324,7 +324,7 @@ describe("WSL runtime cache", () => {
     const digestRecorded = script.indexOf(
       'installed_entry_digest=$(runtime_server_entry_digest "$runtime_tmp")',
     );
-    const markerWritten = script.indexOf('> "$runtime_tmp/.rove-wsl-runtime-ready"');
+    const markerWritten = script.indexOf('> "$runtime_tmp/.paperplane-wsl-runtime-ready"');
     const promoted = script.indexOf('mv -T "$runtime_tmp" "$runtime_root"');
     expect(digestRecorded).toBeGreaterThan(extracted);
     expect(markerWritten).toBeGreaterThan(digestRecorded);
@@ -343,7 +343,7 @@ describe("WSL runtime cache", () => {
     // The extracted tree is rejected before the ready marker is written, so a
     // defective archive falls back to the mounted tree instead of caching.
     const payloadValidated = script.indexOf('runtime_entry_runs "$runtime_tmp"');
-    const markerWritten = script.indexOf('> "$runtime_tmp/.rove-wsl-runtime-ready"');
+    const markerWritten = script.indexOf('> "$runtime_tmp/.paperplane-wsl-runtime-ready"');
     const promoted = script.indexOf('mv -T "$runtime_tmp" "$runtime_root"');
     expect(payloadValidated).toBeGreaterThan(-1);
     expect(markerWritten).toBeGreaterThan(payloadValidated);
@@ -365,7 +365,7 @@ describe("WSL runtime cache", () => {
     expect(script).toContain('[ "$candidate" -nt "$previous_runtime" ]');
     expect(script).toContain('[ "$candidate" != "$current_runtime" ] || continue');
     expect(script).toContain('[ "$candidate" != "$previous_runtime" ] || continue');
-    expect(script).toContain('[ -f "$candidate/.rove-wsl-runtime-ready" ] || continue');
+    expect(script).toContain('[ -f "$candidate/.paperplane-wsl-runtime-ready" ] || continue');
     expect(script).toContain('rm -rf -- "$candidate"');
   });
 
@@ -408,7 +408,7 @@ describe("WSL runtime cache", () => {
     // Readiness is a presence check, so a tree whose pty.node is present but
     // unloadable stays ready forever unless the probe can revoke the marker.
     expect(script).toContain(
-      'rm -f "$HOME/.paperplane/wsl-runtime/1.2.3_x64/.rove-wsl-runtime-ready"',
+      'rm -f "$HOME/.paperplane/wsl-runtime/1.2.3_x64/.paperplane-wsl-runtime-ready"',
     );
     // Deleting the tree here would pull it out from under any backend still
     // running from it; the next install moves an unready root aside instead.
@@ -688,8 +688,8 @@ describe.skipIf(posixShellRunner === null)("WSL runtime install script (executed
         "set -eu",
         `runtime_parent=${sh(fixture.runtimeParent)}`,
         'mkdir -p "$runtime_parent/sha256-current" "$runtime_parent/sha256-previous"',
-        'printf ready > "$runtime_parent/sha256-current/.rove-wsl-runtime-ready"',
-        'printf ready > "$runtime_parent/sha256-previous/.rove-wsl-runtime-ready"',
+        'printf ready > "$runtime_parent/sha256-current/.paperplane-wsl-runtime-ready"',
+        'printf ready > "$runtime_parent/sha256-previous/.paperplane-wsl-runtime-ready"',
         `touch -d "10 minutes ago" ${sh(fixture.runtimeRoot)}`,
         'touch -d "1 minute ago" "$runtime_parent/sha256-previous"',
         `cat > ${sh(`${fixture.work}/select.sh`)} <<'PAPERPLANE_SELECT_SCRIPT'`,
@@ -714,10 +714,10 @@ describe.skipIf(posixShellRunner === null)("WSL runtime install script (executed
         "set -eu",
         `runtime_parent=${sh(fixture.runtimeParent)}`,
         'mkdir -p "$runtime_parent/sha256-current" "$runtime_parent/sha256-previous"',
-        'printf ready > "$runtime_parent/sha256-current/.rove-wsl-runtime-ready"',
-        'printf ready > "$runtime_parent/sha256-previous/.rove-wsl-runtime-ready"',
+        'printf ready > "$runtime_parent/sha256-current/.paperplane-wsl-runtime-ready"',
+        'printf ready > "$runtime_parent/sha256-previous/.paperplane-wsl-runtime-ready"',
         `touch -d "10 minutes ago" ${sh(fixture.runtimeRoot)}`,
-        `touch -d "10 minutes ago" ${sh(`${fixture.runtimeRoot}/.rove-wsl-runtime-selected`)}`,
+        `touch -d "10 minutes ago" ${sh(`${fixture.runtimeRoot}/.paperplane-wsl-runtime-selected`)}`,
         'touch -d "1 minute ago" "$runtime_parent/sha256-previous"',
         `HOME=${sh(`${fixture.work}/home`)}`,
         "export HOME",
@@ -737,7 +737,7 @@ describe.skipIf(posixShellRunner === null)("WSL runtime install script (executed
         "set -eu",
         `runtime_root=${sh(fixture.runtimeRoot)}`,
         `runtime_parent=${sh(fixture.runtimeParent)}`,
-        'rm "$runtime_root/.rove-wsl-runtime-ready"',
+        'rm "$runtime_root/.paperplane-wsl-runtime-ready"',
         holdRuntimeBusy('"$runtime_root/paperplane"'),
         fixture.installScript(),
         'stale=$(find "$runtime_parent" -maxdepth 1 -type d -name ".sha256-*.stale.*" -print -quit)',
@@ -761,7 +761,7 @@ describe.skipIf(posixShellRunner === null)("WSL runtime install script (executed
         'home="$work/home"',
         'runtime_parent="$home/.paperplane/wsl-runtime"',
         'mkdir -p "$runtime_parent"',
-        'make_ready() { mkdir -p "$runtime_parent/$1"; printf ready > "$runtime_parent/$1/.rove-wsl-runtime-ready"; }',
+        'make_ready() { mkdir -p "$runtime_parent/$1"; printf ready > "$runtime_parent/$1/.paperplane-wsl-runtime-ready"; }',
         "make_ready sha256-current",
         "make_ready sha256-previous",
         "make_ready sha256-active",

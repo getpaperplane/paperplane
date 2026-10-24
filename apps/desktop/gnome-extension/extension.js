@@ -8,8 +8,8 @@ import * as Main from "resource:///org/gnome/shell/ui/main.js";
 import { CaptureService, isWaylandSession } from "./captureService.js";
 import { CaptureFeedback } from "./captureFeedback.js";
 
-const NAME = "io.github.hafiezul.rove.ShellSnapShot";
-const PATH = "/io/github/hafiezul/rove/ShellSnapShot";
+const NAME = "io.github.getpaperplane.paperplane.ShellSnapShot";
+const PATH = "/io/github/getpaperplane/paperplane/ShellSnapShot";
 const XML = `<node><interface name="${NAME}">
   <property name="Version" type="u" access="read"/>
   <method name="Capture">

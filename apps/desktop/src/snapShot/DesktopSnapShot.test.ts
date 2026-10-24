@@ -501,7 +501,7 @@ const layerTest = (
           DesktopEnvironment.DesktopEnvironment.of({
             platform,
             stateDir: "/state",
-            linuxDesktopEntryName: "com.hafiezulzikry.rove.RoveCode.desktop",
+            linuxDesktopEntryName: "io.github.getpaperplane.paperplane.desktop",
             appRoot: "/repo",
             linuxApplicationsDir: "/test-data/applications",
           } as DesktopEnvironment.DesktopEnvironment["Service"]),
@@ -939,7 +939,7 @@ it.effect.each(["win32", "darwin", "linux"] as const)(
     const rove = {
       id: 42,
       title: "Paperplane",
-      appIdentifier: "com.hafiezulzikry.rove.RoveCode.desktop",
+      appIdentifier: "io.github.getpaperplane.paperplane.desktop",
       owner: { name: "Paperplane", processId: 123 },
       bounds,
       png: Buffer.from([1, 2, 3]),

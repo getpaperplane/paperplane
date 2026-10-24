@@ -52,7 +52,7 @@ it.effect.each([
     yield* Effect.sync(() => {
       const home = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "rove-persistent-ssh-"));
       try {
-        const runtime = NodePath.join(home, ".rove-code/runtime/versions", runner.archiveVersion);
+        const runtime = NodePath.join(home, ".paperplane/runtime/versions", runner.archiveVersion);
         NodeFS.mkdirSync(runtime, { recursive: true });
         NodeFS.writeFileSync(
           NodePath.join(runtime, ".install-complete"),
@@ -112,7 +112,7 @@ esac
           expect(NodeFS.existsSync(NodePath.join(runtime, "paperplane"))).toBe(true);
         } else {
           expect(
-            NodeFS.existsSync(NodePath.join(home, ".rove-code/ssh-launch", stateKey, "managed")),
+            NodeFS.existsSync(NodePath.join(home, ".paperplane/ssh-launch", stateKey, "managed")),
           ).toBe(false);
         }
       } finally {

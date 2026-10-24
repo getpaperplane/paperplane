@@ -69,6 +69,13 @@ SnapShots work on Wayland sessions. Each desktop provides capture differently, a
 current desktop and shows only what it needs. Preferences carry across desktops, but each desktop's
 helper and shortcut approval are separate.
 
+When upgrading from Rove Code, reinstall the GNOME extension and KDE/Hyprland capture
+helpers from Paperplane's setup and approve the new shortcuts. Their platform identities
+have changed. Remove the old extension/helper using the old app or your desktop's tools;
+Paperplane does not silently remove or take over old capture permissions. Review any
+manually configured Niri or Hyprland shortcut and replace its old app ID with
+`io.github.getpaperplane.paperplane` (`.dev` for development builds).
+
 **GNOME.** Install the bundled **Paperplane SnapShots** extension during setup. It is installed
 per-user, offline, and needs no administrator password. Sign out and back in after the first
 install so GNOME discovers it, then enable it from setup or from GNOME's Extensions app. If GNOME

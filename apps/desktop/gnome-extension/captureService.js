@@ -1,7 +1,7 @@
 // This policy is independent of Shell so lifecycle and authorization can be tested without a desktop.
 export const CLIENT_NAMES = [
-  "io.github.hafiezul.rove.SnapShot",
-  "io.github.hafiezul.rove.dev.SnapShot",
+  "io.github.getpaperplane.paperplane.SnapShot",
+  "io.github.getpaperplane.paperplane.dev.SnapShot",
 ];
 
 export function isWaylandSession(meta) {

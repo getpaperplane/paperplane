@@ -658,7 +658,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "rove-kde-snap-shot"
+name = "paperplane-kde-snap-shot"
 version = "0.1.0"
 dependencies = [
  "async-channel",

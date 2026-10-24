@@ -8,7 +8,12 @@ import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as ProcessRunner from "../processRunner.ts";
-import { findOldService, retireOldService } from "./installedStateMigration.ts";
+import {
+  findOldService,
+  retireOldService,
+  retireOldBrowserProfile,
+} from "./installedStateMigration.ts";
+import { APPARMOR_PROFILE } from "../preview/PreviewBrowserHost.ts";
 
 it.layer(NodeServices.layer)("old service conversion (fake service managers only)", (it) => {
   const harness = Effect.fn(function* (platform: "linux" | "darwin", contents: string) {
@@ -57,6 +62,59 @@ it.layer(NodeServices.layer)("old service conversion (fake service managers only
       find: findOldService.pipe(Effect.provide(layer)),
     };
   });
+  it.effect.each([true, false])("browser policy cleanup recognizes ownership (%s)", (ours) =>
+    Effect.gen(function* () {
+      const h = yield* harness("linux", "not a service");
+      const directory = h.path.join(h.home, "apparmor");
+      yield* h.fs.makeDirectory(h.path.join(directory, "local"), { recursive: true });
+      const oldFile = h.path.join(directory, "rove-chrome-headless-shell");
+      const old = ours
+        ? APPARMOR_PROFILE.replaceAll(
+            "paperplane-chrome-headless-shell",
+            "rove-chrome-headless-shell",
+          )
+            .replace("`paperplane browser setup`", "`rove browser setup`")
+            .replace("Paperplane's", "Rove Code's")
+        : "# user policy\nprofile custom {}\n";
+      yield* h.fs.writeFileString(oldFile, old);
+      const local = h.path.join(directory, "local/rove-chrome-headless-shell");
+      yield* h.fs.writeFileString(local, "# user override\n");
+      const runner = ProcessRunner.ProcessRunner.of({
+        run: (input) => {
+          h.commands.push(`${input.command} ${input.args.join(" ")}`);
+          return Effect.succeed({
+            code: ChildProcessSpawner.ExitCode(0),
+            stdout: "",
+            stderr: "",
+            timedOut: false,
+            stdoutTruncated: false,
+            stderrTruncated: false,
+            stdoutInvalidUtf8: false,
+            stderrInvalidUtf8: false,
+          });
+        },
+      });
+      yield* retireOldBrowserProfile({ profile: APPARMOR_PROFILE, directory }).pipe(
+        Effect.provideService(ProcessRunner.ProcessRunner, runner),
+      );
+      expect(yield* h.fs.exists(oldFile)).toBe(!ours);
+      if (ours) {
+        expect(
+          yield* h.fs.readFileString(h.path.join(directory, "paperplane-chrome-headless-shell")),
+        ).toBe(APPARMOR_PROFILE);
+        expect(
+          yield* h.fs.readFileString(
+            h.path.join(directory, "local/paperplane-chrome-headless-shell"),
+          ),
+        ).toBe("# user override\n");
+        expect(h.commands).toEqual([
+          `apparmor_parser -r ${directory}/paperplane-chrome-headless-shell`,
+          `apparmor_parser -R ${oldFile}`,
+        ]);
+      } else expect(h.commands).toEqual([]);
+    }),
+  );
+
   const unit =
     "[Service]\nExecStart=<HOME>/.rove-code/runtime/versions/1/rove __service-launcher\nEnvironment=ROVE_HOME=<HOME>/.rove-code\nEnvironment=ROVE_PORT=4777\nEnvironment=ROVE_HOST=0.0.0.0\nEnvironment=PATH=/custom/bin:/usr/bin\n";
   it.effect("retires an owned unit, preserves user settings, and does nothing on retry", () =>
