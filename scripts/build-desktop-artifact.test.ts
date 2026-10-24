@@ -210,7 +210,7 @@ const makeWindowsPayloadFixture = Effect.fn("test.makeWindowsPayloadFixture")(fu
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const tempDir = yield* fs.makeTempDirectoryScoped({
-    prefix: "rove-windows-payload-test-",
+    prefix: "paperplane-windows-payload-test-",
   });
   const sourceDir = path.join(tempDir, "server-source");
   const serverEntryPath = path.join(sourceDir, "apps/server/dist/bin.mjs");
@@ -243,7 +243,7 @@ const makeWindowsPayloadFixture = Effect.fn("test.makeWindowsPayloadFixture")(fu
     path.join(resourcesDir, "resource-monitor/paperplane-resource-monitor.exe"),
     binary,
   );
-  const appExecutableName = "rove.exe";
+  const appExecutableName = "paperplane.exe";
   yield* fs.writeFile(path.join(packagedAppDir, appExecutableName), binary);
   yield* fs.writeFile(path.join(packagedAppDir, "chrome_crashpad_handler.exe"), binary);
 
@@ -256,7 +256,7 @@ const makeWindowsPayloadFixture = Effect.fn("test.makeWindowsPayloadFixture")(fu
           yield* makeLinuxCliArchiveFixture({
             root: path.join(tempDir, "wsl-runtime"),
             stem: "apps",
-            omitMembers: ["apps/rove", "apps/client/index.html"],
+            omitMembers: ["apps/paperplane", "apps/client/index.html"],
             extraMembers: ["apps/server/dist/bin.mjs", "node_modules/node-pty/package.json"],
           })
         : yield* makeLinuxCliArchiveFixture({
@@ -333,7 +333,7 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
           ConfigProvider.layer(
             ConfigProvider.fromEnv({
               env: {
-                PAPERPLANE_DESKTOP_UPDATE_REPOSITORY: "rovecode/rove",
+                PAPERPLANE_DESKTOP_UPDATE_REPOSITORY: "paperplane/paperplane",
               },
             }),
           ),
@@ -344,7 +344,7 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
           ConfigProvider.layer(
             ConfigProvider.fromEnv({
               env: {
-                GITHUB_REPOSITORY: "rovecode/rove",
+                GITHUB_REPOSITORY: "paperplane/paperplane",
               },
             }),
           ),
@@ -353,14 +353,14 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
 
       assert.deepStrictEqual(latestConfig, {
         provider: "github",
-        owner: "rovecode",
-        repo: "rove",
+        owner: "paperplane",
+        repo: "paperplane",
         releaseType: "release",
       });
       assert.deepStrictEqual(nightlyConfig, {
         provider: "github",
-        owner: "rovecode",
-        repo: "rove",
+        owner: "paperplane",
+        repo: "paperplane",
         releaseType: "prerelease",
         channel: "nightly",
       });
@@ -403,15 +403,15 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
       assert.deepStrictEqual(release.publish, [
         {
           provider: "github",
-          owner: "rovecode",
-          repo: "rove",
+          owner: "paperplane",
+          repo: "paperplane",
           releaseType: "release",
         },
       ]);
     }).pipe(
       Effect.provide(
         ConfigProvider.layer(
-          ConfigProvider.fromEnv({ env: { GITHUB_REPOSITORY: "rovecode/rove" } }),
+          ConfigProvider.fromEnv({ env: { GITHUB_REPOSITORY: "paperplane/paperplane" } }),
         ),
       ),
     ),
@@ -901,7 +901,7 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const root = yield* fs.makeTempDirectoryScoped({ prefix: "rove-cursor-helpers-" });
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-cursor-helpers-" });
         const nodeModules = path.join(root, "node_modules");
         const destination = path.join(root, "resources/node_modules/@cursor");
         const cursorDirectory = symlinksSupported
@@ -989,7 +989,7 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const tempDir = yield* fs.makeTempDirectoryScoped({
-          prefix: "rove-windows-architecture-test-",
+          prefix: "paperplane-windows-architecture-test-",
         });
         const sourceDir = path.join(tempDir, "server");
         const nativeFiles = [
@@ -1178,7 +1178,9 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const tempDir = yield* fs.makeTempDirectoryScoped({ prefix: "rove-windows-preflight-" });
+        const tempDir = yield* fs.makeTempDirectoryScoped({
+          prefix: "paperplane-windows-preflight-",
+        });
         const pythonPath = path.join(tempDir, "python.exe");
         yield* fs.writeFileString(pythonPath, "python");
         const spawner = Layer.succeed(
@@ -1220,7 +1222,9 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const tempDir = yield* fs.makeTempDirectoryScoped({ prefix: "rove-windows-preflight-" });
+        const tempDir = yield* fs.makeTempDirectoryScoped({
+          prefix: "paperplane-windows-preflight-",
+        });
         const pythonPath = path.join(tempDir, "python.exe");
         yield* fs.writeFileString(pythonPath, "python");
         const commands: string[] = [];
@@ -1262,7 +1266,9 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const tempDir = yield* fs.makeTempDirectoryScoped({ prefix: "rove-python2-preflight-" });
+        const tempDir = yield* fs.makeTempDirectoryScoped({
+          prefix: "paperplane-python2-preflight-",
+        });
         const pythonPath = path.join(tempDir, "python");
         yield* fs.writeFileString(pythonPath, "python2");
         const spawner = Layer.succeed(
@@ -1309,7 +1315,9 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const repoRoot = yield* fs.makeTempDirectoryScoped({ prefix: "rove-kde-stage-test-" });
+        const repoRoot = yield* fs.makeTempDirectoryScoped({
+          prefix: "paperplane-kde-stage-test-",
+        });
         const protocols = path.join(repoRoot, "native/hyprland-snap-shot/protocols");
         yield* fs.makeDirectory(protocols, { recursive: true });
         yield* fs.writeFileString(path.join(protocols, "capture.xml"), "BSD protocol notice");
@@ -1373,7 +1381,7 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
     ),
   );
 
-  // The fixture's rove.exe is a text placeholder, not an executable. These
+  // The fixture's paperplane.exe is a text placeholder, not an executable. These
   // cases reach the native-load probe, so pin only that host-platform check to
   // Linux. Host-native paths and the real Windows tar/archive checks still run.
   it.effect("validates every ASAR-unpacked native in the packaged Windows payload", () =>
@@ -2028,7 +2036,7 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
       Effect.gen(function* () {
         const fixture = yield* makeWindowsPayloadFixture({
           copyUnpackedNatives: true,
-          serverEntrySource: 'import "rove-deliberately-missing-package";\n',
+          serverEntrySource: 'import "paperplane-deliberately-missing-package";\n',
         });
         const error = yield* validateWindowsPackagedPayload({
           stageDistDir: fixture.stageDistDir,
@@ -2038,7 +2046,7 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
         }).pipe(Effect.flip);
 
         assert.instanceOf(error, BundleNotSelfContainedError);
-        assert.include(error.output, "rove-deliberately-missing-package");
+        assert.include(error.output, "paperplane-deliberately-missing-package");
       }),
     ).pipe(Effect.provideService(HostProcess.Platform, "linux")),
   );
@@ -2089,7 +2097,7 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const stageResourcesDir = yield* fs.makeTempDirectoryScoped({
-          prefix: "rove-dmg-background-",
+          prefix: "paperplane-dmg-background-",
         });
         const dmgDir = path.join(stageResourcesDir, "dmg");
         yield* fs.makeDirectory(dmgDir, { recursive: true });
@@ -2140,7 +2148,7 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const stageResourcesDir = yield* fs.makeTempDirectoryScoped({
-          prefix: "rove-dmg-background-missing-",
+          prefix: "paperplane-dmg-background-missing-",
         });
 
         const error = yield* stageDesktopDmgBackground(stageResourcesDir, "latest", false).pipe(
@@ -2157,7 +2165,7 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
   it("derives macOS passkey signing configuration from the Clerk publishable key", () => {
     const configuration = resolveMacPasskeySigningConfiguration({
       PAPERPLANE_APPLE_TEAM_ID: "abc1234567",
-      PAPERPLANE_MACOS_PROVISIONING_PROFILE: "/tmp/rove.provisionprofile",
+      PAPERPLANE_MACOS_PROVISIONING_PROFILE: "/tmp/paperplane.provisionprofile",
       PAPERPLANE_CLERK_PUBLISHABLE_KEY: `pk_test_${btoa("example.clerk.accounts.dev$")}`,
     });
 
@@ -2165,14 +2173,14 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
       appId: "io.github.getpaperplane.paperplane",
       teamId: "ABC1234567",
       rpDomains: ["example.clerk.accounts.dev"],
-      provisioningProfilePath: "/tmp/rove.provisionprofile",
+      provisioningProfilePath: "/tmp/paperplane.provisionprofile",
     });
   });
 
   it("normalizes explicit macOS passkey RP domains and renders required entitlements", () => {
     const configuration = resolveMacPasskeySigningConfiguration({
       PAPERPLANE_APPLE_TEAM_ID: "ABC1234567",
-      PAPERPLANE_MACOS_PROVISIONING_PROFILE: "/tmp/rove.provisionprofile",
+      PAPERPLANE_MACOS_PROVISIONING_PROFILE: "/tmp/paperplane.provisionprofile",
       PAPERPLANE_CLERK_PASSKEY_RP_DOMAINS:
         " Clerk.Example.com,example.clerk.accounts.dev,clerk.example.com ",
     });
@@ -2287,7 +2295,7 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
       "https://domain-user:domain-secret@example.clerk.accounts.dev/path?token=query-secret";
     const invalidDomainError = captureError({
       PAPERPLANE_APPLE_TEAM_ID: "ABC1234567",
-      PAPERPLANE_MACOS_PROVISIONING_PROFILE: "/tmp/rove.provisionprofile",
+      PAPERPLANE_MACOS_PROVISIONING_PROFILE: "/tmp/paperplane.provisionprofile",
       PAPERPLANE_CLERK_PASSKEY_RP_DOMAINS: unsafeDomain,
     });
     assert.instanceOf(invalidDomainError, InvalidMacPasskeyRpDomainError);
@@ -2305,14 +2313,14 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
       () =>
         resolveMacPasskeySigningConfiguration({
           PAPERPLANE_APPLE_TEAM_ID: "ABC1234567",
-          PAPERPLANE_MACOS_PROVISIONING_PROFILE: "/tmp/rove.provisionprofile",
+          PAPERPLANE_MACOS_PROVISIONING_PROFILE: "/tmp/paperplane.provisionprofile",
           PAPERPLANE_CLERK_PASSKEY_RP_DOMAINS: "example.clerk.accounts.dev:8443",
         }),
       /Invalid passkey RP domain/u,
     );
     const invalidPublishableKeyError = captureError({
       PAPERPLANE_APPLE_TEAM_ID: "ABC1234567",
-      PAPERPLANE_MACOS_PROVISIONING_PROFILE: "/tmp/rove.provisionprofile",
+      PAPERPLANE_MACOS_PROVISIONING_PROFILE: "/tmp/paperplane.provisionprofile",
       PAPERPLANE_CLERK_PUBLISHABLE_KEY: "pk_test_%",
     });
     assert.instanceOf(invalidPublishableKeyError, InvalidMacPasskeyPublishableKeyError);
@@ -2351,13 +2359,13 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
     Effect.gen(function* () {
       const config = yield* createBuildConfig("mac", "dmg", "1.2.3", true, false, undefined, {
         entitlementsPath: "/tmp/entitlements.mac.plist",
-        provisioningProfilePath: "/tmp/rove.provisionprofile",
+        provisioningProfilePath: "/tmp/paperplane.provisionprofile",
       });
 
       const mac = config.mac as Record<string, unknown>;
       assert.equal(config.appId, "io.github.getpaperplane.paperplane");
       assert.equal(mac.entitlements, "/tmp/entitlements.mac.plist");
-      assert.equal(mac.provisioningProfile, "/tmp/rove.provisionprofile");
+      assert.equal(mac.provisioningProfile, "/tmp/paperplane.provisionprofile");
       assert.match(String(mac.sign), /[\\/]scripts[\\/]sign-macos\.ts$/);
       assert.deepStrictEqual(mac.protocols, [
         { name: "Paperplane", schemes: ["paperplane", "paperplane-dev"] },
@@ -2482,7 +2490,7 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
           ConfigProvider.fromEnv({
             env: {
               PAPERPLANE_WINDOWS_SIGNING_MODE: "self-signed",
-              WIN_CSC_LINK: "C:\\signing\\rove.pfx",
+              WIN_CSC_LINK: "C:\\signing\\paperplane.pfx",
               PAPERPLANE_WINDOWS_SIGNING_PUBLISHER_NAME: "CN=Rove Code Release Signing",
             },
           }),
@@ -2583,7 +2591,7 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const root = yield* fs.makeTempDirectoryScoped({ prefix: "rove-wsl-runtime-stage-" });
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-wsl-runtime-stage-" });
         const sourceArchivePath = yield* makeLinuxCliArchiveFixture({
           root,
           stem: "rove-1.2.3-linux-x64",
@@ -2612,7 +2620,9 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const root = yield* fs.makeTempDirectoryScoped({ prefix: "rove-wsl-runtime-missing-" });
+        const root = yield* fs.makeTempDirectoryScoped({
+          prefix: "paperplane-wsl-runtime-missing-",
+        });
         const error = yield* stageWslRuntimeArchive({
           sourceArchivePath: path.join(root, "rove-1.2.3-linux-x64.tar.gz"),
           archivePath: path.join(root, WSL_RUNTIME_ARCHIVE_NAME),
@@ -2889,7 +2899,7 @@ it.effect.skipIf(!symlinksSupported)("rebases packaged links into the isolated t
   Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
-    const root = yield* fs.makeTempDirectoryScoped({ prefix: "rove-copy-symlinks-" });
+    const root = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-copy-symlinks-" });
     const source = path.join(root, "source");
     const destination = path.join(root, "destination");
     const packageDir = path.join(source, "node_modules/.pnpm/example@1/node_modules/example");

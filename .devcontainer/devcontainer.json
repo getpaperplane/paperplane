@@ -29,13 +29,13 @@
     // vp keeps the pnpm content-addressable store and metadata cache under
     // ~/.cache/pnpm (verified: the v11 store dir lives there); mounting a
     // volume there lets installs survive container rebuilds.
-    "source=rove-pnpm-store,target=/home/vscode/.cache/pnpm,type=volume",
+    "source=paperplane-pnpm-store,target=/home/vscode/.cache/pnpm,type=volume",
     // Root node_modules holds the whole pnpm virtual store (.pnpm), so one
     // volume keeps the heavy tree off the slow macOS/Windows bind mount.
     // Scoped by devcontainerId so parallel checkouts do not share it.
     // Codespaces note: prebuild snapshots exclude volumes; drop these mounts
     // if prebuilt codespaces become the primary workflow.
-    "source=rove-node-modules-${devcontainerId},target=${containerWorkspaceFolder}/node_modules,type=volume"
+    "source=paperplane-node-modules-${devcontainerId},target=${containerWorkspaceFolder}/node_modules,type=volume"
   ],
   "onCreateCommand": "bash .devcontainer/on-create.sh",
   "updateContentCommand": "bash .devcontainer/update-content.sh",

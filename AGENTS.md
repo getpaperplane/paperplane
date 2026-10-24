@@ -100,9 +100,9 @@ An empty database is a bad test. Seed your worktree's `.paperplane` with a copy 
 - **Do not run repo-wide checks.** Do not run `vp check`, `vp run -r test`, or `vp run -r typecheck` unless asked. CI owns the full suite.
 - Ship backend behavior changes with focused tests for that behavior.
 - The server is event-sourced, and side effects run after the command commits. In tests, drain the effect worker (`OrchestrationEffectWorkerV2.drain`) or await the specific persisted event or `Deferred` that marks the milestone. Never wait on sleeps or polling. A test that needs a timeout to pass is wrong.
-- When asked, give user-visible frontend changes one integrated pass in a real client: use `test-rove-app` for web and `test-rove-mobile` for mobile (skills in `.agents/skills`). The primary agent does this once after integrating. Subagents do not launch their own dev servers. Ask permission before using computer use or opening browsers.
+- When asked, give user-visible frontend changes one integrated pass in a real client: use `test-paperplane-app` for web and `test-paperplane-mobile` for mobile (skills in `.agents/skills`). The primary agent does this once after integrating. Subagents do not launch their own dev servers. Ask permission before using computer use or opening browsers.
 
-For authorized mobile verification, a missing or outdated native client is a build step, not a blocker. Run `node scripts/mobile-native-client.ts ensure <ios|android> <device-id>` on the simulator host before starting Metro. It checks the local Expo fingerprint and builds or installs when needed. See `test-rove-mobile` for the full workflow.
+For authorized mobile verification, a missing or outdated native client is a build step, not a blocker. Run `node scripts/mobile-native-client.ts ensure <ios|android> <device-id>` on the simulator host before starting Metro. It checks the local Expo fingerprint and builds or installs when needed. See `test-paperplane-mobile` for the full workflow.
 
 ## Upstream
 

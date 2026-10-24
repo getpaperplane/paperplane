@@ -73,7 +73,7 @@ export default defineConfig({
     environment: "node",
     exclude: [
       "**/.repos/**",
-      "**/.rove/**",
+      "**/.paperplane/**",
       "**/.paperplane/**",
       "**/node_modules/**",
       "**/dist/**",

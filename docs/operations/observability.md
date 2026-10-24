@@ -372,12 +372,12 @@ Recommended flow in Grafana:
 2. Pick the `Tempo` data source.
 3. Set the time range to something recent like `Last 15 minutes`.
 4. Start broad. Do not begin with a very narrow query.
-5. Look for spans from the `rove-server` or `rove-desktop` service, then narrow by span name or
+5. Look for spans from the `paperplane-server` or `paperplane-desktop` service, then narrow by span name or
    attributes.
 
 Good first searches:
 
-- service name `rove-server` or `rove-desktop`, plus a resource attribute such as
+- service name `paperplane-server` or `paperplane-desktop`, plus a resource attribute such as
   `deployment.environment.name`
 - span names like `sendTurn` or a Git operation such as `GitVcsDriver.statusDetails.status`
 - Git spans whose `git.operation` attribute identifies the operation
@@ -392,28 +392,28 @@ Traces are best for one request. Metrics are best for trends.
 
 Good metric families to watch:
 
-- `rove_rpc_request_duration`
-- `rove_provider_turn_duration` (how long the provider adapter takes to start a turn, not the turn's run time)
-- `rove_git_command_duration`
+- `paperplane_rpc_request_duration`
+- `paperplane_provider_turn_duration` (how long the provider adapter takes to start a turn, not the turn's run time)
+- `paperplane_git_command_duration`
 
 Counters tell you volume and failure rate:
 
-- `rove_rpc_requests_total`
-- `rove_provider_turns_total`
-- `rove_git_commands_total`
+- `paperplane_rpc_requests_total`
+- `paperplane_provider_turns_total`
+- `paperplane_git_commands_total`
 
 Webhooks have their own families:
 
-- `rove_webhook_deliveries_total` by `outcome` and `source` (`relay` or `direct`). Beyond what the
+- `paperplane_webhook_deliveries_total` by `outcome` and `source` (`relay` or `direct`). Beyond what the
   sender sees, `queue_full` means a task already had its limit of deliveries waiting,
   `prompt_too_long` means the filled-in prompt passed the provider limit, and `duplicate` means
   the relay delivered a request this environment had already run.
-- `rove_webhook_runs_total` by `outcome` (`started`, `skipped`, `failed`) for the runs those
+- `paperplane_webhook_runs_total` by `outcome` (`started`, `skipped`, `failed`) for the runs those
   deliveries start, which happen after the sender has its answer.
-- `rove_webhook_held_delay` for how long requests the relay held waited before arriving.
+- `paperplane_webhook_held_delay` for how long requests the relay held waited before arriving.
 
-- `rove_secret_requests_total` by `status` (`saved`, `declined`, `cancelled`, `timed_out`) for secrets
-  agents asked users for, and `rove_secret_refs_consumed_total` by `result` (`used`, `rejected`) for
+- `paperplane_secret_requests_total` by `status` (`saved`, `declined`, `cancelled`, `timed_out`) for secrets
+  agents asked users for, and `paperplane_secret_refs_consumed_total` by `result` (`used`, `rejected`) for
   tools redeeming them. Neither ever carries a value.
 
 `ScheduledTaskService.triggerWebhook` spans carry the same outcome per request, and each run
@@ -584,7 +584,7 @@ The desktop main process is a second producer, assembled in
 `apps/desktop/src/app/DesktopObservability.ts`. It reads the same `PAPERPLANE_OTLP_*` names and the same
 Settings entries as the backend it supervises, and covers work the backend cannot see: app startup,
 window and menu handling, backend supervision, and updates. It reports as service
-`rove-desktop`, so a collector shows it alongside the backend rather than mixed into it. It
+`paperplane-desktop`, so a collector shows it alongside the backend rather than mixed into it. It
 exports traces and logs only; the main process records no metrics, so the metrics endpoint applies
 to the backend alone.
 
@@ -622,8 +622,8 @@ an `http` or `https` URL, a protocol other than `http/protobuf` or `http/json` s
 headers that are not `key=value` pairs with percent-encoded values turn that signal's export off
 with a startup warning, rather than sending it to the Settings endpoint.
 
-Service names are fixed: `rove-server` for the backend and `rove-desktop` for the desktop main
-process, both in `service.namespace` `rove`. `OTEL_SERVICE_NAME` and a `service.name` or
+Service names are fixed: `paperplane-server` for the backend and `paperplane-desktop` for the desktop main
+process, both in `service.namespace` `paperplane`. `OTEL_SERVICE_NAME` and a `service.name` or
 `service.namespace` in `OTEL_RESOURCE_ATTRIBUTES` are ignored. Tell installations apart with other
 resource attributes, such as `OTEL_RESOURCE_ATTRIBUTES=deployment.environment.name=development`.
 

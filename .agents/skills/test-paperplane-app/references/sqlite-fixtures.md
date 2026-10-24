@@ -15,7 +15,7 @@ Start the target runtime once before seeding so all migrations have run. Use an 
 List tables:
 
 ```bash
-node apps/server/scripts/rove-sqlite-state.ts query \
+node apps/server/scripts/paperplane-sqlite-state.ts query \
   --base-dir <base-dir> \
   --sql "SELECT name FROM sqlite_schema WHERE type = 'table' ORDER BY name"
 ```
@@ -23,7 +23,7 @@ node apps/server/scripts/rove-sqlite-state.ts query \
 Inspect current columns before writing a fixture:
 
 ```bash
-node apps/server/scripts/rove-sqlite-state.ts query \
+node apps/server/scripts/paperplane-sqlite-state.ts query \
   --base-dir <base-dir> \
   --sql "PRAGMA table_info(orchestration_v2_projection_threads)"
 ```
@@ -31,9 +31,9 @@ node apps/server/scripts/rove-sqlite-state.ts query \
 Apply a SQL fixture from a file:
 
 ```bash
-node apps/server/scripts/rove-sqlite-state.ts exec \
+node apps/server/scripts/paperplane-sqlite-state.ts exec \
   --base-dir <base-dir> \
-  --file /tmp/rove-seed.sql
+  --file /tmp/paperplane-seed.sql
 ```
 
 Use one statement per invocation for both `query` and `exec`; the helper wraps writes in a transaction and prints the backup path after a successful mutation. Use a single insert with multiple value rows when a fixture needs several records.

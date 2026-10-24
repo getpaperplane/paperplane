@@ -303,7 +303,7 @@ const main = Command.make(
       });
     const recordPath = path.join(
       home,
-      ".cache/rove/native-clients",
+      ".cache/paperplane/native-clients",
       platform,
       `${yield* digest(device)}.json`,
     );
@@ -339,7 +339,7 @@ const main = Command.make(
           true,
         );
         if (platform === "ios") {
-          const output = yield* fs.makeTempDirectoryScoped({ prefix: "rove-native-client-" });
+          const output = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-native-client-" });
           const { mobile } = yield* roots;
           yield* command("pod", ["install"], true, path.join(mobile, "ios"));
           // Target this simulator only, without Expo's desktop activation or log streaming.

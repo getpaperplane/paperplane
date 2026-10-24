@@ -675,7 +675,7 @@ export function runDevRunnerWithInput(input: DevRunnerCliInput) {
     // Trim before choosing: `--home-dir ""` is not a selection, and treating it
     // as one would skip the worktree default and land on the shared home —
     // exactly the outcome this precedence exists to prevent.
-    const resolvedRoveHome =
+    const resolvedPaperplaneHome =
       (input.paperplaneHome?.trim() || undefined) ??
       worktreeHome ??
       (hostEnvironment.PAPERPLANE_HOME?.trim() || undefined);
@@ -684,7 +684,7 @@ export function runDevRunnerWithInput(input: DevRunnerCliInput) {
       baseEnv: hostEnvironment,
       serverOffset,
       webOffset,
-      paperplaneHome: resolvedRoveHome,
+      paperplaneHome: resolvedPaperplaneHome,
       browser: input.browser,
       autoBootstrapProjectFromCwd: input.autoBootstrapProjectFromCwd,
       logWebSocketEvents: input.logWebSocketEvents,

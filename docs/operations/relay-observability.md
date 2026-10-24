@@ -7,7 +7,7 @@ The relay Alchemy stack owns a shared Axiom trace setup:
 - `rove-relay-traces-prod`, the OpenTelemetry trace dataset shared by the Worker, mobile app, and
   first-party relay clients
 - `rove-relay-otel-ingest-prod`, the dataset-scoped Worker ingest token
-- `rove-mobile-otel-ingest-prod`, the dataset-scoped mobile ingest token
+- `paperplane-mobile-otel-ingest-prod`, the dataset-scoped mobile ingest token
 - `rove-relay-client-otel-ingest-prod`, the dataset-scoped first-party relay-client ingest token
 - `rove-relay-recent-spans-prod`, a view of recent request and endpoint spans
 

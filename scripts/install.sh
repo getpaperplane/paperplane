@@ -19,7 +19,7 @@ set -eu
 
 repo="hafiezul/rove"
 base_url="${PAPERPLANE_RELEASE_BASE_URL:-https://github.com/${repo}/releases/download}"
-rove_home="${PAPERPLANE_HOME:-$HOME/.paperplane}"
+paperplane_home="${PAPERPLANE_HOME:-$HOME/.paperplane}"
 bin_dir="${PAPERPLANE_INSTALL_BIN_DIR:-$HOME/.local/bin}"
 
 fail() {
@@ -168,7 +168,7 @@ esac
 
 stem="rove-${version}-${platform}-${arch}"
 archive="${stem}.tar.gz"
-versions_dir="${rove_home}/runtime/versions"
+versions_dir="${paperplane_home}/runtime/versions"
 target_dir="${versions_dir}/${version}"
 
 if [ -f "${target_dir}/.install-complete" ] && [ "$(cat "${target_dir}/.install-complete")" = "$version" ]; then

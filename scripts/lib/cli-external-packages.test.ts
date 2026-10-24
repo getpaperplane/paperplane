@@ -576,7 +576,7 @@ it("runs home migration from isolated ESM and CommonJS bundles with a native sid
 it("loads Paperplane's MCP clients from an isolated runtime sidecar", () => {
   const selected = selectCliRuntimeExternalDependencies(serverPackageJson.dependencies);
   assert.strictEqual(selected["@modelcontextprotocol/sdk"], "1.29.0");
-  const stage = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "rove-mcp-sidecar-"));
+  const stage = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "paperplane-mcp-sidecar-"));
   try {
     const closure = runtimePackageClosure(
       NodePath.join(serverRoot, "node_modules/@modelcontextprotocol/sdk"),
@@ -605,7 +605,7 @@ it("loads Modal's CBOR codec from an isolated runtime sidecar", () => {
   const selected = selectCliRuntimeExternalDependencies(serverPackageJson.dependencies);
   assert.strictEqual(selected["cbor-x"], "1.6.6");
   const root = NodePath.join(serverRoot, "node_modules/cbor-x");
-  const stage = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "rove-cbor-sidecar-"));
+  const stage = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "paperplane-cbor-sidecar-"));
   try {
     const closure = runtimePackageClosure(root);
     assert.isAtLeast(closure.size, 1);
@@ -634,7 +634,9 @@ it(
   "bundles the server CLI without inlining Pi or CBOR runtime sources",
   { timeout: 240000 },
   async () => {
-    const dist = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "rove-cli-pi-bundle-check-"));
+    const dist = NodeFS.mkdtempSync(
+      NodePath.join(NodeOS.tmpdir(), "paperplane-cli-pi-bundle-check-"),
+    );
     try {
       const packed = NodeChildProcess.spawnSync("vp", ["pack", "--out-dir", dist], {
         cwd: serverRoot,

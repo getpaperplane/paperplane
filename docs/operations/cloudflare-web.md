@@ -76,7 +76,7 @@ After the first deployment works, set the repository variable `PAPERPLANE_MARKET
 
 Register a free `workers.dev` subdomain in the account's Workers settings. Production keeps its custom domain and does not enable its `workers.dev` route.
 
-Add `preview:web` to a same-repository pull request. The workflow builds the PR without deployment credentials, then uploads its static assets to a separate `rove-web-pr-<number>` Worker with the trusted base checkout's content handler. Trusted base-branch jobs use the existing `cloudflare-web` environment, so its `main` branch restriction can stay in place. Fork pull requests do not deploy.
+Add `preview:web` to a same-repository pull request. The workflow builds the PR without deployment credentials, then uploads its static assets to a separate `paperplane-web-pr-<number>` Worker with the trusted base checkout's content handler. Trusted base-branch jobs use the existing `cloudflare-web` environment, so its `main` branch restriction can stay in place. Fork pull requests do not deploy.
 
 The PR comment links the preview. Pair your own HTTPS Paperplane environment to use it. Each new push replaces that PR's preview without changing production. Closing the PR or removing `preview:web` deletes its Worker and marks the preview removed.
 
@@ -101,7 +101,7 @@ Keep the Paperplane backend private until you are ready to expose it. The backen
 
 4. In Cloudflare, create a named [Cloudflare Tunnel](https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/).
 5. Install and run `cloudflared` on the computer running Paperplane using the connector command provided by Cloudflare. Treat the connector token as a secret.
-6. Add a published application route for `rove-host.hafiezulzikry.com` with service URL `http://127.0.0.1:3773`.
+6. Add a published application route for `paperplane-host.hafiezulzikry.com` with service URL `http://127.0.0.1:3773`.
 7. Create a one-time pairing code on the host:
 
    ```sh
@@ -109,7 +109,7 @@ Keep the Paperplane backend private until you are ready to expose it. The backen
    ```
 
 8. Open `https://rove.hafiezulzikry.com` and add an environment under **Settings → Connections**.
-9. Enter `https://rove-host.hafiezulzikry.com` as the host and paste the pairing code.
+9. Enter `https://paperplane-host.hafiezulzikry.com` as the host and paste the pairing code.
 10. Confirm that your projects load. Start a thread and verify streaming responses from your provider.
 
 Keep the Paperplane service, `cloudflared`, and the computer running while you work. Update the host with `paperplane update`. The static website stays available when the computer is off, but its environment is offline. Keep pairing authentication enabled. Do not give visitors a pairing code for your own computer.

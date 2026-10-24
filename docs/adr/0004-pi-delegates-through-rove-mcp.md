@@ -6,7 +6,7 @@ Supersedes [ADR 0003](0003-pi-subagents-are-rove-owned.md).
 
 Pi threads delegate through Paperplane's app-owned V2 delegation tools, including
 MCP `delegate_task`. The thread's MCP session exposes these tools to Pi through
-`PiRoveTools`. Paperplane no longer injects a Pi-specific SDK subagent tool.
+`PiPaperplaneTools`. Paperplane no longer injects a Pi-specific SDK subagent tool.
 
 V2 owns child threads, task state, cancellation, and completion delivery across
 providers. Keeping a second Pi-only lifecycle would duplicate that ownership

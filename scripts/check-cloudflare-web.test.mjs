@@ -15,7 +15,7 @@ import {
 
 let directory;
 beforeEach(() => {
-  directory = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "rove-cloudflare-web-"));
+  directory = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "paperplane-cloudflare-web-"));
   NodeFS.writeFileSync(NodePath.join(directory, "index.html"), "<html></html>");
   NodeFS.mkdirSync(NodePath.join(directory, "schema"));
   NodeFS.writeFileSync(

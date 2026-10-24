@@ -153,7 +153,7 @@ calls over HTTP and forward cancellation; project resources remain subject to
 Paperplane's trust policy.
 
 MCP `delegate_task` uses the shared durable child-thread lifecycle for Pi, as
-recorded in [ADR 0004](../adr/0004-pi-delegates-through-rove-mcp.md). Pi has no
+recorded in [ADR 0004](../adr/0004-pi-delegates-through-paperplane-mcp.md). Pi has no
 provider-native subagent tool or lifecycle. Its native subagent capability
 flags do not gate app-owned MCP delegation. Extension output and subprocesses
 do not create delegated task records.

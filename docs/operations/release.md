@@ -52,10 +52,10 @@ leave `PAPERPLANE_CLOUD_READY` unset and OTA updates off.
 1. Generate an Android release key **outside the repository**, once:
 
    ```sh
-   mkdir -p "$HOME/.config/rove-release-signing"
+   mkdir -p "$HOME/.config/paperplane-release-signing"
    keytool -genkeypair -v -storetype PKCS12 \
-     -keystore "$HOME/.config/rove-release-signing/android.p12" \
-     -alias rove-release -keyalg RSA -keysize 3072 -validity 10000
+     -keystore "$HOME/.config/paperplane-release-signing/android.p12" \
+     -alias paperplane-release -keyalg RSA -keysize 3072 -validity 10000
    ```
 
 2. **Back up the keystore and password securely.** Reuse the same key for every
@@ -63,7 +63,7 @@ leave `PAPERPLANE_CLOUD_READY` unset and OTA updates off.
    Add these repository Actions secrets (never print or commit their values):
    - `PAPERPLANE_ANDROID_KEYSTORE_BASE64`: Base64 of the keystore file.
    - `PAPERPLANE_ANDROID_KEYSTORE_PASSWORD`: its store password.
-   - `PAPERPLANE_ANDROID_KEY_ALIAS`: `rove-release` from the command above.
+   - `PAPERPLANE_ANDROID_KEY_ALIAS`: `paperplane-release` from the command above.
    - `PAPERPLANE_ANDROID_KEY_PASSWORD`: the key password (same as the store password for
      this PKCS12 command).
      If any is missing, Android is explicitly skipped; iOS still builds. Invalid
@@ -120,14 +120,14 @@ Windows self-signing is free. It does not provide public certificate trust or re
    read -r -s PAPERPLANE_CERTIFICATE_PASSWORD
    printf '\n'
    export PAPERPLANE_CERTIFICATE_PASSWORD
-   bash scripts/create-windows-signing.sh "$HOME/.config/rove-release-signing/windows"
+   bash scripts/create-windows-signing.sh "$HOME/.config/paperplane-release-signing/windows"
    ```
 
 2. Back up the `.pfx` and its password securely. Reuse this identity for every release. Replacing it requires users to trust the new certificate.
 3. Set separate Windows Actions secrets and enable the mode:
 
    ```sh
-   base64 < "$HOME/.config/rove-release-signing/windows/rove-windows-signing.pfx" | gh secret set WIN_CSC_LINK
+   base64 < "$HOME/.config/paperplane-release-signing/windows/rove-windows-signing.pfx" | gh secret set WIN_CSC_LINK
    printf '%s' "$PAPERPLANE_CERTIFICATE_PASSWORD" | gh secret set WIN_CSC_KEY_PASSWORD
    gh variable set WINDOWS_SIGNING_MODE --body self-signed
    unset PAPERPLANE_CERTIFICATE_PASSWORD

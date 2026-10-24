@@ -49,9 +49,9 @@ Then choose what the agent may do:
   threads in every project. A thread it starts or steers cannot run with more
   permissions than the mode you chose.
 
-When upgrading an existing integration, replace its old `rove` server registration with
+When upgrading an existing integration, replace its old `paperplane` server registration with
 `paperplane` and sign in again. Update any personal permission rules that mention
-`mcp__rove__*` to use `mcp__paperplane__*`; tool names beginning with `rove_` now begin
+`mcp__paperplane__*` to use `mcp__paperplane__*`; tool names beginning with `paperplane_` now begin
 with `paperplane_`. Old tool names are not aliases. Paperplane updates the tools it injects
 into its own agent sessions automatically, without editing your provider configuration files.
 

@@ -153,7 +153,7 @@ jobs:
             if [ "$attempt" -eq 4 ]; then exit 1; fi
             sleep $((5 * 2 ** (attempt - 1)))
           done
-          git sparse-checkout set --no-cone '/*' '!/.repos/' '!/apps/mobile/modules/rove-terminal/Vendor/**/*.a'
+          git sparse-checkout set --no-cone '/*' '!/.repos/' '!/apps/mobile/modules/paperplane-terminal/Vendor/**/*.a'
           git -c checkout.workers=0 checkout --detach FETCH_HEAD
 
       # Only the desktop build needs these, but Ubuntu mirrors sometimes stall
@@ -308,7 +308,7 @@ jobs:
         uses: samypr100/setup-dev-drive@562171fe8df7401fdf582d766cd3b6ab80d5b1a0 # v4.1.0
         with:
           drive-size: 20GB
-          drive-path: C:\rove_temp_drive.vhdx
+          drive-path: C:\paperplane_temp_drive.vhdx
           trusted-dev-drive: true
           env-mapping: |
             TEMP,{{ DEV_DRIVE }}\tmp
@@ -507,9 +507,9 @@ jobs:
             echo "macOS CLI signing disabled (missing CSC_LINK); the archive is signed ad hoc."
             exit 0
           fi
-          keychain="$RUNNER_TEMP/rove-cli-signing.keychain-db"
+          keychain="$RUNNER_TEMP/paperplane-cli-signing.keychain-db"
           keychain_password="$(openssl rand -hex 16)"
-          cert_path="$RUNNER_TEMP/rove-cli-signing.p12"
+          cert_path="$RUNNER_TEMP/paperplane-cli-signing.p12"
           printf '%s' "$CSC_LINK" | base64 --decode > "$cert_path"
           security create-keychain -p "$keychain_password" "$keychain"
           security set-keychain-settings -lut 21600 "$keychain"
@@ -698,7 +698,7 @@ jobs:
               printf '%s' "$APPLE_API_KEY" > "$key_path"
               export APPLE_API_KEY="$key_path"
 
-              profile_path="$RUNNER_TEMP/rove.provisionprofile"
+              profile_path="$RUNNER_TEMP/paperplane.provisionprofile"
               printf '%s' "$MACOS_PROVISIONING_PROFILE" | base64 -D > "$profile_path"
               security cms -D -i "$profile_path" >/dev/null
               export PAPERPLANE_APPLE_TEAM_ID="$APPLE_TEAM_ID"
@@ -754,7 +754,7 @@ jobs:
             for archive in release/*.zip; do
               [[ -f "$archive" ]] || continue
               found_zip=true
-              verification_dir="$(mktemp -d "$RUNNER_TEMP/rove-macos-verify.XXXXXX")"
+              verification_dir="$(mktemp -d "$RUNNER_TEMP/paperplane-macos-verify.XXXXXX")"
               ditto -x -k "$archive" "$verification_dir"
               found_app=false
               while IFS= read -r -d '' app; do

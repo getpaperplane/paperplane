@@ -1,6 +1,6 @@
 ---
-name: test-rove-app
-description: Test Paperplane's web and desktop UI through its built-in Browser panel against isolated development state. Use for browser verification, browser pairing recovery, and test fixtures. Use test-rove-mobile for native mobile verification.
+name: test-paperplane-app
+description: Test Paperplane's web and desktop UI through its built-in Browser panel against isolated development state. Use for browser verification, browser pairing recovery, and test fixtures. Use test-paperplane-mobile for native mobile verification.
 ---
 
 # Test Paperplane web and desktop
@@ -8,7 +8,7 @@ description: Test Paperplane's web and desktop UI through its built-in Browser p
 Use Paperplane's built-in Browser panel for verification. If its tools are absent or
 the panel reports unavailable, explain the blocker and stop verification.
 Do not install or switch to another automation system. For native mobile
-testing, use [test-rove-mobile](../test-rove-mobile/SKILL.md).
+testing, use [test-paperplane-mobile](../test-paperplane-mobile/SKILL.md).
 
 ## Start the app
 

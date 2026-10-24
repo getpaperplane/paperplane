@@ -11,7 +11,7 @@ let directory;
 const contents = "signed update fixture";
 const sha512 = NodeCrypto.createHash("sha512").update(contents).digest("base64");
 beforeEach(() => {
-  directory = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "rove-release-assets-"));
+  directory = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "paperplane-release-assets-"));
 });
 afterEach(() => NodeFS.rmSync(directory, { recursive: true, force: true }));
 

@@ -10,7 +10,7 @@ const execFile = NodeUtil.promisify(NodeChildProcess.execFile);
 const benchmark = NodePath.join(import.meta.dirname, "server-boot.ts");
 
 it("measures TCP readiness without HTTP, stops each spawned PID and removes its state", async () => {
-  const directory = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "rove-boot-test-"));
+  const directory = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "paperplane-boot-test-"));
   const entry = NodePath.join(directory, "fake-server.mjs");
   const log = NodePath.join(directory, "children.jsonl");
   NodeFS.writeFileSync(
@@ -57,7 +57,7 @@ createServer((socket) => socket.on("error", () => {})).listen(Number(flag("--por
 });
 
 it("fails promptly when the spawned entry exits before listening", async () => {
-  const directory = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "rove-boot-failure-"));
+  const directory = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "paperplane-boot-failure-"));
   const entry = NodePath.join(directory, "failed-server.mjs");
   NodeFS.writeFileSync(entry, 'console.error("boot failed"); process.exit(3);');
   try {

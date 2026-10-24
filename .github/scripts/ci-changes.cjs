@@ -63,7 +63,7 @@ const TEST_ONLY_DEPS = {
 };
 // Declared dependencies that only feed a build step: the server bundles the
 // built web app (apps/server/vite.config.ts) but never imports it.
-const BUILD_ONLY_DEPS = { rove: ["@getpaperplane/web"] };
+const BUILD_ONLY_DEPS = { paperplane: ["@getpaperplane/web"] };
 
 // Sources scripts/mobile-native-static-check.ts lints, plus the tool and rule
 // configuration that decides how it lints them, plus the root package.json

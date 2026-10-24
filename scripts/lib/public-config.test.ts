@@ -203,7 +203,7 @@ describe("loadRepoEnv", () => {
 });
 
 function makeTemporaryDirectory() {
-  const directory = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "rove-public-config-"));
+  const directory = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "paperplane-public-config-"));
   temporaryDirectories.push(directory);
   return directory;
 }

@@ -57,7 +57,7 @@ function mockProcess(exit: number | PlatformError.PlatformError) {
 
 const devServerInput = {
   mode: "dev:server",
-  paperplaneHome: "/tmp/rove-dev-runner",
+  paperplaneHome: "/tmp/paperplane-dev-runner",
   browser: undefined,
   autoBootstrapProjectFromCwd: undefined,
   logWebSocketEvents: undefined,
@@ -238,7 +238,7 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
           baseEnv: {},
           serverOffset: 0,
           webOffset: 0,
-          paperplaneHome: "/tmp/custom-rove",
+          paperplaneHome: "/tmp/custom-paperplane",
           browser: false,
           autoBootstrapProjectFromCwd: false,
           logWebSocketEvents: true,
@@ -247,7 +247,7 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
           devUrl: new URL("http://localhost:7331"),
         });
 
-        assert.equal(env.PAPERPLANE_HOME, path.resolve("/tmp/custom-rove"));
+        assert.equal(env.PAPERPLANE_HOME, path.resolve("/tmp/custom-paperplane"));
         assert.equal(env.PAPERPLANE_PORT, "4222");
         assert.equal(env.VITE_HTTP_URL, "http://localhost:4222");
         assert.equal(env.VITE_WS_URL, "ws://localhost:4222");
@@ -336,7 +336,7 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
           baseEnv: {},
           serverOffset: 0,
           webOffset: 0,
-          paperplaneHome: "/tmp/my-rove",
+          paperplaneHome: "/tmp/my-paperplane",
           browser: undefined,
           autoBootstrapProjectFromCwd: undefined,
           logWebSocketEvents: undefined,
@@ -345,7 +345,7 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
           devUrl: undefined,
         });
 
-        assert.equal(env.PAPERPLANE_HOME, path.resolve("/tmp/my-rove"));
+        assert.equal(env.PAPERPLANE_HOME, path.resolve("/tmp/my-paperplane"));
       }),
     );
 
@@ -364,7 +364,7 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
           },
           serverOffset: 0,
           webOffset: 0,
-          paperplaneHome: "/tmp/my-rove",
+          paperplaneHome: "/tmp/my-paperplane",
           browser: true,
           autoBootstrapProjectFromCwd: undefined,
           logWebSocketEvents: undefined,
@@ -373,7 +373,7 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
           devUrl: undefined,
         });
 
-        assert.equal(env.PAPERPLANE_HOME, path.resolve("/tmp/my-rove"));
+        assert.equal(env.PAPERPLANE_HOME, path.resolve("/tmp/my-paperplane"));
         assert.equal(env.PORT, "5733");
         assert.equal(env.VITE_DEV_SERVER_URL, "http://127.0.0.1:5733");
         assert.equal(env.HOST, "127.0.0.1");
@@ -1242,10 +1242,10 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
       });
     });
 
-    describe("rove home precedence", () => {
+    describe("paperplane home precedence", () => {
       const makeWorktree = Effect.acquireRelease(
         Effect.sync(() => {
-          const root = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "rove-devrunner-"));
+          const root = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "paperplane-devrunner-"));
           NodeFS.writeFileSync(
             NodePath.join(root, ".git"),
             "gitdir: /elsewhere/.git/worktrees/x\n",

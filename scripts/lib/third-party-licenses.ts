@@ -984,7 +984,7 @@ function serializeManifest(manifest: ThirdPartyLicenseManifest): string {
 
 export function thirdPartyLicensesPlugin(options: ThirdPartyLicensesPluginOptions): Plugin {
   return {
-    name: "rove:third-party-licenses",
+    name: "paperplane:third-party-licenses",
     configureServer(server) {
       let manifestPromise: Promise<ThirdPartyLicenseManifest> | null = null;
       server.middlewares.use((request, response, next) => {

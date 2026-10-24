@@ -14,7 +14,7 @@ it.live("breaks hard links into independent files, keeping content and mode", ()
   Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
-    const root = yield* fs.makeTempDirectoryScoped({ prefix: "rove-hardlink-test-" });
+    const root = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-hardlink-test-" });
 
     // esbuild's layout on macOS: a shim in one package hard-linked to the
     // native binary in another, nested below the tree root.

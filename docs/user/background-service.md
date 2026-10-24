@@ -52,7 +52,7 @@ Custom systemd drop-ins must be moved manually before conversion.
 If the old server blocks the first start, on Linux run
 `systemctl --user disable --now rove.service`; on macOS run
 `launchctl bootout --wait gui/$(id -u)/io.github.hafiezul.rove.service && launchctl disable gui/$(id -u)/io.github.hafiezul.rove.service`.
-Quit the old desktop app too. For SSH or WSL, stop the old service or `rove serve`
+Quit the old desktop app too. For SSH or WSL, stop the old service or `paperplane serve`
 terminal on that host, then reconnect. Windows has no managed CLI service.
 
 ## Platform support

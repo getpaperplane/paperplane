@@ -12,7 +12,7 @@ if [[ "$CSC_NAME" == *$'\n'* || "$CSC_NAME" == *$'\r'* || "$CSC_NAME" == *'"'* ]
   exit 1
 fi
 
-signing_dir="$(mktemp -d "$RUNNER_TEMP/rove-self-signed.XXXXXX")"
+signing_dir="$(mktemp -d "$RUNNER_TEMP/paperplane-self-signed.XXXXXX")"
 keychain="$signing_dir/signing.keychain-db"
 identity_file="$signing_dir/identity.p12"
 certificate="$signing_dir/certificate.pem"

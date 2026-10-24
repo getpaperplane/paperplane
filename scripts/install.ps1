@@ -18,7 +18,7 @@ $ErrorActionPreference = "Stop"
 
 $repo = "hafiezul/rove"
 $baseUrl = if ($env:PAPERPLANE_RELEASE_BASE_URL) { $env:PAPERPLANE_RELEASE_BASE_URL.TrimEnd("/") } else { "https://github.com/$repo/releases/download" }
-$roveHome = if ($env:PAPERPLANE_HOME) { $env:PAPERPLANE_HOME } else { Join-Path $HOME ".paperplane" }
+$paperplaneHome = if ($env:PAPERPLANE_HOME) { $env:PAPERPLANE_HOME } else { Join-Path $HOME ".paperplane" }
 $binDir = if ($env:PAPERPLANE_INSTALL_BIN_DIR) { $env:PAPERPLANE_INSTALL_BIN_DIR } else { Join-Path $HOME ".local\bin" }
 
 function Fail([string] $message) {
@@ -125,7 +125,7 @@ if (-not $version) {
     "preview" { '^v\d+\.\d+\.\d+-preview\.\d+\.\d+$' }
     default { Fail "PAPERPLANE_CHANNEL must be stable, nightly, or preview" }
   }
-  $releases = Invoke-RestMethod -Uri "https://api.github.com/repos/$repo/releases?per_page=100" -Headers @{ "User-Agent" = "rove-install" }
+  $releases = Invoke-RestMethod -Uri "https://api.github.com/repos/$repo/releases?per_page=100" -Headers @{ "User-Agent" = "paperplane-install" }
   $tag = ($releases | Where-Object { -not $_.draft -and $_.tag_name -match $tagPattern } | Select-Object -First 1).tag_name
   if (-not $tag) { Fail "could not find a $channel release; set PAPERPLANE_VERSION" }
   $version = $tag.Substring(1)
@@ -139,7 +139,7 @@ if ($version -match '-preview\.') {
 
 $stem = "rove-$version-win32-$arch"
 $archive = "$stem.zip"
-$versionsDir = Join-Path $roveHome "runtime\versions"
+$versionsDir = Join-Path $paperplaneHome "runtime\versions"
 $targetDir = Join-Path $versionsDir $version
 $marker = Join-Path $targetDir ".install-complete"
 

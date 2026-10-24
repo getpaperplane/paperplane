@@ -48,7 +48,7 @@ const run = Effect.fn("test.run")(function* (
 const makeFakeArchives = Effect.fn("test.makeFakeArchives")(function* () {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const root = yield* fs.makeTempDirectoryScoped({ prefix: "rove-npm-packages-test-" });
+  const root = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-npm-packages-test-" });
   const archivesDir = path.join(root, "archives");
   yield* fs.makeDirectory(archivesDir);
   for (const key of KEYS) {

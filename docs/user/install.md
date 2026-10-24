@@ -46,9 +46,9 @@ Importing data from another installation is not yet supported.
 
 ## Desktop command line
 
-The desktop app includes the `paperplane` command. In **Settings → General → About**, choose **Install** next to **paperplane command**, then open a new terminal. **Remove** takes it off your PATH again. On upgrade, old desktop-owned `rove` launchers are removed only when their exact ownership marker matches. On Windows, choose **Install** again to replace the old desktop PATH entry.
+The desktop app includes the `paperplane` command. In **Settings → General → About**, choose **Install** next to **paperplane command**, then open a new terminal. **Remove** takes it off your PATH again. On upgrade, old desktop-owned `paperplane` launchers are removed only when their exact ownership marker matches. On Windows, choose **Install** again to replace the old desktop PATH entry.
 
-Existing npm installations stay unchanged: after installing Paperplane, run `npm uninstall -g @rove-code/cli` yourself. Old standalone-installer `rove` links and manually added shell-profile lines are left alone; remove them yourself if no longer needed. The installers do not edit shell profiles, and their default `~/.local/bin` PATH entry is still used by Paperplane.
+Existing npm installations stay unchanged: after installing Paperplane, run `npm uninstall -g @paperplane-code/cli` yourself. Old standalone-installer `paperplane` links and manually added shell-profile lines are left alone; remove them yourself if no longer needed. The installers do not edit shell profiles, and their default `~/.local/bin` PATH entry is still used by Paperplane.
 
 With the desktop app running, `paperplane app` opens a new thread for the current directory. Pass a path, such as `paperplane app ../my-project`, to use another directory. This requires the desktop app; a standalone server or SSH session is not enough.
 

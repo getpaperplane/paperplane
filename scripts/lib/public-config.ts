@@ -4,7 +4,7 @@ import * as NodePath from "node:path";
 import * as NodeURL from "node:url";
 import * as NodeUtil from "node:util";
 
-export interface RovePublicConfig {
+export interface PaperplanePublicConfig {
   readonly clerkPublishableKey: string | undefined;
   readonly clerkJwtTemplate: string | undefined;
   readonly clerkCliOAuthClientId: string | undefined;
@@ -136,7 +136,7 @@ export function loadRepoEnv({
       };
 }
 
-export function resolvePublicConfig(...sources: readonly Environment[]): RovePublicConfig {
+export function resolvePublicConfig(...sources: readonly Environment[]): PaperplanePublicConfig {
   return {
     clerkPublishableKey: firstNonEmpty(
       sources,

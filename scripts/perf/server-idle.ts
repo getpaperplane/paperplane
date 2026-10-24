@@ -22,7 +22,7 @@ const address = reservation.address();
 if (address === null || typeof address === "string") throw new Error("No TCP port");
 const port = address.port;
 await new Promise<void>((resolve) => reservation.close(() => resolve()));
-const home = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "rove-idle-"));
+const home = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "paperplane-idle-"));
 const child = NodeChildProcess.spawn(
   process.execPath,
   [

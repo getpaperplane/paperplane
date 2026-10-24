@@ -17,7 +17,9 @@ describe.skipIf(HostProcess.Platform.defaultValue() !== "linux")("installer term
   ])(
     "preserves download and install behavior (HTTP failure: $fail, explicit home: $explicitHome)",
     async ({ fail, explicitHome }) => {
-      const root = await NodeFSP.mkdtemp(NodePath.join(NodeOS.tmpdir(), "rove-install-progress-"));
+      const root = await NodeFSP.mkdtemp(
+        NodePath.join(NodeOS.tmpdir(), "paperplane-install-progress-"),
+      );
       const version = "1.2.3";
       const homeDirectory = NodePath.join(root, "user");
       await NodeFSP.mkdir(homeDirectory);

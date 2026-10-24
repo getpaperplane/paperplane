@@ -112,7 +112,7 @@
         "@getpaperplane/mobile-terminal-native",
       ],
     },
-    "apps/mobile/modules/rove-source-text": {
+    "apps/mobile/modules/paperplane-source-text": {
       // React Native codegen discovers component specifications by filename.
       "entry": ["src/*NativeComponent.ts!"],
     },

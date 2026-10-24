@@ -17,7 +17,7 @@ afterEach(() => {
 });
 
 function runner() {
-  const root = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "rove-signing-test-"));
+  const root = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "paperplane-signing-test-"));
   directories.push(root);
   const envFile = NodePath.join(root, "github-env");
   const logFile = NodePath.join(root, "commands.jsonl");
@@ -193,7 +193,7 @@ it("imports a reusable identity, scopes trust to code signing, and removes the p
   const searchList = commands.find((args) => args[0] === "list-keychains" && args.includes("-s"));
   assert.include(searchList ?? [], "/tmp/existing keychain-db");
   const signingDirectory = NodeFS.readdirSync(fixture.root).find((entry) =>
-    entry.startsWith("rove-self-signed."),
+    entry.startsWith("paperplane-self-signed."),
   );
   assert.isDefined(signingDirectory);
   assert.notInclude(

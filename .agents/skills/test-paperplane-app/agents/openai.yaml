@@ -1,4 +1,4 @@
 interface:
   display_name: "Paperplane App Testing"
   short_description: "Test web and desktop in Paperplane's Browser panel"
-  default_prompt: "Use $test-rove-app to verify the affected web or desktop flow through Paperplane's Browser panel."
+  default_prompt: "Use $test-paperplane-app to verify the affected web or desktop flow through Paperplane's Browser panel."

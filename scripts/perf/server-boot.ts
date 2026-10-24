@@ -45,10 +45,10 @@ const seedUserdata = values["seed-userdata"]
 const profileDir = values["cpu-prof"]
   ? values["profile-dir"]
     ? NodePath.resolve(values["profile-dir"])
-    : await NodeFSP.mkdtemp(NodePath.join(NodeOS.tmpdir(), "rove-boot-profiles-"))
+    : await NodeFSP.mkdtemp(NodePath.join(NodeOS.tmpdir(), "paperplane-boot-profiles-"))
   : undefined;
 if (profileDir) await NodeFSP.mkdir(profileDir, { recursive: true });
-const baseDir = await NodeFSP.mkdtemp(NodePath.join(NodeOS.tmpdir(), "rove-boot-"));
+const baseDir = await NodeFSP.mkdtemp(NodePath.join(NodeOS.tmpdir(), "paperplane-boot-"));
 const exec = NodeUtil.promisify(NodeChildProcess.execFile);
 let active: ReturnType<typeof NodeChildProcess.spawn> | undefined;
 const abort = new AbortController();

@@ -17,7 +17,7 @@ it.skipIf(HostProcess.Platform.defaultValue() === "win32")(
   "creates a password-protected code-signing identity without replacing it on retry",
   () => {
     const directory = NodeFS.mkdtempSync(
-      NodePath.join(NodeOS.tmpdir(), "rove-windows-certificate-"),
+      NodePath.join(NodeOS.tmpdir(), "paperplane-windows-certificate-"),
     );
     directories.push(directory);
     const env = { ...process.env, PAPERPLANE_CERTIFICATE_PASSWORD: "certificate-test-password" };

@@ -13,7 +13,7 @@ API 24–25 use a single inexact system alarm to expire cards after process exit
 The native notification tests cover API 24, 26, 33 and 36 (plus API 25 for legacy expiry) using Robolectric. To compile the module, run these tests and run Android lint, use the following command from a generated `apps/mobile/android` project with JDK 21 available. No Firebase, signing or relay secrets are required:
 
 ```sh
-./gradlew :rove-agent-notifications:testDebugUnitTest :rove-agent-notifications:lintRelease -Pandroid.lint.useK2Uast=false
+./gradlew :paperplane-agent-notifications:testDebugUnitTest :paperplane-agent-notifications:lintRelease -Pandroid.lint.useK2Uast=false
 ```
 
 Robolectric's API 36 runtime requires JDK 21; module compilation still uses Expo's Java 17 toolchain. The existing Mobile Native Static Analysis job separately runs ktlint and detekt. The native fingerprint check marks this change as requiring a new binary; the production workflow cannot deliver it to an older binary by OTA. Settings disable Android notifications if the installed native module is missing required methods.
@@ -36,7 +36,7 @@ PAPERPLANE_ANDROID_GOOGLE_SERVICES_FILE=/absolute/path/google-services.json \
 vp run android:dev
 ```
 
-For an EAS build, provide the same configuration through each selected build environment, using an EAS file variable named `PAPERPLANE_ANDROID_GOOGLE_SERVICES_FILE` for the Google services file. Make the file available to fingerprint generation as well as the native build. FCM service-account credentials belong on the relay, not in EAS's app environment. If deploying a separate hosted relay, configure the build's Paperplane Connect public settings for that relay and Clerk application as described in [Paperplane Connect](../internals/rove-connect.md).
+For an EAS build, provide the same configuration through each selected build environment, using an EAS file variable named `PAPERPLANE_ANDROID_GOOGLE_SERVICES_FILE` for the Google services file. Make the file available to fingerprint generation as well as the native build. FCM service-account credentials belong on the relay, not in EAS's app environment. If deploying a separate hosted relay, configure the build's Paperplane Connect public settings for that relay and Clerk application as described in [Paperplane Connect](../internals/paperplane-connect.md).
 
 Expo OTA updates are disabled by default in source builds. To enable them for an owned Expo project, set `PAPERPLANE_EXPO_PROJECT_ID` and `PAPERPLANE_MOBILE_UPDATES_ENABLED=1` before prebuild and bundling. A debug development-client APK requires Metro; a bundled release build is needed to verify cold-start notification taps without Expo's development launcher.
 
@@ -77,7 +77,7 @@ Verify an expanded card with five threads, attention/failure priority, project n
 After Android prebuild, run the native presentation regression tests from `apps/mobile/android`:
 
 ```sh
-./gradlew :rove-agent-notifications:testDebugUnitTest --tests io.github.getpaperplane.paperplane.agentnotifications.AgentNotificationsTest
+./gradlew :paperplane-agent-notifications:testDebugUnitTest --tests io.github.getpaperplane.paperplane.agentnotifications.AgentNotificationsTest
 ```
 
 ## Relay deployment

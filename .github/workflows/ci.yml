@@ -76,7 +76,7 @@ jobs:
           sparse-checkout: |
             /*
             !/.repos/
-            !/apps/mobile/modules/rove-terminal/Vendor/**/*.a
+            !/apps/mobile/modules/paperplane-terminal/Vendor/**/*.a
           sparse-checkout-cone-mode: false
 
       - name: Reject repository-owned PR assets
@@ -161,7 +161,7 @@ jobs:
           sparse-checkout: |
             /*
             !/.repos/
-            !/apps/mobile/modules/rove-terminal/Vendor/**/*.a
+            !/apps/mobile/modules/paperplane-terminal/Vendor/**/*.a
           sparse-checkout-cone-mode: false
 
       - uses: ./.github/actions/setup-apt-mirrors
@@ -245,7 +245,7 @@ jobs:
           sparse-checkout: |
             /*
             !/.repos/
-            !/apps/mobile/modules/rove-terminal/Vendor/**/*.a
+            !/apps/mobile/modules/paperplane-terminal/Vendor/**/*.a
           sparse-checkout-cone-mode: false
 
       - name: Assign test packages
@@ -333,7 +333,7 @@ jobs:
           sparse-checkout: |
             /*
             !/.repos/
-            !/apps/mobile/modules/rove-terminal/Vendor/**/*.a
+            !/apps/mobile/modules/paperplane-terminal/Vendor/**/*.a
           sparse-checkout-cone-mode: false
 
       - name: Setup Vite+
@@ -371,7 +371,7 @@ jobs:
           sparse-checkout: |
             /*
             !/.repos/
-            !/apps/mobile/modules/rove-terminal/Vendor/**/*.a
+            !/apps/mobile/modules/paperplane-terminal/Vendor/**/*.a
           sparse-checkout-cone-mode: false
 
       - name: Detect affected jobs
@@ -415,7 +415,7 @@ jobs:
       - name: Test
         if: steps.changes.outputs.test_server != 'false'
         env:
-          PAPERPLANE_TRANSFER_BUDGET_REPORT_PATH: ${{ runner.temp }}/rove-transfer-budget.md
+          PAPERPLANE_TRANSFER_BUDGET_REPORT_PATH: ${{ runner.temp }}/paperplane-transfer-budget.md
           PAPERPLANE_TRANSFER_BUDGET_RESULT_PATH: ${{ runner.temp }}/thread-transfer-result.json
         run: vp run --filter @getpaperplane/server test --shard ${{ matrix.shard }}/${{ strategy.job-total }}
 
@@ -436,8 +436,8 @@ jobs:
       - name: Publish transfer budget report
         if: always() && steps.transfer_budget.outputs.present == 'true'
         run: |
-          if test -f "${{ runner.temp }}/rove-transfer-budget.md"; then
-            tee -a "$GITHUB_STEP_SUMMARY" < "${{ runner.temp }}/rove-transfer-budget.md"
+          if test -f "${{ runner.temp }}/paperplane-transfer-budget.md"; then
+            tee -a "$GITHUB_STEP_SUMMARY" < "${{ runner.temp }}/paperplane-transfer-budget.md"
           else
             echo "Transfer budget report was not produced." >> "$GITHUB_STEP_SUMMARY"
           fi

@@ -24,7 +24,7 @@ function pe(machine = 0xaa64) {
 }
 
 async function directory() {
-  const root = await NodeFSP.mkdtemp(NodePath.join(NodeOS.tmpdir(), "rove-pe-test-"));
+  const root = await NodeFSP.mkdtemp(NodePath.join(NodeOS.tmpdir(), "paperplane-pe-test-"));
   temporaryDirectories.push(root);
   return root;
 }
@@ -33,7 +33,7 @@ it("checks loose binaries and both packed and unpacked ASAR natives", async () =
   const root = await directory();
   const app = NodePath.join(root, "app");
   await NodeFSP.mkdir(app);
-  await NodeFSP.writeFile(NodePath.join(app, "rove.exe"), pe());
+  await NodeFSP.writeFile(NodePath.join(app, "paperplane.exe"), pe());
   const source = NodePath.join(root, "source");
   await NodeFSP.mkdir(source);
   await NodeFSP.writeFile(NodePath.join(source, "packed.node"), pe());

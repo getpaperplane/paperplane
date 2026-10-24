@@ -647,7 +647,7 @@ const writeAtomically = Effect.fn("iconExport.writeAtomically")(function* (
   const temporaryPath = yield* fs
     .makeTempFileScoped({
       directory: targetDirectory,
-      prefix: ".rove-icon-export-",
+      prefix: ".paperplane-icon-export-",
       suffix: ".tmp",
     })
     .pipe(
@@ -721,7 +721,7 @@ export const exportBrandIcons = Effect.fn("exportBrandIcons")(function* (checkOn
   const tool = yield* resolveIconComposerTool();
   const temporaryDirectory = yield* fs
     .makeTempDirectoryScoped({
-      prefix: "rove-icon-export-",
+      prefix: "paperplane-icon-export-",
     })
     .pipe(
       Effect.mapError(

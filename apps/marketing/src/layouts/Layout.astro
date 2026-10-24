@@ -31,7 +31,7 @@ const canonicalUrl = Astro.site ? new URL(Astro.url.pathname, Astro.site) : null
     <script is:inline>
       // Apply the saved choice before first paint. New visitors always start dark.
       try {
-        if (localStorage.getItem("rove-marketing-theme") === "light") {
+        if (localStorage.getItem("paperplane-marketing-theme") === "light") {
           document.documentElement.dataset.theme = "light";
           document.querySelector('meta[name="theme-color"]').content = "#f4f6f9";
         }
@@ -126,13 +126,13 @@ const canonicalUrl = Astro.site ? new URL(Astro.url.pathname, Astro.site) : null
         const theme = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
         applyTheme(theme);
         try {
-          localStorage.setItem("rove-marketing-theme", theme);
+          localStorage.setItem("paperplane-marketing-theme", theme);
         } catch {
           // The toggle still works for this page when persistence is blocked.
         }
       });
       window.addEventListener("storage", (event) => {
-        if (event.key === "rove-marketing-theme" || event.key === null) {
+        if (event.key === "paperplane-marketing-theme" || event.key === null) {
           applyTheme(event.newValue === "light" ? "light" : "dark");
         }
       });

@@ -24,10 +24,10 @@ on:
       theme:
         description: Palette to capture (all multiplies the run by six)
         required: true
-        default: rove
+        default: paperplane
         type: choice
         options:
-          - rove
+          - paperplane
           - plum
           - grove
           - ocean

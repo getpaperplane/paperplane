@@ -1041,7 +1041,7 @@ async function presentIosLockScreen(udid: string): Promise<void> {
  * pressing on a lit lock screen would unlock the device instead.
  */
 async function wakeIosLockScreen(udid: string): Promise<void> {
-  const probe = NodePath.join(NodeOS.tmpdir(), `rove-showcase-wake-${udid}.png`);
+  const probe = NodePath.join(NodeOS.tmpdir(), `paperplane-showcase-wake-${udid}.png`);
   try {
     for (let attempt = 0; attempt < 5; attempt += 1) {
       await delay(2_000);
@@ -1332,7 +1332,7 @@ async function waitForAndroidShowcaseScene(
       "run-as",
       ANDROID_PACKAGE,
       "cat",
-      "files/rove-showcase-ready",
+      "files/paperplane-showcase-ready",
     ]).catch(() => "");
     if (readyScene.trim() === scene) return;
     await delay(500);
@@ -1343,7 +1343,7 @@ async function waitForAndroidShowcaseScene(
 async function writeAndroidShowcaseScene(serial: string, scene: ShowcaseScene): Promise<void> {
   await runAdb(serial, [
     "shell",
-    `run-as ${ANDROID_PACKAGE} sh -c 'mkdir -p files && rm -f files/rove-showcase-ready && printf %s ${scene} > files/rove-showcase-scene'`,
+    `run-as ${ANDROID_PACKAGE} sh -c 'mkdir -p files && rm -f files/paperplane-showcase-ready && printf %s ${scene} > files/paperplane-showcase-scene'`,
   ]);
 }
 
@@ -1518,7 +1518,7 @@ async function main(): Promise<void> {
   }
 
   const showcaseRootDir = await NodeFSP.mkdtemp(
-    NodePath.join(NodeOS.tmpdir(), "rove-mobile-showcase-"),
+    NodePath.join(NodeOS.tmpdir(), "paperplane-mobile-showcase-"),
   );
   const showcaseServers: NodeChildProcess.ChildProcess[] = [];
   const showcaseEnvironments: Array<{

@@ -142,13 +142,13 @@ jobs:
         run: |
           set -euo pipefail
           umask 077
-          trap 'rm -f "$RUNNER_TEMP/rove-release.keystore"' EXIT
-          printf '%s' "$KEYSTORE" | base64 --decode > "$RUNNER_TEMP/rove-release.keystore"
+          trap 'rm -f "$RUNNER_TEMP/paperplane-release.keystore"' EXIT
+          printf '%s' "$KEYSTORE" | base64 --decode > "$RUNNER_TEMP/paperplane-release.keystore"
           tools="$(find "$ANDROID_HOME/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -1)"
           mkdir -p release-assets
           "$tools/zipalign" -f -P 16 4 apps/mobile/android/app/build/outputs/apk/release/app-release-unsigned.apk "$RUNNER_TEMP/aligned.apk"
           apk="release-assets/Rove-Code-$RELEASE_VERSION.apk"
-          "$tools/apksigner" sign --ks "$RUNNER_TEMP/rove-release.keystore" --ks-pass env:STORE_PASSWORD --ks-key-alias "$KEY_ALIAS" --key-pass env:KEY_PASSWORD --out "$apk" "$RUNNER_TEMP/aligned.apk"
+          "$tools/apksigner" sign --ks "$RUNNER_TEMP/paperplane-release.keystore" --ks-pass env:STORE_PASSWORD --ks-key-alias "$KEY_ALIAS" --key-pass env:KEY_PASSWORD --out "$apk" "$RUNNER_TEMP/aligned.apk"
           "$tools/apksigner" verify --verbose --print-certs "$apk"
           rm -f release-assets/*.idsig
       - uses: actions/upload-artifact@v7
@@ -198,10 +198,10 @@ jobs:
           workspace="$(find apps/mobile/ios -maxdepth 1 -name '*.xcworkspace' -print -quit)"
           scheme="$(basename "$workspace" .xcworkspace)"
           xcodebuild -workspace "$workspace" -scheme "$scheme" -configuration Release \
-            -destination 'generic/platform=iOS' -archivePath "$RUNNER_TEMP/Rove.xcarchive" \
+            -destination 'generic/platform=iOS' -archivePath "$RUNNER_TEMP/Paperplane.xcarchive" \
             CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO archive
           mkdir -p "$RUNNER_TEMP/ipa/Payload" release-assets
-          cp -R "$RUNNER_TEMP/Rove.xcarchive/Products/Applications/"*.app "$RUNNER_TEMP/ipa/Payload/"
+          cp -R "$RUNNER_TEMP/Paperplane.xcarchive/Products/Applications/"*.app "$RUNNER_TEMP/ipa/Payload/"
           cd "$RUNNER_TEMP/ipa"
           /usr/bin/zip -qry "$GITHUB_WORKSPACE/release-assets/Rove-Code-$RELEASE_VERSION-unsigned.ipa" Payload
       - uses: actions/upload-artifact@v7
