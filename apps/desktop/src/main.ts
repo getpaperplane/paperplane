@@ -13,6 +13,7 @@ import * as NodeServices from "@effect/platform-node/NodeServices";
 import * as NodeFS from "node:fs";
 import * as NodeOS from "node:os";
 import * as Effect from "effect/Effect";
+import * as Cause from "effect/Cause";
 import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
 
@@ -272,4 +273,13 @@ try {
   throw error;
 }
 
-DesktopApp.program.pipe(Effect.provide(layerDesktopRuntime), NodeRuntime.runMain);
+DesktopApp.program.pipe(
+  Effect.provide(layerDesktopRuntime),
+  // Profile migration runs during layer acquisition, before the normal startup error handler exists.
+  Effect.tapCause((cause) =>
+    Effect.sync(() => {
+      Electron.dialog.showErrorBox("Paperplane could not start", Cause.pretty(cause));
+    }),
+  ),
+  NodeRuntime.runMain,
+);

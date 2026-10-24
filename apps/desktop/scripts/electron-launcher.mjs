@@ -17,7 +17,7 @@ const devBundleIdSuffix = NodePath.basename(repoRoot)
   .toLowerCase()
   .replaceAll(/[^a-z0-9]+/g, "");
 // Keep the bundle name stable until the Electron keychain identity is migrated.
-const APP_DISPLAY_NAME = isDevelopment ? "Rove Code (Dev)" : "Rove Code (Beta)";
+const APP_DISPLAY_NAME = isDevelopment ? "Paperplane (Dev)" : "Paperplane (Beta)";
 const APP_BUNDLE_ID = isDevelopment
   ? `io.github.hafiezul.rove.dev.${devBundleIdSuffix || "local"}`
   : "io.github.hafiezul.rove";

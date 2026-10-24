@@ -2778,8 +2778,8 @@ export function resolvePackageManagerUserAgent(packageManager: string): string {
 
 export function resolveDesktopProductName(version: string): string {
   return resolveDesktopUpdateChannel(version) === "nightly"
-    ? "Rove Code (Nightly)"
-    : (desktopPackageJson.productName ?? "Rove Code");
+    ? "Paperplane (Nightly)"
+    : (desktopPackageJson.productName ?? "Paperplane");
 }
 
 export const createBuildConfig = Effect.fn("createBuildConfig")(function* (

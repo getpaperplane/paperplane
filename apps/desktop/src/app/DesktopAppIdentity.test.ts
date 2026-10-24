@@ -129,7 +129,7 @@ const withIdentity = <A, E, R>(
         Layer.provideMerge(
           FileSystem.layerNoop({
             exists: (path) =>
-              input.legacyPathProbeError && /\/rove-code(?:-dev)?(?:\/|$)/.test(path)
+              input.legacyPathProbeError && /\/paperplane(?:-dev)?(?:\/|$)/.test(path)
                 ? Effect.fail(input.legacyPathProbeError)
                 : Effect.succeed(
                     input.legacyPathExists === true && /\/rove-code(?:-dev)?(?:\/|$)/.test(path),
@@ -153,7 +153,7 @@ describe("DesktopAppIdentity", () => {
         const identity = yield* DesktopAppIdentity.DesktopAppIdentity;
         const userDataPath = yield* identity.resolveUserDataPath;
 
-        assert.equal(userDataPath, "/Users/alice/Library/Application Support/rove-v2");
+        assert.equal(userDataPath, "/Users/alice/Library/Application Support/paperplane");
       }),
       { legacyPathExists: true },
     ),
@@ -165,7 +165,7 @@ describe("DesktopAppIdentity", () => {
         const identity = yield* DesktopAppIdentity.DesktopAppIdentity;
         assert.equal(
           yield* identity.resolveUserDataPath,
-          "/Users/alice/Library/Application Support/rove-dev",
+          "/Users/alice/Library/Application Support/paperplane-dev",
         );
       }),
       {
@@ -175,8 +175,8 @@ describe("DesktopAppIdentity", () => {
     ),
   );
 
-  it.effect("preserves failures while inspecting the legacy Windows credential state", () => {
-    const legacyPath = "/Users/alice/AppData/Roaming/rove-code-dev/Local State";
+  it.effect("preserves failures while inspecting the destination Windows profile", () => {
+    const legacyPath = "/Users/alice/AppData/Roaming/paperplane-dev";
     const cause = PlatformError.systemError({
       _tag: "PermissionDenied",
       module: "FileSystem",
@@ -193,10 +193,7 @@ describe("DesktopAppIdentity", () => {
         assert.instanceOf(error, DesktopUserData.DesktopUserDataInitializationError);
         assert.equal(error.resourcePath, legacyPath);
         assert.strictEqual(error.cause, cause);
-        assert.equal(
-          error.message,
-          `Could not initialize Electron user data during inspect at ${legacyPath} (PermissionDenied).`,
-        );
+        assert.equal(error.operation, "inspect");
       }),
       {
         legacyPathProbeError: cause,
@@ -217,7 +214,7 @@ describe("DesktopAppIdentity", () => {
         const identity = yield* DesktopAppIdentity.DesktopAppIdentity;
         yield* identity.configure;
 
-        assert.deepEqual(calls.setName, ["Rove Code Beta"]);
+        assert.deepEqual(calls.setName, ["Paperplane Beta"]);
         assert.equal(calls.setAboutPanelOptions[0]?.applicationName, "Paperplane (Beta)");
         assert.equal(calls.setAboutPanelOptions[0]?.applicationVersion, "1.2.3");
         assert.equal(calls.setAboutPanelOptions[0]?.version, "0123456789ab");
@@ -261,7 +258,7 @@ describe("DesktopAppIdentity", () => {
 
         const runtimeName = calls.setName[0];
         assert.isDefined(runtimeName);
-        assert.equal(runtimeName, `Rove Code ${stage}`);
+        assert.equal(runtimeName, `Paperplane ${stage}`);
         // RFC 9110's token grammar, after Electron removes ASCII spaces.
         assert.match(runtimeName.replaceAll(" ", ""), /^[!#$%&'*+\-.^_`|~0-9A-Za-z]+$/);
         assert.equal(calls.setAboutPanelOptions[0]?.applicationName, `Paperplane (${stage})`);

@@ -94,8 +94,7 @@ export const make = Effect.gen(function* () {
     // Electron removes spaces from this name to build the native User-Agent
     // product token, but leaves parentheses intact. Keep the runtime name valid
     // without rewriting preview sessions (which breaks Turnstile, #7110).
-    // Preserve the OS keychain identity until the desktop storage migration.
-    yield* electronApp.setName(`Rove Code ${environment.branding.stageLabel}`);
+    yield* electronApp.setName(`Paperplane ${environment.branding.stageLabel}`);
     yield* electronApp.setAboutPanelOptions({
       applicationName: environment.displayName,
       applicationVersion: environment.appVersion,

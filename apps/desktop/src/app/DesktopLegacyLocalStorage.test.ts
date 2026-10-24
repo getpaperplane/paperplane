@@ -12,6 +12,7 @@ vi.mock("electron", () => ({}));
 import * as DesktopConfig from "./DesktopConfig.ts";
 import * as DesktopEnvironment from "./DesktopEnvironment.ts";
 import * as DesktopLegacyLocalStorage from "./DesktopLegacyLocalStorage.ts";
+import { prepareProfileMigration } from "./DesktopMigration.ts";
 
 // A small LevelDB FULL record with a CRC32C header, not a mocked decoder result.
 function logRecord(payload: Buffer) {
@@ -98,7 +99,7 @@ it.effect.each([false, true])(
       yield* writeProfile(root, development ? "rove-code" : "rove-code-dev", !development);
       yield* writeProfile(root, "rove", development);
       yield* writeProfile(root, "Rove Code (Alpha)", development);
-      const destination = path.join(root, development ? "rove-dev" : "rove-v2");
+      const destination = path.join(root, development ? "paperplane-dev" : "paperplane");
       yield* fs.makeDirectory(destination);
       const marker = path.join(destination, "paperplane-local-storage-imported");
       const importer = yield* makeImporter(root, development);
@@ -122,6 +123,32 @@ it.effect.each([false, true])(
     }).pipe(Effect.scoped, Effect.provide(NodeServices.layer)),
 );
 
+it.effect.each([false, true])(
+  "imports the old origin from the independent copied profile (development: %s)",
+  (development) =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-copied-storage-" });
+      const name = development ? "rove-dev" : "rove-v2";
+      const source = yield* writeProfile(root, name, development);
+      yield* fs.writeFileString(path.join(root, name, "v1-local-storage-imported"), "");
+      const destination = prepareProfileMigration({
+        appDataDirectory: root,
+        isDevelopment: development,
+        platform: "linux",
+      });
+      const importer = yield* makeImporter(root, development);
+      yield* importer.load(destination);
+      assert.deepEqual(yield* importer.take, Option.some({ "prompt-draft": `draft-from-${name}` }));
+      yield* importer.complete;
+      assert.deepEqual(yield* fs.readFile(path.join(source.directory, "000002.log")), source.log);
+      const next = yield* makeImporter(root, development);
+      yield* next.load(destination);
+      assert.deepEqual(yield* next.take, Option.none());
+    }).pipe(Effect.scoped, Effect.provide(NodeServices.layer)),
+);
+
 it.effect("retries an unreadable legacy database without marking it imported", () =>
   Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem;
@@ -129,7 +156,7 @@ it.effect("retries an unreadable legacy database without marking it imported", (
     const root = yield* fs.makeTempDirectoryScoped({ prefix: "rove-local-storage-" });
     const source = yield* writeProfile(root, "rove-code", false);
     yield* fs.writeFileString(path.join(source.directory, "CURRENT"), "corrupt");
-    const destination = path.join(root, "rove-v2");
+    const destination = path.join(root, "paperplane");
     yield* fs.makeDirectory(destination);
     const marker = path.join(destination, "paperplane-local-storage-imported");
     const importer = yield* makeImporter(root, false);

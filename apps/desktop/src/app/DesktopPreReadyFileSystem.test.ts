@@ -17,18 +17,19 @@ const resolveWindowsUserData = (appDataDirectory: string) =>
   }).pipe(Effect.provide(DesktopPreReadyFileSystem.layer));
 
 it.layer(NodeServices.layer)("DesktopPreReadyFileSystem", (it) => {
-  it.effect("migrates the legacy Windows profile state", () =>
+  it.effect("prepares the independent Windows profile synchronously", () =>
     Effect.gen(function* () {
       const fileSystem = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const root = yield* fileSystem.makeTempDirectoryScoped({ prefix: "rove-pre-ready-fs-" });
-      yield* fileSystem.makeDirectory(path.join(root, "rove-code"));
-      yield* fileSystem.writeFileString(path.join(root, "rove-code", "Local State"), "keys");
+      yield* fileSystem.makeDirectory(path.join(root, "rove-v2"));
+      const keys = '{"os_crypt":{"encrypted_key":"RFBBUEl3cmFwcGVkLWtleQ=="}}';
+      yield* fileSystem.writeFileString(path.join(root, "rove-v2", "Local State"), keys);
 
       const userData = yield* resolveWindowsUserData(root);
 
-      assert.equal(userData, path.join(root, "rove-v2"));
-      assert.equal(yield* fileSystem.readFileString(path.join(userData, "Local State")), "keys");
+      assert.equal(userData, path.join(root, "paperplane"));
+      assert.equal(yield* fileSystem.readFileString(path.join(userData, "Local State")), keys);
     }),
   );
 
