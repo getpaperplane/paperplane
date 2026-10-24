@@ -83,8 +83,8 @@ describe("DesktopEarlyElectronStartup", () => {
 
     assert.deepEqual(options, {
       isDevelopment: true,
-      linuxWmClass: "rove-dev",
-      linuxDesktopEntryName: "io.github.hafiezul.rove.dev.desktop",
+      linuxWmClass: "io.github.getpaperplane.paperplane.dev",
+      linuxDesktopEntryName: "io.github.getpaperplane.paperplane.dev.desktop",
       passwordStore: "gnome-libsecret",
     });
   });

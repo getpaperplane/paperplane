@@ -76,9 +76,12 @@ describe("DesktopEnvironment", () => {
       assert.equal(environment.serverRoot, "/repo");
       assert.equal(environment.backendEntryPath, "/repo/apps/server/dist/bin.mjs");
       assert.equal(environment.backendCwd, "/repo");
-      assert.equal(environment.appUserModelId, "io.github.hafiezul.rove.dev");
-      assert.equal(environment.linuxWmClass, "rove-dev");
-      assert.equal(environment.linuxDesktopEntryName, "io.github.hafiezul.rove.dev.desktop");
+      assert.equal(environment.appUserModelId, "io.github.getpaperplane.paperplane.dev");
+      assert.equal(environment.linuxWmClass, "io.github.getpaperplane.paperplane.dev");
+      assert.equal(
+        environment.linuxDesktopEntryName,
+        "io.github.getpaperplane.paperplane.dev.desktop",
+      );
       assert.deepEqual(
         Option.map(environment.devServerUrl, (url) => url.href),
         Option.some("http://localhost:5173/"),
@@ -150,7 +153,7 @@ describe("DesktopEnvironment", () => {
         resourcesPath: "/tmp/.mount_rove/resources",
       });
 
-      assert.equal(environment.linuxDesktopEntryName, "io.github.hafiezul.rove.desktop");
+      assert.equal(environment.linuxDesktopEntryName, "io.github.getpaperplane.paperplane.desktop");
     }),
   );
 
@@ -174,12 +177,12 @@ describe("DesktopEnvironment", () => {
       const environment = yield* makeEnvironment(
         {},
         {
-          PAPERPLANE_DESKTOP_APP_USER_MODEL_ID: " io.github.hafiezul.rove.dev.local ",
+          PAPERPLANE_DESKTOP_APP_USER_MODEL_ID: " io.github.getpaperplane.paperplane.dev.local ",
           VITE_DEV_SERVER_URL: "http://localhost:5173",
         },
       );
 
-      assert.equal(environment.appUserModelId, "io.github.hafiezul.rove.dev.local");
+      assert.equal(environment.appUserModelId, "io.github.getpaperplane.paperplane.dev.local");
     }),
   );
 

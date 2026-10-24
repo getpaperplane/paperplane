@@ -89,7 +89,7 @@ function runner() {
       }
       process.exit(process.env.SIGNATURE_FAIL ? 1 : 0);
     }
-    console.error(process.env.REQUIREMENT || 'designated => identifier "io.github.hafiezul.rove" and anchor H"${fingerprint}"');
+    console.error(process.env.REQUIREMENT || 'designated => identifier "io.github.getpaperplane.paperplane" and anchor H"${fingerprint}"');
   `,
   );
   const env = {
@@ -216,9 +216,9 @@ it("accepts a certificate-pinned update requirement", () => {
 });
 
 it.each([
-  `designated => identifier "io.github.hafiezul.rove" and anchor H"${fingerprint}" and anchor trusted`,
+  `designated => identifier "io.github.getpaperplane.paperplane" and anchor H"${fingerprint}" and anchor trusted`,
   `designated => cdhash H"${fingerprint}"`,
-  'designated => identifier "io.github.hafiezul.rove" and anchor H"0000000000000000000000000000000000000000"',
+  'designated => identifier "io.github.getpaperplane.paperplane" and anchor H"0000000000000000000000000000000000000000"',
 ])("rejects an unsuitable update requirement %s", (requirement) => {
   assert.throws(() => runner().run("verify", { REQUIREMENT: requirement }));
 });

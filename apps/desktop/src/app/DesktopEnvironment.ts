@@ -236,10 +236,14 @@ const make = Effect.fn("desktop.environment.make")(function* (
     branding,
     displayName,
     appUserModelId: Option.getOrElse(config.appUserModelIdOverride, () =>
-      isDevelopment ? "io.github.hafiezul.rove.dev" : "io.github.hafiezul.rove",
+      isDevelopment
+        ? "io.github.getpaperplane.paperplane.dev"
+        : "io.github.getpaperplane.paperplane",
     ),
     linuxDesktopEntryName: resolveLinuxDesktopEntryName(isDevelopment),
-    linuxWmClass: isDevelopment ? "rove-dev" : "rove",
+    linuxWmClass: isDevelopment
+      ? "io.github.getpaperplane.paperplane.dev"
+      : "io.github.getpaperplane.paperplane",
     linuxApplicationsDir,
     appImagePath: config.appImagePath,
     defaultDesktopSettings: DesktopAppSettings.resolveDefaultDesktopSettings(input.appVersion),

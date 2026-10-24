@@ -81,31 +81,42 @@ persistence and system-browser callback delivery.
 
 Clerk's native Android SDK uses `clerk://<applicationId>.callback`. In the Clerk instance selected by the app's publishable key, add each supported package to **Native applications > Allowlist for mobile SSO redirect**:
 
-| Variant     | Callback                                |
-| ----------- | --------------------------------------- |
-| Development | `clerk://dev.rove.app.dev.callback`     |
-| Preview     | `clerk://dev.rove.app.preview.callback` |
-| Production  | `clerk://dev.rove.app.callback`         |
+| Variant     | Callback                                                      |
+| ----------- | ------------------------------------------------------------- |
+| Development | `clerk://io.github.getpaperplane.paperplane.dev.callback`     |
+| Preview     | `clerk://io.github.getpaperplane.paperplane.preview.callback` |
+| Production  | `clerk://io.github.getpaperplane.paperplane.callback`         |
 
 Preserve existing entries. These callbacks are separate from the `paperplane-dev` / `paperplane-preview` / `paperplane` navigation schemes. A private development build using the production Clerk key still needs its development callback allowed by that instance's administrator; rebuilding the same package does not change the allowlist.
 
 ## Desktop passkeys
 
-For a production macOS app with bundle ID `dev.rove.app`:
+Paperplane uses a new Apple identity, with no Rove Code passkey or keychain-group
+bridge. Official self-signed releases do not enable these passkeys, and Connect
+remains gated off. Operators of a private Connect setup must register the new App IDs,
+regenerate provisioning profiles, and enroll new passkeys. Update both the desktop and
+iOS entries in Clerk; `webcredentials.apps` must list each signed identity you use,
+such as `<TEAM_ID>.io.github.getpaperplane.paperplane`,
+`<TEAM_ID>.io.github.getpaperplane.paperplane.dev`, and
+`<TEAM_ID>.io.github.getpaperplane.paperplane.preview`.
+
+For a production macOS app with bundle ID `io.github.getpaperplane.paperplane`:
 
 1. Create an explicit macOS App ID in the Apple Developer portal with **Associated Domains**.
 2. Create a provisioning profile for that App ID and the distribution signing certificate.
 3. In Clerk's Native API settings, add an iOS app with the same Apple Team ID and bundle ID.
    This setting also configures Electron/macOS passkeys.
 4. Check `https://<frontend-api>/.well-known/apple-app-site-association`. Its
-   `webcredentials.apps` must include `<TEAM_ID>.dev.rove.app`.
-5. Apple provisioning is separate from [Paperplane's self-signed release mode](./release.md#build-self-signed-macos-artifacts-without-apple-membership), which does not enable native passkeys or notarization. Use Developer ID signing with the Apple credentials and provisioning profile when testing this setup.
+   `webcredentials.apps` must include `<TEAM_ID>.io.github.getpaperplane.paperplane`.
+5. The Touch ID access group is `<TEAM_ID>.io.github.getpaperplane.paperplane.webauthn`.
+   Use the matching bundle-ID suffix for separately signed development apps.
+6. Apple provisioning is separate from [Paperplane's self-signed release mode](./release.md#build-self-signed-macos-artifacts-without-apple-membership), which does not enable native passkeys or notarization. Use Developer ID signing with the Apple credentials and provisioning profile when testing this setup.
 
 Local signed builds additionally use:
 
 ```dotenv
 PAPERPLANE_APPLE_TEAM_ID=ABC1234567
-PAPERPLANE_MACOS_PROVISIONING_PROFILE=/absolute/path/to/rove.provisionprofile
+PAPERPLANE_MACOS_PROVISIONING_PROFILE=/absolute/path/to/paperplane.provisionprofile
 # Override only when the RP domain differs from the Clerk Frontend API hostname.
 PAPERPLANE_CLERK_PASSKEY_RP_DOMAINS=example.clerk.accounts.dev,clerk.example.com
 ```
@@ -121,15 +132,15 @@ actual web and server ports. For example, with the default ports:
 ```sh
 VITE_DEV_SERVER_URL=http://127.0.0.1:5733 \
 PAPERPLANE_PORT=13773 \
-  "/Applications/Rove Code (Alpha).app/Contents/MacOS/Rove Code (Alpha)"
+  "/Applications/Paperplane (Beta).app/Contents/MacOS/Paperplane (Beta)"
 ```
 
 Rebuild the signed app after native dependency, main-process, preload, entitlement, provisioning,
 or signing changes. Renderer edits can reuse it. Verify the installed bundle before testing:
 
 ```sh
-codesign --verify --deep --strict "/Applications/Rove Code (Alpha).app"
-codesign -d --entitlements :- "/Applications/Rove Code (Alpha).app"
+codesign --verify --deep --strict "/Applications/Paperplane (Beta).app"
+codesign -d --entitlements :- "/Applications/Paperplane (Beta).app"
 ```
 
 ## Restricting sign-ups

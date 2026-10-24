@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <component type="desktop-application">
-  <id>io.github.hafiezul.rove</id>
+  <id>io.github.getpaperplane.paperplane</id>
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>MIT</project_license>
   <name>Paperplane</name>
@@ -18,7 +18,7 @@
       Connect from desktop, web, or mobile to continue working remotely.
     </p>
   </description>
-  <launchable type="desktop-id">io.github.hafiezul.rove.desktop</launchable>
+  <launchable type="desktop-id">paperplane.desktop</launchable>
   <icon type="stock">rove</icon>
   <provides>
     <binary>rove</binary>

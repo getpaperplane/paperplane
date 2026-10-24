@@ -301,7 +301,7 @@ describe("PreviewPasskeys", () => {
         Effect.provide(
           layerFor({
             roveWebAuthn: {
-              touchIdKeychainAccessGroup: "ABC1234567.dev.rove.app.webauthn",
+              touchIdKeychainAccessGroup: "ABC1234567.io.github.getpaperplane.paperplane.webauthn",
               browserPasskeys: false,
             },
           }),
@@ -309,7 +309,13 @@ describe("PreviewPasskeys", () => {
       );
       yield* entitled.configure;
       assert.deepStrictEqual(electron.configureWebAuthn.mock.calls, [
-        [{ touchID: { keychainAccessGroup: "ABC1234567.dev.rove.app.webauthn" } }],
+        [
+          {
+            touchID: {
+              keychainAccessGroup: "ABC1234567.io.github.getpaperplane.paperplane.webauthn",
+            },
+          },
+        ],
       ]);
       assert.isFalse(entitled.bridgeEnabled);
       const { guest, handlers } = makeGuest();

@@ -744,13 +744,13 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
       });
       const appStreamSource = NodePath.resolve(
         import.meta.dirname,
-        "../apps/desktop/resources/linux/com.rovetools.rovecode.metainfo.xml",
+        "../apps/desktop/resources/linux/io.github.getpaperplane.paperplane.metainfo.xml",
       );
       assert.isTrue(yield* (yield* FileSystem.FileSystem).exists(appStreamSource));
       assert.deepStrictEqual(linux.deb, {
         fpm: [
-          `${appStreamSource}=/usr/share/metainfo/io.github.hafiezul.rove.metainfo.xml`,
-          `${NodePath.resolve(import.meta.dirname, "../LICENSE")}=/usr/share/doc/rove/copyright`,
+          `${appStreamSource}=/usr/share/metainfo/io.github.getpaperplane.paperplane.metainfo.xml`,
+          `${NodePath.resolve(import.meta.dirname, "../LICENSE")}=/usr/share/doc/paperplane/copyright`,
         ],
         depends: [
           "libasound2t64 | libasound2",
@@ -766,6 +766,7 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
           "xdg-utils",
         ],
       });
+      assert.strictEqual((linux.linux as Record<string, unknown>).executableName, "paperplane");
       // A Linux AppImage build also emits the .deb from the same run.
       assert.deepStrictEqual((linux.linux as Record<string, unknown>).target, ["AppImage", "deb"]);
       // Linux must register the renderer schemes so the generated .desktop
@@ -2158,7 +2159,7 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
     });
 
     assert.deepStrictEqual(configuration, {
-      appId: "io.github.hafiezul.rove",
+      appId: "io.github.getpaperplane.paperplane",
       teamId: "ABC1234567",
       rpDomains: ["example.clerk.accounts.dev"],
       provisioningProfilePath: "/tmp/rove.provisionprofile",
@@ -2181,7 +2182,7 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
       "clerk.example.com",
       "example.clerk.accounts.dev",
     ]);
-    assert.include(entitlements, "<string>ABC1234567.io.github.hafiezul.rove</string>");
+    assert.include(entitlements, "<string>ABC1234567.io.github.getpaperplane.paperplane</string>");
     assert.include(entitlements, "<string>webcredentials:clerk.example.com</string>");
     assert.include(entitlements, "<string>webcredentials:example.clerk.accounts.dev</string>");
     assert.include(entitlements, "<key>com.apple.security.cs.allow-jit</key>");
@@ -2190,7 +2191,7 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
   });
 
   it("grants in-app browser passkey entitlements only when the provisioning profile does", () => {
-    const configuration = { appId: "io.github.hafiezul.rove", teamId: "ABC1234567" };
+    const configuration = { appId: "io.github.getpaperplane.paperplane", teamId: "ABC1234567" };
     // Profiles are CMS envelopes around a plain XML plist.
     const profile = (entitlements: string, outside = "") =>
       `0\x82\x1f\x9a\x06\t*\x86H<?xml version="1.0"?><plist version="1.0"><dict>${outside}<key>Entitlements</key><dict>${entitlements}</dict></dict></plist>\x00\x01`;
@@ -2235,7 +2236,7 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
         configuration,
       ),
       {
-        touchIdKeychainAccessGroup: "ABC1234567.io.github.hafiezul.rove.webauthn",
+        touchIdKeychainAccessGroup: "ABC1234567.io.github.getpaperplane.paperplane.webauthn",
         browserPasskeys: true,
       },
     );
@@ -2251,7 +2252,7 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
     );
     assert.match(
       entitlements,
-      /<key>keychain-access-groups<\/key>\s*<array>\s*<string>ABC1234567\.io\.github\.hafiezul\.rove\.webauthn<\/string>\s*<\/array>/u,
+      /<key>keychain-access-groups<\/key>\s*<array>\s*<string>ABC1234567\.io\.github\.getpaperplane\.paperplane\.webauthn<\/string>\s*<\/array>/u,
     );
     assert.match(
       entitlements,
@@ -2351,7 +2352,7 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
       });
 
       const mac = config.mac as Record<string, unknown>;
-      assert.equal(config.appId, "io.github.hafiezul.rove");
+      assert.equal(config.appId, "io.github.getpaperplane.paperplane");
       assert.equal(mac.entitlements, "/tmp/entitlements.mac.plist");
       assert.equal(mac.provisioningProfile, "/tmp/rove.provisionprofile");
       assert.match(String(mac.sign), /[\\/]scripts[\\/]sign-macos\.ts$/);

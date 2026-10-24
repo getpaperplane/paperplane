@@ -58,7 +58,7 @@ import { Command, Flag } from "effect/cli";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 
 const LINUX_ICON_SIZES = [16, 22, 24, 32, 48, 64, 128, 256, 512] as const;
-const DESKTOP_APP_ID = "io.github.hafiezul.rove";
+const DESKTOP_APP_ID = "io.github.getpaperplane.paperplane";
 const APPLE_TEAM_ID_PATTERN = /^[A-Z0-9]{10}$/u;
 
 const BuildPlatform = Schema.Literals(["mac", "linux", "win"]);
@@ -2939,7 +2939,7 @@ export const createBuildConfig = Effect.fn("createBuildConfig")(function* (
       // resources/package-type into the .deb only, so electron-updater updates
       // each install in its own format.
       target: target === "AppImage" ? [target, "deb"] : [target],
-      executableName: "rove",
+      executableName: "paperplane",
       icon: "icons",
       category: "Development",
       synopsis: "Desktop GUI for coding agents",
@@ -2956,16 +2956,16 @@ export const createBuildConfig = Effect.fn("createBuildConfig")(function* (
       ],
       desktop: {
         entry: {
-          StartupWMClass: "rove",
+          StartupWMClass: DESKTOP_APP_ID,
         },
       },
     };
     buildConfig.deb = {
       // FPM runs outside the staged app directory, so source paths must be absolute.
-      // AppStream consumers associate this metadata with our rove.desktop entry.
+      // AppStream points at electron-builder's paperplane.desktop launcher.
       fpm: [
-        `${path.join(repoRoot, "apps/desktop/resources/linux/com.rovetools.rovecode.metainfo.xml")}=/usr/share/metainfo/io.github.hafiezul.rove.metainfo.xml`,
-        `${path.join(repoRoot, "LICENSE")}=/usr/share/doc/rove/copyright`,
+        `${path.join(repoRoot, "apps/desktop/resources/linux/io.github.getpaperplane.paperplane.metainfo.xml")}=/usr/share/metainfo/io.github.getpaperplane.paperplane.metainfo.xml`,
+        `${path.join(repoRoot, "LICENSE")}=/usr/share/doc/paperplane/copyright`,
       ],
       // Electron's runtime libraries. Debian 13 and Ubuntu 24.04 renamed some
       // for 64-bit time; the old name is the fallback for older releases.

@@ -32,7 +32,9 @@ export interface EarlyLinuxElectronOptions {
 }
 
 export const resolveLinuxDesktopEntryName = (isDevelopment: boolean): string =>
-  isDevelopment ? "io.github.hafiezul.rove.dev.desktop" : "io.github.hafiezul.rove.desktop";
+  isDevelopment
+    ? "io.github.getpaperplane.paperplane.dev.desktop"
+    : "io.github.getpaperplane.paperplane.desktop";
 
 const trimNonEmpty = (value: string | undefined): string | null => {
   const trimmed = value?.trim();
@@ -160,7 +162,9 @@ export function resolveEarlyLinuxElectronOptions(
   const isDevelopment = isDevelopmentEnvironment(input.env);
   return {
     isDevelopment,
-    linuxWmClass: isDevelopment ? "rove-dev" : "rove",
+    linuxWmClass: isDevelopment
+      ? "io.github.getpaperplane.paperplane.dev"
+      : "io.github.getpaperplane.paperplane",
     linuxDesktopEntryName: resolveLinuxDesktopEntryName(isDevelopment),
     passwordStore: resolveLinuxPasswordStoreSwitch({
       preference,

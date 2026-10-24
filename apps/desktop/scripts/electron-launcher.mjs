@@ -19,8 +19,8 @@ const devBundleIdSuffix = NodePath.basename(repoRoot)
 // Keep the bundle name stable until the Electron keychain identity is migrated.
 const APP_DISPLAY_NAME = isDevelopment ? "Paperplane (Dev)" : "Paperplane (Beta)";
 const APP_BUNDLE_ID = isDevelopment
-  ? `io.github.hafiezul.rove.dev.${devBundleIdSuffix || "local"}`
-  : "io.github.hafiezul.rove";
+  ? `io.github.getpaperplane.paperplane.dev.${devBundleIdSuffix || "local"}`
+  : "io.github.getpaperplane.paperplane";
 const APP_PROTOCOL_SCHEMES = isDevelopment ? ["paperplane-dev"] : ["paperplane"];
 const LAUNCHER_VERSION = 20;
 const developmentMacIconPngPath = NodePath.join(

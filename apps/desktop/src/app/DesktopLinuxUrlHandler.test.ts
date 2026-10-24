@@ -29,8 +29,8 @@ const makeEnvironment = (path: Path.Path, overrides: Record<string, unknown> = {
     isPackaged: true,
     isDevelopment: false,
     displayName: "Paperplane (Alpha)",
-    linuxDesktopEntryName: "io.github.hafiezul.rove.desktop",
-    linuxWmClass: "rove",
+    linuxDesktopEntryName: "io.github.getpaperplane.paperplane.desktop",
+    linuxWmClass: "io.github.getpaperplane.paperplane",
     linuxApplicationsDir: "/home/alice/.local/share/applications",
     appImagePath: Option.some("/home/alice/Applications/Rove-Code.AppImage"),
     path,
@@ -185,7 +185,8 @@ describe("DesktopLinuxUrlHandler", () => {
     const writeError = new DesktopLinuxUrlHandler.DesktopLinuxUrlHandlerRegistrationError({
       step: "write-desktop-entry",
       scheme: "paperplane",
-      desktopEntryPath: "/home/alice/.local/share/applications/io.github.hafiezul.rove.desktop",
+      desktopEntryPath:
+        "/home/alice/.local/share/applications/io.github.getpaperplane.paperplane.desktop",
       cause: new Error("boom"),
     });
     assert.equal(
@@ -194,7 +195,7 @@ describe("DesktopLinuxUrlHandler", () => {
     );
     assert.equal(
       writeError.desktopEntryPath,
-      "/home/alice/.local/share/applications/io.github.hafiezul.rove.desktop",
+      "/home/alice/.local/share/applications/io.github.getpaperplane.paperplane.desktop",
     );
 
     const exitError = new DesktopLinuxUrlHandler.DesktopLinuxUrlHandlerRegistrationError({
@@ -220,7 +221,7 @@ describe("DesktopLinuxUrlHandler", () => {
         assert.equal(recorded.files.length, 1);
         assert.equal(
           recorded.files[0]?.path,
-          "/home/alice/.local/share/applications/io.github.hafiezul.rove.desktop",
+          "/home/alice/.local/share/applications/io.github.getpaperplane.paperplane.desktop",
         );
         assert.include(
           recorded.files[0]?.content,
@@ -234,7 +235,11 @@ describe("DesktopLinuxUrlHandler", () => {
           },
           {
             command: "xdg-mime",
-            args: ["default", "io.github.hafiezul.rove.desktop", "x-scheme-handler/paperplane"],
+            args: [
+              "default",
+              "io.github.getpaperplane.paperplane.desktop",
+              "x-scheme-handler/paperplane",
+            ],
           },
         ]);
       });
@@ -263,7 +268,7 @@ describe("DesktopLinuxUrlHandler", () => {
           displayName: "Paperplane (Alpha)",
           execTarget: "/home/alice/Applications/Rove-Code.AppImage",
           scheme: "paperplane",
-          iconPath: "/home/alice/.local/share/icons/io.github.hafiezul.rove.desktop.png",
+          iconPath: "/home/alice/.local/share/icons/io.github.getpaperplane.paperplane.desktop.png",
         }),
       });
 
@@ -276,7 +281,11 @@ describe("DesktopLinuxUrlHandler", () => {
         },
         {
           command: "xdg-mime",
-          args: ["default", "io.github.hafiezul.rove.desktop", "x-scheme-handler/paperplane"],
+          args: [
+            "default",
+            "io.github.getpaperplane.paperplane.desktop",
+            "x-scheme-handler/paperplane",
+          ],
         },
       ]);
     });
@@ -284,7 +293,8 @@ describe("DesktopLinuxUrlHandler", () => {
 
   it.effect("installs a persistent icon even when the desktop entry is already current", () => {
     const recorded = emptyRecording();
-    const iconPath = "/home/alice/.local/share/icons/io.github.hafiezul.rove.desktop.png";
+    const iconPath =
+      "/home/alice/.local/share/icons/io.github.getpaperplane.paperplane.desktop.png";
     return Effect.gen(function* () {
       yield* runRegister(recorded, {
         iconSource: "/tmp/.mount_Rove/resources/icon.png",
@@ -332,14 +342,14 @@ describe("DesktopLinuxUrlHandler", () => {
       yield* runRegister(unpackaged, {
         environment: {
           isPackaged: false,
-          linuxDesktopEntryName: "io.github.hafiezul.rove.dev.desktop",
+          linuxDesktopEntryName: "io.github.getpaperplane.paperplane.dev.desktop",
         },
       });
 
       assert.deepEqual(nonLinux.files, []);
       assert.equal(
         unpackaged.files[0]?.path,
-        "/home/alice/.local/share/applications/io.github.hafiezul.rove.dev.desktop",
+        "/home/alice/.local/share/applications/io.github.getpaperplane.paperplane.dev.desktop",
       );
       assert.deepEqual(unpackaged.commands, []);
     });
@@ -359,7 +369,8 @@ describe("DesktopLinuxUrlHandler", () => {
           module: "FileSystem",
           method: "writeFileString",
           description: "read-only filesystem",
-          pathOrDescriptor: "/home/alice/.local/share/applications/io.github.hafiezul.rove.desktop",
+          pathOrDescriptor:
+            "/home/alice/.local/share/applications/io.github.getpaperplane.paperplane.desktop",
         }),
       });
 

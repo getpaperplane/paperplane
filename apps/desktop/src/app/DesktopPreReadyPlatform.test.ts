@@ -151,13 +151,14 @@ describe("DesktopPreReadyPlatform", () => {
     let desktopEntry = previousEntry;
     let iconInstalled = false;
     copyFileSyncMock.mockImplementation((_source: string, destination: string) => {
-      iconInstalled = destination === "/xdg/icons/io.github.hafiezul.rove.desktop.png";
+      iconInstalled = destination === "/xdg/icons/io.github.getpaperplane.paperplane.desktop.png";
     });
     setDesktopNameMock.mockImplementation((name: string) => {
       desktopName = name;
     });
     writeFileSyncMock.mockImplementation((path: string, contents: string) => {
-      if (path === "/xdg/applications/io.github.hafiezul.rove.desktop") desktopEntry = contents;
+      if (path === "/xdg/applications/io.github.getpaperplane.paperplane.desktop")
+        desktopEntry = contents;
     });
 
     return Effect.scoped(
@@ -173,13 +174,13 @@ describe("DesktopPreReadyPlatform", () => {
           ),
         );
         const identity = yield* Effect.promise(() => portalIdentity);
-        assert.equal(identity.desktopName, "io.github.hafiezul.rove.desktop");
+        assert.equal(identity.desktopName, "io.github.getpaperplane.paperplane.desktop");
         assert.include(identity.desktopEntry ?? "", 'Exec="/Applications/current.AppImage" %U');
         assert.include(identity.desktopEntry ?? "", "Name=Paperplane (Beta)");
         assert.include(identity.desktopEntry ?? "", "MimeType=x-scheme-handler/paperplane;");
         assert.include(
           identity.desktopEntry ?? "",
-          "Icon=/xdg/icons/io.github.hafiezul.rove.desktop.png",
+          "Icon=/xdg/icons/io.github.getpaperplane.paperplane.desktop.png",
         );
         assert.isTrue(identity.iconInstalled);
       }),
