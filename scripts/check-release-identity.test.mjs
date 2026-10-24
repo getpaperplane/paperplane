@@ -54,18 +54,18 @@ it("reports all public claims but only blocks enabled release surfaces", () => {
   console.error = (...args) => messages.push(args.join(" "));
   try {
     expect(checkReleaseIdentity(root, {})).toBe(true);
-    expect(checkReleaseIdentity(root, { ROVE_MARKETING_RELEASE_READY: "true" })).toBe(false);
-    expect(checkReleaseIdentity(root, { ROVE_HOSTED_RELEASE_READY: "true" })).toBe(false);
-    expect(checkReleaseIdentity(root, { ROVE_MOBILE_STORES_READY: "true" })).toBe(false);
-    expect(checkReleaseIdentity(root, { ROVE_MOBILE_SIDELOAD_READY: "true" })).toBe(false);
+    expect(checkReleaseIdentity(root, { PAPERPLANE_MARKETING_RELEASE_READY: "true" })).toBe(false);
+    expect(checkReleaseIdentity(root, { PAPERPLANE_HOSTED_RELEASE_READY: "true" })).toBe(false);
+    expect(checkReleaseIdentity(root, { PAPERPLANE_MOBILE_STORES_READY: "true" })).toBe(false);
+    expect(checkReleaseIdentity(root, { PAPERPLANE_MOBILE_SIDELOAD_READY: "true" })).toBe(false);
     NodeFS.writeFileSync(NodePath.join(root, "apps/mobile/app.config.ts"), "// Paperplane\n");
     NodeFS.writeFileSync(
       NodePath.join(root, "apps/mobile/src/features/settings/lib/legal-document-url.ts"),
       "// Paperplane\n",
     );
     // Store-only EAS metadata does not block sideload builds or enable stores.
-    expect(checkReleaseIdentity(root, { ROVE_MOBILE_SIDELOAD_READY: "true" })).toBe(true);
-    expect(checkReleaseIdentity(root, { ROVE_MOBILE_STORES_READY: "true" })).toBe(false);
+    expect(checkReleaseIdentity(root, { PAPERPLANE_MOBILE_SIDELOAD_READY: "true" })).toBe(true);
+    expect(checkReleaseIdentity(root, { PAPERPLANE_MOBILE_STORES_READY: "true" })).toBe(false);
     expect(messages.join("\n")).toMatch(
       /apps\/marketing\/src\/pages\/download\.astro:1: npx t3@nightly/,
     );

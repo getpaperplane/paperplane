@@ -116,9 +116,9 @@ it.layer(NodeServices.layer)("AnalyticsService", (it) => {
         Layer.provide(
           ConfigProvider.layer(
             ConfigProvider.fromUnknown({
-              ROVE_TELEMETRY_ENABLED: true,
-              ROVE_POSTHOG_KEY: "phc_test_key",
-              ROVE_POSTHOG_HOST: "http://localhost",
+              PAPERPLANE_TELEMETRY_ENABLED: true,
+              PAPERPLANE_POSTHOG_KEY: "phc_test_key",
+              PAPERPLANE_POSTHOG_HOST: "http://localhost",
             }),
           ),
         ),
@@ -150,7 +150,7 @@ it.layer(NodeServices.layer)("AnalyticsService", (it) => {
   );
 
   it.effect("sends anonymous allowlisted metadata to Paperplane's ingestion host", () => {
-    const f = fixture({ env: { ROVE_ANALYTICS_ENVIRONMENT: "test" } });
+    const f = fixture({ env: { PAPERPLANE_ANALYTICS_ENVIRONMENT: "test" } });
     return Effect.gen(function* () {
       const analytics = yield* AnalyticsService.AnalyticsService;
       yield* analytics.record("client.connected", {
@@ -284,7 +284,7 @@ it.layer(NodeServices.layer)("AnalyticsService", (it) => {
   });
 
   for (const [name, options] of [
-    ["environment opt-out", { env: { ROVE_TELEMETRY_ENABLED: false } }],
+    ["environment opt-out", { env: { PAPERPLANE_TELEMETRY_ENABLED: false } }],
     ["persisted preference opt-out", { enabled: false }],
   ] as const) {
     it.effect(`${name} prevents identity access and requests`, () => {
@@ -355,7 +355,7 @@ it.layer(NodeServices.layer)("AnalyticsService", (it) => {
   );
 
   it.effect("the environment opt-out cannot be overridden by Settings", () => {
-    const f = fixture({ env: { ROVE_TELEMETRY_ENABLED: false } });
+    const f = fixture({ env: { PAPERPLANE_TELEMETRY_ENABLED: false } });
     return Effect.gen(function* () {
       const settings = yield* ServerSettings.ServerSettingsService;
       yield* settings.updateSettings({ telemetryEnabled: true });

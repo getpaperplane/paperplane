@@ -45,12 +45,12 @@ describe("ssh auth", () => {
       const askpassPath = path.join(directory, "ssh-askpass.sh");
       assert.equal(env.SSH_ASKPASS, askpassPath);
       assert.equal(env.SSH_ASKPASS_REQUIRE, "force");
-      assert.equal(env.ROVE_SSH_AUTH_SECRET, "super-secret");
+      assert.equal(env.PAPERPLANE_SSH_AUTH_SECRET, "super-secret");
       assert.equal(env.DISPLAY, "rove");
       assert.equal(yield* fs.exists(askpassPath), true);
       assert.include(
         yield* fs.readFileString(askpassPath),
-        'printf "%s\\n" "$ROVE_SSH_AUTH_SECRET"',
+        'printf "%s\\n" "$PAPERPLANE_SSH_AUTH_SECRET"',
       );
     }).pipe(
       Effect.provide(Layer.merge(NodeServices.layer, Layer.succeed(HostProcess.Platform, "linux"))),

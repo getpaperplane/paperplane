@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 /**
- * ROVE_RENDER_BENCH=1 vp test run src/components/chat/renderWaste.bench.test.tsx
+ * PAPERPLANE_RENDER_BENCH=1 vp test run src/components/chat/renderWaste.bench.test.tsx
  *
  * Real: client-runtime detail/shell atom factories and text/shell reducers,
  * timeline entry reuse, MessagesTimeline/row bodies/Markdown, ChatComposer and
@@ -183,7 +183,7 @@ const BenchCell = memo(function BenchCell(props: {
   );
 });
 
-const enabled = NodeProcess.env.ROVE_RENDER_BENCH === "1";
+const enabled = NodeProcess.env.PAPERPLANE_RENDER_BENCH === "1";
 const INPUTS = 40;
 const REPEATS = 5;
 const THREADS = 24;
@@ -591,7 +591,7 @@ function report() {
       summary,
     })}\n`,
   );
-  if (NodeProcess.env.ROVE_RENDER_BENCH_JSON === "1") {
+  if (NodeProcess.env.PAPERPLANE_RENDER_BENCH_JSON === "1") {
     NodeProcess.stdout.write(`ROVE_RENDER_BASELINE ${JSON.stringify(samples)}\n`);
   }
 }

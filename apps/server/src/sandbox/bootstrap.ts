@@ -43,13 +43,13 @@ const responding = async () => {
 
 // The npm wrapper runs the platform binary as a child and does not forward
 // signals, so the server is spawned from the platform package directly.
-const resolveBinary = `require('node:path').join(require('node:path').dirname(require.resolve('@getpaperplane/cli-' + process.platform + '-' + process.arch + '/package.json', { paths: [process.env.ROVE_SANDBOX_RUNTIME_DIR] })), 'paperplane')`;
+const resolveBinary = `require('node:path').join(require('node:path').dirname(require.resolve('@getpaperplane/cli-' + process.platform + '-' + process.arch + '/package.json', { paths: [process.env.PAPERPLANE_SANDBOX_RUNTIME_DIR] })), 'paperplane')`;
 
 export const sandboxStartCommand = `set -u
 ROOT=${ROOT}
 RUNTIME=${RUNTIME}
 mkdir -p "$ROOT/data" "$ROOT/workspace" "$RUNTIME" || exit ${SANDBOX_INSTALL_FAILED}
-export ROVE_SANDBOX_RUNTIME_DIR="$RUNTIME"
+export PAPERPLANE_SANDBOX_RUNTIME_DIR="$RUNTIME"
 installed() { [ -x "$(node -p ${quote(resolveBinary)} 2>/dev/null)" ] && ${WRAPPER} --version >/dev/null 2>&1; }
 # A partial install must not wedge every later repair, so verify the binary.
 # npm exits 0 when an optional platform package is missing (npm can take a while
@@ -72,7 +72,7 @@ ${nodeCommand(`${identityHelpers}
   const child = require('node:child_process').spawn(binary,
     ['serve', '--host', '0.0.0.0', '--port', '${SANDBOX_PORT}', '--base-dir', path.join(root, 'data'), '--no-browser'],
     { cwd: path.join(root, 'workspace'), detached: true, stdio: ['ignore', log, log],
-      env: { ...process.env, ROVE_AUTO_BOOTSTRAP_PROJECT_FROM_CWD: 'false', ROVE_NO_BROWSER: 'true' } });
+      env: { ...process.env, PAPERPLANE_AUTO_BOOTSTRAP_PROJECT_FROM_CWD: 'false', PAPERPLANE_NO_BROWSER: 'true' } });
   child.on('error', () => process.exit(${SANDBOX_INSTALL_FAILED}));
   fs.writeFileSync(pidFile, JSON.stringify({ pid: child.pid, bootId: bootId(), ticks: ticks(child.pid) }), { mode: 0o600 });
   fs.closeSync(log);

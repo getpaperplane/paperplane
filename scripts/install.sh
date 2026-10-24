@@ -5,22 +5,22 @@
 # This installer is not available until Paperplane publishes its own CLI archives.
 #
 # Environment:
-#   ROVE_CHANNEL           release train to follow: stable, nightly, or preview
+#   PAPERPLANE_CHANNEL           release train to follow: stable, nightly, or preview
 #                            (default: stable; preview is a maintainers' test train)
-#   ROVE_VERSION           exact version to install (overrides ROVE_CHANNEL)
-#   ROVE_HOME              Paperplane home directory (default: ~/.paperplane)
-#   ROVE_INSTALL_BIN_DIR   where the `paperplane` symlink goes (default: ~/.local/bin)
-#   ROVE_RELEASE_BASE_URL  mirror for releases/download (default: GitHub)
+#   PAPERPLANE_VERSION           exact version to install (overrides PAPERPLANE_CHANNEL)
+#   PAPERPLANE_HOME              Paperplane home directory (default: ~/.paperplane)
+#   PAPERPLANE_INSTALL_BIN_DIR   where the `paperplane` symlink goes (default: ~/.local/bin)
+#   PAPERPLANE_RELEASE_BASE_URL  mirror for releases/download (default: GitHub)
 #
-# The archive is unpacked into $ROVE_HOME/runtime/versions/<version>, the
+# The archive is unpacked into $PAPERPLANE_HOME/runtime/versions/<version>, the
 # same layout `paperplane service install` uses, so the service reuses this download
 # instead of fetching the release again.
 set -eu
 
 repo="hafiezul/rove"
-base_url="${ROVE_RELEASE_BASE_URL:-https://github.com/${repo}/releases/download}"
-rove_home="${ROVE_HOME:-$HOME/.paperplane}"
-bin_dir="${ROVE_INSTALL_BIN_DIR:-$HOME/.local/bin}"
+base_url="${PAPERPLANE_RELEASE_BASE_URL:-https://github.com/${repo}/releases/download}"
+rove_home="${PAPERPLANE_HOME:-$HOME/.paperplane}"
+bin_dir="${PAPERPLANE_INSTALL_BIN_DIR:-$HOME/.local/bin}"
 
 fail() {
   printf '\npaperplane install: %s\n' "$1" >&2
@@ -136,8 +136,8 @@ else
   fail "sha256sum or shasum is required"
 fi
 
-channel="${ROVE_CHANNEL:-stable}"
-version="${ROVE_VERSION:-}"
+channel="${PAPERPLANE_CHANNEL:-stable}"
+version="${PAPERPLANE_VERSION:-}"
 if [ -z "$version" ]; then
   # Tags are v<semver>; the channel is the prerelease identifier, or none for
   # stable. Only tags of the requested train are considered, so a stable
@@ -145,13 +145,13 @@ if [ -z "$version" ]; then
   case "$channel" in
     stable) tag_pattern='v\([0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\)' ;;
     nightly | preview) tag_pattern="v\([0-9][^\"]*-${channel}\.[0-9]*\.[0-9]*\)" ;;
-    *) fail "ROVE_CHANNEL must be stable, nightly, or preview" ;;
+    *) fail "PAPERPLANE_CHANNEL must be stable, nightly, or preview" ;;
   esac
   tmp_index="$(mktemp)"
   fetch "https://api.github.com/repos/${repo}/releases?per_page=100" "$tmp_index"
   version="$(sed -n "s/.*\"tag_name\": *\"${tag_pattern}\".*/\1/p" "$tmp_index" | head -n 1)"
   rm -f "$tmp_index"
-  [ -n "$version" ] || fail "could not find a ${channel} release; set ROVE_VERSION"
+  [ -n "$version" ] || fail "could not find a ${channel} release; set PAPERPLANE_VERSION"
 fi
 case "$version" in
   *-preview.*)
@@ -159,8 +159,8 @@ case "$version" in
       "paperplane ${version} is a preview build." \
       "  Preview builds are cut by maintainers from unreleased branches to exercise the release" \
       "  pipeline. They can be broken, receive no fixes, and are never offered as updates." \
-      "  Set ROVE_CHANNEL=stable (the default) for a supported build." >&2
-    if [ "$channel" != "preview" ] && [ -z "${ROVE_VERSION:-}" ]; then
+      "  Set PAPERPLANE_CHANNEL=stable (the default) for a supported build." >&2
+    if [ "$channel" != "preview" ] && [ -z "${PAPERPLANE_VERSION:-}" ]; then
       fail "refusing a preview build that was not explicitly requested"
     fi
     ;;

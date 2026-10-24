@@ -3,11 +3,11 @@ import type { V2TurnStartParams__AdditionalContextEntry } from "effect-codex-app
 import { buildRuntimeInstructions } from "@getpaperplane/provider-core/server/runtimeInstructions";
 
 import {
-  ROVE_CODE_BROWSER_TOOL_INSTRUCTIONS,
-  ROVE_CODE_ORCHESTRATION_INSTRUCTIONS,
+  PAPERPLANE_BROWSER_TOOL_INSTRUCTIONS,
+  PAPERPLANE_ORCHESTRATION_INSTRUCTIONS,
 } from "@getpaperplane/provider-core/server/orchestrationInstructions";
 
-const ROVE_CODE_DEVICE_TOOL_INSTRUCTIONS = `## Paperplane devices
+const PAPERPLANE_DEVICE_TOOL_INSTRUCTIONS = `## Paperplane devices
 
 The \`rove\` MCP server also exposes \`device_*\` tools for iOS Simulators and Android Emulators on this environment. For mobile verification, call \`device_list\`, then \`device_open\` so the user can watch the device in their Device panel; its result explains how to drive the device. Driving happens through the \`agent-device\` CLI, using the exact launcher path returned by \`device_open\`. Keep the host config and session flags returned by \`device_open\` on every command so concurrent devices stay independent: prefer \`agent-device snapshot -i\` refs over coordinates, and use \`device_screenshot\` when you need to see the screen. Prefer these tools and \`agent-device\` for opening and driving devices. Platform tools such as \`xcrun simctl\` and \`adb\` remain available for anything they do not cover, such as builds, logs, or port forwarding. If \`device_list\` reports a platform as unavailable, say so.`;
 
@@ -31,8 +31,8 @@ const normalizeAvailability = (
 const toolInstructions = (availability: boolean | RoveCodeToolAvailability): string => {
   const tools = normalizeAvailability(availability);
   return [
-    tools.browser ? ROVE_CODE_BROWSER_TOOL_INSTRUCTIONS : "",
-    tools.device ? ROVE_CODE_DEVICE_TOOL_INSTRUCTIONS : "",
+    tools.browser ? PAPERPLANE_BROWSER_TOOL_INSTRUCTIONS : "",
+    tools.device ? PAPERPLANE_DEVICE_TOOL_INSTRUCTIONS : "",
   ]
     .filter(Boolean)
     .join("\n\n");
@@ -215,7 +215,7 @@ export function buildCodexAdditionalContext(
   const tools = toolInstructions(toolsAvailable);
   // Separate keys keep each value under Codex's per-entry token cap.
   return {
-    rove_code_orchestration: { kind: "application", value: ROVE_CODE_ORCHESTRATION_INSTRUCTIONS },
+    rove_code_orchestration: { kind: "application", value: PAPERPLANE_ORCHESTRATION_INSTRUCTIONS },
     rove_code_runtime: {
       kind: "application",
       value: buildRuntimeInstructions({ harness: "Codex", ...runtime }),

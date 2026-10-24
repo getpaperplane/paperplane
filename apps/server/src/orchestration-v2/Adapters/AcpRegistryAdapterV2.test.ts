@@ -295,7 +295,7 @@ describe("AcpRegistryAdapterV2", () => {
                     command: process.execPath,
                     args: [mockAgentPath],
                     cwd: input.cwd,
-                    env: { ROVE_ACP_SESSION_LIFECYCLE: "1" },
+                    env: { PAPERPLANE_ACP_SESSION_LIFECYCLE: "1" },
                   },
                   authMethodId: "test",
                 }).pipe(
@@ -364,8 +364,8 @@ describe("AcpRegistryAdapterV2", () => {
         instanceId,
         settings,
         environment: {
-          ROVE_ACP_SESSION_LIFECYCLE: "1",
-          ROVE_ACP_COMMAND_ADVERTISEMENT_DELAY_MS: "750",
+          PAPERPLANE_ACP_SESSION_LIFECYCLE: "1",
+          PAPERPLANE_ACP_COMMAND_ADVERTISEMENT_DELAY_MS: "750",
         },
       }).pipe(
         Effect.provide(

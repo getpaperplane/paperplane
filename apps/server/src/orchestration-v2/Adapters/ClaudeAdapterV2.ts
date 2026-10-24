@@ -139,7 +139,7 @@ import {
 } from "../../provider/claudeUsageLimits.ts";
 import type { ManagedServerProvider } from "@getpaperplane/provider-core/server/snapshot";
 import { mergeProviderInstanceEnvironment } from "@getpaperplane/provider-core/server/instanceEnvironment";
-import { ROVE_CODE_ORCHESTRATION_INSTRUCTIONS } from "@getpaperplane/provider-core/server/orchestrationInstructions";
+import { PAPERPLANE_ORCHESTRATION_INSTRUCTIONS } from "@getpaperplane/provider-core/server/orchestrationInstructions";
 import { buildRuntimeInstructions } from "@getpaperplane/provider-core/server/runtimeInstructions";
 import {
   mcpToolPresentation,
@@ -1200,7 +1200,7 @@ export function makeClaudeQueryOptions(input: {
       preset: "claude_code" as const,
       append:
         buildRuntimeInstructions({ harness: "Claude Code" }) +
-        (input.mcpServers === undefined ? "" : ROVE_CODE_ORCHESTRATION_INSTRUCTIONS),
+        (input.mcpServers === undefined ? "" : PAPERPLANE_ORCHESTRATION_INSTRUCTIONS),
     },
     ...(Object.keys(extraArgs).length === 0 ? {} : { extraArgs }),
   };

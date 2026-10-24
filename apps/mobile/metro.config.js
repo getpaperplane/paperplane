@@ -84,7 +84,7 @@ async function generateMobileThirdPartyLicenses() {
     allowMissingGeneratedNotices:
       process.env.NODE_ENV !== "production" &&
       process.env.EAS_BUILD !== "true" &&
-      process.env.ROVE_LICENSES_STRICT !== "1",
+      process.env.PAPERPLANE_LICENSES_STRICT !== "1",
   });
 
   await Promise.all([

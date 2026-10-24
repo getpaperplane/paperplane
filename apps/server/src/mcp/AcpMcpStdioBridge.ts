@@ -318,11 +318,11 @@ export async function runAcpMcpCliFastPath(
   command: "acp-mcp-bridge" | "acp-mcp-call",
   args: ReadonlyArray<string>,
 ): Promise<void> {
-  const endpoint = process.env.ROVE_ACP_MCP_ENDPOINT;
-  const authorization = process.env.ROVE_ACP_MCP_AUTHORIZATION;
+  const endpoint = process.env.PAPERPLANE_ACP_MCP_ENDPOINT;
+  const authorization = process.env.PAPERPLANE_ACP_MCP_AUTHORIZATION;
   if (endpoint === undefined || authorization === undefined) {
     process.stderr.write(
-      `${command} requires ROVE_ACP_MCP_ENDPOINT and ROVE_ACP_MCP_AUTHORIZATION.\n`,
+      `${command} requires PAPERPLANE_ACP_MCP_ENDPOINT and PAPERPLANE_ACP_MCP_AUTHORIZATION.\n`,
     );
     process.exitCode = 2;
     return;

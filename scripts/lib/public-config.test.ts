@@ -18,24 +18,24 @@ describe("loadRepoEnv", () => {
   it("does not project cloud configuration for an unconfigured clone", () => {
     const env = loadRepoEnv({ baseEnv: {}, repoRoot: makeTemporaryDirectory() });
 
-    expect(env.ROVE_CLERK_PUBLISHABLE_KEY).toBeUndefined();
-    expect(env.ROVE_CLERK_CLI_OAUTH_CLIENT_ID).toBeUndefined();
+    expect(env.PAPERPLANE_CLERK_PUBLISHABLE_KEY).toBeUndefined();
+    expect(env.PAPERPLANE_CLERK_CLI_OAUTH_CLIENT_ID).toBeUndefined();
     expect(env.VITE_CLERK_PUBLISHABLE_KEY).toBeUndefined();
     expect(env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY).toBeUndefined();
-    expect(env.ROVE_CLERK_JWT_TEMPLATE).toBeUndefined();
+    expect(env.PAPERPLANE_CLERK_JWT_TEMPLATE).toBeUndefined();
     expect(env.VITE_CLERK_JWT_TEMPLATE).toBeUndefined();
     expect(env.EXPO_PUBLIC_CLERK_JWT_TEMPLATE).toBeUndefined();
-    expect(env.ROVE_RELAY_URL).toBeUndefined();
-    expect(env.VITE_ROVE_RELAY_URL).toBeUndefined();
-    expect(env.ROVE_MOBILE_OTLP_TRACES_URL).toBeUndefined();
-    expect(env.ROVE_MOBILE_OTLP_TRACES_DATASET).toBeUndefined();
-    expect(env.ROVE_MOBILE_OTLP_TRACES_TOKEN).toBeUndefined();
+    expect(env.PAPERPLANE_RELAY_URL).toBeUndefined();
+    expect(env.VITE_PAPERPLANE_RELAY_URL).toBeUndefined();
+    expect(env.PAPERPLANE_MOBILE_OTLP_TRACES_URL).toBeUndefined();
+    expect(env.PAPERPLANE_MOBILE_OTLP_TRACES_DATASET).toBeUndefined();
+    expect(env.PAPERPLANE_MOBILE_OTLP_TRACES_TOKEN).toBeUndefined();
     expect(env.EXPO_PUBLIC_OTLP_TRACES_URL).toBeUndefined();
     expect(env.EXPO_PUBLIC_OTLP_TRACES_DATASET).toBeUndefined();
     expect(env.EXPO_PUBLIC_OTLP_TRACES_TOKEN).toBeUndefined();
-    expect(env.ROVE_RELAY_CLIENT_OTLP_TRACES_URL).toBeUndefined();
-    expect(env.ROVE_RELAY_CLIENT_OTLP_TRACES_DATASET).toBeUndefined();
-    expect(env.ROVE_RELAY_CLIENT_OTLP_TRACES_TOKEN).toBeUndefined();
+    expect(env.PAPERPLANE_RELAY_CLIENT_OTLP_TRACES_URL).toBeUndefined();
+    expect(env.PAPERPLANE_RELAY_CLIENT_OTLP_TRACES_DATASET).toBeUndefined();
+    expect(env.PAPERPLANE_RELAY_CLIENT_OTLP_TRACES_TOKEN).toBeUndefined();
     expect(env.VITE_RELAY_OTLP_TRACES_URL).toBeUndefined();
     expect(env.VITE_RELAY_OTLP_TRACES_DATASET).toBeUndefined();
     expect(env.VITE_RELAY_OTLP_TRACES_TOKEN).toBeUndefined();
@@ -45,36 +45,36 @@ describe("loadRepoEnv", () => {
     const repoRoot = makeTemporaryDirectory();
     NodeFS.writeFileSync(
       NodePath.join(repoRoot, ".env"),
-      "ROVE_CLOUD_READY=1\nROVE_CLERK_PUBLISHABLE_KEY=pk_root\nROVE_CLERK_JWT_TEMPLATE=template_root\nROVE_CLERK_CLI_OAUTH_CLIENT_ID=oauth_root\nROVE_RELAY_URL=https://root.example.test\n",
+      "PAPERPLANE_CLOUD_READY=1\nPAPERPLANE_CLERK_PUBLISHABLE_KEY=pk_root\nPAPERPLANE_CLERK_JWT_TEMPLATE=template_root\nPAPERPLANE_CLERK_CLI_OAUTH_CLIENT_ID=oauth_root\nPAPERPLANE_RELAY_URL=https://root.example.test\n",
     );
     NodeFS.writeFileSync(
       NodePath.join(repoRoot, ".env.local"),
-      "ROVE_CLERK_PUBLISHABLE_KEY=pk_local\nROVE_CLERK_JWT_TEMPLATE=template_local\nROVE_CLERK_CLI_OAUTH_CLIENT_ID=oauth_local\nROVE_RELAY_URL=https://local.example.test\n",
+      "PAPERPLANE_CLERK_PUBLISHABLE_KEY=pk_local\nPAPERPLANE_CLERK_JWT_TEMPLATE=template_local\nPAPERPLANE_CLERK_CLI_OAUTH_CLIENT_ID=oauth_local\nPAPERPLANE_RELAY_URL=https://local.example.test\n",
     );
 
-    expect(loadRepoEnv({ baseEnv: {}, repoRoot }).ROVE_RELAY_URL).toBe(
+    expect(loadRepoEnv({ baseEnv: {}, repoRoot }).PAPERPLANE_RELAY_URL).toBe(
       "https://local.example.test",
     );
     expect(
       loadRepoEnv({
         baseEnv: {
-          ROVE_CLERK_PUBLISHABLE_KEY: "pk_ci",
-          ROVE_CLERK_JWT_TEMPLATE: "template_ci",
-          ROVE_CLERK_CLI_OAUTH_CLIENT_ID: "oauth_ci",
-          ROVE_RELAY_URL: "https://ci.example.test",
+          PAPERPLANE_CLERK_PUBLISHABLE_KEY: "pk_ci",
+          PAPERPLANE_CLERK_JWT_TEMPLATE: "template_ci",
+          PAPERPLANE_CLERK_CLI_OAUTH_CLIENT_ID: "oauth_ci",
+          PAPERPLANE_RELAY_URL: "https://ci.example.test",
         },
         repoRoot,
       }),
     ).toMatchObject({
-      ROVE_CLERK_PUBLISHABLE_KEY: "pk_ci",
-      ROVE_CLERK_CLI_OAUTH_CLIENT_ID: "oauth_ci",
+      PAPERPLANE_CLERK_PUBLISHABLE_KEY: "pk_ci",
+      PAPERPLANE_CLERK_CLI_OAUTH_CLIENT_ID: "oauth_ci",
       VITE_CLERK_PUBLISHABLE_KEY: "pk_ci",
       EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY: "pk_ci",
-      ROVE_CLERK_JWT_TEMPLATE: "template_ci",
+      PAPERPLANE_CLERK_JWT_TEMPLATE: "template_ci",
       VITE_CLERK_JWT_TEMPLATE: "template_ci",
       EXPO_PUBLIC_CLERK_JWT_TEMPLATE: "template_ci",
-      ROVE_RELAY_URL: "https://ci.example.test",
-      VITE_ROVE_RELAY_URL: "https://ci.example.test",
+      PAPERPLANE_RELAY_URL: "https://ci.example.test",
+      VITE_PAPERPLANE_RELAY_URL: "https://ci.example.test",
     });
   });
 
@@ -82,20 +82,21 @@ describe("loadRepoEnv", () => {
     const repoRoot = makeTemporaryDirectory();
     NodeFS.writeFileSync(
       NodePath.join(repoRoot, ".env"),
-      "ROVE_CLOUD_READY=1\nROVE_RELAY_URL=https://root.example.test\n",
+      "PAPERPLANE_CLOUD_READY=1\nPAPERPLANE_RELAY_URL=https://root.example.test\n",
     );
     const cloud = {
-      ROVE_CLERK_PUBLISHABLE_KEY: "pk_canonical",
+      PAPERPLANE_CLERK_PUBLISHABLE_KEY: "pk_canonical",
       EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY: "pk_expo",
       VITE_CLERK_PUBLISHABLE_KEY: "pk_vite",
       EXPO_PUBLIC_CLERK_GOOGLE_WEB_CLIENT_ID: "google-web",
-      VITE_ROVE_RELAY_URL: "https://alias.example.test",
+      VITE_PAPERPLANE_RELAY_URL: "https://alias.example.test",
     };
-    const disabled = loadRepoEnv({ baseEnv: { ...cloud, ROVE_CLOUD_READY: "0" }, repoRoot });
-    for (const key of [...Object.keys(cloud), "ROVE_RELAY_URL"]) expect(disabled[key]).toBe("");
+    const disabled = loadRepoEnv({ baseEnv: { ...cloud, PAPERPLANE_CLOUD_READY: "0" }, repoRoot });
+    for (const key of [...Object.keys(cloud), "PAPERPLANE_RELAY_URL"])
+      expect(disabled[key]).toBe("");
     const enabled = loadRepoEnv({ baseEnv: cloud, repoRoot });
     expect(enabled.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY).toBe("pk_canonical");
-    expect(enabled.VITE_ROVE_RELAY_URL).toBe("https://alias.example.test");
+    expect(enabled.VITE_PAPERPLANE_RELAY_URL).toBe("https://alias.example.test");
     expect(enabled.EXPO_PUBLIC_CLERK_GOOGLE_WEB_CLIENT_ID).toBe("google-web");
     const unconfigured = loadRepoEnv({ baseEnv: cloud, repoRoot: makeTemporaryDirectory() });
     for (const key of Object.keys(cloud)) expect(unconfigured[key]).toBe("");
@@ -106,8 +107,8 @@ describe("loadRepoEnv", () => {
       resolvePublicConfig({
         VITE_CLERK_PUBLISHABLE_KEY: "pk_legacy",
         VITE_CLERK_JWT_TEMPLATE: "template_legacy",
-        ROVE_CLERK_CLI_OAUTH_CLIENT_ID: "oauth_canonical",
-        VITE_ROVE_RELAY_URL: "https://legacy.example.test",
+        PAPERPLANE_CLERK_CLI_OAUTH_CLIENT_ID: "oauth_canonical",
+        VITE_PAPERPLANE_RELAY_URL: "https://legacy.example.test",
         EXPO_PUBLIC_OTLP_TRACES_URL: "https://api.axiom.co/v1/traces",
         EXPO_PUBLIC_OTLP_TRACES_DATASET: "mobile-traces",
         EXPO_PUBLIC_OTLP_TRACES_TOKEN: "mobile-token",
@@ -130,18 +131,18 @@ describe("loadRepoEnv", () => {
     expect(
       loadRepoEnv({
         baseEnv: {
-          ROVE_CLOUD_READY: "1",
-          ROVE_RELAY_CLIENT_OTLP_TRACES_URL: "https://api.axiom.co/v1/traces",
-          ROVE_RELAY_CLIENT_OTLP_TRACES_DATASET: "relay-client-traces",
-          ROVE_RELAY_CLIENT_OTLP_TRACES_TOKEN: "relay-client-token",
+          PAPERPLANE_CLOUD_READY: "1",
+          PAPERPLANE_RELAY_CLIENT_OTLP_TRACES_URL: "https://api.axiom.co/v1/traces",
+          PAPERPLANE_RELAY_CLIENT_OTLP_TRACES_DATASET: "relay-client-traces",
+          PAPERPLANE_RELAY_CLIENT_OTLP_TRACES_TOKEN: "relay-client-token",
         },
         repoRoot: makeTemporaryDirectory(),
       }),
     ).toEqual({
-      ROVE_CLOUD_READY: "1",
-      ROVE_RELAY_CLIENT_OTLP_TRACES_URL: "https://api.axiom.co/v1/traces",
-      ROVE_RELAY_CLIENT_OTLP_TRACES_DATASET: "relay-client-traces",
-      ROVE_RELAY_CLIENT_OTLP_TRACES_TOKEN: "relay-client-token",
+      PAPERPLANE_CLOUD_READY: "1",
+      PAPERPLANE_RELAY_CLIENT_OTLP_TRACES_URL: "https://api.axiom.co/v1/traces",
+      PAPERPLANE_RELAY_CLIENT_OTLP_TRACES_DATASET: "relay-client-traces",
+      PAPERPLANE_RELAY_CLIENT_OTLP_TRACES_TOKEN: "relay-client-token",
       VITE_RELAY_OTLP_TRACES_URL: "https://api.axiom.co/v1/traces",
       VITE_RELAY_OTLP_TRACES_DATASET: "relay-client-traces",
       VITE_RELAY_OTLP_TRACES_TOKEN: "relay-client-token",
@@ -152,21 +153,21 @@ describe("loadRepoEnv", () => {
     expect(
       loadRepoEnv({
         baseEnv: {
-          ROVE_CLOUD_READY: "1",
-          ROVE_RELAY_URL: "https://relay.example.test",
-          ROVE_MOBILE_OTLP_TRACES_URL: "https://api.axiom.co/v1/traces",
-          ROVE_MOBILE_OTLP_TRACES_DATASET: "mobile-traces",
-          ROVE_MOBILE_OTLP_TRACES_TOKEN: "mobile-token",
+          PAPERPLANE_CLOUD_READY: "1",
+          PAPERPLANE_RELAY_URL: "https://relay.example.test",
+          PAPERPLANE_MOBILE_OTLP_TRACES_URL: "https://api.axiom.co/v1/traces",
+          PAPERPLANE_MOBILE_OTLP_TRACES_DATASET: "mobile-traces",
+          PAPERPLANE_MOBILE_OTLP_TRACES_TOKEN: "mobile-token",
         },
         repoRoot: makeTemporaryDirectory(),
       }),
     ).toEqual({
-      ROVE_CLOUD_READY: "1",
-      ROVE_RELAY_URL: "https://relay.example.test",
-      VITE_ROVE_RELAY_URL: "https://relay.example.test",
-      ROVE_MOBILE_OTLP_TRACES_URL: "https://api.axiom.co/v1/traces",
-      ROVE_MOBILE_OTLP_TRACES_DATASET: "mobile-traces",
-      ROVE_MOBILE_OTLP_TRACES_TOKEN: "mobile-token",
+      PAPERPLANE_CLOUD_READY: "1",
+      PAPERPLANE_RELAY_URL: "https://relay.example.test",
+      VITE_PAPERPLANE_RELAY_URL: "https://relay.example.test",
+      PAPERPLANE_MOBILE_OTLP_TRACES_URL: "https://api.axiom.co/v1/traces",
+      PAPERPLANE_MOBILE_OTLP_TRACES_DATASET: "mobile-traces",
+      PAPERPLANE_MOBILE_OTLP_TRACES_TOKEN: "mobile-token",
       EXPO_PUBLIC_OTLP_TRACES_URL: "https://api.axiom.co/v1/traces",
       EXPO_PUBLIC_OTLP_TRACES_DATASET: "mobile-traces",
       EXPO_PUBLIC_OTLP_TRACES_TOKEN: "mobile-token",

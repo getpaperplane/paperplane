@@ -4,22 +4,22 @@
 # This installer is not available until Paperplane publishes its own CLI archives.
 #
 # Environment:
-#   ROVE_CHANNEL           release train to follow: stable, nightly, or preview
+#   PAPERPLANE_CHANNEL           release train to follow: stable, nightly, or preview
 #                            (default: stable; preview is a maintainers' test train)
-#   ROVE_VERSION           exact version to install (overrides ROVE_CHANNEL)
-#   ROVE_HOME              Paperplane home directory (default: ~\.paperplane)
-#   ROVE_INSTALL_BIN_DIR   where paperplane.cmd is linked (default: ~\.local\bin)
-#   ROVE_RELEASE_BASE_URL  mirror for releases/download (default: GitHub)
+#   PAPERPLANE_VERSION           exact version to install (overrides PAPERPLANE_CHANNEL)
+#   PAPERPLANE_HOME              Paperplane home directory (default: ~\.paperplane)
+#   PAPERPLANE_INSTALL_BIN_DIR   where paperplane.cmd is linked (default: ~\.local\bin)
+#   PAPERPLANE_RELEASE_BASE_URL  mirror for releases/download (default: GitHub)
 #
-# The archive is unpacked into $ROVE_HOME\runtime\versions\<version>, the
+# The archive is unpacked into $PAPERPLANE_HOME\runtime\versions\<version>, the
 # same layout `paperplane service install` uses, so the service reuses this download.
 $ErrorActionPreference = "Stop"
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
 $repo = "hafiezul/rove"
-$baseUrl = if ($env:ROVE_RELEASE_BASE_URL) { $env:ROVE_RELEASE_BASE_URL.TrimEnd("/") } else { "https://github.com/$repo/releases/download" }
-$roveHome = if ($env:ROVE_HOME) { $env:ROVE_HOME } else { Join-Path $HOME ".paperplane" }
-$binDir = if ($env:ROVE_INSTALL_BIN_DIR) { $env:ROVE_INSTALL_BIN_DIR } else { Join-Path $HOME ".local\bin" }
+$baseUrl = if ($env:PAPERPLANE_RELEASE_BASE_URL) { $env:PAPERPLANE_RELEASE_BASE_URL.TrimEnd("/") } else { "https://github.com/$repo/releases/download" }
+$roveHome = if ($env:PAPERPLANE_HOME) { $env:PAPERPLANE_HOME } else { Join-Path $HOME ".paperplane" }
+$binDir = if ($env:PAPERPLANE_INSTALL_BIN_DIR) { $env:PAPERPLANE_INSTALL_BIN_DIR } else { Join-Path $HOME ".local\bin" }
 
 function Fail([string] $message) {
   Write-Error "paperplane install: $message"
@@ -113,8 +113,8 @@ $arch = switch ($rawArch) {
   default { Fail "unsupported architecture $rawArch" }
 }
 
-$channel = if ($env:ROVE_CHANNEL) { $env:ROVE_CHANNEL } else { "stable" }
-$version = $env:ROVE_VERSION
+$channel = if ($env:PAPERPLANE_CHANNEL) { $env:PAPERPLANE_CHANNEL } else { "stable" }
+$version = $env:PAPERPLANE_VERSION
 if (-not $version) {
   # Tags are v<semver>; the channel is the prerelease identifier, or none for
   # stable. Only tags of the requested train are considered, so a stable
@@ -123,16 +123,16 @@ if (-not $version) {
     "stable" { '^v\d+\.\d+\.\d+$' }
     "nightly" { '^v\d+\.\d+\.\d+-nightly\.\d+\.\d+$' }
     "preview" { '^v\d+\.\d+\.\d+-preview\.\d+\.\d+$' }
-    default { Fail "ROVE_CHANNEL must be stable, nightly, or preview" }
+    default { Fail "PAPERPLANE_CHANNEL must be stable, nightly, or preview" }
   }
   $releases = Invoke-RestMethod -Uri "https://api.github.com/repos/$repo/releases?per_page=100" -Headers @{ "User-Agent" = "rove-install" }
   $tag = ($releases | Where-Object { -not $_.draft -and $_.tag_name -match $tagPattern } | Select-Object -First 1).tag_name
-  if (-not $tag) { Fail "could not find a $channel release; set ROVE_VERSION" }
+  if (-not $tag) { Fail "could not find a $channel release; set PAPERPLANE_VERSION" }
   $version = $tag.Substring(1)
 }
 if ($version -match '-preview\.') {
-  Write-Warning "paperplane $version is a preview build. Preview builds are cut by maintainers from unreleased branches to exercise the release pipeline. They can be broken, receive no fixes, and are never offered as updates. Set ROVE_CHANNEL=stable (the default) for a supported build."
-  if ($channel -ne "preview" -and -not $env:ROVE_VERSION) {
+  Write-Warning "paperplane $version is a preview build. Preview builds are cut by maintainers from unreleased branches to exercise the release pipeline. They can be broken, receive no fixes, and are never offered as updates. Set PAPERPLANE_CHANNEL=stable (the default) for a supported build."
+  if ($channel -ne "preview" -and -not $env:PAPERPLANE_VERSION) {
     Fail "refusing a preview build that was not explicitly requested"
   }
 }

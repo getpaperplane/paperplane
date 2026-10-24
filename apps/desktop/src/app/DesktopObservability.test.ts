@@ -62,7 +62,7 @@ const layerEnvironmentFor = (
       Layer.mergeAll(
         NodeServices.layer,
         DesktopConfig.layerTest({
-          ROVE_HOME: baseDir,
+          PAPERPLANE_HOME: baseDir,
           VITE_DEV_SERVER_URL: isDevelopment ? "http://127.0.0.1:5733" : undefined,
           ...env,
         }),
@@ -393,8 +393,8 @@ describe("DesktopObservability", () => {
         prefix: "rove-desktop-observability-test-",
       });
       const layerEnvironment = layerEnvironmentFor(baseDir, true, {
-        ROVE_OTLP_LOGS_URL: "https://collector.example.com/v1/logs",
-        ROVE_OTLP_HEADERS: "x-scope=desktop",
+        PAPERPLANE_OTLP_LOGS_URL: "https://collector.example.com/v1/logs",
+        PAPERPLANE_OTLP_HEADERS: "x-scope=desktop",
       });
       const tracePath = yield* Effect.gen(function* () {
         const environment = yield* DesktopEnvironment.DesktopEnvironment;
@@ -439,7 +439,7 @@ describe("DesktopObservability", () => {
         prefix: "rove-desktop-observability-test-",
       });
       const layerEnvironment = layerEnvironmentFor(baseDir, true, {
-        ROVE_OTLP_HEADERS: "x-scope=desktop",
+        PAPERPLANE_OTLP_HEADERS: "x-scope=desktop",
       });
       yield* writeObservabilitySettings(layerEnvironment, {
         otlpLogsUrl: "https://settings.example.com/v1/logs",
@@ -485,7 +485,7 @@ describe("DesktopObservability", () => {
         prefix: "rove-desktop-observability-test-",
       });
       const layerEnvironment = layerEnvironmentFor(baseDir, true, {
-        ROVE_OTLP_LOGS_URL: "https://collector.example.com/v1/logs",
+        PAPERPLANE_OTLP_LOGS_URL: "https://collector.example.com/v1/logs",
       });
 
       yield* Effect.scoped(
@@ -528,7 +528,7 @@ describe("DesktopObservability", () => {
         prefix: "rove-desktop-observability-test-",
       });
       const layerEnvironment = layerEnvironmentFor(baseDir, true, {
-        ROVE_OTLP_HEADERS: "x-scope=desktop",
+        PAPERPLANE_OTLP_HEADERS: "x-scope=desktop",
       });
       yield* writeObservabilitySettings(layerEnvironment, {
         otlpLogsUrl: "https://settings.example.com/v1/logs",
@@ -568,7 +568,7 @@ describe("DesktopObservability", () => {
         prefix: "rove-desktop-observability-test-",
       });
       const layerEnvironment = layerEnvironmentFor(baseDir, true, {
-        ROVE_OTLP_LOGS_URL: "https://collector.example.com/v1/logs",
+        PAPERPLANE_OTLP_LOGS_URL: "https://collector.example.com/v1/logs",
       });
 
       yield* Effect.scoped(

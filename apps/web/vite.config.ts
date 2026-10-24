@@ -31,14 +31,14 @@ Object.assign(process.env, repoEnv);
 // pins the client to localhost and breaks every non-localhost origin — the
 // exact failure single-origin mode exists to prevent, and an invisible one
 // since the page still loads.
-const isSingleOriginDev = process.env.ROVE_SINGLE_ORIGIN_DEV === "1";
+const isSingleOriginDev = process.env.PAPERPLANE_SINGLE_ORIGIN_DEV === "1";
 
 const port = Number(process.env.PORT ?? 5733);
 const explicitHost = process.env.HOST?.trim();
 const host = explicitHost || "localhost";
 const configuredWsUrl = isSingleOriginDev ? undefined : process.env.VITE_WS_URL?.trim();
 const configuredHttpUrl = isSingleOriginDev ? undefined : process.env.VITE_HTTP_URL?.trim();
-const configuredRelayUrl = repoEnv.VITE_ROVE_RELAY_URL?.trim() || "";
+const configuredRelayUrl = repoEnv.VITE_PAPERPLANE_RELAY_URL?.trim() || "";
 const configuredClerkPublishableKey = repoEnv.VITE_CLERK_PUBLISHABLE_KEY?.trim() || "";
 const configuredClerkJwtTemplate = repoEnv.VITE_CLERK_JWT_TEMPLATE?.trim() || "";
 const configuredClerkCliOAuthClientId = repoEnv.VITE_CLERK_CLI_OAUTH_CLIENT_ID?.trim() || "";
@@ -60,14 +60,14 @@ const configuredHostedAppUrl = (() => {
   }
   return undefined;
 })();
-const sourcemapEnv = process.env.ROVE_WEB_SOURCEMAP?.trim().toLowerCase();
+const sourcemapEnv = process.env.PAPERPLANE_WEB_SOURCEMAP?.trim().toLowerCase();
 
 // Vite 8.1's experimental bundled dev mode: serves rolldown-bundled chunks in
 // dev for much faster startup/reload on large module graphs, with HMR served
-// as hot patches. Opt-in while experimental: ROVE_BUNDLED_DEV=1 pnpm dev:web
+// as hot patches. Opt-in while experimental: PAPERPLANE_BUNDLED_DEV=1 pnpm dev:web
 // The dev runner defaults this on for --share runs (remote browsers pay a
-// round trip per import level in unbundled dev); ROVE_BUNDLED_DEV=0 opts out.
-const bundledDevEnv = process.env.ROVE_BUNDLED_DEV?.trim().toLowerCase();
+// round trip per import level in unbundled dev); PAPERPLANE_BUNDLED_DEV=0 opts out.
+const bundledDevEnv = process.env.PAPERPLANE_BUNDLED_DEV?.trim().toLowerCase();
 const bundledDev = bundledDevEnv === "1" || bundledDevEnv === "true";
 
 const buildSourcemap: boolean | "hidden" =
@@ -97,7 +97,7 @@ function resolveDevProxyTarget(
 ): string | undefined {
   // Browser dev is single-origin: the backend port is proxied through this
   // server so the app works from any origin (localhost, tailnet, LAN, phone).
-  // ROVE_PORT is set by scripts/dev-runner.ts for every non-desktop mode.
+  // PAPERPLANE_PORT is set by scripts/dev-runner.ts for every non-desktop mode.
   const port = Number(backendPort?.trim());
   if (Number.isInteger(port) && port > 0) {
     return `http://localhost:${port}/`;
@@ -125,7 +125,7 @@ function resolveDevProxyTarget(
   }
 }
 
-const devProxyTarget = resolveDevProxyTarget(process.env.ROVE_PORT, configuredWsUrl);
+const devProxyTarget = resolveDevProxyTarget(process.env.PAPERPLANE_PORT, configuredWsUrl);
 
 // Vite's dev server sends JS uncompressed. On localhost that is free; over a
 // shared origin (tailnet, LAN) it is the whole cold-start: bundled dev serves
@@ -153,7 +153,7 @@ function devCompressionPlugin(): Plugin {
 // a dev server over Tailscale/LAN. Tailnet names are safe to allow wholesale:
 // the DNS is controlled by tailscale, so they can't be rebound by an attacker.
 // Anything else (ngrok, a LAN IP alias) goes through the env var.
-const configuredAllowedHosts = (process.env.ROVE_DEV_ALLOWED_HOSTS ?? "")
+const configuredAllowedHosts = (process.env.PAPERPLANE_DEV_ALLOWED_HOSTS ?? "")
   .split(",")
   .map((entry) => entry.trim())
   .filter((entry) => entry.length > 0);
@@ -222,7 +222,7 @@ export default defineConfig(({ command, mode }) => {
       // under single-origin dev this must stay empty even when a `.env`
       // supplies it, so the client falls back to window.location.origin.
       "import.meta.env.VITE_HTTP_URL": JSON.stringify(configuredHttpUrl ?? ""),
-      "import.meta.env.VITE_ROVE_RELAY_URL": JSON.stringify(configuredRelayUrl),
+      "import.meta.env.VITE_PAPERPLANE_RELAY_URL": JSON.stringify(configuredRelayUrl),
       "import.meta.env.VITE_CLERK_PUBLISHABLE_KEY": JSON.stringify(configuredClerkPublishableKey),
       "import.meta.env.VITE_CLERK_JWT_TEMPLATE": JSON.stringify(configuredClerkJwtTemplate),
       "import.meta.env.VITE_CLERK_CLI_OAUTH_CLIENT_ID": JSON.stringify(

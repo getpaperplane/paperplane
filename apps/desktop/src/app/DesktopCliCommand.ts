@@ -38,7 +38,7 @@ const sameWindowsPath = (left: string, right: string) =>
   left.replace(/[\\/]+$/, "").toLowerCase() === right.replace(/[\\/]+$/, "").toLowerCase();
 
 /**
- * Reads, or with `ROVE_SET` set writes, the user's PATH in the registry, keeping
+ * Reads, or with `PAPERPLANE_SET` set writes, the user's PATH in the registry, keeping
  * `%VAR%` entries unexpanded. Writes keep REG_EXPAND_SZ (Windows' default for
  * PATH; `SetEnvironmentVariable` would store REG_SZ and break every `%VAR%`
  * entry), then broadcast WM_SETTINGCHANGE so Explorer and the terminals it
@@ -47,13 +47,13 @@ const sameWindowsPath = (left: string, right: string) =>
  */
 const WINDOWS_USER_PATH_SCRIPT = `
 $ErrorActionPreference = 'Stop'
-if ($env:ROVE_SET -eq '1') {
+if ($env:PAPERPLANE_SET -eq '1') {
   $key = [Microsoft.Win32.Registry]::CurrentUser.CreateSubKey('Environment')
   $kind = [Microsoft.Win32.RegistryValueKind]::ExpandString
   if ($key.GetValueNames() -contains 'Path' -and $key.GetValueKind('Path') -eq 'String') {
     $kind = [Microsoft.Win32.RegistryValueKind]::String
   }
-  $key.SetValue('Path', $env:ROVE_PATH, $kind)
+  $key.SetValue('Path', $env:PAPERPLANE_PATH, $kind)
   Add-Type -Namespace Rove -Name Env -MemberDefinition '[DllImport("user32.dll", CharSet = CharSet.Unicode)] public static extern System.IntPtr SendMessageTimeout(System.IntPtr hWnd, uint Msg, System.UIntPtr wParam, string lParam, uint fuFlags, uint uTimeout, out System.UIntPtr lpdwResult);'
   $result = [System.UIntPtr]::Zero
   [void][Rove.Env]::SendMessageTimeout([System.IntPtr]0xffff, 0x1A, [System.UIntPtr]::Zero, 'Environment', 2, 5000, [ref]$result)
@@ -132,7 +132,7 @@ export const make = Effect.gen(function* () {
     Effect.mapError(() => fail("Could not read your PATH, so it was left unchanged.")),
   );
   const writeUserPath = (value: string) =>
-    powershell({ ROVE_SET: "1", ROVE_PATH: value }).pipe(
+    powershell({ PAPERPLANE_SET: "1", PAPERPLANE_PATH: value }).pipe(
       Effect.asVoid,
       Effect.mapError(() => fail("Could not update your PATH.")),
     );

@@ -37,8 +37,8 @@ const layerEnvironment = (input: {
       Layer.mergeAll(
         NodeServices.layer,
         DesktopConfig.layerTest({
-          ROVE_HOME: input.baseDir,
-          ROVE_MODE: "desktop",
+          PAPERPLANE_HOME: input.baseDir,
+          PAPERPLANE_MODE: "desktop",
         }),
       ),
     ),
@@ -243,7 +243,7 @@ describe("DesktopWslServerTree", () => {
         });
         yield* fileSystem.writeFileString(path.join(serverRoot, "apps/server/dist/bin.mjs"), "x");
 
-        // ROVE_HOME is set to tempDir, so the desktop state dir resolves to
+        // PAPERPLANE_HOME is set to tempDir, so the desktop state dir resolves to
         // <tempDir>/userdata (no .rove segment).
         const treeRoot = path.join(tempDir, "userdata", "wsl-server-tree");
         yield* fileSystem.makeDirectory(path.join(treeRoot, "1.0.0"), { recursive: true });

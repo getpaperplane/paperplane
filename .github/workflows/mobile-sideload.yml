@@ -10,13 +10,13 @@ on:
         required: true
         type: string
     secrets:
-      ROVE_ANDROID_KEYSTORE_BASE64:
+      PAPERPLANE_ANDROID_KEYSTORE_BASE64:
         required: false
-      ROVE_ANDROID_KEYSTORE_PASSWORD:
+      PAPERPLANE_ANDROID_KEYSTORE_PASSWORD:
         required: false
-      ROVE_ANDROID_KEY_ALIAS:
+      PAPERPLANE_ANDROID_KEY_ALIAS:
         required: false
-      ROVE_ANDROID_KEY_PASSWORD:
+      PAPERPLANE_ANDROID_KEY_PASSWORD:
         required: false
   workflow_dispatch:
     inputs:
@@ -42,14 +42,14 @@ env:
   # Native version strings must be numeric (iOS rejects 2.1.0-preview.1); the
   # asset file name keeps the full release version.
   RELEASE_VERSION: ${{ inputs.version }}
-  ROVE_MOBILE_UPDATES_ENABLED: "0"
+  PAPERPLANE_MOBILE_UPDATES_ENABLED: "0"
   EXPO_NO_DOTENV: "1"
   CI: "1"
   NODE_OPTIONS: --max-old-space-size=8192
 
 jobs:
   prepare:
-    if: vars.ROVE_MOBILE_SIDELOAD_READY == 'true'
+    if: vars.PAPERPLANE_MOBILE_SIDELOAD_READY == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     outputs:
@@ -60,10 +60,10 @@ jobs:
       - id: prepare
         name: Validate version and check signing credentials
         env:
-          KEYSTORE: ${{ secrets.ROVE_ANDROID_KEYSTORE_BASE64 }}
-          STORE_PASSWORD: ${{ secrets.ROVE_ANDROID_KEYSTORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.ROVE_ANDROID_KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.ROVE_ANDROID_KEY_PASSWORD }}
+          KEYSTORE: ${{ secrets.PAPERPLANE_ANDROID_KEYSTORE_BASE64 }}
+          STORE_PASSWORD: ${{ secrets.PAPERPLANE_ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.PAPERPLANE_ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.PAPERPLANE_ANDROID_KEY_PASSWORD }}
         shell: bash
         run: |
           set -euo pipefail
@@ -76,7 +76,7 @@ jobs:
             echo 'android_ready=true' >> "$GITHUB_OUTPUT"
           else
             echo 'android_ready=false' >> "$GITHUB_OUTPUT"
-            echo '::notice::Android APK skipped: all four ROVE_ANDROID_KEYSTORE_BASE64, ROVE_ANDROID_KEYSTORE_PASSWORD, ROVE_ANDROID_KEY_ALIAS, and ROVE_ANDROID_KEY_PASSWORD secrets are required. No debug-key fallback.'
+            echo '::notice::Android APK skipped: all four PAPERPLANE_ANDROID_KEYSTORE_BASE64, PAPERPLANE_ANDROID_KEYSTORE_PASSWORD, PAPERPLANE_ANDROID_KEY_ALIAS, and PAPERPLANE_ANDROID_KEY_PASSWORD secrets are required. No debug-key fallback.'
             echo 'Android APK skipped: missing release signing secrets. The unsigned iOS build can still run.' >> "$GITHUB_STEP_SUMMARY"
           fi
 
@@ -86,14 +86,14 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 90
     env:
-      ROVE_MOBILE_BUILD_NUMBER: ${{ needs.prepare.outputs.build_number }}
-      ROVE_MOBILE_VERSION: ${{ needs.prepare.outputs.native_version }}
+      PAPERPLANE_MOBILE_BUILD_NUMBER: ${{ needs.prepare.outputs.build_number }}
+      PAPERPLANE_MOBILE_VERSION: ${{ needs.prepare.outputs.native_version }}
     steps:
       - uses: actions/checkout@v6
         with:
           ref: ${{ inputs.ref }}
       - name: Check public identity
-        run: ROVE_MOBILE_SIDELOAD_READY=true node scripts/check-release-identity.mjs
+        run: PAPERPLANE_MOBILE_SIDELOAD_READY=true node scripts/check-release-identity.mjs
       - uses: voidzero-dev/setup-vp@68f39c78aaf39be468cabd2afb09c162574c84af # v1.21.2
         with:
           node-version-file: package.json
@@ -134,10 +134,10 @@ jobs:
           test -f app/build/outputs/apk/release/app-release-unsigned.apk
       - name: Sign and verify APK with the persistent release key
         env:
-          KEYSTORE: ${{ secrets.ROVE_ANDROID_KEYSTORE_BASE64 }}
-          STORE_PASSWORD: ${{ secrets.ROVE_ANDROID_KEYSTORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.ROVE_ANDROID_KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.ROVE_ANDROID_KEY_PASSWORD }}
+          KEYSTORE: ${{ secrets.PAPERPLANE_ANDROID_KEYSTORE_BASE64 }}
+          STORE_PASSWORD: ${{ secrets.PAPERPLANE_ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.PAPERPLANE_ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.PAPERPLANE_ANDROID_KEY_PASSWORD }}
         shell: bash
         run: |
           set -euo pipefail
@@ -162,16 +162,16 @@ jobs:
     runs-on: macos-26
     timeout-minutes: 90
     env:
-      ROVE_MOBILE_BUILD_NUMBER: ${{ needs.prepare.outputs.build_number }}
-      ROVE_MOBILE_VERSION: ${{ needs.prepare.outputs.native_version }}
-      ROVE_IOS_PERSONAL_TEAM: "1"
-      ROVE_IOS_UNSIGNED: "1"
+      PAPERPLANE_MOBILE_BUILD_NUMBER: ${{ needs.prepare.outputs.build_number }}
+      PAPERPLANE_MOBILE_VERSION: ${{ needs.prepare.outputs.native_version }}
+      PAPERPLANE_IOS_PERSONAL_TEAM: "1"
+      PAPERPLANE_IOS_UNSIGNED: "1"
     steps:
       - uses: actions/checkout@v6
         with:
           ref: ${{ inputs.ref }}
       - name: Check public identity
-        run: ROVE_MOBILE_SIDELOAD_READY=true node scripts/check-release-identity.mjs
+        run: PAPERPLANE_MOBILE_SIDELOAD_READY=true node scripts/check-release-identity.mjs
       - uses: voidzero-dev/setup-vp@68f39c78aaf39be468cabd2afb09c162574c84af # v1.21.2
         with:
           node-version-file: package.json

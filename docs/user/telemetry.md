@@ -24,7 +24,7 @@ Disable **Share product usage data** in Settings → General (web/desktop), or S
 without restarting, and discards queued events. Requests already in flight cannot be recalled.
 Turn it back on there to resume collection.
 
-Setting `ROVE_TELEMETRY_ENABLED=false` in the server's environment before starting it always overrides
+Setting `PAPERPLANE_TELEMETRY_ENABLED=false` in the server's environment before starting it always overrides
 the Settings preference. While collection is disabled, analytics does not access or create the
 installation identifier.
 
@@ -39,8 +39,8 @@ saved endpoints are checked when the section opens. Checks send authentication h
 the signal's currently running endpoint and do not follow redirects. To check a new endpoint
 that requires authentication, save it and restart the server first.
 
-`ROVE_OTLP_*_URL` and standard `OTEL_EXPORTER_OTLP_*` environment variables override the saved
-settings. For endpoints saved here or set with `ROVE_OTLP_*_URL`, set `ROVE_OTLP_HEADERS` for
-receivers that need authentication and `ROVE_OTLP_PROTOCOL=http/protobuf` for receivers that do
+`PAPERPLANE_OTLP_*_URL` and standard `OTEL_EXPORTER_OTLP_*` environment variables override the saved
+settings. For endpoints saved here or set with `PAPERPLANE_OTLP_*_URL`, set `PAPERPLANE_OTLP_HEADERS` for
+receivers that need authentication and `PAPERPLANE_OTLP_PROTOCOL=http/protobuf` for receivers that do
 not accept JSON. An endpoint set with `OTEL_EXPORTER_OTLP_*` takes its headers and protocol from
 `OTEL_EXPORTER_OTLP_HEADERS` and `OTEL_EXPORTER_OTLP_PROTOCOL` instead.

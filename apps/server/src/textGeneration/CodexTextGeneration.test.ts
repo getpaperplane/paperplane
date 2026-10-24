@@ -360,7 +360,7 @@ it.layer(layerCodexTextGenerationTest)("CodexTextGeneration", (it) => {
     ),
   );
 
-  it.effect("uses ROVE_CODEX_LAUNCH_ARGS for codex exec over settings", () =>
+  it.effect("uses PAPERPLANE_CODEX_LAUNCH_ARGS for codex exec over settings", () =>
     withFakeCodexEnv(
       {
         output: JSON.stringify({
@@ -368,7 +368,10 @@ it.layer(layerCodexTextGenerationTest)("CodexTextGeneration", (it) => {
           body: "",
         }),
         launchArgs: "--enable settings-feature",
-        environment: { ...process.env, ROVE_CODEX_LAUNCH_ARGS: " --strict-config --listen off " },
+        environment: {
+          ...process.env,
+          PAPERPLANE_CODEX_LAUNCH_ARGS: " --strict-config --listen off ",
+        },
         requireArg: "--strict-config",
         forbidArg: "settings-feature",
       },

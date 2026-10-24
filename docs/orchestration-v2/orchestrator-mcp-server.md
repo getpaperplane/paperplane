@@ -63,10 +63,10 @@ overrides:
 
 ```text
 -c mcp_servers.rove.url=http://127.0.0.1:<port>/mcp
--c mcp_servers.rove.bearer_token_env_var="ROVE_MCP_BEARER_TOKEN"
+-c mcp_servers.rove.bearer_token_env_var="PAPERPLANE_MCP_BEARER_TOKEN"
 ```
 
-The provider-session token is placed in `ROVE_MCP_BEARER_TOKEN`. Both the
+The provider-session token is placed in `PAPERPLANE_MCP_BEARER_TOKEN`. Both the
 production Codex launcher and the injectable test launcher use the same
 projection helper.
 

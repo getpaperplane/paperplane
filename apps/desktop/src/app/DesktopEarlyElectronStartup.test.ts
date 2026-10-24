@@ -13,7 +13,7 @@ describe("DesktopEarlyElectronStartup", () => {
 
   it("reads the persisted linux password-store preference before Electron is ready", () => {
     const preference = resolveEarlyLinuxPasswordStorePreference({
-      env: { ROVE_HOME: "/home/user/.rove-test" },
+      env: { PAPERPLANE_HOME: "/home/user/.rove-test" },
       homeDirectory: "/home/user",
       joinPath,
       readFileString: (path) => {
@@ -27,7 +27,7 @@ describe("DesktopEarlyElectronStartup", () => {
 
   it("accepts JSONC in the early desktop settings file", () => {
     const preference = resolveEarlyLinuxPasswordStorePreference({
-      env: { ROVE_HOME: "/home/user/.rove-test" },
+      env: { PAPERPLANE_HOME: "/home/user/.rove-test" },
       homeDirectory: "/home/user",
       joinPath,
       readFileString: () => `{
@@ -54,7 +54,7 @@ describe("DesktopEarlyElectronStartup", () => {
 
   it("preserves absolute root paths when resolving early settings", () => {
     const preference = resolveEarlyLinuxPasswordStorePreference({
-      env: { ROVE_HOME: "/" },
+      env: { PAPERPLANE_HOME: "/" },
       homeDirectory: "/home/user",
       joinPath,
       readFileString: (path) => {
@@ -69,7 +69,7 @@ describe("DesktopEarlyElectronStartup", () => {
   it("resolves the early linux Electron switches", () => {
     const options = resolveEarlyLinuxElectronOptions({
       env: {
-        ROVE_HOME: "/home/user/.rove-test",
+        PAPERPLANE_HOME: "/home/user/.rove-test",
         XDG_CURRENT_DESKTOP: "niri",
         VITE_DEV_SERVER_URL: "http://127.0.0.1:5173",
       },
@@ -89,7 +89,7 @@ describe("DesktopEarlyElectronStartup", () => {
     });
   });
 
-  it("keeps implicit development state under ~/.paperplane/dev when ROVE_HOME is unset", () => {
+  it("keeps implicit development state under ~/.paperplane/dev when PAPERPLANE_HOME is unset", () => {
     const preference = resolveEarlyLinuxPasswordStorePreference({
       env: {
         VITE_DEV_SERVER_URL: "http://127.0.0.1:5173",
@@ -105,10 +105,10 @@ describe("DesktopEarlyElectronStartup", () => {
     assert.equal(preference, "kwallet");
   });
 
-  it("treats whitespace-only ROVE_HOME as unconfigured in development", () => {
+  it("treats whitespace-only PAPERPLANE_HOME as unconfigured in development", () => {
     const preference = resolveEarlyLinuxPasswordStorePreference({
       env: {
-        ROVE_HOME: "   ",
+        PAPERPLANE_HOME: "   ",
         VITE_DEV_SERVER_URL: "http://127.0.0.1:5173",
       },
       homeDirectory: "/home/user",

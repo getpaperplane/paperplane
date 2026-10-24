@@ -81,10 +81,10 @@ If no credentials are saved, Paperplane falls back to these variables in the ser
 Restart the server after changing them:
 
 ```bash
-export ROVE_BITBUCKET_ACCESS_TOKEN="your-access-token"
+export PAPERPLANE_BITBUCKET_ACCESS_TOKEN="your-access-token"
 # or
-export ROVE_BITBUCKET_EMAIL="you@example.com"
-export ROVE_BITBUCKET_API_TOKEN="your-token"
+export PAPERPLANE_BITBUCKET_EMAIL="you@example.com"
+export PAPERPLANE_BITBUCKET_API_TOKEN="your-token"
 ```
 
 ### Azure DevOps

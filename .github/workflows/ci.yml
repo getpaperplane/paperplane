@@ -415,8 +415,8 @@ jobs:
       - name: Test
         if: steps.changes.outputs.test_server != 'false'
         env:
-          ROVE_TRANSFER_BUDGET_REPORT_PATH: ${{ runner.temp }}/rove-transfer-budget.md
-          ROVE_TRANSFER_BUDGET_RESULT_PATH: ${{ runner.temp }}/thread-transfer-result.json
+          PAPERPLANE_TRANSFER_BUDGET_REPORT_PATH: ${{ runner.temp }}/rove-transfer-budget.md
+          PAPERPLANE_TRANSFER_BUDGET_RESULT_PATH: ${{ runner.temp }}/thread-transfer-result.json
         run: vp run --filter @getpaperplane/server test --shard ${{ matrix.shard }}/${{ strategy.job-total }}
 
       # integration/transferBudgetV2.integration.test.ts writes the report; exactly one shard

@@ -14,7 +14,7 @@ describe("hostedBuildDefines", () => {
       "VITE_HTTP_URL",
       "VITE_WS_URL",
       "VITE_DEV_SERVER_URL",
-      "VITE_ROVE_RELAY_URL",
+      "VITE_PAPERPLANE_RELAY_URL",
       "VITE_CLERK_PUBLISHABLE_KEY",
       "VITE_CLERK_JWT_TEMPLATE",
       "VITE_CLERK_CLI_OAUTH_CLIENT_ID",

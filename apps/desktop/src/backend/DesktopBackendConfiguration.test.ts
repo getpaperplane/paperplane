@@ -92,14 +92,14 @@ function layerEnvironment(
       Layer.mergeAll(
         NodeServices.layer,
         DesktopConfig.layerTest({
-          ROVE_HOME: baseDir,
-          ROVE_PORT: "9999",
-          ROVE_MODE: "desktop",
-          ROVE_DESKTOP_LAN_HOST: "192.168.1.50",
+          PAPERPLANE_HOME: baseDir,
+          PAPERPLANE_PORT: "9999",
+          PAPERPLANE_MODE: "desktop",
+          PAPERPLANE_DESKTOP_LAN_HOST: "192.168.1.50",
           VITE_DEV_SERVER_URL: options?.devServerUrl,
-          ROVE_OTLP_TRACES_URL: options?.otlpTracesUrl,
-          ROVE_OTLP_METRICS_URL: options?.otlpMetricsUrl,
-          ROVE_OTLP_LOGS_URL: options?.otlpLogsUrl,
+          PAPERPLANE_OTLP_TRACES_URL: options?.otlpTracesUrl,
+          PAPERPLANE_OTLP_METRICS_URL: options?.otlpMetricsUrl,
+          PAPERPLANE_OTLP_LOGS_URL: options?.otlpLogsUrl,
         }),
       ),
     ),
@@ -256,9 +256,9 @@ describe("DesktopBackendConfiguration", () => {
         assert.equal(first.cwd, environment.backendCwd);
         assert.equal(first.captureOutput, true);
         assert.equal(first.env.ELECTRON_RUN_AS_NODE, "1");
-        assert.isUndefined(first.env.ROVE_PORT);
-        assert.isUndefined(first.env.ROVE_MODE);
-        assert.isUndefined(first.env.ROVE_DESKTOP_LAN_HOST);
+        assert.isUndefined(first.env.PAPERPLANE_PORT);
+        assert.isUndefined(first.env.PAPERPLANE_MODE);
+        assert.isUndefined(first.env.PAPERPLANE_DESKTOP_LAN_HOST);
 
         assert.equal(first.bootstrap.mode, "desktop");
         assert.equal(first.bootstrap.noBrowser, true);
@@ -1015,11 +1015,11 @@ describe("DesktopBackendConfiguration", () => {
 
       const previousWslEnv = process.env.WSLENV;
       const previousDisabled = process.env.OTEL_SDK_DISABLED;
-      const previousTelemetry = process.env.ROVE_TELEMETRY_ENABLED;
+      const previousTelemetry = process.env.PAPERPLANE_TELEMETRY_ENABLED;
       try {
         delete process.env.WSLENV;
         process.env.OTEL_SDK_DISABLED = "true";
-        process.env.ROVE_TELEMETRY_ENABLED = "false";
+        process.env.PAPERPLANE_TELEMETRY_ENABLED = "false";
 
         yield* Effect.gen(function* () {
           const configuration = yield* DesktopBackendConfiguration.DesktopBackendConfiguration;
@@ -1027,8 +1027,8 @@ describe("DesktopBackendConfiguration", () => {
 
           assert.equal(config.env.OTEL_SDK_DISABLED, "true");
           assert.include((config.env.WSLENV ?? "").split(":"), "OTEL_SDK_DISABLED");
-          assert.equal(config.env.ROVE_TELEMETRY_ENABLED, "false");
-          assert.include((config.env.WSLENV ?? "").split(":"), "ROVE_TELEMETRY_ENABLED");
+          assert.equal(config.env.PAPERPLANE_TELEMETRY_ENABLED, "false");
+          assert.include((config.env.WSLENV ?? "").split(":"), "PAPERPLANE_TELEMETRY_ENABLED");
         }).pipe(
           Effect.provide(
             layerBackendConfiguration().pipe(
@@ -1049,7 +1049,7 @@ describe("DesktopBackendConfiguration", () => {
       } finally {
         restoreEnv("WSLENV", previousWslEnv);
         restoreEnv("OTEL_SDK_DISABLED", previousDisabled);
-        restoreEnv("ROVE_TELEMETRY_ENABLED", previousTelemetry);
+        restoreEnv("PAPERPLANE_TELEMETRY_ENABLED", previousTelemetry);
       }
     }).pipe(Effect.scoped, Effect.provide(NodeServices.layer)),
   );
@@ -1066,12 +1066,12 @@ describe("DesktopBackendConfiguration", () => {
         const standard = {
           OTEL_EXPORTER_OTLP_ENDPOINT: "https://collector.example.com:4318/base?api_key=secret",
           OTEL_EXPORTER_OTLP_LOGS_HEADERS: "authorization=Bearer%20token",
-          ROVE_OTLP_TRACES_URL: "http://rove.example.com:4318/v1/traces",
+          PAPERPLANE_OTLP_TRACES_URL: "http://rove.example.com:4318/v1/traces",
         };
         const previousWslEnv = process.env.WSLENV;
         // A developer's own OTLP variables would be forwarded too.
         const ambientOtel = Object.entries(process.env).filter(
-          ([name]) => name.startsWith("OTEL_") || name.startsWith("ROVE_OTLP_"),
+          ([name]) => name.startsWith("OTEL_") || name.startsWith("PAPERPLANE_OTLP_"),
         );
         try {
           for (const [name] of ambientOtel) delete process.env[name];
@@ -1094,8 +1094,11 @@ describe("DesktopBackendConfiguration", () => {
             const wslEnv = (config.env.WSLENV ?? "").split(":");
             assert.include(wslEnv, "OTEL_EXPORTER_OTLP_ENDPOINT");
             assert.include(wslEnv, "OTEL_EXPORTER_OTLP_LOGS_HEADERS");
-            assert.equal(config.env.ROVE_OTLP_TRACES_URL, "http://rove.example.com:4318/v1/traces");
-            assert.include(wslEnv, "ROVE_OTLP_TRACES_URL");
+            assert.equal(
+              config.env.PAPERPLANE_OTLP_TRACES_URL,
+              "http://rove.example.com:4318/v1/traces",
+            );
+            assert.include(wslEnv, "PAPERPLANE_OTLP_TRACES_URL");
           }).pipe(
             Effect.provide(
               layerBackendConfiguration().pipe(
@@ -1131,8 +1134,8 @@ describe("DesktopBackendConfiguration", () => {
       const previousWslEnv = process.env.WSLENV;
       const previousOpenAiKey = process.env.OPENAI_API_KEY;
       const previousAnthropicKey = process.env.ANTHROPIC_API_KEY;
-      const previousOtlpHeaders = process.env.ROVE_OTLP_HEADERS;
-      const previousOtlpProtocol = process.env.ROVE_OTLP_PROTOCOL;
+      const previousOtlpHeaders = process.env.PAPERPLANE_OTLP_HEADERS;
+      const previousOtlpProtocol = process.env.PAPERPLANE_OTLP_PROTOCOL;
       // A developer's own OTEL_* variables would be forwarded too.
       const ambientOtel = Object.entries(process.env).filter(([name]) => name.startsWith("OTEL_"));
       try {
@@ -1140,8 +1143,8 @@ describe("DesktopBackendConfiguration", () => {
         process.env.WSLENV = "GOPATH/p:OPENAI_API_KEY/u:EMPTY::AZURE_DEVOPS_EXT_PAT/u";
         process.env.OPENAI_API_KEY = "openai-key";
         process.env.ANTHROPIC_API_KEY = "anthropic-key";
-        process.env.ROVE_OTLP_HEADERS = 'authorization="Bearer%20my-token"';
-        process.env.ROVE_OTLP_PROTOCOL = "http/protobuf";
+        process.env.PAPERPLANE_OTLP_HEADERS = 'authorization="Bearer%20my-token"';
+        process.env.PAPERPLANE_OTLP_PROTOCOL = "http/protobuf";
 
         yield* Effect.gen(function* () {
           const configuration = yield* DesktopBackendConfiguration.DesktopBackendConfiguration;
@@ -1161,14 +1164,14 @@ describe("DesktopBackendConfiguration", () => {
           assert.equal(config.httpBaseUrl.href, "http://172.27.0.99:5050/");
           assert.equal(config.env.OPENAI_API_KEY, "openai-key");
           assert.equal(config.env.ANTHROPIC_API_KEY, "anthropic-key");
-          assert.equal(config.env.ROVE_OTLP_PROTOCOL, "http/protobuf");
+          assert.equal(config.env.PAPERPLANE_OTLP_PROTOCOL, "http/protobuf");
           // The existing WSLENV is preserved byte-for-byte (note the empty
           // "::" segment survives — WSL ignores it, so we don't normalize
           // it away) and ANTHROPIC_API_KEY is appended. OPENAI_API_KEY is
           // already declared, so it isn't forwarded twice.
           assert.equal(
             config.env.WSLENV,
-            "GOPATH/p:OPENAI_API_KEY/u:EMPTY::AZURE_DEVOPS_EXT_PAT/u:ANTHROPIC_API_KEY:ROVE_OTLP_HEADERS:ROVE_OTLP_PROTOCOL",
+            "GOPATH/p:OPENAI_API_KEY/u:EMPTY::AZURE_DEVOPS_EXT_PAT/u:ANTHROPIC_API_KEY:PAPERPLANE_OTLP_HEADERS:PAPERPLANE_OTLP_PROTOCOL",
           );
         }).pipe(
           Effect.provide(
@@ -1191,8 +1194,8 @@ describe("DesktopBackendConfiguration", () => {
         restoreEnv("WSLENV", previousWslEnv);
         restoreEnv("OPENAI_API_KEY", previousOpenAiKey);
         restoreEnv("ANTHROPIC_API_KEY", previousAnthropicKey);
-        restoreEnv("ROVE_OTLP_HEADERS", previousOtlpHeaders);
-        restoreEnv("ROVE_OTLP_PROTOCOL", previousOtlpProtocol);
+        restoreEnv("PAPERPLANE_OTLP_HEADERS", previousOtlpHeaders);
+        restoreEnv("PAPERPLANE_OTLP_PROTOCOL", previousOtlpProtocol);
         for (const [name, value] of ambientOtel) restoreEnv(name, value);
       }
     }).pipe(Effect.scoped, Effect.provide(NodeServices.layer)),

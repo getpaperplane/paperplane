@@ -5,7 +5,7 @@
  * dispatches) runs through the real orchestrator and the real GrokAdapterV2;
  * only the ACP runtime's protocol logger is swapped for a tee. Outbound frames
  * are therefore exactly what Paperplane sends, and inbound frames exactly what Grok
- * answered. Run from apps/server with the Grok CLI on PATH (or ROVE_GROK_BIN):
+ * answered. Run from apps/server with the Grok CLI on PATH (or PAPERPLANE_GROK_BIN):
  *
  *   node scripts/record-grok-acp-replay-fixture.ts --scenario simple
  */
@@ -439,7 +439,10 @@ const recordScenario = Effect.fn("recordGrokScenario")(function* (fixtureName: s
   };
 
   const tee = makeWireTee();
-  const settings = { ...DEFAULT_GROK_SETTINGS, binaryPath: process.env.ROVE_GROK_BIN ?? "grok" };
+  const settings = {
+    ...DEFAULT_GROK_SETTINGS,
+    binaryPath: process.env.PAPERPLANE_GROK_BIN ?? "grok",
+  };
   const layerRegistry = ProviderAdapterRegistry.layerFromAdaptersEffect(
     Effect.gen(function* () {
       const environment = yield* HostProcess.Environment;

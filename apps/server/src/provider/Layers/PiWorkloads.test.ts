@@ -432,7 +432,7 @@ describe.skipIf(!supported)("Pi command isolation on Linux", () => {
 
   it("honours the inherited override even when settings say off", async () => {
     expect(
-      await resolvePiWorkloadMemory("off", "3072", { ROVE_PI_MEMORY_BUDGET_MIB: "2048" }),
+      await resolvePiWorkloadMemory("off", "3072", { PAPERPLANE_PI_MEMORY_BUDGET_MIB: "2048" }),
     ).toEqual({ kind: "explicit", mib: 2048 });
     await expect(resolvePiWorkloadMemory("on", "128", {})).rejects.toThrow("384");
   });

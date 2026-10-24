@@ -10,11 +10,11 @@ const load = (env: Record<string, string>) =>
   OtelEnvironment.load.pipe(Effect.provide(ConfigProvider.layer(ConfigProvider.fromEnv({ env }))));
 
 const SPEC_OFF =
-  "OTEL_SDK_DISABLED is set, so no telemetry is exported, whatever configured it; set ROVE_OTEL_SDK_DISABLED=false to export anyway";
-const ROVE_OFF =
-  "ROVE_OTEL_SDK_DISABLED is set, so no telemetry is exported, whatever configured it";
+  "OTEL_SDK_DISABLED is set, so no telemetry is exported, whatever configured it; set PAPERPLANE_OTEL_SDK_DISABLED=false to export anyway";
+const PAPERPLANE_OFF =
+  "PAPERPLANE_OTEL_SDK_DISABLED is set, so no telemetry is exported, whatever configured it";
 const specIgnored = (value: string) =>
-  `OTEL_SDK_DISABLED=${value} was read as false; the OpenTelemetry specification recognizes only the string true, so use OTEL_SDK_DISABLED=true or ROVE_OTEL_SDK_DISABLED to say it any other way`;
+  `OTEL_SDK_DISABLED=${value} was read as false; the OpenTelemetry specification recognizes only the string true, so use OTEL_SDK_DISABLED=true or PAPERPLANE_OTEL_SDK_DISABLED to say it any other way`;
 
 describe("OtelEnvironment", () => {
   it.effect.each([
@@ -41,36 +41,44 @@ describe("OtelEnvironment", () => {
       disabled: false,
       warnings: [specIgnored("yes")],
     },
-    // ROVE_OTEL_SDK_DISABLED takes Config.Boolean's values, case-insensitively.
-    { name: "rove 1", env: { ROVE_OTEL_SDK_DISABLED: "1" }, disabled: true, warnings: [ROVE_OFF] },
+    // PAPERPLANE_OTEL_SDK_DISABLED takes Config.Boolean's values, case-insensitively.
+    {
+      name: "rove 1",
+      env: { PAPERPLANE_OTEL_SDK_DISABLED: "1" },
+      disabled: true,
+      warnings: [PAPERPLANE_OFF],
+    },
     {
       name: "rove TRUE",
-      env: { ROVE_OTEL_SDK_DISABLED: "TRUE" },
+      env: { PAPERPLANE_OTEL_SDK_DISABLED: "TRUE" },
       disabled: true,
-      warnings: [ROVE_OFF],
+      warnings: [PAPERPLANE_OFF],
     },
-    { name: "rove n", env: { ROVE_OTEL_SDK_DISABLED: "n" }, disabled: false, warnings: [] },
+    { name: "rove n", env: { PAPERPLANE_OTEL_SDK_DISABLED: "n" }, disabled: false, warnings: [] },
     {
       name: "rove false overrides spec true",
-      env: { ROVE_OTEL_SDK_DISABLED: "false", OTEL_SDK_DISABLED: "true" },
+      env: { PAPERPLANE_OTEL_SDK_DISABLED: "false", OTEL_SDK_DISABLED: "true" },
       disabled: false,
       warnings: [],
     },
     {
       name: "blank rove falls through",
-      env: { ROVE_OTEL_SDK_DISABLED: "  ", OTEL_SDK_DISABLED: "true" },
+      env: { PAPERPLANE_OTEL_SDK_DISABLED: "  ", OTEL_SDK_DISABLED: "true" },
       disabled: true,
       warnings: [SPEC_OFF],
     },
     {
       name: "unreadable rove warns and falls through",
-      env: { ROVE_OTEL_SDK_DISABLED: "maybe", OTEL_SDK_DISABLED: "true" },
+      env: { PAPERPLANE_OTEL_SDK_DISABLED: "maybe", OTEL_SDK_DISABLED: "true" },
       disabled: true,
-      warnings: ["ROVE_OTEL_SDK_DISABLED=maybe is not a yes or a no and was ignored", SPEC_OFF],
+      warnings: [
+        "PAPERPLANE_OTEL_SDK_DISABLED=maybe is not a yes or a no and was ignored",
+        SPEC_OFF,
+      ],
     },
     {
       name: "bad spec value still warns when rove answered",
-      env: { ROVE_OTEL_SDK_DISABLED: "false", OTEL_SDK_DISABLED: "yes" },
+      env: { PAPERPLANE_OTEL_SDK_DISABLED: "false", OTEL_SDK_DISABLED: "yes" },
       disabled: false,
       warnings: [specIgnored("yes")],
     },
@@ -196,13 +204,13 @@ describe("OtelEnvironment", () => {
       {
         name: "the kill switch wins outright over a valid endpoint",
         env: {
-          ROVE_OTEL_SDK_DISABLED: "true",
+          PAPERPLANE_OTEL_SDK_DISABLED: "true",
           OTEL_EXPORTER_OTLP_ENDPOINT: "https://collector:4318/base",
         },
         traces: "Unset",
         metrics: "Unset",
         logs: "Unset",
-        warnings: [ROVE_OFF],
+        warnings: [PAPERPLANE_OFF],
       },
       {
         name: "an exporter of none turns off only its signal",
@@ -407,13 +415,13 @@ describe("OtelEnvironment", () => {
     });
     it.each([
       {
-        name: "ROVE_OTLP_*_URL wins over an OTEL endpoint",
+        name: "PAPERPLANE_OTLP_*_URL wins over an OTEL endpoint",
         otel: withLogs(otelExport),
         roveUrl: "http://rove:4318/v1/logs",
         expected: { url: "http://rove:4318/v1/logs", export: roveExport },
       },
       {
-        name: "ROVE_OTLP_*_URL wins over a signal the OTEL variables turned off",
+        name: "PAPERPLANE_OTLP_*_URL wins over a signal the OTEL variables turned off",
         otel: withLogs(OtelEnvironment.OtelSignal.Off()),
         roveUrl: "http://rove:4318/v1/logs",
         expected: { url: "http://rove:4318/v1/logs", export: roveExport },

@@ -293,7 +293,7 @@ export function wrapCommandForLinuxCgroup(
         '  case "$line" in 0::*) [ -z "$actual" ] || exit 126; actual=${line#0::};; esac',
         "done < /proc/self/cgroup || exit 125",
         '[ "$actual" = "$expected" ] || exit 126',
-        "unset ELECTRON_RUN_AS_NODE ROVE_ACP_CGROUP_WRAPPER",
+        "unset ELECTRON_RUN_AS_NODE PAPERPLANE_ACP_CGROUP_WRAPPER",
         "trap 'exit 125' 0",
         // The trap alone does not cover a failed `exec`: bash — which is
         // /bin/sh on Arch derivatives — exits 127 without running the EXIT
@@ -1604,7 +1604,7 @@ export const make = (
         : {
             ...options.spawn.env,
             ELECTRON_RUN_AS_NODE: "1",
-            ROVE_ACP_CGROUP_WRAPPER: "1",
+            PAPERPLANE_ACP_CGROUP_WRAPPER: "1",
           };
     const child = yield* spawner
       .spawn(

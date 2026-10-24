@@ -37,7 +37,7 @@ const child = NodeChildProcess.spawn(
     "--no-browser",
   ],
   {
-    env: { ...process.env, ROVE_HOME: home },
+    env: { ...process.env, PAPERPLANE_HOME: home },
     stdio: ["ignore", "pipe", "pipe"],
   },
 );

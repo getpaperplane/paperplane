@@ -99,7 +99,7 @@ export const makeCodexManagedRuntime = Effect.fn("makeCodexManagedRuntime")(func
       ACCESS_TOKEN: credentials.accessToken,
       CODEX_HOME: homePath,
     };
-    delete environment.ROVE_CODEX_LAUNCH_ARGS;
+    delete environment.PAPERPLANE_CODEX_LAUNCH_ARGS;
     delete environment.OPENAI_API_KEY;
     delete environment.OPENAI_BASE_URL;
     return {

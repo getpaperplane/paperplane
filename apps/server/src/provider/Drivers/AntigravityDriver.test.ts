@@ -191,8 +191,8 @@ const makeHarness = Effect.fn("makeAntigravityDriverHarness")(function* (
     config: { ...AntigravityDriver.defaultConfig(), ...options.config },
     environment: [
       { name: "PATH", value: instancePath },
-      { name: "ROVE_ACP_ANTIGRAVITY", value: "1" },
-      { name: "ROVE_ACP_REQUEST_LOG_PATH", value: requestLog },
+      { name: "PAPERPLANE_ACP_ANTIGRAVITY", value: "1" },
+      { name: "PAPERPLANE_ACP_REQUEST_LOG_PATH", value: requestLog },
       { name: "GEMINI_API_KEY", value: "must-not-be-used" },
       { name: "google_api_key", value: "must-not-be-used" },
       { name: "GOOGLE_APPLICATION_CREDENTIALS", value: "/must-not-be-used.json" },

@@ -174,7 +174,7 @@ function sendDesktopAppActivationRequest(input: {
 }
 
 const appEnvironment = Config.all({
-  roveHome: Config.String("ROVE_HOME").pipe(Config.option, Config.map(Option.getOrUndefined)),
+  roveHome: Config.String("PAPERPLANE_HOME").pipe(Config.option, Config.map(Option.getOrUndefined)),
   sshConnection: Config.String("SSH_CONNECTION").pipe(Config.option),
   sshTty: Config.String("SSH_TTY").pipe(Config.option),
 });

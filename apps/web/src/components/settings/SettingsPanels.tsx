@@ -2900,7 +2900,7 @@ export function GeneralSettingsPanel() {
               ? "Update selected environments to control product usage data."
               : undefined
           }
-          description="Share feature usage, outcomes, timings, and agent token counts with Paperplane via PostHog, using a random installation ID. No name, email, prompts, responses, code, paths, commands, or recordings. Applies to all clients on the selected environments. ROVE_TELEMETRY_ENABLED=false overrides this preference."
+          description="Share feature usage, outcomes, timings, and agent token counts with Paperplane via PostHog, using a random installation ID. No name, email, prompts, responses, code, paths, commands, or recordings. Applies to all clients on the selected environments. PAPERPLANE_TELEMETRY_ENABLED=false overrides this preference."
           control={
             <ScopedSwitch
               settingKeys={["telemetryEnabled"]}

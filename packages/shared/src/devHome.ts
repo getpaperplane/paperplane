@@ -4,7 +4,7 @@
  *
  * A linked git worktree gets its own (gitignored) `.paperplane`: feature work in a
  * throwaway branch must not share a database with the real app, and an ambient
- * `ROVE_HOME` counts as an explicit base dir — flipping the state directory
+ * `PAPERPLANE_HOME` counts as an explicit base dir — flipping the state directory
  * from `<base>/dev` to `<base>/userdata`, the live production database.
  */
 

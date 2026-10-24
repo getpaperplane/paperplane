@@ -812,7 +812,7 @@ export const PiSettings = makeProviderSettingsSchema(
       Schema.annotateKey({
         title: "Workload protection",
         description:
-          "Queue shell commands and isolate their memory on Linux/WSL with user systemd. Auto enables on hosts with 768 MiB–8 GiB RAM. Other providers and extension-spawned commands are not protected. ROVE_PI_MEMORY_BUDGET_MIB overrides this setting.",
+          "Queue shell commands and isolate their memory on Linux/WSL with user systemd. Auto enables on hosts with 768 MiB–8 GiB RAM. Other providers and extension-spawned commands are not protected. PAPERPLANE_PI_MEMORY_BUDGET_MIB overrides this setting.",
         providerSettingsForm: {
           control: "select",
           options: [
@@ -828,7 +828,7 @@ export const PiSettings = makeProviderSettingsSchema(
       Schema.annotateKey({
         title: "Workload memory (MiB)",
         description:
-          "Use auto to share the host's Paperplane memory budget with agents, leaving RAM for the OS and server and allowing bounded swap. The largest command stops only when both budgets are exhausted. An integer of at least 384 MiB adds a shared hard cap without swap for Pi commands and background services, capped by the host budget. CPU is not capped. Lower hard limits apply when current usage permits. ROVE_PI_MEMORY_BUDGET_MIB takes precedence.",
+          "Use auto to share the host's Paperplane memory budget with agents, leaving RAM for the OS and server and allowing bounded swap. The largest command stops only when both budgets are exhausted. An integer of at least 384 MiB adds a shared hard cap without swap for Pi commands and background services, capped by the host budget. CPU is not capped. Lower hard limits apply when current usage permits. PAPERPLANE_PI_MEMORY_BUDGET_MIB takes precedence.",
         providerSettingsForm: { placeholder: "auto", clearWhenEmpty: "omit" },
       }),
     ),
@@ -968,7 +968,7 @@ export type SourceControlHostSettings = typeof SourceControlHostSettings.Type;
 
 /**
  * Bitbucket API credentials for this environment, used before the
- * `ROVE_BITBUCKET_*` environment variables. The tokens live in the server's
+ * `PAPERPLANE_BITBUCKET_*` environment variables. The tokens live in the server's
  * secret store; settings and clients only see a redaction marker when one is
  * set. The access token wins when both kinds are configured.
  */

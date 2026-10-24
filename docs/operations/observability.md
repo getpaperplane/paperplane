@@ -79,9 +79,9 @@ it to measure background work or to compare two builds.
 paperplane trace summary --since 30m --limit 40
 ```
 
-It reads `ROVE_TRACE_FILE` if set, else `<home>/userdata/logs/server.trace.ndjson` for
-`--base-dir` or `ROVE_HOME`, plus the `ROVE_TRACE_MAX_FILES` rotated backups. For a dev run or
-a copied file, set `ROVE_TRACE_FILE`. `--since 30m` keeps spans that ended in the last 30
+It reads `PAPERPLANE_TRACE_FILE` if set, else `<home>/userdata/logs/server.trace.ndjson` for
+`--base-dir` or `PAPERPLANE_HOME`, plus the `PAPERPLANE_TRACE_MAX_FILES` rotated backups. For a dev run or
+a copied file, set `PAPERPLANE_TRACE_FILE`. `--since 30m` keeps spans that ended in the last 30
 minutes. The rate is per minute between the first and last span end.
 
 ### Metrics
@@ -99,7 +99,7 @@ If OTLP is not configured, metrics still exist in-process, but you will not have
 `apps/server/src/observability/EventLoopMonitor.ts` samples the server's event loop every 30 s. When
 the loop stalled for more than 2 s since the previous sample, it records a root
 `server.eventLoop.stall` span with a warning. The span has trace level `Warn`, so it stays when
-`ROVE_TRACE_MIN_LEVEL` is `Warn`. The warning shows in Settings > Diagnostics unless OTLP logs are
+`PAPERPLANE_TRACE_MIN_LEVEL` is `Warn`. The warning shows in Settings > Diagnostics unless OTLP logs are
 on. The span time is when the sample ran, not when the stall happened.
 
 The trace file rotates in well under an hour on a busy server, so each stall is also appended as one
@@ -189,17 +189,17 @@ For endpoint settings and startup precedence, see the
 In a worktree, use `vp run dev` instead of `npx @getpaperplane/cli` to keep state isolated.
 
 ```bash
-export ROVE_OTLP_TRACES_URL=http://localhost:4318/v1/traces
-export ROVE_OTLP_METRICS_URL=http://localhost:4318/v1/metrics
-export ROVE_OTLP_LOGS_URL=http://localhost:4318/v1/logs
+export PAPERPLANE_OTLP_TRACES_URL=http://localhost:4318/v1/traces
+export PAPERPLANE_OTLP_METRICS_URL=http://localhost:4318/v1/metrics
+export PAPERPLANE_OTLP_LOGS_URL=http://localhost:4318/v1/logs
 export OTEL_RESOURCE_ATTRIBUTES=deployment.environment.name=development
 ```
 
 Optional:
 
 ```bash
-export ROVE_TRACE_MIN_LEVEL=Info
-export ROVE_TRACE_TIMING_ENABLED=true
+export PAPERPLANE_TRACE_MIN_LEVEL=Info
+export PAPERPLANE_TRACE_TIMING_ENABLED=true
 ```
 
 #### 3. Launch the app from that same shell
@@ -224,23 +224,23 @@ node --run dev:desktop
 
 Packaged desktop app:
 
-Launch the actual app executable from the same shell so the desktop app and embedded backend inherit `ROVE_OTLP_*`.
+Launch the actual app executable from the same shell so the desktop app and embedded backend inherit `PAPERPLANE_OTLP_*`.
 
 macOS app bundle example:
 
 ```bash
-ROVE_OTLP_TRACES_URL=http://localhost:4318/v1/traces \
-ROVE_OTLP_METRICS_URL=http://localhost:4318/v1/metrics \
-ROVE_OTLP_LOGS_URL=http://localhost:4318/v1/logs \
+PAPERPLANE_OTLP_TRACES_URL=http://localhost:4318/v1/traces \
+PAPERPLANE_OTLP_METRICS_URL=http://localhost:4318/v1/metrics \
+PAPERPLANE_OTLP_LOGS_URL=http://localhost:4318/v1/logs \
 "/Applications/Rove Code.app/Contents/MacOS/Rove Code"
 ```
 
 Direct binary example:
 
 ```bash
-ROVE_OTLP_TRACES_URL=http://localhost:4318/v1/traces \
-ROVE_OTLP_METRICS_URL=http://localhost:4318/v1/metrics \
-ROVE_OTLP_LOGS_URL=http://localhost:4318/v1/logs \
+PAPERPLANE_OTLP_TRACES_URL=http://localhost:4318/v1/traces \
+PAPERPLANE_OTLP_METRICS_URL=http://localhost:4318/v1/metrics \
+PAPERPLANE_OTLP_LOGS_URL=http://localhost:4318/v1/logs \
 ./path/to/your/desktop-app-binary
 ```
 
@@ -260,7 +260,7 @@ Resolve the path for the launch mode once. Production and explicitly configured 
 state under the base directory's `userdata` folder:
 
 ```bash
-TRACE_FILE="${ROVE_HOME:-$HOME/.paperplane}/userdata/logs/server.trace.ndjson"
+TRACE_FILE="${PAPERPLANE_HOME:-$HOME/.paperplane}/userdata/logs/server.trace.ndjson"
 ```
 
 A dev server started from a linked worktree defaults to that worktree's local home:
@@ -459,7 +459,7 @@ Use traces when the question is:
 
 Usually one of these is true:
 
-- `ROVE_OTLP_TRACES_URL` was not set
+- `PAPERPLANE_OTLP_TRACES_URL` was not set
 - the app was launched from a different environment than the one where you exported the vars
 - the app was not fully restarted after changing env
 - Grafana is looking at the wrong time range or service name
@@ -581,7 +581,7 @@ It provides:
 - Effect trace-level and timing refs
 
 The desktop main process is a second producer, assembled in
-`apps/desktop/src/app/DesktopObservability.ts`. It reads the same `ROVE_OTLP_*` names and the same
+`apps/desktop/src/app/DesktopObservability.ts`. It reads the same `PAPERPLANE_OTLP_*` names and the same
 Settings entries as the backend it supervises, and covers work the backend cannot see: app startup,
 window and menu handling, backend supervision, and updates. It reports as service
 `rove-desktop`, so a collector shows it alongside the backend rather than mixed into it. It
@@ -592,32 +592,32 @@ to the backend alone.
 
 Local trace file:
 
-- `ROVE_TRACE_FILE`: override trace file path
-- `ROVE_TRACE_MAX_BYTES`: per-file rotation size, default `10485760`
-- `ROVE_TRACE_MAX_FILES`: rotated file count, default `10`
-- `ROVE_TRACE_BATCH_WINDOW_MS`: flush window, default `1000`
-- `ROVE_TRACE_MIN_LEVEL`: minimum trace level, default `Info`
-- `ROVE_TRACE_TIMING_ENABLED`: enable timing metadata, default `true`
+- `PAPERPLANE_TRACE_FILE`: override trace file path
+- `PAPERPLANE_TRACE_MAX_BYTES`: per-file rotation size, default `10485760`
+- `PAPERPLANE_TRACE_MAX_FILES`: rotated file count, default `10`
+- `PAPERPLANE_TRACE_BATCH_WINDOW_MS`: flush window, default `1000`
+- `PAPERPLANE_TRACE_MIN_LEVEL`: minimum trace level, default `Info`
+- `PAPERPLANE_TRACE_TIMING_ENABLED`: enable timing metadata, default `true`
 
 OTLP export:
 
-- `ROVE_OTLP_TRACES_URL`: OTLP trace endpoint
-- `ROVE_OTLP_METRICS_URL`: OTLP metric endpoint
-- `ROVE_OTLP_LOGS_URL`: OTLP log endpoint
-- `ROVE_OTLP_EXPORT_INTERVAL_MS`: export interval, default `10000`
-- `ROVE_OTLP_HEADERS`: extra headers for all three exporters, same format as
+- `PAPERPLANE_OTLP_TRACES_URL`: OTLP trace endpoint
+- `PAPERPLANE_OTLP_METRICS_URL`: OTLP metric endpoint
+- `PAPERPLANE_OTLP_LOGS_URL`: OTLP log endpoint
+- `PAPERPLANE_OTLP_EXPORT_INTERVAL_MS`: export interval, default `10000`
+- `PAPERPLANE_OTLP_HEADERS`: extra headers for all three exporters, same format as
   `OTEL_EXPORTER_OTLP_HEADERS`: comma-separated `key=value` pairs with percent-encoded values.
-- `ROVE_OTLP_PROTOCOL`: `http/json` (default) or `http/protobuf`
+- `PAPERPLANE_OTLP_PROTOCOL`: `http/json` (default) or `http/protobuf`
 
 The server and the desktop app also read the standard
 `OTEL_EXPORTER_OTLP_{TRACES,METRICS,LOGS}_ENDPOINT` and generic `OTEL_EXPORTER_OTLP_ENDPOINT` (with
 `/v1/traces`, `/v1/metrics`, or `/v1/logs` appended), for a collector expecting those instead. A
-non-blank `ROVE_OTLP_*_URL` wins over either, and a per-signal endpoint wins over the generic one
+non-blank `PAPERPLANE_OTLP_*_URL` wins over either, and a per-signal endpoint wins over the generic one
 for its signal. A blank value counts as unset. A signal with an OTEL endpoint takes its headers from
 `OTEL_EXPORTER_OTLP_HEADERS` and its protocol from `OTEL_EXPORTER_OTLP_PROTOCOL` (default
 `http/protobuf`, read case-insensitively), and a per-signal
 `OTEL_EXPORTER_OTLP_{TRACES,METRICS,LOGS}_HEADERS` or `_PROTOCOL` wins over the generic one for its
-signal. `ROVE_OTLP_HEADERS` and `ROVE_OTLP_PROTOCOL` never apply to it. An endpoint that is not
+signal. `PAPERPLANE_OTLP_HEADERS` and `PAPERPLANE_OTLP_PROTOCOL` never apply to it. An endpoint that is not
 an `http` or `https` URL, a protocol other than `http/protobuf` or `http/json` such as `grpc`, or
 headers that are not `key=value` pairs with percent-encoded values turn that signal's export off
 with a startup warning, rather than sending it to the Settings endpoint.
@@ -632,18 +632,18 @@ on stdout only.
 
 ### The Kill Switch
 
-`ROVE_OTEL_SDK_DISABLED` and `OTEL_SDK_DISABLED` turn off every OTLP export in both the server and
+`PAPERPLANE_OTEL_SDK_DISABLED` and `OTEL_SDK_DISABLED` turn off every OTLP export in both the server and
 the desktop main process, overriding any endpoint from the environment or Settings. Local trace
 files and stdout logs are unaffected.
 
-`ROVE_OTEL_SDK_DISABLED` wins when set, so `ROVE_OTEL_SDK_DISABLED=false` re-enables export on a
+`PAPERPLANE_OTEL_SDK_DISABLED` wins when set, so `PAPERPLANE_OTEL_SDK_DISABLED=false` re-enables export on a
 machine that sets `OTEL_SDK_DISABLED` for everything else. It accepts the usual boolean spellings
 (`true`/`false`, `yes`/`no`, `on`/`off`, `1`/`0`, `y`/`n`). `OTEL_SDK_DISABLED` follows the
 OpenTelemetry specification and only `true` disables export, so `OTEL_SDK_DISABLED=1` does not.
 Values are case-insensitive and trimmed. An unrecognized value is ignored with a startup warning.
 
 `OTEL_TRACES_EXPORTER`, `OTEL_METRICS_EXPORTER`, or `OTEL_LOGS_EXPORTER` set to `none` turns off
-just that signal, overriding an OTEL endpoint and the Settings endpoint. A `ROVE_OTLP_*_URL` still
+just that signal, overriding an OTEL endpoint and the Settings endpoint. A `PAPERPLANE_OTLP_*_URL` still
 wins for its signal. `otlp` is the default, and any other exporter name, such as `console` or
 `prometheus`, is ignored with a startup warning.
 
@@ -681,7 +681,7 @@ handler exits on `SIGUSR2`. After a crash the file can keep a stale pid that now
 different process, so check the pid first.
 
 ```bash
-pid="$(jq .pid "${ROVE_HOME:-$HOME/.paperplane}/userdata/server-runtime.json")"
+pid="$(jq .pid "${PAPERPLANE_HOME:-$HOME/.paperplane}/userdata/server-runtime.json")"
 ps -p "$pid" -o command=
 ```
 

@@ -41,7 +41,7 @@ it("builds an isolated Worker configuration using only the trusted edge handler 
   }
   const defines = hostedBuildDefines(deployment.origin);
   NodeAssert.equal(JSON.parse(defines["import.meta.env.VITE_HOSTED_APP_URL"]), deployment.origin);
-  NodeAssert.equal(JSON.parse(defines["import.meta.env.VITE_ROVE_RELAY_URL"]), "");
+  NodeAssert.equal(JSON.parse(defines["import.meta.env.VITE_PAPERPLANE_RELAY_URL"]), "");
 });
 
 it("gives each PR a stable origin without sharing Workers", () => {

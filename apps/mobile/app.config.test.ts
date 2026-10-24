@@ -9,21 +9,21 @@ vi.mock("../../scripts/lib/public-config.ts", () => ({
 const originalEnv = { ...process.env };
 const configuredKeys = [
   "APP_VARIANT",
-  "ROVE_CLOUD_READY",
-  "ROVE_RELAY_URL",
+  "PAPERPLANE_CLOUD_READY",
+  "PAPERPLANE_RELAY_URL",
   "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY",
   "EXPO_PUBLIC_CLERK_JWT_TEMPLATE",
   "EXPO_PUBLIC_CLERK_GOOGLE_WEB_CLIENT_ID",
-  "ROVE_EXPO_PROJECT_ID",
-  "ROVE_EXPO_OWNER",
-  "ROVE_MOBILE_UPDATES_ENABLED",
-  "ROVE_APPLE_TEAM_ID",
-  "ROVE_IOS_UNSIGNED",
-  "ROVE_IOS_PERSONAL_TEAM",
-  "ROVE_IOS_PERSONAL_TEAM_BUNDLE_ID",
-  "ROVE_MOBILE_VERSION",
-  "ROVE_MOBILE_BUILD_NUMBER",
-  "ROVE_CLERK_RELYING_PARTY_DOMAIN",
+  "PAPERPLANE_EXPO_PROJECT_ID",
+  "PAPERPLANE_EXPO_OWNER",
+  "PAPERPLANE_MOBILE_UPDATES_ENABLED",
+  "PAPERPLANE_APPLE_TEAM_ID",
+  "PAPERPLANE_IOS_UNSIGNED",
+  "PAPERPLANE_IOS_PERSONAL_TEAM",
+  "PAPERPLANE_IOS_PERSONAL_TEAM_BUNDLE_ID",
+  "PAPERPLANE_MOBILE_VERSION",
+  "PAPERPLANE_MOBILE_BUILD_NUMBER",
+  "PAPERPLANE_CLERK_RELYING_PARTY_DOMAIN",
 ];
 
 async function configFor(env: Record<string, string>) {
@@ -53,12 +53,12 @@ describe("source-built mobile identity", () => {
 
   it("uses explicitly configured, project-owned native identities", async () => {
     const config = await configFor({
-      ROVE_CLOUD_READY: "1",
-      ROVE_EXPO_PROJECT_ID: "00000000-0000-4000-8000-000000000000",
-      ROVE_EXPO_OWNER: "rove-test",
-      ROVE_MOBILE_UPDATES_ENABLED: "1",
-      ROVE_APPLE_TEAM_ID: "ABCDE12345",
-      ROVE_CLERK_RELYING_PARTY_DOMAIN: "rove.example.test",
+      PAPERPLANE_CLOUD_READY: "1",
+      PAPERPLANE_EXPO_PROJECT_ID: "00000000-0000-4000-8000-000000000000",
+      PAPERPLANE_EXPO_OWNER: "rove-test",
+      PAPERPLANE_MOBILE_UPDATES_ENABLED: "1",
+      PAPERPLANE_APPLE_TEAM_ID: "ABCDE12345",
+      PAPERPLANE_CLERK_RELYING_PARTY_DOMAIN: "rove.example.test",
     });
     expect(config.updates?.enabled).toBe(true);
     expect(config.updates?.url).toBe("https://u.expo.dev/00000000-0000-4000-8000-000000000000");
@@ -75,8 +75,8 @@ describe("source-built mobile identity", () => {
     "gates configured Paperplane Connect infrastructure (%s)",
     async (gate) => {
       const config = await configFor({
-        ...(gate ? { ROVE_CLOUD_READY: gate } : undefined),
-        ROVE_RELAY_URL: "https://relay.example.test",
+        ...(gate ? { PAPERPLANE_CLOUD_READY: gate } : undefined),
+        PAPERPLANE_RELAY_URL: "https://relay.example.test",
         EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY: "pk_test_example",
         EXPO_PUBLIC_CLERK_JWT_TEMPLATE: "rove-relay",
         EXPO_PUBLIC_CLERK_GOOGLE_WEB_CLIENT_ID: "google-web",
@@ -102,7 +102,7 @@ describe("source-built mobile identity", () => {
   });
 
   it("configures an unsigned production IPA without paid-team capabilities", async () => {
-    const config = await configFor({ APP_VARIANT: "production", ROVE_IOS_UNSIGNED: "1" });
+    const config = await configFor({ APP_VARIANT: "production", PAPERPLANE_IOS_UNSIGNED: "1" });
     expect(config.ios?.bundleIdentifier).toBe("dev.rove.app");
     expect(config.android?.package).toBe("dev.rove.app");
     expect(config.ios?.entitlements).toEqual({});
@@ -129,25 +129,25 @@ describe("source-built mobile identity", () => {
 
   it("allows an explicit unsigned bundle ID but still validates it", async () => {
     const config = await configFor({
-      ROVE_IOS_UNSIGNED: "1",
-      ROVE_IOS_PERSONAL_TEAM_BUNDLE_ID: "com.example.sideload",
+      PAPERPLANE_IOS_UNSIGNED: "1",
+      PAPERPLANE_IOS_PERSONAL_TEAM_BUNDLE_ID: "com.example.sideload",
     });
     expect(config.ios?.bundleIdentifier).toBe("com.example.sideload");
     await expect(
       configFor({
-        ROVE_IOS_UNSIGNED: "1",
-        ROVE_IOS_PERSONAL_TEAM_BUNDLE_ID: "not an identifier",
+        PAPERPLANE_IOS_UNSIGNED: "1",
+        PAPERPLANE_IOS_PERSONAL_TEAM_BUNDLE_ID: "not an identifier",
       }),
-    ).rejects.toThrow("ROVE_IOS_PERSONAL_TEAM_BUNDLE_ID");
+    ).rejects.toThrow("PAPERPLANE_IOS_PERSONAL_TEAM_BUNDLE_ID");
   });
 
   it("keeps local Personal Team builds explicit and uses their default keychain group", async () => {
-    await expect(configFor({ ROVE_IOS_PERSONAL_TEAM: "1" })).rejects.toThrow(
-      "ROVE_IOS_PERSONAL_TEAM_BUNDLE_ID",
+    await expect(configFor({ PAPERPLANE_IOS_PERSONAL_TEAM: "1" })).rejects.toThrow(
+      "PAPERPLANE_IOS_PERSONAL_TEAM_BUNDLE_ID",
     );
     const config = await configFor({
-      ROVE_IOS_PERSONAL_TEAM: "1",
-      ROVE_IOS_PERSONAL_TEAM_BUNDLE_ID: "com.example.rove",
+      PAPERPLANE_IOS_PERSONAL_TEAM: "1",
+      PAPERPLANE_IOS_PERSONAL_TEAM_BUNDLE_ID: "com.example.rove",
     });
     expect(config.ios?.bundleIdentifier).toBe("com.example.rove");
     expect(config.ios?.entitlements).toEqual({});
@@ -159,8 +159,8 @@ describe("source-built mobile identity", () => {
 
   it("uses the release version and a shared monotonic native build number", async () => {
     const config = await configFor({
-      ROVE_MOBILE_VERSION: "2.1.0",
-      ROVE_MOBILE_BUILD_NUMBER: "205000001",
+      PAPERPLANE_MOBILE_VERSION: "2.1.0",
+      PAPERPLANE_MOBILE_BUILD_NUMBER: "205000001",
     });
     expect(config.version).toBe("2.1.0");
     expect(config.ios?.buildNumber).toBe("205000001");
@@ -173,21 +173,24 @@ describe("source-built mobile identity", () => {
   it.each(["0", "-1", "1.5", "abc", "2100000001", ""])(
     "rejects invalid build number %s",
     async (value) => {
-      await expect(configFor({ ROVE_MOBILE_BUILD_NUMBER: value })).rejects.toThrow(
-        "ROVE_MOBILE_BUILD_NUMBER",
+      await expect(configFor({ PAPERPLANE_MOBILE_BUILD_NUMBER: value })).rejects.toThrow(
+        "PAPERPLANE_MOBILE_BUILD_NUMBER",
       );
     },
   );
 
   it("refuses OTA updates without a project ID", async () => {
-    await expect(configFor({ ROVE_MOBILE_UPDATES_ENABLED: "1" })).rejects.toThrow(
-      "ROVE_EXPO_PROJECT_ID is required",
+    await expect(configFor({ PAPERPLANE_MOBILE_UPDATES_ENABLED: "1" })).rejects.toThrow(
+      "PAPERPLANE_EXPO_PROJECT_ID is required",
     );
   });
 
   it("refuses upstream relying-party domains even if explicitly configured", async () => {
     await expect(
-      configFor({ ROVE_CLOUD_READY: "1", ROVE_CLERK_RELYING_PARTY_DOMAIN: "clerk.t3.codes" }),
+      configFor({
+        PAPERPLANE_CLOUD_READY: "1",
+        PAPERPLANE_CLERK_RELYING_PARTY_DOMAIN: "clerk.t3.codes",
+      }),
     ).rejects.toThrow("must belong to this project");
   });
 });

@@ -255,7 +255,8 @@ export class CloudLinkEndpointUnavailableError extends Schema.TaggedError<CloudL
 }
 
 const INTERNAL_OPERATION_MESSAGES = {
-  "relay-url-unconfigured": "ROVE_RELAY_URL must be configured as a secure absolute HTTPS origin.",
+  "relay-url-unconfigured":
+    "PAPERPLANE_RELAY_URL must be configured as a secure absolute HTTPS origin.",
   "generate-link-proof": "Could not generate environment link proof.",
   "persist-relay-config": "Could not persist environment relay configuration.",
   "register-endpoint-origin": "Could not register the managed endpoint origin.",
@@ -1317,7 +1318,7 @@ const make = Effect.gen(function* () {
       return false;
     }
     // The link belongs to the relay it was installed against, so target the
-    // persisted URL: ROVE_RELAY_URL may have changed since the link was made.
+    // persisted URL: PAPERPLANE_RELAY_URL may have changed since the link was made.
     const relayUrl = yield* secrets.get(RELAY_URL_SECRET);
     if (Option.isNone(relayUrl)) {
       return false;

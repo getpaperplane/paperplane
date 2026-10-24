@@ -18,7 +18,7 @@ const decodeCapture = Schema.decodeUnknownSync(Schema.Struct({ capture_id: Schem
 const decodeError = Schema.decodeUnknownSync(Schema.Struct({ code: Schema.String }));
 
 it.live.skipIf(
-  process.env.ROVE_TEST_NATIVE_CUA !== "1" || HostProcessPlatform.defaultValue() !== "darwin",
+  process.env.PAPERPLANE_TEST_NATIVE_CUA !== "1" || HostProcessPlatform.defaultValue() !== "darwin",
 )(
   "refuses intrusive input and preserves capture ownership through the installed Cua driver",
   () =>

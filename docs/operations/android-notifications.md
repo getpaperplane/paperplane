@@ -23,7 +23,7 @@ The lint command uses the K1 frontend because AGP's K2 frontend crashes while an
 ## Firebase and app build
 
 1. Create a Firebase project and register each Android application identifier you intend to build: `dev.rove.app.dev`, `dev.rove.app.preview`, or `dev.rove.app`.
-2. Download `google-services.json`. Set `ROVE_ANDROID_GOOGLE_SERVICES_FILE` to its path when running Expo prebuild and building the app. The JSON must contain the selected variant's package identifier.
+2. Download `google-services.json`. Set `PAPERPLANE_ANDROID_GOOGLE_SERVICES_FILE` to its path when running Expo prebuild and building the app. The JSON must contain the selected variant's package identifier.
 3. Create a service-account key with permission to send FCM messages for that Firebase project. Keep this private JSON outside the repository and the app bundle.
 4. Enable the Firebase Cloud Messaging API in the Google project if it is not already enabled. For hosted delivery, set the relay's `FCM_SERVICE_ACCOUNT` secret to the service-account JSON.
 5. Build a new Android binary. A JavaScript-only update cannot install the native notification handler or Firebase configuration. Hosted delivery also needs the relay database migration and updated relay deployment; local verification can use the watcher below.
@@ -32,13 +32,13 @@ For a local development build, from `apps/mobile`:
 
 ```sh
 APP_VARIANT=development \
-ROVE_ANDROID_GOOGLE_SERVICES_FILE=/absolute/path/google-services.json \
+PAPERPLANE_ANDROID_GOOGLE_SERVICES_FILE=/absolute/path/google-services.json \
 vp run android:dev
 ```
 
-For an EAS build, provide the same configuration through each selected build environment, using an EAS file variable named `ROVE_ANDROID_GOOGLE_SERVICES_FILE` for the Google services file. Make the file available to fingerprint generation as well as the native build. FCM service-account credentials belong on the relay, not in EAS's app environment. If deploying a separate hosted relay, configure the build's Paperplane Connect public settings for that relay and Clerk application as described in [Paperplane Connect](../internals/rove-connect.md).
+For an EAS build, provide the same configuration through each selected build environment, using an EAS file variable named `PAPERPLANE_ANDROID_GOOGLE_SERVICES_FILE` for the Google services file. Make the file available to fingerprint generation as well as the native build. FCM service-account credentials belong on the relay, not in EAS's app environment. If deploying a separate hosted relay, configure the build's Paperplane Connect public settings for that relay and Clerk application as described in [Paperplane Connect](../internals/rove-connect.md).
 
-Expo OTA updates are disabled by default in source builds. To enable them for an owned Expo project, set `ROVE_EXPO_PROJECT_ID` and `ROVE_MOBILE_UPDATES_ENABLED=1` before prebuild and bundling. A debug development-client APK requires Metro; a bundled release build is needed to verify cold-start notification taps without Expo's development launcher.
+Expo OTA updates are disabled by default in source builds. To enable them for an owned Expo project, set `PAPERPLANE_EXPO_PROJECT_ID` and `PAPERPLANE_MOBILE_UPDATES_ENABLED=1` before prebuild and bundling. A debug development-client APK requires Metro; a bundled release build is needed to verify cold-start notification taps without Expo's development launcher.
 
 ## Clerk sign-in for private builds
 
@@ -111,12 +111,12 @@ A maintainer with access to the existing Alchemy state and deployment credential
    vp run --filter rove-relay deploy --stage dev_ryan_android --env-file .env.android-dev
    ```
 
-4. Give the tester the deployed relay URL and matching public Clerk configuration. The deploy wrapper also writes the relay URL and public tracing configuration into that checkout's root `.env`. Rebuild the private APK with this `ROVE_RELAY_URL`, the existing Firebase Android file, and OTA updates disabled. If using the separate development package, authorize its Clerk callback as described above.
+4. Give the tester the deployed relay URL and matching public Clerk configuration. The deploy wrapper also writes the relay URL and public tracing configuration into that checkout's root `.env`. Rebuild the private APK with this `PAPERPLANE_RELAY_URL`, the existing Firebase Android file, and OTA updates disabled. If using the separate development package, authorize its Clerk callback as described above.
 5. Configure one isolated Paperplane server with the same relay URL and link that test environment through the new relay. Existing production relay links do not automatically move to a personal stage. Enable activity publishing for the test environment, enable notifications on the phone, and verify a real agent turn produces a running update and completion alert while the phone is locked.
 
 The maintainer can perform deployment themselves and return only the public client configuration; the tester does not need copies of their hosting or Clerk server credentials. A fully independent deployment needs its own initial Cloudflare stack, PostgreSQL database, Firebase project, and a Clerk instance the operator can configure. Its Alchemy deployment needs PlanetScale and Axiom credentials.
 
-Build the host client and mobile app with the same relay URL and Clerk public configuration. A source server or desktop development build can host the test environment; keep its Paperplane home separate from an existing installation. Signing into the phone alone does not link a host environment. Use the host client's Paperplane Connect settings to link it and enable activity publishing. A private Clerk instance also needs its own CLI OAuth application before using `paperplane connect login`. Set `ROVE_CLERK_CLI_OAUTH_CLIENT_ID` to that application's public client ID.
+Build the host client and mobile app with the same relay URL and Clerk public configuration. A source server or desktop development build can host the test environment; keep its Paperplane home separate from an existing installation. Signing into the phone alone does not link a host environment. Use the host client's Paperplane Connect settings to link it and enable activity publishing. A private Clerk instance also needs its own CLI OAuth application before using `paperplane connect login`. Set `PAPERPLANE_CLERK_CLI_OAUTH_CLIENT_ID` to that application's public client ID.
 
 For deployment through GitHub Actions, add `FCM_SERVICE_ACCOUNT` to the `production` environment's secrets. The relay workflow passes it to Alchemy. The maintainer must also supply `google-services.json` for the production Android package in the native build environment; changing the relay secret alone cannot move an installed app to another Firebase project.
 

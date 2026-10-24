@@ -355,13 +355,13 @@ describe("DesktopShellEnvironment", () => {
           envOutput({
             PATH: "/home/linuxbrew/.linuxbrew/bin:/usr/bin",
             SSH_AUTH_SOCK: "/tmp/secretive.sock",
-            ROVE_TELEMETRY_ENABLED: "false",
+            PAPERPLANE_TELEMETRY_ENABLED: "false",
           }),
       });
 
       assert.equal(env.PATH, "/home/linuxbrew/.linuxbrew/bin:/usr/bin");
       assert.equal(env.SSH_AUTH_SOCK, "/tmp/secretive.sock");
-      assert.equal(env.ROVE_TELEMETRY_ENABLED, "false");
+      assert.equal(env.PAPERPLANE_TELEMETRY_ENABLED, "false");
     }),
   );
 

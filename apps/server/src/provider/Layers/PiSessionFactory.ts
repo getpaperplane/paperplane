@@ -58,8 +58,8 @@ import type { PiWorkloads } from "./PiWorkloads.ts";
 import { createPiExtensionUI } from "./PiExtensionUI.ts";
 import { disposePiResource } from "./PiLifecycle.ts";
 import {
-  ROVE_CODE_ORCHESTRATION_INSTRUCTIONS,
-  ROVE_CODE_BROWSER_TOOL_INSTRUCTIONS,
+  PAPERPLANE_ORCHESTRATION_INSTRUCTIONS,
+  PAPERPLANE_BROWSER_TOOL_INSTRUCTIONS,
 } from "@getpaperplane/provider-core/server/orchestrationInstructions";
 import { buildRuntimeInstructions } from "@getpaperplane/provider-core/server/runtimeInstructions";
 import { readPiSubscriptionStatus } from "../PiUsageLimits.ts";
@@ -913,8 +913,8 @@ export async function createPiSession(
   const richResponses = mcpProviderSession !== undefined;
   const runtimeInstructions = [
     buildRuntimeInstructions({ harness: "Pi", richResponses }),
-    ...(mcpProviderSession ? [ROVE_CODE_ORCHESTRATION_INSTRUCTIONS] : []),
-    ...(mcpProviderSession?.browserToolsAvailable ? [ROVE_CODE_BROWSER_TOOL_INSTRUCTIONS] : []),
+    ...(mcpProviderSession ? [PAPERPLANE_ORCHESTRATION_INSTRUCTIONS] : []),
+    ...(mcpProviderSession?.browserToolsAvailable ? [PAPERPLANE_BROWSER_TOOL_INSTRUCTIONS] : []),
   ].join("\n\n");
   let services = await createPiSessionServices({
     cwd,

@@ -2,7 +2,7 @@ import type { ProviderInteractionMode } from "@getpaperplane/contracts";
 
 import { ROVE_MCP_SERVER_NAME, ROVE_MCP_TOOL_PREFIX } from "@getpaperplane/shared/roveMcp";
 
-export const ROVE_CODE_ORCHESTRATION_INSTRUCTIONS = `
+export const PAPERPLANE_ORCHESTRATION_INSTRUCTIONS = `
 
 ## Paperplane orchestration
 
@@ -31,14 +31,14 @@ For stacked work, set \`baseRef\` to the intended parent branch and \`startFromO
 
 Tool names may include a harness-normalized MCP prefix, such as \`${ROVE_MCP_TOOL_PREFIX}delegate_task\`; the semantics are the same. Some harnesses attach optional MCP servers lazily: if an initial tool-catalog scan does not show Paperplane tools, do not conclude that cross-provider delegation is unavailable. Make one bounded direct attempt using the known Paperplane tool name on the next tool step. In Codex code mode, for example, call \`tools.${ROVE_MCP_TOOL_PREFIX}orchestrator_capabilities({})\` before reporting that the capability is absent. Keep polling/wait loops bounded, do not duplicate active work, and use stable \`clientRequestId\` values when retrying tools that accept them.
 
-ACP fallback: some ACP agents accept the injected MCP server but fail to expose its tools. When the Paperplane tools are absent and \`ROVE_ACP_MCP_NODE\` is present, call the same tools through the terminal: \`ELECTRON_RUN_AS_NODE=1 "$ROVE_ACP_MCP_NODE" \${ROVE_ACP_MCP_ENTRYPOINT:+"$ROVE_ACP_MCP_ENTRYPOINT"} acp-mcp-call orchestrator_capabilities '{}'\` (\`ROVE_ACP_MCP_ENTRYPOINT\` is unset when Paperplane runs as a standalone executable). Delegate with \`acp-mcp-call delegate_task '{"task":"...","target":{"providerInstanceId":"...","model":"..."},"mode":"async","clientRequestId":"..."}'\`. This is the supported Paperplane transport fallback, not an ordinary shell-based substitute for delegation.
+ACP fallback: some ACP agents accept the injected MCP server but fail to expose its tools. When the Paperplane tools are absent and \`PAPERPLANE_ACP_MCP_NODE\` is present, call the same tools through the terminal: \`ELECTRON_RUN_AS_NODE=1 "$PAPERPLANE_ACP_MCP_NODE" \${PAPERPLANE_ACP_MCP_ENTRYPOINT:+"$PAPERPLANE_ACP_MCP_ENTRYPOINT"} acp-mcp-call orchestrator_capabilities '{}'\` (\`PAPERPLANE_ACP_MCP_ENTRYPOINT\` is unset when Paperplane runs as a standalone executable). Delegate with \`acp-mcp-call delegate_task '{"task":"...","target":{"providerInstanceId":"...","model":"..."},"mode":"async","clientRequestId":"..."}'\`. This is the supported Paperplane transport fallback, not an ordinary shell-based substitute for delegation.
 
 ### Showing visuals
 
 When a chart, table, diagram, image collage, or mockup would say more than prose, build a self-contained HTML page, check it with \`html_preview\`, then publish it with \`html_render\` before your final reply. The reader sees the page above that reply, so don't announce or restate it; add only what it doesn't say.
 `;
 
-export const ROVE_CODE_BROWSER_TOOL_INSTRUCTIONS = `
+export const PAPERPLANE_BROWSER_TOOL_INSTRUCTIONS = `
 
 ## Paperplane collaborative browser
 
@@ -54,11 +54,11 @@ Do not switch to global browser skills, Chrome, Node REPL browser automation, st
 - preview calls on an open tab have failed twice on the same step (timeouts, \`chrome-error://\` pages, a different client answering). Quote the raw error and switch without asking the user which browser to use.
 `;
 
-const ROVE_CODE_ACP_DEFAULT_MODE_INSTRUCTIONS = `## Paperplane interaction mode: Default
+const PAPERPLANE_ACP_DEFAULT_MODE_INSTRUCTIONS = `## Paperplane interaction mode: Default
 
 Prefer making reasonable assumptions and carrying out the user's request. Ask a concise question only when a missing user decision would materially change the result. Treat this mode as active until Paperplane supplies a different interaction-mode instruction.`;
 
-const ROVE_CODE_ACP_PLAN_MODE_INSTRUCTIONS = `## Paperplane interaction mode: Plan
+const PAPERPLANE_ACP_PLAN_MODE_INSTRUCTIONS = `## Paperplane interaction mode: Plan
 
 Investigate with read-only actions and do not edit files or otherwise execute the implementation. Resolve discoverable facts before asking questions. When the requirements are decision complete, return a concrete implementation plan and do not start implementing it. Treat this mode as active until Paperplane supplies a different interaction-mode instruction.`;
 
@@ -86,10 +86,10 @@ export function roveAcpPromptWithInstructions(input: {
   }
   const instructions = [
     input.state.interactionMode === "plan"
-      ? ROVE_CODE_ACP_PLAN_MODE_INSTRUCTIONS
-      : ROVE_CODE_ACP_DEFAULT_MODE_INSTRUCTIONS,
+      ? PAPERPLANE_ACP_PLAN_MODE_INSTRUCTIONS
+      : PAPERPLANE_ACP_DEFAULT_MODE_INSTRUCTIONS,
     ...(input.state.hasRoveMcp
-      ? [ROVE_CODE_BROWSER_TOOL_INSTRUCTIONS.trim(), ROVE_CODE_ORCHESTRATION_INSTRUCTIONS.trim()]
+      ? [PAPERPLANE_BROWSER_TOOL_INSTRUCTIONS.trim(), PAPERPLANE_ORCHESTRATION_INSTRUCTIONS.trim()]
       : []),
   ];
   return `<rove_code_instructions>\n${instructions.join("\n\n")}\n</rove_code_instructions>\n\n<user_request>\n${input.prompt}\n</user_request>`;
@@ -101,7 +101,7 @@ export function roveAcpPromptWithInstructions(input: {
  * mistaken for text authored by the user.
  */
 function prependRoveOrchestrationInstructions(prompt: string): string {
-  return `<rove_code_orchestration_instructions>${ROVE_CODE_ORCHESTRATION_INSTRUCTIONS.trim()}</rove_code_orchestration_instructions>\n\n<user_request>\n${prompt}\n</user_request>`;
+  return `<rove_code_orchestration_instructions>${PAPERPLANE_ORCHESTRATION_INSTRUCTIONS.trim()}</rove_code_orchestration_instructions>\n\n<user_request>\n${prompt}\n</user_request>`;
 }
 
 export function roveOrchestrationPromptForFirstRun(input: {
@@ -115,5 +115,5 @@ export function roveOrchestrationPromptForFirstRun(input: {
 }
 
 export function roveOrchestrationSystemPrompt(hasRoveMcp: boolean): string | undefined {
-  return hasRoveMcp ? ROVE_CODE_ORCHESTRATION_INSTRUCTIONS : undefined;
+  return hasRoveMcp ? PAPERPLANE_ORCHESTRATION_INSTRUCTIONS : undefined;
 }

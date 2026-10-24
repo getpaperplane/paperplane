@@ -28,7 +28,7 @@ import * as PreviewBrowser from "../preview/PreviewBrowser.ts";
 
 // Real-browser tests run only when this names a chrome-headless-shell, for
 // example one Paperplane installed under <Paperplane home>/tools/chrome-headless-shell.
-const TEST_BROWSER_ENV = "ROVE_TEST_HEADLESS_SHELL";
+const TEST_BROWSER_ENV = "PAPERPLANE_TEST_HEADLESS_SHELL";
 
 const layerHtmlRender = (
   executable?: string,

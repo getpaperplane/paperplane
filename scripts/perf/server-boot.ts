@@ -128,7 +128,7 @@ async function run(index: number) {
       home,
       "--no-browser",
     ],
-    { env: { ...process.env, ROVE_HOME: home }, stdio: ["ignore", "pipe", "pipe"] },
+    { env: { ...process.env, PAPERPLANE_HOME: home }, stdio: ["ignore", "pipe", "pipe"] },
   );
   active = child;
   let output = "";

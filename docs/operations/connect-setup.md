@@ -16,10 +16,10 @@ cp .env.example .env
 For another deployment, set these values in the repository-root `.env` or `.env.local`:
 
 ```dotenv
-ROVE_CLERK_PUBLISHABLE_KEY=<publishable key>
-ROVE_CLERK_JWT_TEMPLATE=<JWT template name>
-ROVE_CLERK_CLI_OAUTH_CLIENT_ID=<public OAuth application client ID>
-ROVE_RELAY_URL=https://relay.example.com
+PAPERPLANE_CLERK_PUBLISHABLE_KEY=<publishable key>
+PAPERPLANE_CLERK_JWT_TEMPLATE=<JWT template name>
+PAPERPLANE_CLERK_CLI_OAUTH_CLIENT_ID=<public OAuth application client ID>
+PAPERPLANE_RELAY_URL=https://relay.example.com
 ```
 
 Process variables take precedence over `.env.local`, then `.env`. Use these canonical names;
@@ -46,7 +46,7 @@ In Clerk's OAuth applications settings:
 4. Enable **Device authorization grant** on the application. Headless and SSH authorization use
    it, and Clerk only advertises the device endpoint once it is on. The feature is in beta and
    Clerk enables it per account on request.
-5. Set `ROVE_CLERK_CLI_OAUTH_CLIENT_ID` to the generated public client ID in local and release
+5. Set `PAPERPLANE_CLERK_CLI_OAUTH_CLIENT_ID` to the generated public client ID in local and release
    build environments.
 
 ## JWT template
@@ -57,7 +57,7 @@ Create a Clerk JWT template named `rove-relay` with claims:
 { "aud": "rove-relay" }
 ```
 
-Set `ROVE_CLERK_JWT_TEMPLATE=rove-relay` for clients and
+Set `PAPERPLANE_CLERK_JWT_TEMPLATE=rove-relay` for clients and
 `CLERK_JWT_AUDIENCE=rove-relay` for the relay. The production relay deployment environment
 also defines `CLERK_JWT_TEMPLATE`. The audience stays the same across relay stages; the relay
 URL selects the deployment.
@@ -104,10 +104,10 @@ For a production macOS app with bundle ID `dev.rove.app`:
 Local signed builds additionally use:
 
 ```dotenv
-ROVE_APPLE_TEAM_ID=ABC1234567
-ROVE_MACOS_PROVISIONING_PROFILE=/absolute/path/to/rove.provisionprofile
+PAPERPLANE_APPLE_TEAM_ID=ABC1234567
+PAPERPLANE_MACOS_PROVISIONING_PROFILE=/absolute/path/to/rove.provisionprofile
 # Override only when the RP domain differs from the Clerk Frontend API hostname.
-ROVE_CLERK_PASSKEY_RP_DOMAINS=example.clerk.accounts.dev,clerk.example.com
+PAPERPLANE_CLERK_PASSKEY_RP_DOMAINS=example.clerk.accounts.dev,clerk.example.com
 ```
 
 Without the override, the build derives the RP domain from the Clerk publishable key.
@@ -120,7 +120,7 @@ actual web and server ports. For example, with the default ports:
 
 ```sh
 VITE_DEV_SERVER_URL=http://127.0.0.1:5733 \
-ROVE_PORT=13773 \
+PAPERPLANE_PORT=13773 \
   "/Applications/Rove Code (Alpha).app/Contents/MacOS/Rove Code (Alpha)"
 ```
 

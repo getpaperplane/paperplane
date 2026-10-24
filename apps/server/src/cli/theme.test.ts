@@ -352,12 +352,12 @@ describe("paperplane theme", () => {
     }),
   );
 
-  it.effect("honors ROVE_HOME like the rest of the CLI", () =>
+  it.effect("honors PAPERPLANE_HOME like the rest of the CLI", () =>
     Effect.gen(function* () {
       const baseDir = makeBaseDir();
       yield* runCli(["theme", "set", "ocean"]).pipe(
         Effect.provide(
-          ConfigProvider.layer(ConfigProvider.fromEnv({ env: { ROVE_HOME: baseDir } })),
+          ConfigProvider.layer(ConfigProvider.fromEnv({ env: { PAPERPLANE_HOME: baseDir } })),
         ),
       );
       assert.equal(readSettings(baseDir).defaultTheme, "ocean");

@@ -309,7 +309,7 @@ export const layer = Layer.effect(
         electronDialog
           .showErrorBox(
             "This Paperplane home is unavailable",
-            "Another Paperplane server, such as the background service, is using this data directory. Stop that server and reopen Paperplane, or set a separate ROVE_HOME and pair with the running server.",
+            "Another Paperplane server, such as the background service, is using this data directory. Stop that server and reopen Paperplane, or set a separate PAPERPLANE_HOME and pair with the running server.",
           )
           .pipe(Effect.andThen(electronApp.quit)),
     });

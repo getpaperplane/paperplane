@@ -72,20 +72,22 @@ export function retryDelayMs(failures: number, random: number): number {
 }
 
 const TelemetryEnvConfig = Config.all({
-  posthogKey: Config.String("ROVE_POSTHOG_KEY").pipe(
+  posthogKey: Config.String("PAPERPLANE_POSTHOG_KEY").pipe(
     Config.withDefault("phc_yeQwVXeqVTddxs65mQDciB89XFT3VdixFEyPuHdEbR9V"),
   ),
-  posthogHost: Config.String("ROVE_POSTHOG_HOST").pipe(
+  posthogHost: Config.String("PAPERPLANE_POSTHOG_HOST").pipe(
     Config.withDefault("https://us.i.posthog.com"),
   ),
-  enabled: Config.Boolean("ROVE_TELEMETRY_ENABLED").pipe(Config.withDefault(true)),
+  enabled: Config.Boolean("PAPERPLANE_TELEMETRY_ENABLED").pipe(Config.withDefault(true)),
   environment: Config.Literals(
     ["production", "development", "test"],
-    "ROVE_ANALYTICS_ENVIRONMENT",
+    "PAPERPLANE_ANALYTICS_ENVIRONMENT",
   ).pipe(Config.option),
   nodeEnvironment: Config.String("NODE_ENV").pipe(Config.option),
-  flushBatchSize: Config.Number("ROVE_TELEMETRY_FLUSH_BATCH_SIZE").pipe(Config.withDefault(20)),
-  maxBufferedEvents: Config.Number("ROVE_TELEMETRY_MAX_BUFFERED_EVENTS").pipe(
+  flushBatchSize: Config.Number("PAPERPLANE_TELEMETRY_FLUSH_BATCH_SIZE").pipe(
+    Config.withDefault(20),
+  ),
+  maxBufferedEvents: Config.Number("PAPERPLANE_TELEMETRY_MAX_BUFFERED_EVENTS").pipe(
     Config.withDefault(1_000),
   ),
   wslDistroName: Config.String("WSL_DISTRO_NAME").pipe(Config.option),

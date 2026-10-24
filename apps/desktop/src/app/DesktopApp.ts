@@ -64,7 +64,7 @@ export class DesktopDevelopmentBackendPortRequiredError extends Schema.TaggedErr
   {},
 ) {
   override get message(): string {
-    return "ROVE_PORT is required in desktop development.";
+    return "PAPERPLANE_PORT is required in desktop development.";
   }
 }
 

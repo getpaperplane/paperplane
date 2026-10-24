@@ -42,7 +42,7 @@ const hostFlag = Flag.String("host").pipe(
 );
 export const baseDirFlag = Flag.String("base-dir").pipe(
   Flag.withDescription(
-    "Explicit Paperplane data directory; runtime state is stored under userdata (equivalent to ROVE_HOME).",
+    "Explicit Paperplane data directory; runtime state is stored under userdata (equivalent to PAPERPLANE_HOME).",
   ),
   Flag.optional,
 );
@@ -68,7 +68,7 @@ const autoBootstrapProjectFromCwdFlag = Flag.Boolean("auto-bootstrap-project-fro
 );
 const logWebSocketEventsFlag = Flag.Boolean("log-websocket-events").pipe(
   Flag.withDescription(
-    "Emit server-side logs for outbound WebSocket push traffic (equivalent to ROVE_LOG_WS_EVENTS).",
+    "Emit server-side logs for outbound WebSocket push traffic (equivalent to PAPERPLANE_LOG_WS_EVENTS).",
   ),
   Flag.withAlias("log-ws-events"),
   Flag.optional,
@@ -93,49 +93,59 @@ export const serviceLaunchFlags = {
 };
 
 // Trace file location, shared by the server and `paperplane trace summary`.
-export const traceFileConfig = Config.String("ROVE_TRACE_FILE").pipe(
+export const traceFileConfig = Config.String("PAPERPLANE_TRACE_FILE").pipe(
   Config.option,
   Config.map(Option.getOrUndefined),
 );
-export const traceMaxFilesConfig = Config.Int("ROVE_TRACE_MAX_FILES").pipe(Config.withDefault(10));
+export const traceMaxFilesConfig = Config.Int("PAPERPLANE_TRACE_MAX_FILES").pipe(
+  Config.withDefault(10),
+);
 
 const EnvServerConfig = Config.all({
-  logLevel: Config.LogLevel("ROVE_LOG_LEVEL").pipe(Config.withDefault("Info")),
-  traceMinLevel: Config.LogLevel("ROVE_TRACE_MIN_LEVEL").pipe(Config.withDefault("Info")),
-  traceTimingEnabled: Config.Boolean("ROVE_TRACE_TIMING_ENABLED").pipe(Config.withDefault(true)),
+  logLevel: Config.LogLevel("PAPERPLANE_LOG_LEVEL").pipe(Config.withDefault("Info")),
+  traceMinLevel: Config.LogLevel("PAPERPLANE_TRACE_MIN_LEVEL").pipe(Config.withDefault("Info")),
+  traceTimingEnabled: Config.Boolean("PAPERPLANE_TRACE_TIMING_ENABLED").pipe(
+    Config.withDefault(true),
+  ),
   traceFile: traceFileConfig,
-  traceMaxBytes: Config.Int("ROVE_TRACE_MAX_BYTES").pipe(Config.withDefault(10 * 1024 * 1024)),
+  traceMaxBytes: Config.Int("PAPERPLANE_TRACE_MAX_BYTES").pipe(
+    Config.withDefault(10 * 1024 * 1024),
+  ),
   traceMaxFiles: traceMaxFilesConfig,
-  traceBatchWindowMs: Config.Int("ROVE_TRACE_BATCH_WINDOW_MS").pipe(Config.withDefault(1_000)),
-  otlpTracesUrl: Config.String("ROVE_OTLP_TRACES_URL").pipe(
+  traceBatchWindowMs: Config.Int("PAPERPLANE_TRACE_BATCH_WINDOW_MS").pipe(
+    Config.withDefault(1_000),
+  ),
+  otlpTracesUrl: Config.String("PAPERPLANE_OTLP_TRACES_URL").pipe(
     Config.option,
     Config.map(Option.getOrUndefined),
   ),
-  otlpMetricsUrl: Config.String("ROVE_OTLP_METRICS_URL").pipe(
+  otlpMetricsUrl: Config.String("PAPERPLANE_OTLP_METRICS_URL").pipe(
     Config.option,
     Config.map(Option.getOrUndefined),
   ),
-  otlpLogsUrl: Config.String("ROVE_OTLP_LOGS_URL").pipe(
+  otlpLogsUrl: Config.String("PAPERPLANE_OTLP_LOGS_URL").pipe(
     Config.option,
     Config.map(Option.getOrUndefined),
   ),
-  otlpExportIntervalMs: Config.Int("ROVE_OTLP_EXPORT_INTERVAL_MS").pipe(Config.withDefault(10_000)),
-  otlpHeaders: Config.schema(OtlpHeadersFromString, "ROVE_OTLP_HEADERS").pipe(
+  otlpExportIntervalMs: Config.Int("PAPERPLANE_OTLP_EXPORT_INTERVAL_MS").pipe(
+    Config.withDefault(10_000),
+  ),
+  otlpHeaders: Config.schema(OtlpHeadersFromString, "PAPERPLANE_OTLP_HEADERS").pipe(
     Config.option,
     Config.map(Option.getOrUndefined),
   ),
-  otlpProtocol: Config.schema(OtlpProtocol, "ROVE_OTLP_PROTOCOL").pipe(
+  otlpProtocol: Config.schema(OtlpProtocol, "PAPERPLANE_OTLP_PROTOCOL").pipe(
     Config.withDefault("http/json"),
   ),
-  mode: Config.schema(ServerConfig.RuntimeMode, "ROVE_MODE").pipe(
+  mode: Config.schema(ServerConfig.RuntimeMode, "PAPERPLANE_MODE").pipe(
     Config.option,
     Config.map(Option.getOrUndefined),
   ),
-  port: Config.Port("ROVE_PORT").pipe(Config.option, Config.map(Option.getOrUndefined)),
-  host: Config.String("ROVE_HOST").pipe(Config.option, Config.map(Option.getOrUndefined)),
-  roveHome: Config.String("ROVE_HOME").pipe(Config.option, Config.map(Option.getOrUndefined)),
+  port: Config.Port("PAPERPLANE_PORT").pipe(Config.option, Config.map(Option.getOrUndefined)),
+  host: Config.String("PAPERPLANE_HOST").pipe(Config.option, Config.map(Option.getOrUndefined)),
+  roveHome: Config.String("PAPERPLANE_HOME").pipe(Config.option, Config.map(Option.getOrUndefined)),
   devUrl: Config.URL("VITE_DEV_SERVER_URL").pipe(Config.option, Config.map(Option.getOrUndefined)),
-  devAllowedOrigins: Config.String("ROVE_DEV_ALLOWED_ORIGINS").pipe(
+  devAllowedOrigins: Config.String("PAPERPLANE_DEV_ALLOWED_ORIGINS").pipe(
     Config.withDefault(""),
     Config.map((value) =>
       value
@@ -144,33 +154,33 @@ const EnvServerConfig = Config.all({
         .filter((entry) => entry.length > 0),
     ),
   ),
-  noBrowser: Config.Boolean("ROVE_NO_BROWSER").pipe(
+  noBrowser: Config.Boolean("PAPERPLANE_NO_BROWSER").pipe(
     Config.option,
     Config.map(Option.getOrUndefined),
   ),
-  bootstrapFd: Config.Int("ROVE_BOOTSTRAP_FD").pipe(
+  bootstrapFd: Config.Int("PAPERPLANE_BOOTSTRAP_FD").pipe(
     Config.option,
     Config.map(Option.getOrUndefined),
   ),
-  autoBootstrapProjectFromCwd: Config.Boolean("ROVE_AUTO_BOOTSTRAP_PROJECT_FROM_CWD").pipe(
+  autoBootstrapProjectFromCwd: Config.Boolean("PAPERPLANE_AUTO_BOOTSTRAP_PROJECT_FROM_CWD").pipe(
     Config.option,
     Config.map(Option.getOrUndefined),
   ),
-  logWebSocketEvents: Config.Boolean("ROVE_LOG_WS_EVENTS").pipe(
+  logWebSocketEvents: Config.Boolean("PAPERPLANE_LOG_WS_EVENTS").pipe(
     Config.option,
     Config.map(Option.getOrUndefined),
   ),
-  tailscaleServeEnabled: Config.Boolean("ROVE_TAILSCALE_SERVE").pipe(
+  tailscaleServeEnabled: Config.Boolean("PAPERPLANE_TAILSCALE_SERVE").pipe(
     Config.option,
     Config.map(Option.getOrUndefined),
   ),
-  tailscaleServePort: Config.Port("ROVE_TAILSCALE_SERVE_PORT").pipe(
+  tailscaleServePort: Config.Port("PAPERPLANE_TAILSCALE_SERVE_PORT").pipe(
     Config.option,
     Config.map(Option.getOrUndefined),
   ),
 });
 
-const DevAuthTokenConfig = Config.Redacted("ROVE_DEV_AUTH_TOKEN").pipe(
+const DevAuthTokenConfig = Config.Redacted("PAPERPLANE_DEV_AUTH_TOKEN").pipe(
   Config.map((token) => Redacted.make(Redacted.value(token).trim())),
   Config.mapEffect((token) =>
     Redacted.value(token).length === 0 || Redacted.value(token).length >= 32
@@ -179,7 +189,7 @@ const DevAuthTokenConfig = Config.Redacted("ROVE_DEV_AUTH_TOKEN").pipe(
           new Config.ConfigError(
             new Schema.SchemaError(
               new SchemaIssue.InvalidValue({
-                message: "ROVE_DEV_AUTH_TOKEN must contain at least 32 characters.",
+                message: "PAPERPLANE_DEV_AUTH_TOKEN must contain at least 32 characters.",
               }),
             ),
           ),

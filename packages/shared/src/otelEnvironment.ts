@@ -3,7 +3,7 @@
  * shared by the server and the desktop main process so both agree on what
  * turns export off and where it goes.
  *
- * `ROVE_OTEL_SDK_DISABLED` is read first, so a machine that sets
+ * `PAPERPLANE_OTEL_SDK_DISABLED` is read first, so a machine that sets
  * `OTEL_SDK_DISABLED` for everything else can still opt Paperplane back in.
  *
  * @module otelEnvironment
@@ -292,10 +292,10 @@ const endpointSignal = (name: OtlpSignalName, own: Settings, generic: Settings):
 
 export const load: Effect.Effect<OtelEnvironment> = Config.all({
   rove: flag(
-    "ROVE_OTEL_SDK_DISABLED",
+    "PAPERPLANE_OTEL_SDK_DISABLED",
     ROVE_TRUE,
     ROVE_FALSE,
-    (value) => `ROVE_OTEL_SDK_DISABLED=${value} is not a yes or a no and was ignored`,
+    (value) => `PAPERPLANE_OTEL_SDK_DISABLED=${value} is not a yes or a no and was ignored`,
   ),
   // The specification: a boolean it defines is true "only by the
   // case-insensitive string `true`", implementations "MUST NOT" accept other
@@ -305,7 +305,7 @@ export const load: Effect.Effect<OtelEnvironment> = Config.all({
     ["true"],
     ["false"],
     (value) =>
-      `OTEL_SDK_DISABLED=${value} was read as false; the OpenTelemetry specification recognizes only the string true, so use OTEL_SDK_DISABLED=true or ROVE_OTEL_SDK_DISABLED to say it any other way`,
+      `OTEL_SDK_DISABLED=${value} was read as false; the OpenTelemetry specification recognizes only the string true, so use OTEL_SDK_DISABLED=true or PAPERPLANE_OTEL_SDK_DISABLED to say it any other way`,
   ),
   resource: resourceAttributes,
   generic: settings("OTEL_EXPORTER_OTLP_"),
@@ -341,8 +341,8 @@ export const load: Effect.Effect<OtelEnvironment> = Config.all({
     if (disabled) {
       warnings.push(
         rove.value
-          ? "ROVE_OTEL_SDK_DISABLED is set, so no telemetry is exported, whatever configured it"
-          : "OTEL_SDK_DISABLED is set, so no telemetry is exported, whatever configured it; set ROVE_OTEL_SDK_DISABLED=false to export anyway",
+          ? "PAPERPLANE_OTEL_SDK_DISABLED is set, so no telemetry is exported, whatever configured it"
+          : "OTEL_SDK_DISABLED is set, so no telemetry is exported, whatever configured it; set PAPERPLANE_OTEL_SDK_DISABLED=false to export anyway",
       );
     }
     return {
@@ -366,9 +366,9 @@ export interface SignalEndpoint {
 }
 
 /**
- * Where one signal exports and how. `ROVE_OTLP_*_URL` wins outright with
+ * Where one signal exports and how. `PAPERPLANE_OTLP_*_URL` wins outright with
  * Paperplane's own export, then an OTEL endpoint with its own headers and
- * protocol, since `ROVE_OTLP_HEADERS` was written for a different
+ * protocol, since `PAPERPLANE_OTLP_HEADERS` was written for a different
  * collector, then the first of `fallbackUrls` with Paperplane's own export.
  */
 export const resolveSignalEndpoint = (

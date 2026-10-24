@@ -100,8 +100,8 @@ it.effect("resolves setup scripts through the standalone project service", () =>
     });
     assert.equal(open.mock.calls[0]?.[0].cwd, "/repo-worktree");
     assert.deepEqual(open.mock.calls[0]?.[0].env, {
-      ROVE_PROJECT_ROOT: "/repo",
-      ROVE_WORKTREE_PATH: "/repo-worktree",
+      PAPERPLANE_PROJECT_ROOT: "/repo",
+      PAPERPLANE_WORKTREE_PATH: "/repo-worktree",
       COLORTERM: "",
       NO_COLOR: "1",
       FORCE_COLOR: "0",

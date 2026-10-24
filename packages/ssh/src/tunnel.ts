@@ -359,12 +359,12 @@ const REMOTE_NODE_ENV_SCRIPT = `prepend_path_if_dir() {
 }
 
 remote_node_satisfies_engine() {
-  ROVE_NODE_ENGINE_RANGE=@@ROVE_NODE_ENGINE_RANGE@@
-  if [ -z "$ROVE_NODE_ENGINE_RANGE" ]; then
+  PAPERPLANE_NODE_ENGINE_RANGE=@@PAPERPLANE_NODE_ENGINE_RANGE@@
+  if [ -z "$PAPERPLANE_NODE_ENGINE_RANGE" ]; then
     return 0
   fi
-  node - "$ROVE_NODE_ENGINE_RANGE" <<'NODE'
-@@ROVE_NODE_ENGINE_CHECK_SCRIPT@@
+  node - "$PAPERPLANE_NODE_ENGINE_RANGE" <<'NODE'
+@@PAPERPLANE_NODE_ENGINE_CHECK_SCRIPT@@
 NODE
 }
 
@@ -431,9 +431,9 @@ ensure_remote_node_path() {
   fi
 
   if ! command -v node >/dev/null 2>&1 && [ -d "$NVM_DIR/versions/node" ]; then
-    for ROVE_NODE_BIN in "$NVM_DIR"/versions/node/*/bin; do
-      if [ -x "$ROVE_NODE_BIN/node" ]; then
-        PATH="$ROVE_NODE_BIN:$PATH"
+    for PAPERPLANE_NODE_BIN in "$NVM_DIR"/versions/node/*/bin; do
+      if [ -x "$PAPERPLANE_NODE_BIN/node" ]; then
+        PATH="$PAPERPLANE_NODE_BIN:$PATH"
         export PATH
       fi
     done
@@ -445,9 +445,9 @@ ensure_remote_node_path() {
 
 const REMOTE_RUNNER_SCRIPT = `#!/bin/sh
 set -eu
-@@ROVE_NODE_ENV_SCRIPT@@
-ROVE_NODE_SCRIPT_PATH=@@ROVE_NODE_SCRIPT_PATH@@
-if [ -n "$ROVE_NODE_SCRIPT_PATH" ]; then
+@@PAPERPLANE_NODE_ENV_SCRIPT@@
+PAPERPLANE_NODE_SCRIPT_PATH=@@PAPERPLANE_NODE_SCRIPT_PATH@@
+if [ -n "$PAPERPLANE_NODE_SCRIPT_PATH" ]; then
   # Dev mode: a source checkout on the remote. This is the only path that
   # needs Node, so Node discovery runs here and nowhere else.
   ensure_remote_node_path || true
@@ -455,26 +455,26 @@ if [ -n "$ROVE_NODE_SCRIPT_PATH" ]; then
     printf 'Remote host is missing node on PATH. Install Node or configure a supported version manager for non-interactive shells.\\n' >&2
     exit 1
   fi
-  exec node "$ROVE_NODE_SCRIPT_PATH" "$@"
+  exec node "$PAPERPLANE_NODE_SCRIPT_PATH" "$@"
 fi
-ROVE_ARCHIVE_VERSION=@@ROVE_ARCHIVE_VERSION@@
-if [ -z "$ROVE_ARCHIVE_VERSION" ]; then
+PAPERPLANE_ARCHIVE_VERSION=@@PAPERPLANE_ARCHIVE_VERSION@@
+if [ -z "$PAPERPLANE_ARCHIVE_VERSION" ]; then
   printf 'No paperplane release version was provided for the remote runtime.\\n' >&2
   exit 1
 fi
 # Self-contained release archive: no Node, npm, or compiler on the remote.
 # Unpacked into the pinned-runtime layout so \`paperplane service install\` reuses it.
-ROVE_RELEASE_BASE_URL=@@ROVE_RELEASE_BASE_URL@@
-ROVE_RUNTIME_DIR="$HOME/.paperplane/runtime/versions/$ROVE_ARCHIVE_VERSION"
+PAPERPLANE_RELEASE_BASE_URL=@@PAPERPLANE_RELEASE_BASE_URL@@
+PAPERPLANE_RUNTIME_DIR="$HOME/.paperplane/runtime/versions/$PAPERPLANE_ARCHIVE_VERSION"
 rove_runtime_ready() {
-  [ -x "$ROVE_RUNTIME_DIR/paperplane" ] && [ "$(cat "$ROVE_RUNTIME_DIR/.install-complete" 2>/dev/null)" = "$ROVE_ARCHIVE_VERSION" ]
+  [ -x "$PAPERPLANE_RUNTIME_DIR/paperplane" ] && [ "$(cat "$PAPERPLANE_RUNTIME_DIR/.install-complete" 2>/dev/null)" = "$PAPERPLANE_ARCHIVE_VERSION" ]
 }
 if ! rove_runtime_ready; then
   mkdir -p "$HOME/.paperplane/runtime/versions"
   # Concurrent launches (two clients, a retry racing a slow first run) must
   # not both install: mkdir is the atomic lock and the ready check repeats
   # under it.
-  ROVE_LOCK="$HOME/.paperplane/runtime/versions/.$ROVE_ARCHIVE_VERSION.install.lock"
+  PAPERPLANE_LOCK="$HOME/.paperplane/runtime/versions/.$PAPERPLANE_ARCHIVE_VERSION.install.lock"
   # mkdir is the only portable atomic exclusive create (mv would silently
   # nest a candidate inside an existing lock). The owner publishes its pid
   # right after, so a lock with a live owner is never reclaimed however
@@ -482,86 +482,86 @@ if ! rove_runtime_ready; then
   # once. A lock with no pid at all is a crash between mkdir and the pid
   # write; it is reclaimed after a short grace so a live owner has time to
   # publish.
-  ROVE_LOCK_WAITED=0
-  ROVE_LOCK_UNOWNED=0
-  while ! mkdir "$ROVE_LOCK" 2>/dev/null; do
-    ROVE_LOCK_OWNER="$(cat "$ROVE_LOCK/pid" 2>/dev/null || true)"
-    if [ -n "$ROVE_LOCK_OWNER" ]; then
-      ROVE_LOCK_UNOWNED=0
-      if ! kill -0 "$ROVE_LOCK_OWNER" 2>/dev/null; then
-        rm -rf "$ROVE_LOCK"
+  PAPERPLANE_LOCK_WAITED=0
+  PAPERPLANE_LOCK_UNOWNED=0
+  while ! mkdir "$PAPERPLANE_LOCK" 2>/dev/null; do
+    PAPERPLANE_LOCK_OWNER="$(cat "$PAPERPLANE_LOCK/pid" 2>/dev/null || true)"
+    if [ -n "$PAPERPLANE_LOCK_OWNER" ]; then
+      PAPERPLANE_LOCK_UNOWNED=0
+      if ! kill -0 "$PAPERPLANE_LOCK_OWNER" 2>/dev/null; then
+        rm -rf "$PAPERPLANE_LOCK"
         continue
       fi
     else
-      ROVE_LOCK_UNOWNED=$((ROVE_LOCK_UNOWNED + 1))
-      if [ "$ROVE_LOCK_UNOWNED" -ge 5 ]; then
-        rm -rf "$ROVE_LOCK"
+      PAPERPLANE_LOCK_UNOWNED=$((PAPERPLANE_LOCK_UNOWNED + 1))
+      if [ "$PAPERPLANE_LOCK_UNOWNED" -ge 5 ]; then
+        rm -rf "$PAPERPLANE_LOCK"
         continue
       fi
     fi
-    if [ "$ROVE_LOCK_WAITED" -ge @@ROVE_ARCHIVE_LOCK_WAIT_SECONDS@@ ]; then
-      printf 'Another paperplane %s installation has held %s for too long.\\n' "$ROVE_ARCHIVE_VERSION" "$ROVE_LOCK" >&2
+    if [ "$PAPERPLANE_LOCK_WAITED" -ge @@PAPERPLANE_ARCHIVE_LOCK_WAIT_SECONDS@@ ]; then
+      printf 'Another paperplane %s installation has held %s for too long.\\n' "$PAPERPLANE_ARCHIVE_VERSION" "$PAPERPLANE_LOCK" >&2
       exit 1
     fi
     sleep 1
-    ROVE_LOCK_WAITED=$((ROVE_LOCK_WAITED + 1))
+    PAPERPLANE_LOCK_WAITED=$((PAPERPLANE_LOCK_WAITED + 1))
   done
-  printf '%s\\n' "$$" > "$ROVE_LOCK/pid.tmp" && mv "$ROVE_LOCK/pid.tmp" "$ROVE_LOCK/pid"
-  trap 'rm -rf "$ROVE_LOCK"' EXIT
+  printf '%s\\n' "$$" > "$PAPERPLANE_LOCK/pid.tmp" && mv "$PAPERPLANE_LOCK/pid.tmp" "$PAPERPLANE_LOCK/pid"
+  trap 'rm -rf "$PAPERPLANE_LOCK"' EXIT
 fi
 if ! rove_runtime_ready; then
   case "$(uname -s)" in
-    Darwin) ROVE_PLATFORM="darwin" ;;
-    Linux) ROVE_PLATFORM="linux" ;;
+    Darwin) PAPERPLANE_PLATFORM="darwin" ;;
+    Linux) PAPERPLANE_PLATFORM="linux" ;;
     *) printf 'Remote host %s has no paperplane release archive.\\n' "$(uname -s)" >&2; exit 1 ;;
   esac
   case "$(uname -m)" in
-    arm64 | aarch64) ROVE_ARCH="arm64" ;;
-    x86_64 | amd64) ROVE_ARCH="x64" ;;
+    arm64 | aarch64) PAPERPLANE_ARCH="arm64" ;;
+    x86_64 | amd64) PAPERPLANE_ARCH="x64" ;;
     *) printf 'Remote host %s has no paperplane release archive.\\n' "$(uname -m)" >&2; exit 1 ;;
   esac
-  ROVE_ARCHIVE="rove-$ROVE_ARCHIVE_VERSION-$ROVE_PLATFORM-$ROVE_ARCH.tar.gz"
-  ROVE_STAGING="$(mktemp -d "$HOME/.paperplane/runtime/versions/.staging-XXXXXX")"
-  trap 'rm -rf "$ROVE_STAGING" "$ROVE_LOCK"' EXIT
+  PAPERPLANE_ARCHIVE="rove-$PAPERPLANE_ARCHIVE_VERSION-$PAPERPLANE_PLATFORM-$PAPERPLANE_ARCH.tar.gz"
+  PAPERPLANE_STAGING="$(mktemp -d "$HOME/.paperplane/runtime/versions/.staging-XXXXXX")"
+  trap 'rm -rf "$PAPERPLANE_STAGING" "$PAPERPLANE_LOCK"' EXIT
   rove_fetch() {
     if command -v curl >/dev/null 2>&1; then curl -fsSL --connect-timeout 30 --max-time "$3" "$1" -o "$2"
     elif command -v wget >/dev/null 2>&1; then wget -q --timeout=30 --tries=1 "$1" -O "$2"
-    else printf 'Remote host needs curl or wget to download %s.\\n' "$ROVE_ARCHIVE" >&2; exit 1
+    else printf 'Remote host needs curl or wget to download %s.\\n' "$PAPERPLANE_ARCHIVE" >&2; exit 1
     fi
   }
-  rove_fetch "$ROVE_RELEASE_BASE_URL/v$ROVE_ARCHIVE_VERSION/SHA256SUMS" "$ROVE_STAGING/SHA256SUMS" @@ROVE_ARCHIVE_CHECKSUMS_SECONDS@@
-  rove_fetch "$ROVE_RELEASE_BASE_URL/v$ROVE_ARCHIVE_VERSION/$ROVE_ARCHIVE" "$ROVE_STAGING/$ROVE_ARCHIVE" @@ROVE_ARCHIVE_DOWNLOAD_SECONDS@@
-  ROVE_EXPECTED="$(grep " \\*\\{0,1\\}$ROVE_ARCHIVE$" "$ROVE_STAGING/SHA256SUMS" | cut -d' ' -f1)"
+  rove_fetch "$PAPERPLANE_RELEASE_BASE_URL/v$PAPERPLANE_ARCHIVE_VERSION/SHA256SUMS" "$PAPERPLANE_STAGING/SHA256SUMS" @@PAPERPLANE_ARCHIVE_CHECKSUMS_SECONDS@@
+  rove_fetch "$PAPERPLANE_RELEASE_BASE_URL/v$PAPERPLANE_ARCHIVE_VERSION/$PAPERPLANE_ARCHIVE" "$PAPERPLANE_STAGING/$PAPERPLANE_ARCHIVE" @@PAPERPLANE_ARCHIVE_DOWNLOAD_SECONDS@@
+  PAPERPLANE_EXPECTED="$(grep " \\*\\{0,1\\}$PAPERPLANE_ARCHIVE$" "$PAPERPLANE_STAGING/SHA256SUMS" | cut -d' ' -f1)"
   if command -v sha256sum >/dev/null 2>&1; then
-    ROVE_ACTUAL="$(sha256sum "$ROVE_STAGING/$ROVE_ARCHIVE" | cut -d' ' -f1)"
+    PAPERPLANE_ACTUAL="$(sha256sum "$PAPERPLANE_STAGING/$PAPERPLANE_ARCHIVE" | cut -d' ' -f1)"
   else
-    ROVE_ACTUAL="$(shasum -a 256 "$ROVE_STAGING/$ROVE_ARCHIVE" | cut -d' ' -f1)"
+    PAPERPLANE_ACTUAL="$(shasum -a 256 "$PAPERPLANE_STAGING/$PAPERPLANE_ARCHIVE" | cut -d' ' -f1)"
   fi
-  if [ -z "$ROVE_EXPECTED" ] || [ "$ROVE_ACTUAL" != "$ROVE_EXPECTED" ]; then
-    printf 'Checksum mismatch for %s.\\n' "$ROVE_ARCHIVE" >&2; exit 1
+  if [ -z "$PAPERPLANE_EXPECTED" ] || [ "$PAPERPLANE_ACTUAL" != "$PAPERPLANE_EXPECTED" ]; then
+    printf 'Checksum mismatch for %s.\\n' "$PAPERPLANE_ARCHIVE" >&2; exit 1
   fi
-  tar -xzf "$ROVE_STAGING/$ROVE_ARCHIVE" -C "$ROVE_STAGING" --strip-components=1
-  rm -f "$ROVE_STAGING/$ROVE_ARCHIVE" "$ROVE_STAGING/SHA256SUMS"
+  tar -xzf "$PAPERPLANE_STAGING/$PAPERPLANE_ARCHIVE" -C "$PAPERPLANE_STAGING" --strip-components=1
+  rm -f "$PAPERPLANE_STAGING/$PAPERPLANE_ARCHIVE" "$PAPERPLANE_STAGING/SHA256SUMS"
   # Prove the binary runs here (libc, arch) before marking it ready, or every
   # later launch would exec a broken install instead of retrying.
-  if ! "$ROVE_STAGING/paperplane" --version >/dev/null 2>&1; then
-    printf 'The paperplane %s executable does not run on this host.\\n' "$ROVE_ARCHIVE_VERSION" >&2; exit 1
+  if ! "$PAPERPLANE_STAGING/paperplane" --version >/dev/null 2>&1; then
+    printf 'The paperplane %s executable does not run on this host.\\n' "$PAPERPLANE_ARCHIVE_VERSION" >&2; exit 1
   fi
-  printf '%s\\n' "$ROVE_ARCHIVE_VERSION" > "$ROVE_STAGING/.install-complete"
-  rm -rf "$ROVE_RUNTIME_DIR"
-  mv "$ROVE_STAGING" "$ROVE_RUNTIME_DIR"
+  printf '%s\\n' "$PAPERPLANE_ARCHIVE_VERSION" > "$PAPERPLANE_STAGING/.install-complete"
+  rm -rf "$PAPERPLANE_RUNTIME_DIR"
+  mv "$PAPERPLANE_STAGING" "$PAPERPLANE_RUNTIME_DIR"
 fi
-if [ -n "\${ROVE_LOCK:-}" ]; then
-  rm -rf "$ROVE_LOCK"
+if [ -n "\${PAPERPLANE_LOCK:-}" ]; then
+  rm -rf "$PAPERPLANE_LOCK"
   trap - EXIT
 fi
-exec "$ROVE_RUNTIME_DIR/paperplane" "$@"
+exec "$PAPERPLANE_RUNTIME_DIR/paperplane" "$@"
 `;
 
 const REMOTE_LAUNCH_SCRIPT = `set -eu
 # This connection always uses the remote default home. Let startup migrate it.
-unset ROVE_HOME
-@@ROVE_NODE_ENV_SCRIPT@@
+unset PAPERPLANE_HOME
+@@PAPERPLANE_NODE_ENV_SCRIPT@@
 STATE_KEY="$1"
 STATE_DIR="$HOME/.paperplane/ssh-launch/$STATE_KEY"
 DEFAULT_SERVER_HOME="$HOME/.paperplane"
@@ -578,7 +578,7 @@ cleanup_runner_next() {
 }
 trap cleanup_runner_next EXIT
 cat >"$RUNNER_NEXT" <<'SH'
-@@ROVE_RUNNER_SCRIPT@@
+@@PAPERPLANE_RUNNER_SCRIPT@@
 SH
 RUNNER_CHANGED=0
 if [ ! -f "$RUNNER_FILE" ] || ! cmp -s "$RUNNER_NEXT" "$RUNNER_FILE"; then
@@ -586,8 +586,8 @@ if [ ! -f "$RUNNER_FILE" ] || ! cmp -s "$RUNNER_NEXT" "$RUNNER_FILE"; then
 fi
 mv "$RUNNER_NEXT" "$RUNNER_FILE"
 chmod 700 "$RUNNER_FILE"
-ROVE_ARCHIVE_MODE=@@ROVE_ARCHIVE_MODE@@
-if [ "$ROVE_ARCHIVE_MODE" = "1" ]; then
+PAPERPLANE_ARCHIVE_MODE=@@PAPERPLANE_ARCHIVE_MODE@@
+if [ "$PAPERPLANE_ARCHIVE_MODE" = "1" ]; then
   # The archive ships the helpers below inside the executable; the remote
   # needs no Node at all. Resolving the runner once here also downloads the
   # archive before the port and readiness probes rely on it.
@@ -597,21 +597,21 @@ elif ! ensure_remote_node_path; then
   exit 1
 fi
 pick_port() {
-  if [ "$ROVE_ARCHIVE_MODE" = "1" ]; then
-    "$RUNNER_FILE" __ssh-helper pick-port "$PORT_FILE" "@@ROVE_DEFAULT_REMOTE_PORT@@" "@@ROVE_REMOTE_PORT_SCAN_WINDOW@@"
+  if [ "$PAPERPLANE_ARCHIVE_MODE" = "1" ]; then
+    "$RUNNER_FILE" __ssh-helper pick-port "$PORT_FILE" "@@PAPERPLANE_DEFAULT_REMOTE_PORT@@" "@@PAPERPLANE_REMOTE_PORT_SCAN_WINDOW@@"
     return
   fi
-  node - "$PORT_FILE" "@@ROVE_DEFAULT_REMOTE_PORT@@" "@@ROVE_REMOTE_PORT_SCAN_WINDOW@@" <<'NODE'
-@@ROVE_PICK_PORT_SCRIPT@@
+  node - "$PORT_FILE" "@@PAPERPLANE_DEFAULT_REMOTE_PORT@@" "@@PAPERPLANE_REMOTE_PORT_SCAN_WINDOW@@" <<'NODE'
+@@PAPERPLANE_PICK_PORT_SCRIPT@@
 NODE
 }
 wait_ready() {
-  if [ "$ROVE_ARCHIVE_MODE" = "1" ]; then
-    "$RUNNER_FILE" __ssh-helper wait-ready "$REMOTE_PORT" "$1" "@@ROVE_READY_PROBE_TIMEOUT_MS@@"
+  if [ "$PAPERPLANE_ARCHIVE_MODE" = "1" ]; then
+    "$RUNNER_FILE" __ssh-helper wait-ready "$REMOTE_PORT" "$1" "@@PAPERPLANE_READY_PROBE_TIMEOUT_MS@@"
     return
   fi
-  node - "$REMOTE_PORT" "$1" "@@ROVE_READY_PROBE_TIMEOUT_MS@@" <<'NODE'
-@@ROVE_WAIT_READY_SCRIPT@@
+  node - "$REMOTE_PORT" "$1" "@@PAPERPLANE_READY_PROBE_TIMEOUT_MS@@" <<'NODE'
+@@PAPERPLANE_WAIT_READY_SCRIPT@@
 NODE
 }
 wait_for_pid_exit() {
@@ -631,7 +631,7 @@ server_running() {
   esac
 }
 resolve_default_runtime_port() {
-  if [ "$ROVE_ARCHIVE_MODE" = "1" ]; then
+  if [ "$PAPERPLANE_ARCHIVE_MODE" = "1" ]; then
     "$RUNNER_FILE" __ssh-helper runtime-port "$DEFAULT_RUNTIME_FILE"
     return
   fi
@@ -675,7 +675,7 @@ if [ -n "$DEFAULT_REMOTE_PORT" ] && [ "$REMOTE_MANAGED" = "managed" ] && [ "$DEF
   printf '%s\\n' "$REMOTE_PORT" >"$PORT_FILE"
 elif [ -n "$DEFAULT_REMOTE_PORT" ]; then
   REMOTE_PORT="$DEFAULT_REMOTE_PORT"
-  if wait_ready "@@ROVE_REUSE_READY_TIMEOUT_MS@@"; then
+  if wait_ready "@@PAPERPLANE_REUSE_READY_TIMEOUT_MS@@"; then
     ADOPTED_PID="$DEFAULT_RUNTIME_PID"
     if [ "$REMOTE_MANAGED" = "managed" ]; then
       if [ -n "$REMOTE_PID" ] && kill -0 "$REMOTE_PID" 2>/dev/null; then
@@ -705,7 +705,7 @@ if [ "$REMOTE_MANAGED" = "external" ]; then
   # it again could catch a momentary stall and launch a second server beside it.
   if server_running "$ADOPTED_PID"; then
     :
-  elif [ -z "$REMOTE_PORT" ] || ! wait_ready "@@ROVE_REUSE_READY_TIMEOUT_MS@@"; then
+  elif [ -z "$REMOTE_PORT" ] || ! wait_ready "@@PAPERPLANE_REUSE_READY_TIMEOUT_MS@@"; then
     REMOTE_PID=""
     REMOTE_PORT=""
     REMOTE_MANAGED=""
@@ -719,7 +719,7 @@ elif [ -n "$REMOTE_PID" ] && [ -n "$REMOTE_PORT" ] && server_running "$REMOTE_PI
     REMOTE_PID=""
     REMOTE_PORT=""
     REMOTE_MANAGED=""
-  elif ! wait_ready "@@ROVE_READY_TIMEOUT_MS@@"; then
+  elif ! wait_ready "@@PAPERPLANE_READY_TIMEOUT_MS@@"; then
     printf 'Remote Paperplane server is still running but did not become ready. Retry the connection; the server was left running.\\n' >&2
     exit 1
   fi
@@ -731,19 +731,19 @@ fi
 if [ -z "$REMOTE_PORT" ]; then
   REMOTE_PORT="$(pick_port)" || true
   if [ -z "$REMOTE_PORT" ]; then
-    if [ "$ROVE_ARCHIVE_MODE" = "1" ]; then
+    if [ "$PAPERPLANE_ARCHIVE_MODE" = "1" ]; then
       printf 'Failed to find an available port on the remote host.\\n' >&2
     else
       printf 'Failed to find an available port on the remote host. Ensure node is available on PATH.\\n' >&2
     fi
     exit 1
   fi
-  nohup env ROVE_NO_BROWSER=1 "$RUNNER_FILE" serve --host 127.0.0.1 --port "$REMOTE_PORT" >>"$LOG_FILE" 2>&1 < /dev/null &
+  nohup env PAPERPLANE_NO_BROWSER=1 "$RUNNER_FILE" serve --host 127.0.0.1 --port "$REMOTE_PORT" >>"$LOG_FILE" 2>&1 < /dev/null &
   REMOTE_PID="$!"
   printf '%s\\n' "$REMOTE_PID" >"$PID_FILE"
   printf '%s\\n' "$REMOTE_PORT" >"$PORT_FILE"
   printf 'managed\\n' >"$MANAGED_FILE"
-  if ! wait_ready "@@ROVE_READY_TIMEOUT_MS@@"; then
+  if ! wait_ready "@@PAPERPLANE_READY_TIMEOUT_MS@@"; then
     printf 'Remote Paperplane server did not become ready on 127.0.0.1:%s.\\n' "$REMOTE_PORT" >&2
     if [ -s "$LOG_FILE" ]; then
       tail -n 80 "$LOG_FILE" >&2 2>/dev/null || true
@@ -761,8 +761,8 @@ printf '{"remotePort":%s,"serverKind":"%s"}\\n' "$REMOTE_PORT" "\${REMOTE_MANAGE
 
 const REMOTE_SERVICE_LAUNCH_SCRIPT = `set -eu
 # This connection always uses the remote default home. Let startup migrate it.
-unset ROVE_HOME
-@@ROVE_NODE_ENV_SCRIPT@@
+unset PAPERPLANE_HOME
+@@PAPERPLANE_NODE_ENV_SCRIPT@@
 STATE_KEY="$1"
 STATE_DIR="$HOME/.paperplane/ssh-launch/$STATE_KEY"
 DEFAULT_SERVER_HOME="$HOME/.paperplane"
@@ -770,19 +770,19 @@ DEFAULT_RUNTIME_FILE="$DEFAULT_SERVER_HOME/userdata/server-runtime.json"
 RUNNER_FILE="$STATE_DIR/run-rove.sh"
 mkdir -p "$STATE_DIR"
 cat >"$RUNNER_FILE" <<'SH'
-@@ROVE_RUNNER_SCRIPT@@
+@@PAPERPLANE_RUNNER_SCRIPT@@
 SH
 chmod 700 "$RUNNER_FILE"
 "$RUNNER_FILE" --version >/dev/null
 ensure_remote_node_path >/dev/null 2>&1 || true
 RUNTIME_INFO="$("$RUNNER_FILE" __ssh-helper runtime-port "$DEFAULT_RUNTIME_FILE" --service 2>/dev/null || true)"
-if [ -z "$RUNTIME_INFO" ] || ! "$RUNNER_FILE" __ssh-helper wait-ready "\${RUNTIME_INFO#* }" "@@ROVE_REUSE_READY_TIMEOUT_MS@@" "@@ROVE_READY_PROBE_TIMEOUT_MS@@"; then
+if [ -z "$RUNTIME_INFO" ] || ! "$RUNNER_FILE" __ssh-helper wait-ready "\${RUNTIME_INFO#* }" "@@PAPERPLANE_REUSE_READY_TIMEOUT_MS@@" "@@PAPERPLANE_READY_PROBE_TIMEOUT_MS@@"; then
   SERVICE_STATUS="$("$RUNNER_FILE" service status --json)"
   case "$SERVICE_STATUS" in
     *'"installed":true'*) "$RUNNER_FILE" service restart >&2 ;;
     *) "$RUNNER_FILE" service install >&2 ;;
   esac
-  if ! RUNTIME_INFO="$("$RUNNER_FILE" __ssh-helper wait-service "$DEFAULT_RUNTIME_FILE" "@@ROVE_READY_TIMEOUT_MS@@" "@@ROVE_READY_PROBE_TIMEOUT_MS@@")"; then
+  if ! RUNTIME_INFO="$("$RUNNER_FILE" __ssh-helper wait-service "$DEFAULT_RUNTIME_FILE" "@@PAPERPLANE_READY_TIMEOUT_MS@@" "@@PAPERPLANE_READY_PROBE_TIMEOUT_MS@@")"; then
     printf 'The persistent Paperplane service did not become ready. Run paperplane service status and paperplane triage on the host. SSH requires a loopback-reachable server.\\n' >&2
     exit 1
   fi
@@ -796,19 +796,19 @@ printf '{"remotePort":%s,"serverKind":"external"}\\n' "$REMOTE_PORT"
 
 const REMOTE_PAIRING_SCRIPT = `set -eu
 # This connection always uses the remote default home. Let startup migrate it.
-unset ROVE_HOME
-STATE_DIR="$HOME/.paperplane/ssh-launch/@@ROVE_STATE_KEY@@"
+unset PAPERPLANE_HOME
+STATE_DIR="$HOME/.paperplane/ssh-launch/@@PAPERPLANE_STATE_KEY@@"
 RUNNER_FILE="$STATE_DIR/run-rove.sh"
 mkdir -p "$STATE_DIR"
 cat >"$RUNNER_FILE" <<'SH'
-@@ROVE_RUNNER_SCRIPT@@
+@@PAPERPLANE_RUNNER_SCRIPT@@
 SH
 chmod 700 "$RUNNER_FILE"
 "$RUNNER_FILE" auth pairing create --json
 `;
 
 const REMOTE_STOP_SCRIPT = `set -eu
-STATE_DIR="$HOME/.paperplane/ssh-launch/@@ROVE_STATE_KEY@@"
+STATE_DIR="$HOME/.paperplane/ssh-launch/@@PAPERPLANE_STATE_KEY@@"
 PID_FILE="$STATE_DIR/pid"
 PORT_FILE="$STATE_DIR/port"
 MANAGED_FILE="$STATE_DIR/managed"
@@ -831,7 +831,7 @@ printf '{"stopped":true}\\n'
 `;
 
 const REMOTE_LOG_TAIL_SCRIPT = `set -eu
-STATE_DIR="$HOME/.paperplane/ssh-launch/@@ROVE_STATE_KEY@@"
+STATE_DIR="$HOME/.paperplane/ssh-launch/@@PAPERPLANE_STATE_KEY@@"
 LOG_FILE="$STATE_DIR/server.log"
 if [ -f "$LOG_FILE" ]; then
   tail -n 80 "$LOG_FILE" 2>/dev/null || true
@@ -878,13 +878,13 @@ export function buildRemoteRoveRunnerScript(input?: RemoteRoveRunnerOptions): st
   );
   return stripTrailingNewlines(
     applyScriptPlaceholders(REMOTE_RUNNER_SCRIPT, {
-      ROVE_NODE_SCRIPT_PATH: shellSingleQuote(nodeScriptPath),
-      ROVE_ARCHIVE_VERSION: shellSingleQuote(archiveVersion),
-      ROVE_RELEASE_BASE_URL: shellSingleQuote(releaseBaseUrl),
-      ROVE_ARCHIVE_LOCK_WAIT_SECONDS: String(REMOTE_ARCHIVE_LOCK_WAIT_SECONDS),
-      ROVE_ARCHIVE_DOWNLOAD_SECONDS: String(REMOTE_ARCHIVE_DOWNLOAD_SECONDS),
-      ROVE_ARCHIVE_CHECKSUMS_SECONDS: String(REMOTE_ARCHIVE_CHECKSUMS_SECONDS),
-      ROVE_NODE_ENV_SCRIPT: buildRemoteNodeEnvScript(input),
+      PAPERPLANE_NODE_SCRIPT_PATH: shellSingleQuote(nodeScriptPath),
+      PAPERPLANE_ARCHIVE_VERSION: shellSingleQuote(archiveVersion),
+      PAPERPLANE_RELEASE_BASE_URL: shellSingleQuote(releaseBaseUrl),
+      PAPERPLANE_ARCHIVE_LOCK_WAIT_SECONDS: String(REMOTE_ARCHIVE_LOCK_WAIT_SECONDS),
+      PAPERPLANE_ARCHIVE_DOWNLOAD_SECONDS: String(REMOTE_ARCHIVE_DOWNLOAD_SECONDS),
+      PAPERPLANE_ARCHIVE_CHECKSUMS_SECONDS: String(REMOTE_ARCHIVE_CHECKSUMS_SECONDS),
+      PAPERPLANE_NODE_ENV_SCRIPT: buildRemoteNodeEnvScript(input),
     }),
   );
 }
@@ -892,8 +892,10 @@ export function buildRemoteRoveRunnerScript(input?: RemoteRoveRunnerOptions): st
 export function buildRemoteNodeEnvScript(input?: RemoteRoveRunnerOptions): string {
   return stripTrailingNewlines(
     applyScriptPlaceholders(REMOTE_NODE_ENV_SCRIPT, {
-      ROVE_NODE_ENGINE_RANGE: shellSingleQuote(input?.nodeEngineRange?.trim() || ""),
-      ROVE_NODE_ENGINE_CHECK_SCRIPT: stripTrailingNewlines(buildRemoteNodeEngineCheckScript()),
+      PAPERPLANE_NODE_ENGINE_RANGE: shellSingleQuote(input?.nodeEngineRange?.trim() || ""),
+      PAPERPLANE_NODE_ENGINE_CHECK_SCRIPT: stripTrailingNewlines(
+        buildRemoteNodeEngineCheckScript(),
+      ),
     }),
   );
 }
@@ -902,16 +904,16 @@ export function buildRemoteLaunchScript(input?: RemoteRoveRunnerOptions): string
   return applyScriptPlaceholders(
     isNodeScriptRunner(input) ? REMOTE_LAUNCH_SCRIPT : REMOTE_SERVICE_LAUNCH_SCRIPT,
     {
-      ROVE_ARCHIVE_MODE: isNodeScriptRunner(input) ? "0" : "1",
-      ROVE_NODE_ENV_SCRIPT: buildRemoteNodeEnvScript(input),
-      ROVE_RUNNER_SCRIPT: stripTrailingNewlines(buildRemoteRoveRunnerScript(input)),
-      ROVE_PICK_PORT_SCRIPT: stripTrailingNewlines(REMOTE_PICK_PORT_SCRIPT),
-      ROVE_WAIT_READY_SCRIPT: stripTrailingNewlines(REMOTE_WAIT_READY_SCRIPT),
-      ROVE_DEFAULT_REMOTE_PORT: String(DEFAULT_REMOTE_PORT),
-      ROVE_REMOTE_PORT_SCAN_WINDOW: String(REMOTE_PORT_SCAN_WINDOW),
-      ROVE_READY_TIMEOUT_MS: String(REMOTE_READY_TIMEOUT_MS),
-      ROVE_REUSE_READY_TIMEOUT_MS: String(REMOTE_REUSE_READY_TIMEOUT_MS),
-      ROVE_READY_PROBE_TIMEOUT_MS: String(SSH_READY_PROBE_TIMEOUT_MS),
+      PAPERPLANE_ARCHIVE_MODE: isNodeScriptRunner(input) ? "0" : "1",
+      PAPERPLANE_NODE_ENV_SCRIPT: buildRemoteNodeEnvScript(input),
+      PAPERPLANE_RUNNER_SCRIPT: stripTrailingNewlines(buildRemoteRoveRunnerScript(input)),
+      PAPERPLANE_PICK_PORT_SCRIPT: stripTrailingNewlines(REMOTE_PICK_PORT_SCRIPT),
+      PAPERPLANE_WAIT_READY_SCRIPT: stripTrailingNewlines(REMOTE_WAIT_READY_SCRIPT),
+      PAPERPLANE_DEFAULT_REMOTE_PORT: String(DEFAULT_REMOTE_PORT),
+      PAPERPLANE_REMOTE_PORT_SCAN_WINDOW: String(REMOTE_PORT_SCAN_WINDOW),
+      PAPERPLANE_READY_TIMEOUT_MS: String(REMOTE_READY_TIMEOUT_MS),
+      PAPERPLANE_REUSE_READY_TIMEOUT_MS: String(REMOTE_REUSE_READY_TIMEOUT_MS),
+      PAPERPLANE_READY_PROBE_TIMEOUT_MS: String(SSH_READY_PROBE_TIMEOUT_MS),
     },
   );
 }
@@ -921,20 +923,20 @@ export function buildRemotePairingScript(
   input?: RemoteRoveRunnerOptions,
 ): string {
   return applyScriptPlaceholders(REMOTE_PAIRING_SCRIPT, {
-    ROVE_STATE_KEY: stateKey,
-    ROVE_RUNNER_SCRIPT: stripTrailingNewlines(buildRemoteRoveRunnerScript(input)),
+    PAPERPLANE_STATE_KEY: stateKey,
+    PAPERPLANE_RUNNER_SCRIPT: stripTrailingNewlines(buildRemoteRoveRunnerScript(input)),
   });
 }
 
 export function buildRemoteStopScript(stateKey: string): string {
   return applyScriptPlaceholders(REMOTE_STOP_SCRIPT, {
-    ROVE_STATE_KEY: stateKey,
+    PAPERPLANE_STATE_KEY: stateKey,
   });
 }
 
 function buildRemoteLogTailScript(stateKey: string): string {
   return applyScriptPlaceholders(REMOTE_LOG_TAIL_SCRIPT, {
-    ROVE_STATE_KEY: stateKey,
+    PAPERPLANE_STATE_KEY: stateKey,
   });
 }
 

@@ -10,7 +10,7 @@ import { makeComponentLogger } from "./DesktopObservability.ts";
 // to run (`sudo paperplane browser setup`) had nothing to call. The app keeps a small
 // launcher for its bundled CLI in the Paperplane home, which is never on PATH and so
 // never shadows another `paperplane`, and the server names it by absolute path in those
-// commands through ROVE_CLI_PATH. An AppImage mounts somewhere new each run,
+// commands through PAPERPLANE_CLI_PATH. An AppImage mounts somewhere new each run,
 // so its launcher mounts the AppImage itself instead of pointing into it.
 const { logInfo, logWarning } = makeComponentLogger("desktop-cli-shim");
 
@@ -63,8 +63,8 @@ export const renderCliShim = (input: {
             "chcp 65001 >nul",
           ]
         : []),
-      `set "ROVE_CLI_PATH=${cmdText(input.shimPath)}"`,
-      `if not defined ROVE_HOME set "ROVE_HOME=${cmdText(input.roveHome)}"`,
+      `set "PAPERPLANE_CLI_PATH=${cmdText(input.shimPath)}"`,
+      `if not defined PAPERPLANE_HOME set "PAPERPLANE_HOME=${cmdText(input.roveHome)}"`,
       'set "ELECTRON_RUN_AS_NODE=1"',
       // A goto, not a parenthesized block: "Program Files (x86)" would close the block early.
       `if exist ${cmdWord(target.executable)} goto run`,
@@ -82,9 +82,9 @@ export const renderCliShim = (input: {
   const header = [
     "#!/bin/sh",
     `# ${MARKER}`,
-    `export ROVE_CLI_PATH=${shellWord(input.shimPath)}`,
+    `export PAPERPLANE_CLI_PATH=${shellWord(input.shimPath)}`,
     `home=${shellWord(input.roveHome)}`,
-    'export ROVE_HOME="${ROVE_HOME:-$home}"',
+    'export PAPERPLANE_HOME="${PAPERPLANE_HOME:-$home}"',
     "export ELECTRON_RUN_AS_NODE=1",
     `app=${shellWord(target.kind === "appimage" ? target.appImage : target.executable)}`,
     'if [ ! -x "$app" ]; then',
@@ -135,7 +135,7 @@ export const launcherPath = (environment: DesktopEnvironment.DesktopEnvironment[
 
 /**
  * Writes the packaged app's launcher to `<Paperplane home>/bin` and returns its path
- * for the backend's ROVE_CLI_PATH. Development builds run from a checkout
+ * for the backend's PAPERPLANE_CLI_PATH. Development builds run from a checkout
  * and get none.
  */
 export const install = Effect.gen(function* () {

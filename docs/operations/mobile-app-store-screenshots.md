@@ -2,7 +2,7 @@
 
 > For maintainers. Using Paperplane? See [docs/user](../user/).
 >
-> Paperplane's mobile app is source-only. This harness prepares assets for a future store release; it does not imply App Store or Google Play availability. Keep `ROVE_MOBILE_STORES_READY` off until that release is reviewed.
+> Paperplane's mobile app is source-only. This harness prepares assets for a future store release; it does not imply App Store or Google Play availability. Keep `PAPERPLANE_MOBILE_STORES_READY` off until that release is reviewed.
 
 The screenshot harness runs the real mobile application against three disposable local Paperplane
 environments. It creates an isolated base directory and server for each environment, real Git
@@ -126,7 +126,7 @@ Download `app-store-connect-screenshots` and `google-play-screenshots` from the 
 Artifacts section. Artifacts are retained for 14 days.
 
 The workflow uses the same checked-in device and scene matrix as local capture. Android remains
-ARM64 by default for local Apple Silicon development; CI sets `ROVE_SHOWCASE_ANDROID_ABI=x86_64` so the
+ARM64 by default for local Apple Silicon development; CI sets `PAPERPLANE_SHOWCASE_ANDROID_ABI=x86_64` so the
 debug APK matches its accelerated emulator.
 
 ## Fast iteration

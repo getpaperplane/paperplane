@@ -1,6 +1,6 @@
 name: Release
 
-# Scheduled nightlies publish only when ROVE_RELEASE_READY is enabled and
+# Scheduled nightlies publish only when PAPERPLANE_RELEASE_READY is enabled and
 # new commits pass the release-gap check. Stable and preview remain manual.
 on:
   schedule:
@@ -49,7 +49,7 @@ jobs:
   # have already run. Scheduled runs also decide here whether a nightly is due.
   resolve_commit:
     name: Resolve release commit
-    if: inputs.build_only || vars.ROVE_RELEASE_READY == 'true'
+    if: inputs.build_only || vars.PAPERPLANE_RELEASE_READY == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     outputs:
@@ -139,10 +139,10 @@ jobs:
 
       - name: Check public release identity
         env:
-          ROVE_MARKETING_RELEASE_READY: ${{ vars.ROVE_MARKETING_RELEASE_READY }}
-          ROVE_HOSTED_RELEASE_READY: ${{ vars.ROVE_HOSTED_RELEASE_READY }}
-          ROVE_MOBILE_STORES_READY: ${{ vars.ROVE_MOBILE_STORES_READY }}
-          ROVE_MOBILE_SIDELOAD_READY: ${{ vars.ROVE_MOBILE_SIDELOAD_READY }}
+          PAPERPLANE_MARKETING_RELEASE_READY: ${{ vars.PAPERPLANE_MARKETING_RELEASE_READY }}
+          PAPERPLANE_HOSTED_RELEASE_READY: ${{ vars.PAPERPLANE_HOSTED_RELEASE_READY }}
+          PAPERPLANE_MOBILE_STORES_READY: ${{ vars.PAPERPLANE_MOBILE_STORES_READY }}
+          PAPERPLANE_MOBILE_SIDELOAD_READY: ${{ vars.PAPERPLANE_MOBILE_SIDELOAD_READY }}
         run: node scripts/check-release-identity.mjs
 
       - name: Setup Vite+
@@ -376,11 +376,11 @@ jobs:
     name: Resolve Paperplane Connect public config
     # Consumes only the release commit, not preflight's resolved version, so it
     # runs alongside preflight instead of after it. The condition mirrors preflight's.
-    # Gated behind ROVE_CLOUD_READY: forks without Clerk/Cloudflare skip this
+    # Gated behind PAPERPLANE_CLOUD_READY: forks without Clerk/Cloudflare skip this
     # job and produce a community build (no Paperplane Connect baked in).
     needs: [resolve_commit]
     if: |
-      vars.ROVE_CLOUD_READY == 'true' &&
+      vars.PAPERPLANE_CLOUD_READY == 'true' &&
       needs.resolve_commit.result == 'success' &&
       (github.event_name != 'schedule' || needs.resolve_commit.outputs.has_changes == 'true')
     runs-on: ubuntu-24.04
@@ -436,9 +436,9 @@ jobs:
           token="$(field clientTracingToken)"
           echo "::add-mask::$token"
           {
-            echo "ROVE_RELAY_CLIENT_OTLP_TRACES_URL=$url"
-            echo "ROVE_RELAY_CLIENT_OTLP_TRACES_DATASET=$dataset"
-            echo "ROVE_RELAY_CLIENT_OTLP_TRACES_TOKEN=$token"
+            echo "PAPERPLANE_RELAY_CLIENT_OTLP_TRACES_URL=$url"
+            echo "PAPERPLANE_RELAY_CLIENT_OTLP_TRACES_DATASET=$dataset"
+            echo "PAPERPLANE_RELAY_CLIENT_OTLP_TRACES_TOKEN=$token"
           } > "$RUNNER_TEMP/relay-client-tracing.env"
 
       - name: Upload relay client tracing config
@@ -494,10 +494,10 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     env:
-      ROVE_CLERK_PUBLISHABLE_KEY: ${{ needs.relay_public_config.outputs.clerk_publishable_key }}
-      ROVE_CLERK_JWT_TEMPLATE: ${{ needs.relay_public_config.outputs.clerk_jwt_template }}
-      ROVE_CLERK_CLI_OAUTH_CLIENT_ID: ${{ needs.relay_public_config.outputs.clerk_cli_oauth_client_id }}
-      ROVE_RELAY_URL: ${{ needs.relay_public_config.outputs.relay_url }}
+      PAPERPLANE_CLERK_PUBLISHABLE_KEY: ${{ needs.relay_public_config.outputs.clerk_publishable_key }}
+      PAPERPLANE_CLERK_JWT_TEMPLATE: ${{ needs.relay_public_config.outputs.clerk_jwt_template }}
+      PAPERPLANE_CLERK_CLI_OAUTH_CLIENT_ID: ${{ needs.relay_public_config.outputs.clerk_cli_oauth_client_id }}
+      PAPERPLANE_RELAY_URL: ${{ needs.relay_public_config.outputs.relay_url }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -541,7 +541,7 @@ jobs:
         shell: bash
         run: |
           config_path="$RUNNER_TEMP/relay-client-tracing/relay-client-tracing.env"
-          tracing_token="$(sed -n 's/^ROVE_RELAY_CLIENT_OTLP_TRACES_TOKEN=//p' "$config_path")"
+          tracing_token="$(sed -n 's/^PAPERPLANE_RELAY_CLIENT_OTLP_TRACES_TOKEN=//p' "$config_path")"
           echo "::add-mask::$tracing_token"
           cat "$config_path" >> "$GITHUB_ENV"
 
@@ -961,7 +961,7 @@ jobs:
   build_web:
     name: Build hosted web app
     needs: [preflight]
-    if: ${{ vars.ROVE_CLOUDFLARE_WEB_READY == 'true' && !cancelled() && needs.preflight.result == 'success' && contains(fromJSON('["stable", "nightly"]'), needs.preflight.outputs.release_channel) }}
+    if: ${{ vars.PAPERPLANE_CLOUDFLARE_WEB_READY == 'true' && !cancelled() && needs.preflight.result == 'success' && contains(fromJSON('["stable", "nightly"]'), needs.preflight.outputs.release_channel) }}
     uses: ./.github/workflows/cloudflare-web.yml
     secrets: inherit
     with:
@@ -975,7 +975,7 @@ jobs:
   build_marketing:
     name: Build marketing site
     needs: [preflight]
-    if: ${{ !inputs.build_only && vars.ROVE_MARKETING_RELEASE_READY == 'true' && !cancelled() && needs.preflight.result == 'success' && needs.preflight.outputs.release_channel == 'stable' }}
+    if: ${{ !inputs.build_only && vars.PAPERPLANE_MARKETING_RELEASE_READY == 'true' && !cancelled() && needs.preflight.result == 'success' && needs.preflight.outputs.release_channel == 'stable' }}
     uses: ./.github/workflows/cloudflare-marketing.yml
     secrets: inherit
     with:
@@ -985,7 +985,7 @@ jobs:
   mobile_sideload:
     name: Build mobile sideload binaries
     needs: [preflight]
-    if: ${{ vars.ROVE_MOBILE_SIDELOAD_READY == 'true' && contains(fromJSON('["stable", "nightly", "preview"]'), needs.preflight.outputs.release_channel) }}
+    if: ${{ vars.PAPERPLANE_MOBILE_SIDELOAD_READY == 'true' && contains(fromJSON('["stable", "nightly", "preview"]'), needs.preflight.outputs.release_channel) }}
     uses: ./.github/workflows/mobile-sideload.yml
     permissions:
       contents: write
@@ -1212,7 +1212,7 @@ jobs:
   deploy_web:
     name: Deploy hosted web app
     needs: [preflight, release, build_web]
-    if: ${{ vars.ROVE_CLOUDFLARE_WEB_READY == 'true' && !failure() && !cancelled() && needs.preflight.result == 'success' && needs.release.result == 'success' && needs.build_web.result == 'success' && contains(fromJSON('["stable", "nightly"]'), needs.preflight.outputs.release_channel) }}
+    if: ${{ vars.PAPERPLANE_CLOUDFLARE_WEB_READY == 'true' && !failure() && !cancelled() && needs.preflight.result == 'success' && needs.release.result == 'success' && needs.build_web.result == 'success' && contains(fromJSON('["stable", "nightly"]'), needs.preflight.outputs.release_channel) }}
     uses: ./.github/workflows/cloudflare-web.yml
     secrets: inherit
     with:
@@ -1225,7 +1225,7 @@ jobs:
   deploy_marketing:
     name: Deploy marketing site
     needs: [preflight, release, build_marketing]
-    if: ${{ vars.ROVE_MARKETING_RELEASE_READY == 'true' && !failure() && !cancelled() && needs.preflight.result == 'success' && needs.release.result == 'success' && needs.build_marketing.result == 'success' && needs.preflight.outputs.release_channel == 'stable' }}
+    if: ${{ vars.PAPERPLANE_MARKETING_RELEASE_READY == 'true' && !failure() && !cancelled() && needs.preflight.result == 'success' && needs.release.result == 'success' && needs.build_marketing.result == 'success' && needs.preflight.outputs.release_channel == 'stable' }}
     uses: ./.github/workflows/cloudflare-marketing.yml
     secrets: inherit
     with:

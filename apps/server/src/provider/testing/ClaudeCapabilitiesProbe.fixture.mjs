@@ -16,7 +16,7 @@ if (rawMcpConfig) {
   }
 }
 NodeFS.writeFileSync(
-  process.env.ROVE_PROBE_INVOCATION_PATH,
+  process.env.PAPERPLANE_PROBE_INVOCATION_PATH,
   JSON.stringify({
     args,
     cwd: process.cwd(),

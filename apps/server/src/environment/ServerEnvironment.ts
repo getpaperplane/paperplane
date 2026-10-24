@@ -42,7 +42,7 @@ export class ServerEnvironmentIdPersistenceError extends Schema.TaggedError<Serv
 
 declare const __ROVE_BUILD_CLOUD_READY__: boolean | undefined;
 const cloudReady =
-  process.env.ROVE_CLOUD_READY === "1" ||
+  process.env.PAPERPLANE_CLOUD_READY === "1" ||
   (typeof __ROVE_BUILD_CLOUD_READY__ !== "undefined" && __ROVE_BUILD_CLOUD_READY__);
 
 export class ServerEnvironmentCloudReady extends Context.Reference<boolean>(

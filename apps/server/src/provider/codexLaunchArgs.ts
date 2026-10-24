@@ -1,11 +1,11 @@
 import { tokenizeCliArgs } from "@getpaperplane/shared/cliArgs";
 
-const ROVE_CODEX_LAUNCH_ARGS_ENV = "ROVE_CODEX_LAUNCH_ARGS";
+const PAPERPLANE_CODEX_LAUNCH_ARGS_ENV = "PAPERPLANE_CODEX_LAUNCH_ARGS";
 
 export const resolveCodexLaunchArgs = (
   launchArgs?: string,
   environment: NodeJS.ProcessEnv = process.env,
-) => environment[ROVE_CODEX_LAUNCH_ARGS_ENV]?.trim() || launchArgs?.trim() || "";
+) => environment[PAPERPLANE_CODEX_LAUNCH_ARGS_ENV]?.trim() || launchArgs?.trim() || "";
 
 const codexLaunchArgv = (launchArgs?: string): ReadonlyArray<string> => tokenizeCliArgs(launchArgs);
 

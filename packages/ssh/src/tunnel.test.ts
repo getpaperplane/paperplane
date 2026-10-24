@@ -106,22 +106,22 @@ describe("ssh tunnel scripts", () => {
   it("installs and runs the release archive without Node, npm, or npx", () => {
     const script = SshTunnel.buildRemoteRoveRunnerScript(ARCHIVE);
 
-    assert.include(script, "ROVE_ARCHIVE_VERSION='1.2.3-preview.20260911.4'");
-    assert.include(script, "ROVE_NODE_SCRIPT_PATH=''");
+    assert.include(script, "PAPERPLANE_ARCHIVE_VERSION='1.2.3-preview.20260911.4'");
+    assert.include(script, "PAPERPLANE_NODE_SCRIPT_PATH=''");
     assert.include(
       script,
-      "ROVE_RELEASE_BASE_URL='https://github.com/hafiezul/rove/releases/download'",
+      "PAPERPLANE_RELEASE_BASE_URL='https://github.com/hafiezul/rove/releases/download'",
     );
     assert.include(
       script,
-      'ROVE_RUNTIME_DIR="$HOME/.paperplane/runtime/versions/$ROVE_ARCHIVE_VERSION"',
+      'PAPERPLANE_RUNTIME_DIR="$HOME/.paperplane/runtime/versions/$PAPERPLANE_ARCHIVE_VERSION"',
     );
     assert.include(
       script,
-      'ROVE_ARCHIVE="rove-$ROVE_ARCHIVE_VERSION-$ROVE_PLATFORM-$ROVE_ARCH.tar.gz"',
+      'PAPERPLANE_ARCHIVE="rove-$PAPERPLANE_ARCHIVE_VERSION-$PAPERPLANE_PLATFORM-$PAPERPLANE_ARCH.tar.gz"',
     );
     assert.include(script, "SHA256SUMS");
-    assert.include(script, 'exec "$ROVE_RUNTIME_DIR/paperplane" "$@"');
+    assert.include(script, 'exec "$PAPERPLANE_RUNTIME_DIR/paperplane" "$@"');
     assert.notInclude(script, "npx");
     assert.notInclude(script, "npm exec");
     assert.notInclude(script, "rove@latest");
@@ -130,44 +130,44 @@ describe("ssh tunnel scripts", () => {
     // the completion marker after acquiring it.
     assert.include(
       script,
-      'ROVE_LOCK="$HOME/.paperplane/runtime/versions/.$ROVE_ARCHIVE_VERSION.install.lock"',
+      'PAPERPLANE_LOCK="$HOME/.paperplane/runtime/versions/.$PAPERPLANE_ARCHIVE_VERSION.install.lock"',
     );
     // mkdir is the exclusive create; the pid follows atomically. A dead owner
     // is reclaimed at once, a never-published owner after a short grace.
-    assert.include(script, 'while ! mkdir "$ROVE_LOCK" 2>/dev/null; do');
-    assert.include(script, 'mv "$ROVE_LOCK/pid.tmp" "$ROVE_LOCK/pid"');
-    assert.include(script, 'if ! kill -0 "$ROVE_LOCK_OWNER" 2>/dev/null; then');
-    assert.include(script, 'if [ "$ROVE_LOCK_UNOWNED" -ge 5 ]; then');
-    assert.include(script, 'if [ "$ROVE_LOCK_WAITED" -ge 360 ]; then');
-    assert.include(script, '"$ROVE_STAGING/SHA256SUMS" 30');
-    assert.include(script, '"$ROVE_STAGING/$ROVE_ARCHIVE" 240');
-    assert.notInclude(script, "ROVE_LOCK_CANDIDATE");
+    assert.include(script, 'while ! mkdir "$PAPERPLANE_LOCK" 2>/dev/null; do');
+    assert.include(script, 'mv "$PAPERPLANE_LOCK/pid.tmp" "$PAPERPLANE_LOCK/pid"');
+    assert.include(script, 'if ! kill -0 "$PAPERPLANE_LOCK_OWNER" 2>/dev/null; then');
+    assert.include(script, 'if [ "$PAPERPLANE_LOCK_UNOWNED" -ge 5 ]; then');
+    assert.include(script, 'if [ "$PAPERPLANE_LOCK_WAITED" -ge 360 ]; then');
+    assert.include(script, '"$PAPERPLANE_STAGING/SHA256SUMS" 30');
+    assert.include(script, '"$PAPERPLANE_STAGING/$PAPERPLANE_ARCHIVE" 240');
+    assert.notInclude(script, "PAPERPLANE_LOCK_CANDIDATE");
     assert.notInclude(script, "-mmin");
     assert.equal(script.split("if ! rove_runtime_ready; then").length - 1, 2);
     assert.isBelow(
-      script.indexOf('"$ROVE_STAGING/paperplane" --version'),
-      script.indexOf('> "$ROVE_STAGING/.install-complete"'),
+      script.indexOf('"$PAPERPLANE_STAGING/paperplane" --version'),
+      script.indexOf('> "$PAPERPLANE_STAGING/.install-complete"'),
     );
     // Node discovery is defined for the dev path but only ever invoked inside
     // the node-script branch, which the archive path skips entirely.
     assert.equal(script.split("ensure_remote_node_path || true").length - 1, 1);
     assert.isBelow(
       script.indexOf("ensure_remote_node_path || true"),
-      script.indexOf('exec node "$ROVE_NODE_SCRIPT_PATH" "$@"'),
+      script.indexOf('exec node "$PAPERPLANE_NODE_SCRIPT_PATH" "$@"'),
     );
     assert.isBelow(
-      script.indexOf('exec node "$ROVE_NODE_SCRIPT_PATH" "$@"'),
-      script.indexOf("ROVE_ARCHIVE_VERSION="),
+      script.indexOf('exec node "$PAPERPLANE_NODE_SCRIPT_PATH" "$@"'),
+      script.indexOf("PAPERPLANE_ARCHIVE_VERSION="),
     );
 
     const launch = SshTunnel.buildRemoteLaunchScript({
       ...ARCHIVE,
       releaseBaseUrl: "https://mirror.example/rove/",
     });
-    assert.include(launch, "ROVE_RELEASE_BASE_URL='https://mirror.example/rove'");
+    assert.include(launch, "PAPERPLANE_RELEASE_BASE_URL='https://mirror.example/rove'");
     assert.include(launch, '"$RUNNER_FILE" __ssh-helper wait-service "$DEFAULT_RUNTIME_FILE"');
     assert.include(launch, '"$RUNNER_FILE" __ssh-helper runtime-port "$DEFAULT_RUNTIME_FILE"');
-    assert.include(SshTunnel.buildRemoteLaunchScript(NODE_SCRIPT), "ROVE_ARCHIVE_MODE=0");
+    assert.include(SshTunnel.buildRemoteLaunchScript(NODE_SCRIPT), "PAPERPLANE_ARCHIVE_MODE=0");
   });
 
   it("rejects archive versions that are not a single exact version segment", () => {
@@ -188,7 +188,7 @@ describe("ssh tunnel scripts", () => {
     }
     assert.include(
       SshTunnel.buildRemoteRoveRunnerScript(ARCHIVE),
-      "ROVE_ARCHIVE_VERSION='1.2.3-preview.20260911.4'",
+      "PAPERPLANE_ARCHIVE_VERSION='1.2.3-preview.20260911.4'",
     );
   });
 
@@ -205,7 +205,7 @@ describe("ssh tunnel scripts", () => {
   it("does not hard-code a remote node engine range", () => {
     const script = SshTunnel.buildRemoteRoveRunnerScript(NODE_SCRIPT);
 
-    assert.include(script, "ROVE_NODE_ENGINE_RANGE=''");
+    assert.include(script, "PAPERPLANE_NODE_ENGINE_RANGE=''");
     assert.notInclude(script, TEST_NODE_ENGINE_RANGE);
   });
 
@@ -217,12 +217,12 @@ describe("ssh tunnel scripts", () => {
 
     assert.include(
       script,
-      "ROVE_NODE_SCRIPT_PATH='/Users/julius/Development/Work/codething-mvp/apps/server/dist/bin.mjs'",
+      "PAPERPLANE_NODE_SCRIPT_PATH='/Users/julius/Development/Work/codething-mvp/apps/server/dist/bin.mjs'",
     );
-    assert.include(script, 'exec node "$ROVE_NODE_SCRIPT_PATH" "$@"');
-    assert.include(script, "ROVE_ARCHIVE_VERSION=''");
+    assert.include(script, 'exec node "$PAPERPLANE_NODE_SCRIPT_PATH" "$@"');
+    assert.include(script, "PAPERPLANE_ARCHIVE_VERSION=''");
     assert.include(script, 'prepend_path_if_dir "$HOME/.local/bin"');
-    assert.include(script, `ROVE_NODE_ENGINE_RANGE='${TEST_NODE_ENGINE_RANGE}'`);
+    assert.include(script, `PAPERPLANE_NODE_ENGINE_RANGE='${TEST_NODE_ENGINE_RANGE}'`);
     assert.include(script, "remote_node_satisfies_engine()");
     assert.include(script, "function satisfiesSemverRange");
     assert.include(script, "satisfiesSemverRange(rawVersion, range)");
@@ -236,7 +236,7 @@ describe("ssh tunnel scripts", () => {
     assert.include(script, 'prepend_path_if_dir "$HOME/.nodenv/shims"');
     assert.include(script, 'NVM_DIR="$HOME/.nvm"');
     assert.include(script, "nvm use --silent default");
-    assert.include(script, 'for ROVE_NODE_BIN in "$NVM_DIR"/versions/node/*/bin');
+    assert.include(script, 'for PAPERPLANE_NODE_BIN in "$NVM_DIR"/versions/node/*/bin');
     assert.notInclude(script, "ensure $NVM_DIR/nvm.sh is available");
     assert.notInclude(script, "npx");
   });
@@ -244,7 +244,7 @@ describe("ssh tunnel scripts", () => {
   it("provisions a persistent service for release SSH connections", () => {
     const launch = SshTunnel.buildRemoteLaunchScript(ARCHIVE);
     assert.notInclude(launch, "--base-dir");
-    assert.include(launch, "unset ROVE_HOME");
+    assert.include(launch, "unset PAPERPLANE_HOME");
     assert.include(launch, "service install >&2");
     assert.include(launch, "service restart >&2");
     assert.include(launch, '__ssh-helper runtime-port "$DEFAULT_RUNTIME_FILE" --service');
@@ -257,7 +257,7 @@ describe("ssh tunnel scripts", () => {
 
   it("embeds the runner in the launch script byte for byte", () => {
     const runner = SshTunnel.buildRemoteRoveRunnerScript(ARCHIVE);
-    assert.include(runner, 'printf \'%s\\n\' "$$" > "$ROVE_LOCK/pid.tmp"');
+    assert.include(runner, 'printf \'%s\\n\' "$$" > "$PAPERPLANE_LOCK/pid.tmp"');
     assert.include(SshTunnel.buildRemoteLaunchScript(ARCHIVE), runner);
   });
 
@@ -276,13 +276,13 @@ describe("ssh tunnel scripts", () => {
     assert.include(launch, "RUNNER_CHANGED=1");
     assert.include(launch, "ensure_remote_node_path()");
     assert.include(launch, "if ! ensure_remote_node_path; then");
-    assert.include(devLaunch, `ROVE_NODE_ENGINE_RANGE='${TEST_NODE_ENGINE_RANGE}'`);
+    assert.include(devLaunch, `PAPERPLANE_NODE_ENGINE_RANGE='${TEST_NODE_ENGINE_RANGE}'`);
     assert.include(devLaunch, "does not satisfy required range ");
     assert.include(launch, 'kill "$REMOTE_PID" 2>/dev/null || true');
     assert.include(launch, "wait_ready");
     assert.include(launch, '"$RUNNER_FILE" serve --host 127.0.0.1');
     assert.notInclude(launch, "--base-dir");
-    assert.include(launch, "unset ROVE_HOME");
+    assert.include(launch, "unset PAPERPLANE_HOME");
     assert.notInclude(launch, "server-home");
     assert.include(launch, "Remote Paperplane server did not become ready");
     assert.include(launch, 'wait_ready "60000"');
@@ -292,11 +292,11 @@ describe("ssh tunnel scripts", () => {
       SshTunnel.buildRemotePairingScript(stateKey, ARCHIVE),
       '"$RUNNER_FILE" auth pairing create --json',
     );
-    assert.include(SshTunnel.buildRemotePairingScript(stateKey, ARCHIVE), "unset ROVE_HOME");
+    assert.include(SshTunnel.buildRemotePairingScript(stateKey, ARCHIVE), "unset PAPERPLANE_HOME");
     assert.notInclude(SshTunnel.buildRemotePairingScript(stateKey, ARCHIVE), "server-home");
     assert.include(
       SshTunnel.buildRemotePairingScript(stateKey, ARCHIVE),
-      "ROVE_ARCHIVE_VERSION='1.2.3-preview.20260911.4'",
+      "PAPERPLANE_ARCHIVE_VERSION='1.2.3-preview.20260911.4'",
     );
     assert.include(
       SshTunnel.buildRemoteStopScript(stateKey),

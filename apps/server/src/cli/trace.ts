@@ -182,9 +182,9 @@ const traceSummaryCommand = Command.make("summary", {
   Command.withHandler(
     Effect.fn("cli.trace.summary")(function* (flags) {
       const fs = yield* FileSystem.FileSystem;
-      // ROVE_TRACE_FILE, else the userdata trace file for --base-dir or
-      // ROVE_HOME. Implicit dev runs write elsewhere; set ROVE_TRACE_FILE.
-      const envHome = yield* Config.String("ROVE_HOME").pipe(Config.option);
+      // PAPERPLANE_TRACE_FILE, else the userdata trace file for --base-dir or
+      // PAPERPLANE_HOME. Implicit dev runs write elsewhere; set PAPERPLANE_TRACE_FILE.
+      const envHome = yield* Config.String("PAPERPLANE_HOME").pipe(Config.option);
       const baseDir = yield* resolveBaseDir(
         Option.getOrUndefined(Option.orElse(flags.baseDir, () => envHome)),
       );

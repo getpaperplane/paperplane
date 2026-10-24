@@ -19,7 +19,7 @@ const decodeApps = Schema.decodeUnknownSync(
 );
 
 it.live.skipIf(
-  process.env.ROVE_TEST_NATIVE_CUA !== "1" || HostProcessPlatform.defaultValue() !== "win32",
+  process.env.PAPERPLANE_TEST_NATIVE_CUA !== "1" || HostProcessPlatform.defaultValue() !== "win32",
 )(
   "reads the Windows desktop and refuses pid-only keyboard input before driver delivery",
   () =>

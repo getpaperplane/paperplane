@@ -44,7 +44,7 @@ The workflow must be present on the repository's default branch before GitHub of
 
 The hosted build disables fixed backend URLs and inherited cloud settings. It also disables source maps and checks the output against Cloudflare's free asset limits.
 
-Do not enable `ROVE_CLOUD_READY` or `ROVE_HOSTED_RELEASE_READY` for this deployment. Those variables belong to the inherited relay and Vercel paths.
+Do not enable `PAPERPLANE_CLOUD_READY` or `PAPERPLANE_HOSTED_RELEASE_READY` for this deployment. Those variables belong to the inherited relay and Vercel paths.
 
 ## Publish the browser app
 
@@ -56,9 +56,9 @@ Do not enable `ROVE_CLOUD_READY` or `ROVE_HOSTED_RELEASE_READY` for this deploym
 
 The initial deployment can take time to provision its HTTPS certificate. Opening the website does not start an agent or connect to a backend automatically. The deployment check verifies the raw HTML overview, Markdown negotiation, discovery files, real 404s, JSON errors, and existing app deep links. Run it independently with `node scripts/check-agent-readiness.mjs https://rove.hafiezulzikry.com` (or the nightly origin).
 
-After the first deployment works, set the repository variable `ROVE_CLOUDFLARE_WEB_READY=true`. Published stable releases deploy the stable app; published nightlies deploy only the nightly app, without changing stable. Preview releases deploy neither. To deploy outside a release, run the workflow manually on an allowed deployment branch and select the channel.
+After the first deployment works, set the repository variable `PAPERPLANE_CLOUDFLARE_WEB_READY=true`. Published stable releases deploy the stable app; published nightlies deploy only the nightly app, without changing stable. Preview releases deploy neither. To deploy outside a release, run the workflow manually on an allowed deployment branch and select the channel.
 
-To stop automatic deployments, unset `ROVE_CLOUDFLARE_WEB_READY`. To stop serving either app, remove its Worker and custom domain in Cloudflare. Saved connections stay in users' browsers.
+To stop automatic deployments, unset `PAPERPLANE_CLOUDFLARE_WEB_READY`. To stop serving either app, remove its Worker and custom domain in Cloudflare. Saved connections stay in users' browsers.
 
 ## Publish the marketing site
 
@@ -70,7 +70,7 @@ The workflow reuses the `cloudflare-web` environment and its secrets.
 2. Run it again with the deployment checkbox enabled.
 3. Open the site and confirm that `curl -fsSL https://rove-code.hafiezulzikry.com/install.sh` prints the install script.
 
-After the first deployment works, set the repository variable `ROVE_MARKETING_RELEASE_READY=true`. Each published stable release then redeploys the site from the release commit. Nightly and preview releases do not redeploy marketing. That variable also makes the release refuse to publish while `apps/marketing` still carries upstream branding; run `node scripts/check-release-identity.mjs` to check. Download links fetch the latest release in the browser, so a new release does not need a redeploy to show up.
+After the first deployment works, set the repository variable `PAPERPLANE_MARKETING_RELEASE_READY=true`. Each published stable release then redeploys the site from the release commit. Nightly and preview releases do not redeploy marketing. That variable also makes the release refuse to publish while `apps/marketing` still carries upstream branding; run `node scripts/check-release-identity.mjs` to check. Download links fetch the latest release in the browser, so a new release does not need a redeploy to show up.
 
 ## Publish pull request previews
 

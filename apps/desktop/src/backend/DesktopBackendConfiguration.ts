@@ -85,16 +85,16 @@ const emptyBackendObservabilitySettings: BackendObservabilitySettings = {
 };
 
 const DESKTOP_BACKEND_ENV_NAMES = [
-  "ROVE_PORT",
-  "ROVE_MODE",
-  "ROVE_NO_BROWSER",
-  "ROVE_HOST",
-  "ROVE_DESKTOP_WS_URL",
-  "ROVE_DESKTOP_LAN_ACCESS",
-  "ROVE_DESKTOP_LAN_HOST",
-  "ROVE_DESKTOP_HTTPS_ENDPOINTS",
-  "ROVE_TAILSCALE_SERVE",
-  "ROVE_TAILSCALE_SERVE_PORT",
+  "PAPERPLANE_PORT",
+  "PAPERPLANE_MODE",
+  "PAPERPLANE_NO_BROWSER",
+  "PAPERPLANE_HOST",
+  "PAPERPLANE_DESKTOP_WS_URL",
+  "PAPERPLANE_DESKTOP_LAN_ACCESS",
+  "PAPERPLANE_DESKTOP_LAN_HOST",
+  "PAPERPLANE_DESKTOP_HTTPS_ENDPOINTS",
+  "PAPERPLANE_TAILSCALE_SERVE",
+  "PAPERPLANE_TAILSCALE_SERVE_PORT",
 ] as const;
 
 // Env vars that the WSL backend needs but Windows process.env won't forward
@@ -103,18 +103,18 @@ const DESKTOP_BACKEND_ENV_NAMES = [
 const WSL_FORWARDED_ENV_NAMES = [
   "OPENAI_API_KEY",
   "ANTHROPIC_API_KEY",
-  "ROVE_TELEMETRY_ENABLED",
+  "PAPERPLANE_TELEMETRY_ENABLED",
   // Otherwise the WSL server keeps exporting to endpoints from the bootstrap.
-  "ROVE_OTEL_SDK_DISABLED",
+  "PAPERPLANE_OTEL_SDK_DISABLED",
   "OTEL_SDK_DISABLED",
-  "ROVE_OTLP_HEADERS",
-  "ROVE_OTLP_PROTOCOL",
+  "PAPERPLANE_OTLP_HEADERS",
+  "PAPERPLANE_OTLP_PROTOCOL",
   // Forwarded without a WSLENV flag, so the values arrive untranslated. The
   // server prefers an OTEL endpoint over the bootstrap envelope, so the Paperplane URLs
   // travel as variables to keep winning inside the distro as they do on Windows.
-  "ROVE_OTLP_TRACES_URL",
-  "ROVE_OTLP_METRICS_URL",
-  "ROVE_OTLP_LOGS_URL",
+  "PAPERPLANE_OTLP_TRACES_URL",
+  "PAPERPLANE_OTLP_METRICS_URL",
+  "PAPERPLANE_OTLP_LOGS_URL",
   "OTEL_EXPORTER_OTLP_ENDPOINT",
   "OTEL_EXPORTER_OTLP_TRACES_ENDPOINT",
   "OTEL_EXPORTER_OTLP_METRICS_ENDPOINT",
@@ -602,9 +602,9 @@ const resolvePrimaryStartConfig = Effect.fn("desktop.backendConfiguration.resolv
         ...backendChildEnvPatch(),
         ELECTRON_RUN_AS_NODE: "1",
         // The server names this launcher in commands it asks a person to run.
-        ROVE_CLI_PATH: Option.getOrUndefined(input.cliPath),
+        PAPERPLANE_CLI_PATH: Option.getOrUndefined(input.cliPath),
       },
-      // Primary wants process.env (PATH, dev-runner's ROVE_HOME, etc.).
+      // Primary wants process.env (PATH, dev-runner's PAPERPLANE_HOME, etc.).
       extendEnv: true,
       bootstrap,
       bootstrapDelivery: "fd3",
@@ -747,14 +747,14 @@ const resolveWslStartConfig = Effect.fn("desktop.backendConfiguration.resolveWsl
     }
   }
 
-  // Build an explicit copy of process.env minus ROVE_HOME (dev-runner
+  // Build an explicit copy of process.env minus PAPERPLANE_HOME (dev-runner
   // exports the Windows-side base dir for the primary; if it leaks into
   // the WSL backend the Linux side ends up sharing C:\Users\...\.rove-code via
   // /mnt/c, which means both backends read/write the same database and
   // their env-ids collide).
   const parentEnvWithoutRoveHome: Record<string, string | undefined> = {};
   for (const [key, value] of Object.entries(process.env)) {
-    if (key === "ROVE_HOME") continue;
+    if (key === "PAPERPLANE_HOME") continue;
     parentEnvWithoutRoveHome[key] = value;
   }
   const wslEnv = mergeWslEnv(parentEnvWithoutRoveHome.WSLENV, forwardedEnvNames);
@@ -770,7 +770,7 @@ const resolveWslStartConfig = Effect.fn("desktop.backendConfiguration.resolveWsl
       ...forwardedEnv,
       ...(wslEnv !== undefined ? { WSLENV: wslEnv } : {}),
     },
-    // env is already a complete process.env minus ROVE_HOME; pass it
+    // env is already a complete process.env minus PAPERPLANE_HOME; pass it
     // verbatim instead of letting the spawner re-merge process.env on top.
     extendEnv: false,
     bootstrap,

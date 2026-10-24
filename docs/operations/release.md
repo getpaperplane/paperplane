@@ -4,7 +4,7 @@
 
 ## Current status
 
-`.github/workflows/release.yml` schedules nightlies daily at 00:00 UTC from the default branch. Scheduled runs skip building and publishing when there are no commits ahead of the latest published nightly or that nightly was published less than six hours ago. Publication requires `ROVE_RELEASE_READY=true`; do not enable it as a shortcut around the gates below.
+`.github/workflows/release.yml` schedules nightlies daily at 00:00 UTC from the default branch. Scheduled runs skip building and publishing when there are no commits ahead of the latest published nightly or that nightly was published less than six hours ago. Publication requires `PAPERPLANE_RELEASE_READY=true`; do not enable it as a shortcut around the gates below.
 
 Manual runs support stable, nightly, and preview, and default to `build_only=true`: checked produces downloadable Actions artifacts without publishing to npm or creating a GitHub Release. Uncheck it to publish; npm uses `latest` for stable, `nightly` for nightly, and `preview` for preview. Manual nightly and preview runs build the selected ref without the scheduled no-change check. Publishing stable builds the latest published nightly's commit, with its base version unless a version override is supplied. The override changes the version, not the commit. Stable build-only runs instead build the selected ref and require an explicit version; nightly and preview generate their own versions.
 
@@ -12,9 +12,9 @@ npm can take over an hour to serve a large platform package it has already accep
 
 A release skips its own quality checks when CI has already passed on a push of the same commit, which is the usual case for nightlies built from `main`.
 
-The first release is **self-hosted desktop and persistent CLI hosts, with local, LAN, Tailscale, and desktop SSH connections**. Leave `ROVE_CLOUD_READY` unset: relay deployment and configuration are skipped, and desktop/CLI builds omit Paperplane Connect. Apple and Azure signing credentials may be omitted for unsigned builds. Signed macOS previews require `ROVE_MACOS_SIGNING_READY=true`; mobile store distribution requires `ROVE_MOBILE_STORES_READY=true` and paid developer accounts. Free APK/unsigned IPA distribution has a separate `ROVE_MOBILE_SIDELOAD_READY` gate. Hosted web and marketing retain separate readiness controls; those controls indicate release readiness, not necessarily a paid service.
+The first release is **self-hosted desktop and persistent CLI hosts, with local, LAN, Tailscale, and desktop SSH connections**. Leave `PAPERPLANE_CLOUD_READY` unset: relay deployment and configuration are skipped, and desktop/CLI builds omit Paperplane Connect. Apple and Azure signing credentials may be omitted for unsigned builds. Signed macOS previews require `PAPERPLANE_MACOS_SIGNING_READY=true`; mobile store distribution requires `PAPERPLANE_MOBILE_STORES_READY=true` and paid developer accounts. Free APK/unsigned IPA distribution has a separate `PAPERPLANE_MOBILE_SIDELOAD_READY` gate. Hosted web and marketing retain separate readiness controls; those controls indicate release readiness, not necessarily a paid service.
 
-The static browser app deploys to Cloudflare. See the [Cloudflare deployment procedure](./cloudflare-web.md). When `ROVE_CLOUDFLARE_WEB_READY=true`, stable releases deploy to `rove.hafiezulzikry.com` and nightlies deploy to the separate `rove-nightly.hafiezulzikry.com` origin. Preview releases deploy neither. Marketing deploys only on stable releases when `ROVE_MARKETING_RELEASE_READY=true`. These deployments do not require the relay gate.
+The static browser app deploys to Cloudflare. See the [Cloudflare deployment procedure](./cloudflare-web.md). When `PAPERPLANE_CLOUDFLARE_WEB_READY=true`, stable releases deploy to `rove.hafiezulzikry.com` and nightlies deploy to the separate `rove-nightly.hafiezulzikry.com` origin. Preview releases deploy neither. Marketing deploys only on stable releases when `PAPERPLANE_MARKETING_RELEASE_READY=true`. These deployments do not require the relay gate.
 
 For the identity migration, stage protocol version 2 clients and servers together. If Connect is enabled,
 stage the matching relay before connecting those clients. Native module names changed, so mobile requires
@@ -34,7 +34,7 @@ Updates from the previous orchestration system preserve transcripts but cannot c
 2. Run `node scripts/check-release-identity.mjs` and triage each finding. The check scans public marketing, hosted-web, and mobile store/sideload identity; it reports gated channels but blocks a channel only when its release-readiness variable is enabled. Saved-data and protocol identifiers require explicit migrations, not bulk replacements; package names, public URLs, downloads, and legal claims must point to Paperplane-owned resources or be removed.
 3. Keep the source server workspace package (`apps/server/package.json`, `name: @getpaperplane/server`) private. Its name is used by Effect's deterministic service keys; it is **not** the published CLI. `scripts/build-npm-platform-packages.ts` produces the separate `@getpaperplane/cli` launcher, its `paperplane` command, and the platform packages. The source package must never be published.
 4. Verify the installer, archive, npm launcher, SSH runtime, WSL payload, desktop identity, and background service resolve to the **same** Paperplane artifact and isolated state paths. The fork defaults to `~/.paperplane`, not inherited `~/.rove`. An import from inherited data is not yet available; never point a release at the live inherited directory to simulate one.
-5. Keep `ROVE_CLOUD_READY`, `ROVE_MOBILE_STORES_READY`, and `ROVE_MACOS_SIGNING_READY` off until their paid infrastructure or credentials are available. Keep hosted web (`ROVE_CLOUDFLARE_WEB_READY`) and marketing (`ROVE_MARKETING_RELEASE_READY`) off until their independent deployment review is complete. The source-only marketing page uses this repository's free GitHub build guides; set `ROVE_MARKETING_SITE_URL` to a verified deployed origin before publishing for canonical and social URLs. Without it those tags are omitted. Review and replace the inherited legal pages and desktop screenshot before enabling marketing; the text check cannot inspect image assets.
+5. Keep `PAPERPLANE_CLOUD_READY`, `PAPERPLANE_MOBILE_STORES_READY`, and `PAPERPLANE_MACOS_SIGNING_READY` off until their paid infrastructure or credentials are available. Keep hosted web (`PAPERPLANE_CLOUDFLARE_WEB_READY`) and marketing (`PAPERPLANE_MARKETING_RELEASE_READY`) off until their independent deployment review is complete. The source-only marketing page uses this repository's free GitHub build guides; set `PAPERPLANE_MARKETING_SITE_URL` to a verified deployed origin before publishing for canonical and social URLs. Without it those tags are omitted. Review and replace the inherited legal pages and desktop screenshot before enabling marketing; the text check cannot inspect image assets.
 6. Check repository CI and focused tests under the supported Node version (`package.json`). Build the platform matrix on its supported hardware, verify signatures/notarization as applicable, and inspect every archive and npm tarball for package identity, executable name, URL, and checksum. Verify release notes and update metadata refer only to this repository.
 7. **Download the Paperplane-built artifacts** from a staging release and test them on clean machines: macOS arm64/x64, Linux x64/arm64, Windows x64/arm64, plus CLI archive and npm launcher for each supported target. Exercise installation, first run, local and LAN pairing, Tailscale HTTPS, service install/restart/uninstall, systemd-enabled WSL, and upgrade/rollback. Verify that the address, port, provider PATH, environment ID, paired-client authorization, and threads survive an update. Verify that disconnecting desktop SSH leaves its host service running. Connect deployments must also retain cloud links and recover their managed tunnel after updates. Native Windows service installation must fail with its supported-platform explanation, not fall back to a disposable process. Confirm that state outside the selected Paperplane home is untouched. Source-tree tests alone do not clear this gate.
 8. Review the result with a maintainer before enabling the release variable, tag/schedule triggers, or any publisher. Publish only the paths that passed staging. Keep disabled channels disabled.
@@ -43,11 +43,11 @@ No credentials or production databases should be copied into a worktree for veri
 
 ## Publish mobile sideload binaries without store accounts
 
-The repository Actions variable `ROVE_MOBILE_SIDELOAD_READY=true` enables `.github/workflows/mobile-sideload.yml` from
+The repository Actions variable `PAPERPLANE_MOBILE_SIDELOAD_READY=true` enables `.github/workflows/mobile-sideload.yml` from
 stable/nightly/preview releases (including build-only runs).
-`ROVE_MOBILE_STORES_READY` remains unchanged and can stay off.
+`PAPERPLANE_MOBILE_STORES_READY` remains unchanged and can stay off.
 No Apple, Play Console, Expo/EAS, or cloud credentials are needed. These builds
-leave `ROVE_CLOUD_READY` unset and OTA updates off.
+leave `PAPERPLANE_CLOUD_READY` unset and OTA updates off.
 
 1. Generate an Android release key **outside the repository**, once:
 
@@ -61,10 +61,10 @@ leave `ROVE_CLOUD_READY` unset and OTA updates off.
 2. **Back up the keystore and password securely.** Reuse the same key for every
    release: losing or changing it prevents Android updates over existing installs.
    Add these repository Actions secrets (never print or commit their values):
-   - `ROVE_ANDROID_KEYSTORE_BASE64`: Base64 of the keystore file.
-   - `ROVE_ANDROID_KEYSTORE_PASSWORD`: its store password.
-   - `ROVE_ANDROID_KEY_ALIAS`: `rove-release` from the command above.
-   - `ROVE_ANDROID_KEY_PASSWORD`: the key password (same as the store password for
+   - `PAPERPLANE_ANDROID_KEYSTORE_BASE64`: Base64 of the keystore file.
+   - `PAPERPLANE_ANDROID_KEYSTORE_PASSWORD`: its store password.
+   - `PAPERPLANE_ANDROID_KEY_ALIAS`: `rove-release` from the command above.
+   - `PAPERPLANE_ANDROID_KEY_PASSWORD`: the key password (same as the store password for
      this PKCS12 command).
      If any is missing, Android is explicitly skipped; iOS still builds. Invalid
      credentials fail the Android build. Published APKs never use a debug key.
@@ -79,15 +79,15 @@ leave `ROVE_CLOUD_READY` unset and OTA updates off.
    It refuses existing asset names rather than silently replacing a published key
    or build. Build-only runs upload Actions artifacts without publishing.
 
-Both platforms use the numeric part of the release version as `ROVE_MOBILE_VERSION`
+Both platforms use the numeric part of the release version as `PAPERPLANE_MOBILE_VERSION`
 (iOS rejects prerelease suffixes; file names keep the full version) and
-`ROVE_MOBILE_BUILD_NUMBER` (seconds since 2020, generated at workflow preparation)
+`PAPERPLANE_MOBILE_BUILD_NUMBER` (seconds since 2020, generated at workflow preparation)
 for native build numbering across workflows. Re-running failed jobs reuses the
 preparation job's number; a new run generates a new one. Do not publish concurrent
 manual builds out of order or dispatch builds within the same second.
 
-The unsigned device archive uses `ROVE_IOS_UNSIGNED=1` with
-`ROVE_IOS_PERSONAL_TEAM=1`; the unsigned mode defaults its bundle ID to
+The unsigned device archive uses `PAPERPLANE_IOS_UNSIGNED=1` with
+`PAPERPLANE_IOS_PERSONAL_TEAM=1`; the unsigned mode defaults its bundle ID to
 `dev.rove.app`. It strips push, App Groups, Sign in with Apple, widgets, the share
 extension, and explicit keychain groups. Sideload signers supply their own default
 keychain group; changing signing identity/bundle ID can lose access to saved
@@ -98,7 +98,7 @@ iOS installation. No full native build or device test is implied by config tests
 
 ## Build self-signed macOS artifacts without Apple membership
 
-This mode signs desktop and CLI artifacts with your own certificate. It does not provide Apple notarization or Apple-provisioned native passkeys. Users must approve the initial unnotarized installation. Do not enable `ROVE_MACOS_SIGNING_READY` for this mode. That variable controls the separate Apple-signed PR preview workflow.
+This mode signs desktop and CLI artifacts with your own certificate. It does not provide Apple notarization or Apple-provisioned native passkeys. Users must approve the initial unnotarized installation. Do not enable `PAPERPLANE_MACOS_SIGNING_READY` for this mode. That variable controls the separate Apple-signed PR preview workflow.
 
 1. Create a self-signed Code Signing identity in Keychain Access. Export the certificate and private key as a password-protected `.p12`. Keep an encrypted backup of the identity and its password. Use the same identity for every release.
 2. Add the Base64-encoded `.p12` as the repository Actions secret `CSC_LINK`. Add its export password as `CSC_KEY_PASSWORD`. Do not put either value in source control or logs.
@@ -117,9 +117,9 @@ Windows self-signing is free. It does not provide public certificate trust or re
 
    ```sh
    printf 'Certificate password: '
-   read -r -s ROVE_CERTIFICATE_PASSWORD
+   read -r -s PAPERPLANE_CERTIFICATE_PASSWORD
    printf '\n'
-   export ROVE_CERTIFICATE_PASSWORD
+   export PAPERPLANE_CERTIFICATE_PASSWORD
    bash scripts/create-windows-signing.sh "$HOME/.config/rove-release-signing/windows"
    ```
 
@@ -128,9 +128,9 @@ Windows self-signing is free. It does not provide public certificate trust or re
 
    ```sh
    base64 < "$HOME/.config/rove-release-signing/windows/rove-windows-signing.pfx" | gh secret set WIN_CSC_LINK
-   printf '%s' "$ROVE_CERTIFICATE_PASSWORD" | gh secret set WIN_CSC_KEY_PASSWORD
+   printf '%s' "$PAPERPLANE_CERTIFICATE_PASSWORD" | gh secret set WIN_CSC_KEY_PASSWORD
    gh variable set WINDOWS_SIGNING_MODE --body self-signed
-   unset ROVE_CERTIFICATE_PASSWORD
+   unset PAPERPLANE_CERTIFICATE_PASSWORD
    ```
 
 4. Run a build-only preview. Check both Windows jobs for successful signing and signature verification. The public `rove-windows-signing.cer` is included with the installers and CLI archives. The private `.pfx` is never published.
@@ -161,6 +161,6 @@ The `@getpaperplane` organization must own the launcher and all five platform pa
    This is a real public publication, not a validation step. No npm token belongs in GitHub secrets. A local initial publication does not use GitHub OIDC provenance.
 
 4. In each package's npm settings, add a GitHub Actions trusted publisher: owner `hafiezul`, repository `paperplane`, workflow `release.yml`, environment blank. Configure all six packages: `@getpaperplane/cli`, `@getpaperplane/cli-darwin-arm64`, `@getpaperplane/cli-linux-x64`, `@getpaperplane/cli-linux-arm64`, `@getpaperplane/cli-win32-x64`, and `@getpaperplane/cli-win32-arm64`.
-5. After staging approval, enable `ROVE_RELEASE_READY` and explicitly dispatch `channel=nightly`, `build_only=false`. A fresh run generates a new prerelease version instead of attempting to overwrite the bootstrap version. Verify that release before dispatching stable with `version=0.0.1`, `build_only=false`. Stable builds the latest published nightly commit, not the current branch, even with a version override.
+5. After staging approval, enable `PAPERPLANE_RELEASE_READY` and explicitly dispatch `channel=nightly`, `build_only=false`. A fresh run generates a new prerelease version instead of attempting to overwrite the bootstrap version. Verify that release before dispatching stable with `version=0.0.1`, `build_only=false`. Stable builds the latest published nightly commit, not the current branch, even with a version override.
 
 Finalization uses a GitHub App installed on this repository with Contents write permission. Store its App ID and PEM key as `RELEASE_APP_ID` and `RELEASE_APP_PRIVATE_KEY`; branch rules must permit its version-bump commit. npm publishing and finalization have no extra readiness switches.

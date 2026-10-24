@@ -58,7 +58,7 @@ jobs:
           node --input-type=module -e '
             import { readFileSync, appendFileSync } from "node:fs";
             const config = JSON.parse(readFileSync("apps/marketing/wrangler.json", "utf8"));
-            appendFileSync(process.env.GITHUB_ENV, `ROVE_MARKETING_SITE_URL=https://${config.routes[0].pattern}\n`);
+            appendFileSync(process.env.GITHUB_ENV, `PAPERPLANE_MARKETING_SITE_URL=https://${config.routes[0].pattern}\n`);
           '
 
       - name: Build

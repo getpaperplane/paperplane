@@ -112,7 +112,7 @@ describe("isolated Pi instance runtime", () => {
     const agentDir = directory("guarded-instance");
     const runtime = await PiRuntimeProcess.create({ agentDir }, false, {
       ...process.env,
-      ROVE_PI_MEMORY_BUDGET_MIB: "2048",
+      PAPERPLANE_PI_MEMORY_BUDGET_MIB: "2048",
     });
     runtimes.push(runtime);
     expect(
@@ -139,7 +139,7 @@ describe("isolated Pi instance runtime", () => {
         workloadMemoryMiB: "384",
         workloadPool: `rove-sdk-workload-test-${NodePath.basename(root)}.slice`,
       };
-      const environment = { ...process.env, ROVE_PI_MEMORY_BUDGET_MIB: "384" };
+      const environment = { ...process.env, PAPERPLANE_PI_MEMORY_BUDGET_MIB: "384" };
       const runtime = await PiRuntimeProcess.create(options, false, environment);
       runtimes.push(runtime);
       try {

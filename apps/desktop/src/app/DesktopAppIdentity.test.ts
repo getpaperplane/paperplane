@@ -229,7 +229,7 @@ describe("DesktopAppIdentity", () => {
         calls,
         environment: {
           env: {
-            ROVE_COMMIT_HASH: "0123456789abcdef",
+            PAPERPLANE_COMMIT_HASH: "0123456789abcdef",
           },
         },
         pngIconPath: Option.some("/icon.png"),

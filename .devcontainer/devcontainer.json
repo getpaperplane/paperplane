@@ -23,7 +23,7 @@
   "containerEnv": {
     // Keep all runtime state inside the (gitignored) workspace .paperplane, matching
     // the worktree default. An explicit --home-dir still wins.
-    "ROVE_HOME": "${containerWorkspaceFolder}/.paperplane"
+    "PAPERPLANE_HOME": "${containerWorkspaceFolder}/.paperplane"
   },
   "mounts": [
     // vp keeps the pnpm content-addressable store and metadata cache under

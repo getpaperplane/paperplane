@@ -353,8 +353,8 @@ it.live(
       const fs = yield* FileSystem.FileSystem;
       const report = formatTransferBudgetReport(runs);
       for (const [path, contents] of [
-        [process.env.ROVE_TRANSFER_BUDGET_REPORT_PATH, report],
-        [process.env.ROVE_TRANSFER_BUDGET_RESULT_PATH, formatTransferBudgetResult(runs)],
+        [process.env.PAPERPLANE_TRANSFER_BUDGET_REPORT_PATH, report],
+        [process.env.PAPERPLANE_TRANSFER_BUDGET_RESULT_PATH, formatTransferBudgetResult(runs)],
       ])
         if (path && contents) yield* fs.writeFileString(path, contents);
       yield* Effect.log(report);

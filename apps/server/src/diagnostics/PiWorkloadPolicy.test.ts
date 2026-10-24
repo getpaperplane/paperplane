@@ -73,7 +73,7 @@ describe("Pi workload policy", () => {
       resolvePiWorkloadMemory(
         "off",
         "auto",
-        { ROVE_PI_MEMORY_BUDGET_MIB: "384" },
+        { PAPERPLANE_PI_MEMORY_BUDGET_MIB: "384" },
         "linux",
         4 * gib,
       ),
@@ -90,7 +90,7 @@ describe("Pi workload policy", () => {
       await resolvePiWorkloadMemory(
         "off",
         "auto",
-        { ROVE_PI_MEMORY_BUDGET_MIB: "384" },
+        { PAPERPLANE_PI_MEMORY_BUDGET_MIB: "384" },
         "linux",
         2 * gib,
       ),
@@ -103,7 +103,7 @@ describe("Pi workload policy", () => {
       resolvePiWorkloadMemory(
         "off",
         "auto",
-        { ROVE_PI_MEMORY_BUDGET_MIB: "auto" },
+        { PAPERPLANE_PI_MEMORY_BUDGET_MIB: "auto" },
         "linux",
         4 * gib,
       ),

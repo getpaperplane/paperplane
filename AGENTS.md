@@ -18,7 +18,7 @@ We regularly audit for performance regressions. Common causes are sending too mu
 
 ### 3. Remote ready
 
-The WebSocket layer (`npx @getpaperplane/cli`) supports direct connections over the local network, including pairing, Tailscale, and SSH. Paperplane Connect, our tunnel solution in `infra/relay`, ships only when `ROVE_CLOUD_READY` is set. It is off for current releases and fresh clones, so the gating that hides it must keep working.
+The WebSocket layer (`npx @getpaperplane/cli`) supports direct connections over the local network, including pairing, Tailscale, and SSH. Paperplane Connect, our tunnel solution in `infra/relay`, ships only when `PAPERPLANE_CLOUD_READY` is set. It is off for current releases and fresh clones, so the gating that hides it must keep working.
 
 ### 4. Multi-surface
 
@@ -78,10 +78,10 @@ The most common defect in this repo is a change that works on the tested path an
 
 - `vp i` installs dependencies. Worktrees get this from the `rove.json` setup script; if module resolution looks broken, it probably did not run.
 - `vp run dev` starts the server and web client. `vp run dev:desktop` starts Electron.
-- In a linked worktree, state defaults to the worktree's gitignored `.paperplane`. This deliberately outranks an ambient `ROVE_HOME`, so you cannot land on shared state by accident. The main checkout defaults to `~/.paperplane/dev`. An explicit `--home-dir` always wins.
+- In a linked worktree, state defaults to the worktree's gitignored `.paperplane`. This deliberately outranks an ambient `PAPERPLANE_HOME`, so you cannot land on shared state by accident. The main checkout defaults to `~/.paperplane/dev`. An explicit `--home-dir` always wins.
 - Ports derive from the worktree path and stay stable across restarts. Occupied ports can shift them, so read the real ports from the `[dev-runner]` line.
 - To share over the tailnet, run `vp run dev --share` in the background, wait for the `pairingUrl:` line, and give that full URL to an unpaired browser. Do not wire up `tailscale serve` by hand, open the URL yourself, or consume the user's pairing link. A browser with the reusable dev cookie can use the bare origin. If a one-time token was consumed, mint a new one with `node apps/server/src/bin.ts pair`. That token has standard scopes. The startup URL has the admin scopes needed for Connections settings.
-- To reuse web dev auth across worktrees, set one fixed `ROVE_DEV_AUTH_TOKEN` in the main checkout's gitignored `.env`. The `rove.json` setup links that file into worktrees. Never commit or publish the token or a startup URL. See [Reusable dev credential](docs/operations/development.md#reusable-dev-credential).
+- To reuse web dev auth across worktrees, set one fixed `PAPERPLANE_DEV_AUTH_TOKEN` in the main checkout's gitignored `.env`. The `rove.json` setup links that file into worktrees. Never commit or publish the token or a startup URL. See [Reusable dev credential](docs/operations/development.md#reusable-dev-credential).
 - Stop only the processes you started, using the PIDs you tracked. See rule 1.
 
 ## Test data
@@ -123,7 +123,7 @@ For authorized mobile verification, a missing or outdated native client is a bui
 
 ## Releases
 
-`release.yml` publishes a nightly every day at 00:00 UTC when there are new commits, plus manual stable and preview builds. It publishes desktop installers to GitHub Releases, `@getpaperplane/cli` to npm, and the hosted web app to Cloudflare. Each channel has its own `ROVE_*_READY` gate. Do not flip a gate to work around a failing check. Details are in [docs/operations/release.md](docs/operations/release.md).
+`release.yml` publishes a nightly every day at 00:00 UTC when there are new commits, plus manual stable and preview builds. It publishes desktop installers to GitHub Releases, `@getpaperplane/cli` to npm, and the hosted web app to Cloudflare. Each channel has its own `PAPERPLANE_*_READY` gate. Do not flip a gate to work around a failing check. Details are in [docs/operations/release.md](docs/operations/release.md).
 
 ## Documentation
 
@@ -160,7 +160,7 @@ Architecture and constraints: [`docs/internals/overview.md`](docs/internals/over
 - `packages/ssh`, `packages/tailscale` - remote connection helpers.
 - `packages/provider-*` - shared provider adapters and runtime protocols. Paperplane's Pi runtime remains SDK-based, not upstream's RPC provider.
 - `packages/effect-acp`, `packages/effect-codex-app-server` - Effect bindings for provider protocols.
-- `infra/relay` - Paperplane Connect relay, gated by `ROVE_CLOUD_READY`.
+- `infra/relay` - Paperplane Connect relay, gated by `PAPERPLANE_CLOUD_READY`.
 - `native/` - native helpers (resource monitor, terminal VT, Linux SnapShot, browser secrets).
 - `.agents/skills/` - repo skills for testing web, mobile, and iOS.
 - `.repos/` - vendored read-only references. Prefer their patterns over invented ones. Never edit or import from them. Run `vpr sync:repos` when bumping the matching dependency.

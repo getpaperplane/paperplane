@@ -333,7 +333,7 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
           ConfigProvider.layer(
             ConfigProvider.fromEnv({
               env: {
-                ROVE_DESKTOP_UPDATE_REPOSITORY: "rovecode/rove",
+                PAPERPLANE_DESKTOP_UPDATE_REPOSITORY: "rovecode/rove",
               },
             }),
           ),
@@ -1081,7 +1081,7 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
           Effect.provide(
             ConfigProvider.layer(
               ConfigProvider.fromEnv({
-                env: { ROVE_DESKTOP_REUSE_RESOURCE_MONITOR: "true" },
+                env: { PAPERPLANE_DESKTOP_REUSE_RESOURCE_MONITOR: "true" },
               }),
             ),
           ),
@@ -1243,7 +1243,7 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
                 ConfigProvider.fromEnv({
                   env: {
                     npm_config_python: pythonPath,
-                    ROVE_DESKTOP_REUSE_RESOURCE_MONITOR: "true",
+                    PAPERPLANE_DESKTOP_REUSE_RESOURCE_MONITOR: "true",
                   },
                 }),
               ),
@@ -1289,7 +1289,7 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
               spawner,
               ConfigProvider.layer(
                 ConfigProvider.fromEnv({
-                  env: { ROVE_DESKTOP_REUSE_RESOURCE_MONITOR: "true" },
+                  env: { PAPERPLANE_DESKTOP_REUSE_RESOURCE_MONITOR: "true" },
                 }),
               ),
             ),
@@ -2152,9 +2152,9 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
 
   it("derives macOS passkey signing configuration from the Clerk publishable key", () => {
     const configuration = resolveMacPasskeySigningConfiguration({
-      ROVE_APPLE_TEAM_ID: "abc1234567",
-      ROVE_MACOS_PROVISIONING_PROFILE: "/tmp/rove.provisionprofile",
-      ROVE_CLERK_PUBLISHABLE_KEY: `pk_test_${btoa("example.clerk.accounts.dev$")}`,
+      PAPERPLANE_APPLE_TEAM_ID: "abc1234567",
+      PAPERPLANE_MACOS_PROVISIONING_PROFILE: "/tmp/rove.provisionprofile",
+      PAPERPLANE_CLERK_PUBLISHABLE_KEY: `pk_test_${btoa("example.clerk.accounts.dev$")}`,
     });
 
     assert.deepStrictEqual(configuration, {
@@ -2167,9 +2167,9 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
 
   it("normalizes explicit macOS passkey RP domains and renders required entitlements", () => {
     const configuration = resolveMacPasskeySigningConfiguration({
-      ROVE_APPLE_TEAM_ID: "ABC1234567",
-      ROVE_MACOS_PROVISIONING_PROFILE: "/tmp/rove.provisionprofile",
-      ROVE_CLERK_PASSKEY_RP_DOMAINS:
+      PAPERPLANE_APPLE_TEAM_ID: "ABC1234567",
+      PAPERPLANE_MACOS_PROVISIONING_PROFILE: "/tmp/rove.provisionprofile",
+      PAPERPLANE_CLERK_PASSKEY_RP_DOMAINS:
         " Clerk.Example.com,example.clerk.accounts.dev,clerk.example.com ",
     });
     const entitlements = renderMacPasskeyEntitlements(configuration, {
@@ -2270,21 +2270,21 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
     };
 
     const missingProfileError = captureError({
-      ROVE_APPLE_TEAM_ID: "ABC1234567",
-      ROVE_CLERK_PASSKEY_RP_DOMAINS: "example.clerk.accounts.dev",
+      PAPERPLANE_APPLE_TEAM_ID: "ABC1234567",
+      PAPERPLANE_CLERK_PASSKEY_RP_DOMAINS: "example.clerk.accounts.dev",
     });
     assert.instanceOf(missingProfileError, MissingMacPasskeyProvisioningProfileError);
     assert.equal(
       missingProfileError.message,
-      "ROVE_MACOS_PROVISIONING_PROFILE must point to an Associated Domains provisioning profile.",
+      "PAPERPLANE_MACOS_PROVISIONING_PROFILE must point to an Associated Domains provisioning profile.",
     );
 
     const unsafeDomain =
       "https://domain-user:domain-secret@example.clerk.accounts.dev/path?token=query-secret";
     const invalidDomainError = captureError({
-      ROVE_APPLE_TEAM_ID: "ABC1234567",
-      ROVE_MACOS_PROVISIONING_PROFILE: "/tmp/rove.provisionprofile",
-      ROVE_CLERK_PASSKEY_RP_DOMAINS: unsafeDomain,
+      PAPERPLANE_APPLE_TEAM_ID: "ABC1234567",
+      PAPERPLANE_MACOS_PROVISIONING_PROFILE: "/tmp/rove.provisionprofile",
+      PAPERPLANE_CLERK_PASSKEY_RP_DOMAINS: unsafeDomain,
     });
     assert.instanceOf(invalidDomainError, InvalidMacPasskeyRpDomainError);
     assert.equal(invalidDomainError.reason, "scheme-not-allowed");
@@ -2300,20 +2300,23 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
     assert.throws(
       () =>
         resolveMacPasskeySigningConfiguration({
-          ROVE_APPLE_TEAM_ID: "ABC1234567",
-          ROVE_MACOS_PROVISIONING_PROFILE: "/tmp/rove.provisionprofile",
-          ROVE_CLERK_PASSKEY_RP_DOMAINS: "example.clerk.accounts.dev:8443",
+          PAPERPLANE_APPLE_TEAM_ID: "ABC1234567",
+          PAPERPLANE_MACOS_PROVISIONING_PROFILE: "/tmp/rove.provisionprofile",
+          PAPERPLANE_CLERK_PASSKEY_RP_DOMAINS: "example.clerk.accounts.dev:8443",
         }),
       /Invalid passkey RP domain/u,
     );
     const invalidPublishableKeyError = captureError({
-      ROVE_APPLE_TEAM_ID: "ABC1234567",
-      ROVE_MACOS_PROVISIONING_PROFILE: "/tmp/rove.provisionprofile",
-      ROVE_CLERK_PUBLISHABLE_KEY: "pk_test_%",
+      PAPERPLANE_APPLE_TEAM_ID: "ABC1234567",
+      PAPERPLANE_MACOS_PROVISIONING_PROFILE: "/tmp/rove.provisionprofile",
+      PAPERPLANE_CLERK_PUBLISHABLE_KEY: "pk_test_%",
     });
     assert.instanceOf(invalidPublishableKeyError, InvalidMacPasskeyPublishableKeyError);
     assert.ok(invalidPublishableKeyError.cause);
-    assert.equal(invalidPublishableKeyError.message, "ROVE_CLERK_PUBLISHABLE_KEY is invalid.");
+    assert.equal(
+      invalidPublishableKeyError.message,
+      "PAPERPLANE_CLERK_PUBLISHABLE_KEY is invalid.",
+    );
     assert.notProperty(invalidPublishableKeyError, "publishableKey");
     assert.notInclude(invalidPublishableKeyError.message, "pk_test_%");
   });
@@ -2474,9 +2477,9 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
         ConfigProvider.layer(
           ConfigProvider.fromEnv({
             env: {
-              ROVE_WINDOWS_SIGNING_MODE: "self-signed",
+              PAPERPLANE_WINDOWS_SIGNING_MODE: "self-signed",
               WIN_CSC_LINK: "C:\\signing\\rove.pfx",
-              ROVE_WINDOWS_SIGNING_PUBLISHER_NAME: "CN=Rove Code Release Signing",
+              PAPERPLANE_WINDOWS_SIGNING_PUBLISHER_NAME: "CN=Rove Code Release Signing",
             },
           }),
         ),
@@ -2485,9 +2488,9 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
   );
 
   it.effect.each([
-    { ROVE_WINDOWS_SIGNING_MODE: "self-signed" },
-    { ROVE_WINDOWS_SIGNING_MODE: "unsupported" },
-  ])("refuses incomplete Windows signing configuration $ROVE_WINDOWS_SIGNING_MODE", (env) =>
+    { PAPERPLANE_WINDOWS_SIGNING_MODE: "self-signed" },
+    { PAPERPLANE_WINDOWS_SIGNING_MODE: "unsupported" },
+  ])("refuses incomplete Windows signing configuration $PAPERPLANE_WINDOWS_SIGNING_MODE", (env) =>
     Effect.gen(function* () {
       const result = yield* Effect.result(
         createBuildConfig("win", "nsis", "1.2.3", true, false, undefined, undefined),
@@ -2794,7 +2797,7 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
           Effect.provide(
             ConfigProvider.layer(
               ConfigProvider.fromEnv({
-                env: { ROVE_MACOS_SIGNING_MODE: mode },
+                env: { PAPERPLANE_MACOS_SIGNING_MODE: mode },
               }),
             ),
           ),
@@ -2804,7 +2807,7 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
       assert.equal(options.macSigningMode, "self-signed");
       assert.equal(options.signed, true);
       const error = yield* Effect.flip(resolve("adhoc"));
-      assert.include(String(error), "ROVE_MACOS_SIGNING_MODE");
+      assert.include(String(error), "PAPERPLANE_MACOS_SIGNING_MODE");
     }),
   );
 
@@ -2828,11 +2831,11 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
           ConfigProvider.layer(
             ConfigProvider.fromEnv({
               env: {
-                ROVE_DESKTOP_SKIP_BUILD: "true",
-                ROVE_DESKTOP_KEEP_STAGE: "true",
-                ROVE_DESKTOP_SIGNED: "true",
-                ROVE_DESKTOP_VERBOSE: "true",
-                ROVE_DESKTOP_MOCK_UPDATES: "true",
+                PAPERPLANE_DESKTOP_SKIP_BUILD: "true",
+                PAPERPLANE_DESKTOP_KEEP_STAGE: "true",
+                PAPERPLANE_DESKTOP_SIGNED: "true",
+                PAPERPLANE_DESKTOP_VERBOSE: "true",
+                PAPERPLANE_DESKTOP_MOCK_UPDATES: "true",
               },
             }),
           ),

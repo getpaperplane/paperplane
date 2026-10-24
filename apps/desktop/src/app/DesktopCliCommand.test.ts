@@ -59,8 +59,8 @@ const fakePowerShell = (initial: string) => {
       const env = options.env ?? {};
       let exitCode = 0;
       let stdout = "";
-      if (env.ROVE_SET === "1") {
-        registry.path = env.ROVE_PATH ?? "";
+      if (env.PAPERPLANE_SET === "1") {
+        registry.path = env.PAPERPLANE_PATH ?? "";
         registry.writes += 1;
       } else if (registry.failReads) {
         exitCode = 1;

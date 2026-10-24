@@ -136,10 +136,10 @@ const buildExeCmd = Command.make(
           cwd: serverDir,
           env: {
             ...process.env,
-            ROVE_PACK_EXE: "1",
+            PAPERPLANE_PACK_EXE: "1",
             ...Option.match(config.target, {
               onNone: () => ({}),
-              onSome: (target) => ({ ROVE_PACK_EXE_TARGET: target }),
+              onSome: (target) => ({ PAPERPLANE_PACK_EXE_TARGET: target }),
             }),
           },
           stdout: config.verbose ? "inherit" : "ignore",

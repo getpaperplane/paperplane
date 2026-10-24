@@ -50,9 +50,9 @@ try {
     if ($publicCertificate.HasPrivateKey -or $publicCertificate.Thumbprint -ne $certificate.Thumbprint) {
         throw 'The published certificate must match the signer and contain no private key.'
     }
-    $env:ROVE_WINDOWS_SIGNING_THUMBPRINT = '0' * 40
+    $env:PAPERPLANE_WINDOWS_SIGNING_THUMBPRINT = '0' * 40
     ExpectFailure { & $signingScript -Action Verify -Path $payload } 'Invalid Windows signature'
-    $env:ROVE_WINDOWS_SIGNING_THUMBPRINT = $certificate.Thumbprint
+    $env:PAPERPLANE_WINDOWS_SIGNING_THUMBPRINT = $certificate.Thumbprint
     $executable = Join-Path $payload 'rove.exe'
     $bytes = [IO.File]::ReadAllBytes($executable)
     $bytes[0x51] = $bytes[0x51] -bxor 1

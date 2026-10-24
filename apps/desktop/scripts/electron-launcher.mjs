@@ -113,14 +113,14 @@ function shellSingleQuote(value) {
 export function makeDevelopmentEnvironmentScript(environment) {
   const envEntries = [
     ["VITE_DEV_SERVER_URL", environment.VITE_DEV_SERVER_URL],
-    ["ROVE_PORT", environment.ROVE_PORT],
-    ["ROVE_HOME", environment.ROVE_HOME],
-    ["ROVE_COMMIT_HASH", environment.ROVE_COMMIT_HASH],
-    ["ROVE_OTLP_TRACES_URL", environment.ROVE_OTLP_TRACES_URL],
-    ["ROVE_OTLP_EXPORT_INTERVAL_MS", environment.ROVE_OTLP_EXPORT_INTERVAL_MS],
-    ["ROVE_OTLP_HEADERS", environment.ROVE_OTLP_HEADERS],
-    ["ROVE_OTLP_PROTOCOL", environment.ROVE_OTLP_PROTOCOL],
-    ["ROVE_DESKTOP_APP_USER_MODEL_ID", APP_BUNDLE_ID],
+    ["PAPERPLANE_PORT", environment.PAPERPLANE_PORT],
+    ["PAPERPLANE_HOME", environment.PAPERPLANE_HOME],
+    ["PAPERPLANE_COMMIT_HASH", environment.PAPERPLANE_COMMIT_HASH],
+    ["PAPERPLANE_OTLP_TRACES_URL", environment.PAPERPLANE_OTLP_TRACES_URL],
+    ["PAPERPLANE_OTLP_EXPORT_INTERVAL_MS", environment.PAPERPLANE_OTLP_EXPORT_INTERVAL_MS],
+    ["PAPERPLANE_OTLP_HEADERS", environment.PAPERPLANE_OTLP_HEADERS],
+    ["PAPERPLANE_OTLP_PROTOCOL", environment.PAPERPLANE_OTLP_PROTOCOL],
+    ["PAPERPLANE_DESKTOP_APP_USER_MODEL_ID", APP_BUNDLE_ID],
   ].filter((entry) => RuntimePredicate.isString(entry[1]) && entry[1].trim().length > 0);
   return [
     ...envEntries.map(

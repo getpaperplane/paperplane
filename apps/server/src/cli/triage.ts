@@ -174,10 +174,10 @@ export const triageCommand = Command.make("triage", {
       const path = yield* Path.Path;
 
       // Triage is a user-facing feature: always the userdata state, never dev.
-      // --base-dir wins; ROVE_HOME is its documented env equivalent (same
+      // --base-dir wins; PAPERPLANE_HOME is its documented env equivalent (same
       // precedence as `paperplane pair`).
       const explicitBaseDir = Option.getOrUndefined(flags.baseDir);
-      const envHome = yield* Config.String("ROVE_HOME").pipe(Config.option);
+      const envHome = yield* Config.String("PAPERPLANE_HOME").pipe(Config.option);
       const baseDir = yield* resolveBaseDir(explicitBaseDir ?? Option.getOrUndefined(envHome));
       const paths = yield* ServerConfig.deriveServerPaths(baseDir, undefined, {});
 

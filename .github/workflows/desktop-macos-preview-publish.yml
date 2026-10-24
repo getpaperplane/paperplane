@@ -31,7 +31,7 @@ jobs:
   resolve:
     name: Verify preview eligibility
     if: >-
-      vars.ROVE_MACOS_SIGNING_READY == 'true' &&
+      vars.PAPERPLANE_MACOS_SIGNING_READY == 'true' &&
       github.event_name == 'workflow_run' &&
       github.event.workflow_run.event == 'pull_request' &&
       github.event.workflow_run.conclusion == 'success'
@@ -224,7 +224,7 @@ jobs:
           echo "version=${base_version}-pr.${PR_NUMBER}.${BUILD_RUN_NUMBER}" >> "$GITHUB_OUTPUT"
 
           head_file .env.example > "$RUNNER_TEMP/head.env.example"
-          for key in clerk_publishable_key:ROVE_CLERK_PUBLISHABLE_KEY clerk_jwt_template:ROVE_CLERK_JWT_TEMPLATE clerk_cli_oauth_client_id:ROVE_CLERK_CLI_OAUTH_CLIENT_ID relay_url:ROVE_RELAY_URL; do
+          for key in clerk_publishable_key:PAPERPLANE_CLERK_PUBLISHABLE_KEY clerk_jwt_template:PAPERPLANE_CLERK_JWT_TEMPLATE clerk_cli_oauth_client_id:PAPERPLANE_CLERK_CLI_OAUTH_CLIENT_ID relay_url:PAPERPLANE_RELAY_URL; do
             output="${key%%:*}"
             name="${key##*:}"
             value="$(sed -n "s/^${name}=//p" "$RUNNER_TEMP/head.env.example" | head -n 1)"

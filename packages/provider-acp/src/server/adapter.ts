@@ -702,8 +702,8 @@ function acpMcpContext(
         args: [...selfInvocationArgs(self, ["acp-mcp-bridge"])],
         env: [
           { name: "ELECTRON_RUN_AS_NODE", value: "1" },
-          { name: "ROVE_ACP_MCP_ENDPOINT", value: session.endpoint },
-          { name: "ROVE_ACP_MCP_AUTHORIZATION", value: session.authorizationHeader },
+          { name: "PAPERPLANE_ACP_MCP_ENDPOINT", value: session.endpoint },
+          { name: "PAPERPLANE_ACP_MCP_AUTHORIZATION", value: session.authorizationHeader },
         ],
       },
     ],
@@ -711,10 +711,10 @@ function acpMcpContext(
     endpoint: session.endpoint,
     authorization: session.authorizationHeader,
     processEnvironment: {
-      ROVE_ACP_MCP_ENDPOINT: session.endpoint,
-      ROVE_ACP_MCP_AUTHORIZATION: session.authorizationHeader,
-      ROVE_ACP_MCP_NODE: self.command,
-      ...(self.entrypoint === undefined ? {} : { ROVE_ACP_MCP_ENTRYPOINT: self.entrypoint }),
+      PAPERPLANE_ACP_MCP_ENDPOINT: session.endpoint,
+      PAPERPLANE_ACP_MCP_AUTHORIZATION: session.authorizationHeader,
+      PAPERPLANE_ACP_MCP_NODE: self.command,
+      ...(self.entrypoint === undefined ? {} : { PAPERPLANE_ACP_MCP_ENTRYPOINT: self.entrypoint }),
     },
   };
 }

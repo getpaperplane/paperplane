@@ -50,7 +50,7 @@ const watchedDirectories = [
 const forcedShutdownTimeoutMs = 1_500;
 const restartDebounceMs = 120;
 const childTreeGracePeriodMs = 1_200;
-const remoteDebuggingPort = process.env.ROVE_DESKTOP_REMOTE_DEBUGGING_PORT?.trim();
+const remoteDebuggingPort = process.env.PAPERPLANE_DESKTOP_REMOTE_DEBUGGING_PORT?.trim();
 // oxlint-disable-next-line paperplane/no-global-process-runtime -- Standalone dev script has no Effect runtime.
 const hostPlatform = NodeOS.platform();
 
@@ -71,8 +71,8 @@ const childEnv = { ...process.env };
 delete childEnv.ELECTRON_RUN_AS_NODE;
 const devProtocolClient = resolveDevProtocolClient();
 if (devProtocolClient) {
-  childEnv.ROVE_DESKTOP_APP_USER_MODEL_ID = devProtocolClient.appBundleId;
-  childEnv.ROVE_DESKTOP_PROTOCOL_REGISTRATION_MANAGED = "1";
+  childEnv.PAPERPLANE_DESKTOP_APP_USER_MODEL_ID = devProtocolClient.appBundleId;
+  childEnv.PAPERPLANE_DESKTOP_PROTOCOL_REGISTRATION_MANAGED = "1";
 }
 
 let shuttingDown = false;

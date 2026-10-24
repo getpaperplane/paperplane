@@ -19,9 +19,9 @@ describe("electron development launcher", () => {
   it("uses captured values only as fallbacks for a live runner environment", () => {
     const environmentScript = makeDevelopmentEnvironmentScript({
       VITE_DEV_SERVER_URL: "http://127.0.0.1:8526",
-      ROVE_PORT: "16566",
-      ROVE_HOME: "/tmp/rove",
-      ROVE_OTLP_PROTOCOL: "http/protobuf",
+      PAPERPLANE_PORT: "16566",
+      PAPERPLANE_HOME: "/tmp/rove",
+      PAPERPLANE_OTLP_PROTOCOL: "http/protobuf",
     });
 
     assert.include(
@@ -30,7 +30,7 @@ describe("electron development launcher", () => {
     );
     assert.include(
       environmentScript,
-      "if [ -z \"${ROVE_OTLP_PROTOCOL:-}\" ]; then export ROVE_OTLP_PROTOCOL='http/protobuf'; fi",
+      "if [ -z \"${PAPERPLANE_OTLP_PROTOCOL:-}\" ]; then export PAPERPLANE_OTLP_PROTOCOL='http/protobuf'; fi",
     );
     assert.notInclude(environmentScript, "\nexport VITE_DEV_SERVER_URL=");
   });

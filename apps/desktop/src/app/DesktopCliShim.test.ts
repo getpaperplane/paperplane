@@ -41,7 +41,7 @@ const run = (shim: string, args: ReadonlyArray<string>, env: NodeJS.ProcessEnv =
 
 /** An app executable that reports its environment and arguments. */
 const REPORTER =
-  '#!/bin/sh\necho "node=$ELECTRON_RUN_AS_NODE cli=$ROVE_CLI_PATH home=$ROVE_HOME"\nprintf "%s\\n" "$@"\nexit 3\n';
+  '#!/bin/sh\necho "node=$ELECTRON_RUN_AS_NODE cli=$PAPERPLANE_CLI_PATH home=$PAPERPLANE_HOME"\nprintf "%s\\n" "$@"\nexit 3\n';
 
 /**
  * A stand-in AppImage whose image holds the reporter. `--appimage-mount`
@@ -112,7 +112,7 @@ describe("renderCliShim", () => {
     });
     // sudo clears the environment, so the launcher supplies its own.
     expect(run(shim, []).stdout).toContain(`home=${root}/home`);
-    expect(run(shim, [], { ROVE_HOME: "/elsewhere" }).stdout).toContain("home=/elsewhere");
+    expect(run(shim, [], { PAPERPLANE_HOME: "/elsewhere" }).stdout).toContain("home=/elsewhere");
     // Run by a relative path, it still names itself absolutely.
     const relative = NodeChildProcess.spawnSync("./bin/paperplane", [], {
       cwd: root,
@@ -168,7 +168,9 @@ describe("renderCliShim", () => {
       (line) => line.includes("whoami") && !/"[^"]*whoami[^"]*"/.test(line),
     );
     expect(bare).toEqual([]);
-    expect(lines).toContain('set "ROVE_CLI_PATH=C:\\Users\\José\\.rove-code\\bin\\paperplane.cmd"');
+    expect(lines).toContain(
+      'set "PAPERPLANE_CLI_PATH=C:\\Users\\José\\.rove-code\\bin\\paperplane.cmd"',
+    );
   });
 
   it("switches the Windows console to UTF-8 only when a path needs it", () => {

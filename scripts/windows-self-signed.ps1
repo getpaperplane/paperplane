@@ -37,15 +37,15 @@ if ($Action -eq 'Import') {
     & certutil.exe -f -addstore Root $publicPath
     if ($LASTEXITCODE -ne 0) { throw 'Could not trust the Windows signing certificate in the runner machine root store.' }
     $env:WIN_CSC_LINK = $pfxPath
-    $env:ROVE_WINDOWS_SIGNING_THUMBPRINT = $certificate.Thumbprint
-    $env:ROVE_WINDOWS_SIGNING_PUBLISHER_NAME = $certificate.Subject
-    $env:ROVE_WINDOWS_SIGNING_CERTIFICATE = $publicPath
+    $env:PAPERPLANE_WINDOWS_SIGNING_THUMBPRINT = $certificate.Thumbprint
+    $env:PAPERPLANE_WINDOWS_SIGNING_PUBLISHER_NAME = $certificate.Subject
+    $env:PAPERPLANE_WINDOWS_SIGNING_CERTIFICATE = $publicPath
     if ($env:GITHUB_ENV) {
         @(
             "WIN_CSC_LINK=$pfxPath"
-            "ROVE_WINDOWS_SIGNING_THUMBPRINT=$($certificate.Thumbprint)"
-            "ROVE_WINDOWS_SIGNING_PUBLISHER_NAME=$($certificate.Subject)"
-            "ROVE_WINDOWS_SIGNING_CERTIFICATE=$publicPath"
+            "PAPERPLANE_WINDOWS_SIGNING_THUMBPRINT=$($certificate.Thumbprint)"
+            "PAPERPLANE_WINDOWS_SIGNING_PUBLISHER_NAME=$($certificate.Subject)"
+            "PAPERPLANE_WINDOWS_SIGNING_CERTIFICATE=$publicPath"
         ) | Add-Content -LiteralPath $env:GITHUB_ENV -Encoding utf8
     }
     $fingerprint = (Get-FileHash -LiteralPath $publicPath -Algorithm SHA256).Hash
@@ -62,7 +62,7 @@ if ($Action -eq 'Import') {
     return
 }
 
-if (!$Path -or !$env:ROVE_WINDOWS_SIGNING_THUMBPRINT) {
+if (!$Path -or !$env:PAPERPLANE_WINDOWS_SIGNING_THUMBPRINT) {
     throw 'Import the Windows signing identity before signing or verifying artifacts.'
 }
 $item = Get-Item -LiteralPath $Path
@@ -96,11 +96,11 @@ if ($Action -eq 'Sign') {
 
 foreach ($file in $files) {
     $signature = Get-AuthenticodeSignature -LiteralPath $file.FullName
-    if ($signature.Status -ne 'Valid' -or $signature.SignerCertificate.Thumbprint -ne $env:ROVE_WINDOWS_SIGNING_THUMBPRINT) {
+    if ($signature.Status -ne 'Valid' -or $signature.SignerCertificate.Thumbprint -ne $env:PAPERPLANE_WINDOWS_SIGNING_THUMBPRINT) {
         throw "Invalid Windows signature for $($file.Name): $($signature.Status)."
     }
     Write-Host "Verified Windows signature for $($file.Name)."
 }
 if ($item.PSIsContainer) {
-    Copy-Item -LiteralPath $env:ROVE_WINDOWS_SIGNING_CERTIFICATE -Destination (Join-Path $Path 'rove-windows-signing.cer') -Force
+    Copy-Item -LiteralPath $env:PAPERPLANE_WINDOWS_SIGNING_CERTIFICATE -Destination (Join-Path $Path 'rove-windows-signing.cer') -Force
 }

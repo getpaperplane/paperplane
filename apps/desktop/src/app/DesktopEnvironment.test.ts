@@ -44,17 +44,17 @@ describe("DesktopEnvironment", () => {
       const environment = yield* makeEnvironment(
         {},
         {
-          ROVE_HOME: " /tmp/rove ",
-          ROVE_COMMIT_HASH: " 0123456789abcdef ",
-          ROVE_PORT: "4949",
+          PAPERPLANE_HOME: " /tmp/rove ",
+          PAPERPLANE_COMMIT_HASH: " 0123456789abcdef ",
+          PAPERPLANE_PORT: "4949",
           VITE_DEV_SERVER_URL: "http://localhost:5173",
-          ROVE_DEV_REMOTE_SERVER_ENTRY_PATH: " /remote/server.mjs ",
-          ROVE_OTLP_TRACES_URL: " http://127.0.0.1:4318/v1/traces ",
-          ROVE_OTLP_METRICS_URL: " http://127.0.0.1:4318/v1/metrics ",
-          ROVE_OTLP_LOGS_URL: " http://127.0.0.1:4318/v1/logs ",
-          ROVE_OTLP_EXPORT_INTERVAL_MS: "2500",
-          ROVE_OTLP_HEADERS: "authorization=Basic%20abc%3D%3D,x-tenant=rove",
-          ROVE_OTLP_PROTOCOL: "http/protobuf",
+          PAPERPLANE_DEV_REMOTE_SERVER_ENTRY_PATH: " /remote/server.mjs ",
+          PAPERPLANE_OTLP_TRACES_URL: " http://127.0.0.1:4318/v1/traces ",
+          PAPERPLANE_OTLP_METRICS_URL: " http://127.0.0.1:4318/v1/metrics ",
+          PAPERPLANE_OTLP_LOGS_URL: " http://127.0.0.1:4318/v1/logs ",
+          PAPERPLANE_OTLP_EXPORT_INTERVAL_MS: "2500",
+          PAPERPLANE_OTLP_HEADERS: "authorization=Basic%20abc%3D%3D,x-tenant=rove",
+          PAPERPLANE_OTLP_PROTOCOL: "http/protobuf",
         },
       );
 
@@ -106,7 +106,7 @@ describe("DesktopEnvironment", () => {
       const environment = yield* makeEnvironment(
         {},
         {
-          ROVE_HOME: "/tmp/rove",
+          PAPERPLANE_HOME: "/tmp/rove",
         },
       );
 
@@ -174,7 +174,7 @@ describe("DesktopEnvironment", () => {
       const environment = yield* makeEnvironment(
         {},
         {
-          ROVE_DESKTOP_APP_USER_MODEL_ID: " io.github.hafiezul.rove.dev.local ",
+          PAPERPLANE_DESKTOP_APP_USER_MODEL_ID: " io.github.hafiezul.rove.dev.local ",
           VITE_DEV_SERVER_URL: "http://localhost:5173",
         },
       );

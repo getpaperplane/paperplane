@@ -114,13 +114,13 @@ describe("TerminalOpenInput", () => {
       cols: 100,
       rows: 24,
       env: {
-        ROVE_PROJECT_ROOT: "/tmp/project",
+        PAPERPLANE_PROJECT_ROOT: "/tmp/project",
         CUSTOM_FLAG: "1",
       },
       providerInstanceId: "codex_work",
     });
     expect(parsed.env).toMatchObject({
-      ROVE_PROJECT_ROOT: "/tmp/project",
+      PAPERPLANE_PROJECT_ROOT: "/tmp/project",
       CUSTOM_FLAG: "1",
     });
     expect(parsed.worktreePath).toBe("/tmp/project/.rove/worktrees/feature-a");

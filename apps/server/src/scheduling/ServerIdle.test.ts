@@ -1,5 +1,5 @@
 // Reproducible logical idle-work benchmark: vp test run apps/server/src/scheduling/ServerIdle.test.ts
-// ROVE_IDLE_THREADS controls fixture size (default 5000). Counts actual SQL statements,
+// PAPERPLANE_IDLE_THREADS controls fixture size (default 5000). Counts actual SQL statements,
 // scheduler source executions, and fake host-summary reads; excludes startup and seeding.
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeServices from "@effect/platform-node/NodeServices";
@@ -113,7 +113,7 @@ it.effect("bounds one simulated hour of idle work with retained threads and an o
       occurredAt: now,
       payload: thread,
     });
-    const n = Number(process.env.ROVE_IDLE_THREADS ?? 5000);
+    const n = Number(process.env.PAPERPLANE_IDLE_THREADS ?? 5000);
     assert.isTrue(Number.isInteger(n) && n > 0 && n <= 100000);
     const payload = yield* Schema.encodeEffect(Schema.fromJsonString(OrchestrationV2AppThread))({
       ...thread,
@@ -178,11 +178,11 @@ it.effect("bounds one simulated hour of idle work with retained threads and an o
       const measured = yield* Ref.get(counts);
       const result = JSON.stringify({ threads: n, simulatedHours: 1, ...measured });
       yield* Effect.logInfo("SERVER_IDLE", result);
-      if (process.env.ROVE_IDLE_RESULT_PATH !== undefined) {
+      if (process.env.PAPERPLANE_IDLE_RESULT_PATH !== undefined) {
         const fs = yield* FileSystem.FileSystem;
-        yield* fs.writeFileString(process.env.ROVE_IDLE_RESULT_PATH, result);
+        yield* fs.writeFileString(process.env.PAPERPLANE_IDLE_RESULT_PATH, result);
       }
-      if (process.env.ROVE_IDLE_BASELINE !== "1") {
+      if (process.env.PAPERPLANE_IDLE_BASELINE !== "1") {
         assert.equal(measured.schedulerPasses, 4);
         assert.equal(measured.githubCalls, 4);
         assert.equal(measured.queries, 16);

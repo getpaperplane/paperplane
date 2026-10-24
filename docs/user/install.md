@@ -40,7 +40,7 @@ Contributor source setup lives in the [development guide](../operations/developm
 It is not the installation or update procedure for a persistent host.
 
 Outside a development worktree, Paperplane uses `~/.paperplane` for its data.
-On first start, Paperplane copies an existing `~/.rove-code` install and keeps the old folder as a backup. Quit Rove Code and stop its background service before starting Paperplane. An explicit `--home-dir` or `ROVE_HOME` skips this copy.
+On first start, Paperplane copies an existing `~/.rove-code` install and keeps the old folder as a backup. Quit Rove Code and stop its background service before starting Paperplane. An explicit `--home-dir` or `PAPERPLANE_HOME` skips this copy.
 Downloaded runtimes and CLI shims do not block the copy. If `~/.paperplane/userdata` already exists, Paperplane keeps it and records that the old home was not migrated in `~/.paperplane/home-migration.json`.
 Importing data from another installation is not yet supported.
 

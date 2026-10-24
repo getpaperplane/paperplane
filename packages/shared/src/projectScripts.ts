@@ -59,10 +59,10 @@ export function projectScriptRuntimeEnv(
   input: ProjectScriptRuntimeEnvInput,
 ): Record<string, string> {
   const env: Record<string, string> = {
-    ROVE_PROJECT_ROOT: input.project.cwd,
+    PAPERPLANE_PROJECT_ROOT: input.project.cwd,
   };
   if (input.worktreePath) {
-    env.ROVE_WORKTREE_PATH = input.worktreePath;
+    env.PAPERPLANE_WORKTREE_PATH = input.worktreePath;
   }
   if (input.extraEnv) {
     return { ...env, ...input.extraEnv };

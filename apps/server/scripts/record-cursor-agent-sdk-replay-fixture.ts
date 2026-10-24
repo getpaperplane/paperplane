@@ -148,10 +148,12 @@ const recordScenario = Effect.fn("recordScenario")(function* (
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const apiKey = yield* Config.Redacted("CURSOR_API_KEY");
-  const model = yield* Config.NonEmptyString("ROVE_CURSOR_REPLAY_MODEL").pipe(
+  const model = yield* Config.NonEmptyString("PAPERPLANE_CURSOR_REPLAY_MODEL").pipe(
     Config.withDefault(CURSOR_MODEL_SELECTION.model),
   );
-  const configuredCwd = yield* Config.NonEmptyString("ROVE_CURSOR_REPLAY_CWD").pipe(Config.option);
+  const configuredCwd = yield* Config.NonEmptyString("PAPERPLANE_CURSOR_REPLAY_CWD").pipe(
+    Config.option,
+  );
   const recording = RECORDINGS[scenario];
 
   const owned = Option.isNone(configuredCwd);
@@ -205,8 +207,10 @@ const recordCursorReplayCommand = Command.make(
   "record-cursor-agent-sdk-replay-fixture",
   {
     scenario: Flag.Literals("scenario", RECORDING_NAMES).pipe(
-      Flag.withDescription("Scenario to record (or ROVE_CURSOR_REPLAY_SCENARIO)."),
-      Flag.withFallbackConfig(Config.Literals(RECORDING_NAMES, "ROVE_CURSOR_REPLAY_SCENARIO")),
+      Flag.withDescription("Scenario to record (or PAPERPLANE_CURSOR_REPLAY_SCENARIO)."),
+      Flag.withFallbackConfig(
+        Config.Literals(RECORDING_NAMES, "PAPERPLANE_CURSOR_REPLAY_SCENARIO"),
+      ),
     ),
     out: Flag.String("out").pipe(
       Flag.optional,
@@ -216,7 +220,7 @@ const recordCursorReplayCommand = Command.make(
   ({ scenario, out }) => recordScenario(scenario, Option.getOrUndefined(out)),
 ).pipe(
   Command.withDescription(
-    "Record a Cursor Agent SDK replay fixture live. Reads CURSOR_API_KEY, plus optional ROVE_CURSOR_REPLAY_MODEL and ROVE_CURSOR_REPLAY_CWD.",
+    "Record a Cursor Agent SDK replay fixture live. Reads CURSOR_API_KEY, plus optional PAPERPLANE_CURSOR_REPLAY_MODEL and PAPERPLANE_CURSOR_REPLAY_CWD.",
   ),
 );
 

@@ -169,7 +169,7 @@ it.layer(NodeServices.layer)("root CLI commands", (it) => {
       const desktop = {
         node: "/tmp/.mount_T3abc/paperplane",
         entry: "/tmp/.mount_T3abc/resources/app.asar/apps/server/dist/bin.mjs",
-        env: { ROVE_CLI_PATH: shim },
+        env: { PAPERPLANE_CLI_PATH: shim },
       };
       // The desktop app's shim, quoted for the shell and run as root as is.
       expect(yield* rootCommand(desktop)).toBe(`sudo '${shim}' browser setup`);
@@ -187,7 +187,7 @@ it.layer(NodeServices.layer)("root CLI commands", (it) => {
       ).toBe("sudo /opt/rove/paperplane browser setup");
       // A stale shim path, then no launcher at all, fall back to plain `paperplane`.
       expect(
-        yield* rootCommand({ ...desktop, env: { ROVE_CLI_PATH: path.join(home, "gone") } }),
+        yield* rootCommand({ ...desktop, env: { PAPERPLANE_CLI_PATH: path.join(home, "gone") } }),
       ).toBe('sudo env "PATH=$PATH" paperplane browser setup');
     }).pipe(Effect.scoped),
   );
@@ -217,7 +217,7 @@ it.layer(NodeServices.layer)("host CLI commands", (it) => {
         );
       // The desktop shim is called through `&`, and each argument is quoted
       // the PowerShell way: no POSIX single quotes anywhere.
-      expect((yield* hostCommand("win32", { ROVE_CLI_PATH: shim })).command).toBe(
+      expect((yield* hostCommand("win32", { PAPERPLANE_CLI_PATH: shim })).command).toBe(
         `& "${shim}" doctor "--base-dir" "C:\\Users\\Jane Doe\\.rove"`,
       );
       // Without a launcher, plain `paperplane` with PowerShell-quoted arguments.
@@ -239,7 +239,7 @@ it.layer(NodeServices.layer)("host CLI commands", (it) => {
       ).toBe('paperplane doctor "--base-dir" "C:\\Rove\\\u201C\u201CArchive\u201D\u201D"');
       // POSIX hosts keep single quotes for the same input. The shim prefix is
       // a host path, so only the arguments are asserted.
-      expect((yield* hostCommand("linux", { ROVE_CLI_PATH: shim })).command).toMatch(
+      expect((yield* hostCommand("linux", { PAPERPLANE_CLI_PATH: shim })).command).toMatch(
         / doctor --base-dir 'C:\\Users\\Jane Doe\\\.rove'$/,
       );
     }).pipe(Effect.scoped),

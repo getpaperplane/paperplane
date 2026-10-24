@@ -171,7 +171,7 @@ it.layer(
       const layerConfig = ConfigProvider.layer(
         ConfigProvider.fromEnv({
           env: {
-            ROVE_DEV_AUTH_TOKEN: "  reusable-dev-auth-token-that-is-long-enough  ",
+            PAPERPLANE_DEV_AUTH_TOKEN: "  reusable-dev-auth-token-that-is-long-enough  ",
           },
         }),
       );
@@ -215,7 +215,7 @@ it.layer(
         tailscaleServePort: Option.none<number>(),
       };
       const layerConfig = ConfigProvider.layer(
-        ConfigProvider.fromEnv({ env: { ROVE_DEV_AUTH_TOKEN: secret } }),
+        ConfigProvider.fromEnv({ env: { PAPERPLANE_DEV_AUTH_TOKEN: secret } }),
       );
       const error = yield* resolveServerConfig(flags, Option.none()).pipe(
         Effect.provide(Layer.mergeAll(layerConfig, NetService.layer)),
@@ -268,17 +268,17 @@ it.layer(
             ConfigProvider.layer(
               ConfigProvider.fromEnv({
                 env: {
-                  ROVE_LOG_LEVEL: "Warn",
-                  ROVE_MODE: "desktop",
-                  ROVE_PORT: "4001",
-                  ROVE_HOST: "0.0.0.0",
-                  ROVE_HOME: baseDir,
+                  PAPERPLANE_LOG_LEVEL: "Warn",
+                  PAPERPLANE_MODE: "desktop",
+                  PAPERPLANE_PORT: "4001",
+                  PAPERPLANE_HOST: "0.0.0.0",
+                  PAPERPLANE_HOME: baseDir,
                   VITE_DEV_SERVER_URL: "http://127.0.0.1:5173",
-                  ROVE_DEV_ALLOWED_ORIGINS:
+                  PAPERPLANE_DEV_ALLOWED_ORIGINS:
                     "https://host.example.ts.net, https://phone.example.ts.net ",
-                  ROVE_NO_BROWSER: "true",
-                  ROVE_AUTO_BOOTSTRAP_PROJECT_FROM_CWD: "false",
-                  ROVE_LOG_WS_EVENTS: "true",
+                  PAPERPLANE_NO_BROWSER: "true",
+                  PAPERPLANE_AUTO_BOOTSTRAP_PROJECT_FROM_CWD: "false",
+                  PAPERPLANE_LOG_WS_EVENTS: "true",
                 },
               }),
             ),
@@ -341,15 +341,15 @@ it.layer(
             ConfigProvider.layer(
               ConfigProvider.fromEnv({
                 env: {
-                  ROVE_LOG_LEVEL: "Warn",
-                  ROVE_MODE: "desktop",
-                  ROVE_PORT: "4001",
-                  ROVE_HOST: "0.0.0.0",
-                  ROVE_HOME: join(NodeOS.tmpdir(), "ignored-base"),
+                  PAPERPLANE_LOG_LEVEL: "Warn",
+                  PAPERPLANE_MODE: "desktop",
+                  PAPERPLANE_PORT: "4001",
+                  PAPERPLANE_HOST: "0.0.0.0",
+                  PAPERPLANE_HOME: join(NodeOS.tmpdir(), "ignored-base"),
                   VITE_DEV_SERVER_URL: "http://127.0.0.1:5173",
-                  ROVE_NO_BROWSER: "false",
-                  ROVE_AUTO_BOOTSTRAP_PROJECT_FROM_CWD: "false",
-                  ROVE_LOG_WS_EVENTS: "false",
+                  PAPERPLANE_NO_BROWSER: "false",
+                  PAPERPLANE_AUTO_BOOTSTRAP_PROJECT_FROM_CWD: "false",
+                  PAPERPLANE_LOG_WS_EVENTS: "false",
                 },
               }),
             ),
@@ -419,10 +419,10 @@ it.layer(
             ConfigProvider.layer(
               ConfigProvider.fromEnv({
                 env: {
-                  ROVE_BOOTSTRAP_FD: String(fd),
-                  ROVE_NO_BROWSER: "true",
-                  ROVE_AUTO_BOOTSTRAP_PROJECT_FROM_CWD: "true",
-                  ROVE_LOG_WS_EVENTS: "true",
+                  PAPERPLANE_BOOTSTRAP_FD: String(fd),
+                  PAPERPLANE_NO_BROWSER: "true",
+                  PAPERPLANE_AUTO_BOOTSTRAP_PROJECT_FROM_CWD: "true",
+                  PAPERPLANE_LOG_WS_EVENTS: "true",
                 },
               }),
             ),
@@ -499,7 +499,7 @@ it.layer(
             ConfigProvider.layer(
               ConfigProvider.fromEnv({
                 env: {
-                  ROVE_BOOTSTRAP_FD: String(fd),
+                  PAPERPLANE_BOOTSTRAP_FD: String(fd),
                 },
               }),
             ),
@@ -659,12 +659,12 @@ it.layer(
             ConfigProvider.layer(
               ConfigProvider.fromEnv({
                 env: {
-                  ROVE_MODE: "web",
-                  ROVE_BOOTSTRAP_FD: String(fd),
-                  ROVE_HOME: baseDir,
-                  ROVE_NO_BROWSER: "true",
-                  ROVE_AUTO_BOOTSTRAP_PROJECT_FROM_CWD: "true",
-                  ROVE_LOG_WS_EVENTS: "true",
+                  PAPERPLANE_MODE: "web",
+                  PAPERPLANE_BOOTSTRAP_FD: String(fd),
+                  PAPERPLANE_HOME: baseDir,
+                  PAPERPLANE_NO_BROWSER: "true",
+                  PAPERPLANE_AUTO_BOOTSTRAP_PROJECT_FROM_CWD: "true",
+                  PAPERPLANE_LOG_WS_EVENTS: "true",
                 },
               }),
             ),
@@ -817,54 +817,56 @@ it.layer(
     }),
   );
 
-  it.effect("lets ROVE_OTEL_SDK_DISABLED=false override an ambient OTEL_SDK_DISABLED=true", () =>
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
-      const baseDir = yield* fs.makeTempDirectoryScoped({ prefix: "rove-cli-config-otel-on-" });
-      const derivedPaths = yield* deriveExplicitServerPaths(baseDir, undefined);
-      yield* fs.makeDirectory(path.dirname(derivedPaths.settingsPath), { recursive: true });
-      yield* fs.writeFileString(
-        derivedPaths.settingsPath,
-        `${JSON.stringify({
-          observability: {
-            otlpTracesUrl: "http://localhost:4318/v1/traces",
+  it.effect(
+    "lets PAPERPLANE_OTEL_SDK_DISABLED=false override an ambient OTEL_SDK_DISABLED=true",
+    () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const baseDir = yield* fs.makeTempDirectoryScoped({ prefix: "rove-cli-config-otel-on-" });
+        const derivedPaths = yield* deriveExplicitServerPaths(baseDir, undefined);
+        yield* fs.makeDirectory(path.dirname(derivedPaths.settingsPath), { recursive: true });
+        yield* fs.writeFileString(
+          derivedPaths.settingsPath,
+          `${JSON.stringify({
+            observability: {
+              otlpTracesUrl: "http://localhost:4318/v1/traces",
+            },
+          })}\n`,
+        );
+
+        const resolved = yield* resolveServerConfig(
+          {
+            mode: Option.some("desktop"),
+            port: Option.some(4888),
+            host: Option.none(),
+            baseDir: Option.some(baseDir),
+            cwd: Option.none(),
+            devUrl: Option.none(),
+            noBrowser: Option.none(),
+            bootstrapFd: Option.none(),
+            autoBootstrapProjectFromCwd: Option.none(),
+            logWebSocketEvents: Option.none(),
+            tailscaleServeEnabled: Option.none(),
+            tailscaleServePort: Option.none(),
           },
-        })}\n`,
-      );
-
-      const resolved = yield* resolveServerConfig(
-        {
-          mode: Option.some("desktop"),
-          port: Option.some(4888),
-          host: Option.none(),
-          baseDir: Option.some(baseDir),
-          cwd: Option.none(),
-          devUrl: Option.none(),
-          noBrowser: Option.none(),
-          bootstrapFd: Option.none(),
-          autoBootstrapProjectFromCwd: Option.none(),
-          logWebSocketEvents: Option.none(),
-          tailscaleServeEnabled: Option.none(),
-          tailscaleServePort: Option.none(),
-        },
-        Option.none(),
-      ).pipe(
-        Effect.provide(
-          Layer.mergeAll(
-            ConfigProvider.layer(
-              ConfigProvider.fromEnv({
-                env: { ROVE_OTEL_SDK_DISABLED: "false", OTEL_SDK_DISABLED: "true" },
-              }),
+          Option.none(),
+        ).pipe(
+          Effect.provide(
+            Layer.mergeAll(
+              ConfigProvider.layer(
+                ConfigProvider.fromEnv({
+                  env: { PAPERPLANE_OTEL_SDK_DISABLED: "false", OTEL_SDK_DISABLED: "true" },
+                }),
+              ),
+              NetService.layer,
             ),
-            NetService.layer,
           ),
-        ),
-      );
+        );
 
-      expect(resolved.otelEnvironment.disabled).toBe(false);
-      expect(resolved.otlpTracesUrl).toBe("http://localhost:4318/v1/traces");
-    }),
+        expect(resolved.otelEnvironment.disabled).toBe(false);
+        expect(resolved.otlpTracesUrl).toBe("http://localhost:4318/v1/traces");
+      }),
   );
 
   it.effect("forces noBrowser and disables auto-bootstrap for headless startup presentation", () =>
@@ -898,8 +900,8 @@ it.layer(
             ConfigProvider.layer(
               ConfigProvider.fromEnv({
                 env: {
-                  ROVE_NO_BROWSER: "false",
-                  ROVE_AUTO_BOOTSTRAP_PROJECT_FROM_CWD: "true",
+                  PAPERPLANE_NO_BROWSER: "false",
+                  PAPERPLANE_AUTO_BOOTSTRAP_PROJECT_FROM_CWD: "true",
                 },
               }),
             ),
@@ -957,7 +959,7 @@ it.layer(
             ConfigProvider.layer(
               ConfigProvider.fromEnv({
                 env: {
-                  ROVE_OTLP_HEADERS: "authorization=Basic%20abc%3D%3D,x-tenant=rove",
+                  PAPERPLANE_OTLP_HEADERS: "authorization=Basic%20abc%3D%3D,x-tenant=rove",
                 },
               }),
             ),
@@ -1000,8 +1002,8 @@ it.layer(
             ConfigProvider.layer(
               ConfigProvider.fromEnv({
                 env: {
-                  ROVE_OTLP_HEADERS: "authorization=Bearer abc==, x-tenant=rove",
-                  ROVE_OTLP_TRACES_URL: "http://collector.internal:4318",
+                  PAPERPLANE_OTLP_HEADERS: "authorization=Bearer abc==, x-tenant=rove",
+                  PAPERPLANE_OTLP_TRACES_URL: "http://collector.internal:4318",
                 },
               }),
             ),
@@ -1043,7 +1045,7 @@ it.layer(
         Effect.provide(
           Layer.mergeAll(
             ConfigProvider.layer(
-              ConfigProvider.fromEnv({ env: { ROVE_OTLP_PROTOCOL: "http/protobuf" } }),
+              ConfigProvider.fromEnv({ env: { PAPERPLANE_OTLP_PROTOCOL: "http/protobuf" } }),
             ),
             NetService.layer,
           ),
@@ -1084,7 +1086,7 @@ it.layer(
           Layer.mergeAll(
             ConfigProvider.layer(
               ConfigProvider.fromEnv({
-                env: { ROVE_OTLP_LOGS_URL: "http://collector.internal:4318/v1/logs" },
+                env: { PAPERPLANE_OTLP_LOGS_URL: "http://collector.internal:4318/v1/logs" },
               }),
             ),
             NetService.layer,
@@ -1112,7 +1114,7 @@ it.layer(
   });
 
   it.effect(
-    "resolves each signal's endpoint through ROVE_OTLP_*_URL, an OTEL endpoint, the bootstrap envelope, and persisted Settings, in that order",
+    "resolves each signal's endpoint through PAPERPLANE_OTLP_*_URL, an OTEL endpoint, the bootstrap envelope, and persisted Settings, in that order",
     () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
@@ -1149,8 +1151,8 @@ it.layer(
               ConfigProvider.layer(
                 ConfigProvider.fromEnv({
                   env: {
-                    ROVE_OTLP_TRACES_URL: "http://rove:4318/v1/traces",
-                    ROVE_OTLP_HEADERS: "x-key=secret",
+                    PAPERPLANE_OTLP_TRACES_URL: "http://rove:4318/v1/traces",
+                    PAPERPLANE_OTLP_HEADERS: "x-key=secret",
                     OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: "http://otel-traces:4318/custom",
                     OTEL_EXPORTER_OTLP_METRICS_ENDPOINT: "http://otel-metrics:4318/custom",
                     OTEL_EXPORTER_OTLP_HEADERS: "x-key=otel",
@@ -1162,11 +1164,11 @@ it.layer(
           ),
         );
 
-        // ROVE_OTLP_TRACES_URL wins over the OTEL variable for the same
+        // PAPERPLANE_OTLP_TRACES_URL wins over the OTEL variable for the same
         // signal, and keeps Paperplane's own headers since Paperplane still owns it.
         expect(resolved.otlpTracesUrl).toBe("http://rove:4318/v1/traces");
         expect(resolved.otlpTracesExport.headers).toEqual({ "x-key": "secret" });
-        // Metrics named no ROVE_OTLP_METRICS_URL, so the OTEL endpoint wins
+        // Metrics named no PAPERPLANE_OTLP_METRICS_URL, so the OTEL endpoint wins
         // over the bootstrap envelope and brings the OTEL headers and protocol.
         expect(resolved.otlpMetricsUrl).toBe("http://otel-metrics:4318/custom");
         expect(resolved.otlpMetricsExport).toEqual({
@@ -1216,7 +1218,7 @@ it.layer(
               ConfigProvider.layer(
                 ConfigProvider.fromEnv({
                   env: {
-                    ROVE_OTLP_TRACES_URL: "http://rove:4318/v1/traces",
+                    PAPERPLANE_OTLP_TRACES_URL: "http://rove:4318/v1/traces",
                     OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel:4318",
                     OTEL_EXPORTER_OTLP_HEADERS: "x-key=%zz",
                   },
@@ -1227,7 +1229,7 @@ it.layer(
           ),
         );
 
-        // ROVE_OTLP_TRACES_URL still wins outright.
+        // PAPERPLANE_OTLP_TRACES_URL still wins outright.
         expect(resolved.otlpTracesUrl).toBe("http://rove:4318/v1/traces");
         // The OTEL endpoint claimed metrics and logs, so neither the bootstrap
         // envelope nor Settings receives them with Paperplane's headers.

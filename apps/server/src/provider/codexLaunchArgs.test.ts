@@ -9,22 +9,22 @@ import {
 } from "./codexLaunchArgs.ts";
 
 describe("resolveCodexLaunchArgs", () => {
-  it("uses ROVE_CODEX_LAUNCH_ARGS before configured settings", () => {
+  it("uses PAPERPLANE_CODEX_LAUNCH_ARGS before configured settings", () => {
     NodeAssert.equal(
-      resolveCodexLaunchArgs(" --strict-config ", { ROVE_CODEX_LAUNCH_ARGS: "--enable foo" }),
+      resolveCodexLaunchArgs(" --strict-config ", { PAPERPLANE_CODEX_LAUNCH_ARGS: "--enable foo" }),
       "--enable foo",
     );
   });
 
-  it("uses configured settings when ROVE_CODEX_LAUNCH_ARGS is empty", () => {
+  it("uses configured settings when PAPERPLANE_CODEX_LAUNCH_ARGS is empty", () => {
     NodeAssert.equal(
-      resolveCodexLaunchArgs(" --strict-config ", { ROVE_CODEX_LAUNCH_ARGS: "   " }),
+      resolveCodexLaunchArgs(" --strict-config ", { PAPERPLANE_CODEX_LAUNCH_ARGS: "   " }),
       "--strict-config",
     );
   });
 
   it("ignores whitespace-only environment values", () => {
-    NodeAssert.equal(resolveCodexLaunchArgs("", { ROVE_CODEX_LAUNCH_ARGS: "   " }), "");
+    NodeAssert.equal(resolveCodexLaunchArgs("", { PAPERPLANE_CODEX_LAUNCH_ARGS: "   " }), "");
   });
 });
 

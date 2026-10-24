@@ -190,7 +190,7 @@ const smokeCliArchive = Effect.fn("smokeCliArchive")(function* (input: {
         USERPROFILE: home,
         TMPDIR: scratch,
         TEMP: scratch,
-        ROVE_HOME: home,
+        PAPERPLANE_HOME: home,
       },
       extendEnv: false,
     }),

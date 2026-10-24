@@ -29,7 +29,7 @@ import { layerComputerUseToolkit } from "../../McpHttpServer.ts";
 import * as McpToolAccessTestkit from "../../McpToolAccess.testkit.ts";
 
 const enabled =
-  HostProcessPlatform.defaultValue() === "linux" && process.env.ROVE_TEST_LINUX_CUA === "1";
+  HostProcessPlatform.defaultValue() === "linux" && process.env.PAPERPLANE_TEST_LINUX_CUA === "1";
 const settingsLayer = Layer.effect(
   ServerSettings.ServerSettingsService,
   Effect.gen(function* () {
@@ -151,7 +151,7 @@ it.effect.skipIf(!enabled)(
       });
       const first = ThreadId.make("linux-native-first");
       const second = ThreadId.make("linux-native-second");
-      const artifacts = process.env.ROVE_TEST_CUA_ARTIFACT_DIR;
+      const artifacts = process.env.PAPERPLANE_TEST_CUA_ARTIFACT_DIR;
       if (artifacts) yield* fs.makeDirectory(artifacts, { recursive: true });
       let sequence = 0;
       const receipts: Array<unknown> = [];
@@ -327,7 +327,7 @@ it.effect.skipIf(!enabled)(
           container.Id,
           "/bin/sh",
           "-c",
-          'test -z "$ROVE_CUA_VERIFY_HOST_ONLY" && test -z "$HTTP_PROXY" && test -z "$HTTPS_PROXY"',
+          'test -z "$PAPERPLANE_CUA_VERIFY_HOST_ONLY" && test -z "$HTTP_PROXY" && test -z "$HTTPS_PROXY"',
         ]);
         guests.push(guest);
       }
@@ -387,7 +387,7 @@ it.effect.skipIf(!enabled)(
       ),
       Effect.provideService(HostProcessEnvironment, {
         ...HostProcessEnvironment.defaultValue(),
-        ROVE_CUA_VERIFY_HOST_ONLY: "must-not-enter-the-guest",
+        PAPERPLANE_CUA_VERIFY_HOST_ONLY: "must-not-enter-the-guest",
         HTTP_PROXY: "http://host-only.invalid:1234",
         HTTPS_PROXY: "http://host-only.invalid:1234",
       }),

@@ -178,11 +178,11 @@ export class ThemeTargetMissingError extends Schema.TaggedError<ThemeTargetMissi
   }
 }
 
-const envRoveHome = Config.String("ROVE_HOME").pipe(Config.option);
+const envRoveHome = Config.String("PAPERPLANE_HOME").pipe(Config.option);
 
 const resolveThemePaths = Effect.fn(function* (explicitBaseDir: Option.Option<string>) {
-  // Same precedence as the rest of the CLI: --base-dir, then ROVE_HOME,
-  // then the default home. A provisioning script exporting ROVE_HOME must
+  // Same precedence as the rest of the CLI: --base-dir, then PAPERPLANE_HOME,
+  // then the default home. A provisioning script exporting PAPERPLANE_HOME must
   // not have this one command silently target the default install.
   const envHome = Option.filter(yield* envRoveHome, (value) => value.trim().length > 0);
   const configuredBaseDir = Option.orElse(explicitBaseDir, () => envHome);

@@ -20,7 +20,7 @@ it.skipIf(HostProcess.Platform.defaultValue() === "win32")(
       NodePath.join(NodeOS.tmpdir(), "rove-windows-certificate-"),
     );
     directories.push(directory);
-    const env = { ...process.env, ROVE_CERTIFICATE_PASSWORD: "certificate-test-password" };
+    const env = { ...process.env, PAPERPLANE_CERTIFICATE_PASSWORD: "certificate-test-password" };
     const script = NodePath.join(import.meta.dirname, "create-windows-signing.sh");
     NodeChildProcess.execFileSync("bash", [script, directory], { env, stdio: "pipe" });
     const pfx = NodePath.join(directory, "rove-windows-signing.pfx");
@@ -34,7 +34,7 @@ it.skipIf(HostProcess.Platform.defaultValue() === "win32")(
     const before = NodeFS.readFileSync(pfx);
     NodeChildProcess.execFileSync(
       "openssl",
-      ["pkcs12", "-in", pfx, "-noout", "-passin", "env:ROVE_CERTIFICATE_PASSWORD"],
+      ["pkcs12", "-in", pfx, "-noout", "-passin", "env:PAPERPLANE_CERTIFICATE_PASSWORD"],
       { env, stdio: "pipe" },
     );
     NodeAssert.throws(() =>

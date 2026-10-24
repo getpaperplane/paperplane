@@ -47,7 +47,7 @@ const BOOT_SERVICE_UNIT_FILE = `${BOOT_SERVICE_NAME}.service`;
 // (io.github.hafiezul.rove), so launchd and TCC records never collide.
 const BOOT_SERVICE_LAUNCHD_LABEL = "io.github.hafiezul.rove.service";
 const BOOT_SERVICE_PLIST_FILE = `${BOOT_SERVICE_LAUNCHD_LABEL}.plist`;
-const BOOT_SERVICE_UNIT_ENV = "ROVE_BOOT_SERVICE_UNIT";
+const BOOT_SERVICE_UNIT_ENV = "PAPERPLANE_BOOT_SERVICE_UNIT";
 /** File in the logs dir that receives the service's stdout and stderr. `paperplane triage` points agents at it. */
 export const BOOT_SERVICE_LOG_FILE = "boot-service.log";
 
@@ -64,12 +64,12 @@ function quoteSystemdValue(value: string): string {
 }
 
 /**
- * Reads `ROVE_HOME` back out of a rendered unit or plist. Only values this
+ * Reads `PAPERPLANE_HOME` back out of a rendered unit or plist. Only values this
  * file writes are expected, so a quoted systemd value is unquoted and
  * unescaped the same way `quoteSystemdValue` produced it.
  */
 export function bootServiceBaseDirOf(contents: string): string | undefined {
-  const systemd = /^Environment=ROVE_HOME=(.*)$/m.exec(contents)?.[1];
+  const systemd = /^Environment=PAPERPLANE_HOME=(.*)$/m.exec(contents)?.[1];
   if (systemd !== undefined) {
     const raw = systemd.trim();
     const unquoted =
@@ -78,7 +78,7 @@ export function bootServiceBaseDirOf(contents: string): string | undefined {
         : raw;
     return unquoted.replaceAll("%%", "%");
   }
-  const plist = /<key>ROVE_HOME<\/key>\s*<string>([^<]*)<\/string>/.exec(contents)?.[1];
+  const plist = /<key>PAPERPLANE_HOME<\/key>\s*<string>([^<]*)<\/string>/.exec(contents)?.[1];
   if (plist !== undefined) {
     return plist.replaceAll("&lt;", "<").replaceAll("&gt;", ">").replaceAll("&amp;", "&");
   }
@@ -111,7 +111,7 @@ export function renderBootServiceUnit(plan: BootServicePlan): string {
     "[Service]",
     "Type=simple",
     "WorkingDirectory=%h",
-    `Environment=ROVE_HOME=${quoteSystemdValue(plan.baseDir)}`,
+    `Environment=PAPERPLANE_HOME=${quoteSystemdValue(plan.baseDir)}`,
     ...(plan.environmentPath === undefined
       ? []
       : [`Environment=PATH=${quoteSystemdValue(plan.environmentPath)}`]),
@@ -182,7 +182,7 @@ export function renderBootServicePlist(
     `  <dict>`,
     `    <key>PATH</key>`,
     `    <string>${escapeXmlText(options.environmentPath)}</string>`,
-    `    <key>ROVE_HOME</key>`,
+    `    <key>PAPERPLANE_HOME</key>`,
     `    <string>${escapeXmlText(plan.baseDir)}</string>`,
     `    <key>${BOOT_SERVICE_UNIT_ENV}</key>`,
     `    <string>${BOOT_SERVICE_PLIST_FILE}</string>`,

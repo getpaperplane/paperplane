@@ -20,7 +20,7 @@ import { appendFileSync, mkdirSync } from "node:fs";
 const args = process.argv.slice(2);
 const flag = (name) => args[args.indexOf(name) + 1];
 const home = flag("--base-dir");
-if (home !== process.env.ROVE_HOME || flag("--host") !== "127.0.0.1" || !args.includes("--no-browser")) process.exit(2);
+if (home !== process.env.PAPERPLANE_HOME || flag("--host") !== "127.0.0.1" || !args.includes("--no-browser")) process.exit(2);
 mkdirSync(home, { recursive: true });
 appendFileSync(${JSON.stringify(log)}, JSON.stringify({ pid: process.pid, home }) + "\\n");
 // Accept TCP but never answer HTTP: an HTTP-based readiness probe would hang.

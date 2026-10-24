@@ -259,7 +259,7 @@ const layerDesktopRuntime = layerDesktopClerk.pipe(
 try {
   migrateDefaultHome({
     homeDirectory: NodeOS.homedir(),
-    explicitHome: process.env.ROVE_HOME,
+    explicitHome: process.env.PAPERPLANE_HOME,
     development: Boolean(process.env.VITE_DEV_SERVER_URL?.trim()),
   });
 } catch (error) {

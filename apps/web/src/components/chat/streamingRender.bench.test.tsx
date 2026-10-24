@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 // Streaming render benchmark. Opt-in because it is slow and prints a report:
-//   ROVE_STREAMING_BENCH=1 vp test run src/components/chat/streamingRender.bench.test.tsx
+//   PAPERPLANE_STREAMING_BENCH=1 vp test run src/components/chat/streamingRender.bench.test.tsx
 // It mounts the real ChatMarkdown inside a React Profiler and streams a reply in
 // 500 deltas, counting commits, render time, and Markdown parse work.
 
@@ -86,7 +86,7 @@ import ChatMarkdown from "../ChatMarkdown";
 
 const DELTAS = 500;
 const TARGET_BYTES = 10_000;
-const enabled = process.env.ROVE_STREAMING_BENCH === "1";
+const enabled = process.env.PAPERPLANE_STREAMING_BENCH === "1";
 
 // Deterministic text so runs compare across commits.
 function seeded(seed: number) {

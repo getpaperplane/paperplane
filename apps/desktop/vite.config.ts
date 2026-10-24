@@ -13,10 +13,10 @@ const repoEnv = loadRepoEnv();
 // bundle that already carries its own copy of the same libraries.
 const isMainProcessExternal = (id: string) =>
   id === "electron" || id.startsWith("electron/") || isDesktopRuntimeExternalDependency(id);
-const shouldLaunchElectronAfterPack = process.env.ROVE_DESKTOP_DEV === "1";
+const shouldLaunchElectronAfterPack = process.env.PAPERPLANE_DESKTOP_DEV === "1";
 const publicConfigDefine = {
   __ROVE_BUILD_CLERK_PUBLISHABLE_KEY__: JSON.stringify(
-    repoEnv.ROVE_CLERK_PUBLISHABLE_KEY?.trim() ?? "",
+    repoEnv.PAPERPLANE_CLERK_PUBLISHABLE_KEY?.trim() ?? "",
   ),
 };
 
@@ -31,7 +31,7 @@ export default defineConfig({
       },
       dev: {
         command:
-          "node scripts/build-browser-secret.mjs && node scripts/build-preview-annotation-css.mjs && cross-env ROVE_DESKTOP_DEV=1 vp pack --watch",
+          "node scripts/build-browser-secret.mjs && node scripts/build-preview-annotation-css.mjs && cross-env PAPERPLANE_DESKTOP_DEV=1 vp pack --watch",
         dependsOn: ["@getpaperplane/server#build"],
         cache: false,
       },

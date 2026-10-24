@@ -101,7 +101,7 @@ function runner() {
     CSC_LINK: Buffer.from("private signing identity fixture").toString("base64"),
     CSC_KEY_PASSWORD: "export-password-fixture",
     CSC_NAME: "Rove Code Release Signing",
-    ROVE_MACOS_SIGNING_CERT_SHA1: fingerprint,
+    PAPERPLANE_MACOS_SIGNING_CERT_SHA1: fingerprint,
   };
   return {
     root,
@@ -152,7 +152,7 @@ function runner() {
         cwd: root,
         env: {
           ...env,
-          ROVE_MACOS_SIGNING_MODE: "self-signed",
+          PAPERPLANE_MACOS_SIGNING_MODE: "self-signed",
           CSC_KEYCHAIN: "fixture",
           GITHUB_STEP_SUMMARY: NodePath.join(root, "summary"),
           ...overrides,
@@ -178,8 +178,8 @@ it("imports a reusable identity, scopes trust to code signing, and removes the p
   const fixture = runner();
   const output = fixture.run("import");
   const exported = NodeFS.readFileSync(fixture.envFile, "utf8");
-  assert.include(exported, `ROVE_CLI_MAC_SIGN_IDENTITY=${fingerprint}`);
-  assert.include(exported, `ROVE_MACOS_SIGNING_CERT_SHA1=${fingerprint}`);
+  assert.include(exported, `PAPERPLANE_CLI_MAC_SIGN_IDENTITY=${fingerprint}`);
+  assert.include(exported, `PAPERPLANE_MACOS_SIGNING_CERT_SHA1=${fingerprint}`);
   assert.include(exported, "CSC_KEYCHAIN=");
   assert.notInclude(exported, "export-password-fixture");
   assert.notInclude(exported, "temporary-keychain-password");
@@ -246,7 +246,7 @@ it.each([
   { EMPTY_ZIP: "1" },
   { SIGNATURE_FAIL: "1" },
   { CSC_KEYCHAIN: "" },
-  { ROVE_MACOS_SIGNING_MODE: "adhoc" },
+  { PAPERPLANE_MACOS_SIGNING_MODE: "adhoc" },
 ])("rejects an unusable self-signed release with %j", (failure) => {
   assert.throws(() => runner().runWorkflow(failure));
 });

@@ -127,12 +127,12 @@ domain override.
 The stack's `PublishClientConfig` action ([`src/clientConfig.ts`](./src/clientConfig.ts)) writes the
 deployed relay URL and tracing configuration into the repository-root `.env`, so subsequent source
 builds point at the relay that was just deployed without copying values manually. It runs only when
-one of those outputs changed, and `ROVE_RELAY_CLIENT_CONFIG_ENV` redirects it to another file.
+one of those outputs changed, and `PAPERPLANE_RELAY_CLIENT_CONFIG_ENV` redirects it to another file.
 
 ### Deployment CI
 
 The relay is versioned separately from client releases. `.github/workflows/deploy-relay.yml` deploys
-the shared Alchemy `prod` stage on pushes to `main` when `ROVE_CLOUD_READY=true`. For initial
+the shared Alchemy `prod` stage on pushes to `main` when `PAPERPLANE_CLOUD_READY=true`. For initial
 setup, run it manually with `dry_run=true` to inspect the plan, then `dry_run=false` to apply it.
 Manual deployment leaves the release readiness gate unchanged. Planning may initialize Alchemy's
 free Cloudflare state-store Worker before it plans relay resources.

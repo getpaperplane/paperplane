@@ -13,7 +13,7 @@ const upstreamAttributionLink = '<a href="https://github.com/pingdotgg/t3code">T
 const surfaces = [
   {
     name: "marketing",
-    readiness: "ROVE_MARKETING_RELEASE_READY",
+    readiness: "PAPERPLANE_MARKETING_RELEASE_READY",
     paths: [
       "apps/marketing/src",
       "apps/marketing/astro.config.mjs",
@@ -22,12 +22,12 @@ const surfaces = [
   },
   {
     name: "hosted web",
-    readiness: "ROVE_HOSTED_RELEASE_READY",
+    readiness: "PAPERPLANE_HOSTED_RELEASE_READY",
     paths: ["apps/web/vercel.ts"],
   },
   {
     name: "mobile sideload",
-    readiness: "ROVE_MOBILE_SIDELOAD_READY",
+    readiness: "PAPERPLANE_MOBILE_SIDELOAD_READY",
     paths: [
       "apps/mobile/app.config.ts",
       "apps/mobile/src/features/settings/lib/legal-document-url.ts",
@@ -35,7 +35,7 @@ const surfaces = [
   },
   {
     name: "mobile stores",
-    readiness: "ROVE_MOBILE_STORES_READY",
+    readiness: "PAPERPLANE_MOBILE_STORES_READY",
     paths: [
       "apps/mobile/app.config.ts",
       "apps/mobile/eas.json",

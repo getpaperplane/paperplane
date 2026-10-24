@@ -166,12 +166,12 @@ const hostShellWord = (platform: NodeJS.Platform, value: string) =>
 /**
  * The launcher a person can type to run this install when `paperplane` is not on
  * PATH: the desktop app's `paperplane` shim, which the app and the shim itself name in
- * `ROVE_CLI_PATH`, or a standalone binary's own path. Script installs (a
+ * `PAPERPLANE_CLI_PATH`, or a standalone binary's own path. Script installs (a
  * repo checkout) have no single launcher and keep plain `paperplane`.
  */
 const resolveInstallLauncher = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
-  const shim = (yield* HostProcess.Environment).ROVE_CLI_PATH?.trim();
+  const shim = (yield* HostProcess.Environment).PAPERPLANE_CLI_PATH?.trim();
   if (shim && (yield* fs.exists(shim).pipe(Effect.orElseSucceed(() => false)))) {
     return Option.some(shim);
   }

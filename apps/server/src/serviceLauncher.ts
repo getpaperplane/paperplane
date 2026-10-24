@@ -862,9 +862,9 @@ export class Launcher {
 }
 
 export async function main(): Promise<void> {
-  const baseDir = process.env.ROVE_HOME?.trim();
+  const baseDir = process.env.PAPERPLANE_HOME?.trim();
   if (baseDir === undefined || baseDir === "") {
-    throw new Error("ROVE_HOME is required by the Paperplane service launcher.");
+    throw new Error("PAPERPLANE_HOME is required by the Paperplane service launcher.");
   }
   const statePath = NodePath.join(baseDir, "runtime", SERVICE_STATE_FILE);
   const state = await readServiceState(statePath);

@@ -509,7 +509,7 @@ it.layer(
       const unsubscribe = yield* manager.attachStream(
         openInput({
           env: {
-            ROVE_WORKTREE_PATH: "/tmp/should-not-restart",
+            PAPERPLANE_WORKTREE_PATH: "/tmp/should-not-restart",
           },
           worktreePath: "/tmp/should-not-restart",
         }),
@@ -547,7 +547,7 @@ it.layer(
         {
           ...openInput({
             env: {
-              ROVE_WORKTREE_PATH: "/tmp/restart-requested",
+              PAPERPLANE_WORKTREE_PATH: "/tmp/restart-requested",
             },
             worktreePath: "/tmp/restart-requested",
           }),
@@ -2062,7 +2062,7 @@ it.layer(
       const { manager, ptyAdapter } = yield* createManager(5, {
         env: {
           PORT: "5173",
-          ROVE_PORT: "3773",
+          PAPERPLANE_PORT: "3773",
           VITE_DEV_SERVER_URL: "http://localhost:5173",
           TEST_TERMINAL_KEEP: "keep-me",
         },
@@ -2073,7 +2073,7 @@ it.layer(
       if (!spawnInput) return;
 
       expect(spawnInput.env.PORT).toBeUndefined();
-      expect(spawnInput.env.ROVE_PORT).toBeUndefined();
+      expect(spawnInput.env.PAPERPLANE_PORT).toBeUndefined();
       expect(spawnInput.env.VITE_DEV_SERVER_URL).toBeUndefined();
       // Arbitrary host env vars must pass through — terminals inherit the
       // user's environment apart from the explicit blocklist.
@@ -2171,8 +2171,8 @@ it.layer(
       yield* manager.open(
         openInput({
           env: {
-            ROVE_PROJECT_ROOT: "/repo",
-            ROVE_WORKTREE_PATH: "/repo/worktree-a",
+            PAPERPLANE_PROJECT_ROOT: "/repo",
+            PAPERPLANE_WORKTREE_PATH: "/repo/worktree-a",
             CUSTOM_FLAG: "1",
             NO_COLOR: "1",
             FORCE_COLOR: "0",
@@ -2183,8 +2183,8 @@ it.layer(
       expect(spawnInput).toBeDefined();
       if (!spawnInput) return;
 
-      assert.equal(spawnInput.env.ROVE_PROJECT_ROOT, "/repo");
-      assert.equal(spawnInput.env.ROVE_WORKTREE_PATH, "/repo/worktree-a");
+      assert.equal(spawnInput.env.PAPERPLANE_PROJECT_ROOT, "/repo");
+      assert.equal(spawnInput.env.PAPERPLANE_WORKTREE_PATH, "/repo/worktree-a");
       assert.equal(spawnInput.env.CUSTOM_FLAG, "1");
       assert.equal(spawnInput.env.NO_COLOR, "1");
       assert.equal(spawnInput.env.FORCE_COLOR, "0");
@@ -2195,7 +2195,7 @@ it.layer(
     Effect.gen(function* () {
       const providerInstanceId = ProviderInstanceId.make("codex_work");
       const { manager, ptyAdapter } = yield* createManager(5, {
-        env: { ROVE_SECRET: "server-only" },
+        env: { PAPERPLANE_SECRET: "server-only" },
         resolveProviderInstanceEnvironment: (requestedId, env) =>
           Effect.succeed({
             ...env,
@@ -2211,7 +2211,7 @@ it.layer(
       expect(ptyAdapter.spawnInputs[0]?.env.PROVIDER_SECRET).toBe("secret-value");
       expect(ptyAdapter.spawnInputs[0]?.env.CODEX_HOME).toBe("/accounts/codex-work");
       expect(ptyAdapter.spawnInputs[0]?.env.CLIENT_FLAG).toBe("1");
-      expect(ptyAdapter.spawnInputs[0]?.env.ROVE_SECRET).toBeUndefined();
+      expect(ptyAdapter.spawnInputs[0]?.env.PAPERPLANE_SECRET).toBeUndefined();
       expect(snapshot).not.toHaveProperty("env");
       expect(snapshot).not.toHaveProperty("providerInstanceId");
     }),

@@ -22,7 +22,7 @@ All of this lives in Paperplane; nothing is installed into extensions or Pi.
   tool call (`PiAgentObserver.ts`). Agents run tools through `agent.state.tools`,
   so Paperplane wraps what that property returns.
 - **Process starts.** The agent hook (`PiAgentHook.ts`) wraps `child_process` in
-  the worker. A process started inside a tool call gets `ROVE_AGENT_PARENT`
+  the worker. A process started inside a tool call gets `PAPERPLANE_AGENT_PARENT`
   (thread and tool call) and `NODE_OPTIONS=--require <hook>`. The hook therefore
   loads in every Node descendant, including detached runners and Pi binaries
   found on `PATH`, and attribution survives the tool call returning.

@@ -74,12 +74,12 @@ function joinSshAskpassPath(
 const ASKPASS_POSIX_SCRIPT = `#!/bin/sh
 # Invoked by ssh via SSH_ASKPASS when Paperplane re-runs ssh with a cached password
 # from the renderer's in-app prompt. We never expose a native dialog here - if
-# ROVE_SSH_AUTH_SECRET is missing, that's a caller bug and we fail loudly.
-if [ "\${ROVE_SSH_AUTH_SECRET+x}" = "x" ]; then
-  printf "%s\\n" "$ROVE_SSH_AUTH_SECRET"
+# PAPERPLANE_SSH_AUTH_SECRET is missing, that's a caller bug and we fail loudly.
+if [ "\${PAPERPLANE_SSH_AUTH_SECRET+x}" = "x" ]; then
+  printf "%s\\n" "$PAPERPLANE_SSH_AUTH_SECRET"
   exit 0
 fi
-printf 'Paperplane ssh-askpass invoked without ROVE_SSH_AUTH_SECRET.\\n' >&2
+printf 'Paperplane ssh-askpass invoked without PAPERPLANE_SSH_AUTH_SECRET.\\n' >&2
 exit 1
 `;
 
@@ -89,13 +89,13 @@ powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0ssh-askpass.ps1" %*\r
 
 const ASKPASS_WINDOWS_SCRIPT = `# Invoked by ssh via SSH_ASKPASS (through ssh-askpass.cmd) when Paperplane re-runs\r
 # ssh with a cached password from the renderer's in-app prompt. We never expose\r
-# a native dialog here - if ROVE_SSH_AUTH_SECRET is missing, that's a caller bug\r
+# a native dialog here - if PAPERPLANE_SSH_AUTH_SECRET is missing, that's a caller bug\r
 # and we fail loudly.\r
-if ($null -ne $env:ROVE_SSH_AUTH_SECRET) {\r
-  [Console]::Out.WriteLine($env:ROVE_SSH_AUTH_SECRET)\r
+if ($null -ne $env:PAPERPLANE_SSH_AUTH_SECRET) {\r
+  [Console]::Out.WriteLine($env:PAPERPLANE_SSH_AUTH_SECRET)\r
   exit 0\r
 }\r
-[Console]::Error.WriteLine("Paperplane ssh-askpass invoked without ROVE_SSH_AUTH_SECRET.")\r
+[Console]::Error.WriteLine("Paperplane ssh-askpass invoked without PAPERPLANE_SSH_AUTH_SECRET.")\r
 exit 1\r
 `;
 
@@ -197,7 +197,9 @@ export const buildSshChildEnvironment = Effect.fn("ssh/auth.buildSshChildEnviron
     ...baseEnv,
     SSH_ASKPASS: sshAskpass,
     SSH_ASKPASS_REQUIRE: "force",
-    ...(input.authSecret === undefined ? {} : { ROVE_SSH_AUTH_SECRET: input.authSecret ?? "" }),
+    ...(input.authSecret === undefined
+      ? {}
+      : { PAPERPLANE_SSH_AUTH_SECRET: input.authSecret ?? "" }),
     ...(platform === "win32" || baseEnv.DISPLAY || hostDisplay ? {} : { DISPLAY: "rove" }),
   };
 });
