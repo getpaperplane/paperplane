@@ -23,7 +23,7 @@ export const OPENCODE2_TITLE_GENERATION: ReadonlyArray<ProviderReplayEntry> = [
     frame: {
       type: "session.create",
       input: {
-        title: "Rove Code generateThreadTitle",
+        title: "Paperplane generateThreadTitle",
         location: { directory: "<any>" },
         model: { providerID: "opencode", id: "big-pickle" },
         permissions: [{ action: "*", resource: "*", effect: "ask" }],
