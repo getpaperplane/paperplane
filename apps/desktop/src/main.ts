@@ -1,3 +1,4 @@
+import { warnIgnoredLegacyEnvironment } from "@getpaperplane/shared/legacyEnvironment";
 import * as MacPermissions from "./permissions/MacPermissions.ts";
 for (const stream of [process.stdout, process.stderr]) {
   stream.on("error", (err: NodeJS.ErrnoException) => {
@@ -253,6 +254,8 @@ const layerDesktopRuntime = layerDesktopClerk.pipe(
   ),
   Layer.provideMerge(DesktopPreReadyPlatform.layer),
 );
+
+warnIgnoredLegacyEnvironment(process.env, (message) => process.stderr.write(`${message}\n`));
 
 // Migration must complete synchronously before Linux settings, Clerk, or any
 // service resolves userData. In particular, do not yield before Clerk's setup.

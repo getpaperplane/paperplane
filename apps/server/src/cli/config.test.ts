@@ -238,6 +238,53 @@ it.layer(
     }),
   );
 
+  it.effect(
+    "ignores the old home while migrating defaults and honors only the new explicit home",
+    () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        for (const explicit of [false, true]) {
+          const home = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-env-home-" });
+          const oldState = path.join(home, ".rove-code", "userdata");
+          yield* fs.makeDirectory(oldState, { recursive: true });
+          yield* fs.writeFileString(path.join(oldState, "migration-proof.txt"), "saved data");
+          const explicitHome = path.join(home, "custom");
+          const resolved = yield* resolveServerConfig(
+            {
+              ...minimalWebFlags(explicitHome),
+              baseDir: Option.none(),
+            },
+            Option.none(),
+          ).pipe(
+            Effect.provideService(HostProcess.HomeDirectory, home),
+            Effect.provide(
+              Layer.mergeAll(
+                NetService.layer,
+                ConfigProvider.layer(
+                  ConfigProvider.fromEnv({
+                    env: {
+                      ROVE_HOME: path.join(home, "ignored"),
+                      ROVE_PORT: "invalid-old-port",
+                      PAPERPLANE_PORT: "8123",
+                      ...(explicit ? { PAPERPLANE_HOME: explicitHome } : {}),
+                    },
+                  }),
+                ),
+              ),
+            ),
+          );
+          expect(resolved.baseDir).toBe(explicit ? explicitHome : path.join(home, ".paperplane"));
+          expect(
+            yield* fs.exists(path.join(home, ".paperplane", "userdata", "migration-proof.txt")),
+          ).toBe(!explicit);
+          expect(yield* fs.readFileString(path.join(oldState, "migration-proof.txt"))).toBe(
+            "saved data",
+          );
+        }
+      }),
+  );
+
   it.effect("falls back to effect/config values when flags are omitted", () =>
     Effect.gen(function* () {
       const { join } = yield* Path.Path;

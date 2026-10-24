@@ -41,6 +41,33 @@ describe("loadRepoEnv", () => {
     expect(env.VITE_RELAY_OTLP_TRACES_TOKEN).toBeUndefined();
   });
 
+  it("ignores the old cloud gate and relay alias", () => {
+    const repoRoot = makeTemporaryDirectory();
+    const settings = {
+      ROVE_CLOUD_READY: "1",
+      ROVE_RELAY_URL: "https://old.example.test",
+      VITE_ROVE_RELAY_URL: "https://old-alias.example.test",
+      PAPERPLANE_RELAY_URL: "https://new.example.test",
+      VITE_CLERK_PUBLISHABLE_KEY: "pk_example",
+      VITE_CLERK_JWT_TEMPLATE: "example-template",
+    };
+    const disabled = loadRepoEnv({ baseEnv: settings, repoRoot });
+    expect(disabled.PAPERPLANE_RELAY_URL).toBe("");
+    expect(disabled.VITE_PAPERPLANE_RELAY_URL).toBe("");
+    expect(disabled.VITE_CLERK_PUBLISHABLE_KEY).toBe("");
+    const enabled = loadRepoEnv({
+      baseEnv: { ...settings, PAPERPLANE_CLOUD_READY: "1" },
+      repoRoot,
+    });
+    expect(enabled.VITE_PAPERPLANE_RELAY_URL).toBe("https://new.example.test");
+    expect(
+      resolvePublicConfig({
+        ROVE_RELAY_URL: settings.ROVE_RELAY_URL,
+        VITE_ROVE_RELAY_URL: settings.VITE_ROVE_RELAY_URL,
+      }).relayUrl,
+    ).toBeUndefined();
+  });
+
   it("applies process, root local, and root precedence in that order", () => {
     const repoRoot = makeTemporaryDirectory();
     NodeFS.writeFileSync(
