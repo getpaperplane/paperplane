@@ -21,9 +21,9 @@
     "storage": "32gb"
   },
   "containerEnv": {
-    // Keep all runtime state inside the (gitignored) workspace .rove, matching
+    // Keep all runtime state inside the (gitignored) workspace .paperplane, matching
     // the worktree default. An explicit --home-dir still wins.
-    "ROVE_HOME": "${containerWorkspaceFolder}/.rove"
+    "ROVE_HOME": "${containerWorkspaceFolder}/.paperplane"
   },
   "mounts": [
     // vp keeps the pnpm content-addressable store and metadata cache under
@@ -61,7 +61,7 @@
         // burns CPU and file handles.
         "files.watcherExclude": {
           "**/.repos/**": true,
-          "**/.rove/**": true
+          "**/.paperplane/**": true
         },
         "search.exclude": {
           "**/.repos": true

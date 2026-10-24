@@ -19,6 +19,7 @@ import * as Electron from "electron";
 
 import * as NetService from "@getpaperplane/shared/Net";
 import * as HostProcess from "@getpaperplane/shared/HostProcess";
+import { migrateDefaultHome } from "@getpaperplane/shared/homeMigration";
 import type { RemoteRoveRunnerOptions } from "@getpaperplane/ssh/tunnel";
 import serverPackageJson from "../../server/package.json" with { type: "json" };
 
@@ -252,5 +253,20 @@ const layerDesktopRuntime = layerDesktopClerk.pipe(
   ),
   Layer.provideMerge(DesktopPreReadyPlatform.layer),
 );
+
+// Migration must complete synchronously before Linux settings, Clerk, or any
+// service resolves userData. In particular, do not yield before Clerk's setup.
+try {
+  migrateDefaultHome({
+    homeDirectory: NodeOS.homedir(),
+    explicitHome: process.env.ROVE_HOME,
+    development: Boolean(process.env.VITE_DEV_SERVER_URL?.trim()),
+  });
+} catch (error) {
+  const message = error instanceof Error ? error.message : String(error);
+  Electron.dialog.showErrorBox("Paperplane could not migrate your data", message);
+  Electron.app.exit(1);
+  throw error;
+}
 
 DesktopApp.program.pipe(Effect.provide(layerDesktopRuntime), NodeRuntime.runMain);

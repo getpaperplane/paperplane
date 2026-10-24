@@ -16,7 +16,7 @@ export function resolveDesktopBaseDir(input: {
   readonly roveHome: Option.Option<string>;
 }): string {
   return Option.getOrElse(normalizeConfiguredBaseDir(input.roveHome), () =>
-    input.joinPath(input.homeDirectory, ".rove-code"),
+    input.joinPath(input.homeDirectory, ".paperplane"),
   );
 }
 

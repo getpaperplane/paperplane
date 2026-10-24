@@ -74,6 +74,7 @@ export default defineConfig({
     exclude: [
       "**/.repos/**",
       "**/.rove/**",
+      "**/.paperplane/**",
       "**/node_modules/**",
       "**/dist/**",
       "**/dist-electron/**",

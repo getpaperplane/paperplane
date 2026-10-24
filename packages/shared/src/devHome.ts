@@ -1,8 +1,8 @@
 /**
  * Where development state lives, and how to keep it away from the shared
- * `~/.rove-code` that a user's installed Paperplane runs against.
+ * `~/.paperplane` that a user's installed Paperplane runs against.
  *
- * A linked git worktree gets its own (gitignored) `.rove`: feature work in a
+ * A linked git worktree gets its own (gitignored) `.paperplane`: feature work in a
  * throwaway branch must not share a database with the real app, and an ambient
  * `ROVE_HOME` counts as an explicit base dir — flipping the state directory
  * from `<base>/dev` to `<base>/userdata`, the live production database.
@@ -99,5 +99,5 @@ export const resolveWorktreeRoveHome = (
       return undefined;
     }
     const path = yield* Path.Path;
-    return path.join(worktreePath, ".rove");
+    return path.join(worktreePath, ".paperplane");
   });

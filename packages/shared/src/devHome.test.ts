@@ -95,11 +95,11 @@ describe("resolveGitWorktreePath", () => {
 });
 
 describe("resolveWorktreeRoveHome", () => {
-  it.effect("answers with .rove before the dev runner creates it", () =>
+  it.effect("answers with .paperplane before the dev runner creates it", () =>
     Effect.gen(function* () {
       const { root, nested } = yield* makeRepo("worktree");
       const home = yield* resolveWorktreeRoveHome(nested);
-      assert.equal(home, NodePath.join(NodePath.resolve(root), ".rove"));
+      assert.equal(home, NodePath.join(NodePath.resolve(root), ".paperplane"));
       assert.isFalse(NodeFS.existsSync(home ?? ""));
     }).pipe(Effect.scoped, Effect.provide(NodeServices.layer)),
   );

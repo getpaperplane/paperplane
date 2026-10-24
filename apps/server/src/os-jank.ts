@@ -1,4 +1,5 @@
 import * as HostProcess from "@getpaperplane/shared/HostProcess";
+import { migrateDefaultHome, PAPERPLANE_HOME_NAME } from "@getpaperplane/shared/homeMigration";
 import {
   listLoginShellCandidates,
   mergePathEntries,
@@ -10,6 +11,7 @@ import {
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
+import * as Schema from "effect/Schema";
 import * as NodeOS from "node:os";
 
 function logPathHydrationWarning(message: string, error?: unknown): void {
@@ -116,10 +118,27 @@ export const expandHomePath = Effect.fn(function* (input: string) {
   return input;
 });
 
-export const resolveBaseDir = Effect.fn(function* (raw: string | undefined) {
+export class HomeMigrationStartupError extends Schema.TaggedError<HomeMigrationStartupError>()(
+  "HomeMigrationStartupError",
+  { cause: Schema.Defect() },
+) {
+  override get message(): string {
+    return this.cause instanceof Error ? this.cause.message : String(this.cause);
+  }
+}
+
+export const resolveBaseDir = Effect.fn(function* (
+  raw: string | undefined,
+  options: { readonly development?: boolean } = {},
+) {
   const { join, resolve } = yield* Path.Path;
   if (!raw || raw.trim().length === 0) {
-    return join(yield* HostProcess.HomeDirectory, ".rove-code");
+    const homeDirectory = yield* HostProcess.HomeDirectory;
+    yield* Effect.try({
+      try: () => migrateDefaultHome({ homeDirectory, development: options.development }),
+      catch: (cause) => new HomeMigrationStartupError({ cause }),
+    });
+    return join(homeDirectory, PAPERPLANE_HOME_NAME);
   }
   return resolve(yield* expandHomePath(raw.trim()));
 });

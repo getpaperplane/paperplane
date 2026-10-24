@@ -909,7 +909,7 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
 
     // `tailscale serve` config outlives the process, so a dry run that shared
     // would replace and then tear down whatever mapping the port already had.
-    // Base-dir precedence (--home-dir > worktree .rove > ambient ROVE_HOME)
+    // Base-dir precedence (--home-dir > worktree .paperplane > ambient ROVE_HOME)
     // lives in runDevRunnerWithInput; the env builder must not consult the
     // ambient variable on its own, or it would silently outrank the worktree
     // default and land dev state on the user's real database.
@@ -917,7 +917,7 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
       Effect.gen(function* () {
         const env = yield* createDevRunnerEnv({
           mode: "dev",
-          baseEnv: { ROVE_HOME: "/home/user/.rove" },
+          baseEnv: { ROVE_HOME: "/home/user/.paperplane" },
           serverOffset: 0,
           webOffset: 0,
           roveHome: undefined,
@@ -1296,7 +1296,7 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
           const home = yield* spawnedHome({
             roveHome: "/tmp/explicit-home",
             cwd: root,
-            ambientHome: "/home/user/.rove",
+            ambientHome: "/home/user/.paperplane",
           });
           assert.equal(home, path.resolve("/tmp/explicit-home"));
         }).pipe(Effect.scoped),
@@ -1309,22 +1309,22 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
           const home = yield* spawnedHome({
             roveHome: "   ",
             cwd: root,
-            ambientHome: "/home/user/.rove",
+            ambientHome: "/home/user/.paperplane",
           });
-          assert.equal(home, path.join(path.resolve(root), ".rove"));
+          assert.equal(home, path.join(path.resolve(root), ".paperplane"));
         }).pipe(Effect.scoped),
       );
 
-      it.effect("prefers the worktree .rove over an ambient ROVE_HOME", () =>
+      it.effect("prefers the worktree .paperplane over an ambient ROVE_HOME", () =>
         Effect.gen(function* () {
           const path = yield* Path.Path;
           const root = yield* makeWorktree;
           const home = yield* spawnedHome({
             roveHome: undefined,
             cwd: root,
-            ambientHome: "/home/user/.rove",
+            ambientHome: "/home/user/.paperplane",
           });
-          assert.equal(home, path.join(path.resolve(root), ".rove"));
+          assert.equal(home, path.join(path.resolve(root), ".paperplane"));
         }).pipe(Effect.scoped),
       );
 
@@ -1334,9 +1334,9 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
           const home = yield* spawnedHome({
             roveHome: undefined,
             cwd: NodeOS.tmpdir(),
-            ambientHome: "/home/user/.rove",
+            ambientHome: "/home/user/.paperplane",
           });
-          assert.equal(home, path.resolve("/home/user/.rove"));
+          assert.equal(home, path.resolve("/home/user/.paperplane"));
         }),
       );
 

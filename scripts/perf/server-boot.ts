@@ -19,7 +19,7 @@ const { values } = NodeUtil.parseArgs({
     "ready-timeout-seconds": { type: "string", default: "60" },
     "cpu-prof": { type: "boolean", default: false },
     "profile-dir": { type: "string" },
-    // Copied into each run's home, e.g. <worktree>/.rove/userdata from `vp run migrate-dev-db`.
+    // Copied into each run's home, e.g. <worktree>/.paperplane/userdata from `vp run migrate-dev-db`.
     "seed-userdata": { type: "string" },
   },
 });

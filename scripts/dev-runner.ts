@@ -72,7 +72,7 @@ export function isProxiableBindHost(host: string): boolean {
 }
 
 export const DEFAULT_ROVE_HOME = Effect.map(Effect.service(Path.Path), (path) =>
-  path.join(NodeOS.homedir(), ".rove-code"),
+  path.join(NodeOS.homedir(), ".paperplane"),
 );
 
 const MODE_ARGS = {
@@ -314,7 +314,7 @@ export function createDevRunnerEnv({
   return Effect.gen(function* () {
     const serverPort = port ?? BASE_SERVER_PORT + serverOffset;
     const webPort = BASE_WEB_PORT + webOffset;
-    // Precedence (--home-dir > worktree .rove > ambient ROVE_HOME) is resolved
+    // Precedence (--home-dir > worktree .paperplane > ambient ROVE_HOME) is resolved
     // by the caller; an unset roveHome here genuinely means "use the default".
     const configuredBaseDir = roveHome?.trim() || undefined;
     const resolvedBaseDir = yield* resolveBaseDir(configuredBaseDir);
@@ -672,7 +672,7 @@ export function runDevRunnerWithInput(input: DevRunnerCliInput) {
 
     const hostEnvironment = yield* HostProcess.Environment;
     // A dev server started inside a worktree defaults to that worktree's own
-    // (gitignored) `.rove` — see @getpaperplane/shared/devHome for why this must
+    // (gitignored) `.paperplane` — see @getpaperplane/shared/devHome for why this must
     // outrank an ambient ROVE_HOME. `--home-dir` still wins.
     const worktreeHome = yield* resolveWorktreeRoveHome(yield* HostProcess.WorkingDirectory);
     // Trim before choosing: `--home-dir ""` is not a selection, and treating it
@@ -851,7 +851,7 @@ const devRunnerCli = Command.make("dev-runner", {
   ),
   roveHome: Flag.String("home-dir").pipe(
     Flag.withDescription(
-      "Explicit Paperplane data directory; runtime state is stored under userdata (equivalent to ROVE_HOME). Inside a git worktree this defaults to that worktree's own .rove so dev state stays off the shared home.",
+      "Explicit Paperplane data directory; runtime state is stored under userdata (equivalent to ROVE_HOME). Inside a git worktree this defaults to that worktree's own .paperplane so dev state stays off the shared home.",
     ),
     Flag.optional,
     Flag.map(Option.getOrUndefined),

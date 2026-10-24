@@ -310,6 +310,7 @@ export const resolveServerConfig = (
       Option.getOrUndefined(
         resolveOptionPrecedence(explicitBaseDir, Option.fromUndefinedOr(bootstrap?.roveHome)),
       ),
+      { development: devUrl !== undefined },
     );
     const savedLaunch =
       mode === "web" && devUrl === undefined

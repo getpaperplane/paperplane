@@ -290,4 +290,26 @@ it.layer(NodeServices.layer)("migrate-dev-db", (it) => {
       assert.equal(error._tag, "MigrateDevDbSharedHomeError");
     }),
   );
+
+  it.effect("refuses to rebuild the old home kept as a backup", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const home = yield* fs.makeTempDirectoryScoped({ prefix: "migrate-dev-db-old-backup-" });
+      const sharedHome = path.join(home, ".paperplane");
+      const oldHome = path.join(home, ".rove-code");
+      const source = path.join(sharedHome, "userdata", "statev2.sqlite");
+      const backup = path.join(oldHome, "userdata", "statev2.sqlite");
+      yield* fs.makeDirectory(path.dirname(source), { recursive: true });
+      yield* fs.makeDirectory(path.dirname(backup), { recursive: true });
+      yield* fs.writeFileString(source, "current data");
+      yield* fs.writeFileString(backup, "frozen backup");
+      const error = yield* runMigrateDevDb(
+        { baseDir: oldHome, source, projects: 5, threadsPerProject: 10 },
+        { sharedHome },
+      ).pipe(Effect.flip);
+      assert.equal(error._tag, "MigrateDevDbSharedHomeError");
+      assert.equal(yield* fs.readFileString(backup), "frozen backup");
+    }),
+  );
 });

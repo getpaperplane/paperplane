@@ -1,6 +1,8 @@
 // @effect-diagnostics nodeBuiltinImport:off
 import * as NodeFS from "node:fs";
 import * as NodeOS from "node:os";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
+import { afterAll } from "vite-plus/test";
 
 import { assert, expect, it } from "@effect/vitest";
 import * as ConfigProvider from "effect/ConfigProvider";
@@ -58,7 +60,12 @@ const makeDesktopBootstrap = (
   ...overrides,
 });
 
-it.layer(NodeServices.layer)("cli config resolution", (it) => {
+const isolatedUserHome = NodeFS.mkdtempSync(`${NodeOS.tmpdir()}/paperplane-config-home-`);
+afterAll(() => NodeFS.rmSync(isolatedUserHome, { recursive: true, force: true }));
+
+it.layer(
+  Layer.mergeAll(NodeServices.layer, Layer.succeed(HostProcess.HomeDirectory, isolatedUserHome)),
+)("cli config resolution", (it) => {
   const defaultObservabilityConfig = {
     traceMinLevel: "Info",
     traceTimingEnabled: true,

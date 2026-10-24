@@ -17,7 +17,7 @@ build/
 release/
 release-mock/
 .rove
-.rove
+.paperplane
 .idea/
 apps/web/.playwright
 apps/web/playwright-report
