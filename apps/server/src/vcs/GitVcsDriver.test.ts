@@ -1,3 +1,5 @@
+// @effect-diagnostics-next-line nodeBuiltinImport:off -- The migration fixture needs a real temporary Git repository alongside a mocked VCS process.
+import * as NodeChildProcess from "node:child_process";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import * as Cause from "effect/Cause";
 import * as Clock from "effect/Clock";
@@ -110,7 +112,7 @@ const makeCheckpointFixture = Effect.fn("makeCheckpointFixture")(function* (
   yield* fileSystem.writeFileString(path.join(cwd, "file.txt"), "initial\n");
   yield* git(["add", "."]);
   yield* git(["commit", "-m", "initial"]);
-  const checkpointRef = CheckpointRef.make("refs/rove/checkpoints/test");
+  const checkpointRef = CheckpointRef.make("refs/paperplane/checkpoints/test");
   yield* fileSystem.writeFileString(path.join(cwd, "file.txt"), "staged\n");
   yield* git(["add", "."]);
   yield* fileSystem.writeFileString(path.join(cwd, "file.txt"), "unstaged\n");
@@ -603,7 +605,7 @@ it.effect.each(
       const originalIndex = yield* fs.readFile(indexPath).pipe(Effect.orElseSucceed(() => null));
       const captureCwd = nested ? path.join(cwd, "scope") : cwd;
       for (const turn of [1, 2]) {
-        const ref = CheckpointRef.make(`refs/rove/checkpoints/sparse/${turn}`);
+        const ref = CheckpointRef.make(`refs/paperplane/checkpoints/sparse/${turn}`);
         if (turn === 2) {
           yield* write("scope/in/edit", "second\n");
           yield* fs.remove(path.join(cwd, "scope/out/new file"));
@@ -824,7 +826,7 @@ it.effect.each(
       const originalIndex = yield* fs.readFile(indexPath).pipe(Effect.orElseSucceed(() => null));
       const captureCwd = nested ? path.join(cwd, "scope") : cwd;
       for (const turn of [1, 2]) {
-        const ref = CheckpointRef.make(`refs/rove/checkpoints/sparse/${turn}`);
+        const ref = CheckpointRef.make(`refs/paperplane/checkpoints/sparse/${turn}`);
         if (turn === 2) {
           yield* write("scope/in/edit", "second\n");
           yield* fs.remove(path.join(cwd, "scope/out/new file"));
@@ -962,8 +964,8 @@ it.effect.each(
       yield* fileSystem.remove(path.join(cwd, "scope/deleted"));
       yield* fileSystem.remove(path.join(cwd, "scope/new-deleted"));
       const captureCwd = nested ? path.join(cwd, "scope") : cwd;
-      const first = CheckpointRef.make("refs/rove/checkpoints/turns/1");
-      const second = CheckpointRef.make("refs/rove/checkpoints/turns/2");
+      const first = CheckpointRef.make("refs/paperplane/checkpoints/turns/1");
+      const second = CheckpointRef.make("refs/paperplane/checkpoints/turns/2");
       yield* driver.checkpoints.captureCheckpoint({ cwd: captureCwd, checkpointRef: first });
       for (const name of ["scope/staged", "scope/assumed", "scope/skipped"]) {
         assert.strictEqual((yield* git(["show", `${first}:${name}`])).stdout, "working\n");
@@ -1038,7 +1040,7 @@ it.effect("restores empty checkpoints without changing paths outside the workspa
       yield* runGit(root, ["commit", "--allow-empty", "-m", "initial"]);
       const cwd = nested ? path.join(root, "nested") : root;
       yield* fileSystem.makeDirectory(cwd, { recursive: true });
-      const checkpointRef = CheckpointRef.make("refs/rove/checkpoints/empty");
+      const checkpointRef = CheckpointRef.make("refs/paperplane/checkpoints/empty");
       yield* driver.checkpoints.captureCheckpoint({ cwd, checkpointRef });
       if (nested) {
         yield* fileSystem.writeFileString(path.join(root, "outside.txt"), "changed\n");
@@ -1138,11 +1140,14 @@ it.effect("GitVcsDriver flushes checkpoint objects and refs to disk before publi
   const observedArgs: ReadonlyArray<string>[] = [];
 
   return Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    const cwd = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-migration-vcs-" });
+    yield* Effect.sync(() => NodeChildProcess.execFileSync("git", ["init", "--quiet", cwd]));
     const driver = yield* GitVcsDriver.makeVcsDriverShape();
 
     yield* driver.checkpoints.captureCheckpoint({
-      cwd: "/repo",
-      checkpointRef: CheckpointRef.make("refs/rove/checkpoints/thread/turn/1"),
+      cwd,
+      checkpointRef: CheckpointRef.make("refs/paperplane/checkpoints/thread/turn/1"),
     });
 
     const writeCommands = ["add", "write-tree", "commit-tree", "update-ref"];
@@ -1160,16 +1165,17 @@ it.effect("GitVcsDriver flushes checkpoint objects and refs to disk before publi
     }
     assert.deepStrictEqual(observedArgs.at(-1), [
       "-C",
-      "/repo",
+      cwd,
       "-c",
       "core.fsync=objects,reference",
       "-c",
       "core.fsyncMethod=fsync",
       "update-ref",
-      "refs/rove/checkpoints/thread/turn/1",
+      "refs/paperplane/checkpoints/thread/turn/1",
       "commit0000",
     ]);
   }).pipe(
+    Effect.scoped,
     Effect.provide(
       Layer.mergeAll(
         NodeServices.layer,
@@ -1204,13 +1210,16 @@ it.effect("shares concurrent checkpoint diffs but rereads completed output", () 
   let gate: Deferred.Deferred<void>;
   let resolvedBoth: Deferred.Deferred<void>;
   return Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    const cwd = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-migration-vcs-" });
+    yield* Effect.sync(() => NodeChildProcess.execFileSync("git", ["init", "--quiet", cwd]));
     gate = yield* Deferred.make<void>();
     resolvedBoth = yield* Deferred.make<void>();
     const driver = yield* GitVcsDriver.makeVcsDriverShape();
     const input = {
-      cwd: "/repo",
-      fromCheckpointRef: CheckpointRef.make("refs/rove/from"),
-      toCheckpointRef: CheckpointRef.make("refs/rove/to"),
+      cwd,
+      fromCheckpointRef: CheckpointRef.make("refs/paperplane/from"),
+      toCheckpointRef: CheckpointRef.make("refs/paperplane/to"),
       ignoreWhitespace: false,
     };
     const requests = yield* Effect.all(
@@ -1236,6 +1245,7 @@ it.effect("shares concurrent checkpoint diffs but rereads completed output", () 
     assert.strictEqual(yield* Fiber.join(second), "patch");
     assert.strictEqual(reads, 3);
   }).pipe(
+    Effect.scoped,
     Effect.provide(
       Layer.mergeAll(
         NodeServices.layer,

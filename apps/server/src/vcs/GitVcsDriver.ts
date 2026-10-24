@@ -1,5 +1,5 @@
 import * as NodeBuffer from "node:buffer";
-import { legacyRoveCheckpointRef } from "@getpaperplane/shared/roveMigration";
+import { migrateRepositoryCheckpointRefs } from "@getpaperplane/shared/homeMigration";
 
 import * as Context from "effect/Context";
 import * as Fiber from "effect/Fiber";
@@ -612,6 +612,7 @@ export const makeVcsDriverShape = Effect.fn("makeGitVcsDriverShape")(function* (
       return null;
     }
 
+    yield* migrateCheckpointRefs(cwd);
     const root = yield* gitCommand(vcsProcess, "GitVcsDriver.detectRepository.root", cwd, [
       "rev-parse",
       "--show-toplevel",
@@ -797,22 +798,41 @@ export const makeVcsDriverShape = Effect.fn("makeGitVcsDriverShape")(function* (
       ...(env !== undefined ? { env } : {}),
     }).pipe(Effect.map((result) => result.exitCode === 0));
 
+  const migrateCheckpointRefs = (cwd: string) =>
+    Effect.try({
+      try: () => migrateRepositoryCheckpointRefs(cwd),
+      catch: (cause) =>
+        new VcsProcessExitError({
+          operation: "GitVcsDriver.migrateCheckpointRefs",
+          command: "git update-ref --stdin",
+          cwd,
+          exitCode: 1,
+          detail: String(cause),
+        }),
+    }).pipe(
+      Effect.flatMap((result) =>
+        result.conflicts.length === 0
+          ? Effect.void
+          : Effect.logWarning("Checkpoint ref migration kept conflicting refs.", {
+              cwd,
+              conflicts: result.conflicts,
+            }),
+      ),
+    );
+
   const resolveCheckpointCommit = Effect.fnUntraced(function* (cwd: string, checkpointRef: string) {
-    for (const ref of [checkpointRef, legacyRoveCheckpointRef(checkpointRef)]) {
-      if (ref === undefined) continue;
-      const result = yield* execute({
-        operation: "GitVcsDriver.checkpoints.resolveCheckpointCommit",
-        cwd,
-        args: ["rev-parse", "--verify", "--quiet", `${ref}^{commit}`],
-        allowNonZeroExit: true,
-      });
-      if (result.exitCode === 0 && result.stdout.trim().length > 0) return result.stdout.trim();
-    }
-    return null;
+    yield* migrateCheckpointRefs(cwd);
+    const result = yield* execute({
+      operation: "GitVcsDriver.checkpoints.resolveCheckpointCommit",
+      cwd,
+      args: ["rev-parse", "--verify", "--quiet", `${checkpointRef}^{commit}`],
+      allowNonZeroExit: true,
+    });
+    return result.exitCode === 0 && result.stdout.trim().length > 0 ? result.stdout.trim() : null;
   });
 
   // Git renames loose objects and refs into place without fsync by default, so
-  // an unclean restart can leave 0-byte files under refs/rove/** that break every
+  // an unclean restart can leave 0-byte files under refs/paperplane/** that break every
   // later fetch and push. Checkpoint writes flush before they are published;
   // macOS defaults to writeout-only, which does not reach the disk either.
   const durableWrite = [
@@ -824,6 +844,7 @@ export const makeVcsDriverShape = Effect.fn("makeGitVcsDriverShape")(function* (
 
   const checkpoints: VcsDriver.VcsCheckpointOps = {
     captureCheckpoint: Effect.fn("GitVcsDriver.checkpoints.captureCheckpoint")(function* (input) {
+      yield* migrateCheckpointRefs(input.cwd);
       const operation = VcsProcess.CHECKPOINT_CAPTURE_OPERATION;
       const indexConfig = [
         "-c",
@@ -1079,7 +1100,7 @@ export const makeVcsDriverShape = Effect.fn("makeGitVcsDriverShape")(function* (
           });
         }
 
-        const message = `rove checkpoint ref=${input.checkpointRef}`;
+        const message = `paperplane checkpoint ref=${input.checkpointRef}`;
         // HEAD is the parent so listAuthoredPaths can see how HEAD moved between checkpoints.
         const commitTreeResult = yield* execute({
           operation,
@@ -1198,6 +1219,7 @@ export const makeVcsDriverShape = Effect.fn("makeGitVcsDriverShape")(function* (
     }),
 
     diffCheckpoints: Effect.fn("GitVcsDriver.checkpoints.diffCheckpoints")(function* (input) {
+      yield* migrateCheckpointRefs(input.cwd);
       const operation = "GitVcsDriver.checkpoints.diffCheckpoints";
       if (input.filePaths?.length === 0) return "";
       yield* Effect.annotateCurrentSpan({
@@ -1306,15 +1328,7 @@ export const makeVcsDriverShape = Effect.fn("makeGitVcsDriverShape")(function* (
           );
         }),
       );
-      let result = yield* sharedRead;
-      if (
-        result.exitCode !== 0 &&
-        (legacyRoveCheckpointRef(fromRevision) || legacyRoveCheckpointRef(input.toCheckpointRef))
-      ) {
-        const from = yield* resolveCheckpointCommit(input.cwd, fromRevision);
-        const to = yield* resolveCheckpointCommit(input.cwd, input.toCheckpointRef);
-        if (from && to) result = yield* runDiff(from, to);
-      }
+      const result = yield* sharedRead;
 
       if (result.exitCode !== 0) {
         return yield* new VcsProcessExitError({
@@ -1380,11 +1394,9 @@ export const makeVcsDriverShape = Effect.fn("makeGitVcsDriverShape")(function* (
 
     deleteCheckpointRefs: Effect.fn("GitVcsDriver.checkpoints.deleteCheckpointRefs")(
       function* (input) {
+        yield* migrateCheckpointRefs(input.cwd);
         yield* Effect.forEach(
-          input.checkpointRefs.flatMap((checkpointRef) => {
-            const historicalRef = legacyRoveCheckpointRef(checkpointRef);
-            return historicalRef === undefined ? [checkpointRef] : [checkpointRef, historicalRef];
-          }),
+          input.checkpointRefs,
           (checkpointRef) =>
             execute({
               operation: "GitVcsDriver.checkpoints.deleteCheckpointRefs",

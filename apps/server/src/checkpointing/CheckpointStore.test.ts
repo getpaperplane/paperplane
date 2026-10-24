@@ -136,7 +136,7 @@ it.layer(layerTest)("CheckpointStore.layer", (it) => {
   );
   describe("diffCheckpoints", () => {
     it.effect.each([false, true])(
-      "reads historical baselines without rewriting refs, fallback %s",
+      "migrates historical baselines before using them, fallback %s",
       (fallbackFromToHead) =>
         Effect.gen(function* () {
           const tmp = yield* makeTmpDir();
@@ -146,7 +146,7 @@ it.layer(layerTest)("CheckpointStore.layer", (it) => {
           const fromCheckpointRef = checkpointRefForThreadTurn(threadId, 0);
           const toCheckpointRef = checkpointRefForThreadTurn(threadId, 1);
           const historicalRef = CheckpointRef.make(
-            fromCheckpointRef.replace("refs/rove/", "refs/t3/"),
+            fromCheckpointRef.replace("refs/paperplane/", "refs/rove/"),
           );
           yield* git(tmp, ["update-ref", historicalRef, "HEAD"]);
           const original = yield* git(tmp, ["rev-parse", historicalRef]);
@@ -174,10 +174,8 @@ it.layer(layerTest)("CheckpointStore.layer", (it) => {
           ).toBe(true);
           const fs = yield* FileSystem.FileSystem;
           expect(yield* fs.readFileString(NodePath.join(tmp, "README.md"))).toBe("# test\n");
-          expect(yield* git(tmp, ["rev-parse", historicalRef])).toBe(original);
-          expect(yield* git(tmp, ["for-each-ref", "--format=%(refname)", fromCheckpointRef])).toBe(
-            "",
-          );
+          expect(yield* git(tmp, ["rev-parse", fromCheckpointRef])).toBe(original);
+          expect(yield* git(tmp, ["for-each-ref", "--format=%(refname)", historicalRef])).toBe("");
           yield* git(tmp, ["update-ref", fromCheckpointRef, "HEAD"]);
           expect(yield* store.diffCheckpoints(input)).toContain("-# unrelated head");
           yield* store.deleteCheckpointRefs({ cwd: tmp, checkpointRefs: [fromCheckpointRef] });

@@ -72,7 +72,7 @@ function checkpointProjection(): OrchestrationV2ThreadProjection {
         parentCheckpointId: null,
         ordinalWithinScope: 0,
         appRunOrdinal: 1,
-        ref: CheckpointRef.make("refs/rove/checkpoints/1"),
+        ref: CheckpointRef.make("refs/paperplane/checkpoints/1"),
         status: "ready",
         files: [{ path: "src/app.ts", kind: "modified", additions: 3, deletions: 1 }],
         capturedAt: base.updatedAt,

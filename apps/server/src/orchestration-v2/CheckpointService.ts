@@ -23,7 +23,7 @@ import { isGitImport, parseTurnDiffFilesFromNumstat } from "../checkpointing/Dif
 import * as CheckpointStore from "../checkpointing/CheckpointStore.ts";
 import * as IdAllocator from "@getpaperplane/provider-core/server/IdAllocator";
 
-const CHECKPOINT_REFS_PREFIX = "refs/rove/orchestration-v2/checkpoints";
+const CHECKPOINT_REFS_PREFIX = "refs/paperplane/orchestration-v2/checkpoints";
 const ROOT_CHECKPOINT_SCOPE_NAME = "root";
 
 export class CheckpointRootScopePrepareError extends Schema.TaggedError<CheckpointRootScopePrepareError>()(

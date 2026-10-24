@@ -475,7 +475,7 @@ describe("semantic thread chrome", () => {
           parentCheckpointId: null,
           ordinalWithinScope: 0,
           appRunOrdinal: 2,
-          ref: CheckpointRef.make("refs/rove/test"),
+          ref: CheckpointRef.make("refs/paperplane/test"),
           status: "ready",
           files: [],
           capturedAt: now,

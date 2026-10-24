@@ -217,7 +217,7 @@ const make = Effect.gen(function* () {
       );
     // Fetched into a ref of this run's own: FETCH_HEAD is shared by every fetch in the
     // workspace, so a concurrent run could otherwise measure this change from its base.
-    const baseRef = `refs/rove/review-guide/${runId}/base`;
+    const baseRef = `refs/paperplane/review-guide/${runId}/base`;
     yield* fetch([`+refs/heads/${detail.baseBranch}:${baseRef}`]);
     yield* Effect.addFinalizer(() =>
       git

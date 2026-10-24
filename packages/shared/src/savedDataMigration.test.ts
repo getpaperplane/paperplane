@@ -3,9 +3,11 @@ import * as NodeFS from "node:fs";
 import * as NodeOS from "node:os";
 import * as NodePath from "node:path";
 import * as NodeSqlite from "node:sqlite";
+import * as NodeChildProcess from "node:child_process";
 import { afterEach, beforeEach, describe, expect, it } from "vite-plus/test";
 import {
   migrateDefaultHome,
+  migrateRepositoryCheckpointRefs,
   rewriteSavedDataStep,
   rewriteStagedDatabase,
 } from "./homeMigration.ts";
@@ -108,4 +110,95 @@ it("converts app JSON on the staged home and leaves opaque files and source data
   expect(NodeFS.readFileSync(NodePath.join(staged, "userdata", "settings.json"), "utf8")).toBe(
     before,
   );
+});
+
+describe("lazy repository refs", () => {
+  const git = (args: string[], cwd = directory) =>
+    NodeChildProcess.execFileSync("git", args, { cwd, encoding: "utf8" }).trim();
+  const seed = () => {
+    git(["init", "--quiet"]);
+    git(["config", "user.name", "Migration test"]);
+    git(["config", "user.email", "migration@example.test"]);
+    NodeFS.writeFileSync(NodePath.join(directory, "file"), "one");
+    git(["add", "file"]);
+    git(["commit", "--quiet", "-m", "one"]);
+    return git(["rev-parse", "HEAD"]);
+  };
+  it("uses one shared completion marker across linked worktrees and moves every namespace", () => {
+    const oid = seed();
+    for (const suffix of [
+      "checkpoints/a",
+      "orchestration-v2/checkpoints/b",
+      "review-guide/run/base",
+      "pre-refresh",
+    ])
+      git(["update-ref", `refs/rove/${suffix}`, oid]);
+    const linked = NodePath.join(directory, "linked");
+    git(["worktree", "add", "--quiet", "--detach", linked]);
+    expect(migrateRepositoryCheckpointRefs(linked)).toEqual({ converted: 4, conflicts: [] });
+    expect(git(["for-each-ref", "--format=%(refname)", "refs/rove/"])).toBe("");
+    expect(git(["rev-parse", "refs/paperplane/checkpoints/a"])).toBe(oid);
+    expect(migrateRepositoryCheckpointRefs(directory)).toEqual({ converted: 0, conflicts: [] });
+    expect(migrateRepositoryCheckpointRefs(linked)).toEqual({ converted: 0, conflicts: [] });
+  });
+  it("retains a symbolic ref and its target intact", () => {
+    const oid = seed();
+    git(["update-ref", "refs/rove/checkpoints/target", oid]);
+    git(["symbolic-ref", "refs/rove/checkpoints/alias", "refs/rove/checkpoints/target"]);
+    const result = migrateRepositoryCheckpointRefs(directory);
+    expect(result.converted).toBe(0);
+    expect(result.conflicts).toHaveLength(2);
+    expect(git(["rev-parse", "refs/rove/checkpoints/alias"])).toBe(oid);
+    expect(git(["rev-parse", "refs/rove/checkpoints/target"])).toBe(oid);
+  });
+  it("preserves conflicting values and safely deduplicates identical refs", () => {
+    const first = seed();
+    NodeFS.writeFileSync(NodePath.join(directory, "file"), "two");
+    git(["commit", "--quiet", "-am", "two"]);
+    const second = git(["rev-parse", "HEAD"]);
+    git(["update-ref", "refs/rove/checkpoints/conflict", first]);
+    git(["update-ref", "refs/paperplane/checkpoints/conflict", second]);
+    git(["update-ref", "refs/rove/checkpoints/same", first]);
+    git(["update-ref", "refs/paperplane/checkpoints/same", first]);
+    expect(migrateRepositoryCheckpointRefs(directory)).toEqual({
+      converted: 1,
+      conflicts: ["refs/rove/checkpoints/conflict -> refs/paperplane/checkpoints/conflict"],
+    });
+    expect(git(["rev-parse", "refs/rove/checkpoints/conflict"])).toBe(first);
+    expect(git(["rev-parse", "refs/paperplane/checkpoints/conflict"])).toBe(second);
+    expect(git(["for-each-ref", "--format=%(refname)", "refs/rove/checkpoints/same"])).toBe("");
+    expect(git(["rev-parse", "refs/paperplane/checkpoints/same"])).toBe(first);
+    expect(migrateRepositoryCheckpointRefs(directory)).toEqual({ converted: 0, conflicts: [] });
+  });
+  it("converges when two processes open linked worktrees together", async () => {
+    const oid = seed();
+    for (let index = 0; index < 20; index++)
+      git(["update-ref", `refs/rove/checkpoints/${index}`, oid]);
+    const linked = NodePath.join(directory, "linked");
+    git(["worktree", "add", "--quiet", "--detach", linked]);
+    const moduleUrl = new URL("./homeMigration.ts", import.meta.url).href;
+    const migrate = (cwd: string) =>
+      new Promise<string>((resolve, reject) => {
+        NodeChildProcess.execFile(
+          process.execPath,
+          [
+            "--input-type=module",
+            "-e",
+            `import { migrateRepositoryCheckpointRefs } from ${JSON.stringify(moduleUrl)}; console.log(JSON.stringify(migrateRepositoryCheckpointRefs(process.cwd())));`,
+          ],
+          { cwd, encoding: "utf8" },
+          (error, stdout) => (error ? reject(error) : resolve(stdout.trim())),
+        );
+      });
+    const results = await Promise.all([migrate(directory), migrate(linked)]);
+    expect(results.sort()).toEqual([
+      '{"converted":0,"conflicts":[]}',
+      '{"converted":20,"conflicts":[]}',
+    ]);
+    expect(git(["for-each-ref", "--format=%(refname)", "refs/rove/"])).toBe("");
+    const converted = git(["for-each-ref", "--format=%(objectname)", "refs/paperplane/"]).split(
+      "\n",
+    );
+    expect(converted).toEqual(Array.from({ length: 20 }, () => oid));
+  });
 });

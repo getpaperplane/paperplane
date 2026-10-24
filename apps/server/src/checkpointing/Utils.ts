@@ -1,11 +1,11 @@
 import * as Base64Url from "effect/encoding/Base64Url";
 import { CheckpointRef, ProjectId, type ThreadId } from "@getpaperplane/contracts";
 
-import { ROVE_CHECKPOINT_REFS_PREFIX } from "@getpaperplane/shared/roveMigration";
+const PAPERPLANE_CHECKPOINT_REFS_PREFIX = "refs/paperplane/checkpoints";
 
 export function checkpointRefForThreadTurn(threadId: ThreadId, turnCount: number): CheckpointRef {
   return CheckpointRef.make(
-    `${ROVE_CHECKPOINT_REFS_PREFIX}/${Base64Url.encode(threadId)}/turn/${turnCount}`,
+    `${PAPERPLANE_CHECKPOINT_REFS_PREFIX}/${Base64Url.encode(threadId)}/turn/${turnCount}`,
   );
 }
 

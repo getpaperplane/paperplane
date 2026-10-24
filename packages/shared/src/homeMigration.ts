@@ -1,5 +1,6 @@
 // @effect-diagnostics nodeBuiltinImport:off - Node-only migration runs before either app's runtime and before Electron may yield.
 import * as NodeCrypto from "node:crypto";
+import * as NodeChildProcess from "node:child_process";
 import * as NodeFS from "node:fs";
 import * as NodePath from "node:path";
 import * as NodeSqlite from "node:sqlite";
@@ -679,6 +680,90 @@ export function previousPaperplaneCookieNames(
       unscopedName === undefined ? undefined : previous(unscopedName),
     ]),
   ].filter((name): name is string => name !== undefined && name !== cookieName);
+}
+
+const migratedRepositoryPaths = new Set<string>();
+
+/** Lazy, shared-repository conversion. Never call this from home migration: the old version may still own those refs. */
+export function migrateRepositoryCheckpointRefs(cwd: string): {
+  converted: number;
+  conflicts: string[];
+} {
+  if (migratedRepositoryPaths.has(cwd)) return { converted: 0, conflicts: [] };
+  const git = (args: string[], input?: string) =>
+    NodeChildProcess.execFileSync("git", args, {
+      cwd,
+      encoding: "utf8",
+      input,
+      timeout: 20_000,
+      maxBuffer: 32 * 1024 * 1024,
+      stdio: ["pipe", "pipe", "pipe"],
+    }).trim();
+  const commonDirectory = git(["rev-parse", "--path-format=absolute", "--git-common-dir"]);
+  const marker = NodePath.join(commonDirectory, "paperplane-ref-migration.json");
+  if (exists(marker)) {
+    migratedRepositoryPaths.add(cwd);
+    return { converted: 0, conflicts: [] };
+  }
+  // CAS on both sides makes concurrent callers from linked worktrees safe. A crash
+  // after commit only leaves a marker to write; no individual ref can be lost.
+  for (let attempt = 0; attempt < 3; attempt++) {
+    if (exists(marker)) {
+      migratedRepositoryPaths.add(cwd);
+      return { converted: 0, conflicts: [] };
+    }
+    const refs = new Map(
+      git(["for-each-ref", "--format=%(refname) %(objectname) %(symref)"])
+        .split("\n")
+        .filter(Boolean)
+        .map((line) => {
+          const [name = "", oid = "", ...symbolic] = line.split(" ");
+          return [name, { oid, symbolic: symbolic.join(" ").trim() }] as const;
+        }),
+    );
+    const conflicts: string[] = [];
+    const commands = ["start", "option no-deref"];
+    let converted = 0;
+    for (const [name, ref] of refs) {
+      if (!name.startsWith("refs/rove/")) continue;
+      const target = name.replace(/^refs\/rove\//, "refs/paperplane/");
+      const current = refs.get(target);
+      const symbolicUsers = [...refs.values()].some((entry) => entry.symbolic === name);
+      if (
+        ref.symbolic ||
+        symbolicUsers ||
+        current?.symbolic ||
+        (current !== undefined && current.oid !== ref.oid)
+      ) {
+        conflicts.push(`${name} -> ${target}`);
+        continue;
+      }
+      commands.push(
+        current === undefined ? `create ${target} ${ref.oid}` : `verify ${target} ${ref.oid}`,
+      );
+      commands.push(`delete ${name} ${ref.oid}`);
+      converted++;
+    }
+    commands.push("prepare", "commit", "");
+    try {
+      if (converted > 0)
+        git(["-c", "core.fsync=reference", "update-ref", "--stdin"], commands.join("\n"));
+    } catch (error) {
+      if (attempt < 2) continue;
+      throw error;
+    }
+    try {
+      NodeFS.writeFileSync(marker, JSON.stringify({ converted, conflicts }) + "\n", {
+        flag: "wx",
+        mode: 0o600,
+      });
+    } catch (error) {
+      if (!(error instanceof Error && "code" in error && error.code === "EEXIST")) throw error;
+    }
+    migratedRepositoryPaths.add(cwd);
+    return { converted, conflicts };
+  }
+  throw new HomeMigrationError("Could not atomically migrate checkpoint refs.");
 }
 
 export class PaperplaneCookieMigrationError extends Schema.TaggedError<PaperplaneCookieMigrationError>()(
