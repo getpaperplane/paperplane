@@ -457,8 +457,11 @@ export function migrateDefaultHome(input: {
   const source = NodePath.join(input.homeDirectory, ".rove-code");
   const destination = NodePath.join(input.homeDirectory, PAPERPLANE_HOME_NAME);
   const reportPath = NodePath.join(destination, HOME_MIGRATION_REPORT);
-  if (destinationIsOccupied(destination) || exists(reportPath))
+  if (destinationIsOccupied(destination)) return { kind: "skipped", reason: "destination-exists" };
+  if (exists(reportPath)) {
+    cleanupHomeMigrationGuard(input.homeDirectory);
     return { kind: "skipped", reason: "destination-exists" };
+  }
   if (!exists(source)) return { kind: "skipped", reason: "source-missing" };
 
   // This stable inode serializes simultaneous CLI/desktop migrations and makes
@@ -680,6 +683,32 @@ export function previousPaperplaneCookieNames(
       unscopedName === undefined ? undefined : previous(unscopedName),
     ]),
   ].filter((name): name is string => name !== undefined && name !== cookieName);
+}
+
+/** A committed report permanently bars new migrations; an exclusive lock excludes a publisher still finishing. */
+export function cleanupHomeMigrationGuard(homeDirectory: string): void {
+  const report = NodePath.join(homeDirectory, PAPERPLANE_HOME_NAME, HOME_MIGRATION_REPORT);
+  const path = NodePath.join(homeDirectory, ".paperplane-migration.sqlite");
+  if (!exists(report) || !exists(path)) return;
+  // Validate the commit marker before retiring the shared lock. Never follow a symlink.
+  if (!NodeFS.lstatSync(report).isFile() || !NodeFS.lstatSync(path).isFile()) return;
+  decodeReport(NodeFS.readFileSync(report, "utf8"));
+  const guard = new NodeSqlite.DatabaseSync(path, { open: true });
+  let acquired = false;
+  try {
+    guard.exec("PRAGMA busy_timeout = 0; BEGIN EXCLUSIVE;");
+    acquired = true;
+  } catch (error) {
+    if (!isBusy(error)) throw error;
+  } finally {
+    guard.close();
+  }
+  if (!acquired) return;
+  // Every process that passed the initial report check rechecks it under the
+  // lock before touching the stage. After the report exists no owner can migrate,
+  // including a late opener of a new inode. Windows requires closing before unlink.
+  for (const suffix of ["-journal", "-wal", "-shm", ""])
+    NodeFS.rmSync(path + suffix, { force: true });
 }
 
 const migratedRepositoryPaths = new Set<string>();

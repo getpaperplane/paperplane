@@ -6,6 +6,8 @@ import * as NodeSqlite from "node:sqlite";
 import * as NodeChildProcess from "node:child_process";
 import { afterEach, beforeEach, describe, expect, it } from "vite-plus/test";
 import {
+  cleanupHomeMigrationGuard,
+  HOME_MIGRATION_REPORT,
   migrateDefaultHome,
   migrateRepositoryCheckpointRefs,
   rewriteSavedDataStep,
@@ -201,4 +203,35 @@ describe("lazy repository refs", () => {
     );
     expect(converted).toEqual(Array.from({ length: 20 }, () => oid));
   });
+});
+
+it("retires the guard only on a later start with a committed report, and respects an active owner", () => {
+  NodeFS.mkdirSync(NodePath.join(directory, ".rove-code", "userdata"), { recursive: true });
+  expect(migrateDefaultHome({ homeDirectory: directory, log: () => {} }).kind).toBe("migrated");
+  const guardPath = NodePath.join(directory, ".paperplane-migration.sqlite");
+  expect(NodeFS.existsSync(guardPath)).toBe(true);
+  const owner = new NodeSqlite.DatabaseSync(guardPath);
+  owner.exec("BEGIN EXCLUSIVE");
+  cleanupHomeMigrationGuard(directory);
+  expect(NodeFS.existsSync(guardPath)).toBe(true);
+  owner.close();
+  expect(NodeFS.existsSync(NodePath.join(directory, ".paperplane", HOME_MIGRATION_REPORT))).toBe(
+    true,
+  );
+  expect(migrateDefaultHome({ homeDirectory: directory }).kind).toBe("skipped");
+  expect(NodeFS.existsSync(guardPath)).toBe(false);
+  cleanupHomeMigrationGuard(directory);
+});
+
+it("keeps the shared guard until there is a valid committed report", () => {
+  const guardPath = NodePath.join(directory, ".paperplane-migration.sqlite");
+  const guard = new NodeSqlite.DatabaseSync(guardPath);
+  guard.close();
+  cleanupHomeMigrationGuard(directory);
+  expect(NodeFS.existsSync(guardPath)).toBe(true);
+  const destination = NodePath.join(directory, ".paperplane");
+  NodeFS.mkdirSync(destination);
+  NodeFS.writeFileSync(NodePath.join(destination, HOME_MIGRATION_REPORT), "{}");
+  expect(() => cleanupHomeMigrationGuard(directory)).toThrow();
+  expect(NodeFS.existsSync(guardPath)).toBe(true);
 });
