@@ -14,8 +14,10 @@ describe.skipIf(hostPlatform !== "linux")("bundled libsecret helper", () => {
   let directory;
   let executable;
   beforeAll(() => {
-    directory = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "rove-browser-secret-test-"));
-    executable = NodePath.join(directory, "rove-browser-secret");
+    directory = NodeFS.mkdtempSync(
+      NodePath.join(NodeOS.tmpdir(), "paperplane-browser-secret-test-"),
+    );
+    executable = NodePath.join(directory, "paperplane-browser-secret");
     const root = NodeURL.fileURLToPath(new URL("../../../native/browser-secret/", import.meta.url));
     const flags = NodeChildProcess.execFileSync(
       "pkg-config",
@@ -55,7 +57,12 @@ describe.skipIf(hostPlatform !== "linux")("bundled libsecret helper", () => {
     });
 
   it("builds an executable for the requested architecture into a staged resource directory", () => {
-    const output = NodePath.join(directory, "resources", "browser-secret", "rove-browser-secret");
+    const output = NodePath.join(
+      directory,
+      "resources",
+      "browser-secret",
+      "paperplane-browser-secret",
+    );
     NodeChildProcess.execFileSync(process.execPath, [
       NodeURL.fileURLToPath(new URL("./build-browser-secret.mjs", import.meta.url)),
       "--arch",

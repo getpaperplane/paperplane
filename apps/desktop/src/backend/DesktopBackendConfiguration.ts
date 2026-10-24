@@ -187,7 +187,7 @@ const logBackendObservabilitySettingsReadFailure = (
 };
 
 function resourceMonitorBinaryName(platform: NodeJS.Platform): string {
-  return platform === "win32" ? "rove-resource-monitor.exe" : "rove-resource-monitor";
+  return platform === "win32" ? "paperplane-resource-monitor.exe" : "paperplane-resource-monitor";
 }
 
 const resolveResourceMonitorPath = Effect.fn(
@@ -752,12 +752,12 @@ const resolveWslStartConfig = Effect.fn("desktop.backendConfiguration.resolveWsl
   // the WSL backend the Linux side ends up sharing C:\Users\...\.paperplane via
   // /mnt/c, which means both backends read/write the same database and
   // their env-ids collide).
-  const parentEnvWithoutRoveHome: Record<string, string | undefined> = {};
+  const parentEnvWithoutPaperplaneHome: Record<string, string | undefined> = {};
   for (const [key, value] of Object.entries(process.env)) {
     if (key === "PAPERPLANE_HOME") continue;
-    parentEnvWithoutRoveHome[key] = value;
+    parentEnvWithoutPaperplaneHome[key] = value;
   }
-  const wslEnv = mergeWslEnv(parentEnvWithoutRoveHome.WSLENV, forwardedEnvNames);
+  const wslEnv = mergeWslEnv(parentEnvWithoutPaperplaneHome.WSLENV, forwardedEnvNames);
 
   const baseConfig = {
     executablePath: "wsl.exe",
@@ -765,7 +765,7 @@ const resolveWslStartConfig = Effect.fn("desktop.backendConfiguration.resolveWsl
       preflight._tag === "Ready" ? preflight.windowsEntryPath : environment.backendEntryPath,
     cwd: environment.backendCwd,
     env: {
-      ...parentEnvWithoutRoveHome,
+      ...parentEnvWithoutPaperplaneHome,
       ...backendChildEnvPatch(),
       ...forwardedEnv,
       ...(wslEnv !== undefined ? { WSLENV: wslEnv } : {}),

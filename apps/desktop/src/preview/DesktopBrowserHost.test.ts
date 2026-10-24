@@ -77,7 +77,7 @@ describe("DesktopBrowserHost", () => {
           encodeJson({
             type: "cdp",
             ...key,
-            message: encodeJson({ id, method, sessionId: "rove-preview-page" }),
+            message: encodeJson({ id, method, sessionId: "paperplane-preview-page" }),
           }),
         );
       yield* command(1, "Page.captureScreenshot");

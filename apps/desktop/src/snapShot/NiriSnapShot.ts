@@ -189,7 +189,9 @@ async function activateNiriWindow(path: string, title: string, signal: AbortSign
 }
 
 export async function captureNiriWindow(path: string): Promise<LinuxWindowSnapshot> {
-  const directory = await NodeFSP.mkdtemp(NodePath.join(NodeOS.tmpdir(), "rove-niri-capture-"));
+  const directory = await NodeFSP.mkdtemp(
+    NodePath.join(NodeOS.tmpdir(), "paperplane-niri-capture-"),
+  );
   const imagePath = NodePath.join(directory, "capture.png");
   const events = new NiriConnection(path);
   try {

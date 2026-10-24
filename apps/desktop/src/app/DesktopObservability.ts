@@ -633,10 +633,10 @@ const layerTelemetry = Layer.unwrap(
     // `host.name` keeps machines apart on a shared collector; one set in
     // `OTEL_RESOURCE_ATTRIBUTES` wins, since explicit attributes override it.
     const resource = {
-      serviceName: "rove-desktop",
+      serviceName: "paperplane-desktop",
       serviceVersion: environment.appVersion,
       attributes: {
-        "service.namespace": "rove",
+        "service.namespace": "paperplane",
         "service.runtime": "desktop",
         "service.mode": environment.isDevelopment ? "development" : "packaged",
         "host.name": endpoints.resourceAttributes["host.name"] || (yield* HostProcess.Hostname),

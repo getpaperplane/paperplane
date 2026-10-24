@@ -22,7 +22,7 @@ import * as Electron from "electron";
 import * as NetService from "@getpaperplane/shared/Net";
 import * as HostProcess from "@getpaperplane/shared/HostProcess";
 import { migrateDefaultHome } from "@getpaperplane/shared/homeMigration";
-import type { RemoteRoveRunnerOptions } from "@getpaperplane/ssh/tunnel";
+import type { RemotePaperplaneRunnerOptions } from "@getpaperplane/ssh/tunnel";
 import serverPackageJson from "../../server/package.json" with { type: "json" };
 
 import * as DesktopIpc from "./ipc/DesktopIpc.ts";
@@ -111,7 +111,7 @@ const layerDesktopEnvironment = Layer.unwrap(
 // a source checkout instead so the two sides can be iterated together.
 const resolveDesktopSshCliRunner = (
   environment: DesktopEnvironment.DesktopEnvironment["Service"],
-): RemoteRoveRunnerOptions => {
+): RemotePaperplaneRunnerOptions => {
   const devRemoteEntryPath = Option.getOrUndefined(environment.devRemoteServerEntryPath);
   if (environment.isDevelopment && devRemoteEntryPath !== undefined) {
     return {

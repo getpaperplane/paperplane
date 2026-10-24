@@ -247,7 +247,7 @@ export const layer = Layer.effect(
           );
           yield* electronDialog.showErrorBox(
             "WSL backend is still unavailable",
-            `${reason}\n\nRove will use the Windows backend for this launch and retry WSL the next time the app starts.`,
+            `${reason}\n\nPaperplane will use the Windows backend for this launch and retry WSL the next time the app starts.`,
           );
           yield* appSettings.applyWslWindowsFallbackInMemory;
           return true;

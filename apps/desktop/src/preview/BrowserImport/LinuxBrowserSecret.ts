@@ -17,7 +17,7 @@ export const layer = Layer.effect(
     const environment = yield* DesktopEnvironment.DesktopEnvironment;
     if (environment.platform !== "linux") return undefined;
     const fileSystem = yield* FileSystem.FileSystem;
-    const relative = environment.path.join("browser-secret", "rove-browser-secret");
+    const relative = environment.path.join("browser-secret", "paperplane-browser-secret");
     const candidates = environment.isPackaged
       ? [environment.path.join(environment.resourcesPath, relative)]
       : [
@@ -27,7 +27,7 @@ export const layer = Layer.effect(
             "browser-secret",
             "build",
             environment.processArch,
-            "rove-browser-secret",
+            "paperplane-browser-secret",
           ),
           ...environment.resolveResourcePathCandidates(relative),
         ];

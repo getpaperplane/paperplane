@@ -955,8 +955,8 @@ interface StagePackageJson {
   readonly name: string;
   readonly version: string;
   readonly buildVersion: string;
-  readonly roveCommitHash: string;
-  readonly roveWebAuthn?: MacWebAuthnEntitlements;
+  readonly paperplaneCommitHash: string;
+  readonly paperplaneWebAuthn?: MacWebAuthnEntitlements;
   readonly private: true;
   readonly packageManager: string;
   readonly description: string;
@@ -3943,9 +3943,9 @@ const buildDesktopArtifact = Effect.fn("buildDesktopArtifact")(function* (
     name: "rove",
     version: appVersion,
     buildVersion: appVersion,
-    roveCommitHash: commitHash,
+    paperplaneCommitHash: commitHash,
     // Read by apps/desktop/src/preview/Passkeys.ts; must match the signed entitlements.
-    ...(macWebAuthn ? { roveWebAuthn: macWebAuthn } : {}),
+    ...(macWebAuthn ? { paperplaneWebAuthn: macWebAuthn } : {}),
     private: true,
     packageManager: rootPackageJson.packageManager,
     description:

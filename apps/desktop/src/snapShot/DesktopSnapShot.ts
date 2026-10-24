@@ -1333,7 +1333,7 @@ export const make = Effect.gen(function* () {
       yield* Effect.scoped(
         Effect.gen(function* () {
           const directory = yield* fileSystem.makeTempDirectoryScoped({
-            prefix: "rove-snapshot-test-",
+            prefix: "paperplane-snapshot-test-",
           });
           yield* Effect.tryPromise(async () => {
             const active = await activeWindow("darwin");

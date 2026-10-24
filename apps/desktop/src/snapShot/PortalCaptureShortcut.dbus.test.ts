@@ -12,7 +12,7 @@ import { PortalCaptureShortcut } from "./PortalCaptureShortcut.ts";
 it.runIf(NodeChildProcess.spawnSync("dbus-daemon", ["--version"]).status === 0)(
   "registers, rebinds saved keys, receives activations, and replaces sessions over real D-Bus",
   async () => {
-    const dir = await NodeFSP.mkdtemp(NodePath.join(NodeOS.tmpdir(), "rove-shortcut-dbus-"));
+    const dir = await NodeFSP.mkdtemp(NodePath.join(NodeOS.tmpdir(), "paperplane-shortcut-dbus-"));
     let daemon: NodeChildProcess.ChildProcess | undefined;
     let server: MessageBus | undefined;
     const clients: PortalCaptureShortcut[] = [];

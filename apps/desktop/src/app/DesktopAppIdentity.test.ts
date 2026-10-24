@@ -135,7 +135,7 @@ const withIdentity = <A, E, R>(
                     input.legacyPathExists === true && /\/rove-code(?:-dev)?(?:\/|$)/.test(path),
                   ),
             readFileString: () =>
-              Effect.succeed(input.packageJson ?? '{"roveCommitHash":"abcdef1234567890"}'),
+              Effect.succeed(input.packageJson ?? '{"paperplaneCommitHash":"abcdef1234567890"}'),
           }),
         ),
         Layer.provideMerge(layerAssets(input.pngIconPath ?? Option.none())),

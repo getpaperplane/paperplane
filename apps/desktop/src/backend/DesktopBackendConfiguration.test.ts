@@ -128,7 +128,7 @@ const withHarness = <A, E, R>(
   Effect.gen(function* () {
     const fileSystem = yield* FileSystem.FileSystem;
     const baseDir = yield* fileSystem.makeTempDirectoryScoped({
-      prefix: "rove-desktop-backend-config-test-",
+      prefix: "paperplane-desktop-backend-config-test-",
     });
 
     return yield* effect.pipe(
@@ -175,7 +175,7 @@ const withPackagedWslHarness = <A, E, R>(
     const fileSystem = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
     const baseDir = yield* fileSystem.makeTempDirectoryScoped({
-      prefix: "rove-desktop-backend-config-test-",
+      prefix: "paperplane-desktop-backend-config-test-",
     });
     const archivePath = path.join(baseDir, "wsl-runtime.tar.gz");
     const hashPath = `${archivePath}.sha256`;
@@ -294,7 +294,7 @@ describe("DesktopBackendConfiguration", () => {
       const fileSystem = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const baseDir = yield* fileSystem.makeTempDirectoryScoped({
-        prefix: "rove-desktop-backend-config-test-",
+        prefix: "paperplane-desktop-backend-config-test-",
       });
       const resourcesPath = path.join(baseDir, "resources");
 
@@ -379,7 +379,7 @@ describe("DesktopBackendConfiguration", () => {
       const fileSystem = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const baseDir = yield* fileSystem.makeTempDirectoryScoped({
-        prefix: "rove-desktop-backend-config-test-",
+        prefix: "paperplane-desktop-backend-config-test-",
       });
       const entryPath = path.join(baseDir, "apps/server/dist/bin.mjs");
       yield* fileSystem.makeDirectory(path.dirname(entryPath), { recursive: true });
@@ -697,7 +697,7 @@ describe("DesktopBackendConfiguration", () => {
         const fileSystem = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const baseDir = yield* fileSystem.makeTempDirectoryScoped({
-          prefix: "rove-desktop-backend-config-test-",
+          prefix: "paperplane-desktop-backend-config-test-",
         });
         const entryPath = path.join(baseDir, "apps/server/dist/bin.mjs");
         yield* fileSystem.makeDirectory(path.dirname(entryPath), { recursive: true });
@@ -826,7 +826,7 @@ describe("DesktopBackendConfiguration", () => {
     Effect.gen(function* () {
       const fileSystem = yield* FileSystem.FileSystem;
       const baseDir = yield* fileSystem.makeTempDirectoryScoped({
-        prefix: "rove-desktop-backend-config-test-",
+        prefix: "paperplane-desktop-backend-config-test-",
       });
 
       yield* Effect.gen(function* () {
@@ -870,7 +870,7 @@ describe("DesktopBackendConfiguration", () => {
     Effect.gen(function* () {
       const fileSystem = yield* FileSystem.FileSystem;
       const baseDir = yield* fileSystem.makeTempDirectoryScoped({
-        prefix: "rove-desktop-backend-config-test-",
+        prefix: "paperplane-desktop-backend-config-test-",
       });
 
       yield* Effect.gen(function* () {
@@ -918,7 +918,7 @@ describe("DesktopBackendConfiguration", () => {
       const fileSystem = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const baseDir = yield* fileSystem.makeTempDirectoryScoped({
-        prefix: "rove-desktop-backend-config-test-",
+        prefix: "paperplane-desktop-backend-config-test-",
       });
       const settingsPath = path.join(baseDir, "userdata", "settings.json");
       const cause = PlatformError.systemError({
@@ -978,7 +978,7 @@ describe("DesktopBackendConfiguration", () => {
     Effect.gen(function* () {
       const fileSystem = yield* FileSystem.FileSystem;
       const baseDir = yield* fileSystem.makeTempDirectoryScoped({
-        prefix: "rove-desktop-backend-config-test-",
+        prefix: "paperplane-desktop-backend-config-test-",
       });
 
       yield* Effect.gen(function* () {
@@ -1010,7 +1010,7 @@ describe("DesktopBackendConfiguration", () => {
     Effect.gen(function* () {
       const fileSystem = yield* FileSystem.FileSystem;
       const baseDir = yield* fileSystem.makeTempDirectoryScoped({
-        prefix: "rove-desktop-backend-config-test-",
+        prefix: "paperplane-desktop-backend-config-test-",
       });
 
       const previousWslEnv = process.env.WSLENV;
@@ -1060,13 +1060,13 @@ describe("DesktopBackendConfiguration", () => {
       Effect.gen(function* () {
         const fileSystem = yield* FileSystem.FileSystem;
         const baseDir = yield* fileSystem.makeTempDirectoryScoped({
-          prefix: "rove-desktop-backend-config-test-",
+          prefix: "paperplane-desktop-backend-config-test-",
         });
 
         const standard = {
           OTEL_EXPORTER_OTLP_ENDPOINT: "https://collector.example.com:4318/base?api_key=secret",
           OTEL_EXPORTER_OTLP_LOGS_HEADERS: "authorization=Bearer%20token",
-          PAPERPLANE_OTLP_TRACES_URL: "http://rove.example.com:4318/v1/traces",
+          PAPERPLANE_OTLP_TRACES_URL: "http://paperplane.example.com:4318/v1/traces",
         };
         const previousWslEnv = process.env.WSLENV;
         // A developer's own OTLP variables would be forwarded too.
@@ -1096,7 +1096,7 @@ describe("DesktopBackendConfiguration", () => {
             assert.include(wslEnv, "OTEL_EXPORTER_OTLP_LOGS_HEADERS");
             assert.equal(
               config.env.PAPERPLANE_OTLP_TRACES_URL,
-              "http://rove.example.com:4318/v1/traces",
+              "http://paperplane.example.com:4318/v1/traces",
             );
             assert.include(wslEnv, "PAPERPLANE_OTLP_TRACES_URL");
           }).pipe(
@@ -1128,7 +1128,7 @@ describe("DesktopBackendConfiguration", () => {
     Effect.gen(function* () {
       const fileSystem = yield* FileSystem.FileSystem;
       const baseDir = yield* fileSystem.makeTempDirectoryScoped({
-        prefix: "rove-desktop-backend-config-test-",
+        prefix: "paperplane-desktop-backend-config-test-",
       });
 
       const previousWslEnv = process.env.WSLENV;
@@ -1207,7 +1207,7 @@ describe("DesktopBackendConfiguration", () => {
       Effect.gen(function* () {
         const fileSystem = yield* FileSystem.FileSystem;
         const baseDir = yield* fileSystem.makeTempDirectoryScoped({
-          prefix: "rove-desktop-backend-config-test-",
+          prefix: "paperplane-desktop-backend-config-test-",
         });
 
         yield* Effect.gen(function* () {
@@ -1247,7 +1247,7 @@ describe("DesktopBackendConfiguration", () => {
       Effect.gen(function* () {
         const fileSystem = yield* FileSystem.FileSystem;
         const baseDir = yield* fileSystem.makeTempDirectoryScoped({
-          prefix: "rove-desktop-backend-config-test-",
+          prefix: "paperplane-desktop-backend-config-test-",
         });
 
         yield* Effect.gen(function* () {
@@ -1288,7 +1288,7 @@ describe("DesktopBackendConfiguration", () => {
     Effect.gen(function* () {
       const fileSystem = yield* FileSystem.FileSystem;
       const baseDir = yield* fileSystem.makeTempDirectoryScoped({
-        prefix: "rove-desktop-backend-config-test-",
+        prefix: "paperplane-desktop-backend-config-test-",
       });
 
       yield* Effect.gen(function* () {
@@ -1324,7 +1324,7 @@ describe("DesktopBackendConfiguration", () => {
     Effect.gen(function* () {
       const fileSystem = yield* FileSystem.FileSystem;
       const baseDir = yield* fileSystem.makeTempDirectoryScoped({
-        prefix: "rove-desktop-backend-config-test-",
+        prefix: "paperplane-desktop-backend-config-test-",
       });
 
       yield* Effect.gen(function* () {
@@ -1357,7 +1357,7 @@ describe("DesktopBackendConfiguration", () => {
     Effect.gen(function* () {
       const fileSystem = yield* FileSystem.FileSystem;
       const baseDir = yield* fileSystem.makeTempDirectoryScoped({
-        prefix: "rove-desktop-backend-config-test-",
+        prefix: "paperplane-desktop-backend-config-test-",
       });
 
       yield* Effect.gen(function* () {
@@ -1399,7 +1399,7 @@ describe("DesktopBackendConfiguration", () => {
     Effect.gen(function* () {
       const fileSystem = yield* FileSystem.FileSystem;
       const baseDir = yield* fileSystem.makeTempDirectoryScoped({
-        prefix: "rove-desktop-backend-config-test-",
+        prefix: "paperplane-desktop-backend-config-test-",
       });
 
       yield* Effect.gen(function* () {
@@ -1432,7 +1432,7 @@ describe("DesktopBackendConfiguration", () => {
     Effect.gen(function* () {
       const fileSystem = yield* FileSystem.FileSystem;
       const baseDir = yield* fileSystem.makeTempDirectoryScoped({
-        prefix: "rove-desktop-backend-config-test-",
+        prefix: "paperplane-desktop-backend-config-test-",
       });
 
       yield* Effect.gen(function* () {
@@ -1465,12 +1465,12 @@ describe("DesktopBackendConfiguration", () => {
       const fileSystem = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const baseDir = yield* fileSystem.makeTempDirectoryScoped({
-        prefix: "rove-desktop-backend-config-test-",
+        prefix: "paperplane-desktop-backend-config-test-",
       });
       const resourcesPath = path.join(baseDir, "resources");
       const dirname = `${resourcesPath}/app.asar/apps/desktop/dist-electron`;
-      const embeddedMonitorPath = `${resourcesPath}/app.asar/apps/desktop/prod-resources/resource-monitor/rove-resource-monitor`;
-      const monitorPath = path.join(resourcesPath, "resource-monitor/rove-resource-monitor");
+      const embeddedMonitorPath = `${resourcesPath}/app.asar/apps/desktop/prod-resources/resource-monitor/paperplane-resource-monitor`;
+      const monitorPath = path.join(resourcesPath, "resource-monitor/paperplane-resource-monitor");
       yield* fileSystem.makeDirectory(
         `${resourcesPath}/app.asar/apps/desktop/prod-resources/resource-monitor`,
         { recursive: true },
@@ -1514,16 +1514,16 @@ describe("DesktopBackendConfiguration", () => {
       const fileSystem = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const baseDir = yield* fileSystem.makeTempDirectoryScoped({
-        prefix: "rove-desktop-backend-config-test-",
+        prefix: "paperplane-desktop-backend-config-test-",
       });
       const dirname = path.join(baseDir, "apps/desktop/src");
       const releaseMonitorPath = path.join(
         baseDir,
-        "native/resource-monitor/target/release/rove-resource-monitor",
+        "native/resource-monitor/target/release/paperplane-resource-monitor",
       );
       const debugMonitorPath = path.join(
         baseDir,
-        "native/resource-monitor/target/debug/rove-resource-monitor",
+        "native/resource-monitor/target/debug/paperplane-resource-monitor",
       );
       yield* fileSystem.makeDirectory(path.dirname(releaseMonitorPath), { recursive: true });
       yield* fileSystem.makeDirectory(path.dirname(debugMonitorPath), { recursive: true });
@@ -1568,7 +1568,7 @@ describe("DesktopBackendConfiguration", () => {
     Effect.gen(function* () {
       const fileSystem = yield* FileSystem.FileSystem;
       const baseDir = yield* fileSystem.makeTempDirectoryScoped({
-        prefix: "rove-desktop-backend-config-test-",
+        prefix: "paperplane-desktop-backend-config-test-",
       });
 
       yield* Effect.gen(function* () {
@@ -1624,7 +1624,9 @@ describe("DesktopBackendConfiguration", () => {
             ),
           ),
         ),
-        Layer.provideMerge(layerEnvironment("/tmp/rove-wsl-isavailable", { platform: "win32" })),
+        Layer.provideMerge(
+          layerEnvironment("/tmp/paperplane-wsl-isavailable", { platform: "win32" }),
+        ),
         Layer.provide(NodeServices.layer),
       ),
     );

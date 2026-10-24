@@ -47,7 +47,7 @@ const layerRejectedBeforeSession = Layer.succeed(
  */
 const withImporter = Effect.fnUntraced(function* () {
   const fileSystem = yield* FileSystem.FileSystem;
-  const home = yield* fileSystem.makeTempDirectoryScoped({ prefix: "rove-import-" });
+  const home = yield* fileSystem.makeTempDirectoryScoped({ prefix: "paperplane-import-" });
   const layerEnvironment = Layer.succeed(HostProcess.Environment, { HOME: home });
   const context = yield* sourcePathContext.pipe(
     Effect.provideService(HostProcess.Environment, { HOME: home }),

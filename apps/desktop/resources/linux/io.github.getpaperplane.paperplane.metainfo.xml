@@ -19,9 +19,9 @@
     </p>
   </description>
   <launchable type="desktop-id">paperplane.desktop</launchable>
-  <icon type="stock">rove</icon>
+  <icon type="stock">paperplane</icon>
   <provides>
-    <binary>rove</binary>
+    <binary>paperplane</binary>
   </provides>
   <categories>
     <category>Development</category>

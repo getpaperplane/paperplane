@@ -20,7 +20,7 @@ describe("snapshotCookieDatabase", () => {
         const fileSystem = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const sourceDirectory = yield* fileSystem.makeTempDirectoryScoped({
-          prefix: "rove-cookie-source-",
+          prefix: "paperplane-cookie-source-",
         });
         const source = path.join(sourceDirectory, "Cookies");
         const snapshot = yield* Effect.gen(function* () {
@@ -47,11 +47,11 @@ describe("snapshotCookieDatabase", () => {
         const fileSystem = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const sourceDirectory = yield* fileSystem.makeTempDirectoryScoped({
-          prefix: "rove-cookie-invalid-source-",
+          prefix: "paperplane-cookie-invalid-source-",
         });
         const source = path.join(sourceDirectory, "Cookies");
         yield* fileSystem.writeFileString(source, "not a sqlite database");
-        const prefix = `rove-cookie-failed-${process.pid}-`;
+        const prefix = `paperplane-cookie-failed-${process.pid}-`;
         const error = yield* snapshotCookieDatabase(source, prefix).pipe(
           Effect.scoped,
           Effect.flip,
@@ -69,7 +69,7 @@ describe("snapshotCookieDatabase", () => {
         const fileSystem = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const sourceDirectory = yield* fileSystem.makeTempDirectoryScoped({
-          prefix: "rove-cookie-cleanup-source-",
+          prefix: "paperplane-cookie-cleanup-source-",
         });
         const source = path.join(sourceDirectory, "Cookies");
         yield* Effect.gen(function* () {

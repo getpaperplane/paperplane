@@ -270,7 +270,7 @@ export class PortalCaptureShortcut {
     body: unknown[],
     options: Record<string, Variant<unknown>> = {},
   ) {
-    const token = `rove_${NodeCrypto.randomUUID().replaceAll("-", "")}`;
+    const token = `paperplane_${NodeCrypto.randomUUID().replaceAll("-", "")}`;
     const expectedPath = this.namespace + token;
     let resolve!: (body: unknown) => void;
     const response = new Promise<unknown>((done) => {
@@ -400,7 +400,7 @@ export class PortalCaptureShortcut {
     const created = await this.request("CreateSession", "", [], {
       session_handle_token: new Variant(
         "s",
-        `rove_capture_${NodeCrypto.randomUUID().replaceAll("-", "")}`,
+        `paperplane_capture_${NodeCrypto.randomUUID().replaceAll("-", "")}`,
       ),
     });
     const session = decodeSession(created).session_handle.value;
@@ -409,7 +409,7 @@ export class PortalCaptureShortcut {
     this.session = session;
     this.shortcutId = this.managedByHyprland
       ? HYPRLAND_CAPTURE_ACTION
-      : `rove-snap-shot-${NodeCrypto.createHash("sha256").update(trigger).digest("hex").slice(0, 16)}`;
+      : `paperplane-snap-shot-${NodeCrypto.createHash("sha256").update(trigger).digest("hex").slice(0, 16)}`;
     // Every session must bind, even when the desktop remembers this shortcut's approval.
     const bound = await this.request("BindShortcuts", "oa(sa{sv})s", [
       this.session,

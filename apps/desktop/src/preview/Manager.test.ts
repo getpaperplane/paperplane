@@ -272,8 +272,8 @@ const layerBrowserSession = Layer.succeed(
 const layerEnvironment = Layer.succeed(
   DesktopEnvironment.DesktopEnvironment,
   DesktopEnvironment.DesktopEnvironment.of({
-    browserArtifactsDir: "/tmp/rove/dev/browser-artifacts",
-    dirname: "/tmp/rove/desktop",
+    browserArtifactsDir: "/tmp/paperplane/dev/browser-artifacts",
+    dirname: "/tmp/paperplane/desktop",
     path: {
       join: (...parts: ReadonlyArray<string>) => parts.join("/"),
     },
@@ -2473,7 +2473,7 @@ describe("PreviewManager", () => {
         const artifact = yield* manager.captureScreenshot("tab_1");
 
         expect(capturePage).toHaveBeenCalledOnce();
-        expect(mkdir).toHaveBeenCalledWith("/tmp/rove/dev/browser-artifacts");
+        expect(mkdir).toHaveBeenCalledWith("/tmp/paperplane/dev/browser-artifacts");
         expect(writeFile).toHaveBeenCalledWith(artifact.path, png);
         expect(artifact).toMatchObject({
           tabId: "tab_1",
@@ -3544,7 +3544,7 @@ describe("PreviewManager", () => {
             show: false,
             skipTaskbar: true,
             webPreferences: expect.objectContaining({
-              preload: "/tmp/rove/desktop/preview-pip-preload.cjs",
+              preload: "/tmp/paperplane/desktop/preview-pip-preload.cjs",
               backgroundThrottling: false,
             }),
           }),
@@ -4394,20 +4394,22 @@ describe("PreviewManager", () => {
     withManager((manager) =>
       Effect.gen(function* () {
         yield* manager.revealArtifact(
-          "/tmp/rove/dev/browser-artifacts/browser-screenshot-test.png",
+          "/tmp/paperplane/dev/browser-artifacts/browser-screenshot-test.png",
         );
 
         expect(showItemInFolder).toHaveBeenCalledWith(
-          "/tmp/rove/dev/browser-artifacts/browser-screenshot-test.png",
+          "/tmp/paperplane/dev/browser-artifacts/browser-screenshot-test.png",
         );
-        const exit = yield* Effect.exit(manager.revealArtifact("/tmp/rove/dev/settings.json"));
+        const exit = yield* Effect.exit(
+          manager.revealArtifact("/tmp/paperplane/dev/settings.json"),
+        );
         expect(Exit.isFailure(exit)).toBe(true);
         if (Exit.isSuccess(exit)) return;
         const error = Option.getOrThrow(Cause.findErrorOption(exit.cause));
         expect(error).toMatchObject({
           _tag: "PreviewArtifactPathOutsideDirectoryError",
-          artifactPath: "/tmp/rove/dev/settings.json",
-          artifactDirectory: "/tmp/rove/dev/browser-artifacts",
+          artifactPath: "/tmp/paperplane/dev/settings.json",
+          artifactDirectory: "/tmp/paperplane/dev/browser-artifacts",
         });
         expect("cause" in error).toBe(false);
       }),
@@ -4417,7 +4419,7 @@ describe("PreviewManager", () => {
   effectIt.effect("copies screenshot artifacts to the system clipboard", () =>
     withManager((manager) =>
       Effect.gen(function* () {
-        const artifactPath = "/tmp/rove/dev/browser-artifacts/browser-screenshot-test.png";
+        const artifactPath = "/tmp/paperplane/dev/browser-artifacts/browser-screenshot-test.png";
 
         yield* manager.copyArtifactToClipboard(artifactPath);
 
@@ -4427,15 +4429,15 @@ describe("PreviewManager", () => {
         });
         expect(writeClipboard).toHaveBeenCalledOnce();
         const exit = yield* Effect.exit(
-          manager.copyArtifactToClipboard("/tmp/rove/dev/settings.json"),
+          manager.copyArtifactToClipboard("/tmp/paperplane/dev/settings.json"),
         );
         expect(Exit.isFailure(exit)).toBe(true);
         if (Exit.isSuccess(exit)) return;
         const error = Option.getOrThrow(Cause.findErrorOption(exit.cause));
         expect(error).toMatchObject({
           _tag: "PreviewArtifactPathOutsideDirectoryError",
-          artifactPath: "/tmp/rove/dev/settings.json",
-          artifactDirectory: "/tmp/rove/dev/browser-artifacts",
+          artifactPath: "/tmp/paperplane/dev/settings.json",
+          artifactDirectory: "/tmp/paperplane/dev/browser-artifacts",
         });
         expect("cause" in error).toBe(false);
 

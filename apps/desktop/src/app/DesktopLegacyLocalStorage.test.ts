@@ -92,7 +92,7 @@ it.effect.each([false, true])(
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const root = yield* fs.makeTempDirectoryScoped({ prefix: "rove-local-storage-" });
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-local-storage-" });
       const name = development ? "rove-code-dev" : "rove-code";
       const source = yield* writeProfile(root, name, development);
       // Valid competing databases must never supply this mode's drafts.
@@ -153,7 +153,7 @@ it.effect("retries an unreadable legacy database without marking it imported", (
   Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
-    const root = yield* fs.makeTempDirectoryScoped({ prefix: "rove-local-storage-" });
+    const root = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-local-storage-" });
     const source = yield* writeProfile(root, "rove-code", false);
     yield* fs.writeFileString(path.join(source.directory, "CURRENT"), "corrupt");
     const destination = path.join(root, "paperplane");

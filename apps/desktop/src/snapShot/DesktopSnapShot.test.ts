@@ -936,7 +936,7 @@ it.effect.each(["win32", "darwin", "linux"] as const)(
       shouldRenderRichAnimation: true,
     });
     const bounds = { x: 10, y: 20, width: 800, height: 600 };
-    const rove = {
+    const paperplane = {
       id: 42,
       title: "Paperplane",
       appIdentifier: "io.github.getpaperplane.paperplane.desktop",
@@ -946,7 +946,7 @@ it.effect.each(["win32", "darwin", "linux"] as const)(
     };
     focusedWindowMock.mockReturnValue({
       getBounds: () => bounds,
-      getTitle: () => rove.title,
+      getTitle: () => paperplane.title,
       isDestroyed: () => false,
       isMinimized: () => false,
       isVisible: () => true,
@@ -955,26 +955,26 @@ it.effect.each(["win32", "darwin", "linux"] as const)(
     });
     const images: Uint8Array[] = [];
     activeWindowMock.mockReset().mockResolvedValue({
-      ...rove,
+      ...paperplane,
       platform: platform === "darwin" ? "macos" : "windows",
     });
     regionCaptureMock.mockReset().mockResolvedValue({
       width: bounds.width,
       height: bounds.height,
-      png: rove.png,
+      png: paperplane.png,
     });
     macCaptureMock.mockReset().mockImplementation(async () => {
-      images.push(rove.png);
-      return { source: { name: rove.title }, png: rove.png };
+      images.push(paperplane.png);
+      return { source: { name: paperplane.title }, png: paperplane.png };
     });
     const activate = vi.fn<(title: string) => Promise<void>>().mockResolvedValue(undefined);
     linuxCaptureMock.mockResolvedValueOnce({
-      png: rove.png,
+      png: paperplane.png,
       window: {
-        title: rove.title,
-        appName: rove.owner.name,
-        appIdentifier: rove.appIdentifier,
-        processId: rove.owner.processId,
+        title: paperplane.title,
+        appName: paperplane.owner.name,
+        appIdentifier: paperplane.appIdentifier,
+        processId: paperplane.owner.processId,
         bounds,
       },
       feedback: {
@@ -1015,14 +1015,17 @@ it.effect.each(["win32", "darwin", "linux"] as const)(
         yield* Effect.promise(trigger);
 
         const saved = yield* decodePendingMetadata(metadata);
-        assert.equal(saved.source.windowTitle, rove.title);
-        assert.equal(saved.source.appName, rove.owner.name);
-        assert.equal(saved.source.accessibleText, `Window from process ${rove.owner.processId}`);
-        assert.deepEqual(images, [rove.png]);
+        assert.equal(saved.source.windowTitle, paperplane.title);
+        assert.equal(saved.source.appName, paperplane.owner.name);
+        assert.equal(
+          saved.source.accessibleText,
+          `Window from process ${paperplane.owner.processId}`,
+        );
+        assert.deepEqual(images, [paperplane.png]);
         assert.equal(prepareCaptureRevealMock.mock.calls.length, platform === "win32" ? 1 : 0);
         if (platform === "linux") {
-          assert.equal(saved.source.appIdentifier, rove.appIdentifier);
-          assert.deepEqual(activate.mock.calls, [[rove.title]]);
+          assert.equal(saved.source.appIdentifier, paperplane.appIdentifier);
+          assert.deepEqual(activate.mock.calls, [[paperplane.title]]);
         }
       }),
     ).pipe(
@@ -2625,8 +2628,8 @@ it.each([
 );
 
 it.each([
-  { names: ["⠙ rove"], expected: "Verified text" },
-  { names: ["⠋ rove", "⠙ rove"], expected: undefined },
+  { names: ["⠙ paperplane"], expected: "Verified text" },
+  { names: ["⠋ paperplane", "⠙ paperplane"], expected: undefined },
 ])("reads a changing Wayland title only when unambiguous: $names", async ({ names, expected }) => {
   vi.stubEnv("XDG_SESSION_TYPE", "wayland");
   const tree = vi.fn(async () => ({ value: "Verified text", children: [] }));
@@ -2642,12 +2645,12 @@ it.each([
     assert.strictEqual(
       await readAccessibleWindowText(
         {
-          title: "⠋ rove",
+          title: "⠋ paperplane",
           bounds: { x: 479, y: 342, width: 700, height: 520 },
           owner: { processId: 123 },
         },
         "linux",
-        "⠋ rove",
+        "⠋ paperplane",
       ),
       expected,
     );

@@ -59,7 +59,7 @@ const layerDesktopClerk = (
   },
 ) => {
   const environment = DesktopEnvironment.DesktopEnvironment.of({
-    stateDir: "/tmp/rove-state",
+    stateDir: "/tmp/paperplane-state",
     isDevelopment,
     appDataDirectory: "/tmp/app-data",
     platform,
@@ -173,12 +173,12 @@ describe("DesktopClerk", () => {
       const error = yield* Effect.scoped(Layer.build(layerDesktopClerk())).pipe(Effect.flip);
 
       assert.instanceOf(error, DesktopClerk.DesktopClerkBridgeInitializationError);
-      assert.equal(error.stateDir, "/tmp/rove-state");
+      assert.equal(error.stateDir, "/tmp/paperplane-state");
       assert.equal(error.isDevelopment, true);
       assert.strictEqual(error.cause, cause);
       assert.equal(
         error.message,
-        'Failed to initialize the desktop Clerk bridge for state directory "/tmp/rove-state" (development: true).',
+        'Failed to initialize the desktop Clerk bridge for state directory "/tmp/paperplane-state" (development: true).',
       );
     });
   });
@@ -199,12 +199,12 @@ describe("DesktopClerk", () => {
       if (exit._tag === "Failure") {
         const error = Cause.squash(exit.cause);
         assert.instanceOf(error, DesktopClerk.DesktopClerkBridgeCleanupError);
-        assert.equal(error.stateDir, "/tmp/rove-state");
+        assert.equal(error.stateDir, "/tmp/paperplane-state");
         assert.equal(error.isDevelopment, false);
         assert.strictEqual(error.cause, cause);
         assert.equal(
           error.message,
-          'Failed to clean up the desktop Clerk bridge for state directory "/tmp/rove-state" (development: false).',
+          'Failed to clean up the desktop Clerk bridge for state directory "/tmp/paperplane-state" (development: false).',
         );
       }
     });
@@ -297,7 +297,7 @@ it.effect(
       assert.equal(loadURL.mock.calls.length, 0);
       assert.equal(event.preventDefault.mock.calls.length, 0);
       listeners.get("second-instance")!({}, [
-        "rove",
+        "paperplane",
         "paperplane-dev://app/settings/providers?instanceId=work&code=never-forward",
       ]);
       yield* Effect.promise(() => revealed.promise);
@@ -390,7 +390,7 @@ it.effect.each(["startup", "open-url"] as const)(
         Effect.provide(layerDesktopClerk(true, [], "darwin", undefined, shell)),
         Effect.provideService(
           HostProcess.Arguments,
-          entry === "startup" ? ["rove", link] : ["rove"],
+          entry === "startup" ? ["paperplane", link] : ["paperplane"],
         ),
         Effect.provideService(ElectronApp.ElectronApp, electronApp),
         Effect.provideService(
@@ -441,7 +441,7 @@ it.effect("hands web and app links to the renderer and leaves other links alone"
       ]);
     }).pipe(
       Effect.provide(layerDesktopClerk(true, [], "darwin")),
-      Effect.provideService(HostProcess.Arguments, ["rove"]),
+      Effect.provideService(HostProcess.Arguments, ["paperplane"]),
       Effect.provideService(ElectronApp.ElectronApp, electronApp),
       Effect.provideService(
         ElectronWindow.ElectronWindow,

@@ -21,7 +21,9 @@ it.layer(NodeServices.layer)("DesktopPreReadyFileSystem", (it) => {
     Effect.gen(function* () {
       const fileSystem = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const root = yield* fileSystem.makeTempDirectoryScoped({ prefix: "rove-pre-ready-fs-" });
+      const root = yield* fileSystem.makeTempDirectoryScoped({
+        prefix: "paperplane-pre-ready-fs-",
+      });
       yield* fileSystem.makeDirectory(path.join(root, "rove-v2"));
       const keys = '{"os_crypt":{"encrypted_key":"RFBBUEl3cmFwcGVkLWtleQ=="}}';
       yield* fileSystem.writeFileString(path.join(root, "rove-v2", "Local State"), keys);
@@ -38,7 +40,9 @@ it.layer(NodeServices.layer)("DesktopPreReadyFileSystem", (it) => {
     () =>
       Effect.gen(function* () {
         const fileSystem = yield* FileSystem.FileSystem;
-        const root = yield* fileSystem.makeTempDirectoryScoped({ prefix: "rove-pre-ready-fs-" });
+        const root = yield* fileSystem.makeTempDirectoryScoped({
+          prefix: "paperplane-pre-ready-fs-",
+        });
         yield* fileSystem.chmod(root, 0o000);
         yield* Effect.addFinalizer(() => fileSystem.chmod(root, 0o700).pipe(Effect.orDie));
 

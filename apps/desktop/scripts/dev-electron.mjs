@@ -95,7 +95,7 @@ function cleanupStaleDevApps() {
     return;
   }
 
-  NodeChildProcess.spawnSync("pkill", ["-f", "--", `--rove-dev-root=${desktopDir}`], {
+  NodeChildProcess.spawnSync("pkill", ["-f", "--", `--paperplane-dev-root=${desktopDir}`], {
     stdio: "ignore",
   });
 }
@@ -110,7 +110,7 @@ function startApp() {
     : [];
   const launchArgs = devProtocolClient
     ? electronArgs
-    : [...electronArgs, `--rove-dev-root=${desktopDir}`, "dist-electron/main.cjs"];
+    : [...electronArgs, `--paperplane-dev-root=${desktopDir}`, "dist-electron/main.cjs"];
   const electronCommand = resolveElectronLaunchCommand(launchArgs);
   const app = NodeChildProcess.spawn(electronCommand.electronPath, electronCommand.args, {
     cwd: desktopDir,

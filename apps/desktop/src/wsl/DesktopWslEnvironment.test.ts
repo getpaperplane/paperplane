@@ -199,7 +199,7 @@ describe("WSL runtime cache", () => {
     expect(script).not.toContain('rm -rf "$runtime_lock"');
     expect(script).toContain('mv -T "$runtime_root" "$runtime_stale"');
     expect(script).toContain('mktemp -d "$runtime_parent/.1.2.3-x64.tmp.XXXXXX"');
-    // The release archive wraps everything in one `rove-<version>-linux-x64/`
+    // The release archive wraps everything in one `paperplane-<version>-linux-x64/`
     // directory; stripping it puts the executable at `$runtime_root/paperplane`.
     expect(script).toContain(
       "tar -xzf '/mnt/c/Program Files/Paperplane/wsl-runtime.tar.gz' -C \"$runtime_tmp\" --strip-components=1",
@@ -435,12 +435,12 @@ describe.skipIf(posixShellRunner === null)("WSL runtime install script (executed
         "work=$(mktemp -d)",
         // Mirrors the release archive: one top-level versioned directory that
         // holds the executable and its native addons.
-        'stage="$work/stage/rove-0.0.0-linux-x64"',
+        'stage="$work/stage/paperplane-0.0.0-linux-x64"',
         'mkdir -p "$stage/node_modules/node-pty/build/Release" "$work/home"',
         `printf '%s' ${sh(SERVER_ENTRY_SOURCE)} > "$stage/paperplane"`,
         'chmod +x "$stage/paperplane"',
         `printf '%s' 'pty-native-payload' > "$stage/node_modules/node-pty/build/Release/pty.node"`,
-        `tar -czf "$work/wsl-runtime.tar.gz" -C "$work/stage" rove-0.0.0-linux-x64`,
+        `tar -czf "$work/wsl-runtime.tar.gz" -C "$work/stage" paperplane-0.0.0-linux-x64`,
         `printf 'work:%s\\n' "$work"`,
         `printf 'archiveSha:%s\\n' "$(sha256sum "$work/wsl-runtime.tar.gz" | cut -d ' ' -f 1)"`,
       ].join("\n"),

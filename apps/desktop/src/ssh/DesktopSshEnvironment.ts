@@ -67,7 +67,7 @@ export class DesktopSshEnvironment extends Context.Service<
 >()("@getpaperplane/desktop/ssh/DesktopSshEnvironment") {}
 
 export interface DesktopSshEnvironmentLayerOptions {
-  readonly resolveCliRunner?: Effect.Effect<SshTunnel.RemoteRoveRunnerOptions>;
+  readonly resolveCliRunner?: Effect.Effect<SshTunnel.RemotePaperplaneRunnerOptions>;
 }
 
 function discoverDesktopSshHostsEffect(input?: { readonly homeDir?: string }) {

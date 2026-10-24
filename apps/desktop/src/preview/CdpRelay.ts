@@ -49,11 +49,11 @@ const isCommand = (value: unknown): value is CdpCommand =>
   typeof (value as { id?: unknown }).id === "number" &&
   typeof (value as { method?: unknown }).method === "string";
 
-const BROWSER_CONTEXT_ID = "rove-preview";
+const BROWSER_CONTEXT_ID = "paperplane-preview";
 /** Marks an event to send right after a command's reply. */
 const ANNOUNCE = Symbol("announce");
 /** The page's root session id, as Playwright sees it. */
-const PAGE_SESSION_ID = "rove-preview-page";
+const PAGE_SESSION_ID = "paperplane-preview-page";
 
 /** Browser-level commands that only need acknowledging for a page the desktop owns. */
 const ACKNOWLEDGED = new Set([
@@ -77,7 +77,7 @@ export function createCdpRelayConnection(
   const sessions = new Map<string, "browser" | "page">([[PAGE_SESSION_ID, "page"]]);
   let sessionSequence = 0;
   const newSession = (kind: "browser" | "page") => {
-    const sessionId = `rove-preview-${kind}-${++sessionSequence}`;
+    const sessionId = `paperplane-preview-${kind}-${++sessionSequence}`;
     sessions.set(sessionId, kind);
     return sessionId;
   };

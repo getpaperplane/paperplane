@@ -161,9 +161,9 @@ describe("DesktopLinuxUrlHandler", () => {
   it("renders a scheme-handler desktop entry with freedesktop Exec quoting", () => {
     const entry = DesktopLinuxUrlHandler.renderUrlHandlerDesktopEntry({
       displayName: "Paperplane (Nightly)",
-      execTarget: '/home/al ice/Apps/Rove "100%" $HOME\\x.AppImage',
+      execTarget: '/home/al ice/Apps/Paperplane "100%" $HOME\\x.AppImage',
       scheme: "paperplane",
-      iconPath: "/home/al ice/icons/Rove\\x.png",
+      iconPath: "/home/al ice/icons/Paperplane\\x.png",
     });
 
     assert.include(entry, "[Desktop Entry]");
@@ -173,12 +173,12 @@ describe("DesktopLinuxUrlHandler", () => {
     // backslashes plus the sign.
     assert.include(
       entry,
-      'Exec="/home/al ice/Apps/Rove \\\\"100%%\\\\" \\\\$HOME\\\\\\\\x.AppImage" %U',
+      'Exec="/home/al ice/Apps/Paperplane \\\\"100%%\\\\" \\\\$HOME\\\\\\\\x.AppImage" %U',
     );
     assert.include(entry, "NoDisplay=true");
     assert.notInclude(entry, "StartupWMClass=");
     assert.include(entry, "MimeType=x-scheme-handler/paperplane;");
-    assert.include(entry, "Icon=/home/al ice/icons/Rove\\\\x.png");
+    assert.include(entry, "Icon=/home/al ice/icons/Paperplane\\\\x.png");
   });
 
   it("carries structured context on registration errors", () => {
@@ -297,7 +297,7 @@ describe("DesktopLinuxUrlHandler", () => {
       "/home/alice/.local/share/icons/io.github.getpaperplane.paperplane.desktop.png";
     return Effect.gen(function* () {
       yield* runRegister(recorded, {
-        iconSource: "/tmp/.mount_Rove/resources/icon.png",
+        iconSource: "/tmp/.mount_Paperplane/resources/icon.png",
         existingEntry: DesktopLinuxUrlHandler.renderUrlHandlerDesktopEntry({
           displayName: "Paperplane (Alpha)",
           execTarget: "/home/alice/Applications/Rove-Code.AppImage",
@@ -307,7 +307,7 @@ describe("DesktopLinuxUrlHandler", () => {
       });
       assert.deepEqual(recorded.files, []);
       assert.deepEqual(recorded.copies, [
-        { source: "/tmp/.mount_Rove/resources/icon.png", destination: iconPath },
+        { source: "/tmp/.mount_Paperplane/resources/icon.png", destination: iconPath },
       ]);
       assert.equal(recorded.commands.at(-1)?.command, "xdg-mime");
     });
@@ -317,7 +317,7 @@ describe("DesktopLinuxUrlHandler", () => {
     const recorded = emptyRecording();
     return Effect.gen(function* () {
       yield* runRegister(recorded, {
-        iconSource: "/tmp/.mount_Rove/resources/icon.png",
+        iconSource: "/tmp/.mount_Paperplane/resources/icon.png",
         iconCopyError: PlatformError.systemError({
           _tag: "PermissionDenied",
           module: "FileSystem",

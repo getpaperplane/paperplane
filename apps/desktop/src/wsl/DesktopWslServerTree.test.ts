@@ -54,7 +54,7 @@ const withTempDir = <A, E, R>(
   Effect.gen(function* () {
     const fileSystem = yield* FileSystem.FileSystem;
     const tempDir = yield* fileSystem.makeTempDirectoryScoped({
-      prefix: "rove-wsl-server-tree-test-",
+      prefix: "paperplane-wsl-server-tree-test-",
     });
     return yield* run(tempDir);
   }).pipe(Effect.scoped);
@@ -244,7 +244,7 @@ describe("DesktopWslServerTree", () => {
         yield* fileSystem.writeFileString(path.join(serverRoot, "apps/server/dist/bin.mjs"), "x");
 
         // PAPERPLANE_HOME is set to tempDir, so the desktop state dir resolves to
-        // <tempDir>/userdata (no .rove segment).
+        // <tempDir>/userdata (no .paperplane segment).
         const treeRoot = path.join(tempDir, "userdata", "wsl-server-tree");
         yield* fileSystem.makeDirectory(path.join(treeRoot, "1.0.0"), { recursive: true });
         yield* fileSystem.makeDirectory(path.join(treeRoot, "1.2.3.partial"), { recursive: true });

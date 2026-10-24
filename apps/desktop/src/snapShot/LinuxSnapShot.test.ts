@@ -155,7 +155,7 @@ let directory: string;
 beforeEach(async () => {
   bus = new FakeBus();
   connect.mockImplementation(() => bus as unknown as MessageBus);
-  directory = await NodeFSP.mkdtemp(NodePath.join(NodeOS.tmpdir(), "rove-portal-test-"));
+  directory = await NodeFSP.mkdtemp(NodePath.join(NodeOS.tmpdir(), "paperplane-portal-test-"));
   bus.uri = NodeURL.pathToFileURL(NodePath.join(directory, "image.png")).href;
   await NodeFSP.writeFile(NodePath.join(directory, "image.png"), png);
   imageSize.width = 800;

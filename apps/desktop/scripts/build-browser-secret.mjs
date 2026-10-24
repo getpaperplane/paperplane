@@ -19,7 +19,7 @@ if (hostPlatform === "linux") {
   const root = NodeURL.fileURLToPath(new URL("../../../native/browser-secret/", import.meta.url));
   const source = NodePath.resolve(root, "main.c");
   const output =
-    values.output ?? NodePath.resolve(root, "build", values.arch, "rove-browser-secret");
+    values.output ?? NodePath.resolve(root, "build", values.arch, "paperplane-browser-secret");
   const matchesArchitecture = (file) => {
     const header = NodeFS.readFileSync(file).subarray(0, 20);
     return header.toString("hex", 0, 6) === "7f454c460201" && header.readUInt16LE(18) === machine;

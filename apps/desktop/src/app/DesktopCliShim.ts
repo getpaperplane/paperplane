@@ -53,7 +53,7 @@ export const renderCliShim = (input: {
     const utf8 = [target.executable, target.entry, input.shimPath, input.paperplaneHome].some(
       (value) => [...value].some((character) => character.codePointAt(0)! > 0x7f),
     );
-    const restore = utf8 ? ["chcp %rove_codepage% >nul"] : [];
+    const restore = utf8 ? ["chcp %paperplane_codepage% >nul"] : [];
     return [
       "@echo off",
       `rem ${MARKER}`,
@@ -64,7 +64,7 @@ export const renderCliShim = (input: {
       // switch is left out for the common all-ASCII install.
       ...(utf8
         ? [
-            `for /f "tokens=2 delims=:." %%c in ('chcp') do set "rove_codepage=%%c"`,
+            `for /f "tokens=2 delims=:." %%c in ('chcp') do set "paperplane_codepage=%%c"`,
             "chcp 65001 >nul",
           ]
         : []),
@@ -78,9 +78,9 @@ export const renderCliShim = (input: {
       "exit /b 127",
       ":run",
       `${cmdWord(target.executable)} ${cmdWord(target.entry)} %*`,
-      'set "rove_exit=%ERRORLEVEL%"',
+      'set "paperplane_exit=%ERRORLEVEL%"',
       ...restore,
-      "exit /b %rove_exit%",
+      "exit /b %paperplane_exit%",
       "",
     ].join("\r\n");
   }

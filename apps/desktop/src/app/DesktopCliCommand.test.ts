@@ -145,14 +145,16 @@ it.layer(NodeServices.layer)("DesktopCliCommand", (it) => {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const home = yield* fs.makeTempDirectoryScoped();
-      const before = yield* commandIn({ home, baseDir: path.join(home, "old-rove") });
+      const before = yield* commandIn({ home, baseDir: path.join(home, "old-paperplane") });
       const link = (yield* before.install).installedPath;
 
-      const after = yield* commandIn({ home, baseDir: path.join(home, "new-rove") });
+      const after = yield* commandIn({ home, baseDir: path.join(home, "new-paperplane") });
       expect((yield* after.state).installedPath).toBe(link);
       // Installing again points the link at this home's launcher.
       expect((yield* after.install).installedPath).toBe(link);
-      expect(yield* fs.readLink(link!)).toBe(path.join(home, "new-rove", "bin", "paperplane"));
+      expect(yield* fs.readLink(link!)).toBe(
+        path.join(home, "new-paperplane", "bin", "paperplane"),
+      );
       yield* after.uninstall;
       expect(yield* fs.exists(path.join(home, ".local", "bin", "paperplane"))).toBe(false);
       expect(yield* fs.exists(path.join(home, "bin", "paperplane"))).toBe(false);
@@ -165,7 +167,7 @@ it.layer(NodeServices.layer)("DesktopCliCommand", (it) => {
       const path = yield* Path.Path;
       const home = yield* fs.makeTempDirectoryScoped();
       // A big executable that happens to contain the marker text is still not ours.
-      const binary = path.join(home, "native-rove");
+      const binary = path.join(home, "native-paperplane");
       yield* fs.writeFileString(binary, `${"\0".repeat(64 * 1024)}${DesktopCliShim.MARKER}`);
       yield* fs.makeDirectory(path.join(home, ".local", "bin"), { recursive: true });
       yield* fs.symlink(binary, path.join(home, ".local", "bin", "paperplane"));

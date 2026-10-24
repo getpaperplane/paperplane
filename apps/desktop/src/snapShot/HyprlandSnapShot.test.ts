@@ -35,7 +35,7 @@ const window = {
   clientBounds: { x: -1920, y: 20, width: 800, height: 600 },
 };
 beforeEach(async () => {
-  directory = await NodeFSP.mkdtemp(NodePath.join(NodeOS.tmpdir(), "rove-hypr-test-"));
+  directory = await NodeFSP.mkdtemp(NodePath.join(NodeOS.tmpdir(), "paperplane-hypr-test-"));
   paths = {
     bundle: NodePath.join(directory, "bundle"),
     dataHome: NodePath.join(directory, "user data"),

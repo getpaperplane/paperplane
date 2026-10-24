@@ -16,7 +16,7 @@ afterEach(() => {
 });
 
 const tempRoot = () => {
-  const root = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "rove-cli-shim-"));
+  const root = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "paperplane-cli-shim-"));
   directories.push(root);
   return root;
 };
@@ -128,10 +128,10 @@ describe("renderCliShim", () => {
     const shim = writeShim(root, {
       kind: "direct",
       executable,
-      entry: "/opt/Rove's/app.asar/bin.mjs",
+      entry: "/opt/Paperplane's/app.asar/bin.mjs",
     });
     expect(run(shim, ["browser", "setup"]).stdout.split("\n").slice(1)).toEqual([
-      "/opt/Rove's/app.asar/bin.mjs",
+      "/opt/Paperplane's/app.asar/bin.mjs",
       "browser",
       "setup",
       "",
@@ -185,6 +185,6 @@ describe("renderCliShim", () => {
     });
     // A Ctrl-C that ends the batch would leave the console switched.
     expect(ascii).not.toContain("chcp");
-    expect(ascii.split("\r\n")).toContain("exit /b %rove_exit%");
+    expect(ascii.split("\r\n")).toContain("exit /b %paperplane_exit%");
   });
 });

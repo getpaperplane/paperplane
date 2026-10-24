@@ -68,7 +68,7 @@ const withSettings = <A, E, R>(
   Effect.gen(function* () {
     const fileSystem = yield* FileSystem.FileSystem;
     const baseDir = yield* fileSystem.makeTempDirectoryScoped({
-      prefix: "rove-desktop-settings-test-",
+      prefix: "paperplane-desktop-settings-test-",
     });
     return yield* effect.pipe(
       Effect.provide(
@@ -364,7 +364,7 @@ describe("DesktopSettings", () => {
         const fileSystem = yield* FileSystem.FileSystem;
         const settings = yield* DesktopAppSettings.DesktopAppSettings;
         const dotfiles = yield* fileSystem.makeTempDirectoryScoped({
-          prefix: "rove-desktop-settings-dotfiles-",
+          prefix: "paperplane-desktop-settings-dotfiles-",
         });
         const linkedSettingsPath = `${dotfiles}/desktop-settings.json`;
         yield* fileSystem.writeFileString(linkedSettingsPath, "{}\n");

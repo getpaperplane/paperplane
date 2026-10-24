@@ -11,6 +11,8 @@ import * as SynchronizedRef from "effect/SynchronizedRef";
 
 import * as ElectronDialog from "../electron/ElectronDialog.ts";
 
+// Persisted Chromium directory names survive the one-time profile copy. Keep
+// this storage identity so Windows preview logins remain readable after upgrade.
 const PREVIEW_PARTITION_PREFIX = "persist:rove-preview-";
 /**
  * Incognito partitions deliberately omit the `persist:` prefix, which is what
@@ -18,7 +20,7 @@ const PREVIEW_PARTITION_PREFIX = "persist:rove-preview-";
  * still carry the product prefix so `isPartition` can admit them — the
  * `will-attach-webview` gate rejects anything it does not recognise.
  */
-const PREVIEW_EPHEMERAL_PARTITION_PREFIX = "rove-preview-ephemeral-";
+const PREVIEW_EPHEMERAL_PARTITION_PREFIX = "paperplane-preview-ephemeral-";
 const PROFILE_PARTITION_MARKER = "profile-";
 
 export type BrowserSessionPartitionNamespace = "profile";

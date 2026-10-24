@@ -114,7 +114,7 @@ function takeSnapshot(animate) {
   });
 }
 
-export default class RoveSnapShotExtension extends Extension {
+export default class PaperplaneSnapShotExtension extends Extension {
   enable() {
     this._feedback = new CaptureFeedback();
     this._sessionChanged = Main.sessionMode.connect("updated", () => this._feedback.dispose());
