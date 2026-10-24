@@ -229,6 +229,8 @@ describe("default home migration", () => {
     seed();
     const skipped = [
       "worktrees",
+      "scratch",
+      "projects",
       "runtime",
       "caches",
       "dev",
@@ -240,7 +242,7 @@ describe("default home migration", () => {
       "userdata/agent-hook",
       "userdata/opencode-servers",
     ];
-    const copied = ["scratch", "projects", "future-state"];
+    const copied = ["future-state"];
     for (const entry of [...skipped, ...copied]) {
       NodeFS.mkdirSync(NodePath.join(source, entry), { recursive: true });
       NodeFS.writeFileSync(NodePath.join(source, entry, "keep"), entry);

@@ -13,10 +13,18 @@ export const PAPERPLANE_HOME_NAME = ".paperplane";
 export const HOME_MIGRATION_REPORT = "home-migration.json";
 
 // Copy userdata: conversations, attachments, credentials, preferences, browser
-// profiles, logs, and desktop state. Copy scratch and projects: they are user work.
-// Preserve unknown entries too, rather than silently losing user-owned files.
+// profiles, logs, and desktop state. Preserve unknown entries too, rather than
+// silently losing user-owned files.
 const skippedEntries = new Map([
   ["worktrees", "Git worktrees and stored absolute paths must stay at their original locations."],
+  [
+    "scratch",
+    "Threads store absolute scratch workspace paths, so existing ones keep working in place; a copy would be an unused duplicate.",
+  ],
+  [
+    "projects",
+    "Named projects store absolute workspace paths, so existing ones keep working in place; a copy would be an unused duplicate.",
+  ],
   [
     "runtime",
     "Downloaded runtimes and service processes must be rebuilt by installed-state migration (3c).",
