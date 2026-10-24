@@ -108,7 +108,7 @@ it("publishes unique tool names with reference-free object-root inputs", () => {
     for (const tool of Object.values(toolkit.tools)) {
       expect(names.has(tool.name)).toBe(false);
       names.add(tool.name);
-      expect(tool.name.startsWith("paperplane_"), tool.name).toBe(false);
+      expect(tool.name.startsWith("rove_"), tool.name).toBe(false);
       const schema = Tool.getJsonSchema(tool);
       expect(schema).toMatchObject({ type: "object" });
       // The published tool catalog must also work with providers without $ref support.
