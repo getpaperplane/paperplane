@@ -48,7 +48,7 @@ const withEnvironmentThemes = <A, E>(
   Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
-    const baseDir = yield* fs.makeTempDirectoryScoped({ prefix: "rove-environment-theme-" });
+    const baseDir = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-environment-theme-" });
     const themesDir = path.join(baseDir, "userdata", "themes");
     yield* fs.makeDirectory(themesDir, { recursive: true });
     for (const [filename, contents] of Object.entries(seeds)) {
@@ -234,7 +234,7 @@ describe("environment theme watching", () => {
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const baseDir = yield* fs.makeTempDirectoryScoped({ prefix: "rove-theme-watch-" });
+      const baseDir = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-theme-watch-" });
       const themesDir = path.join(baseDir, "userdata", "themes");
       yield* fs.makeDirectory(themesDir, { recursive: true });
 

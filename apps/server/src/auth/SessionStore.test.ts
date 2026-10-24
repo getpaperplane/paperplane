@@ -35,7 +35,9 @@ const layerServerConfig = (overrides?: Partial<ServerConfig.ServerConfig["Servic
       } satisfies ServerConfig.ServerConfig["Service"];
     }),
   ).pipe(
-    Layer.provide(ServerConfig.layerTest(process.cwd(), { prefix: "rove-auth-session-test-" })),
+    Layer.provide(
+      ServerConfig.layerTest(process.cwd(), { prefix: "paperplane-auth-session-test-" }),
+    ),
   );
 
 const layerServerEnvironment = (environmentId: EnvironmentId) =>
@@ -180,9 +182,15 @@ it.layer(NodeServices.layer)("SessionStore.layer", (it) => {
           ),
         );
 
-      const original = yield* cookieName("/srv/rove-one", EnvironmentId.make("environment-one"));
-      const moved = yield* cookieName("/srv/rove-moved", EnvironmentId.make("environment-one"));
-      const other = yield* cookieName("/srv/rove-one", EnvironmentId.make("environment-two"));
+      const original = yield* cookieName(
+        "/srv/paperplane-one",
+        EnvironmentId.make("environment-one"),
+      );
+      const moved = yield* cookieName(
+        "/srv/paperplane-moved",
+        EnvironmentId.make("environment-one"),
+      );
+      const other = yield* cookieName("/srv/paperplane-one", EnvironmentId.make("environment-two"));
 
       expect(moved).toBe(original);
       expect(other).not.toBe(original);
@@ -193,8 +201,8 @@ it.layer(NodeServices.layer)("SessionStore.layer", (it) => {
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const token = "reusable-dev-auth-token-that-is-long-enough";
-      const baseA = yield* fs.makeTempDirectoryScoped({ prefix: "rove-dev-auth-a-" });
-      const baseB = yield* fs.makeTempDirectoryScoped({ prefix: "rove-dev-auth-b-" });
+      const baseA = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-dev-auth-a-" });
+      const baseB = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-dev-auth-b-" });
       const layerA = yield* makeDiskSessionStoreLayer(baseA, token);
       const fromA = yield* Effect.gen(function* () {
         const sessions = yield* SessionStore.SessionStore;
@@ -238,7 +246,9 @@ it.layer(NodeServices.layer)("SessionStore.layer", (it) => {
   it.effect("invalidates old dev credentials and tickets after rotation or removal", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
-      const baseDir = yield* fs.makeTempDirectoryScoped({ prefix: "rove-dev-auth-rotation-" });
+      const baseDir = yield* fs.makeTempDirectoryScoped({
+        prefix: "paperplane-dev-auth-rotation-",
+      });
       const oldToken = "old-reusable-dev-auth-token-that-is-long-enough";
       const newToken = "new-reusable-dev-auth-token-that-is-long-enough";
       const layerInitial = yield* makeDiskSessionStoreLayer(baseDir, oldToken);

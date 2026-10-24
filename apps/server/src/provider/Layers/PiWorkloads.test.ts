@@ -38,8 +38,8 @@ describe.skipIf(!supported)("Pi command isolation on Linux", () => {
   const servers: NodeNet.Server[] = [];
 
   beforeEach(async () => {
-    pool = `app-rove-workloadtest${NodeCrypto.randomUUID().replaceAll("-", "")}.slice`;
-    directory = await NodeFSP.mkdtemp(NodePath.join(NodeOS.tmpdir(), "rove-workload-test-"));
+    pool = `app-paperplane-workloadtest${NodeCrypto.randomUUID().replaceAll("-", "")}.slice`;
+    directory = await NodeFSP.mkdtemp(NodePath.join(NodeOS.tmpdir(), "paperplane-workload-test-"));
   });
   afterEach(async () => {
     await Promise.all(managers.splice(0).map((manager) => manager.dispose()));

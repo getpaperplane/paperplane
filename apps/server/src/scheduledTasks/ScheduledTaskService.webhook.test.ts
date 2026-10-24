@@ -147,11 +147,11 @@ it("builds the relay hook URL from the managed tunnel's key, never the environme
   assert.equal(
     ScheduledTaskService.relayHookBaseUrl({
       relayUrl,
-      tunnelName: "roverelay-managedendpoint-dev-julius-0123456789abcdef",
+      tunnelName: "paperplanerelay-managedendpoint-dev-julius-0123456789abcdef",
     }),
     "https://relay.example.com/v1/hooks/0123456789abcdef",
   );
-  for (const tunnelName of [undefined, "roverelay-managedendpoint", "x-0123456789ABCDEF"]) {
+  for (const tunnelName of [undefined, "paperplanerelay-managedendpoint", "x-0123456789ABCDEF"]) {
     assert.isNull(ScheduledTaskService.relayHookBaseUrl({ relayUrl, tunnelName }));
   }
 });
@@ -836,13 +836,13 @@ it.effect("a signature without any secret is refused", () =>
 const signatureFor = (secret: string) =>
   `sha256=${NodeCrypto.createHmac("sha256", secret).update(pullRequestBody).digest("hex")}`;
 
-/** Count recorded by `rove_webhook_deliveries_total` for one outcome and source. */
+/** Count recorded by `paperplane_webhook_deliveries_total` for one outcome and source. */
 const deliveriesCounted = (outcome: string, source: "relay" | "direct") =>
   Metric.snapshot.pipe(
     Effect.map((snapshots) => {
       const found = snapshots.find(
         (snapshot) =>
-          snapshot.id === "rove_webhook_deliveries_total" &&
+          snapshot.id === "paperplane_webhook_deliveries_total" &&
           snapshot.attributes?.outcome === outcome &&
           snapshot.attributes?.source === source,
       );

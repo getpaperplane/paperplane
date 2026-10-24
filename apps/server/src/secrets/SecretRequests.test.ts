@@ -285,7 +285,7 @@ it.effect("traces and counts a saved answer without ever recording the value", (
       Effect.map((snapshots) => {
         const found = snapshots.find(
           (snapshot) =>
-            snapshot.id === "rove_secret_refs_consumed_total" &&
+            snapshot.id === "paperplane_secret_refs_consumed_total" &&
             snapshot.attributes?.result === "used",
         );
         return found?.type === "Counter" ? Number(found.state.count) : 0;
@@ -387,7 +387,7 @@ it.effect("drops values nobody used once they expire, and keeps the rest", () =>
     Effect.provide(
       ServerSecretStore.layer.pipe(
         Layer.provideMerge(
-          ServerConfig.layerTest(process.cwd(), { prefix: "rove-secret-requests-" }),
+          ServerConfig.layerTest(process.cwd(), { prefix: "paperplane-secret-requests-" }),
         ),
         Layer.provideMerge(NodeServices.layer),
       ),

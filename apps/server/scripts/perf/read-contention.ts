@@ -124,7 +124,7 @@ const percentile = (values: number[], quantile: number) => {
 };
 
 async function run(subscribers: number, round: number) {
-  const directory = await mkdtemp(join(tmpdir(), "rove-read-contention-"));
+  const directory = await mkdtemp(join(tmpdir(), "paperplane-read-contention-"));
   const persistence = SqlitePersistence.layerFromPath(join(directory, "state.sqlite")).pipe(
     Layer.provide(NodeServices.layer),
   );

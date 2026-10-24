@@ -43,7 +43,7 @@ const layerConfig = (overrides: Partial<ServerConfig.ServerConfig["Service"]>) =
     ServerConfig.ServerConfig,
     Effect.gen(function* () {
       const path = yield* Path.Path;
-      const baseDir = path.join(NodeOS.tmpdir(), "rove-server-logger-test");
+      const baseDir = path.join(NodeOS.tmpdir(), "paperplane-server-logger-test");
       const derivedPaths = yield* ServerConfig.deriveServerPaths(baseDir, undefined);
       return ServerConfig.make({
         logLevel: "Info",
@@ -146,7 +146,7 @@ describe("ServerLoggerLive", () => {
       const [request] = requests;
       assert.strictEqual(request?.url, "https://collector.example.com/v1/logs");
       assert.include(request?.body ?? "", "server logger under test");
-      assert.include(request?.body ?? "", "rove-server");
+      assert.include(request?.body ?? "", "paperplane-server");
       assert.include(request?.body ?? "", "service.runtime");
     }),
   );
@@ -171,9 +171,9 @@ describe("ServerLoggerLive", () => {
 
       assert.lengthOf(requests, 1);
       const body = requests[0]?.body ?? "";
-      assert.include(body, '"stringValue":"rove-server"');
+      assert.include(body, '"stringValue":"paperplane-server"');
       assert.include(body, "deployment.environment.name");
-      assert.include(body, '"key":"service.namespace","value":{"stringValue":"rove"}');
+      assert.include(body, '"key":"service.namespace","value":{"stringValue":"paperplane"}');
       assert.notInclude(body, "renamed");
     }),
   );

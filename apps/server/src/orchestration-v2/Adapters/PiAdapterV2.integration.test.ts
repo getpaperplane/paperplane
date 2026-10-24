@@ -34,7 +34,7 @@ it.effect(
     Effect.gen(function* () {
       const cwd = yield* checkpointWorkspace("pi-sdk-v2");
       const fs = yield* FileSystem.FileSystem;
-      const agentDir = yield* fs.makeTempDirectoryScoped({ prefix: "rove-pi-v2-agent-" });
+      const agentDir = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-pi-v2-agent-" });
       const fixture = NodePath.join(agentDir, "fixture.ts");
       NodeFS.copyFileSync(
         new URL("../../provider/Layers/fixtures/pi-instance-extension.ts", import.meta.url),
@@ -81,7 +81,7 @@ it.effect(
       ).pipe(
         Layer.provide(
           Layer.mergeAll(
-            ServerConfig.layerTest(cwd, { prefix: "rove-pi-v2-driver-" }),
+            ServerConfig.layerTest(cwd, { prefix: "paperplane-pi-v2-driver-" }),
             ServerSettingsService.layerTest(),
             TestProviderHost.layer({ cwd, runBackgroundWork: false }),
             IdAllocator.layer,

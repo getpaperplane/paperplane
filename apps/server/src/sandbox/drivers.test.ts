@@ -19,7 +19,7 @@ const response = (body: unknown, status = 200) =>
 it("Boat creates no-env persistent compute with a stable idempotency key and never queues prompts", async () => {
   const transport = vi.fn<typeof fetch>().mockResolvedValue(response(sandbox("provisioning"), 202));
   const driver = makeBoatDriver({ token: "test-key", tokenId: "" }, transport);
-  expect(await driver.create("rove-thread-id")).toMatchObject({ remoteId: handle.remoteId });
+  expect(await driver.create("paperplane-thread-id")).toMatchObject({ remoteId: handle.remoteId });
   expect(transport).toHaveBeenCalledWith(
     "https://boat.dev/api/v1/sandboxes",
     expect.objectContaining({
@@ -30,7 +30,7 @@ it("Boat creates no-env persistent compute with a stable idempotency key and nev
   );
   const headers = new Headers(transport.mock.calls[0]?.[1]?.headers);
   expect(headers.get("Authorization")).toBe("Bearer test-key");
-  expect(headers.get("Idempotency-Key")).toBe("rove-thread-id");
+  expect(headers.get("Idempotency-Key")).toBe("paperplane-thread-id");
   expect(transport.mock.calls.some(([url]) => String(url).includes("prompt"))).toBe(false);
 });
 

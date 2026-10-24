@@ -127,11 +127,11 @@ export const otlpResource = (
   config: Pick<ServerConfig["Service"], "mode" | "otelEnvironment">,
   hostName: string,
 ) => ({
-  serviceName: "rove-server",
+  serviceName: "paperplane-server",
   serviceVersion: packageJson.version,
   attributes: {
-    "service.namespace": "rove",
-    "service.runtime": "rove-server",
+    "service.namespace": "paperplane",
+    "service.runtime": "paperplane-server",
     "service.mode": config.mode,
     "host.name": config.otelEnvironment.resourceAttributes["host.name"] || hostName,
   },

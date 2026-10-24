@@ -152,7 +152,9 @@ it.effect("resolves setup scripts through the standalone project service", () =>
     const observedTerminalId = observedSettle.status === "started" ? observedSettle.terminalId : "";
     // Each settle gets its own shell, so a busy one is never typed into.
     assert.notEqual(observedTerminalId, settleTerminalId);
-    const token = /__ROVE_SETUP_DONE___(\w+):/.exec(write.mock.calls.at(-1)?.[0].data ?? "")?.[1];
+    const token = /__PAPERPLANE_SETUP_DONE___(\w+):/.exec(
+      write.mock.calls.at(-1)?.[0].data ?? "",
+    )?.[1];
     const settleListener = listeners.at(-1)!;
     const completion = yield* Effect.forkChild(
       observedSettle.status === "started" && observedSettle.completion
@@ -163,7 +165,7 @@ it.effect("resolves setup scripts through the standalone project service", () =>
       type: "output",
       threadId: "thread-1",
       terminalId: observedTerminalId,
-      data: `\r\n__ROVE_SETUP_DONE___${token}:0\r\n`,
+      data: `\r\n__PAPERPLANE_SETUP_DONE___${token}:0\r\n`,
     });
     yield* Effect.yieldNow;
     assert.equal(closeIdle.mock.calls.length, 0);

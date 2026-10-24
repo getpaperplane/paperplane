@@ -16,7 +16,7 @@ try {
     cwd,
     agentDir,
     interactive: true,
-    model: "rove-extension-test/fixture",
+    model: "paperplane-extension-test/fixture",
     thinkingLevel: undefined,
     resumeSessionId: undefined,
   });
@@ -28,8 +28,8 @@ try {
     session.subscribe((event) => {
       if (event.type === "tool_execution_end") results.push(event.result);
       if (event.type === "extension_error") errors.push(event.error);
-      if (event.type === "rove_ui_notify") notifications.push(event.message);
-      if (event.type === "rove_ui_request") {
+      if (event.type === "paperplane_ui_notify") notifications.push(event.message);
+      if (event.type === "paperplane_ui_request") {
         inputReplies.push(
           Promise.resolve(session.respondToUserInput?.(String(event.requestId), { answer: "0" })),
         );

@@ -338,7 +338,7 @@ function resolvePullRequestWorktreeLocalBranchName(
 
   const sanitizedHeadBranch = sanitizeBranchFragment(pullRequest.headBranch).trim();
   const suffix = sanitizedHeadBranch.length > 0 ? sanitizedHeadBranch : "head";
-  return `rove/pr-${pullRequest.number}/${suffix}`;
+  return `paperplane/pr-${pullRequest.number}/${suffix}`;
 }
 
 /** The repository's `owner/name` from a remote URL, as `provider` reads its remote paths. */
@@ -2356,7 +2356,7 @@ export const make = Effect.gen(function* () {
 
     const bodyFile = path.join(
       tempDir,
-      `rove-pr-body-${process.pid}-${yield* randomUUIDv4(cwd)}.md`,
+      `paperplane-pr-body-${process.pid}-${yield* randomUUIDv4(cwd)}.md`,
     );
     yield* fileSystem.writeFileString(bodyFile, generated.body).pipe(
       Effect.mapError(

@@ -38,7 +38,7 @@ import * as RuntimePolicy from "./RuntimePolicy.ts";
 
 // A root that does not exist never overlaps, so other owners decide isolation.
 const unrelatedProject = Option.some({
-  workspaceRoot: "/nonexistent/rove-rollback-project",
+  workspaceRoot: "/nonexistent/paperplane-rollback-project",
 } as never);
 const layerCheckpointRollbackService = CheckpointRollbackService.layer.pipe(
   Layer.provide(
@@ -400,7 +400,9 @@ it.effect.each([
   Effect.gen(function* () {
     const fileSystem = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
-    const workspaceRoot = yield* fileSystem.makeTempDirectoryScoped({ prefix: "rove-rollback-" });
+    const workspaceRoot = yield* fileSystem.makeTempDirectoryScoped({
+      prefix: "paperplane-rollback-",
+    });
     const worktreePath = path.join(workspaceRoot, "worktree");
     yield* fileSystem.makeDirectory(worktreePath);
     const threadId = ThreadId.make("rollback-worktree");
@@ -723,7 +725,9 @@ it.effect.skipIf(!symlinksSupported)(
   () =>
     Effect.gen(function* () {
       const fileSystem = yield* FileSystem.FileSystem;
-      const cwd = yield* fileSystem.makeTempDirectoryScoped({ prefix: "rove-restore-isolation-" });
+      const cwd = yield* fileSystem.makeTempDirectoryScoped({
+        prefix: "paperplane-restore-isolation-",
+      });
       const path = yield* Path.Path;
       const alias = path.join(cwd, "alias");
       yield* fileSystem.symlink(cwd, alias);

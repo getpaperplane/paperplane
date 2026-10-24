@@ -19,7 +19,9 @@ it.effect("decodes native search and grep strings and keeps scores only through 
   Effect.gen(function* () {
     const fileSystem = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
-    const basePath = yield* fileSystem.makeTempDirectoryScoped({ prefix: "rove-fff-native-" });
+    const basePath = yield* fileSystem.makeTempDirectoryScoped({
+      prefix: "paperplane-fff-native-",
+    });
     const names = [
       ...Array.from({ length: 205 }, (_, index) => `file-${String(index).padStart(3, "0")}`),
       "日本語",

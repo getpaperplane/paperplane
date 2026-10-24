@@ -4,6 +4,7 @@ import * as Option from "effect/Option";
 import { Platform as HostProcessPlatform } from "@getpaperplane/shared/HostProcess";
 
 const WORKLOAD_POOL_SEGMENTS = [
+  "/app-paperplane-workloads.slice/",
   "/app-rove-workloads.slice/",
   // Older guarded commands can still be draining after an upgrade.
   "/rove-provider-workloads.slice/",
@@ -30,7 +31,7 @@ export function isServerOwnedCgroup(candidate: string, server: string): boolean 
   // Root/slice groups likewise establish no server-specific ownership boundary.
   const unit = server.slice(server.lastIndexOf("/") + 1);
   const dedicatedUnit =
-    /^(?:app-)?rove(?:[-@.]|$)/.test(unit) &&
+    /^(?:app-)?(?:paperplane|rove)(?:[-@.]|$)/.test(unit) &&
     (unit.endsWith(".service") || unit.endsWith(".scope"));
   return dedicatedUnit && (candidate === server || candidate.startsWith(`${server}/`));
 }

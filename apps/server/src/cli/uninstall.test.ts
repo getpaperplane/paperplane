@@ -12,7 +12,7 @@ it.layer(NodeServices.layer)("paperplane uninstall launcher", (it) => {
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const root = yield* fs.makeTempDirectoryScoped({ prefix: "rove-uninstall-" });
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-uninstall-" });
       const versionsDir = path.join(root, "runtime/versions");
       const exe = path.join(versionsDir, "1.0.0/paperplane");
       const otherExe = path.join(root, "other/runtime/versions/1.0.0/paperplane");

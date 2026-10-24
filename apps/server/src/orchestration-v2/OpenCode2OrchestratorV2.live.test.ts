@@ -132,7 +132,7 @@ const layerPlatformTest = Layer.merge(
   }),
 );
 const layerServerConfig = ServerConfig.layerTest(`${ROOT}/work`, {
-  prefix: "rove-opencode2-live-",
+  prefix: "paperplane-opencode2-live-",
 });
 const layerVcsDriverRegistry = VcsDriverRegistry.layer.pipe(
   Layer.provide(VcsProcess.layer),
@@ -345,7 +345,10 @@ describe.runIf(binaryPath !== undefined && ROOT !== "")("OpenCode 2 live orchest
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        yield* fs.writeFileString(path.join(ROOT, "work", "hello.txt"), "hello from rove live\n");
+        yield* fs.writeFileString(
+          path.join(ROOT, "work", "hello.txt"),
+          "hello from paperplane live\n",
+        );
         yield* EffectWorker.runDaemonWithOptions({ concurrency: 2 }).pipe(Effect.forkScoped);
 
         // A status check starts a fresh server, which lists no models for its
@@ -745,9 +748,9 @@ describe.runIf(binaryPath !== undefined && ROOT !== "")("OpenCode 2 live orchest
         yield* git("init", "-q");
         yield* git(
           "-c",
-          "user.name=rove",
+          "user.name=paperplane",
           "-c",
-          "user.email=rove@example.com",
+          "user.email=paperplane@example.com",
           "commit",
           "-q",
           "--allow-empty",

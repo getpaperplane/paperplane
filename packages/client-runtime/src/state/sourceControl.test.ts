@@ -38,12 +38,12 @@ const TARGET = new PrimaryConnectionTarget({
 const PUBLISH_RESULT: SourceControlPublishRepositoryResult = {
   repository: {
     provider: SourceControlProviderKind.make("github"),
-    nameWithOwner: "rovetools/rove",
-    url: "https://github.com/rovetools/rove",
-    sshUrl: "git@github.com:rovetools/rove.git",
+    nameWithOwner: "paperplanetools/paperplane",
+    url: "https://github.com/paperplanetools/paperplane",
+    sshUrl: "git@github.com:paperplanetools/paperplane.git",
   },
   remoteName: "origin",
-  remoteUrl: "git@github.com:rovetools/rove.git",
+  remoteUrl: "git@github.com:paperplanetools/paperplane.git",
   branch: "main",
   upstreamBranch: "origin/main",
   status: "pushed",
@@ -142,7 +142,7 @@ describe("source control environment atoms", () => {
             input: {
               cwd: "/repo",
               provider: SourceControlProviderKind.make("github"),
-              repository: "rovetools/rove",
+              repository: "paperplanetools/paperplane",
               visibility: "private",
             },
           }),
@@ -158,7 +158,7 @@ describe("source control environment atoms", () => {
             input: {
               cwd: "/repo",
               provider: SourceControlProviderKind.make("github"),
-              repository: "rovetools/rove",
+              repository: "paperplanetools/paperplane",
               visibility: "private",
             },
           }),

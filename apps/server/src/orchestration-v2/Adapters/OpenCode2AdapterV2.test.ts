@@ -45,7 +45,7 @@ import * as ProviderContinuationRequests from "@getpaperplane/provider-core/serv
 import {
   OPENCODE_2_STILL_STOPPING,
   OPENCODE_PROVIDER,
-  roveMcpServerName,
+  paperplaneMcpServerName,
 } from "@getpaperplane/provider-opencode/testing";
 import { openCode2ReplayRuntime } from "./OpenCode2AdapterV2.testkit.ts";
 import {
@@ -88,13 +88,13 @@ const mcpRules = [
   { action: "paperplane-*", resource: "*", effect: "deny" },
   { action: "paperplane-thread_opencode2-adapter_*", resource: "*", effect: "allow" },
 ];
-const roveRules = [{ action: "*", resource: "*", effect: "allow" }, ...mcpRules];
+const paperplaneRules = [{ action: "*", resource: "*", effect: "allow" }, ...mcpRules];
 /** The thread's title, which the recorded session already carries. */
 const TITLE = "Prime check";
 const sessionInfo = (overrides: Record<string, unknown> = {}) => ({
   id: SESSION,
   title: TITLE,
-  permissions: roveRules,
+  permissions: paperplaneRules,
   projectID: "global",
   model: { id: "big-pickle", providerID: "opencode", variant: "default" },
   cost: 0,
@@ -184,7 +184,7 @@ const withInstructions = (
         ...entries.slice(0, at),
         out("session.instructions.entry.put", {
           sessionID: SESSION,
-          key: "rove",
+          key: "paperplane",
           value: "<any>",
         }),
         reply("session.instructions.entry.put", null),
@@ -460,7 +460,7 @@ it.layer(McpProviderSessions.layer)("OpenCode2 adapter", (it) => {
         out("session.create", {
           location: { directory: WORK },
           model: { providerID: "opencode", id: "big-pickle" },
-          permissions: roveRules,
+          permissions: paperplaneRules,
           title: "Check whether 391 is prime",
         }),
         replyData("session.create", sessionInfo({ title: "Check whether 391 is prime" })),
@@ -2124,7 +2124,7 @@ it.layer(McpProviderSessions.layer)("OpenCode2 adapter", (it) => {
         [
           ...backgroundLaunch(CHILD),
           event("session.execution.succeeded", { sessionID: SESSION }),
-          out("session.update", { sessionID: CHILD, permissions: roveRules }),
+          out("session.update", { sessionID: CHILD, permissions: paperplaneRules }),
           reply("session.update", null),
           out("session.prompt", { sessionID: SESSION, text: "<any>" }),
           reply("session.prompt", {
@@ -2305,7 +2305,7 @@ it.layer(McpProviderSessions.layer)("OpenCode2 adapter", (it) => {
           }),
         ),
         ...noOpenRequests,
-        out("session.update", { sessionID: SESSION, permissions: roveRules }),
+        out("session.update", { sessionID: SESSION, permissions: paperplaneRules }),
         reply("session.update", null),
       ]);
       yield* runtime.resumeThread({
@@ -3423,7 +3423,7 @@ it.layer(McpProviderSessions.layer)("OpenCode2 adapter", (it) => {
         const server = "paperplane-thread_opencode2-adapter";
         const { runtime, thread } = yield* resumed([
           // Registered for the session's directory under the thread's own name;
-          // the session's rules allow only this name's tools (see `roveRules`).
+          // the session's rules allow only this name's tools (see `paperplaneRules`).
           out("mcp.add", {
             server,
             "location[directory]": WORK,
@@ -3520,14 +3520,14 @@ it.layer(McpProviderSessions.layer)("OpenCode2 adapter", (it) => {
         "thread:delegated-task:command%3Amcp%3A48bef2bf-6d0e-4f7a-9c3b-2e5d8a1f7c40%3Adelegate-task%3Around1",
         "thread:delegated-task:command%3Amcp%3A48bef2bf-6d0e-4f7a-9c3b-2e5d8a1f7c40%3Adelegate-task%3Around2",
       ];
-      const names = yield* Effect.forEach(ids, roveMcpServerName);
+      const names = yield* Effect.forEach(ids, paperplaneMcpServerName);
       for (const name of names) assert.match(name, /^paperplane-[A-Za-z0-9_-]{1,54}$/);
       assert.equal(new Set(names).size, ids.length);
-      assert.deepEqual(yield* Effect.forEach(ids, roveMcpServerName), names);
+      assert.deepEqual(yield* Effect.forEach(ids, paperplaneMcpServerName), names);
       // A digested name is the one the synchronous node:crypto version produced.
       assert.equal(names[0], "paperplane-63abb5df2b188bdd");
       // A name that already fits stays readable.
-      assert.equal(yield* roveMcpServerName(threadId), "paperplane-thread_opencode2-adapter");
+      assert.equal(yield* paperplaneMcpServerName(threadId), "paperplane-thread_opencode2-adapter");
     }).pipe(Effect.provide(NodeCrypto.layer)),
   );
 
@@ -3647,7 +3647,7 @@ it.layer(McpProviderSessions.layer)("OpenCode2 adapter", (it) => {
         out("session.create", {
           location: { directory: custom },
           model: { providerID: "opencode", id: "big-pickle" },
-          permissions: roveRules,
+          permissions: paperplaneRules,
         }),
         replyData("session.create", sessionInfo({ location: { directory: custom } })),
         out("session.prompt", { sessionID: SESSION, text: "<any>" }),
@@ -3693,8 +3693,8 @@ it.layer(McpProviderSessions.layer)("OpenCode2 adapter", (it) => {
 
   it.effect("clears a staged revert whose commit failed, before the next prompt too", () =>
     Effect.gen(function* () {
-      const kept = "msg_rove_turn_run-attempt:kept:1";
-      const dropped = "msg_rove_turn_run-attempt:dropped:1";
+      const kept = "msg_paperplane_turn_run-attempt:kept:1";
+      const dropped = "msg_paperplane_turn_run-attempt:dropped:1";
       const { runtime, thread } = yield* resumed([
         out("message.list", "<any>"),
         reply("message.list", {
@@ -3735,7 +3735,7 @@ it.layer(McpProviderSessions.layer)("OpenCode2 adapter", (it) => {
         runAttemptId: RunAttemptId.make(`run-attempt:${attempt}:1`),
         nativeTurnRef: {
           driver: OPENCODE_PROVIDER,
-          nativeId: `msg_rove_turn_run-attempt:${attempt}:1`,
+          nativeId: `msg_paperplane_turn_run-attempt:${attempt}:1`,
           strength: "weak" as const,
         },
         ordinal,
@@ -3763,8 +3763,8 @@ it.layer(McpProviderSessions.layer)("OpenCode2 adapter", (it) => {
 
   it.effect("offers no follow-up for the execution a cleared revert starts", () =>
     Effect.gen(function* () {
-      const kept = "msg_rove_turn_run-attempt:kept:1";
-      const dropped = "msg_rove_turn_run-attempt:dropped:1";
+      const kept = "msg_paperplane_turn_run-attempt:kept:1";
+      const dropped = "msg_paperplane_turn_run-attempt:dropped:1";
       const offers: Array<ProviderContinuationRequests.ProviderContinuationRequest> = [];
       const { runtime, thread } = yield* resumed([
         out("message.list", "<any>"),
@@ -3804,7 +3804,7 @@ it.layer(McpProviderSessions.layer)("OpenCode2 adapter", (it) => {
         runAttemptId: RunAttemptId.make(`run-attempt:${attempt}:1`),
         nativeTurnRef: {
           driver: OPENCODE_PROVIDER,
-          nativeId: `msg_rove_turn_run-attempt:${attempt}:1`,
+          nativeId: `msg_paperplane_turn_run-attempt:${attempt}:1`,
           strength: "weak" as const,
         },
         ordinal,
@@ -3881,7 +3881,11 @@ it.layer(McpProviderSessions.layer)("OpenCode2 adapter", (it) => {
         ...promptInto(SESSION, "msg_recorded_turn_a"),
         ...steerInto(SESSION, "msg_recorded_steer_a"),
         // The other session gets its own instructions entry before its first prompt.
-        out("session.instructions.entry.put", { sessionID: OTHER, key: "rove", value: "<any>" }),
+        out("session.instructions.entry.put", {
+          sessionID: OTHER,
+          key: "paperplane",
+          value: "<any>",
+        }),
         reply("session.instructions.entry.put", null),
         ...promptInto(OTHER, "msg_recorded_turn_b"),
         ...steerInto(OTHER, "msg_recorded_steer_b"),
@@ -3933,7 +3937,7 @@ it.layer(McpProviderSessions.layer)("OpenCode2 adapter", (it) => {
     ["rolls back once a timed-out Stop's run has left the server", false],
   ] as const)("%s", ([, running]) =>
     Effect.gen(function* () {
-      const prompt = `msg_rove_turn_${SESSION}:attempt:opencode2-adapter`;
+      const prompt = `msg_paperplane_turn_${SESSION}:attempt:opencode2-adapter`;
       const { runtime, thread } = yield* resumed([
         ...stopTimedOut,
         // The server says whether the stopped run still goes.
@@ -4003,7 +4007,7 @@ it.layer(McpProviderSessions.layer)("OpenCode2 adapter", (it) => {
 
   it.effect("takes back a stranded steer again when its first cancel failed", () =>
     Effect.gen(function* () {
-      const steerId = `msg_rove_steer_${SESSION}:message:opencode2-adapter:steer`;
+      const steerId = `msg_paperplane_steer_${SESSION}:message:opencode2-adapter:steer`;
       const cancelOut = out("session.inbox.cancel", { sessionID: SESSION, inboxID: steerId });
       const { runtime, thread } = yield* resumed([
         out("session.prompt", { sessionID: SESSION, text: "<any>" }),
@@ -4094,8 +4098,8 @@ it.layer(McpProviderSessions.layer)("OpenCode2 adapter", (it) => {
 
   it.effect("drops the turns a rollback cut from the snapshot it returns", () =>
     Effect.gen(function* () {
-      const kept = `msg_rove_turn_${SESSION}:attempt:opencode2-adapter`;
-      const dropped = `msg_rove_turn_${SESSION}:attempt:opencode2-adapter:2`;
+      const kept = `msg_paperplane_turn_${SESSION}:attempt:opencode2-adapter`;
+      const dropped = `msg_paperplane_turn_${SESSION}:attempt:opencode2-adapter:2`;
       const { runtime, thread } = yield* resumed([
         out("session.prompt", { sessionID: SESSION, text: "<any>" }),
         promptAccepted,
@@ -4163,7 +4167,7 @@ it.layer(McpProviderSessions.layer)("OpenCode2 adapter", (it) => {
 
   it.effect("starts a turn sent during a rollback only once the cut is made", () =>
     Effect.gen(function* () {
-      const prompted = `msg_rove_turn_${SESSION}:attempt:earlier`;
+      const prompted = `msg_paperplane_turn_${SESSION}:attempt:earlier`;
       // The replay is strictly ordered: a prompt sent while the rollback still
       // reads or cuts the history fails it.
       const { runtime, thread } = yield* resumed([
@@ -4222,8 +4226,8 @@ it.layer(McpProviderSessions.layer)("OpenCode2 adapter", (it) => {
     ],
   ] as const)("%s", ([, running]) =>
     Effect.gen(function* () {
-      const first = `msg_rove_turn_${SESSION}:attempt:first`;
-      const second = `msg_rove_turn_${SESSION}:attempt:second`;
+      const first = `msg_paperplane_turn_${SESSION}:attempt:first`;
+      const second = `msg_paperplane_turn_${SESSION}:attempt:second`;
       // A runtime that never loaded the session, as after a Paperplane restart
       // against a server that kept running.
       const runtime = yield* openCode2ReplayRuntime([
@@ -4344,7 +4348,7 @@ it.layer(McpProviderSessions.layer)("OpenCode2 adapter", (it) => {
 
   it.effect("lets the next turn start when a rollback's stage never answers", () =>
     Effect.gen(function* () {
-      const prompted = `msg_rove_turn_${SESSION}:attempt:earlier`;
+      const prompted = `msg_paperplane_turn_${SESSION}:attempt:earlier`;
       const { runtime, thread } = yield* resumed([
         out("message.list", "<any>"),
         reply("message.list", {
@@ -4515,7 +4519,7 @@ it.layer(McpProviderSessions.layer)("OpenCode2 adapter", (it) => {
       const [first, second] = turns;
       return { runtime, thread, first: first!, second: second! };
     });
-  const CONTINUED_PROMPT = `msg_rove_turn_${SESSION}:attempt:attempt:opencode2-adapter`;
+  const CONTINUED_PROMPT = `msg_paperplane_turn_${SESSION}:attempt:attempt:opencode2-adapter`;
   const CONTINUED_REPORT = `<subagent sessionID="${CHILD}" state="completed" description="Sleep">\nCHILD_OK\n</subagent>`;
   const continuedHistory = {
     data: [
@@ -5130,7 +5134,7 @@ it.layer(McpProviderSessions.layer)("OpenCode2 adapter", (it) => {
   it.effect("ends a follow-up turn a steer joined exactly once", () =>
     Effect.gen(function* () {
       const reportText = `<subagent sessionID="${CHILD}" state="completed" description="Sleep">\nCHILD_OK\n</subagent>`;
-      const steerId = `msg_rove_steer_${SESSION}:message:opencode2-adapter:steer`;
+      const steerId = `msg_paperplane_steer_${SESSION}:message:opencode2-adapter:steer`;
       const offers: Array<ProviderContinuationRequests.ProviderContinuationRequest> = [];
       const { runtime, thread } = yield* resumed([
         ...backgroundLaunch(CHILD),

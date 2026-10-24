@@ -1,12 +1,12 @@
 /**
- * RoveProjectFileLoader - Effect service that loads the checked-in `paperplane.json`
+ * PaperplaneProjectFileLoader - Effect service that loads the checked-in `paperplane.json`
  * project file from a workspace root.
  *
  * Loading is best-effort: a missing file resolves to `Option.none`, and
  * unreadable or invalid files are logged and treated as absent so callers
  * can fall back to their defaults.
  *
- * @module RoveProjectFileLoader
+ * @module PaperplaneProjectFileLoader
  */
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -23,10 +23,10 @@ import {
 } from "@getpaperplane/contracts";
 import { PaperplaneProjectFileFromJson } from "@getpaperplane/shared/paperplaneProjectFile";
 
-const decodeRoveProjectFileJson = Schema.decodeEffect(PaperplaneProjectFileFromJson);
+const decodePaperplaneProjectFileJson = Schema.decodeEffect(PaperplaneProjectFileFromJson);
 
-export class RoveProjectFileLoadError extends Schema.TaggedError<RoveProjectFileLoadError>()(
-  "RoveProjectFileLoadError",
+export class PaperplaneProjectFileLoadError extends Schema.TaggedError<PaperplaneProjectFileLoadError>()(
+  "PaperplaneProjectFileLoadError",
   {
     operation: Schema.Literals(["read", "decode"]),
     workspaceRoot: Schema.String,
@@ -40,8 +40,8 @@ export class RoveProjectFileLoadError extends Schema.TaggedError<RoveProjectFile
 }
 
 /** Service tag for paperplane.json project file loading. */
-export class RoveProjectFileLoader extends Context.Service<
-  RoveProjectFileLoader,
+export class PaperplaneProjectFileLoader extends Context.Service<
+  PaperplaneProjectFileLoader,
   {
     /**
      * Load and decode `paperplane.json` at the workspace root.
@@ -53,9 +53,9 @@ export class RoveProjectFileLoader extends Context.Service<
     /** Report missing, invalid, or legacy-only configuration without parsing the legacy file. */
     readonly loadState: (workspaceRoot: string) => Effect.Effect<ProjectConfigState>;
   }
->()("@getpaperplane/server/project/RoveProjectFileLoader") {}
+>()("@getpaperplane/server/project/PaperplaneProjectFileLoader") {}
 
-const logRoveProjectFileLoadError = (error: RoveProjectFileLoadError) =>
+const logPaperplaneProjectFileLoadError = (error: PaperplaneProjectFileLoadError) =>
   Effect.logWarning(error).pipe(
     Effect.annotateLogs({
       operation: error.operation,
@@ -70,8 +70,8 @@ export const make = Effect.gen(function* () {
   const fileSystem = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
 
-  const loadState: RoveProjectFileLoader["Service"]["loadState"] = Effect.fn(
-    "RoveProjectFileLoader.loadState",
+  const loadState: PaperplaneProjectFileLoader["Service"]["loadState"] = Effect.fn(
+    "PaperplaneProjectFileLoader.loadState",
   )(function* (workspaceRoot): Effect.fn.Return<ProjectConfigState> {
     const filePath = path.join(workspaceRoot, PAPERPLANE_PROJECT_FILE_NAME);
     const raw = yield* Effect.result(fileSystem.readFileString(filePath));
@@ -83,8 +83,8 @@ export const make = Effect.gen(function* () {
           .pipe(Effect.catch(() => Effect.succeed(false)));
         return { status: legacyExists ? "legacy-only" : "missing" };
       }
-      yield* logRoveProjectFileLoadError(
-        new RoveProjectFileLoadError({
+      yield* logPaperplaneProjectFileLoadError(
+        new PaperplaneProjectFileLoadError({
           operation: "read",
           workspaceRoot,
           filePath,
@@ -93,25 +93,31 @@ export const make = Effect.gen(function* () {
       );
       return { status: "invalid" };
     }
-    return yield* decodeRoveProjectFileJson(raw.success).pipe(
+    return yield* decodePaperplaneProjectFileJson(raw.success).pipe(
       Effect.map((file): ProjectConfigState => ({ status: "valid", file })),
       Effect.catchTags({
         SchemaError: (cause) =>
-          logRoveProjectFileLoadError(
-            new RoveProjectFileLoadError({ operation: "decode", workspaceRoot, filePath, cause }),
+          logPaperplaneProjectFileLoadError(
+            new PaperplaneProjectFileLoadError({
+              operation: "decode",
+              workspaceRoot,
+              filePath,
+              cause,
+            }),
           ).pipe(Effect.as<ProjectConfigState>({ status: "invalid" })),
       }),
     );
   });
 
-  const load: RoveProjectFileLoader["Service"]["load"] = Effect.fn("RoveProjectFileLoader.load")(
-    (workspaceRoot) =>
-      loadState(workspaceRoot).pipe(
-        Effect.map((state) => (state.status === "valid" ? Option.some(state.file) : Option.none())),
-      ),
+  const load: PaperplaneProjectFileLoader["Service"]["load"] = Effect.fn(
+    "PaperplaneProjectFileLoader.load",
+  )((workspaceRoot) =>
+    loadState(workspaceRoot).pipe(
+      Effect.map((state) => (state.status === "valid" ? Option.some(state.file) : Option.none())),
+    ),
   );
 
-  return RoveProjectFileLoader.of({ load, loadState });
+  return PaperplaneProjectFileLoader.of({ load, loadState });
 });
 
-export const layer = Layer.effect(RoveProjectFileLoader, make);
+export const layer = Layer.effect(PaperplaneProjectFileLoader, make);

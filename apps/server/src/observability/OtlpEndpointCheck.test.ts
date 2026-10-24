@@ -56,7 +56,9 @@ const checkWith = (
       const config = yield* ServerConfig.ServerConfig;
       return ServerConfig.make({ ...config, ...overrides });
     }),
-  ).pipe(Layer.provide(ServerConfig.layerTest(process.cwd(), { prefix: "rove-otlp-check-" })));
+  ).pipe(
+    Layer.provide(ServerConfig.layerTest(process.cwd(), { prefix: "paperplane-otlp-check-" })),
+  );
   const layer = OtlpEndpointCheck.layer.pipe(
     Layer.provide(httpClientLayer ?? Layer.succeed(HttpClient.HttpClient, httpClient)),
     Layer.provide(configLayer),
@@ -75,7 +77,10 @@ describe("OtlpEndpointCheck", () => {
   it.effect("posts an empty export for the signal with the Paperplane headers", () => {
     const { requests, layer } = checkWith(200, {
       otlpMetricsUrl: "http://collector:4318/v1/metrics",
-      otlpMetricsExport: { ...DEFAULT_SIGNAL_EXPORT, headers: { authorization: "Bearer rove" } },
+      otlpMetricsExport: {
+        ...DEFAULT_SIGNAL_EXPORT,
+        headers: { authorization: "Bearer paperplane" },
+      },
     });
     return Effect.gen(function* () {
       const result = yield* check({ signal: "metrics", url: "http://collector:4318/v1/metrics" });
@@ -83,7 +88,7 @@ describe("OtlpEndpointCheck", () => {
       assert.strictEqual(result._tag, "Accepted");
       assert.lengthOf(requests, 1);
       assert.strictEqual(requests[0]?.url, "http://collector:4318/v1/metrics");
-      assert.strictEqual(requests[0]?.headers.authorization, "Bearer rove");
+      assert.strictEqual(requests[0]?.headers.authorization, "Bearer paperplane");
       assert.strictEqual(requests[0]?.body, `{"resourceMetrics":[]}`);
     }).pipe(Effect.provide(layer));
   });
@@ -119,7 +124,7 @@ describe("OtlpEndpointCheck", () => {
   it.effect("does not send export credentials when the signal has no running endpoint", () => {
     const { requests, layer } = checkWith(200, {
       otlpLogsUrl: undefined,
-      otlpLogsExport: { ...DEFAULT_SIGNAL_EXPORT, headers: { authorization: "Bearer rove" } },
+      otlpLogsExport: { ...DEFAULT_SIGNAL_EXPORT, headers: { authorization: "Bearer paperplane" } },
       otelEnvironment: OtelEnvironment.none,
     });
     return Effect.gen(function* () {

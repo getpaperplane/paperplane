@@ -139,7 +139,7 @@ const withWindows = <A, E>(
     }),
     Effect.provide([
       ServerSettings.layerTest({ enableAgentComputerUse: true }),
-      ServerConfig.layerTest(process.cwd(), { prefix: "rove-cua-config-" }).pipe(
+      ServerConfig.layerTest(process.cwd(), { prefix: "paperplane-cua-config-" }).pipe(
         Layer.provide(NodeServices.layer),
       ),
       NodeServices.layer,

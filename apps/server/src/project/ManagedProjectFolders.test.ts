@@ -109,7 +109,9 @@ const withScratch = <A, E>(
 ) =>
   Effect.gen(function* () {
     const fileSystem = yield* FileSystem.FileSystem;
-    const baseDir = yield* fileSystem.makeTempDirectoryScoped({ prefix: "rove-managed-folders-" });
+    const baseDir = yield* fileSystem.makeTempDirectoryScoped({
+      prefix: "paperplane-managed-folders-",
+    });
     return yield* body({ baseDir }).pipe(Effect.provide(layer(baseDir, options)));
   }).pipe(Effect.scoped, Effect.provide(NodeServices.layer));
 
@@ -137,9 +139,11 @@ it.effect("offers nothing when the data dir sits inside a Git checkout", () =>
   Effect.gen(function* () {
     const fileSystem = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
-    const checkout = yield* fileSystem.makeTempDirectoryScoped({ prefix: "rove-scratch-repo-" });
+    const checkout = yield* fileSystem.makeTempDirectoryScoped({
+      prefix: "paperplane-scratch-repo-",
+    });
     yield* git(checkout, ["init", "--quiet"]);
-    const baseDir = path.join(checkout, ".rove");
+    const baseDir = path.join(checkout, ".paperplane");
     yield* fileSystem.makeDirectory(baseDir);
     yield* Effect.gen(function* () {
       const scratch = yield* ManagedProjectFolders.ManagedProjectFolders;
@@ -333,7 +337,7 @@ const withGitEnv = <A, E, R>(
 ) =>
   Effect.gen(function* () {
     const fileSystem = yield* FileSystem.FileSystem;
-    const emptyConfig = yield* fileSystem.makeTempFileScoped({ prefix: "rove-gitconfig-" });
+    const emptyConfig = yield* fileSystem.makeTempFileScoped({ prefix: "paperplane-gitconfig-" });
     return yield* Effect.acquireUseRelease(
       Effect.sync(() => {
         const saved = GIT_IDENTITY_KEYS.map((key) => [key, process.env[key]] as const);

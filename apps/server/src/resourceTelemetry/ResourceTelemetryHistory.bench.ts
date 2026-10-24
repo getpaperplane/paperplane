@@ -97,7 +97,7 @@ describe("resource history replay", () => {
         processes: [
           processSample(100, 1, index),
           processSample(200, 1, index, "electron"),
-          processSample(400, 100, index, "rove-resource-monitor", "process-400"),
+          processSample(400, 100, index, "paperplane-resource-monitor", "process-400"),
           processSample(
             scenario.churn ? 700 + Math.floor(index / 20) : 300,
             100,

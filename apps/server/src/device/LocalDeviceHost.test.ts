@@ -42,7 +42,7 @@ const agentFixture = Effect.fn("agentFixture")(function* (
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const baseDir = yield* fs.makeTempDirectoryScoped({ prefix: "rove-device-agent-start-" });
+  const baseDir = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-device-agent-start-" });
   const stateDir = agentDeviceStateDir(path, path.join(baseDir, "userdata"));
   for (const [name, version, entry] of [
     ["expo-device-hub", DEVICE_HUB_VERSION, "dist/server/cli.mjs"],
@@ -613,7 +613,7 @@ it.effect(
   () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
-      const baseDir = yield* fs.makeTempDirectoryScoped({ prefix: "rove-device-consent-" });
+      const baseDir = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-device-consent-" });
       const host = yield* LocalDeviceHost.make().pipe(
         Effect.provide(Layer.mergeAll(ServerConfig.layerTest(baseDir, baseDir), NetService.layer)),
         Effect.provideService(HostProcess.Environment, { HOME: baseDir, PATH: "" }),

@@ -76,7 +76,7 @@ describe("Paperplane browser developer instructions", () => {
   it("prefers the product-native preview tools in both collaboration modes", () => {
     {
       const instructions = toolInstructions(runtime, true);
-      NodeAssert.match(instructions, /rove/);
+      NodeAssert.match(instructions, /paperplane/);
       NodeAssert.match(instructions, /preview_status/);
       NodeAssert.match(instructions, /preview_open/);
       NodeAssert.match(instructions, /Do not switch to global browser skills/);
@@ -105,11 +105,11 @@ describe("Paperplane browser developer instructions", () => {
 });
 
 function runtimeInstructions(runtime: Parameters<typeof buildCodexAdditionalContext>[0]) {
-  return buildCodexAdditionalContext(runtime).rove_code_runtime!.value;
+  return buildCodexAdditionalContext(runtime).paperplane_code_runtime!.value;
 }
 function toolInstructions(
   runtime: Parameters<typeof buildCodexAdditionalContext>[0],
   available: boolean,
 ) {
-  return buildCodexAdditionalContext(runtime, available).rove_code_tools?.value ?? "";
+  return buildCodexAdditionalContext(runtime, available).paperplane_code_tools?.value ?? "";
 }

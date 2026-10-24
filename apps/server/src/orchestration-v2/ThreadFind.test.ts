@@ -522,25 +522,25 @@ describe("V2 thread find", () => {
   it.effect("searches displayed skill labels and invalidates parsed text when labels change", () =>
     Effect.gen(function* () {
       const projection = yield* setup;
-      yield* putItems([item("skill", 1, "Use $test-rove-app now")]);
+      yield* putItems([item("skill", 1, "Use $test-paperplane-app now")]);
       const input = {
         threadId,
         query: "Paperplane App Testing",
-        skills: [{ name: "test-rove-app", displayName: "Paperplane App Testing" }],
+        skills: [{ name: "test-paperplane-app", displayName: "Paperplane App Testing" }],
       };
       assert.equal((yield* projection.searchThread(input)).totalMatches, 1);
       assert.equal((yield* projection.searchThread({ ...input, skills: [] })).totalMatches, 0);
       // Plans render `$skill` tokens literally, so they match as written, not by label.
       yield* putItems(
-        [item("skill-plan", 2, "# Verify\nUse $test-rove-app now", "proposed_plan")],
+        [item("skill-plan", 2, "# Verify\nUse $test-paperplane-app now", "proposed_plan")],
         "plan",
       );
       assert.equal((yield* projection.searchThread(input)).totalMatches, 1);
       assert.equal(
-        (yield* projection.searchThread({ ...input, query: "$test-rove-app" })).totalMatches,
+        (yield* projection.searchThread({ ...input, query: "$test-paperplane-app" })).totalMatches,
         1,
       );
-      // The message label "Paperplane App Testing" plus the plan's literal "$test-rove-app".
+      // The message label "Paperplane App Testing" plus the plan's literal "$test-paperplane-app".
       assert.equal((yield* projection.searchThread({ ...input, query: "App" })).totalMatches, 2);
     }).pipe(Effect.provide(layerTest)),
   );

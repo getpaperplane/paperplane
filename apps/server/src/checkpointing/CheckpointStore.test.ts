@@ -5,6 +5,10 @@ import * as NodeServices from "@effect/platform-node/NodeServices";
 import { it } from "@effect/vitest";
 import { CheckpointRef, ThreadId, type VcsError } from "@getpaperplane/contracts";
 import * as HostProcess from "@getpaperplane/shared/HostProcess";
+import {
+  enableCheckpointRefMigration,
+  migrateDefaultHome,
+} from "@getpaperplane/shared/homeMigration";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
@@ -20,7 +24,7 @@ import * as VcsProcess from "../vcs/VcsProcess.ts";
 import * as ServerConfig from "../config.ts";
 
 const layerServerConfig = ServerConfig.ServerConfig.layerTest(process.cwd(), {
-  prefix: "rove-checkpoint-store-test-",
+  prefix: "paperplane-checkpoint-store-test-",
 });
 const layerVcsProcessTest = VcsProcess.layer.pipe(Layer.provide(NodeServices.layer));
 const layerVcsDriverTest = VcsDriverRegistry.layer.pipe(Layer.provide(layerVcsProcessTest));
@@ -139,6 +143,16 @@ it.layer(layerTest)("CheckpointStore.layer", (it) => {
       "migrates historical baselines before using them, fallback %s",
       (fallbackFromToHead) =>
         Effect.gen(function* () {
+          const home = yield* makeTmpDir("paperplane-ref-home-");
+          const fileSystem = yield* FileSystem.FileSystem;
+          yield* fileSystem.makeDirectory(NodePath.join(home, ".rove-code", "userdata"), {
+            recursive: true,
+          });
+          expect(migrateDefaultHome({ homeDirectory: home, log: () => {} }).kind).toBe("migrated");
+          yield* Effect.acquireRelease(
+            Effect.sync(() => enableCheckpointRefMigration(NodePath.join(home, ".paperplane"))),
+            () => Effect.sync(() => enableCheckpointRefMigration(home)),
+          );
           const tmp = yield* makeTmpDir();
           yield* initRepoWithCommit(tmp);
           const store = yield* CheckpointStore.CheckpointStore;
@@ -559,7 +573,9 @@ it.layer(layerTest)("CheckpointStore.layer", (it) => {
         // Capture must not leave temp indexes behind in the repo.
         const fileSystem = yield* FileSystem.FileSystem;
         const entries = yield* fileSystem.readDirectory(NodePath.join(tmp, ".git"));
-        expect(entries.filter((entry) => entry.startsWith("rove-checkpoint-index-"))).toEqual([]);
+        expect(entries.filter((entry) => entry.startsWith("paperplane-checkpoint-index-"))).toEqual(
+          [],
+        );
       }),
     );
   });

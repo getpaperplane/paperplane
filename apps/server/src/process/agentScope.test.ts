@@ -84,7 +84,7 @@ const withFakeSystemd = <A, E>(
   }) => Effect.Effect<A, E>,
 ) =>
   Effect.gen(function* () {
-    const bin = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "rove-agent-scope-"));
+    const bin = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "paperplane-agent-scope-"));
     for (const name of ["systemd-run", "systemctl", "agent"]) {
       NodeFS.writeFileSync(NodePath.join(bin, name), "", { mode: 0o755 });
     }
@@ -127,7 +127,7 @@ const withFakeSystemd = <A, E>(
   }).pipe(
     Effect.scoped,
     Effect.provide(
-      ServerConfig.layerTest(process.cwd(), { prefix: "rove-agent-scope-" }).pipe(
+      ServerConfig.layerTest(process.cwd(), { prefix: "paperplane-agent-scope-" }).pipe(
         Layer.provideMerge(NodeServices.layer),
       ),
     ),
@@ -260,7 +260,7 @@ describe("AgentScope without systemd", () => {
     }).pipe(
       Effect.scoped,
       Effect.provide(
-        ServerConfig.layerTest(process.cwd(), { prefix: "rove-unscoped-" }).pipe(
+        ServerConfig.layerTest(process.cwd(), { prefix: "paperplane-unscoped-" }).pipe(
           Layer.provideMerge(NodeServices.layer),
         ),
       ),
@@ -323,7 +323,7 @@ describe("AgentScope service", () => {
           name: "terminal",
           survivesRestart: true,
         });
-        expect(sliceOf(terminal)).toBe("app-rove-agents.slice");
+        expect(sliceOf(terminal)).toBe("app-paperplane-agents.slice");
         // Only the first launch looks for leftovers.
         expect(calls.filter(([, verb]) => verb === "stop")).toHaveLength(1);
       }),
@@ -338,13 +338,13 @@ describe("AgentScope service", () => {
         expect(
           properties.some(
             (args) =>
-              args.includes("app-rove.slice") &&
+              args.includes("app-paperplane.slice") &&
               args.includes("CPUWeight=100") &&
               args.includes("MemoryHigh=infinity") &&
               args.includes("CPUQuota="),
           ),
         ).toBe(true);
-        for (const unit of ["app-rove-agents.slice", ownedAgentSlice(stateDir)]) {
+        for (const unit of ["app-paperplane-agents.slice", ownedAgentSlice(stateDir)]) {
           expect(
             properties.some(
               (args) =>

@@ -43,7 +43,7 @@ const layer = Layer.mergeAll(
   IdAllocator.layer,
   McpProviderSessions.layer,
   PiExtensionStatuses.layer,
-  ServerConfig.layerTest(process.cwd(), { prefix: "rove-pi-v2-" }),
+  ServerConfig.layerTest(process.cwd(), { prefix: "paperplane-pi-v2-" }),
 ).pipe(Layer.provideMerge(NodeServices.layer));
 const decodeEvent = Schema.decodeUnknownSync(ProviderAdapter.ProviderAdapterV2Event);
 function rawSession(initialBranch: PiSessionEntryLike[] = []) {
@@ -116,7 +116,7 @@ function rawSession(initialBranch: PiSessionEntryLike[] = []) {
     respondToUserInput: (native, answer) => {
       answers.push(answer);
       listener({
-        type: "rove_ui_resolved",
+        type: "paperplane_ui_resolved",
         requestId: native,
         answers: { answer: typeof answer.answer === "string" ? answer.answer : "" },
       });
@@ -270,12 +270,12 @@ it.effect(
           Stream.filter((snapshot) => snapshot.statuses[0]?.text === text),
           Stream.runHead,
         );
-      h.raw.emit({ type: "rove_ui_status", statuses: [{ key: "task", text: "active" }] });
+      h.raw.emit({ type: "paperplane_ui_status", statuses: [{ key: "task", text: "active" }] });
       yield* awaitText("active");
       h.raw.settle();
       yield* Deferred.await(h.terminal);
       const transcriptEvents = h.events.length;
-      h.raw.emit({ type: "rove_ui_status", statuses: [{ key: "task", text: "idle timer" }] });
+      h.raw.emit({ type: "paperplane_ui_status", statuses: [{ key: "task", text: "idle timer" }] });
       yield* awaitText("idle timer");
       assert.strictEqual(h.events.length, transcriptEvents);
       h.raw.emit({ type: "runtime_exited", error: "worker stopped" });
@@ -304,7 +304,7 @@ it.effect("continues to stop autonomous SDK work outside a committed run", () =>
     );
     // Aborting stray work must not end the session's status stream.
     const statuses = yield* PiExtensionStatuses.PiExtensionStatuses;
-    h.raw.emit({ type: "rove_ui_status", statuses: [{ key: "task", text: "after abort" }] });
+    h.raw.emit({ type: "paperplane_ui_status", statuses: [{ key: "task", text: "after abort" }] });
     yield* statuses.subscribe(threadId).pipe(
       Stream.filter((snapshot) => snapshot.statuses[0]?.text === "after abort"),
       Stream.runHead,
@@ -418,7 +418,7 @@ it.effect("routes multiline extension questions through live V2 request ids", ()
   Effect.gen(function* () {
     const h = yield* setup();
     h.raw.emit({
-      type: "rove_ui_request",
+      type: "paperplane_ui_request",
       requestId: "native-editor",
       questions: [
         {
@@ -802,7 +802,7 @@ it.effect("reloads the session for rollback immediately after Stop", () =>
   Effect.gen(function* () {
     const h = yield* setup();
     const statuses = yield* PiExtensionStatuses.PiExtensionStatuses;
-    h.raw.emit({ type: "rove_ui_status", statuses: [{ key: "task", text: "working" }] });
+    h.raw.emit({ type: "paperplane_ui_status", statuses: [{ key: "task", text: "working" }] });
     yield* statuses.subscribe(threadId).pipe(
       Stream.filter((snapshot) => snapshot.statuses.length > 0),
       Stream.runHead,

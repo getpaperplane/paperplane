@@ -240,7 +240,7 @@ const makeWindowsPayloadFixture = Effect.fn("test.makeWindowsPayloadFixture")(fu
     );
   }
   yield* fs.writeFile(
-    path.join(resourcesDir, "resource-monitor/rove-resource-monitor.exe"),
+    path.join(resourcesDir, "resource-monitor/paperplane-resource-monitor.exe"),
     binary,
   );
   const appExecutableName = "rove.exe";
@@ -1062,11 +1062,11 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const repoRoot = yield* fs.makeTempDirectoryScoped({
-          prefix: "rove-resource-monitor-cache-test-",
+          prefix: "paperplane-resource-monitor-cache-test-",
         });
         const binaryPath = path.join(
           repoRoot,
-          "native/resource-monitor/target/x86_64-unknown-linux-gnu/release/rove-resource-monitor",
+          "native/resource-monitor/target/x86_64-unknown-linux-gnu/release/paperplane-resource-monitor",
         );
         const stageResourcesDir = path.join(repoRoot, "stage");
         yield* fs.makeDirectory(path.dirname(binaryPath), { recursive: true });
@@ -1090,7 +1090,7 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
 
         assert.equal(
           yield* fs.readFileString(
-            path.join(stageResourcesDir, "resource-monitor/rove-resource-monitor"),
+            path.join(stageResourcesDir, "resource-monitor/paperplane-resource-monitor"),
           ),
           "cached monitor",
         );
@@ -1768,7 +1768,7 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
         "--arch",
         "x64",
         "--output",
-        path.join("/stage/resources", "browser-secret", "rove-browser-secret"),
+        path.join("/stage/resources", "browser-secret", "paperplane-browser-secret"),
       ]);
     }).pipe(
       Effect.provide(
@@ -1882,7 +1882,7 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
         });
         const monitor = path.join(
           fixture.packagedAppDir,
-          "resources/resource-monitor/rove-resource-monitor.exe",
+          "resources/resource-monitor/paperplane-resource-monitor.exe",
         );
         const bytes = yield* fs.readFile(monitor);
         new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength).setUint16(132, 0x8664, true);
@@ -1895,7 +1895,10 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
         }).pipe(Effect.flip);
         assert.instanceOf(error, WindowsPackagedPayloadValidationError);
         assert.equal(error.reason, "architecture-invalid");
-        assert.match(String(error.cause), /rove-resource-monitor.exe: expected arm64.*got 0x8664/);
+        assert.match(
+          String(error.cause),
+          /paperplane-resource-monitor.exe: expected arm64.*got 0x8664/,
+        );
       }),
     ),
   );
@@ -1981,7 +1984,7 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
         yield* fs.writeFileString(nativePath, "native-binary");
         const resourceMonitorPath = path.join(
           fixture.packagedAppDir,
-          "resources/resource-monitor/rove-resource-monitor.exe",
+          "resources/resource-monitor/paperplane-resource-monitor.exe",
         );
         yield* fs.remove(resourceMonitorPath);
         yield* fs.makeDirectory(resourceMonitorPath);
@@ -1995,7 +1998,7 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
         assert.instanceOf(resourceMonitorError, WindowsPackagedPayloadValidationError);
         assert.equal(resourceMonitorError.reason, "resource-monitor-missing");
         assert.deepStrictEqual(resourceMonitorError.missingFiles, [
-          "resource-monitor/rove-resource-monitor.exe",
+          "resource-monitor/paperplane-resource-monitor.exe",
         ]);
       }),
     ),
@@ -2541,8 +2544,8 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
     assert.deepStrictEqual(resolveResourceMonitorRustTargets("win", "arm64"), [
       "aarch64-pc-windows-msvc",
     ]);
-    assert.equal(resourceMonitorExecutableName("mac"), "rove-resource-monitor");
-    assert.equal(resourceMonitorExecutableName("win"), "rove-resource-monitor.exe");
+    assert.equal(resourceMonitorExecutableName("mac"), "paperplane-resource-monitor");
+    assert.equal(resourceMonitorExecutableName("win"), "paperplane-resource-monitor.exe");
   });
 
   it("ships the Linux CLI release archive as the WSL runtime", () => {

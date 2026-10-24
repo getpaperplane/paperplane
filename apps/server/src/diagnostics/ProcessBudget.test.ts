@@ -44,7 +44,7 @@ it.effect("fails closed on unsupported hosts", () =>
 );
 
 describe.skipIf(!hasUserSystemd)("Linux process budget integration", () => {
-  const pool = `app-rove-budgettest${NodeCrypto.randomUUID().replaceAll("-", "")}.slice`;
+  const pool = `app-paperplane-budgettest${NodeCrypto.randomUUID().replaceAll("-", "")}.slice`;
   afterAll(async () => {
     await new Promise<void>((resolve, reject) => {
       NodeChildProcess.execFile("systemctl", ["--user", "stop", pool], (error) =>

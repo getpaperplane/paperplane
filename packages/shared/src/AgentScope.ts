@@ -122,8 +122,8 @@ export function agentScopeCommand(input: {
       command: "/bin/sh",
       args:
         input.pidfile === undefined
-          ? ["-c", LAUNCH_SCRIPT, "rove-agent", command, ...args]
-          : ["-c", PIDFILE_LAUNCH_SCRIPT, "rove-agent", input.pidfile, command, ...args],
+          ? ["-c", LAUNCH_SCRIPT, "paperplane-agent", command, ...args]
+          : ["-c", PIDFILE_LAUNCH_SCRIPT, "paperplane-agent", input.pidfile, command, ...args],
     };
   }
   return {
@@ -131,7 +131,7 @@ export function agentScopeCommand(input: {
     args: [
       "-c",
       SCOPED_LAUNCH_SCRIPT,
-      "rove-agent",
+      "paperplane-agent",
       scope.runtimeDir,
       scope.systemdRun,
       "--user",

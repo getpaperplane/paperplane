@@ -23,7 +23,7 @@ import {
 } from "../../diagnostics/ProcessBudget.ts";
 
 import { foregroundSlots, type PiWorkloadConfig } from "../../diagnostics/PiWorkloadPolicy.ts";
-import { roveMemoryBudget } from "../../process/roveMemoryBudget.ts";
+import { paperplaneMemoryBudget } from "../../process/paperplaneMemoryBudget.ts";
 
 const StartInput = Schema.Struct({ command: Schema.String });
 const ShellInput = Schema.Struct({
@@ -73,14 +73,14 @@ export class PiWorkloads {
   private constructor(config: PiWorkloadConfig, slots: number) {
     this.config = config;
     this.slots = slots;
-    this.pool = config.pool ?? "app-rove-workloads.slice";
+    this.pool = config.pool ?? "app-paperplane-workloads.slice";
     this.runtimeDirectory = process.env.XDG_RUNTIME_DIR ?? `/run/user/${process.getuid!()}`;
   }
 
   static async create(config: PiWorkloadConfig) {
     const meminfo = await NodeFSP.readFile("/proc/meminfo", "utf8").catch(() => "");
     const swap = Number(/^SwapTotal:\s+(\d+)/m.exec(meminfo)?.[1] ?? 0) * 1024;
-    const hostCeiling = roveMemoryBudget(NodeOS.totalmem(), swap).max;
+    const hostCeiling = paperplaneMemoryBudget(NodeOS.totalmem(), swap).max;
     const ceilingBytes =
       config.memoryMiB === "auto"
         ? hostCeiling
@@ -145,7 +145,7 @@ fi
 exec 8>&-
 printf 'ready\\n'
 read -r release`,
-        "rove-lease",
+        "paperplane-lease",
         lock,
         String(slots),
       ],

@@ -40,7 +40,7 @@ describe("resolveNativeAppIcon", () => {
       }),
     );
     const layerConfig = ServerConfig.ServerConfig.layerTest(process.cwd(), {
-      prefix: "rove-native-app-icon-test-",
+      prefix: "paperplane-native-app-icon-test-",
     });
     const layerDependencies = Layer.mergeAll(
       layerConfig,

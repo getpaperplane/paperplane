@@ -46,7 +46,7 @@ describe("parseNewThreadLink", () => {
       value: {
         kind: "new",
         prompt: { text: "Rate me", hiddenCharacters: 0 },
-        repository: { owner: "hafiezul", name: "rove" },
+        repository: { owner: "hafiezul", name: "paperplane" },
         provider: "codex",
         model: "gpt-5",
       },
@@ -63,7 +63,7 @@ describe("parseNewThreadLink", () => {
         ok: true,
         value: {
           kind: "pull-request",
-          pullRequest: { owner: "hafiezul", name: "rove", number: 42 },
+          pullRequest: { owner: "hafiezul", name: "paperplane", number: 42 },
           prompt: null,
         },
       });
@@ -94,7 +94,7 @@ describe("link round trips", () => {
   it("builds a link that parses back to the same prompt", () => {
     const link = buildNewThreadLink({
       prompt: "Swear count & rating?",
-      repository: { owner: "hafiezul", name: "rove" },
+      repository: { owner: "hafiezul", name: "paperplane" },
       provider: "claudeAgent",
       model: "opus",
     });

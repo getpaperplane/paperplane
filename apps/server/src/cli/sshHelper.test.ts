@@ -45,7 +45,7 @@ describe("__ssh-helper pick-port", () => {
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
-        const root = yield* fs.makeTempDirectoryScoped({ prefix: "rove-pick-port-" });
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-pick-port-" });
         yield* fs.writeFileString(`${root}/preload.cjs`, MACOS_BIND_PRELOAD);
         const holder = yield* holdWildcardPort;
         const heldPort = (holder.address() as NodeNet.AddressInfo).port;

@@ -54,7 +54,7 @@ import {
   rewriteCursorSkillMentions,
 } from "./skills.ts";
 import { mergeProviderInstanceEnvironment } from "@getpaperplane/provider-core/server/instanceEnvironment";
-import { roveOrchestrationPromptForFirstRun } from "@getpaperplane/provider-core/server/orchestrationInstructions";
+import { paperplaneOrchestrationPromptForFirstRun } from "@getpaperplane/provider-core/server/orchestrationInstructions";
 import { buildRuntimeInstructions } from "@getpaperplane/provider-core/server/runtimeInstructions";
 import * as IdAllocator from "@getpaperplane/provider-core/server/IdAllocator";
 import { makeProviderFailure } from "@getpaperplane/provider-core/server/failure";
@@ -2151,7 +2151,7 @@ export const makeCursorAdapterV2 = Effect.fn("makeCursorAdapterV2")(function* (
                 .map((skill) => skill.name),
             );
           }
-          const userText = roveOrchestrationPromptForFirstRun({
+          const userText = paperplaneOrchestrationPromptForFirstRun({
             prompt: providerMessageTextWithAttachmentPaths({
               text:
                 cursorSkillNames === undefined
@@ -2161,7 +2161,7 @@ export const makeCursorAdapterV2 = Effect.fn("makeCursorAdapterV2")(function* (
               resolveAttachmentPath: host.resolveAttachmentPath,
             }),
             runOrdinal: turnInput.runOrdinal,
-            hasRoveMcp: mcpServers !== undefined,
+            hasPaperplaneMcp: mcpServers !== undefined,
           });
           const images = yield* Effect.forEach(
             turnInput.message.attachments.filter(isProviderNativeImageAttachment),

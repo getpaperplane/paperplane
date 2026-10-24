@@ -32,7 +32,7 @@ it.layer(NodeServices.layer)("persistent host launch configuration", (it) => {
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const baseDir = yield* fs.makeTempDirectoryScoped({ prefix: "rove-host-config-" });
+      const baseDir = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-host-config-" });
       yield* fs.makeDirectory(path.join(baseDir, "runtime"));
       yield* fs.writeFileString(
         path.join(baseDir, "runtime", "service-config.json"),
@@ -75,7 +75,9 @@ it.layer(NodeServices.layer)("persistent host launch configuration", (it) => {
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const baseDir = yield* fs.makeTempDirectoryScoped({ prefix: "rove-host-config-invalid-" });
+      const baseDir = yield* fs.makeTempDirectoryScoped({
+        prefix: "paperplane-host-config-invalid-",
+      });
       yield* fs.makeDirectory(path.join(baseDir, "runtime"));
       yield* fs.writeFileString(
         path.join(baseDir, "runtime", "service-config.json"),

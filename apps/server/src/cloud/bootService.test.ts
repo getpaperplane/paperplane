@@ -20,11 +20,11 @@ import {
   serviceStateHasPendingUpdate,
 } from "./serviceProtocol.ts";
 
-const linuxRuntime = "/home/theo/.rove/runtime/versions/1.2.3/paperplane";
+const linuxRuntime = "/home/theo/.paperplane/runtime/versions/1.2.3/paperplane";
 const linuxPlan = {
   program: [linuxRuntime, "__service-launcher"],
-  baseDir: "/home/theo/.rove",
-  logPath: "/home/theo/.rove/userdata/logs/boot-service.log",
+  baseDir: "/home/theo/.paperplane",
+  logPath: "/home/theo/.paperplane/userdata/logs/boot-service.log",
   unitPath: "/home/theo/.config/systemd/user/paperplane.service",
 };
 
@@ -53,14 +53,16 @@ it("reads the served Paperplane home back out of a rendered unit or plist", () =
   });
 
   expect(
-    BootService.bootServiceBaseDirOf(BootService.renderBootServiceUnit(plan("/home/theo/.rove"))),
-  ).toBe("/home/theo/.rove");
+    BootService.bootServiceBaseDirOf(
+      BootService.renderBootServiceUnit(plan("/home/theo/.paperplane")),
+    ),
+  ).toBe("/home/theo/.paperplane");
   // Spaces and specifiers are quoted and escaped on the way in.
   expect(
     BootService.bootServiceBaseDirOf(
-      BootService.renderBootServiceUnit(plan("/home/theo/Rove Data/100%")),
+      BootService.renderBootServiceUnit(plan("/home/theo/Paperplane Data/100%")),
     ),
-  ).toBe("/home/theo/Rove Data/100%");
+  ).toBe("/home/theo/Paperplane Data/100%");
   expect(
     BootService.bootServiceBaseDirOf(
       BootService.renderBootServicePlist(plan("/Users/theo/a&b"), {
@@ -78,11 +80,11 @@ it("survives the kernel OOM-killing a greedy agent child", () => {
   expect(unit).toContain("OOMPolicy=continue");
 });
 
-const macRuntime = "/Users/theo/.rove/runtime/versions/1.2.3/paperplane";
+const macRuntime = "/Users/theo/.paperplane/runtime/versions/1.2.3/paperplane";
 const macPlan = {
   program: [macRuntime, "__service-launcher"],
-  baseDir: "/Users/theo/.rove",
-  logPath: "/Users/theo/.rove/userdata/logs/boot-service.log",
+  baseDir: "/Users/theo/.paperplane",
+  logPath: "/Users/theo/.paperplane/userdata/logs/boot-service.log",
   unitPath: "/Users/theo/Library/LaunchAgents/io.github.getpaperplane.paperplane.service.plist",
 };
 const macInstallerPath =
@@ -117,20 +119,20 @@ it("appends both stdio streams to the boot service log", () => {
   const plist = BootService.renderBootServicePlist(macPlan, macRenderOptions);
 
   expect(plist).toContain(
-    "<key>StandardOutPath</key>\n  <string>/Users/theo/.rove/userdata/logs/boot-service.log</string>",
+    "<key>StandardOutPath</key>\n  <string>/Users/theo/.paperplane/userdata/logs/boot-service.log</string>",
   );
   expect(plist).toContain(
-    "<key>StandardErrorPath</key>\n  <string>/Users/theo/.rove/userdata/logs/boot-service.log</string>",
+    "<key>StandardErrorPath</key>\n  <string>/Users/theo/.paperplane/userdata/logs/boot-service.log</string>",
   );
 });
 
 it("escapes XML in host paths", () => {
   const plist = BootService.renderBootServicePlist(
-    { ...macPlan, baseDir: "/Users/theo/Rove & <Co>" },
+    { ...macPlan, baseDir: "/Users/theo/Paperplane & <Co>" },
     { homeDir: "/Users/theo", environmentPath: "/Users/theo/Tools & <Scripts>:/usr/bin" },
   );
 
-  expect(plist).toContain("<string>/Users/theo/Rove &amp; &lt;Co&gt;</string>");
+  expect(plist).toContain("<string>/Users/theo/Paperplane &amp; &lt;Co&gt;</string>");
   expect(plist).toContain("<string>/Users/theo/Tools &amp; &lt;Scripts&gt;:/usr/bin</string>");
 });
 
@@ -140,8 +142,8 @@ const makeHarness = Effect.fn("test.make_boot_service_harness")(function* (
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const home = yield* fs.makeTempDirectoryScoped({ prefix: "rove-boot-service-test-" });
-  const baseDir = path.join(home, ".rove");
+  const home = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-boot-service-test-" });
+  const baseDir = path.join(home, ".paperplane");
   const statePath = path.join(baseDir, "runtime", "service-state.json");
   // A complete pinned runtime is already present, so install only validates
   // it and never downloads a release archive.
@@ -691,7 +693,7 @@ it.layer(NodeServices.layer)("boot service install", (it) => {
       control.active = true;
 
       const fs = yield* FileSystem.FileSystem;
-      const otherHome = yield* fs.makeTempDirectoryScoped({ prefix: "rove-doctor-other-" });
+      const otherHome = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-doctor-other-" });
       const other = yield* makeService(undefined, "1.2.3", otherHome);
       commands.length = 0;
       expect(yield* other.withStopped(Effect.sync(() => control.active))).toBe(true);
@@ -726,9 +728,9 @@ it.layer(NodeServices.layer)("boot service install", (it) => {
       yield* service.install();
       commands.length = 0;
       const path = yield* Path.Path;
-      const otherHome = yield* fs.makeTempDirectoryScoped({ prefix: "rove-other-home-" });
+      const otherHome = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-other-home-" });
 
-      const other = yield* makeService(undefined, "1.2.3", path.join(otherHome, ".rove"));
+      const other = yield* makeService(undefined, "1.2.3", path.join(otherHome, ".paperplane"));
       expect(yield* other.restart).toBe(false);
       expect(commands.filter((command) => command.startsWith("systemctl "))).toEqual([]);
     }),

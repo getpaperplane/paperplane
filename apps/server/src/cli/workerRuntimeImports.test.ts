@@ -70,7 +70,7 @@ registerHooks({
 });
 
 it("reads an absent Claude session through the hidden history command", () => {
-  const directory = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "rove-cli-history-"));
+  const directory = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "paperplane-cli-history-"));
   try {
     const result = NodeChildProcess.spawnSync(
       process.execPath,

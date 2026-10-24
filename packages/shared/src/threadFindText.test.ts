@@ -130,12 +130,12 @@ it("indexes skill labels in prose but leaves links and code literal", () => {
       {
         role: "assistant",
         streaming: false,
-        text: "Use $test-rove-app now.\n\n`$test-rove-app`\n\n[$test-rove-app](https://example.com)",
+        text: "Use $test-paperplane-app now.\n\n`$test-paperplane-app`\n\n[$test-paperplane-app](https://example.com)",
       },
       undefined,
-      [{ name: "test-rove-app", displayName: "Paperplane App Testing" }],
+      [{ name: "test-paperplane-app", displayName: "Paperplane App Testing" }],
     ),
-  ).toEqual(["Use Paperplane App Testing now.", "$test-rove-app", "$test-rove-app"]);
+  ).toEqual(["Use Paperplane App Testing now.", "$test-paperplane-app", "$test-paperplane-app"]);
 });
 
 it("indexes the citation chip label instead of its link text", () => {

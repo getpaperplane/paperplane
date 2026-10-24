@@ -67,6 +67,6 @@ export function assertOpenCode2InboxOutput(
 
   // Each turn remembers the user message it prompted with: fork and rollback cut there.
   for (const turn of [...turnOf(first), ...turnOf(queued)]) {
-    assert.match(turn.nativeTurnRef?.nativeId ?? "", /^msg_rove_turn_/);
+    assert.match(turn.nativeTurnRef?.nativeId ?? "", /^msg_paperplane_turn_/);
   }
 }

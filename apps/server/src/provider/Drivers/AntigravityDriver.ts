@@ -277,7 +277,7 @@ export const AntigravityDriver: ProviderDriver<
         input: Pick<AntigravityAcpRuntimeInput, "onAuthorizationUrl">,
       ) {
         const cwd = yield* fileSystem
-          .makeTempDirectoryScoped({ prefix: "rove-antigravity-setup-" })
+          .makeTempDirectoryScoped({ prefix: "paperplane-antigravity-setup-" })
           .pipe(
             Effect.mapError(
               () =>
@@ -301,7 +301,7 @@ export const AntigravityDriver: ProviderDriver<
         );
         const runtime = yield* makeRuntime({
           cwd,
-          clientInfo: { name: "rove-provider-setup", version: "0.0.0" },
+          clientInfo: { name: "paperplane-provider-setup", version: "0.0.0" },
           mcpServers: [],
           ...(input.onAuthorizationUrl ? { onAuthorizationUrl: input.onAuthorizationUrl } : {}),
         });
@@ -454,7 +454,7 @@ export const AntigravityDriver: ProviderDriver<
         makeRuntime: (cwd) =>
           makeRuntime({
             cwd,
-            clientInfo: { name: "rove-text", version: "0.0.0" },
+            clientInfo: { name: "paperplane-text", version: "0.0.0" },
             mcpServers: [],
           }),
       });

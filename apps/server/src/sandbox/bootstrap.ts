@@ -128,8 +128,8 @@ process.stdin.on('end', () => {
     for (const file of payload.files) {
       const target = path.join(home, file.path);
       fs.mkdirSync(path.dirname(target), { recursive: true, mode: 0o700 });
-      fs.writeFileSync(target + '.rove-tmp', file.content, { mode: 0o600 });
-      fs.renameSync(target + '.rove-tmp', target);
+      fs.writeFileSync(target + '.paperplane-tmp', file.content, { mode: 0o600 });
+      fs.renameSync(target + '.paperplane-tmp', target);
     }
   } catch { process.exit(${SANDBOX_CREDENTIALS_FAILED}); }
   const npm = payload.tools.filter(tool => tool.install === 'npm' && !has(tool.bin)).map(tool => tool.name);

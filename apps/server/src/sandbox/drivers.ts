@@ -221,7 +221,9 @@ export const makeSandboxDriver: SandboxDriverFactory = async (provider, credenti
     region: SandboxRegion | undefined,
     snapshotId?: string,
   ): Promise<SandboxHandle> => {
-    const app = await client.apps.fromName("rove-thread-sandboxes", { createIfMissing: true });
+    const app = await client.apps.fromName("paperplane-thread-sandboxes", {
+      createIfMissing: true,
+    });
     const image = snapshotId
       ? await client.images.fromId(snapshotId)
       : client.images.fromRegistry("node:24-bookworm");
@@ -247,9 +249,9 @@ export const makeSandboxDriver: SandboxDriverFactory = async (provider, credenti
   };
   const driver: SandboxDriver = {
     verify: async () => {
-      await client.apps.fromName("rove-thread-sandboxes", { createIfMissing: true });
+      await client.apps.fromName("paperplane-thread-sandboxes", { createIfMissing: true });
     },
-    create: (id, region) => create(`rove-${id}`, region),
+    create: (id, region) => create(`paperplane-${id}`, region),
     resume: async (handle) => {
       if (!handle.paused) {
         try {

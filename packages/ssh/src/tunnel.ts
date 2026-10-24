@@ -65,7 +65,7 @@ const REMOTE_ARCHIVE_LOCK_WAIT_SECONDS = 360;
 const REMOTE_ARCHIVE_LAUNCH_TIMEOUT_MS = 900_000;
 const REMOTE_REUSE_READY_TIMEOUT_MS = 2_000;
 
-export interface RemoteRoveRunnerOptions {
+export interface RemotePaperplaneRunnerOptions {
   /**
    * Dev mode: run `node <path>` on the remote instead of a release archive.
    * The only mode that needs Node on the remote.
@@ -82,7 +82,7 @@ export interface RemoteRoveRunnerOptions {
 }
 
 export interface SshEnvironmentManagerOptions {
-  readonly resolveCliRunner?: Effect.Effect<RemoteRoveRunnerOptions>;
+  readonly resolveCliRunner?: Effect.Effect<RemotePaperplaneRunnerOptions>;
 }
 
 interface SshTunnelEntry {
@@ -124,11 +124,11 @@ function sshTargetLogFields(target: DesktopSshEnvironmentTarget) {
   };
 }
 
-function isNodeScriptRunner(runner: RemoteRoveRunnerOptions | undefined): boolean {
+function isNodeScriptRunner(runner: RemotePaperplaneRunnerOptions | undefined): boolean {
   return Boolean(runner?.nodeScriptPath?.trim());
 }
 
-function sshRunnerLogFields(runner: RemoteRoveRunnerOptions | undefined) {
+function sshRunnerLogFields(runner: RemotePaperplaneRunnerOptions | undefined) {
   if (runner?.nodeScriptPath?.trim()) {
     return { runner: "node-script", nodeScriptPath: runner.nodeScriptPath.trim() };
   }
@@ -466,10 +466,10 @@ fi
 # Unpacked into the pinned-runtime layout so \`paperplane service install\` reuses it.
 PAPERPLANE_RELEASE_BASE_URL=@@PAPERPLANE_RELEASE_BASE_URL@@
 PAPERPLANE_RUNTIME_DIR="$HOME/.paperplane/runtime/versions/$PAPERPLANE_ARCHIVE_VERSION"
-rove_runtime_ready() {
+paperplane_runtime_ready() {
   [ -x "$PAPERPLANE_RUNTIME_DIR/paperplane" ] && [ "$(cat "$PAPERPLANE_RUNTIME_DIR/.install-complete" 2>/dev/null)" = "$PAPERPLANE_ARCHIVE_VERSION" ]
 }
-if ! rove_runtime_ready; then
+if ! paperplane_runtime_ready; then
   mkdir -p "$HOME/.paperplane/runtime/versions"
   # Concurrent launches (two clients, a retry racing a slow first run) must
   # not both install: mkdir is the atomic lock and the ready check repeats
@@ -509,7 +509,7 @@ if ! rove_runtime_ready; then
   printf '%s\\n' "$$" > "$PAPERPLANE_LOCK/pid.tmp" && mv "$PAPERPLANE_LOCK/pid.tmp" "$PAPERPLANE_LOCK/pid"
   trap 'rm -rf "$PAPERPLANE_LOCK"' EXIT
 fi
-if ! rove_runtime_ready; then
+if ! paperplane_runtime_ready; then
   case "$(uname -s)" in
     Darwin) PAPERPLANE_PLATFORM="darwin" ;;
     Linux) PAPERPLANE_PLATFORM="linux" ;;
@@ -523,14 +523,14 @@ if ! rove_runtime_ready; then
   PAPERPLANE_ARCHIVE="rove-$PAPERPLANE_ARCHIVE_VERSION-$PAPERPLANE_PLATFORM-$PAPERPLANE_ARCH.tar.gz"
   PAPERPLANE_STAGING="$(mktemp -d "$HOME/.paperplane/runtime/versions/.staging-XXXXXX")"
   trap 'rm -rf "$PAPERPLANE_STAGING" "$PAPERPLANE_LOCK"' EXIT
-  rove_fetch() {
+  paperplane_fetch() {
     if command -v curl >/dev/null 2>&1; then curl -fsSL --connect-timeout 30 --max-time "$3" "$1" -o "$2"
     elif command -v wget >/dev/null 2>&1; then wget -q --timeout=30 --tries=1 "$1" -O "$2"
     else printf 'Remote host needs curl or wget to download %s.\\n' "$PAPERPLANE_ARCHIVE" >&2; exit 1
     fi
   }
-  rove_fetch "$PAPERPLANE_RELEASE_BASE_URL/v$PAPERPLANE_ARCHIVE_VERSION/SHA256SUMS" "$PAPERPLANE_STAGING/SHA256SUMS" @@PAPERPLANE_ARCHIVE_CHECKSUMS_SECONDS@@
-  rove_fetch "$PAPERPLANE_RELEASE_BASE_URL/v$PAPERPLANE_ARCHIVE_VERSION/$PAPERPLANE_ARCHIVE" "$PAPERPLANE_STAGING/$PAPERPLANE_ARCHIVE" @@PAPERPLANE_ARCHIVE_DOWNLOAD_SECONDS@@
+  paperplane_fetch "$PAPERPLANE_RELEASE_BASE_URL/v$PAPERPLANE_ARCHIVE_VERSION/SHA256SUMS" "$PAPERPLANE_STAGING/SHA256SUMS" @@PAPERPLANE_ARCHIVE_CHECKSUMS_SECONDS@@
+  paperplane_fetch "$PAPERPLANE_RELEASE_BASE_URL/v$PAPERPLANE_ARCHIVE_VERSION/$PAPERPLANE_ARCHIVE" "$PAPERPLANE_STAGING/$PAPERPLANE_ARCHIVE" @@PAPERPLANE_ARCHIVE_DOWNLOAD_SECONDS@@
   PAPERPLANE_EXPECTED="$(grep " \\*\\{0,1\\}$PAPERPLANE_ARCHIVE$" "$PAPERPLANE_STAGING/SHA256SUMS" | cut -d' ' -f1)"
   if command -v sha256sum >/dev/null 2>&1; then
     PAPERPLANE_ACTUAL="$(sha256sum "$PAPERPLANE_STAGING/$PAPERPLANE_ARCHIVE" | cut -d' ' -f1)"
@@ -862,7 +862,7 @@ export class SshMissingRunnerError extends Schema.TaggedError<SshMissingRunnerEr
   }
 }
 
-export function buildRemoteRoveRunnerScript(input?: RemoteRoveRunnerOptions): string {
+export function buildRemotePaperplaneRunnerScript(input?: RemotePaperplaneRunnerOptions): string {
   const nodeScriptPath = input?.nodeScriptPath?.trim() || "";
   const archiveVersion = input?.archiveVersion?.trim() || "";
   if (nodeScriptPath === "" && archiveVersion === "") {
@@ -889,7 +889,7 @@ export function buildRemoteRoveRunnerScript(input?: RemoteRoveRunnerOptions): st
   );
 }
 
-export function buildRemoteNodeEnvScript(input?: RemoteRoveRunnerOptions): string {
+export function buildRemoteNodeEnvScript(input?: RemotePaperplaneRunnerOptions): string {
   return stripTrailingNewlines(
     applyScriptPlaceholders(REMOTE_NODE_ENV_SCRIPT, {
       PAPERPLANE_NODE_ENGINE_RANGE: shellSingleQuote(input?.nodeEngineRange?.trim() || ""),
@@ -900,13 +900,13 @@ export function buildRemoteNodeEnvScript(input?: RemoteRoveRunnerOptions): strin
   );
 }
 
-export function buildRemoteLaunchScript(input?: RemoteRoveRunnerOptions): string {
+export function buildRemoteLaunchScript(input?: RemotePaperplaneRunnerOptions): string {
   return applyScriptPlaceholders(
     isNodeScriptRunner(input) ? REMOTE_LAUNCH_SCRIPT : REMOTE_SERVICE_LAUNCH_SCRIPT,
     {
       PAPERPLANE_ARCHIVE_MODE: isNodeScriptRunner(input) ? "0" : "1",
       PAPERPLANE_NODE_ENV_SCRIPT: buildRemoteNodeEnvScript(input),
-      PAPERPLANE_RUNNER_SCRIPT: stripTrailingNewlines(buildRemoteRoveRunnerScript(input)),
+      PAPERPLANE_RUNNER_SCRIPT: stripTrailingNewlines(buildRemotePaperplaneRunnerScript(input)),
       PAPERPLANE_PICK_PORT_SCRIPT: stripTrailingNewlines(REMOTE_PICK_PORT_SCRIPT),
       PAPERPLANE_WAIT_READY_SCRIPT: stripTrailingNewlines(REMOTE_WAIT_READY_SCRIPT),
       PAPERPLANE_DEFAULT_REMOTE_PORT: String(DEFAULT_REMOTE_PORT),
@@ -920,11 +920,11 @@ export function buildRemoteLaunchScript(input?: RemoteRoveRunnerOptions): string
 
 export function buildRemotePairingScript(
   stateKey: string,
-  input?: RemoteRoveRunnerOptions,
+  input?: RemotePaperplaneRunnerOptions,
 ): string {
   return applyScriptPlaceholders(REMOTE_PAIRING_SCRIPT, {
     PAPERPLANE_STATE_KEY: stateKey,
-    PAPERPLANE_RUNNER_SCRIPT: stripTrailingNewlines(buildRemoteRoveRunnerScript(input)),
+    PAPERPLANE_RUNNER_SCRIPT: stripTrailingNewlines(buildRemotePaperplaneRunnerScript(input)),
   });
 }
 
@@ -944,7 +944,7 @@ export const launchOrReuseRemoteServer = Effect.fn("ssh/tunnel.launchOrReuseRemo
   function* (
     target: DesktopSshEnvironmentTarget,
     input?: SshAuth.SshAuthOptions,
-    runner?: RemoteRoveRunnerOptions,
+    runner?: RemotePaperplaneRunnerOptions,
   ): Effect.fn.Return<
     { readonly remotePort: number; readonly remoteServerKind: "external" | "managed" | null },
     SshCommandError | SshInvalidTargetError | SshLaunchError,
@@ -1004,7 +1004,7 @@ export const launchOrReuseRemoteServer = Effect.fn("ssh/tunnel.launchOrReuseRemo
 export const issueRemotePairingToken = Effect.fn("ssh/tunnel.issueRemotePairingToken")(function* (
   target: DesktopSshEnvironmentTarget,
   input?: SshAuth.SshAuthOptions,
-  runner?: RemoteRoveRunnerOptions,
+  runner?: RemotePaperplaneRunnerOptions,
 ): Effect.fn.Return<
   {
     readonly credential: string;
@@ -1571,7 +1571,7 @@ const makeSshEnvironmentManager = Effect.fn("ssh/tunnel.SshEnvironmentManager.ma
   const createTunnelEntry = Effect.fn("ssh/tunnel.ensureTunnelEntry.create")(function* (input: {
     readonly key: string;
     readonly resolvedTarget: DesktopSshEnvironmentTarget;
-    readonly runner?: RemoteRoveRunnerOptions;
+    readonly runner?: RemotePaperplaneRunnerOptions;
   }): Effect.fn.Return<SshTunnelEntry, SshEnvironmentEffectError, SshEnvironmentEffectContext> {
     yield* Effect.logDebug("ssh.environment.tunnel.create.start", {
       ...sshTargetLogFields(input.resolvedTarget),
@@ -1687,7 +1687,7 @@ const makeSshEnvironmentManager = Effect.fn("ssh/tunnel.SshEnvironmentManager.ma
   const ensureTunnelEntry = Effect.fn("ssh/tunnel.ensureTunnelEntry")(function* (
     key: string,
     resolvedTarget: DesktopSshEnvironmentTarget,
-    runner?: RemoteRoveRunnerOptions,
+    runner?: RemotePaperplaneRunnerOptions,
   ): Effect.fn.Return<SshTunnelEntry, SshEnvironmentEffectError, SshEnvironmentEffectContext> {
     const entry = tunnels.get(key) ?? null;
 

@@ -33,10 +33,10 @@ it("launch prompt stays a single argv-safe line naming the prompt file", () => {
   // The launch argument goes through cmd.exe on Windows (.cmd shims), which
   // cannot carry newlines; the playbook itself must stay on disk.
   const launch = buildTriageLaunchPrompt(
-    String.raw`C:\Users\a b\.rove\userdata\triage\x\prompt.md`,
+    String.raw`C:\Users\a b\.paperplane\userdata\triage\x\prompt.md`,
   );
   assert.notInclude(launch, "\n");
-  assert.include(launch, String.raw`C:\Users\a b\.rove\userdata\triage\x\prompt.md`);
+  assert.include(launch, String.raw`C:\Users\a b\.paperplane\userdata\triage\x\prompt.md`);
   assert.isBelow(launch.length, 1_000);
 });
 
@@ -49,27 +49,27 @@ it("context file carries every path the playbook depends on", () => {
     launchedAs: "npx @getpaperplane/cli triage",
     server: "running (pid 42, http://127.0.0.1:4501)",
     paths: {
-      stateDir: "/home/u/.rove/userdata",
-      dbPath: "/home/u/.rove/userdata/state.sqlite",
-      settingsPath: "/home/u/.rove/userdata/settings.json",
-      logsDir: "/home/u/.rove/userdata/logs",
-      serviceLogPath: "/home/u/.rove/userdata/logs/boot-service.log",
-      desktopBackendLogGlob: "/home/u/.rove/userdata/logs/server-child*.log*",
-      serverTracePath: "/home/u/.rove/userdata/logs/server.trace.ndjson",
-      providerEventLogPath: "/home/u/.rove/userdata/logs/provider/events.log",
-      terminalLogsDir: "/home/u/.rove/userdata/logs/terminals",
-      providerStatusCacheDir: "/home/u/.rove/caches",
-      secretsDir: "/home/u/.rove/userdata/secrets",
-      sourceCacheDir: "/home/u/.rove/source",
+      stateDir: "/home/u/.paperplane/userdata",
+      dbPath: "/home/u/.paperplane/userdata/state.sqlite",
+      settingsPath: "/home/u/.paperplane/userdata/settings.json",
+      logsDir: "/home/u/.paperplane/userdata/logs",
+      serviceLogPath: "/home/u/.paperplane/userdata/logs/boot-service.log",
+      desktopBackendLogGlob: "/home/u/.paperplane/userdata/logs/server-child*.log*",
+      serverTracePath: "/home/u/.paperplane/userdata/logs/server.trace.ndjson",
+      providerEventLogPath: "/home/u/.paperplane/userdata/logs/provider/events.log",
+      terminalLogsDir: "/home/u/.paperplane/userdata/logs/terminals",
+      providerStatusCacheDir: "/home/u/.paperplane/caches",
+      secretsDir: "/home/u/.paperplane/userdata/secrets",
+      sourceCacheDir: "/home/u/.paperplane/source",
     },
   });
-  assert.include(context, "/home/u/.rove/userdata/state.sqlite");
-  assert.include(context, "/home/u/.rove/userdata/logs/server.trace.ndjson");
-  assert.include(context, "/home/u/.rove/userdata/logs/boot-service.log");
-  assert.include(context, "/home/u/.rove/userdata/logs/server-child*.log*");
-  assert.include(context, "/home/u/.rove/userdata/logs/provider/events.log");
-  assert.include(context, "/home/u/.rove/userdata/secrets");
-  assert.include(context, "/home/u/.rove/source");
+  assert.include(context, "/home/u/.paperplane/userdata/state.sqlite");
+  assert.include(context, "/home/u/.paperplane/userdata/logs/server.trace.ndjson");
+  assert.include(context, "/home/u/.paperplane/userdata/logs/boot-service.log");
+  assert.include(context, "/home/u/.paperplane/userdata/logs/server-child*.log*");
+  assert.include(context, "/home/u/.paperplane/userdata/logs/provider/events.log");
+  assert.include(context, "/home/u/.paperplane/userdata/secrets");
+  assert.include(context, "/home/u/.paperplane/source");
   assert.include(context, "npx @getpaperplane/cli triage");
 });
 
@@ -84,18 +84,18 @@ it("context file labels the CLI version as the CLI's, not the user's build", () 
     launchedAs: "npx @getpaperplane/cli triage",
     server: "running (pid 42, http://127.0.0.1:3773, version 0.0.43-nightly.20260923.2173)",
     paths: {
-      stateDir: "/home/u/.rove/userdata",
-      dbPath: "/home/u/.rove/userdata/state.sqlite",
-      settingsPath: "/home/u/.rove/userdata/settings.json",
-      logsDir: "/home/u/.rove/userdata/logs",
-      serviceLogPath: "/home/u/.rove/userdata/logs/boot-service.log",
-      desktopBackendLogGlob: "/home/u/.rove/userdata/logs/server-child*.log*",
-      serverTracePath: "/home/u/.rove/userdata/logs/server.trace.ndjson",
-      providerEventLogPath: "/home/u/.rove/userdata/logs/provider/events.log",
-      terminalLogsDir: "/home/u/.rove/userdata/logs/terminals",
-      providerStatusCacheDir: "/home/u/.rove/caches",
-      secretsDir: "/home/u/.rove/userdata/secrets",
-      sourceCacheDir: "/home/u/.rove/source",
+      stateDir: "/home/u/.paperplane/userdata",
+      dbPath: "/home/u/.paperplane/userdata/state.sqlite",
+      settingsPath: "/home/u/.paperplane/userdata/settings.json",
+      logsDir: "/home/u/.paperplane/userdata/logs",
+      serviceLogPath: "/home/u/.paperplane/userdata/logs/boot-service.log",
+      desktopBackendLogGlob: "/home/u/.paperplane/userdata/logs/server-child*.log*",
+      serverTracePath: "/home/u/.paperplane/userdata/logs/server.trace.ndjson",
+      providerEventLogPath: "/home/u/.paperplane/userdata/logs/provider/events.log",
+      terminalLogsDir: "/home/u/.paperplane/userdata/logs/terminals",
+      providerStatusCacheDir: "/home/u/.paperplane/caches",
+      secretsDir: "/home/u/.paperplane/userdata/secrets",
+      sourceCacheDir: "/home/u/.paperplane/source",
     },
   });
   assert.notInclude(context, "Installed version");

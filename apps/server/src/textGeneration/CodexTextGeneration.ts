@@ -105,7 +105,7 @@ export const makeCodexTextGeneration = Effect.fn("makeCodexTextGeneration")(func
   ): Effect.Effect<string, TextGenerationError> =>
     fileSystem
       .makeTempFile({
-        prefix: `rove-${prefix}-${process.pid}-`,
+        prefix: `paperplane-${prefix}-${process.pid}-`,
       })
       .pipe(
         Effect.tap((filePath) =>

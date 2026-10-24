@@ -344,7 +344,7 @@ describe("releaseManagedTunnelOnShutdown", () => {
         // The release consults the launcher state file under the configured
         // baseDir, so every harness run gets a scoped temp baseDir.
         Effect.provide(
-          ServerConfigModule.layerTest("/", { prefix: "rove-http-release-test-" }).pipe(
+          ServerConfigModule.layerTest("/", { prefix: "paperplane-http-release-test-" }).pipe(
             Layer.provideMerge(NodeServices.layer),
           ),
         ),

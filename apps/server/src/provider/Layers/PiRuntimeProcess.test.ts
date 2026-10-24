@@ -17,7 +17,7 @@ describe("isolated Pi instance runtime", () => {
   const runtimes: PiRuntimeProcess[] = [];
   beforeEach(() => {
     root = NodeFS.realpathSync(
-      NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "rove-pi-instance-")),
+      NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "paperplane-pi-instance-")),
     );
     vi.stubEnv("PI_CODING_AGENT_DIR", NodePath.join(root, "server-default"));
     vi.stubEnv("PI_OFFLINE", "1");
@@ -119,7 +119,7 @@ describe("isolated Pi instance runtime", () => {
       (await runtime.getCatalogModels()).some((model) => model.slug === "local/guarded-instance"),
     ).toBe(true);
     const current = await session(runtime, agentDir);
-    const probe = nextEvent(current, (event) => event.type === "rove_ui_notify");
+    const probe = nextEvent(current, (event) => event.type === "paperplane_ui_notify");
     await current.prompt("/probe-instance");
     expect(JSON.parse(String((await probe).message))).toMatchObject({ directoryNow: agentDir });
     await current.dispose();
@@ -137,7 +137,7 @@ describe("isolated Pi instance runtime", () => {
         agentDir,
         workloadProtection: "on" as const,
         workloadMemoryMiB: "384",
-        workloadPool: `rove-sdk-workload-test-${NodePath.basename(root)}.slice`,
+        workloadPool: `paperplane-sdk-workload-test-${NodePath.basename(root)}.slice`,
       };
       const environment = { ...process.env, PAPERPLANE_PI_MEMORY_BUDGET_MIB: "384" };
       const runtime = await PiRuntimeProcess.create(options, false, environment);
@@ -221,7 +221,7 @@ describe("isolated Pi instance runtime", () => {
     expect(secondModels.some((model) => model.slug === "local/instance-b")).toBe(true);
     const sessions = await Promise.all([session(first, a), session(second, b)]);
     const probes = sessions.map((current) =>
-      nextEvent(current, (event) => event.type === "rove_ui_notify"),
+      nextEvent(current, (event) => event.type === "paperplane_ui_notify"),
     );
     await Promise.all(sessions.map((current) => current.prompt("/probe-instance")));
     for (const [index, probe] of (await Promise.all(probes)).entries()) {
@@ -247,7 +247,7 @@ describe("isolated Pi instance runtime", () => {
     const agentDir = directory("relaunch");
     const runtime = await create(agentDir);
     const current = await session(runtime, agentDir);
-    const reply = nextEvent(current, (event) => event.type === "rove_ui_notify");
+    const reply = nextEvent(current, (event) => event.type === "paperplane_ui_notify");
     await current.prompt("/relaunch-pi");
     // The child ran the fixture model from the inherited agent directory.
     expect((await reply).message).toBe("relaunch");
@@ -257,13 +257,13 @@ describe("isolated Pi instance runtime", () => {
     const agentDir = directory("interactive");
     const runtime = await create(agentDir);
     const current = await session(runtime, agentDir);
-    const question = nextEvent(current, (event) => event.type === "rove_ui_request");
+    const question = nextEvent(current, (event) => event.type === "paperplane_ui_request");
     const preflight = vi.fn();
     const pending = current.prompt("/ask-instance", { preflightResult: preflight });
     const request = await question;
     expect(preflight).toHaveBeenCalledWith(true);
     expect(current.hasPendingUserInput).toBe(true);
-    const confirmed = nextEvent(current, (event) => event.type === "rove_ui_notify");
+    const confirmed = nextEvent(current, (event) => event.type === "paperplane_ui_notify");
     expect(await current.respondToUserInput?.(String(request.requestId), { answer: "0" })).toBe(
       true,
     );
@@ -306,20 +306,20 @@ describe("isolated Pi instance runtime", () => {
     NodeFS.copyFileSync(new URL("./fixtures/pi-virtual-models.ts", import.meta.url), routerPath);
     const runtime = await create(agentDir);
     expect(await runtime.getCatalogModels()).toContainEqual(
-      expect.objectContaining({ slug: "rove-router-test/auto" }),
+      expect.objectContaining({ slug: "paperplane-router-test/auto" }),
     );
     const current = await runtime.createSession({
       cwd: root,
       agentDir,
       interactive: true,
-      model: "rove-router-test/auto",
+      model: "paperplane-router-test/auto",
       thinkingLevel: "off",
       resumeSessionId: undefined,
     });
     await current.prompt("hello");
     expect(current.messages.at(-1)).toMatchObject({
       role: "assistant",
-      provider: "rove-extension-test",
+      provider: "paperplane-extension-test",
       model: "fixture",
       content: [{ type: "text", text: "done" }],
     });
@@ -333,13 +333,13 @@ describe("isolated Pi instance runtime", () => {
       resumeSessionId: cursor.sessionId,
       resumeSessionFile: cursor.sessionFile,
     });
-    expect(resumed.getModel?.()).toMatchObject({ provider: "rove-router-test", id: "auto" });
+    expect(resumed.getModel?.()).toMatchObject({ provider: "paperplane-router-test", id: "auto" });
     await resumed.dispose();
     NodeFS.unlinkSync(routerPath);
     await runtime.refreshCatalog();
     const models = await runtime.getCatalogModels();
-    expect(models.some((model) => model.slug === "rove-router-test/auto")).toBe(false);
-    expect(models.some((model) => model.slug === "rove-extension-test/fixture")).toBe(true);
+    expect(models.some((model) => model.slug === "paperplane-router-test/auto")).toBe(false);
+    expect(models.some((model) => model.slug === "paperplane-extension-test/fixture")).toBe(true);
   });
 
   it("shares extension model implementations with tool-free helper sessions", async () => {
@@ -449,10 +449,10 @@ describe("isolated Pi instance runtime", () => {
   it("allows Stop to cancel a dialog without waiting for its prompt", async () => {
     const agentDir = directory("stop-dialog");
     const current = await session(await create(agentDir), agentDir);
-    const question = nextEvent(current, (event) => event.type === "rove_ui_request");
+    const question = nextEvent(current, (event) => event.type === "paperplane_ui_request");
     const pending = current.prompt("/ask-instance").catch((error: unknown) => error);
     await question;
-    const resolved = nextEvent(current, (event) => event.type === "rove_ui_resolved");
+    const resolved = nextEvent(current, (event) => event.type === "paperplane_ui_resolved");
     await current.abort();
     await pending;
     await resolved;
@@ -474,10 +474,10 @@ describe("isolated Pi instance runtime", () => {
     const [exiting, surviving] = await Promise.all([session(first, a), session(second, b)]);
     const failed = nextEvent(exiting, (event) => event.type === "prompt_error");
     const waiting = await session(first, a);
-    const question = nextEvent(waiting, (event) => event.type === "rove_ui_request");
+    const question = nextEvent(waiting, (event) => event.type === "paperplane_ui_request");
     const pendingDialog = waiting.prompt("/ask-instance").catch((error: unknown) => error);
     await question;
-    const dismissed = nextEvent(waiting, (event) => event.type === "rove_ui_resolved");
+    const dismissed = nextEvent(waiting, (event) => event.type === "paperplane_ui_resolved");
     await expect(exiting.prompt("/exit-instance")).rejects.toThrow(/exited|disconnected/);
     expect((await failed).error).toMatch(/exited|disconnected/);
     expect(await pendingDialog).toBeInstanceOf(Error);
@@ -495,7 +495,7 @@ describe("isolated Pi instance runtime", () => {
     const current = await session(runtime, agentDir);
     const blocking = nextEvent(
       current,
-      (event) => event.type === "rove_ui_notify" && event.message === "blocking",
+      (event) => event.type === "paperplane_ui_notify" && event.message === "blocking",
     );
     const pending = current.prompt("/hang-instance").catch((error: unknown) => error);
     await blocking;
@@ -644,7 +644,7 @@ describe("isolated Pi instance runtime", () => {
     const agentDir = directory("slow-command");
     const runtime = await create(agentDir);
     const current = await session(runtime, agentDir);
-    const stalled = nextEvent(current, (event) => event.type === "rove_ui_notify");
+    const stalled = nextEvent(current, (event) => event.type === "paperplane_ui_notify");
     const preflight = vi.fn();
     vi.useFakeTimers();
     void current.prompt("/stall-instance", { preflightResult: preflight }).catch(() => {});

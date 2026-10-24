@@ -3,7 +3,7 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { EnvironmentId, ProviderInstanceId, ThreadId } from "@getpaperplane/contracts";
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 
-import { createPiRoveTools, toPiRoveToolResult } from "./PiRoveTools.ts";
+import { createPiPaperplaneTools, toPiPaperplaneToolResult } from "./PiPaperplaneTools.ts";
 
 const config = {
   environmentId: EnvironmentId.make("pi-tools-env"),
@@ -52,7 +52,7 @@ function mockEndpoint(firstTool = "preview_status") {
         ? {
             protocolVersion: "2025-06-18",
             capabilities: { tools: {} },
-            serverInfo: { name: "Rove", version: "1" },
+            serverInfo: { name: "Paperplane", version: "1" },
           }
         : request.method === "tools/list"
           ? {
@@ -96,7 +96,7 @@ describe("Pi's built-in Paperplane tools", () => {
   it("does nothing without a thread credential", async () => {
     const fetch = vi.fn();
     vi.stubGlobal("fetch", fetch);
-    const bridge = await createPiRoveTools(undefined);
+    const bridge = await createPiPaperplaneTools(undefined);
     expect(bridge.tools).toEqual([]);
     await bridge.dispose();
     expect(fetch).not.toHaveBeenCalled();
@@ -104,7 +104,7 @@ describe("Pi's built-in Paperplane tools", () => {
 
   it("discovers all pages, authenticates calls, preserves screenshots, and closes once", async () => {
     const endpoint = mockEndpoint();
-    const bridge = await createPiRoveTools(config);
+    const bridge = await createPiPaperplaneTools(config);
     try {
       expect(bridge.tools.map((tool) => tool.name)).toEqual([
         "mcp__paperplane__preview_status",
@@ -128,7 +128,7 @@ describe("Pi's built-in Paperplane tools", () => {
 
   it("exposes app-owned delegation through the thread MCP session", async () => {
     const endpoint = mockEndpoint("delegate_task");
-    const bridge = await createPiRoveTools(config);
+    const bridge = await createPiPaperplaneTools(config);
     try {
       const delegate = bridge.tools.find((tool) => tool.name === "mcp__paperplane__delegate_task")!;
       await execute(delegate, {
@@ -151,7 +151,7 @@ describe("Pi's built-in Paperplane tools", () => {
 
   it("rejects calls after credential revocation without bypassing authorization", async () => {
     const endpoint = mockEndpoint();
-    const bridge = await createPiRoveTools(config);
+    const bridge = await createPiPaperplaneTools(config);
     endpoint.revoke();
     try {
       await expect(execute(bridge.tools[0]!)).rejects.toThrow();
@@ -163,7 +163,7 @@ describe("Pi's built-in Paperplane tools", () => {
 
   it("honors tool cancellation", async () => {
     mockEndpoint();
-    const bridge = await createPiRoveTools(config);
+    const bridge = await createPiPaperplaneTools(config);
     try {
       const controller = new AbortController();
       controller.abort();
@@ -176,13 +176,13 @@ describe("Pi's built-in Paperplane tools", () => {
   it("terminates the connection when discovery fails", async () => {
     const endpoint = mockEndpoint();
     endpoint.failListing();
-    await expect(createPiRoveTools(config)).rejects.toThrow();
+    await expect(createPiPaperplaneTools(config)).rejects.toThrow();
     expect(endpoint.methods).toContain("DELETE");
   });
 
   it("bounds shutdown when the endpoint never answers DELETE", async () => {
     mockEndpoint();
-    const bridge = await createPiRoveTools(config);
+    const bridge = await createPiPaperplaneTools(config);
     const close = vi.spyOn(Client.prototype, "close");
     const deadline = new AbortController();
     const timeout = vi.spyOn(AbortSignal, "timeout").mockReturnValue(deadline.signal);
@@ -214,7 +214,7 @@ describe("Pi's built-in Paperplane tools", () => {
 
   it("turns MCP error results into Pi tool failures", () => {
     expect(() =>
-      toPiRoveToolResult({
+      toPiPaperplaneToolResult({
         isError: true,
         content: [{ type: "text", text: "Preview snapshot failed." }],
       }),

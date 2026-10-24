@@ -2039,7 +2039,7 @@ export const make = (
           meta !== null &&
           typeof meta === "object" &&
           !Array.isArray(meta) &&
-          (meta as { readonly roveSessionLoadReady?: unknown }).roveSessionLoadReady ===
+          (meta as { readonly paperplaneSessionLoadReady?: unknown }).paperplaneSessionLoadReady ===
             "replay_idle";
         const extractedModelConfigId = extractModelConfigId(sessionSetupResult);
         const nextModelConfigId =

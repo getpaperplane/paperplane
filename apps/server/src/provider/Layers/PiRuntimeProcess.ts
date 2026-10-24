@@ -463,8 +463,9 @@ class RemotePiSession implements PiSessionLike {
       this.branch = [...this.branch.slice(0, update.branch.from), ...update.branch.items];
   }
   emit(event: PiSessionEventLike): void {
-    if (event.type === "rove_ui_request") this.pendingQuestions.add(String(event.requestId));
-    if (event.type === "rove_ui_resolved") this.pendingQuestions.delete(String(event.requestId));
+    if (event.type === "paperplane_ui_request") this.pendingQuestions.add(String(event.requestId));
+    if (event.type === "paperplane_ui_resolved")
+      this.pendingQuestions.delete(String(event.requestId));
     if (this.listeners.size === 0) {
       this.startupEvents.push(event);
       if (this.startupEvents.length > 50) this.startupEvents.shift();
@@ -475,9 +476,9 @@ class RemotePiSession implements PiSessionLike {
     this.state.isPreparingPrompt = false;
     this.state.hasPendingUserInput = false;
     for (const requestId of this.pendingQuestions) {
-      this.emit({ type: "rove_ui_resolved", requestId, answers: {} });
+      this.emit({ type: "paperplane_ui_resolved", requestId, answers: {} });
     }
-    this.emit({ type: "rove_ui_status", statuses: [] });
+    this.emit({ type: "paperplane_ui_status", statuses: [] });
     this.emit({ type: "prompt_error", error: error.message });
     // A worker can die after its parent response settled, while agents remain live.
     this.emit({ type: "runtime_exited", error: error.message });

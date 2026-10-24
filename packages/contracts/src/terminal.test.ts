@@ -110,7 +110,7 @@ describe("TerminalOpenInput", () => {
       threadId: "thread-1",
       terminalId: DEFAULT_TERMINAL_ID,
       cwd: "/tmp/project",
-      worktreePath: "/tmp/project/.rove/worktrees/feature-a",
+      worktreePath: "/tmp/project/.paperplane/worktrees/feature-a",
       cols: 100,
       rows: 24,
       env: {
@@ -123,7 +123,7 @@ describe("TerminalOpenInput", () => {
       PAPERPLANE_PROJECT_ROOT: "/tmp/project",
       CUSTOM_FLAG: "1",
     });
-    expect(parsed.worktreePath).toBe("/tmp/project/.rove/worktrees/feature-a");
+    expect(parsed.worktreePath).toBe("/tmp/project/.paperplane/worktrees/feature-a");
     expect(parsed.providerInstanceId).toBe("codex_work");
   });
 
@@ -333,8 +333,8 @@ describe("TerminalEvent", () => {
         snapshot: {
           threadId: "thread-1",
           terminalId: DEFAULT_TERMINAL_ID,
-          cwd: "/tmp/project/.rove/worktrees/feature-a",
-          worktreePath: "/tmp/project/.rove/worktrees/feature-a",
+          cwd: "/tmp/project/.paperplane/worktrees/feature-a",
+          worktreePath: "/tmp/project/.paperplane/worktrees/feature-a",
           status: "running",
           pid: 1234,
           history: "",

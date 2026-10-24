@@ -178,10 +178,10 @@ export function layer(
       serviceName: resource.serviceName,
       serviceVersion: resource.serviceVersion,
       attributes: {
-        "service.namespace": "rove",
+        "service.namespace": "paperplane",
         "service.runtime": resource.runtime,
         "service.component": resource.component ?? "relay-client",
-        "rove.client.surface": resource.client,
+        "paperplane.client.surface": resource.client,
       },
     },
   }).pipe(Layer.provide(OtlpSerialization.layerJson));

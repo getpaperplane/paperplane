@@ -53,7 +53,7 @@ import {
 } from "./PiAdapter.ts";
 
 import type { McpProviderSessionConfig } from "@getpaperplane/provider-core/server/mcpSession";
-import { createPiRoveTools } from "./PiRoveTools.ts";
+import { createPiPaperplaneTools } from "./PiPaperplaneTools.ts";
 import type { PiWorkloads } from "./PiWorkloads.ts";
 import { createPiExtensionUI } from "./PiExtensionUI.ts";
 import { disposePiResource } from "./PiLifecycle.ts";
@@ -142,7 +142,7 @@ function createUsageLimitCapture() {
   let last: ProviderUsageLimit | null = null;
   const now = () => DateTime.formatIso(DateTime.nowUnsafe());
   const extension: InlineExtension = {
-    name: "rove-usage-limit",
+    name: "paperplane-usage-limit",
     hidden: true,
     factory: (pi) => {
       pi.on("provider_stream_event", (event) => {
@@ -183,7 +183,7 @@ async function toPiSessionLike(
   resumeOutcome?: PiSessionResumeOutcome,
   initialStartupErrors: ReadonlyArray<PiSessionEventLike> = [],
   modelFallbackMessage?: string | undefined,
-  disposeRoveTools: () => Promise<void> = async () => {},
+  disposePaperplaneTools: () => Promise<void> = async () => {},
   interactive = false,
   compatibility?: PiUiCompatibility,
   takeStreamUsageLimit: () => ProviderUsageLimit | null = () => null,
@@ -250,7 +250,7 @@ async function toPiSessionLike(
               disposePiResource(() =>
                 session.extensionRunner.emit({ type: "session_shutdown", reason: "quit" }),
               ),
-              disposePiResource(disposeRoveTools),
+              disposePiResource(disposePaperplaneTools),
             ],
             { concurrency: "unbounded" },
           ),
@@ -437,7 +437,7 @@ async function toPiSessionLike(
       if (!session.isIdle) throw new Error("Wait for Pi to finish before rolling back.");
       if (entryId === null) {
         session.sessionManager.resetLeaf();
-        session.sessionManager.appendCustomEntry("rove.rollback", {});
+        session.sessionManager.appendCustomEntry("paperplane.rollback", {});
         session.agent.state.messages = session.sessionManager.buildSessionContext().messages;
         return;
       }
@@ -447,7 +447,7 @@ async function toPiSessionLike(
       }
       // Tree navigation only moves the in-memory leaf. Persist the chosen
       // branch immediately so restarting before the next prompt preserves it.
-      session.sessionManager.appendCustomEntry("rove.rollback", {});
+      session.sessionManager.appendCustomEntry("paperplane.rollback", {});
     },
   };
 }
@@ -1010,20 +1010,23 @@ export async function createPiSession(
       | PiThinkingLevel
       | undefined;
 
-  const roveTools = await createPiRoveTools(mcpProviderSession);
+  const paperplaneTools = await createPiPaperplaneTools(mcpProviderSession);
   const workloadOwner = input.threadId ?? sessionManager.getSessionId();
   const { session, modelFallbackMessage: sdkModelFallbackMessage } =
     await createAgentSessionFromServices({
       services,
       sessionManager,
-      customTools: [...roveTools.tools, ...(options.workloads?.tools(cwd, workloadOwner) ?? [])],
+      customTools: [
+        ...paperplaneTools.tools,
+        ...(options.workloads?.tools(cwd, workloadOwner) ?? []),
+      ],
       ...(options.textGeneration ? { noTools: "all" as const } : {}),
       ...(resolved?.model !== undefined ? { model: resolved.model } : undefined),
       ...(requestedThinkingLevel !== undefined
         ? { thinkingLevel: requestedThinkingLevel }
         : undefined),
     }).catch(async (error: unknown) => {
-      await roveTools.dispose();
+      await paperplaneTools.dispose();
       throw error;
     });
   usageLimits.observe(session.agent);
@@ -1053,7 +1056,7 @@ export async function createPiSession(
     modelFallbackMessage.length > 0 ? modelFallbackMessage : undefined,
     async () => {
       await options.workloads?.disposeOwner(workloadOwner);
-      await roveTools.dispose();
+      await paperplaneTools.dispose();
     },
     input.interactive === true && !options.textGeneration,
     options.compatibility,

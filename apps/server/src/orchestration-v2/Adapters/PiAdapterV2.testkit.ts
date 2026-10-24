@@ -320,7 +320,7 @@ export const PiOrchestratorReplayHarness: OrchestratorV2ProviderReplayHarness<
         Layer.mergeAll(
           IdAllocator.layer,
           PiExtensionStatuses.layer,
-          ServerConfig.layerTest(process.cwd(), { prefix: "rove-pi-sdk-replay-" }),
+          ServerConfig.layerTest(process.cwd(), { prefix: "paperplane-pi-sdk-replay-" }),
         ).pipe(Layer.provideMerge(NodeServices.layer)),
       ),
     ),

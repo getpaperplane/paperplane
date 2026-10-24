@@ -29,13 +29,13 @@ it("Modal keeps state on the sandbox filesystem, not a volume that rejects hard 
   const handle = await driver.create("task-one");
   expect(handle).toMatchObject({
     remoteId: "sandbox-test",
-    volumeName: "rove-task-one",
+    volumeName: "paperplane-task-one",
     paused: false,
   });
   expect(sdk.sandboxes.create).toHaveBeenCalledWith(
     sdk.app,
     sdk.image,
-    expect.objectContaining({ name: "rove-task-one" }),
+    expect.objectContaining({ name: "paperplane-task-one" }),
   );
   expect(sdk.sandboxes.create).toHaveBeenCalledWith(
     sdk.app,
@@ -50,12 +50,12 @@ it("Modal recovery restores the latest pause snapshot under the same name", asyn
     remoteId: "old-sandbox",
     url: null,
     snapshotIds: ["older-image", "recovery-image"],
-    volumeName: "rove-task-one",
+    volumeName: "paperplane-task-one",
     paused: true,
   });
   expect(handle).toMatchObject({
     remoteId: "sandbox-test",
-    volumeName: "rove-task-one",
+    volumeName: "paperplane-task-one",
     snapshotIds: ["older-image", "recovery-image"],
     paused: false,
   });
@@ -63,6 +63,6 @@ it("Modal recovery restores the latest pause snapshot under the same name", asyn
   expect(sdk.sandboxes.create).toHaveBeenCalledWith(
     sdk.app,
     sdk.image,
-    expect.objectContaining({ name: "rove-task-one" }),
+    expect.objectContaining({ name: "paperplane-task-one" }),
   );
 });

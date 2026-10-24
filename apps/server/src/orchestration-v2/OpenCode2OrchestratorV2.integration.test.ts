@@ -76,12 +76,12 @@ const labelled = (entry: ProviderReplayEntry, label: string): ProviderReplayEntr
  * then this thread's own is allowed again (last match wins).
  */
 const mcpRules = (name: string) => [
-  { action: "rove-*", resource: "*", effect: "deny" },
-  { action: `rove-thread_${name}_*`, resource: "*", effect: "allow" },
+  { action: "paperplane-*", resource: "*", effect: "deny" },
+  { action: `paperplane-thread_${name}_*`, resource: "*", effect: "allow" },
 ];
 const FULL_ACCESS = [{ action: "*", resource: "*", effect: "allow" }];
 /** Full access for the thread named `name`. */
-const roveRules = (name: string) => [...FULL_ACCESS, ...mcpRules(name)];
+const paperplaneRules = (name: string) => [...FULL_ACCESS, ...mcpRules(name)];
 /** Paths the build and plan agents allow for themselves, as 2.0.18 lists them. */
 const BUILD_PATHS = [
   {
@@ -166,7 +166,7 @@ const sessionInfo = (directory: string, permissions: ReadonlyArray<unknown>, tit
 });
 /** Paperplane's instructions entry, written before a thread's first prompt and whenever it changes. */
 const instructionsWritten: ReadonlyArray<ProviderReplayEntry> = [
-  out("session.instructions.entry.put", { sessionID: SESSION, key: "rove", value: "<any>" }),
+  out("session.instructions.entry.put", { sessionID: SESSION, key: "paperplane", value: "<any>" }),
   reply("session.instructions.entry.put", null),
 ];
 /** One prompt the server accepts and answers with `text`. */
@@ -222,7 +222,7 @@ const catalogModel = (id: string, name: string) => ({
 const createdSession = (
   directory: string,
   name: string,
-  permissions: ReadonlyArray<unknown> = roveRules(name),
+  permissions: ReadonlyArray<unknown> = paperplaneRules(name),
   // Only a mode that narrows Full access reads the agents' own path rules.
   narrows = false,
 ): ReadonlyArray<ProviderReplayEntry> => [
@@ -350,7 +350,7 @@ describe("OpenCode 2 through the orchestrator", () => {
             ...answeredPrompt("FIRST"),
             // The next turn resumes the session at its new selection.
             out("session.get", { sessionID: SESSION }),
-            reply("session.get", sessionInfo(cwd, roveRules(name), name)),
+            reply("session.get", sessionInfo(cwd, paperplaneRules(name), name)),
             out("session.switchModel", {
               sessionID: SESSION,
               model: { providerID: "opencode", id: "mimo-v2.6-flash-free" },
@@ -403,7 +403,7 @@ describe("OpenCode 2 through the orchestrator", () => {
           ...answeredPrompt("FIRST"),
           ...directoryModels(after),
           out("session.get", { sessionID: SESSION }),
-          reply("session.get", sessionInfo(before, roveRules(name), name)),
+          reply("session.get", sessionInfo(before, paperplaneRules(name), name)),
           // The worktree change detached the thread, so its session is loaded afresh.
           ...noOpenRequests,
           out("session.move", { sessionID: SESSION, directory: after }),
@@ -462,7 +462,7 @@ describe("OpenCode 2 through the orchestrator", () => {
             ),
           ),
           ...noOpenRequests,
-          out("session.update", { sessionID: SESSION, permissions: roveRules(name) }),
+          out("session.update", { sessionID: SESSION, permissions: paperplaneRules(name) }),
           reply("session.update", null),
           out("session.move", { sessionID: SESSION, directory: after }),
           reply("session.move", null),
@@ -537,7 +537,7 @@ describe("OpenCode 2 through the orchestrator", () => {
           ...answeredPrompt("FIRST"),
           // A mode change detaches nothing: the same session is resumed with the new rules.
           out("session.get", { sessionID: SESSION }),
-          reply("session.get", sessionInfo(cwd, roveRules(name), name)),
+          reply("session.get", sessionInfo(cwd, paperplaneRules(name), name)),
           out("agent.list", "<any>"),
           reply("agent.list", agentList(cwd)),
           out("session.update", { sessionID: SESSION, permissions: autoEditRules(name) }),
@@ -546,7 +546,7 @@ describe("OpenCode 2 through the orchestrator", () => {
           // Back to Full access: the narrowing rules go.
           out("session.get", { sessionID: SESSION }),
           reply("session.get", sessionInfo(cwd, autoEditRules(name), name)),
-          out("session.update", { sessionID: SESSION, permissions: roveRules(name) }),
+          out("session.update", { sessionID: SESSION, permissions: paperplaneRules(name) }),
           reply("session.update", null),
           ...answeredPrompt("THIRD"),
         ],
@@ -584,7 +584,7 @@ describe("OpenCode 2 through the orchestrator", () => {
           ...answeredPrompt("PLANNED"),
           out("session.get", { sessionID: SESSION }),
           reply("session.get", sessionInfo(cwd, planRules(name), name)),
-          out("session.update", { sessionID: SESSION, permissions: roveRules(name) }),
+          out("session.update", { sessionID: SESSION, permissions: paperplaneRules(name) }),
           reply("session.update", null),
           out("session.switchAgent", { sessionID: SESSION, agent: "build" }),
           reply("session.switchAgent", null),

@@ -86,7 +86,7 @@ const makeHarness = Effect.fn("test.makePreviewBrowser")(function* (
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const baseDir = yield* fs.makeTempDirectoryScoped({ prefix: "rove-preview-browser-test-" });
+  const baseDir = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-preview-browser-test-" });
   const archive = options.archive ?? browserArchive;
   const crypto = yield* Crypto.Crypto;
   const sha256 =

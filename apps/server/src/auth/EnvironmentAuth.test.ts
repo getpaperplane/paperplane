@@ -41,7 +41,9 @@ const layerServerConfig = (overrides?: Partial<ServerConfig.ServerConfig["Servic
       } satisfies ServerConfig.ServerConfig["Service"];
     }),
   ).pipe(
-    Layer.provide(ServerConfig.layerTest(process.cwd(), { prefix: "rove-auth-server-test-" })),
+    Layer.provide(
+      ServerConfig.layerTest(process.cwd(), { prefix: "paperplane-auth-server-test-" }),
+    ),
   );
 
 const layerEnvironmentAuth = (overrides?: Partial<ServerConfig.ServerConfig["Service"]>) =>
@@ -351,7 +353,7 @@ it.layer(NodeServices.layer)("EnvironmentAuth.layer", (it) => {
       const sessions = yield* SessionStore.SessionStore;
       const pairing = yield* serverAuth.issuePairingCredential();
       const browser = yield* serverAuth.createBrowserSession(pairing.credential, requestMetadata);
-      const oldName = sessions.cookieName.replace(/^paperplane_session/, "rove_session");
+      const oldName = sessions.cookieName.replace(/^rove_session/, "rove_session");
       const verified = yield* serverAuth.authenticateHttpRequest(
         makeCookieRequest(oldName, browser.sessionToken),
       );

@@ -122,7 +122,7 @@ export function callAcpMcpTool(
         return payloads;
       });
 
-    const initializeId = "rove-acp-cli-initialize";
+    const initializeId = "paperplane-acp-cli-initialize";
     const initialized = yield* send({
       jsonrpc: "2.0",
       id: initializeId,
@@ -141,7 +141,7 @@ export function callAcpMcpTool(
     }
     yield* send({ jsonrpc: "2.0", method: "notifications/initialized" });
 
-    const callId = "rove-acp-cli-tool-call";
+    const callId = "paperplane-acp-cli-tool-call";
     const responses = yield* send({
       jsonrpc: "2.0",
       id: callId,

@@ -62,7 +62,7 @@ export const layerFromPath = Effect.fn("makeSqlitePersistenceLive")(function* (d
       checkpointWorker: true,
       spanAttributes: {
         "db.name": path.basename(dbPath),
-        "service.name": "rove-server",
+        "service.name": "paperplane-server",
       },
     }),
   );

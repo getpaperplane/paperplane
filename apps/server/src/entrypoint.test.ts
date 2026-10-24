@@ -10,7 +10,7 @@ import { isEntrypoint } from "./entrypoint.ts";
 import { symlinksSupported } from "@getpaperplane/shared/testing/symlinks";
 
 const makeTempDir = () =>
-  NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "rove-entrypoint-test-"));
+  NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "paperplane-entrypoint-test-"));
 
 describe("isEntrypoint", () => {
   it("uses the runtime answer when Node provides one", () => {

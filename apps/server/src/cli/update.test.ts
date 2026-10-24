@@ -13,7 +13,7 @@ it.layer(NodeServices.layer)("paperplane update launcher", (it) => {
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const root = yield* fs.makeTempDirectoryScoped({ prefix: "rove-update-" });
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-update-" });
       const oldExe = path.join(root, "runtime/versions/1.0.0/paperplane");
       const newExe = path.join(root, "runtime/versions/2.0.0/paperplane");
       const launcher = path.join(root, "bin/paperplane");
@@ -39,7 +39,7 @@ it.layer(NodeServices.layer)("paperplane update launcher", (it) => {
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const root = yield* fs.makeTempDirectoryScoped({ prefix: "rove-update-" });
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-update-" });
       const newExe = path.join(root, "runtime/versions/2.0.0/paperplane");
       const copy = path.join(root, "copy/paperplane");
       const foreign = path.join(root, "foreign/paperplane");
@@ -73,7 +73,7 @@ it.layer(NodeServices.layer)("paperplane update launcher", (it) => {
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const root = yield* fs.makeTempDirectoryScoped({ prefix: "rove-update-" });
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-update-" });
       const launcher = path.join(root, "bin/paperplane");
       yield* fs.makeDirectory(path.dirname(launcher), { recursive: true });
       yield* fs.writeFileString(launcher, "");

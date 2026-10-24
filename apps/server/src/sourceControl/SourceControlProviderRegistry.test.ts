@@ -160,7 +160,7 @@ function makeRegistry(input: {
           cliEnv: () => Effect.succeed({}),
         }),
         ServerConfig.layerTest(process.cwd(), {
-          prefix: "rove-source-control-registry-test-",
+          prefix: "paperplane-source-control-registry-test-",
         }).pipe(Layer.provide(NodeServices.layer)),
       ),
     ),

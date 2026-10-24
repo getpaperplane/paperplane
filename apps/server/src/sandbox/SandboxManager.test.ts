@@ -30,7 +30,7 @@ function fixture() {
     remoteId: "vm-one",
     url: null,
     snapshotIds: [],
-    volumeName: "rove-volume",
+    volumeName: "paperplane-volume",
     paused: false,
   };
   const driver: SandboxDriver = {
@@ -209,7 +209,7 @@ it.effect(
         remoteId: null,
         detail: error.message,
       });
-      expect(f.stored()).toContain(`rove-${inventory.sandboxes[0]!.id}`);
+      expect(f.stored()).toContain(`paperplane-${inventory.sandboxes[0]!.id}`);
       expect(encodeTestJson(inventory)).not.toContain("secret-token");
     }),
 );
@@ -414,10 +414,10 @@ it.effect("incomplete Modal provisioning retains its sandbox name until explicit
     yield* Effect.result(manager.create({ provider: "modal", label: "Task", confirmCost: true }));
     const sandbox = (yield* manager.inventory).sandboxes[0]!;
     expect(sandbox).toMatchObject({ remoteId: null, phase: "error" });
-    expect(f.stored()).toContain(`rove-${sandbox.id}`);
+    expect(f.stored()).toContain(`paperplane-${sandbox.id}`);
     yield* manager.action({ id: sandbox.id, action: "delete", confirmed: true });
     expect(f.driver.remove).toHaveBeenCalledWith(
-      expect.objectContaining({ remoteId: "", volumeName: `rove-${sandbox.id}` }),
+      expect.objectContaining({ remoteId: "", volumeName: `paperplane-${sandbox.id}` }),
       expect.any(Function),
     );
     expect((yield* manager.inventory).sandboxes).toHaveLength(0);

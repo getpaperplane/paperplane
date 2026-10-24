@@ -23,7 +23,7 @@ describe("findPromptLinkProject", () => {
     const projects = [
       {
         id: "fork",
-        repositoryIdentity: identity("github.com/pingdotgg/t3code", "github.com/me/rove"),
+        repositoryIdentity: identity("github.com/pingdotgg/t3code", "github.com/me/paperplane"),
       },
       { id: "none", repositoryIdentity: null },
       { id: "recent", repositoryIdentity: identity("github.com/PingDotGG/T3Code") },
@@ -32,7 +32,7 @@ describe("findPromptLinkProject", () => {
     expect(findPromptLinkProject(projects, { owner: "pingdotgg", name: "t3code" })?.id).toBe(
       "recent",
     );
-    expect(findPromptLinkProject(projects, { owner: "me", name: "rove" })?.id).toBe("fork");
+    expect(findPromptLinkProject(projects, { owner: "me", name: "paperplane" })?.id).toBe("fork");
     expect(findPromptLinkProject(projects, { owner: "gitlab", name: "x" })).toBeUndefined();
   });
 });

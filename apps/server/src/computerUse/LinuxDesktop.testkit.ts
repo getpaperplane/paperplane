@@ -7,7 +7,9 @@ export const withLinuxProcessFiles = (fs: FileSystem.FileSystem): FileSystem.Fil
   readFileString: (path, options) => {
     if (path === `/proc/${process.pid}/stat`) {
       // Field 22 (index 19 after the command) is the process start time.
-      return Effect.succeed(`${process.pid} (rove test) ${Array(19).fill("0").join(" ")} 12345`);
+      return Effect.succeed(
+        `${process.pid} (paperplane test) ${Array(19).fill("0").join(" ")} 12345`,
+      );
     }
     if (path === "/proc/sys/kernel/random/boot_id") return Effect.succeed("test-boot\n");
     return fs.readFileString(path, options);

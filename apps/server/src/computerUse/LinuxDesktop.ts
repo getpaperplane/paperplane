@@ -15,8 +15,8 @@ import * as ProcessRunner from "../processRunner.ts";
 import { DESKTOP_FILES } from "./LinuxDesktopImage.ts";
 
 export const CAPACITY = 4;
-const OWNER_LABEL = "io.rove.cua.owner";
-const SERVER_LABEL = "io.rove.cua.server";
+const OWNER_LABEL = "io.paperplane.cua.owner";
+const SERVER_LABEL = "io.paperplane.cua.server";
 const Identity = Schema.Struct({
   pid: Schema.Int.check(Schema.isGreaterThan(0)),
   start: Schema.String.check(Schema.isPattern(/^\d+$/)),
@@ -203,7 +203,7 @@ export const make = Effect.fn("LinuxDesktop.make")(function* () {
         .update(binary)
         .update(Object.values(DESKTOP_FILES).join("\n"))
         .digest("hex");
-      const image = `localhost/rove-cua-desktop:${hash.slice(0, 24)}`;
+      const image = `localhost/paperplane-cua-desktop:${hash.slice(0, 24)}`;
       references.set(resolved, { stamp, image });
       return image;
     },
@@ -233,7 +233,7 @@ export const make = Effect.fn("LinuxDesktop.make")(function* () {
     function* (executable: string) {
       yield* requireRootless;
       const image = yield* reference(executable);
-      const directory = yield* fs.makeTempDirectoryScoped({ prefix: "rove-cua-image-" });
+      const directory = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-cua-image-" });
       for (const [name, content] of Object.entries(DESKTOP_FILES)) {
         yield* fs.writeFileString(path.join(directory, name), content);
       }
@@ -326,7 +326,7 @@ export const make = Effect.fn("LinuxDesktop.make")(function* () {
           `All ${CAPACITY} private desktop slots are occupied. Use close_desktop in a finished thread to discard its temporary apps and files.`,
         );
       }
-      const name = `rove-cua-${NodeCrypto.randomUUID()}`;
+      const name = `paperplane-cua-${NodeCrypto.randomUUID()}`;
       const image = yield* reference(executable);
       const server = yield* identity;
       desktops.set(key, name);

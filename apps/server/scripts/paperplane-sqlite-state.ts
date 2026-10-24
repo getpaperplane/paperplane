@@ -256,8 +256,8 @@ export const runSqliteState = Effect.fn("runSqliteState")(function* (
   );
 });
 
-const roveSqliteStateCommand = Command.make(
-  "rove-sqlite-state",
+const paperplaneSqliteStateCommand = Command.make(
+  "paperplane-sqlite-state",
   {
     operation: Argument.Literals("operation", SqliteStateOperation.literals).pipe(
       Argument.withDescription("Run a read-only query or a backed-up fixture mutation."),
@@ -290,7 +290,7 @@ const roveSqliteStateCommand = Command.make(
 );
 
 if (import.meta.main) {
-  Command.run(roveSqliteStateCommand, { version: "0.0.0" }).pipe(
+  Command.run(paperplaneSqliteStateCommand, { version: "0.0.0" }).pipe(
     Effect.provide(NodeServices.layer),
     NodeRuntime.runMain,
   );

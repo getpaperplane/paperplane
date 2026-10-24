@@ -46,7 +46,8 @@ const makeHarness = Effect.fn("test.makeCodexInstallation")(function* (
 ) {
   const fs = yield* FileSystem.FileSystem;
   const baseDir =
-    input.baseDir ?? (yield* fs.makeTempDirectoryScoped({ prefix: "rove-codex-install-test-" }));
+    input.baseDir ??
+    (yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-codex-install-test-" }));
   const localDirectory = `${baseDir}/local`;
   const localBinaryPath = `${localDirectory}/codex`;
   const probeLog = `${baseDir}/local-probes.txt`;
@@ -410,7 +411,7 @@ it("publishes complete packages for all supported platforms", () => {
 it.live("startup removes only stale staging directories", () =>
   Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem;
-    const baseDir = yield* fs.makeTempDirectoryScoped({ prefix: "rove-codex-install-test-" });
+    const baseDir = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-codex-install-test-" });
     const managed = `${baseDir}/tools/codex`;
     // utimes takes seconds when given numbers.
     const stale = ((yield* Clock.currentTimeMillis) - 25 * 60 * 60_000) / 1000;

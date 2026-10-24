@@ -599,7 +599,9 @@ effectIt.effect.each(["cleanup-first", "startup-first"])(
     Effect.gen(function* () {
       const fileSystem = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const workspaceRoot = yield* fileSystem.makeTempDirectoryScoped({ prefix: "rove-start-" });
+      const workspaceRoot = yield* fileSystem.makeTempDirectoryScoped({
+        prefix: "paperplane-start-",
+      });
       const worktreePath = path.join(workspaceRoot, "worktree");
       yield* fileSystem.makeDirectory(worktreePath);
       const release = yield* Deferred.make<void>();

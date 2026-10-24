@@ -878,8 +878,8 @@ describe("toolGroupAction", () => {
 describe("resolveViewedImageAsset", () => {
   const threadId = ThreadId.make("thread-1");
 
-  it("serves rove attachment paths in place like any other host path", () => {
-    const path = "/Users/demo/.rove/dev/attachments/11111111-1111-4111-8111-111111111111.png";
+  it("serves paperplane attachment paths in place like any other host path", () => {
+    const path = "/Users/demo/.paperplane/dev/attachments/11111111-1111-4111-8111-111111111111.png";
     expect(resolveViewedImageAsset(path, { threadId, workspaceRoot: "/workspace" })).toEqual({
       resource: { _tag: "media-file", threadId, path },
       alt: "11111111-1111-4111-8111-111111111111.png",

@@ -143,6 +143,7 @@ function lockOldServer(source: string): NodeSqlite.DatabaseSync | undefined {
     if (isBusy(error)) {
       throw new HomeMigrationError(
         "Quit Rove Code. " +
+          // oxlint-disable-next-line paperplane/no-global-process-runtime -- Pre-runtime migration must describe the actual host before Effect services exist.
           oldServiceStopInstruction(process.platform) +
           " Or run `paperplane service install` to replace a recognized old service automatically. For an SSH or WSL host, run the stop command on that host (or stop its old `rove serve` terminal), then reconnect. Start Paperplane again. " +
           `A running Rove Code server holds ${path}; the home has not been migrated.`,

@@ -75,7 +75,9 @@ const withFileStore = <A, E>(
   Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
-    const directory = yield* fs.makeTempDirectoryScoped({ prefix: "rove-read-contention-test-" });
+    const directory = yield* fs.makeTempDirectoryScoped({
+      prefix: "paperplane-read-contention-test-",
+    });
     const persistence = SqlitePersistence.layerFromPath(path.join(directory, "state.sqlite"));
     return yield* effect.pipe(
       Effect.provide(

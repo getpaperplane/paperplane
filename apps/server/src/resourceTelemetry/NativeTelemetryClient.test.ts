@@ -124,7 +124,7 @@ describe("NativeTelemetryClient", () => {
       const client = yield* NativeTelemetryClient.make().pipe(
         Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
         Effect.provideService(ResourceMonitorBinary.ResourceMonitorBinary, {
-          resolve: Effect.succeed("/test/rove-resource-monitor"),
+          resolve: Effect.succeed("/test/paperplane-resource-monitor"),
         }),
       );
 
@@ -150,7 +150,7 @@ describe("NativeTelemetryClient", () => {
     }).pipe(
       Effect.provide(
         Layer.mergeAll(
-          ServerConfig.layerTest(process.cwd(), { prefix: "rove-native-telemetry-test-" }),
+          ServerConfig.layerTest(process.cwd(), { prefix: "paperplane-native-telemetry-test-" }),
           NodeCrypto.layer,
         ).pipe(Layer.provideMerge(NodeServices.layer)),
       ),

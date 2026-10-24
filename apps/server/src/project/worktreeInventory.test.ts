@@ -44,7 +44,9 @@ import {
 
 const TestLayer = Layer.mergeAll(GitVcsDriverLayer, projectionLayer, projectLayer).pipe(
   Layer.provideMerge(SqlitePersistence.layerMemory),
-  Layer.provideMerge(ServerConfig.layerTest(process.cwd(), { prefix: "rove-worktree-inventory-" })),
+  Layer.provideMerge(
+    ServerConfig.layerTest(process.cwd(), { prefix: "paperplane-worktree-inventory-" }),
+  ),
   Layer.provideMerge(NodeServices.layer),
 );
 const projectId = ProjectId.make("project-1");
@@ -87,7 +89,7 @@ const fixture = Effect.gen(function* () {
   const path = yield* Path.Path;
   const config = yield* ServerConfig;
   const driver = yield* GitVcsDriver;
-  const cwd = yield* fs.makeTempDirectoryScoped({ prefix: "rove-inventory-repo-" });
+  const cwd = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-inventory-repo-" });
   const git = (args: readonly string[], directory = cwd) =>
     driver.execute({ operation: "WorktreeInventory.test", cwd: directory, args });
   yield* git(["init", "--initial-branch=main"]);
@@ -413,7 +415,9 @@ describe("worktree inventory", () => {
   it.effect("reports repository failures instead of presenting an empty successful scan", () =>
     Effect.gen(function* () {
       const { inventory, projects, fs, addProject } = yield* fixture;
-      const missing = yield* fs.makeTempDirectoryScoped({ prefix: "rove-inventory-not-git-" });
+      const missing = yield* fs.makeTempDirectoryScoped({
+        prefix: "paperplane-inventory-not-git-",
+      });
       yield* addProject({
         ...projects[0]!,
         id: ProjectId.make("project-2"),

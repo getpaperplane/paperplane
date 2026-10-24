@@ -194,8 +194,8 @@ describe("isTemporaryWorktreeBranch", () => {
   });
 
   it("matches legacy rove temporary worktree refs", () => {
-    expect(isTemporaryWorktreeBranch("rove/deadbeef")).toBe(true);
-    expect(isTemporaryWorktreeBranch("rove-deadbeef")).toBe(true);
+    expect(isTemporaryWorktreeBranch("paperplane/deadbeef")).toBe(true);
+    expect(isTemporaryWorktreeBranch("paperplane-deadbeef")).toBe(true);
     expect(isTemporaryWorktreeBranch("rove/f4ae4e0e-f971-4d48-b4f2-9cf0aa54ab12")).toBe(true);
     expect(
       isTemporaryWorktreeBranch(`${WORKTREE_BRANCH_PREFIX}/f4ae4e0e-f971-4d48-b4f2-9cf0aa54ab12`),
@@ -204,9 +204,13 @@ describe("isTemporaryWorktreeBranch", () => {
 
   it("rejects UUID-shaped refs that are not RFC 4122 v4", () => {
     // version nibble is not 4
-    expect(isTemporaryWorktreeBranch("rove/f4ae4e0e-f971-1d48-b4f2-9cf0aa54ab12")).toBe(false);
+    expect(isTemporaryWorktreeBranch("paperplane/f4ae4e0e-f971-1d48-b4f2-9cf0aa54ab12")).toBe(
+      false,
+    );
     // variant nibble is not [89ab]
-    expect(isTemporaryWorktreeBranch("rove/f4ae4e0e-f971-4d48-c4f2-9cf0aa54ab12")).toBe(false);
+    expect(isTemporaryWorktreeBranch("paperplane/f4ae4e0e-f971-4d48-c4f2-9cf0aa54ab12")).toBe(
+      false,
+    );
   });
 
   it("matches the flat fallback used when a plain rove branch exists", () => {
@@ -218,10 +222,10 @@ describe("isTemporaryWorktreeBranch", () => {
     expect(flattenTemporaryWorktreeBranchName("rove/f4ae4e0e-f971-4d48-b4f2-9cf0aa54ab12")).toBe(
       `${WORKTREE_BRANCH_PREFIX}-f4ae4e0e`,
     );
-    expect(flattenTemporaryWorktreeBranchName("rove-deadbeef")).toBe(
+    expect(flattenTemporaryWorktreeBranchName("paperplane-deadbeef")).toBe(
       `${WORKTREE_BRANCH_PREFIX}-deadbeef`,
     );
-    expect(flattenTemporaryWorktreeBranchName("rove/deadbeef")).toBe(
+    expect(flattenTemporaryWorktreeBranchName("paperplane/deadbeef")).toBe(
       `${WORKTREE_BRANCH_PREFIX}-deadbeef`,
     );
   });
@@ -350,10 +354,10 @@ describe("resolveAutoFeatureBranchName", () => {
 });
 
 describe("formatGeneratedBranchName", () => {
-  it.each(["rove", "rove/"])("joins static prefix %s with one slash", (prefix) => {
+  it.each(["paperplane", "paperplane/"])("joins static prefix %s with one slash", (prefix) => {
     expect(
       formatGeneratedBranchName("Add Search", { mode: "static", prefix, instructions: "" }),
-    ).toBe("rove/add-search");
+    ).toBe("paperplane/add-search");
   });
   it("supports an empty prefix and preserves user prefix casing", () => {
     expect(
@@ -381,7 +385,7 @@ describe("formatGeneratedBranchName", () => {
     expect(
       formatGeneratedBranchName("feat/Add Search", {
         mode: "semantic",
-        prefix: "rove",
+        prefix: "paperplane",
         instructions: "",
       }),
     ).toBe("feat/add-search");

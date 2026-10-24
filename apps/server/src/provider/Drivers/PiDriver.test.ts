@@ -17,7 +17,7 @@ import { makeSdkDiscoveryClient } from "../Layers/PiDiscovery.ts";
 import { PiDriver } from "./PiDriver.ts";
 import * as PiExtensionStatuses from "../PiExtensionStatuses.ts";
 const testLayer = Layer.mergeAll(
-  ServerConfig.layerTest(process.cwd(), { prefix: "rove-pi-driver-" }),
+  ServerConfig.layerTest(process.cwd(), { prefix: "paperplane-pi-driver-" }),
   ServerSettingsService.layerTest(),
   TestProviderHost.layer({ runBackgroundWork: false }),
   IdAllocator.layer,
@@ -28,7 +28,7 @@ describe("Pi SDK driver", () => {
   let root: string, agentDir: string;
   beforeEach(() => {
     root = NodeFS.realpathSync(
-      NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "rove-pi-discovery-")),
+      NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "paperplane-pi-discovery-")),
     );
     agentDir = NodePath.join(root, "agent");
     NodeFS.mkdirSync(NodePath.join(agentDir, "skills", "fixture-skill"), { recursive: true });

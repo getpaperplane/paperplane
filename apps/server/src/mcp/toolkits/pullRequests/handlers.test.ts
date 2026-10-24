@@ -67,7 +67,7 @@ function makeProject(
     provider: "github",
     displayName: "hafiezul/rove",
     owner: "hafiezul",
-    name: "rove",
+    name: "paperplane",
   },
 ): OrchestrationProjectShell {
   return {

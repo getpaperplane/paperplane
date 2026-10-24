@@ -88,7 +88,7 @@ const layerPlatformTest = Layer.merge(
 );
 
 const layerServerConfig = ServerConfig.layerTest(process.cwd(), {
-  prefix: "rove-orchestration-v2-runtime-layer-",
+  prefix: "paperplane-orchestration-v2-runtime-layer-",
 });
 
 const modelSelection = {
@@ -553,7 +553,7 @@ it.layer(layerTest)("OrchestrationV2LayerLive", (it) => {
         interactionMode: "default",
         branch: null,
         // Its own path, so other rollback tests keep an isolated worktree.
-        worktreePath: `/tmp/rove-${name}`,
+        worktreePath: `/tmp/paperplane-${name}`,
       });
       yield* orchestrator.dispatch({
         type: "message.dispatch",
@@ -2096,7 +2096,7 @@ it.layer(layerTest)("OrchestrationV2LayerLive lifecycle", (it) => {
         threadId,
         title: "Renamed lifecycle thread",
         branch: "feature/v2",
-        worktreePath: "/tmp/rove-v2-worktree",
+        worktreePath: "/tmp/paperplane-v2-worktree",
       });
       const staleWorkspaceUpdate = yield* orchestrator
         .dispatch({
@@ -2113,7 +2113,7 @@ it.layer(layerTest)("OrchestrationV2LayerLive lifecycle", (it) => {
       assert.equal(projectionAfterStaleWorkspaceUpdate.thread.branch, "feature/v2");
       assert.equal(
         projectionAfterStaleWorkspaceUpdate.thread.worktreePath,
-        "/tmp/rove-v2-worktree",
+        "/tmp/paperplane-v2-worktree",
       );
       const pullRequestSnapshot = yield* orchestrator.getShellSnapshot();
       const pullRequest = {
@@ -2133,7 +2133,7 @@ it.layer(layerTest)("OrchestrationV2LayerLive lifecycle", (it) => {
           expected: {
             workspaceRoot: "/workspace/project",
             branch: "feature/v2",
-            worktreePath: "/tmp/rove-v2-worktree",
+            worktreePath: "/tmp/paperplane-v2-worktree",
             linkedPullRequest: null,
             branchPullRequest: null,
           },
@@ -2151,7 +2151,7 @@ it.layer(layerTest)("OrchestrationV2LayerLive lifecycle", (it) => {
         expected: {
           workspaceRoot: "/workspace/project",
           branch: "feature/v2",
-          worktreePath: "/tmp/rove-v2-worktree",
+          worktreePath: "/tmp/paperplane-v2-worktree",
           linkedPullRequest: null,
           branchPullRequest: null,
         },
@@ -2171,7 +2171,7 @@ it.layer(layerTest)("OrchestrationV2LayerLive lifecycle", (it) => {
           expected: {
             workspaceRoot: "/workspace/project",
             branch: "feature/v2",
-            worktreePath: "/tmp/rove-v2-worktree",
+            worktreePath: "/tmp/paperplane-v2-worktree",
             linkedPullRequest: null,
             branchPullRequest: null,
           },
@@ -2339,7 +2339,7 @@ it.layer(layerTest)("OrchestrationV2LayerLive lifecycle", (it) => {
       const projection = yield* orchestrator.getThreadProjection(threadId);
       assert.equal(projection.thread.title, "Renamed lifecycle thread");
       assert.equal(projection.thread.branch, "feature/v2");
-      assert.equal(projection.thread.worktreePath, "/tmp/rove-v2-worktree");
+      assert.equal(projection.thread.worktreePath, "/tmp/paperplane-v2-worktree");
       assert.equal(projection.thread.runtimeMode, "approval-required");
       assert.equal(projection.thread.interactionMode, "plan");
       assert.equal(projection.thread.modelSelection.model, "gpt-5.5");

@@ -209,7 +209,7 @@ describe("server config forward compatibility", () => {
 describe("ServerObservability", () => {
   it("reads a server from before the log signal as exporting no logs", () => {
     const parsed = decodeServerObservability({
-      logsDirectoryPath: "/tmp/rove/logs",
+      logsDirectoryPath: "/tmp/paperplane/logs",
       localTracingEnabled: true,
       otlpTracesUrl: "https://collector.example.com/v1/traces",
       otlpTracesEnabled: true,

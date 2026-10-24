@@ -91,8 +91,8 @@ it("switches to fixed authenticated feeds while retaining one HID socket, routes
       platform: "ios",
       deviceId: "duo",
       access: {
-        httpBase: "https://rove.test/api/device-hub",
-        wsBase: "wss://rove.test/api/device-hub",
+        httpBase: "https://paperplane.test/api/device-hub",
+        wsBase: "wss://paperplane.test/api/device-hub",
         credentials: true,
         query: { hostId: "remote", wsTicket: "ticket" },
       },

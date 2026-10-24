@@ -26,7 +26,7 @@ const layerServerConfig = (
   ).pipe(
     Layer.provide(
       ServerConfig.layerTest(process.cwd(), {
-        prefix: "rove-auth-control-plane-test-",
+        prefix: "paperplane-auth-control-plane-test-",
       }),
     ),
   );

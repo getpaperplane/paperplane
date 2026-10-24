@@ -52,7 +52,7 @@ const layerPlatformTest = Layer.merge(
 );
 
 const layerServerConfig = ServerConfig.layerTest(process.cwd(), {
-  prefix: "rove-orchestration-v2-delegated-completion-",
+  prefix: "paperplane-orchestration-v2-delegated-completion-",
 });
 
 const modelSelection = {

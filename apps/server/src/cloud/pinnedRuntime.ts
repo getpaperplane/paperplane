@@ -32,7 +32,7 @@ import * as ProcessRunner from "../processRunner.ts";
  */
 const PINNED_RUNTIME_DIR = "runtime";
 const PINNED_RUNTIME_INSTALL_TIMEOUT = Duration.minutes(10);
-const PINNED_RUNTIME_ARCHIVE_FILE = "rove-runtime-archive";
+const PINNED_RUNTIME_ARCHIVE_FILE = "paperplane-runtime-archive";
 // Boot-service setup and remote update can construct separate layers. Serialize
 // the complete install transaction across every caller in this process.
 const pinnedRuntimeInstallLock = Semaphore.makeUnsafe(1);

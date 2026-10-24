@@ -271,7 +271,7 @@ const make = Effect.gen(function* () {
     }
   });
 
-  // Inside a checkout (a dev worktree's .rove, a dotfiles home) the folder would
+  // Inside a checkout (a dev worktree's .paperplane, a dotfiles home) the folder would
   // inherit the repo's git status and checkpoints, so Scratch is offered only
   // when the data dir is outside any work tree. With no Git installed nothing
   // can see a checkout, so Scratch is offered. Probed once; other detection

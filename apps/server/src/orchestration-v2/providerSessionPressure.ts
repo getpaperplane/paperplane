@@ -1,4 +1,4 @@
-import { SMALL_HOST_BYTES } from "../process/roveMemoryBudget.ts";
+import { SMALL_HOST_BYTES } from "../process/paperplaneMemoryBudget.ts";
 
 const GIB = 1024 ** 3;
 

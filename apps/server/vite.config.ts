@@ -108,7 +108,7 @@ export default mergeConfig(
       plugins: packExecutable
         ? [
             {
-              name: "rove:sea-external-packages",
+              name: "paperplane:sea-external-packages",
               resolveId(id: string) {
                 return isRuntimeExternalCliDependency(id) ? `\0rove-sea-external:${id}.cjs` : null;
               },
@@ -141,22 +141,22 @@ export default mergeConfig(
         js: "#!/usr/bin/env node\n",
       },
       define: {
-        __ROVE_BUILD_CHANNEL__: JSON.stringify(cliBuildChannel),
-        __ROVE_BUILD_CLOUD_READY__: JSON.stringify(repoEnv.PAPERPLANE_CLOUD_READY === "1"),
-        __ROVE_BUILD_RELAY_URL__: JSON.stringify(repoEnv.PAPERPLANE_RELAY_URL?.trim() ?? ""),
-        __ROVE_BUILD_CLERK_PUBLISHABLE_KEY__: JSON.stringify(
+        __PAPERPLANE_BUILD_CHANNEL__: JSON.stringify(cliBuildChannel),
+        __PAPERPLANE_BUILD_CLOUD_READY__: JSON.stringify(repoEnv.PAPERPLANE_CLOUD_READY === "1"),
+        __PAPERPLANE_BUILD_RELAY_URL__: JSON.stringify(repoEnv.PAPERPLANE_RELAY_URL?.trim() ?? ""),
+        __PAPERPLANE_BUILD_CLERK_PUBLISHABLE_KEY__: JSON.stringify(
           repoEnv.PAPERPLANE_CLERK_PUBLISHABLE_KEY?.trim() ?? "",
         ),
-        __ROVE_BUILD_CLERK_CLI_OAUTH_CLIENT_ID__: JSON.stringify(
+        __PAPERPLANE_BUILD_CLERK_CLI_OAUTH_CLIENT_ID__: JSON.stringify(
           repoEnv.PAPERPLANE_CLERK_CLI_OAUTH_CLIENT_ID?.trim() ?? "",
         ),
-        __ROVE_BUILD_RELAY_CLIENT_OTLP_TRACES_URL__: JSON.stringify(
+        __PAPERPLANE_BUILD_RELAY_CLIENT_OTLP_TRACES_URL__: JSON.stringify(
           repoEnv.PAPERPLANE_RELAY_CLIENT_OTLP_TRACES_URL?.trim() ?? "",
         ),
-        __ROVE_BUILD_RELAY_CLIENT_OTLP_TRACES_DATASET__: JSON.stringify(
+        __PAPERPLANE_BUILD_RELAY_CLIENT_OTLP_TRACES_DATASET__: JSON.stringify(
           repoEnv.PAPERPLANE_RELAY_CLIENT_OTLP_TRACES_DATASET?.trim() ?? "",
         ),
-        __ROVE_BUILD_RELAY_CLIENT_OTLP_TRACES_TOKEN__: JSON.stringify(
+        __PAPERPLANE_BUILD_RELAY_CLIENT_OTLP_TRACES_TOKEN__: JSON.stringify(
           repoEnv.PAPERPLANE_RELAY_CLIENT_OTLP_TRACES_TOKEN?.trim() ?? "",
         ),
       },

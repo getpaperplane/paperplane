@@ -58,7 +58,7 @@ describe("ThreadPullRequestServiceV2 project guard", () => {
               provider: "github" as const,
               displayName: "pingdotgg/t3code",
               owner: "pingdotgg",
-              name: "rove",
+              name: "paperplane",
             });
           },
         },

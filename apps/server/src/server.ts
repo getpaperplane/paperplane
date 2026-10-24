@@ -96,7 +96,7 @@ import * as ProviderRegistry from "./provider/ProviderRegistry.ts";
 import * as ProviderUsageLimitsIngestion from "./provider/ProviderUsageLimitsIngestion.ts";
 import * as UsageLimitSources from "./usage/UsageLimitSources.ts";
 import * as ProjectFaviconResolver from "./project/ProjectFaviconResolver.ts";
-import * as RoveProjectFileLoader from "./project/RoveProjectFileLoader.ts";
+import * as PaperplaneProjectFileLoader from "./project/PaperplaneProjectFileLoader.ts";
 import * as RepositoryIdentityResolver from "./project/RepositoryIdentityResolver.ts";
 import * as WorkspaceEntries from "./workspace/WorkspaceEntries.ts";
 import * as WorkspaceFileSystem from "./workspace/WorkspaceFileSystem.ts";
@@ -443,14 +443,14 @@ const layerWorkspaceFileSystem = WorkspaceFileSystem.layer.pipe(
 
 const layerWorkspace = Layer.mergeAll(
   WorkspacePaths.layer,
-  RoveProjectFileLoader.layer,
+  PaperplaneProjectFileLoader.layer,
   layerWorkspaceEntries,
   layerWorkspaceFileSystem,
 );
 
 const layerProjectFaviconResolver = ProjectFaviconResolver.layer.pipe(
   Layer.provide(WorkspacePaths.layer),
-  Layer.provide(RoveProjectFileLoader.layer),
+  Layer.provide(PaperplaneProjectFileLoader.layer),
 );
 
 const layerServerEnvironment = ServerEnvironment.layer.pipe(Layer.provide(ServerSecretStore.layer));

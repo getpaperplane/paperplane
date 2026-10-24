@@ -301,7 +301,7 @@ export const makeSandboxManager = Effect.fn("SandboxManager.make")(function* (
           environmentId: null,
           threadId: null,
           snapshotIds: [],
-          volumeName: input.provider === "modal" ? `rove-${id}` : null,
+          volumeName: input.provider === "modal" ? `paperplane-${id}` : null,
           ...(input.credentials?.length ? { credentials: input.credentials } : {}),
           ...(input.provider === "modal" && input.region ? { region: input.region } : {}),
         };

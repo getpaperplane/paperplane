@@ -188,7 +188,7 @@ export default function (pi: ExtensionAPI) {
           ? [
               {
                 type: "toolCall",
-                id: "rove-call",
+                id: "paperplane-call",
                 name: workloadTool
                   ? workloadName === "workload-service"
                     ? "workload_start"

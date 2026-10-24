@@ -291,7 +291,7 @@ const endpointSignal = (name: OtlpSignalName, own: Settings, generic: Settings):
 };
 
 export const load: Effect.Effect<OtelEnvironment> = Config.all({
-  rove: flag(
+  paperplane: flag(
     "PAPERPLANE_OTEL_SDK_DISABLED",
     PAPERPLANE_TRUE,
     PAPERPLANE_FALSE,
@@ -318,8 +318,8 @@ export const load: Effect.Effect<OtelEnvironment> = Config.all({
     logs: exporter("OTEL_LOGS_EXPORTER"),
   }),
 }).pipe(
-  Effect.map(({ rove, spec, resource, generic, exporters, ...own }) => {
-    const disabled = rove.value ?? spec.value ?? false;
+  Effect.map(({ paperplane, spec, resource, generic, exporters, ...own }) => {
+    const disabled = paperplane.value ?? spec.value ?? false;
     // The kill switch wins outright, so the signals say nothing once it is set.
     const signals = disabled
       ? undefined
@@ -333,14 +333,14 @@ export const load: Effect.Effect<OtelEnvironment> = Config.all({
       signals === undefined ? [] : Object.values(signals).flatMap((resolved) => resolved.used),
     );
     const warnings = [
-      rove.warning,
+      paperplane.warning,
       spec.warning,
       resource.warning,
       ...Array.from(used, (setting) => setting.warning),
     ].filter((warning) => warning !== undefined);
     if (disabled) {
       warnings.push(
-        rove.value
+        paperplane.value
           ? "PAPERPLANE_OTEL_SDK_DISABLED is set, so no telemetry is exported, whatever configured it"
           : "OTEL_SDK_DISABLED is set, so no telemetry is exported, whatever configured it; set PAPERPLANE_OTEL_SDK_DISABLED=false to export anyway",
       );
@@ -374,25 +374,25 @@ export interface SignalEndpoint {
 export const resolveSignalEndpoint = (
   otel: OtelEnvironment,
   signal: SignalName,
-  rove: { readonly url: string | undefined; readonly export: SignalExport },
+  paperplane: { readonly url: string | undefined; readonly export: SignalExport },
   ...fallbackUrls: ReadonlyArray<string | undefined>
 ): SignalEndpoint | undefined => {
   if (otel.disabled) {
     return undefined;
   }
-  const paperplaneUrl = blankAsUnset(rove.url);
+  const paperplaneUrl = blankAsUnset(paperplane.url);
   if (paperplaneUrl !== undefined) {
-    return { url: paperplaneUrl, export: rove.export };
+    return { url: paperplaneUrl, export: paperplane.export };
   }
   return OtelSignal.$match(otel[signal], {
     Export: ({ url, protocol, headers }): SignalEndpoint => ({
       url,
-      export: { protocol, headers, exportIntervalMs: rove.export.exportIntervalMs },
+      export: { protocol, headers, exportIntervalMs: paperplane.export.exportIntervalMs },
     }),
     Off: () => undefined,
     Unset: () => {
       const url = fallbackUrls.map(blankAsUnset).find((candidate) => candidate !== undefined);
-      return url === undefined ? undefined : { url, export: rove.export };
+      return url === undefined ? undefined : { url, export: paperplane.export };
     },
   });
 };

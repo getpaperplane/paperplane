@@ -1,7 +1,7 @@
 // @effect-diagnostics nodeBuiltinImport:off
 import * as NodeOS from "node:os";
 import { executeProcessControl, parseProcessBudgetMiB } from "./ProcessBudget.ts";
-import { SMALL_HOST_BYTES } from "../process/roveMemoryBudget.ts";
+import { SMALL_HOST_BYTES } from "../process/paperplaneMemoryBudget.ts";
 
 export interface PiWorkloadConfig {
   readonly memoryMiB: number | "auto";

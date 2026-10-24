@@ -108,7 +108,7 @@ it("publishes unique tool names with reference-free object-root inputs", () => {
     for (const tool of Object.values(toolkit.tools)) {
       expect(names.has(tool.name)).toBe(false);
       names.add(tool.name);
-      expect(tool.name.startsWith("rove_"), tool.name).toBe(false);
+      expect(tool.name.startsWith("paperplane_"), tool.name).toBe(false);
       const schema = Tool.getJsonSchema(tool);
       expect(schema).toMatchObject({ type: "object" });
       // The published tool catalog must also work with providers without $ref support.
@@ -128,7 +128,7 @@ it("publishes unique tool names with reference-free object-root inputs", () => {
   }
   expect(names.has("paperplane_thread_launch")).toBe(true);
   expect(names.has("paperplane_thread_start")).toBe(false);
-  expect(names.has("rove_thread_start")).toBe(false);
+  expect(names.has("paperplane_thread_start")).toBe(false);
 });
 
 const threadId = ThreadId.make("mcp-core-thread");
@@ -296,7 +296,9 @@ it.effect("returns an HTML render reference that Codex and Claude tool rows both
       McpHttpServer.layerHtmlToolkit.pipe(
         Layer.provideMerge(McpServer.McpServer.layer),
         Layer.provide(PreviewBrowser.layer),
-        Layer.provide(ServerConfig.layerTest(process.cwd(), { prefix: "rove-mcp-html-render-" })),
+        Layer.provide(
+          ServerConfig.layerTest(process.cwd(), { prefix: "paperplane-mcp-html-render-" }),
+        ),
         Layer.provide(NodeServices.layer),
         // The preview browser is not installed in a fresh home, so nothing downloads.
         Layer.provide(FetchHttpClient.layer),
@@ -888,7 +890,9 @@ it.effect("only the caller that prepared a pending upload can discard it", () =>
         Layer.provideMerge(McpServer.McpServer.layer),
         Layer.provide(McpToolAccessTestkit.liveThreadsLayer),
         Layer.provide(ServerSecretStore.layer),
-        Layer.provide(ServerConfig.layerTest(process.cwd(), { prefix: "rove-mcp-attachment-" })),
+        Layer.provide(
+          ServerConfig.layerTest(process.cwd(), { prefix: "paperplane-mcp-attachment-" }),
+        ),
         Layer.provide(NodeServices.layer),
       ),
     ),

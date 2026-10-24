@@ -29,7 +29,7 @@ describe("injectHtmlRenderBootstrap", () => {
     const html =
       "<!doctype html><html><head><style>:root{--background:red}</style></head><body>x</body></html>";
     const injected = injectHtmlRenderBootstrap(html);
-    const themeAt = injected.indexOf('<style id="rove-theme">');
+    const themeAt = injected.indexOf('<style id="paperplane-theme">');
     expect(themeAt).toBeGreaterThan(injected.indexOf("<head>"));
     expect(themeAt).toBeLessThan(injected.indexOf(":root{--background:red}"));
     expect(injected).toContain('<meta charset="utf-8">');
@@ -52,7 +52,7 @@ describe("injectHtmlRenderBootstrap", () => {
       const fragment = `<${tag}><head><meta name="viewport"></head></${tag}>`;
       const injected = injectHtmlRenderBootstrap(fragment);
       expect(injected.startsWith("<!doctype html><head>")).toBe(true);
-      expect(injected.indexOf('<style id="rove-theme">')).toBeLessThan(
+      expect(injected.indexOf('<style id="paperplane-theme">')).toBeLessThan(
         injected.indexOf(`<${tag}>`),
       );
       expect(injected).toContain('<meta name="viewport" content="width=device-width');
@@ -66,7 +66,7 @@ describe("injectHtmlRenderBootstrap", () => {
   ])("keeps the bootstrap outside inert template content: %s", (fragment) => {
     const injected = injectHtmlRenderBootstrap(fragment);
     expect(injected.startsWith("<!doctype html><head>")).toBe(true);
-    expect(injected.indexOf('<style id="rove-theme">')).toBeLessThan(
+    expect(injected.indexOf('<style id="paperplane-theme">')).toBeLessThan(
       injected.indexOf("<template>"),
     );
     expect(injected).toContain('<meta name="viewport" content="width=device-width');
@@ -78,7 +78,7 @@ describe("injectHtmlRenderBootstrap", () => {
       '<!-- copy <head> and <meta name="viewport"> here --><html><head>' +
       "<script>const tag = '<meta name=\"viewport\">';</script></head><body>x</body></html>";
     const injected = injectHtmlRenderBootstrap(html);
-    expect(injected.indexOf('<style id="rove-theme">')).toBeGreaterThan(
+    expect(injected.indexOf('<style id="paperplane-theme">')).toBeGreaterThan(
       injected.indexOf("<html><head>"),
     );
     expect(injected).toContain('<meta name="viewport" content="width=device-width');
@@ -112,7 +112,10 @@ describe("readHtmlRenderLinkRequest", () => {
       }),
     ).toBeUndefined();
     expect(
-      readHtmlRenderLinkRequest({ type: "rove-html-render-link", url: "https://example.com" }),
+      readHtmlRenderLinkRequest({
+        type: "paperplane-html-render-link",
+        url: "https://example.com",
+      }),
     ).toBeUndefined();
   });
 });
@@ -197,7 +200,9 @@ describe("htmlRenderTheme", () => {
     expect(theme.variables["--chart-1"]).toBe(PAPERPLANE_CODE_LIGHT_THEME_COLORS.accent);
     expect(theme.variables["--chart-6"]).toBeDefined();
     const fragment = htmlRenderThemeFragment(theme);
-    expect(JSON.parse(decodeURIComponent(fragment.slice("#rove-theme=".length)))).toEqual(theme);
+    expect(JSON.parse(decodeURIComponent(fragment.slice("#paperplane-theme=".length)))).toEqual(
+      theme,
+    );
     expect(fragment).not.toContain("&");
     expect(
       htmlRenderTheme(PAPERPLANE_CODE_DARK_THEME_COLORS, "dark").variables["--background"],

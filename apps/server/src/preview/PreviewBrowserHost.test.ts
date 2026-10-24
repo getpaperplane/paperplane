@@ -62,7 +62,8 @@ const diagnose = (input: {
     version: input.version ?? LOADER_ERROR,
   });
   return PreviewBrowserHost.diagnoseLaunchFailure({
-    executable: "/home/me/.rove/tools/chrome-headless-shell/linux64/154/chrome-headless-shell",
+    executable:
+      "/home/me/.paperplane/tools/chrome-headless-shell/linux64/154/chrome-headless-shell",
     output: input.output,
     setupCommand: "sudo paperplane browser setup",
   }).pipe(

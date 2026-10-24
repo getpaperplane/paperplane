@@ -848,7 +848,7 @@ export const makeVcsDriverShape = Effect.fn("makeGitVcsDriverShape")(function* (
       ];
       // Keep each private index outside the repository; killed captures leave no shared-dir litter.
       const tempIndexPath = yield* fileSystem
-        .makeTempFile({ prefix: `rove-checkpoint-index-${process.pid}-` })
+        .makeTempFile({ prefix: `paperplane-checkpoint-index-${process.pid}-` })
         .pipe(
           Effect.tap((createdPath) =>
             fileSystem.remove(createdPath, { force: true }).pipe(Effect.ignore),

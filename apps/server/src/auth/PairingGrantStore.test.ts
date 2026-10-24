@@ -33,7 +33,9 @@ const layerServerConfig = (
       } satisfies ServerConfig.ServerConfig["Service"];
     }),
   ).pipe(
-    Layer.provide(ServerConfig.layerTest(process.cwd(), { prefix: "rove-auth-bootstrap-test-" })),
+    Layer.provide(
+      ServerConfig.layerTest(process.cwd(), { prefix: "paperplane-auth-bootstrap-test-" }),
+    ),
   );
 
 const layerPairingGrantStore = (

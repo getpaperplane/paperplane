@@ -28,12 +28,12 @@ it.live.skipIf(
       const client = McpSchema.McpServerClient.of({
         clientId: 1,
         clientCapabilities: {},
-        clientInfo: { name: "rove-windows-verification", version: "1" },
+        clientInfo: { name: "paperplane-windows-verification", version: "1" },
         protocolVersion: "2025-06-18",
         initializePayload: {
           protocolVersion: "2025-06-18",
           capabilities: {},
-          clientInfo: { name: "rove-windows-verification", version: "1" },
+          clientInfo: { name: "paperplane-windows-verification", version: "1" },
         },
         getClient: Effect.die("unused"),
       });
@@ -74,7 +74,9 @@ it.live.skipIf(
           Layer.provide(McpToolAccessTestkit.liveThreadsLayer),
           Layer.provide(CuaDriver.layer),
           Layer.provide(ServerSettings.layerTest({ enableAgentComputerUse: true })),
-          Layer.provide(ServerConfig.layerTest(process.cwd(), { prefix: "rove-cua-native-" })),
+          Layer.provide(
+            ServerConfig.layerTest(process.cwd(), { prefix: "paperplane-cua-native-" }),
+          ),
           Layer.provide(NodeServices.layer),
         ),
       ),

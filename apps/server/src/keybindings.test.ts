@@ -28,7 +28,7 @@ const layerKeybindings = () => {
     Layer.provideMerge(
       Layer.fresh(
         ServerConfig.layerTest(process.cwd(), {
-          prefix: "rove-keybindings-test-",
+          prefix: "paperplane-keybindings-test-",
         }),
       ),
     ),

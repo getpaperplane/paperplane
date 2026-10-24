@@ -18,8 +18,9 @@ function createUI(reportUnsupportedUI = () => {}) {
     reportUnsupportedUI,
   );
   const latestQuestion = () => {
-    const request = events.findLast((event) => event.type === "rove_ui_request");
-    if (request?.type !== "rove_ui_request") throw new Error("Expected an extension question");
+    const request = events.findLast((event) => event.type === "paperplane_ui_request");
+    if (request?.type !== "paperplane_ui_request")
+      throw new Error("Expected an extension question");
     return {
       requestId: request.requestId,
       questions: decodeQuestions({ questions: request.questions }).questions,

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vite-plus/test";
-import { nextSliceLimits, roveMemoryBudget } from "./roveMemoryBudget.ts";
+import { nextSliceLimits, paperplaneMemoryBudget } from "./paperplaneMemoryBudget.ts";
 
 const MiB = 1024 ** 2;
 describe("Paperplane memory budget", () => {
@@ -10,13 +10,13 @@ describe("Paperplane memory budget", () => {
     [16384, 12288, 4096],
     [65536, 61440, 4096],
   ])("reserves OS and server RAM on a %i MiB host", (total, max, swapMax) => {
-    expect(roveMemoryBudget(total * MiB, 4096 * MiB)).toEqual({
+    expect(paperplaneMemoryBudget(total * MiB, 4096 * MiB)).toEqual({
       max: max * MiB,
       swapMax: swapMax * MiB,
     });
   });
   it("does not invent swap", () => {
-    expect(roveMemoryBudget(8192 * MiB, 0).swapMax).toBe(0);
+    expect(paperplaneMemoryBudget(8192 * MiB, 0).swapMax).toBe(0);
   });
 });
 

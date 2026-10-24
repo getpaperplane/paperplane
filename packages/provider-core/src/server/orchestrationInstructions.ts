@@ -65,25 +65,25 @@ const PAPERPLANE_ACP_PLAN_MODE_INSTRUCTIONS = `## Paperplane interaction mode: P
 
 Investigate with read-only actions and do not edit files or otherwise execute the implementation. Resolve discoverable facts before asking questions. When the requirements are decision complete, return a concrete implementation plan and do not start implementing it. Treat this mode as active until Paperplane supplies a different interaction-mode instruction.`;
 
-export interface RoveAcpInstructionState {
+export interface PaperplaneAcpInstructionState {
   readonly interactionMode: ProviderInteractionMode;
-  readonly hasRoveMcp: boolean;
+  readonly hasPaperplaneMcp: boolean;
 }
 
 /**
  * ACP has no system/developer prompt field, so send Paperplane-owned context in the
  * first user prompt and whenever the available tools or interaction mode change.
  */
-export function roveAcpPromptWithInstructions(input: {
+export function paperplaneAcpPromptWithInstructions(input: {
   readonly prompt: string;
-  readonly state: RoveAcpInstructionState;
-  readonly previousState?: RoveAcpInstructionState;
+  readonly state: PaperplaneAcpInstructionState;
+  readonly previousState?: PaperplaneAcpInstructionState;
 }): string {
   // Native slash commands must remain at the start of the prompt.
   if (input.prompt.trimStart().startsWith("/")) return input.prompt;
   if (
     input.previousState?.interactionMode === input.state.interactionMode &&
-    input.previousState.hasRoveMcp === input.state.hasRoveMcp
+    input.previousState.hasPaperplaneMcp === input.state.hasPaperplaneMcp
   ) {
     return input.prompt;
   }
@@ -91,11 +91,11 @@ export function roveAcpPromptWithInstructions(input: {
     input.state.interactionMode === "plan"
       ? PAPERPLANE_ACP_PLAN_MODE_INSTRUCTIONS
       : PAPERPLANE_ACP_DEFAULT_MODE_INSTRUCTIONS,
-    ...(input.state.hasRoveMcp
+    ...(input.state.hasPaperplaneMcp
       ? [PAPERPLANE_BROWSER_TOOL_INSTRUCTIONS.trim(), PAPERPLANE_ORCHESTRATION_INSTRUCTIONS.trim()]
       : []),
   ];
-  return `<rove_code_instructions>\n${instructions.join("\n\n")}\n</rove_code_instructions>\n\n<user_request>\n${input.prompt}\n</user_request>`;
+  return `<paperplane_code_instructions>\n${instructions.join("\n\n")}\n</paperplane_code_instructions>\n\n<user_request>\n${input.prompt}\n</user_request>`;
 }
 
 /**
@@ -103,20 +103,20 @@ export function roveAcpPromptWithInstructions(input: {
  * context in the first prompt. Keep the wrapper explicit so it cannot be
  * mistaken for text authored by the user.
  */
-function prependRoveOrchestrationInstructions(prompt: string): string {
-  return `<rove_code_orchestration_instructions>${PAPERPLANE_ORCHESTRATION_INSTRUCTIONS.trim()}</rove_code_orchestration_instructions>\n\n<user_request>\n${prompt}\n</user_request>`;
+function prependPaperplaneOrchestrationInstructions(prompt: string): string {
+  return `<paperplane_code_orchestration_instructions>${PAPERPLANE_ORCHESTRATION_INSTRUCTIONS.trim()}</paperplane_code_orchestration_instructions>\n\n<user_request>\n${prompt}\n</user_request>`;
 }
 
-export function roveOrchestrationPromptForFirstRun(input: {
+export function paperplaneOrchestrationPromptForFirstRun(input: {
   readonly prompt: string;
   readonly runOrdinal: number;
-  readonly hasRoveMcp: boolean;
+  readonly hasPaperplaneMcp: boolean;
 }): string {
-  return input.runOrdinal === 1 && input.hasRoveMcp
-    ? prependRoveOrchestrationInstructions(input.prompt)
+  return input.runOrdinal === 1 && input.hasPaperplaneMcp
+    ? prependPaperplaneOrchestrationInstructions(input.prompt)
     : input.prompt;
 }
 
-export function roveOrchestrationSystemPrompt(hasRoveMcp: boolean): string | undefined {
-  return hasRoveMcp ? PAPERPLANE_ORCHESTRATION_INSTRUCTIONS : undefined;
+export function paperplaneOrchestrationSystemPrompt(hasPaperplaneMcp: boolean): string | undefined {
+  return hasPaperplaneMcp ? PAPERPLANE_ORCHESTRATION_INSTRUCTIONS : undefined;
 }

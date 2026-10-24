@@ -198,7 +198,7 @@ it.layer(layerTest)("Paperplane V1 compatibility", (it) => {
             '2025-01-01T00:00:00.000Z', '2025-01-01T00:00:00.000Z'),
           ('bad-message', 'good', 'user', 'Bad timestamp', NULL, '[]', 0,
             '2026-01-01T00:00:00.000Z', 'invalid'),
-          ('latest', 'good', 'assistant', ${'```rove-response\n{"type":"table"}\n```'}, '{"forkOnly":"value"}', 'invalid', 0,
+          ('latest', 'good', 'assistant', ${'```paperplane-response\n{"type":"table"}\n```'}, '{"forkOnly":"value"}', 'invalid', 0,
             '2026-01-02T00:00:00.000Z', '2026-01-02T00:00:00.000Z')
       `;
         yield* sql`
@@ -237,7 +237,7 @@ it.layer(layerTest)("Paperplane V1 compatibility", (it) => {
           good.messages.map((message) => message.id),
           ["older", "latest"],
         );
-        assert.include(good.messages[1]!.text, "rove-response");
+        assert.include(good.messages[1]!.text, "paperplane-response");
         assert.deepStrictEqual(good.messages[1]!.attachments, []);
         assert.isUndefined(good.messages[1]!.context);
         assert.isNull(good.thread.linkedPullRequest);

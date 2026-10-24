@@ -51,7 +51,7 @@ function fixture(
       return HttpClientResponse.fromWeb(request, new Response(null, { status }));
     }),
   );
-  const configLayer = ServerConfig.layerTest(process.cwd(), { prefix: "rove-analytics-" });
+  const configLayer = ServerConfig.layerTest(process.cwd(), { prefix: "paperplane-analytics-" });
   const settingsLayer = ServerSettings.layerTest({ telemetryEnabled: options.enabled ?? true });
   const layer = AnalyticsService.layer.pipe(
     Layer.provideMerge(configLayer),
@@ -111,7 +111,7 @@ it.layer(NodeServices.layer)("AnalyticsService", (it) => {
       const layerRuntime = AnalyticsService.layer.pipe(
         Layer.provide(ServerSettings.layerTest()),
         Layer.provideMerge(
-          ServerConfig.layerTest(process.cwd(), { prefix: "rove-telemetry-retry-" }),
+          ServerConfig.layerTest(process.cwd(), { prefix: "paperplane-telemetry-retry-" }),
         ),
         Layer.provide(
           ConfigProvider.layer(
@@ -178,7 +178,7 @@ it.layer(NodeServices.layer)("AnalyticsService", (it) => {
       const event = f.requests[0]?.payload.batch[0];
       assert.match(event?.distinct_id ?? "", /^[0-9a-f]{64}$/);
       assert.equal(event?.properties.$process_person_profile, false);
-      assert.equal(event?.properties.$lib, "rove-server");
+      assert.equal(event?.properties.$lib, "paperplane-server");
       assert.equal(event?.properties.$geoip_disable, true);
       assert.isNull(event?.properties.$ip);
       assert.notProperty(event?.properties ?? {}, "$set");

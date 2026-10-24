@@ -59,7 +59,7 @@ export class ResourceMonitorBinary extends Context.Service<
 >()("@getpaperplane/server/resourceTelemetry/ResourceMonitorBinary") {}
 
 function binaryName(platform: NodeJS.Platform): string {
-  return platform === "win32" ? "rove-resource-monitor.exe" : "rove-resource-monitor";
+  return platform === "win32" ? "paperplane-resource-monitor.exe" : "paperplane-resource-monitor";
 }
 
 export type ResourceMonitorLinuxLibc = "gnu" | "musl";

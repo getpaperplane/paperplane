@@ -21,7 +21,7 @@ describe("host-bound agent commands", () => {
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const temp = yield* fs.makeTempDirectoryScoped({ prefix: "rove-device-target-" });
+      const temp = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-device-target-" });
       const platform = yield* HostProcess.Platform;
       const dir = path.join(
         temp,

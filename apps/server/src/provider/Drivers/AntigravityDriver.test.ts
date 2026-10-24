@@ -63,7 +63,7 @@ const makeHarness = Effect.fn("makeAntigravityDriverHarness")(function* (
   const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
   const nodePath = yield* HostProcess.ExecutablePath;
   const baseEnv = yield* HostProcess.Environment;
-  const root = yield* fs.makeTempDirectoryScoped({ prefix: "rove-antigravity-driver-" });
+  const root = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-antigravity-driver-" });
   const instanceId = ProviderInstanceId.make(path.basename(root));
   const mockAgentPath = yield* path.fromFileUrl(
     new URL("../../../scripts/acp-mock-agent.ts", import.meta.url),
@@ -244,7 +244,7 @@ const makeHarness = Effect.fn("makeAntigravityDriverHarness")(function* (
 });
 
 const layerDeps = ServerConfig.layerTest(process.cwd(), {
-  prefix: "rove-antigravity-driver-config-",
+  prefix: "paperplane-antigravity-driver-config-",
 }).pipe(
   Layer.provideMerge(NodeServices.layer),
   Layer.provideMerge(

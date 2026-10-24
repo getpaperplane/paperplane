@@ -75,7 +75,7 @@ rl.on("line", (line) => {
     write({
       id,
       result: {
-        userAgent: "rove-collab-mock/0.0.0",
+        userAgent: "paperplane-collab-mock/0.0.0",
         codexHome: "/tmp",
         platformFamily: "unix",
         platformOs: "linux",

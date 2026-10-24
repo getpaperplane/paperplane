@@ -125,7 +125,7 @@ const withTempDirectory = <A, E, R>(
 
 describe("paperplane server command safety", () => {
   it.effect("rejects unknown command words without creating a home or project", () =>
-    withTempDirectory("rove-cli-unknown-", (root) =>
+    withTempDirectory("paperplane-cli-unknown-", (root) =>
       Effect.gen(function* () {
         const baseDir = NodePath.join(root, "home");
         for (const word of [
@@ -149,7 +149,7 @@ describe("paperplane server command safety", () => {
   );
 
   it.effect("shows help without creating state", () =>
-    withTempDirectory("rove-cli-help-", (root) =>
+    withTempDirectory("paperplane-cli-help-", (root) =>
       Effect.gen(function* () {
         const baseDir = NodePath.join(root, "home");
         const help = yield* runCli(["help"], { PAPERPLANE_HOME: baseDir }).pipe(Effect.flip);
@@ -160,7 +160,7 @@ describe("paperplane server command safety", () => {
   );
 
   it.effect("refuses manual startup over a live server before creating directories", () =>
-    withTempDirectory("rove-cli-running-", (root) =>
+    withTempDirectory("paperplane-cli-running-", (root) =>
       Effect.gen(function* () {
         const baseDir = NodePath.join(root, "home");
         const stateDir = NodePath.join(baseDir, "userdata");
@@ -207,9 +207,9 @@ describe("paperplane server command safety", () => {
 
 describe("paperplane app", () => {
   it.effect("rejects SSH before it tries to reach a desktop app", () =>
-    withTempDirectory("rove-app-ssh-test-", (root) =>
+    withTempDirectory("paperplane-app-ssh-test-", (root) =>
       Effect.gen(function* () {
-        const baseDir = NodePath.join(root, "missing-rove-home");
+        const baseDir = NodePath.join(root, "missing-paperplane-home");
         const error = yield* runCli(["app", "--base-dir", baseDir], {
           SSH_CONNECTION: "client server",
         }).pipe(Effect.flip);
@@ -225,9 +225,9 @@ describe("paperplane app", () => {
   );
 
   it.effect("rejects unsupported platforms without creating state", () =>
-    withTempDirectory("rove-app-platform-test-", (root) =>
+    withTempDirectory("paperplane-app-platform-test-", (root) =>
       Effect.gen(function* () {
-        const baseDir = NodePath.join(root, "missing-rove-home");
+        const baseDir = NodePath.join(root, "missing-paperplane-home");
         const error = yield* runCli(["app", "--base-dir", baseDir]).pipe(
           Effect.provideService(HostProcess.Platform, "freebsd"),
           Effect.flip,
@@ -244,9 +244,9 @@ describe("paperplane app", () => {
   );
 
   it.effect("does not create state when only a server or no desktop app is running", () =>
-    withTempDirectory("rove-app-missing-test-", (root) =>
+    withTempDirectory("paperplane-app-missing-test-", (root) =>
       Effect.gen(function* () {
-        const baseDir = NodePath.join(root, "missing-rove-home");
+        const baseDir = NodePath.join(root, "missing-paperplane-home");
         const error = yield* runCli(["app", "--base-dir", baseDir]).pipe(Effect.flip);
 
         expect(error).toMatchObject({
@@ -262,9 +262,9 @@ describe("paperplane app", () => {
   );
 
   it.effect("uses PAPERPLANE_HOME or --base-dir and sends the default or explicit path", () =>
-    withTempDirectory("rove-app-command-test-", (root) =>
+    withTempDirectory("paperplane-app-command-test-", (root) =>
       Effect.gen(function* () {
-        const baseDir = NodePath.join(root, "rove-home");
+        const baseDir = NodePath.join(root, "paperplane-home");
         const explicitPath = NodePath.join(root, "project");
         const platform = yield* HostProcess.Platform;
         const workingDirectory = yield* HostProcess.WorkingDirectory;
@@ -283,7 +283,7 @@ describe("paperplane app", () => {
   );
 
   it.effect("prefers the installed desktop app when a dev desktop is also running", () =>
-    withTempDirectory("rove-app-preferred-test-", (root) =>
+    withTempDirectory("paperplane-app-preferred-test-", (root) =>
       Effect.gen(function* () {
         const baseDir = NodePath.join(root, ".paperplane");
         const desktop = yield* fakeDesktop({ baseDir });
@@ -298,7 +298,7 @@ describe("paperplane app", () => {
   );
 
   it.effect("finds the dev desktop when the default desktop socket is absent", () =>
-    withTempDirectory("rove-app-dev-test-", (root) =>
+    withTempDirectory("paperplane-app-dev-test-", (root) =>
       Effect.gen(function* () {
         const baseDir = NodePath.join(root, ".paperplane");
         const development = yield* fakeDesktop({ baseDir, stateSubdirectory: "dev" });
@@ -313,7 +313,7 @@ describe("paperplane app", () => {
   );
 
   it.effect("never searches a dev state directory for an explicit Paperplane home", () =>
-    withTempDirectory("rove-app-explicit-test-", (root) =>
+    withTempDirectory("paperplane-app-explicit-test-", (root) =>
       Effect.gen(function* () {
         const baseDir = NodePath.join(root, ".paperplane");
         const development = yield* fakeDesktop({ baseDir, stateSubdirectory: "dev" });
@@ -331,7 +331,7 @@ describe("paperplane app", () => {
   it.effect.each(["failure", "invalid"] as const)(
     "never falls back after the default desktop sends a %s response",
     (responseKind) =>
-      withTempDirectory("rove-app-response-test-", (root) =>
+      withTempDirectory("paperplane-app-response-test-", (root) =>
         Effect.gen(function* () {
           const baseDir = NodePath.join(root, ".paperplane");
           const desktop = yield* fakeDesktop({

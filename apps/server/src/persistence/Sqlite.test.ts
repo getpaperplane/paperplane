@@ -42,7 +42,7 @@ const spawnWriteLockHolder = (dbPath: string, holdMs: number) =>
   );
 
 it.effect("waits out a concurrent writer instead of failing with SQLITE_BUSY", () => {
-  const tempDir = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "rove-sqlite-busy-"));
+  const tempDir = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "paperplane-sqlite-busy-"));
   const dbPath = NodePath.join(tempDir, "state.sqlite");
 
   return Effect.gen(function* () {
@@ -67,7 +67,7 @@ it.effect("limits the WAL file size in the shared persistence setup", () =>
 );
 
 it.effect("collects planner statistics for an existing database on open", () => {
-  const tempDir = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "rove-sqlite-stats-"));
+  const tempDir = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "paperplane-sqlite-stats-"));
   const dbPath = NodePath.join(tempDir, "state.sqlite");
   const persistence = () =>
     SqlitePersistence.layerFromPath(dbPath).pipe(Layer.provide(NodeServices.layer));
@@ -97,7 +97,7 @@ it.effect("collects planner statistics for an existing database on open", () => 
 });
 
 it.effect("only fsyncs the database file at WAL checkpoints", () => {
-  const tempDir = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "rove-sqlite-sync-"));
+  const tempDir = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "paperplane-sqlite-sync-"));
   const dbPath = NodePath.join(tempDir, "state.sqlite");
 
   return Effect.gen(function* () {

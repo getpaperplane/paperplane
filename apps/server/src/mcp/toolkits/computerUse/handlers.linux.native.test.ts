@@ -63,7 +63,7 @@ const settingsLayer = Layer.effect(
 const services = CuaDriver.layer.pipe(
   Layer.provideMerge(settingsLayer),
   Layer.provideMerge(ProcessRunner.layer),
-  Layer.provide(ServerConfig.layerTest(process.cwd(), { prefix: "rove-cua-native-" })),
+  Layer.provide(ServerConfig.layerTest(process.cwd(), { prefix: "paperplane-cua-native-" })),
   Layer.provideMerge(NodeServices.layer),
 );
 const Window = Schema.Struct({ pid: Schema.Int, window_id: Schema.Int, title: Schema.String });
@@ -140,12 +140,12 @@ it.effect.skipIf(!enabled)(
       const client = McpSchema.McpServerClient.of({
         clientId: 1,
         clientCapabilities: {},
-        clientInfo: { name: "rove-linux-verification", version: "1" },
+        clientInfo: { name: "paperplane-linux-verification", version: "1" },
         protocolVersion: "2025-06-18",
         initializePayload: {
           protocolVersion: "2025-06-18",
           capabilities: {},
-          clientInfo: { name: "rove-linux-verification", version: "1" },
+          clientInfo: { name: "paperplane-linux-verification", version: "1" },
         },
         getClient: Effect.die("unused"),
       });
@@ -278,12 +278,13 @@ it.effect.skipIf(!enabled)(
           "ps",
           "--all",
           "--filter",
-          "label=io.rove.cua.server",
+          "label=io.paperplane.cua.server",
           "--format",
           "json",
         ]);
         return decodeContainers(listing).filter(
-          (container) => decodeServer(container.Labels["io.rove.cua.server"]).pid === process.pid,
+          (container) =>
+            decodeServer(container.Labels["io.paperplane.cua.server"]).pid === process.pid,
         );
       });
       const containers = yield* ownedContainers;

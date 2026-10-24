@@ -518,7 +518,7 @@ const program = Effect.gen(function* () {
       parameterizedModelPicker = request.capabilities?._meta?.parameterizedModelPicker === true;
       return {
         protocolVersion: 2,
-        info: { name: "rove-acp-mock-agent", version: "0.0.0" },
+        info: { name: "paperplane-acp-mock-agent", version: "0.0.0" },
         _meta: { modelState: modelState() },
         capabilities: {
           session: {
@@ -1936,7 +1936,7 @@ const program = Effect.gen(function* () {
             status: "completed",
             rawOutput: {
               exitCode: 0,
-              stdout: '{ "name": "rove" }',
+              stdout: '{ "name": "paperplane" }',
               stderr: "",
             },
           },

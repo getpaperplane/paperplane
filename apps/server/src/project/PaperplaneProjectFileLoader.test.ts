@@ -6,17 +6,17 @@ import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
 import * as Path from "effect/Path";
 
-import * as RoveProjectFileLoader from "./RoveProjectFileLoader.ts";
+import * as PaperplaneProjectFileLoader from "./PaperplaneProjectFileLoader.ts";
 
 const layerTest = Layer.empty.pipe(
-  Layer.provideMerge(RoveProjectFileLoader.layer),
+  Layer.provideMerge(PaperplaneProjectFileLoader.layer),
   Layer.provideMerge(NodeServices.layer),
 );
 
 const makeTempDir = Effect.gen(function* () {
   const fileSystem = yield* FileSystem.FileSystem;
   return yield* fileSystem.makeTempDirectoryScoped({
-    prefix: "rove-project-file-",
+    prefix: "paperplane-project-file-",
   });
 });
 
@@ -26,11 +26,11 @@ const writeProjectFile = Effect.fn("writeProjectFile")(function* (cwd: string, c
   yield* fileSystem.writeFileString(path.join(cwd, "paperplane.json"), contents).pipe(Effect.orDie);
 });
 
-it.layer(layerTest)("RoveProjectFileLoader", (it) => {
+it.layer(layerTest)("PaperplaneProjectFileLoader", (it) => {
   describe("loadState", () => {
     it.effect("reports a missing configuration", () =>
       Effect.gen(function* () {
-        const loader = yield* RoveProjectFileLoader.RoveProjectFileLoader;
+        const loader = yield* PaperplaneProjectFileLoader.PaperplaneProjectFileLoader;
         const cwd = yield* makeTempDir;
         expect(yield* loader.loadState(cwd)).toEqual({ status: "missing" });
       }),
@@ -43,7 +43,7 @@ it.layer(layerTest)("RoveProjectFileLoader", (it) => {
         const cwd = yield* makeTempDir;
         // A directory cannot be read as JSON: detection must be existence-only.
         yield* fs.makeDirectory(path.join(cwd, "rove.json"));
-        const loader = yield* RoveProjectFileLoader.RoveProjectFileLoader;
+        const loader = yield* PaperplaneProjectFileLoader.PaperplaneProjectFileLoader;
         expect(yield* loader.loadState(cwd)).toEqual({ status: "legacy-only" });
         expect(Option.isNone(yield* loader.load(cwd))).toBe(true);
       }),
@@ -53,7 +53,7 @@ it.layer(layerTest)("RoveProjectFileLoader", (it) => {
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const loader = yield* RoveProjectFileLoader.RoveProjectFileLoader;
+        const loader = yield* PaperplaneProjectFileLoader.PaperplaneProjectFileLoader;
         const cwd = yield* makeTempDir;
         const file = {
           defaultThreadEnvMode: "worktree",
@@ -71,7 +71,7 @@ it.layer(layerTest)("RoveProjectFileLoader", (it) => {
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const loader = yield* RoveProjectFileLoader.RoveProjectFileLoader;
+        const loader = yield* PaperplaneProjectFileLoader.PaperplaneProjectFileLoader;
         const cwd = yield* makeTempDir;
         yield* fs.writeFileString(
           path.join(cwd, "rove.json"),
@@ -92,7 +92,7 @@ it.layer(layerTest)("RoveProjectFileLoader", (it) => {
   describe("load", () => {
     it.effect("loads and decodes a valid paperplane.json", () =>
       Effect.gen(function* () {
-        const loader = yield* RoveProjectFileLoader.RoveProjectFileLoader;
+        const loader = yield* PaperplaneProjectFileLoader.PaperplaneProjectFileLoader;
         const cwd = yield* makeTempDir;
         yield* writeProjectFile(
           cwd,
@@ -115,7 +115,7 @@ it.layer(layerTest)("RoveProjectFileLoader", (it) => {
 
     it.effect("returns none when paperplane.json is missing", () =>
       Effect.gen(function* () {
-        const loader = yield* RoveProjectFileLoader.RoveProjectFileLoader;
+        const loader = yield* PaperplaneProjectFileLoader.PaperplaneProjectFileLoader;
         const cwd = yield* makeTempDir;
 
         const loaded = yield* loader.load(cwd);
@@ -126,7 +126,7 @@ it.layer(layerTest)("RoveProjectFileLoader", (it) => {
 
     it.effect("returns none for malformed JSON without failing", () =>
       Effect.gen(function* () {
-        const loader = yield* RoveProjectFileLoader.RoveProjectFileLoader;
+        const loader = yield* PaperplaneProjectFileLoader.PaperplaneProjectFileLoader;
         const cwd = yield* makeTempDir;
         yield* writeProjectFile(cwd, "{ not json");
 
@@ -138,7 +138,7 @@ it.layer(layerTest)("RoveProjectFileLoader", (it) => {
 
     it.effect("returns none for schema-invalid files without failing", () =>
       Effect.gen(function* () {
-        const loader = yield* RoveProjectFileLoader.RoveProjectFileLoader;
+        const loader = yield* PaperplaneProjectFileLoader.PaperplaneProjectFileLoader;
         const cwd = yield* makeTempDir;
         yield* writeProjectFile(cwd, '{ "scripts": [{ "name": "Dev" }] }');
 

@@ -16,7 +16,7 @@ it.effect("finds Android Studio Java for a non-interactive SSH session", () =>
   Effect.gen(function* () {
     if ((yield* HostProcess.Platform) === "win32") return;
     yield* Effect.promise(async () => {
-      const home = await NodeFSP.mkdtemp(NodePath.join(NodeOS.tmpdir(), "rove-ssh-java-"));
+      const home = await NodeFSP.mkdtemp(NodePath.join(NodeOS.tmpdir(), "paperplane-ssh-java-"));
       try {
         const javaHome = NodePath.join(home, ".local/opt/android-studio/jbr");
         await NodeFSP.mkdir(NodePath.join(javaHome, "bin"), { recursive: true });
@@ -52,7 +52,9 @@ describe("remote helper lifecycle", () => {
     Effect.gen(function* () {
       if ((yield* HostProcess.Platform) === "win32") return;
       yield* Effect.promise(async () => {
-        const home = await NodeFSP.mkdtemp(NodePath.join(NodeOS.tmpdir(), "rove-remote-script-"));
+        const home = await NodeFSP.mkdtemp(
+          NodePath.join(NodeOS.tmpdir(), "paperplane-remote-script-"),
+        );
         const bin = NodePath.join(home, "bin");
         await NodeFSP.mkdir(bin);
         await NodeFSP.writeFile(NodePath.join(bin, "adb"), "#!/bin/sh\nexit 0\n", { mode: 0o755 });

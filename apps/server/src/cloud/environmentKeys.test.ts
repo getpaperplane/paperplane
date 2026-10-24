@@ -11,7 +11,9 @@ import { getOrCreateEnvironmentKeyPairFromSecretStore } from "./environmentKeys.
 
 const layerServerSecretStore = () =>
   ServerSecretStore.layer.pipe(
-    Layer.provide(ServerConfig.layerTest(process.cwd(), { prefix: "rove-environment-keys-test-" })),
+    Layer.provide(
+      ServerConfig.layerTest(process.cwd(), { prefix: "paperplane-environment-keys-test-" }),
+    ),
   );
 
 const unusedSecretStoreOperation = () => Effect.die("unused secret-store operation");

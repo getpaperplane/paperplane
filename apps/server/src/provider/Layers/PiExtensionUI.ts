@@ -75,7 +75,7 @@ export function createPiExtensionUI(
         visible.push({ key: statusKey, text });
         remaining -= statusKey.length + text.length;
       }
-      emit({ type: "rove_ui_status", statuses: visible });
+      emit({ type: "paperplane_ui_status", statuses: visible });
     }, 250);
     statusTimer.unref();
   };
@@ -102,7 +102,7 @@ export function createPiExtensionUI(
         .map((entry) => entry.message)
         .join("\n")
         .slice(0, 8192);
-      if (message) emit({ type: "rove_ui_text", message });
+      if (message) emit({ type: "paperplane_ui_text", message });
     }, 500);
     textTimer.unref();
   };
@@ -152,7 +152,7 @@ export function createPiExtensionUI(
         if (timer !== undefined) clearTimeout(timer);
         opts?.signal?.removeEventListener("abort", cancel);
         emit({
-          type: "rove_ui_resolved",
+          type: "paperplane_ui_resolved",
           requestId,
           answers: answer === undefined ? {} : { answer },
         });
@@ -184,7 +184,7 @@ export function createPiExtensionUI(
       // free to route the answer (or Stop) back to this session.
       try {
         onPrompt();
-        emit({ type: "rove_ui_request", requestId, questions: [question] });
+        emit({ type: "paperplane_ui_request", requestId, questions: [question] });
       } catch (error) {
         cancel();
         throw error;
@@ -201,7 +201,7 @@ export function createPiExtensionUI(
     editor: (title, prefill) => ask(title, undefined, undefined, undefined, { prefill }),
     notify: (message, level = "info") => {
       const text = textForDisplay(message).trim();
-      if (!stopped && text) emit({ type: "rove_ui_notify", message: text, level });
+      if (!stopped && text) emit({ type: "paperplane_ui_notify", message: text, level });
     },
     custom: (factory, options) => {
       unsupported();

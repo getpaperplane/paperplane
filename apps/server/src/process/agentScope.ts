@@ -17,15 +17,15 @@ import * as Path from "effect/Path";
 
 import * as ServerConfig from "../config.ts";
 import * as ProcessRunner from "../processRunner.ts";
-import { roveMemoryBudget } from "./roveMemoryBudget.ts";
+import { paperplaneMemoryBudget } from "./paperplaneMemoryBudget.ts";
 import { configureSlice, withSliceLock } from "./systemdSlice.ts";
 
 /**
- * Agents and terminals share this child of app-rove.slice. The parent also
+ * Agents and terminals share this child of app-paperplane.slice. The parent also
  * contains guarded commands and sits beside the server's own unit in app.slice,
  * keeping the control plane outside their aggregate memory ceiling.
  */
-const AGENT_SLICE = "app-rove-agents.slice";
+const AGENT_SLICE = "app-paperplane-agents.slice";
 
 /**
  * The child slice for one server's agents, named after its state directory.
@@ -36,11 +36,11 @@ const AGENT_SLICE = "app-rove-agents.slice";
  */
 export function ownedAgentSlice(stateDir: string): string {
   const hash = NodeCrypto.createHash("sha256").update(stateDir).digest("hex").slice(0, 12);
-  return `app-rove-agents-${hash}.slice`;
+  return `app-paperplane-agents-${hash}.slice`;
 }
 
 /** Shared by agents and Pi commands, including hosts that only run Pi. */
-export const ensureRoveParentSlice = Effect.fn("ensureRoveParentSlice")(function* (
+export const ensurePaperplaneParentSlice = Effect.fn("ensurePaperplaneParentSlice")(function* (
   ownedSlice?: string,
 ) {
   const fs = yield* FileSystem.FileSystem;
@@ -49,12 +49,12 @@ export const ensureRoveParentSlice = Effect.fn("ensureRoveParentSlice")(function
   const runtimeDir = environment.XDG_RUNTIME_DIR ?? `/run/user/${uid}`;
   const meminfo = yield* fs.readFileString("/proc/meminfo").pipe(Effect.orElseSucceed(() => ""));
   const swap = Number(/^SwapTotal:\s+(\d+)/m.exec(meminfo)?.[1] ?? 0) * 1024;
-  const requested = roveMemoryBudget(NodeOS.totalmem(), swap);
+  const requested = paperplaneMemoryBudget(NodeOS.totalmem(), swap);
   return yield* withSliceLock(
     runtimeDir,
-    "app-rove.slice",
+    "app-paperplane.slice",
     Effect.gen(function* () {
-      const limits = yield* configureSlice("app-rove.slice", requested, [
+      const limits = yield* configureSlice("app-paperplane.slice", requested, [
         `MemorySwapMax=${requested.swapMax}`,
         "CPUWeight=100",
         "CPUQuota=",
@@ -253,7 +253,7 @@ export const make = Effect.gen(function* () {
         yield* Effect.logInfo("Agent scopes are off: no systemd user manager");
         return undefined;
       }
-      const limits = yield* ensureRoveParentSlice(ownedSlice).pipe(
+      const limits = yield* ensurePaperplaneParentSlice(ownedSlice).pipe(
         Effect.provideService(ProcessRunner.ProcessRunner, runner),
         Effect.provideService(FileSystem.FileSystem, fileSystem),
         Effect.provideService(HostProcess.Environment, hostEnvironment),
@@ -265,7 +265,7 @@ export const make = Effect.gen(function* () {
       );
       yield* Effect.logInfo("Agent scopes are on", {
         slice: AGENT_SLICE,
-        parent: "app-rove.slice",
+        parent: "app-paperplane.slice",
         ...limits,
         oomPolicy: scopeOptions.length > 0,
       });
@@ -444,7 +444,7 @@ export const make = Effect.gen(function* () {
         }
         return agentScopeCommand({ command: resolved, args, pidfile });
       }
-      const unit = `rove-${name}-${NodeCrypto.randomUUID().slice(0, 8)}.scope`;
+      const unit = `paperplane-${name}-${NodeCrypto.randomUUID().slice(0, 8)}.scope`;
       if (threadId !== undefined) yield* track(scope.systemctl, threadId, unit);
       const systemdScope: AgentSystemdScope = {
         systemdRun: scope.systemdRun,

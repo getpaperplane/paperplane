@@ -153,7 +153,7 @@ export function resolveResourceMonitorRustTargets(
 }
 
 export function resourceMonitorExecutableName(platform: typeof BuildPlatform.Type): string {
-  return platform === "win" ? "rove-resource-monitor.exe" : "rove-resource-monitor";
+  return platform === "win" ? "paperplane-resource-monitor.exe" : "paperplane-resource-monitor";
 }
 
 const PLATFORM_CONFIG: Record<typeof BuildPlatform.Type, PlatformConfig> = {
@@ -2460,7 +2460,7 @@ export const stageBrowserSecret = Effect.fn("stageBrowserSecret")(function* (inp
         "--arch",
         input.arch === "arm64" ? "arm64" : "x64",
         "--output",
-        path.join(input.stageResourcesDir, "browser-secret", "rove-browser-secret"),
+        path.join(input.stageResourcesDir, "browser-secret", "paperplane-browser-secret"),
       ],
       { cwd: input.repoRoot },
     ),
@@ -3460,7 +3460,7 @@ export const validateWindowsPackagedPayload = Effect.fn(
     return yield* new WindowsPackagedPayloadValidationError({
       reason: "resource-monitor-missing",
       packagedAppDir,
-      missingFiles: ["resource-monitor/rove-resource-monitor.exe"],
+      missingFiles: ["resource-monitor/paperplane-resource-monitor.exe"],
     });
   }
 

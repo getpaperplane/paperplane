@@ -363,7 +363,7 @@ effectIt.layer(NodeServices.layer)("isCommandAvailable", (it) => {
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const cwd = yield* fs.makeTempDirectoryScoped({ prefix: "rove-command-trace-" });
+        const cwd = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-command-trace-" });
         const env = { PATH: cwd, PATHEXT: ".CMD" };
         const checks = [
           isCommandAvailable("missing", { env }),
@@ -394,7 +394,7 @@ effectIt.layer(NodeServices.layer)("isCommandAvailable", (it) => {
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const cwd = yield* fs.makeTempDirectoryScoped({ prefix: "rove-command-trace-" });
+        const cwd = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-command-trace-" });
         const executable = path.join(cwd, platform === "win32" ? "available.cmd" : "available");
         yield* fs.writeFileString(executable, "");
         yield* fs.chmod(executable, 0o700);
@@ -512,7 +512,9 @@ effectIt.layer(NodeServices.layer)("resolveCommandPath", (it) => {
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const cwd = yield* fs.makeTempDirectoryScoped({ prefix: "rove-case-sensitive-path-" });
+        const cwd = yield* fs.makeTempDirectoryScoped({
+          prefix: "paperplane-case-sensitive-path-",
+        });
         const executable = path.join(cwd, "audit-command.cmd");
         yield* fs.writeFileString(executable, "@echo off\n");
 
@@ -537,7 +539,7 @@ effectIt.layer(NodeServices.layer)("resolveCommandPath", (it) => {
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const cwd = yield* fs.makeTempDirectoryScoped({ prefix: "rove-path-cache-" });
+      const cwd = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-path-cache-" });
       const executable = path.join(cwd, "appeared.CMD");
       const options = { env: { PATH: `${cwd};${cwd}`, PATHEXT: ".CMD" } };
 

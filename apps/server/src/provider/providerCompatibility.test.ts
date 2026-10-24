@@ -136,14 +136,18 @@ describe("provider compatibility", () => {
       ["1.14.19", "graceful"],
       ["1.14.18", "broken"],
     ] as const) {
-      for (const roveCodeVersion of [V2_RELEASE, "0.0.46-preview.20261002.2598"]) {
+      for (const paperplaneCodeVersion of [V2_RELEASE, "0.0.46-preview.20261002.2598"]) {
         const advisory = resolveProviderCompatibility(
           ModelManifest.BUNDLED_MODEL_MANIFEST.compatibility,
           opencode,
           version,
-          roveCodeVersion,
+          paperplaneCodeVersion,
         );
-        assert.strictEqual(advisory?.status, expected, `OpenCode ${version} on ${roveCodeVersion}`);
+        assert.strictEqual(
+          advisory?.status,
+          expected,
+          `OpenCode ${version} on ${paperplaneCodeVersion}`,
+        );
         assert.strictEqual(advisory?.recommendedRange, ">=2.0.18");
       }
     }

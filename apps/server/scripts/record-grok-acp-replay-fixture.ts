@@ -171,7 +171,7 @@ function wireToEntries(wire: ReadonlyArray<WireMessage>): {
   readonly droppedFrames: number;
 } {
   const entries: Array<ProviderReplayEntry> = [];
-  const roveRequests = new Map<string, string>();
+  const paperplaneRequests = new Map<string, string>();
   const agentRequests = new Map<string, string>();
   let droppedFrames = 0;
   for (const { direction, message } of wire) {
@@ -183,7 +183,7 @@ function wireToEntries(wire: ReadonlyArray<WireMessage>): {
       }
       const isRequest = message.id !== undefined && message.id !== null;
       if (isRequest) {
-        (direction === "outgoing" ? roveRequests : agentRequests).set(
+        (direction === "outgoing" ? paperplaneRequests : agentRequests).set(
           String(message.id),
           message.method,
         );
@@ -200,7 +200,7 @@ function wireToEntries(wire: ReadonlyArray<WireMessage>): {
       });
       continue;
     }
-    const pending = direction === "outgoing" ? agentRequests : roveRequests;
+    const pending = direction === "outgoing" ? agentRequests : paperplaneRequests;
     const method = pending.get(String(message.id));
     if (method === undefined) {
       // Grok answers its own internal requests (e.g. id "skills-reload") on the
@@ -223,7 +223,8 @@ function wireToEntries(wire: ReadonlyArray<WireMessage>): {
   return { entries, droppedFrames };
 }
 
-const ROVE_INSTRUCTIONS_BODY = /<rove_code_instructions>\n[\s\S]*?\n<\/rove_code_instructions>/u;
+const PAPERPLANE_INSTRUCTIONS_BODY =
+  /<paperplane_code_instructions>\n[\s\S]*?\n<\/paperplane_code_instructions>/u;
 
 /** Replaces Paperplane-owned request content so prompt wording changes do not invalidate recordings. */
 function normalizeOutboundFrame(frame: Record<string, unknown>, runtimeInstructions: string) {
@@ -263,8 +264,8 @@ function normalizeOutboundFrame(frame: Record<string, unknown>, runtimeInstructi
               ? {
                   ...part,
                   text: part.text.replace(
-                    ROVE_INSTRUCTIONS_BODY,
-                    "<rove_code_instructions>\n<any>\n</rove_code_instructions>",
+                    PAPERPLANE_INSTRUCTIONS_BODY,
+                    "<paperplane_code_instructions>\n<any>\n</paperplane_code_instructions>",
                   ),
                 }
               : part,

@@ -3,7 +3,7 @@ const MiB = 1024 ** 2;
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
 
 /** Leave RAM for the OS and control plane, with bounded swap for agent work. */
-export function roveMemoryBudget(totalBytes: number, swapBytes: number) {
+export function paperplaneMemoryBudget(totalBytes: number, swapBytes: number) {
   const total = totalBytes / MiB;
   const max = Math.floor(total - clamp(total / 4, 1536, 4096));
   return {

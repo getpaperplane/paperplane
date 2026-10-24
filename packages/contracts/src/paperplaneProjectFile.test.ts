@@ -3,12 +3,12 @@ import { describe, expect, it } from "vite-plus/test";
 
 import {
   PaperplaneProjectFile,
-  type PaperplaneProjectFile as RoveProjectFileType,
+  type PaperplaneProjectFile as PaperplaneProjectFileType,
 } from "./paperplaneProjectFile.ts";
 
 const decode = Schema.decodeUnknownSync(PaperplaneProjectFile as never) as (
   input: unknown,
-) => RoveProjectFileType;
+) => PaperplaneProjectFileType;
 
 describe("PaperplaneProjectFile", () => {
   it("decodes a full project file", () => {

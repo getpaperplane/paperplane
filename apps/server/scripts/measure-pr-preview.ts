@@ -79,7 +79,9 @@ const sourceControlHost = ServerSourceControlHost.layer.pipe(
   Layer.provide(GitVcsDriver.layer),
   Layer.provide(ServerSettings.layerTest()),
   // A scratch state directory, so nothing here touches a real Paperplane home.
-  Layer.provide(ServerConfig.layerTest(process.cwd(), { prefix: "rove-measure-pr-preview-" })),
+  Layer.provide(
+    ServerConfig.layerTest(process.cwd(), { prefix: "paperplane-measure-pr-preview-" }),
+  ),
   Layer.provideMerge(VcsProcess.layer),
   Layer.provideMerge(NodeServices.layer),
 );

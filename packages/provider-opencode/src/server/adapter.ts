@@ -64,7 +64,7 @@ import {
   summarizeNativeProtocolPayload,
 } from "@getpaperplane/provider-core/server/nativeProtocolLogging";
 import { mergeProviderInstanceEnvironment } from "@getpaperplane/provider-core/server/instanceEnvironment";
-import { roveOrchestrationSystemPrompt } from "@getpaperplane/provider-core/server/orchestrationInstructions";
+import { paperplaneOrchestrationSystemPrompt } from "@getpaperplane/provider-core/server/orchestrationInstructions";
 import { buildRuntimeInstructions } from "@getpaperplane/provider-core/server/runtimeInstructions";
 import * as OpenCodeRuntime from "./OpenCodeRuntime.ts";
 import * as IdAllocator from "@getpaperplane/provider-core/server/IdAllocator";
@@ -970,9 +970,9 @@ export const makeOpenCodeAdapterV2 = Effect.fn("makeOpenCodeAdapterV2")(function
         });
 
         const mcpSession = yield* mcpSessions.read(input.threadId);
-        const hasRoveMcp = mcpSession !== undefined && !connection.external;
-        const orchestrationSystemPrompt = roveOrchestrationSystemPrompt(hasRoveMcp);
-        if (hasRoveMcp) {
+        const hasPaperplaneMcp = mcpSession !== undefined && !connection.external;
+        const orchestrationSystemPrompt = paperplaneOrchestrationSystemPrompt(hasPaperplaneMcp);
+        if (hasPaperplaneMcp) {
           yield* OpenCodeRuntime.runOpenCodeSdk("mcp.add", () =>
             client.mcp.add({
               name: PAPERPLANE_MCP_SERVER_NAME,

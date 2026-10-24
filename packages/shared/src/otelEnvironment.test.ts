@@ -43,32 +43,37 @@ describe("OtelEnvironment", () => {
     },
     // PAPERPLANE_OTEL_SDK_DISABLED takes Config.Boolean's values, case-insensitively.
     {
-      name: "rove 1",
+      name: "paperplane 1",
       env: { PAPERPLANE_OTEL_SDK_DISABLED: "1" },
       disabled: true,
       warnings: [PAPERPLANE_OFF],
     },
     {
-      name: "rove TRUE",
+      name: "paperplane TRUE",
       env: { PAPERPLANE_OTEL_SDK_DISABLED: "TRUE" },
       disabled: true,
       warnings: [PAPERPLANE_OFF],
     },
-    { name: "rove n", env: { PAPERPLANE_OTEL_SDK_DISABLED: "n" }, disabled: false, warnings: [] },
     {
-      name: "rove false overrides spec true",
+      name: "paperplane n",
+      env: { PAPERPLANE_OTEL_SDK_DISABLED: "n" },
+      disabled: false,
+      warnings: [],
+    },
+    {
+      name: "paperplane false overrides spec true",
       env: { PAPERPLANE_OTEL_SDK_DISABLED: "false", OTEL_SDK_DISABLED: "true" },
       disabled: false,
       warnings: [],
     },
     {
-      name: "blank rove falls through",
+      name: "blank paperplane falls through",
       env: { PAPERPLANE_OTEL_SDK_DISABLED: "  ", OTEL_SDK_DISABLED: "true" },
       disabled: true,
       warnings: [SPEC_OFF],
     },
     {
-      name: "unreadable rove warns and falls through",
+      name: "unreadable paperplane warns and falls through",
       env: { PAPERPLANE_OTEL_SDK_DISABLED: "maybe", OTEL_SDK_DISABLED: "true" },
       disabled: true,
       warnings: [
@@ -77,7 +82,7 @@ describe("OtelEnvironment", () => {
       ],
     },
     {
-      name: "bad spec value still warns when rove answered",
+      name: "bad spec value still warns when paperplane answered",
       env: { PAPERPLANE_OTEL_SDK_DISABLED: "false", OTEL_SDK_DISABLED: "yes" },
       disabled: false,
       warnings: [specIgnored("yes")],
@@ -306,9 +311,9 @@ describe("OtelEnvironment", () => {
       },
       {
         name: "headers are comma-separated pairs with percent-encoded values",
-        env: { ...ENDPOINT, OTEL_EXPORTER_OTLP_HEADERS: "api-key=a%20b,tenant=rove" },
-        traces: { protocol: "http/protobuf", headers: { "api-key": "a b", tenant: "rove" } },
-        logs: { protocol: "http/protobuf", headers: { "api-key": "a b", tenant: "rove" } },
+        env: { ...ENDPOINT, OTEL_EXPORTER_OTLP_HEADERS: "api-key=a%20b,tenant=paperplane" },
+        traces: { protocol: "http/protobuf", headers: { "api-key": "a b", tenant: "paperplane" } },
+        logs: { protocol: "http/protobuf", headers: { "api-key": "a b", tenant: "paperplane" } },
         warnings: [],
       },
       {
@@ -398,9 +403,9 @@ describe("OtelEnvironment", () => {
   });
 
   describe("resolveSignalEndpoint", () => {
-    const roveExport = {
+    const paperplaneExport = {
       protocol: "http/json",
-      headers: { "x-key": "rove" },
+      headers: { "x-key": "paperplane" },
       exportIntervalMs: 5_000,
     } as const;
     const withLogs = (logs: OtelEnvironment.OtelSignal, disabled = false) => ({
@@ -417,14 +422,14 @@ describe("OtelEnvironment", () => {
       {
         name: "PAPERPLANE_OTLP_*_URL wins over an OTEL endpoint",
         otel: withLogs(otelExport),
-        paperplaneUrl: "http://rove:4318/v1/logs",
-        expected: { url: "http://rove:4318/v1/logs", export: roveExport },
+        paperplaneUrl: "http://paperplane:4318/v1/logs",
+        expected: { url: "http://paperplane:4318/v1/logs", export: paperplaneExport },
       },
       {
         name: "PAPERPLANE_OTLP_*_URL wins over a signal the OTEL variables turned off",
         otel: withLogs(OtelEnvironment.OtelSignal.Off()),
-        paperplaneUrl: "http://rove:4318/v1/logs",
-        expected: { url: "http://rove:4318/v1/logs", export: roveExport },
+        paperplaneUrl: "http://paperplane:4318/v1/logs",
+        expected: { url: "http://paperplane:4318/v1/logs", export: paperplaneExport },
       },
       {
         name: "an OTEL endpoint brings its headers and protocol over the fallback",
@@ -449,12 +454,12 @@ describe("OtelEnvironment", () => {
         name: "an unset signal takes the first non-blank fallback",
         otel: withLogs(OtelEnvironment.OtelSignal.Unset()),
         paperplaneUrl: undefined,
-        expected: { url: "http://settings:4318/v1/logs", export: roveExport },
+        expected: { url: "http://settings:4318/v1/logs", export: paperplaneExport },
       },
       {
         name: "the kill switch wins over everything",
         otel: withLogs(otelExport, true),
-        paperplaneUrl: "http://rove:4318/v1/logs",
+        paperplaneUrl: "http://paperplane:4318/v1/logs",
         expected: undefined,
       },
     ])("$name", ({ otel, paperplaneUrl, expected }) => {
@@ -462,7 +467,7 @@ describe("OtelEnvironment", () => {
         OtelEnvironment.resolveSignalEndpoint(
           otel,
           "logs",
-          { url: paperplaneUrl, export: roveExport },
+          { url: paperplaneUrl, export: paperplaneExport },
           "",
           "http://settings:4318/v1/logs",
         ),
@@ -474,19 +479,24 @@ describe("OtelEnvironment", () => {
   it.effect("an exporter of none keeps the Settings endpoint from re-enabling its signal", () =>
     Effect.gen(function* () {
       const otel = yield* load({ OTEL_LOGS_EXPORTER: "none" });
-      const rove = {
+      const paperplane = {
         url: undefined,
         export: { protocol: "http/json", headers: undefined, exportIntervalMs: 10_000 },
       } as const;
       assert.strictEqual(
-        OtelEnvironment.resolveSignalEndpoint(otel, "logs", rove, "http://settings:4318/v1/logs"),
+        OtelEnvironment.resolveSignalEndpoint(
+          otel,
+          "logs",
+          paperplane,
+          "http://settings:4318/v1/logs",
+        ),
         undefined,
       );
       assert.strictEqual(
         OtelEnvironment.resolveSignalEndpoint(
           otel,
           "traces",
-          rove,
+          paperplane,
           "http://settings:4318/v1/traces",
         )?.url,
         "http://settings:4318/v1/traces",
@@ -504,7 +514,7 @@ describe("OtelEnvironment", () => {
           ConfigProvider.fromEnv({ env: { OTEL_RESOURCE_ATTRIBUTES: raw } }),
         );
         const otel = yield* OtelEnvironment.load.pipe(Effect.provide(layerEnv));
-        const resource = yield* OtlpResource.fromConfig({ serviceName: "rove" }).pipe(
+        const resource = yield* OtlpResource.fromConfig({ serviceName: "paperplane" }).pipe(
           Effect.provide(
             Layer.provide(
               OtelEnvironment.layerResourceAttributes(otel.resourceAttributes),

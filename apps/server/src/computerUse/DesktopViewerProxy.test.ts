@@ -56,7 +56,7 @@ const fixture = (
   return { handler, lookups };
 };
 const request = () =>
-  new Request("http://rove.test/api/computer-use/desktops/unknown/vnc?wsTicket=secret", {
+  new Request("http://paperplane.test/api/computer-use/desktops/unknown/vnc?wsTicket=secret", {
     headers: { upgrade: "websocket", "sec-websocket-protocol": "binary" },
   });
 

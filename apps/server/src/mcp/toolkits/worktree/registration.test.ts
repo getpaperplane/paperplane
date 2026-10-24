@@ -172,7 +172,7 @@ it.effect("production mcp layer lists worktree tools over http", () =>
     Effect.provide(
       Layer.mergeAll(
         NodeHttpServer.layerTest,
-        ServerConfig.layerTest(process.cwd(), { prefix: "rove-worktree-mcp-" }).pipe(
+        ServerConfig.layerTest(process.cwd(), { prefix: "paperplane-worktree-mcp-" }).pipe(
           Layer.provide(NodeServices.layer),
         ),
         NodeServices.layer,

@@ -22,7 +22,7 @@ it.layer(DatabaseMaintenance.layer.pipe(Layer.provideMerge(NodeServices.layer)))
         const path = yield* Path.Path;
         const maintenance = yield* DatabaseMaintenance.DatabaseMaintenance;
         const dbPath = path.join(
-          yield* fs.makeTempDirectoryScoped({ prefix: "rove-inspect-" }),
+          yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-inspect-" }),
           "statev2.sqlite",
         );
         yield* fs.writeFileString(dbPath, "not a database");
@@ -36,7 +36,7 @@ it.layer(DatabaseMaintenance.layer.pipe(Layer.provideMerge(NodeServices.layer)))
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const maintenance = yield* DatabaseMaintenance.DatabaseMaintenance;
-        const baseDir = yield* fs.makeTempDirectoryScoped({ prefix: "rove-compact-" });
+        const baseDir = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-compact-" });
         const dbPath = path.join(baseDir, "userdata", "statev2.sqlite");
         // A migrated database created before incremental auto_vacuum, with free pages.
         yield* Effect.flatMap(

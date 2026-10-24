@@ -15,7 +15,7 @@ const isMainProcessExternal = (id: string) =>
   id === "electron" || id.startsWith("electron/") || isDesktopRuntimeExternalDependency(id);
 const shouldLaunchElectronAfterPack = process.env.PAPERPLANE_DESKTOP_DEV === "1";
 const publicConfigDefine = {
-  __ROVE_BUILD_CLERK_PUBLISHABLE_KEY__: JSON.stringify(
+  __PAPERPLANE_BUILD_CLERK_PUBLISHABLE_KEY__: JSON.stringify(
     repoEnv.PAPERPLANE_CLERK_PUBLISHABLE_KEY?.trim() ?? "",
   ),
 };

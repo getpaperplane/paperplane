@@ -2029,7 +2029,7 @@ const SandboxRpcError = Schema.Union([SandboxError, EnvironmentAuthorizationErro
  * be added without authorization.
  */
 export class RpcScopeAuthorization extends RpcMiddleware.Service<RpcScopeAuthorization>()(
-  "rove/contracts/RpcScopeAuthorization",
+  "paperplane/contracts/RpcScopeAuthorization",
   { error: EnvironmentAuthorizationError },
 ) {}
 

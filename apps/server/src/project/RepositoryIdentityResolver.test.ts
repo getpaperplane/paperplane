@@ -42,7 +42,7 @@ it.layer(NodeServices.layer)("RepositoryIdentityResolverLive", (it) => {
   it.effect("refreshes the Git root only when requested", () => {
     const calls: Array<ReadonlyArray<string>> = [];
     let rootPath = "/repo";
-    let remoteUrl = "git@github.com:RoveTools/rove.git";
+    let remoteUrl = "git@github.com:PaperplaneTools/paperplane.git";
     let refinements = 0;
     let refinementFails = false;
     const processRunner = Layer.succeed(ProcessRunner.ProcessRunner, {
@@ -98,7 +98,7 @@ it.layer(NodeServices.layer)("RepositoryIdentityResolverLive", (it) => {
       yield* TestClock.adjust(Duration.minutes(10));
       const second = yield* resolver.resolve("/repo/packages/web");
 
-      expect(first?.canonicalKey).toBe("github.com/rovetools/rove");
+      expect(first?.canonicalKey).toBe("github.com/paperplanetools/paperplane");
       expect(second).toEqual(first);
       expect(refinements).toBe(1);
       expect(calls).toEqual([
@@ -142,7 +142,7 @@ it.layer(NodeServices.layer)("RepositoryIdentityResolverLive", (it) => {
               ? failed
                 ? ""
                 : "/repo\n"
-              : "origin\tgit@github.com:RoveTools/rove.git (fetch)\n",
+              : "origin\tgit@github.com:PaperplaneTools/paperplane.git (fetch)\n",
             stderr: failed ? "temporary Git failure" : "",
             code: ChildProcessSpawner.ExitCode(failed ? 1 : 0),
             timedOut: false,
@@ -178,11 +178,11 @@ it.layer(NodeServices.layer)("RepositoryIdentityResolverLive", (it) => {
     Effect.gen(function* () {
       const fileSystem = yield* FileSystem.FileSystem;
       const cwd = yield* fileSystem.makeTempDirectoryScoped({
-        prefix: "rove-repository-identity-test-",
+        prefix: "paperplane-repository-identity-test-",
       });
 
       yield* git(cwd, ["init"]);
-      yield* git(cwd, ["remote", "add", "origin", "git@github.com:RoveTools/rove.git"]);
+      yield* git(cwd, ["remote", "add", "origin", "git@github.com:PaperplaneTools/paperplane.git"]);
 
       const resolver = yield* RepositoryIdentityResolver.RepositoryIdentityResolver;
       const identity = yield* resolver.resolve(cwd);
@@ -193,12 +193,12 @@ it.layer(NodeServices.layer)("RepositoryIdentityResolverLive", (it) => {
       const resolvedCwd = NodeFS.realpathSync.native(cwd);
 
       expect(identity).not.toBeNull();
-      expect(identity?.canonicalKey).toBe("github.com/rovetools/rove");
+      expect(identity?.canonicalKey).toBe("github.com/paperplanetools/paperplane");
       expect(normalizeResolvedPath(resolvedIdentityRoot)).toBe(normalizeResolvedPath(resolvedCwd));
-      expect(identity?.displayName).toBe("rovetools/rove");
+      expect(identity?.displayName).toBe("paperplanetools/paperplane");
       expect(identity?.provider).toBe("github");
-      expect(identity?.owner).toBe("rovetools");
-      expect(identity?.name).toBe("rove");
+      expect(identity?.owner).toBe("paperplanetools");
+      expect(identity?.name).toBe("paperplane");
     }).pipe(Effect.provide(RepositoryIdentityResolver.layer)),
   );
 
@@ -207,13 +207,18 @@ it.layer(NodeServices.layer)("RepositoryIdentityResolverLive", (it) => {
       const fileSystem = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const repoRoot = yield* fileSystem.makeTempDirectoryScoped({
-        prefix: "rove-repository-identity-nested-root-test-",
+        prefix: "paperplane-repository-identity-nested-root-test-",
       });
       const nestedWorkspace = path.join(repoRoot, "packages", "web");
 
       yield* fileSystem.makeDirectory(nestedWorkspace, { recursive: true });
       yield* git(repoRoot, ["init"]);
-      yield* git(repoRoot, ["remote", "add", "origin", "git@github.com:RoveTools/rove.git"]);
+      yield* git(repoRoot, [
+        "remote",
+        "add",
+        "origin",
+        "git@github.com:PaperplaneTools/paperplane.git",
+      ]);
 
       const resolver = yield* RepositoryIdentityResolver.RepositoryIdentityResolver;
       const identity = yield* resolver.resolve(nestedWorkspace);
@@ -222,7 +227,7 @@ it.layer(NodeServices.layer)("RepositoryIdentityResolverLive", (it) => {
       const resolvedRepoRoot = NodeFS.realpathSync.native(repoRoot);
 
       expect(identity).not.toBeNull();
-      expect(identity?.canonicalKey).toBe("github.com/rovetools/rove");
+      expect(identity?.canonicalKey).toBe("github.com/paperplanetools/paperplane");
       expect(normalizeResolvedPath(resolvedIdentityRoot)).toBe(
         normalizeResolvedPath(resolvedRepoRoot),
       );
@@ -233,10 +238,10 @@ it.layer(NodeServices.layer)("RepositoryIdentityResolverLive", (it) => {
     Effect.gen(function* () {
       const fileSystem = yield* FileSystem.FileSystem;
       const nonGitDir = yield* fileSystem.makeTempDirectoryScoped({
-        prefix: "rove-repository-identity-non-git-",
+        prefix: "paperplane-repository-identity-non-git-",
       });
       const gitDir = yield* fileSystem.makeTempDirectoryScoped({
-        prefix: "rove-repository-identity-no-remote-",
+        prefix: "paperplane-repository-identity-no-remote-",
       });
 
       yield* git(gitDir, ["init"]);
@@ -254,21 +259,26 @@ it.layer(NodeServices.layer)("RepositoryIdentityResolverLive", (it) => {
     Effect.gen(function* () {
       const fileSystem = yield* FileSystem.FileSystem;
       const cwd = yield* fileSystem.makeTempDirectoryScoped({
-        prefix: "rove-repository-identity-preference-test-",
+        prefix: "paperplane-repository-identity-preference-test-",
       });
 
       yield* git(cwd, ["init"]);
-      yield* git(cwd, ["remote", "add", "origin", "git@github.com:julius/rove.git"]);
-      yield* git(cwd, ["remote", "add", "upstream", "git@github.com:RoveTools/rove.git"]);
+      yield* git(cwd, ["remote", "add", "origin", "git@github.com:julius/paperplane.git"]);
+      yield* git(cwd, [
+        "remote",
+        "add",
+        "upstream",
+        "git@github.com:PaperplaneTools/paperplane.git",
+      ]);
 
       const resolver = yield* RepositoryIdentityResolver.RepositoryIdentityResolver;
       const byDefault = yield* resolver.resolve(cwd);
       const upstream = yield* resolver.resolve(cwd, { preferredRemote: "upstream" });
 
       expect(byDefault?.locator.remoteName).toBe("origin");
-      expect(byDefault?.canonicalKey).toBe("github.com/julius/rove");
+      expect(byDefault?.canonicalKey).toBe("github.com/julius/paperplane");
       expect(upstream?.locator.remoteName).toBe("upstream");
-      expect(upstream?.canonicalKey).toBe("github.com/rovetools/rove");
+      expect(upstream?.canonicalKey).toBe("github.com/paperplanetools/paperplane");
       // Both preferences stay cached side by side.
       expect(yield* resolver.resolve(cwd)).toEqual(byDefault);
 
@@ -341,35 +351,40 @@ it.layer(NodeServices.layer)("RepositoryIdentityResolverLive", (it) => {
       Effect.gen(function* () {
         const fileSystem = yield* FileSystem.FileSystem;
         const cwd = yield* fileSystem.makeTempDirectoryScoped({
-          prefix: "rove-repository-identity-upstream-test-",
+          prefix: "paperplane-repository-identity-upstream-test-",
         });
 
         yield* git(cwd, ["init"]);
-        yield* git(cwd, ["remote", "add", "origin", "git@github.com:julius/rove.git"]);
+        yield* git(cwd, ["remote", "add", "origin", "git@github.com:julius/paperplane.git"]);
         if (change === "replace") {
-          yield* git(cwd, ["remote", "add", "upstream", "git@github.com:RoveTools/previous.git"]);
+          yield* git(cwd, [
+            "remote",
+            "add",
+            "upstream",
+            "git@github.com:PaperplaneTools/previous.git",
+          ]);
         }
 
         const resolver = yield* RepositoryIdentityResolver.RepositoryIdentityResolver;
         const preferUpstream = { preferredRemote: "upstream" } as const;
         const initialIdentity = yield* resolver.resolve(cwd, preferUpstream);
         expect(initialIdentity?.canonicalKey).toBe(
-          change === "add" ? "github.com/julius/rove" : "github.com/rovetools/previous",
+          change === "add" ? "github.com/julius/paperplane" : "github.com/paperplanetools/previous",
         );
 
         yield* git(cwd, [
           "remote",
           change === "add" ? "add" : "set-url",
           "upstream",
-          "git@github.com:RoveTools/rove.git",
+          "git@github.com:PaperplaneTools/paperplane.git",
         ]);
         expect(yield* resolver.resolve(cwd, preferUpstream)).toEqual(initialIdentity);
         const identity = yield* resolver.resolve(cwd, { ...preferUpstream, refresh: true });
 
         expect(identity).not.toBeNull();
         expect(identity?.locator.remoteName).toBe("upstream");
-        expect(identity?.canonicalKey).toBe("github.com/rovetools/rove");
-        expect(identity?.displayName).toBe("rovetools/rove");
+        expect(identity?.canonicalKey).toBe("github.com/paperplanetools/paperplane");
+        expect(identity?.displayName).toBe("paperplanetools/paperplane");
         expect(yield* resolver.resolve(cwd, preferUpstream)).toEqual(identity);
       }).pipe(Effect.provide(RepositoryIdentityResolver.layer)),
   );
@@ -378,21 +393,26 @@ it.layer(NodeServices.layer)("RepositoryIdentityResolverLive", (it) => {
     Effect.gen(function* () {
       const fileSystem = yield* FileSystem.FileSystem;
       const cwd = yield* fileSystem.makeTempDirectoryScoped({
-        prefix: "rove-repository-identity-fork-test-",
+        prefix: "paperplane-repository-identity-fork-test-",
       });
 
       yield* git(cwd, ["init"]);
-      yield* git(cwd, ["remote", "add", "origin", "git@github.com:julius/rove-fork.git"]);
-      yield* git(cwd, ["remote", "add", "upstream", "git@github.com:RoveTools/rove.git"]);
+      yield* git(cwd, ["remote", "add", "origin", "git@github.com:julius/paperplane-fork.git"]);
+      yield* git(cwd, [
+        "remote",
+        "add",
+        "upstream",
+        "git@github.com:PaperplaneTools/paperplane.git",
+      ]);
 
       const resolver = yield* RepositoryIdentityResolver.RepositoryIdentityResolver;
       const identity = yield* resolver.resolve(cwd, { preferredRemote: "upstream" });
 
-      expect(identity?.canonicalKey).toBe("github.com/rovetools/rove");
-      expect(identity?.displayName).toBe("rovetools/rove");
+      expect(identity?.canonicalKey).toBe("github.com/paperplanetools/paperplane");
+      expect(identity?.displayName).toBe("paperplanetools/paperplane");
       expect(identity?.origin).toEqual({
-        canonicalKey: "github.com/julius/rove-fork",
-        displayName: "julius/rove-fork",
+        canonicalKey: "github.com/julius/paperplane-fork",
+        displayName: "julius/paperplane-fork",
       });
     }).pipe(Effect.provide(RepositoryIdentityResolver.layer)),
   );
@@ -401,20 +421,25 @@ it.layer(NodeServices.layer)("RepositoryIdentityResolverLive", (it) => {
     Effect.gen(function* () {
       const fileSystem = yield* FileSystem.FileSystem;
       const cwd = yield* fileSystem.makeTempDirectoryScoped({
-        prefix: "rove-repository-identity-nested-group-test-",
+        prefix: "paperplane-repository-identity-nested-group-test-",
       });
 
       yield* git(cwd, ["init"]);
-      yield* git(cwd, ["remote", "add", "origin", "git@gitlab.com:RoveTools/platform/rove.git"]);
+      yield* git(cwd, [
+        "remote",
+        "add",
+        "origin",
+        "git@gitlab.com:PaperplaneTools/platform/paperplane.git",
+      ]);
 
       const resolver = yield* RepositoryIdentityResolver.RepositoryIdentityResolver;
       const identity = yield* resolver.resolve(cwd);
 
       expect(identity).not.toBeNull();
-      expect(identity?.canonicalKey).toBe("gitlab.com/rovetools/platform/rove");
-      expect(identity?.displayName).toBe("rovetools/platform/rove");
-      expect(identity?.owner).toBe("rovetools");
-      expect(identity?.name).toBe("rove");
+      expect(identity?.canonicalKey).toBe("gitlab.com/paperplanetools/platform/paperplane");
+      expect(identity?.displayName).toBe("paperplanetools/platform/paperplane");
+      expect(identity?.owner).toBe("paperplanetools");
+      expect(identity?.name).toBe("paperplane");
     }).pipe(Effect.provide(RepositoryIdentityResolver.layer)),
   );
 
@@ -424,7 +449,7 @@ it.layer(NodeServices.layer)("RepositoryIdentityResolverLive", (it) => {
       Effect.gen(function* () {
         const fileSystem = yield* FileSystem.FileSystem;
         const cwd = yield* fileSystem.makeTempDirectoryScoped({
-          prefix: "rove-repository-identity-late-remote-test-",
+          prefix: "paperplane-repository-identity-late-remote-test-",
         });
 
         yield* git(cwd, ["init"]);
@@ -433,7 +458,12 @@ it.layer(NodeServices.layer)("RepositoryIdentityResolverLive", (it) => {
         const initialIdentity = yield* resolver.resolve(cwd);
         expect(initialIdentity).toBeNull();
 
-        yield* git(cwd, ["remote", "add", "origin", "git@github.com:RoveTools/rove.git"]);
+        yield* git(cwd, [
+          "remote",
+          "add",
+          "origin",
+          "git@github.com:PaperplaneTools/paperplane.git",
+        ]);
 
         for (const _attempt of [1, 2, 3]) {
           const cachedIdentity = yield* resolver.resolve(cwd);
@@ -444,8 +474,8 @@ it.layer(NodeServices.layer)("RepositoryIdentityResolverLive", (it) => {
 
         const refreshedIdentity = yield* resolver.resolve(cwd);
         expect(refreshedIdentity).not.toBeNull();
-        expect(refreshedIdentity?.canonicalKey).toBe("github.com/rovetools/rove");
-        expect(refreshedIdentity?.name).toBe("rove");
+        expect(refreshedIdentity?.canonicalKey).toBe("github.com/paperplanetools/paperplane");
+        expect(refreshedIdentity?.name).toBe("paperplane");
       }).pipe(
         Effect.provide(
           Layer.merge(
@@ -463,30 +493,35 @@ it.layer(NodeServices.layer)("RepositoryIdentityResolverLive", (it) => {
     Effect.gen(function* () {
       const fileSystem = yield* FileSystem.FileSystem;
       const cwd = yield* fileSystem.makeTempDirectoryScoped({
-        prefix: "rove-repository-identity-remote-change-test-",
+        prefix: "paperplane-repository-identity-remote-change-test-",
       });
 
       yield* git(cwd, ["init"]);
-      yield* git(cwd, ["remote", "add", "origin", "git@github.com:RoveTools/rove.git"]);
+      yield* git(cwd, ["remote", "add", "origin", "git@github.com:PaperplaneTools/paperplane.git"]);
 
       const resolver = yield* RepositoryIdentityResolver.RepositoryIdentityResolver;
       const initialIdentity = yield* resolver.resolve(cwd);
       expect(initialIdentity).not.toBeNull();
-      expect(initialIdentity?.canonicalKey).toBe("github.com/rovetools/rove");
+      expect(initialIdentity?.canonicalKey).toBe("github.com/paperplanetools/paperplane");
 
-      yield* git(cwd, ["remote", "set-url", "origin", "git@github.com:RoveTools/rove-next.git"]);
+      yield* git(cwd, [
+        "remote",
+        "set-url",
+        "origin",
+        "git@github.com:PaperplaneTools/paperplane-next.git",
+      ]);
 
       const cachedIdentity = yield* resolver.resolve(cwd);
       expect(cachedIdentity).not.toBeNull();
-      expect(cachedIdentity?.canonicalKey).toBe("github.com/rovetools/rove");
+      expect(cachedIdentity?.canonicalKey).toBe("github.com/paperplanetools/paperplane");
 
       yield* TestClock.adjust(Duration.millis(180));
 
       const refreshedIdentity = yield* resolver.resolve(cwd);
       expect(refreshedIdentity).not.toBeNull();
-      expect(refreshedIdentity?.canonicalKey).toBe("github.com/rovetools/rove-next");
-      expect(refreshedIdentity?.displayName).toBe("rovetools/rove-next");
-      expect(refreshedIdentity?.name).toBe("rove-next");
+      expect(refreshedIdentity?.canonicalKey).toBe("github.com/paperplanetools/paperplane-next");
+      expect(refreshedIdentity?.displayName).toBe("paperplanetools/paperplane-next");
+      expect(refreshedIdentity?.name).toBe("paperplane-next");
     }).pipe(
       Effect.provide(
         Layer.merge(

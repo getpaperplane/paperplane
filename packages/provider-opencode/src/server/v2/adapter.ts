@@ -78,7 +78,7 @@ import * as OpenCodeRuntime from "../OpenCodeRuntime.ts";
 import { PAPERPLANE_MCP_SERVER_NAME } from "@getpaperplane/shared/paperplaneMcp";
 import * as McpProviderSessions from "@getpaperplane/provider-core/server/McpProviderSessions";
 import { buildRuntimeInstructions } from "@getpaperplane/provider-core/server/runtimeInstructions";
-import { roveOrchestrationSystemPrompt } from "@getpaperplane/provider-core/server/orchestrationInstructions";
+import { paperplaneOrchestrationSystemPrompt } from "@getpaperplane/provider-core/server/orchestrationInstructions";
 import { SKILL_MENTION_PATTERN } from "@getpaperplane/shared/composerInlineTokens";
 import * as KeyedLock from "@getpaperplane/shared/KeyedLock";
 import {
@@ -476,7 +476,9 @@ const rule = (action: string, effect: Rule["effect"]): Rule => ({ action, resour
  * tool namespace limit), and its router rejects adding one over 100, so a
  * thread id that does not fit is replaced by a digest of it.
  */
-export const roveMcpServerName = Effect.fn("roveMcpServerName")(function* (threadId: string) {
+export const paperplaneMcpServerName = Effect.fn("paperplaneMcpServerName")(function* (
+  threadId: string,
+) {
   const name = `${PAPERPLANE_MCP_SERVER_NAME}-${threadId.replaceAll(/[^a-zA-Z0-9_-]/g, "_")}`;
   if (name.length <= 64) return name;
   const crypto = yield* Crypto.Crypto;
@@ -725,9 +727,9 @@ type ModelRef = ReturnType<typeof Model.Ref.make>;
  * session ids. A turn keeps its id in `nativeTurnRef`.
  */
 const turnPromptId = (sessionId: string, attemptId: string) =>
-  SessionMessage.ID.make(`msg_rove_turn_${sessionId}:${attemptId}`);
+  SessionMessage.ID.make(`msg_paperplane_turn_${sessionId}:${attemptId}`);
 const steerPromptId = (sessionId: string, messageId: string) =>
-  SessionMessage.ID.make(`msg_rove_steer_${sessionId}:${messageId}`);
+  SessionMessage.ID.make(`msg_paperplane_steer_${sessionId}:${messageId}`);
 
 /**
  * The user message a turn prompted with. Turns from before Paperplane chose prompt ids
@@ -858,7 +860,7 @@ export const make = Effect.fn("OpenCode2Adapter.make")(function* (instanceId: Pr
   const crypto = yield* Crypto.Crypto;
   const driver = OPENCODE_PROVIDER;
   const mcpServerNameFor = (threadId: string) =>
-    roveMcpServerName(threadId).pipe(Effect.provideService(Crypto.Crypto, crypto));
+    paperplaneMcpServerName(threadId).pipe(Effect.provideService(Crypto.Crypto, crypto));
 
   /**
    * Lends the instance's server to a session until its scope closes. A spawned
@@ -3418,7 +3420,7 @@ export const make = Effect.fn("OpenCode2Adapter.make")(function* (instanceId: Pr
       }
       const instructions = [
         buildRuntimeInstructions({ harness: "OpenCode", model: turnInput.modelSelection.model }),
-        roveOrchestrationSystemPrompt(state.mcp !== undefined),
+        paperplaneOrchestrationSystemPrompt(state.mcp !== undefined),
       ]
         .filter((part) => part !== undefined && part.length > 0)
         .join("\n\n");

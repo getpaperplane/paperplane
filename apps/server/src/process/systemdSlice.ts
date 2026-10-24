@@ -5,7 +5,7 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Schema from "effect/Schema";
 import * as ProcessRunner from "../processRunner.ts";
-import { nextSliceLimits, type SliceLimits } from "./roveMemoryBudget.ts";
+import { nextSliceLimits, type SliceLimits } from "./paperplaneMemoryBudget.ts";
 
 class SystemdSliceError extends Schema.TaggedError<SystemdSliceError>()("SystemdSliceError", {
   exitCode: Schema.NullOr(Schema.Number),

@@ -25,7 +25,9 @@ import {
 } from "./AttachmentUpload.ts";
 
 const layerTest = ServerSecretStore.layer.pipe(
-  Layer.provideMerge(ServerConfig.layerTest(process.cwd(), { prefix: "rove-attachment-upload-" })),
+  Layer.provideMerge(
+    ServerConfig.layerTest(process.cwd(), { prefix: "paperplane-attachment-upload-" }),
+  ),
   Layer.provideMerge(NodeServices.layer),
 );
 

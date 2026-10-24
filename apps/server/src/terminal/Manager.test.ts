@@ -264,7 +264,7 @@ const createManager = (
   Effect.flatMap(Effect.service(FileSystem.FileSystem), (fs) =>
     Effect.gen(function* () {
       const { join } = yield* Path.Path;
-      const baseDir = yield* fs.makeTempDirectoryScoped({ prefix: "rove-terminal-" });
+      const baseDir = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-terminal-" });
       const logsDir = join(baseDir, "userdata", "logs", "terminals");
       const ptyAdapter = options.ptyAdapter ?? new FakePtyAdapter();
 
@@ -1943,7 +1943,7 @@ it.layer(
       const fileSystem = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const cacheDir = yield* fileSystem.makeTempDirectoryScoped({
-        prefix: "rove-terminal-acp-path-",
+        prefix: "paperplane-terminal-acp-path-",
       });
       const installBin = path.join(
         cacheDir,
@@ -2103,7 +2103,7 @@ it.layer(
 
   it.effect("strips AppImage runtime env from terminal sessions", () =>
     Effect.gen(function* () {
-      const appDir = "/tmp/.mount_RoveCodeabc123";
+      const appDir = "/tmp/.mount_PaperplaneCodeabc123";
       const { manager, ptyAdapter } = yield* createManager(5, {
         env: {
           APPIMAGE: "/home/user/Rove-Code.AppImage",
@@ -2506,7 +2506,9 @@ it.layer(
           Layer.provide(ServerSecretStore.layer),
           Layer.provide(SqlitePersistence.layerMemory),
           Layer.provide(
-            ServerConfig.layerTest(process.cwd(), { prefix: "rove-terminal-provider-restart-" }),
+            ServerConfig.layerTest(process.cwd(), {
+              prefix: "paperplane-terminal-provider-restart-",
+            }),
           ),
         ),
       ),

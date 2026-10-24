@@ -539,7 +539,7 @@ function shouldRetainDecodedRecord(
  * Paperplane runs its own agent sessions inside disposable worktrees. Their
  * transcripts look exactly like user sessions, but re-importing the app's own
  * sandboxes as projects is never right. Matches this server's configured
- * worktrees directory plus the conventional `.rove/worktrees` layout, which
+ * worktrees directory plus the conventional `.paperplane/worktrees` layout, which
  * also catches sandboxes from other Paperplane homes on the same machine. Separators
  * are normalized (and, on Windows, case folded) so the prefix match holds
  * there too. Callers check both the recorded spelling and its realpath so a
@@ -550,7 +550,7 @@ function normalizeForWorktreeMatch(value: string, caseFold: boolean): string {
   return caseFold ? normalized.toLowerCase() : normalized;
 }
 
-function isRoveManagedWorktree(
+function isPaperplaneManagedWorktree(
   candidatePath: string,
   worktreesDir: string,
   caseFold: boolean,
@@ -558,6 +558,8 @@ function isRoveManagedWorktree(
   const normalized = normalizeForWorktreeMatch(candidatePath, caseFold);
   return (
     normalized.startsWith(normalizeForWorktreeMatch(worktreesDir, caseFold)) ||
+    normalized.includes("/.paperplane/worktrees/") ||
+    // Stored worktree paths are deliberately not moved by home migration.
     normalized.includes("/.rove/worktrees/")
   );
 }
@@ -656,7 +658,7 @@ export const make = Effect.gen(function* () {
     normalizeForWorktreeMatch(candidatePath, foldWorktreeCase).startsWith(
       normalizeForWorktreeMatch(baseDir, foldWorktreeCase),
     ) ||
-    isRoveManagedWorktree(candidatePath, worktreesDir, foldWorktreeCase);
+    isPaperplaneManagedWorktree(candidatePath, worktreesDir, foldWorktreeCase);
 
   const listDirectory = (directory: string) =>
     fileSystem.readDirectory(directory).pipe(Effect.orElseSucceed((): ReadonlyArray<string> => []));

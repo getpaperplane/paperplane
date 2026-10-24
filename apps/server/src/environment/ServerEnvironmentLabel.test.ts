@@ -65,7 +65,7 @@ describe("resolveServerEnvironmentLabel", () => {
   it.effect("uses hostname fallback regardless of launch mode", () =>
     Effect.gen(function* () {
       const result = yield* ServerEnvironmentLabel.resolveServerEnvironmentLabel({
-        cwdBaseName: "rove",
+        cwdBaseName: "paperplane",
       }).pipe(Effect.provide(withHostPlatform(layerTest, "win32", "macbook-pro")));
 
       expect(result).toBe("macbook-pro");
@@ -88,7 +88,7 @@ describe("resolveServerEnvironmentLabel", () => {
       );
 
       const result = yield* ServerEnvironmentLabel.resolveServerEnvironmentLabel({
-        cwdBaseName: "rove",
+        cwdBaseName: "paperplane",
       }).pipe(Effect.provide(withHostPlatform(layerTest, "darwin", "macbook-pro")));
 
       expect(result).toBe("Julius's MacBook Pro");
@@ -105,7 +105,7 @@ describe("resolveServerEnvironmentLabel", () => {
   it.effect("prefers Linux PRETTY_HOSTNAME from machine-info", () =>
     Effect.gen(function* () {
       const result = yield* ServerEnvironmentLabel.resolveServerEnvironmentLabel({
-        cwdBaseName: "rove",
+        cwdBaseName: "paperplane",
       }).pipe(Effect.provide(withHostPlatform(layerLinuxMachineInfo, "linux", "buildbox")));
 
       expect(result).toBe("Build Agent 01");
@@ -129,7 +129,7 @@ describe("resolveServerEnvironmentLabel", () => {
       );
 
       const result = yield* ServerEnvironmentLabel.resolveServerEnvironmentLabel({
-        cwdBaseName: "rove",
+        cwdBaseName: "paperplane",
       }).pipe(Effect.provide(withHostPlatform(layerTest, "linux", "runner-01")));
 
       expect(result).toBe("CI Runner");
@@ -146,7 +146,7 @@ describe("resolveServerEnvironmentLabel", () => {
   it.effect("falls back to the hostname when friendly labels are unavailable", () =>
     Effect.gen(function* () {
       const result = yield* ServerEnvironmentLabel.resolveServerEnvironmentLabel({
-        cwdBaseName: "rove",
+        cwdBaseName: "paperplane",
       }).pipe(Effect.provide(withHostPlatform(layerTest, "win32", "JULIUS-LAPTOP")));
 
       expect(result).toBe("JULIUS-LAPTOP");
@@ -171,7 +171,7 @@ describe("resolveServerEnvironmentLabel", () => {
 
     return Effect.gen(function* () {
       const result = yield* ServerEnvironmentLabel.resolveServerEnvironmentLabel({
-        cwdBaseName: "rove",
+        cwdBaseName: "paperplane",
       });
 
       expect(result).toBe("macbook-pro");
@@ -235,7 +235,7 @@ describe("resolveServerEnvironmentLabel", () => {
 
     return Effect.gen(function* () {
       const result = yield* ServerEnvironmentLabel.resolveServerEnvironmentLabel({
-        cwdBaseName: "rove",
+        cwdBaseName: "paperplane",
       });
 
       expect(result).toBe("CI Runner");
@@ -281,10 +281,10 @@ describe("resolveServerEnvironmentLabel", () => {
       );
 
       const result = yield* ServerEnvironmentLabel.resolveServerEnvironmentLabel({
-        cwdBaseName: "rove",
+        cwdBaseName: "paperplane",
       }).pipe(Effect.provide(withHostPlatform(layerTest, "linux", "   ")));
 
-      expect(result).toBe("rove");
+      expect(result).toBe("paperplane");
     }),
   );
 

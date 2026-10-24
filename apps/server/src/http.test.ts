@@ -43,7 +43,7 @@ describe("MCP app asset responses", () => {
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const directory = yield* fs.makeTempDirectoryScoped({ prefix: "rove-mcp-theme-" });
+        const directory = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-mcp-theme-" });
         const file = path.join(directory, "app.html");
         const html = injectMcpAppCsp(
           "<html><head><script>vendor()</script></head><body>☃</body></html>",
@@ -91,7 +91,7 @@ describe("MCP app asset responses", () => {
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const directory = yield* fs.makeTempDirectoryScoped({ prefix: "rove-mcp-theme-size-" });
+      const directory = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-mcp-theme-size-" });
       const file = path.join(directory, "app.html");
       yield* fs.writeFileString(file, "x".repeat(MCP_APP_MAX_HTML_BYTES + 128 * 1024 + 1));
       const response = yield* assetFileResponse({ path: file, renderIntent: "mcp-app" });
@@ -210,7 +210,7 @@ const makeStaticRequest = Effect.fn("HttpTest.makeStaticRequest")(function* (sta
 });
 
 it.layer(
-  ServerConfig.layerTest(process.cwd(), { prefix: "rove-static-http-test-" }).pipe(
+  ServerConfig.layerTest(process.cwd(), { prefix: "paperplane-static-http-test-" }).pipe(
     Layer.provideMerge(NodeServices.layer),
   ),
 )("static HTTP responses", (it) => {
@@ -218,7 +218,7 @@ it.layer(
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const staticDir = yield* fs.makeTempDirectoryScoped({ prefix: "rove-static-cache-" });
+      const staticDir = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-static-cache-" });
       const assetPath = path.join(staticDir, "app.js");
       yield* fs.writeFileString(assetPath, 'export const build = "first";');
       const request = yield* makeStaticRequest(staticDir);
@@ -261,7 +261,7 @@ it.layer(
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const staticDir = yield* fs.makeTempDirectoryScoped({ prefix: "rove-static-html-" });
+      const staticDir = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-static-html-" });
       const indexPath = path.join(staticDir, "index.html");
       const modifiedAt = DateTime.toDateUtc(DateTime.makeUnsafe("1985-10-26T08:15:00.000Z"));
       yield* fs.writeFileString(indexPath, "<html>old build</html>");
@@ -300,7 +300,7 @@ it.layer(
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const staticDir = yield* fs.makeTempDirectoryScoped({ prefix: "rove-static-close-" });
+      const staticDir = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-static-close-" });
       const filePath = path.join(staticDir, "app.txt");
       const body = "file content\n".repeat(1024);
       yield* fs.writeFileString(filePath, body);
@@ -386,7 +386,9 @@ describe("video asset byte ranges", () => {
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const directory = yield* fs.makeTempDirectoryScoped({ prefix: "rove-guarded-current-stat-" });
+      const directory = yield* fs.makeTempDirectoryScoped({
+        prefix: "paperplane-guarded-current-stat-",
+      });
       const filePath = path.join(directory, "clip.mp4");
       for (const [contents, range, method, expected, status, contentRange] of [
         ["1234", undefined, "GET", "1234", 200, null],
@@ -430,7 +432,7 @@ describe("video asset byte ranges", () => {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const directory = yield* fs.makeTempDirectoryScoped({
-          prefix: "rove-guarded-offset-limit-",
+          prefix: "paperplane-guarded-offset-limit-",
         });
         const filePath = path.join(directory, "clip.mp4");
         yield* fs.writeFileString(filePath, "0123456789");
@@ -474,7 +476,7 @@ describe("video asset byte ranges", () => {
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const directory = yield* fs.makeTempDirectoryScoped({ prefix: "rove-guarded-range-" });
+      const directory = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-guarded-range-" });
       const filePath = path.join(directory, "clip.mp4");
       yield* fs.writeFileString(filePath, "0123456789");
       const canonicalPath = yield* fs.realPath(filePath);
@@ -514,7 +516,9 @@ describe("video asset byte ranges", () => {
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const directory = yield* fs.makeTempDirectoryScoped({ prefix: "rove-attachment-media-" });
+      const directory = yield* fs.makeTempDirectoryScoped({
+        prefix: "paperplane-attachment-media-",
+      });
       const filePath = path.join(directory, "audio.wav");
       yield* fs.writeFileString(filePath, "RIFF");
       const canonicalPath = yield* fs.realPath(filePath);
@@ -532,7 +536,9 @@ describe("video asset byte ranges", () => {
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const directory = yield* fs.makeTempDirectoryScoped({ prefix: "rove-guarded-cleanup-" });
+      const directory = yield* fs.makeTempDirectoryScoped({
+        prefix: "paperplane-guarded-cleanup-",
+      });
       const filePath = path.join(directory, "clip.mp4");
       const bytes = new Uint8Array(1024 * 1024).fill(42);
       yield* fs.writeFile(filePath, bytes);
@@ -579,7 +585,7 @@ describe("video asset byte ranges", () => {
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const directory = yield* fs.makeTempDirectoryScoped({ prefix: "rove-video-range-" });
+      const directory = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-video-range-" });
       const file = path.join(directory, "clip.mp4");
       yield* fs.writeFileString(file, "0123456789");
       const asset = { path: file, mimeType: "video/mp4" };
@@ -634,7 +640,7 @@ describe("video asset byte ranges", () => {
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const directory = yield* fs.makeTempDirectoryScoped({ prefix: "rove-audio-range-" });
+        const directory = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-audio-range-" });
         const file = path.join(directory, "recording.wav");
         yield* fs.writeFileString(file, "0123456789");
         const asset = { path: file, mimeType: "audio/wav" };
@@ -662,7 +668,7 @@ describe("video asset byte ranges", () => {
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const directory = yield* fs.makeTempDirectoryScoped({ prefix: "rove-video-range-" });
+      const directory = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-video-range-" });
       const file = path.join(directory, "clip.mp4");
       yield* fs.writeFileString(file, "0123456789");
       for (const header of ["bytes=10-", "bytes=-0", "bytes=999999999999999999999999-"]) {

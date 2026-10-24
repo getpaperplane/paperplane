@@ -76,8 +76,8 @@ function nativeSnapshot(input: {
       pid: 9_000,
       ppid: process.pid,
       startTimeMs: 400,
-      name: "rove-resource-monitor",
-      command: "rove-resource-monitor",
+      name: "paperplane-resource-monitor",
+      command: "paperplane-resource-monitor",
       cpuTimeMs: input.sequence * 5,
     }),
   ];

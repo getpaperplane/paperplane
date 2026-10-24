@@ -185,7 +185,7 @@ const makeParkedWindowsLauncher = Effect.gen(function* () {
       Effect.provide(
         ConfigProvider.layer(
           ConfigProvider.fromEnv({
-            env: { PATH: "C:\\rove-late-editors-test", PATHEXT: ".EXE" },
+            env: { PATH: "C:\\paperplane-late-editors-test", PATHEXT: ".EXE" },
           }),
         ),
       ),

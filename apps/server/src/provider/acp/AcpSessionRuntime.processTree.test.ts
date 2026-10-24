@@ -97,7 +97,7 @@ describe("terminatePosixOwnedProcessTree", () => {
     ).toHaveLength(2);
   });
 
-  it.live("sweeps empty rove-acp sibling leases owned by dead pids only", () =>
+  it.live("sweeps empty paperplane-acp sibling leases owned by dead pids only", () =>
     Effect.sync(() => {
       const scratchRoot = NodePath.join(process.cwd(), "tmp");
       NodeFS.mkdirSync(scratchRoot, { recursive: true });
@@ -115,10 +115,10 @@ describe("terminatePosixOwnedProcessTree", () => {
       const deadPid = 2_147_483_646;
       // Synthetic live foreign pid (not this process, still reported alive by the probe).
       const liveForeignPid = 2_147_483_645;
-      const staleEmpty = writeSibling(`rove-acp-${deadPid}-aaaa`, "0");
-      const currentPidSibling = writeSibling(`rove-acp-${process.pid}-bbbb`, "0");
-      const liveForeignSibling = writeSibling(`rove-acp-${liveForeignPid}-cccc`, "0");
-      const stalePopulated = writeSibling(`rove-acp-${deadPid}-dddd`, "1");
+      const staleEmpty = writeSibling(`paperplane-acp-${deadPid}-aaaa`, "0");
+      const currentPidSibling = writeSibling(`paperplane-acp-${process.pid}-bbbb`, "0");
+      const liveForeignSibling = writeSibling(`paperplane-acp-${liveForeignPid}-cccc`, "0");
+      const stalePopulated = writeSibling(`paperplane-acp-${deadPid}-dddd`, "1");
       const unrelated = writeSibling("other-lease", "0");
       const isProcessAlive = (pid: number) => pid === process.pid || pid === liveForeignPid;
       try {
@@ -136,7 +136,7 @@ describe("terminatePosixOwnedProcessTree", () => {
         expect(NodeFS.existsSync(stalePopulated)).toBe(true);
         expect(NodeFS.existsSync(unrelated)).toBe(true);
         // Missing populated state must not remove a sibling.
-        writeSibling(`rove-acp-${deadPid}-eeee`, null);
+        writeSibling(`paperplane-acp-${deadPid}-eeee`, null);
         AcpSessionRuntime.sweepStaleLinuxCgroupSiblings(parent, {
           isProcessAlive,
           readPopulated: (path) => populatedByPath.get(path),
@@ -145,7 +145,9 @@ describe("terminatePosixOwnedProcessTree", () => {
             NodeFS.rmdirSync(path);
           },
         });
-        expect(NodeFS.existsSync(NodePath.join(parent, `rove-acp-${deadPid}-eeee`))).toBe(true);
+        expect(NodeFS.existsSync(NodePath.join(parent, `paperplane-acp-${deadPid}-eeee`))).toBe(
+          true,
+        );
         expect(NodeFS.existsSync(currentPidSibling)).toBe(true);
       } finally {
         NodeFS.rmSync(parent, { recursive: true, force: true });
@@ -297,7 +299,7 @@ describe("terminatePosixOwnedProcessTree", () => {
 
       const missingTarget = AcpSessionRuntime.wrapCommandForLinuxCgroup(
         lease,
-        "/nonexistent-rove-probe",
+        "/nonexistent-paperplane-probe",
         [],
       );
       const missingTargetResult = NodeChildProcess.spawnSync(
@@ -431,8 +433,8 @@ describe("terminatePosixOwnedProcessTree", () => {
       const lease: AcpSessionRuntime.AcpLinuxCgroupLease = {
         contains: () => false,
         exists: () => exists,
-        path: "/test/rove-acp-repopulation",
-        relativePath: "/test/rove-acp-repopulation",
+        path: "/test/paperplane-acp-repopulation",
+        relativePath: "/test/paperplane-acp-repopulation",
         kill: () => {
           killCalls += 1;
           populated = false;
@@ -472,8 +474,8 @@ describe("terminatePosixOwnedProcessTree", () => {
       const lease: AcpSessionRuntime.AcpLinuxCgroupLease = {
         contains: () => false,
         exists: () => true,
-        path: "/test/rove-acp-busy",
-        relativePath: "/test/rove-acp-busy",
+        path: "/test/paperplane-acp-busy",
+        relativePath: "/test/paperplane-acp-busy",
         kill: () => undefined,
         populated: () => false,
         remove: () => {
@@ -482,7 +484,7 @@ describe("terminatePosixOwnedProcessTree", () => {
       };
 
       const error = yield* Effect.flip(AcpSessionRuntime.terminateLinuxCgroupLease(lease));
-      expect(error.detail).toBe("Failed to remove ACP cgroup /test/rove-acp-busy");
+      expect(error.detail).toBe("Failed to remove ACP cgroup /test/paperplane-acp-busy");
       expect(error.cause).toBe(removeError);
     }),
   );
@@ -503,8 +505,8 @@ describe("terminatePosixOwnedProcessTree", () => {
     const lease: AcpSessionRuntime.AcpLinuxCgroupLease = {
       contains: () => true,
       exists: () => true,
-      path: "/test/rove-acp-root",
-      relativePath: "/test/rove-acp-root",
+      path: "/test/paperplane-acp-root",
+      relativePath: "/test/paperplane-acp-root",
       kill: () => undefined,
       populated: () => true,
       remove: () => undefined,

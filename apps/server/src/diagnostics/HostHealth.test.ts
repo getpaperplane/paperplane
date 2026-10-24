@@ -40,7 +40,7 @@ describe("hostHealthFindings", () => {
     ["memory_pressure", { availableMemoryBytes: GIB - 1 }],
     ["no_swap", { totalMemoryBytes: 8 * GIB, swapTotalBytes: 0 }],
     ["event_loop_stalls", { stalls: [{ time: now, delayMaxMs: 1000 }] }],
-    ["rove_oom_kills", { paperplaneMemory }],
+    ["paperplane_oom_kills", { paperplaneMemory }],
     ["host_oom_kills", { hostOomKills: 4 }],
   ])("reports %s", (id, patch) => {
     const findings = HostHealth.hostHealthFindings(
@@ -126,7 +126,7 @@ describe("HostHealth service", () => {
     () =>
       Effect.gen(function* () {
         const config = yield* ServerConfig.ServerConfig;
-        const slice = "/sys/fs/cgroup/custom/user@123.service/app.slice/app-rove.slice";
+        const slice = "/sys/fs/cgroup/custom/user@123.service/app.slice/app-paperplane.slice";
         const files = new Map([
           ["/proc/meminfo", "SwapTotal: 4194304 kB\nSwapFree: 2097152 kB\n"],
           ["/proc/sys/kernel/osrelease", "microsoft-standard-WSL2"],
@@ -185,7 +185,7 @@ describe("HostHealth service", () => {
           files.set(`${slice}/memory.events`, "oom_kill 3\n");
           yield* TestClock.adjust("11 seconds");
           const next = yield* health.read;
-          expect(next.findings.map((finding) => finding.id)).toContain("rove_oom_kills");
+          expect(next.findings.map((finding) => finding.id)).toContain("paperplane_oom_kills");
           expect(stallReads).toBe(1);
           mtime++;
           yield* TestClock.adjust("11 seconds");
@@ -202,7 +202,7 @@ describe("HostHealth service", () => {
         );
       }).pipe(
         Effect.provide(
-          ServerConfig.layerTest(process.cwd(), { prefix: "rove-host-health-" }).pipe(
+          ServerConfig.layerTest(process.cwd(), { prefix: "paperplane-host-health-" }).pipe(
             Layer.provideMerge(NodeServices.layer),
           ),
         ),
@@ -214,7 +214,7 @@ describe("HostHealth service", () => {
     () =>
       Effect.gen(function* () {
         const files = new Map<string, string>();
-        const slice = "/sys/fs/cgroup/later/user@123.service/app.slice/app-rove.slice";
+        const slice = "/sys/fs/cgroup/later/user@123.service/app.slice/app-paperplane.slice";
         yield* Effect.gen(function* () {
           const health = yield* HostHealth.HostHealth;
           expect((yield* health.read).paperplaneMemory).toBeNull();
@@ -253,7 +253,7 @@ describe("HostHealth service", () => {
         );
       }).pipe(
         Effect.provide(
-          ServerConfig.layerTest(process.cwd(), { prefix: "rove-host-health-" }).pipe(
+          ServerConfig.layerTest(process.cwd(), { prefix: "paperplane-host-health-" }).pipe(
             Layer.provideMerge(NodeServices.layer),
           ),
         ),
@@ -297,7 +297,7 @@ describe("HostHealth service", () => {
       ),
       Effect.provideService(HostProcess.Platform, "darwin"),
       Effect.provide(
-        ServerConfig.layerTest(process.cwd(), { prefix: "rove-host-health-" }).pipe(
+        ServerConfig.layerTest(process.cwd(), { prefix: "paperplane-host-health-" }).pipe(
           Layer.provideMerge(NodeServices.layer),
         ),
       ),

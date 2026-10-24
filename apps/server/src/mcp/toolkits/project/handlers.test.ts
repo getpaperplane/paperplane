@@ -82,7 +82,7 @@ it.effect("attributes a launched thread's first message to the calling thread", 
       Layer.mock(ManagedProjectFolders.ManagedProjectFolders)({ namedProjectsRoot: "/projects" }),
       Layer.mock(GitVcsDriver.GitVcsDriver)({}),
       NodeServices.layer,
-      ServerConfig.layerTest(process.cwd(), { prefix: "rove-source-link-" }).pipe(
+      ServerConfig.layerTest(process.cwd(), { prefix: "paperplane-source-link-" }).pipe(
         Layer.provide(NodeServices.layer),
       ),
     );
@@ -157,7 +157,7 @@ it.effect("launches a scratch thread into the Scratch project", () =>
       }),
       Layer.mock(GitVcsDriver.GitVcsDriver)({}),
       NodeServices.layer,
-      ServerConfig.layerTest(process.cwd(), { prefix: "rove-scratch-launch-" }).pipe(
+      ServerConfig.layerTest(process.cwd(), { prefix: "paperplane-scratch-launch-" }).pipe(
         Layer.provide(NodeServices.layer),
       ),
     );
@@ -261,7 +261,7 @@ it.effect("starts a project from just a title when workspaceRoot is omitted", ()
       }),
       Layer.mock(GitVcsDriver.GitVcsDriver)({}),
       NodeServices.layer,
-      ServerConfig.layerTest(process.cwd(), { prefix: "rove-named-project-" }).pipe(
+      ServerConfig.layerTest(process.cwd(), { prefix: "paperplane-named-project-" }).pipe(
         Layer.provide(NodeServices.layer),
       ),
     );
@@ -367,7 +367,7 @@ const clientLaunchHarness = (input: {
     Layer.provideMerge(GitVcsDriver.layer),
     Layer.provideMerge(VcsProcess.layer),
     Layer.provideMerge(
-      ServerConfig.layerTest(process.cwd(), { prefix: "rove-client-launch-" }).pipe(
+      ServerConfig.layerTest(process.cwd(), { prefix: "paperplane-client-launch-" }).pipe(
         Layer.provide(NodeServices.layer),
       ),
     ),
@@ -411,7 +411,9 @@ it.effect("a launch binds only an existing checkout that is one of the project's
   Effect.gen(function* () {
     const fileSystem = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
-    const root = yield* fileSystem.makeTempDirectoryScoped({ prefix: "rove-launch-worktree-" });
+    const root = yield* fileSystem.makeTempDirectoryScoped({
+      prefix: "paperplane-launch-worktree-",
+    });
     const repo = path.join(root, "repo");
     const worktree = path.join(root, "feature");
     const outside = path.join(root, "outside");
@@ -475,7 +477,7 @@ it.effect("a launch into a new worktree creates nothing when its base ref has no
       runtimeModeCeiling: "auto",
       launched,
       checkWorktreeBase: ({ projectId, workspaceStrategy }) =>
-        workspaceStrategy.type === "worktree" && workspaceStrategy.baseRef === "rove/renamed"
+        workspaceStrategy.type === "worktree" && workspaceStrategy.baseRef === "paperplane/renamed"
           ? Effect.fail(
               new ThreadLaunch.ThreadLaunchBaseRefError({
                 projectId,
@@ -500,10 +502,10 @@ it.effect("a launch into a new worktree creates nothing when its base ref has no
         })
         .pipe(Stream.unwrap, Stream.runCollect, Effect.provide(dependencies));
 
-    const refused = (yield* launchFrom("rove/renamed")).at(-1)?.result;
+    const refused = (yield* launchFrom("paperplane/renamed")).at(-1)?.result;
     expect(refused).toMatchObject({ code: "invalid_request" });
     expect((refused as { message: string }).message).toContain(
-      'Base ref "rove/renamed" does not resolve to a commit in project "Client target" (/projects/client-target). No thread was created.',
+      'Base ref "paperplane/renamed" does not resolve to a commit in project "Client target" (/projects/client-target). No thread was created.',
     );
     expect(launched).toHaveLength(0);
 

@@ -36,7 +36,7 @@ const bitbucketPullRequest = {
   source: {
     branch: { name: "feature/source-control" },
     repository: {
-      full_name: "octocat/rove",
+      full_name: "octocat/paperplane",
       workspace: { slug: "octocat" },
     },
   },
@@ -202,7 +202,7 @@ it.effect("parses pull request responses from the Bitbucket REST API", () => {
       state: "open",
       updatedAt: Option.some(DateTime.makeUnsafe("2026-01-02T00:00:00.000Z")),
       isCrossRepository: true,
-      headRepositoryNameWithOwner: "octocat/rove",
+      headRepositoryNameWithOwner: "octocat/paperplane",
       headRepositoryOwnerLogin: "octocat",
     });
     assert.strictEqual(
@@ -358,7 +358,7 @@ it.effect.each([false, true])(
 
     return Effect.gen(function* () {
       const bitbucket = yield* BitbucketApi.BitbucketApi;
-      for (const repository of ["rove", "", " \t "]) {
+      for (const repository of ["paperplane", "", " \t "]) {
         const error = yield* bitbucket
           .getRepositoryCloneUrls({
             cwd: "/repo",
@@ -936,15 +936,15 @@ it.effect("preserves Git checkout failures without deriving the domain message f
 it.effect("checks out fork pull requests through an ensured fork remote", () => {
   const { git, layer } = makeLayer({
     response: (request) => {
-      if (request.url.endsWith("/repositories/octocat/rove")) {
+      if (request.url.endsWith("/repositories/octocat/paperplane")) {
         return Response.json({
           ...repositoryJson,
-          full_name: "octocat/rove",
+          full_name: "octocat/paperplane",
           links: {
-            html: { href: "https://bitbucket.org/octocat/rove" },
+            html: { href: "https://bitbucket.org/octocat/paperplane" },
             clone: [
-              { name: "https", href: "https://bitbucket.org/octocat/rove.git" },
-              { name: "ssh", href: "git@bitbucket.org:octocat/rove.git" },
+              { name: "https", href: "https://bitbucket.org/octocat/paperplane.git" },
+              { name: "ssh", href: "git@bitbucket.org:octocat/paperplane.git" },
             ],
           },
         });
@@ -954,7 +954,7 @@ it.effect("checks out fork pull requests through an ensured fork remote", () => 
         source: {
           branch: { name: "main" },
           repository: {
-            full_name: "octocat/rove",
+            full_name: "octocat/paperplane",
             workspace: { slug: "octocat" },
           },
         },
@@ -973,23 +973,23 @@ it.effect("checks out fork pull requests through an ensured fork remote", () => 
     assert.deepStrictEqual(git.ensureRemote.mock.calls[0]?.[0], {
       cwd: "/repo",
       preferredName: "octocat",
-      url: "git@bitbucket.org:octocat/rove.git",
+      url: "git@bitbucket.org:octocat/paperplane.git",
     });
     assert.deepStrictEqual(git.fetchRemoteBranch.mock.calls[0]?.[0], {
       cwd: "/repo",
       remoteName: "octocat",
       remoteBranch: "main",
-      localBranch: "rove/pr-42/main",
+      localBranch: "paperplane/pr-42/main",
     });
     assert.deepStrictEqual(git.setBranchUpstream.mock.calls[0]?.[0], {
       cwd: "/repo",
-      branch: "rove/pr-42/main",
+      branch: "paperplane/pr-42/main",
       remoteName: "octocat",
       remoteBranch: "main",
     });
     assert.deepStrictEqual(git.switchRef.mock.calls[0]?.[0], {
       cwd: "/repo",
-      refName: "rove/pr-42/main",
+      refName: "paperplane/pr-42/main",
     });
   }).pipe(Effect.provide(layer));
 });

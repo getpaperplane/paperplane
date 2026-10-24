@@ -6,7 +6,7 @@ import * as Path from "effect/Path";
 import * as SqlClient from "effect/sql/SqlClient";
 
 import * as NodeSqliteClient from "@getpaperplane/shared/nodeSqliteClient";
-import { runSqliteState } from "./rove-sqlite-state.ts";
+import { runSqliteState } from "./paperplane-sqlite-state.ts";
 import * as HostProcess from "@getpaperplane/shared/HostProcess";
 import { symlinksSupported } from "@getpaperplane/shared/testing/symlinks";
 
@@ -25,11 +25,13 @@ const createFixtureDatabase = Effect.fn("createSqliteStateFixtureDatabase")(func
   }).pipe(Effect.provide(NodeSqliteClient.layer({ filename: databasePath })));
 });
 
-it.layer(NodeServices.layer)("rove-sqlite-state", (it) => {
+it.layer(NodeServices.layer)("paperplane-sqlite-state", (it) => {
   it.effect("reports each invalid SQL source with a specific error", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
-      const baseDir = yield* fs.makeTempDirectoryScoped({ prefix: "rove-sqlite-state-input-" });
+      const baseDir = yield* fs.makeTempDirectoryScoped({
+        prefix: "paperplane-sqlite-state-input-",
+      });
 
       const multipleSources = yield* runSqliteState({
         operation: "query",
@@ -59,7 +61,9 @@ it.layer(NodeServices.layer)("rove-sqlite-state", (it) => {
   it.effect("queries an isolated database through Effect SQL", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
-      const baseDir = yield* fs.makeTempDirectoryScoped({ prefix: "rove-sqlite-state-query-" });
+      const baseDir = yield* fs.makeTempDirectoryScoped({
+        prefix: "paperplane-sqlite-state-query-",
+      });
       yield* createFixtureDatabase(baseDir);
 
       const result = yield* runSqliteState({
@@ -78,7 +82,9 @@ it.layer(NodeServices.layer)("rove-sqlite-state", (it) => {
   it.effect("enables checkpoint_fullfsync on its direct connection", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
-      const baseDir = yield* fs.makeTempDirectoryScoped({ prefix: "rove-sqlite-state-fsync-" });
+      const baseDir = yield* fs.makeTempDirectoryScoped({
+        prefix: "paperplane-sqlite-state-fsync-",
+      });
       yield* createFixtureDatabase(baseDir);
 
       const result = yield* runSqliteState({
@@ -100,7 +106,9 @@ it.layer(NodeServices.layer)("rove-sqlite-state", (it) => {
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const baseDir = yield* fs.makeTempDirectoryScoped({ prefix: "rove-sqlite-state-exec-" });
+        const baseDir = yield* fs.makeTempDirectoryScoped({
+          prefix: "paperplane-sqlite-state-exec-",
+        });
         yield* createFixtureDatabase(baseDir);
 
         const mutation = yield* runSqliteState({
@@ -125,7 +133,7 @@ it.layer(NodeServices.layer)("rove-sqlite-state", (it) => {
         assert.equal(error._tag, "SqliteStateSharedHomeMutationError");
 
         const aliasParent = yield* fs.makeTempDirectoryScoped({
-          prefix: "rove-sqlite-state-alias-",
+          prefix: "paperplane-sqlite-state-alias-",
         });
         const aliasBaseDir = path.join(aliasParent, "shared-home-alias");
         yield* fs.symlink(baseDir, aliasBaseDir);
@@ -139,10 +147,10 @@ it.layer(NodeServices.layer)("rove-sqlite-state", (it) => {
         ).pipe(Effect.flip);
         assert.equal(aliasError._tag, "SqliteStateSharedHomeMutationError");
 
-        // A worktree's own `.rove` dev state is not the live home.
+        // A worktree's own `.paperplane` dev state is not the live home.
         const worktreeBase = path.join(
-          yield* fs.makeTempDirectoryScoped({ prefix: "rove-sqlite-state-wt-" }),
-          ".rove",
+          yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-sqlite-state-wt-" }),
+          ".paperplane",
         );
         yield* fs.makeDirectory(worktreeBase);
         yield* createFixtureDatabase(worktreeBase);
@@ -158,7 +166,7 @@ it.layer(NodeServices.layer)("rove-sqlite-state", (it) => {
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const home = yield* fs.makeTempDirectoryScoped({ prefix: "rove-sqlite-state-user-" });
+      const home = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-sqlite-state-user-" });
       for (const name of [".paperplane", ".rove-code"]) {
         const sharedHome = path.join(home, name);
         yield* createFixtureDatabase(sharedHome);

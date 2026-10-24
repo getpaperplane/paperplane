@@ -11,7 +11,7 @@ import { PAPERPLANE_MCP_TOOL_PREFIX } from "@getpaperplane/shared/paperplaneMcp"
 import type { McpProviderSessionConfig } from "@getpaperplane/provider-core/server/mcpSession";
 
 /** Keep MCP failures as failed Pi tool executions, not successful text results. */
-export function toPiRoveToolResult(result: CallToolResult) {
+export function toPiPaperplaneToolResult(result: CallToolResult) {
   if (result.isError) {
     throw new Error(
       result.content
@@ -33,7 +33,7 @@ export function toPiRoveToolResult(result: CallToolResult) {
 }
 
 /** Only connects to the Paperplane-owned endpoint supplied by the provider session registry. */
-export async function createPiRoveTools(config: McpProviderSessionConfig | undefined) {
+export async function createPiPaperplaneTools(config: McpProviderSessionConfig | undefined) {
   if (!config) return { tools: [], dispose: async () => {} };
 
   const client = new Client({ name: "paperplane-pi", version: "1.0.0" });
@@ -84,7 +84,7 @@ export async function createPiRoveTools(config: McpProviderSessionConfig | undef
               CallToolResultSchema,
               signal ? { signal } : undefined,
             );
-            return toPiRoveToolResult(CallToolResultSchema.parse(result));
+            return toPiPaperplaneToolResult(CallToolResultSchema.parse(result));
           },
         });
       }

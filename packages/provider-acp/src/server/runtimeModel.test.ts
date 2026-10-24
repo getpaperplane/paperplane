@@ -196,7 +196,7 @@ describe("AcpRuntimeModel", () => {
     } as EffectAcpSchema.InitializeResponse);
 
     expect(response.modes).toBeUndefined();
-    expect(response._meta).toMatchObject({ roveSessionLoadReady: "replay_idle" });
+    expect(response._meta).toMatchObject({ paperplaneSessionLoadReady: "replay_idle" });
   });
 
   it("builds a synthetic load response with initialize mode state", () => {
@@ -1176,7 +1176,7 @@ describe("AcpRuntimeModel", () => {
   it("turns future ACP content and session updates into explicit placeholders", () => {
     expect(
       acpContentBlockDisplayText({
-        type: "_rove_unknown",
+        type: "_paperplane_unknown",
         originalType: "chart",
         raw: { type: "chart", points: [] },
       }),
@@ -1186,7 +1186,7 @@ describe("AcpRuntimeModel", () => {
       parseSessionUpdateEvent({
         sessionId: "session-1",
         update: {
-          sessionUpdate: "_rove_unknown",
+          sessionUpdate: "_paperplane_unknown",
           originalSessionUpdate: "timeline_update",
           raw: { sessionUpdate: "timeline_update", entries: [] },
         },

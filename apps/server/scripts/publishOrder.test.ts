@@ -13,7 +13,7 @@ import { buildNpmPlatformPackages } from "../../../scripts/build-npm-platform-pa
 import { publishPlatformsThenLauncher } from "./publishOrder.ts";
 
 const platformTarballs = ["a.tgz", "b.tgz", "c.tgz"];
-const launcherTarball = "rove.tgz";
+const launcherTarball = "paperplane.tgz";
 
 // A fake publish that records when each upload starts and ends. Platform
 // uploads only end once every platform upload has started, so they have to
@@ -98,7 +98,7 @@ it.effect("single-platform builds match full packaging and publish without a lau
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
     const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
-    const root = yield* fs.makeTempDirectoryScoped({ prefix: "rove-early-npm-" });
+    const root = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-early-npm-" });
     const archivesDir = path.join(root, "archives");
     const stage = path.join(root, "stage");
     yield* fs.makeDirectory(archivesDir);

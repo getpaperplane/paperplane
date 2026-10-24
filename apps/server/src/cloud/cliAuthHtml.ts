@@ -1,9 +1,9 @@
 export type LoopbackAuthorizationStage = "dev" | "nightly" | "latest";
 
-declare const __ROVE_BUILD_CHANNEL__: "nightly" | "latest" | undefined;
+declare const __PAPERPLANE_BUILD_CHANNEL__: "nightly" | "latest" | undefined;
 
 function resolveLoopbackAuthorizationStage(): LoopbackAuthorizationStage {
-  return typeof __ROVE_BUILD_CHANNEL__ === "undefined" ? "dev" : __ROVE_BUILD_CHANNEL__;
+  return typeof __PAPERPLANE_BUILD_CHANNEL__ === "undefined" ? "dev" : __PAPERPLANE_BUILD_CHANNEL__;
 }
 
 const stageBrands = {

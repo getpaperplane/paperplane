@@ -46,7 +46,7 @@ function layerAcpRegistryProviderAdapterRegistryReplay(
       const replayGate = options.replayGate;
       const replayDir = yield* fileSystem
         .makeTempDirectory({
-          prefix: `rove-orchestration-v2-acp-registry-replay-${transcript.scenario}-`,
+          prefix: `paperplane-orchestration-v2-acp-registry-replay-${transcript.scenario}-`,
         })
         .pipe(Effect.orDie);
       const statusPath = path.join(replayDir, "status.json");

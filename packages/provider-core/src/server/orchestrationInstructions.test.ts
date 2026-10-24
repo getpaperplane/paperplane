@@ -2,9 +2,9 @@ import { assert, describe, it } from "@effect/vitest";
 
 import {
   PAPERPLANE_ORCHESTRATION_INSTRUCTIONS,
-  roveAcpPromptWithInstructions,
-  roveOrchestrationPromptForFirstRun,
-  roveOrchestrationSystemPrompt,
+  paperplaneAcpPromptWithInstructions,
+  paperplaneOrchestrationPromptForFirstRun,
+  paperplaneOrchestrationSystemPrompt,
 } from "./orchestrationInstructions.ts";
 
 describe("Paperplane orchestration provider instructions", () => {
@@ -31,33 +31,33 @@ describe("Paperplane orchestration provider instructions", () => {
 
   it("injects prompt fallback only for an MCP-enabled first run", () => {
     const prompt = "Inspect the repository.";
-    const injected = roveOrchestrationPromptForFirstRun({
+    const injected = paperplaneOrchestrationPromptForFirstRun({
       prompt,
       runOrdinal: 1,
-      hasRoveMcp: true,
+      hasPaperplaneMcp: true,
     });
 
-    assert.include(injected, "<rove_code_orchestration_instructions>");
+    assert.include(injected, "<paperplane_code_orchestration_instructions>");
     assert.include(injected, `<user_request>\n${prompt}\n</user_request>`);
     assert.equal(
-      roveOrchestrationPromptForFirstRun({ prompt, runOrdinal: 2, hasRoveMcp: true }),
+      paperplaneOrchestrationPromptForFirstRun({ prompt, runOrdinal: 2, hasPaperplaneMcp: true }),
       prompt,
     );
     assert.equal(
-      roveOrchestrationPromptForFirstRun({ prompt, runOrdinal: 1, hasRoveMcp: false }),
+      paperplaneOrchestrationPromptForFirstRun({ prompt, runOrdinal: 1, hasPaperplaneMcp: false }),
       prompt,
     );
   });
 
   it("only exposes the system prompt when the Paperplane MCP server is attached", () => {
-    assert.equal(roveOrchestrationSystemPrompt(false), undefined);
-    assert.equal(roveOrchestrationSystemPrompt(true), PAPERPLANE_ORCHESTRATION_INSTRUCTIONS);
+    assert.equal(paperplaneOrchestrationSystemPrompt(false), undefined);
+    assert.equal(paperplaneOrchestrationSystemPrompt(true), PAPERPLANE_ORCHESTRATION_INSTRUCTIONS);
   });
 
   it("gives ACP sessions provider-neutral mode, browser, and orchestration guidance", () => {
-    const injected = roveAcpPromptWithInstructions({
+    const injected = paperplaneAcpPromptWithInstructions({
       prompt: "Inspect the repository.",
-      state: { interactionMode: "default", hasRoveMcp: true },
+      state: { interactionMode: "default", hasPaperplaneMcp: true },
     });
 
     assert.include(injected, "Paperplane interaction mode: Default");
@@ -68,23 +68,27 @@ describe("Paperplane orchestration provider instructions", () => {
 
   it("reinjects ACP guidance only when mode or tool availability changes", () => {
     const prompt = "Continue.";
-    const defaultState = { interactionMode: "default", hasRoveMcp: true } as const;
+    const defaultState = { interactionMode: "default", hasPaperplaneMcp: true } as const;
 
     assert.equal(
-      roveAcpPromptWithInstructions({ prompt, state: defaultState, previousState: defaultState }),
+      paperplaneAcpPromptWithInstructions({
+        prompt,
+        state: defaultState,
+        previousState: defaultState,
+      }),
       prompt,
     );
     assert.include(
-      roveAcpPromptWithInstructions({
+      paperplaneAcpPromptWithInstructions({
         prompt,
         state: { ...defaultState, interactionMode: "plan" },
         previousState: defaultState,
       }),
       "Paperplane interaction mode: Plan",
     );
-    const withoutMcp = roveAcpPromptWithInstructions({
+    const withoutMcp = paperplaneAcpPromptWithInstructions({
       prompt,
-      state: { interactionMode: "default", hasRoveMcp: false },
+      state: { interactionMode: "default", hasPaperplaneMcp: false },
     });
     assert.include(withoutMcp, "Paperplane interaction mode: Default");
     assert.notInclude(withoutMcp, "Paperplane collaborative browser");

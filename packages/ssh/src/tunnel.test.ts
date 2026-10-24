@@ -104,7 +104,7 @@ const NODE_SCRIPT = {
 
 describe("ssh tunnel scripts", () => {
   it("installs and runs the release archive without Node, npm, or npx", () => {
-    const script = SshTunnel.buildRemoteRoveRunnerScript(ARCHIVE);
+    const script = SshTunnel.buildRemotePaperplaneRunnerScript(ARCHIVE);
 
     assert.include(script, "PAPERPLANE_ARCHIVE_VERSION='1.2.3-preview.20260911.4'");
     assert.include(script, "PAPERPLANE_NODE_SCRIPT_PATH=''");
@@ -143,7 +143,7 @@ describe("ssh tunnel scripts", () => {
     assert.include(script, '"$PAPERPLANE_STAGING/$PAPERPLANE_ARCHIVE" 240');
     assert.notInclude(script, "PAPERPLANE_LOCK_CANDIDATE");
     assert.notInclude(script, "-mmin");
-    assert.equal(script.split("if ! rove_runtime_ready; then").length - 1, 2);
+    assert.equal(script.split("if ! paperplane_runtime_ready; then").length - 1, 2);
     assert.isBelow(
       script.indexOf('"$PAPERPLANE_STAGING/paperplane" --version'),
       script.indexOf('> "$PAPERPLANE_STAGING/.install-complete"'),
@@ -180,14 +180,14 @@ describe("ssh tunnel scripts", () => {
       "v1.2.3",
     ]) {
       assert.throws(
-        () => SshTunnel.buildRemoteRoveRunnerScript({ archiveVersion }),
+        () => SshTunnel.buildRemotePaperplaneRunnerScript({ archiveVersion }),
         SshTunnel.SshInvalidArchiveVersionError,
         undefined,
         archiveVersion,
       );
     }
     assert.include(
-      SshTunnel.buildRemoteRoveRunnerScript(ARCHIVE),
+      SshTunnel.buildRemotePaperplaneRunnerScript(ARCHIVE),
       "PAPERPLANE_ARCHIVE_VERSION='1.2.3-preview.20260911.4'",
     );
   });
@@ -195,7 +195,7 @@ describe("ssh tunnel scripts", () => {
   it("refuses to build a runner with neither an archive version nor a node script", () => {
     for (const input of [undefined, {}, { archiveVersion: "  " }, { nodeScriptPath: null }]) {
       assert.throws(
-        () => SshTunnel.buildRemoteRoveRunnerScript(input),
+        () => SshTunnel.buildRemotePaperplaneRunnerScript(input),
         SshTunnel.SshMissingRunnerError,
       );
     }
@@ -203,14 +203,14 @@ describe("ssh tunnel scripts", () => {
   });
 
   it("does not hard-code a remote node engine range", () => {
-    const script = SshTunnel.buildRemoteRoveRunnerScript(NODE_SCRIPT);
+    const script = SshTunnel.buildRemotePaperplaneRunnerScript(NODE_SCRIPT);
 
     assert.include(script, "PAPERPLANE_NODE_ENGINE_RANGE=''");
     assert.notInclude(script, TEST_NODE_ENGINE_RANGE);
   });
 
   it("builds the remote paperplane runner with a node script override", () => {
-    const script = SshTunnel.buildRemoteRoveRunnerScript({
+    const script = SshTunnel.buildRemotePaperplaneRunnerScript({
       ...NODE_SCRIPT,
       nodeEngineRange: TEST_NODE_ENGINE_RANGE,
     });
@@ -256,7 +256,7 @@ describe("ssh tunnel scripts", () => {
   });
 
   it("embeds the runner in the launch script byte for byte", () => {
-    const runner = SshTunnel.buildRemoteRoveRunnerScript(ARCHIVE);
+    const runner = SshTunnel.buildRemotePaperplaneRunnerScript(ARCHIVE);
     assert.include(runner, 'printf \'%s\\n\' "$$" > "$PAPERPLANE_LOCK/pid.tmp"');
     assert.include(SshTunnel.buildRemoteLaunchScript(ARCHIVE), runner);
   });
@@ -920,7 +920,7 @@ describe("archive runner script", () => {
         const runner = `${root}/run-paperplane.sh`;
         yield* fs.writeFileString(
           runner,
-          SshTunnel.buildRemoteRoveRunnerScript({ archiveVersion, releaseBaseUrl }),
+          SshTunnel.buildRemotePaperplaneRunnerScript({ archiveVersion, releaseBaseUrl }),
         );
         const home = `${root}/home`;
         yield* fs.makeDirectory(home, { recursive: true });

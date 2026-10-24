@@ -45,7 +45,9 @@ const layerConfig = Layer.effect(
       devAuthToken: Redacted.make(DEV_TOKEN),
     } satisfies ServerConfig.ServerConfig["Service"];
   }),
-).pipe(Layer.provide(ServerConfig.layerTest(process.cwd(), { prefix: "rove-auth-http-test-" })));
+).pipe(
+  Layer.provide(ServerConfig.layerTest(process.cwd(), { prefix: "paperplane-auth-http-test-" })),
+);
 
 const layerEnvironmentAuth = EnvironmentAuth.layer.pipe(
   Layer.provide(SqlitePersistence.layerMemory),

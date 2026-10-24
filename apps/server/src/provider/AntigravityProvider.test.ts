@@ -120,7 +120,7 @@ const layerTest = ProviderHostLive.layer.pipe(
   Layer.provideMerge(ServerSettings.layerTest()),
   Layer.provideMerge(ServerSecretStore.layer),
   Layer.provide(
-    ServerConfig.layerTest(process.cwd(), { prefix: "rove-antigravity-provider-test-" }).pipe(
+    ServerConfig.layerTest(process.cwd(), { prefix: "paperplane-antigravity-provider-test-" }).pipe(
       Layer.provideMerge(NodeServices.layer),
     ),
   ),

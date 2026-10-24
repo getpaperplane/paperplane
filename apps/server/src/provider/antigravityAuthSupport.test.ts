@@ -51,10 +51,10 @@ const decodeJson = Schema.decodeUnknownSync(Schema.fromJsonString(Schema.Unknown
 describe("Antigravity process environment", () => {
   const profile: AntigravityProfile = {
     platform: "linux",
-    geminiHome: "/rove/userdata/providers/antigravity/profile",
-    acpDirectory: "/rove/userdata/providers/antigravity/profile/antigravity-acp",
-    tokenPath: "/rove/userdata/providers/antigravity/profile/antigravity-acp/acp_token.json",
-    tempDirectory: "/rove/userdata/providers/antigravity/profile/antigravity-acp/tmp",
+    geminiHome: "/paperplane/userdata/providers/antigravity/profile",
+    acpDirectory: "/paperplane/userdata/providers/antigravity/profile/antigravity-acp",
+    tokenPath: "/paperplane/userdata/providers/antigravity/profile/antigravity-acp/acp_token.json",
+    tempDirectory: "/paperplane/userdata/providers/antigravity/profile/antigravity-acp/tmp",
     browserCommand: "managed-browser-helper",
   };
 
@@ -271,7 +271,7 @@ describe("Antigravity process environment", () => {
       const deepestMember =
         "google3\\cloud\\developer_experience\\antigravity_extensions\\acp_server\\_private__agy_acp_server_bin.lazy_imports_info.json";
       const directories = yield* resolveAntigravityInstanceDirectories(
-        "C:\\Users\\a-twenty-char-person\\.rove\\userdata",
+        "C:\\Users\\a-twenty-char-person\\.paperplane\\userdata",
         ProviderInstanceId.make("antigravity"),
       );
       const extracted = (tempDirectory: string) =>
@@ -567,11 +567,11 @@ it.layer(NodeServices.layer)("Antigravity profile preparation", (it) => {
         profileDirectory: path.join(directory, "profile"),
         baseEnv: { PATH: path.dirname(process.execPath) },
       });
-      expect(profile.browserCommand).not.toContain("/packaged/rove");
+      expect(profile.browserCommand).not.toContain("/packaged/paperplane");
       expect(yield* fs.exists(profile.acpDirectory)).toBe(true);
     }).pipe(
       Effect.provideService(HostProcess.IsExecutable, true),
-      Effect.provideService(HostProcess.ExecutablePath, "/packaged/rove"),
+      Effect.provideService(HostProcess.ExecutablePath, "/packaged/paperplane"),
     ),
   );
 

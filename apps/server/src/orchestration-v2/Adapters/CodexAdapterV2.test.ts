@@ -474,19 +474,19 @@ describe("CodexAdapterV2 runtime policy", () => {
         "mcp_app_todos_list_todos_item-1": { kind: "untrusted", value: "Filtered to overdue" },
       });
       // Alongside Paperplane's own context, both are kept.
-      const withRove = yield* CodexAdapterV2.buildCodexTurnStartParams({
+      const withPaperplane = yield* CodexAdapterV2.buildCodexTurnStartParams({
         nativeThreadId: "native-app-context",
         codexInput: [{ type: "text", text: "what's on my list?" }],
         runtimePolicy: policy,
         modelSelection,
-        hasRoveMcp: true,
+        hasPaperplaneMcp: true,
         appContext,
       });
-      assert.deepEqual(withRove.additionalContext?.["mcp_app_todos_list_todos_item-1"], {
+      assert.deepEqual(withPaperplane.additionalContext?.["mcp_app_todos_list_todos_item-1"], {
         kind: "untrusted",
         value: "Filtered to overdue",
       });
-      assert.isDefined(withRove.additionalContext?.["rove_code_runtime"]);
+      assert.isDefined(withPaperplane.additionalContext?.["paperplane_code_runtime"]);
     }),
   );
 
@@ -506,16 +506,16 @@ describe("CodexAdapterV2 runtime policy", () => {
             instanceId: ProviderInstanceId.make("codex"),
             model: "gpt-5.4",
           },
-          hasRoveMcp: true,
+          hasPaperplaneMcp: true,
         });
 
         assert.equal(params.collaborationMode?.mode, "default");
         assert.include(
-          params.additionalContext?.rove_code_orchestration?.value ?? "",
+          params.additionalContext?.paperplane_code_orchestration?.value ?? "",
           "Use `delegate_task`",
         );
         assert.include(
-          params.additionalContext?.rove_code_orchestration?.value ?? "",
+          params.additionalContext?.paperplane_code_orchestration?.value ?? "",
           "structured object, never as JSON text",
         );
       }),
@@ -524,7 +524,7 @@ describe("CodexAdapterV2 runtime policy", () => {
   it.effect("omits default-mode collaboration settings without the Paperplane MCP server", () =>
     Effect.gen(function* () {
       const params = yield* CodexAdapterV2.buildCodexTurnStartParams({
-        nativeThreadId: "native-default-without-rove-mcp",
+        nativeThreadId: "native-default-without-paperplane-mcp",
         codexInput: [{ type: "text", text: "implement this task" }],
         runtimePolicy: {
           runtimeMode: "full-access",
@@ -535,7 +535,7 @@ describe("CodexAdapterV2 runtime policy", () => {
           instanceId: ProviderInstanceId.make("codex"),
           model: "gpt-5.4",
         },
-        hasRoveMcp: false,
+        hasPaperplaneMcp: false,
       });
 
       assert.isUndefined(params.collaborationMode);
@@ -547,7 +547,7 @@ describe("CodexAdapterV2 runtime policy", () => {
     () =>
       Effect.gen(function* () {
         const params = yield* CodexAdapterV2.buildCodexTurnStartParams({
-          nativeThreadId: "native-plan-with-rove-mcp",
+          nativeThreadId: "native-plan-with-paperplane-mcp",
           codexInput: [{ type: "text", text: "plan this task" }],
           runtimePolicy: {
             runtimeMode: "full-access",
@@ -558,7 +558,7 @@ describe("CodexAdapterV2 runtime policy", () => {
             instanceId: ProviderInstanceId.make("codex"),
             model: "gpt-5.4",
           },
-          hasRoveMcp: true,
+          hasPaperplaneMcp: true,
         });
 
         assert.equal(params.collaborationMode?.mode, "plan");
@@ -566,14 +566,17 @@ describe("CodexAdapterV2 runtime policy", () => {
           params.collaborationMode?.settings.developer_instructions ?? "",
           "request_user_input",
         );
-        assert.include(params.additionalContext?.rove_code_tools?.value ?? "", "preview_status");
+        assert.include(
+          params.additionalContext?.paperplane_code_tools?.value ?? "",
+          "preview_status",
+        );
       }),
   );
 
   it.effect("keeps Codex in plan mode without referencing unavailable Paperplane MCP tools", () =>
     Effect.gen(function* () {
       const params = yield* CodexAdapterV2.buildCodexTurnStartParams({
-        nativeThreadId: "native-plan-without-rove-mcp",
+        nativeThreadId: "native-plan-without-paperplane-mcp",
         codexInput: [{ type: "text", text: "plan this task" }],
         runtimePolicy: {
           runtimeMode: "full-access",
@@ -584,7 +587,7 @@ describe("CodexAdapterV2 runtime policy", () => {
           instanceId: ProviderInstanceId.make("codex"),
           model: "gpt-5.4",
         },
-        hasRoveMcp: false,
+        hasPaperplaneMcp: false,
       });
 
       assert.equal(params.collaborationMode?.mode, "plan");
@@ -808,7 +811,7 @@ describe("CodexAdapterV2 process spawning", () => {
         Effect.provide(
           Layer.mergeAll(
             CodexAdapterV2.layerAppServerClientFactory,
-            ServerConfig.layerTest(process.cwd(), { prefix: "rove-codex-binary-home-" }),
+            ServerConfig.layerTest(process.cwd(), { prefix: "paperplane-codex-binary-home-" }),
           ),
         ),
         Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
@@ -3012,10 +3015,10 @@ describe("CodexAdapterV2 post-settle continuation", () => {
           codexInput: [{ type: "text", text: "work" }],
           runtimePolicy: CODEX_TEST_RUNTIME_POLICY,
           modelSelection: CODEX_TEST_MODEL_SELECTION,
-          hasRoveMcp: true,
+          hasPaperplaneMcp: true,
         });
         assert.include(
-          params.additionalContext?.rove_code_orchestration?.value ?? "",
+          params.additionalContext?.paperplane_code_orchestration?.value ?? "",
           "delegate_task",
         );
         const entries = codexReplayPreamble({ nativeThreadId, nativeTurnId, prompt: "work" });
@@ -4860,7 +4863,7 @@ describe("CodexAdapterV2 post-settle continuation", () => {
     return Effect.scoped(
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
-        const cwd = yield* fs.makeTempDirectoryScoped({ prefix: "rove-bg-stop-workspace-" });
+        const cwd = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-bg-stop-workspace-" });
         const localTranscript = yield* decodeReplayTranscriptJson(
           (yield* encodeReplayTranscriptJson(transcript)).replaceAll(
             yield* encodeStringJson("/workspace"),
@@ -4992,7 +4995,7 @@ describe("CodexAdapterV2 post-settle continuation", () => {
     Effect.scoped(
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
-        const cwd = yield* fs.makeTempDirectoryScoped({ prefix: "rove-bg-stale-workspace-" });
+        const cwd = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-bg-stale-workspace-" });
         const staleTranscript = makeCodexReplayTranscript({
           scenario: "codex-bg-stop-untracked",
           entries: [

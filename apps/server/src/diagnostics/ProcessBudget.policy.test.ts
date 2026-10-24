@@ -9,7 +9,7 @@ const { configure, ensureParent } = vi.hoisted(() => ({
   ensureParent: vi.fn(),
 }));
 
-vi.mock("../process/agentScope.ts", () => ({ ensureRoveParentSlice: ensureParent }));
+vi.mock("../process/agentScope.ts", () => ({ ensurePaperplaneParentSlice: ensureParent }));
 vi.mock("../process/systemdSlice.ts", () => ({
   configureSlice: configure,
   withSliceLock: (_directory: string, _unit: string, body: Effect.Effect<unknown>) => body,
@@ -29,7 +29,7 @@ it.effect("explicit pools disable swap and cap RAM at the parent; auto pools inh
       ["auto", Infinity, "infinity"],
     ] as const) {
       const budget = yield* prepareBudgetedProcess("unused", [], memory);
-      expect(configure).toHaveBeenLastCalledWith("app-rove-workloads.slice", { max }, [
+      expect(configure).toHaveBeenLastCalledWith("app-paperplane-workloads.slice", { max }, [
         "CPUQuota=",
         `MemorySwapMax=${swap}`,
       ]);
@@ -44,7 +44,7 @@ it.effect("isolated pools never reconfigure the shared parent ceiling", () =>
       Effect.succeed(limits),
     );
     ensureParent.mockClear();
-    const budget = yield* prepareBudgetedProcess("unused", [], 384, "app-rove-test.slice");
+    const budget = yield* prepareBudgetedProcess("unused", [], 384, "app-paperplane-test.slice");
     expect(ensureParent).not.toHaveBeenCalled();
     expect(budget.memoryMiB).toBe(384);
   }).pipe(Effect.provideService(Platform, "linux"), Effect.provideService(UserId, 1000)),

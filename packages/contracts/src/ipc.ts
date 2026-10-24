@@ -328,12 +328,12 @@ export const DesktopUpdateStateSchema = Schema.Struct({
 export const DesktopCliCommandStateSchema = Schema.Struct({
   /** Only installed builds have a launcher to put on PATH. */
   supported: Schema.Boolean,
-  /** The `rove` the app installed, or null when it is not installed. */
+  /** The `paperplane` the app installed, or null when it is not installed. */
   installedPath: Schema.NullOr(Schema.String),
   /** Whether a new terminal finds it; false when the folder is not on PATH yet. */
   onPath: Schema.Boolean,
   /**
-   * Another `rove` a new terminal runs instead, earlier on PATH. Install refuses
+   * Another `paperplane` a new terminal runs instead, earlier on PATH. Install refuses
    * while it is there, since a link behind it would never run.
    */
   shadowedBy: Schema.optionalKey(Schema.String),
@@ -709,7 +709,7 @@ export interface DesktopPreviewRecordingInputEvent {
  * can attach.
  */
 export interface DesktopPreviewWebviewConfig {
-  /** `persist:rove-preview` (or whatever the desktop chose). */
+  /** `persist:paperplane-preview` (or whatever the desktop chose). */
   partition: string;
   /**
    * Canonical `<webview webpreferences="...">` string. Encodes the security

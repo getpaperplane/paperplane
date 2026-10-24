@@ -181,10 +181,10 @@ describe("AntigravityAdapterV2 client file system", () => {
         defaultModel: Effect.succeed(undefined),
       });
       const workspace = yield* fileSystem
-        .makeTempDirectoryScoped({ prefix: "rove-antigravity-workspace-" })
+        .makeTempDirectoryScoped({ prefix: "paperplane-antigravity-workspace-" })
         .pipe(Effect.flatMap((directory) => fileSystem.realPath(directory)));
       const outside = yield* fileSystem.makeTempDirectoryScoped({
-        prefix: "rove-antigravity-outside-",
+        prefix: "paperplane-antigravity-outside-",
       });
       const outsideFile = path.join(outside, "secret.txt");
       yield* fileSystem.writeFileString(outsideFile, "secret");
@@ -322,8 +322,8 @@ describe("AntigravityAdapterV2 workspace changes", () => {
         withProcess: (_stop, task) => task,
         defaultModel: Effect.succeed(undefined),
       });
-      const workspaceA = yield* fileSystem.makeTempDirectoryScoped({ prefix: "rove-ag-a-" });
-      const workspaceB = yield* fileSystem.makeTempDirectoryScoped({ prefix: "rove-ag-b-" });
+      const workspaceA = yield* fileSystem.makeTempDirectoryScoped({ prefix: "paperplane-ag-a-" });
+      const workspaceB = yield* fileSystem.makeTempDirectoryScoped({ prefix: "paperplane-ag-b-" });
       yield* fileSystem.writeFileString(path.join(workspaceA, "a.txt"), "from a");
       yield* fileSystem.writeFileString(path.join(workspaceB, "b.txt"), "from b");
       const policyFor = (cwd: string) =>
@@ -471,10 +471,10 @@ describe("AntigravityAdapterV2 client file system under restrictive policies", (
           defaultModel: Effect.succeed(undefined),
         });
         const workspace = yield* fileSystem
-          .makeTempDirectoryScoped({ prefix: "rove-ag-restrictive-" })
+          .makeTempDirectoryScoped({ prefix: "paperplane-ag-restrictive-" })
           .pipe(Effect.flatMap((directory) => fileSystem.realPath(directory)));
         const outside = yield* fileSystem.makeTempDirectoryScoped({
-          prefix: "rove-ag-restrictive-outside-",
+          prefix: "paperplane-ag-restrictive-outside-",
         });
         yield* fileSystem.writeFileString(path.join(workspace, "existing.ts"), "existing");
         const threadId = ThreadId.make(`thread-antigravity-restrictive-${policy.runtimeMode}`);

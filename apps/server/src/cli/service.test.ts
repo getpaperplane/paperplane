@@ -27,7 +27,7 @@ const status = {
   installed: true,
   current: true,
   unitPath: "/home/me/.config/systemd/user/paperplane.service",
-  logPath: "/home/me/.rove/userdata/logs/boot-service.log",
+  logPath: "/home/me/.paperplane/userdata/logs/boot-service.log",
 } as const;
 
 it("reports the installed service version and host paths", () => {
@@ -37,7 +37,7 @@ it("reports the installed service version and host paths", () => {
       "Paperplane service",
       "  Status: installed · paperplane@0.0.29",
       "  Unit: /home/me/.config/systemd/user/paperplane.service",
-      "  Logs: /home/me/.rove/userdata/logs/boot-service.log",
+      "  Logs: /home/me/.paperplane/userdata/logs/boot-service.log",
     ].join("\n"),
   );
 });
@@ -117,8 +117,8 @@ function makeTestService(serviceStatus: BootService.BootServiceStatus) {
       Effect.sync(() => {
         installOptions.push(options);
         return {
-          program: ["/test/rove/runtime/versions/1.0.0/paperplane", "__service-launcher"],
-          baseDir: "/test/rove",
+          program: ["/test/paperplane/runtime/versions/1.0.0/paperplane", "__service-launcher"],
+          baseDir: "/test/paperplane",
           unitPath: serviceStatus.unitPath,
           logPath: serviceStatus.logPath,
         };
@@ -132,7 +132,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NetService.layer))("service commands
   it.effect("restart restarts the installed service", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
-      const baseDir = yield* fs.makeTempDirectoryScoped({ prefix: "rove-service-cli-test-" });
+      const baseDir = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-service-cli-test-" });
       const { service, installOptions, restarts } = makeTestService(status);
       vi.spyOn(BootService, "layer").mockReturnValue(
         Layer.succeed(BootService.BootService, service),
@@ -157,7 +157,9 @@ it.layer(Layer.mergeAll(NodeServices.layer, NetService.layer))("service commands
     (command) =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
-        const baseDir = yield* fs.makeTempDirectoryScoped({ prefix: "rove-service-cli-test-" });
+        const baseDir = yield* fs.makeTempDirectoryScoped({
+          prefix: "paperplane-service-cli-test-",
+        });
         const { service, installOptions } = makeTestService(newerServiceStatus);
         vi.spyOn(BootService, "layer").mockReturnValue(
           Layer.succeed(BootService.BootService, service),
@@ -185,7 +187,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NetService.layer))("service commands
   it.effect.each(["install", "update"] as const)("%s allows an explicit downgrade", (command) =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
-      const baseDir = yield* fs.makeTempDirectoryScoped({ prefix: "rove-service-cli-test-" });
+      const baseDir = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-service-cli-test-" });
       const { service, installOptions } = makeTestService(newerServiceStatus);
       vi.spyOn(BootService, "layer").mockReturnValue(
         Layer.succeed(BootService.BootService, service),

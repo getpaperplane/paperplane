@@ -369,7 +369,7 @@ describe("observability", () => {
             const fs = yield* FileSystem.FileSystem;
             const path = yield* Path.Path;
             const directory = yield* fs.makeTempDirectoryScoped({
-              prefix: "rove-trace-backpressure-",
+              prefix: "paperplane-trace-backpressure-",
             });
             const tracePath = path.join(directory, "trace.ndjson");
             const started = yield* Deferred.make<void>();
@@ -424,7 +424,9 @@ describe("observability", () => {
         Effect.gen(function* () {
           const fileSystem = yield* FileSystem.FileSystem;
           const path = yield* Path.Path;
-          const tempDir = yield* fileSystem.makeTempDirectoryScoped({ prefix: "rove-trace-sink-" });
+          const tempDir = yield* fileSystem.makeTempDirectoryScoped({
+            prefix: "paperplane-trace-sink-",
+          });
           const tracePath = path.join(tempDir, "shared.trace.ndjson");
 
           const sink = yield* makeTraceSink({
@@ -452,7 +454,9 @@ describe("observability", () => {
         Effect.gen(function* () {
           const fileSystem = yield* FileSystem.FileSystem;
           const path = yield* Path.Path;
-          const tempDir = yield* fileSystem.makeTempDirectoryScoped({ prefix: "rove-trace-sink-" });
+          const tempDir = yield* fileSystem.makeTempDirectoryScoped({
+            prefix: "paperplane-trace-sink-",
+          });
           const tracePath = path.join(tempDir, "shared.trace.ndjson");
           const reported = yield* Ref.make<ReadonlyArray<TraceSinkFlushStats>>([]);
 
@@ -480,7 +484,9 @@ describe("observability", () => {
         Effect.gen(function* () {
           const fileSystem = yield* FileSystem.FileSystem;
           const path = yield* Path.Path;
-          const tempDir = yield* fileSystem.makeTempDirectoryScoped({ prefix: "rove-trace-sink-" });
+          const tempDir = yield* fileSystem.makeTempDirectoryScoped({
+            prefix: "paperplane-trace-sink-",
+          });
           const tracePath = path.join(tempDir, "shared.trace.ndjson");
 
           const sink = yield* makeTraceSink({
@@ -521,7 +527,9 @@ describe("observability", () => {
         Effect.gen(function* () {
           const fileSystem = yield* FileSystem.FileSystem;
           const path = yield* Path.Path;
-          const tempDir = yield* fileSystem.makeTempDirectoryScoped({ prefix: "rove-trace-sink-" });
+          const tempDir = yield* fileSystem.makeTempDirectoryScoped({
+            prefix: "paperplane-trace-sink-",
+          });
           const tracePath = path.join(tempDir, "shared.trace.ndjson");
           const maxBytes = 1_024;
 
@@ -554,7 +562,9 @@ describe("observability", () => {
         Effect.gen(function* () {
           const fileSystem = yield* FileSystem.FileSystem;
           const path = yield* Path.Path;
-          const tempDir = yield* fileSystem.makeTempDirectoryScoped({ prefix: "rove-trace-sink-" });
+          const tempDir = yield* fileSystem.makeTempDirectoryScoped({
+            prefix: "paperplane-trace-sink-",
+          });
           const tracePath = path.join(tempDir, "shared.trace.ndjson");
           const maxBytes = 1_024;
 
@@ -585,7 +595,9 @@ describe("observability", () => {
         Effect.gen(function* () {
           const fileSystem = yield* FileSystem.FileSystem;
           const path = yield* Path.Path;
-          const tempDir = yield* fileSystem.makeTempDirectoryScoped({ prefix: "rove-trace-sink-" });
+          const tempDir = yield* fileSystem.makeTempDirectoryScoped({
+            prefix: "paperplane-trace-sink-",
+          });
           const tracePath = path.join(tempDir, "shared.trace.ndjson");
 
           const sink = yield* makeTraceSink({
@@ -635,7 +647,9 @@ describe("observability", () => {
       return Effect.gen(function* () {
         const fileSystem = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const tempDir = yield* fileSystem.makeTempDirectoryScoped({ prefix: "rove-trace-sink-" });
+        const tempDir = yield* fileSystem.makeTempDirectoryScoped({
+          prefix: "paperplane-trace-sink-",
+        });
         const tracePath = path.join(tempDir, "shared.trace.ndjson");
         // A directory at the trace path fails every append, like a full disk.
         yield* fileSystem.makeDirectory(tracePath);
@@ -721,7 +735,7 @@ describe("observability", () => {
           const fileSystem = yield* FileSystem.FileSystem;
           const path = yield* Path.Path;
           const tempDir = yield* fileSystem.makeTempDirectoryScoped({
-            prefix: "rove-local-tracer-",
+            prefix: "paperplane-local-tracer-",
           });
           const tracePath = path.join(tempDir, "shared.trace.ndjson");
 
@@ -781,7 +795,7 @@ describe("observability", () => {
           const fileSystem = yield* FileSystem.FileSystem;
           const path = yield* Path.Path;
           const tempDir = yield* fileSystem.makeTempDirectoryScoped({
-            prefix: "rove-local-tracer-",
+            prefix: "paperplane-local-tracer-",
           });
           const tracePath = path.join(tempDir, "shared.trace.ndjson");
 
@@ -810,13 +824,13 @@ describe("OtlpHeadersFromString", () => {
   it.each([
     {
       name: "decodes percent-encoded values",
-      input: "authorization=Basic%20abc%3D%3D,x-tenant=rove",
-      expected: { authorization: "Basic abc==", "x-tenant": "rove" },
+      input: "authorization=Basic%20abc%3D%3D,x-tenant=paperplane",
+      expected: { authorization: "Basic abc==", "x-tenant": "paperplane" },
     },
     {
       name: "ignores whitespace around separators",
-      input: "authorization=Basic%20abc%3D%3D, x-tenant = rove ,",
-      expected: { authorization: "Basic abc==", "x-tenant": "rove" },
+      input: "authorization=Basic%20abc%3D%3D, x-tenant = paperplane ,",
+      expected: { authorization: "Basic abc==", "x-tenant": "paperplane" },
     },
     {
       name: "keeps literal equals signs inside a value",

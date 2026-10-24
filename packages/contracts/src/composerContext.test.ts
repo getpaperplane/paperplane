@@ -103,7 +103,7 @@ const knownRecords: Record<(typeof COMPOSER_CONTEXT_KINDS)[number], Record<strin
     pullRequest: {
       number: 42,
       title: "Improve context chips",
-      url: "https://github.com/rovecode/rove/pull/42",
+      url: "https://github.com/paperplane/paperplane/pull/42",
       headBranch: "feat/context-chips",
       baseBranch: "main",
       state: "open",

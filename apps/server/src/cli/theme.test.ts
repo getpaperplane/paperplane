@@ -25,7 +25,8 @@ const runCli = (args: ReadonlyArray<string>) =>
     Effect.provide(Layer.mergeAll(NodeServices.layer, NetService.layer, TestConsole.layer)),
   );
 
-const makeBaseDir = () => NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "rove-theme-cli-"));
+const makeBaseDir = () =>
+  NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "paperplane-theme-cli-"));
 
 const settingsPathFor = (baseDir: string) => NodePath.join(baseDir, "userdata", "settings.json");
 
@@ -431,7 +432,7 @@ describe("paperplane theme", () => {
   it.effect("rejects the mobile default theme id", () =>
     Effect.gen(function* () {
       const baseDir = makeBaseDir();
-      const failure = yield* runCli(["theme", "set", "rove", "--base-dir", baseDir]).pipe(
+      const failure = yield* runCli(["theme", "set", "paperplane", "--base-dir", baseDir]).pipe(
         Effect.flip,
       );
       assert.include(String(failure), "No theme named");

@@ -212,7 +212,7 @@ const layerServeConfig = Layer.effect(
     tailscaleServePort: 443,
   })),
 ).pipe(
-  Layer.provide(ServerConfig.layerTest(process.cwd(), { prefix: "rove-direct-" })),
+  Layer.provide(ServerConfig.layerTest(process.cwd(), { prefix: "paperplane-direct-" })),
   Layer.provide(NodeServices.layer),
 );
 

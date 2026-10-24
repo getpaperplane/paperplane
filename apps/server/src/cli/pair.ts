@@ -5,7 +5,7 @@
  * Discovery reads the `server-runtime.json` a live server persists next to its
  * database, then confirms the process is actually answering by fetching its
  * public environment descriptor. Inside a linked git worktree the worktree's
- * own `.rove` is checked first (matching dev-runner precedence); otherwise the
+ * own `.paperplane` is checked first (matching dev-runner precedence); otherwise the
  * shared Paperplane home. `--tailscale` publishes the server over Tailscale Serve
  * HTTPS and pairs through the tailnet URL instead.
  */
@@ -200,7 +200,7 @@ const formatPairOutput = (input: {
 type EnvironmentProbeResult =
   | { readonly _tag: "descriptor"; readonly descriptor: ExecutionEnvironmentDescriptor }
   | { readonly _tag: "unreachable" }
-  | { readonly _tag: "not-a-rove-server" };
+  | { readonly _tag: "not-a-paperplane-server" };
 
 const probeEnvironmentDescriptor = (
   baseUrl: string,
@@ -224,7 +224,7 @@ const probeEnvironmentDescriptor = (
     // some other service.
     const descriptor = yield* HttpClientResponse.filterStatusOk(response).pipe(
       Effect.flatMap(HttpClientResponse.schemaBodyJson(ExecutionEnvironmentDescriptor)),
-      Effect.mapError(() => ({ _tag: "not-a-rove-server" }) as const),
+      Effect.mapError(() => ({ _tag: "not-a-paperplane-server" }) as const),
     );
     return { _tag: "descriptor", descriptor } as const;
   }).pipe(Effect.catch((outcome) => Effect.succeed(outcome)));
@@ -243,7 +243,7 @@ const discoverPairTarget = Effect.fn("pair.discoverPairTarget")(function* (
   if (explicitBaseDir !== undefined && explicitBaseDir.trim().length > 0) {
     bases.push(yield* resolveBaseDir(explicitBaseDir));
   } else {
-    // Same precedence as dev-runner: inside a linked worktree its own `.rove`
+    // Same precedence as dev-runner: inside a linked worktree its own `.paperplane`
     // outranks the shared home, so `paperplane pair` in a worktree pairs with the dev
     // server under test rather than the daily-driver install.
     const worktreeHome = yield* resolveWorktreePaperplaneHome(process.cwd());
@@ -391,7 +391,7 @@ const resolveTailscalePairingBase = Effect.fn("pair.resolveTailscalePairingBase"
         return { baseUrl, notes };
       }
     }
-    if (existing._tag === "not-a-rove-server") {
+    if (existing._tag === "not-a-paperplane-server") {
       return yield* new ServePortOccupiedError({ servePort: input.servePort });
     }
 

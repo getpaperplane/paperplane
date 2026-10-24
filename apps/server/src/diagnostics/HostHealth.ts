@@ -81,7 +81,7 @@ export function hostHealthFindings(
   }
   if (facts.paperplaneMemory !== null && facts.paperplaneMemory.oomKills > oomBaseline) {
     findings.push({
-      id: "rove_oom_kills",
+      id: "paperplane_oom_kills",
       severity: "warning",
       message: `${plural(facts.paperplaneMemory.oomKills - oomBaseline, "out-of-memory kill")} under the Paperplane memory ceiling since the server started.`,
       fix: "Run fewer agents at once or raise the Paperplane memory ceiling.",
@@ -143,22 +143,22 @@ const make = Effect.fnUntraced(function* (options: { readonly oomBaseline?: numb
   const exists = (path: string) => fs.exists(path).pipe(Effect.orElseSucceed(() => false));
   const resolveCgroup = Effect.gen(function* () {
     if (platform !== "linux" || uid === undefined) return undefined;
-    const conventional = `/sys/fs/cgroup/user.slice/user-${uid}.slice/user@${uid}.service/app.slice/app-rove.slice`;
+    const conventional = `/sys/fs/cgroup/user.slice/user-${uid}.slice/user@${uid}.service/app.slice/app-paperplane.slice`;
     // The slice may be created by the first agent after this service starts.
     let cgroup = conventional;
     if (!(yield* exists(`${conventional}/memory.current`))) {
       const self = yield* readText("/proc/self/cgroup");
       const ownPath = /^0::([^\n]+)$/m.exec(self)?.[1];
-      const slicePath = ownPath?.match(/^(.*\/app-rove\.slice)(?:\/|$)/)?.[1];
+      const slicePath = ownPath?.match(/^(.*\/app-paperplane\.slice)(?:\/|$)/)?.[1];
       const managerPath = ownPath?.match(/^(.*\/user@\d+\.service)(?:\/|$)/)?.[1];
       const candidate =
-        slicePath ?? (managerPath ? `${managerPath}/app.slice/app-rove.slice` : undefined);
+        slicePath ?? (managerPath ? `${managerPath}/app.slice/app-paperplane.slice` : undefined);
       if (candidate && !candidate.split("/").includes("..")) cgroup = `/sys/fs/cgroup${candidate}`;
     }
     return cgroup;
   });
   let cgroup = yield* resolveCgroup;
-  let hasRoveMemory = false;
+  let hasPaperplaneMemory = false;
   const baseline =
     options.oomBaseline ??
     (cgroup ? counter(yield* readText(`${cgroup}/memory.events`), "oom_kill") : 0);
@@ -182,7 +182,7 @@ const make = Effect.fnUntraced(function* (options: { readonly oomBaseline?: numb
         environment.WSL_INTEROP !== undefined;
       userManager = uid !== undefined && (yield* exists(`/run/user/${uid}/systemd/private`));
       hostOomKills = counter(yield* readText("/proc/vmstat"), "oom_kill");
-      if (!hasRoveMemory) cgroup = yield* resolveCgroup;
+      if (!hasPaperplaneMemory) cgroup = yield* resolveCgroup;
       if (cgroup) {
         const limit = yield* readText(`${cgroup}/memory.max`);
         const current = yield* readText(`${cgroup}/memory.current`);
@@ -200,7 +200,7 @@ const make = Effect.fnUntraced(function* (options: { readonly oomBaseline?: numb
             oomKills: counter(yield* readText(`${cgroup}/memory.events`), "oom_kill"),
           };
       }
-      hasRoveMemory = paperplaneMemory !== null;
+      hasPaperplaneMemory = paperplaneMemory !== null;
     }
     const stallPath = `${config.logsDir}/event-loop-stalls.ndjson`;
     const stat = yield* fs.stat(stallPath).pipe(Effect.option);
