@@ -317,7 +317,7 @@ private struct ReviewDiffNativeStyle {
 
 public final class RoveReviewDiffView: ExpoView, UIScrollViewDelegate {
   private let payloadDecodeQueue = DispatchQueue(
-    label: "com.hafiezulzikry.rove.review-diff.payload-decode",
+    label: "io.github.getpaperplane.paperplane.review-diff.payload-decode",
     qos: .userInitiated
   )
   private let scrollView = UIScrollView()

@@ -1,11 +1,11 @@
 apply plugin: 'com.android.library'
 apply plugin: 'org.jetbrains.kotlin.android'
 
-group = 'com.hafiezulzikry.rove.reviewdiff'
+group = 'io.github.getpaperplane.paperplane.reviewdiff'
 version = '0.0.0'
 
 android {
-  namespace 'expo.modules.rovereviewdiff'
+  namespace 'io.github.getpaperplane.paperplane.reviewdiff'
   compileSdk rootProject.ext.compileSdkVersion
 
   testOptions {

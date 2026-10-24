@@ -91,20 +91,39 @@ describe("source-built mobile identity", () => {
   );
 
   it.each([
-    ["development", "Paperplane Dev", "dev.rove.app.dev"],
-    ["preview", "Paperplane Preview", "dev.rove.app.preview"],
-    ["production", "Paperplane", "dev.rove.app"],
+    ["development", "Paperplane Dev", "io.github.getpaperplane.paperplane.dev"],
+    ["preview", "Paperplane Preview", "io.github.getpaperplane.paperplane.preview"],
+    ["production", "Paperplane", "io.github.getpaperplane.paperplane"],
   ])("retains the %s Paperplane app identity", async (variant, name, id) => {
     const config = await configFor({ APP_VARIANT: variant });
     expect(config.name).toBe(name);
     expect(config.ios?.bundleIdentifier).toBe(id);
     expect(config.android?.package).toBe(id);
+    expect(config.ios?.entitlements?.["keychain-access-groups"]).toEqual([
+      `$(AppIdentifierPrefix)${id}`,
+    ]);
+    expect(config.plugins).toContainEqual([
+      "expo-widgets",
+      expect.objectContaining({
+        bundleIdentifier: `${id}.widgets`,
+        groupIdentifier: `group.${id}`,
+      }),
+    ]);
+    expect(config.plugins).toContainEqual([
+      "expo-sharing",
+      expect.objectContaining({
+        ios: expect.objectContaining({
+          extensionBundleIdentifier: `${id}.sharing`,
+          appGroupId: `group.${id}`,
+        }),
+      }),
+    ]);
   });
 
   it("configures an unsigned production IPA without paid-team capabilities", async () => {
     const config = await configFor({ APP_VARIANT: "production", PAPERPLANE_IOS_UNSIGNED: "1" });
-    expect(config.ios?.bundleIdentifier).toBe("dev.rove.app");
-    expect(config.android?.package).toBe("dev.rove.app");
+    expect(config.ios?.bundleIdentifier).toBe("io.github.getpaperplane.paperplane");
+    expect(config.android?.package).toBe("io.github.getpaperplane.paperplane");
     expect(config.ios?.entitlements).toEqual({});
     expect(config.extra?.iosPersonalTeamBuild).toBe(true);
     expect(config.extra?.cloudReady).toBe(false);
@@ -153,7 +172,7 @@ describe("source-built mobile identity", () => {
     expect(config.ios?.entitlements).toEqual({});
     const regular = await configFor({});
     expect(regular.ios?.entitlements?.["keychain-access-groups"]).toEqual([
-      "$(AppIdentifierPrefix)dev.rove.app",
+      "$(AppIdentifierPrefix)io.github.getpaperplane.paperplane",
     ]);
   });
 

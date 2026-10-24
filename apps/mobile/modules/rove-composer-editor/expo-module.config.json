@@ -4,6 +4,6 @@
     "modules": ["RoveComposerEditorModule"]
   },
   "android": {
-    "modules": ["expo.modules.rovecomposereditor.RoveComposerEditorModule"]
+    "modules": ["io.github.getpaperplane.paperplane.composereditor.RoveComposerEditorModule"]
   }
 }

@@ -51,7 +51,7 @@ const config = {
 } satisfies RelayConfiguration.RelayConfiguration["Service"];
 const input = {
   token: "device-token",
-  packageName: "dev.rove.app.dev",
+  packageName: "io.github.getpaperplane.paperplane.dev",
   data: { rove_kind: "agent_activity", active: "true" },
   alert: false,
 };

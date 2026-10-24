@@ -88,7 +88,7 @@ manual builds out of order or dispatch builds within the same second.
 
 The unsigned device archive uses `PAPERPLANE_IOS_UNSIGNED=1` with
 `PAPERPLANE_IOS_PERSONAL_TEAM=1`; the unsigned mode defaults its bundle ID to
-`dev.rove.app`. It strips push, App Groups, Sign in with Apple, widgets, the share
+`io.github.getpaperplane.paperplane`. It strips push, App Groups, Sign in with Apple, widgets, the share
 extension, and explicit keychain groups. Sideload signers supply their own default
 keychain group; changing signing identity/bundle ID can lose access to saved
 credentials. Normal signed builds retain their keychain entitlement. An unsigned

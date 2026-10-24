@@ -135,7 +135,7 @@ export const hashBundle = Effect.fn("hashBundle")(function* (root: string) {
 });
 type FileSystemError = import("effect/PlatformError").PlatformError;
 
-const bundleId = "dev.rove.app.dev";
+const bundleId = "io.github.getpaperplane.paperplane.dev";
 const roots = Effect.gen(function* () {
   const path = yield* Path.Path;
   const repo = yield* path.fromFileUrl(new URL("../", import.meta.url));

@@ -10,7 +10,7 @@
     },
     "android": {
       "modules": [
-        "expo.modules.roveterminal.RoveTerminalModule"
+        "io.github.getpaperplane.paperplane.terminal.RoveTerminalModule"
       ]
     }
   }

@@ -1,4 +1,8 @@
 {
   "platforms": ["android"],
-  "android": { "modules": ["expo.modules.roveagentnotifications.RoveAgentNotificationsModule"] }
+  "android": {
+    "modules": [
+      "io.github.getpaperplane.paperplane.agentnotifications.RoveAgentNotificationsModule"
+    ]
+  }
 }

@@ -5,6 +5,6 @@
     "podspecPath": "RoveReviewDiffNative.podspec"
   },
   "android": {
-    "modules": ["expo.modules.rovereviewdiff.RoveReviewDiffModule"]
+    "modules": ["io.github.getpaperplane.paperplane.reviewdiff.RoveReviewDiffModule"]
   }
 }

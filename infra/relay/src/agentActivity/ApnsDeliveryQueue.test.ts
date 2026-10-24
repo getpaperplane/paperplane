@@ -15,7 +15,7 @@ const config: RelayConfiguration.RelayConfiguration["Service"] = {
     teamId: "team-1",
     keyId: "key-1",
     privateKey: Redacted.make("apns-private-key"),
-    bundleId: "com.hafiezulzikry.rove.test",
+    bundleId: "io.github.getpaperplane.paperplane.test",
     environment: "sandbox",
   },
   clerkSecretKey: Redacted.make("clerk-secret"),

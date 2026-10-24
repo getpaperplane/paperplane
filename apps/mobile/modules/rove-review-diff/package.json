@@ -10,7 +10,7 @@
     },
     "android": {
       "modules": [
-        "expo.modules.rovereviewdiff.RoveReviewDiffModule"
+        "io.github.getpaperplane.paperplane.reviewdiff.RoveReviewDiffModule"
       ]
     }
   }

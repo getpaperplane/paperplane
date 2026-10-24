@@ -5,6 +5,6 @@
     "podspecPath": "RoveTerminalNative.podspec"
   },
   "android": {
-    "modules": ["expo.modules.roveterminal.RoveTerminalModule"]
+    "modules": ["io.github.getpaperplane.paperplane.terminal.RoveTerminalModule"]
   }
 }

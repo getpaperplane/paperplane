@@ -296,7 +296,7 @@ describe("summarizeToolGroup", () => {
         entry("inspect-app", {
           label: "Inspect app",
           toolSource: {
-            key: "native-app:dev.rove.app",
+            key: "native-app:io.github.getpaperplane.paperplane",
             name: "Computer Use",
             kind: "computer",
           },

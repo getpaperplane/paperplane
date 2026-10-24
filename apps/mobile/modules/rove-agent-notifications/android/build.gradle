@@ -3,11 +3,11 @@ plugins {
   id 'expo-module-gradle-plugin'
 }
 
-group = 'com.hafiezulzikry.rove.agentnotifications'
+group = 'io.github.getpaperplane.paperplane.agentnotifications'
 version = '0.0.0'
 
 android {
-  namespace 'expo.modules.roveagentnotifications'
+  namespace 'io.github.getpaperplane.paperplane.agentnotifications'
   defaultConfig {
     versionCode 1
     versionName '0.0.0'

@@ -22,7 +22,7 @@ The lint command uses the K1 frontend because AGP's K2 frontend crashes while an
 
 ## Firebase and app build
 
-1. Create a Firebase project and register each Android application identifier you intend to build: `dev.rove.app.dev`, `dev.rove.app.preview`, or `dev.rove.app`.
+1. Create a Firebase project and register each Android application identifier you intend to build: `io.github.getpaperplane.paperplane.dev`, `io.github.getpaperplane.paperplane.preview`, or `io.github.getpaperplane.paperplane`.
 2. Download `google-services.json`. Set `PAPERPLANE_ANDROID_GOOGLE_SERVICES_FILE` to its path when running Expo prebuild and building the app. The JSON must contain the selected variant's package identifier.
 3. Create a service-account key with permission to send FCM messages for that Firebase project. Keep this private JSON outside the repository and the app bundle.
 4. Enable the Firebase Cloud Messaging API in the Google project if it is not already enabled. For hosted delivery, set the relay's `FCM_SERVICE_ACCOUNT` secret to the service-account JSON.
@@ -45,14 +45,14 @@ Expo OTA updates are disabled by default in source builds. To enable them for an
 Clerk's native Android sign-in uses `clerk://<applicationId>.callback`. In the Clerk instance selected by the build's publishable key, its administrator must allow the exact callback under **Native applications > Allowlist for mobile SSO redirect**. For the development package, add:
 
 ```text
-clerk://dev.rove.app.dev.callback
+clerk://io.github.getpaperplane.paperplane.dev.callback
 ```
 
 The app already declares the matching callback receiver. A "redirect url ... does not match an authorized redirect URI" error requires a Clerk configuration change; rebuilding the same APK does not fix it. Reopen sign-in after the administrator saves the entry. See [Android native sign-in redirects](./connect-setup.md#android-native-sign-in-redirects) for the other variants.
 
 Use a publishable key from a Clerk instance you control. The key selects that instance but does not grant access to its allowlist. The chosen package's callback must already be allowed or be added by that instance's administrator. Android device registration and hosted delivery separately require the relay deployment below. A successful direct-pairing or FCM smoke test does not verify hosted sign-in or device registration.
 
-Building with `APP_VARIANT=production` selects `dev.rove.app` and its corresponding Clerk callback. Set the same variant during prebuild and bundling, and supply a Google services file that includes that package. Leave OTA updates disabled for a private binary. A locally signed build with this package cannot update an official installation signed by the maintainer or coexist with it; removing that installation also removes its app-local data. The development package remains a separate app.
+Building with `APP_VARIANT=production` selects `io.github.getpaperplane.paperplane` and its corresponding Clerk callback. Set the same variant during prebuild and bundling, and supply a Google services file that includes that package. Leave OTA updates disabled for a private binary. A locally signed build with this package cannot update an official installation signed by the maintainer or coexist with it; removing that installation also removes its app-local data. The development package remains a separate app.
 
 ## Focused delivery check
 
@@ -77,7 +77,7 @@ Verify an expanded card with five threads, attention/failure priority, project n
 After Android prebuild, run the native presentation regression tests from `apps/mobile/android`:
 
 ```sh
-./gradlew :rove-agent-notifications:testDebugUnitTest --tests expo.modules.roveagentnotifications.AgentNotificationsTest
+./gradlew :rove-agent-notifications:testDebugUnitTest --tests io.github.getpaperplane.paperplane.agentnotifications.AgentNotificationsTest
 ```
 
 ## Relay deployment

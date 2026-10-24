@@ -216,7 +216,7 @@ describe("ApnsClient", () => {
             teamId: "team-1",
             keyId: "key-1",
             privateKey: Redacted.make("not-a-private-key"),
-            bundleId: "com.hafiezulzikry.rove.test",
+            bundleId: "io.github.getpaperplane.paperplane.test",
             environment: "sandbox",
           },
           request,
@@ -252,7 +252,7 @@ describe("ApnsClient", () => {
       teamId: "team-1",
       keyId: "key-1",
       privateKey: Redacted.make(privateKey),
-      bundleId: "com.hafiezulzikry.rove.test",
+      bundleId: "io.github.getpaperplane.paperplane.test",
       environment: "sandbox",
     } satisfies ApnsCredentials;
     const failingHttpClient = HttpClient.make((request) =>
@@ -295,7 +295,7 @@ describe("ApnsClient", () => {
         requestKind: "push-notification",
         event: null,
         environment: "sandbox",
-        bundleId: "com.hafiezulzikry.rove.test",
+        bundleId: "io.github.getpaperplane.paperplane.test",
         tokenSuffix: "sh-token",
         stage: "send",
         status: null,
@@ -320,7 +320,7 @@ describe("ApnsClient", () => {
       teamId: "team-jwt-cache",
       keyId: "key-jwt-cache",
       privateKey: Redacted.make(privateKey),
-      bundleId: "com.hafiezulzikry.rove.test",
+      bundleId: "io.github.getpaperplane.paperplane.test",
       environment: "sandbox",
     } satisfies ApnsCredentials;
     const authorizations: Array<string> = [];
@@ -396,7 +396,7 @@ describe("ApnsClient", () => {
         teamId: "team-timeout",
         keyId: "key-timeout",
         privateKey: Redacted.make("unused-test-key"),
-        bundleId: "com.hafiezulzikry.rove.test",
+        bundleId: "io.github.getpaperplane.paperplane.test",
         environment: "sandbox",
       } satisfies ApnsCredentials;
       const send =

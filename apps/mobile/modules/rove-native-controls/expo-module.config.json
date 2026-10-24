@@ -9,9 +9,9 @@
   },
   "android": {
     "modules": [
-      "expo.modules.rovenativecontrols.RoveNativeControlsModule",
-      "expo.modules.rovenativecontrols.RoveWorkspaceNavigationModule",
-      "expo.modules.rovenativecontrols.RoveKeyboardCommandsModule"
+      "io.github.getpaperplane.paperplane.nativecontrols.RoveNativeControlsModule",
+      "io.github.getpaperplane.paperplane.nativecontrols.RoveWorkspaceNavigationModule",
+      "io.github.getpaperplane.paperplane.nativecontrols.RoveKeyboardCommandsModule"
     ]
   }
 }

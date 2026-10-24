@@ -9,11 +9,11 @@ apply plugin: 'com.android.library'
 apply plugin: 'org.jetbrains.kotlin.android'
 apply plugin: 'org.jetbrains.kotlin.plugin.compose'
 
-group = 'com.hafiezulzikry.rove.nativecontrols'
+group = 'io.github.getpaperplane.paperplane.nativecontrols'
 version = '0.0.0'
 
 android {
-  namespace 'expo.modules.rovenativecontrols'
+  namespace 'io.github.getpaperplane.paperplane.nativecontrols'
   compileSdk rootProject.ext.compileSdkVersion
 
   defaultConfig {

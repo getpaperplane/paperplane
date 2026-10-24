@@ -1,4 +1,6 @@
 {
   "platforms": ["android"],
-  "android": { "modules": ["expo.modules.rovewidgetexpiry.RoveWidgetExpiryModule"] }
+  "android": {
+    "modules": ["io.github.getpaperplane.paperplane.widgetexpiry.RoveWidgetExpiryModule"]
+  }
 }

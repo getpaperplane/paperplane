@@ -1,11 +1,11 @@
 apply plugin: 'com.android.library'
 apply plugin: 'org.jetbrains.kotlin.android'
 
-group = 'com.hafiezulzikry.rove.composereditor'
+group = 'io.github.getpaperplane.paperplane.composereditor'
 version = '0.0.0'
 
 android {
-  namespace 'expo.modules.rovecomposereditor'
+  namespace 'io.github.getpaperplane.paperplane.composereditor'
   compileSdk rootProject.ext.compileSdkVersion
 
   testOptions {

@@ -1,11 +1,11 @@
 apply plugin: 'com.android.library'
 apply plugin: 'org.jetbrains.kotlin.android'
 
-group = 'com.hafiezulzikry.rove.terminal'
+group = 'io.github.getpaperplane.paperplane.terminal'
 version = '0.0.0'
 
 android {
-  namespace 'expo.modules.roveterminal'
+  namespace 'io.github.getpaperplane.paperplane.terminal'
   ndkVersion rootProject.ext.ndkVersion
   compileSdk rootProject.ext.compileSdkVersion
 

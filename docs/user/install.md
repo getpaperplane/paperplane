@@ -91,6 +91,12 @@ To remove that trust, use `certmgr.msc` to remove the same certificate from **Tr
 
 ## Mobile app
 
+Upgrading from Rove Code requires a fresh mobile installation and pairing again.
+Paperplane has new iOS and Android identities (`io.github.getpaperplane.paperplane`,
+with `.dev` and `.preview` variants), so it cannot update the old app in place.
+Remove the old app when you no longer need its local settings; host conversations
+remain on your server.
+
 Download `Rove-Code-<version>.apk` (Android) or
 `Rove-Code-<version>-unsigned.ipa` (iOS) from the
 [GitHub Release assets](https://github.com/hafiezul/rove/releases) when available.

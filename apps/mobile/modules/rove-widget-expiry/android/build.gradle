@@ -1,11 +1,11 @@
 apply plugin: 'com.android.library'
 apply plugin: 'org.jetbrains.kotlin.android'
 
-group = 'com.hafiezulzikry.rove.widgetexpiry'
+group = 'io.github.getpaperplane.paperplane.widgetexpiry'
 version = '0.0.0'
 
 android {
-  namespace 'expo.modules.rovewidgetexpiry'
+  namespace 'io.github.getpaperplane.paperplane.widgetexpiry'
   compileSdk rootProject.ext.compileSdkVersion
   defaultConfig {
     minSdkVersion rootProject.ext.minSdkVersion

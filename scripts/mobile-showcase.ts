@@ -33,7 +33,7 @@ import * as RuntimePredicate from "effect/Predicate";
 
 const REPO_ROOT = NodePath.resolve(NodePath.dirname(NodeURL.fileURLToPath(import.meta.url)), "..");
 const MOBILE_ROOT = NodePath.join(REPO_ROOT, "apps/mobile");
-const ANDROID_PACKAGE = "dev.rove.app";
+const ANDROID_PACKAGE = "io.github.getpaperplane.paperplane";
 const APP_SCHEME = "paperplane";
 // expo-dev-launcher reads these off the manifest URL and updates the dev menu
 // preferences before the app loads, keeping captures free of dev chrome.

@@ -230,7 +230,7 @@ function harness(input?: {
       teamId: "team-id",
       keyId: "key-id",
       privateKey: Redacted.make("private-key"),
-      bundleId: "dev.rove.app.dev",
+      bundleId: "io.github.getpaperplane.paperplane.dev",
     },
     apnsDeliveryJobSigningSecret: Redacted.make("job-secret"),
     clerkSecretKey: Redacted.make("clerk-secret"),

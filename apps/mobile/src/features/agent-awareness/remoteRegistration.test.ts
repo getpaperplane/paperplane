@@ -145,6 +145,10 @@ vi.mock("expo-secure-store", () => ({
     secureStore.set(key, value);
     return Promise.resolve();
   },
+  deleteItemAsync: (key: string) => {
+    secureStore.delete(key);
+    return Promise.resolve();
+  },
 }));
 
 vi.mock("react-native", () => ({
@@ -315,13 +319,13 @@ describe("makeRelayDeviceRegistrationRequest", () => {
         label: "Julius's iPhone",
         iosMajorVersion: 18,
         appVersion: "1.0.0",
-        bundleId: "dev.rove.app.preview",
+        bundleId: "io.github.getpaperplane.paperplane.preview",
         apsEnvironment: resolveApsEnvironment("preview"),
         notificationsEnabled: true,
         preferences: {},
       }),
     ).toMatchObject({
-      bundleId: "dev.rove.app.preview",
+      bundleId: "io.github.getpaperplane.paperplane.preview",
       apsEnvironment: "production",
     });
   });

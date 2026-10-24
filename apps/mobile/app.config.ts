@@ -24,7 +24,7 @@ const runtimeVersionPolicy =
 
 const personalTeamBundleIdentifier =
   repoEnv.PAPERPLANE_IOS_PERSONAL_TEAM_BUNDLE_ID?.trim() ||
-  (isIosUnsignedBuild ? "dev.rove.app" : undefined);
+  (isIosUnsignedBuild ? "io.github.getpaperplane.paperplane" : undefined);
 const expoProjectId = repoEnv.PAPERPLANE_EXPO_PROJECT_ID?.trim();
 const mobileUpdatesEnabled = repoEnv.PAPERPLANE_MOBILE_UPDATES_ENABLED === "1";
 const cloudReady = repoEnv.PAPERPLANE_CLOUD_READY === "1";
@@ -44,7 +44,7 @@ if (
     !IOS_BUNDLE_IDENTIFIER_PATTERN.test(personalTeamBundleIdentifier))
 ) {
   throw new Error(
-    "PAPERPLANE_IOS_PERSONAL_TEAM_BUNDLE_ID must be a reverse-DNS identifier such as com.example.rove when PAPERPLANE_IOS_PERSONAL_TEAM=1.",
+    "PAPERPLANE_IOS_PERSONAL_TEAM_BUNDLE_ID must be a reverse-DNS identifier such as com.example.paperplane when PAPERPLANE_IOS_PERSONAL_TEAM=1.",
   );
 }
 
@@ -98,22 +98,22 @@ const VARIANT_CONFIG = {
   development: {
     appName: "Paperplane Dev",
     scheme: "paperplane-dev",
-    iosBundleIdentifier: "dev.rove.app.dev",
-    androidPackage: "dev.rove.app.dev",
+    iosBundleIdentifier: "io.github.getpaperplane.paperplane.dev",
+    androidPackage: "io.github.getpaperplane.paperplane.dev",
     assets: DEVELOPMENT_ASSETS,
   },
   preview: {
     appName: "Paperplane Preview",
     scheme: "paperplane-preview",
-    iosBundleIdentifier: "dev.rove.app.preview",
-    androidPackage: "dev.rove.app.preview",
+    iosBundleIdentifier: "io.github.getpaperplane.paperplane.preview",
+    androidPackage: "io.github.getpaperplane.paperplane.preview",
     assets: PREVIEW_ASSETS,
   },
   production: {
     appName: "Paperplane",
     scheme: "paperplane",
-    iosBundleIdentifier: "dev.rove.app",
-    androidPackage: "dev.rove.app",
+    iosBundleIdentifier: "io.github.getpaperplane.paperplane",
+    androidPackage: "io.github.getpaperplane.paperplane",
     assets: RELEASE_ASSETS,
   },
 } as const;
@@ -246,7 +246,7 @@ const sharingPlugin: NonNullable<ExpoConfig["plugins"]>[number] = [
 
 const config: ExpoConfig = {
   name: variant.appName,
-  slug: "rove",
+  slug: "paperplane",
   platforms: ["ios", "android"],
   scheme: variant.scheme,
   version: repoEnv.PAPERPLANE_MOBILE_VERSION ?? "2.0.0",

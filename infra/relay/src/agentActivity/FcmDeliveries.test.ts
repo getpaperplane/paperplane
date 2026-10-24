@@ -52,7 +52,7 @@ const target: LiveActivities.TargetRow = {
   platform: "android",
   ios_major_version: null,
   app_version: null,
-  bundle_id: "dev.rove.app.dev",
+  bundle_id: "io.github.getpaperplane.paperplane.dev",
   aps_environment: null,
   push_token: "fcm-token",
   push_to_start_token: null,
