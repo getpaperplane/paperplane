@@ -128,12 +128,39 @@ describe("default home migration", () => {
       destination,
       copied: ["userdata"],
       databases: ["userdata/statev2.sqlite"],
-      steps: ["copy-user-state", "paperplane-saved-data"],
+      steps: ["copy-user-state", "paperplane-saved-data", "stage-desktop-secrets"],
     });
     expect(messages[0]).toContain("The old home is kept as a backup");
     const before = snapshot(destination);
     expect(migrate()).toEqual({ kind: "skipped", reason: "destination-exists" });
     expect(snapshot(destination)).toEqual(before);
+  });
+
+  it("quarantines desktop ciphertext in the staged home, including when the CLI migrates first", () => {
+    seed();
+    const files = ["connection-catalog.json", "saved-environments.json", "clerk-tokens.json"];
+    for (const name of files)
+      NodeFS.writeFileSync(
+        NodePath.join(source, "userdata", name),
+        '{"encrypted":"old-identity-bytes"}',
+      );
+    const before = snapshot(source);
+    expect(migrate().kind).toBe("migrated");
+    expect(snapshot(source)).toEqual(before);
+    for (const name of files) {
+      expect(NodeFS.existsSync(NodePath.join(destination, "userdata", name))).toBe(false);
+      expect(
+        JSON.parse(
+          NodeFS.readFileSync(
+            NodePath.join(destination, "userdata", "desktop-name-migration", "input", name),
+            "utf8",
+          ),
+        ),
+      ).toEqual({ encrypted: "old-identity-bytes" });
+    }
+    const after = snapshot(destination);
+    expect(migrate().kind).toBe("skipped");
+    expect(snapshot(destination)).toEqual(after);
   });
 
   it.each(["file", "symlink"])("never replaces an existing %s destination", (kind) => {

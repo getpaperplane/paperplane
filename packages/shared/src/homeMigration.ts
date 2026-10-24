@@ -522,6 +522,7 @@ export function migrateDefaultHome(input: {
             },
           },
           rewriteSavedDataStep,
+          stageDesktopSecretsStep,
           ...(input.steps ?? []),
         ];
         for (const step of pipeline) {
@@ -960,6 +961,25 @@ export function handoffPaperplaneCookie(input: {
     Effect.provideService(HttpServerRequest.HttpServerRequest, input.request),
   );
 }
+
+/** Keep old-identity ciphertext out of ordinary desktop readers until Electron can convert it after ready. */
+const stageDesktopSecretsStep: HomeMigrationStep = {
+  name: "stage-desktop-secrets",
+  run: (stagedHome) => {
+    const state = NodePath.join(stagedHome, "userdata");
+    const pending = NodePath.join(state, "desktop-name-migration", "input");
+    for (const name of [
+      "connection-catalog.json",
+      "saved-environments.json",
+      "clerk-tokens.json",
+    ]) {
+      const source = NodePath.join(state, name);
+      if (!exists(source)) continue;
+      NodeFS.mkdirSync(pending, { recursive: true, mode: 0o700 });
+      NodeFS.renameSync(source, NodePath.join(pending, name));
+    }
+  },
+};
 
 /** Read old Chromium origins without registering them or opening their profile in Electron. */
 export function prepareDesktopStorageMigration<E, R>(input: {

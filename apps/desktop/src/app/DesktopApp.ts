@@ -21,6 +21,7 @@ import * as PreviewPasskeys from "../preview/Passkeys.ts";
 import * as DesktopBackendPool from "../backend/DesktopBackendPool.ts";
 import * as DesktopEnvironment from "./DesktopEnvironment.ts";
 import * as DesktopLegacyLocalStorage from "./DesktopLegacyLocalStorage.ts";
+import * as DesktopMigration from "./DesktopMigration.ts";
 import * as DesktopLifecycle from "./DesktopLifecycle.ts";
 import * as DesktopLinuxUrlHandler from "./DesktopLinuxUrlHandler.ts";
 import * as DesktopObservability from "./DesktopObservability.ts";
@@ -327,6 +328,25 @@ const startup = Effect.gen(function* () {
     Effect.catchCause((cause) => fatalStartupCause("whenReady", cause)),
   );
   yield* logStartupInfo("app ready");
+  const dialog = yield* ElectronDialog.ElectronDialog;
+  yield* DesktopMigration.finishDesktopMigration(
+    { stateDir: environment.stateDir, userDataPath, platform: environment.platform },
+    {
+      readLinuxSecret: DesktopMigration.readOldLinuxSecret(environment.branding.stageLabel),
+      encryptionAvailable: DesktopMigration.migrationEffect(safeStorage.isEncryptionAvailable),
+      encrypt: (plain) => DesktopMigration.migrationEffect(safeStorage.encryptString(plain)),
+      decrypt: (bytes) => DesktopMigration.migrationEffect(safeStorage.decryptString(bytes)),
+      showNotice: (message) =>
+        dialog
+          .showMessageBox({
+            type: "info",
+            title: "Welcome to Paperplane",
+            message,
+            buttons: ["OK"],
+          })
+          .pipe(DesktopMigration.migrationEffect),
+    },
+  );
   if (environment.platform === "linux") {
     const selectedBackend = yield* safeStorage.selectedStorageBackend;
     yield* logStartupInfo("safe storage ready", {
