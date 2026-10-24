@@ -11,10 +11,10 @@ import {
 } from "./worktreeProcesses.ts";
 
 it("matches deleted worktree directories without matching sibling paths", () => {
-  const roots = ["/w/rove-a"];
-  expect(isCwdInside("/w/rove-a (deleted)", roots)).toBe(true);
-  expect(isCwdInside("/w/rove-a/apps/web (deleted)", roots)).toBe(true);
-  expect(isCwdInside("/w/rove-ab/apps/web", roots)).toBe(false);
+  const roots = ["/w/paperplane-a"];
+  expect(isCwdInside("/w/paperplane-a (deleted)", roots)).toBe(true);
+  expect(isCwdInside("/w/paperplane-a/apps/web (deleted)", roots)).toBe(true);
+  expect(isCwdInside("/w/paperplane-ab/apps/web", roots)).toBe(false);
   expect(isCwdInside("/w", roots)).toBe(false);
 });
 
@@ -26,8 +26,8 @@ it("normalizes removal roots and refuses filesystem roots", () => {
 });
 
 const workload =
-  "/user.slice/user@1000.service/app.slice/app-rove.slice/app-rove-workloads.slice/rove-budget-x.scope";
-const service = "/user.slice/user@1000.service/app.slice/rove.service";
+  "/user.slice/user@1000.service/app.slice/app-paperplane.slice/app-paperplane-workloads.slice/paperplane-budget-x.scope";
+const service = "/user.slice/user@1000.service/app.slice/paperplane.service";
 
 it("fails closed for root, slices, shared services and SSH login scopes", () => {
   for (const server of [
@@ -44,18 +44,29 @@ it("fails closed for root, slices, shared services and SSH login scopes", () => 
   }
 });
 
+it("recognizes historical units while their processes drain after upgrade", () => {
+  const legacyService = "/app.slice/rove.service";
+  expect(isServerOwnedCgroup(`${legacyService}/tools`, legacyService)).toBe(true);
+  expect(
+    isServerOwnedCgroup("/app.slice/app-rove-workloads.slice/rove-budget-x.scope", service),
+  ).toBe(true);
+});
+
 it("recognizes dedicated Paperplane units and guarded workloads, not adjacent groups", () => {
   expect(isServerOwnedCgroup(service, service)).toBe(true);
   expect(isServerOwnedCgroup(`${service}/tools`, service)).toBe(true);
   expect(isServerOwnedCgroup(`${service}2`, service)).toBe(false);
   expect(
-    isServerOwnedCgroup("/app.slice/rove-server.scope/tools", "/app.slice/rove-server.scope"),
+    isServerOwnedCgroup(
+      "/app.slice/paperplane-server.scope/tools",
+      "/app.slice/paperplane-server.scope",
+    ),
   ).toBe(true);
   expect(isServerOwnedCgroup("/app.slice/tmux.scope", service)).toBe(false);
   expect(isServerOwnedCgroup(workload, service)).toBe(true);
   expect(
     isServerOwnedCgroup(
-      workload.replace("app-rove-workloads.slice", "app-rove-workloads-other.slice"),
+      workload.replace("app-paperplane-workloads.slice", "app-paperplane-workloads-other.slice"),
       service,
     ),
   ).toBe(false);

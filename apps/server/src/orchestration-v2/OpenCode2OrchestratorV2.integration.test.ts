@@ -166,7 +166,7 @@ const sessionInfo = (directory: string, permissions: ReadonlyArray<unknown>, tit
 });
 /** Paperplane's instructions entry, written before a thread's first prompt and whenever it changes. */
 const instructionsWritten: ReadonlyArray<ProviderReplayEntry> = [
-  out("session.instructions.entry.put", { sessionID: SESSION, key: "paperplane", value: "<any>" }),
+  out("session.instructions.entry.put", { sessionID: SESSION, key: "rove", value: "<any>" }),
   reply("session.instructions.entry.put", null),
 ];
 /** One prompt the server accepts and answers with `text`. */

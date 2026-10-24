@@ -35,8 +35,8 @@ describe("cliRelease", () => {
     expect(cliReleaseDownloadBaseUrl("1.2.3")).toBe(
       "https://github.com/hafiezul/rove/releases/download/v1.2.3",
     );
-    expect(cliReleaseDownloadBaseUrl("1.2.3", "https://mirror.example/rove/")).toBe(
-      "https://mirror.example/rove/v1.2.3",
+    expect(cliReleaseDownloadBaseUrl("1.2.3", "https://mirror.example/paperplane/")).toBe(
+      "https://mirror.example/paperplane/v1.2.3",
     );
   });
 

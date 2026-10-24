@@ -3,7 +3,9 @@ const path = require("node:path");
 
 const ARTIFACT_NAME = "thread-transfer-results";
 const RESULT_FILE = "thread-transfer-result.json";
-const COMMENT_MARKER = "<!-- paperplane-thread-transfer-report -->";
+// These stored GitHub comment markers survive checkout upgrades. Keeping them
+// stable lets reruns update the existing bot comment instead of duplicating it.
+const COMMENT_MARKER = "<!-- rove-thread-transfer-report -->";
 const PROVIDERS = new Map([
   ["codex", "Codex"],
   ["claudeAgent", "Claude"],
@@ -34,7 +36,7 @@ const SCENARIO_KEYS = [
 ];
 
 function resultShaMarker(sha) {
-  return `<!-- paperplane-thread-transfer-result-sha:${sha} -->`;
+  return `<!-- rove-thread-transfer-result-sha:${sha} -->`;
 }
 
 function assertObject(value, label) {

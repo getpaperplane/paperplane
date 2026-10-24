@@ -184,7 +184,7 @@ const withInstructions = (
         ...entries.slice(0, at),
         out("session.instructions.entry.put", {
           sessionID: SESSION,
-          key: "paperplane",
+          key: "rove",
           value: "<any>",
         }),
         reply("session.instructions.entry.put", null),
@@ -3883,7 +3883,7 @@ it.layer(McpProviderSessions.layer)("OpenCode2 adapter", (it) => {
         // The other session gets its own instructions entry before its first prompt.
         out("session.instructions.entry.put", {
           sessionID: OTHER,
-          key: "paperplane",
+          key: "rove",
           value: "<any>",
         }),
         reply("session.instructions.entry.put", null),

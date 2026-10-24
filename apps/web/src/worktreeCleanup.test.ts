@@ -99,7 +99,7 @@ describe("formatWorktreePathForDisplay", () => {
     expect(result).toBe("paperplane-4e609bb8");
   });
 
-  it("uses the final segment even when outside ~/.rove-code/worktrees", () => {
+  it("uses the final segment even when outside ~/.paperplane/worktrees", () => {
     const result = formatWorktreePathForDisplay("/tmp/custom-worktrees/my-worktree");
     expect(result).toBe("my-worktree");
   });

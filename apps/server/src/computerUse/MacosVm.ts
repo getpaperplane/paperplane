@@ -549,7 +549,7 @@ export const make = Effect.fn("MacosVm.make")(function* (options?: { readonly ar
         "-N",
         "",
         "-C",
-        "rove-cua",
+        "paperplane-cua",
         "-f",
         keyPath,
       ]);

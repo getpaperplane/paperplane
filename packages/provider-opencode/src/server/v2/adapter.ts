@@ -678,8 +678,9 @@ const isWakeTurn = (turn: OrchestrationV2ProviderTurn) =>
   turn.nativeTurnRef?.nativeId?.includes(":wake:") === true;
 
 const INTERRUPT_TIMEOUT = "10 seconds";
-/** The session instructions entry Paperplane writes its per-turn system prompt to. */
-const INSTRUCTIONS_KEY = "paperplane";
+/** Keep the native session's stored entry key so resumed sessions replace, rather
+ * than duplicate, the old system instructions. This is not a displayed name. */
+const INSTRUCTIONS_KEY = "rove";
 /** A lost event stream is resubscribed this many times, this far apart, before the session breaks. */
 const RECONNECT_ATTEMPTS = 5;
 const RECONNECT_DELAY = "2 seconds";

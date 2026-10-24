@@ -205,11 +205,11 @@ it.layer(NodeServices.layer)("host CLI commands", (it) => {
         resolveHostCliCommand("doctor", ["--base-dir", "C:\\Users\\Jane Doe\\.paperplane"]).pipe(
           Effect.provideService(
             HostProcess.ExecutablePath,
-            "C:\\Program Files\\Rove Code\\paperplane.exe",
+            "C:\\Program Files\\Paperplane\\paperplane.exe",
           ),
           Effect.provideService(HostProcess.Arguments, [
-            "C:\\Program Files\\Rove Code\\paperplane.exe",
-            "C:\\Program Files\\Rove Code\\resources\\app.asar\\apps\\server\\dist\\bin.mjs",
+            "C:\\Program Files\\Paperplane\\paperplane.exe",
+            "C:\\Program Files\\Paperplane\\resources\\app.asar\\apps\\server\\dist\\bin.mjs",
           ]),
           Effect.provideService(HostProcess.IsExecutable, false),
           Effect.provideService(HostProcess.Platform, platform),

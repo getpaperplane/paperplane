@@ -176,7 +176,7 @@ const harness = <A, E>(
           if (input.command === "/usr/bin/ssh-keygen") {
             const key = args[args.indexOf("-f") + 1];
             yield* fs.writeFileString(key!, "private");
-            yield* fs.writeFileString(`${key}.pub`, "ssh-ed25519 AAAATEST rove-cua\n");
+            yield* fs.writeFileString(`${key}.pub`, "ssh-ed25519 AAAATEST paperplane-cua\n");
             return output();
           }
           if (input.command === "/bin/bash") {
@@ -311,7 +311,7 @@ const harness = <A, E>(
   }).pipe(
     Effect.scoped,
     Effect.provide(
-      ServerConfig.layerTest(process.cwd(), { prefix: "rove-macos-vm-" }).pipe(
+      ServerConfig.layerTest(process.cwd(), { prefix: "paperplane-macos-vm-" }).pipe(
         Layer.provideMerge(NodeServices.layer),
       ),
     ),
@@ -952,7 +952,7 @@ it.effect(
           memoryBytes: 8_589_934_592,
         });
         expect(runs.some((run) => run.args.includes("--clipboard"))).toBe(false);
-        expect(status.setupCommand).toContain("ssh-ed25519 AAAATEST rove-cua");
+        expect(status.setupCommand).toContain("ssh-ed25519 AAAATEST paperplane-cua");
         expect(status.setupCommand).toContain("authorized_keys");
         const setup = runs.find((run) => run.args[0] === "ssh");
         expect(setup?.args.slice(0, 6)).toEqual([
@@ -966,7 +966,7 @@ it.effect(
         expect(setup?.timeout).toBe("10 minutes");
         expect(setup?.args).toHaveLength(7);
         const script = setup!.args[6]!;
-        expect(script).toContain("grep -qxF 'ssh-ed25519 AAAATEST rove-cua'");
+        expect(script).toContain("grep -qxF 'ssh-ed25519 AAAATEST paperplane-cua'");
         expect(script).toContain('/bin/bash -c "$(curl -fsSL https://cua.ai/driver/install.sh)"');
         expect(script).toContain("cua-driver telemetry disable");
         expect(script).toContain("cua-driver permissions grant");

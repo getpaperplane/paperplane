@@ -203,7 +203,7 @@ function assertMissing(path: string, message: string): void {
   }
 }
 
-const tempRoot = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "rove-release-smoke-"));
+const tempRoot = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "paperplane-release-smoke-"));
 
 try {
   NodeChildProcess.execFileSync(
