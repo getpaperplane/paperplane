@@ -1,6 +1,7 @@
 import {
   type EnvironmentId,
   ProjectId,
+  PAPERPLANE_PROJECT_FILE_NAME,
   type ProjectReadFileResult,
   type ScopedProjectRef,
   WS_METHODS,
@@ -100,6 +101,12 @@ export function createProjectEnvironmentAtoms<R, E>(
     key: ({ environmentId, input }: { environmentId: string; input: { projectId: string } }) =>
       JSON.stringify([environmentId, input.projectId]),
   };
+  const readConfig = createEnvironmentRpcQueryAtomFamily(runtime, {
+    label: "environment-data:projects:read-config",
+    tag: WS_METHODS.projectsReadConfig,
+    staleTimeMs: 30_000,
+    idleTtlMs: 5 * 60_000,
+  });
   return {
     fileMetadata: fileMetadata.metadata,
     fileMetadataThread: fileMetadata.retainThread,
@@ -137,6 +144,7 @@ export function createProjectEnvironmentAtoms<R, E>(
           (result, isCurrent) => fileMetadata.rememberEntries(input.cwd, result.entries, isCurrent),
         ),
     }),
+    readConfig,
     readFile: createEnvironmentRpcQueryAtomFamily(runtime, {
       label: "environment-data:projects:read-file",
       tag: WS_METHODS.projectsReadFile,
@@ -222,6 +230,13 @@ export function createProjectEnvironmentAtoms<R, E>(
         Effect.sync(() => {
           for (const path of writtenFilePaths(input, result))
             fileMetadata.refreshPath(environmentId, path, registry);
+          if (
+            writtenFilePaths(input, result).has(
+              resolveWorkspaceFilePath(PAPERPLANE_PROJECT_FILE_NAME, input.cwd),
+            )
+          ) {
+            registry.refresh(readConfig({ environmentId, input: { cwd: input.cwd } }));
+          }
         }),
     }),
   };

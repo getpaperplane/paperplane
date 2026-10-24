@@ -1,65 +1,28 @@
-import {
-  ROVE_PROJECT_FILE_NAME,
-  type EnvironmentId,
-  type RoveProjectFile,
-  type RoveProjectFileScript,
-} from "@getpaperplane/contracts";
-import { parseRoveProjectFile } from "@getpaperplane/shared/roveProjectFile";
-import { useMemo } from "react";
+import { useAtomValue } from "@effect/atom-react";
+import type { EnvironmentId, ProjectConfigState } from "@getpaperplane/contracts";
+import { resolveProjectConfigState } from "@getpaperplane/client-runtime/project-config";
+import * as Option from "effect/Option";
+import { AsyncResult, Atom } from "effect/reactivity";
 
-import { useProjectFileQuery } from "~/components/files/projectFilesQueryState";
+import { useFilesystemReadAccess } from "~/state/filesystem";
+import { projectEnvironment } from "~/state/projects";
 
-const NO_SCRIPTS: ReadonlyArray<RoveProjectFileScript> = [];
+const EMPTY_CONFIG_QUERY = Atom.make(AsyncResult.initial<ProjectConfigState, never>(false));
 
-export interface RoveProjectFileState {
-  /**
-   * - `valid`: rove.json exists and decoded.
-   * - `invalid`: rove.json exists but fails to decode (the server then ignores
-   *   the whole file, including `iconPath` and every script).
-   * - `missing`: no readable rove.json at the workspace root.
-   * - `loading`: the file query has not settled yet.
-   */
-  status: "loading" | "missing" | "invalid" | "valid";
-  /** The decoded file when status is `valid`, null otherwise. */
-  file: RoveProjectFile | null;
-  scripts: ReadonlyArray<RoveProjectFileScript>;
+export function getProjectConfigQueryAtom(environmentId: EnvironmentId, cwd: string) {
+  return projectEnvironment.readConfig({ environmentId, input: { cwd } });
 }
 
-/**
- * Decoded state of the project's checked-in `rove.json`, including whether the
- * file exists but is broken — which the runtime otherwise swallows silently.
- */
-export function useRoveProjectFileState(
-  environmentId: EnvironmentId,
-  cwd: string | null,
-): RoveProjectFileState {
-  const query = useProjectFileQuery(environmentId, cwd ?? "", ROVE_PROJECT_FILE_NAME, cwd !== null);
-  const contents = query.data && !query.data.truncated ? query.data.contents : null;
-  const isPending = query.isPending;
-  return useMemo(() => {
-    if (contents === null) {
-      return {
-        status: isPending ? "loading" : "missing",
-        file: null,
-        scripts: NO_SCRIPTS,
-      } as const;
-    }
-    const file = parseRoveProjectFile(contents);
-    if (file === null) {
-      return { status: "invalid", file: null, scripts: NO_SCRIPTS } as const;
-    }
-    return { status: "valid", file, scripts: file.scripts ?? NO_SCRIPTS } as const;
-  }, [contents, isPending]);
-}
-
-/**
- * Scripts declared in the project's checked-in `rove.json`, offered in the
- * scripts menu for import. Missing, truncated, or invalid files resolve to
- * an empty list.
- */
-export function useRoveProjectFileScripts(
-  environmentId: EnvironmentId,
-  cwd: string | null,
-): ReadonlyArray<RoveProjectFileScript> {
-  return useRoveProjectFileState(environmentId, cwd).scripts;
+/** Server-decoded paperplane.json state, including a filename-only legacy notice. */
+export function useRoveProjectFileState(environmentId: EnvironmentId, cwd: string | null) {
+  const access = useFilesystemReadAccess(environmentId);
+  const result = useAtomValue(
+    cwd !== null && access.canReadFiles
+      ? getProjectConfigQueryAtom(environmentId, cwd)
+      : EMPTY_CONFIG_QUERY,
+  );
+  return resolveProjectConfigState(
+    cwd !== null && access.canReadFiles ? Option.getOrNull(AsyncResult.value(result)) : null,
+    cwd !== null && (access.isPending || result.waiting),
+  );
 }

@@ -1,5 +1,5 @@
 /**
- * RoveProjectFileLoader - Effect service that loads the checked-in `rove.json`
+ * RoveProjectFileLoader - Effect service that loads the checked-in `paperplane.json`
  * project file from a workspace root.
  *
  * Loading is best-effort: a missing file resolves to `Option.none`, and
@@ -16,7 +16,11 @@ import * as Option from "effect/Option";
 import * as Path from "effect/Path";
 import * as Schema from "effect/Schema";
 
-import { ROVE_PROJECT_FILE_NAME, type RoveProjectFile } from "@getpaperplane/contracts";
+import {
+  PAPERPLANE_PROJECT_FILE_NAME,
+  type ProjectConfigState,
+  type RoveProjectFile,
+} from "@getpaperplane/contracts";
 import { RoveProjectFileFromJson } from "@getpaperplane/shared/roveProjectFile";
 
 const decodeRoveProjectFileJson = Schema.decodeEffect(RoveProjectFileFromJson);
@@ -31,21 +35,23 @@ export class RoveProjectFileLoadError extends Schema.TaggedError<RoveProjectFile
   },
 ) {
   override get message(): string {
-    return `Failed to ${this.operation} ${ROVE_PROJECT_FILE_NAME} at ${this.filePath}.`;
+    return `Failed to ${this.operation} ${PAPERPLANE_PROJECT_FILE_NAME} at ${this.filePath}.`;
   }
 }
 
-/** Service tag for rove.json project file loading. */
+/** Service tag for paperplane.json project file loading. */
 export class RoveProjectFileLoader extends Context.Service<
   RoveProjectFileLoader,
   {
     /**
-     * Load and decode `rove.json` at the workspace root.
+     * Load and decode `paperplane.json` at the workspace root.
      *
      * Never fails: missing, unreadable, or invalid files resolve to
      * `Option.none` (invalid files are logged as warnings).
      */
     readonly load: (workspaceRoot: string) => Effect.Effect<Option.Option<RoveProjectFile>>;
+    /** Report missing, invalid, or legacy-only configuration without parsing the legacy file. */
+    readonly loadState: (workspaceRoot: string) => Effect.Effect<ProjectConfigState>;
   }
 >()("@getpaperplane/server/project/RoveProjectFileLoader") {}
 
@@ -64,43 +70,48 @@ export const make = Effect.gen(function* () {
   const fileSystem = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
 
-  const load: RoveProjectFileLoader["Service"]["load"] = Effect.fn("RoveProjectFileLoader.load")(
-    function* (workspaceRoot) {
-      for (const fileName of [ROVE_PROJECT_FILE_NAME]) {
-        const filePath = path.join(workspaceRoot, fileName);
-        const raw = yield* Effect.result(fileSystem.readFileString(filePath));
-        if (raw._tag === "Failure") {
-          if (raw.failure.reason._tag === "NotFound") continue;
-          yield* logRoveProjectFileLoadError(
-            new RoveProjectFileLoadError({
-              operation: "read",
-              workspaceRoot,
-              filePath,
-              cause: raw.failure,
-            }),
-          );
-          return Option.none<RoveProjectFile>();
-        }
-        return yield* decodeRoveProjectFileJson(raw.success).pipe(
-          Effect.asSome,
-          Effect.catchTags({
-            SchemaError: (error) =>
-              logRoveProjectFileLoadError(
-                new RoveProjectFileLoadError({
-                  operation: "decode",
-                  workspaceRoot,
-                  filePath,
-                  cause: error,
-                }),
-              ).pipe(Effect.as(Option.none<RoveProjectFile>())),
-          }),
-        );
+  const loadState: RoveProjectFileLoader["Service"]["loadState"] = Effect.fn(
+    "RoveProjectFileLoader.loadState",
+  )(function* (workspaceRoot): Effect.fn.Return<ProjectConfigState> {
+    const filePath = path.join(workspaceRoot, PAPERPLANE_PROJECT_FILE_NAME);
+    const raw = yield* Effect.result(fileSystem.readFileString(filePath));
+    if (raw._tag === "Failure") {
+      if (raw.failure.reason._tag === "NotFound") {
+        // Existence only: even malformed or unreadable legacy files need the rename notice.
+        const legacyExists = yield* fileSystem
+          .exists(path.join(workspaceRoot, "rove.json"))
+          .pipe(Effect.catch(() => Effect.succeed(false)));
+        return { status: legacyExists ? "legacy-only" : "missing" };
       }
-      return Option.none<RoveProjectFile>();
-    },
+      yield* logRoveProjectFileLoadError(
+        new RoveProjectFileLoadError({
+          operation: "read",
+          workspaceRoot,
+          filePath,
+          cause: raw.failure,
+        }),
+      );
+      return { status: "invalid" };
+    }
+    return yield* decodeRoveProjectFileJson(raw.success).pipe(
+      Effect.map((file): ProjectConfigState => ({ status: "valid", file })),
+      Effect.catchTags({
+        SchemaError: (cause) =>
+          logRoveProjectFileLoadError(
+            new RoveProjectFileLoadError({ operation: "decode", workspaceRoot, filePath, cause }),
+          ).pipe(Effect.as<ProjectConfigState>({ status: "invalid" })),
+      }),
+    );
+  });
+
+  const load: RoveProjectFileLoader["Service"]["load"] = Effect.fn("RoveProjectFileLoader.load")(
+    (workspaceRoot) =>
+      loadState(workspaceRoot).pipe(
+        Effect.map((state) => (state.status === "valid" ? Option.some(state.file) : Option.none())),
+      ),
   );
 
-  return RoveProjectFileLoader.of({ load });
+  return RoveProjectFileLoader.of({ load, loadState });
 });
 
 export const layer = Layer.effect(RoveProjectFileLoader, make);

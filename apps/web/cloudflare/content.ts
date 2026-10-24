@@ -42,7 +42,7 @@ const docs = {
     },
     {
       title: "Discover public content",
-      text: "Request `/` or `/docs` with `Accept: text/markdown` for Markdown, or `Accept: text/html` for HTML. Both representations set `Vary: Accept`. Direct Markdown files are available at `/index.md` and `/docs.md`. `/openapi.json` documents these public resources, and `/schema/rove.json` is the JSON Schema for a project's rove.json configuration. Unknown resources return HTTP 404. Unsupported methods return 405 with an Allow header. Unsupported representations return 406.",
+      text: "Request `/` or `/docs` with `Accept: text/markdown` for Markdown, or `Accept: text/html` for HTML. Both representations set `Vary: Accept`. Direct Markdown files are available at `/index.md` and `/docs.md`. `/openapi.json` documents these public resources, and `/schema/paperplane.json` is the JSON Schema for a project's paperplane.json configuration. Unknown resources return HTTP 404. Unsupported methods return 405 with an Allow header. Unsupported representations return 406.",
     },
     {
       title: "Understand the API boundary",
@@ -97,7 +97,7 @@ export function publicFiles(origin: string) {
     "index.md": markdownContent(homepage),
     "docs.md": markdownContent(docs),
     "docs/index.html": htmlDocument(docs),
-    "llms.txt": `# Paperplane\n\n> Open-source web, desktop, and mobile workspace for coding agents. Bring your own host and provider credentials.\n\nThis origin serves a browser client and public documentation only. It has no public agent execution API. Do not send secrets here. JavaScript is needed for the workspace, not for these resources.\n\n## Documentation\n\n- [Overview](${origin}/index.md): Product overview and connection requirements.\n- [Connection guide](${origin}/docs.md): Install, start, and pair your own host.\n- [Installation](https://github.com/hafiezul/rove/blob/main/docs/user/install.md): Desktop and CLI setup.\n\n## Machine-readable resources\n\n- [OpenAPI](${origin}/openapi.json): Public read-only content endpoints only.\n- [Project schema](${origin}/schema/rove.json): JSON Schema for rove.json.\n- [Sitemap](${origin}/sitemap.xml): Public content URLs, excluding private app routes.\n\n## Optional\n\n- [Source](https://github.com/hafiezul/rove): Code and issue tracker.\n`,
+    "llms.txt": `# Paperplane\n\n> Open-source web, desktop, and mobile workspace for coding agents. Bring your own host and provider credentials.\n\nThis origin serves a browser client and public documentation only. It has no public agent execution API. Do not send secrets here. JavaScript is needed for the workspace, not for these resources.\n\n## Documentation\n\n- [Overview](${origin}/index.md): Product overview and connection requirements.\n- [Connection guide](${origin}/docs.md): Install, start, and pair your own host.\n- [Installation](https://github.com/hafiezul/rove/blob/main/docs/user/install.md): Desktop and CLI setup.\n\n## Machine-readable resources\n\n- [OpenAPI](${origin}/openapi.json): Public read-only content endpoints only.\n- [Project schema](${origin}/schema/paperplane.json): JSON Schema for paperplane.json.\n- [Sitemap](${origin}/sitemap.xml): Public content URLs, excluding private app routes.\n\n## Optional\n\n- [Source](https://github.com/hafiezul/rove): Code and issue tracker.\n`,
     "robots.txt": `User-agent: *\nAllow: /\nSitemap: ${origin}/sitemap.xml\n`,
     "sitemap.xml": `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${["/", "/docs"].map((path) => `  <url><loc>${escapeHtml(origin + path)}</loc></url>`).join("\n")}\n</urlset>\n`,
     "openapi.json": `${JSON.stringify(openApiDocument(origin), null, 2)}\n`,
@@ -157,9 +157,9 @@ function openApiDocument(origin: string) {
           },
         },
       },
-      "/schema/rove.json": {
+      "/schema/paperplane.json": {
         get: {
-          summary: "rove.json project configuration schema",
+          summary: "paperplane.json project configuration schema",
           responses: {
             200: {
               description: "JSON Schema",

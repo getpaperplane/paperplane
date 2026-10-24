@@ -77,7 +77,7 @@ const SUBMODULE_CHOICES: ReadonlyArray<{
   {
     mode: null,
     label: "Inherit",
-    description: "Use the repository's rove.json, or initialize recursively.",
+    description: "Use the repository's paperplane.json, or initialize recursively.",
   },
   { mode: "recursive", label: "Recursive", description: "Initialize nested submodules too." },
   {
@@ -97,7 +97,7 @@ const WORKSPACE_CHOICES: ReadonlyArray<{
   {
     mode: null,
     label: "Inherit",
-    description: "Use the repository's rove.json, or the current checkout.",
+    description: "Use the repository's paperplane.json, or the current checkout.",
   },
   {
     mode: "local",

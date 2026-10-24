@@ -76,12 +76,12 @@ The most common defect in this repo is a change that works on the tested path an
 
 ## Dev servers
 
-- `vp i` installs dependencies. Worktrees get this from the `rove.json` setup script; if module resolution looks broken, it probably did not run.
+- `vp i` installs dependencies. Worktrees get this from the `paperplane.json` setup script; if module resolution looks broken, it probably did not run.
 - `vp run dev` starts the server and web client. `vp run dev:desktop` starts Electron.
 - In a linked worktree, state defaults to the worktree's gitignored `.paperplane`. This deliberately outranks an ambient `PAPERPLANE_HOME`, so you cannot land on shared state by accident. The main checkout defaults to `~/.paperplane/dev`. An explicit `--home-dir` always wins.
 - Ports derive from the worktree path and stay stable across restarts. Occupied ports can shift them, so read the real ports from the `[dev-runner]` line.
 - To share over the tailnet, run `vp run dev --share` in the background, wait for the `pairingUrl:` line, and give that full URL to an unpaired browser. Do not wire up `tailscale serve` by hand, open the URL yourself, or consume the user's pairing link. A browser with the reusable dev cookie can use the bare origin. If a one-time token was consumed, mint a new one with `node apps/server/src/bin.ts pair`. That token has standard scopes. The startup URL has the admin scopes needed for Connections settings.
-- To reuse web dev auth across worktrees, set one fixed `PAPERPLANE_DEV_AUTH_TOKEN` in the main checkout's gitignored `.env`. The `rove.json` setup links that file into worktrees. Never commit or publish the token or a startup URL. See [Reusable dev credential](docs/operations/development.md#reusable-dev-credential).
+- To reuse web dev auth across worktrees, set one fixed `PAPERPLANE_DEV_AUTH_TOKEN` in the main checkout's gitignored `.env`. The `paperplane.json` setup links that file into worktrees. Never commit or publish the token or a startup URL. See [Reusable dev credential](docs/operations/development.md#reusable-dev-credential).
 - Stop only the processes you started, using the PIDs you tracked. See rule 1.
 
 ## Test data

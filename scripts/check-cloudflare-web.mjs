@@ -12,7 +12,7 @@ function checkProjectFileSchema(raw, expectedSchema) {
 
 export function readBuiltProjectFileSchema(directory = defaultDirectory) {
   const schema = JSON.parse(
-    NodeFS.readFileSync(NodePath.join(directory, "schema/rove.json"), "utf8"),
+    NodeFS.readFileSync(NodePath.join(directory, "schema/paperplane.json"), "utf8"),
   );
   const canonical = buildRoveProjectFileJsonSchema();
   NodeAssert.equal(schema.$schema, canonical.$schema);
@@ -38,7 +38,7 @@ export async function checkDeployedProjectFileSchema(
   origin,
   expectedSchema = buildRoveProjectFileJsonSchema(),
 ) {
-  const url = new URL("/schema/rove.json", origin);
+  const url = new URL("/schema/paperplane.json", origin);
   // DNS and schema content can take time to propagate after Wrangler reports success.
   for (let attempt = 1; attempt <= DEPLOY_CHECK_ATTEMPTS; attempt++) {
     let failure;
@@ -94,7 +94,7 @@ export function checkCloudflareWeb(
   }
 
   checkProjectFileSchema(
-    NodeFS.readFileSync(NodePath.join(directory, "schema/rove.json"), "utf8"),
+    NodeFS.readFileSync(NodePath.join(directory, "schema/paperplane.json"), "utf8"),
     expectedSchema,
   );
 

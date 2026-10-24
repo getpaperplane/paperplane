@@ -21,7 +21,7 @@ import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import {
   GitCommandError,
   type GitCommandFailureReason,
-  ROVE_PROJECT_FILE_NAME,
+  PAPERPLANE_PROJECT_FILE_NAME,
   type ReviewDiffFileContentsInput,
   type ReviewDiffPreviewInput,
   type ReviewDiffFileStat,
@@ -3550,7 +3550,7 @@ export const makeGitVcsDriverCore = Effect.fn("makeGitVcsDriverCore")(function* 
     // `.git/modules`, but a first-ever clone needs the network, and failing to
     // populate a submodule must not roll back the caller's thread. Repos with
     // hundreds of nested submodules opt out or stop at the top level; the
-    // caller resolves that from settings, or the checkout's rove.json decides.
+    // caller resolves that from settings, or the checkout's paperplane.json decides.
     const hasSubmodules = yield* fileSystem
       .exists(path.join(worktreePath, ".gitmodules"))
       .pipe(Effect.orElseSucceed(() => false));
@@ -3562,13 +3562,13 @@ export const makeGitVcsDriverCore = Effect.fn("makeGitVcsDriverCore")(function* 
           options?.submodules != null
             ? null
             : yield* fileSystem
-                .readFileString(path.join(worktreePath, ROVE_PROJECT_FILE_NAME))
+                .readFileString(path.join(worktreePath, PAPERPLANE_PROJECT_FILE_NAME))
                 .pipe(
                   Effect.flatMap((contents) => {
                     const file = parseRoveProjectFile(contents);
                     return file === null
                       ? Effect.logWarning(
-                          "rove.json is invalid; initializing submodules recursively",
+                          "paperplane.json is invalid; initializing submodules recursively",
                           {
                             worktreePath,
                           },
@@ -3580,7 +3580,7 @@ export const makeGitVcsDriverCore = Effect.fn("makeGitVcsDriverCore")(function* 
         );
     if (hasSubmodules && submoduleMode.value === "none" && progress?.onSubmodulesDisabled) {
       yield* progress.onSubmodulesDisabled({
-        source: submoduleMode.source === "rove.json" ? "rove.json" : "settings",
+        source: submoduleMode.source === "paperplane.json" ? "paperplane.json" : "settings",
       });
     }
     if (submoduleMode.value !== "none") {

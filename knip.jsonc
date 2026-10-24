@@ -21,7 +21,7 @@
     },
     "scripts": {
       // Knip loads its preprocessor through a CLI option; native verification and
-      // worktree setup (from rove.json) run directly.
+      // worktree setup (from paperplane.json) run directly.
       "entry": [
         "knip-schemas.ts",
         "mobile-native-client.ts",

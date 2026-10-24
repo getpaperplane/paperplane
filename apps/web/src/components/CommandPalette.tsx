@@ -2282,7 +2282,7 @@ function OpenCommandPaletteDialog(props: {
         "grouping",
         "checkout",
         "remove",
-        "rove.json",
+        "paperplane.json",
       ],
       title: "Project settings",
       description: contextualProjectGroup.displayName,

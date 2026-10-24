@@ -1,6 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import {
   AuthFilesystemWriteScope,
+  AuthFilesystemReadScope,
   EnvironmentId,
   ProjectId,
   ThreadId,
@@ -44,6 +45,7 @@ const makeHarness = Effect.fn("TestProjectCommands.makeHarness")(function* () {
   const metadataRequests: string[][] = [];
   const file = { byteLength: 5 };
   const readResponse = { wait: Effect.void as Effect.Effect<void> };
+  const config = { status: "legacy-only" as "legacy-only" | "valid" };
   const supervisor = EnvironmentSupervisor.EnvironmentSupervisor.of({
     target: { environmentId: ENVIRONMENT_ID },
     session: yield* SubscriptionRef.make(
@@ -56,9 +58,14 @@ const makeHarness = Effect.fn("TestProjectCommands.makeHarness")(function* () {
               yield* readResponse.wait;
               return { relativePath: "foo", byteLength, contents: "old", truncated: false };
             }),
+          [WS_METHODS.projectsReadConfig]: () =>
+            Effect.sync(() =>
+              config.status === "valid" ? { status: "valid", file: {} } : { status: "legacy-only" },
+            ),
           [WS_METHODS.projectsWriteFile]: () =>
             Effect.sync(() => {
               file.byteLength = 10;
+              config.status = "valid";
               return { relativePath: "foo" };
             }),
           [WS_METHODS.filesystemGetMetadata]: (input: { paths: string[] }) =>
@@ -115,8 +122,8 @@ const makeHarness = Effect.fn("TestProjectCommands.makeHarness")(function* () {
         sessionMethods: [],
         sessionCookieName: "test",
       },
-      scopes: [AuthFilesystemWriteScope],
-      permissions: [AuthFilesystemWriteScope],
+      scopes: [AuthFilesystemWriteScope, AuthFilesystemReadScope],
+      permissions: [AuthFilesystemWriteScope, AuthFilesystemReadScope],
     }),
   );
   const openScratch = Effect.promise(() =>
@@ -126,6 +133,27 @@ const makeHarness = Effect.fn("TestProjectCommands.makeHarness")(function* () {
 });
 
 describe("writeFile metadata", () => {
+  it.effect("refreshes server configuration after saving a new project file", () =>
+    Effect.gen(function* () {
+      const h = yield* makeHarness();
+      const config = h.commands.readConfig({
+        environmentId: ENVIRONMENT_ID,
+        input: { cwd: "/repo" },
+      });
+      h.registry.mount(config);
+      const read = () => AtomRegistry.getResult(h.registry, config, { suspendOnWaiting: true });
+      expect(yield* read()).toEqual({ status: "legacy-only" });
+      const result = yield* Effect.promise(() =>
+        h.commands.writeFile.run(h.registry, {
+          environmentId: ENVIRONMENT_ID,
+          input: { cwd: "/repo", relativePath: "paperplane.json", contents: "{}" },
+        }),
+      );
+      expect(result._tag).toBe("Success");
+      expect(yield* read()).toEqual({ status: "valid", file: {} });
+    }).pipe(Effect.scoped),
+  );
+
   it.effect("reuses a current file read without another metadata request", () =>
     Effect.gen(function* () {
       const h = yield* makeHarness();

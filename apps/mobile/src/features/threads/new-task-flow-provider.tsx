@@ -7,7 +7,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import type {
   EnvironmentId,
   ModelSelection,
-  ProjectReadFileResult,
+  ProjectConfigState,
   ProviderInteractionMode,
   ProviderOptionSelection,
   RuntimeMode,
@@ -20,7 +20,6 @@ import {
   DEFAULT_SERVER_SETTINGS,
   MessageId,
   repositoryGroupingKeyOf,
-  ROVE_PROJECT_FILE_NAME,
   ThreadId,
 } from "@getpaperplane/contracts";
 import { sanitizeNewRefName } from "@getpaperplane/shared/git";
@@ -28,7 +27,7 @@ import {
   resolveNewThreadEnvMode,
   resolveProjectSettings,
 } from "@getpaperplane/shared/projectSettings";
-import { parseRoveProjectFile } from "@getpaperplane/shared/roveProjectFile";
+import { resolveProjectConfigState } from "@getpaperplane/client-runtime/project-config";
 import * as Arr from "effect/Array";
 import { pipe } from "effect/Function";
 
@@ -185,6 +184,7 @@ type NewTaskFlowContextValue = {
   readonly branchQuery: string;
   readonly branchesLoading: boolean;
   readonly branchesError: string | null;
+  readonly projectConfigNotice: string | null;
   readonly branchesFetchingNextPage: boolean;
   readonly hasMoreBranches: boolean;
   readonly availableBranches: ReadonlyArray<VcsRef>;
@@ -491,7 +491,7 @@ export function NewTaskFlowProvider(props: React.PropsWithChildren) {
   const attachments = selectedProjectDraft.attachments;
   // Default mode until the user picks one explicitly — same resolution web
   // uses for new draft threads: per-project setting, then the repo's
-  // checked-in rove.json, then the server's configured default (which a new
+  // checked-in paperplane.json, then the server's configured default (which a new
   // project with no threads yet replaces with its checkout).
   const fileAccessSession = useEnvironmentQuery(
     selectedProject !== null && selectedProject.workspaceRoot !== ""
@@ -510,24 +510,18 @@ export function NewTaskFlowProvider(props: React.PropsWithChildren) {
     selectedProject !== null && selectedProject.workspaceRoot !== "" && fileAccess.isPending;
   const roveProjectFileQuery = useEnvironmentQuery(
     canReadFiles && selectedProject !== null && selectedProject.workspaceRoot !== ""
-      ? projectEnvironment.readFile({
+      ? projectEnvironment.readConfig({
           environmentId: selectedProject.environmentId,
-          input: {
-            cwd: selectedProject.workspaceRoot,
-            relativePath: ROVE_PROJECT_FILE_NAME,
-          },
+          input: { cwd: selectedProject.workspaceRoot },
         })
       : null,
   );
-  const roveProjectFileData = roveProjectFileQuery.data as ProjectReadFileResult | null;
-  const roveProjectFile = useMemo(
-    () =>
-      roveProjectFileData === null || roveProjectFileData.truncated
-        ? null
-        : parseRoveProjectFile(roveProjectFileData.contents),
-    [roveProjectFileData],
+  const projectConfig = resolveProjectConfigState(
+    roveProjectFileQuery.data as ProjectConfigState | null,
+    roveProjectFileQuery.isPending,
   );
-  // Environment settings with the project's overrides and its rove.json
+  const roveProjectFile = projectConfig.file;
+  // Environment settings with the project's overrides and its paperplane.json
   // applied; the aggregate's own legacy fields still count until the server
   // folds them.
   const projectSettings = useMemo(
@@ -561,7 +555,7 @@ export function NewTaskFlowProvider(props: React.PropsWithChildren) {
   // While the file read is pending and nothing above it decided, the
   // resolved default is provisional. Nothing may write it into the draft
   // during that window (the auto-branch effect does), or the frozen interim
-  // value beats the rove.json default once it loads.
+  // value beats the paperplane.json default once it loads.
   const defaultWorkspaceModeSettled =
     selectedProjectDraft.workspaceSelection?.mode !== undefined ||
     projectSettings.sources.defaultThreadEnvMode !== "environment" ||
@@ -1345,6 +1339,7 @@ export function NewTaskFlowProvider(props: React.PropsWithChildren) {
       branchQuery,
       branchesLoading,
       branchesError: branchState.error,
+      projectConfigNotice: projectConfig.notice,
       branchesFetchingNextPage,
       hasMoreBranches,
       availableBranches,
@@ -1397,6 +1392,7 @@ export function NewTaskFlowProvider(props: React.PropsWithChildren) {
       branchQuery,
       branchesLoading,
       branchState.error,
+      projectConfig.notice,
       branchesFetchingNextPage,
       buildPendingTaskMessage,
       cancelEditingPendingTask,

@@ -7,7 +7,7 @@ export function projectFileSchemaPlugin(): Plugin {
     name: "rove-project-file-schema",
     configureServer(server) {
       server.middlewares.use((request, response, next) => {
-        if (request.method !== "GET" || request.url?.split("?")[0] !== "/schema/rove.json") {
+        if (request.method !== "GET" || request.url?.split("?")[0] !== "/schema/paperplane.json") {
           next();
           return;
         }
@@ -16,7 +16,7 @@ export function projectFileSchemaPlugin(): Plugin {
       });
     },
     generateBundle() {
-      this.emitFile({ type: "asset", fileName: "schema/rove.json", source });
+      this.emitFile({ type: "asset", fileName: "schema/paperplane.json", source });
     },
   };
 }

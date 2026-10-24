@@ -1,19 +1,19 @@
-import { ROVE_PROJECT_FILE_NAME, type RoveProjectFile } from "@getpaperplane/contracts";
-import { parseRoveProjectFile } from "@getpaperplane/shared/roveProjectFile";
+import { type RoveProjectFile } from "@getpaperplane/contracts";
+import { resolveProjectConfigState } from "@getpaperplane/client-runtime/project-config";
 import { useAtomValue } from "@effect/atom-react";
 import * as Option from "effect/Option";
 import { AsyncResult, Atom } from "effect/reactivity";
 import { createContext, type ReactNode, useContext, useMemo } from "react";
 
 import { useEnvironments, usePrimaryEnvironmentId } from "../../state/environments";
-import { getProjectFileQueryAtom, optimisticFileAtom } from "../files/projectFilesQueryState";
+import { getProjectConfigQueryAtom } from "../../hooks/useRoveProjectFileScripts";
 import { useSettingsProjectGroups } from "./useSettingsProjectGroups";
 import { resolveScopedSettingsTargets, selectScopedSettingsEnvironments } from "./scopedSettings";
 import { resolveSettingsScope, type SettingsScopeSearch } from "./settingsScope";
 import { selectSingleEnvironmentScope } from "./settingsScopeAxis";
 
 /**
- * Each member's decoded rove.json, so file-backed settings show the file as a
+ * Each member's server-decoded paperplane.json, so file-backed settings show the file as a
  * layer in the inheritance chain. A member is only present once its read has
  * settled; the query atom caches per (environment, cwd).
  */
@@ -24,30 +24,23 @@ function useMemberProjectFiles(scope: ReturnType<typeof resolveSettingsScope>) {
       () =>
         Atom.make((get) => {
           const files = new Map<string, RoveProjectFile | null>();
+          const notices: Array<{ key: string; workspaceRoot: string; message: string }> = [];
           for (const member of members) {
             const result = get(
-              getProjectFileQueryAtom(
-                member.environmentId,
-                member.workspaceRoot,
-                ROVE_PROJECT_FILE_NAME,
-              ),
+              getProjectConfigQueryAtom(member.environmentId, member.workspaceRoot),
             );
-            if (result.waiting) continue;
-            // A pending in-app save overlays the query, like useProjectFileQuery.
-            const data =
-              get(
-                optimisticFileAtom(
-                  member.environmentId,
-                  member.workspaceRoot,
-                  ROVE_PROJECT_FILE_NAME,
-                ),
-              )?.data ?? Option.getOrNull(AsyncResult.value(result));
-            files.set(
-              member.physicalProjectKey,
-              data === null || data.truncated ? null : parseRoveProjectFile(data.contents),
-            );
+            const data = Option.getOrNull(AsyncResult.value(result));
+            if (result.waiting && data === null) continue;
+            const { notice } = resolveProjectConfigState(data);
+            if (notice)
+              notices.push({
+                key: member.physicalProjectKey,
+                workspaceRoot: member.workspaceRoot,
+                message: notice,
+              });
+            files.set(member.physicalProjectKey, data?.status === "valid" ? data.file : null);
           }
-          return files;
+          return { files, notices };
         }),
       [members],
     ),
@@ -84,7 +77,7 @@ function useResolvedSettingsScope(rawSearch: SettingsScopeSearch, singleEnvironm
     const targets = resolveScopedSettingsTargets(
       scope,
       selected.connectedEnvironments,
-      projectFiles,
+      projectFiles.files,
     );
     // The representative target supplies display values; project scopes
     // prefer the member on the primary environment, like environments do.
@@ -94,7 +87,15 @@ function useResolvedSettingsScope(rawSearch: SettingsScopeSearch, singleEnvironm
       ) ??
       targets[0] ??
       null;
-    return { scope, groups, search, ...selected, targets, target };
+    return {
+      scope,
+      groups,
+      search,
+      ...selected,
+      targets,
+      target,
+      projectConfigNotices: projectFiles.notices,
+    };
   }, [availableEnvironments, groups, primaryEnvironmentId, projectFiles, scope, search]);
 }
 

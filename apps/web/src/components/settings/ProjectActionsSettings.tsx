@@ -88,7 +88,7 @@ export function ProjectActionsSettings() {
     }),
   );
 
-  // A project's rove.json can declare actions to import. Read it from the
+  // A project's paperplane.json can declare actions to import. Read it from the
   // representative checkout; the imported action still fans out.
   const representativeMember = target?.projectId ? memberById.get(target.projectId) : undefined;
   const roveFile = useRoveProjectFileState(
@@ -162,7 +162,7 @@ export function ProjectActionsSettings() {
                 </MenuTrigger>
                 <MenuPopup align="end">
                   <MenuGroup>
-                    <MenuGroupLabel>Import from rove.json</MenuGroupLabel>
+                    <MenuGroupLabel>Import from paperplane.json</MenuGroupLabel>
                     <p className="px-2 pb-2 text-pretty text-sm text-muted-foreground">
                       Add actions declared by this checkout without editing them first.
                     </p>
@@ -210,10 +210,14 @@ export function ProjectActionsSettings() {
           onEdit={(script) => setRequest(editorRequestForScript(script, keybindings))}
         />
       )}
-      {roveFile.status === "invalid" ? (
+      {roveFile.notice ? (
         <SettingsRow
-          title="rove.json is invalid"
-          description="A rove.json exists in this checkout but fails to parse, so every action and icon it declares is ignored. Check the JSON syntax and icon values."
+          title={
+            roveFile.status === "legacy-only"
+              ? "Rename the project file"
+              : "paperplane.json is invalid"
+          }
+          description={roveFile.notice}
           className="text-warning"
         />
       ) : null}

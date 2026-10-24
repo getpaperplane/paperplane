@@ -418,8 +418,8 @@ export function SettingsRow({
     ? { state: "mixed", summary: "Mixed across selected environments" }
     : source === "project"
       ? { state: "overridden", summary: "Overridden for this project" }
-      : source === "rove.json"
-        ? { state: "inherited", summary: "Inherited from the repository's rove.json" }
+      : source === "paperplane.json"
+        ? { state: "inherited", summary: "Inherited from the repository's paperplane.json" }
         : source === "environment" && scopedKeys.length > 0
           ? { state: "inherited", summary: `Inherited from ${inheritedFrom}` }
           : customized

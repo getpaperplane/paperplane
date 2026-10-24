@@ -23,7 +23,7 @@ attachments, notification history, credentials, and checkpoint refs. Android wid
 added again after their receiver class changes.
 
 Before publishing new project-file schema links, deploy the web or marketing build and verify that
-`https://rove.hafiezulzikry.com/schema/rove.json` returns the generated JSON Schema rather than the
+`https://paperplane.hafiezulzikry.com/schema/paperplane.json` returns the generated JSON Schema rather than the
 app's HTML fallback. Source-tree generation does not clear this deployment gate.
 
 Updates from the previous orchestration system preserve transcripts but cannot carry all runtime history forward. Before testing an upgrade, read [Threads from older Paperplane versions](../user/thread-migration.md) and verify the `statev2.sqlite` migration against isolated data.

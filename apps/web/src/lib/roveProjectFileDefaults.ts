@@ -1,42 +1,18 @@
-import {
-  ROVE_PROJECT_FILE_NAME,
-  type EnvironmentId,
-  type RoveProjectFile,
-} from "@getpaperplane/contracts";
-import { parseRoveProjectFile } from "@getpaperplane/shared/roveProjectFile";
+import type { EnvironmentId, RoveProjectFile } from "@getpaperplane/contracts";
 import { executeAtomQuery } from "@getpaperplane/client-runtime/state/runtime";
 
-import {
-  getProjectFileQueryAtom,
-  resolveProjectFileQueryData,
-} from "~/components/files/projectFilesQueryState";
+import { getProjectConfigQueryAtom } from "~/hooks/useRoveProjectFileScripts";
 import { appAtomRegistry } from "~/rpc/atomRegistry";
 
-/**
- * Read and decode the project's checked-in `rove.json`.
- *
- * Imperative counterpart to `useRoveProjectFileState` for the new-thread path,
- * which resolves defaults at call time rather than render time. The file
- * query atom caches per (environment, cwd), so repeat calls don't re-fetch.
- * Optimistic in-app writes overlay the query result, matching what
- * `useProjectFileQuery` renders. Missing, truncated, or invalid files
- * resolve to null.
- */
+/** Read the owning server's accepted project configuration for new-thread defaults. */
 export async function readRoveProjectFile(
   environmentId: EnvironmentId,
   workspaceRoot: string,
 ): Promise<RoveProjectFile | null> {
   const result = await executeAtomQuery(
     appAtomRegistry,
-    getProjectFileQueryAtom(environmentId, workspaceRoot, ROVE_PROJECT_FILE_NAME),
+    getProjectConfigQueryAtom(environmentId, workspaceRoot),
     { reportDefect: false, reportFailure: false },
   );
-  const data = resolveProjectFileQueryData(
-    environmentId,
-    workspaceRoot,
-    ROVE_PROJECT_FILE_NAME,
-    result._tag === "Success" ? result.value : null,
-  );
-  if (data === null || data.truncated) return null;
-  return parseRoveProjectFile(data.contents);
+  return result._tag === "Success" && result.value.status === "valid" ? result.value.file : null;
 }

@@ -6,10 +6,11 @@ import { ProjectScriptIcon } from "./project.ts";
 import type { ProjectScopedServerSettingKey, ServerSettings } from "./settings.ts";
 
 /** File name of the checked-in Paperplane project file, resolved at the workspace root. */
-export const ROVE_PROJECT_FILE_NAME = "rove.json";
+export const PAPERPLANE_PROJECT_FILE_NAME = "paperplane.json";
 
 /** Public URL of the published JSON Schema for {@link RoveProjectFile}. */
-export const ROVE_PROJECT_FILE_SCHEMA_URL = "https://rove.hafiezulzikry.com/schema/rove.json";
+export const PAPERPLANE_PROJECT_FILE_SCHEMA_URL =
+  "https://paperplane.hafiezulzikry.com/schema/paperplane.json";
 
 const ROVE_PROJECT_FILE_PATH_MAX_LENGTH = 512;
 const ROVE_PROJECT_FILE_MAX_SCRIPTS = 50;
@@ -75,7 +76,7 @@ export type RoveProjectFileScript = typeof RoveProjectFileScript.Type;
 export const RoveProjectFile = Schema.Struct({
   $schema: Schema.optionalKey(
     Schema.String.annotate({
-      description: `URL of the JSON Schema for this file, typically "${ROVE_PROJECT_FILE_SCHEMA_URL}".`,
+      description: `URL of the JSON Schema for this file, typically "${PAPERPLANE_PROJECT_FILE_SCHEMA_URL}".`,
     }),
   ),
   iconPath: Schema.optionalKey(
@@ -110,15 +111,22 @@ export const RoveProjectFile = Schema.Struct({
 }).annotate({
   title: "Paperplane project file",
   description:
-    "Checked-in project configuration for Paperplane (rove.json at the repository root). See https://github.com/hafiezul/rove/blob/main/docs/user/project-settings.md for documentation.",
+    "Checked-in project configuration for Paperplane (paperplane.json at the repository root). See https://github.com/hafiezul/rove/blob/main/docs/user/project-settings.md for documentation.",
 });
 export type RoveProjectFile = typeof RoveProjectFile.Type;
 
+/** Server-owned configuration state; the legacy filename is detected, never read. */
+export const ProjectConfigState = Schema.Union([
+  Schema.Struct({ status: Schema.Literal("valid"), file: RoveProjectFile }),
+  Schema.Struct({ status: Schema.Literals(["missing", "invalid", "legacy-only"]) }),
+]);
+export type ProjectConfigState = typeof ProjectConfigState.Type;
+
 /**
- * Settings a repository can also declare in rove.json. A key here must be
+ * Settings a repository can also declare in paperplane.json. A key here must be
  * nullable on `ServerSettings` (null means inherit) so both the project
  * override and the environment value can defer to the file; `field` names
- * the rove.json field carrying the same value and `builtIn` is what applies
+ * the paperplane.json field carrying the same value and `builtIn` is what applies
  * when every tier is unset. `resolveProjectSettings` walks project override,
  * environment value, file, built-in, so listing a key here is the whole
  * change for a new file-backed setting.
@@ -145,7 +153,7 @@ export type ProjectFileBackedSettingKey = keyof typeof PROJECT_FILE_BACKED_SETTI
 
 /**
  * `ServerSettings` with every file-backed key resolved to a concrete value.
- * What `resolveProjectSettings(...).settings` produces once a rove.json (or
+ * What `resolveProjectSettings(...).settings` produces once a paperplane.json (or
  * its absence) has been accounted for.
  */
 export type ResolvedServerSettings = Omit<ServerSettings, ProjectFileBackedSettingKey> & {

@@ -122,7 +122,7 @@ describe("paperplane theme", () => {
   it.effect("publishes a theme file under an explicit id", () =>
     Effect.gen(function* () {
       const baseDir = makeBaseDir();
-      const themeFile = NodePath.join(baseDir, "rove.json");
+      const themeFile = NodePath.join(baseDir, "paperplane.json");
       NodeFS.writeFileSync(themeFile, NIGHTFALL_THEME_JSON);
 
       yield* runCli(["theme", "set", "--id", "nightfall", themeFile, "--base-dir", baseDir]);

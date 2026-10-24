@@ -34,6 +34,7 @@ const projectMocks = vi.hoisted(() => ({
   listEntries: vi.fn(),
   optimisticFile: vi.fn(),
   readFile: vi.fn(),
+  readConfig: vi.fn(),
 }));
 
 const atomHooks = vi.hoisted(() => ({
@@ -144,6 +145,7 @@ describe("project query refresh", () => {
     projectMocks.listEntries.mockReset();
     projectMocks.optimisticFile.mockReset();
     projectMocks.readFile.mockReset();
+    projectMocks.readConfig.mockReset();
     reactHooks.reset();
   });
 
@@ -171,7 +173,7 @@ describe("project query refresh", () => {
     }
   });
 
-  it("keeps rove.json and the file tree loading until the file grant arrives", () => {
+  it("keeps paperplane.json and the file tree loading until the file grant arrives", () => {
     authorizationMocks.sessionAtom = Atom.make(AsyncResult.initial());
     const registry = AtomRegistry.make();
     atomHooks.registry = registry;
@@ -182,12 +184,15 @@ describe("project query refresh", () => {
     projectMocks.readFile.mockReturnValue(
       Atom.make(AsyncResult.success(file(JSON.stringify(config)))),
     );
+    projectMocks.readConfig.mockReturnValue(
+      Atom.make(AsyncResult.success({ status: "valid", file: config })),
+    );
     projectMocks.listEntries.mockReturnValue(
-      Atom.make(AsyncResult.success(projectEntries(["rove.json"]))),
+      Atom.make(AsyncResult.success(projectEntries(["paperplane.json"]))),
     );
     projectMocks.optimisticFile.mockReturnValue(Atom.make(null));
     try {
-      expect(useProjectFileQuery(environmentId, "/repo", "rove.json")).toMatchObject({
+      expect(useProjectFileQuery(environmentId, "/repo", "paperplane.json")).toMatchObject({
         data: null,
         error: null,
         isPending: true,
@@ -208,9 +213,10 @@ describe("project query refresh", () => {
         status: "valid",
         file: config,
         scripts: config.scripts,
+        notice: null,
       });
       expect(useProjectEntriesQuery(environmentId, "/repo")).toMatchObject({
-        data: projectEntries(["rove.json"]),
+        data: projectEntries(["paperplane.json"]),
         error: null,
         isPending: false,
       });
@@ -221,7 +227,7 @@ describe("project query refresh", () => {
   });
 
   it.each(["connected", "offline"] as const)(
-    "preserves cached rove.json defaults and scripts during a granted refresh while %s",
+    "preserves cached paperplane.json defaults and scripts during a granted refresh while %s",
     (phase) => {
       authorizationMocks.phase = phase;
       authorizationMocks.sessionAtom = Atom.make(
@@ -239,9 +245,12 @@ describe("project query refresh", () => {
       projectMocks.readFile.mockReturnValue(
         Atom.make(AsyncResult.success(file(JSON.stringify(config)), { waiting: true })),
       );
+      projectMocks.readConfig.mockReturnValue(
+        Atom.make(AsyncResult.success({ status: "valid", file: config }, { waiting: true })),
+      );
       projectMocks.optimisticFile.mockReturnValue(Atom.make(null));
       try {
-        expect(useProjectFileQuery(environmentId, "/repo", "rove.json")).toMatchObject({
+        expect(useProjectFileQuery(environmentId, "/repo", "paperplane.json")).toMatchObject({
           error: null,
           isPending: true,
         });
@@ -249,6 +258,7 @@ describe("project query refresh", () => {
           status: "valid",
           file: config,
           scripts: config.scripts,
+          notice: null,
         });
       } finally {
         registry.dispose();
@@ -291,13 +301,32 @@ describe("project query refresh", () => {
     },
   );
 
+  it("shows the server's legacy-only rename decision without reading a legacy file", () => {
+    const registry = AtomRegistry.make();
+    atomHooks.registry = registry;
+    projectMocks.readConfig.mockReturnValue(
+      Atom.make(AsyncResult.success({ status: "legacy-only" })),
+    );
+    try {
+      const state = useRoveProjectFileState(environmentId, "/repo");
+      expect(state.status).toBe("legacy-only");
+      expect(state.file).toBeNull();
+      expect(state.scripts).toEqual([]);
+      expect(state.notice).toContain("Rename rove.json to paperplane.json");
+      expect(projectMocks.readFile).not.toHaveBeenCalled();
+    } finally {
+      registry.dispose();
+      atomHooks.registry = null;
+    }
+  });
+
   it("leaves disabled file queries idle while the file grant loads", () => {
     authorizationMocks.sessionAtom = Atom.make(AsyncResult.initial());
     const registry = AtomRegistry.make();
     atomHooks.registry = registry;
     projectMocks.optimisticFile.mockReturnValue(Atom.make(null));
     try {
-      expect(useProjectFileQuery(environmentId, "/repo", "rove.json", false)).toMatchObject({
+      expect(useProjectFileQuery(environmentId, "/repo", "paperplane.json", false)).toMatchObject({
         data: null,
         error: null,
         isPending: false,

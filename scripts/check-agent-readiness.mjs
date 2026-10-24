@@ -57,7 +57,7 @@ export async function checkAgentReadiness(origin) {
     ["/robots.txt", "text/plain"],
     ["/sitemap.xml", "application/xml"],
     ["/openapi.json", "application/json"],
-    ["/schema/rove.json", "application/schema+json"],
+    ["/schema/paperplane.json", "application/schema+json"],
   ]) {
     const { body } = await request(path, type, 200, type);
     NodeAssert.ok(body.length > 20, `${path} content`);

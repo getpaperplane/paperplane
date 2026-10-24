@@ -23,7 +23,7 @@
       "/robots.txt",
       "/sitemap.xml",
       "/openapi.json",
-      "/schema/rove.json"
+      "/schema/paperplane.json"
     ]
   },
   "routes": [

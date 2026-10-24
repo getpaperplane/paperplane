@@ -65,8 +65,9 @@ interface ProjectScriptsControlProps {
   onRequestMenuClose?: () => void;
   environmentId: EnvironmentId;
   scripts: ReadonlyArray<ProjectScript>;
-  /** Scripts declared in the project's checked-in rove.json, offered for import. */
+  /** Scripts declared in the project's checked-in paperplane.json, offered for import. */
   fileScripts?: ReadonlyArray<RoveProjectFileScript>;
+  projectFileNotice?: string | null;
   preferredScriptId?: string | null;
   onRunScript?: ((script: ProjectScript) => void) | undefined;
   onAddScript: (input: NewProjectScriptInput) => Promise<ProjectScriptActionResult>;
@@ -84,6 +85,7 @@ export default function ProjectScriptsControl({
   environmentId,
   scripts,
   fileScripts = NO_FILE_SCRIPTS,
+  projectFileNotice = null,
   preferredScriptId = null,
   onRunScript,
   onAddScript,
@@ -171,7 +173,7 @@ export default function ProjectScriptsControl({
     <>
       {scripts.length > 0 && <MenuSeparator />}
       <MenuGroup>
-        <MenuGroupLabel>From rove.json</MenuGroupLabel>
+        <MenuGroupLabel>From paperplane.json</MenuGroupLabel>
         {importableScripts.map((fileScript) => (
           <MenuItem
             density={presentation === "menu" ? "touch" : "default"}
@@ -191,6 +193,11 @@ export default function ProjectScriptsControl({
 
   const scriptItems = (
     <>
+      {projectFileNotice ? (
+        <p role="status" className="max-w-72 px-2 py-2 text-sm text-warning">
+          {projectFileNotice}
+        </p>
+      ) : null}
       {scripts.map((script) => {
         const shortcutLabel = shortcutLabelForCommand(
           keybindings,
@@ -267,7 +274,7 @@ export default function ProjectScriptsControl({
               </MenuShortcut>
             </MenuItem>
           )}
-          {scripts.length > 0 || importableScripts.length > 0 ? (
+          {scripts.length > 0 || importableScripts.length > 0 || projectFileNotice ? (
             <MenuSub
               open={actionsMenuOpen.scripts}
               onOpenChange={(open) =>
@@ -370,8 +377,8 @@ export default function ProjectScriptsControl({
             </MenuPopup>
           </Menu>
         </ActionGroup>
-      ) : scripts.length > 0 || importableScripts.length > 0 ? (
-        // No one-click action (only a settle action, or only rove.json imports),
+      ) : scripts.length > 0 || importableScripts.length > 0 || projectFileNotice ? (
+        // No one-click action (only a settle action, or only paperplane.json imports),
         // so the saved actions stay reachable through this menu.
         isPanel ? (
           <div

@@ -36,6 +36,10 @@ describe("RPC authorization scopes", () => {
     expect(new Set(Object.keys(RPC_REQUIRED_SCOPES))).toEqual(new Set(WsRpcGroup.requests.keys()));
   });
 
+  it("requires file read access to inspect project configuration", () => {
+    expect(requiredScopeForRpcMethod(WS_METHODS.projectsReadConfig)).toBe(AuthFilesystemReadScope);
+  });
+
   it("allows host health subscriptions under the host resource read scope", () => {
     expect(requiredScopeForRpcMethod(WS_METHODS.serverSubscribeHostHealth)).toBe(
       AuthOrchestrationReadScope,

@@ -88,7 +88,7 @@ export interface ScopedSettingsTarget {
 export function resolveScopedSettingsTargets(
   scope: ResolvedSettingsScope,
   connectedEnvironments: readonly ScopedSettingsEnvironment[],
-  // Each member's decoded rove.json, keyed by physical project key, once read.
+  // Each member's decoded paperplane.json, keyed by physical project key, once read.
   // A member absent here has no file tier yet; null is a missing or invalid file.
   projectFiles?: ReadonlyMap<string, RoveProjectFile | null>,
 ): readonly ScopedSettingsTarget[] {
@@ -157,8 +157,8 @@ export function scopedSettingsSource(
     ? "mixed"
     : sources.has("project")
       ? "project"
-      : sources.has("rove.json")
-        ? "rove.json"
+      : sources.has("paperplane.json")
+        ? "paperplane.json"
         : "environment";
 }
 

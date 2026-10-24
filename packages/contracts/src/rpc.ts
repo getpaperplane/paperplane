@@ -61,6 +61,7 @@ import * as Rpc from "effect/rpc/Rpc";
 import * as RpcGroup from "effect/rpc/RpcGroup";
 import * as RpcMiddleware from "effect/rpc/RpcMiddleware";
 import { NonNegativeInt, TrimmedNonEmptyString } from "./baseSchemas.ts";
+import { ProjectConfigState } from "./roveProjectFile.ts";
 import {
   CodexAuthCallbackInput,
   CodexAuthCallbackState,
@@ -430,6 +431,7 @@ export const WS_METHODS = {
   projectsRemove: "projects.remove",
   projectsListEntries: "projects.listEntries",
   projectsReadFile: "projects.readFile",
+  projectsReadConfig: "projects.readConfig",
   projectsSearchContents: "projects.searchContents",
   projectsSearchEntries: "projects.searchEntries",
   projectsWriteFile: "projects.writeFile",
@@ -1296,6 +1298,12 @@ const WsProjectsListEntriesRpc = Rpc.make(WS_METHODS.projectsListEntries, {
   payload: ProjectListEntriesInput,
   success: ProjectListEntriesResult,
   error: Schema.Union([ProjectListEntriesError, EnvironmentAuthorizationError]),
+});
+
+const WsProjectsReadConfigRpc = Rpc.make(WS_METHODS.projectsReadConfig, {
+  payload: Schema.Struct({ cwd: TrimmedNonEmptyString }),
+  success: ProjectConfigState,
+  error: EnvironmentAuthorizationError,
 });
 
 const WsProjectsReadFileRpc = Rpc.make(WS_METHODS.projectsReadFile, {
@@ -2169,6 +2177,7 @@ export const WsRpcGroup = RpcGroup.make(
   WsSubscribeProjectClonesRpc,
   WsProjectsListEntriesRpc,
   WsProjectsReadFileRpc,
+  WsProjectsReadConfigRpc,
   WsProjectsSearchContentsRpc,
   WsProjectsSearchEntriesRpc,
   WsProjectsEnsureScratchRpc,

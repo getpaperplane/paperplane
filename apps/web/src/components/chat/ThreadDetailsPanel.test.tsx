@@ -6,13 +6,13 @@ import { PopoverCreateHandle } from "../ui/popover";
 import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 const testState = vi.hoisted(() => ({
-  useRoveProjectFileScripts: vi.fn(),
+  useRoveProjectFileState: vi.fn(),
   projectScriptsControl: vi.fn(),
 }));
 
 vi.mock("../../hooks/useRoveProjectFileScripts", () => ({
-  useRoveProjectFileScripts: (...args: ReadonlyArray<unknown>) =>
-    testState.useRoveProjectFileScripts(...args),
+  useRoveProjectFileState: (...args: ReadonlyArray<unknown>) =>
+    testState.useRoveProjectFileState(...args),
 }));
 vi.mock("../BranchToolbar", () => ({
   BranchToolbar: () => null,
@@ -38,11 +38,11 @@ import { ThreadDetailsPanel, type ThreadDetailsPanelProps } from "./ThreadDetail
 
 describe("ThreadDetailsPanel", () => {
   beforeEach(() => {
-    testState.useRoveProjectFileScripts.mockReset();
+    testState.useRoveProjectFileState.mockReset();
     testState.projectScriptsControl.mockReset();
   });
 
-  it("passes checked-in rove.json scripts to the project scripts control", () => {
+  it("passes checked-in paperplane.json scripts to the project scripts control", () => {
     const environmentId = "environment:thread-details" as EnvironmentId;
     const gitCwd = "/tmp/thread-details-project";
     const fileScripts = [
@@ -52,7 +52,7 @@ describe("ThreadDetailsPanel", () => {
         icon: "test",
       },
     ] satisfies ReadonlyArray<RoveProjectFileScript>;
-    testState.useRoveProjectFileScripts.mockReturnValue(fileScripts);
+    testState.useRoveProjectFileState.mockReturnValue({ scripts: fileScripts, notice: null });
 
     const props: ThreadDetailsPanelProps = {
       anchor: { current: null },
@@ -90,7 +90,7 @@ describe("ThreadDetailsPanel", () => {
 
     renderToStaticMarkup(<ThreadDetailsPanel {...props} />);
 
-    expect(testState.useRoveProjectFileScripts).toHaveBeenCalledWith(environmentId, gitCwd);
+    expect(testState.useRoveProjectFileState).toHaveBeenCalledWith(environmentId, gitCwd);
     expect(testState.projectScriptsControl).toHaveBeenCalledWith(
       expect.objectContaining({
         displayMode: "panel",
@@ -101,7 +101,7 @@ describe("ThreadDetailsPanel", () => {
   });
 
   it("skips re-rendering for unchanged props and updates when thread metadata changes", () => {
-    testState.useRoveProjectFileScripts.mockReturnValue([]);
+    testState.useRoveProjectFileState.mockReturnValue({ scripts: [], notice: null });
     const props: ThreadDetailsPanelProps = {
       anchor: { current: null },
       handle: PopoverCreateHandle(),

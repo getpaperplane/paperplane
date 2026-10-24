@@ -120,10 +120,10 @@ depending on the project crumb.
 The Project category, shown while a project is selected, holds the project's name, icon, actions,
 checkouts and removal. Actions belong to a project: editing them creates the project's own list
 on each selected environment, and reset returns to the environment's shared list. A project's
-`rove.json` actions can be imported there.
+`paperplane.json` actions can be imported there.
 
-Settings a repository can also declare in `rove.json`, such as the workspace for new threads,
-resolve in one order: a project override, then the environment setting, then `rove.json`, then the
+Settings a repository can also declare in `paperplane.json`, such as the workspace for new threads,
+resolve in one order: a project override, then the environment setting, then `paperplane.json`, then the
 built-in default. Leave a setting on **Inherit** to let the next tier decide.
 Browser access changes apply when an agent session next starts.
 
@@ -131,8 +131,20 @@ New worktrees initialize git submodules recursively. If that step is slow becaus
 declares many nested submodules, set **Submodules** in **Settings → General** (with the project
 selected to override it there) to **Top level only** to stop at the ones the repository declares
 itself, or **Skip** to leave them for a setup script. It resolves in the same order as the
-workspace default: a `"worktreeSubmodules"` value in the `rove.json` of the branch being checked out
+workspace default: a `"worktreeSubmodules"` value in the `paperplane.json` of the branch being checked out
 applies when the project and environment are both on **Inherit**.
+
+## Checked-in project configuration
+
+Put shared project settings and scripts in `paperplane.json` at the repository root. For editor
+validation, set `"$schema": "https://paperplane.hafiezulzikry.com/schema/paperplane.json"`.
+Scripts in the file can be imported from the project's Actions settings or the thread's project
+actions menu.
+
+If your repository still has `rove.json`, rename it to `paperplane.json` and update its `$schema`
+URL. Paperplane does not read `rove.json`: its scripts, settings, and icon do not apply. When only
+that old file exists, the app shows a rename notice. If both files exist, only `paperplane.json`
+is used.
 
 ## Review worktree storage
 

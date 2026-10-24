@@ -10,7 +10,7 @@ const decode = Schema.decodeUnknownSync(RoveProjectFile as never) as (
 describe("RoveProjectFile", () => {
   it("decodes a full project file", () => {
     const decoded = decode({
-      $schema: "https://rove.hafiezulzikry.com/schema/rove.json",
+      $schema: "https://paperplane.hafiezulzikry.com/schema/paperplane.json",
       iconPath: "assets/logo.svg",
       scripts: [
         {

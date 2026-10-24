@@ -1,12 +1,12 @@
 import * as Exit from "effect/Exit";
 import * as Schema from "effect/Schema";
 
-import { RoveProjectFile, ROVE_PROJECT_FILE_SCHEMA_URL } from "@getpaperplane/contracts";
+import { RoveProjectFile, PAPERPLANE_PROJECT_FILE_SCHEMA_URL } from "@getpaperplane/contracts";
 
 import { fromLenientJson } from "./schemaJson.ts";
 
 /**
- * Codec between the raw `rove.json` file contents (lenient JSONC string) and the
+ * Codec between the raw `paperplane.json` file contents (lenient JSONC string) and the
  * decoded {@link RoveProjectFile}.
  */
 export const RoveProjectFileFromJson = fromLenientJson(RoveProjectFile);
@@ -14,9 +14,8 @@ export const RoveProjectFileFromJson = fromLenientJson(RoveProjectFile);
 const decodeRoveProjectFile = Schema.decodeExit(RoveProjectFileFromJson);
 
 /**
- * Decode raw `rove.json` contents, treating invalid or malformed files as
- * absent. Clients use this to read optional defaults (scripts, thread env
- * mode) without surfacing decode errors to the user.
+ * Decode raw `paperplane.json` contents, treating invalid or malformed files as
+ * absent. Used when resolving the configuration of a newly checked-out worktree.
  */
 export function parseRoveProjectFile(contents: string): RoveProjectFile | null {
   const decoded = decodeRoveProjectFile(contents);
@@ -24,18 +23,18 @@ export function parseRoveProjectFile(contents: string): RoveProjectFile | null {
 }
 
 /**
- * Build the publishable JSON Schema document for `rove.json` (draft 2020-12).
+ * Build the publishable JSON Schema document for `paperplane.json` (draft 2020-12).
  *
- * Served from the marketing site at {@link ROVE_PROJECT_FILE_SCHEMA_URL} so
+ * Served from the marketing site at {@link PAPERPLANE_PROJECT_FILE_SCHEMA_URL} so
  * editors get LSP support via a `$schema` reference.
  */
 export function buildRoveProjectFileJsonSchema(): Record<string, unknown> {
   // Closed objects, as before effect rc.113 changed the generator default;
-  // editors then flag unknown keys in rove.json.
+  // editors then flag unknown keys in paperplane.json.
   const document = Schema.toJsonSchemaDocument(RoveProjectFile, { onExcessProperty: "error" });
   const jsonSchema: Record<string, unknown> = {
     $schema: "https://json-schema.org/draft/2020-12/schema",
-    $id: ROVE_PROJECT_FILE_SCHEMA_URL,
+    $id: PAPERPLANE_PROJECT_FILE_SCHEMA_URL,
     ...document.schema,
   };
   if (document.definitions && Object.keys(document.definitions).length > 0) {

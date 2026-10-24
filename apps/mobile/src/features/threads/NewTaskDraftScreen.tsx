@@ -1449,6 +1449,11 @@ export function NewTaskDraftScreen(props: {
   };
   const promptEditor = (
     <>
+      {flow.projectConfigNotice ? (
+        <Text accessibilityRole="alert" className="px-4 py-2 text-sm text-warning-foreground">
+          {flow.projectConfigNotice}
+        </Text>
+      ) : null}
       <ComposerEditor
         draftKey={flow.draftKey}
         environmentId={selectedProject.environmentId}

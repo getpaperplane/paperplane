@@ -159,7 +159,7 @@ const resources = {
   "/robots.txt": ["text/plain"],
   "/sitemap.xml": ["application/xml"],
   "/openapi.json": ["application/json"],
-  "/schema/rove.json": ["application/schema+json", "application/json"],
+  "/schema/paperplane.json": ["application/schema+json", "application/json"],
 };
 
 // Other URLs stay asset-first: existing bundles are free static requests, while

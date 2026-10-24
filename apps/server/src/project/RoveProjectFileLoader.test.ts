@@ -23,12 +23,74 @@ const makeTempDir = Effect.gen(function* () {
 const writeProjectFile = Effect.fn("writeProjectFile")(function* (cwd: string, contents: string) {
   const fileSystem = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  yield* fileSystem.writeFileString(path.join(cwd, "rove.json"), contents).pipe(Effect.orDie);
+  yield* fileSystem.writeFileString(path.join(cwd, "paperplane.json"), contents).pipe(Effect.orDie);
 });
 
 it.layer(layerTest)("RoveProjectFileLoader", (it) => {
+  describe("loadState", () => {
+    it.effect("reports a missing configuration", () =>
+      Effect.gen(function* () {
+        const loader = yield* RoveProjectFileLoader.RoveProjectFileLoader;
+        const cwd = yield* makeTempDir;
+        expect(yield* loader.loadState(cwd)).toEqual({ status: "missing" });
+      }),
+    );
+
+    it.effect("detects only the legacy filename without reading or decoding it", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const cwd = yield* makeTempDir;
+        // A directory cannot be read as JSON: detection must be existence-only.
+        yield* fs.makeDirectory(path.join(cwd, "rove.json"));
+        const loader = yield* RoveProjectFileLoader.RoveProjectFileLoader;
+        expect(yield* loader.loadState(cwd)).toEqual({ status: "legacy-only" });
+        expect(Option.isNone(yield* loader.load(cwd))).toBe(true);
+      }),
+    );
+
+    it.effect("ignores legacy scripts and settings until the file is renamed", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const loader = yield* RoveProjectFileLoader.RoveProjectFileLoader;
+        const cwd = yield* makeTempDir;
+        const file = {
+          defaultThreadEnvMode: "worktree",
+          scripts: [{ name: "Setup", command: "vp i" }],
+        };
+        yield* fs.writeFileString(path.join(cwd, "rove.json"), JSON.stringify(file));
+        expect(yield* loader.loadState(cwd)).toEqual({ status: "legacy-only" });
+        expect(Option.isNone(yield* loader.load(cwd))).toBe(true);
+        yield* fs.rename(path.join(cwd, "rove.json"), path.join(cwd, "paperplane.json"));
+        expect(yield* loader.loadState(cwd)).toEqual({ status: "valid", file });
+      }),
+    );
+
+    it.effect("prefers the new file even when invalid and never falls back to legacy", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const loader = yield* RoveProjectFileLoader.RoveProjectFileLoader;
+        const cwd = yield* makeTempDir;
+        yield* fs.writeFileString(
+          path.join(cwd, "rove.json"),
+          '{"defaultThreadEnvMode":"worktree"}',
+        );
+        yield* writeProjectFile(cwd, "{ broken");
+        expect(yield* loader.loadState(cwd)).toEqual({ status: "invalid" });
+        expect(Option.isNone(yield* loader.load(cwd))).toBe(true);
+        yield* writeProjectFile(cwd, '{"defaultThreadEnvMode":"local"}');
+        expect(yield* loader.loadState(cwd)).toEqual({
+          status: "valid",
+          file: { defaultThreadEnvMode: "local" },
+        });
+      }),
+    );
+  });
+
   describe("load", () => {
-    it.effect("loads and decodes a valid rove.json", () =>
+    it.effect("loads and decodes a valid paperplane.json", () =>
       Effect.gen(function* () {
         const loader = yield* RoveProjectFileLoader.RoveProjectFileLoader;
         const cwd = yield* makeTempDir;
@@ -51,7 +113,7 @@ it.layer(layerTest)("RoveProjectFileLoader", (it) => {
       }),
     );
 
-    it.effect("returns none when rove.json is missing", () =>
+    it.effect("returns none when paperplane.json is missing", () =>
       Effect.gen(function* () {
         const loader = yield* RoveProjectFileLoader.RoveProjectFileLoader;
         const cwd = yield* makeTempDir;

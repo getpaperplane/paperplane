@@ -516,7 +516,7 @@ export const SETTINGS_SEARCH_ITEMS = [
     title: "Submodules",
     to: "/settings/general",
     scope: "project-defaults",
-    searchTerms: ["git submodule init recursive top-level none worktree rove.json"],
+    searchTerms: ["git submodule init recursive top-level none worktree paperplane.json"],
   },
   {
     id: "start-from-origin",
@@ -983,7 +983,7 @@ export const SETTINGS_SEARCH_ITEMS = [
     id: "project-actions",
     title: "Actions",
     to: "/settings/projects",
-    searchTerms: ["commands scripts setup run dev server checkout worktree rove.json import"],
+    searchTerms: ["commands scripts setup run dev server checkout worktree paperplane.json import"],
   },
   {
     id: "environment-icon",

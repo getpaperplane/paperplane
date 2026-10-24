@@ -24,7 +24,7 @@ import { isProjectScopedSettingKey } from "./scopedSettings";
 import { settingsScopeEnvironmentLabels } from "./settingsScopeAxis";
 
 interface InheritanceLayer {
-  readonly key: "project" | "environment" | "rove.json" | "built-in";
+  readonly key: "project" | "environment" | "paperplane.json" | "built-in";
   readonly label: string;
   readonly value: string;
   readonly effective: boolean;
@@ -93,7 +93,7 @@ function formatValue(key: keyof ServerSettings, value: unknown): string {
 /**
  * The layers a setting resolves through for one target, top-down: the
  * project override when the target is a project, the environment's value,
- * the checkout's rove.json for file-backed keys, and the built-in default. The
+ * the checkout's paperplane.json for file-backed keys, and the built-in default. The
  * first layer that is set wins. Same order as `resolveProjectSettings`.
  */
 export function settingInheritanceLayers(
@@ -124,11 +124,11 @@ export function settingInheritanceLayers(
   });
   if (fileBacked && target.projectId !== null) {
     layers.push({
-      key: "rove.json",
-      label: "rove.json",
-      value: source === "rove.json" ? formatValue(key, target.settings[key]) : "Inherits",
-      effective: source === "rove.json",
-      set: source === "rove.json",
+      key: "paperplane.json",
+      label: "paperplane.json",
+      value: source === "paperplane.json" ? formatValue(key, target.settings[key]) : "Inherits",
+      effective: source === "paperplane.json",
+      set: source === "paperplane.json",
     });
   }
   // For a file-backed key the built-in is what the resolver produced with

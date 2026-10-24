@@ -443,6 +443,7 @@ const layerWorkspaceFileSystem = WorkspaceFileSystem.layer.pipe(
 
 const layerWorkspace = Layer.mergeAll(
   WorkspacePaths.layer,
+  RoveProjectFileLoader.layer,
   layerWorkspaceEntries,
   layerWorkspaceFileSystem,
 );
