@@ -2,9 +2,9 @@ import { assert, describe } from "@effect/vitest";
 
 import { createOxlintRuleHarness } from "../test/utils.ts";
 
-const rule = createOxlintRuleHarness("rove/no-inline-schema-compile");
+const rule = createOxlintRuleHarness("paperplane/no-inline-schema-compile");
 
-describe("rove/no-inline-schema-compile", () => {
+describe("paperplane/no-inline-schema-compile", () => {
   rule.valid(
     "allows schema compilers hoisted to module scope",
     `

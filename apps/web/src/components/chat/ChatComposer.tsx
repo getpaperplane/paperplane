@@ -1,4 +1,4 @@
-import { formatProviderSkillDisplayName } from "@rove-code/shared/inlineSkills";
+import { formatProviderSkillDisplayName } from "@getpaperplane/shared/inlineSkills";
 import { useComposerTypingGuard } from "./useComposerTypingGuard";
 import { DESKTOP_PASTE_AS_TEXT_EVENT } from "../../lib/desktopPasteAsText";
 import { runtimeModeConfig, runtimeModeOptions as runtimeModes } from "./runtimeModeConfig";
@@ -10,7 +10,7 @@ import { Dialog, DialogPopup, DialogTitle } from "../ui/dialog";
 import {
   composerPullRequestsFromLinks,
   filterComposerPullRequestMatches,
-} from "@rove-code/shared/composerPullRequestMatches";
+} from "@getpaperplane/shared/composerPullRequestMatches";
 import { importPastedComposerText, readPastedComposerContext } from "../composerInlineTokenPaste";
 import { elementContextToPreviewAnnotation } from "../../lib/elementContext";
 import { RefreshIcon } from "~/components/ui/refresh-icon";
@@ -41,7 +41,7 @@ import type {
   ServerProvider,
   ThreadId,
   SnapShotSource,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   EnvironmentRequestInvalidError,
   AuthOrchestrationOperateScope,
@@ -51,20 +51,20 @@ import {
   PROVIDER_SEND_TURN_MAX_IMAGE_BYTES,
   PROVIDER_SEND_TURN_MAX_INPUT_CHARS,
   PROVIDER_WORKSPACE_SNAPSHOT_TTL_MS,
-} from "@rove-code/contracts";
-import type { EnvironmentConnectionPresentation } from "@rove-code/client-runtime/connection";
-import { squashAtomCommandFailure } from "@rove-code/client-runtime/state/runtime";
+} from "@getpaperplane/contracts";
+import type { EnvironmentConnectionPresentation } from "@getpaperplane/client-runtime/connection";
+import { squashAtomCommandFailure } from "@getpaperplane/client-runtime/state/runtime";
 import * as Schema from "effect/Schema";
 import {
   isPasteAsTextShortcut,
   nextPastedTextFileName,
   pastedTextDisposition,
   wouldTextPasteExceedLimit,
-} from "@rove-code/client-runtime/text-paste";
-import { serializeComposerFileLink } from "@rove-code/shared/composerTrigger";
+} from "@getpaperplane/client-runtime/text-paste";
+import { serializeComposerFileLink } from "@getpaperplane/shared/composerTrigger";
 import { folderDropTarget, resolveDroppedFolderPath } from "./folderDrop";
-import { createModelSelection, normalizeModelSlug } from "@rove-code/shared/model";
-import { USAGE_LIMITS_COMMAND } from "@rove-code/shared/usageLimits";
+import { createModelSelection, normalizeModelSlug } from "@getpaperplane/shared/model";
+import { USAGE_LIMITS_COMMAND } from "@getpaperplane/shared/usageLimits";
 import {
   memo,
   type ComponentProps,
@@ -166,7 +166,7 @@ import { compressImageForStash, prepareImageForAttachment } from "../../lib/imag
 import {
   fileAttachmentTooLargeMessage,
   formatAttachmentSize,
-} from "@rove-code/client-runtime/state/attachments";
+} from "@getpaperplane/client-runtime/state/attachments";
 import {
   attachmentsToReleaseOnUploadCapabilityLoss,
   composerOtherFilesForPresentation,
@@ -203,7 +203,7 @@ import { useComposerPathSearch } from "../../lib/composerPathSearchState";
 import {
   replaceComposerContextReferences,
   toKindScopedComposerContextId,
-} from "@rove-code/shared/composerContextReferences";
+} from "@getpaperplane/shared/composerContextReferences";
 import {
   getRestingComposerImagePreviewCounts,
   resolveRestingComposerControlsLayout,
@@ -253,16 +253,16 @@ import {
   threadContextRecord,
   threadContextReference,
 } from "~/lib/composerContextRecords";
-import { matchComposerThreadItems } from "@rove-code/client-runtime/composerThreadItems";
+import { matchComposerThreadItems } from "@getpaperplane/client-runtime/composerThreadItems";
 import { useThreadContextDrop, threadContextDropTargetProps } from "./threadContextDrag";
 import { readThreadShell, useThreadShells } from "~/state/entities";
 import { requestConfirmDialog } from "~/confirmDialog";
-import { encodeComposerContextFragment } from "@rove-code/shared/composerContextClipboard";
+import { encodeComposerContextFragment } from "@getpaperplane/shared/composerContextClipboard";
 import type {
   ComposerContextClipboardFragment,
   ComposerContextRecord,
   ThreadPullRequestLink,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { resolveAssetUrl } from "~/assets/assetUrls";
 import { assetEnvironment } from "~/state/assets";
 import { readPreparedConnection } from "~/state/session";
@@ -1112,7 +1112,7 @@ import {
   ShieldIcon,
   XIcon,
 } from "lucide-react";
-import { proposedPlanTitle } from "@rove-code/shared/proposedPlanText";
+import { proposedPlanTitle } from "@getpaperplane/shared/proposedPlanText";
 import { hasProviderSetup } from "./ProviderStatusBanner";
 import {
   isComposerDictationOffered,
@@ -1127,7 +1127,7 @@ import {
   type ProviderInstanceEntry,
 } from "../../providerInstances";
 import { type AppModelOption, getAppModelOptionsForInstance } from "../../modelSelection";
-import type { UnifiedSettings } from "@rove-code/contracts/settings";
+import type { UnifiedSettings } from "@getpaperplane/contracts/settings";
 import {
   isVideoAttachment,
   type ChatMessage,
@@ -1150,7 +1150,7 @@ import type {
 import {
   resolveComposerDispatchMode,
   type ComposerDispatchMode,
-} from "@rove-code/client-runtime/state/composer-dispatch";
+} from "@getpaperplane/client-runtime/state/composer-dispatch";
 import type { ContextWindowSnapshot } from "../../lib/contextWindow";
 import {
   getProviderSlashCommandsForSlashMenu,
@@ -1159,7 +1159,7 @@ import {
   hasCurrentProviderWorkspaceSnapshot,
   resolveProviderSkillsForCwd,
   resolveProviderSlashCommandsForCwd,
-} from "@rove-code/client-runtime/providerSkills";
+} from "@getpaperplane/client-runtime/providerSkills";
 import { searchProviderSkills } from "../../providerSkillSearch";
 import { useDelayedStatus } from "../../hooks/useDelayedStatus";
 import { useMediaQuery } from "../../hooks/useMediaQuery";

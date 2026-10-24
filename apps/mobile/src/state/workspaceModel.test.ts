@@ -1,9 +1,9 @@
-import type { EnvironmentShellSummary } from "@rove-code/client-runtime/state/shell";
+import type { EnvironmentShellSummary } from "@getpaperplane/client-runtime/state/shell";
 import {
   BearerConnectionProfile,
   BearerConnectionTarget,
-} from "@rove-code/client-runtime/connection";
-import { EnvironmentId } from "@rove-code/contracts";
+} from "@getpaperplane/client-runtime/connection";
+import { EnvironmentId } from "@getpaperplane/contracts";
 import { describe, expect, it } from "@effect/vitest";
 import * as Option from "effect/Option";
 

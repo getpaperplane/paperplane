@@ -1,10 +1,10 @@
 import * as Dialog from "../../components/ui/Dialog";
 import type { ComposerTextPaste } from "../../native/RoveComposerEditor.types";
 import { useAppearancePreferences } from "../settings/appearance/AppearancePreferencesProvider";
-import type { EnvironmentThreadShell } from "@rove-code/client-runtime/state/shell";
+import type { EnvironmentThreadShell } from "@getpaperplane/client-runtime/state/shell";
 import { useAtomValue } from "@effect/atom-react";
-import { clampFileAttachmentUploadBytes } from "@rove-code/client-runtime/state/attachments";
-import { pastedTextDisposition, replaceTextSelection } from "@rove-code/client-runtime/text-paste";
+import { clampFileAttachmentUploadBytes } from "@getpaperplane/client-runtime/state/attachments";
+import { pastedTextDisposition, replaceTextSelection } from "@getpaperplane/client-runtime/text-paste";
 import {
   PROVIDER_SEND_TURN_MAX_ATTACHMENTS,
   PROVIDER_SEND_TURN_MAX_INPUT_CHARS,
@@ -16,12 +16,12 @@ import {
   type RuntimeMode,
   type ServerConfig as RoveServerConfig,
   type UsageLimitsReport,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   collectProviderUsageLimits,
   hasProviderUsageLimits,
   isUsageLimitsCommand,
-} from "@rove-code/shared/usageLimits";
+} from "@getpaperplane/shared/usageLimits";
 import { StackActions, useFocusEffect, useNavigation } from "@react-navigation/native";
 import type { ReactNode } from "react";
 import {
@@ -66,7 +66,7 @@ import {
 import { appAtomRegistry } from "../../state/atom-registry";
 import type { ComposerDocumentAttachment } from "../../lib/composerContext";
 import { useProject, useThreadShells } from "../../state/entities";
-import { scopeProjectRef } from "@rove-code/client-runtime/environment";
+import { scopeProjectRef } from "@getpaperplane/client-runtime/environment";
 
 import { AppText as Text } from "../../components/ui/AppText";
 import { ComposerAttachmentButton } from "./ComposerAttachmentButton";
@@ -99,7 +99,7 @@ import { useScaledTextRole } from "../settings/appearance/useScaledTextRole";
 import type { RemoteClientConnectionState } from "../../lib/connection";
 import { resolveProviderOptionDescriptors } from "../../lib/providerOptions";
 import { Menu } from "../../components/ui/Menu";
-import type { ActiveTurnComposerAction } from "@rove-code/client-runtime/state/composer-dispatch";
+import type { ActiveTurnComposerAction } from "@getpaperplane/client-runtime/state/composer-dispatch";
 import type { FollowUpBehavior } from "../../lib/followUpBehavior";
 import {
   resolveComposerSendPresentation,

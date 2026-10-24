@@ -1,4 +1,4 @@
-import { ProjectId, type PullRequestStack, type ThreadPullRequestLink } from "@rove-code/contracts";
+import { ProjectId, type PullRequestStack, type ThreadPullRequestLink } from "@getpaperplane/contracts";
 import { describe, expect, it } from "vite-plus/test";
 import {
   pullRequestStackMerge,

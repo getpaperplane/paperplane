@@ -1,5 +1,5 @@
 import { Spinner } from "~/components/ui/spinner";
-import { AuthFilesystemReadScope, type ProjectContentMatch } from "@rove-code/contracts";
+import { AuthFilesystemReadScope, type ProjectContentMatch } from "@getpaperplane/contracts";
 
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 

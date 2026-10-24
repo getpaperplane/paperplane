@@ -8,7 +8,7 @@ import {
   ProviderInstanceId,
   type ProviderReplayTranscript,
   ThreadId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
@@ -18,7 +18,7 @@ import { ChildProcess, ChildProcessSpawner } from "effect/process";
 
 import { ClaudeOrchestratorReplayHarness } from "../Adapters/ClaudeAdapterV2.testkit.ts";
 import { CodexOrchestratorReplayHarness } from "../Adapters/CodexAdapterV2.testkit.ts";
-import * as IdAllocator from "@rove-code/provider-core/server/IdAllocator";
+import * as IdAllocator from "@getpaperplane/provider-core/server/IdAllocator";
 import { provideDeterministicTestRuntime } from "./DeterministicRuntime.ts";
 import {
   THREAD_FORK_NATIVE_PRIOR_TURN_ALPHA_PROMPT,
@@ -31,7 +31,7 @@ import { runOrchestratorV2ProviderReplayScenario } from "./ProviderReplayHarness
 import {
   decodeProviderReplayNdjson,
   materializeReplayTranscriptWorkspace,
-} from "@rove-code/provider-testing/replayTranscript";
+} from "@getpaperplane/provider-testing/replayTranscript";
 
 const CODEX_MODEL_SELECTION = {
   instanceId: ProviderInstanceId.make("codex"),

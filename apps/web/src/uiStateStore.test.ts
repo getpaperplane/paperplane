@@ -1,4 +1,4 @@
-import { ProjectId, ThreadId } from "@rove-code/contracts";
+import { ProjectId, ThreadId } from "@getpaperplane/contracts";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 import { testDouble } from "~/testDouble";
 

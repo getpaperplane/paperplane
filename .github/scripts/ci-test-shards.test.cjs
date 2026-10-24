@@ -25,7 +25,7 @@ test("full workspace covers every test package exactly once, excluding dedicated
 });
 
 test("selected packages are rebalanced, with no unaffected packages", () => {
-  const selected = "@rove-code/shared @rove-code/client-runtime rove-relay @rove-code/provider-pi";
+  const selected = "@getpaperplane/shared @getpaperplane/client-runtime rove-relay @getpaperplane/provider-pi";
   const shards = assignShards(readWorkspace(), selected);
   assert.deepEqual(names(shards), selected.split(" ").sort());
   assert.deepEqual(
@@ -41,9 +41,9 @@ test("unknown new workspace packages get a default weight and no-test packages a
 });
 
 test("few selected packages leave explicit empty shards; whitespace and duplicates are harmless", () => {
-  const shards = assignShards(readWorkspace(), "  @rove-code/shared\n@rove-code/shared  ");
+  const shards = assignShards(readWorkspace(), "  @getpaperplane/shared\n@getpaperplane/shared  ");
   assert.deepEqual(shards, [
-    { packages: ["@rove-code/shared"], weight: 84 },
+    { packages: ["@getpaperplane/shared"], weight: 84 },
     { packages: [], weight: 0 },
     { packages: [], weight: 0 },
   ]);
@@ -51,7 +51,7 @@ test("few selected packages leave explicit empty shards; whitespace and duplicat
 
 test("invalid selections and shard counts fail instead of silently skipping tests", () => {
   assert.throws(() => assignShards([], "missing"), /Unknown test package/);
-  assert.throws(() => assignShards(readWorkspace(), "@rove-code/server"), /Unknown test package/);
+  assert.throws(() => assignShards(readWorkspace(), "@getpaperplane/server"), /Unknown test package/);
   for (const count of [0, -1, 1.5, NaN]) {
     assert.throws(() => assignShards([], "", count), /Invalid shard count/);
   }
@@ -61,11 +61,11 @@ test("CLI emits safe empty-shard outputs, and marks desktop prerequisites", () =
   const script = path.join(__dirname, "ci-test-shards.cjs");
   const run = (index) =>
     spawnSync(process.execPath, [script, String(index), "3"], {
-      env: { ...process.env, TEST_PACKAGES: "@rove-code/desktop" },
+      env: { ...process.env, TEST_PACKAGES: "@getpaperplane/desktop" },
       encoding: "utf8",
     });
   assert.equal(run(1).status, 0);
-  assert.equal(run(1).stdout, "packages=@rove-code/desktop\nhas_packages=true\ndesktop=true\n");
+  assert.equal(run(1).stdout, "packages=@getpaperplane/desktop\nhas_packages=true\ndesktop=true\n");
   assert.equal(run(2).stdout, "packages=\nhas_packages=false\ndesktop=false\n");
   assert.notEqual(run(0).status, 0);
 });

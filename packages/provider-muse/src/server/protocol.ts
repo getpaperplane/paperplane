@@ -1,4 +1,4 @@
-import type { ProviderApprovalDecision } from "@rove-code/contracts";
+import type { ProviderApprovalDecision } from "@getpaperplane/contracts";
 import * as Schema from "effect/Schema";
 
 const NonEmptyString = Schema.String.check(Schema.isMinLength(1));

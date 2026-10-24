@@ -1,4 +1,4 @@
-import type { DesktopSnapShotState } from "@rove-code/contracts";
+import type { DesktopSnapShotState } from "@getpaperplane/contracts";
 
 export type CaptureSetupStep = "access" | "shortcut";
 

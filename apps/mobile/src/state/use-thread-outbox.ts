@@ -1,6 +1,6 @@
 import { useAtomValue } from "@effect/atom-react";
-import type { EnvironmentShellStatus } from "@rove-code/client-runtime/state/shell";
-import type { EnvironmentId, MessageId } from "@rove-code/contracts";
+import type { EnvironmentShellStatus } from "@getpaperplane/client-runtime/state/shell";
+import type { EnvironmentId, MessageId } from "@getpaperplane/contracts";
 import { Atom } from "effect/reactivity";
 
 import { appAtomRegistry } from "./atom-registry";

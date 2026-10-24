@@ -1,4 +1,4 @@
-import type { SnapShotShortcut } from "@rove-code/contracts";
+import type { SnapShotShortcut } from "@getpaperplane/contracts";
 import { snapShotShortcutKeyLabels } from "../../lib/snapShotShortcut";
 import { Kbd, KbdGroup } from "../ui/kbd";
 

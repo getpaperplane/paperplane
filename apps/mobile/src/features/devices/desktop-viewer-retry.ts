@@ -1,4 +1,4 @@
-import { ComputerDesktopViewerError } from "@rove-code/contracts";
+import { ComputerDesktopViewerError } from "@getpaperplane/contracts";
 import * as Cause from "effect/Cause";
 
 /**

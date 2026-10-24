@@ -3,8 +3,8 @@ import * as NodePath from "node:path";
 
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { it } from "@effect/vitest";
-import { CheckpointRef, ThreadId, type VcsError } from "@rove-code/contracts";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+import { CheckpointRef, ThreadId, type VcsError } from "@getpaperplane/contracts";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";

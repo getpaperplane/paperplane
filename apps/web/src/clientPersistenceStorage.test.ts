@@ -1,4 +1,4 @@
-import { DEFAULT_CLIENT_SETTINGS } from "@rove-code/contracts";
+import { DEFAULT_CLIENT_SETTINGS } from "@getpaperplane/contracts";
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 
 function createLocalStorageStub(): Storage {

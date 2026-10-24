@@ -1,16 +1,16 @@
 import { useEffect, useRef, type RefObject } from "react";
-import type { PhoneViewer } from "@rove-code/client-runtime/device/phone-viewer";
+import type { PhoneViewer } from "@getpaperplane/client-runtime/device/phone-viewer";
 import type {
   DeviceAccessorySource,
   DeviceModelSource,
-} from "@rove-code/client-runtime/device/model";
-import type { DeviceShapeProfile } from "@rove-code/client-runtime/device/shape-profile";
-import { createPhoneInteraction } from "@rove-code/client-runtime/device/phone-interaction";
-import type { DeviceScreenSize, DeviceStreamClient } from "@rove-code/client-runtime/device/stream";
+} from "@getpaperplane/client-runtime/device/model";
+import type { DeviceShapeProfile } from "@getpaperplane/client-runtime/device/shape-profile";
+import { createPhoneInteraction } from "@getpaperplane/client-runtime/device/phone-interaction";
+import type { DeviceScreenSize, DeviceStreamClient } from "@getpaperplane/client-runtime/device/stream";
 import { bindPhoneTrackpad } from "./phoneTrackpad";
 import { observeResize } from "../../lib/observeResize";
 
-const loadPhoneViewer = () => import("@rove-code/client-runtime/device/phone-viewer");
+const loadPhoneViewer = () => import("@getpaperplane/client-runtime/device/phone-viewer");
 
 /** Web shell for the framework-independent viewer. The decoded screen and input connection remain owned by DeviceStreamView. */
 export function DevicePhoneViewport(props: {

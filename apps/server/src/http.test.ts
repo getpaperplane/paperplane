@@ -21,8 +21,8 @@ import {
   injectMcpAppCookieBootstrap,
   injectMcpAppThemeBootstrap,
   MCP_APP_MAX_HTML_BYTES,
-} from "@rove-code/shared/mcpApp";
-import { ORCHESTRATION_PROTOCOL_HEADER } from "@rove-code/contracts";
+} from "@getpaperplane/shared/mcpApp";
+import { ORCHESTRATION_PROTOCOL_HEADER } from "@getpaperplane/contracts";
 
 import * as ServerConfig from "./config.ts";
 

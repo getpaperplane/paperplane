@@ -5,16 +5,16 @@ import {
   ManagedRelay,
   managedRelaySessionAtom,
   readManagedRelaySnapshotState,
-} from "@rove-code/client-runtime/relay";
+} from "@getpaperplane/client-runtime/relay";
 import {
   createAtomCommandScheduler,
   createRuntimeCommand,
-} from "@rove-code/client-runtime/state/runtime";
+} from "@getpaperplane/client-runtime/state/runtime";
 import type {
   RelayClientDeviceRecord,
   RelayClientEnvironmentRecord,
-} from "@rove-code/contracts/relay";
-import type { EnvironmentId } from "@rove-code/contracts";
+} from "@getpaperplane/contracts/relay";
+import type { EnvironmentId } from "@getpaperplane/contracts";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";

@@ -2,20 +2,20 @@ import type {
   StorageCleanupReport,
   StorageCleanupSettings,
   WorktreeCleanupRules,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   describeStorageCleanupCounts,
   hasEnabledCleanupRules,
   storageCleanupEntryName,
-} from "@rove-code/client-runtime/environment-admin";
-import { resolveWorktreeCleanup } from "@rove-code/shared/projectSettings";
+} from "@getpaperplane/client-runtime/environment-admin";
+import { resolveWorktreeCleanup } from "@getpaperplane/shared/projectSettings";
 import { useMemo, useRef, useState } from "react";
 import { useAtomValue } from "@effect/atom-react";
 import { Atom } from "effect/reactivity";
 import {
   isAtomCommandInterrupted,
   squashAtomCommandFailure,
-} from "@rove-code/client-runtime/state/runtime";
+} from "@getpaperplane/client-runtime/state/runtime";
 import { formatBytes } from "../../lib/formatBytes";
 import { serverEnvironment } from "../../state/server";
 import { useAtomCommand } from "../../state/use-atom-command";

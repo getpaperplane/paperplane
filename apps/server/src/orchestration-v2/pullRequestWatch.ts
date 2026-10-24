@@ -4,7 +4,7 @@ import type {
   PullRequestComment,
   PullRequestDetail,
   ThreadPullRequestWatch,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 
 /**
  * Wakes in a row that bring only comments. Check, conflict, or push news resets the count, so

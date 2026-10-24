@@ -12,9 +12,9 @@ import type {
   UsageCostSource,
   UsageModelPriceOverride,
   UsageTokenTotals,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 
-import type { UsageRecord, UsageSpeed } from "@rove-code/provider-core/server/usage";
+import type { UsageRecord, UsageSpeed } from "@getpaperplane/provider-core/server/usage";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 

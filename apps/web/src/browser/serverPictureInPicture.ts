@@ -2,8 +2,8 @@ import {
   createPreviewFramePainter,
   createPreviewStreamClient,
   type PreviewStreamClient,
-} from "@rove-code/client-runtime/preview/server-browser-stream";
-import type { EnvironmentId } from "@rove-code/contracts";
+} from "@getpaperplane/client-runtime/preview/server-browser-stream";
+import type { EnvironmentId } from "@getpaperplane/contracts";
 import { useSyncExternalStore } from "react";
 
 import { readPreviewStreamAccess } from "~/state/previewStream";

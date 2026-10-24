@@ -1,5 +1,5 @@
 import { resolveTextScaleVariables } from "./appearancePreferences";
-import { BUILT_IN_THEME_IDS, type BuiltInThemeId } from "@rove-code/shared/themePalettes";
+import { BUILT_IN_THEME_IDS, type BuiltInThemeId } from "@getpaperplane/shared/themePalettes";
 import {
   DEFAULT_MOBILE_THEME_ID,
   type MobileThemeAppearance,

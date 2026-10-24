@@ -1,23 +1,23 @@
 import * as Dialog from "../../components/ui/Dialog";
 import { StackActions, useNavigation } from "@react-navigation/native";
-import { availableScratchWorkspaceRoot } from "@rove-code/client-runtime/operations/projects";
+import { availableScratchWorkspaceRoot } from "@getpaperplane/client-runtime/operations/projects";
 import {
   findPromptLinkProject,
   findPromptLinkPullRequestThread,
   resolvePromptLinkModelSelection,
-} from "@rove-code/client-runtime/prompt-links";
+} from "@getpaperplane/client-runtime/prompt-links";
 import {
   isAtomCommandInterrupted,
   squashAtomCommandFailure,
-} from "@rove-code/client-runtime/state/runtime";
-import type { EnvironmentProject } from "@rove-code/client-runtime/state/shell";
-import type { EnvironmentId } from "@rove-code/contracts";
+} from "@getpaperplane/client-runtime/state/runtime";
+import type { EnvironmentProject } from "@getpaperplane/client-runtime/state/shell";
+import type { EnvironmentId } from "@getpaperplane/contracts";
 import {
   parseNewThreadLink,
   type LinkedPrompt,
   type PromptLinkPullRequest,
   type PromptLinkRepository,
-} from "@rove-code/shared/promptLinks";
+} from "@getpaperplane/shared/promptLinks";
 import { useEffect, useEffectEvent, useRef } from "react";
 
 import { scopedThreadKey } from "../../lib/scopedEntities";

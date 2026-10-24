@@ -9,7 +9,7 @@ import type {
   PullRequestReviewPosition,
   PullRequestReviewThread,
   PullRequestThreadCommentsResult,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   ChevronDownIcon,
   ChevronRightIcon,

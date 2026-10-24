@@ -1,4 +1,4 @@
-import { EMPTY_V2_ITEM_SUPPORT } from "@rove-code/client-runtime/state/item-support";
+import { EMPTY_V2_ITEM_SUPPORT } from "@getpaperplane/client-runtime/state/item-support";
 import {
   CheckpointId,
   CheckpointScopeId,
@@ -10,7 +10,7 @@ import {
   TurnItemId,
   type OrchestrationV2ProjectedTurnItem,
   type OrchestrationV2TurnItem,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as DateTime from "effect/DateTime";
 import { describe, expect, it } from "vite-plus/test";
 

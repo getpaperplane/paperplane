@@ -4,9 +4,9 @@ import {
   threadRuntimeIsActive,
   type EnvironmentProject,
   type EnvironmentThreadShell,
-} from "@rove-code/client-runtime/state/shell";
-import type { AtomCommandResult } from "@rove-code/client-runtime/state/runtime";
-import { deriveThreadTitleSeed } from "@rove-code/client-runtime/operations";
+} from "@getpaperplane/client-runtime/state/shell";
+import type { AtomCommandResult } from "@getpaperplane/client-runtime/state/runtime";
+import { deriveThreadTitleSeed } from "@getpaperplane/client-runtime/operations";
 import {
   AuthOrchestrationOperateScope,
   CommandId,
@@ -14,8 +14,8 @@ import {
   DEFAULT_RUNTIME_MODE,
   PROVIDER_SEND_TURN_MAX_ATTACHMENTS,
   type MessageId,
-} from "@rove-code/contracts";
-import { buildTemporaryWorktreeBranchName } from "@rove-code/shared/git";
+} from "@getpaperplane/contracts";
+import { buildTemporaryWorktreeBranchName } from "@getpaperplane/shared/git";
 import * as Cause from "effect/Cause";
 import { AsyncResult } from "effect/reactivity";
 import { useCallback, useEffect, useRef, useState } from "react";

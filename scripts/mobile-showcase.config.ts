@@ -2,7 +2,7 @@ import {
   MOBILE_DEFAULT_THEME_ID,
   MOBILE_THEME_IDS,
   type MobileThemeId,
-} from "@rove-code/shared/themePalettes";
+} from "@getpaperplane/shared/themePalettes";
 
 import { SHOWCASE_SCENES, type ShowcaseScene } from "./mobile-showcase-environment.ts";
 

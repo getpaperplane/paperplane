@@ -3,7 +3,7 @@ import {
   ProviderInstanceId,
   type RepositoryIdentity,
   type ThreadPullRequestLink,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { describe, expect, it } from "vite-plus/test";
 
 import {

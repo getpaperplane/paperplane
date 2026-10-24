@@ -15,7 +15,7 @@ import {
   type UsageSourceFingerprint,
   type UsageSummary,
   type UsageTokenTotals,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 
 export interface EnvironmentUsage {
   readonly environmentId: EnvironmentId;

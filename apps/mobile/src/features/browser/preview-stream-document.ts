@@ -1,10 +1,10 @@
-import type { DeviceHubAccess } from "@rove-code/client-runtime/device/hub-access";
-import type { PreviewStreamHostSetup } from "@rove-code/contracts";
+import type { DeviceHubAccess } from "@getpaperplane/client-runtime/device/hub-access";
+import type { PreviewStreamHostSetup } from "@getpaperplane/contracts";
 import type {
   PreviewStreamControl,
   PreviewStreamDownload,
   PreviewStreamFileChooser,
-} from "@rove-code/client-runtime/preview/server-browser-stream";
+} from "@getpaperplane/client-runtime/preview/server-browser-stream";
 
 export interface PreviewStreamConfiguration {
   readonly access: DeviceHubAccess;

@@ -1,11 +1,11 @@
-import { SourceControlProviderKind } from "@rove-code/contracts";
+import { SourceControlProviderKind } from "@getpaperplane/contracts";
 /**
  * The GitHub driver: repository operations and discovery through `gh` and git, and pull requests
  * through the GitHub REST and GraphQL APIs.
  *
  * @module source-control-github/server/driver
  */
-import { defineSourceControlDriver } from "@rove-code/source-control-core/server/driver";
+import { defineSourceControlDriver } from "@getpaperplane/source-control-core/server/driver";
 import * as Effect from "effect/Effect";
 
 import * as GitHubPullRequestProvider from "./GitHubPullRequestProvider.ts";

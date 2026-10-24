@@ -1,9 +1,9 @@
 // @effect-diagnostics nodeBuiltinImport:off
 import * as NodePath from "node:path";
-import type { ServerProviderSlashCommand } from "@rove-code/contracts";
+import type { ServerProviderSlashCommand } from "@getpaperplane/contracts";
 
 import * as NodeOS from "node:os";
-import { expandHomePath } from "@rove-code/provider-core/server/pathExpansion";
+import { expandHomePath } from "@getpaperplane/provider-core/server/pathExpansion";
 import type { PiDiscoveryClient } from "./PiProvider.ts";
 
 /** Discover resources without running extensions or changing persisted project trust. */

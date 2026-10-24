@@ -8,9 +8,9 @@ import {
   DesktopAppActivationResponse,
   type DesktopAppActivationPlatform,
   type DesktopAppActivationRequest,
-} from "@rove-code/contracts";
-import { resolveDesktopAppControlAddress } from "@rove-code/shared/desktopAppControl";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+} from "@getpaperplane/contracts";
+import { resolveDesktopAppControlAddress } from "@getpaperplane/shared/desktopAppControl";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 import * as Config from "effect/Config";
 import * as Console from "effect/Console";
 import * as Crypto from "effect/Crypto";

@@ -1,4 +1,4 @@
-import type { DevicePlatform, PreviewViewportSetting } from "@rove-code/contracts";
+import type { DevicePlatform, PreviewViewportSetting } from "@getpaperplane/contracts";
 
 import type { BrowserSurfaceContentPresentation } from "~/browser/browserSurfaceStore";
 import {
@@ -7,7 +7,7 @@ import {
 } from "~/browser/browserViewportLayout";
 import type { PreviewMiniPlayerPosition, PreviewMiniPlayerSize } from "~/previewMiniPlayerStore";
 
-import type { DeviceScreenSize } from "@rove-code/client-runtime/device/stream";
+import type { DeviceScreenSize } from "@getpaperplane/client-runtime/device/stream";
 
 export const PREVIEW_MINI_PLAYER_EDGE_GAP = 12;
 export const PREVIEW_MINI_PLAYER_CORNER_RADIUS = 12;

@@ -1,14 +1,14 @@
 import {
   presentThreadShell,
   type EnvironmentThreadShell,
-} from "@rove-code/client-runtime/state/shell";
+} from "@getpaperplane/client-runtime/state/shell";
 import {
   EnvironmentId,
   ProjectId,
   ProviderInstanceId,
   ThreadId,
   type OrchestrationV2ThreadShell,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as DateTime from "effect/DateTime";
 
 const DEFAULT_TIMESTAMP = "2026-01-01T00:00:00.000Z";

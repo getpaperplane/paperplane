@@ -14,8 +14,8 @@ import * as Stream from "effect/Stream";
 import * as TestClock from "effect/testing/TestClock";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import { HttpClient, HttpClientError, HttpClientResponse } from "effect/http";
-import type { RelayManagedEndpointRuntimeConfig } from "@rove-code/contracts/relay";
-import * as RelayClient from "@rove-code/shared/relayClient";
+import type { RelayManagedEndpointRuntimeConfig } from "@getpaperplane/contracts/relay";
+import * as RelayClient from "@getpaperplane/shared/relayClient";
 
 import * as ServerSecretStore from "../auth/ServerSecretStore.ts";
 import * as ManagedEndpointRuntime from "./ManagedEndpointRuntime.ts";

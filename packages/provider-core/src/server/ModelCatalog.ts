@@ -12,7 +12,7 @@ import type {
   ModelCapabilities,
   ProviderDriverKind,
   ServerProviderModel,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Context from "effect/Context";
 import type * as Effect from "effect/Effect";
 
@@ -58,7 +58,7 @@ export class ModelCatalog extends Context.Service<
      */
     readonly refreshInBackground: Effect.Effect<void>;
   }
->()("@rove-code/provider-core/server/ModelCatalog") {}
+>()("@getpaperplane/provider-core/server/ModelCatalog") {}
 
 /** A catalog model as the snapshot model it presents. */
 export const catalogServerModel = (

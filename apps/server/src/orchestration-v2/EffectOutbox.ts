@@ -13,7 +13,7 @@ import {
   RunId,
   RuntimeRequestId,
   ThreadId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Deferred from "effect/Deferred";
@@ -264,7 +264,7 @@ export interface EffectOutboxV2Shape {
 }
 
 export class EffectOutboxV2 extends Context.Service<EffectOutboxV2, EffectOutboxV2Shape>()(
-  "@rove-code/server/orchestration-v2/EffectOutbox/EffectOutboxV2",
+  "@getpaperplane/server/orchestration-v2/EffectOutbox/EffectOutboxV2",
 ) {}
 
 type EffectRow = {

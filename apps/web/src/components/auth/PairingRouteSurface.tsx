@@ -1,6 +1,6 @@
 import { Alert, AlertDescription } from "../ui/alert";
-import type { AuthSessionState } from "@rove-code/contracts";
-import { squashAtomCommandFailure } from "@rove-code/client-runtime/state/runtime";
+import type { AuthSessionState } from "@getpaperplane/contracts";
+import { squashAtomCommandFailure } from "@getpaperplane/client-runtime/state/runtime";
 import React, { startTransition, useEffect, useRef, useState, useCallback } from "react";
 
 import { APP_DISPLAY_NAME } from "../../branding";

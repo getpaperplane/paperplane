@@ -3,9 +3,9 @@ import type {
   ServerConfig,
   ServerInstallation,
   ServerSelfUpdateCapability,
-} from "@rove-code/contracts";
-import type { ServerUpdateState } from "@rove-code/client-runtime/state/server";
-import { compareSemverVersions, parseSemver } from "@rove-code/shared/semver";
+} from "@getpaperplane/contracts";
+import type { ServerUpdateState } from "@getpaperplane/client-runtime/state/server";
+import { compareSemverVersions, parseSemver } from "@getpaperplane/shared/semver";
 import * as Schema from "effect/Schema";
 
 import { APP_VERSION } from "./branding";
@@ -128,11 +128,11 @@ export function manualServerUpdateCommand(
 ): string {
   if (installation?.kind === "npm-global") {
     const prefix = `'${installation.prefix.replaceAll("'", "'\\''")}'`;
-    return `npm install --global --prefix ${prefix} @rove-code/cli@${targetVersion}`;
+    return `npm install --global --prefix ${prefix} @getpaperplane/cli@${targetVersion}`;
   }
   const runner =
     installation?.kind === "pnpm-dlx" ? "pnpm dlx" : installation?.kind === "bunx" ? "bunx" : "npx";
-  return `${runner} @rove-code/cli@${targetVersion}`;
+  return `${runner} @getpaperplane/cli@${targetVersion}`;
 }
 
 export function serverUpdateGuidance(capability: ServerSelfUpdateCapability): string {

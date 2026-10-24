@@ -3,10 +3,10 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import { ChildProcessSpawner } from "effect/process";
 
-import { VcsProcessExitError } from "@rove-code/contracts";
+import { VcsProcessExitError } from "@getpaperplane/contracts";
 
-import type * as SourceControlHost from "@rove-code/source-control-core/server/SourceControlHost";
-import * as TestSourceControlHost from "@rove-code/source-control-testing/TestSourceControlHost";
+import type * as SourceControlHost from "@getpaperplane/source-control-core/server/SourceControlHost";
+import * as TestSourceControlHost from "@getpaperplane/source-control-testing/TestSourceControlHost";
 import * as GitLabCli from "./GitLabCli.ts";
 
 const mockedRun = vi.fn<SourceControlHost.SourceControlHost["Service"]["process"]["run"]>();

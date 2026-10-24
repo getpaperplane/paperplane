@@ -1,9 +1,9 @@
-import { AuthSettingsWriteScope } from "@rove-code/contracts";
+import { AuthSettingsWriteScope } from "@getpaperplane/contracts";
 import { useEnvironmentsWithScope } from "../../state/session";
 import {
   requiredScopesForServerSettingsPatch,
   EnvironmentAuthorizationError,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { readEnvironmentScope } from "../../state/session";
 import * as Cause from "effect/Cause";
 import { AsyncResult } from "effect/reactivity";
@@ -12,7 +12,7 @@ import {
   type ProjectScopedServerSettingKey,
   type ServerSettings,
   type UnifiedSettings,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { useCallback, useMemo } from "react";
 
 import {

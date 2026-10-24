@@ -5,7 +5,7 @@ import {
   type ComputerDesktop,
   type ComputerDesktopViewer,
   type ComputerDesktopsState,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as DateTime from "effect/DateTime";
 import * as Context from "effect/Context";
 import * as Deferred from "effect/Deferred";
@@ -54,7 +54,7 @@ export class ComputerDesktops extends Context.Service<
       id: string,
     ) => Effect.Effect<ComputerDesktopViewer, ComputerDesktopViewerError>;
   }
->()("@rove-code/server/computerUse/ComputerDesktops") {}
+>()("@getpaperplane/server/computerUse/ComputerDesktops") {}
 
 /** One registry per Cua runtime; credentials and teardown signals never enter its public stream. */
 export const make = Effect.gen(function* () {

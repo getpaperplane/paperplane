@@ -1,4 +1,4 @@
-import type { ScopedThreadRef, ThreadId } from "@rove-code/contracts";
+import type { ScopedThreadRef, ThreadId } from "@getpaperplane/contracts";
 import * as RuntimePredicate from "effect/Predicate";
 
 /**

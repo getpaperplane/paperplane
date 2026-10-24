@@ -13,7 +13,7 @@ import {
   ProviderInstanceId,
   ProviderThreadId,
   ThreadId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 
@@ -24,7 +24,7 @@ import {
   makeSubagentConversationArtifacts,
   endOrphanedNativeSubagent,
   endRunlessRootTurns,
-} from "@rove-code/provider-core/server/subagentProjection";
+} from "@getpaperplane/provider-core/server/subagentProjection";
 
 import { emptyProjection } from "./ProjectionStore.ts";
 

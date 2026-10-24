@@ -4,7 +4,7 @@ import {
   ThreadId,
   WS_METHODS,
   type PiExtensionStatusSnapshot,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";

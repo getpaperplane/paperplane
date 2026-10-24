@@ -1,6 +1,6 @@
-import { ThreadId } from "@rove-code/contracts";
+import { ThreadId } from "@getpaperplane/contracts";
 import { describe, expect, it } from "vite-plus/test";
-import { collectComposerContextReferences } from "@rove-code/shared/composerContextReferences";
+import { collectComposerContextReferences } from "@getpaperplane/shared/composerContextReferences";
 import { terminalContextRecord } from "./composerContextRecords";
 
 import {

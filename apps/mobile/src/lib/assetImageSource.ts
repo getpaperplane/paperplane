@@ -1,4 +1,4 @@
-import type { AssetResource, EnvironmentId } from "@rove-code/contracts";
+import type { AssetResource, EnvironmentId } from "@getpaperplane/contracts";
 import type { ImageSource } from "expo-image";
 
 /**

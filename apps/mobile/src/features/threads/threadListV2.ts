@@ -1,4 +1,4 @@
-import { threadPullRequestSearchTerms } from "@rove-code/shared/threadPullRequests";
+import { threadPullRequestSearchTerms } from "@getpaperplane/shared/threadPullRequests";
 import {
   canSnooze,
   effectiveSnoozed,
@@ -6,24 +6,24 @@ import {
   QUEUED_TURN_START_GRACE_MS,
   resolveSnoozePresets,
   snoozeWakeLabel,
-} from "@rove-code/client-runtime/state/thread-settled";
-import type { SnoozePreset } from "@rove-code/client-runtime/state/thread-settled";
-import type { EnvironmentThreadShell } from "@rove-code/client-runtime/state/shell";
-import { resolveThreadProviderStack } from "@rove-code/client-runtime/state/models";
-import { threadSearchMatchKey } from "@rove-code/client-runtime/state/thread-search";
+} from "@getpaperplane/client-runtime/state/thread-settled";
+import type { SnoozePreset } from "@getpaperplane/client-runtime/state/thread-settled";
+import type { EnvironmentThreadShell } from "@getpaperplane/client-runtime/state/shell";
+import { resolveThreadProviderStack } from "@getpaperplane/client-runtime/state/models";
+import { threadSearchMatchKey } from "@getpaperplane/client-runtime/state/thread-search";
 import {
   createInboxReturnTracker,
   isThreadWorking,
   sortInboxThreadsByReturn,
   sortWorkingThreadsBySend,
-} from "@rove-code/client-runtime/state/thread-inbox";
+} from "@getpaperplane/client-runtime/state/thread-inbox";
 import {
   sortActiveThreadsByOrderKey,
   resolveSettledThreadTimestamp,
   sortPinnedThreadsByOrderKey,
   sortSettledThreads,
-} from "@rove-code/client-runtime/state/thread-sort";
-import type { EnvironmentId, ProjectId } from "@rove-code/contracts";
+} from "@getpaperplane/client-runtime/state/thread-sort";
+import type { EnvironmentId, ProjectId } from "@getpaperplane/contracts";
 
 import type { ThreadListProvider } from "../../state/thread-list-environments";
 import type { ThreadMoveAvailability } from "./threadOrder";

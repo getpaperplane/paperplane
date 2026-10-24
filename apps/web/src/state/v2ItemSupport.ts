@@ -4,9 +4,9 @@ import {
   resolveV2ItemSupport,
   v2ItemSupportEqual,
   type V2ItemSupport,
-} from "@rove-code/client-runtime/state/item-support";
-import type { EnvironmentId, ThreadId, TurnItemId } from "@rove-code/contracts";
-import { scopeThreadRef } from "@rove-code/client-runtime/environment";
+} from "@getpaperplane/client-runtime/state/item-support";
+import type { EnvironmentId, ThreadId, TurnItemId } from "@getpaperplane/contracts";
+import { scopeThreadRef } from "@getpaperplane/client-runtime/environment";
 import { Atom } from "effect/reactivity";
 
 import { environmentThreadDetails } from "./threads";

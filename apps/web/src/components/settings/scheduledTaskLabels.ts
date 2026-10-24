@@ -1,4 +1,4 @@
-import type { ScheduledTaskSchedule } from "@rove-code/contracts";
+import type { ScheduledTaskSchedule } from "@getpaperplane/contracts";
 
 import { formatRelativeTime } from "../../timestampFormat";
 

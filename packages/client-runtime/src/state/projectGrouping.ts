@@ -5,8 +5,8 @@ import {
   type EnvironmentId,
   type ScopedProjectRef,
   type SidebarProjectGroupingMode,
-} from "@rove-code/contracts";
-import type { ClientSettings } from "@rove-code/contracts/settings";
+} from "@getpaperplane/contracts";
+import type { ClientSettings } from "@getpaperplane/contracts/settings";
 
 import type { EnvironmentProject } from "./models.ts";
 import { normalizeProjectPathForComparison } from "./projects.ts";

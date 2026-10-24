@@ -4,8 +4,8 @@ import {
   type DiscoveredLocalServer,
   type EnvironmentId,
   type ThreadId,
-} from "@rove-code/contracts";
-import { isLoopbackHost } from "@rove-code/shared/preview";
+} from "@getpaperplane/contracts";
+import { isLoopbackHost } from "@getpaperplane/shared/preview";
 import { useMemo } from "react";
 
 import { previewEnvironment } from "./state/preview";

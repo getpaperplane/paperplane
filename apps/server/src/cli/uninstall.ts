@@ -4,7 +4,7 @@
 // cannot express: it kills the child when the scope closes.
 import * as NodeChildProcess from "node:child_process";
 
-import * as HostProcess from "@rove-code/shared/HostProcess";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -133,7 +133,7 @@ const runUninstall = Effect.fn("cli.uninstall.run")(function* (input: {
     yield* Console.log(`Nothing to remove: rove is not installed for ${input.baseDir}.`);
     if (!(yield* HostProcess.IsExecutable)) {
       yield* Console.log(
-        "  This rove runs from a Node script, so it was installed by npm or built from source. Remove it the same way (`npm uninstall -g @rove-code/cli`, or delete the checkout).",
+        "  This rove runs from a Node script, so it was installed by npm or built from source. Remove it the same way (`npm uninstall -g @getpaperplane/cli`, or delete the checkout).",
       );
     }
     return;

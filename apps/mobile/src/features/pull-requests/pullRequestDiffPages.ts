@@ -1,4 +1,4 @@
-import type { PullRequestDiffResult } from "@rove-code/contracts";
+import type { PullRequestDiffResult } from "@getpaperplane/contracts";
 import { buildReviewParsedDiff, type ReviewParsedDiff } from "../review/reviewModel";
 
 export interface PullRequestDiffPage {

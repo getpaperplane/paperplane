@@ -23,7 +23,7 @@ export interface RelayClientTracingResource {
 }
 
 export class RelayClientTracer extends Context.Reference(
-  "@rove-code/shared/relayTracing/RelayClientTracer",
+  "@getpaperplane/shared/relayTracing/RelayClientTracer",
   {
     defaultValue: () => Option.none<Tracer.Tracer>(),
   },
@@ -33,7 +33,7 @@ export class RelayClientTracer extends Context.Reference(
  * The tracer that was active before relay tracing took over, so work nested
  * inside a relay span can return to it.
  */
-class LocalTracer extends Context.Reference("@rove-code/shared/relayTracing/LocalTracer", {
+class LocalTracer extends Context.Reference("@getpaperplane/shared/relayTracing/LocalTracer", {
   defaultValue: () => Option.none<Tracer.Tracer>(),
 }) {}
 

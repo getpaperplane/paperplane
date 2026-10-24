@@ -51,7 +51,7 @@ const forcedShutdownTimeoutMs = 1_500;
 const restartDebounceMs = 120;
 const childTreeGracePeriodMs = 1_200;
 const remoteDebuggingPort = process.env.ROVE_DESKTOP_REMOTE_DEBUGGING_PORT?.trim();
-// oxlint-disable-next-line rove/no-global-process-runtime -- Standalone dev script has no Effect runtime.
+// oxlint-disable-next-line paperplane/no-global-process-runtime -- Standalone dev script has no Effect runtime.
 const hostPlatform = NodeOS.platform();
 
 NodeChildProcess.execFileSync(

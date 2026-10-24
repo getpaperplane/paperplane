@@ -1,4 +1,4 @@
-import { SourceControlProviderKind } from "@rove-code/contracts";
+import { SourceControlProviderKind } from "@getpaperplane/contracts";
 // @effect-diagnostics nodeBuiltinImport:off
 import * as NodeFS from "node:fs";
 import * as NodePath from "node:path";
@@ -31,7 +31,7 @@ import type {
   GitManagerServiceError,
   GitPreparePullRequestThreadInput,
   ModelSelection,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 
 import {
   DEFAULT_SERVER_SETTINGS,
@@ -43,13 +43,13 @@ import {
   SourceControlProviderError as SourceControlProviderFailure,
   TextGenerationError,
   ThreadId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as DateTime from "effect/DateTime";
-import { decodeGitHubPullRequestListJson } from "@rove-code/source-control-github/server/gitHubPullRequests";
-import * as GitHubChangeRequestTemplate from "@rove-code/source-control-github/server/gitHubChangeRequestTemplate";
-import * as GitLabCli from "@rove-code/source-control-gitlab/server/GitLabCli";
-import type * as SourceControlHost from "@rove-code/source-control-core/server/SourceControlHost";
-import * as TestSourceControlHost from "@rove-code/source-control-testing/TestSourceControlHost";
+import { decodeGitHubPullRequestListJson } from "@getpaperplane/source-control-github/server/gitHubPullRequests";
+import * as GitHubChangeRequestTemplate from "@getpaperplane/source-control-github/server/gitHubChangeRequestTemplate";
+import * as GitLabCli from "@getpaperplane/source-control-gitlab/server/GitLabCli";
+import type * as SourceControlHost from "@getpaperplane/source-control-core/server/SourceControlHost";
+import * as TestSourceControlHost from "@getpaperplane/source-control-testing/TestSourceControlHost";
 import * as TextGeneration from "../textGeneration/TextGeneration.ts";
 import * as GitVcsDriver from "../vcs/GitVcsDriver.ts";
 import * as VcsProcess from "../vcs/VcsProcess.ts";
@@ -58,13 +58,13 @@ import * as VcsProjectConfig from "../vcs/VcsProjectConfig.ts";
 import * as VcsStatusBroadcaster from "../vcs/VcsStatusBroadcaster.ts";
 import * as BackgroundPolicy from "../background/BackgroundPolicy.ts";
 import * as GitWorkflowService from "./GitWorkflowService.ts";
-import * as ForgejoSourceControlProvider from "@rove-code/source-control-forgejo/server/ForgejoSourceControlProvider";
-import * as GitLabSourceControlProvider from "@rove-code/source-control-gitlab/server/GitLabSourceControlProvider";
+import * as ForgejoSourceControlProvider from "@getpaperplane/source-control-forgejo/server/ForgejoSourceControlProvider";
+import * as GitLabSourceControlProvider from "@getpaperplane/source-control-gitlab/server/GitLabSourceControlProvider";
 import {
   ForgejoPullRequestSchema,
   toForgejoChangeRequest,
-} from "@rove-code/source-control-forgejo/server/forgejoPullRequests";
-import type { SourceControlProvider } from "@rove-code/source-control-core/server/SourceControlProvider";
+} from "@getpaperplane/source-control-forgejo/server/forgejoPullRequests";
+import type { SourceControlProvider } from "@getpaperplane/source-control-core/server/SourceControlProvider";
 import * as SourceControlProviderRegistry from "../sourceControl/SourceControlProviderRegistry.ts";
 import * as ServerConfig from "../config.ts";
 import * as ProjectionStore from "../orchestration-v2/ProjectionStore.ts";
@@ -73,7 +73,7 @@ import * as SqlitePersistence from "../persistence/Sqlite.ts";
 import * as ProjectSetupScriptRunner from "../project/ProjectSetupScriptRunner.ts";
 import * as ProviderRegistry from "../provider/ProviderRegistry.ts";
 import * as ServerSettings from "../serverSettings.ts";
-import { SelectedGitHubAccount } from "@rove-code/source-control-github/server/GitHubCredentials";
+import { SelectedGitHubAccount } from "@getpaperplane/source-control-github/server/GitHubCredentials";
 import * as GitManager from "./GitManager.ts";
 import { gitRepositoryFixture } from "../testUtils/gitRepositoryFixture.ts";
 

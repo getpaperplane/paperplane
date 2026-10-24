@@ -1,9 +1,9 @@
-import type { RelayEnvironmentStatusResponse } from "@rove-code/contracts/relay";
+import type { RelayEnvironmentStatusResponse } from "@getpaperplane/contracts/relay";
 import {
   orchestrationProtocolCompatibilityError,
   type EnvironmentConnectionPhase,
-} from "@rove-code/client-runtime/connection";
-import { relayOfflineReasonMessage } from "@rove-code/client-runtime/relay";
+} from "@getpaperplane/client-runtime/connection";
+import { relayOfflineReasonMessage } from "@getpaperplane/client-runtime/relay";
 
 export interface AvailableCloudEnvironmentPresentation {
   readonly connectionError: string | null;

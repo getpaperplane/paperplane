@@ -1,4 +1,4 @@
-import { PROVIDER_SEND_TURN_MAX_ATTACHMENTS } from "@rove-code/contracts";
+import { PROVIDER_SEND_TURN_MAX_ATTACHMENTS } from "@getpaperplane/contracts";
 import { scopedThreadKey } from "../lib/scopedEntities";
 import { appAtomRegistry } from "./atom-registry";
 import {

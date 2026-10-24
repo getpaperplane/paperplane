@@ -1,7 +1,7 @@
 import {
   type ComposerPathSearchState,
   type ComposerPathSearchTarget,
-} from "@rove-code/client-runtime/state/threads";
+} from "@getpaperplane/client-runtime/state/threads";
 
 import { useMemo } from "react";
 

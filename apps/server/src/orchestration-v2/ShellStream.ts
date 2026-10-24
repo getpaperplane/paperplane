@@ -7,12 +7,12 @@ import type {
   OrchestrationV2ThreadShellSnapshot,
   OrchestrationV2ShellStreamItem,
   OrchestrationV2StoredEvent,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   OrchestrationProjectShell as ProjectShellSchema,
   OrchestrationV2ThreadShell as ThreadShellSchema,
-} from "@rove-code/contracts";
-import * as NodeSqliteClient from "@rove-code/shared/nodeSqliteClient";
+} from "@getpaperplane/contracts";
+import * as NodeSqliteClient from "@getpaperplane/shared/nodeSqliteClient";
 import * as Clock from "effect/Clock";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";

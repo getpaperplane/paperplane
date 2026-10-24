@@ -7,7 +7,7 @@ import {
   ThreadId,
   type OrchestrationV2SearchThreadInput,
   type OrchestrationV2SearchThreadResult,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { useThreadFind } from "./useThreadFind";
 import { orchestrationEnvironment } from "~/state/orchestration";
 import { requestThreadFindOpen } from "./threadFindActionBus";

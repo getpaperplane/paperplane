@@ -1,15 +1,15 @@
-import { EnvironmentRegistry } from "@rove-code/client-runtime/connection";
+import { EnvironmentRegistry } from "@getpaperplane/client-runtime/connection";
 import {
   EnvironmentRpcSubscriptionObserver,
   request,
   type EnvironmentRpcSubscriptionObservation,
-} from "@rove-code/client-runtime/rpc";
+} from "@getpaperplane/client-runtime/rpc";
 import {
   type BackgroundScope,
   type ClientActivityReportInput,
   type EnvironmentId,
   WS_METHODS,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Clock from "effect/Clock";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -22,7 +22,7 @@ import * as SubscriptionRef from "effect/SubscriptionRef";
 import { randomUUID } from "./utils";
 import * as RuntimePredicate from "effect/Predicate";
 
-import { readMigratedRoveStorage } from "@rove-code/shared/roveMigration";
+import { readMigratedRoveStorage } from "@getpaperplane/shared/roveMigration";
 
 const CLIENT_ID_STORAGE_KEY = "rove.backgroundActivity.clientId";
 const REPORT_INTERVAL_MS = 25_000;

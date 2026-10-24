@@ -1,4 +1,4 @@
-import type { DeviceServiceState, EnvironmentId } from "@rove-code/contracts";
+import type { DeviceServiceState, EnvironmentId } from "@getpaperplane/contracts";
 import { useState } from "react";
 import { Button } from "~/components/ui/button";
 import { deviceEnvironment } from "~/state/device";

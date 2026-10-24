@@ -1,4 +1,4 @@
-import { EnvironmentId, type ExecutionEnvironmentDescriptor } from "@rove-code/contracts";
+import { EnvironmentId, type ExecutionEnvironmentDescriptor } from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 

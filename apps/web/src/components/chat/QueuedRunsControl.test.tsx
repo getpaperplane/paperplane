@@ -6,11 +6,11 @@ const state = vi.hoisted(() => ({
   workflow: null as unknown,
 }));
 
-vi.mock("@rove-code/client-runtime/environment", () => ({
+vi.mock("@getpaperplane/client-runtime/environment", () => ({
   scopeThreadRef: () => ({}) as never,
 }));
 
-vi.mock("@rove-code/client-runtime/state/thread-workflows", () => ({
+vi.mock("@getpaperplane/client-runtime/state/thread-workflows", () => ({
   deriveThreadQueueWorkflowState: () => state.workflow,
 }));
 

@@ -2,7 +2,7 @@ import type {
   ProviderUsageLimitsUpdate,
   ServerProviderUsageLimits,
   ServerProviderUsageWindow,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 
 const WINDOW_KIND_ORDER: Record<ServerProviderUsageWindow["kind"], number> = {
   session: 0,

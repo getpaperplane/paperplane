@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vite-plus/test";
-import { LEGACY_THEME_IDS } from "@rove-code/shared/roveMigration";
+import { LEGACY_THEME_IDS } from "@getpaperplane/shared/roveMigration";
 import { converter } from "culori/fn";
-import { BUILT_IN_THEMES } from "@rove-code/shared/themePalettes";
+import { BUILT_IN_THEMES } from "@getpaperplane/shared/themePalettes";
 
 import {
   applyThemeColorPreview,

@@ -12,7 +12,7 @@ import {
   AuthSessionId,
   ClientSurface,
   ServerAuthSessionMethod,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 
 import {
   type AuthSessionRepositoryError,
@@ -130,7 +130,7 @@ export class AuthSessionRepository extends Context.Service<
       input: SetAuthSessionClientConnectionInput,
     ) => Effect.Effect<void, AuthSessionRepositoryError>;
   }
->()("@rove-code/server/persistence/AuthSessions/AuthSessionRepository") {}
+>()("@getpaperplane/server/persistence/AuthSessions/AuthSessionRepository") {}
 
 const AuthSessionDbRow = Schema.Struct({
   sessionId: AuthSessionId,

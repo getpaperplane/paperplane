@@ -17,7 +17,7 @@ import {
   TurnItemId,
   type OrchestrationV2ProjectedTurnItem,
   type OrchestrationV2ThreadShell,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import * as TestClock from "effect/testing/TestClock";
 import * as Layer from "effect/Layer";
@@ -78,8 +78,8 @@ import {
   resolveRoveMcpToolDefinition,
   resolveRoveMcpToolPresentation,
   resolveRoveMcpToolSummaryAction,
-} from "@rove-code/shared/roveMcpToolPresentation";
-import { htmlRenderFromToolItem } from "@rove-code/shared/toolOutput";
+} from "@getpaperplane/shared/roveMcpToolPresentation";
+import { htmlRenderFromToolItem } from "@getpaperplane/shared/toolOutput";
 
 const decodeMcpAttachmentInput = Schema.decodeUnknownEffect(McpAttachmentInput);
 const decodeThreadReadResult = Schema.decodeUnknownEffect(OrchestratorMcpThreadReadResult);

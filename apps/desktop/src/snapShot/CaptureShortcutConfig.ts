@@ -10,7 +10,7 @@ import type {
   DesktopCaptureConfigApplied,
   DesktopCaptureConfigPreview,
   DesktopCaptureConfigRequest,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   captureConfigKeys,
   editCaptureConfig,

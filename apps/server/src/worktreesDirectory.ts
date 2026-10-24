@@ -1,6 +1,6 @@
 import type * as Path from "effect/Path";
 
-import { expandHomePath } from "@rove-code/provider-core/server/pathExpansion";
+import { expandHomePath } from "@getpaperplane/provider-core/server/pathExpansion";
 
 /**
  * Directory new worktrees are created under: the `worktreesDirectory`

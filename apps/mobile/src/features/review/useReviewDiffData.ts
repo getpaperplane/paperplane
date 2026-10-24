@@ -1,6 +1,6 @@
 import type { Json as SchemaJson } from "effect/Schema";
 import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
-import { formatDiffCount } from "@rove-code/client-runtime/diff-count";
+import { formatDiffCount } from "@getpaperplane/client-runtime/diff-count";
 
 import { countReviewCommentContexts, parseReviewInlineComments } from "./reviewCommentSelection";
 import { getCachedNativeReviewDiffData } from "./nativeReviewDiffAdapter";
@@ -18,7 +18,7 @@ import type {
   EnvironmentId,
   ReviewDiffFileStat,
   ReviewDiffPreviewSource,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { RegistryContext, useAtomValue } from "@effect/atom-react";
 import * as AsyncResult from "effect/reactivity/AsyncResult";
 import * as Atom from "effect/reactivity/Atom";

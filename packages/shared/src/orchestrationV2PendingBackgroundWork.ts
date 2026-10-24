@@ -5,8 +5,8 @@ import type {
   OrchestrationV2TurnItem,
   ThreadId,
   ThreadPullRequestLink,
-} from "@rove-code/contracts";
-import { isOrchestrationV2WorkActive } from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
+import { isOrchestrationV2WorkActive } from "@getpaperplane/contracts";
 
 import { threadPullRequestKeyOf } from "./threadPullRequests.ts";
 

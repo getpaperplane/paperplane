@@ -10,10 +10,10 @@
  *   node scripts/record-grok-acp-replay-fixture.ts --scenario simple
  */
 import * as NodeServices from "@effect/platform-node/NodeServices";
-import { type ProviderReplayEntry } from "@rove-code/contracts";
-import { GrokSettings } from "@rove-code/provider-grok/settings";
-import * as HostProcess from "@rove-code/shared/HostProcess";
-import { resolveSelfInvocation } from "@rove-code/shared/nodeRuntime";
+import { type ProviderReplayEntry } from "@getpaperplane/contracts";
+import { GrokSettings } from "@getpaperplane/provider-grok/settings";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
+import { resolveSelfInvocation } from "@getpaperplane/shared/nodeRuntime";
 import * as Clock from "effect/Clock";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
@@ -23,26 +23,26 @@ import * as Path from "effect/Path";
 import * as Schema from "effect/Schema";
 import type * as EffectAcpProtocol from "effect-acp/protocol";
 
-import * as TestProviderHost from "@rove-code/provider-testing/TestProviderHost";
+import * as TestProviderHost from "@getpaperplane/provider-testing/TestProviderHost";
 import {
   GROK_DEFAULT_INSTANCE_ID,
   GROK_PROVIDER,
   grokLaunchRuntimeMode,
   makeGrokAdapterV2,
-} from "@rove-code/provider-grok/testing";
-import { ACP_PROTOCOL } from "@rove-code/provider-acp/server/adapter";
-import * as IdAllocator from "@rove-code/provider-core/server/IdAllocator";
-import type * as ProviderAdapter from "@rove-code/provider-core/server/ProviderAdapter";
-import * as ProviderContinuationRequests from "@rove-code/provider-core/server/ProviderContinuationRequests";
+} from "@getpaperplane/provider-grok/testing";
+import { ACP_PROTOCOL } from "@getpaperplane/provider-acp/server/adapter";
+import * as IdAllocator from "@getpaperplane/provider-core/server/IdAllocator";
+import type * as ProviderAdapter from "@getpaperplane/provider-core/server/ProviderAdapter";
+import * as ProviderContinuationRequests from "@getpaperplane/provider-core/server/ProviderContinuationRequests";
 import * as ProviderAdapterRegistry from "../src/orchestration-v2/ProviderAdapterRegistry.ts";
 import { provideDeterministicTestRuntime } from "../src/orchestration-v2/testkit/DeterministicRuntime.ts";
 import { ORCHESTRATOR_REPLAY_FIXTURES } from "../src/orchestration-v2/testkit/fixtures/index.ts";
 import { materializeFixtureInput } from "../src/orchestration-v2/testkit/fixtures/shared.ts";
 import { runOrchestratorV2Scenario } from "../src/orchestration-v2/testkit/OrchestratorScenario.ts";
 import * as ProviderReplayHarness from "../src/orchestration-v2/testkit/ProviderReplayHarness.ts";
-import { checkpointWorkspace } from "@rove-code/provider-testing/replayWorkspace";
-import { makeGrokAcpRuntime } from "@rove-code/provider-grok/testing";
-import { buildRuntimeInstructions } from "@rove-code/provider-core/server/runtimeInstructions";
+import { checkpointWorkspace } from "@getpaperplane/provider-testing/replayWorkspace";
+import { makeGrokAcpRuntime } from "@getpaperplane/provider-grok/testing";
+import { buildRuntimeInstructions } from "@getpaperplane/provider-core/server/runtimeInstructions";
 
 const wallClock = Clock.Clock.defaultValue();
 const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));

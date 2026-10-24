@@ -1,13 +1,13 @@
 import { useAtomValue } from "@effect/atom-react";
-import { resolveFilesystemReadAccess } from "@rove-code/client-runtime/state/filesystem";
+import { resolveFilesystemReadAccess } from "@getpaperplane/client-runtime/state/filesystem";
 import {
   assetUrlStateFromResult,
   blockedAssetUrlState,
   createAssetEnvironmentAtoms,
   createProjectFaviconUrlAtomFamily,
   EMPTY_ASSET_URL_ATOM,
-} from "@rove-code/client-runtime/state/assets";
-import type { AssetResource, EnvironmentId } from "@rove-code/contracts";
+} from "@getpaperplane/client-runtime/state/assets";
+import type { AssetResource, EnvironmentId } from "@getpaperplane/contracts";
 import { useCallback } from "react";
 
 import { connectionAtomRuntime } from "../connection/runtime";

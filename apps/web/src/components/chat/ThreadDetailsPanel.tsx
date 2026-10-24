@@ -4,7 +4,7 @@ import type {
   ProjectScript,
   ResolvedKeybindingsConfig,
   ThreadId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 
 import type { DraftId } from "../../composerDraftStore";
 import { useRoveProjectFileScripts } from "../../hooks/useRoveProjectFileScripts";

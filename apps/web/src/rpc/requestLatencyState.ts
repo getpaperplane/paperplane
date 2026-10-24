@@ -1,5 +1,5 @@
 import { useAtomValue } from "@effect/atom-react";
-import { WS_METHODS } from "@rove-code/contracts";
+import { WS_METHODS } from "@getpaperplane/contracts";
 import { Atom } from "effect/reactivity";
 
 import { appAtomRegistry } from "./atomRegistry";

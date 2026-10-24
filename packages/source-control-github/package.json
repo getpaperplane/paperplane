@@ -1,5 +1,5 @@
 {
-  "name": "@rove-code/source-control-github",
+  "name": "@getpaperplane/source-control-github",
   "private": true,
   "type": "module",
   "exports": {
@@ -78,17 +78,17 @@
     "generate": "graphqlgen"
   },
   "dependencies": {
-    "@rove-code/contracts": "workspace:*",
-    "@rove-code/provider-core": "workspace:*",
-    "@rove-code/shared": "workspace:*",
-    "@rove-code/source-control-core": "workspace:*",
+    "@getpaperplane/contracts": "workspace:*",
+    "@getpaperplane/provider-core": "workspace:*",
+    "@getpaperplane/shared": "workspace:*",
+    "@getpaperplane/source-control-core": "workspace:*",
     "effect": "catalog:"
   },
   "devDependencies": {
     "@effect/graphql-generator": "catalog:",
     "@effect/platform-node": "catalog:",
     "@effect/vitest": "catalog:",
-    "@rove-code/source-control-testing": "workspace:*",
+    "@getpaperplane/source-control-testing": "workspace:*",
     "@types/node": "catalog:",
     "vite-plus": "catalog:"
   }

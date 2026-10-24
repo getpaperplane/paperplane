@@ -1,10 +1,10 @@
-import { createAttachmentEnvironmentAtoms } from "@rove-code/client-runtime/state/attachments";
-import type { AtomCommand } from "@rove-code/client-runtime/state/runtime";
+import { createAttachmentEnvironmentAtoms } from "@getpaperplane/client-runtime/state/attachments";
+import type { AtomCommand } from "@getpaperplane/client-runtime/state/runtime";
 import {
   AuthOrchestrationOperateScope,
   EnvironmentAuthorizationError,
   type EnvironmentId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Cause from "effect/Cause";
 import { AsyncResult } from "effect/reactivity";
 

@@ -1,4 +1,4 @@
-import type { RelayClientDeviceRecord } from "@rove-code/contracts/relay";
+import type { RelayClientDeviceRecord } from "@getpaperplane/contracts/relay";
 import { describe, expect, it } from "vite-plus/test";
 
 import {

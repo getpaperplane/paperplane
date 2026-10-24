@@ -2,11 +2,11 @@ import type {
   BrowserNavigationTarget,
   EnvironmentId,
   PreviewUrlResolution,
-} from "@rove-code/contracts";
-import { isLoopbackHost, normalizePreviewUrl } from "@rove-code/shared/preview";
-import { isLocalLoopbackHost, isPrivateNetworkHost } from "@rove-code/shared/hostClassification";
+} from "@getpaperplane/contracts";
+import { isLoopbackHost, normalizePreviewUrl } from "@getpaperplane/shared/preview";
+import { isLocalLoopbackHost, isPrivateNetworkHost } from "@getpaperplane/shared/hostClassification";
 
-import type { ConnectionTarget } from "@rove-code/client-runtime/connection";
+import type { ConnectionTarget } from "@getpaperplane/client-runtime/connection";
 
 import { isDesktopLocalConnectionTarget } from "~/connection/desktopLocal";
 import { isElectron } from "~/env";
@@ -17,7 +17,7 @@ export {
   isLocalLoopbackHost,
   isPrivateNetworkHost,
   isPublicFaviconHost,
-} from "@rove-code/shared/hostClassification";
+} from "@getpaperplane/shared/hostClassification";
 
 const readEnvironmentUrl = (environmentId: EnvironmentId): URL => {
   const connection = readPreparedConnection(environmentId);

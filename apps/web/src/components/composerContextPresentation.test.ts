@@ -1,4 +1,4 @@
-import { ThreadId } from "@rove-code/contracts";
+import { ThreadId } from "@getpaperplane/contracts";
 import { describe, expect, it } from "vite-plus/test";
 
 import { buildMessageContext } from "~/lib/composerContextRecords";

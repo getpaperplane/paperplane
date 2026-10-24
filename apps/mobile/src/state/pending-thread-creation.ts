@@ -1,9 +1,9 @@
 import {
   presentThreadShell,
   type EnvironmentThreadShell,
-} from "@rove-code/client-runtime/state/shell";
+} from "@getpaperplane/client-runtime/state/shell";
 import type { LocalThreadMessage } from "../lib/threadActivity";
-import { DEFAULT_PROVIDER_INTERACTION_MODE, DEFAULT_RUNTIME_MODE } from "@rove-code/contracts";
+import { DEFAULT_PROVIDER_INTERACTION_MODE, DEFAULT_RUNTIME_MODE } from "@getpaperplane/contracts";
 import { Atom } from "effect/reactivity";
 import * as DateTime from "effect/DateTime";
 

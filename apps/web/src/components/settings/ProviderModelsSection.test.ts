@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vite-plus/test";
-import type { ServerProviderModel } from "@rove-code/contracts";
+import type { ServerProviderModel } from "@getpaperplane/contracts";
 
 import { groupModelsForDisplay, nextHiddenModelsForBulkToggle } from "./ProviderModelsSection";
 

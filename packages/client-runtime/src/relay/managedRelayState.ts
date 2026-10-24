@@ -1,13 +1,13 @@
 import type {
   RelayClientEnvironmentRecord,
   RelayEnvironmentStatusResponse,
-} from "@rove-code/contracts/relay";
-import type { EnvironmentId } from "@rove-code/contracts";
+} from "@getpaperplane/contracts/relay";
+import type { EnvironmentId } from "@getpaperplane/contracts";
 import {
   RelayEnvironmentConnectScope,
   RelayEnvironmentStatusScope,
-} from "@rove-code/contracts/relay";
-import { decodeRelayJwt } from "@rove-code/shared/relayJwt";
+} from "@getpaperplane/contracts/relay";
+import { decodeRelayJwt } from "@getpaperplane/shared/relayJwt";
 import * as Cause from "effect/Cause";
 import * as Clock from "effect/Clock";
 import * as Data from "effect/Data";

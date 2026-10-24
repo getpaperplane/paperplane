@@ -1,8 +1,8 @@
-import type { V2ItemSupport } from "@rove-code/client-runtime/state/item-support";
-import { toolItemForDisplay } from "@rove-code/client-runtime/work-log/presentation";
-import { formatDiffCount } from "@rove-code/client-runtime/diff-count";
-import type { ThreadId } from "@rove-code/contracts";
-import { formatDuration } from "@rove-code/shared/orchestrationTiming";
+import type { V2ItemSupport } from "@getpaperplane/client-runtime/state/item-support";
+import { toolItemForDisplay } from "@getpaperplane/client-runtime/work-log/presentation";
+import { formatDiffCount } from "@getpaperplane/client-runtime/diff-count";
+import type { ThreadId } from "@getpaperplane/contracts";
+import { formatDuration } from "@getpaperplane/shared/orchestrationTiming";
 import * as DateTime from "effect/DateTime";
 
 import type { ThreadFeedActivity } from "./threadActivity";

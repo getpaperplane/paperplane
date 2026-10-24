@@ -1,5 +1,5 @@
 import * as NodeBuffer from "node:buffer";
-import { legacyRoveCheckpointRef } from "@rove-code/shared/roveMigration";
+import { legacyRoveCheckpointRef } from "@getpaperplane/shared/roveMigration";
 
 import * as Context from "effect/Context";
 import * as Fiber from "effect/Fiber";
@@ -34,7 +34,7 @@ import {
   type VcsStatusInput,
   type VcsStatusResult,
   type WorktreeSubmodules,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   makeGitVcsDriverCore,
   PATCH_RENDER_PREFIX_ARGS,
@@ -438,7 +438,7 @@ export class GitVcsDriver extends Context.Service<
     readonly initRepo: (input: VcsInitInput) => Effect.Effect<void, GitCommandError>;
     readonly listLocalBranchNames: (cwd: string) => Effect.Effect<string[], GitCommandError>;
   }
->()("@rove-code/server/vcs/GitVcsDriver") {}
+>()("@getpaperplane/server/vcs/GitVcsDriver") {}
 
 const WORKSPACE_FILES_MAX_OUTPUT_BYTES = 16 * 1024 * 1024;
 const CHECKPOINT_RECOVERY_MAX_CANDIDATES = 64;

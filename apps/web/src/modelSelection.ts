@@ -7,16 +7,16 @@ import {
   ProviderDriverKind,
   ProviderInstanceId,
   type ServerProvider,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   type CustomModelDefinition,
   createModelSelection,
   normalizeCustomModelSlug,
   readCustomModelEntries,
   resolveSelectableModel,
-} from "@rove-code/shared/model";
+} from "@getpaperplane/shared/model";
 import { getComposerProviderState } from "./components/chat/composerProviderState";
-import { UnifiedSettings } from "@rove-code/contracts/settings";
+import { UnifiedSettings } from "@getpaperplane/contracts/settings";
 import * as Arr from "effect/Array";
 import * as Result from "effect/Result";
 import {

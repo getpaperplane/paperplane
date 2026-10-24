@@ -1,24 +1,24 @@
 import { useMemo } from "react";
-import { sourceControlRepositorySelector } from "@rove-code/shared/sourceControl";
+import { sourceControlRepositorySelector } from "@getpaperplane/shared/sourceControl";
 import type {
   EnvironmentId,
   ScopedThreadRef,
   ThreadLinkedPullRequest,
   ThreadPullRequestLink,
-} from "@rove-code/contracts";
-import type { EnvironmentProject } from "@rove-code/client-runtime/state/shell";
+} from "@getpaperplane/contracts";
+import type { EnvironmentProject } from "@getpaperplane/client-runtime/state/shell";
 import {
   isAtomCommandInterrupted,
   squashAtomCommandFailure,
-} from "@rove-code/client-runtime/state/runtime";
+} from "@getpaperplane/client-runtime/state/runtime";
 import {
   planThreadPullRequestMutation,
   threadPullRequestLinkMode,
-} from "@rove-code/client-runtime/thread-pull-request-compatibility";
+} from "@getpaperplane/client-runtime/thread-pull-request-compatibility";
 import {
   threadPullRequestKeysEqual,
   visibleThreadPullRequests,
-} from "@rove-code/shared/threadPullRequests";
+} from "@getpaperplane/shared/threadPullRequests";
 import {
   findProjectForChangeRequest,
   matchesLinkedPullRequestUrl,

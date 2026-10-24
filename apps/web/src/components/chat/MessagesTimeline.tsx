@@ -1,10 +1,10 @@
 import { ThreadFindTimelineContext } from "./ThreadFindProvider";
-import { shouldPreserveAssistantLineBreaks } from "@rove-code/shared/markdownPipeline";
+import { shouldPreserveAssistantLineBreaks } from "@getpaperplane/shared/markdownPipeline";
 import { MarkdownFindContext, useFindRevealRef } from "./markdownFindContext";
 import { useChatCanvas } from "./ChatCanvasContext";
 import { WorkLogBlock, WorkLogButton, WorkLogDetails, WorkLogList, WorkLogRow } from "./WorkLog";
 import { PullRequestGlyph } from "../pullRequest/pullRequestIcons";
-import type { WorktreeSetupSnapshot } from "@rove-code/contracts";
+import type { WorktreeSetupSnapshot } from "@getpaperplane/contracts";
 import { ReadOnlySourcePreview } from "../files/AttachmentFilePreview";
 import { useRightPanelStore } from "~/rightPanelStore";
 import {
@@ -12,7 +12,7 @@ import {
   getQuestionAnswerText,
   getQuestionTextPreview,
   hasQuestionAnswer,
-} from "@rove-code/client-runtime/work-log/user-input";
+} from "@getpaperplane/client-runtime/work-log/user-input";
 import {
   deriveTimelineMinimapItems,
   resolveTimelineMinimapPreview,
@@ -32,41 +32,41 @@ import {
   type RunId,
   ThreadId,
   type ToolActivityIcon,
-} from "@rove-code/contracts";
-import { parseScopedThreadKey, scopeThreadRef } from "@rove-code/client-runtime/environment";
+} from "@getpaperplane/contracts";
+import { parseScopedThreadKey, scopeThreadRef } from "@getpaperplane/client-runtime/environment";
 import { useAtomValue } from "@effect/atom-react";
 import { environmentThreadDetails } from "../../state/threads";
-import { resolveUserMessagePresentation } from "@rove-code/client-runtime/user-message";
+import { resolveUserMessagePresentation } from "@getpaperplane/client-runtime/user-message";
 import { Link } from "@tanstack/react-router";
-import { canForkProjectedAssistantItem } from "@rove-code/client-runtime/state/thread-workflows";
-import { notificationChildThreadId } from "@rove-code/client-runtime/state/thread-execution";
-import { replaceComposerContextReferences } from "@rove-code/shared/composerContextReferences";
+import { canForkProjectedAssistantItem } from "@getpaperplane/client-runtime/state/thread-workflows";
+import { notificationChildThreadId } from "@getpaperplane/client-runtime/state/thread-execution";
+import { replaceComposerContextReferences } from "@getpaperplane/shared/composerContextReferences";
 import {
   liveThoughtLine,
   resolveWorkEntryToolPresentation,
   resolveViewedImageAsset,
   workEntryViewedImagePath,
-} from "@rove-code/client-runtime/work-log/presentation";
-import { resolveWorkGroupScrollAnchor } from "@rove-code/client-runtime/work-log/scroll-anchor";
+} from "@getpaperplane/client-runtime/work-log/presentation";
+import { resolveWorkGroupScrollAnchor } from "@getpaperplane/client-runtime/work-log/scroll-anchor";
 import {
   turnItemHasDetail,
   turnItemNeedsDetailFetch,
-} from "@rove-code/client-runtime/work-log/item-detail";
-import { formatAttachmentSize } from "@rove-code/client-runtime/state/attachments";
+} from "@getpaperplane/client-runtime/work-log/item-detail";
+import { formatAttachmentSize } from "@getpaperplane/client-runtime/state/attachments";
 import {
   subagentGroupSummary,
   summarizeSubagentStatuses,
-} from "@rove-code/client-runtime/state/subagent-display";
+} from "@getpaperplane/client-runtime/state/subagent-display";
 import { observeResize } from "~/lib/observeResize";
 
 const NOOP_USE_ARTIFACT_TEMPLATE = () => {};
 const NOOP_OPEN_ATTACHMENT = (_attachment: ChatFileAttachment) => {};
 
-import { resolveChatListAnchoredEndSpace } from "@rove-code/shared/chatList";
-import { toolActivityFaviconUrl } from "@rove-code/shared/favicon";
-import { formatDuration } from "@rove-code/shared/orchestrationTiming";
-import { getProjectFaviconCacheKey } from "@rove-code/shared/projectFavicon";
-import { claudeSkillInvocation, isJavaScriptReplTool } from "@rove-code/shared/toolActivity";
+import { resolveChatListAnchoredEndSpace } from "@getpaperplane/shared/chatList";
+import { toolActivityFaviconUrl } from "@getpaperplane/shared/favicon";
+import { formatDuration } from "@getpaperplane/shared/orchestrationTiming";
+import { getProjectFaviconCacheKey } from "@getpaperplane/shared/projectFavicon";
+import { claudeSkillInvocation, isJavaScriptReplTool } from "@getpaperplane/shared/toolActivity";
 import { observeVisibleAnimation } from "../../lib/visibleAnimation";
 import {
   createContext,
@@ -99,7 +99,7 @@ import {
   workEntrySignalsSevereFailure,
   workLogEntryIsToolLike,
 } from "../../session-logic";
-import type { CodexArtifactTemplate } from "@rove-code/shared/codexArtifactTemplates";
+import type { CodexArtifactTemplate } from "@getpaperplane/shared/codexArtifactTemplates";
 import {
   type ChatMessage,
   type ChatFileAttachment,
@@ -151,7 +151,7 @@ import type {
   ComposerContextId,
   ComposerContextRecord,
   KnownComposerContextRecord,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { Button, InlineButton } from "../ui/button";
 import { MorphIcon } from "~/components/MorphIcon";
 import { useAssetUrlRefresh, useAssetUrls, useAssetUrlState } from "../../assets/assetUrls";
@@ -254,12 +254,12 @@ import {
 import {
   collectComposerContextReferences,
   formatComposerContextReference,
-} from "@rove-code/shared/composerContextReferences";
+} from "@getpaperplane/shared/composerContextReferences";
 import {
   COMPOSER_CONTEXT_CLIPBOARD_MIME,
   encodeComposerContextClipboardHtml,
   encodeComposerContextFragment,
-} from "@rove-code/shared/composerContextClipboard";
+} from "@getpaperplane/shared/composerContextClipboard";
 import { chatMarkdownClipboardPayload } from "../../markdown-clipboard";
 import { ContextChip, ContextChipLabel, type ContextChipKind } from "../ContextChip";
 import { createContextPresentationRegistry } from "../contextPresentationRegistry";
@@ -269,7 +269,7 @@ import type { ChatMarkdownContextReference } from "../ChatMarkdown";
 import { useMediaQuery } from "~/hooks/useMediaQuery";
 import { cn } from "~/lib/utils";
 import { useUiStateStore } from "~/uiStateStore";
-import { type TimestampFormat } from "@rove-code/contracts/settings";
+import { type TimestampFormat } from "@getpaperplane/contracts/settings";
 import {
   formatChatTimestampTooltip,
   formatDayAwareTimestamp,
@@ -5909,7 +5909,7 @@ function WorkEntryLogRow(props: WorkEntryRowProps) {
 function QuestionAnswerHistory({
   answer,
 }: {
-  answer: import("@rove-code/contracts").UserInputAttachmentAnswerPayload;
+  answer: import("@getpaperplane/contracts").UserInputAttachmentAnswerPayload;
 }) {
   const { activeThreadEnvironmentId } = use(TimelineRowCtx);
   const attachments = useMemo(() => Object.values(answer.attachmentsByQuestionId).flat(), [answer]);

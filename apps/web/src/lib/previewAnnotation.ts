@@ -1,4 +1,4 @@
-import type { PreviewAnnotationPayload } from "@rove-code/contracts";
+import type { PreviewAnnotationPayload } from "@getpaperplane/contracts";
 
 import { dataUrlToFile } from "./imageCompression";
 

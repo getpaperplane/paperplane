@@ -1,5 +1,5 @@
-import type { EnvironmentId, ThreadId, TurnItemId } from "@rove-code/contracts";
-import { TERMINAL_PALETTES, terminalOutputSpans } from "@rove-code/shared/terminalOutput";
+import type { EnvironmentId, ThreadId, TurnItemId } from "@getpaperplane/contracts";
+import { TERMINAL_PALETTES, terminalOutputSpans } from "@getpaperplane/shared/terminalOutput";
 import { useLayoutEffect, useMemo, useRef } from "react";
 
 import { useTheme } from "../../hooks/useTheme";

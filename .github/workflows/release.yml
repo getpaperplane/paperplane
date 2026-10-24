@@ -156,7 +156,7 @@ jobs:
           # the root prepare script runs effect-tsgo, a dev dependency.
           run-install: |
             args:
-              - --filter=@rove-code/scripts...
+              - --filter=@getpaperplane/scripts...
         env:
           pnpm_config_cache_dir: ${{ runner.temp }}/pnpm-metadata
 
@@ -334,7 +334,7 @@ jobs:
 
       - name: Ensure Electron runtime is installed
         if: matrix.suite == 'static' || matrix.suite == 'packages'
-        run: vp run --filter @rove-code/desktop ensure:electron
+        run: vp run --filter @getpaperplane/desktop ensure:electron
 
       - name: Check
         if: matrix.suite == 'static'
@@ -355,13 +355,13 @@ jobs:
         if: matrix.suite == 'packages'
         run: >-
           vp run --parallel --concurrency-limit 4
-          --filter '!@rove-code/server' --filter '!@rove-code/monorepo'
-          --filter '!@rove-code/web' --filter '!@rove-code/mobile'
-          --filter '!@rove-code/client-runtime' test
+          --filter '!@getpaperplane/server' --filter '!@getpaperplane/monorepo'
+          --filter '!@getpaperplane/web' --filter '!@getpaperplane/mobile'
+          --filter '!@getpaperplane/client-runtime' test
 
       - name: Test client
         if: matrix.suite == 'client'
-        run: vp run --filter @rove-code/${{ matrix.workspace }} test --shard ${{ matrix.shard }}/${{ matrix.shards }} --maxWorkers 2
+        run: vp run --filter @getpaperplane/${{ matrix.workspace }} test --shard ${{ matrix.shard }}/${{ matrix.shards }} --maxWorkers 2
 
       - name: Install Chromium for server browser integration tests
         if: matrix.suite == 'server'
@@ -370,7 +370,7 @@ jobs:
       # Server test files stay serial within each runner, as in CI.
       - name: Test server
         if: matrix.suite == 'server'
-        run: vp run --filter @rove-code/server test --shard ${{ matrix.shard }}/${{ matrix.shards }}
+        run: vp run --filter @getpaperplane/server test --shard ${{ matrix.shard }}/${{ matrix.shards }}
 
   relay_public_config:
     name: Resolve Paperplane Connect public config
@@ -527,7 +527,7 @@ jobs:
       - name: Install bundle dependencies
         env:
           pnpm_config_cache_dir: ${{ runner.temp }}/pnpm-metadata
-        run: vp install --filter=@rove-code/server... --filter=@rove-code/web... --filter=@rove-code/desktop... --filter=@rove-code/scripts...
+        run: vp install --filter=@getpaperplane/server... --filter=@getpaperplane/web... --filter=@getpaperplane/desktop... --filter=@getpaperplane/scripts...
 
       - name: Download relay client tracing config
         if: needs.relay_public_config.result == 'success'
@@ -550,13 +550,13 @@ jobs:
 
       - uses: ./.github/actions/setup-apt-mirrors
 
-      # @rove-code/desktop#build compiles the Linux browser secret helper on a
+      # @getpaperplane/desktop#build compiles the Linux browser secret helper on a
       # Linux host before packing, and that needs libsecret headers.
       - name: Install browser secret helper build libraries
         run: sudo apt-get update && sudo apt-get install -y libsecret-1-dev pkg-config build-essential
 
-      # Runs @rove-code/server#build (which depends on @rove-code/web#build) and
-      # @rove-code/desktop#build, so apps/server/dist holds the server bundle
+      # Runs @getpaperplane/server#build (which depends on @getpaperplane/web#build) and
+      # @getpaperplane/desktop#build, so apps/server/dist holds the server bundle
       # plus the web client and apps/desktop/dist-electron the Electron main.
       - name: Build JS bundle
         run: vp run build:desktop
@@ -790,8 +790,8 @@ jobs:
           cache: true
           run-install: |
             args:
-              - --filter=@rove-code/server...
-              - --filter=@rove-code/scripts...
+              - --filter=@getpaperplane/server...
+              - --filter=@getpaperplane/scripts...
 
       - name: Wait for Linux x64 CLI archive
         uses: ./.github/actions/wait-for-artifact
@@ -826,8 +826,8 @@ jobs:
         with:
           name: npm-packages
           path: |
-            npm-packages/@rove-code/*.tgz
-            npm-packages/@rove-code/*/package.json
+            npm-packages/@getpaperplane/*.tgz
+            npm-packages/@getpaperplane/*/package.json
           if-no-files-found: error
           retention-days: 14
 
@@ -878,8 +878,8 @@ jobs:
           cache: true
           run-install: |
             args:
-              - --filter=@rove-code/server...
-              - --filter=@rove-code/scripts...
+              - --filter=@getpaperplane/server...
+              - --filter=@getpaperplane/scripts...
 
       - name: Wait for this platform's CLI archive
         uses: ./.github/actions/wait-for-artifact
@@ -944,15 +944,15 @@ jobs:
           cache: true
           run-install: |
             args:
-              - --filter=@rove-code/server...
-              - --filter=@rove-code/scripts...
+              - --filter=@getpaperplane/server...
+              - --filter=@getpaperplane/scripts...
 
       - name: Download npm packages
         uses: actions/download-artifact@v8
         with:
           name: npm-packages
-          # The artifact root is @rove-code/, the paths' common ancestor.
-          path: npm-packages/@rove-code
+          # The artifact root is @getpaperplane/, the paths' common ancestor.
+          path: npm-packages/@getpaperplane
 
       - name: Publish CLI launcher after npm serves every platform
         run: node apps/server/scripts/cli.ts publish --only launcher --packages-dir npm-packages --tag "${{ needs.preflight.outputs.cli_dist_tag }}" --provenance --verbose
@@ -1037,7 +1037,7 @@ jobs:
           # Manifest merging and verification import Effect from scripts.
           run-install: |
             args:
-              - --filter=@rove-code/scripts...
+              - --filter=@getpaperplane/scripts...
 
       - name: Download all desktop artifacts
         uses: actions/download-artifact@v8
@@ -1280,8 +1280,8 @@ jobs:
           # Vite+ config and lint plugin, so keep the development tooling here.
           run-install: |
             args:
-              - --filter=@rove-code/scripts...
-              - --filter=@rove-code/oxlint-plugin-rove...
+              - --filter=@getpaperplane/scripts...
+              - --filter=@getpaperplane/oxlint-plugin-paperplane...
 
       - id: update_versions
         name: Update version strings
@@ -1348,7 +1348,7 @@ jobs:
           # notify-discord-release.ts uses Effect CLI/HTTP and Node services.
           run-install: |
             args:
-              - --filter=@rove-code/scripts...
+              - --filter=@getpaperplane/scripts...
 
       - name: Read published release notes
         if: needs.preflight.outputs.is_prerelease == 'true'

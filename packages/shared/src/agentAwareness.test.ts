@@ -5,8 +5,8 @@ import type {
   OrchestrationV2ThreadShell,
   Project,
   ThreadId,
-} from "@rove-code/contracts";
-import { ProviderInstanceId, RuntimeRequestId } from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
+import { ProviderInstanceId, RuntimeRequestId } from "@getpaperplane/contracts";
 import * as DateTime from "effect/DateTime";
 
 import { projectThreadAwarenessV2 } from "./agentAwareness.ts";

@@ -27,15 +27,15 @@ import {
   type ReviewDiffFileStat,
   type ReviewDiffPreviewSource,
   type VcsRef,
-} from "@rove-code/contracts";
-import { dedupeRemoteBranchesWithLocalMatches, normalizeGitRemoteUrl } from "@rove-code/shared/git";
-import { SelectedGitHubAccount } from "@rove-code/source-control-github/server/GitHubCredentials";
-import * as HostProcess from "@rove-code/shared/HostProcess";
-import { compactTraceAttributes } from "@rove-code/shared/observability";
-import { decodeJsonResult } from "@rove-code/shared/schemaJson";
-import { resolveSpawnCommand } from "@rove-code/shared/shell";
-import { parseRoveProjectFile } from "@rove-code/shared/roveProjectFile";
-import { resolveProjectFileBackedSetting } from "@rove-code/shared/projectSettings";
+} from "@getpaperplane/contracts";
+import { dedupeRemoteBranchesWithLocalMatches, normalizeGitRemoteUrl } from "@getpaperplane/shared/git";
+import { SelectedGitHubAccount } from "@getpaperplane/source-control-github/server/GitHubCredentials";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
+import { compactTraceAttributes } from "@getpaperplane/shared/observability";
+import { decodeJsonResult } from "@getpaperplane/shared/schemaJson";
+import { resolveSpawnCommand } from "@getpaperplane/shared/shell";
+import { parseRoveProjectFile } from "@getpaperplane/shared/roveProjectFile";
+import { resolveProjectFileBackedSetting } from "@getpaperplane/shared/projectSettings";
 import { gitCommandDuration, gitCommandsTotal, withMetrics } from "../observability/Metrics.ts";
 import * as GitVcsDriver from "./GitVcsDriver.ts";
 import { stopWorktreeProcessesAfterRemoval } from "./worktreeProcesses.ts";

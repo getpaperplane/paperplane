@@ -5,7 +5,7 @@ import {
   type AttachmentCreateUploadUrlResult,
   type AttachmentDeleteInput,
   type EnvironmentId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import type { AsyncResult, Atom, AtomRegistry } from "effect/reactivity";
 
 import type { EnvironmentRegistry } from "../connection/registry.ts";

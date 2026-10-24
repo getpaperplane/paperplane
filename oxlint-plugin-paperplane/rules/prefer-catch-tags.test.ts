@@ -2,9 +2,9 @@ import { assert, describe } from "@effect/vitest";
 
 import { createOxlintRuleHarness } from "../test/utils.ts";
 
-const rule = createOxlintRuleHarness("rove/prefer-catch-tags");
+const rule = createOxlintRuleHarness("paperplane/prefer-catch-tags");
 
-describe("rove/prefer-catch-tags", () => {
+describe("paperplane/prefer-catch-tags", () => {
   rule.valid(
     "allows Effect.catchTags",
     `

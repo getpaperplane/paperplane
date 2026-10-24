@@ -1,12 +1,12 @@
-import { ProviderDriverKind, type CodexSettings } from "@rove-code/contracts";
+import { ProviderDriverKind, type CodexSettings } from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
 import * as Schema from "effect/Schema";
 import * as PlatformError from "effect/PlatformError";
 
-import { expandHomePath } from "@rove-code/provider-core/server/pathExpansion";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+import { expandHomePath } from "@getpaperplane/provider-core/server/pathExpansion";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 
 export interface CodexHomeLayout {
   readonly mode: "direct" | "authOverlay";

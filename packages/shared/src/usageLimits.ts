@@ -16,7 +16,7 @@ import {
   type ServerProviderUsageLimits,
   type ServerProviderUsageWindow,
   type UsageLimitSourceSnapshots,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 
 import * as DateTime from "effect/DateTime";
 

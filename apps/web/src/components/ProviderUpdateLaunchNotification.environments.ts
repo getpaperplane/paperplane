@@ -1,5 +1,5 @@
-import type { ConnectionCatalogEntry } from "@rove-code/client-runtime/connection";
-import type { ServerConfig } from "@rove-code/contracts";
+import type { ConnectionCatalogEntry } from "@getpaperplane/client-runtime/connection";
+import type { ServerConfig } from "@getpaperplane/contracts";
 import { useMemo } from "react";
 
 import { useEnvironments, usePrimaryEnvironmentId } from "~/state/environments";

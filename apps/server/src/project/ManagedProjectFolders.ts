@@ -15,8 +15,8 @@ import {
   ProjectId,
   type ThreadId,
   VcsProcessSpawnError,
-} from "@rove-code/contracts";
-import { newProjectFolderName } from "@rove-code/shared/path";
+} from "@getpaperplane/contracts";
+import { newProjectFolderName } from "@getpaperplane/shared/path";
 import * as Cause from "effect/Cause";
 import * as Context from "effect/Context";
 import * as Crypto from "effect/Crypto";
@@ -132,7 +132,7 @@ export class ManagedProjectFolders extends Context.Service<
       NamedProjectError
     >;
   }
->()("@rove-code/server/project/ManagedProjectFolders") {}
+>()("@getpaperplane/server/project/ManagedProjectFolders") {}
 
 // Only [a-z0-9] reaches a folder name, so it stays one path segment, and the
 // words are capped so a pasted blob cannot outgrow a file name.

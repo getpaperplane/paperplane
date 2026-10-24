@@ -81,7 +81,7 @@ export class ElectronApp extends Context.Service<
       listener: (...args: Args) => void,
     ) => Effect.Effect<void, never, Scope.Scope>;
   }
->()("@rove-code/desktop/electron/ElectronApp") {}
+>()("@getpaperplane/desktop/electron/ElectronApp") {}
 
 const addScopedAppListener = <Args extends ReadonlyArray<unknown>>(
   eventName: string,

@@ -1,6 +1,6 @@
 import { PermissionUpdateNotice } from "../components/PermissionUpdateNotice";
-import { type ServerLifecycleWelcomePayload } from "@rove-code/contracts";
-import { scopedProjectKey, scopeProjectRef } from "@rove-code/client-runtime/environment";
+import { type ServerLifecycleWelcomePayload } from "@getpaperplane/contracts";
+import { scopedProjectKey, scopeProjectRef } from "@getpaperplane/client-runtime/environment";
 import {
   Outlet,
   Link,

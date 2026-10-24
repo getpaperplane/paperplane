@@ -1,4 +1,4 @@
-import type { ServerConfigStreamEvent } from "@rove-code/contracts";
+import type { ServerConfigStreamEvent } from "@getpaperplane/contracts";
 import { describe, expect, it } from "vite-plus/test";
 
 import {

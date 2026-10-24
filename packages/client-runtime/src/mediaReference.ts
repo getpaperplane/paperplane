@@ -1,6 +1,6 @@
-import { isWindowsAbsolutePath } from "@rove-code/shared/path";
+import { isWindowsAbsolutePath } from "@getpaperplane/shared/path";
 
-import { safeDecodeURIComponent } from "@rove-code/shared/markdownLinks";
+import { safeDecodeURIComponent } from "@getpaperplane/shared/markdownLinks";
 
 /** The authored media location, never the temporary URL used to load its bytes. */
 export type MediaReference =

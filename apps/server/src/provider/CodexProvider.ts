@@ -25,15 +25,15 @@ import type {
   ProviderOptionDescriptor,
   ServerProviderModel,
   ServerProviderSkill,
-} from "@rove-code/contracts";
-import { PREFERRED_DEFAULT_CODEX_MODELS, ServerSettingsError } from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
+import { PREFERRED_DEFAULT_CODEX_MODELS, ServerSettingsError } from "@getpaperplane/contracts";
 
 import {
   codexModelFamily,
   createModelCapabilities,
   formatCodexModelName,
-} from "@rove-code/shared/model";
-import { resolveSpawnCommand } from "@rove-code/shared/shell";
+} from "@getpaperplane/shared/model";
+import { resolveSpawnCommand } from "@getpaperplane/shared/shell";
 import { codexAppServerArgs, resolveCodexLaunchArgs } from "./codexLaunchArgs.ts";
 import {
   AUTH_PROBE_TIMEOUT_MS,
@@ -41,16 +41,16 @@ import {
   COMPACT_SLASH_COMMAND,
   providerModelsFromSettings,
   type ServerProviderDraft,
-} from "@rove-code/provider-core/server/snapshotProbe";
-import { expandHomePath } from "@rove-code/provider-core/server/pathExpansion";
-import { makeUnavailableUsageLimits } from "@rove-code/provider-core/server/usageLimits";
+} from "@getpaperplane/provider-core/server/snapshotProbe";
+import { expandHomePath } from "@getpaperplane/provider-core/server/pathExpansion";
+import { makeUnavailableUsageLimits } from "@getpaperplane/provider-core/server/usageLimits";
 import {
   codexRateLimitsFailureMessage,
   codexRateLimitsToLimits,
   type CodexRateLimitSnapshot,
   type CodexResetCreditsSummary,
 } from "./codexUsageLimits.ts";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 import packageJson from "../../package.json" with { type: "json" };
 const isCodexAppServerSpawnError = Schema.is(CodexErrors.CodexAppServerSpawnError);
 const RATE_LIMITS_PROBE_TIMEOUT_MS = 3_000;

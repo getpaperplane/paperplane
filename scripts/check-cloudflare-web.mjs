@@ -3,7 +3,7 @@ import * as NodeFS from "node:fs";
 import * as NodePath from "node:path";
 import * as NodeURL from "node:url";
 
-import { buildRoveProjectFileJsonSchema } from "@rove-code/shared/roveProjectFile";
+import { buildRoveProjectFileJsonSchema } from "@getpaperplane/shared/roveProjectFile";
 import { checkAgentReadiness } from "./check-agent-readiness.mjs";
 
 function checkProjectFileSchema(raw, expectedSchema) {

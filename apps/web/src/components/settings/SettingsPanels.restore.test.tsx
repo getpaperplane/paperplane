@@ -1,4 +1,4 @@
-import { DEFAULT_UNIFIED_SETTINGS, type UnifiedSettings } from "@rove-code/contracts";
+import { DEFAULT_UNIFIED_SETTINGS, type UnifiedSettings } from "@getpaperplane/contracts";
 import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 import { reactHookHarness as hooks } from "../../test/reactHookHarness";

@@ -2,12 +2,12 @@ import { useAtomValue } from "@effect/atom-react";
 import {
   RelayConnectionRegistration,
   RelayConnectionTarget,
-} from "@rove-code/client-runtime/connection";
-import type { EnvironmentId } from "@rove-code/contracts";
+} from "@getpaperplane/client-runtime/connection";
+import type { EnvironmentId } from "@getpaperplane/contracts";
 import type {
   RelayClientEnvironmentRecord,
   RelayEnvironmentStatusResponse,
-} from "@rove-code/contracts/relay";
+} from "@getpaperplane/contracts/relay";
 import * as Option from "effect/Option";
 import { useCallback, useMemo } from "react";
 

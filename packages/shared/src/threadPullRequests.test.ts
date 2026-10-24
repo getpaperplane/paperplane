@@ -2,7 +2,7 @@ import {
   ProjectId,
   type ThreadPullRequestLink,
   type ThreadPullRequestSnapshot,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { beforeEach, describe, expect, it } from "vite-plus/test";
 
 import {

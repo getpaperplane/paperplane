@@ -3,19 +3,19 @@ import {
   AuthEnvironmentMaintainScope,
   type AuthSessionState,
   sessionGrantsScope,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import type { AsyncResult } from "effect/reactivity";
 import { environmentSession } from "~/state/session";
 import type {
   EnvironmentId,
   ServerInstallation,
   ServerSelfUpdateCapability,
-} from "@rove-code/contracts";
-import type { ServerUpdateStage, ServerUpdateState } from "@rove-code/client-runtime/state/server";
+} from "@getpaperplane/contracts";
+import type { ServerUpdateStage, ServerUpdateState } from "@getpaperplane/client-runtime/state/server";
 import {
   isAtomCommandInterrupted,
   squashAtomCommandFailure,
-} from "@rove-code/client-runtime/state/runtime";
+} from "@getpaperplane/client-runtime/state/runtime";
 import { CircleArrowUpIcon } from "lucide-react";
 import { type ComponentProps, useRef, useState } from "react";
 

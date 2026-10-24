@@ -1,4 +1,4 @@
-import { KeybindingCommand, KeybindingRule, KeybindingsConfig } from "@rove-code/contracts";
+import { KeybindingCommand, KeybindingRule, KeybindingsConfig } from "@getpaperplane/contracts";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { assert, it } from "@effect/vitest";
 import { assertFailure } from "@effect/vitest/utils";
@@ -11,8 +11,8 @@ import * as Path from "effect/Path";
 import * as Schema from "effect/Schema";
 import * as ServerConfig from "./config.ts";
 import * as Keybindings from "./keybindings.ts";
-import { KeybindingsConfigError, MAX_KEYBINDINGS_COUNT } from "@rove-code/contracts";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+import { KeybindingsConfigError, MAX_KEYBINDINGS_COUNT } from "@getpaperplane/contracts";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 
 const KeybindingsConfigJson = Schema.fromJsonString(KeybindingsConfig);
 const encodeKeybindingsConfigJson = Schema.encodeEffect(KeybindingsConfigJson);

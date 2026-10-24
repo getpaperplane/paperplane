@@ -1,7 +1,7 @@
 import type { SendUserTurnOptions } from "@muse-code/sdk";
-import { ModelCapabilities, ServerProviderModel } from "@rove-code/contracts";
+import { ModelCapabilities, ServerProviderModel } from "@getpaperplane/contracts";
 import { MuseSettings } from "../settings.ts";
-import { createModelCapabilities, getProviderOptionDescriptors } from "@rove-code/shared/model";
+import { createModelCapabilities, getProviderOptionDescriptors } from "@getpaperplane/shared/model";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 import { createMuseSdkHost, createMuseSdkHostEffect, type MuseSdkHost } from "./sdk.ts";

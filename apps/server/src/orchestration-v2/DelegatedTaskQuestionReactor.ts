@@ -4,14 +4,14 @@ import {
   type OrchestrationV2DomainEvent,
   type OrchestrationV2RuntimeRequest,
   type OrchestrationV2Subagent,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import type * as Scope from "effect/Scope";
 import * as Stream from "effect/Stream";
 
-import { reportLabel } from "@rove-code/provider-core/server/notification";
+import { reportLabel } from "@getpaperplane/provider-core/server/notification";
 
 import { forkParked } from "../serverActivation.ts";
 import * as Orchestrator from "./Orchestrator.ts";
@@ -29,7 +29,7 @@ export class DelegatedTaskQuestionReactor extends Context.Service<
     readonly start: () => Effect.Effect<void, never, Scope.Scope>;
     readonly handle: (event: OrchestrationV2DomainEvent) => Effect.Effect<void>;
   }
->()("@rove-code/server/orchestration-v2/DelegatedTaskQuestionReactor") {}
+>()("@getpaperplane/server/orchestration-v2/DelegatedTaskQuestionReactor") {}
 
 const make = Effect.gen(function* () {
   const engine = yield* Orchestrator.OrchestratorV2;

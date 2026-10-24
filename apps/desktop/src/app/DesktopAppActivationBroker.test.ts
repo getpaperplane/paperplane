@@ -1,4 +1,4 @@
-import { ProjectId, ThreadId, type DesktopAppActivationRequest } from "@rove-code/contracts";
+import { ProjectId, ThreadId, type DesktopAppActivationRequest } from "@getpaperplane/contracts";
 import { describe, expect, it, vi } from "vite-plus/test";
 
 import { DesktopAppActivationBroker } from "./DesktopAppActivationBroker.ts";

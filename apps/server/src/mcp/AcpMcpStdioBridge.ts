@@ -7,7 +7,7 @@ import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
 import * as Stream from "effect/Stream";
-import { discardResponseBody, responsePayloads } from "@rove-code/shared/mcpResponsePayloads";
+import { discardResponseBody, responsePayloads } from "@getpaperplane/shared/mcpResponsePayloads";
 
 /**
  * Stdio-to-HTTP bridge for Paperplane's MCP endpoint.

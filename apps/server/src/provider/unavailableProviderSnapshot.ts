@@ -14,11 +14,11 @@ import {
   ProviderDriverKind,
   type ProviderInstanceId,
   type ServerProvider,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 
-import { buildServerProvider } from "@rove-code/provider-core/server/snapshotProbe";
+import { buildServerProvider } from "@getpaperplane/provider-core/server/snapshotProbe";
 
 export interface UnavailableProviderSnapshotInput {
   readonly driverKind: ProviderDriverKind | string;

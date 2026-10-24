@@ -1,5 +1,5 @@
-import { SourceControlProviderKind } from "@rove-code/contracts";
-import type { VcsStatusRemoteResult, VcsStatusResult } from "@rove-code/contracts";
+import { SourceControlProviderKind } from "@getpaperplane/contracts";
+import type { VcsStatusRemoteResult, VcsStatusResult } from "@getpaperplane/contracts";
 import { describe, expect, it } from "vite-plus/test";
 
 import {

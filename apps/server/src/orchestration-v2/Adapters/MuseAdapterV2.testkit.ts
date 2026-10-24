@@ -21,27 +21,27 @@ import {
   ProviderReplayEntry,
   type ProviderReplayEntry as ProviderReplayEntryType,
   type ProviderReplayTranscript,
-} from "@rove-code/contracts";
-import { MuseSettings } from "@rove-code/provider-muse/settings";
+} from "@getpaperplane/contracts";
+import { MuseSettings } from "@getpaperplane/provider-muse/settings";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as Schema from "effect/Schema";
 
-import * as TestProviderHost from "@rove-code/provider-testing/TestProviderHost";
+import * as TestProviderHost from "@getpaperplane/provider-testing/TestProviderHost";
 import {
   museInitializeParams,
   museServeArgs,
   museWorkspaceRoot,
   type MuseSdkHost,
   type MuseSdkHostOptions,
-} from "@rove-code/provider-muse/testing";
-import * as IdAllocator from "@rove-code/provider-core/server/IdAllocator";
+} from "@getpaperplane/provider-muse/testing";
+import * as IdAllocator from "@getpaperplane/provider-core/server/IdAllocator";
 import * as ProviderAdapterRegistry from "../ProviderAdapterRegistry.ts";
-import * as ProviderContinuationRequests from "@rove-code/provider-core/server/ProviderContinuationRequests";
+import * as ProviderContinuationRequests from "@getpaperplane/provider-core/server/ProviderContinuationRequests";
 import type { OrchestratorV2ProviderReplayHarness } from "../testkit/ProviderReplayHarness.ts";
-import { materializeReplayTranscriptWorkspace } from "@rove-code/provider-testing/replayTranscript";
-import { makeMuseAdapterV2 } from "@rove-code/provider-muse/server";
+import { materializeReplayTranscriptWorkspace } from "@getpaperplane/provider-testing/replayTranscript";
+import { makeMuseAdapterV2 } from "@getpaperplane/provider-muse/server";
 
 export const MUSE_PROVIDER_KIND = "muse";
 export const MUSE_MSP_REPLAY_PROTOCOL = "muse.msp-jsonl";

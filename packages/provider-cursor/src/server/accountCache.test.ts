@@ -1,7 +1,7 @@
 import { assert, describe, it } from "@effect/vitest";
 
 import { cursorFetchRange, mergeCursorFetch } from "./accountCache.ts";
-import type { UsageRecord } from "@rove-code/provider-core/server/usage";
+import type { UsageRecord } from "@getpaperplane/provider-core/server/usage";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 

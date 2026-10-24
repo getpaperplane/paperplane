@@ -5,14 +5,14 @@
  *
  * @module provider/codexModelCatalog
  */
-import type { ServerProviderUpdateRequiredModel } from "@rove-code/contracts";
-import * as ModelCatalog from "@rove-code/provider-core/server/ModelCatalog";
-import type { ServerProviderDraft } from "@rove-code/provider-core/server/snapshotProbe";
-import { codexModelFamily } from "@rove-code/shared/model";
-import { compareSemverVersions, parseSemver } from "@rove-code/shared/semver";
+import type { ServerProviderUpdateRequiredModel } from "@getpaperplane/contracts";
+import * as ModelCatalog from "@getpaperplane/provider-core/server/ModelCatalog";
+import type { ServerProviderDraft } from "@getpaperplane/provider-core/server/snapshotProbe";
+import { codexModelFamily } from "@getpaperplane/shared/model";
+import { compareSemverVersions, parseSemver } from "@getpaperplane/shared/semver";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
-import { TrimmedNonEmptyString } from "@rove-code/contracts";
+import { TrimmedNonEmptyString } from "@getpaperplane/contracts";
 
 /** Dated Codex builds match their base model's catalog entry. */
 const CODEX_MATCHING: ModelCatalog.CatalogMatching = { family: codexModelFamily };

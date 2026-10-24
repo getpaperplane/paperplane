@@ -10,8 +10,8 @@ import {
   DesktopTelemetryControlMessage,
   type DesktopUpdateStatusReport,
   type ResourceTelemetrySourceStatus,
-} from "@rove-code/contracts";
-import { resolveServerBackgroundActivitySettings } from "@rove-code/shared/backgroundActivitySettings";
+} from "@getpaperplane/contracts";
+import { resolveServerBackgroundActivitySettings } from "@getpaperplane/shared/backgroundActivitySettings";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
@@ -198,7 +198,7 @@ export class DesktopTelemetryReceiver extends Context.Service<
       Scope.Scope
     >;
   }
->()("@rove-code/server/resourceTelemetry/DesktopTelemetryReceiver") {}
+>()("@getpaperplane/server/resourceTelemetry/DesktopTelemetryReceiver") {}
 
 const decodeMessage = Schema.decodeUnknownEffect(DesktopHostTelemetryMessage);
 const encodeControlMessage = Schema.encodeEffect(

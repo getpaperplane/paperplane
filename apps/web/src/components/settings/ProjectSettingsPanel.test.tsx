@@ -2,7 +2,7 @@ import { RegistryContext } from "@effect/atom-react";
 import type {
   DeleteProjectInput,
   UpdateProjectInput,
-} from "@rove-code/client-runtime/state/projects";
+} from "@getpaperplane/client-runtime/state/projects";
 import {
   AuthOrchestrationOperateScope,
   AuthSettingsWriteScope,
@@ -15,9 +15,9 @@ import {
   type AuthSessionState,
   type ResolvedKeybindingsConfig,
   type ServerProvider,
-} from "@rove-code/contracts";
-import { DEFAULT_CLIENT_SETTINGS } from "@rove-code/contracts/settings";
-import { DEFAULT_RESOLVED_KEYBINDINGS } from "@rove-code/shared/keybindings";
+} from "@getpaperplane/contracts";
+import { DEFAULT_CLIENT_SETTINGS } from "@getpaperplane/contracts/settings";
+import { DEFAULT_RESOLVED_KEYBINDINGS } from "@getpaperplane/shared/keybindings";
 import * as Cause from "effect/Cause";
 import { AsyncResult, Atom, AtomRegistry } from "effect/reactivity";
 import { cloneElement, type ReactElement, type ReactNode } from "react";
@@ -59,7 +59,7 @@ const state = vi.hoisted(() => ({
 }));
 
 vi.mock("~/connection/runtime", () => ({ connectionAtomRuntime: undefined }));
-vi.mock("@rove-code/client-runtime/state/session", () => ({
+vi.mock("@getpaperplane/client-runtime/state/session", () => ({
   createEnvironmentSessionAtoms: () => ({
     sessionStateAtom: (id: EnvironmentId) => state.sessions.get(id)!,
   }),

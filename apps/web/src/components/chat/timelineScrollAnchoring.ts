@@ -1,4 +1,4 @@
-import type { MessageId, RunId } from "@rove-code/contracts";
+import type { MessageId, RunId } from "@getpaperplane/contracts";
 
 export interface TimelineRunObservation {
   readonly threadKey: string | null;
@@ -33,7 +33,7 @@ export function observeTimelineRun(
   }
   return { observation, anchorMessageId: input.messageId };
 }
-import type { RunAttemptId } from "@rove-code/contracts";
+import type { RunAttemptId } from "@getpaperplane/contracts";
 
 // Match the titlebar fade inset so draft promotion preserves the first row's position.
 export const CHAT_TIMELINE_ANCHOR_OFFSET = 24;

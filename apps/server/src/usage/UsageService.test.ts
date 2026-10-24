@@ -8,8 +8,8 @@ import * as NodeSqlite from "node:sqlite";
 
 import { assert, describe, it } from "@effect/vitest";
 import * as NodeServices from "@effect/platform-node/NodeServices";
-import * as HostProcess from "@rove-code/shared/HostProcess";
-import { mergeUsage } from "@rove-code/shared/usageMerge";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
+import { mergeUsage } from "@getpaperplane/shared/usageMerge";
 import {
   EnvironmentId,
   ProviderDriverKind,
@@ -17,7 +17,7 @@ import {
   UsageDay,
   type UsageSource,
   type UsageSummaryInput,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Duration from "effect/Duration";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
@@ -33,14 +33,14 @@ import { HttpClient, HttpClientResponse } from "effect/http";
 
 import * as ServerConfig from "../config.ts";
 import * as ServerSettings from "../serverSettings.ts";
-import * as CursorAccountReader from "@rove-code/provider-cursor/server/CursorAccountReader";
-import * as CursorKeychain from "@rove-code/provider-cursor/server/CursorKeychain";
-import * as CursorUsageAccounts from "@rove-code/provider-cursor/server/CursorUsageAccounts";
+import * as CursorAccountReader from "@getpaperplane/provider-cursor/server/CursorAccountReader";
+import * as CursorKeychain from "@getpaperplane/provider-cursor/server/CursorKeychain";
+import * as CursorUsageAccounts from "@getpaperplane/provider-cursor/server/CursorUsageAccounts";
 import * as ServerSecretStore from "../auth/ServerSecretStore.ts";
 import * as BackgroundPolicy from "../background/BackgroundPolicy.ts";
 import * as AntigravityUsage from "../provider/Drivers/AntigravityUsage.ts";
 import * as ProviderHostLive from "../provider/ProviderHostLive.ts";
-import { totalTokens, type UsageRecord } from "@rove-code/provider-core/server/usage";
+import { totalTokens, type UsageRecord } from "@getpaperplane/provider-core/server/usage";
 import * as UsageService from "./UsageService.ts";
 
 const encodeUnknownJson = Schema.encodeEffect(Schema.fromJsonString(Schema.Unknown));

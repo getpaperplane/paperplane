@@ -8,7 +8,7 @@ import {
   ProjectId,
   RunId,
   ThreadId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   act,
   createRef,

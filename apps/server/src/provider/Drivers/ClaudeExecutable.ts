@@ -2,8 +2,8 @@
 import * as NodeFS from "node:fs";
 import * as NodePath from "node:path";
 
-import * as HostProcess from "@rove-code/shared/HostProcess";
-import { SpawnExecutableResolution } from "@rove-code/shared/shell";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
+import { SpawnExecutableResolution } from "@getpaperplane/shared/shell";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 

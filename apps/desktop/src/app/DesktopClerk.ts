@@ -8,13 +8,13 @@ import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 import * as Scope from "effect/Scope";
 
-import { codexAuthDeliveryUrl, readCodexAuthHandoff } from "@rove-code/shared/codexAuthHandoff";
+import { codexAuthDeliveryUrl, readCodexAuthHandoff } from "@getpaperplane/shared/codexAuthHandoff";
 import { receiveCodexAuthCallback, CodexAuthCallbackError } from "./CodexAuthCallback.ts";
 import * as ElectronShell from "../electron/ElectronShell.ts";
-import { providerAuthReturnUrl } from "@rove-code/shared/providerAuthReturnUrl";
-import { promptLinkAppPath } from "@rove-code/shared/promptLinks";
-import * as HostProcess from "@rove-code/shared/HostProcess";
-import { clerkFrontendApiHostnameFromPublishableKey } from "@rove-code/shared/relayAuth";
+import { providerAuthReturnUrl } from "@getpaperplane/shared/providerAuthReturnUrl";
+import { promptLinkAppPath } from "@getpaperplane/shared/promptLinks";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
+import { clerkFrontendApiHostnameFromPublishableKey } from "@getpaperplane/shared/relayAuth";
 import * as ElectronApp from "../electron/ElectronApp.ts";
 import * as ElectronProtocol from "../electron/ElectronProtocol.ts";
 import * as ElectronWindow from "../electron/ElectronWindow.ts";
@@ -62,7 +62,7 @@ export class DesktopClerk extends Context.Service<
       | Scope.Scope
     >;
   }
->()("@rove-code/desktop/app/DesktopClerk") {}
+>()("@getpaperplane/desktop/app/DesktopClerk") {}
 
 function resolveDesktopClerkFrontendApiHostname(
   publishableKey: string | undefined,

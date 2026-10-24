@@ -5,8 +5,8 @@ import {
   ProviderDriverKind,
   ProviderInstanceId,
   type ServerProvider,
-} from "@rove-code/contracts";
-import { createModelCapabilities } from "@rove-code/shared/model";
+} from "@getpaperplane/contracts";
+import { createModelCapabilities } from "@getpaperplane/shared/model";
 import { assert, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";

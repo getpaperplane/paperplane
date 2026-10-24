@@ -8,7 +8,7 @@ Use Paperplane-owned CLI packages. Do not substitute an upstream package.
 With Node.js and npm available for installation, run:
 
 ```sh
-npm install -g @rove-code/cli
+npm install -g @getpaperplane/cli
 rove service install
 rove service status
 ```
@@ -20,8 +20,8 @@ require a Git checkout or a system Node.js installation.
 To bootstrap without a global npm installation, run:
 
 ```sh
-npx @rove-code/cli@latest service install --tailscale-serve
-npx @rove-code/cli@latest pair --tailscale
+npx @getpaperplane/cli@latest service install --tailscale-serve
+npx @getpaperplane/cli@latest pair --tailscale
 ```
 
 Use the pairing URL in **Settings → Connections → Add environment** on your
@@ -34,7 +34,7 @@ background services are not supported. Desktop clients have a separate platform 
 for prerequisites, restart, and removal.
 
 Update a packaged host with `rove update`, or
-`npx @rove-code/cli@latest update`. See [updates](./updating.md).
+`npx @getpaperplane/cli@latest update`. See [updates](./updating.md).
 
 Contributor source setup lives in the [development guide](../operations/development.md).
 It is not the installation or update procedure for a persistent host.

@@ -1,4 +1,4 @@
-import type { TurnTokenUsage } from "@rove-code/contracts";
+import type { TurnTokenUsage } from "@getpaperplane/contracts";
 import type * as EffectCodexSchema from "effect-codex-app-server/schema";
 
 type CodexCumulativeTokenUsage = {

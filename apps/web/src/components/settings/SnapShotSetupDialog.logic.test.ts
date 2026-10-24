@@ -1,4 +1,4 @@
-import { DEFAULT_CLIENT_SETTINGS, type DesktopSnapShotState } from "@rove-code/contracts";
+import { DEFAULT_CLIENT_SETTINGS, type DesktopSnapShotState } from "@getpaperplane/contracts";
 import { expect, it } from "vite-plus/test";
 import {
   captureSetupAccessReady,

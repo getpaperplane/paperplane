@@ -2,8 +2,8 @@ import type {
   AuthAccessSnapshot,
   AuthAccessStreamEvent,
   AuthAccessStreamSnapshotEvent,
-} from "@rove-code/contracts";
-import { WS_METHODS } from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
+import { WS_METHODS } from "@getpaperplane/contracts";
 import * as Stream from "effect/Stream";
 import { Atom } from "effect/reactivity";
 

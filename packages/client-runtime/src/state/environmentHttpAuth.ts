@@ -3,9 +3,9 @@ import * as Option from "effect/Option";
 import {
   ORCHESTRATION_PROTOCOL_HEADER,
   ORCHESTRATION_PROTOCOL_VERSION_TEXT,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Result from "effect/Result";
-import { withRelayClientTracing } from "@rove-code/shared/relayTracing";
+import { withRelayClientTracing } from "@getpaperplane/shared/relayTracing";
 import { FetchHttpClient, type HttpMethod } from "effect/http";
 
 import type { RemoteEnvironmentAuthorization } from "../authorization/service.ts";

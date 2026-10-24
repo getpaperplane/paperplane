@@ -1,7 +1,7 @@
 import { useAtomValue } from "@effect/atom-react";
-import type { EnvironmentPresentation } from "@rove-code/client-runtime/connection";
-import { createEnvironmentPresentationAtoms } from "@rove-code/client-runtime/state/presentation";
-import type { EnvironmentId } from "@rove-code/contracts";
+import type { EnvironmentPresentation } from "@getpaperplane/client-runtime/connection";
+import { createEnvironmentPresentationAtoms } from "@getpaperplane/client-runtime/state/presentation";
+import type { EnvironmentId } from "@getpaperplane/contracts";
 import { Atom } from "effect/reactivity";
 
 import { environmentCatalog } from "../connection/catalog";

@@ -1,5 +1,5 @@
-import type { ProjectEntry } from "@rove-code/contracts";
-import { normalizeSearchQuery } from "@rove-code/shared/searchRanking";
+import type { ProjectEntry } from "@getpaperplane/contracts";
+import { normalizeSearchQuery } from "@getpaperplane/shared/searchRanking";
 
 export const PROJECT_FILE_PICKER_RESULT_LIMIT = 200;
 

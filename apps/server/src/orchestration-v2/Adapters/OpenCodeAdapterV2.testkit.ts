@@ -1,24 +1,24 @@
 import type { OpencodeClient } from "@opencode-ai/sdk/v2";
 import * as NodeServices from "@effect/platform-node/NodeServices";
-import { ProviderReplayEntry, type ProviderReplayTranscript } from "@rove-code/contracts";
+import { ProviderReplayEntry, type ProviderReplayTranscript } from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import * as Duration from "effect/Duration";
 import * as Layer from "effect/Layer";
 import * as Schema from "effect/Schema";
 
-import { OpenCodeAdapterV2Driver } from "@rove-code/provider-opencode/server";
-import * as OpenCodeRuntime from "@rove-code/provider-opencode/server/OpenCodeRuntime";
-import * as TestProviderHost from "@rove-code/provider-testing/TestProviderHost";
-import * as ProviderEventLoggers from "@rove-code/provider-core/server/ProviderEventLoggers";
-import * as IdAllocator from "@rove-code/provider-core/server/IdAllocator";
-import { ProviderAdapterDriverCreateError } from "@rove-code/provider-core/server/adapterDriver";
+import { OpenCodeAdapterV2Driver } from "@getpaperplane/provider-opencode/server";
+import * as OpenCodeRuntime from "@getpaperplane/provider-opencode/server/OpenCodeRuntime";
+import * as TestProviderHost from "@getpaperplane/provider-testing/TestProviderHost";
+import * as ProviderEventLoggers from "@getpaperplane/provider-core/server/ProviderEventLoggers";
+import * as IdAllocator from "@getpaperplane/provider-core/server/IdAllocator";
+import { ProviderAdapterDriverCreateError } from "@getpaperplane/provider-core/server/adapterDriver";
 import * as ProviderAdapterRegistry from "../ProviderAdapterRegistry.ts";
 import { type OrchestratorV2ProviderReplayHarness } from "../testkit/ProviderReplayHarness.ts";
 import {
   OPENCODE_DEFAULT_INSTANCE_ID,
   OPENCODE_PROVIDER,
   OPENCODE_SDK_PROTOCOL,
-} from "@rove-code/provider-opencode/testing";
+} from "@getpaperplane/provider-opencode/testing";
 
 const OPENCODE_SDK_REPLAY_PROTOCOL = OPENCODE_SDK_PROTOCOL;
 

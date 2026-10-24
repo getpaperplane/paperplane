@@ -6,8 +6,8 @@ import * as NodeSqlite from "node:sqlite";
 
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { assert, it } from "@effect/vitest";
-import { ThreadId } from "@rove-code/contracts";
-import * as NodeSqliteClient from "@rove-code/shared/nodeSqliteClient";
+import { ThreadId } from "@getpaperplane/contracts";
+import * as NodeSqliteClient from "@getpaperplane/shared/nodeSqliteClient";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as SqlClient from "effect/sql/SqlClient";

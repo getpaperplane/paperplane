@@ -6,8 +6,8 @@ import type {
   ScopedProjectRef,
   ScopedThreadRef,
   ThreadId,
-} from "@rove-code/contracts";
-import { isProviderNativeSubagentThread } from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
+import { isProviderNativeSubagentThread } from "@getpaperplane/contracts";
 import { Atom } from "effect/reactivity";
 
 import type { EnvironmentThreadShell, PendingSubagentRequest } from "./models.ts";

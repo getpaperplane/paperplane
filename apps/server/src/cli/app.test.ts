@@ -6,10 +6,10 @@ import * as NodePath from "node:path";
 
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { it } from "@effect/vitest";
-import type { DesktopAppActivationRequest } from "@rove-code/contracts";
-import { resolveDesktopAppControlAddress } from "@rove-code/shared/desktopAppControl";
-import * as HostProcess from "@rove-code/shared/HostProcess";
-import * as NetService from "@rove-code/shared/Net";
+import type { DesktopAppActivationRequest } from "@getpaperplane/contracts";
+import { resolveDesktopAppControlAddress } from "@getpaperplane/shared/desktopAppControl";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
+import * as NetService from "@getpaperplane/shared/Net";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";

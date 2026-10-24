@@ -4,10 +4,10 @@ import {
   ProviderDriverKind,
   ProviderInstanceId,
   type ServerProvider,
-} from "@rove-code/contracts";
-import { DEFAULT_UNIFIED_SETTINGS, type UnifiedSettings } from "@rove-code/contracts/settings";
+} from "@getpaperplane/contracts";
+import { DEFAULT_UNIFIED_SETTINGS, type UnifiedSettings } from "@getpaperplane/contracts/settings";
 import { describe, expect, it } from "vite-plus/test";
-import { createModelSelection } from "@rove-code/shared/model";
+import { createModelSelection } from "@getpaperplane/shared/model";
 import { deriveEffectiveComposerModelState } from "./composerDraftStore";
 import { getComposerProviderState } from "./components/chat/composerProviderState";
 import { deriveProviderInstanceEntries, NO_PROVIDER_MODEL_SELECTION } from "./providerInstances";

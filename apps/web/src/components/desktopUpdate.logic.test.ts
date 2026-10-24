@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vite-plus/test";
-import type { DesktopUpdateActionResult, DesktopUpdateState } from "@rove-code/contracts";
+import type { DesktopUpdateActionResult, DesktopUpdateState } from "@getpaperplane/contracts";
 
 import {
   canCheckForUpdate,

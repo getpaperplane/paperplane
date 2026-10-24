@@ -1,9 +1,9 @@
 import {
   ConnectionTransientError,
   PrimaryConnectionTarget,
-} from "@rove-code/client-runtime/connection";
-import { EnvironmentId, ThreadId } from "@rove-code/contracts";
-import { ConnectionCatalogDocument, Persistence } from "@rove-code/client-runtime/platform";
+} from "@getpaperplane/client-runtime/connection";
+import { EnvironmentId, ThreadId } from "@getpaperplane/contracts";
+import { ConnectionCatalogDocument, Persistence } from "@getpaperplane/client-runtime/platform";
 import { describe, expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Deferred from "effect/Deferred";

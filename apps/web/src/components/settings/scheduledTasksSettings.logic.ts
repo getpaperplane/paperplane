@@ -8,17 +8,17 @@ import {
   type RuntimeMode,
   type ProviderInteractionMode,
   type ServerSettings,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   WEBHOOK_SIGNATURE_DEFAULTS,
   parseMaxDeliveryAge,
   webhookSignatureForUpsert,
-} from "@rove-code/client-runtime/scheduled-task-webhook";
+} from "@getpaperplane/client-runtime/scheduled-task-webhook";
 
 import {
   resolveProjectSettings,
   type LegacyProjectSettingsFields,
-} from "@rove-code/shared/projectSettings";
+} from "@getpaperplane/shared/projectSettings";
 import type { ProviderInstanceEntry } from "../../providerInstances";
 
 import type { ResolvedSettingsScope } from "./settingsScope";

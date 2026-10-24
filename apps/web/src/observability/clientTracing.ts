@@ -8,8 +8,8 @@ import { OtlpExporter, OtlpSerialization, OtlpTracer } from "effect/observabilit
 import {
   settleAsyncResult,
   squashAtomCommandFailure,
-} from "@rove-code/client-runtime/state/runtime";
-import { safeErrorLogAttributes } from "@rove-code/client-runtime/errors";
+} from "@getpaperplane/client-runtime/state/runtime";
+import { safeErrorLogAttributes } from "@getpaperplane/client-runtime/errors";
 import { resolvePrimaryEnvironmentHttpUrl } from "../environments/primary";
 import * as ClientTracer from "./clientTracer";
 import * as PrimaryEnvironmentHttpLayer from "../environments/primary/httpLayer";

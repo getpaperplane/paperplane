@@ -1,5 +1,5 @@
-import { ManagedRelay } from "@rove-code/client-runtime/relay";
-import { RelayWebClientId } from "@rove-code/contracts/relay";
+import { ManagedRelay } from "@getpaperplane/client-runtime/relay";
+import { RelayWebClientId } from "@getpaperplane/contracts/relay";
 import * as Crypto from "effect/Crypto";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";

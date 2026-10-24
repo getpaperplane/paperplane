@@ -1,4 +1,4 @@
-import { ProviderDriverKind, TextGenerationError, type CodexSettings } from "@rove-code/contracts";
+import { ProviderDriverKind, TextGenerationError, type CodexSettings } from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
@@ -6,7 +6,7 @@ import * as Stream from "effect/Stream";
 import * as Option from "effect/Option";
 import { ChildProcessSpawner } from "effect/process";
 import { makeCodexTextGeneration } from "../../textGeneration/CodexTextGeneration.ts";
-import * as ProviderHost from "@rove-code/provider-core/server/ProviderHost";
+import * as ProviderHost from "@getpaperplane/provider-core/server/ProviderHost";
 import { chatGptModels } from "../CodexChatGptModels.ts";
 import { makeCodexManagedRuntime } from "../CodexManagedRuntime.ts";
 import { ProviderDriverError } from "../Errors.ts";
@@ -16,14 +16,14 @@ import {
   makePendingCodexProvider,
   probeCodexSkillsForCwd,
 } from "../CodexProvider.ts";
-import { makeManagedServerProvider } from "@rove-code/provider-core/server/managedProvider";
-import { mergeProviderInstanceEnvironment } from "@rove-code/provider-core/server/instanceEnvironment";
+import { makeManagedServerProvider } from "@getpaperplane/provider-core/server/managedProvider";
+import { mergeProviderInstanceEnvironment } from "@getpaperplane/provider-core/server/instanceEnvironment";
 import {
   type ProviderDriverCreateInput,
   type ProviderInstance,
-} from "@rove-code/provider-core/server/driver";
+} from "@getpaperplane/provider-core/server/driver";
 import { codexContinuationIdentity } from "./CodexHomeLayout.ts";
-import { withInstanceIdentity } from "@rove-code/provider-core/server/instanceIdentity";
+import { withInstanceIdentity } from "@getpaperplane/provider-core/server/instanceIdentity";
 import { HttpClient } from "effect/http";
 const DRIVER = ProviderDriverKind.make("codex");
 

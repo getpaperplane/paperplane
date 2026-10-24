@@ -9,14 +9,14 @@ import * as EffectAcpSchemaV1 from "effect-acp/schema-v1";
 import {
   deriveToolActivityPresentation,
   mergeToolActivityData,
-} from "@rove-code/shared/toolActivity";
-import { ROVE_MCP_SERVER_NAME } from "@rove-code/shared/roveMcp";
-import { ROVE_MCP_TOOL_NAMES } from "@rove-code/shared/roveMcpToolPresentation";
+} from "@getpaperplane/shared/toolActivity";
+import { ROVE_MCP_SERVER_NAME } from "@getpaperplane/shared/roveMcp";
+import { ROVE_MCP_TOOL_NAMES } from "@getpaperplane/shared/roveMcpToolPresentation";
 import type {
   OrchestrationV2ProviderThreadNativeMetadata,
   ThreadTokenUsageSnapshot,
   ToolLifecycleItemType,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);

@@ -1,5 +1,5 @@
-import type { EnvironmentId, SidebarProjectGroupingMode } from "@rove-code/contracts";
-import { DEFAULT_SIDEBAR_PROJECT_SORT_ORDER } from "@rove-code/contracts";
+import type { EnvironmentId, SidebarProjectGroupingMode } from "@getpaperplane/contracts";
+import { DEFAULT_SIDEBAR_PROJECT_SORT_ORDER } from "@getpaperplane/contracts";
 import { useAtomSet } from "@effect/atom-react";
 import {
   createContext,

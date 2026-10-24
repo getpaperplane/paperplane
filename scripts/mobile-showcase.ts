@@ -417,7 +417,7 @@ function printUsage(config: ShowcaseConfig): void {
   NodeProcess.stdout.write(`App screenshot showcase
 
 Usage:
-  pnpm --filter @rove-code/mobile screenshots [options]
+  pnpm --filter @getpaperplane/mobile screenshots [options]
 
 Options:
   --platform ios|android|all  Capture one platform (repeatable)

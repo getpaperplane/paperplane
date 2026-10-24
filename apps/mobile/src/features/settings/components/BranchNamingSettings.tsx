@@ -1,4 +1,4 @@
-import { BranchNamingMode, type ServerSettingsPatch } from "@rove-code/contracts";
+import { BranchNamingMode, type ServerSettingsPatch } from "@getpaperplane/contracts";
 import { useRef } from "react";
 import { View } from "react-native";
 

@@ -15,7 +15,7 @@ import {
   type ProjectId,
   type SecretRequestAnswerInput,
   type ThreadId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 // @effect-diagnostics-next-line nodeBuiltinImport:off -- Effect's Crypto has no createHmac.
 import * as NodeCrypto from "node:crypto";
 
@@ -84,7 +84,7 @@ export class SecretRequests extends Context.Service<
       readonly projectId: ProjectId;
     }) => Effect.Effect<string, SecretRequestError>;
   }
->()("@rove-code/server/secrets/SecretRequests") {}
+>()("@getpaperplane/server/secrets/SecretRequests") {}
 
 const make = Effect.gen(function* () {
   const store = yield* ServerSecretStore.ServerSecretStore;

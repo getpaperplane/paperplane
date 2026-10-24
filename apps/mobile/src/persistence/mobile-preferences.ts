@@ -13,14 +13,14 @@ import {
   type ProviderInstanceId,
   type PullRequestMergeMethod,
   type SidebarProjectGroupingMode,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import type { ComposerEnterBehavior } from "../lib/composerEnterBehavior";
 import type { FollowUpBehavior } from "../lib/followUpBehavior";
 import { isMicrophoneKind, type MicrophoneEntry } from "../lib/microphonePriority";
 import { MOBILE_THEME_IDS, type MobileThemeId, type MobileThemeMode } from "../lib/mobileTheme";
 import * as MobileDatabase from "./mobile-database";
 import * as MobileSecureStorage from "./mobile-secure-storage";
-import { migrateRoveSavedState } from "@rove-code/shared/roveMigration";
+import { migrateRoveSavedState } from "@getpaperplane/shared/roveMigration";
 import { MobileStorageDecodeError, MobileStorageEncodeError } from "./mobile-storage";
 
 const decodeMigrationJson = Schema.decodeUnknownSync(Schema.Json);
@@ -137,7 +137,7 @@ export class MobilePreferencesStore extends Context.Service<
       transform: (current: Preferences) => Partial<Preferences>,
     ) => Effect.Effect<Preferences, MobilePreferencesSaveError>;
   }
->()("@rove-code/mobile/persistence/MobilePreferencesStore") {}
+>()("@getpaperplane/mobile/persistence/MobilePreferencesStore") {}
 
 function sanitizePreferences(parsed: Preferences): Preferences {
   const preferences: {

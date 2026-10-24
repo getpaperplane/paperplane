@@ -1,4 +1,4 @@
-import { withRelayClientTracing } from "@rove-code/shared/relayTracing";
+import { withRelayClientTracing } from "@getpaperplane/shared/relayTracing";
 import * as Cause from "effect/Cause";
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
@@ -252,7 +252,7 @@ export class EnvironmentSupervisor extends Context.Service<
     readonly disconnect: Effect.Effect<void>;
     readonly retryNow: Effect.Effect<void>;
   }
->()("@rove-code/client-runtime/connection/supervisor/EnvironmentSupervisor") {}
+>()("@getpaperplane/client-runtime/connection/supervisor/EnvironmentSupervisor") {}
 
 export const make = Effect.fn("EnvironmentSupervisor.make")(function* (
   entry: ConnectionCatalogEntry,

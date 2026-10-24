@@ -1,15 +1,15 @@
-import { proposedPlanTitle, stripDisplayedPlanMarkdown } from "@rove-code/shared/proposedPlanText";
+import { proposedPlanTitle, stripDisplayedPlanMarkdown } from "@getpaperplane/shared/proposedPlanText";
 import { memo, useCallback, useState, useId } from "react";
 import { useFindRevealRef } from "./markdownFindContext";
 import {
   isAtomCommandInterrupted,
   squashAtomCommandFailure,
-} from "@rove-code/client-runtime/state/runtime";
+} from "@getpaperplane/client-runtime/state/runtime";
 import {
   AuthFilesystemWriteScope,
   type EnvironmentId,
   type ScopedThreadRef,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   buildCollapsedProposedPlanPreviewMarkdown,
   buildProposedPlanMarkdownFilename,

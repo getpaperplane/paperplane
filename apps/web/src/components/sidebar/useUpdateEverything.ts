@@ -1,5 +1,5 @@
 import { useAtomValue } from "@effect/atom-react";
-import { PROVIDER_DISPLAY_NAMES } from "@rove-code/contracts";
+import { PROVIDER_DISPLAY_NAMES } from "@getpaperplane/contracts";
 import { Atom } from "effect/reactivity";
 import { useMemo } from "react";
 

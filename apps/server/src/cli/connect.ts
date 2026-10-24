@@ -3,11 +3,11 @@ import {
   EnvironmentHttpApi,
   type RelayClientInstallProgressEvent,
   type RelayClientInstallProgressStage,
-} from "@rove-code/contracts";
-import { RelayOkResponse } from "@rove-code/contracts/relay";
-import * as HostProcess from "@rove-code/shared/HostProcess";
-import * as RelayClient from "@rove-code/shared/relayClient";
-import { withRelayClientTracing } from "@rove-code/shared/relayTracing";
+} from "@getpaperplane/contracts";
+import { RelayOkResponse } from "@getpaperplane/contracts/relay";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
+import * as RelayClient from "@getpaperplane/shared/relayClient";
+import { withRelayClientTracing } from "@getpaperplane/shared/relayTracing";
 import * as Cause from "effect/Cause";
 import * as Config from "effect/Config";
 import * as Console from "effect/Console";

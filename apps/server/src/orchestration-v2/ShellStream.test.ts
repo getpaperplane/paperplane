@@ -5,9 +5,9 @@ import type {
   OrchestrationV2ShellStreamItem,
   OrchestrationV2StoredEvent,
   OrchestrationV2ThreadShell,
-} from "@rove-code/contracts";
-import { ProjectId, ProviderInstanceId, ThreadId } from "@rove-code/contracts";
-import * as NodeSqliteClient from "@rove-code/shared/nodeSqliteClient";
+} from "@getpaperplane/contracts";
+import { ProjectId, ProviderInstanceId, ThreadId } from "@getpaperplane/contracts";
+import * as NodeSqliteClient from "@getpaperplane/shared/nodeSqliteClient";
 import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";

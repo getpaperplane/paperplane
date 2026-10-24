@@ -15,12 +15,12 @@ import {
   type PreviewStreamPointer,
   type PreviewStreamViewport,
   previewStreamHostSetupMessage,
-} from "@rove-code/client-runtime/preview/server-browser-stream";
+} from "@getpaperplane/client-runtime/preview/server-browser-stream";
 import type {
   EnvironmentId,
   PreviewStreamHostSetup,
   PreviewViewportSetting,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   type FormEvent,
   type KeyboardEvent,

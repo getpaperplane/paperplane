@@ -1,4 +1,4 @@
-import type { TextGenerationPolicy } from "@rove-code/provider-core/server/textGenerationPolicy";
+import type { TextGenerationPolicy } from "@getpaperplane/provider-core/server/textGenerationPolicy";
 
 export const conventionalCommitsTextGenerationPolicy: TextGenerationPolicy = {
   kind: "conventional_commits",

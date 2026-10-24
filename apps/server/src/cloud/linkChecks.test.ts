@@ -1,5 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
-import type { RelayLinkProofRequest } from "@rove-code/contracts/relay";
+import type { RelayLinkProofRequest } from "@getpaperplane/contracts/relay";
 
 import {
   isSupportedLinkProviderKind,

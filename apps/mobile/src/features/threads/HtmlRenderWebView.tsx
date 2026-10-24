@@ -1,6 +1,6 @@
 import { AppActivityIndicator } from "../../components/ui/AppActivityIndicator";
 import { useNavigation } from "@react-navigation/native";
-import type { EnvironmentId, ThreadId } from "@rove-code/contracts";
+import type { EnvironmentId, ThreadId } from "@getpaperplane/contracts";
 import {
   htmlRenderFileName,
   htmlRenderFrameHeight,
@@ -8,7 +8,7 @@ import {
   htmlRenderThemeMessage,
   type HtmlRenderReference,
   type HtmlRenderTheme,
-} from "@rove-code/shared/htmlRender";
+} from "@getpaperplane/shared/htmlRender";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Platform, Pressable, View, type ColorValue } from "react-native";
 import { WebView, type WebViewMessageEvent } from "react-native-webview";

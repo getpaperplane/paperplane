@@ -1,5 +1,5 @@
-import type { ResponseStreamingMode } from "@rove-code/contracts";
-import type * as ProviderAdapter from "@rove-code/provider-core/server/ProviderAdapter";
+import type { ResponseStreamingMode } from "@getpaperplane/contracts";
+import type * as ProviderAdapter from "@getpaperplane/provider-core/server/ProviderAdapter";
 
 // An opening fence may sit at any indentation, since fences inside list
 // items are indented past the marker. A closing fence may be indented at most

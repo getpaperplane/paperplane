@@ -1,4 +1,4 @@
-import type { EnvironmentId, ScopedThreadRef, ThreadId } from "@rove-code/contracts";
+import type { EnvironmentId, ScopedThreadRef, ThreadId } from "@getpaperplane/contracts";
 import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 import type { DraftId } from "../composerDraftStore";

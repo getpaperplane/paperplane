@@ -6,10 +6,10 @@ import {
   type AcpRegistryOperationError,
   type ServerProvider,
   type ServerProviderModel,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { AcpRegistrySettings } from "../settings.ts";
-import * as HostProcess from "@rove-code/shared/HostProcess";
-import { createModelCapabilities } from "@rove-code/shared/model";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
+import { createModelCapabilities } from "@getpaperplane/shared/model";
 import * as Clock from "effect/Clock";
 import * as Crypto from "effect/Crypto";
 import * as DateTime from "effect/DateTime";
@@ -21,24 +21,24 @@ import * as Schema from "effect/Schema";
 import * as Semaphore from "effect/Semaphore";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
-import * as ProviderHost from "@rove-code/provider-core/server/ProviderHost";
+import * as ProviderHost from "@getpaperplane/provider-core/server/ProviderHost";
 import { AcpRegistryAdapterV2Driver, type AcpRegistryAdapterV2DriverEnv } from "./adapter.ts";
-import type { ProviderTextGeneration } from "@rove-code/provider-core/server/textGeneration";
-import { ProviderDriverError } from "@rove-code/provider-core/server/errors";
-import { makeManagedServerProvider } from "@rove-code/provider-core/server/managedProvider";
-import { mergeProviderInstanceEnvironment } from "@rove-code/provider-core/server/instanceEnvironment";
+import type { ProviderTextGeneration } from "@getpaperplane/provider-core/server/textGeneration";
+import { ProviderDriverError } from "@getpaperplane/provider-core/server/errors";
+import { makeManagedServerProvider } from "@getpaperplane/provider-core/server/managedProvider";
+import { mergeProviderInstanceEnvironment } from "@getpaperplane/provider-core/server/instanceEnvironment";
 import {
   defaultProviderContinuationIdentity,
   type ProviderDriver,
   type ProviderInstance,
-} from "@rove-code/provider-core/server/driver";
-import { providerModelsFromSettings } from "@rove-code/provider-core/server/snapshotProbe";
-import { makeManualOnlyProviderMaintenanceCapabilities } from "@rove-code/provider-core/server/maintenanceResolver";
+} from "@getpaperplane/provider-core/server/driver";
+import { providerModelsFromSettings } from "@getpaperplane/provider-core/server/snapshotProbe";
+import { makeManualOnlyProviderMaintenanceCapabilities } from "@getpaperplane/provider-core/server/maintenanceResolver";
 import {
   haveProviderSnapshotSettingsChanged,
   makeProviderSnapshotSettingsSource,
   type ProviderSnapshotSettings,
-} from "@rove-code/provider-core/server/snapshotSettings";
+} from "@getpaperplane/provider-core/server/snapshotSettings";
 import {
   type AcpRegistryAvailableCommands,
   type AcpRegistryConfigurationProbe,

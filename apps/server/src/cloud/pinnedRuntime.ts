@@ -16,7 +16,7 @@ import {
   cliArchiveTarCommand,
   cliReleaseDownloadBaseUrl,
   parseChecksums,
-} from "@rove-code/shared/cliRelease";
+} from "@getpaperplane/shared/cliRelease";
 
 import * as ProcessRunner from "../processRunner.ts";
 
@@ -26,8 +26,8 @@ import * as ProcessRunner from "../processRunner.ts";
  * web client, and the native packages beside it. The boot service points its
  * unit or launch agent at the executable, and server self-update installs the
  * target version here before switching over. The runtime never depends on a
- * Node or npm on the machine; people who prefer npm install `@rove-code/cli`
- * with `npx @rove-code/cli` or `npm install -g @rove-code/cli`. Even a
+ * Node or npm on the machine; people who prefer npm install `@getpaperplane/cli`
+ * with `npx @getpaperplane/cli` or `npm install -g @getpaperplane/cli`. Even a
  * CLI installed that way pins an archive when it sets up the service.
  */
 const PINNED_RUNTIME_DIR = "runtime";

@@ -9,7 +9,7 @@ import {
   TurnItemId,
   type ProviderDriverKind,
   type OrchestrationV2DomainEvent,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as DateTime from "effect/DateTime";
 import {
   diagnosticOutput,

@@ -1,4 +1,4 @@
-import { resolveThreadWorkingStartedAt } from "@rove-code/client-runtime/state/models";
+import { resolveThreadWorkingStartedAt } from "@getpaperplane/client-runtime/state/models";
 import {
   type AssetResource,
   type OrchestrationV2ExecutionNode,
@@ -14,30 +14,30 @@ import {
   type ToolActivitySource,
   type ThreadId,
   type TurnItemId,
-} from "@rove-code/contracts";
-import { extractToolActivityPresentation } from "@rove-code/client-runtime/work-log/tool-presentation";
+} from "@getpaperplane/contracts";
+import { extractToolActivityPresentation } from "@getpaperplane/client-runtime/work-log/tool-presentation";
 import {
   classifyToolActivity,
   collectToolFilePaths,
   formatReadToolLabel,
   formatSearchToolLabel,
-} from "@rove-code/shared/toolActivity";
-import type { HtmlRenderReference } from "@rove-code/shared/htmlRender";
-import { turnItemDetailRevision } from "@rove-code/client-runtime/work-log/item-detail";
-import type { McpAppReference } from "@rove-code/shared/mcpApp";
-import { htmlRenderFromToolItem, mcpAppFromToolItem } from "@rove-code/shared/toolOutput";
+} from "@getpaperplane/shared/toolActivity";
+import type { HtmlRenderReference } from "@getpaperplane/shared/htmlRender";
+import { turnItemDetailRevision } from "@getpaperplane/client-runtime/work-log/item-detail";
+import type { McpAppReference } from "@getpaperplane/shared/mcpApp";
+import { htmlRenderFromToolItem, mcpAppFromToolItem } from "@getpaperplane/shared/toolOutput";
 import {
   contextCompactionLabel,
   workEntryIndicatesToolFailure,
-} from "@rove-code/client-runtime/work-log/presentation";
-import type { ThreadCheckpointSummary } from "@rove-code/client-runtime/state/thread-checkpoints";
+} from "@getpaperplane/client-runtime/work-log/presentation";
+import type { ThreadCheckpointSummary } from "@getpaperplane/client-runtime/state/thread-checkpoints";
 import type {
   ThreadPendingApproval,
   ThreadPendingUserInput,
-} from "@rove-code/client-runtime/state/thread-requests";
-import type { ThreadRunSummary, ThreadRuntimeSummary } from "@rove-code/client-runtime/state/shell";
-import { threadRuntimeHasInterruptibleRun } from "@rove-code/client-runtime/state/thread-execution";
-import { turnItemIsWorkspacePreparation } from "@rove-code/client-runtime/state/turn-item-presentation";
+} from "@getpaperplane/client-runtime/state/thread-requests";
+import type { ThreadRunSummary, ThreadRuntimeSummary } from "@getpaperplane/client-runtime/state/shell";
+import { threadRuntimeHasInterruptibleRun } from "@getpaperplane/client-runtime/state/thread-execution";
+import { turnItemIsWorkspacePreparation } from "@getpaperplane/client-runtime/state/turn-item-presentation";
 
 import {
   isImageAttachment,
@@ -51,11 +51,11 @@ import * as DateTime from "effect/DateTime";
 import * as Equal from "effect/Equal";
 import { shallow } from "zustand/vanilla/shallow";
 
-export { formatDuration } from "@rove-code/shared/orchestrationTiming";
+export { formatDuration } from "@getpaperplane/shared/orchestrationTiming";
 export {
   workEntryDisplayIndicatesToolFailure,
   workEntryIndicatesToolFailure,
-} from "@rove-code/client-runtime/work-log/presentation";
+} from "@getpaperplane/client-runtime/work-log/presentation";
 
 export type WorkLogToolLifecycleStatus =
   | "idle"
@@ -66,7 +66,7 @@ export type WorkLogToolLifecycleStatus =
   | "stopped";
 
 export interface WorkLogEntry {
-  readonly questionAnswer?: import("@rove-code/contracts").UserInputAttachmentAnswerPayload;
+  readonly questionAnswer?: import("@getpaperplane/contracts").UserInputAttachmentAnswerPayload;
   readonly id: string;
   readonly createdAt: string;
   readonly runId?: RunId | null;

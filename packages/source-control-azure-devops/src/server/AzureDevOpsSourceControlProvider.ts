@@ -1,16 +1,16 @@
-import { SourceControlProviderKind } from "@rove-code/contracts";
+import { SourceControlProviderKind } from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
-import { SourceControlProviderError, type ChangeRequest } from "@rove-code/contracts";
+import { SourceControlProviderError, type ChangeRequest } from "@getpaperplane/contracts";
 
 import * as AzureDevOpsCli from "./AzureDevOpsCli.ts";
-import * as SourceControlProvider from "@rove-code/source-control-core/server/SourceControlProvider";
+import * as SourceControlProvider from "@getpaperplane/source-control-core/server/SourceControlProvider";
 import {
   combinedAuthOutput,
   firstSafeAuthLine,
   providerAuth,
   type SourceControlAuthProbeInput,
   type SourceControlCliDiscoverySpec,
-} from "@rove-code/source-control-core/server/discovery";
+} from "@getpaperplane/source-control-core/server/discovery";
 
 function parseAzureAuth(input: SourceControlAuthProbeInput) {
   const account = input.stdout.trim().split(/\r?\n/)[0]?.trim();

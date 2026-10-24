@@ -1,5 +1,5 @@
 import { useAuth, useClerk } from "@clerk/react";
-import { readConnectAuthorizeRequest } from "@rove-code/shared/connectAuth";
+import { readConnectAuthorizeRequest } from "@getpaperplane/shared/connectAuth";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import {

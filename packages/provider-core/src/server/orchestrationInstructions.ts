@@ -1,6 +1,6 @@
-import type { ProviderInteractionMode } from "@rove-code/contracts";
+import type { ProviderInteractionMode } from "@getpaperplane/contracts";
 
-import { ROVE_MCP_SERVER_NAME, ROVE_MCP_TOOL_PREFIX } from "@rove-code/shared/roveMcp";
+import { ROVE_MCP_SERVER_NAME, ROVE_MCP_TOOL_PREFIX } from "@getpaperplane/shared/roveMcp";
 
 export const ROVE_CODE_ORCHESTRATION_INSTRUCTIONS = `
 

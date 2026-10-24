@@ -1,4 +1,4 @@
-import { SANDBOX_PORT } from "@rove-code/contracts";
+import { SANDBOX_PORT } from "@getpaperplane/contracts";
 import packageJson from "../../package.json" with { type: "json" };
 
 const quote = (value: string) => `'${value.replaceAll("'", "'\\''")}'`;
@@ -43,7 +43,7 @@ const responding = async () => {
 
 // The npm wrapper runs the platform binary as a child and does not forward
 // signals, so the server is spawned from the platform package directly.
-const resolveBinary = `require('node:path').join(require('node:path').dirname(require.resolve('@rove-code/cli-' + process.platform + '-' + process.arch + '/package.json', { paths: [process.env.ROVE_SANDBOX_RUNTIME_DIR] })), 'rove')`;
+const resolveBinary = `require('node:path').join(require('node:path').dirname(require.resolve('@getpaperplane/cli-' + process.platform + '-' + process.arch + '/package.json', { paths: [process.env.ROVE_SANDBOX_RUNTIME_DIR] })), 'rove')`;
 
 export const sandboxStartCommand = `set -u
 ROOT=${ROOT}
@@ -56,7 +56,7 @@ installed() { [ -x "$(node -p ${quote(resolveBinary)} 2>/dev/null)" ] && ${WRAPP
 # to serve freshly published binaries), so each attempt is checked by running it.
 if ! installed; then
   : >"$ROOT/install.log"
-  for spec in ${quote(`@rove-code/cli@${packageJson.version}`)} @rove-code/cli@latest; do
+  for spec in ${quote(`@getpaperplane/cli@${packageJson.version}`)} @getpaperplane/cli@latest; do
     rm -rf "$RUNTIME/node_modules" "$RUNTIME/package.json" "$RUNTIME/package-lock.json"
     npm install --prefix "$RUNTIME" --no-audit --no-fund "$spec" >>"$ROOT/install.log" 2>&1
     installed && break

@@ -1,4 +1,4 @@
-import type { RepositoryIdentity, ThreadLinkedPullRequest } from "@rove-code/contracts";
+import type { RepositoryIdentity, ThreadLinkedPullRequest } from "@getpaperplane/contracts";
 import { canonicalRepositoryKey } from "./sourceControl.ts";
 
 /**

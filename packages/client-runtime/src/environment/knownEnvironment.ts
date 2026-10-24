@@ -1,4 +1,4 @@
-import type { EnvironmentId, ExecutionEnvironmentDescriptor } from "@rove-code/contracts";
+import type { EnvironmentId, ExecutionEnvironmentDescriptor } from "@getpaperplane/contracts";
 
 export interface KnownEnvironmentConnectionTarget {
   readonly httpBaseUrl: string;

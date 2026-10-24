@@ -162,7 +162,7 @@ Then run the capture from the repository root:
 
     pnpm screenshots:mobile --skip-build --skip-metro --device iphone-6.9
 
-`pnpm --filter @rove-code/mobile showcase` starts Expo on its normal port, so it is not compatible with
+`pnpm --filter @getpaperplane/mobile showcase` starts Expo on its normal port, so it is not compatible with
 the harness's `--skip-metro` mode.
 
 List the matrix and flags:

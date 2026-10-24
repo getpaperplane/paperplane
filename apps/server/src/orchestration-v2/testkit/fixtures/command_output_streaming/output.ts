@@ -1,6 +1,6 @@
 import { assert } from "@effect/vitest";
-import type { ProviderReplayTranscript } from "@rove-code/contracts";
-import { normalizeTerminalOutput, terminalOutputPlainText } from "@rove-code/shared/terminalOutput";
+import type { ProviderReplayTranscript } from "@getpaperplane/contracts";
+import { normalizeTerminalOutput, terminalOutputPlainText } from "@getpaperplane/shared/terminalOutput";
 
 import type { OrchestratorV2ScenarioResult } from "../../OrchestratorScenario.ts";
 import {

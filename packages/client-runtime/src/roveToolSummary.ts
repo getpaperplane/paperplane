@@ -1,4 +1,4 @@
-import type { RoveMcpToolSummaryAction } from "@rove-code/shared/roveMcpToolPresentation";
+import type { RoveMcpToolSummaryAction } from "@getpaperplane/shared/roveMcpToolPresentation";
 
 export interface RoveToolSummaryCall {
   readonly input: unknown;

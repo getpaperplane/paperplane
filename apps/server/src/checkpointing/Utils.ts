@@ -1,7 +1,7 @@
 import * as Base64Url from "effect/encoding/Base64Url";
-import { CheckpointRef, ProjectId, type ThreadId } from "@rove-code/contracts";
+import { CheckpointRef, ProjectId, type ThreadId } from "@getpaperplane/contracts";
 
-import { ROVE_CHECKPOINT_REFS_PREFIX } from "@rove-code/shared/roveMigration";
+import { ROVE_CHECKPOINT_REFS_PREFIX } from "@getpaperplane/shared/roveMigration";
 
 export function checkpointRefForThreadTurn(threadId: ThreadId, turnCount: number): CheckpointRef {
   return CheckpointRef.make(

@@ -1,5 +1,5 @@
-import type { AssetResource, ProjectReadFileError, ScopedThreadRef } from "@rove-code/contracts";
-import { isAbsolutePath, workspaceRelativeFilePath } from "@rove-code/shared/path";
+import type { AssetResource, ProjectReadFileError, ScopedThreadRef } from "@getpaperplane/contracts";
+import { isAbsolutePath, workspaceRelativeFilePath } from "@getpaperplane/shared/path";
 
 /** Resolve workspace links before choosing between the explorer and a file preview. */
 export function resolveFilePreviewPath(path: string | null, cwd: string): string | null {

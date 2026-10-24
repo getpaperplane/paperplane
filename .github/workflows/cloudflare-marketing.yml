@@ -51,7 +51,7 @@ jobs:
           cache-save: false
           run-install: |
             args:
-              - --filter=@rove-code/marketing...
+              - --filter=@getpaperplane/marketing...
 
       - name: Set site origin
         run: |

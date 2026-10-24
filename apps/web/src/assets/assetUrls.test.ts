@@ -4,7 +4,7 @@ import {
   EnvironmentId,
   ThreadId,
   type AuthSessionState,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Cause from "effect/Cause";
 import { AsyncResult } from "effect/reactivity";
 import { beforeEach, expect, it, vi } from "vite-plus/test";
@@ -29,7 +29,7 @@ vi.mock("~/state/session", () => ({
 }));
 vi.mock("~/state/filesystem", async () => {
   const { resolveFilesystemReadAccess } =
-    await import("@rove-code/client-runtime/state/filesystem");
+    await import("@getpaperplane/client-runtime/state/filesystem");
   return {
     useFilesystemReadAccess: () =>
       resolveFilesystemReadAccess({

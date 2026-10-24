@@ -16,7 +16,7 @@ import {
   type PiSessionEventLike,
   type PiSessionLike,
 } from "./PiAdapter.ts";
-import type { McpProviderSessionConfig } from "@rove-code/provider-core/server/mcpSession";
+import type { McpProviderSessionConfig } from "@getpaperplane/provider-core/server/mcpSession";
 import type {
   PiRuntimeCalls,
   PiRuntimeMessage,

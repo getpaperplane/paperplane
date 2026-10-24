@@ -2,11 +2,11 @@ import type {
   RelayAgentActivityAggregateState,
   RelayDeliveryKind,
   RelayLiveActivityRegistrationRequest,
-} from "@rove-code/contracts/relay";
+} from "@getpaperplane/contracts/relay";
 import {
   RelayAgentActivityAggregateState as RelayAgentActivityAggregateStateSchema,
   RelayDeliveryKind as RelayDeliveryKindSchema,
-} from "@rove-code/contracts/relay";
+} from "@getpaperplane/contracts/relay";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";

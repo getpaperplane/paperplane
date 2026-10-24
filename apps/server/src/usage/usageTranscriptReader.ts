@@ -23,7 +23,7 @@ import type {
   SelectedFields,
   TranscriptUsageFormat,
   UsageRecord,
-} from "@rove-code/provider-core/server/usage";
+} from "@getpaperplane/provider-core/server/usage";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 

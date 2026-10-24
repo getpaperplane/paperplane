@@ -1,4 +1,4 @@
-import deviceStreamScript from "@rove-code/mobile-device-stream";
+import deviceStreamScript from "@getpaperplane/mobile-device-stream";
 import {
   useEffect,
   useEffectEvent,
@@ -11,7 +11,7 @@ import {
 } from "react";
 import { Platform, Pressable, View } from "react-native";
 import { WebView } from "react-native-webview";
-import type { DeviceStreamStatus } from "@rove-code/client-runtime/device/stream";
+import type { DeviceStreamStatus } from "@getpaperplane/client-runtime/device/stream";
 
 import { AppActivityIndicator } from "../../components/ui/AppActivityIndicator";
 import { AppText } from "../../components/ui/AppText";

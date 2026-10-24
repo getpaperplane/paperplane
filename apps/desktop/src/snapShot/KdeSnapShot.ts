@@ -6,7 +6,7 @@ import * as NodeOS from "node:os";
 import * as NodePath from "node:path";
 import * as NodeURL from "node:url";
 import * as Schema from "effect/Schema";
-import type { DesktopCaptureHelperState } from "@rove-code/contracts";
+import type { DesktopCaptureHelperState } from "@getpaperplane/contracts";
 
 import { escapeDesktopEntryExecArgument } from "../app/DesktopLinuxUrlHandler.ts";
 import type { LinuxWindowSnapshot } from "./LinuxSnapShot.ts";
@@ -16,7 +16,7 @@ export { isKdeCaptureSession } from "./linuxCaptureSession.ts";
 
 export const KDE_CAPTURE_EXECUTABLE = "rove-kde-snap-shot";
 const DESKTOP_FILE = "io.github.hafiezul.rove.KdeCapture.desktop";
-import { CAPTURE_HELPER_READ_MARKERS } from "@rove-code/shared/roveMigration";
+import { CAPTURE_HELPER_READ_MARKERS } from "@getpaperplane/shared/roveMigration";
 
 const MARKER = "X-RoveCode-Capture-Helper=true";
 const decodeCapabilities = Schema.decodeUnknownSync(

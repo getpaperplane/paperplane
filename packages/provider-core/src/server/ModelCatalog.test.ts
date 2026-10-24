@@ -1,5 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
-import type { ServerProviderModel } from "@rove-code/contracts";
+import type { ServerProviderModel } from "@getpaperplane/contracts";
 
 import * as ModelCatalog from "./ModelCatalog.ts";
 

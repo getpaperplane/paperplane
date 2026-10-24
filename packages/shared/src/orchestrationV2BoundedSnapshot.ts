@@ -1,7 +1,7 @@
 import type {
   OrchestrationV2ProjectedTurnItem,
   OrchestrationV2ThreadProjection,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 
 /** Local timeline rows also carry their item in `projection.turnItems`. */
 function isLocalTimelineRow(

@@ -126,14 +126,14 @@ jobs:
         run: bash .github/scripts/background-start.sh release-smoke node scripts/release-smoke.ts
 
       - name: Ensure Electron runtime is installed
-        run: vp run --filter @rove-code/desktop ensure:electron
+        run: vp run --filter @getpaperplane/desktop ensure:electron
 
       # Files/dependencies are repo-wide; export checks cover clean workspaces only.
       - name: Check unused code
         run: vp run knip:check
 
       - name: Check generated GitHub GraphQL operations
-        run: vp run --filter @rove-code/source-control-github generate --check
+        run: vp run --filter @getpaperplane/source-control-github generate --check
 
       - name: Check
         run: vp check
@@ -183,7 +183,7 @@ jobs:
 
       - name: Ensure Electron runtime is installed
         id: electron
-        run: vp run --filter @rove-code/desktop ensure:electron
+        run: vp run --filter @getpaperplane/desktop ensure:electron
 
       # Runs in the background while the build runs, and reports in the last
       # step: neither result hides the other.
@@ -286,7 +286,7 @@ jobs:
 
       - name: Ensure Electron runtime is installed
         if: steps.shard.outputs.desktop == 'true'
-        run: vp run --filter @rove-code/desktop ensure:electron
+        run: vp run --filter @getpaperplane/desktop ensure:electron
 
       - name: Test preview artifact validation
         if: matrix.shard == 1
@@ -340,7 +340,7 @@ jobs:
         uses: ./.github/actions/setup-ci-deps
 
       - name: Test
-        run: vp run --filter @rove-code/web test --shard ${{ matrix.shard }}/${{ strategy.job-total }}
+        run: vp run --filter @getpaperplane/web test --shard ${{ matrix.shard }}/${{ strategy.job-total }}
 
   # apps/server sets `fileParallelism: false`, so its test files run strictly
   # one at a time. Sharding spreads them over separate runners instead of
@@ -382,9 +382,9 @@ jobs:
         if: steps.changes.outputs.test_server != 'false'
         uses: ./.github/actions/setup-ci-deps
 
-      # No Electron setup here: `@rove-code/server` (apps/server) has no Electron dependency
+      # No Electron setup here: `@getpaperplane/server` (apps/server) has no Electron dependency
       # and none of its tests touch the runtime. Only the non-server `test`
-      # job, which covers @rove-code/desktop, needs the download.
+      # job, which covers @getpaperplane/desktop, needs the download.
       # Cache the pinned browser and skip apt unless shared libraries are missing.
       - name: Resolve Playwright version
         id: playwright_version
@@ -417,7 +417,7 @@ jobs:
         env:
           ROVE_TRANSFER_BUDGET_REPORT_PATH: ${{ runner.temp }}/rove-transfer-budget.md
           ROVE_TRANSFER_BUDGET_RESULT_PATH: ${{ runner.temp }}/thread-transfer-result.json
-        run: vp run --filter @rove-code/server test --shard ${{ matrix.shard }}/${{ strategy.job-total }}
+        run: vp run --filter @getpaperplane/server test --shard ${{ matrix.shard }}/${{ strategy.job-total }}
 
       # integration/transferBudgetV2.integration.test.ts writes the report; exactly one shard
       # produces these files. Gating the upload on their presence keeps a
@@ -473,7 +473,7 @@ jobs:
           cache: true
           run-install: |
             args:
-              - --filter=@rove-code/scripts...
+              - --filter=@getpaperplane/scripts...
 
       - name: Install mobile native static analysis tools
         run: brew bundle install --file apps/mobile/Brewfile
@@ -507,7 +507,7 @@ jobs:
           cache: false
           run-install: |
             args:
-              - --filter=@rove-code/scripts...
+              - --filter=@getpaperplane/scripts...
       - name: Check release assets and hosted deployments
         run: vp test run scripts/check-release-assets.test.mjs scripts/check-cloudflare-web.test.mjs scripts/cloudflare-web-preview.test.mjs
 

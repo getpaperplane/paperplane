@@ -7,7 +7,7 @@ import * as DesktopEnvironment from "../../app/DesktopEnvironment.ts";
 
 /** Absolute path to the helper shipped with this desktop instance. */
 export const LinuxBrowserSecretPath = Context.Reference<string | undefined>(
-  "@rove-code/desktop/preview/BrowserImport/LinuxBrowserSecretPath",
+  "@getpaperplane/desktop/preview/BrowserImport/LinuxBrowserSecretPath",
   { defaultValue: () => undefined },
 );
 

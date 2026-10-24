@@ -1,5 +1,5 @@
-import * as HostProcess from "@rove-code/shared/HostProcess";
-import * as SharedObservability from "@rove-code/shared/observability";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
+import * as SharedObservability from "@getpaperplane/shared/observability";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Logger from "effect/Logger";

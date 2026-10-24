@@ -1,10 +1,10 @@
-import { scopedThreadKey } from "@rove-code/client-runtime/environment";
-import type { ScopedThreadRef } from "@rove-code/contracts";
+import { scopedThreadKey } from "@getpaperplane/client-runtime/environment";
+import type { ScopedThreadRef } from "@getpaperplane/contracts";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { useShallow } from "zustand/react/shallow";
 
-import { normalizePreviewUrl } from "@rove-code/shared/preview";
+import { normalizePreviewUrl } from "@getpaperplane/shared/preview";
 import { readPreparedConnection } from "~/state/session";
 
 import { isLocalLoopbackHost, normalizeHostname } from "./browser/browserTargetResolver";

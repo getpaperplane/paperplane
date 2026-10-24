@@ -1,4 +1,4 @@
-import type { EnvironmentId, ProjectId } from "@rove-code/contracts";
+import type { EnvironmentId, ProjectId } from "@getpaperplane/contracts";
 import { CircleIcon } from "lucide-react";
 import { Children, isValidElement, type ReactElement, type ReactNode } from "react";
 import { describe, expect, it, vi } from "vite-plus/test";

@@ -1,10 +1,10 @@
-import { sourceControlClients } from "@rove-code/client-runtime/source-control-clients";
+import { sourceControlClients } from "@getpaperplane/client-runtime/source-control-clients";
 import type {
   PullRequestAction,
   PullRequestDetail,
   PullRequestMergeMethod,
   SourceControlProviderKind,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import type { AppSymbolName } from "../../components/ui/AppSymbol";
 
 type ActionDetail = Pick<

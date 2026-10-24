@@ -1,5 +1,5 @@
-import type { ThreadPullRequestLink } from "@rove-code/contracts";
-import { resolveThreadPullRequestChains } from "@rove-code/shared/threadPullRequests";
+import type { ThreadPullRequestLink } from "@getpaperplane/contracts";
+import { resolveThreadPullRequestChains } from "@getpaperplane/shared/threadPullRequests";
 import { describe, expect, it } from "vite-plus/test";
 
 import { pullRequestListLines } from "./pullRequestListLines";

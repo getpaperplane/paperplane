@@ -5,8 +5,8 @@ import type {
   OrchestrationV2Run,
   OrchestrationV2RunAttempt,
   OrchestrationV2TurnItem,
-} from "@rove-code/contracts";
-import { runRanAfter } from "@rove-code/shared/orchestrationV2ThreadError";
+} from "@getpaperplane/contracts";
+import { runRanAfter } from "@getpaperplane/shared/orchestrationV2ThreadError";
 
 type Work = OrchestrationV2RestartCancelledBackgroundWork;
 type Attempt = Pick<OrchestrationV2RunAttempt, "id" | "runId">;

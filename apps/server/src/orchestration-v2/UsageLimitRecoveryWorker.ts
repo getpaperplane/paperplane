@@ -1,4 +1,4 @@
-import { CommandId, MessageId, type OrchestrationV2Command } from "@rove-code/contracts";
+import { CommandId, MessageId, type OrchestrationV2Command } from "@getpaperplane/contracts";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";

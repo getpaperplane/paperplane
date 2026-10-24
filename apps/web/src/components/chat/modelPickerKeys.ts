@@ -1,4 +1,4 @@
-import type { ProviderInstanceId } from "@rove-code/contracts";
+import type { ProviderInstanceId } from "@getpaperplane/contracts";
 
 const MODEL_KEY_PREFIX = "model:";
 const LEGACY_SECTION_KEY_PREFIX = "legacy-models:";

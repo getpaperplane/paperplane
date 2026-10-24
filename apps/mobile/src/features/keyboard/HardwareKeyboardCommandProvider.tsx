@@ -1,5 +1,5 @@
 import { StackActions, useNavigation } from "@react-navigation/native";
-import { resolveThreadReferenceCopyTarget } from "@rove-code/shared/threadReference";
+import { resolveThreadReferenceCopyTarget } from "@getpaperplane/shared/threadReference";
 import {
   createContext,
   use,

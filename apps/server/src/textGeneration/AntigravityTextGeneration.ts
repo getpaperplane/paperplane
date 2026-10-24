@@ -1,4 +1,4 @@
-import { type ProviderSetupError, TextGenerationError } from "@rove-code/contracts";
+import { type ProviderSetupError, TextGenerationError } from "@getpaperplane/contracts";
 import * as Cause from "effect/Cause";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
@@ -14,8 +14,8 @@ import { type AcpError, AcpRequestError } from "effect-acp/errors";
 
 import { applyAntigravityAcpModelSelection } from "../provider/acp/AntigravityAcpSupport.ts";
 import { removeAntigravitySessionFiles } from "../provider/acp/AntigravitySessionFiles.ts";
-import type * as AcpSessionRuntime from "@rove-code/provider-acp/server/AcpSessionRuntime";
-import * as TextGenerationOperations from "@rove-code/provider-core/server/textGenerationOperations";
+import type * as AcpSessionRuntime from "@getpaperplane/provider-acp/server/AcpSessionRuntime";
+import * as TextGenerationOperations from "@getpaperplane/provider-core/server/textGenerationOperations";
 
 const ANTIGRAVITY_TIMEOUT_MS = 180_000;
 const MAX_OUTPUT_CHARS = 128_000;

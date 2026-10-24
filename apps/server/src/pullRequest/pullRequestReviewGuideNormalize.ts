@@ -1,8 +1,8 @@
 import type {
   PullRequestReviewGuideExcerpt,
   PullRequestReviewGuideStop,
-} from "@rove-code/contracts";
-import type { ReviewGuideGenerationResult } from "@rove-code/provider-core/server/textGeneration";
+} from "@getpaperplane/contracts";
+import type { ReviewGuideGenerationResult } from "@getpaperplane/provider-core/server/textGeneration";
 
 /** Longest excerpt kept. The reader wants the lines that carry the idea, not the whole hunk. */
 const MAX_EXCERPT_LINES = 25;

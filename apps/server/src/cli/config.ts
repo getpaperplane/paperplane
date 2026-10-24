@@ -1,12 +1,12 @@
-import * as NetService from "@rove-code/shared/Net";
+import * as NetService from "@getpaperplane/shared/Net";
 import {
   OtlpHeadersFromString,
   OtlpProtocol,
   type SignalExport,
-} from "@rove-code/shared/observability";
-import * as OtelEnvironment from "@rove-code/shared/otelEnvironment";
-import { parsePersistedServerObservabilitySettings } from "@rove-code/shared/serverSettings";
-import { DesktopBackendBootstrap, PortSchema } from "@rove-code/contracts";
+} from "@getpaperplane/shared/observability";
+import * as OtelEnvironment from "@getpaperplane/shared/otelEnvironment";
+import { parsePersistedServerObservabilitySettings } from "@getpaperplane/shared/serverSettings";
+import { DesktopBackendBootstrap, PortSchema } from "@getpaperplane/contracts";
 import * as Config from "effect/Config";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";

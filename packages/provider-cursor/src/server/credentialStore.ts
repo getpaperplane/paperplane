@@ -1,11 +1,11 @@
 import type { SdkCredentialStore } from "@cursor/sdk";
-import { ProviderSetupError, type ProviderInstanceId } from "@rove-code/contracts";
+import { ProviderSetupError, type ProviderInstanceId } from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 
-import * as ProviderHost from "@rove-code/provider-core/server/ProviderHost";
+import * as ProviderHost from "@getpaperplane/provider-core/server/ProviderHost";
 
 const Credentials = Schema.fromJsonString(
   Schema.Struct({

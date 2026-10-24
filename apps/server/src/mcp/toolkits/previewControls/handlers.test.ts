@@ -7,8 +7,8 @@ import {
   ProjectId,
   ProviderInstanceId,
   ThreadId,
-} from "@rove-code/contracts";
-import { resolveProjectSettings } from "@rove-code/shared/projectSettings";
+} from "@getpaperplane/contracts";
+import { resolveProjectSettings } from "@getpaperplane/shared/projectSettings";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Stream from "effect/Stream";

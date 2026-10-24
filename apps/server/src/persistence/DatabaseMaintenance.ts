@@ -1,7 +1,7 @@
 // @effect-diagnostics-next-line nodeBuiltinImport:off -- Effect FileSystem has no statfs API.
 import * as NodeFSP from "node:fs/promises";
 
-import * as NodeSqliteClient from "@rove-code/shared/nodeSqliteClient";
+import * as NodeSqliteClient from "@getpaperplane/shared/nodeSqliteClient";
 import * as Context from "effect/Context";
 import * as Clock from "effect/Clock";
 import * as Effect from "effect/Effect";
@@ -89,7 +89,7 @@ export class DatabaseMaintenance extends Context.Service<
       | DatabaseCompactError
     >;
   }
->()("@rove-code/server/persistence/DatabaseMaintenance") {}
+>()("@getpaperplane/server/persistence/DatabaseMaintenance") {}
 
 const isDomainError = Schema.is(
   Schema.Union([DatabaseMissingError, DatabaseInUseError, DatabaseProjectionsInvalidError]),

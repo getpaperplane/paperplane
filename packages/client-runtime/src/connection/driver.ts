@@ -63,7 +63,7 @@ export class ConnectionDriver extends Context.Service<
       route: ConnectionRoute,
     ) => Effect.Effect<boolean>;
   }
->()("@rove-code/client-runtime/connection/driver/ConnectionDriver") {}
+>()("@getpaperplane/client-runtime/connection/driver/ConnectionDriver") {}
 
 /**
  * Connects over the first route, in preference order, that is worth trying.

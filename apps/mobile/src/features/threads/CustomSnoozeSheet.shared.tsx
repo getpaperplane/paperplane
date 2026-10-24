@@ -4,7 +4,7 @@ import {
   localSnoozeTime,
   resolveCustomSnooze,
   type CustomSnoozeInput,
-} from "@rove-code/client-runtime/state/thread-settled";
+} from "@getpaperplane/client-runtime/state/thread-settled";
 import { useState } from "react";
 import {
   KeyboardAvoidingView,

@@ -1,4 +1,4 @@
-import { EnvironmentId } from "@rove-code/contracts";
+import { EnvironmentId } from "@getpaperplane/contracts";
 import * as Arr from "effect/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -13,7 +13,7 @@ import {
 } from "../lib/connection";
 import * as MobileSecureStorage from "./mobile-secure-storage";
 import * as RuntimePredicate from "effect/Predicate";
-import { migrateRoveSavedState } from "@rove-code/shared/roveMigration";
+import { migrateRoveSavedState } from "@getpaperplane/shared/roveMigration";
 
 const decodeMigrationJson = Schema.decodeUnknownSync(Schema.Json);
 const CONNECTIONS_KEY = "rove.connections";
@@ -118,7 +118,7 @@ export class MobileStorage extends Context.Service<
       MobileSecureStorage.MobileSecureStorageError | MobileStorageEncodeError
     >;
   }
->()("@rove-code/mobile/persistence/MobileStorage") {}
+>()("@getpaperplane/mobile/persistence/MobileStorage") {}
 
 export const make = Effect.fn("MobileStorage.make")(function* () {
   const secureStorage = yield* MobileSecureStorage.MobileSecureStorage;

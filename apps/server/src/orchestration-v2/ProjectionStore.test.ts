@@ -24,14 +24,14 @@ import {
   ThreadId,
   TurnItemId,
   type ThreadPullRequestLink,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Schema from "effect/Schema";
 import * as Tracer from "effect/Tracer";
 import * as SqlClient from "effect/sql/SqlClient";
-import { projectThreadAwarenessV2 } from "@rove-code/shared/agentAwareness";
+import { projectThreadAwarenessV2 } from "@getpaperplane/shared/agentAwareness";
 
 import * as SqlitePersistence from "../persistence/Sqlite.ts";
 import { CodexProviderCapabilitiesV2 } from "./Adapters/CodexAdapterV2.ts";

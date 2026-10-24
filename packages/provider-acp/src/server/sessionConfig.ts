@@ -1,4 +1,4 @@
-import type { ProviderOptionChoice, ProviderOptionDescriptor } from "@rove-code/contracts";
+import type { ProviderOptionChoice, ProviderOptionDescriptor } from "@getpaperplane/contracts";
 import type * as EffectAcpSchema from "effect-acp/compat";
 
 import type { AcpSessionModeState } from "./runtimeModel.ts";

@@ -1,6 +1,6 @@
 // @effect-diagnostics globalDate:off globalTimers:off -- Synchronous before-input-event handler; key events must be timed and the watchdog scheduled outside any Effect runtime.
 
-import type { QuitConfirmationMode, QuitShortcutHintEvent } from "@rove-code/contracts";
+import type { QuitConfirmationMode, QuitShortcutHintEvent } from "@getpaperplane/contracts";
 
 // The quit accelerator is intercepted in before-input-event, which runs
 // before the native menu accelerator. Quitting from the application menu is

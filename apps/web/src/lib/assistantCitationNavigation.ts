@@ -1,8 +1,8 @@
-import type { AssistantCitation } from "@rove-code/contracts";
+import type { AssistantCitation } from "@getpaperplane/contracts";
 import {
   formatAssistantCitationHref,
   parseAssistantCitationHref,
-} from "@rove-code/shared/assistantCitations";
+} from "@getpaperplane/shared/assistantCitations";
 import * as Base64Url from "effect/encoding/Base64Url";
 import * as Result from "effect/Result";
 

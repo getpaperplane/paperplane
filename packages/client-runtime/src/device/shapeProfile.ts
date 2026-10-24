@@ -1,4 +1,4 @@
-import type { DevicePlatform } from "@rove-code/contracts";
+import type { DevicePlatform } from "@getpaperplane/contracts";
 
 export interface DeviceShapeProfile {
   readonly id: "ios-phone" | "ios-tablet" | "android-phone" | "android-tablet";

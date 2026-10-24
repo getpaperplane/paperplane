@@ -7,12 +7,12 @@
  * server is actually bound to are listed: a loopback-only server lists none,
  * because its loopback address means a different machine to every client.
  */
-import type { ServerDirectEndpoint } from "@rove-code/contracts";
+import type { ServerDirectEndpoint } from "@getpaperplane/contracts";
 import {
   buildTailscaleHttpsBaseUrl,
   probeTailscaleHttpsEndpoint,
   readTailscaleStatus,
-} from "@rove-code/tailscale";
+} from "@getpaperplane/tailscale";
 import * as Context from "effect/Context";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -23,7 +23,7 @@ import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as NodeNet from "node:net";
 import * as NodeOS from "node:os";
 
-import { isPrivateNetworkHost, isTailnetHost } from "@rove-code/shared/hostClassification";
+import { isPrivateNetworkHost, isTailnetHost } from "@getpaperplane/shared/hostClassification";
 
 import * as ServerConfig from "../config.ts";
 import { formatHostForUrl, isLoopbackHost, isWildcardHost } from "../startupAccess.ts";
@@ -42,7 +42,7 @@ export class DirectEndpoints extends Context.Service<
   {
     readonly resolve: () => Effect.Effect<ReadonlyArray<ServerDirectEndpoint>>;
   }
->()("@rove-code/server/environment/DirectEndpoints") {}
+>()("@getpaperplane/server/environment/DirectEndpoints") {}
 
 /**
  * Only numeric private-network IPv4 addresses, including VPN ranges such as

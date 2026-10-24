@@ -5,16 +5,16 @@ import { UsageLimitRecoveryCard } from "./UsageLimitRecoveryCard";
 import { useNavigation } from "@react-navigation/native";
 import type { WorktreeSetupCardProps } from "./worktree-setup-card";
 import type { ComposerTextPaste } from "../../native/RoveComposerEditor.types";
-import { type EnvironmentConnectionPhase } from "@rove-code/client-runtime/connection";
-import type { EnvironmentThreadShell } from "@rove-code/client-runtime/state/shell";
-import type { HandoffEndpoints } from "@rove-code/client-runtime/handoff";
+import { type EnvironmentConnectionPhase } from "@getpaperplane/client-runtime/connection";
+import type { EnvironmentThreadShell } from "@getpaperplane/client-runtime/state/shell";
+import type { HandoffEndpoints } from "@getpaperplane/client-runtime/handoff";
 import {
   childThreadInputsTitle,
   type CodexFeedbackSubmission,
   type EnvironmentThreadStatus,
-} from "@rove-code/client-runtime/state/threads";
+} from "@getpaperplane/client-runtime/state/threads";
 import { useKeyboardChatComposerInset, useKeyboardScrollToEnd } from "@legendapp/list/keyboard";
-import { resolveProviderSkillsForCwd } from "@rove-code/client-runtime/providerSkills";
+import { resolveProviderSkillsForCwd } from "@getpaperplane/client-runtime/providerSkills";
 import type { LegendListRef } from "@legendapp/list/react-native";
 import { HeaderHeightContext } from "@react-navigation/elements";
 import { NativeLayoutObserver } from "../../native/NativeLayoutObserver";
@@ -31,26 +31,26 @@ import type {
   ServerConfig as RoveServerConfig,
   ThreadId,
   UsageLimitsReport,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   appendCodexArtifactTemplateUsePrompt,
   type CodexArtifactTemplate,
-} from "@rove-code/shared/codexArtifactTemplates";
-import type { ThreadUserInputQuestion } from "@rove-code/client-runtime/state/thread-requests";
+} from "@getpaperplane/shared/codexArtifactTemplates";
+import type { ThreadUserInputQuestion } from "@getpaperplane/client-runtime/state/thread-requests";
 import {
   presentPendingBackgroundWork,
   presentProviderGoal,
-} from "@rove-code/client-runtime/state/thread-execution";
-import { resolveSubagentPillSegment } from "@rove-code/client-runtime/state/thread-subagents";
+} from "@getpaperplane/client-runtime/state/thread-execution";
+import { resolveSubagentPillSegment } from "@getpaperplane/client-runtime/state/thread-subagents";
 import {
   formatModelSelectionEffort,
   type ProviderSubagentStatus,
-} from "@rove-code/client-runtime/state/thread-execution";
-import { formatModelSlugName, resolveSelectableModel } from "@rove-code/shared/model";
-import { isProviderNativeSubagentThread } from "@rove-code/contracts";
+} from "@getpaperplane/client-runtime/state/thread-execution";
+import { formatModelSlugName, resolveSelectableModel } from "@getpaperplane/shared/model";
+import { isProviderNativeSubagentThread } from "@getpaperplane/contracts";
 import type { QueuedRunEdit } from "../../state/queued-run-edit";
 import type { FollowUpBehavior } from "../../lib/followUpBehavior";
-import type { ActiveTurnComposerAction } from "@rove-code/client-runtime/state/composer-dispatch";
+import type { ActiveTurnComposerAction } from "@getpaperplane/client-runtime/state/composer-dispatch";
 import * as Haptics from "expo-haptics";
 import {
   memo,
@@ -92,7 +92,7 @@ import { useWorkspaceContentWidth } from "../layout/workspace-content-width";
 import { useNativeWorkspaceColumnsSupported } from "../../native/NativeWorkspaceColumns";
 import { useNativeColumnLayoutMetrics } from "../../native/native-layout-metrics";
 import { useAppearancePreferences } from "../settings/appearance/AppearancePreferencesProvider";
-import { collectProviderUsageLimits } from "@rove-code/shared/usageLimits";
+import { collectProviderUsageLimits } from "@getpaperplane/shared/usageLimits";
 import type { ComposerEditorHandle } from "../../components/ComposerEditor";
 import type { StatusTone } from "../../components/StatusPill";
 import type { DraftComposerAttachment } from "../../lib/composerImages";

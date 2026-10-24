@@ -34,12 +34,12 @@ const EXTRA_OWNERS = [
   // Vite configs and tsconfigs of these apps import scripts/lib directly.
   [
     /^scripts\/lib\//,
-    ["@rove-code/desktop", "@rove-code/mobile", "@rove-code/web", "@rove-code/server"],
+    ["@getpaperplane/desktop", "@getpaperplane/mobile", "@getpaperplane/web", "@getpaperplane/server"],
   ],
   // scripts/build-desktop-artifact.ts reads the GNOME extension manifest.
-  [/^apps\/desktop\/gnome-extension\//, ["@rove-code/scripts"]],
-  [/^native\/browser-secret\//, ["@rove-code/desktop"]],
-  [/^native\/libghostty-vt\//, ["@rove-code/web"]],
+  [/^apps\/desktop\/gnome-extension\//, ["@getpaperplane/scripts"]],
+  [/^native\/browser-secret\//, ["@getpaperplane/desktop"]],
+  [/^native\/libghostty-vt\//, ["@getpaperplane/web"]],
 ];
 const RUST = /^native\/(resource-monitor|kde-snap-shot|hyprland-snap-shot)\//;
 
@@ -47,18 +47,18 @@ const RUST = /^native\/(resource-monitor|kde-snap-shot|hyprland-snap-shot)\//;
 // tests read app manifests, assets, and sources (cursor-sdk-packaging,
 // third-party-licenses, brand-assets, build-desktop-artifact).
 const TEST_ONLY_DEPS = {
-  "@rove-code/provider-pi": ["@rove-code/client-runtime"],
-  "@rove-code/scripts": [
-    "@rove-code/desktop",
-    "@rove-code/mobile",
-    "@rove-code/web",
-    "@rove-code/server",
-    "@rove-code/provider-cursor",
+  "@getpaperplane/provider-pi": ["@getpaperplane/client-runtime"],
+  "@getpaperplane/scripts": [
+    "@getpaperplane/desktop",
+    "@getpaperplane/mobile",
+    "@getpaperplane/web",
+    "@getpaperplane/server",
+    "@getpaperplane/provider-cursor",
   ],
 };
 // Declared dependencies that only feed a build step: the server bundles the
 // built web app (apps/server/vite.config.ts) but never imports it.
-const BUILD_ONLY_DEPS = { rove: ["@rove-code/web"] };
+const BUILD_ONLY_DEPS = { rove: ["@getpaperplane/web"] };
 
 // Sources scripts/mobile-native-static-check.ts lints, plus the tool and rule
 // configuration that decides how it lints them, plus the root package.json
@@ -67,7 +67,7 @@ const MOBILE_NATIVE =
   /^apps\/mobile\/.*\.(swift|kt|kts)$|^apps\/mobile\/(\.swiftlint\.yml|detekt\.yml|\.editorconfig|Brewfile)$|^scripts\/mobile-native-static-check\.ts$|^package\.json$|^\.github\/workflows\/ci\.yml$|^\.github\/scripts\/ci-changes\.cjs$|^\.github\/actions\/ci-changes\//;
 
 // Jobs that test every package except these, which have jobs of their own.
-const OWN_TEST_JOB = new Set(["@rove-code/server", "@rove-code/web", "@rove-code/monorepo"]);
+const OWN_TEST_JOB = new Set(["@getpaperplane/server", "@getpaperplane/web", "@getpaperplane/monorepo"]);
 
 function readWorkspace() {
   const patterns = [];
@@ -116,7 +116,7 @@ function ownersOf(file, packages) {
   if (path.posix.basename(file) === "package.json") return null;
   if (RUNS_EVERYTHING.some((pattern) => pattern.test(file))) return null;
   // scripts/build-desktop-artifact.test.ts reads the crates' sources.
-  if (RUST.test(file)) return ["@rove-code/scripts"];
+  if (RUST.test(file)) return ["@getpaperplane/scripts"];
 
   const extra = EXTRA_OWNERS.flatMap(([pattern, names]) => (pattern.test(file) ? names : []));
   const owner = packages
@@ -159,7 +159,7 @@ function decide(files, packages, full) {
         }
       }
     }
-    scriptsChanged = affected.has("@rove-code/scripts");
+    scriptsChanged = affected.has("@getpaperplane/scripts");
     for (const [name, deps] of Object.entries(TEST_ONLY_DEPS)) {
       if (deps.some((dep) => affected.has(dep))) affected.add(name);
     }
@@ -174,12 +174,12 @@ function decide(files, packages, full) {
     affected: [...affected].sort(),
     outputs: {
       typecheck: affected.size > 0,
-      build: has("@rove-code/desktop") || has("@rove-code/server") || has("@rove-code/web"),
+      build: has("@getpaperplane/desktop") || has("@getpaperplane/server") || has("@getpaperplane/web"),
       test: tested.length > 0,
       // Empty means every package the Test job covers.
       test_packages: everything ? "" : tested.map((pkg) => pkg.name).join(" "),
-      test_web: has("@rove-code/web"),
-      test_server: has("@rove-code/server"),
+      test_web: has("@getpaperplane/web"),
+      test_server: has("@getpaperplane/server"),
       rust: everything || rust,
       release_smoke: scriptsChanged,
       mobile_native: files === null || files.some((file) => MOBILE_NATIVE.test(file)),

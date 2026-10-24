@@ -4,7 +4,7 @@
  *
  * @module provider/Drivers/codexUsage
  */
-import type { CodexSettings } from "@rove-code/contracts";
+import type { CodexSettings } from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import * as Path from "effect/Path";
 import * as Schema from "effect/Schema";
@@ -17,8 +17,8 @@ import {
   type TranscriptUsageFormat,
   type UsageRecord,
   type UsageSpeed,
-} from "@rove-code/provider-core/server/usage";
-import type { UsageTokenTotals } from "@rove-code/contracts";
+} from "@getpaperplane/provider-core/server/usage";
+import type { UsageTokenTotals } from "@getpaperplane/contracts";
 
 import { resolveCodexHomeLayout } from "./CodexHomeLayout.ts";
 

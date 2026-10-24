@@ -1,4 +1,4 @@
-import { ClientSettingsSchema, type ClientSettings } from "@rove-code/contracts";
+import { ClientSettingsSchema, type ClientSettings } from "@getpaperplane/contracts";
 
 import { getLocalStorageItem, setLocalStorageItem } from "./hooks/useLocalStorage";
 

@@ -1,12 +1,12 @@
 // @effect-diagnostics-next-line nodeBuiltinImport:off - Effect's symlink has no type argument, and Windows needs a junction to link without elevation.
 import * as NodeFSP from "node:fs/promises";
 
-import type { AntigravityAuthMethod, ProviderInstanceId } from "@rove-code/contracts";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+import type { AntigravityAuthMethod, ProviderInstanceId } from "@getpaperplane/contracts";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 import {
   resolveNodeExecutable,
   nodeRuntimeUnavailableMessage,
-} from "@rove-code/shared/nodeRuntime";
+} from "@getpaperplane/shared/nodeRuntime";
 import * as Crypto from "effect/Crypto";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
@@ -19,8 +19,8 @@ import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as AcpErrors from "effect-acp/errors";
 
-import { collectUint8StreamText } from "@rove-code/provider-core/server/collectStreamText";
-import type * as AcpSessionRuntime from "@rove-code/provider-acp/server/AcpSessionRuntime";
+import { collectUint8StreamText } from "@getpaperplane/provider-core/server/collectStreamText";
+import type * as AcpSessionRuntime from "@getpaperplane/provider-acp/server/AcpSessionRuntime";
 import {
   antigravityUserSkillDirectories,
   resolveAntigravityUserHome,

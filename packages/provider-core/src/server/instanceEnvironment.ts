@@ -1,5 +1,5 @@
-import type { ProviderInstanceEnvironment } from "@rove-code/contracts";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+import type { ProviderInstanceEnvironment } from "@getpaperplane/contracts";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 import * as Effect from "effect/Effect";
 
 import { expandHomePath } from "./pathExpansion.ts";

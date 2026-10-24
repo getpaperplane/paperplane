@@ -5,20 +5,20 @@ import {
   EnvironmentId,
   USAGE_CONTRACT_VERSION,
   type UsageProviderKind,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { type RouteProp, useIsFocused, useNavigation, useRoute } from "@react-navigation/native";
-import { cursorKeychainAccessEnvironments } from "@rove-code/client-runtime/state/usage";
+import { cursorKeychainAccessEnvironments } from "@getpaperplane/client-runtime/state/usage";
 import {
   updatingProvidersLabel,
   usageEnvironmentProgress,
   usageProgress,
-} from "@rove-code/client-runtime/state/usage-progress";
+} from "@getpaperplane/client-runtime/state/usage-progress";
 import {
   isCompatibleUsageContractVersion,
   isModelCostUnknown,
   type DailyTotals,
   type MergedUsage,
-} from "@rove-code/shared/usageMerge";
+} from "@getpaperplane/shared/usageMerge";
 import {
   enumerateDays,
   enumerateHourStarts,
@@ -30,7 +30,7 @@ import {
   formatUsageContractMismatch,
   formatUsd,
   makeWindow,
-} from "@rove-code/shared/usageFormat";
+} from "@getpaperplane/shared/usageFormat";
 import { useCallback, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Platform, Pressable, RefreshControl, View } from "react-native";
 import Animated, {

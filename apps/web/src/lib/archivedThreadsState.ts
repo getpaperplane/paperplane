@@ -2,8 +2,8 @@ import { useAtomValue } from "@effect/atom-react";
 import {
   createArchivedThreadSnapshotsAtomFamily,
   makeArchivedThreadsEnvironmentKey,
-} from "@rove-code/client-runtime/state/threads";
-import type { EnvironmentId } from "@rove-code/contracts";
+} from "@getpaperplane/client-runtime/state/threads";
+import type { EnvironmentId } from "@getpaperplane/contracts";
 import { useCallback, useMemo } from "react";
 
 import { orchestrationEnvironment } from "../state/orchestration";

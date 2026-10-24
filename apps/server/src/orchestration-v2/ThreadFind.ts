@@ -6,12 +6,12 @@ import {
   type OrchestrationV2TurnItem,
   ThreadId,
   TurnItemId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   searchableMessageSegments,
   searchablePlanSegments,
-} from "@rove-code/shared/threadFindText";
-import { countThreadSearchOccurrences } from "@rove-code/shared/threadSearch";
+} from "@getpaperplane/shared/threadFindText";
+import { countThreadSearchOccurrences } from "@getpaperplane/shared/threadSearch";
 import * as Cache from "effect/Cache";
 import * as Data from "effect/Data";
 import * as Effect from "effect/Effect";

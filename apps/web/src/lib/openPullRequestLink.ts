@@ -1,17 +1,17 @@
-import type { EnvironmentId, PullRequestRef, ScopedThreadRef } from "@rove-code/contracts";
+import type { EnvironmentId, PullRequestRef, ScopedThreadRef } from "@getpaperplane/contracts";
 import { useAtomValue } from "@effect/atom-react";
 import { useNavigate } from "@tanstack/react-router";
 import { type MouseEvent, useCallback, useMemo } from "react";
 
-import { sourceControlClients } from "@rove-code/client-runtime/source-control-clients";
-import { parseChangeRequestUrl, type ChangeRequestLink } from "@rove-code/shared/changeRequestUrl";
-import { sourceControlRepositorySelector } from "@rove-code/shared/sourceControl";
+import { sourceControlClients } from "@getpaperplane/client-runtime/source-control-clients";
+import { parseChangeRequestUrl, type ChangeRequestLink } from "@getpaperplane/shared/changeRequestUrl";
+import { sourceControlRepositorySelector } from "@getpaperplane/shared/sourceControl";
 
 import { useOpenLink } from "../browser/useOpenLink";
 import { useClientSettings } from "../hooks/useSettings";
 import { stackedThreadToast, toastManager } from "../components/ui/toast";
 import { useRightPanelStore } from "../rightPanelStore";
-import type { EnvironmentProject } from "@rove-code/client-runtime/state/shell";
+import type { EnvironmentProject } from "@getpaperplane/client-runtime/state/shell";
 
 import { useProjects, useServerConfigs } from "../state/entities";
 import { serverEnvironment } from "../state/server";
@@ -24,7 +24,7 @@ export {
   pullRequestCandidateUrlFromReferenceAutolink,
   matchesLinkedPullRequestUrl,
   changeRequestRepositoryUrl,
-} from "@rove-code/shared/changeRequestUrl";
+} from "@getpaperplane/shared/changeRequestUrl";
 
 /**
  * The project a link belongs to, or nothing. Matched the way the server matches: the repository

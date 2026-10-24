@@ -1,14 +1,14 @@
 import { assert, describe, it } from "@effect/vitest";
 import * as NodeServices from "@effect/platform-node/NodeServices";
-import { OrchestrationV2Command, ProviderInstanceId } from "@rove-code/contracts";
+import { OrchestrationV2Command, ProviderInstanceId } from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
-import * as IdAllocator from "@rove-code/provider-core/server/IdAllocator";
+import * as IdAllocator from "@getpaperplane/provider-core/server/IdAllocator";
 import { provideDeterministicTestRuntime } from "./DeterministicRuntime.ts";
 import { ORCHESTRATOR_REPLAY_FIXTURES } from "./fixtures/index.ts";
 import { materializeFixtureInput } from "./fixtures/shared.ts";
-import { readProviderReplayTranscript } from "@rove-code/provider-testing/replayTranscript";
+import { readProviderReplayTranscript } from "@getpaperplane/provider-testing/replayTranscript";
 
 const decodeCommand = Schema.decodeUnknownEffect(OrchestrationV2Command);
 const readTranscript = Effect.fn("readOrchestratorReplayContractTranscript")(function* (file: URL) {

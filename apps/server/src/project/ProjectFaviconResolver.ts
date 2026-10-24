@@ -133,7 +133,7 @@ export class ProjectFaviconResolver extends Context.Service<
       faviconPath?: string,
     ) => Effect.Effect<string | null, ProjectFaviconResolutionError>;
   }
->()("@rove-code/server/project/ProjectFaviconResolver") {}
+>()("@getpaperplane/server/project/ProjectFaviconResolver") {}
 
 function extractIconHref(source: string): string | null {
   const htmlMatch = source.match(LINK_ICON_HTML_RE);

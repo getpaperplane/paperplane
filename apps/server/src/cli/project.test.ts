@@ -1,5 +1,5 @@
-import * as OtelEnvironment from "@rove-code/shared/otelEnvironment";
-import { DEFAULT_SIGNAL_EXPORT } from "@rove-code/shared/observability";
+import * as OtelEnvironment from "@getpaperplane/shared/otelEnvironment";
+import { DEFAULT_SIGNAL_EXPORT } from "@getpaperplane/shared/observability";
 // @effect-diagnostics nodeBuiltinImport:off - CLI integration uses temporary Node paths.
 import * as NodeFS from "node:fs";
 import * as NodeOS from "node:os";
@@ -15,8 +15,8 @@ import {
   ThreadId,
   type OrchestrationV2AppThread,
   type ProjectId,
-} from "@rove-code/contracts";
-import * as NetService from "@rove-code/shared/Net";
+} from "@getpaperplane/contracts";
+import * as NetService from "@getpaperplane/shared/Net";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";

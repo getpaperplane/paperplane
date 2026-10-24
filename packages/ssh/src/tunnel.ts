@@ -1,16 +1,16 @@
 import type {
   DesktopSshEnvironmentBootstrap,
   DesktopSshEnvironmentTarget,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   describeReadinessCause,
   waitForHttpReady as waitForHttpReadyShared,
-} from "@rove-code/shared/httpReadiness";
-import { cliReleaseDownloadBaseUrl } from "@rove-code/shared/cliRelease";
-import * as KeyedLock from "@rove-code/shared/KeyedLock";
-import * as NetService from "@rove-code/shared/Net";
-import { extractJsonObject, fromLenientJson } from "@rove-code/shared/schemaJson";
-import { satisfiesSemverRange } from "@rove-code/shared/semver";
+} from "@getpaperplane/shared/httpReadiness";
+import { cliReleaseDownloadBaseUrl } from "@getpaperplane/shared/cliRelease";
+import * as KeyedLock from "@getpaperplane/shared/KeyedLock";
+import * as NetService from "@getpaperplane/shared/Net";
+import { extractJsonObject, fromLenientJson } from "@getpaperplane/shared/schemaJson";
+import { satisfiesSemverRange } from "@getpaperplane/shared/semver";
 import * as Context from "effect/Context";
 import * as Crypto from "effect/Crypto";
 import * as Effect from "effect/Effect";
@@ -1845,7 +1845,7 @@ const makeSshEnvironmentManager = Effect.fn("ssh/tunnel.SshEnvironmentManager.ma
 export class SshEnvironmentManager extends Context.Service<
   SshEnvironmentManager,
   SshEnvironmentManagerShape
->()("@rove-code/ssh/tunnel/SshEnvironmentManager") {
+>()("@getpaperplane/ssh/tunnel/SshEnvironmentManager") {
   static readonly layer = (options: SshEnvironmentManagerOptions = {}) =>
     Layer.effect(SshEnvironmentManager, makeSshEnvironmentManager(options));
 }

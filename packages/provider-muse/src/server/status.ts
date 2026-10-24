@@ -1,6 +1,6 @@
-import { ServerProviderModel } from "@rove-code/contracts";
+import { ServerProviderModel } from "@getpaperplane/contracts";
 import { MuseSettings } from "../settings.ts";
-import { resolveSpawnCommand } from "@rove-code/shared/shell";
+import { resolveSpawnCommand } from "@getpaperplane/shared/shell";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
@@ -18,7 +18,7 @@ import {
   providerModelsFromSettings,
   spawnAndCollect,
   type ProviderProbeResult,
-} from "@rove-code/provider-core/server/snapshotProbe";
+} from "@getpaperplane/provider-core/server/snapshotProbe";
 
 const MUSE_PRESENTATION = {
   displayName: "Muse Code",

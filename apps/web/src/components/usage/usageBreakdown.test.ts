@@ -1,4 +1,4 @@
-import type { ModelTotals } from "@rove-code/shared/usageMerge";
+import type { ModelTotals } from "@getpaperplane/shared/usageMerge";
 import { describe, expect, it } from "vite-plus/test";
 
 import {

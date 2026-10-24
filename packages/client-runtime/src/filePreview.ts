@@ -1,4 +1,4 @@
-import { decodeFilePreviewText, FILE_TEXT_PREVIEW_MAX_BYTES } from "@rove-code/shared/filePreview";
+import { decodeFilePreviewText, FILE_TEXT_PREVIEW_MAX_BYTES } from "@getpaperplane/shared/filePreview";
 
 /** Consume only a bounded prefix, even when a host ignores the requested HTTP range. */
 export async function readFilePreviewResponse(

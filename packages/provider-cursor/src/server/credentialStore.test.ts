@@ -1,12 +1,12 @@
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { assert, it } from "@effect/vitest";
-import { ProviderInstanceId } from "@rove-code/contracts";
+import { ProviderInstanceId } from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
 
-import * as ProviderHost from "@rove-code/provider-core/server/ProviderHost";
-import * as TestProviderHost from "@rove-code/provider-testing/TestProviderHost";
+import * as ProviderHost from "@getpaperplane/provider-core/server/ProviderHost";
+import * as TestProviderHost from "@getpaperplane/provider-testing/TestProviderHost";
 import * as Layer from "effect/Layer";
 import { makeCursorCredentialStore } from "./credentialStore.ts";
 

@@ -6,7 +6,7 @@
  *
  * @module OrchestrationCommandReceiptRepository
  */
-import { CommandId, IsoDateTime, NonNegativeInt, ProjectId, ThreadId } from "@rove-code/contracts";
+import { CommandId, IsoDateTime, NonNegativeInt, ProjectId, ThreadId } from "@getpaperplane/contracts";
 import * as SqlClient from "effect/sql/SqlClient";
 import * as SqlSchema from "effect/sql/SqlSchema";
 import * as Context from "effect/Context";
@@ -67,7 +67,7 @@ export class OrchestrationCommandReceiptRepository extends Context.Service<
     >;
   }
 >()(
-  "@rove-code/server/persistence/OrchestrationCommandReceipts/OrchestrationCommandReceiptRepository",
+  "@getpaperplane/server/persistence/OrchestrationCommandReceipts/OrchestrationCommandReceiptRepository",
 ) {}
 
 const makeOrchestrationCommandReceiptRepository = Effect.gen(function* () {

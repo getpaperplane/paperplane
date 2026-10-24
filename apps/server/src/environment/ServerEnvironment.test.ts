@@ -1,5 +1,5 @@
 import * as NodeServices from "@effect/platform-node/NodeServices";
-import { ORCHESTRATION_PROTOCOL_VERSION } from "@rove-code/contracts";
+import { ORCHESTRATION_PROTOCOL_VERSION } from "@getpaperplane/contracts";
 import { expect, it } from "@effect/vitest";
 import * as Crypto from "effect/Crypto";
 import * as Deferred from "effect/Deferred";
@@ -9,9 +9,9 @@ import * as Layer from "effect/Layer";
 import * as PlatformError from "effect/PlatformError";
 import * as Schema from "effect/Schema";
 
-import { DEFAULT_SIGNAL_EXPORT } from "@rove-code/shared/observability";
-import * as HostProcess from "@rove-code/shared/HostProcess";
-import * as OtelEnvironment from "@rove-code/shared/otelEnvironment";
+import { DEFAULT_SIGNAL_EXPORT } from "@getpaperplane/shared/observability";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
+import * as OtelEnvironment from "@getpaperplane/shared/otelEnvironment";
 
 import * as ServerSecretStore from "../auth/ServerSecretStore.ts";
 import {
@@ -90,15 +90,15 @@ it.layer(NodeServices.layer)("ServerEnvironmentLive", (it) => {
       const fs = yield* FileSystem.FileSystem;
       const baseDir = yield* fs.makeTempDirectoryScoped();
       const installPrefix = `${baseDir}/node`;
-      const entry = `${installPrefix}/lib/node_modules/@rove-code/cli/dist/bin.mjs`;
-      yield* fs.makeDirectory(`${installPrefix}/lib/node_modules/@rove-code/cli/dist`, {
+      const entry = `${installPrefix}/lib/node_modules/@getpaperplane/cli/dist/bin.mjs`;
+      yield* fs.makeDirectory(`${installPrefix}/lib/node_modules/@getpaperplane/cli/dist`, {
         recursive: true,
       });
       yield* fs.makeDirectory(`${installPrefix}/bin`, { recursive: true });
       yield* fs.writeFileString(entry, "");
       yield* fs.writeFileString(
-        `${installPrefix}/lib/node_modules/@rove-code/cli/package.json`,
-        '{"name":"@rove-code/cli","version":"0.0.45","bin":{"rove":"./dist/bin.mjs"}}',
+        `${installPrefix}/lib/node_modules/@getpaperplane/cli/package.json`,
+        '{"name":"@getpaperplane/cli","version":"0.0.45","bin":{"rove":"./dist/bin.mjs"}}',
       );
       yield* fs.symlink(entry, `${installPrefix}/bin/rove`);
       const prefix = yield* fs.realPath(`${baseDir}/node`);

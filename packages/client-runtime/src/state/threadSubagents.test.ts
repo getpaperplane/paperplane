@@ -6,7 +6,7 @@ import {
   RunId,
   ThreadId,
   type OrchestrationV2Subagent,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as DateTime from "effect/DateTime";
 
 import { deriveThreadTurnSubagents, resolveSubagentPillSegment } from "./threadSubagents.ts";

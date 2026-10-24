@@ -1,4 +1,4 @@
-import { presentThreadShell } from "@rove-code/client-runtime/state/shell";
+import { presentThreadShell } from "@getpaperplane/client-runtime/state/shell";
 import {
   EnvironmentId,
   MessageId,
@@ -10,7 +10,7 @@ import {
   ProviderInstanceId,
   ThreadId,
   type OrchestrationV2ThreadProjection,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as DateTime from "effect/DateTime";
 
 import type { ChatMessage, Thread } from "./types";

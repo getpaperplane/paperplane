@@ -5,7 +5,7 @@ import {
   type ComposerContextRecord,
   type ElementContextDetails,
   type KnownComposerContextRecord,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 
 /**
  * Canonical inline reference: `[label](rove-context://v1/<kind>/<contextId>)`, or the image
@@ -359,10 +359,10 @@ export function projectComposerContextForProvider(input: {
 
 /** Preserve context bindings when uploads become thread-owned attachments. */
 export function remapComposerContextAttachments(
-  context: import("@rove-code/contracts").OrchestrationMessageContext | undefined,
+  context: import("@getpaperplane/contracts").OrchestrationMessageContext | undefined,
   before: ReadonlyArray<{ readonly id?: string | undefined }>,
   after: ReadonlyArray<{ readonly id: string }>,
-): import("@rove-code/contracts").OrchestrationMessageContext | undefined {
+): import("@getpaperplane/contracts").OrchestrationMessageContext | undefined {
   if (context === undefined) return undefined;
   const ids = new Map(
     before.flatMap((attachment, index) => {

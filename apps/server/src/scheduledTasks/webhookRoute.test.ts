@@ -12,13 +12,13 @@ import * as HttpRouter from "effect/http/HttpRouter";
 import * as HttpApi from "effect/http-api/HttpApi";
 import * as HttpApiBuilder from "effect/http-api/HttpApiBuilder";
 
-import { RELAY_HOOK_DELIVERY_TYP, signRelayJwt } from "@rove-code/shared/relayJwt";
+import { RELAY_HOOK_DELIVERY_TYP, signRelayJwt } from "@getpaperplane/shared/relayJwt";
 import {
   EnvironmentHttpApi,
   EnvironmentId,
   ScheduledTaskWebhookDeliveryId,
   ScheduledTaskError,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   ScheduledTaskService,
   type WebhookTriggerRequest,

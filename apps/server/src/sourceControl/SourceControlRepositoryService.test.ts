@@ -1,4 +1,4 @@
-import { SourceControlProviderKind } from "@rove-code/contracts";
+import { SourceControlProviderKind } from "@getpaperplane/contracts";
 import * as NodePath from "@effect/platform-node/NodePath";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { assert, it } from "@effect/vitest";
@@ -10,13 +10,13 @@ import * as PlatformError from "effect/PlatformError";
 import * as Schema from "effect/Schema";
 import { ChildProcessSpawner } from "effect/process";
 
-import { GitCommandError, SourceControlProviderError } from "@rove-code/contracts";
+import { GitCommandError, SourceControlProviderError } from "@getpaperplane/contracts";
 
 import * as ServerConfig from "../config.ts";
 import * as GitVcsDriver from "../vcs/GitVcsDriver.ts";
-import * as BitbucketApi from "@rove-code/source-control-bitbucket/server/BitbucketApi";
-import * as BitbucketSourceControlProvider from "@rove-code/source-control-bitbucket/server/BitbucketSourceControlProvider";
-import type * as SourceControlProvider from "@rove-code/source-control-core/server/SourceControlProvider";
+import * as BitbucketApi from "@getpaperplane/source-control-bitbucket/server/BitbucketApi";
+import * as BitbucketSourceControlProvider from "@getpaperplane/source-control-bitbucket/server/BitbucketSourceControlProvider";
+import type * as SourceControlProvider from "@getpaperplane/source-control-core/server/SourceControlProvider";
 import * as SourceControlProviderRegistry from "./SourceControlProviderRegistry.ts";
 import * as SourceControlRepositoryService from "./SourceControlRepositoryService.ts";
 

@@ -1,5 +1,5 @@
 import * as Dialog from "./ui/Dialog";
-import type { ComposerContextRecord, EnvironmentId } from "@rove-code/contracts";
+import type { ComposerContextRecord, EnvironmentId } from "@getpaperplane/contracts";
 import { Pressable, View } from "react-native";
 import { Image } from "expo-image";
 import { useEffect, useId, useMemo, useState } from "react";

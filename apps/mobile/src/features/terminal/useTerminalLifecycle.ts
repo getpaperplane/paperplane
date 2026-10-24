@@ -1,4 +1,4 @@
-import type { TerminalSessionState } from "@rove-code/client-runtime/state/terminal";
+import type { TerminalSessionState } from "@getpaperplane/client-runtime/state/terminal";
 import { useEffect, useEffectEvent, useRef } from "react";
 
 /** Keep observed history passive while preserving explicit terminal visits and live exits. */

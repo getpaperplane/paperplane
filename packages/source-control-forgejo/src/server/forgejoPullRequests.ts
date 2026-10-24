@@ -1,7 +1,7 @@
-import { SourceControlProviderKind } from "@rove-code/contracts";
+import { SourceControlProviderKind } from "@getpaperplane/contracts";
 import * as Schema from "effect/Schema";
 import * as Option from "effect/Option";
-import type { ChangeRequest } from "@rove-code/contracts";
+import type { ChangeRequest } from "@getpaperplane/contracts";
 
 const Repository = Schema.Struct({
   full_name: Schema.String,

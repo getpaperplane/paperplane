@@ -51,7 +51,7 @@ export interface AgentScopeCommand {
   readonly args: ReadonlyArray<string>;
 }
 
-export const AgentScope = Context.Reference<AgentScopeShape>("@rove-code/shared/AgentScope", {
+export const AgentScope = Context.Reference<AgentScopeShape>("@getpaperplane/shared/AgentScope", {
   defaultValue: () => ({
     wrap: ({ command, args }) => Effect.succeed({ command, args }),
     oomKill: () => Effect.succeed(null),
@@ -64,7 +64,7 @@ export const AgentScope = Context.Reference<AgentScopeShape>("@rove-code/shared/
  * provider flavors and do not take a thread id, so the ACP adapter provides it.
  */
 export const AgentScopeThreadId = Context.Reference<string | undefined>(
-  "@rove-code/shared/AgentScope/ThreadId",
+  "@getpaperplane/shared/AgentScope/ThreadId",
   { defaultValue: () => undefined },
 );
 

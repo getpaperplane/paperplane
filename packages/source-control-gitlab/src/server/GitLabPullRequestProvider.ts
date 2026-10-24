@@ -1,10 +1,10 @@
-import { SourceControlProviderKind } from "@rove-code/contracts";
+import { SourceControlProviderKind } from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import type {
   PullRequestCapabilities,
   PullRequestReaction,
   PullRequestViewerPermissions,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 
 import * as GitLabPullRequestCli from "./GitLabPullRequestCli.ts";
 import {
@@ -13,7 +13,7 @@ import {
   type ProviderChangeRequestActivity,
   type ProviderChangeRequestDetail,
   type PullRequestProviderApi,
-} from "@rove-code/source-control-core/server/PullRequestProvider";
+} from "@getpaperplane/source-control-core/server/PullRequestProvider";
 import { definition } from "../client/definition.ts";
 
 const CAPABILITIES: PullRequestCapabilities = {

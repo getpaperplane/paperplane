@@ -48,8 +48,8 @@ import {
   PRIMARY_LOCAL_ENVIRONMENT_ID,
   DesktopTelemetryControlMessage,
   type DesktopTelemetryControlMessage as DesktopTelemetryControlMessageValue,
-} from "@rove-code/contracts";
-import { waitForHttpReady as waitForHttpReadyShared } from "@rove-code/shared/httpReadiness";
+} from "@getpaperplane/contracts";
+import { waitForHttpReady as waitForHttpReadyShared } from "@getpaperplane/shared/httpReadiness";
 
 import * as DesktopObservability from "../app/DesktopObservability.ts";
 import * as DesktopTelemetryPublisher from "../telemetry/DesktopTelemetryPublisher.ts";

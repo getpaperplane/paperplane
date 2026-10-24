@@ -16,9 +16,9 @@ import * as Option from "effect/Option";
 import * as Path from "effect/Path";
 import * as Schema from "effect/Schema";
 
-import { ROVE_PROJECT_FILE_NAME, type RoveProjectFile } from "@rove-code/contracts";
-import { LEGACY_PROJECT_FILE_NAME } from "@rove-code/shared/roveMigration";
-import { RoveProjectFileFromJson } from "@rove-code/shared/roveProjectFile";
+import { ROVE_PROJECT_FILE_NAME, type RoveProjectFile } from "@getpaperplane/contracts";
+import { LEGACY_PROJECT_FILE_NAME } from "@getpaperplane/shared/roveMigration";
+import { RoveProjectFileFromJson } from "@getpaperplane/shared/roveProjectFile";
 
 const decodeRoveProjectFileJson = Schema.decodeEffect(RoveProjectFileFromJson);
 
@@ -48,7 +48,7 @@ export class RoveProjectFileLoader extends Context.Service<
      */
     readonly load: (workspaceRoot: string) => Effect.Effect<Option.Option<RoveProjectFile>>;
   }
->()("@rove-code/server/project/RoveProjectFileLoader") {}
+>()("@getpaperplane/server/project/RoveProjectFileLoader") {}
 
 const logRoveProjectFileLoadError = (error: RoveProjectFileLoadError) =>
   Effect.logWarning(error).pipe(

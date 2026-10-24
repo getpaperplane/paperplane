@@ -1,4 +1,4 @@
-import { applyThreadPullRequestLinkUpdate } from "@rove-code/shared/threadPullRequests";
+import { applyThreadPullRequestLinkUpdate } from "@getpaperplane/shared/threadPullRequests";
 import { projectTurnItemForWire } from "./WireProjection.ts";
 import * as Stream from "effect/Stream";
 import { makeThreadFind, findProjectedThreadItems } from "./ThreadFind.ts";
@@ -7,14 +7,14 @@ import type {
   OrchestrationV2SearchThreadInput,
   OrchestrationV2SearchThreadResult,
   OrchestrationV2ThreadHistoryPage,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   latestRootProviderFailure,
   latestUnheldRun,
   threadErrorSummary,
   usageLimitRunPresentedAsLatest,
-} from "@rove-code/shared/orchestrationV2ThreadError";
-import { threadPullRequestsOf } from "@rove-code/shared/threadPullRequests";
+} from "@getpaperplane/shared/orchestrationV2ThreadError";
+import { threadPullRequestsOf } from "@getpaperplane/shared/threadPullRequests";
 import type {
   OrchestrationV2AppThread,
   OrchestrationV2CheckpointScope,
@@ -39,7 +39,7 @@ import type {
   ProviderThreadId,
   ProviderTurnId,
   RunAttemptId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   OrchestrationV2AppThreadJson as OrchestrationV2AppThreadJsonSchema,
   OrchestrationV2CheckpointJson as OrchestrationV2CheckpointJsonSchema,
@@ -65,13 +65,13 @@ import {
   ThreadId,
   TurnItemId,
   NodeId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   createOrchestrationV2TurnItemVisibility,
   isOrchestrationV2SupersededInterrupt,
-} from "@rove-code/shared/orchestrationV2Timeline";
-import { derivePendingBackgroundWork } from "@rove-code/shared/orchestrationV2PendingBackgroundWork";
-import * as NodeSqliteClient from "@rove-code/shared/nodeSqliteClient";
+} from "@getpaperplane/shared/orchestrationV2Timeline";
+import { derivePendingBackgroundWork } from "@getpaperplane/shared/orchestrationV2PendingBackgroundWork";
+import * as NodeSqliteClient from "@getpaperplane/shared/nodeSqliteClient";
 import * as Cache from "effect/Cache";
 import * as Data from "effect/Data";
 import * as Duration from "effect/Duration";
@@ -86,7 +86,7 @@ import * as Schema from "effect/Schema";
 import * as SqlClient from "effect/sql/SqlClient";
 import type * as Statement from "effect/sql/Statement";
 
-import { MCP_APP_OUTPUT_KEY } from "@rove-code/shared/mcpApp";
+import { MCP_APP_OUTPUT_KEY } from "@getpaperplane/shared/mcpApp";
 import { threadHtmlRenderAttachmentIds } from "../attachmentStore.ts";
 import {
   isThreadHistoryUserTurn,
@@ -596,7 +596,7 @@ export interface ProjectionStoreV2Shape {
 }
 
 export class ProjectionStoreV2 extends Context.Service<ProjectionStoreV2, ProjectionStoreV2Shape>()(
-  "@rove-code/server/orchestration-v2/ProjectionStore/ProjectionStoreV2",
+  "@getpaperplane/server/orchestration-v2/ProjectionStore/ProjectionStoreV2",
 ) {}
 
 export const ORCHESTRATION_V2_PROJECTION_SCHEMA_VERSION = 2;

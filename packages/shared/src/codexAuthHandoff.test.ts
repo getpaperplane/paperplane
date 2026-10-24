@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vite-plus/test";
-import { EnvironmentId, ProviderInstanceId } from "@rove-code/contracts";
+import { EnvironmentId, ProviderInstanceId } from "@getpaperplane/contracts";
 import {
   codexAuthorizationRequest,
   codexAuthDeliveryUrl,

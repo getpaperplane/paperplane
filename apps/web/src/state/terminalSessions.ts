@@ -5,7 +5,7 @@ import {
   selectRunningSubprocessTerminalIds,
   type KnownTerminalSession,
   type TerminalSessionState,
-} from "@rove-code/client-runtime/state/terminal";
+} from "@getpaperplane/client-runtime/state/terminal";
 import {
   ThreadId,
   AuthTerminalReadScope,
@@ -13,7 +13,7 @@ import {
   type EnvironmentId,
   type TerminalAttachInput,
   type TerminalSummary,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { useMemo } from "react";
 
 import { useEnvironmentQuery } from "./query";

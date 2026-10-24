@@ -7,15 +7,15 @@ import {
   removeCatalogValue,
   replaceCatalogValue,
   Persistence,
-} from "@rove-code/client-runtime/platform";
-import { TokenStore } from "@rove-code/client-runtime/authorization";
+} from "@getpaperplane/client-runtime/platform";
+import { TokenStore } from "@getpaperplane/client-runtime/authorization";
 import {
   ConnectionTransientError,
   CredentialStore,
   ProfileStore,
   GitHubRoutingPermissions,
   makeGitHubRoutingPermissions,
-} from "@rove-code/client-runtime/connection";
+} from "@getpaperplane/client-runtime/connection";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";

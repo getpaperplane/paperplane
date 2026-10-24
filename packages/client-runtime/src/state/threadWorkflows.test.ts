@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vite-plus/test";
-import type { OrchestrationV2ThreadProjection } from "@rove-code/contracts";
+import type { OrchestrationV2ThreadProjection } from "@getpaperplane/contracts";
 
 import {
   canDetachThreadProviderSession,

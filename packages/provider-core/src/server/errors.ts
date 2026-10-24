@@ -1,4 +1,4 @@
-import { ProviderDriverKind, ProviderInstanceId } from "@rove-code/contracts";
+import { ProviderDriverKind, ProviderInstanceId } from "@getpaperplane/contracts";
 import * as Schema from "effect/Schema";
 
 /**

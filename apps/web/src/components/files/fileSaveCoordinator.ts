@@ -1,4 +1,4 @@
-import type { AtomCommandResult } from "@rove-code/client-runtime/state/runtime";
+import type { AtomCommandResult } from "@getpaperplane/client-runtime/state/runtime";
 
 export interface FileSaveCoordinatorOptions<A, E> {
   readonly debounceMs: number;

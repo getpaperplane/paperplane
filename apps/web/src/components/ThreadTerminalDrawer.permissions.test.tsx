@@ -3,9 +3,9 @@ import {
   EnvironmentId,
   ThreadId,
   type AuthEnvironmentScope,
-} from "@rove-code/contracts";
-import { DEFAULT_CLIENT_SETTINGS } from "@rove-code/contracts/settings";
-import { nextTerminalAttachSeedState } from "@rove-code/client-runtime/state/terminal";
+} from "@getpaperplane/contracts";
+import { DEFAULT_CLIENT_SETTINGS } from "@getpaperplane/contracts/settings";
+import { nextTerminalAttachSeedState } from "@getpaperplane/client-runtime/state/terminal";
 import { AsyncResult } from "effect/reactivity";
 import { act, create, type ReactTestRenderer } from "react-test-renderer";
 import { afterEach, beforeEach, expect, it, vi } from "vite-plus/test";

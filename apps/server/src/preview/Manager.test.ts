@@ -1,8 +1,8 @@
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { it } from "@effect/vitest";
-import { type PreviewEvent, ThreadId } from "@rove-code/contracts";
-import { PreviewUrlNormalizationError } from "@rove-code/shared/preview";
+import { type PreviewEvent, ThreadId } from "@getpaperplane/contracts";
+import { PreviewUrlNormalizationError } from "@getpaperplane/shared/preview";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as PubSub from "effect/PubSub";

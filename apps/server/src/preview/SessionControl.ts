@@ -1,4 +1,4 @@
-import type { PreviewAutomationControlReason } from "@rove-code/contracts";
+import type { PreviewAutomationControlReason } from "@getpaperplane/contracts";
 
 export class BrowserControlInterrupted extends Error {
   readonly reason: PreviewAutomationControlReason;

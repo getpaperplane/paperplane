@@ -1,5 +1,5 @@
-import { ROVE_PROJECT_FILE_NAME, type RoveProjectFile } from "@rove-code/contracts";
-import { parseRoveProjectFile } from "@rove-code/shared/roveProjectFile";
+import { ROVE_PROJECT_FILE_NAME, type RoveProjectFile } from "@getpaperplane/contracts";
+import { parseRoveProjectFile } from "@getpaperplane/shared/roveProjectFile";
 import { useAtomValue } from "@effect/atom-react";
 import * as Option from "effect/Option";
 import { AsyncResult, Atom } from "effect/reactivity";

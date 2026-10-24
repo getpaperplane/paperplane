@@ -4,8 +4,8 @@ import {
   type VcsListRefsResult,
   type VcsStatusResult,
   WS_METHODS,
-} from "@rove-code/contracts";
-import { applyGitStatusStreamEvent } from "@rove-code/shared/git";
+} from "@getpaperplane/contracts";
+import { applyGitStatusStreamEvent } from "@getpaperplane/shared/git";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";

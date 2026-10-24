@@ -1,4 +1,4 @@
-import type { EnvironmentId } from "@rove-code/contracts";
+import type { EnvironmentId } from "@getpaperplane/contracts";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
@@ -15,7 +15,7 @@ export class EnvironmentQueryStore extends Context.Reference<{
     key: string,
     payload: string,
   ) => Effect.Effect<void>;
-} | null>("@rove-code/client-runtime/EnvironmentQueryStore", {
+} | null>("@getpaperplane/client-runtime/EnvironmentQueryStore", {
   defaultValue: () => null,
 }) {}
 

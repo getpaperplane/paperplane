@@ -5,14 +5,14 @@ import {
   type OrchestrationSearchThreadsResult,
   ProjectId,
   ThreadId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Schema from "effect/Schema";
 import * as SqlClient from "effect/sql/SqlClient";
 import * as SqlSchema from "effect/sql/SqlSchema";
-import * as NodeSqliteClient from "@rove-code/shared/nodeSqliteClient";
+import * as NodeSqliteClient from "@getpaperplane/shared/nodeSqliteClient";
 
 /** Carries no query text: search input is user content. */
 export class ThreadSearchError extends Schema.TaggedError<ThreadSearchError>()(
@@ -73,7 +73,7 @@ export class ThreadSearch extends Context.Service<
       input: OrchestrationSearchThreadsInput,
     ) => Effect.Effect<OrchestrationSearchThreadsResult, ThreadSearchError>;
   }
->()("@rove-code/server/orchestration-v2/ThreadSearch") {}
+>()("@getpaperplane/server/orchestration-v2/ThreadSearch") {}
 
 /** @public Service construction is part of the canonical Effect module API. */
 export const make = Effect.gen(function* () {

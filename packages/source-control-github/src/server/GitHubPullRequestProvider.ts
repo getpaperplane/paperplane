@@ -1,5 +1,5 @@
-import { SourceControlProviderKind } from "@rove-code/contracts";
-import { removeAgentCredits } from "@rove-code/source-control-core/server/mergeMessage";
+import { SourceControlProviderKind } from "@getpaperplane/contracts";
+import { removeAgentCredits } from "@getpaperplane/source-control-core/server/mergeMessage";
 import * as Effect from "effect/Effect";
 import type {
   PullRequestActor,
@@ -7,9 +7,9 @@ import type {
   PullRequestCheck,
   PullRequestReaction,
   PullRequestViewerPermissions,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 
-import * as SourceControlRateLimit from "@rove-code/source-control-core/server/SourceControlRateLimit";
+import * as SourceControlRateLimit from "@getpaperplane/source-control-core/server/SourceControlRateLimit";
 import * as GitHubPullRequestApi from "./GitHubPullRequestApi.ts";
 import {
   PullRequestProviderError,
@@ -18,7 +18,7 @@ import {
   type ProviderChangeRequestDetail,
   type PullRequestProviderApi,
   type ProviderRepositoryRef,
-} from "@rove-code/source-control-core/server/PullRequestProvider";
+} from "@getpaperplane/source-control-core/server/PullRequestProvider";
 import type { GitHubViewerAccess, GitHubWorkflowRunApproval } from "./gitHubPullRequestJson.ts";
 import { definition } from "../client/definition.ts";
 

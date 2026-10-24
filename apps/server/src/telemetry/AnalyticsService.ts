@@ -8,8 +8,8 @@
  *
  * @module AnalyticsService
  */
-import * as HostProcess from "@rove-code/shared/HostProcess";
-import type { ClientOs } from "@rove-code/contracts";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
+import type { ClientOs } from "@getpaperplane/contracts";
 import * as Clock from "effect/Clock";
 import * as Config from "effect/Config";
 import * as Context from "effect/Context";
@@ -103,7 +103,7 @@ export class AnalyticsService extends Context.Service<
     /** Flush all currently queued telemetry events. */
     readonly flush: Effect.Effect<void>;
   }
->()("@rove-code/server/telemetry/AnalyticsService") {
+>()("@getpaperplane/server/telemetry/AnalyticsService") {
   /** No-op layer for callers that intentionally disable telemetry. */
   static readonly layerTest = Layer.succeed(
     AnalyticsService,

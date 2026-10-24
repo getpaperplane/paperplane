@@ -46,7 +46,7 @@ import {
 } from "@react-navigation/native";
 import { useAtomRefresh } from "@effect/atom-react";
 import { pullRequestReviewKey } from "./pullRequestReviewDrafts";
-import { type PullRequestDetail, type PullRequestListEntry } from "@rove-code/contracts";
+import { type PullRequestDetail, type PullRequestListEntry } from "@getpaperplane/contracts";
 import { PullRequestOverviewLoading } from "./PullRequestOverviewLoading";
 import { pullRequestStatus } from "./pullRequestStatus";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";

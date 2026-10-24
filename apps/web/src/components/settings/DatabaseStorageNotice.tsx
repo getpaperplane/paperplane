@@ -1,5 +1,5 @@
 import { useAtomValue } from "@effect/atom-react";
-import { shouldRecommendDatabaseCompaction, type EnvironmentId } from "@rove-code/contracts";
+import { shouldRecommendDatabaseCompaction, type EnvironmentId } from "@getpaperplane/contracts";
 import * as Schema from "effect/Schema";
 
 import { useCopyToClipboard } from "../../hooks/useCopyToClipboard";

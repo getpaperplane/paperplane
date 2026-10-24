@@ -1,8 +1,8 @@
-import { formatProviderSkillDisplayName } from "@rove-code/shared/inlineSkills";
+import { formatProviderSkillDisplayName } from "@getpaperplane/shared/inlineSkills";
 import {
   resolveProviderSkillSourceKind,
   type ProviderSkillSourceKind,
-} from "@rove-code/client-runtime/providerSkills";
+} from "@getpaperplane/client-runtime/providerSkills";
 import {
   type ProjectEntry,
   type ProviderDriverKind,
@@ -10,7 +10,7 @@ import {
   type ScopedThreadRef,
   type ServerProviderSkill,
   type ServerProviderSlashCommand,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   BlocksIcon,
   FolderIcon,

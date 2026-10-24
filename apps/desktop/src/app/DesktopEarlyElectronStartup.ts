@@ -1,4 +1,4 @@
-import { fromLenientJson } from "@rove-code/shared/schemaJson";
+import { fromLenientJson } from "@getpaperplane/shared/schemaJson";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 

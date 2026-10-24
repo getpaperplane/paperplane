@@ -1,5 +1,5 @@
-import type { EnvironmentRpcSubscriptionObservation } from "@rove-code/client-runtime/rpc";
-import { type BackgroundScope, type EnvironmentId, WS_METHODS } from "@rove-code/contracts";
+import type { EnvironmentRpcSubscriptionObservation } from "@getpaperplane/client-runtime/rpc";
+import { type BackgroundScope, type EnvironmentId, WS_METHODS } from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import * as RuntimePredicate from "effect/Predicate";
 

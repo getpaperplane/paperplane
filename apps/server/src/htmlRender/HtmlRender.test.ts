@@ -1,14 +1,14 @@
 // @effect-diagnostics nodeBuiltinImport:off - plain local servers stand in for LAN services.
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { describe, expect, it } from "@effect/vitest";
-import { ThreadId } from "@rove-code/contracts";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+import { ThreadId } from "@getpaperplane/contracts";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 import {
   HTML_RENDER_MEASURE_FONTS,
   HTML_RENDER_MEASURE_WIDTHS,
   htmlRenderTheme,
-} from "@rove-code/shared/htmlRender";
-import { ROVE_CODE_DARK_THEME_COLORS } from "@rove-code/shared/themePalettes";
+} from "@getpaperplane/shared/htmlRender";
+import { ROVE_CODE_DARK_THEME_COLORS } from "@getpaperplane/shared/themePalettes";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Base64 from "effect/encoding/Base64";

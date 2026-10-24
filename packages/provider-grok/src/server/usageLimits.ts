@@ -1,4 +1,4 @@
-import type { ServerProviderUsageWindow } from "@rove-code/contracts";
+import type { ServerProviderUsageWindow } from "@getpaperplane/contracts";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -12,8 +12,8 @@ import {
   clampPercent,
   makeUnavailableUsageLimits,
   makeUsageLimits,
-} from "@rove-code/provider-core/server/usageLimits";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+} from "@getpaperplane/provider-core/server/usageLimits";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 
 const GrokCredentials = Schema.Record(
   Schema.String,

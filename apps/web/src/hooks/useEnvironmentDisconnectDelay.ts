@@ -1,4 +1,4 @@
-import type { EnvironmentId } from "@rove-code/contracts";
+import type { EnvironmentId } from "@getpaperplane/contracts";
 import { useEffect, useState } from "react";
 
 /** Wait through brief outages before offering to switch off the active environment. */

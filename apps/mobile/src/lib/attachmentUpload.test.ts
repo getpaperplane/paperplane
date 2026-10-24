@@ -1,4 +1,4 @@
-import { EnvironmentId } from "@rove-code/contracts";
+import { EnvironmentId } from "@getpaperplane/contracts";
 import * as Option from "effect/Option";
 import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
@@ -18,7 +18,7 @@ const mocks = vi.hoisted(() => ({
   readBase64: vi.fn(),
 }));
 
-vi.mock("@rove-code/client-runtime/state/runtime", () => ({
+vi.mock("@getpaperplane/client-runtime/state/runtime", () => ({
   // The client-runtime attachments module resolves the same file through its
   // relative import, so these fakes also feed runAttachmentUploadCycle and
   // verifyPersistedAttachmentUpload.

@@ -1,4 +1,4 @@
-import { createOrchestrationEnvironmentAtoms } from "@rove-code/client-runtime/state/orchestration";
+import { createOrchestrationEnvironmentAtoms } from "@getpaperplane/client-runtime/state/orchestration";
 
 import { connectionAtomRuntime } from "../connection/runtime";
 

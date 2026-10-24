@@ -1,5 +1,5 @@
-import type { ToolActivityIcon, ToolActivitySource } from "@rove-code/contracts";
-import { resolveRoveMcpToolDefinition } from "@rove-code/shared/roveMcpToolPresentation";
+import type { ToolActivityIcon, ToolActivitySource } from "@getpaperplane/contracts";
+import { resolveRoveMcpToolDefinition } from "@getpaperplane/shared/roveMcpToolPresentation";
 
 export function normalizeMcpText(value: unknown, maxLength = 160): string | undefined {
   if (typeof value !== "string") return undefined;

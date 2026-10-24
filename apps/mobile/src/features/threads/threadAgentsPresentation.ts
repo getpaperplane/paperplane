@@ -1,9 +1,9 @@
 import {
   formatSubagentDisplayTitle,
   subagentDetailPreview,
-} from "@rove-code/client-runtime/state/subagent-display";
-import { isActiveSubagentStatus } from "@rove-code/client-runtime/state/subagentRuntime";
-import type { OrchestrationV2Subagent } from "@rove-code/contracts";
+} from "@getpaperplane/client-runtime/state/subagent-display";
+import { isActiveSubagentStatus } from "@getpaperplane/client-runtime/state/subagentRuntime";
+import type { OrchestrationV2Subagent } from "@getpaperplane/contracts";
 
 const PROMPT_TITLE_LIMIT = 80;
 

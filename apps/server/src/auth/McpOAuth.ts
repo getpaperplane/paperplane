@@ -13,8 +13,8 @@ import {
   type AuthEnvironmentScope,
   AuthOrchestrationOperateScope,
   AuthOrchestrationReadScope,
-} from "@rove-code/contracts";
-import { encodeOAuthScope } from "@rove-code/shared/oauthScope";
+} from "@getpaperplane/contracts";
+import { encodeOAuthScope } from "@getpaperplane/shared/oauthScope";
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
 import * as Crypto from "effect/Crypto";
@@ -239,7 +239,7 @@ export class McpOAuth extends Context.Service<
       readonly token: AuthMcpTokenRequest;
     }) => Effect.Effect<AuthMcpTokenResult, AuthMcpTokenError>;
   }
->()("@rove-code/server/auth/McpOAuth") {}
+>()("@getpaperplane/server/auth/McpOAuth") {}
 
 /** Appends OAuth response parameters, keeping any the client put in its redirect URI. */
 const redirectWith = (redirectUri: string, params: Record<string, string | undefined>) => {

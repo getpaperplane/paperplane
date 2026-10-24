@@ -1,4 +1,4 @@
-import type { OrchestrationMessageContext, ServerProviderSkill } from "@rove-code/contracts";
+import type { OrchestrationMessageContext, ServerProviderSkill } from "@getpaperplane/contracts";
 import type { Ref } from "react";
 import type { StyleProp, TextStyle, ViewStyle } from "react-native";
 

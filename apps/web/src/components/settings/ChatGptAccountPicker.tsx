@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { ProviderAuthMethod } from "@rove-code/contracts";
+import type { ProviderAuthMethod } from "@getpaperplane/contracts";
 import { RadioGroup, Radio } from "../ui/radio-group";
 import {
   Dialog,

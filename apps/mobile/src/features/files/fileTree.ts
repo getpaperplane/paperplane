@@ -1,5 +1,5 @@
-import type { ProjectEntry } from "@rove-code/contracts";
-import { normalizeSearchQuery, scoreQueryMatch } from "@rove-code/shared/searchRanking";
+import type { ProjectEntry } from "@getpaperplane/contracts";
+import { normalizeSearchQuery, scoreQueryMatch } from "@getpaperplane/shared/searchRanking";
 
 export interface FileTreeNode {
   readonly path: string;

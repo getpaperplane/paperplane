@@ -3,12 +3,12 @@ import * as Dialog from "../../components/ui/Dialog";
 import { useAtomValue } from "@effect/atom-react";
 import * as Cause from "effect/Cause";
 import { AsyncResult } from "effect/reactivity";
-import { clampFileAttachmentUploadBytes } from "@rove-code/client-runtime/state/attachments";
+import { clampFileAttachmentUploadBytes } from "@getpaperplane/client-runtime/state/attachments";
 import {
   nextPastedTextFileName,
   pastedTextDisposition,
   replaceTextSelection,
-} from "@rove-code/client-runtime/text-paste";
+} from "@getpaperplane/client-runtime/text-paste";
 import { NativeStackScreenOptions } from "../../native/StackHeader";
 import {
   CommonActions,
@@ -34,8 +34,8 @@ import {
   PROVIDER_SEND_TURN_MAX_ATTACHMENTS,
   PROVIDER_SEND_TURN_MAX_INPUT_CHARS,
   resolveEnvironmentMachineKind,
-} from "@rove-code/contracts";
-import { deriveThreadTitleSeed } from "@rove-code/client-runtime/operations";
+} from "@getpaperplane/contracts";
+import { deriveThreadTitleSeed } from "@getpaperplane/client-runtime/operations";
 
 import {
   ComposerEditor,
@@ -68,7 +68,7 @@ import { VideoPreviewModal, type VideoPreviewSource } from "../../components/Vid
 import { ProviderIcon } from "../../components/ProviderIcon";
 import { SymbolView } from "../../components/ui/AppSymbol";
 import { AppText as Text } from "../../components/ui/AppText";
-import { hasProviderUsageLimits, isUsageLimitsCommand } from "@rove-code/shared/usageLimits";
+import { hasProviderUsageLimits, isUsageLimitsCommand } from "@getpaperplane/shared/usageLimits";
 import { COMPOSER_LAYOUT_TRANSITION, ComposerSurface } from "./ThreadComposer";
 import { ComposerCommandPopover } from "./ComposerCommandPopover";
 import { useComposerCommandMenu } from "./use-composer-command-menu";

@@ -14,13 +14,13 @@ import {
 import { useAtomValue } from "@effect/atom-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { type ProviderApprovalDecision, type RuntimeRequestId } from "@rove-code/contracts";
+import { type ProviderApprovalDecision, type RuntimeRequestId } from "@getpaperplane/contracts";
 import {
   type PendingThreadRequests,
   type ThreadUserInputQuestion,
   seedUserInputDraftAnswers,
-} from "@rove-code/client-runtime/state/thread-requests";
-import { AuthOrchestrationOperateScope } from "@rove-code/contracts";
+} from "@getpaperplane/client-runtime/state/thread-requests";
+import { AuthOrchestrationOperateScope } from "@getpaperplane/contracts";
 import { Atom } from "effect/reactivity";
 
 import { threadEnvironment } from "../state/threads";
@@ -275,7 +275,7 @@ export function useSelectedThreadRequests() {
     if (userInputResponsesInFlight.current.has(responseKey)) return;
     const attachmentsByQuestionId = new Map<
       string,
-      import("@rove-code/contracts").UserInputAttachments[string]
+      import("@getpaperplane/contracts").UserInputAttachments[string]
     >();
     for (const question of activePendingUserInput.questions) {
       const key = questionAttachmentDraftKey(

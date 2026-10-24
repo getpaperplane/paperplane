@@ -18,7 +18,7 @@ import {
   type ProviderInteractionMode,
   type ProviderOptionSelection,
   type RuntimeMode,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Schema from "effect/Schema";
 import { useEffect } from "react";
 import { Atom } from "effect/reactivity";
@@ -31,9 +31,9 @@ import {
   formatComposerContextReference,
   sanitizeComposerContextLabel,
   replaceComposerContextReferences,
-} from "@rove-code/shared/composerContextReferences";
-import { imageMimeType } from "@rove-code/shared/image";
-import { videoMimeType } from "@rove-code/shared/video";
+} from "@getpaperplane/shared/composerContextReferences";
+import { imageMimeType } from "@getpaperplane/shared/image";
+import { videoMimeType } from "@getpaperplane/shared/video";
 import { DraftComposerAttachmentSchema } from "../lib/composer-image-schema";
 import {
   composerAttachmentFileReferenceKey,

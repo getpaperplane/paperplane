@@ -14,8 +14,8 @@ import * as VcsProcess from "../vcs/VcsProcess.ts";
 import * as WorkspaceEntries from "./WorkspaceEntries.ts";
 import * as WorkspaceFileSystem from "./WorkspaceFileSystem.ts";
 import * as WorkspacePaths from "./WorkspacePaths.ts";
-import * as HostProcess from "@rove-code/shared/HostProcess";
-import { symlinksSupported } from "@rove-code/shared/testing/symlinks";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
+import { symlinksSupported } from "@getpaperplane/shared/testing/symlinks";
 
 const layerProject = WorkspaceFileSystem.layer.pipe(
   Layer.provide(WorkspacePaths.layer),

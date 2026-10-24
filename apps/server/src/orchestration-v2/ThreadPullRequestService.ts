@@ -1,7 +1,7 @@
 import {
   canonicalRepositoryKey,
   sourceControlRepositorySelector,
-} from "@rove-code/shared/sourceControl";
+} from "@getpaperplane/shared/sourceControl";
 import {
   CommandId,
   type OrchestrationProjectShell,
@@ -9,9 +9,9 @@ import {
   type OrchestrationV2ThreadShell,
   type ThreadId,
   type ThreadLinkedPullRequest,
-} from "@rove-code/contracts";
-import { makeDrainableWorker } from "@rove-code/shared/DrainableWorker";
-import * as NodeSqliteClient from "@rove-code/shared/nodeSqliteClient";
+} from "@getpaperplane/contracts";
+import { makeDrainableWorker } from "@getpaperplane/shared/DrainableWorker";
+import * as NodeSqliteClient from "@getpaperplane/shared/nodeSqliteClient";
 import * as Cause from "effect/Cause";
 import * as Context from "effect/Context";
 import * as Crypto from "effect/Crypto";
@@ -36,7 +36,7 @@ class ThreadPullRequestServiceV2 extends Context.Service<
     readonly start: () => Effect.Effect<void, never, Scope.Scope>;
     readonly drain: Effect.Effect<void>;
   }
->()("@rove-code/server/orchestration-v2/ThreadPullRequestService/ThreadPullRequestServiceV2") {}
+>()("@getpaperplane/server/orchestration-v2/ThreadPullRequestService/ThreadPullRequestServiceV2") {}
 
 function samePullRequest(
   left: ThreadLinkedPullRequest | null | undefined,

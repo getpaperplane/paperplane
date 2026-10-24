@@ -4,8 +4,8 @@ import type {
   PullRequestRef,
   PullRequestStack,
   PullRequestMergeMethod,
-} from "@rove-code/contracts";
-import { squashAtomCommandFailure } from "@rove-code/client-runtime/state/runtime";
+} from "@getpaperplane/contracts";
+import { squashAtomCommandFailure } from "@getpaperplane/client-runtime/state/runtime";
 import { RefreshCwIcon, TriangleAlertIcon } from "lucide-react";
 import { useState } from "react";
 import { useAtomCommand } from "~/state/use-atom-command";

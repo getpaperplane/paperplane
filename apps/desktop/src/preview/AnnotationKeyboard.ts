@@ -1,4 +1,4 @@
-import type { PreviewAnnotationSubmission } from "@rove-code/contracts";
+import type { PreviewAnnotationSubmission } from "@getpaperplane/contracts";
 
 interface AnnotationKeyboardEvent {
   readonly key: string;

@@ -1,4 +1,4 @@
-import type { EnvironmentId, ScopedThreadRef } from "@rove-code/contracts";
+import type { EnvironmentId, ScopedThreadRef } from "@getpaperplane/contracts";
 import { Globe, History, RadioTower } from "lucide-react";
 
 import type { BrowserHistoryEntry } from "~/browserHistoryStore";

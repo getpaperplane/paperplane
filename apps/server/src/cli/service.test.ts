@@ -1,7 +1,7 @@
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { assert, expect, it } from "@effect/vitest";
-import * as HostProcess from "@rove-code/shared/HostProcess";
-import * as NetService from "@rove-code/shared/Net";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
+import * as NetService from "@getpaperplane/shared/Net";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";

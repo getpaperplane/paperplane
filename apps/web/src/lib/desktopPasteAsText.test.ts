@@ -1,4 +1,4 @@
-import type { DesktopBridge } from "@rove-code/contracts";
+import type { DesktopBridge } from "@getpaperplane/contracts";
 import { describe, expect, it, vi } from "vite-plus/test";
 import { DESKTOP_PASTE_AS_TEXT_EVENT, installDesktopPasteAsText } from "./desktopPasteAsText";
 

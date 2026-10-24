@@ -1,4 +1,4 @@
-import type { ServerSettings } from "@rove-code/contracts";
+import type { ServerSettings } from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
 import * as Stream from "effect/Stream";

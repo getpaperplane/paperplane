@@ -63,7 +63,7 @@ jobs:
           run-install: false
 
       - name: Install bundle dependencies
-        run: vp install --filter=@rove-code/server... --filter=@rove-code/web... --filter=@rove-code/desktop... --filter=@rove-code/scripts...
+        run: vp install --filter=@getpaperplane/server... --filter=@getpaperplane/web... --filter=@getpaperplane/desktop... --filter=@getpaperplane/scripts...
 
       # The publish workflow derives the same version from this run's number,
       # so the version baked into the bundle matches the packaged app.

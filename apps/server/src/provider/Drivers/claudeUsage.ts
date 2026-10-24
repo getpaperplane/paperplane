@@ -5,19 +5,19 @@
  * @module provider/Drivers/claudeUsage
  */
 
-import type { ClaudeSettings } from "@rove-code/contracts";
+import type { ClaudeSettings } from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import * as Path from "effect/Path";
 
-import { expandHomePath } from "@rove-code/provider-core/server/pathExpansion";
+import { expandHomePath } from "@getpaperplane/provider-core/server/pathExpansion";
 import {
   parseTimestampMs,
   tokenCount,
   type ProviderUsageReader,
   type TranscriptUsageFormat,
   type UsageRecord,
-} from "@rove-code/provider-core/server/usage";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+} from "@getpaperplane/provider-core/server/usage";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 
 /**
  * Parses one line of a Claude Code transcript.

@@ -1,4 +1,4 @@
-import { EnvironmentId, MessageId, ThreadId } from "@rove-code/contracts";
+import { EnvironmentId, MessageId, ThreadId } from "@getpaperplane/contracts";
 import { expect, it } from "vite-plus/test";
 import { serializeAssistantCitation } from "./assistantCitations.ts";
 import { searchableMessageSegments } from "./threadFindText.ts";

@@ -25,12 +25,12 @@ import {
   FILL_PREVIEW_VIEWPORT,
   PreviewSessionLookupError,
   type PreviewSessionSnapshot,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   isPreviewUrlNormalizationError,
   newPreviewTabId,
   normalizePreviewUrl,
-} from "@rove-code/shared/preview";
+} from "@getpaperplane/shared/preview";
 import * as Context from "effect/Context";
 import * as Crypto from "effect/Crypto";
 import * as DateTime from "effect/DateTime";
@@ -40,7 +40,7 @@ import * as PubSub from "effect/PubSub";
 import * as Scope from "effect/Scope";
 import * as Stream from "effect/Stream";
 import * as SynchronizedRef from "effect/SynchronizedRef";
-import { PreviewControlRequiredError } from "@rove-code/contracts";
+import { PreviewControlRequiredError } from "@getpaperplane/contracts";
 
 export class PreviewManager extends Context.Service<
   PreviewManager,
@@ -78,7 +78,7 @@ export class PreviewManager extends Context.Service<
     readonly events: Stream.Stream<PreviewEvent>;
     readonly subscribeEvents: Effect.Effect<PubSub.Subscription<PreviewEvent>, never, Scope.Scope>;
   }
->()("@rove-code/server/preview/Manager/PreviewManager") {}
+>()("@getpaperplane/server/preview/Manager/PreviewManager") {}
 
 interface PreviewSessionState {
   readonly threadId: string;

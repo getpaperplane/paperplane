@@ -4,7 +4,7 @@
  *
  * @module provider-acp-registry/settings
  */
-import { TrimmedString, makeProviderSettingsSchema } from "@rove-code/contracts";
+import { TrimmedString, makeProviderSettingsSchema } from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 

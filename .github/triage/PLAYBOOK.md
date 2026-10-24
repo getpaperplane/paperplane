@@ -24,7 +24,7 @@ the database.
 
 Its triage CLI version (called "Installed version" in older context files) is only
 the version of the `rove` that ran `rove triage`. It is often not the build the bug
-happened on: `npx @rove-code/cli triage` runs whatever `@rove-code/cli` npm resolves, while the user may
+happened on: `npx @getpaperplane/cli triage` runs whatever `@getpaperplane/cli` npm resolves, while the user may
 run the desktop app, the background service, or a nightly. The server process line
 gives the local server's version when the server recorded one.
 
@@ -65,7 +65,7 @@ Diagnosis grounded in source beats guessing.
 First establish the shape of the install, because the same symptom points at
 different code depending on it:
 
-- How is Paperplane running on this machine: `npx @rove-code/cli serve` in a terminal, the
+- How is Paperplane running on this machine: `npx @getpaperplane/cli serve` in a terminal, the
   background service, or the desktop app?
 - Which surface is the user connecting from: the website (rove.hafiezulzikry.com), the
   desktop app against a local server, the desktop app against a remote server,

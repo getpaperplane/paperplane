@@ -1,4 +1,4 @@
-import { type EnvironmentId, type ScopedProjectRef } from "@rove-code/contracts";
+import { type EnvironmentId, type ScopedProjectRef } from "@getpaperplane/contracts";
 import { ThreadHoverCard, ThreadHoverCardPopup } from "./ThreadHoverCard";
 import { CollapsibleSectionHeader } from "./ui/collapsible-section-header";
 import {
@@ -14,9 +14,9 @@ import {
 import { discardComposerDraft } from "../lib/discardComposerDraft";
 import { requestCustomSnooze } from "./CustomSnoozeDialog";
 import { useSupportsMultiplePullRequests } from "~/hooks/useSupportsMultiplePullRequests";
-import { resolveThreadCurrentPullRequestLink } from "@rove-code/shared/threadPullRequests";
+import { resolveThreadCurrentPullRequestLink } from "@getpaperplane/shared/threadPullRequests";
 import { useAtomValue } from "@effect/atom-react";
-import { replaceComposerContextReferences } from "@rove-code/shared/composerContextReferences";
+import { replaceComposerContextReferences } from "@getpaperplane/shared/composerContextReferences";
 import * as Schema from "effect/Schema";
 import {
   DndContext,
@@ -34,36 +34,36 @@ import {
   canSnooze,
   effectiveSnoozed,
   threadWokeAt,
-} from "@rove-code/client-runtime/state/thread-settled";
-import { createInboxReturnTracker } from "@rove-code/client-runtime/state/thread-inbox";
-import { formatDiffCount } from "@rove-code/client-runtime/diff-count";
+} from "@getpaperplane/client-runtime/state/thread-settled";
+import { createInboxReturnTracker } from "@getpaperplane/client-runtime/state/thread-inbox";
+import { formatDiffCount } from "@getpaperplane/client-runtime/diff-count";
 import {
   resolveSettledThreadTimestamp,
   sortSettledThreads,
-} from "@rove-code/client-runtime/state/thread-sort";
+} from "@getpaperplane/client-runtime/state/thread-sort";
 import {
   threadSearchMatchKey,
   type EnvironmentThreadSearchMatch,
-} from "@rove-code/client-runtime/state/thread-search";
+} from "@getpaperplane/client-runtime/state/thread-search";
 import {
   resolveThreadProviderStack,
   threadRuntimeCanArchive,
   type EnvironmentThreadShell,
-} from "@rove-code/client-runtime/state/models";
+} from "@getpaperplane/client-runtime/state/models";
 import {
   parseScopedThreadKey,
   scopeProjectRef,
   scopeThreadRef,
   scopedThreadKey,
-} from "@rove-code/client-runtime/environment";
+} from "@getpaperplane/client-runtime/environment";
 import {
   AuthOrchestrationOperateScope,
   type EnvironmentMachineKind,
   type ScopedThreadRef,
   type ThreadId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 
-import type { TimestampFormat } from "@rove-code/contracts/settings";
+import type { TimestampFormat } from "@getpaperplane/contracts/settings";
 import {
   AlarmClockIcon,
   AlarmClockOffIcon,
@@ -111,7 +111,7 @@ import {
   settlePromise,
   squashAtomCommandFailure,
   type AtomCommandResult,
-} from "@rove-code/client-runtime/state/runtime";
+} from "@getpaperplane/client-runtime/state/runtime";
 import { isElectron } from "../env";
 import {
   resolveShortcutCommand,
@@ -180,8 +180,8 @@ import {
 } from "../threadRoutes";
 import { formatRelativeTimeLabel, parseTimestampDate } from "../timestampFormat";
 import type { SidebarThreadSummary } from "../types";
-import { isScratchProject } from "@rove-code/client-runtime/state/projects";
-import type { EnvironmentProject } from "@rove-code/client-runtime/state/shell";
+import { isScratchProject } from "@getpaperplane/client-runtime/state/projects";
+import type { EnvironmentProject } from "@getpaperplane/client-runtime/state/shell";
 import { cn } from "~/lib/utils";
 import { EnvironmentMachineIcon } from "./EnvironmentMachineIcon";
 import { ProjectEnvironmentBadge } from "./ProjectEnvironmentBadge";

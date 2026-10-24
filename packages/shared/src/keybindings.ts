@@ -8,7 +8,7 @@ import {
   type ResolvedKeybindingRule,
   type ResolvedKeybindingsConfig,
   THREAD_JUMP_KEYBINDING_COMMANDS,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 
 export interface ShortcutEventLike {
   getModifierState?: (key: "AltGraph") => boolean;

@@ -8,9 +8,9 @@ import * as Option from "effect/Option";
 import * as PlatformError from "effect/PlatformError";
 import * as Redacted from "effect/Redacted";
 import * as Schema from "effect/Schema";
-import * as HostProcess from "@rove-code/shared/HostProcess";
-import * as SourceControlHost from "@rove-code/source-control-core/server/SourceControlHost";
-import { readSourceControlHostSettings } from "@rove-code/source-control-core/client/definition";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
+import * as SourceControlHost from "@getpaperplane/source-control-core/server/SourceControlHost";
+import { readSourceControlHostSettings } from "@getpaperplane/source-control-core/client/definition";
 
 import * as GitCafeClient from "../client/definition.ts";
 
@@ -75,7 +75,7 @@ export class GitCafeCredentials extends Context.Service<
      */
     readonly cliEnv: (host: string) => Effect.Effect<Readonly<Record<string, string>>>;
   }
->()("@rove-code/source-control-gitcafe/server/GitCafeCredentials") {}
+>()("@getpaperplane/source-control-gitcafe/server/GitCafeCredentials") {}
 
 const normalizeHost = (host: string) => host.trim().toLowerCase();
 /** The host `cafe` and a token saved in Settings target unless told otherwise. */

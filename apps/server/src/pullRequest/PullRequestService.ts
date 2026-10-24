@@ -2,8 +2,8 @@ import {
   canonicalRepositoryKey,
   isSshRemoteUrl,
   sourceControlRepositorySelector,
-} from "@rove-code/shared/sourceControl";
-import { normalizeGitRemoteUrl } from "@rove-code/shared/git";
+} from "@getpaperplane/shared/sourceControl";
+import { normalizeGitRemoteUrl } from "@getpaperplane/shared/git";
 import * as Cache from "effect/Cache";
 import * as Cause from "effect/Cause";
 import * as Clock from "effect/Clock";
@@ -75,25 +75,25 @@ import {
   type SourceControlProviderInfo,
   SourceControlProviderKind,
   type ThreadPullRequestKey,
-} from "@rove-code/contracts";
-import { resolveProjectSettings } from "@rove-code/shared/projectSettings";
-import { detectSourceControlProviderFromRemoteUrl } from "@rove-code/shared/sourceControl";
+} from "@getpaperplane/contracts";
+import { resolveProjectSettings } from "@getpaperplane/shared/projectSettings";
+import { detectSourceControlProviderFromRemoteUrl } from "@getpaperplane/shared/sourceControl";
 
-import { provideSelectedGitHubAccount } from "@rove-code/source-control-github/server/GitHubCredentials";
+import { provideSelectedGitHubAccount } from "@getpaperplane/source-control-github/server/GitHubCredentials";
 
 import * as ProjectService from "../project/ProjectService.ts";
 import * as ServerSettings from "../serverSettings.ts";
 import * as PullRequestFilesViewed from "../persistence/PullRequestFilesViewed.ts";
 import * as RepositoryIdentityResolver from "../project/RepositoryIdentityResolver.ts";
 import * as SourceControlProviderRegistry from "../sourceControl/SourceControlProviderRegistry.ts";
-import * as SourceControlRateLimit from "@rove-code/source-control-core/server/SourceControlRateLimit";
+import * as SourceControlRateLimit from "@getpaperplane/source-control-core/server/SourceControlRateLimit";
 import {
   type ProviderChangeRequest,
   type ProviderListCursor,
   type ProviderChangeRequestWatchFingerprint,
   type PullRequestProviderApi,
   PullRequestProviderError,
-} from "@rove-code/source-control-core/server/PullRequestProvider";
+} from "@getpaperplane/source-control-core/server/PullRequestProvider";
 import * as PullRequestReadCache from "./PullRequestReadCache.ts";
 import * as PullRequestProviderRegistry from "./PullRequestProviderRegistry.ts";
 import * as ViewedFiles from "./pullRequestViewedFiles.ts";
@@ -202,7 +202,7 @@ export type PullRequestError = PullRequestUnavailableError | PullRequestOperatio
 const routingCredential = Context.Reference<{
   readonly credentialFingerprint: string;
   readonly viewer: string;
-} | null>("@rove-code/server/pullRequest/PullRequestService/routingCredential", {
+} | null>("@getpaperplane/server/pullRequest/PullRequestService/routingCredential", {
   defaultValue: () => null,
 });
 // Internal only: the client cannot choose its cache's credential namespace.
@@ -330,7 +330,7 @@ export class PullRequestService extends Context.Service<
       options?: { readonly notifyReaders?: boolean },
     ) => Effect.Effect<void>;
   }
->()("@rove-code/server/pullRequest/PullRequestService") {}
+>()("@getpaperplane/server/pullRequest/PullRequestService") {}
 
 /** What a verdict is called when refusing it, so the sentence reads as an action. */
 const VERDICT_LABELS: Record<PullRequestReviewVerdict, string> = {

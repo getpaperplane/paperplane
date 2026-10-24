@@ -1,4 +1,4 @@
-import type { ThreadId, WorktreeSetupSnapshot } from "@rove-code/contracts";
+import type { ThreadId, WorktreeSetupSnapshot } from "@getpaperplane/contracts";
 
 /** A subscription can close or replay an older value during the setup handoff. */
 export function resolveWorktreeSetupSnapshot(

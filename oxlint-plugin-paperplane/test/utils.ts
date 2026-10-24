@@ -107,7 +107,7 @@ export const createOxlintRuleHarness = (
     const sourcePath = path.join(fixtureDir, options.filename ?? "fixture.ts");
     const repoRoot = path.join(import.meta.dirname, "..", "..");
     const oxlintBin = path.join(path.dirname(oxlintPackageJsonPath), "bin", "oxlint");
-    const pluginPath = path.join(repoRoot, "oxlint-plugin-rove", "index.ts");
+    const pluginPath = path.join(repoRoot, "oxlint-plugin-paperplane", "index.ts");
 
     yield* fs.writeFileString(
       configPath,

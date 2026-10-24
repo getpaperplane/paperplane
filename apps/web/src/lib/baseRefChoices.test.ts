@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vite-plus/test";
-import type { VcsRef } from "@rove-code/contracts";
+import type { VcsRef } from "@getpaperplane/contracts";
 import { buildBaseRefChoices, filterBaseRefChoices } from "./baseRefChoices";
 
 function ref(name: string, remoteName?: string): VcsRef {

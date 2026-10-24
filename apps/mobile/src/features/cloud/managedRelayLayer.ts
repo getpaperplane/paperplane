@@ -1,5 +1,5 @@
-import { ManagedRelay } from "@rove-code/client-runtime/relay";
-import { RelayMobileClientId } from "@rove-code/contracts/relay";
+import { ManagedRelay } from "@getpaperplane/client-runtime/relay";
+import { RelayMobileClientId } from "@getpaperplane/contracts/relay";
 import * as Cache from "effect/Cache";
 import * as Crypto from "effect/Crypto";
 import * as Duration from "effect/Duration";

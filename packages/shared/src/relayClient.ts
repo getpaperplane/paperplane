@@ -3,7 +3,7 @@ import * as Clock from "effect/Clock";
 import type {
   RelayClientInstallProgressEvent,
   RelayClientInstallProgressStage,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Config from "effect/Config";
 import * as Context from "effect/Context";
 import * as Crypto from "effect/Crypto";
@@ -169,7 +169,7 @@ export function isPinnedManagedRelayClient(client: AvailableRelayClient): boolea
 }
 
 export class RelayClient extends Context.Service<RelayClient, RelayClientShape>()(
-  "@rove-code/shared/relayClient",
+  "@getpaperplane/shared/relayClient",
 ) {}
 
 function executableFileName(platform: NodeJS.Platform): string {

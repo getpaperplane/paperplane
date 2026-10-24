@@ -14,11 +14,11 @@ import type {
   DeviceHostSummary,
   DevicePlatform,
   DevicePlatformAvailability,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
-import type { NodeRuntimeUnavailableError } from "@rove-code/shared/nodeRuntime";
+import type { NodeRuntimeUnavailableError } from "@getpaperplane/shared/nodeRuntime";
 
 export class DeviceHostError extends Schema.TaggedError<DeviceHostError>()("DeviceHostError", {
   hostId: Schema.String,
@@ -138,4 +138,4 @@ export class DeviceHost extends Context.Service<
     /** Stops helpers. Devices themselves keep running; the user owns those. */
     readonly stop: Effect.Effect<void>;
   }
->()("@rove-code/server/device/DeviceHost") {}
+>()("@getpaperplane/server/device/DeviceHost") {}

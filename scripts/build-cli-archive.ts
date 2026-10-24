@@ -28,9 +28,9 @@ import * as Schema from "effect/Schema";
 import { Command, Flag } from "effect/cli";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 
-import * as HostProcess from "@rove-code/shared/HostProcess";
-import { fromYaml } from "@rove-code/shared/schemaYaml";
-import { resolveSpawnCommand } from "@rove-code/shared/shell";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
+import { fromYaml } from "@getpaperplane/shared/schemaYaml";
+import { resolveSpawnCommand } from "@getpaperplane/shared/shell";
 import rootPackageJson from "../package.json" with { type: "json" };
 import serverPackageJson from "../apps/server/package.json" with { type: "json" };
 
@@ -562,7 +562,7 @@ const buildCliArchive = Effect.fn("buildCliArchive")(function* (input: {
   );
   yield* requireInput(
     path.join(webClient, "index.html"),
-    "Run `vp run --filter @rove-code/server build` first.",
+    "Run `vp run --filter @getpaperplane/server build` first.",
   );
   yield* requireInput(
     resourceMonitorDir,

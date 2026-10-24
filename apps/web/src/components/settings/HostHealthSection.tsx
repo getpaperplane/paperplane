@@ -4,8 +4,8 @@ import {
   formatHostSwap,
   formatRoveCeiling,
   roveCeilingPercent,
-} from "@rove-code/client-runtime/host-health";
-import type { EnvironmentId } from "@rove-code/contracts";
+} from "@getpaperplane/client-runtime/host-health";
+import type { EnvironmentId } from "@getpaperplane/contracts";
 import { AlertTriangleIcon, InfoIcon } from "lucide-react";
 
 import { useCopyToClipboard } from "../../hooks/useCopyToClipboard";

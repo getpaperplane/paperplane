@@ -1,4 +1,4 @@
-import type { RuntimeMode } from "@rove-code/contracts";
+import type { RuntimeMode } from "@getpaperplane/contracts";
 import { type LucideIcon, LockIcon, LockOpenIcon, PenLineIcon, SparklesIcon } from "lucide-react";
 
 export const runtimeModeConfig: Record<

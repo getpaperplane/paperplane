@@ -4,11 +4,11 @@ import {
   DEFAULT_SERVER_SETTINGS,
   ThreadId,
   type ServerSettings as Settings,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   Environment as HostProcessEnvironment,
   Platform as HostProcessPlatform,
-} from "@rove-code/shared/HostProcess";
+} from "@getpaperplane/shared/HostProcess";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";

@@ -6,7 +6,7 @@ import {
   type UsageDay,
   type UsageProviderKind,
   UsageSummary,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { describe, expect, it } from "vite-plus/test";
 import * as Schema from "effect/Schema";
 

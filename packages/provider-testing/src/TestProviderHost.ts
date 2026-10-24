@@ -5,8 +5,8 @@
  *
  * @module provider-testing/TestProviderHost
  */
-import { DEFAULT_SERVER_SETTINGS, type ServerSettings } from "@rove-code/contracts";
-import * as ProviderHost from "@rove-code/provider-core/server/ProviderHost";
+import { DEFAULT_SERVER_SETTINGS, type ServerSettings } from "@getpaperplane/contracts";
+import * as ProviderHost from "@getpaperplane/provider-core/server/ProviderHost";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -29,7 +29,7 @@ export interface TestProviderHostOptions {
 export class TestProviderHostSettings extends Context.Service<
   TestProviderHostSettings,
   { readonly set: (settings: ServerSettings) => Effect.Effect<void> }
->()("@rove-code/provider-testing/TestProviderHost/TestProviderHostSettings") {}
+>()("@getpaperplane/provider-testing/TestProviderHost/TestProviderHostSettings") {}
 
 export const layer = (
   options: TestProviderHostOptions = {},

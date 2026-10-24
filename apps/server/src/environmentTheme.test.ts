@@ -1,4 +1,4 @@
-import { EnvironmentThemeFile } from "@rove-code/contracts";
+import { EnvironmentThemeFile } from "@getpaperplane/contracts";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { assert, describe, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
@@ -13,7 +13,7 @@ import * as Stream from "effect/Stream";
 
 import * as ServerConfig from "./config.ts";
 import * as EnvironmentTheme from "./environmentTheme.ts";
-import { symlinksSupported } from "@rove-code/shared/testing/symlinks";
+import { symlinksSupported } from "@getpaperplane/shared/testing/symlinks";
 
 const encodeThemeFile = Schema.encodeSync(Schema.fromJsonString(EnvironmentThemeFile));
 

@@ -1,4 +1,4 @@
-import type { PullRequestReviewGuideResult } from "@rove-code/contracts";
+import type { PullRequestReviewGuideResult } from "@getpaperplane/contracts";
 
 /** Old failures must not follow a PR onto a different head. */
 export function reviewGuideState(data: PullRequestReviewGuideResult | null) {

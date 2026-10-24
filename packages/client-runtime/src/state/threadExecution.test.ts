@@ -10,9 +10,9 @@ import {
   ThreadId,
   type OrchestrationV2ExecutionNode,
   type OrchestrationV2RunStatus,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as DateTime from "effect/DateTime";
-import { usageLimitBlockedRun } from "@rove-code/shared/orchestrationV2ThreadError";
+import { usageLimitBlockedRun } from "@getpaperplane/shared/orchestrationV2ThreadError";
 import { describe, expect, it } from "vite-plus/test";
 
 import { v2Projection } from "./orchestrationV2TestFixtures.ts";

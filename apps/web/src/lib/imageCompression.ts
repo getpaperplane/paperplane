@@ -18,11 +18,11 @@ import {
   downscalableImageMimeType,
   fitImageAttachmentSize,
   IMAGE_ATTACHMENT_MAX_EDGE,
-} from "@rove-code/client-runtime/image-attachment-size";
+} from "@getpaperplane/client-runtime/image-attachment-size";
 import {
   IMAGE_DIMENSIONS_HEADER_BYTES,
   readImageDimensions,
-} from "@rove-code/shared/imageDimensions";
+} from "@getpaperplane/shared/imageDimensions";
 
 /** Longest edge kept when an image has to be re-encoded. */
 const MAX_DIMENSION = IMAGE_ATTACHMENT_MAX_EDGE;

@@ -1,7 +1,7 @@
 import {
   clampFileAttachmentUploadBytes,
   fileAttachmentTooLargeMessage,
-} from "@rove-code/client-runtime/state/attachments";
+} from "@getpaperplane/client-runtime/state/attachments";
 import {
   isProviderSendTurnSupportedImageMimeType,
   PROVIDER_SEND_TURN_MAX_ATTACHMENTS,
@@ -10,7 +10,7 @@ import {
   type EnvironmentId,
   type PastedTextAttachmentSource,
   type UploadChatImageAttachment,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import type { DocumentPickerResult } from "expo-document-picker";
 import { estimateBase64ByteSize } from "./base64";
 import {
@@ -18,8 +18,8 @@ import {
   isComposerAttachmentFileRetained,
   resolveOwnedComposerAttachmentFileUri,
 } from "./composerAttachmentFiles";
-import { imageMimeType } from "@rove-code/shared/image";
-import { videoMimeType } from "@rove-code/shared/video";
+import { imageMimeType } from "@getpaperplane/shared/image";
+import { videoMimeType } from "@getpaperplane/shared/video";
 import { fitComposerImage, renderPhoto } from "./composerImageFit";
 import { beginForegroundHandoff } from "./foreground-handoff";
 import { uuidv4 } from "./uuid";

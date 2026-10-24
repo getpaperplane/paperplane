@@ -13,7 +13,7 @@ import {
   encodeHtmlRenderOutline,
   HTML_RENDER_COLUMN_WIDTH,
   HTML_RENDER_OUTLINE_MAX_BOXES,
-} from "@rove-code/shared/htmlRender";
+} from "@getpaperplane/shared/htmlRender";
 
 import { publicProxy } from "./publicProxy.ts";
 

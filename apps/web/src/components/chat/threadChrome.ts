@@ -1,5 +1,5 @@
 import { useAtomValue } from "@effect/atom-react";
-import type { OrchestrationV2ThreadProjection, ScopedThreadRef } from "@rove-code/contracts";
+import type { OrchestrationV2ThreadProjection, ScopedThreadRef } from "@getpaperplane/contracts";
 import {
   deriveLatestThreadRun,
   deriveProviderSubagentStatus,
@@ -7,20 +7,20 @@ import {
   deriveRunlessWorkStartedAt,
   deriveThreadActivityRun,
   deriveThreadRuntime,
-} from "@rove-code/client-runtime/state/thread-execution";
-import { derivePendingThreadRequests } from "@rove-code/client-runtime/state/thread-requests";
-import { deriveThreadCheckpointSummaries } from "@rove-code/client-runtime/state/thread-checkpoints";
-import { threadSupportsProviderHandoff } from "@rove-code/client-runtime/state/thread-workflows";
-import { workspacePreparationRetryRunIds } from "@rove-code/client-runtime/state/turn-item-presentation";
+} from "@getpaperplane/client-runtime/state/thread-execution";
+import { derivePendingThreadRequests } from "@getpaperplane/client-runtime/state/thread-requests";
+import { deriveThreadCheckpointSummaries } from "@getpaperplane/client-runtime/state/thread-checkpoints";
+import { threadSupportsProviderHandoff } from "@getpaperplane/client-runtime/state/thread-workflows";
+import { workspacePreparationRetryRunIds } from "@getpaperplane/client-runtime/state/turn-item-presentation";
 import {
   latestExecutedRun,
   latestRootProviderFailure,
   latestUnheldRun,
   usageLimitRunPresentedAsLatest,
-} from "@rove-code/shared/orchestrationV2ThreadError";
-import { derivePendingBackgroundWork } from "@rove-code/shared/orchestrationV2PendingBackgroundWork";
+} from "@getpaperplane/shared/orchestrationV2ThreadError";
+import { derivePendingBackgroundWork } from "@getpaperplane/shared/orchestrationV2PendingBackgroundWork";
 import { Atom } from "effect/reactivity";
-import { parseScopedThreadKey, scopedThreadKey } from "@rove-code/client-runtime/environment";
+import { parseScopedThreadKey, scopedThreadKey } from "@getpaperplane/client-runtime/environment";
 import { structurallyEqual } from "../../hooks/useStructuralValue";
 import { environmentThreadDetails } from "../../state/threads";
 import { deriveActivePlanState, findLatestProposedPlan } from "../../session-logic";

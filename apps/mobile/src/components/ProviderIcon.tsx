@@ -1,9 +1,9 @@
 import { Image } from "expo-image";
 import { Defs, LinearGradient, Path, Stop, Svg } from "react-native-svg";
 import { View } from "react-native";
-import { providerInstanceInitials } from "@rove-code/client-runtime/state/provider-instance-display";
+import { providerInstanceInitials } from "@getpaperplane/client-runtime/state/provider-instance-display";
 import { useId, useState } from "react";
-import { resolveOfficialAcpRegistryIconUrl } from "@rove-code/contracts";
+import { resolveOfficialAcpRegistryIconUrl } from "@getpaperplane/contracts";
 import { useAppearancePreferences } from "../features/settings/appearance/AppearancePreferencesProvider";
 import { AppText as Text } from "./ui/AppText";
 import { getProviderClient } from "../lib/providerClients";

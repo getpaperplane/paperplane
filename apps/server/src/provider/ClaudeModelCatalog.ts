@@ -5,15 +5,15 @@ import {
   ProviderDriverKind,
   type ServerProviderModel,
   type ServerProviderUpdateRequiredModel,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Option from "effect/Option";
 import {
   getModelSelectionStringOptionValue,
   getProviderOptionCurrentValue,
   getProviderOptionDescriptors,
   readCustomModelEntries,
-} from "@rove-code/shared/model";
-import { compareSemverVersions } from "@rove-code/shared/semver";
+} from "@getpaperplane/shared/model";
+import { compareSemverVersions } from "@getpaperplane/shared/semver";
 
 import {
   type ClaudeCodeCompatibility,
@@ -21,7 +21,7 @@ import {
   decodeClaudeModelAdapter,
   decodeClaudeProfileAdapter,
 } from "./ClaudeModelManifest.ts";
-import * as ModelCatalog from "@rove-code/provider-core/server/ModelCatalog";
+import * as ModelCatalog from "@getpaperplane/provider-core/server/ModelCatalog";
 import { BUNDLED_MODEL_MANIFEST, resolveProviderCatalog } from "./ModelManifest.ts";
 
 const CLAUDE = ProviderDriverKind.make("claudeAgent");

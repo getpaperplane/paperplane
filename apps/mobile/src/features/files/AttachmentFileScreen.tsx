@@ -4,8 +4,8 @@ import * as Dialog from "../../components/ui/Dialog";
 import { NativeStackScreenOptions } from "../../native/StackHeader";
 import { useNavigation, type StaticScreenProps } from "@react-navigation/native";
 import type { MenuAction } from "@react-native-menu/menu";
-import { EnvironmentId } from "@rove-code/contracts";
-import { formatAttachmentSize } from "@rove-code/client-runtime/state/attachments";
+import { EnvironmentId } from "@getpaperplane/contracts";
+import { formatAttachmentSize } from "@getpaperplane/client-runtime/state/attachments";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Platform, ScrollView, View } from "react-native";
 

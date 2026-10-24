@@ -1,4 +1,4 @@
-import * as HostProcess from "@rove-code/shared/HostProcess";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -9,8 +9,8 @@ import * as Schema from "effect/Schema";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
-import { writeFileStringAtomically } from "@rove-code/shared/atomicWrite";
-import { signalProcessGroup } from "@rove-code/provider-core/server/processGroup";
+import { writeFileStringAtomically } from "@getpaperplane/shared/atomicWrite";
+import { signalProcessGroup } from "@getpaperplane/provider-core/server/processGroup";
 
 const ProcessIdentity = Schema.Struct({ pid: Schema.Int, startTime: Schema.String });
 type ProcessIdentity = typeof ProcessIdentity.Type;
@@ -57,7 +57,7 @@ export class OpenCodeServerLedger extends Context.Service<
       readonly args: ReadonlyArray<string>;
     }) => Effect.Effect<Effect.Effect<void>>;
   }
->()("@rove-code/provider-opencode/server/OpenCodeServerLedger") {}
+>()("@getpaperplane/provider-opencode/server/OpenCodeServerLedger") {}
 
 const ENTRY_DIRECTORY = "opencode-servers";
 const ENTRY_FILE = /^\d+\.json$/;

@@ -4,13 +4,13 @@ import {
   type AuthSessionState,
   type ExecutionEnvironmentCapabilities,
   type ServerProvider,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   cliReleaseChannelOf,
   cliReleaseIndexPageUrl,
   newestCliReleaseVersion,
-} from "@rove-code/shared/cliRelease";
-import { compareSemverVersions } from "@rove-code/shared/semver";
+} from "@getpaperplane/shared/cliRelease";
+import { compareSemverVersions } from "@getpaperplane/shared/semver";
 import * as Schema from "effect/Schema";
 
 export function canMaintainEnvironment(session: AuthSessionState | null, connected: boolean) {

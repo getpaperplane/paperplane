@@ -13,7 +13,7 @@ import { ChildProcess, ChildProcessSpawner } from "effect/process";
 
 import { DEVELOPMENT_ICON_OVERRIDES } from "../../../scripts/lib/brand-assets.ts";
 import { findEsmImportsOfExternalPackages } from "../../../scripts/lib/cli-executable-imports.ts";
-import { resolveSpawnCommand } from "@rove-code/shared/shell";
+import { resolveSpawnCommand } from "@getpaperplane/shared/shell";
 import {
   ServerCliBuildAssetMissingError,
   ServerCliCommandExitError,
@@ -200,7 +200,7 @@ const registryServes = Effect.fn("registryServes")(function* (spec: string) {
 
 /**
  * Publishes the tarballs scripts/build-npm-platform-packages.ts produced:
- * every `@rove-code/cli-<platform>.tgz` first, `@rove-code/cli.tgz` (the launcher) last, so
+ * every `@getpaperplane/cli-<platform>.tgz` first, `@getpaperplane/cli.tgz` (the launcher) last, so
  * the launcher is never installable before the executables it depends on.
  * Tarballs rather than directories because `npm publish <dir>` strips the
  * `node_modules/` the executable loads its native addons from.
@@ -234,7 +234,7 @@ const publishCmd = Command.make(
       // npm runs with cwd set to the packages dir below, so tarball paths are
       // resolved once here rather than joined twice.
       const packagesDir = path.resolve(config.packagesDir);
-      const scopeDir = path.join(packagesDir, "@rove-code");
+      const scopeDir = path.join(packagesDir, "@getpaperplane");
       const launcherTarball = path.join(scopeDir, "cli.tgz");
       const platformTarballs = (yield* fs
         .readDirectory(scopeDir)
@@ -313,7 +313,7 @@ const publishCmd = Command.make(
     }),
 ).pipe(
   Command.withDescription(
-    "Publish the @rove-code/cli-<platform> tarballs and then @rove-code/cli to npm.",
+    "Publish the @getpaperplane/cli-<platform> tarballs and then @getpaperplane/cli to npm.",
   ),
 );
 

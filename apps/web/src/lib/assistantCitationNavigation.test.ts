@@ -1,4 +1,4 @@
-import { EnvironmentId, MessageId, ThreadId, type AssistantCitation } from "@rove-code/contracts";
+import { EnvironmentId, MessageId, ThreadId, type AssistantCitation } from "@getpaperplane/contracts";
 import {
   createMemoryHistory,
   createRootRoute,

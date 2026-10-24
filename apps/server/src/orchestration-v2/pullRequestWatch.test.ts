@@ -2,7 +2,7 @@ import type {
   PullRequestCheck,
   PullRequestComment,
   ThreadPullRequestWatch,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { assert, describe, it } from "@effect/vitest";
 
 import {

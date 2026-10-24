@@ -10,8 +10,8 @@ import {
   ServerSettings,
   ServerSettingsPatch,
   UsageLimitSourceId,
-} from "@rove-code/contracts";
-import { createModelSelection } from "@rove-code/shared/model";
+} from "@getpaperplane/contracts";
+import { createModelSelection } from "@getpaperplane/shared/model";
 import { assert, it } from "@effect/vitest";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
@@ -30,7 +30,7 @@ import * as ServerSecretStore from "./auth/ServerSecretStore.ts";
 import { sourceControlHostSecretName } from "./sourceControl/sourceControlHostSecrets.ts";
 import * as ServerConfig from "./config.ts";
 import * as SqlitePersistence from "./persistence/Sqlite.ts";
-import { writeFileStringAtomically } from "@rove-code/shared/atomicWrite";
+import { writeFileStringAtomically } from "@getpaperplane/shared/atomicWrite";
 import * as ServerSettingsModule from "./serverSettings.ts";
 import { resolveProviderInstanceTerminalEnvironment } from "./terminal/Manager.ts";
 

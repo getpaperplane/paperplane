@@ -1,4 +1,4 @@
-import type { DesktopBridge, DesktopUpdateState } from "@rove-code/contracts";
+import type { DesktopBridge, DesktopUpdateState } from "@getpaperplane/contracts";
 import { ExternalLinkIcon } from "lucide-react";
 import type { ReactNode } from "react";
 

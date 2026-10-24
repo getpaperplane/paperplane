@@ -5,7 +5,7 @@ import {
   WS_METHODS,
   sessionGrantsScope,
   type SessionGrantInput,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { Atom } from "effect/reactivity";
 
 import type {

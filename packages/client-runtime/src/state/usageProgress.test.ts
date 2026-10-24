@@ -3,7 +3,7 @@ import {
   UsageDay,
   type UsageProviderKind,
   type UsageSummary,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { describe, expect, it } from "vite-plus/test";
 
 import { usageEnvironmentProgress, usageLoadingState, usageProgress } from "./usageProgress.ts";

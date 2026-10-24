@@ -1,5 +1,5 @@
-import { splitThreadSearchText } from "@rove-code/shared/threadSearch";
-import type { EnvironmentThreadSearchMatch } from "@rove-code/client-runtime/state/thread-search";
+import { splitThreadSearchText } from "@getpaperplane/shared/threadSearch";
+import type { EnvironmentThreadSearchMatch } from "@getpaperplane/client-runtime/state/thread-search";
 
 import { AppText as Text } from "../../components/ui/AppText";
 import { cn } from "../../lib/cn";

@@ -2,7 +2,7 @@ import {
   type PiExtensionStatusSnapshot,
   type ThreadId,
   PiExtensionStatusSnapshot as Snapshot,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -34,7 +34,7 @@ export class PiExtensionStatuses extends Context.Service<
     >;
     readonly subscribe: (threadId: ThreadId) => Stream.Stream<PiExtensionStatusSnapshot>;
   }
->()("@rove-code/server/provider/PiExtensionStatuses") {}
+>()("@getpaperplane/server/provider/PiExtensionStatuses") {}
 
 const make = () => {
   type Entry = {

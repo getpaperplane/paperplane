@@ -1,4 +1,4 @@
-import { CommandId, EnvironmentId, MessageId, ProjectId, ThreadId } from "@rove-code/contracts";
+import { CommandId, EnvironmentId, MessageId, ProjectId, ThreadId } from "@getpaperplane/contracts";
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 
 const harness = vi.hoisted(() => ({

@@ -1,4 +1,4 @@
-import { SourceControlProviderKind } from "@rove-code/contracts";
+import { SourceControlProviderKind } from "@getpaperplane/contracts";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import * as NodeV8 from "node:v8";
 import * as NodeVM from "node:vm";
@@ -22,31 +22,31 @@ import type {
   ProjectId,
   PullRequestReviewCapabilities,
   PullRequestReviewerCapabilities,
-} from "@rove-code/contracts";
-import { DEFAULT_SERVER_SETTINGS } from "@rove-code/contracts/settings";
-import type { ServerSettings } from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
+import { DEFAULT_SERVER_SETTINGS } from "@getpaperplane/contracts/settings";
+import type { ServerSettings } from "@getpaperplane/contracts";
 import * as ServerSettingsService from "../serverSettings.ts";
-import { PullRequestOperationError } from "@rove-code/contracts";
+import { PullRequestOperationError } from "@getpaperplane/contracts";
 
 import * as ProjectService from "../project/ProjectService.ts";
 import * as SqlitePersistence from "../persistence/Sqlite.ts";
 import * as PullRequestFilesViewed from "../persistence/PullRequestFilesViewed.ts";
 import * as RepositoryIdentityResolver from "../project/RepositoryIdentityResolver.ts";
 import * as SourceControlProviderRegistry from "../sourceControl/SourceControlProviderRegistry.ts";
-import * as SourceControlRateLimit from "@rove-code/source-control-core/server/SourceControlRateLimit";
-import * as ForgejoCli from "@rove-code/source-control-forgejo/server/ForgejoCli";
-import * as ForgejoPullRequestProvider from "@rove-code/source-control-forgejo/server/ForgejoPullRequestProvider";
-import * as GitHubRest from "@rove-code/source-control-github/server/GitHubRest";
-import * as GitHubCredentials from "@rove-code/source-control-github/server/GitHubCredentials";
-import * as GitHubPullRequestApi from "@rove-code/source-control-github/server/GitHubPullRequestApi";
-import * as GitHubPullRequestProvider from "@rove-code/source-control-github/server/GitHubPullRequestProvider";
-import * as GitHubQuota from "@rove-code/source-control-github/server/GitHubQuota";
-import * as TestSourceControlHost from "@rove-code/source-control-testing/TestSourceControlHost";
+import * as SourceControlRateLimit from "@getpaperplane/source-control-core/server/SourceControlRateLimit";
+import * as ForgejoCli from "@getpaperplane/source-control-forgejo/server/ForgejoCli";
+import * as ForgejoPullRequestProvider from "@getpaperplane/source-control-forgejo/server/ForgejoPullRequestProvider";
+import * as GitHubRest from "@getpaperplane/source-control-github/server/GitHubRest";
+import * as GitHubCredentials from "@getpaperplane/source-control-github/server/GitHubCredentials";
+import * as GitHubPullRequestApi from "@getpaperplane/source-control-github/server/GitHubPullRequestApi";
+import * as GitHubPullRequestProvider from "@getpaperplane/source-control-github/server/GitHubPullRequestProvider";
+import * as GitHubQuota from "@getpaperplane/source-control-github/server/GitHubQuota";
+import * as TestSourceControlHost from "@getpaperplane/source-control-testing/TestSourceControlHost";
 import {
   PullRequestProviderError,
   type ProviderChangeRequest,
   type PullRequestProviderApi,
-} from "@rove-code/source-control-core/server/PullRequestProvider";
+} from "@getpaperplane/source-control-core/server/PullRequestProvider";
 import * as PullRequestProviderRegistry from "./PullRequestProviderRegistry.ts";
 import * as PullRequestService from "./PullRequestService.ts";
 import * as PullRequestReadCache from "./PullRequestReadCache.ts";

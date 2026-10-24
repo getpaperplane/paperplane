@@ -1,7 +1,7 @@
 import type {
   PullRequestFileViewedState,
   PullRequestFilesViewedResult,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 
 /** What the host last said about each file, by path. Absent means the host said nothing. */
 export type FileViewedStates = ReadonlyMap<string, PullRequestFileViewedState>;

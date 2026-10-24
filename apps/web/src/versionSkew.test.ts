@@ -1,5 +1,5 @@
-import { EnvironmentId } from "@rove-code/contracts";
-import type { ServerUpdateState } from "@rove-code/client-runtime/state/server";
+import { EnvironmentId } from "@getpaperplane/contracts";
+import type { ServerUpdateState } from "@getpaperplane/client-runtime/state/server";
 import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 // Pinned so the direction cases below read as fixed versions instead of
@@ -29,21 +29,21 @@ const MISMATCH_HINT =
 describe("versionSkew", () => {
   it("updates only the proven npm prefix and safely quotes its path", () => {
     expect(manualServerUpdateCommand("0.0.45", { kind: "npm-global", prefix: "/opt/node" })).toBe(
-      "npm install --global --prefix '/opt/node' @rove-code/cli@0.0.45",
+      "npm install --global --prefix '/opt/node' @getpaperplane/cli@0.0.45",
     );
     expect(
       manualServerUpdateCommand("0.0.45", { kind: "npm-global", prefix: "/opt/maria's node" }),
-    ).toBe("npm install --global --prefix '/opt/maria'\\''s node' @rove-code/cli@0.0.45");
+    ).toBe("npm install --global --prefix '/opt/maria'\\''s node' @getpaperplane/cli@0.0.45");
   });
 
   it("keeps runner and unknown commands as relaunches", () => {
-    expect(manualServerUpdateCommand("0.0.45")).toBe("npx @rove-code/cli@0.0.45");
-    expect(manualServerUpdateCommand("0.0.45", { kind: "npx" })).toBe("npx @rove-code/cli@0.0.45");
+    expect(manualServerUpdateCommand("0.0.45")).toBe("npx @getpaperplane/cli@0.0.45");
+    expect(manualServerUpdateCommand("0.0.45", { kind: "npx" })).toBe("npx @getpaperplane/cli@0.0.45");
     expect(manualServerUpdateCommand("0.0.45", { kind: "pnpm-dlx" })).toBe(
-      "pnpm dlx @rove-code/cli@0.0.45",
+      "pnpm dlx @getpaperplane/cli@0.0.45",
     );
     expect(manualServerUpdateCommand("0.0.45", { kind: "bunx" })).toBe(
-      "bunx @rove-code/cli@0.0.45",
+      "bunx @getpaperplane/cli@0.0.45",
     );
   });
   beforeEach(() => {

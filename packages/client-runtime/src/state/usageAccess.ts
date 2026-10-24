@@ -3,7 +3,7 @@ import {
   type AuthSessionState,
   sessionGrantsScope,
   type SessionGrantInput,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 
 import type { EnvironmentConnectionPhase } from "../connection/presentation.ts";
 

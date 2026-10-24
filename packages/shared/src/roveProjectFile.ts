@@ -1,7 +1,7 @@
 import * as Exit from "effect/Exit";
 import * as Schema from "effect/Schema";
 
-import { RoveProjectFile, ROVE_PROJECT_FILE_SCHEMA_URL } from "@rove-code/contracts";
+import { RoveProjectFile, ROVE_PROJECT_FILE_SCHEMA_URL } from "@getpaperplane/contracts";
 
 import { fromLenientJson } from "./schemaJson.ts";
 

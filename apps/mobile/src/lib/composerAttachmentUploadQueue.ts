@@ -1,5 +1,5 @@
-import { EnvironmentId, type ServerConfig } from "@rove-code/contracts";
-import { clampFileAttachmentUploadBytes } from "@rove-code/client-runtime/state/attachments";
+import { EnvironmentId, type ServerConfig } from "@getpaperplane/contracts";
+import { clampFileAttachmentUploadBytes } from "@getpaperplane/client-runtime/state/attachments";
 
 import { parseLegacyNewTaskDraftKey } from "../state/new-task-draft-key";
 import type { DraftComposerAttachment } from "./composerImages";

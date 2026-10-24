@@ -14,16 +14,16 @@
  * @module provider/Drivers/ClaudeSkills
  */
 
-import type { ClaudeSettings, ServerProviderSkill } from "@rove-code/contracts";
+import type { ClaudeSettings, ServerProviderSkill } from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
 import * as Schema from "effect/Schema";
-import * as HostProcess from "@rove-code/shared/HostProcess";
-import { fromLenientJson } from "@rove-code/shared/schemaJson";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
+import { fromLenientJson } from "@getpaperplane/shared/schemaJson";
 import { parse as parseYamlDocument } from "yaml";
 
-import { expandHomePath } from "@rove-code/provider-core/server/pathExpansion";
+import { expandHomePath } from "@getpaperplane/provider-core/server/pathExpansion";
 
 type ClaudeSkillScope = "user" | "project";
 

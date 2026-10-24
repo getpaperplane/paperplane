@@ -1,5 +1,5 @@
 /** Detects whether an OpenCode instance runs 1.x or 2.x, so the driver can pick its runtime. */
-import { parseSemver } from "@rove-code/shared/semver";
+import { parseSemver } from "@getpaperplane/shared/semver";
 import * as Cache from "effect/Cache";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -10,7 +10,7 @@ import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientRequest from "effect/http/HttpClientRequest";
 
 import * as OpenCodeRuntime from "./OpenCodeRuntime.ts";
-import { parseGenericCliVersion } from "@rove-code/provider-core/server/snapshotProbe";
+import { parseGenericCliVersion } from "@getpaperplane/provider-core/server/snapshotProbe";
 
 export interface ProbedOpenCode {
   readonly generation: "v1" | "v2";

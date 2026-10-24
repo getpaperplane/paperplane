@@ -4,11 +4,11 @@ import type {
   ProviderDriverKind,
   ProviderInteractionMode,
   RuntimeMode,
-} from "@rove-code/contracts";
-import { modelSelectionsEqual } from "@rove-code/shared/model";
+} from "@getpaperplane/contracts";
+import { modelSelectionsEqual } from "@getpaperplane/shared/model";
 
-import type { ProviderContinuationIdentity } from "@rove-code/provider-core/server/driver";
-import type { ProviderSelectionTransitionPlan } from "@rove-code/provider-core/server/selectionTransition";
+import type { ProviderContinuationIdentity } from "@getpaperplane/provider-core/server/driver";
+import type { ProviderSelectionTransitionPlan } from "@getpaperplane/provider-core/server/selectionTransition";
 
 export type ProviderSessionTransition =
   | { readonly type: "reuse" }

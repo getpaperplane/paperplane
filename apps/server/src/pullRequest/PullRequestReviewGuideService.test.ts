@@ -14,8 +14,8 @@ import {
   type PullRequestDetail,
   type PullRequestStack,
   type PullRequestRef,
-} from "@rove-code/contracts";
-import type { ReviewGuideGenerationInput } from "@rove-code/provider-core/server/textGeneration";
+} from "@getpaperplane/contracts";
+import type { ReviewGuideGenerationInput } from "@getpaperplane/provider-core/server/textGeneration";
 
 import * as ServerConfig from "../config.ts";
 import * as SqlitePersistence from "../persistence/Sqlite.ts";

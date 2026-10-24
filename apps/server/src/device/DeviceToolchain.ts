@@ -1,4 +1,4 @@
-import type { DeviceToolVersions } from "@rove-code/contracts";
+import type { DeviceToolVersions } from "@getpaperplane/contracts";
 /**
  * Pinned installs of the two external tools device support is built on.
  *

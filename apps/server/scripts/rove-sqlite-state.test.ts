@@ -5,10 +5,10 @@ import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
 import * as SqlClient from "effect/sql/SqlClient";
 
-import * as NodeSqliteClient from "@rove-code/shared/nodeSqliteClient";
+import * as NodeSqliteClient from "@getpaperplane/shared/nodeSqliteClient";
 import { runSqliteState } from "./rove-sqlite-state.ts";
-import * as HostProcess from "@rove-code/shared/HostProcess";
-import { symlinksSupported } from "@rove-code/shared/testing/symlinks";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
+import { symlinksSupported } from "@getpaperplane/shared/testing/symlinks";
 
 const createFixtureDatabase = Effect.fn("createSqliteStateFixtureDatabase")(function* (
   baseDir: string,

@@ -1,5 +1,5 @@
-import type { SubagentPillSegment } from "@rove-code/client-runtime/state/thread-subagents";
-import { formatDuration } from "@rove-code/shared/orchestrationTiming";
+import type { SubagentPillSegment } from "@getpaperplane/client-runtime/state/thread-subagents";
+import { formatDuration } from "@getpaperplane/shared/orchestrationTiming";
 import { GlassContainer, GlassView } from "expo-glass-effect";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import {

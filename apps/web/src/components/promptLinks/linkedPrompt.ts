@@ -1,4 +1,4 @@
-import type { LinkedPrompt } from "@rove-code/shared/promptLinks";
+import type { LinkedPrompt } from "@getpaperplane/shared/promptLinks";
 
 import { type ComposerThreadTarget, useComposerDraftStore } from "~/composerDraftStore";
 

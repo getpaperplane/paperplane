@@ -3,7 +3,7 @@ import {
   ProjectId,
   type PullRequestFilesViewedResult,
   type PullRequestRef,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { AsyncResult } from "effect/reactivity";
 import { act, StrictMode } from "react";
 import { create, type ReactTestRenderer } from "react-test-renderer";

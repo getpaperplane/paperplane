@@ -6,7 +6,7 @@ import * as Option from "effect/Option";
 import * as PlatformError from "effect/PlatformError";
 import * as Schema from "effect/Schema";
 
-import { writeFileStringAtomically } from "@rove-code/shared/atomicWrite";
+import { writeFileStringAtomically } from "@getpaperplane/shared/atomicWrite";
 import * as ServerConfig from "../config.ts";
 
 class TelemetryIdentityReadError extends Schema.TaggedError<TelemetryIdentityReadError>()(

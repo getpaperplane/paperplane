@@ -9,13 +9,13 @@ import {
   type StaticScreenProps,
 } from "@react-navigation/native";
 import { SymbolView } from "../../components/ui/AppSymbol";
-import { availableScratchWorkspaceRoot } from "@rove-code/client-runtime/operations/projects";
-import { isScratchProject } from "@rove-code/client-runtime/state/projects";
+import { availableScratchWorkspaceRoot } from "@getpaperplane/client-runtime/operations/projects";
+import { isScratchProject } from "@getpaperplane/client-runtime/state/projects";
 import {
   isAtomCommandInterrupted,
   squashAtomCommandFailure,
-} from "@rove-code/client-runtime/state/runtime";
-import type { EnvironmentProject } from "@rove-code/client-runtime/state/shell";
+} from "@getpaperplane/client-runtime/state/runtime";
+import type { EnvironmentProject } from "@getpaperplane/client-runtime/state/shell";
 import { useEffect, useRef, useState } from "react";
 import { Platform, Pressable, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";

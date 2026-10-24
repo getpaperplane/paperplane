@@ -1,8 +1,8 @@
 import type {
   EnvironmentProject,
   EnvironmentThreadShell,
-} from "@rove-code/client-runtime/state/shell";
-import { EnvironmentId, ProjectId, ThreadId } from "@rove-code/contracts";
+} from "@getpaperplane/client-runtime/state/shell";
+import { EnvironmentId, ProjectId, ThreadId } from "@getpaperplane/contracts";
 import { assert, it } from "@effect/vitest";
 
 import {

@@ -3,12 +3,12 @@ import {
   scopedProjectKey,
   scopeProjectRef,
   scopeThreadRef,
-} from "@rove-code/client-runtime/environment";
+} from "@getpaperplane/client-runtime/environment";
 import {
   DEFAULT_SERVER_SETTINGS,
   type ScopedProjectRef,
   type ThreadId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { useParams, useRouter } from "@tanstack/react-router";
 import { useCallback, useMemo } from "react";
 import {
@@ -26,7 +26,7 @@ import {
   getProjectOrderKey,
   selectProjectGroupingSettings,
 } from "../logicalProject";
-import { resolveNewThreadEnvMode, resolveProjectSettings } from "@rove-code/shared/projectSettings";
+import { resolveNewThreadEnvMode, resolveProjectSettings } from "@getpaperplane/shared/projectSettings";
 import {
   readProject,
   readProjects,

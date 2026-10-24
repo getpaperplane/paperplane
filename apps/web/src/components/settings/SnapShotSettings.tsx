@@ -6,7 +6,7 @@ import {
   type DesktopSnapShotState,
   type DesktopSnapShotSetupAction,
   type SnapShotShortcut,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { PlayIcon } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 

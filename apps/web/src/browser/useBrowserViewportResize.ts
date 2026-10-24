@@ -1,6 +1,6 @@
 "use client";
 
-import type { PreviewViewportSetting, PreviewViewportSize } from "@rove-code/contracts";
+import type { PreviewViewportSetting, PreviewViewportSize } from "@getpaperplane/contracts";
 import {
   useCallback,
   useEffect,

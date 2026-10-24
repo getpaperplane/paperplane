@@ -1,20 +1,20 @@
 import { useAtomValue } from "@effect/atom-react";
-import { deriveReportedModelSelection } from "@rove-code/client-runtime/state/thread-execution";
+import { deriveReportedModelSelection } from "@getpaperplane/client-runtime/state/thread-execution";
 
 import { appAtomRegistry } from "./atom-registry";
 import type {
   EnvironmentProject,
   EnvironmentThread,
   EnvironmentThreadShell,
-} from "@rove-code/client-runtime/state/shell";
+} from "@getpaperplane/client-runtime/state/shell";
 import type {
   EnvironmentId,
   ScopedProjectRef,
   ScopedThreadRef,
   ServerConfig,
   ThreadId,
-} from "@rove-code/contracts";
-import { hasThreadLinks, relabelThreadLinks } from "@rove-code/shared/threadLinks";
+} from "@getpaperplane/contracts";
+import { hasThreadLinks, relabelThreadLinks } from "@getpaperplane/shared/threadLinks";
 import { Atom } from "effect/reactivity";
 import { useMemo } from "react";
 

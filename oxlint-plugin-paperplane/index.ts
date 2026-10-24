@@ -19,7 +19,7 @@ import requireSuppressionReason from "./rules/require-suppression-reason.ts";
 
 export default definePlugin({
   meta: {
-    name: "rove",
+    name: "paperplane",
   },
   rules: {
     "namespace-node-imports": namespaceNodeImports,

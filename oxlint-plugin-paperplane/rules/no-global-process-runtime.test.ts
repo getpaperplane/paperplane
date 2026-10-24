@@ -2,13 +2,13 @@ import { assert, describe } from "@effect/vitest";
 
 import { createOxlintRuleHarness } from "../test/utils.ts";
 
-const rule = createOxlintRuleHarness("rove/no-global-process-runtime");
+const rule = createOxlintRuleHarness("paperplane/no-global-process-runtime");
 
-describe("rove/no-global-process-runtime", () => {
+describe("paperplane/no-global-process-runtime", () => {
   rule.valid(
     "allows injected host process references",
     `
-      import * as HostProcess from "@rove-code/shared/HostProcess";
+      import * as HostProcess from "@getpaperplane/shared/HostProcess";
       import * as Effect from "effect/Effect";
 
       export const isWindows = Effect.map(HostProcess.Platform, (platform) => platform === "win32");

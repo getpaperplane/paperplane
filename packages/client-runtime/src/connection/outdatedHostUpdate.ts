@@ -5,7 +5,7 @@ import {
   type ServerSelfUpdateInput,
   type ServerSelfUpdateResult,
   WS_METHODS,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";

@@ -22,7 +22,7 @@ const workspaceFiles = [
   "apps/mobile/modules/rove-terminal/package.json",
   "apps/marketing/package.json",
   "infra/relay/package.json",
-  "oxlint-plugin-rove/package.json",
+  "oxlint-plugin-paperplane/package.json",
   "packages/client-runtime/package.json",
   "packages/contracts/package.json",
   "packages/shared/package.json",

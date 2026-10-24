@@ -1,10 +1,10 @@
-import type { InlineSkill } from "@rove-code/shared/inlineSkills";
+import type { InlineSkill } from "@getpaperplane/shared/inlineSkills";
 import type {
   OrchestrationV2ThreadProjection,
   OrchestrationV2SearchThreadResult,
   ScopedThreadRef,
-} from "@rove-code/contracts";
-import { scopedThreadKey } from "@rove-code/client-runtime/environment";
+} from "@getpaperplane/contracts";
+import { scopedThreadKey } from "@getpaperplane/client-runtime/environment";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { orchestrationEnvironment } from "~/state/orchestration";
 import { useEnvironmentQuery } from "~/state/query";

@@ -5,14 +5,14 @@ import {
   type EnvironmentId,
   type ResolvedKeybindingsConfig,
   type ScopedThreadRef,
-} from "@rove-code/contracts";
-import { filePreviewDelimiter } from "@rove-code/shared/delimitedPreview";
-import { AuthFilesystemWriteScope } from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
+import { filePreviewDelimiter } from "@getpaperplane/shared/delimitedPreview";
+import { AuthFilesystemWriteScope } from "@getpaperplane/contracts";
 import {
   isWorkspaceAudioPreviewPath,
   isWorkspaceImagePreviewPath,
   isWorkspaceVideoPreviewPath,
-} from "@rove-code/shared/filePreview";
+} from "@getpaperplane/shared/filePreview";
 import {
   DEFAULT_TOKENIZE_MAX_LENGTH,
   VirtualizedFile,
@@ -35,8 +35,8 @@ import { useFilesystemReadAccess } from "~/state/filesystem";
 import {
   isAtomCommandInterrupted,
   squashAtomCommandFailure,
-} from "@rove-code/client-runtime/state/runtime";
-import { mediaFileReference } from "@rove-code/client-runtime/media-reference";
+} from "@getpaperplane/client-runtime/state/runtime";
+import { mediaFileReference } from "@getpaperplane/client-runtime/media-reference";
 import { FolderTree, Globe2, WrapTextIcon } from "lucide-react";
 import { Code2, Eye, Table2 } from "lucide";
 import * as Schema from "effect/Schema";
@@ -57,8 +57,8 @@ import { resolveDiffThemeName } from "~/lib/diffRendering";
 import { PREFERRED_HIGHLIGHTER } from "~/lib/syntaxHighlighting";
 import { cn } from "~/lib/utils";
 import type { ChatFileAttachment } from "~/types";
-import { isAbsolutePath } from "@rove-code/shared/path";
-import { resolvePathLinkTarget } from "@rove-code/shared/fileLinks";
+import { isAbsolutePath } from "@getpaperplane/shared/path";
+import { resolvePathLinkTarget } from "@getpaperplane/shared/fileLinks";
 import { ScrollArea } from "~/components/ui/scroll-area";
 import { stackedThreadToast, toastManager } from "~/components/ui/toast";
 import { type DraftId, useComposerDraftStore } from "~/composerDraftStore";
@@ -197,7 +197,7 @@ function WorkspaceImagePreview(props: {
   }
 
   return assetUrl._tag === "Success" && imageUrl !== null ? (
-    // oxlint-disable-next-line rove/require-centered-scroll-gutter -- The image is capped at max-h-full max-w-full, so this never scrolls.
+    // oxlint-disable-next-line paperplane/require-centered-scroll-gutter -- The image is capped at max-h-full max-w-full, so this never scrolls.
     <div className="flex min-h-0 flex-1 items-center justify-center overflow-auto p-4">
       <MediaActions source={actionsSource}>
         <img

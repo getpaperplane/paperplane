@@ -1,10 +1,10 @@
-import type { AssistantCitation } from "@rove-code/contracts";
-import { collectAssistantCitations } from "@rove-code/shared/assistantCitations";
-import { collectComposerContextReferences } from "@rove-code/shared/composerContextReferences";
+import type { AssistantCitation } from "@getpaperplane/contracts";
+import { collectAssistantCitations } from "@getpaperplane/shared/assistantCitations";
+import { collectComposerContextReferences } from "@getpaperplane/shared/composerContextReferences";
 import {
   collectComposerInlineTokens,
   type ComposerInlineToken,
-} from "@rove-code/shared/composerInlineTokens";
+} from "@getpaperplane/shared/composerInlineTokens";
 
 export type ComposerPromptSegment =
   | {

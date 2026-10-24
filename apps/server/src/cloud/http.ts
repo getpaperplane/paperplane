@@ -8,7 +8,7 @@ import {
   EnvironmentHttpForbiddenError,
   EnvironmentHttpInternalServerError,
   EnvironmentHttpUnauthorizedError,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import * as Context from "effect/Context";
 import * as HttpEffect from "effect/http/HttpEffect";
@@ -26,7 +26,7 @@ export const cloudReady =
   process.env.ROVE_CLOUD_READY === "1" ||
   (typeof __ROVE_BUILD_CLOUD_READY__ !== "undefined" && __ROVE_BUILD_CLOUD_READY__);
 export class CloudReady extends Context.Reference<boolean>(
-  "@rove-code/server/cloud/http/CloudReady",
+  "@getpaperplane/server/cloud/http/CloudReady",
   {
     defaultValue: () => cloudReady,
   },

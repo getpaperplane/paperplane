@@ -1,8 +1,8 @@
-import { ManagedRelay } from "@rove-code/client-runtime/relay";
+import { ManagedRelay } from "@getpaperplane/client-runtime/relay";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 import * as SecureStore from "expo-secure-store";
-import { LEGACY_RELAY_CLIENT_IDS } from "@rove-code/shared/roveMigration";
+import { LEGACY_RELAY_CLIENT_IDS } from "@getpaperplane/shared/roveMigration";
 
 const MANAGED_RELAY_TOKEN_CACHE_KEY = "rove.cloud.relay-access-tokens";
 const MANAGED_RELAY_TOKEN_CACHE_VERSION = 1;

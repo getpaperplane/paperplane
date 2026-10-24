@@ -4,12 +4,12 @@ import {
   EditorId,
   EnvironmentAuthorizationError,
   EnvironmentId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   mapAtomCommandResult,
   type AtomCommandFailure,
   type AtomCommandResult,
-} from "@rove-code/client-runtime/state/runtime";
+} from "@getpaperplane/client-runtime/state/runtime";
 import * as Cause from "effect/Cause";
 import * as Schema from "effect/Schema";
 import { AsyncResult } from "effect/reactivity";

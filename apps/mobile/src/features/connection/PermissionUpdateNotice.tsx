@@ -1,6 +1,6 @@
 import * as Dialog from "../../components/ui/Dialog";
 import { useAtomValue } from "@effect/atom-react";
-import { sessionHasLegacyPermissions } from "@rove-code/contracts";
+import { sessionHasLegacyPermissions } from "@getpaperplane/contracts";
 import { Atom } from "effect/reactivity";
 import * as SecureStore from "expo-secure-store";
 import { useEffect, useMemo, useRef, useState } from "react";

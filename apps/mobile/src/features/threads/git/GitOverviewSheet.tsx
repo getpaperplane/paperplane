@@ -5,14 +5,14 @@ import {
   buildMenuItems,
   getGitActionDisabledReason,
   requiresDefaultBranchConfirmation,
-} from "@rove-code/client-runtime/state/vcs";
+} from "@getpaperplane/client-runtime/state/vcs";
 import {
   linkedPullRequestContextOf,
   resolveThreadCurrentPullRequestLink,
   resolveThreadPullRequestChains,
   threadPullRequestKeyOf,
-} from "@rove-code/shared/threadPullRequests";
-import { EnvironmentId, ThreadId } from "@rove-code/contracts";
+} from "@getpaperplane/shared/threadPullRequests";
+import { EnvironmentId, ThreadId } from "@getpaperplane/contracts";
 import {
   CommonActions,
   StackActions,

@@ -5,8 +5,8 @@ import {
   AuthSessionId,
   ComputerDesktopViewerError,
   type AuthEnvironmentScope,
-} from "@rove-code/contracts";
-import { Environment as HostProcessEnvironment } from "@rove-code/shared/HostProcess";
+} from "@getpaperplane/contracts";
+import { Environment as HostProcessEnvironment } from "@getpaperplane/shared/HostProcess";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import { HttpRouter } from "effect/http";

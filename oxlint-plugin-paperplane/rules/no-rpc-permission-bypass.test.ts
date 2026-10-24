@@ -1,5 +1,5 @@
 import { createOxlintRuleHarness } from "../test/utils.ts";
-const state = createOxlintRuleHarness("rove/no-rpc-permission-bypass", {
+const state = createOxlintRuleHarness("paperplane/no-rpc-permission-bypass", {
   filename: "fixture.ts",
 });
 state.invalid("blocks direct session calls", "session.client[tag](input);");
@@ -17,22 +17,22 @@ state.valid(
   "allows typed requests",
   'import { request } from "../rpc/client.ts"; request(method, input);',
 );
-const rpc = createOxlintRuleHarness("rove/no-rpc-permission-bypass", {
+const rpc = createOxlintRuleHarness("paperplane/no-rpc-permission-bypass", {
   filename: "fixture.ts",
   ruleOptions: [{ allowRawClientAccess: true }],
 });
 rpc.valid("allows the transport boundary", "session.client[tag](input);");
 
-const app = createOxlintRuleHarness("rove/no-rpc-permission-bypass", {
+const app = createOxlintRuleHarness("paperplane/no-rpc-permission-bypass", {
   filename: "fixture.ts",
 });
 app.invalid(
   "blocks guard imports through the barrel",
-  'import { RpcPermissionGuard as Guard } from "@rove-code/client-runtime/rpc";',
+  'import { RpcPermissionGuard as Guard } from "@getpaperplane/client-runtime/rpc";',
 );
 app.invalid(
   "blocks explicit index imports",
-  'import { RpcPermissionGuard } from "@rove-code/client-runtime/rpc/index.ts";',
+  'import { RpcPermissionGuard } from "@getpaperplane/client-runtime/rpc/index.ts";',
 );
 app.invalid(
   "blocks raw session access in subscription callbacks",
@@ -44,20 +44,20 @@ app.invalid(
 );
 app.valid(
   "allows public typed RPC helpers",
-  'import { request, runStream } from "@rove-code/client-runtime/rpc";',
+  'import { request, runStream } from "@getpaperplane/client-runtime/rpc";',
 );
 
 rpc.invalid(
   "raw client allowance does not permit installing the guard",
-  'import { RpcPermissionGuard } from "@rove-code/client-runtime/rpc";',
+  'import { RpcPermissionGuard } from "@getpaperplane/client-runtime/rpc";',
 );
-const boundary = createOxlintRuleHarness("rove/no-rpc-permission-bypass", {
+const boundary = createOxlintRuleHarness("paperplane/no-rpc-permission-bypass", {
   filename: "fixture.ts",
   ruleOptions: [{ allowGuardInstallation: true }],
 });
 boundary.valid(
   "permits guard installation when configured",
-  'import { RpcPermissionGuard } from "@rove-code/client-runtime/rpc"; RpcPermissionGuard.of({ authorize });',
+  'import { RpcPermissionGuard } from "@getpaperplane/client-runtime/rpc"; RpcPermissionGuard.of({ authorize });',
 );
 boundary.invalid(
   "guard installation allowance does not permit raw clients",

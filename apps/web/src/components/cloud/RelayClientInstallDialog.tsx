@@ -1,6 +1,6 @@
 import { DownloadIcon } from "lucide-react";
 import { useSyncExternalStore } from "react";
-import type { RelayClientInstallProgressStage } from "@rove-code/contracts";
+import type { RelayClientInstallProgressStage } from "@getpaperplane/contracts";
 
 import {
   completeRelayClientInstallDialogClose,

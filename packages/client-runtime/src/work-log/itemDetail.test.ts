@@ -1,4 +1,4 @@
-import { ThreadId, TurnItemId } from "@rove-code/contracts";
+import { ThreadId, TurnItemId } from "@getpaperplane/contracts";
 import * as DateTime from "effect/DateTime";
 import { describe, expect, it } from "vite-plus/test";
 

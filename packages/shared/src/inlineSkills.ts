@@ -1,4 +1,4 @@
-import type { ServerProviderSkill } from "@rove-code/contracts";
+import type { ServerProviderSkill } from "@getpaperplane/contracts";
 
 export type InlineSkill = Pick<ServerProviderSkill, "name" | "displayName">;
 

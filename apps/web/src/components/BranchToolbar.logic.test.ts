@@ -1,4 +1,4 @@
-import { EnvironmentId, type VcsRef } from "@rove-code/contracts";
+import { EnvironmentId, type VcsRef } from "@getpaperplane/contracts";
 import { describe, expect, it } from "vite-plus/test";
 import {
   dedupeRemoteBranchesWithLocalMatches,

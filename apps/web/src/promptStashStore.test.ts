@@ -1,9 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it } from "vite-plus/test";
-import { EnvironmentId, MessageId, ThreadId } from "@rove-code/contracts";
+import { EnvironmentId, MessageId, ThreadId } from "@getpaperplane/contracts";
 import {
   collectAssistantCitations,
   serializeAssistantCitation,
-} from "@rove-code/shared/assistantCitations";
+} from "@getpaperplane/shared/assistantCitations";
 
 import { removeLocalStorageItem } from "./hooks/useLocalStorage";
 

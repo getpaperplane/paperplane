@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef } from "react";
 import {
   voiceInputBlocksSubmission,
   type VoiceInputState,
-} from "@rove-code/client-runtime/voice-input";
+} from "@getpaperplane/client-runtime/voice-input";
 
 import type { ComposerEditorSelection } from "../../components/ComposerEditor";
 import { useGlobalVoiceInput } from "./VoiceInputProvider";

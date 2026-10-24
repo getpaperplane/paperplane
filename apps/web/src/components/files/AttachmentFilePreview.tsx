@@ -1,8 +1,8 @@
-import { filePreviewDelimiter } from "@rove-code/shared/delimitedPreview";
-import type { EnvironmentId, ScopedThreadRef } from "@rove-code/contracts";
-import { formatAttachmentSize } from "@rove-code/client-runtime/state/attachments";
-import { readFilePreviewResponse } from "@rove-code/client-runtime/file-preview";
-import { filePreviewKind, FILE_TEXT_PREVIEW_MAX_BYTES } from "@rove-code/shared/filePreview";
+import { filePreviewDelimiter } from "@getpaperplane/shared/delimitedPreview";
+import type { EnvironmentId, ScopedThreadRef } from "@getpaperplane/contracts";
+import { formatAttachmentSize } from "@getpaperplane/client-runtime/state/attachments";
+import { readFilePreviewResponse } from "@getpaperplane/client-runtime/file-preview";
+import { filePreviewKind, FILE_TEXT_PREVIEW_MAX_BYTES } from "@getpaperplane/shared/filePreview";
 import { ChevronRightIcon, DownloadIcon, Trash2Icon, WrapTextIcon, XIcon } from "lucide-react";
 import { Check, Code2, Copy, Eye, Table2 } from "lucide";
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
@@ -264,7 +264,7 @@ export function AttachmentFilePreview(props: {
       />
     </div>
   ) : kind === "image" ? (
-    // oxlint-disable-next-line rove/require-centered-scroll-gutter -- The image is capped at max-h-full max-w-full, so this never scrolls.
+    // oxlint-disable-next-line paperplane/require-centered-scroll-gutter -- The image is capped at max-h-full max-w-full, so this never scrolls.
     <div className="flex min-h-0 flex-1 items-center justify-center overflow-auto p-4">
       <img
         src={url}

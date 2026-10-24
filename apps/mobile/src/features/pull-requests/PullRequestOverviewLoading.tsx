@@ -1,6 +1,6 @@
 import { Chip } from "../../components/ui/Chip";
 import { PullRequestSectionHeading } from "./PullRequestSectionHeading";
-import type { PullRequestListEntry } from "@rove-code/contracts";
+import type { PullRequestListEntry } from "@getpaperplane/contracts";
 import { View } from "react-native";
 import { PullRequestCardGroup, PullRequestCardRow } from "./PullRequestControls";
 import { PullRequestStackCard } from "./PullRequestStackCard";

@@ -1,10 +1,10 @@
-import { scopedThreadKey } from "@rove-code/client-runtime/environment";
+import { scopedThreadKey } from "@getpaperplane/client-runtime/environment";
 import {
   ChatFileAttachment,
   INCOGNITO_BROWSER_PROFILE_ID,
   PreviewSessionSnapshot,
   ScopedThreadRef,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Schema from "effect/Schema";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";

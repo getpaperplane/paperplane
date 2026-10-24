@@ -1,4 +1,4 @@
-import { createAttachmentEnvironmentAtoms } from "@rove-code/client-runtime/state/attachments";
+import { createAttachmentEnvironmentAtoms } from "@getpaperplane/client-runtime/state/attachments";
 
 import { connectionAtomRuntime } from "../connection/runtime";
 

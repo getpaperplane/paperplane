@@ -10,14 +10,14 @@ import {
   ServerSettings,
   type RoveProjectFile,
   type ServerSettingsPatch,
-} from "@rove-code/contracts";
-import type { EnvironmentConnectionPhase } from "@rove-code/client-runtime/connection";
+} from "@getpaperplane/contracts";
+import type { EnvironmentConnectionPhase } from "@getpaperplane/client-runtime/connection";
 import {
   clearProjectSettingsOverrides,
   resolveProjectSettings,
   resolveWorktreeCleanup,
   type ProjectSettingSource,
-} from "@rove-code/shared/projectSettings";
+} from "@getpaperplane/shared/projectSettings";
 import * as Equal from "effect/Equal";
 import * as Cause from "effect/Cause";
 

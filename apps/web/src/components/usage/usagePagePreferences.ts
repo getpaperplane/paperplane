@@ -1,4 +1,4 @@
-import { UsageProviderKind } from "@rove-code/contracts";
+import { UsageProviderKind } from "@getpaperplane/contracts";
 import * as Schema from "effect/Schema";
 
 import { getLocalStorageItem, setLocalStorageItem } from "../../hooks/useLocalStorage";

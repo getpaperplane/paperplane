@@ -1,14 +1,14 @@
 import {
   classifyMarkdownImageSource,
   markdownImageSourceFragment,
-} from "@rove-code/client-runtime/markdown-images";
-import { splitFilePathPosition } from "@rove-code/shared/fileLinks";
+} from "@getpaperplane/client-runtime/markdown-images";
+import { splitFilePathPosition } from "@getpaperplane/shared/fileLinks";
 import {
   mediaFileReference,
   mediaUrlReference,
   mediaReferenceFileName,
-} from "@rove-code/client-runtime/media-reference";
-import type { EnvironmentId, ThreadId } from "@rove-code/contracts";
+} from "@getpaperplane/client-runtime/media-reference";
+import type { EnvironmentId, ThreadId } from "@getpaperplane/contracts";
 import { normalizeNativeMarkdownUrl } from "./markdownLinks";
 import { resolveMobileMarkdownMediaSource } from "./markdownMediaSource";
 

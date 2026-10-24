@@ -1,20 +1,20 @@
-import { AuthProvidersManageScope } from "@rove-code/contracts";
+import { AuthProvidersManageScope } from "@getpaperplane/contracts";
 import { useEnvironmentScope } from "../../state/session";
 import {
   isAtomCommandInterrupted,
   squashAtomCommandFailure,
   type AtomCommandResult,
-} from "@rove-code/client-runtime/state/runtime";
+} from "@getpaperplane/client-runtime/state/runtime";
 import type {
   ChatGptHandoffInput,
   ChatGptTransferredProfile,
   EnvironmentId,
   ProviderInstanceId,
   ServerProvider,
-} from "@rove-code/contracts";
-import { codexAuthHandoffUrl } from "@rove-code/shared/codexAuthHandoff";
-import { providerAuthReturnUrl } from "@rove-code/shared/providerAuthReturnUrl";
-import { isLoopbackHost } from "@rove-code/shared/preview";
+} from "@getpaperplane/contracts";
+import { codexAuthHandoffUrl } from "@getpaperplane/shared/codexAuthHandoff";
+import { providerAuthReturnUrl } from "@getpaperplane/shared/providerAuthReturnUrl";
+import { isLoopbackHost } from "@getpaperplane/shared/preview";
 import { CheckIcon, ChevronRightIcon, ExternalLinkIcon } from "lucide-react";
 import { Children, useCallback, useEffect, useId, useRef, useState, type ReactNode } from "react";
 

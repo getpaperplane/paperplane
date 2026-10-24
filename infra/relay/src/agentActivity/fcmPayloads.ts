@@ -1,4 +1,4 @@
-import type { RelayAgentActivityAggregateState } from "@rove-code/contracts/relay";
+import type { RelayAgentActivityAggregateState } from "@getpaperplane/contracts/relay";
 import {
   activityPhasePriority,
   TERMINAL_AGENT_ACTIVITY_DISPLAY_TTL_MS,

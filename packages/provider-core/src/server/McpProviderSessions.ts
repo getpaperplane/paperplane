@@ -5,7 +5,7 @@
  *
  * @module provider-core/server/McpProviderSessions
  */
-import type { ThreadId } from "@rove-code/contracts";
+import type { ThreadId } from "@getpaperplane/contracts";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -20,7 +20,7 @@ export class McpProviderSessions extends Context.Service<
     readonly read: (threadId: ThreadId) => Effect.Effect<McpProviderSessionConfig | undefined>;
     readonly clear: (threadId: ThreadId) => Effect.Effect<void>;
   }
->()("@rove-code/provider-core/server/McpProviderSessions") {}
+>()("@getpaperplane/provider-core/server/McpProviderSessions") {}
 
 const make = Effect.gen(function* () {
   const sessions = yield* Ref.make(new Map<ThreadId, McpProviderSessionConfig>());

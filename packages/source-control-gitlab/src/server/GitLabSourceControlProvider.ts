@@ -1,11 +1,11 @@
-import { SourceControlProviderKind } from "@rove-code/contracts";
+import { SourceControlProviderKind } from "@getpaperplane/contracts";
 import * as Schema from "effect/Schema";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
-import { SourceControlProviderError, type ChangeRequest } from "@rove-code/contracts";
+import { SourceControlProviderError, type ChangeRequest } from "@getpaperplane/contracts";
 
 import * as GitLabCli from "./GitLabCli.ts";
-import * as SourceControlProvider from "@rove-code/source-control-core/server/SourceControlProvider";
+import * as SourceControlProvider from "@getpaperplane/source-control-core/server/SourceControlProvider";
 import {
   combinedAuthOutput,
   firstSafeAuthLine,
@@ -15,7 +15,7 @@ import {
   type SourceControlAuthProbeInput,
   type SourceControlCliDiscoverySpec,
   type SourceControlUnknownRemoteRefinementInput,
-} from "@rove-code/source-control-core/server/discovery";
+} from "@getpaperplane/source-control-core/server/discovery";
 import { findAuthenticatedGitLabHost, parseGitLabAuthStatusHosts } from "./gitLabAuthStatus.ts";
 
 const decodeLinkSubject = Schema.decodeUnknownEffect(

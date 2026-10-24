@@ -9,11 +9,11 @@
 import * as Schema from "effect/Schema";
 import * as Effect from "effect/Effect";
 import { limitTitleMessage } from "./threadTitleContext.ts";
-import type { BranchNamingOptions, ChatAttachment } from "@rove-code/contracts";
+import type { BranchNamingOptions, ChatAttachment } from "@getpaperplane/contracts";
 
 import { limitSection } from "./textGenerationUtils.ts";
 import type { ReviewGuideStackLayer } from "./textGeneration.ts";
-import type { TextGenerationPolicy } from "@rove-code/provider-core/server/textGenerationPolicy";
+import type { TextGenerationPolicy } from "@getpaperplane/provider-core/server/textGenerationPolicy";
 
 const EARLIER_CONTENT_TRUNCATION_MARKER = "[Earlier content truncated]\n\n";
 

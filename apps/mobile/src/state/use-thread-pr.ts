@@ -1,10 +1,10 @@
 import { useAtomValue } from "@effect/atom-react";
-import { scopedThreadKey, scopeThreadRef } from "@rove-code/client-runtime/environment";
-import type { EnvironmentThreadShell } from "@rove-code/client-runtime/state/shell";
+import { scopedThreadKey, scopeThreadRef } from "@getpaperplane/client-runtime/environment";
+import type { EnvironmentThreadShell } from "@getpaperplane/client-runtime/state/shell";
 import {
   createLinkedPullRequestSummaryAtomFamily,
   pullRequestDetailToVcsStatus,
-} from "@rove-code/client-runtime/state/pull-requests";
+} from "@getpaperplane/client-runtime/state/pull-requests";
 import { Atom } from "effect/reactivity";
 import { useCallback, useEffect, useMemo } from "react";
 

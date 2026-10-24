@@ -1,11 +1,11 @@
-import { findErrorTraceId } from "@rove-code/client-runtime/errors";
+import { findErrorTraceId } from "@getpaperplane/client-runtime/errors";
 import {
   isAtomCommandInterrupted,
   squashAtomCommandFailure,
-} from "@rove-code/client-runtime/state/runtime";
+} from "@getpaperplane/client-runtime/state/runtime";
 import type { MenuAction } from "@react-native-menu/menu";
-import type { EnvironmentId } from "@rove-code/contracts";
-import type { RelayClientEnvironmentRecord } from "@rove-code/contracts/relay";
+import type { EnvironmentId } from "@getpaperplane/contracts";
+import type { RelayClientEnvironmentRecord } from "@getpaperplane/contracts/relay";
 import { type ReactNode, useRef, useState } from "react";
 import { Pressable, RefreshControl, ScrollView, Text, View } from "react-native";
 

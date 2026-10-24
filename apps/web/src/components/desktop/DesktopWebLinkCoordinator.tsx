@@ -1,7 +1,7 @@
-import { scopeProjectRef, scopeThreadRef } from "@rove-code/client-runtime/environment";
-import { squashAtomCommandFailure } from "@rove-code/client-runtime/state/runtime";
-import type { EnvironmentId, ScopedThreadRef } from "@rove-code/contracts";
-import { promptLinkAppPath } from "@rove-code/shared/promptLinks";
+import { scopeProjectRef, scopeThreadRef } from "@getpaperplane/client-runtime/environment";
+import { squashAtomCommandFailure } from "@getpaperplane/client-runtime/state/runtime";
+import type { EnvironmentId, ScopedThreadRef } from "@getpaperplane/contracts";
+import { promptLinkAppPath } from "@getpaperplane/shared/promptLinks";
 import { useRouter } from "@tanstack/react-router";
 import { useEffect, useEffectEvent, useRef } from "react";
 

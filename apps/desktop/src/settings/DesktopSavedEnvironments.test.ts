@@ -1,6 +1,6 @@
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { assert, describe, it } from "@effect/vitest";
-import { EnvironmentId, type PersistedSavedEnvironmentRecord } from "@rove-code/contracts";
+import { EnvironmentId, type PersistedSavedEnvironmentRecord } from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import * as Base64 from "effect/encoding/Base64";
 import * as FileSystem from "effect/FileSystem";

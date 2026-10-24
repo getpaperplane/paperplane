@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vite-plus/test";
-import type { PullRequestReviewThread } from "@rove-code/contracts";
+import type { PullRequestReviewThread } from "@getpaperplane/contracts";
 import type { NativeReviewDiffData } from "../review/nativeReviewDiffAdapter";
 import {
   annotatePullRequestDiff,

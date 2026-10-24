@@ -4,7 +4,7 @@ import {
   type ConfirmDialogOptions,
   type ContextMenuItem,
   type DesktopBridge,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 const showContextMenuFallbackMock =

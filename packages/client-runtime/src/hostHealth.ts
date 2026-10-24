@@ -1,4 +1,4 @@
-import type { HostHealthReport } from "@rove-code/contracts";
+import type { HostHealthReport } from "@getpaperplane/contracts";
 
 const GIB = 1024 ** 3;
 const MIB = 1024 ** 2;

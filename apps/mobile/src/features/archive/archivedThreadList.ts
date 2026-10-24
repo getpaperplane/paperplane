@@ -1,11 +1,11 @@
-import type { ArchivedSnapshotEntry } from "@rove-code/client-runtime/state/threads";
+import type { ArchivedSnapshotEntry } from "@getpaperplane/client-runtime/state/threads";
 import {
   scopeProject,
   scopeThreadShell,
   type EnvironmentProject,
   type EnvironmentThreadShell,
-} from "@rove-code/client-runtime/state/shell";
-import type { EnvironmentId } from "@rove-code/contracts";
+} from "@getpaperplane/client-runtime/state/shell";
+import type { EnvironmentId } from "@getpaperplane/contracts";
 import * as Arr from "effect/Array";
 import * as Order from "effect/Order";
 

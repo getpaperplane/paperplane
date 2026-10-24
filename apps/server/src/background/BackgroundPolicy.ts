@@ -6,12 +6,12 @@ import {
   type ClientActivityReportInput,
   type HostPowerSnapshot,
   type RpcClientId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   getBackgroundActivityPresetSettings,
   resolveServerBackgroundActivitySettings,
   type ResolvedBackgroundActivitySettings,
-} from "@rove-code/shared/backgroundActivitySettings";
+} from "@getpaperplane/shared/backgroundActivitySettings";
 import * as DateTime from "effect/DateTime";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -54,7 +54,7 @@ export class BackgroundPolicy extends Context.Service<
     readonly shouldRunScopeWork: (scope: BackgroundScope) => Effect.Effect<boolean>;
     readonly shouldRunOpportunisticWork: Effect.Effect<boolean>;
   }
->()("@rove-code/server/background/BackgroundPolicy") {}
+>()("@getpaperplane/server/background/BackgroundPolicy") {}
 
 const DEFAULT_LEASE_TTL_MS = 45_000;
 const MAX_LEASE_TTL_MS = 120_000;

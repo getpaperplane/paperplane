@@ -1,5 +1,5 @@
 {
-  "name": "@rove-code/shared",
+  "name": "@getpaperplane/shared",
   "private": true,
   "type": "module",
   "exports": {
@@ -519,7 +519,7 @@
   "dependencies": {
     "@noble/curves": "catalog:",
     "@noble/hashes": "catalog:",
-    "@rove-code/contracts": "workspace:*",
+    "@getpaperplane/contracts": "workspace:*",
     "effect": "catalog:",
     "jose": "catalog:",
     "mdast-util-directive": "catalog:",

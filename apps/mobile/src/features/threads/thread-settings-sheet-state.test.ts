@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vite-plus/test";
 
-import { ProviderInstanceId, type ProviderOptionSelection } from "@rove-code/contracts";
+import { ProviderInstanceId, type ProviderOptionSelection } from "@getpaperplane/contracts";
 
 import type { ModelOption } from "../../lib/modelOptions";
 import {

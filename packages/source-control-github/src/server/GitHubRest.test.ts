@@ -7,16 +7,16 @@ import * as PlatformError from "effect/PlatformError";
 import * as TestClock from "effect/testing/TestClock";
 import * as Tracer from "effect/Tracer";
 import { ChildProcessSpawner } from "effect/process";
-import { VcsProcessSpawnError, VcsProcessTimeoutError } from "@rove-code/contracts";
+import { VcsProcessSpawnError, VcsProcessTimeoutError } from "@getpaperplane/contracts";
 import { HttpClient, HttpClientResponse, type HttpClientRequest } from "effect/http";
 
 import * as GitHubRest from "./GitHubRest.ts";
 import * as GitHubRequestPolicy from "./GitHubRequestPolicy.ts";
 import * as GitHubCredentials from "./GitHubCredentials.ts";
 import * as GitHubQuota from "./GitHubQuota.ts";
-import * as SourceControlRateLimit from "@rove-code/source-control-core/server/SourceControlRateLimit";
-import type * as SourceControlHost from "@rove-code/source-control-core/server/SourceControlHost";
-import * as TestSourceControlHost from "@rove-code/source-control-testing/TestSourceControlHost";
+import * as SourceControlRateLimit from "@getpaperplane/source-control-core/server/SourceControlRateLimit";
+import type * as SourceControlHost from "@getpaperplane/source-control-core/server/SourceControlHost";
+import * as TestSourceControlHost from "@getpaperplane/source-control-testing/TestSourceControlHost";
 
 const NOW = Date.parse("2026-10-05T12:00:00.000Z");
 

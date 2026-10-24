@@ -1,5 +1,5 @@
-import { scopedThreadKey } from "@rove-code/client-runtime/environment";
-import type { RunId, ScopedThreadRef } from "@rove-code/contracts";
+import { scopedThreadKey } from "@getpaperplane/client-runtime/environment";
+import type { RunId, ScopedThreadRef } from "@getpaperplane/contracts";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 

@@ -1,7 +1,7 @@
 import type {
   RelayAgentActivityAggregateState,
   RelayAgentActivityState,
-} from "@rove-code/contracts/relay";
+} from "@getpaperplane/contracts/relay";
 import * as NodeCryptoLayer from "@effect/platform-node/NodeCrypto";
 import { describe, expect, it } from "@effect/vitest";
 // @effect-diagnostics-next-line nodeBuiltinImport:off -- Effect's Crypto has no generateKeyPairSync.

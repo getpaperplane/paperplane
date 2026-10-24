@@ -1,4 +1,4 @@
-import type { ChatFileAttachment } from "@rove-code/contracts";
+import type { ChatFileAttachment } from "@getpaperplane/contracts";
 import type { Directory } from "expo-file-system";
 import type { SharingOptions } from "expo-sharing";
 

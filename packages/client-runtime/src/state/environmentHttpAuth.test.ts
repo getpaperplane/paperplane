@@ -11,8 +11,8 @@ import {
   OrchestrationV2ThreadBoundedSnapshot,
   OrchestrationV2ThreadTranscript,
   type OrchestrationV2ThreadHistoryPage,
-} from "@rove-code/contracts";
-import { RelayClientTracer } from "@rove-code/shared/relayTracing";
+} from "@getpaperplane/contracts";
+import { RelayClientTracer } from "@getpaperplane/shared/relayTracing";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";

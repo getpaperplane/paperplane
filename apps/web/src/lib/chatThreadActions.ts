@@ -1,10 +1,10 @@
-import { scopeProjectRef } from "@rove-code/client-runtime/environment";
+import { scopeProjectRef } from "@getpaperplane/client-runtime/environment";
 import type {
   EnvironmentId,
   ModelSelection,
   ProjectId,
   ScopedProjectRef,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import type { ComposerThreadDraftState, DraftThreadEnvMode } from "../composerDraftStore";
 
 type ComposerModelSelectionState = Pick<

@@ -1,15 +1,15 @@
-import { ComposerContextId } from "@rove-code/contracts";
-import type { ComposerContextClipboardFragment } from "@rove-code/contracts";
+import { ComposerContextId } from "@getpaperplane/contracts";
+import type { ComposerContextClipboardFragment } from "@getpaperplane/contracts";
 import {
   COMPOSER_CONTEXT_CLIPBOARD_MIME,
   decodeComposerContextFragment,
   decodeComposerContextClipboardHtml,
-} from "@rove-code/shared/composerContextClipboard";
+} from "@getpaperplane/shared/composerContextClipboard";
 import {
   collectComposerContextReferences,
   formatComposerContextReference,
   replaceComposerContextReferences,
-} from "@rove-code/shared/composerContextReferences";
+} from "@getpaperplane/shared/composerContextReferences";
 /** Clipboard records referenced by the copied text, including dependent screenshots. */
 export function readPastedComposerContext(
   clipboardData: Pick<DataTransfer, "getData">,

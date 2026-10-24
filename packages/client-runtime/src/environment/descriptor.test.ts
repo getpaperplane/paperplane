@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
-import { ORCHESTRATION_PROTOCOL_VERSION } from "@rove-code/contracts";
+import { ORCHESTRATION_PROTOCOL_VERSION } from "@getpaperplane/contracts";
 import { layerRemoteHttpClient } from "../rpc/http.ts";
 import { orchestrationProtocolCompatibilityError } from "../connection/compatibility.ts";
 import { fetchRemoteEnvironmentDescriptor } from "./descriptor.ts";

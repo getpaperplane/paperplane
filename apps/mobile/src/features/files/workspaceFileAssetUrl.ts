@@ -1,4 +1,4 @@
-import type { AssetResource, EnvironmentId, ThreadId } from "@rove-code/contracts";
+import type { AssetResource, EnvironmentId, ThreadId } from "@getpaperplane/contracts";
 import { useMemo } from "react";
 
 import { useAssetUrlState, useRefreshAssetUrl } from "../../state/assets";

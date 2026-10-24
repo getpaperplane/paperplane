@@ -1,5 +1,5 @@
 import type { FileDiffMetadata } from "@pierre/diffs";
-import { EnvironmentId, type ReviewDiffFileContentsResult } from "@rove-code/contracts";
+import { EnvironmentId, type ReviewDiffFileContentsResult } from "@getpaperplane/contracts";
 import * as Cause from "effect/Cause";
 import { AsyncResult } from "effect/reactivity";
 import { describe, expect, it, vi } from "vite-plus/test";

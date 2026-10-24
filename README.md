@@ -20,7 +20,7 @@ You bring your own subscriptions. If a provider is set up on the host, Paperplan
 **CLI host** (headless server for LAN, Tailscale, or SSH access):
 
 ```sh
-npm install -g @rove-code/cli
+npm install -g @getpaperplane/cli
 rove service install
 rove pair --tailscale   # or connect over LAN; see remote access docs
 ```

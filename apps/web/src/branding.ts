@@ -1,4 +1,4 @@
-import type { DesktopAppBranding } from "@rove-code/contracts";
+import type { DesktopAppBranding } from "@getpaperplane/contracts";
 import { formatAppDisplayName } from "./branding.logic";
 
 function readInjectedDesktopAppBranding(): DesktopAppBranding | null {

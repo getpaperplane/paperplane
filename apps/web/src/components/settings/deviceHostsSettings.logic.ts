@@ -1,4 +1,4 @@
-import type { EnvironmentId, SshDeviceHostConfig } from "@rove-code/contracts";
+import type { EnvironmentId, SshDeviceHostConfig } from "@getpaperplane/contracts";
 
 export interface DeviceHostEnvironment {
   readonly environmentId: EnvironmentId;

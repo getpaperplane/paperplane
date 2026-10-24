@@ -1,5 +1,5 @@
-import type { EnvironmentId, ProjectEntry } from "@rove-code/contracts";
-import { executeAtomQuery } from "@rove-code/client-runtime/state/runtime";
+import type { EnvironmentId, ProjectEntry } from "@getpaperplane/contracts";
+import { executeAtomQuery } from "@getpaperplane/client-runtime/state/runtime";
 import * as Cause from "effect/Cause";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 

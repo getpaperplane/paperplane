@@ -1,4 +1,4 @@
-import { MAX_SCRIPT_ID_LENGTH } from "@rove-code/contracts";
+import { MAX_SCRIPT_ID_LENGTH } from "@getpaperplane/contracts";
 import { shortcutLabelForCommand } from "./keybindings";
 import { describe, expect, it } from "vite-plus/test";
 import {
@@ -7,7 +7,7 @@ import {
   projectScriptMenuLabel,
   settleProjectScript,
   setupProjectScript,
-} from "@rove-code/shared/projectScripts";
+} from "@getpaperplane/shared/projectScripts";
 
 import {
   buildProjectScript,

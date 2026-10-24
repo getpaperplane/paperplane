@@ -3,8 +3,8 @@ import {
   type EnvironmentId,
   type RoveProjectFile,
   type RoveProjectFileScript,
-} from "@rove-code/contracts";
-import { parseRoveProjectFile } from "@rove-code/shared/roveProjectFile";
+} from "@getpaperplane/contracts";
+import { parseRoveProjectFile } from "@getpaperplane/shared/roveProjectFile";
 import { useMemo } from "react";
 
 import { useProjectFileQuery } from "~/components/files/projectFilesQueryState";

@@ -4,13 +4,13 @@ import type {
   ProviderInstanceId,
   ServerSettings,
   SourceControlWritingStyleMode,
-} from "@rove-code/contracts";
-import { DEFAULT_UNIFIED_SETTINGS } from "@rove-code/contracts/settings";
-import { createModelSelection } from "@rove-code/shared/model";
+} from "@getpaperplane/contracts";
+import { DEFAULT_UNIFIED_SETTINGS } from "@getpaperplane/contracts/settings";
+import { createModelSelection } from "@getpaperplane/shared/model";
 import {
   resolveReviewGuideModelSelection,
   resolveSourceControlWriterModelSelection,
-} from "@rove-code/shared/serverSettings";
+} from "@getpaperplane/shared/serverSettings";
 
 import {
   useScopedSettings,

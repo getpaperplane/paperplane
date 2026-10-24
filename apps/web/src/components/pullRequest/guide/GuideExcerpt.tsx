@@ -8,7 +8,7 @@ import { FileDiff } from "@pierre/diffs/react";
 import type {
   PullRequestReviewGuideExcerpt,
   PullRequestReviewPosition,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { ArrowUpRightIcon } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
 
@@ -39,7 +39,7 @@ import {
   excerptRows,
   fileDiffRows,
   rowsToPatch,
-} from "@rove-code/client-runtime/review-guide-tour";
+} from "@getpaperplane/client-runtime/review-guide-tour";
 import { GuideNoteMarker } from "./GuideNotes";
 import { GuideProse } from "./GuideProse";
 

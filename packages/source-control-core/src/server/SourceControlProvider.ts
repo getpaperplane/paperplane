@@ -10,7 +10,7 @@ import type {
   SourceControlProviderKind,
   SourceControlRepositoryCloneUrls,
   SourceControlRepositoryVisibility,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 
 export interface SourceControlLinkSubject {
   readonly title: string;
@@ -194,4 +194,4 @@ export class SourceControlProvider extends Context.Service<
       readonly force?: boolean;
     }) => Effect.Effect<void, SourceControlProviderError>;
   }
->()("@rove-code/source-control-core/server/SourceControlProvider") {}
+>()("@getpaperplane/source-control-core/server/SourceControlProvider") {}

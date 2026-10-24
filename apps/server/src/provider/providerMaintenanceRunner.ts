@@ -6,8 +6,8 @@ import {
   type ServerProvider,
   type ServerProviderUpdatedPayload,
   type ServerProviderUpdateState,
-} from "@rove-code/contracts";
-import { resolveSpawnCommand } from "@rove-code/shared/shell";
+} from "@getpaperplane/contracts";
+import { resolveSpawnCommand } from "@getpaperplane/shared/shell";
 import * as Cause from "effect/Cause";
 import * as Context from "effect/Context";
 import * as Data from "effect/Data";
@@ -33,10 +33,10 @@ import {
   makeTargetedProviderUpdateAction,
   resolveLatestProviderVersion,
   type ProviderMaintenanceCommandAction,
-} from "@rove-code/provider-core/server/maintenanceResolver";
-import * as ProviderLatestVersions from "@rove-code/provider-core/server/ProviderLatestVersions";
-import type { ProviderMaintenanceCapabilities } from "@rove-code/provider-core/server/maintenanceResolver";
-import { collectUint8StreamText } from "@rove-code/provider-core/server/collectStreamText";
+} from "@getpaperplane/provider-core/server/maintenanceResolver";
+import * as ProviderLatestVersions from "@getpaperplane/provider-core/server/ProviderLatestVersions";
+import type { ProviderMaintenanceCapabilities } from "@getpaperplane/provider-core/server/maintenanceResolver";
+import { collectUint8StreamText } from "@getpaperplane/provider-core/server/collectStreamText";
 const isServerProviderUpdateError = Schema.is(ServerProviderUpdateError);
 
 const UPDATE_TIMEOUT_MS = 5 * 60_000;
@@ -72,7 +72,7 @@ export interface ProviderMaintenanceRunnerShape {
 export class ProviderMaintenanceRunner extends Context.Service<
   ProviderMaintenanceRunner,
   ProviderMaintenanceRunnerShape
->()("@rove-code/server/provider/providerMaintenanceRunner") {}
+>()("@getpaperplane/server/provider/providerMaintenanceRunner") {}
 
 class ProviderMaintenanceCommandError extends Data.TaggedError("ProviderMaintenanceCommandError")<{
   readonly message: string;

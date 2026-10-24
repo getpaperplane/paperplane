@@ -6,7 +6,7 @@ import {
   USAGE_CONTRACT_VERSION,
   type ServerProvider,
   type UsageSummary,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import { AsyncResult, Atom, AtomRegistry } from "effect/reactivity";
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";

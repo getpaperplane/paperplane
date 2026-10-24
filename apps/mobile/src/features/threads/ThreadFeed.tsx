@@ -15,10 +15,10 @@ import {
 import * as Haptics from "expo-haptics";
 import { KeyboardAwareLegendList } from "@legendapp/list/keyboard";
 import { useViewabilityAmount, type LegendListRef } from "@legendapp/list/react-native";
-import { scopeThreadRef } from "@rove-code/client-runtime/environment";
-import type { HandoffEndpoints } from "@rove-code/client-runtime/handoff";
-import { resolveUserMessagePresentation } from "@rove-code/client-runtime/user-message";
-import { canForkProjectedAssistantItem } from "@rove-code/client-runtime/state/thread-workflows";
+import { scopeThreadRef } from "@getpaperplane/client-runtime/environment";
+import type { HandoffEndpoints } from "@getpaperplane/client-runtime/handoff";
+import { resolveUserMessagePresentation } from "@getpaperplane/client-runtime/user-message";
+import { canForkProjectedAssistantItem } from "@getpaperplane/client-runtime/state/thread-workflows";
 import {
   type OrchestrationMessageContext,
   ThreadId,
@@ -29,42 +29,42 @@ import {
   type MessageId,
   type OrchestrationV2ProjectedTurnItem,
   type RunId,
-} from "@rove-code/contracts";
-import { renderAssistantCitationsAsText } from "@rove-code/shared/assistantCitations";
-import { encodeComposerContextFragment } from "@rove-code/shared/composerContextClipboard";
-import { parseThreadLinkHref } from "@rove-code/shared/threadLinks";
-import { PROMPT_LINK_MAX_PROMPT_LENGTH } from "@rove-code/shared/promptLinks";
+} from "@getpaperplane/contracts";
+import { renderAssistantCitationsAsText } from "@getpaperplane/shared/assistantCitations";
+import { encodeComposerContextFragment } from "@getpaperplane/shared/composerContextClipboard";
+import { parseThreadLinkHref } from "@getpaperplane/shared/threadLinks";
+import { PROMPT_LINK_MAX_PROMPT_LENGTH } from "@getpaperplane/shared/promptLinks";
 import {
   parseComposerContextHref,
   collectComposerContextReferences,
   replaceComposerContextReferences,
   formatComposerContextReference,
-} from "@rove-code/shared/composerContextReferences";
+} from "@getpaperplane/shared/composerContextReferences";
 import { ComposerContextSheet } from "../../components/ComposerContextSheet";
 import { writeComposerContextClipboard } from "../../lib/composerContextClipboard";
 import {
   codexArtifactTemplatePresentationLabel,
   type CodexArtifactTemplate,
-} from "@rove-code/shared/codexArtifactTemplates";
-import { resolveAssetUrl } from "@rove-code/client-runtime/state/assets";
-import { isMarkdownFileLinkLabel } from "@rove-code/shared/markdownLinks";
-import { formatAttachmentSize } from "@rove-code/client-runtime/state/attachments";
-import { squashAtomCommandFailure } from "@rove-code/client-runtime/state/runtime";
+} from "@getpaperplane/shared/codexArtifactTemplates";
+import { resolveAssetUrl } from "@getpaperplane/client-runtime/state/assets";
+import { isMarkdownFileLinkLabel } from "@getpaperplane/shared/markdownLinks";
+import { formatAttachmentSize } from "@getpaperplane/client-runtime/state/attachments";
+import { squashAtomCommandFailure } from "@getpaperplane/client-runtime/state/runtime";
 import {
   classifyMarkdownImageSource,
   markdownImageSourceFragment,
-} from "@rove-code/client-runtime/markdown-images";
-import { resolveViewedImageAsset } from "@rove-code/client-runtime/work-log/presentation";
+} from "@getpaperplane/client-runtime/markdown-images";
+import { resolveViewedImageAsset } from "@getpaperplane/client-runtime/work-log/presentation";
 import {
   renderCodexInlineDirectivesAsMarkdown,
   splitCodexArtifactTemplateMarkdown,
-} from "@rove-code/shared/codexMarkdownDirectives";
+} from "@getpaperplane/shared/codexMarkdownDirectives";
 import {
   CHAT_LIST_ANCHOR_OFFSET,
   resolveChatListAnchoredEndSpace,
-} from "@rove-code/shared/chatList";
-import { imageMimeType } from "@rove-code/shared/image";
-import { videoMimeType } from "@rove-code/shared/video";
+} from "@getpaperplane/shared/chatList";
+import { imageMimeType } from "@getpaperplane/shared/image";
+import { videoMimeType } from "@getpaperplane/shared/video";
 import { SymbolView, type AppSymbolName } from "../../components/ui/AppSymbol";
 import { HeaderHeightContext } from "@react-navigation/elements";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
@@ -118,7 +118,7 @@ import { copyTextWithHaptic } from "../../lib/copyTextWithHaptic";
 import { tryOpenExternalUrl } from "../../lib/openExternalUrl";
 import { downloadAndShareAttachment } from "../../lib/attachmentDownload";
 import { hasWideMarkdownBlock } from "../../lib/wideMarkdownBlocks";
-import { faviconUrlForOrigin } from "@rove-code/shared/favicon";
+import { faviconUrlForOrigin } from "@getpaperplane/shared/favicon";
 import {
   SelectableMarkdownText,
   type MarkdownFileContextMenu,
@@ -200,7 +200,7 @@ import {
 import { appendPendingThreadMessages, type PendingThreadFeedEntry } from "./pending-thread-feed";
 import type { QueuedThreadMessage } from "../../state/thread-outbox-model";
 import { resolveThreadFeedFixedItemSize } from "./thread-feed-item-size";
-import { htmlRenderFrameHeight } from "@rove-code/shared/htmlRender";
+import { htmlRenderFrameHeight } from "@getpaperplane/shared/htmlRender";
 import { htmlRenderRowHeight, ThreadHtmlRender } from "./HtmlRenderWebView";
 import { ThreadMcpApp } from "./McpAppWebView";
 import { useMarkdownCodeHighlight } from "./markdownCodeHighlightState";

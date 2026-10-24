@@ -25,7 +25,7 @@ export class Scheduler extends Context.Service<
       nextDueAt?: Effect.Effect<number | null, E, R>,
     ) => Effect.Effect<{ readonly wake: Effect.Effect<void> }, never, R | Scope.Scope>;
   }
->()("@rove-code/server/scheduling/Scheduler") {}
+>()("@getpaperplane/server/scheduling/Scheduler") {}
 
 const make = Effect.gen(function* () {
   const changed = yield* Queue.sliding<void>(1);

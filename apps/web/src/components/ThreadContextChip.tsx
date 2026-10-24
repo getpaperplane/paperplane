@@ -1,4 +1,4 @@
-import type { ThreadContextRecord } from "@rove-code/contracts";
+import type { ThreadContextRecord } from "@getpaperplane/contracts";
 import { Link } from "@tanstack/react-router";
 import { MessagesSquareIcon } from "lucide-react";
 

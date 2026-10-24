@@ -1,17 +1,17 @@
 import * as Dialog from "../components/ui/Dialog";
-import { AuthOrchestrationOperateScope } from "@rove-code/contracts";
+import { AuthOrchestrationOperateScope } from "@getpaperplane/contracts";
 import { readEnvironmentScope } from "./session";
 import type { ComposerTextPaste } from "../native/RoveComposerEditor.types";
 import { useAtomValue } from "@effect/atom-react";
-import { threadRuntimeIsActive } from "@rove-code/client-runtime/state/shell";
-import { resolvePendingHandoff } from "@rove-code/client-runtime/handoff";
+import { threadRuntimeIsActive } from "@getpaperplane/client-runtime/state/shell";
+import { resolvePendingHandoff } from "@getpaperplane/client-runtime/handoff";
 import {
   deriveProviderSubagentStatus,
   deriveRunlessWorkStartedAt,
   deriveThreadActivityRun,
   deriveThreadRuntime,
   threadRuntimeHasInterruptibleRun,
-} from "@rove-code/client-runtime/state/thread-execution";
+} from "@getpaperplane/client-runtime/state/thread-execution";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
@@ -25,20 +25,20 @@ import {
   type ProviderInteractionMode,
   type RuntimeMode,
   type ThreadId,
-} from "@rove-code/contracts";
-import { safeErrorLogAttributes } from "@rove-code/client-runtime/errors";
-import { clampFileAttachmentUploadBytes } from "@rove-code/client-runtime/state/attachments";
+} from "@getpaperplane/contracts";
+import { safeErrorLogAttributes } from "@getpaperplane/client-runtime/errors";
+import { clampFileAttachmentUploadBytes } from "@getpaperplane/client-runtime/state/attachments";
 import {
   nextPastedTextFileName,
   pastedTextDisposition,
-} from "@rove-code/client-runtime/text-paste";
+} from "@getpaperplane/client-runtime/text-paste";
 import {
   parseCodexFeedbackCommand,
   submitCodexFeedback,
   type CodexFeedbackSubmission,
-} from "@rove-code/client-runtime/state/threads";
-import { resolveThreadWorkingStartedAt } from "@rove-code/client-runtime/state/models";
-import { upgradeLegacyContextMessage } from "@rove-code/shared/composerContextLegacy";
+} from "@getpaperplane/client-runtime/state/threads";
+import { resolveThreadWorkingStartedAt } from "@getpaperplane/client-runtime/state/models";
+import { upgradeLegacyContextMessage } from "@getpaperplane/shared/composerContextLegacy";
 import { composerContextSendBlockReason, reidentifyComposerContext } from "../lib/composerContext";
 import { uuidv4 } from "../lib/uuid";
 
@@ -90,7 +90,7 @@ import {
 import {
   resolveComposerDispatchMode,
   type ActiveTurnComposerAction,
-} from "@rove-code/client-runtime/state/composer-dispatch";
+} from "@getpaperplane/client-runtime/state/composer-dispatch";
 import { Atom } from "effect/reactivity";
 import { AsyncResult } from "effect/reactivity";
 import { prepareTurnAttachments } from "../lib/attachmentUpload";

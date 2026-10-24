@@ -4,9 +4,9 @@ import type {
   DeviceServiceState,
   DeviceSummary,
   ScopedThreadRef,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { Link } from "@tanstack/react-router";
-import { threadComputerDesktops } from "@rove-code/client-runtime/state/computer-use";
+import { threadComputerDesktops } from "@getpaperplane/client-runtime/state/computer-use";
 import { Monitor, Smartphone, X } from "lucide-react";
 import { useAtomValue } from "@effect/atom-react";
 import { useEffect, useMemo, useState } from "react";

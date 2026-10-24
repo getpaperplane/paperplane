@@ -1,7 +1,7 @@
-import { scopeProjectRef, scopeThreadRef } from "@rove-code/client-runtime/environment";
-import { resolveProviderInstanceDisplayName } from "@rove-code/client-runtime/state/provider-instance-display";
-import { resolveSubagentMetadata } from "@rove-code/client-runtime/state/subagent-display";
-import type { EnvironmentId, OrchestrationV2Subagent } from "@rove-code/contracts";
+import { scopeProjectRef, scopeThreadRef } from "@getpaperplane/client-runtime/environment";
+import { resolveProviderInstanceDisplayName } from "@getpaperplane/client-runtime/state/provider-instance-display";
+import { resolveSubagentMetadata } from "@getpaperplane/client-runtime/state/subagent-display";
+import type { EnvironmentId, OrchestrationV2Subagent } from "@getpaperplane/contracts";
 import type { ReactNode } from "react";
 import { View } from "react-native";
 

@@ -3,7 +3,7 @@ import {
   type EnvironmentMachineKind,
   type EnvironmentId,
   type ServerConfig,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Option from "effect/Option";
 import { AsyncResult, Atom } from "effect/reactivity";
 

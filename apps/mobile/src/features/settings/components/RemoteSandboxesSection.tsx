@@ -5,11 +5,11 @@ import {
   type RemoteSandbox,
   type SandboxInventory,
   type SandboxProvider,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   squashAtomCommandFailure,
   type AtomCommandResult,
-} from "@rove-code/client-runtime/state/runtime";
+} from "@getpaperplane/client-runtime/state/runtime";
 import { useEffect, useRef, useState } from "react";
 import { Alert, TextInput, View } from "react-native";
 import { AppText as Text } from "../../../components/ui/AppText";

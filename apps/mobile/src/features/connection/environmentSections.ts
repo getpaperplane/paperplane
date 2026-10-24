@@ -1,5 +1,5 @@
-import type { EnvironmentId } from "@rove-code/contracts";
-import type { RelayClientEnvironmentRecord } from "@rove-code/contracts/relay";
+import type { EnvironmentId } from "@getpaperplane/contracts";
+import type { RelayClientEnvironmentRecord } from "@getpaperplane/contracts/relay";
 import type { ConnectedEnvironmentSummary } from "../../state/remote-runtime-types";
 
 export interface EnvironmentSectionsInput {

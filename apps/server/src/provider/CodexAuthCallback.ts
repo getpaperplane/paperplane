@@ -1,8 +1,8 @@
-import { ProviderSetupError, type CodexAuthCallbackInput } from "@rove-code/contracts";
-import { receiveCodexAuthCallback } from "@rove-code/shared/codexAuthCallback";
-import { codexAuthorizationRequest } from "@rove-code/shared/codexAuthHandoff";
-import { providerAuthReturnUrl } from "@rove-code/shared/providerAuthReturnUrl";
-import { isLoopbackHost } from "@rove-code/shared/preview";
+import { ProviderSetupError, type CodexAuthCallbackInput } from "@getpaperplane/contracts";
+import { receiveCodexAuthCallback } from "@getpaperplane/shared/codexAuthCallback";
+import { codexAuthorizationRequest } from "@getpaperplane/shared/codexAuthHandoff";
+import { providerAuthReturnUrl } from "@getpaperplane/shared/providerAuthReturnUrl";
+import { isLoopbackHost } from "@getpaperplane/shared/preview";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";

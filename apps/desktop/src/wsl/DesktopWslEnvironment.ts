@@ -9,8 +9,8 @@ import * as Schema from "effect/Schema";
 import * as Stream from "effect/Stream";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 
-import { buildRemoteNodeEnvScript } from "@rove-code/ssh/tunnel";
-import { satisfiesSemverRange } from "@rove-code/shared/semver";
+import { buildRemoteNodeEnvScript } from "@getpaperplane/ssh/tunnel";
+import { satisfiesSemverRange } from "@getpaperplane/shared/semver";
 
 import * as DesktopEnvironment from "../app/DesktopEnvironment.ts";
 import { parseWslDistroList, type WslDistro } from "./wslPathParsing.ts";
@@ -134,7 +134,7 @@ export class DesktopWslEnvironment extends Context.Service<
       options?: EnsureWslNodePtyOptions,
     ) => Effect.Effect<EnsureWslNodePtyResult>;
   }
->()("@rove-code/desktop/wsl/DesktopWslEnvironment") {}
+>()("@getpaperplane/desktop/wsl/DesktopWslEnvironment") {}
 
 const buildDistroArgs = (distro: string | null): ReadonlyArray<string> =>
   distro ? ["-d", distro] : [];

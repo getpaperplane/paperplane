@@ -5,9 +5,9 @@ import { useParams } from "@tanstack/react-router";
 import {
   isAtomCommandInterrupted,
   squashAtomCommandFailure,
-} from "@rove-code/client-runtime/state/runtime";
-import { safeErrorLogAttributes } from "@rove-code/client-runtime/errors";
-import type { ScopedThreadRef, RunId } from "@rove-code/contracts";
+} from "@getpaperplane/client-runtime/state/runtime";
+import { safeErrorLogAttributes } from "@getpaperplane/client-runtime/errors";
+import type { ScopedThreadRef, RunId } from "@getpaperplane/contracts";
 import {
   ArrowRightIcon,
   CheckIcon,

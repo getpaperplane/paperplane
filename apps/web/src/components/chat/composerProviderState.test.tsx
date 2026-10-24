@@ -4,8 +4,8 @@ import {
   type ProviderOptionDescriptor,
   type ProviderOptionSelection,
   type ServerProviderModel,
-} from "@rove-code/contracts";
-import { getProviderOptionDescriptors } from "@rove-code/shared/model";
+} from "@getpaperplane/contracts";
+import { getProviderOptionDescriptors } from "@getpaperplane/shared/model";
 import { getProviderModelCapabilities } from "../../providerModels";
 import {
   getComposerPromptInjectionState,

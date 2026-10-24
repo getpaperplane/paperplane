@@ -77,7 +77,7 @@ vi.mock("./use-thread-detail", () => ({
   }),
 }));
 
-import { ApprovalRequestId, EnvironmentId, ThreadId } from "@rove-code/contracts";
+import { ApprovalRequestId, EnvironmentId, ThreadId } from "@getpaperplane/contracts";
 import { questionAttachmentDraftKey } from "./question-attachments";
 import { useSelectedThreadRequests } from "./use-selected-thread-requests";
 

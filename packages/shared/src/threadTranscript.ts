@@ -1,4 +1,4 @@
-import type { EnvironmentId, OrchestrationV2ThreadTranscript } from "@rove-code/contracts";
+import type { EnvironmentId, OrchestrationV2ThreadTranscript } from "@getpaperplane/contracts";
 import * as DateTime from "effect/DateTime";
 
 export function threadTranscriptHeader(

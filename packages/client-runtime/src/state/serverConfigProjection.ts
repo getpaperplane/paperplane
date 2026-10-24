@@ -1,4 +1,4 @@
-import type { ServerConfig, ServerConfigStreamEvent } from "@rove-code/contracts";
+import type { ServerConfig, ServerConfigStreamEvent } from "@getpaperplane/contracts";
 import * as Option from "effect/Option";
 
 export interface ServerConfigProjection {

@@ -1,4 +1,4 @@
-import { COMPOSER_CONTEXT_KINDS } from "@rove-code/contracts";
+import { COMPOSER_CONTEXT_KINDS } from "@getpaperplane/contracts";
 import { describe, expect, it } from "vite-plus/test";
 
 import {

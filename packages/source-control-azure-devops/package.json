@@ -1,5 +1,5 @@
 {
-  "name": "@rove-code/source-control-azure-devops",
+  "name": "@getpaperplane/source-control-azure-devops",
   "private": true,
   "type": "module",
   "exports": {
@@ -45,16 +45,16 @@
     "test": "vp test run --config ../../vite.config.ts --dir ."
   },
   "dependencies": {
-    "@rove-code/contracts": "workspace:*",
-    "@rove-code/shared": "workspace:*",
-    "@rove-code/source-control-core": "workspace:*",
+    "@getpaperplane/contracts": "workspace:*",
+    "@getpaperplane/shared": "workspace:*",
+    "@getpaperplane/source-control-core": "workspace:*",
     "diff": "8.0.3",
     "effect": "catalog:"
   },
   "devDependencies": {
     "@effect/platform-node": "catalog:",
     "@effect/vitest": "catalog:",
-    "@rove-code/source-control-testing": "workspace:*",
+    "@getpaperplane/source-control-testing": "workspace:*",
     "@types/node": "catalog:",
     "vite-plus": "catalog:"
   }

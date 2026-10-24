@@ -1,5 +1,5 @@
 import * as Dialog from "../../components/ui/Dialog";
-import { AuthRelayWriteScope } from "@rove-code/contracts";
+import { AuthRelayWriteScope } from "@getpaperplane/contracts";
 import { readEnvironmentScope } from "../../state/session";
 import { ScreenScrollView as ScrollView } from "../../components/ui/ScreenScrollView";
 import { useAuth } from "@clerk/expo";
@@ -19,7 +19,7 @@ import {
   settleAsyncResult,
   settlePromise,
   squashAtomCommandFailure,
-} from "@rove-code/client-runtime/state/runtime";
+} from "@getpaperplane/client-runtime/state/runtime";
 import { supportsAgentAwarenessPush } from "../agent-awareness/capabilities";
 import {
   openAndroidLiveUpdateSettings,

@@ -11,7 +11,7 @@ import type {
   PiExtensionStatusSnapshot,
   ProviderUserInputAnswers,
   UserInputQuestion,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import type { PiSessionEventLike } from "./PiAdapter.ts";
 
 const textForDisplay = (text: string) =>

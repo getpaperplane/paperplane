@@ -7,8 +7,8 @@ import {
   type EnvironmentRequestInvalidError,
   type EnvironmentResourceNotFoundError,
   type EnvironmentScopeRequiredError,
-} from "@rove-code/contracts";
-import * as HttpObservability from "@rove-code/shared/httpObservability";
+} from "@getpaperplane/contracts";
+import * as HttpObservability from "@getpaperplane/shared/httpObservability";
 import * as Data from "effect/Data";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";

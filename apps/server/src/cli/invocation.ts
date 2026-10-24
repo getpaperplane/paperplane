@@ -4,9 +4,9 @@ import * as Option from "effect/Option";
 import * as Path from "effect/Path";
 import * as Schema from "effect/Schema";
 
-import type { ServerInstallation } from "@rove-code/contracts";
-import * as HostProcess from "@rove-code/shared/HostProcess";
-import { isCommandAvailable } from "@rove-code/shared/shell";
+import type { ServerInstallation } from "@getpaperplane/contracts";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
+import { isCommandAvailable } from "@getpaperplane/shared/shell";
 
 import packageJson from "../../package.json" with { type: "json" };
 
@@ -60,7 +60,7 @@ export const resolveServerInstallation = Effect.gen(function* () {
   const platform = yield* HostProcess.Platform;
   const entry = yield* fs.realPath(executable ? executablePath : (args[1] ?? ""));
   const match =
-    /^(.*)\/lib\/node_modules\/@rove-code\/cli\/(?:dist\/bin\.mjs|bin\/rove\.js|node_modules\/@rove\/rove-[^/]+\/rove)$/.exec(
+    /^(.*)\/lib\/node_modules\/@getpaperplane\/cli\/(?:dist\/bin\.mjs|bin\/rove\.js|node_modules\/@rove\/rove-[^/]+\/rove)$/.exec(
       entry,
     );
   if (!match) {
@@ -80,11 +80,11 @@ export const resolveServerInstallation = Effect.gen(function* () {
   )
     return null;
 
-  const packageRoot = path.join(prefix, "lib/node_modules/@rove-code/cli");
+  const packageRoot = path.join(prefix, "lib/node_modules/@getpaperplane/cli");
   const manifest = yield* fs
     .readFileString(path.join(packageRoot, "package.json"))
     .pipe(Effect.flatMap(decodeInstallManifest));
-  if (manifest.name !== "@rove-code/cli" || !manifest.bin) return null;
+  if (manifest.name !== "@getpaperplane/cli" || !manifest.bin) return null;
   const bin = yield* fs.realPath(path.join(packageRoot, manifest.bin.rove));
   const globalBin = yield* fs.realPath(path.join(prefix, "bin/rove"));
   if (globalBin !== bin) return null;
@@ -105,20 +105,20 @@ export const resolveServerInstallation = Effect.gen(function* () {
 }).pipe(Effect.orElseSucceed(() => null));
 
 /**
- * The `@rove-code/cli` package spec to suggest. The literal spec the user typed (e.g.
- * `@rove-code/cli@nightly`) is resolved away before our process starts, so re-derive it
+ * The `@getpaperplane/cli` package spec to suggest. The literal spec the user typed (e.g.
+ * `@getpaperplane/cli@nightly`) is resolved away before our process starts, so re-derive it
  * from the running version: nightly builds re-suggest the nightly channel,
  * anything else suggests the bare package.
  */
 function suggestedPackageSpec(version: string): string {
   const channel = /^[^-+]+-(nightly|preview)\./.exec(version)?.[1];
-  return channel === undefined ? "@rove-code/cli" : `@rove-code/cli@${channel}`;
+  return channel === undefined ? "@getpaperplane/cli" : `@getpaperplane/cli@${channel}`;
 }
 
 /**
  * Render a `rove <subcommand>` suggestion that matches how this process was
- * launched, so copy/pasting it works: `npx @rove-code/cli connect` suggests
- * `npx @rove-code/cli serve`, a global install suggests `rove serve`, and a nightly build
+ * launched, so copy/pasting it works: `npx @getpaperplane/cli connect` suggests
+ * `npx @getpaperplane/cli serve`, a global install suggests `rove serve`, and a nightly build
  * keeps the `@nightly` tag.
  */
 export function formatCliCommand(input: {

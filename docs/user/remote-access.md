@@ -275,7 +275,7 @@ sudo rove browser setup
 ```
 
 The server shows the exact line for how you started it, such as
-`sudo npx @rove-code/cli browser setup`, and keeps your `PATH` when Node is installed only
+`sudo npx @getpaperplane/cli browser setup`, and keeps your `PATH` when Node is installed only
 for your user. Where `rove` is not on your `PATH`, such as with only the
 desktop app installed, it names the full path of the app's own `rove` instead. It allows Chrome's sandbox with an AppArmor profile and installs
 any missing libraries with apt. It is safe to run again. Without `sudo`, it
@@ -303,11 +303,11 @@ expires.
 To choose a token's permissions, pass `--scope` once for each scope you want:
 
 ```sh
-npx @rove-code/cli pair --scope orchestration:read --scope relay:read
+npx @getpaperplane/cli pair --scope orchestration:read --scope relay:read
 ```
 
 The selected scopes replace the default permissions. The same option works with
-`npx @rove-code/cli auth pairing create` and `npx @rove-code/cli auth session issue`; each command's
+`npx @getpaperplane/cli auth pairing create` and `npx @getpaperplane/cli auth session issue`; each command's
 `--help` lists the available scopes. Without `--scope`, pairing tokens retain
 standard client permissions and issued bearer sessions retain administrative
 permissions.

@@ -1,10 +1,10 @@
 import {
   BearerConnectionTarget,
   PrimaryConnectionTarget,
-} from "@rove-code/client-runtime/connection";
-import type { EnvironmentCatalogState } from "@rove-code/client-runtime/state/connections";
-import type { EnvironmentShellState } from "@rove-code/client-runtime/state/shell";
-import { EnvironmentId } from "@rove-code/contracts";
+} from "@getpaperplane/client-runtime/connection";
+import type { EnvironmentCatalogState } from "@getpaperplane/client-runtime/state/connections";
+import type { EnvironmentShellState } from "@getpaperplane/client-runtime/state/shell";
+import { EnvironmentId } from "@getpaperplane/contracts";
 import * as Option from "effect/Option";
 import { Atom, AtomRegistry } from "effect/reactivity";
 import { describe, expect, it } from "vite-plus/test";

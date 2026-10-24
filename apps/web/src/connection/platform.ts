@@ -2,7 +2,7 @@ import {
   ClientCapabilities,
   PlatformConnectionSource,
   Persistence,
-} from "@rove-code/client-runtime/platform";
+} from "@getpaperplane/client-runtime/platform";
 import {
   BearerConnectionCredential,
   BearerConnectionProfile,
@@ -17,14 +17,14 @@ import {
   PrimaryConnectionRegistration,
   PrimaryConnectionTarget,
   Wakeups,
-} from "@rove-code/client-runtime/connection";
-import { bootstrapRemoteBearerSession } from "@rove-code/client-runtime/authorization";
-import { fetchRemoteEnvironmentDescriptor } from "@rove-code/client-runtime/environment";
+} from "@getpaperplane/client-runtime/connection";
+import { bootstrapRemoteBearerSession } from "@getpaperplane/client-runtime/authorization";
+import { fetchRemoteEnvironmentDescriptor } from "@getpaperplane/client-runtime/environment";
 import {
   managedRelayAccountChanges,
   managedRelaySessionAtom,
-} from "@rove-code/client-runtime/relay";
-import { EnvironmentRpcRequestObserver } from "@rove-code/client-runtime/rpc";
+} from "@getpaperplane/client-runtime/relay";
+import { EnvironmentRpcRequestObserver } from "@getpaperplane/client-runtime/rpc";
 import {
   AuthStandardClientScopes,
   type DesktopBridge,
@@ -32,7 +32,7 @@ import {
   type DesktopSshEnvironmentTarget,
   type EnvironmentId,
   PRIMARY_LOCAL_ENVIRONMENT_ID,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";

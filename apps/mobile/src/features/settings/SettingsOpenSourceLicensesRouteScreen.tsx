@@ -8,7 +8,7 @@ import {
   formatLicenseBundles,
   thirdPartyLicenseEntryKey,
   type ThirdPartyLicenseEntry,
-} from "@rove-code/shared/thirdPartyLicenses";
+} from "@getpaperplane/shared/thirdPartyLicenses";
 import { useCallback, useMemo, useState } from "react";
 import { Linking, Platform, Pressable, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";

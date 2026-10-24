@@ -33,7 +33,7 @@ runs:
           node_modules
           apps/*/node_modules
           infra/*/node_modules
-          oxlint-plugin-rove/node_modules
+          oxlint-plugin-paperplane/node_modules
           packages/*/node_modules
           scripts/node_modules
 
@@ -66,6 +66,6 @@ runs:
           node_modules
           apps/*/node_modules
           infra/*/node_modules
-          oxlint-plugin-rove/node_modules
+          oxlint-plugin-paperplane/node_modules
           packages/*/node_modules
           scripts/node_modules

@@ -1,4 +1,4 @@
-import { AuthProvidersManageScope } from "@rove-code/contracts";
+import { AuthProvidersManageScope } from "@getpaperplane/contracts";
 import { readEnvironmentScope, useEnvironmentScope } from "../../state/session";
 import { useAtomValue } from "@effect/atom-react";
 import {
@@ -6,9 +6,9 @@ import {
   ProviderInstanceId,
   type EnvironmentId,
   type ServerProvider,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { useEffect, useEffectEvent, useState, type ReactNode } from "react";
-import { usesChatGptSharing } from "@rove-code/shared/usageLimits";
+import { usesChatGptSharing } from "@getpaperplane/shared/usageLimits";
 
 import { useEnvironmentSettings } from "../../hooks/useSettings";
 import { randomUUID } from "../../lib/utils";

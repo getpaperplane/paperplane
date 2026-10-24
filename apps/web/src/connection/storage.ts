@@ -15,8 +15,8 @@ import {
   setRoutesInCatalog,
   replaceCatalogValue,
   Persistence,
-} from "@rove-code/client-runtime/platform";
-import { TokenStore } from "@rove-code/client-runtime/authorization";
+} from "@getpaperplane/client-runtime/platform";
+import { TokenStore } from "@getpaperplane/client-runtime/authorization";
 import {
   ConnectionTransientError,
   ConnectionBlockedError,
@@ -26,8 +26,8 @@ import {
   StoredGitHubRoutingPermission,
   gitHubRoutingConnectionKey,
   gitHubRoutingPermissionFor,
-} from "@rove-code/client-runtime/connection";
-import { EnvironmentId, ServerConfig, ThreadId, VcsListRefsResult } from "@rove-code/contracts";
+} from "@getpaperplane/client-runtime/connection";
+import { EnvironmentId, ServerConfig, ThreadId, VcsListRefsResult } from "@getpaperplane/contracts";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -35,7 +35,7 @@ import * as Option from "effect/Option";
 import * as Ref from "effect/Ref";
 import * as Queue from "effect/Queue";
 import * as Schema from "effect/Schema";
-import { decodeMigratedRoveJson } from "@rove-code/shared/roveMigration";
+import { decodeMigratedRoveJson } from "@getpaperplane/shared/roveMigration";
 import * as Semaphore from "effect/Semaphore";
 import * as Stream from "effect/Stream";
 import { projectFaviconCache } from "../assets/projectFaviconCache";

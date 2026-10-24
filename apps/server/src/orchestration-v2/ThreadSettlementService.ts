@@ -1,13 +1,13 @@
-import { backgroundWorkHoldsCompletion } from "@rove-code/shared/orchestrationV2PendingBackgroundWork";
-import { resolveProjectSettings } from "@rove-code/shared/projectSettings";
-import { visibleThreadPullRequests } from "@rove-code/shared/threadPullRequests";
+import { backgroundWorkHoldsCompletion } from "@getpaperplane/shared/orchestrationV2PendingBackgroundWork";
+import { resolveProjectSettings } from "@getpaperplane/shared/projectSettings";
+import { visibleThreadPullRequests } from "@getpaperplane/shared/threadPullRequests";
 import {
   CommandId,
   type ThreadId,
   type OrchestrationV2DomainEvent,
   type OrchestrationV2ThreadShell,
-} from "@rove-code/contracts";
-import { makeDrainableWorker } from "@rove-code/shared/DrainableWorker";
+} from "@getpaperplane/contracts";
+import { makeDrainableWorker } from "@getpaperplane/shared/DrainableWorker";
 import * as Cause from "effect/Cause";
 import * as Context from "effect/Context";
 import * as Crypto from "effect/Crypto";
@@ -258,10 +258,10 @@ export class ThreadSettlementServiceV2 extends Context.Service<
     readonly start: () => Effect.Effect<void, never, Scope.Scope>;
     readonly drain: Effect.Effect<void>;
   }
->()("@rove-code/server/orchestration-v2/ThreadSettlementService/ThreadSettlementServiceV2") {}
+>()("@getpaperplane/server/orchestration-v2/ThreadSettlementService/ThreadSettlementServiceV2") {}
 
 function autoSettlementConfigured(
-  settings: import("@rove-code/contracts").ServerSettings,
+  settings: import("@getpaperplane/contracts").ServerSettings,
 ): boolean {
   if (settings.sidebarAutoSettleOnMerge || settings.sidebarAutoSettleAfterDays !== null) {
     return true;
@@ -276,7 +276,7 @@ function autoSettlementConfigured(
 /** Identity of every settlement input, so unrelated settings edits do not trigger a sweep. */
 /** @internal Exported for tests. */
 export function autoSettlementSettingsKey(
-  settings: import("@rove-code/contracts").ServerSettings,
+  settings: import("@getpaperplane/contracts").ServerSettings,
 ): string {
   return JSON.stringify([
     settings.sidebarAutoSettleOnMerge,

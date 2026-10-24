@@ -1,6 +1,6 @@
 import * as NodeOS from "node:os";
 
-import { QrCode } from "@rove-code/shared/qrCode";
+import { QrCode } from "@getpaperplane/shared/qrCode";
 import * as Effect from "effect/Effect";
 import { HttpServer } from "effect/http";
 

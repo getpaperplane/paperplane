@@ -6,7 +6,7 @@ import {
   type ModelSelection,
   type ProviderOptionDescriptor,
   type OrchestrationV2ContextTransfer,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as DateTime from "effect/DateTime";
 import { afterEach, expect, it, vi } from "vite-plus/test";
 

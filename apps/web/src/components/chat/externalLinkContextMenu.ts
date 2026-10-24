@@ -1,4 +1,4 @@
-import type { ContextMenuItem } from "@rove-code/contracts";
+import type { ContextMenuItem } from "@getpaperplane/contracts";
 
 export type ExternalLinkContextMenuAction =
   | "open-in-preview"

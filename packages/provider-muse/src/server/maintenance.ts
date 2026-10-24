@@ -1,5 +1,5 @@
-import { ProviderDriverKind, type ServerProvider } from "@rove-code/contracts";
-import { compareSemverVersions } from "@rove-code/shared/semver";
+import { ProviderDriverKind, type ServerProvider } from "@getpaperplane/contracts";
+import { compareSemverVersions } from "@getpaperplane/shared/semver";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Schema from "effect/Schema";
@@ -12,9 +12,9 @@ import {
   makeProviderMaintenanceCapabilities,
   type ProviderMaintenanceCapabilities,
   type ProviderMaintenanceCapabilitiesResolver,
-} from "@rove-code/provider-core/server/maintenanceResolver";
-import * as ProviderLatestVersions from "@rove-code/provider-core/server/ProviderLatestVersions";
-import { parseGenericCliVersion } from "@rove-code/provider-core/server/snapshotProbe";
+} from "@getpaperplane/provider-core/server/maintenanceResolver";
+import * as ProviderLatestVersions from "@getpaperplane/provider-core/server/ProviderLatestVersions";
+import { parseGenericCliVersion } from "@getpaperplane/provider-core/server/snapshotProbe";
 
 const DRIVER = ProviderDriverKind.make("muse");
 /** Mirrors the official launcher, which reads MUSE_CHANNEL and accepts only these two. */

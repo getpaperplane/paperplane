@@ -2,9 +2,9 @@ import {
   type ClientConnectionMethod,
   EnvironmentId,
   type ExecutionEnvironmentDescriptor,
-} from "@rove-code/contracts";
-import { RelayEnvironmentConnectScope } from "@rove-code/contracts/relay";
-import { withRelayClientTracing } from "@rove-code/shared/relayTracing";
+} from "@getpaperplane/contracts";
+import { RelayEnvironmentConnectScope } from "@getpaperplane/contracts/relay";
+import { withRelayClientTracing } from "@getpaperplane/shared/relayTracing";
 import {
   exchangeRemoteDpopAccessToken,
   type RemoteEnvironmentAuthError,
@@ -84,7 +84,7 @@ export class RemoteEnvironmentAuthorization extends Context.Service<
       readonly rejectedAccessToken?: string;
     }) => Effect.Effect<AuthorizedRemoteHttpEnvironment, ConnectionAttemptError>;
   }
->()("@rove-code/client-runtime/authorization/service/RemoteEnvironmentAuthorization") {}
+>()("@getpaperplane/client-runtime/authorization/service/RemoteEnvironmentAuthorization") {}
 
 const CACHED_ENDPOINT_SOCKET_TIMEOUT_MS = 3_000;
 const BEARER_DESCRIPTOR_CACHE_TTL_MS = 10_000;

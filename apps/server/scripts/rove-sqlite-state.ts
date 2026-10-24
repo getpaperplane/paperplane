@@ -2,7 +2,7 @@
 
 import * as NodeRuntime from "@effect/platform-node/NodeRuntime";
 import * as NodeServices from "@effect/platform-node/NodeServices";
-import { fromJsonStringPretty } from "@rove-code/shared/schemaJson";
+import { fromJsonStringPretty } from "@getpaperplane/shared/schemaJson";
 import * as Console from "effect/Console";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -13,7 +13,7 @@ import * as Schema from "effect/Schema";
 import * as SqlClient from "effect/sql/SqlClient";
 import { Argument, Command, Flag } from "effect/cli";
 
-import * as NodeSqliteClient from "@rove-code/shared/nodeSqliteClient";
+import * as NodeSqliteClient from "@getpaperplane/shared/nodeSqliteClient";
 import { resolveBaseDir } from "../src/os-jank.ts";
 
 export const SqliteStateOperation = Schema.Literals(["query", "exec"]);

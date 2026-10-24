@@ -5,8 +5,8 @@
  * types `agent-device …` and gets the version the injected instructions were
  * written for, regardless of what is or is not globally installed.
  */
-import * as HostProcess from "@rove-code/shared/HostProcess";
-import { resolveNodeExecutable } from "@rove-code/shared/nodeRuntime";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
+import { resolveNodeExecutable } from "@getpaperplane/shared/nodeRuntime";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";

@@ -3,7 +3,7 @@
 import {
   SNAP_SHOT_ACCESSIBLE_TEXT_MAX_CHARS,
   type SnapShotAccessibility,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import type * as Electron from "electron";
 
 import {

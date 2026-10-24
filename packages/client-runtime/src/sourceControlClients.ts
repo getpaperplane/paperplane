@@ -1,29 +1,29 @@
 /**
  * The source control host definitions web and mobile ship, and the one lookup they use.
  *
- * Adding a host means writing its `@rove-code/source-control-<host>` package with a
+ * Adding a host means writing its `@getpaperplane/source-control-<host>` package with a
  * `./client/definition` entry and adding it here; clients then label, list, and check out its
  * change requests without further branches.
  *
  * @module client-runtime/sourceControlClients
  */
-import * as AzureDevOps from "@rove-code/source-control-azure-devops/client/definition";
-import * as Bitbucket from "@rove-code/source-control-bitbucket/client/definition";
+import * as AzureDevOps from "@getpaperplane/source-control-azure-devops/client/definition";
+import * as Bitbucket from "@getpaperplane/source-control-bitbucket/client/definition";
 import {
   makeSourceControlClientRegistry,
   readSourceControlHostSettings,
-} from "@rove-code/source-control-core/client/definition";
-import type { ServerSettings } from "@rove-code/contracts";
+} from "@getpaperplane/source-control-core/client/definition";
+import type { ServerSettings } from "@getpaperplane/contracts";
 
 export {
   UNKNOWN_SOURCE_CONTROL_CLIENT,
   type ChangeRequestTerminology,
   type SourceControlClientDefinition,
-} from "@rove-code/source-control-core/client/definition";
-import * as Forgejo from "@rove-code/source-control-forgejo/client/definition";
-import * as GitCafe from "@rove-code/source-control-gitcafe/client/definition";
-import * as GitHub from "@rove-code/source-control-github/client/definition";
-import * as GitLab from "@rove-code/source-control-gitlab/client/definition";
+} from "@getpaperplane/source-control-core/client/definition";
+import * as Forgejo from "@getpaperplane/source-control-forgejo/client/definition";
+import * as GitCafe from "@getpaperplane/source-control-gitcafe/client/definition";
+import * as GitHub from "@getpaperplane/source-control-github/client/definition";
+import * as GitLab from "@getpaperplane/source-control-gitlab/client/definition";
 
 /**
  * GitHub comes first because a repository that has not reported its host yet reads as GitHub,
@@ -45,7 +45,7 @@ export const sourceControlClients = makeSourceControlClientRegistry(
   BUILT_IN_SOURCE_CONTROL_CLIENTS,
 );
 
-export type { GitHubSettings } from "@rove-code/source-control-github/client/definition";
+export type { GitHubSettings } from "@getpaperplane/source-control-github/client/definition";
 
 /**
  * An environment's GitHub host choices and tokens, decoded with GitHub's settings schema. GitHub's

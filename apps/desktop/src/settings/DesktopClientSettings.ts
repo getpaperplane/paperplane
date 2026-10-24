@@ -1,6 +1,6 @@
-import { ClientSettingsSchema, type ClientSettings } from "@rove-code/contracts";
-import { fromLenientJson } from "@rove-code/shared/schemaJson";
-import { resolveSymlinkTarget } from "@rove-code/shared/symlink";
+import { ClientSettingsSchema, type ClientSettings } from "@getpaperplane/contracts";
+import { fromLenientJson } from "@getpaperplane/shared/schemaJson";
+import { resolveSymlinkTarget } from "@getpaperplane/shared/symlink";
 import * as Context from "effect/Context";
 import * as Crypto from "effect/Crypto";
 import * as Effect from "effect/Effect";
@@ -70,7 +70,7 @@ export class DesktopClientSettings extends Context.Service<
       settings: ClientSettings,
     ) => Effect.Effect<void, DesktopClientSettingsWriteError>;
   }
->()("@rove-code/desktop/settings/DesktopClientSettings") {}
+>()("@getpaperplane/desktop/settings/DesktopClientSettings") {}
 
 const readClientSettings = (
   fileSystem: FileSystem.FileSystem,

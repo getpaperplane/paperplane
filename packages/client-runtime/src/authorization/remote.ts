@@ -5,8 +5,8 @@ import {
   AuthTokenExchangeGrantType,
   type ClientConnectionMethod,
   type AuthEnvironmentScope,
-} from "@rove-code/contracts";
-import { encodeOAuthScope } from "@rove-code/shared/oauthScope";
+} from "@getpaperplane/contracts";
+import { encodeOAuthScope } from "@getpaperplane/shared/oauthScope";
 import * as Effect from "effect/Effect";
 import { environmentEndpointUrl } from "../environment/endpoint.ts";
 import {

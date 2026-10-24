@@ -1,10 +1,10 @@
-import type { MediaActionId } from "@rove-code/client-runtime/media-actions";
+import type { MediaActionId } from "@getpaperplane/client-runtime/media-actions";
 import {
   mediaReferenceFileName,
   type MediaReference,
-} from "@rove-code/client-runtime/media-reference";
-import { resolveAssetUrl } from "@rove-code/client-runtime/state/assets";
-import { squashAtomCommandFailure } from "@rove-code/client-runtime/state/runtime";
+} from "@getpaperplane/client-runtime/media-reference";
+import { resolveAssetUrl } from "@getpaperplane/client-runtime/state/assets";
+import { squashAtomCommandFailure } from "@getpaperplane/client-runtime/state/runtime";
 import {
   AuthFilesystemReadScope,
   type AssetResource,
@@ -13,7 +13,7 @@ import {
   type EnvironmentId,
   sessionGrantsScope,
   type SessionGrantInput,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Option from "effect/Option";
 import { AsyncResult } from "effect/reactivity";
 import { useCallback, useRef, useState, type ReactElement } from "react";

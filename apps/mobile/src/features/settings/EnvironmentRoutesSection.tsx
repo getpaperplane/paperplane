@@ -9,9 +9,9 @@ import {
   connectionRouteLabel,
   connectionRoutes,
   isLearned,
-} from "@rove-code/client-runtime/connection";
-import { type EnvironmentId, sessionGrantsScope } from "@rove-code/contracts";
-import { AUTH_SCOPE_OPTIONS } from "@rove-code/shared/authScopeOptions";
+} from "@getpaperplane/client-runtime/connection";
+import { type EnvironmentId, sessionGrantsScope } from "@getpaperplane/contracts";
+import { AUTH_SCOPE_OPTIONS } from "@getpaperplane/shared/authScopeOptions";
 import { AsyncResult } from "effect/reactivity";
 import * as Option from "effect/Option";
 import { useState } from "react";

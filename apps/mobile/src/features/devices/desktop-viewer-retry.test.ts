@@ -1,4 +1,4 @@
-import { ComputerDesktopViewerError, EnvironmentAuthorizationError } from "@rove-code/contracts";
+import { ComputerDesktopViewerError, EnvironmentAuthorizationError } from "@getpaperplane/contracts";
 import * as Cause from "effect/Cause";
 import { describe, expect, it } from "vite-plus/test";
 

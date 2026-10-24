@@ -3,7 +3,7 @@
  *
  * @module source-control-forgejo/client/definition
  */
-import { SourceControlProviderKind } from "@rove-code/contracts";
+import { SourceControlProviderKind } from "@getpaperplane/contracts";
 import {
   type ChangeRequestProjectIdentity,
   defineSourceControlClient,
@@ -11,7 +11,7 @@ import {
   isChangeRequestInProjectRepository,
   isChangeRequestOnProjectHost,
   isChangeRequestPath,
-} from "@rove-code/source-control-core/client/definition";
+} from "@getpaperplane/source-control-core/client/definition";
 
 const CHECKOUT_COMMAND = /^tea\s+(?:pr|pulls)\s+checkout\s+(.+)$/i;
 const CHANGE_REQUEST_REFERENCE =

@@ -1,5 +1,5 @@
 import { testDouble } from "../testDouble.ts";
-import type { RelayDeviceRegistrationRequest } from "@rove-code/contracts/relay";
+import type { RelayDeviceRegistrationRequest } from "@getpaperplane/contracts/relay";
 import { describe, expect, it } from "@effect/vitest";
 import type { SQL } from "drizzle-orm";
 import { PgDialect } from "drizzle-orm/pg-core";

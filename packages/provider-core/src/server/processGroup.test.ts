@@ -2,7 +2,7 @@
 import * as NodeChildProcess from "node:child_process";
 
 import { describe, expect, it } from "@effect/vitest";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 
 import { signalProcessGroup } from "./processGroup.ts";
 

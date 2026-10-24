@@ -4,8 +4,8 @@ import {
   type ProviderDriverKind,
   type ServerProvider,
   type ServerProviderCompatibilityAdvisory,
-} from "@rove-code/contracts";
-import { satisfiesSemverRange } from "@rove-code/shared/semver";
+} from "@getpaperplane/contracts";
+import { satisfiesSemverRange } from "@getpaperplane/shared/semver";
 import * as Schema from "effect/Schema";
 
 // Manifest gates describe upstream adapter generations, not Paperplane's independent

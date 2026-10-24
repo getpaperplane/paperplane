@@ -1,12 +1,12 @@
-import { withAgentDeviceEnvironment } from "@rove-code/provider-core/server/mcpSession";
-import * as McpProviderSessions from "@rove-code/provider-core/server/McpProviderSessions";
-import { AntigravitySettings, ProviderDriverKind, ProviderSetupError } from "@rove-code/contracts";
-import * as HostProcess from "@rove-code/shared/HostProcess";
-import { resolveSelfInvocation } from "@rove-code/shared/nodeRuntime";
+import { withAgentDeviceEnvironment } from "@getpaperplane/provider-core/server/mcpSession";
+import * as McpProviderSessions from "@getpaperplane/provider-core/server/McpProviderSessions";
+import { AntigravitySettings, ProviderDriverKind, ProviderSetupError } from "@getpaperplane/contracts";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
+import { resolveSelfInvocation } from "@getpaperplane/shared/nodeRuntime";
 import {
   NodeRuntimeUnavailableError,
   nodeRuntimeUnavailableMessage,
-} from "@rove-code/shared/nodeRuntime";
+} from "@getpaperplane/shared/nodeRuntime";
 import * as Crypto from "effect/Crypto";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
@@ -20,7 +20,7 @@ import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import { HttpClient } from "effect/http";
 import type { AcpError } from "effect-acp/errors";
 
-import * as ProviderHost from "@rove-code/provider-core/server/ProviderHost";
+import * as ProviderHost from "@getpaperplane/provider-core/server/ProviderHost";
 import {
   isAntigravityTextGenerationAvailable,
   makeAntigravityTextGeneration,
@@ -42,28 +42,28 @@ import {
   makeAntigravityAcpRuntime,
   type AntigravityAcpRuntimeInput,
 } from "../acp/AntigravityAcpSupport.ts";
-import type * as AcpSessionRuntime from "@rove-code/provider-acp/server/AcpSessionRuntime";
-import type { ServerProviderDraft } from "@rove-code/provider-core/server/snapshotProbe";
+import type * as AcpSessionRuntime from "@getpaperplane/provider-acp/server/AcpSessionRuntime";
+import type { ServerProviderDraft } from "@getpaperplane/provider-core/server/snapshotProbe";
 import {
   removeAntigravityRuntimeTempDirs,
   removeAntigravitySessionFiles,
 } from "../acp/AntigravitySessionFiles.ts";
-import * as IdAllocator from "@rove-code/provider-core/server/IdAllocator";
-import * as ProviderContinuationRequests from "@rove-code/provider-core/server/ProviderContinuationRequests";
+import * as IdAllocator from "@getpaperplane/provider-core/server/IdAllocator";
+import * as ProviderContinuationRequests from "@getpaperplane/provider-core/server/ProviderContinuationRequests";
 import { makeAntigravityAdapterV2 } from "../../orchestration-v2/Adapters/AntigravityAdapterV2.ts";
-import { makeAcpNativeLoggerFactory } from "@rove-code/provider-acp/server/nativeLogging";
+import { makeAcpNativeLoggerFactory } from "@getpaperplane/provider-acp/server/nativeLogging";
 import { ProviderDriverError } from "../Errors.ts";
 import { makeAntigravityProvider } from "../AntigravityProvider.ts";
 import { makeAntigravityUsageProbe } from "../antigravityUsageLimits.ts";
-import * as ProviderEventLoggers from "@rove-code/provider-core/server/ProviderEventLoggers";
-import * as ModelCatalog from "@rove-code/provider-core/server/ModelCatalog";
+import * as ProviderEventLoggers from "@getpaperplane/provider-core/server/ProviderEventLoggers";
+import * as ModelCatalog from "@getpaperplane/provider-core/server/ModelCatalog";
 import {
   defaultProviderContinuationIdentity,
   type ProviderDriver,
   type ProviderInstance,
-} from "@rove-code/provider-core/server/driver";
-import { mergeProviderInstanceEnvironment } from "@rove-code/provider-core/server/instanceEnvironment";
-import { withInstanceIdentity } from "@rove-code/provider-core/server/instanceIdentity";
+} from "@getpaperplane/provider-core/server/driver";
+import { mergeProviderInstanceEnvironment } from "@getpaperplane/provider-core/server/instanceEnvironment";
+import { withInstanceIdentity } from "@getpaperplane/provider-core/server/instanceIdentity";
 import { discoverAntigravitySkills, resolveAntigravityUserHome } from "./AntigravitySkills.ts";
 
 const DRIVER = ProviderDriverKind.make("antigravity");

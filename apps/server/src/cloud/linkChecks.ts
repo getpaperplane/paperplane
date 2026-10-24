@@ -8,7 +8,7 @@ import type {
   RelayLinkProofRequest,
   RelayManagedEndpointOrigin,
   RelayManagedEndpointRuntimeConfig,
-} from "@rove-code/contracts/relay";
+} from "@getpaperplane/contracts/relay";
 import type { HttpServerRequest } from "effect/http";
 
 const CLOUD_PROOF_MAX_LIFETIME_SECONDS = 5 * 60;

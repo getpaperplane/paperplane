@@ -1,8 +1,8 @@
 import { appAtomRegistry } from "../../state/atom-registry";
 import { useAtomValue } from "@effect/atom-react";
-import type { EnvironmentThreadShell } from "@rove-code/client-runtime/state/shell";
-import { effectiveSnoozed } from "@rove-code/client-runtime/state/thread-settled";
-import { sortInboxThreadsByReturn } from "@rove-code/client-runtime/state/thread-inbox";
+import type { EnvironmentThreadShell } from "@getpaperplane/client-runtime/state/shell";
+import { effectiveSnoozed } from "@getpaperplane/client-runtime/state/thread-settled";
+import { sortInboxThreadsByReturn } from "@getpaperplane/client-runtime/state/thread-inbox";
 import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { Animated, FlatList, Modal, Pressable, View } from "react-native";
 import { Gesture, GestureDetector, GestureHandlerRootView } from "react-native-gesture-handler";

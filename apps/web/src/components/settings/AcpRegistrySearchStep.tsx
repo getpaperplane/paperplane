@@ -1,15 +1,15 @@
-import { AuthProvidersManageScope } from "@rove-code/contracts";
+import { AuthProvidersManageScope } from "@getpaperplane/contracts";
 import { readEnvironmentScope, useEnvironmentScope } from "../../state/session";
 import {
   isAtomCommandInterrupted,
   squashAtomCommandFailure,
-} from "@rove-code/client-runtime/state/runtime";
+} from "@getpaperplane/client-runtime/state/runtime";
 import type {
   AcpRegistryPrepareResult,
   AcpRegistrySearchAgent,
   EnvironmentId,
   ProviderInstanceConfig,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { ExternalLinkIcon, SearchIcon } from "lucide-react";
 import { type FormEvent, useEffect, useLayoutEffect, useRef, useState } from "react";
 
@@ -22,7 +22,7 @@ import { InputGroup, InputGroupAddon, InputGroupInput } from "../ui/input-group"
 import { ScrollArea } from "../ui/scroll-area";
 import { Tooltip, TooltipPopup, TooltipTrigger } from "../ui/tooltip";
 import { isConfiguredAcpRegistryAgent } from "./AddProviderInstanceDialog.logic";
-import { ProviderDriverKind } from "@rove-code/contracts";
+import { ProviderDriverKind } from "@getpaperplane/contracts";
 import { ProviderInstanceIcon } from "../chat/ProviderInstanceIcon";
 
 function errorMessage(error: unknown): string {

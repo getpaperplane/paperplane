@@ -15,7 +15,7 @@ import {
   ThreadId,
   type OrchestrationV2ProviderThread,
   type OrchestrationV2ProviderTurn,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { OpenCodeSettings } from "../settings.ts";
 import * as Effect from "effect/Effect";
 import * as Clock from "effect/Clock";
@@ -31,12 +31,12 @@ import * as Scope from "effect/Scope";
 import * as Stream from "effect/Stream";
 import * as TestClock from "effect/testing/TestClock";
 
-import * as ProviderHost from "@rove-code/provider-core/server/ProviderHost";
-import * as TestProviderHost from "@rove-code/provider-testing/TestProviderHost";
-import type * as ProviderEventLoggers from "@rove-code/provider-core/server/ProviderEventLoggers";
+import * as ProviderHost from "@getpaperplane/provider-core/server/ProviderHost";
+import * as TestProviderHost from "@getpaperplane/provider-testing/TestProviderHost";
+import type * as ProviderEventLoggers from "@getpaperplane/provider-core/server/ProviderEventLoggers";
 import * as OpenCodeRuntime from "./OpenCodeRuntime.ts";
-import * as IdAllocator from "@rove-code/provider-core/server/IdAllocator";
-import * as McpProviderSessions from "@rove-code/provider-core/server/McpProviderSessions";
+import * as IdAllocator from "@getpaperplane/provider-core/server/IdAllocator";
+import * as McpProviderSessions from "@getpaperplane/provider-core/server/McpProviderSessions";
 
 import {
   advanceOpenCodePromptAdmission,
@@ -51,7 +51,7 @@ import {
   OPENCODE_PROVIDER,
   reconcileOpenCodePromptAdmissionStatus,
 } from "./adapter.ts";
-import * as ProviderAdapter from "@rove-code/provider-core/server/ProviderAdapter";
+import * as ProviderAdapter from "@getpaperplane/provider-core/server/ProviderAdapter";
 
 const encodeUnknownJson = Schema.encodeUnknownSync(Schema.fromJsonString(Schema.Unknown));
 const OPEN_CODE_TEST_SETTINGS = Schema.decodeSync(OpenCodeSettings)({

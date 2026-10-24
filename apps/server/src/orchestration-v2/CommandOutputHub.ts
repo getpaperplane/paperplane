@@ -4,7 +4,7 @@ import {
   type OrchestrationV2CommandOutputFrame,
   type OrchestrationV2SubscribeCommandOutputInput,
   type OrchestrationV2TurnItem,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   appendTerminalOutput,
   EMPTY_TERMINAL_OUTPUT,
@@ -12,7 +12,7 @@ import {
   type TerminalOutputState,
   TERMINAL_OUTPUT_TAIL_CHARS,
   terminalOutputResumeText,
-} from "@rove-code/shared/terminalOutput";
+} from "@getpaperplane/shared/terminalOutput";
 import * as Cause from "effect/Cause";
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
@@ -75,7 +75,7 @@ export interface CommandOutputHubShape {
 }
 
 export class CommandOutputHub extends Context.Service<CommandOutputHub, CommandOutputHubShape>()(
-  "@rove-code/server/orchestration-v2/CommandOutputHub",
+  "@getpaperplane/server/orchestration-v2/CommandOutputHub",
 ) {}
 
 const isCommandOutputError = Schema.is(OrchestrationV2CommandOutputError);

@@ -3,7 +3,7 @@ import { ConnectionTraceId } from "./ConnectionTraceId";
 import {
   type EnvironmentConnectionPhase,
   type EnvironmentConnectionPresentation,
-} from "@rove-code/client-runtime/connection";
+} from "@getpaperplane/client-runtime/connection";
 import { SymbolView } from "../../components/ui/AppSymbol";
 import { Pressable, View } from "react-native";
 

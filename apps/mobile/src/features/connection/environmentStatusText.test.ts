@@ -1,7 +1,7 @@
-import { EnvironmentId, ORCHESTRATION_PROTOCOL_VERSION } from "@rove-code/contracts";
+import { EnvironmentId, ORCHESTRATION_PROTOCOL_VERSION } from "@getpaperplane/contracts";
 import { describe, expect, it } from "vite-plus/test";
 
-import { orchestrationProtocolCompatibilityError } from "@rove-code/client-runtime/connection";
+import { orchestrationProtocolCompatibilityError } from "@getpaperplane/client-runtime/connection";
 
 import { environmentStatusText } from "./environmentStatusText";
 

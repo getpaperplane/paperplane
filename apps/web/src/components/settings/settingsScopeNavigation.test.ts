@@ -1,4 +1,4 @@
-import { EnvironmentId, ProviderInstanceId, ScheduledTaskId } from "@rove-code/contracts";
+import { EnvironmentId, ProviderInstanceId, ScheduledTaskId } from "@getpaperplane/contracts";
 import {
   createMemoryHistory,
   createRootRoute,

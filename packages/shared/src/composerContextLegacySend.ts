@@ -1,4 +1,4 @@
-import type { ComposerContextRecord, ElementContextDetails } from "@rove-code/contracts";
+import type { ComposerContextRecord, ElementContextDetails } from "@getpaperplane/contracts";
 
 import { collectComposerContextReferences } from "./composerContextReferences.ts";
 

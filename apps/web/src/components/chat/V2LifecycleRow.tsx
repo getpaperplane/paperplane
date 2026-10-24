@@ -1,11 +1,11 @@
 import { ThreadHoverCardPopup } from "../ThreadHoverCard";
 import { AgentElapsed } from "./AgentElapsed";
-import { projectedSubagentsToRuntime } from "@rove-code/client-runtime/state/subagentRuntime";
+import { projectedSubagentsToRuntime } from "@getpaperplane/client-runtime/state/subagentRuntime";
 import type { ReactNode } from "react";
 import { useThreadShell, useProject } from "../../state/entities";
 import { SubagentTooltipContent } from "./SubagentTooltipContent";
 import { useAtomValue } from "@effect/atom-react";
-import { scopeThreadRef, scopeProjectRef } from "@rove-code/client-runtime/environment";
+import { scopeThreadRef, scopeProjectRef } from "@getpaperplane/client-runtime/environment";
 import { environmentThreadDetails } from "../../state/threads";
 import { MiddleTruncate } from "../ui/middle-truncate";
 import * as DateTime from "effect/DateTime";
@@ -14,8 +14,8 @@ import {
   resolveHandoffEndpoints,
   type HandoffEndpoints,
   type HandoffTimelineRun,
-} from "@rove-code/client-runtime/handoff";
-import { formatSubagentDisplayTitle } from "@rove-code/client-runtime/state/subagent-display";
+} from "@getpaperplane/client-runtime/handoff";
+import { formatSubagentDisplayTitle } from "@getpaperplane/client-runtime/state/subagent-display";
 import {
   ProviderDriverKind,
   type OrchestrationV2Notification,
@@ -27,8 +27,8 @@ import {
   type EnvironmentId,
   type NodeId,
   type ScopedThreadRef,
-} from "@rove-code/contracts";
-import type { TimestampFormat } from "@rove-code/contracts/settings";
+} from "@getpaperplane/contracts";
+import type { TimestampFormat } from "@getpaperplane/contracts/settings";
 import {
   BotIcon,
   ChevronRightIcon,
@@ -63,7 +63,7 @@ export function isV2LifecycleItem(item: OrchestrationV2TurnItem): boolean {
   return LIFECYCLE_TYPES.has(item.type);
 }
 
-export type { HandoffTimelineRun } from "@rove-code/client-runtime/handoff";
+export type { HandoffTimelineRun } from "@getpaperplane/client-runtime/handoff";
 
 export function V2LifecycleRow(props: {
   readonly item: OrchestrationV2TurnItem;

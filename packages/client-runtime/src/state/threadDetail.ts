@@ -1,4 +1,4 @@
-import type { OrchestrationV2ThreadProjection, ScopedThreadRef } from "@rove-code/contracts";
+import type { OrchestrationV2ThreadProjection, ScopedThreadRef } from "@getpaperplane/contracts";
 import * as Option from "effect/Option";
 import { AsyncResult, Atom } from "effect/reactivity";
 

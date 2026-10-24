@@ -1,5 +1,5 @@
-import { sanitizeNewRefName } from "@rove-code/shared/git";
-import { parseChangeRequestUrl } from "@rove-code/shared/changeRequestUrl";
+import { sanitizeNewRefName } from "@getpaperplane/shared/git";
+import { parseChangeRequestUrl } from "@getpaperplane/shared/changeRequestUrl";
 
 type WorkspaceMode = "local" | "worktree";
 

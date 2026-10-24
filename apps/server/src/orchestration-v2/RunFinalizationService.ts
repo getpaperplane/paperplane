@@ -1,4 +1,4 @@
-import { CheckpointScopeId, ProjectId, RunId, ThreadId } from "@rove-code/contracts";
+import { CheckpointScopeId, ProjectId, RunId, ThreadId } from "@getpaperplane/contracts";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -33,7 +33,7 @@ export class RunFinalizationObserver extends Context.Reference<{
     readonly threadId: ThreadId;
     readonly runId: RunId;
   }) => Effect.Effect<void, RunFinalizationRefreshError>;
-}>("@rove-code/server/orchestration-v2/RunFinalizationService/RunFinalizationObserver", {
+}>("@getpaperplane/server/orchestration-v2/RunFinalizationService/RunFinalizationObserver", {
   defaultValue: () => ({ refresh: () => Effect.void, refreshAfterTurn: () => Effect.void }),
 }) {}
 
@@ -46,7 +46,7 @@ export class RunFinalizationService extends Context.Service<
       readonly scopeId: CheckpointScopeId;
     }) => Effect.Effect<void, RunFinalizationError>;
   }
->()("@rove-code/server/orchestration-v2/RunFinalizationService") {}
+>()("@getpaperplane/server/orchestration-v2/RunFinalizationService") {}
 
 const make = Effect.gen(function* () {
   const checkpointCapture = yield* CheckpointCapture.CheckpointCaptureServiceV2;

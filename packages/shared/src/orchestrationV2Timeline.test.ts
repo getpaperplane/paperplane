@@ -1,4 +1,4 @@
-import { NodeId, RunId } from "@rove-code/contracts";
+import { NodeId, RunId } from "@getpaperplane/contracts";
 import { describe, expect, it } from "vite-plus/test";
 
 import {

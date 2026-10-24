@@ -1,4 +1,4 @@
-import type { PullRequestReviewGuideNote } from "@rove-code/contracts";
+import type { PullRequestReviewGuideNote } from "@getpaperplane/contracts";
 
 import { cn } from "~/lib/utils";
 

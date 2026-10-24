@@ -1,4 +1,4 @@
-import type { DatabaseStorageStatus } from "@rove-code/contracts";
+import type { DatabaseStorageStatus } from "@getpaperplane/contracts";
 import { makePeriodicWork } from "../background/periodicWork.ts";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -27,7 +27,7 @@ export class DatabaseStorage extends Context.Service<
     /** Current file accounting, re-published after each maintenance pass. Null until first read. */
     readonly status: Stream.Stream<DatabaseStorageStatus | null>;
   }
->()("@rove-code/server/persistence/DatabaseStorage") {}
+>()("@getpaperplane/server/persistence/DatabaseStorage") {}
 
 /**
  * Deletes superseded history every few hours and hands freed pages back to

@@ -1,4 +1,4 @@
-import type { ProviderUserInputAnswers, UserInputAttachments } from "@rove-code/contracts";
+import type { ProviderUserInputAnswers, UserInputAttachments } from "@getpaperplane/contracts";
 import * as Schema from "effect/Schema";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";

@@ -1,7 +1,7 @@
 import {
   createAssetEnvironmentAtoms,
   createProjectFaviconUrlAtomFamily,
-} from "@rove-code/client-runtime/state/assets";
+} from "@getpaperplane/client-runtime/state/assets";
 import { Atom } from "effect/reactivity";
 
 import { connectionAtomRuntime } from "../connection/runtime";

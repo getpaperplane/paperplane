@@ -6,7 +6,7 @@ import * as NodeOS from "node:os";
 import * as NodePath from "node:path";
 import { afterEach, beforeEach, it, vi } from "@effect/vitest";
 
-import { buildRoveProjectFileJsonSchema } from "@rove-code/shared/roveProjectFile";
+import { buildRoveProjectFileJsonSchema } from "@getpaperplane/shared/roveProjectFile";
 import {
   checkCloudflareWeb,
   checkDeployedProjectFileSchema,

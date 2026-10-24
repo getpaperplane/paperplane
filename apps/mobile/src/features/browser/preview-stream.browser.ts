@@ -7,7 +7,7 @@ import {
   type PreviewStreamInput,
   type PreviewStreamPointer,
   type PreviewStreamViewport,
-} from "@rove-code/client-runtime/preview/server-browser-stream";
+} from "@getpaperplane/client-runtime/preview/server-browser-stream";
 
 import type { PreviewStreamConfiguration, PreviewStreamMessage } from "./preview-stream-document";
 

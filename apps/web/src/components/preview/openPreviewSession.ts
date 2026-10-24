@@ -5,8 +5,8 @@ import type {
   PreviewSessionSnapshot,
   PreviewViewportSetting,
   ScopedThreadRef,
-} from "@rove-code/contracts";
-import type { AtomCommandResult } from "@rove-code/client-runtime/state/runtime";
+} from "@getpaperplane/contracts";
+import type { AtomCommandResult } from "@getpaperplane/client-runtime/state/runtime";
 import * as Cause from "effect/Cause";
 import { AsyncResult } from "effect/reactivity";
 

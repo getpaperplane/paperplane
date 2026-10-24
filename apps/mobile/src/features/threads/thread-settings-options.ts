@@ -1,4 +1,4 @@
-import type { ProviderOptionDescriptor, RuntimeMode } from "@rove-code/contracts";
+import type { ProviderOptionDescriptor, RuntimeMode } from "@getpaperplane/contracts";
 
 /**
  * Desktop-oriented effort keywords that don't belong in the phone picker.

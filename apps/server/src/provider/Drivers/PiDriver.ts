@@ -4,24 +4,24 @@ import * as NodePath from "node:path";
 import * as Effect from "effect/Effect";
 import * as Queue from "effect/Queue";
 import * as Schema from "effect/Schema";
-import * as HostProcess from "@rove-code/shared/HostProcess";
-import * as ProviderHost from "@rove-code/provider-core/server/ProviderHost";
-import * as IdAllocator from "@rove-code/provider-core/server/IdAllocator";
-import * as McpProviderSessions from "@rove-code/provider-core/server/McpProviderSessions";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
+import * as ProviderHost from "@getpaperplane/provider-core/server/ProviderHost";
+import * as IdAllocator from "@getpaperplane/provider-core/server/IdAllocator";
+import * as McpProviderSessions from "@getpaperplane/provider-core/server/McpProviderSessions";
 import * as FileSystem from "effect/FileSystem";
 import {
   PiCatalogError,
   PiSettings,
   ProviderDriverKind,
   type ServerProvider,
-} from "@rove-code/contracts";
-import type { ProviderDriver, ProviderInstance } from "@rove-code/provider-core/server/driver";
-import { ProviderDriverError } from "@rove-code/provider-core/server/errors";
-import type { ServerProviderDraft } from "@rove-code/provider-core/server/snapshotProbe";
-import { makeManagedServerProvider } from "@rove-code/provider-core/server/managedProvider";
-import { makeManualOnlyProviderMaintenanceCapabilities } from "@rove-code/provider-core/server/maintenanceResolver";
-import { mergeProviderInstanceEnvironment } from "@rove-code/provider-core/server/instanceEnvironment";
-import { expandHomePath } from "@rove-code/provider-core/server/pathExpansion";
+} from "@getpaperplane/contracts";
+import type { ProviderDriver, ProviderInstance } from "@getpaperplane/provider-core/server/driver";
+import { ProviderDriverError } from "@getpaperplane/provider-core/server/errors";
+import type { ServerProviderDraft } from "@getpaperplane/provider-core/server/snapshotProbe";
+import { makeManagedServerProvider } from "@getpaperplane/provider-core/server/managedProvider";
+import { makeManualOnlyProviderMaintenanceCapabilities } from "@getpaperplane/provider-core/server/maintenanceResolver";
+import { mergeProviderInstanceEnvironment } from "@getpaperplane/provider-core/server/instanceEnvironment";
+import { expandHomePath } from "@getpaperplane/provider-core/server/pathExpansion";
 import { ServerConfig } from "../../config.ts";
 import { ServerSettingsService } from "../../serverSettings.ts";
 import { makePiAdapterV2 } from "../../orchestration-v2/Adapters/PiAdapterV2.ts";

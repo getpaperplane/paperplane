@@ -1,5 +1,5 @@
-import { formatPercent, formatTokens, formatUsd } from "@rove-code/shared/usageFormat";
-import { isModelCostUnknown, type ModelTotals } from "@rove-code/shared/usageMerge";
+import { formatPercent, formatTokens, formatUsd } from "@getpaperplane/shared/usageFormat";
+import { isModelCostUnknown, type ModelTotals } from "@getpaperplane/shared/usageMerge";
 import { useMemo } from "react";
 
 import { mergeAnsweredUsage, type EnvironmentUsageStatus } from "../../state/usage";

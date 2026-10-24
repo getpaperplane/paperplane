@@ -19,7 +19,7 @@
  */
 import * as NodeCrypto from "node:crypto";
 
-import * as HostProcess from "@rove-code/shared/HostProcess";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 
 import * as Effect from "effect/Effect";
 import * as Base64 from "effect/encoding/Base64";

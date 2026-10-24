@@ -1,5 +1,5 @@
 {
-  "name": "@rove-code/provider-opencode",
+  "name": "@getpaperplane/provider-opencode",
   "private": true,
   "type": "module",
   "exports": {
@@ -53,15 +53,15 @@
     "@opencode/client": "2.0.28",
     "@opencode/protocol": "2.0.28",
     "@opencode/schema": "2.0.28",
-    "@rove-code/contracts": "workspace:*",
-    "@rove-code/provider-core": "workspace:*",
-    "@rove-code/shared": "workspace:*",
+    "@getpaperplane/contracts": "workspace:*",
+    "@getpaperplane/provider-core": "workspace:*",
+    "@getpaperplane/shared": "workspace:*",
     "effect": "catalog:"
   },
   "devDependencies": {
     "@effect/platform-node": "catalog:",
     "@effect/vitest": "catalog:",
-    "@rove-code/provider-testing": "workspace:*",
+    "@getpaperplane/provider-testing": "workspace:*",
     "@types/node": "catalog:",
     "vite-plus": "catalog:"
   }

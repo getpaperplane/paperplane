@@ -1,11 +1,11 @@
 import { useAtomValue } from "@effect/atom-react";
-import type { PendingThreadRequests } from "@rove-code/client-runtime/state/thread-requests";
-import type { EnvironmentThread } from "@rove-code/client-runtime/state/shell";
+import type { PendingThreadRequests } from "@getpaperplane/client-runtime/state/thread-requests";
+import type { EnvironmentThread } from "@getpaperplane/client-runtime/state/shell";
 import type {
   EnvironmentId,
   OrchestrationV2ThreadProjection,
   ThreadId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { Atom } from "effect/reactivity";
 
 import { environmentThreadDetails, useEnvironmentThread } from "./threads";

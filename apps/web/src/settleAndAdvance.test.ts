@@ -1,5 +1,5 @@
-import { scopeThreadRef } from "@rove-code/client-runtime/environment";
-import { EnvironmentId, ThreadId, type ScopedThreadRef } from "@rove-code/contracts";
+import { scopeThreadRef } from "@getpaperplane/client-runtime/environment";
+import { EnvironmentId, ThreadId, type ScopedThreadRef } from "@getpaperplane/contracts";
 import { describe, expect, it } from "vite-plus/test";
 
 import { registerSettleAndAdvance, settleAndAdvance } from "./settleAndAdvance";

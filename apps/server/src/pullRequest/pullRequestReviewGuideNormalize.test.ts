@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vite-plus/test";
-import type { PullRequestReviewGuideStop } from "@rove-code/contracts";
-import type { ReviewGuideGenerationResult } from "@rove-code/provider-core/server/textGeneration";
+import type { PullRequestReviewGuideStop } from "@getpaperplane/contracts";
+import type { ReviewGuideGenerationResult } from "@getpaperplane/provider-core/server/textGeneration";
 
 import { normalizeReviewGuide, parseReviewGuideChange } from "./pullRequestReviewGuideNormalize.ts";
 

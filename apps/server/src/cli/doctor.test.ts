@@ -5,7 +5,7 @@ import * as Exit from "effect/Exit";
 import * as Effect from "effect/Effect";
 import * as Console from "effect/Console";
 import * as Stream from "effect/Stream";
-import type { HostHealthReport } from "@rove-code/contracts";
+import type { HostHealthReport } from "@getpaperplane/contracts";
 import * as HostHealth from "../diagnostics/HostHealth.ts";
 import * as Layer from "effect/Layer";
 

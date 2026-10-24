@@ -1,6 +1,6 @@
 import { useAtomValue } from "@effect/atom-react";
-import { parseScopedProjectKey, scopedProjectKey } from "@rove-code/client-runtime/environment";
-import type { EnvironmentId, ProjectCloneSnapshot, ScopedProjectRef } from "@rove-code/contracts";
+import { parseScopedProjectKey, scopedProjectKey } from "@getpaperplane/client-runtime/environment";
+import type { EnvironmentId, ProjectCloneSnapshot, ScopedProjectRef } from "@getpaperplane/contracts";
 import * as Option from "effect/Option";
 import { AsyncResult, Atom } from "effect/reactivity";
 

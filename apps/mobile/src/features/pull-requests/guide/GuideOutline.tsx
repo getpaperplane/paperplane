@@ -1,5 +1,5 @@
-import type { PullRequestReviewGuide } from "@rove-code/contracts";
-import { stopFilePaths } from "@rove-code/client-runtime/review-guide-tour";
+import type { PullRequestReviewGuide } from "@getpaperplane/contracts";
+import { stopFilePaths } from "@getpaperplane/client-runtime/review-guide-tour";
 import { Pressable, View } from "react-native";
 import { AppText as Text } from "../../../components/ui/AppText";
 import { SymbolView } from "../../../components/ui/AppSymbol";

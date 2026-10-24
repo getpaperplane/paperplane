@@ -1,4 +1,4 @@
-import type { EnvironmentId, VcsRef as ContractVcsRef } from "@rove-code/contracts";
+import type { EnvironmentId, VcsRef as ContractVcsRef } from "@getpaperplane/contracts";
 
 export interface VcsRefTarget {
   readonly environmentId: EnvironmentId | null;

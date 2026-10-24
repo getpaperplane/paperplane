@@ -8,12 +8,12 @@ import type {
   ScopedProjectRef,
   ServerConfig,
   ServerProvider,
-} from "@rove-code/contracts";
-import { scopeProjectRef, scopeThreadRef } from "@rove-code/client-runtime/environment";
+} from "@getpaperplane/contracts";
+import { scopeProjectRef, scopeThreadRef } from "@getpaperplane/client-runtime/environment";
 import {
   isAtomCommandInterrupted,
   squashAtomCommandFailure,
-} from "@rove-code/client-runtime/state/runtime";
+} from "@getpaperplane/client-runtime/state/runtime";
 import {
   AuthTerminalOperateScope,
   CommandId,
@@ -21,7 +21,7 @@ import {
   AuthOrchestrationOperateScope,
   ProviderDriverKind,
   ThreadId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Schema from "effect/Schema";
 import {
   ArrowRightIcon,

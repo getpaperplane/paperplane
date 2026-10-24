@@ -1,8 +1,8 @@
 import * as Dialog from "../../components/ui/Dialog";
 import { ConnectionTraceId } from "./ConnectionTraceId";
 import { SymbolView } from "../../components/ui/AppSymbol";
-import type { AtomCommandResult } from "@rove-code/client-runtime/state/runtime";
-import { type EnvironmentId, resolveEnvironmentMachineKind } from "@rove-code/contracts";
+import type { AtomCommandResult } from "@getpaperplane/client-runtime/state/runtime";
+import { type EnvironmentId, resolveEnvironmentMachineKind } from "@getpaperplane/contracts";
 import { useAtomValue } from "@effect/atom-react";
 import * as Cause from "effect/Cause";
 import { AsyncResult } from "effect/reactivity";

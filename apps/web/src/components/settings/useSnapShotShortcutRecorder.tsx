@@ -2,8 +2,8 @@ import {
   isModifierPairShortcut,
   type SnapShotModifier,
   type SnapShotShortcut,
-} from "@rove-code/contracts";
-import { parseKeybindingShortcut } from "@rove-code/shared/keybindings";
+} from "@getpaperplane/contracts";
+import { parseKeybindingShortcut } from "@getpaperplane/shared/keybindings";
 import { useCallback, useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { getDesktopSnapShotBridge } from "../../lib/desktopSnapShot";
 import {

@@ -1,7 +1,7 @@
 import {
   PRIMARY_LOCAL_ENVIRONMENT_ID,
   type DesktopEnvironmentBootstrap,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Schema from "effect/Schema";
 
 import { readDesktopBootstraps } from "../../connection/desktopLocal";

@@ -10,10 +10,10 @@ import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Layer from "effect/Layer";
 import { Cookies, FetchHttpClient, HttpClientRequest, HttpClientResponse } from "effect/http";
-import { ManagedRelay } from "@rove-code/client-runtime/relay";
+import { ManagedRelay } from "@getpaperplane/client-runtime/relay";
 
-import type { EnvironmentId } from "@rove-code/contracts";
-import { verifyDpopProof } from "@rove-code/shared/dpop";
+import type { EnvironmentId } from "@getpaperplane/contracts";
+import { verifyDpopProof } from "@getpaperplane/shared/dpop";
 import type { SavedRemoteConnection } from "../../lib/connection";
 import * as Dpop from "../cloud/dpop";
 import * as ManagedRelayLayer from "../cloud/managedRelayLayer";

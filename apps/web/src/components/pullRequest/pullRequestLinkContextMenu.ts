@@ -1,8 +1,8 @@
-import type { ContextMenuItem } from "@rove-code/contracts";
+import type { ContextMenuItem } from "@getpaperplane/contracts";
 import {
   type SourceControlClientDefinition,
   UNKNOWN_SOURCE_CONTROL_CLIENT,
-} from "@rove-code/client-runtime/source-control-clients";
+} from "@getpaperplane/client-runtime/source-control-clients";
 
 import { writeTextToClipboard } from "~/hooks/useCopyToClipboard";
 import { readLocalApi } from "~/localApi";

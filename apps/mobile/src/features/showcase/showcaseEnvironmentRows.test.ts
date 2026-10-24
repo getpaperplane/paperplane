@@ -1,4 +1,4 @@
-import { EnvironmentId } from "@rove-code/contracts";
+import { EnvironmentId } from "@getpaperplane/contracts";
 import { assert, it } from "@effect/vitest";
 
 import type { ConnectedEnvironmentSummary } from "../../state/remote-runtime-types";

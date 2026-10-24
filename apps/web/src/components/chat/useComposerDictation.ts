@@ -3,7 +3,7 @@ import {
   LiveVoiceInputController,
   voiceInputBlocksSubmission,
   type VoiceInputState,
-} from "@rove-code/client-runtime/voice-input";
+} from "@getpaperplane/client-runtime/voice-input";
 
 import { ensureLocalApi } from "../../localApi";
 import {

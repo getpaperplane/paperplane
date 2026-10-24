@@ -1,9 +1,9 @@
-import { NodeId, ThreadId, TurnItemId, type OrchestrationV2TurnItem } from "@rove-code/contracts";
+import { NodeId, ThreadId, TurnItemId, type OrchestrationV2TurnItem } from "@getpaperplane/contracts";
 import {
   MAX_TOOL_OUTPUT_IMAGE_BASE64_LENGTH,
   MAX_TOOL_OUTPUT_IMAGES,
   toolOutputImages,
-} from "@rove-code/shared/toolOutput";
+} from "@getpaperplane/shared/toolOutput";
 import * as DateTime from "effect/DateTime";
 import { describe, expect, it } from "vite-plus/test";
 

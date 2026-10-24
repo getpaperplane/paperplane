@@ -5,10 +5,10 @@ import {
   type ServerProviderAuth,
   type ServerProviderModel,
   type ServerProviderSlashCommand,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import type { GrokSettings } from "../settings.ts";
 import type * as EffectAcpSchema from "effect-acp/compat";
-import { causeErrorTag } from "@rove-code/shared/observability";
+import { causeErrorTag } from "@getpaperplane/shared/observability";
 import * as Crypto from "effect/Crypto";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -19,10 +19,10 @@ import * as Schema from "effect/Schema";
 import * as HttpClient from "effect/http/HttpClient";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
-import { createModelCapabilities } from "@rove-code/shared/model";
-import { resolveSpawnCommand } from "@rove-code/shared/shell";
+import { createModelCapabilities } from "@getpaperplane/shared/model";
+import { resolveSpawnCommand } from "@getpaperplane/shared/shell";
 
-import * as ProviderLatestVersions from "@rove-code/provider-core/server/ProviderLatestVersions";
+import * as ProviderLatestVersions from "@getpaperplane/provider-core/server/ProviderLatestVersions";
 import {
   AUTH_PROBE_TIMEOUT_MS,
   buildServerProvider,
@@ -32,11 +32,11 @@ import {
   providerModelsFromSettings,
   spawnAndCollect,
   type ServerProviderDraft,
-} from "@rove-code/provider-core/server/snapshotProbe";
+} from "@getpaperplane/provider-core/server/snapshotProbe";
 import {
   enrichProviderSnapshotWithVersionAdvisory,
   type ProviderMaintenanceCapabilities,
-} from "@rove-code/provider-core/server/maintenanceResolver";
+} from "@getpaperplane/provider-core/server/maintenanceResolver";
 import {
   GROK_DEFAULT_MODEL_SLUG,
   GROK_SUPPORTED_RUNTIME_MODES,
@@ -44,7 +44,7 @@ import {
   makeGrokAcpRuntime,
   resolveGrokAcpBaseModelId,
 } from "./acpSupport.ts";
-import { sessionModelStateFromInitialize } from "@rove-code/provider-acp/server/runtimeModel";
+import { sessionModelStateFromInitialize } from "@getpaperplane/provider-acp/server/runtimeModel";
 import { discoverGrokSkills } from "./skills.ts";
 
 const GROK_PRESENTATION = {

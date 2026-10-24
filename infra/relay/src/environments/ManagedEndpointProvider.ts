@@ -14,7 +14,7 @@ import type {
   RelayManagedEndpoint,
   RelayManagedEndpointOrigin,
   RelayManagedEndpointRuntimeConfig,
-} from "@rove-code/contracts/relay";
+} from "@getpaperplane/contracts/relay";
 
 import * as RelayConfiguration from "../Config.ts";
 import {

@@ -2,7 +2,7 @@ import {
   projectCloneDisplayName,
   projectCloneProgressSummary,
   type ProjectCloneSnapshot,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { Pressable, View } from "react-native";
 
 import { AppActivityIndicator } from "../../components/ui/AppActivityIndicator";

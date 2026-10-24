@@ -1,8 +1,8 @@
 import {
   formatProviderSubagentStatus,
   type ProviderSubagentStatus,
-} from "@rove-code/client-runtime/state/thread-execution";
-import { isOrchestrationV2WorkActive } from "@rove-code/contracts";
+} from "@getpaperplane/client-runtime/state/thread-execution";
+import { isOrchestrationV2WorkActive } from "@getpaperplane/contracts";
 import { View } from "react-native";
 
 import { AppText as Text } from "../../components/ui/AppText";

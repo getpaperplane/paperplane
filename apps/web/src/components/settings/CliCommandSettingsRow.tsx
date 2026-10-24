@@ -1,4 +1,4 @@
-import type { DesktopCliCommandState } from "@rove-code/contracts";
+import type { DesktopCliCommandState } from "@getpaperplane/contracts";
 import { useCallback, useEffect, useState } from "react";
 
 import { Button } from "../ui/button";

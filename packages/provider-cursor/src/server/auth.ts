@@ -3,7 +3,7 @@ import {
   ProviderSetupError,
   type ProviderAuthState,
   type ProviderInstanceId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Clock from "effect/Clock";
 import * as Crypto from "effect/Crypto";
 import * as DateTime from "effect/DateTime";
@@ -17,7 +17,7 @@ import * as Stream from "effect/Stream";
 import * as SubscriptionRef from "effect/SubscriptionRef";
 
 import { loadCursorSdk } from "./sdk.ts";
-import type { ProviderAuthController } from "@rove-code/provider-core/server/auth";
+import type { ProviderAuthController } from "@getpaperplane/provider-core/server/auth";
 
 const AUTH_TIMEOUT_MS = 300_000;
 

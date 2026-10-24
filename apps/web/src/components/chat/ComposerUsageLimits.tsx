@@ -1,5 +1,5 @@
-import type { EnvironmentId, UsageLimitsReport } from "@rove-code/contracts";
-import { limitsNotice } from "@rove-code/shared/usageLimits";
+import type { EnvironmentId, UsageLimitsReport } from "@getpaperplane/contracts";
+import { limitsNotice } from "@getpaperplane/shared/usageLimits";
 import { GaugeIcon } from "lucide-react";
 
 import { ensureLocalApi } from "../../localApi";

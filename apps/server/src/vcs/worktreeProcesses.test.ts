@@ -1,6 +1,6 @@
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { Platform as HostProcessPlatform } from "@rove-code/shared/HostProcess";
+import { Platform as HostProcessPlatform } from "@getpaperplane/shared/HostProcess";
 import { it } from "@effect/vitest";
 import { expect, vi } from "vite-plus/test";
 import {

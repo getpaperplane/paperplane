@@ -1,7 +1,7 @@
 import {
   createVcsActionManager,
   createVcsEnvironmentAtoms,
-} from "@rove-code/client-runtime/state/vcs";
+} from "@getpaperplane/client-runtime/state/vcs";
 
 import { connectionAtomRuntime } from "../connection/runtime";
 

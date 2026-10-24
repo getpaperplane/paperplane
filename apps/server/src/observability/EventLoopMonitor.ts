@@ -1,7 +1,7 @@
 // @effect-diagnostics nodeBuiltinImport:off - only node:perf_hooks exposes the event loop delay histogram.
 import * as NodePerfHooks from "node:perf_hooks";
 
-import { RotatingFileSink } from "@rove-code/shared/logging";
+import { RotatingFileSink } from "@getpaperplane/shared/logging";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";

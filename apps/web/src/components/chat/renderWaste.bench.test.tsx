@@ -44,15 +44,15 @@ import {
   createRouter,
   RouterContextProvider,
 } from "@tanstack/react-router";
-import { PrimaryConnectionTarget } from "@rove-code/client-runtime/connection";
-import { applyShellStreamEvent } from "@rove-code/client-runtime/state/shell";
-import { applyOrchestrationV2TextAppend } from "@rove-code/client-runtime/state/orchestration-v2-projection";
+import { PrimaryConnectionTarget } from "@getpaperplane/client-runtime/connection";
+import { applyShellStreamEvent } from "@getpaperplane/client-runtime/state/shell";
+import { applyOrchestrationV2TextAppend } from "@getpaperplane/client-runtime/state/orchestration-v2-projection";
 import {
   EMPTY_THREAD_HISTORY_META,
   createEnvironmentThreadDetailAtoms,
   createEnvironmentThreadShellAtoms,
   type EnvironmentThreadState,
-} from "@rove-code/client-runtime/state/threads";
+} from "@getpaperplane/client-runtime/state/threads";
 import {
   EnvironmentId,
   ThreadId,
@@ -61,7 +61,7 @@ import {
   type OrchestrationV2ThreadProjection,
   type OrchestrationV2ThreadShell,
   type ScopedThreadRef,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as DateTime from "effect/DateTime";
 import * as Option from "effect/Option";
 import { AsyncResult, Atom, AtomRegistry } from "effect/reactivity";

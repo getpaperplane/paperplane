@@ -5,9 +5,9 @@ import {
   MUSE_DEFAULT_MODEL,
   ProviderInstanceId,
   type ServerProviderModel,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { MuseSettings } from "../settings.ts";
-import { createModelSelection } from "@rove-code/shared/model";
+import { createModelSelection } from "@getpaperplane/shared/model";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
 import * as Schema from "effect/Schema";

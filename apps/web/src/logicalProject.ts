@@ -12,4 +12,4 @@ export {
   type ProjectGroupingSettings,
   type ProjectGroup,
   type ProjectGroupMember,
-} from "@rove-code/client-runtime/state/project-grouping";
+} from "@getpaperplane/client-runtime/state/project-grouping";

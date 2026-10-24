@@ -2,9 +2,9 @@ import {
   worktreeSetupStageLabel,
   type WorktreeSetupSnapshot,
   type WorktreeSetupStage,
-} from "@rove-code/contracts";
-import { worktreeSetupAgentStarted } from "@rove-code/client-runtime/worktree-setup";
-import { formatDuration } from "@rove-code/shared/orchestrationTiming";
+} from "@getpaperplane/contracts";
+import { worktreeSetupAgentStarted } from "@getpaperplane/client-runtime/worktree-setup";
+import { formatDuration } from "@getpaperplane/shared/orchestrationTiming";
 import { useEffect, useState } from "react";
 import { AppState, Platform, Pressable, ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";

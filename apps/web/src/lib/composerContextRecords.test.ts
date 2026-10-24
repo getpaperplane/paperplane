@@ -5,9 +5,9 @@ import {
   OrchestrationMessageContext,
   ThreadId,
   type PreviewAnnotationPayload,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Schema from "effect/Schema";
-import { upgradeLegacyContextMessage } from "@rove-code/shared/composerContextLegacy";
+import { upgradeLegacyContextMessage } from "@getpaperplane/shared/composerContextLegacy";
 
 import {
   formatInlineContextReference,

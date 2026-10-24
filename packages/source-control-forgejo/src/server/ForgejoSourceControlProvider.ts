@@ -1,19 +1,19 @@
-import { SourceControlProviderKind } from "@rove-code/contracts";
+import { SourceControlProviderKind } from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Schema from "effect/Schema";
 import * as Result from "effect/Result";
-import { SourceControlProviderError } from "@rove-code/contracts";
-import * as SourceControlHost from "@rove-code/source-control-core/server/SourceControlHost";
+import { SourceControlProviderError } from "@getpaperplane/contracts";
+import * as SourceControlHost from "@getpaperplane/source-control-core/server/SourceControlHost";
 import * as ForgejoCli from "./ForgejoCli.ts";
-import * as SourceControlProvider from "@rove-code/source-control-core/server/SourceControlProvider";
+import * as SourceControlProvider from "@getpaperplane/source-control-core/server/SourceControlProvider";
 import {
   isMissingExecutable,
   providerAuth,
   probeSourceControlProvider,
   type SourceControlCliDiscoverySpec,
   type SourceControlManagedCliDiscoverySpec,
-} from "@rove-code/source-control-core/server/discovery";
+} from "@getpaperplane/source-control-core/server/discovery";
 import { ForgejoPullRequestSchema, toForgejoChangeRequest } from "./forgejoPullRequests.ts";
 
 const isForgejoCliError = Schema.is(ForgejoCli.ForgejoCliError);

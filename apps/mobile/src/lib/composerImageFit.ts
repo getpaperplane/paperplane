@@ -1,11 +1,11 @@
 import {
   downscalableImageMimeType,
   fitImageAttachmentSize,
-} from "@rove-code/client-runtime/image-attachment-size";
+} from "@getpaperplane/client-runtime/image-attachment-size";
 import {
   IMAGE_DIMENSIONS_HEADER_BYTES,
   readImageDimensions,
-} from "@rove-code/shared/imageDimensions";
+} from "@getpaperplane/shared/imageDimensions";
 
 const PHOTO_JPEG_QUALITY = 0.85;
 

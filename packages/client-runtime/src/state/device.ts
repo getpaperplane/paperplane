@@ -1,4 +1,4 @@
-import { type DeviceToolVersions, WS_METHODS } from "@rove-code/contracts";
+import { type DeviceToolVersions, WS_METHODS } from "@getpaperplane/contracts";
 import { Atom } from "effect/reactivity";
 
 import type { EnvironmentRegistry } from "../connection/registry.ts";

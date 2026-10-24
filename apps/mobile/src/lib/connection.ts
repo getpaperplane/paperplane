@@ -1,5 +1,5 @@
-import { EnvironmentId } from "@rove-code/contracts";
-import { type EnvironmentConnectionPhase } from "@rove-code/client-runtime/connection";
+import { EnvironmentId } from "@getpaperplane/contracts";
+import { type EnvironmentConnectionPhase } from "@getpaperplane/client-runtime/connection";
 
 export interface SavedRemoteConnection {
   readonly environmentId: EnvironmentId;

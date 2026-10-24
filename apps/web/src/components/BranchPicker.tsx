@@ -1,4 +1,4 @@
-import type { VcsRef } from "@rove-code/contracts";
+import type { VcsRef } from "@getpaperplane/contracts";
 import { LegendList, type LegendListRef } from "@legendapp/list/react";
 import {
   useCallback,

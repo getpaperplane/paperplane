@@ -1,5 +1,5 @@
-import type { ThreadId } from "@rove-code/contracts";
-import { boundedSnapshotProjection } from "@rove-code/shared/orchestrationV2BoundedSnapshot";
+import type { ThreadId } from "@getpaperplane/contracts";
+import { boundedSnapshotProjection } from "@getpaperplane/shared/orchestrationV2BoundedSnapshot";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";

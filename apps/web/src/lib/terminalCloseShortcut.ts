@@ -1,4 +1,4 @@
-import type { ResolvedKeybindingsConfig } from "@rove-code/contracts";
+import type { ResolvedKeybindingsConfig } from "@getpaperplane/contracts";
 
 import { isTerminalCloseShortcut, type ShortcutEventLike } from "../keybindings";
 

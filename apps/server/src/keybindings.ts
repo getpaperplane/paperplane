@@ -18,7 +18,7 @@ import {
   type ServerRemoveKeybindingInput,
   type ServerUpsertKeybindingInput,
   type ServerConfigIssue,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Array from "effect/Array";
 import * as Cache from "effect/Cache";
 import * as Cause from "effect/Cause";
@@ -41,15 +41,15 @@ import * as Scope from "effect/Scope";
 import * as Stream from "effect/Stream";
 import * as Semaphore from "effect/Semaphore";
 import * as ServerConfig from "./config.ts";
-import { writeFileStringAtomically } from "@rove-code/shared/atomicWrite";
-import { fromJsonStringPretty, fromLenientJson } from "@rove-code/shared/schemaJson";
+import { writeFileStringAtomically } from "@getpaperplane/shared/atomicWrite";
+import { fromJsonStringPretty, fromLenientJson } from "@getpaperplane/shared/schemaJson";
 import {
   DEFAULT_KEYBINDINGS,
   mergeWithDefaultKeybindings,
   compileResolvedKeybindingRule,
   compileResolvedKeybindingsConfig,
   parseKeybindingShortcut,
-} from "@rove-code/shared/keybindings";
+} from "@getpaperplane/shared/keybindings";
 
 export {
   DEFAULT_KEYBINDINGS,
@@ -286,7 +286,7 @@ export class Keybindings extends Context.Service<
       input: ServerRemoveKeybindingInput,
     ) => Effect.Effect<ResolvedKeybindingsConfig, KeybindingsConfigError>;
   }
->()("@rove-code/server/keybindings") {}
+>()("@getpaperplane/server/keybindings") {}
 
 const make = Effect.gen(function* () {
   const { keybindingsConfigPath } = yield* ServerConfig.ServerConfig;

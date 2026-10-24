@@ -1,4 +1,4 @@
-import { COMPOSER_ATTACHMENT_READ_DIRECTORIES } from "@rove-code/shared/roveMigration";
+import { COMPOSER_ATTACHMENT_READ_DIRECTORIES } from "@getpaperplane/shared/roveMigration";
 
 export const COMPOSER_ATTACHMENT_DIRECTORY = "rove-composer-attachments";
 

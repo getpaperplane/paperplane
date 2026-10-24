@@ -2,7 +2,7 @@ import { assert } from "@effect/vitest";
 import type {
   OrchestrationV2ThreadProjection,
   ProviderReplayTranscript,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 
 import type { OrchestratorV2ScenarioResult } from "../../OrchestratorScenario.ts";
 import {

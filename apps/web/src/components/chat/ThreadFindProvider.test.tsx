@@ -5,7 +5,7 @@ import {
   EnvironmentId,
   ThreadId,
   type OrchestrationV2SearchThreadResult,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   ThreadFind,
   ThreadFindProvider,

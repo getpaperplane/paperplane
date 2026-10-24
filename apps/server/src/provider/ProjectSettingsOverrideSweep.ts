@@ -17,7 +17,7 @@
  *
  * @module provider/ProjectSettingsOverrideSweep
  */
-import { type ProjectId, type ServerSettings } from "@rove-code/contracts";
+import { type ProjectId, type ServerSettings } from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 
 import * as ProjectStore from "../orchestration-v2/ProjectStore.ts";

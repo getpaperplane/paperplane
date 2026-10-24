@@ -1,4 +1,4 @@
-import type { EnvironmentId, ServerSelfUpdateInput } from "@rove-code/contracts";
+import type { EnvironmentId, ServerSelfUpdateInput } from "@getpaperplane/contracts";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";

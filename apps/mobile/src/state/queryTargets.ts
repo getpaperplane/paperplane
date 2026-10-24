@@ -1,4 +1,4 @@
-import type { EnvironmentId, ThreadId } from "@rove-code/contracts";
+import type { EnvironmentId, ThreadId } from "@getpaperplane/contracts";
 
 export interface CheckpointDiffTarget {
   readonly environmentId: EnvironmentId | null;

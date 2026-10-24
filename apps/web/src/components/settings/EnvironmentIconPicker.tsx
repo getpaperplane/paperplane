@@ -4,13 +4,13 @@ import {
   resolveEnvironmentMachineKind,
   type EnvironmentId,
   type ServerConfig,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 
 import {
   detectedEnvironmentMachineKind,
   planEnvironmentIconSetting,
   resolveEnvironmentIconPickerLock,
-} from "@rove-code/client-runtime/environment-admin";
+} from "@getpaperplane/client-runtime/environment-admin";
 import { useUpdateEnvironmentSettings } from "../../hooks/useSettings";
 import { useEnvironmentScope } from "../../state/session";
 import { ENVIRONMENT_MACHINE_KIND_LABELS, EnvironmentMachineIcon } from "../EnvironmentMachineIcon";

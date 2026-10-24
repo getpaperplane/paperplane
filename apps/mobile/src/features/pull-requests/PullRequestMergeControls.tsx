@@ -1,8 +1,8 @@
 import { AppActivityIndicator } from "../../components/ui/AppActivityIndicator";
 import * as Dialog from "../../components/ui/Dialog";
 import { useAtomRefresh, useAtomSet, useAtomValue } from "@effect/atom-react";
-import { squashAtomCommandFailure } from "@rove-code/client-runtime/state/runtime";
-import type { PullRequestDetail, PullRequestMergeMethod } from "@rove-code/contracts";
+import { squashAtomCommandFailure } from "@getpaperplane/client-runtime/state/runtime";
+import type { PullRequestDetail, PullRequestMergeMethod } from "@getpaperplane/contracts";
 import { AsyncResult } from "effect/reactivity";
 import { useRef, useState } from "react";
 import { Platform, Pressable, View } from "react-native";

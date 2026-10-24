@@ -1,4 +1,4 @@
-import { OrchestrationV2ProviderThread, type ThreadTokenUsageSnapshot } from "@rove-code/contracts";
+import { OrchestrationV2ProviderThread, type ThreadTokenUsageSnapshot } from "@getpaperplane/contracts";
 import * as DateTime from "effect/DateTime";
 import * as Schema from "effect/Schema";
 import { describe, expect, it } from "vite-plus/test";

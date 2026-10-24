@@ -3,7 +3,7 @@ import type {
   DesktopUpdateChannel,
   DesktopUpdateReleaseNote,
   DesktopUpdateState,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 
 function nextStatusAfterDownloadFailure(
   currentState: DesktopUpdateState,

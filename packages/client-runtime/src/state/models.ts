@@ -1,5 +1,5 @@
-import { backgroundWorkHoldsCompletion } from "@rove-code/shared/orchestrationV2PendingBackgroundWork";
-import { threadPullRequestsOf } from "@rove-code/shared/threadPullRequests";
+import { backgroundWorkHoldsCompletion } from "@getpaperplane/shared/orchestrationV2PendingBackgroundWork";
+import { threadPullRequestsOf } from "@getpaperplane/shared/threadPullRequests";
 import type {
   ThreadLinkedPullRequest,
   EnvironmentId,
@@ -15,7 +15,7 @@ import type {
   ProviderInstanceId,
   RunId,
   ThreadId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as DateTime from "effect/DateTime";
 
 import { formatSubagentDisplayTitle } from "./subagentDisplay.ts";
@@ -132,14 +132,14 @@ export interface EnvironmentThreadShell {
   readonly unsettledAt: string | null;
   readonly snoozedUntil: string | null;
   readonly snoozedAt: string | null;
-  readonly limitRecovery?: import("@rove-code/contracts").OrchestrationV2LimitRecovery | null;
+  readonly limitRecovery?: import("@getpaperplane/contracts").OrchestrationV2LimitRecovery | null;
   readonly pinnedAt: string | null;
   readonly autoSettleDisabledAt?: string | null;
   /** Slot in the user-arranged pinned order; null for keyless (legacy) pins. */
   readonly pinOrderKey: string | null;
   /** Slot in the user-arranged active order; null for keyless active threads. */
   readonly activeOrderKey: string | null;
-  readonly pullRequests: ReadonlyArray<import("@rove-code/contracts").ThreadPullRequestLink>;
+  readonly pullRequests: ReadonlyArray<import("@getpaperplane/contracts").ThreadPullRequestLink>;
   readonly linkedPullRequest?: ThreadLinkedPullRequest | null;
   readonly branchPullRequest?: ThreadLinkedPullRequest | null;
   /**

@@ -2,8 +2,8 @@
 import * as NodeChildProcess from "node:child_process";
 import * as NodeFS from "node:fs";
 import * as NodeServices from "@effect/platform-node/NodeServices";
-import { SelectedGitHubAccount } from "@rove-code/source-control-github/server/GitHubCredentials";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+import { SelectedGitHubAccount } from "@getpaperplane/source-control-github/server/GitHubCredentials";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 import { assert, it, describe } from "@effect/vitest";
 import { vi } from "vite-plus/test";
 import * as Deferred from "effect/Deferred";
@@ -31,7 +31,7 @@ import {
   type ReviewDiffFileContentsInput,
   type ReviewDiffPreviewResult,
   type WorktreeSubmodules,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as ServerConfig from "../config.ts";
 import { gitCommandDuration } from "../observability/Metrics.ts";
 import {

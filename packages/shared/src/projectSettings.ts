@@ -12,7 +12,7 @@ import {
   type RoveProjectFile,
   type ThreadEnvMode,
   type WorktreeCleanupRules,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { normalizeProjectPathForComparison } from "./path.ts";
 import { fallbackTextGenerationModelSelection } from "./serverSettings.ts";
 

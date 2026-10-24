@@ -1,11 +1,11 @@
 import { HOSTED_APP_CHANNEL } from "~/branding";
 import { isElectron } from "~/env";
 import { isMacPlatform, isWindowsPlatform, normalizeSearchText } from "~/lib/utils";
-import { STATIC_KEYBINDING_COMMANDS, type KeybindingCommand } from "@rove-code/contracts";
-import type { EnvironmentId } from "@rove-code/contracts";
-import type { EnvironmentConnectionPhase } from "@rove-code/client-runtime/connection";
-import { sourceControlClients } from "@rove-code/client-runtime/source-control-clients";
-import { DEFAULT_KEYBINDINGS } from "@rove-code/shared/keybindings";
+import { STATIC_KEYBINDING_COMMANDS, type KeybindingCommand } from "@getpaperplane/contracts";
+import type { EnvironmentId } from "@getpaperplane/contracts";
+import type { EnvironmentConnectionPhase } from "@getpaperplane/client-runtime/connection";
+import { sourceControlClients } from "@getpaperplane/client-runtime/source-control-clients";
+import { DEFAULT_KEYBINDINGS } from "@getpaperplane/shared/keybindings";
 import { commandLabel } from "./KeybindingsSettings.logic";
 import {
   validateSettingsScopeSearch,

@@ -3,7 +3,7 @@ import type {
   ProviderApprovalDecision,
   ProviderApprovalOption,
   RuntimeRequestId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { View } from "react-native";
 
 import { AppText as Text } from "../../components/ui/AppText";

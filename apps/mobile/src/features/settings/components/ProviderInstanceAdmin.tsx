@@ -2,7 +2,7 @@ import { useAtomValue } from "@effect/atom-react";
 import {
   isAtomCommandInterrupted,
   squashAtomCommandFailure,
-} from "@rove-code/client-runtime/state/runtime";
+} from "@getpaperplane/client-runtime/state/runtime";
 import {
   asProviderConfigBlob,
   buildProviderInstanceOverridePatch,
@@ -24,7 +24,7 @@ import {
   withProviderCommandArgs,
   type ProviderConfigBlob,
   type ProviderSettingsFieldModel,
-} from "@rove-code/client-runtime/state/provider-instance-settings";
+} from "@getpaperplane/client-runtime/state/provider-instance-settings";
 import {
   resolveProjectProviderInstanceEnabled,
   type AcpRegistrySearchAgent,
@@ -32,7 +32,7 @@ import {
   type ProviderInstanceConfig,
   type ProviderInstanceEnvironmentVariable,
   type ProviderInstanceMutation,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import * as Dialog from "../../../components/ui/Dialog";
 import { TextInput, View } from "react-native";

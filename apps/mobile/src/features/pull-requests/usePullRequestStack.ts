@@ -1,6 +1,6 @@
-import { threadPullRequestLinkMode } from "@rove-code/client-runtime/thread-pull-request-compatibility";
-import type { PullRequestDetail } from "@rove-code/contracts";
-import { parseChangeRequestUrl } from "@rove-code/shared/changeRequestUrl";
+import { threadPullRequestLinkMode } from "@getpaperplane/client-runtime/thread-pull-request-compatibility";
+import type { PullRequestDetail } from "@getpaperplane/contracts";
+import { parseChangeRequestUrl } from "@getpaperplane/shared/changeRequestUrl";
 import { useMemo } from "react";
 import { useEnvironmentServerConfig, useNavigationThreadShells } from "../../state/entities";
 import { pullRequestStackAtom } from "../../state/pull-requests";

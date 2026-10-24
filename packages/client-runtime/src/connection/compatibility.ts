@@ -2,7 +2,7 @@ import {
   ORCHESTRATION_PROTOCOL_QUERY_PARAM,
   ORCHESTRATION_PROTOCOL_VERSION,
   type ExecutionEnvironmentDescriptor,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 
 import { ConnectionBlockedError } from "./model.ts";
 

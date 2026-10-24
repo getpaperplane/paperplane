@@ -14,10 +14,10 @@ import {
   ProjectId,
   ProviderInstanceId,
   ThreadId,
-} from "@rove-code/contracts";
-import * as TestProviderHost from "@rove-code/provider-testing/TestProviderHost";
-import { checkpointWorkspace } from "@rove-code/provider-testing/replayWorkspace";
-import * as IdAllocator from "@rove-code/provider-core/server/IdAllocator";
+} from "@getpaperplane/contracts";
+import * as TestProviderHost from "@getpaperplane/provider-testing/TestProviderHost";
+import { checkpointWorkspace } from "@getpaperplane/provider-testing/replayWorkspace";
+import * as IdAllocator from "@getpaperplane/provider-core/server/IdAllocator";
 import * as ProviderAdapterRegistry from "../ProviderAdapterRegistry.ts";
 import * as ProviderSessionManager from "../ProviderSessionManager.ts";
 import * as Orchestrator from "../Orchestrator.ts";

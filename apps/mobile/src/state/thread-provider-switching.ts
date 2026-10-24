@@ -1,6 +1,6 @@
-import type { EnvironmentThreadShell } from "@rove-code/client-runtime/state/shell";
-import { threadSupportsProviderHandoff } from "@rove-code/client-runtime/state/thread-workflows";
-import type { OrchestrationV2ThreadProjection } from "@rove-code/contracts";
+import type { EnvironmentThreadShell } from "@getpaperplane/client-runtime/state/shell";
+import { threadSupportsProviderHandoff } from "@getpaperplane/client-runtime/state/thread-workflows";
+import type { OrchestrationV2ThreadProjection } from "@getpaperplane/contracts";
 
 type ThreadStartMarkers = Pick<
   EnvironmentThreadShell,

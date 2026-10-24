@@ -3,16 +3,16 @@ import type {
   OrchestrationV2ProjectedTurnItem,
   RunId,
   ThreadId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   toolCallLines,
   turnItemDetailRevision,
   turnItemNeedsDetailFetch,
   turnItemOutputImages,
   turnItemOutputText,
-} from "@rove-code/client-runtime/work-log/item-detail";
-import { formatDiffCount } from "@rove-code/client-runtime/diff-count";
-import { isJavaScriptReplTool } from "@rove-code/shared/toolActivity";
+} from "@getpaperplane/client-runtime/work-log/item-detail";
+import { formatDiffCount } from "@getpaperplane/client-runtime/diff-count";
+import { isJavaScriptReplTool } from "@getpaperplane/shared/toolActivity";
 import { ExternalLinkIcon, GitBranchIcon, RotateCcwIcon } from "lucide-react";
 import { memo, type ReactNode, Suspense, use, useMemo } from "react";
 

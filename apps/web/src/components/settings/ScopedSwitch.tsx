@@ -1,4 +1,4 @@
-import type { ServerSettings } from "@rove-code/contracts";
+import type { ServerSettings } from "@getpaperplane/contracts";
 import type { ComponentProps } from "react";
 
 import { Switch } from "../ui/switch";

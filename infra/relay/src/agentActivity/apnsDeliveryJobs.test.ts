@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
-import { EnvironmentId, ThreadId } from "@rove-code/contracts";
-import type { RelayAgentActivityAggregateState } from "@rove-code/contracts/relay";
+import { EnvironmentId, ThreadId } from "@getpaperplane/contracts";
+import type { RelayAgentActivityAggregateState } from "@getpaperplane/contracts/relay";
 import * as Redacted from "effect/Redacted";
 
 import {

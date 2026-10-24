@@ -5,7 +5,7 @@
  * the results. Raw transcripts never leave the machine that produced them.
  *
  * Mirror of `apps/web/src/state/usage.ts` over mobile's atom wiring; the merge
- * rules themselves live in `@rove-code/shared/usageMerge`.
+ * rules themselves live in `@getpaperplane/shared/usageMerge`.
  *
  * @module state/usage
  */
@@ -16,10 +16,10 @@ import {
   type EnvironmentId,
   type UsageSummary,
   type UsageSummaryInput,
-} from "@rove-code/contracts";
-import { needsCursorKeychainAccess, refreshUsage } from "@rove-code/client-runtime/state/usage";
-import { resolveUsageAccess } from "@rove-code/client-runtime/state/usage-access";
-import { mergeUsage, type EnvironmentUsage, type MergedUsage } from "@rove-code/shared/usageMerge";
+} from "@getpaperplane/contracts";
+import { needsCursorKeychainAccess, refreshUsage } from "@getpaperplane/client-runtime/state/usage";
+import { resolveUsageAccess } from "@getpaperplane/client-runtime/state/usage-access";
+import { mergeUsage, type EnvironmentUsage, type MergedUsage } from "@getpaperplane/shared/usageMerge";
 import * as Option from "effect/Option";
 import { AsyncResult, Atom } from "effect/reactivity";
 import { useCallback, useMemo } from "react";

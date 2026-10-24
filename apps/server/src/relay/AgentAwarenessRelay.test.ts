@@ -13,8 +13,8 @@ import {
   RunId,
   ThreadId,
   TurnItemId,
-} from "@rove-code/contracts";
-import { RelayAgentActivityState } from "@rove-code/contracts/relay";
+} from "@getpaperplane/contracts";
+import { RelayAgentActivityState } from "@getpaperplane/contracts/relay";
 import * as DateTime from "effect/DateTime";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";

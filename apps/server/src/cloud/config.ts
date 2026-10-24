@@ -1,7 +1,7 @@
 import {
   RelayManagedEndpointOrigin,
   RelayManagedEndpointRuntimeConfig,
-} from "@rove-code/contracts/relay";
+} from "@getpaperplane/contracts/relay";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";

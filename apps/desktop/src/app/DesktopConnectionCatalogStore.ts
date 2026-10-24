@@ -5,13 +5,13 @@ import {
   RelayConnectionTarget,
   SshConnectionProfile,
   SshConnectionTarget,
-} from "@rove-code/client-runtime/connection";
+} from "@getpaperplane/client-runtime/connection";
 import {
   ConnectionCatalogDocument as RuntimeConnectionCatalogDocument,
   type ConnectionCatalogDocument as RuntimeConnectionCatalogDocumentType,
-} from "@rove-code/client-runtime/platform";
-import type { PersistedSavedEnvironmentRecord } from "@rove-code/contracts";
-import { fromLenientJson } from "@rove-code/shared/schemaJson";
+} from "@getpaperplane/client-runtime/platform";
+import type { PersistedSavedEnvironmentRecord } from "@getpaperplane/contracts";
+import { fromLenientJson } from "@getpaperplane/shared/schemaJson";
 import * as Context from "effect/Context";
 import * as Crypto from "effect/Crypto";
 import * as Effect from "effect/Effect";
@@ -165,7 +165,7 @@ export class DesktopConnectionCatalogStore extends Context.Service<
     >;
     readonly clear: Effect.Effect<void>;
   }
->()("@rove-code/desktop/app/DesktopConnectionCatalogStore") {}
+>()("@getpaperplane/desktop/app/DesktopConnectionCatalogStore") {}
 
 function decodeSecretBytes(
   catalogPath: string,

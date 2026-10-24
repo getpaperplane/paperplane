@@ -135,7 +135,7 @@ jobs:
           cache: true
           run-install: |
             args:
-              - --filter=@rove-code/mobile...
+              - --filter=@getpaperplane/mobile...
 
       - name: Expose pnpm
         if: steps.expo-token.outputs.present == 'true'

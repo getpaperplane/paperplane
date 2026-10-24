@@ -1,4 +1,4 @@
-import type { ProviderOptionDescriptor } from "@rove-code/contracts";
+import type { ProviderOptionDescriptor } from "@getpaperplane/contracts";
 import { describe, expect, it } from "vite-plus/test";
 
 import { runtimeModeChoicesForSupportedModes, selectableChoices } from "./thread-settings-options";

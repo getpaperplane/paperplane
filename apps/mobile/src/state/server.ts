@@ -1,5 +1,5 @@
-import { createServerEnvironmentAtoms } from "@rove-code/client-runtime/state/server";
-import { createEnvironmentServerConfigsAtom } from "@rove-code/client-runtime/state/shell";
+import { createServerEnvironmentAtoms } from "@getpaperplane/client-runtime/state/server";
+import { createEnvironmentServerConfigsAtom } from "@getpaperplane/client-runtime/state/shell";
 
 import { environmentCatalog } from "../connection/catalog";
 import { connectionAtomRuntime } from "../connection/runtime";

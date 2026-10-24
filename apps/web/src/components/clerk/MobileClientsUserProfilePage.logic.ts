@@ -1,4 +1,4 @@
-import type { RelayClientDeviceRecord } from "@rove-code/contracts/relay";
+import type { RelayClientDeviceRecord } from "@getpaperplane/contracts/relay";
 
 const mobileClientUpdatedAtFormatter = new Intl.DateTimeFormat(undefined, {
   dateStyle: "medium",

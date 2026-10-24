@@ -2,9 +2,9 @@ import {
   ROVE_PROJECT_FILE_NAME,
   type EnvironmentId,
   type RoveProjectFile,
-} from "@rove-code/contracts";
-import { parseRoveProjectFile } from "@rove-code/shared/roveProjectFile";
-import { executeAtomQuery } from "@rove-code/client-runtime/state/runtime";
+} from "@getpaperplane/contracts";
+import { parseRoveProjectFile } from "@getpaperplane/shared/roveProjectFile";
+import { executeAtomQuery } from "@getpaperplane/client-runtime/state/runtime";
 
 import {
   getProjectFileQueryAtom,

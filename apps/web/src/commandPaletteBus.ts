@@ -1,4 +1,4 @@
-import type { EnvironmentId, PullRequestLinkedThreadsResult } from "@rove-code/contracts";
+import type { EnvironmentId, PullRequestLinkedThreadsResult } from "@getpaperplane/contracts";
 
 export interface CommandPaletteLinkedThreads {
   readonly environmentId: EnvironmentId;

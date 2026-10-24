@@ -24,8 +24,8 @@ import {
   type AuthWebSocketTicketResult,
   DpopFailureReason,
   type DpopFailureReason as DpopFailureReasonType,
-} from "@rove-code/contracts";
-import { encodeOAuthScope } from "@rove-code/shared/oauthScope";
+} from "@getpaperplane/contracts";
+import { encodeOAuthScope } from "@getpaperplane/shared/oauthScope";
 import * as Context from "effect/Context";
 import * as Crypto from "effect/Crypto";
 import * as DateTime from "effect/DateTime";
@@ -34,7 +34,7 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
-import { legacyRoveCookieName } from "@rove-code/shared/roveMigration";
+import { legacyRoveCookieName } from "@getpaperplane/shared/roveMigration";
 import * as HttpServerRequest from "effect/http/HttpServerRequest";
 
 import * as ServerEnvironment from "../environment/ServerEnvironment.ts";
@@ -586,7 +586,7 @@ export class EnvironmentAuth extends Context.Service<
       request: HttpServerRequest.HttpServerRequest,
     ) => Effect.Effect<AuthenticatedSession, ServerAuthCredentialError | ServerAuthInternalError>;
   }
->()("@rove-code/server/auth/EnvironmentAuth") {}
+>()("@getpaperplane/server/auth/EnvironmentAuth") {}
 
 type BootstrapExchangeResult = {
   readonly response: AuthBrowserSessionResult;

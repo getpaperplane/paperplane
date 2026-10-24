@@ -5,7 +5,7 @@ import {
   ThreadId,
   WorktreeInventoryError,
   type WorktreeInventoryEntry,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Cause from "effect/Cause";
 import {
   createMemoryHistory,

@@ -6,11 +6,11 @@ import {
   DEFAULT_SERVER_SETTINGS,
   ThreadId,
   type ServerSettings as ServerSettingsValue,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   Environment as HostProcessEnvironment,
   Platform as HostProcessPlatform,
-} from "@rove-code/shared/HostProcess";
+} from "@getpaperplane/shared/HostProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";

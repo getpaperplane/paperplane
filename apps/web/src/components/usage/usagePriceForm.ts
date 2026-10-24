@@ -1,4 +1,4 @@
-import type { UsageModelPriceOverride } from "@rove-code/contracts";
+import type { UsageModelPriceOverride } from "@getpaperplane/contracts";
 
 export const USAGE_PRICE_FIELDS = [
   { key: "inputCostPerMillionTokens", label: "Input", optional: false },

@@ -2,7 +2,7 @@ import {
   GitCommandError,
   OrchestrationV2AppThreadJson,
   OrchestrationV2ProviderSessionJson,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Schema from "effect/Schema";
 import * as SqlClient from "effect/sql/SqlClient";
 import type {
@@ -14,9 +14,9 @@ import type {
   WorktreeCleanupRules,
   StorageCleanupReport,
   StorageCleanupReportEntry,
-} from "@rove-code/contracts";
-import { resolveWorktreeCleanup } from "@rove-code/shared/projectSettings";
-import { makeDrainableWorker } from "@rove-code/shared/DrainableWorker";
+} from "@getpaperplane/contracts";
+import { resolveWorktreeCleanup } from "@getpaperplane/shared/projectSettings";
+import { makeDrainableWorker } from "@getpaperplane/shared/DrainableWorker";
 import * as Context from "effect/Context";
 import * as Deferred from "effect/Deferred";
 import * as Layer from "effect/Layer";
@@ -47,8 +47,8 @@ import { isFilesystemRoot, managedWorktreesDirectories } from "./worktreesDirect
 import * as GitVcsDriver from "./vcs/GitVcsDriver.ts";
 import { stopWorktreeProcessesAfterRemoval } from "./vcs/worktreeProcesses.ts";
 import { withWorkspaceLease } from "./workspace/workspaceLease.ts";
-import * as HostProcess from "@rove-code/shared/HostProcess";
-import * as NodeSqliteClient from "@rove-code/shared/nodeSqliteClient";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
+import * as NodeSqliteClient from "@getpaperplane/shared/nodeSqliteClient";
 
 const decodeCleanupThread = Schema.decodeUnknownEffect(
   Schema.fromJsonString(OrchestrationV2AppThreadJson),
@@ -197,7 +197,7 @@ export class StorageCleanup extends Context.Service<
     readonly reports: Stream.Stream<StorageCleanupReport | null>;
     readonly drain: Effect.Effect<void>;
   }
->()("@rove-code/server/storageCleanup") {}
+>()("@getpaperplane/server/storageCleanup") {}
 
 const make = Effect.gen(function* () {
   const config = yield* ServerConfig.ServerConfig;

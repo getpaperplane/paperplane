@@ -1,6 +1,6 @@
 import { useAtomValue } from "@effect/atom-react";
-import { hostMemoryNotice } from "@rove-code/client-runtime/host-health";
-import type { EnvironmentId, HostHealthReport } from "@rove-code/contracts";
+import { hostMemoryNotice } from "@getpaperplane/client-runtime/host-health";
+import type { EnvironmentId, HostHealthReport } from "@getpaperplane/contracts";
 import { Link } from "@tanstack/react-router";
 import { AsyncResult, Atom } from "effect/reactivity";
 import { MemoryStickIcon } from "lucide-react";

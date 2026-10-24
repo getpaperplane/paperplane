@@ -4,7 +4,7 @@ import {
   RelayAgentActivityAggregateState,
   RelayAgentAwarenessPreferences,
   type RelayDeliveryResult,
-} from "@rove-code/contracts/relay";
+} from "@getpaperplane/contracts/relay";
 import * as Crypto from "effect/Crypto";
 import type * as PlatformError from "effect/PlatformError";
 import * as Context from "effect/Context";

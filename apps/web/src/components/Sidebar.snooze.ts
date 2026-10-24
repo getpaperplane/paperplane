@@ -1,9 +1,9 @@
-import type { TimestampFormat } from "@rove-code/contracts/settings";
+import type { TimestampFormat } from "@getpaperplane/contracts/settings";
 import {
   resolveSnoozePresets as resolveSharedSnoozePresets,
   snoozeWakeLabel,
   type SnoozePreset,
-} from "@rove-code/client-runtime/state/thread-settled";
+} from "@getpaperplane/client-runtime/state/thread-settled";
 
 import { formatShortTimestamp, parseTimestampDate } from "../timestampFormat";
 

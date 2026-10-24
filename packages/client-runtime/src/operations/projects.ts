@@ -7,9 +7,9 @@ import type {
   ServerConfig,
   SourceControlDiscoveryResult,
   SourceControlRepositoryInfo,
-} from "@rove-code/contracts";
-import { SourceControlProviderKind } from "@rove-code/contracts";
-import { newProjectFolderName } from "@rove-code/shared/path";
+} from "@getpaperplane/contracts";
+import { SourceControlProviderKind } from "@getpaperplane/contracts";
+import { newProjectFolderName } from "@getpaperplane/shared/path";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as Order from "effect/Order";

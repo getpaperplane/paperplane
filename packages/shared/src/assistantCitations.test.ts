@@ -7,7 +7,7 @@ import {
   MessageId,
   ThreadId,
   type AssistantCitation,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   assistantCitationsToPlainText,
   collectAssistantCitations,

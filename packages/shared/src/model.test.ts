@@ -3,7 +3,7 @@ import {
   ProviderDriverKind,
   ProviderInstanceId,
   type ModelCapabilities,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 
 import {
   applyClaudePromptEffortPrefix,

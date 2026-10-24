@@ -5,8 +5,8 @@ import type { PullRequestSpeedActionResult } from "~/components/pullRequest/Pull
 import { usePullRequestCloseBatch } from "~/components/pullRequest/usePullRequestActions";
 import { SidebarPointerSensor } from "~/components/Sidebar.pointer";
 import { resolveSidebarSweepKeys } from "~/components/Sidebar.logic";
-import { sortProjectsByGroupOrder } from "@rove-code/client-runtime/state/project-grouping";
-import { pullRequestHostOf, resolveEnvironmentMachineKind } from "@rove-code/contracts";
+import { sortProjectsByGroupOrder } from "@getpaperplane/client-runtime/state/project-grouping";
+import { pullRequestHostOf, resolveEnvironmentMachineKind } from "@getpaperplane/contracts";
 import type {
   EnvironmentId,
   ProjectId,
@@ -18,7 +18,7 @@ import type {
   PullRequestListResult,
   PullRequestListState,
   SourceControlProviderKind,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { useAtomValue } from "@effect/atom-react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import {

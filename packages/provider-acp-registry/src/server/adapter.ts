@@ -8,11 +8,11 @@ import {
   extractCopilotSubagentUpdate,
   makeCopilotSubagentRouting,
 } from "./copilotAcp.ts";
-import { defaultInstanceIdForDriver, ProviderDriverKind } from "@rove-code/contracts";
-import { readCustomModelEntries } from "@rove-code/shared/model";
+import { defaultInstanceIdForDriver, ProviderDriverKind } from "@getpaperplane/contracts";
+import { readCustomModelEntries } from "@getpaperplane/shared/model";
 import { AcpRegistrySettings } from "../settings.ts";
-import * as HostProcess from "@rove-code/shared/HostProcess";
-import { resolveSelfInvocation, type SelfInvocation } from "@rove-code/shared/nodeRuntime";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
+import { resolveSelfInvocation, type SelfInvocation } from "@getpaperplane/shared/nodeRuntime";
 import * as Crypto from "effect/Crypto";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -24,8 +24,8 @@ import type * as Scope from "effect/Scope";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as EffectAcpErrors from "effect-acp/errors";
 
-import * as McpProviderSessions from "@rove-code/provider-core/server/McpProviderSessions";
-import * as ProviderHost from "@rove-code/provider-core/server/ProviderHost";
+import * as McpProviderSessions from "@getpaperplane/provider-core/server/McpProviderSessions";
+import * as ProviderHost from "@getpaperplane/provider-core/server/ProviderHost";
 import {
   normalizeAcpRegistryCommands,
   normalizeAcpRegistryLiveConfiguration,
@@ -33,24 +33,24 @@ import {
 } from "./probe.ts";
 import * as AcpRegistrySupport from "./AcpRegistrySupport.ts";
 import * as AcpRegistryRuntimeCoordinator from "./AcpRegistryRuntimeCoordinator.ts";
-import * as AcpSessionRuntime from "@rove-code/provider-acp/server/AcpSessionRuntime";
-import { makeAcpNativeLoggerFactory } from "@rove-code/provider-acp/server/nativeLogging";
-import * as ProviderEventLoggers from "@rove-code/provider-core/server/ProviderEventLoggers";
-import { mergeProviderInstanceEnvironment } from "@rove-code/provider-core/server/instanceEnvironment";
-import * as IdAllocator from "@rove-code/provider-core/server/IdAllocator";
-import { makeProviderFailure } from "@rove-code/provider-core/server/failure";
+import * as AcpSessionRuntime from "@getpaperplane/provider-acp/server/AcpSessionRuntime";
+import { makeAcpNativeLoggerFactory } from "@getpaperplane/provider-acp/server/nativeLogging";
+import * as ProviderEventLoggers from "@getpaperplane/provider-core/server/ProviderEventLoggers";
+import { mergeProviderInstanceEnvironment } from "@getpaperplane/provider-core/server/instanceEnvironment";
+import * as IdAllocator from "@getpaperplane/provider-core/server/IdAllocator";
+import { makeProviderFailure } from "@getpaperplane/provider-core/server/failure";
 import {
   ProviderAdapterDriverCreateError,
   type ProviderAdapterDriver,
   type ProviderAdapterDriverCreateInput,
-} from "@rove-code/provider-core/server/adapterDriver";
+} from "@getpaperplane/provider-core/server/adapterDriver";
 import {
   AcpProviderCapabilitiesV2,
   makeAcpAdapterV2,
   type AcpAdapterV2ExtensionContext,
   type AcpAdapterV2Flavor,
   type AcpAdapterV2RuntimeInput,
-} from "@rove-code/provider-acp/server/adapter";
+} from "@getpaperplane/provider-acp/server/adapter";
 
 export const ACP_REGISTRY_PROVIDER = ProviderDriverKind.make("acpRegistry");
 export const ACP_REGISTRY_DEFAULT_INSTANCE_ID = defaultInstanceIdForDriver(ACP_REGISTRY_PROVIDER);

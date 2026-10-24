@@ -1,6 +1,6 @@
 import * as Dialog from "../../components/ui/Dialog";
-import type { ServerProvider } from "@rove-code/contracts";
-import { CHATGPT_USAGE_URL, usesChatGptSharing } from "@rove-code/shared/usageLimits";
+import type { ServerProvider } from "@getpaperplane/contracts";
+import { CHATGPT_USAGE_URL, usesChatGptSharing } from "@getpaperplane/shared/usageLimits";
 import { Linking, Pressable, View } from "react-native";
 import { AppText as Text } from "../../components/ui/AppText";
 import { ProviderIcon } from "../../components/ProviderIcon";

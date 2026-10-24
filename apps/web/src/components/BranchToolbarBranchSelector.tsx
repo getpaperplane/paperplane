@@ -1,13 +1,13 @@
 import { ThreadDetailsControl } from "./chat/ThreadDetailsControl";
 import { ComposerContextLabel } from "./ComposerContextLabel";
 import { useSupportsMultiplePullRequests } from "~/hooks/useSupportsMultiplePullRequests";
-import { resolveThreadCurrentPullRequestLink } from "@rove-code/shared/threadPullRequests";
+import { resolveThreadCurrentPullRequestLink } from "@getpaperplane/shared/threadPullRequests";
 import { useRightPanelStore } from "../rightPanelStore";
-import { scopeProjectRef, scopeThreadRef } from "@rove-code/client-runtime/environment";
+import { scopeProjectRef, scopeThreadRef } from "@getpaperplane/client-runtime/environment";
 import {
   isAtomCommandInterrupted,
   squashAtomCommandFailure,
-} from "@rove-code/client-runtime/state/runtime";
+} from "@getpaperplane/client-runtime/state/runtime";
 import {
   AuthOrchestrationOperateScope,
   AuthSourceControlWriteScope,
@@ -15,7 +15,7 @@ import {
   type EnvironmentId,
   type VcsRef,
   type ThreadId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { ChevronDownIcon, GitBranchIcon } from "lucide-react";
 import {
   useCallback,

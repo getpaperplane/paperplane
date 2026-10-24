@@ -1,4 +1,4 @@
-import { ProviderDriverKind, ProviderInstanceId, type ServerProvider } from "@rove-code/contracts";
+import { ProviderDriverKind, ProviderInstanceId, type ServerProvider } from "@getpaperplane/contracts";
 import { describe, expect, it } from "vite-plus/test";
 
 import { getProviderSummary, getProviderVersionAdvisoryPresentation } from "./providerStatus";

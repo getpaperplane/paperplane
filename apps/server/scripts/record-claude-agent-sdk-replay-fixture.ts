@@ -10,9 +10,9 @@ import {
   CLAUDE_AGENT_SDK_REPLAY_PROTOCOL,
 } from "../src/orchestration-v2/Adapters/ClaudeAdapterV2.testkit.ts";
 import { claudeRuntimeQueryPolicyForRuntimePolicy } from "../src/orchestration-v2/Adapters/ClaudeAdapterV2.ts";
-import * as ProviderAdapter from "@rove-code/provider-core/server/ProviderAdapter";
+import * as ProviderAdapter from "@getpaperplane/provider-core/server/ProviderAdapter";
 import type { RuntimePolicyV2Override } from "../src/orchestration-v2/RuntimePolicy.ts";
-import { makeCheckpointWorkspace } from "@rove-code/provider-testing/replayWorkspace";
+import { makeCheckpointWorkspace } from "@getpaperplane/provider-testing/replayWorkspace";
 import { CLAUDE_MODEL_SELECTION } from "../src/orchestration-v2/testkit/fixtures/shared.ts";
 import {
   MESSAGE_STEERING_INITIAL_PROMPT,

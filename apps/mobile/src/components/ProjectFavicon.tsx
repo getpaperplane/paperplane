@@ -3,12 +3,12 @@ import { AppText } from "./ui/AppText";
 import { Image } from "expo-image";
 import { memo, useLayoutEffect, useMemo, useState } from "react";
 import { View } from "react-native";
-import type { EnvironmentId, ProjectIconOverride } from "@rove-code/contracts";
+import type { EnvironmentId, ProjectIconOverride } from "@getpaperplane/contracts";
 import {
   getProjectFaviconCacheKey,
   getProjectFaviconResourceKey,
   isProjectFaviconFallbackUrl,
-} from "@rove-code/shared/projectFavicon";
+} from "@getpaperplane/shared/projectFavicon";
 import { useAtomValue } from "@effect/atom-react";
 import { Atom } from "effect/reactivity";
 import { projectFaviconUrlAtom } from "../state/assets";

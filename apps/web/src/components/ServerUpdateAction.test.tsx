@@ -5,7 +5,7 @@ import {
   AuthSessionState,
   type EnvironmentId,
   type ServerInstallation,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Cause from "effect/Cause";
 import * as Schema from "effect/Schema";
 import { AsyncResult } from "effect/reactivity";
@@ -171,19 +171,19 @@ describe("ServerUpdateAction", () => {
   it.each([
     [
       { kind: "npm-global", prefix: "/opt/node" },
-      "npm install --global --prefix '/opt/node' @rove-code/cli@0.0.45",
+      "npm install --global --prefix '/opt/node' @getpaperplane/cli@0.0.45",
       "Update command copied",
       "then restart rove",
     ],
     [
       { kind: "npx" },
-      "npx @rove-code/cli@0.0.45",
+      "npx @getpaperplane/cli@0.0.45",
       "Relaunch command copied",
       "This does not update an installed rove command.",
     ],
     [
       undefined,
-      "npx @rove-code/cli@0.0.45",
+      "npx @getpaperplane/cli@0.0.45",
       "Relaunch command copied",
       "This does not update an installed rove command.",
     ],
@@ -267,7 +267,7 @@ describe("ServerUpdateAction", () => {
       targetVersion: "0.0.31",
     }) as ActionElement;
     element.props.onClick?.();
-    expect(testState.clipboard).toHaveBeenCalledWith("npx @rove-code/cli@0.0.31");
+    expect(testState.clipboard).toHaveBeenCalledWith("npx @getpaperplane/cli@0.0.31");
     expect(testState.updateServer).not.toHaveBeenCalled();
   });
 

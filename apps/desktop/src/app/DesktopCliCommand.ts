@@ -1,4 +1,4 @@
-import type { DesktopCliCommandState } from "@rove-code/contracts";
+import type { DesktopCliCommandState } from "@getpaperplane/contracts";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -71,7 +71,7 @@ export class DesktopCliCommand extends Context.Service<
     readonly install: Effect.Effect<DesktopCliCommandState, DesktopCliCommandError>;
     readonly uninstall: Effect.Effect<DesktopCliCommandState, DesktopCliCommandError>;
   }
->()("@rove-code/desktop/app/DesktopCliCommand") {}
+>()("@getpaperplane/desktop/app/DesktopCliCommand") {}
 
 /** @public Service construction is part of the canonical Effect module API. */
 export const make = Effect.gen(function* () {

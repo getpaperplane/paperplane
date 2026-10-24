@@ -1,4 +1,4 @@
-import type { ChatAttachment, EnvironmentId } from "@rove-code/contracts";
+import type { ChatAttachment, EnvironmentId } from "@getpaperplane/contracts";
 import { Image } from "expo-image";
 import { Pressable, ScrollView, View } from "react-native";
 

@@ -3,13 +3,13 @@
  *
  * @module source-control-gitlab/client/definition
  */
-import { SourceControlProviderKind } from "@rove-code/contracts";
+import { SourceControlProviderKind } from "@getpaperplane/contracts";
 import {
   defineSourceControlClient,
   isChangeRequestInProjectRepository,
   isChangeRequestOnProjectHost,
   isChangeRequestPath,
-} from "@rove-code/source-control-core/client/definition";
+} from "@getpaperplane/source-control-core/client/definition";
 
 const CHECKOUT_COMMAND = /^glab\s+mr\s+checkout\s+(.+)$/i;
 const CHANGE_REQUEST_REFERENCE =

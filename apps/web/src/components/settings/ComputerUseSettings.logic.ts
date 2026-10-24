@@ -5,7 +5,7 @@ import type {
   ComputerUseMacosVm,
   ComputerUseMacosVmProgress,
   ComputerUseStatus,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 
 function hostName(platform: "darwin" | "linux" | "win32"): string {
   switch (platform) {

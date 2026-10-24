@@ -5,7 +5,7 @@ import {
   type PiThinkingLevel,
   type ServerProvider,
   type ServerProviderModel,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 import { deriveProviderInstanceEntries } from "../../providerInstances";

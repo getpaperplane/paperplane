@@ -6,9 +6,9 @@ import {
   type RunId,
   OrchestratorMcpFailure,
   type OrchestrationV2Command,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
-import { modelSelectionCommandType } from "@rove-code/shared/model";
+import { modelSelectionCommandType } from "@getpaperplane/shared/model";
 
 import * as McpToolAccess from "../../McpToolAccess.ts";
 import {

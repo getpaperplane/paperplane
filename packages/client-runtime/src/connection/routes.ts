@@ -3,8 +3,8 @@ import {
   isPrivateNetworkHost,
   isSharedAddressSpaceHost,
   isTailnetHost,
-} from "@rove-code/shared/hostClassification";
-import type { DesktopSshEnvironmentTarget } from "@rove-code/contracts";
+} from "@getpaperplane/shared/hostClassification";
+import type { DesktopSshEnvironmentTarget } from "@getpaperplane/contracts";
 import * as Option from "effect/Option";
 
 import {

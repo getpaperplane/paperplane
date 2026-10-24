@@ -1,5 +1,5 @@
-import type { EnvironmentId } from "@rove-code/contracts";
-import { formatAttachmentSize } from "@rove-code/client-runtime/state/attachments";
+import type { EnvironmentId } from "@getpaperplane/contracts";
+import { formatAttachmentSize } from "@getpaperplane/client-runtime/state/attachments";
 
 import { useFileMetadata } from "../../hooks/useFileMetadata";
 import { PierreEntryIcon } from "./PierreEntryIcon";

@@ -4,14 +4,14 @@ import * as NodeOS from "node:os";
 
 import * as NodeRuntime from "@effect/platform-node/NodeRuntime";
 import * as NodeServices from "@effect/platform-node/NodeServices";
-import * as NetService from "@rove-code/shared/Net";
-import { resolveGitWorktreePath, resolveWorktreeRoveHome } from "@rove-code/shared/devHome";
-import * as HostProcess from "@rove-code/shared/HostProcess";
-import { resolveSpawnCommand } from "@rove-code/shared/shell";
+import * as NetService from "@getpaperplane/shared/Net";
+import { resolveGitWorktreePath, resolveWorktreeRoveHome } from "@getpaperplane/shared/devHome";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
+import { resolveSpawnCommand } from "@getpaperplane/shared/shell";
 import {
   LEGACY_SERVICE_LAUNCHER_CONTEXT_ENV,
   LEGACY_BOOT_SERVICE_UNIT_ENV,
-} from "@rove-code/shared/roveMigration";
+} from "@getpaperplane/shared/roveMigration";
 import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
 import * as Hash from "effect/Hash";
@@ -78,15 +78,15 @@ export const DEFAULT_ROVE_HOME = Effect.map(Effect.service(Path.Path), (path) =>
 const MODE_ARGS = {
   dev: [
     "run",
-    "--filter=@rove-code/contracts",
-    "--filter=@rove-code/web",
-    "--filter=@rove-code/server",
+    "--filter=@getpaperplane/contracts",
+    "--filter=@getpaperplane/web",
+    "--filter=@getpaperplane/server",
     "--parallel",
     "dev",
   ],
-  "dev:server": ["run", "--filter=@rove-code/server", "dev"],
-  "dev:web": ["run", "--filter=@rove-code/web", "dev"],
-  "dev:desktop": ["run", "--filter=@rove-code/desktop", "--filter=@rove-code/web", "dev"],
+  "dev:server": ["run", "--filter=@getpaperplane/server", "dev"],
+  "dev:web": ["run", "--filter=@getpaperplane/web", "dev"],
+  "dev:desktop": ["run", "--filter=@getpaperplane/desktop", "--filter=@getpaperplane/web", "dev"],
 } as const satisfies Record<string, ReadonlyArray<string>>;
 
 type DevMode = keyof typeof MODE_ARGS;
@@ -672,7 +672,7 @@ export function runDevRunnerWithInput(input: DevRunnerCliInput) {
 
     const hostEnvironment = yield* HostProcess.Environment;
     // A dev server started inside a worktree defaults to that worktree's own
-    // (gitignored) `.rove` — see @rove-code/shared/devHome for why this must
+    // (gitignored) `.rove` — see @getpaperplane/shared/devHome for why this must
     // outrank an ambient ROVE_HOME. `--home-dir` still wins.
     const worktreeHome = yield* resolveWorktreeRoveHome(yield* HostProcess.WorkingDirectory);
     // Trim before choosing: `--home-dir ""` is not a selection, and treating it

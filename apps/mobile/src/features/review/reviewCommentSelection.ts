@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from "react";
-import { replaceComposerContextReferences } from "@rove-code/shared/composerContextReferences";
+import { replaceComposerContextReferences } from "@getpaperplane/shared/composerContextReferences";
 
 import type { ReviewRenderableLineRow } from "./reviewModel";
 

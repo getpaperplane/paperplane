@@ -1,8 +1,8 @@
-import * as HostProcess from "@rove-code/shared/HostProcess";
-import * as HttpObservability from "@rove-code/shared/httpObservability";
-import { makeLocalFileTracer, makeTraceSink } from "@rove-code/shared/observability";
-import * as SharedObservability from "@rove-code/shared/observability";
-import * as OtelEnvironment from "@rove-code/shared/otelEnvironment";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
+import * as HttpObservability from "@getpaperplane/shared/httpObservability";
+import { makeLocalFileTracer, makeTraceSink } from "@getpaperplane/shared/observability";
+import * as SharedObservability from "@getpaperplane/shared/observability";
+import * as OtelEnvironment from "@getpaperplane/shared/otelEnvironment";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as References from "effect/References";

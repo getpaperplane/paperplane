@@ -1,1 +1,1 @@
-export { faviconUrlForOrigin } from "@rove-code/shared/favicon";
+export { faviconUrlForOrigin } from "@getpaperplane/shared/favicon";

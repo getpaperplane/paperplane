@@ -5,11 +5,11 @@ import {
   ProjectId,
   ProviderInstanceId,
   type ServerSettings,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { describe, expect, it, vi } from "vite-plus/test";
-import { applyServerSettingsPatch } from "@rove-code/shared/serverSettings";
+import { applyServerSettingsPatch } from "@getpaperplane/shared/serverSettings";
 import * as Cause from "effect/Cause";
-import { resolveWorktreeCleanup } from "@rove-code/shared/projectSettings";
+import { resolveWorktreeCleanup } from "@getpaperplane/shared/projectSettings";
 
 import type { SidebarProjectSnapshot } from "../../sidebarProjectGrouping";
 import {

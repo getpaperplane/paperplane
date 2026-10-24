@@ -94,7 +94,7 @@ const executeBundle = (source, sandboxModules) => {
   const windowEvents = new NodeEvents.EventEmitter();
   const sandboxProcess = {
     contextIsolated: true,
-    // oxlint-disable-next-line rove/no-global-process-runtime -- This standalone CI verifier supplies the preload's host platform without loading Effect.
+    // oxlint-disable-next-line paperplane/no-global-process-runtime -- This standalone CI verifier supplies the preload's host platform without loading Effect.
     platform: process.platform,
     versions: { electron: electronVersion },
   };

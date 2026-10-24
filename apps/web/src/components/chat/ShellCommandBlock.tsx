@@ -1,7 +1,7 @@
 import {
   commandHighlightLanguage,
   withVisibleControlCharacters,
-} from "@rove-code/client-runtime/work-log/command-label";
+} from "@getpaperplane/client-runtime/work-log/command-label";
 import { Suspense, use, useMemo } from "react";
 
 import { useTheme } from "../../hooks/useTheme";

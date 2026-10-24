@@ -17,8 +17,8 @@ import {
   type PullRequestReviewVerdict,
   type RepositoryIdentity,
   SourceControlProviderKind,
-} from "@rove-code/contracts";
-import type { ChangeRequestLink } from "@rove-code/shared/changeRequestUrl";
+} from "@getpaperplane/contracts";
+import type { ChangeRequestLink } from "@getpaperplane/shared/changeRequestUrl";
 import * as Schema from "effect/Schema";
 
 /** What a host calls a change request, e.g. `MR` and `merge request` on GitLab. */

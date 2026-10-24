@@ -17,8 +17,8 @@ import {
   StorageCleanupReport,
   type WorktreeKeepWhen,
   type StorageCleanupSettings,
-} from "@rove-code/contracts";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+} from "@getpaperplane/contracts";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 import * as ServerConfig from "./config.ts";
 import * as StorageCleanup from "./storageCleanup.ts";
 import * as GitVcsDriver from "./vcs/GitVcsDriver.ts";
@@ -44,7 +44,7 @@ import {
   type OrchestrationV2DomainEvent,
   type OrchestrationV2ProviderSession,
   type OrchestrationV2ThreadShell,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as DateTime from "effect/DateTime";
 import {
   storageCleanupActivityAt,
@@ -261,7 +261,7 @@ const cleanupFixture = (
     const worktree = `${config.worktreesDir}/feature`;
     yield* command(repo, ["worktree", "add", "-b", "feature", worktree]);
     // worktreeOnDelete lets domain events request sweeps once a test calls activate.
-    let settings: import("@rove-code/contracts").ServerSettings = {
+    let settings: import("@getpaperplane/contracts").ServerSettings = {
       ...DEFAULT_SERVER_SETTINGS,
       storageCleanup,
     };

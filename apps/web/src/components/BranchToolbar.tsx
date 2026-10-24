@@ -2,8 +2,8 @@ import { writeTextToClipboard } from "../hooks/useCopyToClipboard";
 import { readLocalApi } from "../localApi";
 import { stackedThreadToast, toastManager } from "./ui/toast";
 import { ComposerContextLabel } from "./ComposerContextLabel";
-import { scopeProjectRef, scopeThreadRef } from "@rove-code/client-runtime/environment";
-import type { EnvironmentId, ThreadId } from "@rove-code/contracts";
+import { scopeProjectRef, scopeThreadRef } from "@getpaperplane/client-runtime/environment";
+import type { EnvironmentId, ThreadId } from "@getpaperplane/contracts";
 import {
   ChevronDownIcon,
   FolderGit2Icon,

@@ -10,7 +10,7 @@ import * as NodePath from "node:path";
 import * as NodeTimersPromises from "node:timers/promises";
 
 const delay = NodeTimersPromises.setTimeout;
-// oxlint-disable-next-line rove/no-global-process-runtime -- Standalone benchmark has no Effect runtime.
+// oxlint-disable-next-line paperplane/no-global-process-runtime -- Standalone benchmark has no Effect runtime.
 const platform = NodeOS.platform();
 
 const secondsIndex = process.argv.indexOf("--seconds");

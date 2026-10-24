@@ -3,7 +3,7 @@ import type {
   AuthClientPresentationMetadata,
   ClientOs,
   DesktopBridge,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 
 interface BrowserIdentity {
   readonly userAgent: string;

@@ -1,5 +1,5 @@
 import { assert, expect, it } from "vite-plus/test";
-import { DEFAULT_CLIENT_SETTINGS, type DesktopSnapShotState } from "@rove-code/contracts";
+import { DEFAULT_CLIENT_SETTINGS, type DesktopSnapShotState } from "@getpaperplane/contracts";
 
 import {
   createRecordingRequestTracker,

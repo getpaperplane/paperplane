@@ -5,14 +5,14 @@ import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 
-import { type ProviderSetupError, TextGenerationError } from "@rove-code/contracts";
+import { type ProviderSetupError, TextGenerationError } from "@getpaperplane/contracts";
 import type { CursorSettings } from "../settings.ts";
 
-import * as TextGenerationOperations from "@rove-code/provider-core/server/textGenerationOperations";
+import * as TextGenerationOperations from "@getpaperplane/provider-core/server/textGenerationOperations";
 import { cursorSdkModelSelection } from "./sdkModel.ts";
 import type { CursorAuth } from "./auth.ts";
 import * as CursorSdk from "./CursorSdk.ts";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 
 const CURSOR_TIMEOUT_MS = 180_000;
 

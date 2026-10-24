@@ -6,15 +6,15 @@ import type {
   ProviderDriverKind,
   ProviderInstanceId,
   OrchestrationV2Subagent,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   resolveSubagentMetadata,
   subagentDetailPreview,
-} from "@rove-code/client-runtime/state/subagent-display";
+} from "@getpaperplane/client-runtime/state/subagent-display";
 import {
   getModelSelectionStringOptionValue,
   resolveSelectableModel,
-} from "@rove-code/shared/model";
+} from "@getpaperplane/shared/model";
 import { getTraitsSpeedDisplay, TraitsSpeedIcon } from "./TraitsSpeed";
 import type { ReactNode } from "react";
 import {

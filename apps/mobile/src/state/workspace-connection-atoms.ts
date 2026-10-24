@@ -1,7 +1,7 @@
-import type { EnvironmentPresentation, NetworkStatus } from "@rove-code/client-runtime/connection";
-import type { EnvironmentCatalogState } from "@rove-code/client-runtime/state/connections";
-import type { EnvironmentId } from "@rove-code/contracts";
-import { createEnvironmentSummaryAtoms } from "@rove-code/client-runtime/state/presentation";
+import type { EnvironmentPresentation, NetworkStatus } from "@getpaperplane/client-runtime/connection";
+import type { EnvironmentCatalogState } from "@getpaperplane/client-runtime/state/connections";
+import type { EnvironmentId } from "@getpaperplane/contracts";
+import { createEnvironmentSummaryAtoms } from "@getpaperplane/client-runtime/state/presentation";
 import { Atom } from "effect/reactivity";
 
 import { projectWorkspaceConnectionState } from "./workspaceModel";

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vite-plus/test";
 
-import { ATTACHMENT_ONLY_BOOTSTRAP_PROMPT } from "@rove-code/shared/composerContextReferences";
+import { ATTACHMENT_ONLY_BOOTSTRAP_PROMPT } from "@getpaperplane/shared/composerContextReferences";
 import { buildPlanImplementationPrompt } from "../../proposedPlan";
 import {
   buildComposerPromptHistoryEntries,

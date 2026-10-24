@@ -1,5 +1,5 @@
 {
-  "name": "@rove-code/oxlint-plugin-rove",
+  "name": "@getpaperplane/oxlint-plugin-paperplane",
   "private": true,
   "type": "module",
   "scripts": {

@@ -5,7 +5,7 @@ import * as Latch from "effect/Latch";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 
 import { buildNpmPlatformPackages } from "../../../scripts/build-npm-platform-packages.ts";
@@ -129,7 +129,7 @@ it.effect("single-platform builds match full packaging and publish without a lau
     });
     assert.strictEqual(full.length, 2);
     assert.strictEqual(early.length, 1);
-    assert.strictEqual(yield* fs.exists(path.join(root, "early/@rove-code/cli.tgz")), false);
+    assert.strictEqual(yield* fs.exists(path.join(root, "early/@getpaperplane/cli.tgz")), false);
     assert.strictEqual(
       yield* fs.readFileString(path.join(full[0]!.packageDir, "package.json")),
       yield* fs.readFileString(path.join(early[0]!.packageDir, "package.json")),

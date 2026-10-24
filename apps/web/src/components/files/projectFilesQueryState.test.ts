@@ -1,5 +1,5 @@
-import type { ProjectReadFileResult } from "@rove-code/contracts";
-import { EnvironmentId } from "@rove-code/contracts";
+import type { ProjectReadFileResult } from "@getpaperplane/contracts";
+import { EnvironmentId } from "@getpaperplane/contracts";
 import { AsyncResult } from "effect/reactivity";
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 

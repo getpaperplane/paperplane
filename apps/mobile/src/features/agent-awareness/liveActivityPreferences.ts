@@ -1,5 +1,5 @@
 import * as Effect from "effect/Effect";
-import type { EnvironmentId } from "@rove-code/contracts";
+import type { EnvironmentId } from "@getpaperplane/contracts";
 
 import type { SavedRemoteConnection } from "../../lib/connection";
 import { linkEnvironmentToCloudWithPreference } from "../cloud/linkEnvironment";

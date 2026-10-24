@@ -3,8 +3,8 @@ import {
   getBuiltInSpriteSheet,
   type FileTreeIcons,
 } from "@pierre/trees";
-import { VIDEO_FILE_EXTENSIONS } from "@rove-code/shared/video";
-import { fileIconPathForMimeType } from "@rove-code/shared/filePreview";
+import { VIDEO_FILE_EXTENSIONS } from "@getpaperplane/shared/video";
+import { fileIconPathForMimeType } from "@getpaperplane/shared/filePreview";
 
 export interface PierreIconResolution {
   name: string;

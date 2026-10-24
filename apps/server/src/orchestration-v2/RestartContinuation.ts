@@ -1,5 +1,5 @@
-import { runRanAfter } from "@rove-code/shared/orchestrationV2ThreadError";
-import { resolveProjectSettings } from "@rove-code/shared/projectSettings";
+import { runRanAfter } from "@getpaperplane/shared/orchestrationV2ThreadError";
+import { resolveProjectSettings } from "@getpaperplane/shared/projectSettings";
 import {
   CommandId,
   latestProviderTurnForAttempt,
@@ -7,7 +7,7 @@ import {
   type OrchestrationV2Run,
   type RunId,
   type ThreadId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import type { ProjectionRuntimeRecoveryState } from "./ProjectionStore.ts";

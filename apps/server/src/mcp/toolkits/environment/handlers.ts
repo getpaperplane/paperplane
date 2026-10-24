@@ -1,4 +1,4 @@
-import { OrchestratorMcpFailure, type ServerSettings } from "@rove-code/contracts";
+import { OrchestratorMcpFailure, type ServerSettings } from "@getpaperplane/contracts";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Environment from "../../../environment/ServerEnvironment.ts";

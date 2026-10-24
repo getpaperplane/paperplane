@@ -2,7 +2,7 @@ import {
   RelayClientTracer,
   withLocalTracing,
   withRelayClientTracing,
-} from "@rove-code/shared/relayTracing";
+} from "@getpaperplane/shared/relayTracing";
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";

@@ -9,7 +9,7 @@ import {
   type PullRequestRef,
   type PullRequestReviewGuideResult,
   type ThreadPullRequestLink,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { describe, expect, it } from "@effect/vitest";
 import * as Crypto from "effect/Crypto";
 import * as Effect from "effect/Effect";

@@ -5,14 +5,14 @@ import {
   type ProjectScript,
   type RoveProjectFileScript,
   type ResolvedKeybindingsConfig,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { useAtomValue } from "@effect/atom-react";
-import { DEFAULT_RESOLVED_KEYBINDINGS } from "@rove-code/shared/keybindings";
+import { DEFAULT_RESOLVED_KEYBINDINGS } from "@getpaperplane/shared/keybindings";
 import {
   isAtomCommandInterrupted,
   squashAtomCommandFailure,
-} from "@rove-code/client-runtime/state/runtime";
-import { projectScriptMenuLabel } from "@rove-code/shared/projectScripts";
+} from "@getpaperplane/client-runtime/state/runtime";
+import { projectScriptMenuLabel } from "@getpaperplane/shared/projectScripts";
 import { ChevronDownIcon, DownloadIcon, PlusIcon, SettingsIcon, WrenchIcon } from "lucide-react";
 import React, { useCallback, useMemo, useState } from "react";
 

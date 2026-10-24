@@ -1,4 +1,4 @@
-import type { RelayClientDeviceRecord } from "@rove-code/contracts/relay";
+import type { RelayClientDeviceRecord } from "@getpaperplane/contracts/relay";
 import { SmartphoneIcon } from "lucide-react";
 
 import { useManagedRelayDevices } from "../../cloud/managedRelayState";

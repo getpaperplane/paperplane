@@ -1,10 +1,10 @@
 import { useAuth } from "@clerk/react";
-import { ManagedRelay, setManagedRelaySession } from "@rove-code/client-runtime/relay";
+import { ManagedRelay, setManagedRelaySession } from "@getpaperplane/client-runtime/relay";
 import {
   reportAtomCommandResult,
   settleAsyncResult,
   settlePromise,
-} from "@rove-code/client-runtime/state/runtime";
+} from "@getpaperplane/client-runtime/state/runtime";
 import * as Effect from "effect/Effect";
 import { useEffect, useRef, type ReactNode } from "react";
 

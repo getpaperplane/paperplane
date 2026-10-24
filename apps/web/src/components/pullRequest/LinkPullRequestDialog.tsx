@@ -1,5 +1,5 @@
-import { pullRequestHostOf, type ScopedThreadRef } from "@rove-code/contracts";
-import { sourceControlClients } from "@rove-code/client-runtime/source-control-clients";
+import { pullRequestHostOf, type ScopedThreadRef } from "@getpaperplane/contracts";
+import { sourceControlClients } from "@getpaperplane/client-runtime/source-control-clients";
 import { useAtomValue } from "@effect/atom-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 

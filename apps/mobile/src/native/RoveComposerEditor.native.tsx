@@ -1,6 +1,6 @@
-import { PASTED_TEXT_ATTACHMENT_THRESHOLD_BYTES } from "@rove-code/client-runtime/text-paste";
-import { PROVIDER_SEND_TURN_MAX_INPUT_CHARS } from "@rove-code/contracts";
-import { collectComposerInlineTokens } from "@rove-code/shared/composerInlineTokens";
+import { PASTED_TEXT_ATTACHMENT_THRESHOLD_BYTES } from "@getpaperplane/client-runtime/text-paste";
+import { PROVIDER_SEND_TURN_MAX_INPUT_CHARS } from "@getpaperplane/contracts";
+import { collectComposerInlineTokens } from "@getpaperplane/shared/composerInlineTokens";
 import { composerContextEditorTokens } from "../lib/composerContext";
 import { requireNativeView } from "expo";
 import { TextInputWrapper } from "expo-paste-input";

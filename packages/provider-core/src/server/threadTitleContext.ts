@@ -1,5 +1,5 @@
-import type { ChatAttachment } from "@rove-code/contracts";
-import { assistantCitationsToPlainText } from "@rove-code/shared/assistantCitations";
+import type { ChatAttachment } from "@getpaperplane/contracts";
+import { assistantCitationsToPlainText } from "@getpaperplane/shared/assistantCitations";
 
 export type ThreadTitleMessage = {
   readonly role: "user" | "assistant" | "system" | "reasoning";

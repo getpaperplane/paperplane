@@ -1,5 +1,5 @@
 import * as Equal from "effect/Equal";
-import { migrateRoveThemeId } from "@rove-code/shared/roveMigration";
+import { migrateRoveThemeId } from "@getpaperplane/shared/roveMigration";
 import * as Schema from "effect/Schema";
 import "culori/css";
 import { converter, parse } from "culori/fn";
@@ -19,7 +19,7 @@ import {
   type ThemeColors,
   type ThemeDefinition,
   type ThemeVariants,
-} from "@rove-code/shared/themePalettes";
+} from "@getpaperplane/shared/themePalettes";
 
 export { EMBER_THEME, GROVE_THEME, IRIS_THEME, OCEAN_THEME, PLUM_THEME, THEME_COLOR_ROLES };
 export type { ThemeAppearance, ThemeColorRole, ThemeColors, ThemeDefinition, ThemeVariants };

@@ -1,4 +1,4 @@
-import { splitPullRequestBody } from "@rove-code/client-runtime/pull-request-markdown";
+import { splitPullRequestBody } from "@getpaperplane/client-runtime/pull-request-markdown";
 import {
   PullRequestImageAttachment,
   PullRequestMedia,

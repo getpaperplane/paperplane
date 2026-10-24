@@ -1,4 +1,4 @@
-import { PROVIDER_DISPLAY_NAMES, type ProviderDriverKind } from "@rove-code/contracts";
+import { PROVIDER_DISPLAY_NAMES, type ProviderDriverKind } from "@getpaperplane/contracts";
 import * as Predicate from "effect/Predicate";
 
 const GENERIC_ERROR_PREFIXES = [

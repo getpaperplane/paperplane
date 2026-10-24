@@ -2,9 +2,9 @@ import {
   connectLoopbackRedirectUri,
   CONNECT_OAUTH_SCOPES,
   DEFAULT_HOSTED_APP_URL,
-} from "@rove-code/shared/connectAuth";
-import { clerkFrontendApiUrlFromPublishableKey } from "@rove-code/shared/relayAuth";
-import { normalizeSecureRelayUrl } from "@rove-code/shared/relayUrl";
+} from "@getpaperplane/shared/connectAuth";
+import { clerkFrontendApiUrlFromPublishableKey } from "@getpaperplane/shared/relayAuth";
+import { normalizeSecureRelayUrl } from "@getpaperplane/shared/relayUrl";
 import * as Config from "effect/Config";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";

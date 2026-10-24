@@ -1,5 +1,5 @@
 import { assert, it } from "@effect/vitest";
-import { ProviderDriverKind, ProviderInstanceId } from "@rove-code/contracts";
+import { ProviderDriverKind, ProviderInstanceId } from "@getpaperplane/contracts";
 
 import { CodexProviderCapabilitiesV2 } from "./Adapters/CodexAdapterV2.ts";
 import { decideProviderSessionTransition } from "./ProviderSessionTransitionPolicy.ts";

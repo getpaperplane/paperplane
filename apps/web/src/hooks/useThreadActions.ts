@@ -3,10 +3,10 @@ import {
   scopeProjectRef,
   scopeThreadRef,
   scopedThreadKey,
-} from "@rove-code/client-runtime/environment";
-import { settlePromise, squashAtomCommandFailure } from "@rove-code/client-runtime/state/runtime";
-import { canSnooze, threadWokeAt } from "@rove-code/client-runtime/state/thread-settled";
-import { threadRuntimeCanArchive } from "@rove-code/client-runtime/state/models";
+} from "@getpaperplane/client-runtime/environment";
+import { settlePromise, squashAtomCommandFailure } from "@getpaperplane/client-runtime/state/runtime";
+import { canSnooze, threadWokeAt } from "@getpaperplane/client-runtime/state/thread-settled";
+import { threadRuntimeCanArchive } from "@getpaperplane/client-runtime/state/models";
 import {
   AuthOrchestrationOperateScope,
   AuthSourceControlWriteScope,
@@ -15,8 +15,8 @@ import {
   type ScopedThreadRef,
   ThreadId,
   sessionGrantsScope,
-} from "@rove-code/contracts";
-import { resolveWorktreeCleanup } from "@rove-code/shared/projectSettings";
+} from "@getpaperplane/contracts";
+import { resolveWorktreeCleanup } from "@getpaperplane/shared/projectSettings";
 import * as Cause from "effect/Cause";
 import * as Schema from "effect/Schema";
 import { AsyncResult } from "effect/reactivity";
@@ -29,7 +29,7 @@ import { environmentSession, readEnvironmentScope } from "../state/session";
 import { terminalEnvironment } from "../state/terminal";
 import { appAtomRegistry } from "../rpc/atomRegistry";
 import { environmentServerConfigsAtom } from "../state/server";
-import { isScratchProject } from "@rove-code/client-runtime/state/projects";
+import { isScratchProject } from "@getpaperplane/client-runtime/state/projects";
 import { threadEnvironment } from "../state/threads";
 import { vcsEnvironment } from "../state/vcs";
 import { useNewThreadHandler } from "./useHandleNewThread";

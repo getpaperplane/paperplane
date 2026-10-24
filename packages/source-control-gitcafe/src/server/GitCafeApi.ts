@@ -57,7 +57,7 @@ export class GitCafeApi extends Context.Service<
     /** The body of a successful answer. */
     readonly request: (input: GitCafeApiRequest) => Effect.Effect<string, GitCafeApiError>;
   }
->()("@rove-code/source-control-gitcafe/server/GitCafeApi") {}
+>()("@getpaperplane/source-control-gitcafe/server/GitCafeApi") {}
 
 /** GitCafe's RFC 7807 error body, e.g. `{"type":"https://cafe.sh/errors/not-found",...}`. */
 const decodeProblem = Schema.decodeUnknownOption(

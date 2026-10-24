@@ -3,8 +3,8 @@ import type * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Socket from "effect/socket/Socket";
 
-import { layerRemoteHttpClient } from "@rove-code/client-runtime/rpc";
-import * as RelayTracing from "@rove-code/shared/relayTracing";
+import { layerRemoteHttpClient } from "@getpaperplane/client-runtime/rpc";
+import * as RelayTracing from "@getpaperplane/shared/relayTracing";
 import * as PrimaryEnvironmentHttpClient from "../environments/primary/httpClient";
 import * as PrimaryEnvironmentHttpLayer from "../environments/primary/httpLayer";
 

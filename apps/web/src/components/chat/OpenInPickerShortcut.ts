@@ -1,4 +1,4 @@
-import type { EditorId, EnvironmentId, ResolvedKeybindingsConfig } from "@rove-code/contracts";
+import type { EditorId, EnvironmentId, ResolvedKeybindingsConfig } from "@getpaperplane/contracts";
 import { useEffect } from "react";
 
 import { usePreferredEditor } from "../../editorPreferences";

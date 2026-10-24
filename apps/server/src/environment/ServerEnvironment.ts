@@ -3,8 +3,8 @@ import {
   ORCHESTRATION_PROTOCOL_VERSION,
   PROVIDER_SEND_TURN_MAX_FILE_BYTES,
   type ExecutionEnvironmentDescriptor,
-} from "@rove-code/contracts";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+} from "@getpaperplane/contracts";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 import * as Context from "effect/Context";
 import * as Crypto from "effect/Crypto";
 import * as Effect from "effect/Effect";
@@ -46,7 +46,7 @@ const cloudReady =
   (typeof __ROVE_BUILD_CLOUD_READY__ !== "undefined" && __ROVE_BUILD_CLOUD_READY__);
 
 export class ServerEnvironmentCloudReady extends Context.Reference<boolean>(
-  "@rove-code/server/environment/ServerEnvironment/ServerEnvironmentCloudReady",
+  "@getpaperplane/server/environment/ServerEnvironment/ServerEnvironmentCloudReady",
   {
     defaultValue: () => cloudReady,
   },
@@ -58,14 +58,14 @@ export class ServerEnvironment extends Context.Service<
     readonly getEnvironmentId: Effect.Effect<EnvironmentId>;
     readonly getDescriptor: Effect.Effect<ExecutionEnvironmentDescriptor>;
   }
->()("@rove-code/server/environment/ServerEnvironment") {}
+>()("@getpaperplane/server/environment/ServerEnvironment") {}
 
 export class ServerEnvironmentIdentity extends Context.Service<
   ServerEnvironmentIdentity,
   {
     readonly getEnvironmentId: Effect.Effect<EnvironmentId>;
   }
->()("@rove-code/server/environment/ServerEnvironment/ServerEnvironmentIdentity") {}
+>()("@getpaperplane/server/environment/ServerEnvironment/ServerEnvironmentIdentity") {}
 
 function platformOs(platform: NodeJS.Platform): ExecutionEnvironmentDescriptor["platform"]["os"] {
   switch (platform) {

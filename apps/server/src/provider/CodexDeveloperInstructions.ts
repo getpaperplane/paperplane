@@ -1,11 +1,11 @@
-import type { ProviderInteractionMode } from "@rove-code/contracts";
+import type { ProviderInteractionMode } from "@getpaperplane/contracts";
 import type { V2TurnStartParams__AdditionalContextEntry } from "effect-codex-app-server/schema";
-import { buildRuntimeInstructions } from "@rove-code/provider-core/server/runtimeInstructions";
+import { buildRuntimeInstructions } from "@getpaperplane/provider-core/server/runtimeInstructions";
 
 import {
   ROVE_CODE_BROWSER_TOOL_INSTRUCTIONS,
   ROVE_CODE_ORCHESTRATION_INSTRUCTIONS,
-} from "@rove-code/provider-core/server/orchestrationInstructions";
+} from "@getpaperplane/provider-core/server/orchestrationInstructions";
 
 const ROVE_CODE_DEVICE_TOOL_INSTRUCTIONS = `## Paperplane devices
 

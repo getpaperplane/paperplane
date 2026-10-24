@@ -2,8 +2,8 @@ import {
   type ModelCapabilities,
   ProviderDriverKind,
   type ProviderOptionDescriptor,
-} from "@rove-code/contracts";
-import { type CustomModelDefinition, createModelCapabilities } from "@rove-code/shared/model";
+} from "@getpaperplane/contracts";
+import { type CustomModelDefinition, createModelCapabilities } from "@getpaperplane/shared/model";
 
 /** Editable mirror of a `ProviderOptionChoice`. `key` is only a React key. */
 export interface EditorChoice {

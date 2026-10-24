@@ -9,8 +9,8 @@ import * as Tracer from "effect/Tracer";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientResponse from "effect/http/HttpClientResponse";
 
-import { DEFAULT_SIGNAL_EXPORT } from "@rove-code/shared/observability";
-import * as OtelEnvironment from "@rove-code/shared/otelEnvironment";
+import { DEFAULT_SIGNAL_EXPORT } from "@getpaperplane/shared/observability";
+import * as OtelEnvironment from "@getpaperplane/shared/otelEnvironment";
 
 import * as ServerConfig from "./config.ts";
 import * as ServerLogger from "./serverLogger.ts";

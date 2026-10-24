@@ -1,6 +1,6 @@
-import type { DesktopBridge } from "@rove-code/contracts";
-import { migrateRoveThemeId } from "@rove-code/shared/roveMigration";
-import { safeErrorLogAttributes } from "@rove-code/client-runtime/errors";
+import type { DesktopBridge } from "@getpaperplane/contracts";
+import { migrateRoveThemeId } from "@getpaperplane/shared/roveMigration";
+import { safeErrorLogAttributes } from "@getpaperplane/client-runtime/errors";
 import * as Schema from "effect/Schema";
 import { useCallback, useEffect, useSyncExternalStore } from "react";
 import {

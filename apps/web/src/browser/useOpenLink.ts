@@ -1,8 +1,8 @@
-import { AuthPreviewOperateScope, type ScopedThreadRef } from "@rove-code/contracts";
+import { AuthPreviewOperateScope, type ScopedThreadRef } from "@getpaperplane/contracts";
 import {
   isAtomCommandInterrupted,
   squashAtomCommandFailure,
-} from "@rove-code/client-runtime/state/runtime";
+} from "@getpaperplane/client-runtime/state/runtime";
 import { useCallback } from "react";
 
 import { recordVisitForThread } from "~/browserHistoryStore";

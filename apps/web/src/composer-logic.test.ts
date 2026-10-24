@@ -1,16 +1,16 @@
-import { resolveComposerDispatchMode } from "@rove-code/client-runtime/state/composer-dispatch";
-import { filterComposerPullRequestMatches } from "@rove-code/shared/composerPullRequestMatches";
-import { EnvironmentId, MessageId, ThreadId, type AssistantCitation } from "@rove-code/contracts";
+import { resolveComposerDispatchMode } from "@getpaperplane/client-runtime/state/composer-dispatch";
+import { filterComposerPullRequestMatches } from "@getpaperplane/shared/composerPullRequestMatches";
+import { EnvironmentId, MessageId, ThreadId, type AssistantCitation } from "@getpaperplane/contracts";
 import {
   collectAssistantCitations,
   expandAssistantCitationsForProvider,
   serializeAssistantCitation,
-} from "@rove-code/shared/assistantCitations";
+} from "@getpaperplane/shared/assistantCitations";
 import {
   DEFAULT_RESOLVED_KEYBINDINGS,
   compileResolvedKeybindingsConfig,
   mergeWithDefaultKeybindings,
-} from "@rove-code/shared/keybindings";
+} from "@getpaperplane/shared/keybindings";
 import { describe, expect, it } from "vite-plus/test";
 
 import {

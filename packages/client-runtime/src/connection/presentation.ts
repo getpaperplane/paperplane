@@ -1,4 +1,4 @@
-import type { ServerConfig } from "@rove-code/contracts";
+import type { ServerConfig } from "@getpaperplane/contracts";
 import * as Option from "effect/Option";
 
 import type { ConnectionCatalogEntry } from "./catalog.ts";

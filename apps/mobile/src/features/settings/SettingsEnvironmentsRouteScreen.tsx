@@ -1,8 +1,8 @@
 import { ScreenScrollView as ScrollView } from "../../components/ui/ScreenScrollView";
 import { useNavigation } from "@react-navigation/native";
 import { useAtomValue } from "@effect/atom-react";
-import { managedRelaySessionAtom } from "@rove-code/client-runtime/relay";
-import type { EnvironmentId } from "@rove-code/contracts";
+import { managedRelaySessionAtom } from "@getpaperplane/client-runtime/relay";
+import type { EnvironmentId } from "@getpaperplane/contracts";
 import { useCallback, useRef, useState } from "react";
 import { Platform, RefreshControl } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";

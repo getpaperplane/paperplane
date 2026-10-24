@@ -1,4 +1,4 @@
-import type { ProjectCloneStage } from "@rove-code/contracts";
+import type { ProjectCloneStage } from "@getpaperplane/contracts";
 
 export interface GitCloneProgressLine {
   readonly stage: ProjectCloneStage;

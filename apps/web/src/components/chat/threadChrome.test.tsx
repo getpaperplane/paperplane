@@ -1,10 +1,10 @@
 import { RegistryContext } from "@effect/atom-react";
-import { scopedThreadKey } from "@rove-code/client-runtime/environment";
+import { scopedThreadKey } from "@getpaperplane/client-runtime/environment";
 import { resetHeldThreadTimeline } from "../ChatView.logic";
 import {
   CLAUDE_RESUME_COMPACTION_NEVER_ANSWER,
   formatClaudeResumeCompactionQuestion,
-} from "@rove-code/shared/claudeCompaction";
+} from "@getpaperplane/shared/claudeCompaction";
 import {
   CheckpointId,
   CheckpointRef,
@@ -24,11 +24,11 @@ import {
   TurnItemId,
   type OrchestrationV2ThreadProjection,
   type ScopedThreadRef,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   applyOrchestrationV2ProjectionEvent,
   applyOrchestrationV2TextAppend,
-} from "@rove-code/client-runtime/state/orchestration-v2-projection";
+} from "@getpaperplane/client-runtime/state/orchestration-v2-projection";
 import { act, createRef, useRef } from "react";
 import { ThreadFindProvider, ThreadFind, type ThreadFindControls } from "./ThreadFindProvider";
 import type { useThreadFind } from "./useThreadFind";
@@ -80,7 +80,7 @@ vi.mock("./ThreadFindBar", () => ({
 }));
 vi.mock("../../state/threads", async () => {
   const { createEnvironmentThreadDetailAtoms, EMPTY_ENVIRONMENT_THREAD_STATE } =
-    await import("@rove-code/client-runtime/state/threads");
+    await import("@getpaperplane/client-runtime/state/threads");
   const { Atom, AsyncResult } = await import("effect/reactivity");
   const Option = await import("effect/Option");
   const { appAtomRegistry: registry } = await import("../../rpc/atomRegistry");

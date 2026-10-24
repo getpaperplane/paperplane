@@ -1,4 +1,4 @@
-import type { EnvironmentId } from "@rove-code/contracts";
+import type { EnvironmentId } from "@getpaperplane/contracts";
 import { describe, expect, it } from "vite-plus/test";
 
 import { toggleSettingsEnvironment } from "./settings-environment-filter.logic";

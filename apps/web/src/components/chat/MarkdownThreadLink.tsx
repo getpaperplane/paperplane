@@ -1,6 +1,6 @@
-import { scopeProjectRef, scopeThreadRef } from "@rove-code/client-runtime/environment";
-import type { EnvironmentId, ThreadId } from "@rove-code/contracts";
-import { formatThreadLink, percentDecodedThreadLinkId } from "@rove-code/shared/threadLinks";
+import { scopeProjectRef, scopeThreadRef } from "@getpaperplane/client-runtime/environment";
+import type { EnvironmentId, ThreadId } from "@getpaperplane/contracts";
+import { formatThreadLink, percentDecodedThreadLinkId } from "@getpaperplane/shared/threadLinks";
 import { Link } from "@tanstack/react-router";
 import { MessageSquareTextIcon } from "lucide-react";
 

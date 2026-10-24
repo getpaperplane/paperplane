@@ -1,11 +1,11 @@
-import type { EnvironmentThreadShell } from "@rove-code/client-runtime/state/shell";
+import type { EnvironmentThreadShell } from "@getpaperplane/client-runtime/state/shell";
 import {
   generateSpreadPinOrderKeys,
   pinOrderKeyBetween,
   planPinnedReorder,
-} from "@rove-code/client-runtime/state/thread-sort";
-import { effectiveSnoozed } from "@rove-code/client-runtime/state/thread-settled";
-import type { EnvironmentId } from "@rove-code/contracts";
+} from "@getpaperplane/client-runtime/state/thread-sort";
+import { effectiveSnoozed } from "@getpaperplane/client-runtime/state/thread-settled";
+import type { EnvironmentId } from "@getpaperplane/contracts";
 
 export type ThreadMoveDestination =
   | "up"

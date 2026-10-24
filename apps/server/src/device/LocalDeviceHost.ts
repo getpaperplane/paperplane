@@ -1,5 +1,5 @@
 import { pruneLocalDeviceTools } from "./deviceToolMaintenance.ts";
-import { deviceToolInstallMessage } from "@rove-code/contracts";
+import { deviceToolInstallMessage } from "@getpaperplane/contracts";
 /**
  * The device host that is this machine.
  *
@@ -17,15 +17,15 @@ import {
   type DevicePlatform,
   type DevicePlatformAvailability,
   LOCAL_DEVICE_HOST_ID,
-} from "@rove-code/contracts";
-import { waitForHttpReady } from "@rove-code/shared/httpReadiness";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+} from "@getpaperplane/contracts";
+import { waitForHttpReady } from "@getpaperplane/shared/httpReadiness";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 import {
   resolveNodeExecutable,
   type NodeRuntimeUnavailableError,
-} from "@rove-code/shared/nodeRuntime";
-import * as NetService from "@rove-code/shared/Net";
-import { isCommandAvailable } from "@rove-code/shared/shell";
+} from "@getpaperplane/shared/nodeRuntime";
+import * as NetService from "@getpaperplane/shared/Net";
+import { isCommandAvailable } from "@getpaperplane/shared/shell";
 // @effect-diagnostics-next-line nodeBuiltinImport:off -- FileSystem.stat follows symlinks and has no lstat equivalent.
 import * as NodeFSP from "node:fs/promises";
 import * as Clock from "effect/Clock";
@@ -45,7 +45,7 @@ import { HttpClient } from "effect/http";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
-import { writeFileStringAtomically } from "@rove-code/shared/atomicWrite";
+import { writeFileStringAtomically } from "@getpaperplane/shared/atomicWrite";
 import * as ServerConfig from "../config.ts";
 import * as ProcessRunner from "../processRunner.ts";
 import * as DeviceHost from "./DeviceHost.ts";

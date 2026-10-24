@@ -3,7 +3,7 @@ import {
   EnvironmentId,
   ThreadId,
   type ContextMenuItem,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { AsyncResult } from "effect/reactivity";
 import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 

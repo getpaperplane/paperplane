@@ -5,13 +5,13 @@ import {
   type ServerSettings,
   UsageLimitSourceConfig,
   secretSettingsFields,
-} from "@rove-code/contracts";
-import { acpRegistryClient } from "@rove-code/provider-acp-registry/client";
-import { cursorClient } from "@rove-code/provider-cursor/client";
-import { grokClient } from "@rove-code/provider-grok/client";
-import { museClient } from "@rove-code/provider-muse/client";
-import { openCodeClient } from "@rove-code/provider-opencode/client";
-import { piClient } from "@rove-code/provider-pi/client";
+} from "@getpaperplane/contracts";
+import { acpRegistryClient } from "@getpaperplane/provider-acp-registry/client";
+import { cursorClient } from "@getpaperplane/provider-cursor/client";
+import { grokClient } from "@getpaperplane/provider-grok/client";
+import { museClient } from "@getpaperplane/provider-muse/client";
+import { openCodeClient } from "@getpaperplane/provider-opencode/client";
+import { piClient } from "@getpaperplane/provider-pi/client";
 import {
   readSecretFieldValues,
   SOURCE_CONTROL_HOST_SECRET_FIELDS,

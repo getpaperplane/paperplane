@@ -4,11 +4,11 @@ import {
   type ModelSelection,
   type ServerProviderModel,
   TextGenerationError,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import type { MuseSettings } from "../settings.ts";
-import { sanitizeBranchFragment, sanitizeFeatureBranchName } from "@rove-code/shared/git";
-import { getModelSelectionStringOptionValue } from "@rove-code/shared/model";
-import { extractJsonObject } from "@rove-code/shared/schemaJson";
+import { sanitizeBranchFragment, sanitizeFeatureBranchName } from "@getpaperplane/shared/git";
+import { getModelSelectionStringOptionValue } from "@getpaperplane/shared/model";
+import { extractJsonObject } from "@getpaperplane/shared/schemaJson";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Option from "effect/Option";
@@ -16,20 +16,20 @@ import * as Schema from "effect/Schema";
 
 import { createMuseSdkHost, createMuseSdkHostEffect, type MuseSdkHost } from "./sdk.ts";
 import { museModelCapabilities, resolveMuseReasoningEffort } from "./modelCatalog.ts";
-import type { ProviderTextGeneration } from "@rove-code/provider-core/server/textGeneration";
-import { investigationUnsupported } from "@rove-code/provider-core/server/textGenerationOperations";
+import type { ProviderTextGeneration } from "@getpaperplane/provider-core/server/textGeneration";
+import { investigationUnsupported } from "@getpaperplane/provider-core/server/textGenerationOperations";
 import {
   buildBranchNamePrompt,
   buildCommitMessagePrompt,
   buildPrContentPrompt,
   buildThreadTitlePrompt,
-} from "@rove-code/provider-core/server/textGenerationPrompts";
+} from "@getpaperplane/provider-core/server/textGenerationPrompts";
 import {
   sanitizeCommitSubject,
   sanitizePrTitle,
   sanitizeThreadTitle,
   toJsonSchemaObject,
-} from "@rove-code/provider-core/server/textGenerationUtils";
+} from "@getpaperplane/provider-core/server/textGenerationUtils";
 
 const SessionStarted = Schema.Struct({ session: Schema.Struct({ sessionId: Schema.String }) });
 const ItemNotification = Schema.Struct({

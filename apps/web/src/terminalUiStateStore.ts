@@ -5,8 +5,8 @@
  * API constrained to store actions/selectors.
  */
 
-import { parseScopedThreadKey, scopedThreadKey } from "@rove-code/client-runtime/environment";
-import { type ScopedThreadRef } from "@rove-code/contracts";
+import { parseScopedThreadKey, scopedThreadKey } from "@getpaperplane/client-runtime/environment";
+import { type ScopedThreadRef } from "@getpaperplane/contracts";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { resolveStorage } from "./lib/storage";

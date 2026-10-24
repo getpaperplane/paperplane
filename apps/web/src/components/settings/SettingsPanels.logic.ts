@@ -7,14 +7,14 @@ import type {
   ServerSettings,
   SidebarProjectGroupingMode,
   UnifiedSettings,
-} from "@rove-code/contracts";
-import { DEFAULT_UNIFIED_SETTINGS } from "@rove-code/contracts/settings";
+} from "@getpaperplane/contracts";
+import { DEFAULT_UNIFIED_SETTINGS } from "@getpaperplane/contracts/settings";
 import {
   getBackgroundActivityBaseProfile,
   normalizeBackgroundActivitySettings,
   normalizeServerBackgroundActivitySettings,
   resolveServerBackgroundActivitySettings,
-} from "@rove-code/shared/backgroundActivitySettings";
+} from "@getpaperplane/shared/backgroundActivitySettings";
 import * as Duration from "effect/Duration";
 import * as Equal from "effect/Equal";
 

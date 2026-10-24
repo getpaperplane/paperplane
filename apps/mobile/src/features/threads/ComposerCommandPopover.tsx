@@ -1,14 +1,14 @@
 import {
   resolveProviderSkillSourceKind,
   type ProviderSkillSourceKind,
-} from "@rove-code/client-runtime/providerSkills";
+} from "@getpaperplane/client-runtime/providerSkills";
 import type {
   PullRequestContextMetadata,
   ScopedThreadRef,
   ServerProviderSkill,
   ServerProviderSlashCommand,
-} from "@rove-code/contracts";
-import type { ComposerTriggerKind } from "@rove-code/shared/composerTrigger";
+} from "@getpaperplane/contracts";
+import type { ComposerTriggerKind } from "@getpaperplane/shared/composerTrigger";
 import { memo } from "react";
 import { Pressable, ScrollView, StyleSheet, View, type ViewStyle } from "react-native";
 

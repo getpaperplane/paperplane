@@ -4,7 +4,7 @@ import {
   type ServerProvider,
   type ServerProviderSlashCommand,
   type ServerProviderResetCredits,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -13,8 +13,8 @@ import * as Path from "effect/Path";
 import * as Ref from "effect/Ref";
 import * as Result from "effect/Result";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
-import { createModelCapabilities } from "@rove-code/shared/model";
-import { resolveSpawnCommand } from "@rove-code/shared/shell";
+import { createModelCapabilities } from "@getpaperplane/shared/model";
+import { resolveSpawnCommand } from "@getpaperplane/shared/shell";
 import type {
   Options as ClaudeQueryOptions,
   SlashCommand as ClaudeSlashCommand,
@@ -32,12 +32,12 @@ import {
   providerModelsFromSettings,
   spawnAndCollect,
   type ServerProviderDraft,
-} from "@rove-code/provider-core/server/snapshotProbe";
+} from "@getpaperplane/provider-core/server/snapshotProbe";
 import { resolveClaudeSdkExecutablePath } from "./Drivers/ClaudeExecutable.ts";
 import { hasClaudeManagedMcpConfig, makeClaudeEnvironment } from "./Drivers/ClaudeHome.ts";
 import { discoverClaudeSkills } from "./Drivers/ClaudeSkills.ts";
-import type { ProviderWorkspaceSnapshot } from "@rove-code/provider-core/server/driver";
-import { makeUnavailableUsageLimits } from "@rove-code/provider-core/server/usageLimits";
+import type { ProviderWorkspaceSnapshot } from "@getpaperplane/provider-core/server/driver";
+import { makeUnavailableUsageLimits } from "@getpaperplane/provider-core/server/usageLimits";
 import {
   type ClaudeScopedLimitNames,
   claudeUsageResponseToLimits,

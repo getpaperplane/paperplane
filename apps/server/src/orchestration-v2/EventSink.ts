@@ -11,7 +11,7 @@ import {
   NodeId,
   type ProjectId,
   ThreadId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -202,7 +202,7 @@ export interface EventSinkV2Shape {
 }
 
 export class EventSinkV2 extends Context.Service<EventSinkV2, EventSinkV2Shape>()(
-  "@rove-code/server/orchestration-v2/EventSink/EventSinkV2",
+  "@getpaperplane/server/orchestration-v2/EventSink/EventSinkV2",
 ) {}
 
 /**

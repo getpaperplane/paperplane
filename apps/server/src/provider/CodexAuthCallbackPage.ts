@@ -1,4 +1,4 @@
-import { providerAuthReturnUrl } from "@rove-code/shared/providerAuthReturnUrl";
+import { providerAuthReturnUrl } from "@getpaperplane/shared/providerAuthReturnUrl";
 
 export const codexAuthReturnUrl = providerAuthReturnUrl;
 

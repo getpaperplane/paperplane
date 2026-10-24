@@ -1,12 +1,12 @@
-import { createAdvertisedEndpoint } from "@rove-code/shared/advertisedEndpoint";
-import type { AdvertisedEndpoint, AdvertisedEndpointProvider } from "@rove-code/contracts";
+import { createAdvertisedEndpoint } from "@getpaperplane/shared/advertisedEndpoint";
+import type { AdvertisedEndpoint, AdvertisedEndpointProvider } from "@getpaperplane/contracts";
 import {
   buildTailscaleHttpsBaseUrl,
   isTailscaleIpv4Address,
   parseTailscaleMagicDnsName,
   probeTailscaleHttpsEndpoint,
   readTailscaleStatus,
-} from "@rove-code/tailscale";
+} from "@getpaperplane/tailscale";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
 import * as HttpClient from "effect/http/HttpClient";
@@ -14,7 +14,7 @@ import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
 import type { NetworkInterfaces } from "./DesktopNetworkInterfaces.ts";
 
-export { parseTailscaleMagicDnsName } from "@rove-code/tailscale";
+export { parseTailscaleMagicDnsName } from "@getpaperplane/tailscale";
 
 const TAILSCALE_ENDPOINT_PROVIDER: AdvertisedEndpointProvider = {
   id: "tailscale",

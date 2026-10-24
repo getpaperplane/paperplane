@@ -1,5 +1,5 @@
 import { assert, it } from "@effect/vitest";
-import { EventId, ProviderInstanceId, ThreadId } from "@rove-code/contracts";
+import { EventId, ProviderInstanceId, ThreadId } from "@getpaperplane/contracts";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";

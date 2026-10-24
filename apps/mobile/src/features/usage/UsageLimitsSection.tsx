@@ -9,7 +9,7 @@ import {
   type ServerProviderResetCredits,
   type ServerProviderUsageWindow,
   type UsageProviderKind,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   elapsedShare,
   formatDuration,
@@ -17,9 +17,9 @@ import {
   limitsNotice,
   paceOf,
   remainingPercent,
-} from "@rove-code/shared/usageLimits";
+} from "@getpaperplane/shared/usageLimits";
 import { type ReactNode, useEffect, useEffectEvent, useRef, useState } from "react";
-import { refreshUsageLimits } from "@rove-code/client-runtime/state/usage";
+import { refreshUsageLimits } from "@getpaperplane/client-runtime/state/usage";
 import { Linking, Pressable, View } from "react-native";
 
 import { AppText as Text } from "../../components/ui/AppText";

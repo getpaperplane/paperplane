@@ -14,18 +14,18 @@ import * as Schema from "effect/Schema";
 import * as Stream from "effect/Stream";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 
-import { type ClaudeSettings, TextGenerationError } from "@rove-code/contracts";
-import { resolveSpawnCommand } from "@rove-code/shared/shell";
+import { type ClaudeSettings, TextGenerationError } from "@getpaperplane/contracts";
+import { resolveSpawnCommand } from "@getpaperplane/shared/shell";
 
-import * as TextGenerationOperations from "@rove-code/provider-core/server/textGenerationOperations";
+import * as TextGenerationOperations from "@getpaperplane/provider-core/server/textGenerationOperations";
 import {
   normalizeCliError,
   toJsonSchemaObject,
-} from "@rove-code/provider-core/server/textGenerationUtils";
+} from "@getpaperplane/provider-core/server/textGenerationUtils";
 import {
   getModelSelectionStringOptionValue,
   getProviderOptionDescriptors,
-} from "@rove-code/shared/model";
+} from "@getpaperplane/shared/model";
 import {
   BUNDLED_CLAUDE_MODEL_CATALOG,
   type ClaudeModelCatalog,

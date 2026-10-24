@@ -1,5 +1,5 @@
-import { resolveDefaultBranchActionDialogCopy } from "@rove-code/client-runtime/state/vcs";
-import { resolveAutoFeatureBranchName } from "@rove-code/shared/git";
+import { resolveDefaultBranchActionDialogCopy } from "@getpaperplane/client-runtime/state/vcs";
+import { resolveAutoFeatureBranchName } from "@getpaperplane/shared/git";
 import * as Arr from "effect/Array";
 import * as Result from "effect/Result";
 import { StackActions, useNavigation, type StaticScreenProps } from "@react-navigation/native";

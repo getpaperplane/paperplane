@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vite-plus/test";
-import { AuthFilesystemReadScope, AuthOrchestrationReadScope } from "@rove-code/contracts";
+import { AuthFilesystemReadScope, AuthOrchestrationReadScope } from "@getpaperplane/contracts";
 
 import {
   canPreloadBrowsePath,

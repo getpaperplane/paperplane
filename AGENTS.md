@@ -18,7 +18,7 @@ We regularly audit for performance regressions. Common causes are sending too mu
 
 ### 3. Remote ready
 
-The WebSocket layer (`npx @rove-code/cli`) supports direct connections over the local network, including pairing, Tailscale, and SSH. Paperplane Connect, our tunnel solution in `infra/relay`, ships only when `ROVE_CLOUD_READY` is set. It is off for current releases and fresh clones, so the gating that hides it must keep working.
+The WebSocket layer (`npx @getpaperplane/cli`) supports direct connections over the local network, including pairing, Tailscale, and SSH. Paperplane Connect, our tunnel solution in `infra/relay`, ships only when `ROVE_CLOUD_READY` is set. It is off for current releases and fresh clones, so the gating that hides it must keep working.
 
 ### 4. Multi-surface
 
@@ -107,7 +107,7 @@ For authorized mobile verification, a missing or outdated native client is a bui
 ## Upstream
 
 - Before fixing something, check whether upstream already fixed it. Port the upstream fix when it fits.
-- Upstream syncs are their own PRs (`chore: sync upstream updates ...`). Preserve Paperplane branding, `@rove-code/*` names, `~/.rove-code` paths, and fork-only features such as the Pi provider when resolving conflicts.
+- Upstream syncs are their own PRs (`chore: sync upstream updates ...`). Preserve Paperplane branding, `@getpaperplane/*` names, `~/.rove-code` paths, and fork-only features such as the Pi provider when resolving conflicts.
 - Saved-data, protocol, and native-module identifiers need explicit migrations, not bulk renames. See [Releasing](docs/operations/release.md).
 
 ## Pull requests
@@ -123,7 +123,7 @@ For authorized mobile verification, a missing or outdated native client is a bui
 
 ## Releases
 
-`release.yml` publishes a nightly every day at 00:00 UTC when there are new commits, plus manual stable and preview builds. It publishes desktop installers to GitHub Releases, `@rove-code/cli` to npm, and the hosted web app to Cloudflare. Each channel has its own `ROVE_*_READY` gate. Do not flip a gate to work around a failing check. Details are in [docs/operations/release.md](docs/operations/release.md).
+`release.yml` publishes a nightly every day at 00:00 UTC when there are new commits, plus manual stable and preview builds. It publishes desktop installers to GitHub Releases, `@getpaperplane/cli` to npm, and the hosted web app to Cloudflare. Each channel has its own `ROVE_*_READY` gate. Do not flip a gate to work around a failing check. Details are in [docs/operations/release.md](docs/operations/release.md).
 
 ## Documentation
 

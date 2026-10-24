@@ -1,8 +1,8 @@
 import {
   mapAtomCommandResult,
   type AtomCommandResult,
-} from "@rove-code/client-runtime/state/runtime";
-import type { ScopedThreadRef } from "@rove-code/contracts";
+} from "@getpaperplane/client-runtime/state/runtime";
+import type { ScopedThreadRef } from "@getpaperplane/contracts";
 
 import type { BrowserSettingsReadError, OpenPreviewMutation } from "~/browser/openFileInPreview";
 import { useRightPanelStore } from "~/rightPanelStore";

@@ -12,7 +12,7 @@ import {
   sanitizeThreadTitle,
   toJsonSchemaObject,
 } from "./textGenerationUtils.ts";
-import { TextGenerationError } from "@rove-code/contracts";
+import { TextGenerationError } from "@getpaperplane/contracts";
 
 describe("buildCommitMessagePrompt", () => {
   it("includes staged patch and summary in the prompt", () => {

@@ -1,5 +1,5 @@
-import type { EnvironmentProject } from "@rove-code/client-runtime/state/shell";
-import { EnvironmentId, ProjectId, ProviderInstanceId } from "@rove-code/contracts";
+import type { EnvironmentProject } from "@getpaperplane/client-runtime/state/shell";
+import { EnvironmentId, ProjectId, ProviderInstanceId } from "@getpaperplane/contracts";
 import { assert, it } from "@effect/vitest";
 
 import {

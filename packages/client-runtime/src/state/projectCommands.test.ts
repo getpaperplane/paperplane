@@ -7,7 +7,7 @@ import {
   type AuthSessionState,
   type ScopedProjectRef,
   WS_METHODS,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { vi } from "vite-plus/test";
 import * as Crypto from "effect/Crypto";
 import * as Effect from "effect/Effect";

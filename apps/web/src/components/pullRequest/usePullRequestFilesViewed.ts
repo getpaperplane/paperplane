@@ -1,5 +1,5 @@
-import { isAtomCommandInterrupted } from "@rove-code/client-runtime/state/runtime";
-import type { EnvironmentId, PullRequestRef } from "@rove-code/contracts";
+import { isAtomCommandInterrupted } from "@getpaperplane/client-runtime/state/runtime";
+import type { EnvironmentId, PullRequestRef } from "@getpaperplane/contracts";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { pullRequestEnvironment } from "~/state/pullRequests";

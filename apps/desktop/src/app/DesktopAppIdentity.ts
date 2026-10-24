@@ -29,7 +29,7 @@ export class DesktopAppIdentity extends Context.Service<
     >;
     readonly configure: Effect.Effect<void>;
   }
->()("@rove-code/desktop/app/DesktopAppIdentity") {}
+>()("@getpaperplane/desktop/app/DesktopAppIdentity") {}
 
 const normalizeCommitHash = (value: string): Option.Option<string> => {
   const trimmed = value.trim();

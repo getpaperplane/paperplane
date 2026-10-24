@@ -5,7 +5,7 @@ import {
   AuthRelayReadScope,
   AuthRelayWriteScope,
   type AuthSessionState,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { AsyncResult, Atom } from "effect/reactivity";
 import { useEffect, useRef, useState } from "react";
 

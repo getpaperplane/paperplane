@@ -7,7 +7,7 @@ import * as NodeURL from "node:url";
 import { describe, expect, it } from "vite-plus/test";
 
 import { isEntrypoint } from "./entrypoint.ts";
-import { symlinksSupported } from "@rove-code/shared/testing/symlinks";
+import { symlinksSupported } from "@getpaperplane/shared/testing/symlinks";
 
 const makeTempDir = () =>
   NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "rove-entrypoint-test-"));

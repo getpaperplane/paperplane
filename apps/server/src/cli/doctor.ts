@@ -1,4 +1,4 @@
-import { DATABASE_COMPACTION_RECOMMENDED_BYTES } from "@rove-code/contracts";
+import { DATABASE_COMPACTION_RECOMMENDED_BYTES } from "@getpaperplane/contracts";
 import * as Cause from "effect/Cause";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";

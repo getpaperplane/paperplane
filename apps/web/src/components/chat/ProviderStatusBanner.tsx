@@ -1,4 +1,4 @@
-import { type ProviderInstanceId, type ServerProvider } from "@rove-code/contracts";
+import { type ProviderInstanceId, type ServerProvider } from "@getpaperplane/contracts";
 import { memo } from "react";
 import { InfoIcon, XIcon } from "lucide-react";
 import { Alert, AlertAction, AlertDescription, AlertTitle } from "../ui/alert";

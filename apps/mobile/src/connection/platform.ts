@@ -2,17 +2,17 @@ import {
   ClientCapabilities,
   PlatformConnectionSource,
   Persistence,
-} from "@rove-code/client-runtime/platform";
+} from "@getpaperplane/client-runtime/platform";
 import {
   ConnectionBlockedError,
   ConnectionTransientError,
   Connectivity,
   Wakeups,
-} from "@rove-code/client-runtime/connection";
+} from "@getpaperplane/client-runtime/connection";
 import {
   managedRelayAccountChanges,
   managedRelaySessionAtom,
-} from "@rove-code/client-runtime/relay";
+} from "@getpaperplane/client-runtime/relay";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";

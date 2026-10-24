@@ -7,14 +7,14 @@ import {
   RelayWebClientId,
   type RelayPublicClientId,
   type RelayEnvironmentLinkChallengeRequest,
-} from "@rove-code/contracts/relay";
-import { encodeOAuthScope, parseAllowedOAuthScope } from "@rove-code/shared/oauthScope";
+} from "@getpaperplane/contracts/relay";
+import { encodeOAuthScope, parseAllowedOAuthScope } from "@getpaperplane/shared/oauthScope";
 import {
   normalizeRelayIssuer,
   RelayJwtError,
   signRelayJwt,
   verifyRelayJwt,
-} from "@rove-code/shared/relayJwt";
+} from "@getpaperplane/shared/relayJwt";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";

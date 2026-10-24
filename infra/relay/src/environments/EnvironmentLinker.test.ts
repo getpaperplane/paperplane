@@ -3,8 +3,8 @@ import * as NodeCrypto from "node:crypto";
 import type {
   RelayEnvironmentLinkProofPayload,
   RelayEnvironmentLinkRequest,
-} from "@rove-code/contracts/relay";
-import { RELAY_LINK_PROOF_TYP } from "@rove-code/shared/relayJwt";
+} from "@getpaperplane/contracts/relay";
+import { RELAY_LINK_PROOF_TYP } from "@getpaperplane/shared/relayJwt";
 import { describe, expect, it } from "@effect/vitest";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";

@@ -16,10 +16,10 @@ import type { ThreadMoveDestination } from "./threadOrder";
 import type {
   EnvironmentProject,
   EnvironmentThreadShell,
-} from "@rove-code/client-runtime/state/shell";
-import type { EnvironmentThreadSearchMatch } from "@rove-code/client-runtime/state/thread-search";
-import { AuthOrchestrationOperateScope, type EnvironmentMachineKind } from "@rove-code/contracts";
-import { canSnooze, resolveSnoozePresets } from "@rove-code/client-runtime/state/thread-settled";
+} from "@getpaperplane/client-runtime/state/shell";
+import type { EnvironmentThreadSearchMatch } from "@getpaperplane/client-runtime/state/thread-search";
+import { AuthOrchestrationOperateScope, type EnvironmentMachineKind } from "@getpaperplane/contracts";
+import { canSnooze, resolveSnoozePresets } from "@getpaperplane/client-runtime/state/thread-settled";
 import type { MenuAction } from "@react-native-menu/menu";
 import { memo, useCallback, useEffect, useMemo, useState, type ComponentProps } from "react";
 import { Pressable, useWindowDimensions, View } from "react-native";

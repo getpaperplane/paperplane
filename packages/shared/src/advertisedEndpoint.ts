@@ -5,7 +5,7 @@ import type {
   AdvertisedEndpointReachability,
   AdvertisedEndpointSource,
   AdvertisedEndpointStatus,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 
 export interface CreateAdvertisedEndpointInput {
   readonly id: string;

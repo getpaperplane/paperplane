@@ -1,4 +1,4 @@
-import type { ServerProcessSignal } from "@rove-code/contracts";
+import type { ServerProcessSignal } from "@getpaperplane/contracts";
 
 import { InlineButton } from "../ui/button";
 import { Tooltip, TooltipPopup, TooltipTrigger } from "../ui/tooltip";

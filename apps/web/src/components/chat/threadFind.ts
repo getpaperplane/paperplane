@@ -1,4 +1,4 @@
-import type { OrchestrationV2SearchThreadInput, RunId } from "@rove-code/contracts";
+import type { OrchestrationV2SearchThreadInput, RunId } from "@getpaperplane/contracts";
 
 export type ThreadFindStart = NonNullable<OrchestrationV2SearchThreadInput["start"]>;
 export type ThreadFindPositionReader = (query: string) => ThreadFindStart | undefined;

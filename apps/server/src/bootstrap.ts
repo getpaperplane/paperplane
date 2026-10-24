@@ -8,8 +8,8 @@ import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
 import * as Predicate from "effect/Predicate";
 import * as Schema from "effect/Schema";
-import { decodeMigratedRoveJson } from "@rove-code/shared/roveMigration";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+import { decodeMigratedRoveJson } from "@getpaperplane/shared/roveMigration";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 
 export class BootstrapFdStatError extends Schema.TaggedError<BootstrapFdStatError>()(
   "BootstrapFdStatError",

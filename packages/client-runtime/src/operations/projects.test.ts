@@ -1,11 +1,11 @@
-import { SourceControlProviderKind } from "@rove-code/contracts";
+import { SourceControlProviderKind } from "@getpaperplane/contracts";
 import { describe, expect, it } from "vite-plus/test";
 import {
   EnvironmentId,
   ProjectId,
   CommandId,
   SourceControlDiscoveryResult,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Option from "effect/Option";
 
 import {

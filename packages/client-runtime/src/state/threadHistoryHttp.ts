@@ -1,4 +1,4 @@
-import type { ThreadId } from "@rove-code/contracts";
+import type { ThreadId } from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
 

@@ -1,4 +1,4 @@
-import type { VoiceInputPhase, VoiceInputState } from "@rove-code/client-runtime/voice-input";
+import type { VoiceInputPhase, VoiceInputState } from "@getpaperplane/client-runtime/voice-input";
 import { memo, useCallback, useLayoutEffect, useState, type ReactNode } from "react";
 import {
   Linking,

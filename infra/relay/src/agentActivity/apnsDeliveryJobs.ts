@@ -5,8 +5,8 @@ import {
   RelayAgentActivityAggregateState,
   RelayAgentAwarenessPhase,
   type RelayDeliveryKind,
-} from "@rove-code/contracts/relay";
-import { stableStringify } from "@rove-code/shared/relaySigning";
+} from "@getpaperplane/contracts/relay";
+import { stableStringify } from "@getpaperplane/shared/relaySigning";
 import * as DateTime from "effect/DateTime";
 import * as Option from "effect/Option";
 import * as Redacted from "effect/Redacted";

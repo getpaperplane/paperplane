@@ -7,17 +7,17 @@
  * @module textGeneration/OpenCode2TextGeneration
  */
 import { AbsolutePath, Location, Model, Provider, Session } from "@opencode/client/effect";
-import { TextGenerationError } from "@rove-code/contracts";
-import { getModelSelectionStringOptionValue } from "@rove-code/shared/model";
+import { TextGenerationError } from "@getpaperplane/contracts";
+import { getModelSelectionStringOptionValue } from "@getpaperplane/shared/model";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 import * as Stream from "effect/Stream";
 
-import * as ProviderHost from "@rove-code/provider-core/server/ProviderHost";
+import * as ProviderHost from "@getpaperplane/provider-core/server/ProviderHost";
 import * as OpenCode2Server from "./OpenCode2Server.ts";
 import * as OpenCodeRuntime from "../OpenCodeRuntime.ts";
-import * as TextGenerationOperations from "@rove-code/provider-core/server/textGenerationOperations";
+import * as TextGenerationOperations from "@getpaperplane/provider-core/server/textGenerationOperations";
 
 const isTextGenerationError = Schema.is(TextGenerationError);
 

@@ -7,7 +7,7 @@ import {
   THREAD_JUMP_KEYBINDING_COMMANDS,
   type ModelPickerJumpKeybindingCommand,
   type ThreadJumpKeybindingCommand,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   isMacPlatform,
   matchesKeybindingShortcut,
@@ -16,12 +16,12 @@ import {
   resolveEventKeys,
   type ShortcutEventLike,
   type ShortcutModifierStateLike,
-} from "@rove-code/shared/keybindings";
+} from "@getpaperplane/shared/keybindings";
 import { isElectron } from "./env";
 import { projectScriptIdFromCommand } from "./projectScripts";
 
-export type { ShortcutEventLike, ShortcutModifierStateLike } from "@rove-code/shared/keybindings";
-export { shortcutKeyFromEvent } from "@rove-code/shared/keybindings";
+export type { ShortcutEventLike, ShortcutModifierStateLike } from "@getpaperplane/shared/keybindings";
+export { shortcutKeyFromEvent } from "@getpaperplane/shared/keybindings";
 
 export interface ShortcutMatchContext {
   terminalFocus: boolean;

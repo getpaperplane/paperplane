@@ -2,7 +2,7 @@ import {
   ProviderDriverKind,
   ProviderReplayEntry,
   type ProviderReplayTranscript,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import * as Crypto from "effect/Crypto";
 import * as FileSystem from "effect/FileSystem";
@@ -13,12 +13,12 @@ import * as Stream from "effect/Stream";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as EffectAcpErrors from "effect-acp/errors";
 
-import * as AcpSessionRuntime from "@rove-code/provider-acp/server/AcpSessionRuntime";
-import type { ProviderReplayGate } from "@rove-code/provider-testing/replayGate";
+import * as AcpSessionRuntime from "@getpaperplane/provider-acp/server/AcpSessionRuntime";
+import type { ProviderReplayGate } from "@getpaperplane/provider-testing/replayGate";
 import {
   ACP_PROTOCOL,
   type AcpAdapterV2RuntimeInput,
-} from "@rove-code/provider-acp/server/adapter";
+} from "@getpaperplane/provider-acp/server/adapter";
 
 export const AcpReplayTranscript = Schema.Struct({
   provider: ProviderDriverKind,

@@ -6,12 +6,12 @@ import {
   ThreadId,
   type ProviderReplayEntry,
   type ProviderReplayTranscript,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Layer from "effect/Layer";
-import * as McpProviderSessions from "@rove-code/provider-core/server/McpProviderSessions";
+import * as McpProviderSessions from "@getpaperplane/provider-core/server/McpProviderSessions";
 import * as ProviderAdapterRegistry from "../ProviderAdapterRegistry.ts";
 import { PiOrchestratorReplayHarness } from "./PiAdapterV2.testkit.ts";
 

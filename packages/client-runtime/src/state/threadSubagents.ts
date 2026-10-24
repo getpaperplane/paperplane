@@ -11,8 +11,8 @@ import * as DateTime from "effect/DateTime";
 import type {
   OrchestrationV2Subagent,
   OrchestrationV2ThreadProjection,
-} from "@rove-code/contracts";
-import { copySorted } from "@rove-code/shared/Array";
+} from "@getpaperplane/contracts";
+import { copySorted } from "@getpaperplane/shared/Array";
 
 import { isActiveSubagentStatus, isTerminalSubagentStatus } from "./subagentRuntime.ts";
 import { resolveActiveThreadRun } from "./threadWorkflows.ts";

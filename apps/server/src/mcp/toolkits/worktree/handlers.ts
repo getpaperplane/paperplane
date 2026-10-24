@@ -1,4 +1,4 @@
-import { OrchestratorMcpFailure } from "@rove-code/contracts";
+import { OrchestratorMcpFailure } from "@getpaperplane/contracts";
 import * as Option from "effect/Option";
 import * as GitWorkflow from "../../../git/GitWorkflowService.ts";
 import * as Project from "../../../project/ProjectService.ts";

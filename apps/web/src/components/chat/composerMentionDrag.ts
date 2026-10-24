@@ -1,4 +1,4 @@
-import { serializeComposerFileLink } from "@rove-code/shared/composerTrigger";
+import { serializeComposerFileLink } from "@getpaperplane/shared/composerTrigger";
 
 /**
  * Drag payload type carrying a serialized composer mention. Set on drags that

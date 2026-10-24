@@ -1,5 +1,5 @@
-import type { EnvironmentId } from "@rove-code/contracts";
-import { githubMediaFetchUrl } from "@rove-code/shared/githubMedia";
+import type { EnvironmentId } from "@getpaperplane/contracts";
+import { githubMediaFetchUrl } from "@getpaperplane/shared/githubMedia";
 import type { FilePreviewItem } from "../../components/FilePreviewModal.types";
 
 export interface PullRequestMediaLocation {

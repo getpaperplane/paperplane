@@ -3,31 +3,31 @@ import {
   buildFileLinkParentSuffixByPath,
   fileLinkLabel,
   resolvePathLinkTarget,
-} from "@rove-code/shared/fileLinks";
+} from "@getpaperplane/shared/fileLinks";
 import {
   isWindowsDrivePathHref,
   normalizeMarkdownLinkDestination,
   extractInlineCodeSpans,
   extractMarkdownLinkHrefs,
   inlineCodeFilePathCandidate,
-} from "@rove-code/shared/markdownLinks";
-import { isAbsolutePath } from "@rove-code/shared/path";
+} from "@getpaperplane/shared/markdownLinks";
+import { isAbsolutePath } from "@getpaperplane/shared/path";
 import { usePullRequestLinking } from "~/hooks/usePullRequestLinking";
-import { AuthFilesystemReadScope, AuthOrchestrationOperateScope } from "@rove-code/contracts";
+import { AuthFilesystemReadScope, AuthOrchestrationOperateScope } from "@getpaperplane/contracts";
 import {
   createMarkdownBlockSplitter,
   type MarkdownBlock,
-} from "@rove-code/shared/markdownStreamingBlocks";
+} from "@getpaperplane/shared/markdownStreamingBlocks";
 import {
   CHAT_MARKDOWN_REMARK_PLUGINS,
   CHAT_MARKDOWN_REMARK_PLUGINS_WITH_BREAKS,
   CHAT_MARKDOWN_REHYPE_PLUGINS,
-} from "@rove-code/shared/markdownPipeline";
+} from "@getpaperplane/shared/markdownPipeline";
 import { useAtomValue } from "@effect/atom-react";
 import {
   COMPOSER_CONTEXT_CLIPBOARD_MIME,
   encodeComposerContextClipboardHtml,
-} from "@rove-code/shared/composerContextClipboard";
+} from "@getpaperplane/shared/composerContextClipboard";
 import {
   ChevronRightIcon,
   CodeIcon,
@@ -57,26 +57,26 @@ import {
   type ScopedThreadRef,
   type ServerProviderSkill,
   type ThreadPullRequestKey,
-} from "@rove-code/contracts";
-import { faviconUrlForOrigin } from "@rove-code/shared/favicon";
-import { githubMediaFetchUrl } from "@rove-code/shared/githubMedia";
+} from "@getpaperplane/contracts";
+import { faviconUrlForOrigin } from "@getpaperplane/shared/favicon";
+import { githubMediaFetchUrl } from "@getpaperplane/shared/githubMedia";
 import {
   isAtomCommandInterrupted,
   squashAtomCommandFailure,
   type AtomCommandResult,
-} from "@rove-code/client-runtime/state/runtime";
+} from "@getpaperplane/client-runtime/state/runtime";
 import {
   codexArtifactTemplatePresentationLabel,
   type CodexArtifactTemplate,
   type CodexArtifactTemplateKind,
-} from "@rove-code/shared/codexArtifactTemplates";
+} from "@getpaperplane/shared/codexArtifactTemplates";
 import {
   classifyMarkdownImageSource,
   markdownImageSourceFragment,
-} from "@rove-code/client-runtime/markdown-images";
-import { mediaFileReference, mediaUrlReference } from "@rove-code/client-runtime/media-reference";
-import { MISSING_FILE_ACCESS_MESSAGE } from "@rove-code/client-runtime/state/assets";
-import { mediaKindFromPath, mediaMimeTypeFromExtension } from "@rove-code/shared/filePreview";
+} from "@getpaperplane/client-runtime/markdown-images";
+import { mediaFileReference, mediaUrlReference } from "@getpaperplane/client-runtime/media-reference";
+import { MISSING_FILE_ACCESS_MESSAGE } from "@getpaperplane/client-runtime/state/assets";
+import { mediaKindFromPath, mediaMimeTypeFromExtension } from "@getpaperplane/shared/filePreview";
 import * as Cause from "effect/Cause";
 import { AsyncResult } from "effect/reactivity";
 import React, {
@@ -105,16 +105,16 @@ import type {
 import ReactMarkdown from "react-markdown";
 import { toHtml } from "hast-util-to-html";
 import { defaultUrlTransform } from "react-markdown";
-import { parseAssistantCitationHref } from "@rove-code/shared/assistantCitations";
-import { parseComposerContextHref } from "@rove-code/shared/composerContextReferences";
-import { parseThreadLinkHref } from "@rove-code/shared/threadLinks";
+import { parseAssistantCitationHref } from "@getpaperplane/shared/assistantCitations";
+import { parseComposerContextHref } from "@getpaperplane/shared/composerContextReferences";
+import { parseThreadLinkHref } from "@getpaperplane/shared/threadLinks";
 import { AssistantCitationChip } from "./chat/AssistantCitationChip";
 import { MarkdownThreadLink } from "./chat/MarkdownThreadLink";
-import { isWindowsAbsolutePath } from "@rove-code/shared/path";
+import { isWindowsAbsolutePath } from "@getpaperplane/shared/path";
 import {
   artifactTemplateFromHastProperties,
   renderCodexInlineDirectivesAsMarkdown,
-} from "@rove-code/shared/codexMarkdownDirectives";
+} from "@getpaperplane/shared/codexMarkdownDirectives";
 import { renderSkillInlineMarkdownChildren } from "./chat/SkillInlineText";
 import {
   resolveMarkdownMediaPreview,
@@ -176,7 +176,7 @@ import {
   shouldOpenMarkdownFileLinkInEditor,
   type MarkdownFileLinkMeta,
 } from "../markdown-links";
-import { isMarkdownFileLinkLabel } from "@rove-code/shared/markdownLinks";
+import { isMarkdownFileLinkLabel } from "@getpaperplane/shared/markdownLinks";
 import { isElectron } from "../env";
 import { readLocalApi } from "../localApi";
 import { useAssetUrlRefresh, useAssetUrlState } from "../assets/assetUrls";

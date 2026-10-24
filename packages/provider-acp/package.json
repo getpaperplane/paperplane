@@ -1,5 +1,5 @@
 {
-  "name": "@rove-code/provider-acp",
+  "name": "@getpaperplane/provider-acp",
   "private": true,
   "type": "module",
   "exports": {
@@ -49,9 +49,9 @@
     "test": "vp test run --config ../../vite.config.ts --dir ."
   },
   "dependencies": {
-    "@rove-code/contracts": "workspace:*",
-    "@rove-code/provider-core": "workspace:*",
-    "@rove-code/shared": "workspace:*",
+    "@getpaperplane/contracts": "workspace:*",
+    "@getpaperplane/provider-core": "workspace:*",
+    "@getpaperplane/shared": "workspace:*",
     "diff": "8.0.3",
     "effect": "catalog:"
   },

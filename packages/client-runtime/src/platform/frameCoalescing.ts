@@ -24,7 +24,7 @@ const nextAnimationFrame = Effect.raceFirst(
  */
 export class FrameCoalescing extends Context.Reference<{
   readonly nextFrame: Effect.Effect<void> | null;
-}>("@rove-code/client-runtime/platform/FrameCoalescing", {
+}>("@getpaperplane/client-runtime/platform/FrameCoalescing", {
   defaultValue: () => ({
     nextFrame:
       typeof globalThis.requestAnimationFrame === "function" &&

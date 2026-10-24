@@ -1,4 +1,4 @@
-import { type TimestampFormat } from "@rove-code/contracts/settings";
+import { type TimestampFormat } from "@getpaperplane/contracts/settings";
 
 function getTimestampFormatOptions(
   timestampFormat: TimestampFormat,

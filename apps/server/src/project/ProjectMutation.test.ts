@@ -1,5 +1,5 @@
 import { assert, it } from "@effect/vitest";
-import { CommandId, ProjectId, type Project } from "@rove-code/contracts";
+import { CommandId, ProjectId, type Project } from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import * as Ref from "effect/Ref";
 

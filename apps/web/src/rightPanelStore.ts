@@ -11,8 +11,8 @@ import {
   parseScopedThreadKey,
   scopedThreadKey,
   scopeThreadRef,
-} from "@rove-code/client-runtime/environment";
-import { EnvironmentId, ThreadId, type ScopedThreadRef } from "@rove-code/contracts";
+} from "@getpaperplane/client-runtime/environment";
+import { EnvironmentId, ThreadId, type ScopedThreadRef } from "@getpaperplane/contracts";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 

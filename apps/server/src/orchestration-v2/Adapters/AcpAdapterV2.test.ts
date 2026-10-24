@@ -4,7 +4,7 @@ import {
   normalizeDevinSessionUpdate,
   normalizeDevinToolCall,
   extractDevinSubagentUpdate,
-} from "@rove-code/provider-acp-registry/testing";
+} from "@getpaperplane/provider-acp-registry/testing";
 // @effect-diagnostics nodeBuiltinImport:off
 import * as NodeChildProcess from "node:child_process";
 import * as NodeFS from "node:fs";
@@ -28,10 +28,10 @@ import {
   ThreadId,
   type OrchestrationV2ProviderThread,
   type ProviderOptionDescriptor,
-} from "@rove-code/contracts";
-import { GrokSettings } from "@rove-code/provider-grok/settings";
-import * as HostProcess from "@rove-code/shared/HostProcess";
-import { resolveSelfInvocation } from "@rove-code/shared/nodeRuntime";
+} from "@getpaperplane/contracts";
+import { GrokSettings } from "@getpaperplane/provider-grok/settings";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
+import { resolveSelfInvocation } from "@getpaperplane/shared/nodeRuntime";
 import * as DateTime from "effect/DateTime";
 import * as Deferred from "effect/Deferred";
 import type * as Duration from "effect/Duration";
@@ -56,24 +56,24 @@ import * as EffectAcpErrors from "effect-acp/errors";
 import type * as EffectAcpProtocol from "effect-acp/protocol";
 import type * as EffectAcpSchema from "effect-acp/compat";
 
-import * as TestProviderHost from "@rove-code/provider-testing/TestProviderHost";
-import * as McpProviderSessions from "@rove-code/provider-core/server/McpProviderSessions";
-import * as AcpSessionRuntime from "@rove-code/provider-acp/server/AcpSessionRuntime";
+import * as TestProviderHost from "@getpaperplane/provider-testing/TestProviderHost";
+import * as McpProviderSessions from "@getpaperplane/provider-core/server/McpProviderSessions";
+import * as AcpSessionRuntime from "@getpaperplane/provider-acp/server/AcpSessionRuntime";
 import {
   ACP_EMPTY_OPTION_VALUE,
   ACP_SESSION_MODE_OPTION_ID,
   acpProviderOptionDescriptors,
-} from "@rove-code/provider-acp/server/sessionConfig";
+} from "@getpaperplane/provider-acp/server/sessionConfig";
 import {
   extractXAiAcpSubagentEndNotice,
   extractXAiAcpSubagentUpdate,
   makeXAiPromptCompletionRuntime,
   normalizeXAiAcpToolCallState,
   registerXAiBackgroundTaskTracking,
-} from "@rove-code/provider-grok/testing";
-import * as IdAllocator from "@rove-code/provider-core/server/IdAllocator";
-import * as ProviderAdapter from "@rove-code/provider-core/server/ProviderAdapter";
-import type * as ProviderContinuationRequests from "@rove-code/provider-core/server/ProviderContinuationRequests";
+} from "@getpaperplane/provider-grok/testing";
+import * as IdAllocator from "@getpaperplane/provider-core/server/IdAllocator";
+import * as ProviderAdapter from "@getpaperplane/provider-core/server/ProviderAdapter";
+import type * as ProviderContinuationRequests from "@getpaperplane/provider-core/server/ProviderContinuationRequests";
 import {
   AcpProviderCapabilitiesV2,
   acpProviderItemNativeId,
@@ -92,13 +92,13 @@ import {
   type AcpAdapterV2Flavor,
   type AcpAdapterV2RuntimeInput,
   type AcpAdapterV2SubagentUpdate,
-} from "@rove-code/provider-acp/server/adapter";
+} from "@getpaperplane/provider-acp/server/adapter";
 
-import { makeGrokAdapterV2 } from "@rove-code/provider-grok/testing";
+import { makeGrokAdapterV2 } from "@getpaperplane/provider-grok/testing";
 import {
   acpRegistryPromptFailure,
   registerMistralVibeAcpExtensions,
-} from "@rove-code/provider-acp-registry/testing";
+} from "@getpaperplane/provider-acp-registry/testing";
 
 const DEFAULT_GROK_SETTINGS = Schema.decodeSync(GrokSettings)({});
 

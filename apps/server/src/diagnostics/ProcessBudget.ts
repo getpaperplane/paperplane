@@ -12,7 +12,7 @@ import {
   Environment as HostProcessEnvironment,
   Platform as HostProcessPlatform,
   UserId as HostProcessUserId,
-} from "@rove-code/shared/HostProcess";
+} from "@getpaperplane/shared/HostProcess";
 
 const MemoryMiB = Schema.NumberFromString.check(
   Schema.isInt(),

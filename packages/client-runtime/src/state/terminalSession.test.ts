@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vite-plus/test";
 
-import { EnvironmentId, TerminalSessionSnapshot, ThreadId } from "@rove-code/contracts";
+import { EnvironmentId, TerminalSessionSnapshot, ThreadId } from "@getpaperplane/contracts";
 
 import {
   applyTerminalAttachStreamEvent,

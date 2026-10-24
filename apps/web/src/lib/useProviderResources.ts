@@ -1,4 +1,4 @@
-import type { EnvironmentId, ProviderInstanceId } from "@rove-code/contracts";
+import type { EnvironmentId, ProviderInstanceId } from "@getpaperplane/contracts";
 import { useState } from "react";
 import * as Cause from "effect/Cause";
 import { serverEnvironment } from "../state/server";

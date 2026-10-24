@@ -1,4 +1,4 @@
-import type { ProviderUsageLimitsUpdate, ServerProvider } from "@rove-code/contracts";
+import type { ProviderUsageLimitsUpdate, ServerProvider } from "@getpaperplane/contracts";
 import type * as Effect from "effect/Effect";
 import type * as Stream from "effect/Stream";
 import type { ProviderMaintenanceCapabilities } from "./maintenance.ts";

@@ -2,10 +2,10 @@ import { beforeEach, vi } from "vite-plus/test";
 import { describe, expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import { EnvironmentId } from "@rove-code/contracts";
-import { RelayMobileClientId } from "@rove-code/contracts/relay";
-import { ManagedRelay } from "@rove-code/client-runtime/relay";
-import { layerRemoteHttpClient } from "@rove-code/client-runtime/rpc";
+import { EnvironmentId } from "@getpaperplane/contracts";
+import { RelayMobileClientId } from "@getpaperplane/contracts/relay";
+import { ManagedRelay } from "@getpaperplane/client-runtime/relay";
+import { layerRemoteHttpClient } from "@getpaperplane/client-runtime/rpc";
 import { HttpClient } from "effect/http";
 
 import * as MobileStorage from "../../persistence/mobile-storage";

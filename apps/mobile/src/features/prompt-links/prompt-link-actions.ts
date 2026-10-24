@@ -1,5 +1,5 @@
 import * as Dialog from "../../components/ui/Dialog";
-import { buildNewThreadLink, type LinkedPrompt } from "@rove-code/shared/promptLinks";
+import { buildNewThreadLink, type LinkedPrompt } from "@getpaperplane/shared/promptLinks";
 
 import { tryCopyTextWithHaptic } from "../../lib/copyTextWithHaptic";
 import {

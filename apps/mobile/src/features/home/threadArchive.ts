@@ -1,7 +1,7 @@
 import {
   threadRuntimeCanArchive,
   type ThreadRuntimeSummary,
-} from "@rove-code/client-runtime/state/models";
+} from "@getpaperplane/client-runtime/state/models";
 
 /**
  * Archiving may discard queued work, but it must not detach a provider while

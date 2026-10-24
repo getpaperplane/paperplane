@@ -1,7 +1,7 @@
 import {
   type CheckpointDiffState,
   type CheckpointDiffTarget,
-} from "@rove-code/client-runtime/state/threads";
+} from "@getpaperplane/client-runtime/state/threads";
 
 import { useCheckpointDiff as useCheckpointDiffQuery } from "../state/queries";
 

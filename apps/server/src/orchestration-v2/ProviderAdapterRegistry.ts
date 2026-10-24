@@ -5,7 +5,7 @@ import {
   type ProviderDriverKind,
   type ProviderInstanceConfig,
   type ProviderInstanceConfigMap,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
@@ -13,13 +13,13 @@ import * as Layer from "effect/Layer";
 import * as Schema from "effect/Schema";
 import * as Scope from "effect/Scope";
 
-import type { ProviderInstance } from "@rove-code/provider-core/server/driver";
+import type { ProviderInstance } from "@getpaperplane/provider-core/server/driver";
 import * as ProviderInstanceRegistry from "../provider/ProviderInstanceRegistry.ts";
 import {
   ProviderAdapterDriverCreateError,
   type AnyProviderAdapterDriver,
-} from "@rove-code/provider-core/server/adapterDriver";
-import * as ProviderAdapter from "@rove-code/provider-core/server/ProviderAdapter";
+} from "@getpaperplane/provider-core/server/adapterDriver";
+import * as ProviderAdapter from "@getpaperplane/provider-core/server/ProviderAdapter";
 
 const isProviderSetupError = Schema.is(ProviderSetupError);
 
@@ -69,7 +69,7 @@ export interface ProviderAdapterRegistryV2Shape {
 export class ProviderAdapterRegistryV2 extends Context.Service<
   ProviderAdapterRegistryV2,
   ProviderAdapterRegistryV2Shape
->()("@rove-code/server/orchestration-v2/ProviderAdapterRegistry/ProviderAdapterRegistryV2") {}
+>()("@getpaperplane/server/orchestration-v2/ProviderAdapterRegistry/ProviderAdapterRegistryV2") {}
 
 /**
  * Production facade over the canonical provider-instance registry. Adapter

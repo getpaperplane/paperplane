@@ -9,9 +9,9 @@ import * as Stream from "effect/Stream";
 import * as Schema from "effect/Schema";
 import * as Option from "effect/Option";
 import * as PiExtensionStatuses from "../../provider/PiExtensionStatuses.ts";
-import * as IdAllocator from "@rove-code/provider-core/server/IdAllocator";
-import * as McpProviderSessions from "@rove-code/provider-core/server/McpProviderSessions";
-import * as ProviderAdapter from "@rove-code/provider-core/server/ProviderAdapter";
+import * as IdAllocator from "@getpaperplane/provider-core/server/IdAllocator";
+import * as McpProviderSessions from "@getpaperplane/provider-core/server/McpProviderSessions";
+import * as ProviderAdapter from "@getpaperplane/provider-core/server/ProviderAdapter";
 import {
   MessageId,
   NodeId,
@@ -22,7 +22,7 @@ import {
   RunId,
   ThreadId,
   type OrchestrationV2ProviderThread,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { ServerConfig } from "../../config.ts";
 import { makePiAdapterV2 } from "./PiAdapterV2.ts";
 import type {
@@ -502,7 +502,7 @@ it.effect("Stop acknowledgment cannot close a run before SDK settlement", () =>
     yield* Fiber.join(interrupted);
   }).pipe(Effect.scoped, Effect.provide(layer)),
 );
-import { CheckpointId } from "@rove-code/contracts";
+import { CheckpointId } from "@getpaperplane/contracts";
 
 it.effect.each([false, true])("resumes the durable session after a worker crash, idle=%s", (idle) =>
   Effect.gen(function* () {

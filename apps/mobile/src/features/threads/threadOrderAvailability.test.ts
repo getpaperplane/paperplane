@@ -2,8 +2,8 @@ import { describe, expect, it } from "vite-plus/test";
 import {
   generateSpreadPinOrderKeys,
   pinOrderKeyBetween,
-} from "@rove-code/client-runtime/state/thread-sort";
-import type { EnvironmentId } from "@rove-code/contracts";
+} from "@getpaperplane/client-runtime/state/thread-sort";
+import type { EnvironmentId } from "@getpaperplane/contracts";
 
 import {
   computeThreadMoveAvailability,

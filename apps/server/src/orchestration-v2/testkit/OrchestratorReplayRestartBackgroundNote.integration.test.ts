@@ -1,6 +1,6 @@
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { assert, describe, it } from "@effect/vitest";
-import { ProviderDriverKind, type ProviderReplayEntry } from "@rove-code/contracts";
+import { ProviderDriverKind, type ProviderReplayEntry } from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
@@ -10,7 +10,7 @@ import {
   ClaudeOrchestratorReplayHarness,
   makeClaudeRestartReplayHarness,
 } from "../Adapters/ClaudeAdapterV2.testkit.ts";
-import * as IdAllocator from "@rove-code/provider-core/server/IdAllocator";
+import * as IdAllocator from "@getpaperplane/provider-core/server/IdAllocator";
 import * as EffectWorker from "../EffectWorker.ts";
 import * as SqlitePersistence from "../../persistence/Sqlite.ts";
 import { provideDeterministicTestRuntime } from "./DeterministicRuntime.ts";
@@ -23,8 +23,8 @@ import {
 import { runOrchestratorV2ProviderReplayScenario } from "./ProviderReplayHarness.ts";
 import * as ProviderReplayHarness from "./ProviderReplayHarness.ts";
 import { runOrchestratorV2Scenario } from "./OrchestratorScenario.ts";
-import { checkpointWorkspace } from "@rove-code/provider-testing/replayWorkspace";
-import { readProviderReplayTranscript } from "@rove-code/provider-testing/replayTranscript";
+import { checkpointWorkspace } from "@getpaperplane/provider-testing/replayWorkspace";
+import { readProviderReplayTranscript } from "@getpaperplane/provider-testing/replayTranscript";
 
 const SCENARIO = "claude_background_subagent_after_root";
 const SESSION_ID = "cca274e4-25ae-4171-b972-bbb31118517e";

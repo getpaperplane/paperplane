@@ -1,4 +1,4 @@
-import { legacyThreadPullRequestKey } from "@rove-code/shared/threadPullRequests";
+import { legacyThreadPullRequestKey } from "@getpaperplane/shared/threadPullRequests";
 import * as Effect from "effect/Effect";
 import * as SqlClient from "effect/sql/SqlClient";
 

@@ -4,7 +4,7 @@ import {
   type DesktopAppActivationFailure,
   type DesktopAppActivationRequest,
   type DesktopAppActivationResponse,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 
 interface PendingActivation {
   readonly request: DesktopAppActivationRequest;

@@ -1,4 +1,4 @@
-import { DesktopHostTelemetryMessage } from "@rove-code/contracts";
+import { DesktopHostTelemetryMessage } from "@getpaperplane/contracts";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { assert, describe, it } from "@effect/vitest";
 import * as Deferred from "effect/Deferred";

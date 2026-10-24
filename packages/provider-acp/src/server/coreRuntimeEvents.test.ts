@@ -1,4 +1,4 @@
-import { ProviderDriverKind, RuntimeRequestId, TurnId } from "@rove-code/contracts";
+import { ProviderDriverKind, RuntimeRequestId, TurnId } from "@getpaperplane/contracts";
 import { describe, expect, it } from "vite-plus/test";
 
 import {

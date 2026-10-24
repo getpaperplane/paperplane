@@ -9,16 +9,16 @@ import type {
   OrchestrationV2ExecutionNode,
   OrchestrationV2RuntimeRequest,
   ProviderInstanceId,
-} from "@rove-code/contracts";
-import { OrchestrationV2UserInputQuestion, RuntimeRequestId } from "@rove-code/contracts";
-import * as ProviderAdapter from "@rove-code/provider-core/server/ProviderAdapter";
-import * as IdAllocator from "@rove-code/provider-core/server/IdAllocator";
-import * as McpProviderSessions from "@rove-code/provider-core/server/McpProviderSessions";
-import type { McpProviderSessionConfig } from "@rove-code/provider-core/server/mcpSession";
-import { turnScopedSelectionTransition } from "@rove-code/provider-core/server/selectionTransition";
-import { makeProviderFailure } from "@rove-code/provider-core/server/failure";
-import { ProviderDriverKind } from "@rove-code/contracts";
-import { getModelSelectionStringOptionValue } from "@rove-code/shared/model";
+} from "@getpaperplane/contracts";
+import { OrchestrationV2UserInputQuestion, RuntimeRequestId } from "@getpaperplane/contracts";
+import * as ProviderAdapter from "@getpaperplane/provider-core/server/ProviderAdapter";
+import * as IdAllocator from "@getpaperplane/provider-core/server/IdAllocator";
+import * as McpProviderSessions from "@getpaperplane/provider-core/server/McpProviderSessions";
+import type { McpProviderSessionConfig } from "@getpaperplane/provider-core/server/mcpSession";
+import { turnScopedSelectionTransition } from "@getpaperplane/provider-core/server/selectionTransition";
+import { makeProviderFailure } from "@getpaperplane/provider-core/server/failure";
+import { ProviderDriverKind } from "@getpaperplane/contracts";
+import { getModelSelectionStringOptionValue } from "@getpaperplane/shared/model";
 import * as Deferred from "effect/Deferred";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";

@@ -1,4 +1,4 @@
-import type { EnvironmentId, PullRequestRef } from "@rove-code/contracts";
+import type { EnvironmentId, PullRequestRef } from "@getpaperplane/contracts";
 import { useMemo } from "react";
 import {
   savedPullRequestStack,

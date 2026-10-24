@@ -1,4 +1,4 @@
-import type { HostHealthReport } from "@rove-code/contracts";
+import type { HostHealthReport } from "@getpaperplane/contracts";
 import { describe, expect, it } from "vite-plus/test";
 
 import {

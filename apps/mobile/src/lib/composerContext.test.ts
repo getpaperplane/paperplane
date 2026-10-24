@@ -1,4 +1,4 @@
-import { upgradeLegacyContextMessage } from "@rove-code/shared/composerContextLegacy";
+import { upgradeLegacyContextMessage } from "@getpaperplane/shared/composerContextLegacy";
 import { buildProjectThreadStartTurnInput } from "./projectThreadStartTurn";
 import {
   ProjectId,
@@ -7,14 +7,14 @@ import {
   EnvironmentId,
   ThreadId,
   type OrchestrationMessageContext,
-} from "@rove-code/contracts";
-import { collectComposerInlineTokens } from "@rove-code/shared/composerInlineTokens";
+} from "@getpaperplane/contracts";
+import { collectComposerInlineTokens } from "@getpaperplane/shared/composerInlineTokens";
 import {
   ATTACHMENT_ONLY_BOOTSTRAP_PROMPT,
   collectComposerContextReferences,
   formatComposerContextReference,
   projectComposerContextForProvider,
-} from "@rove-code/shared/composerContextReferences";
+} from "@getpaperplane/shared/composerContextReferences";
 import { describe, expect, it } from "vite-plus/test";
 import {
   composerContextEditorTokens,

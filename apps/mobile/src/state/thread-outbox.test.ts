@@ -1,7 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
-import { EnvironmentNotRegisteredError } from "@rove-code/client-runtime/connection";
-import { isTransportConnectionErrorMessage } from "@rove-code/client-runtime/errors";
-import { EnvironmentRpcUnavailableError } from "@rove-code/client-runtime/rpc";
+import { EnvironmentNotRegisteredError } from "@getpaperplane/client-runtime/connection";
+import { isTransportConnectionErrorMessage } from "@getpaperplane/client-runtime/errors";
+import { EnvironmentRpcUnavailableError } from "@getpaperplane/client-runtime/rpc";
 import {
   CommandId,
   ComposerContextId,
@@ -12,7 +12,7 @@ import {
   ProjectId,
   ProviderInstanceId,
   ThreadId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { AtomRegistry } from "effect/reactivity";
 import * as RpcClientError from "effect/rpc/RpcClientError";
 import * as Socket from "effect/socket/Socket";

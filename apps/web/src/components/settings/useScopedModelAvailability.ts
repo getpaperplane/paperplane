@@ -1,4 +1,4 @@
-import type { ProviderInstanceId, UnifiedSettings } from "@rove-code/contracts";
+import type { ProviderInstanceId, UnifiedSettings } from "@getpaperplane/contracts";
 import { useCallback } from "react";
 
 import { mergeEnvironmentSettings } from "../../hooks/useSettings";

@@ -1,5 +1,5 @@
-import type { RelayAgentActivityState } from "@rove-code/contracts/relay";
-import { RelayAgentActivityState as RelayAgentActivityStateSchema } from "@rove-code/contracts/relay";
+import type { RelayAgentActivityState } from "@getpaperplane/contracts/relay";
+import { RelayAgentActivityState as RelayAgentActivityStateSchema } from "@getpaperplane/contracts/relay";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";

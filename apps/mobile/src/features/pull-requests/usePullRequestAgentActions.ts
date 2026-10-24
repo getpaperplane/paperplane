@@ -1,4 +1,4 @@
-import type { PullRequestDetail } from "@rove-code/contracts";
+import type { PullRequestDetail } from "@getpaperplane/contracts";
 import {
   pullRequestAgentActions,
   pullRequestAgentThread,

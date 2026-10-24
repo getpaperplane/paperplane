@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vite-plus/test";
-import { MOBILE_THEME_IDS } from "@rove-code/shared/themePalettes";
+import { MOBILE_THEME_IDS } from "@getpaperplane/shared/themePalettes";
 
 import { getMobileThemeVariables } from "./mobileTheme";
 import { createNativeComposerTheme } from "./nativeComposerTheme";

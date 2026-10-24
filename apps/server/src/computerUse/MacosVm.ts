@@ -8,12 +8,12 @@ import {
   ComputerDesktopViewerError,
   ThreadId,
   type ComputerUseMacosVm,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as ComputerDesktops from "./ComputerDesktops.ts";
 import {
   Environment as HostProcessEnvironment,
   Platform as HostProcessPlatform,
-} from "@rove-code/shared/HostProcess";
+} from "@getpaperplane/shared/HostProcess";
 import * as Cause from "effect/Cause";
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
@@ -146,7 +146,7 @@ export class MacosVm extends Context.Service<
     readonly release: Effect.Effect<void, MacosVmError>;
     readonly remove: Effect.Effect<void, MacosVmError>;
   }
->()("@rove-code/server/computerUse/MacosVm") {}
+>()("@getpaperplane/server/computerUse/MacosVm") {}
 
 /** CuaDriver serializes this runtime with its transport lock. Idle MCP retirement does not close leases. */
 export const make = Effect.fn("MacosVm.make")(function* (options?: { readonly arch?: string }) {

@@ -1,10 +1,10 @@
-import { Connection } from "@rove-code/client-runtime/connection";
-import { ShellSnapshotLoader } from "@rove-code/client-runtime/state/shell";
-import { PullRequestDiffLoader } from "@rove-code/client-runtime/state/pull-requests";
+import { Connection } from "@getpaperplane/client-runtime/connection";
+import { ShellSnapshotLoader } from "@getpaperplane/client-runtime/state/shell";
+import { PullRequestDiffLoader } from "@getpaperplane/client-runtime/state/pull-requests";
 import {
   BoundedThreadSnapshotLoader,
   ThreadHistoryController,
-} from "@rove-code/client-runtime/state/threads";
+} from "@getpaperplane/client-runtime/state/threads";
 import * as Layer from "effect/Layer";
 import { Atom } from "effect/reactivity";
 

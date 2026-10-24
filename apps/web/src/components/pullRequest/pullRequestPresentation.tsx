@@ -8,8 +8,8 @@ import type {
   PullRequestMergeability,
   PullRequestReviewDecision,
   PullRequestState,
-} from "@rove-code/contracts";
-import { formatDiffCount } from "@rove-code/client-runtime/diff-count";
+} from "@getpaperplane/contracts";
+import { formatDiffCount } from "@getpaperplane/client-runtime/diff-count";
 import {
   CircleCheckIcon,
   CircleDashedIcon,

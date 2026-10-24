@@ -12,13 +12,13 @@ import {
   type SourceControlProviderAuth,
   type SourceControlRepositoryCloneUrls,
   type SourceControlRepositoryVisibility,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { HttpClient, HttpClientRequest, HttpClientResponse } from "effect/http";
-import { sanitizeBranchFragment } from "@rove-code/shared/git";
+import { sanitizeBranchFragment } from "@getpaperplane/shared/git";
 import {
   detectSourceControlProviderFromRemoteUrl,
   isSshRemoteUrl,
-} from "@rove-code/shared/sourceControl";
+} from "@getpaperplane/shared/sourceControl";
 
 import {
   BitbucketPullRequestListSchema,
@@ -26,13 +26,13 @@ import {
   normalizeBitbucketPullRequestRecord,
   type NormalizedBitbucketPullRequestRecord,
 } from "./bitbucketPullRequests.ts";
-import { collectUint8StreamText } from "@rove-code/provider-core/server/collectStreamText";
-import * as SourceControlProvider from "@rove-code/source-control-core/server/SourceControlProvider";
-import * as SourceControlHost from "@rove-code/source-control-core/server/SourceControlHost";
-import { readSourceControlHostSettings } from "@rove-code/source-control-core/client/definition";
+import { collectUint8StreamText } from "@getpaperplane/provider-core/server/collectStreamText";
+import * as SourceControlProvider from "@getpaperplane/source-control-core/server/SourceControlProvider";
+import * as SourceControlHost from "@getpaperplane/source-control-core/server/SourceControlHost";
+import { readSourceControlHostSettings } from "@getpaperplane/source-control-core/client/definition";
 
 import * as BitbucketClient from "../client/definition.ts";
-import { retryAtFromHeader } from "@rove-code/source-control-core/server/SourceControlRateLimit";
+import { retryAtFromHeader } from "@getpaperplane/source-control-core/server/SourceControlRateLimit";
 
 const DEFAULT_API_BASE_URL = "https://api.bitbucket.org/2.0";
 /** A response body past this is cut short, so one huge diff cannot exhaust the server. */
@@ -391,7 +391,7 @@ export class BitbucketApi extends Context.Service<
       readonly force?: boolean;
     }) => Effect.Effect<void, BitbucketApiError>;
   }
->()("@rove-code/source-control-bitbucket/server/BitbucketApi") {}
+>()("@getpaperplane/source-control-bitbucket/server/BitbucketApi") {}
 
 function nonEmpty(value: string | undefined): Option.Option<string> {
   const trimmed = value?.trim();

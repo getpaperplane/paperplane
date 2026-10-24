@@ -15,10 +15,10 @@ import {
   type DirectoryRecord,
 } from "@electron/asar";
 
-import { fromYaml } from "@rove-code/shared/schemaYaml";
-import * as HostProcess from "@rove-code/shared/HostProcess";
-import { clerkFrontendApiHostnameFromPublishableKey } from "@rove-code/shared/relayAuth";
-import { resolveSpawnCommand } from "@rove-code/shared/shell";
+import { fromYaml } from "@getpaperplane/shared/schemaYaml";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
+import { clerkFrontendApiHostnameFromPublishableKey } from "@getpaperplane/shared/relayAuth";
+import { resolveSpawnCommand } from "@getpaperplane/shared/shell";
 import rootPackageJson from "../package.json" with { type: "json" };
 import desktopPackageJson from "../apps/desktop/package.json" with { type: "json" };
 import gnomeCaptureBundle from "../apps/desktop/gnome-extension/bundle.json" with { type: "json" };
@@ -4104,7 +4104,7 @@ const buildDesktopArtifact = Effect.fn("buildDesktopArtifact")(function* (
   const builderArgs = [
     "exec",
     "--filter",
-    "@rove-code/desktop",
+    "@getpaperplane/desktop",
     "--",
     "electron-builder",
     "--projectDir",
@@ -4122,7 +4122,7 @@ const buildDesktopArtifact = Effect.fn("buildDesktopArtifact")(function* (
       shell: builderCommand.shell,
     }),
     {
-      label: `vp exec --filter @rove-code/desktop -- electron-builder --projectDir ${stageAppDir} ${platformConfig.cliFlag} --${options.arch} --publish never`,
+      label: `vp exec --filter @getpaperplane/desktop -- electron-builder --projectDir ${stageAppDir} ${platformConfig.cliFlag} --${options.arch} --publish never`,
       verbose: options.verbose,
     },
   );

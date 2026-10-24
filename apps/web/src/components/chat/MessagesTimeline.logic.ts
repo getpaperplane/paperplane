@@ -1,18 +1,18 @@
-import { worktreeSetupAgentStarted } from "@rove-code/client-runtime/worktree-setup";
-export { worktreeSetupAgentStarted } from "@rove-code/client-runtime/worktree-setup";
-import { isLiveSubagentTurnItem } from "@rove-code/client-runtime/state/subagentRuntime";
+import { worktreeSetupAgentStarted } from "@getpaperplane/client-runtime/worktree-setup";
+export { worktreeSetupAgentStarted } from "@getpaperplane/client-runtime/worktree-setup";
+import { isLiveSubagentTurnItem } from "@getpaperplane/client-runtime/state/subagentRuntime";
 import * as DateTime from "effect/DateTime";
 import * as Equal from "effect/Equal";
 import {
   assistantCitationLabel,
   collectAssistantCitations,
-} from "@rove-code/shared/assistantCitations";
+} from "@getpaperplane/shared/assistantCitations";
 import { shallow } from "zustand/vanilla/shallow";
-import { renderCodexDirectivesForCopy } from "@rove-code/shared/codexMarkdownDirectives";
+import { renderCodexDirectivesForCopy } from "@getpaperplane/shared/codexMarkdownDirectives";
 import {
   commandDisplayText,
   commandProgramName,
-} from "@rove-code/client-runtime/work-log/command-label";
+} from "@getpaperplane/client-runtime/work-log/command-label";
 import {
   liveActivityToolStatus,
   normalizeCompactToolLabel,
@@ -21,11 +21,11 @@ import {
   toolGroupAction,
   toolGroupSummaryKind,
   type ToolGroupSummaryKind,
-} from "@rove-code/client-runtime/work-log/presentation";
+} from "@getpaperplane/client-runtime/work-log/presentation";
 export {
   normalizeCompactToolLabel,
   toolGroupAction,
-} from "@rove-code/client-runtime/work-log/presentation";
+} from "@getpaperplane/client-runtime/work-log/presentation";
 import {
   deriveRevertTurnCountByUserMessageId,
   formatDuration,
@@ -53,24 +53,24 @@ import {
   RunId,
   type ThreadId,
   type TurnItemId,
-} from "@rove-code/contracts";
-import type { ThreadRunSummary } from "@rove-code/client-runtime/state/shell";
+} from "@getpaperplane/contracts";
+import type { ThreadRunSummary } from "@getpaperplane/client-runtime/state/shell";
 import {
   resolveRoveMcpToolDefinition,
   resolveRoveMcpToolPresentation,
   type RoveMcpToolPresentation,
-} from "@rove-code/shared/roveMcpToolPresentation";
-import { compactDynamicToolOutput } from "@rove-code/shared/toolOutput";
-import { htmlRenderReferencesEqual, type HtmlRenderReference } from "@rove-code/shared/htmlRender";
-import { mcpAppReferencesEqual, type McpAppReference } from "@rove-code/shared/mcpApp";
-import { dynamicToolTitle } from "@rove-code/shared/toolActivity";
+} from "@getpaperplane/shared/roveMcpToolPresentation";
+import { compactDynamicToolOutput } from "@getpaperplane/shared/toolOutput";
+import { htmlRenderReferencesEqual, type HtmlRenderReference } from "@getpaperplane/shared/htmlRender";
+import { mcpAppReferencesEqual, type McpAppReference } from "@getpaperplane/shared/mcpApp";
+import { dynamicToolTitle } from "@getpaperplane/shared/toolActivity";
 import { formatWorkspaceRelativePath } from "../../filePathDisplay";
 import {
   collectToolFilePaths,
   formatReadToolLabel,
   formatSearchToolLabel,
-} from "@rove-code/shared/toolActivity";
-import { isWindowsAbsolutePath } from "@rove-code/shared/path";
+} from "@getpaperplane/shared/toolActivity";
+import { isWindowsAbsolutePath } from "@getpaperplane/shared/path";
 
 function timelineEntryRunId(entry: TimelineEntry): RunId | null {
   if (entry.kind === "message") {

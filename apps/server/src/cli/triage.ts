@@ -14,8 +14,8 @@ import * as NodeChildProcess from "node:child_process";
 import * as NodeOS from "node:os";
 import * as NodeReadlinePromises from "node:readline/promises";
 
-import * as HostProcess from "@rove-code/shared/HostProcess";
-import { isCommandAvailable, resolveSpawnCommand } from "@rove-code/shared/shell";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
+import { isCommandAvailable, resolveSpawnCommand } from "@getpaperplane/shared/shell";
 import * as Config from "effect/Config";
 import * as Console from "effect/Console";
 import * as DateTime from "effect/DateTime";

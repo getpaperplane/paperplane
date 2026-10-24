@@ -1,4 +1,4 @@
-import type { PreviewSessionSnapshot } from "@rove-code/contracts";
+import type { PreviewSessionSnapshot } from "@getpaperplane/contracts";
 
 /** The tab the agent touched last, the default when nothing is selected. */
 export function latestBrowserTab(tabs: ReadonlyArray<PreviewSessionSnapshot>) {

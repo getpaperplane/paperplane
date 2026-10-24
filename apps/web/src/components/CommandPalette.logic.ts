@@ -1,13 +1,13 @@
-import { threadPullRequestSearchTerms } from "@rove-code/shared/threadPullRequests";
+import { threadPullRequestSearchTerms } from "@getpaperplane/shared/threadPullRequests";
 import type { CommandPaletteLinkedThreads } from "../commandPaletteBus";
 import {
   type EnvironmentId,
   type FilesystemBrowseEntry,
   type KeybindingCommand,
   THREAD_JUMP_KEYBINDING_COMMANDS,
-} from "@rove-code/contracts";
-import { filterFilesystemBrowseEntries } from "@rove-code/client-runtime/state/filesystem";
-import type { SidebarThreadSortOrder } from "@rove-code/contracts/settings";
+} from "@getpaperplane/contracts";
+import { filterFilesystemBrowseEntries } from "@getpaperplane/client-runtime/state/filesystem";
+import type { SidebarThreadSortOrder } from "@getpaperplane/contracts/settings";
 import * as Arr from "effect/Array";
 import * as Result from "effect/Result";
 import { type ReactNode } from "react";

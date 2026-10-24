@@ -18,7 +18,7 @@ import {
 
 /**
  * Legacy single-PR link. Still emitted as the thread's derived current pull
- * request (see `@rove-code/shared/threadPullRequests`) so clients from before
+ * request (see `@getpaperplane/shared/threadPullRequests`) so clients from before
  * `pullRequests` keep working independently of their release schedule.
  */
 export const ThreadLinkedPullRequest = Schema.Struct({

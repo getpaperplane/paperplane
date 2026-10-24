@@ -3,8 +3,8 @@ import {
   ProviderDriverKind,
   ProviderInstanceId,
   type ServerProvider,
-} from "@rove-code/contracts";
-import { formatProviderSkillDisplayName } from "@rove-code/shared/inlineSkills";
+} from "@getpaperplane/contracts";
+import { formatProviderSkillDisplayName } from "@getpaperplane/shared/inlineSkills";
 import { describe, expect, it } from "vite-plus/test";
 
 import {

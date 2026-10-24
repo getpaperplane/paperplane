@@ -4,8 +4,8 @@ import { useNavigation } from "@react-navigation/native";
 import {
   executeAtomQuery,
   squashAtomCommandFailure,
-} from "@rove-code/client-runtime/state/runtime";
-import type { EnvironmentId, PullRequestAction } from "@rove-code/contracts";
+} from "@getpaperplane/client-runtime/state/runtime";
+import type { EnvironmentId, PullRequestAction } from "@getpaperplane/contracts";
 import * as Clipboard from "expo-clipboard";
 import { Atom } from "effect/reactivity";
 import { use, useCallback, useMemo, useRef, useState } from "react";

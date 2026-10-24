@@ -3,9 +3,9 @@ import {
   connectionCatalogDisplayUrl,
   hasRelayRoute,
   type EnvironmentPresentation as BaseEnvironmentPresentation,
-} from "@rove-code/client-runtime/connection";
-import { Discovery } from "@rove-code/client-runtime/relay";
-import type { EnvironmentId } from "@rove-code/contracts";
+} from "@getpaperplane/client-runtime/connection";
+import { Discovery } from "@getpaperplane/client-runtime/relay";
+import type { EnvironmentId } from "@getpaperplane/contracts";
 import * as Option from "effect/Option";
 import { useMemo } from "react";
 

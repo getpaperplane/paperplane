@@ -1,5 +1,5 @@
-import { SourceControlProviderKind } from "@rove-code/contracts";
-import type { VcsStatusResult } from "@rove-code/contracts";
+import { SourceControlProviderKind } from "@getpaperplane/contracts";
+import type { VcsStatusResult } from "@getpaperplane/contracts";
 import { assert, describe, it } from "vite-plus/test";
 import {
   buildGitActionProgressStages,

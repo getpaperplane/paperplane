@@ -6,7 +6,7 @@ import {
   type ProviderAuthInteraction,
   type ProviderAuthResponse,
   type ProviderAuthState,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Fiber from "effect/Fiber";
 import * as Exit from "effect/Exit";
 import * as Scope from "effect/Scope";

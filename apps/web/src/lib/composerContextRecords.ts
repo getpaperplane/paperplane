@@ -1,7 +1,7 @@
 import {
   COMPOSER_CONTEXT_REVIEW_DIFF_MAX_CHARS,
   COMPOSER_CONTEXT_REVIEW_TEXT_MAX_CHARS,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import type {
   ComposerContextId,
   ComposerContextRecord,
@@ -18,14 +18,14 @@ import type {
   TerminalContextRecord,
   ThreadContextRecord,
   ThreadId,
-} from "@rove-code/contracts";
-import { upgradeLegacyContextMessage } from "@rove-code/shared/composerContextLegacy";
-import { encodeComposerContextFragment } from "@rove-code/shared/composerContextClipboard";
+} from "@getpaperplane/contracts";
+import { upgradeLegacyContextMessage } from "@getpaperplane/shared/composerContextLegacy";
+import { encodeComposerContextFragment } from "@getpaperplane/shared/composerContextClipboard";
 import {
   collectComposerContextReferences,
   sanitizeComposerContextLabel,
   toKindScopedComposerContextId,
-} from "@rove-code/shared/composerContextReferences";
+} from "@getpaperplane/shared/composerContextReferences";
 
 import {
   type ComposerContextReference,

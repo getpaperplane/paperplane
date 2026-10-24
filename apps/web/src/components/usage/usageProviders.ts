@@ -1,6 +1,6 @@
-import type { UsageProviderKind } from "@rove-code/contracts";
+import type { UsageProviderKind } from "@getpaperplane/contracts";
 
-import { ProviderDriverKind } from "@rove-code/contracts";
+import { ProviderDriverKind } from "@getpaperplane/contracts";
 
 type UsageProviderPresentation = {
   readonly label: string;

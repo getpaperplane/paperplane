@@ -1,5 +1,5 @@
-import type { EnvironmentId, ThreadId } from "@rove-code/contracts";
-import { formatDiffCount } from "@rove-code/client-runtime/diff-count";
+import type { EnvironmentId, ThreadId } from "@getpaperplane/contracts";
+import { formatDiffCount } from "@getpaperplane/client-runtime/diff-count";
 import { useNavigation, type StaticScreenProps } from "@react-navigation/native";
 import { AppActivityIndicator } from "../../components/ui/AppActivityIndicator";
 import { nativeHeaderScrollEdgeEffects } from "../../native/StackHeader";

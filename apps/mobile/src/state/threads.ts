@@ -6,8 +6,8 @@ import {
   EMPTY_ENVIRONMENT_THREAD_STATE,
   type EnvironmentThreadState,
   createThreadEnvironmentAtoms,
-} from "@rove-code/client-runtime/state/threads";
-import type { EnvironmentId, ThreadId } from "@rove-code/contracts";
+} from "@getpaperplane/client-runtime/state/threads";
+import type { EnvironmentId, ThreadId } from "@getpaperplane/contracts";
 import * as Option from "effect/Option";
 import { AsyncResult, Atom } from "effect/reactivity";
 

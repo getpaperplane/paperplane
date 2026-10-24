@@ -6,8 +6,8 @@ import {
   type DesktopUpdateChannel,
   type DesktopUpdateCheckResult,
   type DesktopUpdateState,
-} from "@rove-code/contracts";
-import { errorTag } from "@rove-code/shared/observability";
+} from "@getpaperplane/contracts";
+import { errorTag } from "@getpaperplane/shared/observability";
 import * as Cause from "effect/Cause";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
@@ -198,7 +198,7 @@ export class DesktopUpdates extends Context.Service<
       expectedVersion: string,
     ) => Effect.Effect<DesktopPreparedUpdateInstallResult>;
   }
->()("@rove-code/desktop/updates/DesktopUpdates") {}
+>()("@getpaperplane/desktop/updates/DesktopUpdates") {}
 
 const {
   logInfo: logUpdaterInfo,

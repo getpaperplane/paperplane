@@ -1,4 +1,4 @@
-import type { EnvironmentTheme } from "@rove-code/contracts";
+import type { EnvironmentTheme } from "@getpaperplane/contracts";
 import { useAtomValue } from "@effect/atom-react";
 import * as Equal from "effect/Equal";
 import { useEffect, useRef, useSyncExternalStore } from "react";

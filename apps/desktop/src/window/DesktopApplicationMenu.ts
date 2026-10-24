@@ -30,7 +30,7 @@ export class DesktopApplicationMenu extends Context.Service<
   {
     readonly configure: Effect.Effect<void>;
   }
->()("@rove-code/desktop/window/DesktopApplicationMenu") {}
+>()("@getpaperplane/desktop/window/DesktopApplicationMenu") {}
 
 type DesktopApplicationMenuRuntimeServices =
   | DesktopUpdates.DesktopUpdates

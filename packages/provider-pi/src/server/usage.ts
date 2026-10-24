@@ -8,7 +8,7 @@ import {
   totalTokens,
   type TranscriptUsageFormat,
   type UsageRecord,
-} from "@rove-code/provider-core/server/usage";
+} from "@getpaperplane/provider-core/server/usage";
 
 const PiScanState = Schema.Struct({ sessionId: Schema.mutableKey(Schema.String) });
 const Usage = Schema.Struct({

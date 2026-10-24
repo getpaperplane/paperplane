@@ -1,11 +1,11 @@
-import { fileBasename, workspaceRelativeFilePath } from "@rove-code/shared/path";
+import { fileBasename, workspaceRelativeFilePath } from "@getpaperplane/shared/path";
 import {
   inlineCodeFilePathCandidate,
   isRelativeFilePath,
   normalizeMarkdownLinkDestination,
   resolveMarkdownFileLinkTarget,
-} from "@rove-code/shared/markdownLinks";
-import { parseFileUrlHref, splitFilePathPosition } from "@rove-code/shared/fileLinks";
+} from "@getpaperplane/shared/markdownLinks";
+import { parseFileUrlHref, splitFilePathPosition } from "@getpaperplane/shared/fileLinks";
 
 import { formatWorkspaceRelativePath } from "./filePathDisplay";
 import { isTerminalLinkActivation } from "./terminal-links";

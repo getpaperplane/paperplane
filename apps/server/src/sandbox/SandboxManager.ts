@@ -11,11 +11,11 @@ import {
   SandboxCreateInput,
   SandboxInventory,
   SandboxLinkInput,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   Environment as HostProcessEnvironment,
   Platform as HostProcessPlatform,
-} from "@rove-code/shared/HostProcess";
+} from "@getpaperplane/shared/HostProcess";
 import * as Context from "effect/Context";
 import * as Crypto from "effect/Crypto";
 import * as Effect from "effect/Effect";
@@ -77,7 +77,7 @@ export class SandboxManager extends Context.Service<
     ) => Effect.Effect<typeof SandboxActionResult.Type, SandboxError>;
     link: (input: typeof SandboxLinkInput.Type) => Effect.Effect<void, SandboxError>;
   }
->()("@rove-code/server/sandbox/SandboxManager") {
+>()("@getpaperplane/server/sandbox/SandboxManager") {
   static readonly layer: Layer.Layer<SandboxManager, never, ServerSecretStore | Crypto.Crypto> =
     Layer.effect(
       SandboxManager,

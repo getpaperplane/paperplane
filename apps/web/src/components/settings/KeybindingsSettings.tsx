@@ -29,12 +29,12 @@ import {
   type KeybindingWhenNode,
   type ServerRemoveKeybindingInput,
   type ServerUpsertKeybindingInput,
-} from "@rove-code/contracts";
-import { mergeWithDefaultKeybindings } from "@rove-code/shared/keybindings";
+} from "@getpaperplane/contracts";
+import { mergeWithDefaultKeybindings } from "@getpaperplane/shared/keybindings";
 import {
   isAtomCommandInterrupted,
   squashAtomCommandFailure,
-} from "@rove-code/client-runtime/state/runtime";
+} from "@getpaperplane/client-runtime/state/runtime";
 
 import { isElectron } from "../../env";
 import { useOpenInPreferredEditor } from "../../editorPreferences";

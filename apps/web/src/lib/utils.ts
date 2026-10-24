@@ -1,5 +1,5 @@
-import { MessageId, ProjectId, ThreadId } from "@rove-code/contracts";
-import { isMacPlatform } from "@rove-code/shared/keybindings";
+import { MessageId, ProjectId, ThreadId } from "@getpaperplane/contracts";
+import { isMacPlatform } from "@getpaperplane/shared/keybindings";
 import { type CxOptions, cx } from "class-variance-authority";
 import * as Hex from "effect/encoding/Hex";
 import { extendTailwindMerge } from "tailwind-merge";

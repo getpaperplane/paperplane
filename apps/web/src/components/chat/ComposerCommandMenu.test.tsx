@@ -1,5 +1,5 @@
 import { renderToStaticMarkup } from "react-dom/server";
-import { ProviderDriverKind } from "@rove-code/contracts";
+import { ProviderDriverKind } from "@getpaperplane/contracts";
 import { describe, expect, it } from "vite-plus/test";
 
 import { ComposerCommandMenu, composerSuggestionOptionId } from "./ComposerCommandMenu";

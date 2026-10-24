@@ -1,5 +1,5 @@
-import { HTML_RENDER_DEFAULT_FONTS, type HtmlRenderTheme } from "@rove-code/shared/htmlRender";
-import { BUILT_IN_THEME_IDS } from "@rove-code/shared/themePalettes";
+import { HTML_RENDER_DEFAULT_FONTS, type HtmlRenderTheme } from "@getpaperplane/shared/htmlRender";
+import { BUILT_IN_THEME_IDS } from "@getpaperplane/shared/themePalettes";
 import { act, createElement, useEffect } from "react";
 import { create, type ReactTestRenderer } from "react-test-renderer";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";

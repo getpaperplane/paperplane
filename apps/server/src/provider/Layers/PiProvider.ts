@@ -15,7 +15,7 @@ import {
   type ServerProviderModel,
   type ServerProviderSkill,
   type ServerProviderSlashCommand,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { PI_SDK_VERSION } from "../PiSdkMetadata.ts";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -23,7 +23,7 @@ import * as Effect from "effect/Effect";
 import {
   buildServerProvider,
   type ServerProviderDraft,
-} from "@rove-code/provider-core/server/snapshotProbe";
+} from "@getpaperplane/provider-core/server/snapshotProbe";
 
 const PI_PRESENTATION = {
   displayName: "Pi",

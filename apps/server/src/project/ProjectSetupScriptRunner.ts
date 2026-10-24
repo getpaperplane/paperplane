@@ -1,11 +1,11 @@
-import { ProjectId, type ProjectScript } from "@rove-code/contracts";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+import { ProjectId, type ProjectScript } from "@getpaperplane/contracts";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 import {
   projectScriptRuntimeEnv,
   resolveProjectScripts,
   settleProjectScript,
   setupProjectScript,
-} from "@rove-code/shared/projectScripts";
+} from "@getpaperplane/shared/projectScripts";
 
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
@@ -121,7 +121,7 @@ export class ProjectSetupScriptRunner extends Context.Service<
       input: ProjectSetupScriptRunnerInput,
     ) => Effect.Effect<ProjectSetupScriptRunnerResult, ProjectSetupScriptRunnerError>;
   }
->()("@rove-code/server/project/ProjectSetupScriptRunner") {}
+>()("@getpaperplane/server/project/ProjectSetupScriptRunner") {}
 
 /** @public Service construction is part of the canonical Effect module API. */
 /**

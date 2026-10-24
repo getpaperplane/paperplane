@@ -116,7 +116,7 @@ function resolveSpawnExecutableWithNode(
 }
 
 export const SpawnExecutableResolution = Context.Reference<SpawnExecutableResolver>(
-  "@rove-code/shared/shell/SpawnExecutableResolution",
+  "@getpaperplane/shared/shell/SpawnExecutableResolution",
   {
     defaultValue: () => resolveSpawnExecutableWithNode,
   },
@@ -296,14 +296,14 @@ export type WindowsShellEnvironmentReader = (
 ) => Partial<Record<string, string>>;
 
 export const WindowsShellEnvironment = Context.Reference<WindowsShellEnvironmentReader>(
-  "@rove-code/shared/shell/WindowsShellEnvironment",
+  "@getpaperplane/shared/shell/WindowsShellEnvironment",
   {
     defaultValue: () => readEnvironmentFromWindowsShell,
   },
 );
 
 export const CommandAvailability = Context.Reference<CommandAvailabilityChecker>(
-  "@rove-code/shared/shell/CommandAvailability",
+  "@getpaperplane/shared/shell/CommandAvailability",
   {
     defaultValue: () => isCommandAvailable,
   },
@@ -482,7 +482,7 @@ interface CommandResolutionCacheEntry {
 // so tests and embedders can provide an isolated instance; the default is a
 // single process-wide map shared by all consumers.
 export const CommandResolutionCache = Context.Reference<Map<string, CommandResolutionCacheEntry>>(
-  "@rove-code/shared/shell/CommandResolutionCache",
+  "@getpaperplane/shared/shell/CommandResolutionCache",
   {
     defaultValue: () => new Map(),
   },
@@ -517,7 +517,7 @@ const listPathDirectory = Effect.fnUntraced(function* (
 
 const PathDirectoryListings = Context.Reference<
   Cache.Cache<string, PathDirectoryListing, never, FileSystem.FileSystem> | undefined
->("@rove-code/shared/shell/PathDirectoryListings", { defaultValue: () => undefined });
+>("@getpaperplane/shared/shell/PathDirectoryListings", { defaultValue: () => undefined });
 
 /**
  * Run a batch of command lookups (e.g. editor discovery) that lists each PATH

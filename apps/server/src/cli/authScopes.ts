@@ -1,4 +1,4 @@
-import { AuthGrantScope } from "@rove-code/contracts";
+import { AuthGrantScope } from "@getpaperplane/contracts";
 import { Flag } from "effect/cli";
 
 export const authScopesFlag = (defaults: ReadonlyArray<AuthGrantScope>) =>

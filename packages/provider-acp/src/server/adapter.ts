@@ -30,10 +30,10 @@ import {
   type RuntimeRequestId,
   type ThreadTokenUsageSnapshot,
   type ThreadId,
-} from "@rove-code/contracts";
-import { AgentScope, AgentScopeThreadId } from "@rove-code/shared/AgentScope";
-import { modelSelectionsEqual } from "@rove-code/shared/model";
-import { type SelfInvocation, selfInvocationArgs } from "@rove-code/shared/nodeRuntime";
+} from "@getpaperplane/contracts";
+import { AgentScope, AgentScopeThreadId } from "@getpaperplane/shared/AgentScope";
+import { modelSelectionsEqual } from "@getpaperplane/shared/model";
+import { type SelfInvocation, selfInvocationArgs } from "@getpaperplane/shared/nodeRuntime";
 import { FILE_HEADERS_ONLY, formatPatch, structuredPatch } from "diff";
 import * as Cause from "effect/Cause";
 import * as Crypto from "effect/Crypto";
@@ -56,13 +56,13 @@ import * as EffectAcpErrors from "effect-acp/errors";
 import type * as EffectAcpProtocol from "effect-acp/protocol";
 import type * as EffectAcpSchema from "effect-acp/compat";
 
-import { formatReadToolLabel, formatSearchToolLabel } from "@rove-code/shared/toolActivity";
-import * as ProviderHost from "@rove-code/provider-core/server/ProviderHost";
+import { formatReadToolLabel, formatSearchToolLabel } from "@getpaperplane/shared/toolActivity";
+import * as ProviderHost from "@getpaperplane/provider-core/server/ProviderHost";
 import { makeAcpMcpOverAcpBridge, type AcpMcpOverAcpBridge } from "./mcpOverAcpBridge.ts";
-import { mcpToolPresentation } from "@rove-code/provider-core/server/mcpToolPresentation";
-import * as McpProviderSessions from "@rove-code/provider-core/server/McpProviderSessions";
-import { ROVE_MCP_SERVER_NAME } from "@rove-code/shared/roveMcp";
-import * as McpProviderSession from "@rove-code/provider-core/server/mcpSession";
+import { mcpToolPresentation } from "@getpaperplane/provider-core/server/mcpToolPresentation";
+import * as McpProviderSessions from "@getpaperplane/provider-core/server/McpProviderSessions";
+import { ROVE_MCP_SERVER_NAME } from "@getpaperplane/shared/roveMcp";
+import * as McpProviderSession from "@getpaperplane/provider-core/server/mcpSession";
 import {
   applyAcpAgentTerminalUpdate,
   acpContentBlockDisplayText,
@@ -95,30 +95,30 @@ import * as AcpSessionRuntime from "./AcpSessionRuntime.ts";
 import {
   roveAcpPromptWithInstructions,
   type RoveAcpInstructionState,
-} from "@rove-code/provider-core/server/orchestrationInstructions";
-import { buildRuntimeInstructions } from "@rove-code/provider-core/server/runtimeInstructions";
-import * as IdAllocator from "@rove-code/provider-core/server/IdAllocator";
-import type * as ProviderContinuationRequests from "@rove-code/provider-core/server/ProviderContinuationRequests";
+} from "@getpaperplane/provider-core/server/orchestrationInstructions";
+import { buildRuntimeInstructions } from "@getpaperplane/provider-core/server/runtimeInstructions";
+import * as IdAllocator from "@getpaperplane/provider-core/server/IdAllocator";
+import type * as ProviderContinuationRequests from "@getpaperplane/provider-core/server/ProviderContinuationRequests";
 import {
   type BackgroundWork,
   type BackgroundWorkReport,
   backgroundWorkNotification,
-} from "@rove-code/provider-core/server/notification";
+} from "@getpaperplane/provider-core/server/notification";
 import {
   makeProviderFailure,
   makeProviderRetryTurnItem,
-} from "@rove-code/provider-core/server/failure";
-import { acpSelectionTransition } from "@rove-code/provider-core/server/selectionTransition";
+} from "@getpaperplane/provider-core/server/failure";
+import { acpSelectionTransition } from "@getpaperplane/provider-core/server/selectionTransition";
 import {
   isProviderNativeImageAttachment,
   providerMessageTextWithAttachmentPaths,
-} from "@rove-code/provider-core/server/attachmentPrompt";
+} from "@getpaperplane/provider-core/server/attachmentPrompt";
 import {
   makeSubagentChildThread,
   makeSubagentConversationArtifacts,
   subagentThreadTitle,
-} from "@rove-code/provider-core/server/subagentProjection";
-import * as ProviderAdapter from "@rove-code/provider-core/server/ProviderAdapter";
+} from "@getpaperplane/provider-core/server/subagentProjection";
+import * as ProviderAdapter from "@getpaperplane/provider-core/server/ProviderAdapter";
 
 export const ACP_PROTOCOL = "acp.ndjson-jsonrpc" as const;
 

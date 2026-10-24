@@ -1,6 +1,6 @@
 import { useAtomValue } from "@effect/atom-react";
-import type { EnvironmentId } from "@rove-code/contracts";
-import { isWindowsAbsolutePath } from "@rove-code/shared/path";
+import type { EnvironmentId } from "@getpaperplane/contracts";
+import { isWindowsAbsolutePath } from "@getpaperplane/shared/path";
 import { useMemo, useState } from "react";
 
 import { primaryServerKeybindingsAtom } from "~/state/server";

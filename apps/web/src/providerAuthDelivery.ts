@@ -1,4 +1,4 @@
-import { readCodexAuthDelivery } from "@rove-code/shared/codexAuthHandoff";
+import { readCodexAuthDelivery } from "@getpaperplane/shared/codexAuthHandoff";
 
 let pending: ReturnType<typeof readCodexAuthDelivery>;
 

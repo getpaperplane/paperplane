@@ -1,4 +1,4 @@
-import { OrchestratorMcpFailure } from "@rove-code/contracts";
+import { OrchestratorMcpFailure } from "@getpaperplane/contracts";
 import { OrchestratorToolkit } from "./tools.ts";
 import * as Effect from "effect/Effect";
 

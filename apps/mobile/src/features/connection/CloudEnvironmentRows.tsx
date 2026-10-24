@@ -2,13 +2,13 @@ import { AppActivityIndicator } from "../../components/ui/AppActivityIndicator";
 import { ConnectionTraceId } from "./ConnectionTraceId";
 import { useAuth } from "@clerk/expo";
 import { SymbolView } from "../../components/ui/AppSymbol";
-import { type EnvironmentConnectionPhase } from "@rove-code/client-runtime/connection";
+import { type EnvironmentConnectionPhase } from "@getpaperplane/client-runtime/connection";
 import {
   type EnvironmentId,
   type EnvironmentMachineKind,
   type ExecutionEnvironmentDescriptor,
   resolveEnvironmentMachineKind,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { useAtomValue } from "@effect/atom-react";
 import { useCallback, useState } from "react";
 import { Pressable, type TextLayoutEvent, View } from "react-native";

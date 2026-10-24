@@ -1,5 +1,5 @@
-import { scopeThreadRef } from "@rove-code/client-runtime/environment";
-import { EnvironmentId, ThreadId, RunId } from "@rove-code/contracts";
+import { scopeThreadRef } from "@getpaperplane/client-runtime/environment";
+import { EnvironmentId, ThreadId, RunId } from "@getpaperplane/contracts";
 import { beforeEach, describe, expect, it } from "vite-plus/test";
 
 import { selectThreadDiffPanelSelection, useDiffPanelStore } from "./diffPanelStore";

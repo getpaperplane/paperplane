@@ -1,4 +1,4 @@
-import { WsRpcGroup } from "@rove-code/contracts";
+import { WsRpcGroup } from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import { RpcClient } from "effect/rpc";
 

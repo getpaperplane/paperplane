@@ -1,4 +1,4 @@
-import { OtlpHeadersFromString, OtlpProtocol } from "@rove-code/shared/observability";
+import { OtlpHeadersFromString, OtlpProtocol } from "@getpaperplane/shared/observability";
 import * as Config from "effect/Config";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Option from "effect/Option";

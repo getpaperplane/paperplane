@@ -1,4 +1,4 @@
-import { resolveEnvironmentMachineKind } from "@rove-code/contracts";
+import { resolveEnvironmentMachineKind } from "@getpaperplane/contracts";
 import { useLocation } from "@tanstack/react-router";
 import { CheckIcon, ChevronDownIcon, LayersIcon } from "lucide-react";
 import { Fragment, useState, type ReactNode } from "react";

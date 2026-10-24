@@ -1,4 +1,4 @@
-import type { UsageProviderKind, UsageSummary } from "@rove-code/contracts";
+import type { UsageProviderKind, UsageSummary } from "@getpaperplane/contracts";
 
 interface UsageProgressEnvironment {
   readonly label: string;

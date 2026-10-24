@@ -1,5 +1,5 @@
-import { mediaKindFromPath } from "@rove-code/shared/filePreview";
-import { mediaUrlReference } from "@rove-code/client-runtime/media-reference";
+import { mediaKindFromPath } from "@getpaperplane/shared/filePreview";
+import { mediaUrlReference } from "@getpaperplane/client-runtime/media-reference";
 import type { ExpandedImageItem, ExpandedImagePreview } from "./ExpandedImagePreview";
 import { resolveExternalWebLinkHost } from "./externalLinkContextMenu";
 import { resolveProtocolRelativeMediaUrl } from "../media/mediaContent";

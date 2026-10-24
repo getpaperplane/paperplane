@@ -1,5 +1,5 @@
 {
-  "name": "@rove-code/provider-acp-registry",
+  "name": "@getpaperplane/provider-acp-registry",
   "private": true,
   "type": "module",
   "exports": {
@@ -34,16 +34,16 @@
   },
   "dependencies": {
     "@noble/hashes": "catalog:",
-    "@rove-code/contracts": "workspace:*",
-    "@rove-code/provider-acp": "workspace:*",
-    "@rove-code/provider-core": "workspace:*",
-    "@rove-code/shared": "workspace:*",
+    "@getpaperplane/contracts": "workspace:*",
+    "@getpaperplane/provider-acp": "workspace:*",
+    "@getpaperplane/provider-core": "workspace:*",
+    "@getpaperplane/shared": "workspace:*",
     "effect": "catalog:"
   },
   "devDependencies": {
     "@effect/platform-node": "catalog:",
     "@effect/vitest": "catalog:",
-    "@rove-code/provider-testing": "workspace:*",
+    "@getpaperplane/provider-testing": "workspace:*",
     "@types/node": "catalog:",
     "effect-acp": "workspace:*",
     "vite-plus": "catalog:"

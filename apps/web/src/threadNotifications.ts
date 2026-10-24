@@ -1,4 +1,4 @@
-import type { ClientSettings } from "@rove-code/contracts/settings";
+import type { ClientSettings } from "@getpaperplane/contracts/settings";
 
 import completionUrl from "./assets/notification-completion.mp3";
 import inputUrl from "./assets/notification-input.mp3";

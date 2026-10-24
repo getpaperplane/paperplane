@@ -1,5 +1,5 @@
 import { assert, it } from "@effect/vitest";
-import { ProjectId } from "@rove-code/contracts";
+import { ProjectId } from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 
 import {

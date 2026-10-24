@@ -1,9 +1,9 @@
-import { EnvironmentAuthInvalidError } from "@rove-code/contracts";
+import { EnvironmentAuthInvalidError } from "@getpaperplane/contracts";
 import {
   RelayAuthInvalidError,
   RelayEnvironmentConnectNotAuthorizedError,
   RelayEnvironmentEndpointTimedOutError,
-} from "@rove-code/contracts/relay";
+} from "@getpaperplane/contracts/relay";
 import { describe, expect, it } from "@effect/vitest";
 
 import {

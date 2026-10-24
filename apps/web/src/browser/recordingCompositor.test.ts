@@ -1,4 +1,4 @@
-import type { DesktopPreviewRecordingInput } from "@rove-code/contracts";
+import type { DesktopPreviewRecordingInput } from "@getpaperplane/contracts";
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 
 import { createRecordingCompositor, RecordingDecorations } from "./recordingCompositor";

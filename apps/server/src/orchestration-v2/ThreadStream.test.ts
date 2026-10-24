@@ -6,13 +6,13 @@ import {
   type OrchestrationV2ProjectedTurnItem,
   type OrchestrationV2ThreadProjection,
   type OrchestrationV2TurnItem,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { describe, expect, it } from "vite-plus/test";
 import * as DateTime from "effect/DateTime";
 import * as Schema from "effect/Schema";
 import * as Effect from "effect/Effect";
 import * as Stream from "effect/Stream";
-import { boundedSnapshotProjection } from "@rove-code/shared/orchestrationV2BoundedSnapshot";
+import { boundedSnapshotProjection } from "@getpaperplane/shared/orchestrationV2BoundedSnapshot";
 
 import {
   buildBoundedThreadStreamSnapshot,

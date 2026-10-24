@@ -1,4 +1,4 @@
-import { formatProviderSkillDisplayName } from "@rove-code/shared/inlineSkills";
+import { formatProviderSkillDisplayName } from "@getpaperplane/shared/inlineSkills";
 import {
   Extension,
   findChildren,
@@ -24,15 +24,15 @@ import type {
   AssistantCitation,
   ComposerContextClipboardFragment,
   ServerProviderSkill,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   serializeAssistantCitation,
   withAssistantCitationComment,
-} from "@rove-code/shared/assistantCitations";
+} from "@getpaperplane/shared/assistantCitations";
 import {
   COMPOSER_CONTEXT_CLIPBOARD_MIME,
   encodeComposerContextClipboardHtml,
-} from "@rove-code/shared/composerContextClipboard";
+} from "@getpaperplane/shared/composerContextClipboard";
 import {
   createContext,
   use,

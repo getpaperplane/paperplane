@@ -1,6 +1,6 @@
 import { useId, type CSSProperties, type SVGProps } from "react";
 
-import type { ProviderIcon } from "@rove-code/provider-core/client";
+import type { ProviderIcon } from "@getpaperplane/provider-core/client";
 
 import { cn } from "~/lib/utils";
 

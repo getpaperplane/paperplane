@@ -14,4 +14,4 @@ export {
   normalizeProjectPathForComparison,
   normalizeProjectPathForDispatch,
   resolveProjectPathForDispatch,
-} from "@rove-code/client-runtime/state/projects";
+} from "@getpaperplane/client-runtime/state/projects";

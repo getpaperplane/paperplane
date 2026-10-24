@@ -1,5 +1,5 @@
 import * as Dialog from "../../components/ui/Dialog";
-import { resolveFilesystemReadAccess } from "@rove-code/client-runtime/state/filesystem";
+import { resolveFilesystemReadAccess } from "@getpaperplane/client-runtime/state/filesystem";
 import { useEnvironmentPresentation } from "../../state/presentation";
 import { environmentSession } from "../../state/session";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -12,7 +12,7 @@ import type {
   ProviderOptionSelection,
   RuntimeMode,
   ServerProvider,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   CommandId,
   DEFAULT_PROVIDER_INTERACTION_MODE,
@@ -22,10 +22,10 @@ import {
   repositoryGroupingKeyOf,
   ROVE_PROJECT_FILE_NAME,
   ThreadId,
-} from "@rove-code/contracts";
-import { sanitizeNewRefName } from "@rove-code/shared/git";
-import { resolveNewThreadEnvMode, resolveProjectSettings } from "@rove-code/shared/projectSettings";
-import { parseRoveProjectFile } from "@rove-code/shared/roveProjectFile";
+} from "@getpaperplane/contracts";
+import { sanitizeNewRefName } from "@getpaperplane/shared/git";
+import { resolveNewThreadEnvMode, resolveProjectSettings } from "@getpaperplane/shared/projectSettings";
+import { parseRoveProjectFile } from "@getpaperplane/shared/roveProjectFile";
 import * as Arr from "effect/Array";
 import { pipe } from "effect/Function";
 
@@ -95,14 +95,14 @@ import {
   useRemoteConnectionStatus,
   useSavedRemoteConnections,
 } from "../../state/use-remote-environment-registry";
-import { availableScratchWorkspaceRoot } from "@rove-code/client-runtime/operations/projects";
+import { availableScratchWorkspaceRoot } from "@getpaperplane/client-runtime/operations/projects";
 import {
   isAtomCommandInterrupted,
   squashAtomCommandFailure,
-} from "@rove-code/client-runtime/state/runtime";
-import { isScratchProject } from "@rove-code/client-runtime/state/projects";
-import { EnvironmentProject } from "@rove-code/client-runtime/state/shell";
-import { type VcsRef } from "@rove-code/client-runtime/state/vcs";
+} from "@getpaperplane/client-runtime/state/runtime";
+import { isScratchProject } from "@getpaperplane/client-runtime/state/projects";
+import { EnvironmentProject } from "@getpaperplane/client-runtime/state/shell";
+import { type VcsRef } from "@getpaperplane/client-runtime/state/vcs";
 import {
   buildHomeProjectScopes,
   sortHomeProjectScopes,

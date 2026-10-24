@@ -8,7 +8,7 @@ import {
   secretSetting,
   SourceControlProviderKind,
   TrimmedString,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 import {
@@ -16,7 +16,7 @@ import {
   isChangeRequestInProjectRepository,
   isChangeRequestOnProjectHost,
   isChangeRequestPath,
-} from "@rove-code/source-control-core/client/definition";
+} from "@getpaperplane/source-control-core/client/definition";
 
 /** GitCafe has no self-hosted installs: production and staging are its only hosts. */
 const GITCAFE_HOSTS = new Set(["git.cafe", "staging.git.cafe"]);

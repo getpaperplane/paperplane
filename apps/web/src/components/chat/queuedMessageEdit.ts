@@ -1,4 +1,4 @@
-import type { ChatAttachment } from "@rove-code/contracts";
+import type { ChatAttachment } from "@getpaperplane/contracts";
 import {
   composerDraftHasUserContent,
   useComposerDraftStore,

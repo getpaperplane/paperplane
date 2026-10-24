@@ -1,17 +1,17 @@
-import { SourceControlProviderKind } from "@rove-code/contracts";
+import { SourceControlProviderKind } from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 import * as Result from "effect/Result";
-import type { PullRequestCapabilities, PullRequestViewerPermissions } from "@rove-code/contracts";
-import { decodeJsonResult } from "@rove-code/shared/schemaJson";
+import type { PullRequestCapabilities, PullRequestViewerPermissions } from "@getpaperplane/contracts";
+import { decodeJsonResult } from "@getpaperplane/shared/schemaJson";
 import * as ForgejoCli from "./ForgejoCli.ts";
-import { parseDiffFileRevisions } from "@rove-code/source-control-core/server/diffFileRevisions";
+import { parseDiffFileRevisions } from "@getpaperplane/source-control-core/server/diffFileRevisions";
 import {
   PullRequestProviderError,
   type ProviderChangeRequestDetail,
   type ProviderRepositoryRef,
   type PullRequestProviderApi,
-} from "@rove-code/source-control-core/server/PullRequestProvider";
+} from "@getpaperplane/source-control-core/server/PullRequestProvider";
 import {
   ForgejoPullRequest,
   ForgejoRepository,

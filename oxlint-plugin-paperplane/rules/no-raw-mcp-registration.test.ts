@@ -2,12 +2,12 @@ import { assert, describe } from "@effect/vitest";
 
 import { createOxlintRuleHarness } from "../test/utils.ts";
 
-const rule = createOxlintRuleHarness("rove/no-raw-mcp-registration");
-const testFile = createOxlintRuleHarness("rove/no-raw-mcp-registration", {
+const rule = createOxlintRuleHarness("paperplane/no-raw-mcp-registration");
+const testFile = createOxlintRuleHarness("paperplane/no-raw-mcp-registration", {
   filename: "server.test.ts",
 });
 
-describe("rove/no-raw-mcp-registration", () => {
+describe("paperplane/no-raw-mcp-registration", () => {
   rule.valid(
     "allows the rest of effect/ai and type-only McpServer imports",
     `

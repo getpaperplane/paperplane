@@ -1,9 +1,9 @@
 import type {
   EnvironmentPresentation,
   PreparedConnection,
-} from "@rove-code/client-runtime/connection";
-import { connectionCatalogDisplayUrl } from "@rove-code/client-runtime/connection";
-import type { EnvironmentId, ServerConfig } from "@rove-code/contracts";
+} from "@getpaperplane/client-runtime/connection";
+import { connectionCatalogDisplayUrl } from "@getpaperplane/client-runtime/connection";
+import type { EnvironmentId, ServerConfig } from "@getpaperplane/contracts";
 import * as Option from "effect/Option";
 import { Atom } from "effect/reactivity";
 

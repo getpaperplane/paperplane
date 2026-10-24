@@ -1,4 +1,4 @@
-import { OrchestratorMcpFailure } from "@rove-code/contracts";
+import { OrchestratorMcpFailure } from "@getpaperplane/contracts";
 import * as Schema from "effect/Schema";
 import { McpSchema, Tool, Toolkit } from "effect/ai";
 

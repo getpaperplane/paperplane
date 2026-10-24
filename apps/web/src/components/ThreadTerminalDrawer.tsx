@@ -2,14 +2,14 @@ import { useAtomValue } from "@effect/atom-react";
 import {
   isAtomCommandInterrupted,
   squashAtomCommandFailure,
-} from "@rove-code/client-runtime/state/runtime";
+} from "@getpaperplane/client-runtime/state/runtime";
 import {
   INITIAL_TERMINAL_OUTPUT_CURSOR,
   readTerminalOutputUpdate,
   type TerminalOutputCursor,
   type TerminalOutputUpdate,
   type TerminalSessionState,
-} from "@rove-code/client-runtime/state/terminal";
+} from "@getpaperplane/client-runtime/state/terminal";
 import {
   Plus,
   Square,
@@ -27,8 +27,8 @@ import {
   type ResolvedKeybindingsConfig,
   type ScopedThreadRef,
   type ThreadId,
-} from "@rove-code/contracts";
-import { getTerminalLabel } from "@rove-code/shared/terminalLabels";
+} from "@getpaperplane/contracts";
+import { getTerminalLabel } from "@getpaperplane/shared/terminalLabels";
 import * as Schema from "effect/Schema";
 import {
   type PointerEvent as ReactPointerEvent,
@@ -61,7 +61,7 @@ import {
 } from "~/terminal/ghostty/surface";
 import { type GhosttyColor, type GhosttyTheme } from "~/terminal/ghostty/core";
 import { useOpenInPreferredEditor } from "../editorPreferences";
-import { resolvePathLinkTarget } from "@rove-code/shared/fileLinks";
+import { resolvePathLinkTarget } from "@getpaperplane/shared/fileLinks";
 import { isTerminalUrl } from "../terminal-links";
 import {
   isDiffToggleShortcut,

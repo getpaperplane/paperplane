@@ -1,4 +1,4 @@
-import type { EnvironmentTheme } from "@rove-code/contracts";
+import type { EnvironmentTheme } from "@getpaperplane/contracts";
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 
 const NIGHTFALL_THEME = {

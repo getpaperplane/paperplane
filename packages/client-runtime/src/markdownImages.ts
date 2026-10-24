@@ -1,11 +1,11 @@
-import { isWindowsAbsolutePath, stripSlashPrefixedWindowsDrive } from "@rove-code/shared/path";
+import { isWindowsAbsolutePath, stripSlashPrefixedWindowsDrive } from "@getpaperplane/shared/path";
 
 import {
   normalizeMarkdownLinkDestination,
   safeDecodeURIComponent,
   splitMarkdownLinkSearchAndHash,
-} from "@rove-code/shared/markdownLinks";
-import { parseFileUrlHref } from "@rove-code/shared/fileLinks";
+} from "@getpaperplane/shared/markdownLinks";
+import { parseFileUrlHref } from "@getpaperplane/shared/fileLinks";
 
 const DIRECT_IMAGE_SOURCE_PATTERN = /^(?:https?:|data:|blob:|\/\/)/i;
 const URI_SCHEME_PATTERN = /^[A-Za-z][A-Za-z0-9+.-]*:/;

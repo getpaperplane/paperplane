@@ -1,4 +1,4 @@
-import type { PullRequestActivity, PullRequestActor } from "@rove-code/contracts";
+import type { PullRequestActivity, PullRequestActor } from "@getpaperplane/contracts";
 
 export interface ActivityFilter {
   readonly kind: "all" | "comments" | "commits";

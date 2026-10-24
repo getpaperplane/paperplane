@@ -1,4 +1,4 @@
-import { createAuthEnvironmentAtoms } from "@rove-code/client-runtime/state/auth";
+import { createAuthEnvironmentAtoms } from "@getpaperplane/client-runtime/state/auth";
 
 import { connectionAtomRuntime } from "../connection/runtime";
 

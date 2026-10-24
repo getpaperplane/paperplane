@@ -1,8 +1,8 @@
-import { normalizeGitRemoteUrl } from "@rove-code/shared/git";
+import { normalizeGitRemoteUrl } from "@getpaperplane/shared/git";
 import {
   detectSourceControlProviderFromRemoteUrl,
   isSshRemoteUrl,
-} from "@rove-code/shared/sourceControl";
+} from "@getpaperplane/shared/sourceControl";
 
 /** A repository on a GitHub host: the API it is read through, and its owner and name. */
 export interface GitHubRepositoryLocator {

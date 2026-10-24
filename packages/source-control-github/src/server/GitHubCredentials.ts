@@ -11,17 +11,17 @@ import * as PlatformError from "effect/PlatformError";
 import * as Redacted from "effect/Redacted";
 import * as Schema from "effect/Schema";
 
-import * as HostProcess from "@rove-code/shared/HostProcess";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 
-import * as SourceControlHost from "@rove-code/source-control-core/server/SourceControlHost";
-import { readSourceControlHostSettings } from "@rove-code/source-control-core/client/definition";
-import type { GitHubAccountSelection, ServerSettings } from "@rove-code/contracts";
+import * as SourceControlHost from "@getpaperplane/source-control-core/server/SourceControlHost";
+import { readSourceControlHostSettings } from "@getpaperplane/source-control-core/client/definition";
+import type { GitHubAccountSelection, ServerSettings } from "@getpaperplane/contracts";
 
 import * as GitHubClient from "../client/definition.ts";
 
 /** Paperplane: the acting project's account, independent of gh's active login. */
 export const SelectedGitHubAccount = Context.Reference<GitHubAccountSelection | null>(
-  "@rove-code/source-control-github/SelectedGitHubAccount",
+  "@getpaperplane/source-control-github/SelectedGitHubAccount",
   { defaultValue: () => null },
 );
 
@@ -127,7 +127,7 @@ export class GitHubCredentials extends Context.Service<
     /** Drops the held token after GitHub refused it, so the next read asks its source again. */
     readonly invalidate: (host: string) => Effect.Effect<void>;
   }
->()("@rove-code/source-control-github/server/GitHubCredentials") {}
+>()("@getpaperplane/source-control-github/server/GitHubCredentials") {}
 
 function normalizeHost(host: string): string {
   return host.trim().toLowerCase();

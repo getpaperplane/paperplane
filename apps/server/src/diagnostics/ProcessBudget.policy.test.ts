@@ -1,6 +1,6 @@
 import { it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
-import { Platform, UserId } from "@rove-code/shared/HostProcess";
+import { Platform, UserId } from "@getpaperplane/shared/HostProcess";
 import { expect, vi } from "vite-plus/test";
 import { prepareBudgetedProcess } from "./ProcessBudget.ts";
 

@@ -1,4 +1,4 @@
-import type { ThreadCheckpointSummary } from "@rove-code/client-runtime/state/thread-checkpoints";
+import type { ThreadCheckpointSummary } from "@getpaperplane/client-runtime/state/thread-checkpoints";
 import {
   AuthFilesystemReadScope,
   CheckpointRef,
@@ -7,7 +7,7 @@ import {
   ThreadId,
   RunId,
   type AuthSessionState,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { beforeEach, expect, it, vi } from "vite-plus/test";
 
 const state = vi.hoisted(() => ({
@@ -18,7 +18,7 @@ const state = vi.hoisted(() => ({
   checkpoints: [] as ReadonlyArray<ThreadCheckpointSummary>,
 }));
 
-vi.mock("@rove-code/client-runtime/state/thread-checkpoints", () => ({
+vi.mock("@getpaperplane/client-runtime/state/thread-checkpoints", () => ({
   deriveThreadCheckpointSummaries: () => state.checkpoints,
 }));
 vi.mock("react", () => ({

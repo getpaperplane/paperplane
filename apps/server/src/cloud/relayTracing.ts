@@ -1,4 +1,4 @@
-import * as RelayTracing from "@rove-code/shared/relayTracing";
+import * as RelayTracing from "@getpaperplane/shared/relayTracing";
 
 import { resolveRelayClientTracingConfig } from "./publicConfig.ts";
 

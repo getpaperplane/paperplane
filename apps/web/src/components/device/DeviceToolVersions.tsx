@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import type { DeviceToolVersions as ToolVersions } from "@rove-code/contracts";
+import type { DeviceToolVersions as ToolVersions } from "@getpaperplane/contracts";
 import { InlineButton } from "~/components/ui/button";
 import { Popover, PopoverPopup, PopoverTitle, PopoverTrigger } from "~/components/ui/popover";
 

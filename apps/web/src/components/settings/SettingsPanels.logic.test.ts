@@ -4,8 +4,8 @@ import {
   ProviderDriverKind,
   ProviderInstanceId,
   type ProviderInstanceConfig,
-} from "@rove-code/contracts";
-import { getBackgroundActivityPresetSettings } from "@rove-code/shared/backgroundActivitySettings";
+} from "@getpaperplane/contracts";
+import { getBackgroundActivityPresetSettings } from "@getpaperplane/shared/backgroundActivitySettings";
 import * as Duration from "effect/Duration";
 import { describe, expect, it } from "vite-plus/test";
 import {

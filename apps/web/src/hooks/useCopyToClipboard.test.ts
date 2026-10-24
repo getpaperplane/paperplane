@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 
-import { COMPOSER_CONTEXT_CLIPBOARD_MIME } from "@rove-code/shared/composerContextClipboard";
+import { COMPOSER_CONTEXT_CLIPBOARD_MIME } from "@getpaperplane/shared/composerContextClipboard";
 
 import {
   ClipboardApiUnavailableError,

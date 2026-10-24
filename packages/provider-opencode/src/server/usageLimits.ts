@@ -1,4 +1,4 @@
-import type { ServerProviderUsageWindow } from "@rove-code/contracts";
+import type { ServerProviderUsageWindow } from "@getpaperplane/contracts";
 import * as Crypto from "effect/Crypto";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -15,8 +15,8 @@ import {
   clampPercent,
   makeUnavailableUsageLimits,
   makeUsageLimits,
-} from "@rove-code/provider-core/server/usageLimits";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+} from "@getpaperplane/provider-core/server/usageLimits";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 
 const AuthFile = Schema.Struct({ "opencode-go": Schema.optionalKey(Schema.Unknown) });
 const ApiAuth = Schema.Struct({ type: Schema.Literal("api"), key: Schema.String });

@@ -1,5 +1,5 @@
-import { shouldPreserveAssistantLineBreaks } from "@rove-code/shared/markdownPipeline";
-import { ThreadId, type WorktreeSetupSnapshot } from "@rove-code/contracts";
+import { shouldPreserveAssistantLineBreaks } from "@getpaperplane/shared/markdownPipeline";
+import { ThreadId, type WorktreeSetupSnapshot } from "@getpaperplane/contracts";
 import {
   CheckpointRef,
   NodeId,
@@ -11,7 +11,7 @@ import {
   RuntimeRequestId,
   type OrchestrationV2ProjectedTurnItem,
   type OrchestrationV2TurnItem,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as DateTime from "effect/DateTime";
 import {
   deriveTimelineEntriesFromVisibleTurnItems,
@@ -22,8 +22,8 @@ import {
 import { makeStreamingTimelineFixture } from "../../test-fixtures";
 import type { TurnDiffSummary } from "../../types";
 import { describe, expect, it } from "vite-plus/test";
-import { EnvironmentId, MessageId, RunId } from "@rove-code/contracts";
-import { serializeAssistantCitation } from "@rove-code/shared/assistantCitations";
+import { EnvironmentId, MessageId, RunId } from "@getpaperplane/contracts";
+import { serializeAssistantCitation } from "@getpaperplane/shared/assistantCitations";
 import {
   computeStableMessagesTimelineRows,
   computeMessageDurationStart,

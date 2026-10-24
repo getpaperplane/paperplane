@@ -2,7 +2,7 @@ import { describe, expect, it } from "vite-plus/test";
 import type {
   OrchestrationV2Subagent,
   OrchestrationV2SubagentWorkflow,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as DateTime from "effect/DateTime";
 
 import { deriveWorkflowGroups, projectedSubagentsToRuntime } from "./subagentRuntime.ts";

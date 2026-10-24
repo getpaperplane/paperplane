@@ -1,4 +1,4 @@
-import type { BackgroundPolicySnapshot } from "@rove-code/contracts";
+import type { BackgroundPolicySnapshot } from "@getpaperplane/contracts";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";

@@ -1,6 +1,6 @@
-import { formatAttachmentSize } from "@rove-code/client-runtime/state/attachments";
-import { imageMimeType } from "@rove-code/shared/image";
-import { videoMimeType } from "@rove-code/shared/video";
+import { formatAttachmentSize } from "@getpaperplane/client-runtime/state/attachments";
+import { imageMimeType } from "@getpaperplane/shared/image";
+import { videoMimeType } from "@getpaperplane/shared/video";
 /**
  * Every accent shares a lightness so no kind reads heavier than another; only hue carries
  * identity. These are the sRGB form of the same OKLCH set web uses, so a chip looks the

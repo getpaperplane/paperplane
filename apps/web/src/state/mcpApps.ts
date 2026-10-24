@@ -1,4 +1,4 @@
-import { createMcpAppEnvironmentAtoms } from "@rove-code/client-runtime/state/mcp-apps";
+import { createMcpAppEnvironmentAtoms } from "@getpaperplane/client-runtime/state/mcp-apps";
 
 import { connectionAtomRuntime } from "../connection/runtime";
 

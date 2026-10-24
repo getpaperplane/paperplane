@@ -1,4 +1,4 @@
-import { EDITORS, type EditorId } from "@rove-code/contracts";
+import { EDITORS, type EditorId } from "@getpaperplane/contracts";
 
 import { getLocalFileManagerName } from "~/lib/utils";
 

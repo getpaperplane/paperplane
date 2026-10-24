@@ -1,5 +1,5 @@
-import { scopedThreadKey } from "@rove-code/client-runtime/environment";
-import type { DevicePlatform, ScopedThreadRef } from "@rove-code/contracts";
+import { scopedThreadKey } from "@getpaperplane/client-runtime/environment";
+import type { DevicePlatform, ScopedThreadRef } from "@getpaperplane/contracts";
 import { create } from "zustand";
 
 import type { DeviceTabTarget } from "./rightPanelStore";

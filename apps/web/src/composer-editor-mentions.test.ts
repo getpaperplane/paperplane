@@ -1,5 +1,5 @@
-import { EnvironmentId, MessageId, ThreadId, type AssistantCitation } from "@rove-code/contracts";
-import { serializeAssistantCitation } from "@rove-code/shared/assistantCitations";
+import { EnvironmentId, MessageId, ThreadId, type AssistantCitation } from "@getpaperplane/contracts";
+import { serializeAssistantCitation } from "@getpaperplane/shared/assistantCitations";
 import { describe, expect, it } from "vite-plus/test";
 
 import {

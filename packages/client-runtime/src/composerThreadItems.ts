@@ -1,4 +1,4 @@
-import type { EnvironmentId, ScopedThreadRef, ThreadId } from "@rove-code/contracts";
+import type { EnvironmentId, ScopedThreadRef, ThreadId } from "@getpaperplane/contracts";
 
 const COMPOSER_THREAD_RESULT_LIMIT = 5;
 

@@ -1,6 +1,6 @@
-import type { PullRequestReviewCommentDraft } from "@rove-code/contracts";
+import type { PullRequestReviewCommentDraft } from "@getpaperplane/contracts";
 import * as Schema from "effect/Schema";
-import { PullRequestReviewCommentDraft as CommentSchema } from "@rove-code/contracts";
+import { PullRequestReviewCommentDraft as CommentSchema } from "@getpaperplane/contracts";
 import type { PullRequestParams } from "./usePullRequestDiff";
 
 export type PendingReviewComment = PullRequestReviewCommentDraft & {

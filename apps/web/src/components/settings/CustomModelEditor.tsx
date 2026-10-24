@@ -2,8 +2,8 @@
 
 import { PlusIcon, XIcon } from "lucide-react";
 import { useMemo, useState } from "react";
-import type { ProviderDriverKind, ServerProviderModel } from "@rove-code/contracts";
-import type { CustomModelDefinition } from "@rove-code/shared/model";
+import type { ProviderDriverKind, ServerProviderModel } from "@getpaperplane/contracts";
+import type { CustomModelDefinition } from "@getpaperplane/shared/model";
 
 import { cn } from "../../lib/utils";
 import { Button } from "../ui/button";

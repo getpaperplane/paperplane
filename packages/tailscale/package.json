@@ -1,5 +1,5 @@
 {
-  "name": "@rove-code/tailscale",
+  "name": "@getpaperplane/tailscale",
   "private": true,
   "type": "module",
   "exports": {
@@ -13,7 +13,7 @@
     "test": "vp test run --config ../../vite.config.ts --dir ."
   },
   "dependencies": {
-    "@rove-code/shared": "workspace:*",
+    "@getpaperplane/shared": "workspace:*",
     "effect": "catalog:"
   },
   "devDependencies": {

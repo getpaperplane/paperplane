@@ -1,5 +1,5 @@
-import { DESKTOP_PREVIEW_RECORDING_CAPTURE_TRIGGER } from "@rove-code/contracts";
-import type { DesktopPreviewRecordingArtifact, ScopedThreadRef } from "@rove-code/contracts";
+import { DESKTOP_PREVIEW_RECORDING_CAPTURE_TRIGGER } from "@getpaperplane/contracts";
+import type { DesktopPreviewRecordingArtifact, ScopedThreadRef } from "@getpaperplane/contracts";
 import { useAtomValue } from "@effect/atom-react";
 import * as Schema from "effect/Schema";
 import { Atom } from "effect/reactivity";

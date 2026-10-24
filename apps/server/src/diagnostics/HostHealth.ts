@@ -1,5 +1,5 @@
-import type { HostHealthFinding, HostHealthReport, RoveMemoryUsage } from "@rove-code/contracts";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+import type { HostHealthFinding, HostHealthReport, RoveMemoryUsage } from "@getpaperplane/contracts";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 import * as Cache from "effect/Cache";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
@@ -99,7 +99,7 @@ export class HostHealth extends Context.Service<
     readonly read: Effect.Effect<HostHealthReport>;
     readonly changes: Stream.Stream<HostHealthReport>;
   }
->()("@rove-code/server/diagnostics/HostHealth") {}
+>()("@getpaperplane/server/diagnostics/HostHealth") {}
 
 function counter(text: string, key: string): number {
   return Number(new RegExp(`^${key}\\s+(\\d+)`, "m").exec(text)?.[1] ?? 0);

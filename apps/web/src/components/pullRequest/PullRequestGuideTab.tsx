@@ -2,7 +2,7 @@ import type {
   EnvironmentId,
   PullRequestRef,
   PullRequestReviewGuideStop,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { SparklesIcon, TriangleAlertIcon } from "lucide-react";
 import { useEffect, useEffectEvent, useMemo } from "react";
 

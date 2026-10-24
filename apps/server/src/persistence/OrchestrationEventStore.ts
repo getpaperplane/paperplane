@@ -25,8 +25,8 @@ import {
   StoredProjectIcon,
   ThreadId,
   type OrchestrationV2DomainEvent,
-} from "@rove-code/contracts";
-import * as NodeSqliteClient from "@rove-code/shared/nodeSqliteClient";
+} from "@getpaperplane/contracts";
+import * as NodeSqliteClient from "@getpaperplane/shared/nodeSqliteClient";
 import * as Context from "effect/Context";
 import * as SqlClient from "effect/sql/SqlClient";
 import * as SqlSchema from "effect/sql/SqlSchema";
@@ -155,7 +155,7 @@ export class OrchestrationEventStore extends Context.Service<
       readonly project: (event: ApplicationStoredEvent) => A;
     }) => Stream.Stream<A, OrchestrationEventStoreError>;
   }
->()("@rove-code/server/persistence/OrchestrationEventStore") {}
+>()("@getpaperplane/server/persistence/OrchestrationEventStore") {}
 
 const encodeProjectIcon = Schema.encodeSync(StoredProjectIcon);
 const decodeProjectEvent = Schema.decodeUnknownEffect(ApplicationProjectEvent);

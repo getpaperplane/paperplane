@@ -1,4 +1,4 @@
-import * as RelayClient from "@rove-code/shared/relayClient";
+import * as RelayClient from "@getpaperplane/shared/relayClient";
 import { assert, it } from "@effect/vitest";
 import * as Cause from "effect/Cause";
 import * as ConfigProvider from "effect/ConfigProvider";

@@ -1,4 +1,4 @@
-import type { ActiveTurnComposerAction } from "@rove-code/client-runtime/state/composer-dispatch";
+import type { ActiveTurnComposerAction } from "@getpaperplane/client-runtime/state/composer-dispatch";
 
 /**
  * What the send button does while a turn is already running: `queue` waits for

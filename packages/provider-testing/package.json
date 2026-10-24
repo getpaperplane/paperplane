@@ -1,5 +1,5 @@
 {
-  "name": "@rove-code/provider-testing",
+  "name": "@getpaperplane/provider-testing",
   "private": true,
   "type": "module",
   "exports": {
@@ -30,9 +30,9 @@
   },
   "dependencies": {
     "@effect/platform-node": "catalog:",
-    "@rove-code/contracts": "workspace:*",
-    "@rove-code/provider-core": "workspace:*",
-    "@rove-code/shared": "workspace:*",
+    "@getpaperplane/contracts": "workspace:*",
+    "@getpaperplane/provider-core": "workspace:*",
+    "@getpaperplane/shared": "workspace:*",
     "effect": "catalog:"
   },
   "devDependencies": {

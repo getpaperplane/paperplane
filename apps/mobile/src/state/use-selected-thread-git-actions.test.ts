@@ -1,4 +1,4 @@
-import { AuthOrchestrationOperateScope, AuthSourceControlWriteScope } from "@rove-code/contracts";
+import { AuthOrchestrationOperateScope, AuthSourceControlWriteScope } from "@getpaperplane/contracts";
 import * as Cause from "effect/Cause";
 import { AsyncResult } from "effect/reactivity";
 import { beforeEach, describe, expect, it, vi } from "vite-plus/test";

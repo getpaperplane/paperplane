@@ -1,4 +1,4 @@
-import type { OrchestrationV2ProviderFailure } from "@rove-code/contracts";
+import type { OrchestrationV2ProviderFailure } from "@getpaperplane/contracts";
 
 /** Labels process memory failures without hiding a provider's usage limit. */
 export function labelOutOfMemory(

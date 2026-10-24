@@ -6,7 +6,7 @@ import {
   PullRequestInvolvement,
   PullRequestListFilters,
   PullRequestListState,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 
 export const PullRequestListSort = Schema.Literals([
   "ready",

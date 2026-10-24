@@ -1,6 +1,6 @@
 import type { PreviewCard as PreviewCardPrimitive } from "@base-ui/react/preview-card";
-import { isAtomCommandInterrupted } from "@rove-code/client-runtime/state/runtime";
-import type { EnvironmentId, PullRequestRef } from "@rove-code/contracts";
+import { isAtomCommandInterrupted } from "@getpaperplane/client-runtime/state/runtime";
+import type { EnvironmentId, PullRequestRef } from "@getpaperplane/contracts";
 import {
   cloneElement,
   useRef,

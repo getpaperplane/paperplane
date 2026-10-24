@@ -1,4 +1,4 @@
-import type { AdvertisedEndpoint, DesktopWslState } from "@rove-code/contracts";
+import type { AdvertisedEndpoint, DesktopWslState } from "@getpaperplane/contracts";
 import { describe, expect, it, vi } from "vite-plus/test";
 import {
   applyWslEnableSelection,

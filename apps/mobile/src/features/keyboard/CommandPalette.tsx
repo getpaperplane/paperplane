@@ -1,7 +1,7 @@
 import { useNavigation } from "@react-navigation/native";
-import type { EnvironmentThreadSearchMatch } from "@rove-code/client-runtime/state/thread-search";
-import { THREAD_JUMP_KEYBINDING_COMMANDS } from "@rove-code/contracts";
-import { threadPullRequestSearchTerms } from "@rove-code/shared/threadPullRequests";
+import type { EnvironmentThreadSearchMatch } from "@getpaperplane/client-runtime/state/thread-search";
+import { THREAD_JUMP_KEYBINDING_COMMANDS } from "@getpaperplane/contracts";
+import { threadPullRequestSearchTerms } from "@getpaperplane/shared/threadPullRequests";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   FlatList,

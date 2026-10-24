@@ -1,5 +1,5 @@
-import type { AssetResource, OrchestrationV2TurnItem } from "@rove-code/contracts";
-import { readToolOutputImage, toolOutputImages } from "@rove-code/shared/toolOutput";
+import type { AssetResource, OrchestrationV2TurnItem } from "@getpaperplane/contracts";
+import { readToolOutputImage, toolOutputImages } from "@getpaperplane/shared/toolOutput";
 import * as DateTime from "effect/DateTime";
 
 const MAX_TEXT_BLOCK_DEPTH = 4;

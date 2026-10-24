@@ -1,5 +1,5 @@
-import { relayClerkTokenOptions } from "@rove-code/shared/relayAuth";
-import { normalizeSecureRelayUrl } from "@rove-code/shared/relayUrl";
+import { relayClerkTokenOptions } from "@getpaperplane/shared/relayAuth";
+import { normalizeSecureRelayUrl } from "@getpaperplane/shared/relayUrl";
 import * as Schema from "effect/Schema";
 
 export class CloudPublicConfigMissingError extends Schema.TaggedError<CloudPublicConfigMissingError>()(

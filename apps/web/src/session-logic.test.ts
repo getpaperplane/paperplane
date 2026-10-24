@@ -16,8 +16,8 @@ import {
   type OrchestrationV2ExecutionNode,
   type OrchestrationV2RunAttempt,
   type OrchestrationV2TurnItem,
-} from "@rove-code/contracts";
-import type { ThreadRuntimeSummary } from "@rove-code/client-runtime/state/shell";
+} from "@getpaperplane/contracts";
+import type { ThreadRuntimeSummary } from "@getpaperplane/client-runtime/state/shell";
 import { deriveMessagesTimelineRows } from "./components/chat/MessagesTimeline.logic";
 import * as DateTime from "effect/DateTime";
 import { describe, expect, it } from "vite-plus/test";

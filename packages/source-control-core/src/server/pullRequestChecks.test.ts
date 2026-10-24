@@ -1,4 +1,4 @@
-import type { PullRequestCheck, PullRequestCheckStatus } from "@rove-code/contracts";
+import type { PullRequestCheck, PullRequestCheckStatus } from "@getpaperplane/contracts";
 import { describe, expect, it } from "vite-plus/test";
 
 import { dedupeChecks } from "./pullRequestChecks.ts";

@@ -1,8 +1,8 @@
-import { EnvironmentId, ORCHESTRATION_PROTOCOL_VERSION } from "@rove-code/contracts";
-import type { RelayEnvironmentStatusResponse } from "@rove-code/contracts/relay";
+import { EnvironmentId, ORCHESTRATION_PROTOCOL_VERSION } from "@getpaperplane/contracts";
+import type { RelayEnvironmentStatusResponse } from "@getpaperplane/contracts/relay";
 import { describe, expect, it } from "vite-plus/test";
 
-import { RELAY_TUNNEL_RELEASED_MESSAGE } from "@rove-code/client-runtime/relay";
+import { RELAY_TUNNEL_RELEASED_MESSAGE } from "@getpaperplane/client-runtime/relay";
 
 import { availableCloudEnvironmentPresentation } from "./cloudEnvironmentPresentation";
 

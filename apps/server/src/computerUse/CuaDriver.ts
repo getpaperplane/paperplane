@@ -7,11 +7,11 @@ import {
   type ComputerUseControlInput,
   type ComputerUseStatus,
   type ThreadId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   Environment as HostProcessEnvironment,
   Platform as HostProcessPlatform,
-} from "@rove-code/shared/HostProcess";
+} from "@getpaperplane/shared/HostProcess";
 import type { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import type { Tool as CuaMcpTool } from "@modelcontextprotocol/sdk/types.js";
 import * as Context from "effect/Context";
@@ -139,7 +139,7 @@ export class CuaDriver extends Context.Service<
       expectedPolicy?: CuaCatalog["policy"],
     ) => Effect.Effect<McpSchema.CallToolResult, CuaDriverUnavailableError>;
   }
->()("@rove-code/server/computerUse/CuaDriver") {}
+>()("@getpaperplane/server/computerUse/CuaDriver") {}
 
 export const make = Effect.fn("CuaDriver.make")(function* (options?: {
   readonly appPath?: string;

@@ -2,7 +2,7 @@
  * Pins `./GitCafeCredentials.ts`, a service module pass 2 creates:
  *
  * - `class GitCafeCredentials extends Context.Service` keyed
- *   `"@rove-code/source-control-gitcafe/server/GitCafeCredentials"`, with
+ *   `"@getpaperplane/source-control-gitcafe/server/GitCafeCredentials"`, with
  *   `get(host) => Effect<GitCafeCredential, GitCafeCredentialUnavailableError>` and
  *   `invalidate(host) => Effect<void>`.
  * - `interface GitCafeCredential { host; token: Redacted<string>; source: "env" | "cafe" }`.
@@ -11,17 +11,17 @@
  * - `environmentToken(host, env): string | null` — `CAFE_TOKEN` only for the host `CAFE_HOST`
  *   names (git.cafe when unset).
  * - `make` / `layer`, yielding `SourceControlHost` (for `process.run`) and
- *   `HostProcess.Environment` / `HostProcess.WorkingDirectory` from `@rove-code/shared/HostProcess`.
+ *   `HostProcess.Environment` / `HostProcess.WorkingDirectory` from `@getpaperplane/shared/HostProcess`.
  */
 import { assert, describe, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as PlatformError from "effect/PlatformError";
 import * as Redacted from "effect/Redacted";
-import { VcsProcessExitError, VcsProcessSpawnError } from "@rove-code/contracts";
-import * as HostProcess from "@rove-code/shared/HostProcess";
-import type * as SourceControlHost from "@rove-code/source-control-core/server/SourceControlHost";
-import * as TestSourceControlHost from "@rove-code/source-control-testing/TestSourceControlHost";
+import { VcsProcessExitError, VcsProcessSpawnError } from "@getpaperplane/contracts";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
+import type * as SourceControlHost from "@getpaperplane/source-control-core/server/SourceControlHost";
+import * as TestSourceControlHost from "@getpaperplane/source-control-testing/TestSourceControlHost";
 
 import * as GitCafeCredentials from "./GitCafeCredentials.ts";
 

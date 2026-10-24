@@ -10,8 +10,8 @@ import {
   pullRequestCandidateUrlFromReferenceAutolink,
   shouldOpenPullRequestExternally,
 } from "./openPullRequestLink";
-import { ProjectId, type RepositoryIdentity } from "@rove-code/contracts";
-import { normalizeGitRemoteUrl } from "@rove-code/shared/git";
+import { ProjectId, type RepositoryIdentity } from "@getpaperplane/contracts";
+import { normalizeGitRemoteUrl } from "@getpaperplane/shared/git";
 
 function repositoryIdentity(
   provider: string,

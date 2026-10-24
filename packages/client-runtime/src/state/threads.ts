@@ -5,8 +5,8 @@ import {
   type OrchestrationV2ThreadProjection,
   type OrchestrationV2ThreadStreamItem,
   type ThreadId as ThreadIdType,
-} from "@rove-code/contracts";
-import { boundedSnapshotProjection } from "@rove-code/shared/orchestrationV2BoundedSnapshot";
+} from "@getpaperplane/contracts";
+import { boundedSnapshotProjection } from "@getpaperplane/shared/orchestrationV2BoundedSnapshot";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";

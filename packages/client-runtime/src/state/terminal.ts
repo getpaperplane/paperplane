@@ -1,4 +1,4 @@
-import { type TerminalSummary, WS_METHODS } from "@rove-code/contracts";
+import { type TerminalSummary, WS_METHODS } from "@getpaperplane/contracts";
 import * as Stream from "effect/Stream";
 import { Atom } from "effect/reactivity";
 

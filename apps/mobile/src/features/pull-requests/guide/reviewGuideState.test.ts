@@ -3,7 +3,7 @@ import {
   IsoDateTime,
   ProviderInstanceId,
   type PullRequestReviewGuideResult,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { guideNoticeState, reviewGuideState } from "./reviewGuideState";
 
 const guide: NonNullable<PullRequestReviewGuideResult["guide"]> = {

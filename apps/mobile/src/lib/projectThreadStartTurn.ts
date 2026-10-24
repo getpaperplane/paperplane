@@ -8,9 +8,9 @@ import {
   type ProjectId,
   type ProviderInteractionMode,
   type RuntimeMode,
-} from "@rove-code/contracts";
-import { deriveThreadTitleSeed } from "@rove-code/client-runtime/operations";
-import { assistantCitationsToPlainText } from "@rove-code/shared/assistantCitations";
+} from "@getpaperplane/contracts";
+import { deriveThreadTitleSeed } from "@getpaperplane/client-runtime/operations";
+import { assistantCitationsToPlainText } from "@getpaperplane/shared/assistantCitations";
 
 import type { UploadedMobileAttachment } from "./attachmentUpload";
 

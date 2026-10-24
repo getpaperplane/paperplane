@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vite-plus/test";
 
-import { ThreadId, TurnItemId, type OrchestrationV2TurnItem } from "@rove-code/contracts";
+import { ThreadId, TurnItemId, type OrchestrationV2TurnItem } from "@getpaperplane/contracts";
 import * as DateTime from "effect/DateTime";
-import { ROVE_MCP_TOOL_NAMES } from "@rove-code/shared/roveMcpToolPresentation";
+import { ROVE_MCP_TOOL_NAMES } from "@getpaperplane/shared/roveMcpToolPresentation";
 
 import {
   commandDetailRepeatsCommand,

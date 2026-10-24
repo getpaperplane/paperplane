@@ -1,6 +1,6 @@
-import { presentThreadShell } from "@rove-code/client-runtime/state/models";
+import { presentThreadShell } from "@getpaperplane/client-runtime/state/models";
 import * as DateTime from "effect/DateTime";
-import { planPinnedMove } from "@rove-code/client-runtime/state/thread-sort";
+import { planPinnedMove } from "@getpaperplane/client-runtime/state/thread-sort";
 import {
   createPendingThreadOrder,
   createThreadMovePlanner,
@@ -10,9 +10,9 @@ import {
   type PendingThreadOrder,
   type ThreadMoveAvailability,
 } from "./threadOrder";
-import type { EnvironmentThreadShell } from "@rove-code/client-runtime/state/shell";
-import { threadSearchMatchKey } from "@rove-code/client-runtime/state/thread-search";
-import { resolveSnoozePresets } from "@rove-code/client-runtime/state/thread-settled";
+import type { EnvironmentThreadShell } from "@getpaperplane/client-runtime/state/shell";
+import { threadSearchMatchKey } from "@getpaperplane/client-runtime/state/thread-search";
+import { resolveSnoozePresets } from "@getpaperplane/client-runtime/state/thread-settled";
 import {
   CommandId,
   EnvironmentId,
@@ -21,7 +21,7 @@ import {
   ProviderInstanceId,
   RunId,
   ThreadId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { describe, expect, it, vi } from "vite-plus/test";
 
 import type { PendingNewTask } from "../../state/use-pending-new-tasks";

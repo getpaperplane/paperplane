@@ -5,7 +5,7 @@ import * as Layer from "effect/Layer";
 import * as Schema from "effect/Schema";
 import { lt } from "drizzle-orm";
 
-import { DpopVerificationFailureCode, verifyDpopProof } from "@rove-code/shared/dpop";
+import { DpopVerificationFailureCode, verifyDpopProof } from "@getpaperplane/shared/dpop";
 import * as RelayDb from "../db.ts";
 import { relayDpopProofs } from "../persistence/schema.ts";
 

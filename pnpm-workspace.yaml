@@ -1,7 +1,7 @@
 packages:
   - apps/*
   - infra/*
-  - oxlint-plugin-rove
+  - oxlint-plugin-paperplane
   # Includes the V2 packages/provider-* and packages/source-control-* workspaces.
   - packages/*
   - scripts

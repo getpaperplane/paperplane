@@ -1,7 +1,7 @@
 import { RequestActionButton } from "./RequestActionButton";
 import { QuestionAttachments } from "./QuestionAttachments";
-import type { RuntimeRequestId } from "@rove-code/contracts";
-import type { ThreadUserInputQuestion } from "@rove-code/client-runtime/state/thread-requests";
+import type { RuntimeRequestId } from "@getpaperplane/contracts";
+import type { ThreadUserInputQuestion } from "@getpaperplane/client-runtime/state/thread-requests";
 import { useCallback, useRef } from "react";
 import { Platform, Pressable, ScrollView, View, type LayoutChangeEvent } from "react-native";
 import Animated, {

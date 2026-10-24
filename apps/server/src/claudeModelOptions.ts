@@ -1,10 +1,10 @@
-import type { ModelSelection } from "@rove-code/contracts";
+import type { ModelSelection } from "@getpaperplane/contracts";
 import {
   getModelSelectionBooleanOptionValue,
   getModelSelectionStringOptionValue,
   getProviderOptionDescriptors,
   resolvePromptInjectedEffort,
-} from "@rove-code/shared/model";
+} from "@getpaperplane/shared/model";
 
 import {
   BUNDLED_CLAUDE_MODEL_CATALOG,

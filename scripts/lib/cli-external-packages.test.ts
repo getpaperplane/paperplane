@@ -50,7 +50,7 @@ const serverRoot = NodePath.resolve(
 
 describe("shouldBundleCliDependency", () => {
   it("bundles ordinary runtime dependencies", () => {
-    for (const id of ["effect", "@effect/platform", "@rove-code/shared/HostProcess"]) {
+    for (const id of ["effect", "@effect/platform", "@getpaperplane/shared/HostProcess"]) {
       assert.strictEqual(shouldBundleCliDependency(id), true, id);
     }
   });

@@ -6,16 +6,16 @@ import type {
   ServerProvider,
   ThreadId,
   ThreadPullRequestLink,
-} from "@rove-code/contracts";
-import { matchComposerThreadItems } from "@rove-code/client-runtime/composerThreadItems";
-import type { EnvironmentThreadShell } from "@rove-code/client-runtime/state/models";
+} from "@getpaperplane/contracts";
+import { matchComposerThreadItems } from "@getpaperplane/client-runtime/composerThreadItems";
+import type { EnvironmentThreadShell } from "@getpaperplane/client-runtime/state/models";
 
 const EMPTY_THREAD_SHELLS: ReadonlyArray<EnvironmentThreadShell> = [];
 import {
   COMPOSER_CONTEXT_MAX_RECORDS,
   PROVIDER_WORKSPACE_SNAPSHOT_TTL_MS,
-} from "@rove-code/contracts";
-import { formatComposerContextReference } from "@rove-code/shared/composerContextReferences";
+} from "@getpaperplane/contracts";
+import { formatComposerContextReference } from "@getpaperplane/shared/composerContextReferences";
 import { pullRequestComposerContext, threadComposerContext } from "../../lib/composerContext";
 import { uuidv4 } from "../../lib/uuid";
 import {
@@ -23,18 +23,18 @@ import {
   readComposerDraftSelection,
   setComposerDraftContext,
 } from "../../state/use-composer-drafts";
-import { USAGE_LIMITS_COMMAND } from "@rove-code/shared/usageLimits";
+import { USAGE_LIMITS_COMMAND } from "@getpaperplane/shared/usageLimits";
 import {
   detectComposerTrigger,
   replaceTextRange,
   serializeComposerFileLink,
   type ComposerTrigger,
-} from "@rove-code/shared/composerTrigger";
+} from "@getpaperplane/shared/composerTrigger";
 import {
   insertRankedSearchResult,
   normalizeSearchQuery,
   scoreQueryMatch,
-} from "@rove-code/shared/searchRanking";
+} from "@getpaperplane/shared/searchRanking";
 import {
   dedupeProviderSkillsByName,
   getProviderSkillsForSlashMenu,
@@ -44,7 +44,7 @@ import {
   hasCurrentProviderWorkspaceSnapshot,
   resolveProviderSkillsForCwd,
   resolveProviderSlashCommandsForCwd,
-} from "@rove-code/client-runtime/providerSkills";
+} from "@getpaperplane/client-runtime/providerSkills";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import type { ComposerEditorSelection } from "../../components/ComposerEditor";

@@ -2,7 +2,7 @@ import type {
   ServerProvider,
   ServerProviderVersionAdvisory,
   ServerProviderCompatibilityAdvisory,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 
 /**
  * Visual treatment for each server-reported provider status. Centralized so

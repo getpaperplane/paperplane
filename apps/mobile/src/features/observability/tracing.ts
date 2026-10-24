@@ -1,5 +1,5 @@
 import Constants from "expo-constants";
-import * as RelayTracing from "@rove-code/shared/relayTracing";
+import * as RelayTracing from "@getpaperplane/shared/relayTracing";
 
 import { hasTracingPublicConfig, resolveCloudPublicConfig } from "../cloud/publicConfig";
 import * as RuntimePredicate from "effect/Predicate";

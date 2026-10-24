@@ -10,7 +10,7 @@ import {
   type OrchestrationV2ThreadProjection,
   ProviderDriverKind,
   type ThreadId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 
 import {
   ClaudeOrchestratorReplayHarness,
@@ -24,7 +24,7 @@ import {
   makeCursorAgentSdkReplayRunner,
 } from "../Adapters/CursorAdapterV2.testkit.ts";
 import * as CursorAdapterV2Testkit from "../Adapters/CursorAdapterV2.testkit.ts";
-import * as IdAllocator from "@rove-code/provider-core/server/IdAllocator";
+import * as IdAllocator from "@getpaperplane/provider-core/server/IdAllocator";
 import * as SqlitePersistence from "../../persistence/Sqlite.ts";
 import { provideDeterministicTestRuntime } from "./DeterministicRuntime.ts";
 import {
@@ -48,12 +48,12 @@ import {
 } from "./fixtures/shared.ts";
 import type { OrchestratorV2ScenarioResult } from "./OrchestratorScenario.ts";
 import { runOrchestratorV2ProviderReplayScenario } from "./ProviderReplayHarness.ts";
-import { checkpointWorkspace } from "@rove-code/provider-testing/replayWorkspace";
+import { checkpointWorkspace } from "@getpaperplane/provider-testing/replayWorkspace";
 import { materializeReplayTranscriptRuntimeInstructions } from "./ReplayRuntimeInstructions.ts";
 import {
   materializeReplayTranscriptWorkspace,
   readProviderReplayTranscript,
-} from "@rove-code/provider-testing/replayTranscript";
+} from "@getpaperplane/provider-testing/replayTranscript";
 
 const FIRST_FINAL = "provider thread resume fixture first turn complete";
 const SECOND_FINAL = "provider thread resume fixture second turn complete";

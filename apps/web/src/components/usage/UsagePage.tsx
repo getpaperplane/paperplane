@@ -1,5 +1,5 @@
 import { ChatGptUsageButton } from "../settings/ChatGptUsageButton";
-import { usesChatGptSharing } from "@rove-code/shared/usageLimits";
+import { usesChatGptSharing } from "@getpaperplane/shared/usageLimits";
 import { RefreshIcon } from "~/components/ui/refresh-icon";
 import { useAtomValue } from "@effect/atom-react";
 import {
@@ -7,7 +7,7 @@ import {
   USAGE_CONTRACT_VERSION,
   type EnvironmentId,
   type UsageProviderKind,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   CircleAlertIcon,
   ChevronDownIcon,
@@ -19,12 +19,12 @@ import { useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
 import {
   cursorKeychainAccessEnvironments,
   refreshUsageLimits,
-} from "@rove-code/client-runtime/state/usage";
+} from "@getpaperplane/client-runtime/state/usage";
 import {
   updatingProvidersLabel,
   usageEnvironmentProgress,
   usageLoadingState,
-} from "@rove-code/client-runtime/state/usage-progress";
+} from "@getpaperplane/client-runtime/state/usage-progress";
 
 import {
   isCompatibleUsageContractVersion,
@@ -36,7 +36,7 @@ import {
   type DailyTotals,
   type HourlyTotals,
   type MergedUsage,
-} from "@rove-code/shared/usageMerge";
+} from "@getpaperplane/shared/usageMerge";
 
 import { isElectron } from "../../env";
 import { cn } from "../../lib/utils";
@@ -59,7 +59,7 @@ import {
   formatUsageContractMismatch,
   formatUsd,
   makeWindow,
-} from "@rove-code/shared/usageFormat";
+} from "@getpaperplane/shared/usageFormat";
 import { Button, InlineButton } from "../ui/button";
 import { ProviderInstanceIcon } from "../chat/ProviderInstanceIcon";
 import {

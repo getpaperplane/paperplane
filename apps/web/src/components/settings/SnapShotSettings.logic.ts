@@ -2,7 +2,7 @@ import type {
   ClientSettingsPatch,
   DesktopSnapShotState,
   SnapShotSound,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   captureSetupBackend,
   captureSetupDesktopName,

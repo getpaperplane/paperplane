@@ -1,12 +1,12 @@
 import { useAtomValue } from "@effect/atom-react";
-import { scopeThreadRef } from "@rove-code/client-runtime/environment";
+import { scopeThreadRef } from "@getpaperplane/client-runtime/environment";
 import {
   EMPTY_V2_ITEM_SUPPORT,
   resolveV2ItemSupport,
   v2ItemSupportEqual,
   type V2ItemSupport,
-} from "@rove-code/client-runtime/state/item-support";
-import type { EnvironmentId, ThreadId, TurnItemId } from "@rove-code/contracts";
+} from "@getpaperplane/client-runtime/state/item-support";
+import type { EnvironmentId, ThreadId, TurnItemId } from "@getpaperplane/contracts";
 import { Atom } from "effect/reactivity";
 
 import { environmentThreadDetails } from "./threads";

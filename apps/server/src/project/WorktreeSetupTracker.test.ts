@@ -1,5 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
-import { ThreadId, WorktreeSetupSnapshot } from "@rove-code/contracts";
+import { ThreadId, WorktreeSetupSnapshot } from "@getpaperplane/contracts";
 import * as Deferred from "effect/Deferred";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";

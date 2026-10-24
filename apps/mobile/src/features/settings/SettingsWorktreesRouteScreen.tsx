@@ -4,12 +4,12 @@ import type {
   ProjectId,
   WorktreeInventoryEntry,
   WorktreeInventoryInspection,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   filterWorktrees,
   formatWorktreeSize,
   type WorktreeSizeState,
-} from "@rove-code/client-runtime/worktree-inventory";
+} from "@getpaperplane/client-runtime/worktree-inventory";
 import { useNavigation } from "@react-navigation/native";
 import * as Cause from "effect/Cause";
 import { useState } from "react";

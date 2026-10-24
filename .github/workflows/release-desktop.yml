@@ -297,7 +297,7 @@ jobs:
         # CLI-only jobs (desktop: false) build the server executable and archive
         # from scripts/ and apps/server; skipping the desktop graph saves linking
         # time on the windows-11-arm runner, where linking dominates install.
-        run: vp install ${{ inputs.desktop && '--filter=@rove-code/desktop... ' || '' }}--filter=@rove-code/server... --filter=@rove-code/scripts...
+        run: vp install ${{ inputs.desktop && '--filter=@getpaperplane/desktop... ' || '' }}--filter=@getpaperplane/server... --filter=@getpaperplane/scripts...
 
       # Desktop staging, CLI archive staging, and the smoke test's runtime copy
       # each write tens of thousands of files under TEMP, which sits on the

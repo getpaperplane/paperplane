@@ -13,7 +13,7 @@ done
 
 CI=true vp i
 # Repairs electron's path.txt and exec bits after install, same as CI.
-vp run --filter @rove-code/desktop ensure:electron
+vp run --filter @getpaperplane/desktop ensure:electron
 # Pre-warms Vite's dep optimizer (cache is keyed on the absolute path, which
 # is stable inside the container).
 node apps/web/scripts/warm-dep-cache.ts

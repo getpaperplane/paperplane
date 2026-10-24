@@ -2,7 +2,7 @@ import type {
   ResourceMonitorProcessSample,
   ResourceMonitorSnapshotEvent,
   ResourceTelemetryHealth,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as DateTime from "effect/DateTime";
 import * as Option from "effect/Option";
 import { it, describe } from "vite-plus/test";

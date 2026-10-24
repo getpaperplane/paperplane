@@ -1,4 +1,4 @@
-import type { ProjectIconColor } from "@rove-code/contracts";
+import type { ProjectIconColor } from "@getpaperplane/contracts";
 import { projectIconColorClassName } from "../projectIconColors";
 import { cn } from "~/lib/utils";
 

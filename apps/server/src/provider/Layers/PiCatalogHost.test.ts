@@ -4,13 +4,13 @@ import * as NodeOS from "node:os";
 import * as NodePath from "node:path";
 
 import { assert, it } from "@effect/vitest";
-import { PiSettings, type PiThinkingLevel, type ServerProviderModel } from "@rove-code/contracts";
+import { PiSettings, type PiThinkingLevel, type ServerProviderModel } from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 import {
   getProviderOptionDescriptors,
   buildProviderOptionSelectionsFromDescriptors,
-} from "@rove-code/shared/model";
+} from "@getpaperplane/shared/model";
 import { checkPiProviderStatus } from "./PiProvider.ts";
 import { afterEach, beforeEach, describe, vi } from "vite-plus/test";
 

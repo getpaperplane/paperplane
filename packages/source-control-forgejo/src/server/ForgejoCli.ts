@@ -10,11 +10,11 @@ import * as Semaphore from "effect/Semaphore";
 import * as NodePath from "node:path";
 import { FetchHttpClient, HttpClient, HttpClientRequest } from "effect/http";
 import { ChildProcessSpawner } from "effect/process";
-import { decodeJsonResult } from "@rove-code/shared/schemaJson";
-import * as HostProcess from "@rove-code/shared/HostProcess";
-import * as SourceControlHost from "@rove-code/source-control-core/server/SourceControlHost";
-import { collectUint8StreamText } from "@rove-code/provider-core/server/collectStreamText";
-import type { SourceControlProviderContext } from "@rove-code/source-control-core/server/SourceControlProvider";
+import { decodeJsonResult } from "@getpaperplane/shared/schemaJson";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
+import * as SourceControlHost from "@getpaperplane/source-control-core/server/SourceControlHost";
+import { collectUint8StreamText } from "@getpaperplane/provider-core/server/collectStreamText";
+import type { SourceControlProviderContext } from "@getpaperplane/source-control-core/server/SourceControlProvider";
 
 const encodeApiBody = Schema.encodeEffect(Schema.fromJsonString(Schema.Unknown));
 
@@ -149,7 +149,7 @@ export class ForgejoCli extends Context.Service<
       input: ForgejoApiInput,
     ) => Effect.Effect<SourceControlHost.SourceControlProcessOutput, ForgejoCliError>;
   }
->()("@rove-code/source-control-forgejo/server/ForgejoCli") {}
+>()("@getpaperplane/source-control-forgejo/server/ForgejoCli") {}
 
 export function parseForgejoRemote(value: string) {
   if (/^(?:https?|ssh):\/\//i.test(value)) {

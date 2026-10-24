@@ -1,4 +1,4 @@
-import { ProjectId, ThreadId, type WorktreeInventoryEntry } from "@rove-code/contracts";
+import { ProjectId, ThreadId, type WorktreeInventoryEntry } from "@getpaperplane/contracts";
 import { describe, expect, it } from "vite-plus/test";
 
 import { filterWorktrees, formatWorktreeSize } from "./worktreeInventory.ts";

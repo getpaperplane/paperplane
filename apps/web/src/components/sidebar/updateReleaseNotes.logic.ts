@@ -1,4 +1,4 @@
-import type { DesktopUpdateReleaseNote, DesktopUpdateState } from "@rove-code/contracts";
+import type { DesktopUpdateReleaseNote, DesktopUpdateState } from "@getpaperplane/contracts";
 
 import {
   getDesktopUpdateReleaseHistoryUrl,

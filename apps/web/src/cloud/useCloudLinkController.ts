@@ -1,18 +1,18 @@
 import { useAtomValue } from "@effect/atom-react";
 import { useAuth } from "@clerk/react";
-import { findErrorTraceId } from "@rove-code/client-runtime/errors";
+import { findErrorTraceId } from "@getpaperplane/client-runtime/errors";
 import {
   EnvironmentId,
   AuthRelayReadScope,
   AuthRelayWriteScope,
   type EnvironmentCloudLinkStateResult,
-} from "@rove-code/contracts";
-import type { RelayManagedEndpointProviderKind } from "@rove-code/contracts/relay";
+} from "@getpaperplane/contracts";
+import type { RelayManagedEndpointProviderKind } from "@getpaperplane/contracts/relay";
 import {
   isAtomCommandInterrupted,
   settlePromise,
   squashAtomCommandFailure,
-} from "@rove-code/client-runtime/state/runtime";
+} from "@getpaperplane/client-runtime/state/runtime";
 import { useState } from "react";
 
 import { toastManager } from "../components/ui/toast";

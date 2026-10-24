@@ -1,15 +1,15 @@
-import { type EnvironmentShellSummary } from "@rove-code/client-runtime/state/shell";
-import type { EnvironmentId, ServerConfig } from "@rove-code/contracts";
+import { type EnvironmentShellSummary } from "@getpaperplane/client-runtime/state/shell";
+import type { EnvironmentId, ServerConfig } from "@getpaperplane/contracts";
 
 import {
   type EnvironmentConnectionPhase,
   type NetworkStatus,
-} from "@rove-code/client-runtime/connection";
+} from "@getpaperplane/client-runtime/connection";
 
-import type { EnvironmentConnectionSummary as WorkspaceEnvironment } from "@rove-code/client-runtime/state/presentation";
+import type { EnvironmentConnectionSummary as WorkspaceEnvironment } from "@getpaperplane/client-runtime/state/presentation";
 
-export { projectEnvironmentConnectionSummary as projectWorkspaceEnvironment } from "@rove-code/client-runtime/state/presentation";
-export type { EnvironmentConnectionSummary as WorkspaceEnvironment } from "@rove-code/client-runtime/state/presentation";
+export { projectEnvironmentConnectionSummary as projectWorkspaceEnvironment } from "@getpaperplane/client-runtime/state/presentation";
+export type { EnvironmentConnectionSummary as WorkspaceEnvironment } from "@getpaperplane/client-runtime/state/presentation";
 
 export interface WorkspaceConnectionState {
   readonly isLoadingConnections: boolean;

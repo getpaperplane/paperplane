@@ -2,7 +2,7 @@ import type {
   RelayAgentActivitySnapshotResponse,
   RelayDeviceRegistrationRequest,
   RelayLiveActivityRegistrationRequest,
-} from "@rove-code/contracts/relay";
+} from "@getpaperplane/contracts/relay";
 import * as DateTime from "effect/DateTime";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";

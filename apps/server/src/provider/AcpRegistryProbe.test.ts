@@ -3,8 +3,8 @@ import * as NodePath from "node:path";
 import * as NodeURL from "node:url";
 
 import * as NodeServices from "@effect/platform-node/NodeServices";
-import { ProviderInstanceId } from "@rove-code/contracts";
-import { AcpRegistrySettings } from "@rove-code/provider-acp-registry/settings";
+import { ProviderInstanceId } from "@getpaperplane/contracts";
+import { AcpRegistrySettings } from "@getpaperplane/provider-acp-registry/settings";
 import { describe, expect, it } from "@effect/vitest";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
@@ -13,7 +13,7 @@ import * as Schema from "effect/Schema";
 import * as TestClock from "effect/testing/TestClock";
 import * as EffectAcpErrors from "effect-acp/errors";
 
-import type * as AcpSessionRuntime from "@rove-code/provider-acp/server/AcpSessionRuntime";
+import type * as AcpSessionRuntime from "@getpaperplane/provider-acp/server/AcpSessionRuntime";
 import {
   acpRegistryProbeFailure,
   acpRegistryProbeResult,
@@ -22,8 +22,8 @@ import {
   normalizeAcpRegistryAuthMethods,
   normalizeAcpRegistryCommands,
   probeAcpRegistryConfiguration,
-} from "@rove-code/provider-acp-registry/testing";
-import * as AcpRegistrySupport from "@rove-code/provider-acp-registry/server/AcpRegistrySupport";
+} from "@getpaperplane/provider-acp-registry/testing";
+import * as AcpRegistrySupport from "@getpaperplane/provider-acp-registry/server/AcpRegistrySupport";
 
 const instanceId = ProviderInstanceId.make("acpRegistry_codex");
 const __dirname = NodePath.dirname(NodeURL.fileURLToPath(import.meta.url));

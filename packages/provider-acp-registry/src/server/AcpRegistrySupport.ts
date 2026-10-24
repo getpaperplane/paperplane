@@ -9,16 +9,16 @@ import {
   type AcpRegistrySearchInput,
   type AcpRegistrySearchResult,
   type AcpRegistryDistribution as AcpRegistryDistributionKind,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import type { AcpRegistryDistributionPreference } from "../settings.ts";
 import type { AcpRegistrySettings } from "../settings.ts";
-import { cliArchiveTarCommand } from "@rove-code/shared/cliRelease";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+import { cliArchiveTarCommand } from "@getpaperplane/shared/cliRelease";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 import {
   mergePathEntries,
   resolveSpawnCommand,
   SpawnExecutableResolution,
-} from "@rove-code/shared/shell";
+} from "@getpaperplane/shared/shell";
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
 import * as Duration from "effect/Duration";
@@ -42,9 +42,9 @@ import * as HttpClientResponse from "effect/http/HttpClientResponse";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
-import { collectUint8StreamText } from "@rove-code/provider-core/server/collectStreamText";
-import * as ProviderHost from "@rove-code/provider-core/server/ProviderHost";
-import type * as AcpSessionRuntime from "@rove-code/provider-acp/server/AcpSessionRuntime";
+import { collectUint8StreamText } from "@getpaperplane/provider-core/server/collectStreamText";
+import * as ProviderHost from "@getpaperplane/provider-core/server/ProviderHost";
+import type * as AcpSessionRuntime from "@getpaperplane/provider-acp/server/AcpSessionRuntime";
 
 const ACP_REGISTRY_URL = "https://cdn.agentclientprotocol.com/registry/v1/latest/registry.json";
 
@@ -523,7 +523,7 @@ export class AcpRegistryCatalog extends Context.Service<
       input: AcpRegistryManagedBinaryUninstallInput,
     ) => Effect.Effect<AcpRegistryManagedBinaryUninstallResult, AcpRegistryError>;
   }
->()("@rove-code/provider-acp-registry/server/AcpRegistrySupport/AcpRegistryCatalog") {}
+>()("@getpaperplane/provider-acp-registry/server/AcpRegistrySupport/AcpRegistryCatalog") {}
 
 const layer = (options: AcpRegistryCatalogOptions) =>
   Layer.effect(AcpRegistryCatalog, makeAcpRegistryCatalog(options));

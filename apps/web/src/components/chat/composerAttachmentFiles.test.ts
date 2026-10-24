@@ -1,4 +1,4 @@
-import { EnvironmentId, PROVIDER_SEND_TURN_MAX_FILE_BYTES } from "@rove-code/contracts";
+import { EnvironmentId, PROVIDER_SEND_TURN_MAX_FILE_BYTES } from "@getpaperplane/contracts";
 import { describe, expect, it } from "vite-plus/test";
 
 import type { ComposerFileAttachment, ComposerImageAttachment } from "../../composerDraftStore";

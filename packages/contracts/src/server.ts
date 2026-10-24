@@ -978,7 +978,7 @@ export class ServerProviderUpdateError extends Schema.TaggedError<ServerProvider
 }
 
 export const ServerSelfUpdateInput = Schema.Struct({
-  /** Exact npm version of the `@rove-code/cli` package to install (never a dist-tag, so
+  /** Exact npm version of the `@getpaperplane/cli` package to install (never a dist-tag, so
       the server and the acknowledging client agree on what was requested). */
   targetVersion: TrimmedNonEmptyString,
   /** Opt-in recovery for provider turns that are running when the server

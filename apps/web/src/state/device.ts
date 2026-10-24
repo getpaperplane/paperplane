@@ -1,11 +1,11 @@
 import { useMemo } from "react";
 import { useAtomValue } from "@effect/atom-react";
-import { createDeviceEnvironmentAtoms } from "@rove-code/client-runtime/state/device";
+import { createDeviceEnvironmentAtoms } from "@getpaperplane/client-runtime/state/device";
 import {
   type DeviceHubAccess,
   resolveDeviceHubAccess,
-} from "@rove-code/client-runtime/state/deviceHubAccess";
-import type { DeviceServiceState, EnvironmentId } from "@rove-code/contracts";
+} from "@getpaperplane/client-runtime/state/deviceHubAccess";
+import type { DeviceServiceState, EnvironmentId } from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
 import { AsyncResult, Atom } from "effect/reactivity";

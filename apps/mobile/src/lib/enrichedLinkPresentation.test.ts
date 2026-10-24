@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vite-plus/test";
-import type { ComposerContextId, ReviewCommentContextRecord } from "@rove-code/contracts";
+import type { ComposerContextId, ReviewCommentContextRecord } from "@getpaperplane/contracts";
 import {
   enrichedContextLinkPresentation,
   enrichedLinkVariantPattern,

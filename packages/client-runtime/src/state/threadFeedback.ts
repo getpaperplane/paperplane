@@ -1,4 +1,4 @@
-import { MessageId, type ProviderUploadFeedbackResult } from "@rove-code/contracts";
+import { MessageId, type ProviderUploadFeedbackResult } from "@getpaperplane/contracts";
 
 import {
   isAtomCommandInterrupted,

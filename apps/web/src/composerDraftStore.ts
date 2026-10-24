@@ -24,7 +24,7 @@ import {
   type ScopedThreadRef,
   ThreadId,
   SnapShotSource,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   parseScopedProjectKey,
   parseScopedThreadKey,
@@ -32,12 +32,12 @@ import {
   scopeProjectRef,
   scopedThreadKey,
   scopeThreadRef,
-} from "@rove-code/client-runtime/environment";
+} from "@getpaperplane/client-runtime/environment";
 import * as Schema from "effect/Schema";
 import * as Equal from "effect/Equal";
 import * as Effect from "effect/Effect";
 import { DeepMutable } from "effect/Types";
-import { createModelSelection, normalizeModelSlug } from "@rove-code/shared/model";
+import { createModelSelection, normalizeModelSlug } from "@getpaperplane/shared/model";
 import { useMemo } from "react";
 import { getLocalStorageItem } from "./hooks/useLocalStorage";
 import { readThreadPreviewState } from "./previewStateStore";
@@ -79,8 +79,8 @@ import {
   replaceComposerContextReferences,
   toComposerContextId,
   toKindScopedComposerContextId,
-} from "@rove-code/shared/composerContextReferences";
-import { UnifiedSettings } from "@rove-code/contracts/settings";
+} from "@getpaperplane/shared/composerContextReferences";
+import { UnifiedSettings } from "@getpaperplane/contracts/settings";
 import { ReviewCommentContextSchema, type ReviewCommentContext } from "./reviewCommentContext";
 const isRuntimeMode = Schema.is(RuntimeMode);
 const isProviderDriverKind = Schema.is(ProviderDriverKind);

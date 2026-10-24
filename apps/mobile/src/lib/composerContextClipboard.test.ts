@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
-import { ComposerContextId, EnvironmentId } from "@rove-code/contracts";
-import { encodeComposerContextFragment } from "@rove-code/shared/composerContextClipboard";
+import { ComposerContextId, EnvironmentId } from "@getpaperplane/contracts";
+import { encodeComposerContextFragment } from "@getpaperplane/shared/composerContextClipboard";
 
 const mocks = vi.hoisted(() => ({
   execute: vi.fn(),
@@ -31,7 +31,7 @@ vi.mock("../state/use-composer-drafts", () => ({
   waitForComposerDraftsLoaded: async () => {},
   findLocalComposerClipboardAttachment: mocks.local,
 }));
-vi.mock("@rove-code/client-runtime/state/runtime", () => ({
+vi.mock("@getpaperplane/client-runtime/state/runtime", () => ({
   executeAtomQuery: mocks.execute,
   squashAtomCommandFailure: () => new Error("offline"),
 }));

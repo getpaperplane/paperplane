@@ -7,9 +7,9 @@ import {
   agentScopeCommand,
   type AgentScopeShape,
   type AgentSystemdScope,
-} from "@rove-code/shared/AgentScope";
-import * as HostProcess from "@rove-code/shared/HostProcess";
-import { resolveCommandPath } from "@rove-code/shared/shell";
+} from "@getpaperplane/shared/AgentScope";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
+import { resolveCommandPath } from "@getpaperplane/shared/shell";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";

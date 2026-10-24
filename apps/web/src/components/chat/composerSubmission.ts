@@ -1,5 +1,5 @@
-import { PROVIDER_SEND_TURN_MAX_INPUT_CHARS } from "@rove-code/contracts";
-import { expandAssistantCitationsForProvider } from "@rove-code/shared/assistantCitations";
+import { PROVIDER_SEND_TURN_MAX_INPUT_CHARS } from "@getpaperplane/contracts";
+import { expandAssistantCitationsForProvider } from "@getpaperplane/shared/assistantCitations";
 
 type ComposerSubmitEvent = { preventDefault: () => void };
 

@@ -1,16 +1,16 @@
 import type {
   OrchestrationV2ContextHandoff,
   OrchestrationV2ProviderThread,
-} from "@rove-code/contracts";
-import type * as ProviderAdapter from "@rove-code/provider-core/server/ProviderAdapter";
-import { ContextHandoffBudgetError } from "@rove-code/provider-core/server/failure";
+} from "@getpaperplane/contracts";
+import type * as ProviderAdapter from "@getpaperplane/provider-core/server/ProviderAdapter";
+import { ContextHandoffBudgetError } from "@getpaperplane/provider-core/server/failure";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 import {
   historyCost,
   renderHistory,
   selectHistory,
-} from "@rove-code/provider-core/server/handoffBudget";
+} from "@getpaperplane/provider-core/server/handoffBudget";
 
 /**
  * Persist before/after injection: an ambiguous pending delivery requires a fresh native thread.

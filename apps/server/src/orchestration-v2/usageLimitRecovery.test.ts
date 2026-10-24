@@ -1,5 +1,5 @@
 import { assert, it } from "@effect/vitest";
-import { RunId } from "@rove-code/contracts";
+import { RunId } from "@getpaperplane/contracts";
 import { limitRecoveryAttempts, usageLimitChain } from "./usageLimitRecovery.ts";
 
 const id = (name: string) => RunId.make(`run:${name}`);

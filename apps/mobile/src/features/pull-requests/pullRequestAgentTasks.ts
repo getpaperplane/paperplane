@@ -1,4 +1,4 @@
-import type { PullRequestDetail, PullRequestLinkedThreadsResult } from "@rove-code/contracts";
+import type { PullRequestDetail, PullRequestLinkedThreadsResult } from "@getpaperplane/contracts";
 
 export type PullRequestAgentTask = "ask" | "explain" | "feedback" | "conflicts" | "watch";
 

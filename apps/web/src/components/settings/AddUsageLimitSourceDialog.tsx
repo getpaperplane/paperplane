@@ -1,4 +1,4 @@
-import { type EnvironmentId, UsageLimitSourceId } from "@rove-code/contracts";
+import { type EnvironmentId, UsageLimitSourceId } from "@getpaperplane/contracts";
 import { useState } from "react";
 
 import { useUpdateEnvironmentSettings } from "../../hooks/useSettings";

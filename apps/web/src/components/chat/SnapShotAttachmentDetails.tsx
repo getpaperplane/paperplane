@@ -1,4 +1,4 @@
-import type { SnapShotSource } from "@rove-code/contracts";
+import type { SnapShotSource } from "@getpaperplane/contracts";
 import { ImageIcon, TextIcon } from "lucide-react";
 import { Suspense } from "react";
 

@@ -4,7 +4,7 @@ import {
   dynamicToolTitle,
   formatReadToolLabel,
   formatSearchToolLabel,
-} from "@rove-code/shared/toolActivity";
+} from "@getpaperplane/shared/toolActivity";
 import { field, text } from "../unknownField.ts";
 import { readWorkflowAgentAnswers } from "../workflowAgentAnswers.ts";
 import {
@@ -14,7 +14,7 @@ import {
   parseClaudeWorkflowRunHandles,
 } from "./claudeWorkflowProgress.ts";
 
-import { isWorkspaceImagePreviewPath } from "@rove-code/shared/filePreview";
+import { isWorkspaceImagePreviewPath } from "@getpaperplane/shared/filePreview";
 import { normalizeClaudeTurnTokenUsage } from "../../provider/ClaudeTurnTokenUsage.ts";
 import type {
   CanUseTool,
@@ -42,14 +42,14 @@ import type {
 } from "@anthropic-ai/claude-agent-sdk/sdk-tools";
 // @effect-diagnostics-next-line nodeBuiltinImport:off -- the SDK takes a Node ChildProcess for the CLI.
 import * as NodeChildProcess from "node:child_process";
-import { parseCliArgs } from "@rove-code/shared/cliArgs";
-import { AgentScope } from "@rove-code/shared/AgentScope";
-import * as HostProcess from "@rove-code/shared/HostProcess";
-import { applyClaudePromptEffortPrefix } from "@rove-code/shared/model";
+import { parseCliArgs } from "@getpaperplane/shared/cliArgs";
+import { AgentScope } from "@getpaperplane/shared/AgentScope";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
+import { applyClaudePromptEffortPrefix } from "@getpaperplane/shared/model";
 import {
   CLAUDE_RESUME_COMPACTION_NEVER_ANSWER,
   formatClaudeResumeCompactionQuestion,
-} from "@rove-code/shared/claudeCompaction";
+} from "@getpaperplane/shared/claudeCompaction";
 import {
   type ChatAttachment,
   ClaudeSettings,
@@ -83,7 +83,7 @@ import {
   type ProviderThreadId,
   type RunId,
   type ThreadId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 
 import * as Cause from "effect/Cause";
 import * as Context from "effect/Context";
@@ -114,8 +114,8 @@ import {
   type CompiledClaudeModelSelection,
 } from "../../claudeModelOptions.ts";
 import * as ServerConfig from "../../config.ts";
-import { expandHomePath } from "@rove-code/provider-core/server/pathExpansion";
-import { signalProcessGroup } from "@rove-code/provider-core/server/processGroup";
+import { expandHomePath } from "@getpaperplane/provider-core/server/pathExpansion";
+import { signalProcessGroup } from "@getpaperplane/provider-core/server/processGroup";
 import {
   claudeSignedOutMessage,
   makeClaudeEnvironment,
@@ -132,45 +132,45 @@ import {
   boundProviderEventForLogging,
   shouldPersistProviderEvent,
 } from "../../provider/EventNdjsonLogger.ts";
-import * as ProviderEventLoggers from "@rove-code/provider-core/server/ProviderEventLoggers";
+import * as ProviderEventLoggers from "@getpaperplane/provider-core/server/ProviderEventLoggers";
 import {
   claudeRateLimitEventToUpdate,
   type ClaudeScopedLimitNames,
 } from "../../provider/claudeUsageLimits.ts";
-import type { ManagedServerProvider } from "@rove-code/provider-core/server/snapshot";
-import { mergeProviderInstanceEnvironment } from "@rove-code/provider-core/server/instanceEnvironment";
-import { ROVE_CODE_ORCHESTRATION_INSTRUCTIONS } from "@rove-code/provider-core/server/orchestrationInstructions";
-import { buildRuntimeInstructions } from "@rove-code/provider-core/server/runtimeInstructions";
+import type { ManagedServerProvider } from "@getpaperplane/provider-core/server/snapshot";
+import { mergeProviderInstanceEnvironment } from "@getpaperplane/provider-core/server/instanceEnvironment";
+import { ROVE_CODE_ORCHESTRATION_INSTRUCTIONS } from "@getpaperplane/provider-core/server/orchestrationInstructions";
+import { buildRuntimeInstructions } from "@getpaperplane/provider-core/server/runtimeInstructions";
 import {
   mcpToolPresentation,
   normalizeMcpText,
-} from "@rove-code/provider-core/server/mcpToolPresentation";
-import { ROVE_MCP_SERVER_NAME, ROVE_MCP_TOOL_PREFIX } from "@rove-code/shared/roveMcp";
-import * as McpProviderSession from "@rove-code/provider-core/server/mcpSession";
-import * as McpProviderSessions from "@rove-code/provider-core/server/McpProviderSessions";
-import * as IdAllocator from "@rove-code/provider-core/server/IdAllocator";
+} from "@getpaperplane/provider-core/server/mcpToolPresentation";
+import { ROVE_MCP_SERVER_NAME, ROVE_MCP_TOOL_PREFIX } from "@getpaperplane/shared/roveMcp";
+import * as McpProviderSession from "@getpaperplane/provider-core/server/mcpSession";
+import * as McpProviderSessions from "@getpaperplane/provider-core/server/McpProviderSessions";
+import * as IdAllocator from "@getpaperplane/provider-core/server/IdAllocator";
 import {
   makeProviderFailure,
   makeProviderRetryTurnItem,
-} from "@rove-code/provider-core/server/failure";
-import { turnScopedSelectionTransition } from "@rove-code/provider-core/server/selectionTransition";
-import { providerMessageTextWithAttachmentPaths } from "@rove-code/provider-core/server/attachmentPrompt";
-import * as ProviderAdapter from "@rove-code/provider-core/server/ProviderAdapter";
+} from "@getpaperplane/provider-core/server/failure";
+import { turnScopedSelectionTransition } from "@getpaperplane/provider-core/server/selectionTransition";
+import { providerMessageTextWithAttachmentPaths } from "@getpaperplane/provider-core/server/attachmentPrompt";
+import * as ProviderAdapter from "@getpaperplane/provider-core/server/ProviderAdapter";
 import {
   ProviderAdapterDriverCreateError,
   type ProviderAdapterDriver,
   type ProviderAdapterDriverCreateInput,
-} from "@rove-code/provider-core/server/adapterDriver";
+} from "@getpaperplane/provider-core/server/adapterDriver";
 import {
   type BackgroundWorkReport,
   backgroundWorkNotification,
-} from "@rove-code/provider-core/server/notification";
-import * as ProviderContinuationRequests from "@rove-code/provider-core/server/ProviderContinuationRequests";
+} from "@getpaperplane/provider-core/server/notification";
+import * as ProviderContinuationRequests from "@getpaperplane/provider-core/server/ProviderContinuationRequests";
 import {
   makeSubagentChildThread,
   makeSubagentConversationArtifacts,
   subagentThreadTitle,
-} from "@rove-code/provider-core/server/subagentProjection";
+} from "@getpaperplane/provider-core/server/subagentProjection";
 
 export const CLAUDE_PROVIDER = ProviderDriverKind.make("claudeAgent");
 export const CLAUDE_AGENT_SDK_QUERY_PROTOCOL = "claude-agent-sdk.query" as const;
@@ -474,7 +474,7 @@ export interface ClaudeAgentSdkQueryRunnerShape {
 export class ClaudeAgentSdkQueryRunner extends Context.Service<
   ClaudeAgentSdkQueryRunner,
   ClaudeAgentSdkQueryRunnerShape
->()("@rove-code/server/orchestration-v2/Adapters/ClaudeAdapterV2/ClaudeAgentSdkQueryRunner") {}
+>()("@getpaperplane/server/orchestration-v2/Adapters/ClaudeAdapterV2/ClaudeAgentSdkQueryRunner") {}
 
 export interface ClaudeAgentSdkSessionForkInput {
   readonly sessionId: string;

@@ -1,4 +1,4 @@
-import { EnvironmentId, ProjectId, type AgentSessionProjectCandidate } from "@rove-code/contracts";
+import { EnvironmentId, ProjectId, type AgentSessionProjectCandidate } from "@getpaperplane/contracts";
 import { describe, expect, it } from "vite-plus/test";
 
 import {

@@ -2,7 +2,7 @@ import {
   AuthOrchestrationOperateScope,
   AuthProvidersManageScope,
   AuthOrchestrationReadScope,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { useEnvironmentScope, readEnvironmentScope } from "~/state/session";
 import type {
   AcpRegistryConfigurableProvider,
@@ -11,12 +11,12 @@ import type {
   ProjectId,
   ProviderInstanceId,
   ServerProvider,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   isAtomCommandInterrupted,
   squashAtomCommandFailure,
   type AtomCommandResult,
-} from "@rove-code/client-runtime/state/runtime";
+} from "@getpaperplane/client-runtime/state/runtime";
 import { useState } from "react";
 
 import { ensureLocalApi } from "../../localApi";

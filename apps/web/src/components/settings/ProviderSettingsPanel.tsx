@@ -4,15 +4,15 @@ import {
   AuthSettingsWriteScope,
   AuthProvidersManageScope,
   AuthOrchestrationReadScope,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { useEnvironmentScope, readEnvironmentScope } from "../../state/session";
 import { useAtomValue } from "@effect/atom-react";
-import { connectionStatusTitle } from "@rove-code/client-runtime/connection";
-import { safeErrorLogAttributes } from "@rove-code/client-runtime/errors";
+import { connectionStatusTitle } from "@getpaperplane/client-runtime/connection";
+import { safeErrorLogAttributes } from "@getpaperplane/client-runtime/errors";
 import {
   isAtomCommandInterrupted,
   squashAtomCommandFailure,
-} from "@rove-code/client-runtime/state/runtime";
+} from "@getpaperplane/client-runtime/state/runtime";
 import {
   defaultInstanceIdForDriver,
   type EnvironmentId,
@@ -25,12 +25,12 @@ import {
   resolveEnvironmentMachineKind,
   resolveProjectProviderInstanceEnabled,
   resolveProviderInstanceEnabled,
-} from "@rove-code/contracts";
-import { DEFAULT_UNIFIED_SETTINGS } from "@rove-code/contracts/settings";
+} from "@getpaperplane/contracts";
+import { DEFAULT_UNIFIED_SETTINGS } from "@getpaperplane/contracts/settings";
 import {
   getBackgroundActivityPresetSettings,
   resolveServerBackgroundActivitySettings,
-} from "@rove-code/shared/backgroundActivitySettings";
+} from "@getpaperplane/shared/backgroundActivitySettings";
 import * as Arr from "effect/Array";
 import * as Duration from "effect/Duration";
 import * as Equal from "effect/Equal";

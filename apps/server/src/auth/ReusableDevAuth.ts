@@ -1,6 +1,6 @@
 // @effect-diagnostics-next-line nodeBuiltinImport:off -- Effect's Crypto has no timingSafeEqual.
 import * as NodeCrypto from "node:crypto";
-import { AuthSessionId } from "@rove-code/contracts";
+import { AuthSessionId } from "@getpaperplane/contracts";
 import * as DateTime from "effect/DateTime";
 import * as Redacted from "effect/Redacted";
 

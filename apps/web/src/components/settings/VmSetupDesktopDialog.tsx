@@ -1,4 +1,4 @@
-import type { EnvironmentId } from "@rove-code/contracts";
+import type { EnvironmentId } from "@getpaperplane/contracts";
 import { Monitor } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 

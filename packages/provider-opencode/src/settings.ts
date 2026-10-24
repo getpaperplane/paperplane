@@ -9,7 +9,7 @@ import {
   makeBinaryPathSetting,
   makeProviderSettingsSchema,
   TrimmedString,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 

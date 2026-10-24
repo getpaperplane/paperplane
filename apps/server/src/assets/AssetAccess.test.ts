@@ -7,9 +7,9 @@ import {
   AssetPreviewTypeValidationError,
   ThreadId,
   TurnItemId,
-} from "@rove-code/contracts";
-import { PROJECT_FAVICON_FALLBACK_MARKER } from "@rove-code/shared/projectFavicon";
-import { MCP_APP_MAX_HTML_BYTES } from "@rove-code/shared/mcpApp";
+} from "@getpaperplane/contracts";
+import { PROJECT_FAVICON_FALLBACK_MARKER } from "@getpaperplane/shared/projectFavicon";
+import { MCP_APP_MAX_HTML_BYTES } from "@getpaperplane/shared/mcpApp";
 import { describe, expect, it } from "@effect/vitest";
 import * as Crypto from "effect/Crypto";
 import * as DateTime from "effect/DateTime";
@@ -34,10 +34,10 @@ import { assetFileResponse } from "../http.ts";
 import { ASSET_ROUTE_PREFIX, issueAssetUrl, readMcpAppHtml, resolveAsset } from "./AssetAccess.ts";
 import * as NativeAppIconResolver from "./NativeAppIconResolver.ts";
 import { openMediaFile } from "./MediaFile.ts";
-import { symlinksSupported } from "@rove-code/shared/testing/symlinks";
-import * as GitHubCredentials from "@rove-code/source-control-github/server/GitHubCredentials";
+import { symlinksSupported } from "@getpaperplane/shared/testing/symlinks";
+import * as GitHubCredentials from "@getpaperplane/source-control-github/server/GitHubCredentials";
 import { githubMediaResponse } from "./GitHubMediaFetch.ts";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 
 vi.mock("node:fs/promises", async (importOriginal) => {
   const actual = await importOriginal<typeof NodeFSP>();

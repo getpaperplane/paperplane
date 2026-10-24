@@ -70,8 +70,8 @@ jobs:
           # schema verification imports shared/contracts through scripts.
           run-install: |
             args:
-              - --filter=@rove-code/scripts...
-              - --filter=@rove-code/web...
+              - --filter=@getpaperplane/scripts...
+              - --filter=@getpaperplane/web...
 
       - name: Set hosted origin
         env:
@@ -96,7 +96,7 @@ jobs:
         env:
           APP_VERSION: ${{ inputs.version }}
         run: |
-          vp run --filter @rove-code/web build --mode hosted
+          vp run --filter @getpaperplane/web build --mode hosted
           node scripts/apply-web-brand-assets.ts --channel "$VITE_HOSTED_APP_CHANNEL"
           node scripts/check-cloudflare-web.mjs
 
@@ -138,7 +138,7 @@ jobs:
           # shared/roveProjectFile (and contracts), so this is not install-free.
           run-install: |
             args:
-              - --filter=@rove-code/scripts...
+              - --filter=@getpaperplane/scripts...
 
       - name: Deploy hosted app and content handler
         env:

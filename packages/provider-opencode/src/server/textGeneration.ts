@@ -1,12 +1,12 @@
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
-import { NonNegativeInt, TextGenerationError } from "@rove-code/contracts";
+import { NonNegativeInt, TextGenerationError } from "@getpaperplane/contracts";
 import type { OpenCodeSettings } from "../settings.ts";
-import { getModelSelectionStringOptionValue } from "@rove-code/shared/model";
+import { getModelSelectionStringOptionValue } from "@getpaperplane/shared/model";
 
-import * as ProviderHost from "@rove-code/provider-core/server/ProviderHost";
-import * as TextGenerationOperations from "@rove-code/provider-core/server/textGenerationOperations";
+import * as ProviderHost from "@getpaperplane/provider-core/server/ProviderHost";
+import * as TextGenerationOperations from "@getpaperplane/provider-core/server/textGenerationOperations";
 import * as OpenCodeRuntime from "./OpenCodeRuntime.ts";
 import * as OpenCodeServerOwner from "./OpenCodeServerOwner.ts";
 

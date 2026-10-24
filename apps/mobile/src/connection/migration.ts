@@ -5,13 +5,13 @@ import {
   RelayConnectionRegistration,
   RelayConnectionTarget,
   BearerConnectionTarget,
-} from "@rove-code/client-runtime/connection";
+} from "@getpaperplane/client-runtime/connection";
 import {
   type ConnectionCatalogDocument,
   EMPTY_CONNECTION_CATALOG_DOCUMENT,
   registerConnectionInCatalog,
-} from "@rove-code/client-runtime/platform";
-import { EnvironmentId } from "@rove-code/contracts";
+} from "@getpaperplane/client-runtime/platform";
+import { EnvironmentId } from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 

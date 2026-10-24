@@ -15,9 +15,9 @@
  *
  * @module BrowserImportSources
  */
-import type { BrowserImportSourceId, BrowserImportSourceProfile } from "@rove-code/contracts";
-import * as NodeSqliteClient from "@rove-code/shared/nodeSqliteClient";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+import type { BrowserImportSourceId, BrowserImportSourceProfile } from "@getpaperplane/contracts";
+import * as NodeSqliteClient from "@getpaperplane/shared/nodeSqliteClient";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";

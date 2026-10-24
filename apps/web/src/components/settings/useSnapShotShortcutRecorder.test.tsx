@@ -1,4 +1,4 @@
-import { DEFAULT_CLIENT_SETTINGS } from "@rove-code/contracts";
+import { DEFAULT_CLIENT_SETTINGS } from "@getpaperplane/contracts";
 import { afterEach, beforeEach, expect, it, vi } from "vite-plus/test";
 import { reactHookHarness as hooks } from "../../test/reactHookHarness";
 import { useSnapShotShortcutRecorder } from "./useSnapShotShortcutRecorder";

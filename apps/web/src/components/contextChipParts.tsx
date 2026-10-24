@@ -1,4 +1,4 @@
-import type { EnvironmentId, PullRequestContextMetadata } from "@rove-code/contracts";
+import type { EnvironmentId, PullRequestContextMetadata } from "@getpaperplane/contracts";
 import { CircleDashedIcon, FilmIcon, ImageIcon } from "lucide-react";
 import {
   useState,

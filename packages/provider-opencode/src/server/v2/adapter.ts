@@ -55,7 +55,7 @@ import {
   type ProviderInstanceId,
   type RunId,
   type RuntimeRequestId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import type * as Cause from "effect/Cause";
 import * as DateTime from "effect/DateTime";
 import * as Deferred from "effect/Deferred";
@@ -71,34 +71,34 @@ import * as Schema from "effect/Schema";
 import * as Semaphore from "effect/Semaphore";
 import * as Stream from "effect/Stream";
 
-import * as ProviderHost from "@rove-code/provider-core/server/ProviderHost";
+import * as ProviderHost from "@getpaperplane/provider-core/server/ProviderHost";
 import * as OpenCode2Client from "./OpenCode2Client.ts";
 import * as OpenCode2Server from "./OpenCode2Server.ts";
 import * as OpenCodeRuntime from "../OpenCodeRuntime.ts";
-import { ROVE_MCP_SERVER_NAME } from "@rove-code/shared/roveMcp";
-import * as McpProviderSessions from "@rove-code/provider-core/server/McpProviderSessions";
-import { buildRuntimeInstructions } from "@rove-code/provider-core/server/runtimeInstructions";
-import { roveOrchestrationSystemPrompt } from "@rove-code/provider-core/server/orchestrationInstructions";
-import { SKILL_MENTION_PATTERN } from "@rove-code/shared/composerInlineTokens";
-import * as KeyedLock from "@rove-code/shared/KeyedLock";
-import { getModelSelectionStringOptionValue, modelSelectionsEqual } from "@rove-code/shared/model";
-import { causeErrorTag } from "@rove-code/shared/observability";
+import { ROVE_MCP_SERVER_NAME } from "@getpaperplane/shared/roveMcp";
+import * as McpProviderSessions from "@getpaperplane/provider-core/server/McpProviderSessions";
+import { buildRuntimeInstructions } from "@getpaperplane/provider-core/server/runtimeInstructions";
+import { roveOrchestrationSystemPrompt } from "@getpaperplane/provider-core/server/orchestrationInstructions";
+import { SKILL_MENTION_PATTERN } from "@getpaperplane/shared/composerInlineTokens";
+import * as KeyedLock from "@getpaperplane/shared/KeyedLock";
+import { getModelSelectionStringOptionValue, modelSelectionsEqual } from "@getpaperplane/shared/model";
+import { causeErrorTag } from "@getpaperplane/shared/observability";
 
-import { providerMessageTextWithAttachmentPaths } from "@rove-code/provider-core/server/attachmentPrompt";
-import * as IdAllocator from "@rove-code/provider-core/server/IdAllocator";
+import { providerMessageTextWithAttachmentPaths } from "@getpaperplane/provider-core/server/attachmentPrompt";
+import * as IdAllocator from "@getpaperplane/provider-core/server/IdAllocator";
 import {
   backgroundWorkNotification,
   type BackgroundWorkReport,
-} from "@rove-code/provider-core/server/notification";
-import * as ProviderContinuationRequests from "@rove-code/provider-core/server/ProviderContinuationRequests";
-import { makeProviderFailure } from "@rove-code/provider-core/server/failure";
+} from "@getpaperplane/provider-core/server/notification";
+import * as ProviderContinuationRequests from "@getpaperplane/provider-core/server/ProviderContinuationRequests";
+import { makeProviderFailure } from "@getpaperplane/provider-core/server/failure";
 import {
   makeSubagentChildThread,
   makeSubagentConversationArtifacts,
   subagentThreadTitle,
-} from "@rove-code/provider-core/server/subagentProjection";
-import * as ProviderAdapter from "@rove-code/provider-core/server/ProviderAdapter";
-import { turnScopedSelectionTransition } from "@rove-code/provider-core/server/selectionTransition";
+} from "@getpaperplane/provider-core/server/subagentProjection";
+import * as ProviderAdapter from "@getpaperplane/provider-core/server/ProviderAdapter";
+import { turnScopedSelectionTransition } from "@getpaperplane/provider-core/server/selectionTransition";
 import { OPENCODE_PROVIDER, openCodePermissionRequestKind } from "../adapter.ts";
 import { openCodeToolTurnItem } from "../toolItems.ts";
 

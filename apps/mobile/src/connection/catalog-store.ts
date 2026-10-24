@@ -2,13 +2,13 @@ import {
   ConnectionCatalogDocument,
   type ConnectionCatalogDocument as ConnectionCatalogDocumentType,
   EMPTY_CONNECTION_CATALOG_DOCUMENT,
-} from "@rove-code/client-runtime/platform";
-import { ConnectionTransientError } from "@rove-code/client-runtime/connection";
+} from "@getpaperplane/client-runtime/platform";
+import { ConnectionTransientError } from "@getpaperplane/client-runtime/connection";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
 import * as Ref from "effect/Ref";
 import * as Schema from "effect/Schema";
-import { decodeMigratedRoveJson } from "@rove-code/shared/roveMigration";
+import { decodeMigratedRoveJson } from "@getpaperplane/shared/roveMigration";
 import * as Semaphore from "effect/Semaphore";
 
 import * as MobileSecureStorage from "../persistence/mobile-secure-storage";

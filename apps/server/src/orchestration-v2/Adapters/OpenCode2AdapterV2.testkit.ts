@@ -11,7 +11,7 @@ import {
   ProviderSessionId,
   ThreadId,
   type ProviderReplayTranscript,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Schema from "effect/Schema";
@@ -20,19 +20,19 @@ import * as HttpClientError from "effect/http/HttpClientError";
 import * as HttpClientResponse from "effect/http/HttpClientResponse";
 import * as UrlParams from "effect/http/UrlParams";
 
-import * as OpenCode2Client from "@rove-code/provider-opencode/server/v2/OpenCode2Client";
-import * as OpenCode2Server from "@rove-code/provider-opencode/server/v2/OpenCode2Server";
-import * as IdAllocator from "@rove-code/provider-core/server/IdAllocator";
+import * as OpenCode2Client from "@getpaperplane/provider-opencode/server/v2/OpenCode2Client";
+import * as OpenCode2Server from "@getpaperplane/provider-opencode/server/v2/OpenCode2Server";
+import * as IdAllocator from "@getpaperplane/provider-core/server/IdAllocator";
 import * as ProviderAdapterRegistry from "../ProviderAdapterRegistry.ts";
-import type { ProviderReplayGate } from "@rove-code/provider-testing/replayGate";
+import type { ProviderReplayGate } from "@getpaperplane/provider-testing/replayGate";
 import type { OrchestratorV2ProviderReplayHarness } from "../testkit/ProviderReplayHarness.ts";
-import * as TestProviderHost from "@rove-code/provider-testing/TestProviderHost";
-import { OPENCODE_PROVIDER } from "@rove-code/provider-opencode/testing";
+import * as TestProviderHost from "@getpaperplane/provider-testing/TestProviderHost";
+import { OPENCODE_PROVIDER } from "@getpaperplane/provider-opencode/testing";
 import {
   OpenCodeReplayController,
   OpenCodeReplayTranscriptDecodeError,
 } from "./OpenCodeAdapterV2.testkit.ts";
-import * as OpenCode2Adapter from "@rove-code/provider-opencode/server/v2/adapter";
+import * as OpenCode2Adapter from "@getpaperplane/provider-opencode/server/v2/adapter";
 
 export const OPENCODE2_HTTP_PROTOCOL = "opencode2-http.sse" as const;
 const BASE_URL = "http://opencode2.replay";

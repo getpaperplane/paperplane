@@ -1,4 +1,4 @@
-import type { DesktopUpdateActionResult, DesktopUpdateState } from "@rove-code/contracts";
+import type { DesktopUpdateActionResult, DesktopUpdateState } from "@getpaperplane/contracts";
 
 export type DesktopUpdateButtonAction = "download" | "install" | "none";
 

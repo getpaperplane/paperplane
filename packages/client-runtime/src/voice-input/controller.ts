@@ -1,4 +1,4 @@
-import { replaceTextRange } from "@rove-code/shared/composerTrigger";
+import { replaceTextRange } from "@getpaperplane/shared/composerTrigger";
 
 import type { PreparedVoiceTranscription, VoiceTranscriber } from "./transcription.ts";
 

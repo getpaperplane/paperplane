@@ -1,6 +1,6 @@
-import type { ProviderDriverKind, ProviderReplayTranscript } from "@rove-code/contracts";
+import type { ProviderDriverKind, ProviderReplayTranscript } from "@getpaperplane/contracts";
 
-import { buildRuntimeInstructions } from "@rove-code/provider-core/server/runtimeInstructions";
+import { buildRuntimeInstructions } from "@getpaperplane/provider-core/server/runtimeInstructions";
 
 /** Adds current runtime context to legacy prompt expectations, keeping outbound matching exact. */
 export function materializeReplayTranscriptRuntimeInstructions(

@@ -1,4 +1,4 @@
-import * as HostProcess from "@rove-code/shared/HostProcess";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 import {
   listLoginShellCandidates,
   mergePathEntries,
@@ -6,7 +6,7 @@ import {
   readPathFromLaunchctl,
   resolveWindowsEnvironment,
   setWindowsPath,
-} from "@rove-code/shared/shell";
+} from "@getpaperplane/shared/shell";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";

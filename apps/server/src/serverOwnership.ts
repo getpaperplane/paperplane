@@ -3,8 +3,8 @@ import * as NodeFS from "node:fs";
 import * as NodePath from "node:path";
 import * as NodeSqlite from "node:sqlite";
 
-import { SERVER_EXIT_CODE_STATE_DIR_OWNED } from "@rove-code/contracts";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+import { SERVER_EXIT_CODE_STATE_DIR_OWNED } from "@getpaperplane/contracts";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 import * as Crypto from "effect/Crypto";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";

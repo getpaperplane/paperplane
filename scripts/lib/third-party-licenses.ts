@@ -120,7 +120,7 @@ const NOTICE_TEXT_EXTENSIONS = new Set([
   ".txt",
   ".unlicense",
 ]);
-const FIRST_PARTY_PACKAGE_PREFIX = "@rove-code/";
+const FIRST_PARTY_PACKAGE_PREFIX = "@getpaperplane/";
 
 function isNoticeTextFile(fileName: string): boolean {
   return (

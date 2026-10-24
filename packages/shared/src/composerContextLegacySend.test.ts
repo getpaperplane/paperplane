@@ -1,4 +1,4 @@
-import { ComposerContextId, type ComposerContextRecord } from "@rove-code/contracts";
+import { ComposerContextId, type ComposerContextRecord } from "@getpaperplane/contracts";
 import { describe, expect, it } from "vite-plus/test";
 
 import { upgradeLegacyContextMessage } from "./composerContextLegacy.ts";

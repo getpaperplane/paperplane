@@ -1,6 +1,6 @@
-import { computerDesktopViewerUrl } from "@rove-code/client-runtime/state/computer-use";
-import desktopStreamScript from "@rove-code/mobile-desktop-stream";
-import type { EnvironmentId } from "@rove-code/contracts";
+import { computerDesktopViewerUrl } from "@getpaperplane/client-runtime/state/computer-use";
+import desktopStreamScript from "@getpaperplane/mobile-desktop-stream";
+import type { EnvironmentId } from "@getpaperplane/contracts";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Pressable, View } from "react-native";
 

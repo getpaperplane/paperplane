@@ -1,6 +1,6 @@
 import * as NodeOS from "node:os";
-import type { HostResourcesSnapshot } from "@rove-code/contracts";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+import type { HostResourcesSnapshot } from "@getpaperplane/contracts";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 import * as Cache from "effect/Cache";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
@@ -18,7 +18,7 @@ export class HostResources extends Context.Service<
       readonly availableMemoryBytes: number;
     }>;
   }
->()("@rove-code/server/resourceTelemetry/HostResources") {}
+>()("@getpaperplane/server/resourceTelemetry/HostResources") {}
 
 function readCpu() {
   const cpus = NodeOS.cpus();

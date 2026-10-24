@@ -5,7 +5,7 @@ import type {
   OrchestrationV2TurnItem,
   ProviderInstanceId,
   ServerProvider,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 
 /**
  * The subset of a projection run that handoff rows read. Kept minimal so the

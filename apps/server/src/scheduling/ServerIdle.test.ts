@@ -13,7 +13,7 @@ import {
   ThreadId,
   OrchestrationV2AppThread,
   type PullRequestSummary,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";

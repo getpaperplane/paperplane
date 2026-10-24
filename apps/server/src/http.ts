@@ -3,10 +3,10 @@ import {
   AuthOrchestrationOperateScope,
   AuthOrchestrationReadScope,
   EnvironmentHttpApi,
-} from "@rove-code/contracts";
-import { isDevProxiedPath } from "@rove-code/shared/devProxy";
-import { injectMcpAppCookieBootstrap, injectMcpAppThemeBootstrap } from "@rove-code/shared/mcpApp";
-import { decodeOtlpTraceRecords } from "@rove-code/shared/observability";
+} from "@getpaperplane/contracts";
+import { isDevProxiedPath } from "@getpaperplane/shared/devProxy";
+import { injectMcpAppCookieBootstrap, injectMcpAppThemeBootstrap } from "@getpaperplane/shared/mcpApp";
+import { decodeOtlpTraceRecords } from "@getpaperplane/shared/observability";
 import * as Data from "effect/Data";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";

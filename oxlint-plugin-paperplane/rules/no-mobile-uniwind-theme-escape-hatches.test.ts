@@ -2,15 +2,15 @@ import { assert, describe, expect } from "@effect/vitest";
 
 import { createOxlintRuleHarness } from "../test/utils.ts";
 
-const guardedMobileFile = createOxlintRuleHarness("rove/no-mobile-uniwind-theme-escape-hatches", {
+const guardedMobileFile = createOxlintRuleHarness("paperplane/no-mobile-uniwind-theme-escape-hatches", {
   filename: "apps/mobile/src/features/settings/NewThemeSurface.tsx",
 });
-const reviewedInteropFile = createOxlintRuleHarness("rove/no-mobile-uniwind-theme-escape-hatches", {
+const reviewedInteropFile = createOxlintRuleHarness("paperplane/no-mobile-uniwind-theme-escape-hatches", {
   filename: "apps/mobile/src/features/home/HomeHeader.tsx",
   ruleOptions: [{ allowUniwindTheme: true }],
 });
 
-describe("rove/no-mobile-uniwind-theme-escape-hatches", () => {
+describe("paperplane/no-mobile-uniwind-theme-escape-hatches", () => {
   guardedMobileFile.valid(
     "allows semantic mobile theme classes",
     `const surface = <View className="bg-surface text-foreground" />;`,

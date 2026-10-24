@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { AuthSourceControlWriteScope, EnvironmentId, ThreadId } from "@rove-code/contracts";
+import { AuthSourceControlWriteScope, EnvironmentId, ThreadId } from "@getpaperplane/contracts";
 import { AsyncResult } from "effect/reactivity";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 

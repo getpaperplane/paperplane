@@ -4,8 +4,8 @@ import {
   EnvironmentHttpForbiddenError,
   EnvironmentHttpInternalServerError,
   EnvironmentHttpUnauthorizedError,
-} from "@rove-code/contracts";
-import { makeEnvironmentHttpApiClient } from "@rove-code/client-runtime/rpc";
+} from "@getpaperplane/contracts";
+import { makeEnvironmentHttpApiClient } from "@getpaperplane/client-runtime/rpc";
 import {
   RelayCloudEnvironmentHealthProofPayload,
   RelayEnvironmentHealthResponse,
@@ -17,7 +17,7 @@ import {
   type RelayEnvironmentConnectResponse,
   type RelayEnvironmentStatusResponse,
   type RelayManagedEndpoint,
-} from "@rove-code/contracts/relay";
+} from "@getpaperplane/contracts/relay";
 import {
   normalizeRelayIssuer,
   RELAY_HEALTH_REQUEST_TYP,
@@ -26,8 +26,8 @@ import {
   RELAY_MINT_RESPONSE_TYP,
   signRelayJwt,
   verifyRelayJwt,
-} from "@rove-code/shared/relayJwt";
-import { stableStringify } from "@rove-code/shared/relaySigning";
+} from "@getpaperplane/shared/relayJwt";
+import { stableStringify } from "@getpaperplane/shared/relaySigning";
 import * as Context from "effect/Context";
 import * as Crypto from "effect/Crypto";
 import * as DateTime from "effect/DateTime";

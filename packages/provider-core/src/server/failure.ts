@@ -9,7 +9,7 @@ import type {
   ProviderTurnId,
   RunId,
   ThreadId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as DateTime from "effect/DateTime";
 import * as Cause from "effect/Cause";
 import * as Option from "effect/Option";

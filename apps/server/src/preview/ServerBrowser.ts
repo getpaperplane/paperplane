@@ -41,10 +41,10 @@ import {
   ThreadId,
   SERVER_BROWSER_AUTOMATION_CLIENT_ID,
   type PreviewAppearancePreference,
-} from "@rove-code/contracts";
-import * as HostProcess from "@rove-code/shared/HostProcess";
-import { normalizePreviewUrl } from "@rove-code/shared/preview";
-import { resolvePreviewViewport } from "@rove-code/shared/previewViewport";
+} from "@getpaperplane/contracts";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
+import { normalizePreviewUrl } from "@getpaperplane/shared/preview";
+import { resolvePreviewViewport } from "@getpaperplane/shared/previewViewport";
 import * as NodeCrypto from "node:crypto";
 import * as NodeFSP from "node:fs/promises";
 import * as NodePath from "node:path";
@@ -252,7 +252,7 @@ export class ServerBrowser extends Context.Service<
      */
     readonly reportProfiles: (input: PreviewReportProfilesInput) => Effect.Effect<void>;
   }
->()("@rove-code/server/preview/ServerBrowser") {}
+>()("@getpaperplane/server/preview/ServerBrowser") {}
 
 interface ViewerState {
   readonly id: string;

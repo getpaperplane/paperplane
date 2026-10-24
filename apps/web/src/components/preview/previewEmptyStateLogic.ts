@@ -1,4 +1,4 @@
-import type { PreviewSessionSnapshot, ProjectScript } from "@rove-code/contracts";
+import type { PreviewSessionSnapshot, ProjectScript } from "@getpaperplane/contracts";
 
 export function shouldShowPreviewEmptyState(snapshot: PreviewSessionSnapshot | null): boolean {
   return snapshot === null || snapshot.navStatus._tag === "Idle";

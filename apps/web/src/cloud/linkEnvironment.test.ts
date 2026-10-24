@@ -4,8 +4,8 @@ import {
   EnvironmentId,
   type RelayClientInstallProgressEvent,
   WS_METHODS,
-} from "@rove-code/contracts";
-import { RelayWebClientId } from "@rove-code/contracts/relay";
+} from "@getpaperplane/contracts";
+import { RelayWebClientId } from "@getpaperplane/contracts/relay";
 import { describe, expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -19,11 +19,11 @@ import {
   type PreparedConnection,
   PrimaryConnectionTarget,
   EnvironmentSupervisor,
-} from "@rove-code/client-runtime/connection";
-import { type RpcSession } from "@rove-code/client-runtime/rpc";
-import { EnvironmentRegistry } from "@rove-code/client-runtime/connection";
-import { ManagedRelay } from "@rove-code/client-runtime/relay";
-import { layerRemoteHttpClient } from "@rove-code/client-runtime/rpc";
+} from "@getpaperplane/client-runtime/connection";
+import { type RpcSession } from "@getpaperplane/client-runtime/rpc";
+import { EnvironmentRegistry } from "@getpaperplane/client-runtime/connection";
+import { ManagedRelay } from "@getpaperplane/client-runtime/relay";
+import { layerRemoteHttpClient } from "@getpaperplane/client-runtime/rpc";
 import { __resetDesktopPrimaryAuthForTests } from "../environments/primary/desktopAuth";
 
 import {

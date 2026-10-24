@@ -2,7 +2,7 @@ import {
   type SourceControlDiscoveryResult,
   type VcsDiscoveryItem,
   type VcsDriverKind,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -13,7 +13,7 @@ import * as VcsProcess from "../vcs/VcsProcess.ts";
 import {
   detailFromCause,
   firstNonEmptyLine,
-} from "@rove-code/source-control-core/server/discovery";
+} from "@getpaperplane/source-control-core/server/discovery";
 import * as SourceControlProviderRegistry from "./SourceControlProviderRegistry.ts";
 
 interface DiscoveryProbe {
@@ -65,7 +65,7 @@ export class SourceControlDiscovery extends Context.Service<
   {
     readonly discover: Effect.Effect<SourceControlDiscoveryResult>;
   }
->()("@rove-code/server/sourceControl/SourceControlDiscovery") {}
+>()("@getpaperplane/server/sourceControl/SourceControlDiscovery") {}
 
 /** @public Service construction is part of the canonical Effect module API. */
 export const make = Effect.gen(function* () {

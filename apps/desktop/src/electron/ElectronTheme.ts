@@ -1,4 +1,4 @@
-import { DesktopThemeSchema, type DesktopTheme } from "@rove-code/contracts";
+import { DesktopThemeSchema, type DesktopTheme } from "@getpaperplane/contracts";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -26,7 +26,7 @@ export class ElectronTheme extends Context.Service<
     readonly setSource: (theme: DesktopTheme) => Effect.Effect<void, ElectronThemeSetSourceError>;
     readonly onUpdated: (listener: () => void) => Effect.Effect<void, never, Scope.Scope>;
   }
->()("@rove-code/desktop/electron/ElectronTheme") {}
+>()("@getpaperplane/desktop/electron/ElectronTheme") {}
 
 /** @public Service construction is part of the canonical Effect module API. */
 export const make = ElectronTheme.of({

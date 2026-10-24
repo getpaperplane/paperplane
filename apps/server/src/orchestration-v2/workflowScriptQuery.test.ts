@@ -3,12 +3,12 @@ import * as NodeFS from "node:fs";
 import * as NodeOS from "node:os";
 import * as NodePath from "node:path";
 import * as NodeChildProcess from "node:child_process";
-import { OrchestrationWorkflowFileError } from "@rove-code/contracts";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+import { OrchestrationWorkflowFileError } from "@getpaperplane/contracts";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 import { it as effectIt } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import { afterAll, assert, describe } from "vite-plus/test";
-import { symlinksSupported } from "@rove-code/shared/testing/symlinks";
+import { symlinksSupported } from "@getpaperplane/shared/testing/symlinks";
 import { readWorkflowScript } from "./workflowScriptQuery.ts";
 
 const root = NodePath.join(NodeOS.homedir(), ".claude", "projects", "__wf_script_test__");

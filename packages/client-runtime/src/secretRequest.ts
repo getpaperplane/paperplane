@@ -1,4 +1,4 @@
-import type { OrchestrationV2TurnItem, SecretRequestAnswerInput } from "@rove-code/contracts";
+import type { OrchestrationV2TurnItem, SecretRequestAnswerInput } from "@getpaperplane/contracts";
 
 export type SecretRequestItem = Extract<
   OrchestrationV2TurnItem,

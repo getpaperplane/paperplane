@@ -3,7 +3,7 @@ import {
   latestUnheldRun,
   threadErrorSummary,
   usageLimitRunPresentedAsLatest,
-} from "@rove-code/shared/orchestrationV2ThreadError";
+} from "@getpaperplane/shared/orchestrationV2ThreadError";
 import {
   isOrchestrationV2WorkActive,
   isProviderNativeSubagentThread,
@@ -16,16 +16,16 @@ import {
   type OrchestrationV2ThreadProjection,
   orchestrationV2RunWorkStartedAt,
   type ThreadId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   backgroundWorkHoldsCompletion,
   derivePendingBackgroundWork,
-} from "@rove-code/shared/orchestrationV2PendingBackgroundWork";
+} from "@getpaperplane/shared/orchestrationV2PendingBackgroundWork";
 import {
   getProviderOptionCurrentLabel,
   getProviderOptionDescriptors,
-} from "@rove-code/shared/model";
-import { formatDuration } from "@rove-code/shared/orchestrationTiming";
+} from "@getpaperplane/shared/model";
+import { formatDuration } from "@getpaperplane/shared/orchestrationTiming";
 import * as DateTime from "effect/DateTime";
 
 import {

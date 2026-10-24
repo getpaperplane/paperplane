@@ -52,7 +52,7 @@ import {
   type PiSessionResumeOutcome,
 } from "./PiAdapter.ts";
 
-import type { McpProviderSessionConfig } from "@rove-code/provider-core/server/mcpSession";
+import type { McpProviderSessionConfig } from "@getpaperplane/provider-core/server/mcpSession";
 import { createPiRoveTools } from "./PiRoveTools.ts";
 import type { PiWorkloads } from "./PiWorkloads.ts";
 import { createPiExtensionUI } from "./PiExtensionUI.ts";
@@ -60,8 +60,8 @@ import { disposePiResource } from "./PiLifecycle.ts";
 import {
   ROVE_CODE_ORCHESTRATION_INSTRUCTIONS,
   ROVE_CODE_BROWSER_TOOL_INSTRUCTIONS,
-} from "@rove-code/provider-core/server/orchestrationInstructions";
-import { buildRuntimeInstructions } from "@rove-code/provider-core/server/runtimeInstructions";
+} from "@getpaperplane/provider-core/server/orchestrationInstructions";
+import { buildRuntimeInstructions } from "@getpaperplane/provider-core/server/runtimeInstructions";
 import { readPiSubscriptionStatus } from "../PiUsageLimits.ts";
 import type { UsageLimitStatus } from "../usageLimitStatus.ts";
 import {
@@ -70,7 +70,7 @@ import {
   usageLimitFromHttpError,
 } from "../usageLimitError.ts";
 import * as NodeOS from "node:os";
-import { expandHomePath } from "@rove-code/provider-core/server/pathExpansion";
+import { expandHomePath } from "@getpaperplane/provider-core/server/pathExpansion";
 
 /**
  * Adapt an SDK `AgentSession` to the narrow `PiSessionLike` surface the

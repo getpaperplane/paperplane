@@ -5,7 +5,7 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
-import { SandboxActionInput, SandboxCreateInput } from "@rove-code/contracts";
+import { SandboxActionInput, SandboxCreateInput } from "@getpaperplane/contracts";
 import { ServerSecretStore } from "../auth/ServerSecretStore.ts";
 import { makeSandboxManager } from "./SandboxManager.ts";
 import {

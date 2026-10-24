@@ -5,7 +5,7 @@ import {
   type EnvironmentId,
   type ServerProvider,
   type ServerProviderModel,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { PlusIcon, XIcon } from "lucide-react";
 
 import { cn } from "../../lib/utils";
@@ -16,7 +16,7 @@ import { SecretInput } from "./SecretInput";
 import { Select, SelectItem, SelectPopup, SelectTrigger, SelectValue } from "../ui/select";
 import { Switch } from "../ui/switch";
 import { Textarea } from "../ui/textarea";
-import type { ProviderClientDefinition } from "@rove-code/provider-core/client";
+import type { ProviderClientDefinition } from "@getpaperplane/provider-core/client";
 
 /** What the form reads from a definition: an agent provider's, or a source control host's. */
 export type SettingsFormDefinition = Pick<ProviderClientDefinition, "settingsSchema"> & {
@@ -28,7 +28,7 @@ import {
   readProviderConfigBoolean,
   readProviderConfigString,
   type ProviderSettingsFieldModel,
-} from "@rove-code/client-runtime/state/provider-instance-settings";
+} from "@getpaperplane/client-runtime/state/provider-instance-settings";
 import { PiModelSettings } from "./PiModelSettings";
 import { SettingsRow } from "./settingsLayout";
 

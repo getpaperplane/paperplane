@@ -15,7 +15,7 @@ import * as Stream from "effect/Stream";
 import { HttpClient, HttpClientResponse, HttpServer, type HttpClientRequest } from "effect/http";
 import * as NetAddress from "effect/net/NetAddress";
 
-import { DESKTOP_UPDATE_RESTART_MARKER_FILE, EnvironmentId } from "@rove-code/contracts";
+import { DESKTOP_UPDATE_RESTART_MARKER_FILE, EnvironmentId } from "@getpaperplane/contracts";
 import * as EnvironmentAuth from "../auth/EnvironmentAuth.ts";
 import * as ServerSecretStore from "../auth/ServerSecretStore.ts";
 import * as ServerConfigModule from "../config.ts";
@@ -30,7 +30,7 @@ import * as ServerEnvironment from "../environment/ServerEnvironment.ts";
 import * as AgentAwarenessRelay from "../relay/AgentAwarenessRelay.ts";
 import { CLOUD_CLI_DESIRED_LINK_SECRET } from "./CliState.ts";
 import * as CliTokenManager from "./CliTokenManager.ts";
-import { RelayManagedEndpointRecoveryRegistrationRequest } from "@rove-code/contracts/relay";
+import { RelayManagedEndpointRecoveryRegistrationRequest } from "@getpaperplane/contracts/relay";
 import {
   CLOUD_ENDPOINT_CONFIRMED_ORIGIN,
   CLOUD_ENDPOINT_RUNTIME_CONFIG,

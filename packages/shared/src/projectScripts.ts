@@ -1,4 +1,4 @@
-import type { ProjectId, ProjectScript, ServerSettings } from "@rove-code/contracts";
+import type { ProjectId, ProjectScript, ServerSettings } from "@getpaperplane/contracts";
 
 type ProjectScriptSettings = Pick<
   ServerSettings,

@@ -3,9 +3,9 @@
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, expect, it, vi } from "vite-plus/test";
-import { htmlRenderTheme, HTML_RENDER_DEFAULT_FONTS } from "@rove-code/shared/htmlRender";
-import { ROVE_CODE_DARK_THEME_COLORS } from "@rove-code/shared/themePalettes";
-import { EnvironmentId, ThreadId } from "@rove-code/contracts";
+import { htmlRenderTheme, HTML_RENDER_DEFAULT_FONTS } from "@getpaperplane/shared/htmlRender";
+import { ROVE_CODE_DARK_THEME_COLORS } from "@getpaperplane/shared/themePalettes";
+import { EnvironmentId, ThreadId } from "@getpaperplane/contracts";
 
 import { HtmlRenderDialog } from "./HtmlRenderDialog";
 import { HtmlRenderFrame } from "./HtmlRenderFrame";

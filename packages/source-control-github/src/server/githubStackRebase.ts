@@ -5,7 +5,7 @@ import * as Schema from "effect/Schema";
 import * as Base64 from "effect/encoding/Base64";
 
 import * as GitHubRest from "./GitHubRest.ts";
-import * as SourceControlHost from "@rove-code/source-control-core/server/SourceControlHost";
+import * as SourceControlHost from "@getpaperplane/source-control-core/server/SourceControlHost";
 
 /** One open layer of a stack, bottom to top, with the head the reader reviewed. */
 export interface CascadeLayer {

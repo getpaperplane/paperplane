@@ -3,7 +3,7 @@ import {
   ProjectId,
   type PullRequestDiffResult,
   type PullRequestListEntry,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { useAtomRefresh } from "@effect/atom-react";
 import { useCallback, useMemo, useState } from "react";
 

@@ -5,7 +5,7 @@ import * as Layer from "effect/Layer";
 import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
 import { ChildProcessSpawner } from "effect/process";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 
 import * as ServerConfig from "../config.ts";
 import * as NativeAppIconResolver from "./NativeAppIconResolver.ts";

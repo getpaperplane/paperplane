@@ -1,9 +1,9 @@
-import { isTransportConnectionErrorMessage } from "@rove-code/client-runtime/errors";
+import { isTransportConnectionErrorMessage } from "@getpaperplane/client-runtime/errors";
 import {
   clampFileAttachmentUploadBytes,
   fileAttachmentTooLargeMessage,
-} from "@rove-code/client-runtime/state/attachments";
-import type { EnvironmentShellStatus } from "@rove-code/client-runtime/state/shell";
+} from "@getpaperplane/client-runtime/state/attachments";
+import type { EnvironmentShellStatus } from "@getpaperplane/client-runtime/state/shell";
 import {
   CommandId,
   EnvironmentId,
@@ -20,11 +20,11 @@ import {
   type ProviderInteractionMode as ProviderInteractionModeType,
   type RuntimeMode as RuntimeModeType,
   type ServerProvider,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Schema from "effect/Schema";
 
 import { DraftComposerAttachmentSchema } from "../lib/composer-image-schema";
-import type { ComposerDispatchMode } from "@rove-code/client-runtime/state/composer-dispatch";
+import type { ComposerDispatchMode } from "@getpaperplane/client-runtime/state/composer-dispatch";
 import type { DraftComposerAttachment } from "../lib/composerImages";
 import { scopedThreadKey } from "../lib/scopedEntities";
 import { resolveProviderInteractionMode } from "./legacy-plan-mode";

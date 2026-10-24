@@ -1,4 +1,4 @@
-import { ProjectId, ThreadId } from "@rove-code/contracts";
+import { ProjectId, ThreadId } from "@getpaperplane/contracts";
 import { describe, expect, it } from "@effect/vitest";
 import {
   planThreadPullRequestMutation,

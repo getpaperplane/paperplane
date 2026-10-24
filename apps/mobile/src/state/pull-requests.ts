@@ -1,7 +1,7 @@
 import {
   createPullRequestEnvironmentAtoms,
   createPullRequestStackAtomFamily,
-} from "@rove-code/client-runtime/state/pull-requests";
+} from "@getpaperplane/client-runtime/state/pull-requests";
 import { connectionAtomRuntime } from "../connection/runtime";
 
 export const composerPullRequests = createPullRequestEnvironmentAtoms(connectionAtomRuntime);

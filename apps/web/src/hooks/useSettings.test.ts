@@ -2,8 +2,8 @@ import {
   DEFAULT_SERVER_SETTINGS,
   ProviderDriverKind,
   ProviderInstanceId,
-} from "@rove-code/contracts";
-import { DEFAULT_CLIENT_SETTINGS, type ClientSettings } from "@rove-code/contracts/settings";
+} from "@getpaperplane/contracts";
+import { DEFAULT_CLIENT_SETTINGS, type ClientSettings } from "@getpaperplane/contracts/settings";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 const persistenceMocks = vi.hoisted(() => ({
@@ -26,7 +26,7 @@ import {
   prepareModelPreferencesPatch,
   resolveEnvironmentIdentificationMode,
 } from "./useSettings";
-import { applyServerSettingsPatch } from "@rove-code/shared/serverSettings";
+import { applyServerSettingsPatch } from "@getpaperplane/shared/serverSettings";
 
 beforeEach(() => {
   persistenceMocks.getClientSettings.mockReset().mockResolvedValue(null);

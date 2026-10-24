@@ -3,7 +3,7 @@ import { useAtomValue } from "@effect/atom-react";
 import {
   AuthOrchestrationOperateScope,
   resolveProjectProviderInstanceEnabled,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { readEnvironmentScope } from "../../state/session";
 import type {
   EnvironmentId,
@@ -12,18 +12,18 @@ import type {
   ScheduledTaskUpsertInput,
   ScheduledTaskWebhookDeliveryId,
   ScheduledTaskWebhookDeliverySummary,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   MAX_WEBHOOK_DELIVERY_AGE_MINUTES,
   resolveEnvironmentMachineKind,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import type { MenuAction } from "@react-native-menu/menu";
 import { DateTimePicker } from "@expo/ui/community/datetime-picker";
 import {
   isAtomCommandInterrupted,
   squashAtomCommandFailure,
   type AtomCommandResult,
-} from "@rove-code/client-runtime/state/runtime";
+} from "@getpaperplane/client-runtime/state/runtime";
 import {
   DEFAULT_WEBHOOK_PROMPT,
   WEBHOOK_DELIVERY_OUTCOME_LABELS,
@@ -32,7 +32,7 @@ import {
   webhookDeliveryOutcomeTone,
   webhookSignatureForUpsert,
   webhookSignatureIncomplete,
-} from "@rove-code/client-runtime/scheduled-task-webhook";
+} from "@getpaperplane/client-runtime/scheduled-task-webhook";
 import {
   useCallback,
   useEffect,
@@ -59,7 +59,7 @@ import type { ComposerEditorSelection } from "../../components/ComposerEditor";
 import { ScreenScrollView as ScrollView } from "../../components/ui/ScreenScrollView";
 import { SegmentedControl } from "../../components/ui/SegmentedControl";
 import { ThemedSwitch } from "../../components/ui/ThemedSwitch";
-import { webhookAddress } from "@rove-code/client-runtime/webhook-address";
+import { webhookAddress } from "@getpaperplane/client-runtime/webhook-address";
 import { tryCopyTextWithHaptic } from "../../lib/copyTextWithHaptic";
 import { usePreparedConnection } from "../../state/session";
 import { buildModelOptions } from "../../lib/modelOptions";

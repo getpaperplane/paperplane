@@ -7,7 +7,7 @@ import {
   type RuntimeMode,
   type ThreadId,
   type OrchestrationV2ThreadShell,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Crypto from "effect/Crypto";
 import * as Effect from "effect/Effect";
 

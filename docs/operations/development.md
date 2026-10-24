@@ -118,7 +118,7 @@ Marketing keeps `astro check` for Astro files.
 On Linux with a systemd user manager and `flock`, run verification inside a shared resource budget:
 
 ```sh
-vp run guarded -- vp run --filter @rove-code/server typecheck
+vp run guarded -- vp run --filter @getpaperplane/server typecheck
 ```
 
 Guarded commands default to a shared 2048 MiB memory ceiling across worktrees and environments for the same OS user, capped by the host's aggregate Paperplane budget. Explicit limits are hard caps without swap; CPU is not capped. In auto mode, Paperplane reserves RAM for the system and server and lets agent work use bounded swap, stopping the largest command only when both budgets are exhausted. Commands have a 120-second deadline; set `--timeout-seconds` before the separator to change it (up to 86400 seconds). A job can be killed for running out of memory or time; the purpose is to keep the environment reachable, not to make a large typecheck fit. Background descendants are stopped when their owning command exits. This is opt-in; ordinary commands and other users' processes are unaffected.

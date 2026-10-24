@@ -6,8 +6,8 @@ import {
   EnvironmentId,
   ThreadId,
   sessionGrantsScope,
-} from "@rove-code/contracts";
-import { type KnownTerminalSession } from "@rove-code/client-runtime/state/terminal";
+} from "@getpaperplane/contracts";
+import { type KnownTerminalSession } from "@getpaperplane/client-runtime/state/terminal";
 import { SymbolView } from "../../components/ui/AppSymbol";
 import { AppBar } from "../../components/ui/AppBar";
 import { useNativeColumnLayoutMetrics } from "../../native/native-layout-metrics";

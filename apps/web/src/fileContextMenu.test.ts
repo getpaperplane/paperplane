@@ -1,4 +1,4 @@
-import { EnvironmentId } from "@rove-code/contracts";
+import { EnvironmentId } from "@getpaperplane/contracts";
 import * as NodeAssert from "node:assert/strict";
 import { describe, expect, it } from "vite-plus/test";
 

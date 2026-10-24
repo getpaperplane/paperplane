@@ -1,4 +1,4 @@
-import { resolveEnvironmentMachineKind } from "@rove-code/contracts";
+import { resolveEnvironmentMachineKind } from "@getpaperplane/contracts";
 
 import {
   useClientSettings,

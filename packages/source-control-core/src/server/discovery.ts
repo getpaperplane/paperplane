@@ -10,7 +10,7 @@ import {
   type SourceControlProviderDiscoveryItem,
   type SourceControlProviderInfo,
   type SourceControlProviderKind,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import type * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
@@ -20,7 +20,7 @@ import * as Schema from "effect/Schema";
 import {
   detectSourceControlProviderFromRemoteUrl,
   isSshRemoteUrl,
-} from "@rove-code/shared/sourceControl";
+} from "@getpaperplane/shared/sourceControl";
 
 import type * as SourceControlProvider from "./SourceControlProvider.ts";
 import type * as SourceControlHost from "./SourceControlHost.ts";

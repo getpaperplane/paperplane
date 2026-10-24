@@ -1,5 +1,5 @@
 import { assert } from "@effect/vitest";
-import type { OrchestrationV2TurnItem, ProviderReplayTranscript } from "@rove-code/contracts";
+import type { OrchestrationV2TurnItem, ProviderReplayTranscript } from "@getpaperplane/contracts";
 
 import type { OrchestratorV2ScenarioResult } from "../../OrchestratorScenario.ts";
 import {

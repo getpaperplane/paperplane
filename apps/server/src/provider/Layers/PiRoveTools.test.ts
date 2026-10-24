@@ -1,6 +1,6 @@
 import type { ToolDefinition } from "@earendil-works/pi-coding-agent";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { EnvironmentId, ProviderInstanceId, ThreadId } from "@rove-code/contracts";
+import { EnvironmentId, ProviderInstanceId, ThreadId } from "@getpaperplane/contracts";
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 
 import { createPiRoveTools, toPiRoveToolResult } from "./PiRoveTools.ts";

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 
-import { cursorRateModel } from "@rove-code/provider-cursor/server/accountUsage";
-import type { UsageSpeed } from "@rove-code/provider-core/server/usage";
+import { cursorRateModel } from "@getpaperplane/provider-cursor/server/accountUsage";
+import type { UsageSpeed } from "@getpaperplane/provider-core/server/usage";
 import {
   cacheSavingsUsd,
   createOverrideRateTable,

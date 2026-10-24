@@ -6,8 +6,8 @@ import {
   ProviderDriverKind,
   type ProviderInstanceId,
   type ServerProviderModel,
-} from "@rove-code/contracts";
-import { type CustomModelDefinition, normalizeCustomModelSlug } from "@rove-code/shared/model";
+} from "@getpaperplane/contracts";
+import { type CustomModelDefinition, normalizeCustomModelSlug } from "@getpaperplane/shared/model";
 
 import { cn } from "../../lib/utils";
 import { sortModelsForProviderInstance } from "../../modelOrdering";

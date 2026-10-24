@@ -1,4 +1,4 @@
-import type { SnapShotSource } from "@rove-code/contracts";
+import type { SnapShotSource } from "@getpaperplane/contracts";
 
 import type { ComposerFileAttachment } from "../../composerDraftStore";
 import { type ChatFileAttachment, type ChatImageAttachment, isVideoAttachment } from "../../types";
@@ -7,14 +7,14 @@ import type {
   AssetResource,
   EnvironmentId,
   ScopedThreadRef,
-} from "@rove-code/contracts";
-import { videoMimeType } from "@rove-code/shared/video";
-import { resolveMediaSource } from "@rove-code/client-runtime/media-source";
-import { resolveAssetUrl } from "@rove-code/client-runtime/state/assets";
+} from "@getpaperplane/contracts";
+import { videoMimeType } from "@getpaperplane/shared/video";
+import { resolveMediaSource } from "@getpaperplane/client-runtime/media-source";
+import { resolveAssetUrl } from "@getpaperplane/client-runtime/state/assets";
 import {
   squashAtomCommandFailure,
   type AtomCommandResult,
-} from "@rove-code/client-runtime/state/runtime";
+} from "@getpaperplane/client-runtime/state/runtime";
 import { resolveExternalWebLinkHost } from "./externalLinkContextMenu";
 import type { MediaActionSource } from "../media/MediaActions";
 import { resolveProtocolRelativeMediaUrl } from "../media/mediaContent";

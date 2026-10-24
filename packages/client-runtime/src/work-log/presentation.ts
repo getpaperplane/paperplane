@@ -7,25 +7,25 @@ import {
   type ToolActivityIcon,
   type OrchestrationV2TurnItem,
   type ThreadId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   resolveRoveMcpToolDefinition,
   type RoveMcpToolDefinition,
   type RoveMcpToolSummaryAction,
-} from "@rove-code/shared/roveMcpToolPresentation";
-import { classifyMarkdownImageSource } from "@rove-code/client-runtime/markdown-images";
-import { resolveMediaSource } from "@rove-code/client-runtime/media-source";
-import { parseChangeRequestUrl } from "@rove-code/shared/changeRequestUrl";
-import { isWorkspaceImagePreviewPath } from "@rove-code/shared/filePreview";
-import { formatTokens } from "@rove-code/shared/usageFormat";
-import { classifyToolActivity } from "@rove-code/shared/toolActivity";
-import { toolOutputIndicatesFailure } from "@rove-code/shared/toolOutput";
+} from "@getpaperplane/shared/roveMcpToolPresentation";
+import { classifyMarkdownImageSource } from "@getpaperplane/client-runtime/markdown-images";
+import { resolveMediaSource } from "@getpaperplane/client-runtime/media-source";
+import { parseChangeRequestUrl } from "@getpaperplane/shared/changeRequestUrl";
+import { isWorkspaceImagePreviewPath } from "@getpaperplane/shared/filePreview";
+import { formatTokens } from "@getpaperplane/shared/usageFormat";
+import { classifyToolActivity } from "@getpaperplane/shared/toolActivity";
+import { toolOutputIndicatesFailure } from "@getpaperplane/shared/toolOutput";
 
 import {
   summarizeRoveToolCalls,
   roveToolResultIndicatesFailure,
   type RoveToolSummaryCall,
-} from "@rove-code/client-runtime/roveToolSummary";
+} from "@getpaperplane/client-runtime/roveToolSummary";
 
 export type WorkLogToolLifecycleStatus = RuntimeItemStatus | "stopped" | "idle";
 
@@ -63,7 +63,7 @@ export function contextCompactionLabel(
 }
 
 export interface WorkLogPresentationEntry {
-  readonly questionAnswer?: import("@rove-code/contracts").UserInputAttachmentAnswerPayload;
+  readonly questionAnswer?: import("@getpaperplane/contracts").UserInputAttachmentAnswerPayload;
   readonly id: string;
   readonly createdAt: string;
   readonly label: string;

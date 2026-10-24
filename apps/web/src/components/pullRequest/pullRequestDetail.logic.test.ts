@@ -1,6 +1,6 @@
-import { SourceControlProviderKind } from "@rove-code/contracts";
+import { SourceControlProviderKind } from "@getpaperplane/contracts";
 import { resolvePlanFollowUpSubmission } from "../../proposedPlan";
-import { serializeLegacyContextMessage } from "@rove-code/shared/composerContextLegacySend";
+import { serializeLegacyContextMessage } from "@getpaperplane/shared/composerContextLegacySend";
 import {
   ProjectId,
   PullRequestAction,
@@ -13,7 +13,7 @@ import {
   type PullRequestState,
   type RepositoryIdentity,
   type ThreadPullRequestLink,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { describe, expect, it } from "vite-plus/test";
 import { formatInlineContextReference } from "~/lib/composerContextReferences";
 import { buildMessageContext, reviewCommentContextReference } from "~/lib/composerContextRecords";

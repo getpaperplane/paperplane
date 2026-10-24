@@ -1,4 +1,4 @@
-import type { EnvironmentId } from "@rove-code/contracts";
+import type { EnvironmentId } from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import { Atom } from "effect/reactivity";
 

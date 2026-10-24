@@ -22,10 +22,10 @@ import {
   type RuntimeRequestId,
   type ServerProviderModel,
   type ThreadId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import type { MuseSettings } from "../settings.ts";
-import { AgentScope } from "@rove-code/shared/AgentScope";
-import { getModelSelectionStringOptionValue } from "@rove-code/shared/model";
+import { AgentScope } from "@getpaperplane/shared/AgentScope";
+import { getModelSelectionStringOptionValue } from "@getpaperplane/shared/model";
 import * as Cause from "effect/Cause";
 import * as DateTime from "effect/DateTime";
 import * as Deferred from "effect/Deferred";
@@ -38,11 +38,11 @@ import * as Semaphore from "effect/Semaphore";
 import * as Scope from "effect/Scope";
 import * as Stream from "effect/Stream";
 
-import * as ProviderHost from "@rove-code/provider-core/server/ProviderHost";
-import { ROVE_MCP_SERVER_NAME } from "@rove-code/shared/roveMcp";
-import * as McpProviderSession from "@rove-code/provider-core/server/mcpSession";
-import * as McpProviderSessions from "@rove-code/provider-core/server/McpProviderSessions";
-import { buildRuntimeInstructions } from "@rove-code/provider-core/server/runtimeInstructions";
+import * as ProviderHost from "@getpaperplane/provider-core/server/ProviderHost";
+import { ROVE_MCP_SERVER_NAME } from "@getpaperplane/shared/roveMcp";
+import * as McpProviderSession from "@getpaperplane/provider-core/server/mcpSession";
+import * as McpProviderSessions from "@getpaperplane/provider-core/server/McpProviderSessions";
+import { buildRuntimeInstructions } from "@getpaperplane/provider-core/server/runtimeInstructions";
 import { museModelCapabilities, resolveMuseReasoningEffort } from "./modelCatalog.ts";
 import {
   MuseApproval,
@@ -70,25 +70,25 @@ import {
   type createMuseSdkHost,
   type MuseSdkHost,
 } from "./sdk.ts";
-import type * as ProviderEventLoggers from "@rove-code/provider-core/server/ProviderEventLoggers";
+import type * as ProviderEventLoggers from "@getpaperplane/provider-core/server/ProviderEventLoggers";
 import {
   providerMessageTextWithAttachmentPaths,
   isProviderNativeImageAttachment,
-} from "@rove-code/provider-core/server/attachmentPrompt";
-import * as IdAllocator from "@rove-code/provider-core/server/IdAllocator";
-import * as ProviderAdapter from "@rove-code/provider-core/server/ProviderAdapter";
+} from "@getpaperplane/provider-core/server/attachmentPrompt";
+import * as IdAllocator from "@getpaperplane/provider-core/server/IdAllocator";
+import * as ProviderAdapter from "@getpaperplane/provider-core/server/ProviderAdapter";
 import {
   backgroundWorkNotification,
   type BackgroundWorkReport,
-} from "@rove-code/provider-core/server/notification";
-import type * as ProviderContinuationRequests from "@rove-code/provider-core/server/ProviderContinuationRequests";
-import { makeProviderFailure } from "@rove-code/provider-core/server/failure";
+} from "@getpaperplane/provider-core/server/notification";
+import type * as ProviderContinuationRequests from "@getpaperplane/provider-core/server/ProviderContinuationRequests";
+import { makeProviderFailure } from "@getpaperplane/provider-core/server/failure";
 import {
   makeSubagentChildThread,
   makeSubagentConversationArtifacts,
   subagentThreadTitle,
-} from "@rove-code/provider-core/server/subagentProjection";
-import { turnScopedSelectionTransition } from "@rove-code/provider-core/server/selectionTransition";
+} from "@getpaperplane/provider-core/server/subagentProjection";
+import { turnScopedSelectionTransition } from "@getpaperplane/provider-core/server/selectionTransition";
 import { museItemStatus, museToolPresentation } from "./itemPresentation.ts";
 
 const MUSE_PROVIDER = ProviderDriverKind.make("muse");

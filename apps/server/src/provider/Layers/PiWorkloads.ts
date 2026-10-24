@@ -5,10 +5,10 @@ import * as NodeCrypto from "node:crypto";
 import * as NodePath from "node:path";
 import * as NodeOS from "node:os";
 import * as NodeFSP from "node:fs/promises";
-import { RAISE_OOM_SCORE_LINE } from "@rove-code/shared/AgentScope";
+import { RAISE_OOM_SCORE_LINE } from "@getpaperplane/shared/AgentScope";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
-import { Environment as HostProcessEnvironment } from "@rove-code/shared/HostProcess";
+import { Environment as HostProcessEnvironment } from "@getpaperplane/shared/HostProcess";
 import {
   createBashToolDefinition,
   getShellConfig,

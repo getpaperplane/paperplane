@@ -1,5 +1,5 @@
-import { scopeThreadRef } from "@rove-code/client-runtime/environment";
-import { AuthFilesystemReadScope, EnvironmentId, ThreadId } from "@rove-code/contracts";
+import { scopeThreadRef } from "@getpaperplane/client-runtime/environment";
+import { AuthFilesystemReadScope, EnvironmentId, ThreadId } from "@getpaperplane/contracts";
 import type { ReactNode } from "react";
 import { act, create, type ReactTestRenderer } from "react-test-renderer";
 import { afterEach, beforeEach, expect, it, vi } from "vite-plus/test";

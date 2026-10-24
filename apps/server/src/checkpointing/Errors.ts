@@ -1,4 +1,4 @@
-import { NonNegativeInt, ThreadId, type VcsError } from "@rove-code/contracts";
+import { NonNegativeInt, ThreadId, type VcsError } from "@getpaperplane/contracts";
 import * as Schema from "effect/Schema";
 
 import type { ProjectionRepositoryError } from "../persistence/Errors.ts";

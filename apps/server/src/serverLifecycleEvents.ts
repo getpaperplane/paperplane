@@ -1,4 +1,4 @@
-import type { ServerLifecycleStreamEvent } from "@rove-code/contracts";
+import type { ServerLifecycleStreamEvent } from "@getpaperplane/contracts";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -23,7 +23,7 @@ export class ServerLifecycleEvents extends Context.Service<
     readonly snapshot: Effect.Effect<SnapshotState>;
     readonly stream: Stream.Stream<ServerLifecycleStreamEvent>;
   }
->()("@rove-code/server/serverLifecycleEvents") {}
+>()("@getpaperplane/server/serverLifecycleEvents") {}
 
 const make = Effect.gen(function* () {
   const pubsub = yield* PubSub.unbounded<ServerLifecycleStreamEvent>();

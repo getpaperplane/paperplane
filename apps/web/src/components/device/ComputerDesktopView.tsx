@@ -1,6 +1,6 @@
-import { computerDesktopViewerUrl } from "@rove-code/client-runtime/state/computer-use";
-import { ComputerDesktopViewerError, type EnvironmentId } from "@rove-code/contracts";
-import { squashAtomCommandFailure } from "@rove-code/client-runtime/state/runtime";
+import { computerDesktopViewerUrl } from "@getpaperplane/client-runtime/state/computer-use";
+import { ComputerDesktopViewerError, type EnvironmentId } from "@getpaperplane/contracts";
+import { squashAtomCommandFailure } from "@getpaperplane/client-runtime/state/runtime";
 import * as Schema from "effect/Schema";
 import type RFB from "@novnc/novnc";
 import type { RfbOptions } from "@novnc/novnc";

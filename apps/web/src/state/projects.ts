@@ -1,7 +1,7 @@
-import { createEnvironmentProjectAtoms } from "@rove-code/client-runtime/state/projects";
-import { createProjectEnvironmentAtoms } from "@rove-code/client-runtime/state/projects";
-import { createEnvironmentRpcQueryAtomFamily } from "@rove-code/client-runtime/state/runtime";
-import { WS_METHODS } from "@rove-code/contracts";
+import { createEnvironmentProjectAtoms } from "@getpaperplane/client-runtime/state/projects";
+import { createProjectEnvironmentAtoms } from "@getpaperplane/client-runtime/state/projects";
+import { createEnvironmentRpcQueryAtomFamily } from "@getpaperplane/client-runtime/state/runtime";
+import { WS_METHODS } from "@getpaperplane/contracts";
 
 import { environmentCatalog } from "../connection/catalog";
 import { connectionAtomRuntime } from "../connection/runtime";

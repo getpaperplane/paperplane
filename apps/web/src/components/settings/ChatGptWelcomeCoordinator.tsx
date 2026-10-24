@@ -1,5 +1,5 @@
 import { useAtomValue } from "@effect/atom-react";
-import { usesChatGptSharing } from "@rove-code/shared/usageLimits";
+import { usesChatGptSharing } from "@getpaperplane/shared/usageLimits";
 import { useState } from "react";
 import { environmentPresentations } from "../../state/presentation";
 import { OpenAI } from "../Icons";

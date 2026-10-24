@@ -29,7 +29,7 @@ import {
   ThreadId,
   WsRpcGroup,
   type OrchestrationV2ThreadProjection,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 
 const { values } = NodeUtil.parseArgs({
   options: {

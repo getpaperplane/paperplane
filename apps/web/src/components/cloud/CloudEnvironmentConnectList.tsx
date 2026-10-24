@@ -1,24 +1,24 @@
-import { findErrorTraceId } from "@rove-code/client-runtime/errors";
+import { findErrorTraceId } from "@getpaperplane/client-runtime/errors";
 import {
   type EnvironmentConnectionPresentation,
   RelayConnectionRegistration,
   RelayConnectionTarget,
   orchestrationProtocolCompatibilityError,
-} from "@rove-code/client-runtime/connection";
-import { relayOfflineReasonMessage } from "@rove-code/client-runtime/relay";
+} from "@getpaperplane/client-runtime/connection";
+import { relayOfflineReasonMessage } from "@getpaperplane/client-runtime/relay";
 import {
   isAtomCommandInterrupted,
   squashAtomCommandFailure,
-} from "@rove-code/client-runtime/state/runtime";
+} from "@getpaperplane/client-runtime/state/runtime";
 import {
   type EnvironmentId,
   resolveEnvironmentMachineKind,
   type ServerConfig,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import type {
   RelayClientEnvironmentRecord,
   RelayEnvironmentStatusResponse,
-} from "@rove-code/contracts/relay";
+} from "@getpaperplane/contracts/relay";
 import * as Option from "effect/Option";
 import { type ReactNode, useCallback, useEffect, useEffectEvent, useState } from "react";
 

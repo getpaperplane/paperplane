@@ -1,4 +1,4 @@
-import { AuthPreviewOperateScope } from "@rove-code/contracts";
+import { AuthPreviewOperateScope } from "@getpaperplane/contracts";
 import { Outlet, createFileRoute, redirect, useParams } from "@tanstack/react-router";
 import { useAtomValue } from "@effect/atom-react";
 import { useEffect, useMemo } from "react";

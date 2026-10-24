@@ -4,7 +4,7 @@ import * as NodeFS from "node:fs";
 import * as NodeOS from "node:os";
 import * as NodePath from "node:path";
 import * as Schema from "effect/Schema";
-import { fromYaml } from "@rove-code/shared/schemaYaml";
+import { fromYaml } from "@getpaperplane/shared/schemaYaml";
 import { afterEach, assert, it } from "vite-plus/test";
 
 const fingerprint = "0123456789ABCDEF0123456789ABCDEF01234567";

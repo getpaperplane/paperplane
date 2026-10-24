@@ -6,7 +6,7 @@ import type {
   PullRequestDetailView,
   PullRequestRef,
   ScopedThreadRef,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   ChevronDownIcon,
   ExternalLinkIcon,

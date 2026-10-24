@@ -1,5 +1,5 @@
 import { useRef } from "react";
-import { BranchNamingMode, DEFAULT_SERVER_SETTINGS } from "@rove-code/contracts";
+import { BranchNamingMode, DEFAULT_SERVER_SETTINGS } from "@getpaperplane/contracts";
 
 import { Input } from "../ui/input";
 import { Select, SelectItem, SelectPopup, SelectTrigger, SelectValue } from "../ui/select";

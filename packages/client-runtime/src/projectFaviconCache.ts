@@ -1,10 +1,10 @@
-import { EnvironmentId } from "@rove-code/contracts";
-import { mediaMimeType } from "@rove-code/shared/filePreview";
+import { EnvironmentId } from "@getpaperplane/contracts";
+import { mediaMimeType } from "@getpaperplane/shared/filePreview";
 import {
   getProjectFaviconCacheKey,
   getProjectFaviconResourceKey,
   isProjectFaviconFallbackUrl,
-} from "@rove-code/shared/projectFavicon";
+} from "@getpaperplane/shared/projectFavicon";
 import * as Base64 from "effect/encoding/Base64";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";

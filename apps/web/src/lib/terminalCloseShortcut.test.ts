@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vite-plus/test";
 
-import type { ResolvedKeybindingsConfig } from "@rove-code/contracts";
+import type { ResolvedKeybindingsConfig } from "@getpaperplane/contracts";
 
 import {
   preventRepeatedTerminalCloseShortcut,

@@ -1,4 +1,4 @@
-import type { EnvironmentId, OrchestrationV2ShellSnapshot } from "@rove-code/contracts";
+import type { EnvironmentId, OrchestrationV2ShellSnapshot } from "@getpaperplane/contracts";
 import * as Option from "effect/Option";
 import { AsyncResult, Atom } from "effect/reactivity";
 

@@ -13,7 +13,7 @@
  * @module provider-cursor/server/accountCache
  */
 import { cursorRateModel } from "./accountUsage.ts";
-import type { UsageRecord } from "@rove-code/provider-core/server/usage";
+import type { UsageRecord } from "@getpaperplane/provider-core/server/usage";
 
 export type CursorCredentialSource = string | { readonly kind: "keychain" };
 

@@ -2,13 +2,13 @@ import { useAtomValue } from "@effect/atom-react";
 import {
   type CheckpointDiffTarget,
   type ComposerPathSearchTarget,
-} from "@rove-code/client-runtime/state/threads";
+} from "@getpaperplane/client-runtime/state/threads";
 import {
   createThreadSearchResultsAtomFamily,
   makeThreadSearchKey,
   type EnvironmentThreadSearchMatch,
-} from "@rove-code/client-runtime/state/thread-search";
-import { type VcsRefTarget } from "@rove-code/client-runtime/state/vcs";
+} from "@getpaperplane/client-runtime/state/thread-search";
+import { type VcsRefTarget } from "@getpaperplane/client-runtime/state/vcs";
 import type {
   EnvironmentId,
   ProjectContentMatch,
@@ -18,7 +18,7 @@ import type {
   TurnItemId,
   VcsListRefsResult,
   VcsRef,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Cause from "effect/Cause";
 import * as Option from "effect/Option";
 import { AsyncResult, Atom } from "effect/reactivity";

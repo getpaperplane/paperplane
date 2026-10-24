@@ -4,7 +4,7 @@ import type {
   PullRequestReaction,
   PullRequestReactionContent,
   PullRequestRef,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { SmilePlusIcon } from "lucide-react";
 import { useState } from "react";
 

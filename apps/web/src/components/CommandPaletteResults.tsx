@@ -1,4 +1,4 @@
-import { type ResolvedKeybindingsConfig } from "@rove-code/contracts";
+import { type ResolvedKeybindingsConfig } from "@getpaperplane/contracts";
 import { LegendList, type LegendListRef } from "@legendapp/list/react";
 import { ChevronRightIcon } from "lucide-react";
 import { type RefObject, useCallback, useState } from "react";

@@ -5,7 +5,7 @@ import {
   AuthTerminalReadScope,
   type DesktopBridge,
   type DesktopWslState,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 
 /**
  * Operating terminals without being able to list them leaves a client

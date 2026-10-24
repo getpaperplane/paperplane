@@ -1,4 +1,4 @@
-import type { EnvironmentConnectionPhase } from "@rove-code/client-runtime/connection";
+import type { EnvironmentConnectionPhase } from "@getpaperplane/client-runtime/connection";
 import {
   AuthProvidersManageScope,
   type AuthSessionState,
@@ -9,7 +9,7 @@ import {
   sessionGrantsScope,
   type ServerSettings,
   type SessionGrantInput,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 
 export interface ProviderEnvironmentOptionLike {
   readonly environmentId: EnvironmentId;
@@ -123,7 +123,7 @@ export function resolveRemoteOperateAccess(input: {
  * function means to make.
  */
 /** Every checkout of a project on one environment shares the same choice. */
-export { buildProviderInstanceOverridePatch } from "@rove-code/client-runtime/state/provider-instance-settings";
+export { buildProviderInstanceOverridePatch } from "@getpaperplane/client-runtime/state/provider-instance-settings";
 
 export function classifyProviderEnvironmentAccess(input: {
   readonly connectionPhase: EnvironmentConnectionPhase;

@@ -1,5 +1,5 @@
-import { scopedThreadKey } from "@rove-code/client-runtime/environment";
-import type { ScopedThreadRef, SnapShotSource } from "@rove-code/contracts";
+import { scopedThreadKey } from "@getpaperplane/client-runtime/environment";
+import type { ScopedThreadRef, SnapShotSource } from "@getpaperplane/contracts";
 
 import type { DraftId } from "../composerDraftStore";
 import { getDesktopSnapShotBridge } from "./desktopSnapShot";

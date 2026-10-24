@@ -1,8 +1,8 @@
 import type { DraftId } from "~/composerDraftStore";
 import { composerDraftHasUserContent, useComposerDraftStore } from "~/composerDraftStore";
-import { resolveEnvironmentMachineKind, type ScopedProjectRef } from "@rove-code/contracts";
-import { scopedProjectKey, scopeProjectRef } from "@rove-code/client-runtime/environment";
-import { isScratchProject } from "@rove-code/client-runtime/state/projects";
+import { resolveEnvironmentMachineKind, type ScopedProjectRef } from "@getpaperplane/contracts";
+import { scopedProjectKey, scopeProjectRef } from "@getpaperplane/client-runtime/environment";
+import { isScratchProject } from "@getpaperplane/client-runtime/state/projects";
 import { FolderPlusIcon } from "lucide-react";
 import { useAtomValue } from "@effect/atom-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -40,7 +40,7 @@ import {
 } from "../ui/combobox";
 import { Tooltip, TooltipPopup, TooltipTrigger } from "../ui/tooltip";
 import { InlineButton } from "../ui/button";
-import { resolveProjectSettings } from "@rove-code/shared/projectSettings";
+import { resolveProjectSettings } from "@getpaperplane/shared/projectSettings";
 
 // Picker value for the "Add project" row; real entries are keyed by logical
 // project key.

@@ -1,4 +1,4 @@
-import { buildNewThreadLink, parseNewThreadLink } from "@rove-code/shared/promptLinks";
+import { buildNewThreadLink, parseNewThreadLink } from "@getpaperplane/shared/promptLinks";
 import { describe, expect, it } from "vite-plus/test";
 
 import {

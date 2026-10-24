@@ -12,7 +12,7 @@ import pkg from "./package.json" with { type: "json" };
 import {
   DEV_PROXIED_ORIGIN_PRESERVING_PREFIXES,
   DEV_PROXIED_PATH_PREFIXES,
-} from "@rove-code/shared/devProxy";
+} from "@getpaperplane/shared/devProxy";
 
 import { loadRepoEnv } from "../../scripts/lib/public-config";
 import { thirdPartyLicensesPlugin } from "../../scripts/lib/third-party-licenses";

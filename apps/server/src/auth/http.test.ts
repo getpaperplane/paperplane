@@ -6,8 +6,8 @@ import {
   AuthAccessTokenType,
   EnvironmentAuthenticatedAuth,
   EnvironmentHttpApi,
-} from "@rove-code/contracts";
-import { RelayClientTracer } from "@rove-code/shared/relayTracing";
+} from "@getpaperplane/contracts";
+import { RelayClientTracer } from "@getpaperplane/shared/relayTracing";
 import { expect, it } from "@effect/vitest";
 import * as Context from "effect/Context";
 import * as Crypto from "effect/Crypto";

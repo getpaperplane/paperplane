@@ -7,10 +7,10 @@ import * as NodePath from "node:path";
 
 import { assert, it } from "@effect/vitest";
 import * as DateTime from "effect/DateTime";
-import { ThreadId } from "@rove-code/contracts";
+import { ThreadId } from "@getpaperplane/contracts";
 import { ModelRuntime, SessionManager, SettingsManager } from "@earendil-works/pi-coding-agent";
 import * as PiSdk from "@earendil-works/pi-coding-agent";
-import { EnvironmentId, ProviderInstanceId } from "@rove-code/contracts";
+import { EnvironmentId, ProviderInstanceId } from "@getpaperplane/contracts";
 import * as PiRoveTools from "./PiRoveTools.ts";
 import { afterEach, beforeEach, describe, expect, vi } from "vite-plus/test";
 

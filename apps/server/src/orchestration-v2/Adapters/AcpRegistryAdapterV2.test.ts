@@ -1,7 +1,7 @@
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { assert, describe, it } from "@effect/vitest";
-import { ProviderInstanceId, ProviderSessionId, ThreadId } from "@rove-code/contracts";
-import { resolveSelfInvocation } from "@rove-code/shared/nodeRuntime";
+import { ProviderInstanceId, ProviderSessionId, ThreadId } from "@getpaperplane/contracts";
+import { resolveSelfInvocation } from "@getpaperplane/shared/nodeRuntime";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -14,32 +14,32 @@ import * as HttpClientResponse from "effect/http/HttpClientResponse";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as EffectAcpErrors from "effect-acp/errors";
 
-import * as ProviderHost from "@rove-code/provider-core/server/ProviderHost";
-import * as McpProviderSessions from "@rove-code/provider-core/server/McpProviderSessions";
-import * as TestProviderHost from "@rove-code/provider-testing/TestProviderHost";
+import * as ProviderHost from "@getpaperplane/provider-core/server/ProviderHost";
+import * as McpProviderSessions from "@getpaperplane/provider-core/server/McpProviderSessions";
+import * as TestProviderHost from "@getpaperplane/provider-testing/TestProviderHost";
 import * as ServerSettings from "../../serverSettings.ts";
 import type {
   AcpRegistryAvailableCommands,
   AcpRegistryLiveConfiguration,
-} from "@rove-code/provider-acp-registry/testing";
-import * as AcpRegistrySupport from "@rove-code/provider-acp-registry/server/AcpRegistrySupport";
-import * as AcpRegistryRuntimeCoordinator from "@rove-code/provider-acp-registry/server/AcpRegistryRuntimeCoordinator";
-import { ACP_SESSION_MODE_OPTION_ID } from "@rove-code/provider-acp/server/sessionConfig";
-import * as AcpSessionRuntime from "@rove-code/provider-acp/server/AcpSessionRuntime";
-import * as IdAllocator from "@rove-code/provider-core/server/IdAllocator";
+} from "@getpaperplane/provider-acp-registry/testing";
+import * as AcpRegistrySupport from "@getpaperplane/provider-acp-registry/server/AcpRegistrySupport";
+import * as AcpRegistryRuntimeCoordinator from "@getpaperplane/provider-acp-registry/server/AcpRegistryRuntimeCoordinator";
+import { ACP_SESSION_MODE_OPTION_ID } from "@getpaperplane/provider-acp/server/sessionConfig";
+import * as AcpSessionRuntime from "@getpaperplane/provider-acp/server/AcpSessionRuntime";
+import * as IdAllocator from "@getpaperplane/provider-core/server/IdAllocator";
 import {
   decodeAcpReplayTranscript,
   makeAcpReplayCompletenessAssertion,
   makeAcpReplayRuntime,
 } from "./AcpAdapterV2.testkit.ts";
-import * as ProviderAdapter from "@rove-code/provider-core/server/ProviderAdapter";
+import * as ProviderAdapter from "@getpaperplane/provider-core/server/ProviderAdapter";
 import { BUILT_IN_PROVIDER_ADAPTER_DRIVER_KINDS_V2 } from "../builtInProviderAdapterDrivers.ts";
-import { AcpRegistryAdapterV2Driver } from "@rove-code/provider-acp-registry/server";
+import { AcpRegistryAdapterV2Driver } from "@getpaperplane/provider-acp-registry/server";
 import {
   ACP_REGISTRY_PROVIDER,
   makeAcpRegistryAdapterV2,
   acpRegistryPromptFailure,
-} from "@rove-code/provider-acp-registry/testing";
+} from "@getpaperplane/provider-acp-registry/testing";
 
 const registryUrl = "https://registry.test/registry.json";
 const decodeAcpRegistryAdapterSettings = Schema.decodeUnknownEffect(

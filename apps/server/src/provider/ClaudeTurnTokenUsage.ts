@@ -1,5 +1,5 @@
 import type { SDKResultMessage } from "@anthropic-ai/claude-agent-sdk";
-import type { ProviderRuntimeTurnStatus, TurnTokenUsage } from "@rove-code/contracts";
+import type { ProviderRuntimeTurnStatus, TurnTokenUsage } from "@getpaperplane/contracts";
 
 function finiteNonNegativeInteger(value: unknown): number | undefined {
   return typeof value === "number" && Number.isFinite(value) && value >= 0

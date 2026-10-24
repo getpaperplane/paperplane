@@ -1,6 +1,6 @@
 import * as NodeURL from "node:url";
 
-import type { ChatAttachment, ProviderApprovalDecision, RuntimeMode } from "@rove-code/contracts";
+import type { ChatAttachment, ProviderApprovalDecision, RuntimeMode } from "@getpaperplane/contracts";
 import {
   createOpencodeClient,
   type Agent,
@@ -31,15 +31,15 @@ import * as Stream from "effect/Stream";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
-import { signalProcessGroup } from "@rove-code/provider-core/server/processGroup";
-import { isWindowsCommandNotFound } from "@rove-code/provider-core/server/snapshotProbe";
+import { signalProcessGroup } from "@getpaperplane/provider-core/server/processGroup";
+import { isWindowsCommandNotFound } from "@getpaperplane/provider-core/server/snapshotProbe";
 import * as OpenCodeServerLedger from "./OpenCodeServerLedger.ts";
-import { collectStreamAsString } from "@rove-code/provider-core/server/snapshotProbe";
-import * as NetService from "@rove-code/shared/Net";
-import { AgentScope } from "@rove-code/shared/AgentScope";
-import * as HostProcess from "@rove-code/shared/HostProcess";
-import { compareSemverVersions, parseSemver } from "@rove-code/shared/semver";
-import { resolveSpawnCommand } from "@rove-code/shared/shell";
+import { collectStreamAsString } from "@getpaperplane/provider-core/server/snapshotProbe";
+import * as NetService from "@getpaperplane/shared/Net";
+import { AgentScope } from "@getpaperplane/shared/AgentScope";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
+import { compareSemverVersions, parseSemver } from "@getpaperplane/shared/semver";
+import { resolveSpawnCommand } from "@getpaperplane/shared/shell";
 const encodeUnknownJsonStringExit = Schema.encodeUnknownExit(Schema.fromJsonString(Schema.Unknown));
 const OPENCODE_EMPTY_CONFIG_CONTENT = "{}";
 
@@ -305,7 +305,7 @@ export class OpenCodeRuntime extends Context.Service<
       readonly environment?: NodeJS.ProcessEnv;
     }) => Effect.Effect<ReadonlyArray<OpenCodeSkill>, OpenCodeRuntimeError>;
   }
->()("@rove-code/provider-opencode/server/OpenCodeRuntime") {}
+>()("@getpaperplane/provider-opencode/server/OpenCodeRuntime") {}
 
 function parseServerUrlFromOutput(output: string): string | null {
   for (const line of output.split("\n")) {

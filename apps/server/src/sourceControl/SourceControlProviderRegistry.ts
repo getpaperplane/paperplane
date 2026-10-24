@@ -2,7 +2,7 @@ import {
   SourceControlProviderKind,
   DEFAULT_REPOSITORY_REMOTE_PREFERENCE,
   type RepositoryRemotePreference,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Cache from "effect/Cache";
 import * as Context from "effect/Context";
 import * as Duration from "effect/Duration";
@@ -15,19 +15,19 @@ import * as Stream from "effect/Stream";
 import {
   SourceControlProviderError,
   type SourceControlProviderDiscoveryItem,
-} from "@rove-code/contracts";
-import type {} from "@rove-code/contracts";
-import { detectSourceControlProviderFromRemoteUrl } from "@rove-code/shared/sourceControl";
+} from "@getpaperplane/contracts";
+import type {} from "@getpaperplane/contracts";
+import { detectSourceControlProviderFromRemoteUrl } from "@getpaperplane/shared/sourceControl";
 
 import * as BuiltInDrivers from "./builtInDrivers.ts";
-import * as SourceControlProvider from "@rove-code/source-control-core/server/SourceControlProvider";
+import * as SourceControlProvider from "@getpaperplane/source-control-core/server/SourceControlProvider";
 import {
   probeSourceControlProvider,
   refineUnknownRemoteProvider,
   type SourceControlProviderDiscoverySpec,
   type UnknownRemoteVerdict,
-} from "@rove-code/source-control-core/server/discovery";
-import * as SourceControlHost from "@rove-code/source-control-core/server/SourceControlHost";
+} from "@getpaperplane/source-control-core/server/discovery";
+import * as SourceControlHost from "@getpaperplane/source-control-core/server/SourceControlHost";
 
 import * as ServerConfig from "../config.ts";
 import * as ServerSettings from "../serverSettings.ts";
@@ -74,7 +74,7 @@ export class SourceControlProviderRegistry extends Context.Service<
     >;
     readonly discover: Effect.Effect<ReadonlyArray<SourceControlProviderDiscoveryItem>>;
   }
->()("@rove-code/server/sourceControl/SourceControlProviderRegistry") {}
+>()("@getpaperplane/server/sourceControl/SourceControlProviderRegistry") {}
 
 function unsupportedProvider(
   kind: SourceControlProviderKind,

@@ -5,18 +5,18 @@ import type {
   RuntimeMode,
   ScheduledTask,
   ScheduledTaskUpsertSchedule,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 
-import { DEFAULT_SERVER_SETTINGS } from "@rove-code/contracts";
+import { DEFAULT_SERVER_SETTINGS } from "@getpaperplane/contracts";
 import {
   WEBHOOK_SIGNATURE_DEFAULTS,
   parseMaxDeliveryAge,
   webhookSignatureForUpsert,
-} from "@rove-code/client-runtime/scheduled-task-webhook";
+} from "@getpaperplane/client-runtime/scheduled-task-webhook";
 import {
   resolveProjectSettings,
   type LegacyProjectSettingsFields,
-} from "@rove-code/shared/projectSettings";
+} from "@getpaperplane/shared/projectSettings";
 import {
   buildModelOptions,
   resolveDefaultableModelSelection,

@@ -1,8 +1,8 @@
-import type { DpopFailureReason } from "@rove-code/contracts";
+import type { DpopFailureReason } from "@getpaperplane/contracts";
 import type {
   RelayEnvironmentStatusResponse,
   RelayProtectedError,
-} from "@rove-code/contracts/relay";
+} from "@getpaperplane/contracts/relay";
 
 export const DPOP_CLOCK_HINT =
   "Hint: Check that automatic date and time is enabled on both devices, then try again.";

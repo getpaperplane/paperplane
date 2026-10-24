@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vite-plus/test";
 
-import type { ModelCapabilities } from "@rove-code/contracts";
+import type { ModelCapabilities } from "@getpaperplane/contracts";
 
 import { applyProviderOptionSelection, resolveProviderOptionDescriptors } from "./providerOptions";
 

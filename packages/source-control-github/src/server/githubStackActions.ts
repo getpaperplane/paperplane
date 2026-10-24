@@ -2,7 +2,7 @@ import type {
   PullRequestAction,
   PullRequestMergeMethod,
   PullRequestStackHead,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import * as Clock from "effect/Clock";
 import { GraphQLClient, GraphQLClientError, GraphQLResolver } from "effect/graphql";

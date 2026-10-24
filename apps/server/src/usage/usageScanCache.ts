@@ -14,12 +14,12 @@
  *
  * @module usageScanCache
  */
-import type { UsageProviderKind } from "@rove-code/contracts";
+import type { UsageProviderKind } from "@getpaperplane/contracts";
 import type {
   TranscriptUsageFormat,
   UsageRecord,
   UsageSpeed,
-} from "@rove-code/provider-core/server/usage";
+} from "@getpaperplane/provider-core/server/usage";
 import * as Schema from "effect/Schema";
 
 import { GUARD_LENGTH, type TranscriptParsePosition } from "./usageTranscriptReader.ts";

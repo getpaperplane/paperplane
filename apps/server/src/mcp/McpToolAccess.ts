@@ -3,7 +3,7 @@ import {
   type ProviderInteractionMode,
   type RuntimeMode,
   type ThreadId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import * as Ref from "effect/Ref";
 import * as Struct from "effect/Struct";
@@ -68,7 +68,7 @@ let handlersLayer: <Tools extends Record<string, Tool.Any>, EX, RX>(
  * without a decision here does not compile. Both are nominal classes, so a
  * handler or layer cannot pass for one by copying its fields. Effect's own
  * registration functions accept any handler, so the
- * `rove/no-raw-mcp-registration` lint rule keeps Effect's `McpServer` inside
+ * `paperplane/no-raw-mcp-registration` lint rule keeps Effect's `McpServer` inside
  * McpHttpServer.
  *
  * Parameters choose the target; the caller sets the limits: a thread caller

@@ -4,7 +4,7 @@ import {
   type ProjectReadFileResult,
   type ScopedProjectRef,
   WS_METHODS,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Crypto from "effect/Crypto";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
@@ -36,7 +36,7 @@ import {
 } from "../operations/commands.ts";
 import type { EnvironmentRegistry } from "../connection/registry.ts";
 import { createFileMetadataAtoms } from "./fileMetadata.ts";
-import { resolveWorkspaceFilePath } from "@rove-code/shared/path";
+import { resolveWorkspaceFilePath } from "@getpaperplane/shared/path";
 
 export type {
   CreateProjectInput,

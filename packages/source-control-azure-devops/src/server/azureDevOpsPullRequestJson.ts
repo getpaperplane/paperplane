@@ -8,9 +8,9 @@ import type {
   PullRequestMergeMethod,
   PullRequestMergeability,
   PullRequestState,
-} from "@rove-code/contracts";
-import { TrimmedNonEmptyString } from "@rove-code/contracts";
-import { decodeJsonResult } from "@rove-code/shared/schemaJson";
+} from "@getpaperplane/contracts";
+import { TrimmedNonEmptyString } from "@getpaperplane/contracts";
+import { decodeJsonResult } from "@getpaperplane/shared/schemaJson";
 
 import { azureDevOpsPullRequestWebUrl } from "./azureDevOpsPullRequests.ts";
 

@@ -1,5 +1,5 @@
-import type { ScheduledTaskWebhookEndpoint } from "@rove-code/contracts";
-import { isLocalLoopbackHost } from "@rove-code/shared/hostClassification";
+import type { ScheduledTaskWebhookEndpoint } from "@getpaperplane/contracts";
+import { isLocalLoopbackHost } from "@getpaperplane/shared/hostClassification";
 
 /**
  * Where a sender can call a webhook task, as a client shows it. With Paperplane

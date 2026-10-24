@@ -1,5 +1,5 @@
-import { AuthStandardClientScopes, EnvironmentId, type ServerConfig } from "@rove-code/contracts";
-import { RelayClientTracer } from "@rove-code/shared/relayTracing";
+import { AuthStandardClientScopes, EnvironmentId, type ServerConfig } from "@getpaperplane/contracts";
+import { RelayClientTracer } from "@getpaperplane/shared/relayTracing";
 import { describe, expect, it } from "@effect/vitest";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";

@@ -3,8 +3,8 @@ import {
   connectionRouteId,
   connectionRouteLabel,
   connectionRoutes,
-} from "@rove-code/client-runtime/connection";
-import type { DesktopSshEnvironmentTarget, EnvironmentMachineKind } from "@rove-code/contracts";
+} from "@getpaperplane/client-runtime/connection";
+import type { DesktopSshEnvironmentTarget, EnvironmentMachineKind } from "@getpaperplane/contracts";
 import * as Option from "effect/Option";
 import type { ReactNode } from "react";
 

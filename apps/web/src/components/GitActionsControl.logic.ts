@@ -2,14 +2,14 @@ import type {
   GitRunStackedActionResult,
   GitStackedAction,
   VcsStatusResult,
-} from "@rove-code/contracts";
-import { isTemporaryWorktreeBranch } from "@rove-code/shared/git";
+} from "@getpaperplane/contracts";
+import { isTemporaryWorktreeBranch } from "@getpaperplane/shared/git";
 import {
   linkedPullRequestStateFor,
   type LinkedPullRequestContext,
-} from "@rove-code/shared/threadPullRequests";
-import { sourceControlClients } from "@rove-code/client-runtime/source-control-clients";
-import type { ChangeRequestTerminology } from "@rove-code/client-runtime/source-control-clients";
+} from "@getpaperplane/shared/threadPullRequests";
+import { sourceControlClients } from "@getpaperplane/client-runtime/source-control-clients";
+import type { ChangeRequestTerminology } from "@getpaperplane/client-runtime/source-control-clients";
 
 export type GitActionIconName = "commit" | "push" | "pr";
 
@@ -494,4 +494,4 @@ export function resolveLiveThreadBranchUpdate(input: {
 }
 
 // Re-export from shared for backwards compatibility in this module's exports
-export { resolveAutoFeatureBranchName } from "@rove-code/shared/git";
+export { resolveAutoFeatureBranchName } from "@getpaperplane/shared/git";

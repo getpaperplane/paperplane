@@ -13,9 +13,9 @@ import {
   type ChatAttachment,
   type ModelSelection,
   TextGenerationError,
-} from "@rove-code/contracts";
-import { formatGeneratedBranchName, sanitizeFeatureBranchName } from "@rove-code/shared/git";
-import { extractJsonObject } from "@rove-code/shared/schemaJson";
+} from "@getpaperplane/contracts";
+import { formatGeneratedBranchName, sanitizeFeatureBranchName } from "@getpaperplane/shared/git";
+import { extractJsonObject } from "@getpaperplane/shared/schemaJson";
 
 import type { ProviderTextGeneration } from "./textGeneration.ts";
 import {

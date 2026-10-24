@@ -14,15 +14,15 @@ import {
   EnvironmentHttpUnauthorizedError,
   EnvironmentId,
   WS_METHODS,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   type RelayEnvironmentLinkResponse,
   type RelayManagedEndpointProviderKind,
-} from "@rove-code/contracts/relay";
-import { EnvironmentRegistry } from "@rove-code/client-runtime/connection";
-import { request, runStream } from "@rove-code/client-runtime/rpc";
-import { makeEnvironmentHttpApiClient } from "@rove-code/client-runtime/rpc";
-import { ManagedRelay, relayRequestFailureDetail } from "@rove-code/client-runtime/relay";
+} from "@getpaperplane/contracts/relay";
+import { EnvironmentRegistry } from "@getpaperplane/client-runtime/connection";
+import { request, runStream } from "@getpaperplane/client-runtime/rpc";
+import { makeEnvironmentHttpApiClient } from "@getpaperplane/client-runtime/rpc";
+import { ManagedRelay, relayRequestFailureDetail } from "@getpaperplane/client-runtime/relay";
 
 import * as PrimaryEnvironmentHttpLayer from "../environments/primary/httpLayer";
 import { resolveCloudPublicConfig } from "./publicConfig";

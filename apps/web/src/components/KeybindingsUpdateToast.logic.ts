@@ -1,4 +1,4 @@
-import type { ServerConfigStreamEvent } from "@rove-code/contracts";
+import type { ServerConfigStreamEvent } from "@getpaperplane/contracts";
 
 export const KEYBINDINGS_SUCCESS_TOAST_COOLDOWN_MS = 2_000;
 

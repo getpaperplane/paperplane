@@ -16,7 +16,7 @@ import {
   AuthSourceControlWriteScope,
   AuthTerminalOperateScope,
   AuthTerminalReadScope,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 
 export const AUTH_SCOPE_OPTIONS: ReadonlyArray<{
   readonly scope: AuthGrantScope;

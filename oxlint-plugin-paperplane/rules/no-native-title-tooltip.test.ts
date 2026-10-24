@@ -2,11 +2,11 @@ import { assert, describe } from "@effect/vitest";
 
 import { createOxlintRuleHarness } from "../test/utils.ts";
 
-const rule = createOxlintRuleHarness("rove/no-native-title-tooltip", {
+const rule = createOxlintRuleHarness("paperplane/no-native-title-tooltip", {
   filename: "fixture.tsx",
 });
 
-describe("rove/no-native-title-tooltip", () => {
+describe("paperplane/no-native-title-tooltip", () => {
   rule.valid(
     "allows intrinsic elements without a title attribute",
     `const el = <span className="truncate">Truncated text</span>;`,

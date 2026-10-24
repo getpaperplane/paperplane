@@ -1,10 +1,10 @@
-import { scopeProjectRef } from "@rove-code/client-runtime/environment";
+import { scopeProjectRef } from "@getpaperplane/client-runtime/environment";
 import {
   EnvironmentId,
   ProjectId,
   ProviderInstanceId,
   type ModelSelection,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { describe, expect, it, vi } from "vite-plus/test";
 import {
   resolveThreadActionProjectRef,

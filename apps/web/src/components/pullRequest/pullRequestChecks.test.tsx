@@ -1,4 +1,4 @@
-import type { EnvironmentId, ProjectId, PullRequestCheck } from "@rove-code/contracts";
+import type { EnvironmentId, ProjectId, PullRequestCheck } from "@getpaperplane/contracts";
 import { Children, isValidElement, type ReactNode } from "react";
 import { describe, expect, it } from "vite-plus/test";
 

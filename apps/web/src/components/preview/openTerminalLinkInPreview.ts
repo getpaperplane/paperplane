@@ -1,5 +1,5 @@
-import type { ScopedThreadRef } from "@rove-code/contracts";
-import { isAtomCommandInterrupted } from "@rove-code/client-runtime/state/runtime";
+import type { ScopedThreadRef } from "@getpaperplane/contracts";
+import { isAtomCommandInterrupted } from "@getpaperplane/client-runtime/state/runtime";
 import * as Schema from "effect/Schema";
 
 import {

@@ -1,6 +1,6 @@
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackHeaderItem } from "@react-navigation/native-stack";
-import { resolveEnvironmentMachineKind } from "@rove-code/contracts";
+import { resolveEnvironmentMachineKind } from "@getpaperplane/contracts";
 import { Platform, Pressable } from "react-native";
 
 import { Menu } from "../../../components/ui/Menu";

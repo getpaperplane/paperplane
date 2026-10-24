@@ -1,7 +1,7 @@
 import type {
   DesktopPreviewAnnotationTheme,
   DesktopPreviewRecordingInput,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 
 import {
   DEFAULT_RECORDING_INPUT_OPTIONS,

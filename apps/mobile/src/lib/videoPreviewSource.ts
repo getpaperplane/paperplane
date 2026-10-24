@@ -1,5 +1,5 @@
-import type { AssetResource, ChatFileAttachment, EnvironmentId } from "@rove-code/contracts";
-import { videoMimeType } from "@rove-code/shared/video";
+import type { AssetResource, ChatFileAttachment, EnvironmentId } from "@getpaperplane/contracts";
+import { videoMimeType } from "@getpaperplane/shared/video";
 
 import type { DraftComposerFileAttachment } from "./composerImages";
 import type { MediaActionsSource } from "./mediaActionsSource";

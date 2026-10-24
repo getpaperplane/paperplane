@@ -1,4 +1,4 @@
-import { type EnvironmentConnectionPhase } from "@rove-code/client-runtime/connection";
+import { type EnvironmentConnectionPhase } from "@getpaperplane/client-runtime/connection";
 
 export type ThreadContentPresentation =
   | { readonly kind: "ready" }

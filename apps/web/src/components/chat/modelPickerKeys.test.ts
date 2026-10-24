@@ -1,4 +1,4 @@
-import { ProviderInstanceId } from "@rove-code/contracts";
+import { ProviderInstanceId } from "@getpaperplane/contracts";
 import { describe, expect, it } from "vite-plus/test";
 import {
   modelPickerLegacySectionKey,

@@ -1,7 +1,7 @@
 import { ExternalLinkIcon, PaperclipIcon } from "lucide-react";
-import { markdownImageSourceFragment } from "@rove-code/client-runtime/markdown-images";
-import { githubMediaFetchUrl } from "@rove-code/shared/githubMedia";
-import type { AssetResource, EnvironmentId, ScopedThreadRef } from "@rove-code/contracts";
+import { markdownImageSourceFragment } from "@getpaperplane/client-runtime/markdown-images";
+import { githubMediaFetchUrl } from "@getpaperplane/shared/githubMedia";
+import type { AssetResource, EnvironmentId, ScopedThreadRef } from "@getpaperplane/contracts";
 import { createContext, useContext, useMemo } from "react";
 import type { Options as ReactMarkdownOptions } from "react-markdown";
 

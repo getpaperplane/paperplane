@@ -3,8 +3,8 @@ import {
   type DesktopCaptureConfigApplied,
   type DesktopCaptureConfigPreview,
   type DesktopSnapShotState,
-} from "@rove-code/contracts";
-import { parseKeybindingShortcut } from "@rove-code/shared/keybindings";
+} from "@getpaperplane/contracts";
+import { parseKeybindingShortcut } from "@getpaperplane/shared/keybindings";
 import { FileDiff } from "@pierre/diffs/react";
 import { parseDiffFromFile } from "@pierre/diffs";
 import { useMemo, useState } from "react";

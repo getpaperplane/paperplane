@@ -1,4 +1,4 @@
-import { SourceControlProviderKind } from "@rove-code/contracts";
+import { SourceControlProviderKind } from "@getpaperplane/contracts";
 import * as Arr from "effect/Array";
 import * as Cache from "effect/Cache";
 import * as Clock from "effect/Clock";
@@ -42,11 +42,11 @@ import {
   type ThreadPullRequestKey,
   type VcsCreateWorktreeInput,
   type VcsCreateWorktreeResult,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   hasProjectSettingsOverrides,
   resolveProjectSettings,
-} from "@rove-code/shared/projectSettings";
+} from "@getpaperplane/shared/projectSettings";
 import {
   detectSourceControlProviderFromGitRemoteUrl,
   mergeGitStatusParts,
@@ -54,24 +54,24 @@ import {
   resolveAutoFeatureBranchName,
   sanitizeBranchFragment,
   sanitizeFeatureBranchName,
-} from "@rove-code/shared/git";
+} from "@getpaperplane/shared/git";
 import {
   canonicalRepositoryKey,
   getChangeRequestTerminologyForKind,
   isSshRemoteUrl,
   type ChangeRequestTerminology,
-} from "@rove-code/shared/sourceControl";
-import { parseChangeRequestUrl } from "@rove-code/shared/changeRequestUrl";
+} from "@getpaperplane/shared/sourceControl";
+import { parseChangeRequestUrl } from "@getpaperplane/shared/changeRequestUrl";
 import {
   normalizeThreadPullRequestKey,
   threadPullRequestKeyOf,
-} from "@rove-code/shared/threadPullRequests";
+} from "@getpaperplane/shared/threadPullRequests";
 
 import {
   DEFAULT_SERVER_SETTINGS,
   GitManagerError,
   GitPullRequestMaterializationError,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as TextGeneration from "../textGeneration/TextGeneration.ts";
 import {
   conventionalCommitsTextGenerationPolicy,
@@ -84,17 +84,17 @@ import * as ProjectSetupScriptRunner from "../project/ProjectSetupScriptRunner.t
 import {
   SelectedGitHubAccount,
   provideSelectedGitHubAccount,
-} from "@rove-code/source-control-github/server/GitHubCredentials";
+} from "@getpaperplane/source-control-github/server/GitHubCredentials";
 
 import * as ProviderRegistry from "../provider/ProviderRegistry.ts";
 import { extractBranchNameFromRemoteRef } from "./remoteRefs.ts";
 import { detachStackFrame } from "./detachStackFrame.ts";
 import * as ServerSettings from "../serverSettings.ts";
-import type { GitManagerServiceError } from "@rove-code/contracts";
+import type { GitManagerServiceError } from "@getpaperplane/contracts";
 import * as GitVcsDriver from "../vcs/GitVcsDriver.ts";
-import * as SourceControlProvider from "@rove-code/source-control-core/server/SourceControlProvider";
+import * as SourceControlProvider from "@getpaperplane/source-control-core/server/SourceControlProvider";
 import * as SourceControlProviderRegistry from "../sourceControl/SourceControlProviderRegistry.ts";
-import type { ChangeRequest } from "@rove-code/contracts";
+import type { ChangeRequest } from "@getpaperplane/contracts";
 
 export interface GitActionProgressReporter {
   readonly publish: (event: GitActionProgressEvent) => Effect.Effect<void, never>;
@@ -181,7 +181,7 @@ export class GitManager extends Context.Service<
       Scope.Scope
     >;
   }
->()("@rove-code/server/git/GitManager") {}
+>()("@getpaperplane/server/git/GitManager") {}
 
 const COMMIT_TIMEOUT_MS = 10 * 60_000;
 const MAX_PROGRESS_TEXT_LENGTH = 500;

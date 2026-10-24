@@ -1,4 +1,4 @@
-import { type ProviderDriverKind, type ProviderInstanceId } from "@rove-code/contracts";
+import { type ProviderDriverKind, type ProviderInstanceId } from "@getpaperplane/contracts";
 import { memo } from "react";
 import { CheckIcon, StarIcon } from "lucide-react";
 import {

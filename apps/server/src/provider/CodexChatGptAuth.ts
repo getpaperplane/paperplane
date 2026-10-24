@@ -7,8 +7,8 @@ import {
   type ChatGptReconnectProfile,
   type ChatGptTransferredProfile,
   type ProviderInstanceId,
-} from "@rove-code/contracts";
-import { codexCallbackUrl } from "@rove-code/shared/codexAuthHandoff";
+} from "@getpaperplane/contracts";
+import { codexCallbackUrl } from "@getpaperplane/shared/codexAuthHandoff";
 import * as Clock from "effect/Clock";
 import * as Cause from "effect/Cause";
 import * as AnalyticsService from "../telemetry/AnalyticsService.ts";
@@ -19,8 +19,8 @@ import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 import * as Semaphore from "effect/Semaphore";
-import * as ProviderAuthFlow from "@rove-code/provider-core/server/providerAuthFlow";
-import type { ProviderAuthFlowContext } from "@rove-code/provider-core/server/providerAuthFlow";
+import * as ProviderAuthFlow from "@getpaperplane/provider-core/server/providerAuthFlow";
+import type { ProviderAuthFlowContext } from "@getpaperplane/provider-core/server/providerAuthFlow";
 import { HttpClient, HttpClientRequest } from "effect/http";
 import * as ProviderCredentialStore from "./ProviderCredentialStore.ts";
 import { withChatGptSessionLock } from "./CodexChatGptSessionLock.ts";

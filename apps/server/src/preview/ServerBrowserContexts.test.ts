@@ -1,6 +1,6 @@
 import * as NodeEvents from "node:events";
 
-import { INCOGNITO_BROWSER_PROFILE_ID } from "@rove-code/contracts";
+import { INCOGNITO_BROWSER_PROFILE_ID } from "@getpaperplane/contracts";
 import { chromium, type Browser, type BrowserContext, type BrowserType } from "playwright-core";
 import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 

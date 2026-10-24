@@ -1,5 +1,5 @@
 // @effect-diagnostics globalTimers:off - The bridge runs in the client, outside an Effect runtime.
-import { MCP_APP_PROTOCOL_VERSION, type McpAppReference } from "@rove-code/shared/mcpApp";
+import { MCP_APP_PROTOCOL_VERSION, type McpAppReference } from "@getpaperplane/shared/mcpApp";
 import * as Base64 from "effect/encoding/Base64";
 import * as Predicate from "effect/Predicate";
 import * as Result from "effect/Result";

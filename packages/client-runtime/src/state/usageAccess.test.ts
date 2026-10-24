@@ -1,4 +1,4 @@
-import { AuthDiagnosticsReadScope, AuthOrchestrationReadScope } from "@rove-code/contracts";
+import { AuthDiagnosticsReadScope, AuthOrchestrationReadScope } from "@getpaperplane/contracts";
 import { describe, expect, it } from "vite-plus/test";
 
 import { resolveUsageAccess } from "./usageAccess.ts";

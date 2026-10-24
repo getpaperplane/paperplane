@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import * as Cause from "effect/Cause";
-import type { AtomCommandResult } from "@rove-code/client-runtime/state/runtime";
+import type { AtomCommandResult } from "@getpaperplane/client-runtime/state/runtime";
 import {
   type EnvironmentId,
   type RemoteSandbox,
@@ -8,7 +8,7 @@ import {
   type SandboxInventory,
   type SandboxProvider,
   type SandboxRegion,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { useRouter } from "@tanstack/react-router";
 import { AlertCircleIcon, ChevronDownIcon, ExternalLinkIcon, RefreshCwIcon } from "lucide-react";
 import { sandboxEnvironment } from "../../state/sandbox";

@@ -1,9 +1,9 @@
 import { createContext, useContext, useMemo, useState } from "react";
 import { pullRequestMediaSource, pullRequestImageSource } from "./pullRequestMediaSource";
 import { useFilePreviewGallery } from "../../components/FilePreviewGallery";
-import type { AssetResource, EnvironmentId } from "@rove-code/contracts";
-import { githubMediaFetchUrl } from "@rove-code/shared/githubMedia";
-import { videoMimeType } from "@rove-code/shared/video";
+import type { AssetResource, EnvironmentId } from "@getpaperplane/contracts";
+import { githubMediaFetchUrl } from "@getpaperplane/shared/githubMedia";
+import { videoMimeType } from "@getpaperplane/shared/video";
 import { Pressable, View } from "react-native";
 import { Image } from "expo-image";
 import { AppText } from "../../components/ui/AppText";

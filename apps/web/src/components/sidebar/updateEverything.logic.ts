@@ -1,6 +1,6 @@
-import type { ServerUpdateState } from "@rove-code/client-runtime/state/server";
-import type { EnvironmentId, ServerConfig } from "@rove-code/contracts";
-import { cliReleaseChannelOf } from "@rove-code/shared/cliRelease";
+import type { ServerUpdateState } from "@getpaperplane/client-runtime/state/server";
+import type { EnvironmentId, ServerConfig } from "@getpaperplane/contracts";
+import { cliReleaseChannelOf } from "@getpaperplane/shared/cliRelease";
 
 import {
   resolveServerSelfUpdateCapability,

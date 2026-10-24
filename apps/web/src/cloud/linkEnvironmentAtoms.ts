@@ -1,7 +1,7 @@
 import {
   createAtomCommandScheduler,
   createRuntimeCommand,
-} from "@rove-code/client-runtime/state/runtime";
+} from "@getpaperplane/client-runtime/state/runtime";
 
 import { connectionAtomRuntime } from "../connection/runtime";
 import {

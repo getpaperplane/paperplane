@@ -17,11 +17,11 @@ import {
   EnvironmentScopeRequiredError,
   EnvironmentAuthenticatedAuth,
   EnvironmentAuthenticatedPrincipal,
-} from "@rove-code/contracts";
-import type { AuthEnvironmentScope, DpopFailureReason } from "@rove-code/contracts";
-import { parseOAuthScope } from "@rove-code/shared/oauthScope";
-import { legacyRoveCookieName } from "@rove-code/shared/roveMigration";
-import { causeErrorTag } from "@rove-code/shared/observability";
+} from "@getpaperplane/contracts";
+import type { AuthEnvironmentScope, DpopFailureReason } from "@getpaperplane/contracts";
+import { parseOAuthScope } from "@getpaperplane/shared/oauthScope";
+import { legacyRoveCookieName } from "@getpaperplane/shared/roveMigration";
+import { causeErrorTag } from "@getpaperplane/shared/observability";
 import * as Clock from "effect/Clock";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";

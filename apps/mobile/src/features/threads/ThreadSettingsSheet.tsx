@@ -1,11 +1,11 @@
 import { Toolbar } from "../../components/ui/Toolbar";
 import * as Dialog from "../../components/ui/Dialog";
 import { createV5StackNavigator as createNativeStackNavigator } from "../../native/createV5StackNavigator";
-import { DEFAULT_SERVER_SETTINGS } from "@rove-code/contracts";
+import { DEFAULT_SERVER_SETTINGS } from "@getpaperplane/contracts";
 import {
   modelPreferencesMigrationPatch,
   resolveModelPreferences,
-} from "@rove-code/shared/serverSettings";
+} from "@getpaperplane/shared/serverSettings";
 import type {
   EnvironmentId,
   ModelSelection,
@@ -15,7 +15,7 @@ import type {
   ProviderOptionSelection,
   RuntimeMode,
   ServerSettings,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import type { LegendListRenderItemProps } from "@legendapp/list/react-native";
 import { RegistryContext, useAtomValue } from "@effect/atom-react";
 import { AnimatedLegendList } from "@legendapp/list/reanimated";
@@ -23,7 +23,7 @@ import {
   getProviderOptionCurrentLabel,
   getProviderOptionCurrentValue,
   getProviderOptionDescriptors,
-} from "@rove-code/shared/model";
+} from "@getpaperplane/shared/model";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import { type NativeStackNavigationProp } from "@react-navigation/native-stack";
 import * as Haptics from "expo-haptics";
@@ -94,7 +94,7 @@ import {
   pendingModelAfterPress,
   providerSectionIsCollapsed,
 } from "./thread-settings-sheet-state";
-import { formatProviderUpdateRequiredNotice } from "@rove-code/client-runtime/providerUpdateRequiredModels";
+import { formatProviderUpdateRequiredNotice } from "@getpaperplane/client-runtime/providerUpdateRequiredModels";
 
 /**
  * Everyday harnesses start expanded; every other provider (OpenRouter catalogs

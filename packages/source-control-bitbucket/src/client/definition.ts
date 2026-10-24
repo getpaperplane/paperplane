@@ -7,7 +7,7 @@ import {
   makeProviderSettingsSchema,
   SourceControlProviderKind,
   TrimmedString,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 import {
@@ -15,7 +15,7 @@ import {
   isChangeRequestInProjectRepository,
   isChangeRequestOnProjectHost,
   isChangeRequestPath,
-} from "@rove-code/source-control-core/client/definition";
+} from "@getpaperplane/source-control-core/client/definition";
 
 const safeShellArgument = /^[A-Za-z0-9._/@+=,-]+$/;
 const repositoryName = /^[A-Za-z0-9._-]+\/[A-Za-z0-9._-]+$/;

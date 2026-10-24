@@ -8,7 +8,7 @@ import {
   type WorktreeInventoryInput,
   type WorktreeInventoryRemoveInput,
   type WorktreeInventoryTarget,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
@@ -19,7 +19,7 @@ import * as Layer from "effect/Layer";
 import * as Schema from "effect/Schema";
 import * as SqlClient from "effect/sql/SqlClient";
 import * as SqlSchema from "effect/sql/SqlSchema";
-import * as NodeSqliteClient from "@rove-code/shared/nodeSqliteClient";
+import * as NodeSqliteClient from "@getpaperplane/shared/nodeSqliteClient";
 import { ProjectionStoreV2 } from "../orchestration-v2/ProjectionStore.ts";
 import { ProjectStoreV2 } from "../orchestration-v2/ProjectStore.ts";
 import { threadHasQueuedTurnStart } from "../orchestration-v2/ThreadSettlementService.ts";
@@ -101,7 +101,7 @@ export class WorktreeInventory extends Context.Service<
       input: WorktreeInventoryRemoveInput,
     ) => Effect.Effect<void, WorktreeInventoryError>;
   }
->()("@rove-code/server/project/worktreeInventory") {}
+>()("@getpaperplane/server/project/worktreeInventory") {}
 
 const make = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;

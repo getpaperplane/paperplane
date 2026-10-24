@@ -1,5 +1,5 @@
-import { DEFAULT_SERVER_SETTINGS, EnvironmentId, ProjectId } from "@rove-code/contracts";
-import { resolveProjectSettings } from "@rove-code/shared/projectSettings";
+import { DEFAULT_SERVER_SETTINGS, EnvironmentId, ProjectId } from "@getpaperplane/contracts";
+import { resolveProjectSettings } from "@getpaperplane/shared/projectSettings";
 import { describe, expect, it } from "vite-plus/test";
 
 import { settingInheritanceLayers } from "./SettingInheritance";

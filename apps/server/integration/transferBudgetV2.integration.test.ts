@@ -22,7 +22,7 @@ import {
   ProviderDriverKind,
   type OrchestrationV2ThreadStreamItem,
   type OrchestrationV2ShellStreamItem,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";

@@ -3,15 +3,15 @@ import {
   PROVIDER_SEND_TURN_SUPPORTED_IMAGE_MIME_TYPES,
   type ChatAttachment,
   type EnvironmentId,
-} from "@rove-code/contracts";
-import { parseScopedThreadKey } from "@rove-code/client-runtime/environment";
-import { resolveAssetUrl } from "@rove-code/client-runtime/state/assets";
+} from "@getpaperplane/contracts";
+import { parseScopedThreadKey } from "@getpaperplane/client-runtime/environment";
+import { resolveAssetUrl } from "@getpaperplane/client-runtime/state/assets";
 import {
   deletePendingAttachmentUpload,
   runAttachmentUploadCycle,
   verifyPersistedAttachmentUpload,
   type PersistedAttachmentVerification,
-} from "@rove-code/client-runtime/state/attachments";
+} from "@getpaperplane/client-runtime/state/attachments";
 import { create } from "zustand";
 import * as Option from "effect/Option";
 import { AsyncResult } from "effect/reactivity";

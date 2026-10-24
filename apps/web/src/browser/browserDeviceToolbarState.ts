@@ -1,4 +1,4 @@
-import type { PreviewViewportSetting } from "@rove-code/contracts";
+import type { PreviewViewportSetting } from "@getpaperplane/contracts";
 
 export async function commitViewportAndAspectRatio(
   setting: PreviewViewportSetting,

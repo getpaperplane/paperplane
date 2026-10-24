@@ -1,4 +1,4 @@
-import { videoMimeType } from "@rove-code/shared/video";
+import { videoMimeType } from "@getpaperplane/shared/video";
 
 import type { FileBackedComposerAttachment } from "./composerImages";
 import { resolveOwnedComposerAttachmentFileUri } from "./composerAttachmentFiles";

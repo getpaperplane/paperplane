@@ -1,6 +1,6 @@
 import { it } from "@effect/vitest";
-import * as HostProcess from "@rove-code/shared/HostProcess";
-import * as NetService from "@rove-code/shared/Net";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
+import * as NetService from "@getpaperplane/shared/Net";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Sink from "effect/Sink";

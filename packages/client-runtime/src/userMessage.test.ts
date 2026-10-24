@@ -1,4 +1,4 @@
-import { ScheduledTaskId } from "@rove-code/contracts";
+import { ScheduledTaskId } from "@getpaperplane/contracts";
 import { describe, expect, it } from "vite-plus/test";
 
 import { resolveUserMessagePresentation } from "./userMessage.ts";

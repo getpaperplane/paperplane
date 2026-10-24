@@ -1,4 +1,4 @@
-import { DEFAULT_SERVER_SETTINGS, ProjectId, type ServerSettings } from "@rove-code/contracts";
+import { DEFAULT_SERVER_SETTINGS, ProjectId, type ServerSettings } from "@getpaperplane/contracts";
 import { describe, expect, it } from "vite-plus/test";
 
 import { findOrphanedProjectIds } from "./ProjectSettingsOverrideSweep.ts";

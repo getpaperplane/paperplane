@@ -1,7 +1,7 @@
 import { expect, it } from "@effect/vitest";
 import * as NodeServices from "@effect/platform-node/NodeServices";
-import { EnvironmentId, ProviderInstanceId, ThreadId } from "@rove-code/contracts";
-import { Platform as HostProcessPlatform } from "@rove-code/shared/HostProcess";
+import { EnvironmentId, ProviderInstanceId, ThreadId } from "@getpaperplane/contracts";
+import { Platform as HostProcessPlatform } from "@getpaperplane/shared/HostProcess";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Schema from "effect/Schema";

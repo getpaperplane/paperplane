@@ -1,5 +1,5 @@
 import { assert } from "@effect/vitest";
-import type { ProviderReplayTranscript } from "@rove-code/contracts";
+import type { ProviderReplayTranscript } from "@getpaperplane/contracts";
 
 import type { OrchestratorV2ScenarioResult } from "../../OrchestratorScenario.ts";
 import { assertThreadRollbackOutput } from "../thread_rollback/codex_output.ts";

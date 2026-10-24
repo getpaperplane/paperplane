@@ -1,4 +1,4 @@
-import type { ProjectIconColor, ProjectIconOverride } from "@rove-code/contracts";
+import type { ProjectIconColor, ProjectIconOverride } from "@getpaperplane/contracts";
 
 export type ProjectIconGlyph =
   | { readonly kind: "emoji"; readonly emoji: string }

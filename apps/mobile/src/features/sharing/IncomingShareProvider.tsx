@@ -1,7 +1,7 @@
 import * as Dialog from "../../components/ui/Dialog";
 import Constants from "expo-constants";
 import * as Crypto from "expo-crypto";
-import { PROVIDER_SEND_TURN_MAX_FILE_BYTES } from "@rove-code/contracts";
+import { PROVIDER_SEND_TURN_MAX_FILE_BYTES } from "@getpaperplane/contracts";
 import {
   clearSharedPayloads,
   getResolvedSharedPayloadsAsync,

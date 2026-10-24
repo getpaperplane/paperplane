@@ -1,4 +1,4 @@
-import type { OrchestrationV2HistoricalMessage } from "@rove-code/contracts";
+import type { OrchestrationV2HistoricalMessage } from "@getpaperplane/contracts";
 import {
   ChatAttachment,
   CheckpointId,
@@ -33,7 +33,7 @@ import {
   RunId,
   ThreadId,
   TurnItemId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Context from "effect/Context";
 import * as Schema from "effect/Schema";
 import type * as Effect from "effect/Effect";
@@ -689,4 +689,4 @@ export class ProviderAdapterV2 extends Context.Service<
       input: ProviderAdapterV2OpenSessionInput,
     ) => Effect.Effect<ProviderAdapterV2SessionRuntime, ProviderAdapterV2Error, Scope.Scope>;
   }
->()("@rove-code/provider-core/server/ProviderAdapter/ProviderAdapterV2") {}
+>()("@getpaperplane/provider-core/server/ProviderAdapter/ProviderAdapterV2") {}

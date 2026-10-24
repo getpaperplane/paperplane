@@ -1,6 +1,6 @@
 import { AppActivityIndicator } from "../../components/ui/AppActivityIndicator";
 import * as Dialog from "../../components/ui/Dialog";
-import type { EnvironmentId, ThreadId, TurnItemId } from "@rove-code/contracts";
+import type { EnvironmentId, ThreadId, TurnItemId } from "@getpaperplane/contracts";
 import {
   makeMcpAppHost,
   McpAppHostRefusal,
@@ -9,16 +9,16 @@ import {
   type McpAppCallToolResult,
   type McpAppHost,
   type McpAppHostContext,
-} from "@rove-code/client-runtime/mcp-apps";
-import { scopeThreadRef } from "@rove-code/client-runtime/environment";
-import { squashAtomCommandFailure } from "@rove-code/client-runtime/state/runtime";
-import { CommandId, MessageId } from "@rove-code/contracts";
+} from "@getpaperplane/client-runtime/mcp-apps";
+import { scopeThreadRef } from "@getpaperplane/client-runtime/environment";
+import { squashAtomCommandFailure } from "@getpaperplane/client-runtime/state/runtime";
+import { CommandId, MessageId } from "@getpaperplane/contracts";
 import {
   mcpAppAllowAttribute,
   mcpAppFileName,
   mcpAppReferencesEqual,
   type McpAppReference,
-} from "@rove-code/shared/mcpApp";
+} from "@getpaperplane/shared/mcpApp";
 import * as Predicate from "effect/Predicate";
 import Constants from "expo-constants";
 import { useNavigation } from "@react-navigation/native";

@@ -7,7 +7,7 @@ import {
   type FilesystemEntryMetadata,
   type FilesystemGetMetadataInput,
   WS_METHODS,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Clock from "effect/Clock";
 import * as Effect from "effect/Effect";
 import * as Deferred from "effect/Deferred";

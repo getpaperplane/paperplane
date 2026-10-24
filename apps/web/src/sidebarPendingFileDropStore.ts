@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-import type { ScopedThreadRef } from "@rove-code/contracts";
+import type { ScopedThreadRef } from "@getpaperplane/contracts";
 
 /**
  * Field-wise ref equality. `scopedThreadKey` joins with `:`, so two distinct

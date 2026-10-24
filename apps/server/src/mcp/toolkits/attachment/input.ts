@@ -1,4 +1,4 @@
-import { ChatFileAttachment, ChatImageAttachment } from "@rove-code/contracts";
+import { ChatFileAttachment, ChatImageAttachment } from "@getpaperplane/contracts";
 import * as Schema from "effect/Schema";
 import * as Struct from "effect/Struct";
 

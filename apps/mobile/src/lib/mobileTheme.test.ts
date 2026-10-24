@@ -7,7 +7,7 @@ import {
   ROVE_CODE_DARK_THEME_COLORS,
   MOBILE_THEME_IDS,
   getThemeColorsForAppearance,
-} from "@rove-code/shared/themePalettes";
+} from "@getpaperplane/shared/themePalettes";
 import {
   readDefaultMobileThemeVariables,
   readGeneratedMobileThemeVariables,

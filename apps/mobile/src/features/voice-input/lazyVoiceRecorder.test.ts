@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vite-plus/test";
 
-import { VoiceInputController } from "@rove-code/client-runtime/voice-input";
+import { VoiceInputController } from "@getpaperplane/client-runtime/voice-input";
 
 import { createLazyVoiceRecorder, type VoiceRecordingInput } from "./lazyVoiceRecorder";
 

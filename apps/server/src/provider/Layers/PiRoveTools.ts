@@ -7,8 +7,8 @@ import {
   type CallToolResult,
 } from "@modelcontextprotocol/sdk/types.js";
 
-import { ROVE_MCP_TOOL_PREFIX } from "@rove-code/shared/roveMcp";
-import type { McpProviderSessionConfig } from "@rove-code/provider-core/server/mcpSession";
+import { ROVE_MCP_TOOL_PREFIX } from "@getpaperplane/shared/roveMcp";
+import type { McpProviderSessionConfig } from "@getpaperplane/provider-core/server/mcpSession";
 
 /** Keep MCP failures as failed Pi tool executions, not successful text results. */
 export function toPiRoveToolResult(result: CallToolResult) {

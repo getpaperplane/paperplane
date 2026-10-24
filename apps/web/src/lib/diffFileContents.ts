@@ -2,7 +2,7 @@ import type { FileDiffContentsLoader } from "@pierre/diffs";
 import {
   squashAtomCommandFailure,
   type AtomCommandResult,
-} from "@rove-code/client-runtime/state/runtime";
+} from "@getpaperplane/client-runtime/state/runtime";
 import type {
   EnvironmentId,
   PullRequestDiffFileContentsInput,
@@ -11,7 +11,7 @@ import type {
   ReviewDiffFileContentsInput,
   ReviewDiffFileContentsResult,
   ReviewDiffPreviewSourceKind,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 
 import { resolveFileDiffPath } from "./diffRendering";
 

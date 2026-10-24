@@ -1,4 +1,4 @@
-import { AuthFilesystemWriteScope, type EnvironmentId } from "@rove-code/contracts";
+import { AuthFilesystemWriteScope, type EnvironmentId } from "@getpaperplane/contracts";
 import { createRef, useEffect, useMemo } from "react";
 
 import { projectEnvironment } from "~/state/projects";

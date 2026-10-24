@@ -3,10 +3,10 @@ import {
   type ModelSelection,
   type ProviderInstanceId,
   type WorktreeSubmodules,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Option from "effect/Option";
-import { createModelSelection } from "@rove-code/shared/model";
-import { resolveProjectSettings } from "@rove-code/shared/projectSettings";
+import { createModelSelection } from "@getpaperplane/shared/model";
+import { resolveProjectSettings } from "@getpaperplane/shared/projectSettings";
 import { useNavigate } from "@tanstack/react-router";
 
 import { mergeEnvironmentSettings } from "../../hooks/useSettings";

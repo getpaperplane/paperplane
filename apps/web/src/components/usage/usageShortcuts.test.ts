@@ -1,4 +1,4 @@
-import { DEFAULT_RESOLVED_KEYBINDINGS } from "@rove-code/shared/keybindings";
+import { DEFAULT_RESOLVED_KEYBINDINGS } from "@getpaperplane/shared/keybindings";
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 import { resolveUsageShortcut } from "./usageShortcuts";
 

@@ -3,7 +3,7 @@
  * the local server trace file and its rotated backups. It reads the files
  * directly, so it works while the server is stalled or stopped.
  */
-import { PositiveInt } from "@rove-code/contracts";
+import { PositiveInt } from "@getpaperplane/contracts";
 import * as Clock from "effect/Clock";
 import * as Config from "effect/Config";
 import * as Console from "effect/Console";

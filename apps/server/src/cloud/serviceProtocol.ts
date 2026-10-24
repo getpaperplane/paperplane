@@ -1,4 +1,4 @@
-import type { ServerSelfUpdateOutcome } from "@rove-code/contracts";
+import type { ServerSelfUpdateOutcome } from "@getpaperplane/contracts";
 import * as RuntimePredicate from "effect/Predicate";
 import type { Json as SchemaJson } from "effect/Schema";
 

@@ -18,7 +18,7 @@ import {
   RunId,
   NonNegativeInt,
   ProjectId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Crypto from "effect/Crypto";
 import * as Schema from "effect/Schema";
 import { Tool, Toolkit } from "effect/ai";

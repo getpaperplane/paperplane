@@ -1,4 +1,4 @@
-import { EnvironmentId, ProviderInstanceId } from "@rove-code/contracts";
+import { EnvironmentId, ProviderInstanceId } from "@getpaperplane/contracts";
 import * as Schema from "effect/Schema";
 import { providerAuthReturnUrl } from "./providerAuthReturnUrl.ts";
 

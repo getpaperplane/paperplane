@@ -1,8 +1,8 @@
-import type { DiscoveredLocalServer } from "@rove-code/contracts";
-import { isLoopbackHost } from "@rove-code/shared/preview";
+import type { DiscoveredLocalServer } from "@getpaperplane/contracts";
+import { isLoopbackHost } from "@getpaperplane/shared/preview";
 import { useMemo } from "react";
 
-import type { EnvironmentId } from "@rove-code/contracts";
+import type { EnvironmentId } from "@getpaperplane/contracts";
 import { resolveDiscoveredServerUrl } from "~/browser/browserTargetResolver";
 import { useDiscoveredPortsState } from "~/portDiscoveryState";
 

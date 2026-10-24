@@ -1,8 +1,8 @@
 import { ScreenScrollView as ScrollView } from "../../components/ui/ScreenScrollView";
 import { AppText as Text, AppTextInput } from "../../components/ui/AppText";
 import { ProjectFavicon } from "../../components/ProjectFavicon";
-import { deriveProjectGroupLabel } from "@rove-code/client-runtime/state/project-grouping";
-import type { EnvironmentProject } from "@rove-code/client-runtime/state/shell";
+import { deriveProjectGroupLabel } from "@getpaperplane/client-runtime/state/project-grouping";
+import type { EnvironmentProject } from "@getpaperplane/client-runtime/state/shell";
 import { useState } from "react";
 import { Platform, Pressable, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";

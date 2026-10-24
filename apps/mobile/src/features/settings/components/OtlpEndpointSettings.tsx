@@ -1,12 +1,12 @@
 import { useAtomValue } from "@effect/atom-react";
-import type { OtlpSignal } from "@rove-code/contracts";
+import type { OtlpSignal } from "@getpaperplane/contracts";
 import {
   describeOtlpEndpointStatus,
   isOtlpHttpUrl,
   isOtlpEndpointInputValid,
   type OtlpEndpointCheck,
-} from "@rove-code/client-runtime/environment-admin";
-import { squashAtomCommandFailure } from "@rove-code/client-runtime/state/runtime";
+} from "@getpaperplane/client-runtime/environment-admin";
+import { squashAtomCommandFailure } from "@getpaperplane/client-runtime/state/runtime";
 import { AsyncResult } from "effect/reactivity";
 import { useState } from "react";
 import { View } from "react-native";

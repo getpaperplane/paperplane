@@ -15,14 +15,14 @@ import {
   type UsageSummary,
   type UsageProviderKind,
   type UsageSummaryInput,
-} from "@rove-code/contracts";
-import { needsCursorKeychainAccess, refreshUsage } from "@rove-code/client-runtime/state/usage";
-import { resolveUsageAccess } from "@rove-code/client-runtime/state/usage-access";
+} from "@getpaperplane/contracts";
+import { needsCursorKeychainAccess, refreshUsage } from "@getpaperplane/client-runtime/state/usage";
+import { resolveUsageAccess } from "@getpaperplane/client-runtime/state/usage-access";
 import * as Option from "effect/Option";
 import { AsyncResult, Atom } from "effect/reactivity";
 import { useCallback, useMemo, useState } from "react";
 
-import { mergeUsage, type EnvironmentUsage, type MergedUsage } from "@rove-code/shared/usageMerge";
+import { mergeUsage, type EnvironmentUsage, type MergedUsage } from "@getpaperplane/shared/usageMerge";
 import { appAtomRegistry } from "../rpc/atomRegistry";
 import { environmentPresentations } from "./presentation";
 import { serverEnvironment } from "./server";

@@ -1,4 +1,4 @@
-import type { ServerConfig } from "@rove-code/contracts";
+import type { ServerConfig } from "@getpaperplane/contracts";
 import { describe, expect, it } from "vite-plus/test";
 
 import { resolveEnvironmentIconPickerLock } from "./EnvironmentIconPicker";

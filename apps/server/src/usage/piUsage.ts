@@ -2,7 +2,7 @@ import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 
 import { parsePiModelRates as parsePiRates, type RateTable } from "./usagePricing.ts";
-import { totalTokens, type UsageRecord } from "@rove-code/provider-core/server/usage";
+import { totalTokens, type UsageRecord } from "@getpaperplane/provider-core/server/usage";
 
 const NonNegativeNumber = Schema.Finite.check(Schema.isGreaterThanOrEqualTo(0));
 const PiUsage = Schema.Struct({

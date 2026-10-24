@@ -3,7 +3,7 @@ import {
   type RemoteSandbox,
   type SandboxProvider,
   type SandboxRegion,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 import { sandboxCommandFailure } from "./bootstrap.ts";

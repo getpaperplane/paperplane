@@ -5,7 +5,7 @@ import {
   AuthSessionId,
   LOCAL_DEVICE_HOST_ID,
   type AuthEnvironmentScope,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import { HttpClient, HttpClientResponse, HttpRouter } from "effect/http";

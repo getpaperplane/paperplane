@@ -8,19 +8,19 @@ import * as Notifications from "expo-notifications";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 import { AppState, Platform } from "react-native";
-import type { EnvironmentId } from "@rove-code/contracts";
+import type { EnvironmentId } from "@getpaperplane/contracts";
 import {
   type RelayDeviceRegistrationRequest,
   type RelayAgentActivitySnapshotResponse,
   type RelayLiveActivityRegistrationRequest,
-} from "@rove-code/contracts/relay";
-import { findErrorTraceId } from "@rove-code/client-runtime/errors";
-import { ManagedRelay } from "@rove-code/client-runtime/relay";
+} from "@getpaperplane/contracts/relay";
+import { findErrorTraceId } from "@getpaperplane/client-runtime/errors";
+import { ManagedRelay } from "@getpaperplane/client-runtime/relay";
 import {
   isAtomCommandInterrupted,
   settleAsyncResult,
   squashAtomCommandFailure,
-} from "@rove-code/client-runtime/state/runtime";
+} from "@getpaperplane/client-runtime/state/runtime";
 
 import type { SavedRemoteConnection } from "../../lib/connection";
 import { runtime } from "../../lib/runtime";

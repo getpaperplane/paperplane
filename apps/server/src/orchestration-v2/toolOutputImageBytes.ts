@@ -1,9 +1,9 @@
-import type { OrchestrationV2TurnItem } from "@rove-code/contracts";
+import type { OrchestrationV2TurnItem } from "@getpaperplane/contracts";
 import {
   MAX_TOOL_OUTPUT_IMAGE_BASE64_LENGTH,
   readToolOutputImage,
   toolOutputImageBlocks,
-} from "@rove-code/shared/toolOutput";
+} from "@getpaperplane/shared/toolOutput";
 
 const IMAGE_MIME_KEYS = ["mimeType", "mime_type", "media_type", "type"] as const;
 const IMAGE_BODY_KEYS = new Set(["data", "blob", "base64"]);

@@ -1,6 +1,6 @@
 import type { ComponentProps } from "react";
 import { ExternalLinkIcon } from "lucide-react";
-import { CHATGPT_USAGE_URL } from "@rove-code/shared/usageLimits";
+import { CHATGPT_USAGE_URL } from "@getpaperplane/shared/usageLimits";
 import { ensureLocalApi } from "../../localApi";
 import { Button } from "../ui/button";
 

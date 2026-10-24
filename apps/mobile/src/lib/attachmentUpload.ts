@@ -1,22 +1,22 @@
-import { resolveAssetUrl } from "@rove-code/client-runtime/state/assets";
+import { resolveAssetUrl } from "@getpaperplane/client-runtime/state/assets";
 import {
   clampFileAttachmentUploadBytes,
   fileAttachmentTooLargeMessage,
   isAssetAttachmentNotFoundFailure,
   runAttachmentUploadCycle,
   verifyPersistedAttachmentUpload,
-} from "@rove-code/client-runtime/state/attachments";
-import { runAtomCommand, squashAtomCommandFailure } from "@rove-code/client-runtime/state/runtime";
+} from "@getpaperplane/client-runtime/state/attachments";
+import { runAtomCommand, squashAtomCommandFailure } from "@getpaperplane/client-runtime/state/runtime";
 import type {
   ChatFileAttachment,
   ChatImageAttachment,
   EnvironmentId,
   UploadChatImageAttachment,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   AuthOrchestrationOperateScope,
   PROVIDER_SEND_TURN_SUPPORTED_IMAGE_MIME_TYPES,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Option from "effect/Option";
 
 import { appAtomRegistry } from "../state/atom-registry";
@@ -31,7 +31,7 @@ import {
   type DraftComposerAttachment,
   type DraftComposerImageAttachment,
 } from "./composerImages";
-import { imageMimeType } from "@rove-code/shared/image";
+import { imageMimeType } from "@getpaperplane/shared/image";
 import { uuidv4 } from "./uuid";
 
 /**

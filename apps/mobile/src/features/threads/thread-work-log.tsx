@@ -12,7 +12,7 @@ import { ThreadCommandOutput, useCommandOutputStreaming } from "./thread-command
 import {
   getQuestionAnswerPreview,
   hasQuestionAnswer,
-} from "@rove-code/client-runtime/work-log/user-input";
+} from "@getpaperplane/client-runtime/work-log/user-input";
 import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
 import { type AppSymbolName, SymbolView } from "../../components/ui/AppSymbol";
@@ -48,13 +48,13 @@ import {
   type RunId,
   type ThreadId,
   type ToolActivityIcon,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { useAtomValue } from "@effect/atom-react";
-import { scopeThreadRef } from "@rove-code/client-runtime/environment";
+import { scopeThreadRef } from "@getpaperplane/client-runtime/environment";
 import { environmentThreadDetails, threadEnvironment } from "../../state/threads";
 import { useAtomCommand } from "../../state/use-atom-command";
-import { toolActivityFaviconUrl } from "@rove-code/shared/favicon";
-import { isJavaScriptReplTool } from "@rove-code/shared/toolActivity";
+import { toolActivityFaviconUrl } from "@getpaperplane/shared/favicon";
+import { isJavaScriptReplTool } from "@getpaperplane/shared/toolActivity";
 import { useMarkdownCodeHighlight } from "./markdownCodeHighlightState";
 
 import { AppText as Text } from "../../components/ui/AppText";
@@ -72,7 +72,7 @@ import {
   toolCallLines,
   turnItemOutputImages,
   turnItemOutputText,
-} from "@rove-code/client-runtime/work-log/item-detail";
+} from "@getpaperplane/client-runtime/work-log/item-detail";
 import { useTurnItemDetail } from "../../state/queries";
 import {
   resolveThreadWorkGroupInitialScroll,
@@ -84,9 +84,9 @@ import {
   toolGroupAction,
   type ToolGroupSummaryKind,
   workEntryViewedImagePath,
-} from "@rove-code/client-runtime/work-log/presentation";
-import { resolveWorkGroupScrollAnchor } from "@rove-code/client-runtime/work-log/scroll-anchor";
-import { notificationChildThreadId } from "@rove-code/client-runtime/state/thread-execution";
+} from "@getpaperplane/client-runtime/work-log/presentation";
+import { resolveWorkGroupScrollAnchor } from "@getpaperplane/client-runtime/work-log/scroll-anchor";
+import { notificationChildThreadId } from "@getpaperplane/client-runtime/state/thread-execution";
 import type { MarkdownImageRenderer } from "../../native/SelectableMarkdownText";
 import type { FilePreviewSource } from "../../components/FilePreviewModal";
 import { FilePreviewGallery } from "../../components/FilePreviewGallery";
@@ -1307,7 +1307,7 @@ export function ThreadWorkGroupToggle(props: {
   readonly summaryKind: ToolGroupSummaryKind;
   readonly summaryToolIcon?: "browser" | "device" | "rove" | "pull-request" | "brain";
   readonly themeAppearance: "light" | "dark";
-  readonly toolSurface?: import("@rove-code/contracts").ToolActivitySurface;
+  readonly toolSurface?: import("@getpaperplane/contracts").ToolActivitySurface;
   readonly toolIcon?: ToolActivityIcon;
   readonly hasFailure: boolean;
   readonly shimmer: boolean;

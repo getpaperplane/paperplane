@@ -1,4 +1,4 @@
-import type { DesktopBridge } from "@rove-code/contracts";
+import type { DesktopBridge } from "@getpaperplane/contracts";
 
 export const DESKTOP_PASTE_AS_TEXT_EVENT = "rove:paste-as-text";
 

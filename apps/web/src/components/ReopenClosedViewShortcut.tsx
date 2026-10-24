@@ -3,8 +3,8 @@ import {
   scopeProjectRef,
   scopedThreadKey,
   scopeThreadRef,
-} from "@rove-code/client-runtime/environment";
-import type { ScopedThreadRef } from "@rove-code/contracts";
+} from "@getpaperplane/client-runtime/environment";
+import type { ScopedThreadRef } from "@getpaperplane/contracts";
 import { useNavigate, useParams } from "@tanstack/react-router";
 import { useEffect, useEffectEvent, useRef } from "react";
 

@@ -1,7 +1,7 @@
 import {
   ASSISTANT_CITATION_MAX_COMMENT_LENGTH,
   type AssistantCitation,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { useState, type Ref } from "react";
 
 import { Button } from "../ui/button";

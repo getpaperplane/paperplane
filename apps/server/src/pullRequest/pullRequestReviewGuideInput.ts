@@ -1,5 +1,5 @@
-import type { PullRequestActivity, PullRequestDetail } from "@rove-code/contracts";
-import type { ReviewGuideGenerationInput } from "@rove-code/provider-core/server/textGeneration";
+import type { PullRequestActivity, PullRequestDetail } from "@getpaperplane/contracts";
+import type { ReviewGuideGenerationInput } from "@getpaperplane/provider-core/server/textGeneration";
 
 /** Longest a settled remark is quoted. The guide needs what was raised, not the argument. */
 const SETTLED_REMARK_CHARS = 200;

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vite-plus/test";
 
-import type { ThreadPullRequestLink } from "@rove-code/contracts";
+import type { ThreadPullRequestLink } from "@getpaperplane/contracts";
 
 import {
   composerPullRequestsFromLinks,

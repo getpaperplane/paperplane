@@ -1,4 +1,4 @@
-import { readHostedPairingRequest } from "@rove-code/shared/remote";
+import { readHostedPairingRequest } from "@getpaperplane/shared/remote";
 import * as Schema from "effect/Schema";
 
 const MOBILE_PAIRING_URL_PARAM = "pairingUrl";

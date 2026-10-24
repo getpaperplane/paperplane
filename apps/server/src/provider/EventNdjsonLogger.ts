@@ -8,10 +8,10 @@
 import * as NodeFS from "node:fs";
 import * as NodePath from "node:path";
 
-import type { ThreadId } from "@rove-code/contracts";
-import type * as ProviderEventLoggers from "@rove-code/provider-core/server/ProviderEventLoggers";
-import { makeAsyncRotatingFileSink } from "@rove-code/shared/logging";
-import { errorTag } from "@rove-code/shared/observability";
+import type { ThreadId } from "@getpaperplane/contracts";
+import type * as ProviderEventLoggers from "@getpaperplane/provider-core/server/ProviderEventLoggers";
+import { makeAsyncRotatingFileSink } from "@getpaperplane/shared/logging";
+import { errorTag } from "@getpaperplane/shared/observability";
 import * as Clock from "effect/Clock";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";

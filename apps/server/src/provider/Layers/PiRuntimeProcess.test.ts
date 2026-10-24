@@ -7,7 +7,7 @@ import * as NodeStreamConsumers from "node:stream/consumers";
 import * as NodeChildProcess from "node:child_process";
 import * as Schema from "effect/Schema";
 import * as RuntimePredicate from "effect/Predicate";
-import { EnvironmentId, ProviderInstanceId, ThreadId } from "@rove-code/contracts";
+import { EnvironmentId, ProviderInstanceId, ThreadId } from "@getpaperplane/contracts";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 import { PiRuntimeProcess } from "./PiRuntimeProcess.ts";
 import { PiExtensionLoadError, type PiSessionEventLike, type PiSessionLike } from "./PiAdapter.ts";

@@ -2,11 +2,11 @@ import type {
   DesktopDiscoveredSshHost,
   DesktopSshEnvironmentBootstrap,
   DesktopSshEnvironmentTarget,
-} from "@rove-code/contracts";
-import * as NetService from "@rove-code/shared/Net";
-import * as SshAuth from "@rove-code/ssh/auth";
-import { resolveSshTarget } from "@rove-code/ssh/command";
-import { discoverSshHosts } from "@rove-code/ssh/config";
+} from "@getpaperplane/contracts";
+import * as NetService from "@getpaperplane/shared/Net";
+import * as SshAuth from "@getpaperplane/ssh/auth";
+import { resolveSshTarget } from "@getpaperplane/ssh/command";
+import { discoverSshHosts } from "@getpaperplane/ssh/config";
 import {
   SshCommandError,
   SshHostDiscoveryError,
@@ -15,8 +15,8 @@ import {
   SshPairingError,
   SshPasswordPromptError,
   SshReadinessError,
-} from "@rove-code/ssh/errors";
-import * as SshTunnel from "@rove-code/ssh/tunnel";
+} from "@getpaperplane/ssh/errors";
+import * as SshTunnel from "@getpaperplane/ssh/tunnel";
 import * as Context from "effect/Context";
 import type * as Crypto from "effect/Crypto";
 import * as Effect from "effect/Effect";
@@ -64,7 +64,7 @@ export class DesktopSshEnvironment extends Context.Service<
       target: DesktopSshEnvironmentTarget,
     ) => Effect.Effect<void, DesktopSshEnvironmentOperationError>;
   }
->()("@rove-code/desktop/ssh/DesktopSshEnvironment") {}
+>()("@getpaperplane/desktop/ssh/DesktopSshEnvironment") {}
 
 export interface DesktopSshEnvironmentLayerOptions {
   readonly resolveCliRunner?: Effect.Effect<SshTunnel.RemoteRoveRunnerOptions>;

@@ -15,15 +15,15 @@
  *
  * @module provider/Drivers/GrokSkills
  */
-import type { ServerProviderSkill } from "@rove-code/contracts";
+import type { ServerProviderSkill } from "@getpaperplane/contracts";
 import type { GrokSettings } from "../settings.ts";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 import * as ChildProcess from "effect/process/ChildProcess";
-import { resolveSpawnCommand } from "@rove-code/shared/shell";
+import { resolveSpawnCommand } from "@getpaperplane/shared/shell";
 
-import { spawnAndCollect } from "@rove-code/provider-core/server/snapshotProbe";
+import { spawnAndCollect } from "@getpaperplane/provider-core/server/snapshotProbe";
 
 const GROK_SKILLS_PROBE_TIMEOUT_MS = 4_000;
 

@@ -19,7 +19,7 @@ export class LegacyV1StorageMaintenance extends Context.Service<
   {
     readonly retire: (databasePath: string) => Effect.Effect<boolean, LegacyStorageCleanupError>;
   }
->()("@rove-code/server/persistence/LegacyV1StorageMaintenance") {}
+>()("@getpaperplane/server/persistence/LegacyV1StorageMaintenance") {}
 
 // These tables have no runtime readers after v1 migrations. Keep projects,
 // threads, messages and pull requests for shell repair/transcript import, and

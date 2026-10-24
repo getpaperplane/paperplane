@@ -9,9 +9,9 @@ import type {
   PullRequestReaction,
   PullRequestReactionContent,
   PullRequestReviewThread,
-} from "@rove-code/contracts";
-import type { ProviderChangeRequest } from "@rove-code/source-control-core/server/PullRequestProvider";
-import { dedupeChecks } from "@rove-code/source-control-core/server/pullRequestChecks";
+} from "@getpaperplane/contracts";
+import type { ProviderChangeRequest } from "@getpaperplane/source-control-core/server/PullRequestProvider";
+import { dedupeChecks } from "@getpaperplane/source-control-core/server/pullRequestChecks";
 
 export const ForgejoUser = Schema.Struct({
   login: Schema.String,

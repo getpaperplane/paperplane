@@ -5,13 +5,13 @@ import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 import * as Semaphore from "effect/Semaphore";
-import { PositiveInt, type PullRequestChecks } from "@rove-code/contracts";
+import { PositiveInt, type PullRequestChecks } from "@getpaperplane/contracts";
 
 import * as GitHubRest from "./GitHubRest.ts";
 import * as GitHubRequestPolicy from "./GitHubRequestPolicy.ts";
 import type { GitHubPullRequestDetail } from "./gitHubPullRequestJson.ts";
 import type { GitHubPullRequestApiError } from "./GitHubPullRequestApi.ts";
-import type { ProviderRepositoryRef } from "@rove-code/source-control-core/server/PullRequestProvider";
+import type { ProviderRepositoryRef } from "@getpaperplane/source-control-core/server/PullRequestProvider";
 
 const HeadSchema = Schema.Struct({
   head: Schema.Struct({
@@ -44,7 +44,7 @@ export type KnownWorkflowRun = typeof WorkflowRunSchema.Type;
 export const KnownWorkflowRuns = Context.Reference<{
   readonly headSha: string;
   readonly runs: ReadonlyArray<KnownWorkflowRun>;
-} | null>("@rove-code/source-control-github/server/gitHubConditionalChecks/KnownWorkflowRuns", {
+} | null>("@getpaperplane/source-control-github/server/gitHubConditionalChecks/KnownWorkflowRuns", {
   defaultValue: () => null,
 });
 

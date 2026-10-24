@@ -5,7 +5,7 @@ import * as Fiber from "effect/Fiber";
 import * as Schema from "effect/Schema";
 import * as TestClock from "effect/testing/TestClock";
 
-import { EnvironmentAuthInvalidError } from "@rove-code/contracts";
+import { EnvironmentAuthInvalidError } from "@getpaperplane/contracts";
 import {
   appendClientConnectionParams,
   bootstrapRemoteBearerSession,

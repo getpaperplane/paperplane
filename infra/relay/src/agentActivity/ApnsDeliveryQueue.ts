@@ -10,7 +10,7 @@ import * as Schema from "effect/Schema";
 import {
   RelayDeliveryKind as RelayDeliveryKindSchema,
   type RelayDeliveryResult,
-} from "@rove-code/contracts/relay";
+} from "@getpaperplane/contracts/relay";
 
 import {
   sanitizeAgentActivityAggregateState,

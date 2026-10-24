@@ -3,8 +3,8 @@ import {
   connectionCatalogDisplayUrl,
   hasRelayRoute,
   type EnvironmentPresentation as BaseEnvironmentPresentation,
-} from "@rove-code/client-runtime/connection";
-import type { EnvironmentId } from "@rove-code/contracts";
+} from "@getpaperplane/client-runtime/connection";
+import type { EnvironmentId } from "@getpaperplane/contracts";
 import { useMemo } from "react";
 
 import { environmentCatalog } from "../connection/catalog";

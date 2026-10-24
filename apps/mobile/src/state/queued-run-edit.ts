@@ -19,7 +19,7 @@ import type {
   OrchestrationMessageContext,
   RunId,
   UploadChatAttachment,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { Atom } from "effect/reactivity";
 import { useAtomValue } from "@effect/atom-react";
 

@@ -1,5 +1,5 @@
-import type { EnvironmentThreadShell } from "@rove-code/client-runtime/state/shell";
-import { EnvironmentId, ThreadId } from "@rove-code/contracts";
+import type { EnvironmentThreadShell } from "@getpaperplane/client-runtime/state/shell";
+import { EnvironmentId, ThreadId } from "@getpaperplane/contracts";
 import type { Atom } from "effect/reactivity";
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 

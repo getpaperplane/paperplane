@@ -2,9 +2,9 @@ import { assert, describe } from "@effect/vitest";
 
 import { createOxlintRuleHarness } from "../test/utils.ts";
 
-const rule = createOxlintRuleHarness("rove/namespace-node-imports");
+const rule = createOxlintRuleHarness("paperplane/namespace-node-imports");
 
-describe("rove/namespace-node-imports", () => {
+describe("paperplane/namespace-node-imports", () => {
   rule.valid(
     "allows canonical Node namespaces",
     `

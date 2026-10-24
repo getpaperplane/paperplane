@@ -226,19 +226,19 @@ importers:
       '@napi-rs/keyring':
         specifier: ^1.3.0
         version: 1.3.0
-      '@rove-code/client-runtime':
+      '@getpaperplane/client-runtime':
         specifier: workspace:*
         version: link:../../packages/client-runtime
-      '@rove-code/contracts':
+      '@getpaperplane/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
-      '@rove-code/shared':
+      '@getpaperplane/shared':
         specifier: workspace:*
         version: link:../../packages/shared
-      '@rove-code/ssh':
+      '@getpaperplane/ssh':
         specifier: workspace:*
         version: link:../../packages/ssh
-      '@rove-code/tailscale':
+      '@getpaperplane/tailscale':
         specifier: workspace:*
         version: link:../../packages/tailscale
       dbus-next:
@@ -296,7 +296,7 @@ importers:
 
   apps/marketing:
     dependencies:
-      '@rove-code/shared':
+      '@getpaperplane/shared':
         specifier: workspace:*
         version: link:../../packages/shared
       astro:
@@ -360,43 +360,43 @@ importers:
       '@react-navigation/native-stack':
         specifier: 7.21.0
         version: 7.21.0(patch_hash=caae6552051bce91a85f567f3a08f9c8d25ce4c53f65a9391a67f016bb1d798e)(f7bd434a41a50f5d33209f0baf5b709c)
-      '@rove-code/client-runtime':
+      '@getpaperplane/client-runtime':
         specifier: workspace:*
         version: link:../../packages/client-runtime
-      '@rove-code/contracts':
+      '@getpaperplane/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
-      '@rove-code/mobile-review-diff-native':
+      '@getpaperplane/mobile-review-diff-native':
         specifier: file:./modules/rove-review-diff
         version: file:apps/mobile/modules/rove-review-diff
-      '@rove-code/mobile-source-text':
+      '@getpaperplane/mobile-source-text':
         specifier: file:./modules/rove-source-text
         version: file:apps/mobile/modules/rove-source-text(react-native@0.88.0(@babel/core@7.29.7)(@react-native/metro-config@0.88.0(@babel/core@7.29.7)(bufferutil@4.1.0)(utf-8-validate@6.0.6))(@types/react@19.3.0)(bufferutil@4.1.0)(react@19.3.0)(utf-8-validate@6.0.6))(react@19.3.0)
-      '@rove-code/mobile-terminal-native':
+      '@getpaperplane/mobile-terminal-native':
         specifier: file:./modules/rove-terminal
         version: file:apps/mobile/modules/rove-terminal
-      '@rove-code/provider-acp-registry':
+      '@getpaperplane/provider-acp-registry':
         specifier: workspace:*
         version: link:../../packages/provider-acp-registry
-      '@rove-code/provider-core':
+      '@getpaperplane/provider-core':
         specifier: workspace:*
         version: link:../../packages/provider-core
-      '@rove-code/provider-cursor':
+      '@getpaperplane/provider-cursor':
         specifier: workspace:*
         version: link:../../packages/provider-cursor
-      '@rove-code/provider-grok':
+      '@getpaperplane/provider-grok':
         specifier: workspace:*
         version: link:../../packages/provider-grok
-      '@rove-code/provider-muse':
+      '@getpaperplane/provider-muse':
         specifier: workspace:*
         version: link:../../packages/provider-muse
-      '@rove-code/provider-opencode':
+      '@getpaperplane/provider-opencode':
         specifier: workspace:*
         version: link:../../packages/provider-opencode
-      '@rove-code/provider-pi':
+      '@getpaperplane/provider-pi':
         specifier: workspace:*
         version: link:../../packages/provider-pi
-      '@rove-code/shared':
+      '@getpaperplane/shared':
         specifier: workspace:*
         version: link:../../packages/shared
       '@shikijs/core':
@@ -661,49 +661,49 @@ importers:
       '@opencode-ai/sdk':
         specifier: ^1.3.15
         version: 1.15.13
-      '@rove-code/provider-acp':
+      '@getpaperplane/provider-acp':
         specifier: workspace:*
         version: link:../../packages/provider-acp
-      '@rove-code/provider-acp-registry':
+      '@getpaperplane/provider-acp-registry':
         specifier: workspace:*
         version: link:../../packages/provider-acp-registry
-      '@rove-code/provider-core':
+      '@getpaperplane/provider-core':
         specifier: workspace:*
         version: link:../../packages/provider-core
-      '@rove-code/provider-cursor':
+      '@getpaperplane/provider-cursor':
         specifier: workspace:*
         version: link:../../packages/provider-cursor
-      '@rove-code/provider-grok':
+      '@getpaperplane/provider-grok':
         specifier: workspace:*
         version: link:../../packages/provider-grok
-      '@rove-code/provider-muse':
+      '@getpaperplane/provider-muse':
         specifier: workspace:*
         version: link:../../packages/provider-muse
-      '@rove-code/provider-opencode':
+      '@getpaperplane/provider-opencode':
         specifier: workspace:*
         version: link:../../packages/provider-opencode
-      '@rove-code/provider-pi':
+      '@getpaperplane/provider-pi':
         specifier: workspace:*
         version: link:../../packages/provider-pi
-      '@rove-code/source-control-azure-devops':
+      '@getpaperplane/source-control-azure-devops':
         specifier: workspace:*
         version: link:../../packages/source-control-azure-devops
-      '@rove-code/source-control-bitbucket':
+      '@getpaperplane/source-control-bitbucket':
         specifier: workspace:*
         version: link:../../packages/source-control-bitbucket
-      '@rove-code/source-control-core':
+      '@getpaperplane/source-control-core':
         specifier: workspace:*
         version: link:../../packages/source-control-core
-      '@rove-code/source-control-forgejo':
+      '@getpaperplane/source-control-forgejo':
         specifier: workspace:*
         version: link:../../packages/source-control-forgejo
-      '@rove-code/source-control-gitcafe':
+      '@getpaperplane/source-control-gitcafe':
         specifier: workspace:*
         version: link:../../packages/source-control-gitcafe
-      '@rove-code/source-control-github':
+      '@getpaperplane/source-control-github':
         specifier: workspace:*
         version: link:../../packages/source-control-github
-      '@rove-code/source-control-gitlab':
+      '@getpaperplane/source-control-gitlab':
         specifier: workspace:*
         version: link:../../packages/source-control-gitlab
       cbor-x:
@@ -752,25 +752,25 @@ importers:
       '@effect/vitest':
         specifier: 4.0.5
         version: 4.0.5(patch_hash=2731c9c3761c595f25ddc625a7d61ca376b389d5b3049ecb837c8940f21cfa02)(@types/node@24.12.4)(@vitest/ui@5.0.1)(bufferutil@4.1.0)(effect@4.0.5)(esbuild@0.28.2)(jiti@2.7.0)(jsdom@30.1.2(@noble/hashes@1.8.0))(msw@2.12.11(@types/node@24.12.4)(typescript@7.0.2))(terser@5.48.0)(typescript@7.0.2)(unrun@0.2.39)(utf-8-validate@6.0.6)(yaml@2.9.0)
-      '@rove-code/contracts':
+      '@getpaperplane/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
-      '@rove-code/provider-testing':
+      '@getpaperplane/provider-testing':
         specifier: workspace:*
         version: link:../../packages/provider-testing
-      '@rove-code/shared':
+      '@getpaperplane/shared':
         specifier: workspace:*
         version: link:../../packages/shared
-      '@rove-code/source-control-testing':
+      '@getpaperplane/source-control-testing':
         specifier: workspace:*
         version: link:../../packages/source-control-testing
-      '@rove-code/ssh':
+      '@getpaperplane/ssh':
         specifier: workspace:*
         version: link:../../packages/ssh
-      '@rove-code/tailscale':
+      '@getpaperplane/tailscale':
         specifier: workspace:*
         version: link:../../packages/tailscale
-      '@rove-code/web':
+      '@getpaperplane/web':
         specifier: workspace:*
         version: link:../web
       '@types/node':
@@ -842,31 +842,31 @@ importers:
       '@pierre/trees':
         specifier: 1.0.0-beta.6
         version: 1.0.0-beta.6(@pierre/theme@1.1.0)(@shikijs/themes@4.3.0)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(shiki@4.2.0)
-      '@rove-code/client-runtime':
+      '@getpaperplane/client-runtime':
         specifier: workspace:*
         version: link:../../packages/client-runtime
-      '@rove-code/contracts':
+      '@getpaperplane/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
-      '@rove-code/provider-acp-registry':
+      '@getpaperplane/provider-acp-registry':
         specifier: workspace:*
         version: link:../../packages/provider-acp-registry
-      '@rove-code/provider-core':
+      '@getpaperplane/provider-core':
         specifier: workspace:*
         version: link:../../packages/provider-core
-      '@rove-code/provider-cursor':
+      '@getpaperplane/provider-cursor':
         specifier: workspace:*
         version: link:../../packages/provider-cursor
-      '@rove-code/provider-grok':
+      '@getpaperplane/provider-grok':
         specifier: workspace:*
         version: link:../../packages/provider-grok
-      '@rove-code/provider-muse':
+      '@getpaperplane/provider-muse':
         specifier: workspace:*
         version: link:../../packages/provider-muse
-      '@rove-code/provider-opencode':
+      '@getpaperplane/provider-opencode':
         specifier: workspace:*
         version: link:../../packages/provider-opencode
-      '@rove-code/shared':
+      '@getpaperplane/shared':
         specifier: workspace:*
         version: link:../../packages/shared
       '@tanstack/react-pacer':
@@ -1059,13 +1059,13 @@ importers:
       '@noble/hashes':
         specifier: 'catalog:'
         version: 1.8.0
-      '@rove-code/client-runtime':
+      '@getpaperplane/client-runtime':
         specifier: workspace:*
         version: link:../../packages/client-runtime
-      '@rove-code/contracts':
+      '@getpaperplane/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
-      '@rove-code/shared':
+      '@getpaperplane/shared':
         specifier: workspace:*
         version: link:../../packages/shared
       alchemy:
@@ -1103,7 +1103,7 @@ importers:
         specifier: 1.0.0
         version: 1.0.0(@types/node@24.12.4)(@vitest/ui@5.0.1(vitest@5.0.1))(bufferutil@4.1.0)(esbuild@0.28.2)(jiti@2.7.0)(jsdom@30.1.2(@noble/hashes@1.8.0))(msw@2.12.11(@types/node@24.12.4)(typescript@7.0.2))(terser@5.48.0)(typescript@7.0.2)(unrun@0.2.39)(utf-8-validate@6.0.6)(yaml@2.9.0)
 
-  oxlint-plugin-rove:
+  oxlint-plugin-paperplane:
     dependencies:
       '@effect/platform-node':
         specifier: 4.0.5
@@ -1127,31 +1127,31 @@ importers:
       '@pierre/diffs':
         specifier: 'catalog:'
         version: 1.5.2(patch_hash=373cf188bf5d13f9e419401258d6933d030f879bb4a5c2c63245ccabe9b4f708)(@shikijs/themes@4.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
-      '@rove-code/contracts':
+      '@getpaperplane/contracts':
         specifier: workspace:*
         version: link:../contracts
-      '@rove-code/shared':
+      '@getpaperplane/shared':
         specifier: workspace:*
         version: link:../shared
-      '@rove-code/source-control-azure-devops':
+      '@getpaperplane/source-control-azure-devops':
         specifier: workspace:*
         version: link:../source-control-azure-devops
-      '@rove-code/source-control-bitbucket':
+      '@getpaperplane/source-control-bitbucket':
         specifier: workspace:*
         version: link:../source-control-bitbucket
-      '@rove-code/source-control-core':
+      '@getpaperplane/source-control-core':
         specifier: workspace:*
         version: link:../source-control-core
-      '@rove-code/source-control-forgejo':
+      '@getpaperplane/source-control-forgejo':
         specifier: workspace:*
         version: link:../source-control-forgejo
-      '@rove-code/source-control-gitcafe':
+      '@getpaperplane/source-control-gitcafe':
         specifier: workspace:*
         version: link:../source-control-gitcafe
-      '@rove-code/source-control-github':
+      '@getpaperplane/source-control-github':
         specifier: workspace:*
         version: link:../source-control-github
-      '@rove-code/source-control-gitlab':
+      '@getpaperplane/source-control-gitlab':
         specifier: workspace:*
         version: link:../source-control-gitlab
       effect:
@@ -1230,13 +1230,13 @@ importers:
 
   packages/provider-acp:
     dependencies:
-      '@rove-code/contracts':
+      '@getpaperplane/contracts':
         specifier: workspace:*
         version: link:../contracts
-      '@rove-code/provider-core':
+      '@getpaperplane/provider-core':
         specifier: workspace:*
         version: link:../provider-core
-      '@rove-code/shared':
+      '@getpaperplane/shared':
         specifier: workspace:*
         version: link:../shared
       diff:
@@ -1267,16 +1267,16 @@ importers:
       '@noble/hashes':
         specifier: 'catalog:'
         version: 1.8.0
-      '@rove-code/contracts':
+      '@getpaperplane/contracts':
         specifier: workspace:*
         version: link:../contracts
-      '@rove-code/provider-acp':
+      '@getpaperplane/provider-acp':
         specifier: workspace:*
         version: link:../provider-acp
-      '@rove-code/provider-core':
+      '@getpaperplane/provider-core':
         specifier: workspace:*
         version: link:../provider-core
-      '@rove-code/shared':
+      '@getpaperplane/shared':
         specifier: workspace:*
         version: link:../shared
       effect:
@@ -1289,7 +1289,7 @@ importers:
       '@effect/vitest':
         specifier: 4.0.5
         version: 4.0.5(patch_hash=2731c9c3761c595f25ddc625a7d61ca376b389d5b3049ecb837c8940f21cfa02)(@types/node@24.12.4)(@vitest/ui@5.0.1)(bufferutil@4.1.0)(effect@4.0.5)(esbuild@0.28.2)(jiti@2.7.0)(jsdom@30.1.2(@noble/hashes@1.8.0))(msw@2.12.11(@types/node@24.12.4)(typescript@7.0.2))(terser@5.48.0)(typescript@7.0.2)(unrun@0.2.39)(utf-8-validate@6.0.6)(yaml@2.9.0)
-      '@rove-code/provider-testing':
+      '@getpaperplane/provider-testing':
         specifier: workspace:*
         version: link:../provider-testing
       '@types/node':
@@ -1304,10 +1304,10 @@ importers:
 
   packages/provider-core:
     dependencies:
-      '@rove-code/contracts':
+      '@getpaperplane/contracts':
         specifier: workspace:*
         version: link:../contracts
-      '@rove-code/shared':
+      '@getpaperplane/shared':
         specifier: workspace:*
         version: link:../shared
       effect:
@@ -1335,13 +1335,13 @@ importers:
       '@napi-rs/keyring':
         specifier: ^1.3.0
         version: 1.3.0
-      '@rove-code/contracts':
+      '@getpaperplane/contracts':
         specifier: workspace:*
         version: link:../contracts
-      '@rove-code/provider-core':
+      '@getpaperplane/provider-core':
         specifier: workspace:*
         version: link:../provider-core
-      '@rove-code/shared':
+      '@getpaperplane/shared':
         specifier: workspace:*
         version: link:../shared
       effect:
@@ -1357,7 +1357,7 @@ importers:
       '@effect/vitest':
         specifier: 4.0.5
         version: 4.0.5(patch_hash=2731c9c3761c595f25ddc625a7d61ca376b389d5b3049ecb837c8940f21cfa02)(@types/node@24.12.4)(@vitest/ui@5.0.1)(bufferutil@4.1.0)(effect@4.0.5)(esbuild@0.28.2)(jiti@2.7.0)(jsdom@30.1.2(@noble/hashes@1.8.0))(msw@2.12.11(@types/node@24.12.4)(typescript@7.0.2))(terser@5.48.0)(typescript@7.0.2)(unrun@0.2.39)(utf-8-validate@6.0.6)(yaml@2.9.0)
-      '@rove-code/provider-testing':
+      '@getpaperplane/provider-testing':
         specifier: workspace:*
         version: link:../provider-testing
       '@types/node':
@@ -1369,16 +1369,16 @@ importers:
 
   packages/provider-grok:
     dependencies:
-      '@rove-code/contracts':
+      '@getpaperplane/contracts':
         specifier: workspace:*
         version: link:../contracts
-      '@rove-code/provider-acp':
+      '@getpaperplane/provider-acp':
         specifier: workspace:*
         version: link:../provider-acp
-      '@rove-code/provider-core':
+      '@getpaperplane/provider-core':
         specifier: workspace:*
         version: link:../provider-core
-      '@rove-code/shared':
+      '@getpaperplane/shared':
         specifier: workspace:*
         version: link:../shared
       effect:
@@ -1391,7 +1391,7 @@ importers:
       '@effect/vitest':
         specifier: 4.0.5
         version: 4.0.5(patch_hash=2731c9c3761c595f25ddc625a7d61ca376b389d5b3049ecb837c8940f21cfa02)(@types/node@24.12.4)(@vitest/ui@5.0.1)(bufferutil@4.1.0)(effect@4.0.5)(esbuild@0.28.2)(jiti@2.7.0)(jsdom@30.1.2(@noble/hashes@1.8.0))(msw@2.12.11(@types/node@24.12.4)(typescript@7.0.2))(terser@5.48.0)(typescript@7.0.2)(unrun@0.2.39)(utf-8-validate@6.0.6)(yaml@2.9.0)
-      '@rove-code/provider-testing':
+      '@getpaperplane/provider-testing':
         specifier: workspace:*
         version: link:../provider-testing
       '@types/node':
@@ -1409,13 +1409,13 @@ importers:
       '@muse-code/sdk':
         specifier: 1.4.6
         version: 1.4.6(@types/node@24.12.4)
-      '@rove-code/contracts':
+      '@getpaperplane/contracts':
         specifier: workspace:*
         version: link:../contracts
-      '@rove-code/provider-core':
+      '@getpaperplane/provider-core':
         specifier: workspace:*
         version: link:../provider-core
-      '@rove-code/shared':
+      '@getpaperplane/shared':
         specifier: workspace:*
         version: link:../shared
       effect:
@@ -1428,7 +1428,7 @@ importers:
       '@effect/vitest':
         specifier: 4.0.5
         version: 4.0.5(patch_hash=2731c9c3761c595f25ddc625a7d61ca376b389d5b3049ecb837c8940f21cfa02)(@types/node@24.12.4)(@vitest/ui@5.0.1)(bufferutil@4.1.0)(effect@4.0.5)(esbuild@0.28.2)(jiti@2.7.0)(jsdom@30.1.2(@noble/hashes@1.8.0))(msw@2.12.11(@types/node@24.12.4)(typescript@7.0.2))(terser@5.48.0)(typescript@7.0.2)(unrun@0.2.39)(utf-8-validate@6.0.6)(yaml@2.9.0)
-      '@rove-code/provider-testing':
+      '@getpaperplane/provider-testing':
         specifier: workspace:*
         version: link:../provider-testing
       '@types/node':
@@ -1452,13 +1452,13 @@ importers:
       '@opencode/schema':
         specifier: 2.0.28
         version: 2.0.28
-      '@rove-code/contracts':
+      '@getpaperplane/contracts':
         specifier: workspace:*
         version: link:../contracts
-      '@rove-code/provider-core':
+      '@getpaperplane/provider-core':
         specifier: workspace:*
         version: link:../provider-core
-      '@rove-code/shared':
+      '@getpaperplane/shared':
         specifier: workspace:*
         version: link:../shared
       effect:
@@ -1471,7 +1471,7 @@ importers:
       '@effect/vitest':
         specifier: 4.0.5
         version: 4.0.5(patch_hash=2731c9c3761c595f25ddc625a7d61ca376b389d5b3049ecb837c8940f21cfa02)(@types/node@24.12.4)(@vitest/ui@5.0.1)(bufferutil@4.1.0)(effect@4.0.5)(esbuild@0.28.2)(jiti@2.7.0)(jsdom@30.1.2(@noble/hashes@1.8.0))(msw@2.12.11(@types/node@24.12.4)(typescript@7.0.2))(terser@5.48.0)(typescript@7.0.2)(unrun@0.2.39)(utf-8-validate@6.0.6)(yaml@2.9.0)
-      '@rove-code/provider-testing':
+      '@getpaperplane/provider-testing':
         specifier: workspace:*
         version: link:../provider-testing
       '@types/node':
@@ -1483,10 +1483,10 @@ importers:
 
   packages/provider-pi:
     dependencies:
-      '@rove-code/contracts':
+      '@getpaperplane/contracts':
         specifier: workspace:*
         version: link:../contracts
-      '@rove-code/provider-core':
+      '@getpaperplane/provider-core':
         specifier: workspace:*
         version: link:../provider-core
       effect:
@@ -1508,13 +1508,13 @@ importers:
       '@effect/platform-node':
         specifier: 4.0.5
         version: 4.0.5(bufferutil@4.1.0)(effect@4.0.5)(redis@6.2.1)(utf-8-validate@6.0.6)
-      '@rove-code/contracts':
+      '@getpaperplane/contracts':
         specifier: workspace:*
         version: link:../contracts
-      '@rove-code/provider-core':
+      '@getpaperplane/provider-core':
         specifier: workspace:*
         version: link:../provider-core
-      '@rove-code/shared':
+      '@getpaperplane/shared':
         specifier: workspace:*
         version: link:../shared
       effect:
@@ -1539,7 +1539,7 @@ importers:
       '@noble/hashes':
         specifier: 'catalog:'
         version: 1.8.0
-      '@rove-code/contracts':
+      '@getpaperplane/contracts':
         specifier: workspace:*
         version: link:../contracts
       effect:
@@ -1600,13 +1600,13 @@ importers:
 
   packages/source-control-azure-devops:
     dependencies:
-      '@rove-code/contracts':
+      '@getpaperplane/contracts':
         specifier: workspace:*
         version: link:../contracts
-      '@rove-code/shared':
+      '@getpaperplane/shared':
         specifier: workspace:*
         version: link:../shared
-      '@rove-code/source-control-core':
+      '@getpaperplane/source-control-core':
         specifier: workspace:*
         version: link:../source-control-core
       diff:
@@ -1622,7 +1622,7 @@ importers:
       '@effect/vitest':
         specifier: 4.0.5
         version: 4.0.5(patch_hash=2731c9c3761c595f25ddc625a7d61ca376b389d5b3049ecb837c8940f21cfa02)(@types/node@24.12.4)(@vitest/ui@5.0.1)(bufferutil@4.1.0)(effect@4.0.5)(esbuild@0.28.2)(jiti@2.7.0)(jsdom@30.1.2(@noble/hashes@1.8.0))(msw@2.12.11(@types/node@24.12.4)(typescript@7.0.2))(terser@5.48.0)(typescript@7.0.2)(unrun@0.2.39)(utf-8-validate@6.0.6)(yaml@2.9.0)
-      '@rove-code/source-control-testing':
+      '@getpaperplane/source-control-testing':
         specifier: workspace:*
         version: link:../source-control-testing
       '@types/node':
@@ -1634,16 +1634,16 @@ importers:
 
   packages/source-control-bitbucket:
     dependencies:
-      '@rove-code/contracts':
+      '@getpaperplane/contracts':
         specifier: workspace:*
         version: link:../contracts
-      '@rove-code/provider-core':
+      '@getpaperplane/provider-core':
         specifier: workspace:*
         version: link:../provider-core
-      '@rove-code/shared':
+      '@getpaperplane/shared':
         specifier: workspace:*
         version: link:../shared
-      '@rove-code/source-control-core':
+      '@getpaperplane/source-control-core':
         specifier: workspace:*
         version: link:../source-control-core
       effect:
@@ -1662,10 +1662,10 @@ importers:
 
   packages/source-control-core:
     dependencies:
-      '@rove-code/contracts':
+      '@getpaperplane/contracts':
         specifier: workspace:*
         version: link:../contracts
-      '@rove-code/shared':
+      '@getpaperplane/shared':
         specifier: workspace:*
         version: link:../shared
       effect:
@@ -1684,16 +1684,16 @@ importers:
 
   packages/source-control-forgejo:
     dependencies:
-      '@rove-code/contracts':
+      '@getpaperplane/contracts':
         specifier: workspace:*
         version: link:../contracts
-      '@rove-code/provider-core':
+      '@getpaperplane/provider-core':
         specifier: workspace:*
         version: link:../provider-core
-      '@rove-code/shared':
+      '@getpaperplane/shared':
         specifier: workspace:*
         version: link:../shared
-      '@rove-code/source-control-core':
+      '@getpaperplane/source-control-core':
         specifier: workspace:*
         version: link:../source-control-core
       effect:
@@ -1703,7 +1703,7 @@ importers:
       '@effect/vitest':
         specifier: 4.0.5
         version: 4.0.5(patch_hash=2731c9c3761c595f25ddc625a7d61ca376b389d5b3049ecb837c8940f21cfa02)(@types/node@24.12.4)(@vitest/ui@5.0.1)(bufferutil@4.1.0)(effect@4.0.5)(esbuild@0.28.2)(jiti@2.7.0)(jsdom@30.1.2(@noble/hashes@1.8.0))(msw@2.12.11(@types/node@24.12.4)(typescript@7.0.2))(terser@5.48.0)(typescript@7.0.2)(unrun@0.2.39)(utf-8-validate@6.0.6)(yaml@2.9.0)
-      '@rove-code/source-control-testing':
+      '@getpaperplane/source-control-testing':
         specifier: workspace:*
         version: link:../source-control-testing
       '@types/node':
@@ -1715,16 +1715,16 @@ importers:
 
   packages/source-control-gitcafe:
     dependencies:
-      '@rove-code/contracts':
+      '@getpaperplane/contracts':
         specifier: workspace:*
         version: link:../contracts
-      '@rove-code/provider-core':
+      '@getpaperplane/provider-core':
         specifier: workspace:*
         version: link:../provider-core
-      '@rove-code/shared':
+      '@getpaperplane/shared':
         specifier: workspace:*
         version: link:../shared
-      '@rove-code/source-control-core':
+      '@getpaperplane/source-control-core':
         specifier: workspace:*
         version: link:../source-control-core
       effect:
@@ -1734,7 +1734,7 @@ importers:
       '@effect/vitest':
         specifier: 4.0.5
         version: 4.0.5(patch_hash=2731c9c3761c595f25ddc625a7d61ca376b389d5b3049ecb837c8940f21cfa02)(@types/node@24.12.4)(@vitest/ui@5.0.1)(bufferutil@4.1.0)(effect@4.0.5)(esbuild@0.28.2)(jiti@2.7.0)(jsdom@30.1.2(@noble/hashes@1.8.0))(msw@2.12.11(@types/node@24.12.4)(typescript@7.0.2))(terser@5.48.0)(typescript@7.0.2)(unrun@0.2.39)(utf-8-validate@6.0.6)(yaml@2.9.0)
-      '@rove-code/source-control-testing':
+      '@getpaperplane/source-control-testing':
         specifier: workspace:*
         version: link:../source-control-testing
       '@types/node':
@@ -1746,16 +1746,16 @@ importers:
 
   packages/source-control-github:
     dependencies:
-      '@rove-code/contracts':
+      '@getpaperplane/contracts':
         specifier: workspace:*
         version: link:../contracts
-      '@rove-code/provider-core':
+      '@getpaperplane/provider-core':
         specifier: workspace:*
         version: link:../provider-core
-      '@rove-code/shared':
+      '@getpaperplane/shared':
         specifier: workspace:*
         version: link:../shared
-      '@rove-code/source-control-core':
+      '@getpaperplane/source-control-core':
         specifier: workspace:*
         version: link:../source-control-core
       effect:
@@ -1771,7 +1771,7 @@ importers:
       '@effect/vitest':
         specifier: 4.0.5
         version: 4.0.5(patch_hash=2731c9c3761c595f25ddc625a7d61ca376b389d5b3049ecb837c8940f21cfa02)(@types/node@24.12.4)(@vitest/ui@5.0.1)(bufferutil@4.1.0)(effect@4.0.5)(esbuild@0.28.2)(jiti@2.7.0)(jsdom@30.1.2(@noble/hashes@1.8.0))(msw@2.12.11(@types/node@24.12.4)(typescript@7.0.2))(terser@5.48.0)(typescript@7.0.2)(unrun@0.2.39)(utf-8-validate@6.0.6)(yaml@2.9.0)
-      '@rove-code/source-control-testing':
+      '@getpaperplane/source-control-testing':
         specifier: workspace:*
         version: link:../source-control-testing
       '@types/node':
@@ -1783,13 +1783,13 @@ importers:
 
   packages/source-control-gitlab:
     dependencies:
-      '@rove-code/contracts':
+      '@getpaperplane/contracts':
         specifier: workspace:*
         version: link:../contracts
-      '@rove-code/shared':
+      '@getpaperplane/shared':
         specifier: workspace:*
         version: link:../shared
-      '@rove-code/source-control-core':
+      '@getpaperplane/source-control-core':
         specifier: workspace:*
         version: link:../source-control-core
       effect:
@@ -1799,7 +1799,7 @@ importers:
       '@effect/vitest':
         specifier: 4.0.5
         version: 4.0.5(patch_hash=2731c9c3761c595f25ddc625a7d61ca376b389d5b3049ecb837c8940f21cfa02)(@types/node@24.12.4)(@vitest/ui@5.0.1)(bufferutil@4.1.0)(effect@4.0.5)(esbuild@0.28.2)(jiti@2.7.0)(jsdom@30.1.2(@noble/hashes@1.8.0))(msw@2.12.11(@types/node@24.12.4)(typescript@7.0.2))(terser@5.48.0)(typescript@7.0.2)(unrun@0.2.39)(utf-8-validate@6.0.6)(yaml@2.9.0)
-      '@rove-code/source-control-testing':
+      '@getpaperplane/source-control-testing':
         specifier: workspace:*
         version: link:../source-control-testing
       '@types/node':
@@ -1811,13 +1811,13 @@ importers:
 
   packages/source-control-testing:
     dependencies:
-      '@rove-code/contracts':
+      '@getpaperplane/contracts':
         specifier: workspace:*
         version: link:../contracts
-      '@rove-code/shared':
+      '@getpaperplane/shared':
         specifier: workspace:*
         version: link:../shared
-      '@rove-code/source-control-core':
+      '@getpaperplane/source-control-core':
         specifier: workspace:*
         version: link:../source-control-core
       effect:
@@ -1830,10 +1830,10 @@ importers:
 
   packages/ssh:
     dependencies:
-      '@rove-code/contracts':
+      '@getpaperplane/contracts':
         specifier: workspace:*
         version: link:../contracts
-      '@rove-code/shared':
+      '@getpaperplane/shared':
         specifier: workspace:*
         version: link:../shared
       effect:
@@ -1855,7 +1855,7 @@ importers:
 
   packages/tailscale:
     dependencies:
-      '@rove-code/shared':
+      '@getpaperplane/shared':
         specifier: workspace:*
         version: link:../shared
       effect:
@@ -1883,10 +1883,10 @@ importers:
       '@electron/osx-sign':
         specifier: 2.7.0
         version: 2.7.0
-      '@rove-code/shared':
+      '@getpaperplane/shared':
         specifier: workspace:*
         version: link:../packages/shared
-      '@rove-code/tailscale':
+      '@getpaperplane/tailscale':
         specifier: workspace:*
         version: link:../packages/tailscale
       effect:
@@ -6082,16 +6082,16 @@ packages:
   '@rolldown/pluginutils@1.0.1':
     resolution: {integrity: sha512-2j9bGt5Jh8hj+vPtgzPtl72j0yRxHAyumoo6TNfAjsLB04UtpSvPbPcDcBMxz7n+9CYB0c1GxQFxYRg2jimqGw==}
 
-  '@rove-code/mobile-review-diff-native@file:apps/mobile/modules/rove-review-diff':
+  '@getpaperplane/mobile-review-diff-native@file:apps/mobile/modules/rove-review-diff':
     resolution: {directory: apps/mobile/modules/rove-review-diff, type: directory}
 
-  '@rove-code/mobile-source-text@file:apps/mobile/modules/rove-source-text':
+  '@getpaperplane/mobile-source-text@file:apps/mobile/modules/rove-source-text':
     resolution: {directory: apps/mobile/modules/rove-source-text, type: directory}
     peerDependencies:
       react: '*'
       react-native: '*'
 
-  '@rove-code/mobile-terminal-native@file:apps/mobile/modules/rove-terminal':
+  '@getpaperplane/mobile-terminal-native@file:apps/mobile/modules/rove-terminal':
     resolution: {directory: apps/mobile/modules/rove-terminal, type: directory}
 
   '@shadcn/lint@0.1.5':
@@ -17190,14 +17190,14 @@ snapshots:
 
   '@rolldown/pluginutils@1.0.1': {}
 
-  '@rove-code/mobile-review-diff-native@file:apps/mobile/modules/rove-review-diff': {}
+  '@getpaperplane/mobile-review-diff-native@file:apps/mobile/modules/rove-review-diff': {}
 
-  '@rove-code/mobile-source-text@file:apps/mobile/modules/rove-source-text(react-native@0.88.0(@babel/core@7.29.7)(@react-native/metro-config@0.88.0(@babel/core@7.29.7)(bufferutil@4.1.0)(utf-8-validate@6.0.6))(@types/react@19.3.0)(bufferutil@4.1.0)(react@19.3.0)(utf-8-validate@6.0.6))(react@19.3.0)':
+  '@getpaperplane/mobile-source-text@file:apps/mobile/modules/rove-source-text(react-native@0.88.0(@babel/core@7.29.7)(@react-native/metro-config@0.88.0(@babel/core@7.29.7)(bufferutil@4.1.0)(utf-8-validate@6.0.6))(@types/react@19.3.0)(bufferutil@4.1.0)(react@19.3.0)(utf-8-validate@6.0.6))(react@19.3.0)':
     dependencies:
       react: 19.3.0
       react-native: 0.88.0(@babel/core@7.29.7)(@react-native/metro-config@0.88.0(@babel/core@7.29.7)(bufferutil@4.1.0)(utf-8-validate@6.0.6))(@types/react@19.3.0)(bufferutil@4.1.0)(react@19.3.0)(utf-8-validate@6.0.6)
 
-  '@rove-code/mobile-terminal-native@file:apps/mobile/modules/rove-terminal': {}
+  '@getpaperplane/mobile-terminal-native@file:apps/mobile/modules/rove-terminal': {}
 
   '@shadcn/lint@0.1.5':
     dependencies:

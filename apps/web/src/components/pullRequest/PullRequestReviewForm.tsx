@@ -5,7 +5,7 @@ import { useAtomCommand } from "~/state/use-atom-command";
  * trigger and mode toggle, and each pending card can be dropped from the diff, so neither is
  * repeated here. The popover around it belongs to PullRequestComposer.
  */
-import type { EnvironmentId, PullRequestRef, PullRequestReviewVerdict } from "@rove-code/contracts";
+import type { EnvironmentId, PullRequestRef, PullRequestReviewVerdict } from "@getpaperplane/contracts";
 import { CheckIcon, MessageSquareIcon, XCircleIcon } from "lucide-react";
 import { useState, type ReactNode, type RefObject } from "react";
 

@@ -55,7 +55,7 @@
       // CLI archive and desktop sidecar stage them from this manifest.
       "ignoreDependencies": [
         "@effect/platform-node-shared",
-        "@rove-code/web",
+        "@getpaperplane/web",
         "@napi-rs/keyring",
         "cbor-x",
         "cross-spawn",
@@ -108,8 +108,8 @@
       // Fonts are configured as asset paths; Expo autolinks the native packages.
       "ignoreDependencies": [
         "@expo-google-fonts/dm-sans",
-        "@rove-code/mobile-review-diff-native",
-        "@rove-code/mobile-terminal-native",
+        "@getpaperplane/mobile-review-diff-native",
+        "@getpaperplane/mobile-terminal-native",
       ],
     },
     "apps/mobile/modules/rove-source-text": {

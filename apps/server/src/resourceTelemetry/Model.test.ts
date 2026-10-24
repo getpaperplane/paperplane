@@ -3,7 +3,7 @@ import {
   type DesktopHostTelemetrySnapshot,
   type ResourceMonitorProcessSample,
   type ResourceMonitorSnapshotEvent,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { describe, expect, it } from "@effect/vitest";
 import * as DateTime from "effect/DateTime";
 import * as Option from "effect/Option";

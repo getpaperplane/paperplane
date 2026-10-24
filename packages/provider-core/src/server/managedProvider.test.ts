@@ -4,8 +4,8 @@ import {
   ProviderDriverKind,
   ProviderInstanceId,
   type ServerProvider,
-} from "@rove-code/contracts";
-import { createModelCapabilities } from "@rove-code/shared/model";
+} from "@getpaperplane/contracts";
+import { createModelCapabilities } from "@getpaperplane/shared/model";
 import * as Deferred from "effect/Deferred";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";

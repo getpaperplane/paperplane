@@ -1,5 +1,5 @@
-import type { MediaReference } from "@rove-code/client-runtime/media-reference";
-import type { AssetResource, EnvironmentId, ThreadId } from "@rove-code/contracts";
+import type { MediaReference } from "@getpaperplane/client-runtime/media-reference";
+import type { AssetResource, EnvironmentId, ThreadId } from "@getpaperplane/contracts";
 import type { FileBackedComposerAttachment } from "./composerImages";
 
 /** Authored source metadata is kept separate from temporary preview/download URLs. */

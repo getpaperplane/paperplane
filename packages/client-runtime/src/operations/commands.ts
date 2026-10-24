@@ -1,4 +1,4 @@
-import { remapComposerContextAttachments } from "@rove-code/shared/composerContextReferences";
+import { remapComposerContextAttachments } from "@getpaperplane/shared/composerContextReferences";
 import {
   type ThreadLinkedPullRequest,
   CommandId,
@@ -26,10 +26,10 @@ import {
   type ThreadId,
   type ThreadEnvMode,
   type UploadChatAttachment,
-} from "@rove-code/contracts";
-import { modelSelectionCommandType } from "@rove-code/shared/model";
-import { derivePendingBackgroundWork } from "@rove-code/shared/orchestrationV2PendingBackgroundWork";
-import { visibleThreadPullRequests } from "@rove-code/shared/threadPullRequests";
+} from "@getpaperplane/contracts";
+import { modelSelectionCommandType } from "@getpaperplane/shared/model";
+import { derivePendingBackgroundWork } from "@getpaperplane/shared/orchestrationV2PendingBackgroundWork";
+import { visibleThreadPullRequests } from "@getpaperplane/shared/threadPullRequests";
 import * as Crypto from "effect/Crypto";
 import * as Effect from "effect/Effect";
 
@@ -123,7 +123,7 @@ export interface VisitThreadInput extends ThreadCommandInput {
 export type MarkThreadUnreadInput = ThreadCommandInput;
 
 export interface UpdateThreadMetadataInput extends ThreadCommandInput {
-  readonly limitRecovery?: import("@rove-code/contracts").OrchestrationV2LimitRecoveryUpdate | null;
+  readonly limitRecovery?: import("@getpaperplane/contracts").OrchestrationV2LimitRecoveryUpdate | null;
   readonly title?: string;
   readonly modelSelection?: ModelSelection;
   readonly branch?: string | null;
@@ -173,7 +173,7 @@ export interface StartThreadTurnInput extends ThreadCommandInput {
     readonly role: "user";
     readonly text: string;
     readonly attachments: ReadonlyArray<ChatAttachment | UploadChatAttachment>;
-    readonly context?: import("@rove-code/contracts").OrchestrationMessageContext;
+    readonly context?: import("@getpaperplane/contracts").OrchestrationMessageContext;
   };
   readonly modelSelection?: ModelSelection;
   readonly titleSeed?: string;
@@ -199,7 +199,7 @@ export interface RespondToThreadApprovalInput extends ThreadCommandInput {
 export interface RespondToThreadUserInputInput extends ThreadCommandInput {
   readonly requestId: RuntimeRequestId;
   readonly answers: ProviderUserInputAnswers;
-  readonly attachmentsByQuestionId?: import("@rove-code/contracts").UserInputAttachments;
+  readonly attachmentsByQuestionId?: import("@getpaperplane/contracts").UserInputAttachments;
 }
 
 export interface DismissThreadUserInputInput extends ThreadCommandInput {
@@ -258,7 +258,7 @@ export interface EditQueuedRunInput extends ThreadCommandInput {
   readonly edit?: {
     readonly messageId: MessageId;
     readonly attachments: ReadonlyArray<ChatAttachment | UploadChatAttachment>;
-    readonly context?: import("@rove-code/contracts").OrchestrationMessageContext;
+    readonly context?: import("@getpaperplane/contracts").OrchestrationMessageContext;
   };
 }
 

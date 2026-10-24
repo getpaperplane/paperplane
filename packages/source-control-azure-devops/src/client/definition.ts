@@ -3,13 +3,13 @@
  *
  * @module source-control-azure-devops/client/definition
  */
-import { SourceControlProviderKind } from "@rove-code/contracts";
-import { canonicalRepositoryKey } from "@rove-code/shared/sourceControl";
+import { SourceControlProviderKind } from "@getpaperplane/contracts";
+import { canonicalRepositoryKey } from "@getpaperplane/shared/sourceControl";
 import {
   defineSourceControlClient,
   isChangeRequestAuthorityOfProject,
   isChangeRequestPath,
-} from "@rove-code/source-control-core/client/definition";
+} from "@getpaperplane/source-control-core/client/definition";
 
 const CHECKOUT_COMMAND = /^az\s+repos\s+pr\s+checkout\s+(.+)$/i;
 const CHANGE_REQUEST_REFERENCE =

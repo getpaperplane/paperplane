@@ -2,11 +2,11 @@ import {
   ComputerUseControlError,
   type ComputerUseControlInput,
   type ComputerUseMacosVm,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   isAtomCommandInterrupted,
   squashAtomCommandFailure,
-} from "@rove-code/client-runtime/state/runtime";
+} from "@getpaperplane/client-runtime/state/runtime";
 import { useAtomValue } from "@effect/atom-react";
 import * as Schema from "effect/Schema";
 import { CheckIcon } from "lucide-react";

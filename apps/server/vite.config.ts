@@ -77,7 +77,7 @@ export default mergeConfig(
       tasks: {
         build: {
           command: "node scripts/cli.ts build",
-          dependsOn: ["@rove-code/web#build"],
+          dependsOn: ["@getpaperplane/web#build"],
           cache: false,
         },
       },

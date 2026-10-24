@@ -1,6 +1,6 @@
-import { filterComposerPullRequestMatches } from "@rove-code/shared/composerPullRequestMatches";
+import { filterComposerPullRequestMatches } from "@getpaperplane/shared/composerPullRequestMatches";
 import { describe, expect, it } from "@effect/vitest";
-import { EnvironmentId, ThreadId } from "@rove-code/contracts";
+import { EnvironmentId, ThreadId } from "@getpaperplane/contracts";
 
 import { buildCheckpointDiffTargets, normalizeComposerPathSearchQuery } from "./queryTargets";
 

@@ -1,4 +1,4 @@
-import { SourceControlProviderKind } from "@rove-code/contracts";
+import { SourceControlProviderKind } from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
 import * as Result from "effect/Result";
@@ -9,15 +9,15 @@ import {
   SourceControlProviderError,
   TrimmedNonEmptyString,
   type ChangeRequest,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   probeSourceControlProvider,
   providerAuth,
   type SourceControlCliDiscoverySpec,
   type SourceControlManagedCliDiscoverySpec,
-} from "@rove-code/source-control-core/server/discovery";
-import * as SourceControlHost from "@rove-code/source-control-core/server/SourceControlHost";
-import * as SourceControlProvider from "@rove-code/source-control-core/server/SourceControlProvider";
+} from "@getpaperplane/source-control-core/server/discovery";
+import * as SourceControlHost from "@getpaperplane/source-control-core/server/SourceControlHost";
+import * as SourceControlProvider from "@getpaperplane/source-control-core/server/SourceControlProvider";
 
 import * as GitCafeApi from "./GitCafeApi.ts";
 import * as GitCafeCredentials from "./GitCafeCredentials.ts";

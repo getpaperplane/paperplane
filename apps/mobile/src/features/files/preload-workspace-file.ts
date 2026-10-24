@@ -1,11 +1,11 @@
-import { AuthFilesystemReadScope } from "@rove-code/contracts";
+import { AuthFilesystemReadScope } from "@getpaperplane/contracts";
 import { readEnvironmentScope } from "../../state/session";
-import { executeAtomQuery } from "@rove-code/client-runtime/state/runtime";
-import type { EnvironmentId } from "@rove-code/contracts";
+import { executeAtomQuery } from "@getpaperplane/client-runtime/state/runtime";
+import type { EnvironmentId } from "@getpaperplane/contracts";
 import {
   isWorkspaceBrowserPreviewPath,
   isWorkspaceImagePreviewPath,
-} from "@rove-code/shared/filePreview";
+} from "@getpaperplane/shared/filePreview";
 
 import { appAtomRegistry } from "../../state/atom-registry";
 import { projectEnvironment } from "../../state/projects";

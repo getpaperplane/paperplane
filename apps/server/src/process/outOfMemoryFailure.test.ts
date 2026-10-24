@@ -1,5 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
-import { makeProviderFailure } from "@rove-code/provider-core/server/failure";
+import { makeProviderFailure } from "@getpaperplane/provider-core/server/failure";
 
 import { labelOutOfMemory } from "./outOfMemoryFailure.ts";
 

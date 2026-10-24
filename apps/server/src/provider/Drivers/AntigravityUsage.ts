@@ -9,15 +9,15 @@
  * @module provider/Drivers/AntigravityUsage
  */
 
-import { type AntigravitySettings, UsageReadError } from "@rove-code/contracts";
-import { expandHomePath } from "@rove-code/provider-core/server/pathExpansion";
-import * as ProviderHost from "@rove-code/provider-core/server/ProviderHost";
+import { type AntigravitySettings, UsageReadError } from "@getpaperplane/contracts";
+import { expandHomePath } from "@getpaperplane/provider-core/server/pathExpansion";
+import * as ProviderHost from "@getpaperplane/provider-core/server/ProviderHost";
 import type {
   ProviderUsageInstance,
   ProviderUsageReader,
   ProviderUsageScan,
-} from "@rove-code/provider-core/server/usage";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+} from "@getpaperplane/provider-core/server/usage";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 import * as Context from "effect/Context";
 import * as Crypto from "effect/Crypto";
 import * as Effect from "effect/Effect";
@@ -37,7 +37,7 @@ export class AntigravityUsage extends Context.Service<
       readonly windowStartMs: number;
     }) => Effect.Effect<ReadonlyArray<ProviderUsageScan>, UsageReadError>;
   }
->()("@rove-code/server/provider/Drivers/AntigravityUsage") {}
+>()("@getpaperplane/server/provider/Drivers/AntigravityUsage") {}
 
 const make = Effect.gen(function* () {
   const crypto = yield* Crypto.Crypto;

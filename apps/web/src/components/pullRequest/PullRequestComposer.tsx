@@ -1,4 +1,4 @@
-import { sourceControlClients } from "@rove-code/client-runtime/source-control-clients";
+import { sourceControlClients } from "@getpaperplane/client-runtime/source-control-clients";
 /**
  * The single floating control over a pull request. Commenting on the change and submitting the
  * review that carries the Code tab's line comments used to float as two buttons that crowded
@@ -9,7 +9,7 @@ import { sourceControlClients } from "@rove-code/client-runtime/source-control-c
  * the toggle: they are separate texts going to separate places, and merging them would send a
  * summary as a comment or the reverse.
  */
-import type { EnvironmentId, PullRequestDetailView, PullRequestRef } from "@rove-code/contracts";
+import type { EnvironmentId, PullRequestDetailView, PullRequestRef } from "@getpaperplane/contracts";
 import { MessageSquareIcon, Trash2Icon, XIcon } from "lucide-react";
 import { useRef, useState } from "react";
 

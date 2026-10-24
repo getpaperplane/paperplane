@@ -21,24 +21,24 @@ import {
   ServerSettings,
   type ServerSettingsPatch,
   sessionGrantsScope,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   type ClientSettingsPatch,
   type ClientSettings,
   DEFAULT_CLIENT_SETTINGS,
   type EnvironmentIdentificationMode,
   type UnifiedSettings,
-} from "@rove-code/contracts/settings";
-import { safeErrorLogAttributes } from "@rove-code/client-runtime/errors";
+} from "@getpaperplane/contracts/settings";
+import { safeErrorLogAttributes } from "@getpaperplane/client-runtime/errors";
 import {
   isAtomCommandInterrupted,
   squashAtomCommandFailure,
-} from "@rove-code/client-runtime/state/runtime";
+} from "@getpaperplane/client-runtime/state/runtime";
 import {
   filterSharedServerPatch,
   splitSharedServerPatch,
   supportsSharedSettingsSync,
-} from "@rove-code/client-runtime/state/shared-settings";
+} from "@getpaperplane/client-runtime/state/shared-settings";
 import { ensureLocalApi } from "~/localApi";
 import {
   getThemeDefinition,
@@ -50,7 +50,7 @@ import {
 import {
   modelPreferencesMigrationPatch,
   resolveModelPreferences,
-} from "@rove-code/shared/serverSettings";
+} from "@getpaperplane/shared/serverSettings";
 import * as Struct from "effect/Struct";
 import * as Option from "effect/Option";
 import { AsyncResult, Atom } from "effect/reactivity";

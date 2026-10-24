@@ -34,12 +34,12 @@ import {
   ProviderDriverKind,
   type ProviderInstanceConfigMap,
   ProviderInstanceId,
-} from "@rove-code/contracts";
-import * as ProviderLatestVersions from "@rove-code/provider-core/server/ProviderLatestVersions";
-import * as McpProviderSessions from "@rove-code/provider-core/server/McpProviderSessions";
-import type { GrokSettings } from "@rove-code/provider-grok/settings";
-import type { CursorSettings } from "@rove-code/provider-cursor/settings";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+} from "@getpaperplane/contracts";
+import * as ProviderLatestVersions from "@getpaperplane/provider-core/server/ProviderLatestVersions";
+import * as McpProviderSessions from "@getpaperplane/provider-core/server/McpProviderSessions";
+import type { GrokSettings } from "@getpaperplane/provider-grok/settings";
+import type { CursorSettings } from "@getpaperplane/provider-cursor/settings";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -54,15 +54,15 @@ import * as ServerConfig from "../config.ts";
 import * as ServerSettings from "../serverSettings.ts";
 import { ClaudeDriver, type ClaudeDriverEnv } from "./Drivers/ClaudeDriver.ts";
 import { CodexDriver, type CodexDriverEnv } from "./Drivers/CodexDriver.ts";
-import { CursorDriver, type CursorDriverEnv } from "@rove-code/provider-cursor/server";
-import { GrokDriver, type GrokDriverEnv } from "@rove-code/provider-grok/server";
-import { OpenCodeDriver, type OpenCodeDriverEnv } from "@rove-code/provider-opencode/server";
-import type { OpenCodeSettings } from "@rove-code/provider-opencode/settings";
+import { CursorDriver, type CursorDriverEnv } from "@getpaperplane/provider-cursor/server";
+import { GrokDriver, type GrokDriverEnv } from "@getpaperplane/provider-grok/server";
+import { OpenCodeDriver, type OpenCodeDriverEnv } from "@getpaperplane/provider-opencode/server";
+import type { OpenCodeSettings } from "@getpaperplane/provider-opencode/settings";
 import * as ModelManifest from "./ModelManifest.ts";
-import * as OpenCodeRuntime from "@rove-code/provider-opencode/server/OpenCodeRuntime";
-import * as OpenCodeServerLedger from "@rove-code/provider-opencode/server/OpenCodeServerLedger";
+import * as OpenCodeRuntime from "@getpaperplane/provider-opencode/server/OpenCodeRuntime";
+import * as OpenCodeServerLedger from "@getpaperplane/provider-opencode/server/OpenCodeServerLedger";
 import * as ResetCreditCoordinator from "./resetCreditCoordinator.ts";
-import * as ProviderEventLoggers from "@rove-code/provider-core/server/ProviderEventLoggers";
+import * as ProviderEventLoggers from "@getpaperplane/provider-core/server/ProviderEventLoggers";
 import { makeProviderInstanceRegistry } from "./ProviderInstanceRegistry.ts";
 import * as ProviderOrchestrationAdapterInfrastructure from "./ProviderOrchestrationAdapterInfrastructure.ts";
 import * as ProviderHostLive from "./ProviderHostLive.ts";

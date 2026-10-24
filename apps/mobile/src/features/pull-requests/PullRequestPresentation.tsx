@@ -1,5 +1,5 @@
 import { AppActivityIndicator } from "../../components/ui/AppActivityIndicator";
-import type { PullRequestActor } from "@rove-code/contracts";
+import type { PullRequestActor } from "@getpaperplane/contracts";
 import { Image } from "expo-image";
 import { View } from "react-native";
 

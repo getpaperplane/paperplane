@@ -1,4 +1,4 @@
-import { OrchestrationGetWorkflowScriptError } from "@rove-code/contracts";
+import { OrchestrationGetWorkflowScriptError } from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import { readContainedWorkflowFile } from "./workflowFileRead.ts";
 

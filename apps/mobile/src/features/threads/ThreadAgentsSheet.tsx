@@ -1,12 +1,12 @@
 import { useAtomValue } from "@effect/atom-react";
-import type { ThreadTurnSubagents } from "@rove-code/client-runtime/state/thread-subagents";
+import type { ThreadTurnSubagents } from "@getpaperplane/client-runtime/state/thread-subagents";
 import {
   isOrchestrationV2WorkActive,
   type EnvironmentId,
   type OrchestrationV2Subagent,
   type ThreadId,
-} from "@rove-code/contracts";
-import { deriveSubagentElapsedMs, formatDuration } from "@rove-code/shared/orchestrationTiming";
+} from "@getpaperplane/contracts";
+import { deriveSubagentElapsedMs, formatDuration } from "@getpaperplane/shared/orchestrationTiming";
 import { StackActions, useNavigation, type StaticScreenProps } from "@react-navigation/native";
 import * as DateTime from "effect/DateTime";
 import { Atom } from "effect/reactivity";

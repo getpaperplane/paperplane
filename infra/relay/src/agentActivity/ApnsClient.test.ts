@@ -1,8 +1,8 @@
 // @effect-diagnostics-next-line nodeBuiltinImport:off -- Effect's Crypto has no generateKeyPairSync.
 import * as NodeCrypto from "node:crypto";
 
-import { EnvironmentId, ThreadId } from "@rove-code/contracts";
-import type { RelayAgentActivityAggregateState } from "@rove-code/contracts/relay";
+import { EnvironmentId, ThreadId } from "@getpaperplane/contracts";
+import type { RelayAgentActivityAggregateState } from "@getpaperplane/contracts/relay";
 import { describe, expect, it } from "@effect/vitest";
 import * as DateTime from "effect/DateTime";
 import * as Deferred from "effect/Deferred";

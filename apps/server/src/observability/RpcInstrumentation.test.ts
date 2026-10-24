@@ -7,7 +7,7 @@ import {
   ScheduledTaskId,
   WS_METHODS,
   WsRpcGroup,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Deferred from "effect/Deferred";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";

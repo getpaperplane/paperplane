@@ -5,8 +5,8 @@ import type {
   PreviewReportStatusInput,
   ScopedThreadRef,
   ThreadId,
-} from "@rove-code/contracts";
-import { parseScopedThreadKey, scopedThreadKey } from "@rove-code/client-runtime/environment";
+} from "@getpaperplane/contracts";
+import { parseScopedThreadKey, scopedThreadKey } from "@getpaperplane/client-runtime/environment";
 import * as Option from "effect/Option";
 import { useEffect, useEffectEvent, useMemo, useRef } from "react";
 

@@ -14,7 +14,7 @@ import {
   type SnapShotKeyChord,
   type SnapShotModifier,
   type SnapShotShortcut,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 
 interface AccessibilityTreeNode {
   readonly name?: string;

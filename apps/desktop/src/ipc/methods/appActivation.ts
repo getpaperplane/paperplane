@@ -1,4 +1,4 @@
-import { DesktopAppActivationResponse } from "@rove-code/contracts";
+import { DesktopAppActivationResponse } from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 

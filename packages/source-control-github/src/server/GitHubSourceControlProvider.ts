@@ -1,4 +1,4 @@
-import { SourceControlProviderKind } from "@rove-code/contracts";
+import { SourceControlProviderKind } from "@getpaperplane/contracts";
 import * as Data from "effect/Data";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -20,11 +20,11 @@ import {
   type ChangeRequest,
   type SourceControlProviderDiscoveryItem,
   type SourceControlRepositoryCloneUrls,
-} from "@rove-code/contracts";
-import { normalizeGitRemoteUrl } from "@rove-code/shared/git";
-import * as HostProcess from "@rove-code/shared/HostProcess";
-import { decodeJsonResult } from "@rove-code/shared/schemaJson";
-import { isSshRemoteUrl } from "@rove-code/shared/sourceControl";
+} from "@getpaperplane/contracts";
+import { normalizeGitRemoteUrl } from "@getpaperplane/shared/git";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
+import { decodeJsonResult } from "@getpaperplane/shared/schemaJson";
+import { isSshRemoteUrl } from "@getpaperplane/shared/sourceControl";
 
 import * as GitHubRest from "./GitHubRest.ts";
 import * as GitHubRequestPolicy from "./GitHubRequestPolicy.ts";
@@ -43,14 +43,14 @@ import {
   resolveGitHubRepository,
   type GitHubRepositoryLocator,
 } from "./gitHubRepositoryResolution.ts";
-import * as SourceControlRateLimit from "@rove-code/source-control-core/server/SourceControlRateLimit";
+import * as SourceControlRateLimit from "@getpaperplane/source-control-core/server/SourceControlRateLimit";
 import {
   effectiveGitHubAccount,
   findAuthenticatedGitHubAccount,
   parseGitHubAuthStatus,
   type GitHubAuthStatusAccount,
 } from "./gitHubAuthStatus.ts";
-import * as SourceControlProvider from "@rove-code/source-control-core/server/SourceControlProvider";
+import * as SourceControlProvider from "@getpaperplane/source-control-core/server/SourceControlProvider";
 import {
   combinedAuthOutput,
   firstSafeAuthLine,
@@ -59,9 +59,9 @@ import {
   type SourceControlAuthProbeInput,
   type SourceControlCliDiscoverySpec,
   type SourceControlManagedCliDiscoverySpec,
-} from "@rove-code/source-control-core/server/discovery";
-import * as SourceControlHost from "@rove-code/source-control-core/server/SourceControlHost";
-import { readSourceControlHostSettings } from "@rove-code/source-control-core/client/definition";
+} from "@getpaperplane/source-control-core/server/discovery";
+import * as SourceControlHost from "@getpaperplane/source-control-core/server/SourceControlHost";
+import { readSourceControlHostSettings } from "@getpaperplane/source-control-core/client/definition";
 
 import * as GitHubClient from "../client/definition.ts";
 import {

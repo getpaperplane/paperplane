@@ -67,8 +67,8 @@ jobs:
           cache: false
           run-install: |
             args:
-              - --filter=@rove-code/scripts...
-              - --filter=@rove-code/web...
+              - --filter=@getpaperplane/scripts...
+              - --filter=@getpaperplane/web...
       - name: Build preview
         env:
           VITE_HOSTED_APP_URL: ${{ needs.resolve.outputs.origin }}
@@ -99,7 +99,7 @@ jobs:
           cache: true
           run-install: |
             args:
-              - --filter=@rove-code/scripts...
+              - --filter=@getpaperplane/scripts...
       - uses: actions/download-artifact@v8
         with:
           name: web-preview

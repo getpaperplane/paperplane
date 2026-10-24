@@ -1,7 +1,7 @@
 import { PermissionChecklist, PermissionContinueButton } from "../permissions/PermissionChecklist";
 import { usePermissionStatus } from "../permissions/usePermissionStatus";
-import type { BrowserImportSource } from "@rove-code/contracts";
-import { BROWSER_IMPORT_FAILURE_COPY } from "@rove-code/contracts";
+import type { BrowserImportSource } from "@getpaperplane/contracts";
+import { BROWSER_IMPORT_FAILURE_COPY } from "@getpaperplane/contracts";
 import { ArrowDownIcon, ArrowRightIcon, CheckIcon, HardDriveIcon } from "lucide-react";
 import { useRef, useState } from "react";
 

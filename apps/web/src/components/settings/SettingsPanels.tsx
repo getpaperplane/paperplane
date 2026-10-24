@@ -15,14 +15,14 @@ import {
   type ProviderInstanceId,
   type ScopedThreadRef,
   type SidebarProjectGroupingMode,
-} from "@rove-code/contracts";
-import { scopeThreadRef } from "@rove-code/client-runtime/environment";
-import { presentThreadShell } from "@rove-code/client-runtime/state/shell";
+} from "@getpaperplane/contracts";
+import { scopeThreadRef } from "@getpaperplane/client-runtime/environment";
+import { presentThreadShell } from "@getpaperplane/client-runtime/state/shell";
 import {
   isAtomCommandInterrupted,
   settlePromise,
   squashAtomCommandFailure,
-} from "@rove-code/client-runtime/state/runtime";
+} from "@getpaperplane/client-runtime/state/runtime";
 import {
   DEFAULT_ENVIRONMENT_IDENTIFICATION_MODE,
   DEFAULT_UNIFIED_SETTINGS,
@@ -48,9 +48,9 @@ import {
   MIN_TERMINAL_FONT_SIZE,
   type QuitConfirmationMode,
   SidebarProjectSortOrder,
-} from "@rove-code/contracts/settings";
-import { resolveServerBackgroundActivitySettings } from "@rove-code/shared/backgroundActivitySettings";
-import { createModelSelection } from "@rove-code/shared/model";
+} from "@getpaperplane/contracts/settings";
+import { resolveServerBackgroundActivitySettings } from "@getpaperplane/shared/backgroundActivitySettings";
+import { createModelSelection } from "@getpaperplane/shared/model";
 import * as Duration from "effect/Duration";
 import * as Equal from "effect/Equal";
 import * as Schema from "effect/Schema";

@@ -2,11 +2,11 @@ import { assert, describe } from "@effect/vitest";
 
 import { createOxlintRuleHarness } from "../test/utils.ts";
 
-const rule = createOxlintRuleHarness("rove/no-manual-effect-runtime-in-tests", {
+const rule = createOxlintRuleHarness("paperplane/no-manual-effect-runtime-in-tests", {
   filename: "fixture.test.ts",
 });
 
-describe("rove/no-manual-effect-runtime-in-tests", () => {
+describe("paperplane/no-manual-effect-runtime-in-tests", () => {
   rule.valid(
     "allows @effect/vitest effect tests",
     `
@@ -61,7 +61,7 @@ describe("rove/no-manual-effect-runtime-in-tests", () => {
   );
 });
 
-const productionRule = createOxlintRuleHarness("rove/no-manual-effect-runtime-in-tests");
+const productionRule = createOxlintRuleHarness("paperplane/no-manual-effect-runtime-in-tests");
 
 productionRule.valid(
   "allows production runtime boundaries",
@@ -72,12 +72,12 @@ productionRule.valid(
   `,
 );
 
-const legacyRule = createOxlintRuleHarness("rove/no-manual-effect-runtime-in-tests", {
+const legacyRule = createOxlintRuleHarness("paperplane/no-manual-effect-runtime-in-tests", {
   filename: "legacy.test.ts",
   ruleOptions: [{ maxOccurrences: 2 }],
 });
 
-describe("rove/no-manual-effect-runtime-in-tests with maxOccurrences", () => {
+describe("paperplane/no-manual-effect-runtime-in-tests with maxOccurrences", () => {
   legacyRule.valid(
     "allows occurrences up to the ceiling",
     `

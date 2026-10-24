@@ -11,8 +11,8 @@ import {
   type ServerSettings,
   type StorageCleanupReportEntry,
   type WorktreeCleanupRules,
-} from "@rove-code/contracts";
-import { resolveWorktreeCleanup } from "@rove-code/shared/projectSettings";
+} from "@getpaperplane/contracts";
+import { resolveWorktreeCleanup } from "@getpaperplane/shared/projectSettings";
 
 // --- Environment icon -------------------------------------------------------
 
