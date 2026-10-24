@@ -3,6 +3,11 @@ import * as NodeFS from "node:fs";
 import * as NodePath from "node:path";
 import * as NodeSqlite from "node:sqlite";
 import * as NodeWorkerThreads from "node:worker_threads";
+import * as NodeOS from "node:os";
+import * as NodeModule from "node:module";
+import type { DataType } from "ffi-rs";
+
+const requireNative = NodeModule.createRequire(import.meta.url);
 
 export const PAPERPLANE_HOME_NAME = ".paperplane";
 export const HOME_MIGRATION_REPORT = "home-migration.json";
@@ -170,6 +175,85 @@ function isDatabase(path: string): boolean {
   }
 }
 
+/** A single native rename which cannot replace even an empty destination directory. */
+export function publishHomeMigration(
+  staged: string,
+  destination: string,
+): "published" | "destination-exists" {
+  // Load the existing native binding only for a migration, never on no-op starts.
+  const Ffi: typeof import("ffi-rs") = requireNative("ffi-rs");
+  // oxlint-disable-next-line paperplane/no-global-process-runtime -- This adapter must call the actual host kernel's rename API.
+  const platform = NodeOS.platform();
+  let libraryPath: string;
+  if (platform === "win32") libraryPath = "kernel32.dll";
+  else if (platform === "darwin") libraryPath = "/usr/lib/libSystem.B.dylib";
+  else if (platform === "linux") {
+    // Resolve the already-loaded libc, including musl, rather than assuming a
+    // distribution's soname or architecture-specific installation directory.
+    const mappedLibc = NodeFS.readFileSync("/proc/self/maps", "utf8")
+      .split("\n")
+      .map((line) => line.trim().split(/\s+/).at(-1))
+      .find(
+        (path) =>
+          path !== undefined && /\/(?:libc[^/]*\.so(?:\.\d+)*|ld-musl-[^/]*\.so\.\d+)$/.test(path),
+      );
+    if (mappedLibc === undefined)
+      throw new HomeMigrationError(
+        "Could not locate libc for an exclusive home rename. The old home is unchanged.",
+      );
+    libraryPath = mappedLibc;
+  } else
+    throw new HomeMigrationError(
+      `Exclusive home migration is not supported on ${platform}. The old home is unchanged.`,
+    );
+
+  const library = "paperplane-home-migration";
+  Ffi.open({ library, path: libraryPath });
+  try {
+    const result =
+      platform === "win32"
+        ? Ffi.load<DataType.I32, true>({
+            library,
+            funcName: "MoveFileExW",
+            retType: Ffi.DataType.I32,
+            paramsType: [Ffi.DataType.WString, Ffi.DataType.WString, Ffi.DataType.U32],
+            // No REPLACE_EXISTING or COPY_ALLOWED: publish only with one rename.
+            paramsValue: [staged, destination, 0],
+            errno: true,
+          })
+        : platform === "darwin"
+          ? Ffi.load<DataType.I32, true>({
+              library,
+              funcName: "renamex_np",
+              retType: Ffi.DataType.I32,
+              paramsType: [Ffi.DataType.String, Ffi.DataType.String, Ffi.DataType.U32],
+              paramsValue: [staged, destination, 0x4],
+              errno: true,
+            }) // RENAME_EXCL
+          : Ffi.load<DataType.I32, true>({
+              library,
+              funcName: "renameat2",
+              retType: Ffi.DataType.I32,
+              paramsType: [
+                Ffi.DataType.I32,
+                Ffi.DataType.String,
+                Ffi.DataType.I32,
+                Ffi.DataType.String,
+                Ffi.DataType.U32,
+              ],
+              paramsValue: [-100, staged, -100, destination, 1],
+              errno: true,
+            }); // AT_FDCWD, RENAME_NOREPLACE
+    if (platform === "win32" ? result.value !== 0 : result.value === 0) return "published";
+    if (exists(destination)) return "destination-exists";
+    throw new HomeMigrationError(
+      `Could not exclusively publish ${destination}: ${result.errnoMessage}. The old home is unchanged.`,
+    );
+  } finally {
+    Ffi.close(library);
+  }
+}
+
 function copyEntry(
   source: string,
   staged: string,
@@ -286,10 +370,11 @@ export function migrateDefaultHome(input: {
       { mode: 0o600, flag: "wx" },
     );
     NodeFS.chmodSync(staged, NodeFS.statSync(source).mode & 0o777);
-    // The migration guard serializes publishers. Recheck immediately before the
-    // single same-filesystem rename, including destinations created during steps.
-    if (exists(destination)) return { kind: "skipped", reason: "destination-exists" };
-    NodeFS.renameSync(staged, destination);
+    // The native no-replace operation also covers an unrelated creator racing
+    // publication; an exists() check followed by Node's rename is insufficient.
+    if (publishHomeMigration(staged, destination) === "destination-exists") {
+      return { kind: "skipped", reason: "destination-exists" };
+    }
     const log =
       input.log ?? ((message: string) => process.stderr.write(`[home-migration] ${message}\n`));
     log(

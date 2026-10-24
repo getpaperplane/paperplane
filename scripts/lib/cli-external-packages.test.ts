@@ -4,6 +4,8 @@ import * as NodeFS from "node:fs";
 import * as NodeOS from "node:os";
 import * as NodePath from "node:path";
 import * as NodeURL from "node:url";
+import * as NodeSqlite from "node:sqlite";
+import { build } from "vite-plus/pack";
 
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { assert, describe, it } from "@effect/vitest";
@@ -16,6 +18,7 @@ import serverPackageJson from "../../apps/server/package.json" with { type: "jso
 
 import { findEsmImportsOfExternalPackages } from "./cli-executable-imports.ts";
 import { runtimePackageClosure } from "./runtime-package-closure.ts";
+import { stageRuntimePackageFixture } from "./runtime-package-fixture.ts";
 
 import {
   CLI_PI_RUNTIME_PACKAGES,
@@ -170,6 +173,7 @@ describe("selectCliRuntimeExternalDependencies", () => {
         "@napi-rs/keyring",
         "cbor-x",
         "cross-spawn",
+        "ffi-rs",
         "jose",
         "node-pty",
         "playwright-core",
@@ -491,6 +495,82 @@ describe("findEsmImportsOfExternalPackages", () => {
     const source = 'const { FileFinder } = createRequire(import.meta.url)("@ff-labs/fff-node");';
     assert.deepStrictEqual(findEsmImportsOfExternalPackages(source), []);
   });
+});
+
+it("runs home migration from isolated ESM and CommonJS bundles with a native sidecar", async () => {
+  const stage = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "paperplane-home-sidecar-"));
+  try {
+    const entries: string[] = [];
+    for (const format of ["esm", "cjs"] as const) {
+      const extension = format === "cjs" ? ".cjs" : ".mjs";
+      await build({
+        entry: {
+          homeMigration: NodeURL.fileURLToPath(
+            new URL("../../packages/shared/src/homeMigration.ts", import.meta.url),
+          ),
+        },
+        outDir: stage,
+        format,
+        config: false,
+        tsconfig: false,
+        dts: false,
+        clean: false,
+        shims: true,
+        logLevel: "silent",
+        outExtensions: () => ({ js: extension }),
+      });
+      const entry = NodePath.join(stage, `homeMigration${extension}`);
+      entries.push(entry);
+      // A no-op start works before the native dependency is installed at all.
+      const noop = NodeChildProcess.spawnSync(
+        process.execPath,
+        [
+          "--input-type=module",
+          "-e",
+          `const {migrateDefaultHome} = await import(process.argv[1]);
+         const result = migrateDefaultHome({homeDirectory: process.argv[2]});
+         if(result.kind !== 'skipped') throw new Error('expected no-op');`,
+          NodeURL.pathToFileURL(entry).href,
+          stage,
+        ],
+        { cwd: stage, encoding: "utf8", timeout: 10_000, env: { ...process.env, NODE_PATH: "" } },
+      );
+      assert.equal(noop.status, 0, noop.stderr);
+    }
+    assert.equal(
+      selectCliRuntimeExternalDependencies(serverPackageJson.dependencies)["ffi-rs"],
+      "^1.3.0",
+    );
+    stageRuntimePackageFixture(NodePath.join(serverRoot, "node_modules/ffi-rs"), stage);
+    for (const [index, entry] of entries.entries()) {
+      const home = NodePath.join(stage, `user-${index}`);
+      const state = NodePath.join(home, ".rove-code", "userdata");
+      NodeFS.mkdirSync(state, { recursive: true });
+      const db = new NodeSqlite.DatabaseSync(NodePath.join(state, "state.sqlite"));
+      db.exec("CREATE TABLE messages(text); INSERT INTO messages VALUES ('sidecar snapshot');");
+      db.close();
+      const child = NodeChildProcess.spawnSync(
+        process.execPath,
+        [
+          "--input-type=module",
+          "-e",
+          `import * as sqlite from 'node:sqlite'; import * as path from 'node:path';
+         const {migrateDefaultHome} = await import(process.argv[1]);
+         const result = migrateDefaultHome({homeDirectory: process.argv[2], log: () => {}});
+         if(result.kind !== 'migrated') throw new Error('expected migration');
+         const db = new sqlite.DatabaseSync(path.join(process.argv[2], '.paperplane', 'userdata', 'state.sqlite'), {readOnly:true});
+         if(db.prepare('SELECT text FROM messages').get().text !== 'sidecar snapshot') throw new Error('snapshot lost data');
+         db.close();`,
+          NodeURL.pathToFileURL(entry).href,
+          home,
+        ],
+        { cwd: stage, encoding: "utf8", timeout: 10_000, env: { ...process.env, NODE_PATH: "" } },
+      );
+      assert.equal(child.status, 0, child.stderr);
+    }
+  } finally {
+    NodeFS.rmSync(stage, { recursive: true, force: true });
+  }
 });
 
 it("loads Paperplane's MCP clients from an isolated runtime sidecar", () => {

@@ -10,6 +10,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vite-plus/test";
 import {
   HOME_MIGRATION_REPORT,
   migrateDefaultHome,
+  publishHomeMigration,
   type HomeMigrationStep,
 } from "./homeMigration.ts";
 
@@ -77,6 +78,22 @@ function snapshot(root: string): SnapshotEntry[] {
 }
 
 describe("default home migration", () => {
+  it("atomically refuses an empty destination at the native publication boundary", () => {
+    const staged = NodePath.join(homeDirectory, "staged-数据");
+    NodeFS.mkdirSync(staged);
+    NodeFS.writeFileSync(NodePath.join(staged, "data"), "complete snapshot");
+    NodeFS.mkdirSync(destination);
+    const inode = NodeFS.statSync(destination).ino;
+    expect(publishHomeMigration(staged, destination)).toBe("destination-exists");
+    expect(NodeFS.statSync(destination).ino).toBe(inode);
+    expect(NodeFS.readdirSync(destination)).toEqual([]);
+    expect(NodeFS.readFileSync(NodePath.join(staged, "data"), "utf8")).toBe("complete snapshot");
+    NodeFS.rmdirSync(destination);
+    expect(publishHomeMigration(staged, destination)).toBe("published");
+    expect(NodeFS.readFileSync(NodePath.join(destination, "data"), "utf8")).toBe(
+      "complete snapshot",
+    );
+  });
   it("works when the parent Node invocation uses --input-type=module", () => {
     seed();
     const child = NodeChildProcess.spawnSync(
