@@ -4,7 +4,7 @@
   "compatibility": [
     {
       "driver": "codex",
-      "roveCodeRange": ">=0.0.44",
+      "paperplaneCodeRange": ">=0.0.44",
       "recommendedRange": ">=0.159.0",
       "ranges": [
         { "range": ">=0.156.0", "status": "supported" },
@@ -14,7 +14,7 @@
     },
     {
       "driver": "codex",
-      "roveCodeRange": ">=0.0.42 <0.0.44",
+      "paperplaneCodeRange": ">=0.0.42 <0.0.44",
       "recommendedRange": ">=0.156.0",
       "ranges": [
         { "range": ">=0.156.0", "status": "supported" },
@@ -24,7 +24,7 @@
     },
     {
       "driver": "claudeAgent",
-      "roveCodeRange": ">=0.0.42",
+      "paperplaneCodeRange": ">=0.0.42",
       "recommendedRange": ">=2.1.280",
       "ranges": [
         { "range": ">=2.1.280", "status": "supported" },
@@ -34,7 +34,7 @@
     },
     {
       "driver": "cursor",
-      "roveCodeRange": ">=0.0.42",
+      "paperplaneCodeRange": ">=0.0.42",
       "recommendedRange": ">=2026.05.09",
       "ranges": [
         { "range": ">=2026.05.09", "status": "supported" },
@@ -43,7 +43,7 @@
     },
     {
       "driver": "grok",
-      "roveCodeRange": ">=0.0.42",
+      "paperplaneCodeRange": ">=0.0.42",
       "recommendedRange": ">=1.0.13",
       "ranges": [
         { "range": ">=1.0.13", "status": "supported" },
@@ -52,7 +52,7 @@
     },
     {
       "driver": "opencode",
-      "roveCodeRange": ">=0.0.42 <0.0.46",
+      "paperplaneCodeRange": ">=0.0.42 <0.0.46",
       "recommendedRange": ">=1.14.19 <2.0.0",
       "recommendedVersion": "1.14.19",
       "ranges": [
@@ -63,7 +63,7 @@
     },
     {
       "driver": "opencode",
-      "roveCodeRange": ">=0.0.46",
+      "paperplaneCodeRange": ">=0.0.46",
       "recommendedRange": ">=2.0.18",
       "ranges": [
         { "range": ">=2.0.18", "status": "supported" },
@@ -74,13 +74,13 @@
     },
     {
       "driver": "antigravity",
-      "roveCodeRange": ">=0.0.42",
+      "paperplaneCodeRange": ">=0.0.42",
       "recommendedRange": "=1.1.1",
       "ranges": [{ "range": "=1.1.1", "status": "supported" }]
     },
     {
       "driver": "pi",
-      "roveCodeRange": ">=0.0.46",
+      "paperplaneCodeRange": ">=0.0.46",
       "recommendedRange": ">=1.0.0",
       "ranges": [
         { "range": ">=0.80.5", "status": "supported" },
@@ -89,7 +89,7 @@
     },
     {
       "driver": "muse",
-      "roveCodeRange": ">=0.0.46",
+      "paperplaneCodeRange": ">=0.0.46",
       "recommendedRange": ">=1.4.2",
       "ranges": [
         { "range": ">=1.4.2", "status": "supported" },

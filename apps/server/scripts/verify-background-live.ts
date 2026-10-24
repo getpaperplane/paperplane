@@ -224,7 +224,7 @@ function startServer() {
       mode: "desktop",
       noBrowser: true,
       port,
-      roveHome: home,
+      paperplaneHome: home,
       host: "127.0.0.1",
       desktopBootstrapToken: bootstrap,
       tailscaleServeEnabled: false,

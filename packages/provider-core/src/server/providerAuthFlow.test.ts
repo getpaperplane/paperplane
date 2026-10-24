@@ -214,7 +214,7 @@ it.effect.each([
       const received = yield* Deferred.make<ProviderAuthResponse>();
       const controller = yield* ProviderAuthFlow.make({
         instanceId,
-        credentialBinding: { owner: "rove", key: "binding" },
+        credentialBinding: { owner: "paperplane", key: "binding" },
         methods: Effect.succeed([method]),
         authenticate: (_, context) =>
           Effect.gen(function* () {
@@ -309,7 +309,7 @@ it.effect.each([
   Effect.gen(function* () {
     const controller = yield* ProviderAuthFlow.make({
       instanceId,
-      credentialBinding: { owner: "rove", key: "failure" },
+      credentialBinding: { owner: "paperplane", key: "failure" },
       methods: Effect.succeed([method]),
       authenticate: () => failure,
       logout: Effect.void,
@@ -333,7 +333,7 @@ const makeBlockingResponseHarness = Effect.gen(function* () {
   let responses = 0;
   const controller = yield* ProviderAuthFlow.make({
     instanceId,
-    credentialBinding: { owner: "rove", key: "blocked-response" },
+    credentialBinding: { owner: "paperplane", key: "blocked-response" },
     methods: Effect.succeed([method]),
     authenticate: (_, context) =>
       Effect.gen(function* () {
@@ -523,7 +523,7 @@ it.effect("profile import stops owned sessions and gates access until credential
   Effect.gen(function* () {
     const controller = yield* ProviderAuthFlow.make({
       instanceId,
-      credentialBinding: { owner: "rove", key: "handoff-binding" },
+      credentialBinding: { owner: "paperplane", key: "handoff-binding" },
       methods: Effect.succeed([method]),
       authenticate: () => Effect.void,
       logout: Effect.void,

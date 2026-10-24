@@ -26,7 +26,7 @@ const config = {
     mode: "desktop",
     noBrowser: true,
     port: 3773,
-    roveHome: "/tmp/rove",
+    paperplaneHome: "/tmp/rove",
     host: "127.0.0.1",
     desktopBootstrapToken: "desktop-bootstrap-token",
     tailscaleServeEnabled: false,

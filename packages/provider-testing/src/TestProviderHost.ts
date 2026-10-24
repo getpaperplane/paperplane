@@ -75,7 +75,7 @@ export const layer = (
           Effect.sync(() => {
             const key = `${namespace}:${bindingId}`;
             return {
-              binding: { owner: "rove" as const, key },
+              binding: { owner: "paperplane" as const, key },
               get: Effect.sync(() => Option.fromUndefinedOr(credentials.get(key))),
               set: (value: Uint8Array) => Effect.sync(() => void credentials.set(key, value)),
               remove: Effect.sync(() => void credentials.delete(key)),

@@ -8,10 +8,6 @@ import * as NetService from "@getpaperplane/shared/Net";
 import { resolveGitWorktreePath, resolveWorktreeRoveHome } from "@getpaperplane/shared/devHome";
 import * as HostProcess from "@getpaperplane/shared/HostProcess";
 import { resolveSpawnCommand } from "@getpaperplane/shared/shell";
-import {
-  LEGACY_SERVICE_LAUNCHER_CONTEXT_ENV,
-  LEGACY_BOOT_SERVICE_UNIT_ENV,
-} from "@getpaperplane/shared/roveMigration";
 import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
 import * as Hash from "effect/Hash";
@@ -289,7 +285,7 @@ interface CreateDevRunnerEnvInput {
   readonly baseEnv: NodeJS.ProcessEnv;
   readonly serverOffset: number;
   readonly webOffset: number;
-  readonly roveHome: string | undefined;
+  readonly paperplaneHome: string | undefined;
   readonly browser: boolean | undefined;
   readonly autoBootstrapProjectFromCwd: boolean | undefined;
   readonly logWebSocketEvents: boolean | undefined;
@@ -303,7 +299,7 @@ export function createDevRunnerEnv({
   baseEnv,
   serverOffset,
   webOffset,
-  roveHome,
+  paperplaneHome,
   browser,
   autoBootstrapProjectFromCwd,
   logWebSocketEvents,
@@ -315,8 +311,8 @@ export function createDevRunnerEnv({
     const serverPort = port ?? BASE_SERVER_PORT + serverOffset;
     const webPort = BASE_WEB_PORT + webOffset;
     // Precedence (--home-dir > worktree .paperplane > ambient PAPERPLANE_HOME) is resolved
-    // by the caller; an unset roveHome here genuinely means "use the default".
-    const configuredBaseDir = roveHome?.trim() || undefined;
+    // by the caller; an unset paperplaneHome here genuinely means "use the default".
+    const configuredBaseDir = paperplaneHome?.trim() || undefined;
     const resolvedBaseDir = yield* resolveBaseDir(configuredBaseDir);
     const isDesktopMode = mode === "dev:desktop";
 
@@ -341,8 +337,6 @@ export function createDevRunnerEnv({
     // (serviceLauncherClient.ts resolveStartup).
     delete output.PAPERPLANE_SERVICE_LAUNCHER_CONTEXT;
     delete output.PAPERPLANE_BOOT_SERVICE_UNIT;
-    delete output[LEGACY_SERVICE_LAUNCHER_CONTEXT_ENV];
-    delete output[LEGACY_BOOT_SERVICE_UNIT_ENV];
 
     if (!isDesktopMode) {
       output.PAPERPLANE_PORT = String(serverPort);
@@ -615,7 +609,7 @@ export function resolveModePortOffsets<R = NetService.NetService>({
 
 interface DevRunnerCliInput {
   readonly mode: DevMode;
-  readonly roveHome: string | undefined;
+  readonly paperplaneHome: string | undefined;
   readonly browser: boolean | undefined;
   readonly autoBootstrapProjectFromCwd: boolean | undefined;
   readonly logWebSocketEvents: boolean | undefined;
@@ -679,7 +673,7 @@ export function runDevRunnerWithInput(input: DevRunnerCliInput) {
     // as one would skip the worktree default and land on the shared home —
     // exactly the outcome this precedence exists to prevent.
     const resolvedRoveHome =
-      (input.roveHome?.trim() || undefined) ??
+      (input.paperplaneHome?.trim() || undefined) ??
       worktreeHome ??
       (hostEnvironment.PAPERPLANE_HOME?.trim() || undefined);
     const env = yield* createDevRunnerEnv({
@@ -687,7 +681,7 @@ export function runDevRunnerWithInput(input: DevRunnerCliInput) {
       baseEnv: hostEnvironment,
       serverOffset,
       webOffset,
-      roveHome: resolvedRoveHome,
+      paperplaneHome: resolvedRoveHome,
       browser: input.browser,
       autoBootstrapProjectFromCwd: input.autoBootstrapProjectFromCwd,
       logWebSocketEvents: input.logWebSocketEvents,
@@ -852,7 +846,7 @@ const devRunnerCli = Command.make("dev-runner", {
   mode: Argument.Literals("mode", DEV_RUNNER_MODES).pipe(
     Argument.withDescription("Development mode to run."),
   ),
-  roveHome: Flag.String("home-dir").pipe(
+  paperplaneHome: Flag.String("home-dir").pipe(
     Flag.withDescription(
       "Explicit Paperplane data directory; runtime state is stored under userdata (equivalent to PAPERPLANE_HOME). Inside a git worktree this defaults to that worktree's own .paperplane so dev state stays off the shared home.",
     ),

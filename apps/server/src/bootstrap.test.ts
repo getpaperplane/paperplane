@@ -102,20 +102,23 @@ it.layer(NodeServices.layer)("readBootstrapEnvelope", (it) => {
     }),
   );
 
-  it.effect("keeps the home directory supplied by an installed historical desktop binary", () =>
+  it.effect("keeps the home directory supplied by the desktop binary", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const filePath = yield* fs.makeTempFileScoped({
         prefix: "rove-bootstrap-",
         suffix: ".ndjson",
       });
-      yield* fs.writeFileString(filePath, '{"mode":"desktop","t3Home":"/existing/rove/home"}\n');
+      yield* fs.writeFileString(
+        filePath,
+        '{"mode":"desktop","paperplaneHome":"/existing/paperplane/home"}\n',
+      );
       const fd = yield* openBootstrapInputFd(filePath);
       const payload = yield* readBootstrapEnvelope(
-        Schema.Struct({ mode: Schema.String, roveHome: Schema.String }),
+        Schema.Struct({ mode: Schema.String, paperplaneHome: Schema.String }),
         fd,
       );
-      assertSome(payload, { mode: "desktop", roveHome: "/existing/rove/home" });
+      assertSome(payload, { mode: "desktop", paperplaneHome: "/existing/paperplane/home" });
     }),
   );
 

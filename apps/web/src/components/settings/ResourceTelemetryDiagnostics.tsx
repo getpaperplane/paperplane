@@ -844,7 +844,7 @@ export function ResourceTelemetryDiagnostics({
   }, [environmentId]);
   const [isRetrying, setIsRetrying] = useState(false);
   const snapshot = telemetry.data;
-  const allRove = snapshot?.groups.allRove;
+  const allPaperplane = snapshot?.groups.allPaperplane;
 
   const signalProcess = useCallback(
     async (process: ResourceTelemetryProcess, signal: ServerProcessSignal) => {
@@ -1016,42 +1016,52 @@ export function ResourceTelemetryDiagnostics({
             <IconStat
               icon={<CpuIcon className="size-3.5" />}
               label="Current CPU"
-              value={allRove ? `${allRove.currentCpuPercent.toFixed(1)}%` : "..."}
-              detail={allRove ? `${formatCpuTime(allRove.cpuTimeMs)} observed CPU time` : undefined}
+              value={allPaperplane ? `${allPaperplane.currentCpuPercent.toFixed(1)}%` : "..."}
+              detail={
+                allPaperplane
+                  ? `${formatCpuTime(allPaperplane.cpuTimeMs)} observed CPU time`
+                  : undefined
+              }
             />
             <IconStat
               icon={<MemoryStickIcon className="size-3.5" />}
               label="Resident memory"
-              value={allRove ? formatBytes(allRove.currentRssBytes) : "..."}
+              value={allPaperplane ? formatBytes(allPaperplane.currentRssBytes) : "..."}
               detail={
-                allRove ? `${formatBytes(allRove.peakRssBytes)} combined process peaks` : undefined
+                allPaperplane
+                  ? `${formatBytes(allPaperplane.peakRssBytes)} combined process peaks`
+                  : undefined
               }
             />
             <IconStat
               icon={<ActivityIcon className="size-3.5" />}
               label="Process count"
-              value={allRove ? String(allRove.processCount) : "..."}
+              value={allPaperplane ? String(allPaperplane.processCount) : "..."}
               detail={
-                allRove
-                  ? `${allRove.processStarts} starts · ${allRove.processExits} exits`
+                allPaperplane
+                  ? `${allPaperplane.processStarts} starts · ${allPaperplane.processExits} exits`
                   : undefined
               }
             />
             <IconStat
               icon={<HardDriveIcon className="size-3.5" />}
               label="Read throughput"
-              value={allRove ? formatRate(allRove.ioReadBytesPerSecond) : "..."}
-              detail={allRove ? `${formatBytes(allRove.ioReadBytes)} observed` : undefined}
+              value={allPaperplane ? formatRate(allPaperplane.ioReadBytesPerSecond) : "..."}
+              detail={
+                allPaperplane ? `${formatBytes(allPaperplane.ioReadBytes)} observed` : undefined
+              }
             />
             <IconStat
               icon={<DatabaseIcon className="size-3.5" />}
               label="Write throughput"
-              value={allRove ? formatRate(allRove.ioWriteBytesPerSecond) : "..."}
-              detail={allRove ? `${formatBytes(allRove.ioWriteBytes)} observed` : undefined}
+              value={allPaperplane ? formatRate(allPaperplane.ioWriteBytesPerSecond) : "..."}
+              detail={
+                allPaperplane ? `${formatBytes(allPaperplane.ioWriteBytes)} observed` : undefined
+              }
               tone={
-                allRove && allRove.ioWriteBytesPerSecond >= 10 * 1_024 * 1_024
+                allPaperplane && allPaperplane.ioWriteBytesPerSecond >= 10 * 1_024 * 1_024
                   ? "danger"
-                  : allRove && allRove.ioWriteBytesPerSecond >= 1_024 * 1_024
+                  : allPaperplane && allPaperplane.ioWriteBytesPerSecond >= 1_024 * 1_024
                     ? "warning"
                     : "default"
               }

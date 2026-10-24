@@ -29,7 +29,7 @@ const writeExecutable = (path: string, content: string) => {
 /** Writes the launcher for `target` at `<root>/bin/paperplane`, with `<root>/home` as its Paperplane home. */
 const writeShim = (root: string, target: CliShimTarget) => {
   const shim = NodePath.join(root, "bin", "paperplane");
-  writeExecutable(shim, renderCliShim({ target, shimPath: shim, roveHome: `${root}/home` }));
+  writeExecutable(shim, renderCliShim({ target, shimPath: shim, paperplaneHome: `${root}/home` }));
   return shim;
 };
 
@@ -155,7 +155,7 @@ describe("renderCliShim", () => {
     const script = renderCliShim({
       target: { kind: "windows", executable, entry: "C:\\Apps\\server.asar\\bin.mjs" },
       shimPath: "C:\\Users\\José\\.rove-code\\bin\\paperplane.cmd",
-      roveHome: "C:\\Users\\José\\.rove-code",
+      paperplaneHome: "C:\\Users\\José\\.rove-code",
     });
     const lines = script.split("\r\n");
     expect(lines).toContain("setlocal EnableExtensions DisableDelayedExpansion");
@@ -181,7 +181,7 @@ describe("renderCliShim", () => {
         entry: "C:\\Paperplane\\bin.mjs",
       },
       shimPath: "C:\\Users\\me\\.rove-code\\bin\\paperplane.cmd",
-      roveHome: "C:\\Users\\me\\.rove-code",
+      paperplaneHome: "C:\\Users\\me\\.rove-code",
     });
     // A Ctrl-C that ends the batch would leave the console switched.
     expect(ascii).not.toContain("chcp");

@@ -41,12 +41,12 @@ export type CliShimTarget =
 export const renderCliShim = (input: {
   readonly target: CliShimTarget;
   readonly shimPath: string;
-  readonly roveHome: string;
+  readonly paperplaneHome: string;
 }) => {
   const { target } = input;
   if (target.kind === "windows") {
-    const utf8 = [target.executable, target.entry, input.shimPath, input.roveHome].some((value) =>
-      [...value].some((character) => character.codePointAt(0)! > 0x7f),
+    const utf8 = [target.executable, target.entry, input.shimPath, input.paperplaneHome].some(
+      (value) => [...value].some((character) => character.codePointAt(0)! > 0x7f),
     );
     const restore = utf8 ? ["chcp %rove_codepage% >nul"] : [];
     return [
@@ -64,7 +64,7 @@ export const renderCliShim = (input: {
           ]
         : []),
       `set "PAPERPLANE_CLI_PATH=${cmdText(input.shimPath)}"`,
-      `if not defined PAPERPLANE_HOME set "PAPERPLANE_HOME=${cmdText(input.roveHome)}"`,
+      `if not defined PAPERPLANE_HOME set "PAPERPLANE_HOME=${cmdText(input.paperplaneHome)}"`,
       'set "ELECTRON_RUN_AS_NODE=1"',
       // A goto, not a parenthesized block: "Program Files (x86)" would close the block early.
       `if exist ${cmdWord(target.executable)} goto run`,
@@ -83,7 +83,7 @@ export const renderCliShim = (input: {
     "#!/bin/sh",
     `# ${MARKER}`,
     `export PAPERPLANE_CLI_PATH=${shellWord(input.shimPath)}`,
-    `home=${shellWord(input.roveHome)}`,
+    `home=${shellWord(input.paperplaneHome)}`,
     'export PAPERPLANE_HOME="${PAPERPLANE_HOME:-$home}"',
     "export ELECTRON_RUN_AS_NODE=1",
     `app=${shellWord(target.kind === "appimage" ? target.appImage : target.executable)}`,
@@ -157,7 +157,7 @@ export const install = Effect.gen(function* () {
         // macOS and .deb installs live at a fixed path, so the launcher runs the app directly.
         onNone: () => ({ kind: "direct" as const, executable: process.execPath, entry }),
       });
-  const content = renderCliShim({ target, shimPath, roveHome: environment.baseDir });
+  const content = renderCliShim({ target, shimPath, paperplaneHome: environment.baseDir });
 
   return yield* Effect.gen(function* () {
     const existing = yield* fs.readFileString(shimPath).pipe(Effect.option);

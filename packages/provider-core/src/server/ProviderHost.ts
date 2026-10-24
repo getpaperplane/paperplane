@@ -39,7 +39,7 @@ export interface ProviderHostPaths {
 /** One opaque credential blob in the server's secret store. Only the provider decodes it. */
 export interface ProviderCredentials {
   /** Instances whose bindings are equal share these credentials. */
-  readonly binding: { readonly owner: "rove"; readonly key: string };
+  readonly binding: { readonly owner: "paperplane"; readonly key: string };
   readonly get: Effect.Effect<Option.Option<Uint8Array>, ProviderCredentialError>;
   readonly set: (credentials: Uint8Array) => Effect.Effect<void, ProviderCredentialError>;
   readonly remove: Effect.Effect<void, ProviderCredentialError>;

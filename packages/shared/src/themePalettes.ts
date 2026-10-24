@@ -1,9 +1,7 @@
-import { LEGACY_THEME_IDS } from "./roveMigration.ts";
-
 export const BUILT_IN_THEME_IDS = ["plum", "grove", "ocean", "ember", "iris"] as const;
 
 /** The standard Paperplane palette, kept separate from the optional built-in theme library. */
-export const MOBILE_DEFAULT_THEME_ID = "rove";
+export const MOBILE_DEFAULT_THEME_ID = "paperplane";
 
 /**
  * Every palette the mobile app can render. Declared here so host-side tooling
@@ -24,7 +22,6 @@ export const RESERVED_THEME_IDS: ReadonlySet<string> = new Set([
   "dark",
   ...BUILT_IN_THEME_IDS,
   "plum-dark",
-  ...LEGACY_THEME_IDS,
 ]);
 
 /**

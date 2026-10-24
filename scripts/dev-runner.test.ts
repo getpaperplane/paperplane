@@ -57,7 +57,7 @@ function mockProcess(exit: number | PlatformError.PlatformError) {
 
 const devServerInput = {
   mode: "dev:server",
-  roveHome: "/tmp/rove-dev-runner",
+  paperplaneHome: "/tmp/rove-dev-runner",
   browser: undefined,
   autoBootstrapProjectFromCwd: undefined,
   logWebSocketEvents: undefined,
@@ -154,7 +154,7 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
           baseEnv: { PAPERPLANE_DEV_AUTH_TOKEN: "reusable-dev-auth-token-that-is-long-enough" },
           serverOffset: 0,
           webOffset: 0,
-          roveHome: undefined,
+          paperplaneHome: undefined,
           browser: undefined,
           autoBootstrapProjectFromCwd: undefined,
           logWebSocketEvents: undefined,
@@ -176,7 +176,7 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
           baseEnv: {},
           serverOffset: 0,
           webOffset: 0,
-          roveHome: undefined,
+          paperplaneHome: undefined,
           browser: undefined,
           autoBootstrapProjectFromCwd: undefined,
           logWebSocketEvents: undefined,
@@ -197,7 +197,7 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
           baseEnv: {},
           serverOffset: 0,
           webOffset: 0,
-          roveHome: undefined,
+          paperplaneHome: undefined,
           browser: true,
           autoBootstrapProjectFromCwd: undefined,
           logWebSocketEvents: undefined,
@@ -217,7 +217,7 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
           baseEnv: { PAPERPLANE_NO_BROWSER: "0" },
           serverOffset: 0,
           webOffset: 0,
-          roveHome: undefined,
+          paperplaneHome: undefined,
           browser: false,
           autoBootstrapProjectFromCwd: undefined,
           logWebSocketEvents: undefined,
@@ -238,7 +238,7 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
           baseEnv: {},
           serverOffset: 0,
           webOffset: 0,
-          roveHome: "/tmp/custom-rove",
+          paperplaneHome: "/tmp/custom-rove",
           browser: false,
           autoBootstrapProjectFromCwd: false,
           logWebSocketEvents: true,
@@ -266,12 +266,10 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
           baseEnv: {
             PAPERPLANE_SERVICE_LAUNCHER_CONTEXT: '{"childVersion":"9.9.9"}',
             PAPERPLANE_BOOT_SERVICE_UNIT: "rove.service",
-            T3_SERVICE_LAUNCHER_CONTEXT: '{"childVersion":"8.8.8"}',
-            T3_BOOT_SERVICE_UNIT: "historical.service",
           },
           serverOffset: 0,
           webOffset: 0,
-          roveHome: undefined,
+          paperplaneHome: undefined,
           browser: undefined,
           autoBootstrapProjectFromCwd: undefined,
           logWebSocketEvents: undefined,
@@ -282,8 +280,6 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
 
         assert.equal(env.PAPERPLANE_SERVICE_LAUNCHER_CONTEXT, undefined);
         assert.equal(env.PAPERPLANE_BOOT_SERVICE_UNIT, undefined);
-        assert.equal(env.T3_SERVICE_LAUNCHER_CONTEXT, undefined);
-        assert.equal(env.T3_BOOT_SERVICE_UNIT, undefined);
       }),
     );
 
@@ -296,7 +292,7 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
           },
           serverOffset: 0,
           webOffset: 0,
-          roveHome: undefined,
+          paperplaneHome: undefined,
           browser: undefined,
           autoBootstrapProjectFromCwd: undefined,
           logWebSocketEvents: undefined,
@@ -319,7 +315,7 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
           },
           serverOffset: 0,
           webOffset: 0,
-          roveHome: undefined,
+          paperplaneHome: undefined,
           browser: undefined,
           autoBootstrapProjectFromCwd: undefined,
           logWebSocketEvents: false,
@@ -332,7 +328,7 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
       }),
     );
 
-    it.effect("uses custom roveHome when provided", () =>
+    it.effect("uses custom paperplaneHome when provided", () =>
       Effect.gen(function* () {
         const path = yield* Path.Path;
         const env = yield* createDevRunnerEnv({
@@ -340,7 +336,7 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
           baseEnv: {},
           serverOffset: 0,
           webOffset: 0,
-          roveHome: "/tmp/my-rove",
+          paperplaneHome: "/tmp/my-rove",
           browser: undefined,
           autoBootstrapProjectFromCwd: undefined,
           logWebSocketEvents: undefined,
@@ -368,7 +364,7 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
           },
           serverOffset: 0,
           webOffset: 0,
-          roveHome: "/tmp/my-rove",
+          paperplaneHome: "/tmp/my-rove",
           browser: true,
           autoBootstrapProjectFromCwd: undefined,
           logWebSocketEvents: undefined,
@@ -397,7 +393,7 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
           baseEnv: {},
           serverOffset: 0,
           webOffset: 0,
-          roveHome: undefined,
+          paperplaneHome: undefined,
           browser: undefined,
           autoBootstrapProjectFromCwd: undefined,
           logWebSocketEvents: undefined,
@@ -426,7 +422,7 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
             },
             serverOffset: 0,
             webOffset: 0,
-            roveHome: undefined,
+            paperplaneHome: undefined,
             browser: undefined,
             autoBootstrapProjectFromCwd: undefined,
             logWebSocketEvents: undefined,
@@ -454,7 +450,7 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
           baseEnv: { PAPERPLANE_SINGLE_ORIGIN_DEV: "1" },
           serverOffset: 0,
           webOffset: 0,
-          roveHome: undefined,
+          paperplaneHome: undefined,
           browser: undefined,
           autoBootstrapProjectFromCwd: undefined,
           logWebSocketEvents: undefined,
@@ -475,7 +471,7 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
           baseEnv: { PAPERPLANE_SINGLE_ORIGIN_DEV: "1" },
           serverOffset: 0,
           webOffset: 0,
-          roveHome: undefined,
+          paperplaneHome: undefined,
           browser: undefined,
           autoBootstrapProjectFromCwd: undefined,
           logWebSocketEvents: undefined,
@@ -499,7 +495,7 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
           baseEnv: { HOST: "0.0.0.0" },
           serverOffset: 0,
           webOffset: 0,
-          roveHome: undefined,
+          paperplaneHome: undefined,
           browser: undefined,
           autoBootstrapProjectFromCwd: undefined,
           logWebSocketEvents: undefined,
@@ -521,7 +517,7 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
           baseEnv: { HOST: "0.0.0.0" },
           serverOffset: 0,
           webOffset: 0,
-          roveHome: undefined,
+          paperplaneHome: undefined,
           browser: undefined,
           autoBootstrapProjectFromCwd: undefined,
           logWebSocketEvents: undefined,
@@ -543,7 +539,7 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
           baseEnv: { HOST: "0.0.0.0" },
           serverOffset: 0,
           webOffset: 0,
-          roveHome: undefined,
+          paperplaneHome: undefined,
           browser: undefined,
           autoBootstrapProjectFromCwd: undefined,
           logWebSocketEvents: undefined,
@@ -563,7 +559,7 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
           baseEnv: {},
           serverOffset: 0,
           webOffset: 0,
-          roveHome: undefined,
+          paperplaneHome: undefined,
           browser: undefined,
           autoBootstrapProjectFromCwd: undefined,
           logWebSocketEvents: undefined,
@@ -923,7 +919,7 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
           baseEnv: { PAPERPLANE_HOME: "/home/user/.paperplane" },
           serverOffset: 0,
           webOffset: 0,
-          roveHome: undefined,
+          paperplaneHome: undefined,
           browser: undefined,
           autoBootstrapProjectFromCwd: undefined,
           logWebSocketEvents: undefined,
@@ -1260,7 +1256,7 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
       );
 
       const spawnedHome = (input: {
-        readonly roveHome: string | undefined;
+        readonly paperplaneHome: string | undefined;
         readonly cwd: string;
         readonly ambientHome: string | undefined;
       }) =>
@@ -1279,7 +1275,10 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
             }),
           );
 
-          yield* runDevRunnerWithInput({ ...devServerInput, roveHome: input.roveHome }).pipe(
+          yield* runDevRunnerWithInput({
+            ...devServerInput,
+            paperplaneHome: input.paperplaneHome,
+          }).pipe(
             Effect.provide(Layer.mergeAll(emptyConfigLayer, netServiceLayer, spawnerLayer)),
             Effect.provideService(HostProcess.Platform, "linux"),
             Effect.provideService(HostProcess.WorkingDirectory, input.cwd),
@@ -1297,7 +1296,7 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
           const path = yield* Path.Path;
           const root = yield* makeWorktree;
           const home = yield* spawnedHome({
-            roveHome: "/tmp/explicit-home",
+            paperplaneHome: "/tmp/explicit-home",
             cwd: root,
             ambientHome: "/home/user/.paperplane",
           });
@@ -1310,7 +1309,7 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
           const path = yield* Path.Path;
           const root = yield* makeWorktree;
           const home = yield* spawnedHome({
-            roveHome: "   ",
+            paperplaneHome: "   ",
             cwd: root,
             ambientHome: "/home/user/.paperplane",
           });
@@ -1323,7 +1322,7 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
           const path = yield* Path.Path;
           const root = yield* makeWorktree;
           const home = yield* spawnedHome({
-            roveHome: undefined,
+            paperplaneHome: undefined,
             cwd: root,
             ambientHome: "/home/user/.paperplane",
           });
@@ -1335,7 +1334,7 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
         Effect.gen(function* () {
           const path = yield* Path.Path;
           const home = yield* spawnedHome({
-            roveHome: undefined,
+            paperplaneHome: undefined,
             cwd: NodeOS.tmpdir(),
             ambientHome: "/home/user/.paperplane",
           });
@@ -1346,7 +1345,7 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
       it.effect("leaves the home implicit with no worktree and no ambient value", () =>
         Effect.gen(function* () {
           const home = yield* spawnedHome({
-            roveHome: undefined,
+            paperplaneHome: undefined,
             cwd: NodeOS.tmpdir(),
             ambientHome: undefined,
           });

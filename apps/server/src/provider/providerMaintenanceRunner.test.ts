@@ -226,7 +226,7 @@ const makeTestRunner = (
     currentModels: {},
     compatibility: [CODEX_DRIVER, OPENCODE_DRIVER].map((driver) => ({
       driver,
-      roveCodeRange: ">=0.0.0",
+      paperplaneCodeRange: ">=0.0.0",
       ranges: [],
     })),
   },
@@ -1001,7 +1001,7 @@ it.effect("refuses incompatible latest versions and unapproved or unpinnable tar
     compatibility: [
       {
         driver: "codex",
-        roveCodeRange: ">=0.0.0",
+        paperplaneCodeRange: ">=0.0.0",
         recommendedVersion: "2.0.0",
         ranges: [
           { range: "=2.0.0", status: "supported" },

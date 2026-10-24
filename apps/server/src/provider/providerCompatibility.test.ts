@@ -30,7 +30,7 @@ import {
 const driver = ProviderDriverKind.make("codex");
 const policy: ProviderCompatibilityPolicy = {
   driver,
-  roveCodeRange: ">=0.0.0",
+  paperplaneCodeRange: ">=0.0.0",
   recommendedVersion: "2.0.0",
   recommendedRange: ">=2.0.0 <3.0.0",
   ranges: [
@@ -168,7 +168,7 @@ describe("provider compatibility", () => {
     const cursor = ProviderDriverKind.make("cursor");
     const cursorPolicy: ProviderCompatibilityPolicy = {
       driver: cursor,
-      roveCodeRange: policy.roveCodeRange,
+      paperplaneCodeRange: policy.paperplaneCodeRange,
       ranges: [
         { range: "<2026.05.09", status: "unsupported" },
         { range: ">=2026.05.09", status: "supported" },
@@ -250,7 +250,7 @@ describe("provider compatibility", () => {
   });
 
   it("applies policies only within their Paperplane version range", () => {
-    const scopedPolicy = { ...policy, roveCodeRange: ">=0.0.42 <0.1.0" };
+    const scopedPolicy = { ...policy, paperplaneCodeRange: ">=0.0.42 <0.1.0" };
     for (const version of ["0.0.42", "0.0.45"]) {
       assert.strictEqual(
         resolveProviderCompatibility([scopedPolicy], driver, "0.9.0", version)?.status,
@@ -290,8 +290,11 @@ describe("provider compatibility", () => {
     assert.strictEqual(supported.status, "error");
     assert.strictEqual(supported.message, "Authentication failed");
     assert.strictEqual(
-      applyProviderCompatibility(supported, [{ ...policy, roveCodeRange: "<0.0.0" }], [policy])
-        .compatibilityAdvisory?.status,
+      applyProviderCompatibility(
+        supported,
+        [{ ...policy, paperplaneCodeRange: "<0.0.0" }],
+        [policy],
+      ).compatibilityAdvisory?.status,
       "broken",
     );
     const removed = applyProviderCompatibility(supported, [], []);
@@ -312,7 +315,7 @@ describe("provider compatibility", () => {
     assert.doesNotThrow(() => decode(policy));
     const prefixed = decode({
       ...policy,
-      roveCodeRange: ">=v0.0.42 <v0.1",
+      paperplaneCodeRange: ">=v0.0.42 <v0.1",
       recommendedRange: "^v2",
       ranges: [{ range: ">=v2.0 <v3", status: "supported" }],
     });
@@ -325,7 +328,7 @@ describe("provider compatibility", () => {
       "unknown",
     );
     for (const invalid of [
-      { ...policy, roveCodeRange: "*" },
+      { ...policy, paperplaneCodeRange: "*" },
       { ...policy, recommendedVersion: "3.0.0" },
       { ...policy, ranges: [{ range: ">=2.0.0 garbage", status: "supported" }] },
       { ...policy, recommendedVersion: "2.0.0; echo unsafe" },

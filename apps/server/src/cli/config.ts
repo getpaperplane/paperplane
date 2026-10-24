@@ -143,7 +143,10 @@ const EnvServerConfig = Config.all({
   ),
   port: Config.Port("PAPERPLANE_PORT").pipe(Config.option, Config.map(Option.getOrUndefined)),
   host: Config.String("PAPERPLANE_HOST").pipe(Config.option, Config.map(Option.getOrUndefined)),
-  roveHome: Config.String("PAPERPLANE_HOME").pipe(Config.option, Config.map(Option.getOrUndefined)),
+  paperplaneHome: Config.String("PAPERPLANE_HOME").pipe(
+    Config.option,
+    Config.map(Option.getOrUndefined),
+  ),
   devUrl: Config.URL("VITE_DEV_SERVER_URL").pipe(Config.option, Config.map(Option.getOrUndefined)),
   devAllowedOrigins: Config.String("PAPERPLANE_DEV_ALLOWED_ORIGINS").pipe(
     Config.withDefault(""),
@@ -314,11 +317,11 @@ export const resolveServerConfig = (
     );
     const explicitBaseDir = resolveOptionPrecedence(
       normalizedFlags.baseDir,
-      Option.fromUndefinedOr(env.roveHome),
+      Option.fromUndefinedOr(env.paperplaneHome),
     ).pipe(Option.filter((value) => value.trim().length > 0));
     const baseDir = yield* resolveBaseDir(
       Option.getOrUndefined(
-        resolveOptionPrecedence(explicitBaseDir, Option.fromUndefinedOr(bootstrap?.roveHome)),
+        resolveOptionPrecedence(explicitBaseDir, Option.fromUndefinedOr(bootstrap?.paperplaneHome)),
       ),
       { development: devUrl !== undefined },
     );

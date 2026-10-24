@@ -54,17 +54,17 @@ function resolveEarlyDesktopSettingsPath(input: {
   readonly homeDirectory: string;
   readonly joinPath: JoinPath;
 }): string {
-  const roveHome = Option.fromUndefinedOr(input.env.PAPERPLANE_HOME);
+  const paperplaneHome = Option.fromUndefinedOr(input.env.PAPERPLANE_HOME);
   const baseDir = resolveDesktopBaseDir({
     homeDirectory: input.homeDirectory,
     joinPath: input.joinPath,
-    roveHome,
+    paperplaneHome,
   });
   const stateDir = resolveDesktopStateDir({
     baseDir,
     isDevelopment: isDevelopmentEnvironment(input.env),
     joinPath: input.joinPath,
-    roveHome,
+    paperplaneHome,
   });
   return input.joinPath(stateDir, "desktop-settings.json");
 }

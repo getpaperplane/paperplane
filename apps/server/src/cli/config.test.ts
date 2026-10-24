@@ -52,7 +52,7 @@ const makeDesktopBootstrap = (
   mode: "desktop",
   noBrowser: true,
   port: 4888,
-  roveHome: "/tmp/rove-bootstrap-home",
+  paperplaneHome: "/tmp/rove-bootstrap-home",
   host: "127.0.0.1",
   desktopBootstrapToken: "desktop-bootstrap-token",
   tailscaleServeEnabled: false,
@@ -510,7 +510,7 @@ it.layer(
         makeDesktopBootstrap({
           port: 4888,
           host: "127.0.0.2",
-          roveHome: "/tmp/rove-bootstrap-home",
+          paperplaneHome: "/tmp/rove-bootstrap-home",
           noBrowser: true,
           desktopBootstrapToken: "desktop-token",
           desktopTelemetryFd: 4,
@@ -672,7 +672,7 @@ it.layer(
         makeDesktopBootstrap({
           port: 4888,
           host: "127.0.0.2",
-          roveHome: "/tmp/rove-bootstrap-home",
+          paperplaneHome: "/tmp/rove-bootstrap-home",
           noBrowser: false,
           desktopBootstrapToken: "desktop-token",
           tailscaleServeEnabled: false,
@@ -1198,7 +1198,7 @@ it.layer(
               ConfigProvider.layer(
                 ConfigProvider.fromEnv({
                   env: {
-                    PAPERPLANE_OTLP_TRACES_URL: "http://rove:4318/v1/traces",
+                    PAPERPLANE_OTLP_TRACES_URL: "http://paperplane:4318/v1/traces",
                     PAPERPLANE_OTLP_HEADERS: "x-key=secret",
                     OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: "http://otel-traces:4318/custom",
                     OTEL_EXPORTER_OTLP_METRICS_ENDPOINT: "http://otel-metrics:4318/custom",
@@ -1213,7 +1213,7 @@ it.layer(
 
         // PAPERPLANE_OTLP_TRACES_URL wins over the OTEL variable for the same
         // signal, and keeps Paperplane's own headers since Paperplane still owns it.
-        expect(resolved.otlpTracesUrl).toBe("http://rove:4318/v1/traces");
+        expect(resolved.otlpTracesUrl).toBe("http://paperplane:4318/v1/traces");
         expect(resolved.otlpTracesExport.headers).toEqual({ "x-key": "secret" });
         // Metrics named no PAPERPLANE_OTLP_METRICS_URL, so the OTEL endpoint wins
         // over the bootstrap envelope and brings the OTEL headers and protocol.
@@ -1265,7 +1265,7 @@ it.layer(
               ConfigProvider.layer(
                 ConfigProvider.fromEnv({
                   env: {
-                    PAPERPLANE_OTLP_TRACES_URL: "http://rove:4318/v1/traces",
+                    PAPERPLANE_OTLP_TRACES_URL: "http://paperplane:4318/v1/traces",
                     OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel:4318",
                     OTEL_EXPORTER_OTLP_HEADERS: "x-key=%zz",
                   },
@@ -1277,7 +1277,7 @@ it.layer(
         );
 
         // PAPERPLANE_OTLP_TRACES_URL still wins outright.
-        expect(resolved.otlpTracesUrl).toBe("http://rove:4318/v1/traces");
+        expect(resolved.otlpTracesUrl).toBe("http://paperplane:4318/v1/traces");
         // The OTEL endpoint claimed metrics and logs, so neither the bootstrap
         // envelope nor Settings receives them with Paperplane's headers.
         expect(resolved.otlpMetricsUrl).toBeUndefined();

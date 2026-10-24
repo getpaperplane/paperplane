@@ -1,5 +1,4 @@
 import { describe, expect, it, vi } from "vite-plus/test";
-import { LEGACY_THEME_IDS } from "@getpaperplane/shared/roveMigration";
 import { converter } from "culori/fn";
 import { BUILT_IN_THEMES } from "@getpaperplane/shared/themePalettes";
 
@@ -1092,28 +1091,6 @@ describe("stored theme preferences", () => {
     expect(resolveThemeAppearance("plum-dark", true, false)).toBe("dark");
     expect(resolveDesktopTheme("plum-dark", false)).toBe("dark");
     expect(isKnownThemePreference("plum-dark")).toBe(true);
-  });
-
-  it("resolves historical prefixed ids onto the renamed themes", () => {
-    for (const [legacy, theme] of [
-      [LEGACY_THEME_IDS[2]!, GROVE_THEME],
-      [LEGACY_THEME_IDS[3]!, OCEAN_THEME],
-      [LEGACY_THEME_IDS[4]!, EMBER_THEME],
-      [LEGACY_THEME_IDS[5]!, IRIS_THEME],
-    ] as const) {
-      expect(getThemeDefinition(legacy)).toBe(theme);
-      expect(isKnownThemePreference(legacy)).toBe(true);
-      expect(canonicalThemePreference(legacy)).toBe(theme.id);
-    }
-    // The dark-variant alias keeps its raw form: it still carries a mode hint.
-    expect(canonicalThemePreference("plum-dark")).toBe("plum-dark");
-    // A stored mix that predates the rename resolves to the new ids.
-    expect(
-      parseThemeHalves(JSON.stringify({ light: LEGACY_THEME_IDS[3], dark: LEGACY_THEME_IDS[2] })),
-    ).toEqual({
-      light: OCEAN_THEME.id,
-      dark: GROVE_THEME.id,
-    });
   });
 
   it("recognizes only preferences the runtime can render", () => {

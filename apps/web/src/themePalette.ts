@@ -1,5 +1,4 @@
 import * as Equal from "effect/Equal";
-import { migrateRoveThemeId } from "@getpaperplane/shared/roveMigration";
 import * as Schema from "effect/Schema";
 import "culori/css";
 import { converter, parse } from "culori/fn";
@@ -30,10 +29,10 @@ export const OCEAN_THEME_ID = "ocean" as const;
 const EMBER_THEME_ID = "ember" as const;
 const IRIS_THEME_ID = "iris" as const;
 export const THEME_FILE_VERSION = 1 as const;
-export const CUSTOM_THEMES_STORAGE_KEY = "rove:themes:v1";
-export const THEME_FOLLOW_SYSTEM_STORAGE_KEY = "rove:theme-follow-system";
-export const THEME_APPEARANCE_MODE_STORAGE_KEY = "rove:theme-appearance-mode";
-export const THEME_HALVES_STORAGE_KEY = "rove:theme-halves:v1";
+export const CUSTOM_THEMES_STORAGE_KEY = "paperplane:themes:v1";
+export const THEME_FOLLOW_SYSTEM_STORAGE_KEY = "paperplane:theme-follow-system";
+export const THEME_APPEARANCE_MODE_STORAGE_KEY = "paperplane:theme-appearance-mode";
+export const THEME_HALVES_STORAGE_KEY = "paperplane:theme-halves:v1";
 
 const LEGACY_PLUM_DARK_THEME_ID = "plum-dark";
 
@@ -296,8 +295,7 @@ export function subscribeToCustomThemes(listener: () => void): () => void {
 }
 
 function normalizeThemeId(themeId: string): string {
-  const migrated = migrateRoveThemeId(themeId);
-  return migrated === LEGACY_PLUM_DARK_THEME_ID ? PLUM_THEME_ID : migrated;
+  return themeId === LEGACY_PLUM_DARK_THEME_ID ? PLUM_THEME_ID : themeId;
 }
 
 /**
@@ -306,8 +304,7 @@ function normalizeThemeId(themeId: string): string {
  * still carries the appearance hint getThemePreferenceMode reads.
  */
 export function canonicalThemePreference(theme: string): string {
-  const migrated = migrateRoveThemeId(theme);
-  return migrated === LEGACY_PLUM_DARK_THEME_ID ? migrated : normalizeThemeId(migrated);
+  return theme === LEGACY_PLUM_DARK_THEME_ID ? theme : normalizeThemeId(theme);
 }
 
 function themeIdFromPreference(theme: ThemePreference): string {
@@ -317,7 +314,7 @@ function themeIdFromPreference(theme: ThemePreference): string {
 // Older builds stored the dark Plum palette as a separate theme. Keep
 // those preferences readable while mapping them to the dark variant.
 function legacyThemeMode(theme: ThemePreference): ThemeAppearance | null {
-  return migrateRoveThemeId(theme) === LEGACY_PLUM_DARK_THEME_ID ? "dark" : null;
+  return theme === LEGACY_PLUM_DARK_THEME_ID ? "dark" : null;
 }
 
 /**

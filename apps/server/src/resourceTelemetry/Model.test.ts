@@ -152,20 +152,20 @@ describe("resource telemetry process model", () => {
       ioWriteBytesPerSecond: 2_048,
     });
     expect(sampled.counters).toBe(first.counters);
-    expect(sampled.groups.allRove).toMatchObject({
-      currentCpuPercent: cumulative.groups.allRove.currentCpuPercent,
-      currentRssBytes: cumulative.groups.allRove.currentRssBytes,
-      processCount: cumulative.groups.allRove.processCount,
-      ...first.counters.allRove,
+    expect(sampled.groups.allPaperplane).toMatchObject({
+      currentCpuPercent: cumulative.groups.allPaperplane.currentCpuPercent,
+      currentRssBytes: cumulative.groups.allPaperplane.currentRssBytes,
+      processCount: cumulative.groups.allPaperplane.processCount,
+      ...first.counters.allPaperplane,
     });
-    expect(cumulative.counters.allRove).toMatchObject({
+    expect(cumulative.counters.allPaperplane).toMatchObject({
       cpuTimeMs: 250,
       ioReadBytes: 1_024,
       ioWriteBytes: 2_048,
       processStarts: 3,
       processExits: 1,
     });
-    expect(first.counters.allRove).toMatchObject({
+    expect(first.counters.allPaperplane).toMatchObject({
       processStarts: 2,
       processExits: 0,
       cpuTimeMs: 0,
@@ -197,7 +197,7 @@ describe("resource telemetry process model", () => {
     expect(result.groups.backend.processCount).toBe(4);
     expect(result.groups.monitor.processCount).toBe(1);
     expect(result.groups.monitor.processStarts).toBe(1);
-    expect(result.groups.allRove.processStarts).toBe(5);
+    expect(result.groups.allPaperplane.processStarts).toBe(5);
   });
 
   it("deduplicates Electron metrics and classifies Electron descendants", () => {

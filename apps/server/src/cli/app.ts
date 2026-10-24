@@ -174,7 +174,10 @@ function sendDesktopAppActivationRequest(input: {
 }
 
 const appEnvironment = Config.all({
-  roveHome: Config.String("PAPERPLANE_HOME").pipe(Config.option, Config.map(Option.getOrUndefined)),
+  paperplaneHome: Config.String("PAPERPLANE_HOME").pipe(
+    Config.option,
+    Config.map(Option.getOrUndefined),
+  ),
   sshConnection: Config.String("SSH_CONNECTION").pipe(Config.option),
   sshTty: Config.String("SSH_TTY").pipe(Config.option),
 });
@@ -193,9 +196,9 @@ const runAppCommand = Effect.fn("cli.app")(function* (flags: {
   }
 
   const path = yield* Path.Path;
-  const configuredBaseDir = Option.getOrUndefined(flags.baseDir) ?? environment.roveHome;
+  const configuredBaseDir = Option.getOrUndefined(flags.baseDir) ?? environment.paperplaneHome;
   const baseDir = yield* resolveBaseDir(configuredBaseDir);
-  const allowDevFallback = Option.isNone(flags.baseDir) && !environment.roveHome?.trim();
+  const allowDevFallback = Option.isNone(flags.baseDir) && !environment.paperplaneHome?.trim();
   const rawWorkspaceRoot =
     Option.getOrUndefined(flags.workspaceRoot) ?? (yield* HostProcess.WorkingDirectory);
   const workspaceRoot = path.resolve(yield* expandHomePath(rawWorkspaceRoot));

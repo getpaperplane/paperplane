@@ -226,13 +226,13 @@ describe("mobile themes", () => {
   it.each(["light", "dark"] as const)(
     "separates default settings groups from their %s background",
     (appearance) => {
-      const variables = getMobileThemeVariables("rove", appearance);
+      const variables = getMobileThemeVariables("paperplane", appearance);
       expect(
         contrastRatio(variables["--color-grouped-card"], variables["--color-sheet-solid"]),
       ).toBeGreaterThanOrEqual(1.06);
       expect(variables["--color-grouped-card"]).not.toBe(variables["--color-card"]);
       for (const platform of ["ios", "android"]) {
-        const runtime = getMobileThemeRuntimeVariables("rove", appearance, platform);
+        const runtime = getMobileThemeRuntimeVariables("paperplane", appearance, platform);
         const sidebar = flattenThemeColor(runtime["--color-drawer"], runtime["--color-screen"]);
         const chrome = flattenThemeColor(
           runtime[platform === "android" ? "--color-header" : "--color-drawer"],
@@ -318,7 +318,7 @@ describe("mobile themes", () => {
   it.each(["light", "dark"] as const)(
     "slightly strengthens default %s messages and separates fallback materials",
     (appearance) => {
-      const variables = getMobileThemeVariables("rove", appearance);
+      const variables = getMobileThemeVariables("paperplane", appearance);
       const desktop =
         appearance === "dark" ? ROVE_CODE_DARK_THEME_COLORS : ROVE_CODE_LIGHT_THEME_COLORS;
       const bubbleContrast = contrastRatio(
