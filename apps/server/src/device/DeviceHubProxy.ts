@@ -11,7 +11,10 @@
  * Only the routes the Device panel needs are forwarded. Anything under the
  * hub's dashboard, exec, or WebRTC surface is rejected here.
  */
-import { AuthOrchestrationReadScope, AuthOrchestrationOperateScope } from "@getpaperplane/contracts";
+import {
+  AuthOrchestrationReadScope,
+  AuthOrchestrationOperateScope,
+} from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
 import {

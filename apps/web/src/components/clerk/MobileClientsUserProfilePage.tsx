@@ -94,8 +94,8 @@ function EmptyMobileClients() {
       <EmptyHeader>
         <EmptyTitle>No mobile clients</EmptyTitle>
         <EmptyDescription>
-          Install Paperplane on your phone and sign in to Paperplane Connect to get push notifications and
-          Live Activities.
+          Install Paperplane on your phone and sign in to Paperplane Connect to get push
+          notifications and Live Activities.
         </EmptyDescription>
       </EmptyHeader>
     </Empty>

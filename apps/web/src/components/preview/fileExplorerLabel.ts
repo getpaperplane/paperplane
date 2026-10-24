@@ -1,4 +1,7 @@
-import type { ExecutionEnvironmentPlatformOs, FileManagerRevealKind } from "@getpaperplane/contracts";
+import type {
+  ExecutionEnvironmentPlatformOs,
+  FileManagerRevealKind,
+} from "@getpaperplane/contracts";
 
 export function revealInFileExplorerLabel(platform: string): string {
   const normalized = platform.toLowerCase();

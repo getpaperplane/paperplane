@@ -14,7 +14,10 @@ import {
 
 it("formats package runner commands from their cache entry paths", () => {
   for (const [entryPath, expected] of [
-    ["/home/theo/.npm/_npx/abc123/node_modules/@getpaperplane/cli/dist/bin.mjs", "npx @getpaperplane/cli serve"],
+    [
+      "/home/theo/.npm/_npx/abc123/node_modules/@getpaperplane/cli/dist/bin.mjs",
+      "npx @getpaperplane/cli serve",
+    ],
     [
       "C:\\Users\\theo\\AppData\\Local\\npm-cache\\_npx\\abc\\node_modules\\@getpaperplane\\cli\\dist\\bin.mjs",
       "npx @getpaperplane/cli serve",
@@ -31,8 +34,14 @@ it("formats package runner commands from their cache entry paths", () => {
       "C:\\Users\\theo\\AppData\\Local\\pnpm-cache\\dlx\\abc\\node_modules\\@getpaperplane\\cli\\dist\\bin.mjs",
       "pnpm dlx @getpaperplane/cli serve",
     ],
-    ["/home/theo/.bun/install/cache/@getpaperplane+cli@0.0.31/dist/bin.mjs", "bunx @getpaperplane/cli serve"],
-    ["/tmp/bunx-1000-@getpaperplane+cli@latest/node_modules/@getpaperplane/cli/dist/bin.mjs", "bunx @getpaperplane/cli serve"],
+    [
+      "/home/theo/.bun/install/cache/@getpaperplane+cli@0.0.31/dist/bin.mjs",
+      "bunx @getpaperplane/cli serve",
+    ],
+    [
+      "/tmp/bunx-1000-@getpaperplane+cli@latest/node_modules/@getpaperplane/cli/dist/bin.mjs",
+      "bunx @getpaperplane/cli serve",
+    ],
     [
       "C:\\Users\\theo\\AppData\\Local\\Temp\\bunx-0-@getpaperplane+cli@latest\\node_modules\\@getpaperplane\\cli\\dist\\bin.mjs",
       "bunx @getpaperplane/cli serve",
@@ -86,7 +95,8 @@ it("formats serve suggestions to match the launching command", () => {
   assert.equal(
     formatCliCommand({
       subcommand: "serve",
-      entryPath: "/tmp/bunx-1000-@getpaperplane+cli@latest/node_modules/@getpaperplane/cli/dist/bin.mjs",
+      entryPath:
+        "/tmp/bunx-1000-@getpaperplane+cli@latest/node_modules/@getpaperplane/cli/dist/bin.mjs",
       version: "0.0.31",
     }),
     "bunx @getpaperplane/cli serve",

@@ -1,4 +1,8 @@
-import type { HostHealthFinding, HostHealthReport, RoveMemoryUsage } from "@getpaperplane/contracts";
+import type {
+  HostHealthFinding,
+  HostHealthReport,
+  RoveMemoryUsage,
+} from "@getpaperplane/contracts";
 import * as HostProcess from "@getpaperplane/shared/HostProcess";
 import * as Cache from "effect/Cache";
 import * as Context from "effect/Context";

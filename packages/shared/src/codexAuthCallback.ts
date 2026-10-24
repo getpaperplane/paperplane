@@ -1,7 +1,10 @@
 // @effect-diagnostics nodeBuiltinImport:off globalTimers:off - Native loopback helper uses a bounded Node listener with AbortController cleanup.
 import * as Schema from "effect/Schema";
 import * as NodeHttp from "node:http";
-import { codexAuthorizationRequest, codexCallbackUrl } from "@getpaperplane/shared/codexAuthHandoff";
+import {
+  codexAuthorizationRequest,
+  codexCallbackUrl,
+} from "@getpaperplane/shared/codexAuthHandoff";
 
 export class CodexAuthCallbackError extends Schema.TaggedError<CodexAuthCallbackError>()(
   "CodexAuthCallbackError",

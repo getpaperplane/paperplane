@@ -200,7 +200,8 @@ export const make = Effect.gen(function* () {
   );
 
   const install: DesktopCliCommand["Service"]["install"] = Effect.gen(function* () {
-    if (!environment.isPackaged) return yield* fail("The paperplane command needs an installed app.");
+    if (!environment.isPackaged)
+      return yield* fail("The paperplane command needs an installed app.");
     yield* ensureLauncher;
     if (windows) {
       const entries = pathEntries(yield* readUserPath, ";");
@@ -208,7 +209,9 @@ export const make = Effect.gen(function* () {
         yield* writeUserPath([...entries, binDirectory].join(";"));
         yield* fs
           .writeFileString(ownedPathMarker, `${binDirectory}\n`)
-          .pipe(Effect.mapError(() => fail("Added paperplane to your PATH but could not record it.")));
+          .pipe(
+            Effect.mapError(() => fail("Added paperplane to your PATH but could not record it.")),
+          );
       }
       return yield* state;
     }

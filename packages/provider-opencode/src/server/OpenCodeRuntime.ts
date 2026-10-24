@@ -1,6 +1,10 @@
 import * as NodeURL from "node:url";
 
-import type { ChatAttachment, ProviderApprovalDecision, RuntimeMode } from "@getpaperplane/contracts";
+import type {
+  ChatAttachment,
+  ProviderApprovalDecision,
+  RuntimeMode,
+} from "@getpaperplane/contracts";
 import {
   createOpencodeClient,
   type Agent,

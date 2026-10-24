@@ -284,7 +284,9 @@ describe("WSL runtime cache", () => {
     // The same proof the SSH runner and CLI installers use: executable, and
     // `--version` exits 0. That is what decides arch and loadability, so no
     // separate native probe is needed.
-    expect(script).toContain('  [ -x "$1/paperplane" ] && "$1/paperplane" --version >/dev/null 2>&1');
+    expect(script).toContain(
+      '  [ -x "$1/paperplane" ] && "$1/paperplane" --version >/dev/null 2>&1',
+    );
 
     // Readiness gates the short-circuit, so a cache whose executable broke
     // reinstalls from the archive instead of being reused forever.

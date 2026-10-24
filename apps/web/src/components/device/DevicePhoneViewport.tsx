@@ -6,7 +6,10 @@ import type {
 } from "@getpaperplane/client-runtime/device/model";
 import type { DeviceShapeProfile } from "@getpaperplane/client-runtime/device/shape-profile";
 import { createPhoneInteraction } from "@getpaperplane/client-runtime/device/phone-interaction";
-import type { DeviceScreenSize, DeviceStreamClient } from "@getpaperplane/client-runtime/device/stream";
+import type {
+  DeviceScreenSize,
+  DeviceStreamClient,
+} from "@getpaperplane/client-runtime/device/stream";
 import { bindPhoneTrackpad } from "./phoneTrackpad";
 import { observeResize } from "../../lib/observeResize";
 

@@ -1,6 +1,9 @@
 import { SourceControlProviderKind } from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
-import type { PullRequestCapabilities, PullRequestViewerPermissions } from "@getpaperplane/contracts";
+import type {
+  PullRequestCapabilities,
+  PullRequestViewerPermissions,
+} from "@getpaperplane/contracts";
 
 import * as BitbucketPullRequestApi from "./BitbucketPullRequestApi.ts";
 import {

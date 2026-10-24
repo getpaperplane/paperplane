@@ -25,7 +25,8 @@ test("full workspace covers every test package exactly once, excluding dedicated
 });
 
 test("selected packages are rebalanced, with no unaffected packages", () => {
-  const selected = "@getpaperplane/shared @getpaperplane/client-runtime rove-relay @getpaperplane/provider-pi";
+  const selected =
+    "@getpaperplane/shared @getpaperplane/client-runtime rove-relay @getpaperplane/provider-pi";
   const shards = assignShards(readWorkspace(), selected);
   assert.deepEqual(names(shards), selected.split(" ").sort());
   assert.deepEqual(
@@ -51,7 +52,10 @@ test("few selected packages leave explicit empty shards; whitespace and duplicat
 
 test("invalid selections and shard counts fail instead of silently skipping tests", () => {
   assert.throws(() => assignShards([], "missing"), /Unknown test package/);
-  assert.throws(() => assignShards(readWorkspace(), "@getpaperplane/server"), /Unknown test package/);
+  assert.throws(
+    () => assignShards(readWorkspace(), "@getpaperplane/server"),
+    /Unknown test package/,
+  );
   for (const count of [0, -1, 1.5, NaN]) {
     assert.throws(() => assignShards([], "", count), /Invalid shard count/);
   }

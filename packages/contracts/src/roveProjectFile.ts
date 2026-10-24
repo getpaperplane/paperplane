@@ -102,7 +102,8 @@ export const RoveProjectFile = Schema.Struct({
   scripts: Schema.optionalKey(
     Schema.Array(RoveProjectFileScript)
       .annotate({
-        description: "Project scripts shared with everyone who opens this repository in Paperplane.",
+        description:
+          "Project scripts shared with everyone who opens this repository in Paperplane.",
       })
       .check(Schema.isMaxLength(ROVE_PROJECT_FILE_MAX_SCRIPTS)),
   ),

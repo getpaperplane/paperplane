@@ -134,7 +134,9 @@ it.layer(NodeServices.layer)("DesktopCliCommand", (it) => {
       expect(error.message).toContain("Another paperplane command is already installed");
       yield* command.uninstall;
       expect(yield* fs.readFileString(theirs)).toBe("npm's paperplane\n");
-      expect(yield* fs.readLink(path.join(home, "bin", "paperplane"))).toBe(path.join(home, "gone"));
+      expect(yield* fs.readLink(path.join(home, "bin", "paperplane"))).toBe(
+        path.join(home, "gone"),
+      );
     }).pipe(Effect.scoped),
   );
 

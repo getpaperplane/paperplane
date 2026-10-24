@@ -50,10 +50,10 @@
   },
   "dependencies": {
     "@cursor/sdk": "1.0.35",
-    "@napi-rs/keyring": "^1.3.0",
     "@getpaperplane/contracts": "workspace:*",
     "@getpaperplane/provider-core": "workspace:*",
     "@getpaperplane/shared": "workspace:*",
+    "@napi-rs/keyring": "^1.3.0",
     "effect": "catalog:",
     "yaml": "catalog:"
   },

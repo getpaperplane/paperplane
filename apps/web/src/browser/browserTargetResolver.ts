@@ -4,7 +4,10 @@ import type {
   PreviewUrlResolution,
 } from "@getpaperplane/contracts";
 import { isLoopbackHost, normalizePreviewUrl } from "@getpaperplane/shared/preview";
-import { isLocalLoopbackHost, isPrivateNetworkHost } from "@getpaperplane/shared/hostClassification";
+import {
+  isLocalLoopbackHost,
+  isPrivateNetworkHost,
+} from "@getpaperplane/shared/hostClassification";
 
 import type { ConnectionTarget } from "@getpaperplane/client-runtime/connection";
 

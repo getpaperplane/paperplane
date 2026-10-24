@@ -56,7 +56,7 @@ Open the pairing URL the dev runner prints. The bare origin will not authenticat
 | `packages/client-runtime` | Client logic shared by web and mobile                      |
 | `packages/provider-*`     | Shared provider adapters and protocols                     |
 | `packages/shared`         | Shared runtime utilities                                   |
-| `infra/relay`             | Paperplane Connect relay (off unless cloud is configured)        |
+| `infra/relay`             | Paperplane Connect relay (off unless cloud is configured)  |
 
 ## Documentation
 

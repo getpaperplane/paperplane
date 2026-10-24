@@ -40,7 +40,10 @@ import {
   dynamicToolSurface,
   dynamicToolTitle,
 } from "@getpaperplane/shared/toolActivity";
-import { getModelSelectionStringOptionValue, modelSelectionsEqual } from "@getpaperplane/shared/model";
+import {
+  getModelSelectionStringOptionValue,
+  modelSelectionsEqual,
+} from "@getpaperplane/shared/model";
 import { resolveSpawnCommand } from "@getpaperplane/shared/shell";
 import type {
   ChatAttachment,

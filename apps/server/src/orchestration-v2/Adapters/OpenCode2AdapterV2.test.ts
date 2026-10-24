@@ -2359,29 +2359,31 @@ it.layer(McpProviderSessions.layer)("OpenCode2 adapter", (it) => {
       }).pipe(Effect.scoped),
   );
 
-  it.effect("breaks the thread and forgets it when the session was deleted outside Paperplane", () =>
-    Effect.gen(function* () {
-      const { runtime, thread } = yield* resumed([
-        out("session.prompt", { sessionID: SESSION, text: "<any>" }),
-        reply("session.prompt", {
-          status: 404,
-          body: {
-            _tag: "SessionNotFoundError",
-            sessionID: SESSION,
-            message: `Session not found: ${SESSION}`,
-          },
-        }),
-      ]);
-      const terminal = yield* terminalOf(runtime).pipe(Effect.forkScoped);
-      yield* runtime.startTurn(turnInput(thread)).pipe(Effect.ignore);
-      const ended = yield* Fiber.join(terminal);
-      assert.equal(ended?.status, "failed");
-      assert.equal(ended?.threadDisposition, "broken");
-      // The next turn must resume (and fail into a handoff), not reuse the dead session.
-      const again = yield* runtime.startTurn(turnInput(thread)).pipe(Effect.flip);
-      assert.equal(again._tag, "ProviderAdapterProtocolError");
-      assert.include(again.message, "not registered");
-    }).pipe(Effect.scoped),
+  it.effect(
+    "breaks the thread and forgets it when the session was deleted outside Paperplane",
+    () =>
+      Effect.gen(function* () {
+        const { runtime, thread } = yield* resumed([
+          out("session.prompt", { sessionID: SESSION, text: "<any>" }),
+          reply("session.prompt", {
+            status: 404,
+            body: {
+              _tag: "SessionNotFoundError",
+              sessionID: SESSION,
+              message: `Session not found: ${SESSION}`,
+            },
+          }),
+        ]);
+        const terminal = yield* terminalOf(runtime).pipe(Effect.forkScoped);
+        yield* runtime.startTurn(turnInput(thread)).pipe(Effect.ignore);
+        const ended = yield* Fiber.join(terminal);
+        assert.equal(ended?.status, "failed");
+        assert.equal(ended?.threadDisposition, "broken");
+        // The next turn must resume (and fail into a handoff), not reuse the dead session.
+        const again = yield* runtime.startTurn(turnInput(thread)).pipe(Effect.flip);
+        assert.equal(again._tag, "ProviderAdapterProtocolError");
+        assert.include(again.message, "not registered");
+      }).pipe(Effect.scoped),
   );
 
   it.effect("refuses a model slug that is not provider/model before creating a session", () =>
@@ -2411,48 +2413,50 @@ it.layer(McpProviderSessions.layer)("OpenCode2 adapter", (it) => {
     }).pipe(Effect.scoped),
   );
 
-  it.effect("stops the requests a session still waits on when a restarted Paperplane loads it", () =>
-    Effect.gen(function* () {
-      // Paperplane restarted while the server kept waiting on an ask Paperplane no longer shows.
-      const runtime = yield* openCode2ReplayRuntimeWithInstructions(
-        [
-          ...opening,
-          out("session.get", { sessionID: SESSION }),
-          replyData("session.get", sessionInfo()),
-          out("permission.list", { sessionID: SESSION }),
-          replyData("permission.list", [shellAsk.data]),
-          out("session.form.list", { sessionID: SESSION }),
-          replyData("session.form.list", [colorForm]),
-          out("permission.reply", {
-            sessionID: SESSION,
-            requestID: shellAsk.data.id,
-            decision: "reject",
-          }),
-          reply("permission.reply", null),
-          out("session.form.cancel", { sessionID: SESSION, formID: colorForm.id }),
-          reply("session.form.cancel", null),
-          // The next turn checks that the stopped run is gone. Its end arrives
-          // late and is its own; the turn ends on its own execution's end.
-          out("session.active"),
-          reply("session.active", { data: {} }),
-          event("session.execution.interrupted", { sessionID: SESSION, reason: "user" }),
-          out("session.prompt", { sessionID: SESSION, text: "<any>" }),
-          promptAccepted,
-          event("session.execution.started", { sessionID: SESSION }),
-          event("session.execution.succeeded", { sessionID: SESSION }),
-        ],
-        { external: true },
-      );
-      const thread = yield* runtime.resumeThread({
-        providerThread: providerThread(yield* DateTime.now),
-        threadId,
-        modelSelection: bigPickle,
-        runtimePolicy: policy(),
-      });
-      const terminal = yield* terminalOf(runtime).pipe(Effect.forkScoped);
-      yield* runtime.startTurn(turnInput(thread));
-      assert.equal((yield* Fiber.join(terminal))?.status, "completed");
-    }).pipe(Effect.scoped),
+  it.effect(
+    "stops the requests a session still waits on when a restarted Paperplane loads it",
+    () =>
+      Effect.gen(function* () {
+        // Paperplane restarted while the server kept waiting on an ask Paperplane no longer shows.
+        const runtime = yield* openCode2ReplayRuntimeWithInstructions(
+          [
+            ...opening,
+            out("session.get", { sessionID: SESSION }),
+            replyData("session.get", sessionInfo()),
+            out("permission.list", { sessionID: SESSION }),
+            replyData("permission.list", [shellAsk.data]),
+            out("session.form.list", { sessionID: SESSION }),
+            replyData("session.form.list", [colorForm]),
+            out("permission.reply", {
+              sessionID: SESSION,
+              requestID: shellAsk.data.id,
+              decision: "reject",
+            }),
+            reply("permission.reply", null),
+            out("session.form.cancel", { sessionID: SESSION, formID: colorForm.id }),
+            reply("session.form.cancel", null),
+            // The next turn checks that the stopped run is gone. Its end arrives
+            // late and is its own; the turn ends on its own execution's end.
+            out("session.active"),
+            reply("session.active", { data: {} }),
+            event("session.execution.interrupted", { sessionID: SESSION, reason: "user" }),
+            out("session.prompt", { sessionID: SESSION, text: "<any>" }),
+            promptAccepted,
+            event("session.execution.started", { sessionID: SESSION }),
+            event("session.execution.succeeded", { sessionID: SESSION }),
+          ],
+          { external: true },
+        );
+        const thread = yield* runtime.resumeThread({
+          providerThread: providerThread(yield* DateTime.now),
+          threadId,
+          modelSelection: bigPickle,
+          runtimePolicy: policy(),
+        });
+        const terminal = yield* terminalOf(runtime).pipe(Effect.forkScoped);
+        yield* runtime.startTurn(turnInput(thread));
+        assert.equal((yield* Fiber.join(terminal))?.status, "completed");
+      }).pipe(Effect.scoped),
   );
 
   it.effect("ends the turn when an answer to its request cannot be delivered", () =>
@@ -2530,42 +2534,44 @@ it.layer(McpProviderSessions.layer)("OpenCode2 adapter", (it) => {
     }).pipe(Effect.scoped),
   );
 
-  it.effect("declines a form Paperplane cannot show with the reason, instead of leaving it open", () =>
-    Effect.gen(function* () {
-      const { runtime, thread } = yield* resumed([
-        out("session.prompt", { sessionID: SESSION, text: "<any>" }),
-        promptAccepted,
-        event("form.created", {
-          form: {
-            id: "frm_0eb79ab35001fkvFECSh3wYNVD",
+  it.effect(
+    "declines a form Paperplane cannot show with the reason, instead of leaving it open",
+    () =>
+      Effect.gen(function* () {
+        const { runtime, thread } = yield* resumed([
+          out("session.prompt", { sessionID: SESSION, text: "<any>" }),
+          promptAccepted,
+          event("form.created", {
+            form: {
+              id: "frm_0eb79ab35001fkvFECSh3wYNVD",
+              sessionID: SESSION,
+              title: "MCP authorization",
+              metadata: { kind: "mcp" },
+              fields: [
+                {
+                  key: "authorization",
+                  type: "external",
+                  url: "https://example.com/authorize",
+                  title: "Authorize",
+                },
+              ],
+            },
+          }),
+          out("session.form.cancel", {
             sessionID: SESSION,
-            title: "MCP authorization",
-            metadata: { kind: "mcp" },
-            fields: [
-              {
-                key: "authorization",
-                type: "external",
-                url: "https://example.com/authorize",
-                title: "Authorize",
-              },
-            ],
-          },
-        }),
-        out("session.form.cancel", {
-          sessionID: SESSION,
-          formID: "frm_0eb79ab35001fkvFECSh3wYNVD",
-        }),
-        reply("session.form.cancel", null),
-      ]);
-      const terminal = yield* terminalOf(runtime).pipe(Effect.forkScoped);
-      yield* runtime.startTurn(turnInput(thread));
-      const ended = yield* Fiber.join(terminal);
-      assert.equal(ended?.status, "failed");
-      assert.include(
-        ended?.status === "failed" ? ended.failure.message : "",
-        "asked for a link to open",
-      );
-    }).pipe(Effect.scoped),
+            formID: "frm_0eb79ab35001fkvFECSh3wYNVD",
+          }),
+          reply("session.form.cancel", null),
+        ]);
+        const terminal = yield* terminalOf(runtime).pipe(Effect.forkScoped);
+        yield* runtime.startTurn(turnInput(thread));
+        const ended = yield* Fiber.join(terminal);
+        assert.equal(ended?.status, "failed");
+        assert.include(
+          ended?.status === "failed" ? ended.failure.message : "",
+          "asked for a link to open",
+        );
+      }).pipe(Effect.scoped),
   );
 
   it.effect("asks a subagent's permission request on the parent thread's turn", () =>

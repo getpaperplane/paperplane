@@ -1242,7 +1242,8 @@ export default function (pi) {
     assert.isTrue(
       events.some(
         (event) =>
-          event.type === "extension_error" && String(event.error).includes("not supported in Paperplane"),
+          event.type === "extension_error" &&
+          String(event.error).includes("not supported in Paperplane"),
       ),
     );
     assert.strictEqual(events.at(-1)?.type, "agent_settled");

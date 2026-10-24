@@ -1,5 +1,8 @@
 import type { ArchivedSnapshotEntry } from "@getpaperplane/client-runtime/state/threads";
-import type { OrchestrationProjectShell, OrchestrationV2ThreadShell } from "@getpaperplane/contracts";
+import type {
+  OrchestrationProjectShell,
+  OrchestrationV2ThreadShell,
+} from "@getpaperplane/contracts";
 import { EnvironmentId, ProjectId, ThreadId } from "@getpaperplane/contracts";
 import { describe, expect, it } from "vite-plus/test";
 import * as DateTime from "effect/DateTime";

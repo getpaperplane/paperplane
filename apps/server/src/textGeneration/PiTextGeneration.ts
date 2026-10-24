@@ -9,7 +9,11 @@
  *
  * @module textGeneration/PiTextGeneration
  */
-import { TextGenerationError, type ModelSelection, type PiSettings } from "@getpaperplane/contracts";
+import {
+  TextGenerationError,
+  type ModelSelection,
+  type PiSettings,
+} from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 

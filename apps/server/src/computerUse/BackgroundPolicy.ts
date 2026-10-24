@@ -99,7 +99,8 @@ export const instructionsFor = (
 export const isolatedRefusal = (tool: CuaTool, args: CuaArguments) => {
   if (!DESKTOP_TOOLS.has(tool.name))
     return `${tool.name} is not an allowed private-desktop operation.`;
-  if (args.session !== undefined) return "Cua sessions are managed by Paperplane, not by the agent.";
+  if (args.session !== undefined)
+    return "Cua sessions are managed by Paperplane, not by the agent.";
   if (tool.name === "close_desktop" && Object.keys(args).length > 0)
     return "close_desktop accepts no arguments and can only discard the calling thread's desktop.";
   return undefined;

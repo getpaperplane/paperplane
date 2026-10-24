@@ -13,7 +13,10 @@ import {
   CursorAdapterV2Driver,
   type CursorAdapterV2DriverEnv,
 } from "@getpaperplane/provider-cursor/server";
-import { GrokAdapterV2Driver, type GrokAdapterV2DriverEnv } from "@getpaperplane/provider-grok/server";
+import {
+  GrokAdapterV2Driver,
+  type GrokAdapterV2DriverEnv,
+} from "@getpaperplane/provider-grok/server";
 import {
   OpenCodeAdapterV2Driver,
   type OpenCodeAdapterV2DriverEnv,

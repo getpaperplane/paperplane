@@ -29,8 +29,20 @@ export function SubscriptionUsage(props: SubscriptionUsageProps, environment: Wi
   });
   const muted = colors.onSurfaceVariant;
   const providers = props.providers ?? [
-    { name: "Codex", detail: "Open Paperplane to connect", windows: [], expiresAt: 0, totalWindows: 0 },
-    { name: "Claude", detail: "Open Paperplane to connect", windows: [], expiresAt: 0, totalWindows: 0 },
+    {
+      name: "Codex",
+      detail: "Open Paperplane to connect",
+      windows: [],
+      expiresAt: 0,
+      totalWindows: 0,
+    },
+    {
+      name: "Claude",
+      detail: "Open Paperplane to connect",
+      windows: [],
+      expiresAt: 0,
+      totalWindows: 0,
+    },
   ];
   return (
     // The card is one Button so a tap reaches the app's interaction listener,

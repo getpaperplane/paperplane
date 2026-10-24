@@ -14,38 +14,41 @@ const render = (size: number) =>
   }).pipe(Effect.provide(NodeServices.layer), Effect.runPromise);
 
 describe("Android Paperplane foreground", () => {
-  it.each([432, 1152])("renders the Paperplane mark inside the circular mask at %spx", async (size) => {
-    // The real Paperplane sources have logo.png, not upstream's text.svg. A successful
-    // render must use the transparent Paperplane artwork and not resurrect the T3 glyph.
-    const png = await render(size);
-    const { data, info } = await sharp(png)
-      .ensureAlpha()
-      .raw()
-      .toBuffer({ resolveWithObject: true });
-    expect([info.width, info.height]).toEqual([size, size]);
+  it.each([432, 1152])(
+    "renders the Paperplane mark inside the circular mask at %spx",
+    async (size) => {
+      // The real Paperplane sources have logo.png, not upstream's text.svg. A successful
+      // render must use the transparent Paperplane artwork and not resurrect the T3 glyph.
+      const png = await render(size);
+      const { data, info } = await sharp(png)
+        .ensureAlpha()
+        .raw()
+        .toBuffer({ resolveWithObject: true });
+      expect([info.width, info.height]).toEqual([size, size]);
 
-    let left = size;
-    let top = size;
-    let right = -1;
-    let bottom = -1;
-    const center = (size - 1) / 2;
-    const safeRadius = (size * 66) / 108 / 2;
-    let furthestPixel = 0;
-    for (let y = 0; y < size; y++) {
-      for (let x = 0; x < size; x++) {
-        if (data[(y * size + x) * info.channels + 3] === 0) continue;
-        left = Math.min(left, x);
-        top = Math.min(top, y);
-        right = Math.max(right, x);
-        bottom = Math.max(bottom, y);
-        furthestPixel = Math.max(furthestPixel, Math.hypot(x - center, y - center));
+      let left = size;
+      let top = size;
+      let right = -1;
+      let bottom = -1;
+      const center = (size - 1) / 2;
+      const safeRadius = (size * 66) / 108 / 2;
+      let furthestPixel = 0;
+      for (let y = 0; y < size; y++) {
+        for (let x = 0; x < size; x++) {
+          if (data[(y * size + x) * info.channels + 3] === 0) continue;
+          left = Math.min(left, x);
+          top = Math.min(top, y);
+          right = Math.max(right, x);
+          bottom = Math.max(bottom, y);
+          furthestPixel = Math.max(furthestPixel, Math.hypot(x - center, y - center));
+        }
       }
-    }
-    expect(furthestPixel).toBeLessThan(safeRadius);
-    expect(right).toBeGreaterThan(left);
-    // Paperplane's folded R is taller than it is wide; the inherited T3 wordmark is not.
-    expect(bottom - top).toBeGreaterThan(right - left);
-    expect(Math.abs(left + right - (size - 1))).toBeLessThanOrEqual(2);
-    expect(Math.abs(top + bottom - (size - 1))).toBeLessThanOrEqual(2);
-  });
+      expect(furthestPixel).toBeLessThan(safeRadius);
+      expect(right).toBeGreaterThan(left);
+      // Paperplane's folded R is taller than it is wide; the inherited T3 wordmark is not.
+      expect(bottom - top).toBeGreaterThan(right - left);
+      expect(Math.abs(left + right - (size - 1))).toBeLessThanOrEqual(2);
+      expect(Math.abs(top + bottom - (size - 1))).toBeLessThanOrEqual(2);
+    },
+  );
 });

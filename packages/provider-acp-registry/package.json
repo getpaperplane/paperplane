@@ -33,11 +33,11 @@
     "test": "vp test run --config ../../vite.config.ts --dir ."
   },
   "dependencies": {
-    "@noble/hashes": "catalog:",
     "@getpaperplane/contracts": "workspace:*",
     "@getpaperplane/provider-acp": "workspace:*",
     "@getpaperplane/provider-core": "workspace:*",
     "@getpaperplane/shared": "workspace:*",
+    "@noble/hashes": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {

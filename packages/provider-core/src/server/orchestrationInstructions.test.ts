@@ -10,7 +10,10 @@ import {
 describe("Paperplane orchestration provider instructions", () => {
   it("distinguishes delegated subagents from ordinary top-level threads", () => {
     assert.include(ROVE_CODE_ORCHESTRATION_INSTRUCTIONS, "Use `delegate_task`");
-    assert.include(ROVE_CODE_ORCHESTRATION_INSTRUCTIONS, "ordinary top-level Paperplane conversations");
+    assert.include(
+      ROVE_CODE_ORCHESTRATION_INSTRUCTIONS,
+      "ordinary top-level Paperplane conversations",
+    );
     assert.include(ROVE_CODE_ORCHESTRATION_INSTRUCTIONS, "Never use them merely");
     assert.include(ROVE_CODE_ORCHESTRATION_INSTRUCTIONS, "cross-provider");
     assert.include(ROVE_CODE_ORCHESTRATION_INSTRUCTIONS, "call `delegate_task` again");

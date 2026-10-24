@@ -1,4 +1,8 @@
-import { EnvironmentId, ProviderInstanceId, USAGE_CONTRACT_VERSION } from "@getpaperplane/contracts";
+import {
+  EnvironmentId,
+  ProviderInstanceId,
+  USAGE_CONTRACT_VERSION,
+} from "@getpaperplane/contracts";
 import { mergeUsage } from "@getpaperplane/shared/usageMerge";
 import { StrictMode, act } from "react";
 import { DEFAULT_RESOLVED_KEYBINDINGS } from "@getpaperplane/shared/keybindings";

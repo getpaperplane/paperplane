@@ -359,7 +359,8 @@ function WorktreeRow({
             </ul>
           ) : (
             <p className="text-xs text-muted-foreground">
-              Review this checkout before removing it. Paperplane cannot detect every use outside the app.
+              Review this checkout before removing it. Paperplane cannot detect every use outside
+              the app.
             </p>
           )}
           <div className="flex flex-wrap items-center gap-2">

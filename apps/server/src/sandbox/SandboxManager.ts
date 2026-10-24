@@ -485,7 +485,8 @@ export const makeSandboxManager = Effect.fn("SandboxManager.make")(function* (
             );
             const credential = yield* decodePairingOutput(output).pipe(
               Effect.mapError(
-                () => new SandboxError({ message: "Paperplane returned an invalid pairing response." }),
+                () =>
+                  new SandboxError({ message: "Paperplane returned an invalid pairing response." }),
               ),
             );
             const url = new URL("/pair", current.url);

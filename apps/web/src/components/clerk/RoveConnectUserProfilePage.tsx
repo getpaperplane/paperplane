@@ -81,8 +81,8 @@ export function RoveConnectEnvironmentRow(props: {
                 “{environment.label}” will be removed from this account.
               </p>
               <p className="mt-4 max-w-xl text-xs leading-4.5 text-muted-foreground">
-                Paperplane Connect access will be revoked, any managed tunnel will be removed, and a host
-                space will become available. Local connections on your devices are not changed.
+                Paperplane Connect access will be revoked, any managed tunnel will be removed, and a
+                host space will become available. Local connections on your devices are not changed.
               </p>
               <div className="mt-4 flex justify-end gap-2">
                 <Button
@@ -241,8 +241,8 @@ export function RoveConnectUserProfilePage() {
               <EmptyHeader>
                 <EmptyTitle>No Paperplane Connect environments</EmptyTitle>
                 <EmptyDescription>
-                  Link an environment from its local Settings to make it available through Paperplane
-                  Connect.
+                  Link an environment from its local Settings to make it available through
+                  Paperplane Connect.
                 </EmptyDescription>
               </EmptyHeader>
             </Empty>

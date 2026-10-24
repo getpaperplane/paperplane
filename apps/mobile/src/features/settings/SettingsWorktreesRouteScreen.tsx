@@ -343,7 +343,8 @@ function WorktreeRow({
             ))
           ) : (
             <Text className="text-xs text-foreground-muted">
-              Review this checkout before removing it. Paperplane cannot detect every use outside the app.
+              Review this checkout before removing it. Paperplane cannot detect every use outside
+              the app.
             </Text>
           )}
           <Pressable

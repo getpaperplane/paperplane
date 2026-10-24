@@ -1,5 +1,9 @@
 import { resolveManagedCodexHomeLayout } from "./CodexManagedHome.ts";
-import { CodexSettings, ProviderSetupError, type ProviderInstanceId } from "@getpaperplane/contracts";
+import {
+  CodexSettings,
+  ProviderSetupError,
+  type ProviderInstanceId,
+} from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";

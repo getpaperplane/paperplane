@@ -1,4 +1,7 @@
-import { type ConnectionCatalogEntry, hasRelayRoute } from "@getpaperplane/client-runtime/connection";
+import {
+  type ConnectionCatalogEntry,
+  hasRelayRoute,
+} from "@getpaperplane/client-runtime/connection";
 import type { EnvironmentId } from "@getpaperplane/contracts";
 
 interface OnboardingEnvironment {

@@ -1,4 +1,8 @@
-import { AuthStandardClientScopes, EnvironmentId, type ServerConfig } from "@getpaperplane/contracts";
+import {
+  AuthStandardClientScopes,
+  EnvironmentId,
+  type ServerConfig,
+} from "@getpaperplane/contracts";
 import { RelayClientTracer } from "@getpaperplane/shared/relayTracing";
 import { describe, expect, it } from "@effect/vitest";
 import * as Deferred from "effect/Deferred";

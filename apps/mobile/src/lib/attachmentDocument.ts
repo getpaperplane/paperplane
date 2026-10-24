@@ -1,5 +1,8 @@
 import * as Dialog from "../components/ui/Dialog";
-import { filePreviewDelimiter, parseDelimitedPreview } from "@getpaperplane/shared/delimitedPreview";
+import {
+  filePreviewDelimiter,
+  parseDelimitedPreview,
+} from "@getpaperplane/shared/delimitedPreview";
 import type { EnvironmentId } from "@getpaperplane/contracts";
 import { readFilePreviewResponse } from "@getpaperplane/client-runtime/file-preview";
 import { filePreviewKind, FILE_TEXT_PREVIEW_MAX_BYTES } from "@getpaperplane/shared/filePreview";

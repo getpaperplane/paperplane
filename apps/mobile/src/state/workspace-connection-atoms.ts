@@ -1,4 +1,7 @@
-import type { EnvironmentPresentation, NetworkStatus } from "@getpaperplane/client-runtime/connection";
+import type {
+  EnvironmentPresentation,
+  NetworkStatus,
+} from "@getpaperplane/client-runtime/connection";
 import type { EnvironmentCatalogState } from "@getpaperplane/client-runtime/state/connections";
 import type { EnvironmentId } from "@getpaperplane/contracts";
 import { createEnvironmentSummaryAtoms } from "@getpaperplane/client-runtime/state/presentation";

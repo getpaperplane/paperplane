@@ -33,10 +33,14 @@ export const layer = Layer.effectDiscard(
       // The relay retries on its own schedule too, so a few tries are enough.
       Effect.retry({ schedule: Schedule.exponential("2 seconds"), times: 3 }),
       Effect.tap((pending) =>
-        pending ? Effect.logInfo("Paperplane Connect is delivering held webhook requests") : Effect.void,
+        pending
+          ? Effect.logInfo("Paperplane Connect is delivering held webhook requests")
+          : Effect.void,
       ),
       Effect.catchCause((cause) =>
-        Effect.logWarning("Could not ask Paperplane Connect to deliver held webhook requests", { cause }),
+        Effect.logWarning("Could not ask Paperplane Connect to deliver held webhook requests", {
+          cause,
+        }),
       ),
     );
     yield* runtime.tunnelConnected.pipe(

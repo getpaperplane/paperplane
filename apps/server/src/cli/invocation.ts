@@ -193,8 +193,10 @@ export const resolveHostCliCommand = (subcommand: string, args: ReadonlyArray<st
     const withArgs = (prefix: string) =>
       [prefix, ...args.map((arg) => hostShellWord(platform, arg))].join(" ");
     const command = yield* resolveCliCommand(subcommand);
-    if (command !== `paperplane ${subcommand}`) return { command: withArgs(command), launcher: false };
-    if (yield* isCommandAvailable("paperplane")) return { command: withArgs(command), launcher: false };
+    if (command !== `paperplane ${subcommand}`)
+      return { command: withArgs(command), launcher: false };
+    if (yield* isCommandAvailable("paperplane"))
+      return { command: withArgs(command), launcher: false };
     const launcher = yield* resolveInstallLauncher;
     if (Option.isNone(launcher)) return { command: withArgs(command), launcher: false };
     // PowerShell runs a quoted path only through the call operator.

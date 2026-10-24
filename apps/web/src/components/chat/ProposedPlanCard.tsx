@@ -1,4 +1,7 @@
-import { proposedPlanTitle, stripDisplayedPlanMarkdown } from "@getpaperplane/shared/proposedPlanText";
+import {
+  proposedPlanTitle,
+  stripDisplayedPlanMarkdown,
+} from "@getpaperplane/shared/proposedPlanText";
 import { memo, useCallback, useState, useId } from "react";
 import { useFindRevealRef } from "./markdownFindContext";
 import {

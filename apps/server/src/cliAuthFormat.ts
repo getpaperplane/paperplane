@@ -1,4 +1,8 @@
-import type { AuthClientMetadata, AuthClientSession, AuthPairingLink } from "@getpaperplane/contracts";
+import type {
+  AuthClientMetadata,
+  AuthClientSession,
+  AuthPairingLink,
+} from "@getpaperplane/contracts";
 import * as DateTime from "effect/DateTime";
 
 import type { IssuedBearerSession, IssuedPairingLink } from "./auth/EnvironmentAuth.ts";

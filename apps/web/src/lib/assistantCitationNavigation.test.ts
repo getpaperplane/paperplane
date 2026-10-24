@@ -1,4 +1,9 @@
-import { EnvironmentId, MessageId, ThreadId, type AssistantCitation } from "@getpaperplane/contracts";
+import {
+  EnvironmentId,
+  MessageId,
+  ThreadId,
+  type AssistantCitation,
+} from "@getpaperplane/contracts";
 import {
   createMemoryHistory,
   createRootRoute,

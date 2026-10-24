@@ -216,7 +216,9 @@ it("rejects insufficient or poorly headed raw HTML", () => {
     checkHomepageHtml("<body><h1>Paperplane</h1><script>" + "x".repeat(600) + "</script></body>"),
   );
   NodeAssert.throws(() =>
-    checkHomepageHtml(`<body><h1>Paperplane</h1><h3>Skipped</h3><p>${"content ".repeat(100)}</p></body>`),
+    checkHomepageHtml(
+      `<body><h1>Paperplane</h1><h3>Skipped</h3><p>${"content ".repeat(100)}</p></body>`,
+    ),
   );
 });
 

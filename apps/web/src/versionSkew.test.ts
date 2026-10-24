@@ -38,7 +38,9 @@ describe("versionSkew", () => {
 
   it("keeps runner and unknown commands as relaunches", () => {
     expect(manualServerUpdateCommand("0.0.45")).toBe("npx @getpaperplane/cli@0.0.45");
-    expect(manualServerUpdateCommand("0.0.45", { kind: "npx" })).toBe("npx @getpaperplane/cli@0.0.45");
+    expect(manualServerUpdateCommand("0.0.45", { kind: "npx" })).toBe(
+      "npx @getpaperplane/cli@0.0.45",
+    );
     expect(manualServerUpdateCommand("0.0.45", { kind: "pnpm-dlx" })).toBe(
       "pnpm dlx @getpaperplane/cli@0.0.45",
     );

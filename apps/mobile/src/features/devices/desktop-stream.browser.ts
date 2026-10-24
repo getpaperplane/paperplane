@@ -62,7 +62,9 @@ export function start(configuration: DesktopStreamConfiguration) {
     if (password !== null) rfb.sendCredentials({ password });
     else fail("The desktop asked for a password Paperplane doesn't have.");
   });
-  rfb.addEventListener("securityfailure", () => fail("The desktop rejected Paperplane's credentials."));
+  rfb.addEventListener("securityfailure", () =>
+    fail("The desktop rejected Paperplane's credentials."),
+  );
   rfb.addEventListener("disconnect", () => {
     if (activeRfb !== rfb || failed) return;
     const outcome = desktopDisconnectOutcome({

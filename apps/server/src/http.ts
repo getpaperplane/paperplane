@@ -5,7 +5,10 @@ import {
   EnvironmentHttpApi,
 } from "@getpaperplane/contracts";
 import { isDevProxiedPath } from "@getpaperplane/shared/devProxy";
-import { injectMcpAppCookieBootstrap, injectMcpAppThemeBootstrap } from "@getpaperplane/shared/mcpApp";
+import {
+  injectMcpAppCookieBootstrap,
+  injectMcpAppThemeBootstrap,
+} from "@getpaperplane/shared/mcpApp";
 import { decodeOtlpTraceRecords } from "@getpaperplane/shared/observability";
 import * as Data from "effect/Data";
 import * as Effect from "effect/Effect";

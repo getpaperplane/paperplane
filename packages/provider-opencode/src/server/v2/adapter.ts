@@ -81,7 +81,10 @@ import { buildRuntimeInstructions } from "@getpaperplane/provider-core/server/ru
 import { roveOrchestrationSystemPrompt } from "@getpaperplane/provider-core/server/orchestrationInstructions";
 import { SKILL_MENTION_PATTERN } from "@getpaperplane/shared/composerInlineTokens";
 import * as KeyedLock from "@getpaperplane/shared/KeyedLock";
-import { getModelSelectionStringOptionValue, modelSelectionsEqual } from "@getpaperplane/shared/model";
+import {
+  getModelSelectionStringOptionValue,
+  modelSelectionsEqual,
+} from "@getpaperplane/shared/model";
 import { causeErrorTag } from "@getpaperplane/shared/observability";
 
 import { providerMessageTextWithAttachmentPaths } from "@getpaperplane/provider-core/server/attachmentPrompt";

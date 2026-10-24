@@ -414,7 +414,8 @@ const config: ExpoConfig = {
     [
       "expo-camera",
       {
-        cameraPermission: "Allow Paperplane to access your camera so you can scan pairing QR codes.",
+        cameraPermission:
+          "Allow Paperplane to access your camera so you can scan pairing QR codes.",
         microphonePermission: false,
         barcodeScannerEnabled: true,
         recordAudioAndroid: false,

@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useEffectEvent, useMemo } from "react";
 
-import { EnvironmentProject, EnvironmentThreadShell } from "@getpaperplane/client-runtime/state/shell";
+import {
+  EnvironmentProject,
+  EnvironmentThreadShell,
+} from "@getpaperplane/client-runtime/state/shell";
 import type { AtomCommandResult } from "@getpaperplane/client-runtime/state/runtime";
 import {
   type GitActionRequestInput,

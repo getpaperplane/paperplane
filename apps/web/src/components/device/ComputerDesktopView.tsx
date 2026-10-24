@@ -116,7 +116,10 @@ export function ComputerDesktopView(props: {
         Rfb = await loadRfb();
       } catch {
         if (!cancelled)
-          setStatus({ kind: "error", reason: "The desktop viewer failed to load. Reload Paperplane." });
+          setStatus({
+            kind: "error",
+            reason: "The desktop viewer failed to load. Reload Paperplane.",
+          });
         return;
       }
       if (cancelled) return;

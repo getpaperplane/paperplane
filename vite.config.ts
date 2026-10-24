@@ -222,7 +222,9 @@ export default defineConfig({
     overrides: [
       {
         files: ["packages/client-runtime/src/state/**", "apps/{web,mobile,desktop}/src/**"],
-        rules: { "paperplane/no-rpc-permission-bypass": ["error", { allowRawClientAccess: false }] },
+        rules: {
+          "paperplane/no-rpc-permission-bypass": ["error", { allowRawClientAccess: false }],
+        },
       },
       {
         // Only shared command boundaries install the session-backed permission guard.
@@ -458,7 +460,10 @@ export default defineConfig({
           "apps/mobile/src/native/SelectableMarkdownText.tsx",
         ],
         rules: {
-          "paperplane/no-mobile-uniwind-theme-escape-hatches": ["error", { allowUniwindTheme: true }],
+          "paperplane/no-mobile-uniwind-theme-escape-hatches": [
+            "error",
+            { allowUniwindTheme: true },
+          ],
         },
       },
     ],

@@ -256,7 +256,9 @@ const roveSqliteStateCommand = Command.make(
       Argument.withDescription("Run a read-only query or a backed-up fixture mutation."),
     ),
     baseDir: Flag.String("base-dir").pipe(
-      Flag.withDescription("Explicit Paperplane base directory containing userdata/statev2.sqlite."),
+      Flag.withDescription(
+        "Explicit Paperplane base directory containing userdata/statev2.sqlite.",
+      ),
     ),
     sql: Flag.String("sql").pipe(
       Flag.optional,

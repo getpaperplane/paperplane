@@ -5,7 +5,10 @@ import { NavigationRow } from "../../components/ui/NavigationRow";
 import type { EnvironmentProject } from "@getpaperplane/client-runtime/state/shell";
 import { shouldCheckoutNewTaskBranch } from "./new-task-context-presentation";
 import type { VcsRef } from "@getpaperplane/client-runtime/state/vcs";
-import { AuthSourceControlWriteScope, resolveEnvironmentMachineKind } from "@getpaperplane/contracts";
+import {
+  AuthSourceControlWriteScope,
+  resolveEnvironmentMachineKind,
+} from "@getpaperplane/contracts";
 import { LegendList } from "@legendapp/list/react-native";
 import {
   isAtomCommandInterrupted,

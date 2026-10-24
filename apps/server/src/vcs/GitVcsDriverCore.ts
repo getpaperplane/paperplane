@@ -28,7 +28,10 @@ import {
   type ReviewDiffPreviewSource,
   type VcsRef,
 } from "@getpaperplane/contracts";
-import { dedupeRemoteBranchesWithLocalMatches, normalizeGitRemoteUrl } from "@getpaperplane/shared/git";
+import {
+  dedupeRemoteBranchesWithLocalMatches,
+  normalizeGitRemoteUrl,
+} from "@getpaperplane/shared/git";
 import { SelectedGitHubAccount } from "@getpaperplane/source-control-github/server/GitHubCredentials";
 import * as HostProcess from "@getpaperplane/shared/HostProcess";
 import { compactTraceAttributes } from "@getpaperplane/shared/observability";

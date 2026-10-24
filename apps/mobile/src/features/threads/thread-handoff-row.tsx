@@ -1,7 +1,10 @@
 import * as Dialog from "../../components/ui/Dialog";
 import { useAtomValue } from "@effect/atom-react";
 import { scopeThreadRef } from "@getpaperplane/client-runtime/environment";
-import { resolveHandoffEndpoints, type HandoffEndpoints } from "@getpaperplane/client-runtime/handoff";
+import {
+  resolveHandoffEndpoints,
+  type HandoffEndpoints,
+} from "@getpaperplane/client-runtime/handoff";
 import { resolveProviderInstanceDisplayName } from "@getpaperplane/client-runtime/state/provider-instance-display";
 import type {
   EnvironmentId,

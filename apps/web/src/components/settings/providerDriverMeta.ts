@@ -6,7 +6,10 @@ import {
   ProviderDriverKind,
 } from "@getpaperplane/contracts";
 import { acpRegistryClient } from "@getpaperplane/provider-acp-registry/client";
-import { defineProviderClient, makeProviderClientRegistry } from "@getpaperplane/provider-core/client";
+import {
+  defineProviderClient,
+  makeProviderClientRegistry,
+} from "@getpaperplane/provider-core/client";
 import { cursorClient } from "@getpaperplane/provider-cursor/client";
 import { grokClient } from "@getpaperplane/provider-grok/client";
 import { museClient } from "@getpaperplane/provider-muse/client";

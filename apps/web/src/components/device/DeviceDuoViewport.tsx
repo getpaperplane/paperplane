@@ -3,7 +3,10 @@ import type { DuoViewer } from "@getpaperplane/client-runtime/device/duo-viewer"
 import type { DeviceModelSource } from "@getpaperplane/client-runtime/device/model";
 import { createPhoneInteraction } from "@getpaperplane/client-runtime/device/phone-interaction";
 import { createCanvasFrameSink } from "@getpaperplane/client-runtime/device/frame";
-import type { DeviceScreenSize, DeviceStreamClient } from "@getpaperplane/client-runtime/device/stream";
+import type {
+  DeviceScreenSize,
+  DeviceStreamClient,
+} from "@getpaperplane/client-runtime/device/stream";
 import { createDuoPinch } from "@getpaperplane/client-runtime/device/duo-control";
 import { bindPhoneTrackpad } from "./phoneTrackpad";
 import { observeResize } from "../../lib/observeResize";

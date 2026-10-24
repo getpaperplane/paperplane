@@ -1,5 +1,8 @@
 import type { ScopedThreadRef } from "@getpaperplane/contracts";
-import { isWindowsAbsolutePath, normalizeProjectPathForComparison } from "@getpaperplane/shared/path";
+import {
+  isWindowsAbsolutePath,
+  normalizeProjectPathForComparison,
+} from "@getpaperplane/shared/path";
 
 import { useRightPanelStore } from "./rightPanelStore";
 import { resolvePathLinkTarget } from "@getpaperplane/shared/fileLinks";

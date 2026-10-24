@@ -160,8 +160,9 @@ function HostedStaticOnboardingState() {
               </div>
               <EmptyTitle>Connect to a computer running Paperplane</EmptyTitle>
               <EmptyDescription>
-                This app connects to Paperplane running on your computer or a server. Start the Paperplane
-                Code desktop app or command-line server on that machine and keep it running.
+                This app connects to Paperplane running on your computer or a server. Start the
+                Paperplane Code desktop app or command-line server on that machine and keep it
+                running.
               </EmptyDescription>
               <EmptyDescription>{description}</EmptyDescription>
               <div className="mt-6 flex justify-center">

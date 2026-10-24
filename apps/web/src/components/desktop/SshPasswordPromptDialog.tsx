@@ -160,8 +160,9 @@ function ActiveSshPasswordPrompt({
         <DialogHeader>
           <DialogTitle>SSH Password Required</DialogTitle>
           <DialogDescription>
-            Paperplane needs your SSH password to connect to <code>{target}</code>. The password is passed
-            to the local SSH process for this connection attempt and is not saved by Paperplane.
+            Paperplane needs your SSH password to connect to <code>{target}</code>. The password is
+            passed to the local SSH process for this connection attempt and is not saved by
+            Paperplane.
           </DialogDescription>
         </DialogHeader>
         <DialogPanel scrollFade={false}>

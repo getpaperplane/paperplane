@@ -1,5 +1,9 @@
 import { ThreadDetailsControl } from "./ThreadDetailsControl";
-import type { EnvironmentId, ScopedThreadRef, ThreadPullRequestLink } from "@getpaperplane/contracts";
+import type {
+  EnvironmentId,
+  ScopedThreadRef,
+  ThreadPullRequestLink,
+} from "@getpaperplane/contracts";
 import {
   resolveThreadPullRequestChains,
   threadPullRequestKeyOf,

@@ -273,7 +273,8 @@ export function resolveMacBundleInfoPlistStrings(executableName) {
     CFBundleIconFile: "icon.icns",
     NSScreenCaptureUsageDescription:
       "Paperplane captures the active window when you use the snapshot shortcut.",
-    NSDocumentsFolderUsageDescription: "Paperplane reads project files you open in the desktop app.",
+    NSDocumentsFolderUsageDescription:
+      "Paperplane reads project files you open in the desktop app.",
   };
 }
 

@@ -184,7 +184,9 @@ const serviceUpdateCommand = Command.make("update", serviceReconcileFlags).pipe(
         );
         const result = yield* reconcileService({ allowDowngrade: flags.allowDowngrade });
         if (!result.changed) {
-          yield* Console.log(`Paperplane service is already using paperplane@${packageJson.version}.`);
+          yield* Console.log(
+            `Paperplane service is already using paperplane@${packageJson.version}.`,
+          );
           return;
         }
         yield* Console.log(

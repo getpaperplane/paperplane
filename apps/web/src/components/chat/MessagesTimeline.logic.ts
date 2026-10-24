@@ -61,7 +61,10 @@ import {
   type RoveMcpToolPresentation,
 } from "@getpaperplane/shared/roveMcpToolPresentation";
 import { compactDynamicToolOutput } from "@getpaperplane/shared/toolOutput";
-import { htmlRenderReferencesEqual, type HtmlRenderReference } from "@getpaperplane/shared/htmlRender";
+import {
+  htmlRenderReferencesEqual,
+  type HtmlRenderReference,
+} from "@getpaperplane/shared/htmlRender";
 import { mcpAppReferencesEqual, type McpAppReference } from "@getpaperplane/shared/mcpApp";
 import { dynamicToolTitle } from "@getpaperplane/shared/toolActivity";
 import { formatWorkspaceRelativePath } from "../../filePathDisplay";

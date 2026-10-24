@@ -2,13 +2,19 @@ import { assert, describe, expect } from "@effect/vitest";
 
 import { createOxlintRuleHarness } from "../test/utils.ts";
 
-const guardedMobileFile = createOxlintRuleHarness("paperplane/no-mobile-uniwind-theme-escape-hatches", {
-  filename: "apps/mobile/src/features/settings/NewThemeSurface.tsx",
-});
-const reviewedInteropFile = createOxlintRuleHarness("paperplane/no-mobile-uniwind-theme-escape-hatches", {
-  filename: "apps/mobile/src/features/home/HomeHeader.tsx",
-  ruleOptions: [{ allowUniwindTheme: true }],
-});
+const guardedMobileFile = createOxlintRuleHarness(
+  "paperplane/no-mobile-uniwind-theme-escape-hatches",
+  {
+    filename: "apps/mobile/src/features/settings/NewThemeSurface.tsx",
+  },
+);
+const reviewedInteropFile = createOxlintRuleHarness(
+  "paperplane/no-mobile-uniwind-theme-escape-hatches",
+  {
+    filename: "apps/mobile/src/features/home/HomeHeader.tsx",
+    ruleOptions: [{ allowUniwindTheme: true }],
+  },
+);
 
 describe("paperplane/no-mobile-uniwind-theme-escape-hatches", () => {
   guardedMobileFile.valid(

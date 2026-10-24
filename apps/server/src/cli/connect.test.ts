@@ -214,7 +214,10 @@ it.effect(
       Effect.provide(Logger.layer([Logger.make(() => undefined)], { mergeWithExisting: false })),
       Effect.tap(() =>
         Effect.sync(() => {
-          assert.include(warnings.flat().map(String).join("\n"), "Run `paperplane connect unlink` again");
+          assert.include(
+            warnings.flat().map(String).join("\n"),
+            "Run `paperplane connect unlink` again",
+          );
         }),
       ),
     );

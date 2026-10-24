@@ -79,7 +79,9 @@ export interface ProviderTurnControlServiceV2Shape {
 export class ProviderTurnControlServiceV2 extends Context.Service<
   ProviderTurnControlServiceV2,
   ProviderTurnControlServiceV2Shape
->()("@getpaperplane/server/orchestration-v2/ProviderTurnControlService/ProviderTurnControlServiceV2") {}
+>()(
+  "@getpaperplane/server/orchestration-v2/ProviderTurnControlService/ProviderTurnControlServiceV2",
+) {}
 
 export const layer: Layer.Layer<
   ProviderTurnControlServiceV2,

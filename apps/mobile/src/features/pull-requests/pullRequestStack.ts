@@ -1,4 +1,8 @@
-import type { PullRequestRef, PullRequestStack, ThreadPullRequestLink } from "@getpaperplane/contracts";
+import type {
+  PullRequestRef,
+  PullRequestStack,
+  ThreadPullRequestLink,
+} from "@getpaperplane/contracts";
 
 /** A stack merge includes the unmerged layers up to the selected PR, in host order. */
 export function pullRequestStackMerge(stack: PullRequestStack, number: number) {

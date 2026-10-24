@@ -238,7 +238,9 @@ function ProviderExtensionsContent({
         </Button>
         <ul className="space-y-1 text-xs text-muted-foreground">
           {compatibilityWarnings.length === 0 && (
-            <li>Found does not mean every feature works in Paperplane. Pi terminal UI stays in Pi.</li>
+            <li>
+              Found does not mean every feature works in Paperplane. Pi terminal UI stays in Pi.
+            </li>
           )}
           <li>Refresh re-reads extensions and model catalogs from the server's Pi config.</li>
           <li>Switches apply to new sessions. Live threads reload on their next turn.</li>

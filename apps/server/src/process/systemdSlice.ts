@@ -100,11 +100,14 @@ export const configureSlice = Effect.fn("configureSlice")(function* (
     memoryCurrent: usage.trim() === "" ? Infinity : Number(usage),
   });
   if (next.deferred)
-    yield* Effect.logWarning("Paperplane slice memory ceiling reduction deferred until usage falls", {
-      unit,
-      requestedMax: requested.max,
-      retainedMax: next.max,
-    });
+    yield* Effect.logWarning(
+      "Paperplane slice memory ceiling reduction deferred until usage falls",
+      {
+        unit,
+        requestedMax: requested.max,
+        retainedMax: next.max,
+      },
+    );
   const format = (value: number) => (Number.isFinite(value) ? String(value) : "infinity");
   yield* runSystemctl([
     "set-property",

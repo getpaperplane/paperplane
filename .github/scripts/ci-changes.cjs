@@ -34,7 +34,12 @@ const EXTRA_OWNERS = [
   // Vite configs and tsconfigs of these apps import scripts/lib directly.
   [
     /^scripts\/lib\//,
-    ["@getpaperplane/desktop", "@getpaperplane/mobile", "@getpaperplane/web", "@getpaperplane/server"],
+    [
+      "@getpaperplane/desktop",
+      "@getpaperplane/mobile",
+      "@getpaperplane/web",
+      "@getpaperplane/server",
+    ],
   ],
   // scripts/build-desktop-artifact.ts reads the GNOME extension manifest.
   [/^apps\/desktop\/gnome-extension\//, ["@getpaperplane/scripts"]],
@@ -67,7 +72,11 @@ const MOBILE_NATIVE =
   /^apps\/mobile\/.*\.(swift|kt|kts)$|^apps\/mobile\/(\.swiftlint\.yml|detekt\.yml|\.editorconfig|Brewfile)$|^scripts\/mobile-native-static-check\.ts$|^package\.json$|^\.github\/workflows\/ci\.yml$|^\.github\/scripts\/ci-changes\.cjs$|^\.github\/actions\/ci-changes\//;
 
 // Jobs that test every package except these, which have jobs of their own.
-const OWN_TEST_JOB = new Set(["@getpaperplane/server", "@getpaperplane/web", "@getpaperplane/monorepo"]);
+const OWN_TEST_JOB = new Set([
+  "@getpaperplane/server",
+  "@getpaperplane/web",
+  "@getpaperplane/monorepo",
+]);
 
 function readWorkspace() {
   const patterns = [];
@@ -174,7 +183,8 @@ function decide(files, packages, full) {
     affected: [...affected].sort(),
     outputs: {
       typecheck: affected.size > 0,
-      build: has("@getpaperplane/desktop") || has("@getpaperplane/server") || has("@getpaperplane/web"),
+      build:
+        has("@getpaperplane/desktop") || has("@getpaperplane/server") || has("@getpaperplane/web"),
       test: tested.length > 0,
       // Empty means every package the Test job covers.
       test_packages: everything ? "" : tested.map((pkg) => pkg.name).join(" "),

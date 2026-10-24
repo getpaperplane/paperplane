@@ -461,7 +461,6 @@
     "test": "vp test run"
   },
   "dependencies": {
-    "@pierre/diffs": "catalog:",
     "@getpaperplane/contracts": "workspace:*",
     "@getpaperplane/shared": "workspace:*",
     "@getpaperplane/source-control-azure-devops": "workspace:*",
@@ -471,6 +470,7 @@
     "@getpaperplane/source-control-gitcafe": "workspace:*",
     "@getpaperplane/source-control-github": "workspace:*",
     "@getpaperplane/source-control-gitlab": "workspace:*",
+    "@pierre/diffs": "catalog:",
     "effect": "catalog:",
     "three": "0.180.0"
   },

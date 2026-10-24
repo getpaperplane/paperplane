@@ -39,7 +39,10 @@ export function CliCommandSettingsRow() {
           toastManager.add(
             stackedThreadToast({
               type: "error",
-              title: action === "install" ? "Could not install paperplane" : "Could not remove paperplane",
+              title:
+                action === "install"
+                  ? "Could not install paperplane"
+                  : "Could not remove paperplane",
               description: error instanceof Error ? error.message : "Something went wrong.",
             }),
           );

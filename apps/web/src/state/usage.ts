@@ -22,7 +22,11 @@ import * as Option from "effect/Option";
 import { AsyncResult, Atom } from "effect/reactivity";
 import { useCallback, useMemo, useState } from "react";
 
-import { mergeUsage, type EnvironmentUsage, type MergedUsage } from "@getpaperplane/shared/usageMerge";
+import {
+  mergeUsage,
+  type EnvironmentUsage,
+  type MergedUsage,
+} from "@getpaperplane/shared/usageMerge";
 import { appAtomRegistry } from "../rpc/atomRegistry";
 import { environmentPresentations } from "./presentation";
 import { serverEnvironment } from "./server";

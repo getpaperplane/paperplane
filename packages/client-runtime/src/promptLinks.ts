@@ -7,7 +7,10 @@ import {
   type ThreadPullRequestLink,
 } from "@getpaperplane/contracts";
 import { resolveSelectableModel, type SelectableModelOption } from "@getpaperplane/shared/model";
-import type { PromptLinkPullRequest, PromptLinkRepository } from "@getpaperplane/shared/promptLinks";
+import type {
+  PromptLinkPullRequest,
+  PromptLinkRepository,
+} from "@getpaperplane/shared/promptLinks";
 import {
   threadPullRequestKeyOf,
   threadPullRequestsOf,

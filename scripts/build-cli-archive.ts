@@ -650,7 +650,9 @@ const command = Command.make(
     ),
   },
   (input) => buildCliArchive(input).pipe(Effect.scoped),
-).pipe(Command.withDescription("Package the paperplane single-executable into a per-platform archive."));
+).pipe(
+  Command.withDescription("Package the paperplane single-executable into a per-platform archive."),
+);
 
 if (import.meta.main) {
   Command.run(command, { version: "0.0.0" }).pipe(

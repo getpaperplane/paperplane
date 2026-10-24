@@ -233,7 +233,9 @@ read -r release`,
       ...(timeout ? [timeout] : []),
     ]);
     const lease = await this.acquireLease(kind, this.slots, signal, () =>
-      options.onData(Buffer.from(`[Paperplane: all ${this.slots} shell slots are busy; queued.]\n`)),
+      options.onData(
+        Buffer.from(`[Paperplane: all ${this.slots} shell slots are busy; queued.]\n`),
+      ),
     );
     let budget: (ReturnType<typeof makeManagedProcess> & { memoryMiB: number }) | undefined;
     // The scope's exit, including its orphan descendants, is awaited before releasing the OS lease.

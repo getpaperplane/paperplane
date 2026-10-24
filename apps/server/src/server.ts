@@ -951,9 +951,12 @@ const layerMakeServer = Layer.unwrap(
                   Effect.catchCause((cause) =>
                     Cause.hasInterrupts(cause)
                       ? Effect.interrupt
-                      : Effect.logWarning("Failed to recover the Paperplane Connect managed tunnel", {
-                          cause,
-                        }),
+                      : Effect.logWarning(
+                          "Failed to recover the Paperplane Connect managed tunnel",
+                          {
+                            cause,
+                          },
+                        ),
                   ),
                 ),
               );
@@ -1013,7 +1016,9 @@ const layerMakeServer = Layer.unwrap(
                     : Effect.void,
                 ),
                 Effect.catch((cause) =>
-                  Effect.logWarning("Failed to start the stored Paperplane Connect tunnel", { cause }),
+                  Effect.logWarning("Failed to start the stored Paperplane Connect tunnel", {
+                    cause,
+                  }),
                 ),
                 Effect.asVoid,
               );
@@ -1034,9 +1039,12 @@ const layerMakeServer = Layer.unwrap(
               Effect.catchCause((cause) =>
                 Cause.hasInterrupts(cause)
                   ? Effect.interrupt
-                  : Effect.logWarning("Failed to register Paperplane Connect managed tunnel recovery", {
-                      cause,
-                    }).pipe(Effect.as({ status: "unavailable" as const })),
+                  : Effect.logWarning(
+                      "Failed to register Paperplane Connect managed tunnel recovery",
+                      {
+                        cause,
+                      },
+                    ).pipe(Effect.as({ status: "unavailable" as const })),
               ),
             );
             // A host without a confirmed marker is on its first boot after the
@@ -1082,9 +1090,12 @@ const layerMakeServer = Layer.unwrap(
                       : Effect.logInfo("Paperplane Connect desired link reconciled on startup"),
                   ),
                   Effect.catch((cause) =>
-                    Effect.logWarning("Failed to reconcile Paperplane Connect desired link on startup", {
-                      cause,
-                    }).pipe(Effect.as(null)),
+                    Effect.logWarning(
+                      "Failed to reconcile Paperplane Connect desired link on startup",
+                      {
+                        cause,
+                      },
+                    ).pipe(Effect.as(null)),
                   ),
                 );
               if (reconciledMode === "managed") {

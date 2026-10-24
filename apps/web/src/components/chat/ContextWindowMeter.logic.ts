@@ -1,4 +1,8 @@
-import type { ModelSelection, ProviderDriverKind, ProviderInstanceId } from "@getpaperplane/contracts";
+import type {
+  ModelSelection,
+  ProviderDriverKind,
+  ProviderInstanceId,
+} from "@getpaperplane/contracts";
 import {
   CLAUDE_RESUME_COMPACTION_NEVER_ANSWER,
   isClaudeResumeCompactionQuestion,

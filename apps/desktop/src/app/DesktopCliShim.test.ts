@@ -114,7 +114,10 @@ describe("renderCliShim", () => {
     expect(run(shim, []).stdout).toContain(`home=${root}/home`);
     expect(run(shim, [], { ROVE_HOME: "/elsewhere" }).stdout).toContain("home=/elsewhere");
     // Run by a relative path, it still names itself absolutely.
-    const relative = NodeChildProcess.spawnSync("./bin/paperplane", [], { cwd: root, encoding: "utf8" });
+    const relative = NodeChildProcess.spawnSync("./bin/paperplane", [], {
+      cwd: root,
+      encoding: "utf8",
+    });
     expect(relative.stdout).toContain(`cli=${shim}`);
   });
 

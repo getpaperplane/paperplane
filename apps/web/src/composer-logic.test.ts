@@ -1,6 +1,11 @@
 import { resolveComposerDispatchMode } from "@getpaperplane/client-runtime/state/composer-dispatch";
 import { filterComposerPullRequestMatches } from "@getpaperplane/shared/composerPullRequestMatches";
-import { EnvironmentId, MessageId, ThreadId, type AssistantCitation } from "@getpaperplane/contracts";
+import {
+  EnvironmentId,
+  MessageId,
+  ThreadId,
+  type AssistantCitation,
+} from "@getpaperplane/contracts";
 import {
   collectAssistantCitations,
   expandAssistantCitationsForProvider,

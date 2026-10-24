@@ -490,33 +490,35 @@ describe("CodexAdapterV2 runtime policy", () => {
     }),
   );
 
-  it.effect("adds default-mode developer instructions when the Paperplane MCP server is attached", () =>
-    Effect.gen(function* () {
-      const params = yield* CodexAdapterV2.buildCodexTurnStartParams({
-        nativeThreadId: "native-orchestration-instructions",
-        codexInput: [{ type: "text", text: "delegate this task" }],
-        runtimePolicy: {
-          runtimeMode: "full-access",
-          interactionMode: "default",
-          cwd: null,
-        },
-        modelSelection: {
-          instanceId: ProviderInstanceId.make("codex"),
-          model: "gpt-5.4",
-        },
-        hasRoveMcp: true,
-      });
+  it.effect(
+    "adds default-mode developer instructions when the Paperplane MCP server is attached",
+    () =>
+      Effect.gen(function* () {
+        const params = yield* CodexAdapterV2.buildCodexTurnStartParams({
+          nativeThreadId: "native-orchestration-instructions",
+          codexInput: [{ type: "text", text: "delegate this task" }],
+          runtimePolicy: {
+            runtimeMode: "full-access",
+            interactionMode: "default",
+            cwd: null,
+          },
+          modelSelection: {
+            instanceId: ProviderInstanceId.make("codex"),
+            model: "gpt-5.4",
+          },
+          hasRoveMcp: true,
+        });
 
-      assert.equal(params.collaborationMode?.mode, "default");
-      assert.include(
-        params.additionalContext?.rove_code_orchestration?.value ?? "",
-        "Use `delegate_task`",
-      );
-      assert.include(
-        params.additionalContext?.rove_code_orchestration?.value ?? "",
-        "structured object, never as JSON text",
-      );
-    }),
+        assert.equal(params.collaborationMode?.mode, "default");
+        assert.include(
+          params.additionalContext?.rove_code_orchestration?.value ?? "",
+          "Use `delegate_task`",
+        );
+        assert.include(
+          params.additionalContext?.rove_code_orchestration?.value ?? "",
+          "structured object, never as JSON text",
+        );
+      }),
   );
 
   it.effect("omits default-mode collaboration settings without the Paperplane MCP server", () =>
@@ -540,30 +542,32 @@ describe("CodexAdapterV2 runtime policy", () => {
     }),
   );
 
-  it.effect("adds Paperplane plan-mode developer instructions when the Paperplane MCP server is attached", () =>
-    Effect.gen(function* () {
-      const params = yield* CodexAdapterV2.buildCodexTurnStartParams({
-        nativeThreadId: "native-plan-with-rove-mcp",
-        codexInput: [{ type: "text", text: "plan this task" }],
-        runtimePolicy: {
-          runtimeMode: "full-access",
-          interactionMode: "plan",
-          cwd: null,
-        },
-        modelSelection: {
-          instanceId: ProviderInstanceId.make("codex"),
-          model: "gpt-5.4",
-        },
-        hasRoveMcp: true,
-      });
+  it.effect(
+    "adds Paperplane plan-mode developer instructions when the Paperplane MCP server is attached",
+    () =>
+      Effect.gen(function* () {
+        const params = yield* CodexAdapterV2.buildCodexTurnStartParams({
+          nativeThreadId: "native-plan-with-rove-mcp",
+          codexInput: [{ type: "text", text: "plan this task" }],
+          runtimePolicy: {
+            runtimeMode: "full-access",
+            interactionMode: "plan",
+            cwd: null,
+          },
+          modelSelection: {
+            instanceId: ProviderInstanceId.make("codex"),
+            model: "gpt-5.4",
+          },
+          hasRoveMcp: true,
+        });
 
-      assert.equal(params.collaborationMode?.mode, "plan");
-      assert.include(
-        params.collaborationMode?.settings.developer_instructions ?? "",
-        "request_user_input",
-      );
-      assert.include(params.additionalContext?.rove_code_tools?.value ?? "", "preview_status");
-    }),
+        assert.equal(params.collaborationMode?.mode, "plan");
+        assert.include(
+          params.collaborationMode?.settings.developer_instructions ?? "",
+          "request_user_input",
+        );
+        assert.include(params.additionalContext?.rove_code_tools?.value ?? "", "preview_status");
+      }),
   );
 
   it.effect("keeps Codex in plan mode without referencing unavailable Paperplane MCP tools", () =>

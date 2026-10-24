@@ -34,26 +34,28 @@ describe("runMigrations", () => {
     }).pipe(Effect.provide(NodeSqliteClient.layer({ filename: ":memory:" }))),
   );
 
-  it.effect("reconciles copied Paperplane V1 migration ids without re-running removed features", () =>
-    Effect.gen(function* () {
-      const sql = yield* SqlClient.SqlClient;
-      yield* runMigrations({ toMigrationInclusive: 54 });
-      yield* sql`
+  it.effect(
+    "reconciles copied Paperplane V1 migration ids without re-running removed features",
+    () =>
+      Effect.gen(function* () {
+        const sql = yield* SqlClient.SqlClient;
+        yield* runMigrations({ toMigrationInclusive: 54 });
+        yield* sql`
         INSERT INTO effect_sql_migrations (migration_id, name) VALUES
           (55, 'ProjectionThreadLimitRecovery'),
           (56, 'StandaloneThreads'),
           (57, 'ThreadActivitySequence')
       `;
-      const legacyHistory = yield* history;
+        const legacyHistory = yield* history;
 
-      // Legacy-only callers must not rewrite the recorded Paperplane history.
-      assert.deepStrictEqual(yield* runMigrations({ toMigrationInclusive: 54 }), []);
-      assert.deepStrictEqual(yield* history, legacyHistory);
-      assert.deepStrictEqual(yield* runMigrations(), v2Migrations);
-      assert.deepStrictEqual(yield* history, migrationManifest);
-      assert.isAbove(yield* v2TableCount, 0);
-      assert.deepStrictEqual(yield* runMigrations(), []);
-    }).pipe(Effect.provide(NodeSqliteClient.layer({ filename: ":memory:" }))),
+        // Legacy-only callers must not rewrite the recorded Paperplane history.
+        assert.deepStrictEqual(yield* runMigrations({ toMigrationInclusive: 54 }), []);
+        assert.deepStrictEqual(yield* history, legacyHistory);
+        assert.deepStrictEqual(yield* runMigrations(), v2Migrations);
+        assert.deepStrictEqual(yield* history, migrationManifest);
+        assert.isAbove(yield* v2TableCount, 0);
+        assert.deepStrictEqual(yield* runMigrations(), []);
+      }).pipe(Effect.provide(NodeSqliteClient.layer({ filename: ":memory:" }))),
   );
 
   it.effect("keeps Paperplane history intact when an unrelated migration still blocks V2", () =>

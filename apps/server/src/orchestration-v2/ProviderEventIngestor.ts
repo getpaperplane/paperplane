@@ -29,7 +29,10 @@ import * as Schema from "effect/Schema";
 import { AgentScope } from "@getpaperplane/shared/AgentScope";
 import { labelOutOfMemory } from "../process/outOfMemoryFailure.ts";
 import { isTemporaryWorktreeBranch } from "@getpaperplane/shared/git";
-import { getModelSelectionStringOptionValue, modelSelectionsEqual } from "@getpaperplane/shared/model";
+import {
+  getModelSelectionStringOptionValue,
+  modelSelectionsEqual,
+} from "@getpaperplane/shared/model";
 import * as AnalyticsService from "../telemetry/AnalyticsService.ts";
 import * as GitVcsDriver from "../vcs/GitVcsDriver.ts";
 import * as EventSink from "./EventSink.ts";

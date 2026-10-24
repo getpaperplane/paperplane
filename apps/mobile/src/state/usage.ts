@@ -19,7 +19,11 @@ import {
 } from "@getpaperplane/contracts";
 import { needsCursorKeychainAccess, refreshUsage } from "@getpaperplane/client-runtime/state/usage";
 import { resolveUsageAccess } from "@getpaperplane/client-runtime/state/usage-access";
-import { mergeUsage, type EnvironmentUsage, type MergedUsage } from "@getpaperplane/shared/usageMerge";
+import {
+  mergeUsage,
+  type EnvironmentUsage,
+  type MergedUsage,
+} from "@getpaperplane/shared/usageMerge";
 import * as Option from "effect/Option";
 import { AsyncResult, Atom } from "effect/reactivity";
 import { useCallback, useMemo } from "react";

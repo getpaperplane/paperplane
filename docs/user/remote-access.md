@@ -377,13 +377,13 @@ configuration. It is not a live reachability check. If the environment appears
 offline, run `paperplane service status` and read the displayed log. If it disappears
 when SSH closes, see [background-service troubleshooting](./background-service.md#troubleshooting).
 
-| Error                                                     | Recovery                                                                                                                                          |
-| --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `environment_link_limit_exceeded` or managed tunnel limit | Deregister an unused environment, then restart Paperplane on the host.                                                                             |
+| Error                                                     | Recovery                                                                                                                                                            |
+| --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `environment_link_limit_exceeded` or managed tunnel limit | Deregister an unused environment, then restart Paperplane on the host.                                                                                              |
 | `auth_invalid` or `invalid_bearer`                        | Run `paperplane connect login`. If credentials were revoked, run `paperplane connect logout`, then `paperplane connect` again. Restart the server after signing in. |
-| Expired or invalid link proof                             | Check the host's date and time, update Paperplane, then restart it.                                                                                |
-| HTTP 403 without a recognized error                       | Check relay access, proxies, and firewall rules. Keep any Cloudflare Ray ID for a bug report.                                                     |
-| HTTP 408, 429, or 5xx                                     | Check network and relay availability. Startup retries temporary failures for up to ten minutes.                                                   |
+| Expired or invalid link proof                             | Check the host's date and time, update Paperplane, then restart it.                                                                                                 |
+| HTTP 403 without a recognized error                       | Check relay access, proxies, and firewall rules. Keep any Cloudflare Ray ID for a bug report.                                                                       |
+| HTTP 408, 429, or 5xx                                     | Check network and relay availability. Startup retries temporary failures for up to ten minutes.                                                                     |
 
 After fixing a permanent rejection, restart the host's server. On Linux, use
 `systemctl --user restart rove.service` for the background service. For a

@@ -26,7 +26,10 @@ import {
   getProjectOrderKey,
   selectProjectGroupingSettings,
 } from "../logicalProject";
-import { resolveNewThreadEnvMode, resolveProjectSettings } from "@getpaperplane/shared/projectSettings";
+import {
+  resolveNewThreadEnvMode,
+  resolveProjectSettings,
+} from "@getpaperplane/shared/projectSettings";
 import {
   readProject,
   readProjects,

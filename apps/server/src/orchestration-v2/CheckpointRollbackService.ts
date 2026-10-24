@@ -81,7 +81,9 @@ export interface CheckpointRollbackServiceV2Shape {
 export class CheckpointRollbackServiceV2 extends Context.Service<
   CheckpointRollbackServiceV2,
   CheckpointRollbackServiceV2Shape
->()("@getpaperplane/server/orchestration-v2/CheckpointRollbackService/CheckpointRollbackServiceV2") {}
+>()(
+  "@getpaperplane/server/orchestration-v2/CheckpointRollbackService/CheckpointRollbackServiceV2",
+) {}
 
 export const layer: Layer.Layer<
   CheckpointRollbackServiceV2,

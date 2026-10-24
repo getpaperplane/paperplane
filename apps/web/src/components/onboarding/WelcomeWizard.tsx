@@ -428,8 +428,8 @@ function ConnectionStep({
       ) : null}
       <div className="mt-6 flex flex-col-reverse gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
         <p className="min-w-0 text-xs leading-relaxed text-muted-foreground">
-          Paperplane collects anonymous usage data to help us improve it. To read more about how your
-          data is used and how to opt out, see our{" "}
+          Paperplane collects anonymous usage data to help us improve it. To read more about how
+          your data is used and how to opt out, see our{" "}
           <a
             className="underline underline-offset-2 hover:text-foreground"
             href={TELEMETRY_PRIVACY_URL}
@@ -640,7 +640,8 @@ function PairingForm({
             </p>
             <CommandBlock command="npx @getpaperplane/cli pair" className="mt-2" />
             <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
-              Start Paperplane first, or run <code className="font-mono">npx @getpaperplane/cli serve</code>. Add{" "}
+              Start Paperplane first, or run{" "}
+              <code className="font-mono">npx @getpaperplane/cli serve</code>. Add{" "}
               <code className="font-mono">--tailscale</code> to use your tailnet.
             </p>
           </CollapsiblePanel>

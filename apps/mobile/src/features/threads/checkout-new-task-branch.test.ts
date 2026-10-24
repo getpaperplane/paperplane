@@ -4,7 +4,10 @@ import * as NodeOS from "node:os";
 import * as NodePath from "node:path";
 import * as NodeUtil from "node:util";
 import { EnvironmentId } from "@getpaperplane/contracts";
-import { settlePromise, squashAtomCommandFailure } from "@getpaperplane/client-runtime/state/runtime";
+import {
+  settlePromise,
+  squashAtomCommandFailure,
+} from "@getpaperplane/client-runtime/state/runtime";
 import { afterEach, beforeEach, describe, expect, it } from "vite-plus/test";
 
 import { checkoutNewTaskBranch } from "./checkout-new-task-branch";

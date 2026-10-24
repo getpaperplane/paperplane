@@ -106,7 +106,9 @@ const browserSetupCommand = Command.make("setup", { baseDir: baseDirFlag }).pipe
   Command.withHandler(({ baseDir }) =>
     Effect.gen(function* () {
       if ((yield* HostProcess.Platform) !== "linux") {
-        return yield* Console.log("Nothing to set up: Paperplane's browser runs as is on this system.");
+        return yield* Console.log(
+          "Nothing to set up: Paperplane's browser runs as is on this system.",
+        );
       }
       const fs = yield* FileSystem.FileSystem;
       const isRoot = (yield* HostProcess.UserId) === 0;

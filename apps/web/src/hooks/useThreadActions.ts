@@ -4,7 +4,10 @@ import {
   scopeThreadRef,
   scopedThreadKey,
 } from "@getpaperplane/client-runtime/environment";
-import { settlePromise, squashAtomCommandFailure } from "@getpaperplane/client-runtime/state/runtime";
+import {
+  settlePromise,
+  squashAtomCommandFailure,
+} from "@getpaperplane/client-runtime/state/runtime";
 import { canSnooze, threadWokeAt } from "@getpaperplane/client-runtime/state/thread-settled";
 import { threadRuntimeCanArchive } from "@getpaperplane/client-runtime/state/models";
 import {

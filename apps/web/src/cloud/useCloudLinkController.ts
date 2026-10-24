@@ -90,7 +90,11 @@ export function useCloudLinkController() {
     const message =
       cause instanceof Error ? cause.message : "Could not update Paperplane Connect access.";
     const traceId = findErrorTraceId(cause);
-    console.error("[rove-connect] Could not update Paperplane Connect", { message, traceId, cause });
+    console.error("[rove-connect] Could not update Paperplane Connect", {
+      message,
+      traceId,
+      cause,
+    });
     setOperationError(traceId ? `${message} Trace ID: ${traceId}` : message);
     toastManager.add({
       type: "error",
@@ -133,7 +137,9 @@ export function useCloudLinkController() {
         !readEnvironmentScope(environmentId, AuthRelayWriteScope)
       ) {
         reportUpdateFailure(
-          new Error("This connection needs permission to view and manage Paperplane Connect settings."),
+          new Error(
+            "This connection needs permission to view and manage Paperplane Connect settings.",
+          ),
         );
         return false;
       }
@@ -142,7 +148,9 @@ export function useCloudLinkController() {
     const readLinkState = () => {
       const state = readCachedPrimaryCloudLinkState(target);
       if (state === null) {
-        reportUpdateFailure(new Error("Wait until the current Paperplane Connect settings can be read."));
+        reportUpdateFailure(
+          new Error("Wait until the current Paperplane Connect settings can be read."),
+        );
       }
       return state;
     };

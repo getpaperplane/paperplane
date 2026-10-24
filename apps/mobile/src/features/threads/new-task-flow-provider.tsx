@@ -24,7 +24,10 @@ import {
   ThreadId,
 } from "@getpaperplane/contracts";
 import { sanitizeNewRefName } from "@getpaperplane/shared/git";
-import { resolveNewThreadEnvMode, resolveProjectSettings } from "@getpaperplane/shared/projectSettings";
+import {
+  resolveNewThreadEnvMode,
+  resolveProjectSettings,
+} from "@getpaperplane/shared/projectSettings";
 import { parseRoveProjectFile } from "@getpaperplane/shared/roveProjectFile";
 import * as Arr from "effect/Array";
 import { pipe } from "effect/Function";

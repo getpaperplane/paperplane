@@ -48,15 +48,20 @@ it.effect("rejects an injected relay URL with a non-origin path", () =>
   makeRelayUrlConfig("https://embedded.example.test/path").pipe(provideEnv({}), Effect.flip),
 );
 
-it.effect("defaults hosted links to Paperplane without supplying relay or OAuth configuration", () =>
-  Effect.gen(function* () {
-    assert.equal(yield* hostedAppUrlConfig.pipe(provideEnv({})), "https://rove.hafiezulzikry.com");
-    yield* makeRelayUrlConfig("").pipe(provideEnv({}), Effect.flip);
-    yield* makeCloudCliOAuthConfig({
-      clerkPublishableKeyFallback: "",
-      clerkCliOAuthClientIdFallback: "",
-    }).pipe(provideEnv({}), Effect.flip);
-  }),
+it.effect(
+  "defaults hosted links to Paperplane without supplying relay or OAuth configuration",
+  () =>
+    Effect.gen(function* () {
+      assert.equal(
+        yield* hostedAppUrlConfig.pipe(provideEnv({})),
+        "https://rove.hafiezulzikry.com",
+      );
+      yield* makeRelayUrlConfig("").pipe(provideEnv({}), Effect.flip);
+      yield* makeCloudCliOAuthConfig({
+        clerkPublishableKeyFallback: "",
+        clerkCliOAuthClientIdFallback: "",
+      }).pipe(provideEnv({}), Effect.flip);
+    }),
 );
 
 it.effect("normalizes the hosted app URL to an absolute origin", () =>

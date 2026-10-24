@@ -11,7 +11,10 @@ import type {
   ServerInstallation,
   ServerSelfUpdateCapability,
 } from "@getpaperplane/contracts";
-import type { ServerUpdateStage, ServerUpdateState } from "@getpaperplane/client-runtime/state/server";
+import type {
+  ServerUpdateStage,
+  ServerUpdateState,
+} from "@getpaperplane/client-runtime/state/server";
 import {
   isAtomCommandInterrupted,
   squashAtomCommandFailure,

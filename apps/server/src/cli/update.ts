@@ -69,7 +69,9 @@ const resolveNewestVersion = Effect.fn("cli.update.resolve_newest")(function* (
       .pipe(
         Effect.flatMap(HttpClientResponse.filterStatusOk),
         Effect.flatMap((response) => response.text),
-        Effect.mapError(() => new CliUpdateError({ reason: "Could not list paperplane releases." })),
+        Effect.mapError(
+          () => new CliUpdateError({ reason: "Could not list paperplane releases." }),
+        ),
         Effect.timeoutOrElse({
           duration: RELEASE_INDEX_TIMEOUT,
           orElse: () =>
@@ -78,7 +80,8 @@ const resolveNewestVersion = Effect.fn("cli.update.resolve_newest")(function* (
       );
     const releases = yield* decodeReleaseIndex(body).pipe(
       Effect.mapError(
-        () => new CliUpdateError({ reason: "The paperplane release index had an unexpected shape." }),
+        () =>
+          new CliUpdateError({ reason: "The paperplane release index had an unexpected shape." }),
       ),
     );
     const version = newestCliReleaseVersion(releases, channel);
@@ -129,14 +132,14 @@ export const repointLauncher = Effect.fn("cli.update.repoint_launcher")(function
     const current = yield* fs.readFileString(shimPath).pipe(Effect.option);
     const quoted = Option.isSome(current) ? /^"([^"]+)"/m.exec(current.value)?.[1] : undefined;
     if (quoted === undefined || !ownsTarget(quoted)) return Option.none<string>();
-    yield* fs
-      .writeFileString(shimPath, `@echo off\r\n"${input.targetEntryPath}" %*`)
-      .pipe(
-        Effect.mapError(
-          () =>
-            new CliUpdateError({ reason: `Could not rewrite the paperplane launcher at ${shimPath}.` }),
-        ),
-      );
+    yield* fs.writeFileString(shimPath, `@echo off\r\n"${input.targetEntryPath}" %*`).pipe(
+      Effect.mapError(
+        () =>
+          new CliUpdateError({
+            reason: `Could not rewrite the paperplane launcher at ${shimPath}.`,
+          }),
+      ),
+    );
     return Option.some(shimPath);
   }
 

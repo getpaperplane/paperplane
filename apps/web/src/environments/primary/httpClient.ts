@@ -16,7 +16,9 @@ export interface PrimaryEnvironmentHttpClient {
 export const PrimaryEnvironmentHttpClient: Context.Service<
   PrimaryEnvironmentHttpClient,
   PrimaryEnvironmentHttpApiClient
-> = Context.Service("@getpaperplane/web/environments/primary/httpClient/PrimaryEnvironmentHttpClient");
+> = Context.Service(
+  "@getpaperplane/web/environments/primary/httpClient/PrimaryEnvironmentHttpClient",
+);
 
 const make = Effect.suspend(() =>
   makeEnvironmentHttpApiClient(resolvePrimaryEnvironmentHttpUrl("/")),

@@ -35,7 +35,10 @@ import type {
   ThreadPendingApproval,
   ThreadPendingUserInput,
 } from "@getpaperplane/client-runtime/state/thread-requests";
-import type { ThreadRunSummary, ThreadRuntimeSummary } from "@getpaperplane/client-runtime/state/shell";
+import type {
+  ThreadRunSummary,
+  ThreadRuntimeSummary,
+} from "@getpaperplane/client-runtime/state/shell";
 import { threadRuntimeHasInterruptibleRun } from "@getpaperplane/client-runtime/state/thread-execution";
 import { turnItemIsWorkspacePreparation } from "@getpaperplane/client-runtime/state/turn-item-presentation";
 

@@ -74,7 +74,10 @@ import {
   classifyMarkdownImageSource,
   markdownImageSourceFragment,
 } from "@getpaperplane/client-runtime/markdown-images";
-import { mediaFileReference, mediaUrlReference } from "@getpaperplane/client-runtime/media-reference";
+import {
+  mediaFileReference,
+  mediaUrlReference,
+} from "@getpaperplane/client-runtime/media-reference";
 import { MISSING_FILE_ACCESS_MESSAGE } from "@getpaperplane/client-runtime/state/assets";
 import { mediaKindFromPath, mediaMimeTypeFromExtension } from "@getpaperplane/shared/filePreview";
 import * as Cause from "effect/Cause";

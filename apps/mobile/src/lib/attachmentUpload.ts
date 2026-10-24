@@ -6,7 +6,10 @@ import {
   runAttachmentUploadCycle,
   verifyPersistedAttachmentUpload,
 } from "@getpaperplane/client-runtime/state/attachments";
-import { runAtomCommand, squashAtomCommandFailure } from "@getpaperplane/client-runtime/state/runtime";
+import {
+  runAtomCommand,
+  squashAtomCommandFailure,
+} from "@getpaperplane/client-runtime/state/runtime";
 import type {
   ChatFileAttachment,
   ChatImageAttachment,

@@ -1,4 +1,8 @@
-import { EnvironmentId, ThreadId, type ThreadJumpKeybindingCommand } from "@getpaperplane/contracts";
+import {
+  EnvironmentId,
+  ThreadId,
+  type ThreadJumpKeybindingCommand,
+} from "@getpaperplane/contracts";
 import { useEffect } from "react";
 
 export type HardwareKeyboardCommand =

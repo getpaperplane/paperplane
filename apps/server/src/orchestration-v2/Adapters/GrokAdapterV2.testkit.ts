@@ -10,7 +10,10 @@ import * as HostProcess from "@getpaperplane/shared/HostProcess";
 import { resolveSelfInvocation } from "@getpaperplane/shared/nodeRuntime";
 
 import * as TestProviderHost from "@getpaperplane/provider-testing/TestProviderHost";
-import { GROK_ACP_CANCEL_META, GROK_ACP_INITIALIZE_META } from "@getpaperplane/provider-grok/testing";
+import {
+  GROK_ACP_CANCEL_META,
+  GROK_ACP_INITIALIZE_META,
+} from "@getpaperplane/provider-grok/testing";
 import { makeXAiPromptCompletionRuntime } from "@getpaperplane/provider-grok/testing";
 import * as IdAllocator from "@getpaperplane/provider-core/server/IdAllocator";
 import * as ProviderContinuationRequests from "@getpaperplane/provider-core/server/ProviderContinuationRequests";

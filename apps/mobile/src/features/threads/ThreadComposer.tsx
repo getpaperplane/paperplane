@@ -4,7 +4,10 @@ import { useAppearancePreferences } from "../settings/appearance/AppearancePrefe
 import type { EnvironmentThreadShell } from "@getpaperplane/client-runtime/state/shell";
 import { useAtomValue } from "@effect/atom-react";
 import { clampFileAttachmentUploadBytes } from "@getpaperplane/client-runtime/state/attachments";
-import { pastedTextDisposition, replaceTextSelection } from "@getpaperplane/client-runtime/text-paste";
+import {
+  pastedTextDisposition,
+  replaceTextSelection,
+} from "@getpaperplane/client-runtime/text-paste";
 import {
   PROVIDER_SEND_TURN_MAX_ATTACHMENTS,
   PROVIDER_SEND_TURN_MAX_INPUT_CHARS,

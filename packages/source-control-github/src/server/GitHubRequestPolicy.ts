@@ -28,9 +28,12 @@ export const PinnedGitHubCredential = Context.Reference<{
   readonly host: string;
   readonly token: Redacted.Redacted<string>;
   readonly credentialFingerprint: string;
-} | null>("@getpaperplane/source-control-github/server/GitHubRequestPolicy/PinnedGitHubCredential", {
-  defaultValue: () => null,
-});
+} | null>(
+  "@getpaperplane/source-control-github/server/GitHubRequestPolicy/PinnedGitHubCredential",
+  {
+    defaultValue: () => null,
+  },
+);
 
 export class GitHubApiRequestError extends Schema.TaggedError<GitHubApiRequestError>()(
   "GitHubApiRequestError",

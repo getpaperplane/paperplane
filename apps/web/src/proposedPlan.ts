@@ -1,4 +1,7 @@
-import { stripDisplayedPlanMarkdown, proposedPlanTitle } from "@getpaperplane/shared/proposedPlanText";
+import {
+  stripDisplayedPlanMarkdown,
+  proposedPlanTitle,
+} from "@getpaperplane/shared/proposedPlanText";
 
 export function buildCollapsedProposedPlanPreviewMarkdown(
   planMarkdown: string,

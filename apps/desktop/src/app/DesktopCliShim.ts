@@ -178,9 +178,10 @@ export const install = Effect.gen(function* () {
   }).pipe(
     // Best-effort: nothing here may block the backend's start; commands then fall back to plain `paperplane`.
     Effect.catchCause((cause) =>
-      logWarning("could not install paperplane launcher", { shimPath, cause: Cause.pretty(cause) }).pipe(
-        Effect.as(Option.none<string>()),
-      ),
+      logWarning("could not install paperplane launcher", {
+        shimPath,
+        cause: Cause.pretty(cause),
+      }).pipe(Effect.as(Option.none<string>())),
     ),
     Effect.withSpan("desktop.cliShim.install"),
   );

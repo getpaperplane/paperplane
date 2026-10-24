@@ -1,6 +1,10 @@
 import { withAgentDeviceEnvironment } from "@getpaperplane/provider-core/server/mcpSession";
 import * as McpProviderSessions from "@getpaperplane/provider-core/server/McpProviderSessions";
-import { AntigravitySettings, ProviderDriverKind, ProviderSetupError } from "@getpaperplane/contracts";
+import {
+  AntigravitySettings,
+  ProviderDriverKind,
+  ProviderSetupError,
+} from "@getpaperplane/contracts";
 import * as HostProcess from "@getpaperplane/shared/HostProcess";
 import { resolveSelfInvocation } from "@getpaperplane/shared/nodeRuntime";
 import {

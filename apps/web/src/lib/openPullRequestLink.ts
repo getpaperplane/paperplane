@@ -4,7 +4,10 @@ import { useNavigate } from "@tanstack/react-router";
 import { type MouseEvent, useCallback, useMemo } from "react";
 
 import { sourceControlClients } from "@getpaperplane/client-runtime/source-control-clients";
-import { parseChangeRequestUrl, type ChangeRequestLink } from "@getpaperplane/shared/changeRequestUrl";
+import {
+  parseChangeRequestUrl,
+  type ChangeRequestLink,
+} from "@getpaperplane/shared/changeRequestUrl";
 import { sourceControlRepositorySelector } from "@getpaperplane/shared/sourceControl";
 
 import { useOpenLink } from "../browser/useOpenLink";
