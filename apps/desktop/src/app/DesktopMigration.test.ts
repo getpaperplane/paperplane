@@ -8,6 +8,7 @@ import { assert, describe, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import {
   DesktopMigrationError,
+  removeOldDesktopCliShims,
   migrationAttempt,
   decryptLinuxString,
   finishDesktopMigration,
@@ -92,6 +93,55 @@ const seedSecrets = (pending: string, token = linuxBlob("bearer-token")) => {
     }),
   );
 };
+
+describe("old desktop command cleanup", () => {
+  it.each(["linux", "darwin", "win32"] as const)(
+    "removes only exact-marker shims on %s",
+    (platform) => {
+      const baseDir = NodePath.join(root, ".paperplane");
+      const oldBin = NodePath.join(root, ".rove-code/bin");
+      const owned = NodePath.join(oldBin, platform === "win32" ? "rove.cmd" : "rove");
+      const marker = "Written by Rove Code: runs the desktop app's bundled rove CLI.";
+      write(
+        owned,
+        platform === "win32" ? `@echo off\r\nrem ${marker}\r\n` : `#!/bin/sh\n# ${marker}\n`,
+      );
+      const foreign = NodePath.join(baseDir, "bin/rove");
+      write(foreign, `echo '${marker}'\n`);
+      const links = NodePath.join(root, "path");
+      NodeFS.mkdirSync(links);
+      if (platform !== "win32") NodeFS.symlinkSync(owned, NodePath.join(links, "rove"));
+      removeOldDesktopCliShims({
+        homeDirectory: root,
+        baseDir,
+        platform,
+        linkDirectories: [links],
+      });
+      assert.isFalse(NodeFS.existsSync(owned));
+      assert.equal(NodeFS.readFileSync(foreign, "utf8"), `echo '${marker}'\n`);
+      assert.isFalse(NodeFS.existsSync(NodePath.join(links, "rove")));
+      removeOldDesktopCliShims({
+        homeDirectory: root,
+        baseDir,
+        platform,
+        linkDirectories: [links],
+      });
+    },
+  );
+  it("leaves a foreign rove link and its target untouched", () => {
+    const target = NodePath.join(root, "foreign");
+    write(target, "#!/bin/sh\necho user-command\n");
+    const link = NodePath.join(root, "rove");
+    NodeFS.symlinkSync(target, link);
+    removeOldDesktopCliShims({
+      homeDirectory: root,
+      baseDir: NodePath.join(root, ".paperplane"),
+      platform: "linux",
+      linkDirectories: [root],
+    });
+    assert.equal(NodeFS.readlinkSync(link), target);
+  });
+});
 
 describe("independent desktop profile", () => {
   it.each(["linux", "darwin", "win32"] as const)(

@@ -232,6 +232,25 @@ it.layer(NodeServices.layer)("DesktopCliCommand", (it) => {
     }).pipe(Effect.scoped),
   );
 
+  it.effect("replaces only the recorded old Windows PATH entry on upgrade", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const home = yield* fs.makeTempDirectoryScoped();
+      const oldBin = path.join(home, ".rove-code/bin");
+      const baseDir = path.join(home, ".paperplane");
+      const { registry, spawner } = fakePowerShell(`C:\\Tools;${oldBin};%USERPROFILE%\\mine`);
+      const command = yield* commandIn({ home, baseDir, platform: "win32" }, spawner);
+      const marker = path.join(baseDir, "userdata/cli-command-path-entry");
+      yield* fs.writeFileString(marker, `${oldBin}\n`);
+      yield* command.install;
+      expect(registry.path).toBe(`C:\\Tools;%USERPROFILE%\\mine;${path.join(baseDir, "bin")}`);
+      expect(yield* fs.readFileString(marker)).toBe(`${path.join(baseDir, "bin")}\n`);
+      yield* command.uninstall;
+      expect(registry.path).toBe("C:\\Tools;%USERPROFILE%\\mine");
+    }).pipe(Effect.scoped),
+  );
+
   it.effect("does not claim or remove a Windows PATH entry the user added", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;

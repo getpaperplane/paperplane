@@ -11,6 +11,7 @@ import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
 import * as DesktopCliShim from "./DesktopCliShim.ts";
 import * as DesktopEnvironment from "./DesktopEnvironment.ts";
+import { oldOwnedCliPath } from "./DesktopMigration.ts";
 
 // Settings → Install `paperplane` command, like VS Code's "Install 'code' command".
 // The app's launcher (see DesktopCliShim) lives in the Paperplane home and is off PATH
@@ -204,7 +205,26 @@ export const make = Effect.gen(function* () {
       return yield* fail("The paperplane command needs an installed app.");
     yield* ensureLauncher;
     if (windows) {
-      const entries = pathEntries(yield* readUserPath, ";");
+      let entries = pathEntries(yield* readUserPath, ";");
+      const previous = yield* fs.readFileString(ownedPathMarker).pipe(Effect.option);
+      const oldBin = oldOwnedCliPath(
+        environment.homeDirectory,
+        Option.getOrUndefined(previous),
+        path.join,
+      );
+      if (oldBin !== undefined && !sameWindowsPath(oldBin, binDirectory)) {
+        entries = entries.filter((entry) => !sameWindowsPath(entry, oldBin));
+        if (!entries.some((entry) => sameWindowsPath(entry, binDirectory)))
+          entries.push(binDirectory);
+        yield* writeUserPath(entries.join(";"));
+        yield* fs
+          .writeFileString(ownedPathMarker, `${binDirectory}\n`)
+          .pipe(
+            Effect.mapError(() =>
+              fail("Updated PATH but could not record the new command directory."),
+            ),
+          );
+      }
       if (!entries.some((entry) => sameWindowsPath(entry, binDirectory))) {
         yield* writeUserPath([...entries, binDirectory].join(";"));
         yield* fs

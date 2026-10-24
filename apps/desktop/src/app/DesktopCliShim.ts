@@ -4,6 +4,11 @@ import * as FileSystem from "effect/FileSystem";
 import * as Option from "effect/Option";
 
 import * as DesktopEnvironment from "./DesktopEnvironment.ts";
+import {
+  isOldDesktopCliShim,
+  removeOldDesktopCliShims,
+  migrationAttempt,
+} from "./DesktopMigration.ts";
 import { makeComponentLogger } from "./DesktopObservability.ts";
 
 // A desktop install puts no `paperplane` on PATH, so commands the server asks a person
@@ -14,7 +19,7 @@ import { makeComponentLogger } from "./DesktopObservability.ts";
 // so its launcher mounts the AppImage itself instead of pointing into it.
 const { logInfo, logWarning } = makeComponentLogger("desktop-cli-shim");
 
-export const MARKER = "Written by Rove Code: runs the desktop app's bundled rove CLI.";
+export const MARKER = "Written by Paperplane: runs the desktop app's bundled paperplane CLI.";
 
 /** Server entry inside the app, relative to its server root (an asar archive when packaged). */
 const SERVER_ENTRY = "apps/server/dist/bin.mjs";
@@ -161,7 +166,11 @@ export const install = Effect.gen(function* () {
 
   return yield* Effect.gen(function* () {
     const existing = yield* fs.readFileString(shimPath).pipe(Effect.option);
-    if (Option.isSome(existing) && !existing.value.includes(MARKER)) {
+    if (
+      Option.isSome(existing) &&
+      !existing.value.includes(MARKER) &&
+      !isOldDesktopCliShim(existing.value)
+    ) {
       // Someone else's file; leave it, and let commands fall back to plain `paperplane`.
       yield* logWarning("leaving a paperplane launcher the app did not write", { shimPath });
       return Option.none<string>();
@@ -174,6 +183,13 @@ export const install = Effect.gen(function* () {
       yield* fs.rename(staging, shimPath);
       yield* logInfo("installed paperplane launcher", { shimPath });
     }
+    yield* migrationAttempt(() =>
+      removeOldDesktopCliShims({
+        homeDirectory: environment.homeDirectory,
+        baseDir: environment.baseDir,
+        platform: environment.platform,
+      }),
+    );
     return Option.some(shimPath);
   }).pipe(
     // Best-effort: nothing here may block the backend's start; commands then fall back to plain `paperplane`.

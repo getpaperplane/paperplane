@@ -11,6 +11,68 @@ import { publishHomeMigration } from "@getpaperplane/shared/homeMigration";
 import { readLinuxSecret } from "../preview/BrowserImport/ChromiumKeys.ts";
 import * as LinuxBrowserSecret from "../preview/BrowserImport/LinuxBrowserSecret.ts";
 
+const OLD_CLI_MARKER = "Written by Rove Code: runs the desktop app's bundled rove CLI.";
+
+/** Exact historical comment line, not merely a mention in a user's script. */
+export function isOldDesktopCliShim(contents: string) {
+  return contents
+    .split(/\r?\n/)
+    .some((line) => line === `# ${OLD_CLI_MARKER}` || line === `rem ${OLD_CLI_MARKER}`);
+}
+
+/** The migrated private record proves which default-home directory the desktop added. */
+export function oldOwnedCliPath(
+  home: string,
+  record: string | undefined,
+  join: (...paths: string[]) => string,
+) {
+  const oldBin = join(home, ".rove-code", "bin");
+  const normalize = (value: string) => value.replace(/[\\/]+$/, "").toLowerCase();
+  return record !== undefined && normalize(record.trim()) === normalize(oldBin)
+    ? oldBin
+    : undefined;
+}
+
+/** Remove only marker-owned launchers and symlinks, after the new command is written. */
+export function removeOldDesktopCliShims(input: {
+  readonly homeDirectory: string;
+  readonly baseDir: string;
+  readonly platform: NodeJS.Platform;
+  readonly linkDirectories?: readonly string[];
+}) {
+  const owned = (filename: string) => {
+    try {
+      const info = NodeFS.statSync(filename);
+      return (
+        info.isFile() &&
+        info.size <= 16_384 &&
+        isOldDesktopCliShim(NodeFS.readFileSync(filename, "utf8"))
+      );
+    } catch (error) {
+      if (["ENOENT", "ENOTDIR"].includes((error as NodeJS.ErrnoException).code ?? "")) return false;
+      throw error;
+    }
+  };
+  const directories = input.linkDirectories ?? [
+    ...(input.platform === "darwin" ? ["/opt/homebrew/bin", "/usr/local/bin"] : []),
+    NodePath.join(input.homeDirectory, ".local/bin"),
+    NodePath.join(input.homeDirectory, "bin"),
+  ];
+  if (input.platform !== "win32") {
+    for (const directory of directories) {
+      const filename = NodePath.join(directory, "rove");
+      if (exists(filename) && NodeFS.lstatSync(filename).isSymbolicLink() && owned(filename))
+        NodeFS.unlinkSync(filename);
+    }
+  }
+  for (const base of new Set([input.baseDir, NodePath.join(input.homeDirectory, ".rove-code")])) {
+    for (const name of ["rove", "rove.cmd"]) {
+      const filename = NodePath.join(base, "bin", name);
+      if (owned(filename) && NodeFS.lstatSync(filename).isFile()) NodeFS.unlinkSync(filename);
+    }
+  }
+}
+
 export class DesktopMigrationError extends Schema.TaggedError<DesktopMigrationError>()(
   "DesktopMigrationError",
   { cause: Schema.Defect() },
