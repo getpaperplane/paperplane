@@ -165,7 +165,7 @@ export function museServeArgs(
 /** What Paperplane sends in MSP `initialize`; only full hosts ask for session MCP servers. */
 export function museInitializeParams(readOnly = false) {
   return {
-    clientInfo: { name: "rove_code", title: "Paperplane", version: "1" },
+    clientInfo: { name: "paperplane", title: "Paperplane", version: "1" },
     capabilities: { requestedCapabilities: readOnly ? [] : ["sessionMcp"] },
   };
 }
