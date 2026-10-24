@@ -39,7 +39,7 @@ describe("resolveNativeTerminalSurfaceView", () => {
     expoMocks.requireNativeView.mockReturnValue(nativeView);
     const { resolveNativeTerminalSurfaceView } = await import("./nativeTerminalModule");
     expect(resolveNativeTerminalSurfaceView()).toBe(nativeView);
-    expect(expoMocks.requireNativeView).toHaveBeenCalledWith("RoveTerminalSurface");
+    expect(expoMocks.requireNativeView).toHaveBeenCalledWith("PaperplaneTerminalSurface");
   });
 
   it("returns null when the view manager cannot be required", async () => {
@@ -57,7 +57,7 @@ describe("resolveNativeTerminalSurfaceView", () => {
     expect(consoleError).toHaveBeenCalledWith(
       expect.objectContaining({
         _tag: "NativeViewResolutionError",
-        nativeModuleName: "RoveTerminalSurface",
+        nativeModuleName: "PaperplaneTerminalSurface",
         cause,
       }),
     );

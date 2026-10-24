@@ -456,8 +456,8 @@ export default defineConfig({
           "apps/mobile/src/features/threads/thread-list-items.tsx",
           "apps/mobile/src/features/threads/thread-list-v2-items.tsx",
           "apps/mobile/src/lib/useMobileNavigationTheme.ts",
-          "apps/mobile/src/native/RoveComposerEditor.ios.tsx",
-          "apps/mobile/src/native/RoveComposerEditor.native.tsx",
+          "apps/mobile/src/native/PaperplaneComposerEditor.ios.tsx",
+          "apps/mobile/src/native/PaperplaneComposerEditor.native.tsx",
           "apps/mobile/src/native/SelectableMarkdownText.tsx",
         ],
         rules: {

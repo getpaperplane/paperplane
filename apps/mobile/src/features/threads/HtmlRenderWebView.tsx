@@ -50,7 +50,7 @@ function postTheme(view: WebView<object> | null, theme: HtmlRenderTheme) {
   );
 }
 
-const OVERFLOW_MESSAGE_TYPE = "rove-html-render-overflow";
+const OVERFLOW_MESSAGE_TYPE = "paperplane-html-render-overflow";
 
 // Reports which ways the page overflows its frame, so a feed row only takes
 // scroll gestures from a page that can use them.

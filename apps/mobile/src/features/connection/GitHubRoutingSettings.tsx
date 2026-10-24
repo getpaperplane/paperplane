@@ -58,7 +58,7 @@ export function GitHubRoutingSettings() {
                 onPress={() => setExpanded(expanded === environmentId ? null : environmentId)}
               >
                 <View className="min-w-0 flex-1 gap-0.5">
-                  <Text className="text-base font-rove-bold text-foreground">
+                  <Text className="text-base font-paperplane-bold text-foreground">
                     {entry.target.label}
                   </Text>
                   <Text className="text-xs text-foreground-muted" numberOfLines={1}>

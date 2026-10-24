@@ -343,7 +343,10 @@ function DevicePreviewScreen({
                 icon="xmark"
                 onPress={onClose}
               />
-              <AppText numberOfLines={1} className="flex-1 text-center font-rove-medium text-base">
+              <AppText
+                numberOfLines={1}
+                className="flex-1 text-center font-paperplane-medium text-base"
+              >
                 {preview?.name ?? "Devices"}
               </AppText>
               {isDesktop ? null : (

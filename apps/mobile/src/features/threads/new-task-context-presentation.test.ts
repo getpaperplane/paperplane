@@ -41,14 +41,18 @@ describe("resolveNewTaskLocalWorkspaceSelection", () => {
     expect(
       resolveNewTaskLocalWorkspaceSelection({
         branches: [
-          { name: "feature/split", current: true, worktreePath: "/repo/.rove/worktrees/split" },
+          {
+            name: "feature/split",
+            current: true,
+            worktreePath: "/repo/.paperplane/worktrees/split",
+          },
           { name: "main", current: false, worktreePath: "/repo" },
         ],
         projectCwd: "/repo",
       }),
     ).toEqual({
       branch: "feature/split",
-      worktreePath: "/repo/.rove/worktrees/split",
+      worktreePath: "/repo/.paperplane/worktrees/split",
       awaitsCurrentBranch: false,
     });
   });
@@ -60,9 +64,9 @@ describe("resolveNewTaskBranchWorktreePath", () => {
       resolveNewTaskBranchWorktreePath({
         workspaceMode: "local",
         projectCwd: "/repo",
-        branchWorktreePath: "/repo/.rove/worktrees/feature",
+        branchWorktreePath: "/repo/.paperplane/worktrees/feature",
       }),
-    ).toBe("/repo/.rove/worktrees/feature");
+    ).toBe("/repo/.paperplane/worktrees/feature");
   });
 
   it("keeps the project checkout represented by a null override", () => {
@@ -80,7 +84,7 @@ describe("resolveNewTaskBranchWorktreePath", () => {
       resolveNewTaskBranchWorktreePath({
         workspaceMode: "worktree",
         projectCwd: "/repo",
-        branchWorktreePath: "/repo/.rove/worktrees/feature",
+        branchWorktreePath: "/repo/.paperplane/worktrees/feature",
       }),
     ).toBeNull();
   });

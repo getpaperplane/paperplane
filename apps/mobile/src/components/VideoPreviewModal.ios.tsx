@@ -20,7 +20,7 @@ const NativeControls = requireNativeModule<{
     identifier: string,
   ): Promise<void>;
   dismissVideo(identifier: string): Promise<void>;
-}>("RoveNativeControls");
+}>("PaperplaneNativeControls");
 
 function NativeVideoPreview(props: {
   readonly source: VideoPreviewSource;

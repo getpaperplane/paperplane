@@ -1,5 +1,5 @@
 import * as Dialog from "../../components/ui/Dialog";
-import type { ComposerTextPaste } from "../../native/RoveComposerEditor.types";
+import type { ComposerTextPaste } from "../../native/PaperplaneComposerEditor.types";
 import { useAppearancePreferences } from "../settings/appearance/AppearancePreferencesProvider";
 import type { EnvironmentThreadShell } from "@getpaperplane/client-runtime/state/shell";
 import { useAtomValue } from "@effect/atom-react";
@@ -17,7 +17,7 @@ import {
   type ModelSelection,
   type ProviderInteractionMode,
   type RuntimeMode,
-  type ServerConfig as RoveServerConfig,
+  type ServerConfig as PaperplaneServerConfig,
   type UsageLimitsReport,
 } from "@getpaperplane/contracts";
 import {
@@ -165,7 +165,7 @@ export interface ThreadComposerProps {
   readonly selectedThread: EnvironmentThreadShell;
   readonly reportedModelSelection?: ModelSelection | null;
   readonly hasCompactableConversation: boolean;
-  readonly serverConfig: RoveServerConfig | null;
+  readonly serverConfig: PaperplaneServerConfig | null;
   readonly queueCount: number;
   readonly activeThreadBusy: boolean;
   readonly canStopThread: boolean;
@@ -1080,7 +1080,7 @@ export const ThreadComposer = memo(function ThreadComposer(props: ThreadComposer
                 ))}
                 {stripAttachments.length > 3 ? (
                   <View className="size-[30px] items-center justify-center rounded-lg bg-subtle-strong">
-                    <Text className="text-foreground-muted text-2xs font-rove-bold">
+                    <Text className="text-foreground-muted text-2xs font-paperplane-bold">
                       +{stripAttachments.length - 3}
                     </Text>
                   </View>

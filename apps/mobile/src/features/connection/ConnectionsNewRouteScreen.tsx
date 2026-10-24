@@ -234,7 +234,9 @@ export function ConnectionsNewRouteScreen({
           />
 
           <View collapsable={false} className="gap-2">
-            <Text className="px-4 text-sm font-rove-medium text-foreground-muted">Or enter it</Text>
+            <Text className="px-4 text-sm font-paperplane-medium text-foreground-muted">
+              Or enter it
+            </Text>
             <View
               collapsable={false}
               className={cn(
@@ -273,7 +275,7 @@ export function ConnectionsNewRouteScreen({
             </Text>
           </View>
 
-          {hasCloudPublicConfig() ? <RoveConnectSection /> : null}
+          {hasCloudPublicConfig() ? <PaperplaneConnectSection /> : null}
         </View>
       </ScrollView>
     </SettingsScreen>
@@ -363,7 +365,7 @@ function PairingScanCard(props: {
               />
               <Text
                 className={cn(
-                  "font-rove-medium text-sm",
+                  "font-paperplane-medium text-sm",
                   light ? "text-black/70" : "text-white/80",
                 )}
               >
@@ -385,7 +387,7 @@ function PairingScanCard(props: {
  * published environments connect with a switch; signed out, one row opens the
  * Paperplane Account sheet.
  */
-function RoveConnectSection() {
+function PaperplaneConnectSection() {
   const { isLoaded, isSignedIn } = useAuth({ treatPendingAsSignedOut: false });
   const navigation = useNavigation();
   const { connectedEnvironments, onSetEnvironmentEnabled, onRemoveEnvironmentPress } =
@@ -397,7 +399,7 @@ function RoveConnectSection() {
 
   return (
     <View collapsable={false} className="gap-2">
-      <Text className="px-4 text-sm font-rove-medium text-foreground-muted">
+      <Text className="px-4 text-sm font-paperplane-medium text-foreground-muted">
         Or use the managed relay
       </Text>
       {isSignedIn ? (

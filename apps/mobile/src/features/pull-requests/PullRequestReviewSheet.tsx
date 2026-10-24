@@ -187,7 +187,7 @@ export function PullRequestReviewSheet({
       />
       {reviewing && store.draft.comments.length ? (
         <View className="gap-2">
-          <Text className="text-sm font-rove-medium">
+          <Text className="text-sm font-paperplane-medium">
             {store.draft.comments.length} pending line{" "}
             {store.draft.comments.length === 1 ? "comment" : "comments"}
           </Text>

@@ -49,7 +49,7 @@ export function DeviceStreamWebView({
     <StreamWebView
       ref={ref}
       script={deviceStreamScript}
-      globalName="RoveDeviceStream"
+      globalName="PaperplaneDeviceStream"
       subject="device"
       configuration={configuration}
       background={props.colors.background}

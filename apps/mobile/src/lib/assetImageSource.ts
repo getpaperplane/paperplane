@@ -14,7 +14,7 @@ export function assetImageSource(
   return resource._tag === "attachment"
     ? {
         uri,
-        cacheKey: `rove-attachment:${JSON.stringify([environmentId, resource.attachmentId])}`,
+        cacheKey: `paperplane-attachment:${JSON.stringify([environmentId, resource.attachmentId])}`,
       }
     : { uri };
 }

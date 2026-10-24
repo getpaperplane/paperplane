@@ -1435,7 +1435,7 @@ describe("buildThreadFeed", () => {
 
   it("pretty prints Paperplane MCP dynamic tool activities and attaches the product logo", () => {
     const toolItem: OrchestrationV2TurnItem = {
-      ...base("item-rove-tool", "2026-06-20T00:00:04.000Z", 3),
+      ...base("item-paperplane-tool", "2026-06-20T00:00:04.000Z", 3),
       type: "dynamic_tool",
       toolName: "mcp__paperplane__paperplane_thread_read",
       input: { threadId: "thread-child" },

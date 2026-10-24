@@ -118,7 +118,7 @@ function AttachmentDocumentBody(props: {
                           selectable
                           className={
                             rowIndex === 0
-                              ? "text-sm font-rove-semibold text-foreground"
+                              ? "text-sm font-paperplane-semibold text-foreground"
                               : "text-sm text-foreground"
                           }
                         >

@@ -34,7 +34,7 @@ export function WorktreeSetupSheet({ children, height, onClose }: WorktreeSetupS
                   onPress={onClose}
                   className="min-h-11 justify-center px-2"
                 >
-                  <Text className="font-rove-medium text-sm text-foreground">Done</Text>
+                  <Text className="font-paperplane-medium text-sm text-foreground">Done</Text>
                 </Pressable>
               }
             />

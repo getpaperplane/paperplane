@@ -4,7 +4,7 @@ import { useChildThreadInputs, useThreadReportedModelSelection } from "../../sta
 import { UsageLimitRecoveryCard } from "./UsageLimitRecoveryCard";
 import { useNavigation } from "@react-navigation/native";
 import type { WorktreeSetupCardProps } from "./worktree-setup-card";
-import type { ComposerTextPaste } from "../../native/RoveComposerEditor.types";
+import type { ComposerTextPaste } from "../../native/PaperplaneComposerEditor.types";
 import { type EnvironmentConnectionPhase } from "@getpaperplane/client-runtime/connection";
 import type { EnvironmentThreadShell } from "@getpaperplane/client-runtime/state/shell";
 import type { HandoffEndpoints } from "@getpaperplane/client-runtime/handoff";
@@ -28,7 +28,7 @@ import type {
   RuntimeMode,
   RuntimeRequestId,
   ScopedThreadRef,
-  ServerConfig as RoveServerConfig,
+  ServerConfig as PaperplaneServerConfig,
   ThreadId,
   UsageLimitsReport,
 } from "@getpaperplane/contracts";
@@ -224,7 +224,7 @@ export interface ThreadDetailScreenProps {
   readonly selectedThreadQueueCount: number;
   readonly queuedMessages: ReadonlyArray<QueuedThreadMessage>;
   readonly dispatchingMessageId: MessageId | null;
-  readonly serverConfig: RoveServerConfig | null;
+  readonly serverConfig: PaperplaneServerConfig | null;
   readonly layoutVariant?: LayoutVariant;
   readonly usesAutomaticContentInsets?: boolean;
   readonly onHeaderMaterialVisibilityChange?: (visible: boolean) => void;

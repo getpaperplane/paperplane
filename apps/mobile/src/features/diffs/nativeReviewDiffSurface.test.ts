@@ -41,7 +41,7 @@ describe("resolveNativeReviewDiffView", () => {
     expect(resolvedView).not.toBeNull();
     expect(resolvedView).not.toBe(nativeView);
     expect(resolveNativeReviewDiffView()).toBe(resolvedView);
-    expect(expoMocks.requireNativeView).toHaveBeenCalledWith("RoveReviewDiffSurface");
+    expect(expoMocks.requireNativeView).toHaveBeenCalledWith("PaperplaneReviewDiffSurface");
   });
 
   it("returns null when the view manager cannot be required", async () => {
@@ -59,7 +59,7 @@ describe("resolveNativeReviewDiffView", () => {
     expect(consoleError).toHaveBeenCalledWith(
       expect.objectContaining({
         _tag: "NativeViewResolutionError",
-        nativeModuleName: "RoveReviewDiffSurface",
+        nativeModuleName: "PaperplaneReviewDiffSurface",
         cause,
       }),
     );
@@ -73,18 +73,18 @@ describe("isPendingNativeViewRegistration", () => {
 
     expect(
       isPendingNativeViewRegistration(
-        new Error("Unable to find the 'RoveReviewDiffSurface' view for this native tag"),
+        new Error("Unable to find the 'PaperplaneReviewDiffSurface' view for this native tag"),
       ),
     ).toBe(true);
     expect(
       isPendingNativeViewRegistration(
-        new Error("Unable to find the 'RoveReviewDiffView' view for this native tag"),
+        new Error("Unable to find the 'PaperplaneReviewDiffView' view for this native tag"),
       ),
     ).toBe(false);
     expect(
       isPendingNativeViewRegistration(
         new Error(
-          "Unable to find the class io.github.getpaperplane.paperplane.reviewdiff.RoveReviewDiffView view with tag 1150",
+          "Unable to find the class io.github.getpaperplane.paperplane.reviewdiff.PaperplaneReviewDiffView view with tag 1150",
         ),
       ),
     ).toBe(true);

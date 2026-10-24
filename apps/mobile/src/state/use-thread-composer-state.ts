@@ -1,7 +1,7 @@
 import * as Dialog from "../components/ui/Dialog";
 import { AuthOrchestrationOperateScope } from "@getpaperplane/contracts";
 import { readEnvironmentScope } from "./session";
-import type { ComposerTextPaste } from "../native/RoveComposerEditor.types";
+import type { ComposerTextPaste } from "../native/PaperplaneComposerEditor.types";
 import { useAtomValue } from "@effect/atom-react";
 import { threadRuntimeIsActive } from "@getpaperplane/client-runtime/state/shell";
 import { resolvePendingHandoff } from "@getpaperplane/client-runtime/handoff";

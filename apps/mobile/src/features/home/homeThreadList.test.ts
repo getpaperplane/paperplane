@@ -137,13 +137,13 @@ describe("home project scopes", () => {
       makeProject({
         environmentId: localEnvironmentId,
         id: ProjectId.make("project-local"),
-        title: "rove",
+        title: "paperplane",
         repositoryIdentity,
       }),
       makeProject({
         environmentId: remoteEnvironmentId,
         id: ProjectId.make("project-remote"),
-        title: "rove",
+        title: "paperplane",
         repositoryIdentity,
       }),
     ];
@@ -155,7 +155,7 @@ describe("home project scopes", () => {
     });
 
     expect(scopes).toHaveLength(1);
-    expect(scopes[0]?.title).toBe("rove");
+    expect(scopes[0]?.title).toBe("paperplane");
     expect(scopes[0]?.projects).toEqual(projects);
     expect(scopes[0]?.projectRefs).toEqual(
       projects.map((project) => ({
@@ -180,22 +180,22 @@ describe("home project scopes", () => {
       makeProject({
         environmentId: localEnvironmentId,
         id: ProjectId.make("project-local"),
-        title: "rove",
+        title: "paperplane",
         repositoryIdentity,
       }),
       makeProject({
         environmentId: remoteEnvironmentId,
         id: ProjectId.make("project-remote-with-identity"),
-        title: "rove",
-        workspaceRoot: "/remote/rove",
+        title: "paperplane",
+        workspaceRoot: "/remote/paperplane",
         repositoryIdentity,
         updatedAt: "2026-06-01T00:00:00.000Z",
       }),
       makeProject({
         environmentId: remoteEnvironmentId,
         id: ProjectId.make("project-remote-fresh"),
-        title: "rove",
-        workspaceRoot: "/remote/rove/",
+        title: "paperplane",
+        workspaceRoot: "/remote/paperplane/",
         updatedAt: "2026-06-02T00:00:00.000Z",
       }),
     ];
@@ -301,14 +301,14 @@ describe("home project scopes", () => {
     const olderMember = makeProject({
       environmentId: localEnvironmentId,
       id: ProjectId.make("project-older-member"),
-      title: "rove",
+      title: "paperplane",
       updatedAt: "2026-06-01T00:00:00.000Z",
       repositoryIdentity,
     });
     const newerMember = makeProject({
       environmentId: remoteEnvironmentId,
       id: ProjectId.make("project-newer-member"),
-      title: "rove",
+      title: "paperplane",
       updatedAt: "2026-06-03T00:00:00.000Z",
       repositoryIdentity,
     });

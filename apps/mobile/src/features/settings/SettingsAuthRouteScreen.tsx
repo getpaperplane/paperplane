@@ -9,7 +9,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
 import { View } from "react-native";
 
 import { hasCloudPublicConfig } from "../cloud/publicConfig";
-import { RoveConnectProfilePage } from "../cloud/RoveConnectProfilePage";
+import { PaperplaneConnectProfilePage } from "../cloud/PaperplaneConnectProfilePage";
 
 // Custom rows in Clerk's native profile. Mirrors the web UserButton pages.
 const USER_PROFILE_CUSTOM_PAGES = [
@@ -17,7 +17,7 @@ const USER_PROFILE_CUSTOM_PAGES = [
     path: "paperplane-connect",
     label: "Paperplane Connect",
     icon: "globe",
-    content: <RoveConnectProfilePage />,
+    content: <PaperplaneConnectProfilePage />,
   },
 ] satisfies UserProfileCustomPage[];
 

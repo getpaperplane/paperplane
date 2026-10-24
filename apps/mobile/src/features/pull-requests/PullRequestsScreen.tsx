@@ -330,7 +330,7 @@ export function PullRequestsScreen(
               className="items-center gap-2 px-8 py-4"
             >
               <Text className="text-xs text-foreground-muted">{result.loadMoreError}</Text>
-              <Text className="text-sm font-rove-medium text-link">Try again</Text>
+              <Text className="text-sm font-paperplane-medium text-link">Try again</Text>
             </Pressable>
           ) : undefined
         }

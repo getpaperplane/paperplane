@@ -703,14 +703,14 @@ function NotFoundScreen() {
       }}
       style={[{ flex: 1 }, screenBgStyle]}
     >
-      <Text className="text-3xl font-rove-bold text-foreground" selectable>
+      <Text className="text-3xl font-paperplane-bold text-foreground" selectable>
         Route not found
       </Text>
       <Pressable
         style={returnHomeButtonStyle}
         onPress={() => navigation.dispatch(StackActions.replace("Home"))}
       >
-        <Text className="text-base font-rove-bold text-primary-foreground">Return home</Text>
+        <Text className="text-base font-paperplane-bold text-primary-foreground">Return home</Text>
       </Pressable>
     </ScrollView>
   );

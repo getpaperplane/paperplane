@@ -250,7 +250,7 @@ function EnvironmentEditor(props: {
     publish(generic.map((entry, i) => (i === index ? row : entry)));
   return (
     <View>
-      <Text className="px-4 pt-3 text-sm font-rove-medium text-foreground">Variables</Text>
+      <Text className="px-4 pt-3 text-sm font-paperplane-medium text-foreground">Variables</Text>
       <Text className="px-4 text-xs text-foreground-muted">
         API keys, base URLs and other per-instance settings. Sensitive values stay on the
         environment and are never shown again.
@@ -319,7 +319,7 @@ function CommandArguments(props: {
     props.onChange(withProviderCommandArgs(props.config, next));
   return (
     <View>
-      <Text className="px-4 pt-3 text-sm font-rove-medium text-foreground">Arguments</Text>
+      <Text className="px-4 pt-3 text-sm font-paperplane-medium text-foreground">Arguments</Text>
       <Text className="px-4 text-xs text-foreground-muted">
         One literal argument per row, in launch order.
       </Text>

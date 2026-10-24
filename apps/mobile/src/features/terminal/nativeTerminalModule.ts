@@ -5,7 +5,7 @@ import { requireNativeView, requireOptionalNativeModule } from "expo";
 import { NativeViewResolutionError } from "../../native/nativeViewResolutionError";
 import * as RuntimePredicate from "effect/Predicate";
 
-const NATIVE_TERMINAL_MODULE_NAME = "RoveTerminalSurface";
+const NATIVE_TERMINAL_MODULE_NAME = "PaperplaneTerminalSurface";
 
 interface ExpoViewConfig {
   readonly __expoViewConfig?: never;

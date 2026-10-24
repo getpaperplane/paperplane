@@ -252,7 +252,7 @@ export function AgentActivity(
   // the glyph's aspect ratio so it never distorts.
   const renderLogo = (height: number, color: Foreground) => (
     <HStack modifiers={[frame({ width: height * 1.5, height }), foregroundStyle(color)]}>
-      <Image assetName="RoveMark" modifiers={[resizable()]} />
+      <Image assetName="PaperplaneMark" modifiers={[resizable()]} />
     </HStack>
   );
 

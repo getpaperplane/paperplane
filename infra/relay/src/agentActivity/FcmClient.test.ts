@@ -52,7 +52,7 @@ const config = {
 const input = {
   token: "device-token",
   packageName: "io.github.getpaperplane.paperplane.dev",
-  data: { rove_kind: "agent_activity", active: "true" },
+  data: { paperplane_kind: "agent_activity", active: "true" },
   alert: false,
 };
 

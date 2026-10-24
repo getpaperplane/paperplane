@@ -340,14 +340,14 @@ importers:
         specifier: workspace:*
         version: link:../../packages/contracts
       '@getpaperplane/mobile-review-diff-native':
-        specifier: file:./modules/rove-review-diff
-        version: file:apps/mobile/modules/rove-review-diff
+        specifier: file:./modules/paperplane-review-diff
+        version: file:apps/mobile/modules/paperplane-review-diff
       '@getpaperplane/mobile-source-text':
-        specifier: file:./modules/rove-source-text
-        version: file:apps/mobile/modules/rove-source-text(react-native@0.88.0(@babel/core@7.29.7)(@react-native/metro-config@0.88.0(@babel/core@7.29.7)(bufferutil@4.1.0)(utf-8-validate@6.0.6))(@types/react@19.3.0)(bufferutil@4.1.0)(react@19.3.0)(utf-8-validate@6.0.6))(react@19.3.0)
+        specifier: file:./modules/paperplane-source-text
+        version: file:apps/mobile/modules/paperplane-source-text(react-native@0.88.0(@babel/core@7.29.7)(@react-native/metro-config@0.88.0(@babel/core@7.29.7)(bufferutil@4.1.0)(utf-8-validate@6.0.6))(@types/react@19.3.0)(bufferutil@4.1.0)(react@19.3.0)(utf-8-validate@6.0.6))(react@19.3.0)
       '@getpaperplane/mobile-terminal-native':
-        specifier: file:./modules/rove-terminal
-        version: file:apps/mobile/modules/rove-terminal
+        specifier: file:./modules/paperplane-terminal
+        version: file:apps/mobile/modules/paperplane-terminal
       '@getpaperplane/provider-acp-registry':
         specifier: workspace:*
         version: link:../../packages/provider-acp-registry
@@ -4135,17 +4135,17 @@ packages:
   '@formkit/auto-animate@0.9.0':
     resolution: {integrity: sha512-VhP4zEAacXS3dfTpJpJ88QdLqMTcabMg0jwpOSxZ/VzfQVfl3GkZSCZThhGC5uhq/TxPHPzW0dzr4H9Bb1OgKA==}
 
-  '@getpaperplane/mobile-review-diff-native@file:apps/mobile/modules/rove-review-diff':
-    resolution: {directory: apps/mobile/modules/rove-review-diff, type: directory}
+  '@getpaperplane/mobile-review-diff-native@file:apps/mobile/modules/paperplane-review-diff':
+    resolution: {directory: apps/mobile/modules/paperplane-review-diff, type: directory}
 
-  '@getpaperplane/mobile-source-text@file:apps/mobile/modules/rove-source-text':
-    resolution: {directory: apps/mobile/modules/rove-source-text, type: directory}
+  '@getpaperplane/mobile-source-text@file:apps/mobile/modules/paperplane-source-text':
+    resolution: {directory: apps/mobile/modules/paperplane-source-text, type: directory}
     peerDependencies:
       react: '*'
       react-native: '*'
 
-  '@getpaperplane/mobile-terminal-native@file:apps/mobile/modules/rove-terminal':
-    resolution: {directory: apps/mobile/modules/rove-terminal, type: directory}
+  '@getpaperplane/mobile-terminal-native@file:apps/mobile/modules/paperplane-terminal':
+    resolution: {directory: apps/mobile/modules/paperplane-terminal, type: directory}
 
   '@google/genai@2.21.0':
     resolution: {integrity: sha512-+PDtco2/Z0ONdzCGekCoCT+O1VJS9xJQNN4XzQpXG/t3El/SWWMkCWlFRO1KmivOHPa4Q0VjUYu1HBKCZ/v33Q==}
@@ -15674,14 +15674,14 @@ snapshots:
 
   '@formkit/auto-animate@0.9.0': {}
 
-  '@getpaperplane/mobile-review-diff-native@file:apps/mobile/modules/rove-review-diff': {}
+  '@getpaperplane/mobile-review-diff-native@file:apps/mobile/modules/paperplane-review-diff': {}
 
-  '@getpaperplane/mobile-source-text@file:apps/mobile/modules/rove-source-text(react-native@0.88.0(@babel/core@7.29.7)(@react-native/metro-config@0.88.0(@babel/core@7.29.7)(bufferutil@4.1.0)(utf-8-validate@6.0.6))(@types/react@19.3.0)(bufferutil@4.1.0)(react@19.3.0)(utf-8-validate@6.0.6))(react@19.3.0)':
+  '@getpaperplane/mobile-source-text@file:apps/mobile/modules/paperplane-source-text(react-native@0.88.0(@babel/core@7.29.7)(@react-native/metro-config@0.88.0(@babel/core@7.29.7)(bufferutil@4.1.0)(utf-8-validate@6.0.6))(@types/react@19.3.0)(bufferutil@4.1.0)(react@19.3.0)(utf-8-validate@6.0.6))(react@19.3.0)':
     dependencies:
       react: 19.3.0
       react-native: 0.88.0(@babel/core@7.29.7)(@react-native/metro-config@0.88.0(@babel/core@7.29.7)(bufferutil@4.1.0)(utf-8-validate@6.0.6))(@types/react@19.3.0)(bufferutil@4.1.0)(react@19.3.0)(utf-8-validate@6.0.6)
 
-  '@getpaperplane/mobile-terminal-native@file:apps/mobile/modules/rove-terminal': {}
+  '@getpaperplane/mobile-terminal-native@file:apps/mobile/modules/paperplane-terminal': {}
 
   '@google/genai@2.21.0(@modelcontextprotocol/sdk@1.29.0(zod@4.6.5))(bufferutil@4.1.0)(utf-8-validate@6.0.6)':
     dependencies:

@@ -33,7 +33,7 @@ export function NewThreadButton(props: {
         type="monochrome"
       />
       {props.extended && props.expanded !== false ? (
-        <AppText className="text-[16px] font-rove-medium text-primary-foreground">
+        <AppText className="text-[16px] font-paperplane-medium text-primary-foreground">
           New thread
         </AppText>
       ) : null}

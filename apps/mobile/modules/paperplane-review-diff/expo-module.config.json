@@ -1,0 +1,10 @@
+{
+  "platforms": ["apple", "android"],
+  "apple": {
+    "modules": ["PaperplaneReviewDiffModule"],
+    "podspecPath": "PaperplaneReviewDiffNative.podspec"
+  },
+  "android": {
+    "modules": ["io.github.getpaperplane.paperplane.reviewdiff.PaperplaneReviewDiffModule"]
+  }
+}

@@ -103,7 +103,7 @@ export function DesktopStreamView({
     return (
       <StreamWebView
         script={desktopStreamScript}
-        globalName="RoveDesktopStream"
+        globalName="PaperplaneDesktopStream"
         subject="desktop"
         configuration={configuration}
         background={background}

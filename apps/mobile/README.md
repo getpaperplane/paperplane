@@ -72,7 +72,7 @@ entitlement, and native Sign in with Apple entitlement; builds without this opt-
 
 ```bash
 PAPERPLANE_IOS_PERSONAL_TEAM=1 \
-PAPERPLANE_IOS_PERSONAL_TEAM_BUNDLE_ID=com.example.rove.dev \
+PAPERPLANE_IOS_PERSONAL_TEAM_BUNDLE_ID=com.example.paperplane.dev \
 vp run ios:dev
 ```
 
@@ -86,7 +86,7 @@ The Personal Team equivalent also needs a unique bundle identifier:
 
 ```bash
 PAPERPLANE_IOS_PERSONAL_TEAM=1 \
-PAPERPLANE_IOS_PERSONAL_TEAM_BUNDLE_ID=com.example.rove \
+PAPERPLANE_IOS_PERSONAL_TEAM_BUNDLE_ID=com.example.paperplane \
 vp run ios:release
 ```
 

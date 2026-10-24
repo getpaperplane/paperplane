@@ -20,18 +20,20 @@ describe("legal document destinations", () => {
   });
 
   it("uses only the configured site's legal documents", async () => {
-    const documents = await legalDocumentsFor("https://rove.example.test/docs/?campaign=app");
-    expect(documents.LEGAL_URL).toBe("https://rove.example.test/docs/legal");
+    const documents = await legalDocumentsFor("https://paperplane.example.test/docs/?campaign=app");
+    expect(documents.LEGAL_URL).toBe("https://paperplane.example.test/docs/legal");
     for (const path of [
       "legal/",
       "privacy-policy?source=app",
       "terms-of-service#updates",
       "security-policy",
     ]) {
-      expect(documents.isLegalDocumentUrl(`https://rove.example.test/docs/${path}`)).toBe(true);
+      expect(documents.isLegalDocumentUrl(`https://paperplane.example.test/docs/${path}`)).toBe(
+        true,
+      );
     }
     for (const url of [
-      "https://rove.example.test/docs/download",
+      "https://paperplane.example.test/docs/download",
       "https://t3.codes/legal",
       "javascript:alert(1)",
       "not-a-url",

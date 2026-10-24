@@ -54,7 +54,9 @@ const units = [
 ] as const;
 
 function systemUses24HourClock() {
-  return requireNativeModule<{ is24HourFormat(): boolean }>("RoveNativeControls").is24HourFormat();
+  return requireNativeModule<{ is24HourFormat(): boolean }>(
+    "PaperplaneNativeControls",
+  ).is24HourFormat();
 }
 
 export function CustomSnoozeSheet(props: Props) {

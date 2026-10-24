@@ -236,7 +236,7 @@ export function MobileEnrichedMarkdownText(props: SelectableMarkdownTextProps) {
       htmlAttributes: {
         "data-paperplane-context-fragment": encodeURIComponent(props.contextClipboardFragment!),
       },
-      mimeTypes: { "app.rove.context-fragment": props.contextClipboardFragment! },
+      mimeTypes: { "app.paperplane.context-fragment": props.contextClipboardFragment! },
     };
   }, [props.contextClipboardFragment, props.markdown]);
   const markdownStyle = useMemo(

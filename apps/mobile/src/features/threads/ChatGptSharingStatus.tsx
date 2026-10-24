@@ -33,7 +33,7 @@ export function ChatGptSharingStatus({ provider }: { provider: ServerProvider | 
         className="min-h-11 justify-center"
         onPress={() => void Linking.openURL(CHATGPT_USAGE_URL).catch(() => undefined)}
       >
-        <Text className="text-xs font-rove-medium text-primary">Manage usage</Text>
+        <Text className="text-xs font-paperplane-medium text-primary">Manage usage</Text>
       </Pressable>
     </View>
   );

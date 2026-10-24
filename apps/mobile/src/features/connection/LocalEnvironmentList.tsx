@@ -38,7 +38,7 @@ export function LocalEnvironmentList({
         </View>
         <Text className="text-center text-sm leading-normal text-foreground-muted">
           No environments connected yet.{"\n"}Tap{" "}
-          <Text className="font-rove-bold text-foreground">+</Text> to add one.
+          <Text className="font-paperplane-bold text-foreground">+</Text> to add one.
         </Text>
       </View>
     );

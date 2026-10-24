@@ -55,7 +55,7 @@ describe("source-built mobile identity", () => {
     const config = await configFor({
       PAPERPLANE_CLOUD_READY: "1",
       PAPERPLANE_EXPO_PROJECT_ID: "00000000-0000-4000-8000-000000000000",
-      PAPERPLANE_EXPO_OWNER: "rove-test",
+      PAPERPLANE_EXPO_OWNER: "paperplane-test",
       PAPERPLANE_MOBILE_UPDATES_ENABLED: "1",
       PAPERPLANE_APPLE_TEAM_ID: "ABCDE12345",
       PAPERPLANE_CLERK_RELYING_PARTY_DOMAIN: "paperplane.example.test",
@@ -63,7 +63,7 @@ describe("source-built mobile identity", () => {
     expect(config.updates?.enabled).toBe(true);
     expect(config.updates?.url).toBe("https://u.expo.dev/00000000-0000-4000-8000-000000000000");
     expect(config.extra?.eas).toEqual({ projectId: "00000000-0000-4000-8000-000000000000" });
-    expect(config.owner).toBe("rove-test");
+    expect(config.owner).toBe("paperplane-test");
     expect(config.ios?.appleTeamId).toBe("ABCDE12345");
     expect(config.ios?.associatedDomains).toEqual([
       "applinks:paperplane.example.test",
@@ -166,9 +166,9 @@ describe("source-built mobile identity", () => {
     );
     const config = await configFor({
       PAPERPLANE_IOS_PERSONAL_TEAM: "1",
-      PAPERPLANE_IOS_PERSONAL_TEAM_BUNDLE_ID: "com.example.rove",
+      PAPERPLANE_IOS_PERSONAL_TEAM_BUNDLE_ID: "com.example.paperplane",
     });
-    expect(config.ios?.bundleIdentifier).toBe("com.example.rove");
+    expect(config.ios?.bundleIdentifier).toBe("com.example.paperplane");
     expect(config.ios?.entitlements).toEqual({});
     const regular = await configFor({});
     expect(regular.ios?.entitlements?.["keychain-access-groups"]).toEqual([

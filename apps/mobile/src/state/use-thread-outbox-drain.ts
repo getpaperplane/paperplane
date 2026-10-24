@@ -91,7 +91,7 @@ import { useRemoteConnectionStatus } from "./use-remote-environment-registry";
 
 // Ordinary offline behavior (a socket dropping mid-request, a retryable
 // attachment upload failure) must not spam `console.warn` on every backoff
-// retry; it goes to the filterable `[rove-thread-outbox]` debug log instead.
+// retry; it goes to the filterable `[paperplane-thread-outbox]` debug log instead.
 // Failures the server decided stay on `console.warn`.
 const threadOutboxDebug = createDebugLogger("thread-outbox");
 

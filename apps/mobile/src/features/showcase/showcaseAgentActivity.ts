@@ -109,7 +109,7 @@ export function showcaseAndroidActivityData(
   const hero = activity.activities[0];
   const alert = showcaseAgentAlert(activity);
   return {
-    rove_kind: "agent_activity",
+    paperplane_kind: "agent_activity",
     updated_at: String(now),
     active: String(activity.activeCount > 0),
     activity_chip: attentionCount > 0 ? "Review" : "Active",

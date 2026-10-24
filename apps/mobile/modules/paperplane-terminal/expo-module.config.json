@@ -1,0 +1,10 @@
+{
+  "platforms": ["apple", "android"],
+  "apple": {
+    "modules": ["PaperplaneTerminalModule"],
+    "podspecPath": "PaperplaneTerminalNative.podspec"
+  },
+  "android": {
+    "modules": ["io.github.getpaperplane.paperplane.terminal.PaperplaneTerminalModule"]
+  }
+}

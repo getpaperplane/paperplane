@@ -12,8 +12,8 @@ describe("native desktop stream", () => {
     });
     const html = deviceStreamDocument(
       configuration,
-      "var RoveDesktopStream={start(input){return input}};",
-      "RoveDesktopStream",
+      "var PaperplaneDesktopStream={start(input){return input}};",
+      "PaperplaneDesktopStream",
     );
     expect(html.match(/<script>/g)).toHaveLength(1);
     const script = html.match(/<script>([\s\S]*)<\/script>/)![1]!;

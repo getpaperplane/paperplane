@@ -248,7 +248,7 @@ function WorktreeRow({
         onPress={() => setExpanded(!expanded)}
         className="gap-1 p-4 active:opacity-70"
       >
-        <Text className="text-base font-rove-medium text-foreground" numberOfLines={2}>
+        <Text className="text-base font-paperplane-medium text-foreground" numberOfLines={2}>
           {entry.branch ?? "Detached HEAD"}
         </Text>
         <Text className="text-sm text-foreground-muted">

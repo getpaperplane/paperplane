@@ -171,7 +171,7 @@ function ThreadListV2Section(props: {
     <>
       <Text
         className={cn(
-          "text-xs font-rove-medium",
+          "text-xs font-paperplane-medium",
           sidebarPane
             ? "text-drawer-foreground-muted"
             : snoozed
@@ -298,8 +298,8 @@ export const ThreadListV2ShowMoreRow = memo(function ThreadListV2ShowMoreRow(pro
       <Text
         className={
           props.pane === "sidebar"
-            ? "text-xs font-rove-medium text-drawer-foreground-muted"
-            : "text-xs font-rove-medium text-foreground-muted"
+            ? "text-xs font-paperplane-medium text-drawer-foreground-muted"
+            : "text-xs font-paperplane-medium text-foreground-muted"
         }
       >
         Show more ({props.hiddenCount} settled hidden)
@@ -366,7 +366,7 @@ export const ThreadListV2PendingRow = memo(function ThreadListV2PendingRow(props
         ) : null}
         <Text
           className={cn(
-            "flex-1 text-sm font-rove-medium text-foreground-muted",
+            "flex-1 text-sm font-paperplane-medium text-foreground-muted",
             sidebarPane && "text-drawer-foreground-muted",
           )}
           numberOfLines={1}
@@ -399,7 +399,7 @@ export const ThreadListV2PendingRow = memo(function ThreadListV2PendingRow(props
           second line is usually a stray word or emoji rather than meaning. */}
       <Text
         className={cn(
-          "mt-1 text-base font-rove-medium text-foreground",
+          "mt-1 text-base font-paperplane-medium text-foreground",
           sidebarPane && "text-drawer-foreground",
         )}
         numberOfLines={1}
@@ -994,7 +994,7 @@ export const ThreadListV2Row = memo(function ThreadListV2Row(props: {
         ) : null}
         <Text
           className={cn(
-            "flex-1 text-sm font-rove-medium",
+            "flex-1 text-sm font-paperplane-medium",
             selected
               ? selectedThreadRowColors.mutedForegroundClassName
               : rowAppearance.mutedForegroundClassName,
@@ -1025,7 +1025,7 @@ export const ThreadListV2Row = memo(function ThreadListV2Row(props: {
             />
             <Text
               className={cn(
-                "text-xs font-rove-bold",
+                "text-xs font-paperplane-bold",
                 selected ? selectedThreadRowColors.foregroundClassName : statusLabel.className,
               )}
             >
@@ -1049,7 +1049,7 @@ export const ThreadListV2Row = memo(function ThreadListV2Row(props: {
         className={cn(
           "mt-1 text-base",
           // Background work recedes to regular weight, matching web.
-          !recede && "font-rove-medium",
+          !recede && "font-paperplane-medium",
           selected
             ? selectedThreadRowColors.foregroundClassName
             : rowAppearance.foregroundClassName,

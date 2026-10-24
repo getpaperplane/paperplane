@@ -100,7 +100,7 @@ export function ConnectionEnvironmentRow(props: {
               tintColorClassName="accent-foreground-muted"
             />
             <Text
-              className="min-w-0 flex-shrink text-base font-rove-bold leading-snug text-foreground"
+              className="min-w-0 flex-shrink text-base font-paperplane-bold leading-snug text-foreground"
               numberOfLines={1}
             >
               {props.environment.environmentLabel}
@@ -223,7 +223,7 @@ export function ConnectionEnvironmentRow(props: {
                     tintColorClassName="accent-primary-foreground"
                     type="monochrome"
                   />
-                  <Text className="text-xs font-rove-bold tracking-[0.8px] uppercase text-primary-foreground">
+                  <Text className="text-xs font-paperplane-bold tracking-[0.8px] uppercase text-primary-foreground">
                     Save
                   </Text>
                 </Pressable>

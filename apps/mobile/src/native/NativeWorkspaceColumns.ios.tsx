@@ -5,8 +5,8 @@ import { useNativeLayoutMetrics } from "./native-layout-metrics";
 
 const nativeControls = requireOptionalNativeModule<{
   readonly supportsWorkspaceColumns?: boolean;
-  readonly ViewPrototypes?: { readonly RoveNativeControls_LayoutMetrics?: unknown };
-}>("RoveNativeControls");
+  readonly ViewPrototypes?: { readonly PaperplaneNativeControls_LayoutMetrics?: unknown };
+}>("PaperplaneNativeControls");
 export const NATIVE_WORKSPACE_COLUMNS_SUPPORTED =
   Platform.OS === "ios" && Platform.isPad && nativeControls?.supportsWorkspaceColumns === true;
 
@@ -21,7 +21,7 @@ export function useNativeWorkspaceColumnsReady() {
   // without the observer can immediately use the compact navigator.
   const waiting =
     !(Platform.OS === "ios" && Platform.isPad) &&
-    !!nativeControls?.ViewPrototypes?.RoveNativeControls_LayoutMetrics &&
+    !!nativeControls?.ViewPrototypes?.PaperplaneNativeControls_LayoutMetrics &&
     metrics === null;
 
   useEffect(() => {

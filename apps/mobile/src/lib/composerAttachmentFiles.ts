@@ -1,6 +1,11 @@
-const COMPOSER_ATTACHMENT_READ_DIRECTORIES = ["rove-composer-attachments"] as const;
+export const COMPOSER_ATTACHMENT_DIRECTORY = "paperplane-composer-attachments";
 
-export const COMPOSER_ATTACHMENT_DIRECTORY = "rove-composer-attachments";
+// Saved drafts contain physical file URIs; keep reading their original directory
+// rather than moving files out from under a pending attachment or media player.
+const COMPOSER_ATTACHMENT_READ_DIRECTORIES = [
+  COMPOSER_ATTACHMENT_DIRECTORY,
+  "rove-composer-attachments",
+] as const;
 
 const UUID_PATTERN = "[a-f\\d]{8}-[a-f\\d]{4}-[a-f\\d]{4}-[a-f\\d]{4}-[a-f\\d]{12}";
 const GENERATED_FILE_NAME = new RegExp(`^${UUID_PATTERN}-`, "i");

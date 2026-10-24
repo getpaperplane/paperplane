@@ -48,7 +48,7 @@ export function BranchNamingSettings(props: {
       {props.mode === "static" ? (
         <View className="gap-2 px-4 py-3">
           <Text className="text-sm text-foreground-muted">
-            Use rove or rove/ for rove/add-search. Leave empty for no prefix.
+            Use paperplane or paperplane/ for paperplane/add-search. Leave empty for no prefix.
           </Text>
           <AppTextInput
             key={props.prefix}

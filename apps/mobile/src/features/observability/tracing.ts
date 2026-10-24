@@ -26,7 +26,7 @@ export function resolveTracingConfig(): TracingConfig | null {
 
 export function layerFromConfig(config: TracingConfig | null, resource: TracingResource) {
   return RelayTracing.layer(config, {
-    serviceName: "rove-mobile",
+    serviceName: "paperplane-mobile",
     serviceVersion: resource.serviceVersion,
     runtime: "react-native",
     client: `mobile-${resource.appVariant}`,

@@ -23,7 +23,7 @@ import { AppText as Text } from "../../components/ui/AppText";
 import { SymbolView, type AppSymbolName } from "../../components/ui/AppSymbol";
 import { cn } from "../../lib/cn";
 import { scopedProjectKey, scopedThreadKey } from "../../lib/scopedEntities";
-import { RoveKeyboardCommands } from "../../native/RoveKeyboardCommands";
+import { PaperplaneKeyboardCommands } from "../../native/PaperplaneKeyboardCommands";
 import { useProjects, useThreadShell, useThreadShells } from "../../state/entities";
 import { useThreadSearch } from "../../state/queries";
 import { useWorkspaceEnvironments } from "../../state/workspace";
@@ -419,7 +419,7 @@ export function CommandPalette(props: {
       onDismiss={handleDismissed}
     >
       <GestureHandlerRootView className="flex-1">
-        <RoveKeyboardCommands enabledCommands={PALETTE_COMMANDS} onCommand={onCommand}>
+        <PaperplaneKeyboardCommands enabledCommands={PALETTE_COMMANDS} onCommand={onCommand}>
           <KeyboardAvoidingView
             behavior="padding"
             className="flex-1 items-center justify-center p-4"
@@ -504,7 +504,7 @@ export function CommandPalette(props: {
               />
             </GlassSurface>
           </KeyboardAvoidingView>
-        </RoveKeyboardCommands>
+        </PaperplaneKeyboardCommands>
       </GestureHandlerRootView>
     </Modal>
   );

@@ -1,9 +1,0 @@
-{
-  "platforms": ["apple", "android"],
-  "apple": {
-    "modules": ["RoveComposerEditorModule"]
-  },
-  "android": {
-    "modules": ["io.github.getpaperplane.paperplane.composereditor.RoveComposerEditorModule"]
-  }
-}

@@ -19,7 +19,7 @@ export interface DeviceStreamConfiguration {
 export function deviceStreamDocument(
   configuration: string,
   script: string,
-  entry = "RoveDeviceStream",
+  entry = "PaperplaneDeviceStream",
 ) {
   // Tickets and device names are data, including any HTML delimiter characters.
   const safeConfiguration = configuration.replace(/</g, "\\u003c");

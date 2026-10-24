@@ -508,7 +508,7 @@ export function NewTaskFlowProvider(props: React.PropsWithChildren) {
   const { canReadFiles } = fileAccess;
   const fileAccessPending =
     selectedProject !== null && selectedProject.workspaceRoot !== "" && fileAccess.isPending;
-  const roveProjectFileQuery = useEnvironmentQuery(
+  const paperplaneProjectFileQuery = useEnvironmentQuery(
     canReadFiles && selectedProject !== null && selectedProject.workspaceRoot !== ""
       ? projectEnvironment.readConfig({
           environmentId: selectedProject.environmentId,
@@ -517,8 +517,8 @@ export function NewTaskFlowProvider(props: React.PropsWithChildren) {
       : null,
   );
   const projectConfig = resolveProjectConfigState(
-    roveProjectFileQuery.data as ProjectConfigState | null,
-    roveProjectFileQuery.isPending,
+    paperplaneProjectFileQuery.data as ProjectConfigState | null,
+    paperplaneProjectFileQuery.isPending,
   );
   const paperplaneProjectFile = projectConfig.file;
   // Environment settings with the project's overrides and its paperplane.json
@@ -559,7 +559,7 @@ export function NewTaskFlowProvider(props: React.PropsWithChildren) {
   const defaultWorkspaceModeSettled =
     selectedProjectDraft.workspaceSelection?.mode !== undefined ||
     projectSettings.sources.defaultThreadEnvMode !== "environment" ||
-    (!roveProjectFileQuery.isPending && !fileAccessPending);
+    (!paperplaneProjectFileQuery.isPending && !fileAccessPending);
   const workspaceMode = canChooseWorkspace
     ? (selectedProjectDraft.workspaceSelection?.mode ?? defaultWorkspaceMode)
     : "local";

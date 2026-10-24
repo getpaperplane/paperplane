@@ -23,7 +23,10 @@ export function ListSection(props: {
             }
           >
             {props.titleIcon}
-            <Text textRole="footnote" className="shrink font-rove-medium text-foreground-muted">
+            <Text
+              textRole="footnote"
+              className="shrink font-paperplane-medium text-foreground-muted"
+            >
               {props.title}
             </Text>
           </View>

@@ -14,7 +14,7 @@ import {
 } from "react";
 
 import { tryCopyTextWithHaptic } from "../../lib/copyTextWithHaptic";
-import { RoveKeyboardCommands } from "../../native/RoveKeyboardCommands";
+import { PaperplaneKeyboardCommands } from "../../native/PaperplaneKeyboardCommands";
 import { useThreadShell } from "../../state/entities";
 import type { GitActionProgress } from "../../state/use-vcs-action-state";
 import { GitActionProgressOverlay } from "../threads/GitActionProgressOverlay";
@@ -185,9 +185,9 @@ export function HardwareKeyboardCommandProvider({
 
   return (
     <CommandPaletteContext value={palette}>
-      <RoveKeyboardCommands enabledCommands={enabledCommands} onCommand={onCommand}>
+      <PaperplaneKeyboardCommands enabledCommands={enabledCommands} onCommand={onCommand}>
         {children}
-      </RoveKeyboardCommands>
+      </PaperplaneKeyboardCommands>
       <GitActionProgressOverlay progress={copyFeedback} onDismiss={dismissCopyFeedback} />
     </CommandPaletteContext>
   );

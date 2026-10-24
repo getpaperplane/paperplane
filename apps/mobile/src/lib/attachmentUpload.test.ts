@@ -641,15 +641,17 @@ describe("prepareTurnAttachments", () => {
       supportsImageUploads: true,
       persistUploadedReferences: persisted,
     });
-    expect(mocks.writeFile).toHaveBeenCalledWith("file:///cache/rove-upload-uuid", "YWJj", {
+    expect(mocks.writeFile).toHaveBeenCalledWith("file:///cache/paperplane-upload-uuid", "YWJj", {
       encoding: "base64",
     });
     expect(mocks.upload).toHaveBeenCalledWith(
-      "file:///cache/rove-upload-uuid",
+      "file:///cache/paperplane-upload-uuid",
       "https://environment.example/api/attachments/upload/signed",
       expect.objectContaining({ headers: { "Content-Type": "image/png" } }),
     );
-    expect(mocks.deleteFile).toHaveBeenCalledExactlyOnceWith("file:///cache/rove-upload-uuid");
+    expect(mocks.deleteFile).toHaveBeenCalledExactlyOnceWith(
+      "file:///cache/paperplane-upload-uuid",
+    );
     expect(prepared.status).toBe("ready");
     if (prepared.status !== "ready") return;
     expect(prepared.attachments).toEqual([
@@ -699,7 +701,7 @@ describe("prepareTurnAttachments", () => {
       ...saved,
       uploadedAttachmentId: MINTED_ID,
     });
-    expect(mocks.writeFile).toHaveBeenCalledWith("file:///cache/rove-upload-uuid", "YWJj", {
+    expect(mocks.writeFile).toHaveBeenCalledWith("file:///cache/paperplane-upload-uuid", "YWJj", {
       encoding: "base64",
     });
   });

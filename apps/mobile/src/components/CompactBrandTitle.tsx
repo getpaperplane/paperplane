@@ -4,7 +4,7 @@ import type { NativeStackNavigationOptions } from "@react-navigation/native-stac
 import { Platform, View } from "react-native";
 
 import { AppText as Text } from "./ui/AppText";
-import { RoveLogo } from "./RoveLogo";
+import { PaperplaneLogo } from "./PaperplaneLogo";
 import { IPAD_HOME_TITLE_OFFSET } from "../lib/layoutMetrics";
 import { resolveMobileStageLabel } from "../lib/mobileBranding";
 import { useAndroidControlSizing } from "./ui/useAndroidControlSizing";
@@ -40,10 +40,10 @@ export function CompactBrandTitle(
       className="flex-row items-center gap-1.5"
       style={[{ marginLeft: titleOffset }, Platform.OS === "android" && { gap: 5.25 * scale }]}
     >
-      <RoveLogo height={Math.round(18 * scale)} />
+      <PaperplaneLogo height={Math.round(18 * scale)} />
       <Text
         allowFontScaling={props.allowFontScaling}
-        className="font-rove-medium text-foreground-muted"
+        className="font-paperplane-medium text-foreground-muted"
         style={{ fontSize: 21 * scale, letterSpacing: -0.5 * scale }}
       >
         Paperplane
@@ -58,7 +58,7 @@ export function CompactBrandTitle(
       >
         <Text
           allowFontScaling={props.allowFontScaling}
-          className="font-rove-bold text-foreground-muted uppercase"
+          className="font-paperplane-bold text-foreground-muted uppercase"
           style={{ fontSize: 9 * scale, letterSpacing: 0.9 * scale }}
         >
           {stageLabel}

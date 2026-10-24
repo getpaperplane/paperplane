@@ -208,7 +208,7 @@ export function PullRequestMergeControls(props: {
               />
             )}
             <Text
-              className={`shrink text-center text-sm font-rove-semibold ${canMerge ? "text-prominent-action-foreground" : "text-foreground-muted"}`}
+              className={`shrink text-center text-sm font-paperplane-semibold ${canMerge ? "text-prominent-action-foreground" : "text-foreground-muted"}`}
             >
               {busy ? "Working…" : !permissions.connected ? "Reconnect to merge" : label}
             </Text>

@@ -53,7 +53,7 @@ export function Button(props: ButtonProps) {
       ) : null}
       <AppText
         className={cn(
-          "min-w-0 shrink text-center font-rove-medium",
+          "min-w-0 shrink text-center font-paperplane-medium",
           disabled ? "text-foreground-muted" : labelClassName,
         )}
       >

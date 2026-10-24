@@ -29,17 +29,22 @@ const thread = (environmentId: string, id: string, projectId: string, title: str
   }) as EnvironmentThreadShell;
 
 const projects = [
-  project("moonbase-terminal", "rove", "Paperplane"),
+  project("moonbase-terminal", "paperplane", "Paperplane"),
   project("suspense-station", "react", "React"),
   project("kernel-cabin", "linux", "Linux"),
 ];
 
 const threads = [
-  thread("moonbase-terminal", "remote-command-center", "rove", "Make remote coding feel local"),
+  thread(
+    "moonbase-terminal",
+    "remote-command-center",
+    "paperplane",
+    "Make remote coding feel local",
+  ),
   thread(
     "moonbase-terminal",
     "pocket-command-center",
-    "rove",
+    "paperplane",
     "Put the command center in your pocket",
   ),
   thread("suspense-station", "buttery-suspense", "react", "Make Suspense transitions buttery"),

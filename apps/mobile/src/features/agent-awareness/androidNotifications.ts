@@ -12,7 +12,7 @@ interface AndroidAgentNotifications {
 
 const native =
   Platform.OS === "android"
-    ? requireOptionalNativeModule<AndroidAgentNotifications>("RoveAgentNotifications")
+    ? requireOptionalNativeModule<AndroidAgentNotifications>("PaperplaneAgentNotifications")
     : null;
 
 export function supportsAndroidAgentNotifications(): boolean {

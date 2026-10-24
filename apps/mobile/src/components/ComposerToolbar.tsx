@@ -75,7 +75,7 @@ export function ComposerInlineControl(props: {
       ) : null}
       <Text
         className={cn(
-          "shrink text-sm font-rove-medium",
+          "shrink text-sm font-paperplane-medium",
           props.emphasized || props.selected ? "text-foreground" : "text-foreground-muted",
         )}
         numberOfLines={1}
@@ -358,7 +358,7 @@ export function ComposerToolbarButton(props: {
       {props.label ? (
         <Text
           className={cn(
-            "shrink text-center text-sm font-rove-bold",
+            "shrink text-center text-sm font-paperplane-bold",
             variant === "primary"
               ? props.disabled
                 ? "text-foreground-muted"

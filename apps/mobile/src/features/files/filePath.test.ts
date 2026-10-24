@@ -10,8 +10,8 @@ import {
 describe("fileRoutePathSegments", () => {
   it("round-trips workspace-relative and host paths through the route", () => {
     expect(fileRoutePathSegments("src/main.ts")).toEqual(["src", "main.ts"]);
-    expect(fileRoutePathSegments("/tmp/rove-cleanup/report.md").join("/")).toBe(
-      "/tmp/rove-cleanup/report.md",
+    expect(fileRoutePathSegments("/tmp/paperplane-cleanup/report.md").join("/")).toBe(
+      "/tmp/paperplane-cleanup/report.md",
     );
   });
 });
@@ -48,16 +48,16 @@ describe("file preview types", () => {
 describe("fileHeaderSubtitle", () => {
   it("places a workspace file under its project", () => {
     expect(
-      fileHeaderSubtitle("rove", "apps/mobile/src/features/threads/fileChipMenu.test.ts"),
-    ).toBe("rove · apps/mobile/src/features/threads");
+      fileHeaderSubtitle("paperplane", "apps/mobile/src/features/threads/fileChipMenu.test.ts"),
+    ).toBe("paperplane · apps/mobile/src/features/threads");
   });
 
   it("shows only the directory for a host file outside the workspace", () => {
     // It is not under the project, so naming the project there would be a lie.
-    expect(fileHeaderSubtitle("rove", "/tmp/report.md")).toBe("/tmp");
+    expect(fileHeaderSubtitle("paperplane", "/tmp/report.md")).toBe("/tmp");
   });
 
   it("shows only the project for a file at the workspace root", () => {
-    expect(fileHeaderSubtitle("rove", "README.md")).toBe("rove");
+    expect(fileHeaderSubtitle("paperplane", "README.md")).toBe("paperplane");
   });
 });

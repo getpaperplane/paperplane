@@ -171,7 +171,7 @@ function localProjectAction(environmentId = "environment") {
 describe("clone project permissions", () => {
   beforeEach(async () => {
     state.baseDirectory = await NodeFSP.mkdtemp(
-      NodePath.join(NodeOS.tmpdir(), "rove-clone-permissions-"),
+      NodePath.join(NodeOS.tmpdir(), "paperplane-clone-permissions-"),
     );
     state.scopes = new Set([AuthSourceControlWriteScope]);
     state.otherScopes = new Set();
