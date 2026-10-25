@@ -8,9 +8,14 @@ public class PaperplaneTerminalModule: Module {
     // logs so a stale native binary is distinguishable from a broken key pipeline.
     Constants([
       "hardwareKeyRevision": 3,
+      "outputRevision": 1,
     ])
 
     View(PaperplaneTerminalView.self) {
+      AsyncFunction("writeOutput") { (view: PaperplaneTerminalView, data: String, reset: Bool) in
+        view.writeOutput(data, reset: reset)
+      }
+
       Prop("terminalKey") { (view: PaperplaneTerminalView, terminalKey: String) in
         view.terminalKey = terminalKey
       }

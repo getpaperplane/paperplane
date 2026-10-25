@@ -89,14 +89,14 @@ class PaperplaneReviewDiffView(context: Context, appContext: AppContext) : ExpoV
   fun setTokensResetKey(value: String) {
     if (tokensResetKey == value) return
     tokensResetKey = value
-    canvasView.tokensByRowId = emptyMap()
+    canvasView.replaceTokensByRowId(emptyMap())
   }
 
   fun setContentResetKey(value: String) {
     if (contentResetKey == value) return
     contentResetKey = value
     tokensDecodeGeneration += 1
-    canvasView.tokensByRowId = emptyMap()
+    canvasView.replaceTokensByRowId(emptyMap())
     lastVisibleFileId = null
     pendingInitialScroll = true
     canvasView.setVerticalOffset(0)
@@ -182,12 +182,13 @@ class PaperplaneReviewDiffView(context: Context, appContext: AppContext) : ExpoV
       val decodedTokens = parseTokensObject(value)
       post {
         if (generation != tokensDecodeGeneration) return@post
-        canvasView.tokensByRowId = decodedTokens
+        canvasView.replaceTokensByRowId(decodedTokens)
       }
     }
   }
 
   fun setTokensPatchJson(value: String) {
+    val contentResetKey = this.contentResetKey
     payloadDecodeExecutor.execute {
       try {
         val payload = JSONObject(value)
@@ -196,10 +197,9 @@ class PaperplaneReviewDiffView(context: Context, appContext: AppContext) : ExpoV
           payload.optJSONObject("tokensByRowId") ?: JSONObject(),
         )
         post {
+          if (contentResetKey != this.contentResetKey) return@post
           if (resetKey.isNotEmpty() && resetKey != tokensResetKey) return@post
-          if (decodedTokens.isNotEmpty()) {
-            canvasView.tokensByRowId = canvasView.tokensByRowId + decodedTokens
-          }
+          canvasView.mergeTokensByRowId(decodedTokens)
         }
       } catch (_: Exception) {
       }
@@ -731,12 +731,25 @@ private class DiffCanvasView(context: Context) : View(context) {
       )
       rebuildOffsets()
     }
-  var tokensByRowId: Map<String, List<DiffToken>> = emptyMap()
-    set(value) {
-      field = value
-      if (style.wordWrap) rebuildOffsets()
-      invalidate()
+  private val tokensByRowId = HashMap<String, List<DiffToken>>()
+
+  fun replaceTokensByRowId(tokens: Map<String, List<DiffToken>>) {
+    tokensByRowId.clear()
+    tokensByRowId.putAll(tokens)
+    if (style.wordWrap) rebuildOffsets()
+    invalidate()
+  }
+
+  fun mergeTokensByRowId(patch: Map<String, List<DiffToken>>) {
+    if (patch.isEmpty()) return
+    tokensByRowId.putAll(patch)
+    if (drawing.patchCodeTokens(patch, style)) {
+      // Geometry changed, but unchanged rows still retain their shaped layouts.
+      rebuildRowOffsets()
+      requestLayout()
     }
+    invalidate()
+  }
   var viewedFileIds: Set<String> = emptySet()
     set(value) {
       field = value
@@ -780,7 +793,7 @@ private class DiffCanvasView(context: Context) : View(context) {
   var onVisibleRowsChanged: ((Int, Int) -> Unit)? = null
   var onContentHeightChanged: ((Int) -> Unit)? = null
 
-  fun prepareRows() = drawing.prepareRows(tokensByRowId, style, width)
+  fun prepareRows() = drawing.prepareRows(tokensByRowId.toMap(), style, width)
   fun useCodeLayouts(layouts: CodeLayoutCache) {
     drawing.codeLayouts = layouts
   }
@@ -898,6 +911,10 @@ private class DiffCanvasView(context: Context) : View(context) {
 
   private fun layoutRows() {
     codeWrap = drawing.codeWrapLayout(rows, tokensByRowId, style, width)
+    rebuildRowOffsets()
+  }
+
+  private fun rebuildRowOffsets() {
     rowOffsets = IntArray(rows.size + 1)
     rows.forEachIndexed { index, row ->
       rowOffsets[index + 1] = rowOffsets[index] + rowHeight(row)
@@ -908,17 +925,8 @@ private class DiffCanvasView(context: Context) : View(context) {
     onContentHeightChanged?.invoke(rowOffsets.last())
   }
 
-  private fun rowHeight(row: DiffRow): Int = when (row.kind) {
-    "file" -> style.fileHeaderHeightPx.toInt()
-    "notice" -> max((style.rowHeightPx * 2f).toInt(), (44 * density).toInt())
-    "comment" -> if (collapsedCommentIds.contains(row.id)) {
-      (44 * density).toInt()
-    } else {
-      (124 * density).toInt()
-    }
-    "line" -> codeWrap.rowHeight(row.id, style.rowHeightPx.toInt())
-    else -> style.rowHeightPx.toInt()
-  }.coerceAtLeast(1)
+  private fun rowHeight(row: DiffRow): Int =
+    codeWrap.rowHeight(row, style, collapsedCommentIds, density)
 
   @Suppress("ReturnCount")
   private fun rowIndexAt(y: Int): Int {

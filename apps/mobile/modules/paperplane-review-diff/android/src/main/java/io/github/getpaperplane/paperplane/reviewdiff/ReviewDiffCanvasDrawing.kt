@@ -211,6 +211,11 @@ internal class ReviewDiffCanvasDrawing(context: Context) {
     return codeLayouts.layout(rows, tokens, textPaint, style, theme, availableWidth.toInt())
   }
 
+  fun patchCodeTokens(tokens: Map<String, List<DiffToken>>, style: DiffStyle): Boolean {
+    configureCodePaint(theme.text, 0, style)
+    return codeLayouts.patchTokens(tokens, textPaint)
+  }
+
   fun lineNumberColor(change: String): Int = when (change) {
     "add" -> theme.addText
     "delete" -> theme.deleteText

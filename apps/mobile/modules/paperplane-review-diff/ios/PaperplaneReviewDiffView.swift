@@ -26,12 +26,6 @@ private struct ReviewDiffNativeWordDiffRange: Decodable, Sendable {
   let end: Int
 }
 
-private struct ReviewDiffNativeToken: Decodable, Sendable {
-  let content: String
-  let color: String?
-  let fontStyle: Int?
-}
-
 private struct ReviewDiffNativeTokenPatch: Decodable, Sendable {
   let resetKey: String?
   let chunkIndex: Int?
@@ -489,7 +483,7 @@ public final class PaperplaneReviewDiffView: ExpoView, UIScrollViewDelegate {
           guard let self, generation == self.tokensDecodeGeneration else {
             return
           }
-          self.contentView.tokensByRowId = decodedTokens
+          self.contentView.replaceTokensByRowId(decodedTokens)
         }
       } catch {
         let message = error.localizedDescription
@@ -497,7 +491,7 @@ public final class PaperplaneReviewDiffView: ExpoView, UIScrollViewDelegate {
           guard let self, generation == self.tokensDecodeGeneration else {
             return
           }
-          self.contentView.tokensByRowId = [:]
+          self.contentView.replaceTokensByRowId([:])
           self.emitDebug("tokens-decode-failed", ["error": message])
         }
       }
@@ -556,7 +550,7 @@ public final class PaperplaneReviewDiffView: ExpoView, UIScrollViewDelegate {
     }
 
     self.tokensResetKey = tokensResetKey
-    contentView.tokensByRowId = [:]
+    contentView.replaceTokensByRowId([:])
     emitDebug("tokens-reset", [
       "resetKey": tokensResetKey,
     ])
@@ -589,7 +583,7 @@ public final class PaperplaneReviewDiffView: ExpoView, UIScrollViewDelegate {
     self.contentResetKey = contentResetKey
     rowsDecodeGeneration += 1
     tokensDecodeGeneration += 1
-    contentView.tokensByRowId = [:]
+    contentView.replaceTokensByRowId([:])
     rows = []
     contentView.rows = []
     hasAppliedInitialRowIndex = false
@@ -978,26 +972,27 @@ private final class ReviewDiffContentView: UIView, UIGestureRecognizerDelegate {
       activePanFileId = nil
       activePanKind = nil
       codeDecorationVersion += 1
-      tokenAttributedStringsByRowId.removeAll()
+      tokenStore.clearAttributedStrings()
       rebuildRowLayout()
       setNeedsDisplayForVisibleBounds()
     }
   }
-  var tokensByRowId: [String: [ReviewDiffNativeToken]] = [:] {
-    didSet {
-      codeDecorationVersion += 1
-      tokenAttributedStringsByRowId.removeAll()
-      clampHorizontalOffsets()
-      setNeedsDisplayForVisibleBounds()
-    }
+  private let tokenStore = ReviewDiffTokenStore()
+  var tokensByRowId: [String: [ReviewDiffNativeToken]] { tokenStore.tokensByRowId }
+
+  func replaceTokensByRowId(_ tokens: [String: [ReviewDiffNativeToken]]) {
+    tokenStore.replace(tokens)
+    codeDecorationVersion += 1
+    clampHorizontalOffsets()
+    setNeedsDisplayForVisibleBounds()
   }
 
   func mergeTokensByRowId(_ tokensPatch: [String: [ReviewDiffNativeToken]]) {
-    tokensPatch.forEach { rowId, tokens in
-      tokensByRowId[rowId] = tokens
-      tokenAttributedStringsByRowId.removeValue(forKey: rowId)
+    guard !tokensPatch.isEmpty else { return }
+    tokenStore.merge(tokensPatch) { rowId in
+      codeLayoutsByRowId[rowId]?.invalidateDecoration()
     }
-    clampHorizontalOffsets()
+    // Token decoration does not change the measured geometry or horizontal bounds.
     setNeedsDisplayForVisibleBounds()
   }
 
@@ -1027,7 +1022,7 @@ private final class ReviewDiffContentView: UIView, UIGestureRecognizerDelegate {
   var style = ReviewDiffNativeStyle.resolve(nil) {
     didSet {
       codeDecorationVersion += 1
-      tokenAttributedStringsByRowId.removeAll()
+      tokenStore.clearAttributedStrings()
       rebuildRowLayout()
       clampHorizontalOffsets()
       setNeedsDisplayForVisibleBounds()
@@ -1049,7 +1044,7 @@ private final class ReviewDiffContentView: UIView, UIGestureRecognizerDelegate {
     didSet {
       tokenColorsByHex.removeAll()
       codeDecorationVersion += 1
-      tokenAttributedStringsByRowId.removeAll()
+      tokenStore.clearAttributedStrings()
       setNeedsDisplayForVisibleBounds()
     }
   }
@@ -1059,7 +1054,6 @@ private final class ReviewDiffContentView: UIView, UIGestureRecognizerDelegate {
   private var fileHeaderRowIndices: [Int] = []
   private var contentWidthsByFileId: [String: CGFloat] = [:]
   private var tokenColorsByHex: [String: UIColor] = [:]
-  private var tokenAttributedStringsByRowId: [String: NSAttributedString] = [:]
   private var codeCharacterWidth: CGFloat = 8
   /// Columns per visual line while word wrap is on; nil while code rows pan horizontally.
   private var codeWrapColumns: Int?
@@ -2667,26 +2661,22 @@ private final class ReviewDiffContentView: UIView, UIGestureRecognizerDelegate {
     fallbackColor: UIColor,
     font: UIFont
   ) -> NSAttributedString {
-    if let cached = tokenAttributedStringsByRowId[rowId] {
-      return cached
-    }
-
-    let attributedString = NSMutableAttributedString(string: "")
-    for token in tokens where !token.content.isEmpty {
-      attributedString.append(
-        NSAttributedString(
-          string: token.content,
-          attributes: [
-            .font: font,
-            .foregroundColor: tokenColor(for: token.color, fallbackColor: fallbackColor),
-            .ligature: 0,
-          ]
+    tokenStore.attributedString(for: rowId) {
+      let attributedString = NSMutableAttributedString(string: "")
+      for token in tokens where !token.content.isEmpty {
+        attributedString.append(
+          NSAttributedString(
+            string: token.content,
+            attributes: [
+              .font: font,
+              .foregroundColor: tokenColor(for: token.color, fallbackColor: fallbackColor),
+              .ligature: 0,
+            ]
+          )
         )
-      )
+      }
+      return attributedString
     }
-
-    tokenAttributedStringsByRowId[rowId] = attributedString
-    return attributedString
   }
 
   private func tokenColor(for hex: String?, fallbackColor: UIColor) -> UIColor {

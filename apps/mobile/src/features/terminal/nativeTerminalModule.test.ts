@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test"
 
 const expoMocks = vi.hoisted(() => ({
   requireNativeView: vi.fn(),
+  requireOptionalNativeModule: vi.fn(),
 }));
 const nativeView = () => null;
 const originalExpo = globalThis.expo;
@@ -15,11 +16,12 @@ function setExpoViewConfigAvailable() {
 
 vi.mock("expo", () => ({
   requireNativeView: expoMocks.requireNativeView,
+  requireOptionalNativeModule: expoMocks.requireOptionalNativeModule,
 }));
 
 describe("resolveNativeTerminalSurfaceView", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    vi.resetAllMocks();
     vi.resetModules();
     globalThis.expo = testDouble<typeof globalThis.expo>(undefined);
   });
@@ -40,6 +42,34 @@ describe("resolveNativeTerminalSurfaceView", () => {
     const { resolveNativeTerminalSurfaceView } = await import("./nativeTerminalModule");
     expect(resolveNativeTerminalSurfaceView()).toBe(nativeView);
     expect(expoMocks.requireNativeView).toHaveBeenCalledWith("PaperplaneTerminalSurface");
+  });
+
+  it.each([undefined, null, {}, { outputRevision: 0 }])(
+    "keeps legacy output for installed modules without streaming support (%s)",
+    async (module) => {
+      setExpoViewConfigAvailable();
+      expoMocks.requireNativeView.mockReturnValue(nativeView);
+      expoMocks.requireOptionalNativeModule.mockReturnValue(module);
+      const { supportsNativeTerminalOutput } = await import("./nativeTerminalModule");
+      expect(supportsNativeTerminalOutput()).toBe(false);
+    },
+  );
+
+  it("enables streaming only when both the API revision and view are installed", async () => {
+    expoMocks.requireOptionalNativeModule.mockReturnValue({ outputRevision: 1 });
+    const { supportsNativeTerminalOutput } = await import("./nativeTerminalModule");
+    expect(supportsNativeTerminalOutput()).toBe(false);
+    setExpoViewConfigAvailable();
+    expoMocks.requireNativeView.mockReturnValue(nativeView);
+    expect(supportsNativeTerminalOutput()).toBe(true);
+  });
+
+  it("falls back if reading native capabilities throws", async () => {
+    expoMocks.requireOptionalNativeModule.mockImplementation(() => {
+      throw new Error("unavailable");
+    });
+    const { supportsNativeTerminalOutput } = await import("./nativeTerminalModule");
+    expect(supportsNativeTerminalOutput()).toBe(false);
   });
 
   it("returns null when the view manager cannot be required", async () => {

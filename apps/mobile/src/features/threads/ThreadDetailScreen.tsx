@@ -2,7 +2,7 @@ import * as Dialog from "../../components/ui/Dialog";
 import { useAtomValue } from "@effect/atom-react";
 import { useChildThreadInputs, useThreadReportedModelSelection } from "../../state/entities";
 import { UsageLimitRecoveryCard } from "./UsageLimitRecoveryCard";
-import { useNavigation } from "@react-navigation/native";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import type { WorktreeSetupCardProps } from "./worktree-setup-card";
 import type { ComposerTextPaste } from "../../native/PaperplaneComposerEditor.types";
 import { type EnvironmentConnectionPhase } from "@getpaperplane/client-runtime/connection";
@@ -122,6 +122,7 @@ import type {
   ThreadFeedLatestRun,
 } from "../../lib/threadActivity";
 import { PendingApprovalCard } from "./PendingApprovalCard";
+import { derivePendingApprovalOverlayMaxHeight } from "./pendingApprovalLayout";
 import { ComposerErrorNotice } from "./ComposerErrorNotice";
 import { HostMemoryNotice } from "./HostMemoryNotice";
 import { ComposerFeedback } from "./ComposerFeedback";
@@ -443,6 +444,18 @@ export const ThreadDetailScreen = memo(function ThreadDetailScreen(props: Thread
   const lastScrolledSubmittedMessageIdRef = useRef<MessageId | null>(null);
   const [composerExpanded, setComposerExpanded] = useState(false);
   const [composerFocused, setComposerFocused] = useState(false);
+  const activePendingApprovalId = props.activePendingApproval?.requestId ?? null;
+  useFocusEffect(
+    useCallback(() => {
+      if (activePendingApprovalId === null || props.showContent === false) return;
+      // Approval owns the dock until answered; keep its full request reachable
+      // instead of reserving space for an editor that is temporarily hidden.
+      composerEditorRef.current?.blur();
+      Keyboard.dismiss();
+      setComposerExpanded(false);
+      setComposerFocused(false);
+    }, [activePendingApprovalId, props.showContent]),
+  );
   const handleComposerFocusChange = useCallback(
     (focused: boolean) => {
       setComposerFocused(focused);
@@ -597,9 +610,12 @@ export const ThreadDetailScreen = memo(function ThreadDetailScreen(props: Thread
   const [collapsedUserInputRequestId, setCollapsedUserInputRequestId] =
     useState<RuntimeRequestId | null>(null);
   const activeUserInputRequestId = props.activePendingUserInput?.requestId ?? null;
-  // A pending user-input request or a failed creation owns the composer slot.
+  // Requests own the dock one at a time, with approvals ahead of questions.
+  // The hidden editor stays mounted so its draft survives the decision.
   const composerSlotHidden =
-    activeUserInputRequestId !== null || props.creationState?.kind === "failed";
+    activePendingApprovalId !== null ||
+    activeUserInputRequestId !== null ||
+    props.creationState?.kind === "failed";
   // The open /usage-limits panel for this thread, model and turn. Only the open
   // moment is stored: the rows read live provider data, so a redeemed reset
   // credit or refreshed probe shows through. Anything that spends quota closes
@@ -688,6 +704,17 @@ export const ThreadDetailScreen = memo(function ThreadDetailScreen(props: Thread
     // bottom inset still overlaps.
     composerOverlapHeight: composerBottomInset,
   });
+  // Approval owns this bounded dock; all of its content, including wrapped
+  // decision buttons, scrolls rather than competing with composer chrome.
+  const pendingApprovalOverlayMaxHeight = derivePendingApprovalOverlayMaxHeight({
+    viewportHeight: Math.min(windowHeight, nativeMetrics?.height || windowHeight),
+    navigationHeaderHeight,
+    keyboardHeight:
+      Platform.OS !== "android" || (isKeyboardVisible && !keyboardStateSuspect)
+        ? liveKeyboardHeight
+        : 0,
+    bottomInset: controlInsets.bottom,
+  });
   const estimatedOverlayHeight = composerOverlapHeight;
   // The overlay's measured height includes the home-indicator inset (the
   // composer pads it), but contentInsetAdjustmentBehavior="automatic" makes
@@ -729,7 +756,8 @@ export const ThreadDetailScreen = memo(function ThreadDetailScreen(props: Thread
   // Android renders the expanded card in-flow (it cannot hit-test the iOS
   // overlay outside the bar's bounds), so its measured overlay height already
   // includes the card — the coverage extra is iOS-only.
-  const userInputCoverageApplies = Platform.OS === "ios" && activeUserInputRequestId !== null;
+  const userInputCoverageApplies =
+    Platform.OS === "ios" && activePendingApprovalId === null && activeUserInputRequestId !== null;
   const combinedContentInsetEndAdjustment = useSharedValue(
     Math.max(0, estimatedOverlayHeight - nativeInsetOvercount),
   );
@@ -1235,6 +1263,9 @@ export const ThreadDetailScreen = memo(function ThreadDetailScreen(props: Thread
                   bottom: controlInsets.bottom,
                   left: controlInsets.left,
                   right: controlInsets.right,
+                  maxHeight: props.activePendingApproval
+                    ? pendingApprovalOverlayMaxHeight
+                    : undefined,
                 },
                 composerWidthStyle,
               ]}
@@ -1242,7 +1273,11 @@ export const ThreadDetailScreen = memo(function ThreadDetailScreen(props: Thread
               {/* No paddingTop here: the overlay's measured height becomes the
                 list's bottom inset, so any padding above the pill/composer
                 pushes the resting content floor up by the same amount. */}
-              <View ref={composerOverlayRef} onLayout={onComposerLayout} className="w-full">
+              <View
+                ref={composerOverlayRef}
+                onLayout={onComposerLayout}
+                className={props.activePendingApproval ? "min-h-0 w-full shrink" : "w-full"}
+              >
                 <FloatingWorkingControl
                   colorScheme={isDarkMode ? "dark" : "light"}
                   status={floatingStatus}
@@ -1276,101 +1311,111 @@ export const ThreadDetailScreen = memo(function ThreadDetailScreen(props: Thread
                     });
                   }}
                 />
-                <View className="w-full self-center" style={{ maxWidth: contentMaxWidth }}>
-                  {props.queuedRunEdit !== null ? (
-                    <Animated.View
-                      className="shrink-0"
-                      entering={FadeInDown.duration(180)}
-                      exiting={FadeOut.duration(120)}
-                    >
-                      <ComposerQueuedEditBanner
-                        saving={props.isSavingQueuedEdit}
-                        onCancel={() => {
-                          voiceInputSession.cancel(props.composerDraftKey);
-                          props.onCancelQueuedRunEdit();
-                        }}
-                      />
-                    </Animated.View>
-                  ) : null}
-                  <UsageLimitRecoveryCard
-                    key={props.selectedThread.latestRun?.runId}
-                    thread={props.selectedThread}
-                    environmentId={props.environmentId}
-                  />
-                  {props.feedbackSubmissions.map((submission) => (
-                    <ComposerFeedback
-                      key={submission.id}
-                      submission={submission}
-                      onDismiss={() => props.onDismissFeedback(submission.id)}
-                    />
-                  ))}
-                  {props.connectionStateLabel === "connected" &&
-                  props.serverConfig?.environment.capabilities.hostHealth === true ? (
-                    <HostMemoryNotice
+                <View
+                  className={
+                    props.activePendingApproval
+                      ? "min-h-0 w-full shrink self-center"
+                      : "w-full self-center"
+                  }
+                  style={{ maxWidth: contentMaxWidth }}
+                >
+                  <View style={props.activePendingApproval ? { display: "none" } : undefined}>
+                    {props.queuedRunEdit !== null ? (
+                      <Animated.View
+                        className="shrink-0"
+                        entering={FadeInDown.duration(180)}
+                        exiting={FadeOut.duration(120)}
+                      >
+                        <ComposerQueuedEditBanner
+                          saving={props.isSavingQueuedEdit}
+                          onCancel={() => {
+                            voiceInputSession.cancel(props.composerDraftKey);
+                            props.onCancelQueuedRunEdit();
+                          }}
+                        />
+                      </Animated.View>
+                    ) : null}
+                    <UsageLimitRecoveryCard
+                      key={props.selectedThread.latestRun?.runId}
+                      thread={props.selectedThread}
                       environmentId={props.environmentId}
-                      environmentLabel={props.environmentLabel ?? "This environment"}
                     />
-                  ) : null}
-                  {composerError !== null ? (
-                    <Animated.View
-                      className="shrink-0"
-                      entering={FadeInDown.duration(180)}
-                      exiting={FadeOut.duration(120)}
-                    >
-                      <ComposerErrorNotice
-                        message={composerError}
-                        onDismiss={() => clearThreadComposerError(selectedThreadKey)}
+                    {props.feedbackSubmissions.map((submission) => (
+                      <ComposerFeedback
+                        key={submission.id}
+                        submission={submission}
+                        onDismiss={() => props.onDismissFeedback(submission.id)}
                       />
-                    </Animated.View>
-                  ) : null}
-                  {usageLimitsReport && activeUserInputRequestId === null ? (
-                    <Animated.View
-                      className="shrink-0 px-4 pb-3"
-                      entering={FadeInDown.duration(220)}
-                      exiting={FadeOut.duration(140)}
-                    >
-                      <ComposerUsageLimits
-                        report={usageLimitsReport}
+                    ))}
+                    {props.connectionStateLabel === "connected" &&
+                    props.serverConfig?.environment.capabilities.hostHealth === true ? (
+                      <HostMemoryNotice
                         environmentId={props.environmentId}
-                        onClose={dismissUsageLimits}
+                        environmentLabel={props.environmentLabel ?? "This environment"}
                       />
-                    </Animated.View>
-                  ) : null}
-                  {props.creationState?.kind === "failed" ? (
-                    <Animated.View
-                      className="shrink-0 px-4"
-                      style={{ paddingBottom: composerBottomInset }}
-                      entering={FadeInDown.duration(220)}
-                      exiting={FadeOut.duration(140)}
-                    >
-                      <ThreadCreationFailedCard
-                        reason={props.creationState.reason}
-                        onEditTask={props.creationState.onEditTask}
-                      />
-                    </Animated.View>
-                  ) : null}
+                    ) : null}
+                    {composerError !== null ? (
+                      <Animated.View
+                        className="shrink-0"
+                        entering={FadeInDown.duration(180)}
+                        exiting={FadeOut.duration(120)}
+                      >
+                        <ComposerErrorNotice
+                          message={composerError}
+                          onDismiss={() => clearThreadComposerError(selectedThreadKey)}
+                        />
+                      </Animated.View>
+                    ) : null}
+                    {usageLimitsReport && activeUserInputRequestId === null ? (
+                      <Animated.View
+                        className="shrink-0 px-4 pb-3"
+                        entering={FadeInDown.duration(220)}
+                        exiting={FadeOut.duration(140)}
+                      >
+                        <ComposerUsageLimits
+                          report={usageLimitsReport}
+                          environmentId={props.environmentId}
+                          onClose={dismissUsageLimits}
+                        />
+                      </Animated.View>
+                    ) : null}
+                    {props.creationState?.kind === "failed" ? (
+                      <Animated.View
+                        className="shrink-0 px-4"
+                        style={{ paddingBottom: composerBottomInset }}
+                        entering={FadeInDown.duration(220)}
+                        exiting={FadeOut.duration(140)}
+                      >
+                        <ThreadCreationFailedCard
+                          reason={props.creationState.reason}
+                          onEditTask={props.creationState.onEditTask}
+                        />
+                      </Animated.View>
+                    ) : null}
+                  </View>
                   {props.activePendingApproval || props.activePendingUserInput ? (
                     <Animated.View
-                      className="shrink-0 gap-3 px-4 pb-3"
-                      // The questionnaire replaces the composer, so it must pad
-                      // the home indicator the composer normally covers.
-                      style={
-                        activeUserInputRequestId !== null
-                          ? { paddingBottom: composerBottomInset }
-                          : undefined
+                      className={
+                        props.activePendingApproval
+                          ? "min-h-0 shrink gap-3 px-4 pb-3"
+                          : "shrink-0 gap-3 px-4 pb-3"
                       }
+                      // Requests replace the composer, including its home-indicator padding.
+                      style={{ paddingBottom: composerBottomInset }}
                       entering={FadeInDown.duration(220)}
                       exiting={FadeOut.duration(140)}
                     >
                       {props.activePendingApproval ? (
                         <PendingApprovalCard
                           canOperateThread={props.canOperateThread}
+                          canStopThread={props.canStopThread}
+                          onStopThread={props.onStopThread}
                           approval={props.activePendingApproval}
                           respondingApprovalId={props.respondingApprovalId}
                           onRespond={props.onRespondToApproval}
                         />
                       ) : null}
-                      {props.activePendingUserInput ? (
+                      {!props.activePendingApproval && props.activePendingUserInput ? (
                         <PendingUserInputCard
                           canOperateThread={props.canOperateThread}
                           pendingUserInput={props.activePendingUserInput}
@@ -1394,8 +1439,8 @@ export const ThreadDetailScreen = memo(function ThreadDetailScreen(props: Thread
                   ) : null}
                 </View>
 
-                {/* Hidden (not unmounted) while a user-input request owns the
-                composer slot, so composer drafts and editor state survive.
+                {/* Hidden (not unmounted) while a request owns the composer
+                slot, so composer drafts and editor state survive.
                 A rejected creation has no thread to send to; the failure card
                 owns the slot instead. */}
                 <View style={composerSlotHidden ? { display: "none" } : undefined}>

@@ -4,13 +4,15 @@ import type {
   ProviderApprovalOption,
   RuntimeRequestId,
 } from "@getpaperplane/contracts";
-import { View } from "react-native";
+import { ScrollView, View } from "react-native";
 
 import { AppText as Text } from "../../components/ui/AppText";
 import type { PendingApproval } from "../../lib/threadActivity";
 
 export interface PendingApprovalCardProps {
   readonly canOperateThread: boolean;
+  readonly canStopThread: boolean;
+  readonly onStopThread: () => void;
   readonly approval: PendingApproval;
   readonly respondingApprovalId: RuntimeRequestId | null;
   readonly onRespond: (
@@ -34,49 +36,70 @@ export function PendingApprovalCard(props: PendingApprovalCardProps) {
   const canRespond = props.approval.responseCapability === "live";
   const disabled = !canRespond || props.respondingApprovalId === props.approval.requestId;
   return (
-    <View className="gap-2.5 rounded-[20px] border border-border bg-card-alt p-4">
-      <Text className="font-paperplane-bold text-2xs uppercase tracking-[1.1px] text-foreground-secondary">
-        Approval needed
-      </Text>
-      <Text className="font-paperplane-bold text-lg text-foreground">
-        {props.approval.appName ?? props.approval.requestKind}
-      </Text>
-      {props.approval.detail ? (
-        <Text className="font-sans text-sm leading-normal text-foreground-secondary">
-          {props.approval.detail}
+    <View className="min-h-0 shrink overflow-hidden rounded-[20px] border border-border bg-card-alt">
+      <ScrollView
+        bounces={false}
+        nestedScrollEnabled
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator
+        className="min-h-0 shrink"
+        // Actions share the scroll content so wrapped labels and large text
+        // cannot leave an unreachable fixed footer in a short viewport.
+        contentContainerClassName="gap-2.5 p-4"
+      >
+        <Text className="font-paperplane-bold text-2xs uppercase tracking-[1.1px] text-foreground-secondary">
+          Approval needed
         </Text>
-      ) : null}
-      {!canRespond ? (
-        <Text className="font-sans text-sm leading-5 text-foreground-muted">
-          The provider process for this request is no longer available. Interrupt or restart the run
-          to continue.
+        <Text className="font-paperplane-bold text-lg text-foreground">
+          {props.approval.appName ?? props.approval.requestKind}
         </Text>
-      ) : null}
-      {warning ? (
-        <Text className="font-sans text-xs leading-normal text-warning-foreground">{warning}</Text>
-      ) : null}
-      <View className="flex-row flex-wrap gap-2.5">
-        {options.map((option) => (
-          <RequestActionButton
-            key={option.decision}
-            label={option.label}
-            tone={
-              option.decision === "accept"
-                ? "primary"
-                : option.decision === "decline"
-                  ? "danger"
-                  : "secondary"
-            }
-            disabled={disabled || !props.canOperateThread}
-            onPress={() => void props.onRespond(props.approval.requestId, option.decision)}
-          />
-        ))}
-      </View>
-      {!props.canOperateThread ? (
-        <Text className="font-sans text-xs text-foreground-muted">
-          This connection cannot respond to approvals.
-        </Text>
-      ) : null}
+        {props.approval.detail ? (
+          <Text selectable className="font-sans text-sm leading-normal text-foreground-secondary">
+            {props.approval.detail}
+          </Text>
+        ) : null}
+        {!canRespond ? (
+          <Text className="font-sans text-sm leading-5 text-foreground-muted">
+            The provider process for this request is no longer available. Interrupt or restart the
+            run to continue.
+          </Text>
+        ) : null}
+        {warning ? (
+          <Text className="font-sans text-xs leading-normal text-warning-foreground">
+            {warning}
+          </Text>
+        ) : null}
+        <View className="flex-row flex-wrap gap-2.5">
+          {options.map((option) => (
+            <RequestActionButton
+              key={option.decision}
+              label={option.label}
+              tone={
+                option.decision === "accept"
+                  ? "primary"
+                  : option.decision === "decline"
+                    ? "danger"
+                    : "secondary"
+              }
+              disabled={disabled || !props.canOperateThread}
+              onPress={() => void props.onRespond(props.approval.requestId, option.decision)}
+            />
+          ))}
+          {props.canStopThread ? (
+            <RequestActionButton
+              label="Stop run"
+              tone="secondary"
+              disabled={!props.canOperateThread}
+              onPress={props.onStopThread}
+            />
+          ) : null}
+        </View>
+        {!props.canOperateThread ? (
+          <Text className="font-sans text-xs text-foreground-muted">
+            This connection cannot respond to approvals.
+          </Text>
+        ) : null}
+      </ScrollView>
     </View>
   );
 }
