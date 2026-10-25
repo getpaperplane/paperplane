@@ -2636,10 +2636,12 @@ export default function Sidebar() {
   const projectScopeItems = useMemo(
     () => [
       { value: "all", label: "All projects" },
-      ...projectGroups.map((project) => ({
-        value: project.projectKey,
-        label: project.displayName,
-      })),
+      ...projectGroups
+        .toSorted((a, b) => Number(Boolean(b.isScratch)) - Number(Boolean(a.isScratch)))
+        .map((project) => ({
+          value: project.projectKey,
+          label: project.displayName,
+        })),
     ],
     [projectGroups],
   );
