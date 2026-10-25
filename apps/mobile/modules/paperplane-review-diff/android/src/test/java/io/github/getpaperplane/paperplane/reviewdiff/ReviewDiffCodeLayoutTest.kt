@@ -128,6 +128,32 @@ class ReviewDiffCodeLayoutTest {
   }
 
   @Test
+  fun rowHeightsPreserveHeadersNoticesAndCommentExpansion() {
+    val style = DiffStyle.defaults(2f)
+    val line = row("value")
+    val wrap = CodeWrapLayout.NONE
+    assertEquals(
+      style.fileHeaderHeightPx.toInt(),
+      wrap.rowHeight(line.copy(kind = "file"), style, emptySet(), 2f)
+    )
+    assertEquals(88, wrap.rowHeight(line.copy(kind = "comment"), style, setOf(line.id), 2f))
+    assertEquals(248, wrap.rowHeight(line.copy(kind = "comment"), style, emptySet(), 2f))
+    assertEquals(style.rowHeightPx.toInt(), wrap.rowHeight(line, style, emptySet(), 2f))
+    assertEquals(
+      88,
+      wrap.rowHeight(line.copy(kind = "notice"), style.copy(rowHeightPx = 10f), emptySet(), 2f)
+    )
+    assertEquals(
+      200,
+      wrap.rowHeight(line.copy(kind = "notice"), style.copy(rowHeightPx = 100f), emptySet(), 2f)
+    )
+    assertEquals(
+      1,
+      wrap.rowHeight(line.copy(kind = "unknown"), style.copy(rowHeightPx = 0f), emptySet(), 2f)
+    )
+  }
+
+  @Test
   fun highlightsUseNativeTextRangesAndSurviveSyntaxArrival() {
     val cache = CodeLayoutCache()
     val row = row("漢字".repeat(30)).copy(wordDiffRanges = listOf(DiffWordDiffRange(3, 21)))
@@ -136,7 +162,11 @@ class ReviewDiffCodeLayoutTest {
     val wrap = cache.layout(listOf(row), emptyMap(), paint, style, theme, 180)
     val initial = wrap.lines(row.id)
     val tokens = mapOf(row.id to listOf(DiffToken(row.content, 0xff008800.toInt(), 0)))
-    assertEquals("Color-only patches must not rebuild offsets", false, cache.patchTokens(tokens, paint))
+    assertEquals(
+      "Color-only patches must not rebuild offsets",
+      false,
+      cache.patchTokens(tokens, paint),
+    )
     val highlighted = wrap.lines(row.id)
     assertNotSame(initial, highlighted)
     val text = requireNotNull(highlighted.nativeLayout).text as Spanned
@@ -165,8 +195,11 @@ class ReviewDiffCodeLayoutTest {
     assertEquals(false, cache.patchTokens(patch, paint))
     assertEquals("A small token patch must not scan the document", 0, rows.reads)
     rows.forEachIndexed { index, row ->
-      if (index < 4) assertNotSame(before[index], wrap.lines(row.id))
-      else assertSame(before[index], wrap.lines(row.id))
+      if (index < 4) {
+        assertNotSame(before[index], wrap.lines(row.id))
+      } else {
+        assertSame(before[index], wrap.lines(row.id))
+      }
     }
     val unchangedWorker = workerSnapshot.layout(rows, emptyMap(), paint, style, theme, 180)
     assertSame(

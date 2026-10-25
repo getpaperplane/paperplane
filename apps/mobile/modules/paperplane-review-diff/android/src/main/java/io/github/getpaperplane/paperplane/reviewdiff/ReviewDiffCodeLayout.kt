@@ -44,6 +44,24 @@ internal class CodeWrapLayout(
       it.extraHeight
   }
 
+  fun rowHeight(
+    row: DiffRow,
+    style: DiffStyle,
+    collapsedCommentIds: Set<String>,
+    density: Float
+  ): Int =
+    when (row.kind) {
+      "file" -> style.fileHeaderHeightPx.toInt()
+      "notice" -> max((style.rowHeightPx * 2f).toInt(), (44 * density).toInt())
+      "comment" -> if (collapsedCommentIds.contains(row.id)) {
+        (44 * density).toInt()
+      } else {
+        (124 * density).toInt()
+      }
+      "line" -> rowHeight(row.id, style.rowHeightPx.toInt())
+      else -> style.rowHeightPx.toInt()
+    }.coerceAtLeast(1)
+
   companion object {
     private val SINGLE_LINE = CodeLines(intArrayOf(0), 0)
     val NONE = CodeWrapLayout(false, emptyMap())
@@ -130,22 +148,24 @@ internal class CodeLayoutCache {
 
   /** Update only cached code rows in the patch. The current wrap layout owns this map. */
   fun patchTokens(tokens: Map<String, List<DiffToken>>, paint: Paint): Boolean {
-    val style = previousStyle ?: return false
-    val theme = previousTheme ?: return false
+    val style = previousStyle
+    val theme = previousTheme
+    if (style == null || theme == null) return false
     var heightsChanged = false
     for ((rowId, rowTokens) in tokens) {
       val previous = entries[rowId] ?: continue
-      if (previous.tokens == rowTokens) continue
-      // Recreate styled native text, not just colors: StyleSpan can change wrapping.
-      val text = styledCode(previous.row, rowTokens, theme)
-      val lines = createCodeLines(text, TextPaint(paint), previousWidth)
-      entries[rowId] = Entry(previous.row, rowTokens, lines)
-      layouts[rowId] = lines
-      val base = style.rowHeightPx.toInt()
-      if (lines.firstHeight(base) + lines.extraHeight !=
-        previous.lines.firstHeight(base) + previous.lines.extraHeight
-      ) {
-        heightsChanged = true
+      if (previous.tokens != rowTokens) {
+        // Recreate styled native text, not just colors: StyleSpan can change wrapping.
+        val text = styledCode(previous.row, rowTokens, theme)
+        val lines = createCodeLines(text, TextPaint(paint), previousWidth)
+        entries[rowId] = Entry(previous.row, rowTokens, lines)
+        layouts[rowId] = lines
+        val base = style.rowHeightPx.toInt()
+        if (lines.firstHeight(base) + lines.extraHeight !=
+          previous.lines.firstHeight(base) + previous.lines.extraHeight
+        ) {
+          heightsChanged = true
+        }
       }
     }
     return heightsChanged

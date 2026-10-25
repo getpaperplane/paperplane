@@ -925,17 +925,8 @@ private class DiffCanvasView(context: Context) : View(context) {
     onContentHeightChanged?.invoke(rowOffsets.last())
   }
 
-  private fun rowHeight(row: DiffRow): Int = when (row.kind) {
-    "file" -> style.fileHeaderHeightPx.toInt()
-    "notice" -> max((style.rowHeightPx * 2f).toInt(), (44 * density).toInt())
-    "comment" -> if (collapsedCommentIds.contains(row.id)) {
-      (44 * density).toInt()
-    } else {
-      (124 * density).toInt()
-    }
-    "line" -> codeWrap.rowHeight(row.id, style.rowHeightPx.toInt())
-    else -> style.rowHeightPx.toInt()
-  }.coerceAtLeast(1)
+  private fun rowHeight(row: DiffRow): Int =
+    codeWrap.rowHeight(row, style, collapsedCommentIds, density)
 
   @Suppress("ReturnCount")
   private fun rowIndexAt(y: Int): Int {
