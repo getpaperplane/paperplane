@@ -124,7 +124,7 @@ export interface ProfileMigrationInput {
 }
 
 /** Conservatively retain crash locks too: reopening and quitting the old app clears them. No process is signalled. */
-export function oldProfileIsInUse(source: string, platform: NodeJS.Platform) {
+function oldProfileIsInUse(source: string, platform: NodeJS.Platform) {
   return exists(NodePath.join(source, platform === "win32" ? "lockfile" : "SingletonLock"));
 }
 
