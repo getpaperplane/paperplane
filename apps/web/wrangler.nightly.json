@@ -28,7 +28,7 @@
   },
   "routes": [
     {
-      "pattern": "rove-nightly.hafiezulzikry.com",
+      "pattern": "paperplane-nightly.hafiezulzikry.com",
       "custom_domain": true
     }
   ]

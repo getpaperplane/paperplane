@@ -4,7 +4,7 @@ Pod::Spec.new do |s|
   s.summary        = 'Native attributed composer editor for Paperplane mobile.'
   s.description    = 'UIKit-backed rich text composer with atomic skill and file tokens.'
   s.author         = 'T3 Tools'
-  s.homepage       = 'https://rove.hafiezulzikry.com'
+  s.homepage       = 'https://paperplane.hafiezulzikry.com'
   s.platforms      = {
     :ios => '16.4',
   }

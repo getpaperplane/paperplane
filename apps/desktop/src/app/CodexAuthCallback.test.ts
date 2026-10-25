@@ -60,7 +60,7 @@ describe("desktop Codex callback helper", () => {
     const input = {
       authorizationUrl,
       returnUrl:
-        "https://rove.hafiezulzikry.com/settings/providers?environmentId=remote-one&instanceId=work",
+        "https://paperplane.hafiezulzikry.com/settings/providers?environmentId=remote-one&instanceId=work",
       environmentId: EnvironmentId.make("remote-one"),
       instanceId: ProviderInstanceId.make("work"),
       flowId: "flow-one",

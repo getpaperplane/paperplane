@@ -7,7 +7,7 @@ Pod::Spec.new do |s|
   s.version = package['version']
   s.summary = 'Native terminal surface for Paperplane mobile.'
   s.description = 'Native terminal surface bridge used by the Paperplane React Native app.'
-  s.homepage = 'https://rove.hafiezulzikry.com'
+  s.homepage = 'https://paperplane.hafiezulzikry.com'
   s.license = { :type => 'UNLICENSED' }
   s.author = { 'T3 Tools' => 'hello@t3tools.com' }
   s.platforms = { :ios => '16.1' }

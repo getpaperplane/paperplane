@@ -25,7 +25,7 @@ paperplane service install
 paperplane pair --tailscale   # or connect over LAN; see remote access docs
 ```
 
-**Browser:** open [rove.hafiezulzikry.com](https://rove.hafiezulzikry.com) and pair it with a host you run. Every CLI host also serves the web client locally.
+**Browser:** open [paperplane.hafiezulzikry.com](https://paperplane.hafiezulzikry.com) and pair it with a host you run. Every CLI host also serves the web client locally.
 
 **Mobile:** not on the app stores yet. Build the dev client from source and pair it with a host. See the [mobile README](./apps/mobile/README.md).
 

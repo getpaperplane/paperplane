@@ -208,7 +208,7 @@ function namedProjectReadme(name: string): string {
     "",
     `# ${name}`,
     "",
-    "Created in [Paperplane](https://rove.hafiezulzikry.com).",
+    "Created in [Paperplane](https://paperplane.hafiezulzikry.com).",
     "",
   ].join("\n");
 }

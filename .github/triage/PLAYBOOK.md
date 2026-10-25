@@ -67,7 +67,7 @@ different code depending on it:
 
 - How is Paperplane running on this machine: `npx @getpaperplane/cli serve` in a terminal, the
   background service, or the desktop app?
-- Which surface is the user connecting from: the website (rove.hafiezulzikry.com), the
+- Which surface is the user connecting from: the website (paperplane.hafiezulzikry.com), the
   desktop app against a local server, the desktop app against a remote server,
   or the mobile app?
 

@@ -61,7 +61,7 @@ function summarize(
 }
 
 /**
- * On rove.hafiezulzikry.com a prompt link first asks where to open: the installed desktop or mobile app
+ * On paperplane.hafiezulzikry.com a prompt link first asks where to open: the installed desktop or mobile app
  * (through `paperplane://`), this browser when it is connected to a machine, or the download page.
  * Returns that page, or null when the link should open in this browser as usual.
  */

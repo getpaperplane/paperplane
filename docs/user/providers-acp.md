@@ -37,7 +37,7 @@ without expanding shell expressions.
 ## Where agents run
 
 Registry agents always run on the machine that hosts your Paperplane server. That stays true when you
-connect through `rove.hafiezulzikry.com`, Paperplane Connect, or a relay.
+connect through `paperplane.hafiezulzikry.com`, Paperplane Connect, or a relay.
 
 Agents install under `tools/<agent-id>/<version>/` inside Paperplane home. Paperplane verifies SHA-256 when the Registry entry
 provides one; entries without a checksum retain the Registry's HTTPS distribution guarantee.

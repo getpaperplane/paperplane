@@ -341,7 +341,7 @@ it.effect.each(["startup", "open-url"] as const)(
       }).toString();
       const request = {
         authorizationUrl: authorize.toString(),
-        returnUrl: "https://rove.hafiezulzikry.com/welcome#agents:remote-one",
+        returnUrl: "https://paperplane.hafiezulzikry.com/welcome#agents:remote-one",
         environmentId: EnvironmentId.make("remote-one"),
         instanceId: ProviderInstanceId.make("work"),
         flowId: "flow-one",

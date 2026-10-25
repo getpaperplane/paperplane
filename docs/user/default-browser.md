@@ -9,6 +9,6 @@ Choose **Paperplane** under **System Settings → Desktop & Dock → Default web
 choose another browser there.
 
 HTML files you open from Finder open the same way. [Prompt links](prompt-links.md) to
-rove.hafiezulzikry.com open in the app as a draft.
+paperplane.hafiezulzikry.com open in the app as a draft.
 
 A link that launches Paperplane waits until the app has connected to its environment, then opens.

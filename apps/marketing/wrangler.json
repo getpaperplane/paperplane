@@ -9,7 +9,7 @@
   },
   "routes": [
     {
-      "pattern": "rove-code.hafiezulzikry.com",
+      "pattern": "getpaperplane.hafiezulzikry.com",
       "custom_domain": true
     }
   ]

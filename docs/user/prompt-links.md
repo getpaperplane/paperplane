@@ -15,9 +15,9 @@ and the model you picked. Sent messages have a **Copy prompt link** button too.
 You can also write a link by hand:
 
 ```
-https://rove.hafiezulzikry.com/new?prompt=Rate%20my%20swearing
-https://rove.hafiezulzikry.com/new?prompt=Fix%20the%20build&repo=owner/name&provider=codex&model=gpt-5.5
-https://rove.hafiezulzikry.com/new?pr=owner/name/123&prompt=Fix%20the%20failing%20check
+https://paperplane.hafiezulzikry.com/new?prompt=Rate%20my%20swearing
+https://paperplane.hafiezulzikry.com/new?prompt=Fix%20the%20build&repo=owner/name&provider=codex&model=gpt-5.5
+https://paperplane.hafiezulzikry.com/new?pr=owner/name/123&prompt=Fix%20the%20failing%20check
 ```
 
 | Parameter  | Meaning                                                                       |
@@ -32,7 +32,7 @@ Encode the prompt for a URL. In JavaScript, use `encodeURIComponent`.
 
 ## Open a link
 
-On rove.hafiezulzikry.com, the link first asks where to open it: the desktop or mobile app, this browser
+On paperplane.hafiezulzikry.com, the link first asks where to open it: the desktop or mobile app, this browser
 when it is connected to a machine, or the download page. Select **Remember my choice** to skip
 this step next time.
 
@@ -47,7 +47,7 @@ this step next time.
   worktree. Paperplane checks the code out only after you confirm, because the checkout runs your
   setup script on it.
 
-A thread link with a prompt, such as `https://rove.hafiezulzikry.com/<environment>/<thread>?prompt=…`,
+A thread link with a prompt, such as `https://paperplane.hafiezulzikry.com/<environment>/<thread>?prompt=…`,
 puts the prompt in that thread's composer. If you already typed a draft there, Paperplane asks
 before it replaces it.
 

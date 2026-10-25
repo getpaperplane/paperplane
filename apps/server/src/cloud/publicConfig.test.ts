@@ -54,7 +54,7 @@ it.effect(
     Effect.gen(function* () {
       assert.equal(
         yield* hostedAppUrlConfig.pipe(provideEnv({})),
-        "https://rove.hafiezulzikry.com",
+        "https://paperplane.hafiezulzikry.com",
       );
       yield* makeRelayUrlConfig("").pipe(provideEnv({}), Effect.flip);
       yield* makeCloudCliOAuthConfig({

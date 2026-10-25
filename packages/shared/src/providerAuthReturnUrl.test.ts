@@ -16,17 +16,19 @@ describe("provider auth return destinations", () => {
   it("returns to the hosted Paperplane client and strips OAuth credentials", () => {
     expect(
       providerAuthReturnUrl(
-        "https://rove.hafiezulzikry.com/settings/providers?environmentId=remote&instanceId=work&code=secret#token",
+        "https://paperplane.hafiezulzikry.com/settings/providers?environmentId=remote&instanceId=work&code=secret#token",
       ),
     ).toBe(
-      "https://rove.hafiezulzikry.com/settings/providers?environmentId=remote&instanceId=work",
+      "https://paperplane.hafiezulzikry.com/settings/providers?environmentId=remote&instanceId=work",
     );
   });
   it.each([
     "https://app.t3.codes/welcome",
-    "http://rove.hafiezulzikry.com/welcome",
-    "https://rove.hafiezulzikry.com.attacker.example/welcome",
-    "https://rove.hafiezulzikry.com:123/welcome",
+    "https://rove.hafiezulzikry.com/welcome",
+    "https://rove-nightly.hafiezulzikry.com/welcome",
+    "http://paperplane.hafiezulzikry.com/welcome",
+    "https://paperplane.hafiezulzikry.com.attacker.example/welcome",
+    "https://paperplane.hafiezulzikry.com:123/welcome",
     "paperplane://attacker/welcome",
     "paperplane://app:123/welcome",
     "paperplane://app/auth/callback",

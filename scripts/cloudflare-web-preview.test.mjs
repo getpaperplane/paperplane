@@ -20,7 +20,7 @@ it("builds an isolated Worker configuration using only the trusted edge handler 
     {
       name: "paperplane-web",
       compatibility_date: "2025-04-01",
-      routes: [{ pattern: "rove.hafiezulzikry.com", custom_domain: true }],
+      routes: [{ pattern: "paperplane.hafiezulzikry.com", custom_domain: true }],
       workers_dev: false,
       main: "production-server.js",
       vars: { SECRET: "production-only" },

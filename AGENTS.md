@@ -24,7 +24,7 @@ The WebSocket layer (`npx @getpaperplane/cli`) supports direct connections over 
 
 Paperplane has three app surfaces: **web**, **desktop**, and **mobile**.
 
-- **Web** has two forms: the hosted app at `rove.hafiezulzikry.com` (static Cloudflare deploy, no backend, users pair their own hosts) and the copy each CLI host serves locally. New features should support both where reasonable.
+- **Web** has two forms: the hosted app at `paperplane.hafiezulzikry.com` (static Cloudflare deploy, no backend, users pair their own hosts) and the copy each CLI host serves locally. New features should support both where reasonable.
 - **Desktop** is the main surface. Electron bundles the server and can act as the host for LAN, Tailscale, or SSH clients. Builds publish to GitHub Releases on stable and daily nightly channels. macOS builds are self-signed, not notarized.
 - **Mobile** is React Native for iOS and Android. It is source-only: build the dev client and pair it over the network. There are no store releases yet.
 

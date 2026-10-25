@@ -4,10 +4,10 @@ import { hostedBuildDefines } from "./hostedBuild";
 
 describe("hostedBuildDefines", () => {
   it("builds a manual-pairing client with a normalized public origin", () => {
-    const defines = hostedBuildDefines("https://rove.hafiezulzikry.com/");
+    const defines = hostedBuildDefines("https://paperplane.hafiezulzikry.com/");
 
     expect(JSON.parse(defines["import.meta.env.VITE_HOSTED_APP_URL"])).toBe(
-      "https://rove.hafiezulzikry.com",
+      "https://paperplane.hafiezulzikry.com",
     );
     expect(JSON.parse(defines["import.meta.env.VITE_HOSTED_APP_CHANNEL"])).toBe("latest");
     for (const setting of [
@@ -27,10 +27,10 @@ describe("hostedBuildDefines", () => {
   });
 
   it("builds a nightly client with its own public origin and channel", () => {
-    const defines = hostedBuildDefines("https://rove-nightly.hafiezulzikry.com", "nightly");
+    const defines = hostedBuildDefines("https://paperplane-nightly.hafiezulzikry.com", "nightly");
 
     expect(JSON.parse(defines["import.meta.env.VITE_HOSTED_APP_URL"])).toBe(
-      "https://rove-nightly.hafiezulzikry.com",
+      "https://paperplane-nightly.hafiezulzikry.com",
     );
     expect(JSON.parse(defines["import.meta.env.VITE_HOSTED_APP_CHANNEL"])).toBe("nightly");
     expect(defines).toHaveProperty(["import.meta.env.VITE_HTTP_URL"], JSON.stringify(""));
@@ -38,7 +38,7 @@ describe("hostedBuildDefines", () => {
   });
 
   it.each(["stable", "preview", "unknown"])("rejects an unsupported app channel %s", (channel) => {
-    expect(() => hostedBuildDefines("https://rove.hafiezulzikry.com", channel)).toThrow(
+    expect(() => hostedBuildDefines("https://paperplane.hafiezulzikry.com", channel)).toThrow(
       /VITE_HOSTED_APP_CHANNEL/,
     );
   });

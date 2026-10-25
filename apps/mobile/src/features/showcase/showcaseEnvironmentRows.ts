@@ -9,7 +9,7 @@ interface ShowcaseEnvironmentDisplayUrls {
 
 const SHOWCASE_LOCAL_ENVIRONMENT_DISPLAY_URLS: ShowcaseEnvironmentDisplayUrls = {
   "Moonbase Terminal": "https://moonbase.tail9f3a.ts.net/",
-  "Suspense Station": "https://rove.hafiezulzikry.com/",
+  "Suspense Station": "https://paperplane.hafiezulzikry.com/",
   "Kernel Cabin": "http://100.82.16.5:3773/",
 };
 
@@ -36,8 +36,8 @@ export function resolveShowcaseEnvironmentUpdateDisplayUrl(input: {
 
 const pocketPiId = EnvironmentId.make("showcase-pocket-pi");
 const pocketPiEndpoint = {
-  httpBaseUrl: "https://rove.hafiezulzikry.com",
-  wsBaseUrl: "wss://rove.hafiezulzikry.com",
+  httpBaseUrl: "https://paperplane.hafiezulzikry.com",
+  wsBaseUrl: "wss://paperplane.hafiezulzikry.com",
   providerKind: "paperplane_relay" as const,
 };
 
@@ -45,7 +45,7 @@ export const SHOWCASE_CONNECTED_CLOUD_ENVIRONMENTS: ReadonlyArray<ConnectedEnvir
   {
     environmentId: EnvironmentId.make("showcase-aurora-gpu"),
     environmentLabel: "Aurora GPU Pod",
-    displayUrl: "https://rove.hafiezulzikry.com",
+    displayUrl: "https://paperplane.hafiezulzikry.com",
     isRelayManaged: true,
     isEnabled: true,
     connectionState: "connected",

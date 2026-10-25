@@ -28,7 +28,7 @@
   },
   "routes": [
     {
-      "pattern": "rove.hafiezulzikry.com",
+      "pattern": "paperplane.hafiezulzikry.com",
       "custom_domain": true
     }
   ]

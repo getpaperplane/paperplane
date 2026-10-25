@@ -4,7 +4,7 @@ Pod::Spec.new do |s|
   s.summary        = 'Native UIKit controls for Paperplane mobile.'
   s.description    = 'UIKit-backed controls that match native iOS navigation chrome.'
   s.author         = 'T3 Tools'
-  s.homepage       = 'https://rove.hafiezulzikry.com'
+  s.homepage       = 'https://paperplane.hafiezulzikry.com'
   s.platforms      = {
     :ios => '18.0',
   }

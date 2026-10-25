@@ -13,7 +13,7 @@ const CONNECT_AUTHORIZE_PATH = "/connect";
  * default lives here. This is Paperplane's static hosted client, not the relay;
  * using it does not enable Paperplane Connect or configure its credentials.
  */
-export const DEFAULT_HOSTED_APP_URL = "https://rove.hafiezulzikry.com";
+export const DEFAULT_HOSTED_APP_URL = "https://paperplane.hafiezulzikry.com";
 
 /**
  * Requested at authorize time by the hosted page and by the CLI's device
