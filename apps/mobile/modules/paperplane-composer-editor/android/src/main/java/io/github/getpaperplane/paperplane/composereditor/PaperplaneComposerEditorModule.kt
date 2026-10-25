@@ -91,18 +91,12 @@ class PaperplaneComposerEditorModule : Module() {
       Prop("lineHeight") { view: PaperplaneComposerEditorView, lineHeight: Double ->
         view.setLineHeight(lineHeight.toFloat())
       }
-      Prop("contentInsetVertical") {
-          view: PaperplaneComposerEditorView,
-          contentInsetVertical: Double
-        ->
-        view.setContentInsetVertical(contentInsetVertical.toInt())
+      Prop("contentInsetVertical") { view: PaperplaneComposerEditorView, inset: Double ->
+        view.setContentInsetVertical(inset.toInt())
       }
 
-      Prop("singleLineCentered") {
-          view: PaperplaneComposerEditorView,
-          singleLineCentered: Boolean
-        ->
-        view.setSingleLineCentered(singleLineCentered)
+      Prop("singleLineCentered") { view: PaperplaneComposerEditorView, centered: Boolean ->
+        view.setSingleLineCentered(centered)
       }
       Prop("editable") { view: PaperplaneComposerEditorView, editable: Boolean ->
         view.setEditable(editable)

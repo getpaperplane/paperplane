@@ -23,11 +23,8 @@ class PaperplaneReviewDiffModule : Module() {
       Prop("selectedRowIdsJson") { view: PaperplaneReviewDiffView, selectedRowIdsJson: String ->
         view.setSelectedRowIdsJson(selectedRowIdsJson)
       }
-      Prop("collapsedCommentIdsJson") {
-          view: PaperplaneReviewDiffView,
-          collapsedCommentIdsJson: String
-        ->
-        view.setCollapsedCommentIdsJson(collapsedCommentIdsJson)
+      Prop("collapsedCommentIdsJson") { view: PaperplaneReviewDiffView, json: String ->
+        view.setCollapsedCommentIdsJson(json)
       }
       Prop("appearanceScheme") { view: PaperplaneReviewDiffView, appearanceScheme: String ->
         view.setAppearanceScheme(appearanceScheme)
@@ -79,11 +76,8 @@ class PaperplaneReviewDiffModule : Module() {
       AsyncFunction("setTokensJson") { view: PaperplaneReviewDiffView, tokensJson: String ->
         view.setTokensJson(tokensJson)
       }
-      AsyncFunction("setTokensPatchJson") {
-          view: PaperplaneReviewDiffView,
-          tokensPatchJson: String
-        ->
-        view.setTokensPatchJson(tokensPatchJson)
+      AsyncFunction("setTokensPatchJson") { view: PaperplaneReviewDiffView, patchJson: String ->
+        view.setTokensPatchJson(patchJson)
       }
 
       OnViewDestroys { view: PaperplaneReviewDiffView ->
