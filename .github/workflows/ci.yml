@@ -25,7 +25,7 @@ jobs:
   # open: if the diff cannot be resolved, everything runs.
   changes:
     name: Changes
-    runs-on: ubuntu-24.04
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     timeout-minutes: 5
     outputs:
       typecheck: ${{ steps.detect.outputs.typecheck }}
@@ -65,7 +65,7 @@ jobs:
   # waiting for `changes` let the shards fill every runner slot first.
   lint:
     name: Lint
-    runs-on: ubuntu-24.04
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     timeout-minutes: 15
     steps:
       # Depth 2 brings the base commit the change is diffed against.
@@ -152,7 +152,7 @@ jobs:
     name: Build and Typecheck
     needs: changes
     if: ${{ !cancelled() && (needs.changes.outputs.build != 'false' || needs.changes.outputs.typecheck != 'false') }}
-    runs-on: ubuntu-24.04
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     timeout-minutes: 10
     steps:
       - name: Checkout
@@ -232,7 +232,7 @@ jobs:
     if: ${{ !cancelled() && needs.changes.outputs.test != 'false' }}
     # Free arm64 runners ran these import-bound suites 27-37% faster than x64
     # in paired benchmarks; server shards and the desktop build were not faster.
-    runs-on: ubuntu-24.04-arm
+    runs-on: blacksmith-4vcpu-ubuntu-2404-arm
     timeout-minutes: 10
     strategy:
       fail-fast: false
@@ -320,7 +320,7 @@ jobs:
     if: ${{ !cancelled() && needs.changes.outputs.test_web != 'false' }}
     # Free arm64 runners ran these import-bound suites 27-37% faster than x64
     # in paired benchmarks; server shards and the desktop build were not faster.
-    runs-on: ubuntu-24.04-arm
+    runs-on: blacksmith-4vcpu-ubuntu-2404-arm
     timeout-minutes: 10
     strategy:
       fail-fast: false
@@ -356,7 +356,7 @@ jobs:
   # ~15s for `changes`: a shard the change cannot affect stops after checkout.
   test_server:
     name: Test Server ${{ matrix.shard }}
-    runs-on: ubuntu-24.04
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     timeout-minutes: 10
     strategy:
       fail-fast: false
@@ -455,7 +455,7 @@ jobs:
     name: Mobile Native Static Analysis
     needs: changes
     if: ${{ !cancelled() && needs.changes.outputs.mobile_native != 'false' }}
-    runs-on: macos-26
+    runs-on: blacksmith-6vcpu-macos-26
     timeout-minutes: 10
     steps:
       - name: Checkout
@@ -487,7 +487,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        runner: [windows-2025, windows-11-arm]
+        runner: [blacksmith-4vcpu-windows-2025, blacksmith-4vcpu-windows-2025]
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 15
     steps:
@@ -531,7 +531,7 @@ jobs:
         mobile_native_static_analysis,
         windows_release,
       ]
-    runs-on: ubuntu-24.04
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     timeout-minutes: 5
     steps:
       - name: Require every job to pass

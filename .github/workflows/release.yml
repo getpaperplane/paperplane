@@ -50,7 +50,7 @@ jobs:
   resolve_commit:
     name: Resolve release commit
     if: inputs.build_only || vars.PAPERPLANE_RELEASE_READY == 'true'
-    runs-on: ubuntu-24.04
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     timeout-minutes: 5
     outputs:
       ref: ${{ steps.resolve.outputs.ref }}
@@ -92,7 +92,7 @@ jobs:
     if: |
       needs.resolve_commit.result == 'success' &&
       (github.event_name != 'schedule' || needs.resolve_commit.outputs.has_changes == 'true')
-    runs-on: ubuntu-24.04
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     timeout-minutes: 10
     outputs:
       release_channel: ${{ steps.release_meta.outputs.release_channel }}
@@ -254,7 +254,7 @@ jobs:
     name: Release quality checks
     needs: [preflight, quality_checks]
     if: ${{ always() && needs.preflight.result == 'success' }}
-    runs-on: ubuntu-24.04
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     timeout-minutes: 5
     steps:
       - name: Require every quality check
@@ -267,7 +267,7 @@ jobs:
     name: Release quality ${{ matrix.suite }} ${{ matrix.workspace }} ${{ matrix.shard }}
     needs: [preflight]
     if: ${{ !failure() && !cancelled() && needs.preflight.result == 'success' && needs.preflight.outputs.ci_passed != 'true' }}
-    runs-on: ubuntu-24.04
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     timeout-minutes: 15
     strategy:
       fail-fast: false
@@ -383,7 +383,7 @@ jobs:
       vars.PAPERPLANE_CLOUD_READY == 'true' &&
       needs.resolve_commit.result == 'success' &&
       (github.event_name != 'schedule' || needs.resolve_commit.outputs.has_changes == 'true')
-    runs-on: ubuntu-24.04
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     timeout-minutes: 5
     environment:
       name: production
@@ -491,7 +491,7 @@ jobs:
     # config), the bundle is built without Paperplane Connect — a community build.
     needs: [preflight, relay_public_config]
     if: ${{ !cancelled() && needs.preflight.result == 'success' && needs.relay_public_config.result != 'failure' }}
-    runs-on: ubuntu-24.04
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     timeout-minutes: 30
     env:
       PAPERPLANE_CLERK_PUBLISHABLE_KEY: ${{ needs.relay_public_config.outputs.clerk_publishable_key }}
@@ -771,7 +771,7 @@ jobs:
     name: Package CLI for npm
     needs: [preflight, relay_public_config]
     if: ${{ !cancelled() && needs.preflight.result == 'success' && needs.relay_public_config.result != 'failure' }}
-    runs-on: ubuntu-24.04
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     timeout-minutes: 45
     steps:
       - name: Checkout
@@ -846,7 +846,7 @@ jobs:
     name: Publish CLI ${{ matrix.platform }} to npm
     needs: [preflight, quality]
     if: ${{ !inputs.build_only && !failure() && !cancelled() && needs.preflight.result == 'success' && needs.quality.result == 'success' }}
-    runs-on: ubuntu-24.04
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     timeout-minutes: 60
     strategy:
       fail-fast: false
@@ -921,7 +921,7 @@ jobs:
         desktop_win_arm64_cli,
       ]
     if: ${{ !inputs.build_only && !failure() && !cancelled() && needs.preflight.result == 'success' && needs.quality.result == 'success' && needs.package_cli.result == 'success' && needs.publish_cli_platforms.result == 'success' && needs.desktop_win_arm64_cli.result == 'success' && needs.desktop_mac_arm64.result == 'success' && needs.desktop_mac_x64.result == 'success' && needs.desktop_linux_x64.result == 'success' && needs.desktop_linux_arm64.result == 'success' && needs.desktop_win_x64.result == 'success' && needs.desktop_win_arm64.result == 'success' }}
-    runs-on: ubuntu-24.04
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     # Publishing waits up to 120 minutes for npm to serve the platform packages.
     timeout-minutes: 150
     permissions:
@@ -1011,7 +1011,7 @@ jobs:
         mobile_sideload,
       ]
     if: ${{ !inputs.build_only && !failure() && !cancelled() && needs.preflight.result == 'success' && needs.desktop_win_arm64_cli.result == 'success' && needs.desktop_mac_arm64.result == 'success' && needs.desktop_mac_x64.result == 'success' && needs.desktop_linux_x64.result == 'success' && needs.desktop_linux_arm64.result == 'success' && needs.desktop_win_x64.result == 'success' && needs.desktop_win_arm64.result == 'success' && needs.quality.result == 'success' && needs.package_cli.result == 'success' }}
-    runs-on: ubuntu-24.04
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     timeout-minutes: 30
     permissions:
       contents: write
@@ -1237,7 +1237,7 @@ jobs:
     name: Finalize release
     if: ${{ !failure() && !cancelled() && needs.preflight.result == 'success' && needs.release.result == 'success' && needs.preflight.outputs.release_channel == 'stable' }}
     needs: [preflight, release]
-    runs-on: ubuntu-24.04
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     timeout-minutes: 10
     steps:
       - id: app_token
@@ -1327,7 +1327,7 @@ jobs:
     # Finalization only prepares the next source version; users can already
     # install once release + hosted deployment succeed. Do not await that push.
     needs: [preflight, relay_public_config, release, deploy_web]
-    runs-on: ubuntu-24.04
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     timeout-minutes: 10
     steps:
       - name: Checkout

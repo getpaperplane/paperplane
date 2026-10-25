@@ -22,7 +22,7 @@ jobs:
       contains(github.event.pull_request.labels.*.name, 'preview:web') &&
       (github.event.action != 'labeled' || github.event.label.name == 'preview:web') &&
       github.event.action != 'unlabeled'
-    runs-on: ubuntu-24.04
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     timeout-minutes: 5
     environment: cloudflare-web
     outputs:
@@ -47,7 +47,7 @@ jobs:
   build:
     name: Build web preview without deployment credentials
     needs: resolve
-    runs-on: ubuntu-24.04
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     timeout-minutes: 15
     permissions:
       contents: read
@@ -84,7 +84,7 @@ jobs:
   deploy:
     name: Deploy isolated Cloudflare preview
     needs: [resolve, build]
-    runs-on: ubuntu-24.04
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     timeout-minutes: 10
     environment: cloudflare-web
     steps:
@@ -147,7 +147,7 @@ jobs:
       github.event.pull_request.head.repo.full_name == github.repository &&
       (github.event.action == 'closed' ||
        (github.event.action == 'unlabeled' && github.event.label.name == 'preview:web'))
-    runs-on: ubuntu-24.04
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     timeout-minutes: 5
     environment: cloudflare-web
     steps:

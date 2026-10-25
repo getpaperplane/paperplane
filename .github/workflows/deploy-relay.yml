@@ -36,7 +36,7 @@ jobs:
     # enable Connect in release builds; automatic main deployments still require
     # the repository readiness gate.
     if: github.ref == 'refs/heads/main' && (github.event_name == 'workflow_dispatch' || vars.PAPERPLANE_CLOUD_READY == 'true')
-    runs-on: ubuntu-24.04
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     timeout-minutes: 15
     environment:
       name: production
