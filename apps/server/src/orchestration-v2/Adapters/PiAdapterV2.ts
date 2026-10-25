@@ -528,9 +528,7 @@ export const makePiAdapterV2 = Effect.fn("makePiAdapterV2")(function* (
         yield* publishThread();
         if (status === "failed") {
           const limit = yield* Effect.tryPromise(
-            () =>
-              session!.getTurnUsageLimit?.(current.error!, DateTime.formatIso(at)) ??
-              Promise.resolve(null),
+            () => session!.getTurnUsageLimit?.(DateTime.formatIso(at)) ?? Promise.resolve(null),
           ).pipe(Effect.orElseSucceed(() => null));
           const failure = makeProviderFailure({
             class: current.broken ? "transport_error" : limit ? "usage_limit" : "provider_error",

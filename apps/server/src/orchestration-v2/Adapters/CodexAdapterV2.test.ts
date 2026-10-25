@@ -6625,6 +6625,12 @@ describe("CodexAdapterV2 post-settle continuation", () => {
       expectedClass: "usage_limit",
     },
     {
+      name: "read-reset",
+      code: "usageLimitExceeded",
+      notification: false,
+      expectedClass: "usage_limit",
+    },
+    {
       name: "late-reset",
       code: "usageLimitExceeded",
       notification: false,
@@ -6749,6 +6755,20 @@ describe("CodexAdapterV2 post-settle continuation", () => {
                 },
               },
             },
+            ...(scenario.name === "read-reset"
+              ? [
+                  {
+                    type: "expect_outbound" as const,
+                    label: "account/rateLimits/read",
+                    frame: { id: 4, method: "account/rateLimits/read", params: null },
+                  },
+                  {
+                    type: "emit_inbound" as const,
+                    label: "account/rateLimits/read",
+                    frame: { id: 4, result: { rateLimits: snapshot.frame.params.rateLimits } },
+                  },
+                ]
+              : []),
             ...(scenario.name === "late-reset" ? [snapshot] : []),
             ...(scenario.name === "deferred-reset"
               ? [
@@ -6813,7 +6833,7 @@ describe("CodexAdapterV2 post-settle continuation", () => {
           assert.equal(terminal.failure.resetAt, resetAt);
         if (scenario.name === "matching-details")
           assert.equal(terminal.failure.message, "Detailed provider allowance explanation.");
-        if (scenario.name === "late-reset") {
+        if (scenario.name === "late-reset" || scenario.name === "read-reset") {
           yield* Deferred.await(resetReceipt);
           const item = harness.events.find(
             (event) =>

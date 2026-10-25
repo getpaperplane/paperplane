@@ -75,6 +75,14 @@ const decodeClaudeQuota = Schema.decodeUnknownOption(
     seven_day_opus: Schema.optional(Schema.NullOr(ClaudeWindow)),
     seven_day_sonnet: Schema.optional(Schema.NullOr(ClaudeWindow)),
     seven_day_oauth_apps: Schema.optional(Schema.NullOr(ClaudeWindow)),
+    extra_usage: Schema.optional(
+      Schema.NullOr(
+        Schema.Struct({
+          is_enabled: Schema.Boolean,
+          utilization: Schema.optional(Schema.NullOr(Schema.Number)),
+        }),
+      ),
+    ),
   }),
 );
 
@@ -151,16 +159,23 @@ export async function readPiSubscriptionStatus(
     if (!response.ok) return { type: "unavailable" };
     const quota = decodeClaudeQuota(await response.json());
     if (Option.isNone(quota)) return { type: "unavailable" };
-    const windows = Object.entries(quota.value).flatMap(([id, window]) => {
+    const { extra_usage: extraUsage, ...subscriptionWindows } = quota.value;
+    const windows = Object.entries(subscriptionWindows).flatMap(([id, window]) => {
       if (window == null) return [];
       const base = { id, kind: "other" as const, label: id, usedPercent: window.utilization };
       return window.resets_at == null ? [base] : [{ ...base, resetsAt: window.resets_at }];
     });
-    return usageLimitStatusFromWindows(
+    const status = usageLimitStatusFromWindows(
       { checkedAt: input.observedAt, windows },
       input.model ?? "",
       input.observedAt,
     );
+    if (status.type === "limited" && extraUsage?.is_enabled) {
+      if (extraUsage.utilization == null || !Number.isFinite(extraUsage.utilization))
+        return { type: "unavailable" };
+      if (extraUsage.utilization >= 0 && extraUsage.utilization < 100) return { type: "available" };
+    }
+    return status;
   }
   if (url.origin !== "https://chatgpt.com" || !url.pathname.startsWith("/backend-api"))
     return { type: "unavailable" };

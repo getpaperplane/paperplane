@@ -74,10 +74,7 @@ export interface PiSessionLike {
   setModel?(model: string): Promise<void>;
   setThinkingLevel?(level: string): void | Promise<void>;
   getThinkingLevel?(): string;
-  getTurnUsageLimit?(
-    errorMessage: string,
-    observedAt: string,
-  ): Promise<{ readonly resetAt: string | null } | null>;
+  getTurnUsageLimit?(observedAt: string): Promise<{ readonly resetAt: string | null } | null>;
   getModel?(): PiSessionModelLike | undefined;
   subscribe(listener: (event: PiSessionEventLike) => void): () => void;
   getEntries?(): ReadonlyArray<PiSessionEntryLike>;

@@ -20,7 +20,6 @@
 import * as NodeFS from "node:fs";
 import * as NodePath from "node:path";
 import * as RuntimePredicate from "effect/Predicate";
-import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 
 import {
@@ -40,7 +39,7 @@ import {
   type LoadExtensionsResult,
 } from "@earendil-works/pi-coding-agent";
 
-import type { ProviderUsageLimit } from "../PiUsageLimits.ts";
+import { createPiUsageLimitCapture, type PiUsageLimitEvidence } from "./PiUsageLimitCapture.ts";
 
 type PiThinkingLevel = "off" | "minimal" | "low" | "medium" | "high" | "xhigh" | "max";
 
@@ -64,11 +63,6 @@ import {
 import { buildRuntimeInstructions } from "@getpaperplane/provider-core/server/runtimeInstructions";
 import { readPiSubscriptionStatus } from "../PiUsageLimits.ts";
 import type { UsageLimitStatus } from "../usageLimitStatus.ts";
-import {
-  usageLimitFromError,
-  usageLimitFromErrorPayload,
-  usageLimitFromHttpError,
-} from "../usageLimitError.ts";
 import * as NodeOS from "node:os";
 import { expandHomePath } from "@getpaperplane/provider-core/server/pathExpansion";
 
@@ -132,51 +126,6 @@ interface PiUiCompatibility {
   readonly dispose: () => void;
 }
 
-/**
- * Pi keeps only the message of a provider error, which drops the reset time.
- * Codex sends it in its WebSocket `usage_limit_reached` event, read by this
- * hidden extension, and in HTTP 429 bodies or Anthropic's rate-limit headers,
- * read by the fetch `observe` gives the session's provider requests.
- */
-function createUsageLimitCapture() {
-  let last: ProviderUsageLimit | null = null;
-  const now = () => DateTime.formatIso(DateTime.nowUnsafe());
-  const extension: InlineExtension = {
-    name: "paperplane-usage-limit",
-    hidden: true,
-    factory: (pi) => {
-      pi.on("provider_stream_event", (event) => {
-        last = usageLimitFromErrorPayload(event.data, now()) ?? last;
-      });
-    },
-  };
-  const observe = (agent: AgentSession["agent"]) => {
-    const stream = agent.streamFunction;
-    agent.streamFunction = (model, context, options) => {
-      const send = options?.fetch ?? globalThis.fetch;
-      const fetch: typeof globalThis.fetch = async (input, init) => {
-        const response = await send(input, init);
-        if (response.ok) last = null;
-        else if (response.status === 429) {
-          const body: unknown = await response
-            .clone()
-            .json()
-            .catch(() => null);
-          last = usageLimitFromHttpError(response.headers, body, now()) ?? last;
-        }
-        return response;
-      };
-      return stream(model, context, { ...options, fetch });
-    };
-  };
-  const take = () => {
-    const value = last;
-    last = null;
-    return value;
-  };
-  return { extension, observe, take };
-}
-
 async function toPiSessionLike(
   session: AgentSession,
   modelRuntime: ModelRuntime,
@@ -186,7 +135,7 @@ async function toPiSessionLike(
   disposePaperplaneTools: () => Promise<void> = async () => {},
   interactive = false,
   compatibility?: PiUiCompatibility,
-  takeStreamUsageLimit: () => ProviderUsageLimit | null = () => null,
+  takeStreamUsageLimit: () => PiUsageLimitEvidence | null = () => null,
 ): Promise<PiSessionLike> {
   const listeners = new Set<(event: PiSessionEventLike) => void>();
   const startupErrors: PiSessionEventLike[] = [...initialStartupErrors];
@@ -405,10 +354,13 @@ async function toPiSessionLike(
     // SAFETY: The composer supplies Pi thinking levels; the SDK clamps to model capabilities.
     setThinkingLevel: (level) => session.setThinkingLevel(level as PiThinkingLevel),
     getThinkingLevel: () => session.thinkingLevel,
-    getTurnUsageLimit: async (errorMessage, observedAt) => {
-      const limit = takeStreamUsageLimit() ?? usageLimitFromError(errorMessage, observedAt);
-      const model = session.model;
-      if (limit?.resetAt !== null || model === undefined) return limit;
+    getTurnUsageLimit: async (observedAt) => {
+      const evidence = takeStreamUsageLimit();
+      if (evidence?.status.type === "available") return null;
+      const limit =
+        evidence?.status.type === "limited" ? { resetAt: evidence.status.resetAt } : null;
+      const model = evidence?.model ?? session.model;
+      if (limit?.resetAt != null || model === undefined) return limit;
       const status = await readPiModelUsageLimit(
         modelRuntime,
         `${model.provider}/${model.id}`,
@@ -908,7 +860,7 @@ export async function createPiSession(
   const disabledExtensions = [...(input.disabledExtensions ?? [])];
   const startupErrors: PiSessionEventLike[] = [];
 
-  const usageLimits = createUsageLimitCapture();
+  const usageLimits = createPiUsageLimitCapture();
   const mcpProviderSession = options.mcpProviderSession;
   const richResponses = mcpProviderSession !== undefined;
   const runtimeInstructions = [
@@ -923,7 +875,6 @@ export async function createPiSession(
     disabledExtensions,
     noExtensions: options.extensions === false,
     modelRuntime: options.modelRuntime,
-    extensionFactories: [usageLimits.extension],
     richResponses,
     runtimeInstructions,
   });
@@ -956,7 +907,6 @@ export async function createPiSession(
           disabledExtensions: recoveredDisabled,
           noExtensions: false,
           modelRuntime: options.modelRuntime,
-          extensionFactories: [usageLimits.extension],
           richResponses,
           runtimeInstructions,
         });

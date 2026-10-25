@@ -1841,6 +1841,32 @@ export const makeCodexAdapterV2 = Effect.fn("makeCodexAdapterV2")(function* (
         });
         const events = yield* Queue.unbounded<ProviderAdapter.ProviderAdapterV2Event>();
         const rateLimitSnapshot = yield* Ref.make<CodexRateLimitSnapshot | undefined>(undefined);
+        const resolveUsageLimitResetAt = Effect.fn("CodexAdapterV2.resolveUsageLimitResetAt")(
+          function* () {
+            const observedAt = DateTime.formatIso(yield* DateTime.now);
+            const known = codexUsageLimitResetAt(yield* Ref.get(rateLimitSnapshot), observedAt);
+            if (known !== null) return known;
+            // A first request can be rejected before any quota notification arrives.
+            const response = yield* client.request("account/rateLimits/read", null).pipe(
+              Effect.timeout("3 seconds"),
+              Effect.catch((cause) =>
+                Effect.logWarning("Failed to read Codex usage-limit reset.", { cause }).pipe(
+                  Effect.as(null),
+                ),
+              ),
+            );
+            if (response === null) return null;
+            const snapshot = response.rateLimitsByLimitId?.codex ?? response.rateLimits;
+            yield* Ref.update(rateLimitSnapshot, (previous) =>
+              mergeCodexRateLimits(previous, snapshot),
+            );
+            if (adapterOptions.onUsageLimits) {
+              const update = codexRateLimitsToUpdate(snapshot);
+              if (update) yield* adapterOptions.onUsageLimits({ ...update, checkedAt: observedAt });
+            }
+            return codexUsageLimitResetAt(yield* Ref.get(rateLimitSnapshot), observedAt);
+          },
+        );
         const limitedTurnItems = yield* Ref.make(
           new Map<ProviderThreadId, Extract<OrchestrationV2TurnItem, { type: "error" }>>(),
         );
@@ -5741,6 +5767,28 @@ export const makeCodexAdapterV2 = Effect.fn("makeCodexAdapterV2")(function* (
             yield* Ref.update(limitedTurnItems, (items) =>
               new Map(items).set(context.providerThread.id, item),
             );
+            if (item.failure.resetAt === null) {
+              // Keep notification processing free while the same connection answers the read.
+              yield* Effect.gen(function* () {
+                const resetAt = yield* resolveUsageLimitResetAt();
+                if (resetAt === null) return;
+                const pending = (yield* Ref.get(limitedTurnItems)).get(context.providerThread.id);
+                if (pending?.id !== item.id || pending.failure.resetAt != null) return;
+                const updated = {
+                  ...pending,
+                  updatedAt: yield* DateTime.now,
+                  failure: { ...pending.failure, resetAt },
+                };
+                yield* Ref.update(limitedTurnItems, (items) =>
+                  new Map(items).set(context.providerThread.id, updated),
+                );
+                yield* emitProviderEvent({
+                  type: "turn_item.updated",
+                  driver: CODEX_PROVIDER,
+                  turnItem: updated,
+                });
+              }).pipe(Effect.forkIn(scope));
+            }
           }
         });
 
