@@ -5,8 +5,8 @@ import type { PullRequestSpeedActionResult } from "~/components/pullRequest/Pull
 import { usePullRequestCloseBatch } from "~/components/pullRequest/usePullRequestActions";
 import { SidebarPointerSensor } from "~/components/Sidebar.pointer";
 import { resolveSidebarSweepKeys } from "~/components/Sidebar.logic";
-import { sortProjectsByGroupOrder } from "@rove-code/client-runtime/state/project-grouping";
-import { pullRequestHostOf, resolveEnvironmentMachineKind } from "@rove-code/contracts";
+import { sortProjectsByGroupOrder } from "@getpaperplane/client-runtime/state/project-grouping";
+import { pullRequestHostOf, resolveEnvironmentMachineKind } from "@getpaperplane/contracts";
 import type {
   EnvironmentId,
   ProjectId,
@@ -18,7 +18,7 @@ import type {
   PullRequestListResult,
   PullRequestListState,
   SourceControlProviderKind,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { useAtomValue } from "@effect/atom-react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import {
@@ -1916,7 +1916,7 @@ function PullRequestsRouteView() {
       ) : !pullRequestsSupported ? (
         <PullRequestsUnavailableState
           title="Pull requests unavailable"
-          error="Update your Rove Code servers to browse pull requests."
+          error="Update your Paperplane servers to browse pull requests."
         />
       ) : firstLoad ? (
         <PullRequestListGhost rows={7} />
@@ -2264,7 +2264,7 @@ function PullRequestsRouteView() {
             maximized={rightPanelMaximized}
             keybindings={keybindings}
             getShortcutContext={getShortcutContext}
-            widthStorageKey="rove:pull-request-panel-width"
+            widthStorageKey="paperplane:pull-request-panel-width"
             // Default to roughly half the viewport: the PR list needs more
             // room than a chat, so the 540px chat-preview default squashes
             // it. SSR has no window, so fall back to a reasonable width.

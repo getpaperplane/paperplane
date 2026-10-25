@@ -1,4 +1,4 @@
-import { ORCHESTRATION_V2_WS_METHODS, WS_METHODS, type WsRpcGroup } from "@rove-code/contracts";
+import { ORCHESTRATION_V2_WS_METHODS, WS_METHODS, type WsRpcGroup } from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as References from "effect/References";
@@ -155,6 +155,7 @@ const RPC_AGGREGATES = {
   [WS_METHODS.subscribeProjectClones]: "source-control",
   [WS_METHODS.projectsListEntries]: "workspace",
   [WS_METHODS.projectsReadFile]: "workspace",
+  [WS_METHODS.projectsReadConfig]: "workspace",
   [WS_METHODS.projectsSearchContents]: "workspace",
   [WS_METHODS.projectsSearchEntries]: "workspace",
   [WS_METHODS.projectsWriteFile]: "workspace",
@@ -246,7 +247,7 @@ const RPC_METHODS_WITH_TRACING_DISABLED: ReadonlySet<string> = new Set([
  * after `RpcScopeAuthorization`, so it wraps authorization and also records rejected calls.
  */
 export class RpcInstrumentation extends RpcMiddleware.Service<RpcInstrumentation>()(
-  "@rove-code/server/observability/RpcInstrumentation",
+  "@getpaperplane/server/observability/RpcInstrumentation",
 ) {}
 
 /**

@@ -5,8 +5,8 @@
  *
  * @module provider-acp-registry/client
  */
-import { ProviderDriverKind } from "@rove-code/contracts";
-import { defineProviderClient } from "@rove-code/provider-core/client";
+import { ProviderDriverKind } from "@getpaperplane/contracts";
+import { defineProviderClient } from "@getpaperplane/provider-core/client";
 
 import { AcpRegistrySettings } from "./settings.ts";
 

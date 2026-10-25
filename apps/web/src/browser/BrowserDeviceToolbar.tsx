@@ -5,11 +5,11 @@ import {
   PREVIEW_VIEWPORT_MAX_DIMENSION,
   PREVIEW_VIEWPORT_MIN_DIMENSION,
   type PreviewViewportSetting,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   PREVIEW_VIEWPORT_PRESETS,
   resolvePreviewViewport,
-} from "@rove-code/shared/previewViewport";
+} from "@getpaperplane/shared/previewViewport";
 import { Link2, Unlink2, X } from "lucide-react";
 import { useState } from "react";
 

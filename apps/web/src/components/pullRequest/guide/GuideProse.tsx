@@ -1,4 +1,4 @@
-import type { EnvironmentId } from "@rove-code/contracts";
+import type { EnvironmentId } from "@getpaperplane/contracts";
 import { createContext, useContext } from "react";
 
 import { cn } from "~/lib/utils";

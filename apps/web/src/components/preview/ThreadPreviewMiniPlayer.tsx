@@ -1,6 +1,6 @@
 "use client";
 
-import { FILL_PREVIEW_VIEWPORT, type ScopedThreadRef } from "@rove-code/contracts";
+import { FILL_PREVIEW_VIEWPORT, type ScopedThreadRef } from "@getpaperplane/contracts";
 import { PanelRightIcon, PictureInPicture2, XIcon } from "lucide-react";
 import {
   type PointerEvent as ReactPointerEvent,
@@ -48,8 +48,8 @@ import { useDeviceState } from "~/state/device";
 
 import { ComputerDesktopView } from "../device/ComputerDesktopView";
 import { DeviceStreamView } from "../device/DeviceStreamView";
-import type { DeviceScreenSize } from "@rove-code/client-runtime/device/stream";
-import type { PreviewStreamViewport } from "@rove-code/client-runtime/preview/server-browser-stream";
+import type { DeviceScreenSize } from "@getpaperplane/client-runtime/device/stream";
+import type { PreviewStreamViewport } from "@getpaperplane/client-runtime/preview/server-browser-stream";
 import { previewBridge } from "./previewBridge";
 import { showPreviewPopup } from "./showPreviewPopup";
 import {

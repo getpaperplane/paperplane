@@ -35,7 +35,7 @@ const window = {
   clientBounds: { x: -1920, y: 20, width: 800, height: 600 },
 };
 beforeEach(async () => {
-  directory = await NodeFSP.mkdtemp(NodePath.join(NodeOS.tmpdir(), "rove-hypr-test-"));
+  directory = await NodeFSP.mkdtemp(NodePath.join(NodeOS.tmpdir(), "paperplane-hypr-test-"));
   paths = {
     bundle: NodePath.join(directory, "bundle"),
     dataHome: NodePath.join(directory, "user data"),
@@ -122,7 +122,7 @@ it.each([true, false])("uses the active config syntax and user bindings (Lua: %s
     "custom bindings",
   );
   const result = await hyprlandCaptureShortcut(
-    "com.hafiezulzikry.rove.RoveCode",
+    "io.github.getpaperplane.paperplane",
     "/home/test",
     directory,
   );
@@ -131,8 +131,8 @@ it.each([true, false])("uses the active config syntax and user bindings (Lua: %s
   );
   expect(result.shortcutBinding).toBe(
     lua
-      ? 'hl.bind("CTRL + SHIFT + 2", hl.dsp.global("com.hafiezulzikry.rove.RoveCode:capture-window"))'
-      : "bind = CTRL SHIFT, 2, global, com.hafiezulzikry.rove.RoveCode:capture-window",
+      ? 'hl.bind("CTRL + SHIFT + 2", hl.dsp.global("io.github.getpaperplane.paperplane:capture-window"))'
+      : "bind = CTRL SHIFT, 2, global, io.github.getpaperplane.paperplane:capture-window",
   );
   expect(await NodeFSP.readFile(result.shortcutConfigPath, "utf8")).toBe("custom bindings");
 });
@@ -141,10 +141,10 @@ it("captures exact-window metadata for accessibility and focuses only through th
   const result = await captureHyprlandWindow(paths);
   expect(result.png).toEqual(png);
   expect(result.window).toEqual(window);
-  await result.feedback?.activate("Rove destination");
+  await result.feedback?.activate("Paperplane destination");
   expect(execute.mock.calls.find(([, args]) => args[0] === "activate")?.slice(0, 2)).toEqual([
     hyprlandCaptureExecutable(paths),
-    ["activate", String(process.pid), "Rove destination"],
+    ["activate", String(process.pid), "Paperplane destination"],
   ]);
   const captureDirectory = execute.mock.calls.find(([, args]) => args[0] === "capture")![1][1];
   await expect(NodeFSP.stat(captureDirectory)).rejects.toMatchObject({ code: "ENOENT" });

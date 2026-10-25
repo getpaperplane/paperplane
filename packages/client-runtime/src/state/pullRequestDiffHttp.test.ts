@@ -1,4 +1,4 @@
-import { EnvironmentId, ProjectId } from "@rove-code/contracts";
+import { EnvironmentId, ProjectId } from "@getpaperplane/contracts";
 import { describe, expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
@@ -112,7 +112,7 @@ describe("fetchEnvironmentPullRequestDiff", () => {
         traceId: "trace-auth-test",
       });
       expect(error.message).toBe(
-        "This environment session is no longer valid (invalid_credential). Refresh the page or quit and reopen Rove Code.",
+        "This environment session is no longer valid (invalid_credential). Refresh the page or quit and reopen Paperplane.",
       );
     }),
   );

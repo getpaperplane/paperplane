@@ -8,8 +8,8 @@ import {
   FILL_PREVIEW_VIEWPORT,
   ThreadId,
   type PreviewSessionSnapshot,
-} from "@rove-code/contracts";
-import { normalizePreviewUrl } from "@rove-code/shared/preview";
+} from "@getpaperplane/contracts";
+import { normalizePreviewUrl } from "@getpaperplane/shared/preview";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AppState, Platform, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";

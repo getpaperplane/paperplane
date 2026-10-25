@@ -2,7 +2,7 @@ import {
   AuthOrchestrationOperateScope,
   EnvironmentAuthorizationError,
   EnvironmentId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Cause from "effect/Cause";
 import { AsyncResult } from "effect/reactivity";
 import { assert, beforeEach, expect, it, vi } from "vite-plus/test";

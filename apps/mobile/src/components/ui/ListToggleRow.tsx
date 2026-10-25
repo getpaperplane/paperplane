@@ -28,7 +28,9 @@ export function ListToggleRow(
             className="rounded-full bg-subtle px-3 py-2 active:opacity-70"
             onPress={() => props.onValueChange(true)}
           >
-            <AppText className="text-sm font-rove-medium text-foreground">Mixed · Set on</AppText>
+            <AppText className="text-sm font-paperplane-medium text-foreground">
+              Mixed · Set on
+            </AppText>
           </Pressable>
         ) : (
           <ThemedSwitch

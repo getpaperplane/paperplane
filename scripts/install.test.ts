@@ -1,5 +1,5 @@
 // @effect-diagnostics nodeBuiltinImport:off - Drives the real shell installer through a PTY and a gated HTTP fixture.
-import * as HostProcess from "@rove-code/shared/HostProcess";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 import * as NodeChildProcess from "node:child_process";
 import * as NodeCrypto from "node:crypto";
 import * as NodeFSP from "node:fs/promises";
@@ -10,20 +10,28 @@ import { describe, expect, it } from "vite-plus/test";
 
 // util-linux's script gives the real installer a terminal without a browser or extra packages.
 describe.skipIf(HostProcess.Platform.defaultValue() !== "linux")("installer terminal", () => {
-  it.each([false, true])(
-    "preserves download and install behavior (HTTP failure: %s)",
-    async (fail) => {
-      const root = await NodeFSP.mkdtemp(NodePath.join(NodeOS.tmpdir(), "rove-install-progress-"));
+  it.each([
+    { fail: false, explicitHome: true },
+    { fail: false, explicitHome: false },
+    { fail: true, explicitHome: true },
+  ])(
+    "preserves download and install behavior (HTTP failure: $fail, explicit home: $explicitHome)",
+    async ({ fail, explicitHome }) => {
+      const root = await NodeFSP.mkdtemp(
+        NodePath.join(NodeOS.tmpdir(), "paperplane-install-progress-"),
+      );
       const version = "1.2.3";
-      const stem = `rove-${version}-linux-${HostProcess.Architecture.defaultValue()}`;
+      const homeDirectory = NodePath.join(root, "user");
+      await NodeFSP.mkdir(homeDirectory);
+      const stem = `paperplane-${version}-linux-${HostProcess.Architecture.defaultValue()}`;
       const archiveName = `${stem}.tar.gz`;
       let resumeDownload: (() => void) | undefined;
       let sawPartialProgress = false;
       let output = "";
       await NodeFSP.mkdir(NodePath.join(root, stem));
       await NodeFSP.writeFile(
-        NodePath.join(root, stem, "rove"),
-        "#!/bin/sh\necho 'rove v1.2.3'\n",
+        NodePath.join(root, stem, "paperplane"),
+        "#!/bin/sh\necho 'paperplane v1.2.3'\n",
         {
           mode: 0o755,
         },
@@ -64,10 +72,11 @@ describe.skipIf(HostProcess.Platform.defaultValue() !== "linux")("installer term
           ...process.env,
           TERM: "xterm",
           NO_COLOR: "1",
-          ROVE_VERSION: version,
-          ROVE_HOME: NodePath.join(root, "home"),
-          ROVE_INSTALL_BIN_DIR: NodePath.join(root, "bin"),
-          ROVE_RELEASE_BASE_URL: `http://127.0.0.1:${address.port}`,
+          HOME: homeDirectory,
+          PAPERPLANE_VERSION: version,
+          PAPERPLANE_HOME: explicitHome ? NodePath.join(root, "home") : "",
+          PAPERPLANE_INSTALL_BIN_DIR: NodePath.join(root, "bin"),
+          PAPERPLANE_RELEASE_BASE_URL: `http://127.0.0.1:${address.port}`,
         },
         stdio: ["ignore", "pipe", "pipe"],
       });
@@ -85,27 +94,30 @@ describe.skipIf(HostProcess.Platform.defaultValue() !== "linux")("installer term
           child.on("error", reject);
           child.on("close", resolve);
         });
-        const versions = NodePath.join(root, "home/runtime/versions");
+        const versions = NodePath.join(
+          explicitHome ? NodePath.join(root, "home") : NodePath.join(homeDirectory, ".paperplane"),
+          "runtime/versions",
+        );
         if (fail) {
           expect(code).not.toBe(0);
           expect(output).toContain("500");
           expect(output).not.toContain("100%");
-          expect(output).not.toContain("Installed Rove Code");
+          expect(output).not.toContain("Installed Paperplane");
           expect(await NodeFSP.readdir(versions)).toEqual([]);
         } else {
           expect(code).toBe(0);
           expect(sawPartialProgress).toBe(true);
           expect(output).toContain("100%");
           expect(output).toContain("0.1 / 0.1 MB");
-          expect(output).toContain("Installed Rove Code 1.2.3");
+          expect(output).toContain("Installed Paperplane 1.2.3");
           expect(
             await NodeFSP.readFile(NodePath.join(versions, version, ".install-complete"), "utf8"),
           ).toBe("1.2.3\n");
           expect(
-            NodeChildProcess.execFileSync(NodePath.join(root, "bin/rove"), ["--version"], {
+            NodeChildProcess.execFileSync(NodePath.join(root, "bin/paperplane"), ["--version"], {
               encoding: "utf8",
             }).trim(),
-          ).toBe("rove v1.2.3");
+          ).toBe("paperplane v1.2.3");
           expect(await NodeFSP.readdir(versions)).toEqual([version]);
         }
       } finally {

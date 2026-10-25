@@ -17,11 +17,11 @@ import type {
   ProviderTurnId,
   ThreadId,
   TurnItemId,
-} from "@rove-code/contracts";
-import { runRanAfter } from "@rove-code/shared/orchestrationV2ThreadError";
+} from "@getpaperplane/contracts";
+import { runRanAfter } from "@getpaperplane/shared/orchestrationV2ThreadError";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
-import { isOrchestrationV2WorkActive } from "@rove-code/contracts";
+import { isOrchestrationV2WorkActive } from "@getpaperplane/contracts";
 
 function trimmed(value: string | null | undefined): string | undefined {
   const result = value?.trim();

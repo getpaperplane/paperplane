@@ -3,12 +3,12 @@ import type {
   ProjectId,
   WorktreeInventoryEntry,
   WorktreeInventoryInspection,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   filterWorktrees,
   formatWorktreeSize,
   type WorktreeSizeState,
-} from "@rove-code/client-runtime/worktree-inventory";
+} from "@getpaperplane/client-runtime/worktree-inventory";
 import { Link } from "@tanstack/react-router";
 import { ChevronRightIcon, GitBranchIcon, RefreshCwIcon } from "lucide-react";
 import { useState } from "react";
@@ -41,7 +41,7 @@ export function WorktreeInventoryPanel() {
       <div className="space-y-3">
         <p className="text-sm text-muted-foreground">
           Review checkouts without deleting their branches or thread history. Last activity only
-          reflects work in Rove, not use in other apps.
+          reflects work in Paperplane, not use in other apps.
         </p>
         <Input
           aria-label="Search worktrees"
@@ -311,7 +311,7 @@ function WorktreeRow({
           </p>
           {entry.lastActivityAt !== null ? (
             <p className="text-xs text-muted-foreground">
-              Last activity in Rove {new Date(entry.lastActivityAt).toLocaleString()}.
+              Last activity in Paperplane {new Date(entry.lastActivityAt).toLocaleString()}.
             </p>
           ) : null}
           {entry.threads.length > 0 ? (
@@ -359,7 +359,8 @@ function WorktreeRow({
             </ul>
           ) : (
             <p className="text-xs text-muted-foreground">
-              Review this checkout before removing it. Rove cannot detect every use outside the app.
+              Review this checkout before removing it. Paperplane cannot detect every use outside
+              the app.
             </p>
           )}
           <div className="flex flex-wrap items-center gap-2">

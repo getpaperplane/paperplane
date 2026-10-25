@@ -1,4 +1,4 @@
-import { createPiExtensionStatusAtoms } from "@rove-code/client-runtime/state/pi-extension-status";
+import { createPiExtensionStatusAtoms } from "@getpaperplane/client-runtime/state/pi-extension-status";
 
 import { connectionAtomRuntime } from "../connection/runtime";
 

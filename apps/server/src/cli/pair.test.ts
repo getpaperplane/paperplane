@@ -5,9 +5,9 @@ import * as NodeOS from "node:os";
 import * as NodePath from "node:path";
 
 import * as NodeServices from "@effect/platform-node/NodeServices";
-import { AuthStandardClientScopes } from "@rove-code/contracts";
-import * as NetService from "@rove-code/shared/Net";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+import { AuthStandardClientScopes } from "@getpaperplane/contracts";
+import * as NetService from "@getpaperplane/shared/Net";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 import { assert, describe, expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -124,7 +124,7 @@ const withDescriptorServer = <A, E, R>(run: (origin: string) => Effect.Effect<A,
   Effect.acquireUseRelease(
     Effect.callback<NodeHttp.Server>((resume) => {
       const server = NodeHttp.createServer((request, response) => {
-        if (request.url === "/.well-known/rove/environment") {
+        if (request.url === "/.well-known/paperplane/environment") {
           response.writeHead(200, { "content-type": "application/json" });
           response.end(JSON.stringify(testDescriptor));
           return;
@@ -144,11 +144,11 @@ const withDescriptorServer = <A, E, R>(run: (origin: string) => Effect.Effect<A,
     (server) => Effect.sync(() => server.close()),
   );
 
-describe("rove pair", () => {
+describe("paperplane pair", () => {
   it.effect("mints a token and prints a QR pairing URL for a live server", () =>
     withDescriptorServer((origin) =>
       Effect.gen(function* () {
-        const baseDir = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "rove-pair-test-"));
+        const baseDir = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "paperplane-pair-test-"));
         const port = Number(new URL(origin).port);
         const statePath = NodePath.join(baseDir, "userdata", "server-runtime.json");
         yield* persistServerRuntimeState({
@@ -179,7 +179,7 @@ describe("rove pair", () => {
           readonly scopes: ReadonlyArray<string>;
         }>;
         assert.equal(credentials.length, 1);
-        assert.equal(credentials[0]?.label, "rove pair");
+        assert.equal(credentials[0]?.label, "paperplane pair");
         assert.deepEqual(credentials[0]?.scopes, AuthStandardClientScopes);
       }),
     ).pipe(
@@ -204,7 +204,7 @@ describe("rove pair", () => {
     withDescriptorServer((origin) =>
       Effect.gen(function* () {
         const baseDir = NodeFS.mkdtempSync(
-          NodePath.join(NodeOS.tmpdir(), "rove-pair-scopes-test-"),
+          NodePath.join(NodeOS.tmpdir(), "paperplane-pair-scopes-test-"),
         );
         yield* persistServerRuntimeState({
           path: NodePath.join(baseDir, "userdata", "server-runtime.json"),
@@ -242,7 +242,9 @@ describe("rove pair", () => {
   it.effect("pairs through the recorded dev web URL for dev servers", () =>
     withDescriptorServer((origin) =>
       Effect.gen(function* () {
-        const baseDir = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "rove-pair-dev-test-"));
+        const baseDir = NodeFS.mkdtempSync(
+          NodePath.join(NodeOS.tmpdir(), "paperplane-pair-dev-test-"),
+        );
         const port = Number(new URL(origin).port);
         const statePath = NodePath.join(baseDir, "dev", "server-runtime.json");
         yield* persistServerRuntimeState({
@@ -260,9 +262,11 @@ describe("rove pair", () => {
     ).pipe(Effect.provide(NodeServices.layer)),
   );
 
-  it.effect("directs to rove serve when no server is running", () =>
+  it.effect("directs to paperplane serve when no server is running", () =>
     Effect.gen(function* () {
-      const baseDir = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "rove-pair-none-test-"));
+      const baseDir = NodeFS.mkdtempSync(
+        NodePath.join(NodeOS.tmpdir(), "paperplane-pair-none-test-"),
+      );
 
       const error = yield* provideCliTestLayers(
         runCli(["pair", "--base-dir", baseDir]).pipe(Effect.flip),
@@ -271,16 +275,18 @@ describe("rove pair", () => {
       const rendered = String(
         typeof error === "object" && error !== null && "cause" in error ? error.cause : error,
       );
-      assert.include(rendered, "No running Rove Code server found.");
-      assert.include(rendered, "rove serve");
-      assert.notInclude(rendered, "rove connect");
+      assert.include(rendered, "No running Paperplane server found.");
+      assert.include(rendered, "paperplane serve");
+      assert.notInclude(rendered, "paperplane connect");
     }).pipe(Effect.provide(NodeServices.layer)),
   );
 
   it.effect("ignores runtime state whose recorded pid is no longer alive", () =>
     withDescriptorServer((origin) =>
       Effect.gen(function* () {
-        const baseDir = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "rove-pair-pid-test-"));
+        const baseDir = NodeFS.mkdtempSync(
+          NodePath.join(NodeOS.tmpdir(), "paperplane-pair-pid-test-"),
+        );
         const statePath = NodePath.join(baseDir, "userdata", "server-runtime.json");
         // The origin answers (another server reused the port), but the pid
         // that wrote this state file is dead — pairing must not mint a token
@@ -302,14 +308,16 @@ describe("rove pair", () => {
         const rendered = String(
           typeof error === "object" && error !== null && "cause" in error ? error.cause : error,
         );
-        assert.include(rendered, "No running Rove Code server found.");
+        assert.include(rendered, "No running Paperplane server found.");
       }),
     ).pipe(Effect.provide(NodeServices.layer)),
   );
 
   it.effect("ignores stale runtime state pointing at a dead server", () =>
     Effect.gen(function* () {
-      const baseDir = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "rove-pair-stale-test-"));
+      const baseDir = NodeFS.mkdtempSync(
+        NodePath.join(NodeOS.tmpdir(), "paperplane-pair-stale-test-"),
+      );
       const statePath = NodePath.join(baseDir, "userdata", "server-runtime.json");
       // A port from the dynamic range with nothing listening: the probe fails
       // fast with ECONNREFUSED and discovery moves on.
@@ -328,7 +336,7 @@ describe("rove pair", () => {
       const rendered = String(
         typeof error === "object" && error !== null && "cause" in error ? error.cause : error,
       );
-      assert.include(rendered, "No running Rove Code server found.");
+      assert.include(rendered, "No running Paperplane server found.");
     }).pipe(Effect.provide(NodeServices.layer)),
   );
 });
@@ -342,7 +350,7 @@ describe("auth scope options", () => {
     ({ group, action }) =>
       Effect.gen(function* () {
         const baseDir = NodeFS.mkdtempSync(
-          NodePath.join(NodeOS.tmpdir(), "rove-cli-auth-scopes-test-"),
+          NodePath.join(NodeOS.tmpdir(), "paperplane-cli-auth-scopes-test-"),
         );
         const output = yield* captureStdout(
           runCli([
@@ -392,7 +400,7 @@ describe("auth scope options", () => {
       if (!CliError.isCliError(error) || error._tag !== "ShowHelp") {
         assert.fail(`Expected ShowHelp, got ${String(error)}`);
       }
-      assert.deepEqual(error.commandPath, ["rove", ...command]);
+      assert.deepEqual(error.commandPath, ["paperplane", ...command]);
       const scopeError = error.errors[0];
       if (scopeError?._tag !== "InvalidValue") {
         assert.fail(`Expected InvalidValue, got ${String(scopeError?._tag)}`);

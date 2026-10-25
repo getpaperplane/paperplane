@@ -3,7 +3,7 @@ import * as Clock from "effect/Clock";
 import type {
   RelayClientInstallProgressEvent,
   RelayClientInstallProgressStage,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Config from "effect/Config";
 import * as Context from "effect/Context";
 import * as Crypto from "effect/Crypto";
@@ -28,7 +28,7 @@ export const CLOUDFLARED_VERSION = "2026.10.0";
 // (`--output` arrived in 2025.6.1). Override, PATH, and older managed binaries
 // below it are skipped, since they exit immediately on the unknown flag.
 export const CLOUDFLARED_MIN_VERSION = "2025.6.1";
-const CLOUDFLARED_PATH_ENV_NAME = "ROVE_CLOUDFLARED_PATH";
+const CLOUDFLARED_PATH_ENV_NAME = "PAPERPLANE_CLOUDFLARED_PATH";
 
 // Generous bound for a ~40MB binary download; without it a stalled
 // connection parks the install forever (same unbounded-wait family as the
@@ -169,7 +169,7 @@ export function isPinnedManagedRelayClient(client: AvailableRelayClient): boolea
 }
 
 export class RelayClient extends Context.Service<RelayClient, RelayClientShape>()(
-  "@rove-code/shared/relayClient",
+  "@getpaperplane/shared/relayClient",
 ) {}
 
 function executableFileName(platform: NodeJS.Platform): string {
@@ -536,7 +536,7 @@ export const makeCloudflaredRelayClient = Effect.fn("cloudflared.make")(function
     if (!releaseAsset) {
       return yield* new RelayClientInstallError({
         reason: "unsupported_platform",
-        message: `Rove Code does not provide a managed relay client binary for ${platform}-${arch}.`,
+        message: `Paperplane does not provide a managed relay client binary for ${platform}-${arch}.`,
       });
     }
 

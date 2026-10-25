@@ -1,10 +1,10 @@
-import type { DeviceHubAccess } from "@rove-code/client-runtime/state/deviceHubAccess";
+import type { DeviceHubAccess } from "@getpaperplane/client-runtime/state/deviceHubAccess";
 import type {
   DeviceActionInput,
   DeviceDetail,
   DeviceSummary,
   EnvironmentId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { deviceEnvironment } from "~/state/device";
 import { formatEnvironmentQueryError } from "~/state/query";

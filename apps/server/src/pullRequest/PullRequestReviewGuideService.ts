@@ -14,7 +14,7 @@
  */
 import * as Cause from "effect/Cause";
 import * as Clock from "effect/Clock";
-import { SelectedGitHubAccount } from "@rove-code/source-control-github/server/GitHubCredentials";
+import { SelectedGitHubAccount } from "@getpaperplane/source-control-github/server/GitHubCredentials";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -36,10 +36,10 @@ import {
   ProjectId,
   type RepositoryIdentity,
   type ThreadPullRequestKey,
-} from "@rove-code/contracts";
-import type { ReviewGuideStackLayer } from "@rove-code/provider-core/server/textGeneration";
-import { resolveProjectSettings } from "@rove-code/shared/projectSettings";
-import { sourceControlRepositorySelector } from "@rove-code/shared/sourceControl";
+} from "@getpaperplane/contracts";
+import type { ReviewGuideStackLayer } from "@getpaperplane/provider-core/server/textGeneration";
+import { resolveProjectSettings } from "@getpaperplane/shared/projectSettings";
+import { sourceControlRepositorySelector } from "@getpaperplane/shared/sourceControl";
 
 import * as ServerConfig from "../config.ts";
 import * as PullRequestReviewGuides from "../persistence/PullRequestReviewGuides.ts";
@@ -76,7 +76,7 @@ export class PullRequestReviewGuideService extends Context.Service<
       PullRequestService.PullRequestError
     >;
   }
->()("@rove-code/server/pullRequest/PullRequestReviewGuideService") {}
+>()("@getpaperplane/server/pullRequest/PullRequestReviewGuideService") {}
 
 const keyString = (key: ThreadPullRequestKey) => `${key.host}/${key.repository}#${key.number}`;
 
@@ -217,7 +217,7 @@ const make = Effect.gen(function* () {
       );
     // Fetched into a ref of this run's own: FETCH_HEAD is shared by every fetch in the
     // workspace, so a concurrent run could otherwise measure this change from its base.
-    const baseRef = `refs/rove/review-guide/${runId}/base`;
+    const baseRef = `refs/paperplane/review-guide/${runId}/base`;
     yield* fetch([`+refs/heads/${detail.baseBranch}:${baseRef}`]);
     yield* Effect.addFinalizer(() =>
       git

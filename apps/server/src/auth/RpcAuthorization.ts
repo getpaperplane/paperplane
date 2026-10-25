@@ -30,7 +30,7 @@ import {
   RpcScopeAuthorization,
   WS_METHODS,
   WsRpcGroup,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 import * as Layer from "effect/Layer";
@@ -167,6 +167,7 @@ export const RPC_REQUIRED_SCOPES = {
   [WS_METHODS.subscribeProjectClones]: AuthOrchestrationReadScope,
   [WS_METHODS.projectsListEntries]: AuthFilesystemReadScope,
   [WS_METHODS.projectsReadFile]: AuthFilesystemReadScope,
+  [WS_METHODS.projectsReadConfig]: AuthFilesystemReadScope,
   [WS_METHODS.projectsSearchContents]: AuthFilesystemReadScope,
   [WS_METHODS.projectsSearchEntries]: AuthFilesystemReadScope,
   [WS_METHODS.projectsWriteFile]: AuthFilesystemWriteScope,

@@ -1,8 +1,8 @@
 import type {
   OrchestrationV2ProjectedTurnItem,
   OrchestrationV2ThreadProjection,
-} from "@rove-code/contracts";
-import { isOrchestrationV2TurnItemVisible } from "@rove-code/shared/orchestrationV2Timeline";
+} from "@getpaperplane/contracts";
+import { isOrchestrationV2TurnItemVisible } from "@getpaperplane/shared/orchestrationV2Timeline";
 
 export type ThreadHistoryMeta = {
   readonly historyCursor: string | null;

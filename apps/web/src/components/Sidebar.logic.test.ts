@@ -1,4 +1,4 @@
-import { presentThreadShell } from "@rove-code/client-runtime/state/models";
+import { presentThreadShell } from "@getpaperplane/client-runtime/state/models";
 import * as DateTime from "effect/DateTime";
 import { deriveActiveWorkStartedAt } from "../session-logic.ts";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
@@ -61,15 +61,15 @@ import {
   type SidebarSection,
   resolveSidebarDropVerb,
 } from "./Sidebar.logic";
-import { threadSearchMatchKey } from "@rove-code/client-runtime/state/thread-search";
-import { sortSettledThreads } from "@rove-code/client-runtime/state/thread-sort";
+import { threadSearchMatchKey } from "@getpaperplane/client-runtime/state/thread-search";
+import { sortSettledThreads } from "@getpaperplane/client-runtime/state/thread-sort";
 import {
   EnvironmentId,
   ProjectId,
   ProviderInstanceId,
   RunId,
   ThreadId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 
 import {
   DEFAULT_INTERACTION_MODE,
@@ -86,16 +86,16 @@ describe("resolveSidebarRowAccessibility", () => {
     {
       title: "Can you audit the UI?",
       statusLabel: "Working",
-      projectDisplayName: "Rove Code",
+      projectDisplayName: "Paperplane",
       isActive: true,
-      expected: { label: "Can you audit the UI?, Working, Rove Code", current: "page" },
+      expected: { label: "Can you audit the UI?, Working, Paperplane", current: "page" },
     },
     {
       title: "The audit is done",
       statusLabel: null,
-      projectDisplayName: "Rove Code",
+      projectDisplayName: "Paperplane",
       isActive: false,
-      expected: { label: "The audit is done, Rove Code", current: undefined },
+      expected: { label: "The audit is done, Paperplane", current: undefined },
     },
     {
       title: "Untitled task",
@@ -659,7 +659,7 @@ describe("createThreadJumpHintVisibilityController", () => {
 
 describe("getSidebarThreadIdsToPrewarm", () => {
   it("returns only the first visible thread ids up to the prewarm limit", () => {
-    expect(getSidebarThreadIdsToPrewarm(["t1", "t2", "rove"], 2)).toEqual(["t1", "t2"]);
+    expect(getSidebarThreadIdsToPrewarm(["t1", "t2", "paperplane"], 2)).toEqual(["t1", "t2"]);
   });
 
   it("returns all visible thread ids when they fit within the limit", () => {

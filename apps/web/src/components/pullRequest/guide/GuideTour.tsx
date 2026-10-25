@@ -1,4 +1,8 @@
-import type { EnvironmentId, PullRequestRef, PullRequestReviewGuide } from "@rove-code/contracts";
+import type {
+  EnvironmentId,
+  PullRequestRef,
+  PullRequestReviewGuide,
+} from "@getpaperplane/contracts";
 import { useEffect, useEffectEvent, useMemo, useRef, useState, type ReactNode } from "react";
 
 import { createPullRequestDiffFileContentsLoader } from "~/lib/diffFileContents";
@@ -18,7 +22,7 @@ import {
   useGuideRunStore,
   type GuideProgress,
 } from "./guideRunStore";
-import { stepTourPosition, stopFilePaths } from "@rove-code/client-runtime/review-guide-tour";
+import { stepTourPosition, stopFilePaths } from "@getpaperplane/client-runtime/review-guide-tour";
 import { useGuideDiffFiles } from "./useGuideDiffFiles";
 
 /**

@@ -23,7 +23,7 @@ export interface RelayClientTracingResource {
 }
 
 export class RelayClientTracer extends Context.Reference(
-  "@rove-code/shared/relayTracing/RelayClientTracer",
+  "@getpaperplane/shared/relayTracing/RelayClientTracer",
   {
     defaultValue: () => Option.none<Tracer.Tracer>(),
   },
@@ -33,13 +33,13 @@ export class RelayClientTracer extends Context.Reference(
  * The tracer that was active before relay tracing took over, so work nested
  * inside a relay span can return to it.
  */
-class LocalTracer extends Context.Reference("@rove-code/shared/relayTracing/LocalTracer", {
+class LocalTracer extends Context.Reference("@getpaperplane/shared/relayTracing/LocalTracer", {
   defaultValue: () => Option.none<Tracer.Tracer>(),
 }) {}
 
 /**
  * Exports every span `effect` creates through the product tracer. Use it only
- * around Rove Connect work; wrap local work inside it with
+ * around Paperplane Connect work; wrap local work inside it with
  * {@link withLocalTracing} so it stays off the product tracer.
  */
 export const withRelayClientTracing = <A, E, R>(
@@ -178,10 +178,10 @@ export function layer(
       serviceName: resource.serviceName,
       serviceVersion: resource.serviceVersion,
       attributes: {
-        "service.namespace": "rove",
+        "service.namespace": "paperplane",
         "service.runtime": resource.runtime,
         "service.component": resource.component ?? "relay-client",
-        "rove.client.surface": resource.client,
+        "paperplane.client.surface": resource.client,
       },
     },
   }).pipe(Layer.provide(OtlpSerialization.layerJson));

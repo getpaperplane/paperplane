@@ -1,4 +1,4 @@
-import { SourceControlProviderKind } from "@rove-code/contracts";
+import { SourceControlProviderKind } from "@getpaperplane/contracts";
 import { assert, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -9,9 +9,9 @@ import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientRequest from "effect/http/HttpClientRequest";
 import * as HttpClientResponse from "effect/http/HttpClientResponse";
-import { VcsProcessSpawnError } from "@rove-code/contracts";
-import { firstNonEmptyLine } from "@rove-code/source-control-core/server/discovery";
-import * as TestSourceControlHost from "@rove-code/source-control-testing/TestSourceControlHost";
+import { VcsProcessSpawnError } from "@getpaperplane/contracts";
+import { firstNonEmptyLine } from "@getpaperplane/source-control-core/server/discovery";
+import * as TestSourceControlHost from "@getpaperplane/source-control-testing/TestSourceControlHost";
 
 import * as ForgejoCli from "./ForgejoCli.ts";
 import * as ForgejoPullRequestProvider from "./ForgejoPullRequestProvider.ts";

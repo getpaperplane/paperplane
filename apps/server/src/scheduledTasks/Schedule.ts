@@ -1,4 +1,7 @@
-import { MIN_SCHEDULED_TASK_INTERVAL_MS, type ScheduledTaskSchedule } from "@rove-code/contracts";
+import {
+  MIN_SCHEDULED_TASK_INTERVAL_MS,
+  type ScheduledTaskSchedule,
+} from "@getpaperplane/contracts";
 import * as DateTime from "effect/DateTime";
 
 const MINUTE_MS = 60_000;

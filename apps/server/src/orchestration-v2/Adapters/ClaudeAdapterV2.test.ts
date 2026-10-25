@@ -44,7 +44,7 @@ import {
   RunAttemptId,
   RunId,
   ThreadId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { assert, describe, it } from "@effect/vitest";
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
@@ -65,15 +65,15 @@ import * as Scope from "effect/Scope";
 import * as Stream from "effect/Stream";
 import * as TestClock from "effect/testing/TestClock";
 import { Tool } from "effect/ai";
-import { formatClaudeResumeCompactionQuestion } from "@rove-code/shared/claudeCompaction";
-import * as HostProcess from "@rove-code/shared/HostProcess";
-import { getModelSelectionStringOptionValue } from "@rove-code/shared/model";
-import { SpawnExecutableResolution } from "@rove-code/shared/shell";
+import { formatClaudeResumeCompactionQuestion } from "@getpaperplane/shared/claudeCompaction";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
+import { getModelSelectionStringOptionValue } from "@getpaperplane/shared/model";
+import { SpawnExecutableResolution } from "@getpaperplane/shared/shell";
 
 import { attachmentRelativePath } from "../../attachmentStore.ts";
 import * as ServerConfig from "../../config.ts";
-import * as McpProviderSession from "@rove-code/provider-core/server/mcpSession";
-import * as McpProviderSessions from "@rove-code/provider-core/server/McpProviderSessions";
+import * as McpProviderSession from "@getpaperplane/provider-core/server/mcpSession";
+import * as McpProviderSessions from "@getpaperplane/provider-core/server/McpProviderSessions";
 import { PreviewControlsToolkit } from "../../mcp/toolkits/previewControls/tools.ts";
 import { HtmlToolkit } from "../../mcp/toolkits/html/tools.ts";
 import { EnvironmentToolkit } from "../../mcp/toolkits/environment/tools.ts";
@@ -82,12 +82,12 @@ import { WorktreeToolkit } from "../../mcp/toolkits/worktree/tools.ts";
 import { ThreadToolkit } from "../../mcp/toolkits/thread/tools.ts";
 import { OrchestratorToolkit } from "../../mcp/toolkits/orchestrator/tools.ts";
 import { ClaudeExecutableFileCheck } from "../../provider/Drivers/ClaudeExecutable.ts";
-import * as ProviderEventLoggers from "@rove-code/provider-core/server/ProviderEventLoggers";
-import * as ProviderAdapter from "@rove-code/provider-core/server/ProviderAdapter";
-import type * as ProviderContinuationRequests from "@rove-code/provider-core/server/ProviderContinuationRequests";
-import { makeProviderFailure } from "@rove-code/provider-core/server/failure";
+import * as ProviderEventLoggers from "@getpaperplane/provider-core/server/ProviderEventLoggers";
+import * as ProviderAdapter from "@getpaperplane/provider-core/server/ProviderAdapter";
+import type * as ProviderContinuationRequests from "@getpaperplane/provider-core/server/ProviderContinuationRequests";
+import { makeProviderFailure } from "@getpaperplane/provider-core/server/failure";
 import * as ClaudeAdapterV2 from "./ClaudeAdapterV2.ts";
-import * as IdAllocator from "@rove-code/provider-core/server/IdAllocator";
+import * as IdAllocator from "@getpaperplane/provider-core/server/IdAllocator";
 import { ClaudeOrchestratorReplayHarness } from "./ClaudeAdapterV2.testkit.ts";
 import { provideDeterministicTestRuntime } from "../testkit/DeterministicRuntime.ts";
 import { runOrchestratorV2Scenario } from "../testkit/OrchestratorScenario.ts";
@@ -530,14 +530,14 @@ describe("ClaudeAdapterV2 runtime query policy", () => {
 });
 
 describe("ClaudeAdapterV2 MCP query overrides", () => {
-  const ROVE_MCP_SERVERS = {
-    rove: {
+  const PAPERPLANE_MCP_SERVERS = {
+    paperplane: {
       type: "http",
       url: "http://127.0.0.1:43123/mcp",
       headers: {
         Authorization: "Bearer secret-claude-token",
       },
-      timeout: ClaudeAdapterV2.CLAUDE_ROVE_MCP_TOOL_TIMEOUT_MS,
+      timeout: ClaudeAdapterV2.CLAUDE_PAPERPLANE_MCP_TOOL_TIMEOUT_MS,
     },
   } as const;
 
@@ -573,7 +573,7 @@ describe("ClaudeAdapterV2 MCP query overrides", () => {
     assert.deepEqual(overrides, { allowedTools: ["Read"] });
   });
 
-  it("pre-approves all rove tools when attaching an MCP session without an allowlist", () => {
+  it("pre-approves all paperplane tools when attaching an MCP session without an allowlist", () => {
     const threadId = ThreadId.make("thread-claude-mcp-no-allowlist");
     const mcpSession = mcpSessionFor(threadId);
     const overrides = ClaudeAdapterV2.claudeMcpQueryOverrides({
@@ -582,27 +582,27 @@ describe("ClaudeAdapterV2 MCP query overrides", () => {
     });
 
     assert.deepEqual(overrides, {
-      allowedTools: [ClaudeAdapterV2.CLAUDE_ROVE_MCP_TOOL_WILDCARD],
-      mcpServers: ROVE_MCP_SERVERS,
+      allowedTools: [ClaudeAdapterV2.CLAUDE_PAPERPLANE_MCP_TOOL_WILDCARD],
+      mcpServers: PAPERPLANE_MCP_SERVERS,
     });
   });
 
-  it("extends an explicit allowlist with the rove wildcard", () => {
+  it("extends an explicit allowlist with the paperplane wildcard", () => {
     const threadId = ThreadId.make("thread-claude-mcp-with-allowlist");
     const mcpSession = mcpSessionFor(threadId);
     const overrides = ClaudeAdapterV2.claudeMcpQueryOverrides({
       mcpSession,
       readOnlySandbox: false,
-      allowedTools: ["Read", "mcp__rove__*"],
+      allowedTools: ["Read", "mcp__paperplane__*"],
     });
 
     assert.deepEqual(overrides, {
-      allowedTools: ["Read", "mcp__rove__*"],
-      mcpServers: ROVE_MCP_SERVERS,
+      allowedTools: ["Read", "mcp__paperplane__*"],
+      mcpServers: PAPERPLANE_MCP_SERVERS,
     });
   });
 
-  it("pre-approves only read-only rove tools in a read-only sandbox", () => {
+  it("pre-approves only read-only paperplane tools in a read-only sandbox", () => {
     const threadId = ThreadId.make("thread-claude-mcp-read-only");
     const mcpSession = mcpSessionFor(threadId);
     const overrides = ClaudeAdapterV2.claudeMcpQueryOverrides({
@@ -614,14 +614,16 @@ describe("ClaudeAdapterV2 MCP query overrides", () => {
     assert.deepEqual(overrides, {
       allowedTools: [
         ...ClaudeAdapterV2.CLAUDE_READ_ONLY_ALLOWED_TOOLS,
-        ...ClaudeAdapterV2.CLAUDE_READ_ONLY_ROVE_MCP_ALLOWED_TOOLS,
+        ...ClaudeAdapterV2.CLAUDE_READ_ONLY_PAPERPLANE_MCP_ALLOWED_TOOLS,
       ],
-      mcpServers: ROVE_MCP_SERVERS,
+      mcpServers: PAPERPLANE_MCP_SERVERS,
     });
-    assert.isFalse(overrides.allowedTools?.includes(ClaudeAdapterV2.CLAUDE_ROVE_MCP_TOOL_WILDCARD));
+    assert.isFalse(
+      overrides.allowedTools?.includes(ClaudeAdapterV2.CLAUDE_PAPERPLANE_MCP_TOOL_WILDCARD),
+    );
   });
 
-  it("pre-approves only read-only rove tools in a read-only sandbox without an allowlist", () => {
+  it("pre-approves only read-only paperplane tools in a read-only sandbox without an allowlist", () => {
     const threadId = ThreadId.make("thread-claude-mcp-read-only-no-allowlist");
     const mcpSession = mcpSessionFor(threadId);
     const overrides = ClaudeAdapterV2.claudeMcpQueryOverrides({
@@ -630,7 +632,7 @@ describe("ClaudeAdapterV2 MCP query overrides", () => {
     });
 
     assert.deepEqual(overrides.allowedTools, [
-      ...ClaudeAdapterV2.CLAUDE_READ_ONLY_ROVE_MCP_ALLOWED_TOOLS,
+      ...ClaudeAdapterV2.CLAUDE_READ_ONLY_PAPERPLANE_MCP_ALLOWED_TOOLS,
     ]);
   });
 
@@ -701,11 +703,11 @@ describe("ClaudeAdapterV2 MCP query overrides", () => {
       ...Object.values(HtmlToolkit.tools),
     ]
       .filter((tool) => Context.get(tool.annotations, Tool.Readonly))
-      .map((tool) => `mcp__rove__${tool.name}`)
+      .map((tool) => `mcp__paperplane__${tool.name}`)
       .sort();
 
     assert.deepEqual(
-      [...ClaudeAdapterV2.CLAUDE_READ_ONLY_ROVE_MCP_ALLOWED_TOOLS].sort(),
+      [...ClaudeAdapterV2.CLAUDE_READ_ONLY_PAPERPLANE_MCP_ALLOWED_TOOLS].sort(),
       readOnlyToolNames,
     );
   });
@@ -730,15 +732,15 @@ describe("ClaudeAdapterV2 native protocol logging", () => {
       allowedTools: ["Read"],
     });
     assert.deepEqual(overrides, {
-      allowedTools: ["Read", "mcp__rove__*"],
+      allowedTools: ["Read", "mcp__paperplane__*"],
       mcpServers: {
-        rove: {
+        paperplane: {
           type: "http",
           url: "http://127.0.0.1:43123/mcp",
           headers: {
             Authorization: "Bearer secret-claude-token",
           },
-          timeout: ClaudeAdapterV2.CLAUDE_ROVE_MCP_TOOL_TIMEOUT_MS,
+          timeout: ClaudeAdapterV2.CLAUDE_PAPERPLANE_MCP_TOOL_TIMEOUT_MS,
         },
       },
     });
@@ -1012,7 +1014,7 @@ describe("ClaudeAdapterV2 Auto-accept edits", () => {
         const fileSystem = yield* FileSystem.FileSystem;
         const idAllocator = yield* IdAllocator.IdAllocatorV2;
         const attachmentsDir = yield* fileSystem.makeTempDirectoryScoped({
-          prefix: "rove-claude-accept-edits-",
+          prefix: "paperplane-claude-accept-edits-",
         });
         let openedOptions: ClaudeAdapterV2.ClaudeAgentSdkQueryOptions | undefined;
         const adapter = yield* ClaudeAdapterV2.makeClaudeAdapterV2({
@@ -1182,7 +1184,7 @@ const captureSdkExecutablePaths = Effect.fn("captureSdkExecutablePaths")(functio
   ).pipe(
     Effect.provide(
       ServerConfig.layerTest(process.cwd(), {
-        prefix: "rove-claude-binary-path-",
+        prefix: "paperplane-claude-binary-path-",
       }),
     ),
     Effect.provideService(ClaudeAdapterV2.ClaudeAgentSdkQueryRunner, {
@@ -1296,7 +1298,7 @@ describe("ClaudeAdapterV2 resume compaction", () => {
         const fileSystem = yield* FileSystem.FileSystem;
         const idAllocator = yield* IdAllocator.IdAllocatorV2;
         const attachmentsDir = yield* fileSystem.makeTempDirectoryScoped({
-          prefix: "rove-claude-resume-",
+          prefix: "paperplane-claude-resume-",
         });
         let openedOptions: ClaudeAdapterV2.ClaudeAgentSdkQueryOptions | undefined;
         const adapter = yield* ClaudeAdapterV2.makeClaudeAdapterV2({
@@ -1523,7 +1525,7 @@ describe("ClaudeAdapterV2 attachments", () => {
         const idAllocator = yield* IdAllocator.IdAllocatorV2;
         const path = yield* Path.Path;
         const attachmentsDir = yield* fileSystem.makeTempDirectoryScoped({
-          prefix: "rove-claude-v2-attachments-",
+          prefix: "paperplane-claude-v2-attachments-",
         });
         const offeredMessages: Array<SDKUserMessage> = [];
         const adapter = yield* ClaudeAdapterV2.makeClaudeAdapterV2({
@@ -1671,7 +1673,7 @@ describe("ClaudeAdapterV2 attachments", () => {
         const fileSystem = yield* FileSystem.FileSystem;
         const idAllocator = yield* IdAllocator.IdAllocatorV2;
         const attachmentsDir = yield* fileSystem.makeTempDirectoryScoped({
-          prefix: "rove-claude-v2-unsupported-attachment-",
+          prefix: "paperplane-claude-v2-unsupported-attachment-",
         });
         let openCount = 0;
         const adapter = yield* ClaudeAdapterV2.makeClaudeAdapterV2({
@@ -1762,7 +1764,7 @@ describe("ClaudeAdapterV2 native fork", () => {
         const fileSystem = yield* FileSystem.FileSystem;
         const idAllocator = yield* IdAllocator.IdAllocatorV2;
         const attachmentsDir = yield* fileSystem.makeTempDirectoryScoped({
-          prefix: "rove-claude-v2-fork-attachments-",
+          prefix: "paperplane-claude-v2-fork-attachments-",
         });
         const openedQueries: Array<ClaudeAdapterV2.ClaudeAgentSdkQueryOpenInput> = [];
         const forkCalls: Array<{
@@ -1993,7 +1995,7 @@ function makeFakeClaudeCli(answerSetServers = true) {
 }
 
 describe("ClaudeAdapterV2 MCP credential channel", () => {
-  const roveMcpServer = {
+  const paperplaneMcpServer = {
     type: "http" as const,
     url: "http://127.0.0.1:43123/mcp",
     headers: { Authorization: "Bearer dummy-mcp-credential" },
@@ -2011,7 +2013,7 @@ describe("ClaudeAdapterV2 MCP credential channel", () => {
             resume: false,
             cwd: null,
             environment: { PATH: "/usr/bin" },
-            mcpServers: { rove: roveMcpServer },
+            mcpServers: { paperplane: paperplaneMcpServer },
           }),
           pathToClaudeCodeExecutable: "/opt/claude/cli.js",
           spawnClaudeCodeProcess: cli.spawn,
@@ -2034,7 +2036,7 @@ describe("ClaudeAdapterV2 MCP credential channel", () => {
 
       assert.deepInclude(cli.controlRequests, {
         subtype: "mcp_set_servers",
-        servers: { rove: roveMcpServer },
+        servers: { paperplane: paperplaneMcpServer },
       });
       const spawned = JSON.stringify(cli.spawns);
       assert.notInclude(spawned, "--mcp-config");
@@ -2062,7 +2064,7 @@ describe("ClaudeAdapterV2 native session identity", () => {
         const fileSystem = yield* FileSystem.FileSystem;
         const idAllocator = yield* IdAllocator.IdAllocatorV2;
         const attachmentsDir = yield* fileSystem.makeTempDirectoryScoped({
-          prefix: "rove-claude-v2-session-identity-",
+          prefix: "paperplane-claude-v2-session-identity-",
         });
         const openedQueries: Array<ClaudeAdapterV2.ClaudeAgentSdkQueryOpenInput> = [];
         const adapter = yield* ClaudeAdapterV2.makeClaudeAdapterV2({
@@ -2362,7 +2364,7 @@ describe("ClaudeAdapterV2 background wake turns", () => {
       const fileSystem = yield* FileSystem.FileSystem;
       const idAllocator = yield* IdAllocator.IdAllocatorV2;
       const attachmentsDir = yield* fileSystem.makeTempDirectoryScoped({
-        prefix: "rove-claude-v2-wake-",
+        prefix: "paperplane-claude-v2-wake-",
       });
       const sdkMessages = yield* Queue.unbounded<SDKMessage>();
       const processQueues: Array<Queue.Queue<SDKMessage>> = [];
@@ -4991,7 +4993,7 @@ describe("ClaudeAdapterV2 background wake turns", () => {
         const fileSystem = yield* FileSystem.FileSystem;
         const idAllocator = yield* IdAllocator.IdAllocatorV2;
         const attachmentsDir = yield* fileSystem.makeTempDirectoryScoped({
-          prefix: "rove-claude-v2-settled-stop-replaced-",
+          prefix: "paperplane-claude-v2-settled-stop-replaced-",
         });
         const processQueues: Array<Queue.Queue<SDKMessage>> = [];
         const firstCloseRequested = yield* Deferred.make<void>();
@@ -5244,7 +5246,7 @@ describe("ClaudeAdapterV2 background wake turns", () => {
           const fileSystem = yield* FileSystem.FileSystem;
           const idAllocator = yield* IdAllocator.IdAllocatorV2;
           const attachmentsDir = yield* fileSystem.makeTempDirectoryScoped({
-            prefix: "rove-claude-v2-sibling-replace-",
+            prefix: "paperplane-claude-v2-sibling-replace-",
           });
           const nativeIds = ["native-thread-roster-a", "native-thread-roster-b"] as const;
           let allocateIndex = 0;
@@ -7506,7 +7508,7 @@ describe("ClaudeAdapterV2 background wake turns", () => {
         );
         yield* awaitUntil(() => harness.terminalEvents().length === 1, "first turn terminal");
 
-        // A native wake turn launches a new subagent while Rove has no turn.
+        // A native wake turn launches a new subagent while Paperplane has no turn.
         const idleFrames = [
           makeSubagentTaskStartedFrame({
             taskId: TASK_ID,
@@ -10348,7 +10350,7 @@ describe("ClaudeAdapterV2 background wake turns", () => {
         const fileSystem = yield* FileSystem.FileSystem;
         const idAllocator = yield* IdAllocator.IdAllocatorV2;
         const attachmentsDir = yield* fileSystem.makeTempDirectoryScoped({
-          prefix: "rove-claude-v2-process-reset-",
+          prefix: "paperplane-claude-v2-process-reset-",
         });
         const processQueues: Array<Queue.Queue<SDKMessage>> = [];
         const events: Array<ProviderAdapter.ProviderAdapterV2Event> = [];
@@ -10537,7 +10539,7 @@ describe("ClaudeAdapterV2 background wake turns", () => {
           const fileSystem = yield* FileSystem.FileSystem;
           const idAllocator = yield* IdAllocator.IdAllocatorV2;
           const attachmentsDir = yield* fileSystem.makeTempDirectoryScoped({
-            prefix: "rove-claude-v2-buffer-replace-",
+            prefix: "paperplane-claude-v2-buffer-replace-",
           });
           const processQueues: Array<Queue.Queue<SDKMessage>> = [];
           const events: Array<ProviderAdapter.ProviderAdapterV2Event> = [];
@@ -10778,7 +10780,7 @@ describe("ClaudeAdapterV2 background wake turns", () => {
           const fileSystem = yield* FileSystem.FileSystem;
           const idAllocator = yield* IdAllocator.IdAllocatorV2;
           const attachmentsDir = yield* fileSystem.makeTempDirectoryScoped({
-            prefix: "rove-claude-v2-subagent-buffer-replace-",
+            prefix: "paperplane-claude-v2-subagent-buffer-replace-",
           });
           const processQueues: Array<Queue.Queue<SDKMessage>> = [];
           const events: Array<ProviderAdapter.ProviderAdapterV2Event> = [];
@@ -10985,7 +10987,7 @@ describe("ClaudeAdapterV2 background wake turns", () => {
         const fileSystem = yield* FileSystem.FileSystem;
         const idAllocator = yield* IdAllocator.IdAllocatorV2;
         const attachmentsDir = yield* fileSystem.makeTempDirectoryScoped({
-          prefix: "rove-claude-v2-model-change-running-subagent-",
+          prefix: "paperplane-claude-v2-model-change-running-subagent-",
         });
         const processQueues: Array<Queue.Queue<SDKMessage>> = [];
         const events: Array<ProviderAdapter.ProviderAdapterV2Event> = [];
@@ -11155,7 +11157,7 @@ describe("ClaudeAdapterV2 background wake turns", () => {
           const fileSystem = yield* FileSystem.FileSystem;
           const idAllocator = yield* IdAllocator.IdAllocatorV2;
           const attachmentsDir = yield* fileSystem.makeTempDirectoryScoped({
-            prefix: "rove-claude-v2-replace-open-fail-",
+            prefix: "paperplane-claude-v2-replace-open-fail-",
           });
           let openCount = 0;
           const processQueues: Array<Queue.Queue<SDKMessage>> = [];
@@ -11288,7 +11290,7 @@ describe("ClaudeAdapterV2 background wake turns", () => {
           const fileSystem = yield* FileSystem.FileSystem;
           const idAllocator = yield* IdAllocator.IdAllocatorV2;
           const attachmentsDir = yield* fileSystem.makeTempDirectoryScoped({
-            prefix: "rove-claude-v2-replace-open-fail-wake-",
+            prefix: "paperplane-claude-v2-replace-open-fail-wake-",
           });
           let openCount = 0;
           const processQueues: Array<Queue.Queue<SDKMessage>> = [];
@@ -11491,7 +11493,7 @@ describe("ClaudeAdapterV2 background wake turns", () => {
         const fileSystem = yield* FileSystem.FileSystem;
         const idAllocator = yield* IdAllocator.IdAllocatorV2;
         const attachmentsDir = yield* fileSystem.makeTempDirectoryScoped({
-          prefix: "rove-claude-v2-first-open-fail-",
+          prefix: "paperplane-claude-v2-first-open-fail-",
         });
         const events: Array<ProviderAdapter.ProviderAdapterV2Event> = [];
         const adapter = yield* ClaudeAdapterV2.makeClaudeAdapterV2({
@@ -11571,7 +11573,9 @@ describe("ClaudeAdapterV2 background wake turns", () => {
   ) =>
     Effect.gen(function* () {
       const fileSystem = yield* FileSystem.FileSystem;
-      const configDir = yield* fileSystem.makeTempDirectoryScoped({ prefix: "rove-claude-wf-" });
+      const configDir = yield* fileSystem.makeTempDirectoryScoped({
+        prefix: "paperplane-claude-wf-",
+      });
       const transcriptDir = NodePath.join(configDir, "projects", "workflow");
       yield* fileSystem.makeDirectory(transcriptDir, { recursive: true });
       yield* fileSystem.writeFileString(

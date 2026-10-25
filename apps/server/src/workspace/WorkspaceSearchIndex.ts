@@ -24,8 +24,8 @@ import type {
   ProjectSearchContentsInput,
   ProjectSearchContentsResult,
   ProjectSearchEntriesResult,
-} from "@rove-code/contracts";
-import { isProjectFaviconPath } from "@rove-code/shared/projectFavicon";
+} from "@getpaperplane/contracts";
+import { isProjectFaviconPath } from "@getpaperplane/shared/projectFavicon";
 
 // fff-node stays external to the CLI bundle because it dlopens a native
 // library. A static `import` of an external package is a hard error inside a
@@ -128,7 +128,7 @@ export class WorkspaceSearchIndex extends Context.Service<
       WorkspaceSearchIndexRefreshFailed | WorkspaceSearchIndexScanTimedOut
     >;
   }
->()("@rove-code/server/workspace/WorkspaceSearchIndex") {}
+>()("@getpaperplane/server/workspace/WorkspaceSearchIndex") {}
 
 function toPosixPath(input: string): string {
   return input.replaceAll("\\", "/");
@@ -576,7 +576,7 @@ export const layer = (key: string) => {
 };
 
 export class WorkspaceSearchIndexMap extends LayerMap.Service<WorkspaceSearchIndexMap>()(
-  "@rove-code/server/workspace/WorkspaceSearchIndexMap",
+  "@getpaperplane/server/workspace/WorkspaceSearchIndexMap",
   {
     lookup: layer,
     idleTimeToLive: WORKSPACE_INDEX_IDLE_TTL,

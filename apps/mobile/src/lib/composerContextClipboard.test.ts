@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
-import { ComposerContextId, EnvironmentId } from "@rove-code/contracts";
-import { encodeComposerContextFragment } from "@rove-code/shared/composerContextClipboard";
+import { ComposerContextId, EnvironmentId } from "@getpaperplane/contracts";
+import { encodeComposerContextFragment } from "@getpaperplane/shared/composerContextClipboard";
 
 const mocks = vi.hoisted(() => ({
   execute: vi.fn(),
@@ -31,7 +31,7 @@ vi.mock("../state/use-composer-drafts", () => ({
   waitForComposerDraftsLoaded: async () => {},
   findLocalComposerClipboardAttachment: mocks.local,
 }));
-vi.mock("@rove-code/client-runtime/state/runtime", () => ({
+vi.mock("@getpaperplane/client-runtime/state/runtime", () => ({
   executeAtomQuery: mocks.execute,
   squashAtomCommandFailure: () => new Error("offline"),
 }));
@@ -67,7 +67,7 @@ const terminal = {
   text: "Build failed",
 };
 const clipboard = {
-  text: "![Checkout](rove-context://v1/image/image-source) [Build](rove-context://v1/terminal/terminal-source)",
+  text: "![Checkout](paperplane-context://v1/image/image-source) [Build](paperplane-context://v1/terminal/terminal-source)",
   fragment: encodeComposerContextFragment({
     version: 1,
     source: { environmentId: EnvironmentId.make("source") },

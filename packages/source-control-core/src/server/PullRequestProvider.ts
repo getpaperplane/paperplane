@@ -36,8 +36,8 @@ import type {
   PullRequestUpdateMethod,
   PullRequestViewerPermissions,
   SourceControlProviderKind,
-} from "@rove-code/contracts";
-import { SourceControlProviderKind as SourceControlProviderKindSchema } from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
+import { SourceControlProviderKind as SourceControlProviderKindSchema } from "@getpaperplane/contracts";
 
 /**
  * The one failure shape every provider reports, so the service can decide what a failure means

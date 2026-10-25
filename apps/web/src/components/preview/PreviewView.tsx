@@ -1,11 +1,11 @@
 "use client";
 
-import { scopedThreadKey } from "@rove-code/client-runtime/environment";
-import { previewStreamDownloadUrl } from "@rove-code/client-runtime/preview/server-browser-stream";
+import { scopedThreadKey } from "@getpaperplane/client-runtime/environment";
+import { previewStreamDownloadUrl } from "@getpaperplane/client-runtime/preview/server-browser-stream";
 import {
   isAtomCommandInterrupted,
   squashAtomCommandFailure,
-} from "@rove-code/client-runtime/state/runtime";
+} from "@getpaperplane/client-runtime/state/runtime";
 import {
   AuthOrchestrationOperateScope,
   DEFAULT_BROWSER_PROFILE_ID,
@@ -16,8 +16,8 @@ import {
   DEFAULT_PREVIEW_ZOOM_FACTOR,
   PREVIEW_ZOOM_LEVELS,
   type PreviewAdjustInput,
-} from "@rove-code/contracts";
-import { normalizePreviewUrl, resolveAddressBarInput } from "@rove-code/shared/preview";
+} from "@getpaperplane/contracts";
+import { normalizePreviewUrl, resolveAddressBarInput } from "@getpaperplane/shared/preview";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import {
@@ -1097,7 +1097,7 @@ export function PreviewView({
           ) : (
             <div className="flex h-full items-center justify-center p-8 text-center">
               <p className="max-w-sm text-sm text-muted-foreground">
-                This tab is open in the Rove Code desktop app.
+                This tab is open in the Paperplane desktop app.
               </p>
             </div>
           )

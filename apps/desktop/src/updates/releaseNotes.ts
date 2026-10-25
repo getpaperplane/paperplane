@@ -1,4 +1,4 @@
-import type { DesktopUpdateChannel, DesktopUpdateReleaseNote } from "@rove-code/contracts";
+import type { DesktopUpdateChannel, DesktopUpdateReleaseNote } from "@getpaperplane/contracts";
 
 import { resolveDefaultDesktopUpdateChannel } from "./updateChannels.ts";
 

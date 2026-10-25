@@ -3,12 +3,12 @@ import * as Dialog from "../../components/ui/Dialog";
 import { useAtomValue } from "@effect/atom-react";
 import * as Cause from "effect/Cause";
 import { AsyncResult } from "effect/reactivity";
-import { clampFileAttachmentUploadBytes } from "@rove-code/client-runtime/state/attachments";
+import { clampFileAttachmentUploadBytes } from "@getpaperplane/client-runtime/state/attachments";
 import {
   nextPastedTextFileName,
   pastedTextDisposition,
   replaceTextSelection,
-} from "@rove-code/client-runtime/text-paste";
+} from "@getpaperplane/client-runtime/text-paste";
 import { NativeStackScreenOptions } from "../../native/StackHeader";
 import {
   CommonActions,
@@ -34,8 +34,8 @@ import {
   PROVIDER_SEND_TURN_MAX_ATTACHMENTS,
   PROVIDER_SEND_TURN_MAX_INPUT_CHARS,
   resolveEnvironmentMachineKind,
-} from "@rove-code/contracts";
-import { deriveThreadTitleSeed } from "@rove-code/client-runtime/operations";
+} from "@getpaperplane/contracts";
+import { deriveThreadTitleSeed } from "@getpaperplane/client-runtime/operations";
 
 import {
   ComposerEditor,
@@ -68,7 +68,7 @@ import { VideoPreviewModal, type VideoPreviewSource } from "../../components/Vid
 import { ProviderIcon } from "../../components/ProviderIcon";
 import { SymbolView } from "../../components/ui/AppSymbol";
 import { AppText as Text } from "../../components/ui/AppText";
-import { hasProviderUsageLimits, isUsageLimitsCommand } from "@rove-code/shared/usageLimits";
+import { hasProviderUsageLimits, isUsageLimitsCommand } from "@getpaperplane/shared/usageLimits";
 import { COMPOSER_LAYOUT_TRANSITION, ComposerSurface } from "./ThreadComposer";
 import { ComposerCommandPopover } from "./ComposerCommandPopover";
 import { useComposerCommandMenu } from "./use-composer-command-menu";
@@ -486,7 +486,7 @@ export function NewTaskDraftScreen(props: {
   useHardwareKeyboardCommand(cycleEnvironmentCommands, cycleEnvironment);
   // Also guard while a submit is in flight: an Android back press or iOS
   // Cancel would otherwise abandon the screen while the task still starts.
-  // Rove owns /usage-limits only where Limits has data for the selected provider.
+  // Paperplane owns /usage-limits only where Limits has data for the selected provider.
   const offersUsageLimits =
     flow.selectedProviderStatus !== null &&
     hasProviderUsageLimits(
@@ -1285,7 +1285,7 @@ export function NewTaskDraftScreen(props: {
       Dialog.alert(title, detail);
       return;
     }
-    // Rove's own limits command is answered by the thread composer; a new task would
+    // Paperplane's own limits command is answered by the thread composer; a new task would
     // send it to the agent. A provider's same-named command, or a prompt carrying
     // attachments, goes through as usual.
     if (
@@ -1449,6 +1449,11 @@ export function NewTaskDraftScreen(props: {
   };
   const promptEditor = (
     <>
+      {flow.projectConfigNotice ? (
+        <Text accessibilityRole="alert" className="px-4 py-2 text-sm text-warning-foreground">
+          {flow.projectConfigNotice}
+        </Text>
+      ) : null}
       <ComposerEditor
         draftKey={flow.draftKey}
         environmentId={selectedProject.environmentId}
@@ -1551,7 +1556,7 @@ export function NewTaskDraftScreen(props: {
   // like web, and puts the project picker beside the machine as a control.
   const hero = flow.isScratchDraft ? (
     <View className="items-center gap-2 px-6" testID="new-task-hero">
-      <Text className="text-center text-2xl font-rove-medium tracking-tight text-foreground">
+      <Text className="text-center text-2xl font-paperplane-medium tracking-tight text-foreground">
         What should we work on?
       </Text>
       {/* Wraps onto two lines only when a long machine name leaves no room. */}
@@ -1571,11 +1576,13 @@ export function NewTaskDraftScreen(props: {
   ) : (
     <View className="items-center gap-6 px-6" testID="new-task-hero">
       <View className="w-full items-center gap-1.5">
-        <Text className="text-center text-2xl font-rove-medium tracking-tight text-foreground">
+        <Text className="text-center text-2xl font-paperplane-medium tracking-tight text-foreground">
           What should we build
         </Text>
         <View className="max-w-full flex-row items-center justify-center">
-          <Text className="text-2xl font-rove-medium tracking-tight text-foreground">in </Text>
+          <Text className="text-2xl font-paperplane-medium tracking-tight text-foreground">
+            in{" "}
+          </Text>
           <Pressable
             accessibilityHint="Opens the project picker"
             accessibilityLabel={selectedProjectLabel ?? selectedProject.title}
@@ -1585,13 +1592,13 @@ export function NewTaskDraftScreen(props: {
             className="min-w-0 max-w-[250px] border-b border-foreground-muted active:opacity-65"
           >
             <Text
-              className="text-2xl font-rove-medium tracking-tight text-foreground"
+              className="text-2xl font-paperplane-medium tracking-tight text-foreground"
               numberOfLines={1}
             >
               {selectedProjectLabel ?? selectedProject.title}
             </Text>
           </Pressable>
-          <Text className="text-2xl font-rove-medium tracking-tight text-foreground">?</Text>
+          <Text className="text-2xl font-paperplane-medium tracking-tight text-foreground">?</Text>
         </View>
       </View>
 

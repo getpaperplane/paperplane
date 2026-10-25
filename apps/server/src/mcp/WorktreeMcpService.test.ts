@@ -9,7 +9,7 @@ import {
   ProviderInstanceId,
   ThreadId,
   WorktreeMcpHandoffInput,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Cause from "effect/Cause";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
@@ -388,7 +388,7 @@ const runStatus = (harness: ReturnType<typeof makeHarness>) =>
     return yield* service.status(harness.scope);
   }).pipe(Effect.provide(harness.layer));
 
-describe("rove_worktree_handoff", () => {
+describe("paperplane_worktree_handoff", () => {
   it.effect("creates a worktree from the current branch and re-points the thread", () => {
     const harness = makeHarness();
     return Effect.gen(function* () {
@@ -974,7 +974,7 @@ describe("rove_worktree_handoff", () => {
   });
 });
 
-describe("rove_worktree_status", () => {
+describe("paperplane_worktree_status", () => {
   it.effect("reports an unattached thread", () => {
     const harness = makeHarness({ newWorktreesStartFromOrigin: true });
     return Effect.gen(function* () {

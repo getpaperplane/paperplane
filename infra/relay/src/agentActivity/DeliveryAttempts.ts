@@ -65,7 +65,7 @@ export class DeliveryAttempts extends Context.Service<
       input: DeliveryAttemptCompletionInput,
     ) => Effect.Effect<void, DeliveryAttemptRecordPersistenceError>;
   }
->()("rove-relay/agentActivity/DeliveryAttempts") {}
+>()("paperplane-relay/agentActivity/DeliveryAttempts") {}
 
 const SOURCE_JOB_CLAIM_LEASE_MINUTES = 10;
 

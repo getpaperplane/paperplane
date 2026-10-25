@@ -1,4 +1,4 @@
-import { EnvironmentId } from "@rove-code/contracts";
+import { EnvironmentId } from "@getpaperplane/contracts";
 import { beforeEach, expect, it, vi } from "vite-plus/test";
 
 const state = vi.hoisted(() => ({
@@ -45,7 +45,7 @@ vi.mock("../../state/server", () => ({ serverEnvironment: { refreshProviders: nu
 vi.mock("../../state/use-atom-command", () => ({ useAtomCommand: () => state.refreshProviders }));
 
 import { useRefreshLimits } from "./UsageLimitsSection";
-import { refreshUsageLimits } from "@rove-code/client-runtime/state/usage";
+import { refreshUsageLimits } from "@getpaperplane/client-runtime/state/usage";
 
 beforeEach(() => {
   state.values = [];

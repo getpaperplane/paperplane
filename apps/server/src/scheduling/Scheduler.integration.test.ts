@@ -9,7 +9,7 @@ import {
   ThreadId,
   type OrchestrationV2ServerCommand,
   type OrchestrationV2ThreadShell,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";

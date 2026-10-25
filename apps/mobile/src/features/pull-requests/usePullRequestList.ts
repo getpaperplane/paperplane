@@ -2,12 +2,12 @@ import { RegistryContext, useAtomValue } from "@effect/atom-react";
 import {
   executeAtomQuery,
   squashAtomCommandFailure,
-} from "@rove-code/client-runtime/state/runtime";
+} from "@getpaperplane/client-runtime/state/runtime";
 import type {
   EnvironmentId,
   PullRequestDiffStat,
   PullRequestListInput,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Cause from "effect/Cause";
 import * as Option from "effect/Option";
 import { AsyncResult, Atom } from "effect/reactivity";

@@ -1,1 +1,1 @@
-export { sanitizeThreadErrorMessage } from "@rove-code/client-runtime/errors";
+export { sanitizeThreadErrorMessage } from "@getpaperplane/client-runtime/errors";

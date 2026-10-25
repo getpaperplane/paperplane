@@ -7,7 +7,7 @@ import type {
   DesktopPreviewTabState,
   DesktopSshPasswordPromptRequest,
   DesktopUpdateState,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import type { Json as SchemaJson } from "effect/Schema";
 
 type RecordValue = Record<string, SchemaJson>;

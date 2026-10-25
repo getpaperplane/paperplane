@@ -1,4 +1,4 @@
-import { AuthSourceControlWriteScope, EnvironmentId } from "@rove-code/contracts";
+import { AuthSourceControlWriteScope, EnvironmentId } from "@getpaperplane/contracts";
 import { act } from "react";
 import { create, type ReactTestRenderer } from "react-test-renderer";
 import { afterEach, beforeEach, expect, it, vi } from "vite-plus/test";

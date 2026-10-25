@@ -1,7 +1,7 @@
-import type { ScopedThreadRef } from "@rove-code/contracts";
+import type { ScopedThreadRef } from "@getpaperplane/contracts";
 
 import ChatMarkdown from "~/components/ChatMarkdown";
-import { resolvePathLinkTarget } from "@rove-code/shared/fileLinks";
+import { resolvePathLinkTarget } from "@getpaperplane/shared/fileLinks";
 
 export function FileMarkdownPreview(props: {
   readonly cwd: string;

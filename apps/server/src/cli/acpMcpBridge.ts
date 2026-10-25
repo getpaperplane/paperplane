@@ -4,11 +4,11 @@ import { Argument, Command } from "effect/cli";
 import { runAcpMcpCliFastPath } from "../mcp/AcpMcpStdioBridge.ts";
 
 /**
- * `rove acp-mcp-bridge` — internal stdio MCP server that ACP agents spawn.
+ * `paperplane acp-mcp-bridge` — internal stdio MCP server that ACP agents spawn.
  *
- * The Rove server injects this command (with per-session endpoint and
+ * The Paperplane server injects this command (with per-session endpoint and
  * credential environment variables) into `session/new` so every ACP agent
- * reaches the rove toolkit through ACP's required stdio MCP transport.
+ * reaches the paperplane toolkit through ACP's required stdio MCP transport.
  * The credential stays in the environment, never on the command line.
  *
  * Real invocations dispatch through the bin.ts fast path before the CLI
@@ -16,7 +16,7 @@ import { runAcpMcpCliFastPath } from "../mcp/AcpMcpStdioBridge.ts";
  * anything that drives the full CLI programmatically.
  */
 export const acpMcpBridgeCommand = Command.make("acp-mcp-bridge").pipe(
-  Command.withDescription("Bridge Rove Code's MCP endpoint to stdio for ACP agents."),
+  Command.withDescription("Bridge Paperplane's MCP endpoint to stdio for ACP agents."),
   Command.unlisted,
   Command.withHandler(() => Effect.promise(() => runAcpMcpCliFastPath("acp-mcp-bridge", []))),
 );
@@ -26,7 +26,7 @@ export const acpMcpCallCommand = Command.make("acp-mcp-call", {
   tool: Argument.String("tool"),
   argumentsJson: Argument.String("arguments-json"),
 }).pipe(
-  Command.withDescription("Call one Rove Code MCP tool from an ACP agent terminal."),
+  Command.withDescription("Call one Paperplane MCP tool from an ACP agent terminal."),
   Command.unlisted,
   Command.withHandler(({ tool, argumentsJson }) =>
     Effect.promise(() => runAcpMcpCliFastPath("acp-mcp-call", [tool, argumentsJson])),

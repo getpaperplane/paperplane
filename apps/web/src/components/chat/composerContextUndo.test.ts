@@ -1,4 +1,4 @@
-import type { PreviewAnnotationPayload } from "@rove-code/contracts";
+import type { PreviewAnnotationPayload } from "@getpaperplane/contracts";
 import { describe, expect, it } from "vite-plus/test";
 
 import type { ComposerFileAttachment, ComposerImageAttachment } from "../../composerDraftStore";

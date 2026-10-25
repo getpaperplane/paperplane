@@ -4,7 +4,7 @@ import {
   ProjectId,
   type ProjectScript,
   type ResolvedKeybindingsConfig,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { AsyncResult } from "effect/reactivity";
 import { act, create, type ReactTestRenderer } from "react-test-renderer";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";

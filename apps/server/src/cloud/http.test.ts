@@ -1,5 +1,5 @@
 import * as NodeServices from "@effect/platform-node/NodeServices";
-import { EnvironmentHttpApi } from "@rove-code/contracts";
+import { EnvironmentHttpApi } from "@getpaperplane/contracts";
 import { describe, expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -46,7 +46,7 @@ const answerHealthWith = async (failure: HealthFailure, cloudEnabled = true) => 
   });
   try {
     const response = await handler(
-      new Request("http://127.0.0.1/api/rove-connect/health", {
+      new Request("http://127.0.0.1/api/paperplane-connect/health", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ proof: "proof" }),
@@ -59,7 +59,7 @@ const answerHealthWith = async (failure: HealthFailure, cloudEnabled = true) => 
 };
 
 describe("connect routes", () => {
-  it("rejects relay requests when Rove Connect is gated off", async () => {
+  it("rejects relay requests when Paperplane Connect is gated off", async () => {
     const response = await answerHealthWith(
       new CloudLink.CloudLinkProofRejectedError({ request: "health" }),
       false,
@@ -68,7 +68,7 @@ describe("connect routes", () => {
       status: 403,
       body: {
         _tag: "EnvironmentHttpForbiddenError",
-        message: "Rove Connect is not enabled in this build.",
+        message: "Paperplane Connect is not enabled in this build.",
       },
     });
   });

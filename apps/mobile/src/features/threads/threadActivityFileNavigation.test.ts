@@ -1,4 +1,4 @@
-import { EnvironmentId, ThreadId } from "@rove-code/contracts";
+import { EnvironmentId, ThreadId } from "@getpaperplane/contracts";
 import { describe, expect, it } from "@effect/vitest";
 
 import { buildThreadActivityFileParams } from "./threadActivityFileNavigation";

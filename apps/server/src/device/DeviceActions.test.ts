@@ -1,5 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
-import type { DeviceActionInput } from "@rove-code/contracts";
+import type { DeviceActionInput } from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 
 import { readDeviceDetail, runDeviceAction, supportsAction } from "./DeviceActions.ts";

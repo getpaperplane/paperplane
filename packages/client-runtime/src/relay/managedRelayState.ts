@@ -1,13 +1,13 @@
 import type {
   RelayClientEnvironmentRecord,
   RelayEnvironmentStatusResponse,
-} from "@rove-code/contracts/relay";
-import type { EnvironmentId } from "@rove-code/contracts";
+} from "@getpaperplane/contracts/relay";
+import type { EnvironmentId } from "@getpaperplane/contracts";
 import {
   RelayEnvironmentConnectScope,
   RelayEnvironmentStatusScope,
-} from "@rove-code/contracts/relay";
-import { decodeRelayJwt } from "@rove-code/shared/relayJwt";
+} from "@getpaperplane/contracts/relay";
+import { decodeRelayJwt } from "@getpaperplane/shared/relayJwt";
 import * as Cause from "effect/Cause";
 import * as Clock from "effect/Clock";
 import * as Data from "effect/Data";
@@ -127,7 +127,7 @@ export function createManagedRelaySession(input: ManagedRelaySessionInput): Mana
         try: () => readCachedClerkToken(nowMillis),
         catch: (cause) =>
           new ManagedRelaySessionError({
-            message: "Could not obtain the Rove Connect session token.",
+            message: "Could not obtain the Paperplane Connect session token.",
             cause,
           }),
       });
@@ -184,7 +184,7 @@ function readSessionClerkToken(
       (token): token is string => Boolean(token),
       () =>
         new ManagedRelaySessionError({
-          message: "The Rove Connect session token is unavailable.",
+          message: "The Paperplane Connect session token is unavailable.",
         }),
     ),
   );
@@ -200,7 +200,7 @@ export const deregisterManagedRelayEnvironment = Effect.fn(
   const session = registry.get(managedRelaySessionAtom);
   if (!session || session.accountId !== input.accountId) {
     return yield* new ManagedRelaySessionError({
-      message: "Sign in to Rove Connect before deregistering an environment.",
+      message: "Sign in to Paperplane Connect before deregistering an environment.",
     });
   }
   const clerkToken = yield* readSessionClerkToken(session);
@@ -216,7 +216,7 @@ function requireClerkToken(
   if (!session || session.accountId !== accountId) {
     return Effect.fail(
       new ManagedRelaySessionError({
-        message: "Sign in to Rove Connect before loading relay data.",
+        message: "Sign in to Paperplane Connect before loading relay data.",
       }),
     );
   }
@@ -291,7 +291,7 @@ export function readManagedRelaySnapshotState<A>(
         ? relayProtectedErrorMessage(cause.relayError)
         : cause instanceof Error
           ? cause.message
-          : "Could not load Rove Connect data.";
+          : "Could not load Paperplane Connect data.";
     errorTraceId = findErrorTraceId(cause);
   }
   return {

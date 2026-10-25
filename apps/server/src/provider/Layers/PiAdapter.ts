@@ -3,7 +3,7 @@ import type {
   ProviderUserInputAnswers,
   ThreadId,
   ThreadTokenUsageSnapshot,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import type { Json } from "effect/Schema";
 import { piRecord, piTrimmed } from "./PiValues.ts";
 

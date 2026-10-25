@@ -10,13 +10,13 @@ import type {
   EnvironmentId,
   PullRequestRef,
   PullRequestReviewerCandidate,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { CheckIcon, UserPlusIcon } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { pullRequestEnvironment } from "~/state/pullRequests";
 import { useEnvironmentQuery } from "~/state/query";
-import { squashAtomCommandFailure } from "@rove-code/client-runtime/state/runtime";
+import { squashAtomCommandFailure } from "@getpaperplane/client-runtime/state/runtime";
 
 import { toastManager } from "../ui/toast";
 import { PullRequestCandidatePicker } from "./PullRequestCandidatePicker";

@@ -14,7 +14,7 @@ import {
   type OrchestrationV2ThreadStreamItem,
   OrchestrationV2TurnItem,
   OrchestrationV2TurnItemJson,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { describe, expect, it } from "@effect/vitest";
 import * as DateTime from "effect/DateTime";
 import * as Schema from "effect/Schema";
@@ -26,7 +26,7 @@ import {
   makeThreadLiveTextProjector,
 } from "./WireProjection.ts";
 import { threadShellFromProjection } from "./ProjectionStore.ts";
-import { MAX_TOOL_OUTPUT_IMAGES, toolOutputImages } from "@rove-code/shared/toolOutput";
+import { MAX_TOOL_OUTPUT_IMAGES, toolOutputImages } from "@getpaperplane/shared/toolOutput";
 
 const decodeTurnItem = Schema.decodeUnknownSync(OrchestrationV2TurnItem);
 const encodeTurnItemJson = Schema.encodeSync(OrchestrationV2TurnItemJson);
@@ -431,7 +431,7 @@ describe("orchestration V2 wire projection", () => {
     const item = {
       ...base,
       type: "dynamic_tool" as const,
-      toolName: "mcp__rove__device_screenshot",
+      toolName: "mcp__paperplane__device_screenshot",
       input: { deviceId: "phone" },
       output: {
         content: [{ type: "image", source: { type: "base64", media_type: "image/png", data } }],

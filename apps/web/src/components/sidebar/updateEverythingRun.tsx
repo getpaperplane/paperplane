@@ -1,5 +1,5 @@
 import { useAtomValue } from "@effect/atom-react";
-import { EnvironmentId } from "@rove-code/contracts";
+import { EnvironmentId } from "@getpaperplane/contracts";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 import { Atom } from "effect/reactivity";
@@ -167,7 +167,7 @@ export function postponeUpdateRestart(): void {
   decideRestart?.(false);
 }
 
-const SAVED_RESULT_KEY = "rove:update-everything-result:v1";
+const SAVED_RESULT_KEY = "paperplane:update-everything-result:v1";
 // A result older than this belongs to an install that never relaunched the app.
 const SAVED_RESULT_MAX_AGE_MS = 10 * 60 * 1000;
 // Covers a background service's 30-minute trial start, like the server update itself.
@@ -366,7 +366,7 @@ export function DesktopUpdateLaunchNotice() {
       stackedThreadToast({
         type: "error",
         title: "Update did not apply",
-        description: `Rove Code is still on ${APP_VERSION}. Install ${notAppliedVersion} again from the update button.`,
+        description: `Paperplane is still on ${APP_VERSION}. Install ${notAppliedVersion} again from the update button.`,
       }),
     );
   }, [notAppliedVersion]);

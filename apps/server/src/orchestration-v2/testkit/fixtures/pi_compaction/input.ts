@@ -8,7 +8,7 @@ const PI_COMPACTION_RECALL_PROMPT =
  * Two SDK compactions: refusal on a small session, then success and recall.
  * The shipping adapter supports bare /compact only, so both use compactThread.
  * These deterministic SDK events preserve the original RPC scenario's semantics
- * without claiming that its CLI-only custom-instructions path ships in Rove.
+ * without claiming that its CLI-only custom-instructions path ships in Paperplane.
  */
 export function piCompactionInput(): OrchestratorFixtureInput {
   return {

@@ -1,4 +1,5 @@
-import * as HostProcess from "@rove-code/shared/HostProcess";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
+import { enableCheckpointRefMigration } from "@getpaperplane/shared/homeMigration";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Option from "effect/Option";
@@ -23,6 +24,7 @@ const runServerCommand = (
   Effect.gen(function* () {
     const logLevel = yield* GlobalFlag.LogLevel;
     const config = yield* resolveServerConfig(flags, logLevel, options);
+    yield* Effect.sync(() => enableCheckpointRefMigration(config.baseDir));
     return yield* runServer.pipe(Effect.provideService(ServerConfig.ServerConfig, config));
   });
 
@@ -45,7 +47,7 @@ export const runDefaultServerCommand = (flags: CliServerFlags) =>
       ) {
         return yield* new CliError.UserError({
           cause: cwd,
-          userMessage: `Unknown command ${yield* encodeCommand(cwd)}. Use "rove --help" for commands or an explicit path such as "rove ./my-project" for a new directory.`,
+          userMessage: `Unknown command ${yield* encodeCommand(cwd)}. Use "paperplane --help" for commands or an explicit path such as "paperplane ./my-project" for a new directory.`,
         });
       }
     }
@@ -53,13 +55,13 @@ export const runDefaultServerCommand = (flags: CliServerFlags) =>
   });
 
 export const startCommand = Command.make("start", { ...sharedServerCommandFlags }).pipe(
-  Command.withDescription("Run the Rove Code server."),
+  Command.withDescription("Run the Paperplane server."),
   Command.withHandler((flags) => runServerCommand(flags, { rejectRunningServer: true })),
 );
 
 export const serveCommand = Command.make("serve", { ...sharedServerCommandFlags }).pipe(
   Command.withDescription(
-    "Run the Rove Code server without opening a browser and print headless pairing details.",
+    "Run the Paperplane server without opening a browser and print headless pairing details.",
   ),
   Command.withHandler((flags) =>
     runServerCommand(flags, {

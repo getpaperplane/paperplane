@@ -1,4 +1,4 @@
-import { unquoteGitPatchPath } from "@rove-code/shared/gitPatchPath";
+import { unquoteGitPatchPath } from "@getpaperplane/shared/gitPatchPath";
 import { describe, expect, it } from "vite-plus/test";
 
 import {

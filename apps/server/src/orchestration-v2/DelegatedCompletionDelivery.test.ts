@@ -1,5 +1,5 @@
 import * as SourceControlProviderRegistry from "../sourceControl/SourceControlProviderRegistry.ts";
-import * as McpProviderSessions from "@rove-code/provider-core/server/McpProviderSessions";
+import * as McpProviderSessions from "@getpaperplane/provider-core/server/McpProviderSessions";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { assert, it } from "@effect/vitest";
 import {
@@ -16,7 +16,7 @@ import {
   RunId,
   ThreadId,
   TurnItemId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -29,7 +29,7 @@ import * as McpSessionRegistryTestkit from "../mcp/McpSessionRegistry.testkit.ts
 import * as SqlitePersistence from "../persistence/Sqlite.ts";
 import * as ProjectEnrichmentService from "../project/ProjectEnrichmentService.ts";
 import * as ProjectService from "../project/ProjectService.ts";
-import type { ProviderInstance } from "@rove-code/provider-core/server/driver";
+import type { ProviderInstance } from "@getpaperplane/provider-core/server/driver";
 import * as ProviderInstanceRegistry from "../provider/ProviderInstanceRegistry.ts";
 import * as ServerSettings from "../serverSettings.ts";
 import * as VcsDriverRegistry from "../vcs/VcsDriverRegistry.ts";
@@ -41,8 +41,8 @@ import * as Orchestrator from "./Orchestrator.ts";
 import { continueRestartedRun } from "./RestartContinuation.ts";
 import * as RuntimeLayer from "./runtimeLayer.ts";
 import * as ProviderTurnStartServiceTestkit from "./ProviderTurnStartService.testkit.ts";
-import type * as ProviderAdapter from "@rove-code/provider-core/server/ProviderAdapter";
-import * as ProviderContinuationRequests from "@rove-code/provider-core/server/ProviderContinuationRequests";
+import type * as ProviderAdapter from "@getpaperplane/provider-core/server/ProviderAdapter";
+import * as ProviderContinuationRequests from "@getpaperplane/provider-core/server/ProviderContinuationRequests";
 
 const layerPlatformTest = Layer.merge(
   NodeServices.layer,
@@ -52,7 +52,7 @@ const layerPlatformTest = Layer.merge(
 );
 
 const layerServerConfig = ServerConfig.layerTest(process.cwd(), {
-  prefix: "rove-orchestration-v2-delegated-completion-",
+  prefix: "paperplane-orchestration-v2-delegated-completion-",
 });
 
 const modelSelection = {
@@ -615,7 +615,7 @@ it.layer(layerTest)("delegated completion delivery repairs", (it) => {
           now,
         });
 
-        // Distinct command IDs mirror task_status vs rove_thread_read racing after
+        // Distinct command IDs mirror task_status vs paperplane_thread_read racing after
         // their shared read preflight saw delivered ownership.
         const firstAck = yield* orchestrator.dispatch({
           type: "delegated_task.completion-delivery.acknowledge",

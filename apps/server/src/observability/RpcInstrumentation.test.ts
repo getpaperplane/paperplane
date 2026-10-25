@@ -7,7 +7,7 @@ import {
   ScheduledTaskId,
   WS_METHODS,
   WsRpcGroup,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Deferred from "effect/Deferred";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -88,7 +88,7 @@ const requestCount = (
   snapshots.find(
     (snapshot): snapshot is Extract<Metric.Metric.Snapshot, { readonly type: "Counter" }> =>
       snapshot.type === "Counter" &&
-      snapshot.id === "rove_rpc_requests_total" &&
+      snapshot.id === "paperplane_rpc_requests_total" &&
       snapshot.attributes?.["method"] === method &&
       snapshot.attributes?.["outcome"] === outcome,
   )?.state;
@@ -97,7 +97,7 @@ const requestDuration = (snapshots: ReadonlyArray<Metric.Metric.Snapshot>, metho
   snapshots.find(
     (snapshot): snapshot is Extract<Metric.Metric.Snapshot, { readonly type: "Histogram" }> =>
       snapshot.type === "Histogram" &&
-      snapshot.id === "rove_rpc_request_duration" &&
+      snapshot.id === "paperplane_rpc_request_duration" &&
       snapshot.attributes?.["method"] === method,
   )?.state;
 
@@ -113,7 +113,7 @@ describe("WS RPC instrumentation middleware", () => {
           swapTotalBytes: null,
           swapFreeBytes: null,
           memoryPressure: false,
-          roveMemory: null,
+          paperplaneMemory: null,
           findings: [],
         };
         const client = yield* RpcTest.makeClient(group).pipe(

@@ -5,8 +5,8 @@ import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as Redacted from "effect/Redacted";
 
-import * as GitHubRest from "@rove-code/source-control-github/server/GitHubRest";
-import { cascadeRebaseStack } from "@rove-code/source-control-github/server/githubStackRebase";
+import * as GitHubRest from "@getpaperplane/source-control-github/server/GitHubRest";
+import { cascadeRebaseStack } from "@getpaperplane/source-control-github/server/githubStackRebase";
 
 import * as ServerSettings from "../serverSettings.ts";
 import * as GitVcsDriver from "../vcs/GitVcsDriver.ts";
@@ -34,7 +34,7 @@ const layer = Layer.mergeAll(
 const setup = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
   const process = yield* VcsProcess.VcsProcess;
-  const root = yield* fs.makeTempDirectoryScoped({ prefix: "rove-cascade-test-" });
+  const root = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-cascade-test-" });
   const remote = `${root}/remote.git`;
   const work = `${root}/work`;
   const git = (cwd: string, ...args: string[]) =>
@@ -134,7 +134,7 @@ it.layer(layer)("cascadeRebaseStack", (it) => {
       // Make main conflict with the bottom layer's change to the same line.
       const fs = yield* FileSystem.FileSystem;
       const process = yield* VcsProcess.VcsProcess;
-      const scratch = yield* fs.makeTempDirectoryScoped({ prefix: "rove-cascade-conflict-" });
+      const scratch = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-cascade-conflict-" });
       const run = (...args: string[]) =>
         process.run({
           operation: "test",

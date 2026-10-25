@@ -10,9 +10,9 @@ import {
   DESKTOP_APP_ACTIVATION_PROTOCOL_VERSION,
   DesktopAppActivationRequest,
   type DesktopAppActivationResponse,
-} from "@rove-code/contracts";
-import { resolveDesktopAppControlAddress } from "@rove-code/shared/desktopAppControl";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+} from "@getpaperplane/contracts";
+import { resolveDesktopAppControlAddress } from "@getpaperplane/shared/desktopAppControl";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -107,7 +107,7 @@ function closeServer(server: NodeNet.Server): Promise<void> {
 }
 
 /**
- * Serves `rove app` requests on the local control address until `close`.
+ * Serves `paperplane app` requests on the local control address until `close`.
  *
  * Two desktop apps can share one state dir, for example nightly and a preview
  * build. They share one socket path, so on Unix:
@@ -171,7 +171,10 @@ export async function startDesktopAppControlServer(input: {
       activeRequestId = parsed.requestId;
       void input.handle(parsed).then(finish, () => {
         finish(
-          invalidResponse(parsed.requestId, "Rove Code could not process the desktop app request."),
+          invalidResponse(
+            parsed.requestId,
+            "Paperplane could not process the desktop app request.",
+          ),
         );
       });
     });
@@ -305,7 +308,7 @@ export class DesktopAppActivation extends Context.Service<
     readonly setRendererReady: (ready: boolean) => Effect.Effect<void>;
     readonly complete: (response: DesktopAppActivationResponse) => Effect.Effect<void>;
   }
->()("@rove-code/desktop/app/DesktopAppActivation") {}
+>()("@getpaperplane/desktop/app/DesktopAppActivation") {}
 
 const { logWarning } = makeComponentLogger("desktop-app-activation");
 

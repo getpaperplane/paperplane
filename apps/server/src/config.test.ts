@@ -1,4 +1,4 @@
-import * as OtelEnvironment from "@rove-code/shared/otelEnvironment";
+import * as OtelEnvironment from "@getpaperplane/shared/otelEnvironment";
 import { assert, describe, it } from "@effect/vitest";
 
 import * as ServerConfig from "./config.ts";

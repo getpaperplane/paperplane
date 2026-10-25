@@ -1,4 +1,4 @@
-import { MAX_SCRIPT_ID_LENGTH } from "@rove-code/contracts";
+import { MAX_SCRIPT_ID_LENGTH } from "@getpaperplane/contracts";
 import { shortcutLabelForCommand } from "./keybindings";
 import { describe, expect, it } from "vite-plus/test";
 import {
@@ -7,7 +7,7 @@ import {
   projectScriptMenuLabel,
   settleProjectScript,
   setupProjectScript,
-} from "@rove-code/shared/projectScripts";
+} from "@getpaperplane/shared/projectScripts";
 
 import {
   buildProjectScript,
@@ -198,8 +198,8 @@ describe("projectScripts helpers", () => {
     });
 
     expect(env).toMatchObject({
-      ROVE_PROJECT_ROOT: "/repo",
-      ROVE_WORKTREE_PATH: "/repo/worktree-a",
+      PAPERPLANE_PROJECT_ROOT: "/repo",
+      PAPERPLANE_WORKTREE_PATH: "/repo/worktree-a",
     });
   });
 
@@ -207,14 +207,14 @@ describe("projectScripts helpers", () => {
     const env = projectScriptRuntimeEnv({
       project: { cwd: "/repo" },
       extraEnv: {
-        ROVE_PROJECT_ROOT: "/custom-root",
+        PAPERPLANE_PROJECT_ROOT: "/custom-root",
         CUSTOM_FLAG: "1",
       },
     });
 
-    expect(env.ROVE_PROJECT_ROOT).toBe("/custom-root");
+    expect(env.PAPERPLANE_PROJECT_ROOT).toBe("/custom-root");
     expect(env.CUSTOM_FLAG).toBe("1");
-    expect(env.ROVE_WORKTREE_PATH).toBeUndefined();
+    expect(env.PAPERPLANE_WORKTREE_PATH).toBeUndefined();
   });
 
   it("prefers the worktree path for script cwd resolution", () => {

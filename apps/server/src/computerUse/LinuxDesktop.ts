@@ -1,9 +1,9 @@
 // @effect-diagnostics nodeBuiltinImport:off -- Podman image hashing and process-scoped container names use synchronous Node crypto.
 import * as NodeCrypto from "node:crypto";
 
-import { ComputerDesktopViewerError, ThreadId } from "@rove-code/contracts";
+import { ComputerDesktopViewerError, ThreadId } from "@getpaperplane/contracts";
 import * as ComputerDesktops from "./ComputerDesktops.ts";
-import { Environment as HostProcessEnvironment } from "@rove-code/shared/HostProcess";
+import { Environment as HostProcessEnvironment } from "@getpaperplane/shared/HostProcess";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -15,8 +15,8 @@ import * as ProcessRunner from "../processRunner.ts";
 import { DESKTOP_FILES } from "./LinuxDesktopImage.ts";
 
 export const CAPACITY = 4;
-const OWNER_LABEL = "io.rove.cua.owner";
-const SERVER_LABEL = "io.rove.cua.server";
+const OWNER_LABEL = "io.paperplane.cua.owner";
+const SERVER_LABEL = "io.paperplane.cua.server";
 const Identity = Schema.Struct({
   pid: Schema.Int.check(Schema.isGreaterThan(0)),
   start: Schema.String.check(Schema.isPattern(/^\d+$/)),
@@ -109,7 +109,7 @@ export const make = Effect.fn("LinuxDesktop.make")(function* () {
   const processStart = Effect.fn("LinuxDesktop.processStart")(function* (pid: number) {
     const stat = yield* fs.readFileString(`/proc/${pid}/stat`);
     return yield* decodeStart(stat.slice(stat.lastIndexOf(")") + 2).split(" ")[19]).pipe(
-      Effect.mapError(() => error("Cannot read the Rove process identity.")),
+      Effect.mapError(() => error("Cannot read the Paperplane process identity.")),
     );
   });
   const identity = yield* Effect.cached(
@@ -175,14 +175,14 @@ export const make = Effect.fn("LinuxDesktop.make")(function* () {
     const output = yield* run(["info", "--format", "json"]);
     if (output.code !== 0)
       return yield* error(
-        "Rootless Podman is unavailable. Install podman and uidmap, then run podman info as the user running Rove.",
+        "Rootless Podman is unavailable. Install podman and uidmap, then run podman info as the user running Paperplane.",
       );
     const info = yield* decodeInfo(output.stdout).pipe(
       Effect.mapError(() => error("Podman returned unreadable runtime information.")),
     );
     if (!info.host.security.rootless)
       return yield* error(
-        "Linux computer use requires rootless Podman. Run Rove as an unprivileged user.",
+        "Linux computer use requires rootless Podman. Run Paperplane as an unprivileged user.",
       );
     yield* reconcile;
   }).pipe(
@@ -203,7 +203,7 @@ export const make = Effect.fn("LinuxDesktop.make")(function* () {
         .update(binary)
         .update(Object.values(DESKTOP_FILES).join("\n"))
         .digest("hex");
-      const image = `localhost/rove-cua-desktop:${hash.slice(0, 24)}`;
+      const image = `localhost/paperplane-cua-desktop:${hash.slice(0, 24)}`;
       references.set(resolved, { stamp, image });
       return image;
     },
@@ -233,7 +233,7 @@ export const make = Effect.fn("LinuxDesktop.make")(function* () {
     function* (executable: string) {
       yield* requireRootless;
       const image = yield* reference(executable);
-      const directory = yield* fs.makeTempDirectoryScoped({ prefix: "rove-cua-image-" });
+      const directory = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-cua-image-" });
       for (const [name, content] of Object.entries(DESKTOP_FILES)) {
         yield* fs.writeFileString(path.join(directory, name), content);
       }
@@ -268,7 +268,7 @@ export const make = Effect.fn("LinuxDesktop.make")(function* () {
     );
     if (!inspection || inspection.Config.Labels[OWNER_LABEL] !== owner)
       return yield* error(
-        "Desktop ownership does not match this Rove server. Nothing was removed.",
+        "Desktop ownership does not match this Paperplane server. Nothing was removed.",
       );
     const removed = yield* run(["rm", "--force", inspection.Id]);
     if (removed.code !== 0)
@@ -326,7 +326,7 @@ export const make = Effect.fn("LinuxDesktop.make")(function* () {
           `All ${CAPACITY} private desktop slots are occupied. Use close_desktop in a finished thread to discard its temporary apps and files.`,
         );
       }
-      const name = `rove-cua-${NodeCrypto.randomUUID()}`;
+      const name = `paperplane-cua-${NodeCrypto.randomUUID()}`;
       const image = yield* reference(executable);
       const server = yield* identity;
       desktops.set(key, name);

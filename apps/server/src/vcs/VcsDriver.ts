@@ -10,8 +10,8 @@ import type {
   ReviewDiffPreviewInput,
   ReviewDiffPreviewResult,
   VcsRepositoryIdentity,
-} from "@rove-code/contracts";
-import { CheckpointRef } from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
+import { CheckpointRef } from "@getpaperplane/contracts";
 import * as VcsProcess from "./VcsProcess.ts";
 
 export interface VcsCaptureCheckpointInput {
@@ -89,4 +89,4 @@ export class VcsDriver extends Context.Service<
       input: ReviewDiffPreviewInput,
     ) => Effect.Effect<ReviewDiffPreviewResult, VcsError>;
   }
->()("@rove-code/server/vcs/VcsDriver") {}
+>()("@getpaperplane/server/vcs/VcsDriver") {}

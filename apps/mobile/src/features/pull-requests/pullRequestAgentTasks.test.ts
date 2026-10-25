@@ -5,7 +5,7 @@ import {
   pullRequestAgentPrompt,
   pullRequestAgentThread,
 } from "./pullRequestAgentTasks";
-import { IsoDateTime, ProjectId, ThreadId, type PullRequestDetail } from "@rove-code/contracts";
+import { IsoDateTime, ProjectId, ThreadId, type PullRequestDetail } from "@getpaperplane/contracts";
 
 const pr = { state: "open", mergeability: "conflicting" } as PullRequestDetail;
 

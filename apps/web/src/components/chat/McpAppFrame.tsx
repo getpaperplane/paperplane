@@ -1,4 +1,4 @@
-import type { EnvironmentId, ThreadId, TurnItemId } from "@rove-code/contracts";
+import type { EnvironmentId, ThreadId, TurnItemId } from "@getpaperplane/contracts";
 import {
   makeMcpAppHost,
   McpAppHostRefusal,
@@ -8,8 +8,8 @@ import {
   type McpAppDisplayMode,
   type McpAppHost,
   type McpAppHostContext,
-} from "@rove-code/client-runtime/mcp-apps";
-import { squashAtomCommandFailure } from "@rove-code/client-runtime/state/runtime";
+} from "@getpaperplane/client-runtime/mcp-apps";
+import { squashAtomCommandFailure } from "@getpaperplane/client-runtime/state/runtime";
 import {
   clampMcpAppHeight,
   MCP_APP_DEFAULT_HEIGHT,
@@ -17,7 +17,7 @@ import {
   mcpAppAllowAttribute,
   mcpAppFileName,
   type McpAppReference,
-} from "@rove-code/shared/mcpApp";
+} from "@getpaperplane/shared/mcpApp";
 import { Minimize2Icon } from "lucide-react";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { flushSync } from "react-dom";
@@ -250,7 +250,7 @@ export function McpAppFrame(props: {
     };
   }, [props.environmentId, props.threadId, props.itemId, app.tool]);
   // The bridge belongs to the captured document. A frame that navigates keeps
-  // its window, so a second load stops the app rather than letting a page Rove
+  // its window, so a second load stops the app rather than letting a page Paperplane
   // never served pose as it. This is not a confidentiality boundary: a frame
   // can always navigate itself, so the app could carry anything it read out
   // in a URL either way.
@@ -286,7 +286,7 @@ export function McpAppFrame(props: {
         platform: isElectron ? "desktop" : "web",
         locale: navigator.language,
         timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-        userAgent: `rove/${APP_VERSION}`,
+        userAgent: `paperplane/${APP_VERSION}`,
         deviceCapabilities: {
           touch: window.matchMedia("(pointer: coarse)").matches,
           hover: window.matchMedia("(hover: hover)").matches,
@@ -298,14 +298,14 @@ export function McpAppFrame(props: {
       };
     };
     // Approvals render in the page, beneath the top layer a full-screen app
-    // occupies, so the app returns inline before Rove asks.
+    // occupies, so the app returns inline before Paperplane asks.
     const ask = async (message: string) => {
       flushSync(() => setDisplayMode("inline"));
       const approved = await requestConfirmDialog(message);
       // No dialog host is mounted, so nobody was asked; say so rather than
       // reporting that the user declined.
       if (approved === undefined) {
-        throw new McpAppHostRefusal("Rove could not ask for approval here.");
+        throw new McpAppHostRefusal("Paperplane could not ask for approval here.");
       }
       return approved;
     };

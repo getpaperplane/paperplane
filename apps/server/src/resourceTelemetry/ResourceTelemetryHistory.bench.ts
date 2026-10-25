@@ -2,7 +2,7 @@ import type {
   ResourceMonitorProcessSample,
   ResourceMonitorSnapshotEvent,
   ResourceTelemetryHealth,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as DateTime from "effect/DateTime";
 import * as Option from "effect/Option";
 import { it, describe } from "vite-plus/test";
@@ -97,7 +97,7 @@ describe("resource history replay", () => {
         processes: [
           processSample(100, 1, index),
           processSample(200, 1, index, "electron"),
-          processSample(400, 100, index, "rove-resource-monitor", "process-400"),
+          processSample(400, 100, index, "paperplane-resource-monitor", "process-400"),
           processSample(
             scenario.churn ? 700 + Math.floor(index / 20) : 300,
             100,

@@ -1,9 +1,9 @@
 "use client";
 
-import { threadPullRequestLinkMode } from "@rove-code/client-runtime/thread-pull-request-compatibility";
-import { visibleThreadPullRequests } from "@rove-code/shared/threadPullRequests";
+import { threadPullRequestLinkMode } from "@getpaperplane/client-runtime/thread-pull-request-compatibility";
+import { visibleThreadPullRequests } from "@getpaperplane/shared/threadPullRequests";
 
-import { scopeProjectRef, scopeThreadRef } from "@rove-code/client-runtime/environment";
+import { scopeProjectRef, scopeThreadRef } from "@getpaperplane/client-runtime/environment";
 import {
   canCreateProjectInEnvironment,
   getCloneDestinationBrowsePath,
@@ -23,22 +23,22 @@ import {
   sortAddProjectProviderSources,
   type AddProjectRemoteSource,
   type AddProjectRemoteSourceReadiness,
-} from "@rove-code/client-runtime/operations/projects";
-import { sourceControlClients } from "@rove-code/client-runtime/source-control-clients";
-import { connectionStatusText } from "@rove-code/client-runtime/connection";
-import { threadSearchMatchKey } from "@rove-code/client-runtime/state/thread-search";
-import { resolveThreadReferenceCopyTarget } from "@rove-code/shared/threadReference";
+} from "@getpaperplane/client-runtime/operations/projects";
+import { sourceControlClients } from "@getpaperplane/client-runtime/source-control-clients";
+import { connectionStatusText } from "@getpaperplane/client-runtime/connection";
+import { threadSearchMatchKey } from "@getpaperplane/client-runtime/state/thread-search";
+import { resolveThreadReferenceCopyTarget } from "@getpaperplane/shared/threadReference";
 import {
   canPreloadBrowsePath,
   createBrowseNavigationCoordinator,
   filterFilesystemBrowseEntries,
   getFilesystemBrowsePath,
-} from "@rove-code/client-runtime/state/filesystem";
+} from "@getpaperplane/client-runtime/state/filesystem";
 import {
   isAtomCommandInterrupted,
   settlePromise,
   squashAtomCommandFailure,
-} from "@rove-code/client-runtime/state/runtime";
+} from "@getpaperplane/client-runtime/state/runtime";
 import {
   AuthOrchestrationOperateScope,
   AuthSourceControlWriteScope,
@@ -53,7 +53,7 @@ import {
   type SourceControlRepositoryInfo,
   PRIMARY_LOCAL_ENVIRONMENT_ID,
   resolveEnvironmentMachineKind,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { useLocation, useNavigate, useParams } from "@tanstack/react-router";
 import * as Option from "effect/Option";
 import {
@@ -108,7 +108,7 @@ import { useClientSettings } from "../hooks/useSettings";
 import { useTheme } from "../hooks/useTheme";
 import { useCustomThemes } from "../hooks/useCustomThemes";
 import { useEnvironmentThemeDefinitions } from "../hooks/useEnvironmentTheme";
-import { BUILT_IN_THEMES } from "@rove-code/shared/themePalettes";
+import { BUILT_IN_THEMES } from "@getpaperplane/shared/themePalettes";
 import { getThemeDefinition } from "../themePalette";
 import {
   STANDARD_THEME_CARDS,
@@ -128,7 +128,7 @@ import { useAtomCommand } from "../state/use-atom-command";
 import { useAtomQueryRunner } from "../state/use-atom-query-runner";
 import { useScratchProject } from "../hooks/useScratchProject";
 import { useNewProject } from "../hooks/useNewProject";
-import { isScratchProject } from "@rove-code/client-runtime/state/projects";
+import { isScratchProject } from "@getpaperplane/client-runtime/state/projects";
 import { useEnvironments, usePrimaryEnvironmentId } from "../state/environments";
 import { useProjects, useServerConfigs, useThreadShells, waitForProject } from "../state/entities";
 import { useThreadSearch } from "../state/queries";
@@ -2282,7 +2282,7 @@ function OpenCommandPaletteDialog(props: {
         "grouping",
         "checkout",
         "remove",
-        "rove.json",
+        "paperplane.json",
       ],
       title: "Project settings",
       description: contextualProjectGroup.displayName,

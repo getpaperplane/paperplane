@@ -13,7 +13,7 @@ import {
   encodeHtmlRenderOutline,
   HTML_RENDER_COLUMN_WIDTH,
   HTML_RENDER_OUTLINE_MAX_BOXES,
-} from "@rove-code/shared/htmlRender";
+} from "@getpaperplane/shared/htmlRender";
 
 import { publicProxy } from "./publicProxy.ts";
 
@@ -52,7 +52,7 @@ const CAPTURE_TIMEOUT = "20 seconds";
 // public addresses, so a page cannot reach this machine's local network. The
 // main frame also stays on the page and the browser opens no popups, so a
 // capture always shows the page itself.
-const PAGE_ORIGIN = "http://rove-page.localhost";
+const PAGE_ORIGIN = "http://paperplane-page.localhost";
 const PAGE_URL = `${PAGE_ORIGIN}/page.html`;
 // Stack traces and load errors name the page this way instead of its URL.
 const PAGE_NAME = "page.html";
@@ -391,7 +391,7 @@ const launchBrowser = Effect.fnUntraced(function* (input: {
         return fulfillPage(sessionId, paused.requestId, body);
       }
       // A frame inside the page may show another site; Local Network Access
-      // still covers it. The main frame and Rove's own origin serve nothing else.
+      // still covers it. The main frame and Paperplane's own origin serve nothing else.
       const otherSiteFrame =
         paused.resourceType === "Document" &&
         paused.frameId !== page.mainFrameId &&
@@ -521,7 +521,7 @@ const launchBrowser = Effect.fnUntraced(function* (input: {
       Ignored,
       sessionId,
     );
-    // Pauses Rove's own origin, to serve the page, and every document, to keep
+    // Pauses Paperplane's own origin, to serve the page, and every document, to keep
     // the main frame on it.
     yield* send(
       "Fetch.enable",
@@ -631,7 +631,7 @@ const launchBrowser = Effect.fnUntraced(function* (input: {
 const scratchDirectory = Effect.gen(function* () {
   const fileSystem = yield* FileSystem.FileSystem;
   return yield* Effect.acquireRelease(
-    fileSystem.makeTempDirectory({ prefix: "rove-html-preview-" }),
+    fileSystem.makeTempDirectory({ prefix: "paperplane-html-preview-" }),
     (directory) => fileSystem.remove(directory, { recursive: true }).pipe(Effect.ignore),
   ).pipe(
     Effect.mapError(

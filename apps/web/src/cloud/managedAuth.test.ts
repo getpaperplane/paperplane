@@ -1,4 +1,7 @@
-import { managedRelaySessionAtom, setManagedRelaySession } from "@rove-code/client-runtime/relay";
+import {
+  managedRelaySessionAtom,
+  setManagedRelaySession,
+} from "@getpaperplane/client-runtime/relay";
 import * as Effect from "effect/Effect";
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 

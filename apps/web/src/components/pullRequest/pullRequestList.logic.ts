@@ -6,7 +6,7 @@ import {
   PullRequestListProjectError,
   PullRequestListResult,
   resolvePullRequestAuthorFilter,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import type {
   ProjectId,
   PullRequestAction,
@@ -18,7 +18,7 @@ import type {
   PullRequestListFilters,
   PullRequestListState,
   PullRequestState,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 
 import { toSortableTimestamp } from "../../lib/threadSort";
 import type { PullRequestListSort } from "./pullRequestListPreferences";
@@ -779,7 +779,7 @@ export const pullRequestEnvironmentSetKey = (environmentIds: ReadonlyArray<strin
   [...environmentIds].sort((left, right) => left.localeCompare(right)).join(",");
 
 const snapshotStorageKey = (environmentSetKey: string) =>
-  `rove.pullRequests.list:${environmentSetKey}`;
+  `paperplane.pullRequests.list:${environmentSetKey}`;
 
 /**
  * The priority groups' own server-filtered answers, carried with the feed. An authored pull

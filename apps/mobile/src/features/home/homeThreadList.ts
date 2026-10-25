@@ -1,18 +1,18 @@
-import { buildProjectGroups } from "@rove-code/client-runtime/state/project-grouping";
+import { buildProjectGroups } from "@getpaperplane/client-runtime/state/project-grouping";
 import type {
   EnvironmentProject,
   EnvironmentThreadShell,
-} from "@rove-code/client-runtime/state/shell";
+} from "@getpaperplane/client-runtime/state/shell";
 import {
   getThreadSortTimestamp,
   toSortableTimestamp,
-} from "@rove-code/client-runtime/state/thread-sort";
+} from "@getpaperplane/client-runtime/state/thread-sort";
 import type {
   EnvironmentId,
   ScopedProjectRef,
   SidebarProjectGroupingMode,
   SidebarProjectSortOrder,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Arr from "effect/Array";
 import * as Order from "effect/Order";
 

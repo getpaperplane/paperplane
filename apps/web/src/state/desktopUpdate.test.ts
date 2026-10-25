@@ -1,4 +1,4 @@
-import type { DesktopUpdateState } from "@rove-code/contracts";
+import type { DesktopUpdateState } from "@getpaperplane/contracts";
 import * as AsyncResult from "effect/reactivity/AsyncResult";
 import { AtomRegistry } from "effect/reactivity";
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";

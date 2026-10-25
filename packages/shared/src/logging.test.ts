@@ -20,7 +20,7 @@ const windowsHost = HostProcess.Platform.defaultValue() === "win32";
 const tempDirectories: string[] = [];
 
 const makeTempDirectory = (): string => {
-  const directory = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "rove-logging-"));
+  const directory = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "paperplane-logging-"));
   tempDirectories.push(directory);
   return directory;
 };

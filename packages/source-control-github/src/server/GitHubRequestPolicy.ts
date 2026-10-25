@@ -1,4 +1,4 @@
-import { SourceControlProviderKind } from "@rove-code/contracts";
+import { SourceControlProviderKind } from "@getpaperplane/contracts";
 import * as Cause from "effect/Cause";
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
@@ -8,7 +8,7 @@ import * as Layer from "effect/Layer";
 import * as Redacted from "effect/Redacted";
 import * as Schema from "effect/Schema";
 import * as Semaphore from "effect/Semaphore";
-import * as SourceControlRateLimit from "@rove-code/source-control-core/server/SourceControlRateLimit";
+import * as SourceControlRateLimit from "@getpaperplane/source-control-core/server/SourceControlRateLimit";
 
 import * as GitHubCredentials from "./GitHubCredentials.ts";
 import * as GitHubQuota from "./GitHubQuota.ts";
@@ -17,7 +17,7 @@ const DEFAULT_TIMEOUT = Duration.seconds(30);
 /** Polite to GitHub's secondary limits, which punish bursts of concurrent requests. */
 const CONCURRENCY = 8;
 /** The headers every GitHub request carries besides its token. */
-const REQUEST_HEADERS = { "x-github-api-version": "2022-11-28", "user-agent": "rove" };
+const REQUEST_HEADERS = { "x-github-api-version": "2022-11-28", "user-agent": "paperplane" };
 
 /**
  * A credential already verified for one host. Every request made under it must target that
@@ -28,9 +28,12 @@ export const PinnedGitHubCredential = Context.Reference<{
   readonly host: string;
   readonly token: Redacted.Redacted<string>;
   readonly credentialFingerprint: string;
-} | null>("@rove-code/source-control-github/server/GitHubRequestPolicy/PinnedGitHubCredential", {
-  defaultValue: () => null,
-});
+} | null>(
+  "@getpaperplane/source-control-github/server/GitHubRequestPolicy/PinnedGitHubCredential",
+  {
+    defaultValue: () => null,
+  },
+);
 
 export class GitHubApiRequestError extends Schema.TaggedError<GitHubApiRequestError>()(
   "GitHubApiRequestError",
@@ -232,7 +235,7 @@ export class GitHubRequestPolicy extends Context.Service<
       GitHubApiError
     >;
   }
->()("@rove-code/source-control-github/server/GitHubRequestPolicy") {}
+>()("@getpaperplane/source-control-github/server/GitHubRequestPolicy") {}
 
 /** @public Service construction is part of the canonical Effect module API. */
 export const make = Effect.gen(function* () {

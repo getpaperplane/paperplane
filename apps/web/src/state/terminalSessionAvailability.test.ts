@@ -1,4 +1,4 @@
-import { EnvironmentId, ThreadId, type TerminalSummary } from "@rove-code/contracts";
+import { EnvironmentId, ThreadId, type TerminalSummary } from "@getpaperplane/contracts";
 import { act, createElement, useEffect } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, expect, it, vi } from "vite-plus/test";

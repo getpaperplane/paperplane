@@ -1,5 +1,5 @@
 import { testDouble } from "~/testDouble";
-import type { DesktopBridge } from "@rove-code/contracts";
+import type { DesktopBridge } from "@getpaperplane/contracts";
 import { afterEach, describe, expect, it, vi } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import { HttpClient } from "effect/http";
@@ -42,7 +42,7 @@ describe("primary environment HTTP layer", { concurrent: false }, () => {
     Object.defineProperty(globalThis, "window", {
       configurable: true,
       value: {
-        location: { origin: "rove://app" },
+        location: { origin: "paperplane://app" },
         desktopBridge: testDouble<DesktopBridge>({
           getLocalEnvironmentBootstrap: () => ({
             label: "Local environment",

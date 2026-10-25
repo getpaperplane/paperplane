@@ -2,7 +2,7 @@ import {
   AuthFilesystemReadScope,
   EnvironmentId,
   type AuthSessionState,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { beforeEach, expect, it, vi } from "vite-plus/test";
 
 const state = vi.hoisted(() => ({

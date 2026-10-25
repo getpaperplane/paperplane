@@ -1,5 +1,5 @@
 /**
- * `rove browser setup` - prepares a Linux host for Rove's headless browser, which
+ * `paperplane browser setup` - prepares a Linux host for Paperplane's headless browser, which
  * server browser tabs and HTML render previews share. It is the fix every
  * browser host error names, so it does the whole job in one run:
  *
@@ -10,7 +10,7 @@
  * Both need root. Without it, the command prints what it would change and the
  * `sudo` line to run. It is safe to run again; it skips what is already done.
  */
-import * as HostProcess from "@rove-code/shared/HostProcess";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -22,6 +22,11 @@ import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
 import * as PreviewBrowserHost from "../preview/PreviewBrowserHost.ts";
+import {
+  findOldBrowserProfile,
+  retireOldBrowserProfile,
+} from "../cloud/installedStateMigration.ts";
+import * as ProcessRunner from "../processRunner.ts";
 import { resolveBaseDir } from "../os-jank.ts";
 import { baseDirFlag } from "./config.ts";
 import { resolveRootCliCommand } from "./invocation.ts";
@@ -53,12 +58,12 @@ const runStep = Effect.fn("browserSetup.runStep")(function* (
 });
 
 /**
- * The Rove home to check. Under `sudo` the process home is root's, so an
- * unspecified home falls back to the invoking user's `~/.rove-code`.
+ * The Paperplane home to check. Under `sudo` the process home is root's, so an
+ * unspecified home falls back to the invoking user's `~/.paperplane`.
  */
 const setupBaseDir = Effect.fn("browserSetup.baseDir")(function* (explicit: Option.Option<string>) {
   const env = yield* HostProcess.Environment;
-  const raw = Option.getOrUndefined(explicit) ?? env.ROVE_HOME;
+  const raw = Option.getOrUndefined(explicit) ?? env.PAPERPLANE_HOME;
   if (raw !== undefined || env.SUDO_USER === undefined) return yield* resolveBaseDir(raw);
   const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
   const entry = yield* spawner
@@ -68,7 +73,7 @@ const setupBaseDir = Effect.fn("browserSetup.baseDir")(function* (explicit: Opti
     .pipe(Effect.orElseSucceed(() => ""));
   const home = entry.trim().split(":")[5];
   const path = yield* Path.Path;
-  return home ? path.join(home, ".rove-code") : yield* resolveBaseDir(undefined);
+  return home ? path.join(home, ".paperplane") : yield* resolveBaseDir(undefined);
 });
 
 /** Whether apt has an installable candidate for `name`. */
@@ -81,7 +86,7 @@ const aptOffers = Effect.fn("browserSetup.aptOffers")(function* (name: string) {
   return candidate !== undefined && candidate !== "(none)";
 });
 
-/** The installed browser in this Rove home, if any, to check its libraries. */
+/** The installed browser in this Paperplane home, if any, to check its libraries. */
 const installedBrowser = Effect.fn("browserSetup.installedBrowser")(function* (baseDir: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -101,45 +106,53 @@ const installedBrowser = Effect.fn("browserSetup.installedBrowser")(function* (b
 
 const browserSetupCommand = Command.make("setup", { baseDir: baseDirFlag }).pipe(
   Command.withDescription(
-    "Set up this Linux host for Rove's browser: allow Chrome's sandbox and install its libraries.",
+    "Set up this Linux host for Paperplane's browser: allow Chrome's sandbox and install its libraries.",
   ),
   Command.withHandler(({ baseDir }) =>
     Effect.gen(function* () {
       if ((yield* HostProcess.Platform) !== "linux") {
-        return yield* Console.log("Nothing to set up: Rove's browser runs as is on this system.");
+        return yield* Console.log(
+          "Nothing to set up: Paperplane's browser runs as is on this system.",
+        );
       }
       const fs = yield* FileSystem.FileSystem;
       const isRoot = (yield* HostProcess.UserId) === 0;
       const setupCommand = yield* resolveRootCliCommand(PreviewBrowserHost.SETUP_SUBCOMMAND);
 
       const needsProfile = yield* PreviewBrowserHost.sandboxBlocked;
+      const oldProfile = yield* findOldBrowserProfile();
       const browser = yield* installedBrowser(yield* setupBaseDir(baseDir));
       const missing = Option.isSome(browser)
         ? yield* PreviewBrowserHost.missingLibraries(browser.value)
         : [];
       const hasApt = yield* fs.exists("/usr/bin/apt-get").pipe(Effect.orElseSucceed(() => false));
 
-      if (!needsProfile && missing.length === 0) {
+      if (!needsProfile && !oldProfile && missing.length === 0) {
         return yield* Console.log(
           Option.isSome(browser)
-            ? "This host is ready for Rove's browser."
-            : "Chrome's sandbox is allowed here. Rove's browser installs on first use; if it then reports missing libraries, run this again.",
+            ? "This host is ready for Paperplane's browser."
+            : "Chrome's sandbox is allowed here. Paperplane's browser installs on first use; if it then reports missing libraries, run this again.",
         );
       }
 
       if (!isRoot) {
-        if (needsProfile) {
+        if (needsProfile || oldProfile) {
           yield* Console.log(
-            `This host blocks the sandbox Rove's browser runs in. Setup installs an AppArmor profile at ${PreviewBrowserHost.APPARMOR_PROFILE_PATH} that allows it.`,
+            `This host blocks the sandbox Paperplane's browser runs in. Setup installs an AppArmor profile at ${PreviewBrowserHost.APPARMOR_PROFILE_PATH} that allows it.`,
           );
         }
         if (missing.length > 0) {
           yield* Console.log(
-            `Rove's browser is missing ${missing.join(", ")}; setup installs them.`,
+            `Paperplane's browser is missing ${missing.join(", ")}; setup installs them.`,
           );
         }
         return yield* Console.log(`\nThis needs root. Run:\n\n  ${setupCommand}\n`);
       }
+
+      if (oldProfile)
+        yield* retireOldBrowserProfile({ profile: PreviewBrowserHost.APPARMOR_PROFILE }).pipe(
+          Effect.provide(ProcessRunner.layer),
+        );
 
       if (needsProfile) {
         yield* fs
@@ -160,13 +173,13 @@ const browserSetupCommand = Command.make("setup", { baseDir: baseDirFlag }).pipe
           "-r",
           PreviewBrowserHost.APPARMOR_PROFILE_PATH,
         ]);
-        yield* Console.log("Allowed Chrome's sandbox for Rove's browser.");
+        yield* Console.log("Allowed Chrome's sandbox for Paperplane's browser.");
       }
 
       if (missing.length > 0) {
         if (!hasApt) {
           return yield* Console.log(
-            `Rove's browser is missing ${missing.join(", ")}. Install them with your package manager, then run this again.`,
+            `Paperplane's browser is missing ${missing.join(", ")}. Install them with your package manager, then run this again.`,
           );
         }
         yield* runStep("refresh the package lists", "apt-get", ["update"]);
@@ -182,12 +195,12 @@ const browserSetupCommand = Command.make("setup", { baseDir: baseDirFlag }).pipe
         yield* Console.log("Installed the browser's libraries.");
       }
 
-      yield* Console.log("This host is ready for Rove's browser.");
+      yield* Console.log("This host is ready for Paperplane's browser.");
     }),
   ),
 );
 
 export const browserCommand = Command.make("browser").pipe(
-  Command.withDescription("Manage Rove's headless browser on this host."),
+  Command.withDescription("Manage Paperplane's headless browser on this host."),
   Command.withSubcommands([browserSetupCommand]),
 );

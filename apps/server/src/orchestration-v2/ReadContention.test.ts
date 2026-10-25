@@ -6,7 +6,7 @@ import {
   ProviderInstanceId,
   ThreadId,
   type OrchestrationV2DomainEvent,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as DateTime from "effect/DateTime";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
@@ -75,7 +75,9 @@ const withFileStore = <A, E>(
   Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
-    const directory = yield* fs.makeTempDirectoryScoped({ prefix: "rove-read-contention-test-" });
+    const directory = yield* fs.makeTempDirectoryScoped({
+      prefix: "paperplane-read-contention-test-",
+    });
     const persistence = SqlitePersistence.layerFromPath(path.join(directory, "state.sqlite"));
     return yield* effect.pipe(
       Effect.provide(

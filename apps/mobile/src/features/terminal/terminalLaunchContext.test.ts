@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vite-plus/test";
-import { EnvironmentId, ThreadId } from "@rove-code/contracts";
+import { EnvironmentId, ThreadId } from "@getpaperplane/contracts";
 
 import {
   resolvePreferredThreadWorktreePath,

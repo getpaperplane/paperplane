@@ -18,7 +18,7 @@ import {
   toCanonicalThemeColor,
 } from "./themePalette";
 
-const THEME_STORAGE_KEY = "rove:theme";
+const THEME_STORAGE_KEY = "paperplane:theme";
 // A custom theme that omits chrome falls back to the runtime default, so the
 // boot copy of that default stays derived from the real palette.
 const DEFAULT_DARK_CHROME = getDefaultThemeColors("dark").chrome;
@@ -156,14 +156,14 @@ describe("index.html boot script", () => {
   }> = [
     { name: "no stored preference on a dark OS", storage: {}, prefersDark: true },
     {
-      name: "T3 Chat follows a dark OS",
-      storage: { [THEME_STORAGE_KEY]: "t3-chat", [THEME_FOLLOW_SYSTEM_STORAGE_KEY]: "true" },
+      name: "Plum follows a dark OS",
+      storage: { [THEME_STORAGE_KEY]: "plum", [THEME_FOLLOW_SYSTEM_STORAGE_KEY]: "true" },
       prefersDark: true,
     },
     {
-      name: "an explicit global dark mode applies to T3 Chat",
+      name: "an explicit global dark mode applies to Plum",
       storage: {
-        [THEME_STORAGE_KEY]: "t3-chat",
+        [THEME_STORAGE_KEY]: "plum",
         [THEME_APPEARANCE_MODE_STORAGE_KEY]: "dark",
         [THEME_FOLLOW_SYSTEM_STORAGE_KEY]: "false",
       },
@@ -187,16 +187,6 @@ describe("index.html boot script", () => {
     {
       name: "Iris follows a dark OS",
       storage: { [THEME_STORAGE_KEY]: "iris", [THEME_FOLLOW_SYSTEM_STORAGE_KEY]: "true" },
-      prefersDark: true,
-    },
-    {
-      name: "a legacy t3-grove preference resolves through the alias",
-      storage: { [THEME_STORAGE_KEY]: "t3-grove", [THEME_FOLLOW_SYSTEM_STORAGE_KEY]: "true" },
-      prefersDark: true,
-    },
-    {
-      name: "legacy t3-chat-dark resolves to dark T3 Chat",
-      storage: { [THEME_STORAGE_KEY]: "t3-chat-dark" },
       prefersDark: true,
     },
     {
@@ -259,7 +249,7 @@ describe("index.html boot script", () => {
 
   it("marks built-in and custom themes on the document element", () => {
     const chat = runBootScript({
-      storage: { [THEME_STORAGE_KEY]: "t3-chat", [THEME_FOLLOW_SYSTEM_STORAGE_KEY]: "true" },
+      storage: { [THEME_STORAGE_KEY]: "plum", [THEME_FOLLOW_SYSTEM_STORAGE_KEY]: "true" },
       prefersDark: true,
     });
     expect(chat.themeId).toBe("plum");
@@ -368,9 +358,9 @@ describe("index.html boot script", () => {
 
   it("applies the matching half of an automatic mix to the splash", () => {
     const storage = {
-      [THEME_STORAGE_KEY]: "t3-chat",
+      [THEME_STORAGE_KEY]: "plum",
       [THEME_APPEARANCE_MODE_STORAGE_KEY]: "system",
-      "rove:theme-halves:v1": JSON.stringify({ dark: GROVE_THEME.id }),
+      "paperplane:theme-halves:v1": JSON.stringify({ dark: GROVE_THEME.id }),
     };
 
     const dark = runBootScript({ storage, prefersDark: true });
@@ -401,7 +391,7 @@ describe("index.html boot script", () => {
             colors: { canvas: "#f8fbff", text: "#10243d", accent: "#5b6cff" },
           },
         ]),
-        "rove:theme-halves:v1": JSON.stringify({ dark: GROVE_THEME.id }),
+        "paperplane:theme-halves:v1": JSON.stringify({ dark: GROVE_THEME.id }),
       },
       prefersDark: true,
     });
@@ -414,7 +404,7 @@ describe("index.html boot script", () => {
       storage: {
         [THEME_STORAGE_KEY]: "gone-theme",
         [THEME_APPEARANCE_MODE_STORAGE_KEY]: "system",
-        "rove:theme-halves:v1": JSON.stringify({ dark: GROVE_THEME.id }),
+        "paperplane:theme-halves:v1": JSON.stringify({ dark: GROVE_THEME.id }),
       },
       prefersDark: true,
     });
@@ -426,28 +416,12 @@ describe("index.html boot script", () => {
     );
   });
 
-  it("resolves a legacy-prefixed mix half onto the renamed theme", () => {
-    const boot = runBootScript({
-      storage: {
-        [THEME_STORAGE_KEY]: "t3-chat",
-        [THEME_APPEARANCE_MODE_STORAGE_KEY]: "system",
-        "rove:theme-halves:v1": JSON.stringify({ dark: "t3-grove" }),
-      },
-      prefersDark: true,
-    });
-    expect(boot.isDark).toBe(true);
-    expect(boot.themeId).toBe(GROVE_THEME.id);
-    expect(boot.bootVariables["--boot-background"]).toBe(
-      getThemeColorsForMode(GROVE_THEME, "dark")!.canvas,
-    );
-  });
-
   it("ignores a mix half that names an unknown theme", () => {
     const boot = runBootScript({
       storage: {
-        [THEME_STORAGE_KEY]: "t3-chat",
+        [THEME_STORAGE_KEY]: "plum",
         [THEME_APPEARANCE_MODE_STORAGE_KEY]: "system",
-        "rove:theme-halves:v1": JSON.stringify({ dark: "gone-theme" }),
+        "paperplane:theme-halves:v1": JSON.stringify({ dark: "gone-theme" }),
       },
       prefersDark: true,
     });

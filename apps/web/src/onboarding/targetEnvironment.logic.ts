@@ -1,5 +1,8 @@
-import { type ConnectionCatalogEntry, hasRelayRoute } from "@rove-code/client-runtime/connection";
-import type { EnvironmentId } from "@rove-code/contracts";
+import {
+  type ConnectionCatalogEntry,
+  hasRelayRoute,
+} from "@getpaperplane/client-runtime/connection";
+import type { EnvironmentId } from "@getpaperplane/contracts";
 
 interface OnboardingEnvironment {
   readonly environmentId: EnvironmentId;

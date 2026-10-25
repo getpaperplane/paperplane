@@ -1,6 +1,6 @@
 import { AppActivityIndicator } from "../../components/ui/AppActivityIndicator";
 import * as Dialog from "../../components/ui/Dialog";
-import previewStreamScript from "@rove-code/mobile-preview-stream";
+import previewStreamScript from "@getpaperplane/mobile-preview-stream";
 import {
   previewStreamControlLabel,
   previewStreamHostSetupMessage,
@@ -8,8 +8,8 @@ import {
   type PreviewStreamDownload,
   type PreviewStreamFileChooser,
   type PreviewStreamInput,
-} from "@rove-code/client-runtime/preview/server-browser-stream";
-import type { EnvironmentId, PreviewStreamHostSetup } from "@rove-code/contracts";
+} from "@getpaperplane/client-runtime/preview/server-browser-stream";
+import type { EnvironmentId, PreviewStreamHostSetup } from "@getpaperplane/contracts";
 import {
   useEffect,
   useEffectEvent,
@@ -276,12 +276,12 @@ function PreviewStreamDocumentView({
   const controlChanged = useEffectEvent((next: PreviewStreamControl | null) => onControl?.(next));
   const command = (input: PreviewStreamInput) =>
     webView.current?.injectJavaScript(
-      `window.RovePreviewStream?.command(${JSON.stringify(input)}); true;`,
+      `window.PaperplanePreviewStream?.command(${JSON.stringify(input)}); true;`,
     );
   const fail = (message: string) => {
     if (!active.current || failed.current) return;
     failed.current = true;
-    webView.current?.injectJavaScript("window.RovePreviewStream?.stop(); true;");
+    webView.current?.injectJavaScript("window.PaperplanePreviewStream?.stop(); true;");
     onStreamingChange?.(false);
     setControl(null);
     setFileChooser(null);
@@ -308,14 +308,16 @@ function PreviewStreamDocumentView({
   useImperativeHandle(ref, () => ({
     command,
     togglePictureInPicture: () =>
-      webView.current?.injectJavaScript("window.RovePreviewStream?.pictureInPicture(); true;"),
+      webView.current?.injectJavaScript(
+        "window.PaperplanePreviewStream?.pictureInPicture(); true;",
+      ),
   }));
   useLayoutEffect(() => {
     active.current = true;
     const view = webView.current;
     return () => {
       active.current = false;
-      view?.injectJavaScript("window.RovePreviewStream?.stop(); true;");
+      view?.injectJavaScript("window.PaperplanePreviewStream?.stop(); true;");
     };
   }, []);
   useEffect(() => () => onStreamingChange?.(false), [onStreamingChange]);

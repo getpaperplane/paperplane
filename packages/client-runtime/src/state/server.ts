@@ -7,7 +7,7 @@ import {
   type ServerSelfUpdateProgressEvent,
   type ServerSelfUpdateResult,
   WS_METHODS,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Cause from "effect/Cause";
 import * as Duration from "effect/Duration";
 import * as Deferred from "effect/Deferred";
@@ -100,7 +100,7 @@ export class ServerUpdateResumeTimeoutError extends Schema.TaggedError<ServerUpd
   },
 ) {
   override get message(): string {
-    return `The server did not resume on Rove Code ${this.targetVersion}.`;
+    return `The server did not resume on Paperplane ${this.targetVersion}.`;
   }
 }
 
@@ -111,7 +111,7 @@ export class ServerUpdateProgressIncompleteError extends Schema.TaggedError<Serv
   },
 ) {
   override get message(): string {
-    return `The Rove Code ${this.targetVersion} update ended before the server accepted the restart.`;
+    return `The Paperplane ${this.targetVersion} update ended before the server accepted the restart.`;
   }
 }
 
@@ -124,7 +124,7 @@ export class ServerUpdateTerminalError extends Schema.TaggedError<ServerUpdateTe
   },
 ) {
   override get message(): string {
-    return this.reason ?? `The Rove Code ${this.targetVersion} update ${this.status}.`;
+    return this.reason ?? `The Paperplane ${this.targetVersion} update ${this.status}.`;
   }
 }
 

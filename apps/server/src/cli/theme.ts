@@ -2,10 +2,10 @@
 // move exact directory entries with rename, which the FileSystem service does
 // not expose atomically.
 /**
- * `rove theme` - inspect and set the environment's theme. Connected web and
+ * `paperplane theme` - inspect and set the environment's theme. Connected web and
  * desktop clients switch when it is set; mobile keeps its own appearance
  * settings. Each client applies one set once, so a theme the user picks in
- * Settings afterwards sticks until the next `rove theme set`.
+ * Settings afterwards sticks until the next `paperplane theme set`.
  *
  * Writes `defaultTheme` (and `defaultThemeSetAt`, so a re-set of the same
  * value still acts) into the environment's `settings.json`. A running server
@@ -22,9 +22,9 @@ import {
   EnvironmentThemeFile,
   EnvironmentThemeId,
   environmentThemeFileHasColors,
-} from "@rove-code/contracts";
-import { fromJsonStringPretty, fromLenientJson } from "@rove-code/shared/schemaJson";
-import { BUILT_IN_THEME_IDS, UNPUBLISHABLE_THEME_IDS } from "@rove-code/shared/themePalettes";
+} from "@getpaperplane/contracts";
+import { fromJsonStringPretty, fromLenientJson } from "@getpaperplane/shared/schemaJson";
+import { BUILT_IN_THEME_IDS, UNPUBLISHABLE_THEME_IDS } from "@getpaperplane/shared/themePalettes";
 import * as Config from "effect/Config";
 import * as Console from "effect/Console";
 import * as DateTime from "effect/DateTime";
@@ -35,7 +35,7 @@ import * as Path from "effect/Path";
 import * as Schema from "effect/Schema";
 import { Argument, Command, Flag } from "effect/cli";
 
-import { writeFileStringAtomically } from "@rove-code/shared/atomicWrite";
+import { writeFileStringAtomically } from "@getpaperplane/shared/atomicWrite";
 import * as ServerConfig from "../config.ts";
 import {
   MAX_THEME_FILE_BYTES,
@@ -107,7 +107,7 @@ export class ThemeFileInvalidError extends Schema.TaggedError<ThemeFileInvalidEr
   { filePath: Schema.String, cause: Schema.Defect() },
 ) {
   override get message(): string {
-    return `${this.filePath} is not a valid theme file. Use a theme exported from Rove Code, or a seeded file with name, appearance, canvas, and accent.`;
+    return `${this.filePath} is not a valid theme file. Use a theme exported from Paperplane, or a seeded file with name, appearance, canvas, and accent.`;
   }
 }
 
@@ -174,17 +174,17 @@ export class ThemeTargetMissingError extends Schema.TaggedError<ThemeTargetMissi
   {},
 ) {
   override get message(): string {
-    return "Provide a theme id or file, or run `rove theme clear` to remove the theme.";
+    return "Provide a theme id or file, or run `paperplane theme clear` to remove the theme.";
   }
 }
 
-const envRoveHome = Config.String("ROVE_HOME").pipe(Config.option);
+const envPaperplaneHome = Config.String("PAPERPLANE_HOME").pipe(Config.option);
 
 const resolveThemePaths = Effect.fn(function* (explicitBaseDir: Option.Option<string>) {
-  // Same precedence as the rest of the CLI: --base-dir, then ROVE_HOME,
-  // then the default home. A provisioning script exporting ROVE_HOME must
+  // Same precedence as the rest of the CLI: --base-dir, then PAPERPLANE_HOME,
+  // then the default home. A provisioning script exporting PAPERPLANE_HOME must
   // not have this one command silently target the default install.
-  const envHome = Option.filter(yield* envRoveHome, (value) => value.trim().length > 0);
+  const envHome = Option.filter(yield* envPaperplaneHome, (value) => value.trim().length > 0);
   const configuredBaseDir = Option.orElse(explicitBaseDir, () => envHome);
   const baseDir = yield* resolveBaseDir(Option.getOrUndefined(configuredBaseDir));
   const derivedPaths = yield* ServerConfig.deriveServerPaths(baseDir, undefined, {
@@ -485,7 +485,7 @@ const themeSetCommand = Command.make("set", {
       // a well-formed id, so a typo cannot be written as a theme no client
       // will ever resolve.
       // Path-shaped first, existence second. Deciding on existence alone would
-      // make `rove theme set ocean` publish ./ocean whenever the cwd happens to
+      // make `paperplane theme set ocean` publish ./ocean whenever the cwd happens to
       // hold a file by that name, instead of selecting the built-in.
       const looksLikePath =
         target.endsWith(".json") ||

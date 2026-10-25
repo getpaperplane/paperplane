@@ -1,5 +1,5 @@
-import type { DesktopSshEnvironmentTarget, EnvironmentId } from "@rove-code/contracts";
-import { resolveRemotePairingTarget } from "@rove-code/shared/remote";
+import type { DesktopSshEnvironmentTarget, EnvironmentId } from "@getpaperplane/contracts";
+import { resolveRemotePairingTarget } from "@getpaperplane/shared/remote";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -77,7 +77,7 @@ export class ConnectionOnboarding extends Context.Service<
       input: BearerConnectionUpdateInput,
     ) => Effect.Effect<void, ConnectionAttemptError | Persistence.ConnectionPersistenceError>;
   }
->()("@rove-code/client-runtime/connection/onboarding/ConnectionOnboarding") {}
+>()("@getpaperplane/client-runtime/connection/onboarding/ConnectionOnboarding") {}
 
 const resolvePairingTarget = Effect.fn("clientRuntime.connection.onboarding.resolvePairingTarget")(
   function* (input: PairingConnectionInput) {

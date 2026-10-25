@@ -4,13 +4,16 @@ import {
   CodexSettings,
   PiSettings,
   ProviderDriverKind,
-} from "@rove-code/contracts";
-import { acpRegistryClient } from "@rove-code/provider-acp-registry/client";
-import { defineProviderClient, makeProviderClientRegistry } from "@rove-code/provider-core/client";
-import { cursorClient } from "@rove-code/provider-cursor/client";
-import { grokClient } from "@rove-code/provider-grok/client";
-import { museClient } from "@rove-code/provider-muse/client";
-import { openCodeClient } from "@rove-code/provider-opencode/client";
+} from "@getpaperplane/contracts";
+import { acpRegistryClient } from "@getpaperplane/provider-acp-registry/client";
+import {
+  defineProviderClient,
+  makeProviderClientRegistry,
+} from "@getpaperplane/provider-core/client";
+import { cursorClient } from "@getpaperplane/provider-cursor/client";
+import { grokClient } from "@getpaperplane/provider-grok/client";
+import { museClient } from "@getpaperplane/provider-muse/client";
+import { openCodeClient } from "@getpaperplane/provider-opencode/client";
 
 // The SDK driver's settings live in contracts, shared with the server and mobile.
 const piClient = defineProviderClient({

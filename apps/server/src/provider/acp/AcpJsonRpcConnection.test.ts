@@ -17,7 +17,7 @@ import * as TestClock from "effect/testing/TestClock";
 import * as Stream from "effect/Stream";
 import { describe, expect } from "vite-plus/test";
 
-import * as AcpSessionRuntime from "@rove-code/provider-acp/server/AcpSessionRuntime";
+import * as AcpSessionRuntime from "@getpaperplane/provider-acp/server/AcpSessionRuntime";
 import type * as EffectAcpProtocol from "effect-acp/protocol";
 import * as EffectAcpErrors from "effect-acp/errors";
 
@@ -28,7 +28,7 @@ const mockAgentArgs = [mockAgentPath];
 const mockRuntimeOptions = {
   spawn: { command: mockAgentCommand, args: mockAgentArgs },
   cwd: process.cwd(),
-  clientInfo: { name: "rove-test", version: "0.0.0" },
+  clientInfo: { name: "paperplane-test", version: "0.0.0" },
   authMethodId: "test",
 } satisfies AcpSessionRuntime.AcpSessionRuntimeOptions;
 
@@ -46,7 +46,7 @@ describe("AcpSessionRuntime", () => {
             ? {
                 spawn: {
                   ...mockRuntimeOptions.spawn,
-                  env: { ROVE_ACP_SESSION_LIFECYCLE: "1" },
+                  env: { PAPERPLANE_ACP_SESSION_LIFECYCLE: "1" },
                 },
                 resumeSessionId: "mock-session-1",
                 resumeMethod: "resume" as const,
@@ -116,7 +116,10 @@ describe("AcpSessionRuntime", () => {
         ...mockRuntimeOptions,
         spawn: {
           ...mockRuntimeOptions.spawn,
-          env: { ROVE_ACP_WAIT_FOR_RESUME_RELEASE: "1", ROVE_ACP_SESSION_LIFECYCLE: "1" },
+          env: {
+            PAPERPLANE_ACP_WAIT_FOR_RESUME_RELEASE: "1",
+            PAPERPLANE_ACP_SESSION_LIFECYCLE: "1",
+          },
         },
         resumeSessionId: "mock-session-1",
         resumeMethod: "resume",
@@ -154,7 +157,7 @@ describe("AcpSessionRuntime", () => {
         ...mockRuntimeOptions,
         spawn: {
           ...mockRuntimeOptions.spawn,
-          env: { ROVE_ACP_COMPLETE_FIRST_PROMPT_ON_CANCEL: "1" },
+          env: { PAPERPLANE_ACP_COMPLETE_FIRST_PROMPT_ON_CANCEL: "1" },
         },
         cancelBehavior: "wait-for-prompt",
         requestLogger: (event) =>
@@ -237,7 +240,7 @@ describe("AcpSessionRuntime", () => {
         ...mockRuntimeOptions,
         spawn: {
           ...mockRuntimeOptions.spawn,
-          env: { ROVE_ACP_COMPLETE_FIRST_PROMPT_ON_CANCEL: "1" },
+          env: { PAPERPLANE_ACP_COMPLETE_FIRST_PROMPT_ON_CANCEL: "1" },
         },
         cancelBehavior: "wait-for-prompt",
         cancelTimeout: "1 second",
@@ -321,7 +324,7 @@ describe("AcpSessionRuntime", () => {
         ...mockRuntimeOptions,
         spawn: {
           ...mockRuntimeOptions.spawn,
-          env: { ROVE_ACP_COMPLETE_FIRST_PROMPT_ON_CANCEL: "1" },
+          env: { PAPERPLANE_ACP_COMPLETE_FIRST_PROMPT_ON_CANCEL: "1" },
         },
         cancelBehavior: "wait-for-prompt",
       });
@@ -362,7 +365,7 @@ describe("AcpSessionRuntime", () => {
       });
       const runtime = yield* AcpSessionRuntime.make({
         ...mockRuntimeOptions,
-        spawn: { ...mockRuntimeOptions.spawn, env: { ROVE_ACP_FLOOD_STDERR: "1" } },
+        spawn: { ...mockRuntimeOptions.spawn, env: { PAPERPLANE_ACP_FLOOD_STDERR: "1" } },
         onStderr: () => Effect.fail(failure),
       });
       expect(yield* runtime.start().pipe(Effect.flip)).toBe(failure);
@@ -403,7 +406,7 @@ describe("AcpSessionRuntime", () => {
         yield* Effect.gen(function* () {
           const runtime = yield* AcpSessionRuntime.make({
             ...mockRuntimeOptions,
-            spawn: { ...mockRuntimeOptions.spawn, env: { ROVE_ACP_FLOOD_STDERR: "1" } },
+            spawn: { ...mockRuntimeOptions.spawn, env: { PAPERPLANE_ACP_FLOOD_STDERR: "1" } },
             ...(logStderr
               ? {
                   onStderr: (text: string) =>
@@ -460,7 +463,7 @@ describe("AcpSessionRuntime", () => {
         ...mockRuntimeOptions,
         spawn: {
           ...mockRuntimeOptions.spawn,
-          env: { ROVE_ACP_COMPLETE_FIRST_PROMPT_ON_CANCEL: "1" },
+          env: { PAPERPLANE_ACP_COMPLETE_FIRST_PROMPT_ON_CANCEL: "1" },
         },
         cancelBehavior: "wait-for-prompt",
         cancelTimeout: "1 second",
@@ -497,14 +500,14 @@ describe("AcpSessionRuntime", () => {
     Effect.gen(function* () {
       yield* Effect.acquireRelease(
         Effect.sync(() => {
-          const previous = process.env.ROVE_ACP_RUNTIME_AMBIENT;
-          process.env.ROVE_ACP_RUNTIME_AMBIENT = "sentinel";
+          const previous = process.env.PAPERPLANE_ACP_RUNTIME_AMBIENT;
+          process.env.PAPERPLANE_ACP_RUNTIME_AMBIENT = "sentinel";
           return previous;
         }),
         (previous) =>
           Effect.sync(() => {
-            if (previous === undefined) delete process.env.ROVE_ACP_RUNTIME_AMBIENT;
-            else process.env.ROVE_ACP_RUNTIME_AMBIENT = previous;
+            if (previous === undefined) delete process.env.PAPERPLANE_ACP_RUNTIME_AMBIENT;
+            else process.env.PAPERPLANE_ACP_RUNTIME_AMBIENT = previous;
           }),
       );
       const runtime = yield* AcpSessionRuntime.make({
@@ -513,7 +516,7 @@ describe("AcpSessionRuntime", () => {
           command: process.execPath,
           args: mockAgentArgs,
           extendEnv: false,
-          env: { ROVE_ACP_RUNTIME_EXPLICIT: "kept" },
+          env: { PAPERPLANE_ACP_RUNTIME_EXPLICIT: "kept" },
         },
       });
       yield* runtime.initialize();
@@ -565,7 +568,7 @@ describe("AcpSessionRuntime", () => {
               parameterizedModelPicker: true,
             },
           },
-          clientInfo: { name: "rove-test", version: "0.0.0" },
+          clientInfo: { name: "paperplane-test", version: "0.0.0" },
           authMethodId: "test",
           requestLogger: (event) =>
             Effect.sync(() => {
@@ -588,7 +591,7 @@ describe("AcpSessionRuntime", () => {
         (event) => event.method === "session/new" && event.status === "started",
       );
       expect(created?.payload).toMatchObject({
-        mcpServers: [{ type: "acp", name: "rove", serverId: "rove" }],
+        mcpServers: [{ type: "acp", name: "paperplane", serverId: "paperplane" }],
       });
     }).pipe(
       Effect.provide(
@@ -596,13 +599,13 @@ describe("AcpSessionRuntime", () => {
           spawn: {
             command: mockAgentCommand,
             args: mockAgentArgs,
-            env: { ROVE_ACP_MCP_ACP: "1" },
+            env: { PAPERPLANE_ACP_MCP_ACP: "1" },
           },
           cwd: process.cwd(),
-          clientInfo: { name: "rove-test", version: "0.0.0" },
+          clientInfo: { name: "paperplane-test", version: "0.0.0" },
           authMethodId: "test",
-          mcpServers: [{ type: "stdio", name: "rove", command: "/usr/bin/node", args: [] }],
-          acpMcpServers: [{ type: "acp", name: "rove", serverId: "rove" }],
+          mcpServers: [{ type: "stdio", name: "paperplane", command: "/usr/bin/node", args: [] }],
+          acpMcpServers: [{ type: "acp", name: "paperplane", serverId: "paperplane" }],
           requestLogger: (event) =>
             Effect.sync(() => {
               requestEvents.push(event);
@@ -624,7 +627,7 @@ describe("AcpSessionRuntime", () => {
         (event) => event.method === "session/new" && event.status === "started",
       );
       expect(created?.payload).toMatchObject({
-        mcpServers: [{ type: "stdio", name: "rove", command: "/usr/bin/node", args: [] }],
+        mcpServers: [{ type: "stdio", name: "paperplane", command: "/usr/bin/node", args: [] }],
       });
     }).pipe(
       Effect.provide(
@@ -634,10 +637,10 @@ describe("AcpSessionRuntime", () => {
             args: mockAgentArgs,
           },
           cwd: process.cwd(),
-          clientInfo: { name: "rove-test", version: "0.0.0" },
+          clientInfo: { name: "paperplane-test", version: "0.0.0" },
           authMethodId: "test",
-          mcpServers: [{ type: "stdio", name: "rove", command: "/usr/bin/node", args: [] }],
-          acpMcpServers: [{ type: "acp", name: "rove", serverId: "rove" }],
+          mcpServers: [{ type: "stdio", name: "paperplane", command: "/usr/bin/node", args: [] }],
+          acpMcpServers: [{ type: "acp", name: "paperplane", serverId: "paperplane" }],
           requestLogger: (event) =>
             Effect.sync(() => {
               requestEvents.push(event);
@@ -685,10 +688,10 @@ describe("AcpSessionRuntime", () => {
           spawn: {
             command: mockAgentCommand,
             args: mockAgentArgs,
-            env: { ROVE_ACP_V2_MANAGEMENT: "1" },
+            env: { PAPERPLANE_ACP_V2_MANAGEMENT: "1" },
           },
           cwd: process.cwd(),
-          clientInfo: { name: "rove-test", version: "0.0.0" },
+          clientInfo: { name: "paperplane-test", version: "0.0.0" },
           authMethodId: "test",
           requestLogger: (event) =>
             Effect.sync(() => {
@@ -717,10 +720,10 @@ describe("AcpSessionRuntime", () => {
           spawn: {
             command: mockAgentCommand,
             args: mockAgentArgs,
-            env: { ROVE_ACP_AUTH_METHOD_ID: "test" },
+            env: { PAPERPLANE_ACP_AUTH_METHOD_ID: "test" },
           },
           cwd: process.cwd(),
-          clientInfo: { name: "rove-test", version: "0.0.0" },
+          clientInfo: { name: "paperplane-test", version: "0.0.0" },
           requestLogger: (event) =>
             Effect.sync(() => {
               requestEvents.push(event);
@@ -759,12 +762,12 @@ describe("AcpSessionRuntime", () => {
             command: mockAgentCommand,
             args: mockAgentArgs,
             env: {
-              ROVE_ACP_AUTH_METHOD_ID: "test",
-              ROVE_ACP_REQUIRE_AUTH: "1",
+              PAPERPLANE_ACP_AUTH_METHOD_ID: "test",
+              PAPERPLANE_ACP_REQUIRE_AUTH: "1",
             },
           },
           cwd: process.cwd(),
-          clientInfo: { name: "rove-test", version: "0.0.0" },
+          clientInfo: { name: "paperplane-test", version: "0.0.0" },
           requestLogger: (event) =>
             Effect.sync(() => {
               requestEvents.push(event);
@@ -797,12 +800,12 @@ describe("AcpSessionRuntime", () => {
             command: mockAgentCommand,
             args: mockAgentArgs,
             env: {
-              ROVE_ACP_AUTH_METHOD_ID: "test",
-              ROVE_ACP_REQUIRE_AUTH: "1",
+              PAPERPLANE_ACP_AUTH_METHOD_ID: "test",
+              PAPERPLANE_ACP_REQUIRE_AUTH: "1",
             },
           },
           cwd: process.cwd(),
-          clientInfo: { name: "rove-test", version: "0.0.0" },
+          clientInfo: { name: "paperplane-test", version: "0.0.0" },
           onInitialized: (initializeResult) =>
             Effect.sync(() => {
               advertisedAuthMethodName = initializeResult.authMethods?.[0]?.name;
@@ -866,7 +869,7 @@ describe("AcpSessionRuntime", () => {
             args: mockAgentArgs,
           },
           cwd: process.cwd(),
-          clientInfo: { name: "rove-test", version: "0.0.0" },
+          clientInfo: { name: "paperplane-test", version: "0.0.0" },
           authMethodId: "test",
         }),
       ),
@@ -897,7 +900,7 @@ describe("AcpSessionRuntime", () => {
             args: mockAgentArgs,
           },
           cwd: process.cwd(),
-          clientInfo: { name: "rove-test", version: "0.0.0" },
+          clientInfo: { name: "paperplane-test", version: "0.0.0" },
           authMethodId: "test",
         }),
       ),
@@ -943,11 +946,11 @@ describe("AcpSessionRuntime", () => {
             command: mockAgentCommand,
             args: mockAgentArgs,
             env: {
-              ROVE_ACP_EMIT_FOREIGN_SESSION_UPDATES: "1",
+              PAPERPLANE_ACP_EMIT_FOREIGN_SESSION_UPDATES: "1",
             },
           },
           cwd: process.cwd(),
-          clientInfo: { name: "rove-test", version: "0.0.0" },
+          clientInfo: { name: "paperplane-test", version: "0.0.0" },
           authMethodId: "test",
         }),
       ),
@@ -978,7 +981,7 @@ describe("AcpSessionRuntime", () => {
             args: mockAgentArgs,
           },
           cwd: process.cwd(),
-          clientInfo: { name: "rove-test", version: "0.0.0" },
+          clientInfo: { name: "paperplane-test", version: "0.0.0" },
           authMethodId: "test",
         }),
       ),
@@ -1029,11 +1032,11 @@ describe("AcpSessionRuntime", () => {
             command: mockAgentCommand,
             args: mockAgentArgs,
             env: {
-              ROVE_ACP_HANG_FIRST_PROMPT_FOREVER: "1",
+              PAPERPLANE_ACP_HANG_FIRST_PROMPT_FOREVER: "1",
             },
           },
           cwd: process.cwd(),
-          clientInfo: { name: "rove-test", version: "0.0.0" },
+          clientInfo: { name: "paperplane-test", version: "0.0.0" },
           authMethodId: "test",
           cancelMeta: { cancelTrigger: "ctrl_c" },
           protocolLogging: {
@@ -1098,11 +1101,11 @@ describe("AcpSessionRuntime", () => {
             command: mockAgentCommand,
             args: mockAgentArgs,
             env: {
-              ROVE_ACP_EMIT_INTERLEAVED_ASSISTANT_TOOL_CALLS: "1",
+              PAPERPLANE_ACP_EMIT_INTERLEAVED_ASSISTANT_TOOL_CALLS: "1",
             },
           },
           cwd: process.cwd(),
-          clientInfo: { name: "rove-test", version: "0.0.0" },
+          clientInfo: { name: "paperplane-test", version: "0.0.0" },
           authMethodId: "test",
         }),
       ),
@@ -1147,10 +1150,10 @@ describe("AcpSessionRuntime", () => {
           spawn: {
             command: mockAgentCommand,
             args: mockAgentArgs,
-            env: { ROVE_ACP_EMIT_BACKGROUND_TOOL_DURING_ANSWER: "1" },
+            env: { PAPERPLANE_ACP_EMIT_BACKGROUND_TOOL_DURING_ANSWER: "1" },
           },
           cwd: process.cwd(),
-          clientInfo: { name: "rove-test", version: "0.0.0" },
+          clientInfo: { name: "paperplane-test", version: "0.0.0" },
           authMethodId: "test",
         }),
       ),
@@ -1193,11 +1196,11 @@ describe("AcpSessionRuntime", () => {
             command: mockAgentCommand,
             args: mockAgentArgs,
             env: {
-              ROVE_ACP_EMIT_GENERIC_TOOL_PLACEHOLDERS: "1",
+              PAPERPLANE_ACP_EMIT_GENERIC_TOOL_PLACEHOLDERS: "1",
             },
           },
           cwd: process.cwd(),
-          clientInfo: { name: "rove-test", version: "0.0.0" },
+          clientInfo: { name: "paperplane-test", version: "0.0.0" },
           authMethodId: "test",
         }),
       ),
@@ -1246,7 +1249,7 @@ describe("AcpSessionRuntime", () => {
             args: mockAgentArgs,
           },
           cwd: process.cwd(),
-          clientInfo: { name: "rove-test", version: "0.0.0" },
+          clientInfo: { name: "paperplane-test", version: "0.0.0" },
           requestLogger: (event) =>
             Effect.sync(() => {
               requestEvents.push(event);
@@ -1307,11 +1310,11 @@ describe("AcpSessionRuntime", () => {
             command: mockAgentCommand,
             args: mockAgentArgs,
             env: {
-              ROVE_ACP_SESSION_LIFECYCLE: "1",
+              PAPERPLANE_ACP_SESSION_LIFECYCLE: "1",
             },
           },
           cwd: process.cwd(),
-          clientInfo: { name: "rove-test", version: "0.0.0" },
+          clientInfo: { name: "paperplane-test", version: "0.0.0" },
           requestLogger: (event) =>
             Effect.sync(() => {
               requestEvents.push(event);
@@ -1339,10 +1342,10 @@ describe("AcpSessionRuntime", () => {
           spawn: {
             command: mockAgentCommand,
             args: mockAgentArgs,
-            env: { ROVE_ACP_SESSION_LIFECYCLE: "1" },
+            env: { PAPERPLANE_ACP_SESSION_LIFECYCLE: "1" },
           },
           cwd: process.cwd(),
-          clientInfo: { name: "rove-test", version: "0.0.0" },
+          clientInfo: { name: "paperplane-test", version: "0.0.0" },
           requestLogger: (event) =>
             Effect.sync(() => {
               requestEvents.push(event);
@@ -1389,13 +1392,13 @@ describe("AcpSessionRuntime", () => {
             command: mockAgentCommand,
             args: mockAgentArgs,
             env: {
-              ROVE_ACP_REQUIRE_AUTH: "1",
-              ROVE_ACP_SESSION_LIFECYCLE: "1",
+              PAPERPLANE_ACP_REQUIRE_AUTH: "1",
+              PAPERPLANE_ACP_SESSION_LIFECYCLE: "1",
             },
           },
           cwd: process.cwd(),
           resumeSessionId: "mock-session-1",
-          clientInfo: { name: "rove-test", version: "0.0.0" },
+          clientInfo: { name: "paperplane-test", version: "0.0.0" },
         }),
       ),
       Effect.scoped,
@@ -1426,7 +1429,7 @@ describe("AcpSessionRuntime", () => {
             args: mockAgentArgs,
           },
           cwd: process.cwd(),
-          clientInfo: { name: "rove-test", version: "0.0.0" },
+          clientInfo: { name: "paperplane-test", version: "0.0.0" },
           requestLogger: (event) =>
             Effect.sync(() => {
               requestEvents.push(event);
@@ -1469,7 +1472,7 @@ describe("AcpSessionRuntime", () => {
             args: mockAgentArgs,
           },
           cwd: process.cwd(),
-          clientInfo: { name: "rove-test", version: "0.0.0" },
+          clientInfo: { name: "paperplane-test", version: "0.0.0" },
           protocolLogging: {
             logIncoming: true,
             logOutgoing: true,
@@ -1499,12 +1502,12 @@ describe("AcpSessionRuntime", () => {
             command: mockAgentCommand,
             args: mockAgentArgs,
             env: {
-              ROVE_ACP_FAIL_LOAD_SESSION: "1",
+              PAPERPLANE_ACP_FAIL_LOAD_SESSION: "1",
             },
           },
           cwd: process.cwd(),
           resumeSessionId: "stale-session-id",
-          clientInfo: { name: "rove-test", version: "0.0.0" },
+          clientInfo: { name: "paperplane-test", version: "0.0.0" },
         }),
       ),
       Effect.scoped,
@@ -1531,11 +1534,11 @@ describe("AcpSessionRuntime", () => {
             command: mockAgentCommand,
             args: mockAgentArgs,
             env: {
-              ROVE_ACP_FAIL_LOAD_SESSION_AFTER_CONFIG_REPLAY: "1",
+              PAPERPLANE_ACP_FAIL_LOAD_SESSION_AFTER_CONFIG_REPLAY: "1",
             },
           },
           cwd: process.cwd(),
-          clientInfo: { name: "rove-test", version: "0.0.0" },
+          clientInfo: { name: "paperplane-test", version: "0.0.0" },
         }),
       ),
       Effect.scoped,
@@ -1567,12 +1570,12 @@ describe("AcpSessionRuntime", () => {
             command: mockAgentCommand,
             args: mockAgentArgs,
             env: {
-              ROVE_ACP_EMIT_LOAD_REPLAY: "1",
+              PAPERPLANE_ACP_EMIT_LOAD_REPLAY: "1",
             },
           },
           cwd: process.cwd(),
           resumeSessionId: "mock-session-1",
-          clientInfo: { name: "rove-test", version: "0.0.0" },
+          clientInfo: { name: "paperplane-test", version: "0.0.0" },
         }),
       ),
       Effect.scoped,
@@ -1589,13 +1592,13 @@ describe("AcpSessionRuntime", () => {
           command: mockAgentCommand,
           args: mockAgentArgs,
           env: {
-            ROVE_ACP_DELAY_LOAD_SESSION_AFTER_REPLAY: "1",
-            ROVE_ACP_LOAD_SESSION_DELAY_MS: "250",
+            PAPERPLANE_ACP_DELAY_LOAD_SESSION_AFTER_REPLAY: "1",
+            PAPERPLANE_ACP_LOAD_SESSION_DELAY_MS: "250",
           },
         },
         cwd: process.cwd(),
         sessionLoadTimeout: "2 seconds",
-        clientInfo: { name: "rove-test", version: "0.0.0" },
+        clientInfo: { name: "paperplane-test", version: "0.0.0" },
         requestLogger: (event) =>
           event.method === "session/load" && event.status === "started"
             ? Deferred.succeed(loadStarted, undefined).pipe(Effect.asVoid)
@@ -1637,7 +1640,7 @@ describe("AcpSessionRuntime", () => {
 
       expect(started.sessionId).toBe("mock-session-1");
       expect(started.sessionSetupResult._meta).toMatchObject({
-        roveSessionLoadReady: "replay_idle",
+        paperplaneSessionLoadReady: "replay_idle",
       });
 
       const unexpectedReplayEvent = yield* Stream.runHead(runtime.getEvents()).pipe(
@@ -1652,15 +1655,15 @@ describe("AcpSessionRuntime", () => {
             command: mockAgentCommand,
             args: mockAgentArgs,
             env: {
-              ROVE_ACP_HANG_LOAD_SESSION_AFTER_REPLAY: "1",
-              ROVE_ACP_LOAD_SESSION_DELAY_MS: "10000",
+              PAPERPLANE_ACP_HANG_LOAD_SESSION_AFTER_REPLAY: "1",
+              PAPERPLANE_ACP_LOAD_SESSION_DELAY_MS: "10000",
             },
           },
           cwd: process.cwd(),
           resumeSessionId: "mock-session-1",
           sessionLoadReplayIdleGap: "50 millis",
           sessionLoadTimeout: "1 second",
-          clientInfo: { name: "rove-test", version: "0.0.0" },
+          clientInfo: { name: "paperplane-test", version: "0.0.0" },
         }),
       ),
       Effect.scoped,
@@ -1677,7 +1680,7 @@ describe("AcpSessionRuntime", () => {
 
       expect(loaded.sessionId).toBe("mock-session-1");
       expect(loaded.sessionSetupResult._meta).toMatchObject({
-        roveSessionLoadReady: "replay_idle",
+        paperplaneSessionLoadReady: "replay_idle",
       });
     }).pipe(
       Effect.provide(
@@ -1687,14 +1690,14 @@ describe("AcpSessionRuntime", () => {
             command: mockAgentCommand,
             args: mockAgentArgs,
             env: {
-              ROVE_ACP_HANG_LOAD_SESSION_AFTER_REPLAY: "1",
-              ROVE_ACP_LOAD_SESSION_DELAY_MS: "10000",
+              PAPERPLANE_ACP_HANG_LOAD_SESSION_AFTER_REPLAY: "1",
+              PAPERPLANE_ACP_LOAD_SESSION_DELAY_MS: "10000",
             },
           },
           cwd: process.cwd(),
           sessionLoadReplayIdleGap: "50 millis",
           sessionLoadTimeout: "1 second",
-          clientInfo: { name: "rove-test", version: "0.0.0" },
+          clientInfo: { name: "paperplane-test", version: "0.0.0" },
         }),
       ),
       Effect.scoped,
@@ -1740,11 +1743,11 @@ describe("AcpSessionRuntime", () => {
             command: mockAgentCommand,
             args: mockAgentArgs,
             env: {
-              ROVE_ACP_REQUEST_LOG_PATH: requestLogPath,
+              PAPERPLANE_ACP_REQUEST_LOG_PATH: requestLogPath,
             },
           },
           cwd: process.cwd(),
-          clientInfo: { name: "rove-test", version: "0.0.0" },
+          clientInfo: { name: "paperplane-test", version: "0.0.0" },
         }),
       ),
       Effect.scoped,
@@ -1779,7 +1782,7 @@ describe("AcpSessionRuntime", () => {
           spawn: {
             command: mockAgentCommand,
             args: mockAgentArgs,
-            env: { ROVE_ACP_REQUEST_LOG_PATH: requestLogPath },
+            env: { PAPERPLANE_ACP_REQUEST_LOG_PATH: requestLogPath },
           },
           customModels: ["cline-free/custom-model"],
         }),

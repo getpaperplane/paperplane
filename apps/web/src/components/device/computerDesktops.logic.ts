@@ -1,4 +1,4 @@
-import type { ComputerDesktop, ComputerDesktopsState } from "@rove-code/contracts";
+import type { ComputerDesktop, ComputerDesktopsState } from "@getpaperplane/contracts";
 
 import type { ComputerTabTarget } from "~/rightPanelStore";
 

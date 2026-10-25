@@ -1,4 +1,4 @@
-import { quoteGitPatchPath } from "@rove-code/shared/gitPatchPath";
+import { quoteGitPatchPath } from "@getpaperplane/shared/gitPatchPath";
 import { structuredPatch } from "diff";
 
 import type { AzureDevOpsChangeEntry } from "./azureDevOpsPullRequestJson.ts";

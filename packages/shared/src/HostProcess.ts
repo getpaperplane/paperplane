@@ -5,53 +5,53 @@ import * as NodeOS from "node:os";
 import * as NodeSea from "node:sea";
 
 export const Platform = Context.Reference<NodeJS.Platform>(
-  "@rove-code/shared/HostProcess/Platform",
+  "@getpaperplane/shared/HostProcess/Platform",
   {
     defaultValue: () => process.platform,
   },
 );
 
 export const Architecture = Context.Reference<NodeJS.Architecture>(
-  "@rove-code/shared/HostProcess/Architecture",
+  "@getpaperplane/shared/HostProcess/Architecture",
   {
     defaultValue: () => process.arch,
   },
 );
 
-export const Hostname = Context.Reference<string>("@rove-code/shared/HostProcess/Hostname", {
+export const Hostname = Context.Reference<string>("@getpaperplane/shared/HostProcess/Hostname", {
   defaultValue: () => NodeOS.hostname(),
 });
 
 export const HomeDirectory = Context.Reference<string>(
-  "@rove-code/shared/HostProcess/HomeDirectory",
+  "@getpaperplane/shared/HostProcess/HomeDirectory",
   {
     defaultValue: () => NodeOS.homedir(),
   },
 );
 
 export const Environment = Context.Reference<NodeJS.ProcessEnv>(
-  "@rove-code/shared/HostProcess/Environment",
+  "@getpaperplane/shared/HostProcess/Environment",
   {
     defaultValue: () => process.env,
   },
 );
 
 export const WorkingDirectory = Context.Reference<string>(
-  "@rove-code/shared/HostProcess/WorkingDirectory",
+  "@getpaperplane/shared/HostProcess/WorkingDirectory",
   {
     defaultValue: () => process.cwd(),
   },
 );
 
 export const ExecutablePath = Context.Reference<string>(
-  "@rove-code/shared/HostProcess/ExecutablePath",
+  "@getpaperplane/shared/HostProcess/ExecutablePath",
   {
     defaultValue: () => process.execPath,
   },
 );
 
 export const Arguments = Context.Reference<ReadonlyArray<string>>(
-  "@rove-code/shared/HostProcess/Arguments",
+  "@getpaperplane/shared/HostProcess/Arguments",
   {
     defaultValue: () => process.argv,
   },
@@ -59,10 +59,10 @@ export const Arguments = Context.Reference<ReadonlyArray<string>>(
 
 /**
  * The command the shell was given, before Node resolved it to the binary:
- * `rove` for a PATH lookup, `./rove` or the launcher symlink for an explicit
+ * `paperplane` for a PATH lookup, `./paperplane` or the launcher symlink for an explicit
  * path. `process.argv[0]` and `execPath` are always the resolved binary.
  */
-export const InvokedAs = Context.Reference<string>("@rove-code/shared/HostProcess/InvokedAs", {
+export const InvokedAs = Context.Reference<string>("@getpaperplane/shared/HostProcess/InvokedAs", {
   defaultValue: () => process.argv0,
 });
 
@@ -73,7 +73,7 @@ export const InvokedAs = Context.Reference<string>("@rove-code/shared/HostProces
  * subcommands of itself.
  */
 export const IsExecutable = Context.Reference<boolean>(
-  "@rove-code/shared/HostProcess/IsExecutable",
+  "@getpaperplane/shared/HostProcess/IsExecutable",
   {
     defaultValue: () => NodeSea.isSea(),
   },
@@ -90,7 +90,7 @@ export const IsExecutable = Context.Reference<boolean>(
  * Best effort: a failed lookup just leaves the interface set.
  */
 export const Addresses = Context.Reference<Effect.Effect<ReadonlySet<string>>>(
-  "@rove-code/shared/HostProcess/Addresses",
+  "@getpaperplane/shared/HostProcess/Addresses",
   {
     defaultValue: () =>
       Effect.gen(function* () {
@@ -110,7 +110,7 @@ export const Addresses = Context.Reference<Effect.Effect<ReadonlySet<string>>>(
 
 /** Undefined on platforms without POSIX uids (Windows). */
 export const UserId = Context.Reference<number | undefined>(
-  "@rove-code/shared/HostProcess/UserId",
+  "@getpaperplane/shared/HostProcess/UserId",
   {
     defaultValue: () => process.getuid?.(),
   },

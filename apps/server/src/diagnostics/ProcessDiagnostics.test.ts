@@ -2,7 +2,7 @@ import { describe, expect, it } from "@effect/vitest";
 import type {
   DesktopHostTelemetrySnapshot,
   ResourceMonitorSnapshotEvent,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -71,7 +71,7 @@ describe("ProcessDiagnostics", () => {
           startTimeMs: 1_000,
           runTimeMs: 60_000,
           name: "node",
-          command: "rove server",
+          command: "paperplane server",
           status: "Running",
           cpuPercent: 0,
           cpuTimeMs: 100,
@@ -277,7 +277,7 @@ describe("ProcessDiagnostics", () => {
         pid: 4_242,
         signal: "SIGKILL",
         signaled: false,
-        message: Option.some("Process 4242 is not a signalable Rove backend descendant."),
+        message: Option.some("Process 4242 is not a signalable Paperplane backend descendant."),
       });
 
       const diagnostics = yield* Effect.service(ProcessDiagnostics.ProcessDiagnostics).pipe(

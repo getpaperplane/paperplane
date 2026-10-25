@@ -3,7 +3,7 @@ import {
   type RemoteSandbox,
   type SandboxProvider,
   type SandboxRegion,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 import { sandboxCommandFailure } from "./bootstrap.ts";
@@ -21,7 +21,7 @@ export interface SandboxHandle {
   /** Modal only; resumed sandboxes stay in the region they were created in. */
   region?: SandboxRegion;
 }
-// Bootstrap installs Rove and waits for it to become ready; both can be slow.
+// Bootstrap installs Paperplane and waits for it to become ready; both can be slow.
 const COMMAND_TIMEOUT_SECONDS = 600;
 
 export interface SandboxDriver {
@@ -191,8 +191,8 @@ export function makeBoatDriver(
     exec,
     expose: async (handle) => {
       await ready(handle);
-      // Boat's proxy token isn't compatible with Rove's pairing/WebSocket URLs.
-      // Rove's own authentication, not an ungated agent endpoint, owns access.
+      // Boat's proxy token isn't compatible with Paperplane's pairing/WebSocket URLs.
+      // Paperplane's own authentication, not an ungated agent endpoint, owns access.
       const result = decodeBoatHost(
         await request(`${path(handle)}/host`, { port: SANDBOX_PORT, public: true }),
       );
@@ -214,14 +214,16 @@ export const makeSandboxDriver: SandboxDriverFactory = async (provider, credenti
   const client = new ModalClient({ tokenId: credentials.tokenId, tokenSecret: credentials.token });
   // State lives on the sandbox filesystem and persists through pause snapshots,
   // as Modal recommends for work beyond its 24-hour run limit. Modal volumes
-  // can't hold it: they reject hard links, which npm and Rove's atomic writes need.
+  // can't hold it: they reject hard links, which npm and Paperplane's atomic writes need.
   // `name` (stored as volumeName for older records) finds unrecorded sandboxes.
   const create = async (
     name: string,
     region: SandboxRegion | undefined,
     snapshotId?: string,
   ): Promise<SandboxHandle> => {
-    const app = await client.apps.fromName("rove-thread-sandboxes", { createIfMissing: true });
+    const app = await client.apps.fromName("paperplane-thread-sandboxes", {
+      createIfMissing: true,
+    });
     const image = snapshotId
       ? await client.images.fromId(snapshotId)
       : client.images.fromRegistry("node:24-bookworm");
@@ -247,9 +249,9 @@ export const makeSandboxDriver: SandboxDriverFactory = async (provider, credenti
   };
   const driver: SandboxDriver = {
     verify: async () => {
-      await client.apps.fromName("rove-thread-sandboxes", { createIfMissing: true });
+      await client.apps.fromName("paperplane-thread-sandboxes", { createIfMissing: true });
     },
-    create: (id, region) => create(`rove-${id}`, region),
+    create: (id, region) => create(`paperplane-${id}`, region),
     resume: async (handle) => {
       if (!handle.paused) {
         try {
@@ -261,6 +263,7 @@ export const makeSandboxDriver: SandboxDriverFactory = async (provider, credenti
       }
       return {
         ...(await create(
+          // Older saved handles omitted the name; it identifies an existing remote resource.
           handle.volumeName ?? `rove-${handle.remoteId}`,
           handle.region,
           handle.snapshotIds.at(-1),
@@ -280,7 +283,8 @@ export const makeSandboxDriver: SandboxDriverFactory = async (provider, credenti
       try {
         const sandbox = handle.remoteId
           ? await client.sandboxes.fromId(handle.remoteId)
-          : await client.sandboxes.fromName("rove-thread-sandboxes", handle.volumeName ?? "");
+          : // Only historical handles lack remoteId; current ones always remove by ID.
+            await client.sandboxes.fromName("rove-thread-sandboxes", handle.volumeName ?? "");
         await sandbox.terminate({ wait: true });
       } catch (error) {
         if (!(error instanceof NotFoundError)) throw error;

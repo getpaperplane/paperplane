@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 
-import { ProviderInstanceId, type ModelSelection } from "@rove-code/contracts";
+import { ProviderInstanceId, type ModelSelection } from "@getpaperplane/contracts";
 
 import { compileClaudeModelSelection } from "./claudeModelOptions.ts";
 

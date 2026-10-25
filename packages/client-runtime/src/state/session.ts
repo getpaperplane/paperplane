@@ -1,4 +1,4 @@
-import type { AuthSessionState, EnvironmentId, ServerConfig } from "@rove-code/contracts";
+import type { AuthSessionState, EnvironmentId, ServerConfig } from "@getpaperplane/contracts";
 import * as Data from "effect/Data";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";

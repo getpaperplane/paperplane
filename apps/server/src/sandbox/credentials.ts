@@ -2,7 +2,7 @@
 import * as NodeChildProcess from "node:child_process";
 import * as NodeFSP from "node:fs/promises";
 import * as NodePath from "node:path";
-import type { SandboxCredentialKind } from "@rove-code/contracts";
+import type { SandboxCredentialKind } from "@getpaperplane/contracts";
 import { SandboxDriverError } from "./errors.ts";
 
 /** A tool the sandbox needs before a forwarded sign-in is usable. */

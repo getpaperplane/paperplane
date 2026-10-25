@@ -12,7 +12,7 @@
  *
  * @module provider/Drivers/OpenCodeDriver
  */
-import { ProviderDriverKind } from "@rove-code/contracts";
+import { ProviderDriverKind } from "@getpaperplane/contracts";
 import { OpenCodeSettings } from "../settings.ts";
 import * as Crypto from "effect/Crypto";
 import * as Deferred from "effect/Deferred";
@@ -27,13 +27,13 @@ import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
 import * as OpenCode2TextGeneration from "./v2/textGeneration.ts";
 import { makeOpenCodeTextGeneration } from "./textGeneration.ts";
-import * as ProviderLatestVersions from "@rove-code/provider-core/server/ProviderLatestVersions";
-import * as ProviderHost from "@rove-code/provider-core/server/ProviderHost";
+import * as ProviderLatestVersions from "@getpaperplane/provider-core/server/ProviderLatestVersions";
+import * as ProviderHost from "@getpaperplane/provider-core/server/ProviderHost";
 import * as OpenCodeAdapterV2 from "./adapter.ts";
 import * as OpenCode2AdapterV2 from "./v2/adapter.ts";
-import type * as ProviderAdapter from "@rove-code/provider-core/server/ProviderAdapter";
-import type { ProviderTextGeneration } from "@rove-code/provider-core/server/textGeneration";
-import { ProviderDriverError } from "@rove-code/provider-core/server/errors";
+import type * as ProviderAdapter from "@getpaperplane/provider-core/server/ProviderAdapter";
+import type { ProviderTextGeneration } from "@getpaperplane/provider-core/server/textGeneration";
+import { ProviderDriverError } from "@getpaperplane/provider-core/server/errors";
 import { openCodeUsageReader, type OpenCodeUsageReaderEnv } from "./usage.ts";
 import { readOpenCodeGoUsageLimits } from "./usageLimits.ts";
 import { loadOpenCode2Catalog } from "./openCode2Catalog.ts";
@@ -47,7 +47,7 @@ import {
   openCodeSkillsToServerProviderSkills,
   openCodeCommandsToServerProviderSlashCommands,
 } from "./status.ts";
-import { makeManagedServerProvider } from "@rove-code/provider-core/server/managedProvider";
+import { makeManagedServerProvider } from "@getpaperplane/provider-core/server/managedProvider";
 import * as OpenCodeRuntime from "./OpenCodeRuntime.ts";
 import {
   makeOpenCodeRuntimeProbe,
@@ -61,9 +61,9 @@ import {
   defaultProviderContinuationIdentity,
   type ProviderDriver,
   type ProviderInstance,
-} from "@rove-code/provider-core/server/driver";
-import { withInstanceIdentity } from "@rove-code/provider-core/server/instanceIdentity";
-import { mergeProviderInstanceEnvironment } from "@rove-code/provider-core/server/instanceEnvironment";
+} from "@getpaperplane/provider-core/server/driver";
+import { withInstanceIdentity } from "@getpaperplane/provider-core/server/instanceIdentity";
+import { mergeProviderInstanceEnvironment } from "@getpaperplane/provider-core/server/instanceEnvironment";
 import {
   enrichProviderSnapshotWithVersionAdvisory,
   makeCachedProviderMaintenanceResolution,
@@ -71,12 +71,12 @@ import {
   makePackageManagedProviderMaintenanceResolver,
   normalizeCommandPath,
   resolveProviderMaintenanceCapabilitiesEffect,
-} from "@rove-code/provider-core/server/maintenanceResolver";
+} from "@getpaperplane/provider-core/server/maintenanceResolver";
 import {
   haveProviderSnapshotSettingsChanged,
   makeProviderSnapshotSettingsSource,
   type ProviderSnapshotSettings,
-} from "@rove-code/provider-core/server/snapshotSettings";
+} from "@getpaperplane/provider-core/server/snapshotSettings";
 const decodeOpenCodeSettings = Schema.decodeSync(OpenCodeSettings);
 
 const DRIVER_KIND = ProviderDriverKind.make("opencode");
@@ -91,7 +91,7 @@ function isOpenCodeNativeCommandPath(commandPath: string): boolean {
 
 /**
  * OpenCode 1.x ships as `opencode-ai` and 2.x as `@opencode/cli`. An install is
- * only ever updated within its own package: Rove never moves a 1.x install onto
+ * only ever updated within its own package: Paperplane never moves a 1.x install onto
  * 2.x or back, since 2.x converts the shared database in place.
  */
 export const openCodeUpdateFor = (generation: ProbedOpenCode["generation"]) =>

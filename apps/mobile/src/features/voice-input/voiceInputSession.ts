@@ -6,7 +6,7 @@ import {
   voiceInputBlocksSubmission,
   type VoiceDraftSnapshot,
   type VoiceInputControllerDependencies,
-} from "@rove-code/client-runtime/voice-input";
+} from "@getpaperplane/client-runtime/voice-input";
 
 export type VoiceInputTarget = {
   readonly ownerKey: string;

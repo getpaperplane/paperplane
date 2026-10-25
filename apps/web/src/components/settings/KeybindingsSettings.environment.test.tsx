@@ -1,4 +1,4 @@
-import type { EnvironmentId } from "@rove-code/contracts";
+import type { EnvironmentId } from "@getpaperplane/contracts";
 import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 import { visitElements } from "../../test/reactElementTree";

@@ -1,5 +1,5 @@
 import type { ExtensionUIContext } from "@earendil-works/pi-coding-agent";
-import { UserInputRequestedPayload } from "@rove-code/contracts";
+import { UserInputRequestedPayload } from "@getpaperplane/contracts";
 import * as Schema from "effect/Schema";
 import { describe, expect, it, vi } from "vite-plus/test";
 import { createPiExtensionUI } from "./PiExtensionUI.ts";
@@ -18,8 +18,9 @@ function createUI(reportUnsupportedUI = () => {}) {
     reportUnsupportedUI,
   );
   const latestQuestion = () => {
-    const request = events.findLast((event) => event.type === "rove_ui_request");
-    if (request?.type !== "rove_ui_request") throw new Error("Expected an extension question");
+    const request = events.findLast((event) => event.type === "paperplane_ui_request");
+    if (request?.type !== "paperplane_ui_request")
+      throw new Error("Expected an extension question");
     return {
       requestId: request.requestId,
       questions: decodeQuestions({ questions: request.questions }).questions,

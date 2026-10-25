@@ -3,9 +3,9 @@ import type {
   OrchestrationV2ThreadShell,
   OrchestrationProjectShell,
   ServerProvider,
-} from "@rove-code/contracts";
-import { formatModelSlugName, resolveSelectableModel } from "@rove-code/shared/model";
-import { fileBasename } from "@rove-code/shared/path";
+} from "@getpaperplane/contracts";
+import { formatModelSlugName, resolveSelectableModel } from "@getpaperplane/shared/model";
+import { fileBasename } from "@getpaperplane/shared/path";
 import { isTerminalSubagentStatus } from "./subagentRuntime.ts";
 
 /** Summarizes one adjacent group, without changing its member identities or order. */

@@ -9,9 +9,9 @@ import {
   ThreadId,
   type DesktopAppActivationRequest,
   type DesktopAppActivationResponse,
-} from "@rove-code/contracts";
-import { resolveDesktopAppControlAddress } from "@rove-code/shared/desktopAppControl";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+} from "@getpaperplane/contracts";
+import { resolveDesktopAppControlAddress } from "@getpaperplane/shared/desktopAppControl";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 import { it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import { afterEach, describe, expect } from "vite-plus/test";
@@ -87,7 +87,7 @@ describe("desktop app control server", () => {
       const userId = yield* HostProcess.UserId;
       yield* Effect.promise(async () => {
         const root = await NodeFSP.mkdtemp(
-          NodePath.join(NodeOS.tmpdir(), "rove-app-control-test-"),
+          NodePath.join(NodeOS.tmpdir(), "paperplane-app-control-test-"),
         );
         const target = makeTarget(NodePath.join(root, "userdata"), platform, userId);
         const received: DesktopAppActivationRequest[] = [];
@@ -128,7 +128,9 @@ describe("desktop app control server", () => {
       const platform = yield* HostProcess.Platform;
       const userId = yield* HostProcess.UserId;
       yield* Effect.promise(async () => {
-        const root = await NodeFSP.mkdtemp(NodePath.join(NodeOS.tmpdir(), "rove-app-cancel-test-"));
+        const root = await NodeFSP.mkdtemp(
+          NodePath.join(NodeOS.tmpdir(), "paperplane-app-cancel-test-"),
+        );
         const target = makeTarget(NodePath.join(root, "userdata"), platform, userId);
         let resolveCanceled: (requestId: string) => void = () => undefined;
         const canceled = new Promise<string>((resolve) => {
@@ -169,7 +171,7 @@ describe("desktop app control server", () => {
       if (platform === "win32") return;
       yield* Effect.promise(async () => {
         const root = await NodeFSP.mkdtemp(
-          NodePath.join(NodeOS.tmpdir(), "rove-app-takeover-test-"),
+          NodePath.join(NodeOS.tmpdir(), "paperplane-app-takeover-test-"),
         );
         const target = makeTarget(NodePath.join(root, "userdata"), platform, userId);
         const older = await startOkServer(target, userId);
@@ -192,7 +194,7 @@ describe("desktop app control server", () => {
       if (platform === "win32") return;
       yield* Effect.promise(async () => {
         const root = await NodeFSP.mkdtemp(
-          NodePath.join(NodeOS.tmpdir(), "rove-app-reclaim-test-"),
+          NodePath.join(NodeOS.tmpdir(), "paperplane-app-reclaim-test-"),
         );
         const target = makeTarget(NodePath.join(root, "userdata"), platform, userId);
         const server = await startOkServer(target, userId);

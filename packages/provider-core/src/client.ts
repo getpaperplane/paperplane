@@ -11,7 +11,7 @@
  *
  * @module provider-core/client
  */
-import type { ProviderDriverKind } from "@rove-code/contracts";
+import type { ProviderDriverKind } from "@getpaperplane/contracts";
 import type * as Schema from "effect/Schema";
 
 /**

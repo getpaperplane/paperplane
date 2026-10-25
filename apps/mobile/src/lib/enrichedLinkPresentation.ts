@@ -1,8 +1,8 @@
-import type { ComposerContextRecord } from "@rove-code/contracts";
+import type { ComposerContextRecord } from "@getpaperplane/contracts";
 import { contextChipPresentation } from "./composerChipPresentation";
 import type { MarkdownFileIcon } from "./markdownLinks";
 import type { SelectableMarkdownSkill } from "../native/SelectableMarkdownText.types";
-import { parseComposerContextHref } from "@rove-code/shared/composerContextReferences";
+import { parseComposerContextHref } from "@getpaperplane/shared/composerContextReferences";
 
 const CONTEXT_ICONS: Readonly<Record<string, MarkdownFileIcon>> = {
   photo: "image",

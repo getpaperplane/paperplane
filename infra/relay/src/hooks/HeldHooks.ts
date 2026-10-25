@@ -58,7 +58,7 @@ export class HeldHooks extends Context.Service<
       readonly environmentPublicKey: string;
     }) => Effect.Effect<boolean, PersistenceError | HookInbox.HookInboxError>;
   }
->()("rove-relay/hooks/HeldHooks") {}
+>()("paperplane-relay/hooks/HeldHooks") {}
 
 const make = Effect.gen(function* () {
   const links = yield* EnvironmentLinks.EnvironmentLinks;

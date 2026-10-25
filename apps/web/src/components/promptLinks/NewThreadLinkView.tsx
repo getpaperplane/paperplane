@@ -1,20 +1,20 @@
-import { scopeProjectRef, scopeThreadRef } from "@rove-code/client-runtime/environment";
-import { getCloneDestinationPath } from "@rove-code/client-runtime/operations/projects";
+import { scopeProjectRef, scopeThreadRef } from "@getpaperplane/client-runtime/environment";
+import { getCloneDestinationPath } from "@getpaperplane/client-runtime/operations/projects";
 import {
   findPromptLinkProject,
   findPromptLinkPullRequestThread,
   resolvePromptLinkModelSelection,
-} from "@rove-code/client-runtime/prompt-links";
+} from "@getpaperplane/client-runtime/prompt-links";
 import {
   isAtomCommandInterrupted,
   squashAtomCommandFailure,
-} from "@rove-code/client-runtime/state/runtime";
-import type { EnvironmentProject } from "@rove-code/client-runtime/state/shell";
+} from "@getpaperplane/client-runtime/state/runtime";
+import type { EnvironmentProject } from "@getpaperplane/client-runtime/state/shell";
 import {
   type NewThreadLink,
   type PromptLinkRepository,
   promptLinkPullRequestUrl,
-} from "@rove-code/shared/promptLinks";
+} from "@getpaperplane/shared/promptLinks";
 import { useAtomValue } from "@effect/atom-react";
 import { useLocation, useNavigate } from "@tanstack/react-router";
 import { type ReactNode, useEffect, useEffectEvent, useRef, useState } from "react";
@@ -99,7 +99,7 @@ export function NewThreadLinkView({ link }: { readonly link: NewThreadLink }) {
       replace: true,
     }).catch(() => null);
     if (opened === null) {
-      setState({ status: "failed", message: "Rove Code could not open a new thread." });
+      setState({ status: "failed", message: "Paperplane could not open a new thread." });
       return;
     }
     setState({ status: "opened" });
@@ -169,7 +169,7 @@ export function NewThreadLinkView({ link }: { readonly link: NewThreadLink }) {
       setState({
         status: "failed",
         message:
-          "This machine cannot clone from a link. Update Rove Code on it, or clone the repository from the command palette.",
+          "This machine cannot clone from a link. Update Paperplane on it, or clone the repository from the command palette.",
       });
       return;
     }

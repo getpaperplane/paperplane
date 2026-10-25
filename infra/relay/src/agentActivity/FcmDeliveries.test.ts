@@ -1,5 +1,5 @@
-import { EnvironmentId, ThreadId } from "@rove-code/contracts";
-import type { RelayAgentActivityState } from "@rove-code/contracts/relay";
+import { EnvironmentId, ThreadId } from "@getpaperplane/contracts";
+import type { RelayAgentActivityState } from "@getpaperplane/contracts/relay";
 import { describe, expect, it } from "@effect/vitest";
 import * as NodeCryptoLayer from "@effect/platform-node/NodeCrypto";
 import * as Effect from "effect/Effect";
@@ -52,7 +52,7 @@ const target: LiveActivities.TargetRow = {
   platform: "android",
   ios_major_version: null,
   app_version: null,
-  bundle_id: "dev.rove.app.dev",
+  bundle_id: "io.github.getpaperplane.paperplane.dev",
   aps_environment: null,
   push_token: "fcm-token",
   push_to_start_token: null,
@@ -680,7 +680,7 @@ describe("Android delivery routing", () => {
     );
     const data = fitFcmData({
       ...androidActivityData(aggregate),
-      rove_kind: "agent_activity",
+      paperplane_kind: "agent_activity",
       device_id: "d".repeat(128),
       user_id: "u".repeat(128),
       updated_at: "1788780000000",

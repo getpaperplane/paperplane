@@ -2,7 +2,7 @@ import {
   type ReviewDiffPreviewInput,
   VcsUnsupportedOperationError,
   WS_METHODS,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import * as Semaphore from "effect/Semaphore";
 import { request } from "../rpc/client.ts";

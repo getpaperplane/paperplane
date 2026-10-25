@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vite-plus/test";
-import { ProviderDriverKind, type ServerProviderModel } from "@rove-code/contracts";
+import { ProviderDriverKind, type ServerProviderModel } from "@getpaperplane/contracts";
 
 import { providerClients } from "./providerDriverMeta";
 import { resolvePiModelSettings } from "./PiModelSettings";

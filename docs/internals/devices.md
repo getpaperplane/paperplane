@@ -3,13 +3,13 @@
 The environment server owns simulators and emulators the way it owns
 terminals: discovery, streaming, and agent access all run there, and every
 client reaches them through the environment connection. This is what makes the
-Device panel work over Tailscale and Rove Connect, including when an SSH host runs the devices.
+Device panel work over Tailscale and Paperplane Connect, including when an SSH host runs the devices.
 
 ## Two external tools, one seam
 
 [expo-device-hub](../../apps/server/src/device/LocalDeviceHost.ts) streams and
 [agent-device](../../apps/server/src/device/AgentDeviceShim.ts) drives. Each is
-npm-installed at a pinned version into the Rove home after its matching Device
+npm-installed at a pinned version into the Paperplane home after its matching Device
 panel consent step. Manual setup installs and starts only expo-device-hub;
 agent-device remains absent and stopped until agent access is granted. Both run
 with the server's Node; `npx` would make the first `device_open` after a reboot
@@ -48,10 +48,10 @@ travels through `podman exec` stdin/stdout. VM viewers connect only to loopback
 VNC destinations. Lume 0.6.1 uses Apple's private VNC server without a bind-address
 control: a localhost URL does not prove a loopback-only listener, nor is wildcard
 binding universal. Setup and work VMs enable password-protected VNC with a fresh
-random password per boot and suppress the host viewer (`--display none`). Rove
+random password per boot and suppress the host viewer (`--display none`). Paperplane
 does not change the firewall; direct network exposure depends on Lume and the host.
 Traditional VNC uses only eight password bytes (48 random bits here). Credentials
-stay out of Rove's public state/errors, but Lume can log credentialed URLs locally.
+stay out of Paperplane's public state/errors, but Lume can log credentialed URLs locally.
 Lume receives `--vnc-password` on its argv, visible to local users via `ps` while running.
 Desktop lifecycle snapshots never contain VNC passwords; an operate-scoped RPC
 returns credentials separately. The socket also requires operate scope because
@@ -62,7 +62,7 @@ Host macOS/Windows sessions are never listed or viewable.
 
 serve-sim's preview drives its Tools panel by sending shell commands over that
 same exec channel. Proxying it, even allowlisted, would hand any environment
-session arbitrary command execution on the host, so Rove does not. The
+session arbitrary command execution on the host, so Paperplane does not. The
 [`device.action`](../../apps/server/src/device/DeviceActions.ts) RPC runs the
 underlying `simctl`, `adb`, and serve-sim helper binaries itself through
 `DeviceHostReady.run`, one typed action per control, and returns the settings
@@ -74,7 +74,7 @@ screenshot capture and stream tuning.
 
 The `device_*` toolkit is deliberately four tools: list, open, screenshot, and
 close. Driving happens through the `agent-device` CLI, which has the semantic
-snapshot model agents need and stays current with its own releases. Rove prepends
+snapshot model agents need and stays current with its own releases. Paperplane prepends
 a shim directory to the provider's PATH. The CLI installs on the environment
 server even when that server cannot run simulators. Hosts start on demand.
 

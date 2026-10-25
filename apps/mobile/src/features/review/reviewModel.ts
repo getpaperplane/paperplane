@@ -1,7 +1,7 @@
 import { parsePatchFiles } from "@pierre/diffs/utils/parsePatchFiles";
 import type { ChangeTypes, FileDiffMetadata } from "@pierre/diffs/types";
-import type { ThreadCheckpointSummary } from "@rove-code/client-runtime/state/thread-checkpoints";
-import type { ReviewDiffPreviewSource } from "@rove-code/contracts";
+import type { ThreadCheckpointSummary } from "@getpaperplane/client-runtime/state/thread-checkpoints";
+import type { ReviewDiffPreviewSource } from "@getpaperplane/contracts";
 import * as Arr from "effect/Array";
 import { pipe } from "effect/Function";
 import * as Order from "effect/Order";

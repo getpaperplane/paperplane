@@ -1,4 +1,4 @@
-import { EnvironmentId } from "@rove-code/contracts";
+import { EnvironmentId } from "@getpaperplane/contracts";
 import { AsyncResult } from "effect/reactivity";
 import { act, StrictMode } from "react";
 import { create, type ReactTestRenderer } from "react-test-renderer";

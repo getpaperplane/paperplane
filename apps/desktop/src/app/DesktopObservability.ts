@@ -1,16 +1,16 @@
-import { PRIMARY_LOCAL_ENVIRONMENT_ID } from "@rove-code/contracts";
+import { PRIMARY_LOCAL_ENVIRONMENT_ID } from "@getpaperplane/contracts";
 import {
   makeLocalFileTracer,
   makeTraceSink,
   type SignalExport,
-} from "@rove-code/shared/observability";
-import * as HostProcess from "@rove-code/shared/HostProcess";
-import * as SharedObservability from "@rove-code/shared/observability";
-import * as OtelEnvironment from "@rove-code/shared/otelEnvironment";
+} from "@getpaperplane/shared/observability";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
+import * as SharedObservability from "@getpaperplane/shared/observability";
+import * as OtelEnvironment from "@getpaperplane/shared/otelEnvironment";
 import {
   parsePersistedServerObservabilitySettings,
   type PersistedServerObservabilitySettings,
-} from "@rove-code/shared/serverSettings";
+} from "@getpaperplane/shared/serverSettings";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -72,7 +72,7 @@ export class DesktopBackendOutputLogFactory extends Context.Service<
   {
     readonly forInstance: (id: string) => Effect.Effect<DesktopBackendOutputLogShape>;
   }
->()("@rove-code/desktop/app/DesktopObservability/DesktopBackendOutputLogFactory") {}
+>()("@getpaperplane/desktop/app/DesktopObservability/DesktopBackendOutputLogFactory") {}
 
 const textEncoder = new TextEncoder();
 const textDecoder = new TextDecoder();
@@ -633,10 +633,10 @@ const layerTelemetry = Layer.unwrap(
     // `host.name` keeps machines apart on a shared collector; one set in
     // `OTEL_RESOURCE_ATTRIBUTES` wins, since explicit attributes override it.
     const resource = {
-      serviceName: "rove-desktop",
+      serviceName: "paperplane-desktop",
       serviceVersion: environment.appVersion,
       attributes: {
-        "service.namespace": "rove",
+        "service.namespace": "paperplane",
         "service.runtime": "desktop",
         "service.mode": environment.isDevelopment ? "development" : "packaged",
         "host.name": endpoints.resourceAttributes["host.name"] || (yield* HostProcess.Hostname),

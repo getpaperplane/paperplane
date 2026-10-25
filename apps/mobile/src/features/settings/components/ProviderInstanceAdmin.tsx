@@ -2,7 +2,7 @@ import { useAtomValue } from "@effect/atom-react";
 import {
   isAtomCommandInterrupted,
   squashAtomCommandFailure,
-} from "@rove-code/client-runtime/state/runtime";
+} from "@getpaperplane/client-runtime/state/runtime";
 import {
   asProviderConfigBlob,
   buildProviderInstanceOverridePatch,
@@ -24,7 +24,7 @@ import {
   withProviderCommandArgs,
   type ProviderConfigBlob,
   type ProviderSettingsFieldModel,
-} from "@rove-code/client-runtime/state/provider-instance-settings";
+} from "@getpaperplane/client-runtime/state/provider-instance-settings";
 import {
   resolveProjectProviderInstanceEnabled,
   type AcpRegistrySearchAgent,
@@ -32,7 +32,7 @@ import {
   type ProviderInstanceConfig,
   type ProviderInstanceEnvironmentVariable,
   type ProviderInstanceMutation,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import * as Dialog from "../../../components/ui/Dialog";
 import { TextInput, View } from "react-native";
@@ -250,7 +250,7 @@ function EnvironmentEditor(props: {
     publish(generic.map((entry, i) => (i === index ? row : entry)));
   return (
     <View>
-      <Text className="px-4 pt-3 text-sm font-rove-medium text-foreground">Variables</Text>
+      <Text className="px-4 pt-3 text-sm font-paperplane-medium text-foreground">Variables</Text>
       <Text className="px-4 text-xs text-foreground-muted">
         API keys, base URLs and other per-instance settings. Sensitive values stay on the
         environment and are never shown again.
@@ -319,7 +319,7 @@ function CommandArguments(props: {
     props.onChange(withProviderCommandArgs(props.config, next));
   return (
     <View>
-      <Text className="px-4 pt-3 text-sm font-rove-medium text-foreground">Arguments</Text>
+      <Text className="px-4 pt-3 text-sm font-paperplane-medium text-foreground">Arguments</Text>
       <Text className="px-4 text-xs text-foreground-muted">
         One literal argument per row, in launch order.
       </Text>
@@ -505,7 +505,7 @@ function InstanceForm(props: {
               }
               description={
                 mode === "managed"
-                  ? "Sign in from Accounts after saving. Rove manages the CLI and credentials."
+                  ? "Sign in from Accounts after saving. Paperplane manages the CLI and credentials."
                   : "Use the environment's installed CLI and its existing credentials."
               }
               selected={

@@ -1,4 +1,4 @@
-import { AuthPreviewOperateScope, type BrowserProfile } from "@rove-code/contracts";
+import { AuthPreviewOperateScope, type BrowserProfile } from "@getpaperplane/contracts";
 import { useEffect } from "react";
 
 import { useClientSettings, useClientSettingsHydrated } from "~/hooks/useSettings";

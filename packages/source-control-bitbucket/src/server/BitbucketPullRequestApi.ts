@@ -19,10 +19,10 @@ import type {
   PullRequestReviewThread,
   PullRequestReviewVerdict,
   PullRequestReviewerCandidateList,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 
 import * as BitbucketApi from "./BitbucketApi.ts";
-import { parseDiffFileRevisions } from "@rove-code/source-control-core/server/diffFileRevisions";
+import { parseDiffFileRevisions } from "@getpaperplane/source-control-core/server/diffFileRevisions";
 import {
   buildReviewThreads,
   decodeCommentsJson,
@@ -39,7 +39,7 @@ import {
   type BitbucketPullRequest,
   type BitbucketRawComment,
 } from "./bitbucketPullRequestJson.ts";
-import type { ProviderListCursor } from "@rove-code/source-control-core/server/PullRequestProvider";
+import type { ProviderListCursor } from "@getpaperplane/source-control-core/server/PullRequestProvider";
 
 /**
  * Names the read that produced unusable output, so a failure reports the call it came from
@@ -304,7 +304,7 @@ export class BitbucketPullRequestApi extends Context.Service<
       readonly resolved: boolean;
     }) => Effect.Effect<void, BitbucketPullRequestApiError>;
   }
->()("@rove-code/source-control-bitbucket/server/BitbucketPullRequestApi") {}
+>()("@getpaperplane/source-control-bitbucket/server/BitbucketPullRequestApi") {}
 
 /** `workspace/slug`; Bitbucket has no deeper nesting to address. */
 function repositorySegments(

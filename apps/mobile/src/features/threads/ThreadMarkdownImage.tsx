@@ -1,5 +1,5 @@
-import { MISSING_FILE_ACCESS_MESSAGE } from "@rove-code/client-runtime/state/assets";
-import type { AssetResource, EnvironmentId } from "@rove-code/contracts";
+import { MISSING_FILE_ACCESS_MESSAGE } from "@getpaperplane/client-runtime/state/assets";
+import type { AssetResource, EnvironmentId } from "@getpaperplane/contracts";
 import { Image } from "expo-image";
 import { createContext, useContext, useEffect, useEffectEvent, useId, useState } from "react";
 import { fetch } from "expo/fetch";

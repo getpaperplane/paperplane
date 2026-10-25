@@ -13,7 +13,7 @@ interface Props {
 }
 
 const {
-  title = "Rove Code | Your agents. Your machines. One workspace.",
+  title = "Paperplane | Your agents. Your machines. One workspace.",
   description = "A free, open-source workspace for coding agents. Use the providers you choose, review their changes, and connect to your own machines from desktop, web, or mobile.",
   pageClass,
 } = Astro.props;
@@ -31,7 +31,7 @@ const canonicalUrl = Astro.site ? new URL(Astro.url.pathname, Astro.site) : null
     <script is:inline>
       // Apply the saved choice before first paint. New visitors always start dark.
       try {
-        if (localStorage.getItem("rove-marketing-theme") === "light") {
+        if (localStorage.getItem("paperplane-marketing-theme") === "light") {
           document.documentElement.dataset.theme = "light";
           document.querySelector('meta[name="theme-color"]').content = "#f4f6f9";
         }
@@ -41,18 +41,18 @@ const canonicalUrl = Astro.site ? new URL(Astro.url.pathname, Astro.site) : null
     </script>
     {canonicalUrl && <link rel="canonical" href={canonicalUrl} />}
     <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="Rove Code" />
+    <meta property="og:site_name" content="Paperplane" />
     {canonicalUrl && <meta property="og:url" content={canonicalUrl} />}
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     {socialImageUrl && <meta property="og:image" content={socialImageUrl} />}
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content="Rove Code. Your agents. Your machines. One workspace." />
+    <meta property="og:image:alt" content="Paperplane. Your agents. Your machines. One workspace." />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
-    <meta name="twitter:image:alt" content="Rove Code. Your agents. Your machines. One workspace." />
+    <meta name="twitter:image:alt" content="Paperplane. Your agents. Your machines. One workspace." />
     {socialImageUrl && <meta name="twitter:image" content={socialImageUrl} />}
     <link rel="preload" href={displayFontUrl} as="font" type="font/woff2" crossorigin="anonymous" />
     <link rel="icon" href="/favicon.ico" sizes="48x48" />
@@ -66,9 +66,9 @@ const canonicalUrl = Astro.site ? new URL(Astro.url.pathname, Astro.site) : null
     <div class:list={["page", pageClass]}>
       <header class="site-header">
         <div class="container header-inner">
-          <a href="/" class="brand" aria-label="Rove Code home">
+          <a href="/" class="brand" aria-label="Paperplane home">
             <Image src={appIcon} alt="" width={38} height={38} densities={[1, 2]} loading="eager" />
-            <span>Rove<span class="brand-code"> Code</span></span>
+            <span>Paperplane</span>
           </a>
           <nav aria-label="Main navigation">
             <a class="nav-detail" href="/#workspace">Workspace</a>
@@ -77,7 +77,7 @@ const canonicalUrl = Astro.site ? new URL(Astro.url.pathname, Astro.site) : null
             <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Toggle dark mode" aria-pressed="true" title="Switch to light mode" hidden>
               <span class="theme-disc" aria-hidden="true"></span><span data-theme-label>Dark</span>
             </button>
-            <a class="button nav-get" href="/download" aria-current={Astro.url.pathname === "/download" ? "page" : undefined}>Get Rove Code</a>
+            <a class="button nav-get" href="/download" aria-current={Astro.url.pathname === "/download" ? "page" : undefined}>Get Paperplane</a>
           </nav>
         </div>
       </header>
@@ -88,11 +88,11 @@ const canonicalUrl = Astro.site ? new URL(Astro.url.pathname, Astro.site) : null
         <div class="container">
           <div class="footer-top">
             <div>
-              <a href="/" class="brand footer-wordmark">Rove Code</a>
+              <a href="/" class="brand footer-wordmark">Paperplane</a>
               <p>Your agents. Your machines. Your call.</p>
             </div>
             <nav aria-label="Footer navigation">
-              <a href="/download">Get Rove Code</a>
+              <a href="/download">Get Paperplane</a>
               <a href={USER_GUIDE_URL}>Documentation</a>
               <a href={GITHUB_REPOSITORY_URL}>Source code</a>
               <a href={MOBILE_SOURCE_GUIDE_URL}>Build for mobile</a>
@@ -126,13 +126,13 @@ const canonicalUrl = Astro.site ? new URL(Astro.url.pathname, Astro.site) : null
         const theme = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
         applyTheme(theme);
         try {
-          localStorage.setItem("rove-marketing-theme", theme);
+          localStorage.setItem("paperplane-marketing-theme", theme);
         } catch {
           // The toggle still works for this page when persistence is blocked.
         }
       });
       window.addEventListener("storage", (event) => {
-        if (event.key === "rove-marketing-theme" || event.key === null) {
+        if (event.key === "paperplane-marketing-theme" || event.key === null) {
           applyTheme(event.newValue === "light" ? "light" : "dark");
         }
       });
@@ -147,7 +147,6 @@ const canonicalUrl = Astro.site ? new URL(Astro.url.pathname, Astro.site) : null
   .header-inner { display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; }
   .brand { display: inline-flex; align-items: center; gap: .7rem; font-family: var(--font-display); font-weight: 600; font-size: 1.35rem; letter-spacing: -.025em; text-decoration: none; white-space: nowrap; }
   .brand img { border-radius: 10px; }
-  .brand-code { font-weight: 500; }
   .header-inner nav { display: flex; align-items: center; gap: 1.75rem; }
   .theme-toggle { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; min-width: 80px; min-height: 42px; padding: .5rem .7rem; border: 1px solid var(--border); border-radius: 8px; background: transparent; color: var(--fg-muted); font-size: .8rem; cursor: pointer; }
   .theme-toggle:hover { background: var(--bg-elev); color: var(--fg); }
@@ -176,7 +175,6 @@ const canonicalUrl = Astro.site ? new URL(Astro.url.pathname, Astro.site) : null
     .site-footer { padding-top: 3rem; }
   }
   @media (max-width: 520px) {
-    .brand-code { display: none; }
     .header-inner { gap: .75rem; }
     .theme-toggle { min-width: 42px; width: 42px; }
     [data-theme-label] { display: none; }

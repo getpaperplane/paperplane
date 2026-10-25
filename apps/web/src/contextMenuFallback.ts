@@ -1,4 +1,4 @@
-import type { ContextMenuItem } from "@rove-code/contracts";
+import type { ContextMenuItem } from "@getpaperplane/contracts";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 

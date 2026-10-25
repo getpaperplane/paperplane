@@ -1,4 +1,4 @@
-import * as HostProcess from "@rove-code/shared/HostProcess";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 import type { InteractionUpdate, RunResult } from "@cursor/sdk";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import {
@@ -7,7 +7,7 @@ import {
   ThreadId,
   type ModelSelection,
   type ProviderReplayTranscript,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
@@ -15,20 +15,20 @@ import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as Schema from "effect/Schema";
 
-import * as TestProviderHost from "@rove-code/provider-testing/TestProviderHost";
-import * as IdAllocator from "@rove-code/provider-core/server/IdAllocator";
-import { ProviderAdapterDriverCreateError } from "@rove-code/provider-core/server/adapterDriver";
+import * as TestProviderHost from "@getpaperplane/provider-testing/TestProviderHost";
+import * as IdAllocator from "@getpaperplane/provider-core/server/IdAllocator";
+import { ProviderAdapterDriverCreateError } from "@getpaperplane/provider-core/server/adapterDriver";
 import * as ProviderAdapterRegistry from "../ProviderAdapterRegistry.ts";
 import type { OrchestratorV2ProviderReplayHarness } from "../testkit/ProviderReplayHarness.ts";
-import { CursorAdapterV2Driver } from "@rove-code/provider-cursor/server";
-import * as CursorAgentSdk from "@rove-code/provider-cursor/server/CursorAgentSdk";
+import { CursorAdapterV2Driver } from "@getpaperplane/provider-cursor/server";
+import * as CursorAgentSdk from "@getpaperplane/provider-cursor/server/CursorAgentSdk";
 import {
   CURSOR_DEFAULT_INSTANCE_ID,
   CURSOR_DRIVER_KIND,
   cursorSdkModelSelection,
   makeCursorAgentOptions,
-} from "@rove-code/provider-cursor/testing";
-import type * as ProviderAdapter from "@rove-code/provider-core/server/ProviderAdapter";
+} from "@getpaperplane/provider-cursor/testing";
+import type * as ProviderAdapter from "@getpaperplane/provider-core/server/ProviderAdapter";
 import type { RuntimePolicyV2Override } from "../RuntimePolicy.ts";
 
 const CursorAgentSdkReplayTranscript = Schema.Struct({
@@ -522,7 +522,7 @@ export function layer(
     HostProcess.Environment,
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
-      const home = yield* fs.makeTempDirectoryScoped({ prefix: "rove-cursor-replay-home-" });
+      const home = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-cursor-replay-home-" });
       return { HOME: home };
     }).pipe(Effect.orDie),
   ).pipe(Layer.provide(NodeServices.layer));

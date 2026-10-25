@@ -1,6 +1,6 @@
-import { formatProviderSkillDisplayName } from "@rove-code/shared/inlineSkills";
+import { formatProviderSkillDisplayName } from "@getpaperplane/shared/inlineSkills";
 import { Children, cloneElement, isValidElement, type ReactNode } from "react";
-import { matchInlineSkills, type InlineSkill } from "@rove-code/shared/inlineSkills";
+import { matchInlineSkills, type InlineSkill } from "@getpaperplane/shared/inlineSkills";
 
 import { SKILL_CHIP_ICON_SVG } from "../composerInlineChip";
 import { ContextChip, ContextChipLabel } from "../ContextChip";

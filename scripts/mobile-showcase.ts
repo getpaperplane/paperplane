@@ -33,17 +33,17 @@ import * as RuntimePredicate from "effect/Predicate";
 
 const REPO_ROOT = NodePath.resolve(NodePath.dirname(NodeURL.fileURLToPath(import.meta.url)), "..");
 const MOBILE_ROOT = NodePath.join(REPO_ROOT, "apps/mobile");
-const ANDROID_PACKAGE = "dev.rove.app";
-const APP_SCHEME = "rove";
+const ANDROID_PACKAGE = "io.github.getpaperplane.paperplane";
+const APP_SCHEME = "paperplane";
 // expo-dev-launcher reads these off the manifest URL and updates the dev menu
 // preferences before the app loads, keeping captures free of dev chrome.
 const DEV_CLIENT_LAUNCH_FLAGS = "disableOnboarding=1&disableFab=1&disableAutoLaunch=1";
-const IOS_READY_FILENAME = "RoveShowcaseReadyScene";
+const IOS_READY_FILENAME = "PaperplaneShowcaseReadyScene";
 const SERVER_HOST = "0.0.0.0";
 const IOS_SIMULATOR_ARCH = NodeProcess.arch === "arm64" ? "arm64" : "x86_64";
 const IOS_APP_PATH = NodePath.join(
   MOBILE_ROOT,
-  ".showcase/ios-derived-data/Build/Products/Debug-iphonesimulator/Rove Code.app",
+  ".showcase/ios-derived-data/Build/Products/Debug-iphonesimulator/Paperplane.app",
 );
 const ANDROID_APK_PATH = NodePath.join(
   MOBILE_ROOT,
@@ -68,7 +68,7 @@ const MOBILE_BUILD_ENV = {
   EXPO_NO_GIT_STATUS: "1",
   // Lets the capture build require full screen on iPad so the app can rotate
   // itself to landscape (see app.config.ts).
-  ROVE_SHOWCASE_CAPTURE_BUILD: "1",
+  PAPERPLANE_SHOWCASE_CAPTURE_BUILD: "1",
   JAVA_HOME:
     NodeProcess.env.JAVA_HOME ??
     (NodeProcess.platform === "darwin"
@@ -417,7 +417,7 @@ function printUsage(config: ShowcaseConfig): void {
   NodeProcess.stdout.write(`App screenshot showcase
 
 Usage:
-  pnpm --filter @rove-code/mobile screenshots [options]
+  pnpm --filter @getpaperplane/mobile screenshots [options]
 
 Options:
   --platform ios|android|all  Capture one platform (repeatable)
@@ -708,9 +708,9 @@ async function buildIos(): Promise<string> {
     "xcodebuild",
     [
       "-workspace",
-      NodePath.join(MOBILE_ROOT, "ios/Rove Code.xcworkspace"),
+      NodePath.join(MOBILE_ROOT, "ios/Paperplane.xcworkspace"),
       "-scheme",
-      "Rove Code",
+      "Paperplane",
       "-configuration",
       "Debug",
       "-sdk",
@@ -1041,7 +1041,7 @@ async function presentIosLockScreen(udid: string): Promise<void> {
  * pressing on a lit lock screen would unlock the device instead.
  */
 async function wakeIosLockScreen(udid: string): Promise<void> {
-  const probe = NodePath.join(NodeOS.tmpdir(), `rove-showcase-wake-${udid}.png`);
+  const probe = NodePath.join(NodeOS.tmpdir(), `paperplane-showcase-wake-${udid}.png`);
   try {
     for (let attempt = 0; attempt < 5; attempt += 1) {
       await delay(2_000);
@@ -1117,7 +1117,7 @@ async function captureIos(
   const metroUrl = `http://${metroHost}:${config.metroPort}?${DEV_CLIENT_LAUNCH_FLAGS}`;
   const scenePath = NodePath.join(
     await iosAppContainer(simulator.udid),
-    "Library/Caches/RoveShowcaseScene",
+    "Library/Caches/PaperplaneShowcaseScene",
   );
   const readyPath = NodePath.join(
     await iosAppContainer(simulator.udid),
@@ -1332,7 +1332,7 @@ async function waitForAndroidShowcaseScene(
       "run-as",
       ANDROID_PACKAGE,
       "cat",
-      "files/rove-showcase-ready",
+      "files/paperplane-showcase-ready",
     ]).catch(() => "");
     if (readyScene.trim() === scene) return;
     await delay(500);
@@ -1343,7 +1343,7 @@ async function waitForAndroidShowcaseScene(
 async function writeAndroidShowcaseScene(serial: string, scene: ShowcaseScene): Promise<void> {
   await runAdb(serial, [
     "shell",
-    `run-as ${ANDROID_PACKAGE} sh -c 'mkdir -p files && rm -f files/rove-showcase-ready && printf %s ${scene} > files/rove-showcase-scene'`,
+    `run-as ${ANDROID_PACKAGE} sh -c 'mkdir -p files && rm -f files/paperplane-showcase-ready && printf %s ${scene} > files/paperplane-showcase-scene'`,
   ]);
 }
 
@@ -1518,7 +1518,7 @@ async function main(): Promise<void> {
   }
 
   const showcaseRootDir = await NodeFSP.mkdtemp(
-    NodePath.join(NodeOS.tmpdir(), "rove-mobile-showcase-"),
+    NodePath.join(NodeOS.tmpdir(), "paperplane-mobile-showcase-"),
   );
   const showcaseServers: NodeChildProcess.ChildProcess[] = [];
   const showcaseEnvironments: Array<{

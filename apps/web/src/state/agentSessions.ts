@@ -1,8 +1,8 @@
-import { WS_METHODS } from "@rove-code/contracts";
+import { WS_METHODS } from "@getpaperplane/contracts";
 import {
   createEnvironmentRpcCommand,
   createEnvironmentRpcQueryAtomFamily,
-} from "@rove-code/client-runtime/state/runtime";
+} from "@getpaperplane/client-runtime/state/runtime";
 
 import { connectionAtomRuntime } from "../connection/runtime";
 

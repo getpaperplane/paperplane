@@ -1,4 +1,4 @@
-import type { VcsListRefsResult } from "@rove-code/contracts";
+import type { VcsListRefsResult } from "@getpaperplane/contracts";
 import * as Option from "effect/Option";
 import { AsyncResult } from "effect/reactivity";
 

@@ -1,6 +1,6 @@
 import { useAtomValue } from "@effect/atom-react";
 
-import type { EnvironmentId, ReviewDiffPreviewSource, ThreadId } from "@rove-code/contracts";
+import type { EnvironmentId, ReviewDiffPreviewSource, ThreadId } from "@getpaperplane/contracts";
 import { Atom } from "effect/reactivity";
 
 import { scopedThreadKey } from "../../lib/scopedEntities";

@@ -1,4 +1,4 @@
-import { EnvironmentId } from "@rove-code/contracts";
+import { EnvironmentId } from "@getpaperplane/contracts";
 import { assert, it } from "@effect/vitest";
 
 import type { ConnectedEnvironmentSummary } from "../../state/remote-runtime-types";
@@ -35,7 +35,7 @@ it("presents showcase transports as remote endpoints", () => {
     environments.map(({ displayUrl }) => displayUrl),
     [
       "https://moonbase.tail9f3a.ts.net/",
-      "https://rove.hafiezulzikry.com/",
+      "https://paperplane.hafiezulzikry.com/",
       "http://100.82.16.5:3773/",
     ],
   );

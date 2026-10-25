@@ -1,4 +1,4 @@
-import { createEnvironmentCatalogAtoms } from "@rove-code/client-runtime/state/connections";
+import { createEnvironmentCatalogAtoms } from "@getpaperplane/client-runtime/state/connections";
 
 import { connectionAtomRuntime } from "./runtime";
 

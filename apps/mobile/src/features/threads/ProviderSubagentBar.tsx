@@ -1,8 +1,8 @@
 import {
   formatProviderSubagentStatus,
   type ProviderSubagentStatus,
-} from "@rove-code/client-runtime/state/thread-execution";
-import { isOrchestrationV2WorkActive } from "@rove-code/contracts";
+} from "@getpaperplane/client-runtime/state/thread-execution";
+import { isOrchestrationV2WorkActive } from "@getpaperplane/contracts";
 import { View } from "react-native";
 
 import { AppText as Text } from "../../components/ui/AppText";
@@ -47,7 +47,10 @@ export function ProviderSubagentBar(props: {
               size={16}
             />
           ) : null}
-          <Text numberOfLines={1} className="min-w-0 shrink font-rove-bold text-sm text-foreground">
+          <Text
+            numberOfLines={1}
+            className="min-w-0 shrink font-paperplane-bold text-sm text-foreground"
+          >
             {props.modelLabel}
           </Text>
           {props.effortLabel === null ? null : (

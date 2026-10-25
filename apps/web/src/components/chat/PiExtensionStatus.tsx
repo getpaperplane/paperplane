@@ -1,4 +1,4 @@
-import type { EnvironmentId, ThreadId } from "@rove-code/contracts";
+import type { EnvironmentId, ThreadId } from "@getpaperplane/contracts";
 import { PuzzleIcon } from "lucide-react";
 
 import { cn } from "../../lib/utils";

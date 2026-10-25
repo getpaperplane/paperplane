@@ -1,9 +1,9 @@
-import type { ClientSettings } from "@rove-code/contracts/settings";
-import type { AssistantCitation, ResolvedKeybindingsConfig } from "@rove-code/contracts";
+import type { ClientSettings } from "@getpaperplane/contracts/settings";
+import type { AssistantCitation, ResolvedKeybindingsConfig } from "@getpaperplane/contracts";
 import {
   serializeAssistantCitation,
   withAssistantCitationComment,
-} from "@rove-code/shared/assistantCitations";
+} from "@getpaperplane/shared/assistantCitations";
 import {
   splitPromptIntoComposerSegments,
   type ComposerPromptSegment,

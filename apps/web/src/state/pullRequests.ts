@@ -1,10 +1,10 @@
 import { useAtomValue } from "@effect/atom-react";
-import { sourceControlClients } from "@rove-code/client-runtime/source-control-clients";
+import { sourceControlClients } from "@getpaperplane/client-runtime/source-control-clients";
 import {
   createLinkedPullRequestSummaryAtomFamily,
   createPullRequestEnvironmentAtoms,
   createPullRequestStackAtomFamily,
-} from "@rove-code/client-runtime/state/pull-requests";
+} from "@getpaperplane/client-runtime/state/pull-requests";
 import type {
   EnvironmentId,
   ProjectId,
@@ -14,11 +14,11 @@ import type {
   PullRequestRef,
   PullRequestSummary,
   ThreadPullRequestLink,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   threadPullRequestKeyOf,
   visibleThreadPullRequests,
-} from "@rove-code/shared/threadPullRequests";
+} from "@getpaperplane/shared/threadPullRequests";
 import * as Option from "effect/Option";
 import { AsyncResult, Atom } from "effect/reactivity";
 import { useCallback, useLayoutEffect, useMemo } from "react";

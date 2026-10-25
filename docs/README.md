@@ -1,10 +1,10 @@
-# Rove Code documentation
+# Paperplane documentation
 
-Rove Code is an independent fork of an upstream coding-agent control surface. The CLI is `rove`, and installed applications store state under `~/.rove-code` by default. Internal names such as the `@rove-code/*` npm scope and compatibility-sensitive files such as `rove.json` remain until a migration has a clear user benefit.
+Paperplane is an independent fork of an upstream coding-agent control surface. The CLI is `paperplane`, and installed applications store state under `~/.paperplane` by default. Workspace packages use the `@getpaperplane/*` npm scope. Checked-in project configuration lives in `paperplane.json`; rename any existing `rove.json` to apply it.
 
 ## Using the application
 
-- [Install Rove Code](./user/install.md)
+- [Install Paperplane](./user/install.md)
 - [Messages and context](./user/composer.md)
 - [Working with threads](./user/thread-sidebar.md)
 - [Permission modes](./user/permission-modes.md)
@@ -16,7 +16,7 @@ Rove Code is an independent fork of an upstream coding-agent control surface. Th
 - [SnapShots](./user/snap-shot.md)
 - [Visual replies](./user/html-renders.md)
 - [Import browser sessions](./user/browser-import.md)
-- [Use Rove Code as your default browser](./user/default-browser.md)
+- [Use Paperplane as your default browser](./user/default-browser.md)
 - [Devices](./user/devices.md)
 - [Computer use](./user/computer-use.md)
 - [Usage and limits](./user/usage.md)
@@ -24,12 +24,12 @@ Rove Code is an independent fork of an upstream coding-agent control surface. Th
 - [Remote access](./user/remote-access.md)
 - [Outside agents (MCP)](./user/outside-agents.md)
 - [Running in the background](./user/background-service.md)
-- [Updating Rove Code](./user/updating.md)
+- [Updating Paperplane](./user/updating.md)
 - Provider guides: [Codex](./user/providers-codex.md) · [Claude](./user/providers-claude.md) · [OpenCode](./user/providers-opencode.md) · [Antigravity](./user/providers-antigravity.md) · [Pi](./user/providers-pi.md) · [Muse Code](./user/providers-muse.md)
 
 ---
 
-## Working on Rove Code
+## Working on Paperplane
 
 Start with the [development runbook](./operations/development.md) and
 [contribution policy](../CONTRIBUTING.md).
@@ -50,7 +50,7 @@ source alone does not explain. Most code changes do not need an internal documen
 - [Resource telemetry](./internals/resource-telemetry.md)
 - [Product analytics](./internals/product-analytics.md)
 - [Environment auth](./internals/environment-auth.md)
-- [Rove Connect](./internals/rove-connect.md)
+- [Paperplane Connect](./internals/paperplane-connect.md)
 - [Assistant citations](./internals/assistant-citations.md)
 - [Mobile navigation](./internals/mobile-navigation.md)
 - [Mobile development lifecycle](./internals/mobile-development.md)
@@ -62,7 +62,7 @@ source alone does not explain. Most code changes do not need an internal documen
 
 - [Development and local builds](./operations/development.md)
 - [Deploy the browser app on Cloudflare](./operations/cloudflare-web.md)
-- [Rove Connect setup](./operations/connect-setup.md)
+- [Paperplane Connect setup](./operations/connect-setup.md)
 - [Release](./operations/release.md)
 - [Observability](./operations/observability.md)
 - [Relay observability](./operations/relay-observability.md)

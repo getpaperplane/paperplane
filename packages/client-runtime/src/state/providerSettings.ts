@@ -12,8 +12,8 @@
  *
  * @module state/providerSettings
  */
-import type { ProviderInstanceId, UnifiedSettings } from "@rove-code/contracts";
-import { PiSettings } from "@rove-code/contracts";
+import type { ProviderInstanceId, UnifiedSettings } from "@getpaperplane/contracts";
+import { PiSettings } from "@getpaperplane/contracts";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 

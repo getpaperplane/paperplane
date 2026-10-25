@@ -1,4 +1,4 @@
-import { EnvironmentId, WS_METHODS } from "@rove-code/contracts";
+import { EnvironmentId, WS_METHODS } from "@getpaperplane/contracts";
 import { describe, expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 

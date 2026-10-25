@@ -1,6 +1,6 @@
-import { SourceControlProviderKind } from "@rove-code/contracts";
+import { SourceControlProviderKind } from "@getpaperplane/contracts";
 import { limitRecoveryCommand } from "./UsageLimitRecoveryWorker.ts";
-import * as McpProviderSessions from "@rove-code/provider-core/server/McpProviderSessions";
+import * as McpProviderSessions from "@getpaperplane/provider-core/server/McpProviderSessions";
 import * as SourceControlProviderRegistry from "../sourceControl/SourceControlProviderRegistry.ts";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { assert, it } from "@effect/vitest";
@@ -28,7 +28,7 @@ import {
   ProviderTurnId,
   RunId,
   ThreadId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import * as DateTime from "effect/DateTime";
 import * as Deferred from "effect/Deferred";
@@ -52,7 +52,7 @@ import * as ProjectService from "../project/ProjectService.ts";
 import * as ServerSettings from "../serverSettings.ts";
 import * as McpSessionRegistryTestkit from "../mcp/McpSessionRegistry.testkit.ts";
 import * as ProviderInstanceRegistry from "../provider/ProviderInstanceRegistry.ts";
-import type { ProviderInstance } from "@rove-code/provider-core/server/driver";
+import type { ProviderInstance } from "@getpaperplane/provider-core/server/driver";
 import * as VcsDriverRegistry from "../vcs/VcsDriverRegistry.ts";
 import * as VcsProcess from "../vcs/VcsProcess.ts";
 import * as WorkspacePaths from "../workspace/WorkspacePaths.ts";
@@ -66,7 +66,7 @@ import * as ProviderRuntimeRecoveryService from "./ProviderRuntimeRecoveryServic
 import * as ProjectionMaintenance from "./ProjectionMaintenance.ts";
 import * as ProjectionStore from "./ProjectionStore.ts";
 import * as PullRequestWatchReactor from "./PullRequestWatchReactor.ts";
-import { PullRequestProviderError } from "@rove-code/source-control-core/server/PullRequestProvider";
+import { PullRequestProviderError } from "@getpaperplane/source-control-core/server/PullRequestProvider";
 import * as PullRequestService from "../pullRequest/PullRequestService.ts";
 import * as ProjectStore from "./ProjectStore.ts";
 import * as ProviderSessionManager from "./ProviderSessionManager.ts";
@@ -75,7 +75,7 @@ import { shellStreamItemFromThreadShell } from "./ShellStream.ts";
 import { CodexProviderCapabilitiesV2 } from "./Adapters/CodexAdapterV2.ts";
 import * as ThreadManagementService from "./ThreadManagementService.ts";
 import * as ThreadCommandExecutor from "./ThreadCommandExecutor.ts";
-import type * as ProviderAdapter from "@rove-code/provider-core/server/ProviderAdapter";
+import type * as ProviderAdapter from "@getpaperplane/provider-core/server/ProviderAdapter";
 
 /** Shell snapshots carry no run chain; these scenarios start a fresh allowance. */
 const asCandidate = <T extends object>(shell: T) => ({ ...shell, limitRecoveryAttempts: 0 });
@@ -88,7 +88,7 @@ const layerPlatformTest = Layer.merge(
 );
 
 const layerServerConfig = ServerConfig.layerTest(process.cwd(), {
-  prefix: "rove-orchestration-v2-runtime-layer-",
+  prefix: "paperplane-orchestration-v2-runtime-layer-",
 });
 
 const modelSelection = {
@@ -553,7 +553,7 @@ it.layer(layerTest)("OrchestrationV2LayerLive", (it) => {
         interactionMode: "default",
         branch: null,
         // Its own path, so other rollback tests keep an isolated worktree.
-        worktreePath: `/tmp/rove-${name}`,
+        worktreePath: `/tmp/paperplane-${name}`,
       });
       yield* orchestrator.dispatch({
         type: "message.dispatch",
@@ -586,7 +586,7 @@ it.layer(layerTest)("OrchestrationV2LayerLive", (it) => {
               parentCheckpointId: null,
               ordinalWithinScope: 0,
               appRunOrdinal: null,
-              ref: CheckpointRef.make(`refs/rove/${name}`),
+              ref: CheckpointRef.make(`refs/paperplane/${name}`),
               status: "ready",
               files: [],
               capturedAt: now,
@@ -738,7 +738,7 @@ it.layer(layerTest)("OrchestrationV2LayerLive", (it) => {
                 parentCheckpointId: null,
                 ordinalWithinScope: 0,
                 appRunOrdinal: null,
-                ref: CheckpointRef.make(`refs/rove/runtime-rollback-${status}`),
+                ref: CheckpointRef.make(`refs/paperplane/runtime-rollback-${status}`),
                 status,
                 files: [],
                 capturedAt: now,
@@ -2096,7 +2096,7 @@ it.layer(layerTest)("OrchestrationV2LayerLive lifecycle", (it) => {
         threadId,
         title: "Renamed lifecycle thread",
         branch: "feature/v2",
-        worktreePath: "/tmp/rove-v2-worktree",
+        worktreePath: "/tmp/paperplane-v2-worktree",
       });
       const staleWorkspaceUpdate = yield* orchestrator
         .dispatch({
@@ -2113,7 +2113,7 @@ it.layer(layerTest)("OrchestrationV2LayerLive lifecycle", (it) => {
       assert.equal(projectionAfterStaleWorkspaceUpdate.thread.branch, "feature/v2");
       assert.equal(
         projectionAfterStaleWorkspaceUpdate.thread.worktreePath,
-        "/tmp/rove-v2-worktree",
+        "/tmp/paperplane-v2-worktree",
       );
       const pullRequestSnapshot = yield* orchestrator.getShellSnapshot();
       const pullRequest = {
@@ -2133,7 +2133,7 @@ it.layer(layerTest)("OrchestrationV2LayerLive lifecycle", (it) => {
           expected: {
             workspaceRoot: "/workspace/project",
             branch: "feature/v2",
-            worktreePath: "/tmp/rove-v2-worktree",
+            worktreePath: "/tmp/paperplane-v2-worktree",
             linkedPullRequest: null,
             branchPullRequest: null,
           },
@@ -2151,7 +2151,7 @@ it.layer(layerTest)("OrchestrationV2LayerLive lifecycle", (it) => {
         expected: {
           workspaceRoot: "/workspace/project",
           branch: "feature/v2",
-          worktreePath: "/tmp/rove-v2-worktree",
+          worktreePath: "/tmp/paperplane-v2-worktree",
           linkedPullRequest: null,
           branchPullRequest: null,
         },
@@ -2171,7 +2171,7 @@ it.layer(layerTest)("OrchestrationV2LayerLive lifecycle", (it) => {
           expected: {
             workspaceRoot: "/workspace/project",
             branch: "feature/v2",
-            worktreePath: "/tmp/rove-v2-worktree",
+            worktreePath: "/tmp/paperplane-v2-worktree",
             linkedPullRequest: null,
             branchPullRequest: null,
           },
@@ -2339,7 +2339,7 @@ it.layer(layerTest)("OrchestrationV2LayerLive lifecycle", (it) => {
       const projection = yield* orchestrator.getThreadProjection(threadId);
       assert.equal(projection.thread.title, "Renamed lifecycle thread");
       assert.equal(projection.thread.branch, "feature/v2");
-      assert.equal(projection.thread.worktreePath, "/tmp/rove-v2-worktree");
+      assert.equal(projection.thread.worktreePath, "/tmp/paperplane-v2-worktree");
       assert.equal(projection.thread.runtimeMode, "approval-required");
       assert.equal(projection.thread.interactionMode, "plan");
       assert.equal(projection.thread.modelSelection.model, "gpt-5.5");
@@ -3593,7 +3593,7 @@ it.layer(layerTest)("OrchestrationV2LayerLive lifecycle", (it) => {
           notification: {
             source: { kind: "system" as const },
             outcome: "updated" as const,
-            summary: "Rove Code restarted and resumed this turn",
+            summary: "Paperplane restarted and resumed this turn",
             detail: "Continue where you left off.",
           },
           attachments: [],
@@ -3615,7 +3615,7 @@ it.layer(layerTest)("OrchestrationV2LayerLive lifecycle", (it) => {
           continuationItems.flatMap((item) =>
             item.type === "notification" ? [[item.summary, item.detail]] : [],
           ),
-          ["Rove Code restarted and resumed this turn", "Continue where you left off."],
+          ["Paperplane restarted and resumed this turn", "Continue where you left off."],
         );
         // A differently identified stale delivery still must not create another run.
         yield* orchestrator.dispatch({
@@ -3709,7 +3709,7 @@ it.layer(layerTest)("OrchestrationV2LayerLive lifecycle", (it) => {
           commandId: CommandId.make(`restart-${status}-${kind}-continuation`),
           threadId,
           messageId: MessageId.make(`restart-${status}-${kind}-continuation`),
-          text: "Note: the Rove server restarted.",
+          text: "Note: the Paperplane server restarted.",
           attachments: [],
           modelSelection,
           dispatchMode: { type: "start_immediately" },

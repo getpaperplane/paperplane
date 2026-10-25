@@ -1,4 +1,4 @@
-import * as HostProcess from "@rove-code/shared/HostProcess";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { assert, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
@@ -44,15 +44,15 @@ const run = Effect.fn("test.run")(function* (
   return { stdout, stderr, exitCode };
 });
 
-/** A tar.gz laid out like build-cli-archive.ts writes, with a stub `rove` that echoes its args. */
+/** A tar.gz laid out like build-cli-archive.ts writes, with a stub `paperplane` that echoes its args. */
 const makeFakeArchives = Effect.fn("test.makeFakeArchives")(function* () {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const root = yield* fs.makeTempDirectoryScoped({ prefix: "rove-npm-packages-test-" });
+  const root = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-npm-packages-test-" });
   const archivesDir = path.join(root, "archives");
   yield* fs.makeDirectory(archivesDir);
   for (const key of KEYS) {
-    const stem = `rove-${VERSION}-${key}`;
+    const stem = `paperplane-${VERSION}-${key}`;
     const stage = path.join(root, "stage", key);
     const contentDir = path.join(stage, stem);
     for (const dir of [
@@ -73,10 +73,10 @@ const makeFakeArchives = Effect.fn("test.makeFakeArchives")(function* () {
     );
     yield* fs.writeFileString(path.join(contentDir, "client/index.html"), "<html></html>\n");
     yield* fs.writeFileString(
-      path.join(contentDir, "rove"),
+      path.join(contentDir, "paperplane"),
       `#!/bin/sh\necho "stub ${key} $*"\nexit 7\n`,
     );
-    yield* fs.chmod(path.join(contentDir, "rove"), 0o755);
+    yield* fs.chmod(path.join(contentDir, "paperplane"), 0o755);
     const exit = yield* run("tar", ["-czf", path.join(archivesDir, `${stem}.tar.gz`), stem], {
       cwd: stage,
     });
@@ -117,23 +117,23 @@ it.layer(NodeServices.layer)("build-npm-platform-packages", (it) => {
       // Platform packages in CLI_ARCHIVE_PLATFORM_KEYS order, launcher last.
       assert.deepStrictEqual(
         outputs.map((output) => output.name),
-        ["@rove-code/cli-darwin-arm64", "@rove-code/cli-linux-x64", "@rove-code/cli"],
+        ["@getpaperplane/cli-darwin-arm64", "@getpaperplane/cli-linux-x64", "@getpaperplane/cli"],
       );
       for (const output of outputs) {
         assert.isTrue(yield* fs.exists(output.tarball), output.tarball);
       }
 
-      const linuxDir = path.join(fixture.outputDir, "@rove-code/cli-linux-x64");
+      const linuxDir = path.join(fixture.outputDir, "@getpaperplane/cli-linux-x64");
       const linuxManifest = yield* decodeManifest(
         yield* fs.readFileString(path.join(linuxDir, "package.json")),
       );
-      assert.equal(linuxManifest.name, "@rove-code/cli-linux-x64");
+      assert.equal(linuxManifest.name, "@getpaperplane/cli-linux-x64");
       assert.equal(linuxManifest.version, VERSION);
       assert.deepStrictEqual(linuxManifest.os, ["linux"]);
       assert.deepStrictEqual(linuxManifest.cpu, ["x64"]);
       assert.deepStrictEqual(linuxManifest.files, [
-        "rove",
-        "rove.exe",
+        "paperplane",
+        "paperplane.exe",
         "client",
         "resource-monitor",
         "node_modules",
@@ -152,45 +152,45 @@ it.layer(NodeServices.layer)("build-npm-platform-packages", (it) => {
       // A root README, or npm would display a bundled dependency's.
       assert.include(
         yield* fs.readFileString(path.join(linuxDir, "README.md")),
-        "# @rove-code/cli-linux-x64",
+        "# @getpaperplane/cli-linux-x64",
       );
       assert.isTrue(yield* fs.exists(path.join(linuxDir, "node_modules/node-pty")));
-      assert.equal(Number((yield* fs.stat(path.join(linuxDir, "rove"))).mode) & 0o111, 0o111);
+      assert.equal(Number((yield* fs.stat(path.join(linuxDir, "paperplane"))).mode) & 0o111, 0o111);
 
       const darwinManifest = yield* decodeManifest(
         yield* fs.readFileString(
-          path.join(fixture.outputDir, "@rove-code/cli-darwin-arm64/package.json"),
+          path.join(fixture.outputDir, "@getpaperplane/cli-darwin-arm64/package.json"),
         ),
       );
       assert.deepStrictEqual(darwinManifest.os, ["darwin"]);
       assert.deepStrictEqual(darwinManifest.cpu, ["arm64"]);
 
-      const launcherDir = path.join(fixture.outputDir, "@rove-code/cli");
+      const launcherDir = path.join(fixture.outputDir, "@getpaperplane/cli");
       const launcherManifest = yield* decodeManifest(
         yield* fs.readFileString(path.join(launcherDir, "package.json")),
       );
-      assert.equal(launcherManifest.name, "@rove-code/cli");
+      assert.equal(launcherManifest.name, "@getpaperplane/cli");
       assert.isUndefined(launcherManifest.private);
       assert.equal(launcherManifest.version, VERSION);
-      assert.deepStrictEqual(launcherManifest.bin, { rove: "./bin/rove.js" });
+      assert.deepStrictEqual(launcherManifest.bin, { paperplane: "./bin/paperplane.js" });
       assert.deepStrictEqual(launcherManifest.files, ["bin"]);
       assert.deepStrictEqual(launcherManifest.optionalDependencies, {
-        "@rove-code/cli-darwin-arm64": VERSION,
-        "@rove-code/cli-linux-x64": VERSION,
+        "@getpaperplane/cli-darwin-arm64": VERSION,
+        "@getpaperplane/cli-linux-x64": VERSION,
       });
       assert.isUndefined(launcherManifest.engines);
-      assert.isTrue(yield* fs.exists(path.join(launcherDir, "bin/rove.js")));
+      assert.isTrue(yield* fs.exists(path.join(launcherDir, "bin/paperplane.js")));
 
       // The scratch dirs must not be left behind next to the packages.
       const outputEntries = yield* fs.readDirectory(fixture.outputDir);
-      assert.deepStrictEqual(outputEntries.sort(), ["@rove-code"]);
+      assert.deepStrictEqual(outputEntries.sort(), ["@getpaperplane"]);
 
       // The tarball is what gets published: it must carry node_modules (which
       // `npm publish <dir>` would strip) under npm's `package/` root, with the
       // executable bit intact.
       const listing = yield* run(
         "tar",
-        ["-tzvf", path.join(fixture.outputDir, "@rove-code/cli-linux-x64.tgz")],
+        ["-tzvf", path.join(fixture.outputDir, "@getpaperplane/cli-linux-x64.tgz")],
         { cwd: fixture.outputDir },
       );
       assert.equal(listing.exitCode, 0, listing.stderr);
@@ -198,7 +198,7 @@ it.layer(NodeServices.layer)("build-npm-platform-packages", (it) => {
       assert.isTrue(lines.some((line) => line.endsWith(" package/node_modules/node-pty/")));
       assert.isTrue(lines.some((line) => line.endsWith(" package/package.json")));
       assert.isTrue(
-        lines.some((line) => /^-rwxr-xr-x .* package\/rove$/.test(line)),
+        lines.some((line) => /^-rwxr-xr-x .* package\/paperplane$/.test(line)),
         listing.stdout,
       );
 
@@ -210,7 +210,7 @@ it.layer(NodeServices.layer)("build-npm-platform-packages", (it) => {
       if (KEYS.some((key) => key === `${hostPlatform}-${hostArch}`)) {
         const passthrough = yield* run(
           process.execPath,
-          ["bin/rove.js", "serve", "--port", "1234"],
+          ["bin/paperplane.js", "serve", "--port", "1234"],
           {
             cwd: launcherDir,
             env,
@@ -223,14 +223,14 @@ it.layer(NodeServices.layer)("build-npm-platform-packages", (it) => {
         assert.equal(passthrough.exitCode, 7);
       }
 
-      const unsupported = yield* run(process.execPath, ["bin/rove.js", "--version"], {
+      const unsupported = yield* run(process.execPath, ["bin/paperplane.js", "--version"], {
         cwd: launcherDir,
         env: { ...env, NODE_PATH: path.join(fixture.root, "nowhere") },
       });
       assert.equal(unsupported.exitCode, 1);
       assert.include(unsupported.stderr, "linux-x64");
       assert.include(unsupported.stderr, "win32-arm64");
-      assert.include(unsupported.stderr, "https://github.com/hafiezul/rove/releases");
+      assert.include(unsupported.stderr, "https://github.com/getpaperplane/paperplane/releases");
     }),
   );
 });

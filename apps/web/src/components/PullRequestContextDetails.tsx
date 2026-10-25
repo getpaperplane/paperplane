@@ -1,4 +1,4 @@
-import type { PullRequestContextMetadata } from "@rove-code/contracts";
+import type { PullRequestContextMetadata } from "@getpaperplane/contracts";
 import { ArrowRightIcon } from "lucide-react";
 
 import { cn } from "~/lib/utils";

@@ -1,10 +1,10 @@
-import type { TerminalSessionState } from "@rove-code/client-runtime/state/terminal";
+import type { TerminalSessionState } from "@getpaperplane/client-runtime/state/terminal";
 import {
   AuthTerminalOperateScope,
   type EnvironmentId,
   type TerminalResizeInput,
   type ThreadId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { useEffect } from "react";
 
 import type { TerminalGridSize } from "./terminalUiState";

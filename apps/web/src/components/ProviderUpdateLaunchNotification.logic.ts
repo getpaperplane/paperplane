@@ -6,12 +6,12 @@ import {
   type ProviderDriverKind,
   type ProviderInstanceId,
   type ServerProvider,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   isAtomCommandInterrupted,
   squashAtomCommandFailure,
   type AtomCommandResult,
-} from "@rove-code/client-runtime/state/runtime";
+} from "@getpaperplane/client-runtime/state/runtime";
 
 export type ProviderUpdateCandidate = ServerProvider & {
   readonly versionAdvisory: NonNullable<ServerProvider["versionAdvisory"]> & {

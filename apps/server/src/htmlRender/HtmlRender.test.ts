@@ -1,14 +1,14 @@
 // @effect-diagnostics nodeBuiltinImport:off - plain local servers stand in for LAN services.
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { describe, expect, it } from "@effect/vitest";
-import { ThreadId } from "@rove-code/contracts";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+import { ThreadId } from "@getpaperplane/contracts";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 import {
   HTML_RENDER_MEASURE_FONTS,
   HTML_RENDER_MEASURE_WIDTHS,
   htmlRenderTheme,
-} from "@rove-code/shared/htmlRender";
-import { ROVE_CODE_DARK_THEME_COLORS } from "@rove-code/shared/themePalettes";
+} from "@getpaperplane/shared/htmlRender";
+import { PAPERPLANE_CODE_DARK_THEME_COLORS } from "@getpaperplane/shared/themePalettes";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Base64 from "effect/encoding/Base64";
@@ -27,8 +27,8 @@ import * as HtmlRender from "./HtmlRender.ts";
 import * as PreviewBrowser from "../preview/PreviewBrowser.ts";
 
 // Real-browser tests run only when this names a chrome-headless-shell, for
-// example one Rove installed under <Rove home>/tools/chrome-headless-shell.
-const TEST_BROWSER_ENV = "ROVE_TEST_HEADLESS_SHELL";
+// example one Paperplane installed under <Paperplane home>/tools/chrome-headless-shell.
+const TEST_BROWSER_ENV = "PAPERPLANE_TEST_HEADLESS_SHELL";
 
 const layerHtmlRender = (
   executable?: string,
@@ -49,7 +49,9 @@ const layerHtmlRender = (
         }),
       ),
     ),
-    Layer.provideMerge(ServerConfig.layerTest(process.cwd(), { prefix: "rove-html-render-" })),
+    Layer.provideMerge(
+      ServerConfig.layerTest(process.cwd(), { prefix: "paperplane-html-render-" }),
+    ),
     Layer.provideMerge(NodeServices.layer),
   );
 const layerTest = layerHtmlRender();
@@ -62,7 +64,9 @@ describe("HtmlRender", () => {
       const fileSystem = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const htmlRender = yield* HtmlRender.HtmlRender;
-      const directory = yield* fileSystem.makeTempDirectoryScoped({ prefix: "rove-html-images-" });
+      const directory = yield* fileSystem.makeTempDirectoryScoped({
+        prefix: "paperplane-html-images-",
+      });
       const png = path.join(directory, "shot.png");
       const svg = path.join(directory, "logo.svg");
       yield* fileSystem.writeFile(png, PNG_BYTES);
@@ -92,8 +96,12 @@ describe("HtmlRender", () => {
       expect(prepared).not.toContain(directory);
       for (const src of kept) expect(prepared).toContain(`<img src="${src}">`);
       // The theme bootstrap opens the head, ahead of the page's own markup.
-      expect(prepared.indexOf("<head>")).toBeLessThan(prepared.indexOf('<style id="rove-theme">'));
-      expect(prepared.indexOf('<style id="rove-theme">')).toBeLessThan(prepared.indexOf("<title>"));
+      expect(prepared.indexOf("<head>")).toBeLessThan(
+        prepared.indexOf('<style id="paperplane-theme">'),
+      );
+      expect(prepared.indexOf('<style id="paperplane-theme">')).toBeLessThan(
+        prepared.indexOf("<title>"),
+      );
     }).pipe(Effect.provide(layerTest)),
   );
 
@@ -102,7 +110,9 @@ describe("HtmlRender", () => {
       const fileSystem = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const htmlRender = yield* HtmlRender.HtmlRender;
-      const directory = yield* fileSystem.makeTempDirectoryScoped({ prefix: "rove-html-images-" });
+      const directory = yield* fileSystem.makeTempDirectoryScoped({
+        prefix: "paperplane-html-images-",
+      });
       const svg = path.join(directory, "styled.svg");
       const source = [
         '<?xml version="1.0"?>',
@@ -123,7 +133,9 @@ describe("HtmlRender", () => {
       const fileSystem = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const htmlRender = yield* HtmlRender.HtmlRender;
-      const directory = yield* fileSystem.makeTempDirectoryScoped({ prefix: "rove-html-images-" });
+      const directory = yield* fileSystem.makeTempDirectoryScoped({
+        prefix: "paperplane-html-images-",
+      });
       const folder = path.join(directory, "folder.png");
       yield* fileSystem.makeDirectory(folder);
       const missing = path.join(directory, "missing.jpg");
@@ -195,7 +207,7 @@ describe("HtmlRender", () => {
       });
       expect(stored?.endsWith(".html")).toBe(true);
       const html = yield* fileSystem.readFileString(stored ?? "");
-      expect(html).toContain('<style id="rove-theme">');
+      expect(html).toContain('<style id="paperplane-theme">');
       expect(html).toContain("<p>Quarterly revenue</p>");
     }).pipe(Effect.provide(layerTest)),
   );
@@ -245,7 +257,7 @@ describe("HtmlRender", () => {
           const preview = yield* htmlRender.preview({
             html: [
               '<!doctype html><html><head></head><body><div id="page" tabindex="0" style="height:300px;background:var(--accent)"></div>',
-              '<img src="/nonexistent/rove-missing.png" hidden>',
+              '<img src="/nonexistent/paperplane-missing.png" hidden>',
               "<script>",
               "const root = getComputedStyle(document.documentElement);",
               'const page = document.getElementById("page"); page.focus();',
@@ -267,7 +279,7 @@ describe("HtmlRender", () => {
             width: 400,
             contentHeight: 300,
             capturedHeight: 300,
-            missingImages: ["/nonexistent/rove-missing.png"],
+            missingImages: ["/nonexistent/paperplane-missing.png"],
           });
           // Headless Chrome prefers light, so a dark background proves the theme fragment applied.
           expect(preview.consoleMessages).toEqual(
@@ -277,7 +289,7 @@ describe("HtmlRender", () => {
               { level: "info", text: HTML_RENDER_MEASURE_FONTS.sans },
               {
                 level: "warning",
-                text: htmlRenderTheme(ROVE_CODE_DARK_THEME_COLORS, "dark").variables[
+                text: htmlRenderTheme(PAPERPLANE_CODE_DARK_THEME_COLORS, "dark").variables[
                   "--background"
                 ],
               },
@@ -304,7 +316,7 @@ describe("HtmlRender", () => {
           const path = yield* Path.Path;
           const htmlRender = yield* HtmlRender.HtmlRender;
           const directory = yield* fileSystem.makeTempDirectoryScoped({
-            prefix: "rove-html-files-",
+            prefix: "paperplane-html-files-",
           });
           const secret = path.join(directory, "secret.js");
           yield* fileSystem.writeFileString(secret, 'window.secret = "abc123";');

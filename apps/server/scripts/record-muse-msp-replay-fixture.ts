@@ -7,7 +7,7 @@
  *
  *   node scripts/record-muse-msp-replay-fixture.ts --scenario simple
  *
- * Uses the machine's own `muse login`. `ROVE_MUSE_BIN` picks the binary. The
+ * Uses the machine's own `muse login`. `PAPERPLANE_MUSE_BIN` picks the binary. The
  * recording replays itself through the fixture's assertions before it is
  * written, so a run that fails them never replaces the existing transcript.
  */
@@ -15,7 +15,7 @@ import * as NodeChildProcess from "node:child_process";
 
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { createUuidV7Mint } from "@muse-code/sdk";
-import type { ProviderReplayEntry, ProviderReplayTranscript } from "@rove-code/contracts";
+import type { ProviderReplayEntry, ProviderReplayTranscript } from "@getpaperplane/contracts";
 import * as Console from "effect/Console";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -33,14 +33,14 @@ import {
   museRecordLabel,
   MuseOrchestratorReplayHarness,
 } from "../src/orchestration-v2/Adapters/MuseAdapterV2.testkit.ts";
-import * as IdAllocator from "@rove-code/provider-core/server/IdAllocator";
+import * as IdAllocator from "@getpaperplane/provider-core/server/IdAllocator";
 import {
   makeMuseEnvironment,
   museLaunch,
   museServeArgs,
   museWorkspaceRoot,
   parseMuseVersion,
-} from "@rove-code/provider-muse/testing";
+} from "@getpaperplane/provider-muse/testing";
 import { provideDeterministicTestRuntime } from "../src/orchestration-v2/testkit/DeterministicRuntime.ts";
 import { ORCHESTRATOR_REPLAY_FIXTURES } from "../src/orchestration-v2/testkit/fixtures/index.ts";
 import { materializeFixtureInput } from "../src/orchestration-v2/testkit/fixtures/shared.ts";
@@ -48,7 +48,7 @@ import { runOrchestratorV2ProviderReplayScenario } from "../src/orchestration-v2
 import {
   checkpointWorkspace,
   makeCheckpointWorkspace,
-} from "@rove-code/provider-testing/replayWorkspace";
+} from "@getpaperplane/provider-testing/replayWorkspace";
 
 const CLOCK_TICK = Duration.millis(20);
 
@@ -67,8 +67,8 @@ if (fixture === undefined || variant === undefined) {
   throw new Error(`Pass --scenario with a fixture that registers Muse: ${names.join(", ")}`);
 }
 
-const museBinary = process.env.ROVE_MUSE_BIN ?? "muse";
-// Started as Rove starts it, so Windows needs no ROVE_MUSE_BIN for Muse's `muse.cmd` launcher.
+const museBinary = process.env.PAPERPLANE_MUSE_BIN ?? "muse";
+// Started as Paperplane starts it, so Windows needs no PAPERPLANE_MUSE_BIN for Muse's `muse.cmd` launcher.
 const museStart = Effect.runSync(museLaunch(museBinary));
 const home = process.env.HOME ?? "";
 
@@ -79,7 +79,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 /**
  * Makes a recording portable: the workspace becomes `<workspace>` and the home
  * directory `~`, in both directions. Ids, timestamps and model output are kept
- * as recorded; they are opaque to Rove and carry no secrets.
+ * as recorded; they are opaque to Paperplane and carry no secrets.
  */
 function normalizeEntries(
   entries: ReadonlyArray<ProviderReplayEntry>,
@@ -150,7 +150,7 @@ function makeRecordingCreateHost(
       entries.push({ type, ...(label === undefined ? {} : { label }), frame });
     };
     record("expect_outbound", { type: "host_start", args });
-    // The binary named by ROVE_MUSE_BIN, so the recorded version matches what ran.
+    // The binary named by PAPERPLANE_MUSE_BIN, so the recorded version matches what ran.
     const child = NodeChildProcess.spawn(museStart.command, [...museStart.args, ...args], {
       cwd: options.cwd,
       env: options.environment ?? makeMuseEnvironment(),

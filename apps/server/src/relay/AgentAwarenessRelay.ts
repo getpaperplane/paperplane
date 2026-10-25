@@ -5,21 +5,21 @@ import type {
   OrchestrationV2TurnItem,
   Project,
   ThreadId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   RelayApi,
   type RelayAgentActivityPublishProofPayload,
   type RelayAgentActivityState,
-} from "@rove-code/contracts/relay";
-import { projectThreadAwarenessV2 } from "@rove-code/shared/agentAwareness";
-import { turnItemUpdateCanEndBackgroundWork } from "@rove-code/shared/orchestrationV2PendingBackgroundWork";
-import { makeDrainableWorker } from "@rove-code/shared/DrainableWorker";
-import { withRelayClientTracing } from "@rove-code/shared/relayTracing";
+} from "@getpaperplane/contracts/relay";
+import { projectThreadAwarenessV2 } from "@getpaperplane/shared/agentAwareness";
+import { turnItemUpdateCanEndBackgroundWork } from "@getpaperplane/shared/orchestrationV2PendingBackgroundWork";
+import { makeDrainableWorker } from "@getpaperplane/shared/DrainableWorker";
+import { withRelayClientTracing } from "@getpaperplane/shared/relayTracing";
 import {
   normalizeRelayIssuer,
   RELAY_ACTIVITY_PUBLISH_TYP,
   signRelayJwt,
-} from "@rove-code/shared/relayJwt";
+} from "@getpaperplane/shared/relayJwt";
 import * as Cause from "effect/Cause";
 import * as Context from "effect/Context";
 import * as Crypto from "effect/Crypto";
@@ -60,7 +60,7 @@ export class AgentAwarenessRelay extends Context.Service<
     readonly requestCatchUp: () => Effect.Effect<void>;
     readonly start: () => Effect.Effect<void, never, Scope.Scope>;
   }
->()("@rove-code/server/relay/AgentAwarenessRelay") {}
+>()("@getpaperplane/server/relay/AgentAwarenessRelay") {}
 
 function eventThreadId(event: OrchestrationV2DomainEvent): ThreadId {
   return event.threadId;
@@ -261,7 +261,7 @@ const makePublishProof = Effect.fn("makePublishProof")(function* (input: {
   const now = yield* DateTime.now;
   const expiresAt = DateTime.add(now, { minutes: 5 });
   const payload = {
-    iss: `rove-env:${input.environmentId}`,
+    iss: `paperplane-env:${input.environmentId}`,
     aud: normalizeRelayIssuer(input.relayIssuer),
     sub: input.environmentId,
     jti: input.jti,
@@ -755,7 +755,7 @@ export const make = Effect.gen(function* () {
   // linked and publishing is enabled. Many environments never link, so while
   // unlinked the retry backs off from 5 s to 60 s. Only this process writes
   // the link, and it calls `requestCatchUp`, which ends the wait early. A
-  // linked environment keeps the 5 s retry, because `rove connect publish` can
+  // linked environment keeps the 5 s retry, because `paperplane connect publish` can
   // turn publishing on from another process.
   const publishActiveThreadsOnceWhenConfigured = (logEnabledWhenReady: boolean) =>
     Effect.gen(function* () {
@@ -809,11 +809,13 @@ export const make = Effect.gen(function* () {
       switch (startupState) {
         case "waiting-for-link":
           yield* Effect.logInfo(
-            "agent activity publishing standby; waiting for Rove Connect link reconciliation",
+            "agent activity publishing standby; waiting for Paperplane Connect link reconciliation",
           );
           break;
         case "disabled":
-          yield* Effect.logInfo("agent activity publishing disabled by Rove Connect configuration");
+          yield* Effect.logInfo(
+            "agent activity publishing disabled by Paperplane Connect configuration",
+          );
           break;
         case "enabled":
           yield* Effect.logInfo("agent activity publishing enabled", {

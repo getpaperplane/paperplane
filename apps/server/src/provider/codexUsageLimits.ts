@@ -11,12 +11,12 @@ import type {
   ServerProviderResetCredits,
   ServerProviderUsageLimits,
   ServerProviderUsageWindow,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as DateTime from "effect/DateTime";
 import * as Option from "effect/Option";
 import type * as CodexErrors from "effect-codex-app-server/errors";
 
-import { clampPercent, makeUsageLimits } from "@rove-code/provider-core/server/usageLimits";
+import { clampPercent, makeUsageLimits } from "@getpaperplane/provider-core/server/usageLimits";
 
 interface CodexRateLimitWindow {
   readonly usedPercent: number;

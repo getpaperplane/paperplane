@@ -1,4 +1,4 @@
-import type { DevicePlatformAvailability } from "@rove-code/contracts";
+import type { DevicePlatformAvailability } from "@getpaperplane/contracts";
 import { Check, Minus } from "lucide-react";
 import { Tooltip, TooltipTrigger, TooltipPopup } from "../ui/tooltip";
 

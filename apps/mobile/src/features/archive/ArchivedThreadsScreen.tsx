@@ -1,14 +1,14 @@
 import type {
   EnvironmentProject,
   EnvironmentThreadShell,
-} from "@rove-code/client-runtime/state/shell";
+} from "@getpaperplane/client-runtime/state/shell";
 import { LegendList } from "@legendapp/list/react-native";
 import {
   AuthOrchestrationOperateScope,
   type EnvironmentId,
   type EnvironmentMachineKind,
   resolveEnvironmentMachineKind,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { useNavigation } from "@react-navigation/native";
 import { AppActivityIndicator } from "../../components/ui/AppActivityIndicator";
 import { AppBar } from "../../components/ui/AppBar";
@@ -153,7 +153,7 @@ function ProjectGroupLabel(props: {
         workspaceRoot={props.project.workspaceRoot}
       />
       <Text
-        className="flex-1 text-xs font-rove-medium tracking-[0.5px] uppercase text-foreground-muted"
+        className="flex-1 text-xs font-paperplane-medium tracking-[0.5px] uppercase text-foreground-muted"
         numberOfLines={1}
       >
         {props.project.title}
@@ -211,7 +211,7 @@ function ArchivedThreadRow(props: {
       <View className="min-w-0 flex-1 gap-1">
         <View className="flex-row items-center gap-2">
           <Text
-            className="min-w-0 flex-1 text-base font-rove-bold leading-snug text-foreground"
+            className="min-w-0 flex-1 text-base font-paperplane-bold leading-snug text-foreground"
             numberOfLines={1}
           >
             {props.thread.title}
@@ -276,12 +276,12 @@ function ArchivedThreadRow(props: {
 function ArchiveError(props: { readonly message: string; readonly onRetry: () => void }) {
   return (
     <View className="rounded-[20px] border border-danger-border bg-danger p-4">
-      <Text className="text-base font-rove-bold text-danger-foreground">
+      <Text className="text-base font-paperplane-bold text-danger-foreground">
         Could not load every archive
       </Text>
       <Text className="mt-1 text-sm text-foreground-muted">{props.message}</Text>
       <Pressable className="mt-3 self-start active:opacity-60" onPress={props.onRetry}>
-        <Text className="text-sm font-rove-bold text-danger-foreground">Try again</Text>
+        <Text className="text-sm font-paperplane-bold text-danger-foreground">Try again</Text>
       </Pressable>
     </View>
   );

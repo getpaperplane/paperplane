@@ -6,11 +6,11 @@ import {
   ProviderInstanceId,
   ThreadId,
   type OrchestrationV2DomainEvent,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
-import * as IdAllocator from "@rove-code/provider-core/server/IdAllocator";
+import * as IdAllocator from "@getpaperplane/provider-core/server/IdAllocator";
 
 const encodeEvent = Schema.encodeSync(OrchestrationV2DomainEventJson);
 const bytes = (event: OrchestrationV2DomainEvent) =>

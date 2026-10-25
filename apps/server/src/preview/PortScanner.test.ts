@@ -5,8 +5,8 @@ import {
   CONFIGURED_LOCAL_SERVER_URLS_MAX_ITEMS,
   PREVIEW_URL_MAX_LENGTH,
   type DiscoveredLocalServer,
-} from "@rove-code/contracts";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+} from "@getpaperplane/contracts";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 import * as Cause from "effect/Cause";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Clock from "effect/Clock";
@@ -76,7 +76,7 @@ const layerTestPortDiscovery = PortScanner.layer.pipe(
 
 const LSOF_TEST_PORT = 43_123;
 
-/** The scanner with `processIds` registered to a Rove terminal, so their listeners get probes. */
+/** The scanner with `processIds` registered to a Paperplane terminal, so their listeners get probes. */
 const ownedScanner = (processIds: ReadonlyArray<number> = [1234]) =>
   Effect.tap(PortScanner.PortDiscovery, (scanner) =>
     scanner.registerTerminalProcesses({
@@ -541,7 +541,7 @@ effectIt.effect("falls back to HTTPS and does not follow redirects while probing
   }).pipe(Effect.provide(layer));
 });
 
-effectIt.effect("probes a port only while Rove terminals own every listener on it", () => {
+effectIt.effect("probes a port only while Paperplane terminals own every listener on it", () => {
   const owned = `p1234\ncnode\nn[::1]:${LSOF_TEST_PORT}\n`;
   const unowned = `p5678\ncrpc\nn127.0.0.1:${LSOF_TEST_PORT}\n`;
   let stdout = unowned;

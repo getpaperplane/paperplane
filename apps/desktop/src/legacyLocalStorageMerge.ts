@@ -10,13 +10,13 @@ interface MergeStorage {
   setItem(key: string, value: string): void;
 }
 
-const PROMPT_STASH_KEY = "rove:prompt-stash:v2";
-const COMPOSER_DRAFTS_KEY = "rove:composer-drafts:v1";
+const PROMPT_STASH_KEY = "paperplane:prompt-stash:v2";
+const COMPOSER_DRAFTS_KEY = "paperplane:composer-drafts:v1";
 const NOT_IMPORTED_KEYS = new Set([
   // Identifies one running install to the server; two apps must not share it.
-  "rove.backgroundActivity.clientId",
+  "paperplane.backgroundActivity.clientId",
   // Resumes a permission setup V1 left mid-flow; V2 would redirect to it on boot.
-  "rove:snap-shot-setup-resume:v1",
+  "paperplane:snap-shot-setup-resume:v1",
 ]);
 /** Matches MAX_STASH_ENTRIES in apps/web/src/promptStashStore.ts. */
 const MAX_STASH_ENTRIES = 20;

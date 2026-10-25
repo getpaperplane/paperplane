@@ -1,5 +1,5 @@
-import { type EnvironmentConnectionPhase } from "@rove-code/client-runtime/connection";
-import { EnvironmentId, ThreadId, type ServerConfig } from "@rove-code/contracts";
+import { type EnvironmentConnectionPhase } from "@getpaperplane/client-runtime/connection";
+import { EnvironmentId, ThreadId, type ServerConfig } from "@getpaperplane/contracts";
 
 export interface EnvironmentRuntimeState {
   readonly connectionState: EnvironmentConnectionPhase;

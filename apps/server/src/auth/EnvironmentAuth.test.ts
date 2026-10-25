@@ -1,9 +1,10 @@
+import * as HttpServerRequest from "effect/http/HttpServerRequest";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import {
   authScopeResponse,
   AuthAdministrativeScopes,
   AuthStandardClientScopes,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -40,7 +41,9 @@ const layerServerConfig = (overrides?: Partial<ServerConfig.ServerConfig["Servic
       } satisfies ServerConfig.ServerConfig["Service"];
     }),
   ).pipe(
-    Layer.provide(ServerConfig.layerTest(process.cwd(), { prefix: "rove-auth-server-test-" })),
+    Layer.provide(
+      ServerConfig.layerTest(process.cwd(), { prefix: "paperplane-auth-server-test-" }),
+    ),
   );
 
 const layerEnvironmentAuth = (overrides?: Partial<ServerConfig.ServerConfig["Service"]>) =>
@@ -51,16 +54,12 @@ const layerEnvironmentAuth = (overrides?: Partial<ServerConfig.ServerConfig["Ser
     Layer.provide(layerServerConfig(overrides)),
   );
 
-const makeCookieRequest = (
-  cookieName: string,
-  sessionToken: string,
-): Parameters<EnvironmentAuth.EnvironmentAuth["Service"]["authenticateHttpRequest"]>[0] =>
-  ({
-    cookies: {
-      [cookieName]: sessionToken,
-    },
-    headers: {},
-  }) as Parameters<EnvironmentAuth.EnvironmentAuth["Service"]["authenticateHttpRequest"]>[0];
+const makeCookieRequest = (cookieName: string, sessionToken: string) =>
+  HttpServerRequest.fromWeb(
+    new Request("http://127.0.0.1/api/auth/session", {
+      headers: { cookie: `${cookieName}=${sessionToken}` },
+    }),
+  );
 
 const makeBearerRequest = (
   token: string,
@@ -104,7 +103,7 @@ it.layer(NodeServices.layer)("EnvironmentAuth.layer", (it) => {
       >[0];
 
       const authenticated = yield* serverAuth.authenticateHttpRequest(request);
-      expect(devExchange.cookieName).toMatch(/^rove_dev_session_/);
+      expect(devExchange.cookieName).toMatch(/^paperplane_dev_session_/);
       expect(devExchange.expireNormalCookie).toBe(true);
       expect(devExchange.response).toMatchObject(authScopeResponse(AuthAdministrativeScopes));
       expect(authenticated.scopes).toEqual(["orchestration:read"]);
@@ -354,7 +353,7 @@ it.layer(NodeServices.layer)("EnvironmentAuth.layer", (it) => {
       const sessions = yield* SessionStore.SessionStore;
       const pairing = yield* serverAuth.issuePairingCredential();
       const browser = yield* serverAuth.createBrowserSession(pairing.credential, requestMetadata);
-      const oldName = sessions.cookieName.replace(/^rove_session/, "t3_session");
+      const oldName = sessions.cookieName.replace(/^paperplane_session/, "rove_session");
       const verified = yield* serverAuth.authenticateHttpRequest(
         makeCookieRequest(oldName, browser.sessionToken),
       );
@@ -372,7 +371,7 @@ it.layer(NodeServices.layer)("EnvironmentAuth.layer", (it) => {
       const sessions = yield* SessionStore.SessionStore;
       const bearer = yield* serverAuth.issueSession();
       const verified = yield* serverAuth.authenticateHttpRequest({
-        cookies: { [sessions.legacyCookieName ?? "rove_session"]: "stale" },
+        cookies: { [sessions.legacyCookieName ?? "paperplane_session"]: "stale" },
         headers: { authorization: `Bearer ${bearer.token}` },
       } as never);
 
@@ -484,7 +483,7 @@ it.layer(NodeServices.layer)("EnvironmentAuth.layer", (it) => {
       const paired = yield* serverAuth.exchangeBootstrapCredentialForAccessToken(
         pairing.credential,
         undefined,
-        { ...requestMetadata, label: "Rove Code Desktop" },
+        { ...requestMetadata, label: "Paperplane Desktop" },
       );
       const first = yield* serverAuth.exchangeBootstrapCredentialForAccessToken(
         "desktop-bootstrap-token",
@@ -662,7 +661,7 @@ it.layer(NodeServices.layer)("EnvironmentAuth.layer", (it) => {
         origin: "https://box.tail1234.ts.net",
         "x-forwarded-host": "box.tail1234.ts.net",
       });
-      yield* upgrade({ origin: "rove://app" });
+      yield* upgrade({ origin: "paperplane://app" });
       yield* upgrade({ origin: "http://localhost:5733" });
       yield* upgrade({});
 

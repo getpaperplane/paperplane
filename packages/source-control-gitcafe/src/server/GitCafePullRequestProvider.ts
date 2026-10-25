@@ -1,19 +1,19 @@
-import { SourceControlProviderKind } from "@rove-code/contracts";
+import { SourceControlProviderKind } from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
-import { randomUuidV4 } from "@rove-code/provider-core/server/randomUuid";
+import { randomUuidV4 } from "@getpaperplane/provider-core/server/randomUuid";
 import {
   NonNegativeInt,
   TrimmedNonEmptyString,
   type PullRequestCapabilities,
   type PullRequestStackHead,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   PullRequestProviderError,
   type ProviderRepositoryRef,
   type PullRequestProviderApi,
-} from "@rove-code/source-control-core/server/PullRequestProvider";
+} from "@getpaperplane/source-control-core/server/PullRequestProvider";
 
 import * as GitCafeApi from "./GitCafeApi.ts";
 import * as GitCafeHosts from "./gitCafeHosts.ts";
@@ -722,7 +722,7 @@ export const make = Effect.gen(function* () {
           return;
         }
         default:
-          return yield* failure(input.action, `GitCafe cannot ${input.action} from Rove Code.`);
+          return yield* failure(input.action, `GitCafe cannot ${input.action} from Paperplane.`);
       }
     }),
     updateChangeRequest: Effect.fn("GitCafePullRequestProvider.updateChangeRequest")(

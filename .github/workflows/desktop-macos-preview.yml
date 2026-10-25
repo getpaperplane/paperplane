@@ -30,7 +30,7 @@ jobs:
   build:
     name: Build preview JS bundle
     # This preview publishes a Developer ID-signed, notarized app.
-    if: vars.ROVE_MACOS_SIGNING_READY == 'true' && github.event.label.name == 'preview:mac'
+    if: vars.PAPERPLANE_MACOS_SIGNING_READY == 'true' && github.event.label.name == 'preview:mac'
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
@@ -63,7 +63,7 @@ jobs:
           run-install: false
 
       - name: Install bundle dependencies
-        run: vp install --filter=@rove-code/server... --filter=@rove-code/web... --filter=@rove-code/desktop... --filter=@rove-code/scripts...
+        run: vp install --filter=@getpaperplane/server... --filter=@getpaperplane/web... --filter=@getpaperplane/desktop... --filter=@getpaperplane/scripts...
 
       # The publish workflow derives the same version from this run's number,
       # so the version baked into the bundle matches the packaged app.
@@ -76,7 +76,7 @@ jobs:
 
           base_version="$(node -p "require('./apps/desktop/package.json').version")"
           node scripts/update-release-package-versions.ts "${base_version}-pr.${PR_NUMBER}.${GITHUB_RUN_NUMBER}"
-          # Public Rove Connect identifiers (Clerk publishable key, relay URL).
+          # Public Paperplane Connect identifiers (Clerk publishable key, relay URL).
           cp .env.example .env
 
       - uses: ./.github/actions/setup-apt-mirrors

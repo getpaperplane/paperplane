@@ -4,7 +4,7 @@ import {
   PREVIEW_VIEWPORT_MIN_DIMENSION,
   type PreviewViewportSetting,
   type PreviewViewportSize,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 
 export interface BrowserViewportLayout {
   readonly canvasWidth: number;

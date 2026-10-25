@@ -2,7 +2,7 @@ import { AppActivityIndicator } from "../../components/ui/AppActivityIndicator";
 import { LegendList, type LegendListRef } from "@legendapp/list/react-native";
 import { useNavigation } from "@react-navigation/native";
 import { use, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ProjectId } from "@rove-code/contracts";
+import { ProjectId } from "@getpaperplane/contracts";
 import { useAtomValue } from "@effect/atom-react";
 import {
   Keyboard,
@@ -330,7 +330,7 @@ export function PullRequestsScreen(
               className="items-center gap-2 px-8 py-4"
             >
               <Text className="text-xs text-foreground-muted">{result.loadMoreError}</Text>
-              <Text className="text-sm font-rove-medium text-link">Try again</Text>
+              <Text className="text-sm font-paperplane-medium text-link">Try again</Text>
             </Pressable>
           ) : undefined
         }

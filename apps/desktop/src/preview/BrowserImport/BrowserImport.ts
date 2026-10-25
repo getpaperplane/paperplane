@@ -1,6 +1,6 @@
 /**
  * Browser import service - lists importable sources and writes their cookies
- * into a Rove Code browser profile's Electron partition.
+ * into a Paperplane browser profile's Electron partition.
  *
  * @module BrowserImport
  */
@@ -9,8 +9,8 @@ import type {
   BrowserImportResult,
   BrowserImportSource,
   BrowserImportUnavailableReason,
-} from "@rove-code/contracts";
-import { BrowserImportFailureReason } from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
+import { BrowserImportFailureReason } from "@getpaperplane/contracts";
 import * as Context from "effect/Context";
 import type { Session } from "electron";
 import * as Effect from "effect/Effect";
@@ -21,7 +21,7 @@ import * as Schema from "effect/Schema";
 import * as Scope from "effect/Scope";
 import { ChildProcessSpawner } from "effect/process";
 
-import * as HostProcess from "@rove-code/shared/HostProcess";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 
 import * as BrowserSession from "../BrowserSession.ts";
 import { ChromiumCookieReadError, readChromiumCookies } from "./ChromiumCookies.ts";
@@ -80,7 +80,7 @@ export class BrowserImport extends Context.Service<
       readonly namespace?: BrowserSession.BrowserSessionPartitionNamespace;
     }) => Effect.Effect<BrowserImportResult, BrowserImportFailedError>;
   }
->()("@rove-code/desktop/preview/BrowserImport/BrowserImport") {}
+>()("@getpaperplane/desktop/preview/BrowserImport/BrowserImport") {}
 
 const unavailableReason = Effect.fn("BrowserImport.unavailableReason")(function* (
   definition: BrowserImportSourceDefinition,

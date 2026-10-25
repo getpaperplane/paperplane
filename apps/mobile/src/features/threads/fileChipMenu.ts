@@ -1,8 +1,8 @@
-import { fileBasename } from "@rove-code/shared/path";
-import type { ThreadId } from "@rove-code/contracts";
+import { fileBasename } from "@getpaperplane/shared/path";
+import type { ThreadId } from "@getpaperplane/contracts";
 import { resolveMarkdownLinkPresentation } from "../../lib/markdownLinks";
 import type { MarkdownFileContextMenu } from "../../native/SelectableMarkdownText.types";
-import { hostPreviewMimeTypeFromExtension } from "@rove-code/shared/filePreview";
+import { hostPreviewMimeTypeFromExtension } from "@getpaperplane/shared/filePreview";
 
 import {
   isAbsolutePath,

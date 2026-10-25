@@ -1,4 +1,4 @@
-import { imageMimeType } from "@rove-code/shared/image";
+import { imageMimeType } from "@getpaperplane/shared/image";
 import type {
   ChatFileAttachment as ContractChatFileAttachment,
   ChatImageAttachment as ContractChatImageAttachment,
@@ -15,17 +15,17 @@ import type {
   RuntimeMode,
   ScheduledTaskId,
   ThreadId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import type {
   EnvironmentProject,
   EnvironmentThreadShell,
   ThreadRunSummary,
   ThreadRuntimeSummary,
-} from "@rove-code/client-runtime/state/shell";
-import type { ThreadCheckpointSummary } from "@rove-code/client-runtime/state/thread-checkpoints";
-import { videoMimeType } from "@rove-code/shared/video";
+} from "@getpaperplane/client-runtime/state/shell";
+import type { ThreadCheckpointSummary } from "@getpaperplane/client-runtime/state/thread-checkpoints";
+import { videoMimeType } from "@getpaperplane/shared/video";
 
-export { videoMimeType } from "@rove-code/shared/video";
+export { videoMimeType } from "@getpaperplane/shared/video";
 
 export type SessionPhase = "disconnected" | "connecting" | "ready" | "running";
 export const DEFAULT_RUNTIME_MODE: RuntimeMode = "full-access";
@@ -91,7 +91,7 @@ export function isBrowserPreviewAttachment(attachment: ChatFileAttachment): bool
 }
 
 export interface ChatMessage {
-  readonly context?: import("@rove-code/contracts").OrchestrationMessageContext | undefined;
+  readonly context?: import("@getpaperplane/contracts").OrchestrationMessageContext | undefined;
   readonly id: MessageId;
   readonly role: "user" | "assistant" | "system";
   readonly text: string;

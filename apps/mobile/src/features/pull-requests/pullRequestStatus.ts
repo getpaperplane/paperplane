@@ -3,7 +3,7 @@ import type {
   PullRequestCheck,
   PullRequestDetail,
   PullRequestListEntry,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import type { AppSymbolName } from "../../components/ui/AppSymbol";
 
 const STATES = {

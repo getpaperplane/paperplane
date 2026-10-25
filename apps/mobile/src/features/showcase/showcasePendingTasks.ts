@@ -1,4 +1,4 @@
-import type { EnvironmentProject } from "@rove-code/client-runtime/state/shell";
+import type { EnvironmentProject } from "@getpaperplane/client-runtime/state/shell";
 import {
   CommandId,
   DEFAULT_PROVIDER_INTERACTION_MODE,
@@ -6,13 +6,13 @@ import {
   MessageId,
   ProviderInstanceId,
   ThreadId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 
 import type { QueuedThreadMessage } from "../../state/thread-outbox-model";
 
 export const SHOWCASE_PENDING_TASK_DEFINITIONS = [
   {
-    projectId: "rove",
+    projectId: "paperplane",
     id: "offline-launch-checklist",
     text: "Ship the offline launch checklist before touchdown ✈️",
     branch: "feat/offline-launchpad",

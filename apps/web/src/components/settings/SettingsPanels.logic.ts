@@ -7,14 +7,14 @@ import type {
   ServerSettings,
   SidebarProjectGroupingMode,
   UnifiedSettings,
-} from "@rove-code/contracts";
-import { DEFAULT_UNIFIED_SETTINGS } from "@rove-code/contracts/settings";
+} from "@getpaperplane/contracts";
+import { DEFAULT_UNIFIED_SETTINGS } from "@getpaperplane/contracts/settings";
 import {
   getBackgroundActivityBaseProfile,
   normalizeBackgroundActivitySettings,
   normalizeServerBackgroundActivitySettings,
   resolveServerBackgroundActivitySettings,
-} from "@rove-code/shared/backgroundActivitySettings";
+} from "@getpaperplane/shared/backgroundActivitySettings";
 import * as Duration from "effect/Duration";
 import * as Equal from "effect/Equal";
 
@@ -30,7 +30,7 @@ export function projectGroupingModeFromToggle(
   return lastEnabledMode === "repository_path" ? "repository_path" : "repository";
 }
 
-const LAST_ENABLED_PROJECT_GROUPING_MODE_KEY = "rove:last-enabled-project-grouping-mode";
+const LAST_ENABLED_PROJECT_GROUPING_MODE_KEY = "paperplane:last-enabled-project-grouping-mode";
 
 export function readLastEnabledProjectGroupingMode(): SidebarProjectGroupingMode {
   try {
@@ -168,7 +168,7 @@ export function getChangedBrowserSettingLabels(settings: BrowserDefaultSettings)
       ? ["Floating preview"]
       : []),
     ...(settings.pullRequestLinksOpenInApp !== DEFAULT_UNIFIED_SETTINGS.pullRequestLinksOpenInApp
-      ? ["Open pull requests in Rove Code"]
+      ? ["Open pull requests in Paperplane"]
       : []),
   ];
 }

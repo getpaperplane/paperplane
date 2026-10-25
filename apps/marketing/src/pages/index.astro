@@ -27,17 +27,17 @@ const providers = [
     <h1 id="hero-title">Your agents. Your machines.<br />One place to work.</h1>
     <p>Run coding agents on your own machines. Review their work and pick it up from desktop, web, or mobile.</p>
     <div class="actions">
-      <a class="button" href="/download">Get Rove Code</a>
+      <a class="button" href="/download">Get Paperplane</a>
       <a class="text-link" href={GITHUB_REPOSITORY_URL}>Explore the source</a>
     </div>
   </section>
 
-  <section class="product container" id="workspace" aria-label="Inside the Rove workspace">
+  <section class="product container" id="workspace" aria-label="Inside the Paperplane workspace">
     <figure>
       <div class="workspace-frame">
         <picture>
           <source media="(max-width: 720px)" srcset={mobileImage.src} width={780} height={1160} />
-          <Image src={workspaceImage} widths={[960, 1536, 2560, 3072]} sizes="(max-width: 1360px) calc(100vw - 80px), 1280px" format="webp" quality={95} loading="eager" fetchpriority="high" alt="A sample agent conversation in the Rove workspace. Captured from the real interface." />
+          <Image src={workspaceImage} widths={[960, 1536, 2560, 3072]} sizes="(max-width: 1360px) calc(100vw - 80px), 1280px" format="webp" quality={95} loading="eager" fetchpriority="high" alt="A sample agent conversation in the Paperplane workspace. Captured from the real interface." />
         </picture>
       </div>
       <figcaption><span>Real interface. Sample project.</span><span class="desktop-caption">Conversation and code review, together.</span><span class="mobile-caption">The web client, on a smaller screen.</span></figcaption>
@@ -47,7 +47,7 @@ const providers = [
   <section class="agents container" id="agents" aria-labelledby="agents-title">
     <div class="agents-heading">
       <h2 id="agents-title">Keep your favorite agents.</h2>
-      <p>Bring your existing subscriptions or API credentials. Rove is the workspace, not another token reseller.</p>
+      <p>Bring your existing subscriptions or API credentials. Paperplane is the workspace, not another token reseller.</p>
     </div>
     <ul class="provider-strip" aria-label="Supported coding agents">
       {providers.map((provider) => (
@@ -57,7 +57,7 @@ const providers = [
         </li>
       ))}
     </ul>
-    <p class="pi-note">Pi runs directly inside Rove. The other providers use their own runtimes.</p>
+    <p class="pi-note">Pi runs directly inside Paperplane. The other providers use their own runtimes.</p>
   </section>
 
   <section class="review-section container" aria-labelledby="review-title">
@@ -71,7 +71,7 @@ const providers = [
       </dl>
     </div>
     <figure class="review-visual">
-      <Image src={reviewImage} widths={[640, 1078]} sizes="(max-width: 720px) calc(100vw - 40px), 600px" format="webp" quality={95} loading="lazy" alt="A close-up of Rove’s working-tree diff, showing file changes and inline code review. Sample project." />
+      <Image src={reviewImage} widths={[640, 1078]} sizes="(max-width: 720px) calc(100vw - 40px), 600px" format="webp" quality={95} loading="lazy" alt="A close-up of Paperplane’s working-tree diff, showing file changes and inline code review. Sample project." />
       <figcaption>Review the work before it leaves your machine.</figcaption>
     </figure>
   </section>
@@ -79,14 +79,14 @@ const providers = [
   <section class="remote-section" id="remote" aria-labelledby="remote-title">
     <div class="container remote-inner">
       <figure class="phone-visual">
-        <div class="phone-frame"><Image src={mobileImage} width={780} height={1160} format="webp" quality={92} loading="lazy" alt="The Rove web client showing the same sample conversation on a phone-sized screen." /></div>
+        <div class="phone-frame"><Image src={mobileImage} width={780} height={1160} format="webp" quality={92} loading="lazy" alt="The Paperplane web client showing the same sample conversation on a phone-sized screen." /></div>
         <figcaption>The web client, on a smaller screen.</figcaption>
       </figure>
       <div class="remote-copy">
         <h2 id="remote-title">Your desk is optional.<br />Your machine isn’t.</h2>
         <p class="section-copy">The host keeps your repositories, agents, and credentials. Connect from another screen without moving your project into someone else’s cloud.</p>
         <div class="remote-options">
-          <article><h3>Desktop</h3><p>A local host is included. Connect remote machines over your network, Tailscale, or desktop SSH.</p><a class="text-link" href="/download">Get Rove Code</a></article>
+          <article><h3>Desktop</h3><p>A local host is included. Connect remote machines over your network, Tailscale, or desktop SSH.</p><a class="text-link" href="/download">Get Paperplane</a></article>
           <article><h3>Web</h3><p>Pair with your own host. The hosted app needs a reachable HTTPS endpoint.</p><a class="text-link" href={WEB_APP_URL}>Open the web app</a></article>
           <article><h3>Mobile</h3><p>iOS and Android dev clients are available from source. No store releases yet.</p><a class="text-link" href={MOBILE_SOURCE_GUIDE_URL}>Build for mobile</a></article>
         </div>
@@ -99,7 +99,7 @@ const providers = [
     <h2 id="ownership-title">A workspace.<br />Not a walled garden.</h2>
     <div class="ownership-body">
       <p>Free to use. MIT licensed. Run your own host, change the interface, or fork the whole app. We started with <a href="https://github.com/pingdotgg/t3code">T3 Code</a> and are building our own path across providers, machines, and screens.</p>
-      <div class="actions"><a class="button" href="/download">Get Rove Code</a><a class="text-link" href={GITHUB_REPOSITORY_URL}>Explore the source</a></div>
+      <div class="actions"><a class="button" href="/download">Get Paperplane</a><a class="text-link" href={GITHUB_REPOSITORY_URL}>Explore the source</a></div>
     </div>
   </section>
 </Layout>

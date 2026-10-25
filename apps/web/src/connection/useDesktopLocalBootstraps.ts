@@ -1,4 +1,4 @@
-import type { DesktopEnvironmentBootstrap } from "@rove-code/contracts";
+import type { DesktopEnvironmentBootstrap } from "@getpaperplane/contracts";
 import { useEffect, useState } from "react";
 
 import {

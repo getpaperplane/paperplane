@@ -6,11 +6,11 @@ import {
   type ScopedThreadRef,
   type ThreadId,
   WS_METHODS,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   normalizeProjectPathForComparison,
   resolveWorkspaceFilePath,
-} from "@rove-code/shared/path";
+} from "@getpaperplane/shared/path";
 import * as Clock from "effect/Clock";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";

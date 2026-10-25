@@ -18,7 +18,7 @@ import {
   type PreviewAutomationSnapshot,
   type PreviewAutomationStatus,
   type PreviewTabId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 
 import {
   parseAttachmentUuid,
@@ -59,7 +59,7 @@ const invoke = Effect.fn("PreviewToolkit.invoke")(function* <A>(
   tabId?: PreviewTabId,
 ): Effect.fn.Return<
   { result: A; toolIcon?: ToolActivityIcon },
-  import("@rove-code/contracts").PreviewAutomationError,
+  import("@getpaperplane/contracts").PreviewAutomationError,
   McpInvocationContext.McpInvocationContext | PreviewAutomationBroker.PreviewAutomationBroker
 > {
   const scope = yield* McpInvocationContext.requireThreadMcpCapability("preview");

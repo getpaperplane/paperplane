@@ -1,6 +1,6 @@
-import type { DesktopBridge } from "@rove-code/contracts";
+import type { DesktopBridge } from "@getpaperplane/contracts";
 
-export const DESKTOP_PASTE_AS_TEXT_EVENT = "rove:paste-as-text";
+export const DESKTOP_PASTE_AS_TEXT_EVENT = "paperplane:paste-as-text";
 
 /** Arm composer paste handling before Electron delivers the native clipboard event. */
 export function installDesktopPasteAsText(

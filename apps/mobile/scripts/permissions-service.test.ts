@@ -6,11 +6,13 @@ import * as NodeOS from "node:os";
 import * as NodePath from "node:path";
 import { expect, it } from "vite-plus/test";
 
-// oxlint-disable-next-line rove/no-global-process-runtime -- This test compiles against the host Foundation framework.
+// oxlint-disable-next-line paperplane/no-global-process-runtime -- This test compiles against the host Foundation framework.
 it.skipIf(NodeOS.platform() !== "darwin")(
   "registers and reads native permissions concurrently without corrupting the registry",
   () => {
-    const directory = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "rove-permissions-test-"));
+    const directory = NodeFS.mkdtempSync(
+      NodePath.join(NodeOS.tmpdir(), "paperplane-permissions-test-"),
+    );
     try {
       const require = NodeModule.createRequire(import.meta.url);
       const core = NodePath.dirname(

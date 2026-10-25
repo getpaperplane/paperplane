@@ -6,7 +6,7 @@ import type {
   ServerTraceDiagnosticsResult,
   ServerTraceDiagnosticsSpanOccurrence,
   ServerTraceDiagnosticsSpanSummary,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -62,7 +62,7 @@ export class TraceDiagnostics extends Context.Service<
       options: TraceDiagnosticsOptions,
     ) => Effect.Effect<ServerTraceDiagnosticsResult>;
   }
->()("@rove-code/server/diagnostics/TraceDiagnostics") {}
+>()("@getpaperplane/server/diagnostics/TraceDiagnostics") {}
 
 interface TraceDiagnosticsErrorSummary {
   readonly kind: ServerTraceDiagnosticsErrorKind;

@@ -9,7 +9,7 @@ import {
   PreviewTabId,
   ProviderInstanceId,
   ThreadId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -70,7 +70,7 @@ const layerTest = McpHttpServer.layerPreviewToolkit.pipe(
   Layer.provideMerge(McpToolAccessTestkit.liveThreadsLayer),
   Layer.provideMerge(PreviewAutomationBroker.layer),
   Layer.provideMerge(
-    ServerConfig.layerTest(process.cwd(), { prefix: "rove-mcp-http-server-test-" }),
+    ServerConfig.layerTest(process.cwd(), { prefix: "paperplane-mcp-http-server-test-" }),
   ),
   Layer.provideMerge(NodeServices.layer),
 );
@@ -386,7 +386,7 @@ it.effect("refuses preview tools to a client outside a thread before they run", 
       );
     expect(click.isError).toBe(true);
     expect(click.content).toEqual([
-      { type: "text", text: expect.stringContaining("needs an agent running inside Rove Code") },
+      { type: "text", text: expect.stringContaining("needs an agent running inside Paperplane") },
     ]);
   }).pipe(Effect.provide(layerTest)),
 );
@@ -545,14 +545,14 @@ it.effect("returns server ARIA refs to agents in text and structured results", (
   Effect.scoped(
     Effect.gen(function* () {
       const accessibilityTree =
-        '- button "delete" [ref=rove-snapshot-e1]\n- iframe [ref=rove-snapshot-e2]:\n  - textbox "child" [ref=rove-snapshot-f1e1]';
+        '- button "delete" [ref=paperplane-snapshot-e1]\n- iframe [ref=paperplane-snapshot-e2]:\n  - textbox "child" [ref=paperplane-snapshot-f1e1]';
       yield* serveSnapshots("mcp-server-refs", { ...snapshotResult, accessibilityTree });
       const result = yield* callSnapshot({ includeImage: false });
       expect(result.isError).toBe(false);
       expect(result.structuredContent).toMatchObject({ accessibilityTree });
       expect(
         result.content.some(
-          (entry) => entry.type === "text" && entry.text.includes("rove-snapshot-f1e1"),
+          (entry) => entry.type === "text" && entry.text.includes("paperplane-snapshot-f1e1"),
         ),
       ).toBe(true);
     }),
@@ -564,13 +564,13 @@ it.effect("bounds large ARIA trees without dropping every server locator", () =>
     Effect.gen(function* () {
       const accessibilityTree = Array.from(
         { length: 2_000 },
-        (_, index) => `- button "删除 ${index}" [ref=rove-snapshot-e${index}]`,
+        (_, index) => `- button "删除 ${index}" [ref=paperplane-snapshot-e${index}]`,
       ).join("\n");
       yield* serveSnapshots("mcp-large-server-refs", { ...snapshotResult, accessibilityTree });
       const result = yield* callSnapshot({ includeImage: false });
       expect(result.isError).toBe(false);
       const metadata = result.structuredContent as { accessibilityTree: string };
-      expect(metadata.accessibilityTree).toContain("[ref=rove-snapshot-e0]");
+      expect(metadata.accessibilityTree).toContain("[ref=paperplane-snapshot-e0]");
       expect(metadata.accessibilityTree.length).toBeLessThan(accessibilityTree.length);
       const body = result.content[1];
       expect(Buffer.byteLength(body?.type === "text" ? body.text : "", "utf8")).toBeLessThanOrEqual(

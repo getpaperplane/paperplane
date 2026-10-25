@@ -1,10 +1,10 @@
 import type {
   OrchestrationV2ThreadProjection,
   OrchestrationV2ThreadStreamItem,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Stream from "effect/Stream";
 
-import { omitLocalVisibleTurnItems } from "@rove-code/shared/orchestrationV2BoundedSnapshot";
+import { omitLocalVisibleTurnItems } from "@getpaperplane/shared/orchestrationV2BoundedSnapshot";
 
 import {
   buildBoundedThreadProjection,

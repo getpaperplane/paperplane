@@ -1,15 +1,15 @@
 import { ProviderInstanceIcon } from "../chat/ProviderInstanceIcon";
-import type { UsageProviderKind } from "@rove-code/contracts";
+import type { UsageProviderKind } from "@getpaperplane/contracts";
 import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
 
-import type { DailyTotals, HourlyTotals } from "@rove-code/shared/usageMerge";
+import type { DailyTotals, HourlyTotals } from "@getpaperplane/shared/usageMerge";
 import {
   formatDayShort,
   formatHourShort,
   formatRelativeHourShort,
   formatTokens,
   formatUsd,
-} from "@rove-code/shared/usageFormat";
+} from "@getpaperplane/shared/usageFormat";
 import { cn } from "~/lib/utils";
 import { PROVIDER_ORDER, PROVIDER_PRESENTATION } from "./usageProviders";
 import { observeResize } from "~/lib/observeResize";

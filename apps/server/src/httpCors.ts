@@ -1,4 +1,4 @@
-import { ORCHESTRATION_PROTOCOL_HEADER } from "@rove-code/contracts";
+import { ORCHESTRATION_PROTOCOL_HEADER } from "@getpaperplane/contracts";
 
 export const browserApiCorsAllowedMethods = ["GET", "POST", "OPTIONS"] as const;
 export const browserApiCorsAllowedHeaders = [
@@ -11,4 +11,4 @@ export const browserApiCorsAllowedHeaders = [
 ] as const;
 
 /** Origins of the Electron renderer, packaged and dev. */
-export const DESKTOP_RENDERER_ORIGINS = ["rove://app", "rove-dev://app"] as const;
+export const DESKTOP_RENDERER_ORIGINS = ["paperplane://app", "paperplane-dev://app"] as const;

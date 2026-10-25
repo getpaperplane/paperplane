@@ -5,7 +5,7 @@ import {
   type PreviewOpenInput,
   type PreviewSessionSnapshot,
   type ScopedThreadRef,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Cause from "effect/Cause";
 import { AsyncResult } from "effect/reactivity";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
@@ -33,7 +33,7 @@ const snapshot: PreviewSessionSnapshot = {
   tabId: "tab-1",
   navStatus: {
     _tag: "Loading",
-    url: "https://rove.hafiezulzikry.com/",
+    url: "https://paperplane.hafiezulzikry.com/",
     title: "",
   },
   canGoBack: false,
@@ -80,18 +80,18 @@ describe("openPreviewSession", () => {
     await openPreviewSession({
       openPreview: ({ input }) => open(input),
       threadRef,
-      url: "rove.hafiezulzikry.com",
+      url: "paperplane.hafiezulzikry.com",
     });
 
     expect(open).toHaveBeenCalledWith({
       threadId: "thread-1",
-      url: "rove.hafiezulzikry.com",
+      url: "paperplane.hafiezulzikry.com",
       viewport: FILL_PREVIEW_VIEWPORT,
       profileId: DEFAULT_BROWSER_PROFILE_ID,
     });
     expect(readThreadPreviewState(threadRef).snapshot).toEqual(snapshot);
     expect(readThreadPreviewState(threadRef).recentlySeenUrls).toEqual([
-      "https://rove.hafiezulzikry.com/",
+      "https://paperplane.hafiezulzikry.com/",
     ]);
   });
 
@@ -101,7 +101,7 @@ describe("openPreviewSession", () => {
     const result = await openPreviewSession({
       openPreview: async () => AsyncResult.failure(Cause.fail(failure)),
       threadRef,
-      url: "rove.hafiezulzikry.com",
+      url: "paperplane.hafiezulzikry.com",
     });
 
     expect(result._tag).toBe("Failure");
@@ -122,7 +122,7 @@ describe("openPreviewSession", () => {
         browserProfiles: [{ id: "work", name: "Work", kind: "persistent" }],
       });
       const openPreview = vi.fn(async () => AsyncResult.success(snapshot));
-      const input = { openPreview, threadRef, url: "https://rove.hafiezulzikry.com/" };
+      const input = { openPreview, threadRef, url: "https://paperplane.hafiezulzikry.com/" };
       const open = entryPoint === "session" ? openPreviewSession : openUrlInPreview;
 
       const result = await open(input);

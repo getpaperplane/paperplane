@@ -55,7 +55,7 @@
 //     (server.log: 13773 primary, 13774 wsl).
 //   - Per-instance log files: server-child.log + server-child-wsl_Ubuntu.log.
 //   - Distinct environment ids reported by each backend's
-//     /.well-known/rove/environment (Windows vs Linux platform).
+//     /.well-known/paperplane/environment (Windows vs Linux platform).
 //   - Renderer completes the bearer-token bootstrap against the WSL
 //     backend (POST /api/auth/bootstrap/bearer 200), obtains a
 //     ws-token (POST /api/auth/ws-token 200), and holds an
@@ -171,7 +171,7 @@ export class DesktopBackendPool extends Context.Service<
       id: BackendInstanceId,
     ) => Effect.Effect<void, DesktopBackendPoolCannotUnregisterPrimaryError>;
   }
->()("@rove-code/desktop/backend/DesktopBackendPool") {}
+>()("@getpaperplane/desktop/backend/DesktopBackendPool") {}
 
 // Services required by makeBackendInstance — exported so caller
 // orchestrators that build their own specs can confirm the layer graph
@@ -247,7 +247,7 @@ export const layer = Layer.effect(
           );
           yield* electronDialog.showErrorBox(
             "WSL backend is still unavailable",
-            `${reason}\n\nRove will use the Windows backend for this launch and retry WSL the next time the app starts.`,
+            `${reason}\n\nPaperplane will use the Windows backend for this launch and retry WSL the next time the app starts.`,
           );
           yield* appSettings.applyWslWindowsFallbackInMemory;
           return true;
@@ -258,7 +258,7 @@ export const layer = Layer.effect(
         });
         yield* electronDialog.showErrorBox(
           "WSL backend couldn't start",
-          `${reason}\n\nFalling back to the Windows backend so Rove Code can open. Re-enable the WSL backend from Settings > Connections once the WSL distro is fixed.`,
+          `${reason}\n\nFalling back to the Windows backend so Paperplane can open. Re-enable the WSL backend from Settings > Connections once the WSL distro is fixed.`,
         );
         // Fully disable the WSL backend — both flags, matching the "Switch to
         // Windows" recovery path — so the manager's next restart re-resolves the
@@ -308,8 +308,8 @@ export const layer = Layer.effect(
       onStateDirOwned: () =>
         electronDialog
           .showErrorBox(
-            "This Rove home is unavailable",
-            "Another Rove Code server, such as the background service, is using this data directory. Stop that server and reopen Rove Code, or set a separate ROVE_HOME and pair with the running server.",
+            "This Paperplane home is unavailable",
+            "Another Paperplane server, such as the background service, is using this data directory. Stop that server and reopen Paperplane, or set a separate PAPERPLANE_HOME and pair with the running server.",
           )
           .pipe(Effect.andThen(electronApp.quit)),
     });

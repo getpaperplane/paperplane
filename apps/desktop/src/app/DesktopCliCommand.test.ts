@@ -23,7 +23,7 @@ const environmentFor = (
     homeDirectory: input.home,
     baseDir: input.baseDir,
     stateDir: path.join(input.baseDir, "userdata"),
-    serverRoot: "/opt/Rove Code/resources/app.asar",
+    serverRoot: "/opt/Paperplane/resources/app.asar",
     appImagePath: Option.none(),
   } as unknown as DesktopEnvironment.DesktopEnvironment["Service"]);
 
@@ -59,8 +59,8 @@ const fakePowerShell = (initial: string) => {
       const env = options.env ?? {};
       let exitCode = 0;
       let stdout = "";
-      if (env.ROVE_SET === "1") {
-        registry.path = env.ROVE_PATH ?? "";
+      if (env.PAPERPLANE_SET === "1") {
+        registry.path = env.PAPERPLANE_PATH ?? "";
         registry.writes += 1;
       } else if (registry.failReads) {
         exitCode = 1;
@@ -85,7 +85,7 @@ const fakePowerShell = (initial: string) => {
   return { registry, spawner };
 };
 
-// The machine's own PATH may already hold a rove; each test sets the PATH it means.
+// The machine's own PATH may already hold a paperplane; each test sets the PATH it means.
 const machinePath = process.env.PATH;
 beforeEach(() => {
   process.env.PATH = "";
@@ -101,102 +101,106 @@ it.layer(NodeServices.layer)("DesktopCliCommand", (it) => {
       const path = yield* Path.Path;
       const home = yield* fs.makeTempDirectoryScoped();
       const command = yield* commandIn({ home });
-      const link = path.join(home, ".local", "bin", "rove");
+      const link = path.join(home, ".local", "bin", "paperplane");
 
       expect(yield* command.state).toEqual({ supported: true, installedPath: null, onPath: false });
       // Install writes the launcher itself, even when no local backend ever did.
       const installed = yield* command.install;
       expect(installed.installedPath).toBe(link);
-      expect(yield* fs.readLink(link)).toBe(path.join(home, ".rove-code", "bin", "rove"));
+      expect(yield* fs.readLink(link)).toBe(path.join(home, ".rove-code", "bin", "paperplane"));
       expect((yield* command.install).installedPath).toBe(link);
 
       expect((yield* command.uninstall).installedPath).toBeNull();
       expect(yield* fs.exists(link)).toBe(false);
       // The launcher itself stays for setup commands.
-      expect(yield* fs.exists(path.join(home, ".rove-code", "bin", "rove"))).toBe(true);
+      expect(yield* fs.exists(path.join(home, ".rove-code", "bin", "paperplane"))).toBe(true);
     }).pipe(Effect.scoped),
   );
 
-  it.effect("never replaces or removes a rove it did not create", () =>
+  it.effect("never replaces or removes a paperplane it did not create", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const home = yield* fs.makeTempDirectoryScoped();
       const command = yield* commandIn({ home });
-      const theirs = path.join(home, ".local", "bin", "rove");
+      const theirs = path.join(home, ".local", "bin", "paperplane");
       yield* fs.makeDirectory(path.dirname(theirs), { recursive: true });
-      yield* fs.writeFileString(theirs, "npm's rove\n");
+      yield* fs.writeFileString(theirs, "npm's paperplane\n");
       // Even a broken link in the next folder is someone else's.
       yield* fs.makeDirectory(path.join(home, "bin"), { recursive: true });
-      yield* fs.symlink(path.join(home, "gone"), path.join(home, "bin", "rove"));
+      yield* fs.symlink(path.join(home, "gone"), path.join(home, "bin", "paperplane"));
 
       const error = yield* Effect.flip(command.install);
-      expect(error.message).toContain("Another rove command is already installed");
+      expect(error.message).toContain("Another paperplane command is already installed");
       yield* command.uninstall;
-      expect(yield* fs.readFileString(theirs)).toBe("npm's rove\n");
-      expect(yield* fs.readLink(path.join(home, "bin", "rove"))).toBe(path.join(home, "gone"));
+      expect(yield* fs.readFileString(theirs)).toBe("npm's paperplane\n");
+      expect(yield* fs.readLink(path.join(home, "bin", "paperplane"))).toBe(
+        path.join(home, "gone"),
+      );
     }).pipe(Effect.scoped),
   );
 
-  it.effect("finds and removes a link left by a previous Rove home", () =>
+  it.effect("finds and removes a link left by a previous Paperplane home", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const home = yield* fs.makeTempDirectoryScoped();
-      const before = yield* commandIn({ home, baseDir: path.join(home, "old-rove") });
+      const before = yield* commandIn({ home, baseDir: path.join(home, "old-paperplane") });
       const link = (yield* before.install).installedPath;
 
-      const after = yield* commandIn({ home, baseDir: path.join(home, "new-rove") });
+      const after = yield* commandIn({ home, baseDir: path.join(home, "new-paperplane") });
       expect((yield* after.state).installedPath).toBe(link);
       // Installing again points the link at this home's launcher.
       expect((yield* after.install).installedPath).toBe(link);
-      expect(yield* fs.readLink(link!)).toBe(path.join(home, "new-rove", "bin", "rove"));
+      expect(yield* fs.readLink(link!)).toBe(
+        path.join(home, "new-paperplane", "bin", "paperplane"),
+      );
       yield* after.uninstall;
-      expect(yield* fs.exists(path.join(home, ".local", "bin", "rove"))).toBe(false);
-      expect(yield* fs.exists(path.join(home, "bin", "rove"))).toBe(false);
+      expect(yield* fs.exists(path.join(home, ".local", "bin", "paperplane"))).toBe(false);
+      expect(yield* fs.exists(path.join(home, "bin", "paperplane"))).toBe(false);
     }).pipe(Effect.scoped),
   );
 
-  it.effect("does not read a large binary another rove links to", () =>
+  it.effect("does not read a large binary another paperplane links to", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const home = yield* fs.makeTempDirectoryScoped();
       // A big executable that happens to contain the marker text is still not ours.
-      const binary = path.join(home, "native-rove");
+      const binary = path.join(home, "native-paperplane");
       yield* fs.writeFileString(binary, `${"\0".repeat(64 * 1024)}${DesktopCliShim.MARKER}`);
       yield* fs.makeDirectory(path.join(home, ".local", "bin"), { recursive: true });
-      yield* fs.symlink(binary, path.join(home, ".local", "bin", "rove"));
+      yield* fs.symlink(binary, path.join(home, ".local", "bin", "paperplane"));
       const command = yield* commandIn({ home });
       expect((yield* command.state).installedPath).toBeNull();
       yield* command.uninstall;
-      expect(yield* fs.readLink(path.join(home, ".local", "bin", "rove"))).toBe(binary);
+      expect(yield* fs.readLink(path.join(home, ".local", "bin", "paperplane"))).toBe(binary);
     }).pipe(Effect.scoped),
   );
 
-  it.effect("refuses to install behind another rove that runs first", () =>
+  it.effect("refuses to install behind another paperplane that runs first", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const home = yield* fs.makeTempDirectoryScoped();
       const shadow = path.join(home, "shadow");
       yield* fs.makeDirectory(shadow);
-      yield* fs.writeFileString(path.join(shadow, "rove"), "#!/bin/sh\n", { mode: 0o755 });
+      yield* fs.writeFileString(path.join(shadow, "paperplane"), "#!/bin/sh\n", { mode: 0o755 });
       process.env.PATH = [shadow, path.join(home, ".local", "bin")].join(":");
 
       const command = yield* commandIn({ home });
-      const theirs = path.join(shadow, "rove");
+      const theirs = path.join(shadow, "paperplane");
       expect((yield* command.state).shadowedBy).toBe(theirs);
       // A link behind it would never run, so nothing is created.
       const error = yield* Effect.flip(command.install);
       expect(error.message).toContain(theirs);
-      expect(yield* fs.exists(path.join(home, ".local", "bin", "rove"))).toBe(false);
+      expect(yield* fs.exists(path.join(home, ".local", "bin", "paperplane"))).toBe(false);
 
       yield* fs.remove(theirs);
       const installed = yield* command.install;
       expect(installed).toMatchObject({
         onPath: true,
-        installedPath: path.join(home, ".local", "bin", "rove"),
+        installedPath: path.join(home, ".local", "bin", "paperplane"),
       });
       expect(installed.shadowedBy).toBeUndefined();
     }).pipe(Effect.scoped),
@@ -222,11 +226,30 @@ it.layer(NodeServices.layer)("DesktopCliCommand", (it) => {
           baseDir: `${home}/.rove-code`,
           platform: "win32",
         }),
-      ).replace(/[\\/]rove\.cmd$/, "");
+      ).replace(/[\\/]paperplane\.cmd$/, "");
       yield* command.install;
       expect(registry.path).toBe(`${userPath};${launcherDir}`);
       yield* command.uninstall;
       expect(registry.path).toBe(userPath);
+    }).pipe(Effect.scoped),
+  );
+
+  it.effect("replaces only the recorded old Windows PATH entry on upgrade", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const home = yield* fs.makeTempDirectoryScoped();
+      const oldBin = path.join(home, ".rove-code/bin");
+      const baseDir = path.join(home, ".paperplane");
+      const { registry, spawner } = fakePowerShell(`C:\\Tools;${oldBin};%USERPROFILE%\\mine`);
+      const command = yield* commandIn({ home, baseDir, platform: "win32" }, spawner);
+      const marker = path.join(baseDir, "userdata/cli-command-path-entry");
+      yield* fs.writeFileString(marker, `${oldBin}\n`);
+      yield* command.install;
+      expect(registry.path).toBe(`C:\\Tools;%USERPROFILE%\\mine;${path.join(baseDir, "bin")}`);
+      expect(yield* fs.readFileString(marker)).toBe(`${path.join(baseDir, "bin")}\n`);
+      yield* command.uninstall;
+      expect(registry.path).toBe("C:\\Tools;%USERPROFILE%\\mine");
     }).pipe(Effect.scoped),
   );
 

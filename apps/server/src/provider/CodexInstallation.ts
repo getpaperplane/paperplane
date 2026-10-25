@@ -1,8 +1,8 @@
 // @effect-diagnostics nodeBuiltinImport:off - Effect has no incremental digest.
-import { ProviderDriverKind, type ProviderInstallState } from "@rove-code/contracts";
-import { cliArchiveTarCommand } from "@rove-code/shared/cliRelease";
-import * as HostProcess from "@rove-code/shared/HostProcess";
-import { resolveCommandPath, resolveSpawnCommand } from "@rove-code/shared/shell";
+import { ProviderDriverKind, type ProviderInstallState } from "@getpaperplane/contracts";
+import { cliArchiveTarCommand } from "@getpaperplane/shared/cliRelease";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
+import { resolveCommandPath, resolveSpawnCommand } from "@getpaperplane/shared/shell";
 import * as Clock from "effect/Clock";
 import * as Cause from "effect/Cause";
 import * as Context from "effect/Context";
@@ -139,7 +139,7 @@ interface CodexInstallationService {
 export class CodexInstallation extends Context.Service<
   CodexInstallation,
   CodexInstallationService
->()("@rove-code/server/provider/CodexInstallation") {
+>()("@getpaperplane/server/provider/CodexInstallation") {
   static readonly layer = Layer.effect(
     CodexInstallation,
     Effect.gen(function* () {
@@ -285,7 +285,7 @@ export const makeCodexInstallation = Effect.fn("makeCodexInstallation")(function
       return executable;
     },
     Effect.mapError(
-      wrapFailure("resolve", "Codex is not installed in Rove Code. Install it to continue."),
+      wrapFailure("resolve", "Codex is not installed in Paperplane. Install it to continue."),
     ),
   );
   const acquire = Effect.fn("CodexInstallation.acquire")(function* () {
@@ -341,7 +341,7 @@ export const makeCodexInstallation = Effect.fn("makeCodexInstallation")(function
       if (executablePath === null) return null;
       // Keep launcher symlinks intact: version-manager shims dispatch by their invoked name.
       const realExecutablePath = yield* fs.realPath(executablePath);
-      // A PATH entry pointing into Rove's download remains a managed installation.
+      // A PATH entry pointing into Paperplane's download remains a managed installation.
       const realManaged = yield* fs.realPath(managedDirectory).pipe(Effect.option);
       if (
         realExecutablePath.startsWith(

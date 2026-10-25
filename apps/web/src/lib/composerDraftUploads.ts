@@ -1,5 +1,5 @@
-import type { ScopedProjectRef, ScopedThreadRef } from "@rove-code/contracts";
-import { scopedThreadKey } from "@rove-code/client-runtime/environment";
+import type { ScopedProjectRef, ScopedThreadRef } from "@getpaperplane/contracts";
+import { scopedThreadKey } from "@getpaperplane/client-runtime/environment";
 
 import { type DraftId, useComposerDraftStore } from "../composerDraftStore";
 import { releaseDraftAttachments } from "./attachmentUploadQueue";

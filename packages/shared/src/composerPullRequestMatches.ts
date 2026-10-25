@@ -1,4 +1,4 @@
-import type { ThreadPullRequestLink } from "@rove-code/contracts";
+import type { ThreadPullRequestLink } from "@getpaperplane/contracts";
 
 import { visibleThreadPullRequests } from "./threadPullRequests.ts";
 

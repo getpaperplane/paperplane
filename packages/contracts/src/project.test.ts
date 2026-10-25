@@ -202,7 +202,7 @@ effectIt.effect("project monograms validate text and palette colors", () =>
       { kind: "monogram", text: "\u0301", color: "blue" },
       { kind: "monogram", text: "A B", color: "blue" },
       { kind: "monogram", text: "🚀", color: "blue" },
-      { kind: "monogram", text: "Rove", color: "ultraviolet" },
+      { kind: "monogram", text: "Paperplane", color: "ultraviolet" },
     ]) {
       assert.strictEqual((yield* Effect.exit(decodeUpdateIcon(projectIcon)))._tag, "Failure");
     }

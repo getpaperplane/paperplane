@@ -1,5 +1,5 @@
-import type { EnvironmentThreadShell } from "@rove-code/client-runtime/state/shell";
-import { THREAD_JUMP_KEYBINDING_COMMANDS } from "@rove-code/contracts";
+import type { EnvironmentThreadShell } from "@getpaperplane/client-runtime/state/shell";
+import { THREAD_JUMP_KEYBINDING_COMMANDS } from "@getpaperplane/contracts";
 import { useCallback } from "react";
 
 import type { ThreadListV2ListItem } from "../threads/threadListV2";

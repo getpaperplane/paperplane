@@ -9,8 +9,8 @@ import {
   RunAttemptId,
   RunId,
   ThreadId,
-} from "@rove-code/contracts";
-import { resolveSelfInvocation } from "@rove-code/shared/nodeRuntime";
+} from "@getpaperplane/contracts";
+import { resolveSelfInvocation } from "@getpaperplane/shared/nodeRuntime";
 import * as Crypto from "effect/Crypto";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -22,13 +22,13 @@ import * as Stream from "effect/Stream";
 import { ChildProcessSpawner } from "effect/process";
 import type * as EffectAcpSchema from "effect-acp/compat";
 
-import * as ProviderHost from "@rove-code/provider-core/server/ProviderHost";
-import * as McpProviderSessions from "@rove-code/provider-core/server/McpProviderSessions";
-import * as TestProviderHost from "@rove-code/provider-testing/TestProviderHost";
-import type * as AcpSessionRuntime from "@rove-code/provider-acp/server/AcpSessionRuntime";
+import * as ProviderHost from "@getpaperplane/provider-core/server/ProviderHost";
+import * as McpProviderSessions from "@getpaperplane/provider-core/server/McpProviderSessions";
+import * as TestProviderHost from "@getpaperplane/provider-testing/TestProviderHost";
+import type * as AcpSessionRuntime from "@getpaperplane/provider-acp/server/AcpSessionRuntime";
 import { makeAntigravityAcpRuntime } from "../../provider/acp/AntigravityAcpSupport.ts";
-import * as IdAllocator from "@rove-code/provider-core/server/IdAllocator";
-import * as ProviderAdapter from "@rove-code/provider-core/server/ProviderAdapter";
+import * as IdAllocator from "@getpaperplane/provider-core/server/IdAllocator";
+import * as ProviderAdapter from "@getpaperplane/provider-core/server/ProviderAdapter";
 import {
   makeAntigravityAcpAdapterFlavor,
   makeAntigravityAdapterV2,
@@ -161,7 +161,7 @@ describe("AntigravityAdapterV2 client file system", () => {
               command: process.execPath,
               args: [mockAgentPath],
               cwd: input.cwd,
-              env: { ROVE_ACP_ANTIGRAVITY: "1" },
+              env: { PAPERPLANE_ACP_ANTIGRAVITY: "1" },
             },
           }).pipe(
             Effect.provideService(Crypto.Crypto, crypto),
@@ -181,10 +181,10 @@ describe("AntigravityAdapterV2 client file system", () => {
         defaultModel: Effect.succeed(undefined),
       });
       const workspace = yield* fileSystem
-        .makeTempDirectoryScoped({ prefix: "rove-antigravity-workspace-" })
+        .makeTempDirectoryScoped({ prefix: "paperplane-antigravity-workspace-" })
         .pipe(Effect.flatMap((directory) => fileSystem.realPath(directory)));
       const outside = yield* fileSystem.makeTempDirectoryScoped({
-        prefix: "rove-antigravity-outside-",
+        prefix: "paperplane-antigravity-outside-",
       });
       const outsideFile = path.join(outside, "secret.txt");
       yield* fileSystem.writeFileString(outsideFile, "secret");
@@ -307,7 +307,7 @@ describe("AntigravityAdapterV2 workspace changes", () => {
               command: process.execPath,
               args: [mockAgentPath],
               cwd: input.cwd,
-              env: { ROVE_ACP_ANTIGRAVITY: "1", ROVE_ACP_HANG_PROMPT_FOREVER: "1" },
+              env: { PAPERPLANE_ACP_ANTIGRAVITY: "1", PAPERPLANE_ACP_HANG_PROMPT_FOREVER: "1" },
             },
           }).pipe(
             Effect.provideService(Crypto.Crypto, crypto),
@@ -322,8 +322,8 @@ describe("AntigravityAdapterV2 workspace changes", () => {
         withProcess: (_stop, task) => task,
         defaultModel: Effect.succeed(undefined),
       });
-      const workspaceA = yield* fileSystem.makeTempDirectoryScoped({ prefix: "rove-ag-a-" });
-      const workspaceB = yield* fileSystem.makeTempDirectoryScoped({ prefix: "rove-ag-b-" });
+      const workspaceA = yield* fileSystem.makeTempDirectoryScoped({ prefix: "paperplane-ag-a-" });
+      const workspaceB = yield* fileSystem.makeTempDirectoryScoped({ prefix: "paperplane-ag-b-" });
       yield* fileSystem.writeFileString(path.join(workspaceA, "a.txt"), "from a");
       yield* fileSystem.writeFileString(path.join(workspaceB, "b.txt"), "from b");
       const policyFor = (cwd: string) =>
@@ -413,7 +413,7 @@ describe("AntigravityAdapterV2 workspace changes", () => {
 });
 
 describe("AntigravityAdapterV2 client file system under restrictive policies", () => {
-  // Antigravity asks before each of its own edits, so Rove serves an opted-in
+  // Antigravity asks before each of its own edits, so Paperplane serves an opted-in
   // write whatever the thread's policy says, confined to the workspace.
   it.effect("serves in-workspace reads and writes and still refuses outside paths", () =>
     Effect.gen(function* () {
@@ -451,7 +451,7 @@ describe("AntigravityAdapterV2 client file system under restrictive policies", (
                 command: process.execPath,
                 args: [mockAgentPath],
                 cwd: input.cwd,
-                env: { ROVE_ACP_ANTIGRAVITY: "1" },
+                env: { PAPERPLANE_ACP_ANTIGRAVITY: "1" },
               },
             }).pipe(
               Effect.provideService(Crypto.Crypto, crypto),
@@ -471,10 +471,10 @@ describe("AntigravityAdapterV2 client file system under restrictive policies", (
           defaultModel: Effect.succeed(undefined),
         });
         const workspace = yield* fileSystem
-          .makeTempDirectoryScoped({ prefix: "rove-ag-restrictive-" })
+          .makeTempDirectoryScoped({ prefix: "paperplane-ag-restrictive-" })
           .pipe(Effect.flatMap((directory) => fileSystem.realPath(directory)));
         const outside = yield* fileSystem.makeTempDirectoryScoped({
-          prefix: "rove-ag-restrictive-outside-",
+          prefix: "paperplane-ag-restrictive-outside-",
         });
         yield* fileSystem.writeFileString(path.join(workspace, "existing.ts"), "existing");
         const threadId = ThreadId.make(`thread-antigravity-restrictive-${policy.runtimeMode}`);

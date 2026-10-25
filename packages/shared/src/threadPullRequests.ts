@@ -5,9 +5,9 @@ import type {
   ThreadLinkedPullRequest,
   ThreadPullRequestKey,
   ThreadPullRequestLink,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 
-import { pullRequestHostOf } from "@rove-code/contracts";
+import { pullRequestHostOf } from "@getpaperplane/contracts";
 import { parseChangeRequestUrl } from "./changeRequestUrl.ts";
 import { canonicalRepositoryKey, sourceControlRepositorySelector } from "./sourceControl.ts";
 

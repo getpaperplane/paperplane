@@ -1,7 +1,11 @@
-import { EnvironmentId, ProviderInstanceId, USAGE_CONTRACT_VERSION } from "@rove-code/contracts";
-import { mergeUsage } from "@rove-code/shared/usageMerge";
+import {
+  EnvironmentId,
+  ProviderInstanceId,
+  USAGE_CONTRACT_VERSION,
+} from "@getpaperplane/contracts";
+import { mergeUsage } from "@getpaperplane/shared/usageMerge";
 import { StrictMode, act } from "react";
-import { DEFAULT_RESOLVED_KEYBINDINGS } from "@rove-code/shared/keybindings";
+import { DEFAULT_RESOLVED_KEYBINDINGS } from "@getpaperplane/shared/keybindings";
 import { create, type ReactTestRenderer } from "react-test-renderer";
 import { afterEach, beforeEach, expect, it, vi } from "vite-plus/test";
 

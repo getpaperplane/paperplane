@@ -1,6 +1,6 @@
 name: Release
 
-# Scheduled nightlies publish only when ROVE_RELEASE_READY is enabled and
+# Scheduled nightlies publish only when PAPERPLANE_RELEASE_READY is enabled and
 # new commits pass the release-gap check. Stable and preview remain manual.
 on:
   schedule:
@@ -49,7 +49,7 @@ jobs:
   # have already run. Scheduled runs also decide here whether a nightly is due.
   resolve_commit:
     name: Resolve release commit
-    if: inputs.build_only || vars.ROVE_RELEASE_READY == 'true'
+    if: inputs.build_only || vars.PAPERPLANE_RELEASE_READY == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     outputs:
@@ -139,10 +139,10 @@ jobs:
 
       - name: Check public release identity
         env:
-          ROVE_MARKETING_RELEASE_READY: ${{ vars.ROVE_MARKETING_RELEASE_READY }}
-          ROVE_HOSTED_RELEASE_READY: ${{ vars.ROVE_HOSTED_RELEASE_READY }}
-          ROVE_MOBILE_STORES_READY: ${{ vars.ROVE_MOBILE_STORES_READY }}
-          ROVE_MOBILE_SIDELOAD_READY: ${{ vars.ROVE_MOBILE_SIDELOAD_READY }}
+          PAPERPLANE_MARKETING_RELEASE_READY: ${{ vars.PAPERPLANE_MARKETING_RELEASE_READY }}
+          PAPERPLANE_HOSTED_RELEASE_READY: ${{ vars.PAPERPLANE_HOSTED_RELEASE_READY }}
+          PAPERPLANE_MOBILE_STORES_READY: ${{ vars.PAPERPLANE_MOBILE_STORES_READY }}
+          PAPERPLANE_MOBILE_SIDELOAD_READY: ${{ vars.PAPERPLANE_MOBILE_SIDELOAD_READY }}
         run: node scripts/check-release-identity.mjs
 
       - name: Setup Vite+
@@ -156,7 +156,7 @@ jobs:
           # the root prepare script runs effect-tsgo, a dev dependency.
           run-install: |
             args:
-              - --filter=@rove-code/scripts...
+              - --filter=@getpaperplane/scripts...
         env:
           pnpm_config_cache_dir: ${{ runner.temp }}/pnpm-metadata
 
@@ -223,7 +223,7 @@ jobs:
             echo "release_channel=stable" >> "$GITHUB_OUTPUT"
             echo "version=$version" >> "$GITHUB_OUTPUT"
             echo "tag=v$version" >> "$GITHUB_OUTPUT"
-            echo "name=Rove Code v$version" >> "$GITHUB_OUTPUT"
+            echo "name=Paperplane v$version" >> "$GITHUB_OUTPUT"
             echo "cli_dist_tag=latest" >> "$GITHUB_OUTPUT"
             if [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
               echo "is_prerelease=false" >> "$GITHUB_OUTPUT"
@@ -334,7 +334,7 @@ jobs:
 
       - name: Ensure Electron runtime is installed
         if: matrix.suite == 'static' || matrix.suite == 'packages'
-        run: vp run --filter @rove-code/desktop ensure:electron
+        run: vp run --filter @getpaperplane/desktop ensure:electron
 
       - name: Check
         if: matrix.suite == 'static'
@@ -355,13 +355,13 @@ jobs:
         if: matrix.suite == 'packages'
         run: >-
           vp run --parallel --concurrency-limit 4
-          --filter '!@rove-code/server' --filter '!@rove-code/monorepo'
-          --filter '!@rove-code/web' --filter '!@rove-code/mobile'
-          --filter '!@rove-code/client-runtime' test
+          --filter '!@getpaperplane/server' --filter '!@getpaperplane/monorepo'
+          --filter '!@getpaperplane/web' --filter '!@getpaperplane/mobile'
+          --filter '!@getpaperplane/client-runtime' test
 
       - name: Test client
         if: matrix.suite == 'client'
-        run: vp run --filter @rove-code/${{ matrix.workspace }} test --shard ${{ matrix.shard }}/${{ matrix.shards }} --maxWorkers 2
+        run: vp run --filter @getpaperplane/${{ matrix.workspace }} test --shard ${{ matrix.shard }}/${{ matrix.shards }} --maxWorkers 2
 
       - name: Install Chromium for server browser integration tests
         if: matrix.suite == 'server'
@@ -370,17 +370,17 @@ jobs:
       # Server test files stay serial within each runner, as in CI.
       - name: Test server
         if: matrix.suite == 'server'
-        run: vp run --filter @rove-code/server test --shard ${{ matrix.shard }}/${{ matrix.shards }}
+        run: vp run --filter @getpaperplane/server test --shard ${{ matrix.shard }}/${{ matrix.shards }}
 
   relay_public_config:
-    name: Resolve Rove Connect public config
+    name: Resolve Paperplane Connect public config
     # Consumes only the release commit, not preflight's resolved version, so it
     # runs alongside preflight instead of after it. The condition mirrors preflight's.
-    # Gated behind ROVE_CLOUD_READY: forks without Clerk/Cloudflare skip this
-    # job and produce a community build (no Rove Connect baked in).
+    # Gated behind PAPERPLANE_CLOUD_READY: forks without Clerk/Cloudflare skip this
+    # job and produce a community build (no Paperplane Connect baked in).
     needs: [resolve_commit]
     if: |
-      vars.ROVE_CLOUD_READY == 'true' &&
+      vars.PAPERPLANE_CLOUD_READY == 'true' &&
       needs.resolve_commit.result == 'success' &&
       (github.event_name != 'schedule' || needs.resolve_commit.outputs.has_changes == 'true')
     runs-on: ubuntu-24.04
@@ -419,7 +419,7 @@ jobs:
           # `alchemy state read` needs the relay's installed CLI and its peers.
           run-install: |
             args:
-              - --filter=rove-relay...
+              - --filter=paperplane-relay...
 
       - name: Read production relay tracing config
         working-directory: infra/relay
@@ -436,9 +436,9 @@ jobs:
           token="$(field clientTracingToken)"
           echo "::add-mask::$token"
           {
-            echo "ROVE_RELAY_CLIENT_OTLP_TRACES_URL=$url"
-            echo "ROVE_RELAY_CLIENT_OTLP_TRACES_DATASET=$dataset"
-            echo "ROVE_RELAY_CLIENT_OTLP_TRACES_TOKEN=$token"
+            echo "PAPERPLANE_RELAY_CLIENT_OTLP_TRACES_URL=$url"
+            echo "PAPERPLANE_RELAY_CLIENT_OTLP_TRACES_DATASET=$dataset"
+            echo "PAPERPLANE_RELAY_CLIENT_OTLP_TRACES_TOKEN=$token"
           } > "$RUNNER_TEMP/relay-client-tracing.env"
 
       - name: Upload relay client tracing config
@@ -488,16 +488,16 @@ jobs:
   build_bundle:
     name: Build JS bundle
     # Runs alongside preflight. When relay_public_config is skipped (no cloud
-    # config), the bundle is built without Rove Connect — a community build.
+    # config), the bundle is built without Paperplane Connect — a community build.
     needs: [preflight, relay_public_config]
     if: ${{ !cancelled() && needs.preflight.result == 'success' && needs.relay_public_config.result != 'failure' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     env:
-      ROVE_CLERK_PUBLISHABLE_KEY: ${{ needs.relay_public_config.outputs.clerk_publishable_key }}
-      ROVE_CLERK_JWT_TEMPLATE: ${{ needs.relay_public_config.outputs.clerk_jwt_template }}
-      ROVE_CLERK_CLI_OAUTH_CLIENT_ID: ${{ needs.relay_public_config.outputs.clerk_cli_oauth_client_id }}
-      ROVE_RELAY_URL: ${{ needs.relay_public_config.outputs.relay_url }}
+      PAPERPLANE_CLERK_PUBLISHABLE_KEY: ${{ needs.relay_public_config.outputs.clerk_publishable_key }}
+      PAPERPLANE_CLERK_JWT_TEMPLATE: ${{ needs.relay_public_config.outputs.clerk_jwt_template }}
+      PAPERPLANE_CLERK_CLI_OAUTH_CLIENT_ID: ${{ needs.relay_public_config.outputs.clerk_cli_oauth_client_id }}
+      PAPERPLANE_RELAY_URL: ${{ needs.relay_public_config.outputs.relay_url }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -527,7 +527,7 @@ jobs:
       - name: Install bundle dependencies
         env:
           pnpm_config_cache_dir: ${{ runner.temp }}/pnpm-metadata
-        run: vp install --filter=@rove-code/server... --filter=@rove-code/web... --filter=@rove-code/desktop... --filter=@rove-code/scripts...
+        run: vp install --filter=@getpaperplane/server... --filter=@getpaperplane/web... --filter=@getpaperplane/desktop... --filter=@getpaperplane/scripts...
 
       - name: Download relay client tracing config
         if: needs.relay_public_config.result == 'success'
@@ -541,7 +541,7 @@ jobs:
         shell: bash
         run: |
           config_path="$RUNNER_TEMP/relay-client-tracing/relay-client-tracing.env"
-          tracing_token="$(sed -n 's/^ROVE_RELAY_CLIENT_OTLP_TRACES_TOKEN=//p' "$config_path")"
+          tracing_token="$(sed -n 's/^PAPERPLANE_RELAY_CLIENT_OTLP_TRACES_TOKEN=//p' "$config_path")"
           echo "::add-mask::$tracing_token"
           cat "$config_path" >> "$GITHUB_ENV"
 
@@ -550,13 +550,13 @@ jobs:
 
       - uses: ./.github/actions/setup-apt-mirrors
 
-      # @rove-code/desktop#build compiles the Linux browser secret helper on a
+      # @getpaperplane/desktop#build compiles the Linux browser secret helper on a
       # Linux host before packing, and that needs libsecret headers.
       - name: Install browser secret helper build libraries
         run: sudo apt-get update && sudo apt-get install -y libsecret-1-dev pkg-config build-essential
 
-      # Runs @rove-code/server#build (which depends on @rove-code/web#build) and
-      # @rove-code/desktop#build, so apps/server/dist holds the server bundle
+      # Runs @getpaperplane/server#build (which depends on @getpaperplane/web#build) and
+      # @getpaperplane/desktop#build, so apps/server/dist holds the server bundle
       # plus the web client and apps/desktop/dist-electron the Electron main.
       - name: Build JS bundle
         run: vp run build:desktop
@@ -790,8 +790,8 @@ jobs:
           cache: true
           run-install: |
             args:
-              - --filter=@rove-code/server...
-              - --filter=@rove-code/scripts...
+              - --filter=@getpaperplane/server...
+              - --filter=@getpaperplane/scripts...
 
       - name: Wait for Linux x64 CLI archive
         uses: ./.github/actions/wait-for-artifact
@@ -826,8 +826,8 @@ jobs:
         with:
           name: npm-packages
           path: |
-            npm-packages/@rove-code/*.tgz
-            npm-packages/@rove-code/*/package.json
+            npm-packages/@getpaperplane/*.tgz
+            npm-packages/@getpaperplane/*/package.json
           if-no-files-found: error
           retention-days: 14
 
@@ -878,8 +878,8 @@ jobs:
           cache: true
           run-install: |
             args:
-              - --filter=@rove-code/server...
-              - --filter=@rove-code/scripts...
+              - --filter=@getpaperplane/server...
+              - --filter=@getpaperplane/scripts...
 
       - name: Wait for this platform's CLI archive
         uses: ./.github/actions/wait-for-artifact
@@ -944,15 +944,15 @@ jobs:
           cache: true
           run-install: |
             args:
-              - --filter=@rove-code/server...
-              - --filter=@rove-code/scripts...
+              - --filter=@getpaperplane/server...
+              - --filter=@getpaperplane/scripts...
 
       - name: Download npm packages
         uses: actions/download-artifact@v8
         with:
           name: npm-packages
-          # The artifact root is @rove-code/, the paths' common ancestor.
-          path: npm-packages/@rove-code
+          # The artifact root is @getpaperplane/, the paths' common ancestor.
+          path: npm-packages/@getpaperplane
 
       - name: Publish CLI launcher after npm serves every platform
         run: node apps/server/scripts/cli.ts publish --only launcher --packages-dir npm-packages --tag "${{ needs.preflight.outputs.cli_dist_tag }}" --provenance --verbose
@@ -961,7 +961,7 @@ jobs:
   build_web:
     name: Build hosted web app
     needs: [preflight]
-    if: ${{ vars.ROVE_CLOUDFLARE_WEB_READY == 'true' && !cancelled() && needs.preflight.result == 'success' && contains(fromJSON('["stable", "nightly"]'), needs.preflight.outputs.release_channel) }}
+    if: ${{ vars.PAPERPLANE_CLOUDFLARE_WEB_READY == 'true' && !cancelled() && needs.preflight.result == 'success' && contains(fromJSON('["stable", "nightly"]'), needs.preflight.outputs.release_channel) }}
     uses: ./.github/workflows/cloudflare-web.yml
     secrets: inherit
     with:
@@ -975,7 +975,7 @@ jobs:
   build_marketing:
     name: Build marketing site
     needs: [preflight]
-    if: ${{ !inputs.build_only && vars.ROVE_MARKETING_RELEASE_READY == 'true' && !cancelled() && needs.preflight.result == 'success' && needs.preflight.outputs.release_channel == 'stable' }}
+    if: ${{ !inputs.build_only && vars.PAPERPLANE_MARKETING_RELEASE_READY == 'true' && !cancelled() && needs.preflight.result == 'success' && needs.preflight.outputs.release_channel == 'stable' }}
     uses: ./.github/workflows/cloudflare-marketing.yml
     secrets: inherit
     with:
@@ -985,7 +985,7 @@ jobs:
   mobile_sideload:
     name: Build mobile sideload binaries
     needs: [preflight]
-    if: ${{ vars.ROVE_MOBILE_SIDELOAD_READY == 'true' && contains(fromJSON('["stable", "nightly", "preview"]'), needs.preflight.outputs.release_channel) }}
+    if: ${{ vars.PAPERPLANE_MOBILE_SIDELOAD_READY == 'true' && contains(fromJSON('["stable", "nightly", "preview"]'), needs.preflight.outputs.release_channel) }}
     uses: ./.github/workflows/mobile-sideload.yml
     permissions:
       contents: write
@@ -1037,7 +1037,7 @@ jobs:
           # Manifest merging and verification import Effect from scripts.
           run-install: |
             args:
-              - --filter=@rove-code/scripts...
+              - --filter=@getpaperplane/scripts...
 
       - name: Download all desktop artifacts
         uses: actions/download-artifact@v8
@@ -1069,12 +1069,12 @@ jobs:
           set -euo pipefail
           cd release-assets
           shopt -s nullglob
-          archives=(rove-*.tar.gz rove-*.zip)
+          archives=(paperplane-*.tar.gz paperplane-*.zip)
           if [[ ${#archives[@]} -eq 0 ]]; then
             echo "No CLI archives were produced." >&2
             exit 1
           fi
-          mobile=(Rove-Code-*.apk Rove-Code-*-unsigned.ipa)
+          mobile=(Paperplane-*.apk Paperplane-*-unsigned.ipa)
           sha256sum "${archives[@]}" "${mobile[@]}" > SHA256SUMS
           cat SHA256SUMS
 
@@ -1173,7 +1173,7 @@ jobs:
           > [!WARNING]
           > **This is a preview build. Do not install it unless you know exactly why you are here.**
           >
-          > Preview builds are cut by maintainers from unreleased branches to exercise the release pipeline. They can be broken, receive no fixes, are never offered as updates, and are not supported. If you want Rove Code, install the [latest release](https://github.com/hafiezul/rove/releases/latest) or a nightly instead.
+          > Preview builds are cut by maintainers from unreleased branches to exercise the release pipeline. They can be broken, receive no fixes, are never offered as updates, and are not supported. If you want Paperplane, install the [latest release](https://github.com/getpaperplane/paperplane/releases/latest) or a nightly instead.
 
           Built from `${{ needs.preflight.outputs.ref }}`.
           EOF
@@ -1212,7 +1212,7 @@ jobs:
   deploy_web:
     name: Deploy hosted web app
     needs: [preflight, release, build_web]
-    if: ${{ vars.ROVE_CLOUDFLARE_WEB_READY == 'true' && !failure() && !cancelled() && needs.preflight.result == 'success' && needs.release.result == 'success' && needs.build_web.result == 'success' && contains(fromJSON('["stable", "nightly"]'), needs.preflight.outputs.release_channel) }}
+    if: ${{ vars.PAPERPLANE_CLOUDFLARE_WEB_READY == 'true' && !failure() && !cancelled() && needs.preflight.result == 'success' && needs.release.result == 'success' && needs.build_web.result == 'success' && contains(fromJSON('["stable", "nightly"]'), needs.preflight.outputs.release_channel) }}
     uses: ./.github/workflows/cloudflare-web.yml
     secrets: inherit
     with:
@@ -1225,7 +1225,7 @@ jobs:
   deploy_marketing:
     name: Deploy marketing site
     needs: [preflight, release, build_marketing]
-    if: ${{ vars.ROVE_MARKETING_RELEASE_READY == 'true' && !failure() && !cancelled() && needs.preflight.result == 'success' && needs.release.result == 'success' && needs.build_marketing.result == 'success' && needs.preflight.outputs.release_channel == 'stable' }}
+    if: ${{ vars.PAPERPLANE_MARKETING_RELEASE_READY == 'true' && !failure() && !cancelled() && needs.preflight.result == 'success' && needs.release.result == 'success' && needs.build_marketing.result == 'success' && needs.preflight.outputs.release_channel == 'stable' }}
     uses: ./.github/workflows/cloudflare-marketing.yml
     secrets: inherit
     with:
@@ -1280,8 +1280,8 @@ jobs:
           # Vite+ config and lint plugin, so keep the development tooling here.
           run-install: |
             args:
-              - --filter=@rove-code/scripts...
-              - --filter=@rove-code/oxlint-plugin-rove...
+              - --filter=@getpaperplane/scripts...
+              - --filter=@getpaperplane/oxlint-plugin-paperplane...
 
       - id: update_versions
         name: Update version strings
@@ -1348,7 +1348,7 @@ jobs:
           # notify-discord-release.ts uses Effect CLI/HTTP and Node services.
           run-install: |
             args:
-              - --filter=@rove-code/scripts...
+              - --filter=@getpaperplane/scripts...
 
       - name: Read published release notes
         if: needs.preflight.outputs.is_prerelease == 'true'

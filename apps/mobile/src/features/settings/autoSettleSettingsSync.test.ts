@@ -1,4 +1,4 @@
-import { DEFAULT_SERVER_SETTINGS, EnvironmentId, ProjectId } from "@rove-code/contracts";
+import { DEFAULT_SERVER_SETTINGS, EnvironmentId, ProjectId } from "@getpaperplane/contracts";
 import { describe, expect, it } from "vite-plus/test";
 
 import { planAutoSettleSettingsSync } from "./autoSettleSettingsSync";

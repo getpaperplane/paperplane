@@ -6,13 +6,13 @@ import {
   EnvironmentId,
   type ProjectCloneSnapshot,
   WS_METHODS,
-} from "@rove-code/contracts";
-import { mediaMimeTypeFromExtension } from "@rove-code/shared/filePreview";
-import { isWindowsAbsolutePath } from "@rove-code/shared/path";
+} from "@getpaperplane/contracts";
+import { mediaMimeTypeFromExtension } from "@getpaperplane/shared/filePreview";
+import { isWindowsAbsolutePath } from "@getpaperplane/shared/path";
 import {
   getProjectFaviconResourceKey,
   isProjectFaviconFallbackUrl,
-} from "@rove-code/shared/projectFavicon";
+} from "@getpaperplane/shared/projectFavicon";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
 import * as Result from "effect/Result";

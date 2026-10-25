@@ -5,7 +5,7 @@ import { View } from "react-native";
 import {
   isAtomCommandInterrupted,
   squashAtomCommandFailure,
-} from "@rove-code/client-runtime/state/runtime";
+} from "@getpaperplane/client-runtime/state/runtime";
 import { AppText as Text } from "../../components/ui/AppText";
 import { useProjects } from "../../state/entities";
 import { useAtomCommand } from "../../state/use-atom-command";

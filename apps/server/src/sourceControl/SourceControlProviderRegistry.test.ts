@@ -1,4 +1,4 @@
-import { SourceControlProviderKind } from "@rove-code/contracts";
+import { SourceControlProviderKind } from "@getpaperplane/contracts";
 import { assert, it } from "@effect/vitest";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import * as DateTime from "effect/DateTime";
@@ -19,27 +19,27 @@ import {
   VcsProcessSpawnError,
   VcsProcessTimeoutError,
   VcsRepositoryDetectionError,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 
 import * as ServerSettings from "../serverSettings.ts";
 import * as ServerConfig from "../config.ts";
 import type * as VcsDriver from "../vcs/VcsDriver.ts";
 import * as VcsDriverRegistry from "../vcs/VcsDriverRegistry.ts";
 import * as VcsProcess from "../vcs/VcsProcess.ts";
-import * as AzureDevOpsCli from "@rove-code/source-control-azure-devops/server/AzureDevOpsCli";
-import * as AzureDevOpsPullRequestCli from "@rove-code/source-control-azure-devops/server/AzureDevOpsPullRequestCli";
-import * as BitbucketApi from "@rove-code/source-control-bitbucket/server/BitbucketApi";
-import * as BitbucketPullRequestApi from "@rove-code/source-control-bitbucket/server/BitbucketPullRequestApi";
+import * as AzureDevOpsCli from "@getpaperplane/source-control-azure-devops/server/AzureDevOpsCli";
+import * as AzureDevOpsPullRequestCli from "@getpaperplane/source-control-azure-devops/server/AzureDevOpsPullRequestCli";
+import * as BitbucketApi from "@getpaperplane/source-control-bitbucket/server/BitbucketApi";
+import * as BitbucketPullRequestApi from "@getpaperplane/source-control-bitbucket/server/BitbucketPullRequestApi";
 import * as GitVcsDriver from "../vcs/GitVcsDriver.ts";
-import * as GitHubRest from "@rove-code/source-control-github/server/GitHubRest";
-import * as GitHubRequestPolicy from "@rove-code/source-control-github/server/GitHubRequestPolicy";
-import * as GitHubPullRequestApi from "@rove-code/source-control-github/server/GitHubPullRequestApi";
-import * as GitHubCredentials from "@rove-code/source-control-github/server/GitHubCredentials";
-import * as GitLabCli from "@rove-code/source-control-gitlab/server/GitLabCli";
-import * as GitLabPullRequestCli from "@rove-code/source-control-gitlab/server/GitLabPullRequestCli";
-import * as ForgejoCli from "@rove-code/source-control-forgejo/server/ForgejoCli";
-import * as GitCafeApi from "@rove-code/source-control-gitcafe/server/GitCafeApi";
-import * as GitCafeCredentials from "@rove-code/source-control-gitcafe/server/GitCafeCredentials";
+import * as GitHubRest from "@getpaperplane/source-control-github/server/GitHubRest";
+import * as GitHubRequestPolicy from "@getpaperplane/source-control-github/server/GitHubRequestPolicy";
+import * as GitHubPullRequestApi from "@getpaperplane/source-control-github/server/GitHubPullRequestApi";
+import * as GitHubCredentials from "@getpaperplane/source-control-github/server/GitHubCredentials";
+import * as GitLabCli from "@getpaperplane/source-control-gitlab/server/GitLabCli";
+import * as GitLabPullRequestCli from "@getpaperplane/source-control-gitlab/server/GitLabPullRequestCli";
+import * as ForgejoCli from "@getpaperplane/source-control-forgejo/server/ForgejoCli";
+import * as GitCafeApi from "@getpaperplane/source-control-gitcafe/server/GitCafeApi";
+import * as GitCafeCredentials from "@getpaperplane/source-control-gitcafe/server/GitCafeCredentials";
 import * as SourceControlProviderRegistry from "./SourceControlProviderRegistry.ts";
 import * as ServerSourceControlHost from "./ServerSourceControlHost.ts";
 
@@ -160,7 +160,7 @@ function makeRegistry(input: {
           cliEnv: () => Effect.succeed({}),
         }),
         ServerConfig.layerTest(process.cwd(), {
-          prefix: "rove-source-control-registry-test-",
+          prefix: "paperplane-source-control-registry-test-",
         }).pipe(Layer.provide(NodeServices.layer)),
       ),
     ),

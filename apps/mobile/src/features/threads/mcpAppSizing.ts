@@ -1,4 +1,4 @@
-import { clampMcpAppHeight } from "@rove-code/shared/mcpApp";
+import { clampMcpAppHeight } from "@getpaperplane/shared/mcpApp";
 
 /** Taller apps scroll inside the inline view; full screen fills its own screen. */
 export const MCP_APP_INLINE_MAX_HEIGHT = 420;

@@ -1,4 +1,4 @@
-import type { OrchestrationV2ThreadStreamItem } from "@rove-code/contracts";
+import type { OrchestrationV2ThreadStreamItem } from "@getpaperplane/contracts";
 import * as Cause from "effect/Cause";
 import * as Deferred from "effect/Deferred";
 import * as Duration from "effect/Duration";

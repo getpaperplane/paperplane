@@ -9,7 +9,7 @@ import {
   OrchestrationV2Run,
   OrchestrationV2ThreadProjection,
   ThreadId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -71,7 +71,7 @@ export interface ThreadForkServiceV2Shape {
 export class ThreadForkServiceV2 extends Context.Service<
   ThreadForkServiceV2,
   ThreadForkServiceV2Shape
->()("@rove-code/server/orchestration-v2/ThreadForkService/ThreadForkServiceV2") {}
+>()("@getpaperplane/server/orchestration-v2/ThreadForkService/ThreadForkServiceV2") {}
 
 export const layer: Layer.Layer<ThreadForkServiceV2> = Layer.succeed(
   ThreadForkServiceV2,

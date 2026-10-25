@@ -1,9 +1,9 @@
-import { ConnectionOnboarding } from "@rove-code/client-runtime/connection";
+import { ConnectionOnboarding } from "@getpaperplane/client-runtime/connection";
 import {
   createAtomCommandScheduler,
   createRuntimeCommand,
-} from "@rove-code/client-runtime/state/runtime";
-import type { DesktopSshEnvironmentTarget } from "@rove-code/contracts";
+} from "@getpaperplane/client-runtime/state/runtime";
+import type { DesktopSshEnvironmentTarget } from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 
 import { connectionAtomRuntime } from "./runtime";

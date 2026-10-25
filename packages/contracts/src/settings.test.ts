@@ -1093,10 +1093,10 @@ it("validates remote device hosts and rejects ambiguous host ids", () => {
 });
 
 describe("branch naming settings", () => {
-  it("defaults existing settings to the rove static prefix", () => {
+  it("defaults existing settings to the paperplane static prefix", () => {
     expect(decodeServerSettings({})).toMatchObject({
       branchNamingMode: "static",
-      branchNamePrefix: "rove",
+      branchNamePrefix: "paperplane",
       branchNameInstructions: "",
     });
   });

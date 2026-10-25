@@ -8,14 +8,14 @@ import {
 
 const rawManifest = `version: 1.2.3
 files:
-  - url: Rove-Code-1.2.3-arm64.AppImage
+  - url: Paperplane-1.2.3-arm64.AppImage
     sha512: arm64sha
     size: 125621344
     blockMapSize: 196282
-  - url: Rove-Code-1.2.3-x86_64.AppImage
+  - url: Paperplane-1.2.3-x86_64.AppImage
     sha512: x64sha
     size: 132000112
-path: Rove-Code-1.2.3-arm64.AppImage
+path: Paperplane-1.2.3-arm64.AppImage
 sha512: arm64sha
 releaseDate: '2026-10-07T06:00:00Z'
 `;
@@ -29,13 +29,13 @@ describe("update-manifest block map metadata", () => {
     const manifest = parse();
     assert.deepStrictEqual(manifest.files, [
       {
-        url: "Rove-Code-1.2.3-arm64.AppImage",
+        url: "Paperplane-1.2.3-arm64.AppImage",
         sha512: "arm64sha",
         size: 125621344,
         blockMapSize: 196282,
       },
       {
-        url: "Rove-Code-1.2.3-x86_64.AppImage",
+        url: "Paperplane-1.2.3-x86_64.AppImage",
         sha512: "x64sha",
         size: 132000112,
       },

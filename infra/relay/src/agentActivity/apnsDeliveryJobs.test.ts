@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
-import { EnvironmentId, ThreadId } from "@rove-code/contracts";
-import type { RelayAgentActivityAggregateState } from "@rove-code/contracts/relay";
+import { EnvironmentId, ThreadId } from "@getpaperplane/contracts";
+import type { RelayAgentActivityAggregateState } from "@getpaperplane/contracts/relay";
 import * as Redacted from "effect/Redacted";
 
 import {
@@ -11,7 +11,7 @@ import {
 
 const secret = Redacted.make("queue-signing-secret");
 const aggregate: RelayAgentActivityAggregateState = {
-  title: "Rove Code",
+  title: "Paperplane",
   subtitle: "Agent work in progress",
   activeCount: 1,
   updatedAt: "2026-05-25T00:00:00.000Z",

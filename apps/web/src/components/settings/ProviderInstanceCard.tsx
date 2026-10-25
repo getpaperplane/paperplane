@@ -19,7 +19,7 @@ import {
   nextProviderEnvironmentWithFieldValue,
   providerEnvironmentWithoutNames,
   readProviderEnvironmentVariable,
-} from "@rove-code/client-runtime/state/provider-instance-settings";
+} from "@getpaperplane/client-runtime/state/provider-instance-settings";
 import * as Arr from "effect/Array";
 import * as Result from "effect/Result";
 import { useEffect, useRef, useState, type ReactElement, type ReactNode } from "react";
@@ -35,13 +35,13 @@ import {
   type ProviderDriverKind,
   type ServerProvider,
   type ServerProviderModel,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 
 import {
   type CustomModelDefinition,
   readCustomModelEntries,
   toCustomModelSetting,
-} from "@rove-code/shared/model";
+} from "@getpaperplane/shared/model";
 import { cn } from "../../lib/utils";
 import { useCopyToClipboard } from "../../hooks/useCopyToClipboard";
 import { normalizeProviderAccentColor } from "../../providerInstances";
@@ -57,7 +57,7 @@ import { Tooltip, TooltipPopup, TooltipTrigger } from "../ui/tooltip";
 import type {
   ProviderClientDefinition,
   ProviderEnvironmentField,
-} from "@rove-code/provider-core/client";
+} from "@getpaperplane/provider-core/client";
 import { deriveProviderSettingsFields, ProviderSettingsForm } from "./ProviderSettingsForm";
 import { ProviderModelsSection } from "./ProviderModelsSection";
 import { ProviderInstanceIcon } from "../chat/ProviderInstanceIcon";

@@ -1,15 +1,15 @@
 // @effect-diagnostics nodeBuiltinImport:off -- Reads portal-owned screenshot files at the native boundary.
 import * as NodeFSP from "node:fs/promises";
 import * as NodeURL from "node:url";
-import type { SnapShotKeyChord } from "@rove-code/contracts";
+import type { SnapShotKeyChord } from "@getpaperplane/contracts";
 import { nativeImage } from "electron";
 
 // Linux helpers that need no D-Bus. Keep this module free of dbus-next so the main
 // process can answer "which desktop is this" and read a PNG without loading it.
 
 export const HYPRLAND_CAPTURE_ACTION = "capture-window";
-export const NIRI_CAPTURE_PATH = "/io/github/hafiezul/rove/SnapShot";
-export const NIRI_CAPTURE_INTERFACE = "io.github.hafiezul.rove.SnapShot";
+export const NIRI_CAPTURE_PATH = "/io/github/getpaperplane/paperplane/SnapShot";
+export const NIRI_CAPTURE_INTERFACE = "io.github.getpaperplane.paperplane.SnapShot";
 
 function isDesktopSession(env: NodeJS.ProcessEnv, desktop: string): boolean {
   return (

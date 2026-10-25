@@ -1,6 +1,6 @@
-import type { RuntimeSubagent } from "@rove-code/client-runtime/state/subagentRuntime";
-import { isOrchestrationV2WorkActive } from "@rove-code/contracts";
-import { deriveSubagentElapsedMs } from "@rove-code/shared/orchestrationTiming";
+import type { RuntimeSubagent } from "@getpaperplane/client-runtime/state/subagentRuntime";
+import { isOrchestrationV2WorkActive } from "@getpaperplane/contracts";
+import { deriveSubagentElapsedMs } from "@getpaperplane/shared/orchestrationTiming";
 import { useEffect, useRef } from "react";
 
 import { subscribeRelativeTimeTick } from "../../hooks/useRelativeTimeTick";

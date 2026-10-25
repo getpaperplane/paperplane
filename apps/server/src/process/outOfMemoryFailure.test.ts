@@ -1,5 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
-import { makeProviderFailure } from "@rove-code/provider-core/server/failure";
+import { makeProviderFailure } from "@getpaperplane/provider-core/server/failure";
 
 import { labelOutOfMemory } from "./outOfMemoryFailure.ts";
 
@@ -37,7 +37,7 @@ describe("labelOutOfMemory", () => {
     expect(labelOutOfMemory(killed, "likely")).toEqual({
       ...killed,
       message:
-        'Likely killed: the host ran out of memory. Run fewer agents at once or add swap (see "Small or WSL hosts" in the Rove Code docs).',
+        'Likely killed: the host ran out of memory. Run fewer agents at once or add swap (see "Small or WSL hosts" in the Paperplane docs).',
       code: "oom_kill",
     });
   });

@@ -1,14 +1,14 @@
 import { pruneLocalDeviceTools } from "./deviceToolMaintenance.ts";
-import { deviceToolInstallMessage } from "@rove-code/contracts";
+import { deviceToolInstallMessage } from "@getpaperplane/contracts";
 /**
  * The device host that is this machine.
  *
  * Runs expo-device-hub as a supervised child on a loopback port and starts the
- * agent-device daemon in HTTP mode under a Rove-owned state directory. Both are
+ * agent-device daemon in HTTP mode under a Paperplane-owned state directory. Both are
  * lazy: the device service requires explicit setup consent before it calls
  * ensureReady to install tools or start helper processes.
  *
- * The hub runs in its standalone mode (origin root). The Rove proxy strips its
+ * The hub runs in its standalone mode (origin root). The Paperplane proxy strips its
  * own prefix, and the Device panel derives stream and socket URLs from the
  * prefix itself rather than from anything the hub prints.
  */
@@ -17,15 +17,15 @@ import {
   type DevicePlatform,
   type DevicePlatformAvailability,
   LOCAL_DEVICE_HOST_ID,
-} from "@rove-code/contracts";
-import { waitForHttpReady } from "@rove-code/shared/httpReadiness";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+} from "@getpaperplane/contracts";
+import { waitForHttpReady } from "@getpaperplane/shared/httpReadiness";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 import {
   resolveNodeExecutable,
   type NodeRuntimeUnavailableError,
-} from "@rove-code/shared/nodeRuntime";
-import * as NetService from "@rove-code/shared/Net";
-import { isCommandAvailable } from "@rove-code/shared/shell";
+} from "@getpaperplane/shared/nodeRuntime";
+import * as NetService from "@getpaperplane/shared/Net";
+import { isCommandAvailable } from "@getpaperplane/shared/shell";
 // @effect-diagnostics-next-line nodeBuiltinImport:off -- FileSystem.stat follows symlinks and has no lstat equivalent.
 import * as NodeFSP from "node:fs/promises";
 import * as Clock from "effect/Clock";
@@ -45,7 +45,7 @@ import { HttpClient } from "effect/http";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
-import { writeFileStringAtomically } from "@rove-code/shared/atomicWrite";
+import { writeFileStringAtomically } from "@getpaperplane/shared/atomicWrite";
 import * as ServerConfig from "../config.ts";
 import * as ProcessRunner from "../processRunner.ts";
 import * as DeviceHost from "./DeviceHost.ts";
@@ -248,7 +248,7 @@ export const make = Effect.fn("LocalDeviceHost.make")(function* () {
   const httpClient = yield* HttpClient.HttpClient;
   const environment = yield* HostProcess.Environment;
   const hostPlatform = yield* HostProcess.Platform;
-  // Re-run these effects at use time: the SDK can be installed while Rove is running.
+  // Re-run these effects at use time: the SDK can be installed while Paperplane is running.
   const currentSdk = androidSdk.pipe(
     Effect.provideService(FileSystem.FileSystem, fs),
     Effect.provideService(Path.Path, path),

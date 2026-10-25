@@ -1,4 +1,4 @@
-import type { OrchestrationV2Run, RunId } from "@rove-code/contracts";
+import type { OrchestrationV2Run, RunId } from "@getpaperplane/contracts";
 
 export const MAX_LIMIT_RECOVERY_ATTEMPTS = 3;
 

@@ -5,12 +5,12 @@ import {
   ProviderSessionId,
   type RuntimeMode,
   ThreadId,
-} from "@rove-code/contracts";
-import { GrokSettings } from "@rove-code/provider-grok/settings";
-import * as HostProcess from "@rove-code/shared/HostProcess";
-import { resolveSelfInvocation } from "@rove-code/shared/nodeRuntime";
+} from "@getpaperplane/contracts";
+import { GrokSettings } from "@getpaperplane/provider-grok/settings";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
+import { resolveSelfInvocation } from "@getpaperplane/shared/nodeRuntime";
 import * as EffectAcpErrors from "effect-acp/errors";
-import { xAiRateLimitedErrorCode } from "@rove-code/provider-grok/testing";
+import { xAiRateLimitedErrorCode } from "@getpaperplane/provider-grok/testing";
 import { assert, describe, it } from "@effect/vitest";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -20,27 +20,27 @@ import * as Schema from "effect/Schema";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type * as EffectAcpSchema from "effect-acp/compat";
 
-import * as TestProviderHost from "@rove-code/provider-testing/TestProviderHost";
+import * as TestProviderHost from "@getpaperplane/provider-testing/TestProviderHost";
 import * as ProjectStore from "../ProjectStore.ts";
-import { buildInitialGrokProviderSnapshot } from "@rove-code/provider-grok/testing";
-import type { ProviderInstance } from "@rove-code/provider-core/server/driver";
+import { buildInitialGrokProviderSnapshot } from "@getpaperplane/provider-grok/testing";
+import type { ProviderInstance } from "@getpaperplane/provider-core/server/driver";
 import * as ProviderInstanceRegistry from "../../provider/ProviderInstanceRegistry.ts";
-import * as IdAllocator from "@rove-code/provider-core/server/IdAllocator";
-import * as McpProviderSessions from "@rove-code/provider-core/server/McpProviderSessions";
-import * as ProviderAdapter from "@rove-code/provider-core/server/ProviderAdapter";
+import * as IdAllocator from "@getpaperplane/provider-core/server/IdAllocator";
+import * as McpProviderSessions from "@getpaperplane/provider-core/server/McpProviderSessions";
+import * as ProviderAdapter from "@getpaperplane/provider-core/server/ProviderAdapter";
 import * as RuntimePolicy from "../RuntimePolicy.ts";
-import { acpPermissionDisposition } from "@rove-code/provider-acp/server/clientPolicy";
+import { acpPermissionDisposition } from "@getpaperplane/provider-acp/server/clientPolicy";
 import {
   AcpProviderCapabilitiesV2,
   acpCompletedTurnShouldTerminalizeTool,
   acpSubagentStatusBlocksTurnSettlement,
   acpSupportsImagePrompts,
-} from "@rove-code/provider-acp/server/adapter";
+} from "@getpaperplane/provider-acp/server/adapter";
 import {
   makeGrokAcpAdapterFlavor,
   makeGrokAdapterV2,
   GrokProviderCapabilitiesV2,
-} from "@rove-code/provider-grok/testing";
+} from "@getpaperplane/provider-grok/testing";
 
 const LAUNCH_TEST_GROK_SETTINGS = Schema.decodeSync(GrokSettings)({
   binaryPath: "grok-launch-test",
@@ -301,7 +301,7 @@ describe("Grok permission prompts", () => {
   ).permissionDisposition;
 
   // grok_auto_blocked_command replays Auto end to end. When an explicit policy
-  // launches Grok asking instead, Rove's policy still answers its prompts.
+  // launches Grok asking instead, Paperplane's policy still answers its prompts.
   it("leaves Auto prompts to the user unless an explicit policy launched Grok asking", () => {
     assert.equal(
       disposition?.(runtimePolicy({ runtimeMode: "auto" }), permissionRequest("read")),

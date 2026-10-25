@@ -1,4 +1,4 @@
-import type { SnapShotAccessibilityNode, SnapShotSource } from "@rove-code/contracts";
+import type { SnapShotAccessibilityNode, SnapShotSource } from "@getpaperplane/contracts";
 
 /** Keep image-relative accessibility coordinates aligned with a recompressed attachment. */
 export function resizeSnapShotSource(

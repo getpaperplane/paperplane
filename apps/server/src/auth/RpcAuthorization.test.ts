@@ -18,7 +18,7 @@ import {
   AuthTerminalOperateScope,
   WS_METHODS,
   WsRpcGroup,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { describe, expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -34,6 +34,10 @@ import * as RpcAuthorization from "./RpcAuthorization.ts";
 describe("RPC authorization scopes", () => {
   it("declares exactly one scope for every RPC in the server group", () => {
     expect(new Set(Object.keys(RPC_REQUIRED_SCOPES))).toEqual(new Set(WsRpcGroup.requests.keys()));
+  });
+
+  it("requires file read access to inspect project configuration", () => {
+    expect(requiredScopeForRpcMethod(WS_METHODS.projectsReadConfig)).toBe(AuthFilesystemReadScope);
   });
 
   it("allows host health subscriptions under the host resource read scope", () => {

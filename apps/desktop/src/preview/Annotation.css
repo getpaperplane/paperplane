@@ -1,55 +1,55 @@
 @import "tailwindcss";
 
 @theme inline {
-  --font-sans: var(--rove-font-sans);
-  --font-mono: var(--rove-font-mono);
-  --color-background: var(--rove-background);
-  --color-foreground: var(--rove-foreground);
-  --color-popover: var(--rove-popover);
-  --color-popover-foreground: var(--rove-popover-foreground);
-  --color-primary: var(--rove-primary);
-  --color-primary-foreground: var(--rove-primary-foreground);
-  --color-muted: var(--rove-muted);
-  --color-muted-foreground: var(--rove-muted-foreground);
-  --color-accent: var(--rove-accent);
-  --color-accent-foreground: var(--rove-accent-foreground);
-  --color-border: var(--rove-border);
-  --color-input: var(--rove-input);
-  --color-ring: var(--rove-ring);
-  --radius-sm: calc(var(--rove-radius) - 4px);
-  --radius-md: calc(var(--rove-radius) - 2px);
-  --radius-lg: var(--rove-radius);
-  --radius-xl: calc(var(--rove-radius) + 4px);
-  --radius-2xl: calc(var(--rove-radius) + 8px);
+  --font-sans: var(--paperplane-font-sans);
+  --font-mono: var(--paperplane-font-mono);
+  --color-background: var(--paperplane-background);
+  --color-foreground: var(--paperplane-foreground);
+  --color-popover: var(--paperplane-popover);
+  --color-popover-foreground: var(--paperplane-popover-foreground);
+  --color-primary: var(--paperplane-primary);
+  --color-primary-foreground: var(--paperplane-primary-foreground);
+  --color-muted: var(--paperplane-muted);
+  --color-muted-foreground: var(--paperplane-muted-foreground);
+  --color-accent: var(--paperplane-accent);
+  --color-accent-foreground: var(--paperplane-accent-foreground);
+  --color-border: var(--paperplane-border);
+  --color-input: var(--paperplane-input);
+  --color-ring: var(--paperplane-ring);
+  --radius-sm: calc(var(--paperplane-radius) - 4px);
+  --radius-md: calc(var(--paperplane-radius) - 2px);
+  --radius-lg: var(--paperplane-radius);
+  --radius-xl: calc(var(--paperplane-radius) + 4px);
+  --radius-2xl: calc(var(--paperplane-radius) + 8px);
 }
 
 :host {
-  --rove-font-sans:
+  --paperplane-font-sans:
     "DM Sans Variable", "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui,
     sans-serif;
-  --rove-font-mono:
+  --paperplane-font-mono:
     "SF Mono", "SFMono-Regular", "JetBrains Mono", Consolas, "Liberation Mono", Menlo, monospace;
-  --rove-radius: 0.625rem;
-  --rove-background: white;
-  --rove-foreground: oklch(0.269 0 0);
-  --rove-popover: white;
-  --rove-popover-foreground: oklch(0.269 0 0);
-  --rove-primary: oklch(0.488 0.217 264);
-  --rove-primary-foreground: white;
-  --rove-muted: rgb(0 0 0 / 4%);
-  --rove-muted-foreground: oklch(0.556 0 0);
-  --rove-accent: rgb(0 0 0 / 4%);
-  --rove-accent-foreground: oklch(0.269 0 0);
-  --rove-border: rgb(0 0 0 / 8%);
-  --rove-input: rgb(0 0 0 / 10%);
-  --rove-ring: oklch(0.488 0.217 264);
-  color: var(--rove-foreground);
-  font-family: var(--rove-font-sans);
+  --paperplane-radius: 0.625rem;
+  --paperplane-background: white;
+  --paperplane-foreground: oklch(0.269 0 0);
+  --paperplane-popover: white;
+  --paperplane-popover-foreground: oklch(0.269 0 0);
+  --paperplane-primary: oklch(0.488 0.217 264);
+  --paperplane-primary-foreground: white;
+  --paperplane-muted: rgb(0 0 0 / 4%);
+  --paperplane-muted-foreground: oklch(0.556 0 0);
+  --paperplane-accent: rgb(0 0 0 / 4%);
+  --paperplane-accent-foreground: oklch(0.269 0 0);
+  --paperplane-border: rgb(0 0 0 / 8%);
+  --paperplane-input: rgb(0 0 0 / 10%);
+  --paperplane-ring: oklch(0.488 0.217 264);
+  color: var(--paperplane-foreground);
+  font-family: var(--paperplane-font-sans);
 }
 
 * {
   box-sizing: border-box;
-  border-color: var(--rove-border);
+  border-color: var(--paperplane-border);
 }
 
 button,
@@ -63,6 +63,6 @@ button:focus-visible,
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--rove-ring) 72%, transparent);
+  outline: 2px solid color-mix(in srgb, var(--paperplane-ring) 72%, transparent);
   outline-offset: -2px;
 }

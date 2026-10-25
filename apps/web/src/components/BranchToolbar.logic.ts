@@ -4,15 +4,15 @@ import type {
   VcsRef,
   ProjectId,
   WorktreeSubmodules,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Schema from "effect/Schema";
-import { deriveLocalBranchNameFromRemoteRef, sanitizeNewRefName } from "@rove-code/shared/git";
+import { deriveLocalBranchNameFromRemoteRef, sanitizeNewRefName } from "@getpaperplane/shared/git";
 import { toSortableTimestamp } from "../lib/threadSort";
 export {
   dedupeRemoteBranchesWithLocalMatches,
   deriveLocalBranchNameFromRemoteRef,
   sanitizeNewRefName,
-} from "@rove-code/shared/git";
+} from "@getpaperplane/shared/git";
 
 export interface EnvironmentOption {
   environmentId: EnvironmentId;

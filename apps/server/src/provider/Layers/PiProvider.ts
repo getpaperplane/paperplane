@@ -5,7 +5,7 @@
  * model runtime could be created against the user's global config, and the
  * model list is the user's configured Pi catalog (settings/auth/models.json).
  * There is no binary to probe and no per-instance version: the Pi version is
- * the pinned dependency Rove Code ships.
+ * the pinned dependency Paperplane ships.
  *
  * @module provider/Layers/PiProvider
  */
@@ -15,7 +15,7 @@ import {
   type ServerProviderModel,
   type ServerProviderSkill,
   type ServerProviderSlashCommand,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { PI_SDK_VERSION } from "../PiSdkMetadata.ts";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -23,7 +23,7 @@ import * as Effect from "effect/Effect";
 import {
   buildServerProvider,
   type ServerProviderDraft,
-} from "@rove-code/provider-core/server/snapshotProbe";
+} from "@getpaperplane/provider-core/server/snapshotProbe";
 
 const PI_PRESENTATION = {
   displayName: "Pi",
@@ -84,7 +84,7 @@ export function buildInitialPiProviderSnapshot(
         auth: { status: "unknown" },
         message: piSettings.enabled
           ? "Probing the Pi SDK…"
-          : "Pi is disabled in Rove Code settings.",
+          : "Pi is disabled in Paperplane settings.",
       },
     });
   });
@@ -123,7 +123,7 @@ export function checkPiProviderStatus(
           version: PI_SDK_VERSION,
           status: "warning",
           auth: { status: "unknown" },
-          message: "Pi is disabled in Rove Code settings.",
+          message: "Pi is disabled in Paperplane settings.",
         },
       });
     }

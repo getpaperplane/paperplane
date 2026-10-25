@@ -3,7 +3,7 @@ import { NativeStackScreenOptions } from "../../native/StackHeader";
 import {
   addProjectRemoteSourceLabel,
   parseAddProjectRemoteSource,
-} from "@rove-code/client-runtime/operations/projects";
+} from "@getpaperplane/client-runtime/operations/projects";
 
 import { AddProjectRepositoryScreen } from "./AddProjectScreen";
 

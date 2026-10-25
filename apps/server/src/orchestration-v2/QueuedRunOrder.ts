@@ -1,4 +1,4 @@
-import type { OrchestrationV2Run, OrchestrationV2ThreadProjection } from "@rove-code/contracts";
+import type { OrchestrationV2Run, OrchestrationV2ThreadProjection } from "@getpaperplane/contracts";
 
 export function isAutomaticCompletionRun(
   projection: Pick<OrchestrationV2ThreadProjection, "runs" | "messages">,

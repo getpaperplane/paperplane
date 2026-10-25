@@ -9,7 +9,7 @@ import type {
   PullRequestReviewPosition,
   PullRequestReviewThread,
   PullRequestThreadCommentsResult,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   ChevronDownIcon,
   ChevronRightIcon,
@@ -115,7 +115,7 @@ type ReviewAnnotation = DiffLineAnnotation<ReviewAnnotationGroup>;
 /** Commits per press of "Show more" in the scope menu. */
 const COMMIT_PAGE_SIZE = 10;
 
-const PULL_REQUEST_FILE_TREE_STORAGE_KEY = "rove.pullRequestFileTreeOpen";
+const PULL_REQUEST_FILE_TREE_STORAGE_KEY = "paperplane.pullRequestFileTreeOpen";
 
 /** One answer from the host: a whole number of files, and where the next one carries on. */
 interface DiffSlice {

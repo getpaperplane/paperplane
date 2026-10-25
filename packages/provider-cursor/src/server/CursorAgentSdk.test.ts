@@ -1,11 +1,11 @@
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { assert, describe, it } from "@effect/vitest";
-import { ProviderSessionId, ThreadId } from "@rove-code/contracts";
+import { ProviderSessionId, ThreadId } from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import { vi } from "vite-plus/test";
 
-import * as ProviderEventLoggers from "@rove-code/provider-core/server/ProviderEventLoggers";
+import * as ProviderEventLoggers from "@getpaperplane/provider-core/server/ProviderEventLoggers";
 import * as CursorAgentSdk from "./CursorAgentSdk.ts";
 import * as CursorSdk from "./CursorSdk.ts";
 

@@ -1,4 +1,4 @@
-import type { EnvironmentId, ProjectId, ServerSettings } from "@rove-code/contracts";
+import type { EnvironmentId, ProjectId, ServerSettings } from "@getpaperplane/contracts";
 
 export type AutoSettleSettings = Pick<
   ServerSettings,

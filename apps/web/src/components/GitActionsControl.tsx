@@ -5,11 +5,11 @@ import {
   AuthSourceControlWriteScope,
   SourceControlProviderKind,
   type ScopedThreadRef,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   isAtomCommandInterrupted,
   squashAtomCommandFailure,
-} from "@rove-code/client-runtime/state/runtime";
+} from "@getpaperplane/client-runtime/state/runtime";
 import type {
   GitRunStackedActionResult,
   GitStackedAction,
@@ -18,7 +18,7 @@ import type {
   SourceControlPublishRepositoryResult,
   SourceControlRepositoryVisibility,
   VcsStatusResult,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { useNavigate } from "@tanstack/react-router";
 import * as Option from "effect/Option";
 import { type MouseEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -107,11 +107,11 @@ import { threadEnvironment } from "~/state/threads";
 import { useAtomCommand } from "~/state/use-atom-command";
 import { vcsActionManager, vcsEnvironment } from "~/state/vcs";
 import { randomUUID } from "~/lib/utils";
-import { resolvePathLinkTarget } from "@rove-code/shared/fileLinks";
+import { resolvePathLinkTarget } from "@getpaperplane/shared/fileLinks";
 import {
   linkedPullRequestContextOf,
   resolveThreadCurrentPullRequestLink,
-} from "@rove-code/shared/threadPullRequests";
+} from "@getpaperplane/shared/threadPullRequests";
 import { type DraftId, useComposerDraftStore } from "~/composerDraftStore";
 import {
   THREAD_DETAILS_PANEL_CHEVRON_CLASS,
@@ -121,8 +121,8 @@ import {
   THREAD_DETAILS_PANEL_SPLIT_SEPARATOR_CLASS,
 } from "./chat/threadDetailsPanelStyles";
 import { getSourceControlPresentation, sourceControlIcon } from "~/sourceControlPresentation";
-import { sourceControlClients } from "@rove-code/client-runtime/source-control-clients";
-import { formatDiffCount } from "@rove-code/client-runtime/diff-count";
+import { sourceControlClients } from "@getpaperplane/client-runtime/source-control-clients";
+import { formatDiffCount } from "@getpaperplane/client-runtime/diff-count";
 import { useOpenLink } from "~/browser/useOpenLink";
 
 interface GitActionsControlProps {

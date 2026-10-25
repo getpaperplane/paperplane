@@ -6,7 +6,7 @@ import {
   ProviderThreadId,
   RunId,
   ThreadId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -20,8 +20,8 @@ import {
   historicalMessage,
   renderHistory,
   selectHistory,
-} from "@rove-code/provider-core/server/handoffBudget";
-import * as IdAllocator from "@rove-code/provider-core/server/IdAllocator";
+} from "@getpaperplane/provider-core/server/handoffBudget";
+import * as IdAllocator from "@getpaperplane/provider-core/server/IdAllocator";
 
 export class ContextHandoffPrepareError extends Schema.TaggedError<ContextHandoffPrepareError>()(
   "ContextHandoffPrepareError",
@@ -91,7 +91,7 @@ export interface ContextHandoffServiceV2Shape {
 export class ContextHandoffServiceV2 extends Context.Service<
   ContextHandoffServiceV2,
   ContextHandoffServiceV2Shape
->()("@rove-code/server/orchestration-v2/ContextHandoffService/ContextHandoffServiceV2") {}
+>()("@getpaperplane/server/orchestration-v2/ContextHandoffService/ContextHandoffServiceV2") {}
 
 function compactText(text: string, maxLength = 240): string {
   const compacted = text.replace(/\s+/g, " ").trim();
@@ -153,7 +153,7 @@ function makeLegacyImportSummary(items: ReadonlyArray<OrchestrationV2TurnItem>):
     }
   });
   const header =
-    "Imported conversation history from the previous Rove Code orchestrator. Use it as context; do not repeat it unless the user asks.";
+    "Imported conversation history from the previous Paperplane orchestrator. Use it as context; do not repeat it unless the user asks.";
   const maxChars = 32_000;
   const selected: Array<string> = [];
   let remaining = maxChars - header.length - 2;

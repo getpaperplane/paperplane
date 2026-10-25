@@ -1,3 +1,4 @@
+import { warnIgnoredLegacyEnvironment } from "@getpaperplane/shared/legacyEnvironment";
 import * as MacPermissions from "./permissions/MacPermissions.ts";
 for (const stream of [process.stdout, process.stderr]) {
   stream.on("error", (err: NodeJS.ErrnoException) => {
@@ -12,14 +13,16 @@ import * as NodeServices from "@effect/platform-node/NodeServices";
 import * as NodeFS from "node:fs";
 import * as NodeOS from "node:os";
 import * as Effect from "effect/Effect";
+import * as Cause from "effect/Cause";
 import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
 
 import * as Electron from "electron";
 
-import * as NetService from "@rove-code/shared/Net";
-import * as HostProcess from "@rove-code/shared/HostProcess";
-import type { RemoteRoveRunnerOptions } from "@rove-code/ssh/tunnel";
+import * as NetService from "@getpaperplane/shared/Net";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
+import { migrateDefaultHome } from "@getpaperplane/shared/homeMigration";
+import type { RemotePaperplaneRunnerOptions } from "@getpaperplane/ssh/tunnel";
 import serverPackageJson from "../../server/package.json" with { type: "json" };
 
 import * as DesktopIpc from "./ipc/DesktopIpc.ts";
@@ -108,7 +111,7 @@ const layerDesktopEnvironment = Layer.unwrap(
 // a source checkout instead so the two sides can be iterated together.
 const resolveDesktopSshCliRunner = (
   environment: DesktopEnvironment.DesktopEnvironment["Service"],
-): RemoteRoveRunnerOptions => {
+): RemotePaperplaneRunnerOptions => {
   const devRemoteEntryPath = Option.getOrUndefined(environment.devRemoteServerEntryPath);
   if (environment.isDevelopment && devRemoteEntryPath !== undefined) {
     return {
@@ -253,4 +256,30 @@ const layerDesktopRuntime = layerDesktopClerk.pipe(
   Layer.provideMerge(DesktopPreReadyPlatform.layer),
 );
 
-DesktopApp.program.pipe(Effect.provide(layerDesktopRuntime), NodeRuntime.runMain);
+warnIgnoredLegacyEnvironment(process.env, (message) => process.stderr.write(`${message}\n`));
+
+// Migration must complete synchronously before Linux settings, Clerk, or any
+// service resolves userData. In particular, do not yield before Clerk's setup.
+try {
+  migrateDefaultHome({
+    homeDirectory: NodeOS.homedir(),
+    explicitHome: process.env.PAPERPLANE_HOME,
+    development: Boolean(process.env.VITE_DEV_SERVER_URL?.trim()),
+  });
+} catch (error) {
+  const message = error instanceof Error ? error.message : String(error);
+  Electron.dialog.showErrorBox("Paperplane could not migrate your data", message);
+  Electron.app.exit(1);
+  throw error;
+}
+
+DesktopApp.program.pipe(
+  Effect.provide(layerDesktopRuntime),
+  // Profile migration runs during layer acquisition, before the normal startup error handler exists.
+  Effect.tapCause((cause) =>
+    Effect.sync(() => {
+      Electron.dialog.showErrorBox("Paperplane could not start", Cause.pretty(cause));
+    }),
+  ),
+  NodeRuntime.runMain,
+);

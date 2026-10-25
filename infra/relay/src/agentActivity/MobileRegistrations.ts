@@ -2,7 +2,7 @@ import type {
   RelayAgentActivitySnapshotResponse,
   RelayDeviceRegistrationRequest,
   RelayLiveActivityRegistrationRequest,
-} from "@rove-code/contracts/relay";
+} from "@getpaperplane/contracts/relay";
 import * as DateTime from "effect/DateTime";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -38,7 +38,7 @@ export class MobileRegistrations extends Context.Service<
       readonly userId: string;
     }) => Effect.Effect<RelayAgentActivitySnapshotResponse, MobileRegistrationError>;
   }
->()("rove-relay/agentActivity/MobileRegistrations") {}
+>()("paperplane-relay/agentActivity/MobileRegistrations") {}
 
 export const make = Effect.gen(function* () {
   const rows = yield* AgentActivityRows.AgentActivityRows;

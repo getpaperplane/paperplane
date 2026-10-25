@@ -12,7 +12,7 @@ if [[ "$CSC_NAME" == *$'\n'* || "$CSC_NAME" == *$'\r'* || "$CSC_NAME" == *'"'* ]
   exit 1
 fi
 
-signing_dir="$(mktemp -d "$RUNNER_TEMP/rove-self-signed.XXXXXX")"
+signing_dir="$(mktemp -d "$RUNNER_TEMP/paperplane-self-signed.XXXXXX")"
 keychain="$signing_dir/signing.keychain-db"
 identity_file="$signing_dir/identity.p12"
 certificate="$signing_dir/certificate.pem"
@@ -49,7 +49,7 @@ security list-keychains -d user -s "${keychains[@]}"
 {
   printf 'CSC_KEYCHAIN=%s\n' "$keychain"
   printf 'CSC_NAME=%s\n' "$CSC_NAME"
-  printf 'ROVE_MACOS_SIGNING_CERT_SHA1=%s\n' "$fingerprint"
-  printf 'ROVE_CLI_MAC_SIGN_IDENTITY=%s\n' "$fingerprint"
+  printf 'PAPERPLANE_MACOS_SIGNING_CERT_SHA1=%s\n' "$fingerprint"
+  printf 'PAPERPLANE_CLI_MAC_SIGN_IDENTITY=%s\n' "$fingerprint"
 } >> "$GITHUB_ENV"
 echo "Self-signed macOS identity imported and validated."

@@ -4,7 +4,7 @@ import {
   ClientSettingsSchema,
   DEFAULT_CLIENT_SETTINGS,
   type ClientSettings,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
@@ -91,7 +91,7 @@ function layer(baseDir: string) {
     runningUnderArm64Translation: false,
   }).pipe(
     Layer.provide(
-      Layer.mergeAll(NodeServices.layer, DesktopConfig.layerTest({ ROVE_HOME: baseDir })),
+      Layer.mergeAll(NodeServices.layer, DesktopConfig.layerTest({ PAPERPLANE_HOME: baseDir })),
     ),
   );
 
@@ -107,7 +107,7 @@ const withClientSettings = <A, E, R>(
   Effect.gen(function* () {
     const fileSystem = yield* FileSystem.FileSystem;
     const baseDir = yield* fileSystem.makeTempDirectoryScoped({
-      prefix: "rove-desktop-client-settings-test-",
+      prefix: "paperplane-desktop-client-settings-test-",
     });
     return yield* effect.pipe(Effect.provide(layer(baseDir)));
   }).pipe(Effect.provide(NodeServices.layer), Effect.scoped);
@@ -156,7 +156,7 @@ describe("DesktopClientSettings", () => {
         const fileSystem = yield* FileSystem.FileSystem;
         const settings = yield* DesktopClientSettings.DesktopClientSettings;
         const dotfiles = yield* fileSystem.makeTempDirectoryScoped({
-          prefix: "rove-desktop-client-settings-dotfiles-",
+          prefix: "paperplane-desktop-client-settings-dotfiles-",
         });
         const linkedSettingsPath = `${dotfiles}/client-settings.json`;
         yield* fileSystem.writeFileString(linkedSettingsPath, "{}\n");

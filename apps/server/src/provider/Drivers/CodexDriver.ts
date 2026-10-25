@@ -21,7 +21,7 @@
  *
  * @module provider/Drivers/CodexDriver
  */
-import { CodexSettings, ProviderDriverKind } from "@rove-code/contracts";
+import { CodexSettings, ProviderDriverKind } from "@getpaperplane/contracts";
 import * as Crypto from "effect/Crypto";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -31,11 +31,11 @@ import { HttpClient } from "effect/http";
 import { ChildProcessSpawner } from "effect/process";
 
 import { makeCodexTextGeneration } from "../../textGeneration/CodexTextGeneration.ts";
-import * as ProviderLatestVersions from "@rove-code/provider-core/server/ProviderLatestVersions";
-import * as ProviderHost from "@rove-code/provider-core/server/ProviderHost";
+import * as ProviderLatestVersions from "@getpaperplane/provider-core/server/ProviderLatestVersions";
+import * as ProviderHost from "@getpaperplane/provider-core/server/ProviderHost";
 import * as ServerConfig from "../../config.ts";
-import { expandHomePath } from "@rove-code/provider-core/server/pathExpansion";
-import * as ProviderEventLoggers from "@rove-code/provider-core/server/ProviderEventLoggers";
+import { expandHomePath } from "@getpaperplane/provider-core/server/pathExpansion";
+import * as ProviderEventLoggers from "@getpaperplane/provider-core/server/ProviderEventLoggers";
 import {
   createCodexAdapterV2,
   type CodexAdapterV2DriverEnv,
@@ -49,24 +49,24 @@ import {
   withCodexAppServerClient,
 } from "../CodexProvider.ts";
 import { resolveCodexLaunchArgs } from "../codexLaunchArgs.ts";
-import { makeManagedServerProvider } from "@rove-code/provider-core/server/managedProvider";
-import * as ModelCatalog from "@rove-code/provider-core/server/ModelCatalog";
+import { makeManagedServerProvider } from "@getpaperplane/provider-core/server/managedProvider";
+import * as ModelCatalog from "@getpaperplane/provider-core/server/ModelCatalog";
 import { applyCodexModelCatalog } from "../codexModelCatalog.ts";
-import type { ProviderDriver, ProviderInstance } from "@rove-code/provider-core/server/driver";
-import { withInstanceIdentity } from "@rove-code/provider-core/server/instanceIdentity";
-import { mergeProviderInstanceEnvironment } from "@rove-code/provider-core/server/instanceEnvironment";
+import type { ProviderDriver, ProviderInstance } from "@getpaperplane/provider-core/server/driver";
+import { withInstanceIdentity } from "@getpaperplane/provider-core/server/instanceIdentity";
+import { mergeProviderInstanceEnvironment } from "@getpaperplane/provider-core/server/instanceEnvironment";
 import {
   enrichProviderSnapshotWithVersionAdvisory,
   makeCachedProviderMaintenanceResolution,
   makePackageManagedProviderMaintenanceResolver,
   normalizeCommandPath,
   resolveProviderMaintenanceCapabilitiesEffect,
-} from "@rove-code/provider-core/server/maintenanceResolver";
+} from "@getpaperplane/provider-core/server/maintenanceResolver";
 import {
   haveProviderSnapshotSettingsChanged,
   makeProviderSnapshotSettingsSource,
   type ProviderSnapshotSettings,
-} from "@rove-code/provider-core/server/snapshotSettings";
+} from "@getpaperplane/provider-core/server/snapshotSettings";
 import {
   codexContinuationIdentity,
   materializeCodexShadowHome,
@@ -77,7 +77,7 @@ import { codexUsageReader } from "./codexUsage.ts";
 import * as CodexInstallation from "../CodexInstallation.ts";
 import * as ServerSecretStore from "../../auth/ServerSecretStore.ts";
 import * as ServerEnvironment from "../../environment/ServerEnvironment.ts";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 const decodeCodexSettings = Schema.decodeSync(CodexSettings);
 
 const DRIVER_KIND = ProviderDriverKind.make("codex");

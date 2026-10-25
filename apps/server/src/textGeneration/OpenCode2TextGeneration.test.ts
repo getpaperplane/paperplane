@@ -1,13 +1,13 @@
 import { assert, it } from "@effect/vitest";
 import * as NodeServices from "@effect/platform-node/NodeServices";
-import { ProviderInstanceId } from "@rove-code/contracts";
+import { ProviderInstanceId } from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 
-import * as TestProviderHost from "@rove-code/provider-testing/TestProviderHost";
+import * as TestProviderHost from "@getpaperplane/provider-testing/TestProviderHost";
 import * as OpenCode2AdapterV2Testkit from "../orchestration-v2/Adapters/OpenCode2AdapterV2.testkit.ts";
-import * as OpenCode2Server from "@rove-code/provider-opencode/server/v2/OpenCode2Server";
-import * as OpenCode2TextGeneration from "@rove-code/provider-opencode/server/v2/textGeneration";
+import * as OpenCode2Server from "@getpaperplane/provider-opencode/server/v2/OpenCode2Server";
+import * as OpenCode2TextGeneration from "@getpaperplane/provider-opencode/server/v2/textGeneration";
 import { OPENCODE2_TITLE_GENERATION } from "./OpenCode2TextGeneration.fixture.ts";
 
 const layer = TestProviderHost.layer().pipe(Layer.provideMerge(NodeServices.layer));

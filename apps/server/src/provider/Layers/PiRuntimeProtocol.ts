@@ -1,7 +1,7 @@
 import type { PiWorkloadConfig } from "../../diagnostics/PiWorkloadPolicy.ts";
 import type { PiCatalogHost, PiCatalogHostOptions } from "./PiCatalogHost.ts";
 import type { PiCreateSessionInput, PiSessionEventLike, PiSessionLike } from "./PiAdapter.ts";
-import type { McpProviderSessionConfig } from "@rove-code/provider-core/server/mcpSession";
+import type { McpProviderSessionConfig } from "@getpaperplane/provider-core/server/mcpSession";
 
 export type PiPromptOptions = Omit<
   NonNullable<Parameters<PiSessionLike["prompt"]>[1]>,

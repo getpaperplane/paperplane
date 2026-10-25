@@ -1,4 +1,4 @@
-import { SourceControlProviderKind } from "@rove-code/contracts";
+import { SourceControlProviderKind } from "@getpaperplane/contracts";
 import { assert, describe, expect, it } from "@effect/vitest";
 import * as DateTime from "effect/DateTime";
 import {
@@ -17,8 +17,8 @@ import {
   type PullRequestSummary,
   type ServerSettings as ContractServerSettings,
   type ServerSettingsPatch,
-} from "@rove-code/contracts";
-import { applyServerSettingsPatch } from "@rove-code/shared/serverSettings";
+} from "@getpaperplane/contracts";
+import { applyServerSettingsPatch } from "@getpaperplane/shared/serverSettings";
 import * as Crypto from "effect/Crypto";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";

@@ -1,4 +1,4 @@
-import { resolvePathLinkTarget } from "@rove-code/shared/fileLinks";
+import { resolvePathLinkTarget } from "@getpaperplane/shared/fileLinks";
 import { describe, expect, it } from "vite-plus/test";
 
 import {

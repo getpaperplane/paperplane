@@ -1,5 +1,5 @@
-import type { ScopedThreadRef } from "@rove-code/contracts";
-import { parseThreadLinkPrompt, withoutPromptLinkParams } from "@rove-code/shared/promptLinks";
+import type { ScopedThreadRef } from "@getpaperplane/contracts";
+import { parseThreadLinkPrompt, withoutPromptLinkParams } from "@getpaperplane/shared/promptLinks";
 import { useLocation, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 

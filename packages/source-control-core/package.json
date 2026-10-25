@@ -1,5 +1,5 @@
 {
-  "name": "@rove-code/source-control-core",
+  "name": "@getpaperplane/source-control-core",
   "private": true,
   "type": "module",
   "exports": {
@@ -49,8 +49,8 @@
     "test": "vp test run --config ../../vite.config.ts --dir ."
   },
   "dependencies": {
-    "@rove-code/contracts": "workspace:*",
-    "@rove-code/shared": "workspace:*",
+    "@getpaperplane/contracts": "workspace:*",
+    "@getpaperplane/shared": "workspace:*",
     "effect": "catalog:"
   },
   "devDependencies": {

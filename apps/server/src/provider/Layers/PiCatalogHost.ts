@@ -24,8 +24,8 @@ import type {
   PiThinkingLevel,
   ServerProviderModel,
   ServerProviderSlashCommand,
-} from "@rove-code/contracts";
-import { createModelCapabilities } from "@rove-code/shared/model";
+} from "@getpaperplane/contracts";
+import { createModelCapabilities } from "@getpaperplane/shared/model";
 import * as Effect from "effect/Effect";
 
 import {
@@ -36,7 +36,7 @@ import {
   type AgentSession,
   type ModelRuntime,
 } from "@earendil-works/pi-coding-agent";
-import { buildSelectOptionDescriptor } from "@rove-code/provider-core/server/snapshotProbe";
+import { buildSelectOptionDescriptor } from "@getpaperplane/provider-core/server/snapshotProbe";
 import { disposePiResource } from "./PiLifecycle.ts";
 import {
   PI_THINKING_DESCRIPTOR_ID,
@@ -58,7 +58,7 @@ export interface PiCatalogHostOptions {
 
 const MAX_WARNINGS = 50;
 const TERMINAL_UI_NOTICE =
-  "A Pi extension in an active thread requested terminal-only controls. These controls do not work in Rove. Use Pi's terminal UI to access them.";
+  "A Pi extension in an active thread requested terminal-only controls. These controls do not work in Paperplane. Use Pi's terminal UI to access them.";
 
 function pushWarning(warnings: Array<string>, warning: string): void {
   // Repeated refreshes would otherwise stack the same message.

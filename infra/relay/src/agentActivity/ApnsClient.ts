@@ -1,4 +1,4 @@
-import type { RelayAgentActivityAggregateState } from "@rove-code/contracts/relay";
+import type { RelayAgentActivityAggregateState } from "@getpaperplane/contracts/relay";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -173,7 +173,7 @@ function makeLiveActivityRequest(input: MakeLiveActivityRequestInput): ApnsLiveA
 function notificationThreadId(notification: ApnsNotificationPayload): string {
   return notification.threadId.length > 0
     ? `${notification.environmentId}/${notification.threadId}`
-    : "rove-agent-alerts";
+    : "paperplane-agent-alerts";
 }
 
 function makePushNotificationRequest(input: {
@@ -227,7 +227,7 @@ export class ApnsClient extends Context.Service<
       readonly issuedAtUnixSeconds: number;
     }) => Effect.Effect<ApnsDeliveryResult, ApnsError>;
   }
->()("rove-relay/agentActivity/ApnsClient") {}
+>()("paperplane-relay/agentActivity/ApnsClient") {}
 
 export const make = Effect.gen(function* () {
   const httpClient = yield* HttpClient.HttpClient;

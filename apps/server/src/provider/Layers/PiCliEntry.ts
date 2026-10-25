@@ -24,8 +24,8 @@ function resolvePiCliEntry(packageDir = getPackageDir()): string {
  * Make this process relaunchable as the `pi` CLI.
  *
  * Pi extensions start subagents as `process.execPath process.argv[1] ...piArgs`
- * (see Pi's `examples/extensions/subagent`). Inside Rove, argv[1] is the Pi
- * runtime worker, which only speaks Rove's IPC protocol. Pointing it at the
+ * (see Pi's `examples/extensions/subagent`). Inside Paperplane, argv[1] is the Pi
+ * runtime worker, which only speaks Paperplane's IPC protocol. Pointing it at the
  * hosted SDK's CLI lets those children run the same Pi, under the same runtime:
  * Electron can read the SDK inside app.asar because children inherit
  * ELECTRON_RUN_AS_NODE, and plain Node reads it from disk.

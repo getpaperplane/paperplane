@@ -9,14 +9,14 @@ import * as EffectAcpSchemaV1 from "effect-acp/schema-v1";
 import {
   deriveToolActivityPresentation,
   mergeToolActivityData,
-} from "@rove-code/shared/toolActivity";
-import { ROVE_MCP_SERVER_NAME } from "@rove-code/shared/roveMcp";
-import { ROVE_MCP_TOOL_NAMES } from "@rove-code/shared/roveMcpToolPresentation";
+} from "@getpaperplane/shared/toolActivity";
+import { PAPERPLANE_MCP_SERVER_NAME } from "@getpaperplane/shared/paperplaneMcp";
+import { PAPERPLANE_MCP_TOOL_NAMES } from "@getpaperplane/shared/paperplaneMcpToolPresentation";
 import type {
   OrchestrationV2ProviderThreadNativeMetadata,
   ThreadTokenUsageSnapshot,
   ToolLifecycleItemType,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -335,7 +335,7 @@ export function acpContentBlockDisplayText(
       const mimeType = boundedContentMetadata(content.mimeType, 256) || "unknown type";
       return `[ACP audio (${mimeType})]`;
     }
-    case "_rove_unknown":
+    case "_paperplane_unknown":
       return `[Unsupported ACP content: ${boundedContentMetadata(content.originalType, 128) || "unknown"}]`;
   }
 }
@@ -369,9 +369,9 @@ function sanitizeAcpToolCallContent(
         };
       case "terminal":
         return { type: "terminal", terminalId: entry.terminalId };
-      case "_rove_unknown":
+      case "_paperplane_unknown":
         return {
-          type: "_rove_unknown",
+          type: "_paperplane_unknown",
           originalType: boundedContentMetadata(entry.originalType, 128) || "unknown",
           raw: null,
         };
@@ -1053,7 +1053,7 @@ export interface AcpMcpToolCallIdentity {
   readonly input?: Record<string, unknown>;
 }
 
-/** Matches an invocation of Rove's `acp-mcp-call` bridge fallback CLI. */
+/** Matches an invocation of Paperplane's `acp-mcp-call` bridge fallback CLI. */
 const ACP_MCP_FALLBACK_CALL = /(?:^|[\s"'=])acp-mcp-call[\s"']+([A-Za-z0-9_.-]+)(?:\s+(.+?))?\s*$/u;
 
 function acpMcpFallbackInput(value: string | undefined): Record<string, unknown> | undefined {
@@ -1079,36 +1079,35 @@ function acpMcpFallbackInput(value: string | undefined): Record<string, unknown>
 /**
  * Agents flatten injected MCP tools into model-facing function names with no
  * shared convention (survey of the 2026-08 registry builds): Kilo and
- * opencode use `rove_<tool>`, claude-acp and qwen `mcp__rove__<tool>`,
- * droid `rove___<tool>`, Copilot `rove-<tool>`, cline appends `: <args json>`.
- * Legacy rove-code/rove_code titles remain readable. Rove always injects
- * its server as "rove", and matches are additionally gated on the known
- * Rove tool inventory, so the separator match can stay loose.
+ * opencode use `paperplane_<tool>`, claude-acp and qwen `mcp__paperplane__<tool>`,
+ * droid `paperplane___<tool>`, Copilot `paperplane-<tool>`, cline appends `: <args json>`.
+ * Paperplane injects its server as "paperplane", and matches are additionally gated on the known
+ * Paperplane tool inventory, so the separator match can stay loose.
  */
-const ROVE_MCP_TITLE_CALL =
-  /^(?:mcp[-_]{1,2})?rove(?:[-_ ]?code)?[-_.:/ ]{1,3}(?<tool>[A-Za-z0-9][A-Za-z0-9_.-]*)(?::.*)?$/i;
+const PAPERPLANE_MCP_TITLE_CALL =
+  /^(?:mcp[-_]{1,2})?paperplane[-_.:/ ]{1,3}(?<tool>[A-Za-z0-9][A-Za-z0-9_.-]*)(?::.*)?$/i;
 
 /**
  * Gemini CLI titles injected MCP calls "<tool> (<server> MCP Server)" and
  * qwen-code appends ": <args json>" to the same template; Auggie namespaces
- * tool-first as "<tool>_rove".
+ * tool-first as "<tool>_paperplane".
  */
-const ROVE_MCP_TITLE_SUFFIX_CALL =
-  /^(?<tool>[A-Za-z0-9][A-Za-z0-9_.-]*?)(?: \(rove(?:[-_ ]?code)? MCP Server\)(?::|$)|[-_.]rove(?:[-_ ]?code)?$)/i;
+const PAPERPLANE_MCP_TITLE_SUFFIX_CALL =
+  /^(?<tool>[A-Za-z0-9][A-Za-z0-9_.-]*?)(?: \(paperplane MCP Server\)(?::|$)|[-_.]paperplane$)/i;
 
 /**
  * glm-acp-agent and Kimi CLI register injected MCP tools under their bare
  * names; Kimi additionally appends ": <raw args json>". Safe only because the
- * match is gated on the known Rove tool inventory.
+ * match is gated on the known Paperplane tool inventory.
  */
-const ROVE_MCP_BARE_TITLE_CALL = /^(?<tool>[A-Za-z0-9_]+)(?::\s|$)/;
+const PAPERPLANE_MCP_BARE_TITLE_CALL = /^(?<tool>[A-Za-z0-9_]+)(?::\s|$)/;
 
 /**
  * Best-effort recovery of MCP identity from a generic ACP tool call.
  *
  * ACP has no typed MCP tool-call item, so agents surface MCP calls in
  * agent-specific shapes: codex-acp tags execute calls with
- * `rawInput.server`/`rawInput.tool`, while agents on Rove's terminal fallback
+ * `rawInput.server`/`rawInput.tool`, while agents on Paperplane's terminal fallback
  * run the `acp-mcp-call <tool>` CLI through their command or an embedded
  * client terminal. Recovered identity lets the projection render the same
  * branded MCP item that native providers produce.
@@ -1142,8 +1141,8 @@ export function extractMcpToolCallIdentity(
   // its toolName identifies the call even under future prefix formats.
   const metaServerId = typeof meta?.serverId === "string" ? meta.serverId.trim() : "";
   const metaToolName = typeof meta?.toolName === "string" ? meta.toolName.trim() : "";
-  if (/^rove(?:[-_ ]?code)?$/i.test(metaServerId) && metaToolName.length > 0) {
-    for (const knownTool of ROVE_MCP_TOOL_NAMES) {
+  if (/^paperplane$/i.test(metaServerId) && metaToolName.length > 0) {
+    for (const knownTool of PAPERPLANE_MCP_TOOL_NAMES) {
       const boundary = metaToolName.length - knownTool.length - 1;
       if (
         metaToolName === knownTool ||
@@ -1151,16 +1150,16 @@ export function extractMcpToolCallIdentity(
           boundary >= 0 &&
           !/[A-Za-z0-9]/.test(metaToolName.charAt(boundary)))
       ) {
-        return { server: ROVE_MCP_SERVER_NAME, tool: knownTool };
+        return { server: PAPERPLANE_MCP_SERVER_NAME, tool: knownTool };
       }
     }
   }
   const gooseExtension =
     typeof gooseToolCall?.extensionName === "string" ? gooseToolCall.extensionName.trim() : "";
   const assertsForeignOrigin =
-    (metaServerId.length > 0 && !/^rove(?:[-_ ]?code)?$/i.test(metaServerId)) ||
-    (gooseExtension.length > 0 && !/^rove(?:[-_ ]?code)?$/i.test(gooseExtension));
-  // A foreign origin never brands as Rove. qwen's serverId marks a real MCP
+    (metaServerId.length > 0 && !/^paperplane$/i.test(metaServerId)) ||
+    (gooseExtension.length > 0 && !/^paperplane$/i.test(gooseExtension));
+  // A foreign origin never brands as Paperplane. qwen's serverId marks a real MCP
   // server, but goose reports its built-in extensions (developer__shell,
   // edits) the same way as user MCP servers, so goose stays unclassified and
   // keeps its command and file-change projections.
@@ -1181,15 +1180,15 @@ export function extractMcpToolCallIdentity(
   for (const candidate of candidates) {
     const trimmed = candidate.trim();
     const qualified = /^mcp__(.+?)__(.+)$/i.exec(trimmed);
-    if (qualified?.[1] && qualified[2] && !/^rove(?:[-_ ]?code)?$/i.test(qualified[1]))
+    if (qualified?.[1] && qualified[2] && !/^paperplane$/i.test(qualified[1]))
       return { server: qualified[1], tool: qualified[2] };
     const match =
-      ROVE_MCP_TITLE_CALL.exec(trimmed) ??
-      ROVE_MCP_TITLE_SUFFIX_CALL.exec(trimmed) ??
-      ROVE_MCP_BARE_TITLE_CALL.exec(trimmed);
+      PAPERPLANE_MCP_TITLE_CALL.exec(trimmed) ??
+      PAPERPLANE_MCP_TITLE_SUFFIX_CALL.exec(trimmed) ??
+      PAPERPLANE_MCP_BARE_TITLE_CALL.exec(trimmed);
     const candidateTool = match?.groups?.tool;
-    if (candidateTool !== undefined && ROVE_MCP_TOOL_NAMES.has(candidateTool)) {
-      return { server: ROVE_MCP_SERVER_NAME, tool: candidateTool };
+    if (candidateTool !== undefined && PAPERPLANE_MCP_TOOL_NAMES.has(candidateTool)) {
+      return { server: PAPERPLANE_MCP_SERVER_NAME, tool: candidateTool };
     }
   }
   const commands = [
@@ -1201,11 +1200,11 @@ export function extractMcpToolCallIdentity(
   for (const command of commands) {
     const match = ACP_MCP_FALLBACK_CALL.exec(command);
     if (match?.[1] !== undefined) {
-      // The acp-mcp-call CLI exists only as Rove's bridge fallback, so the
-      // server identity is Rove's by construction.
+      // The acp-mcp-call CLI exists only as Paperplane's bridge fallback, so the
+      // server identity is Paperplane's by construction.
       const input = acpMcpFallbackInput(match[2]);
       return {
-        server: ROVE_MCP_SERVER_NAME,
+        server: PAPERPLANE_MCP_SERVER_NAME,
         tool: match[1],
         ...(input === undefined ? {} : { input }),
       };
@@ -1358,7 +1357,7 @@ export function syntheticLoadSessionResponseFromInitialize(
   return {
     ...(modes ? { modes } : {}),
     _meta: {
-      roveSessionLoadReady: "replay_idle",
+      paperplaneSessionLoadReady: "replay_idle",
     },
   };
 }
@@ -1633,7 +1632,7 @@ export function parseSessionUpdateEvent(params: EffectAcpSchema.SessionNotificat
       });
       break;
     }
-    case "_rove_unknown": {
+    case "_paperplane_unknown": {
       events.push({
         _tag: "UnknownUpdate",
         updateType: boundedContentMetadata(upd.originalSessionUpdate, 128) || "unknown",

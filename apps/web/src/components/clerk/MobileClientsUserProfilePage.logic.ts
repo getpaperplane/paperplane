@@ -1,4 +1,4 @@
-import type { RelayClientDeviceRecord } from "@rove-code/contracts/relay";
+import type { RelayClientDeviceRecord } from "@getpaperplane/contracts/relay";
 
 const mobileClientUpdatedAtFormatter = new Intl.DateTimeFormat(undefined, {
   dateStyle: "medium",
@@ -21,7 +21,7 @@ export function mobileClientPlatformLabel(device: RelayClientDeviceRecord): stri
       : device.iosMajorVersion === null
         ? "iOS"
         : `iOS ${device.iosMajorVersion}`;
-  return `${platform}${device.appVersion ? ` · Rove Code ${device.appVersion}` : ""}`;
+  return `${platform}${device.appVersion ? ` · Paperplane ${device.appVersion}` : ""}`;
 }
 
 export function mobileClientNotificationDetail(device: RelayClientDeviceRecord): string {

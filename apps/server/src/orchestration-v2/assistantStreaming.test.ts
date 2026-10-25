@@ -1,8 +1,14 @@
 import { describe, expect, it } from "vite-plus/test";
-import { MessageId, NodeId, ProviderDriverKind, ThreadId, TurnItemId } from "@rove-code/contracts";
+import {
+  MessageId,
+  NodeId,
+  ProviderDriverKind,
+  ThreadId,
+  TurnItemId,
+} from "@getpaperplane/contracts";
 import * as DateTime from "effect/DateTime";
 import { makeAssistantStreamingFilter, splitBufferedAssistantText } from "./assistantStreaming.ts";
-import type * as ProviderAdapter from "@rove-code/provider-core/server/ProviderAdapter";
+import type * as ProviderAdapter from "@getpaperplane/provider-core/server/ProviderAdapter";
 
 const message = (text: string, streaming = true): ProviderAdapter.ProviderAdapterV2Event => ({
   type: "message.updated",

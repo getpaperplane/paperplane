@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";
-import { EnvironmentId } from "@rove-code/contracts";
+import { EnvironmentId } from "@getpaperplane/contracts";
 
 import type { ComposerFileAttachment } from "../../composerDraftStore";
 import {
@@ -16,8 +16,8 @@ describe("resolveMarkdownMediaPreview", () => {
   });
 
   it.each([
-    ["rove:", "https:"],
-    ["rove-dev:", "https:"],
+    ["paperplane:", "https:"],
+    ["paperplane-dev:", "https:"],
     ["http:", "http:"],
     ["https:", "https:"],
   ])(

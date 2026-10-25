@@ -1,28 +1,28 @@
-# Installs the Rove Code CLI from a GitHub Release archive on Windows. Needs
+# Installs the Paperplane CLI from a GitHub Release archive on Windows. Needs
 # only PowerShell 5.1+; no Node, npm, or compiler.
 #
-# This installer is not available until Rove publishes its own CLI archives.
+# This installer is not available until Paperplane publishes its own CLI archives.
 #
 # Environment:
-#   ROVE_CHANNEL           release train to follow: stable, nightly, or preview
+#   PAPERPLANE_CHANNEL           release train to follow: stable, nightly, or preview
 #                            (default: stable; preview is a maintainers' test train)
-#   ROVE_VERSION           exact version to install (overrides ROVE_CHANNEL)
-#   ROVE_HOME              Rove home directory (default: ~\.rove-code)
-#   ROVE_INSTALL_BIN_DIR   where rove.cmd is linked (default: ~\.local\bin)
-#   ROVE_RELEASE_BASE_URL  mirror for releases/download (default: GitHub)
+#   PAPERPLANE_VERSION           exact version to install (overrides PAPERPLANE_CHANNEL)
+#   PAPERPLANE_HOME              Paperplane home directory (default: ~\.paperplane)
+#   PAPERPLANE_INSTALL_BIN_DIR   where paperplane.cmd is linked (default: ~\.local\bin)
+#   PAPERPLANE_RELEASE_BASE_URL  mirror for releases/download (default: GitHub)
 #
-# The archive is unpacked into $ROVE_HOME\runtime\versions\<version>, the
-# same layout `rove service install` uses, so the service reuses this download.
+# The archive is unpacked into $PAPERPLANE_HOME\runtime\versions\<version>, the
+# same layout `paperplane service install` uses, so the service reuses this download.
 $ErrorActionPreference = "Stop"
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
-$repo = "hafiezul/rove"
-$baseUrl = if ($env:ROVE_RELEASE_BASE_URL) { $env:ROVE_RELEASE_BASE_URL.TrimEnd("/") } else { "https://github.com/$repo/releases/download" }
-$roveHome = if ($env:ROVE_HOME) { $env:ROVE_HOME } else { Join-Path $HOME ".rove-code" }
-$binDir = if ($env:ROVE_INSTALL_BIN_DIR) { $env:ROVE_INSTALL_BIN_DIR } else { Join-Path $HOME ".local\bin" }
+$repo = "getpaperplane/paperplane"
+$baseUrl = if ($env:PAPERPLANE_RELEASE_BASE_URL) { $env:PAPERPLANE_RELEASE_BASE_URL.TrimEnd("/") } else { "https://github.com/$repo/releases/download" }
+$paperplaneHome = if ($env:PAPERPLANE_HOME) { $env:PAPERPLANE_HOME } else { Join-Path $HOME ".paperplane" }
+$binDir = if ($env:PAPERPLANE_INSTALL_BIN_DIR) { $env:PAPERPLANE_INSTALL_BIN_DIR } else { Join-Path $HOME ".local\bin" }
 
 function Fail([string] $message) {
-  Write-Error "rove install: $message"
+  Write-Error "paperplane install: $message"
   exit 1
 }
 
@@ -99,7 +99,7 @@ function Fetch([string] $uri, [string] $destination, [switch] $progress) {
   }
 }
 if ($interactive) {
-  [Console]::Error.WriteLine("`n  ${bold}Rove Code$reset ${muted}CLI installer$reset`n")
+  [Console]::Error.WriteLine("`n  ${bold}Paperplane$reset ${muted}CLI installer$reset`n")
 }
 Step "Finding your release..."
 
@@ -113,8 +113,8 @@ $arch = switch ($rawArch) {
   default { Fail "unsupported architecture $rawArch" }
 }
 
-$channel = if ($env:ROVE_CHANNEL) { $env:ROVE_CHANNEL } else { "stable" }
-$version = $env:ROVE_VERSION
+$channel = if ($env:PAPERPLANE_CHANNEL) { $env:PAPERPLANE_CHANNEL } else { "stable" }
+$version = $env:PAPERPLANE_VERSION
 if (-not $version) {
   # Tags are v<semver>; the channel is the prerelease identifier, or none for
   # stable. Only tags of the requested train are considered, so a stable
@@ -123,23 +123,23 @@ if (-not $version) {
     "stable" { '^v\d+\.\d+\.\d+$' }
     "nightly" { '^v\d+\.\d+\.\d+-nightly\.\d+\.\d+$' }
     "preview" { '^v\d+\.\d+\.\d+-preview\.\d+\.\d+$' }
-    default { Fail "ROVE_CHANNEL must be stable, nightly, or preview" }
+    default { Fail "PAPERPLANE_CHANNEL must be stable, nightly, or preview" }
   }
-  $releases = Invoke-RestMethod -Uri "https://api.github.com/repos/$repo/releases?per_page=100" -Headers @{ "User-Agent" = "rove-install" }
+  $releases = Invoke-RestMethod -Uri "https://api.github.com/repos/$repo/releases?per_page=100" -Headers @{ "User-Agent" = "paperplane-install" }
   $tag = ($releases | Where-Object { -not $_.draft -and $_.tag_name -match $tagPattern } | Select-Object -First 1).tag_name
-  if (-not $tag) { Fail "could not find a $channel release; set ROVE_VERSION" }
+  if (-not $tag) { Fail "could not find a $channel release; set PAPERPLANE_VERSION" }
   $version = $tag.Substring(1)
 }
 if ($version -match '-preview\.') {
-  Write-Warning "rove $version is a preview build. Preview builds are cut by maintainers from unreleased branches to exercise the release pipeline. They can be broken, receive no fixes, and are never offered as updates. Set ROVE_CHANNEL=stable (the default) for a supported build."
-  if ($channel -ne "preview" -and -not $env:ROVE_VERSION) {
+  Write-Warning "paperplane $version is a preview build. Preview builds are cut by maintainers from unreleased branches to exercise the release pipeline. They can be broken, receive no fixes, and are never offered as updates. Set PAPERPLANE_CHANNEL=stable (the default) for a supported build."
+  if ($channel -ne "preview" -and -not $env:PAPERPLANE_VERSION) {
     Fail "refusing a preview build that was not explicitly requested"
   }
 }
 
-$stem = "rove-$version-win32-$arch"
+$stem = "paperplane-$version-win32-$arch"
 $archive = "$stem.zip"
-$versionsDir = Join-Path $roveHome "runtime\versions"
+$versionsDir = Join-Path $paperplaneHome "runtime\versions"
 $targetDir = Join-Path $versionsDir $version
 $marker = Join-Path $targetDir ".install-complete"
 
@@ -151,14 +151,14 @@ if ((Test-Path $marker) -and ((Get-Content $marker -Raw).Trim() -eq $version)) {
   New-Item -ItemType Directory -Path $staging | Out-Null
   try {
     if ($interactive) { [Console]::Error.Write("`r$esc[2K") }
-    [Console]::Error.WriteLine("  ${muted}Installing$reset Rove Code $bold$version$reset`n")
+    [Console]::Error.WriteLine("  ${muted}Installing$reset Paperplane $bold$version$reset`n")
     Step "Downloading..."
     try {
       Fetch "$baseUrl/v$version/SHA256SUMS" (Join-Path $staging "SHA256SUMS")
     } catch {
       $status = $_.Exception.Response.StatusCode.value__
       if ($status -eq 404) {
-        Fail "rove $version has no release archive for win32-$arch in this fork"
+        Fail "paperplane $version has no release archive for win32-$arch in this fork"
       }
       throw
     }
@@ -172,7 +172,7 @@ if ((Test-Path $marker) -and ((Get-Content $marker -Raw).Trim() -eq $version)) {
     $actual = (Get-FileHash -Algorithm SHA256 (Join-Path $staging $archive)).Hash.ToLowerInvariant()
     if ($actual -ne $expected) { Fail "checksum mismatch for $archive" }
 
-    Step "Extracting Rove Code..."
+    Step "Extracting Paperplane..."
     # The archive module reads the global preference, not the caller's local scope.
     $savedProgress = $global:ProgressPreference
     try {
@@ -183,7 +183,7 @@ if ((Test-Path $marker) -and ((Get-Content $marker -Raw).Trim() -eq $version)) {
     Get-ChildItem (Join-Path $staging $stem) | Move-Item -Destination $staging
     Remove-Item (Join-Path $staging $stem), (Join-Path $staging $archive), (Join-Path $staging "SHA256SUMS") -Recurse -Force
 
-    & (Join-Path $staging "rove.exe") --version | Out-Null
+    & (Join-Path $staging "paperplane.exe") --version | Out-Null
     if ($LASTEXITCODE -ne 0) { Fail "the downloaded executable does not run" }
     Set-Content -Path (Join-Path $staging ".install-complete") -Value $version -NoNewline
 
@@ -195,19 +195,19 @@ if ((Test-Path $marker) -and ((Get-Content $marker -Raw).Trim() -eq $version)) {
   }
 }
 
-Step "Setting up the rove command..."
+Step "Setting up the paperplane command..."
 New-Item -ItemType Directory -Force -Path $binDir | Out-Null
-$shim = Join-Path $binDir "rove.cmd"
+$shim = Join-Path $binDir "paperplane.cmd"
 if ((Test-Path $shim) -and -not (Get-Content $shim -Raw).Contains($versionsDir)) {
   Fail "$shim belongs to another installation; refusing to replace it"
 }
 # UTF-8 without a BOM: cmd.exe reads the shim as-is, and ASCII would corrupt
 # non-ASCII characters in the user's home path.
-[System.IO.File]::WriteAllText($shim, "@echo off`r`n`"$(Join-Path $targetDir 'rove.exe')`" %*", (New-Object System.Text.UTF8Encoding $false))
+[System.IO.File]::WriteAllText($shim, "@echo off`r`n`"$(Join-Path $targetDir 'paperplane.exe')`" %*", (New-Object System.Text.UTF8Encoding $false))
 if ($interactive) { [Console]::Error.Write("`r$esc[2K") }
-[Console]::Error.WriteLine("  ${green}Installed Rove Code $version$reset`n")
+[Console]::Error.WriteLine("  ${green}Installed Paperplane $version$reset`n")
 if (($env:PATH -split ";") -notcontains $binDir) {
-  Write-Host "  Add $binDir to your PATH, then run ${bold}rove$reset.`n"
+  Write-Host "  Add $binDir to your PATH, then run ${bold}paperplane$reset.`n"
 } else {
-  Write-Host "  Run ${bold}rove$reset to get started.`n"
+  Write-Host "  Run ${bold}paperplane$reset to get started.`n"
 }

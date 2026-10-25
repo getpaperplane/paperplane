@@ -69,7 +69,7 @@ export class CursorSdk extends Context.Service<
     readonly createAgentPlatform: typeof createAgentPlatform;
     readonly SqliteLocalAgentStore: typeof SqliteLocalAgentStore;
   }
->()("@rove-code/provider-cursor/server/CursorSdk") {}
+>()("@getpaperplane/provider-cursor/server/CursorSdk") {}
 
 /** Provide once per process: a second guard would defer to the first and swallow real rejections. */
 export const layer = Layer.effect(

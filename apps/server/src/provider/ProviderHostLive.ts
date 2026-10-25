@@ -4,8 +4,8 @@
  *
  * @module provider/ProviderHostLive
  */
-import * as ProviderHost from "@rove-code/provider-core/server/ProviderHost";
-import { ProviderCredentialError } from "@rove-code/provider-core/server/errors";
+import * as ProviderHost from "@getpaperplane/provider-core/server/ProviderHost";
+import { ProviderCredentialError } from "@getpaperplane/provider-core/server/errors";
 import * as Crypto from "effect/Crypto";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";

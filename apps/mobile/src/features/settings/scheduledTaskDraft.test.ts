@@ -7,7 +7,7 @@ import {
   ProjectId,
   ScheduledTaskId,
   type ScheduledTask,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   scheduledTaskDefaultModel,
   createDraft,

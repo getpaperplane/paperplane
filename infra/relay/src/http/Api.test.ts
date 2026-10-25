@@ -3,7 +3,7 @@ import {
   RelayClientAuth,
   RelayClientPrincipal,
   type RelayClientDeviceRecord,
-} from "@rove-code/contracts/relay";
+} from "@getpaperplane/contracts/relay";
 import * as EnvironmentLinker from "../environments/EnvironmentLinker.ts";
 import * as RelayTokens from "../auth/RelayTokens.ts";
 import * as Devices from "../agentActivity/Devices.ts";
@@ -36,13 +36,13 @@ import * as HttpServerRequest from "effect/http/HttpServerRequest";
 import * as HttpServerResponse from "effect/http/HttpServerResponse";
 import * as HttpApi from "effect/http-api/HttpApi";
 import * as HttpApiBuilder from "effect/http-api/HttpApiBuilder";
-import { EnvironmentId } from "@rove-code/contracts";
+import { EnvironmentId } from "@getpaperplane/contracts";
 import {
   RelayEnvironmentAuth,
   RelayEnvironmentPrincipal,
   RelayApi,
-} from "@rove-code/contracts/relay";
-import { RELAY_MANAGED_TUNNEL_RECOVERY_TYP, signRelayJwt } from "@rove-code/shared/relayJwt";
+} from "@getpaperplane/contracts/relay";
+import { RELAY_MANAGED_TUNNEL_RECOVERY_TYP, signRelayJwt } from "@getpaperplane/shared/relayJwt";
 
 import {
   RELAY_HTTP_ROUTER_CONFIG,
@@ -80,12 +80,12 @@ const relaySettings: RelayConfiguration.RelayConfiguration["Service"] = {
     teamId: "apns-team",
     keyId: "apns-key",
     privateKey: Redacted.make("apns-private-key"),
-    bundleId: "com.example.rove",
+    bundleId: "com.example.paperplane",
     environment: "sandbox",
   },
   clerkSecretKey: Redacted.make("clerk-secret-key"),
   clerkPublishableKey: "pk_test_test",
-  clerkJwtAudience: "rove-relay",
+  clerkJwtAudience: "paperplane-relay",
   apnsDeliveryJobSigningSecret: Redacted.make("apns-delivery-secret"),
   cloudMintPrivateKey: Redacted.make("cloud-mint-private-key"),
   cloudMintPublicKey: "cloud-mint-public-key",
@@ -378,7 +378,7 @@ const linkedEnvironmentRecord = {
 } as const;
 
 describe("relay managed tunnel recovery", () => {
-  it.effect("binds recovery requests to the host, cloud user, and Rove service origin", () =>
+  it.effect("binds recovery requests to the host, cloud user, and Paperplane service origin", () =>
     Effect.gen(function* () {
       const keyPair = NodeCrypto.generateKeyPairSync("ed25519", {
         privateKeyEncoding: { format: "pem", type: "pkcs8" },
@@ -390,7 +390,7 @@ describe("relay managed tunnel recovery", () => {
         privateKey: keyPair.privateKey,
         typ: RELAY_MANAGED_TUNNEL_RECOVERY_TYP,
         payload: {
-          iss: "rove-env:environment-1",
+          iss: "paperplane-env:environment-1",
           aud: "https://relay.example.test",
           sub: "environment-1",
           jti: "recovery-proof",
@@ -453,7 +453,7 @@ describe("relay managed tunnel recovery", () => {
         privateKey: keyPair.privateKey,
         typ: RELAY_MANAGED_TUNNEL_RECOVERY_TYP,
         payload: {
-          iss: "rove-env:environment-1",
+          iss: "paperplane-env:environment-1",
           aud: "https://relay.example.test",
           sub: "environment-1",
           jti: "registration-origin-proof",

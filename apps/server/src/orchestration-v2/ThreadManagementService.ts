@@ -1,7 +1,7 @@
 import type {
   OrchestrationV2SearchThreadInput,
   OrchestrationV2SearchThreadResult,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import type {
   ProjectionRecordField,
   ProjectionRecordFilter,
@@ -34,8 +34,8 @@ import {
   type ScheduledTaskId,
   ThreadId,
   type TurnItemId,
-} from "@rove-code/contracts";
-import { threadTranscriptHeader } from "@rove-code/shared/threadTranscript";
+} from "@getpaperplane/contracts";
+import { threadTranscriptHeader } from "@getpaperplane/shared/threadTranscript";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
@@ -478,7 +478,7 @@ export interface ThreadManagementServiceShape {
 export class ThreadManagementService extends Context.Service<
   ThreadManagementService,
   ThreadManagementServiceShape
->()("@rove-code/server/orchestration-v2/ThreadManagementService") {}
+>()("@getpaperplane/server/orchestration-v2/ThreadManagementService") {}
 
 export function isActiveRun(run: OrchestrationV2Run): boolean {
   return (

@@ -1,4 +1,4 @@
-import type { DatabaseStorageStatus } from "@rove-code/contracts";
+import type { DatabaseStorageStatus } from "@getpaperplane/contracts";
 import { makePeriodicWork } from "../background/periodicWork.ts";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -27,7 +27,7 @@ export class DatabaseStorage extends Context.Service<
     /** Current file accounting, re-published after each maintenance pass. Null until first read. */
     readonly status: Stream.Stream<DatabaseStorageStatus | null>;
   }
->()("@rove-code/server/persistence/DatabaseStorage") {}
+>()("@getpaperplane/server/persistence/DatabaseStorage") {}
 
 /**
  * Deletes superseded history every few hours and hands freed pages back to
@@ -46,12 +46,12 @@ const make = Effect.gen(function* () {
   const statusRef = yield* SubscriptionRef.make<DatabaseStorageStatus | null>(null);
 
   // The notice shows this verbatim; quote for the host's shell. Desktop
-  // installs have no `rove` on PATH, so the command names their launcher.
+  // installs have no `paperplane` on PATH, so the command names their launcher.
   const { command: compactCommand } = yield* resolveHostCliCommand("doctor", [
     "--base-dir",
     config.baseDir,
   ]);
-  // `rove doctor --base-dir` repairs <baseDir>/userdata. A dev server without
+  // `paperplane doctor --base-dir` repairs <baseDir>/userdata. A dev server without
   // an explicit home keeps its state in <baseDir>/dev instead, so there the
   // command would target the live install; publish no status at all.
   const doctorTargetsThisDatabase =

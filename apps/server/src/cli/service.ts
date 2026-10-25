@@ -1,4 +1,4 @@
-import * as HostProcess from "@rove-code/shared/HostProcess";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -10,6 +10,7 @@ import { FetchHttpClient } from "effect/http";
 
 import packageJson from "../../package.json" with { type: "json" };
 import * as BootService from "../cloud/bootService.ts";
+import { retireOldService } from "../cloud/installedStateMigration.ts";
 import { compareExactServiceVersions } from "../cloud/serviceProtocol.ts";
 import type * as ServerConfig from "../config.ts";
 import * as ProcessRunner from "../processRunner.ts";
@@ -83,10 +84,10 @@ export function formatServiceStatus(
   cliVersion: string,
 ): string {
   if (!status.supported) {
-    return "Rove Code service\n  Status: unavailable on this machine\n  Supported on: Linux with systemd, macOS with launchd";
+    return "Paperplane service\n  Status: unavailable on this machine\n  Supported on: Linux with systemd, macOS with launchd";
   }
   if (!status.installed) {
-    return "Rove Code service\n  Status: not installed\n  Next: Run `rove service install`.";
+    return "Paperplane service\n  Status: not installed\n  Next: Run `paperplane service install`.";
   }
   const installedVersion = status.installedVersion ?? cliVersion;
   const problems = (status.problems ?? []).map(
@@ -98,28 +99,34 @@ export function formatServiceStatus(
     compareExactServiceVersions(status.installedVersion, cliVersion) > 0
   ) {
     return [
-      "Rove Code service",
-      `  Status: installed · rove@${installedVersion} (newer than this rove@${cliVersion} CLI)`,
+      "Paperplane service",
+      `  Status: installed · paperplane@${installedVersion} (newer than this paperplane@${cliVersion} CLI)`,
       `  Unit: ${status.unitPath}`,
       `  Logs: ${status.logPath}`,
       ...problems,
-      `  Next: Run \`rove update ${installedVersion}\` to match it, or pass \`--allow-downgrade\` to \`rove service install\` explicitly.`,
+      `  Next: Run \`paperplane update ${installedVersion}\` to match it, or pass \`--allow-downgrade\` to \`paperplane service install\` explicitly.`,
     ].join("\n");
   }
   return [
-    "Rove Code service",
-    `  Status: ${status.current ? `installed · rove@${installedVersion}` : "needs an update or repair"}`,
+    "Paperplane service",
+    `  Status: ${status.current ? `installed · paperplane@${installedVersion}` : "needs an update or repair"}`,
     `  Unit: ${status.unitPath}`,
     `  Logs: ${status.logPath}`,
     ...problems,
-    ...(status.current ? [] : ["  Next: Run `rove service install` to repair it."]),
+    ...(status.current ? [] : ["  Next: Run `paperplane service install` to repair it."]),
   ].join("\n");
 }
 
 const runServiceCommand = Effect.fn("cli.service.run")(function* <A, E>(
   flags: { readonly baseDir: Parameters<typeof resolveCliAuthConfig>[0]["baseDir"] },
   run: Effect.Effect<A, E, BootService.BootService>,
+  replaceOld = false,
 ) {
+  if (replaceOld && Option.isNone(flags.baseDir)) {
+    // Runs the real systemctl/launchctl against the real home: on a machine with the old
+    // service, a test that reaches this without --base-dir stops the developer's live server.
+    yield* retireOldService.pipe(Effect.provide(ProcessRunner.layer));
+  }
   const logLevel = yield* GlobalFlag.LogLevel;
   const config = yield* resolveCliAuthConfig(flags, logLevel);
   return yield* run.pipe(Effect.provide(layer(config)));
@@ -137,7 +144,7 @@ const serviceInstallCommand = Command.make("install", {
   ...serviceReconcileFlags,
   ...serviceLaunchFlags,
 }).pipe(
-  Command.withDescription("Install Rove Code as a background service for this user."),
+  Command.withDescription("Install Paperplane as a background service for this user."),
   Command.withHandler((flags) =>
     runServiceCommand(
       flags,
@@ -158,37 +165,40 @@ const serviceInstallCommand = Command.make("install", {
         });
         if (!result.changed) {
           yield* Console.log(
-            `Rove Code service is already installed with rove@${packageJson.version}.`,
+            `Paperplane service is already installed with paperplane@${packageJson.version}.`,
           );
           return;
         }
         yield* Console.log(
-          `${result.previouslyInstalled ? "Updated" : "Installed"} Rove Code service with rove@${packageJson.version}.\nLogs: ${result.plan.logPath}`,
+          `${result.previouslyInstalled ? "Updated" : "Installed"} Paperplane service with paperplane@${packageJson.version}.\nLogs: ${result.plan.logPath}`,
         );
       }),
+      true,
     ),
   ),
 );
 
-// Keep the deprecated alias for old scripts. `rove update` changes releases;
-// `rove service update` only repairs the installed service.
+// Keep the deprecated alias for old scripts. `paperplane update` changes releases;
+// `paperplane service update` only repairs the installed service.
 const serviceUpdateCommand = Command.make("update", serviceReconcileFlags).pipe(
-  Command.withDescription("Deprecated. Run `rove update` to move to a newer release."),
+  Command.withDescription("Deprecated. Run `paperplane update` to move to a newer release."),
   Command.unlisted,
   Command.withHandler((flags) =>
     runServiceCommand(
       flags,
       Effect.gen(function* () {
         yield* Console.log(
-          "`rove service update` is deprecated: run `rove update` to move to a newer release, or `rove service install` to repair the service. Repairing now.",
+          "`paperplane service update` is deprecated: run `paperplane update` to move to a newer release, or `paperplane service install` to repair the service. Repairing now.",
         );
         const result = yield* reconcileService({ allowDowngrade: flags.allowDowngrade });
         if (!result.changed) {
-          yield* Console.log(`Rove Code service is already using rove@${packageJson.version}.`);
+          yield* Console.log(
+            `Paperplane service is already using paperplane@${packageJson.version}.`,
+          );
           return;
         }
         yield* Console.log(
-          `${result.previouslyInstalled ? "Updated" : "Installed"} Rove Code service with rove@${packageJson.version}.\nLogs: ${result.plan.logPath}`,
+          `${result.previouslyInstalled ? "Updated" : "Installed"} Paperplane service with paperplane@${packageJson.version}.\nLogs: ${result.plan.logPath}`,
         );
       }),
     ),
@@ -197,7 +207,7 @@ const serviceUpdateCommand = Command.make("update", serviceReconcileFlags).pipe(
 
 const serviceRestartCommand = Command.make("restart", projectLocationFlags).pipe(
   Command.withDescription(
-    "Restart the background service. Picks up a version installed by `rove update` that was not restarted at the time.",
+    "Restart the background service. Picks up a version installed by `paperplane update` that was not restarted at the time.",
   ),
   Command.withHandler((flags) =>
     runServiceCommand(
@@ -208,8 +218,8 @@ const serviceRestartCommand = Command.make("restart", projectLocationFlags).pipe
         const restarted = yield* service.restart;
         yield* Console.log(
           restarted
-            ? `Restarted the Rove Code service${status.installedVersion === undefined ? "" : ` on rove@${status.installedVersion}`}.`
-            : "Rove Code service is not installed.",
+            ? `Restarted the Paperplane service${status.installedVersion === undefined ? "" : ` on paperplane@${status.installedVersion}`}.`
+            : "Paperplane service is not installed.",
         );
       }),
     ),
@@ -217,7 +227,7 @@ const serviceRestartCommand = Command.make("restart", projectLocationFlags).pipe
 );
 
 const serviceUninstallCommand = Command.make("uninstall", projectLocationFlags).pipe(
-  Command.withDescription("Stop and remove the Rove Code background service."),
+  Command.withDescription("Stop and remove the Paperplane background service."),
   Command.withHandler((flags) =>
     runServiceCommand(
       flags,
@@ -225,7 +235,7 @@ const serviceUninstallCommand = Command.make("uninstall", projectLocationFlags).
         const service = yield* BootService.BootService;
         const removed = yield* service.uninstall;
         yield* Console.log(
-          removed ? "Removed the Rove Code service." : "Rove Code service is not installed.",
+          removed ? "Removed the Paperplane service." : "Paperplane service is not installed.",
         );
       }),
     ),
@@ -238,7 +248,7 @@ const serviceStatusCommand = Command.make("status", {
   ...projectLocationFlags,
   json: Flag.Boolean("json").pipe(Flag.withDefault(false)),
 }).pipe(
-  Command.withDescription("Show whether the Rove Code background service is installed."),
+  Command.withDescription("Show whether the Paperplane background service is installed."),
   Command.withHandler((flags) =>
     runServiceCommand(
       flags,
@@ -263,7 +273,7 @@ export const offerServiceDuringOnboarding = Effect.gen(function* () {
     return false;
   }
   if (installed && current) {
-    yield* Console.log("Rove Code is already set up to run in the background on this machine.");
+    yield* Console.log("Paperplane is already set up to run in the background on this machine.");
     return true;
   }
   for (const problem of status.problems ?? []) {
@@ -275,7 +285,7 @@ export const offerServiceDuringOnboarding = Effect.gen(function* () {
     compareExactServiceVersions(status.installedVersion, packageJson.version) > 0
   ) {
     yield* Console.log(
-      `A newer rove@${status.installedVersion} background service is installed. Leaving it unchanged.`,
+      `A newer paperplane@${status.installedVersion} background service is installed. Leaving it unchanged.`,
     );
     // This CLI cannot verify the newer service. Keep the manual fallback available.
     return false;
@@ -286,12 +296,12 @@ export const offerServiceDuringOnboarding = Effect.gen(function* () {
   const wanted = yield* Prompt.run(
     Prompt.Confirm({
       message: installed
-        ? "The installed Rove Code service needs an update or repair. Update it now?"
+        ? "The installed Paperplane service needs an update or repair. Update it now?"
         : platform === "darwin"
-          ? "Run Rove Code in the background whenever you log in to this Mac? " +
-            "It stays reachable through Rove Connect while you are logged in."
-          : "Run Rove Code in the background whenever this machine boots? " +
-            "It stays reachable through Rove Connect even after you log out.",
+          ? "Run Paperplane in the background whenever you log in to this Mac? " +
+            "It stays reachable through Paperplane Connect while you are logged in."
+          : "Run Paperplane in the background whenever this machine boots? " +
+            "It stays reachable through Paperplane Connect even after you log out.",
       initial: true,
     }),
   );
@@ -329,7 +339,7 @@ export const recoverServiceOnboardingOffer = <R>(
   );
 
 export const serviceCommand = Command.make("service").pipe(
-  Command.withDescription("Manage the Rove Code background service."),
+  Command.withDescription("Manage the Paperplane background service."),
   Command.withSubcommands([
     serviceInstallCommand,
     serviceRestartCommand,

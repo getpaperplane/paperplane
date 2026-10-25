@@ -2,7 +2,7 @@ import {
   AuthAdministrativeScopes,
   AuthSessionId,
   AuthStandardClientScopes,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";

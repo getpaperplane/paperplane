@@ -1,5 +1,5 @@
-import type { EnvironmentMachineKind } from "@rove-code/contracts";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+import type { EnvironmentMachineKind } from "@getpaperplane/contracts";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 

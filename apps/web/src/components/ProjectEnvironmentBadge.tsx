@@ -1,4 +1,4 @@
-import type { EnvironmentId, EnvironmentMachineKind } from "@rove-code/contracts";
+import type { EnvironmentId, EnvironmentMachineKind } from "@getpaperplane/contracts";
 
 import type { SidebarProjectSnapshot } from "~/sidebarProjectGrouping";
 import { EnvironmentMachineIcon } from "./EnvironmentMachineIcon";

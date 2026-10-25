@@ -21,18 +21,18 @@ Use `vp run dev` for server and web, or `vp run dev:desktop` for the Electron cl
 `dev:server` and `dev:web` start those processes separately.
 See the [mobile README](../../apps/mobile/README.md) for native builds and Metro.
 
-Flags go directly after the task name, for example `vp run dev --home-dir /tmp/rove-dev`.
+Flags go directly after the task name, for example `vp run dev --home-dir /tmp/paperplane-dev`.
 Add `--browser` to open a browser automatically.
 
 ### State and ports
 
-Linked worktrees default to their own `.rove/userdata`, even when `ROVE_HOME` is set.
-The main checkout defaults to `~/.rove-code/dev/userdata`. An explicit `--home-dir` wins in both cases.
-Never run a development server against the live `~/.rove-code/userdata`.
+Linked worktrees default to their own `.paperplane/userdata`, even when `PAPERPLANE_HOME` is set.
+The main checkout defaults to `~/.paperplane/dev`. An explicit `--home-dir` wins in both cases.
+Never run a development server against the live `~/.paperplane/userdata`.
 See [test data](../../AGENTS.md#test-data) for copying a consistent database snapshot.
 
 Read ports from the `[dev-runner]` output. Worktrees derive stable preferences from their paths,
-but occupied ports can shift them. `ROVE_PORT_OFFSET` or `ROVE_DEV_INSTANCE` can select a
+but occupied ports can shift them. `PAPERPLANE_PORT_OFFSET` or `PAPERPLANE_DEV_INSTANCE` can select a
 different preference when needed.
 
 ### Sharing and remote debugging
@@ -45,7 +45,7 @@ Leave `VITE_HTTP_URL` and `VITE_WS_URL` unset. Vite proxies the backend through 
 origin so the same build works over localhost and remote connections.
 
 Shared runs enable bundled dev to avoid a network round trip for each import level.
-`ROVE_BUNDLED_DEV=0` opts out when debugging bundler differences. Two reload traps matter
+`PAPERPLANE_BUNDLED_DEV=0` opts out when debugging bundler differences. Two reload traps matter
 when changing this setup:
 
 - The web entry must dynamically import the app so React refresh initializes before application
@@ -60,7 +60,7 @@ The workarounds live in the [web entry](../../apps/web/src/bootstrap.ts) and
 
 Use this only on a hostname where you trust every service. Browsers send cookies to all ports
 on that hostname. Any service you visit there can receive the reusable admin credential,
-including services unrelated to Rove Code. If you run untrusted services on that hostname, keep
+including services unrelated to Paperplane. If you run untrusted services on that hostname, keep
 normal per-environment pairing instead.
 
 To use one browser profile across web dev worktrees on the same hostname, generate one fixed
@@ -73,16 +73,16 @@ openssl rand -hex 32
 Put that value in the main checkout's gitignored `.env`:
 
 ```dotenv
-ROVE_DEV_AUTH_TOKEN=<the value generated above>
+PAPERPLANE_DEV_AUTH_TOKEN=<the value generated above>
 ```
 
-The `rove.json` Setup Worktree action links that file to each worktree's `.env`. The dev runner reads repository env files at startup. `.env.local` and inherited process
+The `paperplane.json` Setup Worktree action links that file to each worktree's `.env`. The dev runner reads repository env files at startup. `.env.local` and inherited process
 environment values override `.env`, so no per-worktree export is needed after setup.
 
 For a manual worktree or launcher without that link, export the same fixed value instead:
 
 ```sh
-export ROVE_DEV_AUTH_TOKEN="<the value generated above>"
+export PAPERPLANE_DEV_AUTH_TOKEN="<the value generated above>"
 ```
 
 Do not generate a new value at startup. Start or restart `vp run dev --share` after configuration,
@@ -118,12 +118,12 @@ Marketing keeps `astro check` for Astro files.
 On Linux with a systemd user manager and `flock`, run verification inside a shared resource budget:
 
 ```sh
-vp run guarded -- vp run --filter @rove-code/server typecheck
+vp run guarded -- vp run --filter @getpaperplane/server typecheck
 ```
 
-Guarded commands default to a shared 2048 MiB memory ceiling across worktrees and environments for the same OS user, capped by the host's aggregate Rove budget. Explicit limits are hard caps without swap; CPU is not capped. In auto mode, Rove reserves RAM for the system and server and lets agent work use bounded swap, stopping the largest command only when both budgets are exhausted. Commands have a 120-second deadline; set `--timeout-seconds` before the separator to change it (up to 86400 seconds). A job can be killed for running out of memory or time; the purpose is to keep the environment reachable, not to make a large typecheck fit. Background descendants are stopped when their owning command exits. This is opt-in; ordinary commands and other users' processes are unaffected.
+Guarded commands default to a shared 2048 MiB memory ceiling across worktrees and environments for the same OS user, capped by the host's aggregate Paperplane budget. Explicit limits are hard caps without swap; CPU is not capped. In auto mode, Paperplane reserves RAM for the system and server and lets agent work use bounded swap, stopping the largest command only when both budgets are exhausted. Commands have a 120-second deadline; set `--timeout-seconds` before the separator to change it (up to 86400 seconds). A job can be killed for running out of memory or time; the purpose is to keep the environment reachable, not to make a large typecheck fit. Background descendants are stopped when their owning command exits. This is opt-in; ordinary commands and other users' processes are unaffected.
 
-Pi's built-in shell tools have separate, persisted workload protection in provider Settings, enabled automatically on small supported Linux/WSL hosts. `ROVE_PI_MEMORY_BUDGET_MIB` overrides that policy and enables it even when Settings says Off. Pi stays outside the command pool: an oversized shell command fails without disconnecting its runtime. Shell calls serialize across instances; managed background services share their memory pool. Use `workload_start`, `workload_list`, and `workload_stop` for a dev server; ordinary shell-backgrounded children are stopped when the call ends. This uses `app-rove-workloads.slice`, shared with the opt-in guarded wrapper beneath the aggregate `app-rove.slice` budget. Do not nest the guarded wrapper inside an already protected shell call. See [Pi resource limits](../user/providers-pi.md#resource-limits-on-linux-and-wsl) for limits, overrides, resizing, and extension coverage.
+Pi's built-in shell tools have separate, persisted workload protection in provider Settings, enabled automatically on small supported Linux/WSL hosts. `PAPERPLANE_PI_MEMORY_BUDGET_MIB` overrides that policy and enables it even when Settings says Off. Pi stays outside the command pool: an oversized shell command fails without disconnecting its runtime. Shell calls serialize across instances; managed background services share their memory pool. Use `workload_start`, `workload_list`, and `workload_stop` for a dev server; ordinary shell-backgrounded children are stopped when the call ends. This uses `app-paperplane-workloads.slice`, shared with the opt-in guarded wrapper beneath the aggregate `app-paperplane.slice` budget. Do not nest the guarded wrapper inside an already protected shell call. See [Pi resource limits](../user/providers-pi.md#resource-limits-on-linux-and-wsl) for limits, overrides, resizing, and extension coverage.
 
 Use `--memory-mib` before the command separator to request another budget, for example `vp run guarded --memory-mib 3072 -- <command>`. Setup raises limits immediately. A lower hard limit is deferred, with a warning, if live usage is at or above it; the next setup tries again. Use consistent settings across instances because the pool is shared. Old command slices drain naturally and are never reconfigured by the new setup.
 

@@ -22,8 +22,8 @@ import {
   type OrchestrationV2DomainEvent,
   type OrchestrationV2ThreadProjection,
   type OrchestrationV2TurnItem,
-} from "@rove-code/contracts";
-import { boundedSnapshotProjection } from "@rove-code/shared/orchestrationV2BoundedSnapshot";
+} from "@getpaperplane/contracts";
+import { boundedSnapshotProjection } from "@getpaperplane/shared/orchestrationV2BoundedSnapshot";
 import * as NodeHttpPlatform from "@effect/platform-node/NodeHttpPlatform";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import * as DateTime from "effect/DateTime";

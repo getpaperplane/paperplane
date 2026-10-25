@@ -4,7 +4,7 @@ import {
   RunId,
   ThreadId,
   type OrchestrationV2ThreadShell,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 

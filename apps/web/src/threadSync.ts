@@ -1,4 +1,4 @@
-import type { EnvironmentThreadStatus } from "@rove-code/client-runtime/state/threads";
+import type { EnvironmentThreadStatus } from "@getpaperplane/client-runtime/state/threads";
 
 export type ThreadSyncPhase = "loading" | "syncing";
 

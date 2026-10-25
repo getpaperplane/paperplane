@@ -1,4 +1,4 @@
-import { createTerminalEnvironmentAtoms } from "@rove-code/client-runtime/state/terminal";
+import { createTerminalEnvironmentAtoms } from "@getpaperplane/client-runtime/state/terminal";
 
 import { connectionAtomRuntime } from "../connection/runtime";
 

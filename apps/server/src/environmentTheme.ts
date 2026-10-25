@@ -21,8 +21,8 @@ import {
   EnvironmentThemeFile,
   EnvironmentThemeId,
   environmentThemeFileHasColors,
-} from "@rove-code/contracts";
-import { UNPUBLISHABLE_THEME_IDS } from "@rove-code/shared/themePalettes";
+} from "@getpaperplane/contracts";
+import { UNPUBLISHABLE_THEME_IDS } from "@getpaperplane/shared/themePalettes";
 import * as Cause from "effect/Cause";
 import * as Context from "effect/Context";
 import * as Duration from "effect/Duration";
@@ -86,7 +86,7 @@ export class EnvironmentThemeService extends Context.Service<
      */
     readonly streamChanges: Stream.Stream<ReadonlyArray<EnvironmentTheme>>;
   }
->()("@rove-code/server/environmentTheme/EnvironmentThemeService") {}
+>()("@getpaperplane/server/environmentTheme/EnvironmentThemeService") {}
 
 /**
  * Reads a theme file through one opened handle, so every check binds to the

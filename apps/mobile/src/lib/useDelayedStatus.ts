@@ -1,4 +1,7 @@
-import { createDelayedStatus, type ShownStatus } from "@rove-code/client-runtime/delayed-status";
+import {
+  createDelayedStatus,
+  type ShownStatus,
+} from "@getpaperplane/client-runtime/delayed-status";
 import { useEffect, useState } from "react";
 
 /**

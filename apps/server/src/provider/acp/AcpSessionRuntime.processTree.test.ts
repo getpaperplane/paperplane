@@ -5,13 +5,13 @@ import * as NodePath from "node:path";
 import * as NodeURL from "node:url";
 
 import { describe, expect, it, vi } from "@effect/vitest";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 import * as Clock from "effect/Clock";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Scope from "effect/Scope";
 
-import * as AcpSessionRuntime from "@rove-code/provider-acp/server/AcpSessionRuntime";
+import * as AcpSessionRuntime from "@getpaperplane/provider-acp/server/AcpSessionRuntime";
 
 const threadSpawnHelperSource = NodeURL.fileURLToPath(
   new URL("../../../scripts/acp-thread-spawn-helper.c", import.meta.url),
@@ -97,7 +97,7 @@ describe("terminatePosixOwnedProcessTree", () => {
     ).toHaveLength(2);
   });
 
-  it.live("sweeps empty rove-acp sibling leases owned by dead pids only", () =>
+  it.live("sweeps empty paperplane-acp sibling leases owned by dead pids only", () =>
     Effect.sync(() => {
       const scratchRoot = NodePath.join(process.cwd(), "tmp");
       NodeFS.mkdirSync(scratchRoot, { recursive: true });
@@ -115,10 +115,10 @@ describe("terminatePosixOwnedProcessTree", () => {
       const deadPid = 2_147_483_646;
       // Synthetic live foreign pid (not this process, still reported alive by the probe).
       const liveForeignPid = 2_147_483_645;
-      const staleEmpty = writeSibling(`rove-acp-${deadPid}-aaaa`, "0");
-      const currentPidSibling = writeSibling(`rove-acp-${process.pid}-bbbb`, "0");
-      const liveForeignSibling = writeSibling(`rove-acp-${liveForeignPid}-cccc`, "0");
-      const stalePopulated = writeSibling(`rove-acp-${deadPid}-dddd`, "1");
+      const staleEmpty = writeSibling(`paperplane-acp-${deadPid}-aaaa`, "0");
+      const currentPidSibling = writeSibling(`paperplane-acp-${process.pid}-bbbb`, "0");
+      const liveForeignSibling = writeSibling(`paperplane-acp-${liveForeignPid}-cccc`, "0");
+      const stalePopulated = writeSibling(`paperplane-acp-${deadPid}-dddd`, "1");
       const unrelated = writeSibling("other-lease", "0");
       const isProcessAlive = (pid: number) => pid === process.pid || pid === liveForeignPid;
       try {
@@ -136,7 +136,7 @@ describe("terminatePosixOwnedProcessTree", () => {
         expect(NodeFS.existsSync(stalePopulated)).toBe(true);
         expect(NodeFS.existsSync(unrelated)).toBe(true);
         // Missing populated state must not remove a sibling.
-        writeSibling(`rove-acp-${deadPid}-eeee`, null);
+        writeSibling(`paperplane-acp-${deadPid}-eeee`, null);
         AcpSessionRuntime.sweepStaleLinuxCgroupSiblings(parent, {
           isProcessAlive,
           readPopulated: (path) => populatedByPath.get(path),
@@ -145,7 +145,9 @@ describe("terminatePosixOwnedProcessTree", () => {
             NodeFS.rmdirSync(path);
           },
         });
-        expect(NodeFS.existsSync(NodePath.join(parent, `rove-acp-${deadPid}-eeee`))).toBe(true);
+        expect(NodeFS.existsSync(NodePath.join(parent, `paperplane-acp-${deadPid}-eeee`))).toBe(
+          true,
+        );
         expect(NodeFS.existsSync(currentPidSibling)).toBe(true);
       } finally {
         NodeFS.rmSync(parent, { recursive: true, force: true });
@@ -161,7 +163,7 @@ describe("terminatePosixOwnedProcessTree", () => {
       const scratchRoot = NodePath.join(process.cwd(), "tmp");
       NodeFS.mkdirSync(scratchRoot, { recursive: true });
       const scratch = NodeFS.mkdtempSync(NodePath.join(scratchRoot, "acp-cgroup-wrapper-"));
-      const linkedNode = NodePath.join(scratch, "Rove Code AppImage 'quoted'");
+      const linkedNode = NodePath.join(scratch, "Paperplane AppImage 'quoted'");
       const bareGrok = NodePath.join(scratch, "grok");
       const relativeBin = NodePath.join(scratch, "relative-bin");
       const directoryBin = NodePath.join(scratch, "directory-bin");
@@ -203,7 +205,7 @@ describe("terminatePosixOwnedProcessTree", () => {
         "fs.writeFileSync(process.argv[1], JSON.stringify({",
         "  args: process.argv.slice(2),",
         "  electron: process.env.ELECTRON_RUN_AS_NODE,",
-        "  wrapper: process.env.ROVE_ACP_CGROUP_WRAPPER,",
+        "  wrapper: process.env.PAPERPLANE_ACP_CGROUP_WRAPPER,",
         "}));",
       ].join("\n");
       const wrapped = AcpSessionRuntime.wrapCommandForLinuxCgroup(lease, linkedNode, [
@@ -220,7 +222,7 @@ describe("terminatePosixOwnedProcessTree", () => {
           env: {
             ...process.env,
             ELECTRON_RUN_AS_NODE: "1",
-            ROVE_ACP_CGROUP_WRAPPER: "1",
+            PAPERPLANE_ACP_CGROUP_WRAPPER: "1",
           },
         });
         expect(result.status, result.stderr).toBe(0);
@@ -260,7 +262,7 @@ describe("terminatePosixOwnedProcessTree", () => {
     try {
       const wrapped = AcpSessionRuntime.wrapCommandForLinuxCgroup(lease, "/bin/sh", [
         "-c",
-        'printf "%s\\n" "$0" "$1" "$2" "$3" "${ELECTRON_RUN_AS_NODE-}" "${ROVE_ACP_CGROUP_WRAPPER-}" > "$4"',
+        'printf "%s\\n" "$0" "$1" "$2" "$3" "${ELECTRON_RUN_AS_NODE-}" "${PAPERPLANE_ACP_CGROUP_WRAPPER-}" > "$4"',
         "packaged-target",
         "space value",
         "single'quote",
@@ -272,7 +274,7 @@ describe("terminatePosixOwnedProcessTree", () => {
         env: {
           ...process.env,
           ELECTRON_RUN_AS_NODE: "1",
-          ROVE_ACP_CGROUP_WRAPPER: "1",
+          PAPERPLANE_ACP_CGROUP_WRAPPER: "1",
         },
       });
       expect(result.status, result.stderr).toBe(0);
@@ -297,7 +299,7 @@ describe("terminatePosixOwnedProcessTree", () => {
 
       const missingTarget = AcpSessionRuntime.wrapCommandForLinuxCgroup(
         lease,
-        "/nonexistent-rove-probe",
+        "/nonexistent-paperplane-probe",
         [],
       );
       const missingTargetResult = NodeChildProcess.spawnSync(
@@ -357,7 +359,7 @@ describe("terminatePosixOwnedProcessTree", () => {
       ]);
       const provider = NodeChildProcess.spawn(wrapped.command, wrapped.args, {
         detached: true,
-        env: { ...process.env, ELECTRON_RUN_AS_NODE: "1", ROVE_ACP_CGROUP_WRAPPER: "1" },
+        env: { ...process.env, ELECTRON_RUN_AS_NODE: "1", PAPERPLANE_ACP_CGROUP_WRAPPER: "1" },
         stdio: "ignore",
       });
       provider.unref();
@@ -431,8 +433,8 @@ describe("terminatePosixOwnedProcessTree", () => {
       const lease: AcpSessionRuntime.AcpLinuxCgroupLease = {
         contains: () => false,
         exists: () => exists,
-        path: "/test/rove-acp-repopulation",
-        relativePath: "/test/rove-acp-repopulation",
+        path: "/test/paperplane-acp-repopulation",
+        relativePath: "/test/paperplane-acp-repopulation",
         kill: () => {
           killCalls += 1;
           populated = false;
@@ -472,8 +474,8 @@ describe("terminatePosixOwnedProcessTree", () => {
       const lease: AcpSessionRuntime.AcpLinuxCgroupLease = {
         contains: () => false,
         exists: () => true,
-        path: "/test/rove-acp-busy",
-        relativePath: "/test/rove-acp-busy",
+        path: "/test/paperplane-acp-busy",
+        relativePath: "/test/paperplane-acp-busy",
         kill: () => undefined,
         populated: () => false,
         remove: () => {
@@ -482,7 +484,7 @@ describe("terminatePosixOwnedProcessTree", () => {
       };
 
       const error = yield* Effect.flip(AcpSessionRuntime.terminateLinuxCgroupLease(lease));
-      expect(error.detail).toBe("Failed to remove ACP cgroup /test/rove-acp-busy");
+      expect(error.detail).toBe("Failed to remove ACP cgroup /test/paperplane-acp-busy");
       expect(error.cause).toBe(removeError);
     }),
   );
@@ -503,8 +505,8 @@ describe("terminatePosixOwnedProcessTree", () => {
     const lease: AcpSessionRuntime.AcpLinuxCgroupLease = {
       contains: () => true,
       exists: () => true,
-      path: "/test/rove-acp-root",
-      relativePath: "/test/rove-acp-root",
+      path: "/test/paperplane-acp-root",
+      relativePath: "/test/paperplane-acp-root",
       kill: () => undefined,
       populated: () => true,
       remove: () => undefined,
@@ -880,39 +882,41 @@ describe("terminatePosixOwnedProcessTree", () => {
     }),
   );
 
-  it.live("re-admits a still-owned child after PID reuse and never signals the Rove session", () =>
-    Effect.gen(function* () {
-      const reused = identity(110, 100, 110, 110, "reused");
-      const fixture = makeController({
-        processes: [
-          server(),
-          identity(100, process.pid, 100, 100),
-          identity(110, 100, 110, 110, "owned"),
-          identity(120, 100, 120, process.pid),
-        ],
-        onProcess: (processes, pid) => {
-          if (pid === 110) processes.set(110, reused);
-          else processes.delete(pid);
-        },
-      });
+  it.live(
+    "re-admits a still-owned child after PID reuse and never signals the Paperplane session",
+    () =>
+      Effect.gen(function* () {
+        const reused = identity(110, 100, 110, 110, "reused");
+        const fixture = makeController({
+          processes: [
+            server(),
+            identity(100, process.pid, 100, 100),
+            identity(110, 100, 110, 110, "owned"),
+            identity(120, 100, 120, process.pid),
+          ],
+          onProcess: (processes, pid) => {
+            if (pid === 110) processes.set(110, reused);
+            else processes.delete(pid);
+          },
+        });
 
-      const result = yield* Effect.exit(
-        AcpSessionRuntime.terminatePosixOwnedProcessTree({
-          controller: fixture.controller,
-          grace: 0,
-          rootPid: 100,
-        }),
-      );
+        const result = yield* Effect.exit(
+          AcpSessionRuntime.terminatePosixOwnedProcessTree({
+            controller: fixture.controller,
+            grace: 0,
+            rootPid: 100,
+          }),
+        );
 
-      // PID 110 morphs to a new identity under the owned root and never exits, so
-      // teardown fails closed after re-admitting and re-signalling the live child.
-      expect(Exit.isFailure(result)).toBe(true);
-      expect(fixture.processes.get(110)).toEqual(reused);
-      expect(
-        fixture.signals.filter((entry) => entry.startsWith("process:110:")).length,
-      ).toBeGreaterThan(0);
-      expect(fixture.signals.some((entry) => entry.includes(":120:"))).toBe(false);
-    }),
+        // PID 110 morphs to a new identity under the owned root and never exits, so
+        // teardown fails closed after re-admitting and re-signalling the live child.
+        expect(Exit.isFailure(result)).toBe(true);
+        expect(fixture.processes.get(110)).toEqual(reused);
+        expect(
+          fixture.signals.filter((entry) => entry.startsWith("process:110:")).length,
+        ).toBeGreaterThan(0);
+        expect(fixture.signals.some((entry) => entry.includes(":120:"))).toBe(false);
+      }),
   );
 
   it.live("does not treat zombie residual entries as teardown survivors", () =>

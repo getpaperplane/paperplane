@@ -1,10 +1,10 @@
-import { scopedThreadKey, scopeThreadRef } from "@rove-code/client-runtime/environment";
+import { scopedThreadKey, scopeThreadRef } from "@getpaperplane/client-runtime/environment";
 import {
   type EnvironmentId,
   type PreviewEvent,
   type PreviewSessionSnapshot,
   ThreadId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { beforeEach, describe, expect, it } from "vite-plus/test";
 
 import {

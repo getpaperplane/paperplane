@@ -3,10 +3,10 @@ import { describe, expect, it } from "vite-plus/test";
 import {
   EMPTY_TERMINAL_BUFFER_STATE,
   type KnownTerminalSession,
-} from "@rove-code/client-runtime/state/terminal";
-import { DEFAULT_TERMINAL_ID, EnvironmentId, ThreadId } from "@rove-code/contracts";
+} from "@getpaperplane/client-runtime/state/terminal";
+import { DEFAULT_TERMINAL_ID, EnvironmentId, ThreadId } from "@getpaperplane/contracts";
 
-import { getTerminalLabel } from "@rove-code/shared/terminalLabels";
+import { getTerminalLabel } from "@getpaperplane/shared/terminalLabels";
 
 import {
   buildTerminalMenuSessions,

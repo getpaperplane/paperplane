@@ -5,7 +5,7 @@ import {
   ThreadId,
   WorktreeInventoryError,
   type WorktreeInventoryEntry,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Cause from "effect/Cause";
 import {
   createMemoryHistory,
@@ -60,7 +60,7 @@ import { WorktreeInventoryPanel } from "./WorktreeInventory";
 
 const entry: WorktreeInventoryEntry = {
   projectId: ProjectId.make("project-1"),
-  projectTitle: "Rove",
+  projectTitle: "Paperplane",
   workspaceRoot: "/repo",
   path: "/worktrees/feature",
   branch: "feature/storage",

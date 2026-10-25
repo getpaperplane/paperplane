@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vite-plus/test";
-import type { BrowserImportSource } from "@rove-code/contracts";
+import type { BrowserImportSource } from "@getpaperplane/contracts";
 
 import {
   canCloseWizard,

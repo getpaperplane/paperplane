@@ -3,7 +3,7 @@ import {
   PiSettings,
   ProviderDriverKind,
   ProviderInstanceId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Schema from "effect/Schema";
 import { describe, expect, it } from "vite-plus/test";
 

@@ -5,7 +5,7 @@ import * as Semaphore from "effect/Semaphore";
 import * as Stream from "effect/Stream";
 import type * as AcpSchema from "effect-acp/compat";
 
-import { responsePayloads } from "@rove-code/shared/mcpResponsePayloads";
+import { responsePayloads } from "@getpaperplane/shared/mcpResponsePayloads";
 
 const MAX_CONNECTIONS = 16;
 const MAX_MESSAGE_BYTES = 8 * 1024 * 1024;
@@ -79,7 +79,7 @@ export interface AcpMcpOverAcpBridge {
   readonly dispose: Effect.Effect<void>;
 }
 
-/** Bridges the unstable ACP transport to Rove's authenticated streamable-HTTP MCP endpoint. */
+/** Bridges the unstable ACP transport to Paperplane's authenticated streamable-HTTP MCP endpoint. */
 export const makeAcpMcpOverAcpBridge = Effect.fn("AcpMcpOverAcpBridge.make")(function* (
   options: AcpMcpOverAcpBridgeOptions,
 ): Effect.fn.Return<AcpMcpOverAcpBridge> {
@@ -131,7 +131,7 @@ export const makeAcpMcpOverAcpBridge = Effect.fn("AcpMcpOverAcpBridge.make")(fun
           );
           return yield* Effect.fail(
             new AcpMcpOverAcpError(
-              `Rove Code MCP endpoint responded with HTTP ${response.status}.`,
+              `Paperplane MCP endpoint responded with HTTP ${response.status}.`,
             ),
           );
         }
@@ -169,7 +169,7 @@ export const makeAcpMcpOverAcpBridge = Effect.fn("AcpMcpOverAcpBridge.make")(fun
         if (!response.ok && response.status !== 404) {
           return yield* Effect.fail(
             new AcpMcpOverAcpError(
-              `Rove Code MCP endpoint rejected disconnect with HTTP ${response.status}.`,
+              `Paperplane MCP endpoint rejected disconnect with HTTP ${response.status}.`,
             ),
           );
         }
@@ -183,7 +183,7 @@ export const makeAcpMcpOverAcpBridge = Effect.fn("AcpMcpOverAcpBridge.make")(fun
   return {
     connect: (request) =>
       Effect.gen(function* () {
-        if (request.serverId !== "rove") {
+        if (request.serverId !== "paperplane") {
           return yield* Effect.fail(
             new AcpMcpOverAcpError(`Unknown ACP MCP server "${request.serverId}".`),
           );

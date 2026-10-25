@@ -1,8 +1,8 @@
 // @effect-diagnostics nodeBuiltinImport:off - runs before `vp i`, so only Node built-ins exist.
 /**
- * Worktree setup, run by the rove.json "Setup Worktree" action as
+ * Worktree setup, run by the paperplane.json "Setup Worktree" action as
  * `node scripts/setup-worktree.ts`. Plain Node keeps one command working in
- * every shell Rove Code spawns (zsh, bash, fish, PowerShell): it installs
+ * every shell Paperplane spawns (zsh, bash, fish, PowerShell): it installs
  * dependencies, links the main checkout's gitignored env files into this
  * worktree, then warms the web dependency cache.
  */
@@ -12,9 +12,11 @@ import * as NodePath from "node:path";
 
 const ENV_FILES = [".env", NodePath.join("infra", "relay", ".env")];
 
-const projectRoot = process.env.ROVE_PROJECT_ROOT;
+const projectRoot = process.env.PAPERPLANE_PROJECT_ROOT;
 if (!projectRoot) {
-  throw new Error("ROVE_PROJECT_ROOT is not set. Run this through the rove.json setup action.");
+  throw new Error(
+    "PAPERPLANE_PROJECT_ROOT is not set. Run this through the paperplane.json setup action.",
+  );
 }
 const worktree = NodePath.dirname(import.meta.dirname);
 

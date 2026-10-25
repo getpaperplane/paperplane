@@ -25,7 +25,7 @@ import * as HttpRouter from "effect/http/HttpRouter";
 import * as HttpServerRequest from "effect/http/HttpServerRequest";
 import * as HttpServerResponse from "effect/http/HttpServerResponse";
 
-import { buildConnectAuthorizeRequestUrl } from "@rove-code/shared/connectAuth";
+import { buildConnectAuthorizeRequestUrl } from "@getpaperplane/shared/connectAuth";
 
 import * as ServerSecretStore from "../auth/ServerSecretStore.ts";
 import * as ExternalLauncher from "../process/externalLauncher.ts";
@@ -52,7 +52,7 @@ const boldTerminalText = (value: string): string => `\u001b[1m${value}\u001b[22m
 
 function formatLoopbackAuthorizationPrompt(authorizationUrl: string): string {
   return [
-    "Open this URL to authorize Rove Connect:",
+    "Open this URL to authorize Paperplane Connect:",
     `  ${authorizationUrl}`,
     "",
     `Press ${boldTerminalText("Enter")} to open it in your browser.`,
@@ -189,7 +189,7 @@ export class CloudCliCredentialRemovalError extends Schema.TaggedError<CloudCliC
   { cause: Schema.Defect() },
 ) {
   override get message(): string {
-    return "Could not remove the stored Rove Connect CLI credential.";
+    return "Could not remove the stored Paperplane Connect CLI credential.";
   }
 }
 
@@ -198,7 +198,7 @@ export class CloudCliCredentialRefreshError extends Schema.TaggedError<CloudCliC
   { cause: Schema.Defect() },
 ) {
   override get message(): string {
-    return "Could not refresh the Rove Connect CLI credential.";
+    return "Could not refresh the Paperplane Connect CLI credential.";
   }
 }
 
@@ -207,7 +207,7 @@ export class CloudCliCredentialReadError extends Schema.TaggedError<CloudCliCred
   { cause: Schema.Defect() },
 ) {
   override get message(): string {
-    return "Could not read the stored Rove Connect CLI credential.";
+    return "Could not read the stored Paperplane Connect CLI credential.";
   }
 }
 
@@ -216,7 +216,7 @@ export class CloudCliAuthorizationError extends Schema.TaggedError<CloudCliAutho
   { cause: Schema.Defect() },
 ) {
   override get message(): string {
-    return "Could not authorize the Rove Connect CLI.";
+    return "Could not authorize the Paperplane Connect CLI.";
   }
 }
 
@@ -225,7 +225,7 @@ export class CloudCliAuthorizationTimeoutError extends Schema.TaggedError<CloudC
   { cause: Schema.Defect() },
 ) {
   override get message(): string {
-    return "Timed out waiting for Rove Connect authorization.";
+    return "Timed out waiting for Paperplane Connect authorization.";
   }
 }
 
@@ -234,7 +234,7 @@ export class CloudCliAuthorizationDeniedError extends Schema.TaggedError<CloudCl
   {},
 ) {
   override get message(): string {
-    return "Rove Connect authorization was denied in the browser.";
+    return "Paperplane Connect authorization was denied in the browser.";
   }
 }
 
@@ -261,7 +261,7 @@ export class CloudCliTokenManager extends Context.Service<
     readonly store: (token: PersistedToken) => Effect.Effect<void, CloudCliTokenManagerError>;
     readonly clear: Effect.Effect<void, CloudCliTokenManagerError>;
   }
->()("@rove-code/server/cloud/CliTokenManager/CloudCliTokenManager") {}
+>()("@getpaperplane/server/cloud/CliTokenManager/CloudCliTokenManager") {}
 
 function stringToBytes(value: string): Uint8Array {
   return new TextEncoder().encode(value);
@@ -475,7 +475,7 @@ export const make = Effect.gen(function* () {
         const url = new URL(request.originalUrl, metadata.redirectUri);
         const code = url.searchParams.get("code");
         if (url.searchParams.get("state") !== state || !code) {
-          return HttpServerResponse.text("Invalid Rove Connect authorization callback.", {
+          return HttpServerResponse.text("Invalid Paperplane Connect authorization callback.", {
             status: 400,
           });
         }

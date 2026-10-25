@@ -1,5 +1,5 @@
-import { EnvironmentRegistry, removedWithRelay } from "@rove-code/client-runtime/connection";
-import { createRuntimeCommand } from "@rove-code/client-runtime/state/runtime";
+import { EnvironmentRegistry, removedWithRelay } from "@getpaperplane/client-runtime/connection";
+import { createRuntimeCommand } from "@getpaperplane/client-runtime/state/runtime";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 import * as SubscriptionRef from "effect/SubscriptionRef";

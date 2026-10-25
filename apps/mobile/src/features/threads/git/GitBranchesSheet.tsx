@@ -1,4 +1,4 @@
-import { sanitizeFeatureBranchName } from "@rove-code/shared/git";
+import { sanitizeFeatureBranchName } from "@getpaperplane/shared/git";
 import { useNavigation, type StaticScreenProps } from "@react-navigation/native";
 import { useState } from "react";
 import { Platform, Pressable, ScrollView, useWindowDimensions, View } from "react-native";
@@ -97,7 +97,7 @@ export function GitBranchesSheet(_props: GitBranchesSheetProps) {
           }
         >
           <View className="bg-card android:gap-3 android:rounded-[20px] android:p-4 ios:gap-2 ios:rounded-[18px] ios:border ios:border-border ios:px-4 ios:py-4">
-            <Text className="android:text-foreground android:text-base android:font-rove-medium ios:text-foreground-secondary ios:text-2xs ios:font-rove-bold ios:tracking-[1px] ios:uppercase">
+            <Text className="android:text-foreground android:text-base android:font-paperplane-medium ios:text-foreground-secondary ios:text-2xs ios:font-paperplane-bold ios:tracking-[1px] ios:uppercase">
               New branch
             </Text>
             <TextInput
@@ -125,7 +125,7 @@ export function GitBranchesSheet(_props: GitBranchesSheetProps) {
           </View>
 
           <View className="bg-card android:gap-3 android:rounded-[20px] android:p-4 ios:gap-2 ios:rounded-[18px] ios:border ios:border-border ios:px-4 ios:py-4">
-            <Text className="android:text-foreground android:text-base android:font-rove-medium ios:text-foreground-secondary ios:text-2xs ios:font-rove-bold ios:tracking-[1px] ios:uppercase">
+            <Text className="android:text-foreground android:text-base android:font-paperplane-medium ios:text-foreground-secondary ios:text-2xs ios:font-paperplane-bold ios:tracking-[1px] ios:uppercase">
               New worktree
             </Text>
             {Platform.OS === "android" ? (
@@ -174,7 +174,7 @@ export function GitBranchesSheet(_props: GitBranchesSheetProps) {
           </View>
 
           <View className="gap-2">
-            <Text className="text-foreground-secondary android:px-4 android:pb-1 android:pt-3 android:text-sm android:font-rove-medium ios:text-2xs ios:font-rove-bold ios:tracking-[1px] ios:uppercase">
+            <Text className="text-foreground-secondary android:px-4 android:pb-1 android:pt-3 android:text-sm android:font-paperplane-medium ios:text-2xs ios:font-paperplane-bold ios:tracking-[1px] ios:uppercase">
               Existing branches
             </Text>
             {branchesLoading ? (
@@ -219,7 +219,7 @@ export function GitBranchesSheet(_props: GitBranchesSheetProps) {
                   {Platform.OS !== "android" ? (
                     <View className="absolute inset-0 rounded-[18px] bg-card" />
                   ) : null}
-                  <Text className="text-foreground text-base android:font-rove-medium ios:font-rove-bold">
+                  <Text className="text-foreground text-base android:font-paperplane-medium ios:font-paperplane-bold">
                     {branch.name}
                   </Text>
                   <Text className="text-foreground-secondary text-xs font-medium">{subtitle}</Text>

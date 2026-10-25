@@ -15,7 +15,7 @@ import {
   ProviderInstanceId,
   RuntimeMode,
   ThreadId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 
 import {
   PersistenceDecodeError,
@@ -122,7 +122,7 @@ export class ProviderSessionRuntimeRepository extends Context.Service<
       input: DeleteProviderSessionRuntimeInput,
     ) => Effect.Effect<void, ProviderSessionRuntimeRepositoryError>;
   }
->()("@rove-code/server/persistence/ProviderSessionRuntime/ProviderSessionRuntimeRepository") {}
+>()("@getpaperplane/server/persistence/ProviderSessionRuntime/ProviderSessionRuntimeRepository") {}
 
 const ProviderSessionRuntimeDbRowSchema = ProviderSessionRuntime.mapFields(
   Struct.assign({

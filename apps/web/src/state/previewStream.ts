@@ -1,10 +1,10 @@
 import { useAtomValue } from "@effect/atom-react";
-import { PREVIEW_STREAM_BASE_PATH } from "@rove-code/client-runtime/preview/server-browser-stream";
+import { PREVIEW_STREAM_BASE_PATH } from "@getpaperplane/client-runtime/preview/server-browser-stream";
 import {
   type DeviceHubAccess,
   resolveDeviceHubAccess,
-} from "@rove-code/client-runtime/state/deviceHubAccess";
-import type { EnvironmentId } from "@rove-code/contracts";
+} from "@getpaperplane/client-runtime/state/deviceHubAccess";
+import type { EnvironmentId } from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
 import { AsyncResult, Atom, AtomRegistry } from "effect/reactivity";

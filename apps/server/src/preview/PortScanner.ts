@@ -8,7 +8,7 @@
  * Linux without lsof: reads listening sockets from `/proc/net/tcp{,6}` and
  * finds their processes through `/proc/<pid>/fd`.
  *
- * Only listeners owned by Rove terminal processes and explicitly configured
+ * Only listeners owned by Paperplane terminal processes and explicitly configured
  * URLs receive probes. Without listener ownership, only configured URLs do.
  *
  * Listening ports are published only after a bounded HTTP(S) probe finds a
@@ -24,9 +24,9 @@ import {
   PREVIEW_URL_MAX_LENGTH,
   ThreadId,
   type DiscoveredLocalServer,
-} from "@rove-code/contracts";
-import * as HostProcess from "@rove-code/shared/HostProcess";
-import { isLoopbackHost, LSOF_LOCAL_HOST_TOKENS } from "@rove-code/shared/preview";
+} from "@getpaperplane/contracts";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
+import { isLoopbackHost, LSOF_LOCAL_HOST_TOKENS } from "@getpaperplane/shared/preview";
 import * as Cause from "effect/Cause";
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
@@ -68,7 +68,7 @@ export class PortDiscovery extends Context.Service<
       readonly terminalId: string;
     }) => Effect.Effect<void>;
   }
->()("@rove-code/server/preview/PortScanner/PortDiscovery") {}
+>()("@getpaperplane/server/preview/PortScanner/PortDiscovery") {}
 
 const POLL_INTERVAL = Duration.seconds(3);
 const LSOF_TIMEOUT_MS = 5_000;
@@ -220,7 +220,7 @@ const parseLsofOutput = (
       const key = `localhost:${portMatch}`;
       const terminal = pid === null ? null : (terminalByProcessId.get(pid) ?? null);
       const existing = seen.get(key);
-      // A port receives probes only when Rove terminals own all of its listeners.
+      // A port receives probes only when Paperplane terminals own all of its listeners.
       if (existing) {
         if (terminal === null) seen.set(key, { ...existing, terminal: null });
         continue;

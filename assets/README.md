@@ -6,7 +6,7 @@ The three Icon Composer projects are the source of truth for full application ic
 - `nightly/app-icon.icon`
 - `prod/app-icon.icon`
 
-Each project uses `logo.png` for the Rove mark and `background.svg` when the background is a vector layer. Additional layers use semantic names that describe their role and placement.
+Each project uses `logo.png` for the Paperplane mark and `background.svg` when the background is a vector layer. Additional layers use semantic names that describe their role and placement.
 
 Run `vp run icons:export` from the repository root to regenerate the tracked iOS, Linux, Windows, and web assets. The development web exports are also copied to `apps/web/public` for the browser favicon and splash screen. Run `vp run icons:check` to verify that the generated assets and public copies match their sources without changing files.
 
@@ -54,7 +54,7 @@ Do not edit the generated PNG or ICO files directly.
 Android masks the central 72dp of a 108dp adaptive canvas, and the Android 12+ splash screen masks
 the central two thirds of a 288dp canvas, so the Icon Composer exports cannot be used directly:
 their rounded-square silhouette gets framed again and the mark is cropped. `vp run icons:export:android`
-uses `apps/mobile/assets/android-icon-mark.png` as the transparent Rove foreground and the Icon
+uses `apps/mobile/assets/android-icon-mark.png` as the transparent Paperplane foreground and the Icon
 Composer SVG sources for the variant backgrounds:
 
 - `apps/mobile/assets/android-icon-foreground.png`: the shared transparent mark, sized to stay
@@ -64,5 +64,5 @@ Composer SVG sources for the variant backgrounds:
 - `apps/mobile/assets/android-splash-icon-*.png`: the two layers composed into one 288dp image, so
   the splash mask reproduces the launcher icon's framing.
 
-Rerun the export after changing a background SVG or the transparent Rove mark. `android-icon-mark.png`
+Rerun the export after changing a background SVG or the transparent Paperplane mark. `android-icon-mark.png`
 is also used for Android's monochrome themed icon.

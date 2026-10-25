@@ -5,10 +5,10 @@ import * as Layer from "effect/Layer";
 import * as Redacted from "effect/Redacted";
 import { ChildProcessSpawner } from "effect/process";
 
-import { DEFAULT_SERVER_SETTINGS } from "@rove-code/contracts";
-import type * as SourceControlHost from "@rove-code/source-control-core/server/SourceControlHost";
-import { applyServerSettingsPatch } from "@rove-code/shared/serverSettings";
-import * as TestSourceControlHost from "@rove-code/source-control-testing/TestSourceControlHost";
+import { DEFAULT_SERVER_SETTINGS } from "@getpaperplane/contracts";
+import type * as SourceControlHost from "@getpaperplane/source-control-core/server/SourceControlHost";
+import { applyServerSettingsPatch } from "@getpaperplane/shared/serverSettings";
+import * as TestSourceControlHost from "@getpaperplane/source-control-testing/TestSourceControlHost";
 import * as GitHubCredentials from "./GitHubCredentials.ts";
 
 const TOKEN_VARIABLES = [

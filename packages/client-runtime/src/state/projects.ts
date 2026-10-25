@@ -5,7 +5,7 @@ import {
   isWindowsDrivePath,
   normalizeProjectPathForComparison,
   normalizeProjectPathForDispatch,
-} from "@rove-code/shared/path";
+} from "@getpaperplane/shared/path";
 
 export { normalizeProjectPathForComparison, normalizeProjectPathForDispatch };
 

@@ -12,7 +12,7 @@
  */
 import * as NodePath from "node:path";
 
-import { OrchestrationWorkflowFileError } from "@rove-code/contracts";
+import { OrchestrationWorkflowFileError } from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 
 import { field, text } from "./unknownField.ts";

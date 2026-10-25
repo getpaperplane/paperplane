@@ -2,20 +2,19 @@ import {
   ConnectionCatalogDocument,
   type ConnectionCatalogDocument as ConnectionCatalogDocumentType,
   EMPTY_CONNECTION_CATALOG_DOCUMENT,
-} from "@rove-code/client-runtime/platform";
-import { ConnectionTransientError } from "@rove-code/client-runtime/connection";
+} from "@getpaperplane/client-runtime/platform";
+import { ConnectionTransientError } from "@getpaperplane/client-runtime/connection";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
 import * as Ref from "effect/Ref";
 import * as Schema from "effect/Schema";
-import { decodeMigratedRoveJson } from "@rove-code/shared/roveMigration";
 import * as Semaphore from "effect/Semaphore";
 
 import * as MobileSecureStorage from "../persistence/mobile-secure-storage";
 import { migrateLegacyConnectionCatalog } from "./migration";
 
-export const CONNECTION_CATALOG_KEY = "rove.connection-catalog.v1";
-export const LEGACY_CONNECTIONS_KEY = "rove.connections";
+export const CONNECTION_CATALOG_KEY = "paperplane.connection-catalog.v1";
+export const LEGACY_CONNECTIONS_KEY = "paperplane.connections";
 
 function catalogError(operation: string, cause: unknown) {
   return new ConnectionTransientError({
@@ -25,7 +24,9 @@ function catalogError(operation: string, cause: unknown) {
 }
 
 const ConnectionCatalogDocumentJson = Schema.fromJsonString(ConnectionCatalogDocument);
-const decodeConnectionCatalogDocument = decodeMigratedRoveJson(ConnectionCatalogDocument);
+const decodeConnectionCatalogDocument = Schema.decodeUnknownEffect(
+  Schema.fromJsonString(ConnectionCatalogDocument),
+);
 const encodeConnectionCatalogDocument = Schema.encodeEffect(ConnectionCatalogDocumentJson);
 
 const decodeCatalog = Effect.fn("mobile.connectionStorage.decodeCatalog")(function* (raw: string) {

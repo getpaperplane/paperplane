@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vite-plus/test";
-import { TurnId } from "@rove-code/contracts";
+import { TurnId } from "@getpaperplane/contracts";
 
 import {
   buildGrokBackgroundTaskEvents,

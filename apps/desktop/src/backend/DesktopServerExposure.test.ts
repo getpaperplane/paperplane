@@ -83,7 +83,10 @@ function layerEnvironmentFor(baseDir: string, env: Record<string, string | undef
     runningUnderArm64Translation: false,
   }).pipe(
     Layer.provide(
-      Layer.mergeAll(NodeServices.layer, DesktopConfig.layerTest({ ROVE_HOME: baseDir, ...env })),
+      Layer.mergeAll(
+        NodeServices.layer,
+        DesktopConfig.layerTest({ PAPERPLANE_HOME: baseDir, ...env }),
+      ),
     ),
   );
 }
@@ -95,7 +98,7 @@ function layer(input: {
   readonly spawnerLayer?: Layer.Layer<ChildProcessSpawner.ChildProcessSpawner>;
   readonly desktopSettingsLayer?: Layer.Layer<DesktopAppSettings.DesktopAppSettings>;
 }) {
-  const env = { ROVE_HOME: input.baseDir, ...input.env };
+  const env = { PAPERPLANE_HOME: input.baseDir, ...input.env };
   const layerEnvironment = layerEnvironmentFor(input.baseDir, env);
   const layerNetwork = Layer.succeed(DesktopNetworkInterfaces.DesktopNetworkInterfaces, {
     read: Effect.succeed(input.networkInterfaces ?? emptyNetworkInterfaces),
@@ -130,7 +133,7 @@ const withHarness = <A, E, R>(
   Effect.gen(function* () {
     const fileSystem = yield* FileSystem.FileSystem;
     const baseDir = yield* fileSystem.makeTempDirectoryScoped({
-      prefix: "rove-desktop-server-exposure-test-",
+      prefix: "paperplane-desktop-server-exposure-test-",
     });
     return yield* effect.pipe(
       Effect.provide(
@@ -438,8 +441,8 @@ describe("DesktopServerExposure", () => {
         );
       }),
       {
-        ROVE_DESKTOP_LAN_HOST: "100.90.1.2",
-        ROVE_DESKTOP_HTTPS_ENDPOINTS: "https://public.example.test",
+        PAPERPLANE_DESKTOP_LAN_HOST: "100.90.1.2",
+        PAPERPLANE_DESKTOP_HTTPS_ENDPOINTS: "https://public.example.test",
       },
     ),
   );
@@ -538,7 +541,7 @@ describe("DesktopServerExposure", () => {
         ]);
       }),
       {
-        ROVE_DESKTOP_HTTPS_ENDPOINTS:
+        PAPERPLANE_DESKTOP_HTTPS_ENDPOINTS:
           "https://desktop.example.ts.net,http://desktop.example.test:3773,not-a-url",
       },
     ),

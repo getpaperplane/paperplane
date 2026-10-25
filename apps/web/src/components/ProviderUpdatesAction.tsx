@@ -1,4 +1,4 @@
-import { PROVIDER_DISPLAY_NAMES } from "@rove-code/contracts";
+import { PROVIDER_DISPLAY_NAMES } from "@getpaperplane/contracts";
 import { useMemo, useRef, useState } from "react";
 
 import { useEnvironments } from "~/state/environments";

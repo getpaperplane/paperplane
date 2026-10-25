@@ -50,20 +50,20 @@ it.effect.each([
   Effect.gen(function* () {
     const stateKey = yield* remoteStateKey(target);
     yield* Effect.sync(() => {
-      const home = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "rove-persistent-ssh-"));
+      const home = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "paperplane-persistent-ssh-"));
       try {
-        const runtime = NodePath.join(home, ".rove-code/runtime/versions", runner.archiveVersion);
+        const runtime = NodePath.join(home, ".paperplane/runtime/versions", runner.archiveVersion);
         NodeFS.mkdirSync(runtime, { recursive: true });
         NodeFS.writeFileSync(
           NodePath.join(runtime, ".install-complete"),
           `${runner.archiveVersion}\n`,
         );
         NodeFS.writeFileSync(
-          NodePath.join(runtime, "rove"),
+          NodePath.join(runtime, "paperplane"),
           `#!/bin/sh
 set -eu
 case "$1" in
-  --version) printf 'rove v1.2.3\\n' ;;
+  --version) printf 'paperplane v1.2.3\\n' ;;
   __ssh-helper)
     case "$2" in
       runtime-port) ${running ? "printf '42 3773'" : "exit 1"} ;;
@@ -109,10 +109,10 @@ esac
           expect(
             NodeFS.existsSync(actions) ? NodeFS.readFileSync(actions, "utf8").trim() : "",
           ).toBe(action);
-          expect(NodeFS.existsSync(NodePath.join(runtime, "rove"))).toBe(true);
+          expect(NodeFS.existsSync(NodePath.join(runtime, "paperplane"))).toBe(true);
         } else {
           expect(
-            NodeFS.existsSync(NodePath.join(home, ".rove-code/ssh-launch", stateKey, "managed")),
+            NodeFS.existsSync(NodePath.join(home, ".paperplane/ssh-launch", stateKey, "managed")),
           ).toBe(false);
         }
       } finally {

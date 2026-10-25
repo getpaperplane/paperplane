@@ -5,7 +5,7 @@ import {
   PROVIDER_SEND_TURN_MAX_IMAGE_BYTES,
   type ProviderSendTurnInput,
   type RuntimeMode,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Crypto from "effect/Crypto";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -22,7 +22,7 @@ import {
   makeAntigravityStderrHandler,
   makeAntigravityStdoutTransform,
 } from "../antigravityAuthSupport.ts";
-import * as AcpSessionRuntime from "@rove-code/provider-acp/server/AcpSessionRuntime";
+import * as AcpSessionRuntime from "@getpaperplane/provider-acp/server/AcpSessionRuntime";
 import { normalizeAntigravitySessionUpdate } from "./AntigravityProtocol.ts";
 
 export interface AntigravityAcpRuntimeInput extends Omit<
@@ -42,7 +42,7 @@ export interface AntigravityAcpRuntimeInput extends Omit<
   readonly onAuthorizationUrl?: (url: string) => Effect.Effect<void, EffectAcpErrors.AcpError>;
   /**
    * Advertise `fs.readTextFile` and `fs.writeTextFile`. The agent then routes
-   * workspace reads and writes through Rove, which turns each edit into a
+   * workspace reads and writes through Paperplane, which turns each edit into a
    * `session/request_permission` with the file content, instead of writing
    * through its own tools. Chat sessions turn this on. Setup, probe, and text
    * generation helpers leave it off so they never touch a workspace.
@@ -113,7 +113,7 @@ function antigravityModelOptions(
 /**
  * Resolves the model a turn should run on. A saved selection is reapplied
  * as-is. The provider default alias resolves to `defaultModel` when the
- * account offers it, so Rove can pick a newer model than the one Google marks
+ * account offers it, so Paperplane can pick a newer model than the one Google marks
  * current. Otherwise the agent's current selection stands.
  */
 function resolveAntigravityModel(input: {

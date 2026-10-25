@@ -51,8 +51,8 @@ const config = {
 } satisfies RelayConfiguration.RelayConfiguration["Service"];
 const input = {
   token: "device-token",
-  packageName: "dev.rove.app.dev",
-  data: { rove_kind: "agent_activity", active: "true" },
+  packageName: "io.github.getpaperplane.paperplane.dev",
+  data: { paperplane_kind: "agent_activity", active: "true" },
   alert: false,
 };
 
@@ -192,7 +192,7 @@ describe("FCM delivery", () => {
             android: {
               priority: "HIGH",
               ttl: "300s",
-              collapse_key: "rove-agent-activity",
+              collapse_key: "paperplane-agent-activity",
               restricted_package_name: input.packageName,
             },
           },

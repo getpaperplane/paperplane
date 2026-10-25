@@ -1,4 +1,4 @@
-import type { PullRequestCheck } from "@rove-code/contracts";
+import type { PullRequestCheck } from "@getpaperplane/contracts";
 
 import { useLiveRefresh } from "./useLiveRefresh";
 

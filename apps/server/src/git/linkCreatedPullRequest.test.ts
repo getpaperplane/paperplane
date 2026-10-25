@@ -6,7 +6,7 @@ import {
   type GitRunStackedActionResult,
   type OrchestrationV2ServerCommand as OrchestrationCommand,
   type OrchestrationProjectShell,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { describe, expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -156,7 +156,7 @@ describe("linkCreatedPullRequest", () => {
         result: prResult({
           status: "created",
           number: 42,
-          url: "https://github.com/rovetools/rove/pull/42",
+          url: "https://github.com/paperplanetools/paperplane/pull/42",
         }),
         commandId,
       }).pipe(Effect.provide(layerDependenciesFor(dispatch)));
@@ -167,9 +167,9 @@ describe("linkCreatedPullRequest", () => {
           commandId: "server:pr-created-link:test",
           threadId: THREAD_ID,
           host: "github.com",
-          repository: "rovetools/rove",
+          repository: "paperplanetools/paperplane",
           number: 42,
-          url: "https://github.com/rovetools/rove/pull/42",
+          url: "https://github.com/paperplanetools/paperplane/pull/42",
           source: "created",
         },
       ]);
@@ -187,7 +187,10 @@ describe("linkCreatedPullRequest", () => {
       }).pipe(Effect.provide(layerDependencies));
       yield* linkCreatedPullRequest({
         threadId: THREAD_ID,
-        result: prResult({ status: "created", url: "https://github.com/rovetools/rove/pull/42" }),
+        result: prResult({
+          status: "created",
+          url: "https://github.com/paperplanetools/paperplane/pull/42",
+        }),
         commandId,
       }).pipe(Effect.provide(layerDependencies));
 
@@ -208,7 +211,7 @@ describe("linkCreatedPullRequest", () => {
       const result = prResult({
         status: "opened_existing",
         number: 7,
-        url: "https://github.com/rovetools/rove/pull/7",
+        url: "https://github.com/paperplanetools/paperplane/pull/7",
       });
       yield* linkCreatedPullRequest({ threadId: THREAD_ID, result, commandId }).pipe(
         Effect.provide(layerDependenciesFor(rejecting)),

@@ -6,8 +6,8 @@ import {
   type DesktopUpdateChannel,
   type DesktopUpdateCheckResult,
   type DesktopUpdateState,
-} from "@rove-code/contracts";
-import { errorTag } from "@rove-code/shared/observability";
+} from "@getpaperplane/contracts";
+import { errorTag } from "@getpaperplane/shared/observability";
 import * as Cause from "effect/Cause";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
@@ -198,7 +198,7 @@ export class DesktopUpdates extends Context.Service<
       expectedVersion: string,
     ) => Effect.Effect<DesktopPreparedUpdateInstallResult>;
   }
->()("@rove-code/desktop/updates/DesktopUpdates") {}
+>()("@getpaperplane/desktop/updates/DesktopUpdates") {}
 
 const {
   logInfo: logUpdaterInfo,
@@ -328,7 +328,7 @@ function getAutoUpdateDisabledReason(args: {
     return "Automatic updates are only available in packaged production builds.";
   }
   if (args.disabledByEnv) {
-    return "Automatic updates are disabled by the ROVE_DISABLE_AUTO_UPDATE setting.";
+    return "Automatic updates are disabled by the PAPERPLANE_DISABLE_AUTO_UPDATE setting.";
   }
   if (args.platform === "linux" && !args.appImage && !args.isDebPackage) {
     return "Automatic updates on Linux require the AppImage or the .deb package.";

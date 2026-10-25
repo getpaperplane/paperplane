@@ -5,8 +5,8 @@ import { useAtomCommand } from "~/state/use-atom-command";
  * running two copies of "merge" or "resolve in a thread" would drift apart one fix at a time;
  * these hooks are where that behavior lives, and the panels are only where it is rendered.
  */
-import { scopeProjectRef } from "@rove-code/client-runtime/environment";
-import { squashAtomCommandFailure } from "@rove-code/client-runtime/state/runtime";
+import { scopeProjectRef } from "@getpaperplane/client-runtime/environment";
+import { squashAtomCommandFailure } from "@getpaperplane/client-runtime/state/runtime";
 import type {
   EnvironmentId,
   ProjectId,
@@ -14,9 +14,9 @@ import type {
   PullRequestDetail,
   PullRequestMergeMethod,
   PullRequestRef,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { useCallback, useRef, useState } from "react";
-import { resolveProjectSettings } from "@rove-code/shared/projectSettings";
+import { resolveProjectSettings } from "@getpaperplane/shared/projectSettings";
 import { useClientSettings, useEnvironmentSettings } from "~/hooks/useSettings";
 import {
   deriveLogicalProjectKeyFromSettings,

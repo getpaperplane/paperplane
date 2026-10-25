@@ -3,8 +3,8 @@ import {
   isPrivateNetworkHost,
   isSharedAddressSpaceHost,
   isTailnetHost,
-} from "@rove-code/shared/hostClassification";
-import type { DesktopSshEnvironmentTarget } from "@rove-code/contracts";
+} from "@getpaperplane/shared/hostClassification";
+import type { DesktopSshEnvironmentTarget } from "@getpaperplane/contracts";
 import * as Option from "effect/Option";
 
 import {
@@ -15,7 +15,7 @@ import {
 import { BearerConnectionTarget, type ConnectionTarget } from "./model.ts";
 
 /**
- * A saved environment can hold several routes: Rove Connect, direct URLs (LAN,
+ * A saved environment can hold several routes: Paperplane Connect, direct URLs (LAN,
  * tailnet, other VPNs, public), and SSH. The client connects over the first route in
  * preference order that answers as the expected environment, and moves back
  * to a better one when it becomes reachable again.
@@ -30,7 +30,7 @@ export type ConnectionRouteKind =
   | "public"
   | "ssh";
 
-/** An environment has at most one Rove Connect route, so it needs no per-route id. */
+/** An environment has at most one Paperplane Connect route, so it needs no per-route id. */
 export const RELAY_ROUTE_ID = "relay";
 
 export function connectionRouteId(target: ConnectionTarget): string {
@@ -76,7 +76,7 @@ export function routeEntry(
   return entryWithRoutes(entry, [route]);
 }
 
-/** The base URL of a direct route, or null for Rove Connect and SSH. */
+/** The base URL of a direct route, or null for Paperplane Connect and SSH. */
 export function routeHttpBaseUrl(route: ConnectionRoute): string | null {
   if (route.target._tag === "PrimaryConnectionTarget") return route.target.httpBaseUrl;
   const profile = Option.getOrNull(route.profile);
@@ -126,7 +126,7 @@ const ROUTE_KIND_RANK: Record<ConnectionRouteKind, number> = {
 
 /**
  * Where a newly added route goes: after every saved route of the same or a
- * faster kind, so LAN lands ahead of tailnet and both ahead of Rove Connect.
+ * faster kind, so LAN lands ahead of tailnet and both ahead of Paperplane Connect.
  * Users can reorder afterwards; this only picks a sensible starting point.
  */
 export function insertRoute(
@@ -179,11 +179,11 @@ function routeAddressKey(route: ConnectionRoute): string | null {
   }
 }
 
-/** Short user-facing route description: "LAN", "Tailscale", "VPN", "Rove Connect", a URL, or an SSH host. */
+/** Short user-facing route description: "LAN", "Tailscale", "VPN", "Paperplane Connect", a URL, or an SSH host. */
 export function connectionRouteLabel(route: ConnectionRoute): string {
   switch (connectionRouteKind(route)) {
     case "relay":
-      return "Rove Connect";
+      return "Paperplane Connect";
     case "loopback":
       return "This device";
     case "lan":
@@ -203,7 +203,7 @@ export function connectionRouteLabel(route: ConnectionRoute): string {
   }
 }
 
-/** The address shown under a route, or null for Rove Connect. */
+/** The address shown under a route, or null for Paperplane Connect. */
 export function connectionRouteAddress(route: ConnectionRoute): string | null {
   if (route.target._tag === "SshConnectionTarget") {
     const profile = Option.getOrNull(route.profile);
@@ -212,7 +212,7 @@ export function connectionRouteAddress(route: ConnectionRoute): string | null {
   return routeHttpBaseUrl(route);
 }
 
-/** Whether the environment can be reached through Rove Connect. */
+/** Whether the environment can be reached through Paperplane Connect. */
 export function hasRelayRoute(
   entry: Pick<ConnectionCatalogEntry, "target" | "alternateRoutes">,
 ): boolean {
@@ -224,7 +224,7 @@ export function hasRelayRoute(
 /**
  * The routes after the server reports where it listens. Each newly reported
  * address becomes a learned route that authenticates the same way as the route
- * in use: the paired token for a bearer route, the Rove Connect credential for
+ * in use: the paired token for a bearer route, the Paperplane Connect credential for
  * relay. A learned route the server still reports keeps its place, so the
  * user's order holds; one it no longer reports is dropped, so a changed LAN
  * address replaces the old one. Routes the user saved are never removed or
@@ -248,13 +248,13 @@ export function mergeLearnedRoutes(input: {
     return null;
   }
   // A route learned over another learned route inherits what that one uses:
-  // the Rove Connect credential, or the paired token it borrows.
+  // the Paperplane Connect credential, or the paired token it borrows.
   const activeProfile = Option.getOrNull(input.activeRoute.profile);
   const authorization =
     active._tag === "RelayConnectionTarget" ||
     (activeProfile?._tag === "BearerConnectionProfile" &&
-      activeProfile.authorization === "rove-connect")
-      ? ("rove-connect" as const)
+      activeProfile.authorization === "paperplane-connect")
+      ? ("paperplane-connect" as const)
       : undefined;
   const sharedCredential =
     authorization === undefined && active._tag === "BearerConnectionTarget"
@@ -398,7 +398,7 @@ export function isLearned(route: ConnectionRoute): boolean {
 /**
  * Routes left after the user removes one. A learned route borrows the
  * credential of the route it was learned over, so it cannot outlive that
- * route: removing Rove Connect also removes routes learned through it, and
+ * route: removing Paperplane Connect also removes routes learned through it, and
  * removing a paired address removes routes that borrow its token.
  */
 export function routesAfterRemoving(
@@ -411,7 +411,10 @@ export function routesAfterRemoving(
     if (route === removed) return false;
     if (!isLearned(route)) return true;
     const profile = Option.getOrNull(route.profile);
-    if (profile?._tag === "BearerConnectionProfile" && profile.authorization === "rove-connect") {
+    if (
+      profile?._tag === "BearerConnectionProfile" &&
+      profile.authorization === "paperplane-connect"
+    ) {
       return removed.target._tag !== "RelayConnectionTarget";
     }
     return credentialConnectionId(connectionRouteId(route.target)) !== removedId;
@@ -419,8 +422,8 @@ export function routesAfterRemoving(
 }
 
 /**
- * Whether removing Rove Connect leaves the environment no route, so signing out
- * removes it entirely. Routes learned through Rove Connect go with it.
+ * Whether removing Paperplane Connect leaves the environment no route, so signing out
+ * removes it entirely. Routes learned through Paperplane Connect go with it.
  */
 export function removedWithRelay(entry: ConnectionCatalogEntry): boolean {
   return routesAfterRemoving(connectionRoutes(entry), RELAY_ROUTE_ID).length === 0;

@@ -2,7 +2,7 @@ import {
   AuthOrchestrationReadScope,
   EnvironmentHttpApi,
   type OrchestrationProjectShell,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import * as Predicate from "effect/Predicate";
 import * as Schema from "effect/Schema";

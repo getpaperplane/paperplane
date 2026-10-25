@@ -6,7 +6,7 @@ import {
   PullRequestInvolvement,
   PullRequestListFilters,
   PullRequestListState,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 
 export const PullRequestListSort = Schema.Literals([
   "ready",
@@ -62,7 +62,7 @@ const PullRequestListPreferencesSchema = Schema.Struct({
 const decodePullRequestListPreferences = Schema.decodeUnknownOption(
   PullRequestListPreferencesSchema,
 );
-const PULL_REQUEST_LIST_PREFERENCES_STORAGE_KEY = "rove.pullRequests.preferences";
+const PULL_REQUEST_LIST_PREFERENCES_STORAGE_KEY = "paperplane.pullRequests.preferences";
 type PreferenceStorage = Pick<Storage, "getItem" | "setItem">;
 
 function resolvePreferenceStorage(

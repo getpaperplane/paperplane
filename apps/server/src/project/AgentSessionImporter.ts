@@ -21,8 +21,8 @@ import {
   type OrchestrationV2DomainEvent,
   type OrchestrationV2ProviderThread,
   type OrchestrationV2TurnItem,
-} from "@rove-code/contracts";
-import { normalizeProjectPathForComparison } from "@rove-code/shared/path";
+} from "@getpaperplane/contracts";
+import { normalizeProjectPathForComparison } from "@getpaperplane/shared/path";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -32,7 +32,7 @@ import * as Schema from "effect/Schema";
 import * as Stream from "effect/Stream";
 
 import * as EventSink from "../orchestration-v2/EventSink.ts";
-import * as IdAllocator from "@rove-code/provider-core/server/IdAllocator";
+import * as IdAllocator from "@getpaperplane/provider-core/server/IdAllocator";
 import * as Orchestrator from "../orchestration-v2/Orchestrator.ts";
 import * as ProviderSessionRuntime from "../persistence/ProviderSessionRuntime.ts";
 import * as AgentSessionScanner from "./AgentSessionScanner.ts";
@@ -404,6 +404,6 @@ type AgentSessionImporterShape = Effect.Success<typeof make>;
 export class AgentSessionImporter extends Context.Service<
   AgentSessionImporter,
   AgentSessionImporterShape
->()("@rove-code/server/project/AgentSessionImporter") {}
+>()("@getpaperplane/server/project/AgentSessionImporter") {}
 
 export const layer = Layer.effect(AgentSessionImporter, make);

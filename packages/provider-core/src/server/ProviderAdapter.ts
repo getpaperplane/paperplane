@@ -1,4 +1,4 @@
-import type { OrchestrationV2HistoricalMessage } from "@rove-code/contracts";
+import type { OrchestrationV2HistoricalMessage } from "@getpaperplane/contracts";
 import {
   ChatAttachment,
   CheckpointId,
@@ -33,7 +33,7 @@ import {
   RunId,
   ThreadId,
   TurnItemId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Context from "effect/Context";
 import * as Schema from "effect/Schema";
 import type * as Effect from "effect/Effect";
@@ -92,7 +92,7 @@ export const ProviderAdapterV2Event = Schema.Union([
     driver: ProviderDriverKind,
     providerThread: OrchestrationV2ProviderThread,
     /**
-     * Set when the provider rewound its own conversation outside Rove, for
+     * Set when the provider rewound its own conversation outside Paperplane, for
      * example a Pi extension moving the session-tree leaf back. Lists every
      * native turn id still on the active branch; the ingestor rolls back
      * earlier runs whose turns fell off it.
@@ -689,4 +689,4 @@ export class ProviderAdapterV2 extends Context.Service<
       input: ProviderAdapterV2OpenSessionInput,
     ) => Effect.Effect<ProviderAdapterV2SessionRuntime, ProviderAdapterV2Error, Scope.Scope>;
   }
->()("@rove-code/provider-core/server/ProviderAdapter/ProviderAdapterV2") {}
+>()("@getpaperplane/provider-core/server/ProviderAdapter/ProviderAdapterV2") {}

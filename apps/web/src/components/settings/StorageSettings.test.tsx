@@ -5,7 +5,7 @@ import {
   ProjectId,
   ThreadId,
   type StorageCleanupReport,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { act, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, expect, it, vi } from "vite-plus/test";

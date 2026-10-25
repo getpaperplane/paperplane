@@ -1,22 +1,22 @@
-# Rove Connect Relay
+# Paperplane Connect Relay
 
 > [!NOTE]
-> Sign in to Rove Connect from the app under Settings > Connections.
+> Sign in to Paperplane Connect from the app under Settings > Connections.
 
-The relay is the hosted control plane for Rove Connect. It helps clients discover and connect to
+The relay is the hosted control plane for Paperplane Connect. It helps clients discover and connect to
 remote environments, manages the cloud-side records needed for those connections, and delivers
 optional mobile notifications and Live Activities.
 
-The relay is intentionally not in the hot path for normal Rove Code traffic. After a client connects,
+The relay is intentionally not in the hot path for normal Paperplane traffic. After a client connects,
 regular API and WebSocket traffic goes directly between that client and the selected environment.
-See the [Rove Connect architecture note](../../docs/internals/rove-connect.md) for the larger system
+See the [Paperplane Connect architecture note](../../docs/internals/paperplane-connect.md) for the larger system
 design.
 
 ## Responsibilities
 
 The relay currently owns:
 
-- Linking Rove Code environments to a cloud account.
+- Linking Paperplane environments to a cloud account.
 - Provisioning and tracking managed environment endpoints.
 - Issuing short-lived credentials used to connect clients to linked environments.
 - Listing linked environments and registered mobile devices for an account.
@@ -76,11 +76,11 @@ dependencies represented at their boundary rather than mocking internal behavior
 
 ## Deployment
 
-The relay deploys with the Alchemy CLI (`vp run --filter rove-relay deploy` is `alchemy deploy`
+The relay deploys with the Alchemy CLI (`vp run --filter paperplane-relay deploy` is `alchemy deploy`
 in this directory):
 
 ```sh
-vp run --filter rove-relay deploy
+vp run --filter paperplane-relay deploy
 ```
 
 The stack provisions the Cloudflare Worker and queues, managed endpoint resources, database
@@ -111,8 +111,8 @@ not unlimited free hosting. Do not upgrade the plans to work around those limits
 Deploy production first:
 
 ```sh
-vp run --filter rove-relay deploy -- --stage prod
-vp run --filter rove-relay deploy -- --env-file .env.local
+vp run --filter paperplane-relay deploy -- --stage prod
+vp run --filter paperplane-relay deploy -- --env-file .env.local
 ```
 
 Alchemy defaults personal deployments to the `dev_$USER` stage. Relay custom domains apply the same
@@ -127,12 +127,12 @@ domain override.
 The stack's `PublishClientConfig` action ([`src/clientConfig.ts`](./src/clientConfig.ts)) writes the
 deployed relay URL and tracing configuration into the repository-root `.env`, so subsequent source
 builds point at the relay that was just deployed without copying values manually. It runs only when
-one of those outputs changed, and `ROVE_RELAY_CLIENT_CONFIG_ENV` redirects it to another file.
+one of those outputs changed, and `PAPERPLANE_RELAY_CLIENT_CONFIG_ENV` redirects it to another file.
 
 ### Deployment CI
 
 The relay is versioned separately from client releases. `.github/workflows/deploy-relay.yml` deploys
-the shared Alchemy `prod` stage on pushes to `main` when `ROVE_CLOUD_READY=true`. For initial
+the shared Alchemy `prod` stage on pushes to `main` when `PAPERPLANE_CLOUD_READY=true`. For initial
 setup, run it manually with `dry_run=true` to inspect the plan, then `dry_run=false` to apply it.
 Manual deployment leaves the release readiness gate unchanged. Planning may initialize Alchemy's
 free Cloudflare state-store Worker before it plans relay resources.
@@ -187,6 +187,6 @@ and hosted web builds.
 
 See:
 
-- [Rove Connect setup](../../docs/operations/connect-setup.md) for Clerk keys, JWT templates, and sign-up restrictions.
+- [Paperplane Connect setup](../../docs/operations/connect-setup.md) for Clerk keys, JWT templates, and sign-up restrictions.
 - [Relay Observability](../../docs/operations/relay-observability.md) for deployment tracing and diagnostics.
-- [Rove Connect architecture](../../docs/internals/rove-connect.md) for environment linking and trust boundaries.
+- [Paperplane Connect architecture](../../docs/internals/paperplane-connect.md) for environment linking and trust boundaries.

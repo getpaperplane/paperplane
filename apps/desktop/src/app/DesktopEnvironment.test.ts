@@ -14,9 +14,9 @@ const defaultInput = {
   platform: "darwin",
   processArch: "arm64",
   appVersion: "0.0.22",
-  appPath: "/Applications/Rove Code.app/Contents/Resources/app.asar",
+  appPath: "/Applications/Paperplane.app/Contents/Resources/app.asar",
   isPackaged: false,
-  resourcesPath: "/Applications/Rove Code.app/Contents/Resources",
+  resourcesPath: "/Applications/Paperplane.app/Contents/Resources",
   runningUnderArm64Translation: false,
 } satisfies DesktopEnvironment.MakeDesktopEnvironmentInput;
 
@@ -44,41 +44,47 @@ describe("DesktopEnvironment", () => {
       const environment = yield* makeEnvironment(
         {},
         {
-          ROVE_HOME: " /tmp/rove ",
-          ROVE_COMMIT_HASH: " 0123456789abcdef ",
-          ROVE_PORT: "4949",
+          PAPERPLANE_HOME: " /tmp/paperplane ",
+          PAPERPLANE_COMMIT_HASH: " 0123456789abcdef ",
+          PAPERPLANE_PORT: "4949",
           VITE_DEV_SERVER_URL: "http://localhost:5173",
-          ROVE_DEV_REMOTE_SERVER_ENTRY_PATH: " /remote/server.mjs ",
-          ROVE_OTLP_TRACES_URL: " http://127.0.0.1:4318/v1/traces ",
-          ROVE_OTLP_METRICS_URL: " http://127.0.0.1:4318/v1/metrics ",
-          ROVE_OTLP_LOGS_URL: " http://127.0.0.1:4318/v1/logs ",
-          ROVE_OTLP_EXPORT_INTERVAL_MS: "2500",
-          ROVE_OTLP_HEADERS: "authorization=Basic%20abc%3D%3D,x-tenant=rove",
-          ROVE_OTLP_PROTOCOL: "http/protobuf",
+          PAPERPLANE_DEV_REMOTE_SERVER_ENTRY_PATH: " /remote/server.mjs ",
+          PAPERPLANE_OTLP_TRACES_URL: " http://127.0.0.1:4318/v1/traces ",
+          PAPERPLANE_OTLP_METRICS_URL: " http://127.0.0.1:4318/v1/metrics ",
+          PAPERPLANE_OTLP_LOGS_URL: " http://127.0.0.1:4318/v1/logs ",
+          PAPERPLANE_OTLP_EXPORT_INTERVAL_MS: "2500",
+          PAPERPLANE_OTLP_HEADERS: "authorization=Basic%20abc%3D%3D,x-tenant=paperplane",
+          PAPERPLANE_OTLP_PROTOCOL: "http/protobuf",
         },
       );
 
       assert.equal(environment.isDevelopment, true);
       assert.equal(environment.appDataDirectory, "/Users/alice/Library/Application Support");
-      assert.equal(environment.baseDir, "/tmp/rove");
-      assert.equal(environment.stateDir, "/tmp/rove/userdata");
-      assert.equal(environment.desktopSettingsPath, "/tmp/rove/userdata/desktop-settings.json");
-      assert.equal(environment.clientSettingsPath, "/tmp/rove/userdata/client-settings.json");
+      assert.equal(environment.baseDir, "/tmp/paperplane");
+      assert.equal(environment.stateDir, "/tmp/paperplane/userdata");
+      assert.equal(
+        environment.desktopSettingsPath,
+        "/tmp/paperplane/userdata/desktop-settings.json",
+      );
+      assert.equal(environment.clientSettingsPath, "/tmp/paperplane/userdata/client-settings.json");
       assert.equal(
         environment.savedEnvironmentRegistryPath,
-        "/tmp/rove/userdata/saved-environments.json",
+        "/tmp/paperplane/userdata/saved-environments.json",
       );
-      assert.equal(environment.serverSettingsPath, "/tmp/rove/userdata/settings.json");
-      assert.equal(environment.logDir, "/tmp/rove/userdata/logs");
-      assert.equal(environment.browserArtifactsDir, "/tmp/rove/userdata/browser-artifacts");
+      assert.equal(environment.serverSettingsPath, "/tmp/paperplane/userdata/settings.json");
+      assert.equal(environment.logDir, "/tmp/paperplane/userdata/logs");
+      assert.equal(environment.browserArtifactsDir, "/tmp/paperplane/userdata/browser-artifacts");
       assert.equal(environment.rootDir, "/repo");
       assert.equal(environment.appRoot, "/repo");
       assert.equal(environment.serverRoot, "/repo");
       assert.equal(environment.backendEntryPath, "/repo/apps/server/dist/bin.mjs");
       assert.equal(environment.backendCwd, "/repo");
-      assert.equal(environment.appUserModelId, "io.github.hafiezul.rove.dev");
-      assert.equal(environment.linuxWmClass, "rove-dev");
-      assert.equal(environment.linuxDesktopEntryName, "io.github.hafiezul.rove.dev.desktop");
+      assert.equal(environment.appUserModelId, "io.github.getpaperplane.paperplane.dev");
+      assert.equal(environment.linuxWmClass, "io.github.getpaperplane.paperplane.dev");
+      assert.equal(
+        environment.linuxDesktopEntryName,
+        "io.github.getpaperplane.paperplane.dev.desktop",
+      );
       assert.deepEqual(
         Option.map(environment.devServerUrl, (url) => url.href),
         Option.some("http://localhost:5173/"),
@@ -94,7 +100,7 @@ describe("DesktopEnvironment", () => {
         environment.otlpHeaders,
         Option.some({
           authorization: "Basic abc==",
-          "x-tenant": "rove",
+          "x-tenant": "paperplane",
         }),
       );
       assert.equal(environment.otlpProtocol, "http/protobuf");
@@ -106,15 +112,15 @@ describe("DesktopEnvironment", () => {
       const environment = yield* makeEnvironment(
         {},
         {
-          ROVE_HOME: "/tmp/rove",
+          PAPERPLANE_HOME: "/tmp/paperplane",
         },
       );
 
       assert.equal(environment.isDevelopment, false);
-      assert.equal(environment.stateDir, "/tmp/rove/userdata");
-      assert.equal(environment.logDir, "/tmp/rove/userdata/logs");
-      assert.equal(environment.browserArtifactsDir, "/tmp/rove/userdata/browser-artifacts");
-      assert.equal(environment.serverSettingsPath, "/tmp/rove/userdata/settings.json");
+      assert.equal(environment.stateDir, "/tmp/paperplane/userdata");
+      assert.equal(environment.logDir, "/tmp/paperplane/userdata/logs");
+      assert.equal(environment.browserArtifactsDir, "/tmp/paperplane/userdata/browser-artifacts");
+      assert.equal(environment.serverSettingsPath, "/tmp/paperplane/userdata/settings.json");
       assert.equal(environment.otlpProtocol, "http/json");
     }),
   );
@@ -146,11 +152,11 @@ describe("DesktopEnvironment", () => {
       const environment = yield* makeEnvironment({
         platform: "linux",
         isPackaged: true,
-        appPath: "/tmp/.mount_rove/resources/app.asar",
-        resourcesPath: "/tmp/.mount_rove/resources",
+        appPath: "/tmp/.mount_paperplane/resources/app.asar",
+        resourcesPath: "/tmp/.mount_paperplane/resources",
       });
 
-      assert.equal(environment.linuxDesktopEntryName, "io.github.hafiezul.rove.desktop");
+      assert.equal(environment.linuxDesktopEntryName, "io.github.getpaperplane.paperplane.desktop");
     }),
   );
 
@@ -162,10 +168,10 @@ describe("DesktopEnvironment", () => {
       );
       const production = yield* makeEnvironment();
 
-      assert.equal(development.baseDir, "/Users/alice/.rove-code");
-      assert.equal(production.baseDir, "/Users/alice/.rove-code");
-      assert.equal(development.stateDir, "/Users/alice/.rove-code/dev");
-      assert.equal(production.stateDir, "/Users/alice/.rove-code/userdata");
+      assert.equal(development.baseDir, "/Users/alice/.paperplane");
+      assert.equal(production.baseDir, "/Users/alice/.paperplane");
+      assert.equal(development.stateDir, "/Users/alice/.paperplane/dev");
+      assert.equal(production.stateDir, "/Users/alice/.paperplane/userdata");
     }),
   );
 
@@ -174,12 +180,12 @@ describe("DesktopEnvironment", () => {
       const environment = yield* makeEnvironment(
         {},
         {
-          ROVE_DESKTOP_APP_USER_MODEL_ID: " io.github.hafiezul.rove.dev.local ",
+          PAPERPLANE_DESKTOP_APP_USER_MODEL_ID: " io.github.getpaperplane.paperplane.dev.local ",
           VITE_DEV_SERVER_URL: "http://localhost:5173",
         },
       );
 
-      assert.equal(environment.appUserModelId, "io.github.hafiezul.rove.dev.local");
+      assert.equal(environment.appUserModelId, "io.github.getpaperplane.paperplane.dev.local");
     }),
   );
 

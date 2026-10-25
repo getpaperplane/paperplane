@@ -1,8 +1,8 @@
-import { classifyMarkdownImageSource } from "@rove-code/client-runtime/markdown-images";
+import { classifyMarkdownImageSource } from "@getpaperplane/client-runtime/markdown-images";
 import {
   resolveMediaSource,
   type ResolveMediaSourceInput,
-} from "@rove-code/client-runtime/media-source";
+} from "@getpaperplane/client-runtime/media-source";
 
 /** A project draft names its workspace explicitly because it has no thread. */
 export function resolveMobileMarkdownMediaSource(href: string, input: ResolveMediaSourceInput) {

@@ -1,4 +1,4 @@
-import type { HostResourcesSnapshot } from "@rove-code/contracts";
+import type { HostResourcesSnapshot } from "@getpaperplane/contracts";
 
 /** Callers supply only connected machines hosting the project and selected provider. */
 export function chooseLoadBalancedEnvironment(

@@ -1,4 +1,4 @@
-export * from "@rove-code/shared/advertisedEndpoint";
+export * from "@getpaperplane/shared/advertisedEndpoint";
 
 export const environmentEndpointUrl = (httpBaseUrl: string, pathname: string): string => {
   const url = new URL(httpBaseUrl);

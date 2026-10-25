@@ -5,7 +5,7 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
-import { SandboxActionInput, SandboxCreateInput } from "@rove-code/contracts";
+import { SandboxActionInput, SandboxCreateInput } from "@getpaperplane/contracts";
 import { ServerSecretStore } from "../auth/ServerSecretStore.ts";
 import { makeSandboxManager } from "./SandboxManager.ts";
 import {
@@ -30,7 +30,7 @@ function fixture() {
     remoteId: "vm-one",
     url: null,
     snapshotIds: [],
-    volumeName: "rove-volume",
+    volumeName: "paperplane-volume",
     paused: false,
   };
   const driver: SandboxDriver = {
@@ -209,7 +209,7 @@ it.effect(
         remoteId: null,
         detail: error.message,
       });
-      expect(f.stored()).toContain(`rove-${inventory.sandboxes[0]!.id}`);
+      expect(f.stored()).toContain(`paperplane-${inventory.sandboxes[0]!.id}`);
       expect(encodeTestJson(inventory)).not.toContain("secret-token");
     }),
 );
@@ -364,7 +364,7 @@ it.effect("a failed pairing reports the problem without marking a running sandbo
     yield* Effect.flip(manager.action({ id: sandbox.id, action: "pair", confirmed: true }));
     expect((yield* manager.inventory).sandboxes[0]).toMatchObject({
       phase: "running",
-      detail: "Rove returned an invalid pairing response.",
+      detail: "Paperplane returned an invalid pairing response.",
     });
   }),
 );
@@ -414,10 +414,10 @@ it.effect("incomplete Modal provisioning retains its sandbox name until explicit
     yield* Effect.result(manager.create({ provider: "modal", label: "Task", confirmCost: true }));
     const sandbox = (yield* manager.inventory).sandboxes[0]!;
     expect(sandbox).toMatchObject({ remoteId: null, phase: "error" });
-    expect(f.stored()).toContain(`rove-${sandbox.id}`);
+    expect(f.stored()).toContain(`paperplane-${sandbox.id}`);
     yield* manager.action({ id: sandbox.id, action: "delete", confirmed: true });
     expect(f.driver.remove).toHaveBeenCalledWith(
-      expect.objectContaining({ remoteId: "", volumeName: `rove-${sandbox.id}` }),
+      expect.objectContaining({ remoteId: "", volumeName: `paperplane-${sandbox.id}` }),
       expect.any(Function),
     );
     expect((yield* manager.inventory).sandboxes).toHaveLength(0);
@@ -482,7 +482,7 @@ it("wire contracts require explicit acknowledgement of compute cost and destruct
   expect(() => decodeActionInput({ id: "one", action: "delete", confirmed: false })).toThrow();
 });
 
-it.effect("forwarded sign-ins reach the sandbox over stdin before Rove starts", () =>
+it.effect("forwarded sign-ins reach the sandbox over stdin before Paperplane starts", () =>
   Effect.gen(function* () {
     const f = fixture();
     const manager = yield* f.make;
@@ -555,7 +555,7 @@ it.effect("changing sign-ins applies now when running and on resume when paused"
     expect(paused.sandbox).toMatchObject({ phase: "paused", credentials: [] });
     expect(f.credentials.payload).not.toHaveBeenCalled();
     yield* manager.action(decodeActionInput({ id: sandbox.id, action: "resume", confirmed: true }));
-    // Resuming removes the deselected sign-ins before Rove restarts.
+    // Resuming removes the deselected sign-ins before Paperplane restarts.
     expect(f.credentials.payload).toHaveBeenLastCalledWith([]);
   }),
 );

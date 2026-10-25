@@ -6,7 +6,7 @@ import type {
   ResourceTelemetryHistoryBucket,
   ResourceTelemetryProcess,
   ResourceTelemetryProcessSummary,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as DateTime from "effect/DateTime";
 import * as Option from "effect/Option";
 
@@ -243,9 +243,9 @@ export function buildResourceTelemetryHistory(
     );
     aggregateSamples.push({
       sampledAtMs: snapshot.sampledAtUnixMs,
-      cpuPercent: merged.groups.allRove.currentCpuPercent,
-      rssBytes: merged.groups.allRove.currentRssBytes,
-      processCount: merged.groups.allRove.processCount,
+      cpuPercent: merged.groups.allPaperplane.currentCpuPercent,
+      rssBytes: merged.groups.allPaperplane.currentRssBytes,
+      processCount: merged.groups.allPaperplane.processCount,
       ioReadBytes: deltas.reduce((total, process) => total + process.ioReadBytes, 0),
       ioWriteBytes: deltas.reduce((total, process) => total + process.ioWriteBytes, 0),
     });

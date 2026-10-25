@@ -73,19 +73,21 @@ describe("PublishClientConfig", () => {
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const dir = yield* fs.makeTempDirectoryScoped({ prefix: "rove-relay-client-config-" });
+      const dir = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-relay-client-config-" });
       const target = path.join(dir, "client.env");
       yield* fs.writeFileString(target, "KEEP=yes\n");
       const configured = Effect.provide(
-        ConfigProvider.layer(ConfigProvider.fromUnknown({ ROVE_RELAY_CLIENT_CONFIG_ENV: target })),
+        ConfigProvider.layer(
+          ConfigProvider.fromUnknown({ PAPERPLANE_RELAY_CLIENT_CONFIG_ENV: target }),
+        ),
       );
 
       yield* stack.deploy(PublishClientConfig(clientConfig("v1"))).pipe(configured);
       const first = yield* fs.readFileString(target);
       expect(first).toContain("KEEP=yes\n");
-      expect(first).toContain("ROVE_RELAY_URL=https://relay.example.com\n");
-      expect(first).toContain("ROVE_RELAY_CLIENT_OTLP_TRACES_TOKEN=client-v1\n");
-      expect(first).toContain("ROVE_MOBILE_OTLP_TRACES_TOKEN=mobile-v1\n");
+      expect(first).toContain("PAPERPLANE_RELAY_URL=https://relay.example.com\n");
+      expect(first).toContain("PAPERPLANE_RELAY_CLIENT_OTLP_TRACES_TOKEN=client-v1\n");
+      expect(first).toContain("PAPERPLANE_MOBILE_OTLP_TRACES_TOKEN=mobile-v1\n");
 
       // Same input: the action is skipped, so a change made by hand survives.
       yield* fs.writeFileString(target, `${first}MANUAL=1\n`);
@@ -95,7 +97,7 @@ describe("PublishClientConfig", () => {
       // A rotated token changes the input, so it runs again and replaces the line.
       yield* stack.deploy(PublishClientConfig(clientConfig("v2"))).pipe(configured);
       const third = yield* fs.readFileString(target);
-      expect(third).toContain("ROVE_RELAY_CLIENT_OTLP_TRACES_TOKEN=client-v2\n");
+      expect(third).toContain("PAPERPLANE_RELAY_CLIENT_OTLP_TRACES_TOKEN=client-v2\n");
       expect(third).not.toContain("client-v1");
       expect(third).toContain("KEEP=yes\n");
     }).pipe(Effect.scoped, Effect.provide(NodeServices.layer)),
@@ -105,14 +107,14 @@ describe("PublishClientConfig", () => {
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const dir = yield* fs.makeTempDirectoryScoped({ prefix: "rove-relay-client-config-" });
+      const dir = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-relay-client-config-" });
       const target = path.join(dir, "client.env");
       const exit = yield* stack
         .deploy(PublishClientConfig({ ...clientConfig("v1"), url: undefined }))
         .pipe(
           Effect.provide(
             ConfigProvider.layer(
-              ConfigProvider.fromUnknown({ ROVE_RELAY_CLIENT_CONFIG_ENV: target }),
+              ConfigProvider.fromUnknown({ PAPERPLANE_RELAY_CLIENT_CONFIG_ENV: target }),
             ),
           ),
           Effect.exit,
@@ -127,7 +129,7 @@ describe("PublishClientConfig", () => {
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const dir = yield* fs.makeTempDirectoryScoped({ prefix: "rove-relay-client-config-" });
+      const dir = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-relay-client-config-" });
       const target = path.join(dir, "client.env");
       const exit = yield* stack
         .deploy(
@@ -139,7 +141,7 @@ describe("PublishClientConfig", () => {
         .pipe(
           Effect.provide(
             ConfigProvider.layer(
-              ConfigProvider.fromUnknown({ ROVE_RELAY_CLIENT_CONFIG_ENV: target }),
+              ConfigProvider.fromUnknown({ PAPERPLANE_RELAY_CLIENT_CONFIG_ENV: target }),
             ),
           ),
           Effect.exit,

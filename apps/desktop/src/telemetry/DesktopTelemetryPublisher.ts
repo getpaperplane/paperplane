@@ -7,7 +7,7 @@ import {
   type DesktopTelemetryRequestDesktopUpdate,
   type DesktopUpdateStatusReport,
   type HostPowerSnapshot,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Cause from "effect/Cause";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
@@ -78,7 +78,7 @@ export class DesktopTelemetryPublisher extends Context.Service<
     readonly updateCommits: Stream.Stream<DesktopTelemetryCommitDesktopUpdate>;
     readonly updateCancellations: Stream.Stream<DesktopTelemetryCancelDesktopUpdate>;
   }
->()("@rove-code/desktop/telemetry/DesktopTelemetryPublisher") {}
+>()("@getpaperplane/desktop/telemetry/DesktopTelemetryPublisher") {}
 
 function booleanState(value: boolean): HostPowerSnapshot["onBattery"] {
   return value ? "true" : "false";

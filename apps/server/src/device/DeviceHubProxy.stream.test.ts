@@ -9,7 +9,7 @@ import {
   AuthOrchestrationOperateScope,
   AuthSessionId,
   LOCAL_DEVICE_HOST_ID,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as EnvironmentAuth from "../auth/EnvironmentAuth.ts";
 import * as DeviceService from "./DeviceService.ts";
 import * as DeviceHubProxy from "./DeviceHubProxy.ts";

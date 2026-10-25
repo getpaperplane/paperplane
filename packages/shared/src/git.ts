@@ -6,13 +6,13 @@ import type {
   VcsStatusRemoteResult,
   VcsStatusResult,
   VcsStatusStreamEvent,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Arr from "effect/Array";
 import * as Result from "effect/Result";
 import { detectSourceControlProviderFromRemoteUrl } from "./sourceControl.ts";
 
-export const WORKTREE_BRANCH_PREFIX = "rove";
-// Canonical form is `rove/<8 hex>`. `rove-<8 hex>` is the fallback when a plain `rove`
+export const WORKTREE_BRANCH_PREFIX = "paperplane";
+// Canonical form is `paperplane/<8 hex>`. `paperplane-<8 hex>` is the fallback when a plain `paperplane`
 // branch blocks the namespace. The matcher also accepts every legacy shape, so
 // existing threads stay eligible for branch regeneration: `rove/<8 hex>` and
 // `rove-<8 hex>` from before the prefix was shortened, and `rove/<uuid>` from
@@ -22,7 +22,7 @@ const TEMP_WORKTREE_HEX_TOKEN = "[0-9a-f]{8}";
 const TEMP_WORKTREE_UUID_V4_TOKEN =
   "[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}";
 const TEMP_WORKTREE_BRANCH_PATTERN = new RegExp(
-  `^(?:${WORKTREE_BRANCH_PREFIX}[-/]${TEMP_WORKTREE_HEX_TOKEN}|rove(?:[-/]${TEMP_WORKTREE_HEX_TOKEN}|\\/${TEMP_WORKTREE_UUID_V4_TOKEN}))$`,
+  `^(?:${WORKTREE_BRANCH_PREFIX}|rove)(?:[-/]${TEMP_WORKTREE_HEX_TOKEN}|\\/${TEMP_WORKTREE_UUID_V4_TOKEN})$`,
 );
 
 /**
@@ -135,8 +135,8 @@ export function buildTemporaryWorktreeBranchName(
 }
 
 /**
- * Git stores refs as paths, so a plain `rove` branch makes every `rove/<hex>`
- * ref impossible. This moves a temporary name to the flat `rove-<hex>` sibling.
+ * Git stores refs as paths, so a plain `paperplane` branch makes every `paperplane/<hex>`
+ * ref impossible. This moves a temporary name to the flat `paperplane-<hex>` sibling.
  */
 export function flattenTemporaryWorktreeBranchName(refName: string): string {
   // Keep only the canonical 8-hex token so legacy `rove/` and UUID names map cleanly.

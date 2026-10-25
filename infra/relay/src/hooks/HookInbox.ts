@@ -37,4 +37,4 @@ export class HookInbox extends Context.Service<
       readonly endpointKey: string;
     }) => Effect.Effect<void, HookInboxError>;
   }
->()("rove-relay/hooks/HookInbox") {}
+>()("paperplane-relay/hooks/HookInbox") {}

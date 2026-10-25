@@ -4,4 +4,4 @@ export {
   sortThreads,
   toSortableTimestamp,
   type ThreadSortInput,
-} from "@rove-code/client-runtime/state/thread-sort";
+} from "@getpaperplane/client-runtime/state/thread-sort";

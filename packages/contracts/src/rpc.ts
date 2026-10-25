@@ -61,6 +61,7 @@ import * as Rpc from "effect/rpc/Rpc";
 import * as RpcGroup from "effect/rpc/RpcGroup";
 import * as RpcMiddleware from "effect/rpc/RpcMiddleware";
 import { NonNegativeInt, TrimmedNonEmptyString } from "./baseSchemas.ts";
+import { ProjectConfigState } from "./paperplaneProjectFile.ts";
 import {
   CodexAuthCallbackInput,
   CodexAuthCallbackState,
@@ -408,7 +409,7 @@ import { VcsError } from "./vcs.ts";
 import { Project, ProjectMutation, ProjectMutationError } from "./project.ts";
 
 export const WS_METHODS = {
-  // Rove-only, independent of orchestration.
+  // Paperplane-only, independent of orchestration.
   sandboxInventory: "sandbox.inventory",
   sandboxConfigure: "sandbox.configure",
   sandboxCreate: "sandbox.create",
@@ -430,6 +431,7 @@ export const WS_METHODS = {
   projectsRemove: "projects.remove",
   projectsListEntries: "projects.listEntries",
   projectsReadFile: "projects.readFile",
+  projectsReadConfig: "projects.readConfig",
   projectsSearchContents: "projects.searchContents",
   projectsSearchEntries: "projects.searchEntries",
   projectsWriteFile: "projects.writeFile",
@@ -680,7 +682,7 @@ const WsServerRefreshProvidersRpc = Rpc.make(WS_METHODS.serverRefreshProviders, 
     /** With `instanceId` and `cwd`: rescan the workspace's skills and slash
      * commands even when a snapshot for that cwd already exists. */
     fresh: Schema.optional(Schema.Boolean),
-    /** Explicit user request: bypass Rove-owned caches and rediscover models.
+    /** Explicit user request: bypass Paperplane-owned caches and rediscover models.
      * Background status refreshes must not open agent sessions. */
     refreshModels: Schema.optional(Schema.Boolean),
   }),
@@ -1298,6 +1300,12 @@ const WsProjectsListEntriesRpc = Rpc.make(WS_METHODS.projectsListEntries, {
   error: Schema.Union([ProjectListEntriesError, EnvironmentAuthorizationError]),
 });
 
+const WsProjectsReadConfigRpc = Rpc.make(WS_METHODS.projectsReadConfig, {
+  payload: Schema.Struct({ cwd: TrimmedNonEmptyString }),
+  success: ProjectConfigState,
+  error: EnvironmentAuthorizationError,
+});
+
 const WsProjectsReadFileRpc = Rpc.make(WS_METHODS.projectsReadFile, {
   payload: ProjectReadFileInput,
   success: ProjectReadFileResult,
@@ -1510,7 +1518,7 @@ const WsVcsInitRpc = Rpc.make(WS_METHODS.vcsInit, {
 
 /**
  * Ephemeral live diff preview for compact/mobile surfaces.
- * Not the persisted Rove Review model. Future review sessions should use
+ * Not the persisted Paperplane Review model. Future review sessions should use
  * review.open* + review.getSnapshot.
  */
 const WsReviewGetDiffPreviewRpc = Rpc.make(WS_METHODS.reviewGetDiffPreview, {
@@ -2021,7 +2029,7 @@ const SandboxRpcError = Schema.Union([SandboxError, EnvironmentAuthorizationErro
  * be added without authorization.
  */
 export class RpcScopeAuthorization extends RpcMiddleware.Service<RpcScopeAuthorization>()(
-  "rove/contracts/RpcScopeAuthorization",
+  "paperplane/contracts/RpcScopeAuthorization",
   { error: EnvironmentAuthorizationError },
 ) {}
 
@@ -2169,6 +2177,7 @@ export const WsRpcGroup = RpcGroup.make(
   WsSubscribeProjectClonesRpc,
   WsProjectsListEntriesRpc,
   WsProjectsReadFileRpc,
+  WsProjectsReadConfigRpc,
   WsProjectsSearchContentsRpc,
   WsProjectsSearchEntriesRpc,
   WsProjectsEnsureScratchRpc,

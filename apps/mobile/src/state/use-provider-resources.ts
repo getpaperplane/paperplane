@@ -1,8 +1,8 @@
-import type { EnvironmentId, ProviderInstanceId } from "@rove-code/contracts";
+import type { EnvironmentId, ProviderInstanceId } from "@getpaperplane/contracts";
 import {
   readPiInstanceSettings,
   togglePiExtensionDisabled,
-} from "@rove-code/client-runtime/state/providerSettings";
+} from "@getpaperplane/client-runtime/state/providerSettings";
 import { useCallback, useMemo, useState } from "react";
 import * as Cause from "effect/Cause";
 import { serverEnvironment } from "./server";

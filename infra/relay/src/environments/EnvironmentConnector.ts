@@ -4,8 +4,8 @@ import {
   EnvironmentHttpForbiddenError,
   EnvironmentHttpInternalServerError,
   EnvironmentHttpUnauthorizedError,
-} from "@rove-code/contracts";
-import { makeEnvironmentHttpApiClient } from "@rove-code/client-runtime/rpc";
+} from "@getpaperplane/contracts";
+import { makeEnvironmentHttpApiClient } from "@getpaperplane/client-runtime/rpc";
 import {
   RelayCloudEnvironmentHealthProofPayload,
   RelayEnvironmentHealthResponse,
@@ -17,7 +17,7 @@ import {
   type RelayEnvironmentConnectResponse,
   type RelayEnvironmentStatusResponse,
   type RelayManagedEndpoint,
-} from "@rove-code/contracts/relay";
+} from "@getpaperplane/contracts/relay";
 import {
   normalizeRelayIssuer,
   RELAY_HEALTH_REQUEST_TYP,
@@ -26,8 +26,8 @@ import {
   RELAY_MINT_RESPONSE_TYP,
   signRelayJwt,
   verifyRelayJwt,
-} from "@rove-code/shared/relayJwt";
-import { stableStringify } from "@rove-code/shared/relaySigning";
+} from "@getpaperplane/shared/relayJwt";
+import { stableStringify } from "@getpaperplane/shared/relaySigning";
 import * as Context from "effect/Context";
 import * as Crypto from "effect/Crypto";
 import * as DateTime from "effect/DateTime";
@@ -145,7 +145,7 @@ export class EnvironmentConnector extends Context.Service<
       readonly environmentId: string;
     }) => Effect.Effect<RelayEnvironmentStatusResponse, EnvironmentConnectorError>;
   }
->()("rove-relay/environments/EnvironmentConnector") {}
+>()("paperplane-relay/environments/EnvironmentConnector") {}
 
 const decodeMintResponseProof = Schema.decodeUnknownEffect(
   RelayEnvironmentMintResponseProofPayload,
@@ -235,7 +235,7 @@ function verifyEnvironmentResponse(input: {
   return verifyWithEnvironmentKeys({
     token: input.response.proof,
     typ: RELAY_MINT_RESPONSE_TYP,
-    issuer: `rove-env:${input.environmentId}`,
+    issuer: `paperplane-env:${input.environmentId}`,
     audience: normalizeRelayIssuer(input.relayIssuer),
     nowEpochSeconds: input.nowEpochSeconds,
     environmentPublicKeys: input.environmentPublicKeys,
@@ -268,7 +268,7 @@ function verifyEnvironmentHealthResponse(input: {
   return verifyWithEnvironmentKeys({
     token: input.response.proof,
     typ: RELAY_HEALTH_RESPONSE_TYP,
-    issuer: `rove-env:${input.environmentId}`,
+    issuer: `paperplane-env:${input.environmentId}`,
     audience: normalizeRelayIssuer(input.relayIssuer),
     nowEpochSeconds: Math.floor(input.now.epochMilliseconds / 1_000),
     environmentPublicKeys: input.environmentPublicKeys,
@@ -461,7 +461,7 @@ const make = Effect.gen(function* () {
       );
       const payload = {
         iss: relayIssuer,
-        aud: `rove-env:${link.environmentId}`,
+        aud: `paperplane-env:${link.environmentId}`,
         sub: input.userId,
         jti: yield* crypto.randomUUIDv4().pipe(
           Effect.mapError(
@@ -618,7 +618,7 @@ const make = Effect.gen(function* () {
       );
       const payload = {
         iss: relayIssuer,
-        aud: `rove-env:${link.environmentId}`,
+        aud: `paperplane-env:${link.environmentId}`,
         sub: input.userId,
         jti: yield* crypto.randomUUIDv4().pipe(
           Effect.mapError(
@@ -655,7 +655,7 @@ const make = Effect.gen(function* () {
       );
       const environmentClient = yield* makeEnvironmentClient(endpoint.httpBaseUrl);
       const decoded = yield* environmentClient.connect
-        .roveMintCredential({ payload: { proof } })
+        .paperplaneMintCredential({ payload: { proof } })
         .pipe(
           withoutRedirects,
           Effect.mapError(

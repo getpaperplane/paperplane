@@ -12,13 +12,13 @@
  * The real IPC transport/worker is separately covered by the SDK integration test.
  */
 import * as NodeServices from "@effect/platform-node/NodeServices";
-import { ProviderInstanceId, type ProviderReplayTranscript } from "@rove-code/contracts";
+import { ProviderInstanceId, type ProviderReplayTranscript } from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Schema from "effect/Schema";
 import type * as PlatformError from "effect/PlatformError";
-import type { ProviderAdapterV2Error } from "@rove-code/provider-core/server/ProviderAdapter";
-import * as IdAllocator from "@rove-code/provider-core/server/IdAllocator";
+import type { ProviderAdapterV2Error } from "@getpaperplane/provider-core/server/ProviderAdapter";
+import * as IdAllocator from "@getpaperplane/provider-core/server/IdAllocator";
 import { ServerConfig } from "../../config.ts";
 import * as PiExtensionStatuses from "../../provider/PiExtensionStatuses.ts";
 import type {
@@ -320,7 +320,7 @@ export const PiOrchestratorReplayHarness: OrchestratorV2ProviderReplayHarness<
         Layer.mergeAll(
           IdAllocator.layer,
           PiExtensionStatuses.layer,
-          ServerConfig.layerTest(process.cwd(), { prefix: "rove-pi-sdk-replay-" }),
+          ServerConfig.layerTest(process.cwd(), { prefix: "paperplane-pi-sdk-replay-" }),
         ).pipe(Layer.provideMerge(NodeServices.layer)),
       ),
     ),

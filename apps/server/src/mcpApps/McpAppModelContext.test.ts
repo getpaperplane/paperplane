@@ -1,6 +1,6 @@
-import { ThreadId, TurnItemId } from "@rove-code/contracts";
+import { ThreadId, TurnItemId } from "@getpaperplane/contracts";
 import { assert, it } from "@effect/vitest";
-import * as NodeSqliteClient from "@rove-code/shared/nodeSqliteClient";
+import * as NodeSqliteClient from "@getpaperplane/shared/nodeSqliteClient";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as SqlClient from "effect/sql/SqlClient";

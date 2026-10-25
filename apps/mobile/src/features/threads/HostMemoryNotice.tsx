@@ -1,7 +1,7 @@
 import { useAtomValue } from "@effect/atom-react";
 import { useNavigation } from "@react-navigation/native";
-import { hostMemoryNotice } from "@rove-code/client-runtime/host-health";
-import type { EnvironmentId } from "@rove-code/contracts";
+import { hostMemoryNotice } from "@getpaperplane/client-runtime/host-health";
+import type { EnvironmentId } from "@getpaperplane/contracts";
 import { Pressable } from "react-native";
 
 import { Notice } from "../../components/ui/Notice";
@@ -37,7 +37,7 @@ export function HostMemoryNotice(props: {
       }
     >
       <Notice
-        message={`${props.environmentLabel} is low on memory (${notice.freeLabel}). Rove releases idle agents first; new work may be slow or killed.`}
+        message={`${props.environmentLabel} is low on memory (${notice.freeLabel}). Paperplane releases idle agents first; new work may be slow or killed.`}
         icon="exclamationmark.triangle"
         floating
       />

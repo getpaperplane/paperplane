@@ -4,7 +4,7 @@ import {
   parseThreadLinkPrompt,
   promptLinkAppPath,
   promptLinkDeepLink,
-} from "@rove-code/shared/promptLinks";
+} from "@getpaperplane/shared/promptLinks";
 import { useLocation } from "@tanstack/react-router";
 import * as Schema from "effect/Schema";
 import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
@@ -19,9 +19,9 @@ import { Button } from "../ui/button";
 import { Checkbox } from "../ui/checkbox";
 import { StandalonePage, StandalonePageHeader } from "../ui/standalone-page";
 
-const OPENER_STORAGE_KEY = "rove:prompt-link-opener";
+const OPENER_STORAGE_KEY = "paperplane:prompt-link-opener";
 const Opener = Schema.NullOr(Schema.Literals(["app", "browser"]));
-const DOWNLOAD_URL = "https://github.com/hafiezul/rove/releases";
+const DOWNLOAD_URL = "https://github.com/getpaperplane/paperplane/releases";
 
 interface LinkSummary {
   readonly prompt: LinkedPrompt | null;
@@ -61,8 +61,8 @@ function summarize(
 }
 
 /**
- * On rove.hafiezulzikry.com a prompt link first asks where to open: the installed desktop or mobile app
- * (through `rove://`), this browser when it is connected to a machine, or the download page.
+ * On paperplane.hafiezulzikry.com a prompt link first asks where to open: the installed desktop or mobile app
+ * (through `paperplane://`), this browser when it is connected to a machine, or the download page.
  * Returns that page, or null when the link should open in this browser as usual.
  */
 export function useHostedPromptLinkLanding(enabled: boolean): ReactNode | null {
@@ -146,7 +146,7 @@ function HostedPromptLinkLanding({
         <Alert className="mt-5" variant="error">
           <AlertTitle>This prompt had hidden characters, it may be malicious</AlertTitle>
           <AlertDescription>
-            Rove Code removed {prompt.hiddenCharacters} hidden character
+            Paperplane removed {prompt.hiddenCharacters} hidden character
             {prompt.hiddenCharacters === 1 ? "" : "s"}. Read the prompt before you send it.
           </AlertDescription>
         </Alert>
@@ -167,7 +167,7 @@ function HostedPromptLinkLanding({
           </Button>
         ) : null}
         <Button variant="ghost" render={<a href={DOWNLOAD_URL} />}>
-          Get Rove Code
+          Get Paperplane
         </Button>
       </div>
       <label className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">

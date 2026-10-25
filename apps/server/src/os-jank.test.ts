@@ -1,16 +1,77 @@
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { it as effectIt } from "@effect/vitest";
-import * as HostProcess from "@rove-code/shared/HostProcess";
-import { CommandAvailability, WindowsShellEnvironment } from "@rove-code/shared/shell";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
+import { CommandAvailability, WindowsShellEnvironment } from "@getpaperplane/shared/shell";
 import * as Effect from "effect/Effect";
 // @effect-diagnostics-next-line nodeBuiltinImport:off -- Observe the existing synchronous shell probe without launching the user's login shell.
 import * as NodeChildProcess from "node:child_process";
 import * as NodeOS from "node:os";
+// @effect-diagnostics-next-line nodeBuiltinImport:off -- Exercise migration before the server runtime opens its state.
+import * as NodeFS from "node:fs";
+// @effect-diagnostics-next-line nodeBuiltinImport:off -- Build only explicitly isolated temporary home paths.
+import * as NodePath from "node:path";
 import { assert, it, vi } from "vite-plus/test";
 
-import { fixPath, hydratePosixHome } from "./os-jank.ts";
+import { fixPath, hydratePosixHome, resolveBaseDir } from "./os-jank.ts";
 
 vi.mock("node:child_process", { spy: true });
+
+it.each(["runtime", "ssh-launch", "bin"])(
+  "migrates the server default after %s was created",
+  async (entry) => {
+    const homeDirectory = NodeFS.mkdtempSync(
+      NodePath.join(NodeOS.tmpdir(), "paperplane-server-home-"),
+    );
+    try {
+      const oldState = NodePath.join(homeDirectory, ".rove-code", "userdata");
+      NodeFS.mkdirSync(oldState, { recursive: true });
+      NodeFS.writeFileSync(NodePath.join(oldState, "settings.json"), '{"theme":"dark"}');
+      const precreated = NodePath.join(homeDirectory, ".paperplane", entry);
+      NodeFS.mkdirSync(precreated, { recursive: true });
+      NodeFS.writeFileSync(NodePath.join(precreated, "keep"), "new runtime or launch script");
+      const baseDir = await Effect.runPromise(
+        resolveBaseDir(undefined).pipe(
+          Effect.provideService(HostProcess.HomeDirectory, homeDirectory),
+          Effect.provide(NodeServices.layer),
+        ),
+      );
+      assert.equal(baseDir, NodePath.join(homeDirectory, ".paperplane"));
+      assert.equal(
+        NodeFS.readFileSync(NodePath.join(baseDir, "userdata", "settings.json"), "utf8"),
+        '{"theme":"dark"}',
+      );
+      assert.equal(
+        NodeFS.readFileSync(NodePath.join(precreated, "keep"), "utf8"),
+        "new runtime or launch script",
+      );
+    } finally {
+      NodeFS.rmSync(homeDirectory, { recursive: true, force: true });
+    }
+  },
+);
+
+it("does not migrate for an explicit CLI home or disposable development state", async () => {
+  const homeDirectory = NodeFS.mkdtempSync(
+    NodePath.join(NodeOS.tmpdir(), "paperplane-server-home-"),
+  );
+  try {
+    NodeFS.mkdirSync(NodePath.join(homeDirectory, ".rove-code"));
+    for (const effect of [
+      resolveBaseDir(NodePath.join(homeDirectory, "custom")),
+      resolveBaseDir(undefined, { development: true }),
+    ]) {
+      await Effect.runPromise(
+        effect.pipe(
+          Effect.provideService(HostProcess.HomeDirectory, homeDirectory),
+          Effect.provide(NodeServices.layer),
+        ),
+      );
+    }
+    assert.equal(NodeFS.existsSync(NodePath.join(homeDirectory, ".paperplane")), false);
+  } finally {
+    NodeFS.rmSync(homeDirectory, { recursive: true, force: true });
+  }
+});
 
 it("hydrates HOME for minimal service environments from the user account", () => {
   const env: NodeJS.ProcessEnv = {};
@@ -79,7 +140,9 @@ effectIt.effect("hydrates PATH when the desktop handoff is absent", () =>
     Effect.sync(() =>
       vi
         .spyOn(NodeChildProcess, "execFileSync")
-        .mockReturnValue("__ROVE_ENV_PATH_START__\n/opt/tools/bin\n__ROVE_ENV_PATH_END__\n"),
+        .mockReturnValue(
+          "__PAPERPLANE_ENV_PATH_START__\n/opt/tools/bin\n__PAPERPLANE_ENV_PATH_END__\n",
+        ),
     ),
     (probe) =>
       Effect.gen(function* () {
@@ -105,12 +168,12 @@ effectIt.effect("keeps mise's PATH record with the login shell PATH", () =>
         .spyOn(NodeChildProcess, "execFileSync")
         .mockReturnValue(
           [
-            "__ROVE_ENV_PATH_START__",
+            "__PAPERPLANE_ENV_PATH_START__",
             "/home/me/.local/bin:/mise/installs/claude/latest:/mise/shims",
-            "__ROVE_ENV_PATH_END__",
-            "__ROVE_ENV___MISE_DIFF_START__",
+            "__PAPERPLANE_ENV_PATH_END__",
+            "__PAPERPLANE_ENV___MISE_DIFF_START__",
             "mise-diff",
-            "__ROVE_ENV___MISE_DIFF_END__",
+            "__PAPERPLANE_ENV___MISE_DIFF_END__",
           ].join("\n"),
         ),
     ),

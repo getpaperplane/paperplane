@@ -1,4 +1,4 @@
-import type { EnvironmentId, ScopedThreadRef, ThreadId } from "@rove-code/contracts";
+import type { EnvironmentId, ScopedThreadRef, ThreadId } from "@getpaperplane/contracts";
 import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 import type { DraftId } from "../composerDraftStore";
@@ -25,7 +25,7 @@ describe("window capture animation", () => {
     const source = {
       kind: "snap-shot" as const,
       capturedAt: "2026-08-29T00:00:00.000Z",
-      appName: "Rove Code",
+      appName: "Paperplane",
       windowTitle: "Capture animation",
     };
 

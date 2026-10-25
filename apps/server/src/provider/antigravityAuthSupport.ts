@@ -1,12 +1,12 @@
 // @effect-diagnostics-next-line nodeBuiltinImport:off - Effect's symlink has no type argument, and Windows needs a junction to link without elevation.
 import * as NodeFSP from "node:fs/promises";
 
-import type { AntigravityAuthMethod, ProviderInstanceId } from "@rove-code/contracts";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+import type { AntigravityAuthMethod, ProviderInstanceId } from "@getpaperplane/contracts";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 import {
   resolveNodeExecutable,
   nodeRuntimeUnavailableMessage,
-} from "@rove-code/shared/nodeRuntime";
+} from "@getpaperplane/shared/nodeRuntime";
 import * as Crypto from "effect/Crypto";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
@@ -19,8 +19,8 @@ import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as AcpErrors from "effect-acp/errors";
 
-import { collectUint8StreamText } from "@rove-code/provider-core/server/collectStreamText";
-import type * as AcpSessionRuntime from "@rove-code/provider-acp/server/AcpSessionRuntime";
+import { collectUint8StreamText } from "@getpaperplane/provider-core/server/collectStreamText";
+import type * as AcpSessionRuntime from "@getpaperplane/provider-acp/server/AcpSessionRuntime";
 import {
   antigravityUserSkillDirectories,
   resolveAntigravityUserHome,
@@ -61,7 +61,7 @@ const browserHelperSource =
   `process.stderr.on("error",()=>process.exit(0)).write(` +
   `"${ANTIGRAVITY_AUTH_BROWSER_MARKER}"+JSON.stringify(process.argv[1])+"\\n",` +
   `()=>process.exit(0))`;
-const browserPreflightUrl = "https://example.invalid/rove-antigravity-browser-preflight";
+const browserPreflightUrl = "https://example.invalid/paperplane-antigravity-browser-preflight";
 
 const removedEnvironmentKeys = new Set([
   "GEMINI_API_KEY",
@@ -179,7 +179,7 @@ function authSupportError(detail: string) {
   return new AcpErrors.AcpTransportError({ detail, cause: undefined });
 }
 
-/** Recognizes native auth failures and interactive login blocked by Rove. */
+/** Recognizes native auth failures and interactive login blocked by Paperplane. */
 export function isAntigravitySignInRequiredError(error: unknown): boolean {
   return (
     (isAcpRequestError(error) && error.code === -32000) ||
@@ -238,7 +238,7 @@ function antigravityEnvironment(
         : {};
   // The agent is a PyInstaller one-file bundle. It unpacks about 1 GB into
   // the system temp directory per launch and a force kill leaves that behind.
-  // Point it at a Rove-owned directory so the driver can reclaim the space.
+  // Point it at a Paperplane-owned directory so the driver can reclaim the space.
   const tempDirectory = runtimeTempDirectory ?? profile.tempDirectory;
   return {
     ...environment,
@@ -255,7 +255,7 @@ function antigravityEnvironment(
 }
 
 /**
- * The agent reads its user-global skills under `GEMINI_HOME`, which Rove points
+ * The agent reads its user-global skills under `GEMINI_HOME`, which Paperplane points
  * at the private profile. Link the two skill directories back to the user's
  * real `~/.gemini` so global skills load, while MCP servers, hooks, and
  * credentials stay isolated. Best effort: a link that cannot be made only
@@ -349,7 +349,7 @@ export const prepareAntigravityProfile = Effect.fn("prepareAntigravityProfile")(
     helperExecutable.includes("%s")
   ) {
     return yield* authSupportError(
-      "The Rove runtime path cannot be used to suppress Antigravity browser launches.",
+      "The Paperplane runtime path cannot be used to suppress Antigravity browser launches.",
     );
   }
 
@@ -570,7 +570,7 @@ export function makeAntigravityStdoutTransform(
     });
 }
 
-/** Receives native 1.1.1 sign-in URLs and Rove browser-helper URLs without logging stderr. */
+/** Receives native 1.1.1 sign-in URLs and Paperplane browser-helper URLs without logging stderr. */
 export function makeAntigravityStderrHandler(
   input: {
     readonly onAuthorizationUrl?: (

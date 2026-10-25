@@ -1,7 +1,7 @@
 import type {
   OrchestrationV2AppThread,
   OrchestrationV2CheckpointScope,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import type * as FileSystem from "effect/FileSystem";
 import * as Option from "effect/Option";

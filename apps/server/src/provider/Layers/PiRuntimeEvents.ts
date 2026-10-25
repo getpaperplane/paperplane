@@ -23,7 +23,7 @@ export function compactPiToolProgress(event: PiSessionEventLike): PiSessionEvent
   };
 }
 
-/** Pi includes a cumulative assistant snapshot with each delta; Rove only consumes the delta. */
+/** Pi includes a cumulative assistant snapshot with each delta; Paperplane only consumes the delta. */
 export function compactPiMessageUpdate(event: PiSessionEventLike): PiSessionEventLike {
   const update = piRecord(event.assistantMessageEvent);
   return {

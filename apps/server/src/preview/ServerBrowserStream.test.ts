@@ -10,7 +10,7 @@ import {
   PREVIEW_STREAM_HOST_SETUP_CLOSE_CODE,
   PreviewStreamHostSetup,
   type AuthEnvironmentScope,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -188,7 +188,7 @@ it.effect.each([
     );
     const response = yield* Effect.promise(() =>
       handler.handler(
-        new Request("http://rove.test/api/preview-stream/ws?threadId=thread&tabId=tab", {
+        new Request("http://paperplane.test/api/preview-stream/ws?threadId=thread&tabId=tab", {
           headers: { upgrade: "websocket" },
         }),
       ),
@@ -201,7 +201,7 @@ it.effect.each([
 it.effect("serves a tab's download only to an authorized session", () =>
   Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem;
-    const path = `${yield* fs.makeTempDirectoryScoped({ prefix: "rove-download-" })}/file`;
+    const path = `${yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-download-" })}/file`;
     yield* fs.writeFileString(path, "report contents");
     const requests: Array<unknown> = [];
     const browser = ServerBrowser.ServerBrowser.of({
@@ -234,7 +234,7 @@ it.effect("serves a tab's download only to an authorized session", () =>
         );
         return yield* Effect.promise(() => handler.handler(new Request(url)));
       });
-    const base = "http://rove.test/api/preview-stream/download?threadId=thread&tabId=tab";
+    const base = "http://paperplane.test/api/preview-stream/download?threadId=thread&tabId=tab";
     const denied = yield* serve([], `${base}&id=download-1`);
     expect(denied.status).toBe(403);
     expect(requests).toEqual([]);
@@ -286,7 +286,7 @@ it.effect("passes uploaded files to the page's open picker and needs operate sco
         return yield* Effect.promise(() =>
           handler.handler(
             new Request(
-              `http://rove.test/api/preview-stream/upload?threadId=thread&tabId=tab&chooser=${chooser}`,
+              `http://paperplane.test/api/preview-stream/upload?threadId=thread&tabId=tab&chooser=${chooser}`,
               { method: "POST", body },
             ),
           ),
@@ -308,13 +308,13 @@ const decodeHostSetup = Schema.decodeUnknownEffect(Schema.fromJsonString(Preview
 it.effect.each([
   {
     error: new PreviewBrowserHost.PreviewBrowserSandboxError({
-      setupCommand: "sudo rove browser setup",
+      setupCommand: "sudo paperplane browser setup",
     }),
     need: "sandbox",
   },
   {
     error: new PreviewBrowserHost.PreviewBrowserLibrariesError({
-      setupCommand: "sudo rove browser setup",
+      setupCommand: "sudo paperplane browser setup",
       libraries: ["libnss3.so"],
     }),
     need: "libraries",
@@ -359,7 +359,7 @@ it.effect.each([
     expect(code).toBe(PREVIEW_STREAM_HOST_SETUP_CLOSE_CODE);
     expect(yield* decodeHostSetup(reason)).toEqual({
       need,
-      command: "sudo rove browser setup",
+      command: "sudo paperplane browser setup",
     });
   }).pipe(Effect.scoped),
 );

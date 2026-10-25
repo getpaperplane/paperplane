@@ -1,6 +1,6 @@
 import { ComposerSelectControl } from "./chat/ComposerControl";
 import { ComposerContextLabel } from "./ComposerContextLabel";
-import type { EnvironmentId } from "@rove-code/contracts";
+import type { EnvironmentId } from "@getpaperplane/contracts";
 import { ScaleIcon } from "lucide-react";
 import { memo, useMemo } from "react";
 

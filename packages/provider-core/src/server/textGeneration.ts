@@ -4,7 +4,7 @@ import type {
   ModelSelection,
   PullRequestReviewGuide,
   TextGenerationError,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import type * as Effect from "effect/Effect";
 
 import type { TextGenerationPolicy } from "./textGenerationPolicy.ts";

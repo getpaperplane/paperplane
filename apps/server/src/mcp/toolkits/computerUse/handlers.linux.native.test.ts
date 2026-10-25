@@ -5,11 +5,11 @@ import {
   ProviderInstanceId,
   ThreadId,
   type ServerSettings as SettingsValue,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   Environment as HostProcessEnvironment,
   Platform as HostProcessPlatform,
-} from "@rove-code/shared/HostProcess";
+} from "@getpaperplane/shared/HostProcess";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -29,7 +29,7 @@ import { layerComputerUseToolkit } from "../../McpHttpServer.ts";
 import * as McpToolAccessTestkit from "../../McpToolAccess.testkit.ts";
 
 const enabled =
-  HostProcessPlatform.defaultValue() === "linux" && process.env.ROVE_TEST_LINUX_CUA === "1";
+  HostProcessPlatform.defaultValue() === "linux" && process.env.PAPERPLANE_TEST_LINUX_CUA === "1";
 const settingsLayer = Layer.effect(
   ServerSettings.ServerSettingsService,
   Effect.gen(function* () {
@@ -63,7 +63,7 @@ const settingsLayer = Layer.effect(
 const services = CuaDriver.layer.pipe(
   Layer.provideMerge(settingsLayer),
   Layer.provideMerge(ProcessRunner.layer),
-  Layer.provide(ServerConfig.layerTest(process.cwd(), { prefix: "rove-cua-native-" })),
+  Layer.provide(ServerConfig.layerTest(process.cwd(), { prefix: "paperplane-cua-native-" })),
   Layer.provideMerge(NodeServices.layer),
 );
 const Window = Schema.Struct({ pid: Schema.Int, window_id: Schema.Int, title: Schema.String });
@@ -119,19 +119,19 @@ const decodeInspection = Schema.decodeUnknownSync(
 );
 
 it.live.skipIf(!enabled)(
-  "prepares the actual Rove private-desktop image",
+  "prepares the actual Paperplane private-desktop image",
   () =>
     Effect.gen(function* () {
       const driver = yield* CuaDriver.CuaDriver;
       const status = yield* driver.control({ action: "install" });
       expect(status.status).toBe("stopped");
-      yield* Effect.log("PASS. Rove prepared the private desktop image.");
+      yield* Effect.log("PASS. Paperplane prepared the private desktop image.");
     }).pipe(Effect.scoped, Effect.provide(services)),
   600_000,
 );
 
 it.effect.skipIf(!enabled)(
-  "uses Rove MCP for guest input, concurrent isolation, reconnection and explicit disposal",
+  "uses Paperplane MCP for guest input, concurrent isolation, reconnection and explicit disposal",
   () =>
     Effect.gen(function* () {
       const server = yield* McpServer.McpServer;
@@ -140,18 +140,18 @@ it.effect.skipIf(!enabled)(
       const client = McpSchema.McpServerClient.of({
         clientId: 1,
         clientCapabilities: {},
-        clientInfo: { name: "rove-linux-verification", version: "1" },
+        clientInfo: { name: "paperplane-linux-verification", version: "1" },
         protocolVersion: "2025-06-18",
         initializePayload: {
           protocolVersion: "2025-06-18",
           capabilities: {},
-          clientInfo: { name: "rove-linux-verification", version: "1" },
+          clientInfo: { name: "paperplane-linux-verification", version: "1" },
         },
         getClient: Effect.die("unused"),
       });
       const first = ThreadId.make("linux-native-first");
       const second = ThreadId.make("linux-native-second");
-      const artifacts = process.env.ROVE_TEST_CUA_ARTIFACT_DIR;
+      const artifacts = process.env.PAPERPLANE_TEST_CUA_ARTIFACT_DIR;
       if (artifacts) yield* fs.makeDirectory(artifacts, { recursive: true });
       let sequence = 0;
       const receipts: Array<unknown> = [];
@@ -262,8 +262,8 @@ it.effect.skipIf(!enabled)(
       });
       const targets = yield* Effect.all(
         [
-          open(first, "Rove private desktop one", false),
-          open(second, "Rove private desktop two", true),
+          open(first, "Paperplane private desktop one", false),
+          open(second, "Paperplane private desktop two", true),
         ],
         { concurrency: 2 },
       );
@@ -278,12 +278,13 @@ it.effect.skipIf(!enabled)(
           "ps",
           "--all",
           "--filter",
-          "label=io.rove.cua.server",
+          "label=io.paperplane.cua.server",
           "--format",
           "json",
         ]);
         return decodeContainers(listing).filter(
-          (container) => decodeServer(container.Labels["io.rove.cua.server"]).pid === process.pid,
+          (container) =>
+            decodeServer(container.Labels["io.paperplane.cua.server"]).pid === process.pid,
         );
       });
       const containers = yield* ownedContainers;
@@ -327,7 +328,7 @@ it.effect.skipIf(!enabled)(
           container.Id,
           "/bin/sh",
           "-c",
-          'test -z "$ROVE_CUA_VERIFY_HOST_ONLY" && test -z "$HTTP_PROXY" && test -z "$HTTPS_PROXY"',
+          'test -z "$PAPERPLANE_CUA_VERIFY_HOST_ONLY" && test -z "$HTTP_PROXY" && test -z "$HTTPS_PROXY"',
         ]);
         guests.push(guest);
       }
@@ -356,7 +357,7 @@ it.effect.skipIf(!enabled)(
         expect(
           decodeState(fresh.structuredContent).elements.find((element) => element.role === "text")
             ?.value,
-        ).toBe(index === 0 ? "Rove private desktop one" : "Rove private desktop two");
+        ).toBe(index === 0 ? "Paperplane private desktop one" : "Paperplane private desktop two");
       }
       yield* succeed(first, "close_desktop");
       expect(yield* driver.status).toMatchObject({ readiness: { desktops: 1 } });
@@ -367,14 +368,14 @@ it.effect.skipIf(!enabled)(
       expect(
         decodeState(peer.structuredContent).elements.find((element) => element.role === "text")
           ?.value,
-      ).toBe("Rove private desktop two");
+      ).toBe("Paperplane private desktop two");
       const settings = yield* ServerSettings.ServerSettingsService;
       yield* settings.updateSettings({ enableAgentComputerUse: false });
       expect((yield* call(second, "list_windows")).isError).toBe(true);
       yield* driver.status;
       expect(yield* ownedContainers).toHaveLength(0);
       yield* Effect.log(
-        "PASS. Rove MCP verified fresh text, guest pixel input, two isolated threads, idle reconnect and explicit discard.",
+        "PASS. Paperplane MCP verified fresh text, guest pixel input, two isolated threads, idle reconnect and explicit discard.",
       );
     }).pipe(
       Effect.scoped,
@@ -387,7 +388,7 @@ it.effect.skipIf(!enabled)(
       ),
       Effect.provideService(HostProcessEnvironment, {
         ...HostProcessEnvironment.defaultValue(),
-        ROVE_CUA_VERIFY_HOST_ONLY: "must-not-enter-the-guest",
+        PAPERPLANE_CUA_VERIFY_HOST_ONLY: "must-not-enter-the-guest",
         HTTP_PROXY: "http://host-only.invalid:1234",
         HTTPS_PROXY: "http://host-only.invalid:1234",
       }),

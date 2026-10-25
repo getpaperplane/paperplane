@@ -1,5 +1,5 @@
-import { EnvironmentId, type PersistedSavedEnvironmentRecord } from "@rove-code/contracts";
-import { fromLenientJson } from "@rove-code/shared/schemaJson";
+import { EnvironmentId, type PersistedSavedEnvironmentRecord } from "@getpaperplane/contracts";
+import { fromLenientJson } from "@getpaperplane/shared/schemaJson";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Base64 from "effect/encoding/Base64";
@@ -143,7 +143,7 @@ export class DesktopSavedEnvironments extends Context.Service<
       environmentId: string,
     ) => Effect.Effect<Option.Option<string>, DesktopSavedEnvironmentsGetSecretError>;
   }
->()("@rove-code/desktop/settings/DesktopSavedEnvironments") {}
+>()("@getpaperplane/desktop/settings/DesktopSavedEnvironments") {}
 
 function toPersistedSavedEnvironmentRecord(
   record: PersistedSavedEnvironmentStorageRecord,

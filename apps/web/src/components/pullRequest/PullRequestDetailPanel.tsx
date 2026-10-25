@@ -1,4 +1,4 @@
-import { parseChangeRequestUrl } from "@rove-code/shared/changeRequestUrl";
+import { parseChangeRequestUrl } from "@getpaperplane/shared/changeRequestUrl";
 import { useAtomValue } from "@effect/atom-react";
 import { usePullRequestStack } from "~/state/usePullRequestStack";
 import { RefreshIcon } from "~/components/ui/refresh-icon";
@@ -7,8 +7,8 @@ import {
   scopedThreadKey,
   scopeProjectRef,
   scopeThreadRef,
-} from "@rove-code/client-runtime/environment";
-import { squashAtomCommandFailure } from "@rove-code/client-runtime/state/runtime";
+} from "@getpaperplane/client-runtime/environment";
+import { squashAtomCommandFailure } from "@getpaperplane/client-runtime/state/runtime";
 import {
   AuthOrchestrationOperateScope,
   AuthSourceControlWriteScope,
@@ -21,7 +21,7 @@ import {
   type PullRequestReviewGuideStop,
   resolveEnvironmentMachineKind,
   type ScopedThreadRef,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   ArrowDownUpIcon,
   ArrowLeftIcon,
@@ -94,7 +94,7 @@ import {
 } from "~/state/pullRequests";
 import { useAtomCommand } from "~/state/use-atom-command";
 import { PullRequestStackMenu } from "./PullRequestStackMenu";
-import { sourceControlClients } from "@rove-code/client-runtime/source-control-clients";
+import { sourceControlClients } from "@getpaperplane/client-runtime/source-control-clients";
 import { PullRequestThreadLinks } from "./PullRequestThreadLinks";
 import { vcsEnvironment } from "~/state/vcs";
 import { formatRelativeTimeLabel } from "~/timestampFormat";

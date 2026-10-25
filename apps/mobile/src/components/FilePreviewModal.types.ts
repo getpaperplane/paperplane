@@ -1,4 +1,4 @@
-import type { AssetResource, EnvironmentId } from "@rove-code/contracts";
+import type { AssetResource, EnvironmentId } from "@getpaperplane/contracts";
 
 import type { FileBackedComposerAttachment } from "../lib/composerImages";
 import type { MediaActionsSource } from "../lib/mediaActionsSource";

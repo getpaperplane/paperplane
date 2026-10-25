@@ -21,8 +21,8 @@ import * as Stream from "effect/Stream";
 import { Command, Flag } from "effect/cli";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 
-import * as NetService from "@rove-code/shared/Net";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+import * as NetService from "@getpaperplane/shared/Net";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 import { windowsSystemTar } from "./build-cli-archive.ts";
 import { FetchHttpClient, HttpClient, HttpClientRequest, HttpClientResponse } from "effect/http";
 
@@ -106,8 +106,8 @@ const smokeCliArchive = Effect.fn("smokeCliArchive")(function* (input: {
   const path = yield* Path.Path;
   const platform = yield* HostProcess.Platform;
   const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
-  const scratch = yield* fs.makeTempDirectory({ prefix: "rove-cli-smoke-" });
-  // Windows can keep rove.exe locked (EBUSY) for a moment after the server
+  const scratch = yield* fs.makeTempDirectory({ prefix: "paperplane-cli-smoke-" });
+  // Windows can keep paperplane.exe locked (EBUSY) for a moment after the server
   // exits. A leftover scratch directory on a CI runner is harmless, so
   // cleanup retries briefly and never fails a smoke test that passed.
   yield* Effect.addFinalizer(() =>
@@ -139,7 +139,7 @@ const smokeCliArchive = Effect.fn("smokeCliArchive")(function* (input: {
     });
   }
   const contentDir = path.join(scratch, root);
-  const executable = path.join(contentDir, platform === "win32" ? "rove.exe" : "rove");
+  const executable = path.join(contentDir, platform === "win32" ? "paperplane.exe" : "paperplane");
   for (const required of [executable, path.join(contentDir, "client/index.html")]) {
     if (!(yield* fs.exists(required))) {
       return yield* new CliArchiveSmokeError({
@@ -190,7 +190,7 @@ const smokeCliArchive = Effect.fn("smokeCliArchive")(function* (input: {
         USERPROFILE: home,
         TMPDIR: scratch,
         TEMP: scratch,
-        ROVE_HOME: home,
+        PAPERPLANE_HOME: home,
       },
       extendEnv: false,
     }),
@@ -228,7 +228,7 @@ const smokeCliArchive = Effect.fn("smokeCliArchive")(function* (input: {
   }
   const origin = `http://127.0.0.1:${port}`;
   const readDescriptor = httpClient
-    .execute(HttpClientRequest.get(`${origin}/.well-known/rove/environment`))
+    .execute(HttpClientRequest.get(`${origin}/.well-known/paperplane/environment`))
     .pipe(
       Effect.flatMap(HttpClientResponse.filterStatusOk),
       Effect.flatMap(HttpClientResponse.schemaBodyJson(descriptorSchema)),
@@ -252,7 +252,7 @@ const smokeCliArchive = Effect.fn("smokeCliArchive")(function* (input: {
     HttpClientRequest.bodyUrlParams({
       grant_type: "urn:ietf:params:oauth:grant-type:token-exchange",
       subject_token: credential.credential,
-      subject_token_type: "urn:rove:params:oauth:token-type:environment-bootstrap",
+      subject_token_type: "urn:paperplane:params:oauth:token-type:environment-bootstrap",
       requested_token_type: "urn:ietf:params:oauth:token-type:access_token",
     }),
   );

@@ -1,11 +1,11 @@
-import { relayClerkTokenOptions } from "@rove-code/shared/relayAuth";
-import { normalizeSecureRelayUrl } from "@rove-code/shared/relayUrl";
+import { relayClerkTokenOptions } from "@getpaperplane/shared/relayAuth";
+import { normalizeSecureRelayUrl } from "@getpaperplane/shared/relayUrl";
 import * as Schema from "effect/Schema";
 
 export class CloudPublicConfigMissingError extends Schema.TaggedError<CloudPublicConfigMissingError>()(
   "CloudPublicConfigMissingError",
   {
-    key: Schema.Literal("ROVE_CLERK_JWT_TEMPLATE"),
+    key: Schema.Literal("PAPERPLANE_CLERK_JWT_TEMPLATE"),
   },
 ) {
   override get message(): string {
@@ -45,7 +45,7 @@ export function resolveCloudPublicConfig(): CloudPublicConfig {
     ),
     clerkJwtTemplate: trimNonEmpty(import.meta.env.VITE_CLERK_JWT_TEMPLATE as string | undefined),
     relayUrl: normalizeSecureRelayUrl(
-      (import.meta.env.VITE_ROVE_RELAY_URL as string | undefined) ?? "",
+      (import.meta.env.VITE_PAPERPLANE_RELAY_URL as string | undefined) ?? "",
     ),
     relayTracing: {
       tracesUrl: normalizeSecureUrl(
@@ -78,7 +78,7 @@ export function hasCloudPublicConfig(): boolean {
 export function resolveRelayClerkTokenOptions() {
   const { clerkJwtTemplate } = resolveCloudPublicConfig();
   if (!clerkJwtTemplate) {
-    throw new CloudPublicConfigMissingError({ key: "ROVE_CLERK_JWT_TEMPLATE" });
+    throw new CloudPublicConfigMissingError({ key: "PAPERPLANE_CLERK_JWT_TEMPLATE" });
   }
   return relayClerkTokenOptions(clerkJwtTemplate);
 }

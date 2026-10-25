@@ -18,7 +18,7 @@ import * as HttpRouter from "effect/http/HttpRouter";
 import * as HttpApiBuilder from "effect/http-api/HttpApiBuilder";
 import * as HttpApiScalar from "effect/http-api/HttpApiScalar";
 
-import { RelayApi } from "@rove-code/contracts/relay";
+import { RelayApi } from "@getpaperplane/contracts/relay";
 
 import {
   RELAY_HTTP_ROUTER_CONFIG,
@@ -485,7 +485,7 @@ export const layer = Api.make(
           Layer.unwrap(
             Effect.map(RelayObservability, (observability) =>
               Axiom.Telemetry({
-                serviceName: "rove-relay",
+                serviceName: "paperplane-relay",
                 token: observability.workerIngestToken,
                 traces: observability.traces,
               }),

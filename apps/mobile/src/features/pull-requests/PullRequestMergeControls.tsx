@@ -1,8 +1,8 @@
 import { AppActivityIndicator } from "../../components/ui/AppActivityIndicator";
 import * as Dialog from "../../components/ui/Dialog";
 import { useAtomRefresh, useAtomSet, useAtomValue } from "@effect/atom-react";
-import { squashAtomCommandFailure } from "@rove-code/client-runtime/state/runtime";
-import type { PullRequestDetail, PullRequestMergeMethod } from "@rove-code/contracts";
+import { squashAtomCommandFailure } from "@getpaperplane/client-runtime/state/runtime";
+import type { PullRequestDetail, PullRequestMergeMethod } from "@getpaperplane/contracts";
 import { AsyncResult } from "effect/reactivity";
 import { useRef, useState } from "react";
 import { Platform, Pressable, View } from "react-native";
@@ -208,7 +208,7 @@ export function PullRequestMergeControls(props: {
               />
             )}
             <Text
-              className={`shrink text-center text-sm font-rove-semibold ${canMerge ? "text-prominent-action-foreground" : "text-foreground-muted"}`}
+              className={`shrink text-center text-sm font-paperplane-semibold ${canMerge ? "text-prominent-action-foreground" : "text-foreground-muted"}`}
             >
               {busy ? "Working…" : !permissions.connected ? "Reconnect to merge" : label}
             </Text>

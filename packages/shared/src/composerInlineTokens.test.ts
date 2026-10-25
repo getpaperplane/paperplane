@@ -176,10 +176,10 @@ describe("collectComposerInlineTokens", () => {
 
   it("leaves a context reference link alone", () => {
     expect(
-      collectComposerInlineTokens("see [checkout.png](rove-context://v1/image/ctx_abc) ok"),
+      collectComposerInlineTokens("see [checkout.png](paperplane-context://v1/image/ctx_abc) ok"),
     ).toEqual([]);
     expect(
-      collectComposerInlineTokens("see ![ctx_abc](rove-context://v1/image/ctx_abc) ok"),
+      collectComposerInlineTokens("see ![ctx_abc](paperplane-context://v1/image/ctx_abc) ok"),
     ).toEqual([]);
   });
 

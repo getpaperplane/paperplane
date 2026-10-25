@@ -1,4 +1,4 @@
-import type { DesktopDiscoveredSshHost } from "@rove-code/contracts";
+import type { DesktopDiscoveredSshHost } from "@getpaperplane/contracts";
 import * as Cause from "effect/Cause";
 import { AtomRegistry } from "effect/reactivity";
 import * as AsyncResult from "effect/reactivity/AsyncResult";

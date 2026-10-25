@@ -1,5 +1,5 @@
-import type { EnvironmentId } from "@rove-code/contracts";
-import type { RelayClientEnvironmentRecord } from "@rove-code/contracts/relay";
+import type { EnvironmentId } from "@getpaperplane/contracts";
+import type { RelayClientEnvironmentRecord } from "@getpaperplane/contracts/relay";
 import type { ConnectedEnvironmentSummary } from "../../state/remote-runtime-types";
 
 export interface EnvironmentSectionsInput {
@@ -14,7 +14,7 @@ export interface EnvironmentSections {
 }
 
 /**
- * Ids of the environments that already occupy a Rove Connect slot. A backend saved directly is
+ * Ids of the environments that already occupy a Paperplane Connect slot. A backend saved directly is
  * not one of them, so it must not suppress the cloud environment that happens to share its id.
  */
 export function relayManagedEnvironmentIds(

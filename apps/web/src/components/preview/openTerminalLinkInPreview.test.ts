@@ -1,4 +1,4 @@
-import type { PreviewSessionSnapshot, ScopedThreadRef } from "@rove-code/contracts";
+import type { PreviewSessionSnapshot, ScopedThreadRef } from "@getpaperplane/contracts";
 import * as Cause from "effect/Cause";
 import { AsyncResult } from "effect/reactivity";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";

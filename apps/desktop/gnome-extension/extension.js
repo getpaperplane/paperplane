@@ -8,8 +8,8 @@ import * as Main from "resource:///org/gnome/shell/ui/main.js";
 import { CaptureService, isWaylandSession } from "./captureService.js";
 import { CaptureFeedback } from "./captureFeedback.js";
 
-const NAME = "io.github.hafiezul.rove.ShellSnapShot";
-const PATH = "/io/github/hafiezul/rove/ShellSnapShot";
+const NAME = "io.github.getpaperplane.paperplane.ShellSnapShot";
+const PATH = "/io/github/getpaperplane/paperplane/ShellSnapShot";
 const XML = `<node><interface name="${NAME}">
   <property name="Version" type="u" access="read"/>
   <method name="Capture">
@@ -73,7 +73,7 @@ function takeSnapshot(animate) {
     try {
       content = window.get_compositor_private().paint_to_content(null);
     } catch (error) {
-      console.warn(`Rove capture preview unavailable: ${error.message}`);
+      console.warn(`Paperplane capture preview unavailable: ${error.message}`);
     }
   }
   const metadata = JSON.stringify({
@@ -114,7 +114,7 @@ function takeSnapshot(animate) {
   });
 }
 
-export default class RoveSnapShotExtension extends Extension {
+export default class PaperplaneSnapShotExtension extends Extension {
   enable() {
     this._feedback = new CaptureFeedback();
     this._sessionChanged = Main.sessionMode.connect("updated", () => this._feedback.dispose());

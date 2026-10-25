@@ -9,7 +9,7 @@ import {
   type CachedFile,
   type ScanCache,
 } from "./usageScanCache.ts";
-import type { UsageRecord } from "@rove-code/provider-core/server/usage";
+import type { UsageRecord } from "@getpaperplane/provider-core/server/usage";
 
 import { TEST_FORMAT_MAP } from "./usageTestFormats.ts";
 
@@ -115,7 +115,7 @@ describe("scan cache round trip", () => {
     expect(restored.get("/codex.jsonl")).toEqual(original.get("/codex.jsonl"));
   });
 
-  it("migrates Rove v4 Pi records with string rate models and separate reducer state", () => {
+  it("migrates Paperplane v4 Pi records with string rate models and separate reducer state", () => {
     const document = {
       version: 4,
       models: ["custom/model"],

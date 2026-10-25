@@ -4,10 +4,10 @@ import type {
   ProjectScript,
   ResolvedKeybindingsConfig,
   ThreadId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 
 import type { DraftId } from "../../composerDraftStore";
-import { useRoveProjectFileScripts } from "../../hooks/useRoveProjectFileScripts";
+import { usePaperplaneProjectFileState } from "../../hooks/usePaperplaneProjectFileScripts";
 import { type EnvMode, type EnvironmentOption } from "../BranchToolbar.logic";
 import { BranchToolbar } from "../BranchToolbar";
 import BaseGitActionsControl from "../GitActionsControl";
@@ -70,7 +70,7 @@ export interface ThreadDetailsPanelProps extends Pick<
 // ChatView re-renders on every streamed text chunk. Memoizing here keeps the details
 // panel out of that path: its props only change when thread metadata actually changes.
 export const ThreadDetailsPanel = memo(function ThreadDetailsPanel(props: ThreadDetailsPanelProps) {
-  const fileScripts = useRoveProjectFileScripts(
+  const projectFile = usePaperplaneProjectFileState(
     props.environmentId,
     props.activeProjectScripts ? props.gitCwd : null,
   );
@@ -136,12 +136,18 @@ export const ThreadDetailsPanel = memo(function ThreadDetailsPanel(props: Thread
                 />
               ) : null}
 
+              {projectFile.notice ? (
+                <p role="status" className="px-2 py-2 text-sm text-warning">
+                  {projectFile.notice}
+                </p>
+              ) : null}
               {props.activeProjectScripts ? (
                 <ProjectScriptsControl
                   environmentId={props.environmentId}
                   displayMode="panel"
                   scripts={props.activeProjectScripts}
-                  fileScripts={fileScripts}
+                  fileScripts={projectFile.scripts}
+                  projectFileNotice={projectFile.notice}
                   preferredScriptId={props.preferredScriptId}
                   onRunScript={props.onRunProjectScript}
                   onAddScript={props.onAddProjectScript}

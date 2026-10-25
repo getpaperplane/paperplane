@@ -1,4 +1,5 @@
-import type { EnvironmentId } from "@rove-code/contracts";
+import { openMigratedMobileDatabase } from "@getpaperplane/shared/clientMigration";
+import type { EnvironmentId } from "@getpaperplane/contracts";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -8,7 +9,6 @@ import type { SQLiteDatabase } from "expo-sqlite";
 import * as RuntimePredicate from "effect/Predicate";
 import type { Json as SchemaJson } from "effect/Schema";
 
-const DATABASE_NAME = "rove-client.db";
 const DATABASE_SCHEMA_VERSION = 1;
 const LEGACY_CACHE_DIRECTORIES = [
   "connection-shell-snapshots",
@@ -239,14 +239,14 @@ export class MobileDatabase extends Context.Service<
       updatedAt: number,
     ) => Effect.Effect<void, MobileDatabaseError>;
   }
->()("@rove-code/mobile/persistence/MobileDatabase") {}
+>()("@getpaperplane/mobile/persistence/MobileDatabase") {}
 
 const makeAvailable = Effect.gen(function* () {
   const database = yield* Effect.acquireRelease(
     Effect.tryPromise({
       try: async () => {
         const SQLite = await import("expo-sqlite");
-        return SQLite.openDatabaseAsync(DATABASE_NAME);
+        return openMigratedMobileDatabase(SQLite);
       },
       catch: databaseError("open"),
     }),

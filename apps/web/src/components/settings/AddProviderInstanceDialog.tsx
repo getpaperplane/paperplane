@@ -5,7 +5,7 @@ import { ProviderInstanceIcon } from "../chat/ProviderInstanceIcon";
 import { Radio as RadioPrimitive } from "@base-ui/react/radio";
 import { CheckIcon } from "lucide-react";
 import { useMemo, useState } from "react";
-import { squashAtomCommandFailure } from "@rove-code/client-runtime/state/runtime";
+import { squashAtomCommandFailure } from "@getpaperplane/client-runtime/state/runtime";
 import {
   type AcpRegistrySearchAgent,
   AuthProvidersManageScope,
@@ -14,7 +14,7 @@ import {
   type EnvironmentId,
   type ProviderInstanceConfig,
   type ProviderInstanceEnvironmentVariable,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 
 import {
   useEnvironmentSettings,
@@ -55,7 +55,7 @@ import { resolveOfficialAcpRegistryIconUrl } from "./AcpRegistryIcon";
 import {
   deriveProviderInstanceId,
   validateProviderInstanceId,
-} from "@rove-code/client-runtime/state/provider-instance-settings";
+} from "@getpaperplane/client-runtime/state/provider-instance-settings";
 import { AddManagedCodexAccountDialog } from "./CodexSetupSection";
 import { ProviderEnvironmentSection } from "./ProviderInstanceCard";
 

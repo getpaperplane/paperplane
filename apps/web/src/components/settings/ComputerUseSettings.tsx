@@ -2,11 +2,11 @@ import {
   ComputerUseControlError,
   type ComputerUseControlInput,
   type ComputerUseMacosVm,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   isAtomCommandInterrupted,
   squashAtomCommandFailure,
-} from "@rove-code/client-runtime/state/runtime";
+} from "@getpaperplane/client-runtime/state/runtime";
 import { useAtomValue } from "@effect/atom-react";
 import * as Schema from "effect/Schema";
 import { CheckIcon } from "lucide-react";
@@ -145,7 +145,7 @@ export function ComputerUseSettings() {
     }
   };
   const run = async (input: ComputerUseControlInput) => {
-    // The setup desktop opens in Rove; the dialog starts the VM and shows its errors.
+    // The setup desktop opens in Paperplane; the dialog starts the VM and shows its errors.
     if (input.action === "open-vm-display") {
       setSetupDesktopOpen(true);
       return;
@@ -167,7 +167,7 @@ export function ComputerUseSettings() {
         {...searchableSetting("agent-computer-use")}
         serverScoped
         settingKeys={["enableAgentComputerUse"]}
-        description="Use Cua Driver for background-only app control on Mac and Windows, or a private, offline Linux desktop per thread. Linux apps and files are temporary and cannot access the project or host desktop; watch them in the thread's Device panel. Turning this off discards Linux desktops and quits a Mac daemon Rove started."
+        description="Use Cua Driver for background-only app control on Mac and Windows, or a private, offline Linux desktop per thread. Linux apps and files are temporary and cannot access the project or host desktop; watch them in the thread's Device panel. Turning this off discards Linux desktops and quits a Mac daemon Paperplane started."
         control={
           <ScopedSwitch
             settingKeys={["enableAgentComputerUse"]}
@@ -185,7 +185,7 @@ export function ComputerUseSettings() {
           {...searchableSetting("computer-use-macos-mode")}
           serverScoped
           settingKeys={["computerUseMacosMode"]}
-          description="The isolated VM runs apps in a private macOS virtual machine, so agents never touch your desktop. Apple Silicon only. Needs about 150 GB of disk. Lume's password-protected VNC server may also be reachable on this Mac's network. Rove connects locally; use only on trusted networks."
+          description="The isolated VM runs apps in a private macOS virtual machine, so agents never touch your desktop. Apple Silicon only. Needs about 150 GB of disk. Lume's password-protected VNC server may also be reachable on this Mac's network. Paperplane connects locally; use only on trusted networks."
           control={
             <Select
               value={settings.computerUseMacosMode}
@@ -312,7 +312,7 @@ export function ComputerUseSettings() {
       {telemetry !== null && vm === null ? (
         <SettingsRow
           {...searchableSetting("cua-telemetry")}
-          description="Cua collects a pseudonymous installation ID and content-free usage counts, never prompts, screen contents, or file paths. Rove turns this off when it installs Cua."
+          description="Cua collects a pseudonymous installation ID and content-free usage counts, never prompts, screen contents, or file paths. Paperplane turns this off when it installs Cua."
           control={
             <Switch
               checked={telemetry}

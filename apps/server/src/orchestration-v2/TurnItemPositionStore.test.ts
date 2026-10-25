@@ -1,5 +1,5 @@
 import { assert, it } from "@effect/vitest";
-import { RunId, ThreadId, TurnItemId } from "@rove-code/contracts";
+import { RunId, ThreadId, TurnItemId } from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as SqlClient from "effect/sql/SqlClient";

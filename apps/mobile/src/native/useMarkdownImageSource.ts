@@ -1,9 +1,9 @@
-import { resolveFilesystemReadAccess } from "@rove-code/client-runtime/state/filesystem";
+import { resolveFilesystemReadAccess } from "@getpaperplane/client-runtime/state/filesystem";
 import { useEnvironmentPresentation } from "../state/presentation";
 import { useEnvironmentQuery } from "../state/query";
 import { resolveMobileMarkdownMediaSource } from "../lib/markdownMediaSource";
-import { resolveAssetUrl } from "@rove-code/client-runtime/state/assets";
-import type { EnvironmentId, ThreadId } from "@rove-code/contracts";
+import { resolveAssetUrl } from "@getpaperplane/client-runtime/state/assets";
+import type { EnvironmentId, ThreadId } from "@getpaperplane/contracts";
 import type { MarkdownImageSourceResolver } from "./SelectableMarkdownText.types";
 import { normalizeNativeMarkdownUrl } from "../lib/markdownLinks";
 import { useCallback } from "react";

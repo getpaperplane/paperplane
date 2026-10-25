@@ -1,4 +1,4 @@
-import { EnvironmentId, type OrchestrationV2ArchivedShellSnapshot } from "@rove-code/contracts";
+import { EnvironmentId, type OrchestrationV2ArchivedShellSnapshot } from "@getpaperplane/contracts";
 import * as Cause from "effect/Cause";
 import { AsyncResult, Atom, AtomRegistry } from "effect/reactivity";
 import { expect, it } from "vite-plus/test";

@@ -6,8 +6,8 @@ import {
   type AuthEnvironmentScope,
   type EditorId,
   type ThreadLinkedPullRequest,
-} from "@rove-code/contracts";
-import { DEFAULT_CLIENT_SETTINGS } from "@rove-code/contracts/settings";
+} from "@getpaperplane/contracts";
+import { DEFAULT_CLIENT_SETTINGS } from "@getpaperplane/contracts/settings";
 import { AsyncResult } from "effect/reactivity";
 import { cloneElement, type ReactElement, type ReactNode } from "react";
 import { act, create, type ReactTestRenderer } from "react-test-renderer";

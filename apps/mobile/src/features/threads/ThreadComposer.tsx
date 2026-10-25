@@ -1,10 +1,13 @@
 import * as Dialog from "../../components/ui/Dialog";
-import type { ComposerTextPaste } from "../../native/RoveComposerEditor.types";
+import type { ComposerTextPaste } from "../../native/PaperplaneComposerEditor.types";
 import { useAppearancePreferences } from "../settings/appearance/AppearancePreferencesProvider";
-import type { EnvironmentThreadShell } from "@rove-code/client-runtime/state/shell";
+import type { EnvironmentThreadShell } from "@getpaperplane/client-runtime/state/shell";
 import { useAtomValue } from "@effect/atom-react";
-import { clampFileAttachmentUploadBytes } from "@rove-code/client-runtime/state/attachments";
-import { pastedTextDisposition, replaceTextSelection } from "@rove-code/client-runtime/text-paste";
+import { clampFileAttachmentUploadBytes } from "@getpaperplane/client-runtime/state/attachments";
+import {
+  pastedTextDisposition,
+  replaceTextSelection,
+} from "@getpaperplane/client-runtime/text-paste";
 import {
   PROVIDER_SEND_TURN_MAX_ATTACHMENTS,
   PROVIDER_SEND_TURN_MAX_INPUT_CHARS,
@@ -14,14 +17,14 @@ import {
   type ModelSelection,
   type ProviderInteractionMode,
   type RuntimeMode,
-  type ServerConfig as RoveServerConfig,
+  type ServerConfig as PaperplaneServerConfig,
   type UsageLimitsReport,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   collectProviderUsageLimits,
   hasProviderUsageLimits,
   isUsageLimitsCommand,
-} from "@rove-code/shared/usageLimits";
+} from "@getpaperplane/shared/usageLimits";
 import { StackActions, useFocusEffect, useNavigation } from "@react-navigation/native";
 import type { ReactNode } from "react";
 import {
@@ -66,7 +69,7 @@ import {
 import { appAtomRegistry } from "../../state/atom-registry";
 import type { ComposerDocumentAttachment } from "../../lib/composerContext";
 import { useProject, useThreadShells } from "../../state/entities";
-import { scopeProjectRef } from "@rove-code/client-runtime/environment";
+import { scopeProjectRef } from "@getpaperplane/client-runtime/environment";
 
 import { AppText as Text } from "../../components/ui/AppText";
 import { ComposerAttachmentButton } from "./ComposerAttachmentButton";
@@ -99,7 +102,7 @@ import { useScaledTextRole } from "../settings/appearance/useScaledTextRole";
 import type { RemoteClientConnectionState } from "../../lib/connection";
 import { resolveProviderOptionDescriptors } from "../../lib/providerOptions";
 import { Menu } from "../../components/ui/Menu";
-import type { ActiveTurnComposerAction } from "@rove-code/client-runtime/state/composer-dispatch";
+import type { ActiveTurnComposerAction } from "@getpaperplane/client-runtime/state/composer-dispatch";
 import type { FollowUpBehavior } from "../../lib/followUpBehavior";
 import {
   resolveComposerSendPresentation,
@@ -162,7 +165,7 @@ export interface ThreadComposerProps {
   readonly selectedThread: EnvironmentThreadShell;
   readonly reportedModelSelection?: ModelSelection | null;
   readonly hasCompactableConversation: boolean;
-  readonly serverConfig: RoveServerConfig | null;
+  readonly serverConfig: PaperplaneServerConfig | null;
   readonly queueCount: number;
   readonly activeThreadBusy: boolean;
   readonly canStopThread: boolean;
@@ -469,7 +472,7 @@ export const ThreadComposer = memo(function ThreadComposer(props: ThreadComposer
     });
   };
   const { onSendMessage, onChangeDraftMessage, onShowUsageLimits } = props;
-  // Rove owns /usage-limits only where Limits has data for the selected provider;
+  // Paperplane owns /usage-limits only where Limits has data for the selected provider;
   // elsewhere the name stays the provider's own and is sent through untouched.
   const usageLimitsOffered =
     selectedProviderStatus !== null &&
@@ -638,7 +641,7 @@ export const ThreadComposer = memo(function ThreadComposer(props: ThreadComposer
         armAgentAwarenessLiveActivityForLocalWork({
           environmentId: props.environmentId,
           threadTitle: props.selectedThread.title,
-          projectTitle: props.environmentLabel ?? "Rove Code",
+          projectTitle: props.environmentLabel ?? "Paperplane",
         });
       } finally {
         inFlightThreadIdsRef.current.delete(threadKey);
@@ -1077,7 +1080,7 @@ export const ThreadComposer = memo(function ThreadComposer(props: ThreadComposer
                 ))}
                 {stripAttachments.length > 3 ? (
                   <View className="size-[30px] items-center justify-center rounded-lg bg-subtle-strong">
-                    <Text className="text-foreground-muted text-2xs font-rove-bold">
+                    <Text className="text-foreground-muted text-2xs font-paperplane-bold">
                       +{stripAttachments.length - 3}
                     </Text>
                   </View>

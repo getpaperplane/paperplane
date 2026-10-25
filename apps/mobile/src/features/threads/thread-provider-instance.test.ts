@@ -1,11 +1,11 @@
-import type { EnvironmentThreadShell } from "@rove-code/client-runtime/state/shell";
+import type { EnvironmentThreadShell } from "@getpaperplane/client-runtime/state/shell";
 import {
   EnvironmentId,
   ProjectId,
   ProviderInstanceId,
   ThreadId,
   type ServerConfig,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { describe, expect, it } from "vite-plus/test";
 
 import {

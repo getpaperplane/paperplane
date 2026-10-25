@@ -2,8 +2,8 @@
 import * as ChildProcess from "node:child_process";
 import * as Net from "node:net";
 import { Readable, Writable, Duplex } from "node:stream";
-import { AuthOrchestrationOperateScope } from "@rove-code/contracts";
-import { Environment as HostProcessEnvironment } from "@rove-code/shared/HostProcess";
+import { AuthOrchestrationOperateScope } from "@getpaperplane/contracts";
+import { Environment as HostProcessEnvironment } from "@getpaperplane/shared/HostProcess";
 import * as Effect from "effect/Effect";
 import { HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/http";
 import * as Socket from "effect/socket/Socket";

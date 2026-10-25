@@ -1,6 +1,6 @@
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { assert, describe, it } from "@effect/vitest";
-import { currentDesktopBootstrapToken } from "@rove-code/shared/desktopBootstrapToken";
+import { currentDesktopBootstrapToken } from "@getpaperplane/shared/desktopBootstrapToken";
 import * as Clock from "effect/Clock";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -92,14 +92,14 @@ function layerEnvironment(
       Layer.mergeAll(
         NodeServices.layer,
         DesktopConfig.layerTest({
-          ROVE_HOME: baseDir,
-          ROVE_PORT: "9999",
-          ROVE_MODE: "desktop",
-          ROVE_DESKTOP_LAN_HOST: "192.168.1.50",
+          PAPERPLANE_HOME: baseDir,
+          PAPERPLANE_PORT: "9999",
+          PAPERPLANE_MODE: "desktop",
+          PAPERPLANE_DESKTOP_LAN_HOST: "192.168.1.50",
           VITE_DEV_SERVER_URL: options?.devServerUrl,
-          ROVE_OTLP_TRACES_URL: options?.otlpTracesUrl,
-          ROVE_OTLP_METRICS_URL: options?.otlpMetricsUrl,
-          ROVE_OTLP_LOGS_URL: options?.otlpLogsUrl,
+          PAPERPLANE_OTLP_TRACES_URL: options?.otlpTracesUrl,
+          PAPERPLANE_OTLP_METRICS_URL: options?.otlpMetricsUrl,
+          PAPERPLANE_OTLP_LOGS_URL: options?.otlpLogsUrl,
         }),
       ),
     ),
@@ -128,7 +128,7 @@ const withHarness = <A, E, R>(
   Effect.gen(function* () {
     const fileSystem = yield* FileSystem.FileSystem;
     const baseDir = yield* fileSystem.makeTempDirectoryScoped({
-      prefix: "rove-desktop-backend-config-test-",
+      prefix: "paperplane-desktop-backend-config-test-",
     });
 
     return yield* effect.pipe(
@@ -175,7 +175,7 @@ const withPackagedWslHarness = <A, E, R>(
     const fileSystem = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
     const baseDir = yield* fileSystem.makeTempDirectoryScoped({
-      prefix: "rove-desktop-backend-config-test-",
+      prefix: "paperplane-desktop-backend-config-test-",
     });
     const archivePath = path.join(baseDir, "wsl-runtime.tar.gz");
     const hashPath = `${archivePath}.sha256`;
@@ -256,15 +256,15 @@ describe("DesktopBackendConfiguration", () => {
         assert.equal(first.cwd, environment.backendCwd);
         assert.equal(first.captureOutput, true);
         assert.equal(first.env.ELECTRON_RUN_AS_NODE, "1");
-        assert.isUndefined(first.env.ROVE_PORT);
-        assert.isUndefined(first.env.ROVE_MODE);
-        assert.isUndefined(first.env.ROVE_DESKTOP_LAN_HOST);
+        assert.isUndefined(first.env.PAPERPLANE_PORT);
+        assert.isUndefined(first.env.PAPERPLANE_MODE);
+        assert.isUndefined(first.env.PAPERPLANE_DESKTOP_LAN_HOST);
 
         assert.equal(first.bootstrap.mode, "desktop");
         assert.equal(first.bootstrap.noBrowser, true);
         assert.equal(first.bootstrap.port, 4888);
         assert.equal(first.bootstrap.host, "0.0.0.0");
-        assert.equal(first.bootstrap.roveHome, environment.baseDir);
+        assert.equal(first.bootstrap.paperplaneHome, environment.baseDir);
         assert.equal(first.bootstrap.tailscaleServeEnabled, true);
         assert.equal(first.bootstrap.tailscaleServePort, 8443);
         assert.match(first.bootstrap.desktopBootstrapSecret ?? "", /^[0-9a-f]{64}$/i);
@@ -294,7 +294,7 @@ describe("DesktopBackendConfiguration", () => {
       const fileSystem = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const baseDir = yield* fileSystem.makeTempDirectoryScoped({
-        prefix: "rove-desktop-backend-config-test-",
+        prefix: "paperplane-desktop-backend-config-test-",
       });
       const resourcesPath = path.join(baseDir, "resources");
 
@@ -379,7 +379,7 @@ describe("DesktopBackendConfiguration", () => {
       const fileSystem = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const baseDir = yield* fileSystem.makeTempDirectoryScoped({
-        prefix: "rove-desktop-backend-config-test-",
+        prefix: "paperplane-desktop-backend-config-test-",
       });
       const entryPath = path.join(baseDir, "apps/server/dist/bin.mjs");
       yield* fileSystem.makeDirectory(path.dirname(entryPath), { recursive: true });
@@ -442,7 +442,7 @@ describe("DesktopBackendConfiguration", () => {
     }> = [];
     const observedProbeRoots: string[] = [];
     let legacyCleanupCount = 0;
-    const linuxAppRoot = "/home/test/.rove-code/wsl-runtime/1.2.3-x64";
+    const linuxAppRoot = "/home/test/.paperplane/wsl-runtime/1.2.3-x64";
     const resolvedPath = "/home/test/.local/bin:/usr/bin:/bin";
 
     return withPackagedWslHarness(
@@ -496,7 +496,7 @@ describe("DesktopBackendConfiguration", () => {
             "--exec",
             "env",
             `PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:${resolvedPath}`,
-            `${linuxAppRoot}/rove`,
+            `${linuxAppRoot}/paperplane`,
             "--bootstrap-fd",
             "0",
           ]);
@@ -539,9 +539,9 @@ describe("DesktopBackendConfiguration", () => {
 
           assert.deepEqual(observedRuntimeIds, [`sha256-${firstHash}`, `sha256-${secondHash}`]);
           assert.equal(first.wslRuntimeId, observedRuntimeIds[0]);
-          assert.include(first.args, `/runtime/sha256-${firstHash}/rove`);
+          assert.include(first.args, `/runtime/sha256-${firstHash}/paperplane`);
           assert.equal(second.wslRuntimeId, observedRuntimeIds[1]);
-          assert.include(second.args, `/runtime/sha256-${secondHash}/rove`);
+          assert.include(second.args, `/runtime/sha256-${secondHash}/paperplane`);
           assert.isUndefined(invalidIdentity.wslRuntimeId);
           assert.include(invalidIdentity.args, "/usr/bin/node");
           assert.include(invalidIdentity.args, `${mountedAppRoot}/apps/server/dist/bin.mjs`);
@@ -579,7 +579,7 @@ describe("DesktopBackendConfiguration", () => {
 
   it.effect("resolveWsl retires a staged runtime whose executable does not start", () => {
     const archiveHash = "c".repeat(64);
-    const stagedAppRoot = `/home/test/.rove-code/wsl-runtime/sha256-${archiveHash}`;
+    const stagedAppRoot = `/home/test/.paperplane/wsl-runtime/sha256-${archiveHash}`;
     const observedProbeRoots: string[] = [];
     const observedNodePtyRoots: string[] = [];
     const invalidatedRuntimeIds: string[] = [];
@@ -594,7 +594,7 @@ describe("DesktopBackendConfiguration", () => {
             }),
           probeRuntime: (_distro, root) => {
             observedProbeRoots.push(root);
-            return { ok: false, reason: `${root}/rove --version failed (exit 127)` };
+            return { ok: false, reason: `${root}/paperplane --version failed (exit 127)` };
           },
           ensureNodePty: (_distro, root) => {
             observedNodePtyRoots.push(root);
@@ -611,7 +611,7 @@ describe("DesktopBackendConfiguration", () => {
           assert.deepEqual(observedNodePtyRoots, [mountedAppRoot]);
           assert.include(config.args, "/usr/bin/node");
           assert.include(config.args, `${mountedAppRoot}/apps/server/dist/bin.mjs`);
-          assert.notInclude(config.args, `${stagedAppRoot}/rove`);
+          assert.notInclude(config.args, `${stagedAppRoot}/paperplane`);
           assert.equal(config.entryPath, mountedEntryPath);
           assert.isUndefined(config.wslRuntimeId);
           assert.isTrue(Option.isNone(config.preflightFailure));
@@ -621,7 +621,7 @@ describe("DesktopBackendConfiguration", () => {
   });
 
   it.effect("resolveWsl keeps the staged runtime when the mounted tree fails too", () => {
-    const stagedAppRoot = "/home/test/.rove-code/wsl-runtime/cache";
+    const stagedAppRoot = "/home/test/.paperplane/wsl-runtime/cache";
     const invalidatedRuntimeIds: string[] = [];
     return withPackagedWslHarness(
       {
@@ -657,7 +657,7 @@ describe("DesktopBackendConfiguration", () => {
   });
 
   it.effect("resolveWsl keeps WSL retryable when the mounted fallback fails transiently", () => {
-    const stagedAppRoot = "/home/test/.rove-code/wsl-runtime/cache";
+    const stagedAppRoot = "/home/test/.paperplane/wsl-runtime/cache";
     const invalidatedRuntimeIds: string[] = [];
     return withPackagedWslHarness(
       {
@@ -668,7 +668,7 @@ describe("DesktopBackendConfiguration", () => {
             Effect.sync(() => {
               invalidatedRuntimeIds.push(runtimeId);
             }),
-          probeRuntime: () => ({ ok: false, reason: "rove --version failed (exit 1)" }),
+          probeRuntime: () => ({ ok: false, reason: "paperplane --version failed (exit 1)" }),
           ensureNodePty: () => ({
             ok: false,
             reason: "WSL backend preflight timed out while probing for Node.js.",
@@ -697,14 +697,14 @@ describe("DesktopBackendConfiguration", () => {
         const fileSystem = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const baseDir = yield* fileSystem.makeTempDirectoryScoped({
-          prefix: "rove-desktop-backend-config-test-",
+          prefix: "paperplane-desktop-backend-config-test-",
         });
         const entryPath = path.join(baseDir, "apps/server/dist/bin.mjs");
         yield* fileSystem.makeDirectory(path.dirname(entryPath), { recursive: true });
         yield* fileSystem.writeFileString(entryPath, "");
 
         const nodePath = "/home/test user's/.nvm/versions/node/v22.0.0/bin/node";
-        const linuxAppRoot = "/tmp/rove code's launch";
+        const linuxAppRoot = "/tmp/paperplane code's launch";
         const linuxEntryPath = `${linuxAppRoot}/apps/server/dist/bin.mjs`;
         const resolvedPath = "/home/test user/bin:/opt/test's tools/bin:/usr/bin:/bin";
         const devServerUrl = "http://127.0.0.1:5733/dev%20assets/?label=hello%20world";
@@ -826,7 +826,7 @@ describe("DesktopBackendConfiguration", () => {
     Effect.gen(function* () {
       const fileSystem = yield* FileSystem.FileSystem;
       const baseDir = yield* fileSystem.makeTempDirectoryScoped({
-        prefix: "rove-desktop-backend-config-test-",
+        prefix: "paperplane-desktop-backend-config-test-",
       });
 
       yield* Effect.gen(function* () {
@@ -870,7 +870,7 @@ describe("DesktopBackendConfiguration", () => {
     Effect.gen(function* () {
       const fileSystem = yield* FileSystem.FileSystem;
       const baseDir = yield* fileSystem.makeTempDirectoryScoped({
-        prefix: "rove-desktop-backend-config-test-",
+        prefix: "paperplane-desktop-backend-config-test-",
       });
 
       yield* Effect.gen(function* () {
@@ -918,7 +918,7 @@ describe("DesktopBackendConfiguration", () => {
       const fileSystem = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const baseDir = yield* fileSystem.makeTempDirectoryScoped({
-        prefix: "rove-desktop-backend-config-test-",
+        prefix: "paperplane-desktop-backend-config-test-",
       });
       const settingsPath = path.join(baseDir, "userdata", "settings.json");
       const cause = PlatformError.systemError({
@@ -978,7 +978,7 @@ describe("DesktopBackendConfiguration", () => {
     Effect.gen(function* () {
       const fileSystem = yield* FileSystem.FileSystem;
       const baseDir = yield* fileSystem.makeTempDirectoryScoped({
-        prefix: "rove-desktop-backend-config-test-",
+        prefix: "paperplane-desktop-backend-config-test-",
       });
 
       yield* Effect.gen(function* () {
@@ -1010,16 +1010,16 @@ describe("DesktopBackendConfiguration", () => {
     Effect.gen(function* () {
       const fileSystem = yield* FileSystem.FileSystem;
       const baseDir = yield* fileSystem.makeTempDirectoryScoped({
-        prefix: "rove-desktop-backend-config-test-",
+        prefix: "paperplane-desktop-backend-config-test-",
       });
 
       const previousWslEnv = process.env.WSLENV;
       const previousDisabled = process.env.OTEL_SDK_DISABLED;
-      const previousTelemetry = process.env.ROVE_TELEMETRY_ENABLED;
+      const previousTelemetry = process.env.PAPERPLANE_TELEMETRY_ENABLED;
       try {
         delete process.env.WSLENV;
         process.env.OTEL_SDK_DISABLED = "true";
-        process.env.ROVE_TELEMETRY_ENABLED = "false";
+        process.env.PAPERPLANE_TELEMETRY_ENABLED = "false";
 
         yield* Effect.gen(function* () {
           const configuration = yield* DesktopBackendConfiguration.DesktopBackendConfiguration;
@@ -1027,8 +1027,8 @@ describe("DesktopBackendConfiguration", () => {
 
           assert.equal(config.env.OTEL_SDK_DISABLED, "true");
           assert.include((config.env.WSLENV ?? "").split(":"), "OTEL_SDK_DISABLED");
-          assert.equal(config.env.ROVE_TELEMETRY_ENABLED, "false");
-          assert.include((config.env.WSLENV ?? "").split(":"), "ROVE_TELEMETRY_ENABLED");
+          assert.equal(config.env.PAPERPLANE_TELEMETRY_ENABLED, "false");
+          assert.include((config.env.WSLENV ?? "").split(":"), "PAPERPLANE_TELEMETRY_ENABLED");
         }).pipe(
           Effect.provide(
             layerBackendConfiguration().pipe(
@@ -1049,7 +1049,7 @@ describe("DesktopBackendConfiguration", () => {
       } finally {
         restoreEnv("WSLENV", previousWslEnv);
         restoreEnv("OTEL_SDK_DISABLED", previousDisabled);
-        restoreEnv("ROVE_TELEMETRY_ENABLED", previousTelemetry);
+        restoreEnv("PAPERPLANE_TELEMETRY_ENABLED", previousTelemetry);
       }
     }).pipe(Effect.scoped, Effect.provide(NodeServices.layer)),
   );
@@ -1060,18 +1060,18 @@ describe("DesktopBackendConfiguration", () => {
       Effect.gen(function* () {
         const fileSystem = yield* FileSystem.FileSystem;
         const baseDir = yield* fileSystem.makeTempDirectoryScoped({
-          prefix: "rove-desktop-backend-config-test-",
+          prefix: "paperplane-desktop-backend-config-test-",
         });
 
         const standard = {
           OTEL_EXPORTER_OTLP_ENDPOINT: "https://collector.example.com:4318/base?api_key=secret",
           OTEL_EXPORTER_OTLP_LOGS_HEADERS: "authorization=Bearer%20token",
-          ROVE_OTLP_TRACES_URL: "http://rove.example.com:4318/v1/traces",
+          PAPERPLANE_OTLP_TRACES_URL: "http://paperplane.example.com:4318/v1/traces",
         };
         const previousWslEnv = process.env.WSLENV;
         // A developer's own OTLP variables would be forwarded too.
         const ambientOtel = Object.entries(process.env).filter(
-          ([name]) => name.startsWith("OTEL_") || name.startsWith("ROVE_OTLP_"),
+          ([name]) => name.startsWith("OTEL_") || name.startsWith("PAPERPLANE_OTLP_"),
         );
         try {
           for (const [name] of ambientOtel) delete process.env[name];
@@ -1094,8 +1094,11 @@ describe("DesktopBackendConfiguration", () => {
             const wslEnv = (config.env.WSLENV ?? "").split(":");
             assert.include(wslEnv, "OTEL_EXPORTER_OTLP_ENDPOINT");
             assert.include(wslEnv, "OTEL_EXPORTER_OTLP_LOGS_HEADERS");
-            assert.equal(config.env.ROVE_OTLP_TRACES_URL, "http://rove.example.com:4318/v1/traces");
-            assert.include(wslEnv, "ROVE_OTLP_TRACES_URL");
+            assert.equal(
+              config.env.PAPERPLANE_OTLP_TRACES_URL,
+              "http://paperplane.example.com:4318/v1/traces",
+            );
+            assert.include(wslEnv, "PAPERPLANE_OTLP_TRACES_URL");
           }).pipe(
             Effect.provide(
               layerBackendConfiguration().pipe(
@@ -1125,14 +1128,14 @@ describe("DesktopBackendConfiguration", () => {
     Effect.gen(function* () {
       const fileSystem = yield* FileSystem.FileSystem;
       const baseDir = yield* fileSystem.makeTempDirectoryScoped({
-        prefix: "rove-desktop-backend-config-test-",
+        prefix: "paperplane-desktop-backend-config-test-",
       });
 
       const previousWslEnv = process.env.WSLENV;
       const previousOpenAiKey = process.env.OPENAI_API_KEY;
       const previousAnthropicKey = process.env.ANTHROPIC_API_KEY;
-      const previousOtlpHeaders = process.env.ROVE_OTLP_HEADERS;
-      const previousOtlpProtocol = process.env.ROVE_OTLP_PROTOCOL;
+      const previousOtlpHeaders = process.env.PAPERPLANE_OTLP_HEADERS;
+      const previousOtlpProtocol = process.env.PAPERPLANE_OTLP_PROTOCOL;
       // A developer's own OTEL_* variables would be forwarded too.
       const ambientOtel = Object.entries(process.env).filter(([name]) => name.startsWith("OTEL_"));
       try {
@@ -1140,8 +1143,8 @@ describe("DesktopBackendConfiguration", () => {
         process.env.WSLENV = "GOPATH/p:OPENAI_API_KEY/u:EMPTY::AZURE_DEVOPS_EXT_PAT/u";
         process.env.OPENAI_API_KEY = "openai-key";
         process.env.ANTHROPIC_API_KEY = "anthropic-key";
-        process.env.ROVE_OTLP_HEADERS = 'authorization="Bearer%20my-token"';
-        process.env.ROVE_OTLP_PROTOCOL = "http/protobuf";
+        process.env.PAPERPLANE_OTLP_HEADERS = 'authorization="Bearer%20my-token"';
+        process.env.PAPERPLANE_OTLP_PROTOCOL = "http/protobuf";
 
         yield* Effect.gen(function* () {
           const configuration = yield* DesktopBackendConfiguration.DesktopBackendConfiguration;
@@ -1161,14 +1164,14 @@ describe("DesktopBackendConfiguration", () => {
           assert.equal(config.httpBaseUrl.href, "http://172.27.0.99:5050/");
           assert.equal(config.env.OPENAI_API_KEY, "openai-key");
           assert.equal(config.env.ANTHROPIC_API_KEY, "anthropic-key");
-          assert.equal(config.env.ROVE_OTLP_PROTOCOL, "http/protobuf");
+          assert.equal(config.env.PAPERPLANE_OTLP_PROTOCOL, "http/protobuf");
           // The existing WSLENV is preserved byte-for-byte (note the empty
           // "::" segment survives — WSL ignores it, so we don't normalize
           // it away) and ANTHROPIC_API_KEY is appended. OPENAI_API_KEY is
           // already declared, so it isn't forwarded twice.
           assert.equal(
             config.env.WSLENV,
-            "GOPATH/p:OPENAI_API_KEY/u:EMPTY::AZURE_DEVOPS_EXT_PAT/u:ANTHROPIC_API_KEY:ROVE_OTLP_HEADERS:ROVE_OTLP_PROTOCOL",
+            "GOPATH/p:OPENAI_API_KEY/u:EMPTY::AZURE_DEVOPS_EXT_PAT/u:ANTHROPIC_API_KEY:PAPERPLANE_OTLP_HEADERS:PAPERPLANE_OTLP_PROTOCOL",
           );
         }).pipe(
           Effect.provide(
@@ -1191,8 +1194,8 @@ describe("DesktopBackendConfiguration", () => {
         restoreEnv("WSLENV", previousWslEnv);
         restoreEnv("OPENAI_API_KEY", previousOpenAiKey);
         restoreEnv("ANTHROPIC_API_KEY", previousAnthropicKey);
-        restoreEnv("ROVE_OTLP_HEADERS", previousOtlpHeaders);
-        restoreEnv("ROVE_OTLP_PROTOCOL", previousOtlpProtocol);
+        restoreEnv("PAPERPLANE_OTLP_HEADERS", previousOtlpHeaders);
+        restoreEnv("PAPERPLANE_OTLP_PROTOCOL", previousOtlpProtocol);
         for (const [name, value] of ambientOtel) restoreEnv(name, value);
       }
     }).pipe(Effect.scoped, Effect.provide(NodeServices.layer)),
@@ -1204,7 +1207,7 @@ describe("DesktopBackendConfiguration", () => {
       Effect.gen(function* () {
         const fileSystem = yield* FileSystem.FileSystem;
         const baseDir = yield* fileSystem.makeTempDirectoryScoped({
-          prefix: "rove-desktop-backend-config-test-",
+          prefix: "paperplane-desktop-backend-config-test-",
         });
 
         yield* Effect.gen(function* () {
@@ -1216,7 +1219,7 @@ describe("DesktopBackendConfiguration", () => {
           // not spawn wsl.exe (which would loop on preflight failures while the
           // Connections backend control is hidden). Resolve the Windows primary.
           assert.equal(config.executablePath, process.execPath);
-          assert.equal(config.bootstrap.roveHome, environment.baseDir);
+          assert.equal(config.bootstrap.paperplaneHome, environment.baseDir);
           assert.isTrue(Option.isNone(config.preflightFailure));
         }).pipe(
           Effect.provide(
@@ -1244,7 +1247,7 @@ describe("DesktopBackendConfiguration", () => {
       Effect.gen(function* () {
         const fileSystem = yield* FileSystem.FileSystem;
         const baseDir = yield* fileSystem.makeTempDirectoryScoped({
-          prefix: "rove-desktop-backend-config-test-",
+          prefix: "paperplane-desktop-backend-config-test-",
         });
 
         yield* Effect.gen(function* () {
@@ -1285,7 +1288,7 @@ describe("DesktopBackendConfiguration", () => {
     Effect.gen(function* () {
       const fileSystem = yield* FileSystem.FileSystem;
       const baseDir = yield* fileSystem.makeTempDirectoryScoped({
-        prefix: "rove-desktop-backend-config-test-",
+        prefix: "paperplane-desktop-backend-config-test-",
       });
 
       yield* Effect.gen(function* () {
@@ -1321,7 +1324,7 @@ describe("DesktopBackendConfiguration", () => {
     Effect.gen(function* () {
       const fileSystem = yield* FileSystem.FileSystem;
       const baseDir = yield* fileSystem.makeTempDirectoryScoped({
-        prefix: "rove-desktop-backend-config-test-",
+        prefix: "paperplane-desktop-backend-config-test-",
       });
 
       yield* Effect.gen(function* () {
@@ -1354,7 +1357,7 @@ describe("DesktopBackendConfiguration", () => {
     Effect.gen(function* () {
       const fileSystem = yield* FileSystem.FileSystem;
       const baseDir = yield* fileSystem.makeTempDirectoryScoped({
-        prefix: "rove-desktop-backend-config-test-",
+        prefix: "paperplane-desktop-backend-config-test-",
       });
 
       yield* Effect.gen(function* () {
@@ -1396,7 +1399,7 @@ describe("DesktopBackendConfiguration", () => {
     Effect.gen(function* () {
       const fileSystem = yield* FileSystem.FileSystem;
       const baseDir = yield* fileSystem.makeTempDirectoryScoped({
-        prefix: "rove-desktop-backend-config-test-",
+        prefix: "paperplane-desktop-backend-config-test-",
       });
 
       yield* Effect.gen(function* () {
@@ -1429,7 +1432,7 @@ describe("DesktopBackendConfiguration", () => {
     Effect.gen(function* () {
       const fileSystem = yield* FileSystem.FileSystem;
       const baseDir = yield* fileSystem.makeTempDirectoryScoped({
-        prefix: "rove-desktop-backend-config-test-",
+        prefix: "paperplane-desktop-backend-config-test-",
       });
 
       yield* Effect.gen(function* () {
@@ -1462,12 +1465,12 @@ describe("DesktopBackendConfiguration", () => {
       const fileSystem = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const baseDir = yield* fileSystem.makeTempDirectoryScoped({
-        prefix: "rove-desktop-backend-config-test-",
+        prefix: "paperplane-desktop-backend-config-test-",
       });
       const resourcesPath = path.join(baseDir, "resources");
       const dirname = `${resourcesPath}/app.asar/apps/desktop/dist-electron`;
-      const embeddedMonitorPath = `${resourcesPath}/app.asar/apps/desktop/prod-resources/resource-monitor/rove-resource-monitor`;
-      const monitorPath = path.join(resourcesPath, "resource-monitor/rove-resource-monitor");
+      const embeddedMonitorPath = `${resourcesPath}/app.asar/apps/desktop/prod-resources/resource-monitor/paperplane-resource-monitor`;
+      const monitorPath = path.join(resourcesPath, "resource-monitor/paperplane-resource-monitor");
       yield* fileSystem.makeDirectory(
         `${resourcesPath}/app.asar/apps/desktop/prod-resources/resource-monitor`,
         { recursive: true },
@@ -1511,16 +1514,16 @@ describe("DesktopBackendConfiguration", () => {
       const fileSystem = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const baseDir = yield* fileSystem.makeTempDirectoryScoped({
-        prefix: "rove-desktop-backend-config-test-",
+        prefix: "paperplane-desktop-backend-config-test-",
       });
       const dirname = path.join(baseDir, "apps/desktop/src");
       const releaseMonitorPath = path.join(
         baseDir,
-        "native/resource-monitor/target/release/rove-resource-monitor",
+        "native/resource-monitor/target/release/paperplane-resource-monitor",
       );
       const debugMonitorPath = path.join(
         baseDir,
-        "native/resource-monitor/target/debug/rove-resource-monitor",
+        "native/resource-monitor/target/debug/paperplane-resource-monitor",
       );
       yield* fileSystem.makeDirectory(path.dirname(releaseMonitorPath), { recursive: true });
       yield* fileSystem.makeDirectory(path.dirname(debugMonitorPath), { recursive: true });
@@ -1565,7 +1568,7 @@ describe("DesktopBackendConfiguration", () => {
     Effect.gen(function* () {
       const fileSystem = yield* FileSystem.FileSystem;
       const baseDir = yield* fileSystem.makeTempDirectoryScoped({
-        prefix: "rove-desktop-backend-config-test-",
+        prefix: "paperplane-desktop-backend-config-test-",
       });
 
       yield* Effect.gen(function* () {
@@ -1604,7 +1607,7 @@ describe("DesktopBackendConfiguration", () => {
     // a live async effect — otherwise runSync throws in the handler. Build the
     // real WSL layer (not the sync test stub) and resolve the label with a
     // top-level runSync, exactly as the handler does.
-    // oxlint-disable-next-line rove/no-manual-effect-runtime-in-tests -- This test intentionally replicates the sync IPC handler's runSync path to catch a regression to async-only resolution; it.effect would mask it.
+    // oxlint-disable-next-line paperplane/no-manual-effect-runtime-in-tests -- This test intentionally replicates the sync IPC handler's runSync path to catch a regression to async-only resolution; it.effect would mask it.
     const runtime = ManagedRuntime.make(
       layerBackendConfiguration().pipe(
         Layer.provideMerge(layerServerExposure),
@@ -1621,7 +1624,9 @@ describe("DesktopBackendConfiguration", () => {
             ),
           ),
         ),
-        Layer.provideMerge(layerEnvironment("/tmp/rove-wsl-isavailable", { platform: "win32" })),
+        Layer.provideMerge(
+          layerEnvironment("/tmp/paperplane-wsl-isavailable", { platform: "win32" }),
+        ),
         Layer.provide(NodeServices.layer),
       ),
     );
@@ -1629,7 +1634,7 @@ describe("DesktopBackendConfiguration", () => {
       const configuration = await runtime.runPromise(
         DesktopBackendConfiguration.DesktopBackendConfiguration,
       );
-      // oxlint-disable-next-line rove/no-manual-effect-runtime-in-tests -- Same reason: this is the synchronous resolution the IPC handler performs.
+      // oxlint-disable-next-line paperplane/no-manual-effect-runtime-in-tests -- Same reason: this is the synchronous resolution the IPC handler performs.
       const label = Effect.runSync(configuration.resolvePrimaryLabel);
       assert.equal(typeof label, "string");
     } finally {

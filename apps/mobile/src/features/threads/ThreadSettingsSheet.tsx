@@ -1,11 +1,11 @@
 import { Toolbar } from "../../components/ui/Toolbar";
 import * as Dialog from "../../components/ui/Dialog";
 import { createV5StackNavigator as createNativeStackNavigator } from "../../native/createV5StackNavigator";
-import { DEFAULT_SERVER_SETTINGS } from "@rove-code/contracts";
+import { DEFAULT_SERVER_SETTINGS } from "@getpaperplane/contracts";
 import {
   modelPreferencesMigrationPatch,
   resolveModelPreferences,
-} from "@rove-code/shared/serverSettings";
+} from "@getpaperplane/shared/serverSettings";
 import type {
   EnvironmentId,
   ModelSelection,
@@ -15,7 +15,7 @@ import type {
   ProviderOptionSelection,
   RuntimeMode,
   ServerSettings,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import type { LegendListRenderItemProps } from "@legendapp/list/react-native";
 import { RegistryContext, useAtomValue } from "@effect/atom-react";
 import { AnimatedLegendList } from "@legendapp/list/reanimated";
@@ -23,7 +23,7 @@ import {
   getProviderOptionCurrentLabel,
   getProviderOptionCurrentValue,
   getProviderOptionDescriptors,
-} from "@rove-code/shared/model";
+} from "@getpaperplane/shared/model";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import { type NativeStackNavigationProp } from "@react-navigation/native-stack";
 import * as Haptics from "expo-haptics";
@@ -94,7 +94,7 @@ import {
   pendingModelAfterPress,
   providerSectionIsCollapsed,
 } from "./thread-settings-sheet-state";
-import { formatProviderUpdateRequiredNotice } from "@rove-code/client-runtime/providerUpdateRequiredModels";
+import { formatProviderUpdateRequiredNotice } from "@getpaperplane/client-runtime/providerUpdateRequiredModels";
 
 /**
  * Everyday harnesses start expanded; every other provider (OpenRouter catalogs
@@ -142,12 +142,12 @@ function ProviderHeader(props: {
   const content = (
     <>
       <ProviderIcon iconUrl={props.iconUrl} provider={props.driver} size={15} />
-      <Text className="text-sm font-rove-medium text-foreground-muted">{props.label}</Text>
+      <Text className="text-sm font-paperplane-medium text-foreground-muted">{props.label}</Text>
       {props.collapsible ? (
         <>
           <View className="flex-1" />
           {props.collapsed ? (
-            <Text className="text-2xs font-rove-medium text-foreground-muted">
+            <Text className="text-2xs font-paperplane-medium text-foreground-muted">
               {props.modelCount}
             </Text>
           ) : null}
@@ -199,7 +199,7 @@ function DisclosureRow(props: {
         !props.isLast && "border-b border-border-subtle",
       )}
     >
-      <Text className="text-sm font-rove-medium text-foreground">{props.label}</Text>
+      <Text className="text-sm font-paperplane-medium text-foreground">{props.label}</Text>
       <View className="flex-1" />
       {props.value ? (
         <Text className="text-sm text-foreground-muted" numberOfLines={1}>
@@ -229,7 +229,7 @@ function SwitchRow(props: {
         !props.isLast && "border-b border-border-subtle",
       )}
     >
-      <Text className="text-sm font-rove-medium text-foreground">{props.label}</Text>
+      <Text className="text-sm font-paperplane-medium text-foreground">{props.label}</Text>
       <ThemedSwitch
         accessibilityLabel={props.label}
         onValueChange={props.onValueChange}
@@ -892,7 +892,9 @@ function ThreadSettingsPiSection(props: {
   const resources = useProviderResources(session.environmentId, props.instanceId);
   return (
     <>
-      <Text className="px-5 pb-2 pt-7 text-sm font-rove-medium text-foreground-muted">Pi</Text>
+      <Text className="px-5 pb-2 pt-7 text-sm font-paperplane-medium text-foreground-muted">
+        Pi
+      </Text>
       <View className="mx-4 overflow-hidden rounded-2xl bg-grouped-card">
         <DisclosureRow
           isLast
@@ -938,7 +940,9 @@ function ThreadSettingsOptionsItem(props: {
   return (
     <View style={{ paddingBottom: insets.bottom + bottomToolbarInset + 12 }}>
       <ChatGptSharingStatus provider={selectedProvider} />
-      <Text className="px-5 pb-2 pt-2 text-sm font-rove-medium text-foreground-muted">Options</Text>
+      <Text className="px-5 pb-2 pt-2 text-sm font-paperplane-medium text-foreground-muted">
+        Options
+      </Text>
       <Animated.View
         className="mx-4 overflow-hidden rounded-2xl bg-grouped-card"
         layout={THREAD_SETTINGS_OPTIONS_LAYOUT_TRANSITION}
@@ -998,7 +1002,9 @@ function ThreadSettingsOptionsItem(props: {
         <ThreadSettingsPiSection instanceId={piInstanceId} onOpen={props.onOpenPiExtensions} />
       ) : null}
 
-      <Text className="px-5 pb-2 pt-7 text-sm font-rove-medium text-foreground-muted">Catalog</Text>
+      <Text className="px-5 pb-2 pt-7 text-sm font-paperplane-medium text-foreground-muted">
+        Catalog
+      </Text>
       <View className="mx-4 overflow-hidden rounded-2xl bg-grouped-card">
         <SwitchRow
           label="Manage hidden models"

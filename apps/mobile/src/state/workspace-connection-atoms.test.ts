@@ -3,10 +3,10 @@ import {
   PrimaryConnectionTarget,
   type EnvironmentPresentation,
   type NetworkStatus,
-} from "@rove-code/client-runtime/connection";
-import type { EnvironmentCatalogState } from "@rove-code/client-runtime/state/connections";
-import type { EnvironmentShellSummary } from "@rove-code/client-runtime/state/shell";
-import { EnvironmentId, type ServerConfig } from "@rove-code/contracts";
+} from "@getpaperplane/client-runtime/connection";
+import type { EnvironmentCatalogState } from "@getpaperplane/client-runtime/state/connections";
+import type { EnvironmentShellSummary } from "@getpaperplane/client-runtime/state/shell";
+import { EnvironmentId, type ServerConfig } from "@getpaperplane/contracts";
 import * as Option from "effect/Option";
 import { Atom, AtomRegistry } from "effect/reactivity";
 

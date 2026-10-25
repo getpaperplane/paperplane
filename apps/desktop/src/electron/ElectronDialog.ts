@@ -102,7 +102,7 @@ export class ElectronDialog extends Context.Service<
     ) => Effect.Effect<Electron.MessageBoxReturnValue, ElectronDialogShowMessageBoxError>;
     readonly showErrorBox: (title: string, content: string) => Effect.Effect<void>;
   }
->()("@rove-code/desktop/electron/ElectronDialog") {}
+>()("@getpaperplane/desktop/electron/ElectronDialog") {}
 
 /** @public Service construction is part of the canonical Effect module API. */
 export const make = ElectronDialog.of({

@@ -1,5 +1,5 @@
 import type { RunResult, SdkCredentialStore, StoredSdkCredentials } from "@cursor/sdk";
-import { ProviderInstanceId, TextGenerationError } from "@rove-code/contracts";
+import { ProviderInstanceId, TextGenerationError } from "@getpaperplane/contracts";
 import { CursorSettings } from "../settings.ts";
 import { describe, expect, it } from "@effect/vitest";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
@@ -10,7 +10,7 @@ import * as Fiber from "effect/Fiber";
 import * as Layer from "effect/Layer";
 import * as TestClock from "effect/testing/TestClock";
 import * as Schema from "effect/Schema";
-import { createModelSelection } from "@rove-code/shared/model";
+import { createModelSelection } from "@getpaperplane/shared/model";
 import { beforeEach, vi } from "vite-plus/test";
 
 import { makeCursorAuth } from "./auth.ts";

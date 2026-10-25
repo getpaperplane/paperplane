@@ -1,4 +1,4 @@
-import { unquoteGitPatchPath } from "@rove-code/shared/gitPatchPath";
+import { unquoteGitPatchPath } from "@getpaperplane/shared/gitPatchPath";
 
 const ENTRY = "diff --git ";
 const QUOTE = '"';

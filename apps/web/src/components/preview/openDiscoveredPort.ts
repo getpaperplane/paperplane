@@ -1,8 +1,8 @@
-import type { DiscoveredLocalServer, ScopedThreadRef } from "@rove-code/contracts";
+import type { DiscoveredLocalServer, ScopedThreadRef } from "@getpaperplane/contracts";
 import {
   mapAtomCommandResult,
   type AtomCommandResult,
-} from "@rove-code/client-runtime/state/runtime";
+} from "@getpaperplane/client-runtime/state/runtime";
 
 import { resolveDiscoveredServerUrl } from "~/browser/browserTargetResolver";
 import type { BrowserSettingsReadError, OpenPreviewMutation } from "~/browser/openFileInPreview";

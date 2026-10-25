@@ -4,7 +4,7 @@ import {
   RelayAgentActivityAggregateState,
   RelayAgentAwarenessPreferences,
   type RelayDeliveryResult,
-} from "@rove-code/contracts/relay";
+} from "@getpaperplane/contracts/relay";
 import * as Crypto from "effect/Crypto";
 import type * as PlatformError from "effect/PlatformError";
 import * as Context from "effect/Context";
@@ -137,7 +137,7 @@ export class FcmDeliveries extends Context.Service<
       | EnvironmentLinks.EnvironmentLinkUserListPersistenceError
     >;
   }
->()("rove-relay/agentActivity/FcmDeliveries") {}
+>()("paperplane-relay/agentActivity/FcmDeliveries") {}
 
 export const make = Effect.gen(function* () {
   const config = yield* RelayConfiguration.RelayConfiguration;
@@ -296,7 +296,7 @@ export const make = Effect.gen(function* () {
       // already forgotten its baseline. Finished cards are visible, but idle.
       if (!displayedAggregate && !alert && !previousAggregate && job.state !== null) return;
       const data: Record<string, string> = {
-        rove_kind: "agent_activity",
+        paperplane_kind: "agent_activity",
         device_id: job.deviceId,
         user_id: job.userId,
         updated_at: String(now.epochMilliseconds),

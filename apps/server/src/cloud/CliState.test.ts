@@ -34,7 +34,7 @@ const layerTest = () =>
   ServerSecretStore.layer.pipe(
     Layer.provide(
       ServerConfig.layerTest(process.cwd(), {
-        prefix: "rove-cloud-cli-state-test-",
+        prefix: "paperplane-cloud-cli-state-test-",
       }),
     ),
   );

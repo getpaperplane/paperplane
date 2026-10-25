@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 const publicKeyOptions = {
   allowCredentials: [],
   challenge: new Uint8Array([1]),
-  rpId: "clerk.rove.codes",
+  rpId: "clerk.paperplane.codes",
   timeout: 60_000,
   userVerification: "preferred" as const,
 };
@@ -15,7 +15,7 @@ const stubNativePasskeys = () => {
     error: { code: "cancelled", message: "user cancelled" },
   });
 
-  vi.stubGlobal("location", { protocol: "rove:", hostname: "app" });
+  vi.stubGlobal("location", { protocol: "paperplane:", hostname: "app" });
   vi.stubGlobal("window", {
     PublicKeyCredential: vi.fn(),
     __clerk_internal_electron_passkeys: {

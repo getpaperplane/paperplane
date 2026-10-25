@@ -1,4 +1,4 @@
-import { EnvironmentId, ProjectId } from "@rove-code/contracts";
+import { EnvironmentId, ProjectId } from "@getpaperplane/contracts";
 import * as Schema from "effect/Schema";
 
 export class ProjectThreadTaskRequiredError extends Schema.TaggedError<ProjectThreadTaskRequiredError>()(

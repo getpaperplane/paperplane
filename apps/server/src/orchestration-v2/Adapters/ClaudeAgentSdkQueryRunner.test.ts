@@ -6,14 +6,14 @@ import * as NodeOS from "node:os";
 import * as NodePath from "node:path";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { assert, describe, it } from "@effect/vitest";
-import { ProviderSessionId, ThreadId } from "@rove-code/contracts";
+import { ProviderSessionId, ThreadId } from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Layer from "effect/Layer";
 import { vi } from "vite-plus/test";
 
-import { ProviderEventLoggers } from "@rove-code/provider-core/server/ProviderEventLoggers";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+import { ProviderEventLoggers } from "@getpaperplane/provider-core/server/ProviderEventLoggers";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 import {
   CLAUDE_AGENT_SDK_QUERY_PROTOCOL,
   ClaudeAgentSdkQueryRunner,
@@ -97,7 +97,7 @@ const realQueryRunner = layerQueryRunner.pipe(
 
 /** Writes an executable stand-in for the Claude CLI into a fresh directory. */
 function fakeClaudeCli(script: string): string {
-  const dir = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "rove-claude-cli-"));
+  const dir = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "paperplane-claude-cli-"));
   const cli = NodePath.join(dir, "claude");
   NodeFS.writeFileSync(cli, `#!/bin/sh\n${script}\n`, { mode: 0o755 });
   return cli;

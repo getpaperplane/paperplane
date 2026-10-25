@@ -3,8 +3,8 @@ import * as NodeCrypto from "node:crypto";
 import * as NodeFS from "node:fs";
 import * as NodePath from "node:path";
 
-import type { ChatAttachment } from "@rove-code/contracts";
-import { htmlRenderFromToolItem, mcpAppFromToolItem } from "@rove-code/shared/toolOutput";
+import type { ChatAttachment } from "@getpaperplane/contracts";
+import { htmlRenderFromToolItem, mcpAppFromToolItem } from "@getpaperplane/shared/toolOutput";
 
 import {
   normalizeAttachmentRelativePath,

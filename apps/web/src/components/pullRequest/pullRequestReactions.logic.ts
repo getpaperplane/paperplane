@@ -1,4 +1,4 @@
-import type { PullRequestReaction, PullRequestReactionContent } from "@rove-code/contracts";
+import type { PullRequestReaction, PullRequestReactionContent } from "@getpaperplane/contracts";
 
 /** The picker's order, which is GitHub's: the two verdicts first, then the rest as it lists them. */
 export const PULL_REQUEST_REACTION_ORDER: ReadonlyArray<PullRequestReactionContent> = [

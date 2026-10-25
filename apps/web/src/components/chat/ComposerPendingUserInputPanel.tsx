@@ -1,4 +1,4 @@
-import { type RuntimeRequestId, type ScopedThreadRef } from "@rove-code/contracts";
+import { type RuntimeRequestId, type ScopedThreadRef } from "@getpaperplane/contracts";
 import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { type PendingUserInput } from "../../session-logic";
 import {

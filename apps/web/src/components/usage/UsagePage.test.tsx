@@ -1,5 +1,5 @@
-import { EnvironmentId, UsageDay, USAGE_CONTRACT_VERSION } from "@rove-code/contracts";
-import { mergeUsage } from "@rove-code/shared/usageMerge";
+import { EnvironmentId, UsageDay, USAGE_CONTRACT_VERSION } from "@getpaperplane/contracts";
+import { mergeUsage } from "@getpaperplane/shared/usageMerge";
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";

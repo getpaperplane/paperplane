@@ -6,7 +6,7 @@ import {
   reportAtomCommandResult,
   settlePromise,
   squashAtomCommandFailure,
-} from "@rove-code/client-runtime/state/runtime";
+} from "@getpaperplane/client-runtime/state/runtime";
 import * as RuntimePredicate from "effect/Predicate";
 
 export type AppUpdateCheckState =

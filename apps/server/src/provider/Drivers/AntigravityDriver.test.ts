@@ -4,8 +4,8 @@ import {
   ANTIGRAVITY_DEFAULT_MODEL,
   ProviderInstanceId,
   type AntigravitySettings,
-} from "@rove-code/contracts";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+} from "@getpaperplane/contracts";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 import * as Effect from "effect/Effect";
 import * as Deferred from "effect/Deferred";
 import * as Fiber from "effect/Fiber";
@@ -25,10 +25,10 @@ import {
   ANTIGRAVITY_AUTH_STDOUT_PREFIX,
   resolveAntigravityInstanceDirectories,
 } from "../antigravityAuthSupport.ts";
-import * as ProviderEventLoggers from "@rove-code/provider-core/server/ProviderEventLoggers";
-import * as McpProviderSessions from "@rove-code/provider-core/server/McpProviderSessions";
+import * as ProviderEventLoggers from "@getpaperplane/provider-core/server/ProviderEventLoggers";
+import * as McpProviderSessions from "@getpaperplane/provider-core/server/McpProviderSessions";
 import * as ModelManifest from "../ModelManifest.ts";
-import * as IdAllocator from "@rove-code/provider-core/server/IdAllocator";
+import * as IdAllocator from "@getpaperplane/provider-core/server/IdAllocator";
 import { AntigravityDriver } from "./AntigravityDriver.ts";
 import * as ProviderHostLive from "../ProviderHostLive.ts";
 import * as ServerSecretStore from "../../auth/ServerSecretStore.ts";
@@ -63,7 +63,7 @@ const makeHarness = Effect.fn("makeAntigravityDriverHarness")(function* (
   const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
   const nodePath = yield* HostProcess.ExecutablePath;
   const baseEnv = yield* HostProcess.Environment;
-  const root = yield* fs.makeTempDirectoryScoped({ prefix: "rove-antigravity-driver-" });
+  const root = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-antigravity-driver-" });
   const instanceId = ProviderInstanceId.make(path.basename(root));
   const mockAgentPath = yield* path.fromFileUrl(
     new URL("../../../scripts/acp-mock-agent.ts", import.meta.url),
@@ -191,8 +191,8 @@ const makeHarness = Effect.fn("makeAntigravityDriverHarness")(function* (
     config: { ...AntigravityDriver.defaultConfig(), ...options.config },
     environment: [
       { name: "PATH", value: instancePath },
-      { name: "ROVE_ACP_ANTIGRAVITY", value: "1" },
-      { name: "ROVE_ACP_REQUEST_LOG_PATH", value: requestLog },
+      { name: "PAPERPLANE_ACP_ANTIGRAVITY", value: "1" },
+      { name: "PAPERPLANE_ACP_REQUEST_LOG_PATH", value: requestLog },
       { name: "GEMINI_API_KEY", value: "must-not-be-used" },
       { name: "google_api_key", value: "must-not-be-used" },
       { name: "GOOGLE_APPLICATION_CREDENTIALS", value: "/must-not-be-used.json" },
@@ -244,7 +244,7 @@ const makeHarness = Effect.fn("makeAntigravityDriverHarness")(function* (
 });
 
 const layerDeps = ServerConfig.layerTest(process.cwd(), {
-  prefix: "rove-antigravity-driver-config-",
+  prefix: "paperplane-antigravity-driver-config-",
 }).pipe(
   Layer.provideMerge(NodeServices.layer),
   Layer.provideMerge(

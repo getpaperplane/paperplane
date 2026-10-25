@@ -5,14 +5,14 @@
  * @module provider-opencode/server/usage
  */
 
-import { expandHomePath } from "@rove-code/provider-core/server/pathExpansion";
+import { expandHomePath } from "@getpaperplane/provider-core/server/pathExpansion";
 import {
   totalTokens,
   type ProviderUsageReader,
   type UsageRecord,
-} from "@rove-code/provider-core/server/usage";
-import * as HostProcess from "@rove-code/shared/HostProcess";
-import * as NodeSqliteClient from "@rove-code/shared/nodeSqliteClient";
+} from "@getpaperplane/provider-core/server/usage";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
+import * as NodeSqliteClient from "@getpaperplane/shared/nodeSqliteClient";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Option from "effect/Option";

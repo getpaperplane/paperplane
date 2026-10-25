@@ -5,21 +5,21 @@
  * @module provider-grok/server/usage
  */
 
-import type { UsageTokenTotals } from "@rove-code/contracts";
+import type { UsageTokenTotals } from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import * as Path from "effect/Path";
 
-import { expandHomePath } from "@rove-code/provider-core/server/pathExpansion";
+import { expandHomePath } from "@getpaperplane/provider-core/server/pathExpansion";
 import {
   tokenCount,
   totalTokens,
   type ProviderUsageReader,
   type TranscriptUsageFormat,
   type UsageRecord,
-} from "@rove-code/provider-core/server/usage";
+} from "@getpaperplane/provider-core/server/usage";
 
 import type { GrokSettings } from "../settings.ts";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 
 /**
  * Grok reports cost in integer ticks where `1 USD = 10^10` ticks. See Grok

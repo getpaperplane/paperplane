@@ -14,7 +14,7 @@ import {
   ThreadId,
   type OrchestrationV2ThreadProjection,
   type ServerProvider,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -41,7 +41,7 @@ import * as SecretRequests from "../secrets/SecretRequests.ts";
 import type { McpInvocationScope } from "./McpInvocationContext.ts";
 import { idleThreadProjection, liveThreadShell } from "./McpToolAccess.testkit.ts";
 import * as OrchestratorMcpService from "./OrchestratorMcpService.ts";
-import type * as ProviderAdapter from "@rove-code/provider-core/server/ProviderAdapter";
+import type * as ProviderAdapter from "@getpaperplane/provider-core/server/ProviderAdapter";
 
 const layerOrchestratorService = OrchestratorMcpService.layer.pipe(
   Layer.provide(Layer.mock(ThreadLaunchService.ThreadLaunchService)({})),
@@ -1958,7 +1958,7 @@ describe("OrchestratorMcpService provider resolution", () => {
       runCount: 0,
       webhook: {
         path: "/hooks/scheduled-task/secret",
-        url: "https://rove.example/hooks/secret",
+        url: "https://paperplane.example/hooks/secret",
         hasSecret: false,
       },
       ...overrides,
@@ -2022,7 +2022,7 @@ describe("OrchestratorMcpService provider resolution", () => {
         );
         assert.deepEqual(
           listed.tasks.map((summary) => summary.webhookUrl),
-          [undefined, "https://rove.example/hooks/secret"],
+          [undefined, "https://paperplane.example/hooks/secret"],
         );
       }),
     );

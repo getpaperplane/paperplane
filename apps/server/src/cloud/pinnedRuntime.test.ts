@@ -21,7 +21,7 @@ import {
 // and unpacks it with tar. The fake client serves both files; the fake runner
 // stands in for tar and drops the executable where extraction would.
 const version = "1.2.3";
-const archiveName = `rove-${version}-linux-x64.tar.gz`;
+const archiveName = `paperplane-${version}-linux-x64.tar.gz`;
 const archiveBytes = new TextEncoder().encode("not really a tarball");
 const archiveHex = (bytes: Uint8Array) =>
   Effect.promise(() => crypto.subtle.digest("SHA-256", bytes)).pipe(
@@ -48,7 +48,9 @@ const extractingRunner = (fs: FileSystem.FileSystem, path: Path.Path, commands: 
         if (input.command !== "tar" || stagingDir === undefined) {
           return yield* Effect.die(`unexpected command ${input.command}`);
         }
-        yield* fs.writeFileString(path.join(stagingDir, "rove"), "#!/bin/sh\n").pipe(Effect.orDie);
+        yield* fs
+          .writeFileString(path.join(stagingDir, "paperplane"), "#!/bin/sh\n")
+          .pipe(Effect.orDie);
         return {
           stdout: "",
           stderr: "",
@@ -67,7 +69,7 @@ it.layer(NodeServices.layer)("ensurePinnedRuntimeInstalled", (it) => {
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const baseDir = yield* fs.makeTempDirectoryScoped({ prefix: "rove-pinned-archive-" });
+      const baseDir = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-pinned-archive-" });
       const requests: string[] = [];
       const commands: string[] = [];
       const paths = yield* ensurePinnedRuntimeInstalled({
@@ -86,7 +88,7 @@ it.layer(NodeServices.layer)("ensurePinnedRuntimeInstalled", (it) => {
             Effect.orDie,
           ),
       });
-      assert.equal(paths.entryPath, path.join(paths.versionDir, "rove"));
+      assert.equal(paths.entryPath, path.join(paths.versionDir, "paperplane"));
       assert.deepEqual(pinnedRuntimeCommand(paths), { command: paths.entryPath, args: [] });
       assert.deepEqual(requests, [
         `https://releases.example/download/v${version}/SHA256SUMS`,
@@ -94,7 +96,7 @@ it.layer(NodeServices.layer)("ensurePinnedRuntimeInstalled", (it) => {
       ]);
       assert.deepEqual(commands, ["tar"]);
       assert.equal(yield* fs.readFileString(paths.sentinelPath), `${version}\n`);
-      assert.isFalse(yield* fs.exists(path.join(paths.versionDir, "rove-runtime-archive")));
+      assert.isFalse(yield* fs.exists(path.join(paths.versionDir, "paperplane-runtime-archive")));
     }),
   );
 
@@ -104,7 +106,9 @@ it.layer(NodeServices.layer)("ensurePinnedRuntimeInstalled", (it) => {
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const baseDir = yield* fs.makeTempDirectoryScoped({ prefix: "rove-pinned-progress-" });
+        const baseDir = yield* fs.makeTempDirectoryScoped({
+          prefix: "paperplane-pinned-progress-",
+        });
         const firstChunk = yield* Deferred.make<void>();
         let archiveController: ReadableStreamDefaultController<Uint8Array> | undefined;
         const checksums = yield* validChecksums;
@@ -169,7 +173,9 @@ it.layer(NodeServices.layer)("ensurePinnedRuntimeInstalled", (it) => {
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const baseDir = yield* fs.makeTempDirectoryScoped({ prefix: "rove-pinned-progress-failed-" });
+      const baseDir = yield* fs.makeTempDirectoryScoped({
+        prefix: "paperplane-pinned-progress-failed-",
+      });
       const checksums = yield* validChecksums;
       const progress: PinnedRuntimeProgress[] = [];
       let cancelled = false;
@@ -222,7 +228,9 @@ it.layer(NodeServices.layer)("ensurePinnedRuntimeInstalled", (it) => {
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const baseDir = yield* fs.makeTempDirectoryScoped({ prefix: "rove-pinned-archive-bad-" });
+      const baseDir = yield* fs.makeTempDirectoryScoped({
+        prefix: "paperplane-pinned-archive-bad-",
+      });
       const commands: string[] = [];
       const error = yield* ensurePinnedRuntimeInstalled({
         baseDir,
@@ -236,7 +244,7 @@ it.layer(NodeServices.layer)("ensurePinnedRuntimeInstalled", (it) => {
         validate: () => Effect.die("must not validate an unverified archive"),
       }).pipe(Effect.flip);
       assert.instanceOf(error, PinnedRuntimeInstallError);
-      assert.equal(error.step, "verifying the rove release archive checksum");
+      assert.equal(error.step, "verifying the paperplane release archive checksum");
       assert.deepEqual(commands, []);
       assert.deepEqual(yield* fs.readDirectory(path.join(baseDir, "runtime", "versions")), []);
     }),
@@ -246,7 +254,9 @@ it.layer(NodeServices.layer)("ensurePinnedRuntimeInstalled", (it) => {
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const baseDir = yield* fs.makeTempDirectoryScoped({ prefix: "rove-pinned-runtime-test-" });
+      const baseDir = yield* fs.makeTempDirectoryScoped({
+        prefix: "paperplane-pinned-runtime-test-",
+      });
       const finalPaths = pinnedRuntimePaths(path, baseDir, version, "linux");
       let validatedDirectory = "";
 
@@ -278,7 +288,9 @@ it.layer(NodeServices.layer)("ensurePinnedRuntimeInstalled", (it) => {
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const baseDir = yield* fs.makeTempDirectoryScoped({ prefix: "rove-pinned-runtime-test-" });
+      const baseDir = yield* fs.makeTempDirectoryScoped({
+        prefix: "paperplane-pinned-runtime-test-",
+      });
       const finalPaths = pinnedRuntimePaths(path, baseDir, version, "linux");
 
       yield* ensurePinnedRuntimeInstalled({
@@ -308,7 +320,9 @@ it.layer(NodeServices.layer)("ensurePinnedRuntimeInstalled", (it) => {
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const baseDir = yield* fs.makeTempDirectoryScoped({ prefix: "rove-pinned-runtime-repair-" });
+      const baseDir = yield* fs.makeTempDirectoryScoped({
+        prefix: "paperplane-pinned-runtime-repair-",
+      });
       const finalPaths = pinnedRuntimePaths(path, baseDir, version, "linux");
       yield* fs.makeDirectory(finalPaths.versionDir, { recursive: true });
       yield* fs.writeFileString(path.join(finalPaths.versionDir, "partial"), "incomplete\n");
@@ -334,7 +348,9 @@ it.layer(NodeServices.layer)("ensurePinnedRuntimeInstalled", (it) => {
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const baseDir = yield* fs.makeTempDirectoryScoped({ prefix: "rove-pinned-runtime-repair-" });
+      const baseDir = yield* fs.makeTempDirectoryScoped({
+        prefix: "paperplane-pinned-runtime-repair-",
+      });
       const finalPaths = pinnedRuntimePaths(path, baseDir, version, "linux");
       yield* fs.makeDirectory(path.dirname(finalPaths.entryPath), { recursive: true });
       yield* fs.writeFileString(finalPaths.entryPath, "broken\n");
@@ -372,7 +388,7 @@ it.layer(NodeServices.layer)("ensurePinnedRuntimeInstalled", (it) => {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const baseDir = yield* fs.makeTempDirectoryScoped({
-        prefix: "rove-pinned-runtime-interrupt-",
+        prefix: "paperplane-pinned-runtime-interrupt-",
       });
       const started = yield* Deferred.make<void>();
       const runner = ProcessRunner.ProcessRunner.of({

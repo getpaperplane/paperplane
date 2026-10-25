@@ -1,11 +1,11 @@
-import { ProjectId, ThreadId, type WorktreeInventoryEntry } from "@rove-code/contracts";
+import { ProjectId, ThreadId, type WorktreeInventoryEntry } from "@getpaperplane/contracts";
 import { describe, expect, it } from "vite-plus/test";
 
 import { filterWorktrees, formatWorktreeSize } from "./worktreeInventory.ts";
 
 const entry: WorktreeInventoryEntry = {
   projectId: ProjectId.make("project-1"),
-  projectTitle: "Rove",
+  projectTitle: "Paperplane",
   workspaceRoot: "/repo",
   path: "/worktrees/feature",
   branch: "feature/storage",
@@ -17,7 +17,7 @@ const entry: WorktreeInventoryEntry = {
 };
 
 describe("worktree inventory presentation", () => {
-  it.each(["  FEATURE/Storage  ", "/worktrees", "rove", "abandoned"])(
+  it.each(["  FEATURE/Storage  ", "/worktrees", "Paperplane", "abandoned"])(
     "finds worktrees by branch, path, project, and archived thread for %s",
     (query) => expect(filterWorktrees([entry], query)).toEqual([entry]),
   );

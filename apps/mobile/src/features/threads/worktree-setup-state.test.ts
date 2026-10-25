@@ -1,5 +1,5 @@
-import { ThreadId, type WorktreeSetupSnapshot } from "@rove-code/contracts";
-import { resolveVisibleWorktreeSetup } from "@rove-code/client-runtime/worktree-setup";
+import { ThreadId, type WorktreeSetupSnapshot } from "@getpaperplane/contracts";
+import { resolveVisibleWorktreeSetup } from "@getpaperplane/client-runtime/worktree-setup";
 import { describe, expect, it } from "vite-plus/test";
 import { resolveWorktreeSetupSnapshot } from "./worktree-setup-state";
 

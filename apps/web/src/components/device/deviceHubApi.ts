@@ -1,6 +1,6 @@
-import { withDeviceHubQuery } from "@rove-code/client-runtime/state/deviceHubAccess";
-import type { DeviceHubAccess } from "@rove-code/client-runtime/state/deviceHubAccess";
-import type { DevicePlatform } from "@rove-code/contracts";
+import { withDeviceHubQuery } from "@getpaperplane/client-runtime/state/deviceHubAccess";
+import type { DeviceHubAccess } from "@getpaperplane/client-runtime/state/deviceHubAccess";
+import type { DevicePlatform } from "@getpaperplane/contracts";
 
 /**
  * Read-only hub endpoints the Tools drawer consumes directly: the accessibility

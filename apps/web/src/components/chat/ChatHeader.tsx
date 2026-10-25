@@ -3,13 +3,13 @@ import {
   type EnvironmentId,
   type ProviderInstanceId,
   type ThreadId,
-} from "@rove-code/contracts";
-import { scopeThreadRef } from "@rove-code/client-runtime/environment";
-import type { EnvironmentProject } from "@rove-code/client-runtime/state/shell";
+} from "@getpaperplane/contracts";
+import { scopeThreadRef } from "@getpaperplane/client-runtime/environment";
+import type { EnvironmentProject } from "@getpaperplane/client-runtime/state/shell";
 import {
   isAtomCommandInterrupted,
   squashAtomCommandFailure,
-} from "@rove-code/client-runtime/state/runtime";
+} from "@getpaperplane/client-runtime/state/runtime";
 import { ChevronDownIcon } from "lucide-react";
 import {
   memo,
@@ -49,7 +49,7 @@ import { useProviderResources } from "../../lib/useProviderResources";
 import {
   readPiInstanceSettings,
   togglePiExtensionDisabled,
-} from "@rove-code/client-runtime/state/providerSettings";
+} from "@getpaperplane/client-runtime/state/providerSettings";
 
 const EMPTY_STRING_LIST: ReadonlyArray<string> = [];
 

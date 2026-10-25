@@ -3,8 +3,8 @@ import * as NodeServices from "@effect/platform-node/NodeServices";
 import * as NodeFS from "node:fs";
 import * as NodeOS from "node:os";
 import * as NodePath from "node:path";
-import * as NetService from "@rove-code/shared/Net";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+import * as NetService from "@getpaperplane/shared/Net";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 import { assert, describe, it } from "@effect/vitest";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
@@ -57,7 +57,7 @@ function mockProcess(exit: number | PlatformError.PlatformError) {
 
 const devServerInput = {
   mode: "dev:server",
-  roveHome: "/tmp/rove-dev-runner",
+  paperplaneHome: "/tmp/paperplane-dev-runner",
   browser: undefined,
   autoBootstrapProjectFromCwd: undefined,
   logWebSocketEvents: undefined,
@@ -89,8 +89,8 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
       Effect.sync(() => {
         assert.deepStrictEqual(getDevRunnerModeArgs("dev:desktop"), [
           "run",
-          "--filter=@rove-code/desktop",
-          "--filter=@rove-code/web",
+          "--filter=@getpaperplane/desktop",
+          "--filter=@getpaperplane/web",
           "dev",
         ]);
       }),
@@ -100,9 +100,9 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
       Effect.sync(() => {
         assert.deepStrictEqual(getDevRunnerModeArgs("dev"), [
           "run",
-          "--filter=@rove-code/contracts",
-          "--filter=@rove-code/web",
-          "--filter=@rove-code/server",
+          "--filter=@getpaperplane/contracts",
+          "--filter=@getpaperplane/web",
+          "--filter=@getpaperplane/server",
           "--parallel",
           "dev",
         ]);
@@ -111,12 +111,12 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
   });
 
   describe("resolveOffset", () => {
-    it.effect("uses explicit ROVE_PORT_OFFSET when provided", () =>
+    it.effect("uses explicit PAPERPLANE_PORT_OFFSET when provided", () =>
       Effect.gen(function* () {
         const result = yield* resolveOffset({ portOffset: 12, devInstance: undefined });
         assert.deepStrictEqual(result, {
           offset: 12,
-          source: "ROVE_PORT_OFFSET=12",
+          source: "PAPERPLANE_PORT_OFFSET=12",
         });
       }),
     );
@@ -139,7 +139,7 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
         );
 
         assert.equal(error._tag, "DevRunnerInvalidPortOffsetError");
-        assert.equal(error.configKey, "ROVE_PORT_OFFSET");
+        assert.equal(error.configKey, "PAPERPLANE_PORT_OFFSET");
         assert.equal(error.portOffset, -1);
         assert.equal(error.minimum, 0);
         assert.ok(!("cause" in error));
@@ -151,10 +151,10 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
     it.effect("forwards the reusable auth token to web dev and removes it for desktop", () =>
       Effect.gen(function* () {
         const input = {
-          baseEnv: { ROVE_DEV_AUTH_TOKEN: "reusable-dev-auth-token-that-is-long-enough" },
+          baseEnv: { PAPERPLANE_DEV_AUTH_TOKEN: "reusable-dev-auth-token-that-is-long-enough" },
           serverOffset: 0,
           webOffset: 0,
-          roveHome: undefined,
+          paperplaneHome: undefined,
           browser: undefined,
           autoBootstrapProjectFromCwd: undefined,
           logWebSocketEvents: undefined,
@@ -165,8 +165,8 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
         const web = yield* createDevRunnerEnv({ ...input, mode: "dev" });
         const desktop = yield* createDevRunnerEnv({ ...input, mode: "dev:desktop" });
 
-        assert.equal(web.ROVE_DEV_AUTH_TOKEN, input.baseEnv.ROVE_DEV_AUTH_TOKEN);
-        assert.equal(desktop.ROVE_DEV_AUTH_TOKEN, undefined);
+        assert.equal(web.PAPERPLANE_DEV_AUTH_TOKEN, input.baseEnv.PAPERPLANE_DEV_AUTH_TOKEN);
+        assert.equal(desktop.PAPERPLANE_DEV_AUTH_TOKEN, undefined);
       }),
     );
     it.effect("leaves the shared home implicit and disables browser auto-open", () =>
@@ -176,7 +176,7 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
           baseEnv: {},
           serverOffset: 0,
           webOffset: 0,
-          roveHome: undefined,
+          paperplaneHome: undefined,
           browser: undefined,
           autoBootstrapProjectFromCwd: undefined,
           logWebSocketEvents: undefined,
@@ -185,8 +185,8 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
           devUrl: undefined,
         });
 
-        assert.equal(env.ROVE_HOME, undefined);
-        assert.equal(env.ROVE_NO_BROWSER, "1");
+        assert.equal(env.PAPERPLANE_HOME, undefined);
+        assert.equal(env.PAPERPLANE_NO_BROWSER, "1");
       }),
     );
 
@@ -197,7 +197,7 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
           baseEnv: {},
           serverOffset: 0,
           webOffset: 0,
-          roveHome: undefined,
+          paperplaneHome: undefined,
           browser: true,
           autoBootstrapProjectFromCwd: undefined,
           logWebSocketEvents: undefined,
@@ -206,7 +206,7 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
           devUrl: undefined,
         });
 
-        assert.equal(env.ROVE_NO_BROWSER, "0");
+        assert.equal(env.PAPERPLANE_NO_BROWSER, "0");
       }),
     );
 
@@ -214,10 +214,10 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
       Effect.gen(function* () {
         const env = yield* createDevRunnerEnv({
           mode: "dev",
-          baseEnv: { ROVE_NO_BROWSER: "0" },
+          baseEnv: { PAPERPLANE_NO_BROWSER: "0" },
           serverOffset: 0,
           webOffset: 0,
-          roveHome: undefined,
+          paperplaneHome: undefined,
           browser: false,
           autoBootstrapProjectFromCwd: undefined,
           logWebSocketEvents: undefined,
@@ -226,7 +226,7 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
           devUrl: undefined,
         });
 
-        assert.equal(env.ROVE_NO_BROWSER, "1");
+        assert.equal(env.PAPERPLANE_NO_BROWSER, "1");
       }),
     );
 
@@ -238,7 +238,7 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
           baseEnv: {},
           serverOffset: 0,
           webOffset: 0,
-          roveHome: "/tmp/custom-rove",
+          paperplaneHome: "/tmp/custom-paperplane",
           browser: false,
           autoBootstrapProjectFromCwd: false,
           logWebSocketEvents: true,
@@ -247,14 +247,14 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
           devUrl: new URL("http://localhost:7331"),
         });
 
-        assert.equal(env.ROVE_HOME, path.resolve("/tmp/custom-rove"));
-        assert.equal(env.ROVE_PORT, "4222");
+        assert.equal(env.PAPERPLANE_HOME, path.resolve("/tmp/custom-paperplane"));
+        assert.equal(env.PAPERPLANE_PORT, "4222");
         assert.equal(env.VITE_HTTP_URL, "http://localhost:4222");
         assert.equal(env.VITE_WS_URL, "ws://localhost:4222");
-        assert.equal(env.ROVE_NO_BROWSER, "1");
-        assert.equal(env.ROVE_AUTO_BOOTSTRAP_PROJECT_FROM_CWD, "0");
-        assert.equal(env.ROVE_LOG_WS_EVENTS, "1");
-        assert.equal(env.ROVE_HOST, "0.0.0.0");
+        assert.equal(env.PAPERPLANE_NO_BROWSER, "1");
+        assert.equal(env.PAPERPLANE_AUTO_BOOTSTRAP_PROJECT_FROM_CWD, "0");
+        assert.equal(env.PAPERPLANE_LOG_WS_EVENTS, "1");
+        assert.equal(env.PAPERPLANE_HOST, "0.0.0.0");
         assert.equal(env.VITE_DEV_SERVER_URL, "http://localhost:7331/");
       }),
     );
@@ -264,14 +264,12 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
         const env = yield* createDevRunnerEnv({
           mode: "dev",
           baseEnv: {
-            ROVE_SERVICE_LAUNCHER_CONTEXT: '{"childVersion":"9.9.9"}',
-            ROVE_BOOT_SERVICE_UNIT: "rove.service",
-            T3_SERVICE_LAUNCHER_CONTEXT: '{"childVersion":"8.8.8"}',
-            T3_BOOT_SERVICE_UNIT: "historical.service",
+            PAPERPLANE_SERVICE_LAUNCHER_CONTEXT: '{"childVersion":"9.9.9"}',
+            PAPERPLANE_BOOT_SERVICE_UNIT: "paperplane.service",
           },
           serverOffset: 0,
           webOffset: 0,
-          roveHome: undefined,
+          paperplaneHome: undefined,
           browser: undefined,
           autoBootstrapProjectFromCwd: undefined,
           logWebSocketEvents: undefined,
@@ -280,10 +278,8 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
           devUrl: undefined,
         });
 
-        assert.equal(env.ROVE_SERVICE_LAUNCHER_CONTEXT, undefined);
-        assert.equal(env.ROVE_BOOT_SERVICE_UNIT, undefined);
-        assert.equal(env.T3_SERVICE_LAUNCHER_CONTEXT, undefined);
-        assert.equal(env.T3_BOOT_SERVICE_UNIT, undefined);
+        assert.equal(env.PAPERPLANE_SERVICE_LAUNCHER_CONTEXT, undefined);
+        assert.equal(env.PAPERPLANE_BOOT_SERVICE_UNIT, undefined);
       }),
     );
 
@@ -292,11 +288,11 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
         const env = yield* createDevRunnerEnv({
           mode: "dev",
           baseEnv: {
-            ROVE_LOG_WS_EVENTS: "keep-me-out",
+            PAPERPLANE_LOG_WS_EVENTS: "keep-me-out",
           },
           serverOffset: 0,
           webOffset: 0,
-          roveHome: undefined,
+          paperplaneHome: undefined,
           browser: undefined,
           autoBootstrapProjectFromCwd: undefined,
           logWebSocketEvents: undefined,
@@ -305,8 +301,8 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
           devUrl: undefined,
         });
 
-        assert.equal(env.ROVE_MODE, "web");
-        assert.equal(env.ROVE_LOG_WS_EVENTS, undefined);
+        assert.equal(env.PAPERPLANE_MODE, "web");
+        assert.equal(env.PAPERPLANE_LOG_WS_EVENTS, undefined);
       }),
     );
 
@@ -315,11 +311,11 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
         const env = yield* createDevRunnerEnv({
           mode: "dev",
           baseEnv: {
-            ROVE_LOG_WS_EVENTS: "1",
+            PAPERPLANE_LOG_WS_EVENTS: "1",
           },
           serverOffset: 0,
           webOffset: 0,
-          roveHome: undefined,
+          paperplaneHome: undefined,
           browser: undefined,
           autoBootstrapProjectFromCwd: undefined,
           logWebSocketEvents: false,
@@ -328,11 +324,11 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
           devUrl: undefined,
         });
 
-        assert.equal(env.ROVE_LOG_WS_EVENTS, "0");
+        assert.equal(env.PAPERPLANE_LOG_WS_EVENTS, "0");
       }),
     );
 
-    it.effect("uses custom roveHome when provided", () =>
+    it.effect("uses custom paperplaneHome when provided", () =>
       Effect.gen(function* () {
         const path = yield* Path.Path;
         const env = yield* createDevRunnerEnv({
@@ -340,7 +336,7 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
           baseEnv: {},
           serverOffset: 0,
           webOffset: 0,
-          roveHome: "/tmp/my-rove",
+          paperplaneHome: "/tmp/my-paperplane",
           browser: undefined,
           autoBootstrapProjectFromCwd: undefined,
           logWebSocketEvents: undefined,
@@ -349,7 +345,7 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
           devUrl: undefined,
         });
 
-        assert.equal(env.ROVE_HOME, path.resolve("/tmp/my-rove"));
+        assert.equal(env.PAPERPLANE_HOME, path.resolve("/tmp/my-paperplane"));
       }),
     );
 
@@ -359,16 +355,16 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
         const env = yield* createDevRunnerEnv({
           mode: "dev:desktop",
           baseEnv: {
-            ROVE_PORT: "13773",
-            ROVE_MODE: "web",
-            ROVE_NO_BROWSER: "0",
-            ROVE_HOST: "0.0.0.0",
+            PAPERPLANE_PORT: "13773",
+            PAPERPLANE_MODE: "web",
+            PAPERPLANE_NO_BROWSER: "0",
+            PAPERPLANE_HOST: "0.0.0.0",
             VITE_DEV_SERVER_URL: "http://127.0.0.1:8526",
             VITE_WS_URL: "ws://localhost:13773",
           },
           serverOffset: 0,
           webOffset: 0,
-          roveHome: "/tmp/my-rove",
+          paperplaneHome: "/tmp/my-paperplane",
           browser: true,
           autoBootstrapProjectFromCwd: undefined,
           logWebSocketEvents: undefined,
@@ -377,15 +373,15 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
           devUrl: undefined,
         });
 
-        assert.equal(env.ROVE_HOME, path.resolve("/tmp/my-rove"));
+        assert.equal(env.PAPERPLANE_HOME, path.resolve("/tmp/my-paperplane"));
         assert.equal(env.PORT, "5733");
         assert.equal(env.VITE_DEV_SERVER_URL, "http://127.0.0.1:5733");
         assert.equal(env.HOST, "127.0.0.1");
-        assert.equal(env.ROVE_PORT, "4222");
+        assert.equal(env.PAPERPLANE_PORT, "4222");
         assert.equal(env.VITE_HTTP_URL, "http://127.0.0.1:4222");
-        assert.equal(env.ROVE_MODE, undefined);
-        assert.equal(env.ROVE_NO_BROWSER, undefined);
-        assert.equal(env.ROVE_HOST, undefined);
+        assert.equal(env.PAPERPLANE_MODE, undefined);
+        assert.equal(env.PAPERPLANE_NO_BROWSER, undefined);
+        assert.equal(env.PAPERPLANE_HOST, undefined);
         assert.equal(env.VITE_WS_URL, "ws://127.0.0.1:4222");
       }),
     );
@@ -397,7 +393,7 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
           baseEnv: {},
           serverOffset: 0,
           webOffset: 0,
-          roveHome: undefined,
+          paperplaneHome: undefined,
           browser: undefined,
           autoBootstrapProjectFromCwd: undefined,
           logWebSocketEvents: undefined,
@@ -406,7 +402,7 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
           devUrl: undefined,
         });
 
-        assert.equal(env.ROVE_PORT, "13773");
+        assert.equal(env.PAPERPLANE_PORT, "13773");
         assert.equal(env.PORT, "5733");
       }),
     );
@@ -426,7 +422,7 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
             },
             serverOffset: 0,
             webOffset: 0,
-            roveHome: undefined,
+            paperplaneHome: undefined,
             browser: undefined,
             autoBootstrapProjectFromCwd: undefined,
             logWebSocketEvents: undefined,
@@ -437,11 +433,11 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
 
           assert.equal(env.VITE_HTTP_URL, undefined);
           assert.equal(env.VITE_WS_URL, undefined);
-          assert.equal(env.ROVE_PORT, "13773");
+          assert.equal(env.PAPERPLANE_PORT, "13773");
           // Deleting the keys is not sufficient — vite.config.ts merges
           // `.env`/`.env.local` underneath this env and would revive them, so
           // the intent has to be stated positively.
-          assert.equal(env.ROVE_SINGLE_ORIGIN_DEV, "1");
+          assert.equal(env.PAPERPLANE_SINGLE_ORIGIN_DEV, "1");
         }),
     );
 
@@ -451,10 +447,10 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
       Effect.gen(function* () {
         const env = yield* createDevRunnerEnv({
           mode: "dev:desktop",
-          baseEnv: { ROVE_SINGLE_ORIGIN_DEV: "1" },
+          baseEnv: { PAPERPLANE_SINGLE_ORIGIN_DEV: "1" },
           serverOffset: 0,
           webOffset: 0,
-          roveHome: undefined,
+          paperplaneHome: undefined,
           browser: undefined,
           autoBootstrapProjectFromCwd: undefined,
           logWebSocketEvents: undefined,
@@ -463,7 +459,7 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
           devUrl: undefined,
         });
 
-        assert.equal(env.ROVE_SINGLE_ORIGIN_DEV, undefined);
+        assert.equal(env.PAPERPLANE_SINGLE_ORIGIN_DEV, undefined);
         assert.equal(env.VITE_HTTP_URL, "http://127.0.0.1:13773");
       }),
     );
@@ -472,10 +468,10 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
       Effect.gen(function* () {
         const env = yield* createDevRunnerEnv({
           mode: "dev:server",
-          baseEnv: { ROVE_SINGLE_ORIGIN_DEV: "1" },
+          baseEnv: { PAPERPLANE_SINGLE_ORIGIN_DEV: "1" },
           serverOffset: 0,
           webOffset: 0,
-          roveHome: undefined,
+          paperplaneHome: undefined,
           browser: undefined,
           autoBootstrapProjectFromCwd: undefined,
           logWebSocketEvents: undefined,
@@ -484,7 +480,7 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
           devUrl: undefined,
         });
 
-        assert.equal(env.ROVE_SINGLE_ORIGIN_DEV, undefined);
+        assert.equal(env.PAPERPLANE_SINGLE_ORIGIN_DEV, undefined);
         assert.equal(env.VITE_HTTP_URL, "http://localhost:13773");
       }),
     );
@@ -499,7 +495,7 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
           baseEnv: { HOST: "0.0.0.0" },
           serverOffset: 0,
           webOffset: 0,
-          roveHome: undefined,
+          paperplaneHome: undefined,
           browser: undefined,
           autoBootstrapProjectFromCwd: undefined,
           logWebSocketEvents: undefined,
@@ -512,7 +508,7 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
       }),
     );
 
-    // --host configures the *backend* (ROVE_HOST). It must not become Vite's
+    // --host configures the *backend* (PAPERPLANE_HOST). It must not become Vite's
     // bind address by way of an inherited HOST that happens to agree with it.
     it.effect("drops an inherited HOST even when --host is given", () =>
       Effect.gen(function* () {
@@ -521,7 +517,7 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
           baseEnv: { HOST: "0.0.0.0" },
           serverOffset: 0,
           webOffset: 0,
-          roveHome: undefined,
+          paperplaneHome: undefined,
           browser: undefined,
           autoBootstrapProjectFromCwd: undefined,
           logWebSocketEvents: undefined,
@@ -531,7 +527,7 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
         });
 
         assert.equal(env.HOST, undefined);
-        assert.equal(env.ROVE_HOST, "0.0.0.0");
+        assert.equal(env.PAPERPLANE_HOST, "0.0.0.0");
       }),
     );
 
@@ -543,7 +539,7 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
           baseEnv: { HOST: "0.0.0.0" },
           serverOffset: 0,
           webOffset: 0,
-          roveHome: undefined,
+          paperplaneHome: undefined,
           browser: undefined,
           autoBootstrapProjectFromCwd: undefined,
           logWebSocketEvents: undefined,
@@ -563,7 +559,7 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
           baseEnv: {},
           serverOffset: 0,
           webOffset: 0,
-          roveHome: undefined,
+          paperplaneHome: undefined,
           browser: undefined,
           autoBootstrapProjectFromCwd: undefined,
           logWebSocketEvents: undefined,
@@ -729,7 +725,7 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
     );
 
     // A port free on loopback can be taken on the interface the server will
-    // actually bind, so --host/ROVE_HOST has to be probed as well.
+    // actually bind, so --host/PAPERPLANE_HOST has to be probed as well.
     it.effect("adds a non-loopback bind host to the probe list", () =>
       Effect.sync(() => {
         assert.deepStrictEqual(devPortProbeHosts("0.0.0.0"), ["127.0.0.1", "::1", "0.0.0.0"]);
@@ -747,7 +743,7 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
       }),
     );
 
-    // Only the backend honours --host/ROVE_HOST. Vite reads HOST (set for
+    // Only the backend honours --host/PAPERPLANE_HOST. Vite reads HOST (set for
     // desktop only), so judging the web port against the backend's interface
     // would reject ports for a server that never binds there.
     it.effect("passes the port role so only the server port sees the bind host", () =>
@@ -856,7 +852,7 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
             Layer.merge(
               netServiceLayer,
               ConfigProvider.layer(
-                ConfigProvider.fromEnv({ env: { ROVE_PORT_OFFSET: "not-an-integer" } }),
+                ConfigProvider.fromEnv({ env: { PAPERPLANE_PORT_OFFSET: "not-an-integer" } }),
               ),
             ),
           ),
@@ -866,7 +862,10 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
         if (error._tag !== "DevRunnerConfigurationError") {
           assert.fail(`Unexpected error: ${error._tag}`);
         }
-        assert.deepStrictEqual(error.configKeys, ["ROVE_PORT_OFFSET", "ROVE_DEV_INSTANCE"]);
+        assert.deepStrictEqual(error.configKeys, [
+          "PAPERPLANE_PORT_OFFSET",
+          "PAPERPLANE_DEV_INSTANCE",
+        ]);
         assert.ok(error.cause !== undefined);
         // SAFETY: This fixture intentionally supplies the asserted collaborator contract.
         assert.ok(!error.message.includes(String((error.cause as Error).message)));
@@ -909,18 +908,18 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
 
     // `tailscale serve` config outlives the process, so a dry run that shared
     // would replace and then tear down whatever mapping the port already had.
-    // Base-dir precedence (--home-dir > worktree .rove > ambient ROVE_HOME)
+    // Base-dir precedence (--home-dir > worktree .paperplane > ambient PAPERPLANE_HOME)
     // lives in runDevRunnerWithInput; the env builder must not consult the
     // ambient variable on its own, or it would silently outrank the worktree
     // default and land dev state on the user's real database.
-    it.effect("ignores an ambient ROVE_HOME when no home is resolved", () =>
+    it.effect("ignores an ambient PAPERPLANE_HOME when no home is resolved", () =>
       Effect.gen(function* () {
         const env = yield* createDevRunnerEnv({
           mode: "dev",
-          baseEnv: { ROVE_HOME: "/home/user/.rove" },
+          baseEnv: { PAPERPLANE_HOME: "/home/user/.paperplane" },
           serverOffset: 0,
           webOffset: 0,
-          roveHome: undefined,
+          paperplaneHome: undefined,
           browser: undefined,
           autoBootstrapProjectFromCwd: undefined,
           logWebSocketEvents: undefined,
@@ -929,7 +928,7 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
           devUrl: undefined,
         });
 
-        assert.equal(env.ROVE_HOME, undefined);
+        assert.equal(env.PAPERPLANE_HOME, undefined);
       }),
     );
 
@@ -1048,7 +1047,7 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
     // A shared origin means a remote browser, where unbundled dev's
     // per-module waterfall pays a tailnet round trip per import level. The
     // runner defaults bundled dev on for the spawned stack, but only
-    // defaults: an explicit ROVE_BUNDLED_DEV (even "0") must pass through.
+    // defaults: an explicit PAPERPLANE_BUNDLED_DEV (even "0") must pass through.
     describe("--share bundled dev default", () => {
       const shareSpawnedEnv = (input: { readonly ambientBundledDev: string | undefined }) =>
         Effect.gen(function* () {
@@ -1104,28 +1103,28 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
               HostProcess.Environment,
               input.ambientBundledDev === undefined
                 ? {}
-                : { ROVE_BUNDLED_DEV: input.ambientBundledDev },
+                : { PAPERPLANE_BUNDLED_DEV: input.ambientBundledDev },
             ),
           );
 
           return captured;
         });
 
-      it.effect("defaults ROVE_BUNDLED_DEV=1 for a shared run", () =>
+      it.effect("defaults PAPERPLANE_BUNDLED_DEV=1 for a shared run", () =>
         Effect.gen(function* () {
           const env = yield* shareSpawnedEnv({ ambientBundledDev: undefined });
-          assert.equal(env?.ROVE_BUNDLED_DEV, "1");
+          assert.equal(env?.PAPERPLANE_BUNDLED_DEV, "1");
         }),
       );
 
-      it.effect("keeps an explicit ROVE_BUNDLED_DEV=0 opt-out", () =>
+      it.effect("keeps an explicit PAPERPLANE_BUNDLED_DEV=0 opt-out", () =>
         Effect.gen(function* () {
           const env = yield* shareSpawnedEnv({ ambientBundledDev: "0" });
-          assert.equal(env?.ROVE_BUNDLED_DEV, "0");
+          assert.equal(env?.PAPERPLANE_BUNDLED_DEV, "0");
         }),
       );
 
-      it.effect("leaves ROVE_BUNDLED_DEV unset without --share", () =>
+      it.effect("leaves PAPERPLANE_BUNDLED_DEV unset without --share", () =>
         Effect.gen(function* () {
           let captured: Record<string, string | undefined> | undefined;
           const spawnerLayer = Layer.succeed(
@@ -1151,7 +1150,7 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
             Effect.provideService(HostProcess.Environment, {}),
           );
 
-          assert.equal(captured?.ROVE_BUNDLED_DEV, undefined);
+          assert.equal(captured?.PAPERPLANE_BUNDLED_DEV, undefined);
         }),
       );
     });
@@ -1243,10 +1242,10 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
       });
     });
 
-    describe("rove home precedence", () => {
+    describe("paperplane home precedence", () => {
       const makeWorktree = Effect.acquireRelease(
         Effect.sync(() => {
-          const root = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "rove-devrunner-"));
+          const root = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "paperplane-devrunner-"));
           NodeFS.writeFileSync(
             NodePath.join(root, ".git"),
             "gitdir: /elsewhere/.git/worktrees/x\n",
@@ -1257,7 +1256,7 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
       );
 
       const spawnedHome = (input: {
-        readonly roveHome: string | undefined;
+        readonly paperplaneHome: string | undefined;
         readonly cwd: string;
         readonly ambientHome: string | undefined;
       }) =>
@@ -1276,17 +1275,20 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
             }),
           );
 
-          yield* runDevRunnerWithInput({ ...devServerInput, roveHome: input.roveHome }).pipe(
+          yield* runDevRunnerWithInput({
+            ...devServerInput,
+            paperplaneHome: input.paperplaneHome,
+          }).pipe(
             Effect.provide(Layer.mergeAll(emptyConfigLayer, netServiceLayer, spawnerLayer)),
             Effect.provideService(HostProcess.Platform, "linux"),
             Effect.provideService(HostProcess.WorkingDirectory, input.cwd),
             Effect.provideService(
               HostProcess.Environment,
-              input.ambientHome === undefined ? {} : { ROVE_HOME: input.ambientHome },
+              input.ambientHome === undefined ? {} : { PAPERPLANE_HOME: input.ambientHome },
             ),
           );
 
-          return captured?.ROVE_HOME;
+          return captured?.PAPERPLANE_HOME;
         });
 
       it.effect("prefers an explicit --home-dir over the worktree default", () =>
@@ -1294,9 +1296,9 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
           const path = yield* Path.Path;
           const root = yield* makeWorktree;
           const home = yield* spawnedHome({
-            roveHome: "/tmp/explicit-home",
+            paperplaneHome: "/tmp/explicit-home",
             cwd: root,
-            ambientHome: "/home/user/.rove",
+            ambientHome: "/home/user/.paperplane",
           });
           assert.equal(home, path.resolve("/tmp/explicit-home"));
         }).pipe(Effect.scoped),
@@ -1307,43 +1309,43 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
           const path = yield* Path.Path;
           const root = yield* makeWorktree;
           const home = yield* spawnedHome({
-            roveHome: "   ",
+            paperplaneHome: "   ",
             cwd: root,
-            ambientHome: "/home/user/.rove",
+            ambientHome: "/home/user/.paperplane",
           });
-          assert.equal(home, path.join(path.resolve(root), ".rove"));
+          assert.equal(home, path.join(path.resolve(root), ".paperplane"));
         }).pipe(Effect.scoped),
       );
 
-      it.effect("prefers the worktree .rove over an ambient ROVE_HOME", () =>
+      it.effect("prefers the worktree .paperplane over an ambient PAPERPLANE_HOME", () =>
         Effect.gen(function* () {
           const path = yield* Path.Path;
           const root = yield* makeWorktree;
           const home = yield* spawnedHome({
-            roveHome: undefined,
+            paperplaneHome: undefined,
             cwd: root,
-            ambientHome: "/home/user/.rove",
+            ambientHome: "/home/user/.paperplane",
           });
-          assert.equal(home, path.join(path.resolve(root), ".rove"));
+          assert.equal(home, path.join(path.resolve(root), ".paperplane"));
         }).pipe(Effect.scoped),
       );
 
-      it.effect("falls back to an ambient ROVE_HOME outside a worktree", () =>
+      it.effect("falls back to an ambient PAPERPLANE_HOME outside a worktree", () =>
         Effect.gen(function* () {
           const path = yield* Path.Path;
           const home = yield* spawnedHome({
-            roveHome: undefined,
+            paperplaneHome: undefined,
             cwd: NodeOS.tmpdir(),
-            ambientHome: "/home/user/.rove",
+            ambientHome: "/home/user/.paperplane",
           });
-          assert.equal(home, path.resolve("/home/user/.rove"));
+          assert.equal(home, path.resolve("/home/user/.paperplane"));
         }),
       );
 
       it.effect("leaves the home implicit with no worktree and no ambient value", () =>
         Effect.gen(function* () {
           const home = yield* spawnedHome({
-            roveHome: undefined,
+            paperplaneHome: undefined,
             cwd: NodeOS.tmpdir(),
             ambientHome: undefined,
           });

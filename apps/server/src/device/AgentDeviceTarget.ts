@@ -26,7 +26,9 @@ export const agentDeviceConfigPath = (stateDir: string, hostId: string, path: Pa
   key(hostId).pipe(Effect.map((hash) => path.join(stateDir, "device", "hosts", `${hash}.json`)));
 
 export const agentDeviceSession = (threadId: string, hostId: string, deviceId: string) =>
-  key(JSON.stringify([threadId, hostId, deviceId])).pipe(Effect.map((hash) => `rove-${hash}`));
+  key(JSON.stringify([threadId, hostId, deviceId])).pipe(
+    Effect.map((hash) => `paperplane-${hash}`),
+  );
 
 export const writeAgentDeviceConfig = Effect.fn("AgentDeviceTarget.writeConfig")(function* (
   file: string,

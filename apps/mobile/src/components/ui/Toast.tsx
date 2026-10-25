@@ -38,7 +38,7 @@ export function Toast(props: ToastProps) {
           />
         )}
         <View className="min-w-0 flex-1" accessibilityLiveRegion="polite">
-          <AppText textRole="footnote" className="font-rove-semibold">
+          <AppText textRole="footnote" className="font-paperplane-semibold">
             {props.message}
           </AppText>
           {props.description ? (

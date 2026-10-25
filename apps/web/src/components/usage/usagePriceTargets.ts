@@ -2,7 +2,7 @@ import type {
   EnvironmentId,
   ServerSettingsPatch,
   UsageModelPriceOverride,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 
 export interface UsagePriceTarget {
   readonly environmentId: EnvironmentId;

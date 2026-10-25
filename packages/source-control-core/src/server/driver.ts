@@ -11,7 +11,7 @@
  *
  * @module source-control-core/server/driver
  */
-import type { SourceControlProviderKind } from "@rove-code/contracts";
+import type { SourceControlProviderKind } from "@getpaperplane/contracts";
 import type * as Effect from "effect/Effect";
 
 import type { SourceControlProviderDiscoverySpec } from "./discovery.ts";

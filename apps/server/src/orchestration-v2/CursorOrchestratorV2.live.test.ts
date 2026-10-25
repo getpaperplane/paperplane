@@ -11,7 +11,7 @@ import {
   ProviderInstanceId,
   ThreadId,
   type OrchestrationV2ThreadProjection,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -29,11 +29,11 @@ import * as CodexInstallation from "../provider/CodexInstallation.ts";
 import * as ServerEnvironment from "../environment/ServerEnvironment.ts";
 import * as ModelManifest from "../provider/ModelManifest.ts";
 import * as ProviderInstanceRegistryHydration from "../provider/ProviderInstanceRegistryHydration.ts";
-import * as ProviderLatestVersions from "@rove-code/provider-core/server/ProviderLatestVersions";
-import * as McpProviderSessions from "@rove-code/provider-core/server/McpProviderSessions";
-import * as ProviderEventLoggers from "@rove-code/provider-core/server/ProviderEventLoggers";
-import * as OpenCodeRuntime from "@rove-code/provider-opencode/server/OpenCodeRuntime";
-import * as OpenCodeServerLedger from "@rove-code/provider-opencode/server/OpenCodeServerLedger";
+import * as ProviderLatestVersions from "@getpaperplane/provider-core/server/ProviderLatestVersions";
+import * as McpProviderSessions from "@getpaperplane/provider-core/server/McpProviderSessions";
+import * as ProviderEventLoggers from "@getpaperplane/provider-core/server/ProviderEventLoggers";
+import * as OpenCodeRuntime from "@getpaperplane/provider-opencode/server/OpenCodeRuntime";
+import * as OpenCodeServerLedger from "@getpaperplane/provider-opencode/server/OpenCodeServerLedger";
 import * as ServerSettings from "../serverSettings.ts";
 import * as VcsDriverRegistry from "../vcs/VcsDriverRegistry.ts";
 import * as VcsProcess from "../vcs/VcsProcess.ts";
@@ -52,7 +52,7 @@ const layerPlatformTest = Layer.merge(
 );
 
 const layerServerConfig = ServerConfig.layerTest(process.cwd(), {
-  prefix: "rove-cursor-v2-live-",
+  prefix: "paperplane-cursor-v2-live-",
 });
 
 const layerVcsDriverRegistry = VcsDriverRegistry.layer.pipe(
@@ -147,7 +147,7 @@ const waitForIdle = Effect.fn("CursorOrchestratorV2Live.waitForIdle")(function* 
   return yield* Effect.die(new Error(`Timed out waiting for Cursor thread ${threadId}.`));
 });
 
-describe.runIf(process.env.ROVE_CURSOR_LIVE_ORCHESTRATOR === "1")(
+describe.runIf(process.env.PAPERPLANE_CURSOR_LIVE_ORCHESTRATOR === "1")(
   "Cursor V2 live orchestrator",
   () => {
     it.live(

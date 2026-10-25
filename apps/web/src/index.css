@@ -21,29 +21,29 @@ html[data-mobile-composer-route-transition="true"]::view-transition-new(root) {
   animation: none;
 }
 
-html[data-mobile-composer-route-transition="true"]::view-transition-group(rove-mobile-composer) {
+html[data-mobile-composer-route-transition="true"]::view-transition-group(paperplane-mobile-composer) {
   animation-duration: var(--mobile-composer-transition-duration);
   animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-html[data-mobile-composer-route-transition="true"]::view-transition-image-pair(rove-mobile-composer) {
+html[data-mobile-composer-route-transition="true"]::view-transition-image-pair(paperplane-mobile-composer) {
   isolation: isolate;
 }
 
-html[data-mobile-composer-route-transition="true"]::view-transition-old(rove-mobile-composer) {
-  animation: rove-mobile-composer-old var(--mobile-composer-transition-duration) linear both;
+html[data-mobile-composer-route-transition="true"]::view-transition-old(paperplane-mobile-composer) {
+  animation: paperplane-mobile-composer-old var(--mobile-composer-transition-duration) linear both;
   mix-blend-mode: normal;
 }
 
-html[data-mobile-composer-route-transition="true"]::view-transition-new(rove-mobile-composer) {
-  animation: rove-mobile-composer-new var(--mobile-composer-transition-duration) linear both;
+html[data-mobile-composer-route-transition="true"]::view-transition-new(paperplane-mobile-composer) {
+  animation: paperplane-mobile-composer-new var(--mobile-composer-transition-duration) linear both;
   mix-blend-mode: normal;
 }
 
 /* The expanded and compact composers have different internal layouts. Use a
    brief crossfade while their shared wrapper moves so the layout change does
    not read as a single-frame cut. */
-@keyframes rove-mobile-composer-old {
+@keyframes paperplane-mobile-composer-old {
   0%,
   35% {
     opacity: 1;
@@ -54,7 +54,7 @@ html[data-mobile-composer-route-transition="true"]::view-transition-new(rove-mob
   }
 }
 
-@keyframes rove-mobile-composer-new {
+@keyframes paperplane-mobile-composer-new {
   0%,
   35% {
     opacity: 0;
@@ -65,17 +65,17 @@ html[data-mobile-composer-route-transition="true"]::view-transition-new(rove-mob
   }
 }
 
-html[data-mobile-composer-route-transition="true"]::view-transition-group(rove-mobile-draft-headline) {
+html[data-mobile-composer-route-transition="true"]::view-transition-group(paperplane-mobile-draft-headline) {
   animation-duration: var(--mobile-composer-transition-duration);
 }
 
-html[data-mobile-composer-route-transition="true"]::view-transition-old(rove-mobile-draft-headline) {
-  animation: rove-mobile-draft-headline-exit var(--mobile-composer-transition-duration)
+html[data-mobile-composer-route-transition="true"]::view-transition-old(paperplane-mobile-draft-headline) {
+  animation: paperplane-mobile-draft-headline-exit var(--mobile-composer-transition-duration)
     cubic-bezier(0.4, 0, 1, 1) both;
   mix-blend-mode: normal;
 }
 
-@keyframes rove-mobile-draft-headline-exit {
+@keyframes paperplane-mobile-draft-headline-exit {
   from {
     opacity: 1;
     transform: translateY(0);
@@ -374,7 +374,7 @@ html[data-mobile-composer-route-transition="true"]::view-transition-old(rove-mob
 }
 
 /* Paint find results without changing rendered markdown or copied text. */
-::highlight(rove-thread-find) {
+::highlight(paperplane-thread-find) {
   color: var(--app-theme-search-match-foreground, oklch(0.216164 0.028283 77.423));
   background-color: var(--app-theme-search-match-background, oklch(0.915 0.11 85));
 
@@ -384,7 +384,7 @@ html[data-mobile-composer-route-transition="true"]::view-transition-old(rove-mob
   }
 }
 
-::highlight(rove-thread-find-active) {
+::highlight(paperplane-thread-find-active) {
   color: var(--app-theme-search-match-active-foreground, oklch(0.216164 0.028283 77.423));
   background-color: var(
     --app-theme-search-match-active-background,
@@ -636,18 +636,18 @@ html[data-mobile-composer-route-transition="true"]::view-transition-old(rove-mob
 }
 
 @layer base {
-  ::highlight(rove-assistant-citation) {
+  ::highlight(paperplane-assistant-citation) {
     background-color: color-mix(
       in oklab,
       var(--primary) calc(var(--assistant-citation-highlight-opacity) * 100%),
       transparent
     );
   }
-  ::highlight(rove-assistant-citation-comment) {
+  ::highlight(paperplane-assistant-citation-comment) {
     background-color: color-mix(in oklab, var(--primary) 45%, transparent);
   }
   :root {
-    /* Keep the original Rove Code artwork palettes as the defaults. Built-in
+    /* Keep the original Paperplane artwork palettes as the defaults. Built-in
        themes override them with their own pigments in the components layer. */
     --stage-art-top: oklch(0.782169 0.123386 240.226);
     --stage-art-mid: oklch(0.616111 0.195824 259.735);
@@ -724,7 +724,7 @@ html[data-mobile-composer-route-transition="true"]::view-transition-old(rove-mob
      vellum, forest drafting paper, marine cyanotype, copper, and violet ink.
      These colors stay deliberately deep at the top edge so the white stage
      wordmark and controls retain contrast in both appearance modes. */
-  html[data-theme-id="t3-chat"] {
+  html[data-theme-id="plum"] {
     --stage-art-top: oklch(0.760675 0.141361 348.019);
     --stage-art-mid: oklch(0.588093 0.188832 353.138);
     --stage-art-bottom: oklch(0.383959 0.135096 348.656);
@@ -852,7 +852,7 @@ html[data-mobile-composer-route-transition="true"]::view-transition-old(rove-mob
     }
   }
 
-  :is(html[data-theme-id="t3-chat"], html[data-theme-id="ocean"], html[data-theme-id="iris"]) {
+  :is(html[data-theme-id="plum"], html[data-theme-id="ocean"], html[data-theme-id="iris"]) {
     --stage-night-top: color-mix(in oklch, var(--stage-art-top) 38%, var(--stage-night-base-top));
     --stage-night-mid: color-mix(in oklch, var(--stage-art-mid) 38%, var(--stage-night-base-mid));
     --stage-night-bottom: color-mix(
@@ -875,7 +875,7 @@ html[data-mobile-composer-route-transition="true"]::view-transition-old(rove-mob
   }
 
   :is(
-    html[data-theme-id="t3-chat"],
+    html[data-theme-id="plum"],
     html[data-theme-id="grove"],
     html[data-theme-id="ocean"],
     html[data-theme-id="ember"],
@@ -1466,10 +1466,10 @@ html[data-theme-id] :is(.chat-markdown, .composer-tiptap) .chat-markdown-codeblo
   color: color-mix(in srgb, var(--code-foreground) 72%, transparent);
 }
 
-/* T3 Chat renders inline code and compact chat artifacts with its translucent
+/* Plum renders inline code and compact chat artifacts with its translucent
    secondary surface flattened over the light chat canvas. The raw muted and
    secondary tokens are substantially darker than those visible pixels. */
-html[data-theme-id="t3-chat"] {
+html[data-theme-id="plum"] {
   @variant light {
     & .chat-markdown :not(pre) > code,
     & [data-changed-files-state],
@@ -1517,7 +1517,7 @@ html[data-theme-id] [data-app-sidebar] {
 
 /* T3 Chat's panel divider is deliberately pink, and its resize affordance
    keeps that color while hovered. Do not neutralize this branded edge. */
-html[data-theme-id="t3-chat"] [data-app-sidebar] {
+html[data-theme-id="plum"] [data-app-sidebar] {
   @variant dark {
     border-color: var(--contrast-sidebar-border);
   }
@@ -1688,7 +1688,7 @@ body {
 /* The live T3 Chat texture is a 128px grayscale tile with a constant 7/255
    alpha. Keep our procedural texture cheap while matching that scale and
    strength for the branded preset. */
-html[data-theme-id="t3-chat"] {
+html[data-theme-id="plum"] {
   --surface-grain: url("data:image/svg+xml,%3Csvg viewBox='0 0 128 128' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.02745'/%3E%3C/svg%3E");
   --surface-grain-size: 128px 128px;
 }

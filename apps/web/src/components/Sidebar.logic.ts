@@ -1,24 +1,24 @@
-import { resolveThreadWorkingStartedAt } from "@rove-code/client-runtime/state/models";
-import { backgroundWorkHoldsCompletion } from "@rove-code/shared/orchestrationV2PendingBackgroundWork";
-import { threadPullRequestSearchTerms } from "@rove-code/shared/threadPullRequests";
+import { resolveThreadWorkingStartedAt } from "@getpaperplane/client-runtime/state/models";
+import { backgroundWorkHoldsCompletion } from "@getpaperplane/shared/orchestrationV2PendingBackgroundWork";
+import { threadPullRequestSearchTerms } from "@getpaperplane/shared/threadPullRequests";
 import * as React from "react";
 import {
   isAtomCommandInterrupted,
   type AtomCommandResult,
-} from "@rove-code/client-runtime/state/runtime";
+} from "@getpaperplane/client-runtime/state/runtime";
 import { defaultAnimateLayoutChanges, type AnimateLayoutChanges } from "@dnd-kit/sortable";
-import { threadSearchMatchKey } from "@rove-code/client-runtime/state/thread-search";
-import type { ContextMenuItem, EnvironmentId, ThreadId } from "@rove-code/contracts";
+import { threadSearchMatchKey } from "@getpaperplane/client-runtime/state/thread-search";
+import type { ContextMenuItem, EnvironmentId, ThreadId } from "@getpaperplane/contracts";
 import type {
   SidebarProjectSortOrder,
   SidebarThreadSortOrder,
-} from "@rove-code/contracts/settings";
+} from "@getpaperplane/contracts/settings";
 import type { AsyncResult } from "effect/reactivity";
-import { planPinnedReorder } from "@rove-code/client-runtime/state/thread-sort";
+import { planPinnedReorder } from "@getpaperplane/client-runtime/state/thread-sort";
 import {
   effectiveSnoozed,
   type ThreadSnoozeShell,
-} from "@rove-code/client-runtime/state/thread-settled";
+} from "@getpaperplane/client-runtime/state/thread-settled";
 import {
   getThreadSortTimestamp,
   sortThreads,
@@ -1062,18 +1062,18 @@ export function firstValidTimestampMs(
   return 0;
 }
 
-export { sortActiveThreadsByOrderKey as sortThreadsForSidebar } from "@rove-code/client-runtime/state/thread-sort";
+export { sortActiveThreadsByOrderKey as sortThreadsForSidebar } from "@getpaperplane/client-runtime/state/thread-sort";
 // The Working section beta folds and orders the inbox the same way on mobile.
 export {
   isThreadWorking as isSidebarThreadWorking,
   sortInboxThreadsByReturn,
   sortWorkingThreadsBySend,
-} from "@rove-code/client-runtime/state/thread-inbox";
+} from "@getpaperplane/client-runtime/state/thread-inbox";
 
 // Pinned-reorder key math and the keyed sort live in client-runtime
 // (state/thread-sort) so web and mobile compute identical pinned orders.
-export { pinOrderKeyBetween } from "@rove-code/client-runtime/state/thread-sort";
-export { sortPinnedThreadsByOrderKey as sortPinnedThreadsForSidebar } from "@rove-code/client-runtime/state/thread-sort";
+export { pinOrderKeyBetween } from "@getpaperplane/client-runtime/state/thread-sort";
+export { sortPinnedThreadsByOrderKey as sortPinnedThreadsForSidebar } from "@getpaperplane/client-runtime/state/thread-sort";
 
 const EMPTY_CONTENT_MATCH_KEYS: ReadonlySet<string> = new Set<string>();
 

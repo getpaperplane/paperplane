@@ -1,10 +1,10 @@
-import { scopeThreadRef } from "@rove-code/client-runtime/environment";
+import { scopeThreadRef } from "@getpaperplane/client-runtime/environment";
 import {
   type EnvironmentId,
   INCOGNITO_BROWSER_PROFILE_ID,
   type PreviewSessionSnapshot,
   ThreadId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { beforeEach, describe, expect, it } from "vite-plus/test";
 
 import { type ClosedViewEntry, useClosedViewStore } from "./closedViewStore";

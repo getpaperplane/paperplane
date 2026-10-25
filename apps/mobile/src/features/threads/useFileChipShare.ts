@@ -1,6 +1,6 @@
 import * as Dialog from "../../components/ui/Dialog";
-import { resolveAssetUrl } from "@rove-code/client-runtime/state/assets";
-import type { EnvironmentId, ThreadId } from "@rove-code/contracts";
+import { resolveAssetUrl } from "@getpaperplane/client-runtime/state/assets";
+import type { EnvironmentId, ThreadId } from "@getpaperplane/contracts";
 import * as Option from "effect/Option";
 import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
 

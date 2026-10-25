@@ -5,7 +5,7 @@ import {
   gitHubRoutingConnectionKey,
   gitHubRoutingPermissionFor,
   type GitHubRoutingPermission,
-} from "@rove-code/client-runtime/connection";
+} from "@getpaperplane/client-runtime/connection";
 import { useState } from "react";
 import { Pressable, View } from "react-native";
 
@@ -58,11 +58,11 @@ export function GitHubRoutingSettings() {
                 onPress={() => setExpanded(expanded === environmentId ? null : environmentId)}
               >
                 <View className="min-w-0 flex-1 gap-0.5">
-                  <Text className="text-base font-rove-bold text-foreground">
+                  <Text className="text-base font-paperplane-bold text-foreground">
                     {entry.target.label}
                   </Text>
                   <Text className="text-xs text-foreground-muted" numberOfLines={1}>
-                    {connectionCatalogDisplayUrl(entry) ?? "Rove Connect"}
+                    {connectionCatalogDisplayUrl(entry) ?? "Paperplane Connect"}
                   </Text>
                 </View>
                 <Text className="text-sm text-foreground-muted">

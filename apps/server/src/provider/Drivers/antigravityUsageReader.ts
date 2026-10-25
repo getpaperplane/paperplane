@@ -1,8 +1,8 @@
 // @effect-diagnostics-next-line nodeBuiltinImport:off - Effect's File.Info has no ctime, which the cache fingerprint needs.
 import * as NodeFSP from "node:fs/promises";
 
-import type { UsageRecord } from "@rove-code/provider-core/server/usage";
-import * as NodeSqliteClient from "@rove-code/shared/nodeSqliteClient";
+import type { UsageRecord } from "@getpaperplane/provider-core/server/usage";
+import * as NodeSqliteClient from "@getpaperplane/shared/nodeSqliteClient";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";

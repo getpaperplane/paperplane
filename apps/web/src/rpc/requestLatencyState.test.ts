@@ -1,4 +1,4 @@
-import { WS_METHODS } from "@rove-code/contracts";
+import { WS_METHODS } from "@getpaperplane/contracts";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 import {

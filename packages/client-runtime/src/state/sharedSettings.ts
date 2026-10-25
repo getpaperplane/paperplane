@@ -13,8 +13,8 @@ import type {
   ExecutionEnvironmentCapabilities,
   ServerSettings,
   ServerSettingsPatch,
-} from "@rove-code/contracts";
-import { isModelSelectionProviderEnabled } from "@rove-code/shared/serverSettings";
+} from "@getpaperplane/contracts";
+import { isModelSelectionProviderEnabled } from "@getpaperplane/shared/serverSettings";
 import * as Equal from "effect/Equal";
 import * as Struct from "effect/Struct";
 

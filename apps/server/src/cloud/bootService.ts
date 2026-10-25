@@ -1,4 +1,4 @@
-import * as HostProcess from "@rove-code/shared/HostProcess";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 import * as Config from "effect/Config";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
@@ -12,7 +12,7 @@ import * as Path from "effect/Path";
 import { HttpClient } from "effect/http";
 import * as Schema from "effect/Schema";
 
-import { CLI_RELEASE_BASE_URL_ENV } from "@rove-code/shared/cliRelease";
+import { CLI_RELEASE_BASE_URL_ENV } from "@getpaperplane/shared/cliRelease";
 
 import * as ProcessRunner from "../processRunner.ts";
 import {
@@ -41,14 +41,14 @@ import {
   type ServiceState,
 } from "./serviceProtocol.ts";
 
-const BOOT_SERVICE_NAME = "rove";
+const BOOT_SERVICE_NAME = "paperplane";
 const BOOT_SERVICE_UNIT_FILE = `${BOOT_SERVICE_NAME}.service`;
 // `.service` suffix keeps the label distinct from the desktop app's bundle id
-// (io.github.hafiezul.rove), so launchd and TCC records never collide.
-const BOOT_SERVICE_LAUNCHD_LABEL = "io.github.hafiezul.rove.service";
+// (io.github.getpaperplane.paperplane), so launchd and TCC records never collide.
+const BOOT_SERVICE_LAUNCHD_LABEL = "io.github.getpaperplane.paperplane.service";
 const BOOT_SERVICE_PLIST_FILE = `${BOOT_SERVICE_LAUNCHD_LABEL}.plist`;
-const BOOT_SERVICE_UNIT_ENV = "ROVE_BOOT_SERVICE_UNIT";
-/** File in the logs dir that receives the service's stdout and stderr. `rove triage` points agents at it. */
+const BOOT_SERVICE_UNIT_ENV = "PAPERPLANE_BOOT_SERVICE_UNIT";
+/** File in the logs dir that receives the service's stdout and stderr. `paperplane triage` points agents at it. */
 export const BOOT_SERVICE_LOG_FILE = "boot-service.log";
 
 /** systemd expands `%` specifiers, including in unquoted append-log paths. */
@@ -64,12 +64,12 @@ function quoteSystemdValue(value: string): string {
 }
 
 /**
- * Reads `ROVE_HOME` back out of a rendered unit or plist. Only values this
+ * Reads `PAPERPLANE_HOME` back out of a rendered unit or plist. Only values this
  * file writes are expected, so a quoted systemd value is unquoted and
  * unescaped the same way `quoteSystemdValue` produced it.
  */
 export function bootServiceBaseDirOf(contents: string): string | undefined {
-  const systemd = /^Environment=ROVE_HOME=(.*)$/m.exec(contents)?.[1];
+  const systemd = /^Environment=PAPERPLANE_HOME=(.*)$/m.exec(contents)?.[1];
   if (systemd !== undefined) {
     const raw = systemd.trim();
     const unquoted =
@@ -78,7 +78,7 @@ export function bootServiceBaseDirOf(contents: string): string | undefined {
         : raw;
     return unquoted.replaceAll("%%", "%");
   }
-  const plist = /<key>ROVE_HOME<\/key>\s*<string>([^<]*)<\/string>/.exec(contents)?.[1];
+  const plist = /<key>PAPERPLANE_HOME<\/key>\s*<string>([^<]*)<\/string>/.exec(contents)?.[1];
   if (plist !== undefined) {
     return plist.replaceAll("&lt;", "<").replaceAll("&gt;", ">").replaceAll("&amp;", "&");
   }
@@ -104,14 +104,14 @@ export function renderBootServiceUnit(plan: BootServicePlan): string {
   // The user manager has no reliable network-online target; server networking retries itself.
   return [
     "[Unit]",
-    "Description=Rove Code server",
+    "Description=Paperplane server",
     "StartLimitIntervalSec=300",
     "StartLimitBurst=5",
     "",
     "[Service]",
     "Type=simple",
     "WorkingDirectory=%h",
-    `Environment=ROVE_HOME=${quoteSystemdValue(plan.baseDir)}`,
+    `Environment=PAPERPLANE_HOME=${quoteSystemdValue(plan.baseDir)}`,
     ...(plan.environmentPath === undefined
       ? []
       : [`Environment=PATH=${quoteSystemdValue(plan.environmentPath)}`]),
@@ -120,7 +120,7 @@ export function renderBootServiceUnit(plan: BootServicePlan): string {
     // Let the launcher mark an explicit stop before it signals the server.
     // systemd still SIGKILLs the whole cgroup if graceful shutdown times out.
     "KillMode=mixed",
-    // Agents and terminals run in their own scopes in app-rove-agents.slice
+    // Agents and terminals run in their own scopes in app-paperplane-agents.slice
     // (see process/agentScope.ts). Short helper commands still share this
     // cgroup, and with the systemd default of OOMPolicy=stop, the kernel
     // killing one of them stops the whole unit. Keep running and let
@@ -182,7 +182,7 @@ export function renderBootServicePlist(
     `  <dict>`,
     `    <key>PATH</key>`,
     `    <string>${escapeXmlText(options.environmentPath)}</string>`,
-    `    <key>ROVE_HOME</key>`,
+    `    <key>PAPERPLANE_HOME</key>`,
     `    <string>${escapeXmlText(plan.baseDir)}</string>`,
     `    <key>${BOOT_SERVICE_UNIT_ENV}</key>`,
     `    <string>${BOOT_SERVICE_PLIST_FILE}</string>`,
@@ -455,7 +455,7 @@ export class BootServiceInstallError extends Schema.TaggedError<BootServiceInsta
   { cause: Schema.Defect() },
 ) {
   override get message(): string {
-    return "Could not set up the Rove Code background service.";
+    return "Could not set up the Paperplane background service.";
   }
 }
 
@@ -473,17 +473,17 @@ type BootServiceProblem = typeof BootServiceProblem.Type;
 export function formatBootServiceProblem(problem: BootServiceProblem): string {
   switch (problem) {
     case "user-manager-unavailable":
-      return "Cannot reach the systemd user manager. Run `systemctl --user status` in a login session for the service user. Install your distribution's systemd user-session support if it is missing; do not run Rove Code with sudo.";
+      return "Cannot reach the systemd user manager. Run `systemctl --user status` in a login session for the service user. Install your distribution's systemd user-session support if it is missing; do not run Paperplane with sudo.";
     case "linger-unavailable":
       return 'Cannot check whether this user can run services after logout. Run `loginctl show-user "$(id -un)" --property=Linger` and check that systemd-logind is available.';
     case "linger-disabled":
-      return 'Lingering is disabled. Rove Code will stop when your last login session ends and will not start at boot. Run `sudo loginctl enable-linger "$(id -un)"` on this machine, then retry the service command as your normal user.';
+      return 'Lingering is disabled. Paperplane will stop when your last login session ends and will not start at boot. Run `sudo loginctl enable-linger "$(id -un)"` on this machine, then retry the service command as your normal user.';
     case "service-disabled":
-      return "The service is not enabled to start automatically. Run `rove service install` to repair it.";
+      return "The service is not enabled to start automatically. Run `paperplane service install` to repair it.";
     case "service-stopped":
-      return "The service is not running. Check the service log and `systemctl --user status rove.service`, then run `rove service install`.";
+      return "The service is not running. Check the service log and `systemctl --user status paperplane.service`, then run `paperplane service install`.";
     case "restart-pending":
-      return "A newer version is installed but the service is still running the previous one. Run `rove service restart` to switch.";
+      return "A newer version is installed but the service is still running the previous one. Run `paperplane service restart` to switch.";
   }
 }
 
@@ -513,7 +513,7 @@ export class BootServiceDowngradeRefusedError extends Schema.TaggedError<BootSer
   },
 ) {
   override get message(): string {
-    return `Refusing to replace rove@${this.installedVersion} with older rove@${this.targetVersion}. Run the command again with --allow-downgrade to continue.`;
+    return `Refusing to replace paperplane@${this.installedVersion} with older paperplane@${this.targetVersion}. Run the command again with --allow-downgrade to continue.`;
   }
 }
 
@@ -531,9 +531,9 @@ export interface BootServiceStatus {
   readonly current: boolean;
   readonly installedVersion?: string;
   /**
-   * The Rove Code home the installed unit serves. The unit name is fixed per user,
+   * The Paperplane home the installed unit serves. The unit name is fixed per user,
    * so a caller working against another base dir must not treat this service
-   * as its own; `rove update --base-dir` learned that by restarting the live
+   * as its own; `paperplane update --base-dir` learned that by restarting the live
    * server of the machine it ran on.
    */
   readonly installedBaseDir?: string;
@@ -550,8 +550,8 @@ export class BootService extends Context.Service<
       readonly allowDowngrade?: boolean;
       /**
        * Write the unit for this version but leave the service on whatever it
-       * is running now. `rove update` uses this when the user declines the
-       * restart, so a later `rove service restart` lands on the new version.
+       * is running now. `paperplane update` uses this when the user declines the
+       * restart, so a later `paperplane service restart` lands on the new version.
        */
       readonly start?: boolean;
       readonly launch?: ServiceLaunchPatch;
@@ -576,7 +576,7 @@ export class BootService extends Context.Service<
     readonly uninstall: Effect.Effect<boolean, BootServiceError>;
     readonly status: Effect.Effect<BootServiceStatus, BootServiceError>;
   }
->()("@rove-code/server/cloud/bootService") {}
+>()("@getpaperplane/server/cloud/bootService") {}
 
 export interface BootServiceHost {
   readonly execPath: string;
@@ -837,7 +837,7 @@ export const make = Effect.fn("cloud.boot_service.make")(function* (input: {
             Effect.mapError(
               (cause) =>
                 new PinnedRuntimeInstallError({
-                  step: "verifying the pinned Rove Code runtime",
+                  step: "verifying the pinned Paperplane runtime",
                   cause,
                 }),
             ),
@@ -847,7 +847,7 @@ export const make = Effect.fn("cloud.boot_service.make")(function* (input: {
                 ? Effect.void
                 : Effect.fail(
                     new PinnedRuntimeInstallError({
-                      step: "verifying the pinned Rove Code runtime",
+                      step: "verifying the pinned Paperplane runtime",
                       exitCode: Number(result.code),
                       stdoutLength: result.stdout.length,
                       stderrLength: result.stderr.length,

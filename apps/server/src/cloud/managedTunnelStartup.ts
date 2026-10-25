@@ -1,4 +1,4 @@
-import type { RelayManagedEndpointRuntimeConfig } from "@rove-code/contracts/relay";
+import type { RelayManagedEndpointRuntimeConfig } from "@getpaperplane/contracts/relay";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Schedule from "effect/Schedule";

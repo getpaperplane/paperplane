@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vite-plus/test";
 
-import type { ResourceTelemetryProcess } from "@rove-code/contracts";
+import type { ResourceTelemetryProcess } from "@getpaperplane/contracts";
 import * as DateTime from "effect/DateTime";
 
 import {

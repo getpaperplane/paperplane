@@ -1,12 +1,12 @@
-import { fileBasename } from "@rove-code/shared/path";
-import { formatFilePathPosition } from "@rove-code/shared/fileLinks";
+import { fileBasename } from "@getpaperplane/shared/path";
+import { formatFilePathPosition } from "@getpaperplane/shared/fileLinks";
 import {
   inlineCodeFilePathCandidate,
   normalizeMarkdownLinkDestination,
   parseMarkdownFileLink,
-} from "@rove-code/shared/markdownLinks";
-import { parseThreadLinkHref } from "@rove-code/shared/threadLinks";
-import { videoMimeType } from "@rove-code/shared/video";
+} from "@getpaperplane/shared/markdownLinks";
+import { parseThreadLinkHref } from "@getpaperplane/shared/threadLinks";
+import { videoMimeType } from "@getpaperplane/shared/video";
 
 import type { MARKDOWN_FILE_ICON_SOURCES } from "./markdownFileIcons.generated";
 

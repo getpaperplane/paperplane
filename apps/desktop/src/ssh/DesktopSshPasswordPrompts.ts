@@ -1,6 +1,6 @@
-import type { DesktopSshPasswordPromptRequest } from "@rove-code/contracts";
-import { DesktopSshPasswordPromptResolutionInputSchema } from "@rove-code/contracts";
-import type { SshPasswordRequest } from "@rove-code/ssh/auth";
+import type { DesktopSshPasswordPromptRequest } from "@getpaperplane/contracts";
+import { DesktopSshPasswordPromptResolutionInputSchema } from "@getpaperplane/contracts";
+import type { SshPasswordRequest } from "@getpaperplane/ssh/auth";
 import * as Context from "effect/Context";
 import * as Crypto from "effect/Crypto";
 import * as DateTime from "effect/DateTime";
@@ -63,7 +63,7 @@ export class DesktopSshPromptWindowUnavailableError extends Schema.TaggedError<D
 ) {
   override get message(): string {
     const request = this.requestId === null ? "before a request id was assigned" : this.requestId;
-    return `Rove Code window is unavailable during ${this.stage} for SSH authentication to ${this.destination} (request: ${request}).`;
+    return `Paperplane window is unavailable during ${this.stage} for SSH authentication to ${this.destination} (request: ${request}).`;
   }
 }
 
@@ -186,7 +186,7 @@ export class DesktopSshPasswordPrompts extends Context.Service<
       input: DesktopSshPasswordPromptResolutionInput,
     ) => Effect.Effect<void, DesktopSshPasswordPromptResolveError>;
   }
->()("@rove-code/desktop/ssh/DesktopSshPasswordPrompts") {}
+>()("@getpaperplane/desktop/ssh/DesktopSshPasswordPrompts") {}
 
 interface PendingSshPasswordPrompt {
   readonly requestId: string;

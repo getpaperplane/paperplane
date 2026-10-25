@@ -1,9 +1,9 @@
-import type { ConnectionTarget } from "@rove-code/client-runtime/connection";
+import type { ConnectionTarget } from "@getpaperplane/client-runtime/connection";
 import {
   PRIMARY_LOCAL_ENVIRONMENT_ID,
   type DesktopBridge,
   type DesktopEnvironmentBootstrap,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 
 /**
  * Desktop-local secondary backends (e.g. a parallel WSL backend) are registered

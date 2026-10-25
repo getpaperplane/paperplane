@@ -21,7 +21,9 @@ const layerEnvironmentAuthPolicy = (overrides?: Partial<ServerConfig.ServerConfi
           } satisfies ServerConfig.ServerConfig["Service"];
         }),
       ).pipe(
-        Layer.provide(ServerConfig.layerTest(process.cwd(), { prefix: "rove-auth-policy-test-" })),
+        Layer.provide(
+          ServerConfig.layerTest(process.cwd(), { prefix: "paperplane-auth-policy-test-" }),
+        ),
       ),
     ),
   );
@@ -38,7 +40,7 @@ it.layer(NodeServices.layer)("EnvironmentAuthPolicy.layer", (it) => {
       // Packaged desktop has no devUrl, but still needs the port scope: it
       // scans upward from 3773 for a free port and binds 127.0.0.1, so a second
       // instance shares this one's hostname on a different port.
-      expect(descriptor.sessionCookieName).toBe("rove_session_3773");
+      expect(descriptor.sessionCookieName).toBe("paperplane_session_3773");
     }).pipe(
       Effect.provide(
         layerEnvironmentAuthPolicy({
@@ -54,7 +56,7 @@ it.layer(NodeServices.layer)("EnvironmentAuthPolicy.layer", (it) => {
       const policy = yield* EnvironmentAuthPolicy.EnvironmentAuthPolicy;
       const descriptor = yield* policy.getDescriptor();
 
-      expect(descriptor.sessionCookieName).toBe("rove_session_3774");
+      expect(descriptor.sessionCookieName).toBe("paperplane_session_3774");
     }).pipe(
       Effect.provide(
         layerEnvironmentAuthPolicy({
@@ -90,7 +92,7 @@ it.layer(NodeServices.layer)("EnvironmentAuthPolicy.layer", (it) => {
       expect(descriptor.policy).toBe("loopback-browser");
       expect(descriptor.bootstrapMethods).toEqual(["one-time-token"]);
       expect(descriptor.serverUpdateScope).toBe("environment:maintain");
-      expect(descriptor.sessionCookieName).toMatch(/^rove_session_3773_[a-f0-9]{12}$/);
+      expect(descriptor.sessionCookieName).toMatch(/^paperplane_session_3773_[a-f0-9]{12}$/);
     }).pipe(
       Effect.provide(
         layerEnvironmentAuthPolicy({
@@ -109,7 +111,7 @@ it.layer(NodeServices.layer)("EnvironmentAuthPolicy.layer", (it) => {
 
       expect(descriptor.policy).toBe("remote-reachable");
       expect(descriptor.bootstrapMethods).toEqual(["one-time-token"]);
-      expect(descriptor.sessionCookieName).toMatch(/^rove_session_[a-f0-9]{12}$/);
+      expect(descriptor.sessionCookieName).toMatch(/^paperplane_session_[a-f0-9]{12}$/);
     }).pipe(
       Effect.provide(
         layerEnvironmentAuthPolicy({
@@ -126,7 +128,7 @@ it.layer(NodeServices.layer)("EnvironmentAuthPolicy.layer", (it) => {
       const descriptor = yield* policy.getDescriptor();
 
       expect(descriptor.policy).toBe("remote-reachable");
-      expect(descriptor.sessionCookieName).toMatch(/^rove_session_5775_[a-f0-9]{12}$/);
+      expect(descriptor.sessionCookieName).toMatch(/^paperplane_session_5775_[a-f0-9]{12}$/);
     }).pipe(
       Effect.provide(
         layerEnvironmentAuthPolicy({
@@ -145,7 +147,7 @@ it.layer(NodeServices.layer)("EnvironmentAuthPolicy.layer", (it) => {
       const descriptor = yield* policy.getDescriptor();
 
       expect(descriptor.policy).toBe("remote-reachable");
-      expect(descriptor.sessionCookieName).toMatch(/^rove_session_[a-f0-9]{12}$/);
+      expect(descriptor.sessionCookieName).toMatch(/^paperplane_session_[a-f0-9]{12}$/);
     }).pipe(
       Effect.provide(
         layerEnvironmentAuthPolicy({

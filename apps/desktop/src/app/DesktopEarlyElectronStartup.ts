@@ -1,4 +1,4 @@
-import { fromLenientJson } from "@rove-code/shared/schemaJson";
+import { fromLenientJson } from "@getpaperplane/shared/schemaJson";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 
@@ -32,7 +32,9 @@ export interface EarlyLinuxElectronOptions {
 }
 
 export const resolveLinuxDesktopEntryName = (isDevelopment: boolean): string =>
-  isDevelopment ? "io.github.hafiezul.rove.dev.desktop" : "io.github.hafiezul.rove.desktop";
+  isDevelopment
+    ? "io.github.getpaperplane.paperplane.dev.desktop"
+    : "io.github.getpaperplane.paperplane.desktop";
 
 const trimNonEmpty = (value: string | undefined): string | null => {
   const trimmed = value?.trim();
@@ -54,17 +56,17 @@ function resolveEarlyDesktopSettingsPath(input: {
   readonly homeDirectory: string;
   readonly joinPath: JoinPath;
 }): string {
-  const roveHome = Option.fromUndefinedOr(input.env.ROVE_HOME);
+  const paperplaneHome = Option.fromUndefinedOr(input.env.PAPERPLANE_HOME);
   const baseDir = resolveDesktopBaseDir({
     homeDirectory: input.homeDirectory,
     joinPath: input.joinPath,
-    roveHome,
+    paperplaneHome,
   });
   const stateDir = resolveDesktopStateDir({
     baseDir,
     isDevelopment: isDevelopmentEnvironment(input.env),
     joinPath: input.joinPath,
-    roveHome,
+    paperplaneHome,
   });
   return input.joinPath(stateDir, "desktop-settings.json");
 }
@@ -160,7 +162,9 @@ export function resolveEarlyLinuxElectronOptions(
   const isDevelopment = isDevelopmentEnvironment(input.env);
   return {
     isDevelopment,
-    linuxWmClass: isDevelopment ? "rove-dev" : "rove",
+    linuxWmClass: isDevelopment
+      ? "io.github.getpaperplane.paperplane.dev"
+      : "io.github.getpaperplane.paperplane",
     linuxDesktopEntryName: resolveLinuxDesktopEntryName(isDevelopment),
     passwordStore: resolveLinuxPasswordStoreSwitch({
       preference,

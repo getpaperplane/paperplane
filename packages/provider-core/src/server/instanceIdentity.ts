@@ -1,7 +1,7 @@
-import type { ProviderDriverKind, ServerProvider } from "@rove-code/contracts";
+import type { ProviderDriverKind, ServerProvider } from "@getpaperplane/contracts";
 
-import type { ProviderInstance } from "@rove-code/provider-core/server/driver";
-import type { ServerProviderDraft } from "@rove-code/provider-core/server/snapshotProbe";
+import type { ProviderInstance } from "@getpaperplane/provider-core/server/driver";
+import type { ServerProviderDraft } from "@getpaperplane/provider-core/server/snapshotProbe";
 
 /**
  * Stamp instance identity onto a `ServerProvider` snapshot produced by the

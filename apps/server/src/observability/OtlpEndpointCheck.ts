@@ -2,8 +2,8 @@ import type {
   OtlpEndpointCheckInput,
   OtlpEndpointCheckResult,
   OtlpSignal,
-} from "@rove-code/contracts";
-import { layerOtlpSerialization } from "@rove-code/shared/observability";
+} from "@getpaperplane/contracts";
+import { layerOtlpSerialization } from "@getpaperplane/shared/observability";
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -27,7 +27,7 @@ export class OtlpEndpointCheck extends Context.Service<
      */
     readonly check: (input: OtlpEndpointCheckInput) => Effect.Effect<OtlpEndpointCheckResult>;
   }
->()("@rove-code/server/observability/OtlpEndpointCheck") {}
+>()("@getpaperplane/server/observability/OtlpEndpointCheck") {}
 
 const emptyExport = (
   serialization: OtlpSerialization.OtlpSerialization["Service"],

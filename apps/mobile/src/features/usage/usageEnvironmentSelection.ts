@@ -1,4 +1,4 @@
-import type { EnvironmentId } from "@rove-code/contracts";
+import type { EnvironmentId } from "@getpaperplane/contracts";
 
 /** Null follows all environments, including ones connected after the menu opened. */
 export function toggleUsageEnvironment(

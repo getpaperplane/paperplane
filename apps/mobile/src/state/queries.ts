@@ -1,11 +1,11 @@
 import {
   composerPullRequestsFromLinks,
   filterComposerPullRequestMatches,
-} from "@rove-code/shared/composerPullRequestMatches";
-import { resolveFilesystemReadAccess } from "@rove-code/client-runtime/state/filesystem";
+} from "@getpaperplane/shared/composerPullRequestMatches";
+import { resolveFilesystemReadAccess } from "@getpaperplane/client-runtime/state/filesystem";
 import { environmentSession } from "./session";
 import { useEnvironmentPresentation } from "./presentation";
-import type { VcsRefTarget } from "@rove-code/client-runtime/state/vcs";
+import type { VcsRefTarget } from "@getpaperplane/client-runtime/state/vcs";
 import type {
   EnvironmentId,
   OrchestrationV2ProjectedTurnItem,
@@ -14,15 +14,15 @@ import type {
   ThreadPullRequestLink,
   VcsListRefsResult,
   VcsRef,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   createThreadSearchResultsAtomFamily,
   makeThreadSearchKey,
   type EnvironmentThreadSearchMatch,
-} from "@rove-code/client-runtime/state/thread-search";
+} from "@getpaperplane/client-runtime/state/thread-search";
 import { useAtomValue } from "@effect/atom-react";
 import * as Cause from "effect/Cause";
-import { turnItemDetailRevision } from "@rove-code/client-runtime/work-log/item-detail";
+import { turnItemDetailRevision } from "@getpaperplane/client-runtime/work-log/item-detail";
 import * as Option from "effect/Option";
 import { AsyncResult, Atom } from "effect/reactivity";
 import { useCallback, useEffect, useMemo, useState } from "react";

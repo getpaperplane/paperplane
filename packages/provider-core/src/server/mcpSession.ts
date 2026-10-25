@@ -1,4 +1,4 @@
-import type { EnvironmentId, ProviderInstanceId, ThreadId } from "@rove-code/contracts";
+import type { EnvironmentId, ProviderInstanceId, ThreadId } from "@getpaperplane/contracts";
 
 export interface McpProviderSessionConfig {
   readonly environmentId: EnvironmentId;

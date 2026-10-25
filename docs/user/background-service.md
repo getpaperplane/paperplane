@@ -1,48 +1,63 @@
-# Running Rove Code in the background
+# Running Paperplane in the background
 
-On Linux and macOS, Rove Code can run as a service for your user so you do not need
+On Linux and macOS, Paperplane can run as a service for your user so you do not need
 to keep a terminal open.
 
 ## Manage the service
 
-Install the `rove` CLI first ([Install Rove Code](./install.md#command-line)), then
-run these commands on the machine that will host Rove Code:
+Install the `paperplane` CLI first ([Install Paperplane](./install.md#command-line)), then
+run these commands on the machine that will host Paperplane:
 
-| Task                            | Command                  |
-| ------------------------------- | ------------------------ |
-| Install and start               | `rove service install`   |
-| Inspect status and log location | `rove service status`    |
-| Move to a newer release         | `rove update`            |
-| Restart                         | `rove service restart`   |
-| Stop and remove from startup    | `rove service uninstall` |
+| Task                            | Command                        |
+| ------------------------------- | ------------------------------ |
+| Install and start               | `paperplane service install`   |
+| Inspect status and log location | `paperplane service status`    |
+| Move to a newer release         | `paperplane update`            |
+| Restart                         | `paperplane service restart`   |
+| Stop and remove from startup    | `paperplane service uninstall` |
 
 Uninstalling the service leaves your projects, threads, and settings intact.
-Running `rove service install` again repairs a service that `rove service status`
+Running `paperplane service install` again repairs a service that `paperplane service status`
 reports as broken.
 
-`rove update` downloads the newest release on your channel and switches `rove`
+`paperplane update` downloads the newest release on your channel and switches `paperplane`
 and the service to it. Restarting interrupts running agent turns, terminals,
 and remote clients, so it asks first; answer no and the service keeps running
-the old version until you run `rove service restart`. Pass `--yes` from a
+the old version until you run `paperplane service restart`. Pass `--yes` from a
 script. A server you started by hand is left running; stop and start it again
 to pick up the new version. Wait for any remote update already in progress
 before updating; to match a remote client's version, follow
-[Updating Rove Code](./updating.md).
+[Updating Paperplane](./updating.md).
 
-Pass an exact version (`rove update 0.0.42`) to pin one, `--channel nightly` to
+Pass an exact version (`paperplane update 0.0.42`) to pin one, `--channel nightly` to
 switch trains, or `--allow-downgrade` to move backwards. `preview` is a
 maintainers' test train: its builds can be broken and are never offered as
-updates, so the installer and `rove update` ask for confirmation before
+updates, so the installer and `paperplane update` ask for confirmation before
 installing one.
 
-`rove uninstall` removes the background service, the `rove` launcher, and the
+`paperplane uninstall` removes the background service, the `paperplane` launcher, and the
 downloaded versions after showing you the list and asking once. Your projects,
-threads, and settings under `~/.rove-code/userdata` are kept. Pass `--yes` from a
+threads, and settings under `~/.paperplane/userdata` are kept. Pass `--yes` from a
 script.
+
+## Upgrading from Rove Code
+
+Install the Paperplane CLI, then run `paperplane service install`. It stops, disables,
+and removes the old `rove.service` or `io.github.hafiezul.rove.service` launch agent
+only when its launcher is recognizably Rove Code. Saved host/port settings and the
+provider PATH are imported once; existing Paperplane settings win. Other unit
+environment settings are reported for you to reapply with their `PAPERPLANE_*` names.
+Custom systemd drop-ins must be moved manually before conversion.
+
+If the old server blocks the first start, on Linux run
+`systemctl --user disable --now rove.service`; on macOS run
+`launchctl bootout --wait gui/$(id -u)/io.github.hafiezul.rove.service && launchctl disable gui/$(id -u)/io.github.hafiezul.rove.service`.
+Quit the old desktop app too. For SSH or WSL, stop the old service or `paperplane serve`
+terminal on that host, then reconnect. Windows has no managed CLI service.
 
 ## Platform support
 
-Linux needs systemd user services. Setup enables lingering so Rove Code starts at
+Linux needs systemd user services. Setup enables lingering so Paperplane starts at
 boot and keeps running after logout. If this needs administrator permission,
 setup prints a recovery command before changing the service.
 
@@ -53,12 +68,12 @@ service is still installed and will start at the next login.
 
 Windows background services are not supported.
 
-Rove Connect can offer service installation during setup, but the two are managed
-separately. Signing out of Rove Connect does not stop or uninstall the service.
+Paperplane Connect can offer service installation during setup, but the two are managed
+separately. Signing out of Paperplane Connect does not stop or uninstall the service.
 
 ## Troubleshooting
 
-Start with `rove service status` on the host. It prints the log path and, on Linux,
+Start with `paperplane service status` on the host. It prints the log path and, on Linux,
 checks whether the installed service is running, enabled, and allowed to survive
 logout.
 
@@ -76,37 +91,37 @@ ssh -t your-server 'sudo loginctl enable-linger "$(id -un)"'
 ```
 
 Then retry service setup as your normal user. Run only the `loginctl` command
-with sudo; running Rove Code as root creates a separate installation and Connect
-identity. Without administrator access, run `rove serve` in a terminal and keep
+with sudo; running Paperplane as root creates a separate installation and Connect
+identity. Without administrator access, run `paperplane serve` in a terminal and keep
 that session open.
 
 | Status problem                          | Next step                                                                                                                      |
 | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
 | `linger-unavailable`                    | Run `loginctl show-user "$(id -un)" --property=Linger` and check that systemd-logind is available.                             |
 | `user-manager-unavailable`              | Run `systemctl --user status` in a login session for the service user; check your distribution's systemd user-session support. |
-| `service-disabled` or `service-stopped` | Read the log and `systemctl --user status rove.service`, then use the repair command printed by Rove Code.                     |
-| `restart-pending`                       | A newer version is installed but the service still runs the previous one. Run `rove service restart`.                          |
+| `service-disabled` or `service-stopped` | Read the log and `systemctl --user status paperplane.service`, then use the repair command printed by Paperplane.              |
+| `restart-pending`                       | A newer version is installed but the service still runs the previous one. Run `paperplane service restart`.                    |
 
 On macOS, check **System Settings → General → Login Items** if the service no
 longer starts at login. If agent work cannot access Desktop, Documents, or
-Downloads, it may need Full Disk Access for the `rove` executable listed in
+Downloads, it may need Full Disk Access for the `paperplane` executable listed in
 `ProgramArguments` in
-`~/Library/LaunchAgents/dev.rove.app.service.plist`.
+`~/Library/LaunchAgents/io.github.getpaperplane.paperplane.service.plist`.
 
-For failures after signing in to Rove Connect, see
-[connection troubleshooting](./remote-access.md#rove-connect-troubleshooting).
+For failures after signing in to Paperplane Connect, see
+[connection troubleshooting](./remote-access.md#paperplane-connect-troubleshooting).
 
 ## Reclaim database space
 
-Rove Code removes superseded internal history on its own while it runs; your
+Paperplane removes superseded internal history on its own while it runs; your
 conversations are kept. Databases created before this shrank automatically
 still hold the freed space on disk until a one-time offline repair returns it
 and turns on automatic shrinking. Settings > Storage (web and desktop) or
 Settings > Maintenance (mobile) suggests the repair when at least 1 GiB can be
 reclaimed.
 
-Run `rove doctor` on the machine that hosts the environment. It first reports
-available memory, swap, Rove's memory ceiling when present, and host health
+Run `paperplane doctor` on the machine that hosts the environment. It first reports
+available memory, swap, Paperplane's memory ceiling when present, and host health
 findings with suggested fixes. These checks are advisory: `--fix` does not change
 host memory settings. It then reports the database size and the space it can
 reclaim and asks which repairs to run;

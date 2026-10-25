@@ -1,5 +1,5 @@
 import * as NodeServices from "@effect/platform-node/NodeServices";
-import type { DesktopUpdateState } from "@rove-code/contracts";
+import type { DesktopUpdateState } from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as PlatformError from "effect/PlatformError";
@@ -151,7 +151,7 @@ export function makeHarness(options: UpdatesHarnessOptions = {}) {
 
   const layerEnvironment = DesktopEnvironment.layer({
     dirname: "/repo/apps/desktop/src",
-    homeDirectory: `/tmp/rove-desktop-updates-home-${process.pid}`,
+    homeDirectory: `/tmp/paperplane-desktop-updates-home-${process.pid}`,
     platform: options.platform ?? "darwin",
     processArch: "x64",
     appVersion: "1.2.3",
@@ -164,9 +164,9 @@ export function makeHarness(options: UpdatesHarnessOptions = {}) {
       Layer.mergeAll(
         NodeServices.layer,
         DesktopConfig.layerTest({
-          ROVE_HOME: `/tmp/rove-desktop-updates-test-${process.pid}`,
-          ROVE_DESKTOP_MOCK_UPDATES: "true",
-          ROVE_DESKTOP_MOCK_UPDATE_SERVER_PORT: "4141",
+          PAPERPLANE_HOME: `/tmp/paperplane-desktop-updates-test-${process.pid}`,
+          PAPERPLANE_DESKTOP_MOCK_UPDATES: "true",
+          PAPERPLANE_DESKTOP_MOCK_UPDATE_SERVER_PORT: "4141",
           ...options.env,
         }),
       ),
@@ -258,9 +258,9 @@ export function makeHarness(options: UpdatesHarnessOptions = {}) {
     Layer.provideMerge(layerSettings),
     Layer.provideMerge(
       DesktopConfig.layerTest({
-        ROVE_HOME: `/tmp/rove-desktop-updates-test-${process.pid}`,
-        ROVE_DESKTOP_MOCK_UPDATES: "true",
-        ROVE_DESKTOP_MOCK_UPDATE_SERVER_PORT: "4141",
+        PAPERPLANE_HOME: `/tmp/paperplane-desktop-updates-test-${process.pid}`,
+        PAPERPLANE_DESKTOP_MOCK_UPDATES: "true",
+        PAPERPLANE_DESKTOP_MOCK_UPDATE_SERVER_PORT: "4141",
         ...options.env,
       }),
     ),

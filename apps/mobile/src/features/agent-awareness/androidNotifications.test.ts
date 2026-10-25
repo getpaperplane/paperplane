@@ -9,7 +9,7 @@ const mocks = vi.hoisted(() => ({
     clear?: ReturnType<typeof vi.fn>;
     openLiveUpdateSettings?: ReturnType<typeof vi.fn>;
   } | null,
-  config: { scheme: ["rove-preview"], extra: { iosPersonalTeamBuild: false } },
+  config: { scheme: ["paperplane-preview"], extra: { iosPersonalTeamBuild: false } },
   requireModule: vi.fn(),
 }));
 
@@ -71,7 +71,12 @@ describe("Android native notification capability", () => {
     mocks.config.extra.iosPersonalTeamBuild = true;
     expect(supportsAgentAwarenessPush()).toBe(true);
     configureAndroidAgentNotifications("device", "user", false);
-    expect(mocks.native?.configure).toHaveBeenCalledWith("device", "user", "rove-preview", false);
+    expect(mocks.native?.configure).toHaveBeenCalledWith(
+      "device",
+      "user",
+      "paperplane-preview",
+      false,
+    );
     clearAndroidAgentNotifications();
     expect(mocks.native?.clear).toHaveBeenCalledOnce();
   });

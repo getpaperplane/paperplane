@@ -1,6 +1,6 @@
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { assert, it } from "@effect/vitest";
-import { CodexSettings } from "@rove-code/contracts";
+import { CodexSettings } from "@getpaperplane/contracts";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -56,7 +56,7 @@ const decodeCodexSettings = Schema.decodeSync(CodexSettings);
 const solServiceTiers = Effect.fn("solServiceTiers")(function* (ultrafastEntitled: boolean) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const dir = yield* fs.makeTempDirectoryScoped({ prefix: "rove-codex-catalog-" });
+  const dir = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-codex-catalog-" });
   const binaryPath = path.join(dir, "codex");
   yield* fs.writeFileString(binaryPath, FAKE_CODEX_APP_SERVER);
   yield* fs.chmod(binaryPath, 0o755);

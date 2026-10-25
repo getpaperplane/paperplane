@@ -172,7 +172,7 @@ export function AgentActivity(
   const deepLinkRow = attentionRow ?? row0;
   const deepLink =
     deepLinkRow && deepLinkRow.deepLink.startsWith("/") && !deepLinkRow.deepLink.startsWith("//")
-      ? `rove://${deepLinkRow.deepLink.slice(1)}`
+      ? `paperplane://${deepLinkRow.deepLink.slice(1)}`
       : null;
 
   // A scannable status glyph per phase — reads faster than colored words and
@@ -244,7 +244,7 @@ export function AgentActivity(
     </HStack>
   );
 
-  // The branded Rove mark. `assetName` resolves the template image set bundled in
+  // The branded Paperplane mark. `assetName` resolves the template image set bundled in
   // the widget extension's asset catalog. Image views only honor `resizable`
   // directly (frame/foregroundStyle are dropped), so we size it via a container
   // frame the resizable image fills and tint it through the container's
@@ -252,7 +252,7 @@ export function AgentActivity(
   // the glyph's aspect ratio so it never distorts.
   const renderLogo = (height: number, color: Foreground) => (
     <HStack modifiers={[frame({ width: height * 1.5, height }), foregroundStyle(color)]}>
-      <Image assetName="RoveMark" modifiers={[resizable()]} />
+      <Image assetName="PaperplaneMark" modifiers={[resizable()]} />
     </HStack>
   );
 

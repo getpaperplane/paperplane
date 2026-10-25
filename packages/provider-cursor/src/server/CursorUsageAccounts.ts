@@ -11,10 +11,10 @@
  * @module provider-cursor/server/CursorUsageAccounts
  */
 
-import * as ProviderHost from "@rove-code/provider-core/server/ProviderHost";
-import type { ProviderUsageScan } from "@rove-code/provider-core/server/usage";
-import { writeFileStringAtomically } from "@rove-code/shared/atomicWrite";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+import * as ProviderHost from "@getpaperplane/provider-core/server/ProviderHost";
+import type { ProviderUsageScan } from "@getpaperplane/provider-core/server/usage";
+import { writeFileStringAtomically } from "@getpaperplane/shared/atomicWrite";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
 import * as Deferred from "effect/Deferred";
@@ -60,7 +60,7 @@ export class CursorUsageAccounts extends Context.Service<
     /** Waits for every cache write scheduled so far, as a restart would need. */
     readonly awaitPersisted: Effect.Effect<void>;
   }
->()("@rove-code/provider-cursor/server/CursorUsageAccounts") {}
+>()("@getpaperplane/provider-cursor/server/CursorUsageAccounts") {}
 
 const make = Effect.gen(function* () {
   const fileSystem = yield* FileSystem.FileSystem;

@@ -1,6 +1,6 @@
 import * as NodeModule from "node:module";
-import { EMPTY_TERMINAL_BUFFER_STATE } from "@rove-code/client-runtime/state/terminal";
-import { EnvironmentId, ThreadId } from "@rove-code/contracts";
+import { EMPTY_TERMINAL_BUFFER_STATE } from "@getpaperplane/client-runtime/state/terminal";
+import { EnvironmentId, ThreadId } from "@getpaperplane/contracts";
 import { act, createElement, type ReactNode } from "react";
 import { afterEach, beforeEach, expect, it, vi } from "vite-plus/test";
 

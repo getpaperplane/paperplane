@@ -1,13 +1,13 @@
 import { useAtomValue } from "@effect/atom-react";
 import { StackActions, useIsFocused, useNavigation } from "@react-navigation/native";
-import { scopeThreadRef } from "@rove-code/client-runtime/environment";
-import { summarizeSubagentStatuses } from "@rove-code/client-runtime/state/subagent-display";
-import { isActiveSubagentStatus } from "@rove-code/client-runtime/state/subagentRuntime";
+import { scopeThreadRef } from "@getpaperplane/client-runtime/environment";
+import { summarizeSubagentStatuses } from "@getpaperplane/client-runtime/state/subagent-display";
+import { isActiveSubagentStatus } from "@getpaperplane/client-runtime/state/subagentRuntime";
 import type {
   EnvironmentId,
   OrchestrationV2Subagent,
   OrchestrationV2TurnItem,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { useEffect, useState } from "react";
 import { AppState, Pressable, View, type ColorValue } from "react-native";
 
@@ -120,7 +120,7 @@ export function ThreadSubagentGroup(props: {
             ) : null}
           </View>
           <View className="min-w-0 flex-1 gap-0.5">
-            <Text numberOfLines={1} className="font-rove-medium text-sm text-foreground">
+            <Text numberOfLines={1} className="font-paperplane-medium text-sm text-foreground">
               {label}
             </Text>
             <Text

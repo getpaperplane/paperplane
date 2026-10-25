@@ -1,13 +1,13 @@
-import { scopeProjectRef } from "@rove-code/client-runtime/environment";
+import { scopeProjectRef } from "@getpaperplane/client-runtime/environment";
 import {
   getNewProjectRepository,
   type NewProjectPublishTarget,
-} from "@rove-code/client-runtime/operations/projects";
+} from "@getpaperplane/client-runtime/operations/projects";
 import {
   isAtomCommandInterrupted,
   squashAtomCommandFailure,
-} from "@rove-code/client-runtime/state/runtime";
-import type { EnvironmentId } from "@rove-code/contracts";
+} from "@getpaperplane/client-runtime/state/runtime";
+import type { EnvironmentId } from "@getpaperplane/contracts";
 import { useCallback } from "react";
 
 import { stackedThreadToast, toastManager } from "~/components/ui/toast";
@@ -101,7 +101,7 @@ export function useNewProject() {
       }
 
       const { projectId, workspaceRoot, commitError } = result.value;
-      // The folder sits in Rove Code's data directory, so always say where.
+      // The folder sits in Paperplane's data directory, so always say where.
       toastManager.add(
         stackedThreadToast(
           commitError === undefined

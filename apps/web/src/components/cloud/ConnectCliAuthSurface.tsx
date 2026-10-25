@@ -1,5 +1,5 @@
 import { useAuth, useClerk } from "@clerk/react";
-import { readConnectAuthorizeRequest } from "@rove-code/shared/connectAuth";
+import { readConnectAuthorizeRequest } from "@getpaperplane/shared/connectAuth";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import {
@@ -35,7 +35,7 @@ const invalidLinkMessage = {
   eyebrow: "Authorization request",
   title: "This connect link is incomplete",
   description:
-    "The link is missing its authorization request. Re-run `rove connect` in your terminal and open the freshly printed URL.",
+    "The link is missing its authorization request. Re-run `paperplane connect` in your terminal and open the freshly printed URL.",
 } as const;
 
 /**
@@ -97,8 +97,8 @@ export function ConnectCliAuthorizeSurface() {
         title="Connecting your terminal"
         description={
           isSignedIn
-            ? "Redirecting to authorize Rove Connect for your CLI…"
-            : "Sign in to continue authorizing Rove Connect for your CLI."
+            ? "Redirecting to authorize Paperplane Connect for your CLI…"
+            : "Sign in to continue authorizing Paperplane Connect for your CLI."
         }
       />
       {isLoaded && !isSignedIn ? (

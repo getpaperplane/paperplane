@@ -1,4 +1,4 @@
-import { verifyDpopProof } from "@rove-code/shared/dpop";
+import { verifyDpopProof } from "@getpaperplane/shared/dpop";
 import { describe, expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import { decodeJwt } from "jose";

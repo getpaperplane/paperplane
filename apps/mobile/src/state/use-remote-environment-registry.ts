@@ -1,7 +1,7 @@
 import * as Dialog from "../components/ui/Dialog";
 import { useAtomValue } from "@effect/atom-react";
 import { useNavigation } from "@react-navigation/native";
-import type { EnvironmentId } from "@rove-code/contracts";
+import type { EnvironmentId } from "@getpaperplane/contracts";
 import * as Cause from "effect/Cause";
 import { AsyncResult, Atom } from "effect/reactivity";
 import { useCallback } from "react";
@@ -168,16 +168,16 @@ export function useRemoteConnections() {
           void controller.removeEnvironment(environmentId);
         },
       } as const;
-      // Removing a Rove Connect environment here leaves its account registration
+      // Removing a Paperplane Connect environment here leaves its account registration
       // and host space, so point to where it can be deregistered.
       if (environment.isRelayManaged) {
         Dialog.alert(
           "Remove from this device?",
-          `Forget ${environment.environmentLabel} and its cached threads on this device.\n\nIt stays on your Rove Connect account and keeps its host space. Deregister it under Rove Code Account → Rove Connect to free it.`,
+          `Forget ${environment.environmentLabel} and its cached threads on this device.\n\nIt stays on your Paperplane Connect account and keeps its host space. Deregister it under Paperplane Account → Paperplane Connect to free it.`,
           [
             { text: "Cancel", style: "cancel" },
             {
-              text: "Open Rove Code Account",
+              text: "Open Paperplane Account",
               onPress: () => navigation.navigate("SettingsSheet", { screen: "SettingsAuth" }),
             },
             remove,

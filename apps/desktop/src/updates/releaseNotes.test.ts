@@ -18,7 +18,7 @@ describe("normalizeDesktopUpdateReleaseNotes", () => {
         "- fix(opencode): handle child approvals, stops, and model catalogs by @human in #8480",
         "## New Contributors",
         "- @human made their first contribution in #8435",
-        "**Full Changelog**: https://github.com/rovecode/rove/compare/old...new",
+        "**Full Changelog**: https://github.com/paperplane/paperplane/compare/old...new",
       ].join("\n"),
       "0.0.36-nightly.20260828.1213",
       "nightly",
@@ -63,7 +63,7 @@ describe("normalizeDesktopUpdateReleaseNotes", () => {
   it("excludes GitHub's HTML compare link line", () => {
     const result = normalizeDesktopUpdateReleaseNotes(
       "<h2>What's Changed</h2><ul><li>feat(usage): add filters by @human in #247</li></ul>" +
-        '<p><strong>Full Changelog</strong>: <a href="https://github.com/rovecode/rove/compare/v1.2.2...v1.2.3"><tt>v1.2.2...v1.2.3</tt></a></p>',
+        '<p><strong>Full Changelog</strong>: <a href="https://github.com/paperplane/paperplane/compare/v1.2.2...v1.2.3"><tt>v1.2.2...v1.2.3</tt></a></p>',
       "1.2.3",
       "latest",
     );

@@ -1,5 +1,5 @@
 import Constants from "expo-constants";
-import * as RelayTracing from "@rove-code/shared/relayTracing";
+import * as RelayTracing from "@getpaperplane/shared/relayTracing";
 
 import { hasTracingPublicConfig, resolveCloudPublicConfig } from "../cloud/publicConfig";
 import * as RuntimePredicate from "effect/Predicate";
@@ -26,7 +26,7 @@ export function resolveTracingConfig(): TracingConfig | null {
 
 export function layerFromConfig(config: TracingConfig | null, resource: TracingResource) {
   return RelayTracing.layer(config, {
-    serviceName: "rove-mobile",
+    serviceName: "paperplane-mobile",
     serviceVersion: resource.serviceVersion,
     runtime: "react-native",
     client: `mobile-${resource.appVariant}`,

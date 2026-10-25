@@ -1,7 +1,7 @@
 import type { OpencodeClient } from "@opencode-ai/sdk/v2";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { it as effectIt } from "@effect/vitest";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
@@ -167,7 +167,9 @@ describe("OpenCode server output", () => {
         const environment = yield* HostProcess.Environment;
         const executablePath = yield* HostProcess.ExecutablePath;
         const platform = yield* HostProcess.Platform;
-        const tempDir = yield* fs.makeTempDirectoryScoped({ prefix: "rove-opencode-output-" });
+        const tempDir = yield* fs.makeTempDirectoryScoped({
+          prefix: "paperplane-opencode-output-",
+        });
         const isWindows = platform === "win32";
         const binaryPath = path.join(tempDir, isWindows ? "opencode.cmd" : "opencode");
         const scriptPath = path.join(tempDir, "opencode.mjs");

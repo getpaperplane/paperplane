@@ -1,9 +1,9 @@
-import type { EnvironmentId } from "@rove-code/contracts";
-import type { AtomCommandResult } from "@rove-code/client-runtime/state/runtime";
+import type { EnvironmentId } from "@getpaperplane/contracts";
+import type { AtomCommandResult } from "@getpaperplane/client-runtime/state/runtime";
 import {
   isAtomCommandInterrupted,
   squashAtomCommandFailure,
-} from "@rove-code/client-runtime/state/runtime";
+} from "@getpaperplane/client-runtime/state/runtime";
 
 type RefreshProvidersTarget = {
   readonly environmentId: EnvironmentId;

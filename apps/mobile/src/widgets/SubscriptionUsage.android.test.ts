@@ -43,7 +43,7 @@ const provider = {
 } satisfies SubscriptionUsageSnapshot["providers"][number];
 const snapshot = {
   checkedAt: now,
-  url: "rove-dev://settings/usage?tab=limits",
+  url: "paperplane-dev://settings/usage?tab=limits",
   providers: [provider, { ...provider, name: "Claude" }],
 } satisfies SubscriptionUsageSnapshot;
 
@@ -68,25 +68,25 @@ describe("SubscriptionUsage Android layout", () => {
       ...snapshot,
       providers: [{ ...provider, expiresAt: now - 1 }],
     });
-    expect(tree).toContain("Open Rove to refresh");
+    expect(tree).toContain("Open Paperplane to refresh");
     expect(tree).not.toContain("LinearProgressIndicator");
-    expect(tree).not.toContain("more in Rove");
+    expect(tree).not.toContain("more in Paperplane");
   });
 
   it("counts the quotas that did not fit", () => {
     const tree = render({ ...snapshot, providers: [{ ...provider, totalWindows: 5 }] });
-    expect(tree).toContain("3 more in Rove");
+    expect(tree).toContain("3 more in Paperplane");
   });
 
   it("keeps quotas without an expiry deadline visible", () => {
     const tree = render({ ...snapshot, providers: [{ ...provider, expiresAt: 0 }] });
     expect(tree).toContain("5 hours · 60% left");
-    expect(tree).not.toContain("Open Rove to refresh");
+    expect(tree).not.toContain("Open Paperplane to refresh");
   });
 
   it("invites connecting when nothing has been checked", () => {
     const tree = render({ checkedAt: 0, providers: [] }, "light");
-    expect(tree).toContain("Tap to connect in Rove");
+    expect(tree).toContain("Tap to connect in Paperplane");
     expect(tree).not.toContain("As of ");
     expect(tree).toContain('"containerColor":"light-surface"');
   });

@@ -1,5 +1,9 @@
 import { assert, describe, it } from "@effect/vitest";
-import { ProviderDriverKind, ProviderInstanceId, type ServerProvider } from "@rove-code/contracts";
+import {
+  ProviderDriverKind,
+  ProviderInstanceId,
+  type ServerProvider,
+} from "@getpaperplane/contracts";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import * as Deferred from "effect/Deferred";
 import * as Fiber from "effect/Fiber";
@@ -12,8 +16,8 @@ import * as ServerConfig from "../config.ts";
 import * as ModelManifest from "./ModelManifest.ts";
 import * as ProviderRegistry from "./ProviderRegistry.ts";
 import * as ProviderInstanceRegistry from "./ProviderInstanceRegistry.ts";
-import type { ProviderInstance } from "@rove-code/provider-core/server/driver";
-import { makeManualOnlyProviderMaintenanceCapabilities } from "@rove-code/provider-core/server/maintenanceResolver";
+import type { ProviderInstance } from "@getpaperplane/provider-core/server/driver";
+import { makeManualOnlyProviderMaintenanceCapabilities } from "@getpaperplane/provider-core/server/maintenanceResolver";
 import { BUILT_IN_DRIVERS } from "./builtInDrivers.ts";
 import * as Schema from "effect/Schema";
 import {
@@ -26,7 +30,7 @@ import {
 const driver = ProviderDriverKind.make("codex");
 const policy: ProviderCompatibilityPolicy = {
   driver,
-  roveCodeRange: ">=0.0.0",
+  paperplaneCodeRange: ">=0.0.0",
   recommendedVersion: "2.0.0",
   recommendedRange: ">=2.0.0 <3.0.0",
   ranges: [
@@ -51,11 +55,11 @@ const provider: ServerProvider = {
   slashCommands: [],
 };
 
-// This is the adopted adapter generation, not Rove's release version.
+// This is the adopted adapter generation, not Paperplane's release version.
 const V2_RELEASE = PROVIDER_COMPATIBILITY_BASELINE;
 
 describe("provider compatibility", () => {
-  it("uses the V2 adapter generation independently of Rove release numbering", () => {
+  it("uses the V2 adapter generation independently of Paperplane release numbering", () => {
     const opencode = ProviderDriverKind.make("opencode");
     const advisory = resolveProviderCompatibility(
       ModelManifest.BUNDLED_MODEL_MANIFEST.compatibility,
@@ -132,14 +136,18 @@ describe("provider compatibility", () => {
       ["1.14.19", "graceful"],
       ["1.14.18", "broken"],
     ] as const) {
-      for (const roveCodeVersion of [V2_RELEASE, "0.0.46-preview.20261002.2598"]) {
+      for (const paperplaneCodeVersion of [V2_RELEASE, "0.0.46-preview.20261002.2598"]) {
         const advisory = resolveProviderCompatibility(
           ModelManifest.BUNDLED_MODEL_MANIFEST.compatibility,
           opencode,
           version,
-          roveCodeVersion,
+          paperplaneCodeVersion,
         );
-        assert.strictEqual(advisory?.status, expected, `OpenCode ${version} on ${roveCodeVersion}`);
+        assert.strictEqual(
+          advisory?.status,
+          expected,
+          `OpenCode ${version} on ${paperplaneCodeVersion}`,
+        );
         assert.strictEqual(advisory?.recommendedRange, ">=2.0.18");
       }
     }
@@ -164,7 +172,7 @@ describe("provider compatibility", () => {
     const cursor = ProviderDriverKind.make("cursor");
     const cursorPolicy: ProviderCompatibilityPolicy = {
       driver: cursor,
-      roveCodeRange: policy.roveCodeRange,
+      paperplaneCodeRange: policy.paperplaneCodeRange,
       ranges: [
         { range: "<2026.05.09", status: "unsupported" },
         { range: ">=2026.05.09", status: "supported" },
@@ -245,8 +253,8 @@ describe("provider compatibility", () => {
     }
   });
 
-  it("applies policies only within their Rove Code version range", () => {
-    const scopedPolicy = { ...policy, roveCodeRange: ">=0.0.42 <0.1.0" };
+  it("applies policies only within their Paperplane version range", () => {
+    const scopedPolicy = { ...policy, paperplaneCodeRange: ">=0.0.42 <0.1.0" };
     for (const version of ["0.0.42", "0.0.45"]) {
       assert.strictEqual(
         resolveProviderCompatibility([scopedPolicy], driver, "0.9.0", version)?.status,
@@ -286,8 +294,11 @@ describe("provider compatibility", () => {
     assert.strictEqual(supported.status, "error");
     assert.strictEqual(supported.message, "Authentication failed");
     assert.strictEqual(
-      applyProviderCompatibility(supported, [{ ...policy, roveCodeRange: "<0.0.0" }], [policy])
-        .compatibilityAdvisory?.status,
+      applyProviderCompatibility(
+        supported,
+        [{ ...policy, paperplaneCodeRange: "<0.0.0" }],
+        [policy],
+      ).compatibilityAdvisory?.status,
       "broken",
     );
     const removed = applyProviderCompatibility(supported, [], []);
@@ -308,7 +319,7 @@ describe("provider compatibility", () => {
     assert.doesNotThrow(() => decode(policy));
     const prefixed = decode({
       ...policy,
-      roveCodeRange: ">=v0.0.42 <v0.1",
+      paperplaneCodeRange: ">=v0.0.42 <v0.1",
       recommendedRange: "^v2",
       ranges: [{ range: ">=v2.0 <v3", status: "supported" }],
     });
@@ -321,7 +332,7 @@ describe("provider compatibility", () => {
       "unknown",
     );
     for (const invalid of [
-      { ...policy, roveCodeRange: "*" },
+      { ...policy, paperplaneCodeRange: "*" },
       { ...policy, recommendedVersion: "3.0.0" },
       { ...policy, ranges: [{ range: ">=2.0.0 garbage", status: "supported" }] },
       { ...policy, recommendedVersion: "2.0.0; echo unsafe" },

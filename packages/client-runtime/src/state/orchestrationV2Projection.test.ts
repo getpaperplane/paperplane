@@ -15,7 +15,7 @@ import {
   RunId,
   ThreadId,
   TurnItemId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as DateTime from "effect/DateTime";
 
 import {

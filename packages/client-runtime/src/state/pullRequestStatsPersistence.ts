@@ -3,7 +3,7 @@ import {
   PullRequestListStatsInput,
   type PullRequestListStatsResult,
   type PullRequestRef,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";

@@ -1,4 +1,4 @@
-import { EnvironmentId, MessageId, ThreadId } from "@rove-code/contracts";
+import { EnvironmentId, MessageId, ThreadId } from "@getpaperplane/contracts";
 import * as Schema from "effect/Schema";
 import { Atom, type AtomRegistry } from "effect/reactivity";
 

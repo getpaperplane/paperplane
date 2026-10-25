@@ -21,7 +21,7 @@ function windowIndex(nowMs: number): number {
 
 function deriveToken(secret: string, window: number): string {
   return NodeCrypto.createHmac("sha256", secret)
-    .update(`rove-desktop-bootstrap:${window}`)
+    .update(`paperplane-desktop-bootstrap:${window}`)
     .digest("hex");
 }
 

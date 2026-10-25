@@ -1,7 +1,7 @@
-import { EnvironmentId, ORCHESTRATION_PROTOCOL_VERSION } from "@rove-code/contracts";
+import { EnvironmentId, ORCHESTRATION_PROTOCOL_VERSION } from "@getpaperplane/contracts";
 import { describe, expect, it } from "vite-plus/test";
 
-import { orchestrationProtocolCompatibilityError } from "@rove-code/client-runtime/connection";
+import { orchestrationProtocolCompatibilityError } from "@getpaperplane/client-runtime/connection";
 
 import { environmentStatusText } from "./environmentStatusText";
 
@@ -21,7 +21,7 @@ function compatibilityMessage(serverProtocolVersion: number): string {
 describe("environment status text", () => {
   it.each([
     ["a newer server", ORCHESTRATION_PROTOCOL_VERSION + 1, "Update your app"],
-    ["an older server", ORCHESTRATION_PROTOCOL_VERSION - 1, "Update Rove Code on Studio Mac"],
+    ["an older server", ORCHESTRATION_PROTOCOL_VERSION - 1, "Update Paperplane on Studio Mac"],
   ])("tells the user what to update for %s", (_, serverProtocolVersion, guidance) => {
     const text = environmentStatusText({
       phase: "unsupported",

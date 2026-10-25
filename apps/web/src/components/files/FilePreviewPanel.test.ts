@@ -1,5 +1,5 @@
-import type { ScopedThreadRef } from "@rove-code/contracts";
-import { ProjectReadFileError } from "@rove-code/contracts";
+import type { ScopedThreadRef } from "@getpaperplane/contracts";
+import { ProjectReadFileError } from "@getpaperplane/contracts";
 import * as Schema from "effect/Schema";
 import { describe, expect, it } from "vite-plus/test";
 

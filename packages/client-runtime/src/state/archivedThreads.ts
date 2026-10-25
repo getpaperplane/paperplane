@@ -1,4 +1,4 @@
-import { EnvironmentId, type OrchestrationV2ArchivedShellSnapshot } from "@rove-code/contracts";
+import { EnvironmentId, type OrchestrationV2ArchivedShellSnapshot } from "@getpaperplane/contracts";
 import * as Arr from "effect/Array";
 import { pipe } from "effect/Function";
 import * as Option from "effect/Option";

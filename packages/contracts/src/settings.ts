@@ -260,14 +260,14 @@ export const FontFamilyPreference = Schema.String.check(Schema.isMaxLength(200))
 export type FontFamilyPreference = typeof FontFamilyPreference.Type;
 
 /**
- * The environment's theme, set with `rove theme set <id>`. Each client applies
+ * The environment's theme, set with `paperplane theme set <id>`. Each client applies
  * it once per value — live when connected, on its next connect otherwise — so
  * setting it switches every client, while a theme a user picks in Settings
  * afterwards sticks until the next set. Empty means "no environment theme",
  * which is also how it is cleared.
  */
 export const DefaultThemePreference = Schema.String.check(Schema.isMaxLength(64));
-// Deliberately absent from ServerSettingsPatch: `rove theme set` checks that an
+// Deliberately absent from ServerSettingsPatch: `paperplane theme set` checks that an
 // id is syntactically valid and actually resolvable, and a generic RPC patch
 // would let a client write a theme no client can resolve, bypassing both.
 export type DefaultThemePreference = typeof DefaultThemePreference.Type;
@@ -448,7 +448,7 @@ export const ClientSettingsSchema = Schema.Struct({
     PullRequestMergeMethod,
   ).pipe(Schema.withDecodingDefault(Effect.succeed({}))),
   /**
-   * Whether clicking a pull request link opens Rove Code's pull request view.
+   * Whether clicking a pull request link opens Paperplane's pull request view.
    * When false, pull request links open like any other link, so they reach
    * GitHub or the repository's other host.
    */
@@ -655,7 +655,7 @@ export const CodexSettings = makeProviderSettingsSchema(
         description:
           "Account-specific Codex home. Keeps auth.json separate while sharing state from CODEX_HOME.",
         providerSettingsForm: {
-          placeholder: "~/.codex-rove/personal",
+          placeholder: "~/.codex-paperplane/personal",
           clearWhenEmpty: "omit",
         },
       }),
@@ -812,7 +812,7 @@ export const PiSettings = makeProviderSettingsSchema(
       Schema.annotateKey({
         title: "Workload protection",
         description:
-          "Queue shell commands and isolate their memory on Linux/WSL with user systemd. Auto enables on hosts with 768 MiB–8 GiB RAM. Other providers and extension-spawned commands are not protected. ROVE_PI_MEMORY_BUDGET_MIB overrides this setting.",
+          "Queue shell commands and isolate their memory on Linux/WSL with user systemd. Auto enables on hosts with 768 MiB–8 GiB RAM. Other providers and extension-spawned commands are not protected. PAPERPLANE_PI_MEMORY_BUDGET_MIB overrides this setting.",
         providerSettingsForm: {
           control: "select",
           options: [
@@ -828,7 +828,7 @@ export const PiSettings = makeProviderSettingsSchema(
       Schema.annotateKey({
         title: "Workload memory (MiB)",
         description:
-          "Use auto to share the host's Rove memory budget with agents, leaving RAM for the OS and server and allowing bounded swap. The largest command stops only when both budgets are exhausted. An integer of at least 384 MiB adds a shared hard cap without swap for Pi commands and background services, capped by the host budget. CPU is not capped. Lower hard limits apply when current usage permits. ROVE_PI_MEMORY_BUDGET_MIB takes precedence.",
+          "Use auto to share the host's Paperplane memory budget with agents, leaving RAM for the OS and server and allowing bounded swap. The largest command stops only when both budgets are exhausted. An integer of at least 384 MiB adds a shared hard cap without swap for Pi commands and background services, capped by the host budget. CPU is not capped. Lower hard limits apply when current usage permits. PAPERPLANE_PI_MEMORY_BUDGET_MIB takes precedence.",
         providerSettingsForm: { placeholder: "auto", clearWhenEmpty: "omit" },
       }),
     ),
@@ -968,7 +968,7 @@ export type SourceControlHostSettings = typeof SourceControlHostSettings.Type;
 
 /**
  * Bitbucket API credentials for this environment, used before the
- * `ROVE_BITBUCKET_*` environment variables. The tokens live in the server's
+ * `PAPERPLANE_BITBUCKET_*` environment variables. The tokens live in the server's
  * secret store; settings and clients only see a redaction marker when one is
  * set. The access token wins when both kinds are configured.
  */
@@ -1221,7 +1221,7 @@ const NULLABLE_PROJECT_SETTINGS_OVERRIDES: ReadonlySet<ProjectScopedServerSettin
   "sidebarAutoSettleAfterDays",
 ]);
 
-/** Reclaimable bytes from which the offline `rove doctor` repair is worth suggesting. */
+/** Reclaimable bytes from which the offline `paperplane doctor` repair is worth suggesting. */
 export const DATABASE_COMPACTION_RECOMMENDED_BYTES = 1024 ** 3;
 
 /** Live SQLite file accounting for the environment's state database. */
@@ -1229,7 +1229,7 @@ export const DatabaseStorageStatus = Schema.Struct({
   databaseBytes: Schema.Number,
   /** Free pages inside the file that an offline VACUUM (or incremental auto_vacuum) returns to disk. */
   reclaimableBytes: Schema.Number,
-  /** False on databases created before incremental auto_vacuum; `rove doctor` converts them. */
+  /** False on databases created before incremental auto_vacuum; `paperplane doctor` converts them. */
   incrementalVacuumEnabled: Schema.Boolean,
   /** Command to run on the host to reclaim the space offline. */
   compactCommand: Schema.String,
@@ -1293,7 +1293,7 @@ export const ServerSettings = Schema.Struct({
   computerUseAllowPixelInput: Schema.Boolean.pipe(
     Schema.withDecodingDefault(Effect.succeed(false)),
   ),
-  // Compatibility settings for Rove's in-process Pi driver. Other drivers use providerInstances.
+  // Compatibility settings for Paperplane's in-process Pi driver. Other drivers use providerInstances.
   providers: Schema.Struct({
     pi: PiSettings.pipe(Schema.withDecodingDefault(Effect.succeed({}))),
   }).pipe(Schema.withDecodingDefault(Effect.succeed({}))),
@@ -1314,7 +1314,7 @@ export const ServerSettings = Schema.Struct({
   ),
   /**
    * Absolute directory new worktrees are created under, e.g. `D:\worktrees`
-   * or `~/worktrees`. Empty uses `<Rove home>/worktrees`.
+   * or `~/worktrees`. Empty uses `<Paperplane home>/worktrees`.
    */
   worktreesDirectory: TrimmedString.pipe(Schema.withDecodingDefault(Effect.succeed(""))),
   /**
@@ -1335,7 +1335,7 @@ export const ServerSettings = Schema.Struct({
   ),
   /**
    * Whether agents may drive the in-app preview browser. Turning this off
-   * withholds the MCP credential, so the `rove` server (and with it every
+   * withholds the MCP credential, so the `paperplane` server (and with it every
    * `preview_*` tool) is never attached to a provider session, and the prompt
    * text describing those tools is dropped along with them. The user's own
    * browser panel is unaffected — this gates agent access only.
@@ -1389,7 +1389,7 @@ export const ServerSettings = Schema.Struct({
    */
   enableAgentDeviceAccess: Schema.Boolean.pipe(Schema.withDecodingDefault(Effect.succeed(false))),
   /**
-   * Whether this server may install and run Rove's device helper processes.
+   * Whether this server may install and run Paperplane's device helper processes.
    * Kept separate from agent access so enabling the user's Device panel does
    * not also grant providers control of simulators and emulators.
    */
@@ -1425,7 +1425,7 @@ export const ServerSettings = Schema.Struct({
   defaultTheme: DefaultThemePreference.pipe(Schema.withDecodingDefault(Effect.succeed(""))),
   /**
    * When the environment's theme was last set, so clients can tell a re-set
-   * of the same value from one they already applied: `rove theme set` must act
+   * of the same value from one they already applied: `paperplane theme set` must act
    * even when it names the theme it named before. Empty on environments
    * provisioned by builds that predate it, where clients fall back to
    * applying once per value.
@@ -1444,10 +1444,10 @@ export const ServerSettings = Schema.Struct({
     Schema.withDecodingDefault(Effect.succeed(null)),
   ),
   /**
-   * Null means inherit: the repository's rove.json, then "local". The old
+   * Null means inherit: the repository's paperplane.json, then "local". The old
    * default "local" was never persisted (defaults are stripped on write), so
    * it now decodes as inherit, which resolves the same way because the old
-   * chain also let rove.json outrank the environment. Null stays off the wire
+   * chain also let paperplane.json outrank the environment. Null stays off the wire
    * so older clients, which require a literal here, keep decoding.
    */
   defaultThreadEnvMode: OmittedWhenNull(ThreadEnvMode),
@@ -1455,7 +1455,7 @@ export const ServerSettings = Schema.Struct({
     Schema.withDecodingDefault(Effect.succeed(true)),
   ),
   /**
-   * Null defers to the repository's rove.json, then to recursive. A value
+   * Null defers to the repository's paperplane.json, then to recursive. A value
    * picked on a newer server decodes as null here rather than failing the
    * whole settings snapshot for an older client.
    */
@@ -1480,7 +1480,7 @@ export const ServerSettings = Schema.Struct({
   branchNamingMode: BranchNamingMode.pipe(
     Schema.withDecodingDefault(Effect.succeed("static" as const)),
   ),
-  branchNamePrefix: TrimmedString.pipe(Schema.withDecodingDefault(Effect.succeed("rove"))),
+  branchNamePrefix: TrimmedString.pipe(Schema.withDecodingDefault(Effect.succeed("paperplane"))),
   branchNameInstructions: TrimmedString.pipe(Schema.withDecodingDefault(Effect.succeed(""))),
   removeAgentCreditsOnMerge: Schema.Boolean.pipe(Schema.withDecodingDefault(Effect.succeed(false))),
   sourceControlWritingStyle: SourceControlWritingStyleSettings.pipe(

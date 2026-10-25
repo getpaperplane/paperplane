@@ -3,9 +3,9 @@ import {
   DesktopUpdateChannelSchema,
   type DesktopServerExposureMode,
   type DesktopUpdateChannel,
-} from "@rove-code/contracts";
-import { fromLenientJson } from "@rove-code/shared/schemaJson";
-import { resolveSymlinkTarget } from "@rove-code/shared/symlink";
+} from "@getpaperplane/contracts";
+import { fromLenientJson } from "@getpaperplane/shared/schemaJson";
+import { resolveSymlinkTarget } from "@getpaperplane/shared/symlink";
 import * as Context from "effect/Context";
 import * as Crypto from "effect/Crypto";
 import * as Effect from "effect/Effect";
@@ -190,7 +190,7 @@ export class DesktopAppSettings extends Context.Service<
     >;
     readonly applyWslWindowsFallbackInMemory: Effect.Effect<DesktopSettingsChange>;
   }
->()("@rove-code/desktop/settings/DesktopAppSettings") {}
+>()("@getpaperplane/desktop/settings/DesktopAppSettings") {}
 
 export function resolveDefaultDesktopSettings(appVersion: string): DesktopSettings {
   return {

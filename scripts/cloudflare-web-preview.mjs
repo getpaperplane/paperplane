@@ -6,7 +6,7 @@ import { workerFirstPaths } from "../apps/web/cloudflare/worker.mjs";
 
 export function previewWorkerName(prNumber) {
   NodeAssert.match(String(prNumber), /^[1-9][0-9]*$/);
-  return `rove-web-pr-${prNumber}`;
+  return `paperplane-web-pr-${prNumber}`;
 }
 
 export function previewDeployment(prNumber, subdomain, baseConfig, assetsDirectory) {

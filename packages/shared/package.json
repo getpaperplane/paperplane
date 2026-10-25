@@ -1,11 +1,11 @@
 {
-  "name": "@rove-code/shared",
+  "name": "@getpaperplane/shared",
   "private": true,
   "type": "module",
   "exports": {
-    "./roveMcp": {
-      "types": "./src/roveMcp.ts",
-      "import": "./src/roveMcp.ts"
+    "./paperplaneMcp": {
+      "types": "./src/paperplaneMcp.ts",
+      "import": "./src/paperplaneMcp.ts"
     },
     "./githubMarkdownLinks": {
       "types": "./src/githubMarkdownLinks.ts",
@@ -18,10 +18,6 @@
     "./orchestrationV2ThreadError": {
       "types": "./src/orchestrationV2ThreadError.ts",
       "import": "./src/orchestrationV2ThreadError.ts"
-    },
-    "./legacyCliLauncher": {
-      "types": "./src/legacyCliLauncher.ts",
-      "import": "./src/legacyCliLauncher.ts"
     },
     "./delimitedPreview": {
       "types": "./src/delimitedPreview.ts",
@@ -115,10 +111,6 @@
       "types": "./src/schemaJson.ts",
       "import": "./src/schemaJson.ts"
     },
-    "./roveMigration": {
-      "types": "./src/roveMigration.ts",
-      "import": "./src/roveMigration.ts"
-    },
     "./schemaYaml": {
       "types": "./src/schemaYaml.ts",
       "import": "./src/schemaYaml.ts"
@@ -167,9 +159,9 @@
       "types": "./src/projectSettings.ts",
       "import": "./src/projectSettings.ts"
     },
-    "./roveProjectFile": {
-      "types": "./src/roveProjectFile.ts",
-      "import": "./src/roveProjectFile.ts"
+    "./paperplaneProjectFile": {
+      "types": "./src/paperplaneProjectFile.ts",
+      "import": "./src/paperplaneProjectFile.ts"
     },
     "./orchestrationTiming": {
       "types": "./src/orchestrationTiming.ts",
@@ -355,6 +347,10 @@
       "types": "./src/httpReadiness.ts",
       "import": "./src/httpReadiness.ts"
     },
+    "./homeMigration": {
+      "types": "./src/homeMigration.ts",
+      "import": "./src/homeMigration.ts"
+    },
     "./devHome": {
       "types": "./src/devHome.ts",
       "import": "./src/devHome.ts"
@@ -399,9 +395,9 @@
       "types": "./src/orchestrationV2Timeline.ts",
       "import": "./src/orchestrationV2Timeline.ts"
     },
-    "./roveMcpToolPresentation": {
-      "types": "./src/roveMcpToolPresentation.ts",
-      "import": "./src/roveMcpToolPresentation.ts"
+    "./paperplaneMcpToolPresentation": {
+      "types": "./src/paperplaneMcpToolPresentation.ts",
+      "import": "./src/paperplaneMcpToolPresentation.ts"
     },
     "./Array": {
       "types": "./src/Array.ts",
@@ -510,6 +506,14 @@
     "./PtyAdapter": {
       "types": "./src/PtyAdapter.ts",
       "import": "./src/PtyAdapter.ts"
+    },
+    "./legacyEnvironment": {
+      "types": "./src/legacyEnvironment.ts",
+      "import": "./src/legacyEnvironment.ts"
+    },
+    "./clientMigration": {
+      "types": "./src/clientMigration.ts",
+      "import": "./src/clientMigration.ts"
     }
   },
   "scripts": {
@@ -517,10 +521,11 @@
     "test": "vp test run --config ../../vite.config.ts --dir ."
   },
   "dependencies": {
+    "@getpaperplane/contracts": "workspace:*",
     "@noble/curves": "catalog:",
     "@noble/hashes": "catalog:",
-    "@rove-code/contracts": "workspace:*",
     "effect": "catalog:",
+    "ffi-rs": "^1.3.0",
     "jose": "catalog:",
     "mdast-util-directive": "catalog:",
     "micromark-extension-directive": "catalog:",
@@ -538,6 +543,7 @@
     "@effect/platform-node": "catalog:",
     "@effect/vitest": "catalog:",
     "@types/node": "catalog:",
+    "fake-indexeddb": "^6.2.6",
     "micromark-util-types": "catalog:",
     "vite-plus": "catalog:"
   }

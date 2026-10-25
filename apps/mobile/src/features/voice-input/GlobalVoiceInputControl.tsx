@@ -183,7 +183,7 @@ function EdgeDictationPill(props: { readonly collapseRef: RefObject<(() => void)
               <Text
                 className={cn(
                   "text-xs",
-                  isError ? "text-danger-foreground" : "font-rove-medium text-foreground",
+                  isError ? "text-danger-foreground" : "font-paperplane-medium text-foreground",
                 )}
                 numberOfLines={1}
               >

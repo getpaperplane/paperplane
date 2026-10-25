@@ -1,8 +1,8 @@
-import type { DpopFailureReason } from "@rove-code/contracts";
+import type { DpopFailureReason } from "@getpaperplane/contracts";
 import type {
   RelayEnvironmentStatusResponse,
   RelayProtectedError,
-} from "@rove-code/contracts/relay";
+} from "@getpaperplane/contracts/relay";
 
 export const DPOP_CLOCK_HINT =
   "Hint: Check that automatic date and time is enabled on both devices, then try again.";
@@ -44,13 +44,13 @@ export function relayProtectedErrorMessage(error: RelayProtectedError): string {
       // "Not authorized" covers non-auth causes too; surface the reason so a
       // missing link does not read as a credential problem.
       if (error.reason === "environment_link_not_found") {
-        return "Relay has no active link for this environment. If it was deregistered from Rove Connect, link it again on that machine.";
+        return "Relay has no active link for this environment. If it was deregistered from Paperplane Connect, link it again on that machine.";
       }
       if (error.reason === "managed_endpoint_allocation_not_ready") {
-        return "The environment's Rove Connect tunnel is still being set up.";
+        return "The environment's Paperplane Connect tunnel is still being set up.";
       }
       if (error.reason === "endpoint_provider_not_managed") {
-        return "This environment is linked only to publish agent activity, so it cannot accept connections. On that computer, open Settings > Connections and turn Rove Connect on.";
+        return "This environment is linked only to publish agent activity, so it cannot accept connections. On that computer, open Settings > Connections and turn Paperplane Connect on.";
       }
       return error.reason
         ? `Relay rejected the environment connection request (${error.reason}).`
@@ -98,7 +98,7 @@ export function relayRequestFailureDetail(error: {
 // coming back, which clears this reason. While it is still reported, the host
 // is either still off or running a build too old to do that.
 export const RELAY_TUNNEL_RELEASED_MESSAGE =
-  "Offline for a while, so its Rove Connect tunnel was removed. Start Rove Code on that computer and update it to the latest version to reconnect.";
+  "Offline for a while, so its Paperplane Connect tunnel was removed. Start Paperplane on that computer and update it to the latest version to reconnect.";
 
 /** User-facing text for an offline status, or null when the relay gave no known reason. */
 export function relayOfflineReasonMessage(

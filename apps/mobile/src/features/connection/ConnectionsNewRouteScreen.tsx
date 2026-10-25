@@ -10,7 +10,7 @@ import {
   useRoute,
   type StaticScreenProps,
 } from "@react-navigation/native";
-import type { EnvironmentId } from "@rove-code/contracts";
+import type { EnvironmentId } from "@getpaperplane/contracts";
 import { AsyncResult } from "effect/reactivity";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Linking, Pressable, StyleSheet, View } from "react-native";
@@ -234,7 +234,9 @@ export function ConnectionsNewRouteScreen({
           />
 
           <View collapsable={false} className="gap-2">
-            <Text className="px-4 text-sm font-rove-medium text-foreground-muted">Or enter it</Text>
+            <Text className="px-4 text-sm font-paperplane-medium text-foreground-muted">
+              Or enter it
+            </Text>
             <View
               collapsable={false}
               className={cn(
@@ -273,7 +275,7 @@ export function ConnectionsNewRouteScreen({
             </Text>
           </View>
 
-          {hasCloudPublicConfig() ? <RoveConnectSection /> : null}
+          {hasCloudPublicConfig() ? <PaperplaneConnectSection /> : null}
         </View>
       </ScrollView>
     </SettingsScreen>
@@ -363,7 +365,7 @@ function PairingScanCard(props: {
               />
               <Text
                 className={cn(
-                  "font-rove-medium text-sm",
+                  "font-paperplane-medium text-sm",
                   light ? "text-black/70" : "text-white/80",
                 )}
               >
@@ -373,7 +375,7 @@ function PairingScanCard(props: {
           )}
         </View>
         <Text className={cn("text-center text-sm", light ? "text-black/70" : "text-white/80")}>
-          Scan the code from rove pair or desktop Connections settings
+          Scan the code from paperplane pair or desktop Connections settings
         </Text>
       </View>
     </Pressable>
@@ -383,9 +385,9 @@ function PairingScanCard(props: {
 /**
  * Managed-relay alternative to manual pairing: signed in, the account's
  * published environments connect with a switch; signed out, one row opens the
- * Rove Account sheet.
+ * Paperplane Account sheet.
  */
-function RoveConnectSection() {
+function PaperplaneConnectSection() {
   const { isLoaded, isSignedIn } = useAuth({ treatPendingAsSignedOut: false });
   const navigation = useNavigation();
   const { connectedEnvironments, onSetEnvironmentEnabled, onRemoveEnvironmentPress } =
@@ -397,7 +399,7 @@ function RoveConnectSection() {
 
   return (
     <View collapsable={false} className="gap-2">
-      <Text className="px-4 text-sm font-rove-medium text-foreground-muted">
+      <Text className="px-4 text-sm font-paperplane-medium text-foreground-muted">
         Or use the managed relay
       </Text>
       {isSignedIn ? (
@@ -415,7 +417,7 @@ function RoveConnectSection() {
           className="min-h-13 flex-row items-center gap-3 rounded-[26px] border-continuous bg-grouped-card px-4 active:opacity-70"
         >
           <View className="min-w-0 flex-1 py-3">
-            <Text className="text-base text-foreground">Sign in to Rove Connect</Text>
+            <Text className="text-base text-foreground">Sign in to Paperplane Connect</Text>
             <Text className="text-sm text-foreground-muted">
               Reach your machines from anywhere, no network setup.
             </Text>

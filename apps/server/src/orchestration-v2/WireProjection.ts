@@ -5,13 +5,13 @@ import type {
   OrchestrationV2ThreadProjection,
   OrchestrationV2ThreadStreamItem,
   OrchestrationV2TurnItem,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   compactDynamicToolOutput,
   omitToolOutputImageData,
   toolOutputImages,
   toolOutputIndicatesFailure,
-} from "@rove-code/shared/toolOutput";
+} from "@getpaperplane/shared/toolOutput";
 
 const MAX_DETAIL_STRING_BYTES = 32_768;
 const MAX_DYNAMIC_VALUE_BYTES = 16_384;

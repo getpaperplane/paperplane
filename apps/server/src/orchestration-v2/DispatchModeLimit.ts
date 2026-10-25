@@ -1,4 +1,4 @@
-import type { ProviderInteractionMode, RuntimeMode, ThreadId } from "@rove-code/contracts";
+import type { ProviderInteractionMode, RuntimeMode, ThreadId } from "@getpaperplane/contracts";
 import * as Context from "effect/Context";
 import type * as Ref from "effect/Ref";
 
@@ -28,7 +28,7 @@ export interface DispatchModeLimitValue extends DispatchModes {
 }
 
 export const DispatchModeLimit = Context.Reference<DispatchModeLimitValue | undefined>(
-  "@rove-code/server/orchestration-v2/DispatchModeLimit",
+  "@getpaperplane/server/orchestration-v2/DispatchModeLimit",
   { defaultValue: () => undefined },
 );
 

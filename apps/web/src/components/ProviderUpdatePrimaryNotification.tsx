@@ -6,7 +6,7 @@ import {
   AuthProvidersManageScope,
   type ServerProvider,
   type ProviderInstanceId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 
 import { primaryServerProvidersAtom, serverEnvironment } from "../state/server";
 import { usePrimaryEnvironment } from "../state/environments";

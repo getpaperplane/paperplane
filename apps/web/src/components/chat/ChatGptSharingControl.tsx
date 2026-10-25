@@ -1,5 +1,5 @@
-import { usesChatGptSharing } from "@rove-code/shared/usageLimits";
-import type { ServerProvider } from "@rove-code/contracts";
+import { usesChatGptSharing } from "@getpaperplane/shared/usageLimits";
+import type { ServerProvider } from "@getpaperplane/contracts";
 import { OpenAI } from "../Icons";
 import { ChatGptUsageButton } from "../settings/ChatGptUsageButton";
 

@@ -1,4 +1,4 @@
-import { MessageId, ThreadId, OrchestratorMcpFailure, ProjectId } from "@rove-code/contracts";
+import { MessageId, ThreadId, OrchestratorMcpFailure, ProjectId } from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Option from "effect/Option";
@@ -44,7 +44,7 @@ const assertProjectWorktree = Effect.fn("mcp.assertProjectWorktree")(function* (
     return yield* new OrchestratorMcpFailure({
       code: "invalid_request",
       message:
-        "worktreePath must be one of the project's git worktrees. rove_worktree_list shows them.",
+        "worktreePath must be one of the project's git worktrees. paperplane_worktree_list shows them.",
     });
 });
 
@@ -53,7 +53,7 @@ const access = Effect.gen(function* () {
   return yield* Project.ProjectService;
 });
 export const layer = McpToolAccess.toLayer(ProjectToolkit, {
-  rove_thread_launch: McpToolAccess.startsThreads(
+  paperplane_thread_launch: McpToolAccess.startsThreads(
     (input) => input,
     (input, { runtimeMode, interactionMode }) =>
       Effect.gen(function* () {
@@ -184,7 +184,7 @@ export const layer = McpToolAccess.toLayer(ProjectToolkit, {
         };
       }),
   ),
-  rove_project_list: McpToolAccess.reads((input) =>
+  paperplane_project_list: McpToolAccess.reads((input) =>
     Effect.gen(function* () {
       const projects = yield* access;
       const snapshot = yield* projects.snapshot.pipe(Effect.mapError(unavailable));
@@ -194,7 +194,7 @@ export const layer = McpToolAccess.toLayer(ProjectToolkit, {
       return { projects: rows.slice(start, end), nextCursor: end < rows.length ? end : null };
     }),
   ),
-  rove_project_read: McpToolAccess.reads((input) =>
+  paperplane_project_read: McpToolAccess.reads((input) =>
     Effect.gen(function* () {
       const projects = yield* access;
       const result = yield* projects.getById(input.projectId).pipe(Effect.mapError(unavailable));
@@ -206,7 +206,7 @@ export const layer = McpToolAccess.toLayer(ProjectToolkit, {
       return result.value;
     }),
   ),
-  rove_project_create: McpToolAccess.writesEnvironment(({ workspaceRoot, ...input }) =>
+  paperplane_project_create: McpToolAccess.writesEnvironment(({ workspaceRoot, ...input }) =>
     Effect.gen(function* () {
       const projects = yield* Project.ProjectService;
       if (workspaceRoot === undefined) {
@@ -220,7 +220,7 @@ export const layer = McpToolAccess.toLayer(ProjectToolkit, {
           return yield* new OrchestratorMcpFailure({
             code: "invalid_request",
             message:
-              "A project started from its title takes only a title; set scripts or defaultModelSelection afterwards with rove_project_update.",
+              "A project started from its title takes only a title; set scripts or defaultModelSelection afterwards with paperplane_project_update.",
           });
         const folders = yield* ManagedProjectFolders.ManagedProjectFolders;
         const created = yield* folders
@@ -250,7 +250,7 @@ export const layer = McpToolAccess.toLayer(ProjectToolkit, {
         .pipe(Effect.mapError(projectFailure));
     }),
   ),
-  rove_project_update: McpToolAccess.writesEnvironment((input) =>
+  paperplane_project_update: McpToolAccess.writesEnvironment((input) =>
     Effect.gen(function* () {
       const projects = yield* Project.ProjectService;
       return yield* projects
@@ -258,7 +258,7 @@ export const layer = McpToolAccess.toLayer(ProjectToolkit, {
         .pipe(Effect.mapError(projectFailure));
     }),
   ),
-  rove_project_delete: McpToolAccess.writesEnvironment((input) =>
+  paperplane_project_delete: McpToolAccess.writesEnvironment((input) =>
     Effect.gen(function* () {
       const projects = yield* Project.ProjectService;
       return yield* projects
@@ -266,7 +266,7 @@ export const layer = McpToolAccess.toLayer(ProjectToolkit, {
         .pipe(Effect.mapError(projectFailure));
     }),
   ),
-  rove_project_clone: McpToolAccess.writesEnvironment((input) =>
+  paperplane_project_clone: McpToolAccess.writesEnvironment((input) =>
     Effect.gen(function* () {
       const repositories = yield* Repositories.SourceControlRepositoryService;
       return yield* repositories.cloneRepository(input).pipe(

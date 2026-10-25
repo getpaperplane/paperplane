@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vite-plus/test";
-import { EnvironmentId, ProviderInstanceId } from "@rove-code/contracts";
+import { EnvironmentId, ProviderInstanceId } from "@getpaperplane/contracts";
 import {
   codexAuthorizationRequest,
   codexAuthDeliveryUrl,
@@ -22,7 +22,7 @@ const authorizationUrl = () => {
 };
 const input = {
   authorizationUrl: authorizationUrl(),
-  returnUrl: "https://rove.hafiezulzikry.com/welcome#agents:remote-environment",
+  returnUrl: "https://paperplane.hafiezulzikry.com/welcome#agents:remote-environment",
   environmentId: EnvironmentId.make("remote-environment"),
   instanceId: ProviderInstanceId.make("work-codex"),
   flowId: "flow-one",

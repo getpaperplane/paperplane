@@ -1,4 +1,4 @@
-import { sourceControlRepositorySelector } from "@rove-code/shared/sourceControl";
+import { sourceControlRepositorySelector } from "@getpaperplane/shared/sourceControl";
 import {
   type CommandId,
   pullRequestHostOf,
@@ -6,8 +6,8 @@ import {
   type OrchestrationProjectShell,
   type SourceControlProviderKind,
   type ThreadId,
-} from "@rove-code/contracts";
-import { parseChangeRequestUrl } from "@rove-code/shared/changeRequestUrl";
+} from "@getpaperplane/contracts";
+import { parseChangeRequestUrl } from "@getpaperplane/shared/changeRequestUrl";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";

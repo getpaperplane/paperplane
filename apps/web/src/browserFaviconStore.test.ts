@@ -1,5 +1,5 @@
-import { scopeProjectRef } from "@rove-code/client-runtime/environment";
-import { EnvironmentId, ProjectId, ThreadId } from "@rove-code/contracts";
+import { scopeProjectRef } from "@getpaperplane/client-runtime/environment";
+import { EnvironmentId, ProjectId, ThreadId } from "@getpaperplane/contracts";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 import * as RuntimePredicate from "effect/Predicate";
 

@@ -1,12 +1,12 @@
-import { SourceControlProviderKind } from "@rove-code/contracts";
+import { SourceControlProviderKind } from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
-import { SourceControlProviderError, type ChangeRequest } from "@rove-code/contracts";
+import { SourceControlProviderError, type ChangeRequest } from "@getpaperplane/contracts";
 
 import * as BitbucketApi from "./BitbucketApi.ts";
 import type { NormalizedBitbucketPullRequestRecord } from "./bitbucketPullRequests.ts";
-import * as SourceControlProvider from "@rove-code/source-control-core/server/SourceControlProvider";
-import type { SourceControlApiDiscoverySpec } from "@rove-code/source-control-core/server/discovery";
+import * as SourceControlProvider from "@getpaperplane/source-control-core/server/SourceControlProvider";
+import type { SourceControlApiDiscoverySpec } from "@getpaperplane/source-control-core/server/discovery";
 
 function toChangeRequest(summary: NormalizedBitbucketPullRequestRecord): ChangeRequest {
   return {

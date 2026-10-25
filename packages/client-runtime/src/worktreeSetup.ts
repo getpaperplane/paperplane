@@ -2,7 +2,7 @@ import {
   WORKTREE_SETUP_ACTIVITY_KIND,
   WorktreeSetupSnapshot,
   type ThreadId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 

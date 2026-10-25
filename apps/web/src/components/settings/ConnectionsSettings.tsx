@@ -1,5 +1,5 @@
 import { SessionPermissions } from "./SessionPermissions";
-import { AUTH_SCOPE_OPTIONS as PAIRING_SCOPE_OPTIONS } from "@rove-code/shared/authScopeOptions";
+import { AUTH_SCOPE_OPTIONS as PAIRING_SCOPE_OPTIONS } from "@getpaperplane/shared/authScopeOptions";
 import {
   ChevronRightIcon,
   ChevronsLeftRightEllipsisIcon,
@@ -45,18 +45,18 @@ import {
   type DesktopWslState,
   type EnvironmentId,
   resolveEnvironmentMachineKind,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   RelayConnectionRegistration,
   RelayConnectionTarget,
   connectionRoutes,
   connectionStatusText,
   environmentMcpUrl,
-} from "@rove-code/client-runtime/connection";
+} from "@getpaperplane/client-runtime/connection";
 import {
   isAtomCommandInterrupted,
   squashAtomCommandFailure,
-} from "@rove-code/client-runtime/state/runtime";
+} from "@getpaperplane/client-runtime/state/runtime";
 import * as DateTime from "effect/DateTime";
 import * as Option from "effect/Option";
 
@@ -155,7 +155,7 @@ import {
   supportsServerUpdateThreadContinuation,
 } from "~/versionSkew";
 import { hasCloudPublicConfig } from "~/cloud/publicConfig";
-import { RemoveRoveConnectEnvironmentDialog } from "../clerk/RemoveRoveConnectEnvironmentDialog";
+import { RemovePaperplaneConnectEnvironmentDialog } from "../clerk/RemovePaperplaneConnectEnvironmentDialog";
 import { useCloudLinkController } from "~/cloud/useCloudLinkController";
 import { authEnvironment } from "~/state/auth";
 import { environmentCatalog } from "~/connection/catalog";
@@ -1528,7 +1528,7 @@ function SavedBackendListRow({
       toastManager.add({
         type: "success",
         title: "MCP URL copied",
-        description: `Add it to an agent, e.g. claude mcp add --transport http rove ${url}`,
+        description: `Add it to an agent, e.g. claude mcp add --transport http paperplane ${url}`,
       });
     },
     onError: (error) => {
@@ -1547,7 +1547,7 @@ function SavedBackendListRow({
     serverUpdateState.status === "running" && serverUpdateState.stage === "resuming";
   const status = savedBackendStatus(environment);
   const serverVersion = environment.serverConfig?.environment.serverVersion ?? null;
-  // A saved Rove Connect machine this device has never reached (unsupported,
+  // A saved Paperplane Connect machine this device has never reached (unsupported,
   // or not yet connected) still has a descriptor from relay discovery, so
   // it can wear its detected glyph instead of the generic server. Discovery
   // empties its map on every refresh, so hold the last descriptor seen or
@@ -1793,7 +1793,7 @@ function CloudLinkSwitch({
   disabled,
   disabledReason,
   onCheckedChange,
-  ariaLabel = "Enable Rove Connect",
+  ariaLabel = "Enable Paperplane Connect",
 }: {
   readonly checked: boolean;
   readonly disabled: boolean;
@@ -1836,9 +1836,9 @@ function ConfiguredCloudLinkRow({ canManageRelay }: { readonly canManageRelay: b
   const [isUpdatingPreference, setIsUpdatingPreference] = useState(false);
 
   const disabledReason = !isSignedIn
-    ? "Sign in to Rove Connect to manage this environment."
+    ? "Sign in to Paperplane Connect to manage this environment."
     : !canManageRelay
-      ? "Your session does not have permission to manage Rove Connect access."
+      ? "Your session does not have permission to manage Paperplane Connect access."
       : null;
   const isBusy = isUpdating || isUpdatingPreference;
 
@@ -1856,15 +1856,15 @@ function ConfiguredCloudLinkRow({ canManageRelay }: { readonly canManageRelay: b
       toastManager.add({
         type: "success",
         title: enabled
-          ? "Rove Connect linked"
+          ? "Paperplane Connect linked"
           : publishAgentActivity
-            ? "Rove Connect tunnel disabled"
-            : "Rove Connect unlinked",
+            ? "Paperplane Connect tunnel disabled"
+            : "Paperplane Connect unlinked",
         description: enabled
-          ? "This environment is available through Rove Connect."
+          ? "This environment is available through Paperplane Connect."
           : publishAgentActivity
             ? "The managed tunnel was removed. Agent activity publishing stays on."
-            : "This environment is no longer available through Rove Connect.",
+            : "This environment is no longer available through Paperplane Connect.",
       });
     }
     setIsUpdating(false);
@@ -1902,7 +1902,7 @@ function ConfiguredCloudLinkRow({ canManageRelay }: { readonly canManageRelay: b
         type: "success",
         title: enabled ? "Webhooks held while offline" : "Webhooks no longer held",
         description: enabled
-          ? "Rove Connect keeps webhook requests for up to 24 hours while this environment is offline."
+          ? "Paperplane Connect keeps webhook requests for up to 24 hours while this environment is offline."
           : "Requests to an offline environment now fail. Anything already held is still delivered.",
       });
     }
@@ -1913,15 +1913,15 @@ function ConfiguredCloudLinkRow({ canManageRelay }: { readonly canManageRelay: b
     <>
       {window.desktopBridge ? (
         <SettingsRow
-          title={searchableSetting("rove-connect").title}
+          title={searchableSetting("paperplane-connect").title}
           description={
             linkRevoked
-              ? "This environment was removed from Rove Connect. Turn it on to link it again."
+              ? "This environment was removed from Paperplane Connect. Turn it on to link it again."
               : managedTunnelActive
-                ? "This environment is available to your other devices through Rove Connect."
+                ? "This environment is available to your other devices through Paperplane Connect."
                 : managedTunnelOutOfSync
-                  ? "Rove Connect is out of sync. This environment is linked only to publish agent activity, so other devices cannot connect. Turn Rove Connect on to repair it."
-                  : "Make this environment available to your other devices through Rove Connect."
+                  ? "Paperplane Connect is out of sync. This environment is linked only to publish agent activity, so other devices cannot connect. Turn Paperplane Connect on to repair it."
+                  : "Make this environment available to your other devices through Paperplane Connect."
           }
           status={operationError ?? primaryCloudLinkState.error}
           control={
@@ -1941,13 +1941,13 @@ function ConfiguredCloudLinkRow({ canManageRelay }: { readonly canManageRelay: b
         />
       ) : linkRevoked ? (
         <SettingsRow
-          title={searchableSetting("rove-connect").title}
-          description="This environment was removed from Rove Connect. Run `rove connect link` on the host to link it again."
+          title={searchableSetting("paperplane-connect").title}
+          description="This environment was removed from Paperplane Connect. Run `paperplane connect link` on the host to link it again."
         />
       ) : null}
       <SettingsRow
         title={searchableSetting("publish-agent-activity").title}
-        description="Send activity to mobile notifications and Live Activities without Rove Connect."
+        description="Send activity to mobile notifications and Live Activities without Paperplane Connect."
         control={
           <CloudLinkSwitch
             ariaLabel="Publish agent activity to mobile clients"
@@ -1967,7 +1967,7 @@ function ConfiguredCloudLinkRow({ canManageRelay }: { readonly canManageRelay: b
       {managedTunnelActive ? (
         <SettingsRow
           title={searchableSetting("hold-webhooks-while-offline").title}
-          description="Keep webhook requests for up to 24 hours while this environment is offline, then deliver them. Off: Rove Connect only forwards requests and stores nothing."
+          description="Keep webhook requests for up to 24 hours while this environment is offline, then deliver them. Off: Paperplane Connect only forwards requests and stores nothing."
           control={
             <CloudLinkSwitch
               ariaLabel="Hold webhook requests while this environment is offline"
@@ -1994,7 +1994,7 @@ function CloudLinkRow({
   if (!canReadRelay) {
     return (
       <SettingsRow
-        title="Rove Connect"
+        title="Paperplane Connect"
         description="To edit these settings, pair this connection with both View relay and Manage relay permissions."
       />
     );
@@ -2012,7 +2012,7 @@ function EmptyRemoteEnvironments({ cloudEnabled = true }: { readonly cloudEnable
         <EmptyTitle>No saved remote environments</EmptyTitle>
         <EmptyDescription>
           {cloudEnabled
-            ? "Click “Add environment” to pair another environment, or connect one from Rove Connect."
+            ? "Click “Add environment” to pair another environment, or connect one from Paperplane Connect."
             : "Click “Add environment” to pair another environment."}
         </EmptyDescription>
       </EmptyHeader>
@@ -2813,14 +2813,14 @@ export function ConnectionsSettings() {
 
   // Removing forgets the pairing, credentials, and cached threads on this
   // device. Switching off is the reversible path, so removal always confirms.
-  // Rove Connect environments get their own dialog: removing one here leaves its
+  // Paperplane Connect environments get their own dialog: removing one here leaves its
   // account registration, so it points to where that can be deregistered.
-  const [pendingRoveConnectRemoval, setPendingRoveConnectRemoval] =
+  const [pendingPaperplaneConnectRemoval, setPendingPaperplaneConnectRemoval] =
     useState<EnvironmentPresentation | null>(null);
   const handleRemoveSavedBackend = useCallback(
     async (environment: EnvironmentPresentation) => {
       if (environment.relayManaged && hasCloudPublicConfig()) {
-        setPendingRoveConnectRemoval(environment);
+        setPendingPaperplaneConnectRemoval(environment);
         return;
       }
       // Fail closed: no mounted confirm host means no removal.
@@ -2958,7 +2958,7 @@ export function ConnectionsSettings() {
       </div>
     </div>
   );
-  // Rove Connect is offered as a route when this account can reach the machine
+  // Paperplane Connect is offered as a route when this account can reach the machine
   // through it and it is not one of the machine's routes yet.
   const relayRouteOffer =
     routeTarget !== null &&
@@ -2989,7 +2989,7 @@ export function ConnectionsSettings() {
     toastManager.add({
       type: "success",
       title: "Route added",
-      description: `${routeTarget.label} falls back to Rove Connect when its other routes are unreachable.`,
+      description: `${routeTarget.label} falls back to Paperplane Connect when its other routes are unreachable.`,
     });
   };
   const renderRemoteModeBody = () => (
@@ -2997,7 +2997,7 @@ export function ConnectionsSettings() {
       {relayRouteOffer !== null ? (
         <div className="flex items-center justify-between gap-3 rounded-md border border-border px-3 py-2">
           <p className="text-xs text-muted-foreground">
-            This machine is on your Rove Connect account. Use it as a fallback route.
+            This machine is on your Paperplane Connect account. Use it as a fallback route.
           </p>
           <Button
             size="xs"
@@ -3005,7 +3005,7 @@ export function ConnectionsSettings() {
             disabled={isAddingSavedBackend}
             onClick={() => void addRelayRoute()}
           >
-            Add Rove Connect
+            Add Paperplane Connect
           </Button>
         </div>
       ) : null}
@@ -3476,7 +3476,7 @@ export function ConnectionsSettings() {
         {desktopWslState.enabled ? (
           <SettingsRow
             title="WSL only"
-            description="Run only the WSL backend. Rove Code restarts when this changes."
+            description="Run only the WSL backend. Paperplane restarts when this changes."
             className="bg-muted/20 pl-7 sm:pl-8"
             control={
               <Switch
@@ -3801,8 +3801,8 @@ export function ConnectionsSettings() {
                 </AlertDialogTitle>
                 <AlertDialogDescription>
                   {pendingDesktopServerExposureMode === "network-accessible"
-                    ? "Let your other devices connect to Rove Code over the network. Pair devices to give them access. Rove Code will restart."
-                    : "Devices connected over your local network will disconnect. Existing tunnels, such as Rove Connect or Tailscale HTTPS, keep working. Rove Code will restart."}
+                    ? "Let your other devices connect to Paperplane over the network. Pair devices to give them access. Paperplane will restart."
+                    : "Devices connected over your local network will disconnect. Existing tunnels, such as Paperplane Connect or Tailscale HTTPS, keep working. Paperplane will restart."}
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
@@ -3858,15 +3858,15 @@ export function ConnectionsSettings() {
                 <AlertDialogDescription>
                   {pendingWslChange?.kind === "disable"
                     ? pendingWslChange.wasWslOnly
-                      ? "Rove Code will restart on the Windows backend. Threads and projects opened against WSL stay safe inside the distro and become available again when you re-enable WSL."
-                      : "The WSL backend will stop. Threads and projects opened against WSL stay safe inside the distro, but they'll be unavailable in Rove Code until you re-enable WSL."
+                      ? "Paperplane will restart on the Windows backend. Threads and projects opened against WSL stay safe inside the distro and become available again when you re-enable WSL."
+                      : "The WSL backend will stop. Threads and projects opened against WSL stay safe inside the distro, but they'll be unavailable in Paperplane until you re-enable WSL."
                     : pendingWslChange?.kind === "distro"
-                      ? "Rove Code will restart the WSL backend on the new distro. Sessions still running on the current distro will be interrupted."
+                      ? "Paperplane will restart the WSL backend on the new distro. Sessions still running on the current distro will be interrupted."
                       : pendingWslChange?.kind === "enable"
                         ? "Run the WSL backend alongside the Windows one, or stop the Windows backend and use only WSL? You can change this later from Settings."
                         : pendingWslChange?.nextValue
-                          ? "Rove Code will restart and start only the WSL backend. Your Windows-side projects won't be accessible until you turn this off again."
-                          : "Rove Code will restart and bring the Windows backend back up alongside WSL."}
+                          ? "Paperplane will restart and start only the WSL backend. Your Windows-side projects won't be accessible until you turn this off again."
+                          : "Paperplane will restart and bring the Windows backend back up alongside WSL."}
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
@@ -3952,7 +3952,7 @@ export function ConnectionsSettings() {
               <AlertDialogHeader>
                 <AlertDialogTitle>Disable Tailscale HTTPS?</AlertDialogTitle>
                 <AlertDialogDescription>
-                  Rove Code will restart the local backend without Tailscale Serve.
+                  Paperplane will restart the local backend without Tailscale Serve.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
@@ -3990,7 +3990,7 @@ export function ConnectionsSettings() {
               <DialogHeader>
                 <DialogTitle>Set up Tailscale HTTPS?</DialogTitle>
                 <DialogDescription>
-                  Rove Code will restart the local backend with Tailscale Serve enabled and ask
+                  Paperplane will restart the local backend with Tailscale Serve enabled and ask
                   Tailscale to proxy HTTPS traffic to this backend.
                 </DialogDescription>
               </DialogHeader>
@@ -4165,13 +4165,13 @@ export function ConnectionsSettings() {
         />
       </SettingsSection>
       {hasCloudPublicConfig() ? (
-        <RemoveRoveConnectEnvironmentDialog
-          environmentLabel={pendingRoveConnectRemoval?.label ?? null}
-          onCancel={() => setPendingRoveConnectRemoval(null)}
+        <RemovePaperplaneConnectEnvironmentDialog
+          environmentLabel={pendingPaperplaneConnectRemoval?.label ?? null}
+          onCancel={() => setPendingPaperplaneConnectRemoval(null)}
           onConfirm={() => {
-            if (!pendingRoveConnectRemoval) return;
-            setPendingRoveConnectRemoval(null);
-            void removeSavedBackend(pendingRoveConnectRemoval);
+            if (!pendingPaperplaneConnectRemoval) return;
+            setPendingPaperplaneConnectRemoval(null);
+            void removeSavedBackend(pendingPaperplaneConnectRemoval);
           }}
         />
       ) : null}

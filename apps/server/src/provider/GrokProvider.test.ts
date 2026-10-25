@@ -8,7 +8,7 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Schema from "effect/Schema";
 import { HttpClient, HttpClientResponse } from "effect/http";
-import { GrokSettings } from "@rove-code/provider-grok/settings";
+import { GrokSettings } from "@getpaperplane/provider-grok/settings";
 
 import {
   buildGrokModelCapabilities,
@@ -17,9 +17,9 @@ import {
   checkGrokProviderStatus,
   grokSlashCommandsFromInitialize,
   parseGrokModelsCliOutput,
-} from "@rove-code/provider-grok/testing";
-import { execScriptSource, writeFakeCli } from "@rove-code/provider-testing/fakeCli";
-import { grokUsageResponseToLimits, readGrokAccount } from "@rove-code/provider-grok/testing";
+} from "@getpaperplane/provider-grok/testing";
+import { execScriptSource, writeFakeCli } from "@getpaperplane/provider-testing/fakeCli";
+import { grokUsageResponseToLimits, readGrokAccount } from "@getpaperplane/provider-grok/testing";
 
 const decodeGrokSettings = Schema.decodeSync(GrokSettings);
 const __dirname = NodePath.dirname(NodeURL.fileURLToPath(import.meta.url));
@@ -375,7 +375,7 @@ it.layer(NodeServices.layer)("checkGrokProviderStatus", (it) => {
       const snapshot = yield* Effect.scoped(
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
-          const dir = yield* fs.makeTempDirectoryScoped({ prefix: "rove-grok-version-" });
+          const dir = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-grok-version-" });
           const grokPath = writeFakeCli({
             directory: dir,
             name: "grok",
@@ -405,7 +405,7 @@ it.layer(NodeServices.layer)("checkGrokProviderStatus", (it) => {
   const writeFakeGrokCli = (input: { readonly modelsOutput: string; readonly acp: boolean }) =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
-      const dir = yield* fs.makeTempDirectoryScoped({ prefix: "rove-grok-probe-" });
+      const dir = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-grok-probe-" });
       const mockAgentPath = NodePath.resolve(__dirname, "../../scripts/acp-mock-agent.ts");
       return writeFakeCli({
         directory: dir,

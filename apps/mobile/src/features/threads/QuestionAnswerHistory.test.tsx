@@ -1,4 +1,4 @@
-import { ApprovalRequestId, EnvironmentId } from "@rove-code/contracts";
+import { ApprovalRequestId, EnvironmentId } from "@getpaperplane/contracts";
 import type { ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vite-plus/test";

@@ -6,15 +6,15 @@ import {
   type ProviderInstanceEnvironmentVariable,
   type ProviderInstanceMutation,
   type ServerSettings,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   asProviderConfigBlob,
   finalizeProviderEnvironment,
   nextProviderConfigWithFieldValue,
   type ProviderConfigBlob,
   type ProviderSettingsFieldModel,
-} from "@rove-code/client-runtime/state/provider-instance-settings";
-import type { ProviderClientDefinition } from "@rove-code/provider-core/client";
+} from "@getpaperplane/client-runtime/state/provider-instance-settings";
+import type { ProviderClientDefinition } from "@getpaperplane/provider-core/client";
 
 export interface ProviderInstanceRow {
   readonly instanceId: ProviderInstanceId;

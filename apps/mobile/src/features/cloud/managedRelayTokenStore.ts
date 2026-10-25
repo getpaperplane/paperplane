@@ -1,15 +1,15 @@
-import { ManagedRelay } from "@rove-code/client-runtime/relay";
+import { getSecureItemAsync } from "../../persistence/mobile-secure-storage";
+import { ManagedRelay } from "@getpaperplane/client-runtime/relay";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 import * as SecureStore from "expo-secure-store";
-import { LEGACY_RELAY_CLIENT_IDS } from "@rove-code/shared/roveMigration";
 
-const MANAGED_RELAY_TOKEN_CACHE_KEY = "rove.cloud.relay-access-tokens";
+const MANAGED_RELAY_TOKEN_CACHE_KEY = "paperplane.cloud.relay-access-tokens";
 const MANAGED_RELAY_TOKEN_CACHE_VERSION = 1;
 
 const ManagedRelayAccessTokenCacheEntrySchema = Schema.Struct({
   accountId: Schema.String,
-  clientId: Schema.Literals(["rove-mobile", "rove-web"]),
+  clientId: Schema.Literals(["paperplane-mobile", "paperplane-web"]),
   relayUrl: Schema.String,
   thumbprint: Schema.String,
   scopes: Schema.Array(
@@ -30,7 +30,7 @@ const ManagedRelayAccessTokenCacheRead = Schema.Struct({
   entries: Schema.Array(
     Schema.Struct({
       ...ManagedRelayAccessTokenCacheEntrySchema.fields,
-      clientId: Schema.Literals(["rove-mobile", "rove-web", ...LEGACY_RELAY_CLIENT_IDS]),
+      clientId: Schema.Literals(["paperplane-mobile", "paperplane-web"]),
     }),
   ),
 });
@@ -62,7 +62,7 @@ function logStoreFailure(error: ManagedRelayTokenStoreError) {
 }
 
 const loadManagedRelayAccessTokens = Effect.tryPromise({
-  try: () => SecureStore.getItemAsync(MANAGED_RELAY_TOKEN_CACHE_KEY),
+  try: () => getSecureItemAsync(MANAGED_RELAY_TOKEN_CACHE_KEY),
   catch: (cause) =>
     new ManagedRelayTokenStoreError({
       operation: "read",
@@ -74,14 +74,7 @@ const loadManagedRelayAccessTokens = Effect.tryPromise({
     encoded === null
       ? Effect.succeed<ReadonlyArray<ManagedRelay.ManagedRelayAccessTokenCacheEntry>>([])
       : decodeManagedRelayAccessTokenCache(encoded).pipe(
-          // Renaming metadata cannot make an old signed client_id claim valid. Mint a fresh token instead.
-          Effect.map((cache) =>
-            cache.entries.flatMap((entry) =>
-              entry.clientId === "rove-mobile" || entry.clientId === "rove-web"
-                ? [{ ...entry, clientId: entry.clientId }]
-                : [],
-            ),
-          ),
+          Effect.map((cache) => cache.entries),
           Effect.mapError(
             (cause) =>
               new ManagedRelayTokenStoreError({

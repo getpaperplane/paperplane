@@ -1,4 +1,4 @@
-import type { DesktopBridge, DesktopUpdateState } from "@rove-code/contracts";
+import type { DesktopBridge, DesktopUpdateState } from "@getpaperplane/contracts";
 import { TriangleAlertIcon } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { isElectron } from "../../env";

@@ -4,10 +4,10 @@ import {
   type EnvironmentId,
   type ProviderDriverKind,
   type ResolvedKeybindingsConfig,
-} from "@rove-code/contracts";
-import { resolveSelectableModel } from "@rove-code/shared/model";
+} from "@getpaperplane/contracts";
+import { resolveSelectableModel } from "@getpaperplane/shared/model";
 import { useAtomValue } from "@effect/atom-react";
-import { formatProviderUpdateRequiredNotice } from "@rove-code/client-runtime/providerUpdateRequiredModels";
+import { formatProviderUpdateRequiredNotice } from "@getpaperplane/client-runtime/providerUpdateRequiredModels";
 import { useNavigate } from "@tanstack/react-router";
 import { LegendList, type LegendListRef } from "@legendapp/list/react";
 import { memo, useMemo, useState, useCallback, useEffect, useLayoutEffect, useRef } from "react";

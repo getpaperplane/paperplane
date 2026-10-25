@@ -3,7 +3,7 @@ import type {
   OrchestrationV2WorkflowAgent,
   OrchestrationV2WorkflowPhase,
   OrchestrationV2WorkflowRunHandles,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 
 import { field, text } from "../unknownField.ts";
 

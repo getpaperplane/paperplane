@@ -1,8 +1,8 @@
 import {
   type DpopVerificationFailureCode as DpopVerificationFailureCodeType,
   verifyDpopProof,
-} from "@rove-code/shared/dpop";
-import type { DpopFailureReason } from "@rove-code/contracts";
+} from "@getpaperplane/shared/dpop";
+import type { DpopFailureReason } from "@getpaperplane/contracts";
 import * as Crypto from "effect/Crypto";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";

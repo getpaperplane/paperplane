@@ -1,15 +1,15 @@
 import { useAtomValue } from "@effect/atom-react";
-import { parseScopedThreadKey, scopedThreadKey } from "@rove-code/client-runtime/environment";
-import { PREVIEW_STREAM_BASE_PATH } from "@rove-code/client-runtime/preview/server-browser-stream";
-import { createPreviewEnvironmentAtoms } from "@rove-code/client-runtime/state/preview";
-import { resolveDeviceHubAccess } from "@rove-code/client-runtime/state/deviceHubAccess";
+import { parseScopedThreadKey, scopedThreadKey } from "@getpaperplane/client-runtime/environment";
+import { PREVIEW_STREAM_BASE_PATH } from "@getpaperplane/client-runtime/preview/server-browser-stream";
+import { createPreviewEnvironmentAtoms } from "@getpaperplane/client-runtime/state/preview";
+import { resolveDeviceHubAccess } from "@getpaperplane/client-runtime/state/deviceHubAccess";
 import type {
   EnvironmentId,
   PreviewEvent,
   PreviewListResult,
   PreviewSessionSnapshot,
   ThreadId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
 import { AsyncResult, Atom } from "effect/reactivity";

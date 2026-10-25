@@ -1,8 +1,11 @@
 import * as Dialog from "../components/ui/Dialog";
-import { filePreviewDelimiter, parseDelimitedPreview } from "@rove-code/shared/delimitedPreview";
-import type { EnvironmentId } from "@rove-code/contracts";
-import { readFilePreviewResponse } from "@rove-code/client-runtime/file-preview";
-import { filePreviewKind, FILE_TEXT_PREVIEW_MAX_BYTES } from "@rove-code/shared/filePreview";
+import {
+  filePreviewDelimiter,
+  parseDelimitedPreview,
+} from "@getpaperplane/shared/delimitedPreview";
+import type { EnvironmentId } from "@getpaperplane/contracts";
+import { readFilePreviewResponse } from "@getpaperplane/client-runtime/file-preview";
+import { filePreviewKind, FILE_TEXT_PREVIEW_MAX_BYTES } from "@getpaperplane/shared/filePreview";
 import { fetch } from "expo/fetch";
 import { File } from "expo-file-system";
 import { useEffect, useMemo, useRef, useState } from "react";

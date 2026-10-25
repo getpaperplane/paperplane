@@ -1,5 +1,5 @@
-import type { SourceControlProviderAuth } from "@rove-code/contracts";
-import type { GitHubSettings } from "@rove-code/client-runtime/source-control-clients";
+import type { SourceControlProviderAuth } from "@getpaperplane/contracts";
+import type { GitHubSettings } from "@getpaperplane/client-runtime/source-control-clients";
 
 export type GitHubDiscoveredAccount = NonNullable<SourceControlProviderAuth["accounts"]>[number];
 

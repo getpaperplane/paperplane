@@ -11,7 +11,7 @@ import {
   ProviderDriverKind,
   type ProviderReplayTranscript,
   ThreadId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
@@ -19,8 +19,8 @@ import * as ProviderAdapterRegistry from "../ProviderAdapterRegistry.ts";
 
 import { ClaudeOrchestratorReplayHarness } from "../Adapters/ClaudeAdapterV2.testkit.ts";
 import { CodexOrchestratorReplayHarness } from "../Adapters/CodexAdapterV2.testkit.ts";
-import * as IdAllocator from "@rove-code/provider-core/server/IdAllocator";
-import * as ProviderAdapter from "@rove-code/provider-core/server/ProviderAdapter";
+import * as IdAllocator from "@getpaperplane/provider-core/server/IdAllocator";
+import * as ProviderAdapter from "@getpaperplane/provider-core/server/ProviderAdapter";
 import { provideDeterministicTestRuntime } from "./DeterministicRuntime.ts";
 import {
   CODEX_MODEL_SELECTION,
@@ -38,11 +38,11 @@ import {
   THREAD_MERGE_BACK_SOURCE_PROMPT,
 } from "./fixtures/shared.ts";
 import { runOrchestratorV2ProviderReplayScenario } from "./ProviderReplayHarness.ts";
-import { makeCheckpointWorkspace } from "@rove-code/provider-testing/replayWorkspace";
+import { makeCheckpointWorkspace } from "@getpaperplane/provider-testing/replayWorkspace";
 import {
   decodeProviderReplayNdjson,
   materializeReplayTranscriptWorkspace,
-} from "@rove-code/provider-testing/replayTranscript";
+} from "@getpaperplane/provider-testing/replayTranscript";
 
 // These recorded 0.137 rollouts predate injection. Preserve their native fork
 // and turn exchanges, and assert the new history delivery at the adapter boundary.

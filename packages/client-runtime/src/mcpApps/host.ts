@@ -1,5 +1,5 @@
 // @effect-diagnostics globalTimers:off - The bridge runs in the client, outside an Effect runtime.
-import { MCP_APP_PROTOCOL_VERSION, type McpAppReference } from "@rove-code/shared/mcpApp";
+import { MCP_APP_PROTOCOL_VERSION, type McpAppReference } from "@getpaperplane/shared/mcpApp";
 import * as Base64 from "effect/encoding/Base64";
 import * as Predicate from "effect/Predicate";
 import * as Result from "effect/Result";
@@ -242,7 +242,7 @@ export function makeMcpAppHost(options: McpAppHostOptions): McpAppHost {
         respond(id, {
           protocolVersion:
             requested === MCP_APP_PROTOCOL_VERSION ? requested : MCP_APP_PROTOCOL_VERSION,
-          hostInfo: { name: "rove", version: options.hostVersion },
+          hostInfo: { name: "paperplane", version: options.hostVersion },
           hostCapabilities: {
             openLinks: {},
             serverTools: {},
@@ -473,7 +473,7 @@ export function makeMcpAppHost(options: McpAppHostOptions): McpAppHost {
           finish();
           return;
         }
-        const id = `rove-host-${nextHostRequestId++}`;
+        const id = `paperplane-host-${nextHostRequestId++}`;
         hostRequests.set(id, finish);
         timer = setTimeout(() => {
           hostRequests.delete(id);
@@ -537,7 +537,7 @@ function readDownloads(contents: unknown): ReadonlyArray<McpAppDownload> | undef
 }
 
 /**
- * Maps Rove's resolved theme variables to the spec's standardized style names, so
+ * Maps Paperplane's resolved theme variables to the spec's standardized style names, so
  * apps written for any MCP Apps host pick up the thread's colors and fonts.
  */
 export function mcpAppStyleVariables(

@@ -32,7 +32,7 @@ export interface SignalExport {
   readonly exportIntervalMs: number;
 }
 
-/** What Rove Code exports with when nothing configured a signal. */
+/** What Paperplane exports with when nothing configured a signal. */
 export const DEFAULT_SIGNAL_EXPORT: SignalExport = {
   protocol: "http/json",
   headers: undefined,
@@ -807,7 +807,7 @@ function parseBigInt(input: string): bigint {
 
 /**
  * Parses the `OTEL_EXPORTER_OTLP_HEADERS` wire format used by
- * `ROVE_OTLP_HEADERS`: W3C Baggage `key=value` pairs joined by commas, with
+ * `PAPERPLANE_OTLP_HEADERS`: W3C Baggage `key=value` pairs joined by commas, with
  * percent-encoded values. Each pair splits at its first `=` so an encoded or
  * literal `=` inside a value survives, and whitespace around the separators is
  * ignored.

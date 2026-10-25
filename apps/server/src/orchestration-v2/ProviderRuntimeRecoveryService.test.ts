@@ -13,7 +13,7 @@ import {
   ThreadId,
   TurnItemId,
   type OrchestrationV2ThreadProjection,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Ref from "effect/Ref";
@@ -21,7 +21,7 @@ import * as Ref from "effect/Ref";
 import * as EffectWorker from "./EffectWorker.ts";
 import * as EffectOutbox from "./EffectOutbox.ts";
 import * as EventSink from "./EventSink.ts";
-import * as IdAllocator from "@rove-code/provider-core/server/IdAllocator";
+import * as IdAllocator from "@getpaperplane/provider-core/server/IdAllocator";
 import * as ProjectionStore from "./ProjectionStore.ts";
 import * as ProviderRuntimeRecovery from "./ProviderRuntimeRecoveryService.ts";
 import * as ServerSettings from "../serverSettings.ts";
@@ -1232,7 +1232,7 @@ it.effect(
           providerThreadId,
           type: "dynamic_tool",
           status: "running",
-          toolName: "rove.rove_thread_wait",
+          toolName: "paperplane.paperplane_thread_wait",
           input: {
             threadId:
               "thread:delegated-task:command%3Amcp%3Aaafffab1-e811-458a-ae83-558e542c61ff%3Adelegate-task%3Areview-mobile-reconnect-opus-20260815",

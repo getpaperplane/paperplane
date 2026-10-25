@@ -1,4 +1,4 @@
-import * as HostProcess from "@rove-code/shared/HostProcess";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
@@ -398,7 +398,7 @@ export const probeTailscaleHttpsEndpoint = (input: {
   Effect.gen(function* () {
     const client = yield* HttpClient.HttpClient;
     const response = yield* Effect.gen(function* () {
-      const url = new URL("/.well-known/rove/environment", input.baseUrl);
+      const url = new URL("/.well-known/paperplane/environment", input.baseUrl);
       const request = HttpClientRequest.get(url.toString());
       return yield* client.execute(request);
     }).pipe(Effect.timeoutOption(input.timeout ?? TAILSCALE_PROBE_TIMEOUT));

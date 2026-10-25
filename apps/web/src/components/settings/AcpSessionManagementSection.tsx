@@ -2,7 +2,7 @@ import {
   AuthOrchestrationOperateScope,
   AuthProvidersManageScope,
   AuthOrchestrationReadScope,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { useEnvironmentScope, readEnvironmentScope } from "~/state/session";
 import type {
   AcpRegistryConfigurableProvider,
@@ -11,12 +11,12 @@ import type {
   ProjectId,
   ProviderInstanceId,
   ServerProvider,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   isAtomCommandInterrupted,
   squashAtomCommandFailure,
   type AtomCommandResult,
-} from "@rove-code/client-runtime/state/runtime";
+} from "@getpaperplane/client-runtime/state/runtime";
 import { useState } from "react";
 
 import { ensureLocalApi } from "../../localApi";
@@ -306,7 +306,7 @@ export function AcpSessionManagementSection(props: {
     <div className="grid gap-3">
       <SettingsRow
         title="Native sessions"
-        description="Resume agent-owned conversations as Rove threads."
+        description="Resume agent-owned conversations as Paperplane threads."
         status={
           canList && props.projects.length === 0
             ? "Add a project before importing sessions."

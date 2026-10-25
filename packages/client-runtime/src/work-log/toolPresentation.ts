@@ -1,11 +1,11 @@
-import { isWorkspaceImagePreviewPath } from "@rove-code/shared/filePreview";
-import { COMPUTER_USE_TOOL_SOURCE, dynamicToolSurface } from "@rove-code/shared/toolActivity";
+import { isWorkspaceImagePreviewPath } from "@getpaperplane/shared/filePreview";
+import { COMPUTER_USE_TOOL_SOURCE, dynamicToolSurface } from "@getpaperplane/shared/toolActivity";
 import type {
   ToolActivityIcon,
   ToolActivityNativeAppReference,
   ToolActivitySource,
   ToolActivitySurface,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 
 export interface ExtractedToolActivityPresentation {
   readonly viewedImagePath?: string;

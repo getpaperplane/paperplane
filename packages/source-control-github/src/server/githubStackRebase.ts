@@ -5,7 +5,7 @@ import * as Schema from "effect/Schema";
 import * as Base64 from "effect/encoding/Base64";
 
 import * as GitHubRest from "./GitHubRest.ts";
-import * as SourceControlHost from "@rove-code/source-control-core/server/SourceControlHost";
+import * as SourceControlHost from "@getpaperplane/source-control-core/server/SourceControlHost";
 
 /** One open layer of a stack, bottom to top, with the head the reader reviewed. */
 export interface CascadeLayer {
@@ -64,7 +64,7 @@ export const cascadeRebaseStack = Effect.fn("cascadeRebaseStack")(function* (inp
   const first = input.layers[0];
   if (first === undefined) return 0;
   const directory = yield* fileSystem
-    .makeTempDirectoryScoped({ prefix: "rove-stack-rebase-" })
+    .makeTempDirectoryScoped({ prefix: "paperplane-stack-rebase-" })
     .pipe(
       Effect.mapError(
         (cause) =>
@@ -85,9 +85,9 @@ export const cascadeRebaseStack = Effect.fn("cascadeRebaseStack")(function* (inp
     GIT_CONFIG_KEY_0: `http.${remote}.extraheader`,
     GIT_CONFIG_VALUE_0: authorization,
     GIT_CONFIG_KEY_1: "user.name",
-    GIT_CONFIG_VALUE_1: "Rove Code",
+    GIT_CONFIG_VALUE_1: "Paperplane",
     GIT_CONFIG_KEY_2: "user.email",
-    GIT_CONFIG_VALUE_2: "rove@users.noreply.github.com",
+    GIT_CONFIG_VALUE_2: "paperplane@users.noreply.github.com",
   };
   const git = (args: ReadonlyArray<string>, allowNonZeroExit = false) =>
     process.run({

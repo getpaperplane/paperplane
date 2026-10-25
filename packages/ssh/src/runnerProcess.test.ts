@@ -1,6 +1,6 @@
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { assert, describe, it } from "@effect/vitest";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
@@ -12,7 +12,7 @@ import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as NodeNet from "node:net";
 
 import { remoteStateKey } from "./command.ts";
-import { buildRemoteStopScript, buildRemoteRoveRunnerScript } from "./tunnel.ts";
+import { buildRemoteStopScript, buildRemotePaperplaneRunnerScript } from "./tunnel.ts";
 
 const Started = Schema.Struct({
   pid: Schema.Number,
@@ -29,7 +29,7 @@ describe.skipIf(HostProcess.Platform.defaultValue() === "win32")(
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
-        const fixture = yield* fs.makeTempDirectoryScoped({ prefix: "rove-runner-" });
+        const fixture = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-runner-" });
         const bin = path.join(fixture, "bin");
         const cliPath = path.join(fixture, "installed cli.mjs");
         yield* fs.makeDirectory(bin);
@@ -68,7 +68,7 @@ server.listen(Number(process.env.T3_TEST_PORT ?? 0), "127.0.0.1", () => {
                 detached: false,
                 stdin: Stream.make(
                   new TextEncoder().encode(
-                    buildRemoteRoveRunnerScript({ nodeScriptPath: cliPath }),
+                    buildRemotePaperplaneRunnerScript({ nodeScriptPath: cliPath }),
                   ),
                 ),
               }),
@@ -142,7 +142,7 @@ describe.skipIf(HostProcess.Platform.defaultValue() === "win32")(
           const fs = yield* FileSystem.FileSystem;
           const path = yield* Path.Path;
           const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
-          const fixture = yield* fs.makeTempDirectoryScoped({ prefix: "rove-stop-" });
+          const fixture = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-stop-" });
           const signalPath = path.join(fixture, "signals");
           const child = yield* spawner.spawn(
             ChildProcess.make(

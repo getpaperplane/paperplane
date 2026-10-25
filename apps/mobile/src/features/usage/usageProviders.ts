@@ -1,4 +1,4 @@
-import type { UsageProviderKind } from "@rove-code/contracts";
+import type { UsageProviderKind } from "@getpaperplane/contracts";
 import { useAppearancePreferences } from "../settings/appearance/AppearancePreferencesProvider";
 
 /**

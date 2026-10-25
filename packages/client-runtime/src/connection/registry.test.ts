@@ -5,7 +5,7 @@ import {
   ORCHESTRATION_PROTOCOL_VERSION,
   type ExecutionEnvironmentDescriptor,
   type ServerConfig,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { describe, expect, it } from "@effect/vitest";
 import * as Context from "effect/Context";
 import * as Deferred from "effect/Deferred";
@@ -66,7 +66,7 @@ import * as EnvironmentSupervisor from "./supervisor.ts";
 import * as ConnectionWakeups from "./wakeups.ts";
 import { watchDiscoveredCompatibility } from "./layer.ts";
 import * as RelayEnvironmentDiscovery from "../relay/discovery.ts";
-import type { RelayEnvironmentStatusResponse } from "@rove-code/contracts/relay";
+import type { RelayEnvironmentStatusResponse } from "@getpaperplane/contracts/relay";
 import { runDesktopCommitWithReconnectObserver } from "../state/server.ts";
 import { v2ShellSnapshot } from "../state/orchestrationV2TestFixtures.ts";
 
@@ -1891,7 +1891,7 @@ describe("EnvironmentRegistry routes", () => {
   const lanRegistration = (target = LAN_TARGET, profile = LAN_PROFILE) =>
     new BearerConnectionRegistration({ target, profile, credential: BEARER_CREDENTIAL });
 
-  it.effect("adds a paired LAN route ahead of Rove Connect instead of replacing it", () =>
+  it.effect("adds a paired LAN route ahead of Paperplane Connect instead of replacing it", () =>
     Effect.gen(function* () {
       const harness = yield* makeHarness([RELAY_TARGET]);
       yield* Effect.gen(function* () {
@@ -1992,27 +1992,29 @@ describe("EnvironmentRegistry routes", () => {
       }),
   );
 
-  it.effect("signing out of Rove Connect keeps an environment that still has a LAN route", () =>
-    Effect.gen(function* () {
-      const harness = yield* makeHarness(
-        [LAN_TARGET, RELAY_TARGET, SECOND_RELAY_TARGET],
-        [LAN_PROFILE],
-        [[LAN_TARGET.connectionId, BEARER_CREDENTIAL]],
-      );
-      yield* Effect.gen(function* () {
-        const registry = yield* EnvironmentRegistry.EnvironmentRegistry;
-        yield* registry.removeRelayEnvironments();
+  it.effect(
+    "signing out of Paperplane Connect keeps an environment that still has a LAN route",
+    () =>
+      Effect.gen(function* () {
+        const harness = yield* makeHarness(
+          [LAN_TARGET, RELAY_TARGET, SECOND_RELAY_TARGET],
+          [LAN_PROFILE],
+          [[LAN_TARGET.connectionId, BEARER_CREDENTIAL]],
+        );
+        yield* Effect.gen(function* () {
+          const registry = yield* EnvironmentRegistry.EnvironmentRegistry;
+          yield* registry.removeRelayEnvironments();
 
-        const targets = yield* Ref.get(harness.storedTargets);
-        expect(routesOf(targets, LAN_TARGET.environmentId)).toEqual([LAN_TARGET]);
-        expect(hasRoutes(targets, SECOND_RELAY_TARGET.environmentId)).toBe(false);
-        // Only the environment that lost its last route is forgotten.
-        expect(yield* Ref.get(harness.cacheClears)).toEqual([SECOND_RELAY_TARGET.environmentId]);
-        expect(
-          (yield* SubscriptionRef.get(registry.entries)).get(LAN_TARGET.environmentId)?.target,
-        ).toEqual(LAN_TARGET);
-      }).pipe(Effect.provide(harness.layer), Effect.scoped);
-    }),
+          const targets = yield* Ref.get(harness.storedTargets);
+          expect(routesOf(targets, LAN_TARGET.environmentId)).toEqual([LAN_TARGET]);
+          expect(hasRoutes(targets, SECOND_RELAY_TARGET.environmentId)).toBe(false);
+          // Only the environment that lost its last route is forgotten.
+          expect(yield* Ref.get(harness.cacheClears)).toEqual([SECOND_RELAY_TARGET.environmentId]);
+          expect(
+            (yield* SubscriptionRef.get(registry.entries)).get(LAN_TARGET.environmentId)?.target,
+          ).toEqual(LAN_TARGET);
+        }).pipe(Effect.provide(harness.layer), Effect.scoped);
+      }),
   );
 
   it.effect("reorders routes and rejects an order that drops one", () =>

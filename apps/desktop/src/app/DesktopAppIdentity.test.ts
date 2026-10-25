@@ -22,9 +22,9 @@ const defaultEnvironmentInput = {
   platform: "darwin",
   processArch: "arm64",
   appVersion: "1.2.3",
-  appPath: "/Applications/Rove Code.app/Contents/Resources/app.asar",
+  appPath: "/Applications/Paperplane.app/Contents/Resources/app.asar",
   isPackaged: true,
-  resourcesPath: "/Applications/Rove Code.app/Contents/Resources",
+  resourcesPath: "/Applications/Paperplane.app/Contents/Resources",
   runningUnderArm64Translation: false,
 } satisfies DesktopEnvironment.MakeDesktopEnvironmentInput;
 
@@ -41,7 +41,7 @@ interface ElectronAppCalls {
 const layerElectronApp = (calls: ElectronAppCalls) =>
   Layer.succeed(ElectronApp.ElectronApp, {
     metadata: Effect.die("unexpected metadata read"),
-    name: Effect.succeed("Rove Code"),
+    name: Effect.succeed("Paperplane"),
     systemLocale: Effect.succeed("en-US"),
     whenReady: Effect.void,
     quit: Effect.void,
@@ -129,13 +129,13 @@ const withIdentity = <A, E, R>(
         Layer.provideMerge(
           FileSystem.layerNoop({
             exists: (path) =>
-              input.legacyPathProbeError && /\/rove-code(?:-dev)?(?:\/|$)/.test(path)
+              input.legacyPathProbeError && /\/paperplane(?:-dev)?(?:\/|$)/.test(path)
                 ? Effect.fail(input.legacyPathProbeError)
                 : Effect.succeed(
                     input.legacyPathExists === true && /\/rove-code(?:-dev)?(?:\/|$)/.test(path),
                   ),
             readFileString: () =>
-              Effect.succeed(input.packageJson ?? '{"roveCommitHash":"abcdef1234567890"}'),
+              Effect.succeed(input.packageJson ?? '{"paperplaneCommitHash":"abcdef1234567890"}'),
           }),
         ),
         Layer.provideMerge(layerAssets(input.pngIconPath ?? Option.none())),
@@ -153,7 +153,7 @@ describe("DesktopAppIdentity", () => {
         const identity = yield* DesktopAppIdentity.DesktopAppIdentity;
         const userDataPath = yield* identity.resolveUserDataPath;
 
-        assert.equal(userDataPath, "/Users/alice/Library/Application Support/rove-v2");
+        assert.equal(userDataPath, "/Users/alice/Library/Application Support/paperplane");
       }),
       { legacyPathExists: true },
     ),
@@ -165,7 +165,7 @@ describe("DesktopAppIdentity", () => {
         const identity = yield* DesktopAppIdentity.DesktopAppIdentity;
         assert.equal(
           yield* identity.resolveUserDataPath,
-          "/Users/alice/Library/Application Support/rove-dev",
+          "/Users/alice/Library/Application Support/paperplane-dev",
         );
       }),
       {
@@ -175,8 +175,8 @@ describe("DesktopAppIdentity", () => {
     ),
   );
 
-  it.effect("preserves failures while inspecting the legacy Windows credential state", () => {
-    const legacyPath = "/Users/alice/AppData/Roaming/rove-code-dev/Local State";
+  it.effect("preserves failures while inspecting the destination Windows profile", () => {
+    const legacyPath = "/Users/alice/AppData/Roaming/paperplane-dev";
     const cause = PlatformError.systemError({
       _tag: "PermissionDenied",
       module: "FileSystem",
@@ -193,10 +193,7 @@ describe("DesktopAppIdentity", () => {
         assert.instanceOf(error, DesktopUserData.DesktopUserDataInitializationError);
         assert.equal(error.resourcePath, legacyPath);
         assert.strictEqual(error.cause, cause);
-        assert.equal(
-          error.message,
-          `Could not initialize Electron user data during inspect at ${legacyPath} (PermissionDenied).`,
-        );
+        assert.equal(error.operation, "inspect");
       }),
       {
         legacyPathProbeError: cause,
@@ -217,8 +214,8 @@ describe("DesktopAppIdentity", () => {
         const identity = yield* DesktopAppIdentity.DesktopAppIdentity;
         yield* identity.configure;
 
-        assert.deepEqual(calls.setName, ["Rove Code Beta"]);
-        assert.equal(calls.setAboutPanelOptions[0]?.applicationName, "Rove Code (Beta)");
+        assert.deepEqual(calls.setName, ["Paperplane Beta"]);
+        assert.equal(calls.setAboutPanelOptions[0]?.applicationName, "Paperplane (Beta)");
         assert.equal(calls.setAboutPanelOptions[0]?.applicationVersion, "1.2.3");
         assert.equal(calls.setAboutPanelOptions[0]?.version, "0123456789ab");
         // Packaged: the bundle's own icon stands, so a custom one the user
@@ -229,7 +226,7 @@ describe("DesktopAppIdentity", () => {
         calls,
         environment: {
           env: {
-            ROVE_COMMIT_HASH: "0123456789abcdef",
+            PAPERPLANE_COMMIT_HASH: "0123456789abcdef",
           },
         },
         pngIconPath: Option.some("/icon.png"),
@@ -261,10 +258,10 @@ describe("DesktopAppIdentity", () => {
 
         const runtimeName = calls.setName[0];
         assert.isDefined(runtimeName);
-        assert.equal(runtimeName, `Rove Code ${stage}`);
+        assert.equal(runtimeName, `Paperplane ${stage}`);
         // RFC 9110's token grammar, after Electron removes ASCII spaces.
         assert.match(runtimeName.replaceAll(" ", ""), /^[!#$%&'*+\-.^_`|~0-9A-Za-z]+$/);
-        assert.equal(calls.setAboutPanelOptions[0]?.applicationName, `Rove Code (${stage})`);
+        assert.equal(calls.setAboutPanelOptions[0]?.applicationName, `Paperplane (${stage})`);
       }),
       { calls, environment },
     );

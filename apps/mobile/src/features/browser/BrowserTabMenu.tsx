@@ -8,8 +8,8 @@ import {
   type PreviewAdjustInput,
   type PreviewSessionSnapshot,
   type PreviewViewportSetting,
-} from "@rove-code/contracts";
-import { PREVIEW_VIEWPORT_PRESETS } from "@rove-code/shared/previewViewport";
+} from "@getpaperplane/contracts";
+import { PREVIEW_VIEWPORT_PRESETS } from "@getpaperplane/shared/previewViewport";
 
 import { ControlPill } from "../../components/ui/ControlPill";
 import { Menu } from "../../components/ui/Menu";

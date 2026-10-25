@@ -1,7 +1,7 @@
 import {
   isWorkspaceAudioPreviewPath,
   isWorkspaceVideoPreviewPath,
-} from "@rove-code/shared/filePreview";
+} from "@getpaperplane/shared/filePreview";
 
 export interface FileBreadcrumb {
   readonly label: string;

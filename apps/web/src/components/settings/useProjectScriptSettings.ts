@@ -1,20 +1,20 @@
-import { AuthSettingsWriteScope, EnvironmentAuthorizationError } from "@rove-code/contracts";
+import { AuthSettingsWriteScope, EnvironmentAuthorizationError } from "@getpaperplane/contracts";
 import { readEnvironmentScope } from "../../state/session";
 import {
   isAtomCommandInterrupted,
   mapAtomCommandResult,
   squashAtomCommandFailure,
   type AtomCommandResult,
-} from "@rove-code/client-runtime/state/runtime";
+} from "@getpaperplane/client-runtime/state/runtime";
 import {
   type EnvironmentId,
   type ProjectId,
   type ProjectScript,
   type ResolvedKeybindingsConfig,
   type ServerSettings,
-} from "@rove-code/contracts";
-import { resolveProjectScripts } from "@rove-code/shared/projectScripts";
-import { clearProjectSettingsOverrides } from "@rove-code/shared/projectSettings";
+} from "@getpaperplane/contracts";
+import { resolveProjectScripts } from "@getpaperplane/shared/projectScripts";
+import { clearProjectSettingsOverrides } from "@getpaperplane/shared/projectSettings";
 import * as Cause from "effect/Cause";
 import { AsyncResult } from "effect/reactivity";
 import { useRef, useState } from "react";

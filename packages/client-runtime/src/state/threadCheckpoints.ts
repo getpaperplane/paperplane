@@ -5,7 +5,7 @@ import type {
   MessageId,
   OrchestrationV2ThreadProjection,
   RunId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as DateTime from "effect/DateTime";
 
 export interface ThreadCheckpointSummary {

@@ -1,11 +1,11 @@
-import { SourceControlProviderKind } from "@rove-code/contracts";
+import { SourceControlProviderKind } from "@getpaperplane/contracts";
 import { describe, expect, it } from "vite-plus/test";
 import {
   EnvironmentId,
   ProjectId,
   CommandId,
   SourceControlDiscoveryResult,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Option from "effect/Option";
 
 import {
@@ -55,8 +55,8 @@ describe("add project shared logic", () => {
     expect(normalizePastedCloneUrl("imputnet/helium")).toBe(
       "https://github.com/imputnet/helium.git",
     );
-    expect(normalizePastedCloneUrl("  rovecode/rove  ")).toBe(
-      "https://github.com/rovecode/rove.git",
+    expect(normalizePastedCloneUrl("  paperplane/paperplane  ")).toBe(
+      "https://github.com/paperplane/paperplane.git",
     );
   });
 

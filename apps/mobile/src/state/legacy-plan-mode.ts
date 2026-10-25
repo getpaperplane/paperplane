@@ -2,11 +2,11 @@ import {
   DEFAULT_PROVIDER_INTERACTION_MODE,
   type ProviderInteractionMode,
   type ServerProvider,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 
 type InteractionModeProvider = Pick<ServerProvider, "showInteractionModeToggle">;
 
-/** Normalize saved Rove mode choices without changing native slash commands. */
+/** Normalize saved Paperplane mode choices without changing native slash commands. */
 export function resolveProviderInteractionMode(
   provider: InteractionModeProvider | null | undefined,
   interactionMode: ProviderInteractionMode | null | undefined,

@@ -5,7 +5,7 @@ import type {
   ProviderApprovalOption,
   ProviderRequestKind,
   RuntimeRequestId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as DateTime from "effect/DateTime";
 
 export interface ThreadPendingApproval {

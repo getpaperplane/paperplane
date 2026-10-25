@@ -5,7 +5,7 @@ import type {
   TerminalSessionSnapshot,
   TerminalSummary,
   ThreadId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   appendOutput,
   DEFAULT_MAX_TERMINAL_BUFFER_BYTES,

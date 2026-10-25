@@ -38,8 +38,8 @@ describe.skipIf(!supported)("Pi command isolation on Linux", () => {
   const servers: NodeNet.Server[] = [];
 
   beforeEach(async () => {
-    pool = `app-rove-workloadtest${NodeCrypto.randomUUID().replaceAll("-", "")}.slice`;
-    directory = await NodeFSP.mkdtemp(NodePath.join(NodeOS.tmpdir(), "rove-workload-test-"));
+    pool = `app-paperplane-workloadtest${NodeCrypto.randomUUID().replaceAll("-", "")}.slice`;
+    directory = await NodeFSP.mkdtemp(NodePath.join(NodeOS.tmpdir(), "paperplane-workload-test-"));
   });
   afterEach(async () => {
     await Promise.all(managers.splice(0).map((manager) => manager.dispose()));
@@ -128,7 +128,7 @@ describe.skipIf(!supported)("Pi command isolation on Linux", () => {
       await queued.promise;
       abort.abort();
       await cancelled;
-      expect(output).toEqual(["[Rove: all 1 shell slots are busy; queued.]\n"]);
+      expect(output).toEqual(["[Paperplane: all 1 shell slots are busy; queued.]\n"]);
     } finally {
       holder.stdin.end("release\n");
       await exited;
@@ -274,7 +274,7 @@ describe.skipIf(!supported)("Pi command isolation on Linux", () => {
     await cancelledQueue.promise;
     abort.abort();
     await cancelled;
-    expect(cancelledOutput).toEqual(["[Rove: all 2 shell slots are busy; queued.]\n"]);
+    expect(cancelledOutput).toEqual(["[Paperplane: all 2 shell slots are busy; queued.]\n"]);
     expect(cancelledEntered).toBe(false);
 
     const nextQueue = Promise.withResolvers<void>();
@@ -295,7 +295,7 @@ describe.skipIf(!supported)("Pi command isolation on Linux", () => {
     expect(await aRun).toEqual({ exitCode: 0 });
     const nextConnection = await next.ready;
     expect(cancelledEntered).toBe(false);
-    expect(nextOutput).toEqual(["[Rove: all 2 shell slots are busy; queued.]\n"]);
+    expect(nextOutput).toEqual(["[Paperplane: all 2 shell slots are busy; queued.]\n"]);
     // The remaining original scope is still active; only one slot was released.
     expect(bConnection.destroyed).toBe(false);
     nextConnection.write("release");
@@ -432,7 +432,7 @@ describe.skipIf(!supported)("Pi command isolation on Linux", () => {
 
   it("honours the inherited override even when settings say off", async () => {
     expect(
-      await resolvePiWorkloadMemory("off", "3072", { ROVE_PI_MEMORY_BUDGET_MIB: "2048" }),
+      await resolvePiWorkloadMemory("off", "3072", { PAPERPLANE_PI_MEMORY_BUDGET_MIB: "2048" }),
     ).toEqual({ kind: "explicit", mib: 2048 });
     await expect(resolvePiWorkloadMemory("on", "128", {})).rejects.toThrow("384");
   });

@@ -39,15 +39,15 @@ import {
   ClaudeSettings,
   CodexSettings,
   ProviderInstanceId,
-} from "@rove-code/contracts";
-import { makeKeyedCoalescingWorker } from "@rove-code/shared/KeyedCoalescingWorker";
-import * as KeyedLock from "@rove-code/shared/KeyedLock";
-import { AgentScope } from "@rove-code/shared/AgentScope";
-import * as HostProcess from "@rove-code/shared/HostProcess";
-import { mergePathEntries } from "@rove-code/shared/shell";
+} from "@getpaperplane/contracts";
+import { makeKeyedCoalescingWorker } from "@getpaperplane/shared/KeyedCoalescingWorker";
+import * as KeyedLock from "@getpaperplane/shared/KeyedLock";
+import { AgentScope } from "@getpaperplane/shared/AgentScope";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
+import { mergePathEntries } from "@getpaperplane/shared/shell";
 
-import { acpRegistryManagedBinaryDirectories } from "@rove-code/provider-acp-registry/server";
-import { getTerminalLabel } from "@rove-code/shared/terminalLabels";
+import { acpRegistryManagedBinaryDirectories } from "@getpaperplane/provider-acp-registry/server";
+import { getTerminalLabel } from "@getpaperplane/shared/terminalLabels";
 import * as DateTime from "effect/DateTime";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -65,7 +65,7 @@ import * as Scope from "effect/Scope";
 import * as SynchronizedRef from "effect/SynchronizedRef";
 
 import * as ServerConfig from "../config.ts";
-import { mergeProviderInstanceEnvironment } from "@rove-code/provider-core/server/instanceEnvironment";
+import { mergeProviderInstanceEnvironment } from "@getpaperplane/provider-core/server/instanceEnvironment";
 import { resolveCodexHomeLayout } from "../provider/Drivers/CodexHomeLayout.ts";
 import { makeClaudeEnvironment } from "../provider/Drivers/ClaudeHome.ts";
 import { deriveProviderInstanceConfigMap } from "../provider/ProviderInstanceRegistryHydration.ts";
@@ -75,11 +75,11 @@ import {
   terminalRestartsTotal,
   terminalSessionsTotal,
 } from "../observability/Metrics.ts";
-import { expandHomePath } from "@rove-code/provider-core/server/pathExpansion";
+import { expandHomePath } from "@getpaperplane/provider-core/server/pathExpansion";
 import * as ProcessRunner from "../processRunner.ts";
 import * as PortScanner from "../preview/PortScanner.ts";
 import * as NativeTelemetryClient from "../resourceTelemetry/NativeTelemetryClient.ts";
-import * as PtyAdapter from "@rove-code/shared/PtyAdapter";
+import * as PtyAdapter from "@getpaperplane/shared/PtyAdapter";
 
 export {
   TerminalCwdError,
@@ -239,7 +239,7 @@ export class TerminalManager extends Context.Service<
       listener: (event: TerminalMetadataStreamEvent) => Effect.Effect<void>,
     ) => Effect.Effect<() => void>;
   }
->()("@rove-code/server/terminal/Manager/TerminalManager") {}
+>()("@getpaperplane/server/terminal/Manager/TerminalManager") {}
 
 interface TerminalSubprocessInspectResult {
   readonly hasRunningSubprocess: boolean;
@@ -1259,7 +1259,7 @@ function toSessionKey(threadId: string, terminalId: string): string {
 
 function shouldExcludeTerminalEnvKey(key: string): boolean {
   const normalizedKey = key.toUpperCase();
-  if (normalizedKey.startsWith("ROVE_")) {
+  if (normalizedKey.startsWith("PAPERPLANE_")) {
     return true;
   }
   if (normalizedKey.startsWith("VITE_")) {
@@ -1273,7 +1273,7 @@ function shouldExcludeTerminalEnvKey(key: string): boolean {
 // not inherit them.
 const APPIMAGE_RUNTIME_ENV_KEYS = ["APPIMAGE", "APPDIR", "ARGV0", "OWD"] as const;
 // Colon-separated search-path variables the AppImage runtime points at its
-// temporary mount (e.g. /tmp/.mount_Rove-XXXX/usr/bin, the bundled glib schemas,
+// temporary mount (e.g. /tmp/.mount_Paperplane-XXXX/usr/bin, the bundled glib schemas,
 // and an $APPDIR/usr/share XDG data entry). Only the mount segments are
 // dropped; the user's real entries are preserved. When nothing but mount
 // segments remain the variable is removed entirely so consumers fall back to

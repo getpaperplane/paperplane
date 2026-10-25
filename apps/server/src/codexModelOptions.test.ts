@@ -1,7 +1,7 @@
 import { assert, it } from "@effect/vitest";
 
-import { ProviderInstanceId } from "@rove-code/contracts";
-import { createModelSelection } from "@rove-code/shared/model";
+import { ProviderInstanceId } from "@getpaperplane/contracts";
+import { createModelSelection } from "@getpaperplane/shared/model";
 
 import { getCodexServiceTierOptionValue } from "./codexModelOptions.ts";
 

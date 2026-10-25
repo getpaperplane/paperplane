@@ -2,8 +2,8 @@
 import * as Net from "node:net";
 import { expect, it } from "@effect/vitest";
 import * as NodeHttpServer from "@effect/platform-node/NodeHttpServer";
-import { AuthOrchestrationOperateScope, AuthSessionId, ThreadId } from "@rove-code/contracts";
-import { Environment as HostProcessEnvironment } from "@rove-code/shared/HostProcess";
+import { AuthOrchestrationOperateScope, AuthSessionId, ThreadId } from "@getpaperplane/contracts";
+import { Environment as HostProcessEnvironment } from "@getpaperplane/shared/HostProcess";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";

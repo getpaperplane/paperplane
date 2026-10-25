@@ -1,6 +1,6 @@
 import { PermissionUpdateNotice } from "../components/PermissionUpdateNotice";
-import { type ServerLifecycleWelcomePayload } from "@rove-code/contracts";
-import { scopedProjectKey, scopeProjectRef } from "@rove-code/client-runtime/environment";
+import { type ServerLifecycleWelcomePayload } from "@getpaperplane/contracts";
+import { scopedProjectKey, scopeProjectRef } from "@getpaperplane/client-runtime/environment";
 import {
   Outlet,
   Link,
@@ -86,7 +86,7 @@ import { installDesktopPasteAsText } from "../lib/desktopPasteAsText";
 import { shouldResumeSnapShotSetupOnStartup } from "../lib/snapShotSetupResume";
 import { hasCloudPublicConfig } from "../cloud/publicConfig";
 
-// Rove Connect onboarding needs Clerk. Builds without cloud config never load it,
+// Paperplane Connect onboarding needs Clerk. Builds without cloud config never load it,
 // so Clerk stays out of the startup graph for local users.
 const ConnectOnboardingDialog = hasCloudPublicConfig()
   ? lazy(() =>

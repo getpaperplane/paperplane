@@ -1,4 +1,4 @@
-import type { EnvironmentThreadShell } from "@rove-code/client-runtime/state/shell";
+import type { EnvironmentThreadShell } from "@getpaperplane/client-runtime/state/shell";
 import {
   CommonActions,
   StackActions,

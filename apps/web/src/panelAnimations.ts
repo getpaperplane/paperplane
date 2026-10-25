@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useRef, useState } from "react";
-import { type PanelAnimationDurationMs } from "@rove-code/contracts/settings";
+import { type PanelAnimationDurationMs } from "@getpaperplane/contracts/settings";
 
 import { useMediaQuery } from "./hooks/useMediaQuery";
 import { useClientSettings } from "./hooks/useSettings";

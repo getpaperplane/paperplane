@@ -10,25 +10,25 @@ import {
 } from "./ChatView.logic";
 import * as DateTime from "effect/DateTime";
 import { restorePlanFollowUpComposer } from "./ChatView.logic";
-import { assistantCitationsToPlainText } from "@rove-code/shared/assistantCitations";
+import { assistantCitationsToPlainText } from "@getpaperplane/shared/assistantCitations";
 import { prepareQueuedEditAttachments, recoverQueuedMessageEdit } from "./chat/queuedMessageEdit";
 import { recallCheckoutIsRepo, rememberCheckoutIsRepo } from "./ChatView.logic";
 import { useLoadBalancedEnvironment } from "../hooks/useLoadBalancedEnvironment";
 import { useScratchProject } from "../hooks/useScratchProject";
 import { useStableCallback } from "../hooks/useStableCallback";
 import { useStructuralValue } from "../hooks/useStructuralValue";
-import { isScratchProject } from "@rove-code/client-runtime/state/projects";
-import { visibleThreadPullRequests } from "@rove-code/shared/threadPullRequests";
-import type { UsageLimitSourceSnapshots } from "@rove-code/contracts";
+import { isScratchProject } from "@getpaperplane/client-runtime/state/projects";
+import { visibleThreadPullRequests } from "@getpaperplane/shared/threadPullRequests";
+import type { UsageLimitSourceSnapshots } from "@getpaperplane/contracts";
 import {
   collectProviderUsageLimits,
   hasProviderUsageLimits,
   isUsageLimitsCommand,
-} from "@rove-code/shared/usageLimits";
+} from "@getpaperplane/shared/usageLimits";
 import { feedbackBannerItem } from "./chat/ComposerFeedback";
 import { usageLimitsBannerItem } from "./chat/ComposerUsageLimits";
 import { useHostMemoryBannerItem } from "./chat/HostMemoryNotice";
-import { getTerminalLabel } from "@rove-code/shared/terminalLabels";
+import { getTerminalLabel } from "@getpaperplane/shared/terminalLabels";
 import * as Schema from "effect/Schema";
 import {
   questionAttachmentDraftId,
@@ -75,24 +75,24 @@ import {
   RuntimeMode,
   TerminalOpenInput,
   type WorktreeSetupSnapshot,
-} from "@rove-code/contracts";
-import { type EnvironmentConnectionPresentation } from "@rove-code/client-runtime/connection";
-import { deriveThreadTitleSeed } from "@rove-code/client-runtime/operations";
+} from "@getpaperplane/contracts";
+import { type EnvironmentConnectionPresentation } from "@getpaperplane/client-runtime/connection";
+import { deriveThreadTitleSeed } from "@getpaperplane/client-runtime/operations";
 import {
   wasBootstrapThreadDeleted,
   wasBootstrapThreadNotCreated,
-} from "@rove-code/client-runtime/errors";
+} from "@getpaperplane/client-runtime/errors";
 import { readPastedComposerContext } from "./composerInlineTokenPaste";
-import { isPasteAsTextShortcut } from "@rove-code/client-runtime/text-paste";
-import { effectiveSnoozed, threadWokeAt } from "@rove-code/client-runtime/state/thread-settled";
-import { childThreadInputsTitle } from "@rove-code/client-runtime/state/threads";
+import { isPasteAsTextShortcut } from "@getpaperplane/client-runtime/text-paste";
+import { effectiveSnoozed, threadWokeAt } from "@getpaperplane/client-runtime/state/thread-settled";
+import { childThreadInputsTitle } from "@getpaperplane/client-runtime/state/threads";
 import { useAcknowledgeThreadWoke, useThreadActions } from "../hooks/useThreadActions";
 import {
   formatModelSelectionEffort,
   presentPendingBackgroundWork,
   presentProviderGoal,
-} from "@rove-code/client-runtime/state/thread-execution";
-import { resolvePendingHandoffFromModel } from "@rove-code/client-runtime/handoff";
+} from "@getpaperplane/client-runtime/state/thread-execution";
+import { resolvePendingHandoffFromModel } from "@getpaperplane/client-runtime/handoff";
 import { HandoffRow } from "./chat/V2LifecycleRow";
 import {
   codexFeedbackMessage,
@@ -100,32 +100,32 @@ import {
   shouldShowLoadEarlierControl,
   submitCodexFeedback,
   type CodexFeedbackSubmission,
-} from "@rove-code/client-runtime/state/threads";
+} from "@getpaperplane/client-runtime/state/threads";
 import { resolveThreadLastVisitedAt } from "./Sidebar.logic";
 import {
   parseScopedThreadKey,
   scopedThreadKey,
   scopeProjectRef,
   scopeThreadRef,
-} from "@rove-code/client-runtime/environment";
+} from "@getpaperplane/client-runtime/environment";
 import {
   applyClaudePromptEffortPrefix,
   createModelSelection,
   formatModelSlugName,
   resolvePromptInjectedEffort,
   resolveSelectableModel,
-} from "@rove-code/shared/model";
+} from "@getpaperplane/shared/model";
 import {
   projectScriptCwd,
   projectScriptRuntimeEnv,
   resolveProjectScripts,
-} from "@rove-code/shared/projectScripts";
-import { CHAT_LIST_ANCHOR_OFFSET } from "@rove-code/shared/chatList";
-import { resolveProjectSettings } from "@rove-code/shared/projectSettings";
-import { sourceControlRepositorySelector } from "@rove-code/shared/sourceControl";
-import { truncate } from "@rove-code/shared/String";
-import { resolveThreadReferenceCopyTarget } from "@rove-code/shared/threadReference";
-import { nextTerminalId, resolveTerminalSessionLabel } from "@rove-code/shared/terminalLabels";
+} from "@getpaperplane/shared/projectScripts";
+import { CHAT_LIST_ANCHOR_OFFSET } from "@getpaperplane/shared/chatList";
+import { resolveProjectSettings } from "@getpaperplane/shared/projectSettings";
+import { sourceControlRepositorySelector } from "@getpaperplane/shared/sourceControl";
+import { truncate } from "@getpaperplane/shared/String";
+import { resolveThreadReferenceCopyTarget } from "@getpaperplane/shared/threadReference";
+import { nextTerminalId, resolveTerminalSessionLabel } from "@getpaperplane/shared/terminalLabels";
 import { Debouncer } from "@tanstack/react-pacer";
 import { useAtomValue } from "@effect/atom-react";
 import { Atom } from "effect/reactivity";
@@ -155,7 +155,7 @@ import {
   settlePromise,
   squashAtomCommandFailure,
   type AtomCommandResult,
-} from "@rove-code/client-runtime/state/runtime";
+} from "@getpaperplane/client-runtime/state/runtime";
 import * as Cause from "effect/Cause";
 import { AsyncResult } from "effect/reactivity";
 import { isElectron } from "../env";
@@ -196,7 +196,7 @@ import {
   togglePendingUserInputOptionSelection,
   type PendingUserInputDraftAnswer,
 } from "../pendingUserInput";
-import { seedUserInputDraftAnswers } from "@rove-code/client-runtime/state/thread-requests";
+import { seedUserInputDraftAnswers } from "@getpaperplane/client-runtime/state/thread-requests";
 import { useUiStateStore } from "../uiStateStore";
 import { useWorkspaceMutationRefresh } from "../hooks/useWorkspaceMutationRefresh";
 import {
@@ -271,14 +271,14 @@ import { LinkPullRequestDialogHost } from "./pullRequest/LinkPullRequestDialog";
 import { ThreadPullRequestsPanel } from "./pullRequest/ThreadPullRequestsPanel";
 import { useDeviceState } from "~/state/device";
 import { computerUseEnvironment, useComputerDesktops } from "~/state/computerUse";
-import { threadComputerDesktops } from "@rove-code/client-runtime/state/computer-use";
+import { threadComputerDesktops } from "@getpaperplane/client-runtime/state/computer-use";
 import { computerTabTarget, newComputerDesktops } from "./device/computerDesktops.logic";
 import { Dialog } from "./ui/dialog";
 import { WizardPopup } from "./ui/wizard";
 import { BranchToolbar, type BranchToolbarHandle } from "./BranchToolbar";
 import { makeWorkspaceFileDropHandlers } from "./chat/workspaceFileDrop";
 import { isEditableFocused } from "../lib/editableFocus";
-import { DEFAULT_RESOLVED_KEYBINDINGS } from "@rove-code/shared/keybindings";
+import { DEFAULT_RESOLVED_KEYBINDINGS } from "@getpaperplane/shared/keybindings";
 import { resolveChatShortcutCommand, shortcutLabelForCommand } from "../keybindings";
 import { preloadWhenIdle } from "../lib/preloadWhenIdle";
 import {
@@ -373,7 +373,7 @@ import {
   removeInlineContextReference,
   stripInlineContextReferences,
 } from "../lib/composerContextReferences";
-import { serializeLegacyContextMessage } from "@rove-code/shared/composerContextLegacySend";
+import { serializeLegacyContextMessage } from "@getpaperplane/shared/composerContextLegacySend";
 import {
   buildMessageContext,
   previewAnnotationContextLabel,
@@ -397,11 +397,11 @@ import {
 } from "../state/server";
 import { terminalEnvironment } from "../state/terminal";
 import { threadEnvironment } from "../state/threads";
-import { resolveProviderSkillsForCwd } from "@rove-code/client-runtime/providerSkills";
+import { resolveProviderSkillsForCwd } from "@getpaperplane/client-runtime/providerSkills";
 import { vcsEnvironment } from "../state/vcs";
 import { sourceControlEnvironment } from "../state/sourceControl";
 import { useProjectClone } from "../state/projectClones";
-import { projectCloneDisplayName, projectCloneProgressSummary } from "@rove-code/contracts";
+import { projectCloneDisplayName, projectCloneProgressSummary } from "@getpaperplane/contracts";
 import { useEnvironments, usePrimaryEnvironment } from "../state/environments";
 import {
   resolveThreadDetailRef,
@@ -488,7 +488,7 @@ import {
   MOBILE_DRAFT_HEADLINE_VIEW_TRANSITION_NAME,
   runMobileComposerTransition,
 } from "./chat/draftHeroTransition";
-import type { ComposerDispatchMode } from "@rove-code/client-runtime/state/composer-dispatch";
+import type { ComposerDispatchMode } from "@getpaperplane/client-runtime/state/composer-dispatch";
 import {
   MAX_HIDDEN_MOUNTED_TERMINAL_THREADS,
   agentControlledBrowserCloseConfirmation,
@@ -546,7 +546,7 @@ import {
 import { sanitizeThreadErrorMessage } from "~/rpc/transportError";
 import { RightPanelSheet } from "./RightPanelSheet";
 import { previewEnvironment } from "../state/preview";
-import { clampFileAttachmentUploadBytes } from "@rove-code/client-runtime/state/attachments";
+import { clampFileAttachmentUploadBytes } from "@getpaperplane/client-runtime/state/attachments";
 import { appAtomRegistry } from "../rpc/atomRegistry";
 import { fileAttachmentCapabilityBlockReason } from "./chat/composerAttachmentFiles";
 import { assetEnvironment } from "../state/assets";
@@ -584,14 +584,14 @@ import {
   supportsServerUpdateThreadContinuation,
 } from "../versionSkew";
 import { useAssetUrls } from "../assets/assetUrls";
-import { ATTACHMENT_ONLY_BOOTSTRAP_PROMPT } from "@rove-code/shared/composerContextReferences";
+import { ATTACHMENT_ONLY_BOOTSTRAP_PROMPT } from "@getpaperplane/shared/composerContextReferences";
 import { recallableComposerPrompt } from "./chat/composerPromptHistory";
 import { observeResize } from "~/lib/observeResize";
 
 const EMPTY_PROVIDERS: ServerProvider[] = [];
 const EMPTY_PROVIDER_MODELS: ServerProvider["models"] = [];
 const EMPTY_USAGE_LIMIT_SOURCES: UsageLimitSourceSnapshots = [];
-import type { CodexArtifactTemplate } from "@rove-code/shared/codexArtifactTemplates";
+import type { CodexArtifactTemplate } from "@getpaperplane/shared/codexArtifactTemplates";
 
 const TIMELINE_SCROLL_CANCEL_SENTINEL = Object.freeze({});
 const EMPTY_FEEDBACK_SUBMISSIONS: ReadonlyArray<CodexFeedbackSubmission> = [];
@@ -1799,7 +1799,7 @@ export default function ChatView(props: ChatViewProps) {
     readonly messageId: MessageId;
     readonly originalText: string;
     readonly existingAttachments: ReadonlyArray<ContractChatAttachment>;
-    readonly context?: import("@rove-code/contracts").OrchestrationMessageContext | undefined;
+    readonly context?: import("@getpaperplane/contracts").OrchestrationMessageContext | undefined;
   } | null>(null);
   const queuedEditDraftTargetFor = useMemo(
     () => makeQueuedEditDraftTarget(routeThreadRef),
@@ -2327,7 +2327,7 @@ export default function ChatView(props: ChatViewProps) {
   const browserAvailable = isPreviewSupportedInRuntime() || activeEnvironmentServerBrowser;
   const previewPanelInlineSize = usePreviewPanelInlineSize(undefined, {
     container: workspaceLayoutElement,
-    widthStorageKey: `rove:preview-panel-width:${activeThreadKey}`,
+    widthStorageKey: `paperplane:preview-panel-width:${activeThreadKey}`,
   });
   const activeThreadShell = useThreadShell(isServerThread ? activeThreadRef : null);
   const timelineThreadError =
@@ -3581,7 +3581,7 @@ export default function ChatView(props: ChatViewProps) {
         : null,
     [environmentId, usageLimitsPanel, usageLimitsReport],
   );
-  // Rove owns /usage-limits only where Limits has data for the selected provider;
+  // Paperplane owns /usage-limits only where Limits has data for the selected provider;
   // elsewhere the name stays the provider's own and is sent through untouched.
   const usageLimitsOffered =
     activeProviderStatus !== null &&
@@ -3972,7 +3972,7 @@ export default function ChatView(props: ChatViewProps) {
   );
   const [resumeCompactionPermanentlyDismissed, setResumeCompactionPermanentlyDismissed] =
     useLocalStorage(
-      `rove:resume-compaction-dismissed:${environmentId}:${activeProviderInstanceId ?? "claudeAgent"}`,
+      `paperplane:resume-compaction-dismissed:${environmentId}:${activeProviderInstanceId ?? "claudeAgent"}`,
       false,
       Schema.Boolean,
     );
@@ -9792,7 +9792,7 @@ export default function ChatView(props: ChatViewProps) {
     if (userInputResponsesInFlight.current.has(responseKey)) return;
     const attachmentsByQuestionId = new Map<
       string,
-      import("@rove-code/contracts").UserInputAttachments[string]
+      import("@getpaperplane/contracts").UserInputAttachments[string]
     >();
     const providerAnswers = { ...answers };
     for (const question of pendingInput.questions) {
@@ -9820,7 +9820,7 @@ export default function ChatView(props: ChatViewProps) {
       }
       attachmentsByQuestionId.set(
         question.id,
-        uploaded as import("@rove-code/contracts").UserInputAttachments[string],
+        uploaded as import("@getpaperplane/contracts").UserInputAttachments[string],
       );
     }
     userInputResponsesInFlight.current.add(responseKey);
@@ -10635,7 +10635,7 @@ export default function ChatView(props: ChatViewProps) {
     ) : renderedRightPanelSurface?.kind === "pull-request" && !supportsPullRequests ? (
       <PullRequestsUnavailableState
         title="Pull requests unavailable"
-        error="Update this environment's Rove Code server to browse pull requests."
+        error="Update this environment's Paperplane server to browse pull requests."
       />
     ) : renderedRightPanelSurface?.kind === "pull-request" ? (
       // No onClose: the surface tab's own X owns closing here, and a second X in the header

@@ -1,5 +1,5 @@
 import { useAtomValue } from "@effect/atom-react";
-import { EnvironmentId } from "@rove-code/contracts";
+import { EnvironmentId } from "@getpaperplane/contracts";
 import { Atom } from "effect/reactivity";
 
 import { environmentThreadShells } from "~/state/threads";

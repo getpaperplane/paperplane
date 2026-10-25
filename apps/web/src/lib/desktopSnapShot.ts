@@ -1,6 +1,6 @@
-import type { DesktopBridge } from "@rove-code/contracts";
+import type { DesktopBridge } from "@getpaperplane/contracts";
 
-const SNAP_SHOT_FOCUS_EVENT = "rove:focus-composer";
+const SNAP_SHOT_FOCUS_EVENT = "paperplane:focus-composer";
 
 export function dispatchSnapShotComposerFocus(): void {
   if (typeof window === "undefined") return;

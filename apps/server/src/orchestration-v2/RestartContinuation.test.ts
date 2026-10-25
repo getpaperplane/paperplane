@@ -14,7 +14,7 @@ import {
   ThreadId,
   type OrchestrationV2Command,
   type OrchestrationV2ThreadProjection,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -24,7 +24,7 @@ import * as ThreadManagementService from "./ThreadManagementService.ts";
 import * as ProviderRuntimeRecovery from "./ProviderRuntimeRecoveryService.ts";
 import * as ProjectionStore from "./ProjectionStore.ts";
 import * as EventSink from "./EventSink.ts";
-import * as IdAllocator from "@rove-code/provider-core/server/IdAllocator";
+import * as IdAllocator from "@getpaperplane/provider-core/server/IdAllocator";
 import * as EffectWorker from "./EffectWorker.ts";
 import * as EffectOutbox from "./EffectOutbox.ts";
 
@@ -935,13 +935,13 @@ it.effect("tells a turn cut mid-way about the background work it lost", () =>
   }),
 );
 
-it.effect("shows a continuation as a Rove Code notice whose detail is the prompt", () =>
+it.effect("shows a continuation as a Paperplane notice whose detail is the prompt", () =>
   Effect.gen(function* () {
     const [resumed] = yield* continuationDispatches(cutMidTurn());
     assert.deepEqual(resumed?.notification, {
       source: { kind: "system" },
       outcome: "updated",
-      summary: "Rove Code restarted and resumed this turn",
+      summary: "Paperplane restarted and resumed this turn",
       detail: "Continue where you left off.",
     });
   }),

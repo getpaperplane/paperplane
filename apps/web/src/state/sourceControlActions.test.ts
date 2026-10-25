@@ -4,7 +4,7 @@ import {
   EnvironmentId,
   ThreadId,
   SourceControlProviderKind,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Cause from "effect/Cause";
 import { AsyncResult } from "effect/reactivity";
 import { beforeEach, describe, expect, it, vi } from "vite-plus/test";

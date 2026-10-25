@@ -1,4 +1,4 @@
-import { ProviderInteractionMode, RuntimeMode } from "@rove-code/contracts";
+import { ProviderInteractionMode, RuntimeMode } from "@getpaperplane/contracts";
 import { memo, type ReactNode } from "react";
 import { EllipsisIcon } from "lucide-react";
 import {

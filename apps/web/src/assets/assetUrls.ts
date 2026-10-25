@@ -5,9 +5,9 @@ import {
   blockedAssetUrlState,
   EMPTY_ASSET_URL_ATOM,
   resolveAssetUrl,
-} from "@rove-code/client-runtime/state/assets";
-import { squashAtomCommandFailure } from "@rove-code/client-runtime/state/runtime";
-import type { AssetResource, EnvironmentId } from "@rove-code/contracts";
+} from "@getpaperplane/client-runtime/state/assets";
+import { squashAtomCommandFailure } from "@getpaperplane/client-runtime/state/runtime";
+import type { AssetResource, EnvironmentId } from "@getpaperplane/contracts";
 import { AsyncResult } from "effect/reactivity";
 import { useCallback, useMemo } from "react";
 
@@ -16,7 +16,7 @@ import { useFilesystemReadAccess } from "~/state/filesystem";
 import { usePreparedConnection } from "~/state/session";
 import { useAtomQueryRunner } from "~/state/use-atom-query-runner";
 
-export { resolveAssetUrl, type AssetUrlState } from "@rove-code/client-runtime/state/assets";
+export { resolveAssetUrl, type AssetUrlState } from "@getpaperplane/client-runtime/state/assets";
 
 export function useAssetUrlState(
   environmentId: EnvironmentId | null,

@@ -27,7 +27,7 @@ interface NativeShowcaseControls {
 }
 
 function nativeShowcaseControls(): NativeShowcaseControls | null {
-  return requireOptionalNativeModule<NativeShowcaseControls>("RoveNativeControls");
+  return requireOptionalNativeModule<NativeShowcaseControls>("PaperplaneNativeControls");
 }
 
 export function getNativeShowcasePairingUrls(): ReadonlyArray<string> {

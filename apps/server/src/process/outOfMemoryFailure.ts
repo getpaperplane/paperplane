@@ -1,4 +1,4 @@
-import type { OrchestrationV2ProviderFailure } from "@rove-code/contracts";
+import type { OrchestrationV2ProviderFailure } from "@getpaperplane/contracts";
 
 /** Labels process memory failures without hiding a provider's usage limit. */
 export function labelOutOfMemory(
@@ -19,7 +19,7 @@ export function labelOutOfMemory(
     message:
       verdict === "confirmed"
         ? "Killed: out of memory."
-        : 'Likely killed: the host ran out of memory. Run fewer agents at once or add swap (see "Small or WSL hosts" in the Rove Code docs).',
+        : 'Likely killed: the host ran out of memory. Run fewer agents at once or add swap (see "Small or WSL hosts" in the Paperplane docs).',
     code: "oom_kill",
   };
 }

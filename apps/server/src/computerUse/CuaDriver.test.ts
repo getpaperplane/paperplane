@@ -6,11 +6,11 @@ import {
   DEFAULT_SERVER_SETTINGS,
   ThreadId,
   type ServerSettings as ServerSettingsValue,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   Environment as HostProcessEnvironment,
   Platform as HostProcessPlatform,
-} from "@rove-code/shared/HostProcess";
+} from "@getpaperplane/shared/HostProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -189,7 +189,7 @@ const withDriver = <A, E>(
   Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
-    const stateDir = yield* fs.makeTempDirectoryScoped({ prefix: "rove-cua-driver-" });
+    const stateDir = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-cua-driver-" });
     const appPath = path.join(stateDir, "CuaDriver.app");
     const executableDir =
       options.platform === "linux"
@@ -269,7 +269,7 @@ const withDriver = <A, E>(
     Effect.provide(
       Layer.mergeAll(
         ProcessRunner.layer,
-        ServerConfig.layerTest(process.cwd(), { prefix: "rove-cua-config-" }),
+        ServerConfig.layerTest(process.cwd(), { prefix: "paperplane-cua-config-" }),
       ).pipe(Layer.provideMerge(NodeServices.layer)),
     ),
   );
@@ -716,7 +716,7 @@ it.effect("is unsupported off macOS, Windows, and Linux", () =>
           subscribeChanges: Effect.succeed(Stream.empty),
         }),
         ProcessRunner.layer,
-        ServerConfig.layerTest(process.cwd(), { prefix: "rove-cua-config-" }),
+        ServerConfig.layerTest(process.cwd(), { prefix: "paperplane-cua-config-" }),
       ).pipe(Layer.provideMerge(NodeServices.layer)),
     ),
   ),

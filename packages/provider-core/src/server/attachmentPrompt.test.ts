@@ -3,7 +3,7 @@ import {
   ChatFileAttachment,
   ChatImageAttachment,
   PROVIDER_SEND_TURN_MAX_INPUT_CHARS,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { assert, describe, it } from "@effect/vitest";
 
 import {

@@ -1,4 +1,4 @@
-import type { AuthClientPresentationMetadata } from "@rove-code/contracts";
+import type { AuthClientPresentationMetadata } from "@getpaperplane/contracts";
 import * as Device from "expo-device";
 import { Platform } from "react-native";
 
@@ -7,7 +7,7 @@ export function authClientMetadata(appVersion?: string): AuthClientPresentationM
   const deviceModel = Device.modelName?.trim();
 
   return {
-    label: "Rove Code Mobile",
+    label: "Paperplane Mobile",
     deviceType:
       Device.deviceType === Device.DeviceType.TABLET
         ? "tablet"

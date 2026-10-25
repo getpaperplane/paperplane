@@ -32,10 +32,10 @@ import type {
   PullRequestLabelCandidateList,
   PullRequestState,
   PullRequestThreadComment,
-} from "@rove-code/contracts";
-import { quoteGitPatchPath } from "@rove-code/shared/gitPatchPath";
-import { decodeJsonResult } from "@rove-code/shared/schemaJson";
-import { dedupeChecks } from "@rove-code/source-control-core/server/pullRequestChecks";
+} from "@getpaperplane/contracts";
+import { quoteGitPatchPath } from "@getpaperplane/shared/gitPatchPath";
+import { decodeJsonResult } from "@getpaperplane/shared/schemaJson";
+import { dedupeChecks } from "@getpaperplane/source-control-core/server/pullRequestChecks";
 
 import type * as GitHubSchema from "../../schema/github.graphql.ts";
 import type {

@@ -2,8 +2,8 @@ import {
   EnvironmentId,
   ORCHESTRATION_PROTOCOL_VERSION,
   type DesktopSshEnvironmentTarget,
-} from "@rove-code/contracts";
-import { RelayClientTracer } from "@rove-code/shared/relayTracing";
+} from "@getpaperplane/contracts";
+import { RelayClientTracer } from "@getpaperplane/shared/relayTracing";
 import { describe, expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -200,7 +200,7 @@ describe("ConnectionResolver", () => {
       const error = yield* Effect.flip(broker.prepare(catalogEntry(target)));
 
       expect(error).toMatchObject({ reason: "unsupported" });
-      expect(error.message).toContain("Update Rove Code on Compatible environment");
+      expect(error.message).toContain("Update Paperplane on Compatible environment");
     }),
   );
 

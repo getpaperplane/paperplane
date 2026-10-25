@@ -4,8 +4,8 @@ import {
   ProjectId,
   ProviderInstanceId,
   ThreadId,
-} from "@rove-code/contracts";
-import { serializeAssistantCitation } from "@rove-code/shared/assistantCitations";
+} from "@getpaperplane/contracts";
+import { serializeAssistantCitation } from "@getpaperplane/shared/assistantCitations";
 import { describe, expect, it } from "vite-plus/test";
 
 import {

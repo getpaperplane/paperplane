@@ -1,4 +1,4 @@
-name: Deploy Rove Connect relay
+name: Deploy Paperplane Connect relay
 
 on:
   push:
@@ -35,7 +35,7 @@ jobs:
     # another branch would deploy that branch to production. Manual setup does not
     # enable Connect in release builds; automatic main deployments still require
     # the repository readiness gate.
-    if: github.ref == 'refs/heads/main' && (github.event_name == 'workflow_dispatch' || vars.ROVE_CLOUD_READY == 'true')
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'workflow_dispatch' || vars.PAPERPLANE_CLOUD_READY == 'true')
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     environment:
@@ -76,7 +76,7 @@ jobs:
           cache: true
           run-install: |
             args:
-              - --filter=rove-relay...
+              - --filter=paperplane-relay...
 
       # Runs Alchemy directly: `vp run --filter` loads every workspace's Vite
       # config, and apps/server's needs dependencies the relay-only install skips.
@@ -95,7 +95,7 @@ jobs:
           FORCE: ${{ inputs.force && 'true' || '' }}
           # The PublishClientConfig action writes the client env here instead
           # of the repo-root .env; nothing on the runner reads it.
-          ROVE_RELAY_CLIENT_CONFIG_ENV: ${{ runner.temp }}/relay-client-config.env
+          PAPERPLANE_RELAY_CLIENT_CONFIG_ENV: ${{ runner.temp }}/relay-client-config.env
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
           AXIOM_TOKEN: ${{ secrets.AXIOM_TOKEN }}

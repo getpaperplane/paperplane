@@ -2,7 +2,7 @@ import { testDouble } from "../testDouble.ts";
 import type {
   RelayAgentActivityAggregateState,
   RelayLiveActivityRegistrationRequest,
-} from "@rove-code/contracts/relay";
+} from "@getpaperplane/contracts/relay";
 import { describe, expect, it } from "@effect/vitest";
 import type { SQL } from "drizzle-orm";
 import { PgDialect } from "drizzle-orm/pg-core";
@@ -15,7 +15,7 @@ import * as LiveActivities from "./LiveActivities.ts";
 import type { Json as SchemaJson } from "effect/Schema";
 
 const aggregate: RelayAgentActivityAggregateState = {
-  title: "Rove Code",
+  title: "Paperplane",
   subtitle: "Agent work in progress",
   activeCount: 1,
   updatedAt: "2026-05-25T00:00:00.000Z",

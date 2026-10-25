@@ -1,6 +1,6 @@
 import * as NodeOS from "node:os";
 
-import { historyResponseItems } from "@rove-code/provider-core/server/handoffBudget";
+import { historyResponseItems } from "@getpaperplane/provider-core/server/handoffBudget";
 import {
   makeProviderTextDeltaCoalescer,
   type ProviderTextDeltaUpdate,
@@ -28,10 +28,10 @@ import {
   RunId,
   ThreadId,
   TurnItemId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { assert, describe, it } from "@effect/vitest";
-import * as HostProcess from "@rove-code/shared/HostProcess";
-import { SpawnExecutableResolution } from "@rove-code/shared/shell";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
+import { SpawnExecutableResolution } from "@getpaperplane/shared/shell";
 import * as CodexClient from "effect-codex-app-server/client";
 import * as CodexError from "effect-codex-app-server/errors";
 import * as CodexReplay from "effect-codex-app-server/replay";
@@ -41,7 +41,7 @@ import * as Crypto from "effect/Crypto";
 import * as Effect from "effect/Effect";
 import * as Predicate from "effect/Predicate";
 import * as FileSystem from "effect/FileSystem";
-import { MCP_APP_OUTPUT_KEY, readMcpAppReference } from "@rove-code/shared/mcpApp";
+import { MCP_APP_OUTPUT_KEY, readMcpAppReference } from "@getpaperplane/shared/mcpApp";
 import { resolveAttachmentPathById } from "../../attachmentStore.ts";
 import * as Fiber from "effect/Fiber";
 import * as Layer from "effect/Layer";
@@ -55,14 +55,14 @@ import { ChildProcess, ChildProcessSpawner } from "effect/process";
 
 import packageJson from "../../../package.json" with { type: "json" };
 import * as ServerConfig from "../../config.ts";
-import * as McpProviderSessions from "@rove-code/provider-core/server/McpProviderSessions";
-import * as ProviderEventLoggers from "@rove-code/provider-core/server/ProviderEventLoggers";
-import * as IdAllocator from "@rove-code/provider-core/server/IdAllocator";
+import * as McpProviderSessions from "@getpaperplane/provider-core/server/McpProviderSessions";
+import * as ProviderEventLoggers from "@getpaperplane/provider-core/server/ProviderEventLoggers";
+import * as IdAllocator from "@getpaperplane/provider-core/server/IdAllocator";
 import * as EffectWorker from "../EffectWorker.ts";
 import * as Orchestrator from "../Orchestrator.ts";
 import * as ProviderReplayHarness from "../testkit/ProviderReplayHarness.ts";
-import * as ProviderAdapter from "@rove-code/provider-core/server/ProviderAdapter";
-import type * as ProviderContinuationRequests from "@rove-code/provider-core/server/ProviderContinuationRequests";
+import * as ProviderAdapter from "@getpaperplane/provider-core/server/ProviderAdapter";
+import type * as ProviderContinuationRequests from "@getpaperplane/provider-core/server/ProviderContinuationRequests";
 import * as CodexAdapterV2 from "./CodexAdapterV2.ts";
 import { makeReplayServerConfig, withCodexReplayChildMetadata } from "./CodexAdapterV2.testkit.ts";
 import * as CodexAdapterV2Testkit from "./CodexAdapterV2.testkit.ts";
@@ -394,7 +394,7 @@ describe("CodexAdapterV2 assistant message streaming", () => {
 });
 
 describe("CodexAdapterV2 runtime policy", () => {
-  it.effect("derives concrete Codex turn policies from every Rove runtime mode", () =>
+  it.effect("derives concrete Codex turn policies from every Paperplane runtime mode", () =>
     Effect.gen(function* () {
       const build = (
         runtimeMode: "approval-required" | "auto-accept-edits" | "auto" | "full-access",
@@ -473,56 +473,58 @@ describe("CodexAdapterV2 runtime policy", () => {
       assert.deepEqual(alone.additionalContext, {
         "mcp_app_todos_list_todos_item-1": { kind: "untrusted", value: "Filtered to overdue" },
       });
-      // Alongside Rove's own context, both are kept.
-      const withRove = yield* CodexAdapterV2.buildCodexTurnStartParams({
+      // Alongside Paperplane's own context, both are kept.
+      const withPaperplane = yield* CodexAdapterV2.buildCodexTurnStartParams({
         nativeThreadId: "native-app-context",
         codexInput: [{ type: "text", text: "what's on my list?" }],
         runtimePolicy: policy,
         modelSelection,
-        hasRoveMcp: true,
+        hasPaperplaneMcp: true,
         appContext,
       });
-      assert.deepEqual(withRove.additionalContext?.["mcp_app_todos_list_todos_item-1"], {
+      assert.deepEqual(withPaperplane.additionalContext?.["mcp_app_todos_list_todos_item-1"], {
         kind: "untrusted",
         value: "Filtered to overdue",
       });
-      assert.isDefined(withRove.additionalContext?.["rove_code_runtime"]);
+      assert.isDefined(withPaperplane.additionalContext?.["paperplane_code_runtime"]);
     }),
   );
 
-  it.effect("adds default-mode developer instructions when the Rove MCP server is attached", () =>
-    Effect.gen(function* () {
-      const params = yield* CodexAdapterV2.buildCodexTurnStartParams({
-        nativeThreadId: "native-orchestration-instructions",
-        codexInput: [{ type: "text", text: "delegate this task" }],
-        runtimePolicy: {
-          runtimeMode: "full-access",
-          interactionMode: "default",
-          cwd: null,
-        },
-        modelSelection: {
-          instanceId: ProviderInstanceId.make("codex"),
-          model: "gpt-5.4",
-        },
-        hasRoveMcp: true,
-      });
+  it.effect(
+    "adds default-mode developer instructions when the Paperplane MCP server is attached",
+    () =>
+      Effect.gen(function* () {
+        const params = yield* CodexAdapterV2.buildCodexTurnStartParams({
+          nativeThreadId: "native-orchestration-instructions",
+          codexInput: [{ type: "text", text: "delegate this task" }],
+          runtimePolicy: {
+            runtimeMode: "full-access",
+            interactionMode: "default",
+            cwd: null,
+          },
+          modelSelection: {
+            instanceId: ProviderInstanceId.make("codex"),
+            model: "gpt-5.4",
+          },
+          hasPaperplaneMcp: true,
+        });
 
-      assert.equal(params.collaborationMode?.mode, "default");
-      assert.include(
-        params.additionalContext?.rove_code_orchestration?.value ?? "",
-        "Use `delegate_task`",
-      );
-      assert.include(
-        params.additionalContext?.rove_code_orchestration?.value ?? "",
-        "structured object, never as JSON text",
-      );
-    }),
+        assert.equal(params.collaborationMode?.mode, "default");
+        assert.include(
+          params.additionalContext?.paperplane_code_orchestration?.value ?? "",
+          "Use `delegate_task`",
+        );
+        assert.include(
+          params.additionalContext?.paperplane_code_orchestration?.value ?? "",
+          "structured object, never as JSON text",
+        );
+      }),
   );
 
-  it.effect("omits default-mode collaboration settings without the Rove MCP server", () =>
+  it.effect("omits default-mode collaboration settings without the Paperplane MCP server", () =>
     Effect.gen(function* () {
       const params = yield* CodexAdapterV2.buildCodexTurnStartParams({
-        nativeThreadId: "native-default-without-rove-mcp",
+        nativeThreadId: "native-default-without-paperplane-mcp",
         codexInput: [{ type: "text", text: "implement this task" }],
         runtimePolicy: {
           runtimeMode: "full-access",
@@ -533,43 +535,48 @@ describe("CodexAdapterV2 runtime policy", () => {
           instanceId: ProviderInstanceId.make("codex"),
           model: "gpt-5.4",
         },
-        hasRoveMcp: false,
+        hasPaperplaneMcp: false,
       });
 
       assert.isUndefined(params.collaborationMode);
     }),
   );
 
-  it.effect("adds Rove plan-mode developer instructions when the Rove MCP server is attached", () =>
-    Effect.gen(function* () {
-      const params = yield* CodexAdapterV2.buildCodexTurnStartParams({
-        nativeThreadId: "native-plan-with-rove-mcp",
-        codexInput: [{ type: "text", text: "plan this task" }],
-        runtimePolicy: {
-          runtimeMode: "full-access",
-          interactionMode: "plan",
-          cwd: null,
-        },
-        modelSelection: {
-          instanceId: ProviderInstanceId.make("codex"),
-          model: "gpt-5.4",
-        },
-        hasRoveMcp: true,
-      });
+  it.effect(
+    "adds Paperplane plan-mode developer instructions when the Paperplane MCP server is attached",
+    () =>
+      Effect.gen(function* () {
+        const params = yield* CodexAdapterV2.buildCodexTurnStartParams({
+          nativeThreadId: "native-plan-with-paperplane-mcp",
+          codexInput: [{ type: "text", text: "plan this task" }],
+          runtimePolicy: {
+            runtimeMode: "full-access",
+            interactionMode: "plan",
+            cwd: null,
+          },
+          modelSelection: {
+            instanceId: ProviderInstanceId.make("codex"),
+            model: "gpt-5.4",
+          },
+          hasPaperplaneMcp: true,
+        });
 
-      assert.equal(params.collaborationMode?.mode, "plan");
-      assert.include(
-        params.collaborationMode?.settings.developer_instructions ?? "",
-        "request_user_input",
-      );
-      assert.include(params.additionalContext?.rove_code_tools?.value ?? "", "preview_status");
-    }),
+        assert.equal(params.collaborationMode?.mode, "plan");
+        assert.include(
+          params.collaborationMode?.settings.developer_instructions ?? "",
+          "request_user_input",
+        );
+        assert.include(
+          params.additionalContext?.paperplane_code_tools?.value ?? "",
+          "preview_status",
+        );
+      }),
   );
 
-  it.effect("keeps Codex in plan mode without referencing unavailable Rove MCP tools", () =>
+  it.effect("keeps Codex in plan mode without referencing unavailable Paperplane MCP tools", () =>
     Effect.gen(function* () {
       const params = yield* CodexAdapterV2.buildCodexTurnStartParams({
-        nativeThreadId: "native-plan-without-rove-mcp",
+        nativeThreadId: "native-plan-without-paperplane-mcp",
         codexInput: [{ type: "text", text: "plan this task" }],
         runtimePolicy: {
           runtimeMode: "full-access",
@@ -580,7 +587,7 @@ describe("CodexAdapterV2 runtime policy", () => {
           instanceId: ProviderInstanceId.make("codex"),
           model: "gpt-5.4",
         },
-        hasRoveMcp: false,
+        hasPaperplaneMcp: false,
       });
 
       assert.equal(params.collaborationMode?.mode, "plan");
@@ -668,7 +675,7 @@ describe("CodexAdapterV2 process spawning", () => {
           // Codex waits up to 10 s, not 1 s, for MCP servers before the first request (#13437).
           mcp_optional_startup_grace_ms: 10_000,
           mcp_servers: {
-            rove: {
+            paperplane: {
               url: "http://127.0.0.1:43123/mcp",
               tool_timeout_sec: 3_900,
               http_headers: {
@@ -775,7 +782,7 @@ describe("CodexAdapterV2 process spawning", () => {
           .pipe(Effect.scoped, Effect.exit);
 
       yield* open({});
-      yield* open({ ROVE_CODEX_LAUNCH_ARGS: " --enable env-feature " });
+      yield* open({ PAPERPLANE_CODEX_LAUNCH_ARGS: " --enable env-feature " });
 
       assert.deepEqual(spawnedArgs, [
         ["app-server", "--strict-config", "-c", "model_reasoning_summary=detailed"],
@@ -804,7 +811,7 @@ describe("CodexAdapterV2 process spawning", () => {
         Effect.provide(
           Layer.mergeAll(
             CodexAdapterV2.layerAppServerClientFactory,
-            ServerConfig.layerTest(process.cwd(), { prefix: "rove-codex-binary-home-" }),
+            ServerConfig.layerTest(process.cwd(), { prefix: "paperplane-codex-binary-home-" }),
           ),
         ),
         Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
@@ -844,7 +851,7 @@ describe("CodexAdapterV2 dynamic tool projection", () => {
         status: "failed",
         arguments: {
           title: "Restrict the breakpoint to Git actions",
-          code: "await sky.type_text({app:'Rove Code (Nightly)',text:'debug(ga.run)'});",
+          code: "await sky.type_text({app:'Paperplane (Nightly)',text:'debug(ga.run)'});",
         },
         result: { content: [{ type: "text", text: "Illegal Unicode escape sequence" }] },
       });
@@ -1021,7 +1028,7 @@ describe("CodexAdapterV2 dynamic tool projection", () => {
       const projection = yield* CodexAdapterV2.projectCodexDynamicToolItem({
         type: "mcpToolCall",
         id: "call-create-threads",
-        server: "rove",
+        server: "paperplane",
         tool: "create_threads",
         status: "completed",
         arguments: {
@@ -1036,7 +1043,7 @@ describe("CodexAdapterV2 dynamic tool projection", () => {
       });
 
       assert.deepEqual(projection, {
-        toolName: "rove.create_threads",
+        toolName: "paperplane.create_threads",
         input: {
           threads: [{ title: "Fixture child", prompt: "fixture child prompt" }],
         },
@@ -1621,7 +1628,7 @@ function codexReplayPreamble(input: {
         id: 1,
         method: "initialize",
         params: {
-          clientInfo: { name: "Rove Code", title: "Rove Code", version: packageJson.version },
+          clientInfo: { name: "Paperplane", title: "Paperplane", version: packageJson.version },
           capabilities: {
             experimentalApi: true,
             optOutNotificationMethods: ["turn/diff/updated"],
@@ -1638,7 +1645,7 @@ function codexReplayPreamble(input: {
       frame: {
         id: 1,
         result: {
-          userAgent: "Rove Code/0.156.1",
+          userAgent: "Paperplane/0.156.1",
           codexHome: "/tmp/codex-home",
           platformFamily: "unix",
           platformOs: "macos",
@@ -2218,7 +2225,7 @@ describe("CodexAdapterV2 post-settle continuation", () => {
       // version, so pin the whole value here.
       assert.deepEqual(initializeParams, [
         {
-          clientInfo: { name: "Rove Code", title: "Rove Code", version: packageJson.version },
+          clientInfo: { name: "Paperplane", title: "Paperplane", version: packageJson.version },
           capabilities: {
             experimentalApi: true,
             optOutNotificationMethods: ["turn/diff/updated"],
@@ -2998,7 +3005,7 @@ describe("CodexAdapterV2 post-settle continuation", () => {
     ),
   );
 
-  it.effect("preserves Rove context on the wire and restores it after compaction", () =>
+  it.effect("preserves Paperplane context on the wire and restores it after compaction", () =>
     Effect.scoped(
       Effect.gen(function* () {
         const nativeThreadId = "context-thread";
@@ -3008,10 +3015,10 @@ describe("CodexAdapterV2 post-settle continuation", () => {
           codexInput: [{ type: "text", text: "work" }],
           runtimePolicy: CODEX_TEST_RUNTIME_POLICY,
           modelSelection: CODEX_TEST_MODEL_SELECTION,
-          hasRoveMcp: true,
+          hasPaperplaneMcp: true,
         });
         assert.include(
-          params.additionalContext?.rove_code_orchestration?.value ?? "",
+          params.additionalContext?.paperplane_code_orchestration?.value ?? "",
           "delegate_task",
         );
         const entries = codexReplayPreamble({ nativeThreadId, nativeTurnId, prompt: "work" });
@@ -4692,7 +4699,7 @@ describe("CodexAdapterV2 post-settle continuation", () => {
       ),
   );
 
-  // "thread_unloaded": the thread was settled, so Rove unsubscribed and Codex
+  // "thread_unloaded": the thread was settled, so Paperplane unsubscribed and Codex
   // unloaded it (killing its terminals) before Stop arrived.
   const backgroundStopCases = [true, false, "still_running", "thread_unloaded"] as const;
   const makeBackgroundStopTranscript = (terminated: (typeof backgroundStopCases)[number]) => {
@@ -4856,7 +4863,7 @@ describe("CodexAdapterV2 post-settle continuation", () => {
     return Effect.scoped(
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
-        const cwd = yield* fs.makeTempDirectoryScoped({ prefix: "rove-bg-stop-workspace-" });
+        const cwd = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-bg-stop-workspace-" });
         const localTranscript = yield* decodeReplayTranscriptJson(
           (yield* encodeReplayTranscriptJson(transcript)).replaceAll(
             yield* encodeStringJson("/workspace"),
@@ -4988,7 +4995,7 @@ describe("CodexAdapterV2 post-settle continuation", () => {
     Effect.scoped(
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
-        const cwd = yield* fs.makeTempDirectoryScoped({ prefix: "rove-bg-stale-workspace-" });
+        const cwd = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-bg-stale-workspace-" });
         const staleTranscript = makeCodexReplayTranscript({
           scenario: "codex-bg-stop-untracked",
           entries: [
@@ -7207,8 +7214,8 @@ describe("CodexAdapterV2 post-settle continuation", () => {
             item: {
               type: "mcpToolCall",
               id: COMPLETED_WAIT_ITEM,
-              server: "rove",
-              tool: "rove_thread_wait",
+              server: "paperplane",
+              tool: "paperplane_thread_wait",
               status: "inProgress",
               arguments: { threadId: "thread:completed-wait", timeoutMs: 30000 },
             },
@@ -7227,8 +7234,8 @@ describe("CodexAdapterV2 post-settle continuation", () => {
             item: {
               type: "mcpToolCall",
               id: COMPLETED_WAIT_ITEM,
-              server: "rove",
-              tool: "rove_thread_wait",
+              server: "paperplane",
+              tool: "paperplane_thread_wait",
               status: "completed",
               arguments: { threadId: "thread:completed-wait", timeoutMs: 30000 },
               result: { content: [{ type: "text", text: "idle" }] },
@@ -7248,8 +7255,8 @@ describe("CodexAdapterV2 post-settle continuation", () => {
             item: {
               type: "mcpToolCall",
               id: ORPHAN_WAIT_ITEM,
-              server: "rove",
-              tool: "rove_thread_wait",
+              server: "paperplane",
+              tool: "paperplane_thread_wait",
               status: "inProgress",
               arguments: {
                 threadId:

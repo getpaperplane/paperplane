@@ -3,7 +3,7 @@ import {
   type OrchestrationV2TurnItem,
   type ProviderDriverKind,
   type ProviderInstanceId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 
 export function resolveThreadActivityMetadata(input: {
   readonly providerDriver: ProviderDriverKind | null;

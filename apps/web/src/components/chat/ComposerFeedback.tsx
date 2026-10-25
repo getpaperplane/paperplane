@@ -1,7 +1,7 @@
 import {
   codexFeedbackNotice,
   type CodexFeedbackSubmission,
-} from "@rove-code/client-runtime/state/threads";
+} from "@getpaperplane/client-runtime/state/threads";
 import { MessageSquareIcon } from "lucide-react";
 
 import { writeTextToClipboard } from "../../hooks/useCopyToClipboard";

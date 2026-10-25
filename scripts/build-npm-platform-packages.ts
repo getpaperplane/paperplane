@@ -1,18 +1,18 @@
 #!/usr/bin/env node
 /**
  * Turns the per-platform CLI archives of one release into the npm packages
- * behind `npx @rove-code/cli` / `npm i -g @rove-code/cli`: one `@rove-code/cli-<platformKey>`
- * package per archive holding its contents verbatim, plus the `@rove-code/cli` launcher
+ * behind `npx @getpaperplane/cli` / `npm i -g @getpaperplane/cli`: one `@getpaperplane/cli-<platformKey>`
+ * package per archive holding its contents verbatim, plus the `@getpaperplane/cli` launcher
  * that lists them as optionalDependencies and execs the one npm installed.
  * The bytes a user gets from npm are therefore the release archive's, and
  * running them needs neither a Node runtime, npm, nor a native build.
  *
  * Output layout under `--output-dir`:
  *
- *   @rove-code/cli-<platformKey>/     archive contents flattened + package.json
- *   @rove-code/cli-<platformKey>.tgz  the same tree as an npm tarball
- *   @rove-code/cli/                   launcher: package.json, bin/rove.js, README.md
- *   @rove-code/cli.tgz                the launcher as an npm tarball
+ *   @getpaperplane/cli-<platformKey>/     archive contents flattened + package.json
+ *   @getpaperplane/cli-<platformKey>.tgz  the same tree as an npm tarball
+ *   @getpaperplane/cli/                   launcher: package.json, bin/paperplane.js, README.md
+ *   @getpaperplane/cli.tgz                the launcher as an npm tarball
  *
  * The tarballs are what gets published. `npm publish <dir>` always drops
  * `node_modules/` (npm-packlist ignores it whatever `files` says, and
@@ -34,16 +34,16 @@ import {
   CLI_ARCHIVE_PLATFORM_KEYS,
   cliArchiveFileName,
   type CliArchivePlatformKey,
-} from "@rove-code/shared/cliRelease";
-import * as HostProcess from "@rove-code/shared/HostProcess";
-import { fromJsonStringPretty } from "@rove-code/shared/schemaJson";
-import { isCommandAvailable } from "@rove-code/shared/shell";
+} from "@getpaperplane/shared/cliRelease";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
+import { fromJsonStringPretty } from "@getpaperplane/shared/schemaJson";
+import { isCommandAvailable } from "@getpaperplane/shared/shell";
 import serverPackageJson from "../apps/server/package.json" with { type: "json" };
 
 import { windowsSystemTar } from "./build-cli-archive.ts";
 
-export const NPM_PLATFORM_PACKAGE_SCOPE = "@rove-code";
-export const NPM_LAUNCHER_PACKAGE_NAME = "@rove-code/cli";
+export const NPM_PLATFORM_PACKAGE_SCOPE = "@getpaperplane";
+export const NPM_LAUNCHER_PACKAGE_NAME = "@getpaperplane/cli";
 
 const encodePackageJson = Schema.encodeEffect(fromJsonStringPretty(Schema.Unknown));
 
@@ -106,12 +106,12 @@ export function npmPlatformPackageManifest(
   return {
     name: npmPlatformPackageName(platformKey),
     version,
-    description: `Rove Code CLI executable for ${platformKey}`,
+    description: `Paperplane CLI executable for ${platformKey}`,
     license: serverPackageJson.license,
     repository: serverPackageJson.repository,
     os: [os],
     cpu: [cpu],
-    files: ["rove", "rove.exe", "client", "resource-monitor", "node_modules"],
+    files: ["paperplane", "paperplane.exe", "client", "resource-monitor", "node_modules"],
     preferUnplugged: true,
     dependencies: Object.fromEntries(bundleDependencies.map((name) => [name, bundled[name]])),
     bundleDependencies,
@@ -154,7 +154,7 @@ export function npmPlatformPackageReadme(platformKey: CliArchivePlatformKey): st
   return [
     `# ${npmPlatformPackageName(platformKey)}`,
     "",
-    `The Rove Code CLI executable for ${platformKey}. Do not install this package directly:`,
+    `The Paperplane CLI executable for ${platformKey}. Do not install this package directly:`,
     `it is an optional dependency of \`${NPM_LAUNCHER_PACKAGE_NAME}\`, which picks the package for the`,
     "current platform and runs the executable inside it.",
     "",
@@ -162,12 +162,12 @@ export function npmPlatformPackageReadme(platformKey: CliArchivePlatformKey): st
     `npx ${NPM_LAUNCHER_PACKAGE_NAME}@latest`,
     "```",
     "",
-    "Source and documentation: https://github.com/hafiezul/rove",
+    "Source and documentation: https://github.com/getpaperplane/paperplane",
     "",
   ].join("\n");
 }
 
-/** package.json for the `rove` launcher. No engines: bin/rove.js is trivial CJS. */
+/** package.json for the `paperplane` launcher. No engines: bin/paperplane.js is trivial CJS. */
 export function npmLauncherPackageManifest(
   version: string,
   platformKeys: ReadonlyArray<CliArchivePlatformKey>,
@@ -175,10 +175,10 @@ export function npmLauncherPackageManifest(
   return {
     name: NPM_LAUNCHER_PACKAGE_NAME,
     version,
-    description: "Rove Code CLI. Installs the self-contained executable for this platform.",
+    description: "Paperplane CLI. Installs the self-contained executable for this platform.",
     license: serverPackageJson.license,
     repository: serverPackageJson.repository,
-    bin: { rove: "./bin/rove.js" },
+    bin: { paperplane: "./bin/paperplane.js" },
     files: ["bin"],
     optionalDependencies: Object.fromEntries(
       platformKeys.map((key) => [npmPlatformPackageName(key), version]),
@@ -187,7 +187,7 @@ export function npmLauncherPackageManifest(
 }
 
 /**
- * The launcher every `npx @rove-code/cli` runs. Plain CommonJS with no dependencies so it
+ * The launcher every `npx @getpaperplane/cli` runs. Plain CommonJS with no dependencies so it
  * loads on any Node that npm itself runs on; the real work happens in the
  * single-executable it execs.
  */
@@ -206,20 +206,20 @@ try {
 } catch {
   process.stderr.write(
     [
-      "rove: no Rove Code CLI build is available for this platform (" + key + ").",
+      "paperplane: no Paperplane CLI build is available for this platform (" + key + ").",
       "Supported platforms: " + SUPPORTED.join(", ") + ".",
-      "If yours is listed, reinstall @rove-code/cli so npm fetches its optional dependency.",
-      "The desktop app and release archives are at https://github.com/hafiezul/rove/releases",
+      "If yours is listed, reinstall @getpaperplane/cli so npm fetches its optional dependency.",
+      "The desktop app and release archives are at https://github.com/getpaperplane/paperplane/releases",
       "",
     ].join("\\n"),
   );
   process.exit(1);
 }
 
-const executable = join(packageDir, process.platform === "win32" ? "rove.exe" : "rove");
+const executable = join(packageDir, process.platform === "win32" ? "paperplane.exe" : "paperplane");
 const result = spawnSync(executable, process.argv.slice(2), { stdio: "inherit" });
 if (result.error) {
-  process.stderr.write("rove: failed to start " + executable + ": " + result.error.message + "\\n");
+  process.stderr.write("paperplane: failed to start " + executable + ": " + result.error.message + "\\n");
   process.exit(1);
 }
 // A child killed by a signal has no status; report it the way a shell would.
@@ -342,7 +342,7 @@ const stagePlatformPackage = Effect.fn("stagePlatformPackage")(function* (input:
   const extractDir = path.join(scratch, "extract");
   yield* fs.makeDirectory(extractDir);
   const contentDir = yield* extractArchive(input.archive, extractDir);
-  const executableName = input.key.startsWith("win32") ? "rove.exe" : "rove";
+  const executableName = input.key.startsWith("win32") ? "paperplane.exe" : "paperplane";
   const executable = path.join(contentDir, executableName);
   if (!(yield* fs.exists(executable))) {
     return yield* new NpmPackagesArchiveLayoutError({
@@ -351,7 +351,7 @@ const stagePlatformPackage = Effect.fn("stagePlatformPackage")(function* (input:
     });
   }
   // The tarball carries the on-disk mode, so the bit must be set before packing.
-  if (executableName === "rove") {
+  if (executableName === "paperplane") {
     yield* fs.chmod(executable, 0o755);
   }
   const bundled = yield* readBundledPackages(path.join(contentDir, "node_modules"));
@@ -375,7 +375,7 @@ const stagePlatformPackage = Effect.fn("stagePlatformPackage")(function* (input:
   return output;
 }, Effect.scoped);
 
-/** Writes the launcher package (package.json, bin/rove.js, README) and its tarball. */
+/** Writes the launcher package (package.json, bin/paperplane.js, README) and its tarball. */
 const stageLauncherPackage = Effect.fn("stageLauncherPackage")(function* (input: {
   readonly outputDir: string;
   readonly version: string;
@@ -393,7 +393,7 @@ const stageLauncherPackage = Effect.fn("stageLauncherPackage")(function* (input:
     path.join(stageDir, "package.json"),
     `${yield* encodePackageJson(npmLauncherPackageManifest(input.version, input.platformKeys))}\n`,
   );
-  const launcherScript = path.join(stageDir, "bin/rove.js");
+  const launcherScript = path.join(stageDir, "bin/paperplane.js");
   yield* fs.writeFileString(launcherScript, NPM_LAUNCHER_SCRIPT);
   yield* fs.chmod(launcherScript, 0o755);
   const readme = yield* path.fromFileUrl(new URL("../apps/server/README.md", import.meta.url));
@@ -471,7 +471,9 @@ const command = Command.make(
   "build-npm-platform-packages",
   {
     archivesDir: Flag.String("archives-dir").pipe(
-      Flag.withDescription("Directory holding the release's rove-<version>-<platform> archives."),
+      Flag.withDescription(
+        "Directory holding the release's paperplane-<version>-<platform> archives.",
+      ),
     ),
     version: Flag.String("version").pipe(
       Flag.withDescription(
@@ -491,7 +493,7 @@ const command = Command.make(
   buildNpmPlatformPackages,
 ).pipe(
   Command.withDescription(
-    "Build the rove launcher and @rove-code/cli-<platform> npm packages from CLI release archives.",
+    "Build the paperplane launcher and @getpaperplane/cli-<platform> npm packages from CLI release archives.",
   ),
 );
 

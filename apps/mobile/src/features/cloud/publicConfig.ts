@@ -1,13 +1,13 @@
 import Constants from "expo-constants";
-import { relayClerkTokenOptions } from "@rove-code/shared/relayAuth";
-import { normalizeSecureRelayUrl } from "@rove-code/shared/relayUrl";
+import { relayClerkTokenOptions } from "@getpaperplane/shared/relayAuth";
+import { normalizeSecureRelayUrl } from "@getpaperplane/shared/relayUrl";
 import * as Schema from "effect/Schema";
 import * as RuntimePredicate from "effect/Predicate";
 
 export class CloudPublicConfigMissingError extends Schema.TaggedError<CloudPublicConfigMissingError>()(
   "CloudPublicConfigMissingError",
   {
-    key: Schema.Literal("ROVE_CLERK_JWT_TEMPLATE"),
+    key: Schema.Literal("PAPERPLANE_CLERK_JWT_TEMPLATE"),
   },
 ) {
   override get message(): string {
@@ -101,7 +101,7 @@ export function hasTracingPublicConfig(
 export function resolveRelayClerkTokenOptions() {
   const { jwtTemplate } = resolveCloudPublicConfig().clerk;
   if (!jwtTemplate) {
-    throw new CloudPublicConfigMissingError({ key: "ROVE_CLERK_JWT_TEMPLATE" });
+    throw new CloudPublicConfigMissingError({ key: "PAPERPLANE_CLERK_JWT_TEMPLATE" });
   }
   return relayClerkTokenOptions(jwtTemplate);
 }

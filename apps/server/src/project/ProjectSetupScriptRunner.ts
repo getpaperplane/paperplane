@@ -1,11 +1,11 @@
-import { ProjectId, type ProjectScript } from "@rove-code/contracts";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+import { ProjectId, type ProjectScript } from "@getpaperplane/contracts";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 import {
   projectScriptRuntimeEnv,
   resolveProjectScripts,
   settleProjectScript,
   setupProjectScript,
-} from "@rove-code/shared/projectScripts";
+} from "@getpaperplane/shared/projectScripts";
 
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
@@ -121,7 +121,7 @@ export class ProjectSetupScriptRunner extends Context.Service<
       input: ProjectSetupScriptRunnerInput,
     ) => Effect.Effect<ProjectSetupScriptRunnerResult, ProjectSetupScriptRunnerError>;
   }
->()("@rove-code/server/project/ProjectSetupScriptRunner") {}
+>()("@getpaperplane/server/project/ProjectSetupScriptRunner") {}
 
 /** @public Service construction is part of the canonical Effect module API. */
 /**
@@ -129,7 +129,7 @@ export class ProjectSetupScriptRunner extends Context.Service<
  * the PTY stream. Each run gets its own random token so script output cannot
  * spoof completion, and the sentinel pattern is built per run from it.
  */
-const COMPLETION_SENTINEL_PREFIX = "__ROVE_SETUP_DONE__";
+const COMPLETION_SENTINEL_PREFIX = "__PAPERPLANE_SETUP_DONE__";
 const OUTPUT_LINE_MAX_LENGTH = 400;
 /** A partial line longer than this is a byte stream, not a line. Keep only the tail. */
 const PARTIAL_LINE_MAX_LENGTH = 4_096;
@@ -191,7 +191,7 @@ function wrapCommandForCompletion(
   const body = command.replace(/\r?\n/g, "\r");
   switch (shell) {
     case "powershell":
-      return `$global:LASTEXITCODE = $null; & {\r${body}\r}; if ($null -ne $LASTEXITCODE) { $__roveExitCode = $LASTEXITCODE } elseif ($?) { $__roveExitCode = 0 } else { $__roveExitCode = 1 }; Write-Host "${sentinel}$__roveExitCode"`;
+      return `$global:LASTEXITCODE = $null; & {\r${body}\r}; if ($null -ne $LASTEXITCODE) { $__paperplaneExitCode = $LASTEXITCODE } elseif ($?) { $__paperplaneExitCode = 0 } else { $__paperplaneExitCode = 1 }; Write-Host "${sentinel}$__paperplaneExitCode"`;
     case "fish":
       return `begin\r${body}\rend; printf '\\n${sentinel}%s\\n' $status`;
     case "posix":

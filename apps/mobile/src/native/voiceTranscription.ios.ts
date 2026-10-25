@@ -7,7 +7,7 @@ import {
   type PreparedVoiceTranscription,
   type VoiceTranscriber,
   type VoiceTranscriptionOptions,
-} from "@rove-code/client-runtime/voice-input";
+} from "@getpaperplane/client-runtime/voice-input";
 
 function getDeviceLocale(): string {
   return Intl.DateTimeFormat().resolvedOptions().locale;

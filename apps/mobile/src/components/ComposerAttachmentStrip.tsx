@@ -1,8 +1,8 @@
 import { FilePreviewGallery, useFilePreviewGallery } from "./FilePreviewGallery";
 import { composerImageGallery } from "../lib/composerImageGallery";
 import { SymbolView } from "./ui/AppSymbol";
-import { imageMimeType } from "@rove-code/shared/image";
-import { videoMimeType } from "@rove-code/shared/video";
+import { imageMimeType } from "@getpaperplane/shared/image";
+import { videoMimeType } from "@getpaperplane/shared/video";
 import { useEffect, useMemo, useState } from "react";
 import { Image, Pressable, ScrollView, View } from "react-native";
 
@@ -20,7 +20,7 @@ import { type MediaActionsSource } from "../lib/mediaActionsSource";
 import { PresentationSource } from "./ui/NativePresentation";
 import type { FilePreviewSource } from "./FilePreviewModal";
 import { isPdfFile } from "../lib/filePreview";
-import type { EnvironmentId } from "@rove-code/contracts";
+import type { EnvironmentId } from "@getpaperplane/contracts";
 import {
   retryComposerAttachmentUpload,
   useComposerAttachmentUploadState,
@@ -106,7 +106,7 @@ export function ComposerAttachmentThumbnail(props: ComposerAttachmentThumbnailPr
  * persisted URI renders meanwhile, which is correct everywhere but after a
  * container move.
  */
-const PREVIEW_CACHE_DIRECTORY = "rove-composer-previews";
+const PREVIEW_CACHE_DIRECTORY = "paperplane-composer-previews";
 
 /**
  * Fabric re-parses an image source URL on every layout pass of the node, and a

@@ -7,7 +7,7 @@ import type {
   ResourceTelemetryProcessIdentity,
   ResourceTelemetryRetryResult,
   ResourceTelemetrySnapshot,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -72,7 +72,7 @@ export class ResourceTelemetry extends Context.Service<
     ) => Effect.Effect<boolean, ResourceTelemetryRefreshFailed>;
     readonly retry: Effect.Effect<ResourceTelemetryRetryResult>;
   }
->()("@rove-code/server/resourceTelemetry/ResourceTelemetry") {}
+>()("@getpaperplane/server/resourceTelemetry/ResourceTelemetry") {}
 
 interface TelemetryState {
   readonly nativeSnapshot: Option.Option<ResourceMonitorSnapshotEvent>;

@@ -1,6 +1,6 @@
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { assert, expect, it } from "@effect/vitest";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
@@ -14,28 +14,37 @@ import {
 
 it("formats package runner commands from their cache entry paths", () => {
   for (const [entryPath, expected] of [
-    ["/home/theo/.npm/_npx/abc123/node_modules/rove/dist/bin.mjs", "npx @rove-code/cli serve"],
     [
-      "C:\\Users\\theo\\AppData\\Local\\npm-cache\\_npx\\abc\\node_modules\\rove\\dist\\bin.mjs",
-      "npx @rove-code/cli serve",
+      "/home/theo/.npm/_npx/abc123/node_modules/@getpaperplane/cli/dist/bin.mjs",
+      "npx @getpaperplane/cli serve",
     ],
     [
-      "/home/theo/.cache/pnpm/dlx/abc/node_modules/rove/dist/bin.mjs",
-      "pnpm dlx @rove-code/cli serve",
+      "C:\\Users\\theo\\AppData\\Local\\npm-cache\\_npx\\abc\\node_modules\\@getpaperplane\\cli\\dist\\bin.mjs",
+      "npx @getpaperplane/cli serve",
     ],
     [
-      "/home/theo/.local/share/pnpm/.pnpm/dlx/abc/node_modules/rove/dist/bin.mjs",
-      "pnpm dlx @rove-code/cli serve",
+      "/home/theo/.cache/pnpm/dlx/abc/node_modules/@getpaperplane/cli/dist/bin.mjs",
+      "pnpm dlx @getpaperplane/cli serve",
     ],
     [
-      "C:\\Users\\theo\\AppData\\Local\\pnpm-cache\\dlx\\abc\\node_modules\\rove\\dist\\bin.mjs",
-      "pnpm dlx @rove-code/cli serve",
+      "/home/theo/.local/share/pnpm/.pnpm/dlx/abc/node_modules/@getpaperplane/cli/dist/bin.mjs",
+      "pnpm dlx @getpaperplane/cli serve",
     ],
-    ["/home/theo/.bun/install/cache/rove@0.0.31/dist/bin.mjs", "bunx @rove-code/cli serve"],
-    ["/tmp/bunx-1000-rove@latest/node_modules/rove/dist/bin.mjs", "bunx @rove-code/cli serve"],
     [
-      "C:\\Users\\theo\\AppData\\Local\\Temp\\bunx-0-rove@latest\\node_modules\\rove\\dist\\bin.mjs",
-      "bunx @rove-code/cli serve",
+      "C:\\Users\\theo\\AppData\\Local\\pnpm-cache\\dlx\\abc\\node_modules\\@getpaperplane\\cli\\dist\\bin.mjs",
+      "pnpm dlx @getpaperplane/cli serve",
+    ],
+    [
+      "/home/theo/.bun/install/cache/@getpaperplane+cli@0.0.31/dist/bin.mjs",
+      "bunx @getpaperplane/cli serve",
+    ],
+    [
+      "/tmp/bunx-1000-@getpaperplane+cli@latest/node_modules/@getpaperplane/cli/dist/bin.mjs",
+      "bunx @getpaperplane/cli serve",
+    ],
+    [
+      "C:\\Users\\theo\\AppData\\Local\\Temp\\bunx-0-@getpaperplane+cli@latest\\node_modules\\@getpaperplane\\cli\\dist\\bin.mjs",
+      "bunx @getpaperplane/cli serve",
     ],
   ] as const) {
     assert.equal(formatCliCommand({ subcommand: "serve", entryPath, version: "0.0.31" }), expected);
@@ -44,29 +53,29 @@ it("formats package runner commands from their cache entry paths", () => {
 
 it("treats stable installs as direct invocations", () => {
   for (const entryPath of [
-    "/usr/local/lib/node_modules/rove/dist/bin.mjs",
-    "/home/theo/Code/work/rove/apps/server/dist/bin.mjs",
-    "/home/theo/.rove/runtime/0.0.31/node_modules/rove/dist/bin.mjs",
+    "/usr/local/lib/node_modules/@getpaperplane/cli/dist/bin.mjs",
+    "/home/theo/Code/work/paperplane/apps/server/dist/bin.mjs",
+    "/home/theo/.paperplane/runtime/0.0.31/node_modules/@getpaperplane/cli/dist/bin.mjs",
     "",
   ]) {
     assert.equal(
       formatCliCommand({ subcommand: "serve", entryPath, version: "0.0.31" }),
-      "rove serve",
+      "paperplane serve",
     );
   }
 });
 
 it("re-suggests the prerelease channel only for prerelease builds", () => {
   for (const [version, expected] of [
-    ["0.0.31-nightly.20260729", "npx @rove-code/cli@nightly serve"],
-    ["0.0.31-preview.20260729.1", "npx @rove-code/cli@preview serve"],
-    ["0.0.31-foo-preview.20260729.1", "npx @rove-code/cli serve"],
-    ["0.0.31", "npx @rove-code/cli serve"],
+    ["0.0.31-nightly.20260729", "npx @getpaperplane/cli@nightly serve"],
+    ["0.0.31-preview.20260729.1", "npx @getpaperplane/cli@preview serve"],
+    ["0.0.31-foo-preview.20260729.1", "npx @getpaperplane/cli serve"],
+    ["0.0.31", "npx @getpaperplane/cli serve"],
   ] as const) {
     assert.equal(
       formatCliCommand({
         subcommand: "serve",
-        entryPath: "/home/theo/.npm/_npx/abc123/node_modules/rove/dist/bin.mjs",
+        entryPath: "/home/theo/.npm/_npx/abc123/node_modules/@getpaperplane/cli/dist/bin.mjs",
         version,
       }),
       expected,
@@ -78,31 +87,32 @@ it("formats serve suggestions to match the launching command", () => {
   assert.equal(
     formatCliCommand({
       subcommand: "serve",
-      entryPath: "/home/theo/.npm/_npx/abc/node_modules/rove/dist/bin.mjs",
+      entryPath: "/home/theo/.npm/_npx/abc/node_modules/@getpaperplane/cli/dist/bin.mjs",
       version: "0.0.31-nightly.20260729",
     }),
-    "npx @rove-code/cli@nightly serve",
+    "npx @getpaperplane/cli@nightly serve",
   );
   assert.equal(
     formatCliCommand({
       subcommand: "serve",
-      entryPath: "/tmp/bunx-1000-rove@latest/node_modules/rove/dist/bin.mjs",
+      entryPath:
+        "/tmp/bunx-1000-@getpaperplane+cli@latest/node_modules/@getpaperplane/cli/dist/bin.mjs",
       version: "0.0.31",
     }),
-    "bunx @rove-code/cli serve",
+    "bunx @getpaperplane/cli serve",
   );
   assert.equal(
     formatCliCommand({
       subcommand: "serve",
-      entryPath: "/usr/local/lib/node_modules/rove/dist/bin.mjs",
+      entryPath: "/usr/local/lib/node_modules/@getpaperplane/cli/dist/bin.mjs",
       version: "0.0.31-nightly.20260729",
     }),
-    "rove serve",
+    "paperplane serve",
   );
 });
 
 it.layer(NodeServices.layer)("root CLI commands", (it) => {
-  /** `sudo rove browser setup` as this process would render it, with `rove` on PATH or not. */
+  /** `sudo paperplane browser setup` as this process would render it, with `paperplane` on PATH or not. */
   const rootCommand = (input: {
     readonly node: string;
     readonly entry: string;
@@ -118,67 +128,67 @@ it.layer(NodeServices.layer)("root CLI commands", (it) => {
       Effect.provideService(HostProcess.Environment, { PATH: input.path ?? "", ...input.env }),
     );
 
-  /** A directory holding an executable `rove`, to stand in for one on PATH. */
-  const pathWithRove = Effect.gen(function* () {
+  /** A directory holding an executable `paperplane`, to stand in for one on PATH. */
+  const pathWithPaperplane = Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
     const bin = yield* fs.makeTempDirectoryScoped();
-    yield* fs.writeFileString(path.join(bin, "rove"), "#!/bin/sh\n", { mode: 0o755 });
+    yield* fs.writeFileString(path.join(bin, "paperplane"), "#!/bin/sh\n", { mode: 0o755 });
     return bin;
   });
 
   it.effect("keeps a user-installed Node reachable when the command runs under sudo", () =>
     Effect.gen(function* () {
-      const npx = "/home/theo/.npm/_npx/abc/node_modules/rove/dist/bin.mjs";
+      const npx = "/home/theo/.npm/_npx/abc/node_modules/@getpaperplane/cli/dist/bin.mjs";
       // sudo's secure_path already has a system Node.
       expect(yield* rootCommand({ node: "/usr/bin/node", entry: npx })).toBe(
-        "sudo npx @rove-code/cli browser setup",
+        "sudo npx @getpaperplane/cli browser setup",
       );
       // nvm, fnm, and tarball installs are dropped by sudo's PATH reset.
       expect(
         yield* rootCommand({ node: "/home/theo/.nvm/versions/node/v24/bin/node", entry: npx }),
-      ).toBe('sudo env "PATH=$PATH" npx @rove-code/cli browser setup');
+      ).toBe('sudo env "PATH=$PATH" npx @getpaperplane/cli browser setup');
       expect(
         yield* rootCommand({
           node: "/home/theo/.local/node/bin/node",
-          entry: "/home/theo/.local/lib/node_modules/rove/dist/bin.mjs",
-          path: yield* pathWithRove,
+          entry: "/home/theo/.local/lib/node_modules/@getpaperplane/cli/dist/bin.mjs",
+          path: yield* pathWithPaperplane,
         }),
-      ).toBe('sudo env "PATH=$PATH" rove browser setup');
+      ).toBe('sudo env "PATH=$PATH" paperplane browser setup');
     }).pipe(Effect.scoped),
   );
 
-  it.effect("names this install's launcher when rove is not on PATH", () =>
+  it.effect("names this install's launcher when paperplane is not on PATH", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const home = yield* fs.makeTempDirectoryScoped();
-      const shim = path.join(home, ".local bin", "rove");
+      const shim = path.join(home, ".local bin", "paperplane");
       yield* fs.makeDirectory(path.dirname(shim), { recursive: true });
       yield* fs.writeFileString(shim, "#!/bin/sh\n", { mode: 0o755 });
       const desktop = {
-        node: "/tmp/.mount_T3abc/rove",
+        node: "/tmp/.mount_T3abc/paperplane",
         entry: "/tmp/.mount_T3abc/resources/app.asar/apps/server/dist/bin.mjs",
-        env: { ROVE_CLI_PATH: shim },
+        env: { PAPERPLANE_CLI_PATH: shim },
       };
       // The desktop app's shim, quoted for the shell and run as root as is.
       expect(yield* rootCommand(desktop)).toBe(`sudo '${shim}' browser setup`);
-      // A `rove` the person put on PATH still wins.
-      expect(yield* rootCommand({ ...desktop, path: yield* pathWithRove })).toBe(
-        'sudo env "PATH=$PATH" rove browser setup',
+      // A `paperplane` the person put on PATH still wins.
+      expect(yield* rootCommand({ ...desktop, path: yield* pathWithPaperplane })).toBe(
+        'sudo env "PATH=$PATH" paperplane browser setup',
       );
       // A standalone binary names itself.
       expect(
         yield* rootCommand({
-          node: "/opt/rove/rove",
-          entry: "/opt/rove/rove",
+          node: "/opt/paperplane/paperplane",
+          entry: "/opt/paperplane/paperplane",
           executable: true,
         }),
-      ).toBe("sudo /opt/rove/rove browser setup");
-      // A stale shim path, then no launcher at all, fall back to plain `rove`.
+      ).toBe("sudo /opt/paperplane/paperplane browser setup");
+      // A stale shim path, then no launcher at all, fall back to plain `paperplane`.
       expect(
-        yield* rootCommand({ ...desktop, env: { ROVE_CLI_PATH: path.join(home, "gone") } }),
-      ).toBe('sudo env "PATH=$PATH" rove browser setup');
+        yield* rootCommand({ ...desktop, env: { PAPERPLANE_CLI_PATH: path.join(home, "gone") } }),
+      ).toBe('sudo env "PATH=$PATH" paperplane browser setup');
     }).pipe(Effect.scoped),
   );
 });
@@ -189,17 +199,17 @@ it.layer(NodeServices.layer)("host CLI commands", (it) => {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const home = yield* fs.makeTempDirectoryScoped();
-      const shim = path.join(home, "rove.cmd");
+      const shim = path.join(home, "paperplane.cmd");
       yield* fs.writeFileString(shim, "@echo off\r\n");
       const hostCommand = (platform: NodeJS.Platform, env: Record<string, string>) =>
-        resolveHostCliCommand("doctor", ["--base-dir", "C:\\Users\\Jane Doe\\.rove"]).pipe(
+        resolveHostCliCommand("doctor", ["--base-dir", "C:\\Users\\Jane Doe\\.paperplane"]).pipe(
           Effect.provideService(
             HostProcess.ExecutablePath,
-            "C:\\Program Files\\Rove Code\\rove.exe",
+            "C:\\Program Files\\Paperplane\\paperplane.exe",
           ),
           Effect.provideService(HostProcess.Arguments, [
-            "C:\\Program Files\\Rove Code\\rove.exe",
-            "C:\\Program Files\\Rove Code\\resources\\app.asar\\apps\\server\\dist\\bin.mjs",
+            "C:\\Program Files\\Paperplane\\paperplane.exe",
+            "C:\\Program Files\\Paperplane\\resources\\app.asar\\apps\\server\\dist\\bin.mjs",
           ]),
           Effect.provideService(HostProcess.IsExecutable, false),
           Effect.provideService(HostProcess.Platform, platform),
@@ -207,30 +217,30 @@ it.layer(NodeServices.layer)("host CLI commands", (it) => {
         );
       // The desktop shim is called through `&`, and each argument is quoted
       // the PowerShell way: no POSIX single quotes anywhere.
-      expect((yield* hostCommand("win32", { ROVE_CLI_PATH: shim })).command).toBe(
-        `& "${shim}" doctor "--base-dir" "C:\\Users\\Jane Doe\\.rove"`,
+      expect((yield* hostCommand("win32", { PAPERPLANE_CLI_PATH: shim })).command).toBe(
+        `& "${shim}" doctor "--base-dir" "C:\\Users\\Jane Doe\\.paperplane"`,
       );
-      // Without a launcher, plain `rove` with PowerShell-quoted arguments.
+      // Without a launcher, plain `paperplane` with PowerShell-quoted arguments.
       expect((yield* hostCommand("win32", {})).command).toBe(
-        'rove doctor "--base-dir" "C:\\Users\\Jane Doe\\.rove"',
+        'paperplane doctor "--base-dir" "C:\\Users\\Jane Doe\\.paperplane"',
       );
       // Typographic quotes also delimit PowerShell strings; doubling keeps them.
       expect(
         (yield* resolveHostCliCommand("doctor", [
           "--base-dir",
-          "C:\\Rove\\\u201CArchive\u201D",
+          "C:\\Paperplane\\\u201CArchive\u201D",
         ]).pipe(
           Effect.provideService(HostProcess.Platform, "win32"),
           Effect.provideService(HostProcess.Environment, { PATH: "" }),
-          Effect.provideService(HostProcess.ExecutablePath, "C:\\rove.exe"),
-          Effect.provideService(HostProcess.Arguments, ["C:\\rove.exe", "C:\\bin.mjs"]),
+          Effect.provideService(HostProcess.ExecutablePath, "C:\\paperplane.exe"),
+          Effect.provideService(HostProcess.Arguments, ["C:\\paperplane.exe", "C:\\bin.mjs"]),
           Effect.provideService(HostProcess.IsExecutable, false),
         )).command,
-      ).toBe('rove doctor "--base-dir" "C:\\Rove\\\u201C\u201CArchive\u201D\u201D"');
+      ).toBe('paperplane doctor "--base-dir" "C:\\Paperplane\\\u201C\u201CArchive\u201D\u201D"');
       // POSIX hosts keep single quotes for the same input. The shim prefix is
       // a host path, so only the arguments are asserted.
-      expect((yield* hostCommand("linux", { ROVE_CLI_PATH: shim })).command).toMatch(
-        / doctor --base-dir 'C:\\Users\\Jane Doe\\\.rove'$/,
+      expect((yield* hostCommand("linux", { PAPERPLANE_CLI_PATH: shim })).command).toMatch(
+        / doctor --base-dir 'C:\\Users\\Jane Doe\\\.paperplane'$/,
       );
     }).pipe(Effect.scoped),
   );
@@ -243,10 +253,10 @@ it.layer(NodeServices.layer)("manual server installation ownership", (it) => {
       const path = yield* Path.Path;
       const root = yield* fs.makeTempDirectoryScoped();
       for (const [relative, kind] of [
-        ["npm/_npx/hash/node_modules/rove/dist/bin.mjs", "npx"],
-        ["npm/_npx/hash/node_modules/@rove/rove-linux-x64/rove", "npx"],
-        ["pnpm/dlx/hash/node_modules/rove/dist/bin.mjs", "pnpm-dlx"],
-        [".bun/install/cache/rove/dist/bin.mjs", "bunx"],
+        ["npm/_npx/hash/node_modules/@getpaperplane/cli/dist/bin.mjs", "npx"],
+        ["npm/_npx/hash/node_modules/@getpaperplane/cli-linux-x64/paperplane", "npx"],
+        ["pnpm/dlx/hash/node_modules/@getpaperplane/cli/dist/bin.mjs", "pnpm-dlx"],
+        [".bun/install/cache/@getpaperplane+cli/dist/bin.mjs", "bunx"],
       ] as const) {
         const entry = path.join(root, relative);
         yield* fs.makeDirectory(path.dirname(entry), { recursive: true });
@@ -254,7 +264,7 @@ it.layer(NodeServices.layer)("manual server installation ownership", (it) => {
         const installation = yield* resolveServerInstallation.pipe(
           Effect.provideService(HostProcess.Arguments, ["node", entry]),
           Effect.provideService(HostProcess.ExecutablePath, entry),
-          Effect.provideService(HostProcess.IsExecutable, entry.endsWith("/rove")),
+          Effect.provideService(HostProcess.IsExecutable, entry.endsWith("/paperplane")),
         );
         expect(installation).toEqual({ kind });
       }
@@ -267,15 +277,15 @@ it.layer(NodeServices.layer)("manual server installation ownership", (it) => {
       const path = yield* Path.Path;
       const root = yield* fs.makeTempDirectoryScoped();
       const prefix = path.join(root, "bunx-tools");
-      const packageRoot = path.join(prefix, "lib/node_modules/@rove-code/cli");
+      const packageRoot = path.join(prefix, "lib/node_modules/@getpaperplane/cli");
       const entry = path.join(packageRoot, "dist/bin.mjs");
-      const globalBin = path.join(prefix, "bin/rove");
+      const globalBin = path.join(prefix, "bin/paperplane");
       yield* fs.makeDirectory(path.dirname(entry), { recursive: true });
       yield* fs.makeDirectory(path.dirname(globalBin), { recursive: true });
       yield* fs.writeFileString(entry, "");
       yield* fs.writeFileString(
         path.join(packageRoot, "package.json"),
-        '{"name":"@rove-code/cli","version":"0.0.45","bin":{"rove":"./dist/bin.mjs"}}',
+        '{"name":"@getpaperplane/cli","version":"0.0.45","bin":{"paperplane":"./dist/bin.mjs"}}',
       );
       const resolve = resolveServerInstallation.pipe(
         Effect.provideService(HostProcess.Arguments, ["node", entry]),
@@ -286,7 +296,7 @@ it.layer(NodeServices.layer)("manual server installation ownership", (it) => {
       yield* fs.symlink(entry, globalBin);
       expect(yield* resolve).toEqual({ kind: "npm-global", prefix: yield* fs.realPath(prefix) });
       yield* fs.remove(globalBin);
-      yield* fs.writeFileString(globalBin, "an unrelated rove command");
+      yield* fs.writeFileString(globalBin, "an unrelated paperplane command");
       expect(yield* resolve).toBeNull();
       expect(yield* resolve.pipe(Effect.provideService(HostProcess.Platform, "win32"))).toBeNull();
     }),
@@ -298,9 +308,9 @@ it.layer(NodeServices.layer)("manual server installation ownership", (it) => {
       const path = yield* Path.Path;
       const root = yield* fs.makeTempDirectoryScoped();
       const prefix = path.join(root, "bunx-tools");
-      const packageRoot = path.join(prefix, "lib/node_modules/@rove-code/cli");
-      const launcher = path.join(packageRoot, "bin/rove.js");
-      const entry = path.join(packageRoot, "node_modules/@rove/rove-linux-x64/rove");
+      const packageRoot = path.join(prefix, "lib/node_modules/@getpaperplane/cli");
+      const launcher = path.join(packageRoot, "bin/paperplane.js");
+      const entry = path.join(packageRoot, "node_modules/@getpaperplane/cli-linux-x64/paperplane");
       yield* fs.makeDirectory(path.dirname(launcher), { recursive: true });
       yield* fs.makeDirectory(path.dirname(entry), { recursive: true });
       yield* fs.makeDirectory(path.join(prefix, "bin"));
@@ -308,9 +318,9 @@ it.layer(NodeServices.layer)("manual server installation ownership", (it) => {
       yield* fs.writeFileString(entry, "");
       yield* fs.writeFileString(
         path.join(packageRoot, "package.json"),
-        '{"name":"@rove-code/cli","version":"0.0.45","bin":{"rove":"./bin/rove.js"},"optionalDependencies":{"@rove/rove-linux-x64":"0.0.45"}}',
+        '{"name":"@getpaperplane/cli","version":"0.0.45","bin":{"paperplane":"./bin/paperplane.js"},"optionalDependencies":{"@getpaperplane/cli-linux-x64":"0.0.45"}}',
       );
-      yield* fs.symlink(launcher, path.join(prefix, "bin/rove"));
+      yield* fs.symlink(launcher, path.join(prefix, "bin/paperplane"));
       const resolve = resolveServerInstallation.pipe(
         Effect.provideService(HostProcess.ExecutablePath, entry),
         Effect.provideService(HostProcess.IsExecutable, true),
@@ -322,7 +332,7 @@ it.layer(NodeServices.layer)("manual server installation ownership", (it) => {
       ]) {
         yield* fs.writeFileString(
           path.join(path.dirname(entry), "package.json"),
-          `{"name":"@rove/rove-linux-x64","version":"${version}"}`,
+          `{"name":"@getpaperplane/cli-linux-x64","version":"${version}"}`,
         );
         expect(yield* resolve).toEqual(expected);
       }
@@ -335,9 +345,9 @@ it.layer(NodeServices.layer)("manual server installation ownership", (it) => {
       const path = yield* Path.Path;
       const root = yield* fs.makeTempDirectoryScoped();
       for (const relative of [
-        "project/node_modules/rove/dist/bin.mjs",
+        "project/node_modules/@getpaperplane/cli/dist/bin.mjs",
         "project/apps/server/dist/bin.mjs",
-        ".rove/runtime/0.0.45/rove",
+        ".paperplane/runtime/0.0.45/paperplane",
         "missing/dist/bin.mjs",
       ]) {
         const entry = path.join(root, relative);

@@ -1,7 +1,7 @@
 import {
   createDeviceStreamClient,
   type DeviceScreenSize,
-} from "@rove-code/client-runtime/device/stream";
+} from "@getpaperplane/client-runtime/device/stream";
 
 import type { DeviceStreamConfiguration } from "./device-stream-document";
 

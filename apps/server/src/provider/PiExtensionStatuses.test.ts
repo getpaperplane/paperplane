@@ -1,5 +1,5 @@
 import { assert, it } from "@effect/vitest";
-import { ThreadId } from "@rove-code/contracts";
+import { ThreadId } from "@getpaperplane/contracts";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";

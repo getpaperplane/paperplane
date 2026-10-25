@@ -11,11 +11,11 @@ export const PIERRE_TREE_UNSAFE_CSS = `
     --trees-font-size-override: 0.75rem;
   }
   button[data-type='item'], button[data-type='item']::before { border-radius: var(--radius-md); }
-  svg[data-icon-name='rove-tree-icon-loading'] { opacity: 0.6; }
+  svg[data-icon-name='paperplane-tree-icon-loading'] { opacity: 0.6; }
   @media (prefers-reduced-motion: no-preference) {
-    svg[data-icon-name='rove-tree-icon-loading'] { animation: rove-tree-spin 1s linear infinite; }
+    svg[data-icon-name='paperplane-tree-icon-loading'] { animation: paperplane-tree-spin 1s linear infinite; }
   }
-  @keyframes rove-tree-spin { to { transform: rotate(360deg); } }
+  @keyframes paperplane-tree-spin { to { transform: rotate(360deg); } }
 `;
 
 /** Host styles that keep a Pierre tree on the active color scheme and foreground. */

@@ -1,4 +1,4 @@
-import { ThreadId, TurnItemId } from "@rove-code/contracts";
+import { ThreadId, TurnItemId } from "@getpaperplane/contracts";
 import * as DateTime from "effect/DateTime";
 import { describe, expect, it } from "vite-plus/test";
 
@@ -17,7 +17,7 @@ const screenshot = {
   ordinal: 1,
   status: "completed" as const,
   title: null,
-  toolName: "mcp__rove__device_screenshot",
+  toolName: "mcp__paperplane__device_screenshot",
   input: { deviceId: "phone" },
   // What a detail read returns: the image's position without its bytes.
   output: {

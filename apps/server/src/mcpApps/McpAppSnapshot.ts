@@ -1,4 +1,4 @@
-import type { ThreadId } from "@rove-code/contracts";
+import type { ThreadId } from "@getpaperplane/contracts";
 import {
   injectMcpAppCsp,
   MCP_APP_MAX_HTML_BYTES,
@@ -7,7 +7,7 @@ import {
   readMcpAppCsp,
   readMcpAppPermissions,
   type McpAppReference,
-} from "@rove-code/shared/mcpApp";
+} from "@getpaperplane/shared/mcpApp";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Predicate from "effect/Predicate";

@@ -19,7 +19,7 @@ const response = (body: unknown, status = 200) =>
 it("Boat creates no-env persistent compute with a stable idempotency key and never queues prompts", async () => {
   const transport = vi.fn<typeof fetch>().mockResolvedValue(response(sandbox("provisioning"), 202));
   const driver = makeBoatDriver({ token: "test-key", tokenId: "" }, transport);
-  expect(await driver.create("rove-thread-id")).toMatchObject({ remoteId: handle.remoteId });
+  expect(await driver.create("paperplane-thread-id")).toMatchObject({ remoteId: handle.remoteId });
   expect(transport).toHaveBeenCalledWith(
     "https://boat.dev/api/v1/sandboxes",
     expect.objectContaining({
@@ -30,7 +30,7 @@ it("Boat creates no-env persistent compute with a stable idempotency key and nev
   );
   const headers = new Headers(transport.mock.calls[0]?.[1]?.headers);
   expect(headers.get("Authorization")).toBe("Bearer test-key");
-  expect(headers.get("Idempotency-Key")).toBe("rove-thread-id");
+  expect(headers.get("Idempotency-Key")).toBe("paperplane-thread-id");
   expect(transport.mock.calls.some(([url]) => String(url).includes("prompt"))).toBe(false);
 });
 
@@ -87,7 +87,7 @@ it("retrying accepted Boat deletion polls the saved receipt rather than re-delet
   expect(transport.mock.calls[0]?.[1]?.method).toBe("GET");
 });
 
-it("Boat hosting is public at the proxy but remains protected by Rove authentication", async () => {
+it("Boat hosting is public at the proxy but remains protected by Paperplane authentication", async () => {
   const transport = vi
     .fn<typeof fetch>()
     .mockImplementation(async (url) =>
@@ -113,7 +113,7 @@ it("bootstrap failures explain which stage failed without forwarding command out
       ),
     );
   const result = makeBoatDriver({ token: "key", tokenId: "" }, transport).exec(handle, "start");
-  await expect(result).rejects.toThrow("Could not install Rove in the sandbox.");
+  await expect(result).rejects.toThrow("Could not install Paperplane in the sandbox.");
   await expect(result).rejects.not.toThrow("secret-output");
 });
 

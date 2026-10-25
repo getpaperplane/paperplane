@@ -1,4 +1,4 @@
-import { createFilesystemEnvironmentAtoms } from "@rove-code/client-runtime/state/filesystem";
+import { createFilesystemEnvironmentAtoms } from "@getpaperplane/client-runtime/state/filesystem";
 
 import { connectionAtomRuntime } from "../connection/runtime";
 

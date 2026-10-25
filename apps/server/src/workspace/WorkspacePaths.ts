@@ -14,8 +14,8 @@ import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as Schema from "effect/Schema";
 
-import { expandHomePath } from "@rove-code/provider-core/server/pathExpansion";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+import { expandHomePath } from "@getpaperplane/provider-core/server/pathExpansion";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 
 export class WorkspaceRootNotExistsError extends Schema.TaggedError<WorkspaceRootNotExistsError>()(
   "WorkspaceRootNotExistsError",
@@ -117,7 +117,7 @@ export class WorkspacePaths extends Context.Service<
       WorkspacePathOutsideRootError
     >;
   }
->()("@rove-code/server/workspace/WorkspacePaths") {}
+>()("@getpaperplane/server/workspace/WorkspacePaths") {}
 
 function toPosixRelativePath(input: string): string {
   return input.replaceAll("\\", "/");

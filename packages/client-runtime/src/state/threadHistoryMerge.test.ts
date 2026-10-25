@@ -1,4 +1,4 @@
-import type { OrchestrationV2ProjectedTurnItem } from "@rove-code/contracts";
+import type { OrchestrationV2ProjectedTurnItem } from "@getpaperplane/contracts";
 import { describe, expect, it } from "@effect/vitest";
 import * as DateTime from "effect/DateTime";
 

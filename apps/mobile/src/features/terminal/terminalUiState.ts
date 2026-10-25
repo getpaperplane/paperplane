@@ -1,4 +1,4 @@
-import type { EnvironmentId, ThreadId } from "@rove-code/contracts";
+import type { EnvironmentId, ThreadId } from "@getpaperplane/contracts";
 
 export interface TerminalGridSize {
   readonly cols: number;

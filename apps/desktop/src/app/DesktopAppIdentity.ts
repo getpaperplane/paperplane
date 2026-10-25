@@ -16,7 +16,7 @@ const COMMIT_HASH_PATTERN = /^[0-9a-f]{7,40}$/i;
 const COMMIT_HASH_DISPLAY_LENGTH = 12;
 
 const AppPackageMetadata = Schema.Struct({
-  roveCommitHash: Schema.optional(Schema.String),
+  paperplaneCommitHash: Schema.optional(Schema.String),
 });
 const decodeAppPackageMetadata = Schema.decodeEffect(Schema.fromJsonString(AppPackageMetadata));
 
@@ -29,7 +29,7 @@ export class DesktopAppIdentity extends Context.Service<
     >;
     readonly configure: Effect.Effect<void>;
   }
->()("@rove-code/desktop/app/DesktopAppIdentity") {}
+>()("@getpaperplane/desktop/app/DesktopAppIdentity") {}
 
 const normalizeCommitHash = (value: string): Option.Option<string> => {
   const trimmed = value.trim();
@@ -55,7 +55,9 @@ export const make = Effect.gen(function* () {
       onSome: (value) =>
         decodeAppPackageMetadata(value).pipe(
           Effect.map((parsed) =>
-            Option.fromNullishOr(parsed.roveCommitHash).pipe(Option.flatMap(normalizeCommitHash)),
+            Option.fromNullishOr(parsed.paperplaneCommitHash).pipe(
+              Option.flatMap(normalizeCommitHash),
+            ),
           ),
           Effect.orElseSucceed(() => Option.none<string>()),
         ),
@@ -94,9 +96,7 @@ export const make = Effect.gen(function* () {
     // Electron removes spaces from this name to build the native User-Agent
     // product token, but leaves parentheses intact. Keep the runtime name valid
     // without rewriting preview sessions (which breaks Turnstile, #7110).
-    yield* electronApp.setName(
-      `${environment.branding.baseName} ${environment.branding.stageLabel}`,
-    );
+    yield* electronApp.setName(`Paperplane ${environment.branding.stageLabel}`);
     yield* electronApp.setAboutPanelOptions({
       applicationName: environment.displayName,
       applicationVersion: environment.appVersion,

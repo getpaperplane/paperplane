@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vite-plus/test";
 
-import type { TerminalSummary } from "@rove-code/contracts";
-import { DEFAULT_TERMINAL_ID, TerminalOpenInput } from "@rove-code/contracts";
+import type { TerminalSummary } from "@getpaperplane/contracts";
+import { DEFAULT_TERMINAL_ID, TerminalOpenInput } from "@getpaperplane/contracts";
 import * as Schema from "effect/Schema";
 
 import { getTerminalLabel, nextTerminalId, resolveTerminalSessionLabel } from "./terminalLabels.ts";

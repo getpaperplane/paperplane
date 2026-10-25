@@ -1,5 +1,5 @@
 import { useRef } from "react";
-import { BranchNamingMode, DEFAULT_SERVER_SETTINGS } from "@rove-code/contracts";
+import { BranchNamingMode, DEFAULT_SERVER_SETTINGS } from "@getpaperplane/contracts";
 
 import { Input } from "../ui/input";
 import { Select, SelectItem, SelectPopup, SelectTrigger, SelectValue } from "../ui/select";
@@ -81,7 +81,7 @@ export function BranchNamingSettings() {
           serverScoped
           settingKeys={["branchNamePrefix"]}
           title="Branch prefix"
-          description="For example, rove or rove/ produces rove/add-search. Leave empty for no prefix."
+          description="For example, paperplane or paperplane/ produces paperplane/add-search. Leave empty for no prefix."
           resetAction={
             prefixMixed ||
             settings.branchNamePrefix !== DEFAULT_SERVER_SETTINGS.branchNamePrefix ? (

@@ -1,6 +1,6 @@
 import { DownloadIcon } from "lucide-react";
 import { useSyncExternalStore } from "react";
-import type { RelayClientInstallProgressStage } from "@rove-code/contracts";
+import type { RelayClientInstallProgressStage } from "@getpaperplane/contracts";
 
 import {
   completeRelayClientInstallDialogClose,
@@ -69,8 +69,8 @@ export function RelayClientInstallDialog() {
           </DialogTitle>
           <DialogDescription>
             {isInstalling
-              ? "Rove Code is preparing this environment for secure access through Rove Connect."
-              : "Rove Code needs the relay client to make this environment available through Rove Connect."}
+              ? "Paperplane is preparing this environment for secure access through Paperplane Connect."
+              : "Paperplane needs the relay client to make this environment available through Paperplane Connect."}
           </DialogDescription>
         </DialogHeader>
         <DialogPanel scrollFade={false}>
@@ -91,14 +91,14 @@ export function RelayClientInstallDialog() {
                 value={activeStepIndex + 1}
               />
               <p className="text-xs leading-relaxed text-muted-foreground">
-                Keep Rove Code open while the relay client is installed.
+                Keep Paperplane open while the relay client is installed.
               </p>
             </div>
           ) : (
             <div className="rounded-xl border border-border/70 bg-muted/35 p-3">
               <p className="text-sm font-medium text-foreground">Managed relay client</p>
               <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-                Rove Code will download and install version{" "}
+                Paperplane will download and install version{" "}
                 {view.status === "confirming" ? view.version : ""} locally.
               </p>
             </div>

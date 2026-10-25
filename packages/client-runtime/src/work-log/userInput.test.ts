@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vite-plus/test";
-import { ApprovalRequestId, type UserInputAttachmentAnswerPayload } from "@rove-code/contracts";
+import { ApprovalRequestId, type UserInputAttachmentAnswerPayload } from "@getpaperplane/contracts";
 import { getQuestionTextPreview } from "./userInput.ts";
 
 function answer(

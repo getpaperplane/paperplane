@@ -6,7 +6,7 @@ import {
   type ClientGuardedRpcTag,
   ORCHESTRATION_V2_WS_METHODS,
   WS_METHODS,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Cause from "effect/Cause";
 import * as Context from "effect/Context";
 import * as Duration from "effect/Duration";
@@ -38,7 +38,7 @@ export class EnvironmentRpcRequestObserver extends Context.Reference<{
   readonly observe: (
     request: EnvironmentRpcRequestObservation,
   ) => Effect.Effect<Effect.Effect<void>>;
-}>("@rove-code/client-runtime/rpc/EnvironmentRpcRequestObserver", {
+}>("@getpaperplane/client-runtime/rpc/EnvironmentRpcRequestObserver", {
   defaultValue: () => ({
     observe: () => Effect.succeed(Effect.void),
   }),
@@ -99,7 +99,7 @@ export class EnvironmentRpcSubscriptionObserver extends Context.Reference<{
   readonly observe: (
     subscription: EnvironmentRpcSubscriptionObservation,
   ) => Effect.Effect<Effect.Effect<void>>;
-}>("@rove-code/client-runtime/rpc/EnvironmentRpcSubscriptionObserver", {
+}>("@getpaperplane/client-runtime/rpc/EnvironmentRpcSubscriptionObserver", {
   defaultValue: () => ({
     observe: () => Effect.succeed(Effect.void),
   }),
@@ -165,7 +165,7 @@ export class RpcPermissionGuard extends Context.Reference<{
     method: string,
     input: unknown,
   ) => Effect.Effect<void, EnvironmentAuthorizationError>;
-}>("@rove-code/client-runtime/rpc/RpcPermissionGuard", {
+}>("@getpaperplane/client-runtime/rpc/RpcPermissionGuard", {
   defaultValue: () => ({
     authorize: (_environmentId, method, input) => {
       const scope = clientRpcRequiredScopes(method, input)[0];

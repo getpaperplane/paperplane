@@ -8,7 +8,7 @@ import * as NodeNet from "node:net";
 
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
-import { PortSchema } from "@rove-code/contracts";
+import { PortSchema } from "@getpaperplane/contracts";
 import { Argument, Command, Flag } from "effect/cli";
 
 /**

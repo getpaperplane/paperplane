@@ -3,8 +3,8 @@ import {
   PrimaryConnectionTarget,
   RelayConnectionTarget,
   SshConnectionTarget,
-} from "@rove-code/client-runtime/connection";
-import { buildRemoteOpenUrl, EnvironmentId } from "@rove-code/contracts";
+} from "@getpaperplane/client-runtime/connection";
+import { buildRemoteOpenUrl, EnvironmentId } from "@getpaperplane/contracts";
 import { describe, expect, it } from "vite-plus/test";
 
 import { resolveRemoteOpenState } from "./remoteOpen";

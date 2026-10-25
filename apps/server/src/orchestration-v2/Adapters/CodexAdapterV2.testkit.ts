@@ -1,7 +1,7 @@
-import * as OtelEnvironment from "@rove-code/shared/otelEnvironment";
-import { DEFAULT_SIGNAL_EXPORT } from "@rove-code/shared/observability";
+import * as OtelEnvironment from "@getpaperplane/shared/otelEnvironment";
+import { DEFAULT_SIGNAL_EXPORT } from "@getpaperplane/shared/observability";
 import * as NodeServices from "@effect/platform-node/NodeServices";
-import { type ProviderReplayTranscript } from "@rove-code/contracts";
+import { type ProviderReplayTranscript } from "@getpaperplane/contracts";
 import * as CodexClient from "effect-codex-app-server/client";
 import type * as CodexError from "effect-codex-app-server/errors";
 import * as CodexReplay from "effect-codex-app-server/replay";
@@ -14,12 +14,12 @@ import * as Predicate from "effect/Predicate";
 import * as Schema from "effect/Schema";
 
 import * as ServerConfig from "../../config.ts";
-import * as IdAllocator from "@rove-code/provider-core/server/IdAllocator";
-import * as ProviderAdapter from "@rove-code/provider-core/server/ProviderAdapter";
-import { ProviderAdapterDriverCreateError } from "@rove-code/provider-core/server/adapterDriver";
+import * as IdAllocator from "@getpaperplane/provider-core/server/IdAllocator";
+import * as ProviderAdapter from "@getpaperplane/provider-core/server/ProviderAdapter";
+import { ProviderAdapterDriverCreateError } from "@getpaperplane/provider-core/server/adapterDriver";
 import * as ProviderAdapterRegistry from "../ProviderAdapterRegistry.ts";
 import type { OrchestratorV2ProviderReplayHarness } from "../testkit/ProviderReplayHarness.ts";
-import type { ProviderReplayGate } from "@rove-code/provider-testing/replayGate";
+import type { ProviderReplayGate } from "@getpaperplane/provider-testing/replayGate";
 import * as CodexAdapterV2 from "./CodexAdapterV2.ts";
 
 export class CodexReplayTranscriptDecodeError extends Schema.TaggedError<CodexReplayTranscriptDecodeError>()(
@@ -105,7 +105,7 @@ export function makeReplayServerConfig(
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
     const baseDir = yield* fs.makeTempDirectory({
-      prefix: `rove-orchestration-v2-codex-${scenario}-`,
+      prefix: `paperplane-orchestration-v2-codex-${scenario}-`,
     });
     const stateDir = path.join(baseDir, "userdata");
     const logsDir = path.join(stateDir, "logs");

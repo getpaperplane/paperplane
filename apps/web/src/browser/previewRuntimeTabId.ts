@@ -1,4 +1,4 @@
-import type { ScopedThreadRef } from "@rove-code/contracts";
+import type { ScopedThreadRef } from "@getpaperplane/contracts";
 
 /**
  * The server only guarantees preview tab ids are unique within one process.

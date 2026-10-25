@@ -1,4 +1,4 @@
-import { SourceControlProviderKind } from "@rove-code/contracts";
+import { SourceControlProviderKind } from "@getpaperplane/contracts";
 import { assert, it } from "@effect/vitest";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import * as Effect from "effect/Effect";
@@ -10,31 +10,31 @@ import * as Path from "effect/Path";
 import * as Schema from "effect/Schema";
 import { ChildProcessSpawner } from "effect/process";
 import { FetchHttpClient, HttpClient, HttpClientResponse } from "effect/http";
-import { VcsProcessSpawnError } from "@rove-code/contracts";
+import { VcsProcessSpawnError } from "@getpaperplane/contracts";
 
 import * as ServerSettings from "../serverSettings.ts";
 import * as ServerConfig from "../config.ts";
 import * as GitVcsDriver from "../vcs/GitVcsDriver.ts";
 import * as VcsDriverRegistry from "../vcs/VcsDriverRegistry.ts";
 import * as VcsProcess from "../vcs/VcsProcess.ts";
-import * as AzureDevOpsCli from "@rove-code/source-control-azure-devops/server/AzureDevOpsCli";
-import * as AzureDevOpsPullRequestCli from "@rove-code/source-control-azure-devops/server/AzureDevOpsPullRequestCli";
-import * as BitbucketApi from "@rove-code/source-control-bitbucket/server/BitbucketApi";
-import * as BitbucketPullRequestApi from "@rove-code/source-control-bitbucket/server/BitbucketPullRequestApi";
-import * as GitHubRest from "@rove-code/source-control-github/server/GitHubRest";
-import * as GitHubRequestPolicy from "@rove-code/source-control-github/server/GitHubRequestPolicy";
-import * as GitHubPullRequestApi from "@rove-code/source-control-github/server/GitHubPullRequestApi";
-import * as GitLabCli from "@rove-code/source-control-gitlab/server/GitLabCli";
-import * as GitLabPullRequestCli from "@rove-code/source-control-gitlab/server/GitLabPullRequestCli";
-import * as ForgejoCli from "@rove-code/source-control-forgejo/server/ForgejoCli";
-import * as GitCafeApi from "@rove-code/source-control-gitcafe/server/GitCafeApi";
-import * as GitCafeCredentials from "@rove-code/source-control-gitcafe/server/GitCafeCredentials";
-import * as ForgejoSourceControlProvider from "@rove-code/source-control-forgejo/server/ForgejoSourceControlProvider";
-import * as ForgejoPullRequestProvider from "@rove-code/source-control-forgejo/server/ForgejoPullRequestProvider";
+import * as AzureDevOpsCli from "@getpaperplane/source-control-azure-devops/server/AzureDevOpsCli";
+import * as AzureDevOpsPullRequestCli from "@getpaperplane/source-control-azure-devops/server/AzureDevOpsPullRequestCli";
+import * as BitbucketApi from "@getpaperplane/source-control-bitbucket/server/BitbucketApi";
+import * as BitbucketPullRequestApi from "@getpaperplane/source-control-bitbucket/server/BitbucketPullRequestApi";
+import * as GitHubRest from "@getpaperplane/source-control-github/server/GitHubRest";
+import * as GitHubRequestPolicy from "@getpaperplane/source-control-github/server/GitHubRequestPolicy";
+import * as GitHubPullRequestApi from "@getpaperplane/source-control-github/server/GitHubPullRequestApi";
+import * as GitLabCli from "@getpaperplane/source-control-gitlab/server/GitLabCli";
+import * as GitLabPullRequestCli from "@getpaperplane/source-control-gitlab/server/GitLabPullRequestCli";
+import * as ForgejoCli from "@getpaperplane/source-control-forgejo/server/ForgejoCli";
+import * as GitCafeApi from "@getpaperplane/source-control-gitcafe/server/GitCafeApi";
+import * as GitCafeCredentials from "@getpaperplane/source-control-gitcafe/server/GitCafeCredentials";
+import * as ForgejoSourceControlProvider from "@getpaperplane/source-control-forgejo/server/ForgejoSourceControlProvider";
+import * as ForgejoPullRequestProvider from "@getpaperplane/source-control-forgejo/server/ForgejoPullRequestProvider";
 import * as SourceControlDiscovery from "./SourceControlDiscovery.ts";
 import * as SourceControlProviderRegistry from "./SourceControlProviderRegistry.ts";
 import * as ServerSourceControlHost from "./ServerSourceControlHost.ts";
-import * as SourceControlHost from "@rove-code/source-control-core/server/SourceControlHost";
+import * as SourceControlHost from "@getpaperplane/source-control-core/server/SourceControlHost";
 
 const layerSourceControlProviderRegistryTest = (input: {
   readonly bitbucket: Partial<BitbucketApi.BitbucketApi["Service"]>;
@@ -44,7 +44,7 @@ const layerSourceControlProviderRegistryTest = (input: {
     Layer.provide(
       Layer.mergeAll(
         ServerConfig.layerTest(process.cwd(), {
-          prefix: "rove-source-control-registry-test-",
+          prefix: "paperplane-source-control-registry-test-",
         }).pipe(Layer.provide(NodeServices.layer)),
         Layer.mock(AzureDevOpsCli.AzureDevOpsCli)({}),
         Layer.mock(AzureDevOpsPullRequestCli.AzureDevOpsPullRequestCli)({}),
@@ -142,7 +142,7 @@ it.effect("reports implemented tools separately from locally available executabl
   const layerTest = SourceControlDiscovery.layer.pipe(
     Layer.provide(
       ServerConfig.layerTest(process.cwd(), {
-        prefix: "rove-source-control-discovery-",
+        prefix: "paperplane-source-control-discovery-",
       }),
     ),
     Layer.provide(Layer.mock(VcsProcess.VcsProcess)(processMock)),
@@ -155,7 +155,7 @@ it.effect("reports implemented tools separately from locally available executabl
             account: Option.none(),
             host: Option.some("bitbucket.org"),
             detail: Option.some(
-              "Add a Bitbucket token in Settings → Source Control, or set the ROVE_BITBUCKET_* environment variables on the server.",
+              "Add a Bitbucket token in Settings → Source Control, or set the PAPERPLANE_BITBUCKET_* environment variables on the server.",
             ),
           }),
         },
@@ -306,7 +306,7 @@ Logged in to gitlab.com as gitlab-user
   const layerTest = SourceControlDiscovery.layer.pipe(
     Layer.provide(
       ServerConfig.layerTest(process.cwd(), {
-        prefix: "rove-source-control-auth-discovery-",
+        prefix: "paperplane-source-control-auth-discovery-",
       }),
     ),
     Layer.provide(Layer.mock(VcsProcess.VcsProcess)(processMock)),
@@ -386,7 +386,7 @@ it.effect(
       const fs = yield* FileSystem.FileSystem;
       const git = yield* VcsProcess.VcsProcess;
       const path = yield* Path.Path;
-      const root = yield* fs.makeTempDirectoryScoped({ prefix: "rove-fj-checkout-" });
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-fj-checkout-" });
       const source = path.join(root, "source");
       const cwd = path.join(root, "checkout");
       yield* fs.makeDirectory(source);

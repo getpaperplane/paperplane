@@ -1,7 +1,7 @@
 import {
   alternateComposerDispatchAction,
   type ActiveTurnComposerAction,
-} from "@rove-code/client-runtime/state/composer-dispatch";
+} from "@getpaperplane/client-runtime/state/composer-dispatch";
 
 import type { FollowUpBehavior } from "../../lib/followUpBehavior";
 

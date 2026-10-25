@@ -3,9 +3,9 @@ import {
   createProjectFaviconImageLoader,
   PROJECT_FAVICON_MAX_DATA_URL_LENGTH,
   PROJECT_FAVICON_THUMBNAIL_SIZE,
-} from "@rove-code/client-runtime/project-favicon-cache";
+} from "@getpaperplane/client-runtime/project-favicon-cache";
 
-const DATABASE_NAME = "rove:project-favicons";
+const DATABASE_NAME = "paperplane:project-favicons";
 const DATABASE_VERSION = 2;
 const STORE_NAME = "images";
 let database: Promise<IDBDatabase> | undefined;

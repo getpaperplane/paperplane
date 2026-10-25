@@ -5,14 +5,14 @@ import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 
-import { type ProviderSetupError, TextGenerationError } from "@rove-code/contracts";
+import { type ProviderSetupError, TextGenerationError } from "@getpaperplane/contracts";
 import type { CursorSettings } from "../settings.ts";
 
-import * as TextGenerationOperations from "@rove-code/provider-core/server/textGenerationOperations";
+import * as TextGenerationOperations from "@getpaperplane/provider-core/server/textGenerationOperations";
 import { cursorSdkModelSelection } from "./sdkModel.ts";
 import type { CursorAuth } from "./auth.ts";
 import * as CursorSdk from "./CursorSdk.ts";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 
 const CURSOR_TIMEOUT_MS = 180_000;
 
@@ -66,7 +66,7 @@ export const makeCursorTextGeneration = Effect.fn("makeCursorTextGeneration")(fu
       if (!cursorSettings.enabled) {
         return yield* new TextGenerationError({
           operation,
-          detail: "Cursor is disabled in Rove Code settings.",
+          detail: "Cursor is disabled in Paperplane settings.",
         });
       }
 
@@ -97,11 +97,13 @@ export const makeCursorTextGeneration = Effect.fn("makeCursorTextGeneration")(fu
             "Cursor text generation cannot enforce workspace isolation with a custom ~/.cursor/sandbox.json. Use another text-generation provider.",
         });
       }
-      const cwd = yield* fs.makeTempDirectoryScoped({ prefix: "rove-cursor-text-" });
+      const cwd = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-cursor-text-" });
       // The SDK keeps SQLite handles open after `agent.close()` and only releases
       // them from a store the caller disposes. Its state lives outside `cwd` so the
       // agent's workspace stays empty.
-      const stateRoot = yield* fs.makeTempDirectoryScoped({ prefix: "rove-cursor-text-state-" });
+      const stateRoot = yield* fs.makeTempDirectoryScoped({
+        prefix: "paperplane-cursor-text-state-",
+      });
       const store = yield* Effect.acquireRelease(
         Effect.tryPromise(() => sdk.SqliteLocalAgentStore.open({ workspaceRef: cwd, stateRoot })),
         (store) => Effect.tryPromise(() => store.dispose()).pipe(Effect.ignore({ log: true })),

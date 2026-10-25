@@ -3,12 +3,12 @@ import {
   scopedProjectKey,
   scopeProjectRef,
   scopeThreadRef,
-} from "@rove-code/client-runtime/environment";
+} from "@getpaperplane/client-runtime/environment";
 import {
   DEFAULT_SERVER_SETTINGS,
   type ScopedProjectRef,
   type ThreadId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { useParams, useRouter } from "@tanstack/react-router";
 import { useCallback, useMemo } from "react";
 import {
@@ -26,7 +26,10 @@ import {
   getProjectOrderKey,
   selectProjectGroupingSettings,
 } from "../logicalProject";
-import { resolveNewThreadEnvMode, resolveProjectSettings } from "@rove-code/shared/projectSettings";
+import {
+  resolveNewThreadEnvMode,
+  resolveProjectSettings,
+} from "@getpaperplane/shared/projectSettings";
 import {
   readProject,
   readProjects,
@@ -40,7 +43,7 @@ import {
   resolveNewDraftStartFromOrigin,
   resolveNewThreadModelSelectionOverride,
 } from "../lib/chatThreadActions";
-import { readRoveProjectFile } from "../lib/roveProjectFileDefaults";
+import { readPaperplaneProjectFile } from "../lib/paperplaneProjectFileDefaults";
 import { environmentServerConfigsAtom } from "../state/server";
 import { resolveThreadRouteTarget } from "../threadRoutes";
 import { legacyProjectCwdPreferenceKey, useUiStateStore } from "../uiStateStore";
@@ -160,14 +163,14 @@ export function useNewThreadHandler() {
             currentRouteTarget?.kind === "draft" ? currentRouteTarget.draftId : null,
           destinationDraftId,
         });
-      // The shared resolver owns the priority order. The rove.json read is
+      // The shared resolver owns the priority order. The paperplane.json read is
       // skipped entirely when a higher-priority source decides, and its
       // query atom caches per project after the first call.
       const resolveDefaultEnvMode = async (): Promise<DraftThreadEnvMode> => {
         const consultProjectFile =
           project !== undefined && projectSettings.settings.defaultThreadEnvMode === null;
         const projectFile = consultProjectFile
-          ? await readRoveProjectFile(project.environmentId, project.workspaceRoot)
+          ? await readPaperplaneProjectFile(project.environmentId, project.workspaceRoot)
           : null;
         return resolveNewThreadEnvMode({
           projectSettings: resolveProjectSettings(

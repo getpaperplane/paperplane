@@ -2,8 +2,8 @@ import {
   attachEnvironmentDescriptor,
   createKnownEnvironment,
   type KnownEnvironment,
-} from "@rove-code/client-runtime/environment";
-import type { ExecutionEnvironmentDescriptor } from "@rove-code/contracts";
+} from "@getpaperplane/client-runtime/environment";
+import type { ExecutionEnvironmentDescriptor } from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 
 import { PrimaryEnvironmentRequestError, retryTransientBootstrap } from "./auth";

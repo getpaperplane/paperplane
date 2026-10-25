@@ -1,4 +1,4 @@
-import { SANDBOX_PORT } from "@rove-code/contracts";
+import { SANDBOX_PORT } from "@getpaperplane/contracts";
 import packageJson from "../../package.json" with { type: "json" };
 
 const quote = (value: string) => `'${value.replaceAll("'", "'\\''")}'`;
@@ -14,16 +14,16 @@ const SANDBOX_CREDENTIALS_FAILED = 14;
 const SANDBOX_TOOLS_FAILED = 15;
 
 // Clients recognize sandboxes by the workspace below (SANDBOX_WORKSPACE_DIR).
-const ROOT = `"$HOME/.rove-sandbox"`;
-const RUNTIME = `"$HOME/.rove-sandbox/runtime"`;
-const WRAPPER = `"$HOME/.rove-sandbox/runtime/node_modules/.bin/rove"`;
+const ROOT = `"$HOME/.paperplane-sandbox"`;
+const RUNTIME = `"$HOME/.paperplane-sandbox/runtime"`;
+const WRAPPER = `"$HOME/.paperplane-sandbox/runtime/node_modules/.bin/paperplane"`;
 
 // Only this deployment's captured PID may be signalled. Boot identity and process
 // start time also prevent a restored PID file from targeting a different process.
 const identityHelpers = `
 const fs = require('node:fs');
 const path = require('node:path');
-const root = path.join(process.env.HOME, '.rove-sandbox');
+const root = path.join(process.env.HOME, '.paperplane-sandbox');
 const pidFile = path.join(root, 'server.json');
 const bootId = () => fs.readFileSync('/proc/sys/kernel/random/boot_id', 'utf8').trim();
 const stat = pid => fs.readFileSync('/proc/' + pid + '/stat', 'utf8').split(') ')[1].split(' ');
@@ -36,27 +36,27 @@ const owned = () => {
   } catch { return null; }
 };
 const responding = async () => {
-  try { return (await fetch('http://127.0.0.1:${SANDBOX_PORT}/.well-known/rove/environment', { signal: AbortSignal.timeout(1000) })).ok; }
+  try { return (await fetch('http://127.0.0.1:${SANDBOX_PORT}/.well-known/paperplane/environment', { signal: AbortSignal.timeout(1000) })).ok; }
   catch { return false; }
 };
 `;
 
 // The npm wrapper runs the platform binary as a child and does not forward
 // signals, so the server is spawned from the platform package directly.
-const resolveBinary = `require('node:path').join(require('node:path').dirname(require.resolve('@rove-code/cli-' + process.platform + '-' + process.arch + '/package.json', { paths: [process.env.ROVE_SANDBOX_RUNTIME_DIR] })), 'rove')`;
+const resolveBinary = `require('node:path').join(require('node:path').dirname(require.resolve('@getpaperplane/cli-' + process.platform + '-' + process.arch + '/package.json', { paths: [process.env.PAPERPLANE_SANDBOX_RUNTIME_DIR] })), 'paperplane')`;
 
 export const sandboxStartCommand = `set -u
 ROOT=${ROOT}
 RUNTIME=${RUNTIME}
 mkdir -p "$ROOT/data" "$ROOT/workspace" "$RUNTIME" || exit ${SANDBOX_INSTALL_FAILED}
-export ROVE_SANDBOX_RUNTIME_DIR="$RUNTIME"
+export PAPERPLANE_SANDBOX_RUNTIME_DIR="$RUNTIME"
 installed() { [ -x "$(node -p ${quote(resolveBinary)} 2>/dev/null)" ] && ${WRAPPER} --version >/dev/null 2>&1; }
 # A partial install must not wedge every later repair, so verify the binary.
 # npm exits 0 when an optional platform package is missing (npm can take a while
 # to serve freshly published binaries), so each attempt is checked by running it.
 if ! installed; then
   : >"$ROOT/install.log"
-  for spec in ${quote(`@rove-code/cli@${packageJson.version}`)} @rove-code/cli@latest; do
+  for spec in ${quote(`@getpaperplane/cli@${packageJson.version}`)} @getpaperplane/cli@latest; do
     rm -rf "$RUNTIME/node_modules" "$RUNTIME/package.json" "$RUNTIME/package-lock.json"
     npm install --prefix "$RUNTIME" --no-audit --no-fund "$spec" >>"$ROOT/install.log" 2>&1
     installed && break
@@ -72,7 +72,7 @@ ${nodeCommand(`${identityHelpers}
   const child = require('node:child_process').spawn(binary,
     ['serve', '--host', '0.0.0.0', '--port', '${SANDBOX_PORT}', '--base-dir', path.join(root, 'data'), '--no-browser'],
     { cwd: path.join(root, 'workspace'), detached: true, stdio: ['ignore', log, log],
-      env: { ...process.env, ROVE_AUTO_BOOTSTRAP_PROJECT_FROM_CWD: 'false', ROVE_NO_BROWSER: 'true' } });
+      env: { ...process.env, PAPERPLANE_AUTO_BOOTSTRAP_PROJECT_FROM_CWD: 'false', PAPERPLANE_NO_BROWSER: 'true' } });
   child.on('error', () => process.exit(${SANDBOX_INSTALL_FAILED}));
   fs.writeFileSync(pidFile, JSON.stringify({ pid: child.pid, bootId: bootId(), ticks: ticks(child.pid) }), { mode: 0o600 });
   fs.closeSync(log);
@@ -128,8 +128,8 @@ process.stdin.on('end', () => {
     for (const file of payload.files) {
       const target = path.join(home, file.path);
       fs.mkdirSync(path.dirname(target), { recursive: true, mode: 0o700 });
-      fs.writeFileSync(target + '.rove-tmp', file.content, { mode: 0o600 });
-      fs.renameSync(target + '.rove-tmp', target);
+      fs.writeFileSync(target + '.paperplane-tmp', file.content, { mode: 0o600 });
+      fs.renameSync(target + '.paperplane-tmp', target);
     }
   } catch { process.exit(${SANDBOX_CREDENTIALS_FAILED}); }
   const npm = payload.tools.filter(tool => tool.install === 'npm' && !has(tool.bin)).map(tool => tool.name);
@@ -145,26 +145,26 @@ process.stdin.on('end', () => {
 `);
 
 /**
- * Names the sandbox's Rove environment after the sandbox: Rove on Linux labels
+ * Names the sandbox's Paperplane environment after the sandbox: Paperplane on Linux labels
  * itself from PRETTY_HOSTNAME, otherwise every sandbox shows its vendor hostname.
- * Read at startup, so run it before Rove starts. Best effort; needs root.
+ * Read at startup, so run it before Paperplane starts. Best effort; needs root.
  */
 export const sandboxLabelCommand = (label: string) =>
   `printf 'PRETTY_HOSTNAME=%s\\n' ${quote(label.replace(/[\r\n]+/g, " "))} > /etc/machine-info 2>/dev/null || true`;
 
-export const sandboxPairCommand = `${WRAPPER} auth pairing create --base-dir "$HOME/.rove-sandbox/data" --json`;
+export const sandboxPairCommand = `${WRAPPER} auth pairing create --base-dir "$HOME/.paperplane-sandbox/data" --json`;
 
 /** Product-owned explanations for bootstrap exit codes. */
 export function sandboxCommandFailure(exitCode: number): string | undefined {
   switch (exitCode) {
     case SANDBOX_INSTALL_FAILED:
-      return "Could not install Rove in the sandbox. Check its network access, then resume to retry. The install log is at ~/.rove-sandbox/install.log in the sandbox.";
+      return "Could not install Paperplane in the sandbox. Check its network access, then resume to retry. The install log is at ~/.paperplane-sandbox/install.log in the sandbox.";
     case SANDBOX_UNOWNED_SERVER:
-      return "Another Rove server is using the sandbox's port without a matching process record. Stop it from the vendor dashboard, then resume.";
+      return "Another Paperplane server is using the sandbox's port without a matching process record. Stop it from the vendor dashboard, then resume.";
     case SANDBOX_NOT_READY:
-      return "Rove started in the sandbox but did not become ready. Resume to retry. The server log is at ~/.rove-sandbox/server.log in the sandbox.";
+      return "Paperplane started in the sandbox but did not become ready. Resume to retry. The server log is at ~/.paperplane-sandbox/server.log in the sandbox.";
     case SANDBOX_STILL_RUNNING:
-      return "Rove is still shutting down in the sandbox. Pause was refused to protect its data; try again shortly.";
+      return "Paperplane is still shutting down in the sandbox. Pause was refused to protect its data; try again shortly.";
     case SANDBOX_CREDENTIALS_FAILED:
       return "Could not save the forwarded sign-ins in the sandbox. Try forwarding them again.";
     case SANDBOX_TOOLS_FAILED:

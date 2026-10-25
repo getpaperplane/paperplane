@@ -1,4 +1,4 @@
-import type { KeybindingCommand, ResolvedKeybindingsConfig } from "@rove-code/contracts";
+import type { KeybindingCommand, ResolvedKeybindingsConfig } from "@getpaperplane/contracts";
 import type { UsageChartMetric } from "./UsageProviderChart";
 import { resolveShortcutCommand, type ShortcutEventLike } from "../../keybindings";
 

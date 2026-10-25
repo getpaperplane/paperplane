@@ -8,9 +8,9 @@ import {
   DesktopAppActivationResponse,
   type DesktopAppActivationPlatform,
   type DesktopAppActivationRequest,
-} from "@rove-code/contracts";
-import { resolveDesktopAppControlAddress } from "@rove-code/shared/desktopAppControl";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+} from "@getpaperplane/contracts";
+import { resolveDesktopAppControlAddress } from "@getpaperplane/shared/desktopAppControl";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 import * as Config from "effect/Config";
 import * as Console from "effect/Console";
 import * as Crypto from "effect/Crypto";
@@ -32,7 +32,7 @@ export class DesktopAppSshUnsupportedError extends Schema.TaggedError<DesktopApp
   {},
 ) {
   override get message(): string {
-    return "`rove app` only controls a desktop app on the same machine. It cannot run over SSH.";
+    return "`paperplane app` only controls a desktop app on the same machine. It cannot run over SSH.";
   }
 }
 
@@ -41,7 +41,7 @@ export class DesktopAppPlatformUnsupportedError extends Schema.TaggedError<Deskt
   { platform: Schema.String },
 ) {
   override get message(): string {
-    return `\`rove app\` is not supported on ${this.platform}.`;
+    return `\`paperplane app\` is not supported on ${this.platform}.`;
   }
 }
 
@@ -55,7 +55,7 @@ export class DesktopAppUnreachableError extends Schema.TaggedError<DesktopAppUnr
   },
 ) {
   override get message(): string {
-    return "Could not reach the Rove Code desktop app. Start or update the desktop app on this machine, then run `rove app` again. A running Rove Code server is not enough.";
+    return "Could not reach the Paperplane desktop app. Start or update the desktop app on this machine, then run `paperplane app` again. A running Paperplane server is not enough.";
   }
 }
 
@@ -69,7 +69,7 @@ export class DesktopAppRequestFailedError extends Schema.TaggedError<DesktopAppR
   },
 ) {
   override get message(): string {
-    return `Rove Code could not open ${this.workspaceRoot} (${this.code}).`;
+    return `Paperplane could not open ${this.workspaceRoot} (${this.code}).`;
   }
 }
 
@@ -174,7 +174,10 @@ function sendDesktopAppActivationRequest(input: {
 }
 
 const appEnvironment = Config.all({
-  roveHome: Config.String("ROVE_HOME").pipe(Config.option, Config.map(Option.getOrUndefined)),
+  paperplaneHome: Config.String("PAPERPLANE_HOME").pipe(
+    Config.option,
+    Config.map(Option.getOrUndefined),
+  ),
   sshConnection: Config.String("SSH_CONNECTION").pipe(Config.option),
   sshTty: Config.String("SSH_TTY").pipe(Config.option),
 });
@@ -193,9 +196,9 @@ const runAppCommand = Effect.fn("cli.app")(function* (flags: {
   }
 
   const path = yield* Path.Path;
-  const configuredBaseDir = Option.getOrUndefined(flags.baseDir) ?? environment.roveHome;
+  const configuredBaseDir = Option.getOrUndefined(flags.baseDir) ?? environment.paperplaneHome;
   const baseDir = yield* resolveBaseDir(configuredBaseDir);
-  const allowDevFallback = Option.isNone(flags.baseDir) && !environment.roveHome?.trim();
+  const allowDevFallback = Option.isNone(flags.baseDir) && !environment.paperplaneHome?.trim();
   const rawWorkspaceRoot =
     Option.getOrUndefined(flags.workspaceRoot) ?? (yield* HostProcess.WorkingDirectory);
   const workspaceRoot = path.resolve(yield* expandHomePath(rawWorkspaceRoot));
@@ -244,7 +247,7 @@ const runAppCommand = Effect.fn("cli.app")(function* (flags: {
     });
   }
 
-  yield* Console.log(`Opened ${workspaceRoot} in Rove Code.`);
+  yield* Console.log(`Opened ${workspaceRoot} in Paperplane.`);
 });
 
 export const appCommand = Command.make("app", {
@@ -254,6 +257,6 @@ export const appCommand = Command.make("app", {
     Argument.optional,
   ),
 }).pipe(
-  Command.withDescription("Open a project in the running Rove Code desktop app."),
+  Command.withDescription("Open a project in the running Paperplane desktop app."),
   Command.withHandler(runAppCommand),
 );

@@ -11,7 +11,7 @@ import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
 import * as TestClock from "effect/testing/TestClock";
 import { vi } from "vite-plus/test";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 
 import {
   BootstrapEnvelopeDecodeError,
@@ -84,7 +84,7 @@ it.layer(NodeServices.layer)("readBootstrapEnvelope", (it) => {
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const filePath = yield* fs.makeTempFileScoped({
-        prefix: "rove-bootstrap-",
+        prefix: "paperplane-bootstrap-",
         suffix: ".ndjson",
       });
 
@@ -102,20 +102,23 @@ it.layer(NodeServices.layer)("readBootstrapEnvelope", (it) => {
     }),
   );
 
-  it.effect("keeps the home directory supplied by an installed historical desktop binary", () =>
+  it.effect("keeps the home directory supplied by the desktop binary", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const filePath = yield* fs.makeTempFileScoped({
-        prefix: "rove-bootstrap-",
+        prefix: "paperplane-bootstrap-",
         suffix: ".ndjson",
       });
-      yield* fs.writeFileString(filePath, '{"mode":"desktop","t3Home":"/existing/rove/home"}\n');
+      yield* fs.writeFileString(
+        filePath,
+        '{"mode":"desktop","paperplaneHome":"/existing/paperplane/home"}\n',
+      );
       const fd = yield* openBootstrapInputFd(filePath);
       const payload = yield* readBootstrapEnvelope(
-        Schema.Struct({ mode: Schema.String, roveHome: Schema.String }),
+        Schema.Struct({ mode: Schema.String, paperplaneHome: Schema.String }),
         fd,
       );
-      assertSome(payload, { mode: "desktop", roveHome: "/existing/rove/home" });
+      assertSome(payload, { mode: "desktop", paperplaneHome: "/existing/paperplane/home" });
     }),
   );
 
@@ -123,7 +126,7 @@ it.layer(NodeServices.layer)("readBootstrapEnvelope", (it) => {
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const filePath = yield* fs.makeTempFileScoped({
-        prefix: "rove-bootstrap-",
+        prefix: "paperplane-bootstrap-",
         suffix: ".ndjson",
       });
 
@@ -156,7 +159,7 @@ it.layer(NodeServices.layer)("readBootstrapEnvelope", (it) => {
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const filePath = yield* fs.makeTempFileScoped({
-        prefix: "rove-bootstrap-",
+        prefix: "paperplane-bootstrap-",
         suffix: ".ndjson",
       });
       const fd = yield* Effect.acquireRelease(
@@ -227,7 +230,7 @@ it.layer(NodeServices.layer)("readBootstrapEnvelope", (it) => {
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const filePath = yield* fs.makeTempFileScoped({
-        prefix: "rove-bootstrap-",
+        prefix: "paperplane-bootstrap-",
         suffix: ".ndjson",
       });
       yield* fs.writeFileString(filePath, '{"mode":42}\n');
@@ -253,7 +256,7 @@ it.layer(NodeServices.layer)("readBootstrapEnvelope", (it) => {
     () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
-        const tempDir = yield* fs.makeTempDirectoryScoped({ prefix: "rove-bootstrap-" });
+        const tempDir = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-bootstrap-" });
         const fifoPath = NodePath.join(tempDir, "bootstrap.pipe");
 
         yield* Effect.sync(() => NodeChildProcess.execFileSync("mkfifo", [fifoPath]));

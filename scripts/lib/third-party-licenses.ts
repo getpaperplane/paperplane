@@ -120,7 +120,7 @@ const NOTICE_TEXT_EXTENSIONS = new Set([
   ".txt",
   ".unlicense",
 ]);
-const FIRST_PARTY_PACKAGE_PREFIX = "@rove-code/";
+const FIRST_PARTY_PACKAGE_PREFIX = "@getpaperplane/";
 
 function isNoticeTextFile(fileName: string): boolean {
   return (
@@ -984,7 +984,7 @@ function serializeManifest(manifest: ThirdPartyLicenseManifest): string {
 
 export function thirdPartyLicensesPlugin(options: ThirdPartyLicensesPluginOptions): Plugin {
   return {
-    name: "rove:third-party-licenses",
+    name: "paperplane:third-party-licenses",
     configureServer(server) {
       let manifestPromise: Promise<ThirdPartyLicenseManifest> | null = null;
       server.middlewares.use((request, response, next) => {

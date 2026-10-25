@@ -2,8 +2,8 @@ import * as NodeNet from "node:net";
 
 import { assert, describe, it } from "@effect/vitest";
 import * as NodeServices from "@effect/platform-node/NodeServices";
-import * as NetService from "@rove-code/shared/Net";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+import * as NetService from "@getpaperplane/shared/Net";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 import * as Data from "effect/Data";
 import * as Deferred from "effect/Deferred";
 import * as Duration from "effect/Duration";
@@ -104,70 +104,70 @@ const NODE_SCRIPT = {
 
 describe("ssh tunnel scripts", () => {
   it("installs and runs the release archive without Node, npm, or npx", () => {
-    const script = SshTunnel.buildRemoteRoveRunnerScript(ARCHIVE);
+    const script = SshTunnel.buildRemotePaperplaneRunnerScript(ARCHIVE);
 
-    assert.include(script, "ROVE_ARCHIVE_VERSION='1.2.3-preview.20260911.4'");
-    assert.include(script, "ROVE_NODE_SCRIPT_PATH=''");
+    assert.include(script, "PAPERPLANE_ARCHIVE_VERSION='1.2.3-preview.20260911.4'");
+    assert.include(script, "PAPERPLANE_NODE_SCRIPT_PATH=''");
     assert.include(
       script,
-      "ROVE_RELEASE_BASE_URL='https://github.com/hafiezul/rove/releases/download'",
+      "PAPERPLANE_RELEASE_BASE_URL='https://github.com/getpaperplane/paperplane/releases/download'",
     );
     assert.include(
       script,
-      'ROVE_RUNTIME_DIR="$HOME/.rove-code/runtime/versions/$ROVE_ARCHIVE_VERSION"',
+      'PAPERPLANE_RUNTIME_DIR="$HOME/.paperplane/runtime/versions/$PAPERPLANE_ARCHIVE_VERSION"',
     );
     assert.include(
       script,
-      'ROVE_ARCHIVE="rove-$ROVE_ARCHIVE_VERSION-$ROVE_PLATFORM-$ROVE_ARCH.tar.gz"',
+      'PAPERPLANE_ARCHIVE="paperplane-$PAPERPLANE_ARCHIVE_VERSION-$PAPERPLANE_PLATFORM-$PAPERPLANE_ARCH.tar.gz"',
     );
     assert.include(script, "SHA256SUMS");
-    assert.include(script, 'exec "$ROVE_RUNTIME_DIR/rove" "$@"');
+    assert.include(script, 'exec "$PAPERPLANE_RUNTIME_DIR/paperplane" "$@"');
     assert.notInclude(script, "npx");
     assert.notInclude(script, "npm exec");
-    assert.notInclude(script, "rove@latest");
-    assert.notInclude(script, 'exec rove "$@"');
+    assert.notInclude(script, "paperplane@latest");
+    assert.notInclude(script, 'exec paperplane "$@"');
     // Concurrent launches serialize on a per-version mkdir lock and recheck
     // the completion marker after acquiring it.
     assert.include(
       script,
-      'ROVE_LOCK="$HOME/.rove-code/runtime/versions/.$ROVE_ARCHIVE_VERSION.install.lock"',
+      'PAPERPLANE_LOCK="$HOME/.paperplane/runtime/versions/.$PAPERPLANE_ARCHIVE_VERSION.install.lock"',
     );
     // mkdir is the exclusive create; the pid follows atomically. A dead owner
     // is reclaimed at once, a never-published owner after a short grace.
-    assert.include(script, 'while ! mkdir "$ROVE_LOCK" 2>/dev/null; do');
-    assert.include(script, 'mv "$ROVE_LOCK/pid.tmp" "$ROVE_LOCK/pid"');
-    assert.include(script, 'if ! kill -0 "$ROVE_LOCK_OWNER" 2>/dev/null; then');
-    assert.include(script, 'if [ "$ROVE_LOCK_UNOWNED" -ge 5 ]; then');
-    assert.include(script, 'if [ "$ROVE_LOCK_WAITED" -ge 360 ]; then');
-    assert.include(script, '"$ROVE_STAGING/SHA256SUMS" 30');
-    assert.include(script, '"$ROVE_STAGING/$ROVE_ARCHIVE" 240');
-    assert.notInclude(script, "ROVE_LOCK_CANDIDATE");
+    assert.include(script, 'while ! mkdir "$PAPERPLANE_LOCK" 2>/dev/null; do');
+    assert.include(script, 'mv "$PAPERPLANE_LOCK/pid.tmp" "$PAPERPLANE_LOCK/pid"');
+    assert.include(script, 'if ! kill -0 "$PAPERPLANE_LOCK_OWNER" 2>/dev/null; then');
+    assert.include(script, 'if [ "$PAPERPLANE_LOCK_UNOWNED" -ge 5 ]; then');
+    assert.include(script, 'if [ "$PAPERPLANE_LOCK_WAITED" -ge 360 ]; then');
+    assert.include(script, '"$PAPERPLANE_STAGING/SHA256SUMS" 30');
+    assert.include(script, '"$PAPERPLANE_STAGING/$PAPERPLANE_ARCHIVE" 240');
+    assert.notInclude(script, "PAPERPLANE_LOCK_CANDIDATE");
     assert.notInclude(script, "-mmin");
-    assert.equal(script.split("if ! rove_runtime_ready; then").length - 1, 2);
+    assert.equal(script.split("if ! paperplane_runtime_ready; then").length - 1, 2);
     assert.isBelow(
-      script.indexOf('"$ROVE_STAGING/rove" --version'),
-      script.indexOf('> "$ROVE_STAGING/.install-complete"'),
+      script.indexOf('"$PAPERPLANE_STAGING/paperplane" --version'),
+      script.indexOf('> "$PAPERPLANE_STAGING/.install-complete"'),
     );
     // Node discovery is defined for the dev path but only ever invoked inside
     // the node-script branch, which the archive path skips entirely.
     assert.equal(script.split("ensure_remote_node_path || true").length - 1, 1);
     assert.isBelow(
       script.indexOf("ensure_remote_node_path || true"),
-      script.indexOf('exec node "$ROVE_NODE_SCRIPT_PATH" "$@"'),
+      script.indexOf('exec node "$PAPERPLANE_NODE_SCRIPT_PATH" "$@"'),
     );
     assert.isBelow(
-      script.indexOf('exec node "$ROVE_NODE_SCRIPT_PATH" "$@"'),
-      script.indexOf("ROVE_ARCHIVE_VERSION="),
+      script.indexOf('exec node "$PAPERPLANE_NODE_SCRIPT_PATH" "$@"'),
+      script.indexOf("PAPERPLANE_ARCHIVE_VERSION="),
     );
 
     const launch = SshTunnel.buildRemoteLaunchScript({
       ...ARCHIVE,
-      releaseBaseUrl: "https://mirror.example/rove/",
+      releaseBaseUrl: "https://mirror.example/paperplane/",
     });
-    assert.include(launch, "ROVE_RELEASE_BASE_URL='https://mirror.example/rove'");
+    assert.include(launch, "PAPERPLANE_RELEASE_BASE_URL='https://mirror.example/paperplane'");
     assert.include(launch, '"$RUNNER_FILE" __ssh-helper wait-service "$DEFAULT_RUNTIME_FILE"');
     assert.include(launch, '"$RUNNER_FILE" __ssh-helper runtime-port "$DEFAULT_RUNTIME_FILE"');
-    assert.include(SshTunnel.buildRemoteLaunchScript(NODE_SCRIPT), "ROVE_ARCHIVE_MODE=0");
+    assert.include(SshTunnel.buildRemoteLaunchScript(NODE_SCRIPT), "PAPERPLANE_ARCHIVE_MODE=0");
   });
 
   it("rejects archive versions that are not a single exact version segment", () => {
@@ -180,22 +180,22 @@ describe("ssh tunnel scripts", () => {
       "v1.2.3",
     ]) {
       assert.throws(
-        () => SshTunnel.buildRemoteRoveRunnerScript({ archiveVersion }),
+        () => SshTunnel.buildRemotePaperplaneRunnerScript({ archiveVersion }),
         SshTunnel.SshInvalidArchiveVersionError,
         undefined,
         archiveVersion,
       );
     }
     assert.include(
-      SshTunnel.buildRemoteRoveRunnerScript(ARCHIVE),
-      "ROVE_ARCHIVE_VERSION='1.2.3-preview.20260911.4'",
+      SshTunnel.buildRemotePaperplaneRunnerScript(ARCHIVE),
+      "PAPERPLANE_ARCHIVE_VERSION='1.2.3-preview.20260911.4'",
     );
   });
 
   it("refuses to build a runner with neither an archive version nor a node script", () => {
     for (const input of [undefined, {}, { archiveVersion: "  " }, { nodeScriptPath: null }]) {
       assert.throws(
-        () => SshTunnel.buildRemoteRoveRunnerScript(input),
+        () => SshTunnel.buildRemotePaperplaneRunnerScript(input),
         SshTunnel.SshMissingRunnerError,
       );
     }
@@ -203,26 +203,26 @@ describe("ssh tunnel scripts", () => {
   });
 
   it("does not hard-code a remote node engine range", () => {
-    const script = SshTunnel.buildRemoteRoveRunnerScript(NODE_SCRIPT);
+    const script = SshTunnel.buildRemotePaperplaneRunnerScript(NODE_SCRIPT);
 
-    assert.include(script, "ROVE_NODE_ENGINE_RANGE=''");
+    assert.include(script, "PAPERPLANE_NODE_ENGINE_RANGE=''");
     assert.notInclude(script, TEST_NODE_ENGINE_RANGE);
   });
 
-  it("builds the remote rove runner with a node script override", () => {
-    const script = SshTunnel.buildRemoteRoveRunnerScript({
+  it("builds the remote paperplane runner with a node script override", () => {
+    const script = SshTunnel.buildRemotePaperplaneRunnerScript({
       ...NODE_SCRIPT,
       nodeEngineRange: TEST_NODE_ENGINE_RANGE,
     });
 
     assert.include(
       script,
-      "ROVE_NODE_SCRIPT_PATH='/Users/julius/Development/Work/codething-mvp/apps/server/dist/bin.mjs'",
+      "PAPERPLANE_NODE_SCRIPT_PATH='/Users/julius/Development/Work/codething-mvp/apps/server/dist/bin.mjs'",
     );
-    assert.include(script, 'exec node "$ROVE_NODE_SCRIPT_PATH" "$@"');
-    assert.include(script, "ROVE_ARCHIVE_VERSION=''");
+    assert.include(script, 'exec node "$PAPERPLANE_NODE_SCRIPT_PATH" "$@"');
+    assert.include(script, "PAPERPLANE_ARCHIVE_VERSION=''");
     assert.include(script, 'prepend_path_if_dir "$HOME/.local/bin"');
-    assert.include(script, `ROVE_NODE_ENGINE_RANGE='${TEST_NODE_ENGINE_RANGE}'`);
+    assert.include(script, `PAPERPLANE_NODE_ENGINE_RANGE='${TEST_NODE_ENGINE_RANGE}'`);
     assert.include(script, "remote_node_satisfies_engine()");
     assert.include(script, "function satisfiesSemverRange");
     assert.include(script, "satisfiesSemverRange(rawVersion, range)");
@@ -236,15 +236,17 @@ describe("ssh tunnel scripts", () => {
     assert.include(script, 'prepend_path_if_dir "$HOME/.nodenv/shims"');
     assert.include(script, 'NVM_DIR="$HOME/.nvm"');
     assert.include(script, "nvm use --silent default");
-    assert.include(script, 'for ROVE_NODE_BIN in "$NVM_DIR"/versions/node/*/bin');
+    assert.include(script, 'for PAPERPLANE_NODE_BIN in "$NVM_DIR"/versions/node/*/bin');
     assert.notInclude(script, "ensure $NVM_DIR/nvm.sh is available");
     assert.notInclude(script, "npx");
   });
 
   it("provisions a persistent service for release SSH connections", () => {
     const launch = SshTunnel.buildRemoteLaunchScript(ARCHIVE);
-    assert.include(launch, 'service install --base-dir "$DEFAULT_SERVER_HOME"');
-    assert.include(launch, 'service restart --base-dir "$DEFAULT_SERVER_HOME"');
+    assert.notInclude(launch, "--base-dir");
+    assert.include(launch, "unset PAPERPLANE_HOME");
+    assert.include(launch, "service install >&2");
+    assert.include(launch, "service restart >&2");
     assert.include(launch, '__ssh-helper runtime-port "$DEFAULT_RUNTIME_FILE" --service');
     assert.include(launch, '__ssh-helper wait-service "$DEFAULT_RUNTIME_FILE"');
     assert.include(launch, '"serverKind":"external"');
@@ -254,8 +256,8 @@ describe("ssh tunnel scripts", () => {
   });
 
   it("embeds the runner in the launch script byte for byte", () => {
-    const runner = SshTunnel.buildRemoteRoveRunnerScript(ARCHIVE);
-    assert.include(runner, 'printf \'%s\\n\' "$$" > "$ROVE_LOCK/pid.tmp"');
+    const runner = SshTunnel.buildRemotePaperplaneRunnerScript(ARCHIVE);
+    assert.include(runner, 'printf \'%s\\n\' "$$" > "$PAPERPLANE_LOCK/pid.tmp"');
     assert.include(SshTunnel.buildRemoteLaunchScript(ARCHIVE), runner);
   });
 
@@ -274,29 +276,27 @@ describe("ssh tunnel scripts", () => {
     assert.include(launch, "RUNNER_CHANGED=1");
     assert.include(launch, "ensure_remote_node_path()");
     assert.include(launch, "if ! ensure_remote_node_path; then");
-    assert.include(devLaunch, `ROVE_NODE_ENGINE_RANGE='${TEST_NODE_ENGINE_RANGE}'`);
+    assert.include(devLaunch, `PAPERPLANE_NODE_ENGINE_RANGE='${TEST_NODE_ENGINE_RANGE}'`);
     assert.include(devLaunch, "does not satisfy required range ");
     assert.include(launch, 'kill "$REMOTE_PID" 2>/dev/null || true');
     assert.include(launch, "wait_ready");
     assert.include(launch, '"$RUNNER_FILE" serve --host 127.0.0.1');
-    assert.include(launch, '--base-dir "$DEFAULT_SERVER_HOME"');
+    assert.notInclude(launch, "--base-dir");
+    assert.include(launch, "unset PAPERPLANE_HOME");
     assert.notInclude(launch, "server-home");
-    assert.include(launch, "Remote Rove Code server did not become ready");
+    assert.include(launch, "Remote Paperplane server did not become ready");
     assert.include(launch, 'wait_ready "60000"');
     assert.include(launch, 'if [ -s "$LOG_FILE" ]; then');
     assert.include(launch, "It wrote nothing to %s");
     assert.include(
       SshTunnel.buildRemotePairingScript(stateKey, ARCHIVE),
-      '"$RUNNER_FILE" auth pairing create --base-dir "$PAIRING_BASE_DIR" --json',
+      '"$RUNNER_FILE" auth pairing create --json',
     );
-    assert.include(
-      SshTunnel.buildRemotePairingScript(stateKey, ARCHIVE),
-      'PAIRING_BASE_DIR="$DEFAULT_SERVER_HOME"',
-    );
+    assert.include(SshTunnel.buildRemotePairingScript(stateKey, ARCHIVE), "unset PAPERPLANE_HOME");
     assert.notInclude(SshTunnel.buildRemotePairingScript(stateKey, ARCHIVE), "server-home");
     assert.include(
       SshTunnel.buildRemotePairingScript(stateKey, ARCHIVE),
-      "ROVE_ARCHIVE_VERSION='1.2.3-preview.20260911.4'",
+      "PAPERPLANE_ARCHIVE_VERSION='1.2.3-preview.20260911.4'",
     );
     assert.include(
       SshTunnel.buildRemoteStopScript(stateKey),
@@ -592,7 +592,7 @@ describe("ssh tunnel scripts", () => {
                 exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(1)),
                 stderr: Stream.make(
                   new TextEncoder().encode(
-                    "Remote Rove Code server did not stop within 2 seconds.\n",
+                    "Remote Paperplane server did not stop within 2 seconds.\n",
                   ),
                 ),
               };
@@ -635,7 +635,7 @@ describe("ssh tunnel scripts", () => {
             assert.instanceOf(disconnected.failure, SshCommandError);
             assert.equal(
               disconnected.failure.message,
-              "Remote Rove Code server did not stop within 2 seconds.",
+              "Remote Paperplane server did not stop within 2 seconds.",
             );
           }
         } else {
@@ -806,7 +806,7 @@ describe("remote port picker", () => {
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
-      const root = yield* fs.makeTempDirectoryScoped({ prefix: "rove-pick-port-" });
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-pick-port-" });
       yield* fs.writeFileString(`${root}/preload.cjs`, MACOS_BIND_PRELOAD);
       yield* fs.writeFileString(`${root}/pick-port.cjs`, SshTunnel.REMOTE_PICK_PORT_SCRIPT);
       const holder = yield* holdWildcardPort;
@@ -894,14 +894,14 @@ describe("archive runner script", () => {
     const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
     const platform = hostPlatform === "darwin" ? "darwin" : "linux";
     const arch = hostArch === "arm64" ? "arm64" : "x64";
-    const stem = `rove-${archiveVersion}-${platform}-${arch}`;
+    const stem = `paperplane-${archiveVersion}-${platform}-${arch}`;
     const stage = `${root}/stage/${stem}`;
     const release = `${root}/mirror/v${archiveVersion}`;
     const script = [
       "set -eu",
       `mkdir -p '${stage}' '${release}'`,
-      `printf '#!/bin/sh\\necho rove v${archiveVersion}\\n' > '${stage}/rove'`,
-      `chmod +x '${stage}/rove'`,
+      `printf '#!/bin/sh\\necho paperplane v${archiveVersion}\\n' > '${stage}/paperplane'`,
+      `chmod +x '${stage}/paperplane'`,
       `tar -czf '${release}/${stem}.tar.gz' -C '${root}/stage' '${stem}'`,
       `cd '${release}' && (sha256sum '${stem}.tar.gz' 2>/dev/null || shasum -a 256 '${stem}.tar.gz') > SHA256SUMS`,
     ].join("\n");
@@ -915,12 +915,12 @@ describe("archive runner script", () => {
     () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
-        const root = yield* fs.makeTempDirectoryScoped({ prefix: "rove-archive-runner-" });
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-archive-runner-" });
         const releaseBaseUrl = yield* makeMirror(root);
-        const runner = `${root}/run-rove.sh`;
+        const runner = `${root}/run-paperplane.sh`;
         yield* fs.writeFileString(
           runner,
-          SshTunnel.buildRemoteRoveRunnerScript({ archiveVersion, releaseBaseUrl }),
+          SshTunnel.buildRemotePaperplaneRunnerScript({ archiveVersion, releaseBaseUrl }),
         );
         const home = `${root}/home`;
         yield* fs.makeDirectory(home, { recursive: true });
@@ -931,9 +931,9 @@ describe("archive runner script", () => {
         );
         for (const result of results) {
           assert.equal(result.exitCode, 0, result.stderr);
-          assert.include(result.stdout, `rove v${archiveVersion}`);
+          assert.include(result.stdout, `paperplane v${archiveVersion}`);
         }
-        const versionsDir = `${home}/.rove-code/runtime/versions`;
+        const versionsDir = `${home}/.paperplane/runtime/versions`;
         assert.deepEqual(yield* fs.readDirectory(versionsDir), [archiveVersion]);
         assert.equal(
           (yield* fs.readFileString(`${versionsDir}/${archiveVersion}/.install-complete`)).trim(),
@@ -961,7 +961,7 @@ describe("archive runner script", () => {
 
 // Reuse decisions also live in generated shell. Drive the real launch script
 // against a fake server that answers readiness probes and writes the default
-// runtime file the way `rove serve` does.
+// runtime file the way `paperplane serve` does.
 describe("launch script", () => {
   const windowsHost = HostProcess.Platform.defaultValue() === "win32";
   const FAKE_SERVER = `const fs = require("node:fs");
@@ -983,7 +983,7 @@ const server = http.createServer((_request, response) => {
 });
 server.listen(Number(flag("--port")), "127.0.0.1", () => {
   const port = server.address().port;
-  const userdata = path.join(flag("--base-dir"), "userdata");
+  const userdata = path.join(args.includes("--base-dir") ? flag("--base-dir") : path.join(require("node:os").homedir(), ".paperplane"), "userdata");
   fs.mkdirSync(userdata, { recursive: true });
   fs.writeFileSync(
     path.join(userdata, "server-runtime.json"),
@@ -1028,13 +1028,13 @@ server.listen(Number(flag("--port")), "127.0.0.1", () => {
 
   // Writes the launch script for a fake server into a temporary HOME. The
   // seeded remembered port keeps the test off the default 3773, which a live
-  // Rove on this machine may own.
+  // Paperplane on this machine may own.
   const prepareLaunch = Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem;
-    const root = yield* fs.makeTempDirectoryScoped({ prefix: "rove-launch-script-" });
+    const root = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-launch-script-" });
     const home = `${root}/home`;
-    const stateDir = `${home}/.rove-code/ssh-launch/test-state`;
-    const fakeServer = `${root}/fake-rove.cjs`;
+    const stateDir = `${home}/.paperplane/ssh-launch/test-state`;
+    const fakeServer = `${root}/fake-paperplane.cjs`;
     const launch = `${root}/launch.sh`;
     yield* fs.makeDirectory(stateDir, { recursive: true });
     yield* fs.writeFileString(`${stateDir}/port`, `${yield* freeLoopbackPort}\n`);
@@ -1090,7 +1090,7 @@ server.listen(Number(flag("--port")), "127.0.0.1", () => {
           "--port",
           "0",
           "--base-dir",
-          `${home}/.rove-code`,
+          `${home}/.paperplane`,
           ...flags,
         ];
         const server = yield* spawner.spawn(
@@ -1215,7 +1215,7 @@ server.listen(Number(flag("--port")), "127.0.0.1", () => {
         const { pid: previousPid } = yield* launchManaged;
 
         // A different runner on disk means the client updated: replace the server.
-        yield* fs.writeFileString(`${stateDir}/run-rove.sh`, "# previous runner\n");
+        yield* fs.writeFileString(`${stateDir}/run-paperplane.sh`, "# previous runner\n");
         assert.equal((yield* runLaunch).serverKind, "managed");
         const replacementPid = yield* readManagedPid;
         assert.notEqual(replacementPid, previousPid);
@@ -1283,7 +1283,7 @@ server.listen(Number(flag("--port")), "127.0.0.1", () => {
         );
         yield* fs.writeFileString(`${stateDir}/pid`, `${zombie}\n`);
         yield* fs.writeFileString(
-          `${home}/.rove-code/userdata/server-runtime.json`,
+          `${home}/.paperplane/userdata/server-runtime.json`,
           JSON.stringify({
             version: 1,
             pid: zombie,
@@ -1312,7 +1312,7 @@ server.listen(Number(flag("--port")), "127.0.0.1", () => {
         // the runtime file without the managed marker. A changed runner must not
         // turn that into a restart of a server this launcher cannot claim.
         yield* fs.remove(`${stateDir}/managed`);
-        yield* fs.writeFileString(`${stateDir}/run-rove.sh`, "# superseded runner\n");
+        yield* fs.writeFileString(`${stateDir}/run-paperplane.sh`, "# superseded runner\n");
         assert.deepEqual(yield* runLaunch, {
           remotePort: launched.remotePort,
           serverKind: "external",

@@ -8,10 +8,10 @@ import {
   type DeviceServiceState,
   type ServerSettings as Settings,
   type SshDeviceHostConfig,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeServices from "@effect/platform-node/NodeServices";
-import * as NetService from "@rove-code/shared/Net";
+import * as NetService from "@getpaperplane/shared/Net";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Deferred from "effect/Deferred";
@@ -30,7 +30,7 @@ import * as ServerConfig from "../config.ts";
 import * as ProcessRunner from "../processRunner.ts";
 import * as ServerSettings from "../serverSettings.ts";
 import * as DeviceHost from "./DeviceHost.ts";
-import { NodeRuntimeUnavailableError } from "@rove-code/shared/nodeRuntime";
+import { NodeRuntimeUnavailableError } from "@getpaperplane/shared/nodeRuntime";
 
 import * as DeviceService from "./DeviceService.ts";
 
@@ -828,7 +828,7 @@ it.effect("failed manual installation leaves lifecycle state unchanged and can b
 it.effect("reconciles SSH host settings without publishing no-op changes", () =>
   Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem;
-    const baseDir = yield* fs.makeTempDirectoryScoped({ prefix: "rove-device-reconcile-" });
+    const baseDir = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-device-reconcile-" });
     const settings = yield* ServerSettings.ServerSettingsService;
     // Each change is acknowledged after reconciliation consumed it, so no-ops are observable.
     const changes = yield* Queue.unbounded<{ value: Settings; done: Deferred.Deferred<void> }>();

@@ -1,5 +1,5 @@
 /**
- * ManagedProjectFolders - the project folders Rove Code makes for the user under
+ * ManagedProjectFolders - the project folders Paperplane makes for the user under
  * its data dir, rather than ones the user picks:
  *
  * - `<baseDir>/scratch`: the Scratch project ("No project"), with a folder of
@@ -15,8 +15,8 @@ import {
   ProjectId,
   type ThreadId,
   VcsProcessSpawnError,
-} from "@rove-code/contracts";
-import { newProjectFolderName } from "@rove-code/shared/path";
+} from "@getpaperplane/contracts";
+import { newProjectFolderName } from "@getpaperplane/shared/path";
 import * as Cause from "effect/Cause";
 import * as Context from "effect/Context";
 import * as Crypto from "effect/Crypto";
@@ -132,7 +132,7 @@ export class ManagedProjectFolders extends Context.Service<
       NamedProjectError
     >;
   }
->()("@rove-code/server/project/ManagedProjectFolders") {}
+>()("@getpaperplane/server/project/ManagedProjectFolders") {}
 
 // Only [a-z0-9] reaches a folder name, so it stays one path segment, and the
 // words are capped so a pasted blob cannot outgrow a file name.
@@ -208,7 +208,7 @@ function namedProjectReadme(name: string): string {
     "",
     `# ${name}`,
     "",
-    "Created in [Rove Code](https://rove.hafiezulzikry.com).",
+    "Created in [Paperplane](https://paperplane.hafiezulzikry.com).",
     "",
   ].join("\n");
 }
@@ -271,7 +271,7 @@ const make = Effect.gen(function* () {
     }
   });
 
-  // Inside a checkout (a dev worktree's .rove, a dotfiles home) the folder would
+  // Inside a checkout (a dev worktree's .paperplane, a dotfiles home) the folder would
   // inherit the repo's git status and checkpoints, so Scratch is offered only
   // when the data dir is outside any work tree. With no Git installed nothing
   // can see a checkout, so Scratch is offered. Probed once; other detection

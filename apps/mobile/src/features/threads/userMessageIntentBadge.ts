@@ -1,4 +1,4 @@
-import type { OrchestrationV2UserMessageInputIntent } from "@rove-code/contracts";
+import type { OrchestrationV2UserMessageInputIntent } from "@getpaperplane/contracts";
 
 export interface UserMessageIntentBadgePresentation {
   readonly label: string;

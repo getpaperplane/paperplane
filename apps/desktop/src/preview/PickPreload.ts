@@ -12,7 +12,7 @@ import type {
   PreviewAnnotationStrokeTarget,
   PreviewAnnotationStyleChange,
   PreviewAnnotationSubmission,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 
 import { resolveAnnotationSubmission } from "./AnnotationKeyboard.ts";
 import { previewAnnotationStyles } from "./AnnotationStyles.generated.ts";
@@ -33,10 +33,10 @@ import {
   RECORDING_CONTROLLER_CHANNEL,
   START_PICK_CHANNEL,
 } from "./GuestProtocol.ts";
-const OVERLAY_ATTRIBUTE = "data-rove-annotation-ui";
+const OVERLAY_ATTRIBUTE = "data-paperplane-annotation-ui";
 const Z_INDEX_OVERLAY = 2147483646;
-const PRIMARY = "var(--rove-primary)";
-const PRIMARY_FILL = "color-mix(in srgb, var(--rove-primary) 10%, transparent)";
+const PRIMARY = "var(--paperplane-primary)";
+const PRIMARY_FILL = "color-mix(in srgb, var(--paperplane-primary) 10%, transparent)";
 const MAX_MARQUEE_ELEMENTS = 20;
 /** Upper bound on one element's React context lookup during submit. */
 const ELEMENT_CONTEXT_TIMEOUT_MS = 5_000;
@@ -144,22 +144,22 @@ const applyAnnotationTheme = (
   if (!theme) return;
   host.style.colorScheme = theme.colorScheme;
   const variables = {
-    "--rove-radius": theme.radius,
-    "--rove-background": theme.background,
-    "--rove-foreground": theme.foreground,
-    "--rove-popover": theme.popover,
-    "--rove-popover-foreground": theme.popoverForeground,
-    "--rove-primary": theme.primary,
-    "--rove-primary-foreground": theme.primaryForeground,
-    "--rove-muted": theme.muted,
-    "--rove-muted-foreground": theme.mutedForeground,
-    "--rove-accent": theme.accent,
-    "--rove-accent-foreground": theme.accentForeground,
-    "--rove-border": theme.border,
-    "--rove-input": theme.input,
-    "--rove-ring": theme.ring,
-    "--rove-font-sans": theme.fontSans,
-    "--rove-font-mono": theme.fontMono,
+    "--paperplane-radius": theme.radius,
+    "--paperplane-background": theme.background,
+    "--paperplane-foreground": theme.foreground,
+    "--paperplane-popover": theme.popover,
+    "--paperplane-popover-foreground": theme.popoverForeground,
+    "--paperplane-primary": theme.primary,
+    "--paperplane-primary-foreground": theme.primaryForeground,
+    "--paperplane-muted": theme.muted,
+    "--paperplane-muted-foreground": theme.mutedForeground,
+    "--paperplane-accent": theme.accent,
+    "--paperplane-accent-foreground": theme.accentForeground,
+    "--paperplane-border": theme.border,
+    "--paperplane-input": theme.input,
+    "--paperplane-ring": theme.ring,
+    "--paperplane-font-sans": theme.fontSans,
+    "--paperplane-font-mono": theme.fontMono,
   };
   for (const [name, value] of Object.entries(variables)) {
     host.style.setProperty(name, value);
@@ -569,7 +569,7 @@ function startAnnotation(sendEnabled: boolean): void {
   root.style.cssText = "pointer-events:none";
   const cursorStyle = document.createElement("style");
   cursorStyle.setAttribute(OVERLAY_ATTRIBUTE, "");
-  cursorStyle.textContent = `html[data-rove-annotation-tool] body, html[data-rove-annotation-tool] body * { cursor: crosshair !important; } [${OVERLAY_ATTRIBUTE}], [${OVERLAY_ATTRIBUTE}] * { cursor: default !important; } [${OVERLAY_ATTRIBUTE}] input[type=number]::-webkit-inner-spin-button, [${OVERLAY_ATTRIBUTE}] input[type=number]::-webkit-outer-spin-button { appearance:none; margin:0; }`;
+  cursorStyle.textContent = `html[data-paperplane-annotation-tool] body, html[data-paperplane-annotation-tool] body * { cursor: crosshair !important; } [${OVERLAY_ATTRIBUTE}], [${OVERLAY_ATTRIBUTE}] * { cursor: default !important; } [${OVERLAY_ATTRIBUTE}] input[type=number]::-webkit-inner-spin-button, [${OVERLAY_ATTRIBUTE}] input[type=number]::-webkit-outer-spin-button { appearance:none; margin:0; }`;
   document.documentElement.appendChild(cursorStyle);
   shadowRoot.appendChild(root);
 
@@ -693,7 +693,7 @@ function startAnnotation(sendEnabled: boolean): void {
     }
     if (tool !== "select") hoverOutline.style.display = "none";
     if (tool !== "marquee") marqueeBox.style.display = "none";
-    document.documentElement.setAttribute("data-rove-annotation-tool", tool);
+    document.documentElement.setAttribute("data-paperplane-annotation-tool", tool);
   };
 
   const removeSelected = (target: SelectedElement): void => {
@@ -1307,7 +1307,7 @@ function startAnnotation(sendEnabled: boolean): void {
           regions.push(region);
           const regionBox = createBox(
             PRIMARY,
-            "color-mix(in srgb, var(--rove-primary) 6%, transparent)",
+            "color-mix(in srgb, var(--paperplane-primary) 6%, transparent)",
           );
           regionBox.setAttribute("data-region-id", region.id);
           positionBox(regionBox, rect);
@@ -1369,7 +1369,7 @@ function startAnnotation(sendEnabled: boolean): void {
     if (editorLayoutFrame !== null) window.cancelAnimationFrame(editorLayoutFrame);
     ipcRenderer.off(CANCEL_PICK_CHANNEL, onCancel);
     ipcRenderer.off(ANNOTATION_CAPTURED_CHANNEL, onCaptured);
-    document.documentElement.removeAttribute("data-rove-annotation-tool");
+    document.documentElement.removeAttribute("data-paperplane-annotation-tool");
     cursorStyle.remove();
     host.remove();
     activeSession = null;

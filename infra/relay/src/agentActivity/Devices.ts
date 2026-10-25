@@ -1,7 +1,7 @@
 import type {
   RelayClientDeviceRecord,
   RelayDeviceRegistrationRequest,
-} from "@rove-code/contracts/relay";
+} from "@getpaperplane/contracts/relay";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -68,7 +68,7 @@ export class Devices extends Context.Service<
       readonly userId: string;
     }) => Effect.Effect<ReadonlyArray<RelayClientDeviceRecord>, DeviceListPersistenceError>;
   }
->()("rove-relay/agentActivity/Devices") {}
+>()("paperplane-relay/agentActivity/Devices") {}
 
 export const make = Effect.gen(function* () {
   const db = yield* RelayDb.RelayDb;

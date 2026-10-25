@@ -1,5 +1,5 @@
-import { scopedThreadKey } from "@rove-code/client-runtime/environment";
-import type { RunId, ScopedThreadRef } from "@rove-code/contracts";
+import { scopedThreadKey } from "@getpaperplane/client-runtime/environment";
+import type { RunId, ScopedThreadRef } from "@getpaperplane/contracts";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
@@ -118,7 +118,7 @@ export const useDiffPanelStore = create<DiffPanelStoreState>()(
         }),
     }),
     {
-      name: "rove:diff-panel-state:v1",
+      name: "paperplane:diff-panel-state:v1",
       version: 2,
       storage: createJSONStorage(() =>
         resolveStorage(typeof window !== "undefined" ? window.localStorage : undefined),

@@ -1,4 +1,4 @@
-import { sourceControlClients } from "@rove-code/client-runtime/source-control-clients";
+import { sourceControlClients } from "@getpaperplane/client-runtime/source-control-clients";
 import { useAtomCommand } from "~/state/use-atom-command";
 import type {
   EnvironmentId,
@@ -7,7 +7,7 @@ import type {
   PullRequestRef,
   PullRequestReviewThread,
   ScopedThreadRef,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   ArrowDownUpIcon,
   ChevronDownIcon,
@@ -470,7 +470,7 @@ const COMMENT_PAGE = 10;
  * whether a reader wants bot reports and finished threads in front of them is a habit, not a
  * property of one change.
  */
-const COMMENT_FILTER_STORAGE_KEY = "rove:pull-request-comment-filter:v1";
+const COMMENT_FILTER_STORAGE_KEY = "paperplane:pull-request-comment-filter:v1";
 const CommentFilterSchema = Schema.Struct({ bots: Schema.Boolean, resolved: Schema.Boolean });
 const DEFAULT_COMMENT_FILTER: typeof CommentFilterSchema.Type = { bots: false, resolved: false };
 

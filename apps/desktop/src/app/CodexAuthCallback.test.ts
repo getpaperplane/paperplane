@@ -1,8 +1,11 @@
 // @effect-diagnostics nodeBuiltinImport:off globalFetch:off - Tests exercise the real native loopback listener without an OpenAI account.
 import * as NodeHttp from "node:http";
 import { describe, expect, it } from "vite-plus/test";
-import { codexAuthDeliveryUrl, readCodexAuthDelivery } from "@rove-code/shared/codexAuthHandoff";
-import { EnvironmentId, ProviderInstanceId } from "@rove-code/contracts";
+import {
+  codexAuthDeliveryUrl,
+  readCodexAuthDelivery,
+} from "@getpaperplane/shared/codexAuthHandoff";
+import { EnvironmentId, ProviderInstanceId } from "@getpaperplane/contracts";
 import { receiveCodexAuthCallback, cancelCodexAuthCallback } from "./CodexAuthCallback.ts";
 
 async function freePort() {
@@ -57,7 +60,7 @@ describe("desktop Codex callback helper", () => {
     const input = {
       authorizationUrl,
       returnUrl:
-        "https://rove.hafiezulzikry.com/settings/providers?environmentId=remote-one&instanceId=work",
+        "https://paperplane.hafiezulzikry.com/settings/providers?environmentId=remote-one&instanceId=work",
       environmentId: EnvironmentId.make("remote-one"),
       instanceId: ProviderInstanceId.make("work"),
       flowId: "flow-one",

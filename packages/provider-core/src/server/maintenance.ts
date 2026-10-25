@@ -1,4 +1,4 @@
-import type { ProviderDriverKind } from "@rove-code/contracts";
+import type { ProviderDriverKind } from "@getpaperplane/contracts";
 
 export interface ProviderMaintenanceCapabilities {
   readonly provider: ProviderDriverKind;

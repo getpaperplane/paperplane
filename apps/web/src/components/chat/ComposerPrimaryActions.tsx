@@ -15,7 +15,7 @@ import { composerFloatingLayerProps } from "./composerEventScope";
 import {
   alternateComposerDispatchAction,
   resolveComposerDispatchMode,
-} from "@rove-code/client-runtime/state/composer-dispatch";
+} from "@getpaperplane/client-runtime/state/composer-dispatch";
 
 interface PendingActionState {
   questionIndex: number;

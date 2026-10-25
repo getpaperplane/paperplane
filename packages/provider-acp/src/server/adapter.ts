@@ -30,10 +30,10 @@ import {
   type RuntimeRequestId,
   type ThreadTokenUsageSnapshot,
   type ThreadId,
-} from "@rove-code/contracts";
-import { AgentScope, AgentScopeThreadId } from "@rove-code/shared/AgentScope";
-import { modelSelectionsEqual } from "@rove-code/shared/model";
-import { type SelfInvocation, selfInvocationArgs } from "@rove-code/shared/nodeRuntime";
+} from "@getpaperplane/contracts";
+import { AgentScope, AgentScopeThreadId } from "@getpaperplane/shared/AgentScope";
+import { modelSelectionsEqual } from "@getpaperplane/shared/model";
+import { type SelfInvocation, selfInvocationArgs } from "@getpaperplane/shared/nodeRuntime";
 import { FILE_HEADERS_ONLY, formatPatch, structuredPatch } from "diff";
 import * as Cause from "effect/Cause";
 import * as Crypto from "effect/Crypto";
@@ -56,13 +56,13 @@ import * as EffectAcpErrors from "effect-acp/errors";
 import type * as EffectAcpProtocol from "effect-acp/protocol";
 import type * as EffectAcpSchema from "effect-acp/compat";
 
-import { formatReadToolLabel, formatSearchToolLabel } from "@rove-code/shared/toolActivity";
-import * as ProviderHost from "@rove-code/provider-core/server/ProviderHost";
+import { formatReadToolLabel, formatSearchToolLabel } from "@getpaperplane/shared/toolActivity";
+import * as ProviderHost from "@getpaperplane/provider-core/server/ProviderHost";
 import { makeAcpMcpOverAcpBridge, type AcpMcpOverAcpBridge } from "./mcpOverAcpBridge.ts";
-import { mcpToolPresentation } from "@rove-code/provider-core/server/mcpToolPresentation";
-import * as McpProviderSessions from "@rove-code/provider-core/server/McpProviderSessions";
-import { ROVE_MCP_SERVER_NAME } from "@rove-code/shared/roveMcp";
-import * as McpProviderSession from "@rove-code/provider-core/server/mcpSession";
+import { mcpToolPresentation } from "@getpaperplane/provider-core/server/mcpToolPresentation";
+import * as McpProviderSessions from "@getpaperplane/provider-core/server/McpProviderSessions";
+import { PAPERPLANE_MCP_SERVER_NAME } from "@getpaperplane/shared/paperplaneMcp";
+import * as McpProviderSession from "@getpaperplane/provider-core/server/mcpSession";
 import {
   applyAcpAgentTerminalUpdate,
   acpContentBlockDisplayText,
@@ -93,32 +93,32 @@ import {
 import { ACP_EMPTY_OPTION_VALUE, ACP_SESSION_MODE_OPTION_ID } from "./sessionConfig.ts";
 import * as AcpSessionRuntime from "./AcpSessionRuntime.ts";
 import {
-  roveAcpPromptWithInstructions,
-  type RoveAcpInstructionState,
-} from "@rove-code/provider-core/server/orchestrationInstructions";
-import { buildRuntimeInstructions } from "@rove-code/provider-core/server/runtimeInstructions";
-import * as IdAllocator from "@rove-code/provider-core/server/IdAllocator";
-import type * as ProviderContinuationRequests from "@rove-code/provider-core/server/ProviderContinuationRequests";
+  paperplaneAcpPromptWithInstructions,
+  type PaperplaneAcpInstructionState,
+} from "@getpaperplane/provider-core/server/orchestrationInstructions";
+import { buildRuntimeInstructions } from "@getpaperplane/provider-core/server/runtimeInstructions";
+import * as IdAllocator from "@getpaperplane/provider-core/server/IdAllocator";
+import type * as ProviderContinuationRequests from "@getpaperplane/provider-core/server/ProviderContinuationRequests";
 import {
   type BackgroundWork,
   type BackgroundWorkReport,
   backgroundWorkNotification,
-} from "@rove-code/provider-core/server/notification";
+} from "@getpaperplane/provider-core/server/notification";
 import {
   makeProviderFailure,
   makeProviderRetryTurnItem,
-} from "@rove-code/provider-core/server/failure";
-import { acpSelectionTransition } from "@rove-code/provider-core/server/selectionTransition";
+} from "@getpaperplane/provider-core/server/failure";
+import { acpSelectionTransition } from "@getpaperplane/provider-core/server/selectionTransition";
 import {
   isProviderNativeImageAttachment,
   providerMessageTextWithAttachmentPaths,
-} from "@rove-code/provider-core/server/attachmentPrompt";
+} from "@getpaperplane/provider-core/server/attachmentPrompt";
 import {
   makeSubagentChildThread,
   makeSubagentConversationArtifacts,
   subagentThreadTitle,
-} from "@rove-code/provider-core/server/subagentProjection";
-import * as ProviderAdapter from "@rove-code/provider-core/server/ProviderAdapter";
+} from "@getpaperplane/provider-core/server/subagentProjection";
+import * as ProviderAdapter from "@getpaperplane/provider-core/server/ProviderAdapter";
 
 export const ACP_PROTOCOL = "acp.ndjson-jsonrpc" as const;
 
@@ -292,9 +292,9 @@ export interface AcpAdapterV2Flavor {
       }
     | undefined;
   /**
-   * Replaces Rove's runtime-policy answer to a permission request. Grok's Auto
+   * Replaces Paperplane's runtime-policy answer to a permission request. Grok's Auto
    * mode only asks about what its own classifier refused, so those must reach
-   * the user instead of being approved by Rove's policy.
+   * the user instead of being approved by Paperplane's policy.
    */
   readonly permissionDisposition?: (
     policy: ProviderAdapter.ProviderAdapterV2RuntimePolicy,
@@ -330,7 +330,7 @@ export interface AcpAdapterV2Flavor {
   /**
    * Optional plan-file sniffing (#8358): providers that write their proposed
    * plan to a file mid-turn (Grok plan.md) return its markdown from a tool
-   * call so Rove can show the proposed-plan card while plan mode is active.
+   * call so Paperplane can show the proposed-plan card while plan mode is active.
    */
   readonly extractProposedPlanMarkdown?: (toolCall: AcpToolCallState) => string | undefined;
   /**
@@ -377,7 +377,7 @@ export interface AcpAdapterV2Flavor {
   readonly isPersistentBackgroundTool?: (toolCall: AcpToolCallState) => boolean;
   /**
    * Whether a root-session frame belongs to a turn the agent started itself
-   * after background work ended (Grok `task-completed-*`), not to Rove's prompt.
+   * after background work ended (Grok `task-completed-*`), not to Paperplane's prompt.
    * Such frames never project into a root turn held open for that work; they
    * take the post-settle wake path once the held turn finalizes.
    */
@@ -618,7 +618,7 @@ export const AcpProviderCapabilitiesV2 = {
     appCanCheckpointFilesystem: true,
     supportsNestedCheckpointScopes: false,
     // ACP defines no conversation truncation, so rollback resets the provider
-    // conversation: Rove restores checkpointed state and the next turn starts a
+    // conversation: Paperplane restores checkpointed state and the next turn starts a
     // fresh agent session without the rolled-back context.
     providerCanRollbackConversation: true,
     providerRollbackReturnsSnapshot: true,
@@ -631,7 +631,7 @@ export const AcpProviderCapabilitiesV2 = {
     nativeRequestIds: "weak",
   },
   runtimePolicy: {
-    // ACP agents run their own tools; Rove only answers their permission
+    // ACP agents run their own tools; Paperplane only answers their permission
     // requests by policy.
     enforcement: "client-boundary",
   },
@@ -662,7 +662,7 @@ function negotiatedCapabilities(
     },
     tools: {
       ...base.tools,
-      // The stdio bridge (`rove acp-mcp-bridge`) makes the rove MCP toolkit
+      // The stdio bridge (`paperplane acp-mcp-bridge`) makes the Paperplane MCP toolkit
       // available regardless of the agent's optional http/sse MCP support.
       supportsMcpTools: true,
     },
@@ -691,30 +691,32 @@ function acpMcpContext(
   // Stdio is ACP's required baseline MCP transport. Agents that advertise
   // optional http support still routinely fail to wire injected http servers
   // through to their backend (codex-acp 1.2.0 and pi-acp both drop them), so
-  // every ACP session gets the `rove acp-mcp-bridge` stdio server, which
-  // forwards JSON-RPC to Rove's authenticated MCP endpoint. The credential
+  // every ACP session gets the `paperplane acp-mcp-bridge` stdio server, which
+  // forwards JSON-RPC to Paperplane's authenticated MCP endpoint. The credential
   // travels via environment variables, never the command line.
   return {
     servers: [
       {
-        name: ROVE_MCP_SERVER_NAME,
+        name: PAPERPLANE_MCP_SERVER_NAME,
         command: self.command,
         args: [...selfInvocationArgs(self, ["acp-mcp-bridge"])],
         env: [
           { name: "ELECTRON_RUN_AS_NODE", value: "1" },
-          { name: "ROVE_ACP_MCP_ENDPOINT", value: session.endpoint },
-          { name: "ROVE_ACP_MCP_AUTHORIZATION", value: session.authorizationHeader },
+          { name: "PAPERPLANE_ACP_MCP_ENDPOINT", value: session.endpoint },
+          { name: "PAPERPLANE_ACP_MCP_AUTHORIZATION", value: session.authorizationHeader },
         ],
       },
     ],
-    acpServers: [{ type: "acp", name: ROVE_MCP_SERVER_NAME, serverId: ROVE_MCP_SERVER_NAME }],
+    acpServers: [
+      { type: "acp", name: PAPERPLANE_MCP_SERVER_NAME, serverId: PAPERPLANE_MCP_SERVER_NAME },
+    ],
     endpoint: session.endpoint,
     authorization: session.authorizationHeader,
     processEnvironment: {
-      ROVE_ACP_MCP_ENDPOINT: session.endpoint,
-      ROVE_ACP_MCP_AUTHORIZATION: session.authorizationHeader,
-      ROVE_ACP_MCP_NODE: self.command,
-      ...(self.entrypoint === undefined ? {} : { ROVE_ACP_MCP_ENTRYPOINT: self.entrypoint }),
+      PAPERPLANE_ACP_MCP_ENDPOINT: session.endpoint,
+      PAPERPLANE_ACP_MCP_AUTHORIZATION: session.authorizationHeader,
+      PAPERPLANE_ACP_MCP_NODE: self.command,
+      ...(self.entrypoint === undefined ? {} : { PAPERPLANE_ACP_MCP_ENTRYPOINT: self.entrypoint }),
     },
   };
 }
@@ -1684,7 +1686,7 @@ export const makeAcpAdapterV2 = Effect.fn("makeAcpAdapterV2")(function* (
               agentTerminalsById.get(sessionScopedId(sessionId, terminalId))?.command;
             return command === undefined ? [] : [command];
           });
-        // Client terminals (Devin) run with the Rove server's privileges, so they
+        // Client terminals (Devin) run with the Paperplane server's privileges, so they
         // are policy-checked against the active turn policy; a command the user
         // already approved satisfies an "ask" disposition.
         const clientPolicyGrants = makeAcpClientPolicyGrants();
@@ -1702,7 +1704,7 @@ export const makeAcpAdapterV2 = Effect.fn("makeAcpAdapterV2")(function* (
         const providerThreadByNativeSessionId = yield* Ref.make(
           new Map<string, OrchestrationV2ProviderThread>(),
         );
-        // Rove only owns the temporary Plan override. Remember the agent's
+        // Paperplane only owns the temporary Plan override. Remember the agent's
         // effective native configuration on entry and restore it on Build.
         const nativeBuildConfigurationBySessionId = new Map<string, AcpNativeBuildConfiguration>();
         const initialSessionActivationFailure = yield* Ref.make<{
@@ -1713,7 +1715,9 @@ export const makeAcpAdapterV2 = Effect.fn("makeAcpAdapterV2")(function* (
           yield* Ref.make<AcpSessionRuntime.AcpSessionRuntimeStartResult | null>(null);
         const activeSelection = yield* Ref.make<ModelSelection | null>(null);
         const activeInteractionMode = yield* Ref.make<ProviderInteractionMode | null>(null);
-        const promptInstructionStates = yield* Ref.make(new Map<string, RoveAcpInstructionState>());
+        const promptInstructionStates = yield* Ref.make(
+          new Map<string, PaperplaneAcpInstructionState>(),
+        );
         const runtimeRestartRequired = yield* Ref.make(false);
         const runtimeTeardownState = yield* Ref.make<AcpRuntimeTeardownState>({ _tag: "Idle" });
         const runtimeCallbackGeneration = yield* Ref.make(0);
@@ -2126,7 +2130,7 @@ export const makeAcpAdapterV2 = Effect.fn("makeAcpAdapterV2")(function* (
               elicitation: { form: {}, ...(flavor.onUrlElicitation ? { url: {} } : {}) },
               ...(flavor.clientCapabilitiesMeta ? { _meta: flavor.clientCapabilitiesMeta } : {}),
             },
-            clientInfo: { name: "rove", version: "0.0.0" },
+            clientInfo: { name: "paperplane", version: "0.0.0" },
             onTermination,
             onOutgoingResponseFailure: (requestId, error) =>
               Ref.modify(nativeResponseAcknowledgements, (current) => {
@@ -3328,7 +3332,7 @@ export const makeAcpAdapterV2 = Effect.fn("makeAcpAdapterV2")(function* (
           const projectAsCommandExecution = inputVariant === "monitor" || outputIsBashResult;
           // ACP has no typed MCP item, so recover MCP identity from the
           // agent-specific shape and project the same branded dynamic_tool
-          // item native providers produce (e.g. the Rove orchestration tools).
+          // item native providers produce (e.g. the Paperplane orchestration tools).
           const mcpIdentity = extractMcpToolCallIdentity(toolCall, {
             embeddedTerminalCommands: embeddedTerminalCommands(
               context.nativeThreadId,
@@ -5539,8 +5543,8 @@ export const makeAcpAdapterV2 = Effect.fn("makeAcpAdapterV2")(function* (
               Effect.fail(
                 EffectAcpErrors.AcpRequestError.internalError(
                   disposition === "ask"
-                    ? `The active Rove runtime policy requires approval for ${operation}. Request permission with session/request_permission before retrying.`
-                    : `The active Rove runtime policy does not allow ${operation}.`,
+                    ? `The active Paperplane runtime policy requires approval for ${operation}. Request permission with session/request_permission before retrying.`
+                    : `The active Paperplane runtime policy does not allow ${operation}.`,
                 ),
               ),
             ),
@@ -6332,7 +6336,7 @@ export const makeAcpAdapterV2 = Effect.fn("makeAcpAdapterV2")(function* (
               };
             });
           }
-          // Restore the agent's own empty value for choices Rove stores under a
+          // Restore the agent's own empty value for choices Paperplane stores under a
           // reserved ID (see ACP_EMPTY_OPTION_VALUE).
           const optionSelections = (modelSelection.options ?? []).map((selection) =>
             selection.value === ACP_EMPTY_OPTION_VALUE ? { ...selection, value: "" } : selection,
@@ -6794,15 +6798,15 @@ export const makeAcpAdapterV2 = Effect.fn("makeAcpAdapterV2")(function* (
           const prompt: Array<EffectAcpSchema.ContentBlock> = [];
           const instructionState = {
             interactionMode: turnInput.runtimePolicy.interactionMode,
-            hasRoveMcp: (yield* readMcpContext(turnInput.threadId)).servers.length > 0,
-          } satisfies RoveAcpInstructionState;
+            hasPaperplaneMcp: (yield* readMcpContext(turnInput.threadId)).servers.length > 0,
+          } satisfies PaperplaneAcpInstructionState;
           const previousInstructionState = (yield* Ref.get(promptInstructionStates)).get(sessionId);
           const messageText = providerMessageTextWithAttachmentPaths({
             text: turnInput.message.text,
             attachments: turnInput.message.attachments,
             resolveAttachmentPath: host.resolveAttachmentPath,
           });
-          const text = roveAcpPromptWithInstructions({
+          const text = paperplaneAcpPromptWithInstructions({
             prompt: messageText,
             state: instructionState,
             ...(previousInstructionState === undefined

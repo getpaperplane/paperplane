@@ -1,9 +1,14 @@
-import { NodeId, ThreadId, TurnItemId, type OrchestrationV2TurnItem } from "@rove-code/contracts";
+import {
+  NodeId,
+  ThreadId,
+  TurnItemId,
+  type OrchestrationV2TurnItem,
+} from "@getpaperplane/contracts";
 import {
   MAX_TOOL_OUTPUT_IMAGE_BASE64_LENGTH,
   MAX_TOOL_OUTPUT_IMAGES,
   toolOutputImages,
-} from "@rove-code/shared/toolOutput";
+} from "@getpaperplane/shared/toolOutput";
 import * as DateTime from "effect/DateTime";
 import { describe, expect, it } from "vite-plus/test";
 
@@ -109,7 +114,7 @@ describe("stripUnservedToolOutputImageBytes", () => {
     const mcpImage = { type: "image", data: PADDED_BASE64, mimeType: "image/jpeg" };
     const item = toolItem(
       { content: [{ type: "text", text: "captured" }, claudeImage, mcpImage] },
-      "mcp__rove__device_screenshot",
+      "mcp__paperplane__device_screenshot",
     );
 
     const stripped = stripUnservedToolOutputImageBytes(item);

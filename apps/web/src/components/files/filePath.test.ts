@@ -13,8 +13,8 @@ import {
 
 describe("fileBreadcrumbs", () => {
   it("builds project, directory, and file crumbs", () => {
-    expect(fileBreadcrumbs("rove", "apps/web/src/main.tsx")).toEqual([
-      { label: "rove", path: "", kind: "project" },
+    expect(fileBreadcrumbs("paperplane", "apps/web/src/main.tsx")).toEqual([
+      { label: "paperplane", path: "", kind: "project" },
       { label: "apps", path: "apps", kind: "directory" },
       { label: "web", path: "apps/web", kind: "directory" },
       { label: "src", path: "apps/web/src", kind: "directory" },
@@ -31,21 +31,19 @@ describe("fileBreadcrumbs", () => {
   });
 
   it("starts host paths outside the workspace at the filesystem root", () => {
-    expect(fileBreadcrumbs("rove", "/tmp/rove-cleanup/report.md")).toEqual([
+    expect(fileBreadcrumbs("paperplane", "/tmp/paperplane-cleanup/report.md")).toEqual([
       { label: "tmp", path: "/tmp", kind: "directory" },
-      { label: "rove-cleanup", path: "/tmp/rove-cleanup", kind: "directory" },
-      { label: "report.md", path: "/tmp/rove-cleanup/report.md", kind: "file" },
+      { label: "paperplane-cleanup", path: "/tmp/paperplane-cleanup", kind: "directory" },
+      { label: "report.md", path: "/tmp/paperplane-cleanup/report.md", kind: "file" },
     ]);
-    expect(fileBreadcrumbs("rove", "C:\\Temp\\report.md")).toEqual([
+    expect(fileBreadcrumbs("paperplane", "C:\\Temp\\report.md")).toEqual([
       { label: "C:", path: "C:\\", kind: "directory" },
       { label: "Temp", path: "C:\\Temp", kind: "directory" },
       { label: "report.md", path: "C:\\Temp\\report.md", kind: "file" },
     ]);
-    expect(fileBreadcrumbs("rove", "\\\\server\\share\\report.md").map((c) => c.path)).toEqual([
-      "\\\\server",
-      "\\\\server\\share",
-      "\\\\server\\share\\report.md",
-    ]);
+    expect(
+      fileBreadcrumbs("paperplane", "\\\\server\\share\\report.md").map((c) => c.path),
+    ).toEqual(["\\\\server", "\\\\server\\share", "\\\\server\\share\\report.md"]);
   });
 });
 
@@ -55,7 +53,7 @@ describe("breadcrumbPathOf", () => {
     ["src", "src"],
     ["src/", "src"],
     ["src//components", "src/components"],
-    ["/tmp/rove-demo/", "/tmp/rove-demo"],
+    ["/tmp/paperplane-demo/", "/tmp/paperplane-demo"],
     ["/", "/"],
     ["C:\\Users\\me\\", "C:\\Users\\me"],
     ["C:\\", "C:\\"],

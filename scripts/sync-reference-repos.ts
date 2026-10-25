@@ -11,7 +11,7 @@ import * as Schema from "effect/Schema";
 import * as Stream from "effect/Stream";
 import { Command, Flag } from "effect/cli";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
-import { fromYaml } from "@rove-code/shared/schemaYaml";
+import { fromYaml } from "@getpaperplane/shared/schemaYaml";
 
 import { referenceRepos, type ReferenceRepo } from "./lib/reference-repos.ts";
 import * as RuntimePredicate from "effect/Predicate";

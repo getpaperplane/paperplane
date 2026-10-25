@@ -1,5 +1,5 @@
-import type { EnvironmentId, ThreadId } from "@rove-code/contracts";
-import { formatDiffCount } from "@rove-code/client-runtime/diff-count";
+import type { EnvironmentId, ThreadId } from "@getpaperplane/contracts";
+import { formatDiffCount } from "@getpaperplane/client-runtime/diff-count";
 import { useNavigation, type StaticScreenProps } from "@react-navigation/native";
 import { AppActivityIndicator } from "../../components/ui/AppActivityIndicator";
 import { nativeHeaderScrollEdgeEffects } from "../../native/StackHeader";
@@ -165,7 +165,9 @@ const ReviewNotice = memo(function ReviewNotice(props: { readonly notice: string
         Platform.OS === "android" ? "m-2 rounded-[20px]" : "border-b border-warning-border",
       )}
     >
-      <Text className="text-xs font-rove-bold uppercase text-warning-foreground">Partial diff</Text>
+      <Text className="text-xs font-paperplane-bold uppercase text-warning-foreground">
+        Partial diff
+      </Text>
       <Text className="text-xs leading-normal text-warning-foreground">{props.notice}</Text>
     </View>
   );
@@ -189,7 +191,7 @@ function ReviewSelectionActionBar(props: {
         tintColorClassName="accent-primary-foreground"
         type="monochrome"
       />
-      <Text className="text-base font-rove-bold text-primary-foreground">{props.title}</Text>
+      <Text className="text-base font-paperplane-bold text-primary-foreground">{props.title}</Text>
     </>
   );
 
@@ -271,18 +273,18 @@ const ReviewFileNavigatorRow = memo(function ReviewFileNavigatorRow(props: {
       <Text
         className={
           selected
-            ? "text-xs font-rove-bold text-foreground"
-            : "text-xs font-rove-medium text-foreground-secondary"
+            ? "text-xs font-paperplane-bold text-foreground"
+            : "text-xs font-paperplane-medium text-foreground-secondary"
         }
         numberOfLines={2}
       >
         {file.path}
       </Text>
       <View className="mt-1 flex-row gap-2">
-        <Text className="text-2xs font-rove-bold text-adaptive-emerald-700-300">
+        <Text className="text-2xs font-paperplane-bold text-adaptive-emerald-700-300">
           +{formatDiffCount(file.additions)}
         </Text>
-        <Text className="text-2xs font-rove-bold text-adaptive-rose-700-300">
+        <Text className="text-2xs font-paperplane-bold text-adaptive-rose-700-300">
           -{formatDiffCount(file.deletions)}
         </Text>
       </View>
@@ -429,7 +431,7 @@ function ReviewFileNavigator({
       ) : (
         <View className="border-b border-border" style={{ paddingTop: headerInset }}>
           <View className="px-4 py-3">
-            <Text className="text-sm font-rove-bold text-foreground">Changed files</Text>
+            <Text className="text-sm font-paperplane-bold text-foreground">Changed files</Text>
             <Text className="text-xs text-foreground-muted">
               {files.length} {files.length === 1 ? "file" : "files"}
             </Text>
@@ -689,7 +691,7 @@ export function ReviewSheet(props: ReviewSheetProps) {
             Platform.OS === "android" ? "m-2 rounded-[20px]" : "border-b border-border",
           )}
         >
-          <Text className="text-sm font-rove-bold text-foreground">Review unavailable</Text>
+          <Text className="text-sm font-paperplane-bold text-foreground">Review unavailable</Text>
           <Text className="text-xs leading-normal text-foreground-muted">{error}</Text>
         </View>,
       );
@@ -834,7 +836,9 @@ export function ReviewSheet(props: ReviewSheetProps) {
                         : "border-b border-border bg-card px-4 py-5"
                     }
                   >
-                    <Text className="text-sm font-rove-bold text-foreground">No review diffs</Text>
+                    <Text className="text-sm font-paperplane-bold text-foreground">
+                      No review diffs
+                    </Text>
                     <Text
                       className={cn(
                         "text-xs leading-normal text-foreground-muted",
@@ -863,7 +867,7 @@ export function ReviewSheet(props: ReviewSheetProps) {
                       : "border-b border-border bg-card px-4 py-5"
                   }
                 >
-                  <Text className="text-sm font-rove-bold text-foreground">No changes</Text>
+                  <Text className="text-sm font-paperplane-bold text-foreground">No changes</Text>
                   <Text
                     className={cn(
                       "text-xs leading-normal text-foreground-muted",

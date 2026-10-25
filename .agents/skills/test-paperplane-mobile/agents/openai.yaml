@@ -1,0 +1,4 @@
+interface:
+  display_name: "Test Paperplane Mobile"
+  short_description: "Test iOS and Android in Paperplane's Device panel"
+  default_prompt: "Use $test-paperplane-mobile to verify the affected native mobile flow through Paperplane's Device panel and AgentDevice."

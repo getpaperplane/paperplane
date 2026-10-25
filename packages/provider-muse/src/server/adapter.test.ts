@@ -17,8 +17,8 @@ import {
   ThreadId,
   type OrchestrationV2AppThread,
   type OrchestrationV2ProviderThread,
-} from "@rove-code/contracts";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+} from "@getpaperplane/contracts";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 import { MuseSettings } from "../settings.ts";
 import * as DateTime from "effect/DateTime";
 import * as Deferred from "effect/Deferred";
@@ -31,13 +31,13 @@ import * as Queue from "effect/Queue";
 import * as Schema from "effect/Schema";
 import * as Stream from "effect/Stream";
 
-import * as TestProviderHost from "@rove-code/provider-testing/TestProviderHost";
-import * as McpProviderSessions from "@rove-code/provider-core/server/McpProviderSessions";
+import * as TestProviderHost from "@getpaperplane/provider-testing/TestProviderHost";
+import * as McpProviderSessions from "@getpaperplane/provider-core/server/McpProviderSessions";
 import type { MuseItem } from "./protocol.ts";
 import type { MuseSdkHost } from "./sdk.ts";
-import * as IdAllocator from "@rove-code/provider-core/server/IdAllocator";
-import * as ProviderAdapter from "@rove-code/provider-core/server/ProviderAdapter";
-import type * as ProviderContinuationRequests from "@rove-code/provider-core/server/ProviderContinuationRequests";
+import * as IdAllocator from "@getpaperplane/provider-core/server/IdAllocator";
+import * as ProviderAdapter from "@getpaperplane/provider-core/server/ProviderAdapter";
+import type * as ProviderContinuationRequests from "@getpaperplane/provider-core/server/ProviderContinuationRequests";
 import { makeMuseAdapterV2, type MuseAdapterV2Options } from "./adapter.ts";
 
 const testLayer = Layer.mergeAll(
@@ -369,7 +369,7 @@ describe("MuseAdapterV2", () => {
         const call = yield* fake.takeCall(nativeId ? "session/resume" : "session/start");
         assert.deepStrictEqual(call.params.config, {
           mcpServers: {
-            rove: {
+            paperplane: {
               transport: "streamableHttp",
               mode: "optional",
               url: "http://127.0.0.1:43210/mcp",
@@ -833,7 +833,7 @@ describe("MuseAdapterV2", () => {
         runtimePolicy,
         { continuationRequests: { offer: (request) => Effect.sync(() => offers.push(request)) } },
       );
-      // A finished workflow's report turn starts while Rove runs nothing: it is held.
+      // A finished workflow's report turn starts while Paperplane runs nothing: it is held.
       yield* fake.emit("turn/started", { turnId: "report-1" });
       yield* Effect.yieldNow;
       assert.lengthOf(offers, 1);

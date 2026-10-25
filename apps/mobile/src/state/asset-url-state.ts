@@ -1,5 +1,5 @@
-import type { EnvironmentConnectionPhase } from "@rove-code/client-runtime/connection";
-import type { AssetUrlState as SharedAssetUrlState } from "@rove-code/client-runtime/state/assets";
+import type { EnvironmentConnectionPhase } from "@getpaperplane/client-runtime/connection";
+import type { AssetUrlState as SharedAssetUrlState } from "@getpaperplane/client-runtime/state/assets";
 
 export type AssetUrlFailureReason = "disconnected" | "failed" | "missing-file-access";
 

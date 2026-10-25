@@ -1,4 +1,4 @@
-import type { AssetResource } from "@rove-code/contracts";
+import type { AssetResource } from "@getpaperplane/contracts";
 import {
   AssetAttachmentNotFoundError,
   AssetGitHubMediaUrlValidationError,
@@ -16,7 +16,7 @@ import {
   ThreadId,
   ToolActivityNativeAppReference,
   TurnItemId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   audioMimeTypeFromExtension,
   hostPreviewMimeTypeFromExtension,
@@ -24,22 +24,22 @@ import {
   isWorkspacePreviewEntryPath,
   WORKSPACE_BROWSER_PREVIEW_EXTENSIONS,
   WORKSPACE_IMAGE_PREVIEW_EXTENSIONS,
-} from "@rove-code/shared/filePreview";
+} from "@getpaperplane/shared/filePreview";
 import {
   IMAGE_DIMENSIONS_HEADER_BYTES,
   readImageDimensions,
   type ImageDimensions,
-} from "@rove-code/shared/imageDimensions";
-import { githubMediaFetchUrl, githubMediaFileName } from "@rove-code/shared/githubMedia";
-import { MCP_APP_MAX_HTML_BYTES } from "@rove-code/shared/mcpApp";
+} from "@getpaperplane/shared/imageDimensions";
+import { githubMediaFetchUrl, githubMediaFileName } from "@getpaperplane/shared/githubMedia";
+import { MCP_APP_MAX_HTML_BYTES } from "@getpaperplane/shared/mcpApp";
 import {
   isProjectFaviconPath,
   PROJECT_FAVICON_FALLBACK_MARKER,
-} from "@rove-code/shared/projectFavicon";
+} from "@getpaperplane/shared/projectFavicon";
 import {
   MAX_TOOL_OUTPUT_IMAGE_BASE64_LENGTH,
   toolOutputImages,
-} from "@rove-code/shared/toolOutput";
+} from "@getpaperplane/shared/toolOutput";
 import * as Clock from "effect/Clock";
 import * as Crypto from "effect/Crypto";
 import * as Effect from "effect/Effect";
@@ -61,13 +61,13 @@ import * as ServerSecretStore from "../auth/ServerSecretStore.ts";
 import { parseAttachmentFileExtension, resolveAttachmentPathById } from "../attachmentStore.ts";
 import * as ServerConfig from "../config.ts";
 import * as Orchestrator from "../orchestration-v2/Orchestrator.ts";
-import { expandHomePath } from "@rove-code/provider-core/server/pathExpansion";
+import { expandHomePath } from "@getpaperplane/provider-core/server/pathExpansion";
 import * as ProjectFaviconResolver from "../project/ProjectFaviconResolver.ts";
 import * as WorkspacePaths from "../workspace/WorkspacePaths.ts";
 import * as NativeAppIconResolver from "./NativeAppIconResolver.ts";
 import { extractIcnsPng } from "./icns.ts";
 import { openMediaFile, readMediaFileHeader, type OpenMediaFile } from "./MediaFile.ts";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 
 export const ASSET_ROUTE_PREFIX = "/api/assets";
 

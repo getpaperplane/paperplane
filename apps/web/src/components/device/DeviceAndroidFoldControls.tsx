@@ -1,4 +1,4 @@
-import type { DeviceHubAccess } from "@rove-code/client-runtime/state/deviceHubAccess";
+import type { DeviceHubAccess } from "@getpaperplane/client-runtime/state/deviceHubAccess";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "~/components/ui/button";
 import { Tooltip, TooltipPopup, TooltipTrigger } from "~/components/ui/tooltip";

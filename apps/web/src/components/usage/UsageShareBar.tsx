@@ -1,4 +1,4 @@
-import { formatPercent } from "@rove-code/shared/usageFormat";
+import { formatPercent } from "@getpaperplane/shared/usageFormat";
 import type { ReactNode } from "react";
 
 import { Tooltip, TooltipPopup, TooltipTrigger } from "../ui/tooltip";

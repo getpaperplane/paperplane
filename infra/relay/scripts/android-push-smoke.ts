@@ -101,7 +101,7 @@ const main = Effect.gen(function* () {
         packageName: device.packageName,
         alert: title !== null,
         data: {
-          rove_kind: "agent_activity",
+          paperplane_kind: "agent_activity",
           device_id: device.deviceId,
           user_id: device.userId,
           updated_at: String(now),
@@ -120,7 +120,7 @@ const main = Effect.gen(function* () {
             ? {
                 alert_id: `smoke-${now}`,
                 alert_title: title,
-                alert_body: "Rove Code Android push test",
+                alert_body: "Paperplane Android push test",
                 alert_path: device.deepLink ?? "/",
               }
             : {}),

@@ -1,7 +1,7 @@
 // @effect-diagnostics nodeBuiltinImport:off
 import * as NodeOS from "node:os";
 import { executeProcessControl, parseProcessBudgetMiB } from "./ProcessBudget.ts";
-import { SMALL_HOST_BYTES } from "../process/roveMemoryBudget.ts";
+import { SMALL_HOST_BYTES } from "../process/paperplaneMemoryBudget.ts";
 
 export interface PiWorkloadConfig {
   readonly memoryMiB: number | "auto";
@@ -31,7 +31,7 @@ export async function resolvePiWorkloadMemory(
   platform = process.platform,
   totalMemory = NodeOS.totalmem(),
 ): Promise<{ kind: "auto" } | { kind: "explicit"; mib: number } | undefined> {
-  const override = environment.ROVE_PI_MEMORY_BUDGET_MIB;
+  const override = environment.PAPERPLANE_PI_MEMORY_BUDGET_MIB;
   if (mode === "off" && override === undefined) return undefined;
   const explicit = override !== undefined || mode === "on";
   if (

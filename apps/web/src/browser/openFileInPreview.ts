@@ -5,12 +5,12 @@ import type {
   PreviewOpenInput,
   PreviewSessionSnapshot,
   ScopedThreadRef,
-} from "@rove-code/contracts";
-import { mediaFileReference } from "@rove-code/client-runtime/media-reference";
+} from "@getpaperplane/contracts";
+import { mediaFileReference } from "@getpaperplane/client-runtime/media-reference";
 import {
   type AtomCommandResult,
   mapAtomCommandResult,
-} from "@rove-code/client-runtime/state/runtime";
+} from "@getpaperplane/client-runtime/state/runtime";
 import * as Cause from "effect/Cause";
 import * as Data from "effect/Data";
 import { AsyncResult } from "effect/reactivity";

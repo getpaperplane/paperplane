@@ -12,7 +12,7 @@ import {
   ThreadId,
   type ModelSelection,
   type OrchestrationV2DomainEvent,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as DateTime from "effect/DateTime";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
@@ -25,8 +25,8 @@ import * as EventSink from "./EventSink.ts";
 import * as Orchestrator from "./Orchestrator.ts";
 import * as ProviderAdapterRegistry from "./ProviderAdapterRegistry.ts";
 import * as ProviderReplayHarness from "./testkit/ProviderReplayHarness.ts";
-import { checkpointWorkspace } from "@rove-code/provider-testing/replayWorkspace";
-import * as ProviderAdapter from "@rove-code/provider-core/server/ProviderAdapter";
+import { checkpointWorkspace } from "@getpaperplane/provider-testing/replayWorkspace";
+import * as ProviderAdapter from "@getpaperplane/provider-core/server/ProviderAdapter";
 
 const driver = ProviderDriverKind.make("codex");
 const instanceId = ProviderInstanceId.make("codex");

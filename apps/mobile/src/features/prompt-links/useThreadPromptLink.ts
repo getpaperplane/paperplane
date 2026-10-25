@@ -1,6 +1,6 @@
 import * as Dialog from "../../components/ui/Dialog";
 import { useNavigation } from "@react-navigation/native";
-import { parseThreadLinkPrompt } from "@rove-code/shared/promptLinks";
+import { parseThreadLinkPrompt } from "@getpaperplane/shared/promptLinks";
 import { useEffect, useRef } from "react";
 
 import { applyLinkedPromptToThreadDraft } from "./prompt-link-actions";
@@ -13,7 +13,7 @@ import {
 const THREAD_LINK_KEYS = ["prompt"];
 
 /**
- * Applies the `prompt` of a `rove://threads/<environmentId>/<threadId>?prompt=…` link to that
+ * Applies the `prompt` of a `paperplane://threads/<environmentId>/<threadId>?prompt=…` link to that
  * thread's composer draft, once per link. Used by `ThreadRouteScreen`.
  */
 export function useThreadPromptLink(

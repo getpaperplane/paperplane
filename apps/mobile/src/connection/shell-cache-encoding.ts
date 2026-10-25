@@ -1,5 +1,5 @@
-import { StoredOrchestrationShellSnapshot } from "@rove-code/client-runtime/platform";
-import { OrchestrationV2ThreadShellJson } from "@rove-code/contracts";
+import { StoredOrchestrationShellSnapshot } from "@getpaperplane/client-runtime/platform";
+import { OrchestrationV2ThreadShellJson } from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 

@@ -1,11 +1,11 @@
-import { NodeId, PlanId, ProjectId, RunId } from "@rove-code/contracts";
+import { NodeId, PlanId, ProjectId, RunId } from "@getpaperplane/contracts";
 import {
   getLatestThreadForProject,
   sortActiveThreadsByOrderKey,
   sortPinnedThreadsByOrderKey,
   sortThreads,
-} from "@rove-code/client-runtime/state/thread-sort";
-import { formatHourShort, formatRelativeHourShort } from "@rove-code/shared/usageFormat";
+} from "@getpaperplane/client-runtime/state/thread-sort";
+import { formatHourShort, formatRelativeHourShort } from "@getpaperplane/shared/usageFormat";
 import { describe, test } from "vite-plus/test";
 
 import { makeThreadProjectionFixture } from "./test-fixtures";

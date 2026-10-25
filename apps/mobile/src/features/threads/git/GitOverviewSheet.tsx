@@ -5,14 +5,14 @@ import {
   buildMenuItems,
   getGitActionDisabledReason,
   requiresDefaultBranchConfirmation,
-} from "@rove-code/client-runtime/state/vcs";
+} from "@getpaperplane/client-runtime/state/vcs";
 import {
   linkedPullRequestContextOf,
   resolveThreadCurrentPullRequestLink,
   resolveThreadPullRequestChains,
   threadPullRequestKeyOf,
-} from "@rove-code/shared/threadPullRequests";
-import { EnvironmentId, ThreadId } from "@rove-code/contracts";
+} from "@getpaperplane/shared/threadPullRequests";
+import { EnvironmentId, ThreadId } from "@getpaperplane/contracts";
 import {
   CommonActions,
   StackActions,
@@ -368,7 +368,7 @@ function GitOverviewSheetContent(props: GitOverviewSheetProps) {
 
       {linkedPrChains.length > 0 ? (
         <View className="gap-2">
-          <Text className="px-1 text-xs font-rove-bold text-foreground-muted">
+          <Text className="px-1 text-xs font-paperplane-bold text-foreground-muted">
             Linked pull requests
           </Text>
           {linkedPrChains.map((chain) => (
@@ -558,10 +558,10 @@ function GitOverviewSheetContent(props: GitOverviewSheetProps) {
               />
             </Pressable>
           )}
-          <Text className="text-xs font-rove-bold tracking-[1px] uppercase text-foreground-muted">
+          <Text className="text-xs font-paperplane-bold tracking-[1px] uppercase text-foreground-muted">
             Repository
           </Text>
-          <Text className="pr-10 text-xl font-rove-bold">{currentBranchLabel}</Text>
+          <Text className="pr-10 text-xl font-paperplane-bold">{currentBranchLabel}</Text>
           <Text className="text-foreground-secondary text-sm font-medium leading-normal">
             {currentStatusSummary}
           </Text>

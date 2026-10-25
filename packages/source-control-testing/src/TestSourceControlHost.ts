@@ -10,9 +10,9 @@ import {
   DEFAULT_SERVER_SETTINGS,
   type ServerSettings,
   type ServerSettingsPatch,
-} from "@rove-code/contracts";
-import { applyServerSettingsPatch } from "@rove-code/shared/serverSettings";
-import * as SourceControlHost from "@rove-code/source-control-core/server/SourceControlHost";
+} from "@getpaperplane/contracts";
+import { applyServerSettingsPatch } from "@getpaperplane/shared/serverSettings";
+import * as SourceControlHost from "@getpaperplane/source-control-core/server/SourceControlHost";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -29,7 +29,7 @@ export interface TestSourceControlHostOptions {
 export class TestSourceControlHostSettings extends Context.Service<
   TestSourceControlHostSettings,
   { readonly update: (patch: ServerSettingsPatch) => Effect.Effect<void> }
->()("@rove-code/source-control-testing/TestSourceControlHost/TestSourceControlHostSettings") {}
+>()("@getpaperplane/source-control-testing/TestSourceControlHost/TestSourceControlHostSettings") {}
 
 type Git = SourceControlHost.SourceControlHost["Service"]["git"];
 

@@ -5,14 +5,14 @@ import {
   terminalOutputText,
   type KnownTerminalSession,
   type TerminalSessionState,
-} from "@rove-code/client-runtime/state/terminal";
+} from "@getpaperplane/client-runtime/state/terminal";
 import {
   AuthTerminalReadScope,
   AuthTerminalOperateScope,
   ThreadId,
   type EnvironmentId,
   type TerminalAttachInput,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { useMemo } from "react";
 
 import { useEnvironmentQuery } from "./query";

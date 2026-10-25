@@ -44,14 +44,14 @@ config.resolver = {
       : config.resolver?.blockList
         ? [config.resolver.blockList]
         : []),
-    new RegExp(`${escapedWorkspaceRoot}[/\\\\]\\.rove[/\\\\].*`),
+    new RegExp(`${escapedWorkspaceRoot}[/\\\\]\\.paperplane[/\\\\].*`),
   ],
   extraNodeModules: {
     ...config.resolver?.extraNodeModules,
-    "@rove-code/mobile-third-party-licenses": generatedLicenseModuleRoot,
-    "@rove-code/mobile-device-stream": generatedDeviceStreamRoot,
-    "@rove-code/mobile-desktop-stream": generatedDesktopStreamRoot,
-    "@rove-code/mobile-preview-stream": generatedPreviewStreamRoot,
+    "@getpaperplane/mobile-third-party-licenses": generatedLicenseModuleRoot,
+    "@getpaperplane/mobile-device-stream": generatedDeviceStreamRoot,
+    "@getpaperplane/mobile-desktop-stream": generatedDesktopStreamRoot,
+    "@getpaperplane/mobile-preview-stream": generatedPreviewStreamRoot,
     shiki: mobileShikiRoot,
     "@shikijs/core": resolveShikiDependencyRoot("@shikijs/core"),
     "@shikijs/engine-javascript": resolveShikiDependencyRoot("@shikijs/engine-javascript"),
@@ -84,7 +84,7 @@ async function generateMobileThirdPartyLicenses() {
     allowMissingGeneratedNotices:
       process.env.NODE_ENV !== "production" &&
       process.env.EAS_BUILD !== "true" &&
-      process.env.ROVE_LICENSES_STRICT !== "1",
+      process.env.PAPERPLANE_LICENSES_STRICT !== "1",
   });
 
   await Promise.all([

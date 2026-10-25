@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 /**
- * ROVE_RENDER_BENCH=1 vp test run src/components/chat/renderWaste.bench.test.tsx
+ * PAPERPLANE_RENDER_BENCH=1 vp test run src/components/chat/renderWaste.bench.test.tsx
  *
  * Real: client-runtime detail/shell atom factories and text/shell reducers,
  * timeline entry reuse, MessagesTimeline/row bodies/Markdown, ChatComposer and
@@ -44,15 +44,15 @@ import {
   createRouter,
   RouterContextProvider,
 } from "@tanstack/react-router";
-import { PrimaryConnectionTarget } from "@rove-code/client-runtime/connection";
-import { applyShellStreamEvent } from "@rove-code/client-runtime/state/shell";
-import { applyOrchestrationV2TextAppend } from "@rove-code/client-runtime/state/orchestration-v2-projection";
+import { PrimaryConnectionTarget } from "@getpaperplane/client-runtime/connection";
+import { applyShellStreamEvent } from "@getpaperplane/client-runtime/state/shell";
+import { applyOrchestrationV2TextAppend } from "@getpaperplane/client-runtime/state/orchestration-v2-projection";
 import {
   EMPTY_THREAD_HISTORY_META,
   createEnvironmentThreadDetailAtoms,
   createEnvironmentThreadShellAtoms,
   type EnvironmentThreadState,
-} from "@rove-code/client-runtime/state/threads";
+} from "@getpaperplane/client-runtime/state/threads";
 import {
   EnvironmentId,
   ThreadId,
@@ -61,7 +61,7 @@ import {
   type OrchestrationV2ThreadProjection,
   type OrchestrationV2ThreadShell,
   type ScopedThreadRef,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as DateTime from "effect/DateTime";
 import * as Option from "effect/Option";
 import { AsyncResult, Atom, AtomRegistry } from "effect/reactivity";
@@ -183,7 +183,7 @@ const BenchCell = memo(function BenchCell(props: {
   );
 });
 
-const enabled = NodeProcess.env.ROVE_RENDER_BENCH === "1";
+const enabled = NodeProcess.env.PAPERPLANE_RENDER_BENCH === "1";
 const INPUTS = 40;
 const REPEATS = 5;
 const THREADS = 24;
@@ -591,8 +591,8 @@ function report() {
       summary,
     })}\n`,
   );
-  if (NodeProcess.env.ROVE_RENDER_BENCH_JSON === "1") {
-    NodeProcess.stdout.write(`ROVE_RENDER_BASELINE ${JSON.stringify(samples)}\n`);
+  if (NodeProcess.env.PAPERPLANE_RENDER_BENCH_JSON === "1") {
+    NodeProcess.stdout.write(`PAPERPLANE_RENDER_BASELINE ${JSON.stringify(samples)}\n`);
   }
 }
 

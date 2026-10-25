@@ -1,9 +1,9 @@
 // @effect-diagnostics nodeBuiltinImport:off globalFetchInEffect:off - Hosted handoff test uses a real localhost listener without an OpenAI account.
 import * as NodeHttp from "node:http";
 import * as NodePath from "@effect/platform-node/NodePath";
-import { codexAuthHandoffUrl, readCodexAuthDelivery } from "@rove-code/shared/codexAuthHandoff";
-import { EnvironmentId, ProviderInstanceId } from "@rove-code/contracts";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+import { codexAuthHandoffUrl, readCodexAuthDelivery } from "@getpaperplane/shared/codexAuthHandoff";
+import { EnvironmentId, ProviderInstanceId } from "@getpaperplane/contracts";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 import { assert, describe, it } from "@effect/vitest";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
@@ -59,7 +59,7 @@ const layerDesktopClerk = (
   },
 ) => {
   const environment = DesktopEnvironment.DesktopEnvironment.of({
-    stateDir: "/tmp/rove-state",
+    stateDir: "/tmp/paperplane-state",
     isDevelopment,
     appDataDirectory: "/tmp/app-data",
     platform,
@@ -108,7 +108,7 @@ describe("DesktopClerk", () => {
           {
             storage: storageAdapter,
             passkeys: true,
-            renderer: { scheme: "rove-dev", host: "app" },
+            renderer: { scheme: "paperplane-dev", host: "app" },
           },
         ],
       ]);
@@ -116,7 +116,10 @@ describe("DesktopClerk", () => {
       // The bridge acquires Electron's single-instance lock at creation, and
       // the lock both lives in and creates the userData directory — so the
       // real path must be set before the bridge exists.
-      assert.deepEqual(events, ["setPath:userData:/tmp/app-data/rove-dev", "createClerkBridge"]);
+      assert.deepEqual(events, [
+        "setPath:userData:/tmp/app-data/paperplane-dev",
+        "createClerkBridge",
+      ]);
       storageMock.mockClear();
       createClerkBridgeMock.mockClear();
     });
@@ -127,13 +130,13 @@ describe("DesktopClerk", () => {
       name: "packaged Windows",
       isDevelopment: false,
       platform: "win32" as const,
-      userData: "/tmp/app-data/rove-v2",
+      userData: "/tmp/app-data/paperplane",
     },
     {
       name: "development",
       isDevelopment: true,
       platform: "win32" as const,
-      userData: "/tmp/app-data/rove-dev",
+      userData: "/tmp/app-data/paperplane-dev",
     },
   ])(
     "creates the bridge before startup can yield to the event loop ($name)",
@@ -146,7 +149,7 @@ describe("DesktopClerk", () => {
       });
       // runSync throws if the layer ever suspends, which would let Electron emit
       // ready before the bridge exists. main.ts provides the same FileSystem.
-      // oxlint-disable-next-line rove/no-manual-effect-runtime-in-tests -- The assertion IS that the layer builds synchronously; it.effect would mask a regression to async.
+      // oxlint-disable-next-line paperplane/no-manual-effect-runtime-in-tests -- The assertion IS that the layer builds synchronously; it.effect would mask a regression to async.
       Effect.runSync(
         Effect.scoped(
           Layer.build(
@@ -170,12 +173,12 @@ describe("DesktopClerk", () => {
       const error = yield* Effect.scoped(Layer.build(layerDesktopClerk())).pipe(Effect.flip);
 
       assert.instanceOf(error, DesktopClerk.DesktopClerkBridgeInitializationError);
-      assert.equal(error.stateDir, "/tmp/rove-state");
+      assert.equal(error.stateDir, "/tmp/paperplane-state");
       assert.equal(error.isDevelopment, true);
       assert.strictEqual(error.cause, cause);
       assert.equal(
         error.message,
-        'Failed to initialize the desktop Clerk bridge for state directory "/tmp/rove-state" (development: true).',
+        'Failed to initialize the desktop Clerk bridge for state directory "/tmp/paperplane-state" (development: true).',
       );
     });
   });
@@ -196,12 +199,12 @@ describe("DesktopClerk", () => {
       if (exit._tag === "Failure") {
         const error = Cause.squash(exit.cause);
         assert.instanceOf(error, DesktopClerk.DesktopClerkBridgeCleanupError);
-        assert.equal(error.stateDir, "/tmp/rove-state");
+        assert.equal(error.stateDir, "/tmp/paperplane-state");
         assert.equal(error.isDevelopment, false);
         assert.strictEqual(error.cause, cause);
         assert.equal(
           error.message,
-          'Failed to clean up the desktop Clerk bridge for state directory "/tmp/rove-state" (development: false).',
+          'Failed to clean up the desktop Clerk bridge for state directory "/tmp/paperplane-state" (development: false).',
         );
       }
     });
@@ -289,17 +292,19 @@ it.effect(
       const clerk = yield* DesktopClerk.DesktopClerk;
       yield* clerk.configure;
       const event = { preventDefault: vi.fn() };
-      listeners.get("open-url")!(event, "rove-dev://app/auth/callback?code=clerk-code");
-      listeners.get("open-url")!(event, "rove://app/welcome");
+      listeners.get("open-url")!(event, "paperplane-dev://app/auth/callback?code=clerk-code");
+      listeners.get("open-url")!(event, "paperplane://app/welcome");
       assert.equal(loadURL.mock.calls.length, 0);
       assert.equal(event.preventDefault.mock.calls.length, 0);
       listeners.get("second-instance")!({}, [
-        "rove",
-        "rove-dev://app/settings/providers?instanceId=work&code=never-forward",
+        "paperplane",
+        "paperplane-dev://app/settings/providers?instanceId=work&code=never-forward",
       ]);
       yield* Effect.promise(() => revealed.promise);
-      assert.deepEqual(loadURL.mock.calls, [["rove-dev://app/settings/providers?instanceId=work"]]);
-      listeners.get("open-url")!(event, "rove-dev://app/welcome#agents:machine-id");
+      assert.deepEqual(loadURL.mock.calls, [
+        ["paperplane-dev://app/settings/providers?instanceId=work"],
+      ]);
+      listeners.get("open-url")!(event, "paperplane-dev://app/welcome#agents:machine-id");
       assert.equal(event.preventDefault.mock.calls.length, 1);
     }).pipe(
       Effect.scoped,
@@ -336,7 +341,7 @@ it.effect.each(["startup", "open-url"] as const)(
       }).toString();
       const request = {
         authorizationUrl: authorize.toString(),
-        returnUrl: "https://rove.hafiezulzikry.com/welcome#agents:remote-one",
+        returnUrl: "https://paperplane.hafiezulzikry.com/welcome#agents:remote-one",
         environmentId: EnvironmentId.make("remote-one"),
         instanceId: ProviderInstanceId.make("work"),
         flowId: "flow-one",
@@ -385,7 +390,7 @@ it.effect.each(["startup", "open-url"] as const)(
         Effect.provide(layerDesktopClerk(true, [], "darwin", undefined, shell)),
         Effect.provideService(
           HostProcess.Arguments,
-          entry === "startup" ? ["rove", link] : ["rove"],
+          entry === "startup" ? ["paperplane", link] : ["paperplane"],
         ),
         Effect.provideService(ElectronApp.ElectronApp, electronApp),
         Effect.provideService(
@@ -422,21 +427,21 @@ it.effect("hands web and app links to the renderer and leaves other links alone"
       assert.strictEqual(open("https://example.com/page"), 1);
       assert.strictEqual(open("http://localhost:3000/"), 1);
       // Prompt and thread links ride the same queue; the renderer routes them in the app.
-      assert.strictEqual(open("rove://new?prompt=hi"), 1);
-      assert.strictEqual(open("rove://threads/env-1/thread-1"), 1);
+      assert.strictEqual(open("paperplane://new?prompt=hi"), 1);
+      assert.strictEqual(open("paperplane://threads/env-1/thread-1"), 1);
       // Anything else is not a web page; Electron keeps its own handling.
       assert.strictEqual(open("mailto:hello@example.com"), 0);
-      assert.strictEqual(open("rove://somewhere-else"), 0);
+      assert.strictEqual(open("paperplane://somewhere-else"), 0);
       yield* Effect.yieldNow;
       assert.deepStrictEqual(received, [
         "https://example.com/page",
         "http://localhost:3000/",
-        "rove://new?prompt=hi",
-        "rove://threads/env-1/thread-1",
+        "paperplane://new?prompt=hi",
+        "paperplane://threads/env-1/thread-1",
       ]);
     }).pipe(
       Effect.provide(layerDesktopClerk(true, [], "darwin")),
-      Effect.provideService(HostProcess.Arguments, ["rove"]),
+      Effect.provideService(HostProcess.Arguments, ["paperplane"]),
       Effect.provideService(ElectronApp.ElectronApp, electronApp),
       Effect.provideService(
         ElectronWindow.ElectronWindow,

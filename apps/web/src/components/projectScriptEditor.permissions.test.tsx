@@ -3,7 +3,7 @@ import {
   AuthSettingsWriteScope,
   EnvironmentId,
   type AuthEnvironmentScope,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Cause from "effect/Cause";
 import { AsyncResult } from "effect/reactivity";
 import { act, create, type ReactTestRenderer } from "react-test-renderer";

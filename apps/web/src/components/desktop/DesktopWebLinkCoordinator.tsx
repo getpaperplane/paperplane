@@ -1,7 +1,7 @@
-import { scopeProjectRef, scopeThreadRef } from "@rove-code/client-runtime/environment";
-import { squashAtomCommandFailure } from "@rove-code/client-runtime/state/runtime";
-import type { EnvironmentId, ScopedThreadRef } from "@rove-code/contracts";
-import { promptLinkAppPath } from "@rove-code/shared/promptLinks";
+import { scopeProjectRef, scopeThreadRef } from "@getpaperplane/client-runtime/environment";
+import { squashAtomCommandFailure } from "@getpaperplane/client-runtime/state/runtime";
+import type { EnvironmentId, ScopedThreadRef } from "@getpaperplane/contracts";
+import { promptLinkAppPath } from "@getpaperplane/shared/promptLinks";
 import { useRouter } from "@tanstack/react-router";
 import { useEffect, useEffectEvent, useRef } from "react";
 
@@ -46,9 +46,9 @@ function threadShowingBrowser(
 }
 
 /**
- * Opens each link the OS hands Rove Code. Prompt and thread links, by `rove://`
+ * Opens each link the OS hands Paperplane. Prompt and thread links, by `paperplane://`
  * or as hosted-app pages, open in the app. Other web links and HTML files arrive
- * because Rove Code is the default browser (macOS): with a browser panel on screen
+ * because Paperplane is the default browser (macOS): with a browser panel on screen
  * the page opens as a new tab there; otherwise it starts a thread without a
  * project, its browser panel maximized.
  */

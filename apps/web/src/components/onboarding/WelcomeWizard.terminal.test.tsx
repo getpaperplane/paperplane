@@ -2,7 +2,7 @@ import { RegistryContext } from "@effect/atom-react";
 import {
   BearerConnectionTarget,
   PrimaryConnectionTarget,
-} from "@rove-code/client-runtime/connection";
+} from "@getpaperplane/client-runtime/connection";
 import {
   AuthTerminalOperateScope,
   DEFAULT_SERVER_SETTINGS,
@@ -17,8 +17,8 @@ import {
   type TerminalCloseInput,
   type TerminalOpenInput,
   type TerminalWriteInput,
-} from "@rove-code/contracts";
-import { DEFAULT_RESOLVED_KEYBINDINGS } from "@rove-code/shared/keybindings";
+} from "@getpaperplane/contracts";
+import { DEFAULT_RESOLVED_KEYBINDINGS } from "@getpaperplane/shared/keybindings";
 import * as Cause from "effect/Cause";
 import { AsyncResult, Atom, AtomRegistry } from "effect/reactivity";
 import { act, create, type ReactTestInstance, type ReactTestRenderer } from "react-test-renderer";
@@ -50,7 +50,7 @@ const state = vi.hoisted(() => ({
 }));
 
 vi.mock("../../connection/runtime", () => ({ connectionAtomRuntime: undefined }));
-vi.mock("@rove-code/client-runtime/state/session", () => ({
+vi.mock("@getpaperplane/client-runtime/state/session", () => ({
   createEnvironmentSessionAtoms: () => ({
     sessionStateAtom: (id: EnvironmentId) => state.sessions.get(id)!,
   }),
@@ -109,7 +109,9 @@ vi.mock("../../hooks/useCopyToClipboard", () => ({
   useCopyToClipboard: () => ({ copyToClipboard: vi.fn(), isCopied: false }),
 }));
 vi.mock("../../cloud/publicConfig", () => ({ hasCloudPublicConfig: () => false }));
-vi.mock("../clerk/useRoveConnectAuthPrompt", () => ({ useRoveConnectAuthPrompt: vi.fn() }));
+vi.mock("../clerk/usePaperplaneConnectAuthPrompt", () => ({
+  usePaperplaneConnectAuthPrompt: vi.fn(),
+}));
 vi.mock("@clerk/react", () => ({ useAuth: vi.fn() }));
 vi.mock("../../env", () => ({ isElectron: false }));
 vi.mock("../../providerInstances", () => ({ resolveDefaultProviderModelSelection: vi.fn() }));
@@ -200,7 +202,7 @@ const session = (scopes: readonly AuthEnvironmentScope[]): AuthSessionState => (
     policy: "remote-reachable",
     bootstrapMethods: ["one-time-token"],
     sessionMethods: ["bearer-access-token"],
-    sessionCookieName: "rove_session",
+    sessionCookieName: "paperplane_session",
   },
 });
 function setAccess(environmentId: EnvironmentId, allowed: boolean) {

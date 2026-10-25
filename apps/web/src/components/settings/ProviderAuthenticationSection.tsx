@@ -2,14 +2,14 @@ import {
   isAtomCommandInterrupted,
   squashAtomCommandFailure,
   type AtomCommandResult,
-} from "@rove-code/client-runtime/state/runtime";
+} from "@getpaperplane/client-runtime/state/runtime";
 import type {
   EnvironmentId,
   ProviderAuthRespondInput,
   ProviderAuthResponse,
   ProviderInstanceId,
   ServerProvider,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { lazy, Suspense, useRef, useState } from "react";
 import { CopyIcon } from "lucide-react";
 

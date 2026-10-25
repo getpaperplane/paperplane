@@ -1,12 +1,12 @@
 /**
- * `rove pair` - mint a pairing token for an already-running server and print it
+ * `paperplane pair` - mint a pairing token for an already-running server and print it
  * as a QR code, without restarting anything.
  *
  * Discovery reads the `server-runtime.json` a live server persists next to its
  * database, then confirms the process is actually answering by fetching its
  * public environment descriptor. Inside a linked git worktree the worktree's
- * own `.rove` is checked first (matching dev-runner precedence); otherwise the
- * shared Rove Code home. `--tailscale` publishes the server over Tailscale Serve
+ * own `.paperplane` is checked first (matching dev-runner precedence); otherwise the
+ * shared Paperplane home. `--tailscale` publishes the server over Tailscale Serve
  * HTTPS and pairs through the tailnet URL instead.
  */
 import {
@@ -14,16 +14,16 @@ import {
   AuthStandardClientScopes,
   ExecutionEnvironmentDescriptor,
   PortSchema,
-} from "@rove-code/contracts";
-import { resolveWorktreeRoveHome } from "@rove-code/shared/devHome";
-import { DEFAULT_SIGNAL_EXPORT } from "@rove-code/shared/observability";
-import * as OtelEnvironment from "@rove-code/shared/otelEnvironment";
+} from "@getpaperplane/contracts";
+import { resolveWorktreePaperplaneHome } from "@getpaperplane/shared/devHome";
+import { DEFAULT_SIGNAL_EXPORT } from "@getpaperplane/shared/observability";
+import * as OtelEnvironment from "@getpaperplane/shared/otelEnvironment";
 import {
   buildTailscaleHttpsBaseUrl,
   DEFAULT_TAILSCALE_SERVE_PORT,
   ensureTailscaleServe,
   readTailscaleStatus,
-} from "@rove-code/tailscale";
+} from "@getpaperplane/tailscale";
 import * as Config from "effect/Config";
 import * as Console from "effect/Console";
 import * as DateTime from "effect/DateTime";
@@ -55,7 +55,7 @@ import {
 import { authScopesFlag } from "./authScopes.ts";
 import { baseDirFlag, DurationFromString } from "./config.ts";
 
-const WELL_KNOWN_ENVIRONMENT_PATH = "/.well-known/rove/environment";
+const WELL_KNOWN_ENVIRONMENT_PATH = "/.well-known/paperplane/environment";
 const PAIR_PROBE_TIMEOUT = Duration.millis(2_500);
 // Tailscale provisions an HTTPS certificate on the first request to a fresh
 // serve mapping, which can take a few seconds.
@@ -76,9 +76,9 @@ export class NoRunningServerError extends Schema.TaggedError<NoRunningServerErro
 ) {
   override get message(): string {
     return [
-      "No running Rove Code server found.",
+      "No running Paperplane server found.",
       ...this.checkedStatePaths.map((statePath) => `  checked ${statePath}`),
-      "Start one with `rove serve` on the server machine and pair over its local or LAN address.",
+      "Start one with `paperplane serve` on the server machine and pair over its local or LAN address.",
     ].join("\n");
   }
 }
@@ -108,7 +108,7 @@ export class ServesOtherEnvironmentError extends Schema.TaggedError<ServesOtherE
   { servePort: Schema.Number },
 ) {
   override get message(): string {
-    return `Tailscale Serve on HTTPS port ${String(this.servePort)} already fronts a different Rove Code server. Pass --tailscale-serve-port to publish this one on another port.`;
+    return `Tailscale Serve on HTTPS port ${String(this.servePort)} already fronts a different Paperplane server. Pass --tailscale-serve-port to publish this one on another port.`;
   }
 }
 
@@ -126,7 +126,7 @@ export class ServePortOccupiedError extends Schema.TaggedError<ServePortOccupied
   { servePort: Schema.Number },
 ) {
   override get message(): string {
-    return `HTTPS port ${String(this.servePort)} on the tailnet already serves something that is not a Rove Code server. Pass --tailscale-serve-port to publish this one on another port.`;
+    return `HTTPS port ${String(this.servePort)} on the tailnet already serves something that is not a Paperplane server. Pass --tailscale-serve-port to publish this one on another port.`;
   }
 }
 
@@ -193,14 +193,14 @@ const formatPairOutput = (input: {
   ].join("\n");
 
 /**
- * Three outcomes, because they drive different decisions: a Rove descriptor
+ * Three outcomes, because they drive different decisions: a Paperplane descriptor
  * (pair with it), nothing answering (safe to configure Tailscale Serve), or
- * something answering that is not a Rove server (do NOT overwrite its mapping).
+ * something answering that is not a Paperplane server (do NOT overwrite its mapping).
  */
 type EnvironmentProbeResult =
   | { readonly _tag: "descriptor"; readonly descriptor: ExecutionEnvironmentDescriptor }
   | { readonly _tag: "unreachable" }
-  | { readonly _tag: "not-a-rove-server" };
+  | { readonly _tag: "not-a-paperplane-server" };
 
 const probeEnvironmentDescriptor = (
   baseUrl: string,
@@ -215,7 +215,7 @@ const probeEnvironmentDescriptor = (
     );
     // Bad-gateway family means a proxy (Tailscale Serve) answered for a
     // backend that is gone — a stale mapping, not a live occupant. Treating
-    // it as unreachable lets `rove pair --tailscale` repair its own mapping
+    // it as unreachable lets `paperplane pair --tailscale` repair its own mapping
     // after the server's port changed.
     if (response.status === 502 || response.status === 503 || response.status === 504) {
       return { _tag: "unreachable" } as const;
@@ -224,7 +224,7 @@ const probeEnvironmentDescriptor = (
     // some other service.
     const descriptor = yield* HttpClientResponse.filterStatusOk(response).pipe(
       Effect.flatMap(HttpClientResponse.schemaBodyJson(ExecutionEnvironmentDescriptor)),
-      Effect.mapError(() => ({ _tag: "not-a-rove-server" }) as const),
+      Effect.mapError(() => ({ _tag: "not-a-paperplane-server" }) as const),
     );
     return { _tag: "descriptor", descriptor } as const;
   }).pipe(Effect.catch((outcome) => Effect.succeed(outcome)));
@@ -243,14 +243,14 @@ const discoverPairTarget = Effect.fn("pair.discoverPairTarget")(function* (
   if (explicitBaseDir !== undefined && explicitBaseDir.trim().length > 0) {
     bases.push(yield* resolveBaseDir(explicitBaseDir));
   } else {
-    // Same precedence as dev-runner: inside a linked worktree its own `.rove`
-    // outranks the shared home, so `rove pair` in a worktree pairs with the dev
+    // Same precedence as dev-runner: inside a linked worktree its own `.paperplane`
+    // outranks the shared home, so `paperplane pair` in a worktree pairs with the dev
     // server under test rather than the daily-driver install.
-    const worktreeHome = yield* resolveWorktreeRoveHome(process.cwd());
+    const worktreeHome = yield* resolveWorktreePaperplaneHome(process.cwd());
     if (worktreeHome !== undefined) {
       bases.push(worktreeHome);
     }
-    const envHome = yield* Config.String("ROVE_HOME").pipe(Config.option);
+    const envHome = yield* Config.String("PAPERPLANE_HOME").pipe(Config.option);
     bases.push(yield* resolveBaseDir(Option.getOrUndefined(envHome)));
   }
 
@@ -375,7 +375,7 @@ const resolveTailscalePairingBase = Effect.fn("pair.resolveTailscalePairingBase"
     });
 
     // Only an unreachable port, or a mapping already fronting this exact
-    // environment, is safe to (re)configure. Any other responder — Rove or not
+    // environment, is safe to (re)configure. Any other responder — Paperplane or not
     // — must not have its mapping silently replaced.
     const existing = yield* probeEnvironmentDescriptor(baseUrl);
     if (existing._tag === "descriptor") {
@@ -391,7 +391,7 @@ const resolveTailscalePairingBase = Effect.fn("pair.resolveTailscalePairingBase"
         return { baseUrl, notes };
       }
     }
-    if (existing._tag === "not-a-rove-server") {
+    if (existing._tag === "not-a-paperplane-server") {
       return yield* new ServePortOccupiedError({ servePort: input.servePort });
     }
 
@@ -437,7 +437,7 @@ const mintPairingLink = Effect.fn("pair.mintPairingLink")(function* (input: {
     return yield* environmentAuth.createPairingLink({
       scopes: input.scopes,
       subject: "one-time-token",
-      label: Option.getOrElse(input.label, () => "rove pair"),
+      label: Option.getOrElse(input.label, () => "paperplane pair"),
       ...(Option.isSome(input.ttl) ? { ttl: input.ttl.value } : undefined),
     });
   }).pipe(
@@ -485,7 +485,7 @@ export const pairCommand = Command.make("pair", {
   tailscaleServePort: tailscaleServePortFlag,
 }).pipe(
   Command.withDescription(
-    "Mint a pairing token for a running Rove Code server and print it as a QR code.",
+    "Mint a pairing token for a running Paperplane server and print it as a QR code.",
   ),
   Command.withHandler((flags) =>
     Effect.gen(function* () {

@@ -1,4 +1,8 @@
-import type { PullRequestRef, PullRequestStack, ThreadPullRequestLink } from "@rove-code/contracts";
+import type {
+  PullRequestRef,
+  PullRequestStack,
+  ThreadPullRequestLink,
+} from "@getpaperplane/contracts";
 
 /** Saved native membership is enough for navigation, but never supplies action head SHAs. */
 export function savedPullRequestStack(

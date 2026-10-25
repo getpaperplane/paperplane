@@ -15,10 +15,10 @@ import {
 import * as Haptics from "expo-haptics";
 import { KeyboardAwareLegendList } from "@legendapp/list/keyboard";
 import { useViewabilityAmount, type LegendListRef } from "@legendapp/list/react-native";
-import { scopeThreadRef } from "@rove-code/client-runtime/environment";
-import type { HandoffEndpoints } from "@rove-code/client-runtime/handoff";
-import { resolveUserMessagePresentation } from "@rove-code/client-runtime/user-message";
-import { canForkProjectedAssistantItem } from "@rove-code/client-runtime/state/thread-workflows";
+import { scopeThreadRef } from "@getpaperplane/client-runtime/environment";
+import type { HandoffEndpoints } from "@getpaperplane/client-runtime/handoff";
+import { resolveUserMessagePresentation } from "@getpaperplane/client-runtime/user-message";
+import { canForkProjectedAssistantItem } from "@getpaperplane/client-runtime/state/thread-workflows";
 import {
   type OrchestrationMessageContext,
   ThreadId,
@@ -29,42 +29,42 @@ import {
   type MessageId,
   type OrchestrationV2ProjectedTurnItem,
   type RunId,
-} from "@rove-code/contracts";
-import { renderAssistantCitationsAsText } from "@rove-code/shared/assistantCitations";
-import { encodeComposerContextFragment } from "@rove-code/shared/composerContextClipboard";
-import { parseThreadLinkHref } from "@rove-code/shared/threadLinks";
-import { PROMPT_LINK_MAX_PROMPT_LENGTH } from "@rove-code/shared/promptLinks";
+} from "@getpaperplane/contracts";
+import { renderAssistantCitationsAsText } from "@getpaperplane/shared/assistantCitations";
+import { encodeComposerContextFragment } from "@getpaperplane/shared/composerContextClipboard";
+import { parseThreadLinkHref } from "@getpaperplane/shared/threadLinks";
+import { PROMPT_LINK_MAX_PROMPT_LENGTH } from "@getpaperplane/shared/promptLinks";
 import {
   parseComposerContextHref,
   collectComposerContextReferences,
   replaceComposerContextReferences,
   formatComposerContextReference,
-} from "@rove-code/shared/composerContextReferences";
+} from "@getpaperplane/shared/composerContextReferences";
 import { ComposerContextSheet } from "../../components/ComposerContextSheet";
 import { writeComposerContextClipboard } from "../../lib/composerContextClipboard";
 import {
   codexArtifactTemplatePresentationLabel,
   type CodexArtifactTemplate,
-} from "@rove-code/shared/codexArtifactTemplates";
-import { resolveAssetUrl } from "@rove-code/client-runtime/state/assets";
-import { isMarkdownFileLinkLabel } from "@rove-code/shared/markdownLinks";
-import { formatAttachmentSize } from "@rove-code/client-runtime/state/attachments";
-import { squashAtomCommandFailure } from "@rove-code/client-runtime/state/runtime";
+} from "@getpaperplane/shared/codexArtifactTemplates";
+import { resolveAssetUrl } from "@getpaperplane/client-runtime/state/assets";
+import { isMarkdownFileLinkLabel } from "@getpaperplane/shared/markdownLinks";
+import { formatAttachmentSize } from "@getpaperplane/client-runtime/state/attachments";
+import { squashAtomCommandFailure } from "@getpaperplane/client-runtime/state/runtime";
 import {
   classifyMarkdownImageSource,
   markdownImageSourceFragment,
-} from "@rove-code/client-runtime/markdown-images";
-import { resolveViewedImageAsset } from "@rove-code/client-runtime/work-log/presentation";
+} from "@getpaperplane/client-runtime/markdown-images";
+import { resolveViewedImageAsset } from "@getpaperplane/client-runtime/work-log/presentation";
 import {
   renderCodexInlineDirectivesAsMarkdown,
   splitCodexArtifactTemplateMarkdown,
-} from "@rove-code/shared/codexMarkdownDirectives";
+} from "@getpaperplane/shared/codexMarkdownDirectives";
 import {
   CHAT_LIST_ANCHOR_OFFSET,
   resolveChatListAnchoredEndSpace,
-} from "@rove-code/shared/chatList";
-import { imageMimeType } from "@rove-code/shared/image";
-import { videoMimeType } from "@rove-code/shared/video";
+} from "@getpaperplane/shared/chatList";
+import { imageMimeType } from "@getpaperplane/shared/image";
+import { videoMimeType } from "@getpaperplane/shared/video";
 import { SymbolView, type AppSymbolName } from "../../components/ui/AppSymbol";
 import { HeaderHeightContext } from "@react-navigation/elements";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
@@ -118,7 +118,7 @@ import { copyTextWithHaptic } from "../../lib/copyTextWithHaptic";
 import { tryOpenExternalUrl } from "../../lib/openExternalUrl";
 import { downloadAndShareAttachment } from "../../lib/attachmentDownload";
 import { hasWideMarkdownBlock } from "../../lib/wideMarkdownBlocks";
-import { faviconUrlForOrigin } from "@rove-code/shared/favicon";
+import { faviconUrlForOrigin } from "@getpaperplane/shared/favicon";
 import {
   SelectableMarkdownText,
   type MarkdownFileContextMenu,
@@ -200,7 +200,7 @@ import {
 import { appendPendingThreadMessages, type PendingThreadFeedEntry } from "./pending-thread-feed";
 import type { QueuedThreadMessage } from "../../state/thread-outbox-model";
 import { resolveThreadFeedFixedItemSize } from "./thread-feed-item-size";
-import { htmlRenderFrameHeight } from "@rove-code/shared/htmlRender";
+import { htmlRenderFrameHeight } from "@getpaperplane/shared/htmlRender";
 import { htmlRenderRowHeight, ThreadHtmlRender } from "./HtmlRenderWebView";
 import { ThreadMcpApp } from "./McpAppWebView";
 import { useMarkdownCodeHighlight } from "./markdownCodeHighlightState";
@@ -693,7 +693,7 @@ function MessageAttachmentFile(props: {
             )}
           </View>
           <View className="min-w-0 flex-1 gap-1">
-            <Text className="font-rove-medium text-sm text-foreground" numberOfLines={2}>
+            <Text className="font-paperplane-medium text-sm text-foreground" numberOfLines={2}>
               {attachment.name}
             </Text>
             <Text className="text-xs text-foreground-muted" numberOfLines={1}>
@@ -795,7 +795,7 @@ function ArtifactTemplateCard(props: {
         </View>
       </View>
       <View className="min-w-0 flex-1">
-        <Text className="font-rove-bold text-sm text-foreground" numberOfLines={1}>
+        <Text className="font-paperplane-bold text-sm text-foreground" numberOfLines={1}>
           {props.template.displayName}
         </Text>
         <Text className="text-xs text-foreground-muted">
@@ -809,7 +809,7 @@ function ArtifactTemplateCard(props: {
           className="min-h-9 justify-center rounded-lg border border-border bg-subtle px-3 active:opacity-65"
           onPress={() => props.onUse?.(props.template)}
         >
-          <Text className="font-rove-bold text-xs text-foreground">Use template</Text>
+          <Text className="font-paperplane-bold text-xs text-foreground">Use template</Text>
         </Pressable>
       ) : null}
     </View>
@@ -963,7 +963,7 @@ function AgentMessageAttribution(props: {
   const navigation = useNavigation();
   const senderThreadId = props.senderThreadId;
   const label = (
-    <Text className="mb-1 pr-1 font-rove-medium text-2xs text-foreground-muted opacity-60">
+    <Text className="mb-1 pr-1 font-paperplane-medium text-2xs text-foreground-muted opacity-60">
       Sent by another agent
     </Text>
   );
@@ -1048,7 +1048,7 @@ function renderFeedEntry(
       >
         <Text
           key={props.workRowSizing.textSizeKey}
-          className="font-rove-medium text-sm tabular-nums text-foreground-muted"
+          className="font-paperplane-medium text-sm tabular-nums text-foreground-muted"
         >
           {entry.label}
         </Text>
@@ -1198,12 +1198,12 @@ function renderFeedEntry(
           {...(enterAnimated ? { entering: FadeInUp.duration(220) } : {})}
         >
           {presentation.attribution === "automation" ? (
-            <Text className="mb-1 pr-1 font-rove-medium text-2xs text-foreground-muted opacity-60">
+            <Text className="mb-1 pr-1 font-paperplane-medium text-2xs text-foreground-muted opacity-60">
               Sent by automation
             </Text>
-          ) : presentation.attribution === "rove" ? (
-            <Text className="mb-1 pr-1 font-rove-medium text-2xs text-foreground-muted opacity-60">
-              Sent by Rove Code
+          ) : presentation.attribution === "paperplane" ? (
+            <Text className="mb-1 pr-1 font-paperplane-medium text-2xs text-foreground-muted opacity-60">
+              Sent by Paperplane
             </Text>
           ) : presentation.attribution === "agent" ? (
             <AgentMessageAttribution
@@ -1331,7 +1331,7 @@ function renderFeedEntry(
               >
                 <Text
                   className={cn(
-                    "font-rove-medium text-2xs tracking-wide",
+                    "font-paperplane-medium text-2xs tracking-wide",
                     intentBadge.tone === "queued"
                       ? "text-adaptive-amber-700-300"
                       : "text-adaptive-sky-700-300",
@@ -1341,7 +1341,7 @@ function renderFeedEntry(
                 </Text>
               </Pressable>
             ) : null}
-            <Text className="font-rove-medium text-xs tabular-nums text-foreground-secondary">
+            <Text className="font-paperplane-medium text-xs tabular-nums text-foreground-secondary">
               {entry.pendingMessage && !entry.acknowledged ? "Pending" : timestampLabel}
             </Text>
             {props.onEditPendingMessage !== null &&
@@ -1458,7 +1458,7 @@ function renderFeedEntry(
                 sourceTitle={props.threadTitle}
               />
             ) : null}
-            <Text className="font-rove-medium text-xs tabular-nums text-foreground-secondary">
+            <Text className="font-paperplane-medium text-xs tabular-nums text-foreground-secondary">
               {timestampLabel}
             </Text>
           </View>
@@ -1510,7 +1510,7 @@ function UserMessageContent(props: UserMessageContentProps) {
   const liveText = useLiveThreadLinkLabels(props.text, props.environmentId);
   const text = replaceComposerContextReferences(liveText, (ref) => {
     const available = props.context?.records.some((record) => record.contextId === ref.contextId);
-    return `[${ref.label}${available ? "" : " (unavailable)"}](rove-context://v1/${ref.kind}/${ref.contextId})`;
+    return `[${ref.label}${available ? "" : " (unavailable)"}](paperplane-context://v1/${ref.kind}/${ref.contextId})`;
   });
   const onLinkPress = (href: string) => {
     const reference = parseComposerContextHref(href);
@@ -1692,7 +1692,9 @@ function ThreadFeedPlaceholder(props: {
       }}
     >
       <View className="max-w-[320px] items-center gap-2">
-        <Text className="text-center font-rove-bold text-lg text-foreground">{props.title}</Text>
+        <Text className="text-center font-paperplane-bold text-lg text-foreground">
+          {props.title}
+        </Text>
         <Text className="text-center text-sm leading-normal text-foreground-secondary">
           {props.detail}
         </Text>

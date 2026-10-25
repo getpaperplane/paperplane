@@ -1,7 +1,7 @@
 import { RequestActionButton } from "./RequestActionButton";
 import { QuestionAttachments } from "./QuestionAttachments";
-import type { RuntimeRequestId } from "@rove-code/contracts";
-import type { ThreadUserInputQuestion } from "@rove-code/client-runtime/state/thread-requests";
+import type { RuntimeRequestId } from "@getpaperplane/contracts";
+import type { ThreadUserInputQuestion } from "@getpaperplane/client-runtime/state/thread-requests";
 import { useCallback, useRef } from "react";
 import { Platform, Pressable, ScrollView, View, type LayoutChangeEvent } from "react-native";
 import Animated, {
@@ -197,7 +197,7 @@ export function PendingUserInputCard(props: PendingUserInputCardProps) {
         onPress={props.onToggleCollapsed}
         className="min-h-10 flex-1 flex-row items-center gap-2 active:opacity-70"
       >
-        <Text className="font-rove-bold text-2xs uppercase tracking-[1.1px] text-foreground-secondary">
+        <Text className="font-paperplane-bold text-2xs uppercase tracking-[1.1px] text-foreground-secondary">
           User input needed
         </Text>
         <Text className="font-sans text-xs text-foreground-muted">
@@ -257,10 +257,10 @@ export function PendingUserInputCard(props: PendingUserInputCardProps) {
         className="flex-row items-start gap-2"
       >
         <View className="flex-1 gap-2.5">
-          <Text className="font-rove-bold text-2xs uppercase tracking-[1.1px] text-foreground-secondary">
+          <Text className="font-paperplane-bold text-2xs uppercase tracking-[1.1px] text-foreground-secondary">
             User input needed
           </Text>
-          <Text className="font-rove-bold text-lg text-foreground">
+          <Text className="font-paperplane-bold text-lg text-foreground">
             Fill in the pending answers
           </Text>
         </View>
@@ -292,7 +292,7 @@ export function PendingUserInputCard(props: PendingUserInputCardProps) {
           const draft = props.drafts[question.id];
           return (
             <View key={question.id} className="gap-2 pt-1">
-              <Text className="font-rove-bold text-xs uppercase tracking-[1px] text-foreground-muted">
+              <Text className="font-paperplane-bold text-xs uppercase tracking-[1px] text-foreground-muted">
                 {question.header}
               </Text>
               <QuestionText markdown={question.question} />
@@ -323,7 +323,7 @@ export function PendingUserInputCard(props: PendingUserInputCardProps) {
                       <View className="min-w-0 flex-1 gap-0.5">
                         <Text
                           className={cn(
-                            "font-rove-bold text-sm",
+                            "font-paperplane-bold text-sm",
                             selected ? "text-foreground" : "text-foreground-secondary",
                           )}
                         >
@@ -370,7 +370,7 @@ export function PendingUserInputCard(props: PendingUserInputCardProps) {
           disabled={isResponding}
           onPress={() => void props.onDismiss()}
         >
-          <Text className="font-rove-bold text-sm text-foreground-muted">
+          <Text className="font-paperplane-bold text-sm text-foreground-muted">
             Dismiss without answering
           </Text>
         </Pressable>

@@ -15,7 +15,7 @@ it.layer(NodeServices.layer)("Linux browser secret path", (it) => {
       const fileSystem = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const root = yield* fileSystem.makeTempDirectoryScoped({
-        prefix: "rove-browser-secret-path-",
+        prefix: "paperplane-browser-secret-path-",
       });
       const resourcesPath = path.join(root, "install", "resources");
       const native = path.join(
@@ -24,7 +24,7 @@ it.layer(NodeServices.layer)("Linux browser secret path", (it) => {
         "browser-secret",
         "build",
         "x64",
-        "rove-browser-secret",
+        "paperplane-browser-secret",
       );
       const staged = path.join(
         root,
@@ -32,9 +32,9 @@ it.layer(NodeServices.layer)("Linux browser secret path", (it) => {
         "desktop",
         "prod-resources",
         "browser-secret",
-        "rove-browser-secret",
+        "paperplane-browser-secret",
       );
-      const packaged = path.join(resourcesPath, "browser-secret", "rove-browser-secret");
+      const packaged = path.join(resourcesPath, "browser-secret", "paperplane-browser-secret");
       for (const filename of [native, staged, packaged]) {
         yield* fileSystem.makeDirectory(path.dirname(filename), { recursive: true });
         yield* fileSystem.writeFileString(filename, "helper");

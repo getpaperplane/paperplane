@@ -2,15 +2,18 @@ import { Toolbar } from "../../components/ui/Toolbar";
 import * as Dialog from "../../components/ui/Dialog";
 import { AppActivityIndicator } from "../../components/ui/AppActivityIndicator";
 import { NavigationRow } from "../../components/ui/NavigationRow";
-import type { EnvironmentProject } from "@rove-code/client-runtime/state/shell";
+import type { EnvironmentProject } from "@getpaperplane/client-runtime/state/shell";
 import { shouldCheckoutNewTaskBranch } from "./new-task-context-presentation";
-import type { VcsRef } from "@rove-code/client-runtime/state/vcs";
-import { AuthSourceControlWriteScope, resolveEnvironmentMachineKind } from "@rove-code/contracts";
+import type { VcsRef } from "@getpaperplane/client-runtime/state/vcs";
+import {
+  AuthSourceControlWriteScope,
+  resolveEnvironmentMachineKind,
+} from "@getpaperplane/contracts";
 import { LegendList } from "@legendapp/list/react-native";
 import {
   isAtomCommandInterrupted,
   squashAtomCommandFailure,
-} from "@rove-code/client-runtime/state/runtime";
+} from "@getpaperplane/client-runtime/state/runtime";
 import * as Haptics from "expo-haptics";
 import { useNavigation } from "@react-navigation/native";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
@@ -99,7 +102,7 @@ function SelectionRow(props: {
         (props.icon ?? null)
       )}
       <View className="min-w-0 flex-1 gap-0.5">
-        <Text className="text-base font-rove-medium text-foreground" numberOfLines={1}>
+        <Text className="text-base font-paperplane-medium text-foreground" numberOfLines={1}>
           {props.title}
         </Text>
         {props.subtitle ? (
@@ -131,7 +134,7 @@ function ToggleRow(props: {
       <Text
         className={cn(
           "min-w-0 flex-1 text-base text-foreground",
-          Platform.OS !== "android" && "font-rove-medium",
+          Platform.OS !== "android" && "font-paperplane-medium",
         )}
         numberOfLines={1}
       >
@@ -497,7 +500,7 @@ export function BranchPickerScreen(props: {
               className="rounded-full bg-card px-4 py-2 active:opacity-70"
               onPress={props.onRefresh}
             >
-              <Text className="text-sm font-rove-medium text-foreground">Try again</Text>
+              <Text className="text-sm font-paperplane-medium text-foreground">Try again</Text>
             </Pressable>
           ) : null}
         </View>

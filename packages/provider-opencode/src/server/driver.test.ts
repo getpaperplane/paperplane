@@ -5,9 +5,9 @@ import * as NodePath from "node:path";
 
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { assert, it } from "@effect/vitest";
-import { ProviderInstanceId } from "@rove-code/contracts";
+import { ProviderInstanceId } from "@getpaperplane/contracts";
 import type { OpenCodeSettings } from "../settings.ts";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
 import * as Layer from "effect/Layer";
@@ -15,11 +15,11 @@ import * as TestClock from "effect/testing/TestClock";
 import * as HttpClient from "effect/http/HttpClient";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
-import * as ProviderLatestVersions from "@rove-code/provider-core/server/ProviderLatestVersions";
-import * as IdAllocator from "@rove-code/provider-core/server/IdAllocator";
-import * as McpProviderSessions from "@rove-code/provider-core/server/McpProviderSessions";
-import * as ProviderEventLoggers from "@rove-code/provider-core/server/ProviderEventLoggers";
-import * as ProviderMaintenance from "@rove-code/provider-core/server/maintenanceResolver";
+import * as ProviderLatestVersions from "@getpaperplane/provider-core/server/ProviderLatestVersions";
+import * as IdAllocator from "@getpaperplane/provider-core/server/IdAllocator";
+import * as McpProviderSessions from "@getpaperplane/provider-core/server/McpProviderSessions";
+import * as ProviderEventLoggers from "@getpaperplane/provider-core/server/ProviderEventLoggers";
+import * as ProviderMaintenance from "@getpaperplane/provider-core/server/maintenanceResolver";
 import * as OpenCodeRuntime from "./OpenCodeRuntime.ts";
 import {
   OPENCODE_2_RESPONSES,
@@ -27,7 +27,7 @@ import {
   replayOpenCodeServer,
 } from "./probeResponses.fixture.ts";
 import { OpenCodeDriver, openCodeUpdateFor } from "./driver.ts";
-import * as TestProviderHost from "@rove-code/provider-testing/TestProviderHost";
+import * as TestProviderHost from "@getpaperplane/provider-testing/TestProviderHost";
 
 const serverStarts: Array<string> = [];
 const reachedServer = (operation: string) =>
@@ -161,7 +161,7 @@ it.effect.skipIf(HostProcess.Platform.defaultValue() === "win32")(
   () =>
     Effect.gen(function* () {
       const root = NodeFS.realpathSync(
-        NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "rove-opencode-update-")),
+        NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "paperplane-opencode-update-")),
       );
       const v2Prefix = NodePath.join(root, "v2");
       const v1Prefix = NodePath.join(root, "v1");
@@ -248,7 +248,7 @@ it.layer(layerUpdate)("OpenCodeDriver updates", (it) => {
     () =>
       Effect.gen(function* () {
         const root = NodeFS.realpathSync(
-          NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "rove-opencode-driver-update-")),
+          NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "paperplane-opencode-driver-update-")),
         );
         const binaryPath = npmGlobalInstall(NodePath.join(root, "v1"), ["opencode-ai"], "opencode");
         const instance = yield* OpenCodeDriver.create({

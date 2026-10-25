@@ -1,5 +1,5 @@
-import type { ToolActivityIcon, ToolActivitySource } from "@rove-code/contracts";
-import { resolveRoveMcpToolDefinition } from "@rove-code/shared/roveMcpToolPresentation";
+import type { ToolActivityIcon, ToolActivitySource } from "@getpaperplane/contracts";
+import { resolvePaperplaneMcpToolDefinition } from "@getpaperplane/shared/paperplaneMcpToolPresentation";
 
 export function normalizeMcpText(value: unknown, maxLength = 160): string | undefined {
   if (typeof value !== "string") return undefined;
@@ -38,7 +38,7 @@ export function mcpToolPresentation(input: {
     typeof input.toolName === "string" ? /^mcp__(.+?)__(.+)$/i.exec(input.toolName) : null;
   const server = normalizeMcpText(input.serverName ?? qualified?.[1] ?? input.serverDisplayName);
   const tool = normalizeMcpText(qualified?.[2] ?? input.toolName);
-  if (server && tool && resolveRoveMcpToolDefinition(`${server}.${tool}`)) return {};
+  if (server && tool && resolvePaperplaneMcpToolDefinition(`${server}.${tool}`)) return {};
   const title =
     normalizeMcpText(input.title) ??
     (server && tool ? normalizeMcpText(tool.replace(/[_-]+/gu, " ")) : undefined);

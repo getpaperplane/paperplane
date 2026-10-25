@@ -5,7 +5,7 @@ import * as Exit from "effect/Exit";
 import * as Effect from "effect/Effect";
 import * as Console from "effect/Console";
 import * as Stream from "effect/Stream";
-import type { HostHealthReport } from "@rove-code/contracts";
+import type { HostHealthReport } from "@getpaperplane/contracts";
 import * as HostHealth from "../diagnostics/HostHealth.ts";
 import * as Layer from "effect/Layer";
 
@@ -20,7 +20,7 @@ const hostReport: HostHealthReport = {
   swapTotalBytes: 4 * 1024 ** 3,
   swapFreeBytes: 3 * 1024 ** 3,
   memoryPressure: true,
-  roveMemory: {
+  paperplaneMemory: {
     currentBytes: 2 * 1024 ** 3,
     limitBytes: 6 * 1024 ** 3,
     swapCurrentBytes: 0,
@@ -113,7 +113,7 @@ it.effect("prints host advice before a database failure without attempting repai
     assert.deepEqual(lines, [
       "Host:\n  Memory: 512.0 MiB available / 8.00 GiB total",
       "  Swap: 3.00 GiB free / 4.00 GiB total",
-      "  Rove ceiling: 2.00 GiB current / 6.00 GiB",
+      "  Paperplane ceiling: 2.00 GiB current / 6.00 GiB",
       "  [warning] Low memory.",
       "    Fix: Run fewer agents.",
     ]);
@@ -150,12 +150,12 @@ for (const ceiling of ["unlimited", "no systemd", "121 KiB current"] as const) {
                 ...hostReport,
                 swapTotalBytes: null,
                 swapFreeBytes: null,
-                roveMemory:
+                paperplaneMemory:
                   ceiling === "no systemd"
                     ? null
                     : ceiling === "unlimited"
-                      ? { ...hostReport.roveMemory!, limitBytes: null }
-                      : { ...hostReport.roveMemory!, currentBytes: 123456 },
+                      ? { ...hostReport.paperplaneMemory!, limitBytes: null }
+                      : { ...hostReport.paperplaneMemory!, currentBytes: 123456 },
               }),
               changes: Stream.empty,
             }),

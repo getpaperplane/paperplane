@@ -1,11 +1,11 @@
 import { HOSTED_APP_CHANNEL } from "~/branding";
 import { isElectron } from "~/env";
 import { isMacPlatform, isWindowsPlatform, normalizeSearchText } from "~/lib/utils";
-import { STATIC_KEYBINDING_COMMANDS, type KeybindingCommand } from "@rove-code/contracts";
-import type { EnvironmentId } from "@rove-code/contracts";
-import type { EnvironmentConnectionPhase } from "@rove-code/client-runtime/connection";
-import { sourceControlClients } from "@rove-code/client-runtime/source-control-clients";
-import { DEFAULT_KEYBINDINGS } from "@rove-code/shared/keybindings";
+import { STATIC_KEYBINDING_COMMANDS, type KeybindingCommand } from "@getpaperplane/contracts";
+import type { EnvironmentId } from "@getpaperplane/contracts";
+import type { EnvironmentConnectionPhase } from "@getpaperplane/client-runtime/connection";
+import { sourceControlClients } from "@getpaperplane/client-runtime/source-control-clients";
+import { DEFAULT_KEYBINDINGS } from "@getpaperplane/shared/keybindings";
 import { commandLabel } from "./KeybindingsSettings.logic";
 import {
   validateSettingsScopeSearch,
@@ -66,7 +66,7 @@ export interface SettingsSearchItem {
   readonly localBackendManagementOnly?: boolean;
   readonly localEnvironmentOnly?: boolean;
   readonly wslAvailableOnly?: boolean;
-  // Its row only renders while this environment's Rove Connect managed tunnel is on.
+  // Its row only renders while this environment's Paperplane Connect managed tunnel is on.
   readonly managedTunnelOnly?: boolean;
   /**
    * Sorts after every other match. Keybinding commands mirror rows on other
@@ -516,7 +516,7 @@ export const SETTINGS_SEARCH_ITEMS = [
     title: "Submodules",
     to: "/settings/general",
     scope: "project-defaults",
-    searchTerms: ["git submodule init recursive top-level none worktree rove.json"],
+    searchTerms: ["git submodule init recursive top-level none worktree paperplane.json"],
   },
   {
     id: "start-from-origin",
@@ -579,7 +579,7 @@ export const SETTINGS_SEARCH_ITEMS = [
   },
   {
     id: "cli-command",
-    title: "rove command",
+    title: "paperplane command",
     to: "/settings/general",
     searchTerms: ["cli terminal shell path install command line"],
     desktopOnly: true,
@@ -842,7 +842,7 @@ export const SETTINGS_SEARCH_ITEMS = [
   },
   {
     id: "pull-request-links-open-in-app",
-    title: "Open pull requests in Rove Code",
+    title: "Open pull requests in Paperplane",
     to: "/settings/integrations",
     searchTerms: ["pr links github browser external click default pull request view panel"],
   },
@@ -983,7 +983,7 @@ export const SETTINGS_SEARCH_ITEMS = [
     id: "project-actions",
     title: "Actions",
     to: "/settings/projects",
-    searchTerms: ["commands scripts setup run dev server checkout worktree rove.json import"],
+    searchTerms: ["commands scripts setup run dev server checkout worktree paperplane.json import"],
   },
   {
     id: "environment-icon",
@@ -1030,9 +1030,9 @@ export const SETTINGS_SEARCH_ITEMS = [
     wslAvailableOnly: true,
   },
   {
-    id: "rove-connect",
+    id: "paperplane-connect",
     localEnvironmentOnly: true,
-    title: "Rove Connect",
+    title: "Paperplane Connect",
     to: "/settings/connections",
     targetId: "connections-environment",
     searchTerms: ["managed tunnel cloud other devices remote"],
@@ -1045,7 +1045,7 @@ export const SETTINGS_SEARCH_ITEMS = [
     title: "Hold webhooks while offline",
     to: "/settings/connections",
     targetId: "connections-environment",
-    searchTerms: ["webhook automations offline queue mailbox rove connect"],
+    searchTerms: ["webhook automations offline queue mailbox paperplane connect"],
     cloudOnly: true,
     managedTunnelOnly: true,
   },
@@ -1070,7 +1070,7 @@ export const SETTINGS_SEARCH_ITEMS = [
     id: "remote-environments",
     title: "Environments",
     to: "/settings/connections",
-    searchTerms: ["add pair backend host code ssh config agent tunnel saved rove connect"],
+    searchTerms: ["add pair backend host code ssh config agent tunnel saved paperplane connect"],
   },
   {
     id: "load-balancing",

@@ -1,4 +1,4 @@
-import { normalizeSearchQuery, scoreQueryMatch } from "@rove-code/shared/searchRanking";
+import { normalizeSearchQuery, scoreQueryMatch } from "@getpaperplane/shared/searchRanking";
 
 type ModelPickerSearchableModel = {
   /** Driver kind — indexed so "codex" still matches a Codex Personal instance. */

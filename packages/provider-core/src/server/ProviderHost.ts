@@ -1,11 +1,11 @@
 /**
  * ProviderHost — what a provider package may ask of the server it runs in.
  *
- * Drivers and adapters run inside a Rove server but must not import it. The
+ * Drivers and adapters run inside a Paperplane server but must not import it. The
  * server provides this one service; everything a provider needs from its
  * environment (directories, server settings, background demand, attachment
  * files) goes through it, so a provider package depends only on
- * `@rove-code/provider-core` and its own protocol code.
+ * `@getpaperplane/provider-core` and its own protocol code.
  *
  * @module provider-core/server/host
  */
@@ -14,7 +14,7 @@ import type {
   ChatAttachment,
   ServerSettings,
   ServerSettingsError,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Context from "effect/Context";
 import type * as Effect from "effect/Effect";
 import type * as Option from "effect/Option";
@@ -26,9 +26,9 @@ import type { ProviderCredentialError } from "./errors.ts";
 export interface ProviderHostPaths {
   /** Directory the server was started in; the fallback cwd for sessions without a project. */
   readonly cwd: string;
-  /** Rove home. */
+  /** Paperplane home. */
   readonly baseDir: string;
-  /** Server-owned state directory under the Rove home. */
+  /** Server-owned state directory under the Paperplane home. */
   readonly stateDir: string;
   /** Scratch space for provider probes and generated helper files. */
   readonly providerStatusCacheDir: string;
@@ -39,7 +39,7 @@ export interface ProviderHostPaths {
 /** One opaque credential blob in the server's secret store. Only the provider decodes it. */
 export interface ProviderCredentials {
   /** Instances whose bindings are equal share these credentials. */
-  readonly binding: { readonly owner: "rove"; readonly key: string };
+  readonly binding: { readonly owner: "paperplane"; readonly key: string };
   readonly get: Effect.Effect<Option.Option<Uint8Array>, ProviderCredentialError>;
   readonly set: (credentials: Uint8Array) => Effect.Effect<void, ProviderCredentialError>;
   readonly remove: Effect.Effect<void, ProviderCredentialError>;
@@ -73,4 +73,4 @@ export class ProviderHost extends Context.Service<
       bindingId: string,
     ) => Effect.Effect<ProviderCredentials>;
   }
->()("@rove-code/provider-core/server/ProviderHost") {}
+>()("@getpaperplane/provider-core/server/ProviderHost") {}

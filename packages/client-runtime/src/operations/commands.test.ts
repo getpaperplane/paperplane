@@ -20,7 +20,7 @@ import {
   type OrchestrationV2ThreadLaunchInput,
   type OrchestrationV2ThreadProjection,
   type ProjectMutation,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { describe, expect, it } from "@effect/vitest";
 import * as Crypto from "effect/Crypto";
 import * as Effect from "effect/Effect";
@@ -250,7 +250,7 @@ describe("V2 environment commands", () => {
             parentCheckpointId: null,
             ordinalWithinScope: 0,
             appRunOrdinal: null,
-            ref: CheckpointRef.make("refs/rove/thread-start"),
+            ref: CheckpointRef.make("refs/paperplane/thread-start"),
             status: "ready",
             files: [],
             capturedAt: v2Now,
@@ -852,7 +852,7 @@ describe("V2 environment commands", () => {
                       parentCheckpointId: null,
                       ordinalWithinScope: 0,
                       appRunOrdinal: null,
-                      ref: CheckpointRef.make("refs/rove/legacy-checkpoint"),
+                      ref: CheckpointRef.make("refs/paperplane/legacy-checkpoint"),
                       status,
                       files: [],
                       capturedAt: v2Now,

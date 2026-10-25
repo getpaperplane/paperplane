@@ -1,5 +1,5 @@
-import { EnvironmentId, ThreadId } from "@rove-code/contracts";
-import { scopeThreadRef } from "@rove-code/client-runtime/environment";
+import { EnvironmentId, ThreadId } from "@getpaperplane/contracts";
+import { scopeThreadRef } from "@getpaperplane/client-runtime/environment";
 import { beforeEach, describe, expect, it } from "vite-plus/test";
 import {
   DraftId,

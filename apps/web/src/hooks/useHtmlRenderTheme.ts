@@ -1,4 +1,4 @@
-import { HTML_RENDER_DEFAULT_FONTS, htmlRenderTheme } from "@rove-code/shared/htmlRender";
+import { HTML_RENDER_DEFAULT_FONTS, htmlRenderTheme } from "@getpaperplane/shared/htmlRender";
 import { useMemo, useSyncExternalStore } from "react";
 
 import { appearanceFontStack } from "../appearanceFonts";

@@ -55,7 +55,7 @@ export class DesktopLifecycle extends Context.Service<
       Scope.Scope | DesktopLifecycleRegistrationServices
     >;
   }
->()("@rove-code/desktop/app/DesktopLifecycle") {}
+>()("@getpaperplane/desktop/app/DesktopLifecycle") {}
 
 const { logInfo: logLifecycleInfo, logError: logLifecycleError } =
   makeComponentLogger("desktop-lifecycle");

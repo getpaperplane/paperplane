@@ -9,26 +9,28 @@ const repoEnv = loadRepoEnv();
 Object.assign(process.env, repoEnv);
 
 const APP_VARIANT = resolveAppVariant(repoEnv.APP_VARIANT);
-const isIosUnsignedBuild = repoEnv.ROVE_IOS_UNSIGNED === "1";
-const isIosPersonalTeamBuild = repoEnv.ROVE_IOS_PERSONAL_TEAM === "1" || isIosUnsignedBuild;
-const mobileBuildNumber = repoEnv.ROVE_MOBILE_BUILD_NUMBER;
+const isIosUnsignedBuild = repoEnv.PAPERPLANE_IOS_UNSIGNED === "1";
+const isIosPersonalTeamBuild = repoEnv.PAPERPLANE_IOS_PERSONAL_TEAM === "1" || isIosUnsignedBuild;
+const mobileBuildNumber = repoEnv.PAPERPLANE_MOBILE_BUILD_NUMBER;
 if (
   mobileBuildNumber !== undefined &&
   (!/^[1-9]\d*$/.test(mobileBuildNumber) || Number(mobileBuildNumber) > 2_100_000_000)
 ) {
-  throw new Error("ROVE_MOBILE_BUILD_NUMBER must be an integer from 1 to 2100000000.");
+  throw new Error("PAPERPLANE_MOBILE_BUILD_NUMBER must be an integer from 1 to 2100000000.");
 }
 const runtimeVersionPolicy =
   process.env.MOBILE_VERSION_POLICY ??
   (APP_VARIANT === "development" ? "appVersion" : "fingerprint");
 
 const personalTeamBundleIdentifier =
-  repoEnv.ROVE_IOS_PERSONAL_TEAM_BUNDLE_ID?.trim() ||
-  (isIosUnsignedBuild ? "dev.rove.app" : undefined);
-const expoProjectId = repoEnv.ROVE_EXPO_PROJECT_ID?.trim();
-const mobileUpdatesEnabled = repoEnv.ROVE_MOBILE_UPDATES_ENABLED === "1";
-const cloudReady = repoEnv.ROVE_CLOUD_READY === "1";
-const clerkRelyingParty = cloudReady ? repoEnv.ROVE_CLERK_RELYING_PARTY_DOMAIN?.trim() : undefined;
+  repoEnv.PAPERPLANE_IOS_PERSONAL_TEAM_BUNDLE_ID?.trim() ||
+  (isIosUnsignedBuild ? "io.github.getpaperplane.paperplane" : undefined);
+const expoProjectId = repoEnv.PAPERPLANE_EXPO_PROJECT_ID?.trim();
+const mobileUpdatesEnabled = repoEnv.PAPERPLANE_MOBILE_UPDATES_ENABLED === "1";
+const cloudReady = repoEnv.PAPERPLANE_CLOUD_READY === "1";
+const clerkRelyingParty = cloudReady
+  ? repoEnv.PAPERPLANE_CLERK_RELYING_PARTY_DOMAIN?.trim()
+  : undefined;
 const IOS_BUNDLE_IDENTIFIER_PATTERN = /^[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+$/;
 
 const fromRepoRoot = (relativePath: string) => `../../${relativePath}`;
@@ -42,15 +44,15 @@ if (
     !IOS_BUNDLE_IDENTIFIER_PATTERN.test(personalTeamBundleIdentifier))
 ) {
   throw new Error(
-    "ROVE_IOS_PERSONAL_TEAM_BUNDLE_ID must be a reverse-DNS identifier such as com.example.rove when ROVE_IOS_PERSONAL_TEAM=1.",
+    "PAPERPLANE_IOS_PERSONAL_TEAM_BUNDLE_ID must be a reverse-DNS identifier such as com.example.paperplane when PAPERPLANE_IOS_PERSONAL_TEAM=1.",
   );
 }
 
 if (mobileUpdatesEnabled && !expoProjectId) {
-  throw new Error("ROVE_EXPO_PROJECT_ID is required to enable mobile OTA updates.");
+  throw new Error("PAPERPLANE_EXPO_PROJECT_ID is required to enable mobile OTA updates.");
 }
 if (clerkRelyingParty && /(^|\.)(t3\.codes|t3\.tools)$/i.test(clerkRelyingParty)) {
-  throw new Error("ROVE_CLERK_RELYING_PARTY_DOMAIN must belong to this project.");
+  throw new Error("PAPERPLANE_CLERK_RELYING_PARTY_DOMAIN must belong to this project.");
 }
 
 const DEVELOPMENT_ASSETS = {
@@ -94,24 +96,24 @@ const RELEASE_ASSETS = {
 
 const VARIANT_CONFIG = {
   development: {
-    appName: "Rove Code Dev",
-    scheme: "rove-dev",
-    iosBundleIdentifier: "dev.rove.app.dev",
-    androidPackage: "dev.rove.app.dev",
+    appName: "Paperplane Dev",
+    scheme: "paperplane-dev",
+    iosBundleIdentifier: "io.github.getpaperplane.paperplane.dev",
+    androidPackage: "io.github.getpaperplane.paperplane.dev",
     assets: DEVELOPMENT_ASSETS,
   },
   preview: {
-    appName: "Rove Code Preview",
-    scheme: "rove-preview",
-    iosBundleIdentifier: "dev.rove.app.preview",
-    androidPackage: "dev.rove.app.preview",
+    appName: "Paperplane Preview",
+    scheme: "paperplane-preview",
+    iosBundleIdentifier: "io.github.getpaperplane.paperplane.preview",
+    androidPackage: "io.github.getpaperplane.paperplane.preview",
     assets: PREVIEW_ASSETS,
   },
   production: {
-    appName: "Rove Code",
-    scheme: "rove",
-    iosBundleIdentifier: "dev.rove.app",
-    androidPackage: "dev.rove.app",
+    appName: "Paperplane",
+    scheme: "paperplane",
+    iosBundleIdentifier: "io.github.getpaperplane.paperplane",
+    androidPackage: "io.github.getpaperplane.paperplane",
     assets: RELEASE_ASSETS,
   },
 } as const;
@@ -152,7 +154,7 @@ const widgetsPlugin: NonNullable<ExpoConfig["plugins"]>[number] = [
       {
         name: "SubscriptionUsage",
         displayName: "Subscription usage",
-        description: "Subscription quotas from your connected Rove Code environments.",
+        description: "Subscription quotas from your connected Paperplane environments.",
         ios: {
           configuration: {
             title: "Subscription usage",
@@ -203,7 +205,7 @@ const widgetsPlugin: NonNullable<ExpoConfig["plugins"]>[number] = [
       {
         name: "AgentActivity",
         displayName: "Agent Activity",
-        description: "Shows the current state of active Rove Code agents.",
+        description: "Shows the current state of active Paperplane agents.",
         // Live Activity companion; there is no Android presentation for it.
         android: null,
         ios: { supportedFamilies: ["systemSmall", "systemMedium", "accessoryRectangular"] },
@@ -244,10 +246,10 @@ const sharingPlugin: NonNullable<ExpoConfig["plugins"]>[number] = [
 
 const config: ExpoConfig = {
   name: variant.appName,
-  slug: "rove",
+  slug: "paperplane",
   platforms: ["ios", "android"],
   scheme: variant.scheme,
-  version: repoEnv.ROVE_MOBILE_VERSION ?? "2.0.0",
+  version: repoEnv.PAPERPLANE_MOBILE_VERSION ?? "2.0.0",
   runtimeVersion: {
     // Development manifests resolve on every launch, so avoid fingerprint's
     // expensive native-project calculation there. Preview and production stay
@@ -268,10 +270,10 @@ const config: ExpoConfig = {
     supportsTablet: true,
     // Multitasking-capable iPad apps cannot rotate programmatically, so the
     // showcase capture build requires full screen (see infoPlist below).
-    requireFullScreen: process.env.ROVE_SHOWCASE_CAPTURE_BUILD === "1",
+    requireFullScreen: process.env.PAPERPLANE_SHOWCASE_CAPTURE_BUILD === "1",
     bundleIdentifier: iosBundleIdentifier,
     buildNumber: mobileBuildNumber,
-    appleTeamId: repoEnv.ROVE_APPLE_TEAM_ID?.trim() || undefined,
+    appleTeamId: repoEnv.PAPERPLANE_APPLE_TEAM_ID?.trim() || undefined,
     associatedDomains: clerkRelyingParty
       ? [`applinks:${clerkRelyingParty}`, `webcredentials:${clerkRelyingParty}`]
       : [],
@@ -290,8 +292,8 @@ const config: ExpoConfig = {
         NSAllowsArbitraryLoads: true,
       },
       NSLocalNetworkUsageDescription:
-        "Allow Rove Code to connect to Rove Code servers on your local network or tailnet.",
-      NSPhotoLibraryAddUsageDescription: "Allow Rove Code to save images to your photo library.",
+        "Allow Paperplane to connect to Paperplane servers on your local network or tailnet.",
+      NSPhotoLibraryAddUsageDescription: "Allow Paperplane to save images to your photo library.",
       // "Audio, AirPlay, and Picture in Picture": the browser screen's system
       // picture in picture needs it to start and to stay up outside the app.
       UIBackgroundModes: ["audio"],
@@ -301,7 +303,7 @@ const config: ExpoConfig = {
       // Simulator menu scripting needs), and iPadOS ignores programmatic
       // orientation requests for multitasking-capable apps — so the capture
       // build opts out of multitasking and declares landscape support.
-      ...(process.env.ROVE_SHOWCASE_CAPTURE_BUILD === "1"
+      ...(process.env.PAPERPLANE_SHOWCASE_CAPTURE_BUILD === "1"
         ? {
             "UISupportedInterfaceOrientations~ipad": [
               "UIInterfaceOrientationPortrait",
@@ -317,8 +319,8 @@ const config: ExpoConfig = {
     icon: variant.assets.appIcon,
     package: variant.androidPackage,
     versionCode: mobileBuildNumber ? Number(mobileBuildNumber) : undefined,
-    ...(repoEnv.ROVE_ANDROID_GOOGLE_SERVICES_FILE
-      ? { googleServicesFile: repoEnv.ROVE_ANDROID_GOOGLE_SERVICES_FILE }
+    ...(repoEnv.PAPERPLANE_ANDROID_GOOGLE_SERVICES_FILE
+      ? { googleServicesFile: repoEnv.PAPERPLANE_ANDROID_GOOGLE_SERVICES_FILE }
       : {}),
     adaptiveIcon: {
       backgroundColor: variant.assets.androidAdaptiveBackgroundColor,
@@ -405,7 +407,7 @@ const config: ExpoConfig = {
     [
       "expo-audio",
       {
-        microphonePermission: "Allow Rove Code to use your microphone for voice input.",
+        microphonePermission: "Allow Paperplane to use your microphone for voice input.",
         recordAudioAndroid: false,
         enableBackgroundPlayback: false,
         enableBackgroundRecording: false,
@@ -414,7 +416,8 @@ const config: ExpoConfig = {
     [
       "expo-camera",
       {
-        cameraPermission: "Allow Rove Code to access your camera so you can scan pairing QR codes.",
+        cameraPermission:
+          "Allow Paperplane to access your camera so you can scan pairing QR codes.",
         microphonePermission: false,
         barcodeScannerEnabled: true,
         recordAudioAndroid: false,
@@ -496,7 +499,7 @@ const config: ExpoConfig = {
     iosPersonalTeamBuild: isIosPersonalTeamBuild,
     cloudReady,
     relay: {
-      url: cloudReady ? (repoEnv.ROVE_RELAY_URL ?? null) : null,
+      url: cloudReady ? (repoEnv.PAPERPLANE_RELAY_URL ?? null) : null,
     },
     clerk: {
       publishableKey: cloudReady ? (repoEnv.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY ?? null) : null,
@@ -526,7 +529,7 @@ const config: ExpoConfig = {
     },
     eas: expoProjectId ? { projectId: expoProjectId } : undefined,
   },
-  owner: repoEnv.ROVE_EXPO_OWNER?.trim() || undefined,
+  owner: repoEnv.PAPERPLANE_EXPO_OWNER?.trim() || undefined,
 };
 
 export default config;

@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { AuthEnvironmentMaintainScope } from "@rove-code/contracts";
+import { AuthEnvironmentMaintainScope } from "@getpaperplane/contracts";
 
 import { usePrimaryCloudLinkState } from "~/cloud/primaryCloudLinkState";
 import { hasCloudPublicConfig } from "~/cloud/publicConfig";

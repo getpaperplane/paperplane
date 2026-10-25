@@ -6,7 +6,7 @@ import {
   OrchestratorMcpFailure,
   ServerSettings,
   ServerSettingsPatch,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Schema from "effect/Schema";
 import { Tool, Toolkit } from "effect/ai";
 import * as ServerEnvironment from "../../../environment/ServerEnvironment.ts";
@@ -39,7 +39,7 @@ const shared = {
     ThreadCommandExecutor.ThreadCommandExecutor,
   ],
 };
-const EnvironmentReadTool = Tool.make("rove_environment_read", {
+const EnvironmentReadTool = Tool.make("paperplane_environment_read", {
   ...shared,
   description:
     "Read this server's identity, selected environment preferences, and host memory health when available. Provider/model availability is exposed by orchestrator_capabilities. Writing instructions are limited to 4,000 characters.",
@@ -55,7 +55,7 @@ const EnvironmentReadTool = Tool.make("rove_environment_read", {
 })
   .annotate(Tool.Readonly, true)
   .annotate(Tool.Destructive, false);
-const EnvironmentPreferencesTool = Tool.make("rove_environment_preferences_update", {
+const EnvironmentPreferencesTool = Tool.make("paperplane_environment_preferences_update", {
   ...shared,
   description:
     "Update selected environment-wide preferences through normal settings persistence and notifications. Requires a live full-access/default calling thread. Omitted fields are preserved; empty customInstructions clears them.",

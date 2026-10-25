@@ -1,12 +1,12 @@
 import {
   BearerConnectionTarget,
   PrimaryConnectionTarget,
-} from "@rove-code/client-runtime/connection";
+} from "@getpaperplane/client-runtime/connection";
 import {
   type DesktopEnvironmentBootstrap,
   EnvironmentId,
   PRIMARY_LOCAL_ENVIRONMENT_ID,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { describe, expect, it } from "vite-plus/test";
 
 import {

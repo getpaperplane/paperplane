@@ -6,7 +6,7 @@ import { DesktopUpdateStateSchema } from "./ipc.ts";
 
 export const RESOURCE_MONITOR_PROTOCOL_VERSION = 3 as const;
 
-/** Whole-host capacity, independent of Rove's process diagnostics. */
+/** Whole-host capacity, independent of Paperplane's process diagnostics. */
 export const HostResourcesSnapshot = Schema.Struct({
   sampledAt: NonNegativeInt,
   cpuUtilization: Schema.NullOr(Schema.Number.check(Schema.isBetween({ minimum: 0, maximum: 1 }))),
@@ -25,8 +25,8 @@ export const HostHealthFinding = Schema.Struct({
 });
 export type HostHealthFinding = typeof HostHealthFinding.Type;
 
-/** Usage of the shared cgroup ceiling all Rove-spawned work runs under (Linux user systemd). */
-export const RoveMemoryUsage = Schema.Struct({
+/** Usage of the shared cgroup ceiling all Paperplane-spawned work runs under (Linux user systemd). */
+export const PaperplaneMemoryUsage = Schema.Struct({
   /** Null when the ceiling is unlimited. */
   limitBytes: Schema.NullOr(NonNegativeInt),
   currentBytes: NonNegativeInt,
@@ -35,9 +35,9 @@ export const RoveMemoryUsage = Schema.Struct({
   /** Kernel OOM kills inside the ceiling since it was created. */
   oomKills: NonNegativeInt,
 });
-export type RoveMemoryUsage = typeof RoveMemoryUsage.Type;
+export type PaperplaneMemoryUsage = typeof PaperplaneMemoryUsage.Type;
 
-/** Host memory health shared by `rove doctor`, the composer notice, and Diagnostics. */
+/** Host memory health shared by `paperplane doctor`, the composer notice, and Diagnostics. */
 export const HostHealthReport = Schema.Struct({
   sampledAt: NonNegativeInt,
   totalMemoryBytes: NonNegativeInt,
@@ -46,8 +46,8 @@ export const HostHealthReport = Schema.Struct({
   swapTotalBytes: Schema.NullOr(NonNegativeInt),
   swapFreeBytes: Schema.NullOr(NonNegativeInt),
   memoryPressure: Schema.Boolean,
-  /** Null when Rove's memory ceiling does not exist on this host. */
-  roveMemory: Schema.NullOr(RoveMemoryUsage),
+  /** Null when Paperplane's memory ceiling does not exist on this host. */
+  paperplaneMemory: Schema.NullOr(PaperplaneMemoryUsage),
   findings: Schema.Array(HostHealthFinding),
 });
 export type HostHealthReport = typeof HostHealthReport.Type;
@@ -70,7 +70,7 @@ export const ResourceTelemetryProcessCategory = Schema.Literals([
   "electron-gpu",
   "electron-utility",
   "resource-monitor",
-  "unknown-rove",
+  "unknown-paperplane",
 ]);
 export type ResourceTelemetryProcessCategory = typeof ResourceTelemetryProcessCategory.Type;
 
@@ -447,7 +447,7 @@ export const ResourceTelemetryGroups = Schema.Struct({
   backend: ResourceTelemetryAggregate,
   electron: ResourceTelemetryAggregate,
   monitor: ResourceTelemetryAggregate,
-  allRove: ResourceTelemetryAggregate,
+  allPaperplane: ResourceTelemetryAggregate,
 });
 export type ResourceTelemetryGroups = typeof ResourceTelemetryGroups.Type;
 

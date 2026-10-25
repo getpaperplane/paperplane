@@ -1,14 +1,17 @@
 import * as Dialog from "../../components/ui/Dialog";
 import { useAtomValue } from "@effect/atom-react";
-import { scopeThreadRef } from "@rove-code/client-runtime/environment";
-import { resolveHandoffEndpoints, type HandoffEndpoints } from "@rove-code/client-runtime/handoff";
-import { resolveProviderInstanceDisplayName } from "@rove-code/client-runtime/state/provider-instance-display";
+import { scopeThreadRef } from "@getpaperplane/client-runtime/environment";
+import {
+  resolveHandoffEndpoints,
+  type HandoffEndpoints,
+} from "@getpaperplane/client-runtime/handoff";
+import { resolveProviderInstanceDisplayName } from "@getpaperplane/client-runtime/state/provider-instance-display";
 import type {
   EnvironmentId,
   OrchestrationV2ProjectedTurnItem,
   ProviderInstanceId,
   ServerProvider,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { Atom } from "effect/reactivity";
 import { useMemo } from "react";
 import { Pressable, View, type ColorValue } from "react-native";

@@ -1,4 +1,4 @@
-import type { RepositoryIdentity } from "@rove-code/contracts";
+import type { RepositoryIdentity } from "@getpaperplane/contracts";
 import * as Cache from "effect/Cache";
 import * as Cause from "effect/Cause";
 import * as Context from "effect/Context";
@@ -68,7 +68,7 @@ export class ProjectEnrichmentService extends Context.Service<
       Scope.Scope
     >;
   }
->()("@rove-code/server/project/ProjectEnrichmentService") {}
+>()("@getpaperplane/server/project/ProjectEnrichmentService") {}
 
 function availableValue<A, E>(cached: Option.Option<Exit.Exit<A, E>>): A | null {
   return Option.match(cached, {

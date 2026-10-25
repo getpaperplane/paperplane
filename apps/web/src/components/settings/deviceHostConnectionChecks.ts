@@ -3,7 +3,7 @@ import {
   type DevicePlatformAvailability,
   type EnvironmentId,
   SshDeviceHostConfig,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Schema from "effect/Schema";
 
 export interface DeviceHostCheckTarget {

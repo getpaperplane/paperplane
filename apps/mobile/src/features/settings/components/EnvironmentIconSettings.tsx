@@ -1,11 +1,11 @@
-import { AuthSettingsWriteScope, ENVIRONMENT_MACHINE_KINDS } from "@rove-code/contracts";
-import type { EnvironmentId, ServerConfig } from "@rove-code/contracts";
+import { AuthSettingsWriteScope, ENVIRONMENT_MACHINE_KINDS } from "@getpaperplane/contracts";
+import type { EnvironmentId, ServerConfig } from "@getpaperplane/contracts";
 import {
   detectedEnvironmentMachineKind,
   planEnvironmentIconSetting,
   resolveEnvironmentIconPickerLock,
-} from "@rove-code/client-runtime/environment-admin";
-import { resolveEnvironmentMachineKind } from "@rove-code/contracts";
+} from "@getpaperplane/client-runtime/environment-admin";
+import { resolveEnvironmentMachineKind } from "@getpaperplane/contracts";
 
 import { AppText as Text } from "../../../components/ui/AppText";
 import { ENVIRONMENT_MACHINE_KIND_LABELS } from "../../../components/EnvironmentMachineSymbol";

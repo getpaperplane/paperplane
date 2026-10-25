@@ -7,7 +7,7 @@ import type {
   RelayAgentActivityState,
   RelayDeliveryResult,
   RelayPublishResponse,
-} from "@rove-code/contracts/relay";
+} from "@getpaperplane/contracts/relay";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -45,7 +45,7 @@ export class AgentActivityPublisher extends Context.Service<
       readonly deviceId: string;
     }) => Effect.Effect<RelayDeliveryResult | null, AgentActivityPublishError>;
   }
->()("rove-relay/agentActivity/AgentActivityPublisher") {}
+>()("paperplane-relay/agentActivity/AgentActivityPublisher") {}
 
 export const make = Effect.gen(function* () {
   const rows = yield* AgentActivityRows.AgentActivityRows;

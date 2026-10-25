@@ -1,4 +1,4 @@
-import { buildNewThreadLink, parseNewThreadLink } from "@rove-code/shared/promptLinks";
+import { buildNewThreadLink, parseNewThreadLink } from "@getpaperplane/shared/promptLinks";
 import { describe, expect, it } from "vite-plus/test";
 
 import {
@@ -10,9 +10,9 @@ import {
 } from "./prompt-link-model";
 
 describe("promptLinkSearchFromParams", () => {
-  it("opens the default shared link on Rove's hosted client", () => {
+  it("opens the default shared link on Paperplane's hosted client", () => {
     const url = new URL(buildNewThreadLink({ prompt: "Fix the bug & add tests" }));
-    expect(url.origin).toBe("https://rove.hafiezulzikry.com");
+    expect(url.origin).toBe("https://paperplane.hafiezulzikry.com");
     expect(url.pathname).toBe("/new");
     const search = promptLinkSearchFromParams(Object.fromEntries(url.searchParams));
     const parsed = parseNewThreadLink(search ?? "");
@@ -23,7 +23,7 @@ describe("promptLinkSearchFromParams", () => {
   it("round-trips decoded route params into the shared parser", () => {
     const search = promptLinkSearchFromParams({
       prompt: "Fix the bug & add tests = done?",
-      repo: ["hafiezul/rove", "ignored/second"],
+      repo: ["getpaperplane/paperplane", "ignored/second"],
       provider: "codex",
       screen: "NewTask",
     });
@@ -33,7 +33,7 @@ describe("promptLinkSearchFromParams", () => {
       value: {
         kind: "new",
         prompt: { text: "Fix the bug & add tests = done?", hiddenCharacters: 0 },
-        repository: { owner: "hafiezul", name: "rove" },
+        repository: { owner: "getpaperplane", name: "paperplane" },
         provider: "codex",
         model: null,
       },

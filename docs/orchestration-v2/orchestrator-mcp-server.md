@@ -2,20 +2,20 @@
 
 ## Purpose
 
-Rove exposes V2 orchestration through its app-owned MCP endpoint. A provider
+Paperplane exposes V2 orchestration through its app-owned MCP endpoint. A provider
 agent can use this endpoint to:
 
 - create an app-owned sub-agent on any supported provider instance;
 - wait for or poll the sub-agent's durable result;
 - cancel an active delegated task; and
-- create one or more ordinary top-level Rove threads;
+- create one or more ordinary top-level Paperplane threads;
 - list a project's threads and incrementally read any thread;
 - rename threads, regenerate titles, and link or unlink pull requests;
 - send or steer follow-up messages; and
 - wait for or interrupt ordinary thread runs.
 
-These are Rove orchestration operations, not provider-native sub-agent APIs.
-Delegated tasks always create a Rove child thread and run. The child receives
+These are Paperplane orchestration operations, not provider-native sub-agent APIs.
+Delegated tasks always create a Paperplane child thread and run. The child receives
 only the supplied task prompt, plus an optional role instruction supplied in
 the same tool call. Parent conversation history is not copied into the child.
 
@@ -34,14 +34,14 @@ The orchestration tools share the existing authenticated HTTP MCP endpoint:
 http://127.0.0.1:<server-port>/mcp
 ```
 
-The provider-visible server key is `rove`. The endpoint registers both the
+The provider-visible server key is `paperplane`. The endpoint registers both the
 preview toolkit and the orchestration toolkit.
 
 Before `ProviderSessionManager` opens a new V2 provider session, it asks
 `McpSessionRegistry` for a credential scoped to:
 
-- the Rove environment;
-- the parent Rove thread;
+- the Paperplane environment;
+- the parent Paperplane thread;
 - the concrete provider instance; and
 - the provider session.
 
@@ -62,11 +62,11 @@ Codex app-server receives the remote MCP server through command-line config
 overrides:
 
 ```text
--c mcp_servers.rove.url=http://127.0.0.1:<port>/mcp
--c mcp_servers.rove.bearer_token_env_var="ROVE_MCP_BEARER_TOKEN"
+-c mcp_servers.paperplane.url=http://127.0.0.1:<port>/mcp
+-c mcp_servers.paperplane.bearer_token_env_var="PAPERPLANE_MCP_BEARER_TOKEN"
 ```
 
-The provider-session token is placed in `ROVE_MCP_BEARER_TOKEN`. Both the
+The provider-session token is placed in `PAPERPLANE_MCP_BEARER_TOKEN`. Both the
 production Codex launcher and the injectable test launcher use the same
 projection helper.
 
@@ -77,7 +77,7 @@ Claude receives an HTTP MCP server in its query options:
 ```ts
 {
   mcpServers: {
-    "rove": {
+    "paperplane": {
       type: "http",
       url: "http://127.0.0.1:<port>/mcp",
       headers: {
@@ -87,7 +87,7 @@ Claude receives an HTTP MCP server in its query options:
   },
   allowedTools: [
     // existing allowed tools
-    "mcp__rove__*",
+    "mcp__paperplane__*",
   ],
 }
 ```
@@ -145,15 +145,15 @@ provider-specific extensions; those remain in flavors such as Grok.
 
 ### Pi V2
 
-Rove runs Pi through its bundled SDK inside an isolated instance worker, not
+Paperplane runs Pi through its bundled SDK inside an isolated instance worker, not
 `pi --mode rpc` ([ADR 0001](../adr/0001-pi-provider-uses-sdk-in-process.md)).
 The session factory receives the V2 MCP endpoint and scoped credential before
-opening the SDK session. Rove's registered SDK tools bridge authenticated MCP
+opening the SDK session. Paperplane's registered SDK tools bridge authenticated MCP
 calls over HTTP and forward cancellation; project resources remain subject to
-Rove's trust policy.
+Paperplane's trust policy.
 
 MCP `delegate_task` uses the shared durable child-thread lifecycle for Pi, as
-recorded in [ADR 0004](../adr/0004-pi-delegates-through-rove-mcp.md). Pi has no
+recorded in [ADR 0004](../adr/0004-pi-delegates-through-paperplane-mcp.md). Pi has no
 provider-native subagent tool or lifecycle. Its native subagent capability
 flags do not gate app-owned MCP delegation. Extension output and subprocesses
 do not create delegated task records.
@@ -188,7 +188,7 @@ adapter support, disabled state, missing executable, or missing authentication.
 
 ### `delegate_task`
 
-Creates a Rove-owned child thread and immediately dispatches the supplied task
+Creates a Paperplane-owned child thread and immediately dispatches the supplied task
 prompt.
 
 ```ts
@@ -227,7 +227,7 @@ Each delegated review round uses a new `delegate_task` call with the original br
 prior findings, responses, and unresolved objections. Track each round by its own `taskId` and use
 a distinct `clientRequestId` per round, stable across retries of that round.
 `childThreadId` is backing storage, not a target for another review round through
-`rove_thread_send`. Ordinary thread messaging remains available for user-requested
+`paperplane_thread_send`. Ordinary thread messaging remains available for user-requested
 conversations; it does not reopen a completed task. There is no task-level follow-up
 API for preserving the same reviewer session.
 
@@ -240,8 +240,8 @@ provider session. The request becomes the V2 command
 the timeout expires. A wait timeout does not cancel the child; the result sets
 `waitTimedOut: true`, and the caller can continue with `task_status`. A pending blocking
 question also ends the wait with `hasPendingQuestion: true` and `waitTimedOut: false`.
-If `hasPendingQuestion`, pass `threadId=childThreadId` to `rove_pending_request_list`,
-`rove_pending_request_read` (with `requestId`) and `rove_pending_request_respond`, or ask
+If `hasPendingQuestion`, pass `threadId=childThreadId` to `paperplane_pending_request_list`,
+`paperplane_pending_request_read` (with `requestId`) and `paperplane_pending_request_respond`, or ask
 the user; the task's completion still wakes this thread. Async questions and approvals
 do not end the wait.
 
@@ -290,7 +290,7 @@ optional cancellation reason.
 
 ### `create_threads`
 
-Creates between one and twenty ordinary top-level Rove threads:
+Creates between one and twenty ordinary top-level Paperplane threads:
 
 ```ts
 type CreateThreadsInput = {
@@ -314,7 +314,7 @@ inherit the parent's project, branch, and worktree path, but they have no
 sub-agent lineage. Entries with a prompt immediately dispatch a run; entries
 without a prompt remain idle.
 
-### `rove_thread_launch`
+### `paperplane_thread_launch`
 
 Launches one ordinary top-level thread through the app's launch service. Use an
 explicit `workspaceStrategy` to create a new worktree (`worktree` with `baseRef`),
@@ -330,14 +330,14 @@ its own under the environment's Scratch project. For stacked PRs, use the parent
 interaction modes than the caller. Launch has no retry key, so inspect existing threads after a failed or lost response before
 launching again. `create_threads` remains the batch option for a shared checkout.
 
-### `rove_thread_list`
+### `paperplane_thread_list`
 
 Lists durable thread shells in one project, newest first: `projectId` when
 given, else the calling thread's project. Callers can filter by title, run
 status, and whether app-owned sub-agent threads are included. Results are
 bounded and offset-paginated. Deleted threads are never listed.
 
-### `rove_thread_read`
+### `paperplane_thread_read`
 
 Reads the durable state, recent runs, and visible timeline of any thread in
 the environment by thread ID. A deleted thread returns `thread_not_found`. The
@@ -353,17 +353,17 @@ and `creationSource: "mcp"`; provider output uses `creationSource: "provider"`.
 Actor and ingress are separate so agent-authored user-role messages remain
 distinguishable from human-authored messages.
 
-Agents mention another thread as `[title](rove-thread://v1/<threadId>)`. The
+Agents mention another thread as `[title](paperplane-thread://v1/<threadId>)`. The
 link carries only the id, which resolves in the environment of the message that
 holds it. Clients show the thread's current title rather than the label, so a
 rename never leaves a stale link.
 
 List and read results report `snoozed` and `snoozedUntil`, and
-`rove_thread_list` filters on `snoozed`. The server's `isSnoozed` follows the
+`paperplane_thread_list` filters on `snoozed`. The server's `isSnoozed` follows the
 client's `effectiveSnoozed`, so agents and the sidebar agree: a snoozed thread
 wakes early when it has a pending request, fails, or completes after the snooze.
 
-### `rove_thread_update`
+### `paperplane_thread_update`
 
 Updates metadata for the calling thread or any other thread in the environment.
 The typed actions are `rename`, `regenerate_title`, `link_pull_request`, and
@@ -377,7 +377,7 @@ resultant title, title-regeneration marker, and linked pull request. Reusing a
 receipt. Thread list and read results expose the linked pull request, and thread
 detail also exposes an in-flight title regeneration.
 
-### `rove_thread_send`
+### `paperplane_thread_send`
 
 Sends a message to any ordinary or delegated thread in the environment:
 
@@ -392,14 +392,14 @@ The target runtime and interaction modes may not be broader than the caller's.
 Stable command and message IDs are derived from `clientRequestId` for
 idempotent retries.
 
-### `rove_thread_wait`
+### `paperplane_thread_wait`
 
 Waits for a selected run to become `completed`, `failed`, `cancelled`,
 `interrupted`, or `rolled_back`. Without `runId`, it pins the latest run at call
 time; an idle thread returns immediately. A timeout reports the latest durable
 status and does not cancel work.
 
-### `rove_thread_interrupt`
+### `paperplane_thread_interrupt`
 
 Interrupts a selected active run through the normal V2 `run.interrupt` command.
 Without `runId`, it selects the newest interruptible run. A terminal run is

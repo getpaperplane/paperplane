@@ -1,11 +1,11 @@
 // @effect-diagnostics nodeBuiltinImport:off - Effect has no incremental digest or free-space query.
 import * as EffectNodeStream from "@effect/platform-node/NodeStream";
-import { ProviderDriverKind, type ProviderInstallState } from "@rove-code/contracts";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+import { ProviderDriverKind, type ProviderInstallState } from "@getpaperplane/contracts";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 import {
   resolveNodeExecutable,
   nodeRuntimeUnavailableMessage,
-} from "@rove-code/shared/nodeRuntime";
+} from "@getpaperplane/shared/nodeRuntime";
 import * as Clock from "effect/Clock";
 import * as Cause from "effect/Cause";
 import * as Context from "effect/Context";
@@ -106,7 +106,7 @@ interface AntigravityInstallationService {
 export class AntigravityInstallation extends Context.Service<
   AntigravityInstallation,
   AntigravityInstallationService
->()("@rove-code/server/provider/AntigravityInstallation") {
+>()("@getpaperplane/server/provider/AntigravityInstallation") {
   static readonly layer = Layer.effect(
     AntigravityInstallation,
     Effect.gen(function* () {
@@ -355,7 +355,7 @@ export const makeAntigravityInstallation = Effect.fn("AntigravityInstallation.ma
       function* (executable: AntigravityExecutable, expectedVersion: string) {
         const validationScope = yield* Effect.scope;
         const profileDirectory = yield* Effect.acquireRelease(
-          fs.makeTempDirectory({ prefix: "rove-antigravity-validate-" }),
+          fs.makeTempDirectory({ prefix: "paperplane-antigravity-validate-" }),
           (directory) =>
             fs.remove(directory, { recursive: true, force: true }).pipe(
               // Windows may retain DLL handles briefly after taskkill returns.
@@ -402,7 +402,7 @@ export const makeAntigravityInstallation = Effect.fn("AntigravityInstallation.ma
                   }),
                 )
               : spawner,
-          clientInfo: { name: "rove", version: "0.0.0" },
+          clientInfo: { name: "paperplane", version: "0.0.0" },
         });
         const initialized = yield* runtime.initialize();
         if (

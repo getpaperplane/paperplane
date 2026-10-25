@@ -16,8 +16,8 @@ import {
   type OrchestrationV2ExecutionNode,
   type OrchestrationV2RunAttempt,
   type OrchestrationV2TurnItem,
-} from "@rove-code/contracts";
-import type { ThreadRuntimeSummary } from "@rove-code/client-runtime/state/shell";
+} from "@getpaperplane/contracts";
+import type { ThreadRuntimeSummary } from "@getpaperplane/client-runtime/state/shell";
 import { deriveMessagesTimelineRows } from "./components/chat/MessagesTimeline.logic";
 import * as DateTime from "effect/DateTime";
 import { describe, expect, it } from "vite-plus/test";
@@ -1246,7 +1246,7 @@ describe("HTML renders in the timeline", () => {
     ...base("render", 2),
     status,
     type: "dynamic_tool",
-    toolName: "mcp__rove__html_render",
+    toolName: "mcp__paperplane__html_render",
     input: { title: "Chart", height: 420 },
     ...(output === undefined ? {} : { output }),
   });
@@ -1326,7 +1326,7 @@ describe("HTML renders in the timeline", () => {
       tool: "get_weather",
       resourceUri: "ui://weather/dashboard",
     };
-    const call = renderCall("completed", { roveMcpApp: mcpApp, result: { content: [] } });
+    const call = renderCall("completed", { paperplaneMcpApp: mcpApp, result: { content: [] } });
     const entries = turn(
       call.type === "dynamic_tool" ? { ...call, toolName: "weather.get_weather" } : call,
     );

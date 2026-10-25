@@ -1,6 +1,6 @@
-import { RELAY_TUNNEL_RELEASED_MESSAGE, type Discovery } from "@rove-code/client-runtime/relay";
-import type { AtomCommandResult } from "@rove-code/client-runtime/state/runtime";
-import { EnvironmentId, ORCHESTRATION_PROTOCOL_VERSION } from "@rove-code/contracts";
+import { RELAY_TUNNEL_RELEASED_MESSAGE, type Discovery } from "@getpaperplane/client-runtime/relay";
+import type { AtomCommandResult } from "@getpaperplane/client-runtime/state/runtime";
+import { EnvironmentId, ORCHESTRATION_PROTOCOL_VERSION } from "@getpaperplane/contracts";
 import * as Option from "effect/Option";
 import { AsyncResult } from "effect/reactivity";
 import { act, useState, type ButtonHTMLAttributes, type ReactNode } from "react";
@@ -172,7 +172,7 @@ describe("cloud environment offline reasons", () => {
 
     discovery.listEnvironments.mockResolvedValue(new Map([[newMachineId, offlineEntry()]]));
     await mount();
-    expect(rowText()).toContain("Rove Connect · Not added · Relay offline");
+    expect(rowText()).toContain("Paperplane Connect · Not added · Relay offline");
 
     await act(async () => {
       publish({

@@ -1,15 +1,15 @@
-import type { EnvironmentThreadShell } from "@rove-code/client-runtime/state/shell";
+import type { EnvironmentThreadShell } from "@getpaperplane/client-runtime/state/shell";
 import type {
   ExecutionEnvironmentCapabilities,
   ThreadPullRequestLink,
   VcsStatusResult,
-} from "@rove-code/contracts";
-import { sourceControlClients } from "@rove-code/client-runtime/source-control-clients";
+} from "@getpaperplane/contracts";
+import { sourceControlClients } from "@getpaperplane/client-runtime/source-control-clients";
 
 import {
   resolveThreadCurrentPullRequestLink,
   resolveThreadPullRequestBadge,
-} from "@rove-code/shared/threadPullRequests";
+} from "@getpaperplane/shared/threadPullRequests";
 
 export type ThreadPr = NonNullable<VcsStatusResult["pr"]>;
 

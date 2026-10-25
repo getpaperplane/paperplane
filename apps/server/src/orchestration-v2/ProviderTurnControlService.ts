@@ -1,4 +1,4 @@
-import { projectComposerContextForProvider } from "@rove-code/shared/composerContextReferences";
+import { projectComposerContextForProvider } from "@getpaperplane/shared/composerContextReferences";
 import {
   MessageId,
   type NodeId,
@@ -7,7 +7,7 @@ import {
   ProviderTurnId,
   RunAttemptId,
   ThreadId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Clock from "effect/Clock";
 import type * as DateTime from "effect/DateTime";
 import * as Context from "effect/Context";
@@ -16,7 +16,7 @@ import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 
-import type * as ProviderAdapter from "@rove-code/provider-core/server/ProviderAdapter";
+import type * as ProviderAdapter from "@getpaperplane/provider-core/server/ProviderAdapter";
 import * as ProjectionStore from "./ProjectionStore.ts";
 import * as ProviderSessionManager from "./ProviderSessionManager.ts";
 
@@ -79,7 +79,9 @@ export interface ProviderTurnControlServiceV2Shape {
 export class ProviderTurnControlServiceV2 extends Context.Service<
   ProviderTurnControlServiceV2,
   ProviderTurnControlServiceV2Shape
->()("@rove-code/server/orchestration-v2/ProviderTurnControlService/ProviderTurnControlServiceV2") {}
+>()(
+  "@getpaperplane/server/orchestration-v2/ProviderTurnControlService/ProviderTurnControlServiceV2",
+) {}
 
 export const layer: Layer.Layer<
   ProviderTurnControlServiceV2,

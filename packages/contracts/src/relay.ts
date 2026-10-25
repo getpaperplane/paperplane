@@ -158,7 +158,7 @@ export type RelayAgentActivityAggregateState = typeof RelayAgentActivityAggregat
 export const RelayManagedEndpointProviderKind = Schema.Literals([
   "manual",
   "cloudflare_tunnel",
-  "rove_relay",
+  "paperplane_relay",
 ]);
 export type RelayManagedEndpointProviderKind = typeof RelayManagedEndpointProviderKind.Type;
 
@@ -334,7 +334,7 @@ export const RelayEnvironmentLinkRequest = Schema.Struct({
   notificationsEnabled: Schema.Boolean,
   liveActivitiesEnabled: Schema.Boolean,
   managedTunnelsEnabled: Schema.Boolean,
-}).annotate({ description: "Links an authenticated cloud user to a Rove environment." });
+}).annotate({ description: "Links an authenticated cloud user to a Paperplane environment." });
 export type RelayEnvironmentLinkRequest = typeof RelayEnvironmentLinkRequest.Type;
 
 export const RelayEnvironmentLinkResponse = Schema.Struct({
@@ -643,7 +643,7 @@ export class RelayClientPrincipal extends Context.Service<
     readonly proofKeyThumbprint?: string;
     readonly dpopScopes?: ReadonlyArray<RelayDpopAccessTokenScope>;
   }
->()("@rove-code/contracts/relay/RelayClientPrincipal") {}
+>()("@getpaperplane/contracts/relay/RelayClientPrincipal") {}
 
 export class RelayEnvironmentPrincipal extends Context.Service<
   RelayEnvironmentPrincipal,
@@ -651,12 +651,12 @@ export class RelayEnvironmentPrincipal extends Context.Service<
     readonly environmentId: string;
     readonly environmentPublicKey: string;
   }
->()("@rove-code/contracts/relay/RelayEnvironmentPrincipal") {}
+>()("@getpaperplane/contracts/relay/RelayEnvironmentPrincipal") {}
 
 const RelayClientBearerAuthorization = HttpApiSecurity.http({ scheme: "bearer" }).pipe(
   HttpApiSecurity.annotate(
     OpenApi.Description,
-    "Clerk session or OAuth bearer token for the signed-in Rove Connect user.",
+    "Clerk session or OAuth bearer token for the signed-in Paperplane Connect user.",
   ),
 );
 
@@ -744,10 +744,10 @@ export const RelayDpopTokenExchangeGrantType =
   "urn:ietf:params:oauth:grant-type:token-exchange" as const;
 export const RelayJwtSubjectTokenType = "urn:ietf:params:oauth:token-type:jwt" as const;
 export const RelayAccessTokenType = "urn:ietf:params:oauth:token-type:access_token" as const;
-export const RelayPublicClientId = Schema.Literals(["rove-mobile", "rove-web"]);
+export const RelayPublicClientId = Schema.Literals(["paperplane-mobile", "paperplane-web"]);
 export type RelayPublicClientId = typeof RelayPublicClientId.Type;
-export const RelayMobileClientId = "rove-mobile" as const;
-export const RelayWebClientId = "rove-web" as const;
+export const RelayMobileClientId = "paperplane-mobile" as const;
+export const RelayWebClientId = "paperplane-web" as const;
 
 export const RelayDpopAccessTokenRequest = Schema.Struct({
   grant_type: Schema.Literal(RelayDpopTokenExchangeGrantType),
@@ -826,7 +826,7 @@ export type RelayEnvironmentStatusValue = typeof RelayEnvironmentStatusValue.Typ
 /**
  * Why an environment is offline, when the relay knows more than "the host
  * did not answer". `tunnel_released`: the relay deleted the environment's
- * idle tunnel, and the host needs a current Rove Code build to get a new one.
+ * idle tunnel, and the host needs a current Paperplane build to get a new one.
  */
 const RelayEnvironmentOfflineReason = Schema.Literals(["tunnel_released"]);
 type RelayEnvironmentOfflineReason = typeof RelayEnvironmentOfflineReason.Type;
@@ -875,7 +875,7 @@ export type RelayCloudEnvironmentHealthProofPayload =
 
 /**
  * Sent with every webhook the relay forwards, signed with the relay's mint key
- * (`x-rove-relay-delivery`). The environment trusts the relay's delivery id,
+ * (`x-paperplane-relay-delivery`). The environment trusts the relay's delivery id,
  * receive time and trace context only when this verifies, since its webhook
  * URL can also be called directly.
  */
@@ -1264,10 +1264,10 @@ export const RelayApi = HttpApi.make("RelayApi")
     RelayServerGroup,
     RelayHooksGroup,
   )
-  .annotate(OpenApi.Title, "Rove Code Relay API")
+  .annotate(OpenApi.Title, "Paperplane Relay API")
   .annotate(OpenApi.Version, "1.0.0")
   .annotate(
     OpenApi.Description,
-    "Control-plane API for linking Rove environments, connecting authorized clients, and publishing agent activity.",
+    "Control-plane API for linking Paperplane environments, connecting authorized clients, and publishing agent activity.",
   );
 export type RelayApi = typeof RelayApi;

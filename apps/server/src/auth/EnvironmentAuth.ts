@@ -24,8 +24,8 @@ import {
   type AuthWebSocketTicketResult,
   DpopFailureReason,
   type DpopFailureReason as DpopFailureReasonType,
-} from "@rove-code/contracts";
-import { encodeOAuthScope } from "@rove-code/shared/oauthScope";
+} from "@getpaperplane/contracts";
+import { encodeOAuthScope } from "@getpaperplane/shared/oauthScope";
 import * as Context from "effect/Context";
 import * as Crypto from "effect/Crypto";
 import * as DateTime from "effect/DateTime";
@@ -34,7 +34,11 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
-import { legacyRoveCookieName } from "@rove-code/shared/roveMigration";
+import {
+  previousPaperplaneCookieNames,
+  handoffPaperplaneCookie,
+  PaperplaneCookieMigrationError,
+} from "@getpaperplane/shared/homeMigration";
 import * as HttpServerRequest from "effect/http/HttpServerRequest";
 
 import * as ServerEnvironment from "../environment/ServerEnvironment.ts";
@@ -72,7 +76,7 @@ export interface IssuedBearerSession {
 }
 
 /**
- * Sessions an MCP client (an agent Rove Code did not launch) obtains through
+ * Sessions an MCP client (an agent Paperplane did not launch) obtains through
  * OAuth. They are accepted only by `/mcp`, where every action is capped by the
  * access the user approved; the HTTP API and WebSocket reject them so an agent
  * token cannot reach the full RPC surface around that cap.
@@ -356,6 +360,7 @@ export class ServerAuthCloudMintJwtSigningError extends Schema.TaggedError<Serve
 }
 
 export const ServerAuthInternalError = Schema.Union([
+  PaperplaneCookieMigrationError,
   ServerAuthBootstrapCredentialValidationError,
   ServerAuthSessionCredentialValidationError,
   ServerAuthAuthenticatedSessionIssueError,
@@ -574,7 +579,7 @@ export class EnvironmentAuth extends Context.Service<
     /**
      * Spends a one-time pairing code as approval for an MCP client with the
      * given access; the code must hold every scope that access grants.
-     * Proof-bound codes (Rove Connect) are refused without being spent, and
+     * Proof-bound codes (Paperplane Connect) are refused without being spent, and
      * desktop bootstrap grants never qualify.
      */
     readonly consumeMcpApprovalCode: (
@@ -586,7 +591,7 @@ export class EnvironmentAuth extends Context.Service<
       request: HttpServerRequest.HttpServerRequest,
     ) => Effect.Effect<AuthenticatedSession, ServerAuthCredentialError | ServerAuthInternalError>;
   }
->()("@rove-code/server/auth/EnvironmentAuth") {}
+>()("@getpaperplane/server/auth/EnvironmentAuth") {}
 
 type BootstrapExchangeResult = {
   readonly response: AuthBrowserSessionResult;
@@ -665,6 +670,7 @@ export function selectRequestCredential(
   request: HttpServerRequest.HttpServerRequest,
   cookieName: string,
   legacyCookieName: string | undefined,
+  instanceKey?: string,
 ) {
   const cookieToken = request.cookies[cookieName];
   if (cookieToken !== undefined) {
@@ -681,12 +687,7 @@ export function selectRequestCredential(
     return { token: dpopToken, source: "dpop" } as const;
   }
 
-  const previousScopedName = legacyRoveCookieName(cookieName);
-  const legacyNames = [
-    previousScopedName,
-    legacyCookieName,
-    legacyCookieName ? legacyRoveCookieName(legacyCookieName) : undefined,
-  ];
+  const legacyNames = previousPaperplaneCookieNames(cookieName, legacyCookieName, instanceKey);
   for (const name of legacyNames) {
     const legacyToken = name === undefined ? undefined : request.cookies[name];
     if (legacyToken !== undefined) return { token: legacyToken, source: "legacy-cookie" } as const;
@@ -780,9 +781,12 @@ export const make = Effect.gen(function* () {
       request,
       sessions.cookieName,
       sessions.legacyCookieName,
+      config.stateDir,
     );
     const hasAuthorization = request.headers.authorization !== undefined;
-    const previousDevCookieName = devAuth ? legacyRoveCookieName(devAuth.cookieName) : undefined;
+    const previousDevCookieName = devAuth
+      ? previousPaperplaneCookieNames(devAuth.cookieName)[0]
+      : undefined;
     const devCookieToken = devAuth
       ? (request.cookies[devAuth.cookieName] ??
         (previousDevCookieName ? request.cookies[previousDevCookieName] : undefined))
@@ -852,6 +856,24 @@ export const make = Effect.gen(function* () {
           );
         }
         return Effect.succeed(session);
+      }),
+      Effect.tap((session) => {
+        const cookieName =
+          credential.source === "dev-cookie" ? devAuth?.cookieName : sessions.cookieName;
+        if (
+          !isBrowserCookieCredential(credential.source) ||
+          cookieName === undefined ||
+          !session.expiresAt
+        )
+          return Effect.void;
+        return handoffPaperplaneCookie({
+          request,
+          cookieName,
+          instanceKey: config.stateDir,
+          unscopedName: credential.source === "dev-cookie" ? undefined : sessions.legacyCookieName,
+          token: credential.token,
+          expiresAt: session.expiresAt,
+        });
       }),
     );
   };
@@ -1342,7 +1364,7 @@ export const make = Effect.gen(function* () {
     code,
     access,
   ) =>
-    // No proof key: a code bound to a Rove Connect client's key fails without being spent.
+    // No proof key: a code bound to a Paperplane Connect client's key fails without being spent.
     resolveBootstrapGrant(code.trim()).pipe(
       Effect.catchTags({
         ServerAuthInvalidCredentialError: () =>

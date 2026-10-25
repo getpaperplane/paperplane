@@ -8,8 +8,7 @@ import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
 import * as Predicate from "effect/Predicate";
 import * as Schema from "effect/Schema";
-import { decodeMigratedRoveJson } from "@rove-code/shared/roveMigration";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 
 export class BootstrapFdStatError extends Schema.TaggedError<BootstrapFdStatError>()(
   "BootstrapFdStatError",
@@ -118,7 +117,7 @@ export const readBootstrapEnvelope = Effect.fn("readBootstrapEnvelope")(function
 
     const handleLine = (line: string) => {
       resume(
-        decodeMigratedRoveJson(schema)(line).pipe(
+        Schema.decodeUnknownEffect(Schema.fromJsonString(schema))(line).pipe(
           Effect.map(Option.some),
           Effect.mapError((cause) => new BootstrapEnvelopeDecodeError({ fd, cause })),
         ),

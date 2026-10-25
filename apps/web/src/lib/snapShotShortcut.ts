@@ -5,8 +5,8 @@ import {
   type KeybindingShortcut,
   type SnapShotModifier,
   type SnapShotShortcut,
-} from "@rove-code/contracts";
-import { parseKeybindingShortcut } from "@rove-code/shared/keybindings";
+} from "@getpaperplane/contracts";
+import { parseKeybindingShortcut } from "@getpaperplane/shared/keybindings";
 
 import { formatShortcutKeyLabel, formatShortcutLabel, shortcutConflictKey } from "../keybindings";
 import { isMacPlatform, isWindowsPlatform } from "./utils";

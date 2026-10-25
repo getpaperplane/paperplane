@@ -11,13 +11,13 @@ const mobileRoot = NodePath.resolve(NodePath.dirname(NodeURL.fileURLToPath(impor
  * after the socket connects, so setting it when the probe settles is equivalent.
  */
 const noVncTopLevelAwait = {
-  name: "rove-novnc-top-level-await",
+  name: "paperplane-novnc-top-level-await",
   enforce: "pre" as const,
   transform(code: string, id: string) {
     if (!/@novnc[\\/]novnc[\\/]core[\\/]util[\\/]browser\.js$/.test(id)) return null;
     const probe = "supportsWebCodecsH264Decode = await _checkWebCodecsH264DecodeSupport();";
     if (!code.includes(probe)) {
-      throw new Error("noVNC changed its H.264 probe; update rove-novnc-top-level-await.");
+      throw new Error("noVNC changed its H.264 probe; update paperplane-novnc-top-level-await.");
     }
     return code.replace(
       probe,
@@ -39,7 +39,7 @@ async function generateWebViewScript(feature: string, name: string) {
       minify: true,
       lib: {
         entry: NodePath.join(mobileRoot, "src/features", feature, `${stem}.browser.ts`),
-        name: `Rove${name}Stream`,
+        name: `Paperplane${name}Stream`,
         formats: ["iife"],
       },
     },

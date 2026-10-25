@@ -1,4 +1,4 @@
-import { OrchestrationDispatchCommandError } from "@rove-code/contracts";
+import { OrchestrationDispatchCommandError } from "@getpaperplane/contracts";
 import * as Schema from "effect/Schema";
 
 const isOrchestrationDispatchCommandError = Schema.is(OrchestrationDispatchCommandError);

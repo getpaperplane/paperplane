@@ -34,7 +34,7 @@ export class ConnectionWakeups extends Context.Service<
   {
     readonly changes: Stream.Stream<ConnectionWakeup>;
   }
->()("@rove-code/client-runtime/connection/wakeups/ConnectionWakeups") {}
+>()("@getpaperplane/client-runtime/connection/wakeups/ConnectionWakeups") {}
 
 const make = (service: ConnectionWakeups["Service"]) => ConnectionWakeups.of(service);
 

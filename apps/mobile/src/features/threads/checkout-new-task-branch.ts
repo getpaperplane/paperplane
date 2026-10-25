@@ -1,10 +1,10 @@
-import type { EnvironmentProject } from "@rove-code/client-runtime/state/shell";
-import type { VcsRef } from "@rove-code/client-runtime/state/vcs";
+import type { EnvironmentProject } from "@getpaperplane/client-runtime/state/shell";
+import type { VcsRef } from "@getpaperplane/client-runtime/state/vcs";
 import {
   type AtomCommandResult,
   mapAtomCommandResult,
-} from "@rove-code/client-runtime/state/runtime";
-import type { VcsSwitchRefInput, VcsSwitchRefResult } from "@rove-code/contracts";
+} from "@getpaperplane/client-runtime/state/runtime";
+import type { VcsSwitchRefInput, VcsSwitchRefResult } from "@getpaperplane/contracts";
 import * as Cause from "effect/Cause";
 import { AsyncResult } from "effect/reactivity";
 

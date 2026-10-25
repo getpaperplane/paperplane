@@ -1,4 +1,4 @@
-import { resolveFilesystemReadAccess } from "@rove-code/client-runtime/state/filesystem";
+import { resolveFilesystemReadAccess } from "@getpaperplane/client-runtime/state/filesystem";
 import { environmentSession } from "../../state/session";
 import { NativeStackScreenOptions } from "../../native/StackHeader";
 import { StackActions, useNavigation, type StaticScreenProps } from "@react-navigation/native";
@@ -6,14 +6,14 @@ import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react"
 import { Platform, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
-import { EnvironmentId, type ProjectReadFileResult, ThreadId } from "@rove-code/contracts";
-import { videoMimeType } from "@rove-code/shared/video";
+import { EnvironmentId, type ProjectReadFileResult, ThreadId } from "@getpaperplane/contracts";
+import { videoMimeType } from "@getpaperplane/shared/video";
 import {
   isWorkspaceBrowserPreviewPath,
   isWorkspaceImagePreviewPath,
   mediaMimeTypeFromExtension,
-} from "@rove-code/shared/filePreview";
-import { mediaFileReference } from "@rove-code/client-runtime/media-reference";
+} from "@getpaperplane/shared/filePreview";
+import { mediaFileReference } from "@getpaperplane/client-runtime/media-reference";
 
 import { ScreenContent } from "../../components/ui/ScreenContent";
 import { AudioFilePreview } from "./AudioFilePreview";

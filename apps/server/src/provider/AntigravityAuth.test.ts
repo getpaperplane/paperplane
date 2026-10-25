@@ -4,7 +4,7 @@ import {
   ProviderInstanceId,
   ProviderSetupError,
   type ProviderAuthState,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
@@ -21,11 +21,11 @@ import {
   type AntigravityAuth,
   type AntigravityAuthRuntime,
 } from "./AntigravityAuth.ts";
-import type * as AcpSessionRuntime from "@rove-code/provider-acp/server/AcpSessionRuntime";
+import type * as AcpSessionRuntime from "@getpaperplane/provider-acp/server/AcpSessionRuntime";
 
 const instanceId = ProviderInstanceId.make("antigravity-auth-test");
-const owner = "rove-auth-session-owner";
-const otherOwner = "rove-auth-session-other";
+const owner = "paperplane-auth-session-owner";
+const otherOwner = "paperplane-auth-session-other";
 const authorizationUrl =
   "https://accounts.google.com/o/oauth2/v2/auth?response_type=code&redirect_uri=http%3A%2F%2F127.0.0.1%3A51234%2F&state=test-state";
 const callbackUrl = "http://127.0.0.1:51234/?state=test-state&code=test-code";

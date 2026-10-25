@@ -23,7 +23,7 @@ import {
   connectionRouteLabel,
   connectionRoutes,
   isLearned,
-} from "@rove-code/client-runtime/connection";
+} from "@getpaperplane/client-runtime/connection";
 import { GripVerticalIcon, PlusIcon, XIcon } from "lucide-react";
 import { useState } from "react";
 

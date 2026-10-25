@@ -1,5 +1,5 @@
-import type { EnvironmentProject } from "@rove-code/client-runtime/state/shell";
-import { repositoryGroupingKeyOf, type EnvironmentId } from "@rove-code/contracts";
+import type { EnvironmentProject } from "@getpaperplane/client-runtime/state/shell";
+import { repositoryGroupingKeyOf, type EnvironmentId } from "@getpaperplane/contracts";
 
 import { scopedProjectKey } from "../../lib/scopedEntities";
 import type { HomeProjectScope } from "../home/homeThreadList";

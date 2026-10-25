@@ -3,8 +3,8 @@ import {
   AuthRelayWriteScope,
   EnvironmentId,
   type EnvironmentCloudLinkStateResult,
-} from "@rove-code/contracts";
-import type { RelayManagedEndpointProviderKind } from "@rove-code/contracts/relay";
+} from "@getpaperplane/contracts";
+import type { RelayManagedEndpointProviderKind } from "@getpaperplane/contracts/relay";
 import { AsyncResult } from "effect/reactivity";
 import { act, useLayoutEffect } from "react";
 import { create, type ReactTestRenderer } from "react-test-renderer";

@@ -1,10 +1,10 @@
-import { AuthDiagnosticsReadScope } from "@rove-code/contracts";
-import { AuthEnvironmentMaintainScope } from "@rove-code/contracts";
+import { AuthDiagnosticsReadScope } from "@getpaperplane/contracts";
+import { AuthEnvironmentMaintainScope } from "@getpaperplane/contracts";
 import type {
   EnvironmentId,
   ResourceTelemetryHistoryInput,
   ResourceTelemetrySnapshot,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Cause from "effect/Cause";
 import { useCallback } from "react";
 

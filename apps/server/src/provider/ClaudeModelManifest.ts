@@ -1,5 +1,5 @@
-import { TrimmedNonEmptyString } from "@rove-code/contracts";
-import { compareSemverVersions, parseSemver } from "@rove-code/shared/semver";
+import { TrimmedNonEmptyString } from "@getpaperplane/contracts";
+import { compareSemverVersions, parseSemver } from "@getpaperplane/shared/semver";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 

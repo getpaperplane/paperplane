@@ -1,18 +1,18 @@
 import { Debouncer } from "@tanstack/react-pacer";
-import type { PullRequestMergeMethod } from "@rove-code/contracts";
+import type { PullRequestMergeMethod } from "@getpaperplane/contracts";
 import { create } from "zustand";
 import { normalizeProjectPathForComparison } from "./lib/projectPaths";
 
-export const PERSISTED_STATE_KEY = "rove:ui-state:v1";
+export const PERSISTED_STATE_KEY = "paperplane:ui-state:v1";
 // Version 1 stored card visibility, not folder expansion.
 const THREAD_CHANGED_FILES_EXPANSION_VERSION = 2;
 const LEGACY_PERSISTED_STATE_KEYS = [
-  "rove:renderer-state:v8",
-  "rove:renderer-state:v7",
-  "rove:renderer-state:v6",
-  "rove:renderer-state:v5",
-  "rove:renderer-state:v4",
-  "rove:renderer-state:v3",
+  "paperplane:renderer-state:v8",
+  "paperplane:renderer-state:v7",
+  "paperplane:renderer-state:v6",
+  "paperplane:renderer-state:v5",
+  "paperplane:renderer-state:v4",
+  "paperplane:renderer-state:v3",
   "codething:renderer-state:v4",
   "codething:renderer-state:v3",
   "codething:renderer-state:v2",

@@ -4,11 +4,11 @@ import {
   type ProviderDriverKind,
   type ServerProvider,
   type ServerProviderCompatibilityAdvisory,
-} from "@rove-code/contracts";
-import { satisfiesSemverRange } from "@rove-code/shared/semver";
+} from "@getpaperplane/contracts";
+import { satisfiesSemverRange } from "@getpaperplane/shared/semver";
 import * as Schema from "effect/Schema";
 
-// Manifest gates describe upstream adapter generations, not Rove's independent
+// Manifest gates describe upstream adapter generations, not Paperplane's independent
 // release numbering. This V2 port implements the 0.0.46 adapter generation;
 // keep reported server/release versions honest and advance this with future ports.
 export const PROVIDER_COMPATIBILITY_BASELINE = "0.0.46";
@@ -30,7 +30,7 @@ const VersionRange = TrimmedNonEmptyString.pipe(
 );
 const Policy = Schema.Struct({
   driver: TrimmedNonEmptyString,
-  roveCodeRange: VersionRange,
+  paperplaneCodeRange: VersionRange,
   recommendedRange: Schema.optionalKey(VersionRange),
   recommendedVersion: Schema.optionalKey(StableVersion),
   ranges: Schema.Array(
@@ -68,7 +68,8 @@ export function resolveProviderCompatibility(
 ): ServerProviderCompatibilityAdvisory | undefined {
   const policy = policies?.find(
     (entry) =>
-      entry.driver === driver && satisfiesSemverRange(compatibilityVersion, entry.roveCodeRange),
+      entry.driver === driver &&
+      satisfiesSemverRange(compatibilityVersion, entry.paperplaneCodeRange),
   );
   if (!policy) return undefined;
   const unprefixed = version?.replace(/^v/, "");
@@ -90,11 +91,11 @@ export function resolveProviderCompatibility(
       : "unknown";
   const message =
     status === "broken"
-      ? "This provider version is known to be incompatible with this Rove Code release."
+      ? "This provider version is known to be incompatible with this Paperplane release."
       : status === "unsupported"
-        ? "This provider version is outside the supported range for this Rove Code release."
+        ? "This provider version is outside the supported range for this Paperplane release."
         : status === "graceful"
-          ? "This provider version has limited compatibility with this Rove Code release."
+          ? "This provider version has limited compatibility with this Paperplane release."
           : null;
   const recommendedVersion = policy.recommendedVersion ?? null;
   const recommendedRange = policy.recommendedRange ?? null;

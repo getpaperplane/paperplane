@@ -1,11 +1,11 @@
 import * as Schema from "effect/Schema";
 
 /**
- * Accounts that opted out of the post-sign-in Rove Connect onboarding wizard
+ * Accounts that opted out of the post-sign-in Paperplane Connect onboarding wizard
  * ("Don't show this again"). The wizard otherwise shows on every sign-in,
  * since sign-out clears the connected environments.
  */
-export const CONNECT_ONBOARDING_OPT_OUT_STORAGE_KEY = "rove:connect-onboarding-opt-out:v1";
+export const CONNECT_ONBOARDING_OPT_OUT_STORAGE_KEY = "paperplane:connect-onboarding-opt-out:v1";
 
 export const ConnectOnboardingOptOutSchema = Schema.Struct({
   optOutAccounts: Schema.Array(Schema.String),

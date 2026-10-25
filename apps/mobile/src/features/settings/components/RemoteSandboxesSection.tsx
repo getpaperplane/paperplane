@@ -5,11 +5,11 @@ import {
   type RemoteSandbox,
   type SandboxInventory,
   type SandboxProvider,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   squashAtomCommandFailure,
   type AtomCommandResult,
-} from "@rove-code/client-runtime/state/runtime";
+} from "@getpaperplane/client-runtime/state/runtime";
 import { useEffect, useRef, useState } from "react";
 import { Alert, TextInput, View } from "react-native";
 import { AppText as Text } from "../../../components/ui/AppText";
@@ -271,7 +271,7 @@ export function RemoteSandboxesSection({
               confirm(
                 kind === "pause" ? "Pause sandbox?" : "Start billed compute?",
                 kind === "pause"
-                  ? "This stops Rove and interrupts agents, builds, and terminals. Files and persisted conversations are retained."
+                  ? "This stops Paperplane and interrupts agents, builds, and terminals. Files and persisted conversations are retained."
                   : "Resuming starts compute billing on your account.",
                 async () => {
                   value(

@@ -4,13 +4,17 @@ import * as NodeOS from "node:os";
 import * as NodePath from "node:path";
 
 import { assert, it } from "@effect/vitest";
-import { PiSettings, type PiThinkingLevel, type ServerProviderModel } from "@rove-code/contracts";
+import {
+  PiSettings,
+  type PiThinkingLevel,
+  type ServerProviderModel,
+} from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 import {
   getProviderOptionDescriptors,
   buildProviderOptionSelectionsFromDescriptors,
-} from "@rove-code/shared/model";
+} from "@getpaperplane/shared/model";
 import { checkPiProviderStatus } from "./PiProvider.ts";
 import { afterEach, beforeEach, describe, vi } from "vite-plus/test";
 
@@ -27,7 +31,7 @@ describe("Pi catalog host", () => {
 
   beforeEach(() => {
     root = NodeFS.realpathSync(
-      NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "rove-pi-catalog-")),
+      NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "paperplane-pi-catalog-")),
     );
     agentDir = NodePath.join(root, "agent");
     NodeFS.mkdirSync(agentDir, { recursive: true });
@@ -53,9 +57,11 @@ describe("Pi catalog host", () => {
   it("lists extension models for the provider snapshot", async () => {
     const host = await create({ additionalExtensionPaths: [fixturePath] });
     const catalogModels = await host.getCatalogModels();
-    const fixture = catalogModels.find((model) => model.slug === "rove-extension-test/fixture");
+    const fixture = catalogModels.find(
+      (model) => model.slug === "paperplane-extension-test/fixture",
+    );
     assert.isDefined(fixture);
-    assert.strictEqual(fixture?.subProvider, "rove-extension-test");
+    assert.strictEqual(fixture?.subProvider, "paperplane-extension-test");
     const thinking = fixture?.capabilities?.optionDescriptors?.find(
       (candidate) => candidate.id === "thinkingLevel",
     );
@@ -267,7 +273,9 @@ describe("Pi catalog host", () => {
     const broken = catalog.extensions.find((ext) => ext.path === brokenPath);
     assert.isDefined(broken);
     assert.deepStrictEqual(broken?.tools, []);
-    assert.isTrue(catalog.modelProviders.some((provider) => provider.id === "rove-extension-test"));
+    assert.isTrue(
+      catalog.modelProviders.some((provider) => provider.id === "paperplane-extension-test"),
+    );
     assert.isTrue(catalog.warnings.some((warning) => warning.includes("catalog load failed")));
   });
 
@@ -285,7 +293,7 @@ describe("Pi catalog host", () => {
       second.reportUnsupportedUI();
       const active = await host.getCatalog();
       assert.deepEqual(active.compatibilityWarnings, [
-        "A Pi extension in an active thread requested terminal-only controls. These controls do not work in Rove. Use Pi's terminal UI to access them.",
+        "A Pi extension in an active thread requested terminal-only controls. These controls do not work in Paperplane. Use Pi's terminal UI to access them.",
       ]);
       assert.deepEqual(active.warnings, []);
       assert.strictEqual(changes, 1);
@@ -323,7 +331,7 @@ describe("Pi catalog host", () => {
         {
           cwd: project,
           interactive: true,
-          model: "rove-extension-test/fixture",
+          model: "paperplane-extension-test/fixture",
           thinkingLevel: undefined,
           resumeSessionId: undefined,
         },
@@ -331,7 +339,7 @@ describe("Pi catalog host", () => {
       );
       const threadWarnings: unknown[] = [];
       session.subscribe((event) => {
-        if (event.type === "rove_ui_notify" && event.level === "warning") {
+        if (event.type === "paperplane_ui_notify" && event.level === "warning") {
           threadWarnings.push(event);
         }
       });
@@ -400,10 +408,10 @@ describe("Pi catalog host", () => {
     NodeFS.copyFileSync(new URL("./fixtures/pi-virtual-models.ts", import.meta.url), routerPath);
     const host = await create({ additionalExtensionPaths: [fixturePath, routerPath] });
     const routerSlugs = [
-      "rove-router-test/auto",
-      "rove-router-test/late",
-      "rove-extension-test/auto",
-      "rove-extension-test/late",
+      "paperplane-router-test/auto",
+      "paperplane-router-test/late",
+      "paperplane-extension-test/auto",
+      "paperplane-extension-test/late",
     ];
     assert.deepEqual(
       (await host.getCatalogModels())
@@ -416,7 +424,9 @@ describe("Pi catalog host", () => {
     await host.setDisabledExtensions([routerPath]);
     const disabledModels = await host.getCatalogModels();
     assert.isFalse(disabledModels.some((model) => routerSlugs.includes(model.slug)));
-    assert.isTrue(disabledModels.some((model) => model.slug === "rove-extension-test/fixture"));
+    assert.isTrue(
+      disabledModels.some((model) => model.slug === "paperplane-extension-test/fixture"),
+    );
 
     await host.setDisabledExtensions([]);
     await host.refreshCatalog();
@@ -428,7 +438,9 @@ describe("Pi catalog host", () => {
         .sort(),
       [...routerSlugs].sort(),
     );
-    assert.isTrue(enabledModels.some((model) => model.slug === "rove-extension-test/fixture"));
+    assert.isTrue(
+      enabledModels.some((model) => model.slug === "paperplane-extension-test/fixture"),
+    );
   });
 
   it("filters disabled extensions before factory execution and excludes their models from the catalog", async () => {

@@ -2,7 +2,7 @@ import {
   type OrchestrationV2LimitRecovery,
   type OrchestrationV2LimitRecoveryUpdate,
   type RunId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { GaugeIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "../ui/button";

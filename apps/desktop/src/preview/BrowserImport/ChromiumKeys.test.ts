@@ -1,5 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -49,7 +49,7 @@ const layerHelper = (input: {
   readonly capture?: (command: CapturedCommand) => void;
 }) =>
   Layer.merge(
-    Layer.succeed(LinuxBrowserSecretPath, "/bundled/browser-secret/rove-browser-secret"),
+    Layer.succeed(LinuxBrowserSecretPath, "/bundled/browser-secret/paperplane-browser-secret"),
     Layer.succeed(
       ChildProcessSpawner.ChildProcessSpawner,
       ChildProcessSpawner.make((command) =>
@@ -164,7 +164,7 @@ describe("Linux Chromium secrets", () => {
         linuxSecretApplication: "msedge",
       });
 
-      expect(captured?.command).toBe("/bundled/browser-secret/rove-browser-secret");
+      expect(captured?.command).toBe("/bundled/browser-secret/paperplane-browser-secret");
       expect(captured?.args).toEqual(["msedge"]);
       expect(captured?.options.stdin).toBe("ignore");
       expect(keys.cbcV10).toHaveLength(16);
@@ -172,6 +172,24 @@ describe("Linux Chromium secrets", () => {
     }).pipe(
       Effect.provide(
         layerHelper({ stdout: "linux-secret", capture: (value) => (captured = value) }),
+      ),
+    );
+  });
+
+  it.effect("requests a strictly non-unlocking lookup for desktop migration", () => {
+    let captured: CapturedCommand | undefined;
+    return Effect.gen(function* () {
+      const error = yield* readLinuxSecret("Rove Code Beta", { noUnlock: true }).pipe(Effect.flip);
+      expect(captured?.args).toEqual(["--no-unlock", "Rove Code Beta"]);
+      expect(error.reason).toBe("needsKeychainApproval");
+    }).pipe(
+      Effect.provide(
+        layerHelper({
+          exitCode: 3,
+          capture: (value) => {
+            captured = value;
+          },
+        }),
       ),
     );
   });

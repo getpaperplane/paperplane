@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vite-plus/test";
-import { LEGACY_THEME_IDS, migrateRoveThemeId } from "./roveMigration.ts";
 import {
   BUILT_IN_THEME_IDS,
   BUILT_IN_THEMES,
@@ -11,14 +10,13 @@ import {
 } from "./themePalettes.ts";
 
 describe("built-in theme identity", () => {
-  it("resolves saved Plum preferences and historical aliases to the same palette", () => {
-    const palette = BUILT_IN_THEMES.find((theme) => theme.id === migrateRoveThemeId("t3-chat"));
+  it("resolves saved Plum preferences to the same palette", () => {
+    const palette = BUILT_IN_THEMES.find((theme) => theme.id === "plum");
     expect(palette).toBe(PLUM_THEME);
     expect(palette?.label).toBe("Plum");
     expect(BUILT_IN_THEME_IDS).toContain("plum");
     expect(MOBILE_THEME_IDS).toContain("plum");
     expect(RESERVED_THEME_IDS.has("plum-dark")).toBe(true);
-    for (const id of LEGACY_THEME_IDS) expect(RESERVED_THEME_IDS.has(id)).toBe(true);
   });
 
   it.each(BUILT_IN_THEMES)(

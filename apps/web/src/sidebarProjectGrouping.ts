@@ -1,10 +1,10 @@
-import type { EnvironmentId, ScopedProjectRef } from "@rove-code/contracts";
+import type { EnvironmentId, ScopedProjectRef } from "@getpaperplane/contracts";
 import {
   buildProjectGroups,
   derivePhysicalProjectKey,
   type ProjectGroupingSettings,
 } from "./logicalProject";
-import { resolveScratchProjectScopeKey } from "@rove-code/client-runtime/state/project-grouping";
+import { resolveScratchProjectScopeKey } from "@getpaperplane/client-runtime/state/project-grouping";
 import type { Project } from "./types";
 
 export type EnvironmentPresence = "local-only" | "remote-only" | "mixed";

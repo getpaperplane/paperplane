@@ -1,10 +1,10 @@
-import type { ProviderOptionChoice, ProviderOptionDescriptor } from "@rove-code/contracts";
+import type { ProviderOptionChoice, ProviderOptionDescriptor } from "@getpaperplane/contracts";
 import type * as EffectAcpSchema from "effect-acp/compat";
 
 import type { AcpSessionModeState } from "./runtimeModel.ts";
 
 /**
- * Maps ACP session configuration and session modes onto Rove's provider option
+ * Maps ACP session configuration and session modes onto Paperplane's provider option
  * descriptors so the existing model-options UI can drive them.
  *
  * Model selection stays on the dedicated model picker: `category: "model"`
@@ -19,7 +19,7 @@ export const ACP_SESSION_MODE_OPTION_ID = "_t3/session-mode";
 
 /**
  * Choice ID for a select value that is exactly `""`. Agents use it for a real
- * choice (GitHub Copilot's default agent), but Rove option IDs must be
+ * choice (GitHub Copilot's default agent), but Paperplane option IDs must be
  * non-empty. The ACP adapter maps it back to `""` before applying a selection.
  */
 export const ACP_EMPTY_OPTION_VALUE = "_t3/empty";
@@ -79,7 +79,7 @@ export function acpProviderOptionDescriptors(input: {
 
   for (const option of input.configOptions ?? []) {
     // "model" options surface as the model list; "collaboration_mode" options
-    // are driven by Rove's own plan/build interaction mode in the ACP adapter.
+    // are driven by Paperplane's own plan/build interaction mode in the ACP adapter.
     if (option.category === "model" || option.category === "collaboration_mode") {
       continue;
     }

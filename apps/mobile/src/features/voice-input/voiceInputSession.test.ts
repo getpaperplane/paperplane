@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
-import type { PreparedVoiceTranscription } from "@rove-code/client-runtime/voice-input";
+import type { PreparedVoiceTranscription } from "@getpaperplane/client-runtime/voice-input";
 import { Atom, AtomRegistry } from "effect/reactivity";
 import { resetVoiceInputGlobalsForTests } from "../../../../../packages/client-runtime/src/voice-input/controller";
 

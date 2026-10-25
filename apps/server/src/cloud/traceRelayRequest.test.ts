@@ -3,7 +3,7 @@ import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
 import * as Tracer from "effect/Tracer";
 import { HttpServerRequest } from "effect/http";
-import { RelayClientTracer } from "@rove-code/shared/relayTracing";
+import { RelayClientTracer } from "@getpaperplane/shared/relayTracing";
 
 import {
   traceAuthenticatedRelayRequest,
@@ -25,7 +25,7 @@ describe("relay request tracing", () => {
         },
       });
       const request = HttpServerRequest.fromWeb(
-        new Request("https://environment.example.test/api/rove-cloud/mint-credential", {
+        new Request("https://environment.example.test/api/paperplane-cloud/mint-credential", {
           headers: {
             traceparent: "00-0123456789abcdef0123456789abcdef-0123456789abcdef-01",
           },
@@ -55,7 +55,7 @@ describe("relay request tracing", () => {
         },
       });
       const request = HttpServerRequest.fromWeb(
-        new Request("https://environment.example.test/api/rove-cloud/mint-credential", {
+        new Request("https://environment.example.test/api/paperplane-cloud/mint-credential", {
           headers: {
             traceparent: "00-0123456789abcdef0123456789abcdef-0123456789abcdef-01",
           },
@@ -85,7 +85,7 @@ describe("relay request tracing", () => {
 });
 
 describe("relay request tracing boundary", () => {
-  it.effect("exports a Rove Connect handler span but not its local work", () =>
+  it.effect("exports a Paperplane Connect handler span but not its local work", () =>
     Effect.gen(function* () {
       const productSpans: Array<string> = [];
       const localSpans: Array<string> = [];

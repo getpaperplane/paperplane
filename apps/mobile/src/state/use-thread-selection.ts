@@ -8,15 +8,15 @@ import {
   type OrchestrationV2ThreadShell,
   type ScopedProjectRef,
   type ScopedThreadRef,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   presentThreadShell,
   type EnvironmentThreadShell,
-} from "@rove-code/client-runtime/state/shell";
+} from "@getpaperplane/client-runtime/state/shell";
 import {
   deriveLatestThreadRun,
   deriveThreadRuntime,
-} from "@rove-code/client-runtime/state/thread-execution";
+} from "@getpaperplane/client-runtime/state/thread-execution";
 import * as Option from "effect/Option";
 
 import { scopedThreadKey } from "../lib/scopedEntities";

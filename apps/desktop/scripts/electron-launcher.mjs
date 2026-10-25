@@ -1,4 +1,4 @@
-// This file mostly exists because we want dev mode to say "Rove Code (Dev)" instead of "electron"
+// This file mostly exists because we want dev mode to say "Paperplane (Dev)" instead of "electron"
 
 import * as NodeChildProcess from "node:child_process";
 import * as NodeFS from "node:fs";
@@ -16,11 +16,12 @@ const repoRoot = NodePath.resolve(desktopDir, "..", "..");
 const devBundleIdSuffix = NodePath.basename(repoRoot)
   .toLowerCase()
   .replaceAll(/[^a-z0-9]+/g, "");
-const APP_DISPLAY_NAME = isDevelopment ? "Rove Code (Dev)" : "Rove Code (Beta)";
+// Keep the bundle name stable until the Electron keychain identity is migrated.
+const APP_DISPLAY_NAME = isDevelopment ? "Paperplane (Dev)" : "Paperplane (Beta)";
 const APP_BUNDLE_ID = isDevelopment
-  ? `io.github.hafiezul.rove.dev.${devBundleIdSuffix || "local"}`
-  : "io.github.hafiezul.rove";
-const APP_PROTOCOL_SCHEMES = isDevelopment ? ["rove-dev"] : ["rove"];
+  ? `io.github.getpaperplane.paperplane.dev.${devBundleIdSuffix || "local"}`
+  : "io.github.getpaperplane.paperplane";
+const APP_PROTOCOL_SCHEMES = isDevelopment ? ["paperplane-dev"] : ["paperplane"];
 const LAUNCHER_VERSION = 20;
 const developmentMacIconPngPath = NodePath.join(
   repoRoot,
@@ -29,7 +30,7 @@ const developmentMacIconPngPath = NodePath.join(
   "blueprint-macos-1024.png",
 );
 const productionMacIconPngPath = NodePath.join(repoRoot, "assets", "prod", "black-macos-1024.png");
-// oxlint-disable-next-line rove/no-global-process-runtime -- Standalone launcher script has no Effect runtime.
+// oxlint-disable-next-line paperplane/no-global-process-runtime -- Standalone launcher script has no Effect runtime.
 const hostPlatform = NodeOS.platform();
 
 function setPlistString(plistPath, key, value) {
@@ -112,14 +113,14 @@ function shellSingleQuote(value) {
 export function makeDevelopmentEnvironmentScript(environment) {
   const envEntries = [
     ["VITE_DEV_SERVER_URL", environment.VITE_DEV_SERVER_URL],
-    ["ROVE_PORT", environment.ROVE_PORT],
-    ["ROVE_HOME", environment.ROVE_HOME],
-    ["ROVE_COMMIT_HASH", environment.ROVE_COMMIT_HASH],
-    ["ROVE_OTLP_TRACES_URL", environment.ROVE_OTLP_TRACES_URL],
-    ["ROVE_OTLP_EXPORT_INTERVAL_MS", environment.ROVE_OTLP_EXPORT_INTERVAL_MS],
-    ["ROVE_OTLP_HEADERS", environment.ROVE_OTLP_HEADERS],
-    ["ROVE_OTLP_PROTOCOL", environment.ROVE_OTLP_PROTOCOL],
-    ["ROVE_DESKTOP_APP_USER_MODEL_ID", APP_BUNDLE_ID],
+    ["PAPERPLANE_PORT", environment.PAPERPLANE_PORT],
+    ["PAPERPLANE_HOME", environment.PAPERPLANE_HOME],
+    ["PAPERPLANE_COMMIT_HASH", environment.PAPERPLANE_COMMIT_HASH],
+    ["PAPERPLANE_OTLP_TRACES_URL", environment.PAPERPLANE_OTLP_TRACES_URL],
+    ["PAPERPLANE_OTLP_EXPORT_INTERVAL_MS", environment.PAPERPLANE_OTLP_EXPORT_INTERVAL_MS],
+    ["PAPERPLANE_OTLP_HEADERS", environment.PAPERPLANE_OTLP_HEADERS],
+    ["PAPERPLANE_OTLP_PROTOCOL", environment.PAPERPLANE_OTLP_PROTOCOL],
+    ["PAPERPLANE_DESKTOP_APP_USER_MODEL_ID", APP_BUNDLE_ID],
   ].filter((entry) => RuntimePredicate.isString(entry[1]) && entry[1].trim().length > 0);
   return [
     ...envEntries.map(
@@ -139,7 +140,7 @@ export function makeDevelopmentLauncherScript({
   return [
     "#!/bin/sh",
     `if [ -f ${shellSingleQuote(environmentFilePath)} ]; then . ${shellSingleQuote(environmentFilePath)}; fi`,
-    `exec ${shellSingleQuote(electronBinaryPath)} --rove-dev-root=${shellSingleQuote(desktopRoot)} ${shellSingleQuote(mainEntryPath)} "$@"`,
+    `exec ${shellSingleQuote(electronBinaryPath)} --paperplane-dev-root=${shellSingleQuote(desktopRoot)} ${shellSingleQuote(mainEntryPath)} "$@"`,
     "",
   ].join("\n");
 }
@@ -271,8 +272,9 @@ export function resolveMacBundleInfoPlistStrings(executableName) {
     CFBundleExecutable: executableName,
     CFBundleIconFile: "icon.icns",
     NSScreenCaptureUsageDescription:
-      "Rove Code captures the active window when you use the snapshot shortcut.",
-    NSDocumentsFolderUsageDescription: "Rove Code reads project files you open in the desktop app.",
+      "Paperplane captures the active window when you use the snapshot shortcut.",
+    NSDocumentsFolderUsageDescription:
+      "Paperplane reads project files you open in the desktop app.",
   };
 }
 
@@ -405,7 +407,7 @@ function buildMacLauncher(electronBinaryPath) {
   if (isDevelopment) {
     // Keep Electron's native executable inside the branded bundle. Launching the
     // node_modules copy makes macOS associate the process (and Dock label) with
-    // Electron.app even though this bundle's Info.plist has the Rove Code name.
+    // Electron.app even though this bundle's Info.plist has the Paperplane name.
     // Its conventional executable name also keeps Electron's default-app runtime
     // in development mode instead of making app.isPackaged report true.
     writeDevelopmentEnvironmentScript();

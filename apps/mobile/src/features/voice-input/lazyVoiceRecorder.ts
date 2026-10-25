@@ -1,4 +1,4 @@
-import type { VoiceRecorder } from "@rove-code/client-runtime/voice-input";
+import type { VoiceRecorder } from "@getpaperplane/client-runtime/voice-input";
 
 type Subscription = { remove(): void };
 

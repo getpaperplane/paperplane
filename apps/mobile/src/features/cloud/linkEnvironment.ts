@@ -9,14 +9,14 @@ import {
   EnvironmentHttpForbiddenError,
   EnvironmentHttpInternalServerError,
   EnvironmentHttpUnauthorizedError,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   type RelayEnvironmentLinkResponse as RelayEnvironmentLinkResponseType,
   type RelayManagedEndpointProviderKind,
-} from "@rove-code/contracts/relay";
-import { findErrorTraceId } from "@rove-code/client-runtime/errors";
-import { ManagedRelay, relayRequestFailureDetail } from "@rove-code/client-runtime/relay";
-import { makeEnvironmentHttpApiClient } from "@rove-code/client-runtime/rpc";
+} from "@getpaperplane/contracts/relay";
+import { findErrorTraceId } from "@getpaperplane/client-runtime/errors";
+import { ManagedRelay, relayRequestFailureDetail } from "@getpaperplane/client-runtime/relay";
+import { makeEnvironmentHttpApiClient } from "@getpaperplane/client-runtime/rpc";
 
 import type { SavedRemoteConnection } from "../../lib/connection";
 import * as MobileStorage from "../../persistence/mobile-storage";

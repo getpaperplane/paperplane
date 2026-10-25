@@ -5,7 +5,7 @@
  * removed. (A deny-all session is refused on the free tier: the spike's
  * `text_generation` recording.)
  */
-import type { ProviderReplayEntry } from "@rove-code/contracts";
+import type { ProviderReplayEntry } from "@getpaperplane/contracts";
 
 export const OPENCODE2_TITLE_GENERATION: ReadonlyArray<ProviderReplayEntry> = [
   { type: "expect_outbound", label: "event.subscribe", frame: { type: "event.subscribe" } },
@@ -23,7 +23,7 @@ export const OPENCODE2_TITLE_GENERATION: ReadonlyArray<ProviderReplayEntry> = [
     frame: {
       type: "session.create",
       input: {
-        title: "Rove Code generateThreadTitle",
+        title: "Paperplane generateThreadTitle",
         location: { directory: "<any>" },
         model: { providerID: "opencode", id: "big-pickle" },
         permissions: [{ action: "*", resource: "*", effect: "ask" }],

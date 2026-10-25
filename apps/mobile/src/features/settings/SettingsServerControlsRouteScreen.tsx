@@ -1,6 +1,6 @@
 import { useNavigation } from "@react-navigation/native";
 import { SettingsRow } from "./components/SettingsRow";
-import { AuthSettingsWriteScope } from "@rove-code/contracts";
+import { AuthSettingsWriteScope } from "@getpaperplane/contracts";
 import { readEnvironmentScope, useEnvironmentsWithScope } from "../../state/session";
 import { ScreenScrollView as ScrollView } from "../../components/ui/ScreenScrollView";
 import { AppText as Text } from "../../components/ui/AppText";
@@ -12,7 +12,7 @@ import {
   type WorktreeSubmodules,
   PROJECT_SCOPED_SERVER_SETTING_KEYS,
   type ProjectScopedServerSettingKey,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { useRef, useState } from "react";
 import { View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -77,7 +77,7 @@ const SUBMODULE_CHOICES: ReadonlyArray<{
   {
     mode: null,
     label: "Inherit",
-    description: "Use the repository's rove.json, or initialize recursively.",
+    description: "Use the repository's paperplane.json, or initialize recursively.",
   },
   { mode: "recursive", label: "Recursive", description: "Initialize nested submodules too." },
   {
@@ -97,7 +97,7 @@ const WORKSPACE_CHOICES: ReadonlyArray<{
   {
     mode: null,
     label: "Inherit",
-    description: "Use the repository's rove.json, or the current checkout.",
+    description: "Use the repository's paperplane.json, or the current checkout.",
   },
   {
     mode: "local",
@@ -498,7 +498,7 @@ function ServerSettingsDetail(props: { readonly page: SettingsPage }) {
                           ? "Environment-wide setting. Select All projects to change it."
                           : !supportsTelemetryControls
                             ? "Update selected environments to control product usage data."
-                            : "Share feature usage, outcomes, timings, and agent token counts with Rove via PostHog, using a random installation ID. No name, email, prompts, responses, code, paths, commands, or recordings. Applies to all clients on these environments. ROVE_TELEMETRY_ENABLED=false overrides this preference."
+                            : "Share feature usage, outcomes, timings, and agent token counts with Paperplane via PostHog, using a random installation ID. No name, email, prompts, responses, code, paths, commands, or recordings. Applies to all clients on these environments. PAPERPLANE_TELEMETRY_ENABLED=false overrides this preference."
                       }
                       value={uniform("telemetryEnabled")}
                       disabled={disabledFor("telemetryEnabled") || !supportsTelemetryControls}

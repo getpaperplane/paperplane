@@ -4,14 +4,14 @@ import {
   CodexSettings,
   isProviderDriverKind,
   ProviderDriverKind,
-} from "@rove-code/contracts";
-import { acpRegistryClient } from "@rove-code/provider-acp-registry/client";
-import { makeProviderClientRegistry } from "@rove-code/provider-core/client";
-import { cursorClient } from "@rove-code/provider-cursor/client";
-import { grokClient } from "@rove-code/provider-grok/client";
-import { museClient } from "@rove-code/provider-muse/client";
-import { openCodeClient } from "@rove-code/provider-opencode/client";
-import { piClient } from "@rove-code/provider-pi/client";
+} from "@getpaperplane/contracts";
+import { acpRegistryClient } from "@getpaperplane/provider-acp-registry/client";
+import { makeProviderClientRegistry } from "@getpaperplane/provider-core/client";
+import { cursorClient } from "@getpaperplane/provider-cursor/client";
+import { grokClient } from "@getpaperplane/provider-grok/client";
+import { museClient } from "@getpaperplane/provider-muse/client";
+import { openCodeClient } from "@getpaperplane/provider-opencode/client";
+import { piClient } from "@getpaperplane/provider-pi/client";
 
 /** The provider client definitions this mobile build ships. */
 const providerClients = makeProviderClientRegistry([

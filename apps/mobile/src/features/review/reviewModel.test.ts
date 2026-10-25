@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vite-plus/test";
 
-import { MessageId, RunId, type ReviewDiffPreviewSource } from "@rove-code/contracts";
-import type { ThreadCheckpointSummary } from "@rove-code/client-runtime/state/thread-checkpoints";
+import { MessageId, RunId, type ReviewDiffPreviewSource } from "@getpaperplane/contracts";
+import type { ThreadCheckpointSummary } from "@getpaperplane/client-runtime/state/thread-checkpoints";
 
 import {
   applyReviewDiffMetadata,
@@ -18,7 +18,7 @@ function makeCheckpoint(
     Pick<ThreadCheckpointSummary, "runId" | "checkpointTurnCount" | "completedAt">,
 ): ThreadCheckpointSummary {
   return {
-    checkpointRef: `refs/rove/checkpoints/thread/${input.checkpointTurnCount}` as any,
+    checkpointRef: `refs/paperplane/checkpoints/thread/${input.checkpointTurnCount}` as any,
     status: "ready",
     files: [],
     assistantMessageId: MessageId.make(`msg-${input.checkpointTurnCount}`),

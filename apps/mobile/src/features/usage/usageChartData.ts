@@ -4,8 +4,8 @@
  *
  * @module usageChartData
  */
-import type { UsageProviderKind } from "@rove-code/contracts";
-import type { DailyTotals } from "@rove-code/shared/usageMerge";
+import type { UsageProviderKind } from "@getpaperplane/contracts";
+import type { DailyTotals } from "@getpaperplane/shared/usageMerge";
 
 import { PROVIDER_ORDER } from "./usageProviders";
 

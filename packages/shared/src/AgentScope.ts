@@ -51,7 +51,7 @@ export interface AgentScopeCommand {
   readonly args: ReadonlyArray<string>;
 }
 
-export const AgentScope = Context.Reference<AgentScopeShape>("@rove-code/shared/AgentScope", {
+export const AgentScope = Context.Reference<AgentScopeShape>("@getpaperplane/shared/AgentScope", {
   defaultValue: () => ({
     wrap: ({ command, args }) => Effect.succeed({ command, args }),
     oomKill: () => Effect.succeed(null),
@@ -64,7 +64,7 @@ export const AgentScope = Context.Reference<AgentScopeShape>("@rove-code/shared/
  * provider flavors and do not take a thread id, so the ACP adapter provides it.
  */
 export const AgentScopeThreadId = Context.Reference<string | undefined>(
-  "@rove-code/shared/AgentScope/ThreadId",
+  "@getpaperplane/shared/AgentScope/ThreadId",
   { defaultValue: () => undefined },
 );
 
@@ -122,8 +122,8 @@ export function agentScopeCommand(input: {
       command: "/bin/sh",
       args:
         input.pidfile === undefined
-          ? ["-c", LAUNCH_SCRIPT, "rove-agent", command, ...args]
-          : ["-c", PIDFILE_LAUNCH_SCRIPT, "rove-agent", input.pidfile, command, ...args],
+          ? ["-c", LAUNCH_SCRIPT, "paperplane-agent", command, ...args]
+          : ["-c", PIDFILE_LAUNCH_SCRIPT, "paperplane-agent", input.pidfile, command, ...args],
     };
   }
   return {
@@ -131,7 +131,7 @@ export function agentScopeCommand(input: {
     args: [
       "-c",
       SCOPED_LAUNCH_SCRIPT,
-      "rove-agent",
+      "paperplane-agent",
       scope.runtimeDir,
       scope.systemdRun,
       "--user",

@@ -3,7 +3,7 @@ import type {
   OrchestrationV2ThreadProjection,
   ProviderReplayTranscript,
   ThreadId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 
 import type { OrchestratorV2ScenarioResult } from "../../OrchestratorScenario.ts";
 import {

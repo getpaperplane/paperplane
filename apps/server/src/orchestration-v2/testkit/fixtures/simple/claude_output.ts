@@ -1,4 +1,4 @@
-import type { ProviderReplayTranscript } from "@rove-code/contracts";
+import type { ProviderReplayTranscript } from "@getpaperplane/contracts";
 
 import type { OrchestratorV2ScenarioResult } from "../../OrchestratorScenario.ts";
 import {

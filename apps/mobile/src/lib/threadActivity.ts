@@ -2,20 +2,20 @@ import type {
   ThreadPendingApproval,
   ThreadPendingUserInput,
   ThreadUserInputQuestion,
-} from "@rove-code/client-runtime/state/thread-requests";
-import { turnItemIsWorkspacePreparation } from "@rove-code/client-runtime/state/turn-item-presentation";
-import { formatSubagentDisplayTitle } from "@rove-code/client-runtime/state/subagent-display";
-import { isLiveSubagentTurnItem } from "@rove-code/client-runtime/state/subagentRuntime";
-import { extractToolActivityPresentation } from "@rove-code/client-runtime/work-log/tool-presentation";
+} from "@getpaperplane/client-runtime/state/thread-requests";
+import { turnItemIsWorkspacePreparation } from "@getpaperplane/client-runtime/state/turn-item-presentation";
+import { formatSubagentDisplayTitle } from "@getpaperplane/client-runtime/state/subagent-display";
+import { isLiveSubagentTurnItem } from "@getpaperplane/client-runtime/state/subagentRuntime";
+import { extractToolActivityPresentation } from "@getpaperplane/client-runtime/work-log/tool-presentation";
 import {
   turnItemDetailRevision,
   turnItemHasDetail,
   turnItemNeedsDetailFetch,
-} from "@rove-code/client-runtime/work-log/item-detail";
+} from "@getpaperplane/client-runtime/work-log/item-detail";
 import {
   commandDisplayText,
   commandProgramName,
-} from "@rove-code/client-runtime/work-log/command-label";
+} from "@getpaperplane/client-runtime/work-log/command-label";
 import {
   contextCompactionLabel,
   liveThoughtLine,
@@ -29,13 +29,13 @@ import {
   type ToolGroupSummaryKind,
   type WorkLogPresentationEntry,
   type WorkLogToolLifecycleStatus,
-} from "@rove-code/client-runtime/work-log/presentation";
+} from "@getpaperplane/client-runtime/work-log/presentation";
 import {
-  resolveRoveMcpToolDefinition,
-  resolveRoveMcpToolPresentation,
-  type RoveMcpToolLogo,
-  type RoveMcpToolPresentation,
-} from "@rove-code/shared/roveMcpToolPresentation";
+  resolvePaperplaneMcpToolDefinition,
+  resolvePaperplaneMcpToolPresentation,
+  type PaperplaneMcpToolLogo,
+  type PaperplaneMcpToolPresentation,
+} from "@getpaperplane/shared/paperplaneMcpToolPresentation";
 import type {
   ChatAttachment,
   MessageId,
@@ -51,8 +51,8 @@ import type {
   RunAttemptId,
   ScheduledTaskId,
   TurnItemId,
-} from "@rove-code/contracts";
-import { RunId, ThreadId } from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
+import { RunId, ThreadId } from "@getpaperplane/contracts";
 import {
   classifyToolActivity,
   collectToolFilePaths,
@@ -60,15 +60,15 @@ import {
   isJavaScriptReplTool,
   formatReadToolLabel,
   formatSearchToolLabel,
-} from "@rove-code/shared/toolActivity";
-import { formatDuration } from "@rove-code/shared/orchestrationTiming";
-import type { HtmlRenderReference } from "@rove-code/shared/htmlRender";
-import type { McpAppReference } from "@rove-code/shared/mcpApp";
+} from "@getpaperplane/shared/toolActivity";
+import { formatDuration } from "@getpaperplane/shared/orchestrationTiming";
+import type { HtmlRenderReference } from "@getpaperplane/shared/htmlRender";
+import type { McpAppReference } from "@getpaperplane/shared/mcpApp";
 import {
   compactDynamicToolOutput,
   htmlRenderFromToolItem,
   mcpAppFromToolItem,
-} from "@rove-code/shared/toolOutput";
+} from "@getpaperplane/shared/toolOutput";
 import * as DateTime from "effect/DateTime";
 
 export type PendingApproval = ThreadPendingApproval;
@@ -111,7 +111,7 @@ export interface ThreadFeedActivity {
     | "warning"
     | "wrench"
     | "zap";
-  readonly logo: RoveMcpToolLogo | null;
+  readonly logo: PaperplaneMcpToolLogo | null;
   readonly toolLike: boolean;
   readonly prominent: boolean;
   readonly status: "success" | "failure" | "neutral" | null;
@@ -123,7 +123,7 @@ export interface ThreadFeedActivity {
 }
 
 export interface ThreadFeedMessage {
-  readonly context?: import("@rove-code/contracts").OrchestrationMessageContext | undefined;
+  readonly context?: import("@getpaperplane/contracts").OrchestrationMessageContext | undefined;
   readonly id: MessageId;
   readonly role: "user" | "assistant";
   readonly text: string;
@@ -212,7 +212,7 @@ type ThreadFeedEntryContent =
       readonly summaryKind: ToolGroupSummaryKind;
       readonly toolSurface?: WorkLogPresentationEntry["toolSurface"];
       readonly toolIcon?: WorkLogPresentationEntry["toolIcon"];
-      readonly summaryToolIcon?: "browser" | "device" | "rove" | "pull-request";
+      readonly summaryToolIcon?: "browser" | "device" | "paperplane" | "pull-request";
       readonly hasFailure: boolean;
       readonly live: boolean;
       readonly shimmer: boolean;
@@ -585,18 +585,19 @@ function itemIcon(item: OrchestrationV2TurnItem): ThreadFeedActivity["icon"] {
   }
 }
 
-function itemToolPresentation(item: OrchestrationV2TurnItem): RoveMcpToolPresentation | null {
+function itemToolPresentation(item: OrchestrationV2TurnItem): PaperplaneMcpToolPresentation | null {
   if (item.type !== "dynamic_tool") {
     return null;
   }
   return (
-    resolveRoveMcpToolPresentation(item.toolName) ?? resolveRoveMcpToolPresentation(item.title)
+    resolvePaperplaneMcpToolPresentation(item.toolName) ??
+    resolvePaperplaneMcpToolPresentation(item.title)
   );
 }
 
 function itemSummary(
   item: OrchestrationV2TurnItem,
-  toolPresentation: RoveMcpToolPresentation | null = null,
+  toolPresentation: PaperplaneMcpToolPresentation | null = null,
 ): string {
   if (item.type === "notification") return item.summary;
   if (item.type === "system_notice") return item.message;
@@ -931,7 +932,7 @@ function groupAdjacentActivities(entries: ReadonlyArray<RawThreadFeedEntry>): Th
         item.type === "dynamic_tool" &&
         item.runId !== null &&
         (item.status === "running" || item.status === "completed") &&
-        resolveRoveMcpToolDefinition(item.toolName)?.summaryAction === "delegate" &&
+        resolvePaperplaneMcpToolDefinition(item.toolName)?.summaryAction === "delegate" &&
         !workEntryDisplayIndicatesToolFailure(entry.activity.workEntry)
       ) {
         const output = compactDynamicToolOutput(item.output);

@@ -45,7 +45,7 @@ export * from "./threadMetadataMcp.ts";
 export * from "./threadPullRequest.ts";
 export * from "./threadSearch.ts";
 export * from "./threadTitle.ts";
-export * from "./roveProjectFile.ts";
+export * from "./paperplaneProjectFile.ts";
 export * from "./editor.ts";
 export * from "./project.ts";
 export * from "./filesystem.ts";

@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import type { VcsStatusResult } from "@rove-code/contracts";
+import type { VcsStatusResult } from "@getpaperplane/contracts";
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";

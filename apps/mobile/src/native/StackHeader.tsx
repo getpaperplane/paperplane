@@ -6,7 +6,7 @@ import type {
 import { use, useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import { NativeWorkspaceTabActivityContext } from "./v5-workspace-context";
 import type { ColorValue } from "react-native";
-import { runtimeValueKind } from "@rove-code/shared/runtimeValueKind";
+import { runtimeValueKind } from "@getpaperplane/shared/runtimeValueKind";
 import * as RuntimePredicate from "effect/Predicate";
 import type { Json as SchemaJson } from "effect/Schema";
 

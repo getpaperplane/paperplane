@@ -1,4 +1,4 @@
-import type { EnvironmentId, ThreadId } from "@rove-code/contracts";
+import type { EnvironmentId, ThreadId } from "@getpaperplane/contracts";
 import { View } from "react-native";
 
 import { AppText as Text } from "../../components/ui/AppText";

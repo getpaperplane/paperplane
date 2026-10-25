@@ -10,7 +10,7 @@ import {
   TurnItemId,
   type OrchestrationV2DomainEvent,
   type OrchestrationV2ExecutionNode,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";

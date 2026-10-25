@@ -20,9 +20,9 @@ import type {
   ProjectReadFileResult,
   ProjectWriteFileInput,
   ProjectWriteFileResult,
-} from "@rove-code/contracts";
-import { expandHomePath } from "@rove-code/provider-core/server/pathExpansion";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+} from "@getpaperplane/contracts";
+import { expandHomePath } from "@getpaperplane/provider-core/server/pathExpansion";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -140,7 +140,7 @@ export class WorkspaceFileSystem extends Context.Service<
       WorkspaceFileSystemError | WorkspacePaths.WorkspacePathOutsideRootError
     >;
   }
->()("@rove-code/server/workspace/WorkspaceFileSystem") {}
+>()("@getpaperplane/server/workspace/WorkspaceFileSystem") {}
 
 /** @public Service construction is part of the canonical Effect module API. */
 export const make = Effect.gen(function* () {

@@ -5,7 +5,7 @@ import * as Layer from "effect/Layer";
 import * as Schema from "effect/Schema";
 import { lt } from "drizzle-orm";
 
-import { DpopVerificationFailureCode, verifyDpopProof } from "@rove-code/shared/dpop";
+import { DpopVerificationFailureCode, verifyDpopProof } from "@getpaperplane/shared/dpop";
 import * as RelayDb from "../db.ts";
 import { relayDpopProofs } from "../persistence/schema.ts";
 
@@ -61,7 +61,7 @@ export class DpopProofReplay extends Context.Service<
     }) => Effect.Effect<boolean, DpopProofReplayPersistenceError>;
     readonly pruneExpired: Effect.Effect<void, DpopProofReplayPersistenceError>;
   }
->()("rove-relay/auth/DpopProofs/DpopProofReplay") {}
+>()("paperplane-relay/auth/DpopProofs/DpopProofReplay") {}
 
 const make = Effect.gen(function* () {
   const db = yield* RelayDb.RelayDb;

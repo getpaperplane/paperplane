@@ -1,7 +1,7 @@
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { assert, describe, it } from "@effect/vitest";
-import { ConnectionCatalogDocument } from "@rove-code/client-runtime/platform";
-import { EnvironmentId, type PersistedSavedEnvironmentRecord } from "@rove-code/contracts";
+import { ConnectionCatalogDocument } from "@getpaperplane/client-runtime/platform";
+import { EnvironmentId, type PersistedSavedEnvironmentRecord } from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import * as Base64 from "effect/encoding/Base64";
 import * as FileSystem from "effect/FileSystem";
@@ -68,7 +68,7 @@ function layerFor(
     runningUnderArm64Translation: false,
   }).pipe(
     Layer.provide(
-      Layer.mergeAll(NodeServices.layer, DesktopConfig.layerTest({ ROVE_HOME: baseDir })),
+      Layer.mergeAll(NodeServices.layer, DesktopConfig.layerTest({ PAPERPLANE_HOME: baseDir })),
     ),
   );
   const layerSafeStorage = layerSafeStorageFor(encryptionAvailable, failDecrypt);
@@ -95,7 +95,7 @@ const withStore = <A, E, R>(
   Effect.gen(function* () {
     const fileSystem = yield* FileSystem.FileSystem;
     const baseDir = yield* fileSystem.makeTempDirectoryScoped({
-      prefix: "rove-desktop-connection-catalog-test-",
+      prefix: "paperplane-desktop-connection-catalog-test-",
     });
     return yield* effect.pipe(Effect.provide(layerFor(baseDir, encryptionAvailable)));
   }).pipe(Effect.provide(NodeServices.layer), Effect.scoped);
@@ -272,7 +272,7 @@ describe("DesktopConnectionCatalogStore", () => {
       const path = yield* Path.Path;
       const baseFileSystem = yield* FileSystem.FileSystem;
       const baseDir = yield* baseFileSystem.makeTempDirectoryScoped({
-        prefix: "rove-desktop-connection-catalog-test-",
+        prefix: "paperplane-desktop-connection-catalog-test-",
       });
       const permissionError = PlatformError.systemError({
         _tag: "PermissionDenied",
@@ -310,7 +310,7 @@ describe("DesktopConnectionCatalogStore", () => {
       const baseFileSystem = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const baseDir = yield* baseFileSystem.makeTempDirectoryScoped({
-        prefix: "rove-desktop-connection-catalog-test-",
+        prefix: "paperplane-desktop-connection-catalog-test-",
       });
       const permissionError = PlatformError.systemError({
         _tag: "PermissionDenied",
@@ -410,7 +410,7 @@ describe("DesktopConnectionCatalogStore", () => {
       const path = yield* Path.Path;
       const fileSystem = yield* FileSystem.FileSystem;
       const baseDir = yield* fileSystem.makeTempDirectoryScoped({
-        prefix: "rove-desktop-connection-catalog-test-",
+        prefix: "paperplane-desktop-connection-catalog-test-",
       });
       const failDecrypt = yield* Ref.make(false);
       const layer = layerFor(baseDir, true, failDecrypt);

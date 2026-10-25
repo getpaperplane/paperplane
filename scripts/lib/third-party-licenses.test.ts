@@ -37,7 +37,7 @@ async function createFixture(): Promise<{
   readonly dependencyRoot: string;
   readonly root: string;
 }> {
-  const root = await NodeFSP.mkdtemp(NodePath.join(NodeOS.tmpdir(), "rove-licenses-"));
+  const root = await NodeFSP.mkdtemp(NodePath.join(NodeOS.tmpdir(), "paperplane-licenses-"));
   tempDirectories.push(root);
   const appManifest = NodePath.join(root, "package.json");
   const dependencyRoot = NodePath.join(root, "node_modules", "demo-dependency");
@@ -211,7 +211,7 @@ describe("third-party license generation", () => {
       NodeFSP.readFile(
         NodePath.join(
           REPOSITORY_ROOT,
-          "apps/mobile/modules/rove-terminal/Vendor/libghostty/VERSION",
+          "apps/mobile/modules/paperplane-terminal/Vendor/libghostty/VERSION",
         ),
         "utf8",
       ),
@@ -219,7 +219,7 @@ describe("third-party license generation", () => {
 
     expect(config).toContain(revision.trim());
     expect(config).toContain(
-      "https://github.com/Yash-Singh1/ghostty/tree/rove/custom-io-ordered-feed",
+      "https://github.com/Yash-Singh1/ghostty/tree/paperplane/custom-io-ordered-feed",
     );
   });
 
@@ -273,7 +273,7 @@ describe("third-party license generation", () => {
             {
               licenseId: "MIT",
               copyrights: ["Copyright (c) 2026 Example Author"],
-              preamble: ["Adapted for Rove Code."],
+              preamble: ["Adapted for Paperplane."],
             },
           ],
           bundles: ["assets", "web"],
@@ -288,7 +288,7 @@ describe("third-party license generation", () => {
     });
 
     expect(manifest.entries.find((entry) => entry.name === "generated-asset")?.noticeText).toBe(
-      "Adapted for Rove Code.\n\nMIT License\n\nCopyright (c) 2026 Example Author\n\nPermission text",
+      "Adapted for Paperplane.\n\nMIT License\n\nCopyright (c) 2026 Example Author\n\nPermission text",
     );
   });
 

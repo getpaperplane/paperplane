@@ -4,8 +4,8 @@ import {
   ProviderDriverKind,
   ProviderInstanceId,
   type ProviderInstanceConfig,
-} from "@rove-code/contracts";
-import { getBackgroundActivityPresetSettings } from "@rove-code/shared/backgroundActivitySettings";
+} from "@getpaperplane/contracts";
+import { getBackgroundActivityPresetSettings } from "@getpaperplane/shared/backgroundActivitySettings";
 import * as Duration from "effect/Duration";
 import { describe, expect, it } from "vite-plus/test";
 import {
@@ -200,7 +200,7 @@ describe("buildProviderInstanceUpdatePatch", () => {
     const nextInstance = {
       driver: ProviderDriverKind.make("codex"),
       enabled: true,
-      config: { binaryPath: "/opt/rove/codex" },
+      config: { binaryPath: "/opt/paperplane/codex" },
     } satisfies ProviderInstanceConfig;
 
     const patch = buildProviderInstanceUpdatePatch({
@@ -253,7 +253,7 @@ describe("getChangedBrowserSettingLabels", () => {
       "Recording mouse presses",
       "Open links in",
       "Floating preview",
-      "Open pull requests in Rove Code",
+      "Open pull requests in Paperplane",
     ]);
   });
 });

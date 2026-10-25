@@ -1,5 +1,5 @@
-import { StoredOrchestrationShellSnapshot } from "@rove-code/client-runtime/platform";
-import { deferPullRequests, detachPullRequests } from "@rove-code/client-runtime/state/shell";
+import { StoredOrchestrationShellSnapshot } from "@getpaperplane/client-runtime/platform";
+import { deferPullRequests, detachPullRequests } from "@getpaperplane/client-runtime/state/shell";
 import * as Effect from "effect/Effect";
 import * as Predicate from "effect/Predicate";
 import * as Schema from "effect/Schema";

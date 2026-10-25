@@ -1,5 +1,5 @@
-import type { EnvironmentId, ThreadId, WorktreeSetupSnapshot } from "@rove-code/contracts";
-import { resolveVisibleWorktreeSetup } from "@rove-code/client-runtime/worktree-setup";
+import type { EnvironmentId, ThreadId, WorktreeSetupSnapshot } from "@getpaperplane/contracts";
+import { resolveVisibleWorktreeSetup } from "@getpaperplane/client-runtime/worktree-setup";
 import { useEffect, useState } from "react";
 import { useEnvironmentQuery } from "../../state/query";
 import { vcsEnvironment } from "../../state/vcs";

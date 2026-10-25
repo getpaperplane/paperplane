@@ -21,7 +21,7 @@ export class ProviderInstanceNotFoundError extends Schema.TaggedError<ProviderIn
   }
 }
 
-export { ProviderDriverError } from "@rove-code/provider-core/server/errors";
+export { ProviderDriverError } from "@getpaperplane/provider-core/server/errors";
 
 /**
  * ProviderWorkspaceMissingError - The session's working directory no longer

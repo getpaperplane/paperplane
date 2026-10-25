@@ -2,8 +2,8 @@ import type {
   PreviewAutomationResizeInput,
   PreviewViewportPresetId,
   PreviewViewportSetting,
-} from "@rove-code/contracts";
-import { PREVIEW_VIEWPORT_PRESET_IDS } from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
+import { PREVIEW_VIEWPORT_PRESET_IDS } from "@getpaperplane/contracts";
 
 export interface PreviewViewportPreset {
   readonly id: PreviewViewportPresetId;

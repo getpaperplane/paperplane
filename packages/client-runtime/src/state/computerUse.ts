@@ -3,7 +3,7 @@ import {
   type ComputerDesktopsState,
   type ThreadId,
   WS_METHODS,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { Atom } from "effect/reactivity";
 
 import type { EnvironmentRegistry } from "../connection/registry.ts";

@@ -1,10 +1,10 @@
 import type {
   EnvironmentPresentation,
   PreparedConnection,
-} from "@rove-code/client-runtime/connection";
-import { PrimaryConnectionTarget } from "@rove-code/client-runtime/connection";
-import type { ServerConfig } from "@rove-code/contracts";
-import { EnvironmentId } from "@rove-code/contracts";
+} from "@getpaperplane/client-runtime/connection";
+import { PrimaryConnectionTarget } from "@getpaperplane/client-runtime/connection";
+import type { ServerConfig } from "@getpaperplane/contracts";
+import { EnvironmentId } from "@getpaperplane/contracts";
 import { describe, expect, it } from "@effect/vitest";
 import * as Option from "effect/Option";
 import { Atom, AtomRegistry } from "effect/reactivity";

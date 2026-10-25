@@ -2,8 +2,8 @@ import {
   fileBasename,
   stripSlashPrefixedWindowsDrive,
   isWindowsAbsolutePath,
-} from "@rove-code/shared/path";
-import { formatFilePathPosition, splitFilePathPosition } from "@rove-code/shared/fileLinks";
+} from "@getpaperplane/shared/path";
+import { formatFilePathPosition, splitFilePathPosition } from "@getpaperplane/shared/fileLinks";
 
 function normalizePathSeparators(path: string): string {
   return path.replaceAll("\\", "/");

@@ -5,7 +5,7 @@ import {
   ProviderInstanceId,
   UsageLimitSourceId,
   type ServerProvider,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Duration from "effect/Duration";
 import { describe, expect, it } from "vite-plus/test";
 import { resolveServerBackgroundActivitySettings } from "./backgroundActivitySettings.ts";

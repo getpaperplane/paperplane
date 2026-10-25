@@ -2,7 +2,7 @@
 // OSCrypt primitives the module under test decrypts.
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { describe, expect, it } from "@effect/vitest";
-import * as NodeSqliteClient from "@rove-code/shared/nodeSqliteClient";
+import * as NodeSqliteClient from "@getpaperplane/shared/nodeSqliteClient";
 import * as NodeCrypto from "node:crypto";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -102,7 +102,7 @@ describe("readChromiumCookieDatabase", () => {
       Effect.gen(function* () {
         const fileSystem = yield* FileSystem.FileSystem;
         const directory = yield* fileSystem.makeTempDirectoryScoped({
-          prefix: "rove-missing-key-",
+          prefix: "paperplane-missing-key-",
         });
         const filename = `${directory}/Cookies`;
         const key = Buffer.from("0123456789abcdef");
@@ -156,7 +156,7 @@ describe("readChromiumCookieDatabase", () => {
     Effect.gen(function* () {
       const fileSystem = yield* FileSystem.FileSystem;
       const directory = yield* fileSystem.makeTempDirectoryScoped({
-        prefix: "rove-chromium-cookies-",
+        prefix: "paperplane-chromium-cookies-",
       });
       const filename = `${directory}/Cookies`;
       const key = Buffer.from("0123456789abcdef");
@@ -208,7 +208,7 @@ describe("readChromiumCookieDatabase", () => {
     Effect.gen(function* () {
       const fileSystem = yield* FileSystem.FileSystem;
       const directory = yield* fileSystem.makeTempDirectoryScoped({
-        prefix: "rove-chromium-cookies-",
+        prefix: "paperplane-chromium-cookies-",
       });
       const filename = `${directory}/Cookies`;
       const key = Buffer.from("0123456789abcdef");
@@ -249,7 +249,7 @@ describe("readChromiumCookieDatabase", () => {
     Effect.gen(function* () {
       const fileSystem = yield* FileSystem.FileSystem;
       const directory = yield* fileSystem.makeTempDirectoryScoped({
-        prefix: "rove-chromium-cookies-",
+        prefix: "paperplane-chromium-cookies-",
       });
       const filename = `${directory}/Cookies`;
       const cbcV10 = Buffer.from("0123456789abcdef");
@@ -295,7 +295,7 @@ describe("readChromiumCookieDatabase", () => {
     Effect.gen(function* () {
       const fileSystem = yield* FileSystem.FileSystem;
       const directory = yield* fileSystem.makeTempDirectoryScoped({
-        prefix: "rove-chromium-cookies-",
+        prefix: "paperplane-chromium-cookies-",
       });
       const filename = `${directory}/Cookies`;
       const cbcV10 = Buffer.from("0123456789abcdef");
@@ -347,7 +347,7 @@ describe("readChromiumCookieDatabase", () => {
     Effect.gen(function* () {
       const fileSystem = yield* FileSystem.FileSystem;
       const directory = yield* fileSystem.makeTempDirectoryScoped({
-        prefix: "rove-chromium-cookies-",
+        prefix: "paperplane-chromium-cookies-",
       });
       const filename = `${directory}/Cookies`;
       const key = Buffer.from("0123456789abcdef");
@@ -379,7 +379,7 @@ describe("readChromiumCookieDatabase", () => {
     Effect.gen(function* () {
       const fileSystem = yield* FileSystem.FileSystem;
       const directory = yield* fileSystem.makeTempDirectoryScoped({
-        prefix: "rove-chromium-cookies-",
+        prefix: "paperplane-chromium-cookies-",
       });
       const filename = `${directory}/Cookies`;
 
@@ -403,7 +403,7 @@ describe("readChromiumCookieDatabase", () => {
     Effect.gen(function* () {
       const fileSystem = yield* FileSystem.FileSystem;
       const directory = yield* fileSystem.makeTempDirectoryScoped({
-        prefix: "rove-chromium-cookies-",
+        prefix: "paperplane-chromium-cookies-",
       });
       const filename = `${directory}/Cookies`;
       const key = Buffer.from("0123456789abcdef");
@@ -441,7 +441,7 @@ describe("readChromiumCookieDatabase", () => {
     Effect.gen(function* () {
       const fileSystem = yield* FileSystem.FileSystem;
       const directory = yield* fileSystem.makeTempDirectoryScoped({
-        prefix: "rove-chromium-cookies-",
+        prefix: "paperplane-chromium-cookies-",
       });
       const legacyFilename = `${directory}/LegacyCookies`;
       const chipsFilename = `${directory}/ChipsCookies`;

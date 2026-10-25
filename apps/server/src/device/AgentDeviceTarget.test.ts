@@ -1,5 +1,5 @@
 // @effect-diagnostics nodeBuiltinImport:off - exercises concurrent real CLI subprocesses.
-import * as HostProcess from "@rove-code/shared/HostProcess";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 import { describe, expect, it } from "@effect/vitest";
 import * as NodeChildProcess from "node:child_process";
 import * as NodeUtil from "node:util";
@@ -21,7 +21,7 @@ describe("host-bound agent commands", () => {
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const temp = yield* fs.makeTempDirectoryScoped({ prefix: "rove-device-target-" });
+      const temp = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-device-target-" });
       const platform = yield* HostProcess.Platform;
       const dir = path.join(
         temp,
@@ -89,7 +89,7 @@ if (process.env.AGENT_DEVICE_DAEMON_BASE_URL) process.exit(2);`,
     }).pipe(
       Effect.scoped,
       Effect.provideService(HostProcess.IsExecutable, true),
-      Effect.provideService(HostProcess.ExecutablePath, "/packaged/rove"),
+      Effect.provideService(HostProcess.ExecutablePath, "/packaged/paperplane"),
       Effect.provide(NodeServices.layer),
     ),
   );

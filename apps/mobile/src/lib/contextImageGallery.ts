@@ -1,5 +1,5 @@
-import type { ComposerContextRecord, EnvironmentId } from "@rove-code/contracts";
-import { imageMimeType } from "@rove-code/shared/image";
+import type { ComposerContextRecord, EnvironmentId } from "@getpaperplane/contracts";
+import { imageMimeType } from "@getpaperplane/shared/image";
 import type { FilePreviewItem } from "../components/FilePreviewModal.types";
 import { composerImageGallery } from "./composerImageGallery";
 import type { DraftComposerAttachment } from "./composerImages";

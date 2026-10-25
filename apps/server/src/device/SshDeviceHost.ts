@@ -4,10 +4,10 @@ import {
   DeviceToolVersions,
   deviceToolInstallMessage,
   type SshDeviceHostConfig,
-} from "@rove-code/contracts";
-import { runSshCommand, baseSshArgs, resolveSshCommand } from "@rove-code/ssh/command";
-import * as NetService from "@rove-code/shared/Net";
-import { waitForHttpReady } from "@rove-code/shared/httpReadiness";
+} from "@getpaperplane/contracts";
+import { runSshCommand, baseSshArgs, resolveSshCommand } from "@getpaperplane/ssh/command";
+import * as NetService from "@getpaperplane/shared/Net";
+import { waitForHttpReady } from "@getpaperplane/shared/httpReadiness";
 import * as Crypto from "effect/Crypto";
 import * as Exit from "effect/Exit";
 import * as Effect from "effect/Effect";

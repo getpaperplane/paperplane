@@ -1,7 +1,7 @@
 // @effect-diagnostics nodeBuiltinImport:off - only node:perf_hooks exposes the event loop delay histogram.
 import * as NodePerfHooks from "node:perf_hooks";
 
-import { RotatingFileSink } from "@rove-code/shared/logging";
+import { RotatingFileSink } from "@getpaperplane/shared/logging";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -146,7 +146,7 @@ export const layerWith = (
           rssMb: Math.round(rssBytes / 1024 / 1024),
         };
         // Root, as the stall has no caller to attach to. Warn level keeps it when
-        // ROVE_TRACE_MIN_LEVEL is raised to cut trace noise.
+        // PAPERPLANE_TRACE_MIN_LEVEL is raised to cut trace noise.
         yield* Effect.logWarning(`event loop stalled for ${delayMaxMs} ms`).pipe(
           Effect.withSpan("server.eventLoop.stall", { root: true, level: "Warn", attributes }),
         );

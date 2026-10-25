@@ -1,7 +1,7 @@
-import { EnvironmentId, ProjectId } from "@rove-code/contracts";
+import { EnvironmentId, ProjectId } from "@getpaperplane/contracts";
 import { describe, expect, it } from "vite-plus/test";
 
-import type { EnvironmentProject } from "@rove-code/client-runtime/state/shell";
+import type { EnvironmentProject } from "@getpaperplane/client-runtime/state/shell";
 import type { HomeProjectScope } from "../home/homeThreadList";
 import {
   filterProjectScopes,
@@ -43,8 +43,8 @@ function makeProject(
 
 function makeScope(projects: ReadonlyArray<EnvironmentProject>): HomeProjectScope {
   return {
-    key: "github.com/rovetools/rove",
-    title: "Rove Code",
+    key: "github.com/paperplanetools/paperplane",
+    title: "Paperplane",
     representative: projects[0]!,
     projects,
     projectRefs: projects.map((project) => ({
@@ -56,14 +56,20 @@ function makeScope(projects: ReadonlyArray<EnvironmentProject>): HomeProjectScop
 
 describe("getProjectScopeSelectionTarget", () => {
   it("keeps the current environment when it hosts the selected logical project", () => {
-    const projects = [makeProject("rove-mac", "mac"), makeProject("rove-server", "server")];
+    const projects = [
+      makeProject("paperplane-mac", "mac"),
+      makeProject("paperplane-server", "server"),
+    ];
     expect(getProjectScopeSelectionTarget(makeScope(projects), EnvironmentId.make("server"))).toBe(
       projects[1],
     );
   });
 
   it("falls back to the representative when the current environment does not host the project", () => {
-    const projects = [makeProject("rove-mac", "mac"), makeProject("rove-server", "server")];
+    const projects = [
+      makeProject("paperplane-mac", "mac"),
+      makeProject("paperplane-server", "server"),
+    ];
     expect(getProjectScopeSelectionTarget(makeScope(projects), EnvironmentId.make("other"))).toBe(
       projects[0],
     );
@@ -72,47 +78,53 @@ describe("getProjectScopeSelectionTarget", () => {
 
 describe("resolveEnvironmentProjectMatch", () => {
   it("follows the same repository onto the target machine", () => {
-    const selected = makeProject("rove", "mac", { repositoryKey: "github.com/rovetools/rove" });
+    const selected = makeProject("paperplane", "mac", {
+      repositoryKey: "github.com/paperplanetools/paperplane",
+    });
     const target = [
       makeProject("other", "server", { repositoryKey: "github.com/t3tools/other" }),
-      makeProject("rove-clone", "server", { repositoryKey: "github.com/rovetools/rove" }),
+      makeProject("paperplane-clone", "server", {
+        repositoryKey: "github.com/paperplanetools/paperplane",
+      }),
     ];
     expect(resolveEnvironmentProjectMatch(target, selected)).toBe(target[1]);
   });
 
   it("falls back to workspace basename, then title, for unindexed projects", () => {
-    const selected = makeProject("rove", "mac", { workspaceRoot: "/Users/me/rove" });
+    const selected = makeProject("paperplane", "mac", { workspaceRoot: "/Users/me/paperplane" });
     const byBasename = [
       makeProject("other", "server"),
-      makeProject("srv", "server", { workspaceRoot: "/home/me/rove" }),
+      makeProject("srv", "server", { workspaceRoot: "/home/me/paperplane" }),
     ];
     expect(resolveEnvironmentProjectMatch(byBasename, selected)).toBe(byBasename[1]);
 
     const byTitle = [
       makeProject("other", "server"),
-      makeProject("srv", "server", { title: "rove" }),
+      makeProject("srv", "server", { title: "paperplane" }),
     ];
     expect(resolveEnvironmentProjectMatch(byTitle, selected)).toBe(byTitle[1]);
   });
 
   it("does not treat a known different repository as a basename or title match", () => {
-    const selected = makeProject("rove", "mac", {
-      repositoryKey: "github.com/rovetools/rove",
-      workspaceRoot: "/Users/me/rove",
+    const selected = makeProject("paperplane", "mac", {
+      repositoryKey: "github.com/paperplanetools/paperplane",
+      workspaceRoot: "/Users/me/paperplane",
     });
     const fork = makeProject("fork", "server", {
-      repositoryKey: "github.com/someone/rove",
-      title: "rove",
-      workspaceRoot: "/home/me/rove",
+      repositoryKey: "github.com/someone/paperplane",
+      title: "paperplane",
+      workspaceRoot: "/home/me/paperplane",
     });
-    const unindexed = makeProject("unindexed", "server", { workspaceRoot: "/srv/rove" });
+    const unindexed = makeProject("unindexed", "server", { workspaceRoot: "/srv/paperplane" });
     expect(resolveEnvironmentProjectMatch([fork, unindexed], selected)).toBe(unindexed);
     // Without any weaker match the fork is still the first-project fallback.
     expect(resolveEnvironmentProjectMatch([fork], selected)).toBe(fork);
   });
 
   it("falls back to the first project on the target so the draft has a key to carry over to", () => {
-    const selected = makeProject("rove", "mac", { repositoryKey: "github.com/rovetools/rove" });
+    const selected = makeProject("paperplane", "mac", {
+      repositoryKey: "github.com/paperplanetools/paperplane",
+    });
     const target = [makeProject("unrelated", "server"), makeProject("also-unrelated", "server")];
     expect(resolveEnvironmentProjectMatch(target, selected)).toBe(target[0]);
     expect(resolveEnvironmentProjectMatch([], selected)).toBeNull();
@@ -121,14 +133,14 @@ describe("resolveEnvironmentProjectMatch", () => {
 
 describe("resolveDraftProjectSelection", () => {
   it("preserves an explicit project selection", () => {
-    const project = makeProject("rove");
+    const project = makeProject("paperplane");
     expect(
-      resolveDraftProjectSelection("environment:rove", [project], [makeScope([project])]),
+      resolveDraftProjectSelection("environment:paperplane", [project], [makeScope([project])]),
     ).toEqual({ kind: "preserve" });
   });
 
   it("selects the only physical project when no project was explicitly selected", () => {
-    const project = makeProject("rove");
+    const project = makeProject("paperplane");
     expect(resolveDraftProjectSelection(null, [project], [makeScope([project])])).toEqual({
       kind: "select",
       project,
@@ -136,7 +148,11 @@ describe("resolveDraftProjectSelection", () => {
   });
 
   it("selects one logical project even when it has multiple physical workspaces", () => {
-    const projects = [makeProject("rove"), makeProject("rove-2"), makeProject("rove-3")];
+    const projects = [
+      makeProject("paperplane"),
+      makeProject("paperplane-2"),
+      makeProject("paperplane-3"),
+    ];
     expect(resolveDraftProjectSelection(null, projects, [makeScope(projects)])).toEqual({
       kind: "select",
       project: projects[0],
@@ -144,7 +160,7 @@ describe("resolveDraftProjectSelection", () => {
   });
 
   it("does not preserve a project key that is missing from the catalog", () => {
-    const project = makeProject("rove");
+    const project = makeProject("paperplane");
     expect(
       resolveDraftProjectSelection("environment:removed", [project], [makeScope([project])]),
     ).toEqual({
@@ -167,7 +183,7 @@ describe("filterProjectScopes", () => {
   });
 
   it("matches logical names and workspace names or paths without case sensitivity", () => {
-    expect(filterProjectScopes(scopes, "  Rove CODE ")).toEqual([code]);
+    expect(filterProjectScopes(scopes, "  Paperplane ")).toEqual([code]);
     expect(filterProjectScopes(scopes, "DESKTOP")).toEqual([code]);
     expect(filterProjectScopes(scopes, "REMOTE-WORKSPACE")).toEqual([code]);
     expect(filterProjectScopes(scopes, "documentation")).toEqual([docs]);

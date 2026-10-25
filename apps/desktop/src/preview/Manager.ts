@@ -8,7 +8,7 @@
 import {
   DesktopPreviewRecordingInputSchema,
   DESKTOP_PREVIEW_RECORDING_CAPTURE_TRIGGER,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import type {
   DesktopPreviewAnnotationTheme,
   DesktopPreviewColorScheme,
@@ -24,10 +24,10 @@ import type {
   DesktopPreviewScreenshotArtifact,
   DesktopPreviewTabDefaults,
   PreviewForwardedShortcut,
-} from "@rove-code/contracts";
-import * as HostProcess from "@rove-code/shared/HostProcess";
-import { matchesKeybindingShortcut } from "@rove-code/shared/keybindings";
-import { normalizePreviewUrl } from "@rove-code/shared/preview";
+} from "@getpaperplane/contracts";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
+import { matchesKeybindingShortcut } from "@getpaperplane/shared/keybindings";
+import { normalizePreviewUrl } from "@getpaperplane/shared/preview";
 import {
   BrowserWindow,
   ClipboardItem,
@@ -3684,7 +3684,7 @@ export class PreviewManager extends Context.Service<
       listener: RecordingFrameListener,
     ) => Effect.Effect<void, never, Scope.Scope>;
   }
->()("@rove-code/desktop/preview/Manager/PreviewManager") {}
+>()("@getpaperplane/desktop/preview/Manager/PreviewManager") {}
 
 /** @public Service construction is part of the canonical Effect module API. */
 export const make = Effect.gen(function* PreviewManagerMake() {

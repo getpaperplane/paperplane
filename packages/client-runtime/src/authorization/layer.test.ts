@@ -2,11 +2,11 @@ import {
   AuthAdministrativeScopes,
   AuthStandardClientScopes,
   EnvironmentId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   RelayEnvironmentConnectScope,
   type RelayEnvironmentConnectResponse,
-} from "@rove-code/contracts/relay";
+} from "@getpaperplane/contracts/relay";
 import { describe, expect, it } from "@effect/vitest";
 import * as Clock from "effect/Clock";
 import * as Deferred from "effect/Deferred";
@@ -212,7 +212,7 @@ const makeHarness = Effect.fn("TestRemoteAuthorization.makeHarness")(function* (
           ClientCapabilities.ClientPresentation,
           ClientCapabilities.ClientPresentation.of({
             metadata: {
-              label: "Rove Code Test",
+              label: "Paperplane Test",
               deviceType: "mobile",
               os: "test",
             },
@@ -262,7 +262,7 @@ describe("RemoteEnvironmentAuthorization", () => {
       expect(second.socketUrl).toContain("wsTicket=second-ticket");
       expect(
         harness.fetch.calls.filter(([url]) =>
-          String(url).endsWith("/.well-known/rove/environment"),
+          String(url).endsWith("/.well-known/paperplane/environment"),
         ),
       ).toHaveLength(1);
       expect(
@@ -310,7 +310,7 @@ describe("RemoteEnvironmentAuthorization", () => {
       );
       expect(
         harness.fetch.calls.filter(([url]) =>
-          String(url).endsWith("/.well-known/rove/environment"),
+          String(url).endsWith("/.well-known/paperplane/environment"),
         ),
       ).toHaveLength(2);
     }),
@@ -349,7 +349,7 @@ describe("RemoteEnvironmentAuthorization", () => {
     }),
   );
 
-  it.effect("uses the Rove Connect token on a learned direct address without the relay", () =>
+  it.effect("uses the Paperplane Connect token on a learned direct address without the relay", () =>
     Effect.gen(function* () {
       const cached = new TokenStore.RemoteDpopAccessToken({
         environmentId: ENVIRONMENT_ID,
@@ -380,7 +380,7 @@ describe("RemoteEnvironmentAuthorization", () => {
       expect(authorized.socketUrl).toMatch(/^ws:\/\/192\.168\.1\.10:3773\/ws\?/);
       expect(yield* Ref.get(harness.bootstrapCalls)).toBe(0);
       expect(harness.fetch.calls.map(([url]) => String(url))).toEqual([
-        "http://192.168.1.10:3773/.well-known/rove/environment",
+        "http://192.168.1.10:3773/.well-known/paperplane/environment",
         "http://192.168.1.10:3773/api/auth/websocket-ticket",
       ]);
     }),
@@ -410,9 +410,9 @@ describe("RemoteEnvironmentAuthorization", () => {
 
       expect(error).toMatchObject({ _tag: "ConnectionBlockedError", reason: "configuration" });
       expect(harness.fetch.calls.map(([url]) => String(url))).toEqual([
-        "http://192.168.1.10:3773/.well-known/rove/environment",
+        "http://192.168.1.10:3773/.well-known/paperplane/environment",
       ]);
-      // The token stays saved for the Rove Connect route.
+      // The token stays saved for the Paperplane Connect route.
       expect((yield* Ref.get(harness.tokens)).get(ENVIRONMENT_ID)?.accessToken).toBe(
         "cached-access-token",
       );
@@ -567,7 +567,7 @@ describe("RemoteEnvironmentAuthorization", () => {
         for (const [, init] of exchanges) {
           expect(Object.fromEntries(tokenFields(init))).toMatchObject({
             subject_token: BOOTSTRAP.credential,
-            client_label: "Rove Code Test",
+            client_label: "Paperplane Test",
             client_device_type: "mobile",
             client_os: "test",
           });
@@ -750,7 +750,7 @@ describe("RemoteEnvironmentAuthorization", () => {
           },
         ]);
         expect(harness.fetch.calls.map(([url]) => String(url))).toEqual([
-          `${ENDPOINT.httpBaseUrl}/.well-known/rove/environment`,
+          `${ENDPOINT.httpBaseUrl}/.well-known/paperplane/environment`,
           `${ENDPOINT.httpBaseUrl}/oauth/token`,
         ]);
         expect(yield* Ref.get(harness.proofInputs)).toEqual([

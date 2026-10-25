@@ -1,4 +1,4 @@
-import type { EnvironmentId } from "@rove-code/contracts";
+import type { EnvironmentId } from "@getpaperplane/contracts";
 
 export interface ComposerPathSearchEntry {
   readonly path: string;

@@ -8,11 +8,11 @@ import {
   type ServerLifecycleWelcomePayload,
   type ServerProvider,
   type ServerSettings,
-} from "@rove-code/contracts";
-import { createServerEnvironmentAtoms } from "@rove-code/client-runtime/state/server";
-import { createOutdatedServerUpdateCommand } from "@rove-code/client-runtime/state/outdatedServerUpdate";
-import { createEnvironmentServerConfigsAtom } from "@rove-code/client-runtime/state/shell";
-import { mergeWithDefaultKeybindings } from "@rove-code/shared/keybindings";
+} from "@getpaperplane/contracts";
+import { createServerEnvironmentAtoms } from "@getpaperplane/client-runtime/state/server";
+import { createOutdatedServerUpdateCommand } from "@getpaperplane/client-runtime/state/outdatedServerUpdate";
+import { createEnvironmentServerConfigsAtom } from "@getpaperplane/client-runtime/state/shell";
+import { mergeWithDefaultKeybindings } from "@getpaperplane/shared/keybindings";
 import * as Option from "effect/Option";
 import { AsyncResult, Atom } from "effect/reactivity";
 

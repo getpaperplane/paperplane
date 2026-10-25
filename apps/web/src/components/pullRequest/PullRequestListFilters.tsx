@@ -6,7 +6,7 @@ import type {
   PullRequestListFilters,
   PullRequestListState,
   SourceControlProviderKind,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   CircleCheckIcon,
   CircleDashedIcon,

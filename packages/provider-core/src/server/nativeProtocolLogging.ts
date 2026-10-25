@@ -1,4 +1,4 @@
-import { errorTag } from "@rove-code/shared/observability";
+import { errorTag } from "@getpaperplane/shared/observability";
 
 export function structuralProtocolMethod(value: string): string {
   return value.length <= 128 && /^[A-Za-z][A-Za-z0-9._:/-]*$/.test(value) ? value : "unknown";

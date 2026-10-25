@@ -2,7 +2,7 @@ import {
   DEFAULT_CLIENT_SETTINGS,
   DEFAULT_UNIFIED_SETTINGS,
   type DeviceServiceState,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   createMemoryHistory,
   createRootRoute,

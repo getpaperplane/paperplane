@@ -64,7 +64,7 @@ const makeGuest = (origin = "https://accounts.example.com") => {
   return { guest: guest as unknown as Electron.WebContents, mainFrame, handlers, state, call };
 };
 
-const bridgeLayer = layerFor({ roveWebAuthn: { browserPasskeys: true } });
+const bridgeLayer = layerFor({ paperplaneWebAuthn: { browserPasskeys: true } });
 
 /** CBOR `{ fmt: "packed", attStmt: { alg: -7, sig }, authData }`, as authenticators encode it. */
 const attestationObject = (authData: ReadonlyArray<number>) => {
@@ -300,8 +300,8 @@ describe("PreviewPasskeys", () => {
       const entitled = yield* PreviewPasskeys.PreviewPasskeys.pipe(
         Effect.provide(
           layerFor({
-            roveWebAuthn: {
-              touchIdKeychainAccessGroup: "ABC1234567.dev.rove.app.webauthn",
+            paperplaneWebAuthn: {
+              touchIdKeychainAccessGroup: "ABC1234567.io.github.getpaperplane.paperplane.webauthn",
               browserPasskeys: false,
             },
           }),
@@ -309,7 +309,13 @@ describe("PreviewPasskeys", () => {
       );
       yield* entitled.configure;
       assert.deepStrictEqual(electron.configureWebAuthn.mock.calls, [
-        [{ touchID: { keychainAccessGroup: "ABC1234567.dev.rove.app.webauthn" } }],
+        [
+          {
+            touchID: {
+              keychainAccessGroup: "ABC1234567.io.github.getpaperplane.paperplane.webauthn",
+            },
+          },
+        ],
       ]);
       assert.isFalse(entitled.bridgeEnabled);
       const { guest, handlers } = makeGuest();
@@ -319,7 +325,7 @@ describe("PreviewPasskeys", () => {
       const unpackaged = yield* PreviewPasskeys.PreviewPasskeys.pipe(
         Effect.provide(
           layerFor(
-            { roveWebAuthn: { touchIdKeychainAccessGroup: "X", browserPasskeys: true } },
+            { paperplaneWebAuthn: { touchIdKeychainAccessGroup: "X", browserPasskeys: true } },
             false,
           ),
         ),

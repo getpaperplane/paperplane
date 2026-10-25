@@ -26,7 +26,7 @@ export default function (pi: ExtensionAPI) {
       }
       NodeAssert.equal(directory, getPackageDir(), "extension resolution must locate the host SDK");
       NodeAssert.ok(NodeFS.existsSync(NodePath.join(directory, "dist", "index.js")));
-      const childPath = NodePath.join(directory, "rove-child-probe.mjs");
+      const childPath = NodePath.join(directory, "paperplane-child-probe.mjs");
       NodeFS.writeFileSync(
         childPath,
         `

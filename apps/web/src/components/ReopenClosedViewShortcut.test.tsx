@@ -1,5 +1,5 @@
-import type { ResolvedKeybindingsConfig, ScopedThreadRef } from "@rove-code/contracts";
-import { DEFAULT_RESOLVED_KEYBINDINGS } from "@rove-code/shared/keybindings";
+import type { ResolvedKeybindingsConfig, ScopedThreadRef } from "@getpaperplane/contracts";
+import { DEFAULT_RESOLVED_KEYBINDINGS } from "@getpaperplane/shared/keybindings";
 import * as Cause from "effect/Cause";
 import { AsyncResult } from "effect/reactivity";
 import { act } from "react";

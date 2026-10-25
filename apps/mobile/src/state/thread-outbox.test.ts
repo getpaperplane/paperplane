@@ -1,7 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
-import { EnvironmentNotRegisteredError } from "@rove-code/client-runtime/connection";
-import { isTransportConnectionErrorMessage } from "@rove-code/client-runtime/errors";
-import { EnvironmentRpcUnavailableError } from "@rove-code/client-runtime/rpc";
+import { EnvironmentNotRegisteredError } from "@getpaperplane/client-runtime/connection";
+import { isTransportConnectionErrorMessage } from "@getpaperplane/client-runtime/errors";
+import { EnvironmentRpcUnavailableError } from "@getpaperplane/client-runtime/rpc";
 import {
   CommandId,
   ComposerContextId,
@@ -12,7 +12,7 @@ import {
   ProjectId,
   ProviderInstanceId,
   ThreadId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { AtomRegistry } from "effect/reactivity";
 import * as RpcClientError from "effect/rpc/RpcClientError";
 import * as Socket from "effect/socket/Socket";
@@ -118,7 +118,7 @@ describe("thread outbox", () => {
   it("retains structured context through a persisted offline queue round trip", () => {
     const message: QueuedThreadMessage = {
       ...queuedMessage({ messageId: "context-message", createdAt: "2026-09-06T12:00:00.000Z" }),
-      text: "[Build](rove-context://v1/terminal/build-output)",
+      text: "[Build](paperplane-context://v1/terminal/build-output)",
       context: {
         version: 1,
         records: [
@@ -378,8 +378,8 @@ describe("thread outbox", () => {
           name: "photo.png",
           mimeType: "image/png",
           sizeBytes: 3,
-          fileUri: "file:///documents/rove-composer-attachments/photo.png",
-          previewUri: "file:///documents/rove-composer-attachments/photo.png",
+          fileUri: "file:///documents/paperplane-composer-attachments/photo.png",
+          previewUri: "file:///documents/paperplane-composer-attachments/photo.png",
           uploadedAttachmentId: "pending-photo-png",
           uploadEnvironmentId: EnvironmentId.make("environment-1"),
         },
@@ -1443,8 +1443,8 @@ describe("thread outbox", () => {
             name: "photo.png",
             mimeType: "image/png",
             sizeBytes: 3,
-            fileUri: "file:///documents/rove-composer-attachments/photo.png",
-            previewUri: "file:///documents/rove-composer-attachments/photo.png",
+            fileUri: "file:///documents/paperplane-composer-attachments/photo.png",
+            previewUri: "file:///documents/paperplane-composer-attachments/photo.png",
             uploadedAttachmentId: "pending-photo-png",
             uploadEnvironmentId: EnvironmentId.make("environment-1"),
           },

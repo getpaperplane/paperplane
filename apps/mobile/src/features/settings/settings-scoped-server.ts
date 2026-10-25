@@ -6,12 +6,12 @@ import {
   type ProjectScopedServerSettingKey,
   type ServerSettings,
   type ServerSettingsPatch,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   clearProjectSettingsOverrides,
   resolveProjectSettings,
   resolveWorktreeCleanup,
-} from "@rove-code/shared/projectSettings";
+} from "@getpaperplane/shared/projectSettings";
 
 import type { SettingsTarget } from "./settings-environment-filter";
 

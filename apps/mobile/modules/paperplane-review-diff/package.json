@@ -1,0 +1,17 @@
+{
+  "name": "@getpaperplane/mobile-review-diff-native",
+  "version": "0.0.0",
+  "private": true,
+  "expo-module": {
+    "ios": {
+      "modules": [
+        "PaperplaneReviewDiffModule"
+      ]
+    },
+    "android": {
+      "modules": [
+        "io.github.getpaperplane.paperplane.reviewdiff.PaperplaneReviewDiffModule"
+      ]
+    }
+  }
+}

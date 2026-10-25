@@ -1,5 +1,5 @@
-import { SourceControlProviderKind } from "@rove-code/contracts";
-import type { RepositoryIdentity, SourceControlProviderInfo } from "@rove-code/contracts";
+import { SourceControlProviderKind } from "@getpaperplane/contracts";
+import type { RepositoryIdentity, SourceControlProviderInfo } from "@getpaperplane/contracts";
 
 export interface ChangeRequestPresentation {
   readonly icon:

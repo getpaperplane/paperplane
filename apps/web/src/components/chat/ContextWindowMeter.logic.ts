@@ -1,8 +1,12 @@
-import type { ModelSelection, ProviderDriverKind, ProviderInstanceId } from "@rove-code/contracts";
+import type {
+  ModelSelection,
+  ProviderDriverKind,
+  ProviderInstanceId,
+} from "@getpaperplane/contracts";
 import {
   CLAUDE_RESUME_COMPACTION_NEVER_ANSWER,
   isClaudeResumeCompactionQuestion,
-} from "@rove-code/shared/claudeCompaction";
+} from "@getpaperplane/shared/claudeCompaction";
 import {
   resolveSelectableProviderInstanceEntry,
   type ProviderInstanceEntry,

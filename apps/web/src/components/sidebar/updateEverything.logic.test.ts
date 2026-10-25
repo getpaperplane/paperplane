@@ -1,4 +1,4 @@
-import { EnvironmentId, type ServerSelfUpdateCapability } from "@rove-code/contracts";
+import { EnvironmentId, type ServerSelfUpdateCapability } from "@getpaperplane/contracts";
 import { describe, expect, it } from "vite-plus/test";
 
 import {

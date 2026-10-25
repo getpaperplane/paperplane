@@ -1,7 +1,7 @@
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
-import { resolveSymlinkTarget } from "@rove-code/shared/symlink";
+import { resolveSymlinkTarget } from "@getpaperplane/shared/symlink";
 
 /**
  * Replaces a file's contents via a sibling temp file and rename. A symlinked

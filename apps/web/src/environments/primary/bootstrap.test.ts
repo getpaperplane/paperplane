@@ -1,4 +1,4 @@
-import { EnvironmentId, type ExecutionEnvironmentDescriptor } from "@rove-code/contracts";
+import { EnvironmentId, type ExecutionEnvironmentDescriptor } from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
@@ -122,8 +122,8 @@ describe("environmentBootstrap", () => {
     await installDescriptorApi();
 
     await expect(resolveInitialPrimaryEnvironmentDescriptor()).resolves.toEqual(BASE_ENVIRONMENT);
-    expect(resolvePrimaryEnvironmentHttpUrl("/.well-known/rove/environment")).toBe(
-      "https://remote.example.com/.well-known/rove/environment",
+    expect(resolvePrimaryEnvironmentHttpUrl("/.well-known/paperplane/environment")).toBe(
+      "https://remote.example.com/.well-known/paperplane/environment",
     );
   });
 
@@ -132,8 +132,8 @@ describe("environmentBootstrap", () => {
     await installDescriptorApi();
 
     await expect(resolveInitialPrimaryEnvironmentDescriptor()).resolves.toEqual(BASE_ENVIRONMENT);
-    expect(resolvePrimaryEnvironmentHttpUrl("/.well-known/rove/environment")).toBe(
-      "https://remote.example.com/.well-known/rove/environment",
+    expect(resolvePrimaryEnvironmentHttpUrl("/.well-known/paperplane/environment")).toBe(
+      "https://remote.example.com/.well-known/paperplane/environment",
     );
     expect(getPrimaryKnownEnvironment()?.target).toEqual({
       httpBaseUrl: "https://remote.example.com/",
@@ -146,8 +146,8 @@ describe("environmentBootstrap", () => {
     await installDescriptorApi();
 
     await expect(resolveInitialPrimaryEnvironmentDescriptor()).resolves.toEqual(BASE_ENVIRONMENT);
-    expect(resolvePrimaryEnvironmentHttpUrl("/.well-known/rove/environment")).toBe(
-      "https://remote.example.com/.well-known/rove/environment",
+    expect(resolvePrimaryEnvironmentHttpUrl("/.well-known/paperplane/environment")).toBe(
+      "https://remote.example.com/.well-known/paperplane/environment",
     );
     expect(getPrimaryKnownEnvironment()?.target).toEqual({
       httpBaseUrl: "https://remote.example.com/",
@@ -178,8 +178,8 @@ describe("environmentBootstrap", () => {
     await installDescriptorApi();
 
     await expect(resolveInitialPrimaryEnvironmentDescriptor()).resolves.toEqual(BASE_ENVIRONMENT);
-    expect(resolvePrimaryEnvironmentHttpUrl("/.well-known/rove/environment")).toBe(
-      "http://localhost:5735/.well-known/rove/environment",
+    expect(resolvePrimaryEnvironmentHttpUrl("/.well-known/paperplane/environment")).toBe(
+      "http://localhost:5735/.well-known/paperplane/environment",
     );
   });
 
@@ -205,8 +205,8 @@ describe("environmentBootstrap", () => {
     await installDescriptorApi();
 
     await expect(resolveInitialPrimaryEnvironmentDescriptor()).resolves.toEqual(BASE_ENVIRONMENT);
-    expect(resolvePrimaryEnvironmentHttpUrl("/.well-known/rove/environment")).toBe(
-      "http://127.0.0.1:5733/.well-known/rove/environment",
+    expect(resolvePrimaryEnvironmentHttpUrl("/.well-known/paperplane/environment")).toBe(
+      "http://127.0.0.1:5733/.well-known/paperplane/environment",
     );
   });
 
@@ -259,7 +259,7 @@ describe("environmentBootstrap", () => {
 
   it("has no primary target when the desktop local environment is disabled", () => {
     vi.stubGlobal("window", {
-      location: new URL("rove://app/"),
+      location: new URL("paperplane://app/"),
       desktopBridge: {
         getLocalEnvironmentEnabled: () => false,
         getLocalEnvironmentBootstraps: () => [],
@@ -275,7 +275,7 @@ describe("environmentBootstrap", () => {
 
   it("preserves an unsupported window-origin protocol", () => {
     vi.stubGlobal("window", {
-      location: { origin: "file:///tmp/rove/" },
+      location: { origin: "file:///tmp/paperplane/" },
       history: { replaceState: vi.fn() },
     });
 

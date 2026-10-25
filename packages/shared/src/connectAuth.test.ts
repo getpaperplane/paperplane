@@ -10,14 +10,14 @@ import {
 describe("connectAuth", () => {
   it("round-trips state, challenge, and loopback port through the authorize URL fragment", () => {
     const url = buildConnectAuthorizeRequestUrl({
-      hostedAppUrl: "https://app.rove.codes",
+      hostedAppUrl: "https://app.paperplane.codes",
       state: "q7mK9xV2pL4nR8sT6wYzAQ",
       challenge: "E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM",
       loopbackPort: 34338,
     });
     const parsed = new URL(url);
 
-    expect(parsed.origin).toBe("https://app.rove.codes");
+    expect(parsed.origin).toBe("https://app.paperplane.codes");
     expect(parsed.pathname).toBe("/connect");
     expect(parsed.search).toBe("");
     expect(readConnectAuthorizeRequest(parsed)).toEqual({
@@ -29,18 +29,20 @@ describe("connectAuth", () => {
   });
 
   it("rejects authorize requests missing state, challenge, or port", () => {
-    expect(readConnectAuthorizeRequest(new URL("https://app.rove.codes/connect"))).toBeNull();
-    expect(
-      readConnectAuthorizeRequest(new URL("https://app.rove.codes/connect#state=abc&port=34338")),
-    ).toBeNull();
+    expect(readConnectAuthorizeRequest(new URL("https://app.paperplane.codes/connect"))).toBeNull();
     expect(
       readConnectAuthorizeRequest(
-        new URL("https://app.rove.codes/connect#challenge=abc&port=34338"),
+        new URL("https://app.paperplane.codes/connect#state=abc&port=34338"),
       ),
     ).toBeNull();
     expect(
       readConnectAuthorizeRequest(
-        new URL("https://app.rove.codes/connect#state=abc&challenge=abc"),
+        new URL("https://app.paperplane.codes/connect#challenge=abc&port=34338"),
+      ),
+    ).toBeNull();
+    expect(
+      readConnectAuthorizeRequest(
+        new URL("https://app.paperplane.codes/connect#state=abc&challenge=abc"),
       ),
     ).toBeNull();
   });
@@ -48,7 +50,7 @@ describe("connectAuth", () => {
   it("rejects authorize requests whose loopback port is corrupted", () => {
     for (const port of ["", "abc", "-1", "0", "65536", "34338x", "34 38"]) {
       const url = new URL(
-        `https://app.rove.codes/connect#state=state-1&challenge=challenge-1&port=${encodeURIComponent(port)}`,
+        `https://app.paperplane.codes/connect#state=state-1&challenge=challenge-1&port=${encodeURIComponent(port)}`,
       );
       expect(readConnectAuthorizeRequest(url), port).toBeNull();
     }
@@ -57,7 +59,7 @@ describe("connectAuth", () => {
   it("builds a PKCE authorize URL against the Clerk endpoint", () => {
     const url = new URL(
       buildConnectClerkAuthorizeUrl({
-        authorizationEndpoint: "https://clerk.rove.codes/oauth/authorize",
+        authorizationEndpoint: "https://clerk.paperplane.codes/oauth/authorize",
         clientId: "oauthapp_123",
         redirectUri: connectLoopbackRedirectUri(34338),
         scopes: ["openid", "profile", "email", "offline_access"],
@@ -66,7 +68,7 @@ describe("connectAuth", () => {
       }),
     );
 
-    expect(url.origin).toBe("https://clerk.rove.codes");
+    expect(url.origin).toBe("https://clerk.paperplane.codes");
     expect(url.pathname).toBe("/oauth/authorize");
     expect(url.searchParams.get("client_id")).toBe("oauthapp_123");
     expect(url.searchParams.get("redirect_uri")).toBe("http://127.0.0.1:34338/callback");

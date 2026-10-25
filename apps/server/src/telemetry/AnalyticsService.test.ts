@@ -11,7 +11,7 @@ import * as Layer from "effect/Layer";
 import * as Schema from "effect/Schema";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientResponse from "effect/http/HttpClientResponse";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 import * as ServerConfig from "../config.ts";
 import * as ServerSettings from "../serverSettings.ts";
 import * as AnalyticsService from "./AnalyticsService.ts";
@@ -51,7 +51,7 @@ function fixture(
       return HttpClientResponse.fromWeb(request, new Response(null, { status }));
     }),
   );
-  const configLayer = ServerConfig.layerTest(process.cwd(), { prefix: "rove-analytics-" });
+  const configLayer = ServerConfig.layerTest(process.cwd(), { prefix: "paperplane-analytics-" });
   const settingsLayer = ServerSettings.layerTest({ telemetryEnabled: options.enabled ?? true });
   const layer = AnalyticsService.layer.pipe(
     Layer.provideMerge(configLayer),
@@ -111,14 +111,14 @@ it.layer(NodeServices.layer)("AnalyticsService", (it) => {
       const layerRuntime = AnalyticsService.layer.pipe(
         Layer.provide(ServerSettings.layerTest()),
         Layer.provideMerge(
-          ServerConfig.layerTest(process.cwd(), { prefix: "rove-telemetry-retry-" }),
+          ServerConfig.layerTest(process.cwd(), { prefix: "paperplane-telemetry-retry-" }),
         ),
         Layer.provide(
           ConfigProvider.layer(
             ConfigProvider.fromUnknown({
-              ROVE_TELEMETRY_ENABLED: true,
-              ROVE_POSTHOG_KEY: "phc_test_key",
-              ROVE_POSTHOG_HOST: "http://localhost",
+              PAPERPLANE_TELEMETRY_ENABLED: true,
+              PAPERPLANE_POSTHOG_KEY: "phc_test_key",
+              PAPERPLANE_POSTHOG_HOST: "http://localhost",
             }),
           ),
         ),
@@ -149,8 +149,8 @@ it.layer(NodeServices.layer)("AnalyticsService", (it) => {
     }),
   );
 
-  it.effect("sends anonymous allowlisted metadata to Rove's ingestion host", () => {
-    const f = fixture({ env: { ROVE_ANALYTICS_ENVIRONMENT: "test" } });
+  it.effect("sends anonymous allowlisted metadata to Paperplane's ingestion host", () => {
+    const f = fixture({ env: { PAPERPLANE_ANALYTICS_ENVIRONMENT: "test" } });
     return Effect.gen(function* () {
       const analytics = yield* AnalyticsService.AnalyticsService;
       yield* analytics.record("client.connected", {
@@ -178,7 +178,7 @@ it.layer(NodeServices.layer)("AnalyticsService", (it) => {
       const event = f.requests[0]?.payload.batch[0];
       assert.match(event?.distinct_id ?? "", /^[0-9a-f]{64}$/);
       assert.equal(event?.properties.$process_person_profile, false);
-      assert.equal(event?.properties.$lib, "rove-server");
+      assert.equal(event?.properties.$lib, "paperplane-server");
       assert.equal(event?.properties.$geoip_disable, true);
       assert.isNull(event?.properties.$ip);
       assert.notProperty(event?.properties ?? {}, "$set");
@@ -284,7 +284,7 @@ it.layer(NodeServices.layer)("AnalyticsService", (it) => {
   });
 
   for (const [name, options] of [
-    ["environment opt-out", { env: { ROVE_TELEMETRY_ENABLED: false } }],
+    ["environment opt-out", { env: { PAPERPLANE_TELEMETRY_ENABLED: false } }],
     ["persisted preference opt-out", { enabled: false }],
   ] as const) {
     it.effect(`${name} prevents identity access and requests`, () => {
@@ -355,7 +355,7 @@ it.layer(NodeServices.layer)("AnalyticsService", (it) => {
   );
 
   it.effect("the environment opt-out cannot be overridden by Settings", () => {
-    const f = fixture({ env: { ROVE_TELEMETRY_ENABLED: false } });
+    const f = fixture({ env: { PAPERPLANE_TELEMETRY_ENABLED: false } });
     return Effect.gen(function* () {
       const settings = yield* ServerSettings.ServerSettingsService;
       yield* settings.updateSettings({ telemetryEnabled: true });

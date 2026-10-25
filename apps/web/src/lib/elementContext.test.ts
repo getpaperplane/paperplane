@@ -1,4 +1,4 @@
-import type { PickedElementPayload } from "@rove-code/contracts";
+import type { PickedElementPayload } from "@getpaperplane/contracts";
 import { describe, expect, it } from "vite-plus/test";
 
 import { normalizeElementContextSelection } from "./elementContext";

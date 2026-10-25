@@ -219,7 +219,7 @@ export const OrchestratorMcpDelegateTaskResult = Schema.Struct({
   resultContextTransferId: Schema.NullOr(ContextTransferId),
   hasPendingQuestion: Schema.Boolean.annotate({
     description:
-      "Blocking question ends mode=wait. Pass threadId=childThreadId to rove_pending_request_list, rove_pending_request_read (with requestId) and rove_pending_request_respond, or ask the user; the task's completion still wakes this thread.",
+      "Blocking question ends mode=wait. Pass threadId=childThreadId to paperplane_pending_request_list, paperplane_pending_request_read (with requestId) and paperplane_pending_request_respond, or ask the user; the task's completion still wakes this thread.",
   }),
   waitTimedOut: Schema.Boolean.annotate({
     description:
@@ -299,7 +299,7 @@ export type OrchestratorMcpThreadStatus = typeof OrchestratorMcpThreadStatus.Typ
 const OrchestratorMcpProjectTarget = Schema.optional(
   ProjectId.annotate({
     description:
-      "Project to act on. Omit for the calling thread's project; required when the caller is not a Rove thread.",
+      "Project to act on. Omit for the calling thread's project; required when the caller is not a Paperplane thread.",
   }),
 );
 
@@ -344,7 +344,7 @@ export type OrchestratorMcpThreadListItem = typeof OrchestratorMcpThreadListItem
 
 export const OrchestratorMcpThreadListResult = Schema.Struct({
   projectId: ProjectId,
-  /** The calling thread, or null when the caller is not a Rove thread. */
+  /** The calling thread, or null when the caller is not a Paperplane thread. */
   currentThreadId: Schema.NullOr(ThreadId),
   threads: Schema.Array(OrchestratorMcpThreadListItem),
   nextCursor: Schema.NullOr(NonNegativeInt),
@@ -512,9 +512,9 @@ export const OrchestratorMcpProviderCapability = Schema.Struct({
 export type OrchestratorMcpProviderCapability = typeof OrchestratorMcpProviderCapability.Type;
 
 export const OrchestratorMcpCapabilitiesResult = Schema.Struct({
-  /** The calling thread, or null when the caller is not a Rove thread. */
+  /** The calling thread, or null when the caller is not a Paperplane thread. */
   parentThreadId: Schema.NullOr(ThreadId),
-  /** The calling thread's selection, or null when the caller is not a Rove thread. */
+  /** The calling thread's selection, or null when the caller is not a Paperplane thread. */
   inheritedProviderInstanceId: Schema.NullOr(ProviderInstanceId),
   inheritedModel: Schema.NullOr(Schema.String),
   runtimeMode: RuntimeMode,
@@ -569,10 +569,10 @@ export const OrchestratorMcpScheduledTask = Schema.Struct({
   schedule: ScheduledTaskSchedule,
   nextRunAt: Schema.NullOr(IsoDateTime),
   lastRunStatus: ScheduledTaskRunStatus,
-  /** For webhook tasks: the public Rove Connect URL. Absent when this environment has no managed tunnel. */
+  /** For webhook tasks: the public Paperplane Connect URL. Absent when this environment has no managed tunnel. */
   webhookUrl: Schema.optional(Schema.String).annotate({
     description:
-      "Public URL to give the sender. Absent when this environment has no Rove Connect managed tunnel; the user must enable Rove Connect remote access first.",
+      "Public URL to give the sender. Absent when this environment has no Paperplane Connect managed tunnel; the user must enable Paperplane Connect remote access first.",
   }),
   webhookSignature: Schema.optional(Schema.Literals(["none", "set"])).annotate({
     description: "Whether requests must carry a valid signature.",
@@ -587,7 +587,7 @@ export const OrchestratorMcpListScheduledTasksInput = Schema.Struct({
   projectId: Schema.optional(
     ProjectId.annotate({
       description:
-        "Only list this project's tasks. Omit for the calling thread's project, or for every project when the caller is not a Rove thread.",
+        "Only list this project's tasks. Omit for the calling thread's project, or for every project when the caller is not a Paperplane thread.",
     }),
   ),
 });

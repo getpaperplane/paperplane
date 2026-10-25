@@ -1,4 +1,4 @@
-import { EnvironmentId, ProjectId, ProviderInstanceId } from "@rove-code/contracts";
+import { EnvironmentId, ProjectId, ProviderInstanceId } from "@getpaperplane/contracts";
 import { describe, expect, it } from "vite-plus/test";
 
 import {

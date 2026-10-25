@@ -10,13 +10,13 @@ import { TestClock } from "effect/testing";
 
 import * as WorkspacePaths from "../workspace/WorkspacePaths.ts";
 import * as ProjectFaviconResolver from "./ProjectFaviconResolver.ts";
-import * as RoveProjectFileLoader from "./RoveProjectFileLoader.ts";
+import * as PaperplaneProjectFileLoader from "./PaperplaneProjectFileLoader.ts";
 
 const layerTest = Layer.empty.pipe(
   Layer.provideMerge(
     ProjectFaviconResolver.layer.pipe(
       Layer.provide(WorkspacePaths.layer),
-      Layer.provide(RoveProjectFileLoader.layer),
+      Layer.provide(PaperplaneProjectFileLoader.layer),
     ),
   ),
   Layer.provideMerge(NodeServices.layer),
@@ -25,7 +25,7 @@ const layerTest = Layer.empty.pipe(
 const makeTempDir = Effect.gen(function* () {
   const fileSystem = yield* FileSystem.FileSystem;
   return yield* fileSystem.makeTempDirectoryScoped({
-    prefix: "rove-project-favicon-",
+    prefix: "paperplane-project-favicon-",
   });
 });
 
@@ -45,7 +45,7 @@ const writeTextFile = Effect.fn("writeTextFile")(function* (
 
 const makeResolverWithFileSystem = (fileSystem: FileSystem.FileSystem) =>
   ProjectFaviconResolver.make.pipe(
-    Effect.provide([WorkspacePaths.layer, RoveProjectFileLoader.layer]),
+    Effect.provide([WorkspacePaths.layer, PaperplaneProjectFileLoader.layer]),
     Effect.provideService(FileSystem.FileSystem, fileSystem),
   );
 
@@ -123,12 +123,12 @@ it.layer(layerTest)("ProjectFaviconResolverLive", (it) => {
       }),
     );
 
-    it.effect("prefers a rove.json iconPath over well-known files", () =>
+    it.effect("prefers a paperplane.json iconPath over well-known files", () =>
       Effect.gen(function* () {
         const resolver = yield* ProjectFaviconResolver.ProjectFaviconResolver;
         const path = yield* Path.Path;
         const cwd = yield* makeTempDir;
-        yield* writeTextFile(cwd, "rove.json", '{ "iconPath": "brand/mark.svg" }');
+        yield* writeTextFile(cwd, "paperplane.json", '{ "iconPath": "brand/mark.svg" }');
         yield* writeTextFile(cwd, "brand/mark.svg", "<svg>mark</svg>");
         yield* writeTextFile(cwd, "favicon.svg", "<svg>favicon</svg>");
 
@@ -182,11 +182,27 @@ it.layer(layerTest)("ProjectFaviconResolverLive", (it) => {
       }),
     );
 
-    it.effect("falls back to well-known files when the rove.json iconPath does not exist", () =>
+    it.effect(
+      "falls back to well-known files when the paperplane.json iconPath does not exist",
+      () =>
+        Effect.gen(function* () {
+          const resolver = yield* ProjectFaviconResolver.ProjectFaviconResolver;
+          const cwd = yield* makeTempDir;
+          yield* writeTextFile(cwd, "paperplane.json", '{ "iconPath": "brand/missing.svg" }');
+          yield* writeTextFile(cwd, "favicon.svg", "<svg>favicon</svg>");
+
+          const resolved = yield* resolver.resolvePath(cwd);
+
+          expect(resolved).not.toBeNull();
+          expect(resolved).toContain("favicon.svg");
+        }),
+    );
+
+    it.effect("ignores invalid paperplane.json files", () =>
       Effect.gen(function* () {
         const resolver = yield* ProjectFaviconResolver.ProjectFaviconResolver;
         const cwd = yield* makeTempDir;
-        yield* writeTextFile(cwd, "rove.json", '{ "iconPath": "brand/missing.svg" }');
+        yield* writeTextFile(cwd, "paperplane.json", "{ not json");
         yield* writeTextFile(cwd, "favicon.svg", "<svg>favicon</svg>");
 
         const resolved = yield* resolver.resolvePath(cwd);
@@ -196,27 +212,13 @@ it.layer(layerTest)("ProjectFaviconResolverLive", (it) => {
       }),
     );
 
-    it.effect("ignores invalid rove.json files", () =>
-      Effect.gen(function* () {
-        const resolver = yield* ProjectFaviconResolver.ProjectFaviconResolver;
-        const cwd = yield* makeTempDir;
-        yield* writeTextFile(cwd, "rove.json", "{ not json");
-        yield* writeTextFile(cwd, "favicon.svg", "<svg>favicon</svg>");
-
-        const resolved = yield* resolver.resolvePath(cwd);
-
-        expect(resolved).not.toBeNull();
-        expect(resolved).toContain("favicon.svg");
-      }),
-    );
-
-    it.effect("does not resolve a rove.json iconPath outside the workspace root", () =>
+    it.effect("does not resolve a paperplane.json iconPath outside the workspace root", () =>
       Effect.gen(function* () {
         const resolver = yield* ProjectFaviconResolver.ProjectFaviconResolver;
         const parent = yield* makeTempDir;
         const cwd = `${parent}/app`;
         yield* writeTextFile(parent, "secret.svg", "<svg>secret</svg>");
-        yield* writeTextFile(cwd, "rove.json", '{ "iconPath": "../secret.svg" }');
+        yield* writeTextFile(cwd, "paperplane.json", '{ "iconPath": "../secret.svg" }');
 
         const resolved = yield* resolver.resolvePath(cwd);
 

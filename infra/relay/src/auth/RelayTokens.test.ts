@@ -2,7 +2,7 @@
 import * as NodeCrypto from "node:crypto";
 
 import { describe, expect, it } from "@effect/vitest";
-import { signRelayJwt } from "@rove-code/shared/relayJwt";
+import { signRelayJwt } from "@getpaperplane/shared/relayJwt";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Redacted from "effect/Redacted";
@@ -22,12 +22,12 @@ const config = RelayConfiguration.RelayConfiguration.of({
     teamId: "team-id",
     keyId: "key-id",
     privateKey: Redacted.make("private-key"),
-    bundleId: "dev.rove.app.dev",
+    bundleId: "io.github.getpaperplane.paperplane.dev",
   },
   apnsDeliveryJobSigningSecret: Redacted.make("job-secret"),
   clerkSecretKey: Redacted.make("clerk-secret"),
   clerkPublishableKey: "pk_test_test",
-  clerkJwtAudience: "rove-relay",
+  clerkJwtAudience: "paperplane-relay",
   cloudMintPrivateKey: Redacted.make(keyPair.privateKey),
   cloudMintPublicKey: keyPair.publicKey,
   managedEndpointBaseDomain: undefined,
@@ -88,7 +88,7 @@ describe("RelayTokens", () => {
         jti: "access-token-1",
         issuedAtEpochSeconds: 100,
         expiresAtEpochSeconds: 1_900,
-        clientId: "rove-mobile",
+        clientId: "paperplane-mobile",
         scopes: ["environment:connect", "environment:status", "mobile:registration"],
       });
 
@@ -97,7 +97,7 @@ describe("RelayTokens", () => {
       ).toMatchObject({
         sub: "user_123",
         cnf: { jkt: "proof-key-thumbprint" },
-        client_id: "rove-mobile",
+        client_id: "paperplane-mobile",
         scope: ["environment:connect", "environment:status", "mobile:registration"],
       });
       expect(
@@ -115,14 +115,14 @@ describe("RelayTokens", () => {
         jti: "web-access-token-1",
         issuedAtEpochSeconds: 100,
         expiresAtEpochSeconds: 200,
-        clientId: "rove-web",
+        clientId: "paperplane-web",
         scopes: ["environment:connect", "environment:status"],
       });
 
       expect(
         yield* relayTokens.verifyDpopAccessToken({ token, nowEpochSeconds: 150 }),
       ).toMatchObject({
-        client_id: "rove-web",
+        client_id: "paperplane-web",
         scope: ["environment:connect", "environment:status"],
         cnf: { jkt: "web-proof-key-thumbprint" },
       });
@@ -134,7 +134,7 @@ describe("RelayTokens", () => {
       const relayTokens = yield* RelayTokens.RelayTokens;
       expect(
         relayTokens.resolveDpopAccessTokenScopes({
-          clientId: "rove-mobile",
+          clientId: "paperplane-mobile",
           scope: "environment:status environment:connect environment:status",
         }),
       ).toEqual(["environment:status", "environment:connect"]);
@@ -146,7 +146,7 @@ describe("RelayTokens", () => {
       const relayTokens = yield* RelayTokens.RelayTokens;
       const token = yield* signRelayJwt({
         privateKey: keyPair.privateKey,
-        typ: "rove-relay-dpop-access+jwt",
+        typ: "paperplane-relay-dpop-access+jwt",
         payload: {
           iss: "https://relay.example.test",
           aud: "https://relay.example.test",
@@ -154,7 +154,7 @@ describe("RelayTokens", () => {
           jti: "access-token-invalid-scope",
           iat: 100,
           exp: 200,
-          client_id: "rove-mobile",
+          client_id: "paperplane-mobile",
           scope: "environment:admin",
           cnf: { jkt: "proof-key-thumbprint" },
         },
@@ -169,7 +169,7 @@ describe("RelayTokens", () => {
       const relayTokens = yield* RelayTokens.RelayTokens;
       const token = yield* signRelayJwt({
         privateKey: keyPair.privateKey,
-        typ: "rove-relay-dpop-access+jwt",
+        typ: "paperplane-relay-dpop-access+jwt",
         payload: {
           iss: "https://relay.example.test",
           aud: "https://relay.example.test",
@@ -177,7 +177,7 @@ describe("RelayTokens", () => {
           jti: "web-token-invalid-mobile-scope",
           iat: 100,
           exp: 200,
-          client_id: "rove-web",
+          client_id: "paperplane-web",
           scope: "environment:connect mobile:registration",
           cnf: { jkt: "proof-key-thumbprint" },
         },

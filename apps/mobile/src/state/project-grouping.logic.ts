@@ -1,5 +1,5 @@
-import type { ProjectGroupingSettings } from "@rove-code/client-runtime/state/project-grouping";
-import type { SidebarProjectGroupingMode } from "@rove-code/contracts";
+import type { ProjectGroupingSettings } from "@getpaperplane/client-runtime/state/project-grouping";
+import type { SidebarProjectGroupingMode } from "@getpaperplane/contracts";
 
 import type { Preferences } from "../persistence/mobile-preferences";
 

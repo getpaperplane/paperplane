@@ -1,4 +1,4 @@
-declare module "@rove-code/mobile-preview-stream" {
+declare module "@getpaperplane/mobile-preview-stream" {
   const script: string;
   export default script;
 }

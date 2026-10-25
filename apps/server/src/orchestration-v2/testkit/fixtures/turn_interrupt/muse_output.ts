@@ -1,5 +1,5 @@
 import { assert } from "@effect/vitest";
-import type { ProviderReplayTranscript } from "@rove-code/contracts";
+import type { ProviderReplayTranscript } from "@getpaperplane/contracts";
 
 import type { OrchestratorV2ScenarioResult } from "../../OrchestratorScenario.ts";
 import {
@@ -12,7 +12,7 @@ import {
 } from "../shared.ts";
 
 /**
- * Stop while Muse works on a `sleep 30` request: Rove sends `turn/interrupt`, Muse
+ * Stop while Muse works on a `sleep 30` request: Paperplane sends `turn/interrupt`, Muse
  * ends the turn as cancelled, and the run, every row and the session settle.
  */
 export function assertMuseTurnInterruptOutput(

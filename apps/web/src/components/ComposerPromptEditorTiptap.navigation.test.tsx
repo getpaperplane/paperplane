@@ -10,7 +10,7 @@ import { serializeEditorDoc } from "~/composer-rich-text-doc";
 import { ComposerPromptEditor, type ComposerPromptEditorHandle } from "./ComposerPromptEditor";
 
 const draft =
-  "> **Assistant and reasoning text still save intermediate full snapshots**, using the existing 50 ms batching. Compaction still preserves their `turn-item.updated` events. [Code](/Users/yashsingh/p/projects/rove/apps/server/src/orchestration-v2/ProjectionMaintenance.ts:235)";
+  "> **Assistant and reasoning text still save intermediate full snapshots**, using the existing 50 ms batching. Compaction still preserves their `turn-item.updated` events. [Code](/Users/yashsingh/p/projects/paperplane/apps/server/src/orchestration-v2/ProjectionMaintenance.ts:235)";
 
 let root: Root;
 let container: HTMLDivElement;

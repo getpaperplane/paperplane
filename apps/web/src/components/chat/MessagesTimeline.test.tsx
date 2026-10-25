@@ -8,7 +8,7 @@ import {
   ProjectId,
   RunId,
   ThreadId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   act,
   createRef,
@@ -482,7 +482,7 @@ function buildSnapShotTimelineEntry(previewUrl?: string) {
             kind: "snap-shot" as const,
             capturedAt: "2026-03-17T19:12:28.000Z",
             appName: "Terminal",
-            windowTitle: "rove — Tests",
+            windowTitle: "paperplane — Tests",
             appIconDataUrl: "data:image/png;base64,aWNvbg==",
           },
         },
@@ -1305,7 +1305,7 @@ describe("MessagesTimeline", () => {
     );
 
     expect(markup).toContain("Terminal");
-    expect(markup).toContain("rove — Tests");
+    expect(markup).toContain("paperplane — Tests");
     expect(markup).toContain('src="data:image/png;base64,aWNvbg=="');
     expect(onAnchorReady).toHaveBeenCalledOnce();
     expect(onAnchorReady).toHaveBeenCalledWith(firstEntry.message.id, 0);
@@ -1318,7 +1318,7 @@ describe("MessagesTimeline", () => {
 
     expect(markup).toContain("screenshot.png");
     expect(markup).not.toContain("Terminal");
-    expect(markup).not.toContain("rove — Tests");
+    expect(markup).not.toContain("paperplane — Tests");
     expect(markup).not.toContain('src="data:image/png;base64,aWNvbg=="');
     expect(markup).not.toContain("h-28 w-52 max-w-full");
   });
@@ -2517,11 +2517,11 @@ describe("MessagesTimeline", () => {
     expect(markup).toContain("Received 1 update and ran 1 command");
   });
 
-  it("renders Rove MCP dynamic tools with the product logo and pretty name", async () => {
+  it("renders Paperplane MCP dynamic tools with the product logo and pretty name", async () => {
     activityTestState.expanded = true;
     const { MessagesTimeline } = await import("./MessagesTimeline");
     const item = {
-      id: "tool-rove-thread-read",
+      id: "tool-paperplane-thread-read",
       threadId: "thread-source",
       runId: null,
       nodeId: null,
@@ -2536,7 +2536,7 @@ describe("MessagesTimeline", () => {
       completedAt: null,
       updatedAt: {},
       type: "dynamic_tool",
-      toolName: "mcp__rove__rove_thread_read",
+      toolName: "mcp__paperplane__paperplane_thread_read",
       input: { threadId: "thread-child" },
       output: { messages: [] },
     } as const;
@@ -2586,10 +2586,10 @@ describe("MessagesTimeline", () => {
       />,
     );
 
-    // Rove MCP calls use the branded app icon instead of the generic tool icon.
+    // Paperplane MCP calls use the branded app icon instead of the generic tool icon.
     expect(markup).toContain('src="/favicon-32x32.png"');
-    expect(markup).toContain("Read a Rove thread");
-    expect(markup).not.toContain("mcp__rove__rove_thread_read");
+    expect(markup).toContain("Read a Paperplane thread");
+    expect(markup).not.toContain("mcp__paperplane__paperplane_thread_read");
   });
 
   it("formats changed file paths from the workspace root", async () => {
@@ -2621,16 +2621,18 @@ describe("MessagesTimeline", () => {
               tone: "tool",
               itemType: "file_change",
               toolLifecycleStatus: "completed",
-              changedFiles: ["C:/Users/mike/dev-stuff/rove/apps/web/src/session-logic.ts"],
+              changedFiles: ["C:/Users/mike/dev-stuff/paperplane/apps/web/src/session-logic.ts"],
             },
           },
         ]}
-        workspaceRoot="C:/Users/mike/dev-stuff/rove"
+        workspaceRoot="C:/Users/mike/dev-stuff/paperplane"
       />,
     );
 
-    expect(markup).toContain("rove/apps/web/src/session-logic.ts");
-    expect(markup).not.toContain("C:/Users/mike/dev-stuff/rove/apps/web/src/session-logic.ts");
+    expect(markup).toContain("paperplane/apps/web/src/session-logic.ts");
+    expect(markup).not.toContain(
+      "C:/Users/mike/dev-stuff/paperplane/apps/web/src/session-logic.ts",
+    );
   });
 
   it("renders review comment contexts as structured cards instead of raw tags", () => {

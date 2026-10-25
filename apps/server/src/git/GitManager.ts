@@ -1,4 +1,4 @@
-import { SourceControlProviderKind } from "@rove-code/contracts";
+import { SourceControlProviderKind } from "@getpaperplane/contracts";
 import * as Arr from "effect/Array";
 import * as Cache from "effect/Cache";
 import * as Clock from "effect/Clock";
@@ -42,11 +42,11 @@ import {
   type ThreadPullRequestKey,
   type VcsCreateWorktreeInput,
   type VcsCreateWorktreeResult,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   hasProjectSettingsOverrides,
   resolveProjectSettings,
-} from "@rove-code/shared/projectSettings";
+} from "@getpaperplane/shared/projectSettings";
 import {
   detectSourceControlProviderFromGitRemoteUrl,
   mergeGitStatusParts,
@@ -54,24 +54,24 @@ import {
   resolveAutoFeatureBranchName,
   sanitizeBranchFragment,
   sanitizeFeatureBranchName,
-} from "@rove-code/shared/git";
+} from "@getpaperplane/shared/git";
 import {
   canonicalRepositoryKey,
   getChangeRequestTerminologyForKind,
   isSshRemoteUrl,
   type ChangeRequestTerminology,
-} from "@rove-code/shared/sourceControl";
-import { parseChangeRequestUrl } from "@rove-code/shared/changeRequestUrl";
+} from "@getpaperplane/shared/sourceControl";
+import { parseChangeRequestUrl } from "@getpaperplane/shared/changeRequestUrl";
 import {
   normalizeThreadPullRequestKey,
   threadPullRequestKeyOf,
-} from "@rove-code/shared/threadPullRequests";
+} from "@getpaperplane/shared/threadPullRequests";
 
 import {
   DEFAULT_SERVER_SETTINGS,
   GitManagerError,
   GitPullRequestMaterializationError,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as TextGeneration from "../textGeneration/TextGeneration.ts";
 import {
   conventionalCommitsTextGenerationPolicy,
@@ -84,17 +84,17 @@ import * as ProjectSetupScriptRunner from "../project/ProjectSetupScriptRunner.t
 import {
   SelectedGitHubAccount,
   provideSelectedGitHubAccount,
-} from "@rove-code/source-control-github/server/GitHubCredentials";
+} from "@getpaperplane/source-control-github/server/GitHubCredentials";
 
 import * as ProviderRegistry from "../provider/ProviderRegistry.ts";
 import { extractBranchNameFromRemoteRef } from "./remoteRefs.ts";
 import { detachStackFrame } from "./detachStackFrame.ts";
 import * as ServerSettings from "../serverSettings.ts";
-import type { GitManagerServiceError } from "@rove-code/contracts";
+import type { GitManagerServiceError } from "@getpaperplane/contracts";
 import * as GitVcsDriver from "../vcs/GitVcsDriver.ts";
-import * as SourceControlProvider from "@rove-code/source-control-core/server/SourceControlProvider";
+import * as SourceControlProvider from "@getpaperplane/source-control-core/server/SourceControlProvider";
 import * as SourceControlProviderRegistry from "../sourceControl/SourceControlProviderRegistry.ts";
-import type { ChangeRequest } from "@rove-code/contracts";
+import type { ChangeRequest } from "@getpaperplane/contracts";
 
 export interface GitActionProgressReporter {
   readonly publish: (event: GitActionProgressEvent) => Effect.Effect<void, never>;
@@ -181,7 +181,7 @@ export class GitManager extends Context.Service<
       Scope.Scope
     >;
   }
->()("@rove-code/server/git/GitManager") {}
+>()("@getpaperplane/server/git/GitManager") {}
 
 const COMMIT_TIMEOUT_MS = 10 * 60_000;
 const MAX_PROGRESS_TEXT_LENGTH = 500;
@@ -338,7 +338,7 @@ function resolvePullRequestWorktreeLocalBranchName(
 
   const sanitizedHeadBranch = sanitizeBranchFragment(pullRequest.headBranch).trim();
   const suffix = sanitizedHeadBranch.length > 0 ? sanitizedHeadBranch : "head";
-  return `rove/pr-${pullRequest.number}/${suffix}`;
+  return `paperplane/pr-${pullRequest.number}/${suffix}`;
 }
 
 /** The repository's `owner/name` from a remote URL, as `provider` reads its remote paths. */
@@ -788,7 +788,7 @@ export const make = Effect.gen(function* () {
               Effect.gen(function* () {
                 const project = yield* projects.findActiveByWorkspaceRoot(cwd);
                 if (Option.isSome(project)) return project.value.projectId;
-                // Rove: thread worktrees are not project roots.
+                // Paperplane: thread worktrees are not project roots.
                 const worktrees = yield* threads.getThreadWorktreePaths();
                 const worktree = worktrees.find(
                   ({ worktreePath }) => worktreePath === input.cwd || worktreePath === cwd,
@@ -801,7 +801,7 @@ export const make = Effect.gen(function* () {
           );
     return { settings: resolveProjectSettings(settings, projectId).settings, projectId };
   });
-  // Rove: project identity scopes API calls and HTTPS git credentials together.
+  // Paperplane: project identity scopes API calls and HTTPS git credentials together.
   const withProjectGitHubAccount = <A, E, R>(
     input: {
       readonly cwd: string;
@@ -2356,7 +2356,7 @@ export const make = Effect.gen(function* () {
 
     const bodyFile = path.join(
       tempDir,
-      `rove-pr-body-${process.pid}-${yield* randomUUIDv4(cwd)}.md`,
+      `paperplane-pr-body-${process.pid}-${yield* randomUUIDv4(cwd)}.md`,
     );
     yield* fileSystem.writeFileString(bodyFile, generated.body).pipe(
       Effect.mapError(
@@ -2429,8 +2429,8 @@ export const make = Effect.gen(function* () {
   // each minute, and most calls find the PR answer already cached. The git
   // state around that answer (remotes, the branch's upstream, the remote HEAD,
   // remote URLs) is remembered per checkout for PR_LOOKUP_GIT_STATE_TTL, so
-  // those calls start no git process. Rove's own git actions (invalidateStatus)
-  // and `refresh` read it again, and a change made outside Rove shows within the
+  // those calls start no git process. Paperplane's own git actions (invalidateStatus)
+  // and `refresh` read it again, and a change made outside Paperplane shows within the
   // TTL. A merged or closed answer can settle a thread or remove its worktree,
   // so branchPullRequest confirms one against fresh reads, and discovery asks
   // for fresh reads (`freshGitState`) before it persists an answer.
@@ -2455,7 +2455,7 @@ export const make = Effect.gen(function* () {
       ) {
         return remembered.value;
       }
-      // invalidateStatus bumps the epoch. A read that started before a Rove git
+      // invalidateStatus bumps the epoch. A read that started before a Paperplane git
       // action, or before a newer read finished, must not replace their state.
       const epoch = prLookupEpoch(cwd);
       const value = yield* read;
@@ -3002,7 +3002,7 @@ export const make = Effect.gen(function* () {
         },
         {
           worktreesDirectory: yield* readWorktreesDirectory,
-          // Best effort: a settings read failure falls back to the checkout's rove.json.
+          // Best effort: a settings read failure falls back to the checkout's paperplane.json.
           submodules: yield* projectSettingsFor(input).pipe(
             Effect.map(({ settings }) => settings.worktreeSubmodules),
             Effect.orElseSucceed(() => null),

@@ -6,7 +6,7 @@ import {
   NodeId,
   RunId,
   type OrchestrationV2ThreadProjection,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { act } from "react";
 import { create, type ReactTestRenderer } from "react-test-renderer";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
@@ -72,7 +72,7 @@ function checkpointProjection(): OrchestrationV2ThreadProjection {
         parentCheckpointId: null,
         ordinalWithinScope: 0,
         appRunOrdinal: 1,
-        ref: CheckpointRef.make("refs/rove/checkpoints/1"),
+        ref: CheckpointRef.make("refs/paperplane/checkpoints/1"),
         status: "ready",
         files: [{ path: "src/app.ts", kind: "modified", additions: 3, deletions: 1 }],
         capturedAt: base.updatedAt,

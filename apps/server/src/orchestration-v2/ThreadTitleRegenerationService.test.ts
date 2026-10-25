@@ -8,7 +8,7 @@ import {
   ProviderInstanceId,
   ThreadId,
   TextGenerationError,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import * as Deferred from "effect/Deferred";
 import * as Fiber from "effect/Fiber";
@@ -27,7 +27,7 @@ import * as ProviderAdapterRegistry from "./ProviderAdapterRegistry.ts";
 import * as ThreadManagement from "./ThreadManagementService.ts";
 import * as ThreadTitleRegeneration from "./ThreadTitleRegenerationService.ts";
 import * as ProviderReplayHarness from "./testkit/ProviderReplayHarness.ts";
-import type * as ProviderAdapter from "@rove-code/provider-core/server/ProviderAdapter";
+import type * as ProviderAdapter from "@getpaperplane/provider-core/server/ProviderAdapter";
 
 const projectId = ProjectId.make("project:title-regeneration");
 const modelSelection = {

@@ -59,7 +59,7 @@ const config: ShowcaseConfig = {
       platform: "ios",
       simulator: "iPhone Test",
       appearance: "dark",
-      theme: "rove",
+      theme: "paperplane",
       scenes: ["thread", "review"],
       storeAsset: appleSpec,
     },
@@ -68,7 +68,7 @@ const config: ShowcaseConfig = {
       platform: "android",
       avd: "Pixel_Test",
       appearance: "light",
-      theme: "rove",
+      theme: "paperplane",
       scenes: ["thread", "terminal"],
       storeAsset: googleSpec,
     },
@@ -125,7 +125,10 @@ it("parses validation-only mode", () => {
 it("selects an explicit CI Android ABI without changing the local default", () => {
   assert.equal(resolveShowcaseAndroidAbi(undefined), "arm64-v8a");
   assert.equal(resolveShowcaseAndroidAbi("x86_64"), "x86_64");
-  assert.throws(() => resolveShowcaseAndroidAbi("mips"), /Unsupported ROVE_SHOWCASE_ANDROID_ABI/u);
+  assert.throws(
+    () => resolveShowcaseAndroidAbi("mips"),
+    /Unsupported PAPERPLANE_SHOWCASE_ANDROID_ABI/u,
+  );
 });
 
 it("uses platform-correct default Android SDK roots", () => {
@@ -171,11 +174,11 @@ it("expands both appearances into independent upload-ready directories", () => {
     [
       {
         appearance: "light",
-        directory: NodePath.join("/captures", "apple", "iphone-test", "light", "rove"),
+        directory: NodePath.join("/captures", "apple", "iphone-test", "light", "paperplane"),
       },
       {
         appearance: "dark",
-        directory: NodePath.join("/captures", "apple", "iphone-test", "dark", "rove"),
+        directory: NodePath.join("/captures", "apple", "iphone-test", "dark", "paperplane"),
       },
     ],
   );
@@ -268,7 +271,7 @@ it("enforces store screenshot count limits", () => {
 });
 
 it("defaults every device to the app's own palette", () => {
-  assert.equal(DEFAULT_SHOWCASE_THEME, "rove");
+  assert.equal(DEFAULT_SHOWCASE_THEME, "paperplane");
   assert.equal(
     showcaseConfig.devices.every((device) => device.theme === DEFAULT_SHOWCASE_THEME),
     true,
@@ -310,7 +313,7 @@ it("selects a reachable LAN IPv4 address", () => {
 it("seeds a playful multi-environment project spectrum", () => {
   assert.deepStrictEqual(
     SHOWCASE_PROJECTS.map((project) => project.title),
-    ["Rove Code", "React", "Linux"],
+    ["Paperplane", "React", "Linux"],
   );
   assert.deepStrictEqual(
     SHOWCASE_ENVIRONMENTS.map((environment) => environment.label),

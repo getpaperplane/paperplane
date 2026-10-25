@@ -7,7 +7,7 @@ import {
   TurnItemId,
   RuntimeRequestId,
   type OrchestrationV2ShellSnapshot,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";

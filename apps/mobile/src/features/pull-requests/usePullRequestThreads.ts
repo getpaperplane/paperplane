@@ -1,16 +1,16 @@
 import * as Dialog from "../../components/ui/Dialog";
 import { useNavigation, useNavigationState, useRoute } from "@react-navigation/native";
-import { threadPullRequestLinkMode } from "@rove-code/client-runtime/thread-pull-request-compatibility";
+import { threadPullRequestLinkMode } from "@getpaperplane/client-runtime/thread-pull-request-compatibility";
 import {
   AuthOrchestrationOperateScope,
   AuthSourceControlWriteScope,
   ThreadId,
   type PullRequestDetail,
   type PullRequestLinkedThreadsResult,
-} from "@rove-code/contracts";
-import { formatComposerContextReference } from "@rove-code/shared/composerContextReferences";
-import { parseChangeRequestUrl } from "@rove-code/shared/changeRequestUrl";
-import { normalizeThreadPullRequestKey } from "@rove-code/shared/threadPullRequests";
+} from "@getpaperplane/contracts";
+import { formatComposerContextReference } from "@getpaperplane/shared/composerContextReferences";
+import { parseChangeRequestUrl } from "@getpaperplane/shared/changeRequestUrl";
+import { normalizeThreadPullRequestKey } from "@getpaperplane/shared/threadPullRequests";
 import { useRef, useState } from "react";
 import { Platform } from "react-native";
 import { useAndroidWorkspaceSelection } from "../workspace/useAndroidWorkspaceSelection";

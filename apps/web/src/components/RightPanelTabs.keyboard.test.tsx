@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test"
 import {
   compileResolvedKeybindingsConfig,
   DEFAULT_RESOLVED_KEYBINDINGS,
-} from "@rove-code/shared/keybindings";
+} from "@getpaperplane/shared/keybindings";
 
 import { RightPanelTabs } from "./RightPanelTabs";
 

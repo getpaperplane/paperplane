@@ -16,9 +16,9 @@ import { PullRequestGlyph } from "../pullRequest/pullRequestIcons";
  * Until the detail arrives — or where pull requests are not supported at all — the row renders
  * from the linked snapshot or branch summary, or just the link when status is unavailable.
  */
-import type { EnvironmentProject } from "@rove-code/client-runtime/state/shell";
-import type { EnvironmentId, ProjectId, PullRequestRef } from "@rove-code/contracts";
-import { sourceControlRepositorySelector } from "@rove-code/shared/sourceControl";
+import type { EnvironmentProject } from "@getpaperplane/client-runtime/state/shell";
+import type { EnvironmentId, ProjectId, PullRequestRef } from "@getpaperplane/contracts";
+import { sourceControlRepositorySelector } from "@getpaperplane/shared/sourceControl";
 import {
   ArrowUpRightIcon,
   EyeIcon,

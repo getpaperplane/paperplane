@@ -2,7 +2,7 @@ import type {
   DesktopTelemetryRequestDesktopUpdate,
   DesktopUpdateRemoteOutcome,
   DesktopUpdateState,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Duration from "effect/Duration";
 import * as Clock from "effect/Clock";
 import * as Deferred from "effect/Deferred";

@@ -1,14 +1,14 @@
 import * as Dialog from "./ui/Dialog";
-import { ComposerContextId } from "@rove-code/contracts";
+import { ComposerContextId } from "@getpaperplane/contracts";
 import { useAtomValue } from "@effect/atom-react";
 import { AsyncResult } from "effect/reactivity";
 import { useNavigation } from "@react-navigation/native";
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { EnvironmentId } from "@rove-code/contracts";
-import { encodeComposerContextFragment } from "@rove-code/shared/composerContextClipboard";
-import { collectComposerContextReferences } from "@rove-code/shared/composerContextReferences";
-import { ComposerEditor as NativeComposerEditor } from "../native/RoveComposerEditor";
-import type { ComposerEditorProps as NativeComposerEditorProps } from "../native/RoveComposerEditor";
+import type { EnvironmentId } from "@getpaperplane/contracts";
+import { encodeComposerContextFragment } from "@getpaperplane/shared/composerContextClipboard";
+import { collectComposerContextReferences } from "@getpaperplane/shared/composerContextReferences";
+import { ComposerEditor as NativeComposerEditor } from "../native/PaperplaneComposerEditor";
+import type { ComposerEditorProps as NativeComposerEditorProps } from "../native/PaperplaneComposerEditor";
 import {
   appendComposerDraftAttachments,
   createComposerDraftContextHistory,
@@ -265,4 +265,4 @@ export type {
   ComposerEditorHandle,
   ComposerEditorSelection,
   ComposerTextPaste,
-} from "../native/RoveComposerEditor";
+} from "../native/PaperplaneComposerEditor";

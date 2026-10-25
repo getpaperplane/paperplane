@@ -10,10 +10,10 @@ import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Layer from "effect/Layer";
 import { Cookies, FetchHttpClient, HttpClientRequest, HttpClientResponse } from "effect/http";
-import { ManagedRelay } from "@rove-code/client-runtime/relay";
+import { ManagedRelay } from "@getpaperplane/client-runtime/relay";
 
-import type { EnvironmentId } from "@rove-code/contracts";
-import { verifyDpopProof } from "@rove-code/shared/dpop";
+import type { EnvironmentId } from "@getpaperplane/contracts";
+import { verifyDpopProof } from "@getpaperplane/shared/dpop";
 import type { SavedRemoteConnection } from "../../lib/connection";
 import * as Dpop from "../cloud/dpop";
 import * as ManagedRelayLayer from "../cloud/managedRelayLayer";
@@ -143,6 +143,10 @@ vi.mock("expo-secure-store", () => ({
   getItemAsync: (key: string) => Promise.resolve(secureStore.get(key) ?? null),
   setItemAsync: (key: string, value: string) => {
     secureStore.set(key, value);
+    return Promise.resolve();
+  },
+  deleteItemAsync: (key: string) => {
+    secureStore.delete(key);
     return Promise.resolve();
   },
 }));
@@ -315,13 +319,13 @@ describe("makeRelayDeviceRegistrationRequest", () => {
         label: "Julius's iPhone",
         iosMajorVersion: 18,
         appVersion: "1.0.0",
-        bundleId: "dev.rove.app.preview",
+        bundleId: "io.github.getpaperplane.paperplane.preview",
         apsEnvironment: resolveApsEnvironment("preview"),
         notificationsEnabled: true,
         preferences: {},
       }),
     ).toMatchObject({
-      bundleId: "dev.rove.app.preview",
+      bundleId: "io.github.getpaperplane.paperplane.preview",
       apsEnvironment: "production",
     });
   });
@@ -919,7 +923,7 @@ describe("makeRelayDeviceRegistrationRequest", () => {
     armAgentAwarenessLiveActivityForLocalWork({
       environmentId: "env-1" as EnvironmentId,
       threadTitle: "Fix the flaky test",
-      projectTitle: "rove",
+      projectTitle: "paperplane",
     });
     await new Promise((resolve) => setTimeout(resolve, 0));
 
@@ -938,7 +942,7 @@ describe("makeRelayDeviceRegistrationRequest", () => {
     armAgentAwarenessLiveActivityForLocalWork({
       environmentId: "env-publishing" as EnvironmentId,
       threadTitle: "Fix the flaky test",
-      projectTitle: "rove",
+      projectTitle: "paperplane",
     });
     await new Promise((resolve) => setTimeout(resolve, 0));
     expect(widgetMocks.start).toHaveBeenCalledTimes(1);
@@ -952,7 +956,7 @@ describe("makeRelayDeviceRegistrationRequest", () => {
     armAgentAwarenessLiveActivityForLocalWork({
       environmentId: "env-pre-capability" as EnvironmentId,
       threadTitle: "Fix the flaky test",
-      projectTitle: "rove",
+      projectTitle: "paperplane",
     });
     await new Promise((resolve) => setTimeout(resolve, 0));
     expect(widgetMocks.start).toHaveBeenCalledTimes(1);

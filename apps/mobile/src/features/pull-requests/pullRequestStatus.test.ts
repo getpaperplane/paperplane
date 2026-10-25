@@ -2,7 +2,7 @@ import type {
   PullRequestActivity,
   PullRequestCheck,
   PullRequestComment,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { describe, expect, it } from "vite-plus/test";
 import { pullRequestChecksSummary, pullRequestReviewSummary } from "./pullRequestStatus";
 

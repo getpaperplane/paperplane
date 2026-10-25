@@ -17,7 +17,7 @@ import {
   type OrchestrationV2ServerCommand,
   type OrchestrationV2StoredEvent,
   type UserInputAttachments,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -32,7 +32,7 @@ import * as ThreadManagementService from "./ThreadManagementService.ts";
 import { dispatchCommand, sendToThread } from "./ThreadMessageIntake.ts";
 
 const layerIntakeTest = ServerConfig.layerTest(process.cwd(), {
-  prefix: "rove-question-intake-",
+  prefix: "paperplane-question-intake-",
 }).pipe(Layer.provideMerge(NodeServices.layer), Layer.provideMerge(ServerSettings.layerTest()));
 
 const layerFailingDispatch = (captured: OrchestrationV2ServerCommand[]) =>

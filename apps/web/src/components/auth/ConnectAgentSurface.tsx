@@ -4,9 +4,9 @@ import {
   AuthMcpApprovalError,
   AuthMcpClientAccess,
   type AuthMcpAuthorizationRequest,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { Radio as RadioPrimitive } from "@base-ui/react/radio";
-import { isLoopbackHost } from "@rove-code/shared/preview";
+import { isLoopbackHost } from "@getpaperplane/shared/preview";
 import { EyeIcon, type LucideIcon } from "lucide-react";
 import type * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -252,8 +252,8 @@ export function ConnectAgentSurface() {
               value={pairingCode}
             />
             <p className="text-xs text-muted-foreground">
-              Create one in Settings → Connections, or run <code>rove auth pairing create</code> on
-              this machine.
+              Create one in Settings → Connections, or run{" "}
+              <code>paperplane auth pairing create</code> on this machine.
             </p>
           </div>
         )}

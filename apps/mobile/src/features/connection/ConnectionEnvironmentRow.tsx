@@ -1,8 +1,8 @@
 import * as Dialog from "../../components/ui/Dialog";
 import { ConnectionTraceId } from "./ConnectionTraceId";
 import { SymbolView } from "../../components/ui/AppSymbol";
-import type { AtomCommandResult } from "@rove-code/client-runtime/state/runtime";
-import { type EnvironmentId, resolveEnvironmentMachineKind } from "@rove-code/contracts";
+import type { AtomCommandResult } from "@getpaperplane/client-runtime/state/runtime";
+import { type EnvironmentId, resolveEnvironmentMachineKind } from "@getpaperplane/contracts";
 import { useAtomValue } from "@effect/atom-react";
 import * as Cause from "effect/Cause";
 import { AsyncResult } from "effect/reactivity";
@@ -100,7 +100,7 @@ export function ConnectionEnvironmentRow(props: {
               tintColorClassName="accent-foreground-muted"
             />
             <Text
-              className="min-w-0 flex-shrink text-base font-rove-bold leading-snug text-foreground"
+              className="min-w-0 flex-shrink text-base font-paperplane-bold leading-snug text-foreground"
               numberOfLines={1}
             >
               {props.environment.environmentLabel}
@@ -157,7 +157,7 @@ export function ConnectionEnvironmentRow(props: {
         >
           {props.environment.isRelayManaged ? (
             <Text className="text-sm text-foreground-muted">
-              Managed by Rove Connect. Tunnel details update automatically.
+              Managed by Paperplane Connect. Tunnel details update automatically.
             </Text>
           ) : (
             <>
@@ -223,7 +223,7 @@ export function ConnectionEnvironmentRow(props: {
                     tintColorClassName="accent-primary-foreground"
                     type="monochrome"
                   />
-                  <Text className="text-xs font-rove-bold tracking-[0.8px] uppercase text-primary-foreground">
+                  <Text className="text-xs font-paperplane-bold tracking-[0.8px] uppercase text-primary-foreground">
                     Save
                   </Text>
                 </Pressable>

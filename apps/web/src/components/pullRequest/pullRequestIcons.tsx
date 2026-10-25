@@ -8,7 +8,7 @@ import {
   Unlink2Icon,
   TriangleAlertIcon,
 } from "lucide-react";
-import type { PullRequestState } from "@rove-code/contracts";
+import type { PullRequestState } from "@getpaperplane/contracts";
 
 export const PullRequestGlyph = {
   pullRequest: GitPullRequestArrowIcon,

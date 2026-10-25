@@ -4,7 +4,7 @@ import {
   type ProviderApprovalOption,
   ProviderDriverKind,
   type RuntimeMode,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import type { GrokSettings } from "../settings.ts";
 import * as Crypto from "effect/Crypto";
 import * as Effect from "effect/Effect";
@@ -12,15 +12,15 @@ import * as Layer from "effect/Layer";
 import * as Scope from "effect/Scope";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as EffectAcpErrors from "effect-acp/errors";
-import * as HostProcess from "@rove-code/shared/HostProcess";
-import { normalizeModelSlug } from "@rove-code/shared/model";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
+import { normalizeModelSlug } from "@getpaperplane/shared/model";
 
-import * as AcpSessionRuntime from "@rove-code/provider-acp/server/AcpSessionRuntime";
+import * as AcpSessionRuntime from "@getpaperplane/provider-acp/server/AcpSessionRuntime";
 import { makeXAiPromptCompletionRuntime } from "./xaiAcpExtension.ts";
 
 const GROK_API_KEY_ENV = "XAI_API_KEY";
 const GROK_OAUTH2_REFERRER_ENV = "GROK_OAUTH2_REFERRER";
-const ROVE_CODE_OAUTH_REFERRER = "rove";
+const PAPERPLANE_CODE_OAUTH_REFERRER = "paperplane";
 const GROK_AUTH_METHOD_API_KEY = "xai.api_key";
 const GROK_AUTH_METHOD_CACHED_TOKEN = "cached_token";
 const GROK_DRIVER_KIND = ProviderDriverKind.make("grok");
@@ -77,7 +77,7 @@ export function buildGrokAcpSpawnInput(
     cwd,
     env: {
       ...environment,
-      [GROK_OAUTH2_REFERRER_ENV]: ROVE_CODE_OAUTH_REFERRER,
+      [GROK_OAUTH2_REFERRER_ENV]: PAPERPLANE_CODE_OAUTH_REFERRER,
     },
   };
 }
@@ -114,7 +114,7 @@ export const GROK_ACP_CANCEL_META = { cancelTrigger: "ctrl_c" } as const;
  * Grok's Auto mode asks the client about an action its classifier blocks only
  * when the client declares a type that can show a prompt; the default
  * (`generic`) gets a silent denial instead. `extension` is the prompting type
- * that keeps the permission options Rove already maps (no always-approve row,
+ * that keeps the permission options Paperplane already maps (no always-approve row,
  * no per-command persistent grants).
  */
 export const GROK_ACP_INITIALIZE_META = { clientType: "extension" } as const;
@@ -184,7 +184,7 @@ export const makeGrokAcpRuntime = (
   });
 
 /**
- * Rove's built-in Grok slug. It is the CLI's product name, not a model id the ACP accepts,
+ * Paperplane's built-in Grok slug. It is the CLI's product name, not a model id the ACP accepts,
  * so selecting it means "use whatever model the Grok session currently runs on".
  */
 export const GROK_DEFAULT_MODEL_SLUG = "grok-build";

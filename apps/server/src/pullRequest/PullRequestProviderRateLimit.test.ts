@@ -1,16 +1,16 @@
-import { SourceControlProviderKind } from "@rove-code/contracts";
+import { SourceControlProviderKind } from "@getpaperplane/contracts";
 import { assert, it } from "@effect/vitest";
 
-import * as AzureDevOpsCli from "@rove-code/source-control-azure-devops/server/AzureDevOpsCli";
-import * as BitbucketApi from "@rove-code/source-control-bitbucket/server/BitbucketApi";
-import * as GitHubRest from "@rove-code/source-control-github/server/GitHubRest";
-import * as GitHubRequestPolicy from "@rove-code/source-control-github/server/GitHubRequestPolicy";
-import * as SourceControlRateLimit from "@rove-code/source-control-core/server/SourceControlRateLimit";
-import * as GitLabCli from "@rove-code/source-control-gitlab/server/GitLabCli";
-import { azureDevOpsProviderFailure } from "@rove-code/source-control-azure-devops/server/AzureDevOpsPullRequestProvider";
-import { bitbucketProviderFailure } from "@rove-code/source-control-bitbucket/server/BitbucketPullRequestProvider";
-import { gitHubProviderFailure } from "@rove-code/source-control-github/server/GitHubPullRequestProvider";
-import { gitLabProviderFailure } from "@rove-code/source-control-gitlab/server/GitLabPullRequestProvider";
+import * as AzureDevOpsCli from "@getpaperplane/source-control-azure-devops/server/AzureDevOpsCli";
+import * as BitbucketApi from "@getpaperplane/source-control-bitbucket/server/BitbucketApi";
+import * as GitHubRest from "@getpaperplane/source-control-github/server/GitHubRest";
+import * as GitHubRequestPolicy from "@getpaperplane/source-control-github/server/GitHubRequestPolicy";
+import * as SourceControlRateLimit from "@getpaperplane/source-control-core/server/SourceControlRateLimit";
+import * as GitLabCli from "@getpaperplane/source-control-gitlab/server/GitLabCli";
+import { azureDevOpsProviderFailure } from "@getpaperplane/source-control-azure-devops/server/AzureDevOpsPullRequestProvider";
+import { bitbucketProviderFailure } from "@getpaperplane/source-control-bitbucket/server/BitbucketPullRequestProvider";
+import { gitHubProviderFailure } from "@getpaperplane/source-control-github/server/GitHubPullRequestProvider";
+import { gitLabProviderFailure } from "@getpaperplane/source-control-gitlab/server/GitLabPullRequestProvider";
 
 const cause = new Error("redacted provider failure");
 

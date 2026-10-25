@@ -7,17 +7,17 @@ import {
   PROVIDER_SEND_TURN_MAX_IMAGE_BYTES,
   COMPOSER_CONTEXT_MAX_RECORDS,
   type EnvironmentId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   decodeComposerContextClipboardHtml,
   decodeComposerContextFragment,
   encodeComposerContextFragment,
-} from "@rove-code/shared/composerContextClipboard";
+} from "@getpaperplane/shared/composerContextClipboard";
 import {
   executeAtomQuery,
   squashAtomCommandFailure,
-} from "@rove-code/client-runtime/state/runtime";
-import { resolveAssetUrl } from "@rove-code/client-runtime/state/assets";
+} from "@getpaperplane/client-runtime/state/runtime";
+import { resolveAssetUrl } from "@getpaperplane/client-runtime/state/assets";
 import * as Option from "effect/Option";
 import { appAtomRegistry } from "../state/atom-registry";
 import { assetEnvironment } from "../state/assets";
@@ -49,7 +49,7 @@ function checkAborted(signal: AbortSignal): void {
 const nativeClipboard = () =>
   requireNativeModule<{
     writeContextClipboard: (text: string, fragment: string) => Promise<void>;
-  }>("RoveComposerEditor");
+  }>("PaperplaneComposerEditor");
 
 export function writeComposerContextClipboard(
   text: string,

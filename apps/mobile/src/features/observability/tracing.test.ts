@@ -4,8 +4,8 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import { vi } from "vite-plus/test";
 
-import { layerRemoteHttpClient } from "@rove-code/client-runtime/rpc";
-import { withRelayClientTracing } from "@rove-code/shared/relayTracing";
+import { layerRemoteHttpClient } from "@getpaperplane/client-runtime/rpc";
+import { withRelayClientTracing } from "@getpaperplane/shared/relayTracing";
 
 import * as Tracing from "./tracing";
 

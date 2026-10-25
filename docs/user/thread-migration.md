@@ -1,6 +1,6 @@
-# Threads from older Rove Code versions
+# Threads from older Paperplane versions
 
-On your first V2 launch, Rove Code copies the V1 database, `state.sqlite`, into `statev2.sqlite`
+On your first V2 launch, Paperplane copies the V1 database, `state.sqlite`, into `statev2.sqlite`
 in the same data directory and migrates the copy. Your threads appear automatically, with full
 transcripts imported as needed. You do not need to run an import command.
 
@@ -16,7 +16,7 @@ change in V2 afterwards stays in V2.
 
 The migrated thread keeps its title, project, provider and model selection, permission and
 interaction modes, branch or worktree, archive state, settlement state, snooze and pin state, and
-linked pull request. Rove Code also brings over user and assistant messages, their timestamps, and
+linked pull request. Paperplane also brings over user and assistant messages, their timestamps, and
 supported attachments. Large histories may appear in stages while the server imports transcripts.
 
 The migration does not recreate the old provider's live session. It also does not convert old run
@@ -26,7 +26,7 @@ present.
 
 ## Continuing a migrated thread
 
-The first new message starts a fresh provider session. Rove Code selects intact user and assistant
+The first new message starts a fresh provider session. Paperplane selects intact user and assistant
 messages using the same [handoff budget](./portable-handoffs.md) as a provider switch. Omitted text
 remains in the thread and can be retrieved by the agent. The migration retains its separate
 32,000-character recovery excerpt; neither that excerpt nor the handoff replaces the full imported
@@ -40,18 +40,18 @@ handoff is also a good choice when the old conversation contains conflicting ins
 
 After all legacy threads finish importing, background maintenance removes unused legacy history
 from `statev2.sqlite`. Keep `state.sqlite` as your original recovery source. Older databases may
-retain the freed space inside the file until the next launch. Rove Code automatically rebuilds
+retain the freed space inside the file until the next launch. Paperplane automatically rebuilds
 older databases at startup when the savings are substantial and enough free disk space is available,
 then returns space automatically during future cleanup. This may add a few seconds to that launch.
-If automatic reclamation is deferred, you can stop the desktop app and server and run `rove doctor`
+If automatic reclamation is deferred, you can stop the desktop app and server and run `paperplane doctor`
 on the host. Settings → Storage shows the command for your environment. Allow extra free disk space
 for the rebuild.
 
 ## Keeping a recovery copy
 
-Rove Code does not currently have a whole-thread export command. Before a major server update, stop
+Paperplane does not currently have a whole-thread export command. Before a major server update, stop
 the server and copy its `userdata` directory to a safe location. The default is
-`~/.rove-code/userdata`; a server started with `--home-dir <path>` uses `<path>/userdata`.
+`~/.paperplane/userdata`; a server started with `--home-dir <path>` uses `<path>/userdata`.
 
 If a migrated transcript is missing from the app, keep that copy unchanged. You can inspect the
 old transcript without starting a server against it:

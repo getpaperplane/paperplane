@@ -7,8 +7,8 @@ import {
   ProjectId,
   ProviderInstanceId,
   ThreadId,
-} from "@rove-code/contracts";
-import { resolveProjectSettings } from "@rove-code/shared/projectSettings";
+} from "@getpaperplane/contracts";
+import { resolveProjectSettings } from "@getpaperplane/shared/projectSettings";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Stream from "effect/Stream";
@@ -54,7 +54,7 @@ it.effect.each([
       const manager = yield* Preview.make.pipe(
         Effect.provide(
           Layer.merge(
-            ServerConfig.layerTest(process.cwd(), { prefix: "rove-preview-controls-" }).pipe(
+            ServerConfig.layerTest(process.cwd(), { prefix: "paperplane-preview-controls-" }).pipe(
               Layer.provide(NodeServices.layer),
             ),
             NodeCrypto.layer,
@@ -79,10 +79,10 @@ it.effect.each([
         ),
       );
       const listed = yield* toolkit
-        .handle("rove_preview_list", {})
+        .handle("paperplane_preview_list", {})
         .pipe(Stream.unwrap, Stream.runCollect, Effect.provide(layerDependencies));
       const closed = yield* toolkit
-        .handle("rove_preview_close", { tabId: tab.tabId })
+        .handle("paperplane_preview_close", { tabId: tab.tabId })
         .pipe(Stream.unwrap, Stream.runCollect, Effect.provide(layerDependencies));
       if (projectAccess) {
         expect(listed.at(-1)?.result).toMatchObject({ sessions: [tab], nextCursor: null });

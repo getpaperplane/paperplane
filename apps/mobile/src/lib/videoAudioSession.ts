@@ -4,7 +4,7 @@ import { Platform } from "react-native";
 
 const nativeControls = requireOptionalNativeModule<{
   releaseVideoAudioSession(): Promise<void>;
-}>("RoveNativeControls");
+}>("PaperplaneNativeControls");
 
 // Players report not playing during seeks and buffering stalls, and another
 // player may start right after one stops. Both keep the session.

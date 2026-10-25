@@ -5,7 +5,7 @@ import * as NodePath from "node:path";
 
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import * as ConfigProvider from "effect/ConfigProvider";
-import * as NetService from "@rove-code/shared/Net";
+import * as NetService from "@getpaperplane/shared/Net";
 import { assert, describe, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -13,8 +13,8 @@ import * as TestConsole from "effect/testing/TestConsole";
 import { Command } from "effect/cli";
 
 import { cli } from "../binCli.ts";
-import { symlinksSupported } from "@rove-code/shared/testing/symlinks";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+import { symlinksSupported } from "@getpaperplane/shared/testing/symlinks";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 
 // These force a failure with chmod, which Windows ignores for directories and
 // cannot use to make a file unreadable, so the failure never happens there.
@@ -25,7 +25,8 @@ const runCli = (args: ReadonlyArray<string>) =>
     Effect.provide(Layer.mergeAll(NodeServices.layer, NetService.layer, TestConsole.layer)),
   );
 
-const makeBaseDir = () => NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "rove-theme-cli-"));
+const makeBaseDir = () =>
+  NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "paperplane-theme-cli-"));
 
 const settingsPathFor = (baseDir: string) => NodePath.join(baseDir, "userdata", "settings.json");
 
@@ -47,12 +48,12 @@ const writeSettings = (baseDir: string, settings: Record<string, unknown>) => {
   NodeFS.writeFileSync(settingsPathFor(baseDir), `${JSON.stringify(settings, null, 2)}\n`);
 };
 
-describe("rove theme", () => {
+describe("paperplane theme", () => {
   it.effect("suggests the installed command when no theme is given", () =>
     Effect.gen(function* () {
       const baseDir = makeBaseDir();
       const failure = yield* runCli(["theme", "set", "", "--base-dir", baseDir]).pipe(Effect.flip);
-      assert.include(String(failure), "run `rove theme clear`");
+      assert.include(String(failure), "run `paperplane theme clear`");
       assert.equal(NodeFS.existsSync(settingsPathFor(baseDir)), false);
     }),
   );
@@ -122,7 +123,7 @@ describe("rove theme", () => {
   it.effect("publishes a theme file under an explicit id", () =>
     Effect.gen(function* () {
       const baseDir = makeBaseDir();
-      const themeFile = NodePath.join(baseDir, "rove.json");
+      const themeFile = NodePath.join(baseDir, "paperplane.json");
       NodeFS.writeFileSync(themeFile, NIGHTFALL_THEME_JSON);
 
       yield* runCli(["theme", "set", "--id", "nightfall", themeFile, "--base-dir", baseDir]);
@@ -352,12 +353,12 @@ describe("rove theme", () => {
     }),
   );
 
-  it.effect("honors ROVE_HOME like the rest of the CLI", () =>
+  it.effect("honors PAPERPLANE_HOME like the rest of the CLI", () =>
     Effect.gen(function* () {
       const baseDir = makeBaseDir();
       yield* runCli(["theme", "set", "ocean"]).pipe(
         Effect.provide(
-          ConfigProvider.layer(ConfigProvider.fromEnv({ env: { ROVE_HOME: baseDir } })),
+          ConfigProvider.layer(ConfigProvider.fromEnv({ env: { PAPERPLANE_HOME: baseDir } })),
         ),
       );
       assert.equal(readSettings(baseDir).defaultTheme, "ocean");
@@ -431,7 +432,7 @@ describe("rove theme", () => {
   it.effect("rejects the mobile default theme id", () =>
     Effect.gen(function* () {
       const baseDir = makeBaseDir();
-      const failure = yield* runCli(["theme", "set", "rove", "--base-dir", baseDir]).pipe(
+      const failure = yield* runCli(["theme", "set", "paperplane", "--base-dir", baseDir]).pipe(
         Effect.flip,
       );
       assert.include(String(failure), "No theme named");

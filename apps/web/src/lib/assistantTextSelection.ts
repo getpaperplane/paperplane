@@ -1,4 +1,7 @@
-import { ASSISTANT_CITATION_CONTEXT_LENGTH, type AssistantCitation } from "@rove-code/contracts";
+import {
+  ASSISTANT_CITATION_CONTEXT_LENGTH,
+  type AssistantCitation,
+} from "@getpaperplane/contracts";
 
 export type AssistantTextSelector = {
   readonly text: string;

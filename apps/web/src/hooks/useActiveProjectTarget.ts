@@ -1,5 +1,5 @@
-import { scopeThreadRef } from "@rove-code/client-runtime/environment";
-import type { EnvironmentId, ScopedThreadRef } from "@rove-code/contracts";
+import { scopeThreadRef } from "@getpaperplane/client-runtime/environment";
+import type { EnvironmentId, ScopedThreadRef } from "@getpaperplane/contracts";
 
 import { useProjects } from "~/state/entities";
 

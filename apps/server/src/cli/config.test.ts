@@ -1,6 +1,8 @@
 // @effect-diagnostics nodeBuiltinImport:off
 import * as NodeFS from "node:fs";
 import * as NodeOS from "node:os";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
+import { afterAll } from "vite-plus/test";
 
 import { assert, expect, it } from "@effect/vitest";
 import * as ConfigProvider from "effect/ConfigProvider";
@@ -15,10 +17,10 @@ import * as Schema from "effect/Schema";
 import {
   DesktopBackendBootstrap,
   type DesktopBackendBootstrap as DesktopBackendBootstrapValue,
-} from "@rove-code/contracts";
-import * as NetService from "@rove-code/shared/Net";
-import { DEFAULT_SIGNAL_EXPORT } from "@rove-code/shared/observability";
-import * as OtelEnvironment from "@rove-code/shared/otelEnvironment";
+} from "@getpaperplane/contracts";
+import * as NetService from "@getpaperplane/shared/Net";
+import { DEFAULT_SIGNAL_EXPORT } from "@getpaperplane/shared/observability";
+import * as OtelEnvironment from "@getpaperplane/shared/otelEnvironment";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { deriveServerPaths } from "../config.ts";
 import { resolveServerConfig } from "./config.ts";
@@ -50,7 +52,7 @@ const makeDesktopBootstrap = (
   mode: "desktop",
   noBrowser: true,
   port: 4888,
-  roveHome: "/tmp/rove-bootstrap-home",
+  paperplaneHome: "/tmp/paperplane-bootstrap-home",
   host: "127.0.0.1",
   desktopBootstrapToken: "desktop-bootstrap-token",
   tailscaleServeEnabled: false,
@@ -58,7 +60,12 @@ const makeDesktopBootstrap = (
   ...overrides,
 });
 
-it.layer(NodeServices.layer)("cli config resolution", (it) => {
+const isolatedUserHome = NodeFS.mkdtempSync(`${NodeOS.tmpdir()}/paperplane-config-home-`);
+afterAll(() => NodeFS.rmSync(isolatedUserHome, { recursive: true, force: true }));
+
+it.layer(
+  Layer.mergeAll(NodeServices.layer, Layer.succeed(HostProcess.HomeDirectory, isolatedUserHome)),
+)("cli config resolution", (it) => {
   const defaultObservabilityConfig = {
     traceMinLevel: "Info",
     traceTimingEnabled: true,
@@ -77,7 +84,10 @@ it.layer(NodeServices.layer)("cli config resolution", (it) => {
 
   const openBootstrapFd = Effect.fn(function* (payload: DesktopBackendBootstrapValue) {
     const fs = yield* FileSystem.FileSystem;
-    const filePath = yield* fs.makeTempFileScoped({ prefix: "rove-bootstrap-", suffix: ".ndjson" });
+    const filePath = yield* fs.makeTempFileScoped({
+      prefix: "paperplane-bootstrap-",
+      suffix: ".ndjson",
+    });
     const encoded = yield* encodeDesktopBootstrap(payload);
     yield* fs.writeFileString(filePath, `${encoded}\n`);
     return yield* Effect.acquireRelease(
@@ -99,7 +109,7 @@ it.layer(NodeServices.layer)("cli config resolution", (it) => {
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const root = yield* fs.makeTempDirectoryScoped({ prefix: "rove-cli-preflight-" });
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-cli-preflight-" });
       for (const [name, pid, mode, rejectRunningServer] of [
         ["stale", 2_147_483_647, "web", true],
         ["desktop", process.pid, "desktop", true],
@@ -145,7 +155,7 @@ it.layer(NodeServices.layer)("cli config resolution", (it) => {
   it.effect("enables a trimmed reusable auth token only for web dev mode", () =>
     Effect.gen(function* () {
       const baseDir = yield* FileSystem.FileSystem.pipe(
-        Effect.flatMap((fs) => fs.makeTempDirectoryScoped({ prefix: "rove-cli-dev-auth-" })),
+        Effect.flatMap((fs) => fs.makeTempDirectoryScoped({ prefix: "paperplane-cli-dev-auth-" })),
       );
       const flags = {
         mode: Option.some("web" as const),
@@ -164,7 +174,7 @@ it.layer(NodeServices.layer)("cli config resolution", (it) => {
       const layerConfig = ConfigProvider.layer(
         ConfigProvider.fromEnv({
           env: {
-            ROVE_DEV_AUTH_TOKEN: "  reusable-dev-auth-token-that-is-long-enough  ",
+            PAPERPLANE_DEV_AUTH_TOKEN: "  reusable-dev-auth-token-that-is-long-enough  ",
           },
         }),
       );
@@ -190,7 +200,7 @@ it.layer(NodeServices.layer)("cli config resolution", (it) => {
       const secret = "short-secret";
       const baseDir = yield* FileSystem.FileSystem.pipe(
         Effect.flatMap((fs) =>
-          fs.makeTempDirectoryScoped({ prefix: "rove-cli-dev-auth-invalid-" }),
+          fs.makeTempDirectoryScoped({ prefix: "paperplane-cli-dev-auth-invalid-" }),
         ),
       );
       const flags = {
@@ -208,7 +218,7 @@ it.layer(NodeServices.layer)("cli config resolution", (it) => {
         tailscaleServePort: Option.none<number>(),
       };
       const layerConfig = ConfigProvider.layer(
-        ConfigProvider.fromEnv({ env: { ROVE_DEV_AUTH_TOKEN: secret } }),
+        ConfigProvider.fromEnv({ env: { PAPERPLANE_DEV_AUTH_TOKEN: secret } }),
       );
       const error = yield* resolveServerConfig(flags, Option.none()).pipe(
         Effect.provide(Layer.mergeAll(layerConfig, NetService.layer)),
@@ -231,10 +241,57 @@ it.layer(NodeServices.layer)("cli config resolution", (it) => {
     }),
   );
 
+  it.effect(
+    "ignores the old home while migrating defaults and honors only the new explicit home",
+    () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        for (const explicit of [false, true]) {
+          const home = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-env-home-" });
+          const oldState = path.join(home, ".rove-code", "userdata");
+          yield* fs.makeDirectory(oldState, { recursive: true });
+          yield* fs.writeFileString(path.join(oldState, "migration-proof.txt"), "saved data");
+          const explicitHome = path.join(home, "custom");
+          const resolved = yield* resolveServerConfig(
+            {
+              ...minimalWebFlags(explicitHome),
+              baseDir: Option.none(),
+            },
+            Option.none(),
+          ).pipe(
+            Effect.provideService(HostProcess.HomeDirectory, home),
+            Effect.provide(
+              Layer.mergeAll(
+                NetService.layer,
+                ConfigProvider.layer(
+                  ConfigProvider.fromEnv({
+                    env: {
+                      ROVE_HOME: path.join(home, "ignored"),
+                      ROVE_PORT: "invalid-old-port",
+                      PAPERPLANE_PORT: "8123",
+                      ...(explicit ? { PAPERPLANE_HOME: explicitHome } : {}),
+                    },
+                  }),
+                ),
+              ),
+            ),
+          );
+          expect(resolved.baseDir).toBe(explicit ? explicitHome : path.join(home, ".paperplane"));
+          expect(
+            yield* fs.exists(path.join(home, ".paperplane", "userdata", "migration-proof.txt")),
+          ).toBe(!explicit);
+          expect(yield* fs.readFileString(path.join(oldState, "migration-proof.txt"))).toBe(
+            "saved data",
+          );
+        }
+      }),
+  );
+
   it.effect("falls back to effect/config values when flags are omitted", () =>
     Effect.gen(function* () {
       const { join } = yield* Path.Path;
-      const baseDir = join(NodeOS.tmpdir(), "rove-cli-config-env-base");
+      const baseDir = join(NodeOS.tmpdir(), "paperplane-cli-config-env-base");
       const derivedPaths = yield* deriveExplicitServerPaths(
         baseDir,
         new URL("http://127.0.0.1:5173"),
@@ -261,17 +318,17 @@ it.layer(NodeServices.layer)("cli config resolution", (it) => {
             ConfigProvider.layer(
               ConfigProvider.fromEnv({
                 env: {
-                  ROVE_LOG_LEVEL: "Warn",
-                  ROVE_MODE: "desktop",
-                  ROVE_PORT: "4001",
-                  ROVE_HOST: "0.0.0.0",
-                  ROVE_HOME: baseDir,
+                  PAPERPLANE_LOG_LEVEL: "Warn",
+                  PAPERPLANE_MODE: "desktop",
+                  PAPERPLANE_PORT: "4001",
+                  PAPERPLANE_HOST: "0.0.0.0",
+                  PAPERPLANE_HOME: baseDir,
                   VITE_DEV_SERVER_URL: "http://127.0.0.1:5173",
-                  ROVE_DEV_ALLOWED_ORIGINS:
+                  PAPERPLANE_DEV_ALLOWED_ORIGINS:
                     "https://host.example.ts.net, https://phone.example.ts.net ",
-                  ROVE_NO_BROWSER: "true",
-                  ROVE_AUTO_BOOTSTRAP_PROJECT_FROM_CWD: "false",
-                  ROVE_LOG_WS_EVENTS: "true",
+                  PAPERPLANE_NO_BROWSER: "true",
+                  PAPERPLANE_AUTO_BOOTSTRAP_PROJECT_FROM_CWD: "false",
+                  PAPERPLANE_LOG_WS_EVENTS: "true",
                 },
               }),
             ),
@@ -307,7 +364,7 @@ it.layer(NodeServices.layer)("cli config resolution", (it) => {
   it.effect("uses CLI flags when provided", () =>
     Effect.gen(function* () {
       const { join } = yield* Path.Path;
-      const baseDir = join(NodeOS.tmpdir(), "rove-cli-config-flags-base");
+      const baseDir = join(NodeOS.tmpdir(), "paperplane-cli-config-flags-base");
       const derivedPaths = yield* deriveExplicitServerPaths(
         baseDir,
         new URL("http://127.0.0.1:4173"),
@@ -334,15 +391,15 @@ it.layer(NodeServices.layer)("cli config resolution", (it) => {
             ConfigProvider.layer(
               ConfigProvider.fromEnv({
                 env: {
-                  ROVE_LOG_LEVEL: "Warn",
-                  ROVE_MODE: "desktop",
-                  ROVE_PORT: "4001",
-                  ROVE_HOST: "0.0.0.0",
-                  ROVE_HOME: join(NodeOS.tmpdir(), "ignored-base"),
+                  PAPERPLANE_LOG_LEVEL: "Warn",
+                  PAPERPLANE_MODE: "desktop",
+                  PAPERPLANE_PORT: "4001",
+                  PAPERPLANE_HOST: "0.0.0.0",
+                  PAPERPLANE_HOME: join(NodeOS.tmpdir(), "ignored-base"),
                   VITE_DEV_SERVER_URL: "http://127.0.0.1:5173",
-                  ROVE_NO_BROWSER: "false",
-                  ROVE_AUTO_BOOTSTRAP_PROJECT_FROM_CWD: "false",
-                  ROVE_LOG_WS_EVENTS: "false",
+                  PAPERPLANE_NO_BROWSER: "false",
+                  PAPERPLANE_AUTO_BOOTSTRAP_PROJECT_FROM_CWD: "false",
+                  PAPERPLANE_LOG_WS_EVENTS: "false",
                 },
               }),
             ),
@@ -377,7 +434,7 @@ it.layer(NodeServices.layer)("cli config resolution", (it) => {
   it.effect("preserves explicit false CLI boolean flags over env and bootstrap values", () =>
     Effect.gen(function* () {
       const { join } = yield* Path.Path;
-      const baseDir = join(NodeOS.tmpdir(), "rove-cli-config-false-flags");
+      const baseDir = join(NodeOS.tmpdir(), "paperplane-cli-config-false-flags");
       const fd = yield* openBootstrapFd(
         makeDesktopBootstrap({
           noBrowser: true,
@@ -412,10 +469,10 @@ it.layer(NodeServices.layer)("cli config resolution", (it) => {
             ConfigProvider.layer(
               ConfigProvider.fromEnv({
                 env: {
-                  ROVE_BOOTSTRAP_FD: String(fd),
-                  ROVE_NO_BROWSER: "true",
-                  ROVE_AUTO_BOOTSTRAP_PROJECT_FROM_CWD: "true",
-                  ROVE_LOG_WS_EVENTS: "true",
+                  PAPERPLANE_BOOTSTRAP_FD: String(fd),
+                  PAPERPLANE_NO_BROWSER: "true",
+                  PAPERPLANE_AUTO_BOOTSTRAP_PROJECT_FROM_CWD: "true",
+                  PAPERPLANE_LOG_WS_EVENTS: "true",
                 },
               }),
             ),
@@ -451,12 +508,12 @@ it.layer(NodeServices.layer)("cli config resolution", (it) => {
       const { join, resolve } = yield* Path.Path;
       // The resolver absolutises the configured home, so the expectation must
       // carry the host's drive on Windows.
-      const baseDir = resolve("/tmp/rove-bootstrap-home");
+      const baseDir = resolve("/tmp/paperplane-bootstrap-home");
       const fd = yield* openBootstrapFd(
         makeDesktopBootstrap({
           port: 4888,
           host: "127.0.0.2",
-          roveHome: "/tmp/rove-bootstrap-home",
+          paperplaneHome: "/tmp/paperplane-bootstrap-home",
           noBrowser: true,
           desktopBootstrapToken: "desktop-token",
           desktopTelemetryFd: 4,
@@ -492,7 +549,7 @@ it.layer(NodeServices.layer)("cli config resolution", (it) => {
             ConfigProvider.layer(
               ConfigProvider.fromEnv({
                 env: {
-                  ROVE_BOOTSTRAP_FD: String(fd),
+                  PAPERPLANE_BOOTSTRAP_FD: String(fd),
                 },
               }),
             ),
@@ -535,7 +592,9 @@ it.layer(NodeServices.layer)("cli config resolution", (it) => {
   it.effect("carries the desktop's shell environment handoff only when the envelope sets it", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
-      const baseDir = yield* fs.makeTempDirectoryScoped({ prefix: "rove-cli-config-shell-env-" });
+      const baseDir = yield* fs.makeTempDirectoryScoped({
+        prefix: "paperplane-cli-config-shell-env-",
+      });
       const resolveWith = Effect.fn(function* (overrides: Partial<DesktopBackendBootstrapValue>) {
         const fd = yield* openBootstrapFd(makeDesktopBootstrap(overrides));
         return yield* resolveServerConfig(
@@ -566,7 +625,7 @@ it.layer(NodeServices.layer)("cli config resolution", (it) => {
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const baseDir = yield* fs.makeTempDirectoryScoped({ prefix: "rove-cli-config-dirs-" });
+      const baseDir = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-cli-config-dirs-" });
       const customCwd = path.join(baseDir, "nested", "project");
 
       const resolved = yield* resolveServerConfig(
@@ -613,12 +672,12 @@ it.layer(NodeServices.layer)("cli config resolution", (it) => {
   it.effect("applies flag then env precedence over bootstrap envelope values", () =>
     Effect.gen(function* () {
       const { join } = yield* Path.Path;
-      const baseDir = join(NodeOS.tmpdir(), "rove-cli-config-env-wins");
+      const baseDir = join(NodeOS.tmpdir(), "paperplane-cli-config-env-wins");
       const fd = yield* openBootstrapFd(
         makeDesktopBootstrap({
           port: 4888,
           host: "127.0.0.2",
-          roveHome: "/tmp/rove-bootstrap-home",
+          paperplaneHome: "/tmp/paperplane-bootstrap-home",
           noBrowser: false,
           desktopBootstrapToken: "desktop-token",
           tailscaleServeEnabled: false,
@@ -652,12 +711,12 @@ it.layer(NodeServices.layer)("cli config resolution", (it) => {
             ConfigProvider.layer(
               ConfigProvider.fromEnv({
                 env: {
-                  ROVE_MODE: "web",
-                  ROVE_BOOTSTRAP_FD: String(fd),
-                  ROVE_HOME: baseDir,
-                  ROVE_NO_BROWSER: "true",
-                  ROVE_AUTO_BOOTSTRAP_PROJECT_FROM_CWD: "true",
-                  ROVE_LOG_WS_EVENTS: "true",
+                  PAPERPLANE_MODE: "web",
+                  PAPERPLANE_BOOTSTRAP_FD: String(fd),
+                  PAPERPLANE_HOME: baseDir,
+                  PAPERPLANE_NO_BROWSER: "true",
+                  PAPERPLANE_AUTO_BOOTSTRAP_PROJECT_FROM_CWD: "true",
+                  PAPERPLANE_LOG_WS_EVENTS: "true",
                 },
               }),
             ),
@@ -692,7 +751,9 @@ it.layer(NodeServices.layer)("cli config resolution", (it) => {
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const baseDir = yield* fs.makeTempDirectoryScoped({ prefix: "rove-cli-config-settings-" });
+      const baseDir = yield* fs.makeTempDirectoryScoped({
+        prefix: "paperplane-cli-config-settings-",
+      });
       const derivedPaths = yield* deriveExplicitServerPaths(baseDir, undefined);
       yield* fs.makeDirectory(path.dirname(derivedPaths.settingsPath), { recursive: true });
       yield* fs.writeFileString(
@@ -763,7 +824,9 @@ it.layer(NodeServices.layer)("cli config resolution", (it) => {
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const baseDir = yield* fs.makeTempDirectoryScoped({ prefix: "rove-cli-config-otel-off-" });
+      const baseDir = yield* fs.makeTempDirectoryScoped({
+        prefix: "paperplane-cli-config-otel-off-",
+      });
       const derivedPaths = yield* deriveExplicitServerPaths(baseDir, undefined);
       yield* fs.makeDirectory(path.dirname(derivedPaths.settingsPath), { recursive: true });
       yield* fs.writeFileString(
@@ -810,60 +873,64 @@ it.layer(NodeServices.layer)("cli config resolution", (it) => {
     }),
   );
 
-  it.effect("lets ROVE_OTEL_SDK_DISABLED=false override an ambient OTEL_SDK_DISABLED=true", () =>
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
-      const baseDir = yield* fs.makeTempDirectoryScoped({ prefix: "rove-cli-config-otel-on-" });
-      const derivedPaths = yield* deriveExplicitServerPaths(baseDir, undefined);
-      yield* fs.makeDirectory(path.dirname(derivedPaths.settingsPath), { recursive: true });
-      yield* fs.writeFileString(
-        derivedPaths.settingsPath,
-        `${JSON.stringify({
-          observability: {
-            otlpTracesUrl: "http://localhost:4318/v1/traces",
+  it.effect(
+    "lets PAPERPLANE_OTEL_SDK_DISABLED=false override an ambient OTEL_SDK_DISABLED=true",
+    () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const baseDir = yield* fs.makeTempDirectoryScoped({
+          prefix: "paperplane-cli-config-otel-on-",
+        });
+        const derivedPaths = yield* deriveExplicitServerPaths(baseDir, undefined);
+        yield* fs.makeDirectory(path.dirname(derivedPaths.settingsPath), { recursive: true });
+        yield* fs.writeFileString(
+          derivedPaths.settingsPath,
+          `${JSON.stringify({
+            observability: {
+              otlpTracesUrl: "http://localhost:4318/v1/traces",
+            },
+          })}\n`,
+        );
+
+        const resolved = yield* resolveServerConfig(
+          {
+            mode: Option.some("desktop"),
+            port: Option.some(4888),
+            host: Option.none(),
+            baseDir: Option.some(baseDir),
+            cwd: Option.none(),
+            devUrl: Option.none(),
+            noBrowser: Option.none(),
+            bootstrapFd: Option.none(),
+            autoBootstrapProjectFromCwd: Option.none(),
+            logWebSocketEvents: Option.none(),
+            tailscaleServeEnabled: Option.none(),
+            tailscaleServePort: Option.none(),
           },
-        })}\n`,
-      );
-
-      const resolved = yield* resolveServerConfig(
-        {
-          mode: Option.some("desktop"),
-          port: Option.some(4888),
-          host: Option.none(),
-          baseDir: Option.some(baseDir),
-          cwd: Option.none(),
-          devUrl: Option.none(),
-          noBrowser: Option.none(),
-          bootstrapFd: Option.none(),
-          autoBootstrapProjectFromCwd: Option.none(),
-          logWebSocketEvents: Option.none(),
-          tailscaleServeEnabled: Option.none(),
-          tailscaleServePort: Option.none(),
-        },
-        Option.none(),
-      ).pipe(
-        Effect.provide(
-          Layer.mergeAll(
-            ConfigProvider.layer(
-              ConfigProvider.fromEnv({
-                env: { ROVE_OTEL_SDK_DISABLED: "false", OTEL_SDK_DISABLED: "true" },
-              }),
+          Option.none(),
+        ).pipe(
+          Effect.provide(
+            Layer.mergeAll(
+              ConfigProvider.layer(
+                ConfigProvider.fromEnv({
+                  env: { PAPERPLANE_OTEL_SDK_DISABLED: "false", OTEL_SDK_DISABLED: "true" },
+                }),
+              ),
+              NetService.layer,
             ),
-            NetService.layer,
           ),
-        ),
-      );
+        );
 
-      expect(resolved.otelEnvironment.disabled).toBe(false);
-      expect(resolved.otlpTracesUrl).toBe("http://localhost:4318/v1/traces");
-    }),
+        expect(resolved.otelEnvironment.disabled).toBe(false);
+        expect(resolved.otlpTracesUrl).toBe("http://localhost:4318/v1/traces");
+      }),
   );
 
   it.effect("forces noBrowser and disables auto-bootstrap for headless startup presentation", () =>
     Effect.gen(function* () {
       const { join } = yield* Path.Path;
-      const baseDir = join(NodeOS.tmpdir(), "rove-cli-config-headless-base");
+      const baseDir = join(NodeOS.tmpdir(), "paperplane-cli-config-headless-base");
       const derivedPaths = yield* deriveExplicitServerPaths(baseDir, undefined);
 
       const resolved = yield* resolveServerConfig(
@@ -891,8 +958,8 @@ it.layer(NodeServices.layer)("cli config resolution", (it) => {
             ConfigProvider.layer(
               ConfigProvider.fromEnv({
                 env: {
-                  ROVE_NO_BROWSER: "false",
-                  ROVE_AUTO_BOOTSTRAP_PROJECT_FROM_CWD: "true",
+                  PAPERPLANE_NO_BROWSER: "false",
+                  PAPERPLANE_AUTO_BOOTSTRAP_PROJECT_FROM_CWD: "true",
                 },
               }),
             ),
@@ -926,7 +993,7 @@ it.layer(NodeServices.layer)("cli config resolution", (it) => {
   it.effect("decodes percent-encoded OTLP headers from env", () =>
     Effect.gen(function* () {
       const { join } = yield* Path.Path;
-      const baseDir = join(NodeOS.tmpdir(), "rove-cli-config-otlp-headers-base");
+      const baseDir = join(NodeOS.tmpdir(), "paperplane-cli-config-otlp-headers-base");
 
       const resolved = yield* resolveServerConfig(
         {
@@ -950,7 +1017,7 @@ it.layer(NodeServices.layer)("cli config resolution", (it) => {
             ConfigProvider.layer(
               ConfigProvider.fromEnv({
                 env: {
-                  ROVE_OTLP_HEADERS: "authorization=Basic%20abc%3D%3D,x-tenant=rove",
+                  PAPERPLANE_OTLP_HEADERS: "authorization=Basic%20abc%3D%3D,x-tenant=paperplane",
                 },
               }),
             ),
@@ -961,7 +1028,7 @@ it.layer(NodeServices.layer)("cli config resolution", (it) => {
 
       expect(resolved.otlpTracesExport.headers).toEqual({
         authorization: "Basic abc==",
-        "x-tenant": "rove",
+        "x-tenant": "paperplane",
       });
     }),
   );
@@ -969,7 +1036,7 @@ it.layer(NodeServices.layer)("cli config resolution", (it) => {
   it.effect("keeps whitespace-separated pairs and literal equals signs in OTLP headers", () =>
     Effect.gen(function* () {
       const { join } = yield* Path.Path;
-      const baseDir = join(NodeOS.tmpdir(), "rove-cli-config-otlp-headers-loose-base");
+      const baseDir = join(NodeOS.tmpdir(), "paperplane-cli-config-otlp-headers-loose-base");
 
       const resolved = yield* resolveServerConfig(
         {
@@ -993,8 +1060,8 @@ it.layer(NodeServices.layer)("cli config resolution", (it) => {
             ConfigProvider.layer(
               ConfigProvider.fromEnv({
                 env: {
-                  ROVE_OTLP_HEADERS: "authorization=Bearer abc==, x-tenant=rove",
-                  ROVE_OTLP_TRACES_URL: "http://collector.internal:4318",
+                  PAPERPLANE_OTLP_HEADERS: "authorization=Bearer abc==, x-tenant=paperplane",
+                  PAPERPLANE_OTLP_TRACES_URL: "http://collector.internal:4318",
                 },
               }),
             ),
@@ -1005,7 +1072,7 @@ it.layer(NodeServices.layer)("cli config resolution", (it) => {
 
       expect(resolved.otlpTracesExport.headers).toEqual({
         authorization: "Bearer abc==",
-        "x-tenant": "rove",
+        "x-tenant": "paperplane",
       });
       expect(resolved.otlpTracesUrl).toBe("http://collector.internal:4318");
     }),
@@ -1014,7 +1081,7 @@ it.layer(NodeServices.layer)("cli config resolution", (it) => {
   it.effect("gives every signal the protocol named without one", () =>
     Effect.gen(function* () {
       const { join } = yield* Path.Path;
-      const baseDir = join(NodeOS.tmpdir(), "rove-cli-config-otlp-protocol-base");
+      const baseDir = join(NodeOS.tmpdir(), "paperplane-cli-config-otlp-protocol-base");
 
       const resolved = yield* resolveServerConfig(
         {
@@ -1036,7 +1103,7 @@ it.layer(NodeServices.layer)("cli config resolution", (it) => {
         Effect.provide(
           Layer.mergeAll(
             ConfigProvider.layer(
-              ConfigProvider.fromEnv({ env: { ROVE_OTLP_PROTOCOL: "http/protobuf" } }),
+              ConfigProvider.fromEnv({ env: { PAPERPLANE_OTLP_PROTOCOL: "http/protobuf" } }),
             ),
             NetService.layer,
           ),
@@ -1054,7 +1121,7 @@ it.layer(NodeServices.layer)("cli config resolution", (it) => {
   it.effect("reads the OTLP logs URL from env", () =>
     Effect.gen(function* () {
       const { join } = yield* Path.Path;
-      const baseDir = join(NodeOS.tmpdir(), "rove-cli-config-otlp-logs-url-base");
+      const baseDir = join(NodeOS.tmpdir(), "paperplane-cli-config-otlp-logs-url-base");
 
       const resolved = yield* resolveServerConfig(
         {
@@ -1077,7 +1144,7 @@ it.layer(NodeServices.layer)("cli config resolution", (it) => {
           Layer.mergeAll(
             ConfigProvider.layer(
               ConfigProvider.fromEnv({
-                env: { ROVE_OTLP_LOGS_URL: "http://collector.internal:4318/v1/logs" },
+                env: { PAPERPLANE_OTLP_LOGS_URL: "http://collector.internal:4318/v1/logs" },
               }),
             ),
             NetService.layer,
@@ -1105,13 +1172,13 @@ it.layer(NodeServices.layer)("cli config resolution", (it) => {
   });
 
   it.effect(
-    "resolves each signal's endpoint through ROVE_OTLP_*_URL, an OTEL endpoint, the bootstrap envelope, and persisted Settings, in that order",
+    "resolves each signal's endpoint through PAPERPLANE_OTLP_*_URL, an OTEL endpoint, the bootstrap envelope, and persisted Settings, in that order",
     () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const baseDir = yield* fs.makeTempDirectoryScoped({
-          prefix: "rove-cli-config-otel-precedence-",
+          prefix: "paperplane-cli-config-otel-precedence-",
         });
         const derivedPaths = yield* deriveExplicitServerPaths(baseDir, undefined);
         yield* fs.makeDirectory(path.dirname(derivedPaths.settingsPath), { recursive: true });
@@ -1142,8 +1209,8 @@ it.layer(NodeServices.layer)("cli config resolution", (it) => {
               ConfigProvider.layer(
                 ConfigProvider.fromEnv({
                   env: {
-                    ROVE_OTLP_TRACES_URL: "http://rove:4318/v1/traces",
-                    ROVE_OTLP_HEADERS: "x-key=secret",
+                    PAPERPLANE_OTLP_TRACES_URL: "http://paperplane:4318/v1/traces",
+                    PAPERPLANE_OTLP_HEADERS: "x-key=secret",
                     OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: "http://otel-traces:4318/custom",
                     OTEL_EXPORTER_OTLP_METRICS_ENDPOINT: "http://otel-metrics:4318/custom",
                     OTEL_EXPORTER_OTLP_HEADERS: "x-key=otel",
@@ -1155,11 +1222,11 @@ it.layer(NodeServices.layer)("cli config resolution", (it) => {
           ),
         );
 
-        // ROVE_OTLP_TRACES_URL wins over the OTEL variable for the same
-        // signal, and keeps Rove Code's own headers since Rove Code still owns it.
-        expect(resolved.otlpTracesUrl).toBe("http://rove:4318/v1/traces");
+        // PAPERPLANE_OTLP_TRACES_URL wins over the OTEL variable for the same
+        // signal, and keeps Paperplane's own headers since Paperplane still owns it.
+        expect(resolved.otlpTracesUrl).toBe("http://paperplane:4318/v1/traces");
         expect(resolved.otlpTracesExport.headers).toEqual({ "x-key": "secret" });
-        // Metrics named no ROVE_OTLP_METRICS_URL, so the OTEL endpoint wins
+        // Metrics named no PAPERPLANE_OTLP_METRICS_URL, so the OTEL endpoint wins
         // over the bootstrap envelope and brings the OTEL headers and protocol.
         expect(resolved.otlpMetricsUrl).toBe("http://otel-metrics:4318/custom");
         expect(resolved.otlpMetricsExport).toEqual({
@@ -1167,7 +1234,7 @@ it.layer(NodeServices.layer)("cli config resolution", (it) => {
           protocol: "http/protobuf",
           headers: { "x-key": "otel" },
         });
-        // Logs named no Rove or OTEL endpoint and a blank bootstrap value, so
+        // Logs named no Paperplane or OTEL endpoint and a blank bootstrap value, so
         // Settings answers, and logs keep the shared headers since no OTEL
         // endpoint claimed them.
         expect(resolved.otlpLogsUrl).toBe("http://settings:4318/v1/logs");
@@ -1182,7 +1249,7 @@ it.layer(NodeServices.layer)("cli config resolution", (it) => {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const baseDir = yield* fs.makeTempDirectoryScoped({
-          prefix: "rove-cli-config-otel-off-",
+          prefix: "paperplane-cli-config-otel-off-",
         });
         const derivedPaths = yield* deriveExplicitServerPaths(baseDir, undefined);
         yield* fs.makeDirectory(path.dirname(derivedPaths.settingsPath), { recursive: true });
@@ -1209,7 +1276,7 @@ it.layer(NodeServices.layer)("cli config resolution", (it) => {
               ConfigProvider.layer(
                 ConfigProvider.fromEnv({
                   env: {
-                    ROVE_OTLP_TRACES_URL: "http://rove:4318/v1/traces",
+                    PAPERPLANE_OTLP_TRACES_URL: "http://paperplane:4318/v1/traces",
                     OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel:4318",
                     OTEL_EXPORTER_OTLP_HEADERS: "x-key=%zz",
                   },
@@ -1220,10 +1287,10 @@ it.layer(NodeServices.layer)("cli config resolution", (it) => {
           ),
         );
 
-        // ROVE_OTLP_TRACES_URL still wins outright.
-        expect(resolved.otlpTracesUrl).toBe("http://rove:4318/v1/traces");
+        // PAPERPLANE_OTLP_TRACES_URL still wins outright.
+        expect(resolved.otlpTracesUrl).toBe("http://paperplane:4318/v1/traces");
         // The OTEL endpoint claimed metrics and logs, so neither the bootstrap
-        // envelope nor Settings receives them with Rove Code's headers.
+        // envelope nor Settings receives them with Paperplane's headers.
         expect(resolved.otlpMetricsUrl).toBeUndefined();
         expect(resolved.otlpLogsUrl).toBeUndefined();
       }),

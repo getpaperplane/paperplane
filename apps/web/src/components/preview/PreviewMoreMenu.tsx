@@ -1,6 +1,6 @@
 "use client";
 
-import type { DesktopPreviewColorScheme } from "@rove-code/contracts";
+import type { DesktopPreviewColorScheme } from "@getpaperplane/contracts";
 import { Minus, MoreVertical, Plus as PlusIcon, RotateCcw } from "lucide-react";
 
 import { Button } from "~/components/ui/button";

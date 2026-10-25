@@ -57,8 +57,8 @@ import {
   type ScheduledTaskUpsertInput,
   type ServerProvider,
   ThreadId,
-} from "@rove-code/contracts";
-import { runRanAfter } from "@rove-code/shared/orchestrationV2ThreadError";
+} from "@getpaperplane/contracts";
+import { runRanAfter } from "@getpaperplane/shared/orchestrationV2ThreadError";
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
 import * as Crypto from "effect/Crypto";
@@ -76,7 +76,7 @@ import * as ProviderAdapterRegistry from "../orchestration-v2/ProviderAdapterReg
 import {
   subagentResultForRun,
   delegatedTaskProgress,
-} from "@rove-code/provider-core/server/subagentProjection";
+} from "@getpaperplane/provider-core/server/subagentProjection";
 import {
   DispatchModeLimit,
   type DispatchModeRefusal,
@@ -196,7 +196,7 @@ export interface OrchestratorMcpServiceShape {
 export class OrchestratorMcpService extends Context.Service<
   OrchestratorMcpService,
   OrchestratorMcpServiceShape
->()("@rove-code/server/mcp/OrchestratorMcpService") {}
+>()("@getpaperplane/server/mcp/OrchestratorMcpService") {}
 
 const isThreadManagementError = Schema.is(ThreadManagementService.ThreadManagementError);
 
@@ -1046,7 +1046,7 @@ const make = Effect.gen(function* () {
         : Effect.fail(
             failure(
               "target_required",
-              "Pass projectId: this MCP client is not running inside a Rove thread.",
+              "Pass projectId: this MCP client is not running inside a Paperplane thread.",
             ),
           );
 
@@ -1653,7 +1653,7 @@ const make = Effect.gen(function* () {
           return yield* failure(
             "invalid_request",
             parent === undefined
-              ? "bindToCurrentThread needs an agent running inside a Rove thread."
+              ? "bindToCurrentThread needs an agent running inside a Paperplane thread."
               : "bindToCurrentThread binds to this thread, which belongs to a different project.",
           );
         }
@@ -1726,7 +1726,7 @@ const make = Effect.gen(function* () {
           return yield* failure(
             "invalid_request",
             parent === undefined
-              ? "bindToCurrentThread needs an agent running inside a Rove thread."
+              ? "bindToCurrentThread needs an agent running inside a Paperplane thread."
               : "bindToCurrentThread binds to this thread, which belongs to a different project.",
           );
         }

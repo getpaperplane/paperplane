@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vite-plus/test";
 
-import { ATTACHMENT_ONLY_BOOTSTRAP_PROMPT } from "@rove-code/shared/composerContextReferences";
+import { ATTACHMENT_ONLY_BOOTSTRAP_PROMPT } from "@getpaperplane/shared/composerContextReferences";
 import { buildPlanImplementationPrompt } from "../../proposedPlan";
 import {
   buildComposerPromptHistoryEntries,
@@ -87,9 +87,9 @@ describe("recallableComposerPrompt", () => {
 
   it("removes canonical references without restoring dangling chips", () => {
     const sent =
-      "Look at [Terminal](rove-context://v1/terminal/term-1) please\n    indented  code\n![image](rove-context://v1/image/img-1)";
+      "Look at [Terminal](paperplane-context://v1/terminal/term-1) please\n    indented  code\n![image](paperplane-context://v1/image/img-1)";
     expect(recallableComposerPrompt(sent)).toBe("Look at please\n    indented  code");
-    expect(recallableComposerPrompt("![image](rove-context://v1/image/img-1)")).toBe("");
+    expect(recallableComposerPrompt("![image](paperplane-context://v1/image/img-1)")).toBe("");
   });
 
   it("returns an empty string for app-composed sends", () => {

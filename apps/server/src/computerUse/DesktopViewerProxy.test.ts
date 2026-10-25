@@ -5,8 +5,8 @@ import {
   AuthSessionId,
   ComputerDesktopViewerError,
   type AuthEnvironmentScope,
-} from "@rove-code/contracts";
-import { Environment as HostProcessEnvironment } from "@rove-code/shared/HostProcess";
+} from "@getpaperplane/contracts";
+import { Environment as HostProcessEnvironment } from "@getpaperplane/shared/HostProcess";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import { HttpRouter } from "effect/http";
@@ -56,7 +56,7 @@ const fixture = (
   return { handler, lookups };
 };
 const request = () =>
-  new Request("http://rove.test/api/computer-use/desktops/unknown/vnc?wsTicket=secret", {
+  new Request("http://paperplane.test/api/computer-use/desktops/unknown/vnc?wsTicket=secret", {
     headers: { upgrade: "websocket", "sec-websocket-protocol": "binary" },
   });
 

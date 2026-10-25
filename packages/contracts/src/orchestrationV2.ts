@@ -301,9 +301,9 @@ export type OrchestrationV2CheckpointCapabilities =
 
 export const OrchestrationV2RuntimePolicyCapabilities = Schema.Struct({
   /**
-   * Where Rove runtime modes are actually enforced. "native" providers receive
+   * Where Paperplane runtime modes are actually enforced. "native" providers receive
    * the approval and sandbox policy each turn and confine their own execution.
-   * "client-boundary" providers only have policy applied where Rove mediates the
+   * "client-boundary" providers only have policy applied where Paperplane mediates the
    * work (permission requests and client fs/terminal handlers); provider-owned
    * execution is not confined, so sandbox guarantees are reduced.
    */
@@ -454,7 +454,7 @@ export type OrchestrationV2AppThread = typeof OrchestrationV2AppThread.Type;
 /**
  * A subagent the provider spawned on its own (Claude's Agent tool, Codex or
  * Cursor native subagents). The provider owns its conversation, so it cannot
- * take messages; Rove delegate_task children (`creationSource: "mcp"`) can.
+ * take messages; Paperplane delegate_task children (`creationSource: "mcp"`) can.
  */
 export function isProviderNativeSubagentThread(
   thread: Pick<OrchestrationV2AppThread, "lineage" | "creationSource">,
@@ -953,7 +953,7 @@ export type OrchestrationV2ProviderGoalStatus = typeof OrchestrationV2ProviderGo
 
 /**
  * A provider-native goal set with `/goal` (Codex and Claude). The provider
- * keeps working until it judges the objective met and owns this state; Rove
+ * keeps working until it judges the objective met and owns this state; Paperplane
  * mirrors the latest native report. Usage fields are provider-specific.
  */
 export const OrchestrationV2ProviderGoal = Schema.Struct({
@@ -1197,7 +1197,7 @@ export const OrchestrationV2NotificationSource = kindUnionWithFallback(
     CommandNotificationSource,
     Schema.Struct({ kind: Schema.Literal("monitor") }),
     Schema.Struct({ kind: Schema.Literal("background_task") }),
-    /** Rove Code itself, such as a restart continuing an interrupted turn. */
+    /** Paperplane itself, such as a restart continuing an interrupted turn. */
     Schema.Struct({ kind: Schema.Literal("system") }),
   ],
   (kind) => Schema.Struct({ kind }),
@@ -3316,7 +3316,7 @@ export type OrchestrationV2SubscribeCommandOutputInput =
  * fell behind); `append` extends it. Text is terminal output, not display
  * text: `replace` carries the cleaned tail plus the cursor and style escapes
  * needed to resume, and `append` carries raw chunks. Clients must feed both
- * through `appendTerminalOutput` from `@rove-code/shared/terminalOutput`.
+ * through `appendTerminalOutput` from `@getpaperplane/shared/terminalOutput`.
  * The stream ends after a frame with `running: false`.
  */
 export const OrchestrationV2CommandOutputFrame = Schema.Struct({

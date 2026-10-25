@@ -8,12 +8,12 @@ import {
   ProviderThreadId,
   RunId,
   ThreadId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 
 import { CodexProviderCapabilitiesV2 } from "./Adapters/CodexAdapterV2.ts";
-import { CursorProviderCapabilitiesV2 } from "@rove-code/provider-cursor/testing";
-import { GrokProviderCapabilitiesV2 } from "@rove-code/provider-grok/testing";
+import { CursorProviderCapabilitiesV2 } from "@getpaperplane/provider-cursor/testing";
+import { GrokProviderCapabilitiesV2 } from "@getpaperplane/provider-grok/testing";
 import * as CommandPolicy from "./CommandPolicy.ts";
 
 const commandId = CommandId.make("command-policy-test");

@@ -11,9 +11,9 @@ import * as Layer from "effect/Layer";
 import * as Schema from "effect/Schema";
 import { FetchHttpClient, HttpClient } from "effect/http";
 
-import * as GitHubPullRequestApi from "@rove-code/source-control-github/server/GitHubPullRequestApi";
-import * as GitHubPullRequestProvider from "@rove-code/source-control-github/server/GitHubPullRequestProvider";
-import * as GitHubRest from "@rove-code/source-control-github/server/GitHubRest";
+import * as GitHubPullRequestApi from "@getpaperplane/source-control-github/server/GitHubPullRequestApi";
+import * as GitHubPullRequestProvider from "@getpaperplane/source-control-github/server/GitHubPullRequestProvider";
+import * as GitHubRest from "@getpaperplane/source-control-github/server/GitHubRest";
 import * as ServerConfig from "../src/config.ts";
 import * as ServerSettings from "../src/serverSettings.ts";
 import * as ServerSourceControlHost from "../src/sourceControl/ServerSourceControlHost.ts";
@@ -78,8 +78,10 @@ const sourceControlHost = ServerSourceControlHost.layer.pipe(
   Layer.provide(VcsDriverRegistry.layer.pipe(Layer.provide(VcsProjectConfig.layer))),
   Layer.provide(GitVcsDriver.layer),
   Layer.provide(ServerSettings.layerTest()),
-  // A scratch state directory, so nothing here touches a real Rove home.
-  Layer.provide(ServerConfig.layerTest(process.cwd(), { prefix: "rove-measure-pr-preview-" })),
+  // A scratch state directory, so nothing here touches a real Paperplane home.
+  Layer.provide(
+    ServerConfig.layerTest(process.cwd(), { prefix: "paperplane-measure-pr-preview-" }),
+  ),
   Layer.provideMerge(VcsProcess.layer),
   Layer.provideMerge(NodeServices.layer),
 );

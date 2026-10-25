@@ -1,5 +1,5 @@
 {
-  "name": "rove-relay",
+  "name": "paperplane-relay",
   "private": true,
   "type": "module",
   "scripts": {
@@ -17,11 +17,11 @@
     "@clerk/backend": "catalog:",
     "@effect/sql-pg": "catalog:",
     "@effect/sql-sqlite-do": "catalog:",
+    "@getpaperplane/client-runtime": "workspace:*",
+    "@getpaperplane/contracts": "workspace:*",
+    "@getpaperplane/shared": "workspace:*",
     "@noble/curves": "catalog:",
     "@noble/hashes": "catalog:",
-    "@rove-code/client-runtime": "workspace:*",
-    "@rove-code/contracts": "workspace:*",
-    "@rove-code/shared": "workspace:*",
     "alchemy": "2.0.0-beta.80",
     "drizzle-orm": "1.0.0-rc.5-ab785fc",
     "effect": "catalog:"

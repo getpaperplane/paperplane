@@ -5,7 +5,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
 import { useTheme } from "~/hooks/useTheme";
 import { cn } from "~/lib/utils";
-import { ROVE_PIERRE_ICONS } from "~/pierre-icons";
+import { PAPERPLANE_PIERRE_ICONS } from "~/pierre-icons";
 import { PIERRE_TREE_UNSAFE_CSS, pierreTreeStyle } from "~/pierre-tree-theme";
 
 import { areAllDirectoriesExpanded, setAllDirectoriesExpanded } from "../files/fileTreeExpansion";
@@ -88,7 +88,7 @@ export function DiffFileTree({
     density: "compact",
     flattenEmptyDirectories: true,
     initialExpansion: "open",
-    icons: ROVE_PIERRE_ICONS,
+    icons: PAPERPLANE_PIERRE_ICONS,
     onSelectionChange: (selectedPaths) => {
       if (syncingSelectionRef.current) return;
       const path = selectedPaths.at(-1)?.replace(/\/$/, "");

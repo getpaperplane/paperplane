@@ -19,7 +19,7 @@ const config = {
 const json = JSON.stringify(config, null, 2);
 
 function runStep(stdout, exitCode = 0) {
-  const runnerTemp = mkdtempSync(join(tmpdir(), "rove-relay-state-test-"));
+  const runnerTemp = mkdtempSync(join(tmpdir(), "paperplane-relay-state-test-"));
   try {
     const result = spawnSync(
       "bash",
@@ -55,9 +55,9 @@ for (const prefix of [
     assert.equal(result.stdout, "::add-mask::fixture-token\n");
     assert.equal(
       result.envFile,
-      "ROVE_RELAY_CLIENT_OTLP_TRACES_URL=https://example.invalid/traces\n" +
-        "ROVE_RELAY_CLIENT_OTLP_TRACES_DATASET=fixture-dataset\n" +
-        "ROVE_RELAY_CLIENT_OTLP_TRACES_TOKEN=fixture-token\n",
+      "PAPERPLANE_RELAY_CLIENT_OTLP_TRACES_URL=https://example.invalid/traces\n" +
+        "PAPERPLANE_RELAY_CLIENT_OTLP_TRACES_DATASET=fixture-dataset\n" +
+        "PAPERPLANE_RELAY_CLIENT_OTLP_TRACES_TOKEN=fixture-token\n",
     );
   });
 }

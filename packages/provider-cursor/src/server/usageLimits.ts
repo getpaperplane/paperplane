@@ -1,7 +1,7 @@
-import type { ServerProviderUsageWindow } from "@rove-code/contracts";
+import type { ServerProviderUsageWindow } from "@getpaperplane/contracts";
 import type { CursorSettings } from "../settings.ts";
-import * as HostProcess from "@rove-code/shared/HostProcess";
-import { CURSOR_USAGE_WINDOWS } from "@rove-code/shared/usageLimits";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
+import { CURSOR_USAGE_WINDOWS } from "@getpaperplane/shared/usageLimits";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -15,7 +15,7 @@ import {
   clampPercent,
   makeUnavailableUsageLimits,
   makeUsageLimits,
-} from "@rove-code/provider-core/server/usageLimits";
+} from "@getpaperplane/provider-core/server/usageLimits";
 import * as CursorKeychain from "./CursorKeychain.ts";
 
 const CursorCredentials = Schema.Struct({ accessToken: Schema.optional(Schema.String) });
@@ -94,7 +94,7 @@ export const readCursorUsageLimits = Effect.fn("readCursorUsageLimits")(function
         return makeUnavailableUsageLimits({
           checkedAt,
           reason: "unsupported",
-          message: "Enable Cursor account usage in Rove Code to read its Keychain login.",
+          message: "Enable Cursor account usage in Paperplane to read its Keychain login.",
         });
       }
       if (endpoint !== DEFAULT_CURSOR_API_ENDPOINT) {

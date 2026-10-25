@@ -1,9 +1,9 @@
 import {
   ConnectionTransientError,
   PrimaryConnectionTarget,
-} from "@rove-code/client-runtime/connection";
-import { EnvironmentId, ThreadId } from "@rove-code/contracts";
-import { ConnectionCatalogDocument, Persistence } from "@rove-code/client-runtime/platform";
+} from "@getpaperplane/client-runtime/connection";
+import { EnvironmentId, ThreadId } from "@getpaperplane/contracts";
+import { ConnectionCatalogDocument, Persistence } from "@getpaperplane/client-runtime/platform";
 import { describe, expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Deferred from "effect/Deferred";
@@ -157,6 +157,7 @@ describe("environment cache removal", () => {
       }) as unknown as IDBDatabase;
       const openRequest = Object.assign(new EventTarget(), { result: database, error: null });
       vi.stubGlobal("indexedDB", {
+        databases: async () => [],
         open: () => {
           queueMicrotask(() => openRequest.dispatchEvent(new Event("success")));
           return openRequest;
@@ -187,7 +188,7 @@ describe("IndexedDB connection recovery", () => {
       const open = vi.fn(() => {
         throw new DOMException("Storage is unavailable", "InvalidStateError");
       });
-      vi.stubGlobal("indexedDB", { open });
+      vi.stubGlobal("indexedDB", { open, databases: async () => [] });
 
       yield* Effect.gen(function* () {
         const cache = yield* Persistence.EnvironmentCacheStore;
@@ -233,7 +234,7 @@ describe("IndexedDB connection recovery", () => {
         queueMicrotask(() => request.dispatchEvent(new Event("success")));
         return request;
       });
-      vi.stubGlobal("indexedDB", { open });
+      vi.stubGlobal("indexedDB", { open, databases: async () => [] });
 
       yield* Effect.gen(function* () {
         const cache = yield* Persistence.EnvironmentCacheStore;
@@ -290,7 +291,7 @@ describe("IndexedDB connection closed without a close event", () => {
         queueMicrotask(() => request.dispatchEvent(new Event("success")));
         return request;
       });
-      vi.stubGlobal("indexedDB", { open });
+      vi.stubGlobal("indexedDB", { open, databases: async () => [] });
 
       yield* Effect.gen(function* () {
         const cache = yield* Persistence.EnvironmentCacheStore;

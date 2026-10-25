@@ -2,17 +2,17 @@ import {
   ClientCapabilities,
   PlatformConnectionSource,
   Persistence,
-} from "@rove-code/client-runtime/platform";
+} from "@getpaperplane/client-runtime/platform";
 import {
   ConnectionBlockedError,
   ConnectionTransientError,
   Connectivity,
   Wakeups,
-} from "@rove-code/client-runtime/connection";
+} from "@getpaperplane/client-runtime/connection";
 import {
   managedRelayAccountChanges,
   managedRelaySessionAtom,
-} from "@rove-code/client-runtime/relay";
+} from "@getpaperplane/client-runtime/relay";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -171,7 +171,7 @@ const layerCapabilities = Layer.effectContext(
           if (session === null) {
             return yield* new ConnectionBlockedError({
               reason: "authentication",
-              detail: "Sign in to Rove Connect to connect this environment.",
+              detail: "Sign in to Paperplane Connect to connect this environment.",
             });
           }
           const token = yield* session.readClerkToken().pipe(
@@ -186,7 +186,7 @@ const layerCapabilities = Layer.effectContext(
           if (token === null) {
             return yield* new ConnectionBlockedError({
               reason: "authentication",
-              detail: "The Rove Connect session is unavailable.",
+              detail: "The Paperplane Connect session is unavailable.",
             });
           }
           return token;

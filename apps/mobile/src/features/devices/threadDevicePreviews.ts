@@ -3,8 +3,8 @@ import type {
   ComputerDesktopsState,
   DeviceServiceState,
   ThreadId,
-} from "@rove-code/contracts";
-import { threadComputerDesktops } from "@rove-code/client-runtime/state/computer-use";
+} from "@getpaperplane/contracts";
+import { threadComputerDesktops } from "@getpaperplane/client-runtime/state/computer-use";
 
 /** Host identity is part of the selection because Android serials repeat across hosts. */
 export function threadDevicePreviews(state: DeviceServiceState | null, threadId: ThreadId) {

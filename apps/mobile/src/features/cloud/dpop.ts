@@ -1,3 +1,4 @@
+import { getSecureItemAsync } from "../../persistence/mobile-secure-storage";
 import * as Clock from "effect/Clock";
 import * as Crypto from "effect/Crypto";
 import * as Data from "effect/Data";
@@ -8,7 +9,7 @@ import * as Schema from "effect/Schema";
 import * as ExpoCrypto from "expo-crypto";
 import * as SecureStore from "expo-secure-store";
 import { p256 } from "@noble/curves/nist";
-import { DpopPublicJwk, normalizeDpopHtu } from "@rove-code/shared/dpopCommon";
+import { DpopPublicJwk, normalizeDpopHtu } from "@getpaperplane/shared/dpopCommon";
 import * as Layer from "effect/Layer";
 
 export class CloudDpopError extends Data.TaggedError("CloudDpopError")<{
@@ -86,7 +87,7 @@ export interface DpopProofKeyPair {
   readonly thumbprint: string;
 }
 
-const DPOP_PROOF_KEY_STORAGE_KEY = "rove.cloud.dpop-proof-key";
+const DPOP_PROOF_KEY_STORAGE_KEY = "paperplane.cloud.dpop-proof-key";
 
 function base64UrlToBytes(value: string): Uint8Array {
   return Result.getOrThrow(Base64Url.decode(value));
@@ -198,7 +199,7 @@ export function loadOrCreateDpopProofKeyPair(): Effect.Effect<
 > {
   return Effect.gen(function* () {
     const stored = yield* Effect.tryPromise({
-      try: () => SecureStore.getItemAsync(DPOP_PROOF_KEY_STORAGE_KEY),
+      try: () => getSecureItemAsync(DPOP_PROOF_KEY_STORAGE_KEY),
       catch: cloudDpopError("Could not read the DPoP proof key."),
     });
     if (stored) {

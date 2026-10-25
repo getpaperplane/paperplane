@@ -24,12 +24,12 @@ import {
   type ServerProviderModel,
   type ServerSettings,
   type ServerProviderState,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   normalizeProviderAccentColor,
   resolveProviderInstanceDisplayName,
   shouldShowInstanceBadge,
-} from "@rove-code/client-runtime/state/provider-instance-display";
+} from "@getpaperplane/client-runtime/state/provider-instance-display";
 
 export { normalizeProviderAccentColor, shouldShowInstanceBadge };
 
@@ -39,7 +39,7 @@ export { normalizeProviderAccentColor, shouldShowInstanceBadge };
  * send until a live provider replaces it.
  */
 export const NO_PROVIDER_MODEL_SELECTION: ModelSelection = {
-  instanceId: ProviderInstanceId.make("rove_no_provider"),
+  instanceId: ProviderInstanceId.make("paperplane_no_provider"),
   model: "",
 };
 

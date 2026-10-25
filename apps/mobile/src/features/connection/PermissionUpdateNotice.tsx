@@ -1,6 +1,7 @@
+import { getSecureItemAsync } from "../../persistence/mobile-secure-storage";
 import * as Dialog from "../../components/ui/Dialog";
 import { useAtomValue } from "@effect/atom-react";
-import { sessionHasLegacyPermissions } from "@rove-code/contracts";
+import { sessionHasLegacyPermissions } from "@getpaperplane/contracts";
 import { Atom } from "effect/reactivity";
 import * as SecureStore from "expo-secure-store";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -8,7 +9,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useEnvironments } from "../../state/environments";
 import { environmentSession } from "../../state/session";
 
-const storageKey = "rove.permission-update.v1";
+const storageKey = "paperplane.permission-update.v1";
 const dismissedThisLaunch = new Set<string>();
 const shownThisLaunch = new Set<string>();
 
@@ -35,7 +36,7 @@ export function PermissionUpdateNotice() {
 
   useEffect(() => {
     let active = true;
-    void SecureStore.getItemAsync(storageKey)
+    void getSecureItemAsync(storageKey)
       .then((raw) => {
         const value: unknown = raw === null ? [] : JSON.parse(raw);
         if (active)

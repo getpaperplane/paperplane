@@ -11,14 +11,14 @@ import {
   TrimmedNonEmptyString,
   type SourceControlRepositoryVisibility,
   type VcsError,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 
-import * as SourceControlHost from "@rove-code/source-control-core/server/SourceControlHost";
+import * as SourceControlHost from "@getpaperplane/source-control-core/server/SourceControlHost";
 import {
   decodeGitLabMergeRequestJson,
   decodeGitLabMergeRequestListJson,
 } from "./gitLabMergeRequests.ts";
-import type * as SourceControlProvider from "@rove-code/source-control-core/server/SourceControlProvider";
+import type * as SourceControlProvider from "@getpaperplane/source-control-core/server/SourceControlProvider";
 
 const DEFAULT_TIMEOUT_MS = 30_000;
 
@@ -316,7 +316,7 @@ export class GitLabCli extends Context.Service<
       readonly force?: boolean;
     }) => Effect.Effect<void, GitLabCliError>;
   }
->()("@rove-code/source-control-gitlab/server/GitLabCli") {}
+>()("@getpaperplane/source-control-gitlab/server/GitLabCli") {}
 
 const RawGitLabRepositoryCloneUrlsSchema = Schema.Struct({
   path_with_namespace: TrimmedNonEmptyString,

@@ -2,10 +2,10 @@ import type {
   EnvironmentId,
   UserInputAttachmentAnswerPayload,
   UserInputAttachments,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { Image } from "expo-image";
 import { Linking, Pressable, View } from "react-native";
-import { getQuestionAnswerText } from "@rove-code/client-runtime/work-log/user-input";
+import { getQuestionAnswerText } from "@getpaperplane/client-runtime/work-log/user-input";
 import { AppText as Text } from "../../components/ui/AppText";
 import { assetImageSource } from "../../lib/assetImageSource";
 import { useAssetUrl } from "../../state/assets";

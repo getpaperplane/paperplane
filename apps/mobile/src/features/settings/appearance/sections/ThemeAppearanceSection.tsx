@@ -3,7 +3,10 @@ import { Pressable, View } from "react-native";
 import Svg, { Circle, Defs, RadialGradient, Stop } from "react-native-svg";
 import { ScopedTheme, ScopedVariables } from "uniwind";
 
-import { mixThemePreviewBase, THEME_PREVIEW_RENDER_SPECS } from "@rove-code/shared/themePreview";
+import {
+  mixThemePreviewBase,
+  THEME_PREVIEW_RENDER_SPECS,
+} from "@getpaperplane/shared/themePreview";
 
 import { SymbolView } from "../../../../components/ui/AppSymbol";
 import { AppText as Text } from "../../../../components/ui/AppText";
@@ -169,7 +172,7 @@ function ThemeCard(props: {
         {choice("dark", props.darkSelected)}
       </View>
       <Text
-        className="min-w-0 flex-1 px-1 text-lg font-rove-medium"
+        className="min-w-0 flex-1 px-1 text-lg font-paperplane-medium"
         numberOfLines={1}
         pointerEvents="none"
       >
@@ -270,7 +273,7 @@ function ModeCard(props: {
       <Text
         className={
           props.selected
-            ? "text-center text-base font-rove-bold text-foreground"
+            ? "text-center text-base font-paperplane-bold text-foreground"
             : "text-center text-base text-foreground-muted"
         }
       >
@@ -281,7 +284,9 @@ function ModeCard(props: {
 }
 
 function SectionLabel({ children }: { readonly children: string }) {
-  return <Text className="px-2 text-sm font-rove-medium text-foreground-muted">{children}</Text>;
+  return (
+    <Text className="px-2 text-sm font-paperplane-medium text-foreground-muted">{children}</Text>
+  );
 }
 
 export function ThemeAppearanceSection() {

@@ -39,14 +39,14 @@ describe("sanitizeLinkedPrompt", () => {
 describe("parseNewThreadLink", () => {
   it("reads a shared prompt with its optional repository and model", () => {
     const result = parseNewThreadLink(
-      "?prompt=Rate+me&repo=https://github.com/hafiezul/rove.git&provider=Codex&model=gpt-5",
+      "?prompt=Rate+me&repo=https://github.com/getpaperplane/paperplane.git&provider=Codex&model=gpt-5",
     );
     expect(result).toEqual({
       ok: true,
       value: {
         kind: "new",
         prompt: { text: "Rate me", hiddenCharacters: 0 },
-        repository: { owner: "hafiezul", name: "rove" },
+        repository: { owner: "getpaperplane", name: "paperplane" },
         provider: "codex",
         model: "gpt-5",
       },
@@ -55,15 +55,15 @@ describe("parseNewThreadLink", () => {
 
   it("reads a pull request link, whose prompt is optional", () => {
     for (const pr of [
-      "hafiezul/rove/42",
-      "hafiezul/rove%2342",
-      "https://github.com/hafiezul/rove/pull/42/files",
+      "getpaperplane/paperplane/42",
+      "getpaperplane/paperplane%2342",
+      "https://github.com/getpaperplane/paperplane/pull/42/files",
     ]) {
       expect(parseNewThreadLink(`?pr=${pr}`)).toEqual({
         ok: true,
         value: {
           kind: "pull-request",
-          pullRequest: { owner: "hafiezul", name: "rove", number: 42 },
+          pullRequest: { owner: "getpaperplane", name: "paperplane", number: 42 },
           prompt: null,
         },
       });
@@ -94,11 +94,11 @@ describe("link round trips", () => {
   it("builds a link that parses back to the same prompt", () => {
     const link = buildNewThreadLink({
       prompt: "Swear count & rating?",
-      repository: { owner: "hafiezul", name: "rove" },
+      repository: { owner: "getpaperplane", name: "paperplane" },
       provider: "claudeAgent",
       model: "opus",
     });
-    expect(new URL(link).origin).toBe("https://rove.hafiezulzikry.com");
+    expect(new URL(link).origin).toBe("https://paperplane.hafiezulzikry.com");
     const path = promptLinkAppPath(link);
     expect(path).toBe(new URL(link).pathname + new URL(link).search);
     const parsed = parseNewThreadLink(new URL(link).search);
@@ -108,18 +108,18 @@ describe("link round trips", () => {
   });
 
   it("maps app scheme and hosted links to in-app paths, and nothing else", () => {
-    expect(promptLinkAppPath("rove://new?prompt=hi")).toBe("/new?prompt=hi");
-    expect(promptLinkAppPath("rove-dev://threads/env-1/thread-1")).toBe("/env-1/thread-1");
+    expect(promptLinkAppPath("paperplane://new?prompt=hi")).toBe("/new?prompt=hi");
+    expect(promptLinkAppPath("paperplane-dev://threads/env-1/thread-1")).toBe("/env-1/thread-1");
     expect(
       promptLinkAppPath(
-        "https://rove.hafiezulzikry.com/env-1/thread-1?prompt=go",
-        "https://rove.hafiezulzikry.com",
+        "https://paperplane.hafiezulzikry.com/env-1/thread-1?prompt=go",
+        "https://paperplane.hafiezulzikry.com",
       ),
     ).toBe("/env-1/thread-1?prompt=go");
-    expect(promptLinkAppPath("https://rove.hafiezulzikry.com/new?prompt=hi")).toBe(
+    expect(promptLinkAppPath("https://paperplane.hafiezulzikry.com/new?prompt=hi")).toBe(
       "/new?prompt=hi",
     );
-    expect(promptLinkAppPath("https://rove.hafiezulzikry.com/env-1/thread-1?prompt=go")).toBe(
+    expect(promptLinkAppPath("https://paperplane.hafiezulzikry.com/env-1/thread-1?prompt=go")).toBe(
       "/env-1/thread-1?prompt=go",
     );
     expect(
@@ -129,17 +129,19 @@ describe("link round trips", () => {
       ),
     ).toBe("/new?prompt=hi");
     expect(promptLinkAppPath("https://staging.example.test/new?prompt=hi")).toBeNull();
-    expect(promptLinkAppPath("https://rove.hafiezulzikry.com.evil.test/new?prompt=hi")).toBeNull();
-    expect(promptLinkAppPath("http://rove.hafiezulzikry.com/new?prompt=hi")).toBeNull();
-    expect(promptLinkAppPath("https://rove.hafiezulzikry.com/settings/general")).toBeNull();
+    expect(
+      promptLinkAppPath("https://paperplane.hafiezulzikry.com.evil.test/new?prompt=hi"),
+    ).toBeNull();
+    expect(promptLinkAppPath("http://paperplane.hafiezulzikry.com/new?prompt=hi")).toBeNull();
+    expect(promptLinkAppPath("https://paperplane.hafiezulzikry.com/settings/general")).toBeNull();
     expect(promptLinkAppPath("https://evil.test/new?prompt=hi")).toBeNull();
-    expect(promptLinkAppPath("rove://app/index.html")).toBeNull();
+    expect(promptLinkAppPath("paperplane://app/index.html")).toBeNull();
   });
 
   it("hands an in-app path to the installed app", () => {
-    expect(promptLinkDeepLink("/new?prompt=hi")).toBe("rove://new?prompt=hi");
+    expect(promptLinkDeepLink("/new?prompt=hi")).toBe("paperplane://new?prompt=hi");
     expect(promptLinkDeepLink("/env-1/thread-1?prompt=hi")).toBe(
-      "rove://threads/env-1/thread-1?prompt=hi",
+      "paperplane://threads/env-1/thread-1?prompt=hi",
     );
   });
 });

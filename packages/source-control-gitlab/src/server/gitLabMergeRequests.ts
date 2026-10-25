@@ -4,8 +4,8 @@ import * as Exit from "effect/Exit";
 import * as Option from "effect/Option";
 import * as Result from "effect/Result";
 import * as Schema from "effect/Schema";
-import { PositiveInt, TrimmedNonEmptyString } from "@rove-code/contracts";
-import { decodeJsonResult } from "@rove-code/shared/schemaJson";
+import { PositiveInt, TrimmedNonEmptyString } from "@getpaperplane/contracts";
+import { decodeJsonResult } from "@getpaperplane/shared/schemaJson";
 
 export interface NormalizedGitLabMergeRequestRecord {
   readonly number: number;

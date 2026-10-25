@@ -1,4 +1,4 @@
-import { EnvironmentId, ProjectId, RuntimeRequestId, ThreadId } from "@rove-code/contracts";
+import { EnvironmentId, ProjectId, RuntimeRequestId, ThreadId } from "@getpaperplane/contracts";
 
 export function scopedProjectKey(environmentId: EnvironmentId, projectId: ProjectId): string {
   return `${environmentId}:${projectId}`;

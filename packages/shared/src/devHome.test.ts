@@ -6,7 +6,7 @@ import * as NodeOS from "node:os";
 import * as NodePath from "node:path";
 import * as Effect from "effect/Effect";
 
-import { resolveGitWorktreePath, resolveWorktreeRoveHome } from "./devHome.ts";
+import { resolveGitWorktreePath, resolveWorktreePaperplaneHome } from "./devHome.ts";
 
 const makeRepo = (
   kind:
@@ -20,7 +20,7 @@ const makeRepo = (
 ) =>
   Effect.acquireRelease(
     Effect.sync(() => {
-      const root = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "rove-devhome-"));
+      const root = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "paperplane-devhome-"));
       if (kind === "worktree") {
         NodeFS.writeFileSync(NodePath.join(root, ".git"), "gitdir: /elsewhere/.git/worktrees/x\n");
       } else if (kind === "bare-repo-worktree") {
@@ -94,12 +94,12 @@ describe("resolveGitWorktreePath", () => {
   );
 });
 
-describe("resolveWorktreeRoveHome", () => {
-  it.effect("answers with .rove before the dev runner creates it", () =>
+describe("resolveWorktreePaperplaneHome", () => {
+  it.effect("answers with .paperplane before the dev runner creates it", () =>
     Effect.gen(function* () {
       const { root, nested } = yield* makeRepo("worktree");
-      const home = yield* resolveWorktreeRoveHome(nested);
-      assert.equal(home, NodePath.join(NodePath.resolve(root), ".rove"));
+      const home = yield* resolveWorktreePaperplaneHome(nested);
+      assert.equal(home, NodePath.join(NodePath.resolve(root), ".paperplane"));
       assert.isFalse(NodeFS.existsSync(home ?? ""));
     }).pipe(Effect.scoped, Effect.provide(NodeServices.layer)),
   );

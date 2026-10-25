@@ -31,7 +31,7 @@ Read-heavy `client.feature.used` operations are counted once per operation per W
 not once per query or keystroke. Their outcomes and durations describe the RPC operation. Feature
 events for orchestration commands describe acceptance, not completion of asynchronous side effects.
 Filter `analyticsEnvironment` to `production` for shipped-product reports; isolated verification can
-set `ROVE_ANALYTICS_ENVIRONMENT=test`.
+set `PAPERPLANE_ANALYTICS_ENVIRONMENT=test`.
 
 Provider send and completion counts need not match. Providers can emit synthetic
 turns without a send request. Collection is best effort, with no scan or backfill
@@ -69,6 +69,6 @@ properties or account linkage are sent. Boot/provider-only and development/test 
 profile creation. A previously created profile may still associate events using the same distinct ID.
 GeoIP enrichment is disabled and the event IP property is null.
 
-The persisted environment-wide opt-out and `ROVE_TELEMETRY_ENABLED=false` both stop collection.
+The persisted environment-wide opt-out and `PAPERPLANE_TELEMETRY_ENABLED=false` both stop collection.
 The environment variable wins. Identity lookup is lazy, and opting out discards queued events;
 already-sent requests cannot be recalled.

@@ -1,7 +1,7 @@
 import * as NodeOS from "node:os";
 
-import { parsePersistedServerObservabilitySettings } from "@rove-code/shared/serverSettings";
-import { currentDesktopBootstrapToken } from "@rove-code/shared/desktopBootstrapToken";
+import { parsePersistedServerObservabilitySettings } from "@getpaperplane/shared/serverSettings";
+import { currentDesktopBootstrapToken } from "@getpaperplane/shared/desktopBootstrapToken";
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
 import * as Crypto from "effect/Crypto";
@@ -70,7 +70,7 @@ export class DesktopBackendConfiguration extends Context.Service<
     // so the renderer never holds one long-lived admin credential.
     readonly currentBootstrapToken: Effect.Effect<string, PlatformError.PlatformError>;
   }
->()("@rove-code/desktop/backend/DesktopBackendConfiguration") {}
+>()("@getpaperplane/desktop/backend/DesktopBackendConfiguration") {}
 
 interface BackendObservabilitySettings {
   readonly otlpTracesUrl: Option.Option<string>;
@@ -85,16 +85,16 @@ const emptyBackendObservabilitySettings: BackendObservabilitySettings = {
 };
 
 const DESKTOP_BACKEND_ENV_NAMES = [
-  "ROVE_PORT",
-  "ROVE_MODE",
-  "ROVE_NO_BROWSER",
-  "ROVE_HOST",
-  "ROVE_DESKTOP_WS_URL",
-  "ROVE_DESKTOP_LAN_ACCESS",
-  "ROVE_DESKTOP_LAN_HOST",
-  "ROVE_DESKTOP_HTTPS_ENDPOINTS",
-  "ROVE_TAILSCALE_SERVE",
-  "ROVE_TAILSCALE_SERVE_PORT",
+  "PAPERPLANE_PORT",
+  "PAPERPLANE_MODE",
+  "PAPERPLANE_NO_BROWSER",
+  "PAPERPLANE_HOST",
+  "PAPERPLANE_DESKTOP_WS_URL",
+  "PAPERPLANE_DESKTOP_LAN_ACCESS",
+  "PAPERPLANE_DESKTOP_LAN_HOST",
+  "PAPERPLANE_DESKTOP_HTTPS_ENDPOINTS",
+  "PAPERPLANE_TAILSCALE_SERVE",
+  "PAPERPLANE_TAILSCALE_SERVE_PORT",
 ] as const;
 
 // Env vars that the WSL backend needs but Windows process.env won't forward
@@ -103,18 +103,18 @@ const DESKTOP_BACKEND_ENV_NAMES = [
 const WSL_FORWARDED_ENV_NAMES = [
   "OPENAI_API_KEY",
   "ANTHROPIC_API_KEY",
-  "ROVE_TELEMETRY_ENABLED",
+  "PAPERPLANE_TELEMETRY_ENABLED",
   // Otherwise the WSL server keeps exporting to endpoints from the bootstrap.
-  "ROVE_OTEL_SDK_DISABLED",
+  "PAPERPLANE_OTEL_SDK_DISABLED",
   "OTEL_SDK_DISABLED",
-  "ROVE_OTLP_HEADERS",
-  "ROVE_OTLP_PROTOCOL",
+  "PAPERPLANE_OTLP_HEADERS",
+  "PAPERPLANE_OTLP_PROTOCOL",
   // Forwarded without a WSLENV flag, so the values arrive untranslated. The
-  // server prefers an OTEL endpoint over the bootstrap envelope, so the Rove URLs
+  // server prefers an OTEL endpoint over the bootstrap envelope, so the Paperplane URLs
   // travel as variables to keep winning inside the distro as they do on Windows.
-  "ROVE_OTLP_TRACES_URL",
-  "ROVE_OTLP_METRICS_URL",
-  "ROVE_OTLP_LOGS_URL",
+  "PAPERPLANE_OTLP_TRACES_URL",
+  "PAPERPLANE_OTLP_METRICS_URL",
+  "PAPERPLANE_OTLP_LOGS_URL",
   "OTEL_EXPORTER_OTLP_ENDPOINT",
   "OTEL_EXPORTER_OTLP_TRACES_ENDPOINT",
   "OTEL_EXPORTER_OTLP_METRICS_ENDPOINT",
@@ -187,7 +187,7 @@ const logBackendObservabilitySettingsReadFailure = (
 };
 
 function resourceMonitorBinaryName(platform: NodeJS.Platform): string {
-  return platform === "win32" ? "rove-resource-monitor.exe" : "rove-resource-monitor";
+  return platform === "win32" ? "paperplane-resource-monitor.exe" : "paperplane-resource-monitor";
 }
 
 const resolveResourceMonitorPath = Effect.fn(
@@ -251,7 +251,7 @@ const readPersistedBackendObservabilitySettings = Effect.gen(function* () {
 });
 
 // The bootstrap carries the OTLP endpoints to every backend, including a WSL
-// child that lacks the variables. The Rove URLs also travel as variables in
+// child that lacks the variables. The Paperplane URLs also travel as variables in
 // WSL_FORWARDED_ENV_NAMES so they outrank a forwarded OTEL endpoint. Env beats
 // the persisted settings file, matching the precedence resolveServerConfig and
 // DesktopObservability apply.
@@ -272,7 +272,7 @@ interface SharedBootstrapInput {
 }
 
 // What the launch runs inside the distro. The staged runtime is the release's
-// self-contained `rove` executable (Node inside); the mounted server tree is a
+// self-contained `paperplane` executable (Node inside); the mounted server tree is a
 // script that needs the distro's own Node.
 type WslPreflightRuntime =
   | {
@@ -449,7 +449,7 @@ const runWslPreflight = Effect.fn("desktop.backendConfiguration.wslPreflight")(f
           _tag: "Ready",
           runningDistro,
           windowsEntryPath: environment.backendEntryPath,
-          runtime: { kind: "executable", entryPath: `${runtime.linuxAppRoot}/rove` },
+          runtime: { kind: "executable", entryPath: `${runtime.linuxAppRoot}/paperplane` },
           resolvedPath: stagedProbe.resolvedPath,
           runtimeId: input.runtimeArchive.runtimeId,
         } as const;
@@ -565,7 +565,7 @@ const resolvePrimaryStartConfig = Effect.fn("desktop.backendConfiguration.resolv
       mode: "desktop" as const,
       noBrowser: true,
       port: backendExposure.port,
-      roveHome: environment.baseDir,
+      paperplaneHome: environment.baseDir,
       host: backendExposure.bindHost,
       desktopBootstrapToken: input.bootstrapToken,
       desktopBootstrapSecret: input.bootstrapSecret,
@@ -602,9 +602,9 @@ const resolvePrimaryStartConfig = Effect.fn("desktop.backendConfiguration.resolv
         ...backendChildEnvPatch(),
         ELECTRON_RUN_AS_NODE: "1",
         // The server names this launcher in commands it asks a person to run.
-        ROVE_CLI_PATH: Option.getOrUndefined(input.cliPath),
+        PAPERPLANE_CLI_PATH: Option.getOrUndefined(input.cliPath),
       },
-      // Primary wants process.env (PATH, dev-runner's ROVE_HOME, etc.).
+      // Primary wants process.env (PATH, dev-runner's PAPERPLANE_HOME, etc.).
       extendEnv: true,
       bootstrap,
       bootstrapDelivery: "fd3",
@@ -649,7 +649,7 @@ const resolveWslStartConfig = Effect.fn("desktop.backendConfiguration.resolveWsl
     mode: "desktop" as const,
     noBrowser: true,
     port: input.port,
-    // Omit roveHome so the Linux backend uses its own home dir instead of
+    // Omit paperplaneHome so the Linux backend uses its own home dir instead of
     // the Windows-side baseDir (which would be a /mnt/c path and share
     // the SQLite file with the primary).
     host: wslBindHost,
@@ -747,17 +747,17 @@ const resolveWslStartConfig = Effect.fn("desktop.backendConfiguration.resolveWsl
     }
   }
 
-  // Build an explicit copy of process.env minus ROVE_HOME (dev-runner
+  // Build an explicit copy of process.env minus PAPERPLANE_HOME (dev-runner
   // exports the Windows-side base dir for the primary; if it leaks into
-  // the WSL backend the Linux side ends up sharing C:\Users\...\.rove-code via
+  // the WSL backend the Linux side ends up sharing C:\Users\...\.paperplane via
   // /mnt/c, which means both backends read/write the same database and
   // their env-ids collide).
-  const parentEnvWithoutRoveHome: Record<string, string | undefined> = {};
+  const parentEnvWithoutPaperplaneHome: Record<string, string | undefined> = {};
   for (const [key, value] of Object.entries(process.env)) {
-    if (key === "ROVE_HOME") continue;
-    parentEnvWithoutRoveHome[key] = value;
+    if (key === "PAPERPLANE_HOME") continue;
+    parentEnvWithoutPaperplaneHome[key] = value;
   }
-  const wslEnv = mergeWslEnv(parentEnvWithoutRoveHome.WSLENV, forwardedEnvNames);
+  const wslEnv = mergeWslEnv(parentEnvWithoutPaperplaneHome.WSLENV, forwardedEnvNames);
 
   const baseConfig = {
     executablePath: "wsl.exe",
@@ -765,12 +765,12 @@ const resolveWslStartConfig = Effect.fn("desktop.backendConfiguration.resolveWsl
       preflight._tag === "Ready" ? preflight.windowsEntryPath : environment.backendEntryPath,
     cwd: environment.backendCwd,
     env: {
-      ...parentEnvWithoutRoveHome,
+      ...parentEnvWithoutPaperplaneHome,
       ...backendChildEnvPatch(),
       ...forwardedEnv,
       ...(wslEnv !== undefined ? { WSLENV: wslEnv } : {}),
     },
-    // env is already a complete process.env minus ROVE_HOME; pass it
+    // env is already a complete process.env minus PAPERPLANE_HOME; pass it
     // verbatim instead of letting the spawner re-merge process.env on top.
     extendEnv: false,
     bootstrap,

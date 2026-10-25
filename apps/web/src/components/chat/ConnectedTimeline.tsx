@@ -1,10 +1,10 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, type ReactNode, type RefObject } from "react";
-import type { EnvironmentId, MessageId, ScopedThreadRef } from "@rove-code/contracts";
-import { parseScopedThreadKey } from "@rove-code/client-runtime/environment";
+import type { EnvironmentId, MessageId, ScopedThreadRef } from "@getpaperplane/contracts";
+import { parseScopedThreadKey } from "@getpaperplane/client-runtime/environment";
 import {
   codexFeedbackMessage,
   type CodexFeedbackSubmission,
-} from "@rove-code/client-runtime/state/threads";
+} from "@getpaperplane/client-runtime/state/threads";
 import { useAssetUrls } from "../../assets/assetUrls";
 import { useThreadProjection, useThreadVisibleTurnItems } from "../../state/entities";
 import {
@@ -42,7 +42,7 @@ interface TimelineInput {
   onReleaseToolAnchor: () => void;
   timelineScrollModeRef: RefObject<TimelineScrollMode>;
   anchorMessageId: MessageId | null;
-  runningTurnId: import("@rove-code/contracts").RunId | null;
+  runningTurnId: import("@getpaperplane/contracts").RunId | null;
   liveFollowEnabled: boolean;
 }
 

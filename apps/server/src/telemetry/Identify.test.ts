@@ -59,7 +59,7 @@ it.layer(NodeServices.layer)("telemetry identity", (it) => {
     }).pipe(
       Effect.provide(
         ServerConfig.layerTest(process.cwd(), {
-          prefix: "rove-telemetry-identify-anonymous-",
+          prefix: "paperplane-telemetry-identify-anonymous-",
         }),
       ),
     ),
@@ -85,7 +85,7 @@ it.layer(NodeServices.layer)("telemetry identity", (it) => {
     }).pipe(
       Effect.provide(
         ServerConfig.layerTest(process.cwd(), {
-          prefix: "rove-telemetry-identify-generate-",
+          prefix: "paperplane-telemetry-identify-generate-",
         }),
       ),
     ),
@@ -96,14 +96,14 @@ it.layer(NodeServices.layer)("telemetry identity", (it) => {
       const first = yield* Identify.getTelemetryIdentifier.pipe(
         Effect.provide(
           ServerConfig.layerTest(process.cwd(), {
-            prefix: "rove-telemetry-identify-first-",
+            prefix: "paperplane-telemetry-identify-first-",
           }),
         ),
       );
       const second = yield* Identify.getTelemetryIdentifier.pipe(
         Effect.provide(
           ServerConfig.layerTest(process.cwd(), {
-            prefix: "rove-telemetry-identify-second-",
+            prefix: "paperplane-telemetry-identify-second-",
           }),
         ),
       );
@@ -143,7 +143,7 @@ it.layer(NodeServices.layer)("telemetry identity", (it) => {
       Effect.provide(
         Layer.merge(
           ServerConfig.layerTest(process.cwd(), {
-            prefix: "rove-telemetry-identify-read-",
+            prefix: "paperplane-telemetry-identify-read-",
           }),
           Logger.layer([logger], { mergeWithExisting: false }),
         ),

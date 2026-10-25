@@ -14,10 +14,10 @@
       (() => {
         const LIGHT_BACKGROUND = "#ffffff";
         const DARK_BACKGROUND = "#0a0a0a";
-        const CUSTOM_THEMES_STORAGE_KEY = "rove:themes:v1";
-        const THEME_FOLLOW_SYSTEM_STORAGE_KEY = "rove:theme-follow-system";
-        const THEME_APPEARANCE_MODE_STORAGE_KEY = "rove:theme-appearance-mode";
-        const THEME_HALVES_STORAGE_KEY = "rove:theme-halves:v1";
+        const CUSTOM_THEMES_STORAGE_KEY = "paperplane:themes:v1";
+        const THEME_FOLLOW_SYSTEM_STORAGE_KEY = "paperplane:theme-follow-system";
+        const THEME_APPEARANCE_MODE_STORAGE_KEY = "paperplane:theme-appearance-mode";
+        const THEME_HALVES_STORAGE_KEY = "paperplane:theme-halves:v1";
         const SPLASH_COLORS = {
           light: {
             background: "#ffffff",
@@ -136,18 +136,10 @@
           "dark",
           "plum",
           "plum-dark",
-          "t3-chat",
           "grove",
           "ocean",
           "ember",
           "iris",
-          "t3-chat-dark",
-          "t3-grove",
-          "t3-ocean",
-          "t3-ember",
-          "rove-ocean",
-          "rove-ember",
-          "t3-iris",
         ];
         // Update every theme-color meta so any element another layer added
         // carries the resolved color too.
@@ -221,27 +213,18 @@
         };
 
         try {
-          const storedTheme = window.localStorage.getItem("rove:theme");
+          const storedTheme = window.localStorage.getItem("paperplane:theme");
           const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
           // Older builds stored dark Plum as its own theme id and used
           // prefixed maintainer ids. Keep these preferences readable; mirror
           // the runtime's historical alias table.
           const LEGACY_THEME_IDS = {
-            "t3-chat": "plum",
-            "t3-chat-dark": "plum",
             "plum-dark": "plum",
-            "t3-grove": "grove",
-            "t3-ocean": "ocean",
-            "t3-ember": "ember",
-            "rove-ocean": "ocean",
-            "rove-ember": "ember",
-            "t3-iris": "iris",
           };
-          const isLegacyRoveChatDark =
-            storedTheme === "t3-chat-dark" || storedTheme === "plum-dark";
+          const isLegacyPaperplaneChatDark = storedTheme === "plum-dark";
           const themeId =
             storedTheme === null ? "" : (LEGACY_THEME_IDS[storedTheme] ?? storedTheme);
-          const legacyMode = isLegacyRoveChatDark ? "dark" : null;
+          const legacyMode = isLegacyPaperplaneChatDark ? "dark" : null;
           const builtInModes = BUILT_IN_THEME_MODES[themeId] ?? null;
           const customTheme = builtInModes ? null : findCustomTheme(themeId);
           const themeModes =
@@ -486,13 +469,13 @@
         cursor: pointer;
       }
     </style>
-    <title>Rove Code (Beta)</title>
+    <title>Paperplane (Beta)</title>
   </head>
   <body>
     <div id="root">
       <div id="boot-shell">
-        <div id="boot-shell-card" aria-label="Rove Code splash screen">
-          <img id="boot-shell-logo" src="/apple-touch-icon.png" alt="Rove Code" />
+        <div id="boot-shell-card" aria-label="Paperplane splash screen">
+          <img id="boot-shell-logo" src="/apple-touch-icon.png" alt="Paperplane" />
         </div>
       </div>
     </div>

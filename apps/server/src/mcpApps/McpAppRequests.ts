@@ -10,9 +10,9 @@ import {
   type OrchestrationV2AppThread,
   type ThreadId,
   type TurnItemId,
-} from "@rove-code/contracts";
-import { mcpAppToolCallableByApp, type McpAppReference } from "@rove-code/shared/mcpApp";
-import { mcpAppFromToolItem } from "@rove-code/shared/toolOutput";
+} from "@getpaperplane/contracts";
+import { mcpAppToolCallableByApp, type McpAppReference } from "@getpaperplane/shared/mcpApp";
+import { mcpAppFromToolItem } from "@getpaperplane/shared/toolOutput";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -21,7 +21,7 @@ import * as Predicate from "effect/Predicate";
 import * as Schema from "effect/Schema";
 
 import * as Orchestrator from "../orchestration-v2/Orchestrator.ts";
-import type * as ProviderAdapter from "@rove-code/provider-core/server/ProviderAdapter";
+import type * as ProviderAdapter from "@getpaperplane/provider-core/server/ProviderAdapter";
 import * as ProviderSessionManager from "../orchestration-v2/ProviderSessionManager.ts";
 import * as ThreadManagementService from "../orchestration-v2/ThreadManagementService.ts";
 import * as McpAppModelContext from "./McpAppModelContext.ts";
@@ -49,7 +49,7 @@ export class McpAppRequests extends Context.Service<
       input: McpAppUpdateModelContextInput,
     ) => Effect.Effect<void, McpAppRequestError>;
   }
->()("@rove-code/server/mcpApps/McpAppRequests") {}
+>()("@getpaperplane/server/mcpApps/McpAppRequests") {}
 
 const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 const utf8 = new TextEncoder();

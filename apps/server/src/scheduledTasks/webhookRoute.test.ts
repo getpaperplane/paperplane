@@ -12,13 +12,13 @@ import * as HttpRouter from "effect/http/HttpRouter";
 import * as HttpApi from "effect/http-api/HttpApi";
 import * as HttpApiBuilder from "effect/http-api/HttpApiBuilder";
 
-import { RELAY_HOOK_DELIVERY_TYP, signRelayJwt } from "@rove-code/shared/relayJwt";
+import { RELAY_HOOK_DELIVERY_TYP, signRelayJwt } from "@getpaperplane/shared/relayJwt";
 import {
   EnvironmentHttpApi,
   EnvironmentId,
   ScheduledTaskWebhookDeliveryId,
   ScheduledTaskError,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   ScheduledTaskService,
   type WebhookTriggerRequest,
@@ -39,7 +39,7 @@ const mintKeys = NodeCrypto.generateKeyPairSync("ed25519", {
   privateKeyEncoding: { format: "pem", type: "pkcs8" },
   publicKeyEncoding: { format: "pem", type: "spki" },
 });
-/** The secrets a Rove Connect-linked environment holds, keyed by name. */
+/** The secrets a Paperplane Connect-linked environment holds, keyed by name. */
 const linkedSecrets: ReadonlyMap<string, string> = new Map([
   [CLOUD_MINT_PUBLIC_KEY, mintKeys.publicKey],
   [RELAY_ISSUER_SECRET, relayIssuer],
@@ -58,7 +58,7 @@ const relayProof = Effect.fn("relayProof")(function* (claims: {
     typ: RELAY_HOOK_DELIVERY_TYP,
     payload: {
       iss: relayIssuer,
-      aud: `rove-env:${environmentId}`,
+      aud: `paperplane-env:${environmentId}`,
       sub: environmentId,
       jti: `proof:${claims.deliveryId}`,
       iat: now,
@@ -160,8 +160,8 @@ describe("webhook route", () => {
         Effect.promise(() => handler(post(path, "{}", headers)));
       const receivedAt = "2026-10-04T10:00:00.000Z";
       const relayHeaders = {
-        "x-rove-relay-delivery-id": "relay-1",
-        "x-rove-relay-received-at": receivedAt,
+        "x-paperplane-relay-delivery-id": "relay-1",
+        "x-paperplane-relay-received-at": receivedAt,
       };
       const forged = NodeCrypto.generateKeyPairSync("ed25519", {
         privateKeyEncoding: { format: "pem", type: "pkcs8" },
@@ -175,19 +175,25 @@ describe("webhook route", () => {
         privateKey: forged.privateKey,
       });
       // 0: signed by the relay for exactly this delivery.
-      yield* send("/api/hooks/id/tok", { ...relayHeaders, "x-rove-relay-delivery": proof });
+      yield* send("/api/hooks/id/tok", { ...relayHeaders, "x-paperplane-relay-delivery": proof });
       // 1: a direct caller claiming to be the relay, without a proof.
       yield* send("/api/hooks/id/tok", relayHeaders);
       // 2: a proof signed with any other key.
-      yield* send("/api/hooks/id/tok", { ...relayHeaders, "x-rove-relay-delivery": forgedProof });
+      yield* send("/api/hooks/id/tok", {
+        ...relayHeaders,
+        "x-paperplane-relay-delivery": forgedProof,
+      });
       // 3: a real proof lifted onto another delivery id.
       yield* send("/api/hooks/id/tok", {
         ...relayHeaders,
-        "x-rove-relay-delivery-id": "relay-2",
-        "x-rove-relay-delivery": proof,
+        "x-paperplane-relay-delivery-id": "relay-2",
+        "x-paperplane-relay-delivery": proof,
       });
       // 4: a real proof for another hook.
-      yield* send("/api/hooks/other/tok", { ...relayHeaders, "x-rove-relay-delivery": proof });
+      yield* send("/api/hooks/other/tok", {
+        ...relayHeaders,
+        "x-paperplane-relay-delivery": proof,
+      });
       yield* Effect.promise(() => dispose());
       expect(received.map((request) => request.relayDeliveryId)).toEqual([
         "relay-1",
@@ -202,7 +208,7 @@ describe("webhook route", () => {
   );
 
   // Live clock: the server checks proofs against real time.
-  it.live("trusts no relay headers on an environment not linked to Rove Connect", () =>
+  it.live("trusts no relay headers on an environment not linked to Paperplane Connect", () =>
     Effect.gen(function* () {
       const received: Array<WebhookTriggerRequest> = [];
       const { handler, dispose } = handlerFor((request) => {
@@ -214,9 +220,9 @@ describe("webhook route", () => {
       yield* Effect.promise(() =>
         handler(
           post("/api/hooks/id/tok", "{}", {
-            "x-rove-relay-delivery-id": "relay-1",
-            "x-rove-relay-received-at": receivedAt,
-            "x-rove-relay-delivery": proof,
+            "x-paperplane-relay-delivery-id": "relay-1",
+            "x-paperplane-relay-received-at": receivedAt,
+            "x-paperplane-relay-delivery": proof,
           }),
         ),
       );
@@ -244,7 +250,7 @@ describe("webhook route", () => {
       try {
         const response = await handler(post("/api/hooks/id/tok", "{}"));
         expect(response.status).toBe(status);
-        expect(response.headers.get("x-rove-hook-outcome")).toBe(outcome);
+        expect(response.headers.get("x-paperplane-hook-outcome")).toBe(outcome);
       } finally {
         await dispose();
       }
@@ -267,11 +273,11 @@ describe("webhook route", () => {
       const traceparent = "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01";
       const receivedAt = "2026-10-04T10:00:00.000Z";
       const relayHeaders = {
-        "x-rove-relay-delivery-id": "relay-1",
-        "x-rove-relay-received-at": receivedAt,
+        "x-paperplane-relay-delivery-id": "relay-1",
+        "x-paperplane-relay-received-at": receivedAt,
       };
       const proof = yield* relayProof({ deliveryId: "relay-1", receivedAt, hookId: "id" });
-      yield* send({ ...relayHeaders, traceparent, "x-rove-relay-delivery": proof });
+      yield* send({ ...relayHeaders, traceparent, "x-paperplane-relay-delivery": proof });
       // Claiming to be the relay without its proof cannot attach to our traces.
       yield* send({ ...relayHeaders, traceparent });
       yield* send({ traceparent });

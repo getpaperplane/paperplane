@@ -13,7 +13,7 @@ export function gitRepositoryFixture(input: {
 }) {
   let seed: string;
   beforeAll(() => {
-    seed = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "rove-git-seed-"));
+    seed = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "paperplane-git-seed-"));
     const git = (...args: string[]) =>
       NodeChildProcess.execFileSync("git", args, { cwd: seed, stdio: "pipe" });
     git("init", "--initial-branch=main");

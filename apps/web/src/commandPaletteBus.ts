@@ -1,4 +1,4 @@
-import type { EnvironmentId, PullRequestLinkedThreadsResult } from "@rove-code/contracts";
+import type { EnvironmentId, PullRequestLinkedThreadsResult } from "@getpaperplane/contracts";
 
 export interface CommandPaletteLinkedThreads {
   readonly environmentId: EnvironmentId;
@@ -7,7 +7,7 @@ export interface CommandPaletteLinkedThreads {
 
 // Tiny event bus allowing components to programmatically open the command palette
 // without owning its React state.
-const COMMAND_PALETTE_OPEN_EVENT = "rove:open-command-palette";
+const COMMAND_PALETTE_OPEN_EVENT = "paperplane:open-command-palette";
 
 export interface CommandPaletteOpenDetail {
   readonly open?: "add-project" | "new-thread-in";

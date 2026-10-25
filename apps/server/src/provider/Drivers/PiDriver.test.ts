@@ -7,17 +7,17 @@ import { describe, beforeEach, afterEach, vi } from "vite-plus/test";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import * as IdAllocator from "@rove-code/provider-core/server/IdAllocator";
-import * as McpProviderSessions from "@rove-code/provider-core/server/McpProviderSessions";
-import * as TestProviderHost from "@rove-code/provider-testing/TestProviderHost";
-import { ProviderInstanceId } from "@rove-code/contracts";
+import * as IdAllocator from "@getpaperplane/provider-core/server/IdAllocator";
+import * as McpProviderSessions from "@getpaperplane/provider-core/server/McpProviderSessions";
+import * as TestProviderHost from "@getpaperplane/provider-testing/TestProviderHost";
+import { ProviderInstanceId } from "@getpaperplane/contracts";
 import { ServerConfig } from "../../config.ts";
 import { ServerSettingsService } from "../../serverSettings.ts";
 import { makeSdkDiscoveryClient } from "../Layers/PiDiscovery.ts";
 import { PiDriver } from "./PiDriver.ts";
 import * as PiExtensionStatuses from "../PiExtensionStatuses.ts";
 const testLayer = Layer.mergeAll(
-  ServerConfig.layerTest(process.cwd(), { prefix: "rove-pi-driver-" }),
+  ServerConfig.layerTest(process.cwd(), { prefix: "paperplane-pi-driver-" }),
   ServerSettingsService.layerTest(),
   TestProviderHost.layer({ runBackgroundWork: false }),
   IdAllocator.layer,
@@ -28,7 +28,7 @@ describe("Pi SDK driver", () => {
   let root: string, agentDir: string;
   beforeEach(() => {
     root = NodeFS.realpathSync(
-      NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "rove-pi-discovery-")),
+      NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "paperplane-pi-discovery-")),
     );
     agentDir = NodePath.join(root, "agent");
     NodeFS.mkdirSync(NodePath.join(agentDir, "skills", "fixture-skill"), { recursive: true });

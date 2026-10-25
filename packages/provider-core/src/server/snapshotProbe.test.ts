@@ -1,7 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
-import type { ModelCapabilities } from "@rove-code/contracts";
-import * as HostProcess from "@rove-code/shared/HostProcess";
-import { createModelCapabilities } from "@rove-code/shared/model";
+import type { ModelCapabilities } from "@getpaperplane/contracts";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
+import { createModelCapabilities } from "@getpaperplane/shared/model";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as PlatformError from "effect/PlatformError";

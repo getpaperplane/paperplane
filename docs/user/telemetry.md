@@ -1,15 +1,15 @@
 # Product usage data
 
-The Rove Code server sends product usage events to Rove's PostHog project, associated with a
+The Paperplane server sends product usage events to Paperplane's PostHog project, associated with a
 hashed random installation identifier. Provider account IDs are not used. Events include the
 provider, model, reasoning effort, permission mode, turn result, duration, and main-agent token
-totals when available. Rove also measures explicit feature operations (such as opening a terminal,
+totals when available. Paperplane also measures explicit feature operations (such as opening a terminal,
 reviewing a diff, searching, or creating a worktree), their outcomes, and their durations. Events
 include app version and coarse client/platform metadata; development and test traffic is labeled
 separately from production.
 
 Production client activity creates a minimal PostHog profile keyed only by that random installation
-identifier, so Rove can measure returning installations. No name, email, or provider account identity
+identifier, so Paperplane can measure returning installations. No name, email, or provider account identity
 is attached, and location enrichment is disabled. An installation can serve several clients or
 people, and one person can use several installations; these counts are not a census of unique people.
 Background-only hosts and development/test traffic do not create profiles.
@@ -24,7 +24,7 @@ Disable **Share product usage data** in Settings → General (web/desktop), or S
 without restarting, and discards queued events. Requests already in flight cannot be recalled.
 Turn it back on there to resume collection.
 
-Setting `ROVE_TELEMETRY_ENABLED=false` in the server's environment before starting it always overrides
+Setting `PAPERPLANE_TELEMETRY_ENABLED=false` in the server's environment before starting it always overrides
 the Settings preference. While collection is disabled, analytics does not access or create the
 installation identifier.
 
@@ -39,8 +39,8 @@ saved endpoints are checked when the section opens. Checks send authentication h
 the signal's currently running endpoint and do not follow redirects. To check a new endpoint
 that requires authentication, save it and restart the server first.
 
-`ROVE_OTLP_*_URL` and standard `OTEL_EXPORTER_OTLP_*` environment variables override the saved
-settings. For endpoints saved here or set with `ROVE_OTLP_*_URL`, set `ROVE_OTLP_HEADERS` for
-receivers that need authentication and `ROVE_OTLP_PROTOCOL=http/protobuf` for receivers that do
+`PAPERPLANE_OTLP_*_URL` and standard `OTEL_EXPORTER_OTLP_*` environment variables override the saved
+settings. For endpoints saved here or set with `PAPERPLANE_OTLP_*_URL`, set `PAPERPLANE_OTLP_HEADERS` for
+receivers that need authentication and `PAPERPLANE_OTLP_PROTOCOL=http/protobuf` for receivers that do
 not accept JSON. An endpoint set with `OTEL_EXPORTER_OTLP_*` takes its headers and protocol from
 `OTEL_EXPORTER_OTLP_HEADERS` and `OTEL_EXPORTER_OTLP_PROTOCOL` instead.

@@ -1,6 +1,6 @@
-import { AgentScope } from "@rove-code/shared/AgentScope";
-import * as KeyedLock from "@rove-code/shared/KeyedLock";
-import { resolveProjectSettings } from "@rove-code/shared/projectSettings";
+import { AgentScope } from "@getpaperplane/shared/AgentScope";
+import * as KeyedLock from "@getpaperplane/shared/KeyedLock";
+import { resolveProjectSettings } from "@getpaperplane/shared/projectSettings";
 import {
   isOrchestrationV2WorkActive,
   ModelSelection,
@@ -12,7 +12,7 @@ import {
   ProviderSessionId,
   ThreadId,
   type ProviderThreadId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Cause from "effect/Cause";
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
@@ -42,14 +42,14 @@ import {
 } from "../observability/Metrics.ts";
 import { ProviderWorkspaceMissingError } from "../provider/Errors.ts";
 import * as ProjectService from "../project/ProjectService.ts";
-import * as McpProviderSessions from "@rove-code/provider-core/server/McpProviderSessions";
+import * as McpProviderSessions from "@getpaperplane/provider-core/server/McpProviderSessions";
 import * as ServerSettings from "../serverSettings.ts";
 import * as McpSessionRegistry from "../mcp/McpSessionRegistry.ts";
 import * as EventSink from "./EventSink.ts";
 import * as CommandOutputHub from "./CommandOutputHub.ts";
-import * as IdAllocator from "@rove-code/provider-core/server/IdAllocator";
+import * as IdAllocator from "@getpaperplane/provider-core/server/IdAllocator";
 import * as ProviderEventIngestor from "./ProviderEventIngestor.ts";
-import * as ProviderAdapter from "@rove-code/provider-core/server/ProviderAdapter";
+import * as ProviderAdapter from "@getpaperplane/provider-core/server/ProviderAdapter";
 import * as ProviderAdapterRegistry from "./ProviderAdapterRegistry.ts";
 import * as ProjectionStore from "./ProjectionStore.ts";
 import * as HostResources from "../resourceTelemetry/HostResources.ts";
@@ -203,7 +203,7 @@ export interface ProviderSessionManagerV2Shape {
 export class ProviderSessionManagerV2 extends Context.Service<
   ProviderSessionManagerV2,
   ProviderSessionManagerV2Shape
->()("@rove-code/server/orchestration-v2/ProviderSessionManager/ProviderSessionManagerV2") {}
+>()("@getpaperplane/server/orchestration-v2/ProviderSessionManager/ProviderSessionManagerV2") {}
 
 interface LiveSessionEntry {
   readonly attachedThreadIds: ReadonlySet<ThreadId>;
@@ -269,7 +269,7 @@ export interface ProviderSessionManagerV2LayerOptions {
   >;
   /** Cap on how long idle release may be deferred for pending background work. */
   readonly maxIdlePinMs?: number;
-  /** Test replay harnesses can omit Rove's MCP server from provider protocol fixtures. */
+  /** Test replay harnesses can omit Paperplane's MCP server from provider protocol fixtures. */
   readonly configureMcp?: boolean;
 }
 
@@ -2143,7 +2143,7 @@ export const layerWithOptions = (
                 Effect.gen(function* () {
                   // Some providers can block before a run subscriber exists
                   // (project trust, login, or session-switch hooks). Persist
-                  // their runless request artifacts directly so the normal Rove
+                  // their runless request artifacts directly so the normal Paperplane
                   // request UI can answer them and unblock session setup.
                   const threadId = sessionScopedRuntimeRequestThreadId(event);
                   if (threadId !== undefined) {

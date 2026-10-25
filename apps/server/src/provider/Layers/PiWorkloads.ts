@@ -5,10 +5,10 @@ import * as NodeCrypto from "node:crypto";
 import * as NodePath from "node:path";
 import * as NodeOS from "node:os";
 import * as NodeFSP from "node:fs/promises";
-import { RAISE_OOM_SCORE_LINE } from "@rove-code/shared/AgentScope";
+import { RAISE_OOM_SCORE_LINE } from "@getpaperplane/shared/AgentScope";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
-import { Environment as HostProcessEnvironment } from "@rove-code/shared/HostProcess";
+import { Environment as HostProcessEnvironment } from "@getpaperplane/shared/HostProcess";
 import {
   createBashToolDefinition,
   getShellConfig,
@@ -23,7 +23,7 @@ import {
 } from "../../diagnostics/ProcessBudget.ts";
 
 import { foregroundSlots, type PiWorkloadConfig } from "../../diagnostics/PiWorkloadPolicy.ts";
-import { roveMemoryBudget } from "../../process/roveMemoryBudget.ts";
+import { paperplaneMemoryBudget } from "../../process/paperplaneMemoryBudget.ts";
 
 const StartInput = Schema.Struct({ command: Schema.String });
 const ShellInput = Schema.Struct({
@@ -58,7 +58,7 @@ type Job = {
 /**
  * Bounded foreground shells and one managed service per OS user, across Pi instances and servers.
  * OS-owned locks, not JS semaphores: backgrounding in a shell cannot evade the lease.
- * Commands and services share one pool beneath the aggregate Rove memory ceiling.
+ * Commands and services share one pool beneath the aggregate Paperplane memory ceiling.
  */
 export class PiWorkloads {
   private readonly lifetime = new AbortController();
@@ -73,14 +73,14 @@ export class PiWorkloads {
   private constructor(config: PiWorkloadConfig, slots: number) {
     this.config = config;
     this.slots = slots;
-    this.pool = config.pool ?? "app-rove-workloads.slice";
+    this.pool = config.pool ?? "app-paperplane-workloads.slice";
     this.runtimeDirectory = process.env.XDG_RUNTIME_DIR ?? `/run/user/${process.getuid!()}`;
   }
 
   static async create(config: PiWorkloadConfig) {
     const meminfo = await NodeFSP.readFile("/proc/meminfo", "utf8").catch(() => "");
     const swap = Number(/^SwapTotal:\s+(\d+)/m.exec(meminfo)?.[1] ?? 0) * 1024;
-    const hostCeiling = roveMemoryBudget(NodeOS.totalmem(), swap).max;
+    const hostCeiling = paperplaneMemoryBudget(NodeOS.totalmem(), swap).max;
     const ceilingBytes =
       config.memoryMiB === "auto"
         ? hostCeiling
@@ -145,7 +145,7 @@ fi
 exec 8>&-
 printf 'ready\\n'
 read -r release`,
-        "rove-lease",
+        "paperplane-lease",
         lock,
         String(slots),
       ],
@@ -233,7 +233,9 @@ read -r release`,
       ...(timeout ? [timeout] : []),
     ]);
     const lease = await this.acquireLease(kind, this.slots, signal, () =>
-      options.onData(Buffer.from(`[Rove: all ${this.slots} shell slots are busy; queued.]\n`)),
+      options.onData(
+        Buffer.from(`[Paperplane: all ${this.slots} shell slots are busy; queued.]\n`),
+      ),
     );
     let budget: (ReturnType<typeof makeManagedProcess> & { memoryMiB: number }) | undefined;
     // The scope's exit, including its orphan descendants, is awaited before releasing the OS lease.
@@ -330,7 +332,7 @@ read -r release`,
             );
           } else if (timeout?.aborted) {
             exitCode = 124;
-            data(Buffer.from(`\n[Rove: command deadline ${deadline}s exceeded.]\n`));
+            data(Buffer.from(`\n[Paperplane: command deadline ${deadline}s exceeded.]\n`));
           }
           job.exitCode = exitCode;
           return { exitCode };
@@ -416,7 +418,7 @@ read -r release`,
         name: bash.name,
         label: bash.label,
         parameters: bash.parameters,
-        description: `${bash.description} Rove limits concurrent shell calls across the host and isolates each command's memory. Background descendants are stopped when the command returns. Use workload_start for a dev server, not shell '&' or nohup.`,
+        description: `${bash.description} Paperplane limits concurrent shell calls across the host and isolates each command's memory. Background descendants are stopped when the command returns. Use workload_start for a dev server, not shell '&' or nohup.`,
         ...(bash.promptSnippet ? { promptSnippet: bash.promptSnippet } : {}),
         ...(bash.promptGuidelines ? { promptGuidelines: bash.promptGuidelines } : {}),
         execute: (id, input, signal, onUpdate, ctx) =>

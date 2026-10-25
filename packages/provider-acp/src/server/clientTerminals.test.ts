@@ -2,7 +2,7 @@ import * as NodeServices from "@effect/platform-node/NodeServices";
 import { describe, expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 
 import {
   makeAcpClientTerminals,
@@ -76,13 +76,13 @@ describe("AcpClientTerminals", () => {
       const terminals = yield* makeAcpClientTerminals({
         defaultCwd: process.cwd(),
         shellCommands: true,
-        environmentForSession: () => ({ ROVE_ACP_MCP_NODE: "mailbox-probe" }),
+        environmentForSession: () => ({ PAPERPLANE_ACP_MCP_NODE: "mailbox-probe" }),
       });
       yield* Effect.addFinalizer(() => terminals.disposeAll);
       // Same command-only shape as the failed production commands and live capture.
       const terminal = yield* terminals.create({
         sessionId: "devin",
-        command: 'printf "%s\\n" "$ROVE_ACP_MCP_NODE" | tr a-z A-Z',
+        command: 'printf "%s\\n" "$PAPERPLANE_ACP_MCP_NODE" | tr a-z A-Z',
       });
       const exit = yield* terminals.waitForExit({ sessionId: "devin", ...terminal });
       const output = yield* terminals.output({ sessionId: "devin", ...terminal });
@@ -289,14 +289,14 @@ describe("resolveEmbeddedTerminalContent", () => {
         toolCallId: "call-1",
         content: [
           { type: "content" as const, content: { type: "text" as const, text: "before" } },
-          { type: "terminal" as const, terminalId: "rove-term-1" },
-          { type: "terminal" as const, terminalId: "rove-term-unknown" },
+          { type: "terminal" as const, terminalId: "paperplane-term-1" },
+          { type: "terminal" as const, terminalId: "paperplane-term-unknown" },
         ],
       },
     };
 
     const resolved = resolveEmbeddedTerminalContent(notification, (sessionId, terminalId) =>
-      sessionId === "session" && terminalId === "rove-term-1"
+      sessionId === "session" && terminalId === "paperplane-term-1"
         ? { output: "compiled 3 files", truncated: false, exitStatus: undefined }
         : undefined,
     );
@@ -305,7 +305,7 @@ describe("resolveEmbeddedTerminalContent", () => {
       content: [
         { type: "content", content: { type: "text", text: "before" } },
         { type: "content", content: { type: "text", text: "compiled 3 files" } },
-        { type: "content", content: { type: "text", text: "[terminal rove-term-unknown]" } },
+        { type: "content", content: { type: "text", text: "[terminal paperplane-term-unknown]" } },
       ],
     });
   });

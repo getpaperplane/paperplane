@@ -1,6 +1,6 @@
 import { assert, describe, it } from "@effect/vitest";
-import type { ServerProviderModel } from "@rove-code/contracts";
-import type * as ModelCatalog from "@rove-code/provider-core/server/ModelCatalog";
+import type { ServerProviderModel } from "@getpaperplane/contracts";
+import type * as ModelCatalog from "@getpaperplane/provider-core/server/ModelCatalog";
 
 import { applyCodexModelCatalog } from "./codexModelCatalog.ts";
 

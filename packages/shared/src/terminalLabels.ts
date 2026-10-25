@@ -1,4 +1,4 @@
-import type { TerminalSummary } from "@rove-code/contracts";
+import type { TerminalSummary } from "@getpaperplane/contracts";
 
 function terminalNumber(terminalId: string): string | undefined {
   return /^term(?:inal)?-(\d+)(?:-[\da-f]{8}(?:-[\da-f]{4}){3}-[\da-f]{12})?$/i.exec(

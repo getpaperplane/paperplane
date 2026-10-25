@@ -1,11 +1,11 @@
-import { SourceControlProviderKind } from "@rove-code/contracts";
+import { SourceControlProviderKind } from "@getpaperplane/contracts";
 /**
  * The Forgejo / Gitea driver: repository operations, discovery, and pull requests through
  * `fj` or `tea`.
  *
  * @module source-control-forgejo/server/driver
  */
-import { defineSourceControlDriver } from "@rove-code/source-control-core/server/driver";
+import { defineSourceControlDriver } from "@getpaperplane/source-control-core/server/driver";
 import * as Effect from "effect/Effect";
 
 import * as ForgejoPullRequestProvider from "./ForgejoPullRequestProvider.ts";

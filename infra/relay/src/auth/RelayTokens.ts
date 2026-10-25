@@ -7,14 +7,14 @@ import {
   RelayWebClientId,
   type RelayPublicClientId,
   type RelayEnvironmentLinkChallengeRequest,
-} from "@rove-code/contracts/relay";
-import { encodeOAuthScope, parseAllowedOAuthScope } from "@rove-code/shared/oauthScope";
+} from "@getpaperplane/contracts/relay";
+import { encodeOAuthScope, parseAllowedOAuthScope } from "@getpaperplane/shared/oauthScope";
 import {
   normalizeRelayIssuer,
   RelayJwtError,
   signRelayJwt,
   verifyRelayJwt,
-} from "@rove-code/shared/relayJwt";
+} from "@getpaperplane/shared/relayJwt";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -23,8 +23,8 @@ import * as Schema from "effect/Schema";
 
 import * as RelayConfiguration from "../Config.ts";
 
-const LINK_CHALLENGE_TYP = "rove-link-challenge+jwt";
-const ACCESS_TOKEN_TYP = "rove-relay-dpop-access+jwt";
+const LINK_CHALLENGE_TYP = "paperplane-link-challenge+jwt";
+const ACCESS_TOKEN_TYP = "paperplane-relay-dpop-access+jwt";
 const LINK_CHALLENGE_KIND = "environment_link_challenge";
 export const RELAY_DPOP_ACCESS_TOKEN_TTL = "30 minutes";
 
@@ -110,7 +110,7 @@ export class RelayTokens extends Context.Service<
       readonly nowEpochSeconds: number;
     }) => Effect.Effect<RelayDpopAccessTokenClaims | null>;
   }
->()("rove-relay/auth/RelayTokens") {}
+>()("paperplane-relay/auth/RelayTokens") {}
 
 const make = Effect.gen(function* () {
   const config = yield* RelayConfiguration.RelayConfiguration;

@@ -5,11 +5,11 @@ import {
   ProjectId,
   ProviderInstanceId,
   type ServerSettings,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { describe, expect, it, vi } from "vite-plus/test";
-import { applyServerSettingsPatch } from "@rove-code/shared/serverSettings";
+import { applyServerSettingsPatch } from "@getpaperplane/shared/serverSettings";
 import * as Cause from "effect/Cause";
-import { resolveWorktreeCleanup } from "@rove-code/shared/projectSettings";
+import { resolveWorktreeCleanup } from "@getpaperplane/shared/projectSettings";
 
 import type { SidebarProjectSnapshot } from "../../sidebarProjectGrouping";
 import {
@@ -256,7 +256,7 @@ describe("scoped settings writes", () => {
     const unsupported = [
       {
         label: server.label,
-        message: "This environment does not support this setting. Update Rove Code on it.",
+        message: "This environment does not support this setting. Update Paperplane on it.",
       },
     ];
 
@@ -579,7 +579,7 @@ describe("project overrides at environment scope", () => {
   const laptop = EnvironmentId.make("laptop");
   const desk = EnvironmentId.make("desk");
   const fleet = ProjectId.make("fleet");
-  const rove = ProjectId.make("rove");
+  const paperplane = ProjectId.make("paperplane");
   const environment = (
     environmentId: EnvironmentId,
     overrides: ServerSettings["projectSettingsOverrides"],
@@ -598,7 +598,7 @@ describe("project overrides at environment scope", () => {
       [
         environment(laptop, {
           [fleet]: { defaultAutoPull: true, defaultThreadEnvMode: "local" },
-          [rove]: { defaultThreadEnvMode: "local" },
+          [paperplane]: { defaultThreadEnvMode: "local" },
         }),
         environment(desk, { [fleet]: { defaultAutoPull: false } }),
       ],
@@ -615,12 +615,12 @@ describe("project overrides at environment scope", () => {
       [
         environment(laptop, {
           [fleet]: { defaultAutoPull: true, defaultThreadEnvMode: "local" },
-          [rove]: { defaultAutoPull: true },
+          [paperplane]: { defaultAutoPull: true },
         }),
       ],
       [
         { environmentId: laptop, projectId: fleet },
-        { environmentId: laptop, projectId: rove },
+        { environmentId: laptop, projectId: paperplane },
       ],
       ["defaultAutoPull"],
     );
@@ -630,7 +630,10 @@ describe("project overrides at environment scope", () => {
         label: laptop,
         previous: expect.anything(),
         patch: {
-          projectSettingsOverrides: { [fleet]: { defaultThreadEnvMode: "local" }, [rove]: null },
+          projectSettingsOverrides: {
+            [fleet]: { defaultThreadEnvMode: "local" },
+            [paperplane]: null,
+          },
         },
       },
     ]);

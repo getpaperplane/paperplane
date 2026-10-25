@@ -1,7 +1,7 @@
-import { scopeProjectRef, scopeThreadRef } from "@rove-code/client-runtime/environment";
-import { resolveProviderInstanceDisplayName } from "@rove-code/client-runtime/state/provider-instance-display";
-import { resolveSubagentMetadata } from "@rove-code/client-runtime/state/subagent-display";
-import type { EnvironmentId, OrchestrationV2Subagent } from "@rove-code/contracts";
+import { scopeProjectRef, scopeThreadRef } from "@getpaperplane/client-runtime/environment";
+import { resolveProviderInstanceDisplayName } from "@getpaperplane/client-runtime/state/provider-instance-display";
+import { resolveSubagentMetadata } from "@getpaperplane/client-runtime/state/subagent-display";
+import type { EnvironmentId, OrchestrationV2Subagent } from "@getpaperplane/contracts";
 import type { ReactNode } from "react";
 import { View } from "react-native";
 
@@ -50,7 +50,7 @@ export function SubagentRow(props: {
           <View className="min-w-0 flex-1 flex-row items-baseline gap-1.5">
             <Text
               numberOfLines={1}
-              className="min-w-0 shrink font-rove-medium text-sm text-foreground"
+              className="min-w-0 shrink font-paperplane-medium text-sm text-foreground"
             >
               {presentation.title}
             </Text>
@@ -63,7 +63,7 @@ export function SubagentRow(props: {
             </Text>
             <Text
               className={cn(
-                "shrink-0 text-xs font-rove-medium",
+                "shrink-0 text-xs font-paperplane-medium",
                 SUBAGENT_TONE_TEXT_CLASS[presentation.tone],
               )}
             >

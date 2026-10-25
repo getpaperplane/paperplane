@@ -1,7 +1,7 @@
-import { EnvironmentId, type ThreadPullRequestLink } from "@rove-code/contracts";
-import type { DesktopPreviewFavicon, PreviewSessionSnapshot } from "@rove-code/contracts";
+import { EnvironmentId, type ThreadPullRequestLink } from "@getpaperplane/contracts";
+import type { DesktopPreviewFavicon, PreviewSessionSnapshot } from "@getpaperplane/contracts";
 import { renderToStaticMarkup } from "react-dom/server";
-import { DEFAULT_RESOLVED_KEYBINDINGS } from "@rove-code/shared/keybindings";
+import { DEFAULT_RESOLVED_KEYBINDINGS } from "@getpaperplane/shared/keybindings";
 import { describe, expect, it } from "vite-plus/test";
 
 import {

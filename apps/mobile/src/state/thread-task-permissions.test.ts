@@ -1,6 +1,6 @@
-import { AuthOrchestrationOperateScope, RuntimeRequestId } from "@rove-code/contracts";
+import { AuthOrchestrationOperateScope, RuntimeRequestId } from "@getpaperplane/contracts";
 import type { DraftComposerImageAttachment } from "../lib/composerImages";
-import type { PendingThreadRequests } from "@rove-code/client-runtime/state/thread-requests";
+import type { PendingThreadRequests } from "@getpaperplane/client-runtime/state/thread-requests";
 import { AsyncResult, type Atom } from "effect/reactivity";
 import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 

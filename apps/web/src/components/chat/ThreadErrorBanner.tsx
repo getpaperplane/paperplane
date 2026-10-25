@@ -1,4 +1,4 @@
-import type { OrchestrationV2ProviderFailureClass } from "@rove-code/contracts";
+import type { OrchestrationV2ProviderFailureClass } from "@getpaperplane/contracts";
 import { memo } from "react";
 import { Alert, AlertAction, AlertDescription } from "../ui/alert";
 import { Button } from "../ui/button";

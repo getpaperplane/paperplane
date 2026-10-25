@@ -1,7 +1,7 @@
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { assert, expect, it } from "@effect/vitest";
-import * as HostProcess from "@rove-code/shared/HostProcess";
-import * as NetService from "@rove-code/shared/Net";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
+import * as NetService from "@getpaperplane/shared/Net";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -26,32 +26,32 @@ const status = {
   supported: true,
   installed: true,
   current: true,
-  unitPath: "/home/me/.config/systemd/user/rove.service",
-  logPath: "/home/me/.rove/userdata/logs/boot-service.log",
+  unitPath: "/home/me/.config/systemd/user/paperplane.service",
+  logPath: "/home/me/.paperplane/userdata/logs/boot-service.log",
 } as const;
 
 it("reports the installed service version and host paths", () => {
   assert.equal(
     formatServiceStatus(status, "0.0.29"),
     [
-      "Rove Code service",
-      "  Status: installed · rove@0.0.29",
-      "  Unit: /home/me/.config/systemd/user/rove.service",
-      "  Logs: /home/me/.rove/userdata/logs/boot-service.log",
+      "Paperplane service",
+      "  Status: installed · paperplane@0.0.29",
+      "  Unit: /home/me/.config/systemd/user/paperplane.service",
+      "  Logs: /home/me/.paperplane/userdata/logs/boot-service.log",
     ].join("\n"),
   );
 });
 
 it("gives an install command when the service is absent", () => {
   expect(formatServiceStatus({ ...status, installed: false }, "0.0.29")).toContain(
-    "Next: Run `rove service install`.",
+    "Next: Run `paperplane service install`.",
   );
 });
 
 it("gives a direct repair command for a stale service", () => {
   assert.include(
     formatServiceStatus({ ...status, current: false }, "0.0.29"),
-    "Next: Run `rove service install` to repair it.",
+    "Next: Run `paperplane service install` to repair it.",
   );
 });
 
@@ -70,7 +70,7 @@ it("explains an incomplete nightly installation and keeps repair on its installe
   expect(output).toContain("last login session ends");
   expect(output).toContain('sudo loginctl enable-linger "$(id -un)"');
   expect(output).toContain("[service-stopped]");
-  expect(output).toContain("Run `rove service install` to repair it.");
+  expect(output).toContain("Run `paperplane service install` to repair it.");
   expect(output).not.toContain("npx");
 });
 
@@ -79,7 +79,7 @@ it("points an older service at a repair, never at npx", () => {
     { ...status, current: false, installedVersion: "0.0.28" },
     "0.0.29",
   );
-  expect(output).toContain("Run `rove service install` to repair it.");
+  expect(output).toContain("Run `paperplane service install` to repair it.");
   expect(output).not.toContain("npx");
 });
 
@@ -96,8 +96,8 @@ it("reports a newer installed service and tells the CLI to catch up to it", () =
     "0.0.31",
   );
 
-  assert.include(output, "rove@0.0.32-nightly.1 (newer than this rove@0.0.31 CLI)");
-  assert.include(output, "Run `rove update 0.0.32-nightly.1` to match it");
+  assert.include(output, "paperplane@0.0.32-nightly.1 (newer than this paperplane@0.0.31 CLI)");
+  assert.include(output, "Run `paperplane update 0.0.32-nightly.1` to match it");
   assert.notInclude(output, "npx");
 });
 
@@ -117,8 +117,8 @@ function makeTestService(serviceStatus: BootService.BootServiceStatus) {
       Effect.sync(() => {
         installOptions.push(options);
         return {
-          program: ["/test/rove/runtime/versions/1.0.0/rove", "__service-launcher"],
-          baseDir: "/test/rove",
+          program: ["/test/paperplane/runtime/versions/1.0.0/paperplane", "__service-launcher"],
+          baseDir: "/test/paperplane",
           unitPath: serviceStatus.unitPath,
           logPath: serviceStatus.logPath,
         };
@@ -132,7 +132,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NetService.layer))("service commands
   it.effect("restart restarts the installed service", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
-      const baseDir = yield* fs.makeTempDirectoryScoped({ prefix: "rove-service-cli-test-" });
+      const baseDir = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-service-cli-test-" });
       const { service, installOptions, restarts } = makeTestService(status);
       vi.spyOn(BootService, "layer").mockReturnValue(
         Layer.succeed(BootService.BootService, service),
@@ -157,7 +157,9 @@ it.layer(Layer.mergeAll(NodeServices.layer, NetService.layer))("service commands
     (command) =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
-        const baseDir = yield* fs.makeTempDirectoryScoped({ prefix: "rove-service-cli-test-" });
+        const baseDir = yield* fs.makeTempDirectoryScoped({
+          prefix: "paperplane-service-cli-test-",
+        });
         const { service, installOptions } = makeTestService(newerServiceStatus);
         vi.spyOn(BootService, "layer").mockReturnValue(
           Layer.succeed(BootService.BootService, service),
@@ -185,7 +187,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NetService.layer))("service commands
   it.effect.each(["install", "update"] as const)("%s allows an explicit downgrade", (command) =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
-      const baseDir = yield* fs.makeTempDirectoryScoped({ prefix: "rove-service-cli-test-" });
+      const baseDir = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-service-cli-test-" });
       const { service, installOptions } = makeTestService(newerServiceStatus);
       vi.spyOn(BootService, "layer").mockReturnValue(
         Layer.succeed(BootService.BootService, service),

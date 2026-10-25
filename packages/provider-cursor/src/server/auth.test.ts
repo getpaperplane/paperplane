@@ -5,7 +5,7 @@ import {
   ProviderInstanceId,
   ProviderSetupError,
   type ProviderAuthState,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Clock from "effect/Clock";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";

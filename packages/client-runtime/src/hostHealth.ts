@@ -1,4 +1,4 @@
-import type { HostHealthReport } from "@rove-code/contracts";
+import type { HostHealthReport } from "@getpaperplane/contracts";
 
 const GIB = 1024 ** 3;
 const MIB = 1024 ** 2;
@@ -33,9 +33,9 @@ export function formatHostSwap(report: HostHealthReport): string | null {
   return `${formatBytePair(report.swapFreeBytes ?? 0, report.swapTotalBytes)} free`;
 }
 
-/** Usage of Rove's shared memory ceiling, or null when the host has no ceiling. */
-export function formatRoveCeiling(report: HostHealthReport): string | null {
-  const memory = report.roveMemory;
+/** Usage of Paperplane's shared memory ceiling, or null when the host has no ceiling. */
+export function formatPaperplaneCeiling(report: HostHealthReport): string | null {
+  const memory = report.paperplaneMemory;
   if (memory === null) return null;
   const used =
     memory.limitBytes === null
@@ -49,9 +49,9 @@ export function formatRoveCeiling(report: HostHealthReport): string | null {
   return `${used} · swap ${swap}`;
 }
 
-/** Percent of Rove's ceiling in use (0-100), or null when there is no finite ceiling. */
-export function roveCeilingPercent(report: HostHealthReport): number | null {
-  const memory = report.roveMemory;
+/** Percent of Paperplane's ceiling in use (0-100), or null when there is no finite ceiling. */
+export function paperplaneCeilingPercent(report: HostHealthReport): number | null {
+  const memory = report.paperplaneMemory;
   if (memory === null || memory.limitBytes === null || memory.limitBytes === 0) return null;
   return Math.min(100, (memory.currentBytes / memory.limitBytes) * 100);
 }

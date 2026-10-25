@@ -4,10 +4,10 @@ import {
   type ModelSelection,
   type OrchestrationV2ProviderCapabilities,
   ProviderInstanceId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 
-import { AcpProviderCapabilitiesV2 } from "@rove-code/provider-acp/server/adapter";
-import { acpSelectionTransition } from "@rove-code/provider-core/server/selectionTransition";
+import { AcpProviderCapabilitiesV2 } from "@getpaperplane/provider-acp/server/adapter";
+import { acpSelectionTransition } from "@getpaperplane/provider-core/server/selectionTransition";
 
 const selection = (model: string, effort = "medium"): ModelSelection => ({
   instanceId: ProviderInstanceId.make("acp_test"),

@@ -1,3 +1,4 @@
+import "@getpaperplane/shared/clientMigration";
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { createHashHistory, createBrowserHistory } from "@tanstack/react-router";

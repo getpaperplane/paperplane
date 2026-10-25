@@ -6,10 +6,10 @@ import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
 import * as PlatformError from "effect/PlatformError";
 import { ChildProcessSpawner } from "effect/process";
-import { VcsProcessExitError, VcsProcessSpawnError } from "@rove-code/contracts";
+import { VcsProcessExitError, VcsProcessSpawnError } from "@getpaperplane/contracts";
 
-import type * as SourceControlHost from "@rove-code/source-control-core/server/SourceControlHost";
-import * as TestSourceControlHost from "@rove-code/source-control-testing/TestSourceControlHost";
+import type * as SourceControlHost from "@getpaperplane/source-control-core/server/SourceControlHost";
+import * as TestSourceControlHost from "@getpaperplane/source-control-testing/TestSourceControlHost";
 import * as AzureDevOpsCli from "./AzureDevOpsCli.ts";
 
 const processOutput = (stdout: string): SourceControlHost.SourceControlProcessOutput => ({
@@ -298,7 +298,7 @@ describe("AzureDevOpsCli.layer", () => {
   it.effect("creates pull requests using the body file as the Azure description", () =>
     Effect.gen(function* () {
       const fileSystem = yield* FileSystem.FileSystem;
-      const bodyFile = `/tmp/rove-azure-devops-cli-.md`;
+      const bodyFile = `/tmp/paperplane-azure-devops-cli-.md`;
       yield* fileSystem.writeFileString(bodyFile, "Generated body");
       mockRun.mockReturnValueOnce(Effect.succeed(processOutput("{}")));
 

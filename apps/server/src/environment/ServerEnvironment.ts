@@ -3,8 +3,8 @@ import {
   ORCHESTRATION_PROTOCOL_VERSION,
   PROVIDER_SEND_TURN_MAX_FILE_BYTES,
   type ExecutionEnvironmentDescriptor,
-} from "@rove-code/contracts";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+} from "@getpaperplane/contracts";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 import * as Context from "effect/Context";
 import * as Crypto from "effect/Crypto";
 import * as Effect from "effect/Effect";
@@ -40,13 +40,13 @@ export class ServerEnvironmentIdPersistenceError extends Schema.TaggedError<Serv
   }
 }
 
-declare const __ROVE_BUILD_CLOUD_READY__: boolean | undefined;
+declare const __PAPERPLANE_BUILD_CLOUD_READY__: boolean | undefined;
 const cloudReady =
-  process.env.ROVE_CLOUD_READY === "1" ||
-  (typeof __ROVE_BUILD_CLOUD_READY__ !== "undefined" && __ROVE_BUILD_CLOUD_READY__);
+  process.env.PAPERPLANE_CLOUD_READY === "1" ||
+  (typeof __PAPERPLANE_BUILD_CLOUD_READY__ !== "undefined" && __PAPERPLANE_BUILD_CLOUD_READY__);
 
 export class ServerEnvironmentCloudReady extends Context.Reference<boolean>(
-  "@rove-code/server/environment/ServerEnvironment/ServerEnvironmentCloudReady",
+  "@getpaperplane/server/environment/ServerEnvironment/ServerEnvironmentCloudReady",
   {
     defaultValue: () => cloudReady,
   },
@@ -58,14 +58,14 @@ export class ServerEnvironment extends Context.Service<
     readonly getEnvironmentId: Effect.Effect<EnvironmentId>;
     readonly getDescriptor: Effect.Effect<ExecutionEnvironmentDescriptor>;
   }
->()("@rove-code/server/environment/ServerEnvironment") {}
+>()("@getpaperplane/server/environment/ServerEnvironment") {}
 
 export class ServerEnvironmentIdentity extends Context.Service<
   ServerEnvironmentIdentity,
   {
     readonly getEnvironmentId: Effect.Effect<EnvironmentId>;
   }
->()("@rove-code/server/environment/ServerEnvironment/ServerEnvironmentIdentity") {}
+>()("@getpaperplane/server/environment/ServerEnvironment/ServerEnvironmentIdentity") {}
 
 function platformOs(platform: NodeJS.Platform): ExecutionEnvironmentDescriptor["platform"]["os"] {
   switch (platform) {
@@ -286,7 +286,7 @@ export const make = Effect.gen(function* () {
 
   return ServerEnvironment.of({
     getEnvironmentId: Effect.succeed(environmentId),
-    // The publish opt-in and relay link change at runtime (`rove connect
+    // The publish opt-in and relay link change at runtime (`paperplane connect
     // publish`, the client settings toggle), so the capability is read per
     // descriptor request rather than baked in at startup.
     getDescriptor: ServerEnvironmentCloudReady.pipe(

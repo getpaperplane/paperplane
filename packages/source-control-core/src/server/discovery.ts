@@ -10,7 +10,7 @@ import {
   type SourceControlProviderDiscoveryItem,
   type SourceControlProviderInfo,
   type SourceControlProviderKind,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import type * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
@@ -20,7 +20,7 @@ import * as Schema from "effect/Schema";
 import {
   detectSourceControlProviderFromRemoteUrl,
   isSshRemoteUrl,
-} from "@rove-code/shared/sourceControl";
+} from "@getpaperplane/shared/sourceControl";
 
 import type * as SourceControlProvider from "./SourceControlProvider.ts";
 import type * as SourceControlHost from "./SourceControlHost.ts";
@@ -385,7 +385,7 @@ function sshRemoteHost(remoteUrl: string): string | null {
 /**
  * Multi-account setups point remotes at `~/.ssh/config` aliases such as
  * `git@github-work:org/repo.git`. `ssh -G` prints the alias's effective `hostname` without
- * connecting, so the real forge host can be detected. Rove-specific: keep across upstream syncs.
+ * connecting, so the real forge host can be detected. Paperplane-specific: keep across upstream syncs.
  */
 function resolveSshHostAliasProvider(input: {
   readonly process: SourceControlHost.SourceControlHost["Service"]["process"];

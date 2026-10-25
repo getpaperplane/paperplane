@@ -16,7 +16,7 @@ export class MacPermissions extends Context.Service<
       isGranted?: () => boolean | Promise<boolean>,
     ) => Effect.Effect<void>;
   }
->()("@rove-code/desktop/permissions/MacPermissions") {}
+>()("@getpaperplane/desktop/permissions/MacPermissions") {}
 
 export const layer = Layer.effect(
   MacPermissions,

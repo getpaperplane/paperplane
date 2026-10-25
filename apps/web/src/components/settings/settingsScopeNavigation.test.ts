@@ -1,4 +1,4 @@
-import { EnvironmentId, ProviderInstanceId, ScheduledTaskId } from "@rove-code/contracts";
+import { EnvironmentId, ProviderInstanceId, ScheduledTaskId } from "@getpaperplane/contracts";
 import {
   createMemoryHistory,
   createRootRoute,
@@ -14,9 +14,9 @@ import { retainSettingsScope, validateSettingsRouteSearch } from "./settingsScop
 import { validateScheduledTasksSearch } from "./scheduledTasksSettings.logic";
 
 const checkoutSearch = {
-  project: "repository:rove",
+  project: "repository:paperplane",
   machine: "remote-server",
-  checkout: "remote-server:/home/user/Rove Code",
+  checkout: "remote-server:/home/user/Paperplane",
 };
 
 function createSettingsRouter(initialEntry = "/settings/general") {
@@ -131,7 +131,7 @@ describe("settings scope navigation", () => {
       const router = createSettingsRouter();
       await router.navigate({ to, search: checkoutSearch });
 
-      const regroupedCheckout = { ...checkoutSearch, project: "separate:rove" };
+      const regroupedCheckout = { ...checkoutSearch, project: "separate:paperplane" };
       await router.navigate({
         from: "/settings",
         to: router.state.location.pathname,

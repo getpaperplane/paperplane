@@ -3,10 +3,10 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import { ChildProcessSpawner } from "effect/process";
 
-import { VcsProcessExitError } from "@rove-code/contracts";
+import { VcsProcessExitError } from "@getpaperplane/contracts";
 
-import type * as SourceControlHost from "@rove-code/source-control-core/server/SourceControlHost";
-import * as TestSourceControlHost from "@rove-code/source-control-testing/TestSourceControlHost";
+import type * as SourceControlHost from "@getpaperplane/source-control-core/server/SourceControlHost";
+import * as TestSourceControlHost from "@getpaperplane/source-control-testing/TestSourceControlHost";
 import * as GitLabCli from "./GitLabCli.ts";
 
 const mockedRun = vi.fn<SourceControlHost.SourceControlHost["Service"]["process"]["run"]>();
@@ -37,7 +37,7 @@ layer("GitLabCli.layer", (it) => {
             JSON.stringify({
               iid: 42,
               title: "Add MR thread creation",
-              web_url: "https://gitlab.com/rovecode/rove/-/merge_requests/42",
+              web_url: "https://gitlab.com/paperplane/paperplane/-/merge_requests/42",
               target_branch: "main",
               source_branch: "feature/mr-threads",
               state: "closed",
@@ -45,7 +45,7 @@ layer("GitLabCli.layer", (it) => {
               source_project_id: 101,
               target_project_id: 100,
               source_project: {
-                path_with_namespace: "octocat/rove",
+                path_with_namespace: "octocat/paperplane",
               },
             }),
           ),
@@ -63,14 +63,14 @@ layer("GitLabCli.layer", (it) => {
       assert.deepStrictEqual(result, {
         number: 42,
         title: "Add MR thread creation",
-        url: "https://gitlab.com/rovecode/rove/-/merge_requests/42",
+        url: "https://gitlab.com/paperplane/paperplane/-/merge_requests/42",
         baseRefName: "main",
         headRefName: "feature/mr-threads",
         state: "closed",
         closedAt: "2026-08-23T10:00:00Z",
         mergedAt: null,
         isCrossRepository: true,
-        headRepositoryNameWithOwner: "octocat/rove",
+        headRepositoryNameWithOwner: "octocat/paperplane",
         headRepositoryOwnerLogin: "octocat",
       });
       expect(mockedRun).toHaveBeenCalledWith(
@@ -92,14 +92,14 @@ layer("GitLabCli.layer", (it) => {
               {
                 iid: 0,
                 title: "invalid",
-                web_url: "https://gitlab.com/rovecode/rove/-/merge_requests/0",
+                web_url: "https://gitlab.com/paperplane/paperplane/-/merge_requests/0",
                 target_branch: "main",
                 source_branch: "feature/invalid",
               },
               {
                 iid: 43,
                 title: "  Valid MR  ",
-                web_url: " https://gitlab.com/rovecode/rove/-/merge_requests/43 ",
+                web_url: " https://gitlab.com/paperplane/paperplane/-/merge_requests/43 ",
                 target_branch: " main ",
                 source_branch: " feature/mr-list ",
                 state: "merged",
@@ -123,7 +123,7 @@ layer("GitLabCli.layer", (it) => {
         {
           number: 43,
           title: "Valid MR",
-          url: "https://gitlab.com/rovecode/rove/-/merge_requests/43",
+          url: "https://gitlab.com/paperplane/paperplane/-/merge_requests/43",
           baseRefName: "main",
           headRefName: "feature/mr-list",
           state: "merged",
@@ -157,10 +157,10 @@ layer("GitLabCli.layer", (it) => {
         Effect.succeed(
           processOutput(
             JSON.stringify({
-              path_with_namespace: "octocat/rove",
-              web_url: "https://gitlab.com/octocat/rove",
-              http_url_to_repo: "https://gitlab.com/octocat/rove.git",
-              ssh_url_to_repo: "git@gitlab.com:octocat/rove.git",
+              path_with_namespace: "octocat/paperplane",
+              web_url: "https://gitlab.com/octocat/paperplane",
+              http_url_to_repo: "https://gitlab.com/octocat/paperplane.git",
+              ssh_url_to_repo: "git@gitlab.com:octocat/paperplane.git",
             }),
           ),
         ),
@@ -170,14 +170,14 @@ layer("GitLabCli.layer", (it) => {
         const glab = yield* GitLabCli.GitLabCli;
         return yield* glab.getRepositoryCloneUrls({
           cwd: "/repo",
-          repository: "octocat/rove",
+          repository: "octocat/paperplane",
         });
       });
 
       assert.deepStrictEqual(result, {
-        nameWithOwner: "octocat/rove",
-        url: "https://gitlab.com/octocat/rove",
-        sshUrl: "git@gitlab.com:octocat/rove.git",
+        nameWithOwner: "octocat/paperplane",
+        url: "https://gitlab.com/octocat/paperplane",
+        sshUrl: "git@gitlab.com:octocat/paperplane.git",
       });
     }),
   );
@@ -192,7 +192,7 @@ layer("GitLabCli.layer", (it) => {
         baseBranch: "main",
         headSelector: "owner:feature/provider",
         title: "Provider MR",
-        bodyFile: "/tmp/rove-mr-body.md",
+        bodyFile: "/tmp/paperplane-mr-body.md",
       });
 
       expect(mockedRun).toHaveBeenCalledWith(
@@ -211,7 +211,7 @@ layer("GitLabCli.layer", (it) => {
             "--raw-field",
             "title=Provider MR",
             "--field",
-            "description=@/tmp/rove-mr-body.md",
+            "description=@/tmp/paperplane-mr-body.md",
           ],
         }),
       );
@@ -227,10 +227,10 @@ layer("GitLabCli.layer", (it) => {
           Effect.succeed(
             processOutput(
               JSON.stringify({
-                path_with_namespace: "octocat/rove",
-                web_url: "https://gitlab.com/octocat/rove",
-                http_url_to_repo: "https://gitlab.com/octocat/rove.git",
-                ssh_url_to_repo: "git@gitlab.com:octocat/rove.git",
+                path_with_namespace: "octocat/paperplane",
+                web_url: "https://gitlab.com/octocat/paperplane",
+                http_url_to_repo: "https://gitlab.com/octocat/paperplane.git",
+                ssh_url_to_repo: "git@gitlab.com:octocat/paperplane.git",
               }),
             ),
           ),
@@ -239,14 +239,14 @@ layer("GitLabCli.layer", (it) => {
       const glab = yield* GitLabCli.GitLabCli;
       const result = yield* glab.createRepository({
         cwd: "/repo",
-        repository: "octocat/rove",
+        repository: "octocat/paperplane",
         visibility: "public",
       });
 
       assert.deepStrictEqual(result, {
-        nameWithOwner: "octocat/rove",
-        url: "https://gitlab.com/octocat/rove",
-        sshUrl: "git@gitlab.com:octocat/rove.git",
+        nameWithOwner: "octocat/paperplane",
+        url: "https://gitlab.com/octocat/paperplane",
+        sshUrl: "git@gitlab.com:octocat/paperplane.git",
       });
       expect(mockedRun).toHaveBeenNthCalledWith(
         1,
@@ -267,9 +267,9 @@ layer("GitLabCli.layer", (it) => {
             "POST",
             "projects",
             "--raw-field",
-            "path=rove",
+            "path=paperplane",
             "--raw-field",
-            "name=rove",
+            "name=paperplane",
             "--raw-field",
             "visibility=public",
             "--raw-field",

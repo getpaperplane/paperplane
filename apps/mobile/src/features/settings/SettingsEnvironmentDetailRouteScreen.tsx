@@ -6,8 +6,8 @@ import {
   AuthOrchestrationReadScope,
   type EnvironmentId,
   type ServerProvider,
-} from "@rove-code/contracts";
-import { squashAtomCommandFailure } from "@rove-code/client-runtime/state/runtime";
+} from "@getpaperplane/contracts";
+import { squashAtomCommandFailure } from "@getpaperplane/client-runtime/state/runtime";
 import { AsyncResult } from "effect/reactivity";
 import { useEffect, useRef, useState } from "react";
 import { View } from "react-native";
@@ -138,7 +138,7 @@ function EnvironmentDetail({ environmentId }: { readonly environmentId: Environm
       });
     Dialog.alert(
       `Update ${environment?.environmentLabel ?? "environment"}?`,
-      `Install Rove Code ${targetVersion}. ${capabilities.serverSelfUpdate === "desktop-managed" ? "The desktop app will close and relaunch." : "The server will restart and reconnect."} Running threads may be interrupted.`,
+      `Install Paperplane ${targetVersion}. ${capabilities.serverSelfUpdate === "desktop-managed" ? "The desktop app will close and relaunch." : "The server will restart and reconnect."} Running threads may be interrupted.`,
       [
         { text: "Cancel", style: "cancel" },
         {
@@ -240,7 +240,7 @@ function EnvironmentDetail({ environmentId }: { readonly environmentId: Environm
             {notice ? <Text className="px-2 text-sm text-foreground-muted">{notice}</Text> : null}
             {config ? (
               <>
-                <SettingsSection title="Rove Code">
+                <SettingsSection title="Paperplane">
                   <View className="gap-1 p-4">
                     <Text className="text-base text-foreground">Version {version}</Text>
                     {running ? (
@@ -265,7 +265,7 @@ function EnvironmentDetail({ environmentId }: { readonly environmentId: Environm
                       <Text className="text-sm text-foreground-muted">
                         {capabilities?.serverSelfUpdate === "desktop-managed"
                           ? "Update the desktop app on this machine."
-                          : "Update and restart Rove Code on this machine."}
+                          : "Update and restart Paperplane on this machine."}
                       </Text>
                     ) : null}
                   </View>
@@ -331,7 +331,7 @@ function EnvironmentDetail({ environmentId }: { readonly environmentId: Environm
                         <View className="gap-1 p-4">
                           <View className="flex-row items-center gap-2">
                             <ProviderIcon provider={provider.driver} size={18} />
-                            <Text className="min-w-0 flex-1 text-base font-rove-medium text-foreground">
+                            <Text className="min-w-0 flex-1 text-base font-paperplane-medium text-foreground">
                               {provider.displayName ?? provider.driver}
                             </Text>
                           </View>

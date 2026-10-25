@@ -28,7 +28,7 @@
  *
  * @module provider/ProviderInstanceRegistryMutator
  */
-import type { ProviderInstanceConfigMap } from "@rove-code/contracts";
+import type { ProviderInstanceConfigMap } from "@getpaperplane/contracts";
 import * as Context from "effect/Context";
 import type * as Effect from "effect/Effect";
 
@@ -49,4 +49,4 @@ export interface ProviderInstanceRegistryMutatorShape {
 export class ProviderInstanceRegistryMutator extends Context.Service<
   ProviderInstanceRegistryMutator,
   ProviderInstanceRegistryMutatorShape
->()("@rove-code/server/provider/ProviderInstanceRegistryMutator") {}
+>()("@getpaperplane/server/provider/ProviderInstanceRegistryMutator") {}

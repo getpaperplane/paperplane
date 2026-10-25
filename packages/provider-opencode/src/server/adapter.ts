@@ -9,9 +9,9 @@ import type {
   Todo as OpenCodeTodo,
   ToolPart,
 } from "@opencode-ai/sdk/v2";
-import * as HostProcess from "@rove-code/shared/HostProcess";
-import { getModelSelectionStringOptionValue } from "@rove-code/shared/model";
-import { causeErrorTag } from "@rove-code/shared/observability";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
+import { getModelSelectionStringOptionValue } from "@getpaperplane/shared/model";
+import { causeErrorTag } from "@getpaperplane/shared/observability";
 import {
   defaultInstanceIdForDriver,
   type ModelSelection,
@@ -35,7 +35,7 @@ import {
   type ProviderSessionId,
   type RuntimeRequestId,
   type ThreadId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { OpenCodeSettings } from "../settings.ts";
 import * as Cause from "effect/Cause";
 import * as DateTime from "effect/DateTime";
@@ -54,33 +54,33 @@ import * as Semaphore from "effect/Semaphore";
 import * as Scope from "effect/Scope";
 import * as Stream from "effect/Stream";
 
-import * as ProviderHost from "@rove-code/provider-core/server/ProviderHost";
-import { mcpToolPresentation } from "@rove-code/provider-core/server/mcpToolPresentation";
-import { ROVE_MCP_SERVER_NAME } from "@rove-code/shared/roveMcp";
-import * as McpProviderSessions from "@rove-code/provider-core/server/McpProviderSessions";
-import * as ProviderEventLoggers from "@rove-code/provider-core/server/ProviderEventLoggers";
+import * as ProviderHost from "@getpaperplane/provider-core/server/ProviderHost";
+import { mcpToolPresentation } from "@getpaperplane/provider-core/server/mcpToolPresentation";
+import { PAPERPLANE_MCP_SERVER_NAME } from "@getpaperplane/shared/paperplaneMcp";
+import * as McpProviderSessions from "@getpaperplane/provider-core/server/McpProviderSessions";
+import * as ProviderEventLoggers from "@getpaperplane/provider-core/server/ProviderEventLoggers";
 import {
   structuralProtocolMethod,
   summarizeNativeProtocolPayload,
-} from "@rove-code/provider-core/server/nativeProtocolLogging";
-import { mergeProviderInstanceEnvironment } from "@rove-code/provider-core/server/instanceEnvironment";
-import { roveOrchestrationSystemPrompt } from "@rove-code/provider-core/server/orchestrationInstructions";
-import { buildRuntimeInstructions } from "@rove-code/provider-core/server/runtimeInstructions";
+} from "@getpaperplane/provider-core/server/nativeProtocolLogging";
+import { mergeProviderInstanceEnvironment } from "@getpaperplane/provider-core/server/instanceEnvironment";
+import { paperplaneOrchestrationSystemPrompt } from "@getpaperplane/provider-core/server/orchestrationInstructions";
+import { buildRuntimeInstructions } from "@getpaperplane/provider-core/server/runtimeInstructions";
 import * as OpenCodeRuntime from "./OpenCodeRuntime.ts";
-import * as IdAllocator from "@rove-code/provider-core/server/IdAllocator";
-import { makeProviderFailure } from "@rove-code/provider-core/server/failure";
-import { turnScopedSelectionTransition } from "@rove-code/provider-core/server/selectionTransition";
-import { providerMessageTextWithAttachmentPaths } from "@rove-code/provider-core/server/attachmentPrompt";
-import * as ProviderAdapter from "@rove-code/provider-core/server/ProviderAdapter";
+import * as IdAllocator from "@getpaperplane/provider-core/server/IdAllocator";
+import { makeProviderFailure } from "@getpaperplane/provider-core/server/failure";
+import { turnScopedSelectionTransition } from "@getpaperplane/provider-core/server/selectionTransition";
+import { providerMessageTextWithAttachmentPaths } from "@getpaperplane/provider-core/server/attachmentPrompt";
+import * as ProviderAdapter from "@getpaperplane/provider-core/server/ProviderAdapter";
 import {
   ProviderAdapterDriverCreateError,
   type ProviderAdapterDriver,
   type ProviderAdapterDriverCreateInput,
-} from "@rove-code/provider-core/server/adapterDriver";
+} from "@getpaperplane/provider-core/server/adapterDriver";
 import {
   makeSubagentChildThread,
   subagentThreadTitle,
-} from "@rove-code/provider-core/server/subagentProjection";
+} from "@getpaperplane/provider-core/server/subagentProjection";
 import { openCodeToolTurnItem } from "./toolItems.ts";
 
 export { openCodeToolProjectionKind } from "./toolItems.ts";
@@ -970,12 +970,12 @@ export const makeOpenCodeAdapterV2 = Effect.fn("makeOpenCodeAdapterV2")(function
         });
 
         const mcpSession = yield* mcpSessions.read(input.threadId);
-        const hasRoveMcp = mcpSession !== undefined && !connection.external;
-        const orchestrationSystemPrompt = roveOrchestrationSystemPrompt(hasRoveMcp);
-        if (hasRoveMcp) {
+        const hasPaperplaneMcp = mcpSession !== undefined && !connection.external;
+        const orchestrationSystemPrompt = paperplaneOrchestrationSystemPrompt(hasPaperplaneMcp);
+        if (hasPaperplaneMcp) {
           yield* OpenCodeRuntime.runOpenCodeSdk("mcp.add", () =>
             client.mcp.add({
-              name: ROVE_MCP_SERVER_NAME,
+              name: PAPERPLANE_MCP_SERVER_NAME,
               config: {
                 type: "remote",
                 url: mcpSession.endpoint,

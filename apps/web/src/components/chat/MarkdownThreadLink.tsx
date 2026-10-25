@@ -1,6 +1,6 @@
-import { scopeProjectRef, scopeThreadRef } from "@rove-code/client-runtime/environment";
-import type { EnvironmentId, ThreadId } from "@rove-code/contracts";
-import { formatThreadLink, percentDecodedThreadLinkId } from "@rove-code/shared/threadLinks";
+import { scopeProjectRef, scopeThreadRef } from "@getpaperplane/client-runtime/environment";
+import type { EnvironmentId, ThreadId } from "@getpaperplane/contracts";
+import { formatThreadLink, percentDecodedThreadLinkId } from "@getpaperplane/shared/threadLinks";
 import { Link } from "@tanstack/react-router";
 import { MessageSquareTextIcon } from "lucide-react";
 
@@ -8,7 +8,7 @@ import { useProject, useThreadShell } from "../../state/entities";
 import { ProjectFavicon } from "../ProjectFavicon";
 
 /**
- * A `rove-thread://` link in chat. It shows the thread's current title, so a rename
+ * A `paperplane-thread://` link in chat. It shows the thread's current title, so a rename
  * reaches every message that links to it, and leads with the thread's project icon
  * the way a web link leads with its favicon. `label` is what the message wrote,
  * shown only when this client cannot see the thread. Opens the thread in the app.

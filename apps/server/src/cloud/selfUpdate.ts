@@ -5,8 +5,8 @@ import {
   type ServerSelfUpdateProgressStage,
   type ServerSelfUpdateResult,
   type ThreadId,
-} from "@rove-code/contracts";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+} from "@getpaperplane/contracts";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 import * as Cause from "effect/Cause";
 import * as Config from "effect/Config";
 import * as Context from "effect/Context";
@@ -20,7 +20,7 @@ import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import { HttpClient } from "effect/http";
 
-import { CLI_RELEASE_BASE_URL_ENV } from "@rove-code/shared/cliRelease";
+import { CLI_RELEASE_BASE_URL_ENV } from "@getpaperplane/shared/cliRelease";
 
 import * as ServerConfig from "../config.ts";
 import * as DesktopAppUpdate from "../desktopUpdate/DesktopAppUpdate.ts";
@@ -61,7 +61,7 @@ export class ServerSelfUpdate extends Context.Service<
       onHandoffAccepted?: () => Effect.Effect<void>,
     ) => Effect.Effect<never, ServerSelfUpdateError>;
   }
->()("@rove-code/server/cloud/selfUpdate/ServerSelfUpdate") {}
+>()("@getpaperplane/server/cloud/selfUpdate/ServerSelfUpdate") {}
 
 export const withRunningThreadContinuation = Effect.fn(
   "cloud.server_self_update.withRunningThreadContinuation",
@@ -216,18 +216,18 @@ export const make = Effect.fn("cloud.server_self_update.make")(function* () {
         return yield* desktopAppUpdate.run(reportProgress);
       }
       return yield* failWith(
-        "This server is managed by the Rove Code desktop app on its machine; update the desktop app to update it.",
+        "This server is managed by the Paperplane desktop app on its machine; update the desktop app to update it.",
       );
     }
     if (capability === null) {
       return yield* failWith(
-        "Remote updates require the Rove Code background service. Run `rove service install` on the server machine.",
+        "Remote updates require the Paperplane background service. Run `paperplane service install` on the server machine.",
       );
     }
 
     const targetVersion = input.targetVersion.trim();
     if (!isExactServiceVersion(targetVersion)) {
-      return yield* failWith(`'${targetVersion}' is not an exact rove version.`);
+      return yield* failWith(`'${targetVersion}' is not an exact paperplane version.`);
     }
     if (yield* Ref.getAndSet(inFlight, true)) {
       return yield* failWith("A server update is already in progress.");
@@ -318,7 +318,7 @@ export const make = Effect.fn("cloud.server_self_update.make")(function* () {
         Effect.mapError((error) =>
           error._tag === "PinnedRuntimePreflightBlockedError"
             ? failWith(error.reason, error)
-            : failWith(`Could not prepare rove@${targetVersion}.`, error),
+            : failWith(`Could not prepare paperplane@${targetVersion}.`, error),
         ),
       );
 

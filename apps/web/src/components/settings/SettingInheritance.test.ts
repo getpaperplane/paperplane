@@ -1,5 +1,5 @@
-import { DEFAULT_SERVER_SETTINGS, EnvironmentId, ProjectId } from "@rove-code/contracts";
-import { resolveProjectSettings } from "@rove-code/shared/projectSettings";
+import { DEFAULT_SERVER_SETTINGS, EnvironmentId, ProjectId } from "@getpaperplane/contracts";
+import { resolveProjectSettings } from "@getpaperplane/shared/projectSettings";
 import { describe, expect, it } from "vite-plus/test";
 
 import { settingInheritanceLayers } from "./SettingInheritance";
@@ -92,7 +92,7 @@ describe("settingInheritanceLayers", () => {
     ]);
   });
 
-  it("shows the checkout's rove.json as a layer for file-backed keys", () => {
+  it("shows the checkout's paperplane.json as a layer for file-backed keys", () => {
     const file = { defaultThreadEnvMode: "worktree" as const };
     const fromFile = settingInheritanceLayers(
       {
@@ -107,7 +107,7 @@ describe("settingInheritanceLayers", () => {
     expect(fromFile.map((layer) => [layer.label, layer.value, layer.effective])).toEqual([
       ["Project", "Inherits", false],
       ["Laptop", "Inherits", false],
-      ["rove.json", "New worktree", true],
+      ["paperplane.json", "New worktree", true],
       ["Default", "Current checkout", false],
     ]);
     const settings = { ...DEFAULT_SERVER_SETTINGS, defaultThreadEnvMode: "local" as const };

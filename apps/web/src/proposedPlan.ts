@@ -1,4 +1,7 @@
-import { stripDisplayedPlanMarkdown, proposedPlanTitle } from "@rove-code/shared/proposedPlanText";
+import {
+  stripDisplayedPlanMarkdown,
+  proposedPlanTitle,
+} from "@getpaperplane/shared/proposedPlanText";
 
 export function buildCollapsedProposedPlanPreviewMarkdown(
   planMarkdown: string,

@@ -5,12 +5,12 @@ import {
   secretRequestDisplay,
   secretRequestFailureMessage,
   type SecretRequestItem,
-} from "@rove-code/client-runtime/secret-request";
+} from "@getpaperplane/client-runtime/secret-request";
 import {
   isAtomCommandInterrupted,
   squashAtomCommandFailure,
-} from "@rove-code/client-runtime/state/runtime";
-import type { EnvironmentId, OrchestrationV2ProjectedTurnItem } from "@rove-code/contracts";
+} from "@getpaperplane/client-runtime/state/runtime";
+import type { EnvironmentId, OrchestrationV2ProjectedTurnItem } from "@getpaperplane/contracts";
 import { CheckIcon, LockIcon, MinusIcon, ShieldCheckIcon } from "lucide-react";
 import { useId, useRef, useState, type FormEvent } from "react";
 

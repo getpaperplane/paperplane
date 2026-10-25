@@ -23,7 +23,7 @@ describe("tryOpenExternalUrl", () => {
     openURL.mockResolvedValue(undefined);
 
     await expect(
-      tryOpenExternalUrl("https://github.com/rovecode/rove", "pull-request"),
+      tryOpenExternalUrl("https://github.com/paperplane/paperplane", "pull-request"),
     ).resolves.toBe(true);
   });
 
@@ -33,7 +33,10 @@ describe("tryOpenExternalUrl", () => {
     const consoleError = vi.spyOn(console, "error").mockImplementation(() => undefined);
 
     await expect(
-      tryOpenExternalUrl("https://github.com/rovecode/rove/pull/1?token=secret", "pull-request"),
+      tryOpenExternalUrl(
+        "https://github.com/paperplane/paperplane/pull/1?token=secret",
+        "pull-request",
+      ),
     ).resolves.toBe(false);
 
     expect(consoleError).toHaveBeenCalledTimes(1);

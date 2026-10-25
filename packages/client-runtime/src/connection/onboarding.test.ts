@@ -4,7 +4,7 @@ import {
   EnvironmentId,
   type AuthEnvironmentScope,
   ORCHESTRATION_PROTOCOL_VERSION,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { describe, expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -44,7 +44,7 @@ const layerClientPresentation = Layer.succeed(
   ClientCapabilities.ClientPresentation,
   ClientCapabilities.ClientPresentation.of({
     metadata: {
-      label: "Rove Code Test",
+      label: "Paperplane Test",
       deviceType: "desktop",
       os: "Test OS",
     },
@@ -67,7 +67,7 @@ function layerPairingHttp(
     const url = String(input);
     calls.push({ url, init });
 
-    if (url.endsWith("/.well-known/rove/environment")) {
+    if (url.endsWith("/.well-known/paperplane/environment")) {
       if (options?.failDescriptor === true) {
         return Promise.resolve(
           Response.json({ message: "descriptor unavailable" }, { status: 503 }),
@@ -141,7 +141,7 @@ function layerPairingHttp(
             policy: "remote-reachable",
             bootstrapMethods: ["one-time-token"],
             sessionMethods: ["bearer-access-token"],
-            sessionCookieName: "rove_session",
+            sessionCookieName: "paperplane_session",
           },
           scopes: sessionScopes,
           sessionMethod: "bearer-access-token",
@@ -253,7 +253,7 @@ describe("connection onboarding", () => {
         },
       });
       expect(calls.map((call) => call.url)).toEqual([
-        "https://remote.example.test/.well-known/rove/environment",
+        "https://remote.example.test/.well-known/paperplane/environment",
         "https://remote.example.test/oauth/token",
       ]);
 
@@ -265,7 +265,7 @@ describe("connection onboarding", () => {
       const tokenParams = new URLSearchParams(tokenBody);
       expect(tokenParams.get("subject_token")).toBe("pairing-token");
       expect(tokenParams.has("scope")).toBe(false);
-      expect(tokenParams.get("client_label")).toBe("Rove Code Test");
+      expect(tokenParams.get("client_label")).toBe("Paperplane Test");
       expect(tokenParams.get("client_device_type")).toBe("desktop");
       expect(tokenParams.get("client_os")).toBe("Test OS");
     }),
@@ -418,7 +418,7 @@ describe("connection onboarding", () => {
       );
       expect(error).toMatchObject({ reason: "unsupported" });
       expect(calls.map((call) => call.url)).toEqual([
-        "https://remote.example.test/.well-known/rove/environment",
+        "https://remote.example.test/.well-known/paperplane/environment",
       ]);
     }),
   );
@@ -458,7 +458,7 @@ describe("connection onboarding", () => {
       expect(error).toMatchObject({ reason: "configuration" });
       expect(error.message).toContain("different machine");
       expect(calls.map((call) => call.url)).toEqual([
-        "https://remote.example.test/.well-known/rove/environment",
+        "https://remote.example.test/.well-known/paperplane/environment",
       ]);
     }),
   );
@@ -503,7 +503,7 @@ describe("connection onboarding", () => {
       expect(error).toMatchObject({ reason: "unsupported" });
       expect(error).not.toHaveProperty("serverUpdateRequired");
       expect(calls.map((call) => call.url)).toEqual([
-        "https://remote.example.test/.well-known/rove/environment",
+        "https://remote.example.test/.well-known/paperplane/environment",
       ]);
     }),
   );
@@ -526,7 +526,7 @@ describe("connection onboarding", () => {
       );
 
       expect(calls.map((call) => call.url)).toEqual([
-        "https://remote.example.test/.well-known/rove/environment",
+        "https://remote.example.test/.well-known/paperplane/environment",
       ]);
     }),
   );

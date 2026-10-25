@@ -1,5 +1,9 @@
-import { AuthOrchestrationOperateScope, EnvironmentId, type EditorId } from "@rove-code/contracts";
-import { DEFAULT_RESOLVED_KEYBINDINGS } from "@rove-code/shared/keybindings";
+import {
+  AuthOrchestrationOperateScope,
+  EnvironmentId,
+  type EditorId,
+} from "@getpaperplane/contracts";
+import { DEFAULT_RESOLVED_KEYBINDINGS } from "@getpaperplane/shared/keybindings";
 import { AsyncResult } from "effect/reactivity";
 import { cloneElement, useState, type ReactElement, type ReactNode } from "react";
 import { act, create, type ReactTestRenderer } from "react-test-renderer";
@@ -188,7 +192,7 @@ it.each(["local-exec", "remote-links"] as const)(
     await act(async () => {
       renderer!.root.findByProps({ children: "VS Code" }).parent!.props.onClick();
     });
-    expect(window.localStorage.getItem("rove:last-editor")).toBe('"vscode"');
+    expect(window.localStorage.getItem("paperplane:last-editor")).toBe('"vscode"');
     const openButton = renderer!.root.findByProps({ "aria-label": "Open in VS Code" });
     expect(state.run).not.toHaveBeenCalled();
     expect(state.openUrl).not.toHaveBeenCalled();

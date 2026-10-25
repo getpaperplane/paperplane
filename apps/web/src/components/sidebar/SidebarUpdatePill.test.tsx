@@ -1,4 +1,4 @@
-import type { DesktopUpdateState } from "@rove-code/contracts";
+import type { DesktopUpdateState } from "@getpaperplane/contracts";
 import { describe, expect, it } from "vite-plus/test";
 
 import { shouldUseSidebarUpdateReleaseNotesPopover } from "./SidebarUpdatePill";

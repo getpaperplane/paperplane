@@ -23,27 +23,27 @@
 import {
   AcpRegistryDriver,
   type AcpRegistryDriverEnv,
-} from "@rove-code/provider-acp-registry/server";
+} from "@getpaperplane/provider-acp-registry/server";
 import { AntigravityDriver, type AntigravityDriverEnv } from "./Drivers/AntigravityDriver.ts";
 import { ClaudeDriver, type ClaudeDriverEnv } from "./Drivers/ClaudeDriver.ts";
 import { CodexDriver, type CodexDriverEnv } from "./Drivers/CodexDriver.ts";
-import { CursorDriver, type CursorDriverEnv } from "@rove-code/provider-cursor/server";
-import { GrokDriver, type GrokDriverEnv } from "@rove-code/provider-grok/server";
-import { OpenCodeDriver, type OpenCodeDriverEnv } from "@rove-code/provider-opencode/server";
-import { MuseDriver, type MuseDriverEnv } from "@rove-code/provider-muse/server";
+import { CursorDriver, type CursorDriverEnv } from "@getpaperplane/provider-cursor/server";
+import { GrokDriver, type GrokDriverEnv } from "@getpaperplane/provider-grok/server";
+import { OpenCodeDriver, type OpenCodeDriverEnv } from "@getpaperplane/provider-opencode/server";
+import { MuseDriver, type MuseDriverEnv } from "@getpaperplane/provider-muse/server";
 import { PiDriver, type PiDriverEnv } from "./Drivers/PiDriver.ts";
-import { piUsageFormat } from "@rove-code/provider-pi/server/usage";
+import { piUsageFormat } from "@getpaperplane/provider-pi/server/usage";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
 import * as Path from "effect/Path";
 import * as Schema from "effect/Schema";
-import * as HostProcess from "@rove-code/shared/HostProcess";
-import { expandHomePath } from "@rove-code/provider-core/server/pathExpansion";
-import type { ProviderUsageInstance } from "@rove-code/provider-core/server/usage";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
+import { expandHomePath } from "@getpaperplane/provider-core/server/pathExpansion";
+import type { ProviderUsageInstance } from "@getpaperplane/provider-core/server/usage";
 import type {
   AnyProviderDriver,
   ProviderUsageReaderEnv,
-} from "@rove-code/provider-core/server/driver";
+} from "@getpaperplane/provider-core/server/driver";
 
 /**
  * Union of infrastructure services required to construct any built-in

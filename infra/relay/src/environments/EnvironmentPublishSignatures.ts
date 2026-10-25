@@ -2,14 +2,14 @@ import {
   RelayAgentActivityPublishProofPayload,
   RelayAgentActivityPublishProofInvalidReason,
   type RelayAgentActivityPublishRequest,
-} from "@rove-code/contracts/relay";
+} from "@getpaperplane/contracts/relay";
 import {
   decodeRelayJwt,
   normalizeRelayIssuer,
   RELAY_ACTIVITY_PUBLISH_TYP,
   verifyRelayJwt,
-} from "@rove-code/shared/relayJwt";
-import { stableStringify } from "@rove-code/shared/relaySigning";
+} from "@getpaperplane/shared/relayJwt";
+import { stableStringify } from "@getpaperplane/shared/relaySigning";
 import * as Context from "effect/Context";
 import * as Crypto from "effect/Crypto";
 import * as DateTime from "effect/DateTime";
@@ -84,7 +84,7 @@ export class EnvironmentPublishSignatures extends Context.Service<
       readonly request: RelayAgentActivityPublishRequest;
     }) => Effect.Effect<void, EnvironmentPublishSignatureError>;
   }
->()("rove-relay/environments/EnvironmentPublishSignatures") {}
+>()("paperplane-relay/environments/EnvironmentPublishSignatures") {}
 
 const decodeProof = Schema.decodeUnknownEffect(RelayAgentActivityPublishProofPayload);
 
@@ -140,7 +140,7 @@ const make = Effect.gen(function* () {
         publicKey: input.environmentPublicKey,
         token: input.request.proof,
         typ: RELAY_ACTIVITY_PUBLISH_TYP,
-        issuer: `rove-env:${input.environmentId}`,
+        issuer: `paperplane-env:${input.environmentId}`,
         audience: normalizeRelayIssuer(config.relayIssuer),
         nowEpochSeconds: Math.floor(now.epochMilliseconds / 1_000),
       }).pipe(

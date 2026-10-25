@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
-import { EnvironmentId, ThreadId } from "@rove-code/contracts";
-import type { RelayAgentActivityState } from "@rove-code/contracts/relay";
+import { EnvironmentId, ThreadId } from "@getpaperplane/contracts";
+import type { RelayAgentActivityState } from "@getpaperplane/contracts/relay";
 import { makeAggregateState } from "./agentActivityAggregate.ts";
 import {
   attentionTransitionRows,

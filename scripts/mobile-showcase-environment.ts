@@ -1,4 +1,4 @@
-// @effect-diagnostics nodeBuiltinImport:off globalTimers:off globalDate:off - This host-side fixture creates an isolated local Rove environment.
+// @effect-diagnostics nodeBuiltinImport:off globalTimers:off globalDate:off - This host-side fixture creates an isolated local Paperplane environment.
 import * as NodeChildProcess from "node:child_process";
 import * as NodeFSP from "node:fs/promises";
 import * as NodePath from "node:path";
@@ -7,7 +7,7 @@ import * as NodeUtil from "node:util";
 
 const execFile = NodeUtil.promisify(NodeChildProcess.execFile);
 
-export const SHOWCASE_PROJECT_ID = "rove";
+export const SHOWCASE_PROJECT_ID = "paperplane";
 export const SHOWCASE_THREAD_ID = "remote-command-center";
 export const SHOWCASE_TERMINAL_ID = "term-1";
 
@@ -52,7 +52,7 @@ const PROJECT_SCRIPTS = JSON.stringify([
 ]);
 
 const SHOWCASE_TERMINAL_PROMPT =
-  "\u001b[1;32m→\u001b[0m \u001b[1;36mrove\u001b[0m \u001b[1;34mgit:(\u001b[1;31mfeat/remote-command-center\u001b[1;34m)\u001b[0m \u001b[1;33m✗\u001b[0m ";
+  "\u001b[1;32m→\u001b[0m \u001b[1;36mpaperplane\u001b[0m \u001b[1;34mgit:(\u001b[1;31mfeat/remote-command-center\u001b[1;34m)\u001b[0m \u001b[1;33m✗\u001b[0m ";
 
 // A dev-server startup mirroring the web settings' terminal font preview:
 // zsh-style prompt, brand line, addresses, the thread's 612-test summary,
@@ -65,7 +65,7 @@ export const SHOWCASE_TERMINAL_BUFFER = [
   "",
   "  \u001b[32m→\u001b[0m  \u001b[2mLocal:\u001b[0m    \u001b[4;36mhttp://127.0.0.1:5173/\u001b[0m",
   "  \u001b[32m→\u001b[0m  \u001b[2mNetwork:\u001b[0m  \u001b[4;36mhttp://192.168.1.24:5173/\u001b[0m",
-  "  \u001b[32m→\u001b[0m  \u001b[2mProject:\u001b[0m  \u001b[1mrove\u001b[0m \u001b[2m— ~/Code/rove\u001b[0m",
+  "  \u001b[32m→\u001b[0m  \u001b[2mProject:\u001b[0m  \u001b[1mpaperplane\u001b[0m \u001b[2m— ~/Code/paperplane\u001b[0m",
   "",
   "  \u001b[32m✓ 612 passed\u001b[0m   \u001b[33m△ 2 warnings\u001b[0m   \u001b[31m✗ 0 failed\u001b[0m",
   "",
@@ -100,7 +100,7 @@ export function RemoteHandoffCard(props: { machine: string; latencyMs: number })
 `;
 
 const PROJECT_FAVICONS = {
-  rove: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  paperplane: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
   <rect width="128" height="128" rx="10" fill="#000"/>
   <text x="64" y="96" fill="#6894e8" font-family="Arial, sans-serif" font-size="92" font-weight="800" text-anchor="middle">R</text>
 </svg>`,
@@ -121,11 +121,11 @@ const PROJECT_FAVICONS = {
 
 export const SHOWCASE_PROJECTS = [
   {
-    id: "rove",
-    title: "Rove Code",
-    directory: "rove",
-    repositoryUrl: "https://github.com/hafiezul/rove.git",
-    favicon: PROJECT_FAVICONS.rove,
+    id: "paperplane",
+    title: "Paperplane",
+    directory: "paperplane",
+    repositoryUrl: "https://github.com/getpaperplane/paperplane.git",
+    favicon: PROJECT_FAVICONS.paperplane,
   },
   {
     id: "react",
@@ -147,7 +147,7 @@ export const SHOWCASE_ENVIRONMENTS = [
   {
     id: "moonbase-terminal",
     label: "Moonbase Terminal",
-    projectIds: ["rove"],
+    projectIds: ["paperplane"],
   },
   {
     id: "suspense-station",
@@ -164,18 +164,18 @@ export const SHOWCASE_ENVIRONMENTS = [
 export const SHOWCASE_THREADS = [
   {
     id: SHOWCASE_THREAD_ID,
-    projectId: "rove",
+    projectId: "paperplane",
     title: "Make remote coding feel local ✦",
     branch: "feat/remote-command-center",
     minutesAgo: 3,
     request:
-      "Give Rove Code a remote-first command center. Make three machines feel one tap away, keep agent work in sync, and make every handoff feel instant.",
+      "Give Paperplane a remote-first command center. Make three machines feel one tap away, keep agent work in sync, and make every handoff feel instant.",
     response:
-      "Rove Code now treats every machine like it is right here in the room. ✦\n\n- Moonbase, Suspense Station, and Kernel Cabin stay live together\n- Terminal state follows you without losing a single line\n- Agent work remains perfectly in sync across devices\n- Handoffs land before your train of thought can wander\n\nI also ran the changed workspace: **612 tests passed**.",
+      "Paperplane now treats every machine like it is right here in the room. ✦\n\n- Moonbase, Suspense Station, and Kernel Cabin stay live together\n- Terminal state follows you without losing a single line\n- Agent work remains perfectly in sync across devices\n- Handoffs land before your train of thought can wander\n\nI also ran the changed workspace: **612 tests passed**.",
   },
   {
     id: "pocket-command-center",
-    projectId: "rove",
+    projectId: "paperplane",
     title: "Put the command center in your pocket",
     branch: "feat/pocket-command-center",
     minutesAgo: 21,
@@ -236,7 +236,7 @@ export const SHOWCASE_THREADS = [
   // a store screenshot has to show that history exists, not just imply it.
   {
     id: "handoff-haptics",
-    projectId: "rove",
+    projectId: "paperplane",
     title: "Tune the handoff haptics",
     branch: "feat/handoff-haptics",
     minutesAgo: 5 * 60,
@@ -297,22 +297,22 @@ async function initializeRepository(input: {
   await runGit(input.workspaceRoot, ["commit", "-m", input.commitMessage]);
 }
 
-async function seedRoveWorkspace(workspaceRoot: string): Promise<void> {
+async function seedPaperplaneWorkspace(workspaceRoot: string): Promise<void> {
   await NodeFSP.mkdir(NodePath.join(workspaceRoot, "apps/mobile/src/features/home"), {
     recursive: true,
   });
   await NodeFSP.writeFile(
     NodePath.join(workspaceRoot, "package.json"),
-    `${JSON.stringify({ name: "rove", private: true, scripts: { test: "vp test" } }, null, 2)}\n`,
+    `${JSON.stringify({ name: "paperplane", private: true, scripts: { test: "vp test" } }, null, 2)}\n`,
   );
-  await NodeFSP.writeFile(NodePath.join(workspaceRoot, "favicon.svg"), PROJECT_FAVICONS.rove);
+  await NodeFSP.writeFile(NodePath.join(workspaceRoot, "favicon.svg"), PROJECT_FAVICONS.paperplane);
   await NodeFSP.writeFile(
     NodePath.join(workspaceRoot, "apps/mobile/src/features/home/environmentPresence.ts"),
     BASE_ENVIRONMENT_PRESENCE,
   );
   await initializeRepository({
     workspaceRoot,
-    repositoryUrl: "https://github.com/hafiezul/rove.git",
+    repositoryUrl: "https://github.com/getpaperplane/paperplane.git",
     commitMessage: "Show connected environments",
   });
   await runGit(workspaceRoot, ["checkout", "-b", "feat/remote-command-center"]);
@@ -336,7 +336,7 @@ async function seedCompanionWorkspace(input: {
   await NodeFSP.writeFile(NodePath.join(input.workspaceRoot, "favicon.svg"), input.favicon);
   await NodeFSP.writeFile(
     NodePath.join(input.workspaceRoot, "README.md"),
-    `# ${input.title}\n\nSeeded by the Rove Code mobile screenshot harness.\n`,
+    `# ${input.title}\n\nSeeded by the Paperplane mobile screenshot harness.\n`,
   );
   await initializeRepository({
     workspaceRoot: input.workspaceRoot,
@@ -665,7 +665,7 @@ export async function seedShowcaseEnvironment(input: {
   if (!workspaceRoot) throw new Error("The primary showcase workspace is not configured.");
   const dbPath = NodePath.join(input.baseDir, "userdata", "statev2.sqlite");
   if (primaryProject.id === SHOWCASE_PROJECT_ID) {
-    await seedRoveWorkspace(workspaceRoot);
+    await seedPaperplaneWorkspace(workspaceRoot);
   }
   await Promise.all(
     projects

@@ -1,4 +1,4 @@
-import { EnvironmentId, ProjectId } from "@rove-code/contracts";
+import { EnvironmentId, ProjectId } from "@getpaperplane/contracts";
 import { describe, expect, it } from "vite-plus/test";
 
 import { findScopedProject } from "./pullRequestList.logic";
@@ -19,7 +19,7 @@ function project(
   return {
     id: ProjectId.make(id),
     environmentId,
-    title: "rove",
+    title: "paperplane",
     workspaceRoot: `/work/${id}`,
     repositoryIdentity: canonicalKey === null ? null : { canonicalKey },
     faviconPath: `${id}/favicon.png`,
@@ -38,8 +38,8 @@ describe("pull request project filter choices", () => {
     const choices = pullRequestFilterProjects(projects, labels);
 
     expect(choices.map(({ id, environmentId, title }) => ({ id, environmentId, title }))).toEqual([
-      { id: "main", environmentId: cups, title: "rove · cups" },
-      { id: "main", environmentId: nucbox, title: "rove · nucbox-1" },
+      { id: "main", environmentId: cups, title: "paperplane · cups" },
+      { id: "main", environmentId: nucbox, title: "paperplane · nucbox-1" },
     ]);
     expect(choices[1]?.workspaceRoot).toBe("/work/main");
     expect(choices[1]?.faviconPath).toBe("main/favicon.png");
@@ -52,7 +52,7 @@ describe("pull request project filter choices", () => {
     const choices = pullRequestFilterProjects(projects, labels, selected);
 
     expect(choices.filter((choice) => choice.environmentId === nucbox)).toEqual([
-      { ...projects[1], title: "rove · nucbox-1" },
+      { ...projects[1], title: "paperplane · nucbox-1" },
     ]);
     expect(findScopedProject(choices, nucbox, "worktree")).toBeDefined();
     expect(findScopedProject(choices, nucbox, "main")).toBeUndefined();
@@ -70,20 +70,20 @@ describe("pull request project filter choices", () => {
     const main = project("main");
 
     expect(pullRequestFilterProjects([main, project("worktree")], labels)).toEqual([main]);
-    expect(main.title).toBe("rove");
+    expect(main.title).toBe("paperplane");
   });
 
   it("distinguishes same-named repositories on one server by checkout path", () => {
     const projects = [
       project("upstream"),
-      project("fork", nucbox, "github.com/juliusmarminge/rove"),
+      project("fork", nucbox, "github.com/juliusmarminge/paperplane"),
     ];
 
     const choices = pullRequestFilterProjects(projects, labels);
 
     expect(choices.map((choice) => choice.title)).toEqual([
-      "rove · nucbox-1 · /work/fork",
-      "rove · nucbox-1 · /work/upstream",
+      "paperplane · nucbox-1 · /work/fork",
+      "paperplane · nucbox-1 · /work/upstream",
     ]);
   });
 
@@ -103,8 +103,8 @@ describe("pull request project filter choices", () => {
     );
 
     expect(choices.map((choice) => choice.title)).toEqual([
-      "rove · nucbox-1 · /work/first",
-      "rove · nucbox-1 · /work/second",
+      "paperplane · nucbox-1 · /work/first",
+      "paperplane · nucbox-1 · /work/second",
     ]);
   });
 
@@ -119,8 +119,8 @@ describe("pull request project filter choices", () => {
     const choices = pullRequestFilterProjects([first, second], repeatedLabels);
 
     expect(choices.map((choice) => choice.title)).toEqual([
-      "rove · nucbox-1 · /work/main · env-cups",
-      "rove · nucbox-1 · /work/main · env-nucbox",
+      "paperplane · nucbox-1 · /work/main · env-cups",
+      "paperplane · nucbox-1 · /work/main · env-nucbox",
     ]);
   });
 
@@ -130,7 +130,10 @@ describe("pull request project filter choices", () => {
       new Map(),
     );
 
-    expect(choices.map((choice) => choice.title)).toEqual(["rove · env-cups", "rove · env-nucbox"]);
+    expect(choices.map((choice) => choice.title)).toEqual([
+      "paperplane · env-cups",
+      "paperplane · env-nucbox",
+    ]);
   });
 
   it("can distinguish unresolved project records that also share a checkout path", () => {
@@ -140,8 +143,8 @@ describe("pull request project filter choices", () => {
     const choices = pullRequestFilterProjects([first, second], labels);
 
     expect(choices.map((choice) => choice.title)).toEqual([
-      "rove · nucbox-1 · /work/first · env-nucbox · first",
-      "rove · nucbox-1 · /work/first · env-nucbox · second",
+      "paperplane · nucbox-1 · /work/first · env-nucbox · first",
+      "paperplane · nucbox-1 · /work/first · env-nucbox · second",
     ]);
   });
 

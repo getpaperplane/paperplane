@@ -10,7 +10,7 @@ import {
   RuntimeRequestId,
   TurnItemId,
   type OrchestrationV2TurnItem,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as DateTime from "effect/DateTime";
 import { describe, expect, it } from "vite-plus/test";
 

@@ -1,4 +1,4 @@
-import { SourceControlProviderKind } from "@rove-code/contracts";
+import { SourceControlProviderKind } from "@getpaperplane/contracts";
 import type {
   ProjectCloneSnapshot,
   ProjectCloneStage,
@@ -6,13 +6,13 @@ import type {
   ProjectCloneStartResult,
   ProjectId,
   SourceControlRepositoryInfo,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   OrchestrationDispatchCommandError,
   PROJECT_CLONE_DETAIL_MAX_LENGTH,
   PROJECT_CLONE_ERROR_MAX_LENGTH,
   SourceControlRepositoryError,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Cause from "effect/Cause";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
@@ -70,7 +70,7 @@ export class ProjectCloneTracker extends Context.Service<
     /** Emits every tracked clone first, then the full list after each change. */
     readonly stream: Stream.Stream<ReadonlyArray<ProjectCloneSnapshot>>;
   }
->()("@rove-code/server/project/ProjectCloneTracker") {}
+>()("@getpaperplane/server/project/ProjectCloneTracker") {}
 
 /**
  * Orchestration side effects the caller owns. The tracker never depends on the

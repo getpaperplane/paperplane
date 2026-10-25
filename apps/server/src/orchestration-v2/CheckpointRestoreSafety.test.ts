@@ -9,20 +9,20 @@ import {
   ProviderSessionId,
   ProviderThreadId,
   ThreadId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
 import * as Path from "effect/Path";
-import { symlinksSupported } from "@rove-code/shared/testing/symlinks";
+import { symlinksSupported } from "@getpaperplane/shared/testing/symlinks";
 import * as GitWorkflowService from "../git/GitWorkflowService.ts";
 import * as CheckpointRollbackService from "./CheckpointRollbackService.ts";
 import { isCheckpointRestoreIsolated } from "./CheckpointRestoreSafety.ts";
 import * as ThreadCommandExecutor from "./ThreadCommandExecutor.ts";
 import { CheckpointServiceV2 } from "./CheckpointService.ts";
 import { EventSinkV2 } from "./EventSink.ts";
-import * as IdAllocator from "@rove-code/provider-core/server/IdAllocator";
+import * as IdAllocator from "@getpaperplane/provider-core/server/IdAllocator";
 import { ProjectionStoreV2 } from "./ProjectionStore.ts";
 import * as ProjectStore from "./ProjectStore.ts";
 import { ProviderSessionManagerV2 } from "./ProviderSessionManager.ts";
@@ -45,7 +45,7 @@ it.effect.each([
   Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
-    const parent = yield* fs.makeTempDirectoryScoped({ prefix: "rove-v2-restore-" });
+    const parent = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-v2-restore-" });
     const cwd = path.join(parent, "worktree");
     const nested = path.join(cwd, "nested");
     const sibling = path.join(parent, "worktree2");
@@ -206,7 +206,7 @@ it.effect("lets rollback recreate a worktree storage cleanup removed", () =>
     const fileSystem = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
     const parent = yield* fileSystem.makeTempDirectoryScoped({
-      prefix: "rove-v2-restore-removed-",
+      prefix: "paperplane-v2-restore-removed-",
     });
     const worktreePath = path.join(parent, "worktree");
     const isolated = yield* isCheckpointRestoreIsolated(

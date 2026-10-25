@@ -9,13 +9,17 @@
  *
  * @module textGeneration/PiTextGeneration
  */
-import { TextGenerationError, type ModelSelection, type PiSettings } from "@rove-code/contracts";
+import {
+  TextGenerationError,
+  type ModelSelection,
+  type PiSettings,
+} from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
-import { getModelSelectionStringOptionValue } from "@rove-code/shared/model";
-import { extractJsonObject } from "@rove-code/shared/schemaJson";
-import { sanitizeBranchFragment, sanitizeFeatureBranchName } from "@rove-code/shared/git";
+import { getModelSelectionStringOptionValue } from "@getpaperplane/shared/model";
+import { extractJsonObject } from "@getpaperplane/shared/schemaJson";
+import { sanitizeBranchFragment, sanitizeFeatureBranchName } from "@getpaperplane/shared/git";
 
 import type { PiSessionLike } from "../provider/Layers/PiAdapter.ts";
 import { acquirePiResource, disposePiResource } from "../provider/Layers/PiLifecycle.ts";
@@ -27,12 +31,12 @@ import {
   buildPrContentPrompt,
   buildReviewGuidePrompt,
   buildThreadTitlePrompt,
-} from "@rove-code/provider-core/server/textGenerationPrompts";
+} from "@getpaperplane/provider-core/server/textGenerationPrompts";
 import {
   sanitizeCommitSubject,
   sanitizePrTitle,
   sanitizeThreadTitle,
-} from "@rove-code/provider-core/server/textGenerationUtils";
+} from "@getpaperplane/provider-core/server/textGenerationUtils";
 import * as RuntimePredicate from "effect/Predicate";
 
 type TextGenerationOperation =

@@ -1,4 +1,4 @@
-import type { DesktopDiscoveredSshHost } from "@rove-code/contracts";
+import type { DesktopDiscoveredSshHost } from "@getpaperplane/contracts";
 
 import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";

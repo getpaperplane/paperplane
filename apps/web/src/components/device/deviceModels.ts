@@ -2,8 +2,8 @@ import {
   resolveDeviceModelId,
   type DeviceAccessorySource,
   type DeviceModelSource,
-} from "@rove-code/client-runtime/device/model";
-import type { DevicePlatform } from "@rove-code/contracts";
+} from "@getpaperplane/client-runtime/device/model";
+import type { DevicePlatform } from "@getpaperplane/contracts";
 import iphoneDuo from "./models/iphone-duo.glb?url";
 import iphone18Pro from "./models/iphone-18-pro.glb?url";
 import iphone18ProMax from "./models/iphone-18-pro-max.glb?url";

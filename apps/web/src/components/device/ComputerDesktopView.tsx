@@ -1,6 +1,6 @@
-import { computerDesktopViewerUrl } from "@rove-code/client-runtime/state/computer-use";
-import { ComputerDesktopViewerError, type EnvironmentId } from "@rove-code/contracts";
-import { squashAtomCommandFailure } from "@rove-code/client-runtime/state/runtime";
+import { computerDesktopViewerUrl } from "@getpaperplane/client-runtime/state/computer-use";
+import { ComputerDesktopViewerError, type EnvironmentId } from "@getpaperplane/contracts";
+import { squashAtomCommandFailure } from "@getpaperplane/client-runtime/state/runtime";
 import * as Schema from "effect/Schema";
 import type RFB from "@novnc/novnc";
 import type { RfbOptions } from "@novnc/novnc";
@@ -116,7 +116,10 @@ export function ComputerDesktopView(props: {
         Rfb = await loadRfb();
       } catch {
         if (!cancelled)
-          setStatus({ kind: "error", reason: "The desktop viewer failed to load. Reload Rove." });
+          setStatus({
+            kind: "error",
+            reason: "The desktop viewer failed to load. Reload Paperplane.",
+          });
         return;
       }
       if (cancelled) return;
@@ -152,11 +155,11 @@ export function ComputerDesktopView(props: {
         else
           setStatus({
             kind: "error",
-            reason: "The desktop asked for a password Rove doesn't have.",
+            reason: "The desktop asked for a password Paperplane doesn't have.",
           });
       });
       rfb.addEventListener("securityfailure", () => {
-        setStatus({ kind: "error", reason: "The desktop rejected Rove's credentials." });
+        setStatus({ kind: "error", reason: "The desktop rejected Paperplane's credentials." });
       });
       rfb.addEventListener("disconnect", () => {
         rfb = null;

@@ -1,10 +1,10 @@
-import { SourceControlProviderKind } from "@rove-code/contracts";
+import { SourceControlProviderKind } from "@getpaperplane/contracts";
 import { describe, expect, it } from "@effect/vitest";
 import {
   OrchestrationDispatchCommandError,
   ProjectId,
   SourceControlRepositoryError,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
@@ -19,10 +19,10 @@ import { parseGitCloneProgressLine } from "./gitCloneProgress.ts";
 const projectId = ProjectId.make("project-1");
 const startInput = {
   projectId,
-  title: "rove",
+  title: "paperplane",
   createdAt: "2026-01-01T00:00:00.000Z",
-  remoteUrl: "git@github.com:octocat/rove.git",
-  destinationPath: "/workspace/rove",
+  remoteUrl: "git@github.com:octocat/paperplane.git",
+  destinationPath: "/workspace/paperplane",
 };
 
 function makeHarness(options?: {
@@ -87,9 +87,9 @@ describe("ProjectCloneTracker", () => {
       yield* Effect.yieldNow;
 
       const result = yield* tracker.start(startInput, harness.hooks);
-      expect(result.cwd).toBe("/workspace/rove");
+      expect(result.cwd).toBe("/workspace/paperplane");
       // The project exists before git runs so the draft can open immediately.
-      expect(harness.created).toEqual([{ projectId, workspaceRoot: "/workspace/rove" }]);
+      expect(harness.created).toEqual([{ projectId, workspaceRoot: "/workspace/paperplane" }]);
 
       yield* Effect.yieldNow;
       const running = yield* tracker.get(projectId);
@@ -137,7 +137,7 @@ describe("ProjectCloneTracker", () => {
 
       expect(yield* tracker.retry(projectId)).toBe(true);
       // The partial checkout is cleared so git sees an empty destination.
-      expect(harness.discarded).toEqual(["/workspace/rove"]);
+      expect(harness.discarded).toEqual(["/workspace/paperplane"]);
       yield* Effect.yieldNow;
       expect((yield* tracker.get(projectId))?.phase).toBe("done");
       expect(attempts).toBe(2);
@@ -153,7 +153,7 @@ describe("ProjectCloneTracker", () => {
 
       expect(yield* tracker.cancel(projectId)).toBe(true);
       expect((yield* tracker.get(projectId))?.phase).toBe("cancelled");
-      expect(harness.discarded).toEqual(["/workspace/rove"]);
+      expect(harness.discarded).toEqual(["/workspace/paperplane"]);
       // Nothing left to cancel; retry is what brings it back.
       expect(yield* tracker.cancel(projectId)).toBe(false);
       expect(yield* tracker.retry(projectId)).toBe(true);
@@ -194,8 +194,8 @@ describe("ProjectCloneTracker", () => {
           prepareClone: (input) =>
             Effect.succeed({
               destinationPath: input.destinationPath,
-              remoteUrl: "https://github.com/octocat/rove.git",
-              cloneUrl: "https://user:s3cret@github.com/octocat/rove.git",
+              remoteUrl: "https://github.com/octocat/paperplane.git",
+              cloneUrl: "https://user:s3cret@github.com/octocat/paperplane.git",
               repository: null,
             }),
           cloneRepository: (input) =>
@@ -211,8 +211,8 @@ describe("ProjectCloneTracker", () => {
       const tracker = yield* ProjectCloneTracker.ProjectCloneTracker;
       const result = yield* tracker.start(startInput, harness.hooks);
       yield* Effect.yieldNow;
-      expect(result.remoteUrl).toBe("https://github.com/octocat/rove.git");
-      expect(cloneUrls).toEqual(["https://user:s3cret@github.com/octocat/rove.git"]);
+      expect(result.remoteUrl).toBe("https://github.com/octocat/paperplane.git");
+      expect(cloneUrls).toEqual(["https://user:s3cret@github.com/octocat/paperplane.git"]);
     }).pipe(Effect.provide(layer));
   });
 
@@ -224,7 +224,7 @@ describe("ProjectCloneTracker", () => {
       yield* Effect.yieldNow;
       yield* tracker.discard(projectId);
       expect(yield* tracker.get(projectId)).toBeNull();
-      expect(harness.discarded).toEqual(["/workspace/rove"]);
+      expect(harness.discarded).toEqual(["/workspace/paperplane"]);
     }).pipe(Effect.provide(harness.layer));
   });
 
@@ -298,7 +298,7 @@ describe("parseGitCloneProgressLine", () => {
       percent: null,
       detail: null,
     });
-    expect(parseGitCloneProgressLine("Cloning into 'rove'...")).toBeNull();
+    expect(parseGitCloneProgressLine("Cloning into 'paperplane'...")).toBeNull();
     expect(parseGitCloneProgressLine("fatal: repository not found")).toBeNull();
   });
 });

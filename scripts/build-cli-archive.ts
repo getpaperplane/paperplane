@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Packages the server single-executable into a self-contained per-platform
- * archive: the `rove` binary, the web client, the resource monitor, and a
+ * archive: the `paperplane` binary, the web client, the resource monitor, and a
  * production install of the native packages the bundle keeps external. The
  * archive is the unit every runtime installer downloads, so nothing in it may
  * require Node, npm, or a compiler on the machine that unpacks it.
@@ -9,7 +9,7 @@
  * Layout inside the archive (a single top-level directory named after the
  * archive stem):
  *
- *   rove | rove.exe      the single-executable
+ *   paperplane | paperplane.exe      the single-executable
  *   client/              web app served by the server
  *   resource-monitor/    per-platform Rust helper, same paths as the npm package
  *   node_modules/        runtime externals (node-pty, msgpackr-extract, fff)
@@ -28,9 +28,9 @@ import * as Schema from "effect/Schema";
 import { Command, Flag } from "effect/cli";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 
-import * as HostProcess from "@rove-code/shared/HostProcess";
-import { fromYaml } from "@rove-code/shared/schemaYaml";
-import { resolveSpawnCommand } from "@rove-code/shared/shell";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
+import { fromYaml } from "@getpaperplane/shared/schemaYaml";
+import { resolveSpawnCommand } from "@getpaperplane/shared/shell";
 import rootPackageJson from "../package.json" with { type: "json" };
 import serverPackageJson from "../apps/server/package.json" with { type: "json" };
 
@@ -99,7 +99,7 @@ export function cliArchivePlatformKey(platform: BuildPlatform, arch: BuildArch):
 }
 
 export function cliArchiveStem(version: string, platform: BuildPlatform, arch: BuildArch): string {
-  return `rove-${version}-${cliArchivePlatformKey(platform, arch)}`;
+  return `paperplane-${version}-${cliArchivePlatformKey(platform, arch)}`;
 }
 
 export function cliArchiveFileName(version: string, platform: BuildPlatform, arch: BuildArch) {
@@ -185,7 +185,7 @@ const stageRuntimeExternals = Effect.fn("stageRuntimeExternals")(function* (inpu
   yield* fs.writeFileString(
     path.join(input.stageDir, "package.json"),
     `${yield* encodeJsonString({
-      name: "rove-runtime",
+      name: "paperplane-runtime",
       version: input.version,
       private: true,
       packageManager: rootPackageJson.packageManager,
@@ -330,7 +330,7 @@ const stageWebClient = Effect.fn("stageWebClient")(function* (source: string, ta
 });
 
 const MacSigningConfig = Config.all({
-  identity: Config.String("ROVE_CLI_MAC_SIGN_IDENTITY").pipe(Config.option),
+  identity: Config.String("PAPERPLANE_CLI_MAC_SIGN_IDENTITY").pipe(Config.option),
   appleApiKey: Config.String("APPLE_API_KEY").pipe(Config.option),
   appleApiKeyId: Config.String("APPLE_API_KEY_ID").pipe(Config.option),
   appleApiIssuer: Config.String("APPLE_API_ISSUER").pipe(Config.option),
@@ -361,7 +361,7 @@ const signMacArchiveContents = Effect.fn("signMacArchiveContents")(function* (in
         entry.endsWith(".node") ||
         entry.endsWith(".dylib") ||
         entry.endsWith("spawn-helper") ||
-        entry.endsWith("rove-resource-monitor"),
+        entry.endsWith("paperplane-resource-monitor"),
     )
     .map((entry) => path.join(input.contentDir, entry));
 
@@ -379,7 +379,7 @@ const signMacArchiveContents = Effect.fn("signMacArchiveContents")(function* (in
     );
   }
   if (identity === "-") {
-    yield* Effect.log("[cli-archive] Signed ad hoc (no ROVE_CLI_MAC_SIGN_IDENTITY).");
+    yield* Effect.log("[cli-archive] Signed ad hoc (no PAPERPLANE_CLI_MAC_SIGN_IDENTITY).");
     return;
   }
 
@@ -394,7 +394,7 @@ const signMacArchiveContents = Effect.fn("signMacArchiveContents")(function* (in
   }
   // notarytool only accepts archives, and a bare executable cannot be stapled,
   // so notarize a zip of the binary and rely on the online ticket lookup.
-  const notarizeZip = path.join(path.dirname(input.executablePath), ".notarize-rove.zip");
+  const notarizeZip = path.join(path.dirname(input.executablePath), ".notarize-paperplane.zip");
   yield* runCommand(
     ChildProcess.make("ditto", ["-c", "-k", "--keepParent", input.executablePath, notarizeZip]),
     "ditto (notarization zip)",
@@ -414,7 +414,7 @@ const signMacArchiveContents = Effect.fn("signMacArchiveContents")(function* (in
     ]),
     "notarytool submit",
   ).pipe(Effect.ensuring(fs.remove(notarizeZip, { force: true }).pipe(Effect.ignore)));
-  yield* Effect.log("[cli-archive] Notarized rove.");
+  yield* Effect.log("[cli-archive] Notarized paperplane.");
 });
 
 const WindowsSigningConfig = Config.all({
@@ -517,9 +517,9 @@ const signWindowsExecutable = Effect.fn("signWindowsExecutable")(function* (
   ].join(" ");
   yield* runCommand(
     ChildProcess.make("pwsh", ["-NoProfile", "-NonInteractive", "-Command", script]),
-    "Invoke-TrustedSigning rove.exe",
+    "Invoke-TrustedSigning paperplane.exe",
   );
-  yield* Effect.log("[cli-archive] Signed rove.exe (Azure Trusted Signing).");
+  yield* Effect.log("[cli-archive] Signed paperplane.exe (Azure Trusted Signing).");
 });
 
 const buildCliArchive = Effect.fn("buildCliArchive")(function* (input: {
@@ -533,14 +533,14 @@ const buildCliArchive = Effect.fn("buildCliArchive")(function* (input: {
   const path = yield* Path.Path;
   const repoRoot = yield* RepoRoot;
   const serverDir = path.join(repoRoot, "apps/server");
-  const executableName = input.platform === "win" ? "rove.exe" : "rove";
-  // tsdown suffixes cross-built executables with their target (rove-darwin-x64);
-  // a host build is plain rove. Prefer the exact target when both exist.
+  const executableName = input.platform === "win" ? "paperplane.exe" : "paperplane";
+  // tsdown suffixes cross-built executables with their target (paperplane-darwin-x64);
+  // a host build is plain paperplane. Prefer the exact target when both exist.
   const targetKey = `${input.platform === "mac" ? "darwin" : input.platform}-${input.arch}`;
   const targetExecutable = path.join(
     serverDir,
     "dist-exe",
-    `rove-${targetKey}${input.platform === "win" ? ".exe" : ""}`,
+    `paperplane-${targetKey}${input.platform === "win" ? ".exe" : ""}`,
   );
   // The unsuffixed host build is only a valid stand-in when it was built for
   // this platform and architecture; otherwise a missing target must fail.
@@ -562,7 +562,7 @@ const buildCliArchive = Effect.fn("buildCliArchive")(function* (input: {
   );
   yield* requireInput(
     path.join(webClient, "index.html"),
-    "Run `vp run --filter @rove-code/server build` first.",
+    "Run `vp run --filter @getpaperplane/server build` first.",
   );
   yield* requireInput(
     resourceMonitorDir,
@@ -570,7 +570,7 @@ const buildCliArchive = Effect.fn("buildCliArchive")(function* (input: {
   );
 
   const stem = cliArchiveStem(input.version, input.platform, input.arch);
-  const stageRoot = yield* fs.makeTempDirectoryScoped({ prefix: "rove-cli-archive-" });
+  const stageRoot = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-cli-archive-" });
   const contentDir = path.join(stageRoot, stem);
   yield* fs.makeDirectory(contentDir, { recursive: true });
 
@@ -650,7 +650,9 @@ const command = Command.make(
     ),
   },
   (input) => buildCliArchive(input).pipe(Effect.scoped),
-).pipe(Command.withDescription("Package the rove single-executable into a per-platform archive."));
+).pipe(
+  Command.withDescription("Package the paperplane single-executable into a per-platform archive."),
+);
 
 if (import.meta.main) {
   Command.run(command, { version: "0.0.0" }).pipe(

@@ -7,8 +7,8 @@ import {
   type OrchestrationProjectShell,
   type ServerConfig,
   type ServerConfigStreamEvent,
-} from "@rove-code/contracts";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+} from "@getpaperplane/contracts";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Deferred from "effect/Deferred";
 import * as Duration from "effect/Duration";
@@ -185,7 +185,7 @@ const makeParkedWindowsLauncher = Effect.gen(function* () {
       Effect.provide(
         ConfigProvider.layer(
           ConfigProvider.fromEnv({
-            env: { PATH: "C:\\rove-late-editors-test", PATHEXT: ".EXE" },
+            env: { PATH: "C:\\paperplane-late-editors-test", PATHEXT: ".EXE" },
           }),
         ),
       ),

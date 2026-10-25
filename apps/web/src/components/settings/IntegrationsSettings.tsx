@@ -6,7 +6,7 @@ import { ComputerUseSettings } from "./ComputerUseSettings";
 import { DeviceHostsSettings } from "./DeviceHostsSettings";
 import { RemoteSandboxesSettings } from "./RemoteSandboxesSettings";
 /**
- * Integrations settings - preferences for surfaces Rove Code embeds rather than
+ * Integrations settings - preferences for surfaces Paperplane embeds rather than
  * owns. Browser is the first section: the defaults a preview tab opens at,
  * applied to both hand-opened tabs and agent `preview_open` calls that don't
  * state their own size.
@@ -40,8 +40,8 @@ import {
   type BrowserImportSource,
   type PreviewAppearancePreference,
   type PreviewViewportSetting,
-} from "@rove-code/contracts";
-import { PREVIEW_VIEWPORT_PRESETS } from "@rove-code/shared/previewViewport";
+} from "@getpaperplane/contracts";
+import { PREVIEW_VIEWPORT_PRESETS } from "@getpaperplane/shared/previewViewport";
 import { MoreVertical, Plus as PlusIcon } from "lucide-react";
 import { useCallback, useRef, useState } from "react";
 
@@ -56,7 +56,7 @@ import { readEnvironmentScope, useEnvironmentScope } from "~/state/session";
 import { useAtomCommand } from "~/state/use-atom-command";
 import { previewEnvironment } from "~/state/preview";
 import { useServerConfigs } from "~/state/entities";
-import { squashAtomCommandFailure } from "@rove-code/client-runtime/state/runtime";
+import { squashAtomCommandFailure } from "@getpaperplane/client-runtime/state/runtime";
 import {
   AgentDeviceSetupStatus,
   DeviceHubSetupStatus,
@@ -580,7 +580,7 @@ function BrowserRecordingFrameRateSetting({ disabled }: { readonly disabled: boo
 
 const LINK_TARGET_LABELS: Readonly<Record<BrowserLinkTarget, string>> = {
   system: "Your default browser",
-  app: "Rove Code",
+  app: "Paperplane",
 };
 
 function BrowserLinkTargetSetting({ disabled }: { readonly disabled: boolean }) {
@@ -632,11 +632,11 @@ function PullRequestLinksOpenInAppSetting() {
   return (
     <SettingsRow
       {...searchableSetting("pull-request-links-open-in-app")}
-      description="Clicking a pull request link opens it in Rove Code. Turn off to open pull request links like any other link, on GitHub or your git host."
+      description="Clicking a pull request link opens it in Paperplane. Turn off to open pull request links like any other link, on GitHub or your git host."
       resetAction={
         openInApp ? null : (
           <SettingResetButton
-            label="open pull requests in Rove Code"
+            label="open pull requests in Paperplane"
             onClick={() => updateSettings({ pullRequestLinksOpenInApp: true })}
           />
         )
@@ -647,7 +647,7 @@ function PullRequestLinksOpenInAppSetting() {
           onCheckedChange={(checked) =>
             updateSettings({ pullRequestLinksOpenInApp: Boolean(checked) })
           }
-          aria-label="Open pull requests in Rove Code"
+          aria-label="Open pull requests in Paperplane"
         />
       }
     />

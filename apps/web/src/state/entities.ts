@@ -3,14 +3,14 @@ import type {
   EnvironmentProject,
   EnvironmentThread,
   EnvironmentThreadShell,
-} from "@rove-code/client-runtime/state/shell";
+} from "@getpaperplane/client-runtime/state/shell";
 import {
   EMPTY_THREAD_HISTORY_META,
   type EnvironmentThreadStatus,
   type ThreadHistoryMeta,
-} from "@rove-code/client-runtime/state/threads";
-import type { ScopedProjectRef, ScopedThreadRef, ServerConfig } from "@rove-code/contracts";
-import type { EnvironmentId, OrchestrationV2ProjectedTurnItem } from "@rove-code/contracts";
+} from "@getpaperplane/client-runtime/state/threads";
+import type { ScopedProjectRef, ScopedThreadRef, ServerConfig } from "@getpaperplane/contracts";
+import type { EnvironmentId, OrchestrationV2ProjectedTurnItem } from "@getpaperplane/contracts";
 import { Atom } from "effect/reactivity";
 import { appAtomRegistry } from "../rpc/atomRegistry";
 import { environmentProjects } from "./projects";

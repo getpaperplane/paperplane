@@ -3,7 +3,7 @@ import * as NodeCrypto from "node:crypto";
 
 import * as NodePlatformCrypto from "@effect/platform-node/NodeCrypto";
 import { assert, it } from "@effect/vitest";
-import { ScheduledTaskUpsertInput, SecretRequestError } from "@rove-code/contracts";
+import { ScheduledTaskUpsertInput, SecretRequestError } from "@getpaperplane/contracts";
 import * as DateTime from "effect/DateTime";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
@@ -114,7 +114,7 @@ it.effect("dispatches exactly the rendered prompt and logs the delivery", () =>
       assert.equal(task.nextRunAt, null);
       assert.isDefined(task.webhook);
       assert.isTrue(task.webhook!.path.startsWith("/api/hooks/scheduled-task%3Ahook/"));
-      // Not linked to Rove Connect in tests.
+      // Not linked to Paperplane Connect in tests.
       assert.equal(task.webhook!.url, null);
 
       const result = yield* service.triggerWebhook(requestFor(task));
@@ -836,13 +836,13 @@ it.effect("a signature without any secret is refused", () =>
 const signatureFor = (secret: string) =>
   `sha256=${NodeCrypto.createHmac("sha256", secret).update(pullRequestBody).digest("hex")}`;
 
-/** Count recorded by `rove_webhook_deliveries_total` for one outcome and source. */
+/** Count recorded by `paperplane_webhook_deliveries_total` for one outcome and source. */
 const deliveriesCounted = (outcome: string, source: "relay" | "direct") =>
   Metric.snapshot.pipe(
     Effect.map((snapshots) => {
       const found = snapshots.find(
         (snapshot) =>
-          snapshot.id === "rove_webhook_deliveries_total" &&
+          snapshot.id === "paperplane_webhook_deliveries_total" &&
           snapshot.attributes?.outcome === outcome &&
           snapshot.attributes?.source === source,
       );

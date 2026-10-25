@@ -1,7 +1,7 @@
 import type {
   LiveVoiceErrorCode,
   LiveVoiceRecognizer,
-} from "@rove-code/client-runtime/voice-input";
+} from "@getpaperplane/client-runtime/voice-input";
 
 // lib.dom does not ship the Web Speech API recognition types.
 type SpeechRecognitionResultLike = {

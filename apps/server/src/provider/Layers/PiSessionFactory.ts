@@ -3,8 +3,8 @@
  *
  * Wires `@earendil-works/pi-coding-agent` per the settled provider design:
  *   - Tools, commands, and hooks load through the SDK. Thread sessions expose
- *     RPC-style dialogs through Rove; terminal rendering remains unavailable.
- *   - Always-trust: project-local resources are trusted, matching Rove Code's
+ *     RPC-style dialogs through Paperplane; terminal rendering remains unavailable.
+ *   - Always-trust: project-local resources are trusted, matching Paperplane's
  *     full-access stance and avoiding silent divergence from terminal `pi`.
  *   - Resume: the cursor holds the session id and absolute file path.
  *     ID-only cursors from older versions use cwd-based lookup.
@@ -52,16 +52,16 @@ import {
   type PiSessionResumeOutcome,
 } from "./PiAdapter.ts";
 
-import type { McpProviderSessionConfig } from "@rove-code/provider-core/server/mcpSession";
-import { createPiRoveTools } from "./PiRoveTools.ts";
+import type { McpProviderSessionConfig } from "@getpaperplane/provider-core/server/mcpSession";
+import { createPiPaperplaneTools } from "./PiPaperplaneTools.ts";
 import type { PiWorkloads } from "./PiWorkloads.ts";
 import { createPiExtensionUI } from "./PiExtensionUI.ts";
 import { disposePiResource } from "./PiLifecycle.ts";
 import {
-  ROVE_CODE_ORCHESTRATION_INSTRUCTIONS,
-  ROVE_CODE_BROWSER_TOOL_INSTRUCTIONS,
-} from "@rove-code/provider-core/server/orchestrationInstructions";
-import { buildRuntimeInstructions } from "@rove-code/provider-core/server/runtimeInstructions";
+  PAPERPLANE_ORCHESTRATION_INSTRUCTIONS,
+  PAPERPLANE_BROWSER_TOOL_INSTRUCTIONS,
+} from "@getpaperplane/provider-core/server/orchestrationInstructions";
+import { buildRuntimeInstructions } from "@getpaperplane/provider-core/server/runtimeInstructions";
 import { readPiSubscriptionStatus } from "../PiUsageLimits.ts";
 import type { UsageLimitStatus } from "../usageLimitStatus.ts";
 import {
@@ -70,7 +70,7 @@ import {
   usageLimitFromHttpError,
 } from "../usageLimitError.ts";
 import * as NodeOS from "node:os";
-import { expandHomePath } from "@rove-code/provider-core/server/pathExpansion";
+import { expandHomePath } from "@getpaperplane/provider-core/server/pathExpansion";
 
 /**
  * Adapt an SDK `AgentSession` to the narrow `PiSessionLike` surface the
@@ -114,14 +114,14 @@ export async function readPiModelUsageLimit(
 }
 
 /**
- * System-prompt note telling the model which Pi extensions Rove blocks in
+ * System-prompt note telling the model which Pi extensions Paperplane blocks in
  * this session. The model otherwise answers "which extensions are loaded"
  * from Pi's settings.json filters and reports extensions that are not
  * actually bound in the session.
  */
 function disabledExtensionsPromptNote(disabled: ReadonlyArray<string>): string {
   return [
-    "Rove Code disables these Pi extensions for this session, so they are NOT loaded:",
+    "Paperplane disables these Pi extensions for this session, so they are NOT loaded:",
     ...disabled.map((path) => `- ${path}`),
     "Every other extension from the user's Pi configuration is loaded normally.",
   ].join("\n");
@@ -142,7 +142,7 @@ function createUsageLimitCapture() {
   let last: ProviderUsageLimit | null = null;
   const now = () => DateTime.formatIso(DateTime.nowUnsafe());
   const extension: InlineExtension = {
-    name: "rove-usage-limit",
+    name: "paperplane-usage-limit",
     hidden: true,
     factory: (pi) => {
       pi.on("provider_stream_event", (event) => {
@@ -183,7 +183,7 @@ async function toPiSessionLike(
   resumeOutcome?: PiSessionResumeOutcome,
   initialStartupErrors: ReadonlyArray<PiSessionEventLike> = [],
   modelFallbackMessage?: string | undefined,
-  disposeRoveTools: () => Promise<void> = async () => {},
+  disposePaperplaneTools: () => Promise<void> = async () => {},
   interactive = false,
   compatibility?: PiUiCompatibility,
   takeStreamUsageLimit: () => ProviderUsageLimit | null = () => null,
@@ -199,7 +199,7 @@ async function toPiSessionLike(
   let settlementPending = false;
   // SDK settlement is emitted from a finally block, before prompt() rejects.
   // Hold it until the Promise outcome is known so a thrown provider/extension
-  // failure cannot first be projected as a successful Rove turn.
+  // failure cannot first be projected as a successful Paperplane turn.
   const unsubscribeSdk = session.subscribe((event) => {
     if (event.type === "agent_settled" && activePrompts > 0) {
       settlementPending = true;
@@ -221,7 +221,7 @@ async function toPiSessionLike(
   const abort = async () => {
     stopped = true;
     extensionUI?.stop();
-    // Pi abort deliberately continues queued messages. Rove Stop must discard
+    // Pi abort deliberately continues queued messages. Paperplane Stop must discard
     // them before aborting, or a queued follow-up can execute more tools.
     session.clearQueue();
     // Pi 1.2 invokes its preflight callback outside _startRun's finally block.
@@ -250,7 +250,7 @@ async function toPiSessionLike(
               disposePiResource(() =>
                 session.extensionRunner.emit({ type: "session_shutdown", reason: "quit" }),
               ),
-              disposePiResource(disposeRoveTools),
+              disposePiResource(disposePaperplaneTools),
             ],
             { concurrency: "unbounded" },
           ),
@@ -268,7 +268,7 @@ async function toPiSessionLike(
 
   const unsupportedSessionControl = async (): Promise<never> => {
     throw new Error(
-      "Pi extension session replacement and reload are not supported in Rove. Use Rove's thread controls.",
+      "Pi extension session replacement and reload are not supported in Paperplane. Use Paperplane's thread controls.",
     );
   };
   let binding: Promise<void> | undefined;
@@ -437,7 +437,7 @@ async function toPiSessionLike(
       if (!session.isIdle) throw new Error("Wait for Pi to finish before rolling back.");
       if (entryId === null) {
         session.sessionManager.resetLeaf();
-        session.sessionManager.appendCustomEntry("rove.rollback", {});
+        session.sessionManager.appendCustomEntry("paperplane.rollback", {});
         session.agent.state.messages = session.sessionManager.buildSessionContext().messages;
         return;
       }
@@ -447,7 +447,7 @@ async function toPiSessionLike(
       }
       // Tree navigation only moves the in-memory leaf. Persist the chosen
       // branch immediately so restarting before the next prompt preserves it.
-      session.sessionManager.appendCustomEntry("rove.rollback", {});
+      session.sessionManager.appendCustomEntry("paperplane.rollback", {});
     },
   };
 }
@@ -568,7 +568,7 @@ interface DefaultResourceLoaderInternalAccess {
 }
 
 /**
- * Rove filters extensions through unexported loader members. A Pi SDK bump that
+ * Paperplane filters extensions through unexported loader members. A Pi SDK bump that
  * renames them would silently stop disabling extensions, so fail loudly instead.
  */
 function getLoaderInternals(loader: DefaultResourceLoader): DefaultResourceLoaderInternalAccess {
@@ -738,7 +738,7 @@ export interface CreatePiSessionServicesOptions {
   readonly extensionFactories?: ReadonlyArray<InlineExtension> | undefined;
   /** Whether the session's MCP credential grants `html_render`. */
   readonly richResponses?: boolean | undefined;
-  /** Replaces Rove's thread runtime instructions. */
+  /** Replaces Paperplane's thread runtime instructions. */
   readonly runtimeInstructions?: string | undefined;
 }
 
@@ -893,7 +893,7 @@ export async function createPiSession(
     );
   }
   if (!outcome.resumed && !options.textGeneration) {
-    // Pi defers persistence until an assistant response. Rove saves a cursor at startup.
+    // Pi defers persistence until an assistant response. Paperplane saves a cursor at startup.
     const sessionFile = sessionManager.getSessionFile()!;
     NodeFS.writeFileSync(sessionFile, `${JSON.stringify(sessionManager.getHeader())}\n`, {
       flag: "wx",
@@ -913,8 +913,8 @@ export async function createPiSession(
   const richResponses = mcpProviderSession !== undefined;
   const runtimeInstructions = [
     buildRuntimeInstructions({ harness: "Pi", richResponses }),
-    ...(mcpProviderSession ? [ROVE_CODE_ORCHESTRATION_INSTRUCTIONS] : []),
-    ...(mcpProviderSession?.browserToolsAvailable ? [ROVE_CODE_BROWSER_TOOL_INSTRUCTIONS] : []),
+    ...(mcpProviderSession ? [PAPERPLANE_ORCHESTRATION_INSTRUCTIONS] : []),
+    ...(mcpProviderSession?.browserToolsAvailable ? [PAPERPLANE_BROWSER_TOOL_INSTRUCTIONS] : []),
   ].join("\n\n");
   let services = await createPiSessionServices({
     cwd,
@@ -1010,20 +1010,23 @@ export async function createPiSession(
       | PiThinkingLevel
       | undefined;
 
-  const roveTools = await createPiRoveTools(mcpProviderSession);
+  const paperplaneTools = await createPiPaperplaneTools(mcpProviderSession);
   const workloadOwner = input.threadId ?? sessionManager.getSessionId();
   const { session, modelFallbackMessage: sdkModelFallbackMessage } =
     await createAgentSessionFromServices({
       services,
       sessionManager,
-      customTools: [...roveTools.tools, ...(options.workloads?.tools(cwd, workloadOwner) ?? [])],
+      customTools: [
+        ...paperplaneTools.tools,
+        ...(options.workloads?.tools(cwd, workloadOwner) ?? []),
+      ],
       ...(options.textGeneration ? { noTools: "all" as const } : {}),
       ...(resolved?.model !== undefined ? { model: resolved.model } : undefined),
       ...(requestedThinkingLevel !== undefined
         ? { thinkingLevel: requestedThinkingLevel }
         : undefined),
     }).catch(async (error: unknown) => {
-      await roveTools.dispose();
+      await paperplaneTools.dispose();
       throw error;
     });
   usageLimits.observe(session.agent);
@@ -1053,7 +1056,7 @@ export async function createPiSession(
     modelFallbackMessage.length > 0 ? modelFallbackMessage : undefined,
     async () => {
       await options.workloads?.disposeOwner(workloadOwner);
-      await roveTools.dispose();
+      await paperplaneTools.dispose();
     },
     input.interactive === true && !options.textGeneration,
     options.compatibility,

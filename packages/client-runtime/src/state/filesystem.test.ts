@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vite-plus/test";
-import { AuthFilesystemReadScope, AuthOrchestrationReadScope } from "@rove-code/contracts";
+import { AuthFilesystemReadScope, AuthOrchestrationReadScope } from "@getpaperplane/contracts";
 
 import {
   canPreloadBrowsePath,
@@ -130,10 +130,10 @@ describe("filesystem read access", () => {
 
 describe("filesystem browse model", () => {
   it("derives the browse target and navigation state", () => {
-    expect(getFilesystemBrowsePath("~/projects/rove")).toEqual({
+    expect(getFilesystemBrowsePath("~/projects/paperplane")).toEqual({
       isBrowsing: true,
       directoryPath: "~/projects/",
-      filterQuery: "rove",
+      filterQuery: "paperplane",
       parentPath: "~/",
       canBrowseUp: true,
     });

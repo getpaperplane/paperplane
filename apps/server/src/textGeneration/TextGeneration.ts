@@ -1,12 +1,12 @@
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import type { ProviderInstanceId } from "@rove-code/contracts";
-import type { ProviderTextGeneration } from "@rove-code/provider-core/server/textGeneration";
-import { TextGenerationError } from "@rove-code/contracts";
+import type { ProviderInstanceId } from "@getpaperplane/contracts";
+import type { ProviderTextGeneration } from "@getpaperplane/provider-core/server/textGeneration";
+import { TextGenerationError } from "@getpaperplane/contracts";
 
 import * as ProviderInstanceRegistry from "../provider/ProviderInstanceRegistry.ts";
-import type { ProviderInstance } from "@rove-code/provider-core/server/driver";
+import type { ProviderInstance } from "@getpaperplane/provider-core/server/driver";
 import * as SourceControlProviderRegistry from "../sourceControl/SourceControlProviderRegistry.ts";
 import * as ThreadTitleLinks from "./ThreadTitleLinks.ts";
 
@@ -21,13 +21,13 @@ export type {
   ReviewGuideGenerationResult,
   ThreadTitleGenerationInput,
   ThreadTitleGenerationResult,
-} from "@rove-code/provider-core/server/textGeneration";
+} from "@getpaperplane/provider-core/server/textGeneration";
 
 /**
  * TextGeneration - Service tag for commit and change request text generation.
  */
 export class TextGeneration extends Context.Service<TextGeneration, ProviderTextGeneration>()(
-  "@rove-code/server/textGeneration/TextGeneration",
+  "@getpaperplane/server/textGeneration/TextGeneration",
 ) {}
 
 type TextGenerationOp =

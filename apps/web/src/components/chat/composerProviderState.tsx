@@ -6,14 +6,14 @@ import {
   type ProviderOptionSelection,
   type ScopedThreadRef,
   type ServerProviderModel,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   buildExplicitProviderOptionSelectionsFromDescriptors,
   getProviderOptionCurrentValue,
   getProviderOptionDescriptors,
   isClaudeUltrathinkPrompt,
   normalizeModelSlug,
-} from "@rove-code/shared/model";
+} from "@getpaperplane/shared/model";
 import type { ReactNode } from "react";
 
 import type { DraftId } from "../../composerDraftStore";
@@ -65,7 +65,7 @@ export function getComposerPromptInjectionState(prompt: string): ComposerPromptI
 }
 
 /**
- * Cursor ACP can report `fastMode: true` as the provider default. Rove only
+ * Cursor ACP can report `fastMode: true` as the provider default. Paperplane only
  * treats Fast as selected when the user chose it (draft/sticky/settings).
  * Otherwise inject an explicit `false` so new chats stay Normal and the
  * send path can overwrite a prior Fast session — descriptor defaults are

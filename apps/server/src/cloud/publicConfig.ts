@@ -2,21 +2,21 @@ import {
   connectLoopbackRedirectUri,
   CONNECT_OAUTH_SCOPES,
   DEFAULT_HOSTED_APP_URL,
-} from "@rove-code/shared/connectAuth";
-import { clerkFrontendApiUrlFromPublishableKey } from "@rove-code/shared/relayAuth";
-import { normalizeSecureRelayUrl } from "@rove-code/shared/relayUrl";
+} from "@getpaperplane/shared/connectAuth";
+import { clerkFrontendApiUrlFromPublishableKey } from "@getpaperplane/shared/relayAuth";
+import { normalizeSecureRelayUrl } from "@getpaperplane/shared/relayUrl";
 import * as Config from "effect/Config";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 import * as SchemaIssue from "effect/SchemaIssue";
 
-declare const __ROVE_BUILD_RELAY_URL__: string | undefined;
-declare const __ROVE_BUILD_CLERK_PUBLISHABLE_KEY__: string | undefined;
-declare const __ROVE_BUILD_CLERK_CLI_OAUTH_CLIENT_ID__: string | undefined;
-declare const __ROVE_BUILD_RELAY_CLIENT_OTLP_TRACES_URL__: string | undefined;
-declare const __ROVE_BUILD_RELAY_CLIENT_OTLP_TRACES_DATASET__: string | undefined;
-declare const __ROVE_BUILD_RELAY_CLIENT_OTLP_TRACES_TOKEN__: string | undefined;
+declare const __PAPERPLANE_BUILD_RELAY_URL__: string | undefined;
+declare const __PAPERPLANE_BUILD_CLERK_PUBLISHABLE_KEY__: string | undefined;
+declare const __PAPERPLANE_BUILD_CLERK_CLI_OAUTH_CLIENT_ID__: string | undefined;
+declare const __PAPERPLANE_BUILD_RELAY_CLIENT_OTLP_TRACES_URL__: string | undefined;
+declare const __PAPERPLANE_BUILD_RELAY_CLIENT_OTLP_TRACES_DATASET__: string | undefined;
+declare const __PAPERPLANE_BUILD_RELAY_CLIENT_OTLP_TRACES_TOKEN__: string | undefined;
 
 const CLOUD_CLI_OAUTH_LOOPBACK_PORT = 34338;
 const CLOUD_CLI_OAUTH_SCOPES = CONNECT_OAUTH_SCOPES;
@@ -50,34 +50,34 @@ function normalizeSecureUrl(value: string): string | null {
 }
 
 const buildTimeRelayUrl =
-  typeof __ROVE_BUILD_RELAY_URL__ === "undefined"
+  typeof __PAPERPLANE_BUILD_RELAY_URL__ === "undefined"
     ? ""
-    : (normalizeSecureRelayUrl(__ROVE_BUILD_RELAY_URL__) ?? "");
+    : (normalizeSecureRelayUrl(__PAPERPLANE_BUILD_RELAY_URL__) ?? "");
 const buildTimeClerkPublishableKey = readBuildTimeValue(
-  typeof __ROVE_BUILD_CLERK_PUBLISHABLE_KEY__ === "undefined"
+  typeof __PAPERPLANE_BUILD_CLERK_PUBLISHABLE_KEY__ === "undefined"
     ? undefined
-    : __ROVE_BUILD_CLERK_PUBLISHABLE_KEY__,
+    : __PAPERPLANE_BUILD_CLERK_PUBLISHABLE_KEY__,
 );
 const buildTimeClerkCliOAuthClientId = readBuildTimeValue(
-  typeof __ROVE_BUILD_CLERK_CLI_OAUTH_CLIENT_ID__ === "undefined"
+  typeof __PAPERPLANE_BUILD_CLERK_CLI_OAUTH_CLIENT_ID__ === "undefined"
     ? undefined
-    : __ROVE_BUILD_CLERK_CLI_OAUTH_CLIENT_ID__,
+    : __PAPERPLANE_BUILD_CLERK_CLI_OAUTH_CLIENT_ID__,
 );
 const buildTimeRelayClientTracing = {
   tracesUrl: readBuildTimeValue(
-    typeof __ROVE_BUILD_RELAY_CLIENT_OTLP_TRACES_URL__ === "undefined"
+    typeof __PAPERPLANE_BUILD_RELAY_CLIENT_OTLP_TRACES_URL__ === "undefined"
       ? undefined
-      : __ROVE_BUILD_RELAY_CLIENT_OTLP_TRACES_URL__,
+      : __PAPERPLANE_BUILD_RELAY_CLIENT_OTLP_TRACES_URL__,
   ),
   tracesDataset: readBuildTimeValue(
-    typeof __ROVE_BUILD_RELAY_CLIENT_OTLP_TRACES_DATASET__ === "undefined"
+    typeof __PAPERPLANE_BUILD_RELAY_CLIENT_OTLP_TRACES_DATASET__ === "undefined"
       ? undefined
-      : __ROVE_BUILD_RELAY_CLIENT_OTLP_TRACES_DATASET__,
+      : __PAPERPLANE_BUILD_RELAY_CLIENT_OTLP_TRACES_DATASET__,
   ),
   tracesToken: readBuildTimeValue(
-    typeof __ROVE_BUILD_RELAY_CLIENT_OTLP_TRACES_TOKEN__ === "undefined"
+    typeof __PAPERPLANE_BUILD_RELAY_CLIENT_OTLP_TRACES_TOKEN__ === "undefined"
       ? undefined
-      : __ROVE_BUILD_RELAY_CLIENT_OTLP_TRACES_TOKEN__,
+      : __PAPERPLANE_BUILD_RELAY_CLIENT_OTLP_TRACES_TOKEN__,
   ),
 } as const;
 
@@ -85,9 +85,10 @@ export function resolveRelayClientTracingConfig(
   env: Readonly<Record<string, string | undefined>> = process.env,
   fallback = buildTimeRelayClientTracing,
 ) {
-  const tracesUrl = env.ROVE_RELAY_CLIENT_OTLP_TRACES_URL?.trim() || fallback.tracesUrl;
-  const tracesDataset = env.ROVE_RELAY_CLIENT_OTLP_TRACES_DATASET?.trim() || fallback.tracesDataset;
-  const tracesToken = env.ROVE_RELAY_CLIENT_OTLP_TRACES_TOKEN?.trim() || fallback.tracesToken;
+  const tracesUrl = env.PAPERPLANE_RELAY_CLIENT_OTLP_TRACES_URL?.trim() || fallback.tracesUrl;
+  const tracesDataset =
+    env.PAPERPLANE_RELAY_CLIENT_OTLP_TRACES_DATASET?.trim() || fallback.tracesDataset;
+  const tracesToken = env.PAPERPLANE_RELAY_CLIENT_OTLP_TRACES_TOKEN?.trim() || fallback.tracesToken;
   const normalizedTracesUrl = normalizeSecureUrl(tracesUrl);
   return normalizedTracesUrl && tracesDataset && tracesToken
     ? { tracesUrl: normalizedTracesUrl, tracesDataset, tracesToken }
@@ -95,7 +96,7 @@ export function resolveRelayClientTracingConfig(
 }
 
 export function makeRelayUrlConfig(fallback = buildTimeRelayUrl) {
-  const runtimeConfig = Config.NonEmptyString("ROVE_RELAY_URL");
+  const runtimeConfig = Config.NonEmptyString("PAPERPLANE_RELAY_URL");
   return (fallback ? runtimeConfig.pipe(Config.withDefault(fallback)) : runtimeConfig).pipe(
     Config.mapEffect(validateRelayUrl),
   );
@@ -109,7 +110,7 @@ export const relayUrlConfig = makeRelayUrlConfig();
  * matching hosted deployment.
  */
 export const hostedAppUrlConfig = makePublicValueConfig(
-  "ROVE_HOSTED_APP_URL",
+  "PAPERPLANE_HOSTED_APP_URL",
   DEFAULT_HOSTED_APP_URL,
 ).pipe(Config.mapEffect(validateHostedAppUrl));
 
@@ -173,11 +174,11 @@ export function makeCloudCliOAuthConfig({
 } = {}) {
   return Config.all({
     clerkPublishableKey: makePublicValueConfig(
-      "ROVE_CLERK_PUBLISHABLE_KEY",
+      "PAPERPLANE_CLERK_PUBLISHABLE_KEY",
       clerkPublishableKeyFallback,
     ),
     clientId: makePublicValueConfig(
-      "ROVE_CLERK_CLI_OAUTH_CLIENT_ID",
+      "PAPERPLANE_CLERK_CLI_OAUTH_CLIENT_ID",
       clerkCliOAuthClientIdFallback,
     ),
   }).pipe(
@@ -211,7 +212,7 @@ export function makeCloudCliOAuthConfig({
 export const cloudCliOAuthConfig = makeCloudCliOAuthConfig();
 
 export const hasCloudPublicConfig = Boolean(
-  (normalizeSecureRelayUrl(process.env.ROVE_RELAY_URL ?? "") ?? buildTimeRelayUrl) &&
-  (process.env.ROVE_CLERK_PUBLISHABLE_KEY?.trim() || buildTimeClerkPublishableKey) &&
-  (process.env.ROVE_CLERK_CLI_OAUTH_CLIENT_ID?.trim() || buildTimeClerkCliOAuthClientId),
+  (normalizeSecureRelayUrl(process.env.PAPERPLANE_RELAY_URL ?? "") ?? buildTimeRelayUrl) &&
+  (process.env.PAPERPLANE_CLERK_PUBLISHABLE_KEY?.trim() || buildTimeClerkPublishableKey) &&
+  (process.env.PAPERPLANE_CLERK_CLI_OAUTH_CLIENT_ID?.trim() || buildTimeClerkCliOAuthClientId),
 );

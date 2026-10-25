@@ -1,5 +1,5 @@
-import { EnvironmentId } from "@rove-code/contracts";
-import { RelayManagedEndpoint } from "@rove-code/contracts/relay";
+import { EnvironmentId } from "@getpaperplane/contracts";
+import { RelayManagedEndpoint } from "@getpaperplane/contracts/relay";
 import * as Context from "effect/Context";
 import type * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -9,7 +9,7 @@ import * as Schema from "effect/Schema";
 import type { ConnectionAttemptError } from "../connection/model.ts";
 
 export class RemoteDpopAccessToken extends Schema.Class<RemoteDpopAccessToken>(
-  "@rove-code/client-runtime/authorization/RemoteDpopAccessToken",
+  "@getpaperplane/client-runtime/authorization/RemoteDpopAccessToken",
 )({
   environmentId: EnvironmentId,
   accountId: Schema.optionalKey(Schema.String),
@@ -29,7 +29,7 @@ export class RemoteDpopAccessTokenStore extends Context.Service<
     readonly put: (token: RemoteDpopAccessToken) => Effect.Effect<void, ConnectionAttemptError>;
     readonly remove: (environmentId: EnvironmentId) => Effect.Effect<void, ConnectionAttemptError>;
   }
->()("@rove-code/client-runtime/authorization/tokenStore/RemoteDpopAccessTokenStore") {}
+>()("@getpaperplane/client-runtime/authorization/tokenStore/RemoteDpopAccessTokenStore") {}
 
 export const make = (service: RemoteDpopAccessTokenStore["Service"]) =>
   RemoteDpopAccessTokenStore.of(service);

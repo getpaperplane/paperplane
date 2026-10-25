@@ -1,4 +1,7 @@
-import type { LiveVoiceRecognizer, VoiceTranscriber } from "@rove-code/client-runtime/voice-input";
+import type {
+  LiveVoiceRecognizer,
+  VoiceTranscriber,
+} from "@getpaperplane/client-runtime/voice-input";
 
 /** Transcribes a finished recording. Only iOS has one. */
 export function getLocalVoiceTranscriber(): VoiceTranscriber | null {

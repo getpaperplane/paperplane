@@ -1,8 +1,8 @@
 import type {
   EnvironmentProject,
   EnvironmentThreadShell,
-} from "@rove-code/client-runtime/state/shell";
-import { EnvironmentId, ThreadId, type SidebarProjectGroupingMode } from "@rove-code/contracts";
+} from "@getpaperplane/client-runtime/state/shell";
+import { EnvironmentId, ThreadId, type SidebarProjectGroupingMode } from "@getpaperplane/contracts";
 import { useAtomValue } from "@effect/atom-react";
 import { useFocusEffect } from "@react-navigation/native";
 import {

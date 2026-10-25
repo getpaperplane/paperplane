@@ -264,7 +264,7 @@ const main = (): void => {
       "Pi is 0.x, so a minor can change SDK payload shapes. Merge only when CI is green;",
       "if typecheck or Pi adapter tests fail, the bump needs adapter edits in the same PR.",
       "",
-      "Includes lockfile refresh and third-party license sync. Generated with Rove Code.",
+      "Includes lockfile refresh and third-party license sync. Generated with Paperplane.",
     ].join("\n"),
   ]);
   // A PR opened with GITHUB_TOKEN triggers no pull_request workflows. A

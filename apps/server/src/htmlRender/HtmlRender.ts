@@ -1,5 +1,5 @@
-import type { ThreadId } from "@rove-code/contracts";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+import type { ThreadId } from "@getpaperplane/contracts";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 import {
   clampHtmlRenderHeight,
   HTML_RENDER_COLUMN_WIDTH,
@@ -10,12 +10,12 @@ import {
   htmlRenderThemeFragment,
   injectHtmlRenderBootstrap,
   type HtmlRenderReference,
-} from "@rove-code/shared/htmlRender";
+} from "@getpaperplane/shared/htmlRender";
 import {
-  ROVE_CODE_DARK_THEME_COLORS,
-  ROVE_CODE_LIGHT_THEME_COLORS,
+  PAPERPLANE_CODE_DARK_THEME_COLORS,
+  PAPERPLANE_CODE_LIGHT_THEME_COLORS,
   type ThemeAppearance,
-} from "@rove-code/shared/themePalettes";
+} from "@getpaperplane/shared/themePalettes";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -124,7 +124,7 @@ export class HtmlRender extends Context.Service<
       | HeadlessChrome.HtmlRenderBrowserError
     >;
   }
->()("@rove-code/server/htmlRender/HtmlRender") {}
+>()("@getpaperplane/server/htmlRender/HtmlRender") {}
 
 const IMAGE_MIME_TYPES: Record<string, string> = {
   png: "image/png",
@@ -328,7 +328,7 @@ const MEASURE_TIMEOUT = "6 seconds";
 
 // Measured in the dark theme with Arial-metric fonts, so text wraps close to how clients show it.
 const MEASURE_FRAGMENT = htmlRenderThemeFragment(
-  htmlRenderTheme(ROVE_CODE_DARK_THEME_COLORS, "dark", HTML_RENDER_MEASURE_FONTS),
+  htmlRenderTheme(PAPERPLANE_CODE_DARK_THEME_COLORS, "dark", HTML_RENDER_MEASURE_FONTS),
 );
 
 const make = Effect.gen(function* () {
@@ -461,7 +461,9 @@ const make = Effect.gen(function* () {
     const inlined = yield* inline(input.html);
     const executable = yield* previewBrowser.executable;
     const theme = htmlRenderTheme(
-      appearance === "light" ? ROVE_CODE_LIGHT_THEME_COLORS : ROVE_CODE_DARK_THEME_COLORS,
+      appearance === "light"
+        ? PAPERPLANE_CODE_LIGHT_THEME_COLORS
+        : PAPERPLANE_CODE_DARK_THEME_COLORS,
       appearance,
       HTML_RENDER_MEASURE_FONTS,
     );

@@ -1,4 +1,4 @@
-import type { ConfirmDialogOptions, ContextMenuItem, LocalApi } from "@rove-code/contracts";
+import type { ConfirmDialogOptions, ContextMenuItem, LocalApi } from "@getpaperplane/contracts";
 
 import { requestConfirmDialog } from "./confirmDialog";
 import { dismissContextMenu, showContextMenuFallback } from "./contextMenuFallback";

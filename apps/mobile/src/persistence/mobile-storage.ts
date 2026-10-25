@@ -1,4 +1,4 @@
-import { EnvironmentId } from "@rove-code/contracts";
+import { EnvironmentId } from "@getpaperplane/contracts";
 import * as Arr from "effect/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -13,13 +13,11 @@ import {
 } from "../lib/connection";
 import * as MobileSecureStorage from "./mobile-secure-storage";
 import * as RuntimePredicate from "effect/Predicate";
-import { migrateRoveSavedState } from "@rove-code/shared/roveMigration";
 
-const decodeMigrationJson = Schema.decodeUnknownSync(Schema.Json);
-const CONNECTIONS_KEY = "rove.connections";
-const AGENT_AWARENESS_DEVICE_ID_KEY = "rove.agent-awareness.device-id";
-const AGENT_AWARENESS_REGISTRATION_KEY = "rove.agent-awareness.registration";
-const RECENT_THREAD_SHORTCUTS_KEY = "rove.recent-thread-shortcuts";
+const CONNECTIONS_KEY = "paperplane.connections";
+const AGENT_AWARENESS_DEVICE_ID_KEY = "paperplane.agent-awareness.device-id";
+const AGENT_AWARENESS_REGISTRATION_KEY = "paperplane.agent-awareness.registration";
+const RECENT_THREAD_SHORTCUTS_KEY = "paperplane.recent-thread-shortcuts";
 
 export class MobileStorageDecodeError extends Schema.TaggedError<MobileStorageDecodeError>()(
   "MobileStorageDecodeError",
@@ -118,7 +116,7 @@ export class MobileStorage extends Context.Service<
       MobileSecureStorage.MobileSecureStorageError | MobileStorageEncodeError
     >;
   }
->()("@rove-code/mobile/persistence/MobileStorage") {}
+>()("@getpaperplane/mobile/persistence/MobileStorage") {}
 
 export const make = Effect.fn("MobileStorage.make")(function* () {
   const secureStorage = yield* MobileSecureStorage.MobileSecureStorage;
@@ -127,7 +125,7 @@ export const make = Effect.fn("MobileStorage.make")(function* () {
     if (!raw.trim()) return null;
     try {
       // SAFETY: The surrounding adapter boundary establishes the asserted runtime contract.
-      return migrateRoveSavedState(decodeMigrationJson(JSON.parse(raw))) as A;
+      return JSON.parse(raw) as A;
     } catch (cause) {
       console.warn(
         "[mobile-storage] ignored invalid JSON",

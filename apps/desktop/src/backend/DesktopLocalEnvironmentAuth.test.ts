@@ -7,11 +7,11 @@ import * as Ref from "effect/Ref";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientRequest from "effect/http/HttpClientRequest";
 import * as HttpClientResponse from "effect/http/HttpClientResponse";
-import { PRIMARY_LOCAL_ENVIRONMENT_ID } from "@rove-code/contracts";
+import { PRIMARY_LOCAL_ENVIRONMENT_ID } from "@getpaperplane/contracts";
 import {
   DESKTOP_BOOTSTRAP_TOKEN_WINDOW_MS,
   currentDesktopBootstrapToken,
-} from "@rove-code/shared/desktopBootstrapToken";
+} from "@getpaperplane/shared/desktopBootstrapToken";
 import * as TestClock from "effect/testing/TestClock";
 
 import * as DesktopBackendPool from "./DesktopBackendPool.ts";
@@ -26,7 +26,7 @@ const config = {
     mode: "desktop",
     noBrowser: true,
     port: 3773,
-    roveHome: "/tmp/rove",
+    paperplaneHome: "/tmp/paperplane",
     host: "127.0.0.1",
     desktopBootstrapToken: "desktop-bootstrap-token",
     tailscaleServeEnabled: false,

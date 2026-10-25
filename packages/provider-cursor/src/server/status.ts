@@ -5,9 +5,9 @@ import type {
   ServerProviderAuth,
   ServerProviderModel,
   ServerProviderState,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import type { CursorSettings } from "../settings.ts";
-import { createModelCapabilities } from "@rove-code/shared/model";
+import { createModelCapabilities } from "@getpaperplane/shared/model";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
@@ -20,7 +20,7 @@ import {
   buildServerProvider,
   providerModelsFromSettings,
   type ServerProviderDraft,
-} from "@rove-code/provider-core/server/snapshotProbe";
+} from "@getpaperplane/provider-core/server/snapshotProbe";
 import * as CursorSdkCatalog from "./CursorSdkCatalog.ts";
 
 const CURSOR_PRESENTATION = {
@@ -52,7 +52,7 @@ export function buildInitialCursorProviderSnapshot(
           version: null,
           status: "warning",
           auth: { status: "unknown" },
-          message: "Cursor is disabled in Rove Code settings.",
+          message: "Cursor is disabled in Paperplane settings.",
         },
       });
     }
@@ -265,7 +265,7 @@ export const checkCursorProviderStatus = Effect.fn("checkCursorProviderStatus")(
         version: null,
         status: "warning",
         auth: { status: "unknown" },
-        message: "Cursor is disabled in Rove Code settings.",
+        message: "Cursor is disabled in Paperplane settings.",
       },
     });
   }

@@ -303,7 +303,7 @@
   "src/provider/Layers/PiExtensionUI.test.ts": 1.3,
   "src/provider/Layers/PiProvider.test.ts": 0.9,
   "src/provider/Layers/PiResourceLoader.test.ts": 0.8,
-  "src/provider/Layers/PiRoveTools.test.ts": 0.5,
+  "src/provider/Layers/PiPaperplaneTools.test.ts": 0.5,
   "src/provider/Layers/PiRuntimeProcess.test.ts": 38.7,
   "src/provider/Layers/PiSessionFactory.bundle.test.ts": 7,
   "src/provider/Layers/PiSessionFactory.test.ts": 4.4,

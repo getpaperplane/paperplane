@@ -1,4 +1,4 @@
-import { EnvironmentId, ThreadId } from "@rove-code/contracts";
+import { EnvironmentId, ThreadId } from "@getpaperplane/contracts";
 import { describe, expect, it } from "vite-plus/test";
 
 import { resolveMarkdownMediaPreview } from "./markdownMedia";
@@ -61,9 +61,9 @@ describe("resolveMarkdownMediaPreview", () => {
     });
   });
 
-  it("serves a linked Rove attachment file in place like any other host path", () => {
+  it("serves a linked Paperplane attachment file in place like any other host path", () => {
     const path =
-      "/home/demo/.rove/userdata/attachments/11111111-1111-4111-8111-111111111111-mp4.mp4";
+      "/home/demo/.paperplane/userdata/attachments/11111111-1111-4111-8111-111111111111-mp4.mp4";
     expect(resolveMarkdownMediaPreview(path, input)).toMatchObject({
       kind: "video",
       source: {

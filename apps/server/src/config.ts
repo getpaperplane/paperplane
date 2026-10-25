@@ -17,8 +17,8 @@ import type * as Redacted from "effect/Redacted";
 import * as Schema from "effect/Schema";
 
 import { sweepStalePendingAttachments } from "./attachmentStore.ts";
-import { DEFAULT_SIGNAL_EXPORT, type SignalExport } from "@rove-code/shared/observability";
-import * as OtelEnvironment from "@rove-code/shared/otelEnvironment";
+import { DEFAULT_SIGNAL_EXPORT, type SignalExport } from "@getpaperplane/shared/observability";
+import * as OtelEnvironment from "@getpaperplane/shared/otelEnvironment";
 import packageJson from "../package.json" with { type: "json" };
 
 export const DEFAULT_PORT = 3773;
@@ -107,7 +107,7 @@ export class ServerConfig extends Context.Service<
     readonly tailscaleServeEnabled: boolean;
     readonly tailscaleServePort: number;
   }
->()("@rove-code/server/config/ServerConfig") {
+>()("@getpaperplane/server/config/ServerConfig") {
   /** @deprecated Import and use `layerTest` from this module. */
   static readonly layerTest = (
     cwd: string,
@@ -127,11 +127,11 @@ export const otlpResource = (
   config: Pick<ServerConfig["Service"], "mode" | "otelEnvironment">,
   hostName: string,
 ) => ({
-  serviceName: "rove-server",
+  serviceName: "paperplane-server",
   serviceVersion: packageJson.version,
   attributes: {
-    "service.namespace": "rove",
-    "service.runtime": "rove-server",
+    "service.namespace": "paperplane",
+    "service.runtime": "paperplane-server",
     "service.mode": config.mode,
     "host.name": config.otelEnvironment.resourceAttributes["host.name"] || hostName,
   },

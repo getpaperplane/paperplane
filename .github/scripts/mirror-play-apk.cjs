@@ -164,7 +164,7 @@ async function main() {
     return;
   }
   const safeName = build.versionName.replace(/[^0-9A-Za-z.]+/g, "-").replace(/^-|-$/g, "");
-  const apkName = `rove-android-${channel}-${safeName}-${build.versionCode}.apk`;
+  const apkName = `paperplane-android-${channel}-${safeName}-${build.versionCode}.apk`;
   const tag = outputDirectory ? undefined : requireEnv("RELEASE_TAG");
   const snapshotTag = `android-beta-${build.versionCode}`;
   const release = tag ? readRelease(tag) : undefined;
@@ -206,7 +206,7 @@ async function main() {
       return;
     }
     const notes = [
-      `Rove Code for Android beta, mirrored from Google Play closed testing. Build: ${build.versionName} (${build.versionCode}).`,
+      `Paperplane for Android beta, mirrored from Google Play closed testing. Build: ${build.versionName} (${build.versionCode}).`,
       "",
       "These builds have been promoted for wider testing, but may still contain bugs. The beta is optional; the store app also works with Nightly servers.",
     ].join("\n");
@@ -218,7 +218,7 @@ async function main() {
       notes,
       `Android beta ${build.versionName} (${build.versionCode})`,
     );
-    publishBeta(tag, apkPath, notes, "Rove Code for Android (beta)");
+    publishBeta(tag, apkPath, notes, "Paperplane for Android (beta)");
     pruneBetaAssets();
   } finally {
     fs.rmSync(path.dirname(apkPath), { recursive: true, force: true });

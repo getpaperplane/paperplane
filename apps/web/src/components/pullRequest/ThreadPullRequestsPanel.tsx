@@ -1,12 +1,12 @@
-import type { ProjectId, ScopedThreadRef, ThreadPullRequestLink } from "@rove-code/contracts";
+import type { ProjectId, ScopedThreadRef, ThreadPullRequestLink } from "@getpaperplane/contracts";
 import {
   sourceControlClients,
   UNKNOWN_SOURCE_CONTROL_CLIENT,
-} from "@rove-code/client-runtime/source-control-clients";
+} from "@getpaperplane/client-runtime/source-control-clients";
 import {
   resolveThreadPullRequestChains,
   visibleThreadPullRequests,
-} from "@rove-code/shared/threadPullRequests";
+} from "@getpaperplane/shared/threadPullRequests";
 import {
   ArrowUpRightIcon,
   EyeIcon,

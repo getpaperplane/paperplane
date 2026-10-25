@@ -1,6 +1,6 @@
 import { expect, it } from "@effect/vitest";
 import * as NodeServices from "@effect/platform-node/NodeServices";
-import { Environment as HostProcessEnvironment } from "@rove-code/shared/HostProcess";
+import { Environment as HostProcessEnvironment } from "@getpaperplane/shared/HostProcess";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
@@ -53,7 +53,7 @@ const withRuntime = <A, E>(
 ) =>
   Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem;
-    const directory = yield* fs.makeTempDirectoryScoped({ prefix: "rove-desktop-test-" });
+    const directory = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-desktop-test-" });
     const executable = `${directory}/cua-driver`;
     yield* fs.writeFileString(executable, "fake executable");
     const runs: Array<ReadonlyArray<string>> = [];
@@ -197,7 +197,7 @@ it.effect("cleans partial creation but refuses to delete a desktop with differen
       const record = containers.get(name);
       expect(record).toBeDefined();
       if (!record) return;
-      record.Config.Labels["io.rove.cua.owner"] = "another-server";
+      record.Config.Labels["io.paperplane.cua.owner"] = "another-server";
       expect((yield* runtime.close("thread:a").pipe(Effect.flip)).detail).toContain("ownership");
       expect(containers.size).toBe(1);
       expect(
@@ -215,7 +215,7 @@ it.effect("reconciles dead boot owners but preserves live servers and unknown ow
       if (!record) return;
       const deadLabels = {
         ...record.Config.Labels,
-        "io.rove.cua.server": encodeJson({
+        "io.paperplane.cua.server": encodeJson({
           pid: 1,
           start: "1",
           boot: "previous-boot",
@@ -229,10 +229,10 @@ it.effect("reconciles dead boot owners but preserves live servers and unknown ow
       });
       containers.set("unknown", {
         Id: "unknown",
-        Config: { Labels: { "io.rove.cua.server": "not json" } },
+        Config: { Labels: { "io.paperplane.cua.server": "not json" } },
         State: { Running: true },
       });
-      const identity = decodeProcessIdentity(record.Config.Labels["io.rove.cua.server"]);
+      const identity = decodeProcessIdentity(record.Config.Labels["io.paperplane.cua.server"]);
       for (const [id, override] of [
         ["reused-pid", { start: "0" }],
         ["missing-pid", { pid: 2147483647 }],
@@ -243,7 +243,7 @@ it.effect("reconciles dead boot owners but preserves live servers and unknown ow
           Config: {
             Labels: {
               ...record.Config.Labels,
-              "io.rove.cua.server": encodeJson({ ...identity, ...override }),
+              "io.paperplane.cua.server": encodeJson({ ...identity, ...override }),
             },
           },
           State: { Running: true },
@@ -373,7 +373,7 @@ it.effect("rechecks container ownership and running state before opening a viewe
         yield* pull;
         const name = yield* runtime.connect("thread:one", executable, launch);
         const id = (yield* pull)[0]!.desktops[0]!.id;
-        containers.get(name)!.Config.Labels["io.rove.cua.owner"] = "another-server";
+        containers.get(name)!.Config.Labels["io.paperplane.cua.owner"] = "another-server";
         expect(yield* registry.viewer(id).pipe(Effect.flip)).toMatchObject({
           _tag: "ComputerDesktopViewerError",
           desktopId: id,

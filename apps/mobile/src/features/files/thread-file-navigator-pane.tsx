@@ -1,6 +1,6 @@
-import { resolveFilesystemReadAccess } from "@rove-code/client-runtime/state/filesystem";
+import { resolveFilesystemReadAccess } from "@getpaperplane/client-runtime/state/filesystem";
 import { environmentSession } from "../../state/session";
-import type { EnvironmentId } from "@rove-code/contracts";
+import type { EnvironmentId } from "@getpaperplane/contracts";
 import { SymbolView } from "../../components/ui/AppSymbol";
 import { ScreenContent } from "../../components/ui/ScreenContent";
 import { useCallback, useMemo, useState, type ComponentProps } from "react";
@@ -181,7 +181,7 @@ export function ThreadFileNavigatorPane(props: {
         ) : (
           <View className="h-12 flex-row items-center gap-2 px-3">
             <View className="min-w-0 flex-1">
-              <Text className="text-sm font-rove-bold text-foreground">Files</Text>
+              <Text className="text-sm font-paperplane-bold text-foreground">Files</Text>
               <Text className="text-xs text-foreground-muted" numberOfLines={1}>
                 {props.projectName}
               </Text>

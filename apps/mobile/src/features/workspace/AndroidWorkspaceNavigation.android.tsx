@@ -31,7 +31,7 @@ interface NativeNavigationProps extends ViewProps {
   readonly onTabSelected: (event: NativeSyntheticEvent<{ readonly tab: WorkspaceTab }>) => void;
 }
 
-const NativeNavigation = requireNativeView<NativeNavigationProps>("RoveWorkspaceNavigation");
+const NativeNavigation = requireNativeView<NativeNavigationProps>("PaperplaneWorkspaceNavigation");
 
 function nativeColor(value: string) {
   const color = processColor(value);

@@ -1,4 +1,4 @@
-import { ThreadId } from "@rove-code/contracts";
+import { ThreadId } from "@getpaperplane/contracts";
 import { describe, expect, it } from "vite-plus/test";
 
 import { resolveMediaSource } from "./mediaSource.ts";
@@ -41,7 +41,7 @@ describe("resolveMediaSource", () => {
       });
     });
 
-    it.each(["data:image/png;base64,AAAA", "blob:https://app.rove.codes/id"])(
+    it.each(["data:image/png;base64,AAAA", "blob:https://app.paperplane.codes/id"])(
       "loads %s directly",
       (href) => {
         expect(resolveMediaSource(href, { threadId, imageEmbed: true })).toMatchObject({
@@ -130,8 +130,8 @@ describe("resolveMediaSource", () => {
     );
   });
 
-  it("serves Rove attachment files in place like any other host path", () => {
-    const path = `/home/demo/.rove/userdata/attachments/${attachmentId}.mp4`;
+  it("serves Paperplane attachment files in place like any other host path", () => {
+    const path = `/home/demo/.paperplane/userdata/attachments/${attachmentId}.mp4`;
     expect(resolveMediaSource(path, { threadId, workspaceRoot: "/repo" })).toMatchObject({
       kind: "video",
       access: "environment",

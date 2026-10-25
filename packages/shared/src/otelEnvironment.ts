@@ -3,8 +3,8 @@
  * shared by the server and the desktop main process so both agree on what
  * turns export off and where it goes.
  *
- * `ROVE_OTEL_SDK_DISABLED` is read first, so a machine that sets
- * `OTEL_SDK_DISABLED` for everything else can still opt Rove Code back in.
+ * `PAPERPLANE_OTEL_SDK_DISABLED` is read first, so a machine that sets
+ * `OTEL_SDK_DISABLED` for everything else can still opt Paperplane back in.
  *
  * @module otelEnvironment
  */
@@ -18,7 +18,7 @@ import * as SchemaTransformation from "effect/SchemaTransformation";
 
 import { OtlpHeadersFromString, OtlpProtocol, type SignalExport } from "./observability.ts";
 
-/** The signals Rove Code exports, spelled as the variable names spell them. */
+/** The signals Paperplane exports, spelled as the variable names spell them. */
 type OtlpSignalName = "TRACES" | "METRICS" | "LOGS";
 
 /**
@@ -100,8 +100,8 @@ const flag = (
   );
 
 // `Config.Boolean`'s literals, which effect does not export on their own.
-const ROVE_TRUE = ["true", "yes", "on", "1", "y"];
-const ROVE_FALSE = ["false", "no", "off", "0", "n"];
+const PAPERPLANE_TRUE = ["true", "yes", "on", "1", "y"];
+const PAPERPLANE_FALSE = ["false", "no", "off", "0", "n"];
 
 const RESOURCE_ATTRIBUTES = "OTEL_RESOURCE_ATTRIBUTES";
 
@@ -190,7 +190,7 @@ const isExporter = (entry: string): entry is Exporter => EXPORTERS.has(entry);
 
 /**
  * `OTEL_<SIGNAL>_EXPORTER`, a case-insensitive list whose default is `otlp`.
- * Entries Rove Code has no exporter for are named in a warning and dropped, and
+ * Entries Paperplane has no exporter for are named in a warning and dropped, and
  * a list left with nothing to honor reads as unset, as the specification asks
  * of any enum value an implementation does not recognize.
  */
@@ -209,7 +209,7 @@ const exporter = (name: string): Config.Config<Setting<Exporter>> =>
         ? { value }
         : {
             value,
-            warning: `${name} names ${ignored.join(", ")}, which Rove Code does not export to, so ${ignored.length === 1 ? "it was" : "they were"} ignored`,
+            warning: `${name} names ${ignored.join(", ")}, which Paperplane does not export to, so ${ignored.length === 1 ? "it was" : "they were"} ignored`,
           };
     }),
   );
@@ -291,11 +291,11 @@ const endpointSignal = (name: OtlpSignalName, own: Settings, generic: Settings):
 };
 
 export const load: Effect.Effect<OtelEnvironment> = Config.all({
-  rove: flag(
-    "ROVE_OTEL_SDK_DISABLED",
-    ROVE_TRUE,
-    ROVE_FALSE,
-    (value) => `ROVE_OTEL_SDK_DISABLED=${value} is not a yes or a no and was ignored`,
+  paperplane: flag(
+    "PAPERPLANE_OTEL_SDK_DISABLED",
+    PAPERPLANE_TRUE,
+    PAPERPLANE_FALSE,
+    (value) => `PAPERPLANE_OTEL_SDK_DISABLED=${value} is not a yes or a no and was ignored`,
   ),
   // The specification: a boolean it defines is true "only by the
   // case-insensitive string `true`", implementations "MUST NOT" accept other
@@ -305,7 +305,7 @@ export const load: Effect.Effect<OtelEnvironment> = Config.all({
     ["true"],
     ["false"],
     (value) =>
-      `OTEL_SDK_DISABLED=${value} was read as false; the OpenTelemetry specification recognizes only the string true, so use OTEL_SDK_DISABLED=true or ROVE_OTEL_SDK_DISABLED to say it any other way`,
+      `OTEL_SDK_DISABLED=${value} was read as false; the OpenTelemetry specification recognizes only the string true, so use OTEL_SDK_DISABLED=true or PAPERPLANE_OTEL_SDK_DISABLED to say it any other way`,
   ),
   resource: resourceAttributes,
   generic: settings("OTEL_EXPORTER_OTLP_"),
@@ -318,8 +318,8 @@ export const load: Effect.Effect<OtelEnvironment> = Config.all({
     logs: exporter("OTEL_LOGS_EXPORTER"),
   }),
 }).pipe(
-  Effect.map(({ rove, spec, resource, generic, exporters, ...own }) => {
-    const disabled = rove.value ?? spec.value ?? false;
+  Effect.map(({ paperplane, spec, resource, generic, exporters, ...own }) => {
+    const disabled = paperplane.value ?? spec.value ?? false;
     // The kill switch wins outright, so the signals say nothing once it is set.
     const signals = disabled
       ? undefined
@@ -333,16 +333,16 @@ export const load: Effect.Effect<OtelEnvironment> = Config.all({
       signals === undefined ? [] : Object.values(signals).flatMap((resolved) => resolved.used),
     );
     const warnings = [
-      rove.warning,
+      paperplane.warning,
       spec.warning,
       resource.warning,
       ...Array.from(used, (setting) => setting.warning),
     ].filter((warning) => warning !== undefined);
     if (disabled) {
       warnings.push(
-        rove.value
-          ? "ROVE_OTEL_SDK_DISABLED is set, so no telemetry is exported, whatever configured it"
-          : "OTEL_SDK_DISABLED is set, so no telemetry is exported, whatever configured it; set ROVE_OTEL_SDK_DISABLED=false to export anyway",
+        paperplane.value
+          ? "PAPERPLANE_OTEL_SDK_DISABLED is set, so no telemetry is exported, whatever configured it"
+          : "OTEL_SDK_DISABLED is set, so no telemetry is exported, whatever configured it; set PAPERPLANE_OTEL_SDK_DISABLED=false to export anyway",
       );
     }
     return {
@@ -366,33 +366,33 @@ export interface SignalEndpoint {
 }
 
 /**
- * Where one signal exports and how. `ROVE_OTLP_*_URL` wins outright with
- * Rove Code's own export, then an OTEL endpoint with its own headers and
- * protocol, since `ROVE_OTLP_HEADERS` was written for a different
- * collector, then the first of `fallbackUrls` with Rove Code's own export.
+ * Where one signal exports and how. `PAPERPLANE_OTLP_*_URL` wins outright with
+ * Paperplane's own export, then an OTEL endpoint with its own headers and
+ * protocol, since `PAPERPLANE_OTLP_HEADERS` was written for a different
+ * collector, then the first of `fallbackUrls` with Paperplane's own export.
  */
 export const resolveSignalEndpoint = (
   otel: OtelEnvironment,
   signal: SignalName,
-  rove: { readonly url: string | undefined; readonly export: SignalExport },
+  paperplane: { readonly url: string | undefined; readonly export: SignalExport },
   ...fallbackUrls: ReadonlyArray<string | undefined>
 ): SignalEndpoint | undefined => {
   if (otel.disabled) {
     return undefined;
   }
-  const roveUrl = blankAsUnset(rove.url);
-  if (roveUrl !== undefined) {
-    return { url: roveUrl, export: rove.export };
+  const paperplaneUrl = blankAsUnset(paperplane.url);
+  if (paperplaneUrl !== undefined) {
+    return { url: paperplaneUrl, export: paperplane.export };
   }
   return OtelSignal.$match(otel[signal], {
     Export: ({ url, protocol, headers }): SignalEndpoint => ({
       url,
-      export: { protocol, headers, exportIntervalMs: rove.export.exportIntervalMs },
+      export: { protocol, headers, exportIntervalMs: paperplane.export.exportIntervalMs },
     }),
     Off: () => undefined,
     Unset: () => {
       const url = fallbackUrls.map(blankAsUnset).find((candidate) => candidate !== undefined);
-      return url === undefined ? undefined : { url, export: rove.export };
+      return url === undefined ? undefined : { url, export: paperplane.export };
     },
   });
 };

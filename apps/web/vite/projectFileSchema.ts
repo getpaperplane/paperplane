@@ -1,13 +1,13 @@
 import type { Plugin } from "vite-plus";
-import { buildRoveProjectFileJsonSchema } from "@rove-code/shared/roveProjectFile";
+import { buildPaperplaneProjectFileJsonSchema } from "@getpaperplane/shared/paperplaneProjectFile";
 
 export function projectFileSchemaPlugin(): Plugin {
-  const source = `${JSON.stringify(buildRoveProjectFileJsonSchema(), null, 2)}\n`;
+  const source = `${JSON.stringify(buildPaperplaneProjectFileJsonSchema(), null, 2)}\n`;
   return {
-    name: "rove-project-file-schema",
+    name: "paperplane-project-file-schema",
     configureServer(server) {
       server.middlewares.use((request, response, next) => {
-        if (request.method !== "GET" || request.url?.split("?")[0] !== "/schema/rove.json") {
+        if (request.method !== "GET" || request.url?.split("?")[0] !== "/schema/paperplane.json") {
           next();
           return;
         }
@@ -16,7 +16,7 @@ export function projectFileSchemaPlugin(): Plugin {
       });
     },
     generateBundle() {
-      this.emitFile({ type: "asset", fileName: "schema/rove.json", source });
+      this.emitFile({ type: "asset", fileName: "schema/paperplane.json", source });
     },
   };
 }

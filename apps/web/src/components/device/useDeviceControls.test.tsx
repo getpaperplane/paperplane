@@ -1,5 +1,5 @@
-import { EnvironmentId, type DeviceDetail, type DeviceSummary } from "@rove-code/contracts";
-import type { DeviceHubAccess } from "@rove-code/client-runtime/device/hub-access";
+import { EnvironmentId, type DeviceDetail, type DeviceSummary } from "@getpaperplane/contracts";
+import type { DeviceHubAccess } from "@getpaperplane/client-runtime/device/hub-access";
 import { act, useEffect } from "react";
 import { create, type ReactTestRenderer } from "react-test-renderer";
 import { afterEach, beforeEach, expect, it, vi } from "vite-plus/test";

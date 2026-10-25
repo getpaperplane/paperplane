@@ -8,16 +8,16 @@ import {
   type ProjectScopedServerSettingKey,
   type ProjectSettingsOverrides,
   ServerSettings,
-  type RoveProjectFile,
+  type PaperplaneProjectFile,
   type ServerSettingsPatch,
-} from "@rove-code/contracts";
-import type { EnvironmentConnectionPhase } from "@rove-code/client-runtime/connection";
+} from "@getpaperplane/contracts";
+import type { EnvironmentConnectionPhase } from "@getpaperplane/client-runtime/connection";
 import {
   clearProjectSettingsOverrides,
   resolveProjectSettings,
   resolveWorktreeCleanup,
   type ProjectSettingSource,
-} from "@rove-code/shared/projectSettings";
+} from "@getpaperplane/shared/projectSettings";
 import * as Equal from "effect/Equal";
 import * as Cause from "effect/Cause";
 
@@ -88,9 +88,9 @@ export interface ScopedSettingsTarget {
 export function resolveScopedSettingsTargets(
   scope: ResolvedSettingsScope,
   connectedEnvironments: readonly ScopedSettingsEnvironment[],
-  // Each member's decoded rove.json, keyed by physical project key, once read.
+  // Each member's decoded paperplane.json, keyed by physical project key, once read.
   // A member absent here has no file tier yet; null is a missing or invalid file.
-  projectFiles?: ReadonlyMap<string, RoveProjectFile | null>,
+  projectFiles?: ReadonlyMap<string, PaperplaneProjectFile | null>,
 ): readonly ScopedSettingsTarget[] {
   const byId = new Map(
     connectedEnvironments.map((environment) => [environment.environmentId, environment]),
@@ -157,8 +157,8 @@ export function scopedSettingsSource(
     ? "mixed"
     : sources.has("project")
       ? "project"
-      : sources.has("rove.json")
-        ? "rove.json"
+      : sources.has("paperplane.json")
+        ? "paperplane.json"
         : "environment";
 }
 
@@ -475,7 +475,7 @@ export async function persistScopedSettingsPatch(
       return [
         {
           ...environment,
-          message: "This environment does not support this setting. Update Rove Code on it.",
+          message: "This environment does not support this setting. Update Paperplane on it.",
         },
       ];
     }

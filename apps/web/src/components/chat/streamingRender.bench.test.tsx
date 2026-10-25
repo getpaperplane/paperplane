@@ -1,11 +1,11 @@
 // @vitest-environment jsdom
 
 // Streaming render benchmark. Opt-in because it is slow and prints a report:
-//   ROVE_STREAMING_BENCH=1 vp test run src/components/chat/streamingRender.bench.test.tsx
+//   PAPERPLANE_STREAMING_BENCH=1 vp test run src/components/chat/streamingRender.bench.test.tsx
 // It mounts the real ChatMarkdown inside a React Profiler and streams a reply in
 // 500 deltas, counting commits, render time, and Markdown parse work.
 
-import { EnvironmentId, type AuthEnvironmentScope } from "@rove-code/contracts";
+import { EnvironmentId, type AuthEnvironmentScope } from "@getpaperplane/contracts";
 import { act, Profiler, type ComponentProps, type ReactNode } from "react";
 import { createRoot } from "react-dom/client";
 import { unified } from "unified";
@@ -44,7 +44,7 @@ vi.mock("../../state/use-atom-query-runner", () => ({ useAtomQueryRunner: () => 
 vi.mock("../../state/use-atom-command", () => ({ useAtomCommand: () => vi.fn() }));
 vi.mock("../../state/session", async (importOriginal) => {
   const actual = await importOriginal<typeof import("../../state/session")>();
-  const { AuthStandardClientScopes } = await import("@rove-code/contracts");
+  const { AuthStandardClientScopes } = await import("@getpaperplane/contracts");
   const grantedScopes = new Set<AuthEnvironmentScope>(AuthStandardClientScopes);
   const hasScope = (environmentId: EnvironmentId | null, scope: AuthEnvironmentScope) =>
     environmentId !== null && grantedScopes.has(scope);
@@ -74,7 +74,7 @@ vi.mock("~/lib/openPullRequestLink", () => ({
   useOpenChangeRequestLink: () => vi.fn(),
 }));
 
-import { derivePendingThreadRequests } from "@rove-code/client-runtime/state/thread-requests";
+import { derivePendingThreadRequests } from "@getpaperplane/client-runtime/state/thread-requests";
 import { memo, useMemo } from "react";
 import * as DateTime from "effect/DateTime";
 
@@ -86,7 +86,7 @@ import ChatMarkdown from "../ChatMarkdown";
 
 const DELTAS = 500;
 const TARGET_BYTES = 10_000;
-const enabled = process.env.ROVE_STREAMING_BENCH === "1";
+const enabled = process.env.PAPERPLANE_STREAMING_BENCH === "1";
 
 // Deterministic text so runs compare across commits.
 function seeded(seed: number) {

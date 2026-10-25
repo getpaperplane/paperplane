@@ -3,22 +3,22 @@ import { cloneDirectoryName, sandboxCloneUrl } from "./remoteSandbox";
 
 describe("sandboxCloneUrl", () => {
   it("clones GitHub SSH remotes over HTTPS", () => {
-    expect(sandboxCloneUrl("git@github.com:hafiezul/rove.git")).toBe(
-      "https://github.com/hafiezul/rove.git",
+    expect(sandboxCloneUrl("git@github.com:getpaperplane/paperplane.git")).toBe(
+      "https://github.com/getpaperplane/paperplane.git",
     );
-    expect(sandboxCloneUrl("ssh://git@github.com/hafiezul/rove")).toBe(
-      "https://github.com/hafiezul/rove.git",
+    expect(sandboxCloneUrl("ssh://git@github.com/getpaperplane/paperplane")).toBe(
+      "https://github.com/getpaperplane/paperplane.git",
     );
   });
   it("leaves other remotes alone", () => {
-    expect(sandboxCloneUrl("https://github.com/hafiezul/rove.git")).toBe(
-      "https://github.com/hafiezul/rove.git",
+    expect(sandboxCloneUrl("https://github.com/getpaperplane/paperplane.git")).toBe(
+      "https://github.com/getpaperplane/paperplane.git",
     );
     expect(sandboxCloneUrl("git@gitlab.com:a/b.git")).toBe("git@gitlab.com:a/b.git");
   });
 });
 
 it("names the clone folder after the repository", () => {
-  expect(cloneDirectoryName("git@github.com:hafiezul/rove.git")).toBe("rove");
+  expect(cloneDirectoryName("git@github.com:getpaperplane/paperplane.git")).toBe("paperplane");
   expect(cloneDirectoryName("https://example.com/a/b/")).toBe("b");
 });

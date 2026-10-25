@@ -21,7 +21,7 @@ import {
   type ScheduledTaskRunNowResult,
   type ScheduledTaskSetEnabledInput,
   type ScheduledTaskUpsertInput,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Cause from "effect/Cause";
 import * as Context from "effect/Context";
 import * as Crypto from "effect/Crypto";
@@ -69,7 +69,7 @@ const WEBHOOK_RATE_LIMIT_PER_MINUTE = 60;
 
 /**
  * Where a webhook task's public URL points: `${relayHookBaseUrl}/${taskId}/${token}`.
- * Null when the environment has no managed tunnel on Rove Connect; clients then show the path.
+ * Null when the environment has no managed tunnel on Paperplane Connect; clients then show the path.
  */
 interface WebhookOrigin {
   readonly relayHookBaseUrl: string | null;
@@ -95,7 +95,7 @@ export function relayHookBaseUrl(input: {
 }
 
 export class ScheduledTaskWebhookOrigin extends Context.Reference<Effect.Effect<WebhookOrigin>>(
-  "@rove-code/server/scheduledTasks/ScheduledTaskService/ScheduledTaskWebhookOrigin",
+  "@getpaperplane/server/scheduledTasks/ScheduledTaskService/ScheduledTaskWebhookOrigin",
   {
     defaultValue: () => Effect.succeed({ relayHookBaseUrl: null }),
   },
@@ -116,7 +116,7 @@ export interface WebhookTriggerRequest extends WebhookRequest {
   readonly hookId: string;
   readonly token: string;
   readonly body: Uint8Array;
-  /** Set by Rove Connect; the same id is never dispatched twice. */
+  /** Set by Paperplane Connect; the same id is never dispatched twice. */
   readonly relayDeliveryId?: string;
   /** When the relay received a held request; defaults to now. */
   readonly receivedAt?: string;
@@ -125,7 +125,7 @@ export interface WebhookTriggerRequest extends WebhookRequest {
 /** What the HTTP route should answer. `not_found` covers unknown hooks and wrong tokens alike. */
 /**
  * What happened to one webhook request, as recorded in metrics and spans.
- * Sent back to the relay as `x-rove-hook-outcome`; never request contents.
+ * Sent back to the relay as `x-paperplane-hook-outcome`; never request contents.
  */
 export type WebhookDeliveryOutcome =
   | "accepted"
@@ -254,7 +254,7 @@ export class ScheduledTaskService extends Context.Service<
       request: WebhookTriggerRequest,
     ) => Effect.Effect<WebhookTriggerResult, ScheduledTaskError>;
   }
->()("@rove-code/server/scheduledTasks/ScheduledTaskService") {}
+>()("@getpaperplane/server/scheduledTasks/ScheduledTaskService") {}
 
 function taskError(message: string, input?: { taskId?: ScheduledTaskId; cause?: unknown }) {
   return new ScheduledTaskError({

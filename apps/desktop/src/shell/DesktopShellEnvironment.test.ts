@@ -25,7 +25,11 @@ const isDesktopShellEnvironmentCommandError = Schema.is(
 
 function envOutput(values: Readonly<Record<string, string>>): string {
   return Object.entries(values)
-    .flatMap(([name, value]) => [`__ROVE_ENV_${name}_START__`, value, `__ROVE_ENV_${name}_END__`])
+    .flatMap(([name, value]) => [
+      `__PAPERPLANE_ENV_${name}_START__`,
+      value,
+      `__PAPERPLANE_ENV_${name}_END__`,
+    ])
     .join("\n");
 }
 
@@ -355,13 +359,13 @@ describe("DesktopShellEnvironment", () => {
           envOutput({
             PATH: "/home/linuxbrew/.linuxbrew/bin:/usr/bin",
             SSH_AUTH_SOCK: "/tmp/secretive.sock",
-            ROVE_TELEMETRY_ENABLED: "false",
+            PAPERPLANE_TELEMETRY_ENABLED: "false",
           }),
       });
 
       assert.equal(env.PATH, "/home/linuxbrew/.linuxbrew/bin:/usr/bin");
       assert.equal(env.SSH_AUTH_SOCK, "/tmp/secretive.sock");
-      assert.equal(env.ROVE_TELEMETRY_ENABLED, "false");
+      assert.equal(env.PAPERPLANE_TELEMETRY_ENABLED, "false");
     }),
   );
 

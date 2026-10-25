@@ -11,8 +11,8 @@ import {
   OrchestrationV2ThreadBoundedSnapshot,
   OrchestrationV2ThreadTranscript,
   type OrchestrationV2ThreadHistoryPage,
-} from "@rove-code/contracts";
-import { RelayClientTracer } from "@rove-code/shared/relayTracing";
+} from "@getpaperplane/contracts";
+import { RelayClientTracer } from "@getpaperplane/shared/relayTracing";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
@@ -72,7 +72,7 @@ const AUTH = {
   policy: "remote-reachable",
   bootstrapMethods: ["one-time-token"],
   sessionMethods: ["dpop-access-token"],
-  sessionCookieName: "rove_session",
+  sessionCookieName: "paperplane_session",
 } satisfies AuthSessionState["auth"];
 const SESSION = {
   authenticated: true,
@@ -739,7 +739,7 @@ describe("authenticated environment HTTP requests", () => {
 });
 
 describe("relay request tracing", () => {
-  it.effect("starts an exported trace for a Rove Connect request", () =>
+  it.effect("starts an exported trace for a Paperplane Connect request", () =>
     Effect.gen(function* () {
       const productSpans: Array<{ readonly name: string; readonly root: boolean }> = [];
       const productTracer = Tracer.make({

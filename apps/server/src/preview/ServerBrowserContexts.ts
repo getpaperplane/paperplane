@@ -1,5 +1,5 @@
 // @effect-diagnostics nodeBuiltinImport:off - Owns Playwright resources outside the Effect runtime.
-import { INCOGNITO_BROWSER_PROFILE_ID } from "@rove-code/contracts";
+import { INCOGNITO_BROWSER_PROFILE_ID } from "@getpaperplane/contracts";
 import { constVoid } from "effect/Function";
 import * as NodeFSP from "node:fs/promises";
 import * as NodeModule from "node:module";

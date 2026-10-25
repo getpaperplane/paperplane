@@ -1,4 +1,4 @@
-import { splitPullRequestBody } from "@rove-code/client-runtime/pull-request-markdown";
+import { splitPullRequestBody } from "@getpaperplane/client-runtime/pull-request-markdown";
 import type { ReactNode } from "react";
 import { View } from "react-native";
 import { useProject } from "../../state/entities";
@@ -8,9 +8,9 @@ import {
   PullRequestMediaContext,
   usePullRequestMediaUrl,
 } from "./PullRequestMedia";
-import { videoMimeType } from "@rove-code/shared/video";
+import { videoMimeType } from "@getpaperplane/shared/video";
 import { createContext, useContext, useCallback, useMemo, useState } from "react";
-import { githubMarkdownLinks } from "@rove-code/shared/githubMarkdownLinks";
+import { githubMarkdownLinks } from "@getpaperplane/shared/githubMarkdownLinks";
 
 import { useOpenPullRequest } from "../../native/useOpenPullRequest";
 import { SelectableMarkdownText } from "../../native/SelectableMarkdownText";

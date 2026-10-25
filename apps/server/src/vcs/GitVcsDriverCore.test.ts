@@ -2,8 +2,8 @@
 import * as NodeChildProcess from "node:child_process";
 import * as NodeFS from "node:fs";
 import * as NodeServices from "@effect/platform-node/NodeServices";
-import { SelectedGitHubAccount } from "@rove-code/source-control-github/server/GitHubCredentials";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+import { SelectedGitHubAccount } from "@getpaperplane/source-control-github/server/GitHubCredentials";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 import { assert, it, describe } from "@effect/vitest";
 import { vi } from "vite-plus/test";
 import * as Deferred from "effect/Deferred";
@@ -31,7 +31,7 @@ import {
   type ReviewDiffFileContentsInput,
   type ReviewDiffPreviewResult,
   type WorktreeSubmodules,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as ServerConfig from "../config.ts";
 import { gitCommandDuration } from "../observability/Metrics.ts";
 import {
@@ -67,7 +67,7 @@ describe("selected GitHub account credentials", () => {
 const encodeGitCommandError = Schema.encodeEffect(Schema.fromJsonString(GitCommandError));
 
 const layerServerConfig = ServerConfig.layerTest(process.cwd(), {
-  prefix: "rove-git-vcs-driver-test-",
+  prefix: "paperplane-git-vcs-driver-test-",
 });
 const layerTest = GitVcsDriver.layer.pipe(
   Layer.provide(layerServerConfig),
@@ -3382,7 +3382,7 @@ it.layer(layerTest)("GitVcsDriver core integration", (it) => {
       }),
     );
 
-    it.effect("resolves the submodule mode from the option, then rove.json", () =>
+    it.effect("resolves the submodule mode from the option, then paperplane.json", () =>
       Effect.gen(function* () {
         const fileSystem = yield* FileSystem.FileSystem;
         const pathService = yield* Path.Path;
@@ -3425,12 +3425,12 @@ it.layer(layerTest)("GitVcsDriver core integration", (it) => {
           branch: string,
           submodules: WorktreeSubmodules | null = null,
         ) {
-          yield* writeTextFile(cwd, "rove.json", `{ "worktreeSubmodules": "${fileMode}" }`);
-          yield* git(cwd, ["add", "rove.json"]);
+          yield* writeTextFile(cwd, "paperplane.json", `{ "worktreeSubmodules": "${fileMode}" }`);
+          yield* git(cwd, ["add", "paperplane.json"]);
           // Consecutive cases may reuse a file mode to test the option alone.
           yield* git(cwd, ["commit", "--allow-empty", "-m", `submodules: ${fileMode}`]);
           const worktreePath = pathService.join(worktreesDir, branch);
-          const disabled = yield* Ref.make<"settings" | "rove.json" | false>(false);
+          const disabled = yield* Ref.make<"settings" | "paperplane.json" | false>(false);
           yield* driver.createWorktree(
             { cwd, path: worktreePath, refName: initialBranch, newRefName: branch },
             {
@@ -3469,7 +3469,7 @@ it.layer(layerTest)("GitVcsDriver core integration", (it) => {
           nested: false,
         });
         assert.deepEqual(yield* createWithMode("none", "none"), {
-          disabled: "rove.json",
+          disabled: "paperplane.json",
           inner: false,
           nested: false,
         });
@@ -3744,7 +3744,7 @@ it.layer(layerTest)("GitVcsDriver core integration", (it) => {
         const addedForFork = yield* driver.ensureRemote({
           cwd,
           preferredName: "octocat",
-          url: "git@github.com:octocat/rove.git",
+          url: "git@github.com:octocat/paperplane.git",
         });
         assert.equal(addedForFork, "octocat");
         assert.equal(yield* git(cwd, ["remote"]), "octocat\norigin");
@@ -4015,17 +4015,20 @@ it.layer(layerTest)("GitVcsDriver core integration", (it) => {
           cwd,
           path: worktreePath,
           refName: resolvedBase.commitSha,
-          newRefName: "rove/fetched-origin",
+          newRefName: "paperplane/fetched-origin",
           baseRefName: resolvedBase.remoteRefName,
         });
 
         assert.equal(yield* git(worktreePath, ["rev-parse", "HEAD"]), remoteHead);
         assert.equal(
-          yield* driver.readConfigValue(worktreePath, "branch.rove/fetched-origin.gh-merge-base"),
+          yield* driver.readConfigValue(
+            worktreePath,
+            "branch.paperplane/fetched-origin.gh-merge-base",
+          ),
           initialBranch,
         );
         assert.equal(
-          yield* driver.readConfigValue(worktreePath, "branch.rove/fetched-origin.remote"),
+          yield* driver.readConfigValue(worktreePath, "branch.paperplane/fetched-origin.remote"),
           null,
         );
         const status = yield* driver.statusDetails(worktreePath);
@@ -4399,7 +4402,7 @@ const hasDedicatedProcessCgroup = () => {
 };
 
 it.live.runIf(hasDedicatedProcessCgroup())(
-  "stops real worktree children in a dedicated Rove cgroup, sparing a sibling",
+  "stops real worktree children in a dedicated Paperplane cgroup, sparing a sibling",
   () =>
     Effect.gen(function* () {
       const cwd = yield* makeTmpDir();
@@ -4458,7 +4461,7 @@ it.live.runIf(hasDedicatedProcessCgroup())(
     }).pipe(Effect.scoped, Effect.provide(layerTest)),
 );
 
-// A test runner need not own a dedicated Rove cgroup (CI often shares a login
+// A test runner need not own a dedicated Paperplane cgroup (CI often shares a login
 // scope or the root group). Real Git + synthetic /proc makes the ownership and
 // removal-order assertions portable, without waiting for a deliberately spared
 // child to exit or ever scanning/signalling the host's processes.

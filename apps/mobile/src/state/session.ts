@@ -1,11 +1,11 @@
 import { useAtomValue } from "@effect/atom-react";
-import { createEnvironmentSessionAtoms } from "@rove-code/client-runtime/state/session";
+import { createEnvironmentSessionAtoms } from "@getpaperplane/client-runtime/state/session";
 import {
   type AuthEnvironmentScope,
   type AuthSessionState,
   type EnvironmentId,
   sessionGrantsScope,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Option from "effect/Option";
 import { AsyncResult, Atom } from "effect/reactivity";
 import { useMemo } from "react";

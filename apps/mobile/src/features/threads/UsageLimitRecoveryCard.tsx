@@ -1,6 +1,6 @@
-import { squashAtomCommandFailure } from "@rove-code/client-runtime/state/runtime";
-import type { EnvironmentThreadShell } from "@rove-code/client-runtime/state/shell";
-import type { EnvironmentId } from "@rove-code/contracts";
+import { squashAtomCommandFailure } from "@getpaperplane/client-runtime/state/runtime";
+import type { EnvironmentThreadShell } from "@getpaperplane/client-runtime/state/shell";
+import type { EnvironmentId } from "@getpaperplane/contracts";
 import * as DateTime from "effect/DateTime";
 import { useState } from "react";
 import { Pressable, View } from "react-native";

@@ -10,12 +10,12 @@ import {
   type ProjectScript,
   ThreadId,
   type VcsStatusResult,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   type GitActionRequestInput,
   requiresDefaultBranchConfirmation,
   resolveQuickAction,
-} from "@rove-code/client-runtime/state/vcs";
+} from "@getpaperplane/client-runtime/state/vcs";
 import { useNavigation } from "@react-navigation/native";
 
 import { useCallback, useMemo } from "react";
@@ -26,8 +26,8 @@ import {
   projectScriptMenuIcon,
   type TerminalMenuSession,
 } from "../terminal/terminalMenu";
-import { projectScriptMenuLabel } from "@rove-code/shared/projectScripts";
-import type { LinkedPullRequestContext } from "@rove-code/shared/threadPullRequests";
+import { projectScriptMenuLabel } from "@getpaperplane/shared/projectScripts";
+import type { LinkedPullRequestContext } from "@getpaperplane/shared/threadPullRequests";
 
 function truncateMiddle(value: string, maxLength: number): string {
   if (value.length <= maxLength) {

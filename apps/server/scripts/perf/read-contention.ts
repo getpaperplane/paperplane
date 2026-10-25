@@ -36,8 +36,8 @@ import {
   ThreadId,
   TurnItemId,
   type OrchestrationV2DomainEvent,
-} from "@rove-code/contracts";
-import * as NodeSqliteClient from "@rove-code/shared/nodeSqliteClient";
+} from "@getpaperplane/contracts";
+import * as NodeSqliteClient from "@getpaperplane/shared/nodeSqliteClient";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -124,7 +124,7 @@ const percentile = (values: number[], quantile: number) => {
 };
 
 async function run(subscribers: number, round: number) {
-  const directory = await mkdtemp(join(tmpdir(), "rove-read-contention-"));
+  const directory = await mkdtemp(join(tmpdir(), "paperplane-read-contention-"));
   const persistence = SqlitePersistence.layerFromPath(join(directory, "state.sqlite")).pipe(
     Layer.provide(NodeServices.layer),
   );

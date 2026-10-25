@@ -2,7 +2,7 @@ import {
   RelayClientInstallProgressStageSchema,
   type RelayClientInstallProgressEvent,
   type RelayClientInstallProgressStage,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Schema from "effect/Schema";
 
 export class RelayClientInstallConfirmationConflictError extends Schema.TaggedError<RelayClientInstallConfirmationConflictError>()(

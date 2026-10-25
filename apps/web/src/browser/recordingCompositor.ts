@@ -1,4 +1,4 @@
-import type { DesktopPreviewRecordingInput } from "@rove-code/contracts";
+import type { DesktopPreviewRecordingInput } from "@getpaperplane/contracts";
 
 import { readPreviewAnnotationTheme } from "./annotationTheme";
 

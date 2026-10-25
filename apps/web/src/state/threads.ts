@@ -1,6 +1,6 @@
 import { useAtomValue } from "@effect/atom-react";
-import { enabledEnvironmentIds } from "@rove-code/client-runtime/state/connections";
-import { arrayElementsEqual } from "@rove-code/client-runtime/state/entities";
+import { enabledEnvironmentIds } from "@getpaperplane/client-runtime/state/connections";
+import { arrayElementsEqual } from "@getpaperplane/client-runtime/state/entities";
 import {
   createEnvironmentThreadDetailAtoms,
   createEnvironmentThreadShellAtoms,
@@ -8,8 +8,8 @@ import {
   EMPTY_ENVIRONMENT_THREAD_STATE,
   type EnvironmentThreadState,
   createThreadEnvironmentAtoms,
-} from "@rove-code/client-runtime/state/threads";
-import type { EnvironmentId, OrchestrationV2ThreadShell, ThreadId } from "@rove-code/contracts";
+} from "@getpaperplane/client-runtime/state/threads";
+import type { EnvironmentId, OrchestrationV2ThreadShell, ThreadId } from "@getpaperplane/contracts";
 import * as Option from "effect/Option";
 import { AsyncResult, Atom } from "effect/reactivity";
 

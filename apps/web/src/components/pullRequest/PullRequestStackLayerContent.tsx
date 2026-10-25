@@ -1,4 +1,4 @@
-import type { PullRequestStack } from "@rove-code/contracts";
+import type { PullRequestStack } from "@getpaperplane/contracts";
 import { cn } from "~/lib/utils";
 import { resolvePullRequestState } from "./pullRequestPresentation";
 

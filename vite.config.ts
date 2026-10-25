@@ -5,9 +5,9 @@ import * as NodeURL from "node:url";
 /** Import restrictions every file keeps, including the one module exempt from the glyph rule. */
 const RESTRICTED_IMPORT_PATHS = [
   {
-    name: "@rove-code/client-runtime",
+    name: "@getpaperplane/client-runtime",
     message:
-      "Import from an explicit @rove-code/client-runtime/* subpath. The package has no root export.",
+      "Import from an explicit @getpaperplane/client-runtime/* subpath. The package has no root export.",
   },
   {
     name: "@pierre/diffs/react",
@@ -73,7 +73,8 @@ export default defineConfig({
     environment: "node",
     exclude: [
       "**/.repos/**",
-      "**/.rove/**",
+      "**/.paperplane/**",
+      "**/.paperplane/**",
       "**/node_modules/**",
       "**/dist/**",
       "**/dist-electron/**",
@@ -142,7 +143,7 @@ export default defineConfig({
     plugins: ["eslint", "oxc", "react", "unicorn", "typescript"],
     jsPlugins: [
       { name: "anti-slop", specifier: "./tools/oxlint/anti-slop/index.ts" },
-      "./oxlint-plugin-rove/index.ts",
+      "./oxlint-plugin-paperplane/index.ts",
       "@shadcn/lint",
     ],
     settings: {
@@ -206,23 +207,25 @@ export default defineConfig({
         "error",
         { paths: [...RESTRICTED_IMPORT_PATHS, RESTRICTED_PULL_REQUEST_GLYPH_IMPORTS] },
       ],
-      "rove/no-global-process-runtime": "error",
-      "rove/no-inline-schema-compile": "warn",
-      "rove/no-manual-effect-runtime-in-tests": "error",
-      "rove/no-native-title-tooltip": "error",
-      "rove/no-raw-mcp-registration": "error",
-      "rove/no-test-in-loop": "error",
-      "rove/no-rpc-permission-bypass": ["error", { allowRawClientAccess: true }],
-      "rove/no-unscoped-has": "error",
-      "rove/namespace-node-imports": "error",
-      "rove/prefer-catch-tags": "error",
-      "rove/require-centered-scroll-gutter": "error",
-      "rove/require-suppression-reason": "error",
+      "paperplane/no-global-process-runtime": "error",
+      "paperplane/no-inline-schema-compile": "warn",
+      "paperplane/no-manual-effect-runtime-in-tests": "error",
+      "paperplane/no-native-title-tooltip": "error",
+      "paperplane/no-raw-mcp-registration": "error",
+      "paperplane/no-test-in-loop": "error",
+      "paperplane/no-rpc-permission-bypass": ["error", { allowRawClientAccess: true }],
+      "paperplane/no-unscoped-has": "error",
+      "paperplane/namespace-node-imports": "error",
+      "paperplane/prefer-catch-tags": "error",
+      "paperplane/require-centered-scroll-gutter": "error",
+      "paperplane/require-suppression-reason": "error",
     },
     overrides: [
       {
         files: ["packages/client-runtime/src/state/**", "apps/{web,mobile,desktop}/src/**"],
-        rules: { "rove/no-rpc-permission-bypass": ["error", { allowRawClientAccess: false }] },
+        rules: {
+          "paperplane/no-rpc-permission-bypass": ["error", { allowRawClientAccess: false }],
+        },
       },
       {
         // Only shared command boundaries install the session-backed permission guard.
@@ -231,7 +234,7 @@ export default defineConfig({
           "packages/client-runtime/src/state/vcsAction.ts",
         ],
         rules: {
-          "rove/no-rpc-permission-bypass": [
+          "paperplane/no-rpc-permission-bypass": [
             "error",
             { allowGuardInstallation: true, allowRawClientAccess: false },
           ],
@@ -245,12 +248,12 @@ export default defineConfig({
           "apps/web/src/components/device/DevicePhoneViewport.tsx",
           "apps/web/src/components/device/DeviceDuoViewport.tsx",
         ],
-        rules: { "rove/no-rpc-permission-bypass": ["error", { allowRawClientAccess: true }] },
+        rules: { "paperplane/no-rpc-permission-bypass": ["error", { allowRawClientAccess: true }] },
       },
       {
         // Incompatible hosts cannot open a normal session; their updater uses a dedicated socket.
         files: ["packages/client-runtime/src/connection/outdatedHostUpdate.ts"],
-        rules: { "rove/no-rpc-permission-bypass": "off" },
+        rules: { "paperplane/no-rpc-permission-bypass": "off" },
       },
       {
         // RPC implementation and transport test fixtures need the raw client.
@@ -258,17 +261,17 @@ export default defineConfig({
           "packages/client-runtime/src/rpc/**",
           "**/*.{test,spec}.{ts,tsx,js,jsx,mts,cts,mjs,cjs}",
         ],
-        rules: { "rove/no-rpc-permission-bypass": "off" },
+        rules: { "paperplane/no-rpc-permission-bypass": "off" },
       },
       {
         // The one place that reads the host platform to seed the injected references.
         files: ["packages/shared/src/HostProcess.ts"],
-        rules: { "rove/no-global-process-runtime": "off" },
+        rules: { "paperplane/no-global-process-runtime": "off" },
       },
       {
         // The registration helpers that only accept handlers built by McpToolAccess.
         files: ["apps/server/src/mcp/McpHttpServer.ts"],
-        rules: { "rove/no-raw-mcp-registration": "off" },
+        rules: { "paperplane/no-raw-mcp-registration": "off" },
       },
       {
         files: ["apps/web/src/**"],
@@ -310,7 +313,7 @@ export default defineConfig({
       },
       {
         files: ["apps/mobile/src/**"],
-        rules: { "rove/no-mobile-uniwind-theme-escape-hatches": "error" },
+        rules: { "paperplane/no-mobile-uniwind-theme-escape-hatches": "error" },
       },
       {
         // React commits state set in a raw ResizeObserver callback after the paint, so derived
@@ -320,7 +323,7 @@ export default defineConfig({
           "apps/web/src/lib/observeResize.ts",
           "**/*.{test,spec}.{ts,tsx,js,jsx,mts,cts,mjs,cjs}",
         ],
-        rules: { "rove/no-raw-resize-observer": "error" },
+        rules: { "paperplane/no-raw-resize-observer": "error" },
       },
       {
         // Every class in web code must be one Tailwind generates: a typo or a class nothing
@@ -331,7 +334,7 @@ export default defineConfig({
       {
         // State indicators paint inward; decorative rings keep their own geometry.
         files: ["apps/web/src/**"],
-        rules: { "rove/no-outset-state-indicators": "error" },
+        rules: { "paperplane/no-outset-state-indicators": "error" },
       },
       {
         // Colors come from theme tokens so status tones follow custom themes. components/ui
@@ -408,7 +411,7 @@ export default defineConfig({
         },
       },
       {
-        // The sign-in masthead is Rove brand artwork: fixed gradients, not theme surfaces.
+        // The sign-in masthead is Paperplane brand artwork: fixed gradients, not theme surfaces.
         files: ["apps/web/src/components/auth/AuthSurfaceShell.tsx"],
         rules: { "shadcn/no-arbitrary-values": "off" },
       },
@@ -423,7 +426,7 @@ export default defineConfig({
           "packages/shared/src/**",
         ],
         excludeFiles: ["**/*.test.ts", "**/*.test.tsx"],
-        rules: { "rove/no-hermes-unsupported-apis": "error" },
+        rules: { "paperplane/no-hermes-unsupported-apis": "error" },
       },
       {
         // Reviewed native and third-party interop boundaries that cannot consume a className.
@@ -453,12 +456,15 @@ export default defineConfig({
           "apps/mobile/src/features/threads/thread-list-items.tsx",
           "apps/mobile/src/features/threads/thread-list-v2-items.tsx",
           "apps/mobile/src/lib/useMobileNavigationTheme.ts",
-          "apps/mobile/src/native/RoveComposerEditor.ios.tsx",
-          "apps/mobile/src/native/RoveComposerEditor.native.tsx",
+          "apps/mobile/src/native/PaperplaneComposerEditor.ios.tsx",
+          "apps/mobile/src/native/PaperplaneComposerEditor.native.tsx",
           "apps/mobile/src/native/SelectableMarkdownText.tsx",
         ],
         rules: {
-          "rove/no-mobile-uniwind-theme-escape-hatches": ["error", { allowUniwindTheme: true }],
+          "paperplane/no-mobile-uniwind-theme-escape-hatches": [
+            "error",
+            { allowUniwindTheme: true },
+          ],
         },
       },
     ],

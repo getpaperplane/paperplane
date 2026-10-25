@@ -1,4 +1,4 @@
-import type { DesktopCliCommandState } from "@rove-code/contracts";
+import type { DesktopCliCommandState } from "@getpaperplane/contracts";
 import { useCallback, useEffect, useState } from "react";
 
 import { Button } from "../ui/button";
@@ -7,7 +7,7 @@ import { SettingsRow } from "./settingsLayout";
 import { searchableSetting } from "./settingsSearch";
 
 /**
- * Settings → `rove` command: puts the desktop app's bundled CLI on PATH, or takes
+ * Settings → `paperplane` command: puts the desktop app's bundled CLI on PATH, or takes
  * it off again. Hidden where the desktop build has no launcher to install.
  */
 export function CliCommandSettingsRow() {
@@ -39,7 +39,10 @@ export function CliCommandSettingsRow() {
           toastManager.add(
             stackedThreadToast({
               type: "error",
-              title: action === "install" ? "Could not install rove" : "Could not remove rove",
+              title:
+                action === "install"
+                  ? "Could not install paperplane"
+                  : "Could not remove paperplane",
               description: error instanceof Error ? error.message : "Something went wrong.",
             }),
           );
@@ -52,12 +55,12 @@ export function CliCommandSettingsRow() {
   if (!bridge || !state?.supported) return null;
   const installed = state.installedPath !== null;
   const description = state.shadowedBy
-    ? `Another rove at ${state.shadowedBy} runs first in a new terminal. Remove it to use Rove Code's.`
+    ? `Another paperplane at ${state.shadowedBy} runs first in a new terminal. Remove it to use Paperplane's.`
     : !installed
-      ? "Run Rove Code's CLI as `rove` from any terminal."
+      ? "Run Paperplane's CLI as `paperplane` from any terminal."
       : state.onPath
         ? `Installed at ${state.installedPath}. Open a new terminal to use it.`
-        : `Installed at ${state.installedPath}, which is not on your PATH yet. Add its folder to your PATH to run \`rove\`.`;
+        : `Installed at ${state.installedPath}, which is not on your PATH yet. Add its folder to your PATH to run \`paperplane\`.`;
 
   return (
     <SettingsRow

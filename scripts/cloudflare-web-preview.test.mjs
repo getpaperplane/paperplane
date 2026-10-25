@@ -16,11 +16,11 @@ afterEach(() => vi.unstubAllEnvs());
 it("builds an isolated Worker configuration using only the trusted edge handler and assets", () => {
   const deployment = previewDeployment(
     42,
-    "rove-test",
+    "paperplane-test",
     {
-      name: "rove-web",
+      name: "paperplane-web",
       compatibility_date: "2025-04-01",
-      routes: [{ pattern: "rove.hafiezulzikry.com", custom_domain: true }],
+      routes: [{ pattern: "paperplane.hafiezulzikry.com", custom_domain: true }],
       workers_dev: false,
       main: "production-server.js",
       vars: { SECRET: "production-only" },
@@ -28,8 +28,8 @@ it("builds an isolated Worker configuration using only the trusted edge handler 
     },
     "/tmp/preview/dist",
   );
-  NodeAssert.equal(deployment.origin, "https://rove-web-pr-42.rove-test.workers.dev");
-  NodeAssert.equal(deployment.config.name, "rove-web-pr-42");
+  NodeAssert.equal(deployment.origin, "https://paperplane-web-pr-42.paperplane-test.workers.dev");
+  NodeAssert.equal(deployment.config.name, "paperplane-web-pr-42");
   NodeAssert.equal(deployment.config.assets.directory, NodePath.resolve("/tmp/preview/dist"));
   NodeAssert.equal(deployment.config.main, NodePath.resolve("apps/web/cloudflare/worker.mjs"));
   NodeAssert.equal(deployment.config.assets.binding, "ASSETS");
@@ -41,23 +41,23 @@ it("builds an isolated Worker configuration using only the trusted edge handler 
   }
   const defines = hostedBuildDefines(deployment.origin);
   NodeAssert.equal(JSON.parse(defines["import.meta.env.VITE_HOSTED_APP_URL"]), deployment.origin);
-  NodeAssert.equal(JSON.parse(defines["import.meta.env.VITE_ROVE_RELAY_URL"]), "");
+  NodeAssert.equal(JSON.parse(defines["import.meta.env.VITE_PAPERPLANE_RELAY_URL"]), "");
 });
 
 it("gives each PR a stable origin without sharing Workers", () => {
-  const first = previewDeployment(1, "rove", {}, ".");
-  NodeAssert.deepEqual(first, previewDeployment(1, "rove", {}, "."));
-  NodeAssert.notEqual(first.origin, previewDeployment(2, "rove", {}, ".").origin);
+  const first = previewDeployment(1, "paperplane", {}, ".");
+  NodeAssert.deepEqual(first, previewDeployment(1, "paperplane", {}, "."));
+  NodeAssert.notEqual(first.origin, previewDeployment(2, "paperplane", {}, ".").origin);
 });
 
-it.each([0, -1, "../rove-web", "1\nname=rove-web"])(
+it.each([0, -1, "../paperplane-web", "1\nname=paperplane-web"])(
   "rejects unsafe preview names %s",
   (prNumber) => {
     NodeAssert.throws(() => previewWorkerName(prNumber));
   },
 );
 
-it.each(["", "rove.example.com", "rove\nVITE_HTTP_URL=bad"])(
+it.each(["", "paperplane.example.com", "paperplane\nVITE_HTTP_URL=bad"])(
   "rejects unsafe workers.dev subdomains %s",
   (subdomain) => {
     NodeAssert.throws(() => previewDeployment(1, subdomain, {}, "."));
@@ -69,7 +69,7 @@ it("treats deletion of an absent preview as complete", async () => {
   vi.stubEnv("CLOUDFLARE_API_TOKEN", "token-fixture");
   vi.stubGlobal("fetch", async () => new Response("not found", { status: 404 }));
   NodeAssert.equal(
-    await cloudflarePreviewRequest("workers/scripts/rove-web-pr-42", "DELETE"),
+    await cloudflarePreviewRequest("workers/scripts/paperplane-web-pr-42", "DELETE"),
     undefined,
   );
 });
@@ -81,7 +81,7 @@ it("does not mistake permission errors for a completed cleanup", async () => {
     Response.json({ success: false, errors: [{ message: "Denied" }] }, { status: 403 }),
   );
   await NodeAssert.rejects(
-    cloudflarePreviewRequest("workers/scripts/rove-web-pr-42", "DELETE"),
+    cloudflarePreviewRequest("workers/scripts/paperplane-web-pr-42", "DELETE"),
     /HTTP 403/,
   );
 });

@@ -12,7 +12,7 @@ import { ThreadCommandOutput, useCommandOutputStreaming } from "./thread-command
 import {
   getQuestionAnswerPreview,
   hasQuestionAnswer,
-} from "@rove-code/client-runtime/work-log/user-input";
+} from "@getpaperplane/client-runtime/work-log/user-input";
 import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
 import { type AppSymbolName, SymbolView } from "../../components/ui/AppSymbol";
@@ -48,17 +48,17 @@ import {
   type RunId,
   type ThreadId,
   type ToolActivityIcon,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { useAtomValue } from "@effect/atom-react";
-import { scopeThreadRef } from "@rove-code/client-runtime/environment";
+import { scopeThreadRef } from "@getpaperplane/client-runtime/environment";
 import { environmentThreadDetails, threadEnvironment } from "../../state/threads";
 import { useAtomCommand } from "../../state/use-atom-command";
-import { toolActivityFaviconUrl } from "@rove-code/shared/favicon";
-import { isJavaScriptReplTool } from "@rove-code/shared/toolActivity";
+import { toolActivityFaviconUrl } from "@getpaperplane/shared/favicon";
+import { isJavaScriptReplTool } from "@getpaperplane/shared/toolActivity";
 import { useMarkdownCodeHighlight } from "./markdownCodeHighlightState";
 
 import { AppText as Text } from "../../components/ui/AppText";
-import { RoveLogo } from "../../components/RoveLogo";
+import { PaperplaneLogo } from "../../components/PaperplaneLogo";
 import { BrowserAppIcon } from "./BrowserAppIcon";
 import { cn } from "../../lib/cn";
 import { THREAD_WORK_ROW_MIN_HEIGHT, type deriveThreadWorkLogSizing } from "../../lib/layout";
@@ -72,7 +72,7 @@ import {
   toolCallLines,
   turnItemOutputImages,
   turnItemOutputText,
-} from "@rove-code/client-runtime/work-log/item-detail";
+} from "@getpaperplane/client-runtime/work-log/item-detail";
 import { useTurnItemDetail } from "../../state/queries";
 import {
   resolveThreadWorkGroupInitialScroll,
@@ -84,9 +84,9 @@ import {
   toolGroupAction,
   type ToolGroupSummaryKind,
   workEntryViewedImagePath,
-} from "@rove-code/client-runtime/work-log/presentation";
-import { resolveWorkGroupScrollAnchor } from "@rove-code/client-runtime/work-log/scroll-anchor";
-import { notificationChildThreadId } from "@rove-code/client-runtime/state/thread-execution";
+} from "@getpaperplane/client-runtime/work-log/presentation";
+import { resolveWorkGroupScrollAnchor } from "@getpaperplane/client-runtime/work-log/scroll-anchor";
+import { notificationChildThreadId } from "@getpaperplane/client-runtime/state/thread-execution";
 import type { MarkdownImageRenderer } from "../../native/SelectableMarkdownText";
 import type { FilePreviewSource } from "../../components/FilePreviewModal";
 import { FilePreviewGallery } from "../../components/FilePreviewGallery";
@@ -115,7 +115,13 @@ export const THREAD_DISCLOSURE_TRANSITION_MS = 180;
 const WORK_LOG_LAYOUT_TRANSITION = LinearTransition.duration(THREAD_DISCLOSURE_TRANSITION_MS);
 const WORK_LOG_DETAIL_ENTER_TRANSITION = FadeIn.duration(140);
 const WORK_LOG_DETAIL_EXIT_TRANSITION = FadeOut.duration(120);
-type WorkContentIcon = AppSymbolName | "browser" | "computer" | "device" | "rove" | "pull-request";
+type WorkContentIcon =
+  | AppSymbolName
+  | "browser"
+  | "computer"
+  | "device"
+  | "paperplane"
+  | "pull-request";
 
 function WorkLogIcon(props: {
   readonly icon: WorkContentIcon;
@@ -124,8 +130,8 @@ function WorkLogIcon(props: {
   readonly highlighted?: boolean;
 }) {
   const colorClassName = props.highlighted ? "accent-foreground" : props.colorClassName;
-  if (props.icon === "rove") {
-    return <RoveLogo height={15} />;
+  if (props.icon === "paperplane") {
+    return <PaperplaneLogo height={15} />;
   }
   if (props.icon === "computer") {
     return (
@@ -839,7 +845,7 @@ function WorkspacePreparationRetryButton(props: {
       style={{ opacity: busy ? 0.5 : 1 }}
     >
       <SymbolView name="arrow.clockwise" size={13} tintColorClassName="accent-icon" />
-      <Text className="font-rove-medium text-sm text-foreground">Retry</Text>
+      <Text className="font-paperplane-medium text-sm text-foreground">Retry</Text>
     </Pressable>
   );
 }
@@ -937,14 +943,14 @@ const ThreadWorkLogRow = memo(function ThreadWorkLogRow(
             <Text
               className={
                 warning
-                  ? "min-w-0 flex-1 font-rove-medium text-sm text-warning-foreground"
-                  : "min-w-0 flex-1 font-rove-medium text-sm text-adaptive-rose-600-400"
+                  ? "min-w-0 flex-1 font-paperplane-medium text-sm text-warning-foreground"
+                  : "min-w-0 flex-1 font-paperplane-medium text-sm text-adaptive-rose-600-400"
               }
             >
               {label}
             </Text>
             {props.copied ? (
-              <Text className="pr-1 font-rove-medium text-3xs text-adaptive-emerald-600-400">
+              <Text className="pr-1 font-paperplane-medium text-3xs text-adaptive-emerald-600-400">
                 Copied
               </Text>
             ) : null}
@@ -1146,7 +1152,7 @@ const ThreadWorkLogRow = memo(function ThreadWorkLogRow(
 
         <View className="shrink-0 flex-row items-center gap-px">
           {props.copied ? (
-            <Text className="pr-1 font-rove-medium text-3xs text-adaptive-emerald-600-400">
+            <Text className="pr-1 font-paperplane-medium text-3xs text-adaptive-emerald-600-400">
               Copied
             </Text>
           ) : null}
@@ -1305,9 +1311,9 @@ export function ThreadWorkGroupToggle(props: {
   readonly iconSubtleColor: import("react-native").ColorValue;
   readonly summary: string;
   readonly summaryKind: ToolGroupSummaryKind;
-  readonly summaryToolIcon?: "browser" | "device" | "rove" | "pull-request" | "brain";
+  readonly summaryToolIcon?: "browser" | "device" | "paperplane" | "pull-request" | "brain";
   readonly themeAppearance: "light" | "dark";
-  readonly toolSurface?: import("@rove-code/contracts").ToolActivitySurface;
+  readonly toolSurface?: import("@getpaperplane/contracts").ToolActivitySurface;
   readonly toolIcon?: ToolActivityIcon;
   readonly hasFailure: boolean;
   readonly shimmer: boolean;
@@ -1444,7 +1450,7 @@ export const ThreadAgentSpawnCard = memo(function ThreadAgentSpawnCard(props: {
           <View className="min-w-0 flex-1 gap-0.5">
             <Text
               key={props.rowSizing.textSizeKey}
-              className="font-rove-medium text-sm text-foreground"
+              className="font-paperplane-medium text-sm text-foreground"
               numberOfLines={1}
             >
               {summary.title}

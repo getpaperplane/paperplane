@@ -42,7 +42,7 @@ beforeEach(() => {
   forkMock.mockReset().mockReturnValue(worker);
 });
 
-it("keeps Rove alive when Zoom crashes accessibility extraction", async () => {
+it("keeps Paperplane alive when Zoom crashes accessibility extraction", async () => {
   const process = startSnapShotAccessibilityProcess("accessibility.cjs");
   const read = process.read(request);
   worker.emit("message", "ready");

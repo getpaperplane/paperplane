@@ -5,24 +5,24 @@
  * @module provider/Drivers/claudeUsage
  */
 
-import type { ClaudeSettings } from "@rove-code/contracts";
+import type { ClaudeSettings } from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import * as Path from "effect/Path";
 
-import { expandHomePath } from "@rove-code/provider-core/server/pathExpansion";
+import { expandHomePath } from "@getpaperplane/provider-core/server/pathExpansion";
 import {
   parseTimestampMs,
   tokenCount,
   type ProviderUsageReader,
   type TranscriptUsageFormat,
   type UsageRecord,
-} from "@rove-code/provider-core/server/usage";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+} from "@getpaperplane/provider-core/server/usage";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 
 /**
  * Parses one line of a Claude Code transcript.
  *
- * Rove Code writes one record per assistant *content block*, and every one of
+ * Paperplane writes one record per assistant *content block*, and every one of
  * those records repeats the same complete `usage` object for the parent
  * message. Summing them overcounts by roughly 2.4x on a real workload, so the
  * caller must drop repeats by `dedupeKey` and keep the first.

@@ -3,7 +3,7 @@ import { describe, expect, it } from "vite-plus/test";
 import { shouldHandleAppLink } from "./appLinking";
 
 describe("shouldHandleAppLink", () => {
-  it.each(["rove://", "rove:///", "rove-dev://", "rove-preview://"])(
+  it.each(["paperplane://", "paperplane:///", "paperplane-dev://", "paperplane-preview://"])(
     "ignores scheme-only URL %s",
     (url) => {
       expect(shouldHandleAppLink(url)).toBe(false);
@@ -11,14 +11,14 @@ describe("shouldHandleAppLink", () => {
   );
 
   it.each([
-    "rove://threads/env-1/thread-1",
-    "rove://pair?pairingUrl=x",
-    "rove-dev://settings/usage?tab=limits",
+    "paperplane://threads/env-1/thread-1",
+    "paperplane://pair?pairingUrl=x",
+    "paperplane-dev://settings/usage?tab=limits",
   ])("handles path-bearing URL %s", (url) => {
     expect(shouldHandleAppLink(url)).toBe(true);
   });
 
-  it.each(["rove://expo-development-client/?url=x", "rove://expo-sharing/anything"])(
+  it.each(["paperplane://expo-development-client/?url=x", "paperplane://expo-sharing/anything"])(
     "ignores lifecycle URL %s",
     (url) => {
       expect(shouldHandleAppLink(url)).toBe(false);

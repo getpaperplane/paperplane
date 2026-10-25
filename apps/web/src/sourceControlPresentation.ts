@@ -1,10 +1,10 @@
 import type { ElementType } from "react";
-import type { SourceControlProviderInfo } from "@rove-code/contracts";
-import { sourceControlClients } from "@rove-code/client-runtime/source-control-clients";
+import type { SourceControlProviderInfo } from "@getpaperplane/contracts";
+import { sourceControlClients } from "@getpaperplane/client-runtime/source-control-clients";
 import type {
   ChangeRequestTerminology,
   SourceControlClientDefinition,
-} from "@rove-code/client-runtime/source-control-clients";
+} from "@getpaperplane/client-runtime/source-control-clients";
 import {
   AzureDevOpsIcon,
   BitbucketIcon,
@@ -15,7 +15,7 @@ import {
 } from "./components/Icons";
 import { PullRequestGlyph } from "~/components/pullRequest/pullRequestIcons";
 
-export type { ChangeRequestTerminology } from "@rove-code/client-runtime/source-control-clients";
+export type { ChangeRequestTerminology } from "@getpaperplane/client-runtime/source-control-clients";
 
 type SourceControlIcon = ElementType<{ className?: string }>;
 

@@ -1,4 +1,4 @@
-import { EnvironmentId, ThreadId, type ThreadPullRequestLink } from "@rove-code/contracts";
+import { EnvironmentId, ThreadId, type ThreadPullRequestLink } from "@getpaperplane/contracts";
 import { act } from "react";
 import { create, type ReactTestRenderer } from "react-test-renderer";
 import { afterEach, expect, it, vi } from "vite-plus/test";

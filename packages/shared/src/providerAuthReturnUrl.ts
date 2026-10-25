@@ -1,14 +1,14 @@
 import { isLoopbackHost } from "./preview.ts";
 
-/** Only return to a local client or the hosted Rove client, never an arbitrary OAuth-supplied URL. */
+/** Only return to a local client or the hosted Paperplane client, never an arbitrary OAuth-supplied URL. */
 export function providerAuthReturnUrl(value: string | undefined): string | undefined {
   if (!value) return undefined;
   try {
     const url = new URL(value);
-    const desktop = ["rove:", "rove-dev:"].includes(url.protocol) && url.host === "app";
+    const desktop = ["paperplane:", "paperplane-dev:"].includes(url.protocol) && url.host === "app";
     const web =
       ["http:", "https:"].includes(url.protocol) &&
-      (isLoopbackHost(url.hostname) || url.origin === "https://rove.hafiezulzikry.com");
+      (isLoopbackHost(url.hostname) || url.origin === "https://paperplane.hafiezulzikry.com");
     if (
       url.username ||
       url.password ||

@@ -1,16 +1,16 @@
 import * as Dialog from "./ui/Dialog";
 import { useOpenPullRequest } from "../native/useOpenPullRequest";
 import { SourceFileSurface } from "../features/files/SourceFileSurface";
-import { filePreviewKind } from "@rove-code/shared/filePreview";
+import { filePreviewKind } from "@getpaperplane/shared/filePreview";
 import type {
   ComposerContextRecord,
   ElementContextSource,
   EnvironmentId,
   ProjectId,
   ScopedThreadRef,
-} from "@rove-code/contracts";
-import { formatAttachmentSize } from "@rove-code/client-runtime/state/attachments";
-import { videoMimeType } from "@rove-code/shared/video";
+} from "@getpaperplane/contracts";
+import { formatAttachmentSize } from "@getpaperplane/client-runtime/state/attachments";
+import { videoMimeType } from "@getpaperplane/shared/video";
 import { Platform, Pressable, ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { REVIEW_MONO_FONT_FAMILY } from "../features/review/reviewDiffRendering";

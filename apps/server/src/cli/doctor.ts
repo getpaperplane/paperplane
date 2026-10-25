@@ -1,4 +1,4 @@
-import { DATABASE_COMPACTION_RECOMMENDED_BYTES } from "@rove-code/contracts";
+import { DATABASE_COMPACTION_RECOMMENDED_BYTES } from "@getpaperplane/contracts";
 import * as Cause from "effect/Cause";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
@@ -6,6 +6,7 @@ import * as Layer from "effect/Layer";
 import { Command, Flag, GlobalFlag, Prompt } from "effect/cli";
 
 import * as BootService from "../cloud/bootService.ts";
+import { findOldService } from "../cloud/installedStateMigration.ts";
 import * as HostHealth from "../diagnostics/HostHealth.ts";
 import * as HostResources from "../resourceTelemetry/HostResources.ts";
 import * as ServerConfig from "../config.ts";
@@ -36,9 +37,9 @@ export const runDoctor = Effect.fn("runDoctor")(function* (
         : `  Swap: ${formatBytes(host.swapFreeBytes)} free / ${formatBytes(host.swapTotalBytes)} total`,
     );
     yield* Console.log(
-      host.roveMemory === null
-        ? "  Rove ceiling: unavailable (no systemd memory ceiling)"
-        : `  Rove ceiling: ${formatBytes(host.roveMemory.currentBytes)} current / ${host.roveMemory.limitBytes === null ? "unlimited" : formatBytes(host.roveMemory.limitBytes)}`,
+      host.paperplaneMemory === null
+        ? "  Paperplane ceiling: unavailable (no systemd memory ceiling)"
+        : `  Paperplane ceiling: ${formatBytes(host.paperplaneMemory.currentBytes)} current / ${host.paperplaneMemory.limitBytes === null ? "unlimited" : formatBytes(host.paperplaneMemory.limitBytes)}`,
     );
     for (const finding of host.findings) {
       yield* Console.log(`  [${finding.severity}] ${finding.message}`);
@@ -138,11 +139,16 @@ export const doctorCommand = Command.make("doctor", {
   ),
 }).pipe(
   Command.withDescription(
-    "Check host memory health and inspect this Rove Code data directory. Repairs pause and restart the background service as needed.",
+    "Check host memory health and inspect this Paperplane data directory. Repairs pause and restart the background service as needed.",
   ),
   Command.withHandler((flags) =>
     Effect.gen(function* () {
       const logLevel = yield* GlobalFlag.LogLevel;
+      const old = yield* findOldService;
+      if (old)
+        yield* Console.warn(
+          `Leftover old service: ${old.filename}. ${old.ours ? "Run paperplane service install to replace it." : "Unrecognized launcher; inspect it manually. Paperplane will leave it untouched."}`,
+        );
       const config = yield* resolveCliAuthConfig(flags, logLevel);
       yield* runDoctor(config.dbPath, { fix: flags.fix, dryRun: flags.dryRun }).pipe(
         Effect.provide(

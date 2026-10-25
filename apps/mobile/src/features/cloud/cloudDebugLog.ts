@@ -2,7 +2,7 @@ import { createDebugLogger } from "../../lib/debugLog";
 
 const logger = createDebugLogger("cloud", {
   enabledInDev: true,
-  legacyGlobalFlag: "__ROVE_CLOUD_DEBUG__",
+  legacyGlobalFlag: "__PAPERPLANE_CLOUD_DEBUG__",
 });
 
 export function cloudDebugLog(event: string, data?: Record<string, unknown>): void {

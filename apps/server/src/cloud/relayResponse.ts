@@ -1,4 +1,4 @@
-import { RelayProtectedError } from "@rove-code/contracts/relay";
+import { RelayProtectedError } from "@getpaperplane/contracts/relay";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
@@ -29,7 +29,7 @@ export function relayRequestError(cause: unknown): RelayRequestError {
     ? cause
     : new RelayRequestError({
         rejection: "unavailable",
-        description: `Could not complete the Rove Connect relay request. ${isHttpClientError(cause) ? `The relay request failed (${cause.reason._tag}).` : "The relay returned an unexpected response."} Check this machine's network connection and relay availability, then retry.`,
+        description: `Could not complete the Paperplane Connect relay request. ${isHttpClientError(cause) ? `The relay request failed (${cause.reason._tag}).` : "The relay returned an unexpected response."} Check this machine's network connection and relay availability, then retry.`,
       });
 }
 
@@ -40,12 +40,12 @@ export const shouldRetryRelayRequest = (error: unknown): boolean =>
 function recoveryHint(error: RelayProtectedError): string {
   switch (error._tag) {
     case "RelayEnvironmentLinkLimitExceededError":
-      return "Unlink an unused environment in Rove Connect, then restart Rove Code on this machine.";
+      return "Unlink an unused environment in Paperplane Connect, then restart Paperplane on this machine.";
     case "RelayAuthInvalidError":
-      return "Run `rove connect login` to check this machine's authorization. If the stored credential was revoked, sign out with `rove connect logout`, then run `rove connect` again. Restart Rove Code after signing in.";
+      return "Run `paperplane connect login` to check this machine's authorization. If the stored credential was revoked, sign out with `paperplane connect logout`, then run `paperplane connect` again. Restart Paperplane after signing in.";
     case "RelayEnvironmentLinkProofExpiredError":
     case "RelayEnvironmentLinkProofInvalidError":
-      return "Check this machine's date and time, update Rove Code, then restart it.";
+      return "Check this machine's date and time, update Paperplane, then restart it.";
     default:
       return "Retry when the relay is available. If this continues, include the trace ID when reporting it.";
   }
@@ -62,8 +62,8 @@ export const filterRelayResponse = Effect.fn("cloud.filter_relay_response")(func
   const ray = response.headers["cf-ray"];
   const requestId = ray && /^[a-zA-Z0-9-]{1,128}$/.test(ray) ? ` Cloudflare Ray ID: ${ray}.` : "";
   const description = Option.isSome(decoded)
-    ? `Rove Connect: ${decoded.value.message}. ${recoveryHint(decoded.value)} Trace ID: ${decoded.value.traceId}.`
-    : `Rove Connect relay returned HTTP ${response.status} without a recognized error response. Check relay access and any proxy or firewall restrictions, then restart Rove Code.${requestId}`;
+    ? `Paperplane Connect: ${decoded.value.message}. ${recoveryHint(decoded.value)} Trace ID: ${decoded.value.traceId}.`
+    : `Paperplane Connect relay returned HTTP ${response.status} without a recognized error response. Check relay access and any proxy or firewall restrictions, then restart Paperplane.${requestId}`;
 
   if (response.status === 401) {
     return yield* new RelayRequestError({ rejection: "unauthorized", description });

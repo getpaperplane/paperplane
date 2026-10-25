@@ -34,12 +34,12 @@ import {
   type DeviceHostSummary,
   LOCAL_DEVICE_HOST_ID,
   type ThreadId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as FileSystem from "effect/FileSystem";
 import {
   resolveNodeExecutable,
   nodeRuntimeUnavailableMessage,
-} from "@rove-code/shared/nodeRuntime";
+} from "@getpaperplane/shared/nodeRuntime";
 import * as Path from "effect/Path";
 import { ensureAgentDevice, ensureDeviceHub } from "./DeviceToolchain.ts";
 import * as ServerConfig from "../config.ts";
@@ -159,7 +159,7 @@ export class DeviceService extends Context.Service<
     readonly currentReadiness: (hostId?: DeviceHostId) => Effect.Effect<DeviceReadiness | null>;
     readonly sessionsForThread: (threadId: ThreadId) => Effect.Effect<ReadonlyArray<DeviceSession>>;
   }
->()("@rove-code/server/device/DeviceService") {}
+>()("@getpaperplane/server/device/DeviceService") {}
 
 interface ServiceState {
   readonly state: DeviceServiceState;
@@ -692,7 +692,7 @@ export const makeWithHosts = Effect.fn("DeviceService.makeWithHosts")(function* 
         return yield* new DeviceNotFoundError({ hostId: host.id, deviceId: bootedId });
       }
     } else if (device.platform === "ios" && device.booted) {
-      // A simulator booted outside Rove has no helper attached yet.
+      // A simulator booted outside Paperplane has no helper attached yet.
       yield* HttpClientRequest.post(
         `${ready.hub.origin}${vendorPrefix("ios")}/grid/api/start`,
       ).pipe(

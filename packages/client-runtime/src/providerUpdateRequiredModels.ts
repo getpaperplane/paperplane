@@ -1,5 +1,5 @@
-import { PROVIDER_DISPLAY_NAMES, type ServerProvider } from "@rove-code/contracts";
-import { compareSemverVersions } from "@rove-code/shared/semver";
+import { PROVIDER_DISPLAY_NAMES, type ServerProvider } from "@getpaperplane/contracts";
+import { compareSemverVersions } from "@getpaperplane/shared/semver";
 
 // Name the thing the user updates; "Claude" alone reads like the app or model.
 const RUNTIME_NAMES: Partial<Record<string, string>> = {

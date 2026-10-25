@@ -26,23 +26,23 @@ import {
   resolveAddProjectPath,
   sortAddProjectProviderSources,
   type AddProjectRemoteSource,
-} from "@rove-code/client-runtime/operations/projects";
+} from "@getpaperplane/client-runtime/operations/projects";
 import {
   connectionStatusText,
   type EnvironmentConnectionPhase,
-} from "@rove-code/client-runtime/connection";
+} from "@getpaperplane/client-runtime/connection";
 import {
   canPreloadBrowsePath,
   createBrowseNavigationCoordinator,
   filterFilesystemBrowseEntries,
   getFilesystemBrowsePath,
   resolveFilesystemReadAccess,
-} from "@rove-code/client-runtime/state/filesystem";
+} from "@getpaperplane/client-runtime/state/filesystem";
 import {
   appendBrowsePathSegment,
   inferProjectTitleFromPath,
   isWindowsPlatform,
-} from "@rove-code/client-runtime/state/projects";
+} from "@getpaperplane/client-runtime/state/projects";
 import {
   AuthOrchestrationOperateScope,
   AuthSourceControlWriteScope,
@@ -53,7 +53,7 @@ import {
   ProjectId,
   resolveEnvironmentMachineKind,
   SourceControlProviderKind,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { CommonActions, StackActions, useNavigation } from "@react-navigation/native";
 import { SymbolView } from "../../components/ui/AppSymbol";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
@@ -75,7 +75,7 @@ import { AppText as Text, AppTextInput as TextInput } from "../../components/ui/
 import { EnvironmentMachineSymbol } from "../../components/EnvironmentMachineSymbol";
 import { ErrorBanner } from "../../components/ui/ErrorBanner";
 import { SourceControlIcon } from "./SourceControlIcon";
-import { sourceControlClients } from "@rove-code/client-runtime/source-control-clients";
+import { sourceControlClients } from "@getpaperplane/client-runtime/source-control-clients";
 import { ThemedSwitch } from "../../components/ui/ThemedSwitch";
 import { uuidv4 } from "../../lib/uuid";
 import { useAtomCommand } from "../../state/use-atom-command";
@@ -141,8 +141,8 @@ function SectionTitle(props: { readonly children: string }) {
     <Text
       className={
         Platform.OS === "android"
-          ? "px-4 text-sm font-rove-medium text-primary-text"
-          : "px-1 text-2xs font-rove-bold tracking-[0.7px] uppercase text-foreground-muted"
+          ? "px-4 text-sm font-paperplane-medium text-primary-text"
+          : "px-1 text-2xs font-paperplane-bold tracking-[0.7px] uppercase text-foreground-muted"
       }
     >
       {props.children}
@@ -236,7 +236,7 @@ function ListRow(props: {
           {props.icon}
         </View>
         <View className="flex-1 gap-0.5">
-          <Text className="text-base leading-snug font-rove-bold">{props.title}</Text>
+          <Text className="text-base leading-snug font-paperplane-bold">{props.title}</Text>
           {props.subtitle ? (
             <Text className="text-sm leading-snug text-foreground-muted" numberOfLines={2}>
               {props.subtitle}
@@ -274,7 +274,9 @@ function PrimaryActionButton(props: {
       {props.loading ? (
         <AppActivityIndicator colorClassName={String("accent-primary-foreground")} />
       ) : (
-        <Text className="text-base font-rove-bold text-primary-foreground">{props.label}</Text>
+        <Text className="text-base font-paperplane-bold text-primary-foreground">
+          {props.label}
+        </Text>
       )}
     </Pressable>
   );
@@ -460,7 +462,7 @@ function EmptyEnvironmentState() {
 
   return (
     <View className="items-center gap-3 rounded-2xl bg-grouped-card px-5 py-8">
-      <Text className="text-center text-lg font-rove-bold">Environment unavailable</Text>
+      <Text className="text-center text-lg font-paperplane-bold">Environment unavailable</Text>
       <Text className="text-center text-sm leading-normal text-foreground-muted">
         Start or reconnect an environment before adding a project.
       </Text>
@@ -468,7 +470,9 @@ function EmptyEnvironmentState() {
         onPress={() => navigation.dispatch(StackActions.replace("ConnectionsNew"))}
         className="mt-1 rounded-full bg-primary px-4 py-2.5 active:opacity-70"
       >
-        <Text className="text-sm font-rove-bold text-primary-foreground">Add environment</Text>
+        <Text className="text-sm font-paperplane-bold text-primary-foreground">
+          Add environment
+        </Text>
       </Pressable>
     </View>
   );
@@ -1467,7 +1471,7 @@ export function AddProjectDestinationScreen(props: {
       {error ? <ErrorBanner message={error} /> : null}
       {repositoryTitle ? (
         <View className="rounded-[24px] bg-grouped-card px-4 py-3">
-          <Text className="text-base font-rove-bold">{repositoryTitle}</Text>
+          <Text className="text-base font-paperplane-bold">{repositoryTitle}</Text>
           <Text className="mt-0.5 text-xs text-foreground-muted" numberOfLines={2}>
             {remoteUrl}
           </Text>

@@ -1,14 +1,14 @@
 included:
-  - ios/RoveCode
-  - modules/rove-composer-editor/ios
-  - modules/rove-native-controls/ios
-  - modules/rove-terminal/ios
-  - modules/rove-review-diff/ios
+  - ios/PaperplaneCode
+  - modules/paperplane-composer-editor/ios
+  - modules/paperplane-native-controls/ios
+  - modules/paperplane-terminal/ios
+  - modules/paperplane-review-diff/ios
 
 excluded:
   - ios/Pods
   - ios/build
-  - modules/rove-terminal/Vendor
+  - modules/paperplane-terminal/Vendor
 
 reporter: xcode
 

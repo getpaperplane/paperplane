@@ -1,4 +1,4 @@
-import { EnvironmentId } from "@rove-code/contracts";
+import { EnvironmentId } from "@getpaperplane/contracts";
 import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 const mocks = vi.hoisted(() => {
@@ -42,6 +42,8 @@ const mocks = vi.hoisted(() => {
           run({ execAsync: () => Promise.resolve() }),
       ),
       getFirstAsync: vi.fn((sql: string) => {
+        if (sql.includes("paperplane_name_migration"))
+          return Promise.resolve({ name: "paperplane_name_migration" });
         if (sql.includes("PRAGMA user_version")) {
           return Promise.resolve({ user_version: 1 });
         }
@@ -78,6 +80,7 @@ vi.mock("expo-secure-store", () => ({
 
 vi.mock("expo-sqlite", () => ({
   openDatabaseAsync: vi.fn(() => Promise.resolve(mocks.database)),
+  deleteDatabaseAsync: vi.fn(() => Promise.resolve()),
 }));
 
 vi.mock("expo-crypto", () => ({
@@ -146,14 +149,14 @@ describe("mobile connection storage", () => {
     await expect(loadSavedConnections()).rejects.toMatchObject({
       _tag: "MobileSecureStorageError",
       operation: "read",
-      key: "rove.connections",
+      key: "paperplane.connections",
       cause,
-      message: "Mobile secure storage operation read failed for key rove.connections.",
+      message: "Mobile secure storage operation read failed for key paperplane.connections.",
     });
   });
 
   it("logs structured decode failures before using the empty fallback", async () => {
-    await mocks.setItemAsync("rove.connections", "{");
+    await mocks.setItemAsync("paperplane.connections", "{");
     const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
 
     await expect(loadSavedConnections()).resolves.toEqual([]);
@@ -161,9 +164,9 @@ describe("mobile connection storage", () => {
       "[mobile-storage] ignored invalid JSON",
       expect.objectContaining({
         _tag: "MobileStorageDecodeError",
-        key: "rove.connections",
+        key: "paperplane.connections",
         cause: expect.any(SyntaxError),
-        message: "Failed to decode mobile storage value for key rove.connections.",
+        message: "Failed to decode mobile storage value for key paperplane.connections.",
       }),
     );
 
@@ -172,31 +175,9 @@ describe("mobile connection storage", () => {
 
   it("loads legacy preferences when SQLite is unavailable", async () => {
     mocks.setDatabaseFailures(true, true);
-    await mocks.setItemAsync("rove.preferences", JSON.stringify({ baseFontSize: 17 }));
+    await mocks.setItemAsync("paperplane.preferences", JSON.stringify({ baseFontSize: 17 }));
 
     await expect(loadPreferences()).resolves.toEqual({ baseFontSize: 17 });
-  });
-
-  it("migrates historical theme preferences once without losing unrelated settings", async () => {
-    mocks.setPreferencesJson(
-      JSON.stringify({ themeId: "t3-chat", darkThemeId: "t3-ocean", baseFontSize: 17 }),
-      1,
-    );
-    await expect(loadPreferences()).resolves.toEqual({
-      themeId: "plum",
-      darkThemeId: "ocean",
-      baseFontSize: 17,
-    });
-    expect(JSON.parse(mocks.getPreferencesJson()!)).toEqual({
-      themeId: "plum",
-      darkThemeId: "ocean",
-      baseFontSize: 17,
-    });
-    await expect(loadPreferences()).resolves.toEqual({
-      themeId: "plum",
-      darkThemeId: "ocean",
-      baseFontSize: 17,
-    });
   });
 
   it("persists independent light and dark theme choices", async () => {
@@ -246,7 +227,7 @@ describe("mobile connection storage", () => {
   it("falls back to secure storage when SQLite cannot save preferences", async () => {
     mocks.setDatabaseFailures(true, true);
     await expect(savePreferencesPatch({ baseFontSize: 19 })).resolves.toEqual({ baseFontSize: 19 });
-    const fallback = JSON.parse(mocks.getStoredValue("rove.preferences.fallback") ?? "") as {
+    const fallback = JSON.parse(mocks.getStoredValue("paperplane.preferences.fallback") ?? "") as {
       readonly payload: string;
       readonly updatedAt: number;
     };
@@ -327,7 +308,7 @@ describe("mobile connection storage", () => {
   it("reconciles fallback preferences after SQLite recovers", async () => {
     mocks.setPreferencesJson(JSON.stringify({ baseFontSize: 15 }), 10);
     await mocks.setItemAsync(
-      "rove.preferences.fallback",
+      "paperplane.preferences.fallback",
       JSON.stringify({
         payload: JSON.stringify({ baseFontSize: 19 }),
         updatedAt: 20,
@@ -336,13 +317,13 @@ describe("mobile connection storage", () => {
 
     await expect(loadPreferences()).resolves.toEqual({ baseFontSize: 19 });
     expect(JSON.parse(mocks.getPreferencesJson() ?? "")).toEqual({ baseFontSize: 19 });
-    expect(mocks.getStoredValue("rove.preferences.fallback")).toBeNull();
+    expect(mocks.getStoredValue("paperplane.preferences.fallback")).toBeNull();
   });
 
   it("ignores a stale fallback when its previous deletion failed", async () => {
     mocks.setPreferencesJson(JSON.stringify({ baseFontSize: 21 }), 30);
     await mocks.setItemAsync(
-      "rove.preferences.fallback",
+      "paperplane.preferences.fallback",
       JSON.stringify({
         payload: JSON.stringify({ baseFontSize: 19 }),
         updatedAt: 20,
@@ -351,27 +332,27 @@ describe("mobile connection storage", () => {
 
     await expect(loadPreferences()).resolves.toEqual({ baseFontSize: 21 });
     expect(JSON.parse(mocks.getPreferencesJson() ?? "")).toEqual({ baseFontSize: 21 });
-    expect(mocks.getStoredValue("rove.preferences.fallback")).toBeNull();
+    expect(mocks.getStoredValue("paperplane.preferences.fallback")).toBeNull();
   });
 
   it("ignores an invalid fallback even when it has a newer timestamp", async () => {
     mocks.setPreferencesJson(JSON.stringify({ baseFontSize: 21 }), 30);
     await mocks.setItemAsync(
-      "rove.preferences.fallback",
+      "paperplane.preferences.fallback",
       JSON.stringify({ payload: "{", updatedAt: 40 }),
     );
     const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
 
     await expect(loadPreferences()).resolves.toEqual({ baseFontSize: 21 });
     expect(JSON.parse(mocks.getPreferencesJson() ?? "")).toEqual({ baseFontSize: 21 });
-    expect(mocks.getStoredValue("rove.preferences.fallback")).toBeNull();
+    expect(mocks.getStoredValue("paperplane.preferences.fallback")).toBeNull();
 
     warn.mockRestore();
   });
 
   it("keeps SQLite authoritative when stale legacy preferences remain", async () => {
     mocks.setPreferencesJson(JSON.stringify({ baseFontSize: 21 }), 30);
-    await mocks.setItemAsync("rove.preferences", JSON.stringify({ baseFontSize: 19 }));
+    await mocks.setItemAsync("paperplane.preferences", JSON.stringify({ baseFontSize: 19 }));
 
     await expect(loadPreferences()).resolves.toEqual({ baseFontSize: 21 });
     expect(JSON.parse(mocks.getPreferencesJson() ?? "")).toEqual({ baseFontSize: 21 });

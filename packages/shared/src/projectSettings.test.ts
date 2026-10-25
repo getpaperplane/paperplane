@@ -4,7 +4,7 @@ import {
   ProjectId,
   ProviderDriverKind,
   ProviderInstanceId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { describe, expect, it } from "vite-plus/test";
 import { createModelSelection } from "./model.ts";
 import {
@@ -187,7 +187,7 @@ describe("resolveProjectSettings", () => {
   });
 });
 
-describe("resolveProjectSettings with a rove.json", () => {
+describe("resolveProjectSettings with a paperplane.json", () => {
   it("walks project override, environment value, file, then built-in for file-backed keys", () => {
     const file = { defaultThreadEnvMode: "worktree" as const };
     const fromOverride = resolveProjectSettings(
@@ -213,7 +213,7 @@ describe("resolveProjectSettings with a rove.json", () => {
 
     const fromFile = resolveProjectSettings(DEFAULT_SERVER_SETTINGS, projectId, null, file);
     expect(fromFile.settings.defaultThreadEnvMode).toBe("worktree");
-    expect(fromFile.sources.defaultThreadEnvMode).toBe("rove.json");
+    expect(fromFile.sources.defaultThreadEnvMode).toBe("paperplane.json");
 
     const builtIn = resolveProjectSettings(DEFAULT_SERVER_SETTINGS, projectId, null, null);
     expect(builtIn.settings.defaultThreadEnvMode).toBe("local");
@@ -230,7 +230,7 @@ describe("resolveProjectSettings with a rove.json", () => {
       file,
     );
     expect(nullOverride.settings.defaultThreadEnvMode).toBe("worktree");
-    expect(nullOverride.sources.defaultThreadEnvMode).toBe("rove.json");
+    expect(nullOverride.sources.defaultThreadEnvMode).toBe("paperplane.json");
     // A file that does not mention the key leaves the source alone too.
     expect(
       resolveProjectSettings(DEFAULT_SERVER_SETTINGS, projectId, null, {}).sources
@@ -248,7 +248,7 @@ describe("resolveProjectSettings with a rove.json", () => {
       resolveProjectFileBackedSetting("worktreeSubmodules", null, {
         worktreeSubmodules: "top-level",
       }),
-    ).toEqual({ value: "top-level", source: "rove.json" });
+    ).toEqual({ value: "top-level", source: "paperplane.json" });
     expect(resolveProjectFileBackedSetting("worktreeSubmodules", null, null)).toEqual({
       value: "recursive",
       source: "environment",
@@ -301,7 +301,7 @@ describe("resolveNewThreadEnvMode", () => {
     expect(resolveNewThreadEnvMode({ ...newProject, newProjectsRoot: undefined })).toBe("worktree");
   });
 
-  it("lets a project override, or a rove.json the environment defers to, keep worktree mode", () => {
+  it("lets a project override, or a paperplane.json the environment defers to, keep worktree mode", () => {
     for (const projectSettings of [
       resolveProjectSettings(
         {

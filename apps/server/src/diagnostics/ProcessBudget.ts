@@ -3,7 +3,7 @@ import * as NodeChildProcess from "node:child_process";
 import * as NodeCrypto from "node:crypto";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import * as ProcessRunner from "../processRunner.ts";
-import { ensureRoveParentSlice } from "../process/agentScope.ts";
+import { ensurePaperplaneParentSlice } from "../process/agentScope.ts";
 import { configureSlice, withSliceLock } from "../process/systemdSlice.ts";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -12,14 +12,14 @@ import {
   Environment as HostProcessEnvironment,
   Platform as HostProcessPlatform,
   UserId as HostProcessUserId,
-} from "@rove-code/shared/HostProcess";
+} from "@getpaperplane/shared/HostProcess";
 
 const MemoryMiB = Schema.NumberFromString.check(
   Schema.isInt(),
   Schema.isBetween({ minimum: 128, maximum: 1_048_576 }),
 );
 
-const PROVIDER_BUDGET_POOL = "app-rove-workloads.slice";
+const PROVIDER_BUDGET_POOL = "app-paperplane-workloads.slice";
 
 const decodeMemoryMiB = Schema.decodeUnknownSync(MemoryMiB);
 const decodeTimeoutSeconds = Schema.decodeUnknownSync(
@@ -97,7 +97,7 @@ export const prepareBudgetedProcess = Effect.fn("prepareBudgetedProcess")(functi
     // Only the production pool owns the shared host ceiling. Isolated pools (tests,
     // diagnostics) must never resize limits a live server on this OS user relies on.
     const parent =
-      pool === PROVIDER_BUDGET_POOL ? yield* ensureRoveParentSlice() : { max: Infinity };
+      pool === PROVIDER_BUDGET_POOL ? yield* ensurePaperplaneParentSlice() : { max: Infinity };
     const max = Math.min(bytes, parent.max);
     const poolLimits = yield* withSliceLock(
       runtimeDirectory,
@@ -117,15 +117,15 @@ export const prepareBudgetedProcess = Effect.fn("prepareBudgetedProcess")(functi
   return { ...makeManagedProcess(command, args, pool, deadline, scopeOptions), ...limits };
 });
 
-/** An owner outside the command pool, still governed by the aggregate Rove budget. */
+/** An owner outside the command pool, still governed by the aggregate Paperplane budget. */
 export function makeManagedProcess(
   command: string,
   args: ReadonlyArray<string>,
-  pool = "app-rove-agents.slice",
+  pool = "app-paperplane-agents.slice",
   deadline: ReadonlyArray<string> = [],
   options?: { readonly properties?: ReadonlyArray<string>; readonly collect?: boolean },
 ) {
-  const unit = `rove-budget-${NodeCrypto.randomUUID()}.scope`;
+  const unit = `paperplane-budget-${NodeCrypto.randomUUID()}.scope`;
   let cleanupTask: Promise<void> | undefined;
   const stopScope = async () => {
     try {

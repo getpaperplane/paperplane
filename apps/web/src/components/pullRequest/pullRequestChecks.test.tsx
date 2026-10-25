@@ -1,4 +1,4 @@
-import type { EnvironmentId, ProjectId, PullRequestCheck } from "@rove-code/contracts";
+import type { EnvironmentId, ProjectId, PullRequestCheck } from "@getpaperplane/contracts";
 import { Children, isValidElement, type ReactNode } from "react";
 import { describe, expect, it } from "vite-plus/test";
 
@@ -76,10 +76,10 @@ function entry(overrides: Partial<EnvironmentPullRequestEntry>): EnvironmentPull
     environmentId: "env-1" as EnvironmentId,
     projectId: "project-1" as ProjectId,
     provider: "github",
-    repository: "rovecode/rove",
+    repository: "paperplane/paperplane",
     number: 1,
     title: "Add the pull requests page",
-    url: "https://github.com/rovecode/rove/pull/1",
+    url: "https://github.com/paperplane/paperplane/pull/1",
     author: null,
     headBranch: "feat/page",
     baseBranch: "main",

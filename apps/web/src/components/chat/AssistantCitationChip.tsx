@@ -1,8 +1,8 @@
-import type { AssistantCitation } from "@rove-code/contracts";
+import type { AssistantCitation } from "@getpaperplane/contracts";
 import {
   assistantCitationLabel,
   serializeAssistantCitation,
-} from "@rove-code/shared/assistantCitations";
+} from "@getpaperplane/shared/assistantCitations";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { ArrowUpRightIcon, PencilIcon, QuoteIcon } from "lucide-react";
 import {

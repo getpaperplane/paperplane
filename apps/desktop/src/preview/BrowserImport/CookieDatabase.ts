@@ -9,7 +9,7 @@ import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
 import * as SqlClient from "effect/sql/SqlClient";
 
-import * as NodeSqliteClient from "@rove-code/shared/nodeSqliteClient";
+import * as NodeSqliteClient from "@getpaperplane/shared/nodeSqliteClient";
 
 /** A cookie in the shape Electron's `session.cookies.set` accepts. */
 export interface ImportedCookie {
@@ -86,7 +86,7 @@ export const bareHost = (host: string): string => (host.startsWith(".") ? host.s
  */
 export const snapshotCookieDatabase = Effect.fn("CookieDatabase.snapshotCookieDatabase")(function* (
   cookiePath: string,
-  tempPrefix = "rove-cookie-import-",
+  tempPrefix = "paperplane-cookie-import-",
 ) {
   const fileSystem = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;

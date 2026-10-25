@@ -4,17 +4,22 @@ import * as FileSystem from "effect/FileSystem";
 import * as Option from "effect/Option";
 
 import * as DesktopEnvironment from "./DesktopEnvironment.ts";
+import {
+  isOldDesktopCliShim,
+  removeOldDesktopCliShims,
+  migrationAttempt,
+} from "./DesktopMigration.ts";
 import { makeComponentLogger } from "./DesktopObservability.ts";
 
-// A desktop install puts no `rove` on PATH, so commands the server asks a person
-// to run (`sudo rove browser setup`) had nothing to call. The app keeps a small
-// launcher for its bundled CLI in the Rove home, which is never on PATH and so
-// never shadows another `rove`, and the server names it by absolute path in those
-// commands through ROVE_CLI_PATH. An AppImage mounts somewhere new each run,
+// A desktop install puts no `paperplane` on PATH, so commands the server asks a person
+// to run (`sudo paperplane browser setup`) had nothing to call. The app keeps a small
+// launcher for its bundled CLI in the Paperplane home, which is never on PATH and so
+// never shadows another `paperplane`, and the server names it by absolute path in those
+// commands through PAPERPLANE_CLI_PATH. An AppImage mounts somewhere new each run,
 // so its launcher mounts the AppImage itself instead of pointing into it.
 const { logInfo, logWarning } = makeComponentLogger("desktop-cli-shim");
 
-export const MARKER = "Written by Rove Code: runs the desktop app's bundled rove CLI.";
+export const MARKER = "Written by Paperplane: runs the desktop app's bundled paperplane CLI.";
 
 /** Server entry inside the app, relative to its server root (an asar archive when packaged). */
 const SERVER_ENTRY = "apps/server/dist/bin.mjs";
@@ -24,7 +29,7 @@ const shellWord = (value: string) => `'${value.replaceAll("'", `'"'"'`)}'`;
 const cmdText = (value: string) => value.replaceAll("%", "%%");
 const cmdWord = (value: string) => `"${cmdText(value)}"`;
 
-const MOVED = "Rove Code has moved or been removed. Open the app once to update this command.";
+const MOVED = "Paperplane has moved or been removed. Open the app once to update this command.";
 
 export type CliShimTarget =
   | { readonly kind: "appimage"; readonly appImage: string; readonly executableName: string }
@@ -34,21 +39,21 @@ export type CliShimTarget =
 /**
  * The launcher script. Electron runs the server as plain Node with
  * `ELECTRON_RUN_AS_NODE`, which reads the entry from inside the asar archive.
- * The launcher's own path and the app's Rove home are written in, so the command
+ * The launcher's own path and the app's Paperplane home are written in, so the command
  * the server shows is absolute and `sudo`, which clears the environment, still
  * runs against this install's home.
  */
 export const renderCliShim = (input: {
   readonly target: CliShimTarget;
   readonly shimPath: string;
-  readonly roveHome: string;
+  readonly paperplaneHome: string;
 }) => {
   const { target } = input;
   if (target.kind === "windows") {
-    const utf8 = [target.executable, target.entry, input.shimPath, input.roveHome].some((value) =>
-      [...value].some((character) => character.codePointAt(0)! > 0x7f),
+    const utf8 = [target.executable, target.entry, input.shimPath, input.paperplaneHome].some(
+      (value) => [...value].some((character) => character.codePointAt(0)! > 0x7f),
     );
-    const restore = utf8 ? ["chcp %rove_codepage% >nul"] : [];
+    const restore = utf8 ? ["chcp %paperplane_codepage% >nul"] : [];
     return [
       "@echo off",
       `rem ${MARKER}`,
@@ -59,12 +64,12 @@ export const renderCliShim = (input: {
       // switch is left out for the common all-ASCII install.
       ...(utf8
         ? [
-            `for /f "tokens=2 delims=:." %%c in ('chcp') do set "rove_codepage=%%c"`,
+            `for /f "tokens=2 delims=:." %%c in ('chcp') do set "paperplane_codepage=%%c"`,
             "chcp 65001 >nul",
           ]
         : []),
-      `set "ROVE_CLI_PATH=${cmdText(input.shimPath)}"`,
-      `if not defined ROVE_HOME set "ROVE_HOME=${cmdText(input.roveHome)}"`,
+      `set "PAPERPLANE_CLI_PATH=${cmdText(input.shimPath)}"`,
+      `if not defined PAPERPLANE_HOME set "PAPERPLANE_HOME=${cmdText(input.paperplaneHome)}"`,
       'set "ELECTRON_RUN_AS_NODE=1"',
       // A goto, not a parenthesized block: "Program Files (x86)" would close the block early.
       `if exist ${cmdWord(target.executable)} goto run`,
@@ -73,18 +78,18 @@ export const renderCliShim = (input: {
       "exit /b 127",
       ":run",
       `${cmdWord(target.executable)} ${cmdWord(target.entry)} %*`,
-      'set "rove_exit=%ERRORLEVEL%"',
+      'set "paperplane_exit=%ERRORLEVEL%"',
       ...restore,
-      "exit /b %rove_exit%",
+      "exit /b %paperplane_exit%",
       "",
     ].join("\r\n");
   }
   const header = [
     "#!/bin/sh",
     `# ${MARKER}`,
-    `export ROVE_CLI_PATH=${shellWord(input.shimPath)}`,
-    `home=${shellWord(input.roveHome)}`,
-    'export ROVE_HOME="${ROVE_HOME:-$home}"',
+    `export PAPERPLANE_CLI_PATH=${shellWord(input.shimPath)}`,
+    `home=${shellWord(input.paperplaneHome)}`,
+    'export PAPERPLANE_HOME="${PAPERPLANE_HOME:-$home}"',
     "export ELECTRON_RUN_AS_NODE=1",
     `app=${shellWord(target.kind === "appimage" ? target.appImage : target.executable)}`,
     'if [ ! -x "$app" ]; then',
@@ -125,17 +130,17 @@ export const renderCliShim = (input: {
   ].join("\n");
 };
 
-/** Where the packaged app keeps its launcher: `<Rove home>/bin/rove`, `rove.cmd` on Windows. */
+/** Where the packaged app keeps its launcher: `<Paperplane home>/bin/paperplane`, `paperplane.cmd` on Windows. */
 export const launcherPath = (environment: DesktopEnvironment.DesktopEnvironment["Service"]) =>
   environment.path.join(
     environment.baseDir,
     "bin",
-    environment.platform === "win32" ? "rove.cmd" : "rove",
+    environment.platform === "win32" ? "paperplane.cmd" : "paperplane",
   );
 
 /**
- * Writes the packaged app's launcher to `<Rove home>/bin` and returns its path
- * for the backend's ROVE_CLI_PATH. Development builds run from a checkout
+ * Writes the packaged app's launcher to `<Paperplane home>/bin` and returns its path
+ * for the backend's PAPERPLANE_CLI_PATH. Development builds run from a checkout
  * and get none.
  */
 export const install = Effect.gen(function* () {
@@ -157,30 +162,42 @@ export const install = Effect.gen(function* () {
         // macOS and .deb installs live at a fixed path, so the launcher runs the app directly.
         onNone: () => ({ kind: "direct" as const, executable: process.execPath, entry }),
       });
-  const content = renderCliShim({ target, shimPath, roveHome: environment.baseDir });
+  const content = renderCliShim({ target, shimPath, paperplaneHome: environment.baseDir });
 
   return yield* Effect.gen(function* () {
     const existing = yield* fs.readFileString(shimPath).pipe(Effect.option);
-    if (Option.isSome(existing) && !existing.value.includes(MARKER)) {
-      // Someone else's file; leave it, and let commands fall back to plain `rove`.
-      yield* logWarning("leaving a rove launcher the app did not write", { shimPath });
+    if (
+      Option.isSome(existing) &&
+      !existing.value.includes(MARKER) &&
+      !isOldDesktopCliShim(existing.value)
+    ) {
+      // Someone else's file; leave it, and let commands fall back to plain `paperplane`.
+      yield* logWarning("leaving a paperplane launcher the app did not write", { shimPath });
       return Option.none<string>();
     }
     if (Option.getOrUndefined(existing) !== content) {
       yield* fs.makeDirectory(path.dirname(shimPath), { recursive: true });
-      // Written beside the launcher and renamed over it, so a running `rove` never reads half a file.
+      // Written beside the launcher and renamed over it, so a running `paperplane` never reads half a file.
       const staging = `${shimPath}.${process.pid}.tmp`;
       yield* fs.writeFileString(staging, content, { mode: 0o755 });
       yield* fs.rename(staging, shimPath);
-      yield* logInfo("installed rove launcher", { shimPath });
+      yield* logInfo("installed paperplane launcher", { shimPath });
     }
+    yield* migrationAttempt(() =>
+      removeOldDesktopCliShims({
+        homeDirectory: environment.homeDirectory,
+        baseDir: environment.baseDir,
+        platform: environment.platform,
+      }),
+    );
     return Option.some(shimPath);
   }).pipe(
-    // Best-effort: nothing here may block the backend's start; commands then fall back to plain `rove`.
+    // Best-effort: nothing here may block the backend's start; commands then fall back to plain `paperplane`.
     Effect.catchCause((cause) =>
-      logWarning("could not install rove launcher", { shimPath, cause: Cause.pretty(cause) }).pipe(
-        Effect.as(Option.none<string>()),
-      ),
+      logWarning("could not install paperplane launcher", {
+        shimPath,
+        cause: Cause.pretty(cause),
+      }).pipe(Effect.as(Option.none<string>())),
     ),
     Effect.withSpan("desktop.cliShim.install"),
   );

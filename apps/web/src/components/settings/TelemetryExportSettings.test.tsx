@@ -1,4 +1,4 @@
-import { DEFAULT_SERVER_SETTINGS } from "@rove-code/contracts";
+import { DEFAULT_SERVER_SETTINGS } from "@getpaperplane/contracts";
 import { act, type ReactNode } from "react";
 import { create, type ReactTestRenderer } from "react-test-renderer";
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";

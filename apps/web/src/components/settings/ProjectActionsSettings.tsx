@@ -1,14 +1,14 @@
 import { useScopedSettingsWriteAllowed } from "./useScopedSettings";
-import { AuthSettingsWriteScope } from "@rove-code/contracts";
-import { EnvironmentId, type RoveProjectFileScript } from "@rove-code/contracts";
+import { AuthSettingsWriteScope } from "@getpaperplane/contracts";
+import { EnvironmentId, type PaperplaneProjectFileScript } from "@getpaperplane/contracts";
 import {
   isAtomCommandInterrupted,
   squashAtomCommandFailure,
-} from "@rove-code/client-runtime/state/runtime";
-import { DEFAULT_RESOLVED_KEYBINDINGS } from "@rove-code/shared/keybindings";
+} from "@getpaperplane/client-runtime/state/runtime";
+import { DEFAULT_RESOLVED_KEYBINDINGS } from "@getpaperplane/shared/keybindings";
 import { ChevronDownIcon, PlusIcon } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
-import { useRoveProjectFileState } from "../../hooks/useRoveProjectFileScripts";
+import { usePaperplaneProjectFileState } from "../../hooks/usePaperplaneProjectFileScripts";
 import { useEnvironments } from "../../state/environments";
 import {
   EMPTY_PROJECT_SCRIPT_INPUT,
@@ -88,16 +88,16 @@ export function ProjectActionsSettings() {
     }),
   );
 
-  // A project's rove.json can declare actions to import. Read it from the
+  // A project's paperplane.json can declare actions to import. Read it from the
   // representative checkout; the imported action still fans out.
   const representativeMember = target?.projectId ? memberById.get(target.projectId) : undefined;
-  const roveFile = useRoveProjectFileState(
+  const paperplaneFile = usePaperplaneProjectFileState(
     representativeMember?.environmentId ?? EnvironmentId.make("none"),
     representativeMember?.workspaceRoot ?? null,
   );
   const importableScripts = useMemo(
     () =>
-      roveFile.scripts.filter(
+      paperplaneFile.scripts.filter(
         (fileScript) =>
           !scripts.some(
             (script) =>
@@ -105,10 +105,10 @@ export function ProjectActionsSettings() {
               script.name.toLowerCase() === fileScript.name.toLowerCase(),
           ),
       ),
-    [scripts, roveFile.scripts],
+    [scripts, paperplaneFile.scripts],
   );
   const importFileScript = useCallback(
-    async (fileScript: RoveProjectFileScript) => {
+    async (fileScript: PaperplaneProjectFileScript) => {
       const payload: NewProjectScriptInput = {
         name: fileScript.name,
         command: fileScript.command,
@@ -162,7 +162,7 @@ export function ProjectActionsSettings() {
                 </MenuTrigger>
                 <MenuPopup align="end">
                   <MenuGroup>
-                    <MenuGroupLabel>Import from rove.json</MenuGroupLabel>
+                    <MenuGroupLabel>Import from paperplane.json</MenuGroupLabel>
                     <p className="px-2 pb-2 text-pretty text-sm text-muted-foreground">
                       Add actions declared by this checkout without editing them first.
                     </p>
@@ -210,10 +210,14 @@ export function ProjectActionsSettings() {
           onEdit={(script) => setRequest(editorRequestForScript(script, keybindings))}
         />
       )}
-      {roveFile.status === "invalid" ? (
+      {paperplaneFile.notice ? (
         <SettingsRow
-          title="rove.json is invalid"
-          description="A rove.json exists in this checkout but fails to parse, so every action and icon it declares is ignored. Check the JSON syntax and icon values."
+          title={
+            paperplaneFile.status === "legacy-only"
+              ? "Rename the project file"
+              : "paperplane.json is invalid"
+          }
+          description={paperplaneFile.notice}
           className="text-warning"
         />
       ) : null}

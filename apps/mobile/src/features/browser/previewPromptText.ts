@@ -1,4 +1,4 @@
-import type { PreviewStreamControl } from "@rove-code/client-runtime/preview/server-browser-stream";
+import type { PreviewStreamControl } from "@getpaperplane/client-runtime/preview/server-browser-stream";
 
 type Dialog = PreviewStreamControl["dialog"];
 

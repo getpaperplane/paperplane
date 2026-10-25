@@ -1,6 +1,6 @@
 import { useMemo } from "react";
-import { deriveThreadCheckpointSummaries } from "@rove-code/client-runtime/state/thread-checkpoints";
-import type { OrchestrationV2ThreadProjection } from "@rove-code/contracts";
+import { deriveThreadCheckpointSummaries } from "@getpaperplane/client-runtime/state/thread-checkpoints";
+import type { OrchestrationV2ThreadProjection } from "@getpaperplane/contracts";
 import { inferCheckpointTurnCountByRunId } from "../session-logic";
 import { useStructuralValue } from "./useStructuralValue";
 import type { TurnDiffSummary } from "../types";

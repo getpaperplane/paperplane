@@ -68,8 +68,8 @@ describe("parseFileUrlHref", () => {
   it.each([
     ["file:///Users/julius/project/src/main.ts#L42", "/Users/julius/project/src/main.ts", "#L42"],
     [
-      "file:///D:/Programme/rove/OpenInPicker.tsx#L69",
-      "D:/Programme/rove/OpenInPicker.tsx",
+      "file:///D:/Programme/paperplane/OpenInPicker.tsx#L69",
+      "D:/Programme/paperplane/OpenInPicker.tsx",
       "#L69",
     ],
     ["file://server/share/workspace-image.svg", "\\\\server\\share\\workspace-image.svg", ""],
@@ -116,8 +116,8 @@ describe("parseMarkdownFileLink", () => {
     ["C:\\Users\\mike\\project\\src\\main.ts", "C:\\Users\\mike\\project\\src\\main.ts"],
     ["C:%5Crepo%5Cimage.png", "C:\\repo\\image.png"],
     ["\\\\server\\share\\image.png", "\\\\server\\share\\image.png"],
-    ["/D:/Programme/rove/OpenInPicker.tsx", "D:/Programme/rove/OpenInPicker.tsx"],
-    ["</D:/Programme/rove/ChatMarkdown.tsx:1>", "D:/Programme/rove/ChatMarkdown.tsx"],
+    ["/D:/Programme/paperplane/OpenInPicker.tsx", "D:/Programme/paperplane/OpenInPicker.tsx"],
+    ["</D:/Programme/paperplane/ChatMarkdown.tsx:1>", "D:/Programme/paperplane/ChatMarkdown.tsx"],
     ["file:///Users/julius/project/file%2520name.md", "/Users/julius/project/file%20name.md"],
     ["file://server/share/workspace-image.svg", "\\\\server\\share\\workspace-image.svg"],
     ["file://localhost/home/me/notes.md", "/home/me/notes.md"],
@@ -190,14 +190,14 @@ describe("workspaceRelativeFilePath", () => {
     ["C:/", "c:/", "."],
     ["/repo/project/src/main.ts", "/repo/project", "src/main.ts"],
     ["/repo/project/src/main.ts", "/repo/project/", "src/main.ts"],
-    ["C:\\Users\\mike\\rove\\apps\\web\\a.ts", "C:/Users/mike/rove", "apps/web/a.ts"],
-    ["/C:/Users/mike/rove/apps/web/a.ts", "C:/Users/mike/rove", "apps/web/a.ts"],
+    ["C:\\Users\\mike\\paperplane\\apps\\web\\a.ts", "C:/Users/mike/paperplane", "apps/web/a.ts"],
+    ["/C:/Users/mike/paperplane/apps/web/a.ts", "C:/Users/mike/paperplane", "apps/web/a.ts"],
     ["/Repo/Project/src/main.ts", "/repo/project", null],
     ["/tmp/case/project/probe.txt", "/tmp/case/Project", null],
     ["//tmp/case/project/probe.txt", "//tmp/case/Project", null],
     ["/tmp/case/Project/probe.txt", "/tmp/case/Project", "probe.txt"],
-    ["C:/USERS/mike/rove/main.ts", "c:/users/MIKE/rove", "main.ts"],
-    ["/C:/USERS/mike/rove/main.ts", "/c:/users/MIKE/rove", "main.ts"],
+    ["C:/USERS/mike/paperplane/main.ts", "c:/users/MIKE/paperplane", "main.ts"],
+    ["/C:/USERS/mike/paperplane/main.ts", "/c:/users/MIKE/paperplane", "main.ts"],
     ["\\\\server\\share\\PROJECT\\main.ts", "\\\\Server\\Share\\Project", "main.ts"],
     ["/tmp/repo/file.ts", "/", "tmp/repo/file.ts"],
     ["C:/Users/MIKE/main.ts", "c:/", "Users/MIKE/main.ts"],
@@ -321,17 +321,17 @@ describe("resolveMarkdownFileLinkTarget", () => {
   it("normalizes slash-prefixed windows drive paths before resolving", () => {
     expect(
       resolveMarkdownFileLinkTarget(
-        "/D:/Programme/rove/apps/web/src/components/chat/OpenInPicker.tsx#L69",
+        "/D:/Programme/paperplane/apps/web/src/components/chat/OpenInPicker.tsx#L69",
       ),
-    ).toBe("D:/Programme/rove/apps/web/src/components/chat/OpenInPicker.tsx:69");
+    ).toBe("D:/Programme/paperplane/apps/web/src/components/chat/OpenInPicker.tsx:69");
   });
 
   it("resolves angle-bracketed windows drive paths", () => {
     expect(
       resolveMarkdownFileLinkTarget(
-        "</D:/Programme/rove/apps/web/src/components/ChatMarkdown.tsx:1>",
+        "</D:/Programme/paperplane/apps/web/src/components/ChatMarkdown.tsx:1>",
       ),
-    ).toBe("D:/Programme/rove/apps/web/src/components/ChatMarkdown.tsx:1");
+    ).toBe("D:/Programme/paperplane/apps/web/src/components/ChatMarkdown.tsx:1");
   });
 
   it("does not treat app routes as file links, even with a line anchor", () => {

@@ -1,5 +1,5 @@
-import { SourceControlProviderKind } from "@rove-code/contracts";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+import { SourceControlProviderKind } from "@getpaperplane/contracts";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 import { assert, describe, it } from "@effect/vitest";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import * as Effect from "effect/Effect";
@@ -12,10 +12,10 @@ import * as Schema from "effect/Schema";
 import { HttpClient, HttpClientResponse } from "effect/http";
 import { ChildProcessSpawner } from "effect/process";
 import * as TestClock from "effect/testing/TestClock";
-import * as SourceControlRateLimit from "@rove-code/source-control-core/server/SourceControlRateLimit";
+import * as SourceControlRateLimit from "@getpaperplane/source-control-core/server/SourceControlRateLimit";
 
-import type * as SourceControlHost from "@rove-code/source-control-core/server/SourceControlHost";
-import * as TestSourceControlHost from "@rove-code/source-control-testing/TestSourceControlHost";
+import type * as SourceControlHost from "@getpaperplane/source-control-core/server/SourceControlHost";
+import * as TestSourceControlHost from "@getpaperplane/source-control-testing/TestSourceControlHost";
 import * as GitHubRest from "./GitHubRest.ts";
 import * as GitHubRequestPolicy from "./GitHubRequestPolicy.ts";
 import * as GitHubCredentials from "./GitHubCredentials.ts";
@@ -317,7 +317,7 @@ describe("GitHubSourceControlProvider repository resolution", () => {
       host: "api.example.test:8443",
     },
   ])(
-    "creates a same-repository PR on Rove's selected $remoteName remote via $host",
+    "creates a same-repository PR on Paperplane's selected $remoteName remote via $host",
     ({ remoteName, repository, remoteHost, host }) => {
       const requests: GitHubRest.GitHubRestInput[] = [];
       const { layer, processCalls } = harness({
@@ -1394,7 +1394,7 @@ it.effect.each([
     expected: "chosen/repo",
   },
 ])(
-  "prefers GH_REPO, then Rove's context on $host: $resolved $envRepository",
+  "prefers GH_REPO, then Paperplane's context on $host: $resolved $envRepository",
   ({ host, resolved, envRepository, expected }) => {
     const targets: string[] = [];
     const { layer } = harness({

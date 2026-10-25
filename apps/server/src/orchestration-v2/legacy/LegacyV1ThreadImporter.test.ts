@@ -1,5 +1,5 @@
 import { assert, it } from "@effect/vitest";
-import { EventId, ProviderInstanceId, ThreadId } from "@rove-code/contracts";
+import { EventId, ProviderInstanceId, ThreadId } from "@getpaperplane/contracts";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -37,7 +37,7 @@ const layerTest = Layer.mergeAll(
   layerProjectionMaintenanceProvided,
 );
 
-// Reproduce Rove migration 056's nullable ownership without re-registering it.
+// Reproduce Paperplane migration 056's nullable ownership without re-registering it.
 const standaloneLegacySchema = Effect.gen(function* () {
   const sql = yield* SqlClient.SqlClient;
   const columns = yield* sql<{ readonly name: string }>`PRAGMA table_info(projection_threads)`;
@@ -79,7 +79,7 @@ const seedLegacyThread = (input: {
   `;
   });
 
-it.layer(layerTest)("Rove V1 compatibility", (it) => {
+it.layer(layerTest)("Paperplane V1 compatibility", (it) => {
   it.effect("preserves standalone history under existing or replayable workspace projects", () =>
     Effect.gen(function* () {
       const sql = yield* SqlClient.SqlClient;
@@ -198,14 +198,14 @@ it.layer(layerTest)("Rove V1 compatibility", (it) => {
             '2025-01-01T00:00:00.000Z', '2025-01-01T00:00:00.000Z'),
           ('bad-message', 'good', 'user', 'Bad timestamp', NULL, '[]', 0,
             '2026-01-01T00:00:00.000Z', 'invalid'),
-          ('latest', 'good', 'assistant', ${'```rove-response\n{"type":"table"}\n```'}, '{"forkOnly":"value"}', 'invalid', 0,
+          ('latest', 'good', 'assistant', ${'```paperplane-response\n{"type":"table"}\n```'}, '{"forkOnly":"value"}', 'invalid', 0,
             '2026-01-02T00:00:00.000Z', '2026-01-02T00:00:00.000Z')
       `;
         yield* sql`
         INSERT INTO projection_thread_pull_requests (
           thread_id, host, repository, number, url, source, linked_at, snapshot_json, stack_json
-        ) VALUES ('good', 'github.com', 'hafiezul/rove', 234,
-          'https://github.com/hafiezul/rove/pull/234', 'manual',
+        ) VALUES ('good', 'github.com', 'getpaperplane/paperplane', 234,
+          'https://github.com/getpaperplane/paperplane/pull/234', 'manual',
           '2026-01-01T00:00:00.000Z', 'invalid', 'invalid')
       `;
         yield* sql`
@@ -237,7 +237,7 @@ it.layer(layerTest)("Rove V1 compatibility", (it) => {
           good.messages.map((message) => message.id),
           ["older", "latest"],
         );
-        assert.include(good.messages[1]!.text, "rove-response");
+        assert.include(good.messages[1]!.text, "paperplane-response");
         assert.deepStrictEqual(good.messages[1]!.attachments, []);
         assert.isUndefined(good.messages[1]!.context);
         assert.isNull(good.thread.linkedPullRequest);

@@ -4,16 +4,16 @@
  * The fixture's own scenario (the same commands and steps the replay test
  * dispatches) runs through the real orchestrator and the real GrokAdapterV2;
  * only the ACP runtime's protocol logger is swapped for a tee. Outbound frames
- * are therefore exactly what Rove sends, and inbound frames exactly what Grok
- * answered. Run from apps/server with the Grok CLI on PATH (or ROVE_GROK_BIN):
+ * are therefore exactly what Paperplane sends, and inbound frames exactly what Grok
+ * answered. Run from apps/server with the Grok CLI on PATH (or PAPERPLANE_GROK_BIN):
  *
  *   node scripts/record-grok-acp-replay-fixture.ts --scenario simple
  */
 import * as NodeServices from "@effect/platform-node/NodeServices";
-import { type ProviderReplayEntry } from "@rove-code/contracts";
-import { GrokSettings } from "@rove-code/provider-grok/settings";
-import * as HostProcess from "@rove-code/shared/HostProcess";
-import { resolveSelfInvocation } from "@rove-code/shared/nodeRuntime";
+import { type ProviderReplayEntry } from "@getpaperplane/contracts";
+import { GrokSettings } from "@getpaperplane/provider-grok/settings";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
+import { resolveSelfInvocation } from "@getpaperplane/shared/nodeRuntime";
 import * as Clock from "effect/Clock";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
@@ -23,32 +23,32 @@ import * as Path from "effect/Path";
 import * as Schema from "effect/Schema";
 import type * as EffectAcpProtocol from "effect-acp/protocol";
 
-import * as TestProviderHost from "@rove-code/provider-testing/TestProviderHost";
+import * as TestProviderHost from "@getpaperplane/provider-testing/TestProviderHost";
 import {
   GROK_DEFAULT_INSTANCE_ID,
   GROK_PROVIDER,
   grokLaunchRuntimeMode,
   makeGrokAdapterV2,
-} from "@rove-code/provider-grok/testing";
-import { ACP_PROTOCOL } from "@rove-code/provider-acp/server/adapter";
-import * as IdAllocator from "@rove-code/provider-core/server/IdAllocator";
-import type * as ProviderAdapter from "@rove-code/provider-core/server/ProviderAdapter";
-import * as ProviderContinuationRequests from "@rove-code/provider-core/server/ProviderContinuationRequests";
+} from "@getpaperplane/provider-grok/testing";
+import { ACP_PROTOCOL } from "@getpaperplane/provider-acp/server/adapter";
+import * as IdAllocator from "@getpaperplane/provider-core/server/IdAllocator";
+import type * as ProviderAdapter from "@getpaperplane/provider-core/server/ProviderAdapter";
+import * as ProviderContinuationRequests from "@getpaperplane/provider-core/server/ProviderContinuationRequests";
 import * as ProviderAdapterRegistry from "../src/orchestration-v2/ProviderAdapterRegistry.ts";
 import { provideDeterministicTestRuntime } from "../src/orchestration-v2/testkit/DeterministicRuntime.ts";
 import { ORCHESTRATOR_REPLAY_FIXTURES } from "../src/orchestration-v2/testkit/fixtures/index.ts";
 import { materializeFixtureInput } from "../src/orchestration-v2/testkit/fixtures/shared.ts";
 import { runOrchestratorV2Scenario } from "../src/orchestration-v2/testkit/OrchestratorScenario.ts";
 import * as ProviderReplayHarness from "../src/orchestration-v2/testkit/ProviderReplayHarness.ts";
-import { checkpointWorkspace } from "@rove-code/provider-testing/replayWorkspace";
-import { makeGrokAcpRuntime } from "@rove-code/provider-grok/testing";
-import { buildRuntimeInstructions } from "@rove-code/provider-core/server/runtimeInstructions";
+import { checkpointWorkspace } from "@getpaperplane/provider-testing/replayWorkspace";
+import { makeGrokAcpRuntime } from "@getpaperplane/provider-grok/testing";
+import { buildRuntimeInstructions } from "@getpaperplane/provider-core/server/runtimeInstructions";
 
 const wallClock = Clock.Clock.defaultValue();
 const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 const decodeJson = Schema.decodeUnknownSync(Schema.fromJsonString(Schema.Unknown));
 
-// Broadcasts Rove never reads: account tier, marketing, and client UI settings.
+// Broadcasts Paperplane never reads: account tier, marketing, and client UI settings.
 const DROPPED_INBOUND_METHODS = new Set(["_x.ai/settings/update", "_x.ai/announcements/update"]);
 const HOME_PLACEHOLDER = "/home/grok-replay";
 
@@ -115,7 +115,7 @@ function makeWireTee() {
     };
   };
   // Grok runs its own wake turns (`task-completed-*`, `notifications-*`,
-  // `subagent-completed-*`) after Rove's run can already have settled, and its
+  // `subagent-completed-*`) after Paperplane's run can already have settled, and its
   // session roster can report idle before them. Grok is done when no session
   // has a queued or running prompt (`x.ai/queue/changed` vs `turn_completed`),
   // no background task still runs (`background_tasks`), and every spawned
@@ -171,7 +171,7 @@ function wireToEntries(wire: ReadonlyArray<WireMessage>): {
   readonly droppedFrames: number;
 } {
   const entries: Array<ProviderReplayEntry> = [];
-  const roveRequests = new Map<string, string>();
+  const paperplaneRequests = new Map<string, string>();
   const agentRequests = new Map<string, string>();
   let droppedFrames = 0;
   for (const { direction, message } of wire) {
@@ -183,7 +183,7 @@ function wireToEntries(wire: ReadonlyArray<WireMessage>): {
       }
       const isRequest = message.id !== undefined && message.id !== null;
       if (isRequest) {
-        (direction === "outgoing" ? roveRequests : agentRequests).set(
+        (direction === "outgoing" ? paperplaneRequests : agentRequests).set(
           String(message.id),
           message.method,
         );
@@ -200,11 +200,11 @@ function wireToEntries(wire: ReadonlyArray<WireMessage>): {
       });
       continue;
     }
-    const pending = direction === "outgoing" ? agentRequests : roveRequests;
+    const pending = direction === "outgoing" ? agentRequests : paperplaneRequests;
     const method = pending.get(String(message.id));
     if (method === undefined) {
       // Grok answers its own internal requests (e.g. id "skills-reload") on the
-      // shared stream; Rove's protocol drops those, so replay never sees them.
+      // shared stream; Paperplane's protocol drops those, so replay never sees them.
       droppedFrames += 1;
       continue;
     }
@@ -223,16 +223,17 @@ function wireToEntries(wire: ReadonlyArray<WireMessage>): {
   return { entries, droppedFrames };
 }
 
-const ROVE_INSTRUCTIONS_BODY = /<rove_code_instructions>\n[\s\S]*?\n<\/rove_code_instructions>/u;
+const PAPERPLANE_INSTRUCTIONS_BODY =
+  /<paperplane_code_instructions>\n[\s\S]*?\n<\/paperplane_code_instructions>/u;
 
-/** Replaces Rove-owned request content so prompt wording changes do not invalidate recordings. */
+/** Replaces Paperplane-owned request content so prompt wording changes do not invalidate recordings. */
 function normalizeOutboundFrame(frame: Record<string, unknown>, runtimeInstructions: string) {
   const params = isRecord(frame.params) ? frame.params : undefined;
   if (params === undefined) return frame;
   switch (frame.method) {
     case "initialize":
-      // Pin what Rove advertises (fs and terminal capabilities decide whether
-      // Grok routes file and shell work through Rove, the client type whether
+      // Pin what Paperplane advertises (fs and terminal capabilities decide whether
+      // Grok routes file and shell work through Paperplane, the client type whether
       // Auto mode asks); the rest is <any>.
       return {
         ...frame,
@@ -263,8 +264,8 @@ function normalizeOutboundFrame(frame: Record<string, unknown>, runtimeInstructi
               ? {
                   ...part,
                   text: part.text.replace(
-                    ROVE_INSTRUCTIONS_BODY,
-                    "<rove_code_instructions>\n<any>\n</rove_code_instructions>",
+                    PAPERPLANE_INSTRUCTIONS_BODY,
+                    "<paperplane_code_instructions>\n<any>\n</paperplane_code_instructions>",
                   ),
                 }
               : part,
@@ -439,7 +440,10 @@ const recordScenario = Effect.fn("recordGrokScenario")(function* (fixtureName: s
   };
 
   const tee = makeWireTee();
-  const settings = { ...DEFAULT_GROK_SETTINGS, binaryPath: process.env.ROVE_GROK_BIN ?? "grok" };
+  const settings = {
+    ...DEFAULT_GROK_SETTINGS,
+    binaryPath: process.env.PAPERPLANE_GROK_BIN ?? "grok",
+  };
   const layerRegistry = ProviderAdapterRegistry.layerFromAdaptersEffect(
     Effect.gen(function* () {
       const environment = yield* HostProcess.Environment;
@@ -555,7 +559,7 @@ const recordScenario = Effect.fn("recordGrokScenario")(function* (fixtureName: s
       generatedBy: "live-grok-recorder",
       grokVersion: initializeMeta.agentVersion ?? "unknown",
       normalization:
-        "Session ids are fixed UUIDs, the workspace is <workspace>, HOME is /home/grok-replay and the recording user is grok-replay. Rove-owned prompt text, MCP servers and initialize params other than clientCapabilities and _meta are <any>. Personal skills, machine identity, account settings and announcement broadcasts are removed, as are responses to Grok-internal request ids that Rove's protocol drops. Timestamps are kept as recorded.",
+        "Session ids are fixed UUIDs, the workspace is <workspace>, HOME is /home/grok-replay and the recording user is grok-replay. Paperplane-owned prompt text, MCP servers and initialize params other than clientCapabilities and _meta are <any>. Personal skills, machine identity, account settings and announcement broadcasts are removed, as are responses to Grok-internal request ids that Paperplane's protocol drops. Timestamps are kept as recorded.",
       droppedFrames,
     },
     entries: [

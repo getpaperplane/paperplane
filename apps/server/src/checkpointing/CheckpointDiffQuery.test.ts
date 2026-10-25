@@ -1,6 +1,6 @@
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import { assert, it, vi } from "@effect/vitest";
-import { CheckpointRef, CheckpointScopeId, RunId, ThreadId } from "@rove-code/contracts";
+import { CheckpointRef, CheckpointScopeId, RunId, ThreadId } from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 
@@ -21,7 +21,7 @@ const firstRunId = RunId.make("run:checkpoint-diff-v2:1");
 const secondRunId = RunId.make("run:checkpoint-diff-v2:2");
 const firstScopeId = CheckpointScopeId.make("scope:checkpoint-diff-v2:1");
 const secondScopeId = CheckpointScopeId.make("scope:checkpoint-diff-v2:2");
-const secondRef = CheckpointRef.make("refs/rove/test/second");
+const secondRef = CheckpointRef.make("refs/paperplane/test/second");
 
 function makeProjection(): ProjectionCheckpointContext {
   return {
@@ -176,7 +176,7 @@ it.effect("excludes ready checkpoints from rolled-back runs", () => {
           scopeId: firstScopeId,
           runId: firstRunId,
           appRunOrdinal: 1,
-          ref: CheckpointRef.make("refs/rove/test/first"),
+          ref: CheckpointRef.make("refs/paperplane/test/first"),
         },
         ...projection.checkpoints,
       ],

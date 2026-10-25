@@ -3,8 +3,8 @@ import {
   connectLoopbackRedirectUri,
   CONNECT_OAUTH_SCOPES,
   type ConnectAuthorizeRequest,
-} from "@rove-code/shared/connectAuth";
-import { clerkFrontendApiUrlFromPublishableKey } from "@rove-code/shared/relayAuth";
+} from "@getpaperplane/shared/connectAuth";
+import { clerkFrontendApiUrlFromPublishableKey } from "@getpaperplane/shared/relayAuth";
 
 import { isHostedStaticApp } from "../hostedPairing";
 import { hasCloudPublicConfig, resolveCloudPublicConfig, trimNonEmpty } from "./publicConfig";

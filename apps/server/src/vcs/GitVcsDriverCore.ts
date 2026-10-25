@@ -21,21 +21,24 @@ import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import {
   GitCommandError,
   type GitCommandFailureReason,
-  ROVE_PROJECT_FILE_NAME,
+  PAPERPLANE_PROJECT_FILE_NAME,
   type ReviewDiffFileContentsInput,
   type ReviewDiffPreviewInput,
   type ReviewDiffFileStat,
   type ReviewDiffPreviewSource,
   type VcsRef,
-} from "@rove-code/contracts";
-import { dedupeRemoteBranchesWithLocalMatches, normalizeGitRemoteUrl } from "@rove-code/shared/git";
-import { SelectedGitHubAccount } from "@rove-code/source-control-github/server/GitHubCredentials";
-import * as HostProcess from "@rove-code/shared/HostProcess";
-import { compactTraceAttributes } from "@rove-code/shared/observability";
-import { decodeJsonResult } from "@rove-code/shared/schemaJson";
-import { resolveSpawnCommand } from "@rove-code/shared/shell";
-import { parseRoveProjectFile } from "@rove-code/shared/roveProjectFile";
-import { resolveProjectFileBackedSetting } from "@rove-code/shared/projectSettings";
+} from "@getpaperplane/contracts";
+import {
+  dedupeRemoteBranchesWithLocalMatches,
+  normalizeGitRemoteUrl,
+} from "@getpaperplane/shared/git";
+import { SelectedGitHubAccount } from "@getpaperplane/source-control-github/server/GitHubCredentials";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
+import { compactTraceAttributes } from "@getpaperplane/shared/observability";
+import { decodeJsonResult } from "@getpaperplane/shared/schemaJson";
+import { resolveSpawnCommand } from "@getpaperplane/shared/shell";
+import { parsePaperplaneProjectFile } from "@getpaperplane/shared/paperplaneProjectFile";
+import { resolveProjectFileBackedSetting } from "@getpaperplane/shared/projectSettings";
 import { gitCommandDuration, gitCommandsTotal, withMetrics } from "../observability/Metrics.ts";
 import * as GitVcsDriver from "./GitVcsDriver.ts";
 import { stopWorktreeProcessesAfterRemoval } from "./worktreeProcesses.ts";
@@ -653,7 +656,7 @@ const createTrace2Monitor = Effect.fnUntraced(function* (
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const traceFilePath = yield* fs.makeTempFileScoped({
-    prefix: `rove-git-trace2-${process.pid}-`,
+    prefix: `paperplane-git-trace2-${process.pid}-`,
     suffix: ".json",
   });
   const hookStartByChildKey = new Map<string, { hookName: string; startedAtMs: number }>();
@@ -947,7 +950,7 @@ export const windowsLongPathConfigEnv = (
   };
 };
 
-// Rove: reset ambient HTTPS helpers only for the acting project's selected host.
+// Paperplane: reset ambient HTTPS helpers only for the acting project's selected host.
 const GITHUB_LOGIN_PATTERN = /^[a-z0-9][a-z0-9._-]*$/i;
 const GITHUB_HOST_PATTERN = /^[a-z0-9.-]+(?::\d+)?$/i;
 
@@ -2260,7 +2263,7 @@ export const makeGitVcsDriverCore = Effect.fn("makeGitVcsDriverCore")(function* 
           );
           const indexPath = path.resolve(cwd, indexValue.trim());
           const directory = yield* fileSystem.makeTempDirectoryScoped({
-            prefix: "rove-commit-index-",
+            prefix: "paperplane-commit-index-",
           });
           const tempIndexPath = path.join(directory, "index");
           const env = { GIT_INDEX_FILE: tempIndexPath } satisfies NodeJS.ProcessEnv;
@@ -2672,7 +2675,7 @@ export const makeGitVcsDriverCore = Effect.fn("makeGitVcsDriverCore")(function* 
       ? indexValue.trim()
       : path.resolve(cwd, indexValue.trim());
     const tempIndexPath = yield* fileSystem.makeTempFileScoped({
-      prefix: `rove-review-index-${process.pid}-`,
+      prefix: `paperplane-review-index-${process.pid}-`,
     });
     const indexExists = yield* fileSystem.exists(indexPath);
     if (indexExists) {
@@ -3547,7 +3550,7 @@ export const makeGitVcsDriverCore = Effect.fn("makeGitVcsDriverCore")(function* 
     // `.git/modules`, but a first-ever clone needs the network, and failing to
     // populate a submodule must not roll back the caller's thread. Repos with
     // hundreds of nested submodules opt out or stop at the top level; the
-    // caller resolves that from settings, or the checkout's rove.json decides.
+    // caller resolves that from settings, or the checkout's paperplane.json decides.
     const hasSubmodules = yield* fileSystem
       .exists(path.join(worktreePath, ".gitmodules"))
       .pipe(Effect.orElseSucceed(() => false));
@@ -3559,13 +3562,13 @@ export const makeGitVcsDriverCore = Effect.fn("makeGitVcsDriverCore")(function* 
           options?.submodules != null
             ? null
             : yield* fileSystem
-                .readFileString(path.join(worktreePath, ROVE_PROJECT_FILE_NAME))
+                .readFileString(path.join(worktreePath, PAPERPLANE_PROJECT_FILE_NAME))
                 .pipe(
                   Effect.flatMap((contents) => {
-                    const file = parseRoveProjectFile(contents);
+                    const file = parsePaperplaneProjectFile(contents);
                     return file === null
                       ? Effect.logWarning(
-                          "rove.json is invalid; initializing submodules recursively",
+                          "paperplane.json is invalid; initializing submodules recursively",
                           {
                             worktreePath,
                           },
@@ -3577,7 +3580,7 @@ export const makeGitVcsDriverCore = Effect.fn("makeGitVcsDriverCore")(function* 
         );
     if (hasSubmodules && submoduleMode.value === "none" && progress?.onSubmodulesDisabled) {
       yield* progress.onSubmodulesDisabled({
-        source: submoduleMode.source === "rove.json" ? "rove.json" : "settings",
+        source: submoduleMode.source === "paperplane.json" ? "paperplane.json" : "settings",
       });
     }
     if (submoduleMode.value !== "none") {
@@ -3722,7 +3725,7 @@ export const makeGitVcsDriverCore = Effect.fn("makeGitVcsDriverCore")(function* 
         yield* executeGit(
           "GitVcsDriver.refreshCheckedOutBranch.keepPrevious",
           input.cwd,
-          ["update-ref", "refs/rove/pre-refresh", headCommit],
+          ["update-ref", "refs/paperplane/pre-refresh", headCommit],
           { fallbackErrorDetail: "git failed to record the previous checkout commit" },
         );
       }

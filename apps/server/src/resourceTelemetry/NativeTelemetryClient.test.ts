@@ -1,11 +1,11 @@
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeServices from "@effect/platform-node/NodeServices";
-import type { HostPowerSnapshot } from "@rove-code/contracts";
+import type { HostPowerSnapshot } from "@getpaperplane/contracts";
 import {
   RESOURCE_MONITOR_PROTOCOL_VERSION,
   ResourceMonitorCommand,
   type ResourceMonitorHelloEvent,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { describe, expect, it } from "@effect/vitest";
 import * as DateTime from "effect/DateTime";
 import * as Deferred from "effect/Deferred";
@@ -124,7 +124,7 @@ describe("NativeTelemetryClient", () => {
       const client = yield* NativeTelemetryClient.make().pipe(
         Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
         Effect.provideService(ResourceMonitorBinary.ResourceMonitorBinary, {
-          resolve: Effect.succeed("/test/rove-resource-monitor"),
+          resolve: Effect.succeed("/test/paperplane-resource-monitor"),
         }),
       );
 
@@ -150,7 +150,7 @@ describe("NativeTelemetryClient", () => {
     }).pipe(
       Effect.provide(
         Layer.mergeAll(
-          ServerConfig.layerTest(process.cwd(), { prefix: "rove-native-telemetry-test-" }),
+          ServerConfig.layerTest(process.cwd(), { prefix: "paperplane-native-telemetry-test-" }),
           NodeCrypto.layer,
         ).pipe(Layer.provideMerge(NodeServices.layer)),
       ),

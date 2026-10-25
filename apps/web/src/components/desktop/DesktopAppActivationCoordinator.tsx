@@ -1,5 +1,5 @@
-import { squashAtomCommandFailure } from "@rove-code/client-runtime/state/runtime";
-import type { DesktopAppActivationRequest } from "@rove-code/contracts";
+import { squashAtomCommandFailure } from "@getpaperplane/client-runtime/state/runtime";
+import type { DesktopAppActivationRequest } from "@getpaperplane/contracts";
 import { useEffect, useEffectEvent, useRef } from "react";
 
 import { handleDesktopAppActivationRequest } from "../../desktopAppActivation";
@@ -63,7 +63,7 @@ export function DesktopAppActivationCoordinator() {
         });
         if (result._tag === "Failure") {
           const error = squashAtomCommandFailure(result);
-          throw error instanceof Error ? error : new Error("Rove Code could not add the project.");
+          throw error instanceof Error ? error : new Error("Paperplane could not add the project.");
         }
         return projectId;
       },

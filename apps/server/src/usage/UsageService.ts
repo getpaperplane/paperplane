@@ -3,7 +3,7 @@
  * buckets.
  *
  * Each built-in driver with a `usage` reader contributes its sources, including
- * work driven outside Rove Code. A `transcripts` reader names JSONL directories
+ * work driven outside Paperplane. A `transcripts` reader names JSONL directories
  * that this service streams itself; a `scan` reader reads its own sources.
  *
  * JSONL transcripts are append-only, so parsed records are memoised per file by
@@ -30,8 +30,8 @@ import {
   type UsageSummary,
   type UsageSummaryInput,
   UsageReadError,
-} from "@rove-code/contracts";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+} from "@getpaperplane/contracts";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 import * as Cause from "effect/Cause";
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
@@ -48,7 +48,7 @@ import * as Schema from "effect/Schema";
 import * as Semaphore from "effect/Semaphore";
 import { HttpClient, HttpClientResponse } from "effect/http";
 
-import { writeFileStringAtomically } from "@rove-code/shared/atomicWrite";
+import { writeFileStringAtomically } from "@getpaperplane/shared/atomicWrite";
 import * as ServerConfig from "../config.ts";
 import * as ServerSettings from "../serverSettings.ts";
 import {
@@ -56,13 +56,13 @@ import {
   resolvePiUsageAgentDir,
   type BuiltInUsageReadersEnv,
 } from "../provider/builtInDrivers.ts";
-import type { ProviderDriver } from "@rove-code/provider-core/server/driver";
-import { mergeProviderInstanceEnvironment } from "@rove-code/provider-core/server/instanceEnvironment";
+import type { ProviderDriver } from "@getpaperplane/provider-core/server/driver";
+import { mergeProviderInstanceEnvironment } from "@getpaperplane/provider-core/server/instanceEnvironment";
 import type {
   ProviderUsageInstance,
   TranscriptUsageFormat,
   UsageRecord,
-} from "@rove-code/provider-core/server/usage";
+} from "@getpaperplane/provider-core/server/usage";
 import { resolveModelAliases, UsageAggregator } from "./usageAggregation.ts";
 import {
   createOverrideRateTable,
@@ -202,7 +202,7 @@ export class UsageService extends Context.Service<
     /** Refetches the rate table ahead of its TTL. See `ensureRates`. */
     readonly refreshRates: Effect.Effect<UsagePricing>;
   }
->()("@rove-code/server/usage/UsageService") {}
+>()("@getpaperplane/server/usage/UsageService") {}
 
 const EMPTY_PRICING: UsagePricing = {
   status: "unavailable",

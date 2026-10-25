@@ -5,17 +5,19 @@ import * as NodePath from "node:path";
 import * as NodeURL from "node:url";
 import { afterAll, beforeAll, describe, expect, it } from "vite-plus/test";
 
-// oxlint-disable-next-line rove/no-global-process-runtime -- The native compiler targets the actual host; this script has no Effect runtime.
+// oxlint-disable-next-line paperplane/no-global-process-runtime -- The native compiler targets the actual host; this script has no Effect runtime.
 const hostArch = process.arch;
-// oxlint-disable-next-line rove/no-global-process-runtime -- Native compilation only runs on the actual Linux host.
+// oxlint-disable-next-line paperplane/no-global-process-runtime -- Native compilation only runs on the actual Linux host.
 const hostPlatform = process.platform;
 
 describe.skipIf(hostPlatform !== "linux")("bundled libsecret helper", () => {
   let directory;
   let executable;
   beforeAll(() => {
-    directory = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "rove-browser-secret-test-"));
-    executable = NodePath.join(directory, "rove-browser-secret");
+    directory = NodeFS.mkdtempSync(
+      NodePath.join(NodeOS.tmpdir(), "paperplane-browser-secret-test-"),
+    );
+    executable = NodePath.join(directory, "paperplane-browser-secret");
     const root = NodeURL.fileURLToPath(new URL("../../../native/browser-secret/", import.meta.url));
     const flags = NodeChildProcess.execFileSync(
       "pkg-config",
@@ -55,7 +57,12 @@ describe.skipIf(hostPlatform !== "linux")("bundled libsecret helper", () => {
     });
 
   it("builds an executable for the requested architecture into a staged resource directory", () => {
-    const output = NodePath.join(directory, "resources", "browser-secret", "rove-browser-secret");
+    const output = NodePath.join(
+      directory,
+      "resources",
+      "browser-secret",
+      "paperplane-browser-secret",
+    );
     NodeChildProcess.execFileSync(process.execPath, [
       NodeURL.fileURLToPath(new URL("./build-browser-secret.mjs", import.meta.url)),
       "--arch",
@@ -90,6 +97,16 @@ describe.skipIf(hostPlatform !== "linux")("bundled libsecret helper", () => {
     const result = run([scenario]);
     expect(result.status).toBe(code);
     expect(result.stdout.length).toBe(0);
+  });
+  it.each([
+    ["success", 0],
+    ["locked", 3],
+    ["missing", 2],
+    ["unavailable", 4],
+  ])("never asks libsecret to unlock during silent migration (%s)", (scenario, status) => {
+    const result = run(["--no-unlock", `silent-${scenario}`]);
+    expect(result.status).toBe(status);
+    if (status !== 0) expect(result.stdout.length).toBe(0);
   });
   it("rejects invalid arguments before accessing the keyring", () => {
     for (const args of [[], [""], ["chrome", "extra"]]) {

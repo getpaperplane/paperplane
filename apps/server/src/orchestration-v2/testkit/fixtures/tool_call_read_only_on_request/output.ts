@@ -1,5 +1,5 @@
 import { assert } from "@effect/vitest";
-import type { OrchestrationV2TurnItem, ProviderReplayTranscript } from "@rove-code/contracts";
+import type { OrchestrationV2TurnItem, ProviderReplayTranscript } from "@getpaperplane/contracts";
 
 import type { OrchestratorV2ScenarioResult } from "../../OrchestratorScenario.ts";
 import {
@@ -66,8 +66,8 @@ export function assertToolCallReadOnlyOnRequestOutput(
   }
 }
 
-// Rove advertises no client fs or terminal to Grok, so Grok reads and writes the
-// workspace itself and gates the write with its own permission prompt: Rove
+// Paperplane advertises no client fs or terminal to Grok, so Grok reads and writes the
+// workspace itself and gates the write with its own permission prompt: Paperplane
 // answers that prompt (the shared assertion pins it as the only request) and
 // never serves a file or terminal request.
 export function assertToolCallReadOnlyOnRequestGrokOutput(
@@ -84,7 +84,7 @@ export function assertToolCallReadOnlyOnRequestGrokOutput(
     };
     return frame.method === "session/request_permission" ? [frame.params?.toolCall?.kind] : [];
   });
-  assert.deepEqual(permissionKinds, ["edit"], "Grok must ask Rove before its own write");
+  assert.deepEqual(permissionKinds, ["edit"], "Grok must ask Paperplane before its own write");
 
   // Grok's edit prompt is the one whose "always" answer lasts only the session.
   const approval = projectionFor(result, transcript.scenario).turnItems.find(

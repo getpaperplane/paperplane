@@ -3,8 +3,12 @@ import * as NodePath from "node:path";
 
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { it } from "@effect/vitest";
-import { CheckpointRef, ThreadId, type VcsError } from "@rove-code/contracts";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+import { CheckpointRef, ThreadId, type VcsError } from "@getpaperplane/contracts";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
+import {
+  enableCheckpointRefMigration,
+  migrateDefaultHome,
+} from "@getpaperplane/shared/homeMigration";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
@@ -20,7 +24,7 @@ import * as VcsProcess from "../vcs/VcsProcess.ts";
 import * as ServerConfig from "../config.ts";
 
 const layerServerConfig = ServerConfig.ServerConfig.layerTest(process.cwd(), {
-  prefix: "rove-checkpoint-store-test-",
+  prefix: "paperplane-checkpoint-store-test-",
 });
 const layerVcsProcessTest = VcsProcess.layer.pipe(Layer.provide(NodeServices.layer));
 const layerVcsDriverTest = VcsDriverRegistry.layer.pipe(Layer.provide(layerVcsProcessTest));
@@ -136,9 +140,19 @@ it.layer(layerTest)("CheckpointStore.layer", (it) => {
   );
   describe("diffCheckpoints", () => {
     it.effect.each([false, true])(
-      "reads historical baselines without rewriting refs, fallback %s",
+      "migrates historical baselines before using them, fallback %s",
       (fallbackFromToHead) =>
         Effect.gen(function* () {
+          const home = yield* makeTmpDir("paperplane-ref-home-");
+          const fileSystem = yield* FileSystem.FileSystem;
+          yield* fileSystem.makeDirectory(NodePath.join(home, ".rove-code", "userdata"), {
+            recursive: true,
+          });
+          expect(migrateDefaultHome({ homeDirectory: home, log: () => {} }).kind).toBe("migrated");
+          yield* Effect.acquireRelease(
+            Effect.sync(() => enableCheckpointRefMigration(NodePath.join(home, ".paperplane"))),
+            () => Effect.sync(() => enableCheckpointRefMigration(home)),
+          );
           const tmp = yield* makeTmpDir();
           yield* initRepoWithCommit(tmp);
           const store = yield* CheckpointStore.CheckpointStore;
@@ -146,7 +160,7 @@ it.layer(layerTest)("CheckpointStore.layer", (it) => {
           const fromCheckpointRef = checkpointRefForThreadTurn(threadId, 0);
           const toCheckpointRef = checkpointRefForThreadTurn(threadId, 1);
           const historicalRef = CheckpointRef.make(
-            fromCheckpointRef.replace("refs/rove/", "refs/t3/"),
+            fromCheckpointRef.replace("refs/paperplane/", "refs/rove/"),
           );
           yield* git(tmp, ["update-ref", historicalRef, "HEAD"]);
           const original = yield* git(tmp, ["rev-parse", historicalRef]);
@@ -174,10 +188,8 @@ it.layer(layerTest)("CheckpointStore.layer", (it) => {
           ).toBe(true);
           const fs = yield* FileSystem.FileSystem;
           expect(yield* fs.readFileString(NodePath.join(tmp, "README.md"))).toBe("# test\n");
-          expect(yield* git(tmp, ["rev-parse", historicalRef])).toBe(original);
-          expect(yield* git(tmp, ["for-each-ref", "--format=%(refname)", fromCheckpointRef])).toBe(
-            "",
-          );
+          expect(yield* git(tmp, ["rev-parse", fromCheckpointRef])).toBe(original);
+          expect(yield* git(tmp, ["for-each-ref", "--format=%(refname)", historicalRef])).toBe("");
           yield* git(tmp, ["update-ref", fromCheckpointRef, "HEAD"]);
           expect(yield* store.diffCheckpoints(input)).toContain("-# unrelated head");
           yield* store.deleteCheckpointRefs({ cwd: tmp, checkpointRefs: [fromCheckpointRef] });
@@ -561,7 +573,9 @@ it.layer(layerTest)("CheckpointStore.layer", (it) => {
         // Capture must not leave temp indexes behind in the repo.
         const fileSystem = yield* FileSystem.FileSystem;
         const entries = yield* fileSystem.readDirectory(NodePath.join(tmp, ".git"));
-        expect(entries.filter((entry) => entry.startsWith("rove-checkpoint-index-"))).toEqual([]);
+        expect(entries.filter((entry) => entry.startsWith("paperplane-checkpoint-index-"))).toEqual(
+          [],
+        );
       }),
     );
   });

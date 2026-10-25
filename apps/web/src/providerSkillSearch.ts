@@ -1,14 +1,14 @@
-import { formatProviderSkillDisplayName } from "@rove-code/shared/inlineSkills";
-import type { ServerProviderSkill } from "@rove-code/contracts";
+import { formatProviderSkillDisplayName } from "@getpaperplane/shared/inlineSkills";
+import type { ServerProviderSkill } from "@getpaperplane/contracts";
 import {
   dedupeProviderSkillsByName,
   isProviderSkillUserInvocable,
-} from "@rove-code/client-runtime/providerSkills";
+} from "@getpaperplane/client-runtime/providerSkills";
 import {
   insertRankedSearchResult,
   normalizeSearchQuery,
   scoreQueryMatch,
-} from "@rove-code/shared/searchRanking";
+} from "@getpaperplane/shared/searchRanking";
 
 export function scoreProviderSkill(skill: ServerProviderSkill, query: string): number | null {
   const normalizedName = skill.name.toLowerCase();

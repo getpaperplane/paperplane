@@ -2,7 +2,7 @@
  * Whether this server is going down only to be replaced by an update. Shutdown
  * keeps the managed tunnel across those restarts instead of releasing it.
  */
-import { DESKTOP_UPDATE_RESTART_MARKER_FILE } from "@rove-code/contracts";
+import { DESKTOP_UPDATE_RESTART_MARKER_FILE } from "@getpaperplane/contracts";
 import * as Clock from "effect/Clock";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -34,7 +34,7 @@ export const pendingServiceUpdateExists = Effect.gen(function* () {
 });
 
 // A pending update alone is not proof a replacement server is coming: an
-// explicit launcher stop (`rove service uninstall`, `systemctl stop`,
+// explicit launcher stop (`paperplane service uninstall`, `systemctl stop`,
 // `launchctl bootout`) during
 // the pending window also tears this server down. The launcher marks that case
 // just before it signals the child, so pending + no marker is the handoff.

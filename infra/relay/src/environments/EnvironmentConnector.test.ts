@@ -11,10 +11,10 @@ import {
   RelayEnvironmentHealthResponseProofPayload,
   RelayEnvironmentMintResponse,
   RelayEnvironmentMintResponseProofPayload,
-} from "@rove-code/contracts/relay";
+} from "@getpaperplane/contracts/relay";
 import { describe, expect, it } from "@effect/vitest";
 import * as DateTime from "effect/DateTime";
-import { RELAY_HEALTH_RESPONSE_TYP, RELAY_MINT_RESPONSE_TYP } from "@rove-code/shared/relayJwt";
+import { RELAY_HEALTH_RESPONSE_TYP, RELAY_MINT_RESPONSE_TYP } from "@getpaperplane/shared/relayJwt";
 import * as Deferred from "effect/Deferred";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -69,12 +69,12 @@ const settings = RelayConfiguration.RelayConfiguration.of({
     teamId: "team-id",
     keyId: "key-id",
     privateKey: Redacted.make("private-key"),
-    bundleId: "dev.rove.app.dev",
+    bundleId: "io.github.getpaperplane.paperplane.dev",
   },
   apnsDeliveryJobSigningSecret: Redacted.make("job-secret"),
   clerkSecretKey: Redacted.make("clerk-secret"),
   clerkPublishableKey: "pk_test_test",
-  clerkJwtAudience: "rove-relay",
+  clerkJwtAudience: "paperplane-relay",
   cloudMintPrivateKey: Redacted.make(cloudKeyPair.privateKey),
   cloudMintPublicKey: cloudKeyPair.publicKey,
   managedEndpointBaseDomain: "example.test",
@@ -101,7 +101,7 @@ function signMintResponse(
 ): RelayEnvironmentMintResponse {
   const requestProof = decodeRequestProof<RelayCloudMintCredentialProofPayload>(request.proof);
   const payload = {
-    iss: `rove-env:${requestProof.environmentId}`,
+    iss: `paperplane-env:${requestProof.environmentId}`,
     aud: "https://relay.example.test",
     sub: requestProof.environmentId,
     jti: "mint-response-jti",
@@ -128,7 +128,7 @@ function signHealthResponse(
 ): RelayEnvironmentHealthResponse {
   const requestProof = decodeRequestProof<RelayCloudEnvironmentHealthProofPayload>(request.proof);
   const payload = {
-    iss: `rove-env:${requestProof.environmentId}`,
+    iss: `paperplane-env:${requestProof.environmentId}`,
     aud: "https://relay.example.test",
     sub: requestProof.environmentId,
     jti: "health-response-jti",
@@ -312,10 +312,10 @@ describe("EnvironmentConnector", () => {
         environmentId: "env-connector-test",
       });
 
-      expect(seenUrls).toEqual(["https://env.example.test/api/rove-connect/health"]);
+      expect(seenUrls).toEqual(["https://env.example.test/api/paperplane-connect/health"]);
       expect(seenProofs[0]).toMatchObject({
         iss: "https://relay.example.test",
-        aud: "rove-env:env-connector-test",
+        aud: "paperplane-env:env-connector-test",
         sub: "user_123",
         environmentId: "env-connector-test",
         scope: ["environment:status"],
@@ -711,10 +711,10 @@ describe("EnvironmentConnector", () => {
         deviceId: "device-123",
       });
 
-      expect(seenUrls).toEqual(["https://env.example.test/api/rove-connect/mint-credential"]);
+      expect(seenUrls).toEqual(["https://env.example.test/api/paperplane-connect/mint-credential"]);
       expect(seenProofs[0]).toMatchObject({
         iss: "https://relay.example.test",
-        aud: "rove-env:env-connector-test",
+        aud: "paperplane-env:env-connector-test",
         sub: "user_123",
         environmentId: "env-connector-test",
         clientProofKeyThumbprint: "client-proof-key-thumbprint",

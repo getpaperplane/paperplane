@@ -1,4 +1,4 @@
-import type { ExecutionEnvironmentPlatformOs } from "@rove-code/contracts";
+import type { ExecutionEnvironmentPlatformOs } from "@getpaperplane/contracts";
 
 export type PendingModifier = "ctrl" | "meta";
 export type HostPlatform = "mac" | "linux" | "windows" | "unknown";

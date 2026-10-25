@@ -7,7 +7,7 @@ import {
   makeProviderSettingsSchema,
   SourceControlProviderKind,
   TrimmedString,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 import {
@@ -15,7 +15,7 @@ import {
   isChangeRequestInProjectRepository,
   isChangeRequestOnProjectHost,
   isChangeRequestPath,
-} from "@rove-code/source-control-core/client/definition";
+} from "@getpaperplane/source-control-core/client/definition";
 
 const safeShellArgument = /^[A-Za-z0-9._/@+=,-]+$/;
 const repositoryName = /^[A-Za-z0-9._-]+\/[A-Za-z0-9._-]+$/;
@@ -29,7 +29,7 @@ const text = (annotations: Schema.Annotations.Key<string>) =>
   );
 
 /**
- * Bitbucket API credentials, used before the `ROVE_BITBUCKET_*` environment variables: an
+ * Bitbucket API credentials, used before the `PAPERPLANE_BITBUCKET_*` environment variables: an
  * access token, or an Atlassian account email with an API token. The access token wins when both
  * are saved.
  */
@@ -82,7 +82,7 @@ export const definition = defineSourceControlClient({
     headRepositoryNameWithOwner &&
     repositoryName.test(headRepositoryNameWithOwner) &&
     safeShellArgument.test(headBranch)
-      ? `git clone --single-branch --branch ${headBranch} https://bitbucket.org/${headRepositoryNameWithOwner}.git rove-pr-${number}`
+      ? `git clone --single-branch --branch ${headBranch} https://bitbucket.org/${headRepositoryNameWithOwner}.git paperplane-pr-${number}`
       : null,
   authorProfileUrl: () => null,
   referenceAutolinkRepositoryUrl: () => null,

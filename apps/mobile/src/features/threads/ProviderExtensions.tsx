@@ -20,7 +20,7 @@ function Stat({ value, label }: { value: string; label: string }) {
   return (
     <View className="min-w-[72px]">
       <Text
-        className="text-2xl font-rove-medium text-foreground"
+        className="text-2xl font-paperplane-medium text-foreground"
         style={{ fontVariant: ["tabular-nums"] }}
       >
         {value}
@@ -34,7 +34,7 @@ function SectionTitle({ children }: { children: string }) {
   return (
     <Text
       accessibilityRole="header"
-      className="px-1 pb-2 text-sm font-rove-medium text-foreground-muted"
+      className="px-1 pb-2 text-sm font-paperplane-medium text-foreground-muted"
     >
       {children}
     </Text>
@@ -61,7 +61,7 @@ export function ProviderExtensionsContent(props: ProviderResources) {
     >
       <Text className="px-1 text-sm leading-5 text-foreground-muted">
         Global Pi extensions found on the server. Project extensions load in their threads and are
-        not listed here. Standard questions work in Rove, but Pi terminal components do not.
+        not listed here. Standard questions work in Paperplane, but Pi terminal components do not.
       </Text>
 
       <View className="rounded-2xl bg-grouped-card px-4 py-3">
@@ -106,7 +106,10 @@ export function ProviderExtensionsContent(props: ProviderResources) {
 
       {props.data && compatibilityWarnings.length > 0 ? (
         <View className="gap-1.5 border-l-2 border-warning-border pl-3">
-          <Text accessibilityRole="header" className="font-rove-medium text-sm text-foreground">
+          <Text
+            accessibilityRole="header"
+            className="font-paperplane-medium text-sm text-foreground"
+          >
             Needs Pi's terminal
           </Text>
           {compatibilityWarnings.map((warning) => (
@@ -134,7 +137,9 @@ export function ProviderExtensionsContent(props: ProviderResources) {
                   index < all.length - 1 && "border-b border-border-subtle",
                 )}
               >
-                <Text className="text-sm font-rove-medium text-foreground">{provider.name}</Text>
+                <Text className="text-sm font-paperplane-medium text-foreground">
+                  {provider.name}
+                </Text>
                 <Text className="text-xs text-foreground-muted">
                   {provider.modelCount} {provider.modelCount === 1 ? "model" : "models"} ·{" "}
                   {provider.authenticated ? "Authenticated" : "Sign in needed"}
@@ -177,7 +182,7 @@ export function ProviderExtensionsContent(props: ProviderResources) {
                       />
                       <Text
                         className={cn(
-                          "flex-1 text-sm font-rove-medium",
+                          "flex-1 text-sm font-paperplane-medium",
                           isDisabled ? "text-foreground-muted" : "text-foreground",
                         )}
                       >
@@ -233,13 +238,13 @@ export function ProviderExtensionsContent(props: ProviderResources) {
         onPress={() => void props.refresh()}
         className="items-center rounded-2xl bg-grouped-card px-4 py-3 active:bg-subtle"
       >
-        <Text className="text-sm font-rove-medium text-foreground">
+        <Text className="text-sm font-paperplane-medium text-foreground">
           {props.error ? "Retry" : "Refresh catalog"}
         </Text>
       </Pressable>
       <Text className="px-1 text-xs leading-5 text-foreground-muted">
         {compatibilityWarnings.length === 0
-          ? "Found does not mean every extension feature works in Rove. Pi terminal UI stays in Pi. "
+          ? "Found does not mean every extension feature works in Paperplane. Pi terminal UI stays in Pi. "
           : ""}
         Disabling an extension stops loading it in new Pi sessions; existing sessions reload on
         their next turn.

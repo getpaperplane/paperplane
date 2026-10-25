@@ -4,8 +4,8 @@ import {
   ProviderDriverKind,
   ProviderInstanceId,
   type ServerProvider,
-} from "@rove-code/contracts";
-import { createModelCapabilities } from "@rove-code/shared/model";
+} from "@getpaperplane/contracts";
+import { createModelCapabilities } from "@getpaperplane/shared/model";
 import * as Deferred from "effect/Deferred";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -106,10 +106,10 @@ function layerProviderHost(input: {
     ProviderHost.ProviderHost.of({
       paths: {
         cwd: process.cwd(),
-        baseDir: "/rove",
-        stateDir: "/rove/userdata",
-        providerStatusCacheDir: "/rove/caches",
-        attachmentsDir: "/rove/userdata/attachments",
+        baseDir: "/paperplane",
+        stateDir: "/paperplane/userdata",
+        providerStatusCacheDir: "/paperplane/caches",
+        attachmentsDir: "/paperplane/userdata/attachments",
       },
       settings: input.settings ?? {
         get: Effect.succeed(DEFAULT_SERVER_SETTINGS),

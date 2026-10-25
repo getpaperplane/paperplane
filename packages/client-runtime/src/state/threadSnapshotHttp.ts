@@ -1,4 +1,4 @@
-import type { OrchestrationV2ThreadDetailSnapshot, ThreadId } from "@rove-code/contracts";
+import type { OrchestrationV2ThreadDetailSnapshot, ThreadId } from "@getpaperplane/contracts";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
@@ -92,4 +92,4 @@ export class ThreadSnapshotLoader extends Context.Service<
       threadId: ThreadId,
     ) => Effect.Effect<ThreadSnapshotLoadResult>;
   }
->()("@rove-code/client-runtime/state/threadSnapshotHttp/ThreadSnapshotLoader") {}
+>()("@getpaperplane/client-runtime/state/threadSnapshotHttp/ThreadSnapshotLoader") {}

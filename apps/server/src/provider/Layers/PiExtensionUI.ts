@@ -11,7 +11,7 @@ import type {
   PiExtensionStatusSnapshot,
   ProviderUserInputAnswers,
   UserInputQuestion,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import type { PiSessionEventLike } from "./PiAdapter.ts";
 
 const textForDisplay = (text: string) =>
@@ -22,7 +22,7 @@ const decodeAnswer = Schema.decodeUnknownSync(
 
 let themeInitialized = false;
 
-/** Standard Pi dialogs use Rove's provider-neutral questions, never terminal emulation. */
+/** Standard Pi dialogs use Paperplane's provider-neutral questions, never terminal emulation. */
 export function createPiExtensionUI(
   fallback: ExtensionUIContext,
   emit: (event: PiSessionEventLike) => void,
@@ -75,7 +75,7 @@ export function createPiExtensionUI(
         visible.push({ key: statusKey, text });
         remaining -= statusKey.length + text.length;
       }
-      emit({ type: "rove_ui_status", statuses: visible });
+      emit({ type: "paperplane_ui_status", statuses: visible });
     }, 250);
     statusTimer.unref();
   };
@@ -102,7 +102,7 @@ export function createPiExtensionUI(
         .map((entry) => entry.message)
         .join("\n")
         .slice(0, 8192);
-      if (message) emit({ type: "rove_ui_text", message });
+      if (message) emit({ type: "paperplane_ui_text", message });
     }, 500);
     textTimer.unref();
   };
@@ -122,11 +122,11 @@ export function createPiExtensionUI(
     if (stopped || opts?.signal?.aborted) return Promise.resolve(undefined);
     if (pending.size >= 32) throw new Error("Too many pending Pi extension questions.");
     if (editor?.prefill !== undefined && editor.prefill.length > 65_536) {
-      throw new Error("Pi extension editor prefill exceeds 65,536 characters in Rove.");
+      throw new Error("Pi extension editor prefill exceeds 65,536 characters in Paperplane.");
     }
     // Do not send an unbounded extension-owned array across the wire.
     if (choices && (choices.length === 0 || choices.length > 256)) {
-      throw new Error("Pi extension selectors require between 1 and 256 options in Rove.");
+      throw new Error("Pi extension selectors require between 1 and 256 options in Paperplane.");
     }
     const requestId = NodeCrypto.randomUUID();
     const question = {
@@ -152,7 +152,7 @@ export function createPiExtensionUI(
         if (timer !== undefined) clearTimeout(timer);
         opts?.signal?.removeEventListener("abort", cancel);
         emit({
-          type: "rove_ui_resolved",
+          type: "paperplane_ui_resolved",
           requestId,
           answers: answer === undefined ? {} : { answer },
         });
@@ -184,7 +184,7 @@ export function createPiExtensionUI(
       // free to route the answer (or Stop) back to this session.
       try {
         onPrompt();
-        emit({ type: "rove_ui_request", requestId, questions: [question] });
+        emit({ type: "paperplane_ui_request", requestId, questions: [question] });
       } catch (error) {
         cancel();
         throw error;
@@ -201,7 +201,7 @@ export function createPiExtensionUI(
     editor: (title, prefill) => ask(title, undefined, undefined, undefined, { prefill }),
     notify: (message, level = "info") => {
       const text = textForDisplay(message).trim();
-      if (!stopped && text) emit({ type: "rove_ui_notify", message: text, level });
+      if (!stopped && text) emit({ type: "paperplane_ui_notify", message: text, level });
     },
     custom: (factory, options) => {
       unsupported();

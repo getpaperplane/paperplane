@@ -1,10 +1,10 @@
 import { expect, it } from "@effect/vitest";
 import * as NodeServices from "@effect/platform-node/NodeServices";
-import { ThreadId } from "@rove-code/contracts";
+import { ThreadId } from "@getpaperplane/contracts";
 import {
   Environment as HostProcessEnvironment,
   Platform as HostProcessPlatform,
-} from "@rove-code/shared/HostProcess";
+} from "@getpaperplane/shared/HostProcess";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
@@ -139,14 +139,14 @@ const withWindows = <A, E>(
     }),
     Effect.provide([
       ServerSettings.layerTest({ enableAgentComputerUse: true }),
-      ServerConfig.layerTest(process.cwd(), { prefix: "rove-cua-config-" }).pipe(
+      ServerConfig.layerTest(process.cwd(), { prefix: "paperplane-cua-config-" }).pipe(
         Layer.provide(NodeServices.layer),
       ),
       NodeServices.layer,
     ]),
   );
 
-it.effect("never stops the Scheduled Task's daemon when Rove's scope closes", () =>
+it.effect("never stops the Scheduled Task's daemon when Paperplane's scope closes", () =>
   Effect.gen(function* () {
     const runs = yield* withWindows({}, ({ driver, runs }) =>
       Effect.gen(function* () {

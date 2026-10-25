@@ -5,14 +5,17 @@ import {
   type ServerProvider,
   type ThreadLinkedPullRequest,
   type ThreadPullRequestLink,
-} from "@rove-code/contracts";
-import { resolveSelectableModel, type SelectableModelOption } from "@rove-code/shared/model";
-import type { PromptLinkPullRequest, PromptLinkRepository } from "@rove-code/shared/promptLinks";
+} from "@getpaperplane/contracts";
+import { resolveSelectableModel, type SelectableModelOption } from "@getpaperplane/shared/model";
+import type {
+  PromptLinkPullRequest,
+  PromptLinkRepository,
+} from "@getpaperplane/shared/promptLinks";
 import {
   threadPullRequestKeyOf,
   threadPullRequestsOf,
   visibleThreadPullRequests,
-} from "@rove-code/shared/threadPullRequests";
+} from "@getpaperplane/shared/threadPullRequests";
 
 /**
  * How web and mobile resolve a prompt link against what this client knows. Both read the same

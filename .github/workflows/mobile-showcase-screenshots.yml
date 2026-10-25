@@ -24,10 +24,10 @@ on:
       theme:
         description: Palette to capture (all multiplies the run by six)
         required: true
-        default: rove
+        default: paperplane
         type: choice
         options:
-          - rove
+          - paperplane
           - plum
           - grove
           - ocean
@@ -65,9 +65,9 @@ jobs:
           cache: true
           run-install: |
             args:
-              - --filter=@rove-code/mobile...
-              - --filter=@rove-code/scripts...
-              - --filter=@rove-code/server...
+              - --filter=@getpaperplane/mobile...
+              - --filter=@getpaperplane/scripts...
+              - --filter=@getpaperplane/server...
 
       - name: Expose pnpm
         run: |
@@ -110,7 +110,7 @@ jobs:
     # one native build is shared between them.
     timeout-minutes: ${{ inputs.theme == 'all' && 300 || 60 }}
     env:
-      ROVE_SHOWCASE_ANDROID_ABI: x86_64
+      PAPERPLANE_SHOWCASE_ANDROID_ABI: x86_64
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -127,9 +127,9 @@ jobs:
           cache: true
           run-install: |
             args:
-              - --filter=@rove-code/mobile...
-              - --filter=@rove-code/scripts...
-              - --filter=@rove-code/server...
+              - --filter=@getpaperplane/mobile...
+              - --filter=@getpaperplane/scripts...
+              - --filter=@getpaperplane/server...
 
       - name: Expose pnpm
         run: |

@@ -1,4 +1,4 @@
-import type { ScopedThreadRef } from "@rove-code/contracts";
+import type { ScopedThreadRef } from "@getpaperplane/contracts";
 
 import { browserMiniPlayerSource, usePreviewMiniPlayerStore } from "~/previewMiniPlayerStore";
 import { whenPreviewTabKnown } from "~/previewStateStore";

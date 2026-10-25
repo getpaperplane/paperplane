@@ -212,7 +212,10 @@ function main() {
       cwd: webRoot,
       // Build logs go to stderr so stdout stays parseable JSON.
       stdio: ["ignore", process.stderr, "inherit"],
-      env: { ...process.env, ROVE_WEB_SOURCEMAP: process.env.ROVE_WEB_SOURCEMAP ?? "hidden" },
+      env: {
+        ...process.env,
+        PAPERPLANE_WEB_SOURCEMAP: process.env.PAPERPLANE_WEB_SOURCEMAP ?? "hidden",
+      },
     });
   }
   const manifestPath = join(options.dist, ".vite/manifest.json");

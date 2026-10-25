@@ -3,7 +3,7 @@ import {
   type ComputerUseMacosVm,
   type ComputerUseStatus,
   ThreadId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { describe, expect, it } from "vite-plus/test";
 
 import {
@@ -408,7 +408,7 @@ describe("isolated macOS VM setup", () => {
 
 describe("setup desktop", () => {
   const desktop = (overrides: Partial<ComputerDesktop>): ComputerDesktop => ({
-    id: "vm:rove-cua-golden",
+    id: "vm:paperplane-cua-golden",
     kind: "macos-vm",
     role: "setup",
     threadId: null,

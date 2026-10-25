@@ -1,6 +1,6 @@
-import type { EnvironmentConnectionPhase } from "@rove-code/client-runtime/connection";
-import type { EnvironmentShellStatus } from "@rove-code/client-runtime/state/shell";
-import type { EnvironmentThreadStatus } from "@rove-code/client-runtime/state/threads";
+import type { EnvironmentConnectionPhase } from "@getpaperplane/client-runtime/connection";
+import type { EnvironmentShellStatus } from "@getpaperplane/client-runtime/state/shell";
+import type { EnvironmentThreadStatus } from "@getpaperplane/client-runtime/state/threads";
 
 /**
  * Reports whether the route-local projections can still yield the requested

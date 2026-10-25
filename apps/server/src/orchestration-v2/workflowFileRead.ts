@@ -17,9 +17,9 @@ import * as NodeFS from "node:fs";
 import * as NodeFSP from "node:fs/promises";
 import * as NodePath from "node:path";
 
-import { OrchestrationWorkflowFileError } from "@rove-code/contracts";
+import { OrchestrationWorkflowFileError } from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 
 function workflowFilesRoot(home: string, configDir?: string): string {
   return NodePath.join(configDir?.trim() || NodePath.join(home, ".claude"), "projects");

@@ -4,8 +4,8 @@ import {
   isAtomCommandInterrupted,
   squashAtomCommandFailure,
   type AtomCommandResult,
-} from "@rove-code/client-runtime/state/runtime";
-import type { ProviderAuthResponse, ServerProvider } from "@rove-code/contracts";
+} from "@getpaperplane/client-runtime/state/runtime";
+import type { ProviderAuthResponse, ServerProvider } from "@getpaperplane/contracts";
 import { useNavigation, usePreventRemove } from "@react-navigation/native";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Linking, Pressable, ScrollView, TextInput, View } from "react-native";

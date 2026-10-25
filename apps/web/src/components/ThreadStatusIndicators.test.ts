@@ -1,5 +1,5 @@
-import { SourceControlProviderKind } from "@rove-code/contracts";
-import { ProjectId, type PullRequestSummary, type VcsStatusResult } from "@rove-code/contracts";
+import { SourceControlProviderKind } from "@getpaperplane/contracts";
+import { ProjectId, type PullRequestSummary, type VcsStatusResult } from "@getpaperplane/contracts";
 import { describe, expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import { AtomRegistry } from "effect/reactivity";

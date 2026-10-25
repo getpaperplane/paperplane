@@ -5,7 +5,7 @@ import type {
   PullRequestChecksState,
   PullRequestRef,
   ScopedThreadRef,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { useState } from "react";
 
 import { useOpenLink } from "~/browser/useOpenLink";

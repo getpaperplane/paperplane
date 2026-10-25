@@ -1,8 +1,8 @@
 import { appAtomRegistry } from "../../state/atom-registry";
 import { useAtomValue } from "@effect/atom-react";
-import type { EnvironmentThreadShell } from "@rove-code/client-runtime/state/shell";
-import { effectiveSnoozed } from "@rove-code/client-runtime/state/thread-settled";
-import { sortInboxThreadsByReturn } from "@rove-code/client-runtime/state/thread-inbox";
+import type { EnvironmentThreadShell } from "@getpaperplane/client-runtime/state/shell";
+import { effectiveSnoozed } from "@getpaperplane/client-runtime/state/thread-settled";
+import { sortInboxThreadsByReturn } from "@getpaperplane/client-runtime/state/thread-inbox";
 import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { Animated, FlatList, Modal, Pressable, View } from "react-native";
 import { Gesture, GestureDetector, GestureHandlerRootView } from "react-native-gesture-handler";
@@ -381,7 +381,7 @@ export function ThreadArrangementSheet(props: { onClose: () => void }) {
           style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}
         >
           <View className="flex-row items-center justify-between gap-3 px-5 py-3">
-            <Text className="flex-1 text-xl font-rove-semibold">Arrange threads</Text>
+            <Text className="flex-1 text-xl font-paperplane-semibold">Arrange threads</Text>
             <Pressable
               accessibilityRole="button"
               onPress={props.onClose}
@@ -525,7 +525,7 @@ export function ThreadArrangementSheet(props: { onClose: () => void }) {
                             setExpanded((value) => ({ ...value, [section]: !value[section] }));
                         }}
                       >
-                        <Text className="text-sm font-rove-semibold text-foreground-muted">
+                        <Text className="text-sm font-paperplane-semibold text-foreground-muted">
                           {item.section[0]!.toUpperCase() + item.section.slice(1)} (
                           {sections[item.section].length})
                         </Text>
@@ -543,7 +543,7 @@ export function ThreadArrangementSheet(props: { onClose: () => void }) {
               >
                 <Text
                   numberOfLines={visiblePreview.destination?.section ? 1 : 2}
-                  className="text-base font-rove-medium"
+                  className="text-base font-paperplane-medium"
                 >
                   {visiblePreview.thread.title}
                 </Text>

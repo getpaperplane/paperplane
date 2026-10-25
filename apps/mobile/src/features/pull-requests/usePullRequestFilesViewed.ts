@@ -1,7 +1,7 @@
 import { usePullRequestConnected } from "./usePullRequestConnected";
 import { useAtomRefresh, useAtomValue } from "@effect/atom-react";
-import { squashAtomCommandFailure } from "@rove-code/client-runtime/state/runtime";
-import type { PullRequestDetail } from "@rove-code/contracts";
+import { squashAtomCommandFailure } from "@getpaperplane/client-runtime/state/runtime";
+import type { PullRequestDetail } from "@getpaperplane/contracts";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { composerPullRequests } from "../../state/pull-requests";
 import { useEnvironmentQuery } from "../../state/query";

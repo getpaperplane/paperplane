@@ -1,4 +1,4 @@
-import type { ProviderApprovalDecision } from "@rove-code/contracts";
+import type { ProviderApprovalDecision } from "@getpaperplane/contracts";
 import * as Schema from "effect/Schema";
 
 const NonEmptyString = Schema.String.check(Schema.isMinLength(1));
@@ -177,7 +177,7 @@ export const MuseDelta = Schema.Struct({
   field: Schema.optional(Schema.String),
 });
 
-/** The Rove decision for one native Muse choice, or none when Rove has no equivalent. */
+/** The Paperplane decision for one native Muse choice, or none when Paperplane has no equivalent. */
 export function museApprovalDecision(
   choice: Pick<MuseApproval["availableChoices"][number], "decision" | "scope">,
 ): ProviderApprovalDecision | undefined {

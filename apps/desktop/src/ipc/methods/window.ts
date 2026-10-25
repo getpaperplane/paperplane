@@ -12,10 +12,10 @@ import {
   SystemSettingsPaneSchema,
   type DesktopEnvironmentBootstrap,
   type PickedThemeFile,
-} from "@rove-code/contracts";
-import { PROJECT_FAVICON_EXTENSIONS } from "@rove-code/shared/projectFavicon";
-import { resolveEditorCommand } from "@rove-code/shared/editor";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+} from "@getpaperplane/contracts";
+import { PROJECT_FAVICON_EXTENSIONS } from "@getpaperplane/shared/projectFavicon";
+import { resolveEditorCommand } from "@getpaperplane/shared/editor";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
 import * as Duration from "effect/Duration";

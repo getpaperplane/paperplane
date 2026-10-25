@@ -27,7 +27,7 @@ import {
   type AgentSessionProjectGit,
   type AgentSessionScanResult,
   type ProviderInstanceConfig,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -43,14 +43,14 @@ import {
   normalizeGitRemoteUrl,
   parseGitHubRepositoryNameWithOwnerFromRemoteUrl,
   parseOriginUrlFromGitConfig,
-} from "@rove-code/shared/git";
-import * as HostProcess from "@rove-code/shared/HostProcess";
-import { normalizeProjectPathForComparison } from "@rove-code/shared/path";
+} from "@getpaperplane/shared/git";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
+import { normalizeProjectPathForComparison } from "@getpaperplane/shared/path";
 
 import * as ServerConfig from "../config.ts";
 import * as ProjectStore from "../orchestration-v2/ProjectStore.ts";
 import { resolveCodexHomeLayout } from "../provider/Drivers/CodexHomeLayout.ts";
-import { expandHomePath } from "@rove-code/provider-core/server/pathExpansion";
+import { expandHomePath } from "@getpaperplane/provider-core/server/pathExpansion";
 import * as ServerSettings from "../serverSettings.ts";
 import {
   createTranscriptJsonReader,
@@ -194,7 +194,7 @@ export class AgentSessionScanner extends Context.Service<
       completedSources?: ReadonlyArray<AgentSessionImportSource>,
     ) => Stream.Stream<AgentSessionRecentThread, AgentSessionScanError>;
   }
->()("@rove-code/server/project/AgentSessionScanner") {}
+>()("@getpaperplane/server/project/AgentSessionScanner") {}
 
 type AgentSessionSource = AgentSessionProjectCandidate["sources"][number];
 
@@ -536,11 +536,11 @@ function shouldRetainDecodedRecord(
 }
 
 /**
- * Rove Code runs its own agent sessions inside disposable worktrees. Their
+ * Paperplane runs its own agent sessions inside disposable worktrees. Their
  * transcripts look exactly like user sessions, but re-importing the app's own
  * sandboxes as projects is never right. Matches this server's configured
- * worktrees directory plus the conventional `.rove/worktrees` layout, which
- * also catches sandboxes from other Rove homes on the same machine. Separators
+ * worktrees directory plus the conventional `.paperplane/worktrees` layout, which
+ * also catches sandboxes from other Paperplane homes on the same machine. Separators
  * are normalized (and, on Windows, case folded) so the prefix match holds
  * there too. Callers check both the recorded spelling and its realpath so a
  * symlink into the worktrees directory cannot bypass the filter.
@@ -550,7 +550,7 @@ function normalizeForWorktreeMatch(value: string, caseFold: boolean): string {
   return caseFold ? normalized.toLowerCase() : normalized;
 }
 
-function isRoveManagedWorktree(
+function isPaperplaneManagedWorktree(
   candidatePath: string,
   worktreesDir: string,
   caseFold: boolean,
@@ -558,6 +558,8 @@ function isRoveManagedWorktree(
   const normalized = normalizeForWorktreeMatch(candidatePath, caseFold);
   return (
     normalized.startsWith(normalizeForWorktreeMatch(worktreesDir, caseFold)) ||
+    normalized.includes("/.paperplane/worktrees/") ||
+    // Stored worktree paths are deliberately not moved by home migration.
     normalized.includes("/.rove/worktrees/")
   );
 }
@@ -656,7 +658,7 @@ export const make = Effect.gen(function* () {
     normalizeForWorktreeMatch(candidatePath, foldWorktreeCase).startsWith(
       normalizeForWorktreeMatch(baseDir, foldWorktreeCase),
     ) ||
-    isRoveManagedWorktree(candidatePath, worktreesDir, foldWorktreeCase);
+    isPaperplaneManagedWorktree(candidatePath, worktreesDir, foldWorktreeCase);
 
   const listDirectory = (directory: string) =>
     fileSystem.readDirectory(directory).pipe(Effect.orElseSucceed((): ReadonlyArray<string> => []));

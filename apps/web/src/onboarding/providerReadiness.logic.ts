@@ -4,7 +4,7 @@ import {
   type ExecutionEnvironmentPlatformOs,
   type ServerProvider,
   type ServerSettings,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 

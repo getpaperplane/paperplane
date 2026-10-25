@@ -4,8 +4,8 @@ import {
   COMPOSER_CONTEXT_TERMINAL_TEXT_MAX_CHARS,
   type EnvironmentId,
   type ThreadId,
-} from "@rove-code/contracts";
-import { formatComposerContextReference } from "@rove-code/shared/composerContextReferences";
+} from "@getpaperplane/contracts";
+import { formatComposerContextReference } from "@getpaperplane/shared/composerContextReferences";
 import { useState } from "react";
 import { Platform, Pressable, ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";

@@ -1,4 +1,4 @@
-import { DesktopSshEnvironmentTargetSchema, EnvironmentId } from "@rove-code/contracts";
+import { DesktopSshEnvironmentTargetSchema, EnvironmentId } from "@getpaperplane/contracts";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 
@@ -29,10 +29,10 @@ export class BearerConnectionProfile extends Schema.TaggedClass<BearerConnection
      */
     learned: Schema.optionalKey(Schema.Literal(true)),
     /**
-     * "rove-connect" when the route authenticates with the environment's Rove
+     * "paperplane-connect" when the route authenticates with the environment's Paperplane
      * Connect credential instead of a stored bearer token.
      */
-    authorization: Schema.optionalKey(Schema.Literal("rove-connect")),
+    authorization: Schema.optionalKey(Schema.Literal("paperplane-connect")),
     /**
      * "tailscale" on a learned route the server found on its Tailscale
      * interface. A bare 100.64.0.0/10 address could belong to any VPN.
@@ -52,7 +52,7 @@ export class SshConnectionProfile extends Schema.TaggedClass<SshConnectionProfil
 export const ConnectionProfile = Schema.Union([BearerConnectionProfile, SshConnectionProfile]);
 export type ConnectionProfile = typeof ConnectionProfile.Type;
 
-/** One way to reach an environment: Rove Connect, a direct URL, or SSH. */
+/** One way to reach an environment: Paperplane Connect, a direct URL, or SSH. */
 export interface ConnectionRoute {
   readonly target: ConnectionTarget;
   readonly profile: Option.Option<ConnectionProfile>;

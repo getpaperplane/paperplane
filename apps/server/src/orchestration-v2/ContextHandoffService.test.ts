@@ -7,13 +7,13 @@ import {
   ThreadId,
   TurnItemId,
   type OrchestrationV2TurnItem,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 
 import * as ContextHandoffService from "./ContextHandoffService.ts";
-import * as IdAllocator from "@rove-code/provider-core/server/IdAllocator";
+import * as IdAllocator from "@getpaperplane/provider-core/server/IdAllocator";
 
 const layerTest = ContextHandoffService.layer.pipe(Layer.provide(IdAllocator.layer));
 

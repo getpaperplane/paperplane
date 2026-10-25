@@ -1,4 +1,4 @@
-import { ApprovalRequestId, EnvironmentId, ThreadId } from "@rove-code/contracts";
+import { ApprovalRequestId, EnvironmentId, ThreadId } from "@getpaperplane/contracts";
 import { beforeEach, expect, it, vi } from "vite-plus/test";
 import { useComposerDraftStore } from "./composerDraftStore";
 import {

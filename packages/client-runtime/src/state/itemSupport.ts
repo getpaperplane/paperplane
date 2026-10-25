@@ -1,4 +1,4 @@
-import type { OrchestrationV2ThreadProjection, TurnItemId } from "@rove-code/contracts";
+import type { OrchestrationV2ThreadProjection, TurnItemId } from "@getpaperplane/contracts";
 
 type Projection = OrchestrationV2ThreadProjection;
 

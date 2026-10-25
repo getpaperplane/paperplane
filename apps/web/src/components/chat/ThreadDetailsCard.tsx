@@ -1,5 +1,5 @@
 import { useLayoutEffect, useState, type ReactNode, type RefObject } from "react";
-import type { ScopedThreadRef } from "@rove-code/contracts";
+import type { ScopedThreadRef } from "@getpaperplane/contracts";
 import { ScrollArea } from "../ui/scroll-area";
 import { cn } from "../../lib/utils";
 import { Popover, PopoverPopup, PopoverCreateHandle } from "../ui/popover";

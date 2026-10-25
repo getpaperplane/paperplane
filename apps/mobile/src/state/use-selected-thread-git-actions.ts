@@ -1,22 +1,25 @@
 import { useCallback, useEffect, useEffectEvent, useMemo } from "react";
 
-import { EnvironmentProject, EnvironmentThreadShell } from "@rove-code/client-runtime/state/shell";
-import type { AtomCommandResult } from "@rove-code/client-runtime/state/runtime";
+import {
+  EnvironmentProject,
+  EnvironmentThreadShell,
+} from "@getpaperplane/client-runtime/state/shell";
+import type { AtomCommandResult } from "@getpaperplane/client-runtime/state/runtime";
 import {
   type GitActionRequestInput,
   type VcsActionOperation,
   type VcsRef,
-} from "@rove-code/client-runtime/state/vcs";
+} from "@getpaperplane/client-runtime/state/vcs";
 import {
   AuthOrchestrationOperateScope,
   AuthSourceControlWriteScope,
   EnvironmentAuthorizationError,
   type GitRunStackedActionResult,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   dedupeRemoteBranchesWithLocalMatches,
   sanitizeFeatureBranchName,
-} from "@rove-code/shared/git";
+} from "@getpaperplane/shared/git";
 import * as Cause from "effect/Cause";
 import { AsyncResult } from "effect/reactivity";
 

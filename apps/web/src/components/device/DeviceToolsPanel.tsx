@@ -1,5 +1,5 @@
-import type { DeviceHubAccess } from "@rove-code/client-runtime/state/deviceHubAccess";
-import type { DevicePermission, DeviceSummary, DeviceTextSize } from "@rove-code/contracts";
+import type { DeviceHubAccess } from "@getpaperplane/client-runtime/state/deviceHubAccess";
+import type { DevicePermission, DeviceSummary, DeviceTextSize } from "@getpaperplane/contracts";
 import { ChevronDown, X } from "lucide-react";
 import { useEffect, useState } from "react";
 

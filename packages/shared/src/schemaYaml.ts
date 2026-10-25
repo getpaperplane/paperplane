@@ -68,7 +68,7 @@ function stringifyYaml(options?: YamlStringifyOptions): SchemaGetter.Getter<stri
  *
  * ```ts
  * import * as Schema from "effect/Schema"
- * import { fromYamlString } from "@rove-code/shared/schemaYaml"
+ * import { fromYamlString } from "@getpaperplane/shared/schemaYaml"
  *
  * const schema = Schema.String.pipe(Schema.decodeTo(Schema.Unknown, fromYamlString))
  * ```

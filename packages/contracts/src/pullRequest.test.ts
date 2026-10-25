@@ -46,7 +46,7 @@ const LIST_RESULT: PullRequestListResult = {
       provider: SourceControlProviderKind.make("github"),
       host: "github.com",
       projectId: "project-1" as PullRequestListResult["entries"][number]["projectId"],
-      projectTitle: "rove",
+      projectTitle: "paperplane",
       repository: "pingdotgg/t3code",
       number: 1,
       title: "Add a pull requests page",

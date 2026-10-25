@@ -5,7 +5,7 @@ import {
   MODEL_PICKER_JUMP_KEYBINDING_COMMANDS,
   type ScopedThreadRef,
   THREAD_JUMP_KEYBINDING_COMMANDS,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   type HtmlRenderShortcut,
   htmlRenderShortcutsMessage,
@@ -16,12 +16,12 @@ import {
   readHtmlRenderImageRequest,
   readHtmlRenderKeyDown,
   readHtmlRenderLinkRequest,
-} from "@rove-code/shared/htmlRender";
+} from "@getpaperplane/shared/htmlRender";
 import {
   isMacPlatform,
   matchesKeybindingShortcut,
   normalizeEventKey,
-} from "@rove-code/shared/keybindings";
+} from "@getpaperplane/shared/keybindings";
 import { useEffect, useEffectEvent, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 import { useOpenLink } from "~/browser/useOpenLink";

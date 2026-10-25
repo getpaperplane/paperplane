@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 
-import { dedupeRemoteBranchesWithLocalMatches } from "@rove-code/shared/git";
+import { dedupeRemoteBranchesWithLocalMatches } from "@getpaperplane/shared/git";
 
 import { useBranches } from "./queries";
 import { useEnvironmentQuery } from "./query";

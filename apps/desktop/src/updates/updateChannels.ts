@@ -1,4 +1,4 @@
-import type { DesktopUpdateChannel } from "@rove-code/contracts";
+import type { DesktopUpdateChannel } from "@getpaperplane/contracts";
 
 const NIGHTLY_VERSION_PATTERN = /^[^-+]+-nightly\.\d{8}\.\d+$/;
 // Preview builds are the maintainers' test train, cut by hand from unreleased

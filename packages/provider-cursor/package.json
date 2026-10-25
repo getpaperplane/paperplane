@@ -1,5 +1,5 @@
 {
-  "name": "@rove-code/provider-cursor",
+  "name": "@getpaperplane/provider-cursor",
   "private": true,
   "type": "module",
   "exports": {
@@ -50,17 +50,17 @@
   },
   "dependencies": {
     "@cursor/sdk": "1.0.35",
+    "@getpaperplane/contracts": "workspace:*",
+    "@getpaperplane/provider-core": "workspace:*",
+    "@getpaperplane/shared": "workspace:*",
     "@napi-rs/keyring": "^1.3.0",
-    "@rove-code/contracts": "workspace:*",
-    "@rove-code/provider-core": "workspace:*",
-    "@rove-code/shared": "workspace:*",
     "effect": "catalog:",
     "yaml": "catalog:"
   },
   "devDependencies": {
     "@effect/platform-node": "catalog:",
     "@effect/vitest": "catalog:",
-    "@rove-code/provider-testing": "workspace:*",
+    "@getpaperplane/provider-testing": "workspace:*",
     "@types/node": "catalog:",
     "vite-plus": "catalog:"
   }

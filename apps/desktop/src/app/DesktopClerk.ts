@@ -8,13 +8,13 @@ import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 import * as Scope from "effect/Scope";
 
-import { codexAuthDeliveryUrl, readCodexAuthHandoff } from "@rove-code/shared/codexAuthHandoff";
+import { codexAuthDeliveryUrl, readCodexAuthHandoff } from "@getpaperplane/shared/codexAuthHandoff";
 import { receiveCodexAuthCallback, CodexAuthCallbackError } from "./CodexAuthCallback.ts";
 import * as ElectronShell from "../electron/ElectronShell.ts";
-import { providerAuthReturnUrl } from "@rove-code/shared/providerAuthReturnUrl";
-import { promptLinkAppPath } from "@rove-code/shared/promptLinks";
-import * as HostProcess from "@rove-code/shared/HostProcess";
-import { clerkFrontendApiHostnameFromPublishableKey } from "@rove-code/shared/relayAuth";
+import { providerAuthReturnUrl } from "@getpaperplane/shared/providerAuthReturnUrl";
+import { promptLinkAppPath } from "@getpaperplane/shared/promptLinks";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
+import { clerkFrontendApiHostnameFromPublishableKey } from "@getpaperplane/shared/relayAuth";
 import * as ElectronApp from "../electron/ElectronApp.ts";
 import * as ElectronProtocol from "../electron/ElectronProtocol.ts";
 import * as ElectronWindow from "../electron/ElectronWindow.ts";
@@ -22,7 +22,7 @@ import * as DesktopUserData from "./DesktopUserData.ts";
 import * as DesktopEnvironment from "./DesktopEnvironment.ts";
 import * as DesktopWebLinks from "./DesktopWebLinks.ts";
 
-declare const __ROVE_BUILD_CLERK_PUBLISHABLE_KEY__: string | undefined;
+declare const __PAPERPLANE_BUILD_CLERK_PUBLISHABLE_KEY__: string | undefined;
 
 export class DesktopClerkBridgeInitializationError extends Schema.TaggedError<DesktopClerkBridgeInitializationError>()(
   "DesktopClerkBridgeInitializationError",
@@ -62,7 +62,7 @@ export class DesktopClerk extends Context.Service<
       | Scope.Scope
     >;
   }
->()("@rove-code/desktop/app/DesktopClerk") {}
+>()("@getpaperplane/desktop/app/DesktopClerk") {}
 
 function resolveDesktopClerkFrontendApiHostname(
   publishableKey: string | undefined,
@@ -78,9 +78,9 @@ function resolveDesktopClerkFrontendApiHostname(
 }
 
 export const desktopClerkFrontendApiHostname = resolveDesktopClerkFrontendApiHostname(
-  typeof __ROVE_BUILD_CLERK_PUBLISHABLE_KEY__ === "undefined"
+  typeof __PAPERPLANE_BUILD_CLERK_PUBLISHABLE_KEY__ === "undefined"
     ? undefined
-    : __ROVE_BUILD_CLERK_PUBLISHABLE_KEY__,
+    : __PAPERPLANE_BUILD_CLERK_PUBLISHABLE_KEY__,
 );
 
 function createDesktopClerkBridge(stateDir: string, isDevelopment: boolean) {
@@ -189,7 +189,7 @@ export const make = Effect.gen(function* () {
         );
         return true;
       };
-      // Prompt links and thread links (`rove://new?…`, `rove://threads/…`) reach the
+      // Prompt links and thread links (`paperplane://new?…`, `paperplane://threads/…`) reach the
       // renderer through the same queue as web links; it routes them in the app.
       const openAppLink = (value: string | undefined) => {
         if (!value || promptLinkAppPath(value) === null) return false;
@@ -198,7 +198,7 @@ export const make = Effect.gen(function* () {
       };
       const args = yield* HostProcess.Arguments;
       args.some((value) => startProviderAuthHandoff(value) || openAppLink(value));
-      // As the default browser, macOS hands Rove Code every web link through the same event.
+      // As the default browser, macOS hands Paperplane every web link through the same event.
       const openWebLink = (url: string) => {
         if (!DesktopWebLinks.isWebLink(url)) return false;
         void runPromise(webLinks.receive(url));

@@ -6,7 +6,7 @@ import {
   ProviderInstanceId,
   ScheduledTaskId,
   type ScheduledTask,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { describe, expect, it } from "vite-plus/test";
 
 import type {
@@ -34,7 +34,7 @@ function member(id: string, environmentId: EnvironmentId): SidebarProjectGroupMe
   return {
     id: ProjectId.make(id),
     environmentId,
-    title: "Rove Code",
+    title: "Paperplane",
     workspaceRoot: `/repos/${id}`,
     physicalProjectKey: `${environmentId}:/repos/${id}`,
     environmentLabel:
@@ -76,7 +76,10 @@ function group(
 // Project IDs are environment-local. This unrelated server checkout deliberately
 // shares an ID with a laptop checkout in the selected group.
 const sameIdElsewhere = member("first", serverId);
-const groups = [group("rove", [first, second, third]), group("other", [other, sameIdElsewhere])];
+const groups = [
+  group("paperplane", [first, second, third]),
+  group("other", [other, sameIdElsewhere]),
+];
 const tasks = [first, second, third, other, sameIdElsewhere].map((project, index) => ({
   id: `task-${index}`,
   environmentId: project.environmentId,
@@ -87,12 +90,15 @@ describe("scheduled task settings scope", () => {
   it.each<{ search: SettingsScopeSearch; expected: string[] }>([
     { search: {}, expected: ["task-0", "task-1", "task-2", "task-3", "task-4"] },
     { search: { machine: laptopId }, expected: ["task-0", "task-1"] },
-    { search: { project: "rove" }, expected: ["task-0", "task-1", "task-2"] },
-    { search: { project: "rove", machine: serverId }, expected: ["task-2"] },
-    { search: { project: "rove", checkout: second.physicalProjectKey }, expected: ["task-1"] },
+    { search: { project: "paperplane" }, expected: ["task-0", "task-1", "task-2"] },
+    { search: { project: "paperplane", machine: serverId }, expected: ["task-2"] },
+    {
+      search: { project: "paperplane", checkout: second.physicalProjectKey },
+      expected: ["task-1"],
+    },
     { search: { project: "missing" }, expected: [] },
     { search: { machine: "removed" }, expected: [] },
-    { search: { project: "rove", checkout: "removed" }, expected: [] },
+    { search: { project: "paperplane", checkout: "removed" }, expected: [] },
     { search: { project: "other", machine: laptopId }, expected: [] },
   ])("lists only matching tasks for $search", ({ search, expected }) => {
     const scope = resolveSettingsScope(search, groups, environments);
@@ -114,7 +120,7 @@ describe("scheduled task settings scope", () => {
     ).toBe(true);
     expect(
       matchesScheduledTaskScope(
-        resolveSettingsScope({ project: "rove" }, groups, environments),
+        resolveSettingsScope({ project: "paperplane" }, groups, environments),
         laptopId,
         removedProject,
       ),
@@ -122,7 +128,7 @@ describe("scheduled task settings scope", () => {
   });
 
   it("does not offer an unrelated environment's same-ID project when creating a task", () => {
-    const scope = resolveSettingsScope({ project: "rove" }, groups, environments);
+    const scope = resolveSettingsScope({ project: "paperplane" }, groups, environments);
     const serverProjects = [third, other, sameIdElsewhere];
     expect(
       serverProjects.filter((project) => matchesScheduledTaskScope(scope, serverId, project.id)),

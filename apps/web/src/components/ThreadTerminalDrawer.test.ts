@@ -5,7 +5,7 @@ import {
   EMPTY_TERMINAL_BUFFER_STATE,
   INITIAL_TERMINAL_OUTPUT_CURSOR,
   nextTerminalAttachSeedState,
-} from "@rove-code/client-runtime/state/terminal";
+} from "@getpaperplane/client-runtime/state/terminal";
 
 import {
   shouldClearTerminalSelectionAction,

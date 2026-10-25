@@ -4,7 +4,7 @@ import * as NodeCrypto from "node:crypto";
 import * as NodeFSP from "node:fs/promises";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
-import { Platform as HostProcessPlatform } from "@rove-code/shared/HostProcess";
+import { Platform as HostProcessPlatform } from "@getpaperplane/shared/HostProcess";
 import { it } from "@effect/vitest";
 import { afterAll, describe, expect } from "vite-plus/test";
 import {
@@ -44,7 +44,7 @@ it.effect("fails closed on unsupported hosts", () =>
 );
 
 describe.skipIf(!hasUserSystemd)("Linux process budget integration", () => {
-  const pool = `app-rove-budgettest${NodeCrypto.randomUUID().replaceAll("-", "")}.slice`;
+  const pool = `app-paperplane-budgettest${NodeCrypto.randomUUID().replaceAll("-", "")}.slice`;
   afterAll(async () => {
     await new Promise<void>((resolve, reject) => {
       NodeChildProcess.execFile("systemctl", ["--user", "stop", pool], (error) =>

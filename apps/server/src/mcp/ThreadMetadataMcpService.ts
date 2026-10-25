@@ -7,7 +7,7 @@ import {
   type ThreadMetadataMcpUpdateInput,
   type ThreadMetadataMcpUpdateResult,
   ThreadId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Context from "effect/Context";
 import * as Crypto from "effect/Crypto";
 import * as DateTime from "effect/DateTime";
@@ -25,7 +25,7 @@ export class ThreadMetadataMcpService extends Context.Service<
       input: ThreadMetadataMcpUpdateInput,
     ) => Effect.Effect<ThreadMetadataMcpUpdateResult, OrchestratorMcpFailure>;
   }
->()("@rove-code/server/mcp/ThreadMetadataMcpService") {}
+>()("@getpaperplane/server/mcp/ThreadMetadataMcpService") {}
 
 function failure(code: OrchestratorMcpFailure["code"], message: string): OrchestratorMcpFailure {
   return new OrchestratorMcpFailure({ code, message });
@@ -153,7 +153,7 @@ const make = Effect.gen(function* () {
     if (threadId === undefined) {
       return yield* failure(
         "target_required",
-        "Pass threadId: this MCP client is not running inside a Rove thread.",
+        "Pass threadId: this MCP client is not running inside a Paperplane thread.",
       );
     }
     const shell = yield* threadManagement

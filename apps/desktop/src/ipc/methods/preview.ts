@@ -23,7 +23,7 @@ import {
   INCOGNITO_BROWSER_PROFILE_ID,
   PreviewForwardedShortcut,
   MAX_KEYBINDINGS_COUNT,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 import * as Option from "effect/Option";

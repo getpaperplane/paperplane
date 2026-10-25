@@ -1,4 +1,4 @@
-import type { PullRequestReviewPosition, PullRequestReviewThread } from "@rove-code/contracts";
+import type { PullRequestReviewPosition, PullRequestReviewThread } from "@getpaperplane/contracts";
 import type { NativeReviewDiffRow } from "../diffs/nativeReviewDiffSurface";
 import type { NativeReviewDiffData } from "../review/nativeReviewDiffAdapter";
 import type { PendingReviewComment } from "./pullRequestReviewDrafts";

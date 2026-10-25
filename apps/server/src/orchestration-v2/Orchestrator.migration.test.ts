@@ -1,6 +1,6 @@
 import { assert, it } from "@effect/vitest";
 import * as Schema from "effect/Schema";
-import { ContextHandoffId, OrchestrationV2Command, ThreadId } from "@rove-code/contracts";
+import { ContextHandoffId, OrchestrationV2Command, ThreadId } from "@getpaperplane/contracts";
 
 import {
   appendContextHandoffId,

@@ -3,9 +3,9 @@ import * as Option from "effect/Option";
 import {
   ORCHESTRATION_PROTOCOL_HEADER,
   ORCHESTRATION_PROTOCOL_VERSION_TEXT,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Result from "effect/Result";
-import { withRelayClientTracing } from "@rove-code/shared/relayTracing";
+import { withRelayClientTracing } from "@getpaperplane/shared/relayTracing";
 import { FetchHttpClient, type HttpMethod } from "effect/http";
 
 import type { RemoteEnvironmentAuthorization } from "../authorization/service.ts";
@@ -101,7 +101,7 @@ const buildEnvironmentAuthHeaders = (
  * A rejected credential gets one refresh and retry, with a new request-bound
  * proof. Cookie and bearer requests keep their existing authentication behavior.
  *
- * A DPoP request is Rove Connect work, so its span starts an exported trace that
+ * A DPoP request is Paperplane Connect work, so its span starts an exported trace that
  * the environment continues; its local caller's span would leave that trace
  * without a root.
  */

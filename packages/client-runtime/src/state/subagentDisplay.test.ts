@@ -1,5 +1,5 @@
-import { ProjectId, ProviderDriverKind } from "@rove-code/contracts";
-import type { OrchestrationV2TurnItemStatus } from "@rove-code/contracts";
+import { ProjectId, ProviderDriverKind } from "@getpaperplane/contracts";
+import type { OrchestrationV2TurnItemStatus } from "@getpaperplane/contracts";
 import { describe, expect, it } from "vite-plus/test";
 import {
   subagentGroupSummary,

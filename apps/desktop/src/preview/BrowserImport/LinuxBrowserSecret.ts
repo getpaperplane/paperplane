@@ -7,7 +7,7 @@ import * as DesktopEnvironment from "../../app/DesktopEnvironment.ts";
 
 /** Absolute path to the helper shipped with this desktop instance. */
 export const LinuxBrowserSecretPath = Context.Reference<string | undefined>(
-  "@rove-code/desktop/preview/BrowserImport/LinuxBrowserSecretPath",
+  "@getpaperplane/desktop/preview/BrowserImport/LinuxBrowserSecretPath",
   { defaultValue: () => undefined },
 );
 
@@ -17,7 +17,7 @@ export const layer = Layer.effect(
     const environment = yield* DesktopEnvironment.DesktopEnvironment;
     if (environment.platform !== "linux") return undefined;
     const fileSystem = yield* FileSystem.FileSystem;
-    const relative = environment.path.join("browser-secret", "rove-browser-secret");
+    const relative = environment.path.join("browser-secret", "paperplane-browser-secret");
     const candidates = environment.isPackaged
       ? [environment.path.join(environment.resourcesPath, relative)]
       : [
@@ -27,7 +27,7 @@ export const layer = Layer.effect(
             "browser-secret",
             "build",
             environment.processArch,
-            "rove-browser-secret",
+            "paperplane-browser-secret",
           ),
           ...environment.resolveResourcePathCandidates(relative),
         ];

@@ -18,12 +18,12 @@ import type {
   ProjectSearchContentsResult,
   ProjectSearchEntriesInput,
   ProjectSearchEntriesResult,
-} from "@rove-code/contracts";
-import * as HostProcess from "@rove-code/shared/HostProcess";
-import { isExplicitRelativePath, isWindowsAbsolutePath } from "@rove-code/shared/path";
-import { normalizeSearchQuery } from "@rove-code/shared/searchRanking";
+} from "@getpaperplane/contracts";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
+import { isExplicitRelativePath, isWindowsAbsolutePath } from "@getpaperplane/shared/path";
+import { normalizeSearchQuery } from "@getpaperplane/shared/searchRanking";
 
-import { expandHomePath } from "@rove-code/provider-core/server/pathExpansion";
+import { expandHomePath } from "@getpaperplane/provider-core/server/pathExpansion";
 import * as VcsProcess from "../vcs/VcsProcess.ts";
 import * as WorkspacePaths from "./WorkspacePaths.ts";
 import * as WorkspaceSearchIndex from "./WorkspaceSearchIndex.ts";
@@ -104,7 +104,7 @@ export class WorkspaceEntries extends Context.Service<
     ) => Effect.Effect<ProjectSearchContentsResult, WorkspaceEntriesError>;
     readonly refresh: (cwd: string) => Effect.Effect<void>;
   }
->()("@rove-code/server/workspace/WorkspaceEntries") {}
+>()("@getpaperplane/server/workspace/WorkspaceEntries") {}
 
 const resolveBrowseTarget = Effect.fn("WorkspaceEntries.resolveBrowseTarget")(function* (
   input: FilesystemBrowseInput,

@@ -3,7 +3,7 @@ import * as Layer from "effect/Layer";
 import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
 import * as SqlClient from "effect/sql/SqlClient";
-import * as NodeSqliteClient from "@rove-code/shared/nodeSqliteClient";
+import * as NodeSqliteClient from "@getpaperplane/shared/nodeSqliteClient";
 
 import { runMigrations } from "./Migrations.ts";
 import { initializeV2Database } from "./initializeV2Database.ts";
@@ -20,7 +20,7 @@ const layerSetup = Layer.effectDiscard(
     yield* sql`PRAGMA busy_timeout = 5000;`;
     yield* sql`PRAGMA foreign_keys = ON;`;
     // Only an empty file can switch modes here; an existing database needs the
-    // offline VACUUM shared by startup and `rove doctor`, rebuilding pointer maps.
+    // offline VACUUM shared by startup and `paperplane doctor`, rebuilding pointer maps.
     const tables = yield* sql<{
       readonly count: number;
     }>`SELECT COUNT(*) AS count FROM sqlite_schema WHERE type = 'table'`;
@@ -62,7 +62,7 @@ export const layerFromPath = Effect.fn("makeSqlitePersistenceLive")(function* (d
       checkpointWorker: true,
       spanAttributes: {
         "db.name": path.basename(dbPath),
-        "service.name": "rove-server",
+        "service.name": "paperplane-server",
       },
     }),
   );

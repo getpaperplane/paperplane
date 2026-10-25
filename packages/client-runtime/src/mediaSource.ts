@@ -1,14 +1,14 @@
-import type { AssetResource, ThreadId } from "@rove-code/contracts";
-import { mediaMimeType, mediaMimeTypeFromExtension } from "@rove-code/shared/filePreview";
+import type { AssetResource, ThreadId } from "@getpaperplane/contracts";
+import { mediaMimeType, mediaMimeTypeFromExtension } from "@getpaperplane/shared/filePreview";
 
 import {
   classifyMarkdownImageSource,
   markdownImageSourceFragment,
   type MarkdownImageSource,
 } from "./markdownImages.ts";
-import { fileBasename } from "@rove-code/shared/path";
-import { splitFilePathPosition } from "@rove-code/shared/fileLinks";
-import { splitMarkdownLinkSearchAndHash } from "@rove-code/shared/markdownLinks";
+import { fileBasename } from "@getpaperplane/shared/path";
+import { splitFilePathPosition } from "@getpaperplane/shared/fileLinks";
+import { splitMarkdownLinkSearchAndHash } from "@getpaperplane/shared/markdownLinks";
 import {
   mediaFileReference,
   mediaReferenceFileName,

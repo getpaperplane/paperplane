@@ -5,9 +5,9 @@ import {
   OrchestrationMessageContext,
   ThreadId,
   type PreviewAnnotationPayload,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Schema from "effect/Schema";
-import { upgradeLegacyContextMessage } from "@rove-code/shared/composerContextLegacy";
+import { upgradeLegacyContextMessage } from "@getpaperplane/shared/composerContextLegacy";
 
 import {
   formatInlineContextReference,
@@ -324,7 +324,7 @@ describe("composerContextRecords", () => {
       pullRequest: {
         number: 42,
         title: "Improve context chips",
-        url: "https://github.com/rovecode/rove/pull/42",
+        url: "https://github.com/paperplane/paperplane/pull/42",
         headBranch: "feat/context-chips",
         baseBranch: "main",
         state: "open" as const,
@@ -593,7 +593,7 @@ describe("composerContextRecords", () => {
 
   it("resolves structured context directly and upgrades legacy text otherwise", () => {
     const structured = resolveUserMessageContext({
-      text: "hi [b.ts L4](rove-context://v1/review-comment/rc-1)",
+      text: "hi [b.ts L4](paperplane-context://v1/review-comment/rc-1)",
       context: {
         version: 1,
         records: [
@@ -615,7 +615,9 @@ describe("composerContextRecords", () => {
     const legacy = resolveUserMessageContext({
       text: "hi\n\n<terminal_context>\n- T line 1:\n  1 | x\n</terminal_context>",
     });
-    expect(legacy.text).toBe("hi\n\n[T line 1](rove-context://v1/terminal/legacy_terminal_1)");
+    expect(legacy.text).toBe(
+      "hi\n\n[T line 1](paperplane-context://v1/terminal/legacy_terminal_1)",
+    );
     expect(legacy.recordsById.get("legacy_terminal_1")?.kind).toBe("terminal");
   });
 });
@@ -699,7 +701,7 @@ describe("producer ids that do not fit the grammar", () => {
     expect(record.contextId).toMatch(/^review-comment_pull-request-finding-42-[0-9a-f]{16}$/);
     expect(
       resolveUserMessageContext({
-        text: `[b.ts L1](rove-context://v1/review-comment/${record.contextId})`,
+        text: `[b.ts L1](paperplane-context://v1/review-comment/${record.contextId})`,
         context: { version: 1, records: [record] },
       }).recordsById.has(record.contextId),
     ).toBe(true);
@@ -738,7 +740,7 @@ describe("selectedMessageContextFragment", () => {
   it("carries only records for chips inside the selection", () => {
     const fragment = selectedMessageContextFragment({
       ...input,
-      markdown: `see [b.ts L4](rove-context://v1/review-comment/${review.contextId})`,
+      markdown: `see [b.ts L4](paperplane-context://v1/review-comment/${review.contextId})`,
     });
 
     expect(fragment).toContain(review.contextId);
@@ -751,7 +753,7 @@ describe("selectedMessageContextFragment", () => {
       selectedMessageContextFragment({
         ...input,
         records: [],
-        markdown: `[b.ts L4](rove-context://v1/review-comment/${review.contextId})`,
+        markdown: `[b.ts L4](paperplane-context://v1/review-comment/${review.contextId})`,
       }),
     ).toBeNull();
   });

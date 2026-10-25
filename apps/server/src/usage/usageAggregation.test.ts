@@ -2,7 +2,7 @@ import { describe, expect, it } from "@effect/vitest";
 
 import { resolveModelAliases, UsageAggregator } from "./usageAggregation.ts";
 import type { RateTable } from "./usagePricing.ts";
-import type { UsageRecord } from "@rove-code/provider-core/server/usage";
+import type { UsageRecord } from "@getpaperplane/provider-core/server/usage";
 
 const rates: RateTable = new Map([
   [

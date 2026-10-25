@@ -1,4 +1,4 @@
-import type { PullRequestCheck } from "@rove-code/contracts";
+import type { PullRequestCheck } from "@getpaperplane/contracts";
 import { act, createElement } from "react";
 import { create, type ReactTestRenderer } from "react-test-renderer";
 import { expect, it, vi } from "vite-plus/test";

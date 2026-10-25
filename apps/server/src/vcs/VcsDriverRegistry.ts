@@ -7,8 +7,8 @@ import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 
-import type { VcsDriverKind, VcsError, VcsRepositoryIdentity } from "@rove-code/contracts";
-import { VcsUnsupportedOperationError } from "@rove-code/contracts";
+import type { VcsDriverKind, VcsError, VcsRepositoryIdentity } from "@getpaperplane/contracts";
+import { VcsUnsupportedOperationError } from "@getpaperplane/contracts";
 import * as GitVcsDriver from "./GitVcsDriver.ts";
 import * as VcsProjectConfig from "./VcsProjectConfig.ts";
 import * as VcsDriver from "./VcsDriver.ts";
@@ -39,7 +39,7 @@ export class VcsDriverRegistry extends Context.Service<
     ) => Effect.Effect<VcsDriverHandle | null, VcsError>;
     readonly resolve: (input: VcsDriverResolveInput) => Effect.Effect<VcsDriverHandle, VcsError>;
   }
->()("@rove-code/server/vcs/VcsDriverRegistry") {}
+>()("@getpaperplane/server/vcs/VcsDriverRegistry") {}
 
 function detectionCacheKey(input: {
   readonly cwd: string;

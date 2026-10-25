@@ -1,17 +1,17 @@
-import { makeProviderFailure } from "@rove-code/provider-core/server/failure";
+import { makeProviderFailure } from "@getpaperplane/provider-core/server/failure";
 import {
   XAiPromptFailureText,
   isXAiTaskCompletedWakeNotification,
   xAiRateLimitedErrorCode,
 } from "./xaiAcpExtension.ts";
-import * as HostProcess from "@rove-code/shared/HostProcess";
-import { resolveSelfInvocation, type SelfInvocation } from "@rove-code/shared/nodeRuntime";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
+import { resolveSelfInvocation, type SelfInvocation } from "@getpaperplane/shared/nodeRuntime";
 import {
   defaultInstanceIdForDriver,
   ProviderDriverKind,
   type OrchestrationV2ProviderCapabilities,
   type RuntimeMode,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { GrokSettings } from "../settings.ts";
 import * as Crypto from "effect/Crypto";
 import * as Effect from "effect/Effect";
@@ -23,9 +23,9 @@ import type * as Scope from "effect/Scope";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as EffectAcpErrors from "effect-acp/errors";
 
-import * as McpProviderSessions from "@rove-code/provider-core/server/McpProviderSessions";
-import * as ProviderHost from "@rove-code/provider-core/server/ProviderHost";
-import { makeAcpNativeLoggerFactory } from "@rove-code/provider-acp/server/nativeLogging";
+import * as McpProviderSessions from "@getpaperplane/provider-core/server/McpProviderSessions";
+import * as ProviderHost from "@getpaperplane/provider-core/server/ProviderHost";
+import { makeAcpNativeLoggerFactory } from "@getpaperplane/provider-acp/server/nativeLogging";
 import {
   applyGrokAcpModelSelection,
   currentGrokModelIdFromSessionSetup,
@@ -54,25 +54,25 @@ import {
   XAiAskUserQuestionRequest,
   XAiExitPlanModeRequest,
 } from "./xaiAcpExtension.ts";
-import { mergeProviderInstanceEnvironment } from "@rove-code/provider-core/server/instanceEnvironment";
-import { acpPermissionDisposition } from "@rove-code/provider-acp/server/clientPolicy";
-import * as AcpSessionRuntime from "@rove-code/provider-acp/server/AcpSessionRuntime";
-import * as ProviderEventLoggers from "@rove-code/provider-core/server/ProviderEventLoggers";
-import * as IdAllocator from "@rove-code/provider-core/server/IdAllocator";
-import * as ProviderContinuationRequests from "@rove-code/provider-core/server/ProviderContinuationRequests";
-import * as ProviderAdapter from "@rove-code/provider-core/server/ProviderAdapter";
+import { mergeProviderInstanceEnvironment } from "@getpaperplane/provider-core/server/instanceEnvironment";
+import { acpPermissionDisposition } from "@getpaperplane/provider-acp/server/clientPolicy";
+import * as AcpSessionRuntime from "@getpaperplane/provider-acp/server/AcpSessionRuntime";
+import * as ProviderEventLoggers from "@getpaperplane/provider-core/server/ProviderEventLoggers";
+import * as IdAllocator from "@getpaperplane/provider-core/server/IdAllocator";
+import * as ProviderContinuationRequests from "@getpaperplane/provider-core/server/ProviderContinuationRequests";
+import * as ProviderAdapter from "@getpaperplane/provider-core/server/ProviderAdapter";
 import {
   ProviderAdapterDriverCreateError,
   type ProviderAdapterDriver,
   type ProviderAdapterDriverCreateInput,
-} from "@rove-code/provider-core/server/adapterDriver";
+} from "@getpaperplane/provider-core/server/adapterDriver";
 import {
   AcpProviderCapabilitiesV2,
   makeAcpAdapterV2,
   type AcpAdapterV2ExtensionContext,
   type AcpAdapterV2Flavor,
   type AcpAdapterV2RuntimeInput,
-} from "@rove-code/provider-acp/server/adapter";
+} from "@getpaperplane/provider-acp/server/adapter";
 
 export const GROK_PROVIDER = ProviderDriverKind.make("grok");
 const GROK_DRIVER_KIND = GROK_PROVIDER;
@@ -150,7 +150,7 @@ const registerGrokAcpExtensions: NonNullable<AcpAdapterV2Flavor["registerExtensi
 
 /**
  * Grok intercepts exit_plan_mode and reverse-requests client approval. Capture
- * the plan into Rove's proposed-plan card and abandon the native gate so the
+ * the plan into Paperplane's proposed-plan card and abandon the native gate so the
  * turn does not hang (#8358; mirrors the Claude ExitPlanMode pattern). Plan
  * content preference: the request payload, then the plan.md contents sniffed
  * from tool calls this turn, then the empty-state placeholder.
@@ -215,7 +215,7 @@ const registerGrokAskUserQuestionExtensions = ({
 
 /**
  * Grok's permission mode is fixed at launch. Explicit approval or sandbox
- * overrides launch it asking, so every mutating prompt reaches Rove's policy
+ * overrides launch it asking, so every mutating prompt reaches Paperplane's policy
  * check instead of being bypassed by always-approve or Grok's auto classifier.
  */
 export function grokLaunchRuntimeMode(

@@ -2,11 +2,11 @@ import type {
   GitRunStackedActionInput,
   GitStackedAction,
   VcsStatusResult,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   linkedPullRequestStateFor,
   type LinkedPullRequestContext,
-} from "@rove-code/shared/threadPullRequests";
+} from "@getpaperplane/shared/threadPullRequests";
 
 export type GitActionIconName = "commit" | "push" | "pr";
 

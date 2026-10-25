@@ -1,7 +1,7 @@
-import { bootstrapRemoteBearerSession } from "@rove-code/client-runtime/authorization";
-import type { RemoteEnvironmentRequestError } from "@rove-code/client-runtime/rpc";
-import { PRIMARY_LOCAL_ENVIRONMENT_ID } from "@rove-code/contracts";
-import { currentDesktopBootstrapToken } from "@rove-code/shared/desktopBootstrapToken";
+import { bootstrapRemoteBearerSession } from "@getpaperplane/client-runtime/authorization";
+import type { RemoteEnvironmentRequestError } from "@getpaperplane/client-runtime/rpc";
+import { PRIMARY_LOCAL_ENVIRONMENT_ID } from "@getpaperplane/contracts";
+import { currentDesktopBootstrapToken } from "@getpaperplane/shared/desktopBootstrapToken";
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
 import * as Duration from "effect/Duration";
@@ -65,7 +65,7 @@ export class DesktopLocalEnvironmentAuth extends Context.Service<
   {
     readonly getBearerToken: Effect.Effect<string, DesktopLocalEnvironmentAuthError>;
   }
->()("@rove-code/desktop/backend/DesktopLocalEnvironmentAuth") {}
+>()("@getpaperplane/desktop/backend/DesktopLocalEnvironmentAuth") {}
 
 /** @public Service construction is part of the canonical Effect module API. */
 export const make = Effect.gen(function* () {
@@ -104,7 +104,7 @@ export const make = Effect.gen(function* () {
           httpBaseUrl: config.httpBaseUrl.href,
           credential,
           clientMetadata: {
-            label: "Rove Code Desktop",
+            label: "Paperplane Desktop",
             deviceType: "desktop",
           },
         }).pipe(

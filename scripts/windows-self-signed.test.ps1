@@ -1,5 +1,5 @@
 $ErrorActionPreference = 'Stop'
-$root = Join-Path ([IO.Path]::GetTempPath()) "rove-windows-signing-test-$([Guid]::NewGuid())"
+$root = Join-Path ([IO.Path]::GetTempPath()) "paperplane-windows-signing-test-$([Guid]::NewGuid())"
 New-Item -ItemType Directory -Path $root | Out-Null
 $signingScript = Join-Path $PSScriptRoot 'windows-self-signed.ps1'
 $certificate = $null
@@ -23,7 +23,7 @@ try {
     $principal = [Security.Principal.WindowsPrincipal]::new($identity)
     Write-Host "Runner administrator token: $($principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator))"
     Write-Host 'Creating a temporary Windows signing identity.'
-    $certificate = New-SelfSignedCertificate -Type CodeSigningCert -Subject "CN=Rove Signing Test $([Guid]::NewGuid())" `
+    $certificate = New-SelfSignedCertificate -Type CodeSigningCert -Subject "CN=Paperplane Signing Test $([Guid]::NewGuid())" `
         -CertStoreLocation Cert:\CurrentUser\My -KeyAlgorithm RSA -KeyLength 2048 -HashAlgorithm SHA256 `
         -KeyExportPolicy Exportable -NotBefore (Get-Date).AddMinutes(-5) -NotAfter (Get-Date).AddDays(1)
     $password = [Guid]::NewGuid().ToString()
@@ -38,22 +38,22 @@ try {
     New-Item -ItemType Directory -Path (Join-Path $payload 'resource-monitor') -Force | Out-Null
     $unsignedBytes = [IO.File]::ReadAllBytes("$env:SystemRoot\System32\where.exe")
     $unsignedBytes[0x50] = $unsignedBytes[0x50] -bxor 1
-    foreach ($name in @('rove.exe', 'native.dll', 'native.node', 'resource-monitor\rove-resource-monitor.exe')) {
+    foreach ($name in @('paperplane.exe', 'native.dll', 'native.node', 'resource-monitor\paperplane-resource-monitor.exe')) {
         [IO.File]::WriteAllBytes((Join-Path $payload $name), $unsignedBytes)
     }
     & $signingScript -Action Sign -Path $payload -NoTimestamp
     & $signingScript -Action Verify -Path $payload
-    if (!(Test-Path -LiteralPath (Join-Path $payload 'rove-windows-signing.cer'))) {
+    if (!(Test-Path -LiteralPath (Join-Path $payload 'paperplane-windows-signing.cer'))) {
         throw 'The public signing certificate was not packaged.'
     }
-    $publicCertificate = [Security.Cryptography.X509Certificates.X509Certificate2]::new((Join-Path $payload 'rove-windows-signing.cer'))
+    $publicCertificate = [Security.Cryptography.X509Certificates.X509Certificate2]::new((Join-Path $payload 'paperplane-windows-signing.cer'))
     if ($publicCertificate.HasPrivateKey -or $publicCertificate.Thumbprint -ne $certificate.Thumbprint) {
         throw 'The published certificate must match the signer and contain no private key.'
     }
-    $env:ROVE_WINDOWS_SIGNING_THUMBPRINT = '0' * 40
+    $env:PAPERPLANE_WINDOWS_SIGNING_THUMBPRINT = '0' * 40
     ExpectFailure { & $signingScript -Action Verify -Path $payload } 'Invalid Windows signature'
-    $env:ROVE_WINDOWS_SIGNING_THUMBPRINT = $certificate.Thumbprint
-    $executable = Join-Path $payload 'rove.exe'
+    $env:PAPERPLANE_WINDOWS_SIGNING_THUMBPRINT = $certificate.Thumbprint
+    $executable = Join-Path $payload 'paperplane.exe'
     $bytes = [IO.File]::ReadAllBytes($executable)
     $bytes[0x51] = $bytes[0x51] -bxor 1
     [IO.File]::WriteAllBytes($executable, $bytes)

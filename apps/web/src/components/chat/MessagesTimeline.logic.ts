@@ -1,18 +1,18 @@
-import { worktreeSetupAgentStarted } from "@rove-code/client-runtime/worktree-setup";
-export { worktreeSetupAgentStarted } from "@rove-code/client-runtime/worktree-setup";
-import { isLiveSubagentTurnItem } from "@rove-code/client-runtime/state/subagentRuntime";
+import { worktreeSetupAgentStarted } from "@getpaperplane/client-runtime/worktree-setup";
+export { worktreeSetupAgentStarted } from "@getpaperplane/client-runtime/worktree-setup";
+import { isLiveSubagentTurnItem } from "@getpaperplane/client-runtime/state/subagentRuntime";
 import * as DateTime from "effect/DateTime";
 import * as Equal from "effect/Equal";
 import {
   assistantCitationLabel,
   collectAssistantCitations,
-} from "@rove-code/shared/assistantCitations";
+} from "@getpaperplane/shared/assistantCitations";
 import { shallow } from "zustand/vanilla/shallow";
-import { renderCodexDirectivesForCopy } from "@rove-code/shared/codexMarkdownDirectives";
+import { renderCodexDirectivesForCopy } from "@getpaperplane/shared/codexMarkdownDirectives";
 import {
   commandDisplayText,
   commandProgramName,
-} from "@rove-code/client-runtime/work-log/command-label";
+} from "@getpaperplane/client-runtime/work-log/command-label";
 import {
   liveActivityToolStatus,
   normalizeCompactToolLabel,
@@ -21,11 +21,11 @@ import {
   toolGroupAction,
   toolGroupSummaryKind,
   type ToolGroupSummaryKind,
-} from "@rove-code/client-runtime/work-log/presentation";
+} from "@getpaperplane/client-runtime/work-log/presentation";
 export {
   normalizeCompactToolLabel,
   toolGroupAction,
-} from "@rove-code/client-runtime/work-log/presentation";
+} from "@getpaperplane/client-runtime/work-log/presentation";
 import {
   deriveRevertTurnCountByUserMessageId,
   formatDuration,
@@ -53,24 +53,27 @@ import {
   RunId,
   type ThreadId,
   type TurnItemId,
-} from "@rove-code/contracts";
-import type { ThreadRunSummary } from "@rove-code/client-runtime/state/shell";
+} from "@getpaperplane/contracts";
+import type { ThreadRunSummary } from "@getpaperplane/client-runtime/state/shell";
 import {
-  resolveRoveMcpToolDefinition,
-  resolveRoveMcpToolPresentation,
-  type RoveMcpToolPresentation,
-} from "@rove-code/shared/roveMcpToolPresentation";
-import { compactDynamicToolOutput } from "@rove-code/shared/toolOutput";
-import { htmlRenderReferencesEqual, type HtmlRenderReference } from "@rove-code/shared/htmlRender";
-import { mcpAppReferencesEqual, type McpAppReference } from "@rove-code/shared/mcpApp";
-import { dynamicToolTitle } from "@rove-code/shared/toolActivity";
+  resolvePaperplaneMcpToolDefinition,
+  resolvePaperplaneMcpToolPresentation,
+  type PaperplaneMcpToolPresentation,
+} from "@getpaperplane/shared/paperplaneMcpToolPresentation";
+import { compactDynamicToolOutput } from "@getpaperplane/shared/toolOutput";
+import {
+  htmlRenderReferencesEqual,
+  type HtmlRenderReference,
+} from "@getpaperplane/shared/htmlRender";
+import { mcpAppReferencesEqual, type McpAppReference } from "@getpaperplane/shared/mcpApp";
+import { dynamicToolTitle } from "@getpaperplane/shared/toolActivity";
 import { formatWorkspaceRelativePath } from "../../filePathDisplay";
 import {
   collectToolFilePaths,
   formatReadToolLabel,
   formatSearchToolLabel,
-} from "@rove-code/shared/toolActivity";
-import { isWindowsAbsolutePath } from "@rove-code/shared/path";
+} from "@getpaperplane/shared/toolActivity";
+import { isWindowsAbsolutePath } from "@getpaperplane/shared/path";
 
 function timelineEntryRunId(entry: TimelineEntry): RunId | null {
   if (entry.kind === "message") {
@@ -181,18 +184,19 @@ export function workEntryDisplayLabel(entry: WorkLogEntry, workspaceRoot: string
   return `${heading.charAt(0).toUpperCase()}${heading.slice(1)}`;
 }
 
-/** The trimmed thread id a `rove_thread_read` call targets, or null for any other entry. */
+/** The trimmed thread id a `paperplane_thread_read` call targets, or null for any other entry. */
 export function threadReadTargetId(entry: Pick<WorkLogEntry, "structuredPayload">) {
   const item = entry.structuredPayload;
   if (item?.type !== "dynamic_tool") return null;
-  if (resolveRoveMcpToolDefinition(item.toolName)?.summaryAction !== "thread-read") return null;
+  if (resolvePaperplaneMcpToolDefinition(item.toolName)?.summaryAction !== "thread-read")
+    return null;
   const input = item.input;
   const threadId =
     input !== null && typeof input === "object" && "threadId" in input ? input.threadId : null;
   return typeof threadId === "string" && threadId.trim().length > 0 ? threadId.trim() : null;
 }
 
-const THREAD_READ_OBJECT = " a Rove thread";
+const THREAD_READ_OBJECT = " a Paperplane thread";
 
 export function threadReadTargetTitle(
   shell: Pick<ThreadShell, "title" | "archivedAt" | "deletedAt"> | null,
@@ -202,7 +206,7 @@ export function threadReadTargetTitle(
 }
 
 /**
- * Names the read thread in place of the generic object ("Read a Rove thread" becomes
+ * Names the read thread in place of the generic object ("Read a Paperplane thread" becomes
  * `Read thread “Title”`), keeping the label's tense. Null keeps the generic label.
  */
 export function threadReadLabelPrefix(label: string) {
@@ -571,7 +575,7 @@ type MessagesTimelineRowContent =
       summaryKind: ToolGroupSummaryKind;
       toolSurface?: WorkLogEntry["toolSurface"];
       toolIcon?: WorkLogEntry["toolIcon"];
-      summaryToolIcon?: "browser" | "device" | "rove" | "pull-request";
+      summaryToolIcon?: "browser" | "device" | "paperplane" | "pull-request";
       hasFailure: boolean;
     }
   | {
@@ -678,8 +682,8 @@ function workGroupId(timelineEntryId: string): string {
   return `work-group:${timelineEntryId}`;
 }
 
-export type TimelineToolPresentation = RoveMcpToolPresentation;
-export const resolveTimelineToolPresentation = resolveRoveMcpToolPresentation;
+export type TimelineToolPresentation = PaperplaneMcpToolPresentation;
+export const resolveTimelineToolPresentation = resolvePaperplaneMcpToolPresentation;
 
 function expandedWorkGroupRow(
   groupId: string,
@@ -1333,7 +1337,7 @@ function withoutSubagentDelegationRows(entries: ReadonlyArray<TimelineEntry>) {
       item?.type !== "dynamic_tool" ||
       item.runId === null ||
       (item.status !== "running" && item.status !== "completed") ||
-      resolveRoveMcpToolDefinition(item.toolName)?.summaryAction !== "delegate"
+      resolvePaperplaneMcpToolDefinition(item.toolName)?.summaryAction !== "delegate"
     )
       return true;
     const output = compactDynamicToolOutput(item.output);

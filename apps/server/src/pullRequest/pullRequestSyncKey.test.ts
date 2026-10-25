@@ -1,4 +1,4 @@
-import { ProjectId } from "@rove-code/contracts";
+import { ProjectId } from "@getpaperplane/contracts";
 import { describe, expect, it } from "vite-plus/test";
 
 import { pullRequestSyncKey } from "./pullRequestSyncKey.ts";

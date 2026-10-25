@@ -8,12 +8,12 @@ import {
   type PullRequestThreadCommentsResult,
   type ThreadPullRequestLink,
   type ThreadPullRequestWatch,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   normalizeThreadPullRequestKey,
   threadPullRequestKeyOf,
   visibleThreadPullRequests,
-} from "@rove-code/shared/threadPullRequests";
+} from "@getpaperplane/shared/threadPullRequests";
 import * as Cause from "effect/Cause";
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
@@ -29,7 +29,7 @@ import type * as Scope from "effect/Scope";
 import {
   type ProviderChangeRequestWatchFingerprint,
   PullRequestProviderError,
-} from "@rove-code/source-control-core/server/PullRequestProvider";
+} from "@getpaperplane/source-control-core/server/PullRequestProvider";
 import * as PullRequestService from "../pullRequest/PullRequestService.ts";
 import { forkParked } from "../serverActivation.ts";
 import * as Orchestrator from "./Orchestrator.ts";
@@ -228,7 +228,7 @@ export class PullRequestWatchReactor extends Context.Service<
     /** One pass over every watched pull request. */
     readonly sweep: Effect.Effect<void>;
   }
->()("@rove-code/server/orchestration-v2/PullRequestWatchReactor") {}
+>()("@getpaperplane/server/orchestration-v2/PullRequestWatchReactor") {}
 
 /** @public Service construction is part of the canonical Effect module API. */
 export const make = Effect.gen(function* () {
@@ -327,7 +327,7 @@ export const make = Effect.gen(function* () {
   // "Watching" while it learns nothing.
   const giveUp = (target: WatchTarget) =>
     record(target, null, {
-      text: `Rove Code stopped watching pull request #${target.link.number} (${target.link.url}) because it failed to read it from the host ${READ_FAILURE_LIMIT} times in a row. Check it yourself, and call watch_pull_request to watch it again.`,
+      text: `Paperplane stopped watching pull request #${target.link.number} (${target.link.url}) because it failed to read it from the host ${READ_FAILURE_LIMIT} times in a row. Check it yourself, and call watch_pull_request to watch it again.`,
       notification: {
         source: { kind: "monitor" },
         outcome: "failed",
@@ -395,7 +395,7 @@ export const make = Effect.gen(function* () {
   // A closed pull request can reopen, but the watch has nothing to report until then.
   const closed = (target: WatchTarget) =>
     record(target, null, {
-      text: `Pull request #${target.link.number} (${target.link.url}) was closed, so Rove Code stopped watching it. Call watch_pull_request if it reopens.`,
+      text: `Pull request #${target.link.number} (${target.link.url}) was closed, so Paperplane stopped watching it. Call watch_pull_request if it reopens.`,
       notification: {
         source: { kind: "monitor" },
         outcome: "updated",

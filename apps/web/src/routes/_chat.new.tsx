@@ -1,4 +1,4 @@
-import { parseNewThreadLink } from "@rove-code/shared/promptLinks";
+import { parseNewThreadLink } from "@getpaperplane/shared/promptLinks";
 import { createFileRoute, useLocation } from "@tanstack/react-router";
 import { useMemo } from "react";
 

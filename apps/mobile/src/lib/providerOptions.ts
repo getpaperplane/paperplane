@@ -2,11 +2,11 @@ import type {
   ModelCapabilities,
   ProviderOptionDescriptor,
   ProviderOptionSelection,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   buildProviderOptionSelectionsFromDescriptors,
   getProviderOptionDescriptors,
-} from "@rove-code/shared/model";
+} from "@getpaperplane/shared/model";
 import * as RuntimePredicate from "effect/Predicate";
 
 export function resolveProviderOptionDescriptors(input: {

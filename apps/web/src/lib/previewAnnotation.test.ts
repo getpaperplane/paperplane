@@ -1,4 +1,4 @@
-import type { PreviewAnnotationPayload } from "@rove-code/contracts";
+import type { PreviewAnnotationPayload } from "@getpaperplane/contracts";
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 
 import { capturePreviewAnnotationScreenshot } from "./previewAnnotation";

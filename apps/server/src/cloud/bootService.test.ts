@@ -1,6 +1,6 @@
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { expect, it } from "@effect/vitest";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -20,18 +20,18 @@ import {
   serviceStateHasPendingUpdate,
 } from "./serviceProtocol.ts";
 
-const linuxRuntime = "/home/theo/.rove/runtime/versions/1.2.3/rove";
+const linuxRuntime = "/home/theo/.paperplane/runtime/versions/1.2.3/paperplane";
 const linuxPlan = {
   program: [linuxRuntime, "__service-launcher"],
-  baseDir: "/home/theo/.rove",
-  logPath: "/home/theo/.rove/userdata/logs/boot-service.log",
-  unitPath: "/home/theo/.config/systemd/user/rove.service",
+  baseDir: "/home/theo/.paperplane",
+  logPath: "/home/theo/.paperplane/userdata/logs/boot-service.log",
+  unitPath: "/home/theo/.config/systemd/user/paperplane.service",
 };
 
 it.each([
-  ["service-disabled", "`rove service install`"],
-  ["service-stopped", "`rove service install`"],
-  ["restart-pending", "`rove service restart`"],
+  ["service-disabled", "`paperplane service install`"],
+  ["service-stopped", "`paperplane service install`"],
+  ["restart-pending", "`paperplane service restart`"],
 ] as const)("points $0 at the installed CLI", (problem, command) => {
   expect(BootService.formatBootServiceProblem(problem)).toContain(command);
 });
@@ -44,23 +44,25 @@ it("runs the pinned runtime's own executable as the systemd launcher", () => {
   expect(unit).not.toContain("node");
 });
 
-it("reads the served Rove Code home back out of a rendered unit or plist", () => {
+it("reads the served Paperplane home back out of a rendered unit or plist", () => {
   const plan = (baseDir: string) => ({
-    program: [`${baseDir}/runtime/versions/1.2.3/rove`, "__service-launcher"],
+    program: [`${baseDir}/runtime/versions/1.2.3/paperplane`, "__service-launcher"],
     baseDir,
     logPath: `${baseDir}/userdata/logs/boot-service.log`,
-    unitPath: "/home/theo/.config/systemd/user/rove.service",
+    unitPath: "/home/theo/.config/systemd/user/paperplane.service",
   });
 
   expect(
-    BootService.bootServiceBaseDirOf(BootService.renderBootServiceUnit(plan("/home/theo/.rove"))),
-  ).toBe("/home/theo/.rove");
+    BootService.bootServiceBaseDirOf(
+      BootService.renderBootServiceUnit(plan("/home/theo/.paperplane")),
+    ),
+  ).toBe("/home/theo/.paperplane");
   // Spaces and specifiers are quoted and escaped on the way in.
   expect(
     BootService.bootServiceBaseDirOf(
-      BootService.renderBootServiceUnit(plan("/home/theo/Rove Data/100%")),
+      BootService.renderBootServiceUnit(plan("/home/theo/Paperplane Data/100%")),
     ),
-  ).toBe("/home/theo/Rove Data/100%");
+  ).toBe("/home/theo/Paperplane Data/100%");
   expect(
     BootService.bootServiceBaseDirOf(
       BootService.renderBootServicePlist(plan("/Users/theo/a&b"), {
@@ -78,12 +80,12 @@ it("survives the kernel OOM-killing a greedy agent child", () => {
   expect(unit).toContain("OOMPolicy=continue");
 });
 
-const macRuntime = "/Users/theo/.rove/runtime/versions/1.2.3/rove";
+const macRuntime = "/Users/theo/.paperplane/runtime/versions/1.2.3/paperplane";
 const macPlan = {
   program: [macRuntime, "__service-launcher"],
-  baseDir: "/Users/theo/.rove",
-  logPath: "/Users/theo/.rove/userdata/logs/boot-service.log",
-  unitPath: "/Users/theo/Library/LaunchAgents/io.github.hafiezul.rove.service.plist",
+  baseDir: "/Users/theo/.paperplane",
+  logPath: "/Users/theo/.paperplane/userdata/logs/boot-service.log",
+  unitPath: "/Users/theo/Library/LaunchAgents/io.github.getpaperplane.paperplane.service.plist",
 };
 const macInstallerPath =
   "/opt/homebrew/bin:/Users/theo/.npm-global/bin:/Users/theo/.nvm/versions/node/v22.16.0/bin:/usr/bin:/bin";
@@ -117,20 +119,20 @@ it("appends both stdio streams to the boot service log", () => {
   const plist = BootService.renderBootServicePlist(macPlan, macRenderOptions);
 
   expect(plist).toContain(
-    "<key>StandardOutPath</key>\n  <string>/Users/theo/.rove/userdata/logs/boot-service.log</string>",
+    "<key>StandardOutPath</key>\n  <string>/Users/theo/.paperplane/userdata/logs/boot-service.log</string>",
   );
   expect(plist).toContain(
-    "<key>StandardErrorPath</key>\n  <string>/Users/theo/.rove/userdata/logs/boot-service.log</string>",
+    "<key>StandardErrorPath</key>\n  <string>/Users/theo/.paperplane/userdata/logs/boot-service.log</string>",
   );
 });
 
 it("escapes XML in host paths", () => {
   const plist = BootService.renderBootServicePlist(
-    { ...macPlan, baseDir: "/Users/theo/Rove & <Co>" },
+    { ...macPlan, baseDir: "/Users/theo/Paperplane & <Co>" },
     { homeDir: "/Users/theo", environmentPath: "/Users/theo/Tools & <Scripts>:/usr/bin" },
   );
 
-  expect(plist).toContain("<string>/Users/theo/Rove &amp; &lt;Co&gt;</string>");
+  expect(plist).toContain("<string>/Users/theo/Paperplane &amp; &lt;Co&gt;</string>");
   expect(plist).toContain("<string>/Users/theo/Tools &amp; &lt;Scripts&gt;:/usr/bin</string>");
 });
 
@@ -140,8 +142,8 @@ const makeHarness = Effect.fn("test.make_boot_service_harness")(function* (
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const home = yield* fs.makeTempDirectoryScoped({ prefix: "rove-boot-service-test-" });
-  const baseDir = path.join(home, ".rove");
+  const home = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-boot-service-test-" });
+  const baseDir = path.join(home, ".paperplane");
   const statePath = path.join(baseDir, "runtime", "service-state.json");
   // A complete pinned runtime is already present, so install only validates
   // it and never downloads a release archive.
@@ -174,13 +176,15 @@ const makeHarness = Effect.fn("test.make_boot_service_harness")(function* (
       const failed = command === control.failCommand;
       if (!failed && command === "loginctl enable-linger --no-ask-password 501")
         control.linger = "yes";
-      if (!failed && command === "systemctl --user enable rove.service") control.enabled = true;
-      if (!failed && command === "systemctl --user restart rove.service") control.active = true;
+      if (!failed && command === "systemctl --user enable paperplane.service")
+        control.enabled = true;
+      if (!failed && command === "systemctl --user restart paperplane.service")
+        control.active = true;
       // A stop that fails (a timeout, say) has still stopped the service.
-      if (command === "systemctl --user stop rove.service") control.active = false;
+      if (command === "systemctl --user stop paperplane.service") control.active = false;
       if (
         control.stateAfterStop !== undefined &&
-        (command === "systemctl --user stop rove.service" ||
+        (command === "systemctl --user stop paperplane.service" ||
           command.startsWith("launchctl bootout --wait "))
       ) {
         yield* fs.writeFileString(statePath, control.stateAfterStop).pipe(Effect.orDie);
@@ -190,7 +194,7 @@ const makeHarness = Effect.fn("test.make_boot_service_harness")(function* (
           input.args[0] === "--version"
             ? // The runtime under test reports the version of the directory it
               // was launched from, like the real executable.
-              `rove v${/versions\/([^/]+)\//.exec(input.command)?.[1] ?? "1.2.3"}\n`
+              `paperplane v${/versions\/([^/]+)\//.exec(input.command)?.[1] ?? "1.2.3"}\n`
             : input.command === "loginctl" && input.args[0] === "show-user"
               ? `${control.linger}\n`
               : input.args[1] === "is-enabled"
@@ -231,7 +235,7 @@ const makeHarness = Effect.fn("test.make_boot_service_harness")(function* (
         baseDir: serviceBaseDir,
         logsDir: path.join(serviceBaseDir, "userdata", "logs"),
         cliVersion,
-        host: { execPath: "/usr/bin/rove" },
+        host: { execPath: "/usr/bin/paperplane" },
         ...(launchDefaults === undefined ? {} : { launchDefaults }),
       });
     }).pipe(
@@ -240,7 +244,7 @@ const makeHarness = Effect.fn("test.make_boot_service_harness")(function* (
         Layer.mergeAll(
           Layer.succeed(HostProcess.Platform, platform),
           Layer.succeed(HostProcess.UserId, 501),
-          Layer.succeed(HostProcess.ExecutablePath, "/usr/bin/rove"),
+          Layer.succeed(HostProcess.ExecutablePath, "/usr/bin/paperplane"),
           Layer.succeed(
             HttpClient.HttpClient,
             HttpClient.make(() => Effect.die("no release download expected")),
@@ -365,7 +369,7 @@ it.layer(NodeServices.layer)("boot service install", (it) => {
         );
         expect(yield* fs.readFileString(statePath)).toBe(before);
         expect(yield* fs.readFileString(plan.unitPath)).toBe(unit);
-        expect(commands).not.toContain("systemctl --user stop rove.service");
+        expect(commands).not.toContain("systemctl --user stop paperplane.service");
       }),
   );
 
@@ -439,7 +443,7 @@ it.layer(NodeServices.layer)("boot service install", (it) => {
       expect((yield* service.status).installed).toBe(false);
       // The stop can block up to systemd's 90s TimeoutStopSec; the runner's
       // 60s default would cancel it mid-shutdown.
-      expect(timeouts.get("systemctl --user disable --now rove.service")).toEqual(
+      expect(timeouts.get("systemctl --user disable --now paperplane.service")).toEqual(
         Duration.seconds(120),
       );
     }),
@@ -511,9 +515,12 @@ it.layer(NodeServices.layer)("boot service install", (it) => {
           ),
         ).toEqual(
           platform === "linux"
-            ? ["systemctl --user stop rove.service", "systemctl --user restart rove.service"]
+            ? [
+                "systemctl --user stop paperplane.service",
+                "systemctl --user restart paperplane.service",
+              ]
             : [
-                "launchctl bootout --wait gui/501/io.github.hafiezul.rove.service",
+                "launchctl bootout --wait gui/501/io.github.getpaperplane.paperplane.service",
                 `launchctl bootstrap gui/501 ${plan.unitPath}`,
               ],
         );
@@ -564,14 +571,14 @@ it.layer(NodeServices.layer)("boot service install", (it) => {
         protocol: SERVICE_LAUNCHER_PROTOCOL,
         activeVersion: "1.2.4",
       });
-      expect(yield* fs.readFileString(plan.unitPath)).toContain("versions/1.2.4/rove");
+      expect(yield* fs.readFileString(plan.unitPath)).toContain("versions/1.2.4/paperplane");
       expect(
         commands.filter(
           (command) => command.startsWith("systemctl ") && !command.includes("show-environment"),
         ),
       ).toEqual([]);
       // The files say 1.2.4 but the process is still 1.2.3: not current, and
-      // the reason is named so `rove service status` can point at restart.
+      // the reason is named so `paperplane service status` can point at restart.
       const status = yield* newer.status;
       expect(status.current).toBe(false);
       expect(status.problems).toContain("restart-pending");
@@ -640,7 +647,7 @@ it.layer(NodeServices.layer)("boot service install", (it) => {
       expect(control.active).toBe(true);
 
       // A failed stop skips the operation but still starts the service again.
-      control.failCommand = "systemctl --user stop rove.service";
+      control.failCommand = "systemctl --user stop paperplane.service";
       let ran = false;
       const stopFailure = yield* service
         .withStopped(
@@ -663,11 +670,11 @@ it.layer(NodeServices.layer)("boot service install", (it) => {
       commands.length = 0;
       yield* service.withStopped(Effect.sync(() => commands.push("repair")));
       expect(commands).toEqual([
-        "systemctl --user is-enabled rove.service",
-        "systemctl --user is-active rove.service",
-        "systemctl --user stop rove.service",
+        "systemctl --user is-enabled paperplane.service",
+        "systemctl --user is-active paperplane.service",
+        "systemctl --user stop paperplane.service",
         "repair",
-        "systemctl --user restart rove.service",
+        "systemctl --user restart paperplane.service",
       ]);
       expect(control.active).toBe(true);
       // A running unit the user disabled is started again but stays disabled.
@@ -679,14 +686,14 @@ it.layer(NodeServices.layer)("boot service install", (it) => {
       control.enabled = false;
       commands.length = 0;
       yield* service.withStopped(Effect.sync(() => commands.push("repair")));
-      expect(commands).toContain("systemctl --user stop rove.service");
-      expect(commands).not.toContain("systemctl --user restart rove.service");
+      expect(commands).toContain("systemctl --user stop paperplane.service");
+      expect(commands).not.toContain("systemctl --user restart paperplane.service");
       expect(control.active).toBe(false);
       control.enabled = true;
       control.active = true;
 
       const fs = yield* FileSystem.FileSystem;
-      const otherHome = yield* fs.makeTempDirectoryScoped({ prefix: "rove-doctor-other-" });
+      const otherHome = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-doctor-other-" });
       const other = yield* makeService(undefined, "1.2.3", otherHome);
       commands.length = 0;
       expect(yield* other.withStopped(Effect.sync(() => control.active))).toBe(true);
@@ -707,23 +714,23 @@ it.layer(NodeServices.layer)("boot service install", (it) => {
           (command) => command.startsWith("systemctl ") && !command.includes("show-environment"),
         ),
       ).toEqual([
-        "systemctl --user stop rove.service",
+        "systemctl --user stop paperplane.service",
         "systemctl --user daemon-reload",
-        "systemctl --user enable rove.service",
-        "systemctl --user restart rove.service",
+        "systemctl --user enable paperplane.service",
+        "systemctl --user restart paperplane.service",
       ]);
     }),
   );
 
-  it.effect("restart leaves a service that serves another Rove Code home alone", () =>
+  it.effect("restart leaves a service that serves another Paperplane home alone", () =>
     Effect.gen(function* () {
       const { service, fs, commands, makeService } = yield* makeHarness();
       yield* service.install();
       commands.length = 0;
       const path = yield* Path.Path;
-      const otherHome = yield* fs.makeTempDirectoryScoped({ prefix: "rove-other-home-" });
+      const otherHome = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-other-home-" });
 
-      const other = yield* makeService(undefined, "1.2.3", path.join(otherHome, ".rove"));
+      const other = yield* makeService(undefined, "1.2.3", path.join(otherHome, ".paperplane"));
       expect(yield* other.restart).toBe(false);
       expect(commands.filter((command) => command.startsWith("systemctl "))).toEqual([]);
     }),
@@ -743,9 +750,9 @@ it.layer(NodeServices.layer)("boot service install", (it) => {
           (command) => command.startsWith("systemctl ") && !command.includes("show-environment"),
         ),
       ).toEqual([
-        "systemctl --user stop rove.service",
+        "systemctl --user stop paperplane.service",
         "systemctl --user daemon-reload",
-        "systemctl --user restart rove.service",
+        "systemctl --user restart paperplane.service",
       ]);
     }),
   );
@@ -764,9 +771,9 @@ it.layer(NodeServices.layer)("boot service install", (it) => {
           (command) => command.startsWith("systemctl ") && !command.includes("show-environment"),
         ),
       ).toEqual([
-        "systemctl --user stop rove.service",
+        "systemctl --user stop paperplane.service",
         "systemctl --user daemon-reload",
-        "systemctl --user restart rove.service",
+        "systemctl --user restart paperplane.service",
       ]);
     }),
   );
@@ -797,7 +804,10 @@ it.layer(NodeServices.layer)("boot service install", (it) => {
           commands.filter(
             (command) => command.startsWith("systemctl ") && !command.includes("show-environment"),
           ),
-        ).toEqual(["systemctl --user stop rove.service", "systemctl --user restart rove.service"]);
+        ).toEqual([
+          "systemctl --user stop paperplane.service",
+          "systemctl --user restart paperplane.service",
+        ]);
       }
     }),
   );
@@ -818,7 +828,7 @@ it.layer(NodeServices.layer)("boot service install", (it) => {
 
       expect(
         plan.unitPath.endsWith(
-          path.join("Library", "LaunchAgents", "io.github.hafiezul.rove.service.plist"),
+          path.join("Library", "LaunchAgents", "io.github.getpaperplane.paperplane.service.plist"),
         ),
       ).toBe(true);
       expect(yield* fs.readFileString(plan.unitPath)).toContain(
@@ -841,7 +851,7 @@ it.layer(NodeServices.layer)("boot service install", (it) => {
       // A bootout can block up to the plist's 90s ExitTimeOut; the runner's
       // 60s default would cancel it and let bootstrap race a loaded job.
       expect(
-        timeouts.get("launchctl bootout --wait gui/501/io.github.hafiezul.rove.service"),
+        timeouts.get("launchctl bootout --wait gui/501/io.github.getpaperplane.paperplane.service"),
       ).toEqual(Duration.seconds(120));
     }),
   );
@@ -857,8 +867,8 @@ it.layer(NodeServices.layer)("boot service install", (it) => {
       const error = yield* service.install().pipe(Effect.flip);
       expect(error._tag).toBe("BootServiceCommandError");
       expect(commands.filter((command) => command.startsWith("launchctl "))).toEqual([
-        "launchctl bootout --wait gui/501/io.github.hafiezul.rove.service",
-        "launchctl enable gui/501/io.github.hafiezul.rove.service",
+        "launchctl bootout --wait gui/501/io.github.getpaperplane.paperplane.service",
+        "launchctl enable gui/501/io.github.getpaperplane.paperplane.service",
         `launchctl bootstrap gui/501 ${plistPath}`,
         `launchctl bootstrap gui/501 ${plistPath}`,
       ]);
@@ -920,7 +930,8 @@ it.layer(NodeServices.layer)("boot service install", (it) => {
     Effect.gen(function* () {
       const { service, control } = yield* makeHarness("darwin");
       yield* service.install();
-      control.failCommand = "launchctl bootout --wait gui/501/io.github.hafiezul.rove.service";
+      control.failCommand =
+        "launchctl bootout --wait gui/501/io.github.getpaperplane.paperplane.service";
 
       yield* service.install();
       expect((yield* service.status).current).toBe(true);
@@ -951,7 +962,7 @@ it.layer(NodeServices.layer)("boot service install", (it) => {
         );
         expect(serviceStateHasPendingUpdate(yield* fs.readFileString(statePath))).toBe(true);
         expect(commands.filter((command) => command.startsWith("launchctl "))).toEqual([
-          "launchctl bootout --wait gui/501/io.github.hafiezul.rove.service",
+          "launchctl bootout --wait gui/501/io.github.getpaperplane.paperplane.service",
           `launchctl bootstrap gui/501 ${plistPath}`,
         ]);
       }

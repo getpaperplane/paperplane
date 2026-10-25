@@ -112,10 +112,10 @@ jobs:
     # Windows waits for the same-arch Linux archive inside this budget.
     timeout-minutes: ${{ inputs.platform == 'win' && 70 || 30 }}
     env:
-      ROVE_CLERK_PUBLISHABLE_KEY: ${{ inputs.clerk_publishable_key }}
-      ROVE_CLERK_JWT_TEMPLATE: ${{ inputs.clerk_jwt_template }}
-      ROVE_CLERK_CLI_OAUTH_CLIENT_ID: ${{ inputs.clerk_cli_oauth_client_id }}
-      ROVE_RELAY_URL: ${{ inputs.relay_url }}
+      PAPERPLANE_CLERK_PUBLISHABLE_KEY: ${{ inputs.clerk_publishable_key }}
+      PAPERPLANE_CLERK_JWT_TEMPLATE: ${{ inputs.clerk_jwt_template }}
+      PAPERPLANE_CLERK_CLI_OAUTH_CLIENT_ID: ${{ inputs.clerk_cli_oauth_client_id }}
+      PAPERPLANE_RELAY_URL: ${{ inputs.relay_url }}
     steps:
       # The windows-11-arm image runs jobs on its OS disk, where Defender scans
       # every write. A trusted Dev Drive mounted over the empty workspace keeps
@@ -153,7 +153,7 @@ jobs:
             if [ "$attempt" -eq 4 ]; then exit 1; fi
             sleep $((5 * 2 ** (attempt - 1)))
           done
-          git sparse-checkout set --no-cone '/*' '!/.repos/' '!/apps/mobile/modules/rove-terminal/Vendor/**/*.a'
+          git sparse-checkout set --no-cone '/*' '!/.repos/' '!/apps/mobile/modules/paperplane-terminal/Vendor/**/*.a'
           git -c checkout.workers=0 checkout --detach FETCH_HEAD
 
       # Only the desktop build needs these, but Ubuntu mirrors sometimes stall
@@ -297,7 +297,7 @@ jobs:
         # CLI-only jobs (desktop: false) build the server executable and archive
         # from scripts/ and apps/server; skipping the desktop graph saves linking
         # time on the windows-11-arm runner, where linking dominates install.
-        run: vp install ${{ inputs.desktop && '--filter=@rove-code/desktop... ' || '' }}--filter=@rove-code/server... --filter=@rove-code/scripts...
+        run: vp install ${{ inputs.desktop && '--filter=@getpaperplane/desktop... ' || '' }}--filter=@getpaperplane/server... --filter=@getpaperplane/scripts...
 
       # Desktop staging, CLI archive staging, and the smoke test's runtime copy
       # each write tens of thousands of files under TEMP, which sits on the
@@ -308,7 +308,7 @@ jobs:
         uses: samypr100/setup-dev-drive@562171fe8df7401fdf582d766cd3b6ab80d5b1a0 # v4.1.0
         with:
           drive-size: 20GB
-          drive-path: C:\rove_temp_drive.vhdx
+          drive-path: C:\paperplane_temp_drive.vhdx
           trusted-dev-drive: true
           env-mapping: |
             TEMP,{{ DEV_DRIVE }}\tmp
@@ -323,7 +323,7 @@ jobs:
         id: resource_monitor_cache
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
         with:
-          path: native/resource-monitor/target/${{ inputs.rust_target }}/release/rove-resource-monitor${{ inputs.platform == 'win' && '.exe' || '' }}
+          path: native/resource-monitor/target/${{ inputs.rust_target }}/release/paperplane-resource-monitor${{ inputs.platform == 'win' && '.exe' || '' }}
           key: resource-monitor-${{ inputs.rust_target }}-${{ hashFiles('native/resource-monitor/Cargo.lock', 'native/resource-monitor/Cargo.toml', 'native/resource-monitor/src/**') }}
 
       - name: Cache Linux capture helpers
@@ -332,8 +332,8 @@ jobs:
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
         with:
           path: |
-            native/kde-snap-shot/target/${{ inputs.rust_target }}/release/rove-kde-snap-shot
-            native/hyprland-snap-shot/target/${{ inputs.rust_target }}/release/rove-hyprland-snap-shot
+            native/kde-snap-shot/target/${{ inputs.rust_target }}/release/paperplane-kde-snap-shot
+            native/hyprland-snap-shot/target/${{ inputs.rust_target }}/release/paperplane-hyprland-snap-shot
           key: linux-capture-helpers-${{ inputs.rust_target }}-${{ hashFiles('native/kde-snap-shot/Cargo.lock', 'native/kde-snap-shot/Cargo.toml', 'native/kde-snap-shot/src/**', 'native/hyprland-snap-shot/Cargo.lock', 'native/hyprland-snap-shot/Cargo.toml', 'native/hyprland-snap-shot/src/**', 'native/hyprland-snap-shot/protocols/**') }}
 
       - name: Setup Rust
@@ -355,7 +355,7 @@ jobs:
         shell: bash
         run: |
           config_path="$RUNNER_TEMP/relay-client-tracing/relay-client-tracing.env"
-          tracing_token="$(sed -n 's/^ROVE_RELAY_CLIENT_OTLP_TRACES_TOKEN=//p' "$config_path")"
+          tracing_token="$(sed -n 's/^PAPERPLANE_RELAY_CLIENT_OTLP_TRACES_TOKEN=//p' "$config_path")"
           echo "::add-mask::$tracing_token"
           cat "$config_path" >> "$GITHUB_ENV"
 
@@ -485,7 +485,7 @@ jobs:
         env:
           CSC_LINK: ${{ secrets.CSC_LINK }}
           CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
-          CSC_NAME: ${{ vars.MACOS_SIGNING_IDENTITY || 'Rove Code Release Signing' }}
+          CSC_NAME: ${{ vars.MACOS_SIGNING_IDENTITY || 'Paperplane Release Signing' }}
         run: bash scripts/import-macos-self-signed.sh
 
       # The CLI archive and the desktop app build concurrently and both ship
@@ -507,9 +507,9 @@ jobs:
             echo "macOS CLI signing disabled (missing CSC_LINK); the archive is signed ad hoc."
             exit 0
           fi
-          keychain="$RUNNER_TEMP/rove-cli-signing.keychain-db"
+          keychain="$RUNNER_TEMP/paperplane-cli-signing.keychain-db"
           keychain_password="$(openssl rand -hex 16)"
-          cert_path="$RUNNER_TEMP/rove-cli-signing.p12"
+          cert_path="$RUNNER_TEMP/paperplane-cli-signing.p12"
           printf '%s' "$CSC_LINK" | base64 --decode > "$cert_path"
           security create-keychain -p "$keychain_password" "$keychain"
           security set-keychain-settings -lut 21600 "$keychain"
@@ -523,7 +523,7 @@ jobs:
             exit 1
           fi
           echo "::add-mask::$keychain_password"
-          echo "ROVE_CLI_MAC_SIGN_IDENTITY=$identity" >> "$GITHUB_ENV"
+          echo "PAPERPLANE_CLI_MAC_SIGN_IDENTITY=$identity" >> "$GITHUB_ENV"
           echo "macOS CLI signing enabled."
 
       - name: Stage resource monitor for the CLI archive
@@ -531,7 +531,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          binary_name="rove-resource-monitor"
+          binary_name="paperplane-resource-monitor"
           if [[ "${{ inputs.platform }}" == "win" ]]; then
             binary_name="${binary_name}.exe"
           fi
@@ -553,8 +553,8 @@ jobs:
         if: inputs.cli_archive
         shell: bash
         env:
-          ROVE_MACOS_SIGNING_MODE: ${{ vars.MACOS_SIGNING_MODE || 'developer-id' }}
-          ROVE_WINDOWS_SIGNING_MODE: ${{ vars.WINDOWS_SIGNING_MODE || 'azure' }}
+          PAPERPLANE_MACOS_SIGNING_MODE: ${{ vars.MACOS_SIGNING_MODE || 'developer-id' }}
+          PAPERPLANE_WINDOWS_SIGNING_MODE: ${{ vars.WINDOWS_SIGNING_MODE || 'azure' }}
           WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
           APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
           APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
@@ -567,7 +567,7 @@ jobs:
           AZURE_TRUSTED_SIGNING_CERTIFICATE_PROFILE_NAME: ${{ secrets.AZURE_TRUSTED_SIGNING_CERTIFICATE_PROFILE_NAME }}
         run: |
           set -euo pipefail
-          if [[ "${{ inputs.platform }}" == "mac" && "$ROVE_MACOS_SIGNING_MODE" == "self-signed" ]]; then
+          if [[ "${{ inputs.platform }}" == "mac" && "$PAPERPLANE_MACOS_SIGNING_MODE" == "self-signed" ]]; then
             unset APPLE_API_KEY APPLE_API_KEY_ID APPLE_API_ISSUER
           fi
           if [[ "${{ inputs.platform }}" == "mac" && -n "${APPLE_API_KEY:-}" ]]; then
@@ -635,10 +635,10 @@ jobs:
         env:
           pnpm_config_cache_dir: ${{ runner.temp }}/pnpm-metadata
           # Built (or restored) before the CLI archive, which ships it too.
-          ROVE_DESKTOP_REUSE_RESOURCE_MONITOR: true
-          ROVE_DESKTOP_REUSE_LINUX_CAPTURE_HELPERS: ${{ steps.capture_helper_cache.outputs.cache-hit == 'true' }}
-          ROVE_MACOS_SIGNING_MODE: ${{ vars.MACOS_SIGNING_MODE || 'developer-id' }}
-          ROVE_WINDOWS_SIGNING_MODE: ${{ vars.WINDOWS_SIGNING_MODE || 'azure' }}
+          PAPERPLANE_DESKTOP_REUSE_RESOURCE_MONITOR: true
+          PAPERPLANE_DESKTOP_REUSE_LINUX_CAPTURE_HELPERS: ${{ steps.capture_helper_cache.outputs.cache-hit == 'true' }}
+          PAPERPLANE_MACOS_SIGNING_MODE: ${{ vars.MACOS_SIGNING_MODE || 'developer-id' }}
+          PAPERPLANE_WINDOWS_SIGNING_MODE: ${{ vars.WINDOWS_SIGNING_MODE || 'azure' }}
           WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
           CSC_LINK: ${{ secrets.CSC_LINK }}
           CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
@@ -647,7 +647,7 @@ jobs:
           APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
           APPLE_TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
           MACOS_PROVISIONING_PROFILE: ${{ secrets.MACOS_PROVISIONING_PROFILE }}
-          ROVE_CLERK_PASSKEY_RP_DOMAINS: ${{ vars.CLERK_PASSKEY_RP_DOMAINS }}
+          PAPERPLANE_CLERK_PASSKEY_RP_DOMAINS: ${{ vars.CLERK_PASSKEY_RP_DOMAINS }}
           AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
           AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
           AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
@@ -675,17 +675,17 @@ jobs:
           }
 
           if [[ "${{ inputs.platform }}" == "mac" ]]; then
-            if [[ "$ROVE_MACOS_SIGNING_MODE" == "self-signed" ]]; then
+            if [[ "$PAPERPLANE_MACOS_SIGNING_MODE" == "self-signed" ]]; then
               if ! has_all "$CSC_LINK" "$CSC_KEY_PASSWORD" "${CSC_KEYCHAIN:-}"; then
                 echo "Self-signed macOS releases require an imported CSC_LINK identity and CSC_KEY_PASSWORD." >&2
                 exit 1
               fi
               unset APPLE_API_KEY APPLE_API_KEY_ID APPLE_API_ISSUER APPLE_TEAM_ID
-              unset ROVE_APPLE_TEAM_ID ROVE_MACOS_PROVISIONING_PROFILE
+              unset PAPERPLANE_APPLE_TEAM_ID PAPERPLANE_MACOS_PROVISIONING_PROFILE
               echo "macOS certificate signing enabled without Apple notarization."
               mac_unnotarized=true
               args+=(--signed)
-            elif [[ "$ROVE_MACOS_SIGNING_MODE" != "developer-id" ]]; then
+            elif [[ "$PAPERPLANE_MACOS_SIGNING_MODE" != "developer-id" ]]; then
               echo "MACOS_SIGNING_MODE must be developer-id or self-signed." >&2
               exit 1
             elif has_all "$CSC_LINK" "$CSC_KEY_PASSWORD" "$APPLE_API_KEY" "$APPLE_API_KEY_ID" "$APPLE_API_ISSUER"; then
@@ -698,11 +698,11 @@ jobs:
               printf '%s' "$APPLE_API_KEY" > "$key_path"
               export APPLE_API_KEY="$key_path"
 
-              profile_path="$RUNNER_TEMP/rove.provisionprofile"
+              profile_path="$RUNNER_TEMP/paperplane.provisionprofile"
               printf '%s' "$MACOS_PROVISIONING_PROFILE" | base64 -D > "$profile_path"
               security cms -D -i "$profile_path" >/dev/null
-              export ROVE_APPLE_TEAM_ID="$APPLE_TEAM_ID"
-              export ROVE_MACOS_PROVISIONING_PROFILE="$profile_path"
+              export PAPERPLANE_APPLE_TEAM_ID="$APPLE_TEAM_ID"
+              export PAPERPLANE_MACOS_PROVISIONING_PROFILE="$profile_path"
 
               echo "macOS signing enabled."
               args+=(--signed)
@@ -714,16 +714,16 @@ jobs:
           elif [[ "${{ inputs.platform }}" == "win" ]]; then
             # Embed the Linux CLI archive built by the same-arch Linux job as
             # the WSL runtime. Required for a working WSL backend on Windows.
-            args+=(--wsl-runtime "$GITHUB_WORKSPACE"/wsl-runtime/rove-*-linux-${{ inputs.arch }}.tar.gz)
+            args+=(--wsl-runtime "$GITHUB_WORKSPACE"/wsl-runtime/paperplane-*-linux-${{ inputs.arch }}.tar.gz)
             unset CSC_LINK CSC_KEY_PASSWORD
-            if [[ "${ROVE_WINDOWS_SIGNING_MODE:-azure}" == "self-signed" ]]; then
-              if ! has_all "${WIN_CSC_LINK:-}" "$WIN_CSC_KEY_PASSWORD" "${ROVE_WINDOWS_SIGNING_THUMBPRINT:-}"; then
+            if [[ "${PAPERPLANE_WINDOWS_SIGNING_MODE:-azure}" == "self-signed" ]]; then
+              if ! has_all "${WIN_CSC_LINK:-}" "$WIN_CSC_KEY_PASSWORD" "${PAPERPLANE_WINDOWS_SIGNING_THUMBPRINT:-}"; then
                 echo "Self-signed Windows builds require an imported WIN_CSC_LINK identity and WIN_CSC_KEY_PASSWORD." >&2
                 exit 1
               fi
               args+=(--signed)
               echo "Windows self-signing enabled without Azure Trusted Signing."
-            elif [[ "${ROVE_WINDOWS_SIGNING_MODE:-azure}" != "azure" ]]; then
+            elif [[ "${PAPERPLANE_WINDOWS_SIGNING_MODE:-azure}" != "azure" ]]; then
               echo "WINDOWS_SIGNING_MODE must be azure or self-signed." >&2
               exit 1
             elif has_all \
@@ -745,7 +745,7 @@ jobs:
 
           vp run dist:desktop:artifact "${args[@]}"
 
-          if [[ "${{ inputs.platform }}" == "win" && "${ROVE_WINDOWS_SIGNING_MODE:-azure}" == "self-signed" ]]; then
+          if [[ "${{ inputs.platform }}" == "win" && "${PAPERPLANE_WINDOWS_SIGNING_MODE:-azure}" == "self-signed" ]]; then
             pwsh -NoProfile -NonInteractive -File scripts/windows-self-signed.ps1 -Action Verify -Path release
           fi
 
@@ -754,7 +754,7 @@ jobs:
             for archive in release/*.zip; do
               [[ -f "$archive" ]] || continue
               found_zip=true
-              verification_dir="$(mktemp -d "$RUNNER_TEMP/rove-macos-verify.XXXXXX")"
+              verification_dir="$(mktemp -d "$RUNNER_TEMP/paperplane-macos-verify.XXXXXX")"
               ditto -x -k "$archive" "$verification_dir"
               found_app=false
               while IFS= read -r -d '' app; do
@@ -773,9 +773,9 @@ jobs:
           fi
 
           if [[ "${mac_unsigned:-false}" == "true" || "${mac_unnotarized:-false}" == "true" ]]; then
-            app_name="$(node -p "require('./apps/desktop/package.json').productName || 'Rove Code'")"
+            app_name="$(node -p "require('./apps/desktop/package.json').productName || 'Paperplane'")"
             if [[ "${{ inputs.release_channel }}" == "nightly" ]]; then
-              app_name="Rove Code (Nightly)"
+              app_name="Paperplane (Nightly)"
             fi
             {
               echo "### Installing this unnotarized macOS build"
@@ -862,7 +862,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          binary_name="rove-resource-monitor"
+          binary_name="paperplane-resource-monitor"
           if [[ "${{ inputs.platform }}" == "win" ]]; then
             binary_name="${binary_name}.exe"
           fi

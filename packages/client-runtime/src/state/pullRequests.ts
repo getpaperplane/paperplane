@@ -19,7 +19,7 @@ import {
   PullRequestOperationError,
   type PullRequestSummary,
   type VcsStatusResult,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Data from "effect/Data";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";

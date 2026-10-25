@@ -14,6 +14,8 @@ import { RelayObservability } from "./src/observability.ts";
 import { ManagedEndpointZone, RelayApiZone } from "./src/zone.ts";
 import * as RelayWorker from "./src/worker.ts";
 
+// Deployed identity: renaming the stack makes Alchemy create a second relay
+// (worker, database branch, tunnels) beside the live one. Keep it.
 export default Alchemy.Stack(
   "RoveRelay",
   {

@@ -5,7 +5,7 @@ import * as Latch from "effect/Latch";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 
 import { buildNpmPlatformPackages } from "../../../scripts/build-npm-platform-packages.ts";
@@ -13,7 +13,7 @@ import { buildNpmPlatformPackages } from "../../../scripts/build-npm-platform-pa
 import { publishPlatformsThenLauncher } from "./publishOrder.ts";
 
 const platformTarballs = ["a.tgz", "b.tgz", "c.tgz"];
-const launcherTarball = "rove.tgz";
+const launcherTarball = "paperplane.tgz";
 
 // A fake publish that records when each upload starts and ends. Platform
 // uploads only end once every platform upload has started, so they have to
@@ -98,16 +98,16 @@ it.effect("single-platform builds match full packaging and publish without a lau
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
     const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
-    const root = yield* fs.makeTempDirectoryScoped({ prefix: "rove-early-npm-" });
+    const root = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-early-npm-" });
     const archivesDir = path.join(root, "archives");
     const stage = path.join(root, "stage");
     yield* fs.makeDirectory(archivesDir);
     yield* fs.makeDirectory(path.join(stage, "package/node_modules"), { recursive: true });
-    yield* fs.writeFileString(path.join(stage, "package/rove"), "#!/bin/sh\nexit 0\n");
+    yield* fs.writeFileString(path.join(stage, "package/paperplane"), "#!/bin/sh\nexit 0\n");
     const tar = yield* spawner.spawn(
       ChildProcess.make("tar", [
         "-czf",
-        path.join(archivesDir, "rove-1.2.3-linux-x64.tar.gz"),
+        path.join(archivesDir, "paperplane-1.2.3-linux-x64.tar.gz"),
         "-C",
         stage,
         "package",
@@ -129,7 +129,7 @@ it.effect("single-platform builds match full packaging and publish without a lau
     });
     assert.strictEqual(full.length, 2);
     assert.strictEqual(early.length, 1);
-    assert.strictEqual(yield* fs.exists(path.join(root, "early/@rove-code/cli.tgz")), false);
+    assert.strictEqual(yield* fs.exists(path.join(root, "early/@getpaperplane/cli.tgz")), false);
     assert.strictEqual(
       yield* fs.readFileString(path.join(full[0]!.packageDir, "package.json")),
       yield* fs.readFileString(path.join(early[0]!.packageDir, "package.json")),

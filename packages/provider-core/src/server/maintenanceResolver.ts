@@ -1,20 +1,20 @@
 export type {
   ProviderMaintenanceCapabilities,
   ProviderMaintenanceCommandAction,
-} from "@rove-code/provider-core/server/maintenance";
+} from "@getpaperplane/provider-core/server/maintenance";
 import type {
   ProviderMaintenanceCapabilities,
   ProviderMaintenanceCommandAction,
-} from "@rove-code/provider-core/server/maintenance";
+} from "@getpaperplane/provider-core/server/maintenance";
 import {
   ProviderDriverKind,
   type ServerProvider,
   type ServerProviderVersionAdvisory,
-} from "@rove-code/contracts";
-import { compareSemverVersions } from "@rove-code/shared/semver";
-import * as HostProcess from "@rove-code/shared/HostProcess";
-import { causeErrorTag } from "@rove-code/shared/observability";
-import { resolveCommandPath } from "@rove-code/shared/shell";
+} from "@getpaperplane/contracts";
+import { compareSemverVersions } from "@getpaperplane/shared/semver";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
+import { causeErrorTag } from "@getpaperplane/shared/observability";
+import { resolveCommandPath } from "@getpaperplane/shared/shell";
 import * as Cache from "effect/Cache";
 import * as Config from "effect/Config";
 import * as DateTime from "effect/DateTime";
@@ -366,7 +366,7 @@ const runHomebrew = Effect.fn("runHomebrew")(function* (
 /**
  * Derive update capabilities from where the executable actually lives. Every
  * package-manager branch has evidence that the named tool owns that path, so
- * Rove Code never runs a package manager against an install it did not create.
+ * Paperplane never runs a package manager against an install it did not create.
  * An unproven install falls back to the provider's own updater, which detects
  * its installer itself, and stays manual-only without one.
  */

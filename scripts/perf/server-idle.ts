@@ -10,7 +10,7 @@ import * as NodePath from "node:path";
 import * as NodeTimersPromises from "node:timers/promises";
 
 const delay = NodeTimersPromises.setTimeout;
-// oxlint-disable-next-line rove/no-global-process-runtime -- Standalone benchmark has no Effect runtime.
+// oxlint-disable-next-line paperplane/no-global-process-runtime -- Standalone benchmark has no Effect runtime.
 const platform = NodeOS.platform();
 
 const secondsIndex = process.argv.indexOf("--seconds");
@@ -22,7 +22,7 @@ const address = reservation.address();
 if (address === null || typeof address === "string") throw new Error("No TCP port");
 const port = address.port;
 await new Promise<void>((resolve) => reservation.close(() => resolve()));
-const home = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "rove-idle-"));
+const home = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "paperplane-idle-"));
 const child = NodeChildProcess.spawn(
   process.execPath,
   [
@@ -37,7 +37,7 @@ const child = NodeChildProcess.spawn(
     "--no-browser",
   ],
   {
-    env: { ...process.env, ROVE_HOME: home },
+    env: { ...process.env, PAPERPLANE_HOME: home },
     stdio: ["ignore", "pipe", "pipe"],
   },
 );

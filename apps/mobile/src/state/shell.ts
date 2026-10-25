@@ -4,9 +4,9 @@ import {
   createEnvironmentSnapshotAtom,
   createShellEnvironmentAtoms,
   type EnvironmentShellState,
-} from "@rove-code/client-runtime/state/shell";
+} from "@getpaperplane/client-runtime/state/shell";
 import { useAtomValue } from "@effect/atom-react";
-import type { EnvironmentId } from "@rove-code/contracts";
+import type { EnvironmentId } from "@getpaperplane/contracts";
 import * as Option from "effect/Option";
 import { Atom } from "effect/reactivity";
 

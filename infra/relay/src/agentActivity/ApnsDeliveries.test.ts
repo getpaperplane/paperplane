@@ -1,7 +1,7 @@
 import type {
   RelayAgentActivityAggregateState,
   RelayAgentActivityState,
-} from "@rove-code/contracts/relay";
+} from "@getpaperplane/contracts/relay";
 import * as NodeCryptoLayer from "@effect/platform-node/NodeCrypto";
 import { describe, expect, it } from "@effect/vitest";
 // @effect-diagnostics-next-line nodeBuiltinImport:off -- Effect's Crypto has no generateKeyPairSync.
@@ -38,12 +38,12 @@ const config = RelayConfiguration.RelayConfiguration.of({
     teamId: "team-id",
     keyId: "key-id",
     privateKey: Redacted.make("not-a-private-key"),
-    bundleId: "dev.rove.app.dev",
+    bundleId: "io.github.getpaperplane.paperplane.dev",
   },
   apnsDeliveryJobSigningSecret: Redacted.make("job-signing-secret"),
   clerkSecretKey: Redacted.make("clerk-secret"),
   clerkPublishableKey: "pk_test_test",
-  clerkJwtAudience: "rove-relay",
+  clerkJwtAudience: "paperplane-relay",
   cloudMintPrivateKey: Redacted.make("cloud-private-key"),
   cloudMintPublicKey: "cloud-public-key",
   managedEndpointBaseDomain: undefined,
@@ -77,7 +77,7 @@ const state: RelayAgentActivityState = {
 };
 
 const aggregate: RelayAgentActivityAggregateState = {
-  title: "Rove Code",
+  title: "Paperplane",
   subtitle: "Agent work in progress",
   activeCount: 1,
   updatedAt: state.updatedAt,
@@ -462,7 +462,7 @@ describe("ApnsDeliveries", () => {
       yield* deliveries.sendForTarget({
         target: {
           ...target,
-          bundle_id: "dev.rove.app.preview",
+          bundle_id: "io.github.getpaperplane.paperplane.preview",
           aps_environment: "production",
           ended_at: "1970-01-01T00:00:05.000Z",
         },
@@ -476,7 +476,7 @@ describe("ApnsDeliveries", () => {
             kind: "live_activity_update",
             target: {
               token: "activity-token",
-              bundleId: "dev.rove.app.preview",
+              bundleId: "io.github.getpaperplane.paperplane.preview",
               apsEnvironment: "production",
             },
           },
@@ -493,7 +493,7 @@ describe("ApnsDeliveries", () => {
       userId: target.user_id,
       deviceId: target.device_id,
       token: "activity-token",
-      bundleId: "dev.rove.app.preview",
+      bundleId: "io.github.getpaperplane.paperplane.preview",
       apsEnvironment: "sandbox",
       aggregate,
       createdAt: "1970-01-01T00:00:00.000Z",
@@ -518,14 +518,18 @@ describe("ApnsDeliveries", () => {
       expect(requests).toHaveLength(1);
       expect(requests[0]?.url).toBe("https://api.sandbox.push.apple.com/3/device/activity-token");
       expect(requests[0]?.headers["apns-topic"]).toBe(
-        "dev.rove.app.preview.push-type.liveactivity",
+        "io.github.getpaperplane.paperplane.preview.push-type.liveactivity",
       );
     }).pipe(
       Effect.provide(
         layerFor({
           attempts,
           currentTargets: [
-            { ...target, bundle_id: "dev.rove.app.preview", aps_environment: "sandbox" },
+            {
+              ...target,
+              bundle_id: "io.github.getpaperplane.paperplane.preview",
+              aps_environment: "sandbox",
+            },
           ],
           config: signingConfig,
           execute,
@@ -2030,7 +2034,10 @@ describe("signed APNs registration metadata", () => {
       token: "unchanged-token",
       ...(changed === "legacy"
         ? {}
-        : { bundleId: "dev.rove.app.dev", apsEnvironment: "sandbox" as const }),
+        : {
+            bundleId: "io.github.getpaperplane.paperplane.dev",
+            apsEnvironment: "sandbox" as const,
+          }),
       aggregate: kind === "live_activity_update" ? aggregate : null,
       ...(kind === "push_notification"
         ? {
@@ -2060,7 +2067,7 @@ describe("signed APNs registration metadata", () => {
         `${changed === "environment" ? "https://api.push.apple.com" : "https://api.sandbox.push.apple.com"}/3/device/unchanged-token`,
       );
       expect(requests[0]?.headers["apns-topic"]).toBe(
-        `${changed === "bundle" ? "dev.rove.app.preview" : "dev.rove.app.dev"}${kind === "live_activity_update" ? ".push-type.liveactivity" : ""}`,
+        `${changed === "bundle" ? "io.github.getpaperplane.paperplane.preview" : "io.github.getpaperplane.paperplane.dev"}${kind === "live_activity_update" ? ".push-type.liveactivity" : ""}`,
       );
     }).pipe(
       Effect.provide(
@@ -2072,7 +2079,10 @@ describe("signed APNs registration metadata", () => {
               ...target,
               push_token: "unchanged-token",
               activity_push_token: "unchanged-token",
-              bundle_id: changed === "bundle" ? "dev.rove.app.preview" : "dev.rove.app.dev",
+              bundle_id:
+                changed === "bundle"
+                  ? "io.github.getpaperplane.paperplane.preview"
+                  : "io.github.getpaperplane.paperplane.dev",
               aps_environment: changed === "environment" ? "production" : "sandbox",
             },
           ],

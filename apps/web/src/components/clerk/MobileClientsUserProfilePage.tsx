@@ -1,4 +1,4 @@
-import type { RelayClientDeviceRecord } from "@rove-code/contracts/relay";
+import type { RelayClientDeviceRecord } from "@getpaperplane/contracts/relay";
 import { SmartphoneIcon } from "lucide-react";
 
 import { useManagedRelayDevices } from "../../cloud/managedRelayState";
@@ -94,8 +94,8 @@ function EmptyMobileClients() {
       <EmptyHeader>
         <EmptyTitle>No mobile clients</EmptyTitle>
         <EmptyDescription>
-          Install Rove Code on your phone and sign in to Rove Connect to get push notifications and
-          Live Activities.
+          Install Paperplane on your phone and sign in to Paperplane Connect to get push
+          notifications and Live Activities.
         </EmptyDescription>
       </EmptyHeader>
     </Empty>

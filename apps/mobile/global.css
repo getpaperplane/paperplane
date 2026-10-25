@@ -40,15 +40,15 @@
 }
 
 /* ─── Custom utilities ──────────────────────────────────────────────── */
-@utility font-rove-medium {
+@utility font-paperplane-medium {
   font-family: var(--font-medium);
 }
 
-@utility font-rove-bold {
+@utility font-paperplane-bold {
   font-family: var(--font-bold);
 }
 
-@utility font-rove-extrabold {
+@utility font-paperplane-extrabold {
   font-family: var(--font-bold);
   font-weight: 800;
 }

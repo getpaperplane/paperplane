@@ -14,8 +14,8 @@ import {
   type PullRequestDetail,
   type PullRequestStack,
   type PullRequestRef,
-} from "@rove-code/contracts";
-import type { ReviewGuideGenerationInput } from "@rove-code/provider-core/server/textGeneration";
+} from "@getpaperplane/contracts";
+import type { ReviewGuideGenerationInput } from "@getpaperplane/provider-core/server/textGeneration";
 
 import * as ServerConfig from "../config.ts";
 import * as SqlitePersistence from "../persistence/Sqlite.ts";
@@ -64,7 +64,7 @@ const git = (cwd: string, args: ReadonlyArray<string>) =>
  */
 const makeRepositories = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
-  const root = yield* fs.makeTempDirectoryScoped({ prefix: "rove-review-guide-" });
+  const root = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-review-guide-" });
   const remote = `${root}/remote`;
   const workspace = `${root}/workspace`;
   yield* fs.makeDirectory(remote);
@@ -218,12 +218,16 @@ const makeLayer = (input: {
       } as unknown as TextGeneration.TextGeneration["Service"]),
     ),
     Layer.provide(ServerSettings.layerTest({ reviewGuidesEnabled: input.enabled ?? true })),
-    Layer.provide(ServerConfig.layerTest(input.root, { prefix: "rove-review-guide-config-" })),
+    Layer.provide(
+      ServerConfig.layerTest(input.root, { prefix: "paperplane-review-guide-config-" }),
+    ),
   );
 
 const layerBase = Layer.mergeAll(
   GitVcsDriver.layer.pipe(
-    Layer.provide(ServerConfig.layerTest(process.cwd(), { prefix: "rove-review-guide-git-" })),
+    Layer.provide(
+      ServerConfig.layerTest(process.cwd(), { prefix: "paperplane-review-guide-git-" }),
+    ),
     Layer.provideMerge(VcsProcess.layer),
   ),
   SqlitePersistence.layerMemory,

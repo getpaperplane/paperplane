@@ -1,4 +1,4 @@
-import type { EnvironmentMachineKind } from "@rove-code/contracts";
+import type { EnvironmentMachineKind } from "@getpaperplane/contracts";
 import { CloudIcon, LaptopIcon, MonitorIcon, ServerIcon, type LucideProps } from "lucide-react";
 import type { FunctionComponent, SVGProps } from "react";
 import { LinuxIcon } from "./Icons";

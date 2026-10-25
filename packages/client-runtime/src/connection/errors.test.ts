@@ -1,9 +1,9 @@
-import { EnvironmentAuthInvalidError } from "@rove-code/contracts";
+import { EnvironmentAuthInvalidError } from "@getpaperplane/contracts";
 import {
   RelayAuthInvalidError,
   RelayEnvironmentConnectNotAuthorizedError,
   RelayEnvironmentEndpointTimedOutError,
-} from "@rove-code/contracts/relay";
+} from "@getpaperplane/contracts/relay";
 import { describe, expect, it } from "@effect/vitest";
 
 import {
@@ -55,13 +55,13 @@ describe("mapManagedRelayError", () => {
     expect(mapConnectRefusal("managed_endpoint_allocation_not_ready")).toMatchObject({
       _tag: "ConnectionTransientError",
       reason: "endpoint-unavailable",
-      detail: "The environment's Rove Connect tunnel is still being set up.",
+      detail: "The environment's Paperplane Connect tunnel is still being set up.",
       traceId: "trace-connect-refused",
     });
     expect(mapConnectRefusal("endpoint_provider_not_managed")).toMatchObject({
       _tag: "ConnectionBlockedError",
       reason: "permission",
-      detail: expect.stringContaining("turn Rove Connect on"),
+      detail: expect.stringContaining("turn Paperplane Connect on"),
     });
     expect(mapConnectRefusal(undefined)).toMatchObject({
       _tag: "ConnectionBlockedError",

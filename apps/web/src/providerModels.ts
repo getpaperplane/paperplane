@@ -7,8 +7,8 @@ import {
   type ProviderInstanceId,
   type ServerProvider,
   type ServerProviderModel,
-} from "@rove-code/contracts";
-import { createModelCapabilities, resolveSelectableModel } from "@rove-code/shared/model";
+} from "@getpaperplane/contracts";
+import { createModelCapabilities, resolveSelectableModel } from "@getpaperplane/shared/model";
 
 const EMPTY_CAPABILITIES: ModelCapabilities = createModelCapabilities({
   optionDescriptors: [],

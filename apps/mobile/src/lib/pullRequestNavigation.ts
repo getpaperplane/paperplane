@@ -1,4 +1,4 @@
-import { parseChangeRequestUrl } from "@rove-code/shared/changeRequestUrl";
+import { parseChangeRequestUrl } from "@getpaperplane/shared/changeRequestUrl";
 
 export function nativePullRequestDestination(
   url: string,

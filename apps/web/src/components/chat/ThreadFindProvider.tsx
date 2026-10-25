@@ -10,7 +10,7 @@ import {
 import { useThreadFind } from "./useThreadFind";
 import { ThreadFindBar } from "./ThreadFindBar";
 import { ChatCanvas } from "./ChatCanvas";
-import type { ScopedThreadRef } from "@rove-code/contracts";
+import type { ScopedThreadRef } from "@getpaperplane/contracts";
 import { useThreadProjection } from "../../state/entities";
 
 type FindOptions = Omit<Parameters<typeof useThreadFind>[0], "content"> & {

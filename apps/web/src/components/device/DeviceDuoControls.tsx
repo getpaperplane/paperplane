@@ -4,8 +4,8 @@ import {
   duoHoldOrientation,
   type DuoCommand,
   type DuoControlState,
-} from "@rove-code/client-runtime/device/duo-control";
-import type { DeviceScreenSize } from "@rove-code/client-runtime/device/stream";
+} from "@getpaperplane/client-runtime/device/duo-control";
+import type { DeviceScreenSize } from "@getpaperplane/client-runtime/device/stream";
 import { DeviceDuoGlyph } from "./DeviceDuoGlyph";
 import { Button } from "~/components/ui/button";
 import { Tooltip, TooltipPopup, TooltipTrigger } from "~/components/ui/tooltip";

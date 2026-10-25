@@ -1,5 +1,5 @@
-import { type EnvironmentId, sessionGrantsScope } from "@rove-code/contracts";
-import { AUTH_SCOPE_OPTIONS } from "@rove-code/shared/authScopeOptions";
+import { type EnvironmentId, sessionGrantsScope } from "@getpaperplane/contracts";
+import { AUTH_SCOPE_OPTIONS } from "@getpaperplane/shared/authScopeOptions";
 import { useEnvironmentSessionState } from "~/state/session";
 
 export function SessionPermissions({

@@ -1,4 +1,4 @@
-import type { AdvertisedEndpoint, DesktopServerExposureState } from "@rove-code/contracts";
+import type { AdvertisedEndpoint, DesktopServerExposureState } from "@getpaperplane/contracts";
 import * as Cause from "effect/Cause";
 import * as AsyncResult from "effect/reactivity/AsyncResult";
 import { AtomRegistry } from "effect/reactivity";

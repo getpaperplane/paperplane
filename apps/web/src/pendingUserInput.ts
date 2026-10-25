@@ -1,6 +1,6 @@
-import type { ThreadContextRecord, UserInputQuestion } from "@rove-code/contracts";
-import { replaceComposerContextReferences } from "@rove-code/shared/composerContextReferences";
-import { formatThreadLink } from "@rove-code/shared/threadLinks";
+import type { ThreadContextRecord, UserInputQuestion } from "@getpaperplane/contracts";
+import { replaceComposerContextReferences } from "@getpaperplane/shared/composerContextReferences";
+import { formatThreadLink } from "@getpaperplane/shared/threadLinks";
 
 /** Question responses carry text, so send thread chips as links with the actual thread IDs. */
 export function projectPendingUserInputAnswer(

@@ -26,7 +26,7 @@ interface RecoveredMarkdown {
   readonly source: string;
 }
 
-const INLINE_PARSE_PREFIX = "rove-markdown-inline-prefix:";
+const INLINE_PARSE_PREFIX = "paperplane-markdown-inline-prefix:";
 
 function isSameLineOverIndentedCode(
   node: MarkdownAstNode,

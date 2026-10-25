@@ -4,7 +4,7 @@ import * as NodePath from "node:path";
 
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { describe, expect, it } from "@effect/vitest";
-import { ChatAttachmentId, type ChatAttachment } from "@rove-code/contracts";
+import { ChatAttachmentId, type ChatAttachment } from "@getpaperplane/contracts";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
@@ -24,7 +24,9 @@ import {
 } from "./AttachmentClaims.ts";
 
 const layerTest = Layer.mergeAll(NodeServices.layer).pipe(
-  Layer.provideMerge(ServerConfig.layerTest(process.cwd(), { prefix: "rove-attachment-claims-" })),
+  Layer.provideMerge(
+    ServerConfig.layerTest(process.cwd(), { prefix: "paperplane-attachment-claims-" }),
+  ),
   Layer.provideMerge(NodeServices.layer),
 );
 

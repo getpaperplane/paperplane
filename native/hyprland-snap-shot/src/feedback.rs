@@ -290,7 +290,7 @@ pub fn run(directory: &Path, mut options: Options) -> Result<()> {
             &qh,
             surface,
             Layer::Overlay,
-            Some("rove-snap-shot"),
+            Some("io.github.getpaperplane.paperplane.SnapShot"),
             Some(&output),
         );
         layer.set_anchor(Anchor::TOP | Anchor::BOTTOM | Anchor::LEFT | Anchor::RIGHT);

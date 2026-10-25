@@ -1,5 +1,5 @@
-import { scopeThreadRef, scopedThreadKey } from "@rove-code/client-runtime/environment";
-import { ThreadId } from "@rove-code/contracts";
+import { scopeThreadRef, scopedThreadKey } from "@getpaperplane/client-runtime/environment";
+import { ThreadId } from "@getpaperplane/contracts";
 import { beforeEach, describe, expect, it } from "vite-plus/test";
 
 import {

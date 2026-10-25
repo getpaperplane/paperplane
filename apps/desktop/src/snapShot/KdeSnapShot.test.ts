@@ -36,7 +36,7 @@ const window = {
 };
 
 beforeEach(async () => {
-  directory = await NodeFSP.mkdtemp(NodePath.join(NodeOS.tmpdir(), "rove-kde-test-"));
+  directory = await NodeFSP.mkdtemp(NodePath.join(NodeOS.tmpdir(), "paperplane-kde-test-"));
   paths = {
     bundle: NodePath.join(directory, "bundled-helper"),
     dataHome: NodePath.join(directory, "user data"),
@@ -90,7 +90,11 @@ it("installs offline at a stable path and verifies permissions using the install
   await setup.perform("install-kde-helper");
   const { executable, desktop } = kdeCapturePaths(paths);
   expect(desktop).toBe(
-    NodePath.join(paths.dataHome, "applications", "io.github.hafiezul.rove.KdeCapture.desktop"),
+    NodePath.join(
+      paths.dataHome,
+      "applications",
+      "io.github.getpaperplane.paperplane.KdeCapture.desktop",
+    ),
   );
   expect(await NodeFSP.readFile(executable, "utf8")).toBe("bundled executable");
   expect((await NodeFSP.stat(executable)).mode & 0o777).toBe(0o755);
@@ -158,23 +162,6 @@ it("repairs the old semicolon permission entry without replacing unrelated regis
   expect(await NodeFSP.readdir(NodePath.dirname(desktop))).toEqual([NodePath.basename(desktop)]);
 });
 
-it.each(["install-kde-helper", "remove-kde-helper"] as const)(
-  "%s recognizes a legacy capture registration",
-  async (action) => {
-    await setup.perform("install-kde-helper");
-    const { desktop } = kdeCapturePaths(paths);
-    const entry = await NodeFSP.readFile(desktop, "utf8");
-    await NodeFSP.writeFile(
-      desktop,
-      entry.replace("X-RoveCode-Capture-Helper=true", "X-T3Code-Capture-Helper=true"),
-    );
-    await setup.perform(action);
-    expect((await setup.state()).status).toBe(
-      action === "install-kde-helper" ? "ready" : "not-installed",
-    );
-  },
-);
-
 it("still verifies capture access when a systemd user manager is unavailable", async () => {
   const executeNormally = execute.getMockImplementation()!;
   execute.mockImplementation((file, args, options, callback) => {
@@ -206,7 +193,7 @@ it("refuses symlink destinations and unrelated desktop entries", async () => {
   expect(await NodeFSP.readFile(paths.bundle, "utf8")).toBe("bundled executable");
 });
 
-it("captures with verified identity, cleans private files, and activates only the owning Rove PID/title", async () => {
+it("captures with verified identity, cleans private files, and activates only the owning Paperplane PID/title", async () => {
   await setup.perform("install-kde-helper");
   const capture = await captureKdeWindow(paths);
   expect(capture.png).toEqual(png);

@@ -12,7 +12,7 @@ import {
   sanitizeThreadTitle,
   toJsonSchemaObject,
 } from "./textGenerationUtils.ts";
-import { TextGenerationError } from "@rove-code/contracts";
+import { TextGenerationError } from "@getpaperplane/contracts";
 
 describe("buildCommitMessagePrompt", () => {
   it("includes staged patch and summary in the prompt", () => {
@@ -283,7 +283,7 @@ describe("buildThreadTitlePrompt", () => {
     });
 
     expect(result.prompt).toContain(
-      "Regenerate the title for an existing Rove Code thread so the user can recognize it weeks later.",
+      "Regenerate the title for an existing Paperplane thread so the user can recognize it weeks later.",
     );
     expect(result.prompt).toContain('The previous title was "Investigate reconnect regressions".');
     expect(result.prompt).toContain("Thread contents:");

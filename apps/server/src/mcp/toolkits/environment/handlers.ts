@@ -1,4 +1,4 @@
-import { OrchestratorMcpFailure, type ServerSettings } from "@rove-code/contracts";
+import { OrchestratorMcpFailure, type ServerSettings } from "@getpaperplane/contracts";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Environment from "../../../environment/ServerEnvironment.ts";
@@ -43,7 +43,7 @@ const access = Effect.gen(function* () {
   return { ...context, descriptor, settings: yield* Settings.ServerSettingsService };
 });
 export const layer = McpToolAccess.toLayer(EnvironmentToolkit, {
-  rove_environment_read: McpToolAccess.reads(() =>
+  paperplane_environment_read: McpToolAccess.reads(() =>
     Effect.gen(function* () {
       const { descriptor, settings } = yield* access;
       const current = yield* settings.getSettings.pipe(Effect.mapError(unavailable));
@@ -64,7 +64,7 @@ export const layer = McpToolAccess.toLayer(EnvironmentToolkit, {
       };
     }),
   ),
-  rove_environment_preferences_update: McpToolAccess.writesEnvironment((patch, check) =>
+  paperplane_environment_preferences_update: McpToolAccess.writesEnvironment((patch, check) =>
     Effect.gen(function* () {
       const scope = yield* McpInvocationContext.McpInvocationContext;
       const executor = yield* ThreadCommandExecutor.ThreadCommandExecutor;

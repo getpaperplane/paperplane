@@ -1,5 +1,5 @@
 import { revertCodexThread } from "../../provider/CodexThreadRevert.ts";
-import { historyResponseItems } from "@rove-code/provider-core/server/handoffBudget";
+import { historyResponseItems } from "@getpaperplane/provider-core/server/handoffBudget";
 import { makeProviderTextDeltaCoalescer } from "./ProviderTextDeltaCoalescer.ts";
 import {
   mcpToolPresentation,
@@ -12,7 +12,7 @@ import {
   completeCodexTurnTokenUsage,
   type CodexTurnTokenUsageState,
 } from "../../provider/CodexTurnTokenUsage.ts";
-import type { ManagedServerProvider } from "@rove-code/provider-core/server/snapshot";
+import type { ManagedServerProvider } from "@getpaperplane/provider-core/server/snapshot";
 import type { CodexEffectiveRuntime } from "../../provider/CodexManagedRuntime.ts";
 import {
   buildCodexInitializeParams,
@@ -31,17 +31,20 @@ import {
   OrchestrationV2ProviderGoal,
   ProviderDriverKind,
   type ProviderSetupError,
-} from "@rove-code/contracts";
-import { SKILL_MENTION_PATTERN } from "@rove-code/shared/composerInlineTokens";
-import { AgentScope } from "@rove-code/shared/AgentScope";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+} from "@getpaperplane/contracts";
+import { SKILL_MENTION_PATTERN } from "@getpaperplane/shared/composerInlineTokens";
+import { AgentScope } from "@getpaperplane/shared/AgentScope";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 import {
   COMPUTER_USE_TOOL_SOURCE,
   dynamicToolSurface,
   dynamicToolTitle,
-} from "@rove-code/shared/toolActivity";
-import { getModelSelectionStringOptionValue, modelSelectionsEqual } from "@rove-code/shared/model";
-import { resolveSpawnCommand } from "@rove-code/shared/shell";
+} from "@getpaperplane/shared/toolActivity";
+import {
+  getModelSelectionStringOptionValue,
+  modelSelectionsEqual,
+} from "@getpaperplane/shared/model";
+import { resolveSpawnCommand } from "@getpaperplane/shared/shell";
 import type {
   ChatAttachment,
   OrchestrationV2AppThread,
@@ -69,7 +72,7 @@ import type {
   RuntimeMode,
   RuntimeRequestId,
   ThreadId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as CodexClient from "effect-codex-app-server/client";
 import * as CodexErrors from "effect-codex-app-server/errors";
 import * as CodexSchema from "effect-codex-app-server/schema";
@@ -95,7 +98,7 @@ import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import { resolveAttachmentPath, resolveAttachmentPathById } from "../../attachmentStore.ts";
 import { getCodexServiceTierOptionValue } from "../../codexModelOptions.ts";
 import { ServerConfig } from "../../config.ts";
-import { expandHomePath } from "@rove-code/provider-core/server/pathExpansion";
+import { expandHomePath } from "@getpaperplane/provider-core/server/pathExpansion";
 import {
   buildCodexAdditionalContext,
   buildCodexDeveloperInstructions,
@@ -112,43 +115,43 @@ import {
   boundProviderEventForLogging,
   shouldPersistProviderEvent,
 } from "../../provider/EventNdjsonLogger.ts";
-import * as ProviderEventLoggers from "@rove-code/provider-core/server/ProviderEventLoggers";
+import * as ProviderEventLoggers from "@getpaperplane/provider-core/server/ProviderEventLoggers";
 import { codexAppServerArgs, resolveCodexLaunchArgs } from "../../provider/codexLaunchArgs.ts";
-import { mergeProviderInstanceEnvironment } from "@rove-code/provider-core/server/instanceEnvironment";
-import { ROVE_MCP_SERVER_NAME } from "@rove-code/shared/roveMcp";
-import * as McpProviderSession from "@rove-code/provider-core/server/mcpSession";
-import * as McpProviderSessions from "@rove-code/provider-core/server/McpProviderSessions";
+import { mergeProviderInstanceEnvironment } from "@getpaperplane/provider-core/server/instanceEnvironment";
+import { PAPERPLANE_MCP_SERVER_NAME } from "@getpaperplane/shared/paperplaneMcp";
+import * as McpProviderSession from "@getpaperplane/provider-core/server/mcpSession";
+import * as McpProviderSessions from "@getpaperplane/provider-core/server/McpProviderSessions";
 import {
   MCP_APP_EXTENSION_ID,
   MCP_APP_MIME_TYPE,
   MCP_APP_OUTPUT_KEY,
   MCP_APP_RESOURCE_SCHEME,
-} from "@rove-code/shared/mcpApp";
+} from "@getpaperplane/shared/mcpApp";
 import { snapshotMcpApp } from "../../mcpApps/McpAppSnapshot.ts";
 import {
   ProviderAdapterDriverCreateError,
   type ProviderAdapterDriver,
   type ProviderAdapterDriverCreateInput,
-} from "@rove-code/provider-core/server/adapterDriver";
-import * as ProviderContinuationRequests from "@rove-code/provider-core/server/ProviderContinuationRequests";
-import { backgroundWorkNotification } from "@rove-code/provider-core/server/notification";
+} from "@getpaperplane/provider-core/server/adapterDriver";
+import * as ProviderContinuationRequests from "@getpaperplane/provider-core/server/ProviderContinuationRequests";
+import { backgroundWorkNotification } from "@getpaperplane/provider-core/server/notification";
 import {
   makeProviderFailure,
   makeProviderFailureTurnItem,
   makeProviderRetryTurnItem,
-} from "@rove-code/provider-core/server/failure";
-import { turnScopedSelectionTransition } from "@rove-code/provider-core/server/selectionTransition";
+} from "@getpaperplane/provider-core/server/failure";
+import { turnScopedSelectionTransition } from "@getpaperplane/provider-core/server/selectionTransition";
 import {
   isProviderNativeImageAttachment,
   providerMessageTextWithAttachmentPaths,
-} from "@rove-code/provider-core/server/attachmentPrompt";
+} from "@getpaperplane/provider-core/server/attachmentPrompt";
 import {
   makeSubagentChildThread,
   makeSubagentConversationArtifacts,
   subagentThreadTitle,
-} from "@rove-code/provider-core/server/subagentProjection";
-import * as IdAllocator from "@rove-code/provider-core/server/IdAllocator";
-import * as ProviderAdapter from "@rove-code/provider-core/server/ProviderAdapter";
+} from "@getpaperplane/provider-core/server/subagentProjection";
+import * as IdAllocator from "@getpaperplane/provider-core/server/IdAllocator";
+import * as ProviderAdapter from "@getpaperplane/provider-core/server/ProviderAdapter";
 
 const CODEX_PROVIDER = ProviderDriverKind.make("codex");
 export const CODEX_DRIVER_KIND = CODEX_PROVIDER;
@@ -723,7 +726,7 @@ export function buildCodexTurnStartParams(input: {
   readonly codexInput: ReadonlyArray<CodexSchema.V2TurnStartParams__UserInput>;
   readonly runtimePolicy: ProviderAdapter.ProviderAdapterV2RuntimePolicy;
   readonly modelSelection: ModelSelection;
-  readonly hasRoveMcp?: boolean;
+  readonly hasPaperplaneMcp?: boolean;
   readonly browserToolsAvailable?: boolean;
   readonly deviceToolsAvailable?: boolean;
   /** ChatGPT token sharing does not accept service tiers. */
@@ -752,7 +755,7 @@ export function buildCodexTurnStartParams(input: {
         ? undefined
         : getCodexServiceTierOptionValue(input.modelSelection);
     const developerInstructions =
-      input.hasRoveMcp !== true
+      input.hasPaperplaneMcp !== true
         ? undefined
         : buildCodexDeveloperInstructions(input.runtimePolicy.interactionMode);
     // An app's context is text an MCP server wrote, so it goes in as untrusted
@@ -764,8 +767,8 @@ export function buildCodexTurnStartParams(input: {
         { kind: "untrusted" as const, value: entry.text },
       ]),
     );
-    const roveContext =
-      input.hasRoveMcp === true
+    const paperplaneContext =
+      input.hasPaperplaneMcp === true
         ? buildCodexAdditionalContext(
             { model: input.modelSelection.model, reasoningEffort: effort ?? "medium" },
             {
@@ -775,9 +778,9 @@ export function buildCodexTurnStartParams(input: {
           )
         : undefined;
     const additionalContext =
-      roveContext === undefined && Object.keys(appContext).length === 0
+      paperplaneContext === undefined && Object.keys(appContext).length === 0
         ? undefined
-        : { ...roveContext, ...appContext };
+        : { ...paperplaneContext, ...appContext };
     const collaborationMode: CodexSchema.ClientRequest__CollaborationMode | undefined =
       input.runtimePolicy.interactionMode !== "plan" && developerInstructions === undefined
         ? undefined
@@ -799,7 +802,7 @@ export function buildCodexTurnStartParams(input: {
       cwd: input.runtimePolicy.cwd,
       model: input.modelSelection.model,
       // Model catalogues can default summaries to "none". Request them on every
-      // turn, including resumed threads, for Rove's reasoning timeline.
+      // turn, including resumed threads, for Paperplane's reasoning timeline.
       summary: "detailed",
       // Always explicit: omitting this on resume leaves Codex's previous
       // reviewer sticky after switching away from Auto mode.
@@ -1307,13 +1310,13 @@ export interface CodexAppServerClientFactoryShape {
 export class CodexAppServerClientFactory extends Context.Service<
   CodexAppServerClientFactory,
   CodexAppServerClientFactoryShape
->()("@rove-code/server/orchestration-v2/Adapters/CodexAdapterV2/CodexAppServerClientFactory") {}
+>()("@getpaperplane/server/orchestration-v2/Adapters/CodexAdapterV2/CodexAppServerClientFactory") {}
 
 /**
  * Config overrides sent with every `thread/start`, `thread/resume` and `thread/fork`.
  * Codex layers these above the user's and project's `config.toml`.
  *
- * - Codex 0.152 made the `update_plan` checklist tool opt-in; Rove renders it as
+ * - Codex 0.152 made the `update_plan` checklist tool opt-in; Paperplane renders it as
  *   the todo list.
  * - Codex waits this long for MCP servers before the first model request and
  *   leaves out any server still starting (default 1 s, too short for cold
@@ -1325,7 +1328,7 @@ export const CODEX_THREAD_CONFIG = {
   mcp_optional_startup_grace_ms: 10_000,
 } as const;
 
-// Rove wait tools can block for up to an hour. Keep Codex's MCP timeout above
+// Paperplane wait tools can block for up to an hour. Keep Codex's MCP timeout above
 // that limit so the server's own wait timeout ends a long call.
 const CODEX_T3_MCP_TOOL_TIMEOUT_SEC = 65 * 60;
 
@@ -1348,7 +1351,7 @@ export function codexThreadRuntimeParams(input: {
         ? {}
         : {
             mcp_servers: {
-              [ROVE_MCP_SERVER_NAME]: {
+              [PAPERPLANE_MCP_SERVER_NAME]: {
                 url: mcpSession.endpoint,
                 tool_timeout_sec: CODEX_T3_MCP_TOOL_TIMEOUT_SEC,
                 http_headers: {
@@ -1693,7 +1696,7 @@ export interface CodexAdapterV2Options {
   readonly onUsageLimits?: ManagedServerProvider["applyUsageLimits"];
   /**
    * Resolves launch settings when each session opens, replacing `settings` and
-   * `environment`. Managed ChatGPT sign-in uses it to launch the Rove-installed
+   * `environment`. Managed ChatGPT sign-in uses it to launch the Paperplane-installed
    * Codex with a current access token.
    */
   readonly resolveRuntime?: Effect.Effect<CodexEffectiveRuntime, ProviderSetupError, Scope.Scope>;
@@ -6323,7 +6326,7 @@ export const makeCodexAdapterV2 = Effect.fn("makeCodexAdapterV2")(function* (
               codexInput,
               runtimePolicy: turnInput.runtimePolicy,
               modelSelection: turnInput.modelSelection,
-              hasRoveMcp: mcpSession !== undefined,
+              hasPaperplaneMcp: mcpSession !== undefined,
               browserToolsAvailable: mcpSession?.browserToolsAvailable ?? true,
               deviceToolsAvailable: mcpSession?.capabilities?.has("device") ?? false,
               omitServiceTier: adapterOptions.resolveRuntime !== undefined,
@@ -6480,7 +6483,7 @@ export const makeCodexAdapterV2 = Effect.fn("makeCodexAdapterV2")(function* (
           );
 
         // MCP Apps reach their server through Codex's own MCP client, so any
-        // server the user configured for Codex works without Rove connecting to it.
+        // server the user configured for Codex works without Paperplane connecting to it.
         const mcpAppsError = (detail: string) => (cause: unknown) =>
           new ProviderAdapter.ProviderAdapterProtocolError({
             driver: CODEX_PROVIDER,

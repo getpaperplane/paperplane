@@ -1,11 +1,11 @@
 import {
   type PendingSubagentRequest,
   presentThreadShell,
-} from "@rove-code/client-runtime/state/models";
-import { pendingSubagentRequestsByThread } from "@rove-code/client-runtime/state/threads";
+} from "@getpaperplane/client-runtime/state/models";
+import { pendingSubagentRequestsByThread } from "@getpaperplane/client-runtime/state/threads";
 import { useAtomValue } from "@effect/atom-react";
 import { useNavigate, useParams } from "@tanstack/react-router";
-import type { EnvironmentId, OrchestrationV2ThreadShell, ThreadId } from "@rove-code/contracts";
+import type { EnvironmentId, OrchestrationV2ThreadShell, ThreadId } from "@getpaperplane/contracts";
 import * as Option from "effect/Option";
 import {
   CircleAlertIcon,

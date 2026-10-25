@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
-import { ORCHESTRATION_PROTOCOL_VERSION } from "@rove-code/contracts";
+import { ORCHESTRATION_PROTOCOL_VERSION } from "@getpaperplane/contracts";
 import { layerRemoteHttpClient } from "../rpc/http.ts";
 import { orchestrationProtocolCompatibilityError } from "../connection/compatibility.ts";
 import { fetchRemoteEnvironmentDescriptor } from "./descriptor.ts";
@@ -27,7 +27,7 @@ describe("environment descriptor transition", () => {
       const value = yield* fetchRemoteEnvironmentDescriptor({ httpBaseUrl: "https://server.test" });
       expect(orchestrationProtocolCompatibilityError(value)?.reason).toBe("unsupported");
       expect(requests).toEqual([
-        "https://server.test/.well-known/rove/environment",
+        "https://server.test/.well-known/paperplane/environment",
         "https://server.test/.well-known/t3/environment",
       ]);
     }).pipe(Effect.provide(layerRemoteHttpClient(fetchFn)));
@@ -57,7 +57,7 @@ describe("environment descriptor transition", () => {
     };
     return Effect.gen(function* () {
       yield* Effect.flip(fetchRemoteEnvironmentDescriptor({ httpBaseUrl: "https://server.test" }));
-      expect(requests).toEqual(["https://server.test/.well-known/rove/environment"]);
+      expect(requests).toEqual(["https://server.test/.well-known/paperplane/environment"]);
     }).pipe(Effect.provide(layerRemoteHttpClient(fetchFn)));
   });
 });

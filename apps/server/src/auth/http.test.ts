@@ -6,8 +6,8 @@ import {
   AuthAccessTokenType,
   EnvironmentAuthenticatedAuth,
   EnvironmentHttpApi,
-} from "@rove-code/contracts";
-import { RelayClientTracer } from "@rove-code/shared/relayTracing";
+} from "@getpaperplane/contracts";
+import { RelayClientTracer } from "@getpaperplane/shared/relayTracing";
 import { expect, it } from "@effect/vitest";
 import * as Context from "effect/Context";
 import * as Crypto from "effect/Crypto";
@@ -45,7 +45,9 @@ const layerConfig = Layer.effect(
       devAuthToken: Redacted.make(DEV_TOKEN),
     } satisfies ServerConfig.ServerConfig["Service"];
   }),
-).pipe(Layer.provide(ServerConfig.layerTest(process.cwd(), { prefix: "rove-auth-http-test-" })));
+).pipe(
+  Layer.provide(ServerConfig.layerTest(process.cwd(), { prefix: "paperplane-auth-http-test-" })),
+);
 
 const layerEnvironmentAuth = EnvironmentAuth.layer.pipe(
   Layer.provide(SqlitePersistence.layerMemory),
@@ -120,11 +122,13 @@ it.effect("sets the selected browser session cookies through the HTTP route", ()
           expect(await retiredScopeResponse.json()).toMatchObject({ reason: "invalid_scope" });
 
           const devCookies = devResponse.headers.getSetCookie();
-          const devCookie = devCookies.find((cookie) => cookie.startsWith("rove_dev_session_"));
+          const devCookie = devCookies.find((cookie) =>
+            cookie.startsWith("paperplane_dev_session_"),
+          );
           expect(devCookie).toContain("HttpOnly");
           expect(devCookie).toContain(`=${DEV_TOKEN};`);
           expect(devCookies).toContainEqual(
-            expect.stringMatching(/^rove_session_[^=]*=;.*Max-Age=0/),
+            expect.stringMatching(/^paperplane_session_[^=]*=;.*Max-Age=0/),
           );
           const devCookieHeader = devCookie?.split(";", 1)[0] ?? "";
           const environmentBSession = await environmentB.handler(
@@ -140,11 +144,14 @@ it.effect("sets the selected browser session cookies through the HTTP route", ()
             postJson(
               "/api/auth/pairing-token",
               { scopes: ["orchestration:read"] },
-              { cookie: devCookieHeader },
+              { cookie: devCookieHeader.replace(/^paperplane_/, "rove_") },
             ),
             requestContext,
           );
           expect(pairingResponse.status).toBe(200);
+          expect(pairingResponse.headers.getSetCookie()).toContainEqual(
+            expect.stringContaining("rove_dev_session_"),
+          );
           const pairing = (await pairingResponse.json()) as { credential: string };
           const restrictedResponse = await environmentA.handler(
             postJson("/api/auth/browser-session", { credential: pairing.credential }),
@@ -153,8 +160,39 @@ it.effect("sets the selected browser session cookies through the HTTP route", ()
           expect(restrictedResponse.status).toBe(200);
           const restrictedCookies = restrictedResponse.headers.getSetCookie();
           expect(restrictedCookies).toHaveLength(1);
-          expect(restrictedCookies[0]).toMatch(/^rove_session_/);
-          expect(restrictedCookies[0]).not.toContain("rove_dev_session_");
+          expect(restrictedCookies[0]).toMatch(/^paperplane_session_/);
+          expect(restrictedCookies[0]).not.toContain("paperplane_dev_session_");
+          for (const cookie of [devCookieHeader, restrictedCookies[0]?.split(";", 1)[0] ?? ""]) {
+            const oldCookie = cookie.replace(/^paperplane_/, "rove_");
+            const handoff = await environmentA.handler(
+              new Request("http://127.0.0.1/api/auth/session", {
+                headers: { cookie: oldCookie },
+              }),
+              requestContext,
+            );
+            expect(handoff.status).toBe(200);
+            expect(handoff.headers.get("cache-control")).toBe("no-store");
+            expect(await handoff.json()).toMatchObject({ authenticated: true });
+            const cookies = handoff.headers.getSetCookie();
+            const next = cookies.find((value) => value.startsWith(cookie.split("=")[0] + "="));
+            const expired = cookies.find((value) =>
+              value.startsWith(oldCookie.split("=")[0] + "="),
+            );
+            expect(next).toContain(cookie + ";");
+            expect(expired).toContain("Max-Age=0");
+            for (const value of [next, expired]) {
+              expect(value).toContain("HttpOnly");
+              expect(value).toContain("SameSite=Lax");
+              expect(value).toContain("Path=/");
+              expect(value).not.toContain("Secure");
+            }
+            const once = await environmentA.handler(
+              new Request("http://127.0.0.1/api/auth/session", { headers: { cookie } }),
+              requestContext,
+            );
+            expect(await once.json()).toMatchObject({ authenticated: true });
+            expect(once.headers.getSetCookie()).toEqual([]);
+          }
         }),
       ([environmentA, environmentB]) =>
         Effect.promise(() => Promise.all([environmentA.dispose(), environmentB.dispose()])),
@@ -162,7 +200,7 @@ it.effect("sets the selected browser session cookies through the HTTP route", ()
   }).pipe(Effect.provide(NodeServices.layer)),
 );
 
-it.effect("exports only verified Rove Connect requests", () =>
+it.effect("exports only verified Paperplane Connect requests", () =>
   Effect.gen(function* () {
     const productSpans: Array<string> = [];
     const localSpans: Array<string> = [];
@@ -173,7 +211,7 @@ it.effect("exports only verified Rove Connect requests", () =>
           return new Tracer.NativeSpan(options);
         },
       });
-    // "DPoP connect" is a Rove Connect session; any other DPoP token is rejected.
+    // "DPoP connect" is a Paperplane Connect session; any other DPoP token is rejected.
     const environmentAuth = {
       authenticateHttpRequest: (request: HttpServerRequest.HttpServerRequest) =>
         (request.headers.authorization === "DPoP forged"

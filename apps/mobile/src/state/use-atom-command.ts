@@ -4,7 +4,7 @@ import {
   type AtomCommandOptions,
   type AtomCommandResult,
   runAtomCommand,
-} from "@rove-code/client-runtime/state/runtime";
+} from "@getpaperplane/client-runtime/state/runtime";
 import { useCallback, useContext } from "react";
 import * as RuntimePredicate from "effect/Predicate";
 

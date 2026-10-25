@@ -12,7 +12,7 @@ import {
   parsePiLine,
   PiScanState,
 } from "./piUsage.ts";
-import type { TranscriptUsageFormat } from "@rove-code/provider-core/server/usage";
+import type { TranscriptUsageFormat } from "@getpaperplane/provider-core/server/usage";
 import * as Schema from "effect/Schema";
 const format: TranscriptUsageFormat<PiScanState> = {
   selectFields: {

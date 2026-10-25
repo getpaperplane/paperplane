@@ -19,7 +19,7 @@ const { values } = NodeUtil.parseArgs({
     "ready-timeout-seconds": { type: "string", default: "60" },
     "cpu-prof": { type: "boolean", default: false },
     "profile-dir": { type: "string" },
-    // Copied into each run's home, e.g. <worktree>/.rove/userdata from `vp run migrate-dev-db`.
+    // Copied into each run's home, e.g. <worktree>/.paperplane/userdata from `vp run migrate-dev-db`.
     "seed-userdata": { type: "string" },
   },
 });
@@ -45,10 +45,10 @@ const seedUserdata = values["seed-userdata"]
 const profileDir = values["cpu-prof"]
   ? values["profile-dir"]
     ? NodePath.resolve(values["profile-dir"])
-    : await NodeFSP.mkdtemp(NodePath.join(NodeOS.tmpdir(), "rove-boot-profiles-"))
+    : await NodeFSP.mkdtemp(NodePath.join(NodeOS.tmpdir(), "paperplane-boot-profiles-"))
   : undefined;
 if (profileDir) await NodeFSP.mkdir(profileDir, { recursive: true });
-const baseDir = await NodeFSP.mkdtemp(NodePath.join(NodeOS.tmpdir(), "rove-boot-"));
+const baseDir = await NodeFSP.mkdtemp(NodePath.join(NodeOS.tmpdir(), "paperplane-boot-"));
 const exec = NodeUtil.promisify(NodeChildProcess.execFile);
 let active: ReturnType<typeof NodeChildProcess.spawn> | undefined;
 const abort = new AbortController();
@@ -128,7 +128,7 @@ async function run(index: number) {
       home,
       "--no-browser",
     ],
-    { env: { ...process.env, ROVE_HOME: home }, stdio: ["ignore", "pipe", "pipe"] },
+    { env: { ...process.env, PAPERPLANE_HOME: home }, stdio: ["ignore", "pipe", "pipe"] },
   );
   active = child;
   let output = "";

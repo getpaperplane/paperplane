@@ -1,4 +1,4 @@
-import type { EnvironmentId, ScopedThreadRef } from "@rove-code/contracts";
+import type { EnvironmentId, ScopedThreadRef } from "@getpaperplane/contracts";
 import {
   HTML_RENDER_COLUMN_WIDTH,
   htmlRenderFileName,
@@ -6,7 +6,7 @@ import {
   htmlRenderOutlineBoxes,
   type HtmlRenderOutlineBox,
   type HtmlRenderReference,
-} from "@rove-code/shared/htmlRender";
+} from "@getpaperplane/shared/htmlRender";
 import { Maximize2Icon } from "lucide-react";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 

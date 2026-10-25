@@ -1,6 +1,6 @@
-import { serializeLegacyContextMessage } from "@rove-code/shared/composerContextLegacySend";
-import { filePreviewKind } from "@rove-code/shared/filePreview";
-import { videoMimeType } from "@rove-code/shared/video";
+import { serializeLegacyContextMessage } from "@getpaperplane/shared/composerContextLegacySend";
+import { filePreviewKind } from "@getpaperplane/shared/filePreview";
+import { videoMimeType } from "@getpaperplane/shared/video";
 import {
   COMPOSER_CONTEXT_MAX_RECORDS,
   COMPOSER_CONTEXT_REVIEW_TEXT_MAX_CHARS,
@@ -11,7 +11,7 @@ import {
   type ReviewCommentContextRecord,
   type ScopedThreadRef,
   type ThreadContextRecord,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Schema from "effect/Schema";
 import {
   ATTACHMENT_ONLY_BOOTSTRAP_PROMPT,
@@ -21,11 +21,11 @@ import {
   replaceComposerContextReferences,
   sanitizeComposerContextLabel,
   toKindScopedComposerContextId,
-} from "@rove-code/shared/composerContextReferences";
+} from "@getpaperplane/shared/composerContextReferences";
 import {
   collectComposerInlineTokens,
   type ComposerInlineToken,
-} from "@rove-code/shared/composerInlineTokens";
+} from "@getpaperplane/shared/composerInlineTokens";
 
 const isMessageContext = Schema.is(OrchestrationMessageContext);
 const decodeMessageContext = Schema.decodeUnknownOption(OrchestrationMessageContext);

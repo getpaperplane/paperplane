@@ -1,9 +1,9 @@
 import * as ProviderRegistry from "../ProviderRegistry.ts";
-import { PiCatalogError, type ServerProvider } from "@rove-code/contracts";
+import { PiCatalogError, type ServerProvider } from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Stream from "effect/Stream";
-import { makeManualOnlyProviderMaintenanceCapabilities } from "@rove-code/provider-core/server/maintenanceResolver";
+import { makeManualOnlyProviderMaintenanceCapabilities } from "@getpaperplane/provider-core/server/maintenanceResolver";
 
 const makeProviderRegistryMock = (
   providers: ReadonlyArray<ServerProvider> = [],

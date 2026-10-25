@@ -1,4 +1,4 @@
-import { sortProjectsByGroupOrder } from "@rove-code/client-runtime/state/project-grouping";
+import { sortProjectsByGroupOrder } from "@getpaperplane/client-runtime/state/project-grouping";
 import { useMemo } from "react";
 import { ScrollView } from "react-native";
 import type { MenuProps } from "../../components/ui/Menu.types";

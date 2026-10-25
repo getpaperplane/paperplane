@@ -7,9 +7,9 @@ import type {
   ServerAuthSessionMethod,
   AuthSessionId,
   AuthSessionState,
-} from "@rove-code/contracts";
-import { EnvironmentHttpCommonError, PRIMARY_LOCAL_ENVIRONMENT_ID } from "@rove-code/contracts";
-import type { EnvironmentHttpCommonError as EnvironmentHttpCommonErrorType } from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
+import { EnvironmentHttpCommonError, PRIMARY_LOCAL_ENVIRONMENT_ID } from "@getpaperplane/contracts";
+import type { EnvironmentHttpCommonError as EnvironmentHttpCommonErrorType } from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 import { HttpClientError } from "effect/http";

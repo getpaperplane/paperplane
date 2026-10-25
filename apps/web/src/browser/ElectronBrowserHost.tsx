@@ -1,7 +1,7 @@
 "use client";
 
-import { parseScopedThreadKey } from "@rove-code/client-runtime/environment";
-import { AuthPreviewOperateScope, FILL_PREVIEW_VIEWPORT } from "@rove-code/contracts";
+import { parseScopedThreadKey } from "@getpaperplane/client-runtime/environment";
+import { AuthPreviewOperateScope, FILL_PREVIEW_VIEWPORT } from "@getpaperplane/contracts";
 import { useAtomValue } from "@effect/atom-react";
 import { type ComponentProps, useEffect, useMemo, useRef, useState } from "react";
 

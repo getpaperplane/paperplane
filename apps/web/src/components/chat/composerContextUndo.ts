@@ -1,4 +1,4 @@
-import type { PreviewAnnotationPayload } from "@rove-code/contracts";
+import type { PreviewAnnotationPayload } from "@getpaperplane/contracts";
 
 import type { ComposerFileAttachment, ComposerImageAttachment } from "../../composerDraftStore";
 import { fileContextReference, previewAnnotationContextId } from "../../lib/composerContextRecords";

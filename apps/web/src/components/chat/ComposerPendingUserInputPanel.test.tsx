@@ -1,4 +1,4 @@
-import { EnvironmentId, RuntimeRequestId, ThreadId } from "@rove-code/contracts";
+import { EnvironmentId, RuntimeRequestId, ThreadId } from "@getpaperplane/contracts";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vite-plus/test";
 

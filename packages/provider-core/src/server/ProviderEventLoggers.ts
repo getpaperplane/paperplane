@@ -5,7 +5,7 @@
  *
  * @module provider-core/server/ProviderEventLoggers
  */
-import type { ThreadId } from "@rove-code/contracts";
+import type { ThreadId } from "@getpaperplane/contracts";
 import * as Context from "effect/Context";
 import type * as Effect from "effect/Effect";
 
@@ -21,7 +21,7 @@ export class ProviderEventLoggers extends Context.Service<
     readonly native: EventNdjsonLogger | undefined;
     readonly canonical: EventNdjsonLogger | undefined;
   }
->()("@rove-code/provider-core/server/ProviderEventLoggers") {}
+>()("@getpaperplane/provider-core/server/ProviderEventLoggers") {}
 
 /** Logging turned off: for tests and boot layers that skip diagnostics. */
 export const NoOpProviderEventLoggers: ProviderEventLoggers["Service"] = {

@@ -1,5 +1,5 @@
-import { SourceControlProviderKind } from "@rove-code/contracts";
-import type { VcsStatusResult } from "@rove-code/contracts";
+import { SourceControlProviderKind } from "@getpaperplane/contracts";
+import type { VcsStatusResult } from "@getpaperplane/contracts";
 import { assert, describe, it } from "vite-plus/test";
 import {
   buildGitActionProgressStages,
@@ -1187,8 +1187,8 @@ describe("resolveLiveThreadBranchUpdate", () => {
 
   it("does not regress a semantic thread ref back to a temporary worktree ref", () => {
     const update = resolveLiveThreadBranchUpdate({
-      threadBranch: "rove/github-query-rate-limit",
-      gitStatus: status({ refName: "rove/bda76797" }),
+      threadBranch: "paperplane/github-query-rate-limit",
+      gitStatus: status({ refName: "paperplane/bda76797" }),
     });
 
     assert.equal(update, null);
@@ -1196,7 +1196,7 @@ describe("resolveLiveThreadBranchUpdate", () => {
 
   it("allows a temporary worktree ref to reconcile to a semantic branch", () => {
     const update = resolveLiveThreadBranchUpdate({
-      threadBranch: "rove/a9628676",
+      threadBranch: "paperplane/a9628676",
       gitStatus: status({ refName: "feature/diff-panel-toggle" }),
     });
 

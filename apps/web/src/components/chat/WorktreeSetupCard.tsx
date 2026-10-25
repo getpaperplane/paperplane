@@ -2,8 +2,8 @@ import {
   worktreeSetupStageLabel,
   type WorktreeSetupSnapshot,
   type WorktreeSetupStage,
-} from "@rove-code/contracts";
-import { formatDuration } from "@rove-code/shared/orchestrationTiming";
+} from "@getpaperplane/contracts";
+import { formatDuration } from "@getpaperplane/shared/orchestrationTiming";
 import {
   CheckIcon,
   CircleAlertIcon,

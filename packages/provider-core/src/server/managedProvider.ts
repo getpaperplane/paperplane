@@ -2,8 +2,8 @@ import {
   DEFAULT_PROVIDER_HEALTH_REFRESH_INTERVAL,
   type ServerProvider,
   ServerSettingsError,
-} from "@rove-code/contracts";
-import { resolveServerBackgroundActivitySettings } from "@rove-code/shared/backgroundActivitySettings";
+} from "@getpaperplane/contracts";
+import { resolveServerBackgroundActivitySettings } from "@getpaperplane/shared/backgroundActivitySettings";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";

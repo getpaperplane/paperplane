@@ -1,5 +1,5 @@
-import type { ChatAttachment, EnvironmentId, ThreadId } from "@rove-code/contracts";
-import { imageMimeType } from "@rove-code/shared/image";
+import type { ChatAttachment, EnvironmentId, ThreadId } from "@getpaperplane/contracts";
+import { imageMimeType } from "@getpaperplane/shared/image";
 import type { FilePreviewItem } from "../../components/FilePreviewModal.types";
 import { markdownImageSources } from "../../lib/markdownImageSources";
 import { resolveMarkdownMediaPreview } from "../../lib/markdownMedia";

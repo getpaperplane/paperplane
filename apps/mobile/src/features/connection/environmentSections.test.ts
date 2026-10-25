@@ -1,5 +1,5 @@
-import { EnvironmentId } from "@rove-code/contracts";
-import type { RelayClientEnvironmentRecord } from "@rove-code/contracts/relay";
+import { EnvironmentId } from "@getpaperplane/contracts";
+import type { RelayClientEnvironmentRecord } from "@getpaperplane/contracts/relay";
 import { describe, expect, it } from "vite-plus/test";
 import type { ConnectedEnvironmentSummary } from "../../state/remote-runtime-types";
 import { relayManagedEnvironmentIds, splitEnvironmentSections } from "./environmentSections";
@@ -47,7 +47,7 @@ describe("relayManagedEnvironmentIds", () => {
 });
 
 describe("mobile environment settings sections", () => {
-  it("keeps saved relay-managed connections under Rove Connect", () => {
+  it("keeps saved relay-managed connections under Paperplane Connect", () => {
     const local = connectedEnvironment({
       environmentId: "environment-local",
       isRelayManaged: false,
@@ -158,7 +158,7 @@ describe("mobile environment settings sections", () => {
     expect(sections.availableCloudEnvironments).toEqual([]);
   });
 
-  it("offers Rove Connect for a machine saved only over the LAN, as an added route", () => {
+  it("offers Paperplane Connect for a machine saved only over the LAN, as an added route", () => {
     const local = connectedEnvironment({
       environmentId: "environment-desk",
       isRelayManaged: false,

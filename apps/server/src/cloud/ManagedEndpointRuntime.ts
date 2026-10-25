@@ -1,5 +1,5 @@
-import type { RelayManagedEndpointRuntimeConfig } from "@rove-code/contracts/relay";
-import * as RelayClient from "@rove-code/shared/relayClient";
+import type { RelayManagedEndpointRuntimeConfig } from "@getpaperplane/contracts/relay";
+import * as RelayClient from "@getpaperplane/shared/relayClient";
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
 import * as Deferred from "effect/Deferred";
@@ -54,7 +54,7 @@ export class CloudManagedEndpointRuntime extends Context.Service<
     readonly tunnelConnected: Stream.Stream<void>;
     readonly withLinkStateLock: <A, E, R>(effect: Effect.Effect<A, E, R>) => Effect.Effect<A, E, R>;
   }
->()("@rove-code/server/cloud/ManagedEndpointRuntime/CloudManagedEndpointRuntime") {}
+>()("@getpaperplane/server/cloud/ManagedEndpointRuntime/CloudManagedEndpointRuntime") {}
 
 interface ActiveConnector {
   readonly child: ChildProcessSpawner.ChildProcessHandle;

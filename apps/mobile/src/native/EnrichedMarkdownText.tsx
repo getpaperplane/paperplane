@@ -1,9 +1,9 @@
-import { decodeComposerContextFragment } from "@rove-code/shared/composerContextClipboard";
+import { decodeComposerContextFragment } from "@getpaperplane/shared/composerContextClipboard";
 import {
   collectComposerContextReferences,
   formatComposerContextHref,
   formatComposerContextReference,
-} from "@rove-code/shared/composerContextReferences";
+} from "@getpaperplane/shared/composerContextReferences";
 import { markdownWithHtml } from "../lib/markdownDocument";
 import { useCallback, useMemo, useState, type ReactNode } from "react";
 import { Platform, Share, StyleSheet, View } from "react-native";
@@ -234,9 +234,9 @@ export function MobileEnrichedMarkdownText(props: SelectableMarkdownTextProps) {
     return {
       linkTextByUrl,
       htmlAttributes: {
-        "data-rove-context-fragment": encodeURIComponent(props.contextClipboardFragment!),
+        "data-paperplane-context-fragment": encodeURIComponent(props.contextClipboardFragment!),
       },
-      mimeTypes: { "app.rove.context-fragment": props.contextClipboardFragment! },
+      mimeTypes: { "app.paperplane.context-fragment": props.contextClipboardFragment! },
     };
   }, [props.contextClipboardFragment, props.markdown]);
   const markdownStyle = useMemo(

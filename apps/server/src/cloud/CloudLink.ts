@@ -1,5 +1,5 @@
 /**
- * The Rove Connect link lifecycle of this environment: linking it to the relay,
+ * The Paperplane Connect link lifecycle of this environment: linking it to the relay,
  * applying and reading the link, unlinking, answering the relay's signed health
  * and mint requests, and keeping the managed tunnel registered, recovered and
  * released. HTTP handlers, server startup and shutdown all go through it.
@@ -11,7 +11,7 @@ import {
   type EnvironmentCloudLinkStateResult,
   type EnvironmentCloudPreferencesRequest,
   type EnvironmentCloudRelayConfigResult,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   RelayCloudEnvironmentHealthProofPayload,
   type RelayCloudEnvironmentHealthRequest,
@@ -33,8 +33,8 @@ import {
   RelayManagedEndpointRecoveryResponse,
   type RelayManagedEndpointRuntimeConfig,
   RelayOkResponse,
-} from "@rove-code/contracts/relay";
-import { withRelayClientTracing } from "@rove-code/shared/relayTracing";
+} from "@getpaperplane/contracts/relay";
+import { withRelayClientTracing } from "@getpaperplane/shared/relayTracing";
 import {
   normalizeRelayIssuer,
   RELAY_HEALTH_REQUEST_TYP,
@@ -45,8 +45,8 @@ import {
   RELAY_MINT_RESPONSE_TYP,
   signRelayJwt,
   verifyRelayJwt,
-} from "@rove-code/shared/relayJwt";
-import { isSecureRelayUrl } from "@rove-code/shared/relayUrl";
+} from "@getpaperplane/shared/relayJwt";
+import { isSecureRelayUrl } from "@getpaperplane/shared/relayUrl";
 import * as Context from "effect/Context";
 import * as Crypto from "effect/Crypto";
 import * as DateTime from "effect/DateTime";
@@ -180,7 +180,7 @@ export class CloudLinkNotLinkedError extends Schema.TaggedError<CloudLinkNotLink
   {},
 ) {
   override get message(): string {
-    return "Link this environment to Rove Connect first.";
+    return "Link this environment to Paperplane Connect first.";
   }
 }
 
@@ -193,13 +193,13 @@ export class CloudLinkAccountMismatchError extends Schema.TaggedError<CloudLinkA
   }
 }
 
-/** Linking from the CLI needs the authorization `rove connect link` stores. */
+/** Linking from the CLI needs the authorization `paperplane connect link` stores. */
 export class CloudLinkAuthorizationMissingError extends Schema.TaggedError<CloudLinkAuthorizationMissingError>()(
   "CloudLinkAuthorizationMissingError",
   {},
 ) {
   override get message(): string {
-    return "Run `rove connect link` to authorize this environment.";
+    return "Run `paperplane connect link` to authorize this environment.";
   }
 }
 
@@ -255,19 +255,20 @@ export class CloudLinkEndpointUnavailableError extends Schema.TaggedError<CloudL
 }
 
 const INTERNAL_OPERATION_MESSAGES = {
-  "relay-url-unconfigured": "ROVE_RELAY_URL must be configured as a secure absolute HTTPS origin.",
+  "relay-url-unconfigured":
+    "PAPERPLANE_RELAY_URL must be configured as a secure absolute HTTPS origin.",
   "generate-link-proof": "Could not generate environment link proof.",
   "persist-relay-config": "Could not persist environment relay configuration.",
   "register-endpoint-origin": "Could not register the managed endpoint origin.",
   "resolve-server-origin": "Could not resolve the local server origin.",
-  "persist-desired-link": "Could not persist desired Rove Connect link state.",
+  "persist-desired-link": "Could not persist desired Paperplane Connect link state.",
   "sign-recovery-proof": "Could not sign the managed tunnel recovery request.",
   "unsupported-recovered-tunnel":
-    "Rove Connect returned an unsupported managed tunnel configuration.",
+    "Paperplane Connect returned an unsupported managed tunnel configuration.",
   "persist-recovered-tunnel": "Could not persist the recovered managed tunnel configuration.",
   "read-relay-config": "Could not read environment relay configuration.",
   "remove-relay-config": "Could not remove environment relay configuration.",
-  "update-webhook-settings": "Could not update Rove Connect webhook settings.",
+  "update-webhook-settings": "Could not update Paperplane Connect webhook settings.",
   "read-preferences": "Could not read environment cloud preferences.",
   "persist-preferences": "Could not persist environment cloud preferences.",
   "answer-health": "Could not answer cloud health request.",
@@ -316,7 +317,7 @@ export const shouldRetryCloudLink = (error: unknown): boolean =>
 
 /** A failed rollback leaves a setting changed; it is logged, not hidden. */
 const rollbackFailed = (cause: unknown) =>
-  Effect.logWarning("Could not roll back a Rove Connect preference", { cause });
+  Effect.logWarning("Could not roll back a Paperplane Connect preference", { cause });
 
 const requireRelayUrl = relayUrlConfig.pipe(
   Effect.mapError(
@@ -432,7 +433,7 @@ type CloudLinkBackgroundError =
   | PlatformError.PlatformError;
 
 // "revoked" means the relay rejected this environment's credential, as after
-// the environment is deregistered from Rove Connect.
+// the environment is deregistered from Paperplane Connect.
 type ManagedTunnelRegistration =
   | { readonly status: "not_linked" | "superseded" | "revoked" }
   | { readonly status: "recovery_required"; readonly config: RelayManagedEndpointRuntimeConfig }
@@ -476,7 +477,7 @@ export class CloudLink extends Context.Service<
     /** Stops the tunnel and forgets the link, including the CLI's wish to keep it. */
     readonly unlink: () => Effect.Effect<EnvironmentCloudRelayConfigResult, CloudLinkInternalError>;
     /**
-     * Saves this environment's Rove Connect preferences, all or nothing, and
+     * Saves this environment's Paperplane Connect preferences, all or nothing, and
      * returns the link state. The activity setting is saved first. Holding
      * webhooks while offline is decided by the relay, so the relay is told
      * before the local copy is saved. If either step fails, the activity
@@ -565,7 +566,7 @@ export class CloudLink extends Context.Service<
       | HttpClientError.HttpClientError
     >;
   }
->()("@rove-code/server/cloud/CloudLink") {}
+>()("@getpaperplane/server/cloud/CloudLink") {}
 
 const make = Effect.gen(function* () {
   const secrets = yield* ServerSecretStore.ServerSecretStore;
@@ -646,7 +647,7 @@ const make = Effect.gen(function* () {
     const nowSeconds = Math.floor(now.epochMilliseconds / 1_000);
     const descriptor = yield* environment.getDescriptor;
     const payload = {
-      iss: `rove-env:${descriptor.environmentId}`,
+      iss: `paperplane-env:${descriptor.environmentId}`,
       aud: normalizeRelayIssuer(request.relayIssuer),
       sub: descriptor.environmentId,
       jti: yield* crypto.randomUUIDv4(),
@@ -988,7 +989,7 @@ const make = Effect.gen(function* () {
     const now = yield* DateTime.now;
     const issuedAt = Math.floor(now.epochMilliseconds / 1_000);
     const claims = {
-      iss: `rove-env:${input.environmentId}`,
+      iss: `paperplane-env:${input.environmentId}`,
       aud: normalizeRelayIssuer(
         Option.isSome(configuredIssuer) ? bytesToString(configuredIssuer.value) : input.relayUrl,
       ),
@@ -1036,7 +1037,7 @@ const make = Effect.gen(function* () {
           return false;
         }
         yield* Effect.logWarning(
-          "Rove Connect no longer accepts this environment's link. Link it again to restore remote access.",
+          "Paperplane Connect no longer accepts this environment's link. Link it again to restore remote access.",
           { cause },
         );
         yield* secrets.set(CLOUD_LINK_REVOKED, stringToBytes("true"));
@@ -1317,7 +1318,7 @@ const make = Effect.gen(function* () {
       return false;
     }
     // The link belongs to the relay it was installed against, so target the
-    // persisted URL: ROVE_RELAY_URL may have changed since the link was made.
+    // persisted URL: PAPERPLANE_RELAY_URL may have changed since the link was made.
     const relayUrl = yield* secrets.get(RELAY_URL_SECRET);
     if (Option.isNone(relayUrl)) {
       return false;
@@ -1545,7 +1546,7 @@ const make = Effect.gen(function* () {
         token: request.proof,
         typ: RELAY_HEALTH_REQUEST_TYP,
         issuer: normalizeRelayIssuer(relayIssuer),
-        audience: `rove-env:${environmentId}`,
+        audience: `paperplane-env:${environmentId}`,
         nowEpochSeconds: nowSeconds,
       }).pipe(Effect.flatMap(decodeCloudHealthProof), Effect.option);
       if (
@@ -1574,7 +1575,7 @@ const make = Effect.gen(function* () {
       const descriptor = yield* environment.getDescriptor;
       const responseExpiresAt = DateTime.add(now, { minutes: 5 });
       const responsePayload = {
-        iss: `rove-env:${environmentId}`,
+        iss: `paperplane-env:${environmentId}`,
         aud: normalizeRelayIssuer(relayIssuer),
         sub: environmentId,
         jti: yield* crypto.randomUUIDv4(),
@@ -1649,7 +1650,7 @@ const make = Effect.gen(function* () {
         token: request.proof,
         typ: RELAY_MINT_REQUEST_TYP,
         issuer: normalizeRelayIssuer(relayIssuer),
-        audience: `rove-env:${environmentId}`,
+        audience: `paperplane-env:${environmentId}`,
         nowEpochSeconds: nowSeconds,
       }).pipe(Effect.flatMap(decodeCloudMintProof), Effect.option);
       if (
@@ -1680,11 +1681,11 @@ const make = Effect.gen(function* () {
         scopes: AuthStandardClientScopes,
         subject: "cloud-connect",
         ttl: Duration.minutes(2),
-        label: "Rove Connect connect",
+        label: "Paperplane Connect connect",
         proofKeyThumbprint: proof.clientProofKeyThumbprint,
       });
       const responsePayload = {
-        iss: `rove-env:${environmentId}`,
+        iss: `paperplane-env:${environmentId}`,
         aud: normalizeRelayIssuer(relayIssuer),
         sub: environmentId,
         jti: yield* crypto.randomUUIDv4(),

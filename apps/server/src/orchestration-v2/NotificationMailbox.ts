@@ -3,7 +3,7 @@ import {
   type MessageId,
   type OrchestrationV2ConversationMessage,
   type OrchestrationV2ThreadProjection,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 
 /** A wake attaches to output held in provider memory, which Stop or process loss discards. */
 export function isBufferedProviderNotification(

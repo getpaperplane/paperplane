@@ -15,10 +15,10 @@ import {
   type DirectoryRecord,
 } from "@electron/asar";
 
-import { fromYaml } from "@rove-code/shared/schemaYaml";
-import * as HostProcess from "@rove-code/shared/HostProcess";
-import { clerkFrontendApiHostnameFromPublishableKey } from "@rove-code/shared/relayAuth";
-import { resolveSpawnCommand } from "@rove-code/shared/shell";
+import { fromYaml } from "@getpaperplane/shared/schemaYaml";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
+import { clerkFrontendApiHostnameFromPublishableKey } from "@getpaperplane/shared/relayAuth";
+import { resolveSpawnCommand } from "@getpaperplane/shared/shell";
 import rootPackageJson from "../package.json" with { type: "json" };
 import desktopPackageJson from "../apps/desktop/package.json" with { type: "json" };
 import gnomeCaptureBundle from "../apps/desktop/gnome-extension/bundle.json" with { type: "json" };
@@ -58,7 +58,7 @@ import { Command, Flag } from "effect/cli";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 
 const LINUX_ICON_SIZES = [16, 22, 24, 32, 48, 64, 128, 256, 512] as const;
-const DESKTOP_APP_ID = "io.github.hafiezul.rove";
+const DESKTOP_APP_ID = "io.github.getpaperplane.paperplane";
 const APPLE_TEAM_ID_PATTERN = /^[A-Z0-9]{10}$/u;
 
 const BuildPlatform = Schema.Literals(["mac", "linux", "win"]);
@@ -153,7 +153,7 @@ export function resolveResourceMonitorRustTargets(
 }
 
 export function resourceMonitorExecutableName(platform: typeof BuildPlatform.Type): string {
-  return platform === "win" ? "rove-resource-monitor.exe" : "rove-resource-monitor";
+  return platform === "win" ? "paperplane-resource-monitor.exe" : "paperplane-resource-monitor";
 }
 
 const PLATFORM_CONFIG: Record<typeof BuildPlatform.Type, PlatformConfig> = {
@@ -955,8 +955,8 @@ interface StagePackageJson {
   readonly name: string;
   readonly version: string;
   readonly buildVersion: string;
-  readonly roveCommitHash: string;
-  readonly roveWebAuthn?: MacWebAuthnEntitlements;
+  readonly paperplaneCommitHash: string;
+  readonly paperplaneWebAuthn?: MacWebAuthnEntitlements;
   readonly private: true;
   readonly packageManager: string;
   readonly description: string;
@@ -992,7 +992,7 @@ export const DESKTOP_FILE_EXCLUSIONS = [
   "!**/node_modules/@cursor/sdk-*/**/*",
   "!apps/desktop/prod-resources/cursor-sdk",
   "!apps/desktop/prod-resources/cursor-sdk/**/*",
-  // Rove Code always passes the user's installed Claude executable to the SDK,
+  // Paperplane always passes the user's installed Claude executable to the SDK,
   // so the SDK's optional platform packages (each a ~200MB bundled executable)
   // are dead weight. The trailing dash keeps the SDK's own JS package.
   "!**/node_modules/@anthropic-ai/claude-agent-sdk-*/**/*",
@@ -1117,7 +1117,7 @@ export const WSL_RUNTIME_ARCHIVE_HASH_EXTRA_RESOURCE = {
   to: WSL_RUNTIME_ARCHIVE_HASH_NAME,
 } as const;
 
-// The WSL runtime is the Linux CLI release archive (rove-<version>-linux-<arch>
+// The WSL runtime is the Linux CLI release archive (paperplane-<version>-linux-<arch>
 // .tar.gz, built by scripts/build-cli-archive.ts) copied in verbatim, so WSL
 // runs the exact bytes a Linux user downloads. This one predicate decides both
 // whether the archive is staged and whether the packaging config ships it:
@@ -1200,7 +1200,7 @@ export class InvalidAppleTeamIdError extends Schema.TaggedError<InvalidAppleTeam
   },
 ) {
   override get message(): string {
-    return `ROVE_APPLE_TEAM_ID '${this.teamId}' must be a 10-character Apple Developer Team ID.`;
+    return `PAPERPLANE_APPLE_TEAM_ID '${this.teamId}' must be a 10-character Apple Developer Team ID.`;
   }
 }
 
@@ -1209,7 +1209,7 @@ export class MissingMacPasskeyProvisioningProfileError extends Schema.TaggedErro
   {},
 ) {
   override get message(): string {
-    return "ROVE_MACOS_PROVISIONING_PROFILE must point to an Associated Domains provisioning profile.";
+    return "PAPERPLANE_MACOS_PROVISIONING_PROFILE must point to an Associated Domains provisioning profile.";
   }
 }
 
@@ -1218,7 +1218,7 @@ export class MissingMacPasskeyDomainConfigurationError extends Schema.TaggedErro
   {},
 ) {
   override get message(): string {
-    return "ROVE_CLERK_PUBLISHABLE_KEY or ROVE_CLERK_PASSKEY_RP_DOMAINS is required for signed macOS passkey builds.";
+    return "PAPERPLANE_CLERK_PUBLISHABLE_KEY or PAPERPLANE_CLERK_PASSKEY_RP_DOMAINS is required for signed macOS passkey builds.";
   }
 }
 
@@ -1229,7 +1229,7 @@ export class InvalidMacPasskeyPublishableKeyError extends Schema.TaggedError<Inv
   },
 ) {
   override get message(): string {
-    return "ROVE_CLERK_PUBLISHABLE_KEY is invalid.";
+    return "PAPERPLANE_CLERK_PUBLISHABLE_KEY is invalid.";
   }
 }
 
@@ -1297,22 +1297,22 @@ function normalizePasskeyRpDomain(value: string): string {
 export function resolveMacPasskeySigningConfiguration(
   env: Readonly<Record<string, string | undefined>>,
 ): MacPasskeySigningConfiguration {
-  const teamId = env.ROVE_APPLE_TEAM_ID?.trim().toUpperCase() ?? "";
+  const teamId = env.PAPERPLANE_APPLE_TEAM_ID?.trim().toUpperCase() ?? "";
   if (!APPLE_TEAM_ID_PATTERN.test(teamId)) {
     throw new InvalidAppleTeamIdError({ teamId });
   }
 
-  const provisioningProfilePath = env.ROVE_MACOS_PROVISIONING_PROFILE?.trim() ?? "";
+  const provisioningProfilePath = env.PAPERPLANE_MACOS_PROVISIONING_PROFILE?.trim() ?? "";
   if (provisioningProfilePath.length === 0) {
     throw new MissingMacPasskeyProvisioningProfileError();
   }
 
-  const configuredRpDomains = env.ROVE_CLERK_PASSKEY_RP_DOMAINS?.trim();
+  const configuredRpDomains = env.PAPERPLANE_CLERK_PASSKEY_RP_DOMAINS?.trim();
   let rpDomains: readonly string[];
   if (configuredRpDomains) {
     rpDomains = configuredRpDomains.split(",").map(normalizePasskeyRpDomain);
   } else {
-    const publishableKey = env.ROVE_CLERK_PUBLISHABLE_KEY?.trim();
+    const publishableKey = env.PAPERPLANE_CLERK_PUBLISHABLE_KEY?.trim();
     if (!publishableKey) {
       throw new MissingMacPasskeyDomainConfigurationError();
     }
@@ -1696,24 +1696,26 @@ const AzureTrustedSigningOptionsConfig = Config.all({
 });
 
 const BuildEnvConfig = Config.all({
-  platform: Config.schema(BuildPlatform, "ROVE_DESKTOP_PLATFORM").pipe(Config.option),
-  target: Config.String("ROVE_DESKTOP_TARGET").pipe(Config.option),
-  arch: Config.schema(BuildArch, "ROVE_DESKTOP_ARCH").pipe(Config.option),
-  version: Config.String("ROVE_DESKTOP_VERSION").pipe(Config.option),
-  outputDir: Config.String("ROVE_DESKTOP_OUTPUT_DIR").pipe(Config.option),
-  skipBuild: Config.Boolean("ROVE_DESKTOP_SKIP_BUILD").pipe(Config.withDefault(false)),
-  keepStage: Config.Boolean("ROVE_DESKTOP_KEEP_STAGE").pipe(Config.withDefault(false)),
-  signed: Config.Boolean("ROVE_DESKTOP_SIGNED").pipe(Config.withDefault(false)),
-  macSigningMode: Config.schema(MacSigningMode, "ROVE_MACOS_SIGNING_MODE").pipe(
+  platform: Config.schema(BuildPlatform, "PAPERPLANE_DESKTOP_PLATFORM").pipe(Config.option),
+  target: Config.String("PAPERPLANE_DESKTOP_TARGET").pipe(Config.option),
+  arch: Config.schema(BuildArch, "PAPERPLANE_DESKTOP_ARCH").pipe(Config.option),
+  version: Config.String("PAPERPLANE_DESKTOP_VERSION").pipe(Config.option),
+  outputDir: Config.String("PAPERPLANE_DESKTOP_OUTPUT_DIR").pipe(Config.option),
+  skipBuild: Config.Boolean("PAPERPLANE_DESKTOP_SKIP_BUILD").pipe(Config.withDefault(false)),
+  keepStage: Config.Boolean("PAPERPLANE_DESKTOP_KEEP_STAGE").pipe(Config.withDefault(false)),
+  signed: Config.Boolean("PAPERPLANE_DESKTOP_SIGNED").pipe(Config.withDefault(false)),
+  macSigningMode: Config.schema(MacSigningMode, "PAPERPLANE_MACOS_SIGNING_MODE").pipe(
     Config.withDefault("developer-id"),
   ),
-  verbose: Config.Boolean("ROVE_DESKTOP_VERBOSE").pipe(Config.withDefault(false)),
-  mockUpdates: Config.Boolean("ROVE_DESKTOP_MOCK_UPDATES").pipe(Config.withDefault(false)),
-  mockUpdateServerPort: Config.String("ROVE_DESKTOP_MOCK_UPDATE_SERVER_PORT").pipe(Config.option),
-  // Path to the Linux CLI release archive (rove-<version>-linux-x64.tar.gz) built
+  verbose: Config.Boolean("PAPERPLANE_DESKTOP_VERBOSE").pipe(Config.withDefault(false)),
+  mockUpdates: Config.Boolean("PAPERPLANE_DESKTOP_MOCK_UPDATES").pipe(Config.withDefault(false)),
+  mockUpdateServerPort: Config.String("PAPERPLANE_DESKTOP_MOCK_UPDATE_SERVER_PORT").pipe(
+    Config.option,
+  ),
+  // Path to the Linux CLI release archive (paperplane-<version>-linux-x64.tar.gz) built
   // by the build_linux_cli CI job. The Windows build embeds it verbatim as the
   // WSL runtime.
-  wslRuntime: Config.String("ROVE_DESKTOP_WSL_RUNTIME").pipe(Config.option),
+  wslRuntime: Config.String("PAPERPLANE_DESKTOP_WSL_RUNTIME").pipe(Config.option),
 });
 
 const MockUpdateServerPortSchema = Schema.NumberFromString.check(
@@ -1879,11 +1881,11 @@ const rustTargetIsInstalled = Effect.fn("rustTargetIsInstalled")(function* (targ
 export const preflightLinuxDesktopBuild = Effect.fn("preflightLinuxDesktopBuild")(function* (
   arch: typeof BuildArch.Type = "x64",
 ) {
-  const reuseResourceMonitor = yield* Config.Boolean("ROVE_DESKTOP_REUSE_RESOURCE_MONITOR").pipe(
-    Config.withDefault(false),
-  );
+  const reuseResourceMonitor = yield* Config.Boolean(
+    "PAPERPLANE_DESKTOP_REUSE_RESOURCE_MONITOR",
+  ).pipe(Config.withDefault(false));
   const reuseCaptureHelpers = yield* Config.Boolean(
-    "ROVE_DESKTOP_REUSE_LINUX_CAPTURE_HELPERS",
+    "PAPERPLANE_DESKTOP_REUSE_LINUX_CAPTURE_HELPERS",
   ).pipe(Config.withDefault(false));
   // Rust is only optional when every Linux Rust artifact comes from a cache.
   const needsRust = !reuseResourceMonitor || !reuseCaptureHelpers;
@@ -1921,9 +1923,9 @@ export const preflightMacDesktopBuild = Effect.fn("preflightMacDesktopBuild")(fu
   arch: typeof BuildArch.Type,
 ) {
   const rustTargets = resolveResourceMonitorRustTargets("mac", arch);
-  const reuseResourceMonitor = yield* Config.Boolean("ROVE_DESKTOP_REUSE_RESOURCE_MONITOR").pipe(
-    Config.withDefault(false),
-  );
+  const reuseResourceMonitor = yield* Config.Boolean(
+    "PAPERPLANE_DESKTOP_REUSE_RESOURCE_MONITOR",
+  ).pipe(Config.withDefault(false));
   const checks = yield* Effect.all(
     {
       rust: reuseResourceMonitor
@@ -1978,9 +1980,9 @@ function windowsVswherePrerequisiteScript(arch: typeof BuildArch.Type): string {
 export const preflightWindowsDesktopBuild = Effect.fn("preflightWindowsDesktopBuild")(
   function* (input: { readonly arch: typeof BuildArch.Type; readonly bundlesWslRuntime: boolean }) {
     const rustTarget = resolveResourceMonitorRustTargets("win", input.arch)[0]!;
-    const reuseResourceMonitor = yield* Config.Boolean("ROVE_DESKTOP_REUSE_RESOURCE_MONITOR").pipe(
-      Config.withDefault(false),
-    );
+    const reuseResourceMonitor = yield* Config.Boolean(
+      "PAPERPLANE_DESKTOP_REUSE_RESOURCE_MONITOR",
+    ).pipe(Config.withDefault(false));
     const python = yield* resolvePythonForNodeGyp();
     const checks = yield* Effect.all(
       {
@@ -2194,7 +2196,7 @@ const verifyPackagedBundleIsSelfContained = Effect.fn("verifyPackagedBundleIsSel
     const path = yield* Path.Path;
 
     const probeRoot = yield* fs.makeTempDirectoryScoped({
-      prefix: "rove-bundle-selfcheck-",
+      prefix: "paperplane-bundle-selfcheck-",
     });
     const extractedApp = path.join(probeRoot, "extracted");
     const probeApp = path.join(probeRoot, "app");
@@ -2296,14 +2298,14 @@ export const stageLinuxCaptureHelper = Effect.fn("stageLinuxCaptureHelper")(func
   const [rustTarget] = resolveResourceMonitorRustTargets("linux", input.arch);
   // Release CI restores these binaries from a cache keyed on the crate sources and
   // skips the Rust toolchain on a hit, so the build must be skippable too.
-  const reuseHelpers = yield* Config.Boolean("ROVE_DESKTOP_REUSE_LINUX_CAPTURE_HELPERS").pipe(
+  const reuseHelpers = yield* Config.Boolean("PAPERPLANE_DESKTOP_REUSE_LINUX_CAPTURE_HELPERS").pipe(
     Config.withDefault(false),
   );
   const binaryPath = path.join(
     input.repoRoot,
     `native/${input.backend}-snap-shot/target`,
     rustTarget!,
-    `release/rove-${input.backend}-snap-shot`,
+    `release/paperplane-${input.backend}-snap-shot`,
   );
   if (!reuseHelpers) {
     const spawnCommand = yield* resolveSpawnCommand("cargo", [
@@ -2335,7 +2337,7 @@ export const stageLinuxCaptureHelper = Effect.fn("stageLinuxCaptureHelper")(func
   }
   const destination = path.join(input.stageResourcesDir, `${input.backend}-capture`);
   yield* fs.makeDirectory(destination, { recursive: true });
-  const executable = path.join(destination, `rove-${input.backend}-snap-shot`);
+  const executable = path.join(destination, `paperplane-${input.backend}-snap-shot`);
   yield* fs.copyFile(binaryPath, executable);
   yield* fs.chmod(executable, 0o755);
   if (input.backend === "hyprland") {
@@ -2359,9 +2361,9 @@ export const stageResourceMonitor = Effect.fn("stageResourceMonitor")(function* 
   const manifestPath = path.join(input.repoRoot, "native/resource-monitor/Cargo.toml");
   const executableName = resourceMonitorExecutableName(input.platform);
   const rustTargets = resolveResourceMonitorRustTargets(input.platform, input.arch);
-  const reuseResourceMonitor = yield* Config.Boolean("ROVE_DESKTOP_REUSE_RESOURCE_MONITOR").pipe(
-    Config.withDefault(false),
-  );
+  const reuseResourceMonitor = yield* Config.Boolean(
+    "PAPERPLANE_DESKTOP_REUSE_RESOURCE_MONITOR",
+  ).pipe(Config.withDefault(false));
   const builtBinaries: string[] = [];
 
   for (const rustTarget of rustTargets) {
@@ -2458,7 +2460,7 @@ export const stageBrowserSecret = Effect.fn("stageBrowserSecret")(function* (inp
         "--arch",
         input.arch === "arm64" ? "arm64" : "x64",
         "--output",
-        path.join(input.stageResourcesDir, "browser-secret", "rove-browser-secret"),
+        path.join(input.stageResourcesDir, "browser-secret", "paperplane-browser-secret"),
       ],
       { cwd: input.repoRoot },
     ),
@@ -2515,7 +2517,7 @@ function stageMacIcons(stageResourcesDir: string, sourcePng: string, verbose: bo
     }
 
     const tmpRoot = yield* fs.makeTempDirectoryScoped({
-      prefix: "rove-icon-build-",
+      prefix: "paperplane-icon-build-",
     });
 
     const iconPngPath = path.join(stageResourcesDir, "icon.png");
@@ -2700,7 +2702,7 @@ export const resolveGitHubPublishConfig = Effect.fn("resolveGitHubPublishConfig"
   updateChannel: "latest" | "nightly",
 ) {
   const env = yield* Config.all({
-    updateRepository: Config.String("ROVE_DESKTOP_UPDATE_REPOSITORY").pipe(Config.option),
+    updateRepository: Config.String("PAPERPLANE_DESKTOP_UPDATE_REPOSITORY").pipe(Config.option),
     githubRepository: Config.String("GITHUB_REPOSITORY").pipe(Config.option),
   });
   const rawRepo = (
@@ -2776,8 +2778,8 @@ export function resolvePackageManagerUserAgent(packageManager: string): string {
 
 export function resolveDesktopProductName(version: string): string {
   return resolveDesktopUpdateChannel(version) === "nightly"
-    ? "Rove Code (Nightly)"
-    : (desktopPackageJson.productName ?? "Rove Code");
+    ? "Paperplane (Nightly)"
+    : (desktopPackageJson.productName ?? "Paperplane");
 }
 
 export const createBuildConfig = Effect.fn("createBuildConfig")(function* (
@@ -2803,7 +2805,7 @@ export const createBuildConfig = Effect.fn("createBuildConfig")(function* (
   const buildConfig: Record<string, unknown> = {
     appId: DESKTOP_APP_ID,
     productName: resolveDesktopProductName(version),
-    artifactName: "Rove-Code-${version}-${arch}.${ext}",
+    artifactName: "Paperplane-${version}-${arch}.${ext}",
     electronLanguages: [...DESKTOP_ELECTRON_LANGUAGES],
     files: [
       ...DESKTOP_FILE_EXCLUSIONS,
@@ -2856,9 +2858,9 @@ export const createBuildConfig = Effect.fn("createBuildConfig")(function* (
         // macOS 26 offers Messages/Mail codes in every text field unless opted out.
         NSAutoFillRequiresTextContentTypeForOneTimeCodeOnMac: true,
         NSLocalNetworkUsageDescription:
-          "Rove Code connects to devices on your local network for remote environments and commands run by terminals and coding agents.",
+          "Paperplane connects to devices on your local network for remote environments and commands run by terminals and coding agents.",
         NSScreenCaptureUsageDescription:
-          "Rove Code captures the active window when you use the window capture shortcut.",
+          "Paperplane captures the active window when you use the window capture shortcut.",
         // macOS lists an app under Default web browser only when it opens web
         // pages as documents as well as http and https links (see protocols).
         CFBundleDocumentTypes: [
@@ -2872,10 +2874,10 @@ export const createBuildConfig = Effect.fn("createBuildConfig")(function* (
       },
       protocols: [
         {
-          name: "Rove Code",
-          schemes: ["rove", "rove-dev"],
+          name: "Paperplane",
+          schemes: ["paperplane", "paperplane-dev"],
         },
-        // Lets people choose Rove Code as their default web browser, which opens
+        // Lets people choose Paperplane as their default web browser, which opens
         // each link in a new thread's browser panel.
         {
           name: "Web site URL",
@@ -2937,33 +2939,33 @@ export const createBuildConfig = Effect.fn("createBuildConfig")(function* (
       // resources/package-type into the .deb only, so electron-updater updates
       // each install in its own format.
       target: target === "AppImage" ? [target, "deb"] : [target],
-      executableName: "rove",
+      executableName: "paperplane",
       icon: "icons",
       category: "Development",
       synopsis: "Desktop GUI for coding agents",
       // Required by the .deb control file.
-      maintainer: "Rove Code Contributors <rove@users.noreply.github.com>",
+      maintainer: "Paperplane Contributors <paperplane@users.noreply.github.com>",
       // electron-builder turns these into MimeType=x-scheme-handler/<scheme>;
       // in the .desktop entry (Exec already gets %U), so browsers can hand
-      // rove:// OAuth callbacks to the app.
+      // paperplane:// OAuth callbacks to the app.
       protocols: [
         {
-          name: "Rove Code",
-          schemes: ["rove", "rove-dev"],
+          name: "Paperplane",
+          schemes: ["paperplane", "paperplane-dev"],
         },
       ],
       desktop: {
         entry: {
-          StartupWMClass: "rove",
+          StartupWMClass: DESKTOP_APP_ID,
         },
       },
     };
     buildConfig.deb = {
       // FPM runs outside the staged app directory, so source paths must be absolute.
-      // AppStream consumers associate this metadata with our rove.desktop entry.
+      // AppStream points at electron-builder's paperplane.desktop launcher.
       fpm: [
-        `${path.join(repoRoot, "apps/desktop/resources/linux/com.rovetools.rovecode.metainfo.xml")}=/usr/share/metainfo/io.github.hafiezul.rove.metainfo.xml`,
-        `${path.join(repoRoot, "LICENSE")}=/usr/share/doc/rove/copyright`,
+        `${path.join(repoRoot, "apps/desktop/resources/linux/io.github.getpaperplane.paperplane.metainfo.xml")}=/usr/share/metainfo/io.github.getpaperplane.paperplane.metainfo.xml`,
+        `${path.join(repoRoot, "LICENSE")}=/usr/share/doc/paperplane/copyright`,
       ],
       // Electron's runtime libraries. Debian 13 and Ubuntu 24.04 renamed some
       // for 64-bit time; the old name is the fallback for older releases.
@@ -3006,7 +3008,7 @@ export const createBuildConfig = Effect.fn("createBuildConfig")(function* (
       if ((yield* WindowsSigningModeConfig) === "self-signed") {
         winConfig.signtoolOptions = {
           certificateFile: yield* Config.String("WIN_CSC_LINK"),
-          publisherName: yield* Config.String("ROVE_WINDOWS_SIGNING_PUBLISHER_NAME"),
+          publisherName: yield* Config.String("PAPERPLANE_WINDOWS_SIGNING_PUBLISHER_NAME"),
           signingHashAlgorithms: ["sha256"],
         };
         winConfig.verifyUpdateCodeSignature = true;
@@ -3077,7 +3079,7 @@ export const stageWslRuntimeArchive = Effect.fn("stageWslRuntimeArchive")(functi
 // this module, so it cannot be imported here). WSL runs the same CPU arch as
 // the Windows host.
 export const wslRuntimeArchiveStem = (version: string, arch: typeof BuildArch.Type): string =>
-  `rove-${version}-linux-${arch}`;
+  `paperplane-${version}-linux-${arch}`;
 
 export const parseWslRuntimeArchiveMembers = (listing: string): ReadonlyArray<string> =>
   listing
@@ -3171,7 +3173,7 @@ export const stageWindowsServerSidecar = Effect.fn("stageWindowsServerSidecar")(
     sidecarDependencies,
   );
   const sidecarPackageJson = {
-    name: "rove-server",
+    name: "paperplane-server",
     version: input.appVersion,
     private: true,
     packageManager: rootPackageJson.packageManager,
@@ -3297,7 +3299,7 @@ export const verifyWindowsPrimaryFffNativeLoad = Effect.fn(
   }
 
   const probeRoot = yield* fs.makeTempDirectoryScoped({
-    prefix: "rove-windows-primary-native-probe-",
+    prefix: "paperplane-windows-primary-native-probe-",
   });
   const fffEntryPath = path.join(input.asarPath, "node_modules/@ff-labs/fff-node/dist/index.js");
   const probeEnv = { ...process.env };
@@ -3360,7 +3362,7 @@ export const validateWindowsPackagedPayload = Effect.fn(
   readonly appExecutableName: string;
   readonly targetArch: typeof BuildArch.Type;
   // The version the embedded Linux CLI archive must carry; its top-level
-  // directory is named rove-<version>-linux-<arch>.
+  // directory is named paperplane-<version>-linux-<arch>.
   readonly appVersion: string;
   readonly expectWslRuntime?: boolean;
   readonly fileLimit?: number;
@@ -3458,7 +3460,7 @@ export const validateWindowsPackagedPayload = Effect.fn(
     return yield* new WindowsPackagedPayloadValidationError({
       reason: "resource-monitor-missing",
       packagedAppDir,
-      missingFiles: ["resource-monitor/rove-resource-monitor.exe"],
+      missingFiles: ["resource-monitor/paperplane-resource-monitor.exe"],
     });
   }
 
@@ -3526,7 +3528,7 @@ export const validateWindowsPackagedPayload = Effect.fn(
     }
     const members = parseWslRuntimeArchiveMembers(listing.stdout);
     // A release archive unpacks to one directory named after its stem; the
-    // desktop app's WSL install script relies on that layout to find `rove`.
+    // desktop app's WSL install script relies on that layout to find `paperplane`.
     const stem = wslRuntimeArchiveStem(input.appVersion, input.targetArch);
     const topLevel = new Set(members.map((member) => member.split("/")[0]));
     if (topLevel.size !== 1 || !topLevel.has(stem)) {
@@ -3536,7 +3538,7 @@ export const validateWindowsPackagedPayload = Effect.fn(
         ),
       );
     }
-    const requiredMembers = [`${stem}/rove`, `${stem}/client`, `${stem}/node_modules`];
+    const requiredMembers = [`${stem}/paperplane`, `${stem}/client`, `${stem}/node_modules`];
     const missingMembers = requiredMembers.filter((member) => !members.includes(member));
     // node-pty can load a source build or the prebuild for the WSL target.
     const ptyCandidates = [
@@ -3692,7 +3694,7 @@ const buildDesktopArtifact = Effect.fn("buildDesktopArtifact")(function* (
   const commitHash = yield* resolveGitCommitHash(repoRoot);
   const mkdir = options.keepStage ? fs.makeTempDirectory : fs.makeTempDirectoryScoped;
   const stageRoot = yield* mkdir({
-    prefix: `rove-desktop-${options.platform}-stage-`,
+    prefix: `paperplane-desktop-${options.platform}-stage-`,
   });
 
   const stageAppDir = path.join(stageRoot, "app");
@@ -3938,20 +3940,20 @@ const buildDesktopArtifact = Effect.fn("buildDesktopArtifact")(function* (
       ? path.join(stageAppDir, WINDOWS_SERVER_RESOURCE_SOURCE_DIR, WINDOWS_SERVER_ASAR_RESOURCE)
       : undefined;
   const stagePackageJson: StagePackageJson = {
-    name: "rove",
+    name: "paperplane",
     version: appVersion,
     buildVersion: appVersion,
-    roveCommitHash: commitHash,
+    paperplaneCommitHash: commitHash,
     // Read by apps/desktop/src/preview/Passkeys.ts; must match the signed entitlements.
-    ...(macWebAuthn ? { roveWebAuthn: macWebAuthn } : {}),
+    ...(macWebAuthn ? { paperplaneWebAuthn: macWebAuthn } : {}),
     private: true,
     packageManager: rootPackageJson.packageManager,
     description:
-      "Rove Code is an open-source desktop app for coding agents. Work with your existing agent subscriptions, review code changes, and run commands in your projects. Connect from desktop, web, or mobile to continue working remotely.",
+      "Paperplane is an open-source desktop app for coding agents. Work with your existing agent subscriptions, review code changes, and run commands in your projects. Connect from desktop, web, or mobile to continue working remotely.",
     license: "MIT",
     // Required by the .deb control file.
-    homepage: "https://github.com/hafiezul/rove",
-    author: "Rove Code Contributors",
+    homepage: "https://github.com/getpaperplane/paperplane",
+    author: "Paperplane Contributors",
     main: "apps/desktop/dist-electron/boot.cjs",
     build: yield* createBuildConfig(
       options.platform,
@@ -4104,7 +4106,7 @@ const buildDesktopArtifact = Effect.fn("buildDesktopArtifact")(function* (
   const builderArgs = [
     "exec",
     "--filter",
-    "@rove-code/desktop",
+    "@getpaperplane/desktop",
     "--",
     "electron-builder",
     "--projectDir",
@@ -4122,7 +4124,7 @@ const buildDesktopArtifact = Effect.fn("buildDesktopArtifact")(function* (
       shell: builderCommand.shell,
     }),
     {
-      label: `vp exec --filter @rove-code/desktop -- electron-builder --projectDir ${stageAppDir} ${platformConfig.cliFlag} --${options.arch} --publish never`,
+      label: `vp exec --filter @getpaperplane/desktop -- electron-builder --projectDir ${stageAppDir} ${platformConfig.cliFlag} --${options.arch} --publish never`,
       verbose: options.verbose,
     },
   );
@@ -4191,64 +4193,68 @@ const buildDesktopArtifact = Effect.fn("buildDesktopArtifact")(function* (
 
 const buildDesktopArtifactCli = Command.make("build-desktop-artifact", {
   platform: Flag.Literals("platform", BuildPlatform.literals).pipe(
-    Flag.withDescription("Build platform (env: ROVE_DESKTOP_PLATFORM)."),
+    Flag.withDescription("Build platform (env: PAPERPLANE_DESKTOP_PLATFORM)."),
     Flag.optional,
   ),
   target: Flag.String("target").pipe(
     Flag.withDescription(
-      "Artifact target, for example dmg/AppImage/nsis (env: ROVE_DESKTOP_TARGET).",
+      "Artifact target, for example dmg/AppImage/nsis (env: PAPERPLANE_DESKTOP_TARGET).",
     ),
     Flag.optional,
   ),
   arch: Flag.Literals("arch", BuildArch.literals).pipe(
-    Flag.withDescription("Build arch, for example arm64/x64/universal (env: ROVE_DESKTOP_ARCH)."),
+    Flag.withDescription(
+      "Build arch, for example arm64/x64/universal (env: PAPERPLANE_DESKTOP_ARCH).",
+    ),
     Flag.optional,
   ),
   buildVersion: Flag.String("build-version").pipe(
-    Flag.withDescription("Artifact version metadata (env: ROVE_DESKTOP_VERSION)."),
+    Flag.withDescription("Artifact version metadata (env: PAPERPLANE_DESKTOP_VERSION)."),
     Flag.optional,
   ),
   outputDir: Flag.String("output-dir").pipe(
-    Flag.withDescription("Output directory for artifacts (env: ROVE_DESKTOP_OUTPUT_DIR)."),
+    Flag.withDescription("Output directory for artifacts (env: PAPERPLANE_DESKTOP_OUTPUT_DIR)."),
     Flag.optional,
   ),
   skipBuild: Flag.Boolean("skip-build").pipe(
     Flag.withDescription(
-      "Skip `vp run build:desktop` and use existing dist artifacts (env: ROVE_DESKTOP_SKIP_BUILD).",
+      "Skip `vp run build:desktop` and use existing dist artifacts (env: PAPERPLANE_DESKTOP_SKIP_BUILD).",
     ),
     Flag.optional,
   ),
   keepStage: Flag.Boolean("keep-stage").pipe(
-    Flag.withDescription("Keep temporary staging files (env: ROVE_DESKTOP_KEEP_STAGE)."),
+    Flag.withDescription("Keep temporary staging files (env: PAPERPLANE_DESKTOP_KEEP_STAGE)."),
     Flag.optional,
   ),
   signed: Flag.Boolean("signed").pipe(
     Flag.withDescription(
-      "Enable signing/notarization discovery; Windows uses ROVE_WINDOWS_SIGNING_MODE (env: ROVE_DESKTOP_SIGNED).",
+      "Enable signing/notarization discovery; Windows uses PAPERPLANE_WINDOWS_SIGNING_MODE (env: PAPERPLANE_DESKTOP_SIGNED).",
     ),
     Flag.optional,
   ),
   verbose: Flag.Boolean("verbose").pipe(
-    Flag.withDescription("Stream subprocess stdout (env: ROVE_DESKTOP_VERBOSE)."),
+    Flag.withDescription("Stream subprocess stdout (env: PAPERPLANE_DESKTOP_VERBOSE)."),
     Flag.optional,
   ),
   mockUpdates: Flag.Boolean("mock-updates").pipe(
-    Flag.withDescription("Enable mock updates (env: ROVE_DESKTOP_MOCK_UPDATES)."),
+    Flag.withDescription("Enable mock updates (env: PAPERPLANE_DESKTOP_MOCK_UPDATES)."),
     Flag.optional,
   ),
   mockUpdateServerPort: Flag.Int("mock-update-server-port").pipe(
     Flag.withSchema(Schema.Int.check(Schema.isBetween({ minimum: 1, maximum: 65535 }))),
-    Flag.withDescription("Mock update server port (env: ROVE_DESKTOP_MOCK_UPDATE_SERVER_PORT)."),
+    Flag.withDescription(
+      "Mock update server port (env: PAPERPLANE_DESKTOP_MOCK_UPDATE_SERVER_PORT).",
+    ),
     Flag.optional,
   ),
   wslRuntime: Flag.String("wsl-runtime").pipe(
     Flag.withDescription(
-      "Path to the Linux CLI release archive (rove-<version>-linux-x64.tar.gz) to embed as the WSL runtime of a Windows build (env: ROVE_DESKTOP_WSL_RUNTIME).",
+      "Path to the Linux CLI release archive (paperplane-<version>-linux-x64.tar.gz) to embed as the WSL runtime of a Windows build (env: PAPERPLANE_DESKTOP_WSL_RUNTIME).",
     ),
     Flag.optional,
   ),
 }).pipe(
-  Command.withDescription("Build a desktop artifact for Rove Code."),
+  Command.withDescription("Build a desktop artifact for Paperplane."),
   Command.withHandler((input) => Effect.flatMap(resolveBuildOptions(input), buildDesktopArtifact)),
 );
 

@@ -2,29 +2,29 @@
  * The source control drivers this build ships with. Both registries, repository operations and
  * pull requests, iterate this list; a host with no driver here shows up as unsupported.
  *
- * Adding a host means writing its `@rove-code/source-control-<host>` package, adding its driver
+ * Adding a host means writing its `@getpaperplane/source-control-<host>` package, adding its driver
  * here, and providing its services' layers in `layer` below.
  *
  * @module sourceControl/builtInDrivers
  */
-import * as AzureDevOpsCli from "@rove-code/source-control-azure-devops/server/AzureDevOpsCli";
-import * as AzureDevOpsPullRequestCli from "@rove-code/source-control-azure-devops/server/AzureDevOpsPullRequestCli";
-import * as AzureDevOpsDriver from "@rove-code/source-control-azure-devops/server/driver";
-import * as BitbucketApi from "@rove-code/source-control-bitbucket/server/BitbucketApi";
-import * as BitbucketPullRequestApi from "@rove-code/source-control-bitbucket/server/BitbucketPullRequestApi";
-import * as BitbucketDriver from "@rove-code/source-control-bitbucket/server/driver";
-import * as ForgejoCli from "@rove-code/source-control-forgejo/server/ForgejoCli";
-import * as ForgejoDriver from "@rove-code/source-control-forgejo/server/driver";
-import * as GitCafeApi from "@rove-code/source-control-gitcafe/server/GitCafeApi";
-import * as GitCafeCredentials from "@rove-code/source-control-gitcafe/server/GitCafeCredentials";
-import * as GitCafeDriver from "@rove-code/source-control-gitcafe/server/driver";
-import * as GitHubRest from "@rove-code/source-control-github/server/GitHubRest";
-import * as GitHubPullRequestApi from "@rove-code/source-control-github/server/GitHubPullRequestApi";
-import * as GitHubDriver from "@rove-code/source-control-github/server/driver";
-import * as GitLabCli from "@rove-code/source-control-gitlab/server/GitLabCli";
-import * as GitLabPullRequestCli from "@rove-code/source-control-gitlab/server/GitLabPullRequestCli";
-import * as GitLabDriver from "@rove-code/source-control-gitlab/server/driver";
-import type { SourceControlDriver } from "@rove-code/source-control-core/server/driver";
+import * as AzureDevOpsCli from "@getpaperplane/source-control-azure-devops/server/AzureDevOpsCli";
+import * as AzureDevOpsPullRequestCli from "@getpaperplane/source-control-azure-devops/server/AzureDevOpsPullRequestCli";
+import * as AzureDevOpsDriver from "@getpaperplane/source-control-azure-devops/server/driver";
+import * as BitbucketApi from "@getpaperplane/source-control-bitbucket/server/BitbucketApi";
+import * as BitbucketPullRequestApi from "@getpaperplane/source-control-bitbucket/server/BitbucketPullRequestApi";
+import * as BitbucketDriver from "@getpaperplane/source-control-bitbucket/server/driver";
+import * as ForgejoCli from "@getpaperplane/source-control-forgejo/server/ForgejoCli";
+import * as ForgejoDriver from "@getpaperplane/source-control-forgejo/server/driver";
+import * as GitCafeApi from "@getpaperplane/source-control-gitcafe/server/GitCafeApi";
+import * as GitCafeCredentials from "@getpaperplane/source-control-gitcafe/server/GitCafeCredentials";
+import * as GitCafeDriver from "@getpaperplane/source-control-gitcafe/server/driver";
+import * as GitHubRest from "@getpaperplane/source-control-github/server/GitHubRest";
+import * as GitHubPullRequestApi from "@getpaperplane/source-control-github/server/GitHubPullRequestApi";
+import * as GitHubDriver from "@getpaperplane/source-control-github/server/driver";
+import * as GitLabCli from "@getpaperplane/source-control-gitlab/server/GitLabCli";
+import * as GitLabPullRequestCli from "@getpaperplane/source-control-gitlab/server/GitLabPullRequestCli";
+import * as GitLabDriver from "@getpaperplane/source-control-gitlab/server/driver";
+import type { SourceControlDriver } from "@getpaperplane/source-control-core/server/driver";
 import * as Layer from "effect/Layer";
 
 import * as ServerSourceControlHost from "./ServerSourceControlHost.ts";

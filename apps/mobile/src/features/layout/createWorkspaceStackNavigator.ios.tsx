@@ -22,7 +22,7 @@ import {
 import { use, useCallback, useEffect, useMemo, useRef, useState, type ComponentProps } from "react";
 import { Platform, View } from "react-native";
 import { Split, type SplitHostCommands } from "react-native-screens";
-import { EnvironmentId, ThreadId } from "@rove-code/contracts";
+import { EnvironmentId, ThreadId } from "@getpaperplane/contracts";
 import { scopedThreadKey } from "../../lib/scopedEntities";
 import { WorkspaceTabsProvider } from "../workspace/WorkspaceTabsContext";
 import { WorkspaceNativeTabs } from "../workspace/WorkspaceNativeTabs.ios";

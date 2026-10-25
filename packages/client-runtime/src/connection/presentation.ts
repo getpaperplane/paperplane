@@ -1,4 +1,4 @@
-import type { ServerConfig } from "@rove-code/contracts";
+import type { ServerConfig } from "@getpaperplane/contracts";
 import * as Option from "effect/Option";
 
 import type { ConnectionCatalogEntry } from "./catalog.ts";
@@ -94,7 +94,7 @@ export function presentEnvironmentConnection(
 }
 
 /**
- * The address an agent outside Rove (Claude Code, Codex) uses to reach this
+ * The address an agent outside Paperplane (Claude Code, Codex) uses to reach this
  * environment's MCP server: the route this device is connected over, since an
  * agent beside this client can reach it too, else the first route in
  * preference order that has an address. SSH connections ride a local forward

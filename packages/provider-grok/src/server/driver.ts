@@ -1,4 +1,4 @@
-import { ProviderDriverKind } from "@rove-code/contracts";
+import { ProviderDriverKind } from "@getpaperplane/contracts";
 import { GrokSettings } from "../settings.ts";
 import * as Crypto from "effect/Crypto";
 import * as Effect from "effect/Effect";
@@ -8,12 +8,12 @@ import * as Schema from "effect/Schema";
 import * as HttpClient from "effect/http/HttpClient";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
-import * as ProviderLatestVersions from "@rove-code/provider-core/server/ProviderLatestVersions";
-import * as ProviderHost from "@rove-code/provider-core/server/ProviderHost";
-import * as ProviderEventLoggers from "@rove-code/provider-core/server/ProviderEventLoggers";
+import * as ProviderLatestVersions from "@getpaperplane/provider-core/server/ProviderLatestVersions";
+import * as ProviderHost from "@getpaperplane/provider-core/server/ProviderHost";
+import * as ProviderEventLoggers from "@getpaperplane/provider-core/server/ProviderEventLoggers";
 import { makeGrokTextGeneration } from "./textGeneration.ts";
 import { GrokAdapterV2Driver, type GrokAdapterV2DriverEnv } from "./adapter.ts";
-import { ProviderDriverError } from "@rove-code/provider-core/server/errors";
+import { ProviderDriverError } from "@getpaperplane/provider-core/server/errors";
 import {
   buildInitialGrokProviderSnapshot,
   checkGrokProviderStatus,
@@ -21,14 +21,14 @@ import {
 } from "./status.ts";
 import { grokUsageReader } from "./usage.ts";
 import { readGrokAccount } from "./usageLimits.ts";
-import { makeManagedServerProvider } from "@rove-code/provider-core/server/managedProvider";
+import { makeManagedServerProvider } from "@getpaperplane/provider-core/server/managedProvider";
 import {
   defaultProviderContinuationIdentity,
   type ProviderDriver,
   type ProviderInstance,
-} from "@rove-code/provider-core/server/driver";
-import { withInstanceIdentity } from "@rove-code/provider-core/server/instanceIdentity";
-import { mergeProviderInstanceEnvironment } from "@rove-code/provider-core/server/instanceEnvironment";
+} from "@getpaperplane/provider-core/server/driver";
+import { withInstanceIdentity } from "@getpaperplane/provider-core/server/instanceIdentity";
+import { mergeProviderInstanceEnvironment } from "@getpaperplane/provider-core/server/instanceEnvironment";
 import { discoverGrokSkills } from "./skills.ts";
 import {
   makeCachedProviderMaintenanceResolution,
@@ -36,12 +36,12 @@ import {
   makeProviderMaintenanceCapabilities,
   type ProviderMaintenanceCapabilitiesResolver,
   resolveProviderMaintenanceCapabilitiesEffect,
-} from "@rove-code/provider-core/server/maintenanceResolver";
+} from "@getpaperplane/provider-core/server/maintenanceResolver";
 import {
   haveProviderSnapshotSettingsChanged,
   makeProviderSnapshotSettingsSource,
   type ProviderSnapshotSettings,
-} from "@rove-code/provider-core/server/snapshotSettings";
+} from "@getpaperplane/provider-core/server/snapshotSettings";
 const decodeGrokSettings = Schema.decodeSync(GrokSettings);
 
 const DRIVER_KIND = ProviderDriverKind.make("grok");

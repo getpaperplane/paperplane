@@ -1,7 +1,7 @@
 import {
   threadPullRequestsOf,
   threadPullRequestKeysEqual,
-} from "@rove-code/shared/threadPullRequests";
+} from "@getpaperplane/shared/threadPullRequests";
 import {
   CommandId,
   pullRequestHostOf,
@@ -10,15 +10,15 @@ import {
   type SourceControlProviderKind,
   type ThreadId,
   type ThreadPullRequestLink,
-} from "@rove-code/contracts";
-import { changeRequestUrlFor, parseChangeRequestUrl } from "@rove-code/shared/changeRequestUrl";
-import { sourceControlRepositorySelector } from "@rove-code/shared/sourceControl";
+} from "@getpaperplane/contracts";
+import { changeRequestUrlFor, parseChangeRequestUrl } from "@getpaperplane/shared/changeRequestUrl";
+import { sourceControlRepositorySelector } from "@getpaperplane/shared/sourceControl";
 import {
   normalizeThreadPullRequestKey,
   resolveThreadPullRequestChains,
   threadPullRequestKeyOf,
   visibleThreadPullRequests,
-} from "@rove-code/shared/threadPullRequests";
+} from "@getpaperplane/shared/threadPullRequests";
 import * as Cause from "effect/Cause";
 import * as Crypto from "effect/Crypto";
 import * as Effect from "effect/Effect";

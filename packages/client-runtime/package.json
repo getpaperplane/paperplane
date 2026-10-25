@@ -1,8 +1,12 @@
 {
-  "name": "@rove-code/client-runtime",
+  "name": "@getpaperplane/client-runtime",
   "private": true,
   "type": "module",
   "exports": {
+    "./project-config": {
+      "types": "./src/projectConfig.ts",
+      "default": "./src/projectConfig.ts"
+    },
     "./composerThreadItems": {
       "types": "./src/composerThreadItems.ts",
       "default": "./src/composerThreadItems.ts"
@@ -127,9 +131,9 @@
       "types": "./src/voice-input/index.ts",
       "default": "./src/voice-input/index.ts"
     },
-    "./roveToolSummary": {
-      "types": "./src/roveToolSummary.ts",
-      "default": "./src/roveToolSummary.ts"
+    "./paperplaneToolSummary": {
+      "types": "./src/paperplaneToolSummary.ts",
+      "default": "./src/paperplaneToolSummary.ts"
     },
     "./relay": {
       "types": "./src/relay/index.ts",
@@ -461,16 +465,16 @@
     "test": "vp test run"
   },
   "dependencies": {
+    "@getpaperplane/contracts": "workspace:*",
+    "@getpaperplane/shared": "workspace:*",
+    "@getpaperplane/source-control-azure-devops": "workspace:*",
+    "@getpaperplane/source-control-bitbucket": "workspace:*",
+    "@getpaperplane/source-control-core": "workspace:*",
+    "@getpaperplane/source-control-forgejo": "workspace:*",
+    "@getpaperplane/source-control-gitcafe": "workspace:*",
+    "@getpaperplane/source-control-github": "workspace:*",
+    "@getpaperplane/source-control-gitlab": "workspace:*",
     "@pierre/diffs": "catalog:",
-    "@rove-code/contracts": "workspace:*",
-    "@rove-code/shared": "workspace:*",
-    "@rove-code/source-control-azure-devops": "workspace:*",
-    "@rove-code/source-control-bitbucket": "workspace:*",
-    "@rove-code/source-control-core": "workspace:*",
-    "@rove-code/source-control-forgejo": "workspace:*",
-    "@rove-code/source-control-gitcafe": "workspace:*",
-    "@rove-code/source-control-github": "workspace:*",
-    "@rove-code/source-control-gitlab": "workspace:*",
     "effect": "catalog:",
     "three": "0.180.0"
   },

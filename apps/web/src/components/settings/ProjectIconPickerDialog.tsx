@@ -5,7 +5,7 @@ import {
   ProjectMonogramText,
   type ProjectIconColor,
   type ProjectIconOverride,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import type { IconName } from "lucide-react/dynamic";
 import { NamedLucideIcon } from "../NamedLucideIcon";
 import { useEffect, useMemo, useRef, useState } from "react";

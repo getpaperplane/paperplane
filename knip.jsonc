@@ -21,7 +21,7 @@
     },
     "scripts": {
       // Knip loads its preprocessor through a CLI option; native verification and
-      // worktree setup (from rove.json) run directly.
+      // worktree setup (from paperplane.json) run directly.
       "entry": [
         "knip-schemas.ts",
         "mobile-native-client.ts",
@@ -55,10 +55,11 @@
       // CLI archive and desktop sidecar stage them from this manifest.
       "ignoreDependencies": [
         "@effect/platform-node-shared",
-        "@rove-code/web",
+        "@getpaperplane/web",
         "@napi-rs/keyring",
         "cbor-x",
         "cross-spawn",
+        "ffi-rs",
         "jose",
         "ws",
       ],
@@ -108,11 +109,11 @@
       // Fonts are configured as asset paths; Expo autolinks the native packages.
       "ignoreDependencies": [
         "@expo-google-fonts/dm-sans",
-        "@rove-code/mobile-review-diff-native",
-        "@rove-code/mobile-terminal-native",
+        "@getpaperplane/mobile-review-diff-native",
+        "@getpaperplane/mobile-terminal-native",
       ],
     },
-    "apps/mobile/modules/rove-source-text": {
+    "apps/mobile/modules/paperplane-source-text": {
       // React Native codegen discovers component specifications by filename.
       "entry": ["src/*NativeComponent.ts!"],
     },

@@ -26,14 +26,14 @@ runs:
       id: modules
       uses: actions/cache/restore@v6
       with:
-        key: ci-node-modules-v1-${{ runner.os }}-${{ runner.arch }}-${{ steps.vp.outputs.node }}-${{ steps.vp.outputs.version }}-${{ hashFiles('pnpm-lock.yaml', 'pnpm-workspace.yaml', '**/package.json', 'patches/**', '**/.npmrc', '**/.pnpmfile.*', '**/*.tgz', 'apps/mobile/modules/rove-review-diff/**', 'apps/mobile/modules/rove-source-text/**', 'apps/mobile/modules/rove-terminal/**', '.github/actions/setup-ci-deps/action.yml', '!**/node_modules/**', '!.repos/**') }}
+        key: ci-node-modules-v1-${{ runner.os }}-${{ runner.arch }}-${{ steps.vp.outputs.node }}-${{ steps.vp.outputs.version }}-${{ hashFiles('pnpm-lock.yaml', 'pnpm-workspace.yaml', '**/package.json', 'patches/**', '**/.npmrc', '**/.pnpmfile.*', '**/*.tgz', 'apps/mobile/modules/paperplane-review-diff/**', 'apps/mobile/modules/paperplane-source-text/**', 'apps/mobile/modules/paperplane-terminal/**', '.github/actions/setup-ci-deps/action.yml', '!**/node_modules/**', '!.repos/**') }}
         # Workspace globs from pnpm-workspace.yaml; don't cache .repos or
         # unrelated nested node_modules. The isolated .pnpm tree is self-contained.
         path: |
           node_modules
           apps/*/node_modules
           infra/*/node_modules
-          oxlint-plugin-rove/node_modules
+          oxlint-plugin-paperplane/node_modules
           packages/*/node_modules
           scripts/node_modules
 
@@ -66,6 +66,6 @@ runs:
           node_modules
           apps/*/node_modules
           infra/*/node_modules
-          oxlint-plugin-rove/node_modules
+          oxlint-plugin-paperplane/node_modules
           packages/*/node_modules
           scripts/node_modules

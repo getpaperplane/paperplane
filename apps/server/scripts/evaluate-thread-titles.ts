@@ -8,7 +8,7 @@ import * as NodeUtil from "node:util";
 import * as NodeCrypto from "node:crypto";
 import * as FetchHttpClient from "effect/http/FetchHttpClient";
 import * as NodeServices from "@effect/platform-node/NodeServices";
-import { CodexSettings, ProviderInstanceId } from "@rove-code/contracts";
+import { CodexSettings, ProviderInstanceId } from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Duration from "effect/Duration";
@@ -20,7 +20,7 @@ import { threadTitleEvaluationCases } from "./threadTitleEvaluationCases.ts";
 import {
   formatThreadTitleContext,
   type ThreadTitleMessage,
-} from "@rove-code/provider-core/server/threadTitleContext";
+} from "@getpaperplane/provider-core/server/threadTitleContext";
 import * as ThreadTitleLinks from "../src/textGeneration/ThreadTitleLinks.ts";
 import * as SourceControlProviderRegistry from "../src/sourceControl/SourceControlProviderRegistry.ts";
 import * as SourceControlBuiltInDrivers from "../src/sourceControl/builtInDrivers.ts";
@@ -62,7 +62,7 @@ await Effect.runPromise(
   Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
-    const cwd = yield* fs.makeTempDirectoryScoped({ prefix: "rove-title-evaluation-" });
+    const cwd = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-title-evaluation-" });
     const generation = yield* CodexTextGeneration.makeCodexTextGeneration(
       yield* decodeSettings({}),
     );
@@ -156,7 +156,7 @@ await Effect.runPromise(
         ),
       ).pipe(
         Layer.provideMerge(
-          ServerConfig.layerTest(process.cwd(), { prefix: "rove-title-evaluation-state-" }),
+          ServerConfig.layerTest(process.cwd(), { prefix: "paperplane-title-evaluation-state-" }),
         ),
         Layer.provideMerge(NodeServices.layer),
       ),

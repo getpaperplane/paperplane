@@ -3,7 +3,7 @@ import * as Predicate from "effect/Predicate";
 /**
  * MCP Apps (https://github.com/modelcontextprotocol/ext-apps, spec 2026-01-26):
  * an MCP tool can name a `ui://` HTML resource that hosts render as an
- * interactive view of its result. Rove snapshots the resource when the tool call
+ * interactive view of its result. Paperplane snapshots the resource when the tool call
  * completes, stores it as a thread attachment, and records an `McpAppReference`
  * in the tool item's output; clients host it in an opaque-origin frame and
  * speak the spec's JSON-RPC bridge with it.
@@ -14,13 +14,13 @@ export const MCP_APP_MIME_TYPE = "text/html;profile=mcp-app";
 /** The MCP extension id a client declares to receive UI resources. */
 export const MCP_APP_EXTENSION_ID = "io.modelcontextprotocol/ui";
 export const MCP_APP_RESOURCE_SCHEME = "ui://";
-/** Where Rove records the app reference inside a tool item's output object. */
-export const MCP_APP_OUTPUT_KEY = "roveMcpApp";
+/** Where Paperplane records the app reference inside a tool item's output object. */
+export const MCP_APP_OUTPUT_KEY = "paperplaneMcpApp";
 
 const MCP_APP_MIN_HEIGHT = 80;
 export const MCP_APP_DEFAULT_HEIGHT = 320;
 export const MCP_APP_MAX_HEIGHT = 2000;
-/** Largest app document Rove stores. */
+/** Largest app document Paperplane stores. */
 export const MCP_APP_MAX_HTML_BYTES = 5 * 1024 * 1024;
 const MAX_DOMAINS = 32;
 const MAX_DOMAIN_LENGTH = 256;
@@ -173,7 +173,7 @@ export function mcpAppToolCallableByApp(meta: unknown): boolean {
 /**
  * The Content-Security-Policy for an app document, per the spec's
  * construction: undeclared origins stay blocked, and nothing loads from the
- * host's own origin ('self' would reach Rove's API).
+ * host's own origin ('self' would reach Paperplane's API).
  */
 export function mcpAppContentSecurityPolicy(csp: McpAppCsp | undefined): string {
   const resources = csp?.resourceDomains?.join(" ") ?? "";

@@ -1,4 +1,4 @@
-import type { DesktopUpdateRemoteOutcome, DesktopUpdateState } from "@rove-code/contracts";
+import type { DesktopUpdateRemoteOutcome, DesktopUpdateState } from "@getpaperplane/contracts";
 
 /**
  * What a server-triggered update run should do next, given the updater's

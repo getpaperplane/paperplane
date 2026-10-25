@@ -1,7 +1,7 @@
 import * as WorktreeSetupTracker from "../project/WorktreeSetupTracker.ts";
 import * as ProjectCloneTracker from "../project/ProjectCloneTracker.ts";
 import * as TerminalManager from "../terminal/Manager.ts";
-import { resolveProjectSettings } from "@rove-code/shared/projectSettings";
+import { resolveProjectSettings } from "@getpaperplane/shared/projectSettings";
 import {
   CommandId,
   type ChatAttachment,
@@ -18,7 +18,7 @@ import {
   type RuntimeMode,
   type ScheduledTaskId,
   ThreadId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Cause from "effect/Cause";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -34,7 +34,7 @@ import {
   flattenTemporaryWorktreeBranchName,
   isTemporaryWorktreeBranch,
   WORKTREE_BRANCH_PREFIX,
-} from "@rove-code/shared/git";
+} from "@getpaperplane/shared/git";
 
 import * as GitWorkflow from "../git/GitWorkflowService.ts";
 import * as ProjectService from "../project/ProjectService.ts";
@@ -44,10 +44,10 @@ import * as ProviderRegistry from "../provider/ProviderRegistry.ts";
 import * as ServerSettings from "../serverSettings.ts";
 import * as TextGeneration from "../textGeneration/TextGeneration.ts";
 import * as CommandReceiptStore from "./CommandReceiptStore.ts";
-import * as IdAllocator from "@rove-code/provider-core/server/IdAllocator";
+import * as IdAllocator from "@getpaperplane/provider-core/server/IdAllocator";
 import type * as Orchestrator from "./Orchestrator.ts";
-import { makeProviderFailure } from "@rove-code/provider-core/server/failure";
-import { randomUuidV4 } from "@rove-code/provider-core/server/randomUuid";
+import { makeProviderFailure } from "@getpaperplane/provider-core/server/failure";
+import { randomUuidV4 } from "@getpaperplane/provider-core/server/randomUuid";
 import * as ThreadManagement from "./ThreadManagementService.ts";
 
 export type ThreadLaunchWorkspaceStrategy =
@@ -70,7 +70,7 @@ export interface ThreadLaunchInitialMessage {
   readonly senderThreadId?: ThreadId;
   readonly text: string;
   readonly attachments: ReadonlyArray<ChatAttachment>;
-  readonly context?: import("@rove-code/contracts").OrchestrationMessageContext | undefined;
+  readonly context?: import("@getpaperplane/contracts").OrchestrationMessageContext | undefined;
 }
 
 export interface ThreadLaunchInput {
@@ -190,7 +190,7 @@ export class ThreadLaunchService extends Context.Service<
     >;
     readonly prepareRun: (input: ThreadLaunchPreparationInput) => Effect.Effect<void>;
   }
->()("@rove-code/server/orchestration-v2/ThreadLaunchService") {}
+>()("@getpaperplane/server/orchestration-v2/ThreadLaunchService") {}
 
 const isThreadLaunchError = Schema.is(ThreadLaunchError);
 
@@ -375,7 +375,7 @@ const make = Effect.gen(function* () {
         });
 
       // The server owns worktree naming: without an explicit branch, provision
-      // under a temporary `rove/<hash>` name so the worktree never waits on
+      // under a temporary `paperplane/<hash>` name so the worktree never waits on
       // name generation, then rename in the background below.
       const requestedBranch = input.workspaceStrategy.branch;
       let branch: string | null;

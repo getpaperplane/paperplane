@@ -2,11 +2,11 @@
 
 /**
  * Rebuild an isolated dev database from a pruned snapshot of the real
- * ~/.rove-code database, then run this checkout's migrations against it.
+ * ~/.paperplane database, then run this checkout's migrations against it.
  *
  * `vp run migrate-dev-db` from a worktree:
- *   1. Nukes `<worktree>/.rove/userdata/statev2.sqlite`.
- *   2. Copies a slice of the real db (`~/.rove-code/userdata/statev2.sqlite`,
+ *   1. Nukes `<worktree>/.paperplane/userdata/statev2.sqlite`.
+ *   2. Copies a slice of the real db (`~/.paperplane/userdata/statev2.sqlite`,
  *      attached read-only): the schema, and every row except those of
  *      deleted, archived, and settled threads, which are nearly all of a
  *      long-lived database. It then prunes that to the most recently updated
@@ -32,7 +32,7 @@ import * as NodeRuntime from "@effect/platform-node/NodeRuntime";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import * as NodeOS from "node:os";
 import * as NodeURL from "node:url";
-import { resolveWorktreeRoveHome } from "@rove-code/shared/devHome";
+import { resolveWorktreePaperplaneHome } from "@getpaperplane/shared/devHome";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -45,14 +45,14 @@ import { Command, Flag } from "effect/cli";
 
 import * as ProjectionStore from "../src/orchestration-v2/ProjectionStore.ts";
 import { migrationManifest, runMigrations } from "../src/persistence/Migrations.ts";
-import * as NodeSqliteClient from "@rove-code/shared/nodeSqliteClient";
+import * as NodeSqliteClient from "@getpaperplane/shared/nodeSqliteClient";
 
 export class MigrateDevDbNotInWorktreeError extends Schema.TaggedError<MigrateDevDbNotInWorktreeError>()(
   "MigrateDevDbNotInWorktreeError",
   {},
 ) {
   override get message(): string {
-    return "Not inside a linked git worktree. Pass --base-dir to target an isolated .rove directory.";
+    return "Not inside a linked git worktree. Pass --base-dir to target an isolated .paperplane directory.";
   }
 }
 
@@ -61,7 +61,7 @@ export class MigrateDevDbSharedHomeError extends Schema.TaggedError<MigrateDevDb
   {},
 ) {
   override get message(): string {
-    return "Refusing to rebuild the shared ~/.rove-code database. Use an isolated --base-dir.";
+    return "Refusing to rebuild the shared ~/.paperplane database or its ~/.rove-code backup. Use an isolated --base-dir.";
   }
 }
 
@@ -95,7 +95,7 @@ export class MigrateDevDbServerRunningError extends Schema.TaggedError<MigrateDe
   },
 ) {
   override get message(): string {
-    return `Dev database at '${this.databasePath}' is open by a running server (pid ${this.pid} per server-runtime.json). Stop that server first; if that pid is not actually a Rove server (stale descriptor, reused pid), delete the server-runtime.json next to the database and retry.`;
+    return `Dev database at '${this.databasePath}' is open by a running server (pid ${this.pid} per server-runtime.json). Stop that server first; if that pid is not actually a Paperplane server (stale descriptor, reused pid), delete the server-runtime.json next to the database and retry.`;
   }
 }
 
@@ -148,9 +148,9 @@ export class MigrateDevDbPhaseError extends Schema.TaggedError<MigrateDevDbPhase
 }
 
 export interface RunMigrateDevDbInput {
-  /** Isolated .rove directory. Defaults to `<worktree>/.rove` of the cwd. */
+  /** Isolated .paperplane directory. Defaults to `<worktree>/.paperplane` of the cwd. */
   readonly baseDir?: string | undefined;
-  /** Source database. Defaults to `~/.rove-code/userdata/statev2.sqlite`. */
+  /** Source database. Defaults to `~/.paperplane/userdata/statev2.sqlite`. */
   readonly source?: string | undefined;
   readonly projects: number;
   readonly threadsPerProject: number;
@@ -479,7 +479,7 @@ export const runMigrateDevDb = Effect.fn("runMigrateDevDb")(function* (
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
 
-  const sharedHome = path.resolve(options.sharedHome ?? path.join(NodeOS.homedir(), ".rove-code"));
+  const sharedHome = path.resolve(options.sharedHome ?? path.join(NodeOS.homedir(), ".paperplane"));
   const sourcePath = path.resolve(
     input.source ?? path.join(sharedHome, "userdata", "statev2.sqlite"),
   );
@@ -487,7 +487,7 @@ export const runMigrateDevDb = Effect.fn("runMigrateDevDb")(function* (
   const baseDir =
     input.baseDir !== undefined
       ? path.resolve(input.baseDir)
-      : yield* resolveWorktreeRoveHome(process.cwd());
+      : yield* resolveWorktreePaperplaneHome(process.cwd());
   if (baseDir === undefined) {
     return yield* new MigrateDevDbNotInWorktreeError();
   }
@@ -498,11 +498,13 @@ export const runMigrateDevDb = Effect.fn("runMigrateDevDb")(function* (
   if (!(yield* fs.exists(sourcePath))) {
     return yield* new MigrateDevDbSourceMissingError({ sourcePath });
   }
-  const [canonicalBaseDir, canonicalSharedHome] = yield* Effect.all([
+  const legacyHome = path.join(path.dirname(sharedHome), ".rove-code");
+  const [canonicalBaseDir, canonicalSharedHome, canonicalLegacyHome] = yield* Effect.all([
     fs.realPath(baseDir).pipe(Effect.orElseSucceed(() => baseDir)),
     fs.realPath(sharedHome).pipe(Effect.orElseSucceed(() => sharedHome)),
+    fs.realPath(legacyHome).pipe(Effect.orElseSucceed(() => legacyHome)),
   ]);
-  if (canonicalBaseDir === canonicalSharedHome) {
+  if (canonicalBaseDir === canonicalSharedHome || canonicalBaseDir === canonicalLegacyHome) {
     return yield* new MigrateDevDbSharedHomeError();
   }
   // The destination db and snapshot both get deleted below; a --source that
@@ -635,11 +637,13 @@ export const migrateDevDbCommand = Command.make(
     ),
     baseDir: Flag.String("base-dir").pipe(
       Flag.optional,
-      Flag.withDescription("Isolated .rove directory. Defaults to the current worktree's .rove."),
+      Flag.withDescription(
+        "Isolated .paperplane directory. Defaults to the current worktree's .paperplane.",
+      ),
     ),
     source: Flag.String("source").pipe(
       Flag.optional,
-      Flag.withDescription("Source database. Defaults to ~/.rove-code/userdata/statev2.sqlite."),
+      Flag.withDescription("Source database. Defaults to ~/.paperplane/userdata/statev2.sqlite."),
     ),
   },
   ({ projects, threadsPerProject, baseDir, source }) =>
@@ -666,7 +670,7 @@ export const migrateDevDbCommand = Command.make(
     }),
 ).pipe(
   Command.withDescription(
-    "Rebuild the worktree dev database from a pruned snapshot of the real ~/.rove-code data, then run migrations.",
+    "Rebuild the worktree dev database from a pruned snapshot of the real ~/.paperplane data, then run migrations.",
   ),
 );
 

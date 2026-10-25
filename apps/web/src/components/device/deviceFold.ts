@@ -1,5 +1,5 @@
-import type { DeviceHubAccess } from "@rove-code/client-runtime/state/deviceHubAccess";
-import { withDeviceHubQuery } from "@rove-code/client-runtime/state/deviceHubAccess";
+import type { DeviceHubAccess } from "@getpaperplane/client-runtime/state/deviceHubAccess";
+import { withDeviceHubQuery } from "@getpaperplane/client-runtime/state/deviceHubAccess";
 
 export type AndroidFoldPosture = "closed" | "opened";
 

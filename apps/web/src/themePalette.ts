@@ -1,5 +1,4 @@
 import * as Equal from "effect/Equal";
-import { migrateRoveThemeId } from "@rove-code/shared/roveMigration";
 import * as Schema from "effect/Schema";
 import "culori/css";
 import { converter, parse } from "culori/fn";
@@ -10,8 +9,8 @@ import {
   IRIS_THEME,
   OCEAN_THEME,
   PLUM_THEME,
-  ROVE_CODE_LIGHT_THEME_COLORS,
-  ROVE_CODE_DARK_THEME_COLORS,
+  PAPERPLANE_CODE_LIGHT_THEME_COLORS,
+  PAPERPLANE_CODE_DARK_THEME_COLORS,
   RESERVED_THEME_IDS,
   THEME_COLOR_ROLES,
   type ThemeAppearance,
@@ -19,7 +18,7 @@ import {
   type ThemeColors,
   type ThemeDefinition,
   type ThemeVariants,
-} from "@rove-code/shared/themePalettes";
+} from "@getpaperplane/shared/themePalettes";
 
 export { EMBER_THEME, GROVE_THEME, IRIS_THEME, OCEAN_THEME, PLUM_THEME, THEME_COLOR_ROLES };
 export type { ThemeAppearance, ThemeColorRole, ThemeColors, ThemeDefinition, ThemeVariants };
@@ -30,10 +29,10 @@ export const OCEAN_THEME_ID = "ocean" as const;
 const EMBER_THEME_ID = "ember" as const;
 const IRIS_THEME_ID = "iris" as const;
 export const THEME_FILE_VERSION = 1 as const;
-export const CUSTOM_THEMES_STORAGE_KEY = "rove:themes:v1";
-export const THEME_FOLLOW_SYSTEM_STORAGE_KEY = "rove:theme-follow-system";
-export const THEME_APPEARANCE_MODE_STORAGE_KEY = "rove:theme-appearance-mode";
-export const THEME_HALVES_STORAGE_KEY = "rove:theme-halves:v1";
+export const CUSTOM_THEMES_STORAGE_KEY = "paperplane:themes:v1";
+export const THEME_FOLLOW_SYSTEM_STORAGE_KEY = "paperplane:theme-follow-system";
+export const THEME_APPEARANCE_MODE_STORAGE_KEY = "paperplane:theme-appearance-mode";
+export const THEME_HALVES_STORAGE_KEY = "paperplane:theme-halves:v1";
 
 const LEGACY_PLUM_DARK_THEME_ID = "plum-dark";
 
@@ -296,8 +295,7 @@ export function subscribeToCustomThemes(listener: () => void): () => void {
 }
 
 function normalizeThemeId(themeId: string): string {
-  const migrated = migrateRoveThemeId(themeId);
-  return migrated === LEGACY_PLUM_DARK_THEME_ID ? PLUM_THEME_ID : migrated;
+  return themeId === LEGACY_PLUM_DARK_THEME_ID ? PLUM_THEME_ID : themeId;
 }
 
 /**
@@ -306,8 +304,7 @@ function normalizeThemeId(themeId: string): string {
  * still carries the appearance hint getThemePreferenceMode reads.
  */
 export function canonicalThemePreference(theme: string): string {
-  const migrated = migrateRoveThemeId(theme);
-  return migrated === LEGACY_PLUM_DARK_THEME_ID ? migrated : normalizeThemeId(migrated);
+  return theme === LEGACY_PLUM_DARK_THEME_ID ? theme : normalizeThemeId(theme);
 }
 
 function themeIdFromPreference(theme: ThemePreference): string {
@@ -317,20 +314,20 @@ function themeIdFromPreference(theme: ThemePreference): string {
 // Older builds stored the dark Plum palette as a separate theme. Keep
 // those preferences readable while mapping them to the dark variant.
 function legacyThemeMode(theme: ThemePreference): ThemeAppearance | null {
-  return migrateRoveThemeId(theme) === LEGACY_PLUM_DARK_THEME_ID ? "dark" : null;
+  return theme === LEGACY_PLUM_DARK_THEME_ID ? "dark" : null;
 }
 
 /**
- * The standard Rove Code look as a theme palette, for seeding a new theme when
+ * The standard Paperplane look as a theme palette, for seeding a new theme when
  * no theme is installed. Distinct from {@link getDefaultThemeColors}, which
  * carries the Plum palette used to fill roles omitted by theme
  * files.
  */
 export function getStandardThemeColors(appearance: ThemeAppearance): ThemeColors {
   if (appearance === "dark") {
-    return (standardDarkThemeColors ??= decodeThemeColors(ROVE_CODE_DARK_THEME_COLORS));
+    return (standardDarkThemeColors ??= decodeThemeColors(PAPERPLANE_CODE_DARK_THEME_COLORS));
   }
-  return (standardLightThemeColors ??= decodeThemeColors(ROVE_CODE_LIGHT_THEME_COLORS));
+  return (standardLightThemeColors ??= decodeThemeColors(PAPERPLANE_CODE_LIGHT_THEME_COLORS));
 }
 
 type ThemeRgbColor = {
@@ -586,7 +583,7 @@ function solveOklchLightness(
 }
 
 /**
- * The status colors Rove Code shows without a theme, read from the app's own
+ * The status colors Paperplane shows without a theme, read from the app's own
  * tokens (red-500 / amber-500 families). Generated palettes fall back to
  * these instead of the flagship theme's, so an imported or created theme
  * never inherits a brand tint on destructive buttons and warnings.

@@ -5,7 +5,7 @@ import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 
 import * as Electron from "electron";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 
 const electronSafeStorageErrorFields = {
   cause: Schema.Defect(),
@@ -63,7 +63,7 @@ export class ElectronSafeStorage extends Context.Service<
     ) => Effect.Effect<string, ElectronSafeStorageDecryptError>;
     readonly selectedStorageBackend: Effect.Effect<Option.Option<string>>;
   }
->()("@rove-code/desktop/electron/ElectronSafeStorage") {}
+>()("@getpaperplane/desktop/electron/ElectronSafeStorage") {}
 
 /** @public Service construction is part of the canonical Effect module API. */
 export const make = Effect.gen(function* () {

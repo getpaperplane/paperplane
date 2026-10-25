@@ -5,13 +5,13 @@ import { ThreadDetailsSection } from "./ThreadDetailsSection";
 import { CollapsibleSectionHeader, SectionHeaderStatus } from "../ui/collapsible-section-header";
 import { SubagentTooltipContent } from "./SubagentTooltipContent";
 import { PullRequestGlyph } from "../pullRequest/pullRequestIcons";
-import { scopedThreadKey, scopeThreadRef } from "@rove-code/client-runtime/environment";
+import { scopedThreadKey, scopeThreadRef } from "@getpaperplane/client-runtime/environment";
 import {
   deriveWorkflowGroups,
   projectedSubagentsToRuntime,
   type RuntimeSubagent,
-} from "@rove-code/client-runtime/state/subagentRuntime";
-import { formatSubagentDisplayTitle } from "@rove-code/client-runtime/state/subagent-display";
+} from "@getpaperplane/client-runtime/state/subagentRuntime";
+import { formatSubagentDisplayTitle } from "@getpaperplane/client-runtime/state/subagent-display";
 import {
   deriveThreadRelationshipGraph,
   immediateThreadRelationships,
@@ -21,19 +21,19 @@ import {
   resolveMergeBackTargetThreadId,
   type ThreadRelationshipEdge,
   type ThreadRelationshipWalkRow,
-} from "@rove-code/client-runtime/state/thread-relationships";
+} from "@getpaperplane/client-runtime/state/thread-relationships";
 import {
   canDetachThreadProviderSession,
   resolveLatestMergeBackRun,
-} from "@rove-code/client-runtime/state/thread-workflows";
+} from "@getpaperplane/client-runtime/state/thread-workflows";
 import {
   NodeId,
   type EnvironmentId,
   type OrchestrationV2Subagent,
   type OrchestrationV2ThreadShell,
   type ThreadId,
-} from "@rove-code/contracts";
-import { deriveSubagentElapsedMs } from "@rove-code/shared/orchestrationTiming";
+} from "@getpaperplane/contracts";
+import { deriveSubagentElapsedMs } from "@getpaperplane/shared/orchestrationTiming";
 import { groupBy } from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import { useNavigate } from "@tanstack/react-router";

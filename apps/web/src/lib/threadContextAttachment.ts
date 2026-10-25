@@ -1,6 +1,6 @@
-import type { EnvironmentId, OrchestrationV2ThreadTranscript } from "@rove-code/contracts";
-import { toKindScopedComposerContextId } from "@rove-code/shared/composerContextReferences";
-import { threadTranscriptHeader } from "@rove-code/shared/threadTranscript";
+import type { EnvironmentId, OrchestrationV2ThreadTranscript } from "@getpaperplane/contracts";
+import { toKindScopedComposerContextId } from "@getpaperplane/shared/composerContextReferences";
+import { threadTranscriptHeader } from "@getpaperplane/shared/threadTranscript";
 import * as DateTime from "effect/DateTime";
 
 export function threadContextAttachment(

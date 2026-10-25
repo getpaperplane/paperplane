@@ -55,7 +55,7 @@ export default function (pi: ExtensionAPI) {
       return { content: [{ type: "text", text: "extension tool worked" }], details: {} };
     },
   });
-  pi.registerProvider("rove-extension-test", {
+  pi.registerProvider("paperplane-extension-test", {
     baseUrl: "https://example.invalid",
     apiKey: "test-key",
     api: "openai-completions",

@@ -4,7 +4,7 @@ import {
   RpcClientId,
   type HostPowerSnapshot,
   type ClientActivityReportInput,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as DateTime from "effect/DateTime";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
@@ -15,7 +15,7 @@ import * as Ref from "effect/Ref";
 import * as Stream from "effect/Stream";
 
 import * as TestClock from "effect/testing/TestClock";
-import { DEFAULT_SERVER_SETTINGS } from "@rove-code/contracts";
+import { DEFAULT_SERVER_SETTINGS } from "@getpaperplane/contracts";
 import * as ServerSettings from "../serverSettings.ts";
 import * as BackgroundPolicy from "./BackgroundPolicy.ts";
 import * as HostPowerMonitor from "./HostPowerMonitor.ts";

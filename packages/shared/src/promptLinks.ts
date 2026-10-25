@@ -1,17 +1,17 @@
 import { DEFAULT_HOSTED_APP_URL } from "./connectAuth.ts";
 
 /**
- * Prompt links open Rove Code from outside it with a prompt ready to send. They never send it:
+ * Prompt links open Paperplane from outside it with a prompt ready to send. They never send it:
  * a link from a stranger fills a draft, and the user reads it and presses Send. A link also
  * cannot pick a runtime mode, branch, or worktree. Those stay the user's own defaults.
  *
  * Shared links are https on the hosted app, because that is what Twitter and GitHub make
- * clickable. The `rove://` scheme carries the same paths into desktop and mobile:
+ * clickable. The `paperplane://` scheme carries the same paths into desktop and mobile:
  *
- *   https://rove.hafiezulzikry.com/new?prompt=…&repo=owner/name&provider=codex&model=gpt-5
- *   https://rove.hafiezulzikry.com/new?pr=owner/name/123&prompt=…
- *   https://rove.hafiezulzikry.com/<environmentId>/<threadId>?prompt=…
- *   rove://new?…   rove://threads/<environmentId>/<threadId>?…
+ *   https://paperplane.hafiezulzikry.com/new?prompt=…&repo=owner/name&provider=codex&model=gpt-5
+ *   https://paperplane.hafiezulzikry.com/new?pr=owner/name/123&prompt=…
+ *   https://paperplane.hafiezulzikry.com/<environmentId>/<threadId>?prompt=…
+ *   paperplane://new?…   paperplane://threads/<environmentId>/<threadId>?…
  */
 
 /** URLs stay well under the limits browsers and link shorteners apply. */
@@ -134,7 +134,7 @@ function readPrompt(params: URLSearchParams): PromptLinkResult<LinkedPrompt | nu
   if (raw.length > PROMPT_LINK_MAX_PROMPT_LENGTH) {
     return {
       ok: false,
-      error: `This prompt is longer than ${PROMPT_LINK_MAX_PROMPT_LENGTH.toLocaleString("en-US")} characters, so Rove Code did not open it.`,
+      error: `This prompt is longer than ${PROMPT_LINK_MAX_PROMPT_LENGTH.toLocaleString("en-US")} characters, so Paperplane did not open it.`,
     };
   }
   const prompt = sanitizeLinkedPrompt(raw);
@@ -142,7 +142,7 @@ function readPrompt(params: URLSearchParams): PromptLinkResult<LinkedPrompt | nu
     return {
       ok: false,
       error:
-        "This prompt had only hidden characters, so it may be malicious. Rove Code did not open it.",
+        "This prompt had only hidden characters, so it may be malicious. Paperplane did not open it.",
     };
   }
   return { ok: true, value: prompt.text.length > 0 ? prompt : null };
@@ -159,7 +159,7 @@ export function parseNewThreadLink(search: string): PromptLinkResult<NewThreadLi
   if (pr !== null) {
     const pullRequest = parsePromptLinkPullRequest(pr);
     if (pullRequest === null) {
-      return { ok: false, error: "This link names a pull request Rove Code cannot read." };
+      return { ok: false, error: "This link names a pull request Paperplane cannot read." };
     }
     return { ok: true, value: { kind: "pull-request", pullRequest, prompt: prompt.value } };
   }
@@ -167,7 +167,7 @@ export function parseNewThreadLink(search: string): PromptLinkResult<NewThreadLi
   const repo = params.get("repo");
   const repository = repo === null ? null : parsePromptLinkRepository(repo);
   if (repo !== null && repository === null) {
-    return { ok: false, error: "This link names a repository Rove Code cannot read." };
+    return { ok: false, error: "This link names a repository Paperplane cannot read." };
   }
   return {
     ok: true,
@@ -212,12 +212,12 @@ export function buildNewThreadLink(input: {
   return url.toString();
 }
 
-const APP_SCHEME = /^rove(?:-[a-z]+)?:$/;
+const APP_SCHEME = /^paperplane(?:-(?:dev|preview))?:$/;
 const THREAD_PATH = /^\/([^/]+)\/([^/]+)\/?$/;
 
 /**
  * The in-app path a prompt link or thread deep link opens, or null for any other URL.
- * Desktop uses it for links the OS hands over, both `rove://` ones and, as the default
+ * Desktop uses it for links the OS hands over, both `paperplane://` ones and, as the default
  * browser on macOS, hosted-app ones.
  */
 export function promptLinkAppPath(
@@ -241,8 +241,8 @@ export function promptLinkAppPath(
   return thread ? `/${thread[1]}/${thread[2]}${url.search}` : null;
 }
 
-/** The `rove://` link that hands an in-app path to an installed desktop or mobile app. */
-export function promptLinkDeepLink(appPath: string, scheme = "rove"): string {
+/** The `paperplane://` link that hands an in-app path to an installed desktop or mobile app. */
+export function promptLinkDeepLink(appPath: string, scheme = "paperplane"): string {
   const url = new URL(appPath, "https://app.invalid");
   const host = url.pathname === "/new" ? "new" : `threads${url.pathname}`;
   return `${scheme}://${host}${url.search}`;

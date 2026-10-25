@@ -3,7 +3,7 @@ import {
   LiveVoiceInputController,
   voiceInputBlocksSubmission,
   type VoiceInputState,
-} from "@rove-code/client-runtime/voice-input";
+} from "@getpaperplane/client-runtime/voice-input";
 
 import { ensureLocalApi } from "../../localApi";
 import {
@@ -12,7 +12,7 @@ import {
 } from "../../lib/webVoiceRecognition";
 
 const IDLE: VoiceInputState = { phase: "idle", error: null, errorAction: null };
-const PRIVACY_ACK_KEY = "rove:web-dictation-privacy-ack";
+const PRIVACY_ACK_KEY = "paperplane:web-dictation-privacy-ack";
 
 export const isComposerDictationSupported = isWebVoiceRecognitionSupported;
 
@@ -34,7 +34,7 @@ async function acknowledgePrivacy(): Promise<boolean> {
     if (window.localStorage.getItem(PRIVACY_ACK_KEY) === "1") return true;
   } catch {}
   const confirmed = await ensureLocalApi().dialogs.confirm(
-    "Dictation sends your microphone audio to your browser's speech service (for example Google for Chrome, Apple for Safari) to be transcribed. Rove Code does not receive the audio. Continue?",
+    "Dictation sends your microphone audio to your browser's speech service (for example Google for Chrome, Apple for Safari) to be transcribed. Paperplane does not receive the audio. Continue?",
   );
   if (!confirmed) return false;
   try {

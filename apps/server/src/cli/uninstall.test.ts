@@ -3,26 +3,26 @@ import { assert, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 
 import { findOwnedLauncher } from "./uninstall.ts";
 
-it.layer(NodeServices.layer)("rove uninstall launcher", (it) => {
+it.layer(NodeServices.layer)("paperplane uninstall launcher", (it) => {
   it.effect("claims only a launcher that points into this home's runtime tree", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const root = yield* fs.makeTempDirectoryScoped({ prefix: "rove-uninstall-" });
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-uninstall-" });
       const versionsDir = path.join(root, "runtime/versions");
-      const exe = path.join(versionsDir, "1.0.0/rove");
-      const otherExe = path.join(root, "other/runtime/versions/1.0.0/rove");
-      const copy = path.join(root, "copy/rove");
+      const exe = path.join(versionsDir, "1.0.0/paperplane");
+      const otherExe = path.join(root, "other/runtime/versions/1.0.0/paperplane");
+      const copy = path.join(root, "copy/paperplane");
       for (const file of [exe, otherExe, copy]) {
         yield* fs.makeDirectory(path.dirname(file), { recursive: true });
         yield* fs.writeFileString(file, "");
       }
-      const ours = path.join(root, "bin/rove");
-      const theirs = path.join(root, "other/bin/rove");
+      const ours = path.join(root, "bin/paperplane");
+      const theirs = path.join(root, "other/bin/paperplane");
       yield* fs.makeDirectory(path.dirname(ours), { recursive: true });
       yield* fs.makeDirectory(path.dirname(theirs), { recursive: true });
       yield* fs.symlink(exe, ours);

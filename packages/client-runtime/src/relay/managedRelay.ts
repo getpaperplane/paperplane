@@ -28,11 +28,11 @@ import {
   RelayProtectedError,
   type RelayProtectedError as RelayProtectedErrorType,
   RelayUnregisterDeviceEndpoint,
-} from "@rove-code/contracts/relay";
-import { encodeOAuthScope, oauthScopeSetEquals } from "@rove-code/shared/oauthScope";
-import { decodeRelayJwt } from "@rove-code/shared/relayJwt";
-import { withRelayClientTracing } from "@rove-code/shared/relayTracing";
-import { normalizeSecureRelayUrl } from "@rove-code/shared/relayUrl";
+} from "@getpaperplane/contracts/relay";
+import { encodeOAuthScope, oauthScopeSetEquals } from "@getpaperplane/shared/oauthScope";
+import { decodeRelayJwt } from "@getpaperplane/shared/relayJwt";
+import { withRelayClientTracing } from "@getpaperplane/shared/relayTracing";
+import { normalizeSecureRelayUrl } from "@getpaperplane/shared/relayUrl";
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
 import * as Duration from "effect/Duration";
@@ -222,7 +222,7 @@ export class ManagedRelayDpopSigner extends Context.Service<
       input: ManagedRelayDpopProofInput,
     ) => Effect.Effect<string, ManagedRelayDpopProofCreationError>;
   }
->()("@rove-code/client-runtime/relay/managedRelay/ManagedRelayDpopSigner") {}
+>()("@getpaperplane/client-runtime/relay/managedRelay/ManagedRelayDpopSigner") {}
 
 export const MANAGED_RELAY_REQUEST_TIMEOUT_MS = 10_000;
 
@@ -304,7 +304,7 @@ export class ManagedRelayClient extends Context.Service<
     }) => Effect.Effect<RelayAgentActivitySnapshotResponse, ManagedRelayClientError>;
     readonly resetTokenCache: Effect.Effect<void>;
   }
->()("@rove-code/client-runtime/relay/managedRelay/ManagedRelayClient") {}
+>()("@getpaperplane/client-runtime/relay/managedRelay/ManagedRelayClient") {}
 
 const isRelayProtectedError = Schema.is(RelayProtectedError);
 

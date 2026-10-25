@@ -12,21 +12,21 @@ import {
   DEFAULT_TEXT_GENERATION_REASONING_EFFORT,
   type ServerProviderModel,
   TextGenerationError,
-} from "@rove-code/contracts";
-import { resolveSpawnCommand } from "@rove-code/shared/shell";
+} from "@getpaperplane/contracts";
+import { resolveSpawnCommand } from "@getpaperplane/shared/shell";
 
 import { resolveAttachmentPath } from "../attachmentStore.ts";
 import * as ServerConfig from "../config.ts";
-import { expandHomePath } from "@rove-code/provider-core/server/pathExpansion";
+import { expandHomePath } from "@getpaperplane/provider-core/server/pathExpansion";
 import { codexExecLaunchArgs, resolveCodexLaunchArgs } from "../provider/codexLaunchArgs.ts";
-import * as TextGenerationOperations from "@rove-code/provider-core/server/textGenerationOperations";
+import * as TextGenerationOperations from "@getpaperplane/provider-core/server/textGenerationOperations";
 import {
   normalizeCliError,
   toJsonSchemaObject,
-} from "@rove-code/provider-core/server/textGenerationUtils";
-import { codexModelFamily, getModelSelectionStringOptionValue } from "@rove-code/shared/model";
+} from "@getpaperplane/provider-core/server/textGenerationUtils";
+import { codexModelFamily, getModelSelectionStringOptionValue } from "@getpaperplane/shared/model";
 import { getCodexServiceTierOptionValue } from "../codexModelOptions.ts";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 
 const CODEX_TIMEOUT_MS = 180_000;
 const CODEX_MCP_LIST_TIMEOUT_MS = 10_000;
@@ -64,7 +64,7 @@ export const makeCodexTextGeneration = Effect.fn("makeCodexTextGeneration")(func
   getModels: Effect.Effect<ReadonlyArray<ServerProviderModel>> = Effect.succeed([]),
   resolveRuntime?: Effect.Effect<
     import("../provider/CodexManagedRuntime.ts").CodexEffectiveRuntime,
-    import("@rove-code/contracts").ProviderSetupError,
+    import("@getpaperplane/contracts").ProviderSetupError,
     Scope.Scope
   >,
 ) {
@@ -105,7 +105,7 @@ export const makeCodexTextGeneration = Effect.fn("makeCodexTextGeneration")(func
   ): Effect.Effect<string, TextGenerationError> =>
     fileSystem
       .makeTempFile({
-        prefix: `rove-${prefix}-${process.pid}-`,
+        prefix: `paperplane-${prefix}-${process.pid}-`,
       })
       .pipe(
         Effect.tap((filePath) =>

@@ -1,4 +1,4 @@
-import type { EnvironmentId, ProjectId } from "@rove-code/contracts";
+import type { EnvironmentId, ProjectId } from "@getpaperplane/contracts";
 
 import { deriveThreadTitleFromPrompt } from "../lib/projectThreadStartTurn";
 import type { QueuedThreadCreation, QueuedThreadMessage } from "./thread-outbox-model";

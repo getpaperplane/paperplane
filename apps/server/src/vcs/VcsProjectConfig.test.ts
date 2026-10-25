@@ -13,198 +13,128 @@ const layerTest = VcsProjectConfig.layer.pipe(
   Layer.provideMerge(NodeServices.layer),
 );
 
+const fixture = Effect.gen(function* () {
+  const fileSystem = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const root = yield* fileSystem.makeTempDirectoryScoped({ prefix: "paperplane-vcs-config-test-" });
+  const config = yield* VcsProjectConfig.VcsProjectConfig;
+  return { fileSystem, path, root, config, configPath: path.join(root, "paperplane.vcs.json") };
+});
+
 describe("VcsProjectConfig", () => {
-  it.layer(layerTest)("uses an explicit requested VCS kind before config", (it) => {
-    it.effect("returns the requested kind", () =>
+  it.layer(layerTest)((it) => {
+    it.effect("uses an explicit requested VCS kind before config", () =>
       Effect.gen(function* () {
-        const config = yield* VcsProjectConfig.VcsProjectConfig;
-        const kind = yield* config.resolveKind({
-          cwd: "/repo",
-          requestedKind: "jj",
-        });
-
-        assert.equal(kind, "jj");
+        const { config, root, configPath, fileSystem } = yield* fixture;
+        yield* fileSystem.writeFileString(configPath, '{"vcs":{"kind":"git"}}');
+        assert.equal(yield* config.resolveKind({ cwd: root, requestedKind: "jj" }), "jj");
       }),
     );
-  });
 
-  it.layer(layerTest)("discovers .rove/vcs.json from nested workspaces", (it) => {
-    it.effect("returns the configured kind", () =>
+    it.effect("discovers paperplane.vcs.json from nested workspaces", () =>
       Effect.gen(function* () {
-        const fileSystem = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const root = yield* fileSystem.makeTempDirectoryScoped({
-          prefix: "rove-vcs-config-test-",
-        });
-        const configDir = path.join(root, ".rove");
+        const { config, root, configPath, fileSystem, path } = yield* fixture;
         const nested = path.join(root, "packages", "app");
-        yield* fileSystem.makeDirectory(configDir, { recursive: true });
         yield* fileSystem.makeDirectory(nested, { recursive: true });
-        yield* fileSystem.writeFileString(
-          path.join(configDir, "vcs.json"),
-          JSON.stringify({ vcs: { kind: "jj" } }),
-        );
-
-        const config = yield* VcsProjectConfig.VcsProjectConfig;
-        const kind = yield* config.resolveKind({ cwd: nested });
-
-        assert.equal(kind, "jj");
+        yield* fileSystem.writeFileString(configPath, '{"vcs":{"kind":"jj"}}');
+        assert.equal(yield* config.resolveKind({ cwd: nested }), "jj");
       }),
     );
-  });
 
-  it.layer(layerTest)("continues to parent configs after a candidate inspect failure", (it) => {
-    it.effect("logs the failed candidate and returns the parent config", () => {
+    it.effect("ignores legacy rules without reading them and warns once per path", () => {
       const messages: unknown[] = [];
-      const logger = Logger.make<unknown, void>(({ message }) => {
-        messages.push(message);
-      });
-
+      const logger = Logger.make<unknown, void>(({ message }) => messages.push(message));
       return Effect.gen(function* () {
-        const fileSystem = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const root = yield* fileSystem.makeTempDirectoryScoped({
-          prefix: "rove-vcs-config-test-",
-        });
-        const configDir = path.join(root, ".rove");
-        const cwd = path.join(root, "invalid\0child");
-        yield* fileSystem.makeDirectory(configDir, { recursive: true });
+        const { config, root, configPath, fileSystem, path } = yield* fixture;
+        const legacyPath = path.join(root, ".rove", "vcs.json");
+        const nested = path.join(root, "packages");
+        yield* fileSystem.makeDirectory(path.dirname(legacyPath));
+        yield* fileSystem.makeDirectory(nested);
+        // A directory cannot be read as JSON: detection must only check existence.
+        yield* fileSystem.makeDirectory(legacyPath);
+        assert.equal(yield* config.resolveKind({ cwd: nested }), "auto");
+        assert.equal(yield* config.resolveKind({ cwd: root }), "auto");
+        assert.deepEqual(messages, [
+          [`${legacyPath} is ignored; rename it to ${configPath} to apply its VCS rules.`],
+        ]);
+        yield* fileSystem.writeFileString(configPath, '{"vcsKind":"jj"}');
+        assert.equal(yield* config.resolveKind({ cwd: nested }), "jj");
+        assert.equal(messages.length, 1);
+      }).pipe(Effect.provide(Logger.layer([logger], { mergeWithExisting: false })));
+    });
+
+    it.effect("prefers the new config without warning when both names exist", () => {
+      const messages: unknown[] = [];
+      const logger = Logger.make<unknown, void>(({ message }) => messages.push(message));
+      return Effect.gen(function* () {
+        const { config, root, configPath, fileSystem, path } = yield* fixture;
+        yield* fileSystem.makeDirectory(path.join(root, ".rove"));
         yield* fileSystem.writeFileString(
-          path.join(configDir, "vcs.json"),
-          JSON.stringify({ vcs: { kind: "jj" } }),
+          path.join(root, ".rove", "vcs.json"),
+          '{"vcsKind":"git"}',
         );
+        yield* fileSystem.writeFileString(configPath, '{"vcsKind":"jj"}');
+        assert.equal(yield* config.resolveKind({ cwd: root }), "jj");
+        assert.deepEqual(messages, []);
+      }).pipe(Effect.provide(Logger.layer([logger], { mergeWithExisting: false })));
+    });
 
-        const config = yield* VcsProjectConfig.VcsProjectConfig;
-        const kind = yield* config.resolveKind({ cwd });
-
-        assert.equal(kind, "jj");
-        const failedCandidate = path.join(cwd, ".rove", "vcs.json");
-        const // SAFETY: This fixture intentionally supplies the asserted collaborator contract.
-          [error] = messages[0] as ReadonlyArray<unknown>;
+    it.effect("continues to parent configs after a candidate inspect failure", () => {
+      const messages: unknown[] = [];
+      const logger = Logger.make<unknown, void>(({ message }) => messages.push(message));
+      return Effect.gen(function* () {
+        const { config, root, configPath, fileSystem, path } = yield* fixture;
+        const cwd = path.join(root, "invalid\0child");
+        yield* fileSystem.writeFileString(configPath, '{"vcs":{"kind":"jj"}}');
+        assert.equal(yield* config.resolveKind({ cwd }), "jj");
+        // SAFETY: Logger messages are arrays containing the logged error.
+        const [error] = messages[0] as ReadonlyArray<unknown>;
         assert.instanceOf(error, VcsProjectConfig.VcsProjectConfigError);
-        assert.equal(
-          error.message,
-          "Failed to inspect VCS project config at " + failedCandidate + ".",
-        );
         assert.deepInclude(error, {
           operation: "inspect",
           cwd,
-          configPath: failedCandidate,
+          configPath: path.join(cwd, "paperplane.vcs.json"),
           _tag: "VcsProjectConfigError",
         });
       }).pipe(Effect.provide(Logger.layer([logger], { mergeWithExisting: false })));
     });
-  });
 
-  it.layer(layerTest)("falls back to auto when no config exists", (it) => {
-    it.effect("returns auto", () =>
+    it.effect("falls back to auto when no config exists", () =>
       Effect.gen(function* () {
-        const fileSystem = yield* FileSystem.FileSystem;
-        const root = yield* fileSystem.makeTempDirectoryScoped({
-          prefix: "rove-vcs-config-test-",
-        });
-        const config = yield* VcsProjectConfig.VcsProjectConfig;
-        const kind = yield* config.resolveKind({ cwd: root });
-
-        assert.equal(kind, "auto");
+        const { config, root } = yield* fixture;
+        assert.equal(yield* config.resolveKind({ cwd: root }), "auto");
       }),
     );
-  });
 
-  it.layer(layerTest)("falls back to auto when config JSON is malformed", (it) => {
-    it.effect("returns auto and logs the failed operation and path", () => {
-      const messages: unknown[] = [];
-      const logger = Logger.make<unknown, void>(({ message }) => {
-        messages.push(message);
+    for (const [name, raw, operation, causeTag] of [
+      ["malformed JSON", "{not json", "decode", "SchemaError"],
+      ["invalid kind", '{"vcs":{"kind":"svn"}}', "decode", "SchemaError"],
+      ["unreadable path", undefined, "read", "PlatformError"],
+    ] as const) {
+      it.effect(`falls back to auto and logs context for ${name}`, () => {
+        const messages: unknown[] = [];
+        const logger = Logger.make<unknown, void>(({ message }) => messages.push(message));
+        return Effect.gen(function* () {
+          const { config, root, configPath, fileSystem } = yield* fixture;
+          if (raw === undefined) yield* fileSystem.makeDirectory(configPath);
+          else yield* fileSystem.writeFileString(configPath, raw);
+          assert.equal(yield* config.resolveKind({ cwd: root }), "auto");
+          // SAFETY: Logger messages are arrays containing the logged error.
+          const [error] = messages[0] as ReadonlyArray<unknown>;
+          assert.instanceOf(error, VcsProjectConfig.VcsProjectConfigError);
+          assert.equal(
+            error.message,
+            `Failed to ${operation} VCS project config at ${configPath}.`,
+          );
+          assert.deepInclude(error, {
+            operation,
+            cwd: root,
+            configPath,
+            _tag: "VcsProjectConfigError",
+          });
+          assert.deepInclude(error.cause, { _tag: causeTag });
+        }).pipe(Effect.provide(Logger.layer([logger], { mergeWithExisting: false })));
       });
-
-      return Effect.gen(function* () {
-        const fileSystem = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const root = yield* fileSystem.makeTempDirectoryScoped({
-          prefix: "rove-vcs-config-test-",
-        });
-        const configDir = path.join(root, ".rove");
-        yield* fileSystem.makeDirectory(configDir, { recursive: true });
-        yield* fileSystem.writeFileString(path.join(configDir, "vcs.json"), "{not json");
-
-        const config = yield* VcsProjectConfig.VcsProjectConfig;
-        const kind = yield* config.resolveKind({ cwd: root });
-
-        assert.equal(kind, "auto");
-        const // SAFETY: This fixture intentionally supplies the asserted collaborator contract.
-          [error] = messages[0] as ReadonlyArray<unknown>;
-        assert.instanceOf(error, VcsProjectConfig.VcsProjectConfigError);
-        assert.equal(
-          error.message,
-          "Failed to decode VCS project config at " + path.join(configDir, "vcs.json") + ".",
-        );
-        assert.deepInclude(error.cause, { _tag: "SchemaError" });
-        assert.deepInclude(error, {
-          operation: "decode",
-          cwd: root,
-          configPath: path.join(configDir, "vcs.json"),
-          _tag: "VcsProjectConfigError",
-        });
-      }).pipe(Effect.provide(Logger.layer([logger], { mergeWithExisting: false })));
-    });
-  });
-
-  it.layer(layerTest)("falls back to auto when the config path cannot be read", (it) => {
-    it.effect("retains the read failure context", () => {
-      const messages: unknown[] = [];
-      const logger = Logger.make<unknown, void>(({ message }) => {
-        messages.push(message);
-      });
-
-      return Effect.gen(function* () {
-        const fileSystem = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const root = yield* fileSystem.makeTempDirectoryScoped({
-          prefix: "rove-vcs-config-test-",
-        });
-        const configPath = path.join(root, ".rove", "vcs.json");
-        yield* fileSystem.makeDirectory(configPath, { recursive: true });
-
-        const config = yield* VcsProjectConfig.VcsProjectConfig;
-        const kind = yield* config.resolveKind({ cwd: root });
-
-        assert.equal(kind, "auto");
-        const // SAFETY: This fixture intentionally supplies the asserted collaborator contract.
-          [error] = messages[0] as ReadonlyArray<unknown>;
-        assert.instanceOf(error, VcsProjectConfig.VcsProjectConfigError);
-        assert.equal(error.message, "Failed to read VCS project config at " + configPath + ".");
-        assert.deepInclude(error.cause, { _tag: "PlatformError" });
-        assert.deepInclude(error, {
-          operation: "read",
-          cwd: root,
-          configPath,
-          _tag: "VcsProjectConfigError",
-        });
-      }).pipe(Effect.provide(Logger.layer([logger], { mergeWithExisting: false })));
-    });
-  });
-
-  it.layer(layerTest)("falls back to auto when config kind is invalid", (it) => {
-    it.effect("returns auto", () =>
-      Effect.gen(function* () {
-        const fileSystem = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const root = yield* fileSystem.makeTempDirectoryScoped({
-          prefix: "rove-vcs-config-test-",
-        });
-        const configDir = path.join(root, ".rove");
-        yield* fileSystem.makeDirectory(configDir, { recursive: true });
-        yield* fileSystem.writeFileString(
-          path.join(configDir, "vcs.json"),
-          `{"vcs":{"kind":"svn"}}`,
-        );
-
-        const config = yield* VcsProjectConfig.VcsProjectConfig;
-        const kind = yield* config.resolveKind({ cwd: root });
-
-        assert.equal(kind, "auto");
-      }),
-    );
+    }
   });
 });

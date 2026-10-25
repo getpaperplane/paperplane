@@ -1,4 +1,4 @@
-import type { EnvironmentId, ProjectId } from "@rove-code/contracts";
+import type { EnvironmentId, ProjectId } from "@getpaperplane/contracts";
 import { CircleIcon } from "lucide-react";
 import { Children, isValidElement, type ReactElement, type ReactNode } from "react";
 import { describe, expect, it, vi } from "vite-plus/test";
@@ -119,8 +119,8 @@ describe("pull request filters menu", () => {
         {
           id: projectId,
           environmentId,
-          title: "Rove Code",
-          workspaceRoot: "/work/rove",
+          title: "Paperplane",
+          workspaceRoot: "/work/paperplane",
         },
       ],
       projectId,
@@ -145,14 +145,14 @@ describe("pull request filters menu", () => {
         {
           id: projectId,
           environmentId: "env-1" as EnvironmentId,
-          title: "Rove Code · one",
-          workspaceRoot: "/work/rove-1",
+          title: "Paperplane · one",
+          workspaceRoot: "/work/paperplane-1",
         },
         {
           id: projectId,
           environmentId: "env-2" as EnvironmentId,
-          title: "Rove Code · two",
-          workspaceRoot: "/work/rove-2",
+          title: "Paperplane · two",
+          workspaceRoot: "/work/paperplane-2",
         },
       ],
       onProject,

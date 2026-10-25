@@ -4,7 +4,7 @@ import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 import type { CursorSettings } from "../settings.ts";
 import { CursorSettings as CursorSettingsSchema } from "../settings.ts";
-import { createModelCapabilities } from "@rove-code/shared/model";
+import { createModelCapabilities } from "@getpaperplane/shared/model";
 
 import {
   buildCursorCapabilitiesFromSdkModel,

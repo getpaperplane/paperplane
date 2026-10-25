@@ -1,4 +1,4 @@
-import { EnvironmentId, MessageId, ThreadId } from "@rove-code/contracts";
+import { EnvironmentId, MessageId, ThreadId } from "@getpaperplane/contracts";
 import { expect, it } from "vite-plus/test";
 import { serializeAssistantCitation } from "./assistantCitations.ts";
 import { searchableMessageSegments } from "./threadFindText.ts";
@@ -30,7 +30,7 @@ it("excludes structured context chips without joining text across them", () => {
     searchableMessageSegments({
       role: "user",
       streaming: false,
-      text: "before[hidden label](rove-context://v1/terminal/terminal_1)after",
+      text: "before[hidden label](paperplane-context://v1/terminal/terminal_1)after",
       context: { version: 1, records: [] },
     }),
   ).toEqual(["before", "after"]);
@@ -55,9 +55,9 @@ it("keeps context reference syntax inside code searchable", () => {
     searchableMessageSegments({
       role: "user",
       streaming: false,
-      text: "`[label](rove-context://v1/terminal/terminal_1)`",
+      text: "`[label](paperplane-context://v1/terminal/terminal_1)`",
     }),
-  ).toEqual(["[label](rove-context://v1/terminal/terminal_1)"]);
+  ).toEqual(["[label](paperplane-context://v1/terminal/terminal_1)"]);
 });
 
 it("excludes repeated legacy attachments containing literal context tags", () => {
@@ -130,12 +130,12 @@ it("indexes skill labels in prose but leaves links and code literal", () => {
       {
         role: "assistant",
         streaming: false,
-        text: "Use $test-rove-app now.\n\n`$test-rove-app`\n\n[$test-rove-app](https://example.com)",
+        text: "Use $test-paperplane-app now.\n\n`$test-paperplane-app`\n\n[$test-paperplane-app](https://example.com)",
       },
       undefined,
-      [{ name: "test-rove-app", displayName: "Rove App Testing" }],
+      [{ name: "test-paperplane-app", displayName: "Paperplane App Testing" }],
     ),
-  ).toEqual(["Use Rove App Testing now.", "$test-rove-app", "$test-rove-app"]);
+  ).toEqual(["Use Paperplane App Testing now.", "$test-paperplane-app", "$test-paperplane-app"]);
 });
 
 it("indexes the citation chip label instead of its link text", () => {

@@ -1,4 +1,4 @@
-import { ProviderDriverKind } from "@rove-code/contracts";
+import { ProviderDriverKind } from "@getpaperplane/contracts";
 import { describe, expect, it } from "vite-plus/test";
 
 import { resolveProviderInstanceAcpRegistryIconUrl } from "./ProviderInstanceIcon";

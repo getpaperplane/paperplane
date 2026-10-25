@@ -5,13 +5,13 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Schema from "effect/Schema";
 import * as ProcessRunner from "../processRunner.ts";
-import { nextSliceLimits, type SliceLimits } from "./roveMemoryBudget.ts";
+import { nextSliceLimits, type SliceLimits } from "./paperplaneMemoryBudget.ts";
 
 class SystemdSliceError extends Schema.TaggedError<SystemdSliceError>()("SystemdSliceError", {
   exitCode: Schema.NullOr(Schema.Number),
 }) {
   override get message() {
-    return "Could not configure Rove's systemd slice.";
+    return "Could not configure Paperplane's systemd slice.";
   }
 }
 
@@ -100,11 +100,14 @@ export const configureSlice = Effect.fn("configureSlice")(function* (
     memoryCurrent: usage.trim() === "" ? Infinity : Number(usage),
   });
   if (next.deferred)
-    yield* Effect.logWarning("Rove slice memory ceiling reduction deferred until usage falls", {
-      unit,
-      requestedMax: requested.max,
-      retainedMax: next.max,
-    });
+    yield* Effect.logWarning(
+      "Paperplane slice memory ceiling reduction deferred until usage falls",
+      {
+        unit,
+        requestedMax: requested.max,
+        retainedMax: next.max,
+      },
+    );
   const format = (value: number) => (Number.isFinite(value) ? String(value) : "infinity");
   yield* runSystemctl([
     "set-property",

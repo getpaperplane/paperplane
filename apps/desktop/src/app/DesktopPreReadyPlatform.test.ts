@@ -1,5 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -32,7 +32,7 @@ vi.mock("electron", () => ({
     setDesktopName: setDesktopNameMock,
     getVersion: () => "0.0.37",
     isPackaged: true,
-    getAppPath: () => "/tmp/.mount_Rove/resources/app.asar",
+    getAppPath: () => "/tmp/.mount_Paperplane/resources/app.asar",
     commandLine: {
       appendSwitch: appendSwitchMock,
       getSwitchValue: getSwitchValueMock,
@@ -147,17 +147,18 @@ describe("DesktopPreReadyPlatform", () => {
     vi.stubEnv("XDG_DATA_HOME", "/xdg");
     vi.stubEnv("APPIMAGE", "/Applications/current.AppImage");
     getSwitchValueMock.mockReturnValue("");
-    let desktopName = "rove.desktop";
+    let desktopName = "paperplane.desktop";
     let desktopEntry = previousEntry;
     let iconInstalled = false;
     copyFileSyncMock.mockImplementation((_source: string, destination: string) => {
-      iconInstalled = destination === "/xdg/icons/io.github.hafiezul.rove.desktop.png";
+      iconInstalled = destination === "/xdg/icons/io.github.getpaperplane.paperplane.desktop.png";
     });
     setDesktopNameMock.mockImplementation((name: string) => {
       desktopName = name;
     });
     writeFileSyncMock.mockImplementation((path: string, contents: string) => {
-      if (path === "/xdg/applications/io.github.hafiezul.rove.desktop") desktopEntry = contents;
+      if (path === "/xdg/applications/io.github.getpaperplane.paperplane.desktop")
+        desktopEntry = contents;
     });
 
     return Effect.scoped(
@@ -173,13 +174,13 @@ describe("DesktopPreReadyPlatform", () => {
           ),
         );
         const identity = yield* Effect.promise(() => portalIdentity);
-        assert.equal(identity.desktopName, "io.github.hafiezul.rove.desktop");
+        assert.equal(identity.desktopName, "io.github.getpaperplane.paperplane.desktop");
         assert.include(identity.desktopEntry ?? "", 'Exec="/Applications/current.AppImage" %U');
-        assert.include(identity.desktopEntry ?? "", "Name=Rove Code (Beta)");
-        assert.include(identity.desktopEntry ?? "", "MimeType=x-scheme-handler/rove;");
+        assert.include(identity.desktopEntry ?? "", "Name=Paperplane (Beta)");
+        assert.include(identity.desktopEntry ?? "", "MimeType=x-scheme-handler/paperplane;");
         assert.include(
           identity.desktopEntry ?? "",
-          "Icon=/xdg/icons/io.github.hafiezul.rove.desktop.png",
+          "Icon=/xdg/icons/io.github.getpaperplane.paperplane.desktop.png",
         );
         assert.isTrue(identity.iconInstalled);
       }),
@@ -206,7 +207,7 @@ describe("DesktopPreReadyPlatform", () => {
     return Effect.gen(function* () {
       yield* DesktopPreReadyPlatform.make;
       const contents = writeFileSyncMock.mock.calls[0]?.[1];
-      assert.include(contents, "MimeType=x-scheme-handler/rove;");
+      assert.include(contents, "MimeType=x-scheme-handler/paperplane;");
       assert.include(contents, "Icon=");
       assert.equal(setDesktopNameMock.mock.calls.length, 1);
     }).pipe(Effect.provideService(HostProcess.Platform, "linux"));
@@ -217,7 +218,7 @@ describe("DesktopPreReadyPlatform", () => {
     () =>
       Effect.gen(function* () {
         class ClerkShaped extends Context.Service<ClerkShaped, { readonly ready: true }>()(
-          "@rove-code/desktop/app/DesktopPreReadyPlatform.test/ClerkShaped",
+          "@getpaperplane/desktop/app/DesktopPreReadyPlatform.test/ClerkShaped",
         ) {}
 
         const events: Array<string> = [];

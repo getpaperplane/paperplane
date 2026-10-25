@@ -11,14 +11,14 @@ import * as SynchronizedRef from "effect/SynchronizedRef";
 
 import * as ElectronDialog from "../electron/ElectronDialog.ts";
 
-const PREVIEW_PARTITION_PREFIX = "persist:rove-preview-";
+const PREVIEW_PARTITION_PREFIX = "persist:paperplane-preview-";
 /**
  * Incognito partitions deliberately omit the `persist:` prefix, which is what
  * makes Chromium keep them in memory and discard them with the process. They
  * still carry the product prefix so `isPartition` can admit them — the
  * `will-attach-webview` gate rejects anything it does not recognise.
  */
-const PREVIEW_EPHEMERAL_PARTITION_PREFIX = "rove-preview-ephemeral-";
+const PREVIEW_EPHEMERAL_PARTITION_PREFIX = "paperplane-preview-ephemeral-";
 const PROFILE_PARTITION_MARKER = "profile-";
 
 export type BrowserSessionPartitionNamespace = "profile";
@@ -37,7 +37,7 @@ const ALLOWED_PREVIEW_PERMISSIONS: ReadonlySet<string> = new Set([
   "geolocation",
   // The Fullscreen API. `DesktopWindow` disables HTML fullscreen window resizing
   // for the app window and every preview guest, so a page that goes fullscreen
-  // fills its own webview instead of taking over the whole Rove window.
+  // fills its own webview instead of taking over the whole Paperplane window.
   "fullscreen",
   // Deliberately NOT local-fonts: preview sessions run untrusted web content,
   // and silently granting it would hand every page the user's installed-font
@@ -165,7 +165,7 @@ export class BrowserSession extends Context.Service<
       partitions?: ReadonlyArray<string>,
     ) => Effect.Effect<void, BrowserSessionCacheClearError>;
   }
->()("@rove-code/desktop/preview/BrowserSession") {}
+>()("@getpaperplane/desktop/preview/BrowserSession") {}
 
 /**
  * Restricts a clear to the given partitions. Omitting them keeps the historical

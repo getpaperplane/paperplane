@@ -11,7 +11,7 @@ import {
   RunAttemptId,
   RunId,
   ThreadId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { CursorSettings } from "../settings.ts";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -22,10 +22,10 @@ import * as Path from "effect/Path";
 import * as Schema from "effect/Schema";
 import * as Stream from "effect/Stream";
 
-import * as TestProviderHost from "@rove-code/provider-testing/TestProviderHost";
-import * as IdAllocator from "@rove-code/provider-core/server/IdAllocator";
-import * as McpProviderSessions from "@rove-code/provider-core/server/McpProviderSessions";
-import * as ProviderAdapter from "@rove-code/provider-core/server/ProviderAdapter";
+import * as TestProviderHost from "@getpaperplane/provider-testing/TestProviderHost";
+import * as IdAllocator from "@getpaperplane/provider-core/server/IdAllocator";
+import * as McpProviderSessions from "@getpaperplane/provider-core/server/McpProviderSessions";
+import * as ProviderAdapter from "@getpaperplane/provider-core/server/ProviderAdapter";
 import {
   cursorMcpServers,
   cursorRuntimeAgentPolicy,
@@ -907,7 +907,7 @@ describe("CursorAdapterV2", () => {
     };
 
     assert.deepEqual(cursorMcpServers(mcpSession), {
-      rove: {
+      paperplane: {
         type: "http",
         url: "http://127.0.0.1:43123/mcp",
         headers: {

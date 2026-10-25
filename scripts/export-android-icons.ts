@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-// Renders Android backgrounds from Icon Composer SVGs and the foreground from Rove's
+// Renders Android backgrounds from Icon Composer SVGs and the foreground from Paperplane's
 // transparent monochrome artwork. Full app icons cannot be used as foregrounds:
 // Android would mask their rounded-square silhouette a second time.
 //
@@ -25,7 +25,7 @@ const SPLASH_CANVAS = 1152;
 // The blueprint annotation layer retains its original 128pt coordinate space.
 const TEXT = { x: 15.53, y: 37, width: 94.5, height: 57 };
 const ANNOTATION_FRACTION = 0.48;
-// Keep every visible pixel of Rove's folded R inside Android's circular safe zone.
+// Keep every visible pixel of Paperplane's folded R inside Android's circular safe zone.
 const MARK_FRACTION = 0.45;
 // Icon Composer positions layers on a 1024pt canvas, with translation relative to center.
 const COMPOSER_CANVAS_PT = 1024;
@@ -103,7 +103,7 @@ export const renderForeground = Effect.fn("androidIcons.renderForeground")(funct
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   // The Icon Composer projects now use opaque logo.png artwork, not text.svg.
-  // Reuse the shipped transparent Rove mark instead of extracting obsolete T3 paths.
+  // Reuse the shipped transparent Paperplane mark instead of extracting obsolete T3 paths.
   const source = yield* fs.readFile(
     path.join(repositoryRoot, OUTPUT_DIRECTORY, "android-icon-mark.png"),
   );

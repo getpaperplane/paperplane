@@ -7,11 +7,11 @@ import {
   type ComputerUseControlInput,
   type ComputerUseStatus,
   type ThreadId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   Environment as HostProcessEnvironment,
   Platform as HostProcessPlatform,
-} from "@rove-code/shared/HostProcess";
+} from "@getpaperplane/shared/HostProcess";
 import type { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import type { Tool as CuaMcpTool } from "@modelcontextprotocol/sdk/types.js";
 import * as Context from "effect/Context";
@@ -42,10 +42,10 @@ import {
 const CUA_DRIVER_APP = "/Applications/CuaDriver.app";
 /** Cua's official installer. It downloads from Cua's GitHub Releases and verifies the app signature. */
 const INSTALL_SCRIPT_URL = "https://cua.ai/driver/install.sh";
-/** Cua AI, Inc.'s Developer ID team. Rove runs no binary at the Cua path without it. */
+/** Cua AI, Inc.'s Developer ID team. Paperplane runs no binary at the Cua path without it. */
 const CUA_SIGNING_REQUIREMENT =
   'anchor apple generic and identifier "com.trycua.driver" and certificate leaf[subject.OU] = "YCK386LBJ7"';
-/** An idle Cua daemon costs ~57 MB and ~2% CPU; one Rove started quits after this long unused. */
+/** An idle Cua daemon costs ~57 MB and ~2% CPU; one Paperplane started quits after this long unused. */
 export const IDLE_TIMEOUT = Duration.minutes(5);
 const CONNECT_TIMEOUT = Duration.seconds(30);
 const CALL_TIMEOUT_MS = 120_000;
@@ -118,7 +118,7 @@ const lastLines = (output: ProcessRunner.ProcessRunOutput) =>
     .join(" ");
 
 const untrustedDetail = (appPath: string) =>
-  `The app at ${appPath} is not signed by Cua AI, Inc., so Rove will not run it. Reinstall Cua Driver from Settings → Integrations.`;
+  `The app at ${appPath} is not signed by Cua AI, Inc., so Paperplane will not run it. Reinstall Cua Driver from Settings → Integrations.`;
 
 export class CuaDriver extends Context.Service<
   CuaDriver,
@@ -139,7 +139,7 @@ export class CuaDriver extends Context.Service<
       expectedPolicy?: CuaCatalog["policy"],
     ) => Effect.Effect<McpSchema.CallToolResult, CuaDriverUnavailableError>;
   }
->()("@rove-code/server/computerUse/CuaDriver") {}
+>()("@getpaperplane/server/computerUse/CuaDriver") {}
 
 export const make = Effect.fn("CuaDriver.make")(function* (options?: {
   readonly appPath?: string;
@@ -218,7 +218,7 @@ export const make = Effect.fn("CuaDriver.make")(function* (options?: {
   const lock = yield* Semaphore.make(1);
   // Cua's parser has no session argument, so capture ownership must be transport-local.
   const connections = new Map<string, Connection>();
-  /** True only when Rove launched the running daemon; Rove never quits one it did not start. */
+  /** True only when Paperplane launched the running daemon; Paperplane never quits one it did not start. */
   let ownsDaemon = false;
   let signatureVerified = false;
   let verifiedWindowsPath: string | undefined;
@@ -311,7 +311,7 @@ export const make = Effect.fn("CuaDriver.make")(function* (options?: {
         Effect.mapError((cause) => new CuaDriverUnavailableError({ detail: cause.message })),
       );
   });
-  /** Ends Rove's connections; guest leases survive only idle transport retirement. */
+  /** Ends Paperplane's connections; guest leases survive only idle transport retirement. */
   const release = lock.withPermit(releaseUnlocked).pipe(
     Effect.catch((cause) => Effect.logWarning(cause.detail)),
     Effect.uninterruptible,
@@ -369,7 +369,7 @@ export const make = Effect.fn("CuaDriver.make")(function* (options?: {
           import("@modelcontextprotocol/sdk/client/stdio.js"),
         ]);
         signal.throwIfAborted();
-        const client = new Client({ name: "rove-code", version: "1.0.0" });
+        const client = new Client({ name: "paperplane", version: "1.0.0" });
         signal.addEventListener("abort", () => void client.close(), { once: true });
         try {
           await client.connect(
@@ -428,7 +428,7 @@ export const make = Effect.fn("CuaDriver.make")(function* (options?: {
             },
             idleTimer: undefined,
           };
-          // A daemon quit from outside Rove closes the transport; reconnect on the next call.
+          // A daemon quit from outside Paperplane closes the transport; reconnect on the next call.
           client.onclose = () => {
             if (connections.get(key) === next) connections.delete(key);
           };
@@ -680,7 +680,7 @@ export const make = Effect.fn("CuaDriver.make")(function* (options?: {
     yield* run(["telemetry", "disable"]).pipe(Effect.ignore);
   });
 
-  // The Scheduled Task, not Rove, owns the interactive daemon. Never mark it owned.
+  // The Scheduled Task, not Paperplane, owns the interactive daemon. Never mark it owned.
   const startWindows = (action: "install" | "start") =>
     Effect.gen(function* () {
       const commands =

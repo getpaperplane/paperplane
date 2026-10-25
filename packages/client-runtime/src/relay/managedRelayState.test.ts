@@ -1,10 +1,10 @@
-import { EnvironmentId } from "@rove-code/contracts";
+import { EnvironmentId } from "@getpaperplane/contracts";
 import {
   RelayAuthInvalidError,
   type RelayClientDeviceRecord,
   type RelayClientEnvironmentRecord,
   type RelayEnvironmentStatusResponse,
-} from "@rove-code/contracts/relay";
+} from "@getpaperplane/contracts/relay";
 import { describe, expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";

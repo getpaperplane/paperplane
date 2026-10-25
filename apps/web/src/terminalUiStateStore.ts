@@ -5,8 +5,8 @@
  * API constrained to store actions/selectors.
  */
 
-import { parseScopedThreadKey, scopedThreadKey } from "@rove-code/client-runtime/environment";
-import { type ScopedThreadRef } from "@rove-code/contracts";
+import { parseScopedThreadKey, scopedThreadKey } from "@getpaperplane/client-runtime/environment";
+import { type ScopedThreadRef } from "@getpaperplane/contracts";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { resolveStorage } from "./lib/storage";
@@ -28,7 +28,7 @@ interface ThreadTerminalUiState {
 }
 
 // Keep the old storage key so existing drawer layout preferences migrate.
-const TERMINAL_UI_STATE_STORAGE_KEY = "rove:terminal-state:v1";
+const TERMINAL_UI_STATE_STORAGE_KEY = "paperplane:terminal-state:v1";
 
 interface PersistedTerminalUiStateStoreState {
   terminalUiStateByThreadKey?: Record<string, ThreadTerminalUiState>;

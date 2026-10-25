@@ -385,7 +385,7 @@ export interface EnvironmentSessionPrincipalShape {
 export class EnvironmentAuthenticatedPrincipal extends Context.Service<
   EnvironmentAuthenticatedPrincipal,
   EnvironmentSessionPrincipalShape
->()("@rove-code/contracts/environmentHttp/EnvironmentAuthenticatedPrincipal") {}
+>()("@getpaperplane/contracts/environmentHttp/EnvironmentAuthenticatedPrincipal") {}
 
 export class EnvironmentAuthenticatedAuth extends HttpApiMiddleware.Service<
   EnvironmentAuthenticatedAuth,
@@ -420,11 +420,11 @@ export const EnvironmentCloudLinkStateResult = Schema.Struct({
   // Optional so newer clients tolerate older environment servers.
   managedTunnelActive: Schema.optional(Schema.Boolean),
   publishAgentActivity: Schema.Boolean,
-  // Opt-in: Rove Connect holds webhook requests while this environment is
+  // Opt-in: Paperplane Connect holds webhook requests while this environment is
   // offline. Optional so newer clients tolerate older environment servers.
   holdWebhooksWhileOffline: Schema.optional(Schema.Boolean),
   // The relay rejected this link's credential, usually because the environment
-  // was deregistered from Rove Connect. The link stays stored until it is linked
+  // was deregistered from Paperplane Connect. The link stays stored until it is linked
   // again. Optional so newer clients tolerate older environment servers.
   linkRevoked: Schema.optional(Schema.Boolean),
 });
@@ -454,7 +454,7 @@ export type AuthOtherClientSessionsRevokeResult = typeof AuthOtherClientSessions
 
 class EnvironmentMetadataHttpApi extends HttpApiGroup.make("metadata")
   .add(
-    HttpApiEndpoint.get("descriptor", "/.well-known/rove/environment", {
+    HttpApiEndpoint.get("descriptor", "/.well-known/paperplane/environment", {
       success: ExecutionEnvironmentDescriptor,
     }),
   )
@@ -734,7 +734,7 @@ class EnvironmentConnectHttpApi extends HttpApiGroup.make("connect")
     }).middleware(EnvironmentAuthenticatedAuth),
   )
   .add(
-    HttpApiEndpoint.post("health", "/api/rove-connect/health", {
+    HttpApiEndpoint.post("health", "/api/paperplane-connect/health", {
       payload: RelayCloudEnvironmentHealthRequest,
       success: RelayEnvironmentHealthResponse,
       error: EnvironmentHttpCloudErrors,
@@ -748,7 +748,7 @@ class EnvironmentConnectHttpApi extends HttpApiGroup.make("connect")
     }),
   )
   .add(
-    HttpApiEndpoint.post("roveMintCredential", "/api/rove-connect/mint-credential", {
+    HttpApiEndpoint.post("paperplaneMintCredential", "/api/paperplane-connect/mint-credential", {
       payload: RelayCloudMintCredentialRequest,
       success: RelayEnvironmentMintResponse,
       error: EnvironmentHttpCloudErrors,

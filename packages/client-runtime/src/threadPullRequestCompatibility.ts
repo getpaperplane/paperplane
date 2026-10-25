@@ -3,8 +3,8 @@ import type {
   ProjectId,
   ThreadId,
   ThreadPullRequestKey,
-} from "@rove-code/contracts";
-import { normalizeThreadPullRequestKey } from "@rove-code/shared/threadPullRequests";
+} from "@getpaperplane/contracts";
+import { normalizeThreadPullRequestKey } from "@getpaperplane/shared/threadPullRequests";
 
 type LinkingCapabilities = Pick<
   ExecutionEnvironmentCapabilities,

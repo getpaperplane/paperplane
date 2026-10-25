@@ -1,4 +1,4 @@
-import { ProjectId, ThreadId } from "@rove-code/contracts";
+import { ProjectId, ThreadId } from "@getpaperplane/contracts";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 import { testDouble } from "~/testDouble";
 
@@ -150,10 +150,10 @@ describe("uiStateStore pure functions", () => {
   });
 
   it("stores the sidebar project scope and resets it to all projects", () => {
-    const scoped = setSidebarProjectScopeKey(makeUiState(), "github.com/rovecode/rove");
+    const scoped = setSidebarProjectScopeKey(makeUiState(), "github.com/paperplane/paperplane");
 
-    expect(scoped.sidebarProjectScopeKey).toBe("github.com/rovecode/rove");
-    expect(setSidebarProjectScopeKey(scoped, "github.com/rovecode/rove")).toBe(scoped);
+    expect(scoped.sidebarProjectScopeKey).toBe("github.com/paperplane/paperplane");
+    expect(setSidebarProjectScopeKey(scoped, "github.com/paperplane/paperplane")).toBe(scoped);
     expect(setSidebarProjectScopeKey(scoped, null).sidebarProjectScopeKey).toBeNull();
     expect(setSidebarProjectScopeKey(scoped, "").sidebarProjectScopeKey).toBeNull();
   });
@@ -341,13 +341,15 @@ describe("uiStateStore persistence", () => {
   });
 
   it("restores the sidebar project scope across reloads", () => {
-    persistState(makeUiState({ sidebarProjectScopeKey: "github.com/rovecode/rove" }));
+    persistState(makeUiState({ sidebarProjectScopeKey: "github.com/paperplane/paperplane" }));
 
     const persisted = JSON.parse(
       localStorageStub.getItem(PERSISTED_STATE_KEY) ?? "{}",
     ) as PersistedUiState;
 
-    expect(parsePersistedState(persisted).sidebarProjectScopeKey).toBe("github.com/rovecode/rove");
+    expect(parsePersistedState(persisted).sidebarProjectScopeKey).toBe(
+      "github.com/paperplane/paperplane",
+    );
   });
 
   it("drops the temporary expanded-only migration fallback when rewriting state", () => {

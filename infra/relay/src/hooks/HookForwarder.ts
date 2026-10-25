@@ -13,14 +13,14 @@ import * as HttpClient from "effect/http/HttpClient";
 import type * as HttpServerRequest from "effect/http/HttpServerRequest";
 import * as HttpServerResponse from "effect/http/HttpServerResponse";
 import * as HttpApiBuilder from "effect/http-api/HttpApiBuilder";
-import { EnvironmentId } from "@rove-code/contracts";
-import { RelayApi, type RelayHookDeliveryProofPayload } from "@rove-code/contracts/relay";
+import { EnvironmentId } from "@getpaperplane/contracts";
+import { RelayApi, type RelayHookDeliveryProofPayload } from "@getpaperplane/contracts/relay";
 import {
   normalizeRelayIssuer,
   RELAY_HOOK_DELIVERY_HEADER,
   RELAY_HOOK_DELIVERY_TYP,
   signRelayJwt,
-} from "@rove-code/shared/relayJwt";
+} from "@getpaperplane/shared/relayJwt";
 
 import * as RelayConfiguration from "../Config.ts";
 import { MANAGED_ENDPOINT_KEY_PATTERN } from "../deploymentConfig.ts";
@@ -59,8 +59,8 @@ const DROPPED_REQUEST_HEADERS = new Set([
   "cookie",
   "x-real-ip",
   // Only the relay may set this; a sender could otherwise collide delivery ids.
-  "x-rove-relay-delivery-id",
-  "x-rove-relay-received-at",
+  "x-paperplane-relay-delivery-id",
+  "x-paperplane-relay-received-at",
   RELAY_HOOK_DELIVERY_HEADER,
   // The environment trusts trace context only from the relay, which sets its own.
   "traceparent",
@@ -118,7 +118,7 @@ export class HookRateLimiter extends Context.Service<
     /** One endpoint's overall budget, keyed by its endpoint key. */
     readonly allowEndpoint: (endpointKey: string) => Effect.Effect<boolean>;
   }
->()("rove-relay/hooks/HookForwarder/HookRateLimiter") {}
+>()("paperplane-relay/hooks/HookForwarder/HookRateLimiter") {}
 
 export class HookForwarder extends Context.Service<
   HookForwarder,
@@ -127,7 +127,7 @@ export class HookForwarder extends Context.Service<
       request: HttpServerRequest.HttpServerRequest,
     ) => Effect.Effect<HttpServerResponse.HttpServerResponse>;
   }
->()("rove-relay/hooks/HookForwarder") {}
+>()("paperplane-relay/hooks/HookForwarder") {}
 
 class HookBodyTooLarge extends Schema.TaggedError<HookBodyTooLarge>()("HookBodyTooLarge", {}) {}
 
@@ -256,7 +256,7 @@ const make = Effect.gen(function* () {
         typ: RELAY_HOOK_DELIVERY_TYP,
         payload: {
           iss: normalizeRelayIssuer(settings.relayIssuer),
-          aud: `rove-env:${input.environmentId}`,
+          aud: `paperplane-env:${input.environmentId}`,
           sub: input.environmentId,
           jti: input.jti,
           iat: now,

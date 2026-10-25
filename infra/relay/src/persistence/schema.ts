@@ -3,7 +3,7 @@ import type {
   RelayAgentActivityState,
   RelayAgentAwarenessPreferences,
   RelayManagedEndpointOrigin,
-} from "@rove-code/contracts/relay";
+} from "@getpaperplane/contracts/relay";
 import {
   boolean,
   index,
@@ -66,7 +66,7 @@ export const relayEnvironmentLinks = pgTable(
   {
     userId: varchar("user_id", { length: 191 }).notNull(),
     environmentId: varchar("environment_id", { length: 191 }).notNull(),
-    environmentLabel: text("environment_label").notNull().default("Rove Environment"),
+    environmentLabel: text("environment_label").notNull().default("Paperplane Environment"),
     environmentPublicKey: text("environment_public_key").notNull(),
     endpointHttpBaseUrl: text("endpoint_http_base_url").notNull(),
     endpointWsBaseUrl: text("endpoint_ws_base_url").notNull(),

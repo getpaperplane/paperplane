@@ -1,10 +1,10 @@
-import { CommandId, type OrchestrationV2ThreadProjection } from "@rove-code/contracts";
+import { CommandId, type OrchestrationV2ThreadProjection } from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Ref from "effect/Ref";
 
-import * as IdAllocator from "@rove-code/provider-core/server/IdAllocator";
-import * as ProviderContinuationRequests from "@rove-code/provider-core/server/ProviderContinuationRequests";
+import * as IdAllocator from "@getpaperplane/provider-core/server/IdAllocator";
+import * as ProviderContinuationRequests from "@getpaperplane/provider-core/server/ProviderContinuationRequests";
 import * as ThreadManagementService from "./ThreadManagementService.ts";
 import { isUndeliveredMailboxSteer } from "./NotificationMailbox.ts";
 

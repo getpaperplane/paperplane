@@ -1,4 +1,4 @@
-import { SourceControlProviderKind } from "@rove-code/contracts";
+import { SourceControlProviderKind } from "@getpaperplane/contracts";
 import {
   EnvironmentId,
   ProjectId,
@@ -6,8 +6,8 @@ import {
   type ScopedThreadRef,
   type PullRequestDetailView,
   type ThreadPullRequestLink,
-} from "@rove-code/contracts";
-import { DEFAULT_CLIENT_SETTINGS } from "@rove-code/contracts/settings";
+} from "@getpaperplane/contracts";
+import { DEFAULT_CLIENT_SETTINGS } from "@getpaperplane/contracts/settings";
 import { act, type ReactNode, type ReactElement, type ComponentProps } from "react";
 import { create, type ReactTestRenderer } from "react-test-renderer";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";

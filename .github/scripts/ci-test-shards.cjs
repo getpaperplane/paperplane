@@ -46,7 +46,7 @@ if (require.main === module) {
   );
   console.log(`packages=${shard.packages.join(" ")}`);
   console.log(`has_packages=${shard.packages.length > 0}`);
-  console.log(`desktop=${shard.packages.includes("@rove-code/desktop")}`);
+  console.log(`desktop=${shard.packages.includes("@getpaperplane/desktop")}`);
 }
 
 module.exports = { assignShards, DEFAULT_WEIGHT };

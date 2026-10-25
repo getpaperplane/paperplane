@@ -1,4 +1,4 @@
-import type { PullRequestReaction, PullRequestReactionContent } from "@rove-code/contracts";
+import type { PullRequestReaction, PullRequestReactionContent } from "@getpaperplane/contracts";
 import { describe, expect, it } from "vite-plus/test";
 
 import {

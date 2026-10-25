@@ -79,7 +79,7 @@ export class RelayConfiguration extends Context.Service<
     /** Canary-only override of the legacy grace period; ignored on prod. */
     readonly legacyTunnelGraceMinutes?: number;
   }
->()("rove-relay/Config/RelayConfiguration") {}
+>()("paperplane-relay/Config/RelayConfiguration") {}
 
 export const make = (configuration: RelayConfiguration["Service"]) =>
   RelayConfiguration.of(configuration);

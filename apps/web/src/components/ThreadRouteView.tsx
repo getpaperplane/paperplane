@@ -1,5 +1,5 @@
-import { scopedThreadKey } from "@rove-code/client-runtime/environment";
-import type { ScopedThreadRef } from "@rove-code/contracts";
+import { scopedThreadKey } from "@getpaperplane/client-runtime/environment";
+import type { ScopedThreadRef } from "@getpaperplane/contracts";
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 

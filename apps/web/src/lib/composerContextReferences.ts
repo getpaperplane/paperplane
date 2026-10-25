@@ -1,9 +1,9 @@
-import type { ComposerContextId, ComposerContextKind } from "@rove-code/contracts";
+import type { ComposerContextId, ComposerContextKind } from "@getpaperplane/contracts";
 import {
   collectComposerContextReferences,
   formatComposerContextReference,
   replaceComposerContextReferences,
-} from "@rove-code/shared/composerContextReferences";
+} from "@getpaperplane/shared/composerContextReferences";
 
 /**
  * Prompt-string operations on inline context references, independent of kind. Each context

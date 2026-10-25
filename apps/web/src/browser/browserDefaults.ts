@@ -20,7 +20,7 @@ import {
   type DesktopPreviewTabDefaults,
   type PreviewAppearancePreference,
   type PreviewViewportSetting,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 
 import {
   ensureClientSettingsHydrated,

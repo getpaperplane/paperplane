@@ -1,4 +1,4 @@
-import type { ProviderOptionSelection } from "@rove-code/contracts";
+import type { ProviderOptionSelection } from "@getpaperplane/contracts";
 import { appAtomRegistry } from "./atom-registry";
 import {
   modelOptionMemoryAtom,

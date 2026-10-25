@@ -1,11 +1,11 @@
-import type { HostHealthReport } from "@rove-code/contracts";
+import type { HostHealthReport } from "@getpaperplane/contracts";
 import { describe, expect, it } from "vite-plus/test";
 
 import {
   formatHostSwap,
-  formatRoveCeiling,
+  formatPaperplaneCeiling,
   hostMemoryNotice,
-  roveCeilingPercent,
+  paperplaneCeilingPercent,
 } from "./hostHealth.ts";
 
 const GIB = 1024 ** 3;
@@ -18,7 +18,7 @@ function report(overrides: Partial<HostHealthReport> = {}): HostHealthReport {
     swapTotalBytes: 2 * GIB,
     swapFreeBytes: 0.5 * GIB,
     memoryPressure: true,
-    roveMemory: null,
+    paperplaneMemory: null,
     findings: [],
     ...overrides,
   };
@@ -37,14 +37,14 @@ describe("hostMemoryNotice", () => {
   });
 });
 
-describe("formatRoveCeiling", () => {
+describe("formatPaperplaneCeiling", () => {
   it("is null when the host has no ceiling", () => {
-    expect(formatRoveCeiling(report())).toBeNull();
+    expect(formatPaperplaneCeiling(report())).toBeNull();
   });
 
   it("shows usage against the limit and swap", () => {
     const value = report({
-      roveMemory: {
+      paperplaneMemory: {
         limitBytes: 4.3 * GIB,
         currentBytes: 2.1 * GIB,
         swapLimitBytes: 2.9 * GIB,
@@ -52,13 +52,13 @@ describe("formatRoveCeiling", () => {
         oomKills: 0,
       },
     });
-    expect(formatRoveCeiling(value)).toBe("2.1 / 4.3 GiB used · swap 0.4 / 2.9 GiB");
-    expect(roveCeilingPercent(value)).toBeCloseTo((2.1 / 4.3) * 100);
+    expect(formatPaperplaneCeiling(value)).toBe("2.1 / 4.3 GiB used · swap 0.4 / 2.9 GiB");
+    expect(paperplaneCeilingPercent(value)).toBeCloseTo((2.1 / 4.3) * 100);
   });
 
   it("marks an unlimited ceiling and has no percent", () => {
     const value = report({
-      roveMemory: {
+      paperplaneMemory: {
         limitBytes: null,
         currentBytes: 2.1 * GIB,
         swapLimitBytes: null,
@@ -66,8 +66,8 @@ describe("formatRoveCeiling", () => {
         oomKills: 0,
       },
     });
-    expect(formatRoveCeiling(value)).toBe("2.1 GiB used · unlimited");
-    expect(roveCeilingPercent(value)).toBeNull();
+    expect(formatPaperplaneCeiling(value)).toBe("2.1 GiB used · unlimited");
+    expect(paperplaneCeilingPercent(value)).toBeNull();
   });
 });
 

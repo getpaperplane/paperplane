@@ -4,7 +4,7 @@ import type {
   DesktopPreviewColorScheme,
   PreviewViewportSetting,
   ScopedThreadRef,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { useShallow } from "zustand/react/shallow";
 import { useCallback, useEffect, useRef, useState } from "react";
 

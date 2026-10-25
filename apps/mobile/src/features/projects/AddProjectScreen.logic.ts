@@ -1,6 +1,6 @@
-import { canCreateProjectInEnvironment } from "@rove-code/client-runtime/operations/projects";
-import type { EnvironmentConnectionPhase } from "@rove-code/client-runtime/connection";
-import type { EnvironmentId } from "@rove-code/contracts";
+import { canCreateProjectInEnvironment } from "@getpaperplane/client-runtime/operations/projects";
+import type { EnvironmentConnectionPhase } from "@getpaperplane/client-runtime/connection";
+import type { EnvironmentId } from "@getpaperplane/contracts";
 
 export function resolveAddProjectEnvironment<
   T extends {

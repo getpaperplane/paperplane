@@ -1,8 +1,8 @@
-import type { ProjectId } from "@rove-code/contracts";
+import type { ProjectId } from "@getpaperplane/contracts";
 import type {
   SidebarProjectSortOrder,
   SidebarThreadSortOrder,
-} from "@rove-code/contracts/settings";
+} from "@getpaperplane/contracts/settings";
 import type { EnvironmentThreadShell } from "./models.ts";
 import * as Arr from "effect/Array";
 import * as Order from "effect/Order";

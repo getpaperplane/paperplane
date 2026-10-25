@@ -71,8 +71,8 @@ it.effect("makes revoked authorization actionable and non-retryable", () =>
 
     expect(error).toMatchObject({ _tag: "RelayRequestError", rejection: "unauthorized" });
     expect(error.message).toContain("invalid_bearer");
-    expect(error.message).toContain("rove connect login");
-    expect(error.message).toContain("rove connect logout");
+    expect(error.message).toContain("paperplane connect login");
+    expect(error.message).toContain("paperplane connect logout");
     expect(error.message).toContain("Trace ID: trace-auth");
   }),
 );

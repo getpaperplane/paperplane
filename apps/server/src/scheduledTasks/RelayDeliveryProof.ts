@@ -6,13 +6,13 @@
  * trusted alongside a proof the relay signed with its mint key. A request
  * without a valid proof is handled as a direct request.
  */
-import { RelayHookDeliveryProofPayload } from "@rove-code/contracts/relay";
+import { RelayHookDeliveryProofPayload } from "@getpaperplane/contracts/relay";
 import {
   normalizeRelayIssuer,
   RELAY_HOOK_DELIVERY_HEADER,
   RELAY_HOOK_DELIVERY_TYP,
   verifyRelayJwt,
-} from "@rove-code/shared/relayJwt";
+} from "@getpaperplane/shared/relayJwt";
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -42,7 +42,7 @@ export class RelayDeliveryProof extends Context.Service<
       Option.Option<{ readonly deliveryId: string; readonly receivedAt: string }>
     >;
   }
->()("@rove-code/server/scheduledTasks/RelayDeliveryProof") {}
+>()("@getpaperplane/server/scheduledTasks/RelayDeliveryProof") {}
 
 const make = Effect.gen(function* () {
   const secrets = yield* ServerSecretStore.ServerSecretStore;
@@ -50,8 +50,8 @@ const make = Effect.gen(function* () {
   const verify: RelayDeliveryProof["Service"]["verify"] = (input) =>
     Effect.gen(function* () {
       const proof = input.headers[RELAY_HOOK_DELIVERY_HEADER];
-      const deliveryId = input.headers["x-rove-relay-delivery-id"];
-      const receivedAt = input.headers["x-rove-relay-received-at"];
+      const deliveryId = input.headers["x-paperplane-relay-delivery-id"];
+      const receivedAt = input.headers["x-paperplane-relay-received-at"];
       if (proof === undefined || deliveryId === undefined || receivedAt === undefined) {
         return Option.none();
       }
@@ -61,7 +61,7 @@ const make = Effect.gen(function* () {
       );
       const relayUrl = text(yield* secrets.get(RELAY_URL_SECRET));
       const relayIssuer = Option.isSome(issuer) ? issuer : relayUrl;
-      // Not linked to Rove Connect: no relay can be delivering to us.
+      // Not linked to Paperplane Connect: no relay can be delivering to us.
       if (Option.isNone(publicKey) || Option.isNone(relayIssuer)) return Option.none();
       const environmentId = yield* environment.getEnvironmentId;
       const payload = yield* verifyRelayJwt({
@@ -69,7 +69,7 @@ const make = Effect.gen(function* () {
         token: proof,
         typ: RELAY_HOOK_DELIVERY_TYP,
         issuer: normalizeRelayIssuer(relayIssuer.value),
-        audience: `rove-env:${environmentId}`,
+        audience: `paperplane-env:${environmentId}`,
         nowEpochSeconds: Math.floor((yield* Clock.currentTimeMillis) / 1_000),
         maxTokenAge: MAX_PROOF_AGE_SECONDS,
       }).pipe(Effect.map(decodePayload), Effect.orElseSucceed(Option.none));

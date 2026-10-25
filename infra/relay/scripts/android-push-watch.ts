@@ -8,9 +8,9 @@ import {
   WsRpcGroup,
   type OrchestrationProjectShell,
   type OrchestrationV2ThreadShell,
-} from "@rove-code/contracts";
-import type { RelayAgentActivityState } from "@rove-code/contracts/relay";
-import { projectThreadAwarenessV2 } from "@rove-code/shared/agentAwareness";
+} from "@getpaperplane/contracts";
+import type { RelayAgentActivityState } from "@getpaperplane/contracts/relay";
+import { projectThreadAwarenessV2 } from "@getpaperplane/shared/agentAwareness";
 import * as Cause from "effect/Cause";
 import * as Option from "effect/Option";
 import * as Clock from "effect/Clock";
@@ -193,7 +193,7 @@ const main = Effect.gen(function* () {
             packageName: device.packageName,
             alert: alert !== null,
             data: fitFcmData({
-              rove_kind: "agent_activity",
+              paperplane_kind: "agent_activity",
               device_id: device.deviceId,
               user_id: device.userId,
               updated_at: String(now),

@@ -1,13 +1,13 @@
-import { scopeThreadRef } from "@rove-code/client-runtime/environment";
-import { deriveThreadQueueWorkflowState } from "@rove-code/client-runtime/state/thread-workflows";
-import { replaceComposerContextReferences } from "@rove-code/shared/composerContextReferences";
+import { scopeThreadRef } from "@getpaperplane/client-runtime/environment";
+import { deriveThreadQueueWorkflowState } from "@getpaperplane/client-runtime/state/thread-workflows";
+import { replaceComposerContextReferences } from "@getpaperplane/shared/composerContextReferences";
 import type {
   ChatAttachment as ContractChatAttachment,
   EnvironmentId,
   MessageId,
   RunId,
   ThreadId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   Clock3Icon,
   CornerUpRightIcon,
@@ -40,7 +40,7 @@ interface QueuedRowThumbnail {
   readonly url: string | null;
 }
 
-const QUEUED_RUN_DRAG_TYPE = "application/x-rove-queued-run";
+const QUEUED_RUN_DRAG_TYPE = "application/x-paperplane-queued-run";
 
 export interface QueuedRunsControlHandle {
   steerNext: (repeat: boolean) => boolean;

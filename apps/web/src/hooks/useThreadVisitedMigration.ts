@@ -1,4 +1,4 @@
-import { scopeThreadRef, scopedThreadKey } from "@rove-code/client-runtime/environment";
+import { scopeThreadRef, scopedThreadKey } from "@getpaperplane/client-runtime/environment";
 import { useEffect } from "react";
 
 import { useThreadShells } from "../state/entities";

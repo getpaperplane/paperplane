@@ -14,9 +14,9 @@ import {
 describe("cliRelease", () => {
   it("names archives by version and platform, zip only on Windows", () => {
     expect(cliArchiveFileName("1.2.3-preview.20260911.4", "linux-x64")).toBe(
-      "rove-1.2.3-preview.20260911.4-linux-x64.tar.gz",
+      "paperplane-1.2.3-preview.20260911.4-linux-x64.tar.gz",
     );
-    expect(cliArchiveFileName("1.2.3", "win32-x64")).toBe("rove-1.2.3-win32-x64.zip");
+    expect(cliArchiveFileName("1.2.3", "win32-x64")).toBe("paperplane-1.2.3-win32-x64.zip");
   });
 
   it("only maps platforms and architectures that have a release archive", () => {
@@ -33,24 +33,24 @@ describe("cliRelease", () => {
 
   it("resolves download URLs under the tagged release, honoring a mirror", () => {
     expect(cliReleaseDownloadBaseUrl("1.2.3")).toBe(
-      "https://github.com/hafiezul/rove/releases/download/v1.2.3",
+      "https://github.com/getpaperplane/paperplane/releases/download/v1.2.3",
     );
-    expect(cliReleaseDownloadBaseUrl("1.2.3", "https://mirror.example/rove/")).toBe(
-      "https://mirror.example/rove/v1.2.3",
+    expect(cliReleaseDownloadBaseUrl("1.2.3", "https://mirror.example/paperplane/")).toBe(
+      "https://mirror.example/paperplane/v1.2.3",
     );
   });
 
   it("parses sha256sum output including binary-mode markers", () => {
     const checksums = parseChecksums(
       [
-        `${"a".repeat(64)}  rove-1.2.3-linux-x64.tar.gz`,
-        `${"B".repeat(64)} *rove-1.2.3-win32-x64.zip`,
+        `${"a".repeat(64)}  paperplane-1.2.3-linux-x64.tar.gz`,
+        `${"B".repeat(64)} *paperplane-1.2.3-win32-x64.zip`,
         "not a checksum line",
         "",
       ].join("\n"),
     );
-    expect(checksums.get("rove-1.2.3-linux-x64.tar.gz")).toBe("a".repeat(64));
-    expect(checksums.get("rove-1.2.3-win32-x64.zip")).toBe("b".repeat(64));
+    expect(checksums.get("paperplane-1.2.3-linux-x64.tar.gz")).toBe("a".repeat(64));
+    expect(checksums.get("paperplane-1.2.3-win32-x64.zip")).toBe("b".repeat(64));
     expect(checksums.size).toBe(2);
   });
 
@@ -87,7 +87,7 @@ describe("cliRelease", () => {
 
   it("pages through the release index at the largest page GitHub allows", () => {
     expect(cliReleaseIndexPageUrl(1)).toBe(
-      "https://api.github.com/repos/hafiezul/rove/releases?per_page=100&page=1",
+      "https://api.github.com/repos/getpaperplane/paperplane/releases?per_page=100&page=1",
     );
     expect(cliReleaseIndexPageUrl(3)).toContain("page=3");
   });

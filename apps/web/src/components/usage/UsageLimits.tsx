@@ -7,7 +7,7 @@ import {
   ServerProviderResetCredits,
   ServerProviderUsageWindow,
   UsageProviderKind,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { useAtomValue } from "@effect/atom-react";
 import {
   elapsedShare,
@@ -16,7 +16,7 @@ import {
   type LimitPace,
   paceOf,
   remainingPercent,
-} from "@rove-code/shared/usageLimits";
+} from "@getpaperplane/shared/usageLimits";
 import { GaugeIcon, TrendingDownIcon, TrendingUpIcon } from "lucide-react";
 import { Fragment, type ReactNode, useState } from "react";
 

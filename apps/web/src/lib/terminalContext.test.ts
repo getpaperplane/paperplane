@@ -1,6 +1,6 @@
-import { ThreadId } from "@rove-code/contracts";
+import { ThreadId } from "@getpaperplane/contracts";
 import { describe, expect, it } from "vite-plus/test";
-import { collectComposerContextReferences } from "@rove-code/shared/composerContextReferences";
+import { collectComposerContextReferences } from "@getpaperplane/shared/composerContextReferences";
 import { terminalContextRecord } from "./composerContextRecords";
 
 import {
@@ -49,7 +49,7 @@ describe("terminalContext", () => {
 
   it("formats a terminal context as a canonical reference link", () => {
     expect(formatTerminalContextReference(makeContext())).toBe(
-      "[Terminal 1 lines 12-13](rove-context://v1/terminal/terminal_context-1)",
+      "[Terminal 1 lines 12-13](paperplane-context://v1/terminal/terminal_context-1)",
     );
   });
 

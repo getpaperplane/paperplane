@@ -52,7 +52,7 @@
     "testflight": {
       "extends": "production",
       "env": {
-        "ROVE_MOBILE_VERSION": "3.0.0"
+        "PAPERPLANE_MOBILE_VERSION": "3.0.0"
       }
     },
     "production": {

@@ -1,7 +1,7 @@
 // This policy is independent of Shell so lifecycle and authorization can be tested without a desktop.
 export const CLIENT_NAMES = [
-  "io.github.hafiezul.rove.SnapShot",
-  "io.github.hafiezul.rove.dev.SnapShot",
+  "io.github.getpaperplane.paperplane.SnapShot",
+  "io.github.getpaperplane.paperplane.dev.SnapShot",
 ];
 
 export function isWaylandSession(meta) {
@@ -43,7 +43,7 @@ export class CaptureService {
           break;
         }
       }
-      if (!allowed) throw new Error("Only Rove Code may request a snapshot.");
+      if (!allowed) throw new Error("Only Paperplane may request a snapshot.");
       const pid = options ? await this._getProcessId(sender) : undefined;
       this._checkSession();
       const snapshot = await this._takeSnapshot(options?.animate ?? false);

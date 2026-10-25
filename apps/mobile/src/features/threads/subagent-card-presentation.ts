@@ -1,6 +1,6 @@
-import { isActiveSubagentStatus } from "@rove-code/client-runtime/state/subagentRuntime";
-import type { OrchestrationV2Subagent } from "@rove-code/contracts";
-import { formatDuration } from "@rove-code/shared/orchestrationTiming";
+import { isActiveSubagentStatus } from "@getpaperplane/client-runtime/state/subagentRuntime";
+import type { OrchestrationV2Subagent } from "@getpaperplane/contracts";
+import { formatDuration } from "@getpaperplane/shared/orchestrationTiming";
 import * as DateTime from "effect/DateTime";
 
 export function subagentCardDetail(detail: string | null): string | null {

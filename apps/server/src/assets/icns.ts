@@ -1,4 +1,4 @@
-import { readImageDimensions } from "@rove-code/shared/imageDimensions";
+import { readImageDimensions } from "@getpaperplane/shared/imageDimensions";
 
 const ICNS_HEADER_BYTES = 8;
 const ICNS_MAGIC = 0x69636e73; // "icns"

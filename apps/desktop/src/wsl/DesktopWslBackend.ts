@@ -28,7 +28,7 @@ import * as Option from "effect/Option";
 import * as Ref from "effect/Ref";
 import * as Semaphore from "effect/Semaphore";
 
-import * as NetService from "@rove-code/shared/Net";
+import * as NetService from "@getpaperplane/shared/Net";
 
 import * as DesktopObservability from "../app/DesktopObservability.ts";
 import * as DesktopBackendConfiguration from "../backend/DesktopBackendConfiguration.ts";
@@ -58,7 +58,7 @@ export class DesktopWslBackend extends Context.Service<
     // surfaces via a dialog + Windows fallback).
     readonly lastPreflightError: Effect.Effect<Option.Option<string>>;
   }
->()("@rove-code/desktop/wsl/DesktopWslBackend") {}
+>()("@getpaperplane/desktop/wsl/DesktopWslBackend") {}
 
 const { logInfo: logWslBackendInfo, logWarning: logWslBackendWarning } =
   DesktopObservability.makeComponentLogger("desktop-wsl-backend");
@@ -177,7 +177,7 @@ export const layer = Layer.effect(
                 Ref.set(
                   preflightErrorRef,
                   Option.some(
-                    "Another Rove Code server is using this distro's Rove home. Stop it, or pair with it instead.",
+                    "Another Paperplane server is using this distro's Paperplane home. Stop it, or pair with it instead.",
                   ),
                 ),
               ),

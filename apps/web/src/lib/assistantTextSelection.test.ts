@@ -4,11 +4,11 @@ import {
   EnvironmentId,
   MessageId,
   ThreadId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   formatAssistantCitationHref,
   parseAssistantCitationHref,
-} from "@rove-code/shared/assistantCitations";
+} from "@getpaperplane/shared/assistantCitations";
 
 import {
   type AssistantTextSelector,
@@ -273,7 +273,7 @@ describe("captureAssistantTextSelection", () => {
     const viewport = new SelectionNode("MAIN").append(
       source,
       new SelectionNode("DIV", "", { "data-select-none": "" }).append(textNode("echo ok")),
-      new SelectionNode("H3", "", { "data-select-none": "" }).append(textNode("Rove Code")),
+      new SelectionNode("H3", "", { "data-select-none": "" }).append(textNode("Paperplane")),
       assistantSource(nextParagraph),
     );
 

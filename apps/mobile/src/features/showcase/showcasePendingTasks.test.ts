@@ -1,5 +1,5 @@
-import type { EnvironmentProject } from "@rove-code/client-runtime/state/shell";
-import { EnvironmentId, ProjectId, ProviderInstanceId } from "@rove-code/contracts";
+import type { EnvironmentProject } from "@getpaperplane/client-runtime/state/shell";
+import { EnvironmentId, ProjectId, ProviderInstanceId } from "@getpaperplane/contracts";
 import { assert, it } from "@effect/vitest";
 
 import {
@@ -10,9 +10,9 @@ import {
 const projects: ReadonlyArray<EnvironmentProject> = [
   {
     environmentId: EnvironmentId.make("moonbase-terminal"),
-    id: ProjectId.make("rove"),
-    title: "Rove Code",
-    workspaceRoot: "/workspace/rove",
+    id: ProjectId.make("paperplane"),
+    title: "Paperplane",
+    workspaceRoot: "/workspace/paperplane",
     repositoryIdentity: null,
     defaultModelSelection: { instanceId: ProviderInstanceId.make("codex"), model: "gpt-5.4" },
     scripts: [],
@@ -47,8 +47,8 @@ it("builds sendable-looking pending tasks against real showcase projects", () =>
     [
       {
         environmentId: "moonbase-terminal",
-        projectId: "rove",
-        title: "Rove Code",
+        projectId: "paperplane",
+        title: "Paperplane",
         branch: "feat/offline-launchpad",
         createdAt: "2026-07-16T08:52:00.000Z",
       },

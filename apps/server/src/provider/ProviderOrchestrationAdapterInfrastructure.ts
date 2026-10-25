@@ -3,11 +3,11 @@ import * as PiExtensionStatuses from "./PiExtensionStatuses.ts";
 
 import * as ClaudeAdapterV2 from "../orchestration-v2/Adapters/ClaudeAdapterV2.ts";
 import * as CodexAdapterV2 from "../orchestration-v2/Adapters/CodexAdapterV2.ts";
-import * as CursorAgentSdk from "@rove-code/provider-cursor/server/CursorAgentSdk";
-import * as CursorSdk from "@rove-code/provider-cursor/server/CursorSdk";
-import * as CursorKeychain from "@rove-code/provider-cursor/server/CursorKeychain";
-import * as IdAllocator from "@rove-code/provider-core/server/IdAllocator";
-import * as ProviderContinuationRequests from "@rove-code/provider-core/server/ProviderContinuationRequests";
+import * as CursorAgentSdk from "@getpaperplane/provider-cursor/server/CursorAgentSdk";
+import * as CursorSdk from "@getpaperplane/provider-cursor/server/CursorSdk";
+import * as CursorKeychain from "@getpaperplane/provider-cursor/server/CursorKeychain";
+import * as IdAllocator from "@getpaperplane/provider-core/server/IdAllocator";
+import * as ProviderContinuationRequests from "@getpaperplane/provider-core/server/ProviderContinuationRequests";
 
 export type ProviderOrchestrationAdapterInfrastructure =
   | ClaudeAdapterV2.ClaudeAgentSdkQueryRunner

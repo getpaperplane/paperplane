@@ -8,8 +8,8 @@ import type {
   OrchestrationV2Subagent,
   OrchestrationV2SubagentWorkflow,
   OrchestrationV2TurnItem,
-} from "@rove-code/contracts";
-import { isOrchestrationV2WorkActive } from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
+import { isOrchestrationV2WorkActive } from "@getpaperplane/contracts";
 
 export type RuntimeSubagentStatus =
   | "pending"

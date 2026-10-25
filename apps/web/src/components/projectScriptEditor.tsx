@@ -5,12 +5,12 @@ import {
   type ProjectScript,
   type ProjectScriptIcon,
   type ResolvedKeybindingsConfig,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   isAtomCommandInterrupted,
   squashAtomCommandFailure,
   type AtomCommandResult,
-} from "@rove-code/client-runtime/state/runtime";
+} from "@getpaperplane/client-runtime/state/runtime";
 import {
   BugIcon,
   FlaskConicalIcon,
@@ -119,7 +119,7 @@ export const EMPTY_PROJECT_SCRIPT_INPUT: NewProjectScriptInput = {
 export interface ProjectScriptEditorRequest {
   scriptId: string | null;
   initial: NewProjectScriptInput;
-  /** Validation error to show immediately (e.g. a failed rove.json import). */
+  /** Validation error to show immediately (e.g. a failed paperplane.json import). */
   error?: string;
 }
 

@@ -51,7 +51,7 @@ never receives this build's migration at that id. After repairing supported V2 p
 requested migration at id 55 or later without its expected name. Earlier name clashes remain
 warnings for compatibility with site-local migrations. There is no safe id range for a fork inside
 this ledger: any id at or below a future upstream id masks it forever, so fork schema changes belong
-in a separate migration table or outside the migrator entirely. The ledger recognizes shipped Rove
+in a separate migration table or outside the migrator entirely. The ledger recognizes shipped Paperplane
 names at 55–57; the three removed V1 feature migrations were dropped, not reserved. Upstream ids
 need collision review before adoption. V1 migration 56 (nullable `projection_threads.project_id`)
 must not be re-registered.
@@ -86,7 +86,7 @@ database size plus 64 MiB, and skips if another connection holds the database. F
 upgrade without preventing startup. Only configured userdata paths are eligible, not implicit dev
 paths. SQLite's transactional VACUUM leaves the original database intact on interruption; the
 retirement pass remains off the readiness path, so its freed pages are considered next launch.
-Subsequent background reclamation returns free pages online. `rove doctor` remains an offline
+Subsequent background reclamation returns free pages online. `paperplane doctor` remains an offline
 fallback for skipped upgrades; the Storage page reports reclaimable space and its host-specific command.
 
 ## Recovery

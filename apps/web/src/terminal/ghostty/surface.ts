@@ -693,7 +693,7 @@ export class GhosttyTerminalSurface {
     canvas.setAttribute("aria-hidden", "true");
 
     const input = document.createElement("textarea");
-    input.className = "rove-ghostty-input";
+    input.className = "paperplane-ghostty-input";
     input.setAttribute("aria-label", "Terminal input");
     input.autocapitalize = "off";
     input.autocomplete = "off";

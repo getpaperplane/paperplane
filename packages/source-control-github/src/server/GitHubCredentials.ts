@@ -11,17 +11,17 @@ import * as PlatformError from "effect/PlatformError";
 import * as Redacted from "effect/Redacted";
 import * as Schema from "effect/Schema";
 
-import * as HostProcess from "@rove-code/shared/HostProcess";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 
-import * as SourceControlHost from "@rove-code/source-control-core/server/SourceControlHost";
-import { readSourceControlHostSettings } from "@rove-code/source-control-core/client/definition";
-import type { GitHubAccountSelection, ServerSettings } from "@rove-code/contracts";
+import * as SourceControlHost from "@getpaperplane/source-control-core/server/SourceControlHost";
+import { readSourceControlHostSettings } from "@getpaperplane/source-control-core/client/definition";
+import type { GitHubAccountSelection, ServerSettings } from "@getpaperplane/contracts";
 
 import * as GitHubClient from "../client/definition.ts";
 
-/** Rove: the acting project's account, independent of gh's active login. */
+/** Paperplane: the acting project's account, independent of gh's active login. */
 export const SelectedGitHubAccount = Context.Reference<GitHubAccountSelection | null>(
-  "@rove-code/source-control-github/SelectedGitHubAccount",
+  "@getpaperplane/source-control-github/SelectedGitHubAccount",
   { defaultValue: () => null },
 );
 
@@ -127,7 +127,7 @@ export class GitHubCredentials extends Context.Service<
     /** Drops the held token after GitHub refused it, so the next read asks its source again. */
     readonly invalidate: (host: string) => Effect.Effect<void>;
   }
->()("@rove-code/source-control-github/server/GitHubCredentials") {}
+>()("@getpaperplane/source-control-github/server/GitHubCredentials") {}
 
 function normalizeHost(host: string): string {
   return host.trim().toLowerCase();
@@ -236,7 +236,7 @@ export const make = Effect.gen(function* () {
 
   const lookup = Effect.fn("GitHubCredentials.lookup")(function* (key: string) {
     const [host = key, choice, selected] = key.split("\u0000");
-    // Rove's project selection historically used `gh auth token --user`, which reads that
+    // Paperplane's project selection historically used `gh auth token --user`, which reads that
     // login's stored token rather than GH_TOKEN. Keep that explicit selection above the env;
     // a host-level preference alone still follows gh's usual environment precedence.
     const fromEnv = selected === "selected" ? null : environmentToken(host, environment);

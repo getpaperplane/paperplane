@@ -1,5 +1,5 @@
-import type { PullRequestAction } from "@rove-code/contracts";
-import { sourceControlClients } from "@rove-code/client-runtime/source-control-clients";
+import type { PullRequestAction } from "@getpaperplane/contracts";
+import { sourceControlClients } from "@getpaperplane/client-runtime/source-control-clients";
 import { SearchIcon } from "lucide-react";
 import { PullRequestStackPopover } from "./PullRequestStackPopover";
 import {

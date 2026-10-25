@@ -1,4 +1,4 @@
-import type { AssetResource, EnvironmentId } from "@rove-code/contracts";
+import type { AssetResource, EnvironmentId } from "@getpaperplane/contracts";
 import type { ImageSource } from "expo-image";
 
 /**
@@ -14,7 +14,7 @@ export function assetImageSource(
   return resource._tag === "attachment"
     ? {
         uri,
-        cacheKey: `rove-attachment:${JSON.stringify([environmentId, resource.attachmentId])}`,
+        cacheKey: `paperplane-attachment:${JSON.stringify([environmentId, resource.attachmentId])}`,
       }
     : { uri };
 }

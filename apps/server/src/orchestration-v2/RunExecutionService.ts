@@ -1,6 +1,6 @@
 import { makeAssistantStreamingFilter } from "./assistantStreaming.ts";
-import { resolveProjectSettings } from "@rove-code/shared/projectSettings";
-import { AgentScope } from "@rove-code/shared/AgentScope";
+import { resolveProjectSettings } from "@getpaperplane/shared/projectSettings";
+import { AgentScope } from "@getpaperplane/shared/AgentScope";
 import { labelOutOfMemory } from "../process/outOfMemoryFailure.ts";
 import {
   isOrchestrationV2WorkActive,
@@ -25,7 +25,7 @@ import {
   type RunAttemptId,
   type ThreadId,
   type TurnItemId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Context from "effect/Context";
 import * as Cause from "effect/Cause";
 import * as DateTime from "effect/DateTime";
@@ -42,14 +42,14 @@ import * as McpAppModelContext from "../mcpApps/McpAppModelContext.ts";
 import * as ServerSettings from "../serverSettings.ts";
 import * as CheckpointService from "./CheckpointService.ts";
 import * as EventSink from "./EventSink.ts";
-import * as IdAllocator from "@rove-code/provider-core/server/IdAllocator";
-import * as ProviderAdapter from "@rove-code/provider-core/server/ProviderAdapter";
+import * as IdAllocator from "@getpaperplane/provider-core/server/IdAllocator";
+import * as ProviderAdapter from "@getpaperplane/provider-core/server/ProviderAdapter";
 import * as ProviderEventIngestor from "./ProviderEventIngestor.ts";
 import type { ProjectionStoreV2Error } from "./ProjectionStore.ts";
 import {
   makeProviderFailure,
   makeProviderFailureTurnItem,
-} from "@rove-code/provider-core/server/failure";
+} from "@getpaperplane/provider-core/server/failure";
 import * as RunFinalizationService from "./RunFinalizationService.ts";
 
 export interface ProviderEventRoutingState {
@@ -576,7 +576,7 @@ export interface RunExecutionServiceV2Shape {
 export class RunExecutionServiceV2 extends Context.Service<
   RunExecutionServiceV2,
   RunExecutionServiceV2Shape
->()("@rove-code/server/orchestration-v2/RunExecutionService/RunExecutionServiceV2") {}
+>()("@getpaperplane/server/orchestration-v2/RunExecutionService/RunExecutionServiceV2") {}
 
 /**
  * IMPLEMENTATIONS

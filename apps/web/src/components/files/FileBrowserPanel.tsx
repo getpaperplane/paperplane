@@ -3,9 +3,9 @@ import type {
   ContextMenuItem as TreeContextMenuItem,
   ContextMenuOpenContext as TreeContextMenuOpenContext,
 } from "@pierre/trees";
-import type { EnvironmentId, ProjectEntry } from "@rove-code/contracts";
+import type { EnvironmentId, ProjectEntry } from "@getpaperplane/contracts";
 import { FileTree, useFileTree, useFileTreeSearch, useFileTreeSelector } from "@pierre/trees/react";
-import { serializeComposerFileLink } from "@rove-code/shared/composerTrigger";
+import { serializeComposerFileLink } from "@getpaperplane/shared/composerTrigger";
 import { ChevronsDownUp, ChevronsUpDown } from "lucide";
 import { useEffect, useMemo, useRef, useState } from "react";
 
@@ -20,7 +20,7 @@ import { useTheme } from "~/hooks/useTheme";
 import { useWorkspaceMutationRefresh } from "~/hooks/useWorkspaceMutationRefresh";
 import { useFileContextMenu, type FileContextMenuAction } from "~/fileContextMenu";
 import { readLocalApi } from "~/localApi";
-import { ROVE_PIERRE_ICONS } from "~/pierre-icons";
+import { PAPERPLANE_PIERRE_ICONS } from "~/pierre-icons";
 import { PIERRE_TREE_UNSAFE_CSS, pierreTreeStyle } from "~/pierre-tree-theme";
 
 import { joinHostPath } from "./filePath";
@@ -282,7 +282,7 @@ export default function FileBrowserPanel({
     fileTreeSearchMode: "hide-non-matches",
     flattenEmptyDirectories: true,
     initialExpansion: "closed",
-    icons: ROVE_PIERRE_ICONS,
+    icons: PAPERPLANE_PIERRE_ICONS,
     onSelectionChange: (selectedPaths) => {
       // The drag controller's selection cache must track every change,
       // including reveal-driven ones, or drags act on a stale selection.
@@ -306,7 +306,7 @@ export default function FileBrowserPanel({
       row.kind === "directory" &&
       row.isExpanded &&
       loadingDirectoriesRef.current.has(item.path.replace(/\/$/, ""))
-        ? { icon: "rove-tree-icon-loading", title: "Loading…" }
+        ? { icon: "paperplane-tree-icon-loading", title: "Loading…" }
         : null,
     search: false,
     onSearchChange: (value) => setQuery(value ?? ""),

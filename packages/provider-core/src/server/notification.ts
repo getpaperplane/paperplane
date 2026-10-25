@@ -5,7 +5,7 @@ import type {
   OrchestrationV2Subagent,
   OrchestrationV2TurnItem,
   ThreadId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 
 type NotificationOutcome = OrchestrationV2Notification["outcome"];
 

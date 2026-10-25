@@ -2,9 +2,9 @@ import {
   type ClientConnectionMethod,
   EnvironmentId,
   type ExecutionEnvironmentDescriptor,
-} from "@rove-code/contracts";
-import { RelayEnvironmentConnectScope } from "@rove-code/contracts/relay";
-import { withRelayClientTracing } from "@rove-code/shared/relayTracing";
+} from "@getpaperplane/contracts";
+import { RelayEnvironmentConnectScope } from "@getpaperplane/contracts/relay";
+import { withRelayClientTracing } from "@getpaperplane/shared/relayTracing";
 import {
   exchangeRemoteDpopAccessToken,
   type RemoteEnvironmentAuthError,
@@ -72,7 +72,7 @@ export class RemoteEnvironmentAuthorization extends Context.Service<
     readonly authorizeDpop: (input: {
       readonly expectedEnvironmentId: EnvironmentId;
       /**
-       * Connect to this origin instead of the Rove Connect tunnel. The access
+       * Connect to this origin instead of the Paperplane Connect tunnel. The access
        * token is not bound to an origin, and each proof is minted for the URL
        * it signs, so a token from the relay also works on the environment's
        * LAN or tailnet address.
@@ -84,7 +84,7 @@ export class RemoteEnvironmentAuthorization extends Context.Service<
       readonly rejectedAccessToken?: string;
     }) => Effect.Effect<AuthorizedRemoteHttpEnvironment, ConnectionAttemptError>;
   }
->()("@rove-code/client-runtime/authorization/service/RemoteEnvironmentAuthorization") {}
+>()("@getpaperplane/client-runtime/authorization/service/RemoteEnvironmentAuthorization") {}
 
 const CACHED_ENDPOINT_SOCKET_TIMEOUT_MS = 3_000;
 const BEARER_DESCRIPTOR_CACHE_TTL_MS = 10_000;
@@ -517,7 +517,7 @@ export const make = Effect.gen(function* () {
         return yield* mapDpopSocketError(cachedSocket.failure);
       }
       // An unreachable direct address says nothing about the token, so keep
-      // it for the Rove Connect route rather than forcing a relay round trip.
+      // it for the Paperplane Connect route rather than forcing a relay round trip.
       // A rejected token falls through and is replaced like on the tunnel.
       if (endpoint !== undefined && cachedSocket.failure._tag !== "EnvironmentAuthInvalidError") {
         return yield* mapDpopSocketError(cachedSocket.failure);

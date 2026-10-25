@@ -5,7 +5,7 @@ import * as Option from "effect/Option";
 import * as Ref from "effect/Ref";
 import * as Schema from "effect/Schema";
 
-import * as NetService from "@rove-code/shared/Net";
+import * as NetService from "@getpaperplane/shared/Net";
 import * as Crypto from "effect/Crypto";
 import * as ElectronApp from "../electron/ElectronApp.ts";
 import * as ElectronDialog from "../electron/ElectronDialog.ts";
@@ -21,6 +21,7 @@ import * as PreviewPasskeys from "../preview/Passkeys.ts";
 import * as DesktopBackendPool from "../backend/DesktopBackendPool.ts";
 import * as DesktopEnvironment from "./DesktopEnvironment.ts";
 import * as DesktopLegacyLocalStorage from "./DesktopLegacyLocalStorage.ts";
+import * as DesktopMigration from "./DesktopMigration.ts";
 import * as DesktopLifecycle from "./DesktopLifecycle.ts";
 import * as DesktopLinuxUrlHandler from "./DesktopLinuxUrlHandler.ts";
 import * as DesktopObservability from "./DesktopObservability.ts";
@@ -35,7 +36,7 @@ import * as DesktopUpdates from "../updates/DesktopUpdates.ts";
 import * as DesktopSnapShot from "../snapShot/DesktopSnapShot.ts";
 import * as DesktopWslBackend from "../wsl/DesktopWslBackend.ts";
 import * as DesktopRendererHistory from "../telemetry/DesktopRendererHistory.ts";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 
 const DEFAULT_DESKTOP_BACKEND_PORT = 3773;
 const MAX_TCP_PORT = 65_535;
@@ -64,7 +65,7 @@ export class DesktopDevelopmentBackendPortRequiredError extends Schema.TaggedErr
   {},
 ) {
   override get message(): string {
-    return "ROVE_PORT is required in desktop development.";
+    return "PAPERPLANE_PORT is required in desktop development.";
   }
 }
 
@@ -136,7 +137,7 @@ const handleFatalStartupError = Effect.fn("desktop.startup.handleFatalStartupErr
   const wasQuitting = yield* Ref.getAndSet(state.quitting, true);
   if (!wasQuitting) {
     yield* electronDialog.showErrorBox(
-      "Rove Code failed to start",
+      "Paperplane failed to start",
       `Stage: ${stage}\n${message}${detail}`,
     );
   }
@@ -327,6 +328,25 @@ const startup = Effect.gen(function* () {
     Effect.catchCause((cause) => fatalStartupCause("whenReady", cause)),
   );
   yield* logStartupInfo("app ready");
+  const dialog = yield* ElectronDialog.ElectronDialog;
+  yield* DesktopMigration.finishDesktopMigration(
+    { stateDir: environment.stateDir, userDataPath, platform: environment.platform },
+    {
+      readLinuxSecret: DesktopMigration.readOldLinuxSecret(environment.branding.stageLabel),
+      encryptionAvailable: DesktopMigration.migrationEffect(safeStorage.isEncryptionAvailable),
+      encrypt: (plain) => DesktopMigration.migrationEffect(safeStorage.encryptString(plain)),
+      decrypt: (bytes) => DesktopMigration.migrationEffect(safeStorage.decryptString(bytes)),
+      showNotice: (message) =>
+        dialog
+          .showMessageBox({
+            type: "info",
+            title: "Welcome to Paperplane",
+            message,
+            buttons: ["OK"],
+          })
+          .pipe(DesktopMigration.migrationEffect),
+    },
+  );
   if (environment.platform === "linux") {
     const selectedBackend = yield* safeStorage.selectedStorageBackend;
     yield* logStartupInfo("safe storage ready", {

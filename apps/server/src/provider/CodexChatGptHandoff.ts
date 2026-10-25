@@ -1,5 +1,5 @@
-import type { ChatGptHandoffInput, ChatGptHandoffState } from "@rove-code/contracts";
-import { ProviderSetupError } from "@rove-code/contracts";
+import type { ChatGptHandoffInput, ChatGptHandoffState } from "@getpaperplane/contracts";
+import { ProviderSetupError } from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
 import * as Stream from "effect/Stream";

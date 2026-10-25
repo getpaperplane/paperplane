@@ -2,12 +2,12 @@ import {
   scopedProjectKey,
   scopedThreadKey,
   scopeProjectRef,
-} from "@rove-code/client-runtime/environment";
+} from "@getpaperplane/client-runtime/environment";
 import type {
   DesktopPreviewFavicon,
   ScopedProjectRef,
   ScopedThreadRef,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Option from "effect/Option";
 import { useMemo } from "react";
 import { create } from "zustand";
@@ -30,7 +30,7 @@ import {
 } from "./browserFaviconLogic";
 import { createMemoryStorage, type StateStorage } from "./lib/storage";
 
-const BROWSER_FAVICON_STORAGE_KEY = "rove:browser-favicons:v1";
+const BROWSER_FAVICON_STORAGE_KEY = "paperplane:browser-favicons:v1";
 const MAX_PENDING_ORIGINS_PER_THREAD = 10;
 const MAX_PENDING_THREADS = 20;
 const MAX_REGISTERED_THREADS = 100;

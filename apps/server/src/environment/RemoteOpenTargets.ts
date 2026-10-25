@@ -9,10 +9,10 @@
  * Targets are ordered most-reachable first (tailnet name works from anywhere
  * on the tailnet; `<hostname>.local` only on the same LAN).
  */
-import { type RemoteOpenTarget } from "@rove-code/contracts";
-import * as HostProcess from "@rove-code/shared/HostProcess";
-import * as NetService from "@rove-code/shared/Net";
-import { readTailscaleSshEnabled, readTailscaleStatus } from "@rove-code/tailscale";
+import { type RemoteOpenTarget } from "@getpaperplane/contracts";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
+import * as NetService from "@getpaperplane/shared/Net";
+import { readTailscaleSshEnabled, readTailscaleStatus } from "@getpaperplane/tailscale";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -25,7 +25,7 @@ export class RemoteOpenTargets extends Context.Service<
   {
     readonly resolveTargets: () => Effect.Effect<ReadonlyArray<RemoteOpenTarget>>;
   }
->()("@rove-code/server/environment/RemoteOpenTargets") {}
+>()("@getpaperplane/server/environment/RemoteOpenTargets") {}
 
 /** @public Service construction is part of the canonical Effect module API. */
 export const make = Effect.gen(function* () {

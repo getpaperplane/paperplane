@@ -3,7 +3,7 @@ import {
   type ServerProvider,
   type ServerProviderSkill,
   type ServerProviderSlashCommand,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 
 export type ProviderSkillSourceKind = "app" | "repo" | "project" | "personal" | "system" | "other";
 

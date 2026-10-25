@@ -9,7 +9,7 @@ import {
   ProviderDriverKind,
   ProviderInstanceId,
   type ServerProvider,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as NodeFSP from "node:fs/promises";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { assert, it } from "@effect/vitest";
@@ -24,7 +24,7 @@ import {
   probeClaudeCapabilities,
   probeClaudeWorkspaceSnapshot,
 } from "./ClaudeProvider.ts";
-import { COMPACT_SLASH_COMMAND } from "@rove-code/provider-core/server/snapshotProbe";
+import { COMPACT_SLASH_COMMAND } from "@getpaperplane/provider-core/server/snapshotProbe";
 
 vi.mock("@anthropic-ai/claude-agent-sdk", { spy: true });
 
@@ -82,7 +82,9 @@ it.layer(NodeServices.layer)("Claude capability probe SDK boundary", (it) => {
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const tempDir = yield* fs.makeTempDirectoryScoped({ prefix: "rove-claude-workspaces-" });
+        const tempDir = yield* fs.makeTempDirectoryScoped({
+          prefix: "paperplane-claude-workspaces-",
+        });
         const configDir = path.join(tempDir, "claude-home");
         const workspaces = [path.join(tempDir, "one"), path.join(tempDir, "two")];
         for (const cwd of workspaces) {
@@ -109,7 +111,7 @@ it.layer(NodeServices.layer)("Claude capability probe SDK boundary", (it) => {
         let usageCalls = 0;
         const query = vi.spyOn(ClaudeSdk, "query").mockImplementation(({ options }) => {
           assert.equal(options?.env?.CLAUDE_CONFIG_DIR, configDir);
-          assert.equal(options?.env?.ROVE_WORKSPACE_PROBE, "owned-instance");
+          assert.equal(options?.env?.PAPERPLANE_WORKSPACE_PROBE, "owned-instance");
           return {
             initializationResult: async () => ({
               account: { email: "workspace@example.com" },
@@ -137,7 +139,7 @@ it.layer(NodeServices.layer)("Claude capability probe SDK boundary", (it) => {
             decodeClaudeSettings({ homePath: configDir }),
             machineSnapshot,
             cwd,
-            { ...process.env, ROVE_WORKSPACE_PROBE: "owned-instance" },
+            { ...process.env, PAPERPLANE_WORKSPACE_PROBE: "owned-instance" },
           );
           assert.deepEqual(scoped, {
             ...machineSnapshot,
@@ -175,7 +177,9 @@ it.layer(NodeServices.layer)("Claude capability probe SDK boundary", (it) => {
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const cwd = yield* fs.makeTempDirectoryScoped({ prefix: "rove-claude-workspace-retry-" });
+      const cwd = yield* fs.makeTempDirectoryScoped({
+        prefix: "paperplane-claude-workspace-retry-",
+      });
       const skillDir = path.join(cwd, ".claude", "skills", "existing-skill");
       yield* fs.makeDirectory(skillDir, { recursive: true });
       yield* fs.writeFileString(
@@ -256,7 +260,7 @@ it.layer(NodeServices.layer)("Claude capability probe SDK boundary", (it) => {
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const tempDir = yield* fs.makeTempDirectoryScoped({ prefix: "rove-claude-probe-sdk-" });
+      const tempDir = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-claude-probe-sdk-" });
       const executablePath = yield* path.fromFileUrl(
         new URL("./testing/ClaudeCapabilitiesProbe.fixture.mjs", import.meta.url),
       );
@@ -265,7 +269,7 @@ it.layer(NodeServices.layer)("Claude capability probe SDK boundary", (it) => {
       // Windows a directory that is still some process's cwd cannot be
       // removed. Keep the workspace outside the scoped directory and let it
       // go with a retrying removal once the child has gone.
-      const workspaceCwd = yield* fs.makeTempDirectory({ prefix: "rove-claude-probe-cwd-" });
+      const workspaceCwd = yield* fs.makeTempDirectory({ prefix: "paperplane-claude-probe-cwd-" });
       // Node's own retry rather than an Effect schedule: it.effect runs on a
       // TestClock, so a scheduled retry would wait for time nobody advances.
       // If the child still holds the directory after that, an empty temp
@@ -285,7 +289,7 @@ it.layer(NodeServices.layer)("Claude capability probe SDK boundary", (it) => {
         decodeClaudeSettings({ binaryPath: executablePath }),
         {
           ...process.env,
-          ROVE_PROBE_INVOCATION_PATH: invocationPath,
+          PAPERPLANE_PROBE_INVOCATION_PATH: invocationPath,
           ENABLE_CLAUDEAI_MCP_SERVERS: "true",
         },
         workspaceCwd,

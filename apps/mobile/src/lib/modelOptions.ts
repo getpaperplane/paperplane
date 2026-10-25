@@ -5,12 +5,12 @@ import type {
   ProjectId,
   RuntimeMode,
   ServerConfig,
-} from "@rove-code/contracts";
-import { resolveProjectProviderInstanceEnabled } from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
+import { resolveProjectProviderInstanceEnabled } from "@getpaperplane/contracts";
 import {
   buildExplicitProviderOptionSelectionsFromDescriptors,
   getProviderOptionDescriptors,
-} from "@rove-code/shared/model";
+} from "@getpaperplane/shared/model";
 
 export type ModelOption = {
   readonly key: string;

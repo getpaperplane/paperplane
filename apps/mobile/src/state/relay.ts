@@ -1,4 +1,4 @@
-import { createRelayEnvironmentDiscoveryAtoms } from "@rove-code/client-runtime/state/relay";
+import { createRelayEnvironmentDiscoveryAtoms } from "@getpaperplane/client-runtime/state/relay";
 
 import { connectionAtomRuntime } from "../connection/runtime";
 

@@ -1,5 +1,5 @@
-import type { ProviderDriverKind, ProviderOptionDescriptor } from "@rove-code/contracts";
-import { getProviderOptionCurrentValue } from "@rove-code/shared/model";
+import type { ProviderDriverKind, ProviderOptionDescriptor } from "@getpaperplane/contracts";
+import { getProviderOptionCurrentValue } from "@getpaperplane/shared/model";
 import { ZapIcon } from "lucide-react";
 import { UltrafastIcon } from "../Icons";
 import { cn } from "~/lib/utils";

@@ -12,7 +12,7 @@ import {
   type ProviderSettingsFormOption,
   type ProviderSettingsFormSchemaAnnotation,
   type ServerSettings,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 
 /** What the settings form reads from a provider client definition. */
 export interface ProviderSettingsFormDefinition {

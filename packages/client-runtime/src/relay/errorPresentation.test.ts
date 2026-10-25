@@ -1,4 +1,4 @@
-import { RelayAuthInvalidError } from "@rove-code/contracts/relay";
+import { RelayAuthInvalidError } from "@getpaperplane/contracts/relay";
 import { describe, expect, it } from "@effect/vitest";
 
 import {

@@ -6,7 +6,7 @@ import { expect, it } from "vite-plus/test";
 import { makeLocalSandboxCredentials } from "./credentials.ts";
 
 function home() {
-  const dir = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "rove-sandbox-credentials-"));
+  const dir = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "paperplane-sandbox-credentials-"));
   NodeFS.mkdirSync(NodePath.join(dir, ".codex"));
   NodeFS.writeFileSync(NodePath.join(dir, ".codex", "auth.json"), '{"tokens":"codex-login"}');
   return dir;

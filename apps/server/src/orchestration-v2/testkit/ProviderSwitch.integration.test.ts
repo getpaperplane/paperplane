@@ -1,5 +1,5 @@
 import { vi } from "vite-plus/test";
-import { historyResponseItems } from "@rove-code/provider-core/server/handoffBudget";
+import { historyResponseItems } from "@getpaperplane/provider-core/server/handoffBudget";
 import { assert, describe, it } from "@effect/vitest";
 import {
   CommandId,
@@ -20,7 +20,7 @@ import {
   ThreadId,
   TurnItemId,
   ProviderDriverKind,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as DateTime from "effect/DateTime";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
@@ -42,8 +42,8 @@ import {
   CodexProviderCapabilitiesV2,
   canReuseCodexContextUsage,
 } from "../Adapters/CodexAdapterV2.ts";
-import { AcpProviderCapabilitiesV2 } from "@rove-code/provider-acp/server/adapter";
-import { CursorProviderCapabilitiesV2 } from "@rove-code/provider-cursor/testing";
+import { AcpProviderCapabilitiesV2 } from "@getpaperplane/provider-acp/server/adapter";
+import { CursorProviderCapabilitiesV2 } from "@getpaperplane/provider-cursor/testing";
 import * as EventSink from "../EventSink.ts";
 import * as EventStore from "../EventStore.ts";
 import * as LegacyV1ThreadImporter from "../legacy/LegacyV1ThreadImporter.ts";
@@ -53,7 +53,7 @@ import * as EffectOutbox from "../EffectOutbox.ts";
 import * as ProjectionMaintenance from "../ProjectionMaintenance.ts";
 import * as ProjectionStore from "../ProjectionStore.ts";
 import * as ProviderAdapterRegistry from "../ProviderAdapterRegistry.ts";
-import { makeProviderFailure } from "@rove-code/provider-core/server/failure";
+import { makeProviderFailure } from "@getpaperplane/provider-core/server/failure";
 import {
   CLAUDE_MODEL_SELECTION,
   CODEX_MODEL_SELECTION,
@@ -61,8 +61,8 @@ import {
   GROK_MODEL_SELECTION,
 } from "./fixtures/shared.ts";
 import * as ProviderReplayHarness from "./ProviderReplayHarness.ts";
-import { checkpointWorkspace } from "@rove-code/provider-testing/replayWorkspace";
-import * as ProviderAdapter from "@rove-code/provider-core/server/ProviderAdapter";
+import { checkpointWorkspace } from "@getpaperplane/provider-testing/replayWorkspace";
+import * as ProviderAdapter from "@getpaperplane/provider-core/server/ProviderAdapter";
 
 const encodeJson = Schema.encodeEffect(Schema.fromJsonString(Schema.Unknown));
 

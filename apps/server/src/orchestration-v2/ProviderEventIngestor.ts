@@ -19,24 +19,27 @@ import {
   RunAttemptId,
   RunId,
   ThreadId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Schema from "effect/Schema";
 
-import { AgentScope } from "@rove-code/shared/AgentScope";
+import { AgentScope } from "@getpaperplane/shared/AgentScope";
 import { labelOutOfMemory } from "../process/outOfMemoryFailure.ts";
-import { isTemporaryWorktreeBranch } from "@rove-code/shared/git";
-import { getModelSelectionStringOptionValue, modelSelectionsEqual } from "@rove-code/shared/model";
+import { isTemporaryWorktreeBranch } from "@getpaperplane/shared/git";
+import {
+  getModelSelectionStringOptionValue,
+  modelSelectionsEqual,
+} from "@getpaperplane/shared/model";
 import * as AnalyticsService from "../telemetry/AnalyticsService.ts";
 import * as GitVcsDriver from "../vcs/GitVcsDriver.ts";
 import * as EventSink from "./EventSink.ts";
 import * as ProjectionStore from "./ProjectionStore.ts";
-import * as IdAllocator from "@rove-code/provider-core/server/IdAllocator";
-import * as ProviderAdapter from "@rove-code/provider-core/server/ProviderAdapter";
-import { makeProviderFailureTurnItem } from "@rove-code/provider-core/server/failure";
+import * as IdAllocator from "@getpaperplane/provider-core/server/IdAllocator";
+import * as ProviderAdapter from "@getpaperplane/provider-core/server/ProviderAdapter";
+import { makeProviderFailureTurnItem } from "@getpaperplane/provider-core/server/failure";
 import * as ThreadCommandExecutor from "./ThreadCommandExecutor.ts";
 import { stripUnservedToolOutputImageBytes } from "./toolOutputImageBytes.ts";
 import { boundFileChangeForStorage } from "./WireProjection.ts";
@@ -82,7 +85,7 @@ export interface ProviderTurnAnalyticsContext {
 
 export class ProviderTurnAnalytics extends Context.Reference<{
   readonly record: (properties: Readonly<Record<string, unknown>>) => Effect.Effect<void>;
-}>("@rove-code/server/orchestration-v2/ProviderEventIngestor/ProviderTurnAnalytics", {
+}>("@getpaperplane/server/orchestration-v2/ProviderEventIngestor/ProviderTurnAnalytics", {
   defaultValue: () => ({ record: () => Effect.void }),
 }) {}
 
@@ -298,7 +301,7 @@ export interface ProviderEventIngestorV2Shape {
 export class ProviderEventIngestorV2 extends Context.Service<
   ProviderEventIngestorV2,
   ProviderEventIngestorV2Shape
->()("@rove-code/server/orchestration-v2/ProviderEventIngestor/ProviderEventIngestorV2") {}
+>()("@getpaperplane/server/orchestration-v2/ProviderEventIngestor/ProviderEventIngestorV2") {}
 
 function compactUndefined<T extends Record<string, unknown>>(record: T): T {
   return Object.fromEntries(Object.entries(record).filter(([, value]) => value !== undefined)) as T;
@@ -461,9 +464,9 @@ export const layer: Layer.Layer<
     );
 
     /**
-     * The provider rewound its conversation outside Rove. Retire the runs that
+     * The provider rewound its conversation outside Paperplane. Retire the runs that
      * fell off its active branch with the same run, root-node, and checkpoint
-     * updates CheckpointRollbackService writes for a Rove revert. The run
+     * updates CheckpointRollbackService writes for a Paperplane revert. The run
      * reporting the rewind performed it and stays, so it keeps lastRunOrdinal.
      */
     const rollBackRewoundRuns = Effect.fn("ProviderEventIngestor.rollBackRewoundRuns")(function* (

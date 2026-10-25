@@ -1,7 +1,7 @@
 // @effect-diagnostics-next-line nodeBuiltinImport:off -- Effect FileSystem has no statfs API.
 import * as NodeFSP from "node:fs/promises";
 
-import * as NodeSqliteClient from "@rove-code/shared/nodeSqliteClient";
+import * as NodeSqliteClient from "@getpaperplane/shared/nodeSqliteClient";
 import * as Context from "effect/Context";
 import * as Clock from "effect/Clock";
 import * as Effect from "effect/Effect";
@@ -21,7 +21,7 @@ export class DatabaseMissingError extends Schema.TaggedError<DatabaseMissingErro
   { path: Schema.String },
 ) {
   override get message() {
-    return "No existing Rove Code database was found in this data directory.";
+    return "No existing Paperplane database was found in this data directory.";
   }
 }
 
@@ -30,7 +30,7 @@ export class DatabaseInUseError extends Schema.TaggedError<DatabaseInUseError>()
   { path: Schema.String, cause: Schema.Defect() },
 ) {
   override get message() {
-    return "Stop the Rove Code server and desktop app before compacting the database.";
+    return "Stop the Paperplane server and desktop app before compacting the database.";
   }
 }
 
@@ -39,7 +39,7 @@ export class DatabaseProjectionsInvalidError extends Schema.TaggedError<Database
   { path: Schema.String },
 ) {
   override get message() {
-    return "Database projections need repair before compaction. Start Rove Code once so it rebuilds them, then run doctor again. If this CLI is older than the one that wrote the database, update Rove Code first.";
+    return "Database projections need repair before compaction. Start Paperplane once so it rebuilds them, then run doctor again. If this CLI is older than the one that wrote the database, update Paperplane first.";
   }
 }
 
@@ -61,7 +61,7 @@ export class DatabaseCompactError extends Schema.TaggedError<DatabaseCompactErro
   }
 }
 
-/** Offline inspection and repair, shared by startup and `rove doctor`. */
+/** Offline inspection and repair, shared by startup and `paperplane doctor`. */
 export class DatabaseMaintenance extends Context.Service<
   DatabaseMaintenance,
   {
@@ -89,7 +89,7 @@ export class DatabaseMaintenance extends Context.Service<
       | DatabaseCompactError
     >;
   }
->()("@rove-code/server/persistence/DatabaseMaintenance") {}
+>()("@getpaperplane/server/persistence/DatabaseMaintenance") {}
 
 const isDomainError = Schema.is(
   Schema.Union([DatabaseMissingError, DatabaseInUseError, DatabaseProjectionsInvalidError]),

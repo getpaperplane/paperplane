@@ -1,6 +1,5 @@
-import type { DesktopBridge } from "@rove-code/contracts";
-import { migrateRoveThemeId } from "@rove-code/shared/roveMigration";
-import { safeErrorLogAttributes } from "@rove-code/client-runtime/errors";
+import type { DesktopBridge } from "@getpaperplane/contracts";
+import { safeErrorLogAttributes } from "@getpaperplane/client-runtime/errors";
 import * as Schema from "effect/Schema";
 import { useCallback, useEffect, useSyncExternalStore } from "react";
 import {
@@ -36,7 +35,7 @@ type ThemeSnapshot = {
 
 type DesktopThemeBridge = Pick<DesktopBridge, "setTheme">;
 
-const STORAGE_KEY = "rove:theme";
+const STORAGE_KEY = "paperplane:theme";
 const MEDIA_QUERY = "(prefers-color-scheme: dark)";
 const DEFAULT_THEME_SNAPSHOT: ThemeSnapshot = {
   theme: "system",
@@ -88,7 +87,7 @@ function readStoredThemeHalvesRaw(): { light?: string; dark?: string } {
     const halves: { light?: string; dark?: string } = {};
     for (const appearance of ["light", "dark"] as const) {
       const themeId = (value as Record<string, unknown>)[appearance];
-      if (typeof themeId === "string") halves[appearance] = migrateRoveThemeId(themeId);
+      if (typeof themeId === "string") halves[appearance] = themeId;
     }
     return halves;
   } catch {

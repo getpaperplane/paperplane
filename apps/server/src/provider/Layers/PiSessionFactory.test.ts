@@ -7,11 +7,11 @@ import * as NodePath from "node:path";
 
 import { assert, it } from "@effect/vitest";
 import * as DateTime from "effect/DateTime";
-import { ThreadId } from "@rove-code/contracts";
+import { ThreadId } from "@getpaperplane/contracts";
 import { ModelRuntime, SessionManager, SettingsManager } from "@earendil-works/pi-coding-agent";
 import * as PiSdk from "@earendil-works/pi-coding-agent";
-import { EnvironmentId, ProviderInstanceId } from "@rove-code/contracts";
-import * as PiRoveTools from "./PiRoveTools.ts";
+import { EnvironmentId, ProviderInstanceId } from "@getpaperplane/contracts";
+import * as PiPaperplaneTools from "./PiPaperplaneTools.ts";
 import { afterEach, beforeEach, describe, expect, vi } from "vite-plus/test";
 
 import {
@@ -33,7 +33,7 @@ describe("headless Pi extensions", () => {
 
   beforeEach(() => {
     root = NodeFS.realpathSync(
-      NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "rove-pi-extensions-")),
+      NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "paperplane-pi-extensions-")),
     );
     cwd = NodePath.join(root, "project");
     agentDir = NodePath.join(root, "agent");
@@ -59,7 +59,7 @@ describe("headless Pi extensions", () => {
     const session = await createPiSession(
       {
         cwd,
-        model: extensions ? "rove-extension-test/fixture" : undefined,
+        model: extensions ? "paperplane-extension-test/fixture" : undefined,
         thinkingLevel: undefined,
         resumeSessionId: undefined,
       },
@@ -70,8 +70,8 @@ describe("headless Pi extensions", () => {
   };
   const log = () => NodeFS.readFileSync(NodePath.join(cwd, "extension.log"), "utf8");
 
-  it("installs thread-authorized Rove tools even with user extensions disabled", async () => {
-    const threadId = ThreadId.make("pi-rove-tools");
+  it("installs thread-authorized Paperplane tools even with user extensions disabled", async () => {
+    const threadId = ThreadId.make("pi-paperplane-tools");
     const config = {
       threadId,
       environmentId: EnvironmentId.make("test-env"),
@@ -83,10 +83,10 @@ describe("headless Pi extensions", () => {
       capabilities: new Set<string>(),
     };
     const dispose = vi.fn(async () => {});
-    const bridge = vi.spyOn(PiRoveTools, "createPiRoveTools").mockResolvedValue({
+    const bridge = vi.spyOn(PiPaperplaneTools, "createPiPaperplaneTools").mockResolvedValue({
       tools: [
         {
-          name: "mcp__rove__preview_status",
+          name: "mcp__paperplane__preview_status",
           label: "Preview status",
           description: "Inspect preview",
           parameters: { type: "object", properties: {} },
@@ -111,7 +111,7 @@ describe("headless Pi extensions", () => {
     const result = createSdkSession.mock.results[0]!;
     if (result.type !== "return") throw new Error("SDK session creation failed");
     const { session: sdkSession } = await result.value;
-    expect(sdkSession.getActiveToolNames()).toContain("mcp__rove__preview_status");
+    expect(sdkSession.getActiveToolNames()).toContain("mcp__paperplane__preview_status");
     expect(sdkSession.getAllTools().map((tool) => tool.name)).not.toContain("fixture_tool");
     await session.dispose();
     await session.dispose();
@@ -134,7 +134,7 @@ describe("headless Pi extensions", () => {
     expect(dispose).toHaveBeenCalledOnce();
   });
 
-  it("creates tool-free in-memory metadata sessions with Rove runtime instructions", async () => {
+  it("creates tool-free in-memory metadata sessions with Paperplane runtime instructions", async () => {
     const createSdkSession = vi.spyOn(PiSdk, "createAgentSessionFromServices").mockClear();
     const session = await createPiSession(
       { cwd, model: undefined, thinkingLevel: undefined, resumeSessionId: undefined },
@@ -148,7 +148,7 @@ describe("headless Pi extensions", () => {
     expect(sdkSession.getActiveToolNames()).toEqual([]);
     // Pi 0.87 replays the prompt from the transcript; the session getter is the
     // effective prompt, including changes not yet sent to the model.
-    expect(sdkSession.systemPrompt).toContain("running in Rove Code through the Pi harness");
+    expect(sdkSession.systemPrompt).toContain("running in Paperplane through the Pi harness");
     expect(sdkSession.systemPrompt).toContain("link_pull_request");
     expect(NodeFS.existsSync(NodePath.join(cwd, "extension.log"))).toBe(false);
   });
@@ -158,7 +158,7 @@ describe("headless Pi extensions", () => {
     const input = {
       cwd,
       agentDir: instanceDir,
-      model: "rove-extension-test/fixture",
+      model: "paperplane-extension-test/fixture",
       thinkingLevel: undefined,
       resumeSessionId: undefined,
     };
@@ -202,7 +202,7 @@ describe("headless Pi extensions", () => {
     const helper = await createPiSession(
       {
         cwd,
-        model: "rove-extension-test/fixture",
+        model: "paperplane-extension-test/fixture",
         thinkingLevel: undefined,
         resumeSessionId: undefined,
       },
@@ -271,13 +271,13 @@ describe("headless Pi extensions", () => {
   it("preserves the provider-qualified effective model across live switches", async () => {
     const session = await create();
     expect(session.getModel?.()).toMatchObject({
-      provider: "rove-extension-test",
+      provider: "paperplane-extension-test",
       id: "fixture",
     });
 
-    await session.setModel?.("rove-extension-test/custom-model");
+    await session.setModel?.("paperplane-extension-test/custom-model");
     expect(session.getModel?.()).toMatchObject({
-      provider: "rove-extension-test",
+      provider: "paperplane-extension-test",
       id: "custom-model",
     });
 
@@ -285,7 +285,7 @@ describe("headless Pi extensions", () => {
       /not found/i,
     );
     expect(session.getModel?.()).toMatchObject({
-      provider: "rove-extension-test",
+      provider: "paperplane-extension-test",
       id: "custom-model",
     });
   });
@@ -296,14 +296,14 @@ describe("headless Pi extensions", () => {
     // on this), but the mismatch must be visible.
     const custom = await createPiSession({
       cwd,
-      model: "rove-extension-test/missing-model",
+      model: "paperplane-extension-test/missing-model",
       thinkingLevel: undefined,
       resumeSessionId: undefined,
     });
     sessions.push(custom);
     assert.include(
       custom.modelFallbackMessage ?? "",
-      'Model "missing-model" not found for provider "rove-extension-test". Using custom model id.',
+      'Model "missing-model" not found for provider "paperplane-extension-test". Using custom model id.',
     );
   });
 
@@ -311,20 +311,20 @@ describe("headless Pi extensions", () => {
     // The fixture model declares `reasoning: false`, so "high" must clamp to "off".
     const clamped = await createPiSession({
       cwd,
-      model: "rove-extension-test/fixture",
+      model: "paperplane-extension-test/fixture",
       thinkingLevel: "high",
       resumeSessionId: undefined,
     });
     sessions.push(clamped);
     assert.include(
       clamped.modelFallbackMessage ?? "",
-      'Reasoning level "high" is not supported by rove-extension-test/fixture; using "off".',
+      'Reasoning level "high" is not supported by paperplane-extension-test/fixture; using "off".',
     );
 
     // A level the model supports stays silent — there is no mismatch to report.
     const supported = await createPiSession({
       cwd,
-      model: "rove-extension-test/fixture",
+      model: "paperplane-extension-test/fixture",
       thinkingLevel: "off",
       resumeSessionId: undefined,
     });
@@ -534,7 +534,7 @@ describe("headless Pi extensions", () => {
     sessions.push(resumed);
     assert.include(
       resumed.modelFallbackMessage ?? "",
-      "Could not restore model rove-extension-test/fixture",
+      "Could not restore model paperplane-extension-test/fixture",
     );
     assert.include(resumed.modelFallbackMessage ?? "", "Using rootsys.cloud/kimi-k3");
   });
@@ -602,7 +602,7 @@ describe("headless Pi extensions", () => {
       {
         cwd,
         interactive: true,
-        model: "rove-extension-test/fixture",
+        model: "paperplane-extension-test/fixture",
         thinkingLevel: undefined,
         resumeSessionId: undefined,
       },
@@ -631,7 +631,7 @@ describe("headless Pi extensions", () => {
     const events: PiSessionEventLike[] = [];
     session.subscribe((event) => {
       events.push(event);
-      if (event.type === "rove_ui_request") requested.resolve(event);
+      if (event.type === "paperplane_ui_request") requested.resolve(event);
     });
     const accepted: boolean[] = [];
     const prompting = session.prompt("handled", {
@@ -644,11 +644,11 @@ describe("headless Pi extensions", () => {
     expect(session.respondToUserInput!(String(question.requestId), { answer: "Ada" })).toBe(true);
     await prompting;
     expect(events).toContainEqual({
-      type: "rove_ui_notify",
+      type: "paperplane_ui_notify",
       level: "info",
       message: "Welcome Ada",
     });
-    expect(events.filter((event) => event.type === "rove_ui_resolved")).toHaveLength(1);
+    expect(events.filter((event) => event.type === "paperplane_ui_resolved")).toHaveLength(1);
     expect(events.filter((event) => event.type === "agent_settled")).toHaveLength(1);
     expect(session.hasPendingUserInput).toBe(false);
     expect(session.isPreparingPrompt).toBe(false);
@@ -677,8 +677,8 @@ describe("headless Pi extensions", () => {
     await session.prompt("handled");
     expect(log()).toContain("start:true:rpc\n");
     expect(report).toHaveBeenCalledOnce();
-    expect(events.filter((event) => event.type === "rove_ui_notify")).toEqual([
-      { type: "rove_ui_notify", level: "info", message: "RPC hooks registered" },
+    expect(events.filter((event) => event.type === "paperplane_ui_notify")).toEqual([
+      { type: "paperplane_ui_notify", level: "info", message: "RPC hooks registered" },
     ]);
     await session.dispose();
     expect(dispose).toHaveBeenCalledOnce();
@@ -700,7 +700,7 @@ describe("headless Pi extensions", () => {
     const second = await createInteractive();
     const requested = Promise.withResolvers<PiSessionEventLike>();
     first.subscribe((event) => {
-      if (event.type === "rove_ui_request") requested.resolve(event);
+      if (event.type === "paperplane_ui_request") requested.resolve(event);
     });
     const prompt = first.prompt("/pick");
     const event = await requested.promise;
@@ -746,7 +746,7 @@ describe("headless Pi extensions", () => {
     const events: PiSessionEventLike[] = [];
     session.subscribe((event) => {
       events.push(event);
-      if (event.type === "rove_ui_request") requested.resolve(event);
+      if (event.type === "paperplane_ui_request") requested.resolve(event);
     });
     const prompting = session.prompt("Call the fixture tool");
     const question = await requested.promise;
@@ -779,7 +779,7 @@ describe("headless Pi extensions", () => {
     const events: PiSessionEventLike[] = [];
     session.subscribe((event) => {
       events.push(event);
-      if (event.type === "rove_ui_request") requested.resolve();
+      if (event.type === "paperplane_ui_request") requested.resolve();
     });
     vi.useFakeTimers();
     const prompt = session.prompt("/timed");
@@ -787,7 +787,7 @@ describe("headless Pi extensions", () => {
     await vi.advanceTimersByTimeAsync(25);
     await prompt;
     expect(session.hasPendingUserInput).toBe(false);
-    expect(events.filter((event) => event.type === "rove_ui_resolved")).toMatchObject([
+    expect(events.filter((event) => event.type === "paperplane_ui_resolved")).toMatchObject([
       { answers: {} },
     ]);
     expect(SessionManager.open(session.sessionFile!).getEntries()).toContainEqual(
@@ -827,17 +827,17 @@ describe("headless Pi extensions", () => {
     expect(events.some((event) => event.type === "extension_error")).toBe(false);
     expect(report).toHaveBeenCalledOnce();
     expect(
-      events.filter((event) => event.type === "rove_ui_notify" && event.level === "warning"),
+      events.filter((event) => event.type === "paperplane_ui_notify" && event.level === "warning"),
     ).toHaveLength(0);
     expect(
-      events.filter((event) => event.type === "rove_ui_notify" && event.level === "info"),
+      events.filter((event) => event.type === "paperplane_ui_notify" && event.level === "info"),
     ).toHaveLength(0);
     await vi.advanceTimersByTimeAsync(249);
-    expect(events.filter((event) => event.type === "rove_ui_status")).toEqual([]);
+    expect(events.filter((event) => event.type === "paperplane_ui_status")).toEqual([]);
     await vi.advanceTimersByTimeAsync(1);
-    expect(events.filter((event) => event.type === "rove_ui_status")).toEqual([
+    expect(events.filter((event) => event.type === "paperplane_ui_status")).toEqual([
       {
-        type: "rove_ui_status",
+        type: "paperplane_ui_status",
         statuses: [
           { key: "progress", text: "Step 1000" },
           { key: "second", text: "Remaining" },
@@ -845,13 +845,13 @@ describe("headless Pi extensions", () => {
       },
     ]);
     await vi.advanceTimersByTimeAsync(250);
-    expect(events.filter((event) => event.type === "rove_ui_text")).toEqual([
-      { type: "rove_ui_text", message: "Pi: Thinking\ntodo: One\nTwo" },
+    expect(events.filter((event) => event.type === "paperplane_ui_text")).toEqual([
+      { type: "paperplane_ui_text", message: "Pi: Thinking\ntodo: One\nTwo" },
     ]);
     await session.prompt("/clear-statuses");
     await vi.advanceTimersByTimeAsync(500);
-    expect(events.filter((event) => event.type === "rove_ui_status").at(-1)).toEqual({
-      type: "rove_ui_status",
+    expect(events.filter((event) => event.type === "paperplane_ui_status").at(-1)).toEqual({
+      type: "paperplane_ui_status",
       statuses: [],
     });
     await session.prompt("/statuses");
@@ -883,7 +883,7 @@ describe("headless Pi extensions", () => {
     const events: PiSessionEventLike[] = [];
     session.subscribe((event) => {
       events.push(event);
-      if (event.type === "rove_ui_request") requested.resolve(event);
+      if (event.type === "paperplane_ui_request") requested.resolve(event);
     });
     const prompting = session.prompt("/edit-text");
     const question = await requested.promise;
@@ -897,8 +897,8 @@ describe("headless Pi extensions", () => {
     ]);
     session.respondToUserInput!(String(question.requestId), { answer: "First line\nSecond line" });
     await prompting;
-    expect(events.filter((event) => event.type === "rove_ui_request")).toHaveLength(2);
-    expect(events.filter((event) => event.type === "rove_ui_resolved")).toHaveLength(2);
+    expect(events.filter((event) => event.type === "paperplane_ui_request")).toHaveLength(2);
+    expect(events.filter((event) => event.type === "paperplane_ui_resolved")).toHaveLength(2);
     expect(session.hasPendingUserInput).toBe(false);
     expect(SessionManager.open(session.sessionFile!).getEntries()).toContainEqual(
       expect.objectContaining({ data: { text: "First line\nSecond line" } }),
@@ -934,7 +934,7 @@ describe("headless Pi extensions", () => {
     const events: PiSessionEventLike[] = [];
     session.subscribe((event) => {
       events.push(event);
-      if (event.type === "rove_ui_request") requested.resolve();
+      if (event.type === "paperplane_ui_request") requested.resolve();
     });
     const prompting = session.prompt("must not execute tools");
     const rejected = expect(prompting).rejects.toThrow("stopped during prompt preparation");
@@ -942,13 +942,13 @@ describe("headless Pi extensions", () => {
     await session.abort();
     await rejected;
     expect(events.some((event) => event.type === "agent_start")).toBe(false);
-    expect(events.filter((event) => event.type === "rove_ui_resolved")).toMatchObject([
+    expect(events.filter((event) => event.type === "paperplane_ui_resolved")).toMatchObject([
       { answers: {} },
     ]);
     expect(session.hasPendingUserInput).toBe(false);
   });
 
-  it("still disposes the SDK and Rove tools when an extension shutdown hook never resolves", async () => {
+  it("still disposes the SDK and Paperplane tools when an extension shutdown hook never resolves", async () => {
     NodeFS.writeFileSync(
       NodePath.join(cwd, ".pi", "extensions", "stuck-shutdown.ts"),
       `
@@ -1081,7 +1081,7 @@ export default function (pi) {
   pi.on("before_agent_start", (event, ctx) => {
     NodeFS.appendFileSync(
       NodePath.join(ctx.cwd, "disabled-note-probe.log"),
-      event.systemPrompt.includes("Rove Code disables") ? "note:present" : "note:absent",
+      event.systemPrompt.includes("Paperplane disables") ? "note:present" : "note:absent",
     );
   });
 }`,
@@ -1103,10 +1103,10 @@ export default function (pi) {
     assert.isFalse(NodeFS.existsSync(NodePath.join(cwd, "extension.log")));
 
     // A session keeping the fixture but blocking another extension still
-    // tells the model, in its system prompt, which extension Rove removed.
+    // tells the model, in its system prompt, which extension Paperplane removed.
     const noteSession = await createPiSession({
       cwd,
-      model: "rove-extension-test/fixture",
+      model: "paperplane-extension-test/fixture",
       thinkingLevel: undefined,
       resumeSessionId: undefined,
       disabledExtensions: [NodePath.join(cwd, ".pi", "extensions", "dummy.ts")],
@@ -1132,7 +1132,7 @@ export default function (pi) {
     // With brokenPath disabled, it should NEVER execute or crash session creation:
     const session = await createPiSession({
       cwd,
-      model: "rove-extension-test/fixture",
+      model: "paperplane-extension-test/fixture",
       thinkingLevel: undefined,
       resumeSessionId: undefined,
       disabledExtensions: [brokenPath],
@@ -1155,7 +1155,7 @@ export default function (pi) {
     await expect(
       createPiSession({
         cwd,
-        model: "rove-extension-test/fixture",
+        model: "paperplane-extension-test/fixture",
         thinkingLevel: undefined,
         resumeSessionId: undefined,
       }),
@@ -1165,7 +1165,7 @@ export default function (pi) {
     const recovered = await createPiSession(
       {
         cwd,
-        model: "rove-extension-test/fixture",
+        model: "paperplane-extension-test/fixture",
         thinkingLevel: undefined,
         resumeSessionId: undefined,
       },
@@ -1232,7 +1232,7 @@ export default function (pi) {
     );
   });
 
-  it("rejects extension session replacement without changing Rove's session identity", async () => {
+  it("rejects extension session replacement without changing Paperplane's session identity", async () => {
     const session = await create();
     const sessionId = session.sessionId;
     const events: PiSessionEventLike[] = [];
@@ -1242,7 +1242,8 @@ export default function (pi) {
     assert.isTrue(
       events.some(
         (event) =>
-          event.type === "extension_error" && String(event.error).includes("not supported in Rove"),
+          event.type === "extension_error" &&
+          String(event.error).includes("not supported in Paperplane"),
       ),
     );
     assert.strictEqual(events.at(-1)?.type, "agent_settled");
@@ -1263,7 +1264,7 @@ export default function (pi) {
     await fresh.dispose();
     const resumed = await createPiSession({
       cwd,
-      model: "rove-extension-test/fixture",
+      model: "paperplane-extension-test/fixture",
       thinkingLevel: undefined,
       resumeSessionId: fresh.sessionId,
     });
@@ -1286,7 +1287,7 @@ export default function (pi) {
     vi.stubEnv("PI_CODING_AGENT_DIR", movedAgentDir);
     const resumed = await createPiSession({
       cwd: movedCwd,
-      model: "rove-extension-test/fixture",
+      model: "paperplane-extension-test/fixture",
       thinkingLevel: undefined,
       resumeSessionId: fresh.sessionId,
       resumeSessionFile: fresh.sessionFile,
@@ -1357,7 +1358,7 @@ export default function (pi) {
     },
   );
 
-  it.each(["rove-router-test", "rove-extension-test"])(
+  it.each(["paperplane-router-test", "paperplane-extension-test"])(
     "starts and resumes an interactive thread using the %s virtual model",
     async (provider) => {
       NodeFS.copyFileSync(
@@ -1377,7 +1378,7 @@ export default function (pi) {
       expect(session.messages).toContainEqual(
         expect.objectContaining({
           role: "assistant",
-          provider: "rove-extension-test",
+          provider: "paperplane-extension-test",
           model: "fixture",
         }),
       );
@@ -1402,7 +1403,7 @@ export default function (pi) {
       NodePath.join(cwd, ".pi", "extensions", "invalid-router.ts"),
       `export default function (pi) {
         pi.registerVirtualModel({
-          provider: "rove-extension-test",
+          provider: "paperplane-extension-test",
           id: "fixture",
           name: "Invalid router",
           route() { throw new Error("must not route"); },
@@ -1428,7 +1429,7 @@ export default function (pi) {
       createPiSession(
         {
           cwd,
-          model: "rove-extension-test/fixture",
+          model: "paperplane-extension-test/fixture",
           thinkingLevel: undefined,
           resumeSessionId: undefined,
         },
@@ -1448,7 +1449,7 @@ export default function (pi) {
     const session = await createPiSession(
       {
         cwd,
-        model: "rove-extension-test/fixture",
+        model: "paperplane-extension-test/fixture",
         thinkingLevel: undefined,
         resumeSessionId: undefined,
       },
@@ -1456,7 +1457,7 @@ export default function (pi) {
     );
     sessions.push(session);
     expect(session.getModel?.()).toMatchObject({
-      provider: "rove-extension-test",
+      provider: "paperplane-extension-test",
       id: "fixture",
     });
   });
@@ -1569,7 +1570,7 @@ describe("Pi session recovery", () => {
 
   it("createPiSession rejects a missed resume and resumes a live session", async () => {
     const tmp = NodeFS.realpathSync(
-      NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "rove-pi-resume-")),
+      NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "paperplane-pi-resume-")),
     );
     const resumeCwd = NodePath.join(tmp, "project");
     const resumeAgentDir = NodePath.join(tmp, "agent");

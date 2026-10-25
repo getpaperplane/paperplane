@@ -1,11 +1,11 @@
 import { useAtomValue } from "@effect/atom-react";
-import type { OtlpSignal } from "@rove-code/contracts";
+import type { OtlpSignal } from "@getpaperplane/contracts";
 import {
   describeOtlpEndpointStatus,
   isOtlpHttpUrl,
   isOtlpEndpointInputValid,
   type OtlpEndpointCheck,
-} from "@rove-code/client-runtime/environment-admin";
+} from "@getpaperplane/client-runtime/environment-admin";
 import { useEffect, useEffectEvent, useState } from "react";
 
 import { serverEnvironment } from "../../state/server";

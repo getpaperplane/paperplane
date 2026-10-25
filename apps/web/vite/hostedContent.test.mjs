@@ -26,7 +26,7 @@ let env;
 let html;
 
 beforeAll(async () => {
-  root = await NodeFSP.mkdtemp(NodePath.join(NodeOS.tmpdir(), "rove-agent-readiness-"));
+  root = await NodeFSP.mkdtemp(NodePath.join(NodeOS.tmpdir(), "paperplane-agent-readiness-"));
   server = NodeHttp.createServer(async (request, response) => {
     try {
       const result = await worker.fetch(
@@ -132,7 +132,7 @@ it("does not allow missing content namespaces to become thread routes", async ()
     "/settings/bogus",
     "/docs/bogus",
     "/assets/bogus.js",
-    "/.well-known/rove",
+    "/.well-known/paperplane",
     "/oauth/callback",
   ]) {
     NodeAssert.equal(isAppRoute(path), false, path);
@@ -213,10 +213,12 @@ it("returns explanatory HTML and bodyless HEAD errors", async () => {
 
 it("rejects insufficient or poorly headed raw HTML", () => {
   NodeAssert.throws(() =>
-    checkHomepageHtml("<body><h1>Rove</h1><script>" + "x".repeat(600) + "</script></body>"),
+    checkHomepageHtml("<body><h1>Paperplane</h1><script>" + "x".repeat(600) + "</script></body>"),
   );
   NodeAssert.throws(() =>
-    checkHomepageHtml(`<body><h1>Rove</h1><h3>Skipped</h3><p>${"content ".repeat(100)}</p></body>`),
+    checkHomepageHtml(
+      `<body><h1>Paperplane</h1><h3>Skipped</h3><p>${"content ".repeat(100)}</p></body>`,
+    ),
   );
 });
 

@@ -8,8 +8,8 @@ import type {
   SettingSource,
   ToolCall,
 } from "@cursor/sdk";
-import { formatReadToolLabel, formatSearchToolLabel } from "@rove-code/shared/toolActivity";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+import { formatReadToolLabel, formatSearchToolLabel } from "@getpaperplane/shared/toolActivity";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 import {
   isOrchestrationV2WorkActive,
   defaultInstanceIdForDriver,
@@ -28,7 +28,7 @@ import {
   type OrchestrationV2TurnItem,
   type ProviderInstanceId,
   type ThreadId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { CursorSettings } from "../settings.ts";
 import * as DateTime from "effect/DateTime";
 import * as Deferred from "effect/Deferred";
@@ -41,11 +41,11 @@ import * as Ref from "effect/Ref";
 import * as Schema from "effect/Schema";
 import * as Stream from "effect/Stream";
 
-import * as ProviderHost from "@rove-code/provider-core/server/ProviderHost";
-import { mcpToolPresentation } from "@rove-code/provider-core/server/mcpToolPresentation";
-import * as McpProviderSessions from "@rove-code/provider-core/server/McpProviderSessions";
-import { ROVE_MCP_SERVER_NAME } from "@rove-code/shared/roveMcp";
-import * as McpProviderSession from "@rove-code/provider-core/server/mcpSession";
+import * as ProviderHost from "@getpaperplane/provider-core/server/ProviderHost";
+import { mcpToolPresentation } from "@getpaperplane/provider-core/server/mcpToolPresentation";
+import * as McpProviderSessions from "@getpaperplane/provider-core/server/McpProviderSessions";
+import { PAPERPLANE_MCP_SERVER_NAME } from "@getpaperplane/shared/paperplaneMcp";
+import * as McpProviderSession from "@getpaperplane/provider-core/server/mcpSession";
 import { CursorTransportFailure } from "./transportFailure.ts";
 import { cursorSdkModelSelection } from "./sdkModel.ts";
 import {
@@ -53,27 +53,27 @@ import {
   hasCursorSkillMention,
   rewriteCursorSkillMentions,
 } from "./skills.ts";
-import { mergeProviderInstanceEnvironment } from "@rove-code/provider-core/server/instanceEnvironment";
-import { roveOrchestrationPromptForFirstRun } from "@rove-code/provider-core/server/orchestrationInstructions";
-import { buildRuntimeInstructions } from "@rove-code/provider-core/server/runtimeInstructions";
-import * as IdAllocator from "@rove-code/provider-core/server/IdAllocator";
-import { makeProviderFailure } from "@rove-code/provider-core/server/failure";
-import { turnScopedSelectionTransition } from "@rove-code/provider-core/server/selectionTransition";
+import { mergeProviderInstanceEnvironment } from "@getpaperplane/provider-core/server/instanceEnvironment";
+import { paperplaneOrchestrationPromptForFirstRun } from "@getpaperplane/provider-core/server/orchestrationInstructions";
+import { buildRuntimeInstructions } from "@getpaperplane/provider-core/server/runtimeInstructions";
+import * as IdAllocator from "@getpaperplane/provider-core/server/IdAllocator";
+import { makeProviderFailure } from "@getpaperplane/provider-core/server/failure";
+import { turnScopedSelectionTransition } from "@getpaperplane/provider-core/server/selectionTransition";
 import {
   isProviderNativeImageAttachment,
   providerMessageTextWithAttachmentPaths,
-} from "@rove-code/provider-core/server/attachmentPrompt";
-import * as ProviderAdapter from "@rove-code/provider-core/server/ProviderAdapter";
+} from "@getpaperplane/provider-core/server/attachmentPrompt";
+import * as ProviderAdapter from "@getpaperplane/provider-core/server/ProviderAdapter";
 import {
   ProviderAdapterDriverCreateError,
   type ProviderAdapterDriver,
   type ProviderAdapterDriverCreateInput,
-} from "@rove-code/provider-core/server/adapterDriver";
+} from "@getpaperplane/provider-core/server/adapterDriver";
 import {
   makeSubagentChildThread,
   makeSubagentConversationArtifacts,
   subagentThreadTitle,
-} from "@rove-code/provider-core/server/subagentProjection";
+} from "@getpaperplane/provider-core/server/subagentProjection";
 import * as CursorAgentSdk from "./CursorAgentSdk.ts";
 export { cursorSdkModelSelection } from "./sdkModel.ts";
 
@@ -209,7 +209,7 @@ export function cursorMcpServers(
     return undefined;
   }
   return {
-    [ROVE_MCP_SERVER_NAME]: {
+    [PAPERPLANE_MCP_SERVER_NAME]: {
       type: "http",
       url: session.endpoint,
       headers: {
@@ -293,7 +293,7 @@ function nativeThreadId(providerThread: OrchestrationV2ProviderThread): string {
  * plugins. The SDK loads none of them when `settingSources` is omitted.
  * Sandbox policy files are read either way, and hooks can only deny or ask
  * (which local SDK runs reject), so these layers do not loosen the sandbox or
- * approval mode Rove sets.
+ * approval mode Paperplane sets.
  */
 const CURSOR_AGENT_SETTING_SOURCES = [
   "project",
@@ -314,7 +314,7 @@ export function makeCursorAgentOptions(input: {
   const mcpServers = cursorMcpServers(input.mcpSession);
   return {
     model: cursorSdkModelSelection(input.modelSelection),
-    name: `Rove Code ${input.threadId}`,
+    name: `Paperplane ${input.threadId}`,
     mode: input.runtimePolicy.interactionMode === "plan" ? "plan" : "agent",
     ...(input.apiKey === undefined ? {} : { apiKey: input.apiKey }),
     local: {
@@ -2151,7 +2151,7 @@ export const makeCursorAdapterV2 = Effect.fn("makeCursorAdapterV2")(function* (
                 .map((skill) => skill.name),
             );
           }
-          const userText = roveOrchestrationPromptForFirstRun({
+          const userText = paperplaneOrchestrationPromptForFirstRun({
             prompt: providerMessageTextWithAttachmentPaths({
               text:
                 cursorSkillNames === undefined
@@ -2161,7 +2161,7 @@ export const makeCursorAdapterV2 = Effect.fn("makeCursorAdapterV2")(function* (
               resolveAttachmentPath: host.resolveAttachmentPath,
             }),
             runOrdinal: turnInput.runOrdinal,
-            hasRoveMcp: mcpServers !== undefined,
+            hasPaperplaneMcp: mcpServers !== undefined,
           });
           const images = yield* Effect.forEach(
             turnInput.message.attachments.filter(isProviderNativeImageAttachment),

@@ -1,5 +1,5 @@
 import { assert, it } from "@effect/vitest";
-import { CommandId, MessageId, RunId, ThreadId } from "@rove-code/contracts";
+import { CommandId, MessageId, RunId, ThreadId } from "@getpaperplane/contracts";
 
 import { derive } from "./IdAllocator.ts";
 

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import * as Cause from "effect/Cause";
-import type { AtomCommandResult } from "@rove-code/client-runtime/state/runtime";
+import type { AtomCommandResult } from "@getpaperplane/client-runtime/state/runtime";
 import {
   type EnvironmentId,
   type RemoteSandbox,
@@ -8,7 +8,7 @@ import {
   type SandboxInventory,
   type SandboxProvider,
   type SandboxRegion,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { useRouter } from "@tanstack/react-router";
 import { AlertCircleIcon, ChevronDownIcon, ExternalLinkIcon, RefreshCwIcon } from "lucide-react";
 import { sandboxEnvironment } from "../../state/sandbox";
@@ -56,7 +56,7 @@ export function RemoteSandboxesSettings() {
       ) : environment.serverConfig?.environment.capabilities.remoteSandboxes !== true ? (
         <SettingsRow
           title="Server update required"
-          description="Update the selected Rove server to manage remote sandboxes."
+          description="Update the selected Paperplane server to manage remote sandboxes."
         />
       ) : (
         <SandboxControls
@@ -209,7 +209,7 @@ function SandboxControls({
       kind === "delete"
         ? `Permanently delete ${sandbox.label}, its workspace, credentials, and recovery snapshots? This cannot be undone.${sandbox.remoteId ? "" : ` Provisioning returned no resource ID, so first check the ${vendor} dashboard for leftover resources.`}`
         : kind === "pause"
-          ? `Pause ${sandbox.label}? This stops its Rove server and interrupts any running agent, build, or terminal. Files and persisted conversations are kept.`
+          ? `Pause ${sandbox.label}? This stops its Paperplane server and interrupts any running agent, build, or terminal. Files and persisted conversations are kept.`
           : `${sandbox.phase === "paused" ? "Resume" : "Repair"} ${sandbox.label}? This starts compute billing on your ${vendor} account.`;
     if (
       !(await requestConfirmDialog(message, {
@@ -218,7 +218,7 @@ function SandboxControls({
     )
       return;
     const progress =
-      kind === "delete" ? "Deleting…" : kind === "pause" ? "Pausing…" : "Starting Rove…";
+      kind === "delete" ? "Deleting…" : kind === "pause" ? "Pausing…" : "Starting Paperplane…";
     await run({ scope: sandbox.id, label: progress }, async () => {
       value(
         await action({ environmentId, input: { id: sandbox.id, action: kind, confirmed: true } }),
@@ -241,7 +241,7 @@ function SandboxControls({
             input: { id: sandbox.id, action: "credentials", confirmed: true, credentials },
           }),
         );
-        // Rove in the sandbox only re-checks providers on request.
+        // Paperplane in the sandbox only re-checks providers on request.
         if (sandbox.environmentId && sandbox.phase === "running")
           await refreshProviders({ environmentId: sandbox.environmentId, input: {} });
       },
@@ -302,7 +302,7 @@ function SandboxControls({
     await run(
       {
         scope: "create",
-        label: "Creating the sandbox and installing Rove. This can take a few minutes.",
+        label: "Creating the sandbox and installing Paperplane. This can take a few minutes.",
       },
       async () => {
         value(

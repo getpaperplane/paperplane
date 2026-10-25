@@ -1,5 +1,5 @@
-import type { AntigravitySettings, ServerProviderUsageWindow } from "@rove-code/contracts";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+import type { AntigravitySettings, ServerProviderUsageWindow } from "@getpaperplane/contracts";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 import * as Clock from "effect/Clock";
 import * as Crypto from "effect/Crypto";
 import * as DateTime from "effect/DateTime";
@@ -13,7 +13,7 @@ import { FetchHttpClient, HttpClient, HttpClientRequest, HttpClientResponse } fr
 import {
   makeUnavailableUsageLimits,
   makeUsageLimits,
-} from "@rove-code/provider-core/server/usageLimits";
+} from "@getpaperplane/provider-core/server/usageLimits";
 
 const ENDPOINTS = [
   "https://daily-cloudcode-pa.googleapis.com",

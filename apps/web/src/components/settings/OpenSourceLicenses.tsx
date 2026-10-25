@@ -8,7 +8,7 @@ import {
   thirdPartyLicenseEntryKey,
   type ThirdPartyLicenseEntry,
   type ThirdPartyLicenseManifest,
-} from "@rove-code/shared/thirdPartyLicenses";
+} from "@getpaperplane/shared/thirdPartyLicenses";
 
 import { Button } from "../ui/button";
 import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from "../ui/collapsible";

@@ -1,4 +1,4 @@
-import type { DesktopBridge } from "@rove-code/contracts";
+import type { DesktopBridge } from "@getpaperplane/contracts";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 import {

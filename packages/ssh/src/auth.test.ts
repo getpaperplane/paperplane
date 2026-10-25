@@ -5,7 +5,7 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 
 import {
   buildSshAskpassHelperDescriptor,
@@ -34,7 +34,9 @@ describe("ssh auth", () => {
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const directory = yield* fs.makeTempDirectoryScoped({ prefix: "rove-ssh-askpass-test-" });
+      const directory = yield* fs.makeTempDirectoryScoped({
+        prefix: "paperplane-ssh-askpass-test-",
+      });
       const env = yield* buildSshChildEnvironment({
         authSecret: "super-secret",
         interactiveAuth: true,
@@ -45,12 +47,12 @@ describe("ssh auth", () => {
       const askpassPath = path.join(directory, "ssh-askpass.sh");
       assert.equal(env.SSH_ASKPASS, askpassPath);
       assert.equal(env.SSH_ASKPASS_REQUIRE, "force");
-      assert.equal(env.ROVE_SSH_AUTH_SECRET, "super-secret");
-      assert.equal(env.DISPLAY, "rove");
+      assert.equal(env.PAPERPLANE_SSH_AUTH_SECRET, "super-secret");
+      assert.equal(env.DISPLAY, "paperplane");
       assert.equal(yield* fs.exists(askpassPath), true);
       assert.include(
         yield* fs.readFileString(askpassPath),
-        'printf "%s\\n" "$ROVE_SSH_AUTH_SECRET"',
+        'printf "%s\\n" "$PAPERPLANE_SSH_AUTH_SECRET"',
       );
     }).pipe(
       Effect.provide(Layer.merge(NodeServices.layer, Layer.succeed(HostProcess.Platform, "linux"))),
@@ -61,14 +63,14 @@ describe("ssh auth", () => {
   it.effect("builds a windows askpass launcher pair", () =>
     Effect.gen(function* () {
       const descriptor = yield* buildSshAskpassHelperDescriptor({
-        directory: "C:\\temp\\rove-ssh-askpass",
+        directory: "C:\\temp\\paperplane-ssh-askpass",
       }).pipe(
         Effect.provide(
           Layer.merge(NodeServices.layer, Layer.succeed(HostProcess.Platform, "win32")),
         ),
       );
 
-      assert.equal(descriptor.launcherPath, "C:\\temp\\rove-ssh-askpass\\ssh-askpass.cmd");
+      assert.equal(descriptor.launcherPath, "C:\\temp\\paperplane-ssh-askpass\\ssh-askpass.cmd");
       assert.deepEqual(
         descriptor.files.map((file) => file.path.split("\\").at(-1)),
         ["ssh-askpass.cmd", "ssh-askpass.ps1"],

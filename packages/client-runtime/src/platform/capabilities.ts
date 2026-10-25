@@ -3,7 +3,7 @@ import {
   type DesktopSshEnvironmentBootstrap,
   type DesktopSshEnvironmentTarget,
   EnvironmentId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Context from "effect/Context";
 import type * as Effect from "effect/Effect";
 import type * as Option from "effect/Option";
@@ -31,28 +31,28 @@ export class CloudSession extends Context.Service<
     readonly identity: Effect.Effect<Option.Option<CloudSessionIdentity>>;
     readonly clerkToken: Effect.Effect<string, ConnectionAttemptError>;
   }
->()("@rove-code/client-runtime/platform/capabilities/CloudSession") {}
+>()("@getpaperplane/client-runtime/platform/capabilities/CloudSession") {}
 
 export class RelayDeviceIdentity extends Context.Service<
   RelayDeviceIdentity,
   {
     readonly deviceId: Effect.Effect<Option.Option<string>, ConnectionAttemptError>;
   }
->()("@rove-code/client-runtime/platform/capabilities/RelayDeviceIdentity") {}
+>()("@getpaperplane/client-runtime/platform/capabilities/RelayDeviceIdentity") {}
 
 export class ClientPresentation extends Context.Service<
   ClientPresentation,
   {
     readonly metadata: AuthClientPresentationMetadata;
   }
->()("@rove-code/client-runtime/platform/capabilities/ClientPresentation") {}
+>()("@getpaperplane/client-runtime/platform/capabilities/ClientPresentation") {}
 
 export class PrimaryEnvironmentAuth extends Context.Service<
   PrimaryEnvironmentAuth,
   {
     readonly bearerToken: Effect.Effect<Option.Option<string>, ConnectionAttemptError>;
   }
->()("@rove-code/client-runtime/platform/capabilities/PrimaryEnvironmentAuth") {}
+>()("@getpaperplane/client-runtime/platform/capabilities/PrimaryEnvironmentAuth") {}
 
 export class SshEnvironmentGateway extends Context.Service<
   SshEnvironmentGateway,
@@ -75,4 +75,4 @@ export class SshEnvironmentGateway extends Context.Service<
       target: DesktopSshEnvironmentTarget,
     ) => Effect.Effect<void, ConnectionAttemptError>;
   }
->()("@rove-code/client-runtime/platform/capabilities/SshEnvironmentGateway") {}
+>()("@getpaperplane/client-runtime/platform/capabilities/SshEnvironmentGateway") {}

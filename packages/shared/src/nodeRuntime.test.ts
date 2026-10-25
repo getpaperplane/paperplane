@@ -31,11 +31,15 @@ describe("Self invocation", () => {
     Effect.gen(function* () {
       // Node repeats the binary at argv[1] for a single-executable; it is not a script.
       const invocation = yield* resolveSelfInvocation().pipe(
-        Effect.provideService(HostProcess.ExecutablePath, "/packaged/rove"),
+        Effect.provideService(HostProcess.ExecutablePath, "/packaged/paperplane"),
         Effect.provideService(HostProcess.IsExecutable, true),
-        Effect.provideService(HostProcess.Arguments, ["/packaged/rove", "/packaged/rove", "serve"]),
+        Effect.provideService(HostProcess.Arguments, [
+          "/packaged/paperplane",
+          "/packaged/paperplane",
+          "serve",
+        ]),
       );
-      expect(invocation).toEqual({ command: "/packaged/rove", entrypoint: undefined });
+      expect(invocation).toEqual({ command: "/packaged/paperplane", entrypoint: undefined });
       expect(selfInvocationArgs(invocation, ["acp-mcp-bridge"])).toEqual(["acp-mcp-bridge"]);
     }).pipe(Effect.provide(NodeServices.layer)),
   );
@@ -44,7 +48,7 @@ describe("Self invocation", () => {
 describe("Node runtime selection", () => {
   it.effect("keeps the current Node or Electron runtime without requiring Node on PATH", () =>
     Effect.gen(function* () {
-      for (const executable of ["/runtime/node", "/Applications/Rove Code.app/Electron"]) {
+      for (const executable of ["/runtime/node", "/Applications/Paperplane.app/Electron"]) {
         expect(
           yield* resolveNodeExecutable("Local device support", { PATH: "" }).pipe(
             Effect.provideService(HostProcess.ExecutablePath, executable),
@@ -55,7 +59,7 @@ describe("Node runtime selection", () => {
     }).pipe(Effect.provide(NodeServices.layer)),
   );
 
-  it.effect("uses installed Node instead of the standalone Rove executable", () =>
+  it.effect("uses installed Node instead of the standalone Paperplane executable", () =>
     Effect.gen(function* () {
       const path = yield* Path.Path;
       expect(
@@ -64,7 +68,7 @@ describe("Node runtime selection", () => {
         }),
       ).toBe(process.execPath);
     }).pipe(
-      Effect.provideService(HostProcess.ExecutablePath, "/packaged/rove"),
+      Effect.provideService(HostProcess.ExecutablePath, "/packaged/paperplane"),
       Effect.provideService(HostProcess.IsExecutable, true),
       Effect.provide(NodeServices.layer),
     ),
@@ -102,7 +106,7 @@ describe("Node runtime selection", () => {
       expect(yield* resolveNodeExecutable("Local device support", env)).toBe(node);
     }).pipe(
       Effect.scoped,
-      Effect.provideService(HostProcess.ExecutablePath, "/packaged/rove"),
+      Effect.provideService(HostProcess.ExecutablePath, "/packaged/paperplane"),
       Effect.provideService(HostProcess.IsExecutable, true),
       Effect.provide(NodeServices.layer),
     ),
@@ -129,7 +133,7 @@ describe("Node runtime selection", () => {
       ).toBe(node);
     }).pipe(
       Effect.scoped,
-      Effect.provideService(HostProcess.ExecutablePath, "/packaged/rove"),
+      Effect.provideService(HostProcess.ExecutablePath, "/packaged/paperplane"),
       Effect.provideService(HostProcess.IsExecutable, true),
       Effect.provideService(HostProcess.Platform, "win32"),
       Effect.provide(NodeServices.layer),
@@ -163,7 +167,10 @@ describe("Node runtime selection", () => {
       const path = yield* Path.Path;
       const directory = yield* fs.makeTempDirectoryScoped();
       const platform = yield* HostProcess.Platform;
-      const executable = path.join(directory, platform === "win32" ? "rove.exe" : "rove");
+      const executable = path.join(
+        directory,
+        platform === "win32" ? "paperplane.exe" : "paperplane",
+      );
       const node = path.join(directory, platform === "win32" ? "node.exe" : "node");
       yield* fs.writeFileString(executable, "standalone executable fixture");
       yield* fs.chmod(executable, 0o755);
@@ -192,7 +199,7 @@ describe("Node runtime selection", () => {
       expect(yield* resolveNodeExecutable("Local device support", { PATH: directory })).toBe(node);
     }).pipe(
       Effect.scoped,
-      Effect.provideService(HostProcess.ExecutablePath, "/packaged/rove"),
+      Effect.provideService(HostProcess.ExecutablePath, "/packaged/paperplane"),
       Effect.provideService(HostProcess.IsExecutable, true),
       Effect.provide(NodeServices.layer),
     ),

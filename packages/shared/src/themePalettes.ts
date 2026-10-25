@@ -1,9 +1,7 @@
-import { LEGACY_THEME_IDS } from "./roveMigration.ts";
-
 export const BUILT_IN_THEME_IDS = ["plum", "grove", "ocean", "ember", "iris"] as const;
 
-/** The standard Rove Code palette, kept separate from the optional built-in theme library. */
-export const MOBILE_DEFAULT_THEME_ID = "rove";
+/** The standard Paperplane palette, kept separate from the optional built-in theme library. */
+export const MOBILE_DEFAULT_THEME_ID = "paperplane";
 
 /**
  * Every palette the mobile app can render. Declared here so host-side tooling
@@ -24,7 +22,6 @@ export const RESERVED_THEME_IDS: ReadonlySet<string> = new Set([
   "dark",
   ...BUILT_IN_THEME_IDS,
   "plum-dark",
-  ...LEGACY_THEME_IDS,
 ]);
 
 /**
@@ -125,7 +122,7 @@ export type ThemeDefinition = Readonly<{
 }>;
 
 /**
- * The palette Rove Code wears with no theme installed, captured from the app's
+ * The palette Paperplane wears with no theme installed, captured from the app's
  * stock tokens (index.css) so a draft seeded from the default look paints the
  * pixels the user is already seeing. Alpha-bearing tokens are flattened over
  * their real backdrops (canvas, or the sidebar for its rows) because theme
@@ -133,7 +130,7 @@ export type ThemeDefinition = Readonly<{
  * Search uses amber across built-ins to separate matches from accent-tinted
  * inline code. The current match uses a stronger gold with dark text.
  */
-export const ROVE_CODE_LIGHT_THEME_COLORS: ThemeColors = {
+export const PAPERPLANE_CODE_LIGHT_THEME_COLORS: ThemeColors = {
   searchMatchBackground: "#ffde8b",
   searchMatchForeground: "#21180a",
   searchMatchActiveBackground: "#eea52b",
@@ -197,7 +194,7 @@ export const ROVE_CODE_LIGHT_THEME_COLORS: ThemeColors = {
   terminalScrollbarHover: "#bdbdbd",
 };
 
-export const ROVE_CODE_DARK_THEME_COLORS: ThemeColors = {
+export const PAPERPLANE_CODE_DARK_THEME_COLORS: ThemeColors = {
   searchMatchBackground: "#8c6c1f",
   searchMatchForeground: "#f5f5f5",
   searchMatchActiveBackground: "#eea52b",

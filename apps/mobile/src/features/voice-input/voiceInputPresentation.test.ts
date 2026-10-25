@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vite-plus/test";
-import { voiceInputFreezesEditor } from "@rove-code/client-runtime/voice-input";
+import { voiceInputFreezesEditor } from "@getpaperplane/client-runtime/voice-input";
 
 import { resolveVoiceComposerPresentation } from "./voiceInputPresentation";
 

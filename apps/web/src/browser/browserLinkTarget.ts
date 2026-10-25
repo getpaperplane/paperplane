@@ -8,7 +8,7 @@
  *
  * @module browserLinkTarget
  */
-import type { BrowserLinkTarget, ScopedThreadRef } from "@rove-code/contracts";
+import type { BrowserLinkTarget, ScopedThreadRef } from "@getpaperplane/contracts";
 
 import { ensureClientSettingsHydrated, getClientSettings } from "~/hooks/useSettings";
 import { isPreviewAvailableFor } from "./previewRuntime";

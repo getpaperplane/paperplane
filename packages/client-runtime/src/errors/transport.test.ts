@@ -47,9 +47,9 @@ describe("isTransportConnectionErrorMessage", () => {
     ).toBe(false);
   });
 
-  it("returns true for the Rove server WebSocket message", () => {
+  it("returns true for the Paperplane server WebSocket message", () => {
     expect(
-      isTransportConnectionErrorMessage("Unable to connect to the Rove server WebSocket."),
+      isTransportConnectionErrorMessage("Unable to connect to the Paperplane server WebSocket."),
     ).toBe(true);
   });
 

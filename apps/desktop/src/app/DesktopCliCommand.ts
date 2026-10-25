@@ -1,4 +1,4 @@
-import type { DesktopCliCommandState } from "@rove-code/contracts";
+import type { DesktopCliCommandState } from "@getpaperplane/contracts";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -11,9 +11,10 @@ import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
 import * as DesktopCliShim from "./DesktopCliShim.ts";
 import * as DesktopEnvironment from "./DesktopEnvironment.ts";
+import { oldOwnedCliPath } from "./DesktopMigration.ts";
 
-// Settings → Install `rove` command, like VS Code's "Install 'code' command".
-// The app's launcher (see DesktopCliShim) lives in the Rove home and is off PATH
+// Settings → Install `paperplane` command, like VS Code's "Install 'code' command".
+// The app's launcher (see DesktopCliShim) lives in the Paperplane home and is off PATH
 // by default. Installing links it into a folder on the user's PATH, or on
 // Windows adds the launcher's folder to the user's PATH. Removing undoes only
 // what installing did: a link that points at one of the app's launchers, or a
@@ -38,7 +39,7 @@ const sameWindowsPath = (left: string, right: string) =>
   left.replace(/[\\/]+$/, "").toLowerCase() === right.replace(/[\\/]+$/, "").toLowerCase();
 
 /**
- * Reads, or with `ROVE_SET` set writes, the user's PATH in the registry, keeping
+ * Reads, or with `PAPERPLANE_SET` set writes, the user's PATH in the registry, keeping
  * `%VAR%` entries unexpanded. Writes keep REG_EXPAND_SZ (Windows' default for
  * PATH; `SetEnvironmentVariable` would store REG_SZ and break every `%VAR%`
  * entry), then broadcast WM_SETTINGCHANGE so Explorer and the terminals it
@@ -47,16 +48,16 @@ const sameWindowsPath = (left: string, right: string) =>
  */
 const WINDOWS_USER_PATH_SCRIPT = `
 $ErrorActionPreference = 'Stop'
-if ($env:ROVE_SET -eq '1') {
+if ($env:PAPERPLANE_SET -eq '1') {
   $key = [Microsoft.Win32.Registry]::CurrentUser.CreateSubKey('Environment')
   $kind = [Microsoft.Win32.RegistryValueKind]::ExpandString
   if ($key.GetValueNames() -contains 'Path' -and $key.GetValueKind('Path') -eq 'String') {
     $kind = [Microsoft.Win32.RegistryValueKind]::String
   }
-  $key.SetValue('Path', $env:ROVE_PATH, $kind)
-  Add-Type -Namespace Rove -Name Env -MemberDefinition '[DllImport("user32.dll", CharSet = CharSet.Unicode)] public static extern System.IntPtr SendMessageTimeout(System.IntPtr hWnd, uint Msg, System.UIntPtr wParam, string lParam, uint fuFlags, uint uTimeout, out System.UIntPtr lpdwResult);'
+  $key.SetValue('Path', $env:PAPERPLANE_PATH, $kind)
+  Add-Type -Namespace Paperplane -Name Env -MemberDefinition '[DllImport("user32.dll", CharSet = CharSet.Unicode)] public static extern System.IntPtr SendMessageTimeout(System.IntPtr hWnd, uint Msg, System.UIntPtr wParam, string lParam, uint fuFlags, uint uTimeout, out System.UIntPtr lpdwResult);'
   $result = [System.UIntPtr]::Zero
-  [void][Rove.Env]::SendMessageTimeout([System.IntPtr]0xffff, 0x1A, [System.UIntPtr]::Zero, 'Environment', 2, 5000, [ref]$result)
+  [void][Paperplane.Env]::SendMessageTimeout([System.IntPtr]0xffff, 0x1A, [System.UIntPtr]::Zero, 'Environment', 2, 5000, [ref]$result)
 } else {
   $key = [Microsoft.Win32.Registry]::CurrentUser.OpenSubKey('Environment')
   $value = if ($key) { $key.GetValue('Path', '', 'DoNotExpandEnvironmentNames') } else { '' }
@@ -71,7 +72,7 @@ export class DesktopCliCommand extends Context.Service<
     readonly install: Effect.Effect<DesktopCliCommandState, DesktopCliCommandError>;
     readonly uninstall: Effect.Effect<DesktopCliCommandState, DesktopCliCommandError>;
   }
->()("@rove-code/desktop/app/DesktopCliCommand") {}
+>()("@getpaperplane/desktop/app/DesktopCliCommand") {}
 
 /** @public Service construction is part of the canonical Effect module API. */
 export const make = Effect.gen(function* () {
@@ -95,13 +96,13 @@ export const make = Effect.gen(function* () {
 
   /**
    * A link to one of the app's launchers, by the marker the launcher carries.
-   * This also finds links made under a previous Rove home, so Remove can clean
+   * This also finds links made under a previous Paperplane home, so Remove can clean
    * them up and Install does not add a second.
    */
   const isOurLink = (link: string) =>
     Effect.gen(function* () {
       yield* fs.readLink(link);
-      // The launcher is a few KB; never read a large binary another `rove` links to.
+      // The launcher is a few KB; never read a large binary another `paperplane` links to.
       const info = yield* fs.stat(link);
       if (info.type !== "File" || Number(info.size) > 16_384) return false;
       const content = yield* fs.readFileString(link);
@@ -132,21 +133,21 @@ export const make = Effect.gen(function* () {
     Effect.mapError(() => fail("Could not read your PATH, so it was left unchanged.")),
   );
   const writeUserPath = (value: string) =>
-    powershell({ ROVE_SET: "1", ROVE_PATH: value }).pipe(
+    powershell({ PAPERPLANE_SET: "1", PAPERPLANE_PATH: value }).pipe(
       Effect.asVoid,
       Effect.mapError(() => fail("Could not update your PATH.")),
     );
 
-  /** The `rove` a new shell runs, by PATH order, or none. */
+  /** The `paperplane` a new shell runs, by PATH order, or none. */
   const firstOnPath = Effect.gen(function* () {
     for (const directory of pathEntries(process.env.PATH, ":")) {
-      const candidate = path.join(directory, "rove");
+      const candidate = path.join(directory, "paperplane");
       if (yield* exists(candidate)) return Option.some(candidate);
     }
     return Option.none<string>();
   });
 
-  /** The `rove` a new shell runs when it is not this app's, on Unix. */
+  /** The `paperplane` a new shell runs when it is not this app's, on Unix. */
   const foreignFirstOnPath = Effect.gen(function* () {
     if (windows) return Option.none<string>();
     const first = yield* firstOnPath;
@@ -164,7 +165,7 @@ export const make = Effect.gen(function* () {
         : Option.none<string>();
     }
     for (const directory of unixCandidates(environment.homeDirectory, environment.platform)) {
-      const link = path.join(directory, "rove");
+      const link = path.join(directory, "paperplane");
       if (yield* isOurLink(link)) return Option.some(link);
     }
     return Option.none<string>();
@@ -181,7 +182,7 @@ export const make = Effect.gen(function* () {
       return { supported: true, installedPath: null, onPath: false, ...shadow };
     }
     // On Windows only terminals opened after the change see it. On Unix the
-    // first `rove` on PATH must be ours; a `rove` earlier on PATH would shadow it.
+    // first `paperplane` on PATH must be ours; a `paperplane` earlier on PATH would shadow it.
     const first = yield* firstOnPath;
     const onPath = windows || (Option.isSome(first) && (yield* isOurLink(first.value)));
     return { supported: true, installedPath: installed.value, onPath, ...shadow };
@@ -193,22 +194,44 @@ export const make = Effect.gen(function* () {
     Effect.provideService(FileSystem.FileSystem, fs),
     Effect.flatMap(
       Option.match({
-        onNone: () => Effect.fail(fail(`Could not set up the rove launcher at ${launcher}.`)),
+        onNone: () => Effect.fail(fail(`Could not set up the paperplane launcher at ${launcher}.`)),
         onSome: () => Effect.void,
       }),
     ),
   );
 
   const install: DesktopCliCommand["Service"]["install"] = Effect.gen(function* () {
-    if (!environment.isPackaged) return yield* fail("The rove command needs an installed app.");
+    if (!environment.isPackaged)
+      return yield* fail("The paperplane command needs an installed app.");
     yield* ensureLauncher;
     if (windows) {
-      const entries = pathEntries(yield* readUserPath, ";");
+      let entries = pathEntries(yield* readUserPath, ";");
+      const previous = yield* fs.readFileString(ownedPathMarker).pipe(Effect.option);
+      const oldBin = oldOwnedCliPath(
+        environment.homeDirectory,
+        Option.getOrUndefined(previous),
+        path.join,
+      );
+      if (oldBin !== undefined && !sameWindowsPath(oldBin, binDirectory)) {
+        entries = entries.filter((entry) => !sameWindowsPath(entry, oldBin));
+        if (!entries.some((entry) => sameWindowsPath(entry, binDirectory)))
+          entries.push(binDirectory);
+        yield* writeUserPath(entries.join(";"));
+        yield* fs
+          .writeFileString(ownedPathMarker, `${binDirectory}\n`)
+          .pipe(
+            Effect.mapError(() =>
+              fail("Updated PATH but could not record the new command directory."),
+            ),
+          );
+      }
       if (!entries.some((entry) => sameWindowsPath(entry, binDirectory))) {
         yield* writeUserPath([...entries, binDirectory].join(";"));
         yield* fs
           .writeFileString(ownedPathMarker, `${binDirectory}\n`)
-          .pipe(Effect.mapError(() => fail("Added rove to your PATH but could not record it.")));
+          .pipe(
+            Effect.mapError(() => fail("Added paperplane to your PATH but could not record it.")),
+          );
       }
       return yield* state;
     }
@@ -216,16 +239,16 @@ export const make = Effect.gen(function* () {
     if (Option.isSome(existing)) {
       const target = yield* fs.readLink(existing.value).pipe(Effect.option);
       if (Option.getOrUndefined(target) === launcher) return yield* state;
-      // A link to a previous Rove home's launcher: point it at this one instead.
+      // A link to a previous Paperplane home's launcher: point it at this one instead.
       yield* fs
         .remove(existing.value)
         .pipe(Effect.mapError(() => fail(`Could not replace ${existing.value}.`)));
     }
-    // A link behind another `rove` never runs, so installing one would only hide the problem.
+    // A link behind another `paperplane` never runs, so installing one would only hide the problem.
     const shadowedBy = yield* foreignFirstOnPath;
     if (Option.isSome(shadowedBy)) {
       return yield* fail(
-        `Another rove at ${shadowedBy.value} runs first in a new terminal. Remove it, or run the launcher directly at ${launcher}.`,
+        `Another paperplane at ${shadowedBy.value} runs first in a new terminal. Remove it, or run the launcher directly at ${launcher}.`,
       );
     }
     const onPath = pathEntries(process.env.PATH, ":");
@@ -235,7 +258,7 @@ export const make = Effect.gen(function* () {
       ...candidates.filter((candidate) => onPath.includes(candidate)),
       ...candidates.filter((candidate) => !onPath.includes(candidate)),
     ]) {
-      const link = path.join(directory, "rove");
+      const link = path.join(directory, "paperplane");
       const created = (yield* exists(directory))
         ? yield* writableDirectory(directory)
         : yield* fs.makeDirectory(directory, { recursive: true }).pipe(
@@ -251,7 +274,7 @@ export const make = Effect.gen(function* () {
       if (linked) return yield* state;
     }
     return yield* fail(
-      `Another rove command is already installed, or no folder on your PATH is writable. Run the launcher directly at ${launcher}.`,
+      `Another paperplane command is already installed, or no folder on your PATH is writable. Run the launcher directly at ${launcher}.`,
     );
   }).pipe(Effect.withSpan("desktop.cliCommand.install"));
 
@@ -266,7 +289,7 @@ export const make = Effect.gen(function* () {
       return yield* state;
     }
     for (const directory of unixCandidates(environment.homeDirectory, environment.platform)) {
-      const link = path.join(directory, "rove");
+      const link = path.join(directory, "paperplane");
       if (yield* isOurLink(link)) {
         yield* fs.remove(link).pipe(Effect.mapError(() => fail(`Could not remove ${link}.`)));
       }

@@ -1,4 +1,4 @@
-import { TextGenerationError } from "@rove-code/contracts";
+import { TextGenerationError } from "@getpaperplane/contracts";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 

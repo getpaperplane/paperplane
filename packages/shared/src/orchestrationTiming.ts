@@ -1,4 +1,7 @@
-import { isOrchestrationV2WorkActive, type OrchestrationV2Subagent } from "@rove-code/contracts";
+import {
+  isOrchestrationV2WorkActive,
+  type OrchestrationV2Subagent,
+} from "@getpaperplane/contracts";
 
 /** Unknown settled timing must not turn a task's age into its work duration. */
 export function deriveSubagentElapsedMs(

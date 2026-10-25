@@ -168,34 +168,34 @@ const makeMigrationLoader = (throughId?: number) =>
 // V2's schema migrations start at 55 after the legacy schema migrations.
 const FIRST_V2_MIGRATION_ID = 55;
 
-// Rove builds recorded V1-only migrations at ids 55-57 before V2 claimed them.
+// Paperplane builds recorded V1-only migrations at ids 55-57 before V2 claimed them.
 // Their columns are not used by the V1 importer. Reconcile only these exact ledger
 // rows on the copied database so V2 runs normally; never re-run the V1 migrations.
-const ROVE_LEGACY_MIGRATIONS = [
+const PAPERPLANE_LEGACY_MIGRATIONS = [
   [55, "ProjectionThreadLimitRecovery"],
   [56, "StandaloneThreads"],
   [57, "ThreadActivitySequence"],
 ] as const;
 
-const reconcileRoveLegacyMigrations = Effect.fn("reconcileRoveLegacyMigrations")(function* (
-  throughId?: number,
-) {
-  const sql = yield* SqlClient.SqlClient;
-  const tables = yield* sql`
+const reconcilePaperplaneLegacyMigrations = Effect.fn("reconcilePaperplaneLegacyMigrations")(
+  function* (throughId?: number) {
+    const sql = yield* SqlClient.SqlClient;
+    const tables = yield* sql`
     SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'effect_sql_migrations'
   `;
-  if (tables.length === 0) return;
-  yield* sql.withTransaction(
-    Effect.gen(function* () {
-      for (const [id, name] of ROVE_LEGACY_MIGRATIONS) {
-        yield* sql`DELETE FROM effect_sql_migrations WHERE migration_id = ${id} AND name = ${name}`;
-      }
-      // Do not leave a partially reconciled history if another build's ids still
-      // prevent V2 from running. Only the copied database is ever reconciled.
-      yield* assertV2MigrationsCanRun(throughId);
-    }),
-  );
-});
+    if (tables.length === 0) return;
+    yield* sql.withTransaction(
+      Effect.gen(function* () {
+        for (const [id, name] of PAPERPLANE_LEGACY_MIGRATIONS) {
+          yield* sql`DELETE FROM effect_sql_migrations WHERE migration_id = ${id} AND name = ${name}`;
+        }
+        // Do not leave a partially reconciled history if another build's ids still
+        // prevent V2 from running. Only the copied database is ever reconciled.
+        yield* assertV2MigrationsCanRun(throughId);
+      }),
+    );
+  },
+);
 
 /**
  * Fail before migrating when the migrator would skip one of V2's own
@@ -263,7 +263,7 @@ export const runMigrations = Effect.fn("runMigrations")(function* ({
     toMigrationInclusive === undefined || toMigrationInclusive >= FIRST_V2_MIGRATION_ID;
   const previewMigrations = includesV2 ? yield* reconcileV2PreviewMigration() : [];
   if (includesV2) {
-    yield* reconcileRoveLegacyMigrations(toMigrationInclusive);
+    yield* reconcilePaperplaneLegacyMigrations(toMigrationInclusive);
     yield* assertV2MigrationsCanRun(toMigrationInclusive);
   }
   const executedMigrations = [

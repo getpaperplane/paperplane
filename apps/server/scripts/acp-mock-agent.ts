@@ -17,114 +17,123 @@ import type * as AcpCompat from "effect-acp/compat";
 
 import { beginAcpMockPrompt } from "./acpMockCancellationState.ts";
 
-const requestLogPath = process.env.ROVE_ACP_REQUEST_LOG_PATH;
-const exitLogPath = process.env.ROVE_ACP_EXIT_LOG_PATH;
-const antigravityProfile = process.env.ROVE_ACP_ANTIGRAVITY === "1";
-const emitToolCalls = process.env.ROVE_ACP_EMIT_TOOL_CALLS === "1";
+const requestLogPath = process.env.PAPERPLANE_ACP_REQUEST_LOG_PATH;
+const exitLogPath = process.env.PAPERPLANE_ACP_EXIT_LOG_PATH;
+const antigravityProfile = process.env.PAPERPLANE_ACP_ANTIGRAVITY === "1";
+const emitToolCalls = process.env.PAPERPLANE_ACP_EMIT_TOOL_CALLS === "1";
 const emitInterleavedAssistantToolCalls =
-  process.env.ROVE_ACP_EMIT_INTERLEAVED_ASSISTANT_TOOL_CALLS === "1";
-const emitV2Fidelity = process.env.ROVE_ACP_EMIT_V2_FIDELITY === "1";
-const vibeRetryOutcome = process.env.ROVE_ACP_VIBE_RETRY_OUTCOME;
-const emitGenericToolPlaceholders = process.env.ROVE_ACP_EMIT_GENERIC_TOOL_PLACEHOLDERS === "1";
-const emitPostSettleMonitorFlow = process.env.ROVE_ACP_EMIT_POST_SETTLE_MONITOR_FLOW === "1";
+  process.env.PAPERPLANE_ACP_EMIT_INTERLEAVED_ASSISTANT_TOOL_CALLS === "1";
+const emitV2Fidelity = process.env.PAPERPLANE_ACP_EMIT_V2_FIDELITY === "1";
+const vibeRetryOutcome = process.env.PAPERPLANE_ACP_VIBE_RETRY_OUTCOME;
+const emitGenericToolPlaceholders =
+  process.env.PAPERPLANE_ACP_EMIT_GENERIC_TOOL_PLACEHOLDERS === "1";
+const emitPostSettleMonitorFlow = process.env.PAPERPLANE_ACP_EMIT_POST_SETTLE_MONITOR_FLOW === "1";
 const emitInTurnTaskOutputThenLateDuplicate =
-  process.env.ROVE_ACP_EMIT_IN_TURN_TASKOUTPUT_THEN_LATE_DUPLICATE === "1";
-const injectedReportTriggerPath = process.env.ROVE_ACP_INJECTED_REPORT_TRIGGER_PATH;
+  process.env.PAPERPLANE_ACP_EMIT_IN_TURN_TASKOUTPUT_THEN_LATE_DUPLICATE === "1";
+const injectedReportTriggerPath = process.env.PAPERPLANE_ACP_INJECTED_REPORT_TRIGGER_PATH;
 const emitBackgroundToolDuringAnswer =
-  process.env.ROVE_ACP_EMIT_BACKGROUND_TOOL_DURING_ANSWER === "1";
-const emitAskQuestion = process.env.ROVE_ACP_EMIT_ASK_QUESTION === "1";
-const emitElicitation = process.env.ROVE_ACP_EMIT_ELICITATION === "1";
+  process.env.PAPERPLANE_ACP_EMIT_BACKGROUND_TOOL_DURING_ANSWER === "1";
+const emitAskQuestion = process.env.PAPERPLANE_ACP_EMIT_ASK_QUESTION === "1";
+const emitElicitation = process.env.PAPERPLANE_ACP_EMIT_ELICITATION === "1";
 const emitMcpToolApprovalElicitation =
-  process.env.ROVE_ACP_EMIT_MCP_TOOL_APPROVAL_ELICITATION === "1";
-const emitUrlElicitation = process.env.ROVE_ACP_EMIT_URL_ELICITATION === "1";
-const emitXAiAskUserQuestion = process.env.ROVE_ACP_EMIT_XAI_ASK_USER_QUESTION === "1";
-const emitXAiExitPlanMode = process.env.ROVE_ACP_EMIT_XAI_EXIT_PLAN_MODE === "1";
-const emitXAiPlanMdWrite = process.env.ROVE_ACP_EMIT_XAI_PLAN_MD_WRITE === "1";
+  process.env.PAPERPLANE_ACP_EMIT_MCP_TOOL_APPROVAL_ELICITATION === "1";
+const emitUrlElicitation = process.env.PAPERPLANE_ACP_EMIT_URL_ELICITATION === "1";
+const emitXAiAskUserQuestion = process.env.PAPERPLANE_ACP_EMIT_XAI_ASK_USER_QUESTION === "1";
+const emitXAiExitPlanMode = process.env.PAPERPLANE_ACP_EMIT_XAI_EXIT_PLAN_MODE === "1";
+const emitXAiPlanMdWrite = process.env.PAPERPLANE_ACP_EMIT_XAI_PLAN_MD_WRITE === "1";
 const emitXAiPromptCompleteThenHang =
-  process.env.ROVE_ACP_EMIT_XAI_PROMPT_COMPLETE_THEN_HANG === "1";
-const emitXAiRateLimitThenHang = process.env.ROVE_ACP_EMIT_XAI_RATE_LIMIT_THEN_HANG === "1";
+  process.env.PAPERPLANE_ACP_EMIT_XAI_PROMPT_COMPLETE_THEN_HANG === "1";
+const emitXAiRateLimitThenHang = process.env.PAPERPLANE_ACP_EMIT_XAI_RATE_LIMIT_THEN_HANG === "1";
 const emitXAiAskUserQuestionThenHang =
-  process.env.ROVE_ACP_EMIT_XAI_ASK_USER_QUESTION_THEN_HANG === "1";
-const emitContentThenHang = process.env.ROVE_ACP_EMIT_CONTENT_THEN_HANG === "1";
-const emitPlanThenHang = process.env.ROVE_ACP_EMIT_PLAN_THEN_HANG === "1";
-const emitActiveToolThenHang = process.env.ROVE_ACP_EMIT_ACTIVE_TOOL_THEN_HANG === "1";
-const emitGrokMonitorPostTurnPoll = process.env.ROVE_ACP_EMIT_GROK_MONITOR_POST_TURN_POLL === "1";
+  process.env.PAPERPLANE_ACP_EMIT_XAI_ASK_USER_QUESTION_THEN_HANG === "1";
+const emitContentThenHang = process.env.PAPERPLANE_ACP_EMIT_CONTENT_THEN_HANG === "1";
+const emitPlanThenHang = process.env.PAPERPLANE_ACP_EMIT_PLAN_THEN_HANG === "1";
+const emitActiveToolThenHang = process.env.PAPERPLANE_ACP_EMIT_ACTIVE_TOOL_THEN_HANG === "1";
+const emitGrokMonitorPostTurnPoll =
+  process.env.PAPERPLANE_ACP_EMIT_GROK_MONITOR_POST_TURN_POLL === "1";
 const emitGrokBackgroundTaskStarted =
-  process.env.ROVE_ACP_EMIT_GROK_BACKGROUND_TASK_STARTED === "1";
-const emitForeignSessionUpdates = process.env.ROVE_ACP_EMIT_FOREIGN_SESSION_UPDATES === "1";
-const waitForResumeRelease = process.env.ROVE_ACP_WAIT_FOR_RESUME_RELEASE === "1";
-const completeFirstPromptOnCancel = process.env.ROVE_ACP_COMPLETE_FIRST_PROMPT_ON_CANCEL === "1";
-const floodStderr = process.env.ROVE_ACP_FLOOD_STDERR === "1";
-const hangPromptForever = process.env.ROVE_ACP_HANG_PROMPT_FOREVER === "1";
+  process.env.PAPERPLANE_ACP_EMIT_GROK_BACKGROUND_TASK_STARTED === "1";
+const emitForeignSessionUpdates = process.env.PAPERPLANE_ACP_EMIT_FOREIGN_SESSION_UPDATES === "1";
+const waitForResumeRelease = process.env.PAPERPLANE_ACP_WAIT_FOR_RESUME_RELEASE === "1";
+const completeFirstPromptOnCancel =
+  process.env.PAPERPLANE_ACP_COMPLETE_FIRST_PROMPT_ON_CANCEL === "1";
+const floodStderr = process.env.PAPERPLANE_ACP_FLOOD_STDERR === "1";
+const hangPromptForever = process.env.PAPERPLANE_ACP_HANG_PROMPT_FOREVER === "1";
 // Sends fs/write_text_file for this path, then fs/read_text_file, at the start of
 // each prompt whatever the client advertised, and appends each outcome as a JSON
-// line to ROVE_ACP_CLIENT_FS_PROBE_LOG_PATH.
-const clientFsProbePath = process.env.ROVE_ACP_CLIENT_FS_PROBE_PATH;
-const clientFsProbeLogPath = process.env.ROVE_ACP_CLIENT_FS_PROBE_LOG_PATH;
+// line to PAPERPLANE_ACP_CLIENT_FS_PROBE_LOG_PATH.
+const clientFsProbePath = process.env.PAPERPLANE_ACP_CLIENT_FS_PROBE_PATH;
+const clientFsProbeLogPath = process.env.PAPERPLANE_ACP_CLIENT_FS_PROBE_LOG_PATH;
 const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
-const hangAfterPermission = process.env.ROVE_ACP_HANG_AFTER_PERMISSION === "1";
-const hangFirstPromptForever = process.env.ROVE_ACP_HANG_FIRST_PROMPT_FOREVER === "1";
-const emitLateUpdateAfterCancel = process.env.ROVE_ACP_EMIT_LATE_UPDATE_AFTER_CANCEL === "1";
+const hangAfterPermission = process.env.PAPERPLANE_ACP_HANG_AFTER_PERMISSION === "1";
+const hangFirstPromptForever = process.env.PAPERPLANE_ACP_HANG_FIRST_PROMPT_FOREVER === "1";
+const emitLateUpdateAfterCancel = process.env.PAPERPLANE_ACP_EMIT_LATE_UPDATE_AFTER_CANCEL === "1";
 const emitTaskBackgroundedAfterCancel =
-  process.env.ROVE_ACP_EMIT_TASK_BACKGROUNDED_AFTER_CANCEL === "1";
-const residualCallbackResponseLogPath = process.env.ROVE_ACP_RESIDUAL_CALLBACK_RESPONSE_LOG_PATH;
-const residualCallbackTriggerPath = process.env.ROVE_ACP_RESIDUAL_CALLBACK_TRIGGER_PATH;
-const exitAfterResidualCallbacks = process.env.ROVE_ACP_EXIT_AFTER_RESIDUAL_CALLBACKS === "1";
-const emitRunningCommandThenHang = process.env.ROVE_ACP_EMIT_RUNNING_COMMAND_THEN_HANG === "1";
+  process.env.PAPERPLANE_ACP_EMIT_TASK_BACKGROUNDED_AFTER_CANCEL === "1";
+const residualCallbackResponseLogPath =
+  process.env.PAPERPLANE_ACP_RESIDUAL_CALLBACK_RESPONSE_LOG_PATH;
+const residualCallbackTriggerPath = process.env.PAPERPLANE_ACP_RESIDUAL_CALLBACK_TRIGGER_PATH;
+const exitAfterResidualCallbacks = process.env.PAPERPLANE_ACP_EXIT_AFTER_RESIDUAL_CALLBACKS === "1";
+const emitRunningCommandThenHang =
+  process.env.PAPERPLANE_ACP_EMIT_RUNNING_COMMAND_THEN_HANG === "1";
 const emitRunningCommandThenHangOnFirstPrompt =
-  process.env.ROVE_ACP_EMIT_RUNNING_COMMAND_THEN_HANG_FIRST_PROMPT === "1";
-const emitEmptySuccessfulBash = process.env.ROVE_ACP_EMIT_EMPTY_SUCCESSFUL_BASH === "1";
+  process.env.PAPERPLANE_ACP_EMIT_RUNNING_COMMAND_THEN_HANG_FIRST_PROMPT === "1";
+const emitEmptySuccessfulBash = process.env.PAPERPLANE_ACP_EMIT_EMPTY_SUCCESSFUL_BASH === "1";
 const emitEmptySuccessfulBashThenHang =
-  process.env.ROVE_ACP_EMIT_EMPTY_SUCCESSFUL_BASH_THEN_HANG === "1";
-const exitOnCancel = process.env.ROVE_ACP_EXIT_ON_CANCEL === "1";
-const runningCommandIgnoresTerm = process.env.ROVE_ACP_RUNNING_COMMAND_IGNORE_TERM === "1";
-const runningCommandPidPath = process.env.ROVE_ACP_RUNNING_COMMAND_PID_PATH;
-const runningCommandSeparateSession = process.env.ROVE_ACP_RUNNING_COMMAND_SEPARATE_SESSION === "1";
+  process.env.PAPERPLANE_ACP_EMIT_EMPTY_SUCCESSFUL_BASH_THEN_HANG === "1";
+const exitOnCancel = process.env.PAPERPLANE_ACP_EXIT_ON_CANCEL === "1";
+const runningCommandIgnoresTerm = process.env.PAPERPLANE_ACP_RUNNING_COMMAND_IGNORE_TERM === "1";
+const runningCommandPidPath = process.env.PAPERPLANE_ACP_RUNNING_COMMAND_PID_PATH;
+const runningCommandSeparateSession =
+  process.env.PAPERPLANE_ACP_RUNNING_COMMAND_SEPARATE_SESSION === "1";
 const exitAfterRunningCommandLaunch =
-  process.env.ROVE_ACP_EXIT_AFTER_RUNNING_COMMAND_LAUNCH === "1";
+  process.env.PAPERPLANE_ACP_EXIT_AFTER_RUNNING_COMMAND_LAUNCH === "1";
 const omitXAiPromptCompleteStopReason =
-  process.env.ROVE_ACP_OMIT_XAI_PROMPT_COMPLETE_STOP_REASON === "1";
-const failLoadSession = process.env.ROVE_ACP_FAIL_LOAD_SESSION === "1";
+  process.env.PAPERPLANE_ACP_OMIT_XAI_PROMPT_COMPLETE_STOP_REASON === "1";
+const failLoadSession = process.env.PAPERPLANE_ACP_FAIL_LOAD_SESSION === "1";
 const failLoadSessionAfterConfigReplay =
-  process.env.ROVE_ACP_FAIL_LOAD_SESSION_AFTER_CONFIG_REPLAY === "1";
-const emitLoadReplay = process.env.ROVE_ACP_EMIT_LOAD_REPLAY === "1";
-const hangLoadSessionAfterReplay = process.env.ROVE_ACP_HANG_LOAD_SESSION_AFTER_REPLAY === "1";
-const delayLoadSessionAfterReplay = process.env.ROVE_ACP_DELAY_LOAD_SESSION_AFTER_REPLAY === "1";
-const loadSessionDelayMs = Number(process.env.ROVE_ACP_LOAD_SESSION_DELAY_MS ?? "5000");
+  process.env.PAPERPLANE_ACP_FAIL_LOAD_SESSION_AFTER_CONFIG_REPLAY === "1";
+const emitLoadReplay = process.env.PAPERPLANE_ACP_EMIT_LOAD_REPLAY === "1";
+const hangLoadSessionAfterReplay =
+  process.env.PAPERPLANE_ACP_HANG_LOAD_SESSION_AFTER_REPLAY === "1";
+const delayLoadSessionAfterReplay =
+  process.env.PAPERPLANE_ACP_DELAY_LOAD_SESSION_AFTER_REPLAY === "1";
+const loadSessionDelayMs = Number(process.env.PAPERPLANE_ACP_LOAD_SESSION_DELAY_MS ?? "5000");
 const emitStaleXAiPromptCompleteBeforeSecondHang =
-  process.env.ROVE_ACP_EMIT_STALE_XAI_PROMPT_COMPLETE_BEFORE_SECOND_HANG === "1";
+  process.env.PAPERPLANE_ACP_EMIT_STALE_XAI_PROMPT_COMPLETE_BEFORE_SECOND_HANG === "1";
 const emitOverlappingXAiPromptCompleteOutOfOrder =
-  process.env.ROVE_ACP_EMIT_OVERLAPPING_XAI_PROMPT_COMPLETE_OUT_OF_ORDER === "1";
-const failPrompt = process.env.ROVE_ACP_FAIL_PROMPT === "1";
-const failSetConfigOption = process.env.ROVE_ACP_FAIL_SET_CONFIG_OPTION === "1";
-const failSetModeConfigOption = process.env.ROVE_ACP_FAIL_SET_MODE_CONFIG_OPTION === "1";
-const exitOnSetConfigOption = process.env.ROVE_ACP_EXIT_ON_SET_CONFIG_OPTION === "1";
-const omitModelConfigOption = process.env.ROVE_ACP_OMIT_MODEL_CONFIG_OPTION === "1";
-const emitEmptyDefaultAgentOption = process.env.ROVE_ACP_EMIT_EMPTY_DEFAULT_AGENT_OPTION === "1";
-const promptResponseText = process.env.ROVE_ACP_PROMPT_RESPONSE_TEXT;
+  process.env.PAPERPLANE_ACP_EMIT_OVERLAPPING_XAI_PROMPT_COMPLETE_OUT_OF_ORDER === "1";
+const failPrompt = process.env.PAPERPLANE_ACP_FAIL_PROMPT === "1";
+const failSetConfigOption = process.env.PAPERPLANE_ACP_FAIL_SET_CONFIG_OPTION === "1";
+const failSetModeConfigOption = process.env.PAPERPLANE_ACP_FAIL_SET_MODE_CONFIG_OPTION === "1";
+const exitOnSetConfigOption = process.env.PAPERPLANE_ACP_EXIT_ON_SET_CONFIG_OPTION === "1";
+const omitModelConfigOption = process.env.PAPERPLANE_ACP_OMIT_MODEL_CONFIG_OPTION === "1";
+const emitEmptyDefaultAgentOption =
+  process.env.PAPERPLANE_ACP_EMIT_EMPTY_DEFAULT_AGENT_OPTION === "1";
+const promptResponseText = process.env.PAPERPLANE_ACP_PROMPT_RESPONSE_TEXT;
 const initialGrokReasoningEffort =
-  process.env.ROVE_ACP_INITIAL_GROK_REASONING_EFFORT?.trim() || undefined;
-const promptDelayMs = Number(process.env.ROVE_ACP_PROMPT_DELAY_MS ?? "0");
-const supportsSessionLifecycle = process.env.ROVE_ACP_SESSION_LIFECYCLE === "1";
-const supportsAcpMcp = process.env.ROVE_ACP_MCP_ACP === "1";
-const supportsV2Management = process.env.ROVE_ACP_V2_MANAGEMENT === "1";
-const omitSessionListHandler = process.env.ROVE_ACP_OMIT_SESSION_LIST_HANDLER === "1";
-const advertisedAuthMethodId = process.env.ROVE_ACP_AUTH_METHOD_ID?.trim();
+  process.env.PAPERPLANE_ACP_INITIAL_GROK_REASONING_EFFORT?.trim() || undefined;
+const promptDelayMs = Number(process.env.PAPERPLANE_ACP_PROMPT_DELAY_MS ?? "0");
+const supportsSessionLifecycle = process.env.PAPERPLANE_ACP_SESSION_LIFECYCLE === "1";
+const supportsAcpMcp = process.env.PAPERPLANE_ACP_MCP_ACP === "1";
+const supportsV2Management = process.env.PAPERPLANE_ACP_V2_MANAGEMENT === "1";
+const omitSessionListHandler = process.env.PAPERPLANE_ACP_OMIT_SESSION_LIST_HANDLER === "1";
+const advertisedAuthMethodId = process.env.PAPERPLANE_ACP_AUTH_METHOD_ID?.trim();
 const initializeAuthMethodId =
   advertisedAuthMethodId ?? (supportsSessionLifecycle ? "test" : undefined);
-const requiresAuthentication = process.env.ROVE_ACP_REQUIRE_AUTH === "1";
+const requiresAuthentication = process.env.PAPERPLANE_ACP_REQUIRE_AUTH === "1";
 const commandAdvertisementDelayMs = Number(
-  process.env.ROVE_ACP_COMMAND_ADVERTISEMENT_DELAY_MS ?? "-1",
+  process.env.PAPERPLANE_ACP_COMMAND_ADVERTISEMENT_DELAY_MS ?? "-1",
 );
 const permissionOptionIds = {
-  allowOnce: process.env.ROVE_ACP_ALLOW_ONCE_OPTION_ID ?? "allow-once",
-  allowAlways: process.env.ROVE_ACP_ALLOW_ALWAYS_OPTION_ID ?? "allow-always",
-  rejectOnce: process.env.ROVE_ACP_REJECT_ONCE_OPTION_ID ?? "reject-once",
+  allowOnce: process.env.PAPERPLANE_ACP_ALLOW_ONCE_OPTION_ID ?? "allow-once",
+  allowAlways: process.env.PAPERPLANE_ACP_ALLOW_ALWAYS_OPTION_ID ?? "allow-always",
+  rejectOnce: process.env.PAPERPLANE_ACP_REJECT_ONCE_OPTION_ID ?? "reject-once",
 };
-const omitAllowAlways = process.env.ROVE_ACP_OMIT_ALLOW_ALWAYS === "1";
+const omitAllowAlways = process.env.PAPERPLANE_ACP_OMIT_ALLOW_ALWAYS === "1";
 const permissionRequestCount = Math.max(
   1,
-  Number(process.env.ROVE_ACP_PERMISSION_REQUEST_COUNT ?? "1") || 1,
+  Number(process.env.PAPERPLANE_ACP_PERMISSION_REQUEST_COUNT ?? "1") || 1,
 );
 const sessionId = "mock-session-1";
 
@@ -509,7 +518,7 @@ const program = Effect.gen(function* () {
       parameterizedModelPicker = request.capabilities?._meta?.parameterizedModelPicker === true;
       return {
         protocolVersion: 2,
-        info: { name: "rove-acp-mock-agent", version: "0.0.0" },
+        info: { name: "paperplane-acp-mock-agent", version: "0.0.0" },
         _meta: { modelState: modelState() },
         capabilities: {
           session: {
@@ -899,7 +908,7 @@ const program = Effect.gen(function* () {
       beginAcpMockPrompt(cancelledSessions, requestedSessionId);
       promptCount += 1;
       if (
-        process.env.ROVE_ACP_CRASH_PROMPT === "1" &&
+        process.env.PAPERPLANE_ACP_CRASH_PROMPT === "1" &&
         request.prompt.some((part) => part.type === "text" && part.text === "crash now")
       ) {
         return yield* Effect.sync(() => process.exit(23));
@@ -1133,7 +1142,7 @@ const program = Effect.gen(function* () {
             rawOutput: {
               action: {
                 type: "search",
-                query: "rove code",
+                query: "paperplane",
                 sources: [
                   { type: "url", url: "https://t3.codes" },
                   { type: "url", url: "https://t3.codes" },
@@ -1153,9 +1162,9 @@ const program = Effect.gen(function* () {
             rawInput: { variant: "WebFetch", url: "https://t3.codes" },
             rawOutput: {
               type: "WebFetch",
-              Content: { url: "https://t3.codes", content: "Rove Code page" },
+              Content: { url: "https://t3.codes", content: "Paperplane page" },
             },
-            content: [{ type: "content", content: { type: "text", text: "Rove Code page" } }],
+            content: [{ type: "content", content: { type: "text", text: "Paperplane page" } }],
           },
           {
             sessionUpdate: "tool_call_update",
@@ -1874,16 +1883,16 @@ const program = Effect.gen(function* () {
         for (let index = 0; index < permissionRequestCount; index++) {
           const command =
             index > 0
-              ? (process.env.ROVE_ACP_SECOND_PERMISSION_COMMAND ?? "cat server/package.json")
+              ? (process.env.PAPERPLANE_ACP_SECOND_PERMISSION_COMMAND ?? "cat server/package.json")
               : "cat server/package.json";
           const permission = yield* agent.client.requestPermission({
             sessionId: requestedSessionId,
-            title: process.env.ROVE_ACP_PERMISSION_TITLE ?? `\`${command}\``,
+            title: process.env.PAPERPLANE_ACP_PERMISSION_TITLE ?? `\`${command}\``,
             subject: {
               type: "tool_call",
               toolCall: {
                 toolCallId: index === 0 ? toolCallId : `${toolCallId}-${index + 1}`,
-                title: process.env.ROVE_ACP_PERMISSION_TITLE ?? `\`${command}\``,
+                title: process.env.PAPERPLANE_ACP_PERMISSION_TITLE ?? `\`${command}\``,
                 kind: "execute",
                 status: "pending",
                 rawInput: {
@@ -1927,7 +1936,7 @@ const program = Effect.gen(function* () {
             status: "completed",
             rawOutput: {
               exitCode: 0,
-              stdout: '{ "name": "rove" }',
+              stdout: '{ "name": "paperplane" }',
               stderr: "",
             },
           },
@@ -2202,7 +2211,7 @@ const program = Effect.gen(function* () {
 
       if (emitXAiPlanMdWrite) {
         // Match Grok's real session layout so isGrokPlanMarkdownPath accepts it.
-        const planRoot = process.env.ROVE_ACP_PLAN_ROOT ?? "/tmp/mock-home/.grok";
+        const planRoot = process.env.PAPERPLANE_ACP_PLAN_ROOT ?? "/tmp/mock-home/.grok";
         const planPath = `${planRoot}/sessions/${requestedSessionId}/plan.md`;
         const planBody = "# Mock plan\n\n- Write the feature\n- Add a test\n- Ship it\n";
         // enter_plan_mode first so the adapter arms planModeActive.
@@ -2352,8 +2361,8 @@ const program = Effect.gen(function* () {
   yield* agent.handleUnknownExtRequest((method, params) => {
     if (method === "_test/environment") {
       return Effect.succeed({
-        inherited: process.env.ROVE_ACP_RUNTIME_AMBIENT === "sentinel",
-        explicit: process.env.ROVE_ACP_RUNTIME_EXPLICIT === "kept",
+        inherited: process.env.PAPERPLANE_ACP_RUNTIME_AMBIENT === "sentinel",
+        explicit: process.env.PAPERPLANE_ACP_RUNTIME_EXPLICIT === "kept",
       });
     }
     if (method === "_test/release-resume") {

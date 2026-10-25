@@ -328,7 +328,7 @@ describe("readCursorAccountUsage", () => {
         accountKey: null,
         records: [],
         missing: false,
-        error: "Allow Keychain access on the Mac running Rove Code, then refresh.",
+        error: "Allow Keychain access on the Mac running Paperplane, then refresh.",
       });
     }).pipe(Effect.provide(NodeServices.layer)),
   );

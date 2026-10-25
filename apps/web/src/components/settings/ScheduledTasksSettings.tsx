@@ -1,5 +1,5 @@
 import { useAtomValue } from "@effect/atom-react";
-import { connectionStatusTitle } from "@rove-code/client-runtime/connection";
+import { connectionStatusTitle } from "@getpaperplane/client-runtime/connection";
 import * as Option from "effect/Option";
 import { AsyncResult, Atom } from "effect/reactivity";
 import {
@@ -24,23 +24,23 @@ import type {
   ScheduledTaskUpsertInput,
   ScheduledTaskWebhookDeliverySummary,
   ThreadId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   DEFAULT_WEBHOOK_PROMPT,
   WEBHOOK_DELIVERY_OUTCOME_LABELS,
   WEBHOOK_SIGNATURE_DEFAULTS,
   webhookDeliveryOutcomeTone,
-} from "@rove-code/client-runtime/scheduled-task-webhook";
+} from "@getpaperplane/client-runtime/scheduled-task-webhook";
 import {
   MAX_WEBHOOK_DELIVERY_AGE_MINUTES,
   MIN_SCHEDULED_TASK_INTERVAL_MS,
   ProviderInstanceId,
   resolveEnvironmentMachineKind,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   isAtomCommandInterrupted,
   squashAtomCommandFailure,
-} from "@rove-code/client-runtime/state/runtime";
+} from "@getpaperplane/client-runtime/state/runtime";
 
 import { WEEKDAY_LABELS, relativeLabel, scheduleLabel } from "./scheduledTaskLabels";
 import { useEnvironmentSettings } from "../../hooks/useSettings";
@@ -52,7 +52,7 @@ import {
 } from "../../providerInstances";
 import { usePrimaryCloudLinkState } from "../../cloud/primaryCloudLinkState";
 import { requestConfirmDialog } from "../../confirmDialog";
-import { webhookAddress } from "@rove-code/client-runtime/webhook-address";
+import { webhookAddress } from "@getpaperplane/client-runtime/webhook-address";
 import { Link } from "@tanstack/react-router";
 import { useCopyToClipboard } from "../../hooks/useCopyToClipboard";
 import {
@@ -67,7 +67,7 @@ import { useAtomCommand } from "../../state/use-atom-command";
 import { WorktreeBaseBranchPicker } from "../WorktreeBaseBranchPicker";
 import { EnvironmentMachineIcon } from "../EnvironmentMachineIcon";
 import { ConnectionStatusDot, connectionPhaseDotClassName } from "../ConnectionStatusDot";
-import { AuthOrchestrationOperateScope } from "@rove-code/contracts";
+import { AuthOrchestrationOperateScope } from "@getpaperplane/contracts";
 import { readEnvironmentScope } from "~/state/session";
 import { useSettingsScope } from "./SettingsScopeContext";
 import { EnvironmentRow, environmentTransportLabel } from "./EnvironmentRow";
@@ -872,7 +872,7 @@ function WebhookEndpointField({
 }
 
 /**
- * Whether Rove Connect forwards requests live or holds them while the
+ * Whether Paperplane Connect forwards requests live or holds them while the
  * environment is offline. The setting is per environment and only readable
  * for this machine's own environment, so other environments show nothing.
  */

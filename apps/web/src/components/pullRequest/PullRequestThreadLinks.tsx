@@ -1,18 +1,18 @@
 import { Tooltip, TooltipTrigger, TooltipPopup } from "../ui/tooltip";
-import { scopeThreadRef } from "@rove-code/client-runtime/environment";
+import { scopeThreadRef } from "@getpaperplane/client-runtime/environment";
 import type {
   EnvironmentId,
   PullRequestRef,
   ScopedThreadRef,
   ThreadId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { CheckIcon, MessageSquareIcon } from "lucide-react";
 import { useState } from "react";
-import { threadPullRequestLinkMode } from "@rove-code/client-runtime/thread-pull-request-compatibility";
+import { threadPullRequestLinkMode } from "@getpaperplane/client-runtime/thread-pull-request-compatibility";
 import { usePullRequestLinking } from "~/hooks/usePullRequestLinking";
 
 import { parseChangeRequestUrl } from "~/lib/openPullRequestLink";
-import { normalizeThreadPullRequestKey } from "@rove-code/shared/threadPullRequests";
+import { normalizeThreadPullRequestKey } from "@getpaperplane/shared/threadPullRequests";
 import { useProjects, useServerConfigs, useThreadShell, useThreadShells } from "~/state/entities";
 import { pullRequestEnvironment } from "~/state/pullRequests";
 import { useEnvironmentQuery } from "~/state/query";

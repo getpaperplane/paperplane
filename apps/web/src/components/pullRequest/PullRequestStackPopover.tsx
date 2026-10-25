@@ -3,7 +3,7 @@ import type {
   EnvironmentId,
   PullRequestRef,
   PullRequestStackMembership,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { useState } from "react";
 import { usePullRequestStack } from "~/state/usePullRequestStack";
 import { Menu, MenuTrigger, MenuPopup, MenuGroup, MenuGroupLabel, MenuItem } from "../ui/menu";

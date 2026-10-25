@@ -1,5 +1,5 @@
-import { assistantCitationsToPlainText } from "@rove-code/shared/assistantCitations";
-import { truncate } from "@rove-code/shared/String";
+import { assistantCitationsToPlainText } from "@getpaperplane/shared/assistantCitations";
+import { truncate } from "@getpaperplane/shared/String";
 
 export interface ThreadTitleSeedInput {
   readonly text: string;

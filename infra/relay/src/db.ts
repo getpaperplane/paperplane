@@ -17,14 +17,14 @@ export class RelayDb extends Context.Service<
   EffectPgDatabase & {
     readonly $client: PgClient;
   }
->()("rove-relay/db/RelayDb") {}
+>()("paperplane-relay/db/RelayDb") {}
 
 export class RelayTransactions extends Context.Service<
   RelayTransactions,
   {
     readonly withTransaction: RelayDb["Service"]["$client"]["withTransaction"];
   }
->()("rove-relay/db/RelayTransactions") {
+>()("paperplane-relay/db/RelayTransactions") {
   static readonly layer = Layer.effect(
     RelayTransactions,
     Effect.gen(function* () {

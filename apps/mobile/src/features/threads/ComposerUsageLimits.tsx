@@ -1,4 +1,4 @@
-import type { EnvironmentId, UsageLimitsReport } from "@rove-code/contracts";
+import type { EnvironmentId, UsageLimitsReport } from "@getpaperplane/contracts";
 import { Pressable, ScrollView, useWindowDimensions, View } from "react-native";
 
 import { SymbolView } from "../../components/ui/AppSymbol";

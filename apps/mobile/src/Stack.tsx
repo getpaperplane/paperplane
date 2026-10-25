@@ -287,7 +287,7 @@ const SettingsContentStack = createV5SheetStackNavigator({
     SettingsAbout: createNativeStackScreen({
       screen: SettingsAboutRouteScreen,
       linking: "about",
-      options: { title: "About Rove Code" },
+      options: { title: "About Paperplane" },
     }),
     SettingsEnvironmentNew: createNativeStackScreen({
       screen: ConnectionsNewRouteScreen,
@@ -637,7 +637,7 @@ function RootStackLayout(props: {
   const pathname = path.startsWith("/") ? path : `/${path}`;
   const workspaceLocation = workspaceLocationFromState(props.state);
   useAgentNotificationNavigation(workspaceLocation.pathname);
-  // Presents the Rove Connect onboarding sheet after an in-session sign-in.
+  // Presents the Paperplane Connect onboarding sheet after an in-session sign-in.
   useConnectOnboardingNavigation();
   // Launcher app shortcuts: routes shortcut taps and tracks opened threads.
   useAppShortcuts(props.state);
@@ -703,14 +703,14 @@ function NotFoundScreen() {
       }}
       style={[{ flex: 1 }, screenBgStyle]}
     >
-      <Text className="text-3xl font-rove-bold text-foreground" selectable>
+      <Text className="text-3xl font-paperplane-bold text-foreground" selectable>
         Route not found
       </Text>
       <Pressable
         style={returnHomeButtonStyle}
         onPress={() => navigation.dispatch(StackActions.replace("Home"))}
       >
-        <Text className="text-base font-rove-bold text-primary-foreground">Return home</Text>
+        <Text className="text-base font-paperplane-bold text-primary-foreground">Return home</Text>
       </Pressable>
     </ScrollView>
   );
@@ -976,7 +976,7 @@ const RootStackConfig = createWorkspaceStackNavigator({
         // A root-level Android formSheet does not host the native stack bar;
         // the route renders an embedded AndroidSheetHeader instead.
         ...(Platform.OS === "android" ? { headerShown: false } : SHEET_SOLID_HEADER_OPTIONS),
-        title: "Set up Rove Connect",
+        title: "Set up Paperplane Connect",
         gestureEnabled: true,
         ...FORM_SHEET_PRESENTATION_OPTIONS,
         sheetAllowedDetents: [0.6, 0.95],

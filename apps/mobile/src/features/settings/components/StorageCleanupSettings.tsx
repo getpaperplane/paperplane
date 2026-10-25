@@ -4,7 +4,7 @@ import type {
   StorageCleanupReport,
   WorktreeKeepWhen,
   WorktreeCleanupRules,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   describeStorageCleanupCounts,
   hasEnabledCleanupRules,
@@ -12,10 +12,10 @@ import {
   planWorktreesDirectoryChange,
   storageCleanupEntryName,
   uniformValue,
-} from "@rove-code/client-runtime/environment-admin";
-import { resolveWorktreeCleanup } from "@rove-code/shared/projectSettings";
+} from "@getpaperplane/client-runtime/environment-admin";
+import { resolveWorktreeCleanup } from "@getpaperplane/shared/projectSettings";
 import type { ScopedMobileSettingsTarget } from "../settings-scoped-server";
-import { squashAtomCommandFailure } from "@rove-code/client-runtime/state/runtime";
+import { squashAtomCommandFailure } from "@getpaperplane/client-runtime/state/runtime";
 import { Atom, AsyncResult } from "effect/reactivity";
 import { useMemo, useRef, useState } from "react";
 import { View } from "react-native";
@@ -143,7 +143,7 @@ export function StorageCleanupSettings(props: {
       {withDirectory ? (
         <SettingsSection
           title="Worktree location"
-          footer="Folder where new worktrees are created, such as ~/worktrees. Existing worktrees stay where they are. Leave empty to use the Rove home folder. The environment checks the path."
+          footer="Folder where new worktrees are created, such as ~/worktrees. Existing worktrees stay where they are. Leave empty to use the Paperplane home folder. The environment checks the path."
         >
           <View className="gap-2 px-4 py-3">
             <AppTextInput

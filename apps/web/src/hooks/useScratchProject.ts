@@ -1,11 +1,11 @@
-import { scopeProjectRef } from "@rove-code/client-runtime/environment";
-import { availableScratchWorkspaceRoot } from "@rove-code/client-runtime/operations/projects";
+import { scopeProjectRef } from "@getpaperplane/client-runtime/environment";
+import { availableScratchWorkspaceRoot } from "@getpaperplane/client-runtime/operations/projects";
 import {
   isAtomCommandInterrupted,
   squashAtomCommandFailure,
-} from "@rove-code/client-runtime/state/runtime";
-import type { EnvironmentProject } from "@rove-code/client-runtime/state/shell";
-import type { EnvironmentId } from "@rove-code/contracts";
+} from "@getpaperplane/client-runtime/state/runtime";
+import type { EnvironmentProject } from "@getpaperplane/client-runtime/state/shell";
+import type { EnvironmentId } from "@getpaperplane/contracts";
 import { useCallback } from "react";
 
 import { stackedThreadToast, toastManager } from "~/components/ui/toast";

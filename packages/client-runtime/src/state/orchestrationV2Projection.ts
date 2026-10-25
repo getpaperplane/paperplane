@@ -1,15 +1,15 @@
-import { applyThreadPullRequestLinkUpdate } from "@rove-code/shared/threadPullRequests";
+import { applyThreadPullRequestLinkUpdate } from "@getpaperplane/shared/threadPullRequests";
 import type {
   OrchestrationV2DomainEvent,
   OrchestrationV2Run,
   OrchestrationV2ThreadProjection,
   OrchestrationV2TextAppend,
   OrchestrationV2TurnItem,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   createOrchestrationV2TurnItemVisibility,
   isOrchestrationV2TurnItemVisible,
-} from "@rove-code/shared/orchestrationV2Timeline";
+} from "@getpaperplane/shared/orchestrationV2Timeline";
 
 export type ApplyOrchestrationV2ProjectionEventOptions = {
   readonly partialTimeline?: boolean;

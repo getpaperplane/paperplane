@@ -5,15 +5,15 @@ import * as Result from "effect/Result";
 import * as Stream from "effect/Stream";
 import { describe, expect } from "vite-plus/test";
 
-import { ProviderInstanceId } from "@rove-code/contracts";
-import { createModelSelection } from "@rove-code/shared/model";
+import { ProviderInstanceId } from "@getpaperplane/contracts";
+import { createModelSelection } from "@getpaperplane/shared/model";
 
-import type { ProviderInstance } from "@rove-code/provider-core/server/driver";
+import type { ProviderInstance } from "@getpaperplane/provider-core/server/driver";
 import * as ProviderInstanceRegistry from "../provider/ProviderInstanceRegistry.ts";
 import * as TextGeneration from "./TextGeneration.ts";
 import * as SourceControlProviderRegistry from "../sourceControl/SourceControlProviderRegistry.ts";
 import * as Layer from "effect/Layer";
-import { buildThreadTitlePrompt } from "@rove-code/provider-core/server/textGenerationPrompts";
+import { buildThreadTitlePrompt } from "@getpaperplane/provider-core/server/textGenerationPrompts";
 
 const makeStubTextGeneration = (
   overrides: Partial<TextGeneration.TextGeneration["Service"]>,

@@ -8,7 +8,7 @@ import { afterEach, beforeEach, expect, it as test, vi } from "vite-plus/test";
 import { CaptureShortcutConfig, niriCaptureConfigPath } from "./CaptureShortcutConfig.ts";
 import { captureConfigBinding } from "./captureConfigEdit.ts";
 
-// oxlint-disable-next-line rove/no-global-process-runtime -- Test collection checks the host before starting these Linux-native filesystem tests.
+// oxlint-disable-next-line paperplane/no-global-process-runtime -- Test collection checks the host before starting these Linux-native filesystem tests.
 const it = test.runIf(process.platform === "linux");
 let directory: string;
 let path: string;
@@ -19,11 +19,11 @@ const tools = {
     vi.fn<() => Promise<{ modmask: number; key: string; dispatcher: string; arg: string }[]>>(),
   reloadHyprland: vi.fn<() => Promise<void>>(),
 };
-const appId = "com.hafiezulzikry.rove.RoveCode";
+const appId = "io.github.getpaperplane.paperplane";
 const install = { operation: "install", chooseFile: false } as const;
 const target = () => ({ desktop: "niri" as const, path, appId });
 beforeEach(async () => {
-  directory = await NodeFSP.mkdtemp(NodePath.join(NodeOS.tmpdir(), "rove-capture-config-"));
+  directory = await NodeFSP.mkdtemp(NodePath.join(NodeOS.tmpdir(), "paperplane-capture-config-"));
   path = NodePath.join(directory, "config.kdl");
   await NodeFSP.writeFile(path, "binds {\n    Mod+Q { quit; }\n}\n", { mode: 0o640 });
   tools.validateNiri.mockReset().mockResolvedValue(undefined);

@@ -23,27 +23,27 @@ function fixture(overrides = {}) {
 
 it("rejects other clients before looking at the active window", async () => {
   const { service, snapshots } = fixture();
-  await expect(service.capture(":1.99")).rejects.toThrow("Only Rove Code");
+  await expect(service.capture(":1.99")).rejects.toThrow("Only Paperplane");
   expect(snapshots()).toBe(0);
   expect(await service.capture(":1.23")).toBe("pixels");
 });
 
-it.each(["io.github.hafiezul.rove.SnapShot", "io.github.hafiezul.rove.dev.SnapShot"])(
-  "accepts the current owner of %s",
-  async (client) => {
-    const { service } = fixture({
-      getNameOwner: async (name) => (name === client ? ":1.23" : null),
-    });
-    expect(await service.capture(":1.23")).toBe("pixels");
-  },
-);
+it.each([
+  "io.github.getpaperplane.paperplane.SnapShot",
+  "io.github.getpaperplane.paperplane.dev.SnapShot",
+])("accepts the current owner of %s", async (client) => {
+  const { service } = fixture({
+    getNameOwner: async (name) => (name === client ? ":1.23" : null),
+  });
+  expect(await service.capture(":1.23")).toBe("pixels");
+});
 
 it("rechecks the name owner on each capture", async () => {
   let owner = ":1.23";
   const { service } = fixture({ getNameOwner: async () => owner });
   expect(await service.capture(owner)).toBe("pixels");
   owner = ":1.24";
-  await expect(service.capture(":1.23")).rejects.toThrow("Only Rove Code");
+  await expect(service.capture(":1.23")).rejects.toThrow("Only Paperplane");
 });
 
 it("rejects locked and non-Wayland sessions without taking a screenshot", async () => {
@@ -99,7 +99,7 @@ it("rejects concurrent requests and clears busy after a failed capture", async (
   await expect(service.capture(":1.23")).rejects.toThrow("already in progress");
   finish(new Error("gone"));
   await expect(first).rejects.toThrow("gone");
-  await expect(service.capture(":1.99")).rejects.toThrow("Only Rove Code");
+  await expect(service.capture(":1.99")).rejects.toThrow("Only Paperplane");
 });
 
 it("prepares focus/effects only after pixels and identity have been captured", async () => {

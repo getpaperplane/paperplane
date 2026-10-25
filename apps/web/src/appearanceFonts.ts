@@ -15,7 +15,7 @@ import {
   MIN_CODE_FONT_SIZE,
   MIN_INTERFACE_FONT_SIZE,
   MIN_PROMPT_FONT_SIZE,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as RuntimePredicate from "effect/Predicate";
 
 export const DEFAULT_SANS_FONT_STACK =
@@ -26,7 +26,7 @@ export const DEFAULT_SANS_FONT_STACK =
 export const DEFAULT_CODE_FONT_STACK =
   '"SF Mono", "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace';
 
-export const TYPOGRAPHY_ADVANCED_STORAGE_KEY = "rove:typography-advanced";
+export const TYPOGRAPHY_ADVANCED_STORAGE_KEY = "paperplane:typography-advanced";
 
 /**
  * Simple typography treats the terminal as another monospace surface. In

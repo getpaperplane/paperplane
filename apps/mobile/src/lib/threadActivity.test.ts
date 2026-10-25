@@ -18,9 +18,9 @@ import {
   type OrchestrationV2RunAttempt,
   type OrchestrationV2ProjectedTurnItem,
   type OrchestrationV2TurnItem,
-} from "@rove-code/contracts";
-import { resolveUserMessagePresentation } from "@rove-code/client-runtime/user-message";
-import { summarizeToolGroup } from "@rove-code/client-runtime/work-log/presentation";
+} from "@getpaperplane/contracts";
+import { resolveUserMessagePresentation } from "@getpaperplane/client-runtime/user-message";
+import { summarizeToolGroup } from "@getpaperplane/client-runtime/work-log/presentation";
 import * as DateTime from "effect/DateTime";
 import { describe, expect, it } from "vite-plus/test";
 
@@ -85,20 +85,20 @@ it("shows only the structured path in expanded mobile read details", () => {
   expect(withoutPath?.canExpand).toBe(false);
 });
 
-it("expands a Rove Code notice to the prompt the agent got", () => {
+it("expands a Paperplane notice to the prompt the agent got", () => {
   const item = {
     ...base("restart-notice", "2026-06-20T00:00:03.000Z", 2),
     type: "notification",
     source: { kind: "system" },
     outcome: "updated",
-    summary: "Rove Code restarted and resumed this turn",
+    summary: "Paperplane restarted and resumed this turn",
     detail: "Continue where you left off.",
   } as OrchestrationV2TurnItem;
   const [activity] = buildThreadFeed([projected(item, 0)]).flatMap((entry) =>
     entry.type === "activity-group" ? entry.activities : [],
   );
 
-  expect(activity?.summary).toBe("Rove Code restarted and resumed this turn");
+  expect(activity?.summary).toBe("Paperplane restarted and resumed this turn");
   expect(activity?.canExpand).toBe(true);
   expect(activity?.getFullDetail()).toBe("Continue where you left off.");
 });
@@ -1433,11 +1433,11 @@ describe("buildThreadFeed", () => {
     expect(activity?.workEntry.viewedImagePath).toBe("/workspace/reference.png");
   });
 
-  it("pretty prints Rove MCP dynamic tool activities and attaches the product logo", () => {
+  it("pretty prints Paperplane MCP dynamic tool activities and attaches the product logo", () => {
     const toolItem: OrchestrationV2TurnItem = {
-      ...base("item-rove-tool", "2026-06-20T00:00:04.000Z", 3),
+      ...base("item-paperplane-tool", "2026-06-20T00:00:04.000Z", 3),
       type: "dynamic_tool",
-      toolName: "mcp__rove__rove_thread_read",
+      toolName: "mcp__paperplane__paperplane_thread_read",
       input: { threadId: "thread-child" },
       output: { messages: [] },
     };
@@ -1445,9 +1445,9 @@ describe("buildThreadFeed", () => {
     const feed = buildThreadFeed([projected(toolItem, 0)]);
     const activity = feed[0]?.type === "activity-group" ? feed[0].activities[0] : null;
 
-    expect(activity?.summary).toBe("Read a Rove thread");
-    expect(activity?.logo).toBe("rove");
-    expect(activity?.getCopyText().split("\n")[0]).toBe("Read a Rove thread");
+    expect(activity?.summary).toBe("Read a Paperplane thread");
+    expect(activity?.logo).toBe("paperplane");
+    expect(activity?.getCopyText().split("\n")[0]).toBe("Read a Paperplane thread");
   });
 
   it.each(["cua_repl.js", "node_repl.js", "js"])(
@@ -1471,7 +1471,7 @@ describe("buildThreadFeed", () => {
   it.each([
     [
       "failed",
-      "await sky.type_text({app:'Rove Code (Nightly)',text:'debug(ga.run)'});",
+      "await sky.type_text({app:'Paperplane (Nightly)',text:'debug(ga.run)'});",
       "Restrict the breakpoint to Git actions",
       "computer",
     ],
@@ -1500,21 +1500,24 @@ describe("buildThreadFeed", () => {
     );
   });
 
-  it("uses canonical Rove orchestration summaries in compact work groups", () => {
+  it("uses canonical Paperplane orchestration summaries in compact work groups", () => {
     const rows = [
       projected(command("2026-06-20T00:00:01.000Z"), 0),
-      ...["mcp__rove__rove_thread_send", "rove_code.rove_thread_send", "rove_thread_send"].map(
-        (toolName, index) =>
-          projected(
-            {
-              ...base(`item-send-${index}`, `2026-06-20T00:00:0${index + 2}.000Z`, index + 2),
-              type: "dynamic_tool" as const,
-              toolName,
-              input: { threadId: `thread-${index}`, message: "Continue" },
-              output: { threadId: `thread-${index}`, messageId: `message-${index}` },
-            },
-            index + 1,
-          ),
+      ...[
+        "mcp__paperplane__paperplane_thread_send",
+        "paperplane.paperplane_thread_send",
+        "paperplane_thread_send",
+      ].map((toolName, index) =>
+        projected(
+          {
+            ...base(`item-send-${index}`, `2026-06-20T00:00:0${index + 2}.000Z`, index + 2),
+            type: "dynamic_tool" as const,
+            toolName,
+            input: { threadId: `thread-${index}`, message: "Continue" },
+            output: { threadId: `thread-${index}`, messageId: `message-${index}` },
+          },
+          index + 1,
+        ),
       ),
       projected(
         {
@@ -1548,7 +1551,7 @@ describe("buildThreadFeed", () => {
         ...base("list", "2026-09-19T00:00:01.000Z", 1),
         type: "dynamic_tool",
         title: "Custom provider title",
-        toolName: "Rove-code.rove_project_list",
+        toolName: "paperplane.paperplane_project_list",
         input: {},
         output: { projects: [] },
       },
@@ -1556,7 +1559,7 @@ describe("buildThreadFeed", () => {
         ...base("clone", "2026-09-19T00:00:02.000Z", 2),
         type: "dynamic_tool",
         title: "Custom provider title",
-        toolName: "mcp__rove__rove_project_clone",
+        toolName: "mcp__paperplane__paperplane_project_clone",
         input: {},
         output: { cwd: "/tmp/repo" },
       },
@@ -1564,7 +1567,7 @@ describe("buildThreadFeed", () => {
         ...base("failed-clone", "2026-09-19T00:00:03.000Z", 3),
         type: "dynamic_tool",
         title: "Custom provider title",
-        toolName: "rove_project_clone",
+        toolName: "paperplane_project_clone",
         input: {},
         output: { isError: true },
       },
@@ -1576,7 +1579,7 @@ describe("buildThreadFeed", () => {
     expect(workEntryRowLabel(activities[0]!.workEntry)).toBe("Listed projects");
     expect(workEntryRowLabel(activities[1]!.workEntry)).toBe("Cloned a repository");
     expect(workEntryRowLabel(activities[2]!.workEntry)).toBe("Failed to clone a repository");
-    expect(activities.every((activity) => activity.logo === "rove")).toBe(true);
+    expect(activities.every((activity) => activity.logo === "paperplane")).toBe(true);
     const presented = deriveThreadFeedPresentation(
       feed,
       { runId, status: "running", startedAt: null, completedAt: null },
@@ -1837,7 +1840,7 @@ describe("retained v2 feed presentation", () => {
             ...base("preview-click", "2026-06-20T00:00:02.000Z", 1),
             type: "dynamic_tool",
             status,
-            toolName: "mcp__rove__preview_click",
+            toolName: "mcp__paperplane__preview_click",
             input: { element: "button" },
             output: null,
           },
@@ -1890,7 +1893,7 @@ describe("retained v2 feed presentation", () => {
           {
             ...base(id, "2026-06-20T00:00:02.000Z", index),
             type: "dynamic_tool",
-            toolName: "rove.delegate_task",
+            toolName: "paperplane.delegate_task",
             input: { task: "Identical task" },
             output,
             ...overrides,
@@ -2681,7 +2684,7 @@ describe("html renders", () => {
   ): OrchestrationV2TurnItem => ({
     ...base("item-render", "2026-06-20T00:00:02.500Z", 2),
     type: "dynamic_tool",
-    toolName: "mcp__rove__html_render",
+    toolName: "mcp__paperplane__html_render",
     input: { title: page.title },
     output: { htmlRender: page },
     ...overrides,
@@ -2755,7 +2758,7 @@ describe("MCP apps", () => {
     type: "dynamic_tool",
     toolName: "weather.get_weather",
     input: { city: "Oslo" },
-    output: { roveMcpApp: app, result: { content: [] } },
+    output: { paperplaneMcpApp: app, result: { content: [] } },
   });
   const feed = (status: OrchestrationV2TurnItem["status"]) =>
     buildThreadFeed([

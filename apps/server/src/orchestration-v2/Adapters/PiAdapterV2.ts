@@ -1,4 +1,4 @@
-/** Rove's V2 Pi adapter. Only the injected SDK session boundary crosses IPC (ADR 0001). */
+/** Paperplane's V2 Pi adapter. Only the injected SDK session boundary crosses IPC (ADR 0001). */
 import type {
   OrchestrationV2ConversationMessage,
   ModelSelection,
@@ -9,16 +9,16 @@ import type {
   OrchestrationV2ExecutionNode,
   OrchestrationV2RuntimeRequest,
   ProviderInstanceId,
-} from "@rove-code/contracts";
-import { OrchestrationV2UserInputQuestion, RuntimeRequestId } from "@rove-code/contracts";
-import * as ProviderAdapter from "@rove-code/provider-core/server/ProviderAdapter";
-import * as IdAllocator from "@rove-code/provider-core/server/IdAllocator";
-import * as McpProviderSessions from "@rove-code/provider-core/server/McpProviderSessions";
-import type { McpProviderSessionConfig } from "@rove-code/provider-core/server/mcpSession";
-import { turnScopedSelectionTransition } from "@rove-code/provider-core/server/selectionTransition";
-import { makeProviderFailure } from "@rove-code/provider-core/server/failure";
-import { ProviderDriverKind } from "@rove-code/contracts";
-import { getModelSelectionStringOptionValue } from "@rove-code/shared/model";
+} from "@getpaperplane/contracts";
+import { OrchestrationV2UserInputQuestion, RuntimeRequestId } from "@getpaperplane/contracts";
+import * as ProviderAdapter from "@getpaperplane/provider-core/server/ProviderAdapter";
+import * as IdAllocator from "@getpaperplane/provider-core/server/IdAllocator";
+import * as McpProviderSessions from "@getpaperplane/provider-core/server/McpProviderSessions";
+import type { McpProviderSessionConfig } from "@getpaperplane/provider-core/server/mcpSession";
+import { turnScopedSelectionTransition } from "@getpaperplane/provider-core/server/selectionTransition";
+import { makeProviderFailure } from "@getpaperplane/provider-core/server/failure";
+import { ProviderDriverKind } from "@getpaperplane/contracts";
+import { getModelSelectionStringOptionValue } from "@getpaperplane/shared/model";
 import * as Deferred from "effect/Deferred";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -148,7 +148,7 @@ export interface PiAdapterV2Options {
 }
 const decodeQuestions = Schema.decodeUnknownSync(Schema.Array(OrchestrationV2UserInputQuestion));
 // Turns without a user entry retain their starting cursor, including an empty branch.
-const LEAF_TURN_REF_PREFIX = "rove:leaf:";
+const LEAF_TURN_REF_PREFIX = "paperplane:leaf:";
 const contentText = (value: unknown): string => {
   if (typeof value === "string") return value;
   if (!Array.isArray(value)) return "";
@@ -303,15 +303,15 @@ export const makePiAdapterV2 = Effect.fn("makePiAdapterV2")(function* (
           });
           if (resource.modelFallbackMessage)
             Queue.offerUnsafe(inbound, {
-              type: "rove_model_fallback",
+              type: "paperplane_model_fallback",
               error: resource.modelFallbackMessage,
             });
           const unsubscribe = resource.subscribe((event) => {
             if (session === resource)
               Queue.offerUnsafe(
                 inbound,
-                event.type === "rove_ui_status"
-                  ? { ...event, roveStatusGeneration: statusGeneration }
+                event.type === "paperplane_ui_status"
+                  ? { ...event, paperplaneStatusGeneration: statusGeneration }
                   : event,
               );
           });
@@ -564,8 +564,8 @@ export const makePiAdapterV2 = Effect.fn("makePiAdapterV2")(function* (
       });
       const handle = Effect.fn("PiAdapterV2.handle")(function* (event: PiSessionEventLike) {
         if (closed || !session) return;
-        if (event.type === "rove_ui_status") {
-          if (event.roveStatusGeneration === statusGeneration)
+        if (event.type === "paperplane_ui_status") {
+          if (event.paperplaneStatusGeneration === statusGeneration)
             yield* statusPublisher?.publish({ statuses: event.statuses }) ?? Effect.void;
           return;
         }
@@ -594,12 +594,13 @@ export const makePiAdapterV2 = Effect.fn("makePiAdapterV2")(function* (
           return;
         }
         if (
-          (event.type === "rove_prompt_error" || event.type === "rove_prompt_settled") &&
+          (event.type === "paperplane_prompt_error" ||
+            event.type === "paperplane_prompt_settled") &&
           event.turnId !== active?.turn.id
         )
           return;
         if (!active) {
-          if (event.type === "extension_error" || event.type === "rove_model_fallback") {
+          if (event.type === "extension_error" || event.type === "paperplane_model_fallback") {
             const at = yield* DateTime.now;
             const message = makeProviderFailure({ message: piTrimmed(event.error) }).message;
             const nativeId = `${input.providerSessionId}:extension:${piTrimmed(event.extensionPath) ?? message}`;
@@ -620,7 +621,10 @@ export const makePiAdapterV2 = Effect.fn("makePiAdapterV2")(function* (
                 parentItemId: null,
                 ordinal: 0,
                 type: "system_notice",
-                title: event.type === "rove_model_fallback" ? "Pi model selection" : "Pi extension",
+                title:
+                  event.type === "paperplane_model_fallback"
+                    ? "Pi model selection"
+                    : "Pi extension",
                 status: "completed",
                 message,
                 startedAt: at,
@@ -783,7 +787,7 @@ export const makePiAdapterV2 = Effect.fn("makePiAdapterV2")(function* (
             yield* putItem(key, item, "tool_call");
             return;
           }
-          case "rove_ui_request": {
+          case "paperplane_ui_request": {
             const native = piTrimmed(event.requestId);
             if (!native) return;
             const requestId = yield* ids.allocate
@@ -840,7 +844,7 @@ export const makePiAdapterV2 = Effect.fn("makePiAdapterV2")(function* (
             });
             return;
           }
-          case "rove_ui_resolved": {
+          case "paperplane_ui_resolved": {
             for (const entry of requests.values()) {
               if (
                 entry.request.nativeRequestRef?.nativeId !== event.requestId ||
@@ -925,19 +929,19 @@ export const makePiAdapterV2 = Effect.fn("makePiAdapterV2")(function* (
             );
             return;
           }
-          case "rove_prompt_error":
+          case "paperplane_prompt_error":
           case "prompt_error":
             active.error = piTrimmed(event.error) ?? "Pi prompt failed.";
             return;
           case "agent_end":
             return; // retries and compaction are not root terminal signals
-          case "rove_prompt_settled":
+          case "paperplane_prompt_settled":
           case "agent_settled":
             if (!session.isStreaming && !session.isPreparingPrompt && !session.hasPendingUserInput)
               yield* finish();
             return;
-          case "rove_ui_notify":
-          case "rove_model_fallback":
+          case "paperplane_ui_notify":
+          case "paperplane_model_fallback":
           case "extension_error": {
             const message = piTrimmed(event.message) ?? piTrimmed(event.error);
             if (!message) return;
@@ -1116,7 +1120,7 @@ export const makePiAdapterV2 = Effect.fn("makePiAdapterV2")(function* (
                 Effect.catch((error) =>
                   Effect.gen(function* () {
                     yield* Queue.offer(inbound, {
-                      type: "rove_prompt_error",
+                      type: "paperplane_prompt_error",
                       turnId: providerTurn.id,
                       error: error.message,
                     });
@@ -1126,7 +1130,10 @@ export const makePiAdapterV2 = Effect.fn("makePiAdapterV2")(function* (
                   }),
                 ),
                 Effect.andThen(
-                  Queue.offer(inbound, { type: "rove_prompt_settled", turnId: providerTurn.id }),
+                  Queue.offer(inbound, {
+                    type: "paperplane_prompt_settled",
+                    turnId: providerTurn.id,
+                  }),
                 ),
                 Effect.asVoid,
               );

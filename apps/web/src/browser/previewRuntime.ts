@@ -1,5 +1,9 @@
 import { useAtomValue } from "@effect/atom-react";
-import type { EnvironmentId, PreviewRuntime, PreviewSessionSnapshot } from "@rove-code/contracts";
+import type {
+  EnvironmentId,
+  PreviewRuntime,
+  PreviewSessionSnapshot,
+} from "@getpaperplane/contracts";
 
 import { isElectron } from "~/env";
 import { isPreviewSupportedInRuntime } from "~/previewStateStore";

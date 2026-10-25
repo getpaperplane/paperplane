@@ -1,10 +1,10 @@
 import { useAtomValue } from "@effect/atom-react";
-import { resolveEnvironmentMachineKind } from "@rove-code/contracts";
+import { resolveEnvironmentMachineKind } from "@getpaperplane/contracts";
 import {
   gitHubRoutingConnectionKey,
   gitHubRoutingPermissionFor,
   type GitHubRoutingPermission,
-} from "@rove-code/client-runtime/connection";
+} from "@getpaperplane/client-runtime/connection";
 import { useState } from "react";
 
 import { environmentCatalog } from "~/connection/catalog";

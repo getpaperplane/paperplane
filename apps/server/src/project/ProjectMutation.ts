@@ -1,4 +1,4 @@
-import { type ProjectMutation } from "@rove-code/contracts";
+import { type ProjectMutation } from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 
 import { type ProjectService } from "./ProjectService.ts";

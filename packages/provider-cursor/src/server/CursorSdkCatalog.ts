@@ -35,7 +35,7 @@ export class CursorSdkCatalog extends Context.Service<
       apiKey: string,
     ) => Effect.Effect<CursorSdkCatalogSnapshot, CursorSdkCatalogError>;
   }
->()("@rove-code/provider-cursor/server/CursorSdkCatalog") {}
+>()("@getpaperplane/provider-cursor/server/CursorSdkCatalog") {}
 
 function isAuthenticationFailure(cause: unknown): boolean {
   try {

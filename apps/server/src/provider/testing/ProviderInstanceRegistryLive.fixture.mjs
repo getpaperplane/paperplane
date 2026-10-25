@@ -2,7 +2,7 @@
 import * as NodeFS from "node:fs";
 import * as NodeReadline from "node:readline";
 // Opt-in: act like a `claude` wrapper that only runs inside one directory.
-const requiredCwd = process.env.ROVE_CLAUDE_REQUIRED_CWD;
+const requiredCwd = process.env.PAPERPLANE_CLAUDE_REQUIRED_CWD;
 if (requiredCwd && process.cwd() !== NodeFS.realpathSync(requiredCwd)) {
   process.stderr.write(`claude: refusing to run outside ${requiredCwd}\n`);
   process.exit(1);
@@ -16,8 +16,12 @@ lines.on("line", (line) => {
   const message = JSON.parse(line);
   if (message.type !== "control_request") return;
   if (message.request?.subtype === "get_usage") {
-    const marker = process.env.ROVE_CLAUDE_RESET_MARKER;
-    if (process.env.ROVE_CLAUDE_USAGE_FAILS_AFTER_CLAIM && marker && NodeFS.existsSync(marker)) {
+    const marker = process.env.PAPERPLANE_CLAUDE_RESET_MARKER;
+    if (
+      process.env.PAPERPLANE_CLAUDE_USAGE_FAILS_AFTER_CLAIM &&
+      marker &&
+      NodeFS.existsSync(marker)
+    ) {
       process.stdout.write(
         JSON.stringify({
           type: "control_response",

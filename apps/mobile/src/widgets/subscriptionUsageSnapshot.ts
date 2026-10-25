@@ -3,7 +3,7 @@ import {
   collectLimitPools,
   type LimitAccount,
   type LimitPresentations,
-} from "@rove-code/shared/usageLimits";
+} from "@getpaperplane/shared/usageLimits";
 
 export interface SubscriptionUsageSnapshot {
   url?: string;

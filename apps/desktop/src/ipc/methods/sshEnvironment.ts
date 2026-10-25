@@ -4,8 +4,8 @@ import {
   issueRemoteWebSocketTicket,
   RemoteEnvironmentAuthUndeclaredStatusError,
   type RemoteEnvironmentAuthError,
-} from "@rove-code/client-runtime/authorization";
-import { fetchRemoteEnvironmentDescriptor } from "@rove-code/client-runtime/environment";
+} from "@getpaperplane/client-runtime/authorization";
+import { fetchRemoteEnvironmentDescriptor } from "@getpaperplane/client-runtime/environment";
 import {
   EnvironmentAuthInvalidError,
   DesktopDiscoveredSshHostSchema,
@@ -25,9 +25,9 @@ import {
   AuthAccessTokenResult,
   AuthSessionState,
   AuthWebSocketTicketResult,
-} from "@rove-code/contracts";
-import { SshHttpBridgeError } from "@rove-code/ssh/errors";
-import { resolveLoopbackSshHttpBaseUrl } from "@rove-code/ssh/tunnel";
+} from "@getpaperplane/contracts";
+import { SshHttpBridgeError } from "@getpaperplane/ssh/errors";
+import { resolveLoopbackSshHttpBaseUrl } from "@getpaperplane/ssh/tunnel";
 import * as Data from "effect/Data";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";

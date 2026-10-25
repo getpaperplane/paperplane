@@ -1,4 +1,4 @@
-import { ScheduledTaskId } from "@rove-code/contracts";
+import { ScheduledTaskId } from "@getpaperplane/contracts";
 import { describe, expect, it } from "vite-plus/test";
 
 import { resolveUserMessagePresentation } from "./userMessage.ts";
@@ -55,8 +55,8 @@ describe("resolveUserMessagePresentation", () => {
     }
   });
 
-  it("attributes older server-sent restart continuations to Rove Code, not another agent", () => {
-    const text = "Note: the Rove server restarted.";
+  it("attributes older server-sent restart continuations to Paperplane, not another agent", () => {
+    const text = "Note: the Paperplane server restarted.";
     expect(
       resolveUserMessagePresentation({
         role: "user",
@@ -64,7 +64,7 @@ describe("resolveUserMessagePresentation", () => {
         creationSource: "server",
         text,
       }),
-    ).toMatchObject({ attribution: "rove" });
+    ).toMatchObject({ attribution: "paperplane" });
     for (const creationSource of ["mcp", "provider"] as const) {
       expect(
         resolveUserMessagePresentation({ role: "user", createdBy: "agent", creationSource, text }),

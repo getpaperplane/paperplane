@@ -1,5 +1,5 @@
 import * as Schema from "effect/Schema";
-import { EnvironmentId, PastedTextAttachmentSource } from "@rove-code/contracts";
+import { EnvironmentId, PastedTextAttachmentSource } from "@getpaperplane/contracts";
 
 export const DraftComposerImageAttachmentSchema = Schema.Struct({
   id: Schema.String,

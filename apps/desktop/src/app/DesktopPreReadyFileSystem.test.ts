@@ -1,6 +1,6 @@
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { assert, it } from "@effect/vitest";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
@@ -17,18 +17,21 @@ const resolveWindowsUserData = (appDataDirectory: string) =>
   }).pipe(Effect.provide(DesktopPreReadyFileSystem.layer));
 
 it.layer(NodeServices.layer)("DesktopPreReadyFileSystem", (it) => {
-  it.effect("migrates the legacy Windows profile state", () =>
+  it.effect("prepares the independent Windows profile synchronously", () =>
     Effect.gen(function* () {
       const fileSystem = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const root = yield* fileSystem.makeTempDirectoryScoped({ prefix: "rove-pre-ready-fs-" });
-      yield* fileSystem.makeDirectory(path.join(root, "rove-code"));
-      yield* fileSystem.writeFileString(path.join(root, "rove-code", "Local State"), "keys");
+      const root = yield* fileSystem.makeTempDirectoryScoped({
+        prefix: "paperplane-pre-ready-fs-",
+      });
+      yield* fileSystem.makeDirectory(path.join(root, "rove-v2"));
+      const keys = '{"os_crypt":{"encrypted_key":"RFBBUEl3cmFwcGVkLWtleQ=="}}';
+      yield* fileSystem.writeFileString(path.join(root, "rove-v2", "Local State"), keys);
 
       const userData = yield* resolveWindowsUserData(root);
 
-      assert.equal(userData, path.join(root, "rove-v2"));
-      assert.equal(yield* fileSystem.readFileString(path.join(userData, "Local State")), "keys");
+      assert.equal(userData, path.join(root, "paperplane"));
+      assert.equal(yield* fileSystem.readFileString(path.join(userData, "Local State")), keys);
     }),
   );
 
@@ -37,7 +40,9 @@ it.layer(NodeServices.layer)("DesktopPreReadyFileSystem", (it) => {
     () =>
       Effect.gen(function* () {
         const fileSystem = yield* FileSystem.FileSystem;
-        const root = yield* fileSystem.makeTempDirectoryScoped({ prefix: "rove-pre-ready-fs-" });
+        const root = yield* fileSystem.makeTempDirectoryScoped({
+          prefix: "paperplane-pre-ready-fs-",
+        });
         yield* fileSystem.chmod(root, 0o000);
         yield* Effect.addFinalizer(() => fileSystem.chmod(root, 0o700).pipe(Effect.orDie));
 

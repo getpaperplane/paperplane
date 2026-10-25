@@ -1,5 +1,5 @@
-import type { ProjectEntry } from "@rove-code/contracts";
-import { isWindowsAbsolutePath, isAbsolutePath } from "@rove-code/shared/path";
+import type { ProjectEntry } from "@getpaperplane/contracts";
+import { isWindowsAbsolutePath, isAbsolutePath } from "@getpaperplane/shared/path";
 
 export interface FileBreadcrumb {
   label: string;

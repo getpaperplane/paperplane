@@ -26,11 +26,15 @@ import * as EffectAcpClient from "effect-acp/client";
 import * as EffectAcpErrors from "effect-acp/errors";
 import type * as EffectAcpSchema from "effect-acp/compat";
 import type * as EffectAcpProtocol from "effect-acp/protocol";
-import { resolveSpawnCommand } from "@rove-code/shared/shell";
-import { AgentScope, AgentScopeThreadId, RAISE_OOM_SCORE_LINE } from "@rove-code/shared/AgentScope";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+import { resolveSpawnCommand } from "@getpaperplane/shared/shell";
+import {
+  AgentScope,
+  AgentScopeThreadId,
+  RAISE_OOM_SCORE_LINE,
+} from "@getpaperplane/shared/AgentScope";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 
-import { signalProcessGroup } from "@rove-code/provider-core/server/processGroup";
+import { signalProcessGroup } from "@getpaperplane/provider-core/server/processGroup";
 import { appendAcpStderrTail, sanitizeAcpStderrExcerpt } from "./stderr.ts";
 import {
   collectSessionConfigOptionValues,
@@ -289,7 +293,7 @@ export function wrapCommandForLinuxCgroup(
         '  case "$line" in 0::*) [ -z "$actual" ] || exit 126; actual=${line#0::};; esac',
         "done < /proc/self/cgroup || exit 125",
         '[ "$actual" = "$expected" ] || exit 126',
-        "unset ELECTRON_RUN_AS_NODE ROVE_ACP_CGROUP_WRAPPER",
+        "unset ELECTRON_RUN_AS_NODE PAPERPLANE_ACP_CGROUP_WRAPPER",
         "trap 'exit 125' 0",
         // The trap alone does not cover a failed `exec`: bash — which is
         // /bin/sh on Arch derivatives — exits 127 without running the EXIT
@@ -300,7 +304,7 @@ export function wrapCommandForLinuxCgroup(
         '[ -f "$1" ] && [ -x "$1" ] || exit 125',
         'exec "$@"',
       ].join("\n"),
-      "rove-acp-cgroup-wrapper",
+      "paperplane-acp-cgroup-wrapper",
       lease.path,
       lease.relativePath,
       command,
@@ -343,7 +347,7 @@ export function resolveLinuxCgroupTargetCommand(
   return undefined;
 }
 
-const STALE_ACP_CGROUP_SIBLING = /^rove-acp-(\d+)-/;
+const STALE_ACP_CGROUP_SIBLING = /^paperplane-acp-(\d+)-/;
 
 export interface SweepStaleLinuxCgroupSiblingsOptions {
   readonly currentPid?: number;
@@ -368,7 +372,7 @@ function defaultReadCgroupPopulated(siblingPath: string): "0" | "1" | undefined 
   return state === "0" || state === "1" ? state : undefined;
 }
 
-/** Best-effort removal of empty `rove-acp-<dead-pid>-*` sibling leases under a parent cgroup. */
+/** Best-effort removal of empty `paperplane-acp-<dead-pid>-*` sibling leases under a parent cgroup. */
 export function sweepStaleLinuxCgroupSiblings(
   parentPath: string,
   options: SweepStaleLinuxCgroupSiblingsOptions = {},
@@ -422,7 +426,7 @@ function tryCreateLinuxCgroupLease(
     return undefined;
   }
   sweepStaleLinuxCgroupSiblings(currentPath);
-  const childName = `rove-acp-${process.pid}-${NodeCrypto.randomUUID().replaceAll("-", "")}`;
+  const childName = `paperplane-acp-${process.pid}-${NodeCrypto.randomUUID().replaceAll("-", "")}`;
   const childPath = NodePath.join(currentPath, childName);
   const childRelative = NodePath.posix.join(currentRelative, childName);
   if (NodePath.dirname(childPath) !== currentPath) return undefined;
@@ -955,7 +959,7 @@ export function terminatePosixOwnedProcessTree(input: {
     discover(table);
     const byPid = new Map(table.map((entry) => [entry.pid, entry]));
     const current = input.controller.identity(process.pid);
-    if (current === undefined) throw fail("Cannot identify the current Rove process group");
+    if (current === undefined) throw fail("Cannot identify the current Paperplane process group");
     const ledgerByPid = new Map(
       [...ledger.values()].map((process) => [process.pid, process] as const),
     );
@@ -1344,7 +1348,7 @@ export class AcpSessionRuntime extends Context.Service<
       payload: unknown,
     ) => Effect.Effect<void, EffectAcpErrors.AcpError>;
   }
->()("@rove-code/provider-acp/server/AcpSessionRuntime") {}
+>()("@getpaperplane/provider-acp/server/AcpSessionRuntime") {}
 
 interface AcpStartedState extends AcpSessionRuntimeStartResult {}
 
@@ -1600,7 +1604,7 @@ export const make = (
         : {
             ...options.spawn.env,
             ELECTRON_RUN_AS_NODE: "1",
-            ROVE_ACP_CGROUP_WRAPPER: "1",
+            PAPERPLANE_ACP_CGROUP_WRAPPER: "1",
           };
     const child = yield* spawner
       .spawn(
@@ -2035,7 +2039,7 @@ export const make = (
           meta !== null &&
           typeof meta === "object" &&
           !Array.isArray(meta) &&
-          (meta as { readonly roveSessionLoadReady?: unknown }).roveSessionLoadReady ===
+          (meta as { readonly paperplaneSessionLoadReady?: unknown }).paperplaneSessionLoadReady ===
             "replay_idle";
         const extractedModelConfigId = extractModelConfigId(sessionSetupResult);
         const nextModelConfigId =

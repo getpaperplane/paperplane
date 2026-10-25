@@ -2,13 +2,13 @@ import { AppActivityIndicator } from "../../components/ui/AppActivityIndicator";
 import { ConnectionTraceId } from "./ConnectionTraceId";
 import { useAuth } from "@clerk/expo";
 import { SymbolView } from "../../components/ui/AppSymbol";
-import { type EnvironmentConnectionPhase } from "@rove-code/client-runtime/connection";
+import { type EnvironmentConnectionPhase } from "@getpaperplane/client-runtime/connection";
 import {
   type EnvironmentId,
   type EnvironmentMachineKind,
   type ExecutionEnvironmentDescriptor,
   resolveEnvironmentMachineKind,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { useAtomValue } from "@effect/atom-react";
 import { useCallback, useState } from "react";
 import { Pressable, type TextLayoutEvent, View } from "react-native";
@@ -35,15 +35,15 @@ interface CloudEnvironmentRowsProps {
   readonly showcaseAvailableEnvironments?: ReadonlyArray<RelayEnvironmentView>;
   readonly showcaseSignedIn?: boolean;
   /**
-   * Hide the "Rove Connect" section title when the host provides its own header.
+   * Hide the "Paperplane Connect" section title when the host provides its own header.
    */
   readonly showHeader?: boolean;
 }
 
 /**
- * "Rove Connect" section: every environment published to the signed-in account,
+ * "Paperplane Connect" section: every environment published to the signed-in account,
  * with connect switches, availability status, and loading/error
- * states. Shared between the Settings environments screen and the Rove Connect
+ * states. Shared between the Settings environments screen and the Paperplane Connect
  * onboarding sheet.
  *
  * Already-connected relay environments render even without cloud config or a
@@ -113,8 +113,8 @@ function CloudEnvironmentRowsContent(
     <View collapsable={false} className={cn("gap-3", showHeader && "mt-5")}>
       {showHeader ? (
         <View className="px-1">
-          <Text className="text-sm font-rove-bold uppercase text-foreground-muted">
-            Rove Connect
+          <Text className="text-sm font-paperplane-bold uppercase text-foreground-muted">
+            Paperplane Connect
           </Text>
         </View>
       ) : null}
@@ -171,8 +171,8 @@ function CloudEnvironmentRowsContent(
       controller.relayDiscovery.error &&
       !controller.relayDiscovery.isRefreshing ? (
         <View collapsable={false} className="gap-3 rounded-[24px] bg-grouped-card p-5">
-          <Text className="text-base font-rove-bold text-foreground">
-            Could not load Rove Connect environments
+          <Text className="text-base font-paperplane-bold text-foreground">
+            Could not load Paperplane Connect environments
           </Text>
           <Text className="text-sm text-foreground-muted">{controller.relayDiscovery.error}</Text>
           {controller.relayDiscovery.errorTraceId ? (
@@ -185,7 +185,7 @@ function CloudEnvironmentRowsContent(
             }}
             className="self-start rounded-full bg-subtle px-3.5 py-2 active:opacity-70"
           >
-            <Text className="text-xs font-rove-bold text-foreground">Try again</Text>
+            <Text className="text-xs font-paperplane-bold text-foreground">Try again</Text>
           </Pressable>
         </View>
       ) : null}
@@ -194,7 +194,7 @@ function CloudEnvironmentRowsContent(
 }
 
 /**
- * A saved Rove Connect environment. The switch turns it on or off; off keeps the
+ * A saved Paperplane Connect environment. The switch turns it on or off; off keeps the
  * registration and cache but drops the connection and hides its errors.
  * Long-press removes it from this device.
  */
@@ -354,7 +354,7 @@ function CloudEnvironmentRowShell(props: {
             tintColorClassName="accent-foreground-muted"
           />
           <Text
-            className="min-w-0 flex-shrink text-base font-rove-bold leading-snug text-foreground"
+            className="min-w-0 flex-shrink text-base font-paperplane-bold leading-snug text-foreground"
             numberOfLines={1}
           >
             {props.label}
@@ -436,7 +436,7 @@ function CopyTraceIdButton(props: { readonly traceId: string }) {
         tintColorClassName={"accent-icon"}
         type="monochrome"
       />
-      <Text className="text-xs font-rove-bold text-foreground">Copy trace ID</Text>
+      <Text className="text-xs font-paperplane-bold text-foreground">Copy trace ID</Text>
     </Pressable>
   );
 }

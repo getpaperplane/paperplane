@@ -83,7 +83,7 @@ it.layer(NodeServices.layer)("replayMarkers", (it) => {
       Effect.provide(
         ServerSecretStore.layer.pipe(
           Layer.provideMerge(
-            ServerConfig.layerTest(process.cwd(), { prefix: "rove-replay-markers-test-" }),
+            ServerConfig.layerTest(process.cwd(), { prefix: "paperplane-replay-markers-test-" }),
           ),
         ),
       ),

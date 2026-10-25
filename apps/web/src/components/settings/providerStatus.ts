@@ -2,7 +2,7 @@ import type {
   ServerProvider,
   ServerProviderVersionAdvisory,
   ServerProviderCompatibilityAdvisory,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 
 /**
  * Visual treatment for each server-reported provider status. Centralized so
@@ -45,7 +45,7 @@ export function getProviderSummary(provider: ServerProvider | undefined) {
       headline: "Disabled",
       detail:
         provider.message ??
-        "This provider is installed but disabled for new sessions in Rove Code.",
+        "This provider is installed but disabled for new sessions in Paperplane.",
     };
   }
   if (!provider.installed) {

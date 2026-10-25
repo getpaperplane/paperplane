@@ -3,10 +3,10 @@
  *
  * @module usageTestFormats
  */
-import type { UsageProviderKind } from "@rove-code/contracts";
-import type { TranscriptUsageFormat } from "@rove-code/provider-core/server/usage";
-import { piUsageFormat } from "@rove-code/provider-pi/server/usage";
-import { grokUsageFormat } from "@rove-code/provider-grok/server/usage";
+import type { UsageProviderKind } from "@getpaperplane/contracts";
+import type { TranscriptUsageFormat } from "@getpaperplane/provider-core/server/usage";
+import { piUsageFormat } from "@getpaperplane/provider-pi/server/usage";
+import { grokUsageFormat } from "@getpaperplane/provider-grok/server/usage";
 
 import { claudeUsageFormat } from "../provider/Drivers/claudeUsage.ts";
 import { codexUsageFormat } from "../provider/Drivers/codexUsage.ts";

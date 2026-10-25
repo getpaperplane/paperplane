@@ -1,4 +1,4 @@
-import { type RunId } from "@rove-code/contracts";
+import { type RunId } from "@getpaperplane/contracts";
 import { type MouseEvent, memo, useCallback, useMemo, useState } from "react";
 import { type TurnDiffFileChange } from "../../types";
 import {

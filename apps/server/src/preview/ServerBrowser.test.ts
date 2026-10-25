@@ -9,7 +9,7 @@ import {
   ThreadId,
   type PreviewAutomationSnapshot,
   type PreviewAutomationStatus,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Clock from "effect/Clock";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
@@ -265,7 +265,9 @@ const dependencies = Layer.mergeAll(
     pointer: () => Effect.void,
   }),
 ).pipe(
-  Layer.provideMerge(ServerConfig.layerTest(process.cwd(), { prefix: "rove-server-browser-" })),
+  Layer.provideMerge(
+    ServerConfig.layerTest(process.cwd(), { prefix: "paperplane-server-browser-" }),
+  ),
   Layer.provideMerge(NodeServices.layer),
 );
 const layer = ServerBrowser.layer.pipe(Layer.provideMerge(dependencies));

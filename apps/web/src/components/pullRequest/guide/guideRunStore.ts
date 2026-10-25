@@ -7,7 +7,7 @@
  * a guide opened beside a new thread picks up at the same stop. Not persisted: a reload forgets
  * both, and the guide is still there when the reader comes back.
  */
-import type { EnvironmentId, PullRequestRef } from "@rove-code/contracts";
+import type { EnvironmentId, PullRequestRef } from "@getpaperplane/contracts";
 import { create } from "zustand";
 
 import { pullRequestReviewKey } from "../pullRequestReviewStore";

@@ -3,7 +3,7 @@ import {
   ProviderInstanceId,
   ProviderDriverKind,
   type ProviderOptionDescriptor,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { buildTraitsTriggerDisplay, buildUnavailableModelOptionDescriptors } from "./TraitsPicker";
 
 function selectDescriptor(

@@ -20,7 +20,7 @@ jobs:
     permissions:
       contents: write
     env:
-      PACKAGE_NAME: dev.rove.app
+      PACKAGE_NAME: io.github.getpaperplane.paperplane
       RELEASE_TAG: android-beta
     steps:
       - id: credentials

@@ -1,4 +1,4 @@
-import { OrchestrationDispatchCommandError } from "@rove-code/contracts";
+import { OrchestrationDispatchCommandError } from "@getpaperplane/contracts";
 import * as Crypto from "effect/Crypto";
 import * as Orchestrator from "./orchestration-v2/Orchestrator.ts";
 
@@ -101,8 +101,8 @@ import {
   type PullRequestRef,
   WS_METHODS,
   WsRpcGroup,
-} from "@rove-code/contracts";
-import { resolveServerBackgroundActivitySettings } from "@rove-code/shared/backgroundActivitySettings";
+} from "@getpaperplane/contracts";
+import { resolveServerBackgroundActivitySettings } from "@getpaperplane/shared/backgroundActivitySettings";
 import {
   HttpRouter,
   HttpServerRequest,
@@ -122,7 +122,7 @@ import * as McpAppRequests from "./mcpApps/McpAppRequests.ts";
 import * as ProviderSessionManager from "./orchestration-v2/ProviderSessionManager.ts";
 import * as ThreadLaunchService from "./orchestration-v2/ThreadLaunchService.ts";
 import * as ThreadMessageIntake from "./orchestration-v2/ThreadMessageIntake.ts";
-import * as IdAllocator from "@rove-code/provider-core/server/IdAllocator";
+import * as IdAllocator from "@getpaperplane/provider-core/server/IdAllocator";
 import * as ScheduledTasks from "./scheduledTasks/ScheduledTaskService.ts";
 import * as SecretRequests from "./secrets/SecretRequests.ts";
 import {
@@ -167,10 +167,10 @@ import * as OrchestrationEventStore from "./persistence/OrchestrationEventStore.
 import { userFacingDispatchErrorMessage } from "./orchestration-v2/UserFacingErrors.ts";
 import * as ProviderRegistry from "./provider/ProviderRegistry.ts";
 import * as ProviderInstanceRegistry from "./provider/ProviderInstanceRegistry.ts";
-import * as AcpRegistrySupport from "@rove-code/provider-acp-registry/server/AcpRegistrySupport";
-import * as AcpRegistryRuntimeCoordinator from "@rove-code/provider-acp-registry/server/AcpRegistryRuntimeCoordinator";
+import * as AcpRegistrySupport from "@getpaperplane/provider-acp-registry/server/AcpRegistrySupport";
+import * as AcpRegistryRuntimeCoordinator from "@getpaperplane/provider-acp-registry/server/AcpRegistryRuntimeCoordinator";
 import * as ModelManifest from "./provider/ModelManifest.ts";
-import * as ProviderLatestVersions from "@rove-code/provider-core/server/ProviderLatestVersions";
+import * as ProviderLatestVersions from "@getpaperplane/provider-core/server/ProviderLatestVersions";
 import * as ProviderMaintenanceRunner from "./provider/providerMaintenanceRunner.ts";
 import * as ProviderAuthService from "./provider/ProviderAuthService.ts";
 import { makeProviderInstallation } from "./provider/providerInstallation.ts";
@@ -198,6 +198,7 @@ import { deletePendingAttachment, issueAttachmentUploadUrl } from "./assets/Atta
 import * as PortScanner from "./preview/PortScanner.ts";
 import * as WorkspaceEntries from "./workspace/WorkspaceEntries.ts";
 import * as WorkspaceFileSystem from "./workspace/WorkspaceFileSystem.ts";
+import * as PaperplaneProjectFileLoader from "./project/PaperplaneProjectFileLoader.ts";
 import { readWorkflowScript } from "./orchestration-v2/workflowScriptQuery.ts";
 import * as WorkspacePaths from "./workspace/WorkspacePaths.ts";
 import * as VcsStatusBroadcaster from "./vcs/VcsStatusBroadcaster.ts";
@@ -252,11 +253,11 @@ import * as VcsProjectConfig from "./vcs/VcsProjectConfig.ts";
 import * as PairingGrantStore from "./auth/PairingGrantStore.ts";
 import * as SessionStore from "./auth/SessionStore.ts";
 import { failEnvironmentAuthInvalid, failEnvironmentInternal } from "./auth/http.ts";
-import * as RelayClient from "@rove-code/shared/relayClient";
+import * as RelayClient from "@getpaperplane/shared/relayClient";
 import {
   sameUsageLimitCommandCoverage,
   withUsageLimitsCommands,
-} from "@rove-code/shared/usageLimits";
+} from "@getpaperplane/shared/usageLimits";
 import * as AgentSessionScanner from "./project/AgentSessionScanner.ts";
 import * as AgentSessionImporter from "./project/AgentSessionImporter.ts";
 import * as UsageLimitSources from "./usage/UsageLimitSources.ts";
@@ -576,7 +577,7 @@ const CoreWsRpcGroup = ServerWsRpcGroup.omit(
   WS_METHODS.worktreeInventoryMeasure,
   WS_METHODS.worktreeInventoryRemove,
 );
-const layerRoveWsRpc = Layer.unwrap(
+const layerPaperplaneWsRpc = Layer.unwrap(
   Effect.gen(function* () {
     const providerRegistry = yield* ProviderRegistry.ProviderRegistry;
     const sandboxes = yield* SandboxManager;
@@ -1384,6 +1385,7 @@ const layerCoreWsRpc = (
       const startup = yield* ServerRuntimeStartup.ServerRuntimeStartup;
       const workspaceEntries = yield* WorkspaceEntries.WorkspaceEntries;
       const workspaceFileSystem = yield* WorkspaceFileSystem.WorkspaceFileSystem;
+      const projectFileLoader = yield* PaperplaneProjectFileLoader.PaperplaneProjectFileLoader;
       const serverEnvironment = yield* ServerEnvironment.ServerEnvironment;
       const backgroundPolicy = yield* BackgroundPolicy.BackgroundPolicy;
       const rpcClientIds = yield* Ref.make(new Set<RpcClientId>());
@@ -1619,7 +1621,7 @@ const layerCoreWsRpc = (
               if (racedImport !== null) return { threadId, imported: false } as const;
               return yield* new AcpRegistryOperationError({
                 reason: "session_import_failed",
-                message: "Could not create a Rove thread for the ACP session.",
+                message: "Could not create a Paperplane thread for the ACP session.",
                 cause: launched.failure,
               });
             }
@@ -1660,7 +1662,8 @@ const layerCoreWsRpc = (
             if (importedThread !== null) {
               return yield* new AcpRegistryOperationError({
                 reason: "session_delete_failed",
-                message: "Delete the imported Rove thread before deleting its native ACP session.",
+                message:
+                  "Delete the imported Paperplane thread before deleting its native ACP session.",
               });
             }
             yield* manager.deleteSession({
@@ -2290,7 +2293,7 @@ const layerCoreWsRpc = (
           ),
         [WS_METHODS.serverRefreshProviders]: (input) =>
           Effect.gen(function* () {
-            // Only explicit catalog refreshes bypass Rove's caches. Workspace
+            // Only explicit catalog refreshes bypass Paperplane's caches. Workspace
             // discovery and background status checks retain their timers.
             if (input.refreshModels) {
               yield* modelManifest.forceRefresh;
@@ -2767,6 +2770,7 @@ const layerCoreWsRpc = (
                 }),
             ),
           ),
+        [WS_METHODS.projectsReadConfig]: (input) => projectFileLoader.loadState(input.cwd),
         [WS_METHODS.projectsReadFile]: (input) =>
           workspaceFileSystem.readFile(input).pipe(
             Effect.mapError(
@@ -3247,7 +3251,7 @@ const layerCoreWsRpc = (
   );
 
 const layerWsRpc = (...args: Parameters<typeof layerCoreWsRpc>) =>
-  Layer.merge(layerCoreWsRpc(...args), layerRoveWsRpc);
+  Layer.merge(layerCoreWsRpc(...args), layerPaperplaneWsRpc);
 
 // A defect in a handler's effect fails only its own request. RpcServer's default
 // sends a socket-level Defect frame instead, and the client ends every pending

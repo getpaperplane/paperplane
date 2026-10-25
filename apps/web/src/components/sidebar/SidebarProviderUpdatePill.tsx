@@ -1,7 +1,7 @@
 import { Spinner } from "~/components/ui/spinner";
 import { useNavigate } from "@tanstack/react-router";
 import { useAtomValue } from "@effect/atom-react";
-import type { ServerProvider } from "@rove-code/contracts";
+import type { ServerProvider } from "@getpaperplane/contracts";
 import { CircleCheckIcon, DownloadIcon, TriangleAlertIcon, XIcon } from "lucide-react";
 import { useCallback, useEffect, useState, type CSSProperties } from "react";
 

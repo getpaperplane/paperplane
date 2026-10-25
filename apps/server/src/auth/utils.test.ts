@@ -12,7 +12,7 @@ describe("deriveAuthClientMetadata", () => {
       request: {
         headers: {
           "user-agent":
-            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) rove/0.0.15 Chrome/136.0.7103.93 Electron/36.3.2 Safari/537.36",
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) paperplane/0.0.15 Chrome/136.0.7103.93 Electron/36.3.2 Safari/537.36",
         },
         source: {
           remoteAddress: "::ffff:127.0.0.1",
@@ -40,14 +40,14 @@ describe("deriveAuthClientMetadata", () => {
         },
       } as never,
       presented: {
-        label: "Rove Code Mobile",
+        label: "Paperplane Mobile",
         deviceType: "mobile",
         os: "iOS",
       },
     });
 
     expect(metadata).toMatchObject({
-      label: "Rove Code Mobile",
+      label: "Paperplane Mobile",
       browser: "Electron",
       deviceType: "mobile",
       ipAddress: "192.168.213.72",
@@ -63,7 +63,7 @@ describe("session cookie isolation", () => {
       mode: "web",
       port: 5775,
       host: "127.0.0.1",
-      instanceKey: "/tmp/rove-agent-one",
+      instanceKey: "/tmp/paperplane-agent-one",
       environmentId: "environment-one",
       development: true,
     });
@@ -71,13 +71,13 @@ describe("session cookie isolation", () => {
       mode: "web",
       port: 5775,
       host: "127.0.0.1",
-      instanceKey: "/tmp/rove-agent-two",
+      instanceKey: "/tmp/paperplane-agent-two",
       environmentId: "environment-two",
       development: true,
     });
 
-    expect(first).toMatch(/^rove_session_5775_[a-f0-9]{12}$/);
-    expect(second).toMatch(/^rove_session_5775_[a-f0-9]{12}$/);
+    expect(first).toMatch(/^paperplane_session_5775_[a-f0-9]{12}$/);
+    expect(second).toMatch(/^paperplane_session_5775_[a-f0-9]{12}$/);
     expect(first).not.toBe(second);
   });
 
@@ -86,7 +86,7 @@ describe("session cookie isolation", () => {
       mode: "web",
       port: 3773,
       host: "192.168.1.50",
-      instanceKey: "/srv/rove-one",
+      instanceKey: "/srv/paperplane-one",
       environmentId: "environment-one",
       development: false,
     });
@@ -94,13 +94,13 @@ describe("session cookie isolation", () => {
       mode: "web",
       port: 5775,
       host: "192.168.1.50",
-      instanceKey: "/srv/rove-two",
+      instanceKey: "/srv/paperplane-two",
       environmentId: "environment-two",
       development: false,
     });
 
-    expect(first).toMatch(/^rove_session_[a-f0-9]{12}$/);
-    expect(second).toMatch(/^rove_session_[a-f0-9]{12}$/);
+    expect(first).toMatch(/^paperplane_session_[a-f0-9]{12}$/);
+    expect(second).toMatch(/^paperplane_session_[a-f0-9]{12}$/);
     expect(first).not.toBe(second);
   });
 
@@ -109,7 +109,7 @@ describe("session cookie isolation", () => {
       mode: "web",
       port: 8080,
       host: "0.0.0.0",
-      instanceKey: "/srv/rove",
+      instanceKey: "/srv/paperplane",
       environmentId: "environment-one",
       development: false,
     });
@@ -117,7 +117,7 @@ describe("session cookie isolation", () => {
       mode: "web",
       port: 9090,
       host: "app.example.com",
-      instanceKey: "/srv/rove",
+      instanceKey: "/srv/paperplane",
       environmentId: "environment-one",
       development: false,
     });
@@ -135,7 +135,7 @@ describe("session cookie isolation", () => {
         environmentId: "environment-one",
         development: true,
       }),
-    ).toBe("rove_session_3773");
+    ).toBe("paperplane_session_3773");
   });
 
   it("isolates development servers even when they bind a wildcard host", () => {
@@ -144,11 +144,11 @@ describe("session cookie isolation", () => {
         mode: "web",
         port: 5775,
         host: "0.0.0.0",
-        instanceKey: "/tmp/rove-wildcard-dev",
+        instanceKey: "/tmp/paperplane-wildcard-dev",
         environmentId: "environment-one",
         development: true,
       }),
-    ).toMatch(/^rove_session_5775_[a-f0-9]{12}$/);
+    ).toMatch(/^paperplane_session_5775_[a-f0-9]{12}$/);
   });
 
   it("classifies loopback aliases separately from remotely reachable hosts", () => {

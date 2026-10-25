@@ -1,5 +1,5 @@
-import { scopeThreadRef } from "@rove-code/client-runtime/environment";
-import type { EnvironmentId, ScopedThreadRef, ThreadId } from "@rove-code/contracts";
+import { scopeThreadRef } from "@getpaperplane/client-runtime/environment";
+import type { EnvironmentId, ScopedThreadRef, ThreadId } from "@getpaperplane/contracts";
 import { useMemo } from "react";
 
 /**

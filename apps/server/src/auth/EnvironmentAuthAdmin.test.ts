@@ -1,4 +1,4 @@
-import { AuthAdministrativeScopes } from "@rove-code/contracts";
+import { AuthAdministrativeScopes } from "@getpaperplane/contracts";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
@@ -26,7 +26,7 @@ const layerServerConfig = (
   ).pipe(
     Layer.provide(
       ServerConfig.layerTest(process.cwd(), {
-        prefix: "rove-auth-control-plane-test-",
+        prefix: "paperplane-auth-control-plane-test-",
       }),
     ),
   );

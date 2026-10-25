@@ -1,5 +1,5 @@
-import { EnvironmentId, ProjectId, ThreadId } from "@rove-code/contracts";
-import { scopeProjectRef, scopeThreadRef } from "@rove-code/client-runtime/environment";
+import { EnvironmentId, ProjectId, ThreadId } from "@getpaperplane/contracts";
+import { scopeProjectRef, scopeThreadRef } from "@getpaperplane/client-runtime/environment";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 import { toastManager } from "../components/ui/toast";

@@ -1,4 +1,4 @@
-import type { EnvironmentConnectionPhase } from "@rove-code/client-runtime/connection";
+import type { EnvironmentConnectionPhase } from "@getpaperplane/client-runtime/connection";
 
 /**
  * What the floating pill says. Connection, syncing, and working share one

@@ -1,4 +1,4 @@
-import type { ModelSelection, OrchestrationV2ProviderCapabilities } from "@rove-code/contracts";
+import type { ModelSelection, OrchestrationV2ProviderCapabilities } from "@getpaperplane/contracts";
 
 export interface ProviderSelectionTransitionInput {
   readonly current: ModelSelection;

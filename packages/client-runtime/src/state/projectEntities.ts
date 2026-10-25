@@ -5,7 +5,7 @@ import type {
   ProjectId,
   ScopedProjectRef,
   ServerConfig,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { Atom } from "effect/reactivity";
 
 import type { EnvironmentProject } from "./models.ts";

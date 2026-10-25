@@ -1,9 +1,9 @@
-import type { ProviderDriverKind } from "@rove-code/contracts";
+import type { ProviderDriverKind } from "@getpaperplane/contracts";
 
 import {
   AcpRegistryAdapterV2Driver,
   type AcpRegistryAdapterV2DriverEnv,
-} from "@rove-code/provider-acp-registry/server";
+} from "@getpaperplane/provider-acp-registry/server";
 import {
   ClaudeAdapterV2Driver,
   type ClaudeAdapterV2DriverEnv,
@@ -12,14 +12,17 @@ import { CodexAdapterV2Driver, type CodexAdapterV2DriverEnv } from "./Adapters/C
 import {
   CursorAdapterV2Driver,
   type CursorAdapterV2DriverEnv,
-} from "@rove-code/provider-cursor/server";
-import { GrokAdapterV2Driver, type GrokAdapterV2DriverEnv } from "@rove-code/provider-grok/server";
+} from "@getpaperplane/provider-cursor/server";
+import {
+  GrokAdapterV2Driver,
+  type GrokAdapterV2DriverEnv,
+} from "@getpaperplane/provider-grok/server";
 import {
   OpenCodeAdapterV2Driver,
   type OpenCodeAdapterV2DriverEnv,
-} from "@rove-code/provider-opencode/server";
+} from "@getpaperplane/provider-opencode/server";
 import { PI_PROVIDER } from "./Adapters/PiAdapterV2.ts";
-import type { AnyProviderAdapterDriver } from "@rove-code/provider-core/server/adapterDriver";
+import type { AnyProviderAdapterDriver } from "@getpaperplane/provider-core/server/adapterDriver";
 
 export type BuiltInProviderAdapterDriversV2Env =
   | AcpRegistryAdapterV2DriverEnv

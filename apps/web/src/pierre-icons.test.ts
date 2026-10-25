@@ -4,7 +4,7 @@ import {
   hasSpecificPierreIconForFileName,
   resolvePierreIconForEntry,
   syntheticFileNameForLanguageId,
-  ROVE_PIERRE_ICONS,
+  PAPERPLANE_PIERRE_ICONS,
 } from "./pierre-icons";
 
 describe("Pierre file icons", () => {
@@ -43,24 +43,30 @@ describe("Pierre file icons", () => {
     );
   });
 
-  it("extends Pierre with Rove-specific exact filename icons", () => {
-    assert.equal(resolvePierreIconForEntry("AGENTS.md", "file")?.name, "rove-file-icon-agents");
-    assert.equal(resolvePierreIconForEntry("pnpm-lock.yaml", "file")?.name, "rove-file-icon-pnpm");
+  it("extends Pierre with Paperplane-specific exact filename icons", () => {
+    assert.equal(
+      resolvePierreIconForEntry("AGENTS.md", "file")?.name,
+      "paperplane-file-icon-agents",
+    );
+    assert.equal(
+      resolvePierreIconForEntry("pnpm-lock.yaml", "file")?.name,
+      "paperplane-file-icon-pnpm",
+    );
     assert.equal(
       resolvePierreIconForEntry("pnpm-workspace.yaml", "file")?.name,
-      "rove-file-icon-pnpm",
+      "paperplane-file-icon-pnpm",
     );
   });
 
   it("ships every custom icon referenced by the extended resolver", () => {
     const customIconNames = new Set(
       [
-        ...Object.values(ROVE_PIERRE_ICONS.byFileName),
-        ...Object.values(ROVE_PIERRE_ICONS.byFileExtension),
-      ].filter((name) => name.startsWith("rove-")),
+        ...Object.values(PAPERPLANE_PIERRE_ICONS.byFileName),
+        ...Object.values(PAPERPLANE_PIERRE_ICONS.byFileExtension),
+      ].filter((name) => name.startsWith("paperplane-")),
     );
     for (const iconName of customIconNames) {
-      assert.include(ROVE_PIERRE_ICONS.spriteSheet, `id="${iconName}"`);
+      assert.include(PAPERPLANE_PIERRE_ICONS.spriteSheet, `id="${iconName}"`);
     }
   });
 

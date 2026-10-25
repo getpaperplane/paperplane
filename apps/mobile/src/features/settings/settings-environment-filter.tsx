@@ -1,5 +1,5 @@
-import type { EnvironmentId } from "@rove-code/contracts";
-import { buildProjectGroups } from "@rove-code/client-runtime/state/project-grouping";
+import type { EnvironmentId } from "@getpaperplane/contracts";
+import { buildProjectGroups } from "@getpaperplane/client-runtime/state/project-grouping";
 import {
   createContext,
   useContext,

@@ -1,8 +1,8 @@
-import type { EnvironmentProject } from "@rove-code/client-runtime/state/shell";
+import type { EnvironmentProject } from "@getpaperplane/client-runtime/state/shell";
 import {
   getProjectFaviconResourceKey,
   isProjectFaviconFallbackUrl,
-} from "@rove-code/shared/projectFavicon";
+} from "@getpaperplane/shared/projectFavicon";
 import { FolderCodeIcon } from "lucide-react";
 import type { ComponentType } from "react";
 import { useState } from "react";

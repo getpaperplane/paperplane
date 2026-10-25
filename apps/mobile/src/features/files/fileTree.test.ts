@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vite-plus/test";
-import type { ProjectEntry } from "@rove-code/contracts";
+import type { ProjectEntry } from "@getpaperplane/contracts";
 
 import { buildFileTree, defaultExpandedTreePaths, flattenFileTree } from "./fileTree";
 

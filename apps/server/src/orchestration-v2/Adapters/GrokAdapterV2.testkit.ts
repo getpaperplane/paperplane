@@ -1,21 +1,24 @@
 import * as NodeServices from "@effect/platform-node/NodeServices";
-import { GrokSettings } from "@rove-code/provider-grok/settings";
+import { GrokSettings } from "@getpaperplane/provider-grok/settings";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as Schema from "effect/Schema";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
-import * as HostProcess from "@rove-code/shared/HostProcess";
-import { resolveSelfInvocation } from "@rove-code/shared/nodeRuntime";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
+import { resolveSelfInvocation } from "@getpaperplane/shared/nodeRuntime";
 
-import * as TestProviderHost from "@rove-code/provider-testing/TestProviderHost";
-import { GROK_ACP_CANCEL_META, GROK_ACP_INITIALIZE_META } from "@rove-code/provider-grok/testing";
-import { makeXAiPromptCompletionRuntime } from "@rove-code/provider-grok/testing";
-import * as IdAllocator from "@rove-code/provider-core/server/IdAllocator";
-import * as ProviderContinuationRequests from "@rove-code/provider-core/server/ProviderContinuationRequests";
+import * as TestProviderHost from "@getpaperplane/provider-testing/TestProviderHost";
+import {
+  GROK_ACP_CANCEL_META,
+  GROK_ACP_INITIALIZE_META,
+} from "@getpaperplane/provider-grok/testing";
+import { makeXAiPromptCompletionRuntime } from "@getpaperplane/provider-grok/testing";
+import * as IdAllocator from "@getpaperplane/provider-core/server/IdAllocator";
+import * as ProviderContinuationRequests from "@getpaperplane/provider-core/server/ProviderContinuationRequests";
 import * as ProviderAdapterRegistry from "../ProviderAdapterRegistry.ts";
-import type { ProviderReplayGate } from "@rove-code/provider-testing/replayGate";
+import type { ProviderReplayGate } from "@getpaperplane/provider-testing/replayGate";
 import type { OrchestratorV2ProviderReplayHarness } from "../testkit/ProviderReplayHarness.ts";
 import {
   type AcpReplayTranscript,
@@ -28,7 +31,7 @@ import {
   GROK_DEFAULT_INSTANCE_ID,
   GROK_PROVIDER,
   makeGrokAdapterV2,
-} from "@rove-code/provider-grok/testing";
+} from "@getpaperplane/provider-grok/testing";
 
 const DEFAULT_GROK_SETTINGS = Schema.decodeUnknownSync(GrokSettings)({});
 
@@ -49,7 +52,7 @@ function layerGrokProviderAdapterRegistryReplay(
       const replayGate = options.replayGate;
       const replayDir = yield* fileSystem
         .makeTempDirectory({
-          prefix: `rove-orchestration-v2-grok-replay-${transcript.scenario}-`,
+          prefix: `paperplane-orchestration-v2-grok-replay-${transcript.scenario}-`,
         })
         .pipe(Effect.orDie);
       const statusPath = path.join(replayDir, "status.json");

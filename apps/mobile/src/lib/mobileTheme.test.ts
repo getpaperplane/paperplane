@@ -3,11 +3,11 @@ import {
   BUILT_IN_THEME_IDS,
   BUILT_IN_THEMES,
   PLUM_THEME,
-  ROVE_CODE_LIGHT_THEME_COLORS,
-  ROVE_CODE_DARK_THEME_COLORS,
+  PAPERPLANE_CODE_LIGHT_THEME_COLORS,
+  PAPERPLANE_CODE_DARK_THEME_COLORS,
   MOBILE_THEME_IDS,
   getThemeColorsForAppearance,
-} from "@rove-code/shared/themePalettes";
+} from "@getpaperplane/shared/themePalettes";
 import {
   readDefaultMobileThemeVariables,
   readGeneratedMobileThemeVariables,
@@ -85,8 +85,8 @@ describe("mobile themes", () => {
       const colors = theme
         ? getThemeColorsForAppearance(theme, appearance)!
         : appearance === "dark"
-          ? ROVE_CODE_DARK_THEME_COLORS
-          : ROVE_CODE_LIGHT_THEME_COLORS;
+          ? PAPERPLANE_CODE_DARK_THEME_COLORS
+          : PAPERPLANE_CODE_LIGHT_THEME_COLORS;
       const variables =
         themeId === DEFAULT_MOBILE_THEME_ID
           ? readDefaultMobileThemeVariables(appearance)
@@ -226,13 +226,13 @@ describe("mobile themes", () => {
   it.each(["light", "dark"] as const)(
     "separates default settings groups from their %s background",
     (appearance) => {
-      const variables = getMobileThemeVariables("rove", appearance);
+      const variables = getMobileThemeVariables("paperplane", appearance);
       expect(
         contrastRatio(variables["--color-grouped-card"], variables["--color-sheet-solid"]),
       ).toBeGreaterThanOrEqual(1.06);
       expect(variables["--color-grouped-card"]).not.toBe(variables["--color-card"]);
       for (const platform of ["ios", "android"]) {
-        const runtime = getMobileThemeRuntimeVariables("rove", appearance, platform);
+        const runtime = getMobileThemeRuntimeVariables("paperplane", appearance, platform);
         const sidebar = flattenThemeColor(runtime["--color-drawer"], runtime["--color-screen"]);
         const chrome = flattenThemeColor(
           runtime[platform === "android" ? "--color-header" : "--color-drawer"],
@@ -318,9 +318,11 @@ describe("mobile themes", () => {
   it.each(["light", "dark"] as const)(
     "slightly strengthens default %s messages and separates fallback materials",
     (appearance) => {
-      const variables = getMobileThemeVariables("rove", appearance);
+      const variables = getMobileThemeVariables("paperplane", appearance);
       const desktop =
-        appearance === "dark" ? ROVE_CODE_DARK_THEME_COLORS : ROVE_CODE_LIGHT_THEME_COLORS;
+        appearance === "dark"
+          ? PAPERPLANE_CODE_DARK_THEME_COLORS
+          : PAPERPLANE_CODE_LIGHT_THEME_COLORS;
       const bubbleContrast = contrastRatio(
         variables["--color-user-bubble"],
         variables["--color-screen"],

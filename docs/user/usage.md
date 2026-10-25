@@ -17,18 +17,18 @@ Totals depend on the history available on each server. Grok turns without a save
 record are missing from the totals.
 
 OpenCode reads its SQLite database and older JSON history. Antigravity reads local conversation
-databases, including Rove Code-managed profiles. Set `OPENCODE_DATA_DIR` or `ANTIGRAVITY_DATA_DIR` on the
+databases, including Paperplane-managed profiles. Set `OPENCODE_DATA_DIR` or `ANTIGRAVITY_DATA_DIR` on the
 server to read a different data directory; comma-separated paths read multiple directories.
 
 Cursor reads account usage from Cursor's dashboard API using the CLI login saved on the server.
-This includes headless Rove Code sessions and desktop usage across machines; the same account counts
-once across connected environments. Without an accessible CLI login, Rove Code shows a
-notice instead of incomplete local totals. Rove Code does not estimate missing tokens from conversation text.
-On macOS, choose **Enable Cursor usage** on Usage to allow Rove Code to read your existing CLI login
+This includes headless Paperplane sessions and desktop usage across machines; the same account counts
+once across connected environments. Without an accessible CLI login, Paperplane shows a
+notice instead of incomplete local totals. Paperplane does not estimate missing tokens from conversation text.
+On macOS, choose **Enable Cursor usage** on Usage to allow Paperplane to read your existing CLI login
 from Keychain. You can turn it off in **Settings → Providers → Usage providers**. macOS may ask
 you to allow access on the server Mac.
 
-Pi reads saved sessions from its agent directory, including work outside Rove Code. Saved nonzero
+Pi reads saved sessions from its agent directory, including work outside Paperplane. Saved nonzero
 costs keep the prices used for each response. Records without a saved price use `models.json`
 pricing or public model rates. Models without known prices still count toward token totals.
 Pi model IDs include the API provider, such as `anthropic/claude-sonnet-4-5`. Use that full ID
@@ -123,7 +123,7 @@ closes when you dismiss it or send your next message. It uses the same snapshot 
 anything. The command is offered only for providers that appear under **Usage → Limits**.
 
 OpenCode Go reports its session, weekly, and monthly allowance when OpenCode runs locally in
-the environment. Rove cannot report limits for external OpenCode servers because their credentials
+the environment. Paperplane cannot report limits for external OpenCode servers because their credentials
 belong to the remote server. Limits need an OpenCode Go API key. A Console sign-in alone
 does not report them. Add your Go API key as `OPENCODE_API_KEY` in the OpenCode instance's
 **Environment variables**, then refresh provider status. Cursor reports
@@ -154,9 +154,9 @@ settings section when you no longer need it.
 ## Subscription usage widget
 
 Add **Subscription usage** from your iOS or Android widget gallery to see remaining Codex and
-Claude quotas. Tap it to open **Usage → Limits**; on Android this works while Rove is running in
+Claude quotas. Tap it to open **Usage → Limits**; on Android this works while Paperplane is running in
 the background, otherwise open the app from the launcher. On iOS, use **Edit Widget** to choose
-Session, Weekly, or both for each provider. Reopen Rove to refresh expired readings.
+Session, Weekly, or both for each provider. Reopen Paperplane to refresh expired readings.
 
 ## Keyboard shortcuts
 

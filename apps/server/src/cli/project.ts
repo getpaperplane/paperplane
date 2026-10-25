@@ -6,7 +6,7 @@ import {
   type ProjectMutation,
   type ProjectSnapshot,
   ProjectId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Console from "effect/Console";
 import * as Crypto from "effect/Crypto";
 import * as Duration from "effect/Duration";
@@ -34,7 +34,7 @@ import * as ProjectFaviconResolver from "../project/ProjectFaviconResolver.ts";
 import * as RepositoryIdentityResolver from "../project/RepositoryIdentityResolver.ts";
 import * as ProjectService from "../project/ProjectService.ts";
 import { projectMutationOperation } from "../project/ProjectMutation.ts";
-import * as RoveProjectFileLoader from "../project/RoveProjectFileLoader.ts";
+import * as PaperplaneProjectFileLoader from "../project/PaperplaneProjectFileLoader.ts";
 import * as ServerSettings from "../serverSettings.ts";
 import {
   clearPersistedServerRuntimeState,
@@ -206,7 +206,7 @@ const layerProjectCliRuntime = RuntimeLayer.layerProjectService.pipe(
   Layer.provideMerge(
     ProjectFaviconResolver.layer.pipe(
       Layer.provide(WorkspacePaths.layer),
-      Layer.provide(RoveProjectFileLoader.layer),
+      Layer.provide(PaperplaneProjectFileLoader.layer),
     ),
   ),
   Layer.provideMerge(WorkspacePaths.layer),
@@ -222,7 +222,7 @@ const withProjectCliSessionToken = <A, E, R>(
   Effect.acquireUseRelease(
     environmentAuth.issueSession({
       scopes: AuthAdministrativeScopes,
-      label: "rove project cli",
+      label: "paperplane project cli",
     }),
     (issued) => run(issued.token),
     (issued) => environmentAuth.revokeSession(issued.sessionId).pipe(Effect.ignore({ log: true })),

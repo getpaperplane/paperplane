@@ -1,5 +1,9 @@
-import { SourceControlProviderKind } from "@rove-code/contracts";
-import { ProjectId, type ThreadPullRequestLink, type VcsStatusResult } from "@rove-code/contracts";
+import { SourceControlProviderKind } from "@getpaperplane/contracts";
+import {
+  ProjectId,
+  type ThreadPullRequestLink,
+  type VcsStatusResult,
+} from "@getpaperplane/contracts";
 import { describe, expect, it } from "vite-plus/test";
 
 import {
@@ -11,7 +15,7 @@ import {
 const pullRequest: NonNullable<VcsStatusResult["pr"]> = {
   number: 3774,
   title: "Desktop-style pull request indicator",
-  url: "https://github.com/rovetools/rove/pull/3774",
+  url: "https://github.com/paperplanetools/paperplane/pull/3774",
   baseRef: "main",
   headRef: "codex/desktop-style-pr-indicator",
   state: "merged",
@@ -55,9 +59,9 @@ function linkedPr(
 ): ThreadPullRequestLink {
   return {
     host: "github.com",
-    repository: "rovetools/rove",
+    repository: "paperplanetools/paperplane",
     number,
-    url: `https://github.com/rovetools/rove/pull/${number}`,
+    url: `https://github.com/paperplanetools/paperplane/pull/${number}`,
     source: "manual",
     linkedAt: "2026-09-08T00:00:00.000Z",
     stack: null,
@@ -159,11 +163,15 @@ describe("presentThreadLinkedPullRequests", () => {
 describe("resolveThreadPrSource compatibility", () => {
   const legacyRef = {
     projectId: ProjectId.make("project"),
-    repository: "rovetools/rove",
+    repository: "paperplanetools/paperplane",
     number: 1,
-    url: "https://github.com/rovetools/rove/pull/1",
+    url: "https://github.com/paperplanetools/paperplane/pull/1",
   };
-  const branchRef = { ...legacyRef, number: 2, url: "https://github.com/rovetools/rove/pull/2" };
+  const branchRef = {
+    ...legacyRef,
+    number: 2,
+    url: "https://github.com/paperplanetools/paperplane/pull/2",
+  };
 
   it("polls the legacy reference when only the older linking capability exists", () => {
     expect(

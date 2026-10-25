@@ -1,4 +1,4 @@
-import { listLoginShellCandidates, setWindowsPath } from "@rove-code/shared/shell";
+import { listLoginShellCandidates, setWindowsPath } from "@getpaperplane/shared/shell";
 import * as Context from "effect/Context";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -67,7 +67,7 @@ export class DesktopShellEnvironment extends Context.Service<
     // Reuses the installation result; false leaves server hydration enabled.
     readonly installIntoProcess: Effect.Effect<boolean>;
   }
->()("@rove-code/desktop/shell/DesktopShellEnvironment") {}
+>()("@getpaperplane/desktop/shell/DesktopShellEnvironment") {}
 
 const LOGIN_SHELL_ENV_NAMES = [
   "PATH",
@@ -90,7 +90,7 @@ const LOGIN_SHELL_ENV_NAMES = [
   "SSL_CERT_FILE",
   "SSL_CERT_DIR",
   "NODE_EXTRA_CA_CERTS",
-  "ROVE_TELEMETRY_ENABLED",
+  "PAPERPLANE_TELEMETRY_ENABLED",
   "__MISE_DIFF",
 ] as const;
 const WINDOWS_PROFILE_ENV_NAMES = ["PATH", "FNM_DIR", "FNM_MULTISHELL_PATH"] as const;
@@ -184,8 +184,8 @@ const knownWindowsCliDirs = (env: NodeJS.ProcessEnv): ReadonlyArray<string> => [
   ),
 ];
 
-const startMarker = (name: string) => `__ROVE_ENV_${name}_START__`;
-const endMarker = (name: string) => `__ROVE_ENV_${name}_END__`;
+const startMarker = (name: string) => `__PAPERPLANE_ENV_${name}_START__`;
+const endMarker = (name: string) => `__PAPERPLANE_ENV_${name}_END__`;
 
 const executableName = (command: string): string => command.split(/[\\/]/u).at(-1) ?? command;
 
@@ -466,7 +466,7 @@ const installPosixEnvironment = Effect.fn("desktop.shellEnvironment.installPosix
       "SSL_CERT_DIR",
       "NODE_EXTRA_CA_CERTS",
       // The telemetry opt-out is documented as a shell variable; GUI launches never see it.
-      "ROVE_TELEMETRY_ENABLED",
+      "PAPERPLANE_TELEMETRY_ENABLED",
     ] as const) {
       if (!config.env[name] && shellEnvironment[name]) {
         config.env[name] = shellEnvironment[name];

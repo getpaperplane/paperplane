@@ -16,7 +16,7 @@ it.effect("reports the version the running server recorded, not the CLI's", () =
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
     const statePath = path.join(
-      yield* fs.makeTempDirectoryScoped({ prefix: "rove-triage-" }),
+      yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-triage-" }),
       "server-runtime.json",
     );
     // The test process stands in for the server, so its pid is alive.
@@ -38,7 +38,7 @@ it.effect("says the server version is unknown when the state file has none", () 
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
     const statePath = path.join(
-      yield* fs.makeTempDirectoryScoped({ prefix: "rove-triage-" }),
+      yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-triage-" }),
       "server-runtime.json",
     );
     // A server from before versions were recorded, such as the 0.0.43 desktop

@@ -9,7 +9,7 @@ import {
   type ModelSelection,
   type ServerConfig,
   type ServerSettings,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 
 import {
   buildModelOptions,

@@ -17,7 +17,7 @@ import {
   type ProviderReplayEntry,
   type RuntimeMode,
   ThreadId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as FileSystem from "effect/FileSystem";
@@ -27,16 +27,16 @@ import {
   OPENCODE2_HTTP_PROTOCOL,
   OpenCode2OrchestratorReplayHarness,
 } from "./Adapters/OpenCode2AdapterV2.testkit.ts";
-import { OPENCODE_PROVIDER } from "@rove-code/provider-opencode/testing";
+import { OPENCODE_PROVIDER } from "@getpaperplane/provider-opencode/testing";
 import { provideDeterministicTestRuntime } from "./testkit/DeterministicRuntime.ts";
 import type { OrchestratorV2ScenarioStep } from "./testkit/OrchestratorScenario.ts";
 import { runOrchestratorV2ProviderReplayScenario } from "./testkit/ProviderReplayHarness.ts";
-import { checkpointWorkspace } from "@rove-code/provider-testing/replayWorkspace";
+import { checkpointWorkspace } from "@getpaperplane/provider-testing/replayWorkspace";
 import {
   decodeProviderReplayNdjson,
   readProviderReplayTranscript,
-} from "@rove-code/provider-testing/replayTranscript";
-import * as IdAllocator from "@rove-code/provider-core/server/IdAllocator";
+} from "@getpaperplane/provider-testing/replayTranscript";
+import * as IdAllocator from "@getpaperplane/provider-core/server/IdAllocator";
 
 const SESSION = "ses_f148ca2deffeJcwCnRQtb0YFNX";
 /** Held until the scenario releases it, so the turn is still running meanwhile. */
@@ -72,16 +72,16 @@ const event = (type: string, data: Record<string, unknown>): ProviderReplayEntry
 const labelled = (entry: ProviderReplayEntry, label: string): ProviderReplayEntry =>
   entry.type === "runtime_exit" ? entry : { ...entry, label };
 /**
- * Rove's own rules after a mode's: every thread's Rove MCP server is denied, and
+ * Paperplane's own rules after a mode's: every thread's Paperplane MCP server is denied, and
  * then this thread's own is allowed again (last match wins).
  */
 const mcpRules = (name: string) => [
-  { action: "rove-*", resource: "*", effect: "deny" },
-  { action: `rove-thread_${name}_*`, resource: "*", effect: "allow" },
+  { action: "paperplane-*", resource: "*", effect: "deny" },
+  { action: `paperplane-thread_${name}_*`, resource: "*", effect: "allow" },
 ];
 const FULL_ACCESS = [{ action: "*", resource: "*", effect: "allow" }];
 /** Full access for the thread named `name`. */
-const roveRules = (name: string) => [...FULL_ACCESS, ...mcpRules(name)];
+const paperplaneRules = (name: string) => [...FULL_ACCESS, ...mcpRules(name)];
 /** Paths the build and plan agents allow for themselves, as 2.0.18 lists them. */
 const BUILD_PATHS = [
   {
@@ -104,7 +104,7 @@ const agentInfo = (id: string, description: string, permissions: ReadonlyArray<u
   hidden: false,
   permissions,
 });
-/** `/api/agent` trimmed to the two agents a Rove session runs. */
+/** `/api/agent` trimmed to the two agents a Paperplane session runs. */
 const agentList = (directory: string) => ({
   location: { directory },
   data: [
@@ -164,9 +164,10 @@ const sessionInfo = (directory: string, permissions: ReadonlyArray<unknown>, tit
     permissions,
   },
 });
-/** Rove's instructions entry, written before a thread's first prompt and whenever it changes. */
+/** Paperplane's instructions entry, written before a thread's first prompt and whenever it changes. */
 const instructionsWritten: ReadonlyArray<ProviderReplayEntry> = [
-  out("session.instructions.entry.put", { sessionID: SESSION, key: "rove", value: "<any>" }),
+  out("session.instructions.entry.remove", { sessionID: SESSION, key: "rove" }),
+  out("session.instructions.entry.put", { sessionID: SESSION, key: "paperplane", value: "<any>" }),
   reply("session.instructions.entry.put", null),
 ];
 /** One prompt the server accepts and answers with `text`. */
@@ -222,7 +223,7 @@ const catalogModel = (id: string, name: string) => ({
 const createdSession = (
   directory: string,
   name: string,
-  permissions: ReadonlyArray<unknown> = roveRules(name),
+  permissions: ReadonlyArray<unknown> = paperplaneRules(name),
   // Only a mode that narrows Full access reads the agents' own path rules.
   narrows = false,
 ): ReadonlyArray<ProviderReplayEntry> => [
@@ -350,14 +351,14 @@ describe("OpenCode 2 through the orchestrator", () => {
             ...answeredPrompt("FIRST"),
             // The next turn resumes the session at its new selection.
             out("session.get", { sessionID: SESSION }),
-            reply("session.get", sessionInfo(cwd, roveRules(name), name)),
+            reply("session.get", sessionInfo(cwd, paperplaneRules(name), name)),
             out("session.switchModel", {
               sessionID: SESSION,
               model: { providerID: "opencode", id: "mimo-v2.6-flash-free" },
             }),
             reply("session.switchModel", null),
-            // The instructions name the model, so they are written again.
-            ...instructionsWritten,
+            // Rewrite the model's instructions without repeating the one-time cleanup.
+            ...instructionsWritten.slice(1),
             ...answeredPrompt("SECOND"),
           ],
           commands: [
@@ -403,7 +404,7 @@ describe("OpenCode 2 through the orchestrator", () => {
           ...answeredPrompt("FIRST"),
           ...directoryModels(after),
           out("session.get", { sessionID: SESSION }),
-          reply("session.get", sessionInfo(before, roveRules(name), name)),
+          reply("session.get", sessionInfo(before, paperplaneRules(name), name)),
           // The worktree change detached the thread, so its session is loaded afresh.
           ...noOpenRequests,
           out("session.move", { sessionID: SESSION, directory: after }),
@@ -432,7 +433,7 @@ describe("OpenCode 2 through the orchestrator", () => {
     }).pipe(Effect.scoped),
   );
 
-  it.effect("gives a session made with older rules Rove's rules before its next prompt", () =>
+  it.effect("gives a session made with older rules Paperplane's rules before its next prompt", () =>
     Effect.gen(function* () {
       const name = "opencode2-resume-rules";
       const before = yield* checkpointWorkspace(`${name}-before`);
@@ -462,7 +463,7 @@ describe("OpenCode 2 through the orchestrator", () => {
             ),
           ),
           ...noOpenRequests,
-          out("session.update", { sessionID: SESSION, permissions: roveRules(name) }),
+          out("session.update", { sessionID: SESSION, permissions: paperplaneRules(name) }),
           reply("session.update", null),
           out("session.move", { sessionID: SESSION, directory: after }),
           reply("session.move", null),
@@ -537,7 +538,7 @@ describe("OpenCode 2 through the orchestrator", () => {
           ...answeredPrompt("FIRST"),
           // A mode change detaches nothing: the same session is resumed with the new rules.
           out("session.get", { sessionID: SESSION }),
-          reply("session.get", sessionInfo(cwd, roveRules(name), name)),
+          reply("session.get", sessionInfo(cwd, paperplaneRules(name), name)),
           out("agent.list", "<any>"),
           reply("agent.list", agentList(cwd)),
           out("session.update", { sessionID: SESSION, permissions: autoEditRules(name) }),
@@ -546,7 +547,7 @@ describe("OpenCode 2 through the orchestrator", () => {
           // Back to Full access: the narrowing rules go.
           out("session.get", { sessionID: SESSION }),
           reply("session.get", sessionInfo(cwd, autoEditRules(name), name)),
-          out("session.update", { sessionID: SESSION, permissions: roveRules(name) }),
+          out("session.update", { sessionID: SESSION, permissions: paperplaneRules(name) }),
           reply("session.update", null),
           ...answeredPrompt("THIRD"),
         ],
@@ -584,7 +585,7 @@ describe("OpenCode 2 through the orchestrator", () => {
           ...answeredPrompt("PLANNED"),
           out("session.get", { sessionID: SESSION }),
           reply("session.get", sessionInfo(cwd, planRules(name), name)),
-          out("session.update", { sessionID: SESSION, permissions: roveRules(name) }),
+          out("session.update", { sessionID: SESSION, permissions: paperplaneRules(name) }),
           reply("session.update", null),
           out("session.switchAgent", { sessionID: SESSION, agent: "build" }),
           reply("session.switchAgent", null),
@@ -669,7 +670,7 @@ describe("OpenCode 2 through the orchestrator", () => {
         recorded.metadata?.["forkedNativeSessionId"],
       );
       // The fork keeps the first turn and drops the second: the model answers
-      // from the first alone, and Rove shows the inherited turn but not the other.
+      // from the first alone, and Paperplane shows the inherited turn but not the other.
       assert.deepEqual(
         forked.runs.map((run) => run.status),
         ["completed"],
@@ -769,7 +770,7 @@ describe("OpenCode 2 through the orchestrator", () => {
   /**
    * The recorded background run (`opencode2_background`): the parent's turn
    * ends while its subagent runs, then the subagent's report wakes the parent
-   * and Rove opens a continuation run for that follow-up. `reconnect` replaces
+   * and Paperplane opens a continuation run for that follow-up. `reconnect` replaces
    * the recording from `cut` on with a stream drop, a restarted stream and
    * what the server answers then.
    */

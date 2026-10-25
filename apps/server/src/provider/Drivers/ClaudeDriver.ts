@@ -12,7 +12,7 @@
  *
  * @module provider/Drivers/ClaudeDriver
  */
-import { ClaudeSettings, ProviderDriverKind } from "@rove-code/contracts";
+import { ClaudeSettings, ProviderDriverKind } from "@getpaperplane/contracts";
 import * as Cache from "effect/Cache";
 import * as Duration from "effect/Duration";
 import * as Crypto from "effect/Crypto";
@@ -24,11 +24,11 @@ import { HttpClient } from "effect/http";
 import { ChildProcessSpawner } from "effect/process";
 
 import { makeClaudeTextGeneration } from "../../textGeneration/ClaudeTextGeneration.ts";
-import * as ProviderLatestVersions from "@rove-code/provider-core/server/ProviderLatestVersions";
-import * as ProviderHost from "@rove-code/provider-core/server/ProviderHost";
+import * as ProviderLatestVersions from "@getpaperplane/provider-core/server/ProviderLatestVersions";
+import * as ProviderHost from "@getpaperplane/provider-core/server/ProviderHost";
 import * as ServerConfig from "../../config.ts";
-import { expandHomePath } from "@rove-code/provider-core/server/pathExpansion";
-import * as ProviderEventLoggers from "@rove-code/provider-core/server/ProviderEventLoggers";
+import { expandHomePath } from "@getpaperplane/provider-core/server/pathExpansion";
+import * as ProviderEventLoggers from "@getpaperplane/provider-core/server/ProviderEventLoggers";
 import {
   createClaudeAdapterV2,
   type ClaudeAdapterV2DriverEnv,
@@ -44,34 +44,34 @@ import {
   probeClaudeCapabilities,
   probeClaudeWorkspaceSnapshot,
 } from "../ClaudeProvider.ts";
-import { makeManagedServerProvider } from "@rove-code/provider-core/server/managedProvider";
-import * as ModelCatalog from "@rove-code/provider-core/server/ModelCatalog";
+import { makeManagedServerProvider } from "@getpaperplane/provider-core/server/managedProvider";
+import * as ModelCatalog from "@getpaperplane/provider-core/server/ModelCatalog";
 import { resolveClaudeModelCatalog } from "../ClaudeModelCatalog.ts";
 import {
   defaultProviderContinuationIdentity,
   type ProviderDriver,
   type ProviderInstance,
-} from "@rove-code/provider-core/server/driver";
-import { withInstanceIdentity } from "@rove-code/provider-core/server/instanceIdentity";
-import { mergeProviderInstanceEnvironment } from "@rove-code/provider-core/server/instanceEnvironment";
+} from "@getpaperplane/provider-core/server/driver";
+import { withInstanceIdentity } from "@getpaperplane/provider-core/server/instanceIdentity";
+import { mergeProviderInstanceEnvironment } from "@getpaperplane/provider-core/server/instanceEnvironment";
 import {
   enrichProviderSnapshotWithVersionAdvisory,
   makeCachedProviderMaintenanceResolution,
   makePackageManagedProviderMaintenanceResolver,
   normalizeCommandPath,
   resolveProviderMaintenanceCapabilitiesEffect,
-} from "@rove-code/provider-core/server/maintenanceResolver";
+} from "@getpaperplane/provider-core/server/maintenanceResolver";
 import {
   haveProviderSnapshotSettingsChanged,
   makeProviderSnapshotSettingsSource,
   type ProviderSnapshotSettings,
-} from "@rove-code/provider-core/server/snapshotSettings";
+} from "@getpaperplane/provider-core/server/snapshotSettings";
 import {
   makeClaudeCapabilitiesCacheKey,
   makeClaudeContinuationGroupKey,
   resolveClaudeHomePath,
 } from "./ClaudeHome.ts";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 const decodeClaudeSettings = Schema.decodeSync(ClaudeSettings);
 
 const DRIVER_KIND = ProviderDriverKind.make("claudeAgent");

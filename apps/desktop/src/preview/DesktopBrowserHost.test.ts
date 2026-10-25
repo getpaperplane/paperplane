@@ -1,6 +1,6 @@
 // @effect-diagnostics nodeBuiltinImport:off - Stands in for an Electron debugger.
 import { describe, expect, it } from "@effect/vitest";
-import { DesktopBrowserEvent } from "@rove-code/contracts";
+import { DesktopBrowserEvent } from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
 import * as Schema from "effect/Schema";
@@ -77,7 +77,7 @@ describe("DesktopBrowserHost", () => {
           encodeJson({
             type: "cdp",
             ...key,
-            message: encodeJson({ id, method, sessionId: "rove-preview-page" }),
+            message: encodeJson({ id, method, sessionId: "paperplane-preview-page" }),
           }),
         );
       yield* command(1, "Page.captureScreenshot");

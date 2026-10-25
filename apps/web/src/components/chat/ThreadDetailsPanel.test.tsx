@@ -1,4 +1,8 @@
-import type { EnvironmentId, RoveProjectFileScript, ThreadId } from "@rove-code/contracts";
+import type {
+  EnvironmentId,
+  PaperplaneProjectFileScript,
+  ThreadId,
+} from "@getpaperplane/contracts";
 import { renderToStaticMarkup } from "react-dom/server";
 import { AsyncResult } from "effect/reactivity";
 import { act, create, type ReactTestRenderer } from "react-test-renderer";
@@ -6,13 +10,13 @@ import { PopoverCreateHandle } from "../ui/popover";
 import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 const testState = vi.hoisted(() => ({
-  useRoveProjectFileScripts: vi.fn(),
+  usePaperplaneProjectFileState: vi.fn(),
   projectScriptsControl: vi.fn(),
 }));
 
-vi.mock("../../hooks/useRoveProjectFileScripts", () => ({
-  useRoveProjectFileScripts: (...args: ReadonlyArray<unknown>) =>
-    testState.useRoveProjectFileScripts(...args),
+vi.mock("../../hooks/usePaperplaneProjectFileScripts", () => ({
+  usePaperplaneProjectFileState: (...args: ReadonlyArray<unknown>) =>
+    testState.usePaperplaneProjectFileState(...args),
 }));
 vi.mock("../BranchToolbar", () => ({
   BranchToolbar: () => null,
@@ -38,11 +42,11 @@ import { ThreadDetailsPanel, type ThreadDetailsPanelProps } from "./ThreadDetail
 
 describe("ThreadDetailsPanel", () => {
   beforeEach(() => {
-    testState.useRoveProjectFileScripts.mockReset();
+    testState.usePaperplaneProjectFileState.mockReset();
     testState.projectScriptsControl.mockReset();
   });
 
-  it("passes checked-in rove.json scripts to the project scripts control", () => {
+  it("passes checked-in paperplane.json scripts to the project scripts control", () => {
     const environmentId = "environment:thread-details" as EnvironmentId;
     const gitCwd = "/tmp/thread-details-project";
     const fileScripts = [
@@ -51,8 +55,8 @@ describe("ThreadDetailsPanel", () => {
         command: "vp check",
         icon: "test",
       },
-    ] satisfies ReadonlyArray<RoveProjectFileScript>;
-    testState.useRoveProjectFileScripts.mockReturnValue(fileScripts);
+    ] satisfies ReadonlyArray<PaperplaneProjectFileScript>;
+    testState.usePaperplaneProjectFileState.mockReturnValue({ scripts: fileScripts, notice: null });
 
     const props: ThreadDetailsPanelProps = {
       anchor: { current: null },
@@ -90,7 +94,7 @@ describe("ThreadDetailsPanel", () => {
 
     renderToStaticMarkup(<ThreadDetailsPanel {...props} />);
 
-    expect(testState.useRoveProjectFileScripts).toHaveBeenCalledWith(environmentId, gitCwd);
+    expect(testState.usePaperplaneProjectFileState).toHaveBeenCalledWith(environmentId, gitCwd);
     expect(testState.projectScriptsControl).toHaveBeenCalledWith(
       expect.objectContaining({
         displayMode: "panel",
@@ -101,7 +105,7 @@ describe("ThreadDetailsPanel", () => {
   });
 
   it("skips re-rendering for unchanged props and updates when thread metadata changes", () => {
-    testState.useRoveProjectFileScripts.mockReturnValue([]);
+    testState.usePaperplaneProjectFileState.mockReturnValue({ scripts: [], notice: null });
     const props: ThreadDetailsPanelProps = {
       anchor: { current: null },
       handle: PopoverCreateHandle(),

@@ -1,5 +1,5 @@
 import * as Dialog from "../../components/ui/Dialog";
-import { resolveFilesystemReadAccess } from "@rove-code/client-runtime/state/filesystem";
+import { resolveFilesystemReadAccess } from "@getpaperplane/client-runtime/state/filesystem";
 import { useEnvironmentPresentation } from "../../state/presentation";
 import { environmentSession } from "../../state/session";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -7,12 +7,12 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import type {
   EnvironmentId,
   ModelSelection,
-  ProjectReadFileResult,
+  ProjectConfigState,
   ProviderInteractionMode,
   ProviderOptionSelection,
   RuntimeMode,
   ServerProvider,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   CommandId,
   DEFAULT_PROVIDER_INTERACTION_MODE,
@@ -20,12 +20,14 @@ import {
   DEFAULT_SERVER_SETTINGS,
   MessageId,
   repositoryGroupingKeyOf,
-  ROVE_PROJECT_FILE_NAME,
   ThreadId,
-} from "@rove-code/contracts";
-import { sanitizeNewRefName } from "@rove-code/shared/git";
-import { resolveNewThreadEnvMode, resolveProjectSettings } from "@rove-code/shared/projectSettings";
-import { parseRoveProjectFile } from "@rove-code/shared/roveProjectFile";
+} from "@getpaperplane/contracts";
+import { sanitizeNewRefName } from "@getpaperplane/shared/git";
+import {
+  resolveNewThreadEnvMode,
+  resolveProjectSettings,
+} from "@getpaperplane/shared/projectSettings";
+import { resolveProjectConfigState } from "@getpaperplane/client-runtime/project-config";
 import * as Arr from "effect/Array";
 import { pipe } from "effect/Function";
 
@@ -95,14 +97,14 @@ import {
   useRemoteConnectionStatus,
   useSavedRemoteConnections,
 } from "../../state/use-remote-environment-registry";
-import { availableScratchWorkspaceRoot } from "@rove-code/client-runtime/operations/projects";
+import { availableScratchWorkspaceRoot } from "@getpaperplane/client-runtime/operations/projects";
 import {
   isAtomCommandInterrupted,
   squashAtomCommandFailure,
-} from "@rove-code/client-runtime/state/runtime";
-import { isScratchProject } from "@rove-code/client-runtime/state/projects";
-import { EnvironmentProject } from "@rove-code/client-runtime/state/shell";
-import { type VcsRef } from "@rove-code/client-runtime/state/vcs";
+} from "@getpaperplane/client-runtime/state/runtime";
+import { isScratchProject } from "@getpaperplane/client-runtime/state/projects";
+import { EnvironmentProject } from "@getpaperplane/client-runtime/state/shell";
+import { type VcsRef } from "@getpaperplane/client-runtime/state/vcs";
 import {
   buildHomeProjectScopes,
   sortHomeProjectScopes,
@@ -182,6 +184,7 @@ type NewTaskFlowContextValue = {
   readonly branchQuery: string;
   readonly branchesLoading: boolean;
   readonly branchesError: string | null;
+  readonly projectConfigNotice: string | null;
   readonly branchesFetchingNextPage: boolean;
   readonly hasMoreBranches: boolean;
   readonly availableBranches: ReadonlyArray<VcsRef>;
@@ -488,7 +491,7 @@ export function NewTaskFlowProvider(props: React.PropsWithChildren) {
   const attachments = selectedProjectDraft.attachments;
   // Default mode until the user picks one explicitly — same resolution web
   // uses for new draft threads: per-project setting, then the repo's
-  // checked-in rove.json, then the server's configured default (which a new
+  // checked-in paperplane.json, then the server's configured default (which a new
   // project with no threads yet replaces with its checkout).
   const fileAccessSession = useEnvironmentQuery(
     selectedProject !== null && selectedProject.workspaceRoot !== ""
@@ -505,27 +508,20 @@ export function NewTaskFlowProvider(props: React.PropsWithChildren) {
   const { canReadFiles } = fileAccess;
   const fileAccessPending =
     selectedProject !== null && selectedProject.workspaceRoot !== "" && fileAccess.isPending;
-  const roveProjectFileQuery = useEnvironmentQuery(
+  const paperplaneProjectFileQuery = useEnvironmentQuery(
     canReadFiles && selectedProject !== null && selectedProject.workspaceRoot !== ""
-      ? projectEnvironment.readFile({
+      ? projectEnvironment.readConfig({
           environmentId: selectedProject.environmentId,
-          input: {
-            cwd: selectedProject.workspaceRoot,
-            relativePath: ROVE_PROJECT_FILE_NAME,
-            allowLegacyProjectFile: true,
-          },
+          input: { cwd: selectedProject.workspaceRoot },
         })
       : null,
   );
-  const roveProjectFileData = roveProjectFileQuery.data as ProjectReadFileResult | null;
-  const roveProjectFile = useMemo(
-    () =>
-      roveProjectFileData === null || roveProjectFileData.truncated
-        ? null
-        : parseRoveProjectFile(roveProjectFileData.contents),
-    [roveProjectFileData],
+  const projectConfig = resolveProjectConfigState(
+    paperplaneProjectFileQuery.data as ProjectConfigState | null,
+    paperplaneProjectFileQuery.isPending,
   );
-  // Environment settings with the project's overrides and its rove.json
+  const paperplaneProjectFile = projectConfig.file;
+  // Environment settings with the project's overrides and its paperplane.json
   // applied; the aggregate's own legacy fields still count until the server
   // folds them.
   const projectSettings = useMemo(
@@ -534,9 +530,9 @@ export function NewTaskFlowProvider(props: React.PropsWithChildren) {
         selectedEnvironmentServerConfig?.settings ?? DEFAULT_SERVER_SETTINGS,
         selectedProject?.id ?? null,
         selectedProject,
-        roveProjectFile,
+        paperplaneProjectFile,
       ),
-    [selectedEnvironmentServerConfig?.settings, selectedProject, roveProjectFile],
+    [selectedEnvironmentServerConfig?.settings, selectedProject, paperplaneProjectFile],
   );
   // A thread without a project runs in a plain folder, so worktree mode
   // would leave it unsendable: it is always local and offers no choice.
@@ -559,11 +555,11 @@ export function NewTaskFlowProvider(props: React.PropsWithChildren) {
   // While the file read is pending and nothing above it decided, the
   // resolved default is provisional. Nothing may write it into the draft
   // during that window (the auto-branch effect does), or the frozen interim
-  // value beats the rove.json default once it loads.
+  // value beats the paperplane.json default once it loads.
   const defaultWorkspaceModeSettled =
     selectedProjectDraft.workspaceSelection?.mode !== undefined ||
     projectSettings.sources.defaultThreadEnvMode !== "environment" ||
-    (!roveProjectFileQuery.isPending && !fileAccessPending);
+    (!paperplaneProjectFileQuery.isPending && !fileAccessPending);
   const workspaceMode = canChooseWorkspace
     ? (selectedProjectDraft.workspaceSelection?.mode ?? defaultWorkspaceMode)
     : "local";
@@ -1343,6 +1339,7 @@ export function NewTaskFlowProvider(props: React.PropsWithChildren) {
       branchQuery,
       branchesLoading,
       branchesError: branchState.error,
+      projectConfigNotice: projectConfig.notice,
       branchesFetchingNextPage,
       hasMoreBranches,
       availableBranches,
@@ -1395,6 +1392,7 @@ export function NewTaskFlowProvider(props: React.PropsWithChildren) {
       branchQuery,
       branchesLoading,
       branchState.error,
+      projectConfig.notice,
       branchesFetchingNextPage,
       buildPendingTaskMessage,
       cancelEditingPendingTask,

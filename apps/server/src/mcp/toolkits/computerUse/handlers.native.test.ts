@@ -1,7 +1,7 @@
 import { expect, it } from "@effect/vitest";
 import * as NodeServices from "@effect/platform-node/NodeServices";
-import { EnvironmentId, ProviderInstanceId, ThreadId } from "@rove-code/contracts";
-import { Platform as HostProcessPlatform } from "@rove-code/shared/HostProcess";
+import { EnvironmentId, ProviderInstanceId, ThreadId } from "@getpaperplane/contracts";
+import { Platform as HostProcessPlatform } from "@getpaperplane/shared/HostProcess";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Schema from "effect/Schema";
@@ -18,7 +18,7 @@ const decodeCapture = Schema.decodeUnknownSync(Schema.Struct({ capture_id: Schem
 const decodeError = Schema.decodeUnknownSync(Schema.Struct({ code: Schema.String }));
 
 it.live.skipIf(
-  process.env.ROVE_TEST_NATIVE_CUA !== "1" || HostProcessPlatform.defaultValue() !== "darwin",
+  process.env.PAPERPLANE_TEST_NATIVE_CUA !== "1" || HostProcessPlatform.defaultValue() !== "darwin",
 )(
   "refuses intrusive input and preserves capture ownership through the installed Cua driver",
   () =>
@@ -27,12 +27,12 @@ it.live.skipIf(
       const client = McpSchema.McpServerClient.of({
         clientId: 1,
         clientCapabilities: {},
-        clientInfo: { name: "rove-native-verification", version: "1" },
+        clientInfo: { name: "paperplane-native-verification", version: "1" },
         protocolVersion: "2025-06-18",
         initializePayload: {
           protocolVersion: "2025-06-18",
           capabilities: {},
-          clientInfo: { name: "rove-native-verification", version: "1" },
+          clientInfo: { name: "paperplane-native-verification", version: "1" },
         },
         getClient: Effect.die("unused"),
       });
@@ -100,7 +100,9 @@ it.live.skipIf(
           Layer.provide(McpToolAccessTestkit.liveThreadsLayer),
           Layer.provide(CuaDriver.layer),
           Layer.provide(ServerSettings.layerTest({ enableAgentComputerUse: true })),
-          Layer.provide(ServerConfig.layerTest(process.cwd(), { prefix: "rove-cua-native-" })),
+          Layer.provide(
+            ServerConfig.layerTest(process.cwd(), { prefix: "paperplane-cua-native-" }),
+          ),
           Layer.provide(NodeServices.layer),
         ),
       ),

@@ -3,16 +3,16 @@ import {
   AuthSettingsWriteScope,
   type EnvironmentId,
   type ProjectScript,
-  type RoveProjectFileScript,
+  type PaperplaneProjectFileScript,
   type ResolvedKeybindingsConfig,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { useAtomValue } from "@effect/atom-react";
-import { DEFAULT_RESOLVED_KEYBINDINGS } from "@rove-code/shared/keybindings";
+import { DEFAULT_RESOLVED_KEYBINDINGS } from "@getpaperplane/shared/keybindings";
 import {
   isAtomCommandInterrupted,
   squashAtomCommandFailure,
-} from "@rove-code/client-runtime/state/runtime";
-import { projectScriptMenuLabel } from "@rove-code/shared/projectScripts";
+} from "@getpaperplane/client-runtime/state/runtime";
+import { projectScriptMenuLabel } from "@getpaperplane/shared/projectScripts";
 import { ChevronDownIcon, DownloadIcon, PlusIcon, SettingsIcon, WrenchIcon } from "lucide-react";
 import React, { useCallback, useMemo, useState } from "react";
 
@@ -57,7 +57,7 @@ import {
 
 export type { NewProjectScriptInput, ProjectScriptActionResult };
 
-const NO_FILE_SCRIPTS: ReadonlyArray<RoveProjectFileScript> = [];
+const NO_FILE_SCRIPTS: ReadonlyArray<PaperplaneProjectFileScript> = [];
 
 interface ProjectScriptsControlProps {
   displayMode?: "toolbar" | "panel";
@@ -65,8 +65,9 @@ interface ProjectScriptsControlProps {
   onRequestMenuClose?: () => void;
   environmentId: EnvironmentId;
   scripts: ReadonlyArray<ProjectScript>;
-  /** Scripts declared in the project's checked-in rove.json, offered for import. */
-  fileScripts?: ReadonlyArray<RoveProjectFileScript>;
+  /** Scripts declared in the project's checked-in paperplane.json, offered for import. */
+  fileScripts?: ReadonlyArray<PaperplaneProjectFileScript>;
+  projectFileNotice?: string | null;
   preferredScriptId?: string | null;
   onRunScript?: ((script: ProjectScript) => void) | undefined;
   onAddScript: (input: NewProjectScriptInput) => Promise<ProjectScriptActionResult>;
@@ -84,6 +85,7 @@ export default function ProjectScriptsControl({
   environmentId,
   scripts,
   fileScripts = NO_FILE_SCRIPTS,
+  projectFileNotice = null,
   preferredScriptId = null,
   onRunScript,
   onAddScript,
@@ -142,7 +144,7 @@ export default function ProjectScriptsControl({
     [onAddScript, onUpdateScript],
   );
 
-  const importFileScript = async (fileScript: RoveProjectFileScript) => {
+  const importFileScript = async (fileScript: PaperplaneProjectFileScript) => {
     const payload: NewProjectScriptInput = {
       name: fileScript.name,
       command: fileScript.command,
@@ -171,7 +173,7 @@ export default function ProjectScriptsControl({
     <>
       {scripts.length > 0 && <MenuSeparator />}
       <MenuGroup>
-        <MenuGroupLabel>From rove.json</MenuGroupLabel>
+        <MenuGroupLabel>From paperplane.json</MenuGroupLabel>
         {importableScripts.map((fileScript) => (
           <MenuItem
             density={presentation === "menu" ? "touch" : "default"}
@@ -191,6 +193,11 @@ export default function ProjectScriptsControl({
 
   const scriptItems = (
     <>
+      {projectFileNotice ? (
+        <p role="status" className="max-w-72 px-2 py-2 text-sm text-warning">
+          {projectFileNotice}
+        </p>
+      ) : null}
       {scripts.map((script) => {
         const shortcutLabel = shortcutLabelForCommand(
           keybindings,
@@ -267,7 +274,7 @@ export default function ProjectScriptsControl({
               </MenuShortcut>
             </MenuItem>
           )}
-          {scripts.length > 0 || importableScripts.length > 0 ? (
+          {scripts.length > 0 || importableScripts.length > 0 || projectFileNotice ? (
             <MenuSub
               open={actionsMenuOpen.scripts}
               onOpenChange={(open) =>
@@ -370,8 +377,8 @@ export default function ProjectScriptsControl({
             </MenuPopup>
           </Menu>
         </ActionGroup>
-      ) : scripts.length > 0 || importableScripts.length > 0 ? (
-        // No one-click action (only a settle action, or only rove.json imports),
+      ) : scripts.length > 0 || importableScripts.length > 0 || projectFileNotice ? (
+        // No one-click action (only a settle action, or only paperplane.json imports),
         // so the saved actions stay reachable through this menu.
         isPanel ? (
           <div

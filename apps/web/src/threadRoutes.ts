@@ -1,6 +1,6 @@
-import { scopeThreadRef } from "@rove-code/client-runtime/environment";
-import type { EnvironmentShellStatus } from "@rove-code/client-runtime/state/shell";
-import type { EnvironmentId, ScopedThreadRef, ThreadId } from "@rove-code/contracts";
+import { scopeThreadRef } from "@getpaperplane/client-runtime/environment";
+import type { EnvironmentShellStatus } from "@getpaperplane/client-runtime/state/shell";
+import type { EnvironmentId, ScopedThreadRef, ThreadId } from "@getpaperplane/contracts";
 import type { DraftId } from "./composerDraftStore";
 
 export type ThreadRouteTarget =

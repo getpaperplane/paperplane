@@ -2,8 +2,8 @@ import { Toolbar } from "../../components/ui/Toolbar";
 import { AppActivityIndicator } from "../../components/ui/AppActivityIndicator";
 import { useAtomRefresh } from "@effect/atom-react";
 import { useNavigation, type StaticScreenProps } from "@react-navigation/native";
-import { squashAtomCommandFailure } from "@rove-code/client-runtime/state/runtime";
-import type { PullRequestThreadComment } from "@rove-code/contracts";
+import { squashAtomCommandFailure } from "@getpaperplane/client-runtime/state/runtime";
+import type { PullRequestThreadComment } from "@getpaperplane/contracts";
 import { useRef, useState } from "react";
 import { Platform, ScrollView, View } from "react-native";
 import { KeyboardAvoidingView, useKeyboardState } from "react-native-keyboard-controller";
@@ -190,7 +190,7 @@ function Discussion({ params }: { params: PullRequestParams & { readonly discuss
               <View key={comment.id} className="gap-3 border-b border-border-subtle py-4">
                 <View className="flex-row items-center gap-2">
                   <PullRequestAvatar actor={comment.author} size={28} />
-                  <Text className="min-w-0 flex-1 text-sm font-rove-medium">
+                  <Text className="min-w-0 flex-1 text-sm font-paperplane-medium">
                     {comment.author?.login ?? "Unknown author"}
                   </Text>
                   <Text className="text-2xs text-foreground-muted">

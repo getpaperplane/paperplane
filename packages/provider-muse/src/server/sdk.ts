@@ -9,9 +9,9 @@ import {
   type ProcessExit,
   type SpawnedMspConnection,
 } from "@muse-code/sdk";
-import type { RuntimeMode } from "@rove-code/contracts";
-import * as HostProcess from "@rove-code/shared/HostProcess";
-import { SpawnExecutableResolution } from "@rove-code/shared/shell";
+import type { RuntimeMode } from "@getpaperplane/contracts";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
+import { SpawnExecutableResolution } from "@getpaperplane/shared/shell";
 import * as Effect from "effect/Effect";
 
 export interface MuseSdkHost {
@@ -162,10 +162,10 @@ export function museServeArgs(
   return args;
 }
 
-/** What Rove sends in MSP `initialize`; only full hosts ask for session MCP servers. */
+/** What Paperplane sends in MSP `initialize`; only full hosts ask for session MCP servers. */
 export function museInitializeParams(readOnly = false) {
   return {
-    clientInfo: { name: "rove_code", title: "Rove Code", version: "1" },
+    clientInfo: { name: "paperplane", title: "Paperplane", version: "1" },
     capabilities: { requestedCapabilities: readOnly ? [] : ["sessionMcp"] },
   };
 }

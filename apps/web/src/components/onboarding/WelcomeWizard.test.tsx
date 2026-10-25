@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { EnvironmentId, ProjectId } from "@rove-code/contracts";
+import { EnvironmentId, ProjectId } from "@getpaperplane/contracts";
 import { afterEach, beforeEach, expect, it, vi } from "vite-plus/test";
 
 const mocks = vi.hoisted(() => ({
@@ -78,7 +78,9 @@ vi.mock("../../onboarding/useProjectScans", () => ({
 }));
 vi.mock("../../connection/onboarding", () => ({ connectPairing: vi.fn() }));
 vi.mock("../../state/terminal", () => ({ terminalEnvironment: {} }));
-vi.mock("../clerk/useRoveConnectAuthPrompt", () => ({ useRoveConnectAuthPrompt: vi.fn() }));
+vi.mock("../clerk/usePaperplaneConnectAuthPrompt", () => ({
+  usePaperplaneConnectAuthPrompt: vi.fn(),
+}));
 vi.mock("../../cloud/publicConfig", () => ({ hasCloudPublicConfig: () => false }));
 vi.mock("../ThreadTerminalDrawer", () => ({ TerminalViewport: () => null }));
 vi.mock("../settings/ChatGptWelcomeCoordinator", () => ({ ChatGptWelcomeCoordinator: () => null }));

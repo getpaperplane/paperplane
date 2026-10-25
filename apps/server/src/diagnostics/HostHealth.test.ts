@@ -1,6 +1,6 @@
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { describe, expect, it } from "@effect/vitest";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 import * as ByteSize from "effect/ByteSize";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -22,11 +22,11 @@ const healthy = {
   swapTotalBytes: 4 * GIB,
   wsl: false,
   userManager: true,
-  roveMemory: null,
+  paperplaneMemory: null,
   hostOomKills: 0,
   stalls: [],
 };
-const roveMemory = {
+const paperplaneMemory = {
   limitBytes: 8 * GIB,
   currentBytes: GIB,
   swapLimitBytes: null,
@@ -40,7 +40,7 @@ describe("hostHealthFindings", () => {
     ["memory_pressure", { availableMemoryBytes: GIB - 1 }],
     ["no_swap", { totalMemoryBytes: 8 * GIB, swapTotalBytes: 0 }],
     ["event_loop_stalls", { stalls: [{ time: now, delayMaxMs: 1000 }] }],
-    ["rove_oom_kills", { roveMemory }],
+    ["paperplane_oom_kills", { paperplaneMemory }],
     ["host_oom_kills", { hostOomKills: 4 }],
   ])("reports %s", (id, patch) => {
     const findings = HostHealth.hostHealthFindings(
@@ -71,16 +71,16 @@ describe("hostHealthFindings", () => {
   it("uses cgroup deltas and does not attribute host kills when a slice exists", () => {
     expect(
       HostHealth.hostHealthFindings(
-        { ...healthy, roveMemory, hostOomKills: 100 },
+        { ...healthy, paperplaneMemory, hostOomKills: 100 },
         { now, oomBaseline: 4 },
       ),
     ).toEqual([]);
     expect(
-      HostHealth.hostHealthFindings({ ...healthy, roveMemory }, { now, oomBaseline: 2 })[0]
+      HostHealth.hostHealthFindings({ ...healthy, paperplaneMemory }, { now, oomBaseline: 2 })[0]
         ?.message,
-    ).toContain("2 out-of-memory kills under the Rove memory ceiling");
+    ).toContain("2 out-of-memory kills under the Paperplane memory ceiling");
     expect(
-      HostHealth.hostHealthFindings({ ...healthy, roveMemory }, { now, oomBaseline: 5 }),
+      HostHealth.hostHealthFindings({ ...healthy, paperplaneMemory }, { now, oomBaseline: 5 }),
     ).toEqual([]);
   });
 
@@ -126,7 +126,7 @@ describe("HostHealth service", () => {
     () =>
       Effect.gen(function* () {
         const config = yield* ServerConfig.ServerConfig;
-        const slice = "/sys/fs/cgroup/custom/user@123.service/app.slice/app-rove.slice";
+        const slice = "/sys/fs/cgroup/custom/user@123.service/app.slice/app-paperplane.slice";
         const files = new Map([
           ["/proc/meminfo", "SwapTotal: 4194304 kB\nSwapFree: 2097152 kB\n"],
           ["/proc/sys/kernel/osrelease", "microsoft-standard-WSL2"],
@@ -172,8 +172,8 @@ describe("HostHealth service", () => {
           expect(memoryReads).toBe(1);
           expect(first.swapTotalBytes).toBe(4 * GIB);
           expect(first.swapFreeBytes).toBe(2 * GIB);
-          expect(first.roveMemory).toEqual({
-            ...roveMemory,
+          expect(first.paperplaneMemory).toEqual({
+            ...paperplaneMemory,
             currentBytes: GIB + 1,
             swapCurrentBytes: GIB,
             oomKills: 2,
@@ -185,7 +185,7 @@ describe("HostHealth service", () => {
           files.set(`${slice}/memory.events`, "oom_kill 3\n");
           yield* TestClock.adjust("11 seconds");
           const next = yield* health.read;
-          expect(next.findings.map((finding) => finding.id)).toContain("rove_oom_kills");
+          expect(next.findings.map((finding) => finding.id)).toContain("paperplane_oom_kills");
           expect(stallReads).toBe(1);
           mtime++;
           yield* TestClock.adjust("11 seconds");
@@ -202,7 +202,7 @@ describe("HostHealth service", () => {
         );
       }).pipe(
         Effect.provide(
-          ServerConfig.layerTest(process.cwd(), { prefix: "rove-host-health-" }).pipe(
+          ServerConfig.layerTest(process.cwd(), { prefix: "paperplane-host-health-" }).pipe(
             Layer.provideMerge(NodeServices.layer),
           ),
         ),
@@ -214,17 +214,17 @@ describe("HostHealth service", () => {
     () =>
       Effect.gen(function* () {
         const files = new Map<string, string>();
-        const slice = "/sys/fs/cgroup/later/user@123.service/app.slice/app-rove.slice";
+        const slice = "/sys/fs/cgroup/later/user@123.service/app.slice/app-paperplane.slice";
         yield* Effect.gen(function* () {
           const health = yield* HostHealth.HostHealth;
-          expect((yield* health.read).roveMemory).toBeNull();
+          expect((yield* health.read).paperplaneMemory).toBeNull();
           files.set("/proc/self/cgroup", "0::/later/user@123.service/app.slice/rove.service\n");
           files.set(`${slice}/memory.current`, "1234567");
           files.set(`${slice}/memory.max`, "987654321");
           yield* TestClock.adjust("11 seconds");
           const report = yield* health.read;
-          expect(report.roveMemory?.currentBytes).toBe(1234567);
-          expect(report.roveMemory?.limitBytes).toBe(987654321);
+          expect(report.paperplaneMemory?.currentBytes).toBe(1234567);
+          expect(report.paperplaneMemory?.limitBytes).toBe(987654321);
           expect(report.availableMemoryBytes).toBe(8 * GIB + 1);
         }).pipe(
           Effect.provide(
@@ -253,7 +253,7 @@ describe("HostHealth service", () => {
         );
       }).pipe(
         Effect.provide(
-          ServerConfig.layerTest(process.cwd(), { prefix: "rove-host-health-" }).pipe(
+          ServerConfig.layerTest(process.cwd(), { prefix: "paperplane-host-health-" }).pipe(
             Layer.provideMerge(NodeServices.layer),
           ),
         ),
@@ -265,7 +265,7 @@ describe("HostHealth service", () => {
       const health = yield* HostHealth.HostHealth;
       const report = yield* health.read;
       expect(report.swapTotalBytes).toBeNull();
-      expect(report.roveMemory).toBeNull();
+      expect(report.paperplaneMemory).toBeNull();
       expect(report.findings.map((finding) => finding.id)).toEqual([
         "memory_pressure",
         "event_loop_stalls",
@@ -297,7 +297,7 @@ describe("HostHealth service", () => {
       ),
       Effect.provideService(HostProcess.Platform, "darwin"),
       Effect.provide(
-        ServerConfig.layerTest(process.cwd(), { prefix: "rove-host-health-" }).pipe(
+        ServerConfig.layerTest(process.cwd(), { prefix: "paperplane-host-health-" }).pipe(
           Layer.provideMerge(NodeServices.layer),
         ),
       ),

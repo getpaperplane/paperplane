@@ -1,12 +1,12 @@
 import { useMemo, useState } from "react";
 import { Pressable, View } from "react-native";
 import type { FileDiffMetadata } from "@pierre/diffs";
-import type { PullRequestReviewGuideExcerpt } from "@rove-code/contracts";
+import type { PullRequestReviewGuideExcerpt } from "@getpaperplane/contracts";
 import {
   excerptRows,
   fileDiffRows,
   rowsToPatch,
-} from "@rove-code/client-runtime/review-guide-tour";
+} from "@getpaperplane/client-runtime/review-guide-tour";
 import { AppText as Text } from "../../../components/ui/AppText";
 import { SymbolView } from "../../../components/ui/AppSymbol";
 import { resolveNativeReviewDiffView } from "../../diffs/nativeReviewDiffSurface";

@@ -1,4 +1,4 @@
-import { EnvironmentId, ThreadId } from "@rove-code/contracts";
+import { EnvironmentId, ThreadId } from "@getpaperplane/contracts";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 import { useThreadActions } from "./useThreadActions";

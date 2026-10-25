@@ -4,7 +4,7 @@ import {
   type ProjectListEntriesResult,
   ProjectReadFileError,
   type ProjectReadFileResult,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Cause from "effect/Cause";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
@@ -15,7 +15,7 @@ import { appAtomRegistry } from "~/rpc/atomRegistry";
 import { useFilesystemReadAccess } from "~/state/filesystem";
 import { projectEnvironment } from "~/state/projects";
 import { useProjectPathSearch } from "~/state/queries";
-import { executeAtomQuery } from "@rove-code/client-runtime/state/runtime";
+import { executeAtomQuery } from "@getpaperplane/client-runtime/state/runtime";
 
 const EMPTY_PROJECT_FILE_PATH = "";
 const EMPTY_PROJECT_ENTRIES_QUERY_ATOM = Atom.make(
@@ -25,11 +25,7 @@ const EMPTY_PROJECT_FILE_QUERY_ATOM = Atom.make(
   AsyncResult.initial<ProjectReadFileResult, never>(false),
 ).pipe(Atom.withLabel("project-file-query:empty"));
 /** A pending in-app write to the file, overlaying the query until confirmed. */
-export function optimisticFileAtom(
-  environmentId: EnvironmentId,
-  cwd: string,
-  relativePath: string,
-) {
+function optimisticFileAtom(environmentId: EnvironmentId, cwd: string, relativePath: string) {
   return projectEnvironment.optimisticFile({ environmentId, cwd, relativePath });
 }
 
@@ -66,7 +62,7 @@ function getProjectEntriesQueryAtom(
   });
 }
 
-export function getProjectFileQueryAtom(
+function getProjectFileQueryAtom(
   environmentId: EnvironmentId,
   cwd: string,
   relativePath: string | null,

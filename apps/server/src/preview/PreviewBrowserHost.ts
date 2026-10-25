@@ -1,20 +1,20 @@
 /**
  * Host setup the shared headless browser needs, and the one command that does
  * it. Every failure here names that command, so the server log, an agent's tool
- * error, and the viewer all offer the same fix: `sudo rove browser setup`.
+ * error, and the viewer all offer the same fix: `sudo paperplane browser setup`.
  *
- * Rove never turns Chrome's sandbox off by itself. A host that cannot give it one
+ * Paperplane never turns Chrome's sandbox off by itself. A host that cannot give it one
  * gets the command instead, and only the operator's explicit
- * `ROVE_SERVER_BROWSER_SANDBOX=0` launches without it.
+ * `PAPERPLANE_SERVER_BROWSER_SANDBOX=0` launches without it.
  */
-import * as HostProcess from "@rove-code/shared/HostProcess";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Schema from "effect/Schema";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
-/** The subcommand that sets the host up; callers render it, with `sudo`, for how Rove was launched. */
+/** The subcommand that sets the host up; callers render it, with `sudo`, for how Paperplane was launched. */
 export const SETUP_SUBCOMMAND = "browser setup";
 
 /** What Chrome prints before aborting when it cannot sandbox itself. */
@@ -22,25 +22,25 @@ export const NO_SANDBOX_SIGNATURE = "No usable sandbox";
 
 /** Whether an operator explicitly allowed Chrome to run without its sandbox. */
 export const sandboxDisabled = (env: Readonly<Record<string, string | undefined>>) =>
-  env.ROVE_SERVER_BROWSER_SANDBOX === "0";
+  env.PAPERPLANE_SERVER_BROWSER_SANDBOX === "0";
 
 /** Set on Ubuntu 23.10+: unprivileged user namespaces need an AppArmor profile. */
 const USERNS_RESTRICTION = "/proc/sys/kernel/apparmor_restrict_unprivileged_userns";
-export const APPARMOR_PROFILE_PATH = "/etc/apparmor.d/rove-chrome-headless-shell";
+export const APPARMOR_PROFILE_PATH = "/etc/apparmor.d/paperplane-chrome-headless-shell";
 
 /**
- * Lets Rove's headless browser, in any Rove home and at any pinned version, create
+ * Lets Paperplane's headless browser, in any Paperplane home and at any pinned version, create
  * the user namespace Chrome's sandbox runs in. Modelled on the profile Ubuntu
  * ships for Google Chrome; `unconfined` adds nothing beyond `userns`.
  */
-export const APPARMOR_PROFILE = `# Written by \`rove browser setup\`: lets Rove Code's headless browser use Chrome's sandbox.
+export const APPARMOR_PROFILE = `# Written by \`paperplane browser setup\`: lets Paperplane's headless browser use Chrome's sandbox.
 abi <abi/4.0>,
 include <tunables/global>
 
-profile rove-chrome-headless-shell /**/tools/chrome-headless-shell/*/*/chrome-headless-shell flags=(unconfined) {
+profile paperplane-chrome-headless-shell /**/tools/chrome-headless-shell/*/*/chrome-headless-shell flags=(unconfined) {
   userns,
 
-  include if exists <local/rove-chrome-headless-shell>
+  include if exists <local/paperplane-chrome-headless-shell>
 }
 `;
 
@@ -74,7 +74,7 @@ export class PreviewBrowserSandboxError extends Schema.TaggedError<PreviewBrowse
   { setupCommand: Schema.String },
 ) {
   override get message(): string {
-    return `This host blocks the sandbox Rove's browser runs in (AppArmor on Ubuntu 23.10+). Run \`${this.setupCommand}\` on the host once to allow it, then try again.`;
+    return `This host blocks the sandbox Paperplane's browser runs in (AppArmor on Ubuntu 23.10+). Run \`${this.setupCommand}\` on the host once to allow it, then try again.`;
   }
 }
 
@@ -83,7 +83,7 @@ export class PreviewBrowserLibrariesError extends Schema.TaggedError<PreviewBrow
   { setupCommand: Schema.String, libraries: Schema.Array(Schema.String) },
 ) {
   override get message(): string {
-    return `This host is missing libraries Rove's browser needs (${this.libraries.join(", ")}). Run \`${this.setupCommand}\` on the host to install them, then try again.`;
+    return `This host is missing libraries Paperplane's browser needs (${this.libraries.join(", ")}). Run \`${this.setupCommand}\` on the host to install them, then try again.`;
   }
 }
 
@@ -143,7 +143,7 @@ export const missingLibraries = Effect.fn("PreviewBrowserHost.missingLibraries")
 
 /**
  * Whether Chrome's sandbox will be blocked here: the host restricts user
- * namespaces and Rove's AppArmor profile is not installed. Readable without
+ * namespaces and Paperplane's AppArmor profile is not installed. Readable without
  * root, so the server checks it at startup.
  */
 export const sandboxBlocked = Effect.gen(function* () {

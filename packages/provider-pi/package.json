@@ -1,5 +1,5 @@
 {
-  "name": "@rove-code/provider-pi",
+  "name": "@getpaperplane/provider-pi",
   "private": true,
   "type": "module",
   "exports": {
@@ -17,8 +17,8 @@
     "test": "vp test run --config ../../vite.config.ts --dir ."
   },
   "dependencies": {
-    "@rove-code/contracts": "workspace:*",
-    "@rove-code/provider-core": "workspace:*",
+    "@getpaperplane/contracts": "workspace:*",
+    "@getpaperplane/provider-core": "workspace:*",
     "effect": "catalog:"
   },
   "devDependencies": {

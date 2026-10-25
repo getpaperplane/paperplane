@@ -1,6 +1,6 @@
 import { isValidElement, type ReactElement, type ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
-import type { DesktopUpdateState } from "@rove-code/contracts";
+import type { DesktopUpdateState } from "@getpaperplane/contracts";
 import * as RuntimePredicate from "effect/Predicate";
 
 const testState = vi.hoisted(() => ({
@@ -79,7 +79,7 @@ describe("showDesktopUpdateDownloadedToast", () => {
     link?.props.onClick?.();
     await vi.waitFor(() => {
       expect(openExternal).toHaveBeenCalledWith(
-        "https://github.com/hafiezul/rove/releases/tag/v0.0.30",
+        "https://github.com/getpaperplane/paperplane/releases/tag/v0.0.30",
       );
     });
     expect(testState.addToast).toHaveBeenCalledTimes(1);
@@ -97,7 +97,7 @@ describe("showDesktopUpdateDownloadedToast", () => {
 
     await vi.waitFor(() => {
       expect(openExternal).toHaveBeenCalledWith(
-        "https://github.com/hafiezul/rove/releases/tag/v0.0.30",
+        "https://github.com/getpaperplane/paperplane/releases/tag/v0.0.30",
       );
     });
   });

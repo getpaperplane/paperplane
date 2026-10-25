@@ -7,7 +7,7 @@ import {
   createRouter,
   RouterContextProvider,
 } from "@tanstack/react-router";
-import { EnvironmentId, ThreadId, type ServerProvider } from "@rove-code/contracts";
+import { EnvironmentId, ThreadId, type ServerProvider } from "@getpaperplane/contracts";
 import { AtomRegistry } from "effect/reactivity";
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";

@@ -1,8 +1,8 @@
 import { DeviceHostUpdates } from "./DeviceHostUpdates";
-import type { DevicePlatform, DeviceServiceState, EnvironmentId } from "@rove-code/contracts";
+import type { DevicePlatform, DeviceServiceState, EnvironmentId } from "@getpaperplane/contracts";
 import { Check } from "lucide-react";
 import { Check as CheckGlyph, CircleAlert } from "lucide";
-import { AuthSettingsWriteScope } from "@rove-code/contracts";
+import { AuthSettingsWriteScope } from "@getpaperplane/contracts";
 import { useEffect, useState } from "react";
 
 import { Button } from "~/components/ui/button";

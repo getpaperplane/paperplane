@@ -2,14 +2,14 @@ import {
   type ProviderInstanceId,
   type ServerProvider,
   ServerProvider as ServerProviderSchema,
-} from "@rove-code/contracts";
-import { causeErrorTag } from "@rove-code/shared/observability";
+} from "@getpaperplane/contracts";
+import { causeErrorTag } from "@getpaperplane/shared/observability";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
 import * as Schema from "effect/Schema";
 
-import { writeFileStringAtomically } from "@rove-code/shared/atomicWrite";
+import { writeFileStringAtomically } from "@getpaperplane/shared/atomicWrite";
 
 const decodeProviderStatusCache = Schema.decodeUnknownEffect(
   Schema.fromJsonString(ServerProviderSchema),

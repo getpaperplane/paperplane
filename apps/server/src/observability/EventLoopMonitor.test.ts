@@ -84,7 +84,7 @@ describe("EventLoopMonitor", () => {
   it.effect("keeps each stall as one line in a capped stall log", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
-      const directory = yield* fs.makeTempDirectoryScoped({ prefix: "rove-event-loop-" });
+      const directory = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-event-loop-" });
       const filePath = `${directory}/event-loop-stalls.ndjson`;
       // Room for one line, so each new stall rotates the last one into the backup.
       yield* monitor([stalled, stalled, stalled, { ...stalled, delayMaxNs: ms(7_000) }], {
@@ -124,7 +124,7 @@ describe("EventLoopMonitor", () => {
       const fs = yield* FileSystem.FileSystem;
       // A directory at the log path opens, but every append to it fails. The cap
       // is large so the sink never rotates the directory out of the way.
-      const filePath = yield* fs.makeTempDirectoryScoped({ prefix: "rove-event-loop-" });
+      const filePath = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-event-loop-" });
       yield* monitor([stalled, stalled], { filePath, maxBytes: 1024 * 1024 });
       yield* TestClock.adjust("60 seconds");
       assert.deepStrictEqual(warnings, [

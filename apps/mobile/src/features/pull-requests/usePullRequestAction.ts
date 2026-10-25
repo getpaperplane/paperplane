@@ -1,11 +1,11 @@
 import * as Dialog from "../../components/ui/Dialog";
 import { useAtomRefresh } from "@effect/atom-react";
-import { squashAtomCommandFailure } from "@rove-code/client-runtime/state/runtime";
+import { squashAtomCommandFailure } from "@getpaperplane/client-runtime/state/runtime";
 import type {
   PullRequestAction,
   PullRequestDetail,
   PullRequestUpdateMethod,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { useRef, useState } from "react";
 import { composerPullRequests } from "../../state/pull-requests";
 import { useAtomCommand } from "../../state/use-atom-command";

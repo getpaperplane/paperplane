@@ -1,4 +1,4 @@
-import type { ProjectIconColor } from "@rove-code/contracts";
+import type { ProjectIconColor } from "@getpaperplane/contracts";
 
 export const PROJECT_ICON_COLORS: ReadonlyArray<{
   readonly value: ProjectIconColor;

@@ -266,7 +266,7 @@ export const makeAcpClientTerminals = Effect.fn("makeAcpClientTerminals")(functi
             ),
           );
 
-          const terminalId = `rove-term-${nextTerminalNumber}`;
+          const terminalId = `paperplane-term-${nextTerminalNumber}`;
           nextTerminalNumber += 1;
           const record: ManagedAcpTerminal = {
             terminalId,

@@ -1,20 +1,20 @@
-import { AuthProvidersManageScope } from "@rove-code/contracts";
+import { AuthProvidersManageScope } from "@getpaperplane/contracts";
 import { useEnvironmentScope } from "../../state/session";
 import {
   isAtomCommandInterrupted,
   squashAtomCommandFailure,
   type AtomCommandResult,
-} from "@rove-code/client-runtime/state/runtime";
+} from "@getpaperplane/client-runtime/state/runtime";
 import type {
   ChatGptHandoffInput,
   ChatGptTransferredProfile,
   EnvironmentId,
   ProviderInstanceId,
   ServerProvider,
-} from "@rove-code/contracts";
-import { codexAuthHandoffUrl } from "@rove-code/shared/codexAuthHandoff";
-import { providerAuthReturnUrl } from "@rove-code/shared/providerAuthReturnUrl";
-import { isLoopbackHost } from "@rove-code/shared/preview";
+} from "@getpaperplane/contracts";
+import { codexAuthHandoffUrl } from "@getpaperplane/shared/codexAuthHandoff";
+import { providerAuthReturnUrl } from "@getpaperplane/shared/providerAuthReturnUrl";
+import { isLoopbackHost } from "@getpaperplane/shared/preview";
 import { CheckIcon, ChevronRightIcon, ExternalLinkIcon } from "lucide-react";
 import { Children, useCallback, useEffect, useId, useRef, useState, type ReactNode } from "react";
 
@@ -577,8 +577,8 @@ function ManagedCodexSetup({
         : installation?.phase === "verifying"
           ? "Checking Codex."
           : installed
-            ? `${installation?.source === "local" ? "Using your installed Codex" : "Managed by Rove Code"}${installation?.installedVersion ? ` · v${installation.installedVersion}` : ""}.`
-            : (installation?.message ?? "Rove Code downloads and manages Codex for you.");
+            ? `${installation?.source === "local" ? "Using your installed Codex" : "Managed by Paperplane"}${installation?.installedVersion ? ` · v${installation.installedVersion}` : ""}.`
+            : (installation?.message ?? "Paperplane downloads and manages Codex for you.");
   const accountDescription = finishingSignIn ? (
     "Finishing sign-in..."
   ) : installActive ? (
@@ -655,7 +655,7 @@ function ManagedCodexSetup({
   const callbackCompletion =
     !handoff && auth?.phase === "waiting" && url ? (
       <div className="flex w-full flex-col gap-3 text-xs leading-relaxed text-muted-foreground">
-        <p>If sign-in doesn't return to Rove Code, paste the URL from the final localhost page.</p>
+        <p>If sign-in doesn't return to Paperplane, paste the URL from the final localhost page.</p>
         <form
           className="flex flex-col gap-2 sm:flex-row sm:items-center"
           onSubmit={(event) => {
@@ -711,7 +711,7 @@ function ManagedCodexSetup({
           <details>
             <summary className="cursor-pointer">Other ways to connect</summary>
             <Button className="mt-2" size="sm" variant="outline" render={<a href={handoffUrl} />}>
-              Use Rove desktop for automatic return
+              Use Paperplane desktop for automatic return
             </Button>
           </details>
         ) : null}
@@ -1032,7 +1032,7 @@ export function CodexManagedRuntimeFields({
     <>
       <SettingsRow
         title="Binary path"
-        description="Selected by Rove Code."
+        description="Selected by Paperplane."
         control={
           <div className="w-full sm:w-80">
             <Input

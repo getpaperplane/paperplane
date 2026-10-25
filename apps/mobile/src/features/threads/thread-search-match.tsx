@@ -1,5 +1,5 @@
-import { splitThreadSearchText } from "@rove-code/shared/threadSearch";
-import type { EnvironmentThreadSearchMatch } from "@rove-code/client-runtime/state/thread-search";
+import { splitThreadSearchText } from "@getpaperplane/shared/threadSearch";
+import type { EnvironmentThreadSearchMatch } from "@getpaperplane/client-runtime/state/thread-search";
 
 import { AppText as Text } from "../../components/ui/AppText";
 import { cn } from "../../lib/cn";
@@ -27,7 +27,7 @@ export function ThreadSearchMatchExcerpt(props: {
     >
       <Text
         className={cn(
-          props.compact ? "text-sm font-rove-medium" : "text-xs font-rove-medium",
+          props.compact ? "text-sm font-paperplane-medium" : "text-xs font-paperplane-medium",
           props.selected
             ? "text-thread-selected-foreground"
             : isUser
@@ -43,7 +43,7 @@ export function ThreadSearchMatchExcerpt(props: {
         <Text
           className={cn(
             props.compact ? "text-sm" : "text-xs",
-            part.highlighted && "font-rove-bold",
+            part.highlighted && "font-paperplane-bold",
             props.selected
               ? "text-thread-selected-foreground"
               : part.highlighted

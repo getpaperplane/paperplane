@@ -1,4 +1,4 @@
-import { normalizeProjectPathForComparison } from "@rove-code/shared/path";
+import { normalizeProjectPathForComparison } from "@getpaperplane/shared/path";
 
 export type FirstRunDecision = "pending" | "app" | "wizard";
 

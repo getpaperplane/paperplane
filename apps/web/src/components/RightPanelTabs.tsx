@@ -1,10 +1,10 @@
-import { pullRequestHostOf, type SourceControlProviderKind } from "@rove-code/contracts";
-import type { EnvironmentThreadShell } from "@rove-code/client-runtime/state/shell";
+import { pullRequestHostOf, type SourceControlProviderKind } from "@getpaperplane/contracts";
+import type { EnvironmentThreadShell } from "@getpaperplane/client-runtime/state/shell";
 import { useProjects, useServerConfigs, useThreadShells } from "~/state/entities";
 import {
   threadPullRequestKeysEqual,
   visibleThreadPullRequests,
-} from "@rove-code/shared/threadPullRequests";
+} from "@getpaperplane/shared/threadPullRequests";
 import type {
   ContextMenuItem,
   EnvironmentId,
@@ -12,8 +12,8 @@ import type {
   ProjectId,
   PullRequestState,
   ResolvedKeybindingsConfig,
-} from "@rove-code/contracts";
-import { getTerminalLabel } from "@rove-code/shared/terminalLabels";
+} from "@getpaperplane/contracts";
+import { getTerminalLabel } from "@getpaperplane/shared/terminalLabels";
 import {
   closestCenter,
   DndContext,
@@ -172,7 +172,7 @@ export function shouldOpenDefaultBrowserProfileFromMenuClick(
 }
 
 const SURFACE_DISABLED_REASONS = {
-  browser: "Browser previews are only available in the Rove Code desktop app.",
+  browser: "Browser previews are only available in the Paperplane desktop app.",
   terminal: "Terminal surfaces are only available from a project thread.",
   files: "Files are only available when a project is open.",
   diff: "Diff is only available for server threads in Git repositories.",

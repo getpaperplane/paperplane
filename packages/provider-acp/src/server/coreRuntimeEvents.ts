@@ -10,7 +10,7 @@ import {
   type RuntimeRequestId,
   type ThreadId,
   type TurnId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 
 import {
   type AcpPermissionRequest,

@@ -1,4 +1,4 @@
-import type { EnvironmentId, ThreadId } from "@rove-code/contracts";
+import type { EnvironmentId, ThreadId } from "@getpaperplane/contracts";
 import { create } from "zustand";
 import { DraftId, useComposerDraftStore } from "./composerDraftStore";
 import { releaseDraftAttachments } from "./lib/attachmentUploadQueue";

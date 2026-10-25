@@ -1,10 +1,10 @@
-import type { UsageTokenTotals } from "@rove-code/contracts";
+import type { UsageTokenTotals } from "@getpaperplane/contracts";
 import {
   isModelCostUnknown,
   type CategoryCost,
   type ModelTotals,
   type SpeedCost,
-} from "@rove-code/shared/usageMerge";
+} from "@getpaperplane/shared/usageMerge";
 
 import type { ShareSegment } from "./UsageShareBar";
 

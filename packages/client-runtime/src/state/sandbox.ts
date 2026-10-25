@@ -1,4 +1,4 @@
-import { WS_METHODS } from "@rove-code/contracts";
+import { WS_METHODS } from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
 import * as Stream from "effect/Stream";

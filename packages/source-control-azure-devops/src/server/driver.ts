@@ -1,10 +1,10 @@
-import { SourceControlProviderKind } from "@rove-code/contracts";
+import { SourceControlProviderKind } from "@getpaperplane/contracts";
 /**
  * The Azure DevOps driver: repository operations, discovery, and pull requests through `az`.
  *
  * @module source-control-azure-devops/server/driver
  */
-import { defineSourceControlDriver } from "@rove-code/source-control-core/server/driver";
+import { defineSourceControlDriver } from "@getpaperplane/source-control-core/server/driver";
 import * as Effect from "effect/Effect";
 
 import * as AzureDevOpsPullRequestProvider from "./AzureDevOpsPullRequestProvider.ts";

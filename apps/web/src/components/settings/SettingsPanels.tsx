@@ -15,14 +15,14 @@ import {
   type ProviderInstanceId,
   type ScopedThreadRef,
   type SidebarProjectGroupingMode,
-} from "@rove-code/contracts";
-import { scopeThreadRef } from "@rove-code/client-runtime/environment";
-import { presentThreadShell } from "@rove-code/client-runtime/state/shell";
+} from "@getpaperplane/contracts";
+import { scopeThreadRef } from "@getpaperplane/client-runtime/environment";
+import { presentThreadShell } from "@getpaperplane/client-runtime/state/shell";
 import {
   isAtomCommandInterrupted,
   settlePromise,
   squashAtomCommandFailure,
-} from "@rove-code/client-runtime/state/runtime";
+} from "@getpaperplane/client-runtime/state/runtime";
 import {
   DEFAULT_ENVIRONMENT_IDENTIFICATION_MODE,
   DEFAULT_UNIFIED_SETTINGS,
@@ -48,9 +48,9 @@ import {
   MIN_TERMINAL_FONT_SIZE,
   type QuitConfirmationMode,
   SidebarProjectSortOrder,
-} from "@rove-code/contracts/settings";
-import { resolveServerBackgroundActivitySettings } from "@rove-code/shared/backgroundActivitySettings";
-import { createModelSelection } from "@rove-code/shared/model";
+} from "@getpaperplane/contracts/settings";
+import { resolveServerBackgroundActivitySettings } from "@getpaperplane/shared/backgroundActivitySettings";
+import { createModelSelection } from "@getpaperplane/shared/model";
 import * as Duration from "effect/Duration";
 import * as Equal from "effect/Equal";
 import * as Schema from "effect/Schema";
@@ -2900,7 +2900,7 @@ export function GeneralSettingsPanel() {
               ? "Update selected environments to control product usage data."
               : undefined
           }
-          description="Share feature usage, outcomes, timings, and agent token counts with Rove via PostHog, using a random installation ID. No name, email, prompts, responses, code, paths, commands, or recordings. Applies to all clients on the selected environments. ROVE_TELEMETRY_ENABLED=false overrides this preference."
+          description="Share feature usage, outcomes, timings, and agent token counts with Paperplane via PostHog, using a random installation ID. No name, email, prompts, responses, code, paths, commands, or recordings. Applies to all clients on the selected environments. PAPERPLANE_TELEMETRY_ENABLED=false overrides this preference."
           control={
             <ScopedSwitch
               settingKeys={["telemetryEnabled"]}
@@ -3386,7 +3386,7 @@ export function GeneralSettingsPanel() {
         )}
         <SettingsRow
           {...searchableSetting("telemetry-privacy")}
-          description="What product usage data Rove Code collects and how to opt out."
+          description="What product usage data Paperplane collects and how to opt out."
           control={
             <Button
               render={<a href={TELEMETRY_PRIVACY_URL} target="_blank" rel="noreferrer noopener" />}
@@ -3420,7 +3420,7 @@ export function GeneralSettingsPanel() {
         />
         <SettingsRow
           {...searchableSetting("open-source-licenses")}
-          description="Notices for dependencies, assets, and optional tools used by Rove Code."
+          description="Notices for dependencies, assets, and optional tools used by Paperplane."
           control={
             <Button
               render={<Link to="/settings/open-source-licenses" />}

@@ -4,7 +4,7 @@ import {
   ProviderInstanceId,
   type ScopedThreadRef,
   type ServerProvider,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { createRef } from "react";
 
 import { getClientSettings, mergeEnvironmentSettings } from "../../hooks/useSettings";

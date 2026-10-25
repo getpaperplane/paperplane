@@ -13,13 +13,13 @@ import {
   type PullRequestFilesViewedResult,
   type PullRequestRef,
   type PullRequestSetFilesViewedInput,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 
 import type * as PullRequestFilesViewed from "../persistence/PullRequestFilesViewed.ts";
 import type {
   ProviderFileRevisions,
   PullRequestProviderError,
-} from "@rove-code/source-control-core/server/PullRequestProvider";
+} from "@getpaperplane/source-control-core/server/PullRequestProvider";
 import type { PullRequestError, SupportedProject } from "./PullRequestService.ts";
 
 /**

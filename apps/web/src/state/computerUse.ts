@@ -1,8 +1,8 @@
 import {
   createComputerUseEnvironmentAtoms,
   EMPTY_COMPUTER_DESKTOPS_STATE,
-} from "@rove-code/client-runtime/state/computer-use";
-import type { ComputerDesktopsState, EnvironmentId } from "@rove-code/contracts";
+} from "@getpaperplane/client-runtime/state/computer-use";
+import type { ComputerDesktopsState, EnvironmentId } from "@getpaperplane/contracts";
 
 import { connectionAtomRuntime } from "../connection/runtime";
 import { useEnvironmentQuery } from "./query";

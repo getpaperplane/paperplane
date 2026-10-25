@@ -12,21 +12,21 @@ describe("resolveDesktopAppControlAddress", () => {
       joinPath: (...segments) => segments.join("/"),
     });
     const second = resolveDesktopAppControlAddress({
-      stateDir: "/home/user/.rove/other/userdata",
+      stateDir: "/home/user/.paperplane/other/userdata",
       platform: "linux",
       tempDir: "/tmp",
       userId: 1000,
       joinPath: (...segments) => segments.join("/"),
     });
 
-    expect(first.directory).toBe("/tmp/rove-1000");
+    expect(first.directory).toBe("/tmp/paperplane-1000");
     expect(first.address.length).toBeLessThan(108);
     expect(first.address).not.toBe(second.address);
   });
 
   it("uses a Windows named pipe", () => {
     const result = resolveDesktopAppControlAddress({
-      stateDir: "C:\\Users\\user\\.rove\\userdata",
+      stateDir: "C:\\Users\\user\\.paperplane\\userdata",
       platform: "win32",
       tempDir: "C:\\Temp",
       userId: undefined,
@@ -34,6 +34,6 @@ describe("resolveDesktopAppControlAddress", () => {
     });
 
     expect(result.directory).toBeNull();
-    expect(result.address).toMatch(/^\\\\\.\\pipe\\rove-app-[a-f0-9]{24}$/);
+    expect(result.address).toMatch(/^\\\\\.\\pipe\\paperplane-app-[a-f0-9]{24}$/);
   });
 });

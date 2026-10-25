@@ -30,13 +30,13 @@ import {
   type ServerProvider,
   type ServerProviderSlashCommand,
   type ServerSettings as ContractServerSettings,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as PlatformError from "effect/PlatformError";
 import { HttpClient, HttpClientResponse } from "effect/http";
 import { ChildProcessSpawner } from "effect/process";
-import { deepMerge } from "@rove-code/shared/Struct";
-import { createModelCapabilities } from "@rove-code/shared/model";
-import { applyServerSettingsPatch } from "@rove-code/shared/serverSettings";
+import { deepMerge } from "@getpaperplane/shared/Struct";
+import { createModelCapabilities } from "@getpaperplane/shared/model";
+import { applyServerSettingsPatch } from "@getpaperplane/shared/serverSettings";
 
 import { checkCodexProviderStatus, type CodexAppServerProviderSnapshot } from "./CodexProvider.ts";
 import { checkClaudeProviderStatus } from "./ClaudeProvider.ts";
@@ -45,11 +45,11 @@ import * as AntigravityInstallation from "./AntigravityInstallation.ts";
 import * as ModelManifest from "./ModelManifest.ts";
 import { applyProviderCompatibility } from "./providerCompatibility.ts";
 import * as ResetCreditCoordinator from "./resetCreditCoordinator.ts";
-import * as ProviderLatestVersions from "@rove-code/provider-core/server/ProviderLatestVersions";
-import * as McpProviderSessions from "@rove-code/provider-core/server/McpProviderSessions";
-import * as OpenCodeRuntime from "@rove-code/provider-opencode/server/OpenCodeRuntime";
-import * as OpenCodeServerLedger from "@rove-code/provider-opencode/server/OpenCodeServerLedger";
-import * as ProviderEventLoggers from "@rove-code/provider-core/server/ProviderEventLoggers";
+import * as ProviderLatestVersions from "@getpaperplane/provider-core/server/ProviderLatestVersions";
+import * as McpProviderSessions from "@getpaperplane/provider-core/server/McpProviderSessions";
+import * as OpenCodeRuntime from "@getpaperplane/provider-opencode/server/OpenCodeRuntime";
+import * as OpenCodeServerLedger from "@getpaperplane/provider-opencode/server/OpenCodeServerLedger";
+import * as ProviderEventLoggers from "@getpaperplane/provider-core/server/ProviderEventLoggers";
 import * as ProviderInstanceRegistryHydration from "./ProviderInstanceRegistryHydration.ts";
 import * as ServerConfig from "../config.ts";
 import * as ServerSettingsModule from "../serverSettings.ts";
@@ -58,14 +58,14 @@ import {
   resolveProviderStatusCachePath,
   writeProviderStatusCache,
 } from "./providerStatusCache.ts";
-import { COMPACT_SLASH_COMMAND } from "@rove-code/provider-core/server/snapshotProbe";
+import { COMPACT_SLASH_COMMAND } from "@getpaperplane/provider-core/server/snapshotProbe";
 import type {
   ProviderInstance,
   ProviderWorkspaceSnapshot,
-} from "@rove-code/provider-core/server/driver";
+} from "@getpaperplane/provider-core/server/driver";
 import * as ProviderInstanceRegistry from "./ProviderInstanceRegistry.ts";
 import * as ProviderRegistry from "./ProviderRegistry.ts";
-import { makeManualOnlyProviderMaintenanceCapabilities } from "@rove-code/provider-core/server/maintenanceResolver";
+import { makeManualOnlyProviderMaintenanceCapabilities } from "@getpaperplane/provider-core/server/maintenanceResolver";
 const decodeServerSettings = Schema.decodeSync(ServerSettings);
 const encodeServerSettings = Schema.encodeSync(ServerSettings);
 const encodedDefaultServerSettings = encodeServerSettings(DEFAULT_SERVER_SETTINGS);
@@ -88,7 +88,7 @@ const disabledCodexSettings: CodexSettings = Schema.decodeSync(CodexSettings)({
   enabled: false,
 });
 
-process.env.ROVE_CURSOR_ENABLED = "1";
+process.env.PAPERPLANE_CURSOR_ENABLED = "1";
 
 // ── Test helpers ────────────────────────────────────────────────────
 
@@ -1276,7 +1276,7 @@ it.layer(
         }).pipe(
           Effect.provide(
             ServerConfig.layerTest(process.cwd(), {
-              prefix: "rove-codex-retired-model-cache-",
+              prefix: "paperplane-codex-retired-model-cache-",
             }).pipe(Layer.provideMerge(NodeServices.layer)),
           ),
         ),
@@ -1626,7 +1626,7 @@ it.layer(
             Layer.provideMerge(layerInstanceRegistry),
             Layer.provideMerge(
               ServerConfig.layerTest(process.cwd(), {
-                prefix: "rove-provider-registry-background-refresh-",
+                prefix: "paperplane-provider-registry-background-refresh-",
               }),
             ),
             Layer.provideMerge(NodeServices.layer),
@@ -1763,7 +1763,7 @@ it.layer(
             Layer.provideMerge(layerInstanceRegistry),
             Layer.provideMerge(
               ServerConfig.layerTest(process.cwd(), {
-                prefix: "rove-provider-registry-workspace-snapshot-",
+                prefix: "paperplane-provider-registry-workspace-snapshot-",
               }),
             ),
             Layer.provideMerge(NodeServices.layer),
@@ -2028,7 +2028,7 @@ it.layer(
             Layer.provideMerge(layerInstanceRegistry),
             Layer.provideMerge(
               ServerConfig.layerTest(process.cwd(), {
-                prefix: "rove-provider-registry-reconnect-refresh-",
+                prefix: "paperplane-provider-registry-reconnect-refresh-",
               }),
             ),
             Layer.provideMerge(NodeServices.layer),
@@ -2204,7 +2204,7 @@ it.layer(
             Layer.provideMerge(instanceRegistryLayer),
             Layer.provideMerge(
               ServerConfig.layerTest(process.cwd(), {
-                prefix: "rove-provider-registry-shared-refresh-",
+                prefix: "paperplane-provider-registry-shared-refresh-",
               }),
             ),
             Layer.provideMerge(NodeServices.layer),
@@ -2310,7 +2310,7 @@ it.layer(
             Layer.provideMerge(layerInstanceRegistry),
             Layer.provideMerge(
               ServerConfig.layerTest(process.cwd(), {
-                prefix: "rove-provider-registry-merged-persist-",
+                prefix: "paperplane-provider-registry-merged-persist-",
               }),
             ),
             Layer.provideMerge(layerBackgroundPolicyAlwaysRun),
@@ -2438,7 +2438,7 @@ it.layer(
               Layer.provideMerge(layerInstanceRegistry),
               Layer.provideMerge(
                 ServerConfig.layerTest(process.cwd(), {
-                  prefix: "rove-provider-registry-opencode-authoritative-persist-",
+                  prefix: "paperplane-provider-registry-opencode-authoritative-persist-",
                 }),
               ),
               Layer.provideMerge(NodeServices.layer),
@@ -2541,7 +2541,7 @@ it.layer(
             Layer.provideMerge(layerInstanceRegistry),
             Layer.provideMerge(
               ServerConfig.layerTest(process.cwd(), {
-                prefix: "rove-provider-registry-refresh-failure-",
+                prefix: "paperplane-provider-registry-refresh-failure-",
               }),
             ),
             Layer.provideMerge(layerBackgroundPolicyAlwaysRun),
@@ -2657,7 +2657,7 @@ it.layer(
             Layer.provideMerge(layerInstanceRegistry),
             Layer.provideMerge(
               ServerConfig.layerTest(process.cwd(), {
-                prefix: "rove-provider-registry-sync-failure-",
+                prefix: "paperplane-provider-registry-sync-failure-",
               }),
             ),
             Layer.provideMerge(layerBackgroundPolicyAlwaysRun),
@@ -2708,7 +2708,7 @@ it.layer(
     // assertions below fail.
     it.effect("propagates real Codex probe failures to the aggregator at boot", () =>
       Effect.gen(function* () {
-        const missingBinary = `rove_codex_missing_`;
+        const missingBinary = `paperplane_codex_missing_`;
         const serverSettings = yield* makeMutableServerSettingsService(
           decodeServerSettings(
             deepMerge(encodedDefaultServerSettings, {
@@ -2724,7 +2724,7 @@ it.layer(
                 // test environment stays isolated from the dev
                 // machine's PATH.
                 ...disabledDefaultSlots("codex", "claudeAgent", "cursor", "grok", "opencode"),
-                // Matches the shape the user had in `.rove/dev/settings.json`
+                // Matches the shape the user had in `.paperplane/dev/settings.json`
                 // when the bug was reported: a custom enabled Codex instance
                 // pointing at a binary the server has to actually spawn.
                 codex_personal: {
@@ -2751,7 +2751,7 @@ it.layer(
           Layer.provideMerge(ServerSecretStore.layer),
           Layer.provideMerge(
             ServerConfig.layerTest(process.cwd(), {
-              prefix: "rove-provider-registry-",
+              prefix: "paperplane-provider-registry-",
             }),
           ),
           Layer.provideMerge(layerTestHttpClient),
@@ -2817,8 +2817,8 @@ it.layer(
     // A binary path change must rebuild Codex and publish its new probe result.
     it.effect("re-probes when settings change the codex binaryPath", () =>
       Effect.gen(function* () {
-        const firstMissing = `rove_codex_first_`;
-        const secondMissing = `rove_codex_second_`;
+        const firstMissing = `paperplane_codex_first_`;
+        const secondMissing = `paperplane_codex_second_`;
         const spawnedCommands: Array<string> = [];
         const secondProbeStarted = yield* Deferred.make<void>();
         const releaseSecondProbe = yield* Deferred.make<void>();
@@ -2856,7 +2856,7 @@ it.layer(
           Layer.provideMerge(ServerSecretStore.layer),
           Layer.provideMerge(
             ServerConfig.layerTest(process.cwd(), {
-              prefix: "rove-provider-registry-",
+              prefix: "paperplane-provider-registry-",
             }),
           ),
           Layer.provideMerge(layerTestHttpClient),
@@ -2976,7 +2976,7 @@ it.layer(
           Layer.provideMerge(ServerSecretStore.layer),
           Layer.provideMerge(
             ServerConfig.layerTest(process.cwd(), {
-              prefix: "rove-provider-registry-",
+              prefix: "paperplane-provider-registry-",
             }),
           ),
           Layer.provideMerge(layerTestHttpClient),
@@ -3036,7 +3036,7 @@ it.layer(
             Layer.provideMerge(ServerSecretStore.layer),
             Layer.provideMerge(
               ServerConfig.layerTest(process.cwd(), {
-                prefix: "rove-provider-registry-",
+                prefix: "paperplane-provider-registry-",
               }),
             ),
             Layer.provideMerge(layerTestHttpClient),
@@ -3106,7 +3106,7 @@ it.layer(
             assert.strictEqual(cursorProvider?.status, "disabled");
             assert.strictEqual(
               cursorProvider?.message,
-              "Cursor is disabled in Rove Code settings.",
+              "Cursor is disabled in Paperplane settings.",
             );
             const museProvider = providers.find((provider) => provider.driver === "muse");
             assert.strictEqual(museProvider?.enabled, false);
@@ -3124,7 +3124,7 @@ it.layer(
         assert.strictEqual(status.enabled, false);
         assert.strictEqual(status.status, "disabled");
         assert.strictEqual(status.installed, false);
-        assert.strictEqual(status.message, "Codex is disabled in Rove Code settings.");
+        assert.strictEqual(status.message, "Codex is disabled in Paperplane settings.");
       }),
     );
   });
@@ -3411,7 +3411,7 @@ it.layer(
     );
 
     it.effect("runs Claude status probes with the configured CLAUDE_CONFIG_DIR", () => {
-      const claudeConfigDir = "/tmp/rove-claude-home";
+      const claudeConfigDir = "/tmp/paperplane-claude-home";
       const recorded = recordingMockSpawnerLayer((args) => {
         const joined = args.join(" ");
         if (joined === "--version") return { stdout: "1.0.0\n", stderr: "", code: 0 };

@@ -1,4 +1,4 @@
-import type { ConfirmDialogOptions, ConfirmDialogVariant } from "@rove-code/contracts";
+import type { ConfirmDialogOptions, ConfirmDialogVariant } from "@getpaperplane/contracts";
 
 export type ConfirmDialogState =
   | { readonly status: "idle" }

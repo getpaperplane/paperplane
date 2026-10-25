@@ -1,5 +1,5 @@
-import type { DeviceHubAccess } from "@rove-code/client-runtime/device/hub-access";
-import type { DevicePlatform } from "@rove-code/contracts";
+import type { DeviceHubAccess } from "@getpaperplane/client-runtime/device/hub-access";
+import type { DevicePlatform } from "@getpaperplane/contracts";
 
 export interface DeviceStreamConfiguration {
   readonly access: DeviceHubAccess;
@@ -19,7 +19,7 @@ export interface DeviceStreamConfiguration {
 export function deviceStreamDocument(
   configuration: string,
   script: string,
-  entry = "RoveDeviceStream",
+  entry = "PaperplaneDeviceStream",
 ) {
   // Tickets and device names are data, including any HTML delimiter characters.
   const safeConfiguration = configuration.replace(/</g, "\\u003c");

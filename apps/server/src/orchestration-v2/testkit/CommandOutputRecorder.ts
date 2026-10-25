@@ -1,9 +1,9 @@
-import type { TurnItemId } from "@rove-code/contracts";
+import type { TurnItemId } from "@getpaperplane/contracts";
 import {
   appendTerminalOutput,
   EMPTY_TERMINAL_OUTPUT,
   type TerminalOutputState,
-} from "@rove-code/shared/terminalOutput";
+} from "@getpaperplane/shared/terminalOutput";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -22,7 +22,7 @@ export interface RecordedCommandOutput {
 export class CommandOutputRecorder extends Context.Service<
   CommandOutputRecorder,
   { readonly snapshot: Effect.Effect<ReadonlyMap<TurnItemId, RecordedCommandOutput>> }
->()("@rove-code/server/orchestration-v2/testkit/CommandOutputRecorder") {}
+>()("@getpaperplane/server/orchestration-v2/testkit/CommandOutputRecorder") {}
 
 /** The real hub, plus a record of every chunk it was given, keyed by turn item. */
 export const layer: Layer.Layer<

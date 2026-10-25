@@ -1,11 +1,11 @@
-import type { ClaudeSettings } from "@rove-code/contracts";
+import type { ClaudeSettings } from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
 import * as Schema from "effect/Schema";
 
-import { expandHomePath } from "@rove-code/provider-core/server/pathExpansion";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+import { expandHomePath } from "@getpaperplane/provider-core/server/pathExpansion";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 
 const quotePath = Schema.encodeSync(Schema.fromJsonString(Schema.String));
 

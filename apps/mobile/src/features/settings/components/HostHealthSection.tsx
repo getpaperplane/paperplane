@@ -2,10 +2,10 @@ import { useAtomValue } from "@effect/atom-react";
 import {
   formatHostMemory,
   formatHostSwap,
-  formatRoveCeiling,
-  roveCeilingPercent,
-} from "@rove-code/client-runtime/host-health";
-import type { EnvironmentId } from "@rove-code/contracts";
+  formatPaperplaneCeiling,
+  paperplaneCeilingPercent,
+} from "@getpaperplane/client-runtime/host-health";
+import type { EnvironmentId } from "@getpaperplane/contracts";
 import { View } from "react-native";
 
 import { AppText as Text } from "../../../components/ui/AppText";
@@ -16,31 +16,31 @@ import { serverEnvironment } from "../../../state/server";
 import { SettingsActionRow } from "./SettingsActionRow";
 import { SettingsSection } from "./SettingsSection";
 
-/** Host memory, swap, Rove's memory ceiling, and setup findings for one environment. */
+/** Host memory, swap, Paperplane's memory ceiling, and setup findings for one environment. */
 export function HostHealthSection({ environmentId }: { readonly environmentId: EnvironmentId }) {
   const result = useAtomValue(serverEnvironment.hostHealth({ environmentId, input: {} }));
   const report = result._tag === "Success" ? result.value : null;
   if (report === null) return null;
   const swap = formatHostSwap(report);
-  const ceiling = formatRoveCeiling(report);
-  const ceilingPercent = roveCeilingPercent(report);
-  const oomKills = report.roveMemory?.oomKills ?? 0;
+  const ceiling = formatPaperplaneCeiling(report);
+  const ceilingPercent = paperplaneCeilingPercent(report);
+  const oomKills = report.paperplaneMemory?.oomKills ?? 0;
   return (
     <SettingsSection title="Host health">
       <View className="gap-1 p-4">
         <Text className="text-base text-foreground">Memory {formatHostMemory(report)}</Text>
         {report.memoryPressure ? (
           <Text className="text-sm text-warning-foreground">
-            Low on memory. Rove releases idle agents first; new work may be slow or killed.
+            Low on memory. Paperplane releases idle agents first; new work may be slow or killed.
           </Text>
         ) : null}
         {swap === null ? null : <Text className="text-sm text-foreground-muted">Swap {swap}</Text>}
       </View>
       {ceiling === null ? null : (
         <View className="gap-2 px-4 pb-4">
-          <Text className="text-sm text-foreground-muted">Rove ceiling {ceiling}</Text>
+          <Text className="text-sm text-foreground-muted">Paperplane ceiling {ceiling}</Text>
           {ceilingPercent === null ? null : (
-            <Progress value={ceilingPercent / 100} label="Rove memory ceiling usage" />
+            <Progress value={ceilingPercent / 100} label="Paperplane memory ceiling usage" />
           )}
           {oomKills > 0 ? (
             <Text className="text-sm text-warning-foreground">

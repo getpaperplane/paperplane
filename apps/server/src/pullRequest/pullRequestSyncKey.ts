@@ -4,9 +4,9 @@ import {
   type RepositoryIdentity,
   SourceControlProviderKind,
   type ThreadPullRequestKey,
-} from "@rove-code/contracts";
-import { sourceControlRepositorySelector } from "@rove-code/shared/sourceControl";
-import { normalizeThreadPullRequestKey } from "@rove-code/shared/threadPullRequests";
+} from "@getpaperplane/contracts";
+import { sourceControlRepositorySelector } from "@getpaperplane/shared/sourceControl";
+import { normalizeThreadPullRequestKey } from "@getpaperplane/shared/threadPullRequests";
 
 /** Convert checkout-scoped references to the host-level identity used by linked threads. */
 export function pullRequestSyncKey(

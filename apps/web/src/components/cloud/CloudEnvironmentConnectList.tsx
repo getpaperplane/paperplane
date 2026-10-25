@@ -1,24 +1,24 @@
-import { findErrorTraceId } from "@rove-code/client-runtime/errors";
+import { findErrorTraceId } from "@getpaperplane/client-runtime/errors";
 import {
   type EnvironmentConnectionPresentation,
   RelayConnectionRegistration,
   RelayConnectionTarget,
   orchestrationProtocolCompatibilityError,
-} from "@rove-code/client-runtime/connection";
-import { relayOfflineReasonMessage } from "@rove-code/client-runtime/relay";
+} from "@getpaperplane/client-runtime/connection";
+import { relayOfflineReasonMessage } from "@getpaperplane/client-runtime/relay";
 import {
   isAtomCommandInterrupted,
   squashAtomCommandFailure,
-} from "@rove-code/client-runtime/state/runtime";
+} from "@getpaperplane/client-runtime/state/runtime";
 import {
   type EnvironmentId,
   resolveEnvironmentMachineKind,
   type ServerConfig,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import type {
   RelayClientEnvironmentRecord,
   RelayEnvironmentStatusResponse,
-} from "@rove-code/contracts/relay";
+} from "@getpaperplane/contracts/relay";
 import * as Option from "effect/Option";
 import { type ReactNode, useCallback, useEffect, useEffectEvent, useState } from "react";
 
@@ -70,7 +70,7 @@ function RemoteEnvironmentRowsSkeleton() {
 }
 
 /**
- * The user's Rove Connect environments from relay discovery, each with a
+ * The user's Paperplane Connect environments from relay discovery, each with a
  * Connect button. The primary environment is always excluded; already-saved
  * environments are hidden unless `showSavedEnvironments` renders them with
  * their live connection state (used by onboarding, where the full device mesh
@@ -128,7 +128,7 @@ export function CloudEnvironmentConnectRows({
       .filter((environment) => environment.relayManaged)
       .map((environment) => [environment.environmentId, environment]),
   );
-  // Saved over another route only: Rove Connect would be an added fallback.
+  // Saved over another route only: Paperplane Connect would be an added fallback.
   const savedWithoutRelay = new Set(
     savedEnvironments
       .filter((environment) => !environment.relayManaged)
@@ -165,11 +165,11 @@ export function CloudEnvironmentConnectRows({
       toastManager.add({
         type: "success",
         title: savedWithoutRelay.has(environment.environmentId)
-          ? "Rove Connect route added"
+          ? "Paperplane Connect route added"
           : "Environment added",
         description: savedWithoutRelay.has(environment.environmentId)
-          ? `${environment.label} falls back to Rove Connect when its other routes are unreachable.`
-          : `Connecting to ${environment.label} through Rove Connect.`,
+          ? `${environment.label} falls back to Paperplane Connect when its other routes are unreachable.`
+          : `Connecting to ${environment.label} through Paperplane Connect.`,
       });
       return true;
     }
@@ -178,9 +178,15 @@ export function CloudEnvironmentConnectRows({
     }
     const cause = squashAtomCommandFailure(result);
     const message =
-      cause instanceof Error ? cause.message : "Could not connect the Rove Connect environment.";
+      cause instanceof Error
+        ? cause.message
+        : "Could not connect the Paperplane Connect environment.";
     const traceId = findErrorTraceId(cause);
-    console.error("[rove-connect] Could not connect environment", { message, traceId, cause });
+    console.error("[paperplane-connect] Could not connect environment", {
+      message,
+      traceId,
+      cause,
+    });
     toastManager.add({
       type: "error",
       title: "Could not connect environment",
@@ -198,7 +204,7 @@ export function CloudEnvironmentConnectRows({
   };
 
   // During onboarding selection a machine saved over another route already
-  // has its own row elsewhere, and selecting it must not add a Rove Connect
+  // has its own row elsewhere, and selecting it must not add a Paperplane Connect
   // route as a side effect, so it is left out here.
   const visibleEnvironments = [...environmentsState.environments.values()].filter(
     ({ environment }) =>
@@ -300,7 +306,7 @@ export function CloudEnvironmentConnectRows({
       return (
         <div className={ITEM_ROW_CLASSNAME}>
           <p className="text-sm font-medium text-destructive">
-            Could not load Rove Connect environments
+            Could not load Paperplane Connect environments
           </p>
           <p className="mt-1 text-xs text-muted-foreground">{discoveryProblem}</p>
           <Button
@@ -364,23 +370,23 @@ export function CloudEnvironmentConnectRows({
             ? "bg-warning"
             : "bg-muted-foreground/35";
     const notAdded = savedWithoutRelay.has(environment.environmentId)
-      ? "Saved without Rove Connect"
+      ? "Saved without Paperplane Connect"
       : "Not added";
     const statusText =
       unsupported && !savedEnvironment
-        ? `Rove Connect · ${notAdded} · Client not supported`
+        ? `Paperplane Connect · ${notAdded} · Client not supported`
         : offlineReason !== null
           ? offlineReason
           : savedConnection
             ? savedConnection.statusText
             : availability === "online"
-              ? `Rove Connect · ${notAdded} · Relay online`
+              ? `Paperplane Connect · ${notAdded} · Relay online`
               : availability === "offline"
-                ? `Rove Connect · ${notAdded} · Relay offline`
+                ? `Paperplane Connect · ${notAdded} · Relay offline`
                 : availability === "checking"
-                  ? `Rove Connect · ${notAdded} · Checking relay status…`
+                  ? `Paperplane Connect · ${notAdded} · Checking relay status…`
                   : (Option.getOrNull(error)?.message ??
-                    `Rove Connect · ${notAdded} · Relay status unavailable`);
+                    `Paperplane Connect · ${notAdded} · Relay status unavailable`);
     if (selection) {
       return (
         <label

@@ -3,7 +3,7 @@ import { ScreenScrollView as ScrollView } from "../../components/ui/ScreenScroll
 import { useAuth, useUser } from "@clerk/expo";
 import { useNavigation } from "@react-navigation/native";
 import { Platform, View } from "react-native";
-import { deriveProjectGroupLabel } from "@rove-code/client-runtime/state/project-grouping";
+import { deriveProjectGroupLabel } from "@getpaperplane/client-runtime/state/project-grouping";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { hasCloudPublicConfig } from "../cloud/publicConfig";
@@ -80,7 +80,7 @@ function ConfiguredSettingsRouteScreen() {
         <SettingsSection title="Connections">
           <SettingsRow
             icon="person.crop.circle"
-            label="Rove Account"
+            label="Paperplane Account"
             value={accountLabel}
             disabled={!isLoaded}
             onPress={() => navigation.navigate("SettingsSheet", { screen: "SettingsAuth" })}
@@ -222,7 +222,7 @@ function SettingsIndexSections() {
 
       <SettingsSection title="App">
         <SettingsRow icon="chart.bar.xaxis" label="Usage" target="SettingsUsage" />
-        <SettingsRow icon="info.circle" label="About Rove Code" target="SettingsAbout" />
+        <SettingsRow icon="info.circle" label="About Paperplane" target="SettingsAbout" />
       </SettingsSection>
     </>
   );

@@ -1,6 +1,6 @@
 import { useComposerMenuState } from "../chat/useComposerMenuState";
 import { useOrchestrationCommand } from "../../state/use-orchestration-command";
-import { AuthOrchestrationOperateScope } from "@rove-code/contracts";
+import { AuthOrchestrationOperateScope } from "@getpaperplane/contracts";
 import { useEnvironmentsWithScope, readEnvironmentScope } from "../../state/session";
 import {
   isAtomCommandInterrupted,
@@ -8,10 +8,10 @@ import {
   settlePromise,
   squashAtomCommandFailure,
   type AtomCommandResult,
-} from "@rove-code/client-runtime/state/runtime";
-import { scopeProjectRef, scopeThreadRef } from "@rove-code/client-runtime/environment";
+} from "@getpaperplane/client-runtime/state/runtime";
+import { scopeProjectRef, scopeThreadRef } from "@getpaperplane/client-runtime/environment";
 import { AsyncResult } from "effect/reactivity";
-import { type EnvironmentId, type ProjectIconOverride } from "@rove-code/contracts";
+import { type EnvironmentId, type ProjectIconOverride } from "@getpaperplane/contracts";
 import { useLocation, useNavigate } from "@tanstack/react-router";
 import * as Cause from "effect/Cause";
 import { InfoIcon, Trash2Icon } from "lucide-react";

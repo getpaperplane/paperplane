@@ -1,8 +1,8 @@
-import { AuthSettingsWriteScope } from "@rove-code/contracts";
+import { AuthSettingsWriteScope } from "@getpaperplane/contracts";
 import { readEnvironmentScope } from "../../state/session";
 import { useRef, useState } from "react";
 import * as Cause from "effect/Cause";
-import type { SshDeviceHostConfig } from "@rove-code/contracts";
+import type { SshDeviceHostConfig } from "@getpaperplane/contracts";
 import { deviceEnvironment } from "../../state/device";
 import { useAtomCommand } from "../../state/use-atom-command";
 import {

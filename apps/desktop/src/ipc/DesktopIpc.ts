@@ -78,7 +78,7 @@ export class DesktopIpc extends Context.Service<
       input: DesktopSyncIpcMethod<E, R>,
     ) => Effect.Effect<void, DesktopIpcRegistrationError, R | Scope.Scope>;
   }
->()("@rove-code/desktop/ipc/DesktopIpc") {}
+>()("@getpaperplane/desktop/ipc/DesktopIpc") {}
 
 export const make = (ipcMain: DesktopIpcMain): DesktopIpc["Service"] =>
   DesktopIpc.of({

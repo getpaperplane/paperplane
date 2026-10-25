@@ -3,8 +3,8 @@ import { AppActivityIndicator } from "../../components/ui/AppActivityIndicator";
 import { usePullRequestConnected } from "./usePullRequestConnected";
 import { useAtomValue } from "@effect/atom-react";
 import { useNavigation, type StaticScreenProps } from "@react-navigation/native";
-import { squashAtomCommandFailure } from "@rove-code/client-runtime/state/runtime";
-import type { PullRequestReviewerCandidate } from "@rove-code/contracts";
+import { squashAtomCommandFailure } from "@getpaperplane/client-runtime/state/runtime";
+import type { PullRequestReviewerCandidate } from "@getpaperplane/contracts";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   FlatList,
@@ -223,7 +223,7 @@ export function PullRequestReviewersScreen({ route }: StaticScreenProps<PullRequ
               >
                 <PullRequestAvatar actor={item} size={32} />
                 <View className="min-w-0 flex-1 gap-0.5">
-                  <Text className="text-sm font-rove-medium" numberOfLines={1}>
+                  <Text className="text-sm font-paperplane-medium" numberOfLines={1}>
                     {item.name || item.login}
                   </Text>
                   <Text className="text-xs text-foreground-muted" numberOfLines={1}>

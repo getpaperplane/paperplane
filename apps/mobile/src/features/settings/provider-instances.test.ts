@@ -1,8 +1,8 @@
-import { ProviderDriverKind } from "@rove-code/contracts";
+import { ProviderDriverKind } from "@getpaperplane/contracts";
 import {
   nextProviderEnvironmentWithFieldValue,
   type ProviderSettingsFieldModel,
-} from "@rove-code/client-runtime/state/provider-instance-settings";
+} from "@getpaperplane/client-runtime/state/provider-instance-settings";
 import { describe, expect, it } from "vite-plus/test";
 
 import {

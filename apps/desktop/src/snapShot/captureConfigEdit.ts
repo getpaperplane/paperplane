@@ -1,4 +1,4 @@
-import { parseKeybindingShortcut } from "@rove-code/shared/keybindings";
+import { parseKeybindingShortcut } from "@getpaperplane/shared/keybindings";
 import { readKdlNodes, type KdlNode } from "./captureConfigKdl.ts";
 import { niriCaptureBinding } from "./linuxCaptureSession.ts";
 

@@ -3,7 +3,7 @@ import type {
   DesktopPreviewOpenLinkEvent,
   DesktopPreviewRecordingInputEvent,
   DesktopSnapShotEvent,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import { exposeClerkBridge } from "@clerk/electron/preload";
 import { contextBridge, ipcRenderer, webFrame, webUtils } from "electron";
 
@@ -52,7 +52,7 @@ try {
   // Best effort: the app still starts on the V2 profile's own storage.
 }
 
-// oxlint-disable-next-line rove/no-global-process-runtime -- Electron exposes the client platform in its sandboxed preload process.
+// oxlint-disable-next-line paperplane/no-global-process-runtime -- Electron exposes the client platform in its sandboxed preload process.
 const clientPlatform = process.platform;
 
 if (clientPlatform === "darwin") {

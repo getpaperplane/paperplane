@@ -1,5 +1,5 @@
-import type { EnvironmentId } from "@rove-code/contracts";
-import type { SourceControlClientDefinition } from "@rove-code/client-runtime/source-control-clients";
+import type { EnvironmentId } from "@getpaperplane/contracts";
+import type { SourceControlClientDefinition } from "@getpaperplane/client-runtime/source-control-clients";
 import { useState } from "react";
 
 import { useEnvironmentSettings } from "../../hooks/useSettings";

@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vite-plus/test";
 
-import { ThreadId, TurnItemId, type OrchestrationV2TurnItem } from "@rove-code/contracts";
+import { ThreadId, TurnItemId, type OrchestrationV2TurnItem } from "@getpaperplane/contracts";
 import * as DateTime from "effect/DateTime";
-import { ROVE_MCP_TOOL_NAMES } from "@rove-code/shared/roveMcpToolPresentation";
+import { PAPERPLANE_MCP_TOOL_NAMES } from "@getpaperplane/shared/paperplaneMcpToolPresentation";
 
 import {
   commandDetailRepeatsCommand,
@@ -296,7 +296,7 @@ describe("summarizeToolGroup", () => {
         entry("inspect-app", {
           label: "Inspect app",
           toolSource: {
-            key: "native-app:dev.rove.app",
+            key: "native-app:io.github.getpaperplane.paperplane",
             name: "Computer Use",
             kind: "computer",
           },
@@ -311,23 +311,23 @@ describe("summarizeToolGroup", () => {
 });
 
 describe("resolveWorkEntryToolPresentation", () => {
-  it("presents and summarizes every Rove tool using the same structured identity", () => {
-    for (const tool of ROVE_MCP_TOOL_NAMES) {
+  it("presents and summarizes every Paperplane tool using the same structured identity", () => {
+    for (const tool of PAPERPLANE_MCP_TOOL_NAMES) {
       const entry: WorkLogPresentationEntry = {
         id: tool,
         createdAt: "2026-09-19T00:00:00.000Z",
         tone: "tool",
         label: "Custom provider title",
-        toolData: { server: "rove", tool },
+        toolData: { server: "paperplane", tool },
         toolLifecycleStatus: "completed",
         itemType: "dynamic_tool",
-        toolSource: { key: "rove", name: "Rove Code", kind: "integration" },
+        toolSource: { key: "paperplane", name: "Paperplane", kind: "integration" },
       };
       const presentation = resolveWorkEntryToolPresentation(entry);
       expect(presentation, tool).not.toBeNull();
       expect(presentation?.displayName, tool).not.toContain(tool);
       const summary = summarizeToolGroup([entry]);
-      expect(summary.summary, tool).not.toMatch(/Used (?:1 tool|Rove Code integration)/);
+      expect(summary.summary, tool).not.toMatch(/Used (?:1 tool|Paperplane integration)/);
       expect(summary.hasFailure, tool).toBe(false);
       const failed = { ...entry, toolLifecycleStatus: "failed" as const };
       expect(resolveWorkEntryToolPresentation(failed)?.displayName, tool).toMatch(/^Failed to /);
@@ -339,24 +339,28 @@ describe("resolveWorkEntryToolPresentation", () => {
   });
 
   it.each([
-    ["rove_project_list", "Listing projects", "Listed projects"],
-    ["rove_project_clone", "Cloning a repository", "Cloned a repository"],
-    ["rove_project_create", "Registering a project", "Registered a project"],
-    ["rove_thread_launch", "Launching a project thread", "Launched a project thread"],
-    ["rove_queue_edit", "Editing a queued message", "Edited a queued message"],
-    ["rove_pending_request_respond", "Answering pending questions", "Answered pending questions"],
-    ["rove_thread_configure", "Setting thread model", "Set thread model"],
-    ["rove_thread_fork", "Forking this thread", "Requested a fork of this thread"],
-    ["rove_thread_send_attachments", "Sending attachments", "Sent attachments"],
+    ["paperplane_project_list", "Listing projects", "Listed projects"],
+    ["paperplane_project_clone", "Cloning a repository", "Cloned a repository"],
+    ["paperplane_project_create", "Registering a project", "Registered a project"],
+    ["paperplane_thread_launch", "Launching a project thread", "Launched a project thread"],
+    ["paperplane_queue_edit", "Editing a queued message", "Edited a queued message"],
+    [
+      "paperplane_pending_request_respond",
+      "Answering pending questions",
+      "Answered pending questions",
+    ],
+    ["paperplane_thread_configure", "Setting thread model", "Set thread model"],
+    ["paperplane_thread_fork", "Forking this thread", "Requested a fork of this thread"],
+    ["paperplane_thread_send_attachments", "Sending attachments", "Sent attachments"],
     ["run_scheduled_task_now", "Running a scheduled task", "Requested a run of a scheduled task"],
-    ["rove_workflow_stop", "Stopping a workflow", "Requested a stop for a workflow"],
+    ["paperplane_workflow_stop", "Stopping a workflow", "Requested a stop for a workflow"],
   ])("labels %s through its lifecycle", (tool, running, completed) => {
-    expect(resolveWorkEntryToolPresentation({ label: `Rove-code.${tool}` })?.displayName).toBe(
+    expect(resolveWorkEntryToolPresentation({ label: `paperplane.${tool}` })?.displayName).toBe(
       running,
     );
     expect(
       resolveWorkEntryToolPresentation({
-        label: `Rove-code.${tool}`,
+        label: `paperplane.${tool}`,
         toolLifecycleStatus: "completed",
       })?.displayName,
     ).toBe(completed);
@@ -371,8 +375,8 @@ describe("resolveWorkEntryToolPresentation", () => {
       itemType: "dynamic_tool",
       toolLifecycleStatus: "completed",
       toolData: {
-        server: "rove",
-        tool: "rove_workflow_stop",
+        server: "paperplane",
+        tool: "paperplane_workflow_stop",
         arguments: { threadId: "parent", subagentId: "workflow-1" },
         result: {},
       },
@@ -392,7 +396,7 @@ describe("resolveWorkEntryToolPresentation", () => {
           ...entry,
           toolData: {
             ...entry.toolData,
-            tool: "rove_thread_interrupt",
+            tool: "paperplane_thread_interrupt",
             arguments: { threadId: "parent" },
           },
         },
@@ -412,20 +416,20 @@ describe("resolveWorkEntryToolPresentation", () => {
       itemType: "dynamic_tool",
       toolLifecycleStatus: "completed",
       toolData: {
-        server: "rove",
-        tool: "rove_project_clone",
+        server: "paperplane",
+        tool: "paperplane_project_clone",
         arguments: { url: "https://github.com/acme/repo" },
         result: { cwd: "/tmp/repo" },
       },
     };
-    const list = { ...entry, toolData: { server: "rove", tool: "rove_project_list" } };
+    const list = { ...entry, toolData: { server: "paperplane", tool: "paperplane_project_list" } };
     expect(summarizeToolGroup([list, entry])).toEqual({
       summary: "Listed projects 1 time and cloned 1 repository",
       hasFailure: false,
     });
     const failed = {
       ...entry,
-      toolData: { toolName: "Rove-code.rove_project_clone", rawOutput: { isError: true } },
+      toolData: { toolName: "paperplane.paperplane_project_clone", rawOutput: { isError: true } },
     };
     expect(summarizeToolGroup([entry, failed])).toEqual({
       summary: "Cloned 1 repository",
@@ -433,14 +437,14 @@ describe("resolveWorkEntryToolPresentation", () => {
     });
   });
 
-  it("does not summarize a foreign structured identity as Rove work", () => {
+  it("does not summarize a foreign structured identity as Paperplane work", () => {
     const entry: WorkLogPresentationEntry = {
       id: "foreign",
       createdAt: "2026-09-19T00:00:00.000Z",
       tone: "tool",
-      label: "rove_project_clone",
+      label: "paperplane_project_clone",
       toolLifecycleStatus: "completed",
-      toolData: { server: "another-server", tool: "rove_project_clone" },
+      toolData: { server: "another-server", tool: "paperplane_project_clone" },
     };
     expect(summarizeToolGroup([entry]).summary).toBe("Used 1 tool");
   });
@@ -450,7 +454,7 @@ describe("resolveWorkEntryToolPresentation", () => {
       id: "clone",
       createdAt: "2026-09-19T00:00:00.000Z",
       tone: "tool",
-      label: "Rove-code.rove_project_clone",
+      label: "paperplane.paperplane_project_clone",
       toolLifecycleStatus: "inProgress",
       itemType: "dynamic_tool",
       toolData: { output: { isError: true } },
@@ -462,7 +466,7 @@ describe("resolveWorkEntryToolPresentation", () => {
     expect(workEntryIndicatesToolSuccess(entry)).toBe(false);
     const childFailure = {
       ...entry,
-      label: "Rove-code.task_status",
+      label: "paperplane.task_status",
       toolLifecycleStatus: "completed" as const,
       toolData: { output: { taskId: "child", status: "failed", summary: "command not found" } },
     };
@@ -470,12 +474,12 @@ describe("resolveWorkEntryToolPresentation", () => {
     expect(workEntryIndicatesToolSuccess(childFailure)).toBe(true);
   });
   it.each([
-    "mcp__rove-code__preview_click",
-    "mcp__rove_code__preview_click",
-    "mcp__rove__preview_click",
-    "Rove-code.preview_click",
-    "rove · preview_click completed",
-    "rove_code/preview_click",
+    "mcp__paperplane__preview_click",
+    "paperplane_preview_click",
+    "paperplane:preview_click",
+    "paperplane.preview_click",
+    "paperplane · preview_click completed",
+    "paperplane/preview_click",
     "preview_click",
   ])("recognizes browser tool names across providers: %s", (label) => {
     expect(resolveWorkEntryToolPresentation({ label })).toEqual({
@@ -487,11 +491,11 @@ describe("resolveWorkEntryToolPresentation", () => {
   it("labels device tools with the device icon", () => {
     expect(
       resolveWorkEntryToolPresentation({
-        label: "mcp__rove__device_open",
+        label: "mcp__paperplane__device_open",
         toolLifecycleStatus: "completed",
       }),
     ).toEqual({ displayName: "Opened a device in the Device panel", icon: "device" });
-    expect(resolveWorkEntryToolPresentation({ label: "rove · device_screenshot" })).toEqual({
+    expect(resolveWorkEntryToolPresentation({ label: "paperplane · device_screenshot" })).toEqual({
       displayName: "Taking a screenshot of the device",
       icon: "device",
     });
@@ -502,7 +506,7 @@ describe("resolveWorkEntryToolPresentation", () => {
       resolveWorkEntryToolPresentation({
         label: "Tool call complete",
         toolTitle: "Inspect the current page",
-        toolData: { server: "rove", tool: "preview_snapshot", result: { title: "Example" } },
+        toolData: { server: "paperplane", tool: "preview_snapshot", result: { title: "Example" } },
       }),
     ).toEqual({ displayName: "Taking a snapshot of the preview page", icon: "browser" });
   });
@@ -517,14 +521,14 @@ describe("resolveWorkEntryToolPresentation", () => {
   ] as const)("describes the tool's own %s state", (toolLifecycleStatus, displayName) => {
     expect(
       resolveWorkEntryToolPresentation({
-        label: "Rove-code.preview_click",
+        label: "paperplane.preview_click",
         toolLifecycleStatus: toolLifecycleStatus as WorkLogToolLifecycleStatus,
       }),
     ).toEqual({ displayName, icon: "browser" });
   });
 
   it("uses the summary's state only when the provider omitted a lifecycle status", () => {
-    const entry = { label: "Rove-code.preview_click" };
+    const entry = { label: "paperplane.preview_click" };
     expect(resolveWorkEntryToolPresentation(entry, "inProgress")?.displayName).toBe(
       "Clicking in the preview browser",
     );
@@ -558,15 +562,15 @@ describe("resolveWorkEntryToolPresentation", () => {
       "Stopping recording the preview browser",
       "Stopped recording the preview browser",
     ],
-    ["rove_thread_read", "Reading a Rove thread", "Read a Rove thread"],
-    ["rove_thread_send", "Sending to a Rove thread", "Sent to a Rove thread"],
+    ["paperplane_thread_read", "Reading a Paperplane thread", "Read a Paperplane thread"],
+    ["paperplane_thread_send", "Sending to a Paperplane thread", "Sent to a Paperplane thread"],
     [
-      "rove_worktree_handoff",
+      "paperplane_worktree_handoff",
       "Handing off thread to a git worktree",
       "Handed off thread to a git worktree",
     ],
   ])("preserves verb forms and the rest of %s's label", (tool, running, completed) => {
-    const entry = { label: `rove.${tool}` };
+    const entry = { label: `paperplane.${tool}` };
     expect(
       resolveWorkEntryToolPresentation({ ...entry, toolLifecycleStatus: "inProgress" })
         ?.displayName,
@@ -576,20 +580,20 @@ describe("resolveWorkEntryToolPresentation", () => {
     ).toBe(completed);
   });
 
-  it("keeps Rove branding for non-browser tools and falls back to the original tool label", () => {
+  it("keeps Paperplane branding for non-browser tools and falls back to the original tool label", () => {
     expect(
       resolveWorkEntryToolPresentation({
-        label: "mcp__rove__task_status",
+        label: "mcp__paperplane__task_status",
         toolTitle: "Check the child task",
       }),
-    ).toEqual({ displayName: "Getting delegated task status", icon: "rove" });
+    ).toEqual({ displayName: "Getting delegated task status", icon: "paperplane" });
   });
 
   it("does not brand unknown tools or another server's matching tool name", () => {
     for (const label of [
       "mcp__github__preview_click",
-      "rove.unknown_tool",
-      "rove.toString",
+      "paperplane.unknown_tool",
+      "paperplane.toString",
       "Search files",
     ]) {
       expect(resolveWorkEntryToolPresentation({ label })).toBeNull();
@@ -610,7 +614,7 @@ describe("browser group summaries", () => {
     id: "browser",
     createdAt: "2026-09-01T00:00:00Z",
     label: "MCP tool call",
-    toolData: { server: "rove", tool: "preview_click" },
+    toolData: { server: "paperplane", tool: "preview_click" },
     itemType: "dynamic_tool",
     toolLifecycleStatus: "completed",
     tone: "tool",
@@ -652,7 +656,7 @@ describe("browser group summaries", () => {
         commandEntry,
         {
           ...browserEntry,
-          toolData: { server: "rove", tool: "task_status" },
+          toolData: { server: "paperplane", tool: "task_status" },
         },
       ]),
     ).toBe("Used browser 1 time, ran 1 command, and performed 1 other action");
@@ -664,7 +668,7 @@ describe("browser group summaries", () => {
         {
           ...browserEntry,
           command: "node inspect-page.js",
-          toolData: { toolName: "mcp__rove_code__preview_evaluate" },
+          toolData: { toolName: "mcp__paperplane__preview_evaluate" },
         },
       ]),
     ).toBe("Used browser 1 time");
@@ -874,8 +878,8 @@ describe("toolGroupAction", () => {
 describe("resolveViewedImageAsset", () => {
   const threadId = ThreadId.make("thread-1");
 
-  it("serves rove attachment paths in place like any other host path", () => {
-    const path = "/Users/demo/.rove/dev/attachments/11111111-1111-4111-8111-111111111111.png";
+  it("serves paperplane attachment paths in place like any other host path", () => {
+    const path = "/Users/demo/.paperplane/dev/attachments/11111111-1111-4111-8111-111111111111.png";
     expect(resolveViewedImageAsset(path, { threadId, workspaceRoot: "/workspace" })).toEqual({
       resource: { _tag: "media-file", threadId, path },
       alt: "11111111-1111-4111-8111-111111111111.png",
@@ -904,10 +908,10 @@ describe("resolveViewedImageAsset", () => {
 
 describe("pull request tool presentation", () => {
   it.each([
-    "mcp__rove-code__link_pull_request",
-    "mcp__rove_code__link_pull_request",
-    "Rove-code · link_pull_request",
-    "rove/link_pull_request",
+    "mcp__paperplane__link_pull_request",
+    "paperplane.link_pull_request",
+    "Paperplane · link_pull_request",
+    "paperplane/link_pull_request",
     "link_pull_request",
   ])("recognizes the native linking tool: %s", (label) => {
     const entry: WorkLogPresentationEntry = {
@@ -937,7 +941,7 @@ describe("pull request tool presentation", () => {
         toolTitle: "Custom title",
         toolLifecycleStatus,
         toolData: {
-          server: "rove",
+          server: "paperplane",
           tool: "link_pull_request",
           arguments: { url: "https://github.com/acme/web/pull/42" },
         },
@@ -951,7 +955,7 @@ describe("pull request tool presentation", () => {
         label: "MCP tool call",
         toolLifecycleStatus: "completed",
         toolData: {
-          toolName: "mcp__rove__unlink_pull_request",
+          toolName: "mcp__paperplane__unlink_pull_request",
           rawInput: { repository: "acme/web", number: 42 },
         },
       }),
@@ -962,21 +966,21 @@ describe("pull request tool presentation", () => {
     const link: WorkLogPresentationEntry = {
       id: "link",
       createdAt: "2026-09-10T00:00:00.000Z",
-      label: "Rove-code · link_pull_request",
+      label: "Paperplane · link_pull_request",
       tone: "tool",
       itemType: "dynamic_tool",
       toolLifecycleStatus: "completed",
-      toolSource: { key: "rove", name: "Rove Code", kind: "integration" },
+      toolSource: { key: "paperplane", name: "Paperplane", kind: "integration" },
     };
     const list: WorkLogPresentationEntry = {
       ...link,
-      label: "Rove-code · list_thread_pull_requests",
+      label: "Paperplane · list_thread_pull_requests",
     };
     expect(summarizeToolGroup([link, link, list]).summary).toBe(
       "Linked 2 pull requests and checked linked pull requests",
     );
     expect(
-      summarizeToolGroup([{ ...link, label: "Rove-code · unlink_pull_request" }]).summary,
+      summarizeToolGroup([{ ...link, label: "Paperplane · unlink_pull_request" }]).summary,
     ).toBe("Unlinked 1 pull request");
     expect(toolGroupSummaryKind([link, link, list])).toBe("pull-request");
     expect(summarizeToolGroup([list, list]).summary).toBe("Checked linked pull requests 2 times");
@@ -991,7 +995,7 @@ describe("device group summaries", () => {
     id: tool,
     createdAt: "2026-09-10T00:00:00.000Z",
     label: "MCP tool call",
-    toolData: { server: "rove", tool },
+    toolData: { server: "paperplane", tool },
     itemType: "dynamic_tool",
     toolLifecycleStatus: "completed",
     tone: "tool",
@@ -1026,14 +1030,14 @@ describe("device group summaries", () => {
   it("recognizes Claude tool names and preserves screenshot previews", () => {
     const entry = {
       ...deviceEntry("device_screenshot"),
-      toolData: { toolName: "mcp__rove__device_screenshot" },
+      toolData: { toolName: "mcp__paperplane__device_screenshot" },
       viewedImagePath: "/workspace/device.png",
     };
     expect(summarizeToolGroup([entry]).summary).toBe("Used device controls 1 time");
     expect(workEntryViewedImagePath(entry)).toBe("/workspace/device.png");
   });
 
-  it("does not classify another server's tools as Rove device controls", () => {
+  it("does not classify another server's tools as Paperplane device controls", () => {
     expect(
       summarizeToolGroup([
         {

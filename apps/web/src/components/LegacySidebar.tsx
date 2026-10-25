@@ -1,5 +1,5 @@
 import { useSupportsMultiplePullRequests } from "~/hooks/useSupportsMultiplePullRequests";
-import { resolveThreadCurrentPullRequestLink } from "@rove-code/shared/threadPullRequests";
+import { resolveThreadCurrentPullRequestLink } from "@getpaperplane/shared/threadPullRequests";
 import { Spinner } from "~/components/ui/spinner";
 import {
   ArchiveIcon,
@@ -53,21 +53,21 @@ import {
   type SidebarProjectGroupingMode,
   resolveEnvironmentMachineKind,
   ThreadId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   parseScopedThreadKey,
   scopedProjectKey,
   scopedThreadKey,
   scopeProjectRef,
   scopeThreadRef,
-} from "@rove-code/client-runtime/environment";
-import { safeErrorLogAttributes } from "@rove-code/client-runtime/errors";
+} from "@getpaperplane/client-runtime/environment";
+import { safeErrorLogAttributes } from "@getpaperplane/client-runtime/errors";
 import {
   isAtomCommandInterrupted,
   settlePromise,
   squashAtomCommandFailure,
-} from "@rove-code/client-runtime/state/runtime";
-import { threadRuntimeCanArchive } from "@rove-code/client-runtime/state/models";
+} from "@getpaperplane/client-runtime/state/runtime";
+import { threadRuntimeCanArchive } from "@getpaperplane/client-runtime/state/models";
 import { useNavigate, useParams, useRouter } from "@tanstack/react-router";
 import {
   MAX_SIDEBAR_THREAD_PREVIEW_COUNT,
@@ -75,7 +75,7 @@ import {
   type SidebarProjectSortOrder,
   type SidebarThreadPreviewCount,
   type SidebarThreadSortOrder,
-} from "@rove-code/contracts/settings";
+} from "@getpaperplane/contracts/settings";
 import { isDesktopLocalConnectionTarget, isWslConnectionTarget } from "../connection/desktopLocal";
 import { useDesktopLocalBootstraps } from "../connection/useDesktopLocalBootstraps";
 import { isElectron } from "../env";

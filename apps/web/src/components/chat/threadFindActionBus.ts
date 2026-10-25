@@ -1,4 +1,4 @@
-const THREAD_FIND_OPEN_EVENT = "rove:thread-find-open";
+const THREAD_FIND_OPEN_EVENT = "paperplane:thread-find-open";
 
 export function requestThreadFindOpen(): void {
   window.dispatchEvent(new Event(THREAD_FIND_OPEN_EVENT));

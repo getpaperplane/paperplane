@@ -1,4 +1,7 @@
-import type { RelayManagedEndpoint, RelayManagedEndpointOrigin } from "@rove-code/contracts/relay";
+import type {
+  RelayManagedEndpoint,
+  RelayManagedEndpointOrigin,
+} from "@getpaperplane/contracts/relay";
 import { and, eq, exists, inArray, isNull, sql } from "drizzle-orm";
 import { QueryBuilder } from "drizzle-orm/pg-core";
 import * as Context from "effect/Context";
@@ -193,7 +196,7 @@ export class ManagedEndpointAllocations extends Context.Service<
       input: RemoveClaimedManagedEndpointAllocationInput,
     ) => Effect.Effect<boolean, ManagedEndpointAllocationPersistenceError>;
   }
->()("rove-relay/environments/ManagedEndpointAllocations") {}
+>()("paperplane-relay/environments/ManagedEndpointAllocations") {}
 
 const allocationSelection = {
   userId: relayManagedEndpointAllocations.userId,

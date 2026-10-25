@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vite-plus/test";
-import type { ComposerContextId, ReviewCommentContextRecord } from "@rove-code/contracts";
+import type { ComposerContextId, ReviewCommentContextRecord } from "@getpaperplane/contracts";
 import {
   enrichedContextLinkPresentation,
   enrichedLinkVariantPattern,
@@ -87,23 +87,23 @@ describe("Enriched link presentation", () => {
       },
     };
     expect(
-      enrichedContextLinkPresentation("rove-context://v1/review-comment/review_1", [record]),
+      enrichedContextLinkPresentation("paperplane-context://v1/review-comment/review_1", [record]),
     ).toEqual({ color: "#8a70dd", icon: "git" });
     expect(
-      enrichedContextLinkPresentation("rove-context://v1/review-comment/review_2", [record]),
+      enrichedContextLinkPresentation("paperplane-context://v1/review-comment/review_2", [record]),
     ).toEqual({ color: "#8a70dd", icon: "markdown" });
   });
 
   it("retains recognizable presentation for unavailable and future context kinds", () => {
-    expect(enrichedContextLinkPresentation("rove-context://v1/terminal/missing")).toEqual({
+    expect(enrichedContextLinkPresentation("paperplane-context://v1/terminal/missing")).toEqual({
       color: "#009f6e",
       icon: "bash",
     });
-    expect(enrichedContextLinkPresentation("rove-context://v1/skill/missing")).toEqual({
+    expect(enrichedContextLinkPresentation("paperplane-context://v1/skill/missing")).toEqual({
       color: "#b261be",
       icon: "mcp",
     });
-    expect(enrichedContextLinkPresentation("rove-context://v1/future/missing")).toEqual({
+    expect(enrichedContextLinkPresentation("paperplane-context://v1/future/missing")).toEqual({
       color: "#0090cd",
       icon: "default",
     });

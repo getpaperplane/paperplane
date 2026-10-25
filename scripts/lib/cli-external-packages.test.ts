@@ -4,6 +4,8 @@ import * as NodeFS from "node:fs";
 import * as NodeOS from "node:os";
 import * as NodePath from "node:path";
 import * as NodeURL from "node:url";
+import * as NodeSqlite from "node:sqlite";
+import { build } from "vite-plus/pack";
 
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { assert, describe, it } from "@effect/vitest";
@@ -16,9 +18,11 @@ import serverPackageJson from "../../apps/server/package.json" with { type: "jso
 
 import { findEsmImportsOfExternalPackages } from "./cli-executable-imports.ts";
 import { runtimePackageClosure } from "./runtime-package-closure.ts";
+import { stageRuntimePackageFixture } from "./runtime-package-fixture.ts";
 
 import {
   CLI_PI_RUNTIME_PACKAGES,
+  isExternalCliDependency,
   isRuntimeExternalCliDependency,
   findInlinedExternalPackages,
   selectCliRuntimeExternalDependencies,
@@ -50,7 +54,7 @@ const serverRoot = NodePath.resolve(
 
 describe("shouldBundleCliDependency", () => {
   it("bundles ordinary runtime dependencies", () => {
-    for (const id of ["effect", "@effect/platform", "@rove-code/shared/HostProcess"]) {
+    for (const id of ["effect", "@effect/platform", "@getpaperplane/shared/HostProcess"]) {
       assert.strictEqual(shouldBundleCliDependency(id), true, id);
     }
   });
@@ -88,7 +92,7 @@ describe("shouldBundleCliDependency", () => {
       "jiti",
       "typebox/compile",
       // Pi's @google/genai optional peer is externalized even though a clean
-      // production install only includes it when Rove declares it directly.
+      // production install only includes it when Paperplane declares it directly.
       "@modelcontextprotocol/sdk/client/index.js",
       "@modelcontextprotocol/sdk/client/streamableHttp.js",
       "@modelcontextprotocol/sdk/client/stdio.js",
@@ -170,6 +174,7 @@ describe("selectCliRuntimeExternalDependencies", () => {
         "@napi-rs/keyring",
         "cbor-x",
         "cross-spawn",
+        "ffi-rs",
         "jose",
         "node-pty",
         "playwright-core",
@@ -493,10 +498,93 @@ describe("findEsmImportsOfExternalPackages", () => {
   });
 });
 
-it("loads Rove's MCP clients from an isolated runtime sidecar", () => {
+it("runs home migration from isolated ESM and CommonJS bundles with a native sidecar", async () => {
+  const stage = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "paperplane-home-sidecar-"));
+  try {
+    const entries: string[] = [];
+    for (const format of ["esm", "cjs"] as const) {
+      const extension = format === "cjs" ? ".cjs" : ".mjs";
+      await build({
+        entry: {
+          homeMigration: NodeURL.fileURLToPath(
+            new URL("../../packages/shared/src/homeMigration.ts", import.meta.url),
+          ),
+        },
+        outDir: stage,
+        format,
+        config: false,
+        tsconfig: false,
+        dts: false,
+        clean: false,
+        shims: true,
+        logLevel: "silent",
+        outExtensions: () => ({ js: extension }),
+        // Mirror the CLI bundle (apps/server/vite.config.ts): JS dependencies are
+        // compiled in, and only native addons such as ffi-rs stay external.
+        deps: {
+          alwaysBundle: (id: string) => shouldBundleCliDependency(id),
+          neverBundle: (id: string) => isExternalCliDependency(id),
+          onlyBundle: false,
+        },
+      });
+      const entry = NodePath.join(stage, `homeMigration${extension}`);
+      entries.push(entry);
+      // A no-op start works before the native dependency is installed at all.
+      const noop = NodeChildProcess.spawnSync(
+        process.execPath,
+        [
+          "--input-type=module",
+          "-e",
+          `const {migrateDefaultHome} = await import(process.argv[1]);
+         const result = migrateDefaultHome({homeDirectory: process.argv[2]});
+         if(result.kind !== 'skipped') throw new Error('expected no-op');`,
+          NodeURL.pathToFileURL(entry).href,
+          stage,
+        ],
+        { cwd: stage, encoding: "utf8", timeout: 10_000, env: { ...process.env, NODE_PATH: "" } },
+      );
+      assert.equal(noop.status, 0, noop.stderr);
+    }
+    assert.equal(
+      selectCliRuntimeExternalDependencies(serverPackageJson.dependencies)["ffi-rs"],
+      "^1.3.0",
+    );
+    stageRuntimePackageFixture(NodePath.join(serverRoot, "node_modules/ffi-rs"), stage);
+    for (const [index, entry] of entries.entries()) {
+      const home = NodePath.join(stage, `user-${index}`);
+      const state = NodePath.join(home, ".rove-code", "userdata");
+      NodeFS.mkdirSync(state, { recursive: true });
+      const db = new NodeSqlite.DatabaseSync(NodePath.join(state, "state.sqlite"));
+      db.exec("CREATE TABLE messages(text); INSERT INTO messages VALUES ('sidecar snapshot');");
+      db.close();
+      const child = NodeChildProcess.spawnSync(
+        process.execPath,
+        [
+          "--input-type=module",
+          "-e",
+          `import * as sqlite from 'node:sqlite'; import * as path from 'node:path';
+         const {migrateDefaultHome} = await import(process.argv[1]);
+         const result = migrateDefaultHome({homeDirectory: process.argv[2], log: () => {}});
+         if(result.kind !== 'migrated') throw new Error('expected migration');
+         const db = new sqlite.DatabaseSync(path.join(process.argv[2], '.paperplane', 'userdata', 'state.sqlite'), {readOnly:true});
+         if(db.prepare('SELECT text FROM messages').get().text !== 'sidecar snapshot') throw new Error('snapshot lost data');
+         db.close();`,
+          NodeURL.pathToFileURL(entry).href,
+          home,
+        ],
+        { cwd: stage, encoding: "utf8", timeout: 10_000, env: { ...process.env, NODE_PATH: "" } },
+      );
+      assert.equal(child.status, 0, child.stderr);
+    }
+  } finally {
+    NodeFS.rmSync(stage, { recursive: true, force: true });
+  }
+});
+
+it("loads Paperplane's MCP clients from an isolated runtime sidecar", () => {
   const selected = selectCliRuntimeExternalDependencies(serverPackageJson.dependencies);
   assert.strictEqual(selected["@modelcontextprotocol/sdk"], "1.29.0");
-  const stage = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "rove-mcp-sidecar-"));
+  const stage = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "paperplane-mcp-sidecar-"));
   try {
     const closure = runtimePackageClosure(
       NodePath.join(serverRoot, "node_modules/@modelcontextprotocol/sdk"),
@@ -525,7 +613,7 @@ it("loads Modal's CBOR codec from an isolated runtime sidecar", () => {
   const selected = selectCliRuntimeExternalDependencies(serverPackageJson.dependencies);
   assert.strictEqual(selected["cbor-x"], "1.6.6");
   const root = NodePath.join(serverRoot, "node_modules/cbor-x");
-  const stage = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "rove-cbor-sidecar-"));
+  const stage = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "paperplane-cbor-sidecar-"));
   try {
     const closure = runtimePackageClosure(root);
     assert.isAtLeast(closure.size, 1);
@@ -554,7 +642,9 @@ it(
   "bundles the server CLI without inlining Pi or CBOR runtime sources",
   { timeout: 240000 },
   async () => {
-    const dist = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "rove-cli-pi-bundle-check-"));
+    const dist = NodeFS.mkdtempSync(
+      NodePath.join(NodeOS.tmpdir(), "paperplane-cli-pi-bundle-check-"),
+    );
     try {
       const packed = NodeChildProcess.spawnSync("vp", ["pack", "--out-dir", dist], {
         cwd: serverRoot,

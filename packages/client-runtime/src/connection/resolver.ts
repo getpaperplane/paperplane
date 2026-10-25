@@ -1,8 +1,8 @@
 import type {
   AuthClientPresentationMetadata,
   ExecutionEnvironmentDescriptor,
-} from "@rove-code/contracts";
-import { withRelayClientTracing } from "@rove-code/shared/relayTracing";
+} from "@getpaperplane/contracts";
+import { withRelayClientTracing } from "@getpaperplane/shared/relayTracing";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -65,7 +65,7 @@ export class ConnectionResolver extends Context.Service<
       ConnectionAttemptError
     >;
   }
->()("@rove-code/client-runtime/connection/resolver/ConnectionResolver") {}
+>()("@getpaperplane/client-runtime/connection/resolver/ConnectionResolver") {}
 
 const isBearerProfile = Schema.is(BearerConnectionProfile);
 const isSshProfile = Schema.is(SshConnectionProfile);
@@ -140,7 +140,7 @@ const makeBearerBroker = Effect.fn("clientRuntime.connection.broker.makeBearer")
         actual: profile.environmentId,
       });
     }
-    if (profile.authorization === "rove-connect") {
+    if (profile.authorization === "paperplane-connect") {
       const authorized = yield* remote.authorizeDpop({
         expectedEnvironmentId: target.environmentId,
         directEndpoint: { httpBaseUrl: profile.httpBaseUrl, wsBaseUrl: profile.wsBaseUrl },

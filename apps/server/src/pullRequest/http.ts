@@ -1,4 +1,4 @@
-import { AuthOrchestrationReadScope, EnvironmentHttpApi } from "@rove-code/contracts";
+import { AuthOrchestrationReadScope, EnvironmentHttpApi } from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import * as HttpApiBuilder from "effect/http-api/HttpApiBuilder";
 

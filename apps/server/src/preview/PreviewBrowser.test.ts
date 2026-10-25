@@ -1,6 +1,6 @@
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { expect, it } from "@effect/vitest";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 import * as Deferred from "effect/Deferred";
 import * as Crypto from "effect/Crypto";
 import type * as Duration from "effect/Duration";
@@ -86,7 +86,7 @@ const makeHarness = Effect.fn("test.makePreviewBrowser")(function* (
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const baseDir = yield* fs.makeTempDirectoryScoped({ prefix: "rove-preview-browser-test-" });
+  const baseDir = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-preview-browser-test-" });
   const archive = options.archive ?? browserArchive;
   const crypto = yield* Crypto.Crypto;
   const sha256 =
@@ -176,7 +176,7 @@ it.layer(NodeServices.layer)("PreviewBrowser", (it) => {
 
       expect(error._tag).toBe("PreviewBrowserInstallError");
       expect(error.message).toMatch(
-        /^Rove could not install its headless browser: .+ Try again\.$/,
+        /^Paperplane could not install its headless browser: .+ Try again\.$/,
       );
       expect(yield* fs.readDirectory(installRoot)).toEqual([]);
       yield* browser.executable.pipe(Effect.flip);
@@ -295,6 +295,6 @@ it("tells the agent how far the install has come", () => {
       unpacking: false,
     }).message,
   ).toBe(
-    "Rove is installing its headless browser (37 of 120 MB downloaded). Try again in a minute.",
+    "Paperplane is installing its headless browser (37 of 120 MB downloaded). Try again in a minute.",
   );
 });

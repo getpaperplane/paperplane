@@ -1,8 +1,8 @@
 import {
   computerDesktopViewerUrl,
   threadComputerDesktops,
-} from "@rove-code/client-runtime/state/computer-use";
-import { type ComputerDesktop, ThreadId } from "@rove-code/contracts";
+} from "@getpaperplane/client-runtime/state/computer-use";
+import { type ComputerDesktop, ThreadId } from "@getpaperplane/contracts";
 import { describe, expect, it } from "vite-plus/test";
 
 import { computerPickerNote, newComputerDesktops, typingKeys } from "./computerDesktops.logic";

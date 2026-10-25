@@ -1,6 +1,6 @@
-import { AuthFilesystemReadScope, type EnvironmentId } from "@rove-code/contracts";
-import { resolvePathLinkTarget, splitFilePathPosition } from "@rove-code/shared/fileLinks";
-import { normalizeProjectPathForComparison, isAbsolutePath } from "@rove-code/shared/path";
+import { AuthFilesystemReadScope, type EnvironmentId } from "@getpaperplane/contracts";
+import { resolvePathLinkTarget, splitFilePathPosition } from "@getpaperplane/shared/fileLinks";
+import { normalizeProjectPathForComparison, isAbsolutePath } from "@getpaperplane/shared/path";
 import { useContext } from "react";
 
 import { useEnvironmentScope } from "../state/session";

@@ -59,7 +59,7 @@ export class FcmClient extends Context.Service<
       readonly alert: boolean;
     }) => Effect.Effect<{ readonly unregistered: boolean }, FcmClientError>;
   }
->()("rove-relay/agentActivity/FcmClient") {}
+>()("paperplane-relay/agentActivity/FcmClient") {}
 
 export const make = Effect.gen(function* () {
   const config = yield* RelayConfiguration.RelayConfiguration;
@@ -132,7 +132,7 @@ export const make = Effect.gen(function* () {
             android: {
               priority: "HIGH",
               ttl: "300s",
-              ...(!input.alert ? { collapse_key: "rove-agent-activity" } : {}),
+              ...(!input.alert ? { collapse_key: "paperplane-agent-activity" } : {}),
               ...(input.packageName ? { restricted_package_name: input.packageName } : {}),
             },
           },

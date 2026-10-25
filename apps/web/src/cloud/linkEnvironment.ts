@@ -14,15 +14,15 @@ import {
   EnvironmentHttpUnauthorizedError,
   EnvironmentId,
   WS_METHODS,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   type RelayEnvironmentLinkResponse,
   type RelayManagedEndpointProviderKind,
-} from "@rove-code/contracts/relay";
-import { EnvironmentRegistry } from "@rove-code/client-runtime/connection";
-import { request, runStream } from "@rove-code/client-runtime/rpc";
-import { makeEnvironmentHttpApiClient } from "@rove-code/client-runtime/rpc";
-import { ManagedRelay, relayRequestFailureDetail } from "@rove-code/client-runtime/relay";
+} from "@getpaperplane/contracts/relay";
+import { EnvironmentRegistry } from "@getpaperplane/client-runtime/connection";
+import { request, runStream } from "@getpaperplane/client-runtime/rpc";
+import { makeEnvironmentHttpApiClient } from "@getpaperplane/client-runtime/rpc";
+import { ManagedRelay, relayRequestFailureDetail } from "@getpaperplane/client-runtime/relay";
 
 import * as PrimaryEnvironmentHttpLayer from "../environments/primary/httpLayer";
 import { resolveCloudPublicConfig } from "./publicConfig";
@@ -60,7 +60,7 @@ function ensureRelayClientAvailable(
     if (status.status === "available") return;
     if (status.status === "unsupported") {
       return yield* new CloudEnvironmentLinkError({
-        message: `Rove Code cannot install the relay client automatically on ${status.platform}-${status.arch}.`,
+        message: `Paperplane cannot install the relay client automatically on ${status.platform}-${status.arch}.`,
       });
     }
 
@@ -96,7 +96,7 @@ function ensureRelayClientAvailable(
       return yield* new CloudEnvironmentLinkError({
         message:
           installedStatus.status === "unsupported"
-            ? `Rove Code cannot install the relay client automatically on ${installedStatus.platform}-${installedStatus.arch}.`
+            ? `Paperplane cannot install the relay client automatically on ${installedStatus.platform}-${installedStatus.arch}.`
             : "The relay client is still unavailable after installation.",
       });
     }
@@ -250,7 +250,7 @@ export function unlinkPrimaryEnvironmentFromCloud(input: {
 
 // "publish_only" links the environment to the relay for agent-activity
 // publishing alone: no managed tunnel is provisioned, so it can be toggled
-// independently of Rove Connect while clients reach the environment out of band.
+// independently of Paperplane Connect while clients reach the environment out of band.
 export type CloudLinkMode = "managed" | "publish_only";
 
 const PUBLISH_ONLY_PROVIDER_KIND = "manual" satisfies RelayManagedEndpointProviderKind;
@@ -268,7 +268,7 @@ export function linkPrimaryEnvironmentToCloud(input: {
     const configuredRelayUrl = relayUrl();
     if (!configuredRelayUrl) {
       return yield* new CloudEnvironmentLinkError({
-        message: "ROVE_RELAY_URL is not configured.",
+        message: "PAPERPLANE_RELAY_URL is not configured.",
       });
     }
     const managedTunnelsEnabled = (input.mode ?? "managed") === "managed";

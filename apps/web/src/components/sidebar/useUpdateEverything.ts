@@ -1,5 +1,5 @@
 import { useAtomValue } from "@effect/atom-react";
-import { PROVIDER_DISPLAY_NAMES } from "@rove-code/contracts";
+import { PROVIDER_DISPLAY_NAMES } from "@getpaperplane/contracts";
 import { Atom } from "effect/reactivity";
 import { useMemo } from "react";
 
@@ -79,7 +79,7 @@ export function useUpdateEverything(localUpdateVersion: string | null) {
     targetVersion,
   );
   // A desktop-managed server installs from its own app's update feed, so only
-  // servers that download rove from npm wait for npm to publish the version.
+  // servers that download paperplane from npm wait for npm to publish the version.
   const needsNpm = behindServers.some((server) => server.selfUpdate !== "desktop-managed");
   const published = useNpmReleasePublished(needsNpm ? targetVersion : null);
   const servers = published
@@ -92,7 +92,7 @@ export function useUpdateEverything(localUpdateVersion: string | null) {
       .map((server) => ({
         environmentId: server.environmentId,
         label: server.serverLabel,
-        reason: `rove@${targetVersion} is not on npm yet`,
+        reason: `@getpaperplane/cli@${targetVersion} is not on npm yet`,
       })),
   ];
   const restarts = collectRestartingMachines(machines, servers, localUpdateVersion !== null);

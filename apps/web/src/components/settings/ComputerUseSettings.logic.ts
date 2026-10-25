@@ -5,7 +5,7 @@ import type {
   ComputerUseMacosVm,
   ComputerUseMacosVmProgress,
   ComputerUseStatus,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 
 function hostName(platform: "darwin" | "linux" | "win32"): string {
   switch (platform) {
@@ -30,14 +30,14 @@ export function describeDriver(status: ComputerUseStatus | null, error: string |
     case "needs-desktop-image":
       return "Prepare the private Linux desktop image. This downloads desktop packages and includes Cua Driver. No host folders, credentials, clipboard or display are shared.";
     case "untrusted":
-      return "The installed Cua Driver isn't verified as Cua AI, Inc.'s release, so Rove won't run it. Reinstall it from Cua's official releases.";
+      return "The installed Cua Driver isn't verified as Cua AI, Inc.'s release, so Paperplane won't run it. Reinstall it from Cua's official releases.";
     case "stopped":
     case "running": {
       const readiness = status.readiness;
       if (readiness.platform === "linux") {
         const prefix = `Cua Driver ${status.version}. ${readiness.desktops} of ${readiness.capacity} private thread desktops in use.`;
         const lifecycle =
-          " Offline guest apps and files are temporary. close_desktop, turning this off, or stopping Rove discards them. Idle connections close without discarding documents.";
+          " Offline guest apps and files are temporary. close_desktop, turning this off, or stopping Paperplane discards them. Idle connections close without discarding documents.";
         if (status.status === "stopped") return `${prefix} The desktop image is ready.${lifecycle}`;
         if (readiness.diagnostics === null)
           return `${prefix} A connection is active, but guest diagnostics could not be read.${lifecycle}`;

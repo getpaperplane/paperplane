@@ -25,15 +25,15 @@ import type {
   ProviderOptionDescriptor,
   ServerProviderModel,
   ServerProviderSkill,
-} from "@rove-code/contracts";
-import { PREFERRED_DEFAULT_CODEX_MODELS, ServerSettingsError } from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
+import { PREFERRED_DEFAULT_CODEX_MODELS, ServerSettingsError } from "@getpaperplane/contracts";
 
 import {
   codexModelFamily,
   createModelCapabilities,
   formatCodexModelName,
-} from "@rove-code/shared/model";
-import { resolveSpawnCommand } from "@rove-code/shared/shell";
+} from "@getpaperplane/shared/model";
+import { resolveSpawnCommand } from "@getpaperplane/shared/shell";
 import { codexAppServerArgs, resolveCodexLaunchArgs } from "./codexLaunchArgs.ts";
 import {
   AUTH_PROBE_TIMEOUT_MS,
@@ -41,16 +41,16 @@ import {
   COMPACT_SLASH_COMMAND,
   providerModelsFromSettings,
   type ServerProviderDraft,
-} from "@rove-code/provider-core/server/snapshotProbe";
-import { expandHomePath } from "@rove-code/provider-core/server/pathExpansion";
-import { makeUnavailableUsageLimits } from "@rove-code/provider-core/server/usageLimits";
+} from "@getpaperplane/provider-core/server/snapshotProbe";
+import { expandHomePath } from "@getpaperplane/provider-core/server/pathExpansion";
+import { makeUnavailableUsageLimits } from "@getpaperplane/provider-core/server/usageLimits";
 import {
   codexRateLimitsFailureMessage,
   codexRateLimitsToLimits,
   type CodexRateLimitSnapshot,
   type CodexResetCreditsSummary,
 } from "./codexUsageLimits.ts";
-import * as HostProcess from "@rove-code/shared/HostProcess";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 import packageJson from "../../package.json" with { type: "json" };
 const isCodexAppServerSpawnError = Schema.is(CodexErrors.CodexAppServerSpawnError);
 const RATE_LIMITS_PROBE_TIMEOUT_MS = 3_000;
@@ -71,7 +71,7 @@ type CodexRateLimitsProbe =
 const CODEX_APP_SERVER_PROBE_FORCE_KILL_AFTER = "2 seconds" as const;
 const CODEX_CATALOG_REFRESH_TIMEOUT = "3 seconds" as const;
 const CODEX_CATALOG_REFRESH_POLL = "100 millis" as const;
-const CODEX_CLIENT_NAME = "Rove Code";
+const CODEX_CLIENT_NAME = "Paperplane";
 
 const CODEX_PRESENTATION = {
   displayName: "Codex",
@@ -355,7 +355,7 @@ const readCodexModelsCacheFetchedAt = Effect.fn("readCodexModelsCacheFetchedAt")
 });
 
 /**
- * Lists the ChatGPT model catalog as fetched for Rove Code.
+ * Lists the ChatGPT model catalog as fetched for Paperplane.
  *
  * `model/list` serves `CODEX_HOME/models_cache.json` while it is under five
  * minutes old. Every Codex client on the machine shares that file, and the
@@ -389,7 +389,7 @@ const requestCodexChatGptModels = Effect.fn("requestCodexChatGptModels")(functio
 });
 
 /**
- * Environment for every `codex app-server` Rove Code spawns.
+ * Environment for every `codex app-server` Paperplane spawns.
  *
  * Codex sends its client name as the `originator` header, and the backend
  * tailors the model catalog to it. App-server starts its catalog refresh
@@ -582,7 +582,7 @@ const makePendingCodexProvider = (
           version: null,
           status: "warning",
           auth: { status: "unknown" },
-          message: "Codex is disabled in Rove Code settings.",
+          message: "Codex is disabled in Paperplane settings.",
         },
       });
     }
@@ -675,7 +675,7 @@ export const checkCodexProviderStatus = Effect.fn("checkCodexProviderStatus")(fu
         version: null,
         status: "warning",
         auth: { status: "unknown" },
-        message: "Codex is disabled in Rove Code settings.",
+        message: "Codex is disabled in Paperplane settings.",
       },
     });
   }

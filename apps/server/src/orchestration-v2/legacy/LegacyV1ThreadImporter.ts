@@ -2,7 +2,7 @@ import * as NodePath from "@effect/platform-node/NodePath";
 import {
   threadPullRequestKeysEqual,
   threadPullRequestsOf,
-} from "@rove-code/shared/threadPullRequests";
+} from "@getpaperplane/shared/threadPullRequests";
 import {
   ChatAttachment,
   CommandId,
@@ -22,8 +22,8 @@ import {
   ThreadLinkedPullRequest,
   ThreadPullRequestLink,
   TurnItemId,
-} from "@rove-code/contracts";
-import * as KeyedLock from "@rove-code/shared/KeyedLock";
+} from "@getpaperplane/contracts";
+import * as KeyedLock from "@getpaperplane/shared/KeyedLock";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -34,7 +34,7 @@ import * as Schema from "effect/Schema";
 import * as SqlClient from "effect/sql/SqlClient";
 
 import * as EventSink from "../EventSink.ts";
-import { randomUuidV4 } from "@rove-code/provider-core/server/randomUuid";
+import { randomUuidV4 } from "@getpaperplane/provider-core/server/randomUuid";
 
 const IMPORT_EVENT_PREFIX = "migration:v1";
 const TRANSCRIPT_EVENT_BATCH_SIZE = 100;
@@ -125,7 +125,7 @@ export interface LegacyV1ThreadImporterShape {
 export class LegacyV1ThreadImporter extends Context.Service<
   LegacyV1ThreadImporter,
   LegacyV1ThreadImporterShape
->()("@rove-code/server/orchestration-v2/legacy/LegacyV1ThreadImporter") {}
+>()("@getpaperplane/server/orchestration-v2/legacy/LegacyV1ThreadImporter") {}
 
 const decodeModelSelection = Schema.decodeUnknownOption(ModelSelection);
 const decodeMessageContext = Schema.decodeUnknownOption(OrchestrationMessageContext);

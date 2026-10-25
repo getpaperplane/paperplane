@@ -1,4 +1,4 @@
-import type { EnvironmentId } from "@rove-code/contracts";
+import type { EnvironmentId } from "@getpaperplane/contracts";
 
 /** Wait for earlier grants before choosing the settings that edits and synchronization use. */
 export function resolveAutoSettleReferenceEnvironmentId(

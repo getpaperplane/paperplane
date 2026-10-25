@@ -12,7 +12,7 @@ import type {
   CommandId,
   ThreadId,
   TurnItemId,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as Clock from "effect/Clock";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -25,7 +25,7 @@ import { TestClock } from "effect/testing";
 
 import * as Orchestrator from "../Orchestrator.ts";
 import type { RecordedCommandOutput } from "./CommandOutputRecorder.ts";
-import type { ProviderReplayGate } from "@rove-code/provider-testing/replayGate";
+import type { ProviderReplayGate } from "@getpaperplane/provider-testing/replayGate";
 
 export type OrchestratorV2ScenarioStep =
   | {

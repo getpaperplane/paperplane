@@ -6,7 +6,7 @@ import * as Schema from "effect/Schema";
 import * as SqlClient from "effect/sql/SqlClient";
 import * as SqlSchema from "effect/sql/SqlSchema";
 
-import { PullRequestReviewGuide, ThreadPullRequestKey } from "@rove-code/contracts";
+import { PullRequestReviewGuide, ThreadPullRequestKey } from "@getpaperplane/contracts";
 
 import {
   PersistenceDecodeError,
@@ -33,7 +33,7 @@ export class PullRequestReviewGuideRepository extends Context.Service<
       guide: PullRequestReviewGuide,
     ) => Effect.Effect<void, PullRequestReviewGuideRepositoryError>;
   }
->()("@rove-code/server/persistence/PullRequestReviewGuides/PullRequestReviewGuideRepository") {}
+>()("@getpaperplane/server/persistence/PullRequestReviewGuides/PullRequestReviewGuideRepository") {}
 
 const make = Effect.gen(function* () {
   const sql = yield* SqlClient.SqlClient;

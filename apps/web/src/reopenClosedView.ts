@@ -1,4 +1,4 @@
-import type { EnvironmentId, ProjectId } from "@rove-code/contracts";
+import type { EnvironmentId, ProjectId } from "@getpaperplane/contracts";
 
 import type { OpenPreviewMutation } from "./browser/openFileInPreview";
 import type { ClosedView, ClosedViewEntry } from "./closedViewStore";

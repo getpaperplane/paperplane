@@ -13,7 +13,7 @@ const copyRepository = gitRepositoryFixture({
 });
 
 it("does not share the index, refs, objects or working files between copies", () => {
-  const root = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "rove-git-copy-test-"));
+  const root = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "paperplane-git-copy-test-"));
   const first = NodePath.join(root, "first");
   const second = NodePath.join(root, "second");
   const git = (cwd: string, ...args: string[]) =>

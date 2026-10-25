@@ -1,4 +1,4 @@
-import { EnvironmentHttpApi } from "@rove-code/contracts";
+import { EnvironmentHttpApi } from "@getpaperplane/contracts";
 import * as ByteSize from "effect/ByteSize";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
@@ -7,7 +7,7 @@ import * as HttpIncomingMessage from "effect/http/HttpIncomingMessage";
 import type * as HttpServerRequest from "effect/http/HttpServerRequest";
 import * as HttpServerResponse from "effect/http/HttpServerResponse";
 import * as HttpTraceContext from "effect/http/HttpTraceContext";
-import { withRelayClientTracing } from "@rove-code/shared/relayTracing";
+import { withRelayClientTracing } from "@getpaperplane/shared/relayTracing";
 import * as HttpApiBuilder from "effect/http-api/HttpApiBuilder";
 
 import * as Metrics from "../observability/Metrics.ts";
@@ -18,7 +18,7 @@ import * as ScheduledTaskService from "./ScheduledTaskService.ts";
 export const WEBHOOK_MAX_BODY_BYTES = 1024 * 1024;
 
 /** Response header naming what happened to the request; the relay records it. */
-const WEBHOOK_OUTCOME_HEADER = "x-rove-hook-outcome";
+const WEBHOOK_OUTCOME_HEADER = "x-paperplane-hook-outcome";
 
 const json = (status: number, body: Record<string, string>, outcome: string) =>
   HttpServerResponse.jsonUnsafe(body, { status, headers: { [WEBHOOK_OUTCOME_HEADER]: outcome } });
@@ -61,7 +61,7 @@ export const layer = HttpApiBuilder.group(
         const tooLarge = (error: string) =>
           Metrics.increment(Metrics.webhookDeliveriesTotal, {
             outcome: "body_too_large",
-            source: request.headers["x-rove-relay-delivery-id"] ? "relay" : "direct",
+            source: request.headers["x-paperplane-relay-delivery-id"] ? "relay" : "direct",
           }).pipe(Effect.as(json(413, { error }, "body_too_large")));
         if (Option.isNone(body)) return yield* tooLarge("body_too_large_or_unreadable");
         if (body.value.byteLength > WEBHOOK_MAX_BODY_BYTES) {
@@ -80,7 +80,7 @@ export const layer = HttpApiBuilder.group(
         const relayDeliveryId = Option.isSome(relay) ? relay.value.deliveryId : undefined;
         const relayReceivedAt = Option.isSome(relay) ? relay.value.receivedAt : undefined;
 
-        // A relay delivery joins the relay's trace, and goes to the Rove Connect
+        // A relay delivery joins the relay's trace, and goes to the Paperplane Connect
         // tracer with it. Anyone else's traceparent is never trusted.
         const relayParent = Option.isSome(relay)
           ? HttpTraceContext.fromHeaders(request.headers)

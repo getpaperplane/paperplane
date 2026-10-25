@@ -9,9 +9,9 @@ import {
   connectionRouteLabel,
   connectionRoutes,
   isLearned,
-} from "@rove-code/client-runtime/connection";
-import { type EnvironmentId, sessionGrantsScope } from "@rove-code/contracts";
-import { AUTH_SCOPE_OPTIONS } from "@rove-code/shared/authScopeOptions";
+} from "@getpaperplane/client-runtime/connection";
+import { type EnvironmentId, sessionGrantsScope } from "@getpaperplane/contracts";
+import { AUTH_SCOPE_OPTIONS } from "@getpaperplane/shared/authScopeOptions";
 import { AsyncResult } from "effect/reactivity";
 import * as Option from "effect/Option";
 import { useState } from "react";
@@ -146,7 +146,7 @@ export function EnvironmentRoutesSection({
             onPress={() => setEditing((value) => !value)}
             className="px-2 py-1 active:opacity-70"
           >
-            <Text className="text-sm font-rove-medium text-foreground android:text-primary-text">
+            <Text className="text-sm font-paperplane-medium text-foreground android:text-primary-text">
               {editing ? "Done" : "Edit"}
             </Text>
           </Pressable>

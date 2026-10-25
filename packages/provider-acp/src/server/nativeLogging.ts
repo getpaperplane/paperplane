@@ -1,16 +1,16 @@
-import type { ProviderDriverKind, ThreadId } from "@rove-code/contracts";
-import { causeErrorTag, errorTag } from "@rove-code/shared/observability";
+import type { ProviderDriverKind, ThreadId } from "@getpaperplane/contracts";
+import { causeErrorTag, errorTag } from "@getpaperplane/shared/observability";
 import * as Cause from "effect/Cause";
 import * as Crypto from "effect/Crypto";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import type * as EffectAcpProtocol from "effect-acp/protocol";
 
-import type * as ProviderEventLoggers from "@rove-code/provider-core/server/ProviderEventLoggers";
+import type * as ProviderEventLoggers from "@getpaperplane/provider-core/server/ProviderEventLoggers";
 import {
   structuralProtocolMethod,
   summarizeNativeProtocolPayload,
-} from "@rove-code/provider-core/server/nativeProtocolLogging";
+} from "@getpaperplane/provider-core/server/nativeProtocolLogging";
 import type * as AcpSessionRuntime from "./AcpSessionRuntime.ts";
 
 const transientProtocolUpdates = new Set(["agent_message_chunk", "agent_thought_chunk"]);

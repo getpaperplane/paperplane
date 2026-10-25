@@ -3,12 +3,12 @@ import {
   type RepositoryIdentity,
   type RepositoryRemotePreference,
   type SourceControlProviderError,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   detectSourceControlProviderFromGitRemoteUrl,
   normalizeGitRemoteUrl,
-} from "@rove-code/shared/git";
-import { isSshRemoteUrl } from "@rove-code/shared/sourceControl";
+} from "@getpaperplane/shared/git";
+import { isSshRemoteUrl } from "@getpaperplane/shared/sourceControl";
 import * as Cache from "effect/Cache";
 import * as Context from "effect/Context";
 import * as Duration from "effect/Duration";
@@ -47,7 +47,7 @@ export class RepositoryIdentityResolver extends Context.Service<
       },
     ) => Effect.Effect<RepositoryIdentity | null>;
   }
->()("@rove-code/server/project/RepositoryIdentityResolver") {}
+>()("@getpaperplane/server/project/RepositoryIdentityResolver") {}
 
 function parseRemoteFetchUrls(stdout: string): Map<string, string> {
   const remotes = new Map<string, string>();

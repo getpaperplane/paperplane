@@ -1,5 +1,5 @@
-import { shouldPreserveAssistantLineBreaks } from "@rove-code/shared/markdownPipeline";
-import { ThreadId, type WorktreeSetupSnapshot } from "@rove-code/contracts";
+import { shouldPreserveAssistantLineBreaks } from "@getpaperplane/shared/markdownPipeline";
+import { ThreadId, type WorktreeSetupSnapshot } from "@getpaperplane/contracts";
 import {
   CheckpointRef,
   NodeId,
@@ -11,7 +11,7 @@ import {
   RuntimeRequestId,
   type OrchestrationV2ProjectedTurnItem,
   type OrchestrationV2TurnItem,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import * as DateTime from "effect/DateTime";
 import {
   deriveTimelineEntriesFromVisibleTurnItems,
@@ -22,8 +22,8 @@ import {
 import { makeStreamingTimelineFixture } from "../../test-fixtures";
 import type { TurnDiffSummary } from "../../types";
 import { describe, expect, it } from "vite-plus/test";
-import { EnvironmentId, MessageId, RunId } from "@rove-code/contracts";
-import { serializeAssistantCitation } from "@rove-code/shared/assistantCitations";
+import { EnvironmentId, MessageId, RunId } from "@getpaperplane/contracts";
+import { serializeAssistantCitation } from "@getpaperplane/shared/assistantCitations";
 import {
   computeStableMessagesTimelineRows,
   computeMessageDurationStart,
@@ -158,7 +158,7 @@ describe("work entry labels", () => {
   ] as const)("uses the same friendly %s label in both views", (toolLifecycleStatus, label) => {
     const browserEntry = {
       ...entry,
-      toolTitle: "Rove-code.preview_click",
+      toolTitle: "paperplane.preview_click",
       detail: '{"ok":true}',
       toolLifecycleStatus,
     };
@@ -181,7 +181,7 @@ describe("work entry labels", () => {
       toolLifecycleStatus,
       structuredPayload: {
         type: "dynamic_tool",
-        toolName: "rove.rove_thread_read",
+        toolName: "paperplane.paperplane_thread_read",
         input: { threadId: " thread-child ", view: "activity" },
       } as never,
     };
@@ -194,13 +194,17 @@ describe("work entry labels", () => {
     const payload = (toolName: string, input: unknown) => ({
       structuredPayload: { type: "dynamic_tool", toolName, input } as never,
     });
-    expect(threadReadTargetId(payload("rove.rove_thread_wait", { threadId: "t" }))).toBeNull();
-    expect(threadReadTargetId(payload("rove.rove_thread_read", { threadId: "  " }))).toBeNull();
-    expect(threadReadTargetId(payload("rove.rove_thread_read", null))).toBeNull();
+    expect(
+      threadReadTargetId(payload("paperplane.paperplane_thread_wait", { threadId: "t" })),
+    ).toBeNull();
+    expect(
+      threadReadTargetId(payload("paperplane.paperplane_thread_read", { threadId: "  " })),
+    ).toBeNull();
+    expect(threadReadTargetId(payload("paperplane.paperplane_thread_read", null))).toBeNull();
   });
 
   it("uses the active summary state for legacy tools without a lifecycle status", () => {
-    const browserEntry = { ...entry, toolTitle: "Rove-code.preview_click" };
+    const browserEntry = { ...entry, toolTitle: "paperplane.preview_click" };
     expect(liveWorkEntryLabel(browserEntry, undefined, true)).toBe(
       "Clicking in the preview browser",
     );
@@ -212,7 +216,7 @@ describe("work entry labels", () => {
   it("keeps the latest live activity in the present tense after the call completes", () => {
     const browserEntry = {
       ...entry,
-      toolTitle: "Rove-code.preview_click",
+      toolTitle: "paperplane.preview_click",
       toolLifecycleStatus: "completed" as const,
     };
     expect(liveWorkEntryLabel(browserEntry, undefined, true)).toBe(
@@ -364,7 +368,7 @@ describe("work entry labels", () => {
             entry: {
               ...entry,
               itemType: "dynamic_tool",
-              toolData: { server: "rove", tool },
+              toolData: { server: "paperplane", tool },
             },
           },
         ],
@@ -796,7 +800,7 @@ describe("deriveMessagesTimelineRows", () => {
       toolSource: { key: "mcp:node_repl", name: "node repl", kind: "integration" as const },
       input: {
         title: "Restrict the breakpoint to Git actions",
-        code: "await sky.type_text({app:'Rove Code (Nightly)',text:'debug(ga.run)'});",
+        code: "await sky.type_text({app:'Paperplane (Nightly)',text:'debug(ga.run)'});",
       },
     };
     const entries = deriveTimelineEntriesFromVisibleTurnItems({
@@ -824,7 +828,7 @@ describe("deriveMessagesTimelineRows", () => {
         id: TurnItemId.make("list"),
         status: "completed",
         title: "Custom provider title",
-        toolName: "Rove-code.rove_project_list",
+        toolName: "paperplane.paperplane_project_list",
         input: {},
         output: { projects: [] },
       },
@@ -834,7 +838,7 @@ describe("deriveMessagesTimelineRows", () => {
         id: TurnItemId.make("clone"),
         status: "completed",
         title: "Custom provider title",
-        toolName: "mcp__rove__rove_project_clone",
+        toolName: "mcp__paperplane__paperplane_project_clone",
         input: {},
         output: { cwd: "/tmp/repo" },
       },
@@ -844,7 +848,7 @@ describe("deriveMessagesTimelineRows", () => {
         id: TurnItemId.make("failed-clone"),
         status: "completed",
         title: "Custom provider title",
-        toolName: "rove_project_clone",
+        toolName: "paperplane_project_clone",
         input: {},
         output: { isError: true },
       },
@@ -865,7 +869,7 @@ describe("deriveMessagesTimelineRows", () => {
     expect(
       resolveTimelineToolPresentation(items[1]!.type === "dynamic_tool" ? items[1].toolName : null)
         ?.logo,
-    ).toBe("rove");
+    ).toBe("paperplane");
     const rows = deriveMessagesTimelineRows({
       timelineEntries: entries,
       isWorking: false,
@@ -3249,7 +3253,7 @@ describe("deriveMessagesTimelineRows", () => {
           toolCallId: `call-${index}`,
           createdAt,
           runId,
-          label: "rove.preview_snapshot",
+          label: "paperplane.preview_snapshot",
           tone: "tool" as const,
           toolLifecycleStatus:
             isWorking && index === 999 ? ("inProgress" as const) : ("completed" as const),
@@ -3611,24 +3615,24 @@ describe("computeStableMessagesTimelineRows", () => {
 });
 
 describe("resolveTimelineToolPresentation", () => {
-  it("pretty prints Claude and Cursor Rove MCP tool names", () => {
-    expect(resolveTimelineToolPresentation("mcp__rove__rove_thread_read")).toEqual({
-      displayName: "Read a Rove thread",
-      logo: "rove",
+  it("pretty prints Claude and Cursor Paperplane MCP tool names", () => {
+    expect(resolveTimelineToolPresentation("mcp__paperplane__paperplane_thread_read")).toEqual({
+      displayName: "Read a Paperplane thread",
+      logo: "paperplane",
     });
   });
 
-  it("pretty prints Codex Rove MCP tool names", () => {
-    expect(resolveTimelineToolPresentation("rove.create_threads")).toEqual({
-      displayName: "Create Rove threads",
-      logo: "rove",
+  it("pretty prints Codex Paperplane MCP tool names", () => {
+    expect(resolveTimelineToolPresentation("paperplane.create_threads")).toEqual({
+      displayName: "Create Paperplane threads",
+      logo: "paperplane",
     });
   });
 
-  it("pretty prints bare Rove MCP toolkit names", () => {
+  it("pretty prints bare Paperplane MCP toolkit names", () => {
     expect(resolveTimelineToolPresentation("list_scheduled_tasks")).toEqual({
       displayName: "List scheduled tasks",
-      logo: "rove",
+      logo: "paperplane",
     });
   });
 
@@ -4251,7 +4255,7 @@ describe("streaming v2 row projection", () => {
         {
           runId: source.historyRunId,
           checkpointTurnCount: 1,
-          checkpointRef: CheckpointRef.make("refs/rove/checkpoints/history"),
+          checkpointRef: CheckpointRef.make("refs/paperplane/checkpoints/history"),
           status: "ready",
           files: [],
           assistantMessageId: MessageId.make("history-assistant"),
@@ -4665,7 +4669,7 @@ describe("linked timeline resources", () => {
               runId,
               type: "dynamic_tool",
               status: failed ? "failed" : status,
-              toolName: "rove.delegate_task",
+              toolName: "paperplane.delegate_task",
               input: { task: taskId === "b" ? "a" : taskId, role },
               ...(status === "completed"
                 ? {
@@ -5495,7 +5499,7 @@ describe("shouldCollapseUserMessage", () => {
       (_, index) =>
         `[file${index}.ts](/workspace/projects/example/packages/some/deeply/nested/directory/file${index}.ts)`,
     );
-    const text = `Compare ${links.join(", ")} with [terminal 1](rove-context://v1/terminal/${"a".repeat(36)}).`;
+    const text = `Compare ${links.join(", ")} with [terminal 1](paperplane-context://v1/terminal/${"a".repeat(36)}).`;
 
     expect(text.length).toBeGreaterThan(600);
     expect(shouldCollapseUserMessage(text)).toBe(false);

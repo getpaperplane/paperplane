@@ -1,4 +1,4 @@
-import type { PreviewViewportSetting } from "@rove-code/contracts";
+import type { PreviewViewportSetting } from "@getpaperplane/contracts";
 import { describe, expect, it, vi } from "vite-plus/test";
 
 import {

@@ -4,7 +4,7 @@ import {
   SourceControlProviderKind,
   type PullRequestListEntry,
   type PullRequestListResult,
-} from "@rove-code/contracts";
+} from "@getpaperplane/contracts";
 import {
   appendPullRequestListPage,
   DEFAULT_PR_LIST_CONTROLS,
