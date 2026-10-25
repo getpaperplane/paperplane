@@ -23,7 +23,10 @@ class PaperplaneReviewDiffModule : Module() {
       Prop("selectedRowIdsJson") { view: PaperplaneReviewDiffView, selectedRowIdsJson: String ->
         view.setSelectedRowIdsJson(selectedRowIdsJson)
       }
-      Prop("collapsedCommentIdsJson") { view: PaperplaneReviewDiffView, collapsedCommentIdsJson: String ->
+      Prop("collapsedCommentIdsJson") {
+          view: PaperplaneReviewDiffView,
+          collapsedCommentIdsJson: String
+        ->
         view.setCollapsedCommentIdsJson(collapsedCommentIdsJson)
       }
       Prop("appearanceScheme") { view: PaperplaneReviewDiffView, appearanceScheme: String ->
@@ -60,7 +63,11 @@ class PaperplaneReviewDiffModule : Module() {
         "onToggleComment",
       )
 
-      AsyncFunction("scrollToFile") { view: PaperplaneReviewDiffView, fileId: String, animated: Boolean ->
+      AsyncFunction("scrollToFile") {
+          view: PaperplaneReviewDiffView,
+          fileId: String,
+          animated: Boolean
+        ->
         view.scrollToFile(fileId, animated)
       }
       AsyncFunction("scrollToTop") { view: PaperplaneReviewDiffView, animated: Boolean ->
@@ -72,7 +79,10 @@ class PaperplaneReviewDiffModule : Module() {
       AsyncFunction("setTokensJson") { view: PaperplaneReviewDiffView, tokensJson: String ->
         view.setTokensJson(tokensJson)
       }
-      AsyncFunction("setTokensPatchJson") { view: PaperplaneReviewDiffView, tokensPatchJson: String ->
+      AsyncFunction("setTokensPatchJson") {
+          view: PaperplaneReviewDiffView,
+          tokensPatchJson: String
+        ->
         view.setTokensPatchJson(tokensPatchJson)
       }
 
