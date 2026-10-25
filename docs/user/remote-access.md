@@ -1,6 +1,6 @@
 # Remote access
 
-Paperplane releases support local, LAN, Tailscale, SSH, and the hosted browser app at [rove.hafiezulzikry.com](https://rove.hafiezulzikry.com). Paperplane Connect is disabled unless a maintainer configures the cloud deployment; its instructions below apply only to those builds. Mobile clients are available as sideloadable APK/IPA downloads on supported [GitHub Releases](https://github.com/hafiezul/rove/releases), or as source builds, not store apps. The phone is a client: its desktop or `paperplane serve` host must remain running and reachable over LAN, Tailscale, or SSH. See [mobile installation](./install.md#mobile-app).
+Paperplane releases support local, LAN, Tailscale, SSH, and the hosted browser app at [rove.hafiezulzikry.com](https://rove.hafiezulzikry.com). Paperplane Connect is disabled unless a maintainer configures the cloud deployment; its instructions below apply only to those builds. Mobile clients are available as sideloadable APK/IPA downloads on supported [GitHub Releases](https://github.com/getpaperplane/paperplane/releases), or as source builds, not store apps. The phone is a client: its desktop or `paperplane serve` host must remain running and reachable over LAN, Tailscale, or SSH. See [mobile installation](./install.md#mobile-app).
 
 Connect a phone, browser, or another desktop app to Paperplane running on a different
 machine. That machine must stay running and reachable while you work.

@@ -1,4 +1,4 @@
-export const GITHUB_REPOSITORY_URL = "https://github.com/hafiezul/rove";
+export const GITHUB_REPOSITORY_URL = "https://github.com/getpaperplane/paperplane";
 export const SOURCE_INSTALL_GUIDE_URL = `${GITHUB_REPOSITORY_URL}/blob/main/docs/operations/development.md`;
 export const INSTALL_GUIDE_URL = `${GITHUB_REPOSITORY_URL}/blob/main/docs/user/install.md`;
 export const USER_GUIDE_URL = `${GITHUB_REPOSITORY_URL}/tree/main/docs/user`;

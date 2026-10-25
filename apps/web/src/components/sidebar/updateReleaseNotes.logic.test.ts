@@ -94,7 +94,7 @@ describe("summarizeDesktopUpdateReleaseNotes", () => {
         0,
       ).footer,
     ).toEqual({
-      url: "https://github.com/hafiezul/rove/releases/tag/v0.0.36-nightly.3",
+      url: "https://github.com/getpaperplane/paperplane/releases/tag/v0.0.36-nightly.3",
       label: "Release notes on GitHub",
     });
     expect(
@@ -106,7 +106,7 @@ describe("summarizeDesktopUpdateReleaseNotes", () => {
         0,
       ).footer,
     ).toEqual({
-      url: "https://github.com/hafiezul/rove/releases",
+      url: "https://github.com/getpaperplane/paperplane/releases",
       label: "2 more changes on GitHub",
     });
     expect(
@@ -115,7 +115,7 @@ describe("summarizeDesktopUpdateReleaseNotes", () => {
         1,
       ).footer,
     ).toEqual({
-      url: "https://github.com/hafiezul/rove/releases",
+      url: "https://github.com/getpaperplane/paperplane/releases",
       label: "1 older release on GitHub",
     });
   });

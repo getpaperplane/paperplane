@@ -202,13 +202,13 @@ describe("getDesktopUpdateActionError", () => {
 describe("desktop update UI helpers", () => {
   it("builds the stable release URL for a downloaded version", () => {
     expect(getDesktopUpdateReleaseUrl("0.0.30")).toBe(
-      "https://github.com/hafiezul/rove/releases/tag/v0.0.30",
+      "https://github.com/getpaperplane/paperplane/releases/tag/v0.0.30",
     );
   });
 
   it("builds the nightly release URL without dropping its version suffix", () => {
     expect(getDesktopUpdateReleaseUrl("0.0.30-nightly.20260728.931")).toBe(
-      "https://github.com/hafiezul/rove/releases/tag/v0.0.30-nightly.20260728.931",
+      "https://github.com/getpaperplane/paperplane/releases/tag/v0.0.30-nightly.20260728.931",
     );
   });
 
@@ -218,7 +218,9 @@ describe("desktop update UI helpers", () => {
   });
 
   it("builds the release history URL", () => {
-    expect(getDesktopUpdateReleaseHistoryUrl()).toBe("https://github.com/hafiezul/rove/releases");
+    expect(getDesktopUpdateReleaseHistoryUrl()).toBe(
+      "https://github.com/getpaperplane/paperplane/releases",
+    );
   });
 
   it("toasts only for actionable updater errors", () => {

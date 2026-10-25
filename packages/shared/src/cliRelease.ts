@@ -5,7 +5,7 @@
  * platform key, so a rename here is a release-breaking change.
  */
 
-const CLI_RELEASE_REPOSITORY = "hafiezul/rove";
+const CLI_RELEASE_REPOSITORY = "getpaperplane/paperplane";
 export const CLI_RELEASE_CHECKSUMS_FILE = "SHA256SUMS";
 /** Overrides the download origin for mirrors and air-gapped installs. */
 export const CLI_RELEASE_BASE_URL_ENV = "PAPERPLANE_RELEASE_BASE_URL";

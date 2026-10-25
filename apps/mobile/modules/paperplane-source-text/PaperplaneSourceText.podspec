@@ -8,7 +8,7 @@ Pod::Spec.new do |s|
   s.version = package["version"]
   s.summary = "Native selectable source text for Paperplane mobile."
   s.description = "Fabric-backed styled source text with whole-document selection."
-  s.homepage = "https://github.com/hafiezul/rove"
+  s.homepage = "https://github.com/getpaperplane/paperplane"
   s.license = { :type => "MIT", :file => "LICENSE" }
   s.author = { "T3 Tools" => "hello@t3tools.com" }
   s.platforms = { :ios => min_ios_version_supported }

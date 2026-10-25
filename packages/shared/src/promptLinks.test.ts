@@ -39,14 +39,14 @@ describe("sanitizeLinkedPrompt", () => {
 describe("parseNewThreadLink", () => {
   it("reads a shared prompt with its optional repository and model", () => {
     const result = parseNewThreadLink(
-      "?prompt=Rate+me&repo=https://github.com/hafiezul/rove.git&provider=Codex&model=gpt-5",
+      "?prompt=Rate+me&repo=https://github.com/getpaperplane/paperplane.git&provider=Codex&model=gpt-5",
     );
     expect(result).toEqual({
       ok: true,
       value: {
         kind: "new",
         prompt: { text: "Rate me", hiddenCharacters: 0 },
-        repository: { owner: "hafiezul", name: "rove" },
+        repository: { owner: "getpaperplane", name: "paperplane" },
         provider: "codex",
         model: "gpt-5",
       },
@@ -55,15 +55,15 @@ describe("parseNewThreadLink", () => {
 
   it("reads a pull request link, whose prompt is optional", () => {
     for (const pr of [
-      "hafiezul/rove/42",
-      "hafiezul/rove%2342",
-      "https://github.com/hafiezul/rove/pull/42/files",
+      "getpaperplane/paperplane/42",
+      "getpaperplane/paperplane%2342",
+      "https://github.com/getpaperplane/paperplane/pull/42/files",
     ]) {
       expect(parseNewThreadLink(`?pr=${pr}`)).toEqual({
         ok: true,
         value: {
           kind: "pull-request",
-          pullRequest: { owner: "hafiezul", name: "rove", number: 42 },
+          pullRequest: { owner: "getpaperplane", name: "paperplane", number: 42 },
           prompt: null,
         },
       });
@@ -94,7 +94,7 @@ describe("link round trips", () => {
   it("builds a link that parses back to the same prompt", () => {
     const link = buildNewThreadLink({
       prompt: "Swear count & rating?",
-      repository: { owner: "hafiezul", name: "rove" },
+      repository: { owner: "getpaperplane", name: "paperplane" },
       provider: "claudeAgent",
       model: "opus",
     });

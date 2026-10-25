@@ -5,8 +5,8 @@ import { AppText as Text } from "../../components/ui/AppText";
 import { SettingsLegalDocumentRouteScreen } from "./components/SettingsLegalDocumentRouteScreen";
 import { LEGAL_URL } from "./lib/legal-document-url";
 
-const LICENSE_URL = "https://github.com/hafiezul/rove/blob/main/LICENSE";
-const SECURITY_REPORT_URL = "https://github.com/hafiezul/rove/security/advisories/new";
+const LICENSE_URL = "https://github.com/getpaperplane/paperplane/blob/main/LICENSE";
+const SECURITY_REPORT_URL = "https://github.com/getpaperplane/paperplane/security/advisories/new";
 
 export function SettingsLegalRouteScreen() {
   if (LEGAL_URL !== null) {

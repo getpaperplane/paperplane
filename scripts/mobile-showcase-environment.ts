@@ -124,7 +124,7 @@ export const SHOWCASE_PROJECTS = [
     id: "paperplane",
     title: "Paperplane",
     directory: "paperplane",
-    repositoryUrl: "https://github.com/hafiezul/rove.git",
+    repositoryUrl: "https://github.com/getpaperplane/paperplane.git",
     favicon: PROJECT_FAVICONS.paperplane,
   },
   {
@@ -312,7 +312,7 @@ async function seedPaperplaneWorkspace(workspaceRoot: string): Promise<void> {
   );
   await initializeRepository({
     workspaceRoot,
-    repositoryUrl: "https://github.com/hafiezul/rove.git",
+    repositoryUrl: "https://github.com/getpaperplane/paperplane.git",
     commitMessage: "Show connected environments",
   });
   await runGit(workspaceRoot, ["checkout", "-b", "feat/remote-command-center"]);

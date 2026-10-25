@@ -204,8 +204,8 @@ it.layer(layerTest)("Paperplane V1 compatibility", (it) => {
         yield* sql`
         INSERT INTO projection_thread_pull_requests (
           thread_id, host, repository, number, url, source, linked_at, snapshot_json, stack_json
-        ) VALUES ('good', 'github.com', 'hafiezul/rove', 234,
-          'https://github.com/hafiezul/rove/pull/234', 'manual',
+        ) VALUES ('good', 'github.com', 'getpaperplane/paperplane', 234,
+          'https://github.com/getpaperplane/paperplane/pull/234', 'manual',
           '2026-01-01T00:00:00.000Z', 'invalid', 'invalid')
       `;
         yield* sql`

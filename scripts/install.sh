@@ -17,7 +17,7 @@
 # instead of fetching the release again.
 set -eu
 
-repo="hafiezul/rove"
+repo="getpaperplane/paperplane"
 base_url="${PAPERPLANE_RELEASE_BASE_URL:-https://github.com/${repo}/releases/download}"
 paperplane_home="${PAPERPLANE_HOME:-$HOME/.paperplane}"
 bin_dir="${PAPERPLANE_INSTALL_BIN_DIR:-$HOME/.local/bin}"

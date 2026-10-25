@@ -33,7 +33,7 @@ describe("cliRelease", () => {
 
   it("resolves download URLs under the tagged release, honoring a mirror", () => {
     expect(cliReleaseDownloadBaseUrl("1.2.3")).toBe(
-      "https://github.com/hafiezul/rove/releases/download/v1.2.3",
+      "https://github.com/getpaperplane/paperplane/releases/download/v1.2.3",
     );
     expect(cliReleaseDownloadBaseUrl("1.2.3", "https://mirror.example/paperplane/")).toBe(
       "https://mirror.example/paperplane/v1.2.3",
@@ -87,7 +87,7 @@ describe("cliRelease", () => {
 
   it("pages through the release index at the largest page GitHub allows", () => {
     expect(cliReleaseIndexPageUrl(1)).toBe(
-      "https://api.github.com/repos/hafiezul/rove/releases?per_page=100&page=1",
+      "https://api.github.com/repos/getpaperplane/paperplane/releases?per_page=100&page=1",
     );
     expect(cliReleaseIndexPageUrl(3)).toContain("page=3");
   });

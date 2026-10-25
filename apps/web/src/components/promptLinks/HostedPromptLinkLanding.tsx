@@ -21,7 +21,7 @@ import { StandalonePage, StandalonePageHeader } from "../ui/standalone-page";
 
 const OPENER_STORAGE_KEY = "paperplane:prompt-link-opener";
 const Opener = Schema.NullOr(Schema.Literals(["app", "browser"]));
-const DOWNLOAD_URL = "https://github.com/hafiezul/rove/releases";
+const DOWNLOAD_URL = "https://github.com/getpaperplane/paperplane/releases";
 
 interface LinkSummary {
   readonly prompt: LinkedPrompt | null;

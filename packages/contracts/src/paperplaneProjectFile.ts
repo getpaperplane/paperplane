@@ -111,7 +111,7 @@ export const PaperplaneProjectFile = Schema.Struct({
 }).annotate({
   title: "Paperplane project file",
   description:
-    "Checked-in project configuration for Paperplane (paperplane.json at the repository root). See https://github.com/hafiezul/rove/blob/main/docs/user/project-settings.md for documentation.",
+    "Checked-in project configuration for Paperplane (paperplane.json at the repository root). See https://github.com/getpaperplane/paperplane/blob/main/docs/user/project-settings.md for documentation.",
 });
 export type PaperplaneProjectFile = typeof PaperplaneProjectFile.Type;
 

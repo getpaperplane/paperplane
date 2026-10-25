@@ -162,7 +162,7 @@ export function npmPlatformPackageReadme(platformKey: CliArchivePlatformKey): st
     `npx ${NPM_LAUNCHER_PACKAGE_NAME}@latest`,
     "```",
     "",
-    "Source and documentation: https://github.com/hafiezul/rove",
+    "Source and documentation: https://github.com/getpaperplane/paperplane",
     "",
   ].join("\n");
 }
@@ -209,7 +209,7 @@ try {
       "paperplane: no Paperplane CLI build is available for this platform (" + key + ").",
       "Supported platforms: " + SUPPORTED.join(", ") + ".",
       "If yours is listed, reinstall @getpaperplane/cli so npm fetches its optional dependency.",
-      "The desktop app and release archives are at https://github.com/hafiezul/rove/releases",
+      "The desktop app and release archives are at https://github.com/getpaperplane/paperplane/releases",
       "",
     ].join("\\n"),
   );

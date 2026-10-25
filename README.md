@@ -15,7 +15,7 @@ You bring your own subscriptions. If a provider is set up on the host, Paperplan
 
 ## Install
 
-**Desktop:** download a build for macOS, Windows, or Linux from [Releases](https://github.com/hafiezul/rove/releases). Stable and nightly channels are available; nightlies publish daily when there are new commits. macOS builds are self-signed rather than notarized, so you will need to approve the first install. See [Install Paperplane](./docs/user/install.md).
+**Desktop:** download a build for macOS, Windows, or Linux from [Releases](https://github.com/getpaperplane/paperplane/releases). Stable and nightly channels are available; nightlies publish daily when there are new commits. macOS builds are self-signed rather than notarized, so you will need to approve the first install. See [Install Paperplane](./docs/user/install.md).
 
 **CLI host** (headless server for LAN, Tailscale, or SSH access):
 

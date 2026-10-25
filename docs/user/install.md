@@ -1,6 +1,6 @@
 # Install Paperplane
 
-Download desktop installers from [Paperplane releases](https://github.com/hafiezul/rove/releases).
+Download desktop installers from [Paperplane releases](https://github.com/getpaperplane/paperplane/releases).
 Use Paperplane-owned CLI packages. Do not substitute an upstream package.
 
 ## Command line
@@ -99,7 +99,7 @@ remain on your server.
 
 Download `Rove-Code-<version>.apk` (Android) or
 `Rove-Code-<version>-unsigned.ipa` (iOS) from the
-[GitHub Release assets](https://github.com/hafiezul/rove/releases) when available.
+[GitHub Release assets](https://github.com/getpaperplane/paperplane/releases) when available.
 Mobile binaries accompany stable and preview releases, not daily nightlies.
 There are no App Store or Google Play releases from this project.
 

@@ -4,7 +4,7 @@ Paperplane is a minimal GUI for coding agents. A Node WebSocket server wraps pro
 
 It is a "bring-your-own-subscription" alternative to apps like Claude Desktop, Codex App, Cursor Glass, and Conductor.
 
-Paperplane is a fork of [T3 Code](https://github.com/pingdotgg/t3code) (`upstream` remote) with its own repo (`hafiezul/rove`), releases, and roadmap. We still sync upstream changes, so keep fork-specific changes easy to identify and preserve upstream attribution.
+Paperplane is a fork of [T3 Code](https://github.com/pingdotgg/t3code) (`upstream` remote) with its own repo (`getpaperplane/paperplane`), releases, and roadmap. We still sync upstream changes, so keep fork-specific changes easy to identify and preserve upstream attribution.
 
 ## What we never compromise on
 
@@ -107,13 +107,13 @@ For authorized mobile verification, a missing or outdated native client is a bui
 ## Upstream
 
 - Before fixing something, check whether upstream already fixed it. Port the upstream fix when it fits.
-- Upstream syncs are their own PRs (`chore: sync upstream updates ...`). Preserve Paperplane branding, `@getpaperplane/*` names, `~/.paperplane` paths, and fork-only features such as the Pi provider when resolving conflicts.
+- Upstream syncs are their own PRs (`chore: sync upstream updates ...`). Preserve Paperplane branding, `@getpaperplane/*` names, `~/.paperplane` paths, the `getpaperplane/paperplane` repository, and fork-only features such as the Pi provider when resolving conflicts.
 - Saved-data, protocol, and native-module identifiers need explicit migrations, not bulk renames. See [Releasing](docs/operations/release.md).
 
 ## Pull requests
 
 - Never make a PR unless the developer explicitly asks for one.
-- Open PRs against `hafiezul/rove`, never upstream, unless asked.
+- Open PRs against `getpaperplane/paperplane`, never upstream, unless asked.
 - Use conventional commit titles in plain language, for example `fix(web): new threads no longer spike CPU`.
 - In the body, state the problem in a sentence or two, then explain the fix. End with the model and harness that did the work.
 - UI changes need before and after images. Motion or timing changes need a short video.
@@ -141,7 +141,7 @@ Most code changes do not need an internal documentation change. Agents can read 
 ## Plans and work artifacts
 
 - Do not commit implementation plans, research notes, or agent scratch files. Keep temporary working material outside the worktree. `.plans/` is gitignored only as a safety net for legacy tooling.
-- Track active work in the GitHub issue that owns it on `hafiezul/rove`.
+- Track active work in the GitHub issue that owns it on `getpaperplane/paperplane`.
 - A merged PR is the implementation record. Close or update its tracking issue when the work lands; do not keep a second checklist in the repository.
 
 ## How it works

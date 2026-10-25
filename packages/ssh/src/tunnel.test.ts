@@ -110,7 +110,7 @@ describe("ssh tunnel scripts", () => {
     assert.include(script, "PAPERPLANE_NODE_SCRIPT_PATH=''");
     assert.include(
       script,
-      "PAPERPLANE_RELEASE_BASE_URL='https://github.com/hafiezul/rove/releases/download'",
+      "PAPERPLANE_RELEASE_BASE_URL='https://github.com/getpaperplane/paperplane/releases/download'",
     );
     assert.include(
       script,

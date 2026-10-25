@@ -22,8 +22,11 @@ export const homepage = {
     ["Agent guide", "/llms.txt"],
     ["OpenAPI specification", "/openapi.json"],
     ["Sitemap", "/sitemap.xml"],
-    ["Source code", "https://github.com/hafiezul/rove"],
-    ["Install Paperplane", "https://github.com/hafiezul/rove/blob/main/docs/user/install.md"],
+    ["Source code", "https://github.com/getpaperplane/paperplane"],
+    [
+      "Install Paperplane",
+      "https://github.com/getpaperplane/paperplane/blob/main/docs/user/install.md",
+    ],
   ] satisfies [string, string][],
 };
 
@@ -51,8 +54,11 @@ const docs = {
   ],
   links: [
     ["Open browser app", "/"],
-    ["Install Paperplane", "https://github.com/hafiezul/rove/blob/main/docs/user/install.md"],
-    ["Source code", "https://github.com/hafiezul/rove"],
+    [
+      "Install Paperplane",
+      "https://github.com/getpaperplane/paperplane/blob/main/docs/user/install.md",
+    ],
+    ["Source code", "https://github.com/getpaperplane/paperplane"],
     ["Agent guide", "/llms.txt"],
     ["OpenAPI specification", "/openapi.json"],
   ] satisfies [string, string][],
@@ -97,7 +103,7 @@ export function publicFiles(origin: string) {
     "index.md": markdownContent(homepage),
     "docs.md": markdownContent(docs),
     "docs/index.html": htmlDocument(docs),
-    "llms.txt": `# Paperplane\n\n> Open-source web, desktop, and mobile workspace for coding agents. Bring your own host and provider credentials.\n\nThis origin serves a browser client and public documentation only. It has no public agent execution API. Do not send secrets here. JavaScript is needed for the workspace, not for these resources.\n\n## Documentation\n\n- [Overview](${origin}/index.md): Product overview and connection requirements.\n- [Connection guide](${origin}/docs.md): Install, start, and pair your own host.\n- [Installation](https://github.com/hafiezul/rove/blob/main/docs/user/install.md): Desktop and CLI setup.\n\n## Machine-readable resources\n\n- [OpenAPI](${origin}/openapi.json): Public read-only content endpoints only.\n- [Project schema](${origin}/schema/paperplane.json): JSON Schema for paperplane.json.\n- [Sitemap](${origin}/sitemap.xml): Public content URLs, excluding private app routes.\n\n## Optional\n\n- [Source](https://github.com/hafiezul/rove): Code and issue tracker.\n`,
+    "llms.txt": `# Paperplane\n\n> Open-source web, desktop, and mobile workspace for coding agents. Bring your own host and provider credentials.\n\nThis origin serves a browser client and public documentation only. It has no public agent execution API. Do not send secrets here. JavaScript is needed for the workspace, not for these resources.\n\n## Documentation\n\n- [Overview](${origin}/index.md): Product overview and connection requirements.\n- [Connection guide](${origin}/docs.md): Install, start, and pair your own host.\n- [Installation](https://github.com/getpaperplane/paperplane/blob/main/docs/user/install.md): Desktop and CLI setup.\n\n## Machine-readable resources\n\n- [OpenAPI](${origin}/openapi.json): Public read-only content endpoints only.\n- [Project schema](${origin}/schema/paperplane.json): JSON Schema for paperplane.json.\n- [Sitemap](${origin}/sitemap.xml): Public content URLs, excluding private app routes.\n\n## Optional\n\n- [Source](https://github.com/getpaperplane/paperplane): Code and issue tracker.\n`,
     "robots.txt": `User-agent: *\nAllow: /\nSitemap: ${origin}/sitemap.xml\n`,
     "sitemap.xml": `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${["/", "/docs"].map((path) => `  <url><loc>${escapeHtml(origin + path)}</loc></url>`).join("\n")}\n</urlset>\n`,
     "openapi.json": `${JSON.stringify(openApiDocument(origin), null, 2)}\n`,

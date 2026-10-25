@@ -2,7 +2,7 @@ import type { DesktopUpdateActionResult, DesktopUpdateState } from "@getpaperpla
 
 export type DesktopUpdateButtonAction = "download" | "install" | "none";
 
-const DESKTOP_REPOSITORY_URL = "https://github.com/hafiezul/rove";
+const DESKTOP_REPOSITORY_URL = "https://github.com/getpaperplane/paperplane";
 const DESKTOP_RELEASE_HISTORY_URL = `${DESKTOP_REPOSITORY_URL}/releases`;
 const DESKTOP_RELEASE_TAG_URL = `${DESKTOP_RELEASE_HISTORY_URL}/tag`;
 

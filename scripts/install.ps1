@@ -16,7 +16,7 @@
 $ErrorActionPreference = "Stop"
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
-$repo = "hafiezul/rove"
+$repo = "getpaperplane/paperplane"
 $baseUrl = if ($env:PAPERPLANE_RELEASE_BASE_URL) { $env:PAPERPLANE_RELEASE_BASE_URL.TrimEnd("/") } else { "https://github.com/$repo/releases/download" }
 $paperplaneHome = if ($env:PAPERPLANE_HOME) { $env:PAPERPLANE_HOME } else { Join-Path $HOME ".paperplane" }
 $binDir = if ($env:PAPERPLANE_INSTALL_BIN_DIR) { $env:PAPERPLANE_INSTALL_BIN_DIR } else { Join-Path $HOME ".local\bin" }
