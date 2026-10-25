@@ -23,6 +23,7 @@ const configuredKeys = [
   "PAPERPLANE_IOS_PERSONAL_TEAM_BUNDLE_ID",
   "PAPERPLANE_MOBILE_VERSION",
   "PAPERPLANE_MOBILE_BUILD_NUMBER",
+  "PAPERPLANE_MOBILE_RELEASE_VERSION",
   "PAPERPLANE_CLERK_RELYING_PARTY_DOMAIN",
 ];
 
@@ -197,6 +198,26 @@ describe("source-built mobile identity", () => {
       );
     },
   );
+
+  it("exposes the release label CI baked in without changing the native version", async () => {
+    const config = await configFor({
+      PAPERPLANE_MOBILE_VERSION: "0.1.1",
+      PAPERPLANE_MOBILE_RELEASE_VERSION: "0.1.1-nightly.20261025.748",
+    });
+    expect(config.version).toBe("0.1.1");
+    expect(config.extra?.releaseVersion).toBe("0.1.1-nightly.20261025.748");
+    // Source builds have no release to name, so About falls back to `version`.
+    expect((await configFor({})).extra?.releaseVersion).toBeUndefined();
+  });
+
+  it.each([
+    [" 0.1.1-preview.2 ", "0.1.1-preview.2"],
+    ["   ", undefined],
+    ["", undefined],
+  ] as const)("normalizes release label %j", async (value, expected) => {
+    const config = await configFor({ PAPERPLANE_MOBILE_RELEASE_VERSION: value });
+    expect(config.extra?.releaseVersion).toBe(expected);
+  });
 
   it("refuses OTA updates without a project ID", async () => {
     await expect(configFor({ PAPERPLANE_MOBILE_UPDATES_ENABLED: "1" })).rejects.toThrow(

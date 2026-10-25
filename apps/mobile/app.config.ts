@@ -12,6 +12,9 @@ const APP_VARIANT = resolveAppVariant(repoEnv.APP_VARIANT);
 const isIosUnsignedBuild = repoEnv.PAPERPLANE_IOS_UNSIGNED === "1";
 const isIosPersonalTeamBuild = repoEnv.PAPERPLANE_IOS_PERSONAL_TEAM === "1" || isIosUnsignedBuild;
 const mobileBuildNumber = repoEnv.PAPERPLANE_MOBILE_BUILD_NUMBER;
+// Native version fields must stay numeric, so CI passes the release label
+// (for example `0.1.1-nightly.20261025.748`) separately for About to display.
+const mobileReleaseVersion = repoEnv.PAPERPLANE_MOBILE_RELEASE_VERSION?.trim() || undefined;
 if (
   mobileBuildNumber !== undefined &&
   (!/^[1-9]\d*$/.test(mobileBuildNumber) || Number(mobileBuildNumber) > 2_100_000_000)
@@ -496,6 +499,8 @@ const config: ExpoConfig = {
   ],
   extra: {
     appVariant: APP_VARIANT,
+    // Only CI release builds set this; local builds fall back to `version`.
+    releaseVersion: mobileReleaseVersion,
     iosPersonalTeamBuild: isIosPersonalTeamBuild,
     cloudReady,
     relay: {
