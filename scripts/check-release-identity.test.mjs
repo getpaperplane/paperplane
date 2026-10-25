@@ -81,6 +81,7 @@ it.each([
   ["patches/example.patch", "Rove Code"],
   ["apps/server/src/orchestration-v2/testkit/fixtures/example/replay.ndjson", "Rove Code"],
   ["docs/user/install.md", "Quit Rove Code before copying ~/.rove-code."],
+  ["docs/operations/cloudflare-web.md", "Delete rove-web and rove.hafiezulzikry.com."],
   ["apps/server/src/computerUse/MacosVm.ts", 'const vm = "rove-cua-golden";'],
   [".github/scripts/thread-transfer-report.cjs", "<!-- rove-thread-transfer-report -->"],
   ["apps/server/src/project/PaperplaneProjectFileLoader.ts", 'exists("rove.json")'],
@@ -106,6 +107,7 @@ it.each([
     'branch = "rove/deadbeef"; url = "https://github.com/hafiezul/rove";',
   ],
   ["docs/user/install.md", "Quit Rove Code. Download https://github.com/hafiezul/rove"],
+  ["docs/operations/cloudflare-web.md", "Delete rove-web. Deploy rove-relay."],
   ["apps/mobile/src/lib/attachmentUpload.test.ts", '"rove-composer-attachments"; "rove-relay";'],
 ])("does not broaden history exemptions at %s", (file, source) => {
   expect(findOldNameIdentifiers(file, source)).toHaveLength(1);

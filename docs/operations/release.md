@@ -16,24 +16,76 @@ The first release is **self-hosted desktop and persistent CLI hosts, with local,
 
 The static browser app deploys to Cloudflare. See the [Cloudflare deployment procedure](./cloudflare-web.md). When `PAPERPLANE_CLOUDFLARE_WEB_READY=true`, stable releases deploy to `paperplane.hafiezulzikry.com` and nightlies deploy to the separate `paperplane-nightly.hafiezulzikry.com` origin. Preview releases deploy neither. Marketing deploys only on stable releases when `PAPERPLANE_MARKETING_RELEASE_READY=true`. These deployments do not require the relay gate.
 
-For the identity migration, stage protocol version 2 clients and servers together. If Connect is enabled,
-stage the matching relay before connecting those clients. Native module names changed, so mobile requires
-new iOS and Android binaries, not a JavaScript-only update. Test an upgrade with existing preferences,
-attachments, notification history, credentials, and checkpoint refs. Android widgets may need to be
-added again after their receiver class changes.
+## One-time Paperplane cutover
 
-Before publishing new project-file schema links, deploy the web or marketing build and verify that
-`https://paperplane.hafiezulzikry.com/schema/paperplane.json` returns the generated JSON Schema rather than the
-app's HTML fallback. Source-tree generation does not clear this deployment gate.
+Complete these account and deployment steps around the rename merge. They are maintainer actions,
+not steps performed by the rename scripts. Keep disabled release channels disabled.
+
+1. Before transferring the repository, test the old desktop updater against GitHub's redirect behavior
+   on an isolated installation. Prepare the transfer to `getpaperplane/paperplane`: check GitHub App
+   installations, organization-secret access, environment protections, branch rules and vulnerability
+   reporting for the destination organization. The release App needs
+   Contents write access and permission to make the version-bump commit; its secrets remain
+   `RELEASE_APP_ID` and `RELEASE_APP_PRIVATE_KEY`.
+2. Before merging, copy the old readiness settings to the following repository variables, preserving
+   their intended values, not turning every gate on:
+   `PAPERPLANE_RELEASE_READY`, `PAPERPLANE_CLOUDFLARE_WEB_READY`, `PAPERPLANE_CLOUD_READY`,
+   `PAPERPLANE_HOSTED_RELEASE_READY`, `PAPERPLANE_MACOS_SIGNING_READY`,
+   `PAPERPLANE_MARKETING_RELEASE_READY`, `PAPERPLANE_MOBILE_SIDELOAD_READY`, and
+   `PAPERPLANE_MOBILE_STORES_READY`. Copy the Android secrets to
+   `PAPERPLANE_ANDROID_KEYSTORE_BASE64`, `PAPERPLANE_ANDROID_KEYSTORE_PASSWORD`,
+   `PAPERPLANE_ANDROID_KEY_ALIAS`, and `PAPERPLANE_ANDROID_KEY_PASSWORD`. Copy the Cursor webhook
+   secrets to `CURSOR_PAPERPLANE_WEBHOOK_URL` and `CURSOR_PAPERPLANE_WEBHOOK_AUTH`.
+   Each replaces the same suffix under the former product prefix. Missing gates silently skip their
+   channels; missing Android secrets skip APKs; missing Cursor secrets disable webhook delivery.
+3. Verify ownership of the `@getpaperplane` npm organization and all six CLI packages listed below.
+   Configure each trusted publisher for owner `getpaperplane`, repository `paperplane`, workflow
+   `release.yml`. CI uses npm OIDC, not an `NPM_TOKEN` secret. If using a token for the initial manual
+   publication, grant it access to this organization and every package. Without publisher access,
+   the next nightly's npm jobs fail even if GitHub artifacts ship.
+4. Generate new macOS and Windows self-signed identities named **Paperplane Release Signing** using
+   the procedures below. Replace `CSC_LINK` and `CSC_KEY_PASSWORD` for macOS, and `WIN_CSC_LINK` and
+   `WIN_CSC_KEY_PASSWORD` for Windows. Keep `MACOS_SIGNING_MODE=self-signed` and
+   `WINDOWS_SIGNING_MODE=self-signed` for those release modes. Remove an obsolete
+   `MACOS_SIGNING_IDENTITY` override or set it to `Paperplane Release Signing`. Exported Windows
+   files are `paperplane-windows-signing.pfx` (private) and `paperplane-windows-signing.cer` (public).
+   Old secrets or an old identity override either fail signing or keep signing with the retired
+   certificate. Existing installations must reinstall; Windows users must trust the new public
+   certificate. Do not enable the Apple-signing readiness gate for self-signed builds.
+5. Follow [Cloudflare web](./cloudflare-web.md) to deploy `paperplane-web`, `paperplane-web-nightly`,
+   and `paperplane-marketing` on their new custom domains and retire the previous origins without
+   redirects. Preserve the `cloudflare-web` GitHub environment's `CLOUDFLARE_ACCOUNT_ID` and
+   `CLOUDFLARE_API_TOKEN` secrets and their access after transfer. Verify
+   `https://paperplane.hafiezulzikry.com/schema/paperplane.json` serves JSON Schema, not the SPA.
+   Skipping deployment leaves new pairing, download, and schema links unavailable; users pair again
+   at the new browser origins because cookies and browser storage do not cross origins.
+6. Only if Connect is enabled, complete [Connect setup](./connect-setup.md) before building clients.
+   Deploy the matching protocol-version-2 relay under the `PaperplaneRelay` stack, then rebuild all
+   clients with its new URL, JWT audience and tracing outputs. A release with Connect enabled reads
+   `PaperplaneRelay/prod/output`; without that deployment its public-config job fails. Do not enable
+   `PAPERPLANE_CLOUD_READY` just to exercise the rename.
+7. At merge time, transfer and rename the repository to `getpaperplane/paperplane`, update local
+   remotes, and recheck App/secret access and branch rules. Stage desktop, CLI and new native mobile
+   binaries together. Test an upgrade with existing
+   preferences, notification history, credentials, checkpoint refs and worktree threads against
+   isolated copies. Publish release notes requiring a manual desktop/CLI/mobile reinstall and mobile
+   re-pairing; old CLI updaters expect the old archive and executable names. Tell users to rename
+   `rove.json` to `paperplane.json` (including `$schema`), `.rove/vcs.json` to `paperplane.vcs.json`,
+   update personal MCP permissions to `mcp__paperplane__*`, reinstall capture helpers, and rerun
+   browser sandbox setup if used. Service users install the new CLI and run `paperplane service
+install` to retire the recognized old service. Android widgets may need adding again.
+8. After the first new npm release is live and verified, deprecate the old scoped CLI/platform
+   packages with a pointer to `@getpaperplane/cli`. Do not deprecate them before a replacement exists.
+   Retain the frozen old home/profile backups through the migration window.
 
 Updates from the previous orchestration system preserve transcripts but cannot carry all runtime history forward. Before testing an upgrade, read [Threads from older Paperplane versions](../user/thread-migration.md) and verify the `statev2.sqlite` migration against isolated data.
 
 ## Before enabling publication
 
 1. Confirm that the repository, domains, npm scope, signing accounts, vulnerability reporting, and legal/support contacts belong to this project. Preserve upstream MIT attribution. In particular, verify ownership of the `@getpaperplane` npm scope and configure trusted publishing for `@getpaperplane/cli` and every `@getpaperplane/cli-<platform>` package; a package-name lookup alone does not prove control.
-2. Run `node scripts/check-release-identity.mjs` and triage each finding. The check scans public marketing, hosted-web, and mobile store/sideload identity; it reports gated channels but blocks a channel only when its release-readiness variable is enabled. Saved-data and protocol identifiers require explicit migrations, not bulk replacements; package names, public URLs, downloads, and legal claims must point to Paperplane-owned resources or be removed.
+2. Run `node scripts/check-release-identity.mjs` and triage each finding. Stray old-name identifiers anywhere in tracked or non-ignored source block publication regardless of gates. Explicit exceptions cover one-time migration units and inputs, immutable ledgers/recordings, historical documentation and retained external-resource lookups. Public upstream claims on marketing, hosted-web, and mobile surfaces are also reported; those claims block only when that surface's readiness variable is enabled. Saved-data and protocol identifiers require explicit migrations, not bulk replacements; package names, public URLs, downloads, and legal claims must point to Paperplane-owned resources or be removed.
 3. Keep the source server workspace package (`apps/server/package.json`, `name: @getpaperplane/server`) private. Its name is used by Effect's deterministic service keys; it is **not** the published CLI. `scripts/build-npm-platform-packages.ts` produces the separate `@getpaperplane/cli` launcher, its `paperplane` command, and the platform packages. The source package must never be published.
-4. Verify the installer, archive, npm launcher, SSH runtime, WSL payload, desktop identity, and background service resolve to the **same** Paperplane artifact and isolated state paths. The fork defaults to `~/.paperplane`, not inherited `~/.rove`. An import from inherited data is not yet available; never point a release at the live inherited directory to simulate one.
+4. Verify the installer, archive, npm launcher, SSH runtime, WSL payload, desktop identity, and background service resolve to the **same** Paperplane artifact and isolated state paths. The default home is `~/.paperplane`. The first default-home start copies the previous product's data once, with SQLite backup-API snapshots and no overwrites; an explicit home bypasses that conversion. Test only with isolated copies, never the live inherited directory.
 5. Keep `PAPERPLANE_CLOUD_READY`, `PAPERPLANE_MOBILE_STORES_READY`, and `PAPERPLANE_MACOS_SIGNING_READY` off until their paid infrastructure or credentials are available. Keep hosted web (`PAPERPLANE_CLOUDFLARE_WEB_READY`) and marketing (`PAPERPLANE_MARKETING_RELEASE_READY`) off until their independent deployment review is complete. The source-only marketing page uses this repository's free GitHub build guides; set `PAPERPLANE_MARKETING_SITE_URL` to a verified deployed origin before publishing for canonical and social URLs. Without it those tags are omitted. Review and replace the inherited legal pages and desktop screenshot before enabling marketing; the text check cannot inspect image assets.
 6. Check repository CI and focused tests under the supported Node version (`package.json`). Build the platform matrix on its supported hardware, verify signatures/notarization as applicable, and inspect every archive and npm tarball for package identity, executable name, URL, and checksum. Verify release notes and update metadata refer only to this repository.
 7. **Download the Paperplane-built artifacts** from a staging release and test them on clean machines: macOS arm64/x64, Linux x64/arm64, Windows x64/arm64, plus CLI archive and npm launcher for each supported target. Exercise installation, first run, local and LAN pairing, Tailscale HTTPS, service install/restart/uninstall, systemd-enabled WSL, and upgrade/rollback. Verify that the address, port, provider PATH, environment ID, paired-client authorization, and threads survive an update. Verify that disconnecting desktop SSH leaves its host service running. Connect deployments must also retain cloud links and recover their managed tunnel after updates. Native Windows service installation must fail with its supported-platform explanation, not fall back to a disposable process. Confirm that state outside the selected Paperplane home is untouched. Source-tree tests alone do not clear this gate.
@@ -100,7 +152,7 @@ iOS installation. No full native build or device test is implied by config tests
 
 This mode signs desktop and CLI artifacts with your own certificate. It does not provide Apple notarization or Apple-provisioned native passkeys. Users must approve the initial unnotarized installation. Do not enable `PAPERPLANE_MACOS_SIGNING_READY` for this mode. That variable controls the separate Apple-signed PR preview workflow.
 
-1. Create a self-signed Code Signing identity in Keychain Access. Export the certificate and private key as a password-protected `.p12`. Keep an encrypted backup of the identity and its password. Use the same identity for every release.
+1. Create a new self-signed Code Signing identity named `Paperplane Release Signing` in Keychain Access. Export the certificate and private key as a password-protected `.p12`. Keep an encrypted backup of the identity and its password. Use the same identity for every release.
 2. Add the Base64-encoded `.p12` as the repository Actions secret `CSC_LINK`. Add its export password as `CSC_KEY_PASSWORD`. Do not put either value in source control or logs.
 3. Add the repository Actions variable `MACOS_SIGNING_MODE` with value `self-signed`. The default certificate name is `Paperplane Release Signing`. If you chose another name, set `MACOS_SIGNING_IDENTITY` to that exact name.
 4. Push the workflow and signing scripts to the ref you want to build. Dispatch `release.yml` with `channel=preview` and `build_only=true`. Keep publication disabled during verification.
@@ -160,7 +212,7 @@ The `@getpaperplane` organization must own the launcher and all five platform pa
 
    This is a real public publication, not a validation step. No npm token belongs in GitHub secrets. A local initial publication does not use GitHub OIDC provenance.
 
-4. In each package's npm settings, add a GitHub Actions trusted publisher: owner `hafiezul`, repository `paperplane`, workflow `release.yml`, environment blank. Configure all six packages: `@getpaperplane/cli`, `@getpaperplane/cli-darwin-arm64`, `@getpaperplane/cli-linux-x64`, `@getpaperplane/cli-linux-arm64`, `@getpaperplane/cli-win32-x64`, and `@getpaperplane/cli-win32-arm64`.
+4. In each package's npm settings, add a GitHub Actions trusted publisher: owner `getpaperplane`, repository `paperplane`, workflow `release.yml`, environment blank. Configure all six packages: `@getpaperplane/cli`, `@getpaperplane/cli-darwin-arm64`, `@getpaperplane/cli-linux-x64`, `@getpaperplane/cli-linux-arm64`, `@getpaperplane/cli-win32-x64`, and `@getpaperplane/cli-win32-arm64`.
 5. After staging approval, enable `PAPERPLANE_RELEASE_READY` and explicitly dispatch `channel=nightly`, `build_only=false`. A fresh run generates a new prerelease version instead of attempting to overwrite the bootstrap version. Verify that release before dispatching stable with `version=0.0.1`, `build_only=false`. Stable builds the latest published nightly commit, not the current branch, even with a version override.
 
 Finalization uses a GitHub App installed on this repository with Contents write permission. Store its App ID and PEM key as `RELEASE_APP_ID` and `RELEASE_APP_PRIVATE_KEY`; branch rules must permit its version-bump commit. npm publishing and finalization have no extra readiness switches.

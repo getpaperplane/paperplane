@@ -31,10 +31,49 @@ EAS preview and production environments need the publishable key, JWT template n
 Bundled servers also accept runtime overrides for operator-managed deployments.
 
 Copy `infra/relay/.env.example` to `infra/relay/.env` for relay deployment settings.
-Create an existing Neon Free project and supply its project ID, production branch name, and a
+Use an existing Neon Free project and supply its project ID, production branch name, and a
 project-scoped API key as described in the relay README. Deploy `prod` before personal stages
 because it owns their shared DNS zones and initializes the branch they fork. The stack's `PublishClientConfig` action
 writes the resulting relay URL back to the root `.env`.
+
+For an existing Connect deployment, the rename is a coordinated cutover, not an in-place client
+update. Keep `PAPERPLANE_CLOUD_READY` off unless you actually operate Connect:
+
+1. Preserve the `production` GitHub environment and the repository Cloudflare/Axiom credentials
+   listed in the relay README after transferring to `getpaperplane/paperplane`. Keep the existing
+   Neon project and production branch: the new migration changes only the default environment
+   label, not saved user labels. Do not regenerate or edit applied migration files.
+2. Configure Clerk's new `paperplane-relay` JWT template/audience, the new browser origins
+   `https://paperplane.hafiezulzikry.com` and `https://paperplane-nightly.hafiezulzikry.com`, and the
+   native redirects below. Remove the retired product's origins and redirects, while preserving
+   unrelated applications. Otherwise sign-in or relay token exchange can fail after the cutover.
+3. If you ship Apple-provisioned builds, register the `io.github.getpaperplane.paperplane` App ID
+   family, matching App Groups, Associated Domains and keychain groups, regenerate profiles, and
+   replace the `MACOS_PROVISIONING_PROFILE` release secret. Keep `APPLE_TEAM_ID`, `APPLE_API_KEY`,
+   `APPLE_API_KEY_ID`, and `APPLE_API_ISSUER` authorized for the new IDs; self-signed releases do not
+   need these. Register the corresponding iOS identities in Clerk and verify their AASA entries.
+4. Set deployment `APNS_BUNDLE_ID=io.github.getpaperplane.paperplane` for production, with `.dev` or
+   `.preview` for those builds. Verify `APNS_TEAM_ID`, `APNS_KEY_ID`, and `APNS_PRIVATE_KEY` authorize
+   that topic. Register the new Android package family in Firebase, update build Firebase config,
+   and authorize `FCM_SERVICE_ACCOUNT`. If publishing through stores/EAS, configure the new bundle
+   IDs/package records, Expo project access (`PAPERPLANE_EXPO_OWNER`, `PAPERPLANE_EXPO_PROJECT_ID`,
+   `EXPO_TOKEN`), and Play service-account access (`GOOGLE_PLAY_SERVICE_ACCOUNT_JSON`). Old package
+   or topic settings make push delivery or store upload fail even when pairing works.
+5. Review and deploy the `PaperplaneRelay` Alchemy stack using the `paperplane-relay` workspace.
+   Its Worker/queues/Hyperdrive use new stack-derived physical names; do not assume the old Worker
+   was renamed. Managed tunnels use `paperplanerelay-managedendpoint-<stage>-<digest>`.
+   Axiom resources are `paperplane-relay-traces-prod`, `paperplane-relay-otel-ingest-prod`,
+   `paperplane-mobile-otel-ingest-prod`, `paperplane-relay-client-otel-ingest-prod`, and
+   `paperplane-relay-recent-spans-prod` (replace `prod` for other stages). The release workflow
+   reads `PaperplaneRelay/prod/output`. Verify domains and DNS bindings move to the new deployment;
+   a domain still attached to the previous Worker can block provisioning.
+6. Rebuild desktop, CLI, web and native mobile clients with the new public config and tracing
+   tokens; enroll new passkeys and re-register mobile devices. Existing relay records can still
+   reference old tunnel IDs, so inspect/reconcile allocations and relink hosts before removing
+   obsolete tunnels. After verifying the replacement, retire the old stack's Worker, queues,
+   tunnels and Axiom resources. Preserve the adopted Neon branch and DNS zones; do not blindly
+   destroy the old stack. Missing redeployment/config leaves releases unable to read public config,
+   clients unable to link, or diagnostics writing to retired datasets.
 
 ## CLI OAuth application
 
@@ -73,7 +112,8 @@ paperplane://app/
 
 Add the corresponding origin to the Clerk instance's Backend API `allowed_origins` array.
 Development uses `paperplane-dev://app`; production uses `paperplane://app`. Update the array with
-`PATCH https://api.clerk.com/v1/instance` using the Clerk secret key, preserving existing entries.
+`PATCH https://api.clerk.com/v1/instance` using the Clerk secret key. Retire the previous product's
+entries, preserving unrelated applications.
 The Clerk Electron integration handles token
 persistence and system-browser callback delivery.
 
@@ -87,7 +127,7 @@ Clerk's native Android SDK uses `clerk://<applicationId>.callback`. In the Clerk
 | Preview     | `clerk://io.github.getpaperplane.paperplane.preview.callback` |
 | Production  | `clerk://io.github.getpaperplane.paperplane.callback`         |
 
-Preserve existing entries. These callbacks are separate from the `paperplane-dev` / `paperplane-preview` / `paperplane` navigation schemes. A private development build using the production Clerk key still needs its development callback allowed by that instance's administrator; rebuilding the same package does not change the allowlist.
+Remove the previous product's callbacks and preserve unrelated applications. These callbacks are separate from the `paperplane-dev` / `paperplane-preview` / `paperplane` navigation schemes. A private development build using the production Clerk key still needs its development callback allowed by that instance's administrator; rebuilding the same package does not change the allowlist.
 
 ## Desktop passkeys
 

@@ -18,6 +18,22 @@ Each deployment creates its hostname's DNS record and HTTPS certificate. Do not 
 
 To use another hostname, change the custom-domain `pattern` in `apps/web/wrangler.json` (stable) or `apps/web/wrangler.nightly.json` (nightly). The separate Workers are `paperplane-web` and `paperplane-web-nightly`. The workflow reads the browser app's public origin from the selected configuration.
 
+For the rename cutover, deploy and verify all three new sites before removing the old resources:
+
+| Worker                   | Custom domain                          |
+| ------------------------ | -------------------------------------- |
+| `paperplane-web`         | `paperplane.hafiezulzikry.com`         |
+| `paperplane-web-nightly` | `paperplane-nightly.hafiezulzikry.com` |
+| `paperplane-marketing`   | `getpaperplane.hafiezulzikry.com`      |
+
+Then delete the old `rove-web`, `rove-web-nightly`, and `rove-marketing` Workers, their custom-domain
+bindings, and any leftover DNS records for `rove.hafiezulzikry.com`,
+`rove-nightly.hafiezulzikry.com`, and `rove-code.hafiezulzikry.com`. Do not configure redirects or a
+moved page. Check that no old `workers.dev` route still serves them. Browser connections, cookies,
+and settings are origin-scoped: users pair again on each new origin; there is no cross-origin cookie
+or localStorage import. Keep the backend's one-time local cookie handoff; that is independent of
+these retired public origins.
+
 ## Configure GitHub deployment credentials
 
 1. Find your Cloudflare account ID in the dashboard.
@@ -25,7 +41,7 @@ To use another hostname, change the custom-domain `pattern` in `apps/web/wrangle
 3. In this repository's GitHub settings, create an environment named `cloudflare-web`.
 4. Add the environment secret `CLOUDFLARE_ACCOUNT_ID` with your account ID.
 5. Add the environment secret `CLOUDFLARE_API_TOKEN` with your API token.
-6. Restrict the environment to the deployment branch. Add a required reviewer if your GitHub plan supports that protection.
+6. Restrict the environment to the deployment branch. Add a required reviewer if your GitHub plan supports that protection. After the GitHub transfer to `getpaperplane/paperplane`, verify this environment, its secret access and reviewers still work; organization-owned secrets or App permissions may need reauthorizing.
 
 The token needs permission to edit Workers scripts and Workers routes for the target account and zone. Follow Cloudflare's [GitHub Actions authentication guide](https://developers.cloudflare.com/workers/ci-cd/external-cicd/github-actions/) when creating the token.
 

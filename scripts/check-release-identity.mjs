@@ -122,6 +122,11 @@ const historicalDocs = new Set([
 // identity on the same line. Reasons for retained external resources live at
 // their readers (Tart VMs, Modal handles, bot comments, branches and cgroups).
 const retainedIdentities = [
+  // The operator cutover explicitly lists the resources to delete, not reuse.
+  [
+    /^docs\/operations\/cloudflare-web\.md$/,
+    /rove-web(?:-nightly)?|rove-marketing|rove(?:-nightly|-code)?\.hafiezulzikry\.com/g,
+  ],
   [
     /^\.github\/scripts\/thread-transfer-report(?:\.test)?\.cjs$/,
     /rove-thread-transfer-(?:report|result-sha)/g,
