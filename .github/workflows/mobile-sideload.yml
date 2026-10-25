@@ -9,6 +9,10 @@ on:
       version:
         required: true
         type: string
+      cold_cache:
+        description: Skip restoring build caches for a cold-build measurement
+        default: false
+        type: boolean
     secrets:
       PAPERPLANE_ANDROID_KEYSTORE_BASE64:
         required: false
@@ -32,6 +36,10 @@ on:
         description: Existing GitHub Release tag to attach assets to; blank uploads Actions artifacts only
         required: false
         type: string
+      cold_cache:
+        description: Skip restoring build caches for a cold-build measurement
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -112,12 +120,24 @@ jobs:
           distribution: temurin
           java-version: 17
       - uses: gradle/actions/setup-gradle@v5
+        with:
+          cache-read-only: false
+          cache-write-only: ${{ inputs.cold_cache }}
+      - id: compiler_cache
+        uses: ./.github/actions/setup-mobile-compiler-cache
+        with:
+          cold-cache: ${{ inputs.cold_cache }}
       - name: Generate native Android project
         working-directory: apps/mobile
         run: vp exec expo prebuild --clean --platform android --no-install
       - name: Build unsigned release APK
         working-directory: apps/mobile/android
         shell: bash
+        env:
+          CMAKE_C_COMPILER_LAUNCHER: ccache
+          CMAKE_CXX_COMPILER_LAUNCHER: ccache
+          # Clang's PCH caching requires these; headers still use content hashes.
+          CCACHE_SLOPPINESS: pch_defines,time_macros
         run: |
           set -euo pipefail
           # Expo's template otherwise signs release with its bundled debug key.
@@ -130,8 +150,32 @@ jobs:
             }
           }
           EOF
-          ./gradlew --no-daemon --init-script "$RUNNER_TEMP/unsigned.gradle" :app:assembleRelease
+          ./gradlew --no-daemon --build-cache --profile --console=plain \
+            --init-script "$RUNNER_TEMP/unsigned.gradle" :app:assembleRelease
           test -f app/build/outputs/apk/release/app-release-unsigned.apk
+      - name: Record Android compiler cache results
+        if: ${{ always() && steps.compiler_cache.outcome == 'success' }}
+        shell: bash
+        run: |
+          mkdir -p "$RUNNER_TEMP/mobile-build-reports"
+          ccache --print-stats > "$RUNNER_TEMP/mobile-build-reports/ccache-stats.txt"
+          if [[ -d apps/mobile/android/build/reports/profile ]]; then
+            cp -R apps/mobile/android/build/reports/profile "$RUNNER_TEMP/mobile-build-reports/gradle"
+          fi
+          {
+            echo '### Android compiler cache'
+            echo "Commit: $(git rev-parse HEAD)"
+            echo '```text'
+            ccache --show-stats
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload Android build reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: mobile-build-reports-android
+          path: ${{ runner.temp }}/mobile-build-reports/
+          if-no-files-found: ignore
       - name: Sign and verify APK with the persistent release key
         env:
           KEYSTORE: ${{ secrets.PAPERPLANE_ANDROID_KEYSTORE_BASE64 }}
@@ -166,6 +210,7 @@ jobs:
       PAPERPLANE_MOBILE_VERSION: ${{ needs.prepare.outputs.native_version }}
       PAPERPLANE_IOS_PERSONAL_TEAM: "1"
       PAPERPLANE_IOS_UNSIGNED: "1"
+      USE_CCACHE: "1"
     steps:
       - uses: actions/checkout@v6
         with:
@@ -185,6 +230,10 @@ jobs:
         run: |
           pnpm_version="$(node --print "require('./package.json').packageManager.split('@').pop()")"
           echo "$HOME/.vite-plus/package_manager/pnpm/$pnpm_version/pnpm/bin" >> "$GITHUB_PATH"
+      - id: compiler_cache
+        uses: ./.github/actions/setup-mobile-compiler-cache
+        with:
+          cold-cache: ${{ inputs.cold_cache }}
       - name: Generate native iOS project and install Pods
         working-directory: apps/mobile
         run: |
@@ -198,12 +247,33 @@ jobs:
           workspace="$(find apps/mobile/ios -maxdepth 1 -name '*.xcworkspace' -print -quit)"
           scheme="$(basename "$workspace" .xcworkspace)"
           xcodebuild -workspace "$workspace" -scheme "$scheme" -configuration Release \
+            -showBuildTimingSummary \
             -destination 'generic/platform=iOS' -archivePath "$RUNNER_TEMP/Paperplane.xcarchive" \
             CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO archive
           mkdir -p "$RUNNER_TEMP/ipa/Payload" release-assets
           cp -R "$RUNNER_TEMP/Paperplane.xcarchive/Products/Applications/"*.app "$RUNNER_TEMP/ipa/Payload/"
           cd "$RUNNER_TEMP/ipa"
           /usr/bin/zip -qry "$GITHUB_WORKSPACE/release-assets/Paperplane-$RELEASE_VERSION-unsigned.ipa" Payload
+      - name: Record iOS compiler cache results
+        if: ${{ always() && steps.compiler_cache.outcome == 'success' }}
+        shell: bash
+        run: |
+          mkdir -p "$RUNNER_TEMP/mobile-build-reports"
+          ccache --print-stats > "$RUNNER_TEMP/mobile-build-reports/ccache-stats.txt"
+          {
+            echo '### iOS compiler cache'
+            echo "Commit: $(git rev-parse HEAD)"
+            echo '```text'
+            ccache --show-stats
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload iOS build reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: mobile-build-reports-ios
+          path: ${{ runner.temp }}/mobile-build-reports/
+          if-no-files-found: ignore
       - uses: actions/upload-artifact@v7
         with:
           name: mobile-sideload-ios
