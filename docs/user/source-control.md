@@ -3,6 +3,20 @@
 Paperplane integrates with GitHub, GitLab, Forgejo, Gitea, Bitbucket, Azure DevOps, and GitCafe to clone
 and publish repositories, create pull requests, and review changes.
 
+## Repository VCS configuration
+
+To select Git or Jujutsu for a repository, add `paperplane.vcs.json` at its root:
+
+```json
+{ "vcs": { "kind": "jj" } }
+```
+
+Use `"git"` for Git. Paperplane searches parent directories from the workspace and uses the
+nearest configuration, unless a VCS kind was explicitly selected.
+
+Rename an existing `.rove/vcs.json` to `paperplane.vcs.json`. The old file is not read;
+its rules are ignored and the server logs a rename warning. If both exist, only the new file applies.
+
 ## Review turn changes
 
 A turn's changed files and diff show only the turn's own work. When a turn pulls, merges, or

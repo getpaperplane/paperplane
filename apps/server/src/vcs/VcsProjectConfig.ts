@@ -69,28 +69,32 @@ export const make = Effect.gen(function* () {
   const fileSystem = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
 
+  const warnedPaths = new Set<string>();
+  const exists = (cwd: string, configPath: string) =>
+    fileSystem.exists(configPath).pipe(
+      Effect.mapError(
+        (cause) => new VcsProjectConfigError({ operation: "inspect", cwd, configPath, cause }),
+      ),
+      Effect.catchTags({
+        VcsProjectConfigError: (error) => logVcsProjectConfigError(error).pipe(Effect.as(false)),
+      }),
+    );
+
   const findConfigPath = Effect.fn("VcsProjectConfig.findConfigPath")(function* (cwd: string) {
-    let current = cwd;
+    let current = path.resolve(cwd);
     while (true) {
-      // User-maintained repository configuration cannot be moved by home migration.
-      // Keep its on-disk identity; renaming it silently would discard existing rules.
-      const candidate = path.join(current, ".rove", "vcs.json");
-      const exists = yield* fileSystem.exists(candidate).pipe(
-        Effect.mapError(
-          (cause) =>
-            new VcsProjectConfigError({
-              operation: "inspect",
-              cwd,
-              configPath: candidate,
-              cause,
-            }),
-        ),
-        Effect.catchTags({
-          VcsProjectConfigError: (error) => logVcsProjectConfigError(error).pipe(Effect.as(false)),
-        }),
-      );
-      if (exists) {
+      // .paperplane is gitignored worktree dev state, not repository-owned configuration.
+      const candidate = path.join(current, "paperplane.vcs.json");
+      if (yield* exists(cwd, candidate)) {
         return Option.some(candidate);
+      }
+
+      const legacyPath = path.join(current, ".rove", "vcs.json");
+      if (!warnedPaths.has(legacyPath) && (yield* exists(cwd, legacyPath))) {
+        warnedPaths.add(legacyPath);
+        yield* Effect.logWarning(
+          `${legacyPath} is ignored; rename it to ${candidate} to apply its VCS rules.`,
+        );
       }
 
       const parent = path.dirname(current);
