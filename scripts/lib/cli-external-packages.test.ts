@@ -22,6 +22,7 @@ import { stageRuntimePackageFixture } from "./runtime-package-fixture.ts";
 
 import {
   CLI_PI_RUNTIME_PACKAGES,
+  isExternalCliDependency,
   isRuntimeExternalCliDependency,
   findInlinedExternalPackages,
   selectCliRuntimeExternalDependencies,
@@ -518,6 +519,13 @@ it("runs home migration from isolated ESM and CommonJS bundles with a native sid
         shims: true,
         logLevel: "silent",
         outExtensions: () => ({ js: extension }),
+        // Mirror the CLI bundle (apps/server/vite.config.ts): JS dependencies are
+        // compiled in, and only native addons such as ffi-rs stay external.
+        deps: {
+          alwaysBundle: (id: string) => shouldBundleCliDependency(id),
+          neverBundle: (id: string) => isExternalCliDependency(id),
+          onlyBundle: false,
+        },
       });
       const entry = NodePath.join(stage, `homeMigration${extension}`);
       entries.push(entry);
