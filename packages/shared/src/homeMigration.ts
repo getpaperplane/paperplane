@@ -122,6 +122,13 @@ const exists = (path: string): boolean => {
 const isBusy = (error: unknown) =>
   error instanceof Error && "errcode" in error && (error.errcode === 5 || error.errcode === 6);
 
+/** OpenCode entries survive resumes/forks. Remove the old key before installing the new one. */
+export function removeOldOpenCodeInstructions<A, E, R>(
+  remove: (key: string) => Effect.Effect<A, E, R>,
+): Effect.Effect<A, E, R> {
+  return remove("rove");
+}
+
 /** One-time recovery guidance; Windows never shipped a managed CLI service. */
 export function oldServiceStopInstruction(platform: NodeJS.Platform): string {
   if (platform === "linux") return "Run `systemctl --user disable --now rove.service`.";

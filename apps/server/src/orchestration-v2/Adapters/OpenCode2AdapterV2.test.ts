@@ -147,8 +147,8 @@ const noOpenRequests: ReadonlyArray<ProviderReplayEntry> = [
 ];
 
 /**
- * A thread's first turn writes Paperplane's instructions entry before it starts; the
- * adapter only rewrites it when it changes, so later turns do not.
+ * A thread's first turn removes the old instructions key before writing Paperplane's
+ * entry. The adapter only rewrites it when it changes, so later turns do not.
  */
 const withInstructions = (
   entries: ReadonlyArray<ProviderReplayEntry>,
@@ -182,9 +182,10 @@ const withInstructions = (
     ? entries
     : [
         ...entries.slice(0, at),
+        out("session.instructions.entry.remove", { sessionID: SESSION, key: "rove" }),
         out("session.instructions.entry.put", {
           sessionID: SESSION,
-          key: "rove",
+          key: "paperplane",
           value: "<any>",
         }),
         reply("session.instructions.entry.put", null),
@@ -424,6 +425,30 @@ const history = {
 };
 
 it.layer(McpProviderSessions.layer)("OpenCode2 adapter", (it) => {
+  it.effect("removes the old instructions key before prompting a resumed session, only once", () =>
+    Effect.gen(function* () {
+      // withInstructions requires DELETE rove, then PUT paperplane, before the
+      // first prompt. No instructions requests may accompany the second turn.
+      const { runtime, thread } = yield* resumed([
+        out("session.prompt", { sessionID: SESSION, text: "<any>" }),
+        promptAccepted,
+        event("session.execution.succeeded", { sessionID: SESSION }),
+        out("session.prompt", { sessionID: SESSION, text: "<any>" }),
+        promptAccepted,
+        event("session.execution.succeeded", { sessionID: SESSION }),
+      ]);
+      for (const ordinal of [1, 2]) {
+        const terminal = yield* terminalOf(runtime).pipe(Effect.forkScoped);
+        yield* runtime.startTurn({
+          ...turnInput(thread),
+          attemptId: RunAttemptId.make(`attempt:instructions:${ordinal}`),
+          providerTurnOrdinal: ordinal,
+        });
+        assert.equal((yield* Fiber.join(terminal))?.status, "completed");
+      }
+    }).pipe(Effect.scoped),
+  );
+
   it.effect("switches the session's model and variant before a turn that changed them", () =>
     Effect.gen(function* () {
       const { runtime, thread } = yield* resumed([
@@ -3880,10 +3905,11 @@ it.layer(McpProviderSessions.layer)("OpenCode2 adapter", (it) => {
         replyData("session.form.list", []),
         ...promptInto(SESSION, "msg_recorded_turn_a"),
         ...steerInto(SESSION, "msg_recorded_steer_a"),
-        // The other session gets its own instructions entry before its first prompt.
+        // The other session gets its own cleanup and entry before its first prompt.
+        out("session.instructions.entry.remove", { sessionID: OTHER, key: "rove" }),
         out("session.instructions.entry.put", {
           sessionID: OTHER,
-          key: "rove",
+          key: "paperplane",
           value: "<any>",
         }),
         reply("session.instructions.entry.put", null),

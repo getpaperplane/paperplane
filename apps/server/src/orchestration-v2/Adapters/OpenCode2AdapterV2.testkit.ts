@@ -74,6 +74,12 @@ const operationOf = (
   const entry = /^\/api\/experimental\/session\/([^/]+)\/instructions\/entries\/([^/]+)$/.exec(
     path,
   );
+  if (entry !== null && method === "DELETE") {
+    return {
+      type: "session.instructions.entry.remove",
+      input: { sessionID: entry[1], key: entry[2] },
+    };
+  }
   if (entry !== null && method === "PUT") {
     return {
       type: "session.instructions.entry.put",
@@ -177,6 +183,12 @@ const replayHttpClient = (
             },
           });
           return new Response(body, { headers: { "content-type": "text/event-stream" } });
+        }
+        // The rename adds this idempotent cleanup to historical recordings. Its
+        // outbound frame is checked above; synthesize the empty response rather
+        // than altering any of the recorded inbound frames.
+        if (operation.type === "session.instructions.entry.remove") {
+          return new Response(null, { status: 204 });
         }
         // Recorded responses are the raw HTTP bodies; `null` is an empty 204.
         // `{ status, body }` replays an error status and `"<hang>"` never answers.

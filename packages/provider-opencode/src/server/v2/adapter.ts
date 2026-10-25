@@ -76,6 +76,7 @@ import * as OpenCode2Client from "./OpenCode2Client.ts";
 import * as OpenCode2Server from "./OpenCode2Server.ts";
 import * as OpenCodeRuntime from "../OpenCodeRuntime.ts";
 import { PAPERPLANE_MCP_SERVER_NAME } from "@getpaperplane/shared/paperplaneMcp";
+import { removeOldOpenCodeInstructions } from "@getpaperplane/shared/homeMigration";
 import * as McpProviderSessions from "@getpaperplane/provider-core/server/McpProviderSessions";
 import { buildRuntimeInstructions } from "@getpaperplane/provider-core/server/runtimeInstructions";
 import { paperplaneOrchestrationSystemPrompt } from "@getpaperplane/provider-core/server/orchestrationInstructions";
@@ -678,9 +679,7 @@ const isWakeTurn = (turn: OrchestrationV2ProviderTurn) =>
   turn.nativeTurnRef?.nativeId?.includes(":wake:") === true;
 
 const INTERRUPT_TIMEOUT = "10 seconds";
-/** Keep the native session's stored entry key so resumed sessions replace, rather
- * than duplicate, the old system instructions. This is not a displayed name. */
-const INSTRUCTIONS_KEY = "rove";
+const INSTRUCTIONS_KEY = "paperplane";
 /** A lost event stream is resubscribed this many times, this far apart, before the session breaks. */
 const RECONNECT_ATTEMPTS = 5;
 const RECONNECT_DELAY = "2 seconds";
@@ -3426,6 +3425,23 @@ export const make = Effect.fn("OpenCode2Adapter.make")(function* (instanceId: Pr
         .filter((part) => part !== undefined && part.length > 0)
         .join("\n\n");
       if (instructions !== state.instructions) {
+        // Once per attachment, before any prompt, so a resumed or forked session
+        // doesn't keep the old entry next to the new one. New sessions have no old
+        // entry, so a failed removal is logged and never blocks the turn.
+        if (state.instructions === undefined) {
+          yield* removeOldOpenCodeInstructions((key) =>
+            client.session.instructions.entry.remove({
+              sessionID: Session.ID.make(sessionId),
+              key,
+            }),
+          ).pipe(
+            Effect.catchCause((cause) =>
+              Effect.logWarning("Could not remove the old OpenCode instructions entry.", {
+                cause,
+              }),
+            ),
+          );
+        }
         yield* client.session.instructions.entry.put({
           sessionID: Session.ID.make(sessionId),
           key: INSTRUCTIONS_KEY,
