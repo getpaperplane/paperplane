@@ -55,15 +55,20 @@ export function buildHomeProjectScopes(input: {
       sidebarProjectGroupingMode: input.projectGroupingMode,
       sidebarProjectGroupingOverrides: {},
     },
-  }).map((group) => {
-    return {
-      key: group.key,
-      title: group.label,
-      representative: group.representative,
-      projects: group.members.map((member) => member.project),
-      projectRefs: group.memberProjectRefs,
-    };
-  });
+  })
+    .map((group) => {
+      return {
+        key: group.key,
+        title: group.label,
+        representative: group.representative,
+        projects: group.members.map((member) => member.project),
+        projectRefs: group.memberProjectRefs,
+      };
+    })
+    .sort(
+      (a, b) =>
+        Number(Boolean(b.representative.isScratch)) - Number(Boolean(a.representative.isScratch)),
+    );
 }
 
 // Prefers an exact scope key so a caller-supplied project ID that equals another
