@@ -48,6 +48,188 @@ const layer = (
     Layer.provide(metadataLayer),
   );
 
+it.effect("retries a missing identity without client reads and stops after recovery", () =>
+  Effect.gen(function* () {
+    const available = yield* Ref.make(false);
+    const calls = yield* Ref.make(0);
+    const metadata = Layer.merge(
+      Layer.succeed(RepositoryIdentityResolver.RepositoryIdentityResolver, {
+        resolve: (root) =>
+          Ref.update(calls, (count) => count + 1).pipe(
+            Effect.andThen(Ref.get(available)),
+            Effect.map((ready) => (ready ? identity(root) : null)),
+          ),
+      }),
+      Layer.succeed(ProjectFaviconResolver.ProjectFaviconResolver, {
+        resolvePath: () => Effect.succeed(null),
+      }),
+    );
+    yield* Effect.gen(function* () {
+      const service = yield* ProjectEnrichment.ProjectEnrichmentService;
+      const changes = yield* service.subscribeChanges;
+      yield* service.request("/repo");
+      assert.isNull((yield* PubSub.take(changes)).enrichment.repositoryIdentity);
+
+      yield* Ref.set(available, true);
+      yield* TestClock.adjust("1 minute");
+      assert.equal(
+        (yield* PubSub.take(changes)).enrichment.repositoryIdentity?.canonicalKey,
+        "example.test/v1/repo",
+      );
+      yield* TestClock.adjust("1 hour");
+      assert.equal(yield* Ref.get(calls), 2);
+    }).pipe(Effect.scoped, Effect.provide(layer(metadata)));
+  }),
+);
+
+for (const missing of ["no remote", "failed probe"] as const) {
+  it.effect(`stops automatic retries after two attempts for ${missing}`, () =>
+    Effect.gen(function* () {
+      const calls = yield* Ref.make(0);
+      const metadata = Layer.merge(
+        Layer.succeed(RepositoryIdentityResolver.RepositoryIdentityResolver, {
+          resolve: () =>
+            Ref.update(calls, (count) => count + 1).pipe(
+              Effect.andThen(
+                missing === "no remote" ? Effect.succeed(null) : Effect.die("probe failed"),
+              ),
+            ),
+        }),
+        Layer.succeed(ProjectFaviconResolver.ProjectFaviconResolver, {
+          resolvePath: () => Effect.succeed(null),
+        }),
+      );
+      yield* Effect.gen(function* () {
+        const service = yield* ProjectEnrichment.ProjectEnrichmentService;
+        const changes = yield* service.subscribeChanges;
+        yield* service.request("/repo");
+        yield* PubSub.take(changes);
+        for (let attempt = 0; attempt < 2; attempt += 1) {
+          yield* TestClock.adjust("1 minute");
+          assert.isNull((yield* PubSub.take(changes)).enrichment.repositoryIdentity);
+        }
+        yield* TestClock.adjust("1 hour");
+        assert.equal(yield* Ref.get(calls), 3);
+      }).pipe(Effect.scoped, Effect.provide(layer(metadata)));
+    }),
+  );
+}
+
+for (const cancel of ["invalidation", "shutdown"] as const) {
+  it.effect(`cancels a pending identity retry on ${cancel}`, () =>
+    Effect.gen(function* () {
+      const calls = yield* Ref.make(0);
+      const metadata = Layer.merge(
+        Layer.succeed(RepositoryIdentityResolver.RepositoryIdentityResolver, {
+          resolve: () => Ref.update(calls, (count) => count + 1).pipe(Effect.as(null)),
+        }),
+        Layer.succeed(ProjectFaviconResolver.ProjectFaviconResolver, {
+          resolvePath: () => Effect.succeed(null),
+        }),
+      );
+      yield* Effect.gen(function* () {
+        const service = yield* ProjectEnrichment.ProjectEnrichmentService;
+        const changes = yield* service.subscribeChanges;
+        yield* service.request("/repo");
+        yield* PubSub.take(changes);
+        if (cancel === "invalidation") {
+          yield* service.invalidate(["/repo"]);
+          yield* TestClock.adjust("1 hour");
+          assert.equal(yield* Ref.get(calls), 1);
+        }
+      }).pipe(Effect.scoped, Effect.provide(layer(metadata)));
+      yield* TestClock.adjust("1 hour");
+      assert.equal(yield* Ref.get(calls), 1);
+    }),
+  );
+}
+
+it.effect("does not schedule retries when a root is invalidated during its probe", () =>
+  Effect.gen(function* () {
+    const started = yield* Deferred.make<void>();
+    const release = yield* Deferred.make<void>();
+    const calls = yield* Ref.make(0);
+    const metadata = Layer.merge(
+      Layer.succeed(RepositoryIdentityResolver.RepositoryIdentityResolver, {
+        resolve: () =>
+          Effect.gen(function* () {
+            yield* Ref.update(calls, (count) => count + 1);
+            yield* Deferred.succeed(started, undefined);
+            yield* Deferred.await(release);
+            return null;
+          }),
+      }),
+      Layer.succeed(ProjectFaviconResolver.ProjectFaviconResolver, {
+        resolvePath: () => Effect.succeed(null),
+      }),
+    );
+    yield* Effect.gen(function* () {
+      const service = yield* ProjectEnrichment.ProjectEnrichmentService;
+      const changes = yield* service.subscribeChanges;
+      yield* service.request("/repo");
+      yield* Deferred.await(started);
+      yield* service.invalidate(["/repo"]);
+      yield* Deferred.succeed(release, undefined);
+      yield* PubSub.take(changes);
+      yield* TestClock.adjust("1 hour");
+      assert.equal(yield* Ref.get(calls), 1);
+    }).pipe(Effect.scoped, Effect.provide(layer(metadata)));
+  }),
+);
+
+it.effect("bounds retrying roots and releases their capacity after exhaustion", () =>
+  Effect.gen(function* () {
+    const calls = yield* Ref.make<ReadonlyArray<string>>([]);
+    const metadata = Layer.merge(
+      Layer.succeed(RepositoryIdentityResolver.RepositoryIdentityResolver, {
+        resolve: (root) => Ref.update(calls, (roots) => [...roots, root]).pipe(Effect.as(null)),
+      }),
+      Layer.succeed(ProjectFaviconResolver.ProjectFaviconResolver, {
+        resolvePath: () => Effect.succeed(null),
+      }),
+    );
+    yield* Effect.gen(function* () {
+      const service = yield* ProjectEnrichment.ProjectEnrichmentService;
+      const changes = yield* service.subscribeChanges;
+      for (const root of ["/first", "/second", "/third"]) {
+        yield* service.request(root);
+        yield* PubSub.take(changes);
+      }
+      for (let attempt = 0; attempt < 2; attempt += 1) {
+        yield* TestClock.adjust("1 minute");
+        assert.equal((yield* PubSub.take(changes)).workspaceRoot, "/first");
+        assert.equal((yield* PubSub.take(changes)).workspaceRoot, "/second");
+      }
+      yield* TestClock.adjust("1 hour");
+      assert.deepEqual(yield* Ref.get(calls), [
+        "/first",
+        "/second",
+        "/third",
+        "/first",
+        "/second",
+        "/first",
+        "/second",
+      ]);
+
+      yield* service.request("/fourth");
+      yield* PubSub.take(changes);
+      yield* TestClock.adjust("1 minute");
+      assert.equal((yield* PubSub.take(changes)).workspaceRoot, "/fourth");
+      assert.deepEqual(yield* Ref.get(calls), [
+        "/first",
+        "/second",
+        "/third",
+        "/first",
+        "/second",
+        "/first",
+        "/second",
+        "/fourth",
+        "/fourth",
+      ]);
+    }).pipe(Effect.scoped, Effect.provide(layer(metadata, { maxPending: 2, concurrency: 1 })));
+  }),
+);
+
 it.effect("preserves either enrichment field when the other resolver fails", () =>
   Effect.gen(function* () {
     const layerMetadata = Layer.merge(
