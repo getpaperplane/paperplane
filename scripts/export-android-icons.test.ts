@@ -17,8 +17,7 @@ describe("Android Paperplane foreground", () => {
   it.each([432, 1152])(
     "renders the Paperplane mark inside the circular mask at %spx",
     async (size) => {
-      // The real Paperplane sources have logo.png, not upstream's text.svg. A successful
-      // render must use the transparent Paperplane artwork and not resurrect the T3 glyph.
+      // Render the official artwork, not an obsolete lettermark or a masked app tile.
       const png = await render(size);
       const { data, info } = await sharp(png)
         .ensureAlpha()
@@ -45,8 +44,8 @@ describe("Android Paperplane foreground", () => {
       }
       expect(furthestPixel).toBeLessThan(safeRadius);
       expect(right).toBeGreaterThan(left);
-      // Paperplane's folded R is taller than it is wide; the inherited T3 wordmark is not.
-      expect(bottom - top).toBeGreaterThan(right - left);
+      // The uploaded paper plane is wider than tall and retains its original proportions.
+      expect((right - left) / (bottom - top)).toBeCloseTo(1812 / 1277, 1);
       expect(Math.abs(left + right - (size - 1))).toBeLessThanOrEqual(2);
       expect(Math.abs(top + bottom - (size - 1))).toBeLessThanOrEqual(2);
     },

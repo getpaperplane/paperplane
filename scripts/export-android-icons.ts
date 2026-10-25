@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 // Renders Android backgrounds from Icon Composer SVGs and the foreground from Paperplane's
-// transparent monochrome artwork. Full app icons cannot be used as foregrounds:
+// official transparent artwork. Full app icons cannot be used as foregrounds:
 // Android would mask their rounded-square silhouette a second time.
 //
 // The Android 12+ splash screen uses the same central-two-thirds mask as the launcher,
@@ -16,6 +16,8 @@ import * as Path from "effect/Path";
 import * as Schema from "effect/Schema";
 import sharp from "sharp";
 
+import { BRAND_ASSET_PATHS } from "./lib/brand-assets.ts";
+
 type IconVariant = "dev" | "nightly" | "prod";
 
 // 108dp at xxxhdpi. Expo's prebuild derives every launcher density bucket from this.
@@ -25,7 +27,7 @@ const SPLASH_CANVAS = 1152;
 // The blueprint annotation layer retains its original 128pt coordinate space.
 const TEXT = { x: 15.53, y: 37, width: 94.5, height: 57 };
 const ANNOTATION_FRACTION = 0.48;
-// Keep every visible pixel of Paperplane's folded R inside Android's circular safe zone.
+// Keep every visible pixel of the paper plane inside Android's circular safe zone.
 const MARK_FRACTION = 0.45;
 // Icon Composer positions layers on a 1024pt canvas, with translation relative to center.
 const COMPOSER_CANVAS_PT = 1024;
@@ -102,11 +104,7 @@ export const renderForeground = Effect.fn("androidIcons.renderForeground")(funct
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  // The Icon Composer projects now use opaque logo.png artwork, not text.svg.
-  // Reuse the shipped transparent Paperplane mark instead of extracting obsolete T3 paths.
-  const source = yield* fs.readFile(
-    path.join(repositoryRoot, OUTPUT_DIRECTORY, "android-icon-mark.png"),
-  );
+  const source = yield* fs.readFile(path.join(repositoryRoot, BRAND_ASSET_PATHS.officialLogoPng));
   const markSize = Math.round(size * MARK_FRACTION);
   const mark = yield* Effect.tryPromise({
     try: () =>
@@ -187,7 +185,7 @@ const renderNightlyBackground = Effect.fn("androidIcons.renderNightlyBackground"
   return yield* composite("nightly-background", background, overlays);
 });
 
-const renderBackground = Effect.fn("androidIcons.renderBackground")(function* (
+export const renderBackground = Effect.fn("androidIcons.renderBackground")(function* (
   repositoryRoot: string,
   variant: IconVariant,
   size: number,
@@ -211,10 +209,9 @@ const renderSplashIcon = Effect.fn("androidIcons.renderSplashIcon")(function* (
   return yield* composite(`${variant}-splash`, background, [{ input: foreground }]);
 });
 
-const exportAndroidIcons = Effect.gen(function* () {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const repositoryRoot = path.resolve(import.meta.dirname, "..");
+export const renderAndroidIcons = Effect.fn("androidIcons.renderAndroidIcons")(function* (
+  repositoryRoot: string,
+) {
   const outputs = [
     ["android-icon-foreground.png", yield* renderForeground(repositoryRoot, ADAPTIVE_CANVAS)],
     [
@@ -229,12 +226,18 @@ const exportAndroidIcons = Effect.gen(function* () {
     ["android-splash-icon-nightly.png", yield* renderSplashIcon(repositoryRoot, "nightly")],
     ["android-splash-icon-prod.png", yield* renderSplashIcon(repositoryRoot, "prod")],
   ] as const;
-  for (const [name, contents] of outputs) {
-    yield* fs.writeFile(path.join(repositoryRoot, OUTPUT_DIRECTORY, name), contents);
-    yield* Console.log(`wrote ${OUTPUT_DIRECTORY}/${name}`);
-  }
+  return new Map(outputs.map(([name, contents]) => [`${OUTPUT_DIRECTORY}/${name}`, contents]));
 });
 
 if (import.meta.main) {
-  exportAndroidIcons.pipe(Effect.provide(NodeServices.layer), NodeRuntime.runMain);
+  Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+    const repositoryRoot = path.resolve(import.meta.dirname, "..");
+    const outputs = yield* renderAndroidIcons(repositoryRoot);
+    for (const [name, contents] of outputs) {
+      yield* fs.writeFile(path.join(repositoryRoot, name), contents);
+      yield* Console.log(`wrote ${name}`);
+    }
+  }).pipe(Effect.provide(NodeServices.layer), NodeRuntime.runMain);
 }

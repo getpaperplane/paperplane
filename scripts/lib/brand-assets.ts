@@ -1,4 +1,5 @@
 export const BRAND_ASSET_PATHS = {
+  officialLogoPng: "assets/prod/logo.png",
   developmentIconComposerProject: "assets/dev/app-icon.icon",
   developmentIosIconPng: "assets/dev/blueprint-ios-1024.png",
   developmentUniversalIconPng: "assets/dev/blueprint-universal-1024.png",
@@ -78,11 +79,15 @@ const WEB_ICON_SOURCE_PATHS_BY_BRAND = {
   },
 } as const satisfies Record<WebAssetBrand, Record<keyof typeof WEB_ICON_TARGET_FILENAMES, string>>;
 
+export function resolveWebIconSourcePaths(brand: WebAssetBrand) {
+  return WEB_ICON_SOURCE_PATHS_BY_BRAND[brand];
+}
+
 export function resolveWebIconOverrides(
   brand: WebAssetBrand,
   targetDirectory: string,
 ): ReadonlyArray<IconOverride> {
-  const sourcePaths = WEB_ICON_SOURCE_PATHS_BY_BRAND[brand];
+  const sourcePaths = resolveWebIconSourcePaths(brand);
   return [
     {
       sourceRelativePath: sourcePaths.faviconIco,
