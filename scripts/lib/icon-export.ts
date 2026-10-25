@@ -13,7 +13,7 @@ export function readPngDimensions(contents: Buffer) {
     !contents.subarray(0, PNG_SIGNATURE.length).equals(PNG_SIGNATURE) ||
     contents.toString("ascii", 12, 16) !== "IHDR"
   ) {
-    throw new Error("Icon Composer produced an invalid PNG.");
+    throw new Error("Icon rendition is not a valid PNG.");
   }
 
   return {
