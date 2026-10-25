@@ -18,7 +18,7 @@ import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientRequest from "effect/http/HttpClientRequest";
 import * as HttpClientResponse from "effect/http/HttpClientResponse";
 
-const PREFIX = "paperplanerelay-managedendpoint-";
+const PREFIX = "roverelay-managedendpoint-";
 const PAGE_SIZE = 1_000;
 const DAY_MS = 86_400_000;
 
@@ -33,7 +33,7 @@ const Tunnel = Schema.Struct({
 type Tunnel = typeof Tunnel.Type;
 const TunnelPage = Schema.Struct({ result: Schema.Array(Tunnel) });
 
-// "paperplanerelay-managedendpoint-<stage>-<16 hex>"; stages may contain hyphens.
+// "roverelay-managedendpoint-<stage>-<16 hex>"; stages may contain hyphens.
 const stageOf = (name: string | null | undefined) =>
   name ? name.slice(PREFIX.length).replace(/-[a-f0-9]{16}$/u, "") : "unknown";
 

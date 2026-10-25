@@ -59,11 +59,12 @@ not steps performed by the rename scripts. Keep disabled release channels disabl
    `https://paperplane.hafiezulzikry.com/schema/paperplane.json` serves JSON Schema, not the SPA.
    Skipping deployment leaves new pairing, download, and schema links unavailable; users pair again
    at the new browser origins because cookies and browser storage do not cross origins.
-6. Only if Connect is enabled, complete [Connect setup](./connect-setup.md) before building clients.
-   Deploy the matching protocol-version-2 relay under the `PaperplaneRelay` stack, then rebuild all
-   clients with its new URL, JWT audience and tracing outputs. A release with Connect enabled reads
-   `PaperplaneRelay/prod/output`; without that deployment its public-config job fails. Do not enable
-   `PAPERPLANE_CLOUD_READY` just to exercise the rename.
+6. If Connect is enabled, the merge to `main` redeploys the existing relay through
+   `deploy-relay.yml`. Its deployed identity keeps the pre-rename names (the `RoveRelay` Alchemy
+   stack, `roverelay-managedendpoint-*` tunnels, `rove-relay-traces-*` and sibling Axiom resources), so the deploy updates
+   the live relay in place instead of creating a second one. The relay protocol and credential
+   names changed, so linked hosts relink and paired clients sign in to Connect again. See
+   [Connect setup](./connect-setup.md) for Clerk, Apple and push identities.
 7. At merge time, transfer and rename the repository to `getpaperplane/paperplane`, update local
    remotes, and recheck App/secret access and branch rules. Stage desktop, CLI and new native mobile
    binaries together. Test an upgrade with existing

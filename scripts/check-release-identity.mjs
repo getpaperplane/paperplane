@@ -147,6 +147,12 @@ const retainedIdentities = [
     /^apps\/server\/src\/vcs\/worktreeProcesses(?:\.test)?\.ts$/,
     /(?<=\|)rove(?=\))|(?:app-)?rove(?:-(?:provider-)?workloads|-provider|-budget-x)?(?:\.slice|\.scope)|rove\.service/g,
   ],
+  // The live relay deployment's identity (Alchemy stack, tunnels, Axiom
+  // resources). Renaming any of it deploys a second relay; see alchemy.run.ts.
+  [
+    /^(?:infra\/relay\/|docs\/operations\/(?:connect-setup|relay-observability|release)\.md$|\.github\/workflows\/release\.yml$|apps\/server\/src\/scheduledTasks\/ScheduledTaskService\.webhook\.test\.ts$)/,
+    /\bRoveRelay\b|roverelay-managedendpoint|rove-(?:relay-(?:traces|otel-ingest|client-otel-ingest|recent-spans)|mobile-otel-ingest)/g,
+  ],
   // Warning-only detection of old project files, and protection of old homes.
   [
     /^(?:apps\/server\/(?:src\/(?:project\/(?:PaperplaneProjectFileLoader|AgentSessionScanner)|vcs\/VcsProjectConfig)|scripts\/(?:migrate-dev-db|paperplane-sqlite-state))|packages\/client-runtime\/src\/projectConfig)(?:\.test)?\.ts$/,

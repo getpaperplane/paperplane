@@ -28,7 +28,7 @@ const allocationFor = (
   environmentId,
   hostname: `${key}.example.test`,
   tunnelId: `tunnel-${key}`,
-  tunnelName: `paperplanerelay-managedendpoint-dev-${key}`,
+  tunnelName: `roverelay-managedendpoint-dev-${key}`,
   dnsRecordId: "dns-record-id",
   readyAt: ready ? "2026-05-25T00:00:00.000Z" : null,
   tunnelReleasedAt: null,

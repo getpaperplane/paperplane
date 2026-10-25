@@ -13,7 +13,7 @@ import * as ManagedEndpointReaper from "./ManagedEndpointReaper.ts";
 
 const NOW = "2026-08-25T12:00:00.000Z";
 const NOW_MILLIS = DateTime.makeUnsafe(NOW).epochMilliseconds;
-const PREFIX = "paperplanerelay-managedendpoint-prod-";
+const PREFIX = "roverelay-managedendpoint-prod-";
 
 function tunnel(input: {
   readonly id: string;
@@ -603,7 +603,7 @@ describe("ManagedEndpointReaper", () => {
       ({ stage, expected }) => {
         const stageLegacyTunnels = legacyTunnels.map((entry) => ({
           ...entry,
-          name: entry.name!.replace(PREFIX, `paperplanerelay-managedendpoint-${stage}-`),
+          name: entry.name!.replace(PREFIX, `roverelay-managedendpoint-${stage}-`),
         }));
         const state = harness({
           namespace: stage,

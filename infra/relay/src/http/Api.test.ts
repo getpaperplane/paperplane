@@ -927,7 +927,7 @@ describe("relay environment unlink", () => {
                 environmentId: "environment-1",
                 hostname: "dev-0123456789abcdef.example.test",
                 tunnelId: "tunnel-1",
-                tunnelName: `paperplanerelay-managedendpoint-dev-${endpointKey}`,
+                tunnelName: `roverelay-managedendpoint-dev-${endpointKey}`,
                 dnsRecordId: "dns-1",
                 readyAt: "2026-07-28T00:00:00.000Z",
                 tunnelReleasedAt: null,

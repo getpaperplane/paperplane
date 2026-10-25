@@ -59,14 +59,13 @@ update. Keep `PAPERPLANE_CLOUD_READY` off unless you actually operate Connect:
    IDs/package records, Expo project access (`PAPERPLANE_EXPO_OWNER`, `PAPERPLANE_EXPO_PROJECT_ID`,
    `EXPO_TOKEN`), and Play service-account access (`GOOGLE_PLAY_SERVICE_ACCOUNT_JSON`). Old package
    or topic settings make push delivery or store upload fail even when pairing works.
-5. Review and deploy the `PaperplaneRelay` Alchemy stack using the `paperplane-relay` workspace.
-   Its Worker/queues/Hyperdrive use new stack-derived physical names; do not assume the old Worker
-   was renamed. Managed tunnels use `paperplanerelay-managedendpoint-<stage>-<digest>`.
-   Axiom resources are `paperplane-relay-traces-prod`, `paperplane-relay-otel-ingest-prod`,
-   `paperplane-mobile-otel-ingest-prod`, `paperplane-relay-client-otel-ingest-prod`, and
-   `paperplane-relay-recent-spans-prod` (replace `prod` for other stages). The release workflow
-   reads `PaperplaneRelay/prod/output`. Verify domains and DNS bindings move to the new deployment;
-   a domain still attached to the previous Worker can block provisioning.
+5. Deploy with the `paperplane-relay` workspace. The deployed identity deliberately keeps its
+   pre-rename names: the `RoveRelay` Alchemy stack (the release workflow reads
+   `RoveRelay/prod/output`), `roverelay-managedendpoint-<stage>-<digest>` tunnels, and the Axiom
+   resources `rove-relay-traces-<stage>`, `rove-relay-otel-ingest-<stage>`,
+   `rove-mobile-otel-ingest-<stage>`, `rove-relay-client-otel-ingest-<stage>`, and
+   `rove-relay-recent-spans-<stage>`. Renaming any of them makes Alchemy create a parallel
+   deployment (worker, database branch, tunnels, datasets) next to the live one.
 6. Rebuild desktop, CLI, web and native mobile clients with the new public config and tracing
    tokens; enroll new passkeys and re-register mobile devices. Existing relay records can still
    reference old tunnel IDs, so inspect/reconcile allocations and relink hosts before removing

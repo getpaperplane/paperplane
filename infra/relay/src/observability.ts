@@ -21,10 +21,12 @@ const relayRecentSpansQuery = (dataset: string) =>
     `| limit 200`,
   ].join("\n");
 
+// Axiom dataset, token and view names are the deployed identity; renaming them
+// creates new resources and orphans the live ones. Keep the pre-rename names.
 export const RelayObservability = Effect.gen(function* () {
   const { stage } = yield* Alchemy.Stack;
   const traces = yield* Axiom.Dataset("RelayTracesDataset", {
-    name: relayResourceNameForStage("paperplane-relay-traces", stage),
+    name: relayResourceNameForStage("rove-relay-traces", stage),
     kind: "otel:traces:v1",
     description: "Paperplane relay Worker HTTP request spans.",
     retentionDays: 30,
@@ -32,7 +34,7 @@ export const RelayObservability = Effect.gen(function* () {
   });
 
   const workerIngestToken = yield* Axiom.ApiToken("RelayWorkerAxiomIngestToken", {
-    name: relayResourceNameForStage("paperplane-relay-otel-ingest", stage),
+    name: relayResourceNameForStage("rove-relay-otel-ingest", stage),
     description: "Owned by Alchemy. Scoped OTLP ingest token for relay HTTP spans.",
     datasetCapabilities: Output.map(traces.name, (dataset) => ({
       [dataset]: { ingest: ["create" as const] },
@@ -40,7 +42,7 @@ export const RelayObservability = Effect.gen(function* () {
   });
 
   const mobileIngestToken = yield* Axiom.ApiToken("RelayMobileAxiomIngestToken", {
-    name: relayResourceNameForStage("paperplane-mobile-otel-ingest", stage),
+    name: relayResourceNameForStage("rove-mobile-otel-ingest", stage),
     description: "Owned by Alchemy. Scoped OTLP ingest token for Paperplane mobile spans.",
     datasetCapabilities: Output.map(traces.name, (dataset) => ({
       [dataset]: { ingest: ["create" as const] },
@@ -48,7 +50,7 @@ export const RelayObservability = Effect.gen(function* () {
   });
 
   const clientIngestToken = yield* Axiom.ApiToken("RelayClientAxiomIngestToken", {
-    name: relayResourceNameForStage("paperplane-relay-client-otel-ingest", stage),
+    name: relayResourceNameForStage("rove-relay-client-otel-ingest", stage),
     description: "Owned by Alchemy. Scoped OTLP ingest token for first-party relay client spans.",
     datasetCapabilities: Output.map(traces.name, (dataset) => ({
       [dataset]: { ingest: ["create" as const] },
@@ -56,7 +58,7 @@ export const RelayObservability = Effect.gen(function* () {
   });
 
   yield* Axiom.View("RelayRecentSpansView", {
-    name: relayResourceNameForStage("paperplane-relay-recent-spans", stage),
+    name: relayResourceNameForStage("rove-relay-recent-spans", stage),
     description: "Recent relay HTTP request spans.",
     datasets: [traces.name],
     aplQuery: Output.map(traces.name, relayRecentSpansQuery),
