@@ -213,7 +213,7 @@ export async function runPiRuntimeWorker(): Promise<void> {
               return await prompt;
             }
             case "getTurnUsageLimit":
-              return (await session.getTurnUsageLimit?.(request.args[1], request.args[2])) ?? null;
+              return (await session.getTurnUsageLimit?.(request.args[1])) ?? null;
             case "followUp":
               return await session.followUp(request.args[1]);
             case "abort":

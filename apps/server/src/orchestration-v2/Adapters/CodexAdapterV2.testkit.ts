@@ -3,7 +3,7 @@ import { DEFAULT_SIGNAL_EXPORT } from "@getpaperplane/shared/observability";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { type ProviderReplayTranscript } from "@getpaperplane/contracts";
 import * as CodexClient from "effect-codex-app-server/client";
-import type * as CodexError from "effect-codex-app-server/errors";
+import * as CodexError from "effect-codex-app-server/errors";
 import * as CodexReplay from "effect-codex-app-server/replay";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -66,8 +66,23 @@ export function withCodexReplayChildMetadata(
         : [];
     }),
   );
+  const readsRateLimits = transcript.entries.some(
+    (entry) =>
+      entry.type === "expect_outbound" &&
+      Predicate.isObject(entry.frame) &&
+      entry.frame.method === "account/rateLimits/read",
+  );
   return {
     ...client,
+    request: (method, params) =>
+      method === "account/rateLimits/read" && !readsRateLimits
+        ? Effect.fail(
+            new CodexError.CodexAppServerRequestError({
+              code: -32601,
+              errorMessage: "Usage reads are unavailable in this transcript.",
+            }),
+          )
+        : client.request(method, params),
     raw: {
       ...client.raw,
       request: (method, params) =>

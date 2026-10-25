@@ -74,6 +74,32 @@ describe("Pi subscription quota recovery", () => {
       ),
     ).toBe("2026-10-03T00:00:30.000Z");
   });
+  it("honors extra usage before treating exhausted Anthropic plan windows as blocked", async () => {
+    const input = {
+      baseUrl: "https://api.anthropic.com",
+      apiKey: "synthetic-oauth-token",
+      observedAt: now,
+      signal: new AbortController().signal,
+      model: "claude-sonnet-4-6",
+    };
+    for (const [extraUsage, expected] of [
+      [
+        { is_enabled: false, utilization: 0 },
+        { type: "limited", resetAt: "2026-10-03T05:00:00.000Z" },
+      ],
+      [{ is_enabled: true, utilization: 0 }, { type: "available" }],
+      [{ is_enabled: true, utilization: null }, { type: "unavailable" }],
+    ] as const) {
+      expect(
+        await readPiSubscriptionStatus(input, async () =>
+          Response.json({
+            five_hour: { utilization: 100, resets_at: "2026-10-03T05:00:00.000Z" },
+            extra_usage: extraUsage,
+          }),
+        ),
+      ).toEqual(expected);
+    }
+  });
   it("keeps ambiguous and expired quota data unscheduled", () => {
     for (const response of [
       null,
