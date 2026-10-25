@@ -52,6 +52,7 @@ class PaperplaneTerminalView(context: Context, appContext: AppContext) : ExpoVie
     }
   private var terminalHandle = 0L
   private var fedBuffer = ""
+  private var streamedOutput: TerminalOutputBuffer? = null
   private var cols = 0
   private var rows = 0
   private var clearingInput = false
@@ -67,6 +68,7 @@ class PaperplaneTerminalView(context: Context, appContext: AppContext) : ExpoVie
       if (field == value) return
       field = value
       contentDescription = "paperplane-terminal-$value"
+      streamedOutput = null
       recreateTerminal()
     }
 
@@ -230,6 +232,7 @@ class PaperplaneTerminalView(context: Context, appContext: AppContext) : ExpoVie
     terminalCanvas.onRequestKeyboard = null
     terminalCanvas.onCellMetricsChanged = null
     terminalCanvas.selectionDelegate = null
+    streamedOutput = null
     destroyTerminal()
   }
 
@@ -359,6 +362,7 @@ class PaperplaneTerminalView(context: Context, appContext: AppContext) : ExpoVie
       paletteColors,
     )
     fedBuffer = ""
+    streamedOutput?.let { output -> feedOutput(output.data, replay = true) }
   }
 
   private fun recreateTerminal() {
@@ -378,23 +382,42 @@ class PaperplaneTerminalView(context: Context, appContext: AppContext) : ExpoVie
   }
 
   private fun feedPendingBuffer() {
-    if (terminalHandle == 0L || initialBuffer == fedBuffer) return
+    if (streamedOutput != null || terminalHandle == 0L || initialBuffer == fedBuffer) return
     if (!initialBuffer.startsWith(fedBuffer)) {
       recreateTerminal()
       if (terminalHandle == 0L) return
     }
     val suffix = initialBuffer.substring(fedBuffer.length)
     if (suffix.isNotEmpty()) {
-      emitResponse(GhosttyBridge.nativeFeed(terminalHandle, suffix.toByteArray(Charsets.UTF_8)))
-      // New output invalidates an active selection (matches the web drawer);
-      // otherwise the copy toolbar drifts out of sync with the grid.
-      if (terminalCanvas.hasActiveSelection()) {
-        GhosttyBridge.nativeClearSelection(terminalHandle)
-        terminalCanvas.resetSelectionState()
-      }
+      feedOutput(suffix.toByteArray(Charsets.UTF_8), replay = fedBuffer.isEmpty())
     }
     fedBuffer = initialBuffer
     renderSnapshot()
+  }
+
+  fun writeOutput(data: String, reset: Boolean) {
+    if (isCleanedUp) return
+    val output = streamedOutput ?: TerminalOutputBuffer()
+    val bytes = data.toByteArray(Charsets.UTF_8)
+    output.write(bytes, reset)
+    streamedOutput = output
+    if (reset) {
+      recreateTerminal()
+    } else if (terminalHandle != 0L) {
+      feedOutput(bytes)
+      renderSnapshot()
+    }
+  }
+
+  private fun feedOutput(data: ByteArray, replay: Boolean = false) {
+    if (terminalHandle == 0L || data.isEmpty()) return
+    val response = GhosttyBridge.nativeFeed(terminalHandle, data)
+    // Drain historical query replies, but never send them to the current PTY.
+    if (!replay) emitResponse(response)
+    if (terminalCanvas.hasActiveSelection()) {
+      GhosttyBridge.nativeClearSelection(terminalHandle)
+      terminalCanvas.resetSelectionState()
+    }
   }
 
   private fun renderSnapshot() {

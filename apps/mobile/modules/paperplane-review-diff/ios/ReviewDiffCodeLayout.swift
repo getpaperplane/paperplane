@@ -58,6 +58,11 @@ final class ReviewDiffCodeLayout: NSObject {
     return layout
   }
 
+  /// A token patch invalidates only this row, without discarding its shaped text.
+  func invalidateDecoration() {
+    Self.drawnLayouts.object(forKey: self)?.decorationVersion = -1
+  }
+
   /// Only colors change when syntax tokens arrive; the measured text and font stay intact.
   func decorate(text: NSAttributedString, highlights: [NSRange], color: UIColor, version: Int) {
     guard usesNativeLayout else { return }

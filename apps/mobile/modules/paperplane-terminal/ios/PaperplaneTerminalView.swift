@@ -205,6 +205,7 @@ public final class PaperplaneTerminalView: ExpoView, UITextFieldDelegate {
   private var lastContentScale: CGFloat = 0
   private var lastReportedGrid: (cols: Int, rows: Int)?
   private var lastAppliedBuffer = ""
+  private var streamedOutput: TerminalOutputBuffer?
   private var pendingVerticalScrollPoints: CGFloat = 0
   private var app: ghostty_app_t?
   private var surface: ghostty_surface_t?
@@ -246,6 +247,7 @@ public final class PaperplaneTerminalView: ExpoView, UITextFieldDelegate {
     didSet {
       accessibilityIdentifier = "paperplane-terminal-\(terminalKey)"
       if oldValue != terminalKey {
+        streamedOutput = nil
         resetSurface()
       }
     }
@@ -535,7 +537,11 @@ public final class PaperplaneTerminalView: ExpoView, UITextFieldDelegate {
     ghostty_surface_set_color_scheme(createdSurface, appearance.ghosttyColorScheme)
     setupWriteCallback()
     resizeSurface()
-    feedBuffer(initialBuffer)
+    if let streamedOutput {
+      feedData(streamedOutput.data, replay: true)
+    } else {
+      feedBuffer(initialBuffer)
+    }
   }
 
   private func resetSurface() {
@@ -566,6 +572,7 @@ public final class PaperplaneTerminalView: ExpoView, UITextFieldDelegate {
   }
 
   private func applyRemoteBuffer(_ buffer: String) {
+    guard streamedOutput == nil else { return }
     guard surface != nil else {
       createSurfaceIfPossible()
       return
@@ -588,14 +595,31 @@ public final class PaperplaneTerminalView: ExpoView, UITextFieldDelegate {
     createSurfaceIfPossible()
   }
 
+  func writeOutput(_ data: String, reset: Bool) {
+    let output = streamedOutput ?? TerminalOutputBuffer()
+    let bytes = Data(data.utf8)
+    output.write(bytes, reset: reset)
+    streamedOutput = output
+    if reset {
+      refreshSurface()
+    } else if surface == nil {
+      createSurfaceIfPossible()
+    } else {
+      feedData(bytes)
+    }
+  }
+
   private func feedBuffer(_ buffer: String) {
     guard !buffer.isEmpty else { return }
-    feedData(Data(buffer.utf8))
+    feedData(Data(buffer.utf8), replay: true)
     lastAppliedBuffer = buffer
   }
 
-  private func feedData(_ data: Data) {
+  private func feedData(_ data: Data, replay: Bool = false) {
     guard let surface, !data.isEmpty else { return }
+    // Historical device queries must never write fresh replies to the live shell.
+    if replay { ghostty_surface_set_write_callback(surface, nil, nil) }
+    defer { if replay { setupWriteCallback() } }
 
     data.withUnsafeBytes { buffer in
       guard let pointer = buffer.baseAddress?.assumingMemoryBound(to: UInt8.self) else {

@@ -74,14 +74,15 @@ internal fun createCodeLines(text: CharSequence, paint: TextPaint, width: Int): 
 
 internal class CodeLayoutCache {
   private data class Entry(val row: DiffRow, val tokens: List<DiffToken>?, val lines: CodeLines)
-  private var entries = emptyMap<String, Entry>()
+  private var entries = HashMap<String, Entry>()
+  private var layouts = HashMap<String, CodeLines>()
   private var previousStyle: DiffStyle? = null
   private var previousTheme: DiffTheme? = null
   private var previousWidth = 0
 
-  /** Entries are immutable; a worker can reuse them without changing the displayed cache. */
+  /** Snapshot the map; patches on the UI thread must not mutate a worker's inputs. */
   fun copyForPreparation(): CodeLayoutCache = CodeLayoutCache().also {
-    it.entries = entries
+    it.entries = HashMap(entries)
     it.previousStyle = previousStyle
     it.previousTheme = previousTheme
     it.previousWidth = previousWidth
@@ -97,17 +98,18 @@ internal class CodeLayoutCache {
     width: Int
   ): CodeWrapLayout {
     if (!style.wordWrap || width < paint.measureText("M")) {
-      entries = emptyMap()
+      entries = HashMap()
+      layouts = HashMap()
       return CodeWrapLayout.NONE
     }
     if (previousStyle != style || previousTheme != theme || previousWidth != width) {
-      entries = emptyMap()
+      entries = HashMap()
       previousStyle = style
       previousTheme = theme
       previousWidth = width
     }
     val next = HashMap<String, Entry>()
-    val layouts = HashMap<String, CodeLines>()
+    val nextLayouts = HashMap<String, CodeLines>()
     for (row in rows) {
       if (row.kind != "line") continue
       val rowTokens = tokens[row.id]
@@ -119,10 +121,34 @@ internal class CodeLayoutCache {
         Entry(row, rowTokens, createCodeLines(text, TextPaint(paint), width))
       }
       next[row.id] = entry
-      layouts[row.id] = entry.lines
+      nextLayouts[row.id] = entry.lines
     }
     entries = next
+    layouts = nextLayouts
     return CodeWrapLayout(true, layouts)
+  }
+
+  /** Update only cached code rows in the patch. The current wrap layout owns this map. */
+  fun patchTokens(tokens: Map<String, List<DiffToken>>, paint: Paint): Boolean {
+    val style = previousStyle ?: return false
+    val theme = previousTheme ?: return false
+    var heightsChanged = false
+    for ((rowId, rowTokens) in tokens) {
+      val previous = entries[rowId] ?: continue
+      if (previous.tokens == rowTokens) continue
+      // Recreate styled native text, not just colors: StyleSpan can change wrapping.
+      val text = styledCode(previous.row, rowTokens, theme)
+      val lines = createCodeLines(text, TextPaint(paint), previousWidth)
+      entries[rowId] = Entry(previous.row, rowTokens, lines)
+      layouts[rowId] = lines
+      val base = style.rowHeightPx.toInt()
+      if (lines.firstHeight(base) + lines.extraHeight !=
+        previous.lines.firstHeight(base) + previous.lines.extraHeight
+      ) {
+        heightsChanged = true
+      }
+    }
+    return heightsChanged
   }
 
   private fun styledCode(row: DiffRow, tokens: List<DiffToken>?, theme: DiffTheme): CharSequence {
