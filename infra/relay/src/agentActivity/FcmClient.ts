@@ -59,7 +59,7 @@ export class FcmClient extends Context.Service<
       readonly alert: boolean;
     }) => Effect.Effect<{ readonly unregistered: boolean }, FcmClientError>;
   }
->()("rove-relay/agentActivity/FcmClient") {}
+>()("paperplane-relay/agentActivity/FcmClient") {}
 
 export const make = Effect.gen(function* () {
   const config = yield* RelayConfiguration.RelayConfiguration;

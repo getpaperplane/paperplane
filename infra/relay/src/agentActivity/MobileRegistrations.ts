@@ -38,7 +38,7 @@ export class MobileRegistrations extends Context.Service<
       readonly userId: string;
     }) => Effect.Effect<RelayAgentActivitySnapshotResponse, MobileRegistrationError>;
   }
->()("rove-relay/agentActivity/MobileRegistrations") {}
+>()("paperplane-relay/agentActivity/MobileRegistrations") {}
 
 export const make = Effect.gen(function* () {
   const rows = yield* AgentActivityRows.AgentActivityRows;

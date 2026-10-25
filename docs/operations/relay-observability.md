@@ -4,15 +4,15 @@
 
 The relay Alchemy stack owns a shared Axiom trace setup:
 
-- `rove-relay-traces-prod`, the OpenTelemetry trace dataset shared by the Worker, mobile app, and
+- `paperplane-relay-traces-prod`, the OpenTelemetry trace dataset shared by the Worker, mobile app, and
   first-party relay clients
-- `rove-relay-otel-ingest-prod`, the dataset-scoped Worker ingest token
+- `paperplane-relay-otel-ingest-prod`, the dataset-scoped Worker ingest token
 - `paperplane-mobile-otel-ingest-prod`, the dataset-scoped mobile ingest token
-- `rove-relay-client-otel-ingest-prod`, the dataset-scoped first-party relay-client ingest token
-- `rove-relay-recent-spans-prod`, a view of recent request and endpoint spans
+- `paperplane-relay-client-otel-ingest-prod`, the dataset-scoped first-party relay-client ingest token
+- `paperplane-relay-recent-spans-prod`, a view of recent request and endpoint spans
 
 Alchemy stages append their sanitized stage name to isolate resources, for example
-`rove-relay-traces-dev-julius` for a personal stage.
+`paperplane-relay-traces-dev-julius` for a personal stage.
 
 Deploy from `infra/relay` with the normal Alchemy workflow:
 
@@ -29,7 +29,7 @@ Effect's OpenTelemetry exporter stores semantic HTTP attributes below the `attri
 For example:
 
 ```apl
-['rove-relay-traces-prod']
+['paperplane-relay-traces-prod']
 | where kind == 'server'
 | extend endpoint = column_ifexists('attributes.http.route', ''),
     customAttributes = column_ifexists('attributes.custom', dynamic({}))
@@ -90,19 +90,19 @@ Questions these answer:
 
 ```apl
 // Webhook outcomes per hour
-['rove-relay-traces-prod']
+['paperplane-relay-traces-prod']
 | where name == 'relay.hooks.forward'
 | summarize count() by bin(_time, 1h), outcome = tostring(['attributes.custom']['relay.hook.outcome'])
 
 // Inboxes stuck behind an unreachable environment, by endpoint
-['rove-relay-traces-prod']
+['paperplane-relay-traces-prod']
 | where name == 'HookInboxStore.deliverDue'
 | extend c = ['attributes.custom']
 | where tostring(c['relay.inbox.run_result']) == 'unreachable'
 | project trace_id, failures = toint(c['relay.inbox.consecutive_failures']),
     backlog = toint(c['relay.inbox.held_count'])
 | join kind=inner (
-    ['rove-relay-traces-prod']
+    ['paperplane-relay-traces-prod']
     | where name == 'relay.inbox.deliver'
     | project trace_id, endpoint = tostring(['attributes.custom']['relay.hook.endpoint_key'])
   ) on trace_id

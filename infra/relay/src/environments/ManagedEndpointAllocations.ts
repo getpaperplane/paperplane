@@ -196,7 +196,7 @@ export class ManagedEndpointAllocations extends Context.Service<
       input: RemoveClaimedManagedEndpointAllocationInput,
     ) => Effect.Effect<boolean, ManagedEndpointAllocationPersistenceError>;
   }
->()("rove-relay/environments/ManagedEndpointAllocations") {}
+>()("paperplane-relay/environments/ManagedEndpointAllocations") {}
 
 const allocationSelection = {
   userId: relayManagedEndpointAllocations.userId,

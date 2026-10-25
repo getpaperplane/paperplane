@@ -1,7 +1,7 @@
 {
   "@getpaperplane/client-runtime": 147,
   "@getpaperplane/provider-pi": 132,
-  "rove-relay": 131,
+  "paperplane-relay": 131,
   "@getpaperplane/mobile": 119,
   "@getpaperplane/oxlint-plugin-paperplane": 110,
   "@getpaperplane/shared": 84,

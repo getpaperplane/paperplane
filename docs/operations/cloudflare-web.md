@@ -16,7 +16,7 @@ The deployment uses only your custom domain. You do not need to register a `work
 
 Each deployment creates its hostname's DNS record and HTTPS certificate. Do not create separate CNAMEs for `paperplane.hafiezulzikry.com` or `paperplane-nightly.hafiezulzikry.com`. If a hostname already has a DNS record, resolve the conflict before deploying. Cloudflare requires an active zone for [Workers custom domains](https://developers.cloudflare.com/workers/configuration/routing/custom-domains/).
 
-To use another hostname, change the custom-domain `pattern` in `apps/web/wrangler.json` (stable) or `apps/web/wrangler.nightly.json` (nightly). The separate Workers are `rove-web` and `rove-web-nightly`. The workflow reads the browser app's public origin from the selected configuration.
+To use another hostname, change the custom-domain `pattern` in `apps/web/wrangler.json` (stable) or `apps/web/wrangler.nightly.json` (nightly). The separate Workers are `paperplane-web` and `paperplane-web-nightly`. The workflow reads the browser app's public origin from the selected configuration.
 
 ## Configure GitHub deployment credentials
 
@@ -62,7 +62,7 @@ To stop automatic deployments, unset `PAPERPLANE_CLOUDFLARE_WEB_READY`. To stop 
 
 ## Publish the marketing site
 
-The landing page in `apps/marketing` deploys as a separate `rove-marketing` Worker at `https://getpaperplane.hafiezulzikry.com`. The browser app owns all of `paperplane.hafiezulzikry.com`, so the two sites cannot share a hostname. To use another hostname, change the custom-domain `pattern` in `apps/marketing/wrangler.json`. The build reads the site's canonical origin from that configuration.
+The landing page in `apps/marketing` deploys as a separate `paperplane-marketing` Worker at `https://getpaperplane.hafiezulzikry.com`. The browser app owns all of `paperplane.hafiezulzikry.com`, so the two sites cannot share a hostname. To use another hostname, change the custom-domain `pattern` in `apps/marketing/wrangler.json`. The build reads the site's canonical origin from that configuration.
 
 The workflow reuses the `cloudflare-web` environment and its secrets.
 

@@ -65,7 +65,7 @@ const readyAllocation: ManagedEndpointAllocations.ManagedEndpointAllocation = {
   environmentId,
   hostname: "env.example.test",
   tunnelId: "tunnel-id",
-  tunnelName: `roverelay-managedendpoint-dev-${endpointKey}`,
+  tunnelName: `paperplanerelay-managedendpoint-dev-${endpointKey}`,
   dnsRecordId: "dns-record-id",
   readyAt: "2026-05-25T00:00:00.000Z",
   tunnelReleasedAt: null,

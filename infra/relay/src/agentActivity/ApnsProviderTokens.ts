@@ -21,7 +21,7 @@ export class ApnsProviderTokens extends Context.Service<
   {
     readonly getJwt: (input: ApnsJwtSigningInput) => Effect.Effect<string, ApnsJwtError>;
   }
->()("rove-relay/agentActivity/ApnsProviderTokens") {}
+>()("paperplane-relay/agentActivity/ApnsProviderTokens") {}
 
 interface CachedProviderToken {
   readonly jwt: string;

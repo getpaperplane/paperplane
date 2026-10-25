@@ -1,6 +1,6 @@
 {
   "$schema": "https://raw.githubusercontent.com/cloudflare/workers-sdk/main/packages/wrangler/config-schema.json",
-  "name": "rove-web-nightly",
+  "name": "paperplane-web-nightly",
   "compatibility_date": "2025-04-01",
   "main": "./cloudflare/worker.mjs",
   "workers_dev": false,

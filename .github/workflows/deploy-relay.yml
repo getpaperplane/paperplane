@@ -76,7 +76,7 @@ jobs:
           cache: true
           run-install: |
             args:
-              - --filter=rove-relay...
+              - --filter=paperplane-relay...
 
       # Runs Alchemy directly: `vp run --filter` loads every workspace's Vite
       # config, and apps/server's needs dependencies the relay-only install skips.

@@ -50,7 +50,7 @@ export class ApnsDeliveryQueueSender extends Context.Service<
       body: SignedApnsDeliveryJob,
     ) => Effect.Effect<void, Cloudflare.Queues.SendError>;
   }
->()("rove-relay/agentActivity/ApnsDeliveryQueue/ApnsDeliveryQueueSender") {}
+>()("paperplane-relay/agentActivity/ApnsDeliveryQueue/ApnsDeliveryQueueSender") {}
 
 export class ApnsDeliveryQueue extends Context.Service<
   ApnsDeliveryQueue,
@@ -74,7 +74,7 @@ export class ApnsDeliveryQueue extends Context.Service<
       readonly notification: NonNullable<ApnsDeliveryJobPayload["notification"]>;
     }) => Effect.Effect<RelayDeliveryResult, ApnsDeliveryQueueError>;
   }
->()("rove-relay/agentActivity/ApnsDeliveryQueue") {}
+>()("paperplane-relay/agentActivity/ApnsDeliveryQueue") {}
 
 export const make = Effect.gen(function* () {
   const sender = yield* ApnsDeliveryQueueSender;

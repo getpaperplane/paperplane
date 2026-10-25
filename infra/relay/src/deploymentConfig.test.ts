@@ -60,9 +60,11 @@ describe("relayOwnsManagedEndpointZone", () => {
 
 describe("relayResourceNameForStage", () => {
   it("isolates production and personal stages", () => {
-    expect(relayResourceNameForStage("rove-relay-traces", "prod")).toBe("rove-relay-traces-prod");
-    expect(relayResourceNameForStage("rove-relay-traces", "dev_julius")).toBe(
-      "rove-relay-traces-dev-julius",
+    expect(relayResourceNameForStage("paperplane-relay-traces", "prod")).toBe(
+      "paperplane-relay-traces-prod",
+    );
+    expect(relayResourceNameForStage("paperplane-relay-traces", "dev_julius")).toBe(
+      "paperplane-relay-traces-dev-julius",
     );
   });
 });
@@ -81,10 +83,10 @@ describe("managed endpoint names", () => {
       "prod-abcdef0123456789.paperplanerelay.com",
     );
     expect(managedEndpointTunnelName("dev_julius", hash)).toBe(
-      "roverelay-managedendpoint-dev-julius-abcdef0123456789",
+      "paperplanerelay-managedendpoint-dev-julius-abcdef0123456789",
     );
     expect(managedEndpointTunnelNamePrefix("dev_julius")).toBe(
-      "roverelay-managedendpoint-dev-julius-",
+      "paperplanerelay-managedendpoint-dev-julius-",
     );
   });
 

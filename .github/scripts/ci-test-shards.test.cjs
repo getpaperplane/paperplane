@@ -26,7 +26,7 @@ test("full workspace covers every test package exactly once, excluding dedicated
 
 test("selected packages are rebalanced, with no unaffected packages", () => {
   const selected =
-    "@getpaperplane/shared @getpaperplane/client-runtime rove-relay @getpaperplane/provider-pi";
+    "@getpaperplane/shared @getpaperplane/client-runtime paperplane-relay @getpaperplane/provider-pi";
   const shards = assignShards(readWorkspace(), selected);
   assert.deepEqual(names(shards), selected.split(" ").sort());
   assert.deepEqual(

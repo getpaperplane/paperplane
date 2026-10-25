@@ -89,7 +89,7 @@ export class AgentActivityRows extends Context.Service<
       readonly threadId: string;
     }) => Effect.Effect<RelayAgentActivityState | null, AgentActivityRowListPersistenceError>;
   }
->()("rove-relay/agentActivity/AgentActivityRows") {}
+>()("paperplane-relay/agentActivity/AgentActivityRows") {}
 
 const decodeJsonString = Schema.decodeEffect(Schema.fromJsonString(Schema.Unknown));
 

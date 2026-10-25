@@ -227,7 +227,7 @@ export class ApnsClient extends Context.Service<
       readonly issuedAtUnixSeconds: number;
     }) => Effect.Effect<ApnsDeliveryResult, ApnsError>;
   }
->()("rove-relay/agentActivity/ApnsClient") {}
+>()("paperplane-relay/agentActivity/ApnsClient") {}
 
 export const make = Effect.gen(function* () {
   const httpClient = yield* HttpClient.HttpClient;

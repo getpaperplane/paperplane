@@ -1,6 +1,6 @@
 {
   "$schema": "https://raw.githubusercontent.com/cloudflare/workers-sdk/main/packages/wrangler/config-schema.json",
-  "name": "rove-marketing",
+  "name": "paperplane-marketing",
   "compatibility_date": "2025-04-01",
   "workers_dev": false,
   "preview_urls": false,

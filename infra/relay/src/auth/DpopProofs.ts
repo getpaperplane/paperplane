@@ -61,7 +61,7 @@ export class DpopProofReplay extends Context.Service<
     }) => Effect.Effect<boolean, DpopProofReplayPersistenceError>;
     readonly pruneExpired: Effect.Effect<void, DpopProofReplayPersistenceError>;
   }
->()("rove-relay/auth/DpopProofs/DpopProofReplay") {}
+>()("paperplane-relay/auth/DpopProofs/DpopProofReplay") {}
 
 const make = Effect.gen(function* () {
   const db = yield* RelayDb.RelayDb;

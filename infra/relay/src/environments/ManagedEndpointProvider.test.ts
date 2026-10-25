@@ -383,7 +383,7 @@ function expectedManagedHostname(environmentId: string, userId = "user_ABC"): st
 }
 
 function expectedManagedTunnelName(environmentId: string, userId = "user_ABC"): string {
-  return `roverelay-managedendpoint-dev-julius-${expectedManagedEndpointHash(environmentId, userId)}`;
+  return `paperplanerelay-managedendpoint-dev-julius-${expectedManagedEndpointHash(environmentId, userId)}`;
 }
 
 describe("ManagedEndpointProvider", () => {
@@ -585,7 +585,7 @@ describe("ManagedEndpointProvider", () => {
           | { readonly name?: string }
           | undefined
       )?.name;
-      expect(requestedName).toMatch(/^roverelay-managedendpoint-dev-julius-[a-f0-9]{16}$/);
+      expect(requestedName).toMatch(/^paperplanerelay-managedendpoint-dev-julius-[a-f0-9]{16}$/);
       const configBody = (
         tunnelCalls.find((call) => call.operation === "putConfiguration")?.input as
           | { readonly tunnelConfig?: unknown }

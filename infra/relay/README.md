@@ -76,11 +76,11 @@ dependencies represented at their boundary rather than mocking internal behavior
 
 ## Deployment
 
-The relay deploys with the Alchemy CLI (`vp run --filter rove-relay deploy` is `alchemy deploy`
+The relay deploys with the Alchemy CLI (`vp run --filter paperplane-relay deploy` is `alchemy deploy`
 in this directory):
 
 ```sh
-vp run --filter rove-relay deploy
+vp run --filter paperplane-relay deploy
 ```
 
 The stack provisions the Cloudflare Worker and queues, managed endpoint resources, database
@@ -111,8 +111,8 @@ not unlimited free hosting. Do not upgrade the plans to work around those limits
 Deploy production first:
 
 ```sh
-vp run --filter rove-relay deploy -- --stage prod
-vp run --filter rove-relay deploy -- --env-file .env.local
+vp run --filter paperplane-relay deploy -- --stage prod
+vp run --filter paperplane-relay deploy -- --env-file .env.local
 ```
 
 Alchemy defaults personal deployments to the `dev_$USER` stage. Relay custom domains apply the same
