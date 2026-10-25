@@ -77,7 +77,9 @@ describe("BrowserSession", () => {
       const first = yield* browserSessions.getSession("scope-a");
       const second = yield* browserSessions.getSession("scope-a");
 
-      assert.strictEqual(partition, "persist:rove-preview-f051bb2c68cb7b2fe969");
+      assert.strictEqual(partition, "persist:paperplane-preview-f051bb2c68cb7b2fe969");
+      assert.isTrue(browserSessions.isPartition(partition));
+      assert.isFalse(browserSessions.isPartition("persist:rove-preview-f051bb2c68cb7b2fe969"));
       assert.strictEqual(first, second);
       assert.strictEqual(fromPartition.mock.calls.length, 1);
     }).pipe(Effect.provide(layer)),
@@ -100,7 +102,7 @@ describe("BrowserSession", () => {
       // And a well-formed scope still lands on its historical partition.
       assert.strictEqual(
         yield* browserSessions.getPartition("scope-a"),
-        "persist:rove-preview-f051bb2c68cb7b2fe969",
+        "persist:paperplane-preview-f051bb2c68cb7b2fe969",
       );
     }).pipe(Effect.provide(layer)),
   );
@@ -114,8 +116,11 @@ describe("BrowserSession", () => {
       const legacyDefault = yield* browserSessions.getPartition("a::b");
       const nondefaultProfile = yield* browserSessions.getPartition("a::b", true, "profile");
 
-      assert.strictEqual(legacyDefault, "persist:rove-preview-78f0be89237d77f7a70e");
-      assert.strictEqual(nondefaultProfile, "persist:rove-preview-profile-78f0be89237d77f7a70e");
+      assert.strictEqual(legacyDefault, "persist:paperplane-preview-78f0be89237d77f7a70e");
+      assert.strictEqual(
+        nondefaultProfile,
+        "persist:paperplane-preview-profile-78f0be89237d77f7a70e",
+      );
       assert.notStrictEqual(nondefaultProfile, legacyDefault);
       assert.isTrue(browserSessions.isPartition(legacyDefault));
       assert.isTrue(browserSessions.isPartition(nondefaultProfile));

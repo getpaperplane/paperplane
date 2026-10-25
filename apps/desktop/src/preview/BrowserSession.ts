@@ -11,9 +11,7 @@ import * as SynchronizedRef from "effect/SynchronizedRef";
 
 import * as ElectronDialog from "../electron/ElectronDialog.ts";
 
-// Persisted Chromium directory names survive the one-time profile copy. Keep
-// this storage identity so Windows preview logins remain readable after upgrade.
-const PREVIEW_PARTITION_PREFIX = "persist:rove-preview-";
+const PREVIEW_PARTITION_PREFIX = "persist:paperplane-preview-";
 /**
  * Incognito partitions deliberately omit the `persist:` prefix, which is what
  * makes Chromium keep them in memory and discard them with the process. They

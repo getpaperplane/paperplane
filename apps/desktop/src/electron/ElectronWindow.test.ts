@@ -129,7 +129,7 @@ describe("ElectronWindow", () => {
         icon: {} as Electron.NativeImage,
         webPreferences: {
           preload: "/tmp/preload.js",
-          partition: "persist:rove-preview-test",
+          partition: "persist:paperplane-preview-test",
           sandbox: true,
           contextIsolation: true,
           nodeIntegration: false,
@@ -155,7 +155,7 @@ describe("ElectronWindow", () => {
         backgroundColor: "#101010",
         webPreferences: {
           preload: "/tmp/preload.js",
-          partition: "persist:rove-preview-test",
+          partition: "persist:paperplane-preview-test",
           backgroundThrottling: null,
           sandbox: true,
           contextIsolation: true,

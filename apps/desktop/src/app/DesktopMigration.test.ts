@@ -170,7 +170,9 @@ describe("independent desktop profile", () => {
       assert.equal(NodeFS.readFileSync(preferences, "utf8"), "old preferences and drafts");
       assert.isFalse(NodeFS.existsSync(NodePath.join(destination, "Cache")));
       assert.equal(
-        NodeFS.existsSync(NodePath.join(destination, "Partitions", "rove-preview-test", "Cookies")),
+        NodeFS.existsSync(
+          NodePath.join(destination, "Partitions", "paperplane-preview-test", "Cookies"),
+        ),
         platform === "win32",
       );
       assert.equal(
@@ -218,6 +220,71 @@ describe("independent desktop profile", () => {
       );
     },
   );
+
+  it("renames default and profile partitions only in the staged copy, preserving conflicts", () => {
+    const source = NodePath.join(root, "rove-v2");
+    const names = ["f051bb2c68cb7b2fe969", "profile-78f0be89237d77f7a70e"];
+    for (const name of names) {
+      write(
+        NodePath.join(source, "Partitions", `rove-preview-${name}`, "Local Storage", "data"),
+        name,
+      );
+    }
+    write(NodePath.join(source, "Partitions", "unrelated", "data"), "leave alone");
+    write(NodePath.join(source, "Partitions", "rove-preview-conflict", "data"), "old");
+    write(NodePath.join(source, "Partitions", "paperplane-preview-conflict", "data"), "new");
+    write(NodePath.join(source, "Partitions", "rove-preview-empty", "data"), "old empty conflict");
+    NodeFS.mkdirSync(NodePath.join(source, "Partitions", "paperplane-preview-empty"));
+
+    const destination = prepareProfileMigration({
+      appDataDirectory: root,
+      isDevelopment: false,
+      platform: "linux",
+    });
+    for (const name of names) {
+      assert.equal(
+        NodeFS.readFileSync(
+          NodePath.join(
+            destination,
+            "Partitions",
+            `paperplane-preview-${name}`,
+            "Local Storage",
+            "data",
+          ),
+          "utf8",
+        ),
+        name,
+      );
+      assert.isFalse(
+        NodeFS.existsSync(NodePath.join(destination, "Partitions", `rove-preview-${name}`)),
+      );
+      assert.equal(
+        NodeFS.readFileSync(
+          NodePath.join(source, "Partitions", `rove-preview-${name}`, "Local Storage", "data"),
+          "utf8",
+        ),
+        name,
+      );
+    }
+    const partitions = NodePath.join(destination, "Partitions");
+    assert.equal(
+      NodeFS.readFileSync(NodePath.join(partitions, "unrelated", "data"), "utf8"),
+      "leave alone",
+    );
+    assert.equal(
+      NodeFS.readFileSync(NodePath.join(partitions, "rove-preview-conflict", "data"), "utf8"),
+      "old",
+    );
+    assert.equal(
+      NodeFS.readFileSync(NodePath.join(partitions, "paperplane-preview-conflict", "data"), "utf8"),
+      "new",
+    );
+    assert.deepEqual(NodeFS.readdirSync(NodePath.join(partitions, "paperplane-preview-empty")), []);
+    assert.equal(
+      NodeFS.readFileSync(NodePath.join(partitions, "rove-preview-empty", "data"), "utf8"),
+      "old empty conflict",
+    );
+  });
 
   it("discards an interrupted stage and refuses a source that starts during copying", () => {
     write(NodePath.join(root, "rove-v2", "preferences"), "good");
@@ -326,7 +393,7 @@ describe("one-time saved sign-ins", () => {
         );
         assert.equal(
           NodeFS.readFileSync(
-            NodePath.join(fixture.userDataPath, "Partitions", "rove-preview-test", "Cookies"),
+            NodePath.join(fixture.userDataPath, "Partitions", "paperplane-preview-test", "Cookies"),
             "utf8",
           ),
           "encrypted-cookie-db",

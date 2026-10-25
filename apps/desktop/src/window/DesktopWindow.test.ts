@@ -335,8 +335,8 @@ function layerTest(input: {
           getBrowserSession: () => Effect.succeed({} as Electron.Session),
           setMainWindow: () => Effect.void,
           prepareWebview: () => Effect.void,
-          isBrowserPartition: (partition) => partition.startsWith("persist:rove-preview-"),
-          getBrowserPartition: () => Effect.succeed("persist:rove-preview-test"),
+          isBrowserPartition: (partition) => partition.startsWith("persist:paperplane-preview-"),
+          getBrowserPartition: () => Effect.succeed("persist:paperplane-preview-test"),
           reapplyZoom: () =>
             Effect.sync(() => {
               input.previewZoomReapplies?.push(input.window.webContents.getZoomLevel());
@@ -447,8 +447,8 @@ const makeSplashScenario = (createOutcomes: readonly (Electron.BrowserWindow | n
           Layer.mock(PreviewManager.PreviewManager)({
             getBrowserSession: () => Effect.succeed({} as Electron.Session),
             setMainWindow: () => Effect.void,
-            isBrowserPartition: (partition) => partition.startsWith("persist:rove-preview-"),
-            getBrowserPartition: () => Effect.succeed("persist:rove-preview-test"),
+            isBrowserPartition: (partition) => partition.startsWith("persist:paperplane-preview-"),
+            getBrowserPartition: () => Effect.succeed("persist:paperplane-preview-test"),
           }),
         ),
       ),

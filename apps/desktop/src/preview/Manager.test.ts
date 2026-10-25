@@ -261,8 +261,8 @@ vi.mock("electron", () => ({
 const layerBrowserSession = Layer.succeed(
   BrowserSession.BrowserSession,
   BrowserSession.BrowserSession.of({
-    getPartition: () => Effect.succeed("persist:rove-preview-test"),
-    isPartition: (partition) => partition.startsWith("persist:rove-preview-"),
+    getPartition: () => Effect.succeed("persist:paperplane-preview-test"),
+    isPartition: (partition) => partition.startsWith("persist:paperplane-preview-"),
     getSession: () => Effect.succeed(previewSession as unknown as Electron.Session),
     clearCookies: () => Effect.void,
     clearCache: () => Effect.void,

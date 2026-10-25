@@ -71,7 +71,7 @@ beforeEach(() => {
   mocks.closeTab.mockReset().mockResolvedValue(undefined);
   mocks.registerWebview.mockReset().mockResolvedValue(undefined);
   mocks.getPreviewConfig.mockReset().mockResolvedValue({
-    partition: "persist:rove-preview-work",
+    partition: "persist:paperplane-preview-work",
     webPreferences: "contextIsolation=yes",
     preloadUrl: null,
   });
@@ -179,7 +179,7 @@ describe("HostedBrowserWebview settings hydration", () => {
     expect(createGuest).toHaveBeenCalledOnce();
     expect(createGuest).toHaveBeenCalledWith(
       expect.objectContaining({
-        partition: "persist:rove-preview-work",
+        partition: "persist:paperplane-preview-work",
         src: "https://example.com",
       }),
     );

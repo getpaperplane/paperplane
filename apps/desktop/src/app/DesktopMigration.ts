@@ -168,6 +168,25 @@ function copyProfile(source: string, destination: string, keepEncrypted: boolean
   }
 }
 
+/** Rename only the staged copy; the old profile remains an untouched backup. */
+function renamePreviewPartitions(stage: string) {
+  // Electron 44's Session::FromPartition strips `persist:`; MakePartitionName in
+  // electron_browser_context.cc lowercases then EscapePath-encodes the remainder.
+  // Our generated names use only lowercase ASCII, hyphens and hex digits.
+  const partitions = NodePath.join(stage, "Partitions");
+  if (!exists(partitions)) return;
+  const oldPrefix = "rove-preview-";
+  for (const entry of NodeFS.readdirSync(partitions, { withFileTypes: true })) {
+    if (!entry.isDirectory() || !entry.name.startsWith(oldPrefix)) continue;
+    // Exclusive rename also protects an existing empty destination. On collision,
+    // keep both copies: the already-new partition wins without destroying either.
+    publishHomeMigration(
+      NodePath.join(partitions, entry.name),
+      NodePath.join(partitions, `paperplane-preview-${entry.name.slice(oldPrefix.length)}`),
+    );
+  }
+}
+
 /** Runs before Clerk or Chromium opens the new profile. A crash retries the private stage, never a published profile. */
 export function prepareProfileMigration(input: ProfileMigrationInput, isInUse = oldProfileIsInUse) {
   const destination = NodePath.join(
@@ -203,6 +222,7 @@ export function prepareProfileMigration(input: ProfileMigrationInput, isInUse = 
     try {
       const keepEncrypted = input.platform === "win32" && hasWindowsKey(source);
       copyProfile(source, stage, keepEncrypted);
+      renamePreviewPartitions(stage);
       assertStopped();
       NodeFS.writeFileSync(
         NodePath.join(stage, PROFILE_REPORT),

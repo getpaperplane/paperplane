@@ -92,7 +92,7 @@ describe("BrowserImport.importCookies", () => {
             sourceProfileDirectory: "../../../../secrets",
             targetProfileId: "default",
           },
-          scope: "persist:rove-preview-test",
+          scope: "persist:paperplane-preview-test",
           persistent: true,
         })
         .pipe(Effect.flip);
@@ -119,7 +119,7 @@ describe("BrowserImport.importCookies", () => {
               sourceProfileDirectory: "Default",
               targetProfileId: "default",
             },
-            scope: "persist:rove-preview-test",
+            scope: "persist:paperplane-preview-test",
             persistent: true,
           })
           .pipe(Effect.flip);
