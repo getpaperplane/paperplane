@@ -120,8 +120,8 @@ const fileBackedImage = {
   name: "photo.png",
   mimeType: "image/png",
   sizeBytes: 3,
-  fileUri: "file:///documents/rove-composer-attachments/photo.png",
-  previewUri: "file:///documents/rove-composer-attachments/photo.png",
+  fileUri: "file:///documents/paperplane-composer-attachments/photo.png",
+  previewUri: "file:///documents/paperplane-composer-attachments/photo.png",
 } as const satisfies DraftComposerAttachment;
 
 const file = {
@@ -342,14 +342,14 @@ describe("prepareTurnAttachments", () => {
     const fileName = "33333333-3333-4333-8333-333333333333-photo.png";
     mocks.documentUri =
       "file:///var/mobile/Containers/Data/Application/22222222-2222-4222-8222-222222222222/Documents";
-    const oldUri = `file:///var/mobile/Containers/Data/Application/11111111-1111-4111-8111-111111111111/Documents/rove-composer-attachments/${fileName}`;
+    const oldUri = `file:///var/mobile/Containers/Data/Application/11111111-1111-4111-8111-111111111111/Documents/paperplane-composer-attachments/${fileName}`;
     const prepared = await prepareTurnAttachments({
       environmentId,
       attachments: [{ ...fileBackedImage, fileUri: oldUri, previewUri: oldUri }],
     });
     expect(prepared.status).toBe("ready");
     expect(mocks.readBase64).toHaveBeenCalledExactlyOnceWith(
-      `${mocks.documentUri}/rove-composer-attachments/${fileName}`,
+      `${mocks.documentUri}/paperplane-composer-attachments/${fileName}`,
     );
   });
 
@@ -492,11 +492,11 @@ describe("prepareTurnAttachments", () => {
     const fileName = "33333333-3333-4333-8333-333333333333-report%20%23.pdf";
     const restoredFile = {
       ...file,
-      fileUri: `file:///private/var/mobile/Containers/Data/Application/11111111-1111-4111-8111-111111111111/Documents/rove-composer-attachments/${fileName}`,
+      fileUri: `file:///private/var/mobile/Containers/Data/Application/11111111-1111-4111-8111-111111111111/Documents/paperplane-composer-attachments/${fileName}`,
     };
     mocks.documentUri =
       "file:///var/mobile/Containers/Data/Application/22222222-2222-4222-8222-222222222222/Documents";
-    const currentUri = `${mocks.documentUri}/rove-composer-attachments/${fileName}`;
+    const currentUri = `${mocks.documentUri}/paperplane-composer-attachments/${fileName}`;
     mocks.upload.mockImplementation(async (uri: string) => {
       if (uri !== currentUri) {
         throw new Error("File does not exist in the previous application container.");

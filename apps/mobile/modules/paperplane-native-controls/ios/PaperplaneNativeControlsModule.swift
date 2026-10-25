@@ -235,7 +235,7 @@ public final class PaperplaneNativeControlsModule: Module {
       appContext?.utilities?.currentViewController() != nil
     else { throw URLError(.cannotLoadFromNetwork) }
     let file = PaperplaneNativeFilePresentation(identifier: identifier, sources: presentationSources,
-                                          sourceIdentifier: sourceIdentifier) { [weak self] error in
+                                                sourceIdentifier: sourceIdentifier) { [weak self] error in
       self?.filePresentation = nil
       if let error { promise.reject(error) } else { promise.resolve(nil) }
     }

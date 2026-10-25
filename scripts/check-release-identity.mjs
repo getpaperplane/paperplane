@@ -165,6 +165,10 @@ const retainedIdentities = [
   ],
   [/^apps\/server\/src\/textGeneration\/OpenCode2TextGeneration\.fixture\.ts$/, /Rove Code/g],
   [/^apps\/server\/scripts\/codexReplayRecordingRecords\.ts$/, /\/home\/replay-user\/rove/g],
+  [
+    /^apps\/server\/src\/orchestration-v2\/testkit\/fixtures\/claude_local_bash_task\/output\.ts$/,
+    /@rove-code\/web/g,
+  ],
   // Integration tests of migration, retirement, or rejection. Only the known
   // historical tokens are allowed; public origins and release names still fail.
   [

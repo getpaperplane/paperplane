@@ -53,6 +53,7 @@ export function assertClaudeLocalBashTaskOutput(
 
   const command = projection.turnItems.find((item) => item.type === "command_execution");
   assert.isDefined(command);
-  assert.include(JSON.stringify(command ?? null), "vp run --filter @getpaperplane/web typecheck");
+  // The command text comes from the immutable recording, made before the rename.
+  assert.include(JSON.stringify(command ?? null), "vp run --filter @rove-code/web typecheck");
   assert.include(JSON.stringify(command?.output ?? null), "tsgo --noEmit");
 }

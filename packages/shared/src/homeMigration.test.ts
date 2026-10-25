@@ -132,7 +132,7 @@ describe("default home migration", () => {
     expect(rows()).toEqual(["hello"]);
     expect(
       NodeFS.readFileSync(NodePath.join(destination, "userdata", "settings.json"), "utf8"),
-    ).toBe('{\n  "theme": "dark"\n}\n');
+    ).toBe('{"theme":"dark"}');
     expect(
       JSON.parse(NodeFS.readFileSync(NodePath.join(destination, HOME_MIGRATION_REPORT), "utf8")),
     ).toMatchObject({

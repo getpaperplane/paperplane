@@ -768,10 +768,11 @@ export const rewriteSavedDataStep: HomeMigrationStep = {
         } else if (entry.isFile() && savedJsonFiles.has(entry.name)) {
           const raw = NodeFS.readFileSync(path, "utf8");
           // Invalid app-owned JSON fails the stage instead of silently publishing unmigrated data.
-          const next =
-            JSON.stringify(rewriteSavedToolNames(migrateSavedAppJson(decodeJson(raw))), null, 2) +
-            "\n";
-          if (next !== raw) NodeFS.writeFileSync(path, next);
+          const parsed = decodeJson(raw);
+          const converted = rewriteSavedToolNames(migrateSavedAppJson(parsed));
+          // Rewrite only when a value changed, so untouched files keep their formatting.
+          if (JSON.stringify(converted) !== JSON.stringify(parsed))
+            NodeFS.writeFileSync(path, JSON.stringify(converted, null, 2) + "\n");
         }
       }
     };

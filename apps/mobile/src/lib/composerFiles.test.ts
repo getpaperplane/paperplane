@@ -864,41 +864,41 @@ describe("composer file attachments", () => {
 
   it("deletes app-owned attachments without touching user-owned files", async () => {
     await removePersistedComposerAttachmentFile(
-      "file:///documents/rove-composer-attachments/report.pdf",
+      "file:///documents/paperplane-composer-attachments/report.pdf",
     );
     await removePersistedComposerAttachmentFile("file:///downloads/report.pdf");
 
     expect(mocks.delete).toHaveBeenCalledOnce();
     expect(mocks.delete).toHaveBeenCalledWith(
-      "file:///documents/rove-composer-attachments/report.pdf",
+      "file:///documents/paperplane-composer-attachments/report.pdf",
     );
   });
 
   it("removes a restored attachment from the current iOS document container", async () => {
     const fileName = "33333333-3333-4333-8333-333333333333-report%20%23.pdf";
-    const oldUri = `file:///private/var/mobile/Containers/Data/Application/11111111-1111-4111-8111-111111111111/Documents/rove-composer-attachments/${fileName}`;
+    const oldUri = `file:///private/var/mobile/Containers/Data/Application/11111111-1111-4111-8111-111111111111/Documents/paperplane-composer-attachments/${fileName}`;
     mocks.documentUri =
       "file:///var/mobile/Containers/Data/Application/22222222-2222-4222-8222-222222222222/Documents";
 
     await removePersistedComposerAttachmentFile(oldUri);
     await removePersistedComposerAttachmentFile(
-      `file:///var/mobile/Containers/Shared/FileProvider/other/Documents/rove-composer-attachments/${fileName}`,
+      `file:///var/mobile/Containers/Shared/FileProvider/other/Documents/paperplane-composer-attachments/${fileName}`,
     );
     await removePersistedComposerAttachmentFile(
-      `${mocks.documentUri}/rove-composer-attachments/..%2F..%2Fsender.pdf`,
+      `${mocks.documentUri}/paperplane-composer-attachments/..%2F..%2Fsender.pdf`,
     );
 
     expect(mocks.delete.mock.calls).toEqual([
-      [`${mocks.documentUri}/rove-composer-attachments/${fileName}`],
+      [`${mocks.documentUri}/paperplane-composer-attachments/${fileName}`],
     ]);
   });
 
   it("rechecks preview ownership after loading the native filesystem", async () => {
     const fileName = "33333333-3333-4333-8333-333333333333-recording.mp4";
-    const oldUri = `file:///private/var/mobile/Containers/Data/Application/11111111-1111-4111-8111-111111111111/Documents/rove-composer-attachments/${fileName}`;
+    const oldUri = `file:///private/var/mobile/Containers/Data/Application/11111111-1111-4111-8111-111111111111/Documents/paperplane-composer-attachments/${fileName}`;
     mocks.documentUri =
       "file:///var/mobile/Containers/Data/Application/22222222-2222-4222-8222-222222222222/Documents";
-    const currentUri = `${mocks.documentUri}/rove-composer-attachments/${fileName}`;
+    const currentUri = `${mocks.documentUri}/paperplane-composer-attachments/${fileName}`;
 
     const deleting = removePersistedComposerAttachmentFile(oldUri);
     const release = retainComposerAttachmentFile(currentUri, () => {});
@@ -915,7 +915,7 @@ describe("composer file attachments", () => {
 
   it("copies an open-in-place source from its actual container without rebasing it", async () => {
     const sourceUri =
-      "file:///var/mobile/Containers/Data/Application/11111111-1111-4111-8111-111111111111/Documents/rove-composer-attachments/33333333-3333-4333-8333-333333333333-report.pdf";
+      "file:///var/mobile/Containers/Data/Application/11111111-1111-4111-8111-111111111111/Documents/paperplane-composer-attachments/33333333-3333-4333-8333-333333333333-report.pdf";
     mocks.documentUri =
       "file:///var/mobile/Containers/Data/Application/22222222-2222-4222-8222-222222222222/Documents";
 
