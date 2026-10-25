@@ -32,7 +32,7 @@ const makeEnvironment = (path: Path.Path, overrides: Record<string, unknown> = {
     linuxDesktopEntryName: "io.github.getpaperplane.paperplane.desktop",
     linuxWmClass: "io.github.getpaperplane.paperplane",
     linuxApplicationsDir: "/home/alice/.local/share/applications",
-    appImagePath: Option.some("/home/alice/Applications/Rove-Code.AppImage"),
+    appImagePath: Option.some("/home/alice/Applications/Paperplane.AppImage"),
     path,
     ...overrides,
   } as unknown as DesktopEnvironment.DesktopEnvironment["Service"]);
@@ -225,7 +225,7 @@ describe("DesktopLinuxUrlHandler", () => {
         );
         assert.include(
           recorded.files[0]?.content,
-          'Exec="/home/alice/Applications/Rove-Code.AppImage" %U',
+          'Exec="/home/alice/Applications/Paperplane.AppImage" %U',
         );
         assert.include(recorded.files[0]?.content, "MimeType=x-scheme-handler/paperplane;");
         assert.deepEqual(recorded.commands, [
@@ -266,7 +266,7 @@ describe("DesktopLinuxUrlHandler", () => {
       yield* runRegister(recorded, {
         existingEntry: DesktopLinuxUrlHandler.renderUrlHandlerDesktopEntry({
           displayName: "Paperplane (Alpha)",
-          execTarget: "/home/alice/Applications/Rove-Code.AppImage",
+          execTarget: "/home/alice/Applications/Paperplane.AppImage",
           scheme: "paperplane",
           iconPath: "/home/alice/.local/share/icons/io.github.getpaperplane.paperplane.desktop.png",
         }),
@@ -300,7 +300,7 @@ describe("DesktopLinuxUrlHandler", () => {
         iconSource: "/tmp/.mount_Paperplane/resources/icon.png",
         existingEntry: DesktopLinuxUrlHandler.renderUrlHandlerDesktopEntry({
           displayName: "Paperplane (Alpha)",
-          execTarget: "/home/alice/Applications/Rove-Code.AppImage",
+          execTarget: "/home/alice/Applications/Paperplane.AppImage",
           scheme: "paperplane",
           iconPath,
         }),

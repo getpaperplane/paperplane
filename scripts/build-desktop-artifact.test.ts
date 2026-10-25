@@ -2463,6 +2463,7 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
           .replace("${version}", "1.2.3-nightly.20261007.1")
           .replace("${arch}", "arm64")
           .replace("${ext}", "zip");
+        assert.equal(filename, "Paperplane-1.2.3-nightly.20261007.1-arm64.zip");
         assert.match(filename, /^[a-zA-Z0-9._-]+$/);
         assert.equal(encodeURIComponent(filename), filename);
       }
@@ -2491,7 +2492,7 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
             env: {
               PAPERPLANE_WINDOWS_SIGNING_MODE: "self-signed",
               WIN_CSC_LINK: "C:\\signing\\paperplane.pfx",
-              PAPERPLANE_WINDOWS_SIGNING_PUBLISHER_NAME: "CN=Rove Code Release Signing",
+              PAPERPLANE_WINDOWS_SIGNING_PUBLISHER_NAME: "CN=Paperplane Release Signing",
             },
           }),
         ),
@@ -2569,20 +2570,20 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
     });
     // Both the staging and the packaging config hang off this one decision:
     // Windows only, and only when CI handed the build a Linux CLI archive.
-    const runtimeArchivePath = "/tmp/rove-1.2.3-linux-x64.tar.gz";
+    const runtimeArchivePath = "/tmp/paperplane-1.2.3-linux-x64.tar.gz";
     assert.isTrue(bundlesWslRuntime({ platform: "win", runtimeArchivePath }));
     assert.isFalse(bundlesWslRuntime({ platform: "win", runtimeArchivePath: undefined }));
     assert.isFalse(bundlesWslRuntime({ platform: "linux", runtimeArchivePath }));
     assert.isFalse(bundlesWslRuntime({ platform: "mac", runtimeArchivePath }));
-    assert.equal(wslRuntimeArchiveStem("1.2.3", "x64"), "rove-1.2.3-linux-x64");
+    assert.equal(wslRuntimeArchiveStem("1.2.3", "x64"), "paperplane-1.2.3-linux-x64");
   });
 
   it("parses Windows bsdtar member listings with CRLF line endings", () => {
     assert.deepStrictEqual(
       parseWslRuntimeArchiveMembers(
-        "./rove-1.2.3-linux-x64/paperplane\r\nrove-1.2.3-linux-x64/client/\r\n",
+        "./paperplane-1.2.3-linux-x64/paperplane\r\npaperplane-1.2.3-linux-x64/client/\r\n",
       ),
-      ["rove-1.2.3-linux-x64/paperplane", "rove-1.2.3-linux-x64/client"],
+      ["paperplane-1.2.3-linux-x64/paperplane", "paperplane-1.2.3-linux-x64/client"],
     );
   });
 
@@ -2594,7 +2595,7 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
         const root = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-wsl-runtime-stage-" });
         const sourceArchivePath = yield* makeLinuxCliArchiveFixture({
           root,
-          stem: "rove-1.2.3-linux-x64",
+          stem: "paperplane-1.2.3-linux-x64",
         });
         const stageAppDir = path.join(root, "app");
         const archivePath = path.join(stageAppDir, WSL_RUNTIME_ARCHIVE_EXTRA_RESOURCE.from);
@@ -2624,7 +2625,7 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
           prefix: "paperplane-wsl-runtime-missing-",
         });
         const error = yield* stageWslRuntimeArchive({
-          sourceArchivePath: path.join(root, "rove-1.2.3-linux-x64.tar.gz"),
+          sourceArchivePath: path.join(root, "paperplane-1.2.3-linux-x64.tar.gz"),
           archivePath: path.join(root, WSL_RUNTIME_ARCHIVE_NAME),
           hashPath: path.join(root, WSL_RUNTIME_ARCHIVE_HASH_NAME),
         }).pipe(Effect.flip);

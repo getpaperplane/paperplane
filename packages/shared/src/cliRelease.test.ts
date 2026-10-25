@@ -14,9 +14,9 @@ import {
 describe("cliRelease", () => {
   it("names archives by version and platform, zip only on Windows", () => {
     expect(cliArchiveFileName("1.2.3-preview.20260911.4", "linux-x64")).toBe(
-      "rove-1.2.3-preview.20260911.4-linux-x64.tar.gz",
+      "paperplane-1.2.3-preview.20260911.4-linux-x64.tar.gz",
     );
-    expect(cliArchiveFileName("1.2.3", "win32-x64")).toBe("rove-1.2.3-win32-x64.zip");
+    expect(cliArchiveFileName("1.2.3", "win32-x64")).toBe("paperplane-1.2.3-win32-x64.zip");
   });
 
   it("only maps platforms and architectures that have a release archive", () => {
@@ -43,14 +43,14 @@ describe("cliRelease", () => {
   it("parses sha256sum output including binary-mode markers", () => {
     const checksums = parseChecksums(
       [
-        `${"a".repeat(64)}  rove-1.2.3-linux-x64.tar.gz`,
-        `${"B".repeat(64)} *rove-1.2.3-win32-x64.zip`,
+        `${"a".repeat(64)}  paperplane-1.2.3-linux-x64.tar.gz`,
+        `${"B".repeat(64)} *paperplane-1.2.3-win32-x64.zip`,
         "not a checksum line",
         "",
       ].join("\n"),
     );
-    expect(checksums.get("rove-1.2.3-linux-x64.tar.gz")).toBe("a".repeat(64));
-    expect(checksums.get("rove-1.2.3-win32-x64.zip")).toBe("b".repeat(64));
+    expect(checksums.get("paperplane-1.2.3-linux-x64.tar.gz")).toBe("a".repeat(64));
+    expect(checksums.get("paperplane-1.2.3-win32-x64.zip")).toBe("b".repeat(64));
     expect(checksums.size).toBe(2);
   });
 

@@ -1117,7 +1117,7 @@ export const WSL_RUNTIME_ARCHIVE_HASH_EXTRA_RESOURCE = {
   to: WSL_RUNTIME_ARCHIVE_HASH_NAME,
 } as const;
 
-// The WSL runtime is the Linux CLI release archive (rove-<version>-linux-<arch>
+// The WSL runtime is the Linux CLI release archive (paperplane-<version>-linux-<arch>
 // .tar.gz, built by scripts/build-cli-archive.ts) copied in verbatim, so WSL
 // runs the exact bytes a Linux user downloads. This one predicate decides both
 // whether the archive is staged and whether the packaging config ships it:
@@ -1712,7 +1712,7 @@ const BuildEnvConfig = Config.all({
   mockUpdateServerPort: Config.String("PAPERPLANE_DESKTOP_MOCK_UPDATE_SERVER_PORT").pipe(
     Config.option,
   ),
-  // Path to the Linux CLI release archive (rove-<version>-linux-x64.tar.gz) built
+  // Path to the Linux CLI release archive (paperplane-<version>-linux-x64.tar.gz) built
   // by the build_linux_cli CI job. The Windows build embeds it verbatim as the
   // WSL runtime.
   wslRuntime: Config.String("PAPERPLANE_DESKTOP_WSL_RUNTIME").pipe(Config.option),
@@ -2805,7 +2805,7 @@ export const createBuildConfig = Effect.fn("createBuildConfig")(function* (
   const buildConfig: Record<string, unknown> = {
     appId: DESKTOP_APP_ID,
     productName: resolveDesktopProductName(version),
-    artifactName: "Rove-Code-${version}-${arch}.${ext}",
+    artifactName: "Paperplane-${version}-${arch}.${ext}",
     electronLanguages: [...DESKTOP_ELECTRON_LANGUAGES],
     files: [
       ...DESKTOP_FILE_EXCLUSIONS,
@@ -3079,7 +3079,7 @@ export const stageWslRuntimeArchive = Effect.fn("stageWslRuntimeArchive")(functi
 // this module, so it cannot be imported here). WSL runs the same CPU arch as
 // the Windows host.
 export const wslRuntimeArchiveStem = (version: string, arch: typeof BuildArch.Type): string =>
-  `rove-${version}-linux-${arch}`;
+  `paperplane-${version}-linux-${arch}`;
 
 export const parseWslRuntimeArchiveMembers = (listing: string): ReadonlyArray<string> =>
   listing
@@ -3362,7 +3362,7 @@ export const validateWindowsPackagedPayload = Effect.fn(
   readonly appExecutableName: string;
   readonly targetArch: typeof BuildArch.Type;
   // The version the embedded Linux CLI archive must carry; its top-level
-  // directory is named rove-<version>-linux-<arch>.
+  // directory is named paperplane-<version>-linux-<arch>.
   readonly appVersion: string;
   readonly expectWslRuntime?: boolean;
   readonly fileLimit?: number;
@@ -4249,7 +4249,7 @@ const buildDesktopArtifactCli = Command.make("build-desktop-artifact", {
   ),
   wslRuntime: Flag.String("wsl-runtime").pipe(
     Flag.withDescription(
-      "Path to the Linux CLI release archive (rove-<version>-linux-x64.tar.gz) to embed as the WSL runtime of a Windows build (env: PAPERPLANE_DESKTOP_WSL_RUNTIME).",
+      "Path to the Linux CLI release archive (paperplane-<version>-linux-x64.tar.gz) to embed as the WSL runtime of a Windows build (env: PAPERPLANE_DESKTOP_WSL_RUNTIME).",
     ),
     Flag.optional,
   ),

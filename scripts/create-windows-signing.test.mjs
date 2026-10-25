@@ -23,12 +23,13 @@ it.skipIf(HostProcess.Platform.defaultValue() === "win32")(
     const env = { ...process.env, PAPERPLANE_CERTIFICATE_PASSWORD: "certificate-test-password" };
     const script = NodePath.join(import.meta.dirname, "create-windows-signing.sh");
     NodeChildProcess.execFileSync("bash", [script, directory], { env, stdio: "pipe" });
-    const pfx = NodePath.join(directory, "rove-windows-signing.pfx");
+    const pfx = NodePath.join(directory, "paperplane-windows-signing.pfx");
     const cert = new NodeCrypto.X509Certificate(
-      NodeFS.readFileSync(NodePath.join(directory, "rove-windows-signing.cer")),
+      NodeFS.readFileSync(NodePath.join(directory, "paperplane-windows-signing.cer")),
     );
     NodeAssert.deepEqual(cert.keyUsage, ["1.3.6.1.5.5.7.3.3"]);
     NodeAssert.equal(cert.ca, false);
+    NodeAssert.equal(cert.subject, "CN=Paperplane Release Signing");
     NodeAssert.equal(cert.subject, cert.issuer);
     NodeAssert.equal(cert.verify(cert.publicKey), true);
     const before = NodeFS.readFileSync(pfx);

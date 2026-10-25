@@ -99,7 +99,7 @@ export function cliArchivePlatformKey(platform: BuildPlatform, arch: BuildArch):
 }
 
 export function cliArchiveStem(version: string, platform: BuildPlatform, arch: BuildArch): string {
-  return `rove-${version}-${cliArchivePlatformKey(platform, arch)}`;
+  return `paperplane-${version}-${cliArchivePlatformKey(platform, arch)}`;
 }
 
 export function cliArchiveFileName(version: string, platform: BuildPlatform, arch: BuildArch) {

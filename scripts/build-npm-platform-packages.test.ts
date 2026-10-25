@@ -52,7 +52,7 @@ const makeFakeArchives = Effect.fn("test.makeFakeArchives")(function* () {
   const archivesDir = path.join(root, "archives");
   yield* fs.makeDirectory(archivesDir);
   for (const key of KEYS) {
-    const stem = `rove-${VERSION}-${key}`;
+    const stem = `paperplane-${VERSION}-${key}`;
     const stage = path.join(root, "stage", key);
     const contentDir = path.join(stage, stem);
     for (const dir of [

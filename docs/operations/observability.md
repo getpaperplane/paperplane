@@ -232,7 +232,7 @@ macOS app bundle example:
 PAPERPLANE_OTLP_TRACES_URL=http://localhost:4318/v1/traces \
 PAPERPLANE_OTLP_METRICS_URL=http://localhost:4318/v1/metrics \
 PAPERPLANE_OTLP_LOGS_URL=http://localhost:4318/v1/logs \
-"/Applications/Rove Code.app/Contents/MacOS/Rove Code"
+"/Applications/Paperplane (Beta).app/Contents/MacOS/Paperplane (Beta)"
 ```
 
 Direct binary example:

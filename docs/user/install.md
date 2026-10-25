@@ -70,19 +70,19 @@ do not run this command.
 
 ## Trust a self-signed Windows build
 
-Self-signed Windows releases include `rove-windows-signing.cer`. They are not publicly trusted, and SmartScreen warnings can remain.
+Self-signed Windows releases include `paperplane-windows-signing.cer`. They are not publicly trusted, and SmartScreen warnings can remain.
 
 Only if you trust this repository's release, compare the certificate's SHA256 fingerprint with the release build summary:
 
 ```powershell
-certutil -hashfile .\rove-windows-signing.cer SHA256
+certutil -hashfile .\paperplane-windows-signing.cer SHA256
 ```
 
 After confirming the fingerprint, trust the certificate for your Windows account:
 
 ```powershell
-Import-Certificate -FilePath .\rove-windows-signing.cer -CertStoreLocation Cert:\CurrentUser\Root
-Import-Certificate -FilePath .\rove-windows-signing.cer -CertStoreLocation Cert:\CurrentUser\TrustedPublisher
+Import-Certificate -FilePath .\paperplane-windows-signing.cer -CertStoreLocation Cert:\CurrentUser\Root
+Import-Certificate -FilePath .\paperplane-windows-signing.cer -CertStoreLocation Cert:\CurrentUser\TrustedPublisher
 ```
 
 This trusts code signed by that certificate. Do not import a certificate from an untrusted download. Paperplane keeps signature verification enabled for updates. An older unsigned installation may need one manual reinstall before following signed updates.
@@ -97,8 +97,8 @@ with `.dev` and `.preview` variants), so it cannot update the old app in place.
 Remove the old app when you no longer need its local settings; host conversations
 remain on your server.
 
-Download `Rove-Code-<version>.apk` (Android) or
-`Rove-Code-<version>-unsigned.ipa` (iOS) from the
+Download `Paperplane-<version>.apk` (Android) or
+`Paperplane-<version>-unsigned.ipa` (iOS) from the
 [GitHub Release assets](https://github.com/getpaperplane/paperplane/releases) when available.
 Mobile binaries accompany stable and preview releases, not daily nightlies.
 There are no App Store or Google Play releases from this project.

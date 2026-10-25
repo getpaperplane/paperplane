@@ -12,7 +12,7 @@ if ($Action -eq 'Import') {
     if (!$env:WIN_CSC_LINK -or !$env:WIN_CSC_KEY_PASSWORD) {
         throw 'Self-signed Windows builds require WIN_CSC_LINK and WIN_CSC_KEY_PASSWORD.'
     }
-    $pfxPath = Join-Path $env:RUNNER_TEMP 'rove-windows-signing.pfx'
+    $pfxPath = Join-Path $env:RUNNER_TEMP 'paperplane-windows-signing.pfx'
     [IO.File]::WriteAllBytes($pfxPath, [Convert]::FromBase64String($env:WIN_CSC_LINK))
     $password = ConvertTo-SecureString $env:WIN_CSC_KEY_PASSWORD -AsPlainText -Force
     $certificates = @(Import-PfxCertificate -FilePath $pfxPath -CertStoreLocation Cert:\CurrentUser\My -Password $password |
@@ -30,7 +30,7 @@ if ($Action -eq 'Import') {
         throw 'Expected a valid self-signed Windows code-signing certificate.'
     }
     if ($certificate.Subject -match '[\r\n]') { throw 'Certificate subject must be a single line.' }
-    $publicPath = Join-Path $env:RUNNER_TEMP 'rove-windows-signing.cer'
+    $publicPath = Join-Path $env:RUNNER_TEMP 'paperplane-windows-signing.cer'
     Export-Certificate -Cert $certificate -FilePath $publicPath | Out-Null
     Write-Host 'Importing the public certificate into the runner machine root store.'
     # The default user root opens a trust dialog. Use the native utility on both runner architectures.
@@ -102,5 +102,5 @@ foreach ($file in $files) {
     Write-Host "Verified Windows signature for $($file.Name)."
 }
 if ($item.PSIsContainer) {
-    Copy-Item -LiteralPath $env:PAPERPLANE_WINDOWS_SIGNING_CERTIFICATE -Destination (Join-Path $Path 'rove-windows-signing.cer') -Force
+    Copy-Item -LiteralPath $env:PAPERPLANE_WINDOWS_SIGNING_CERTIFICATE -Destination (Join-Path $Path 'paperplane-windows-signing.cer') -Force
 }

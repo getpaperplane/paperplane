@@ -118,7 +118,7 @@ describe("ssh tunnel scripts", () => {
     );
     assert.include(
       script,
-      'PAPERPLANE_ARCHIVE="rove-$PAPERPLANE_ARCHIVE_VERSION-$PAPERPLANE_PLATFORM-$PAPERPLANE_ARCH.tar.gz"',
+      'PAPERPLANE_ARCHIVE="paperplane-$PAPERPLANE_ARCHIVE_VERSION-$PAPERPLANE_PLATFORM-$PAPERPLANE_ARCH.tar.gz"',
     );
     assert.include(script, "SHA256SUMS");
     assert.include(script, 'exec "$PAPERPLANE_RUNTIME_DIR/paperplane" "$@"');
@@ -894,7 +894,7 @@ describe("archive runner script", () => {
     const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
     const platform = hostPlatform === "darwin" ? "darwin" : "linux";
     const arch = hostArch === "arm64" ? "arm64" : "x64";
-    const stem = `rove-${archiveVersion}-${platform}-${arch}`;
+    const stem = `paperplane-${archiveVersion}-${platform}-${arch}`;
     const stage = `${root}/stage/${stem}`;
     const release = `${root}/mirror/v${archiveVersion}`;
     const script = [

@@ -23,7 +23,7 @@ function manifest(name, urls, blockMapSize) {
 }
 
 it("verifies every architecture in merged manifests without treating builder config as a feed", async () => {
-  const urls = ["Rove-Code-1.2.3-x64.exe", "Rove-Code-1.2.3-arm64.exe"];
+  const urls = ["Paperplane-1.2.3-x64.exe", "Paperplane-1.2.3-arm64.exe"];
   for (const url of urls) NodeFS.writeFileSync(NodePath.join(directory, url), contents);
   manifest("nightly.yml", urls);
   NodeFS.writeFileSync(NodePath.join(directory, "builder-debug.yml"), "configuration");
@@ -31,7 +31,7 @@ it("verifies every architecture in merged manifests without treating builder con
 });
 
 it("verifies AppImage manifests with embedded block map metadata", async () => {
-  const url = "Rove-Code-1.2.3-arm64.AppImage";
+  const url = "Paperplane-1.2.3-arm64.AppImage";
   NodeFS.writeFileSync(NodePath.join(directory, url), contents);
   manifest("nightly-linux-arm64.yml", [url], 196282);
   NodeAssert.deepEqual(await checkReleaseAssets(directory), { manifests: 1, files: 1 });
@@ -41,12 +41,12 @@ it("verifies AppImage manifests with embedded block map metadata", async () => {
 });
 
 it("rejects the published space-to-dot mismatch instead of accepting a green upload", async () => {
-  manifest("nightly-mac.yml", ["Rove-Code-1.2.3-arm64.zip"]);
-  NodeFS.writeFileSync(NodePath.join(directory, "Rove.Code-1.2.3-arm64.zip"), contents);
+  manifest("nightly-mac.yml", ["Paperplane-1.2.3-arm64.zip"]);
+  NodeFS.writeFileSync(NodePath.join(directory, "Paperplane.-1.2.3-arm64.zip"), contents);
   await NodeAssert.rejects(checkReleaseAssets(directory), /missing release asset/);
 });
 
-it.each(["Rove Code.exe", "../outside.exe", "https://example.com/update.exe"])(
+it.each(["Paperplane App.exe", "../outside.exe", "https://example.com/update.exe"])(
   "rejects non-portable asset reference %s",
   async (url) => {
     manifest("latest.yml", [url]);
@@ -55,14 +55,14 @@ it.each(["Rove Code.exe", "../outside.exe", "https://example.com/update.exe"])(
 );
 
 it("rejects an asset whose bytes changed after the manifest was generated", async () => {
-  const url = "Rove-Code-1.2.3-x64.exe";
+  const url = "Paperplane-1.2.3-x64.exe";
   manifest("latest.yml", [url]);
   NodeFS.writeFileSync(NodePath.join(directory, url), contents.toUpperCase());
   await NodeAssert.rejects(checkReleaseAssets(directory), /wrong sha512/);
 });
 
 it("rejects incomplete uploads and incorrect sizes", async () => {
-  const url = "Rove-Code-1.2.3-x86_64.AppImage";
+  const url = "Paperplane-1.2.3-x86_64.AppImage";
   manifest("latest-linux.yml", [url], 196282);
   NodeFS.writeFileSync(NodePath.join(directory, url), "truncated");
   await NodeAssert.rejects(checkReleaseAssets(directory), /wrong size/);

@@ -164,7 +164,7 @@ async function main() {
     return;
   }
   const safeName = build.versionName.replace(/[^0-9A-Za-z.]+/g, "-").replace(/^-|-$/g, "");
-  const apkName = `rove-android-${channel}-${safeName}-${build.versionCode}.apk`;
+  const apkName = `paperplane-android-${channel}-${safeName}-${build.versionCode}.apk`;
   const tag = outputDirectory ? undefined : requireEnv("RELEASE_TAG");
   const snapshotTag = `android-beta-${build.versionCode}`;
   const release = tag ? readRelease(tag) : undefined;

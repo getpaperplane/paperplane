@@ -1069,12 +1069,12 @@ jobs:
           set -euo pipefail
           cd release-assets
           shopt -s nullglob
-          archives=(rove-*.tar.gz rove-*.zip)
+          archives=(paperplane-*.tar.gz paperplane-*.zip)
           if [[ ${#archives[@]} -eq 0 ]]; then
             echo "No CLI archives were produced." >&2
             exit 1
           fi
-          mobile=(Rove-Code-*.apk Rove-Code-*-unsigned.ipa)
+          mobile=(Paperplane-*.apk Paperplane-*-unsigned.ipa)
           sha256sum "${archives[@]}" "${mobile[@]}" > SHA256SUMS
           cat SHA256SUMS
 

@@ -107,7 +107,7 @@ it.effect("single-platform builds match full packaging and publish without a lau
     const tar = yield* spawner.spawn(
       ChildProcess.make("tar", [
         "-czf",
-        path.join(archivesDir, "rove-1.2.3-linux-x64.tar.gz"),
+        path.join(archivesDir, "paperplane-1.2.3-linux-x64.tar.gz"),
         "-C",
         stage,
         "package",

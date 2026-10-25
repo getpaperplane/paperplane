@@ -72,8 +72,8 @@ leave `PAPERPLANE_CLOUD_READY` unset and OTA updates off.
    then dispatch **Mobile sideload binaries** with `ref` and `version` (without
    `v`). Leave `release_tag` blank for staging Actions artifacts. Verify on actual
    phones, including a two-version Android upgrade and iOS signing/refresh.
-4. Stable/preview `release.yml` runs include `Rove-Code-<version>.apk` and
-   `Rove-Code-<version>-unsigned.ipa` in the same GitHub Release and `SHA256SUMS`.
+4. Stable/preview `release.yml` runs include `Paperplane-<version>.apk` and
+   `Paperplane-<version>-unsigned.ipa` in the same GitHub Release and `SHA256SUMS`.
    For manual attachment, supply an **existing** `release_tag`; this uploads the
    binaries and a separate `MOBILE-SHA256SUMS` without replacing desktop checksums.
    It refuses existing asset names rather than silently replacing a published key
@@ -102,7 +102,7 @@ This mode signs desktop and CLI artifacts with your own certificate. It does not
 
 1. Create a self-signed Code Signing identity in Keychain Access. Export the certificate and private key as a password-protected `.p12`. Keep an encrypted backup of the identity and its password. Use the same identity for every release.
 2. Add the Base64-encoded `.p12` as the repository Actions secret `CSC_LINK`. Add its export password as `CSC_KEY_PASSWORD`. Do not put either value in source control or logs.
-3. Add the repository Actions variable `MACOS_SIGNING_MODE` with value `self-signed`. The default certificate name is `Rove Code Release Signing`. If you chose another name, set `MACOS_SIGNING_IDENTITY` to that exact name.
+3. Add the repository Actions variable `MACOS_SIGNING_MODE` with value `self-signed`. The default certificate name is `Paperplane Release Signing`. If you chose another name, set `MACOS_SIGNING_IDENTITY` to that exact name.
 4. Push the workflow and signing scripts to the ref you want to build. Dispatch `release.yml` with `channel=preview` and `build_only=true`. Keep publication disabled during verification.
 5. Check the macOS job for successful identity import and packaged-app signature verification. Download its desktop and CLI artifacts. Follow the job summary's first-install guidance only for artifacts you trust.
 6. Test installation and a two-version auto-update on a Mac that does not have your certificate installed. Use an update feed configured before signing the test builds. Confirm that a same-certificate update installs and relaunches, and that a different-certificate update fails. Do not treat CI signature verification as proof that auto-update works.
@@ -127,13 +127,13 @@ Windows self-signing is free. It does not provide public certificate trust or re
 3. Set separate Windows Actions secrets and enable the mode:
 
    ```sh
-   base64 < "$HOME/.config/paperplane-release-signing/windows/rove-windows-signing.pfx" | gh secret set WIN_CSC_LINK
+   base64 < "$HOME/.config/paperplane-release-signing/windows/paperplane-windows-signing.pfx" | gh secret set WIN_CSC_LINK
    printf '%s' "$PAPERPLANE_CERTIFICATE_PASSWORD" | gh secret set WIN_CSC_KEY_PASSWORD
    gh variable set WINDOWS_SIGNING_MODE --body self-signed
    unset PAPERPLANE_CERTIFICATE_PASSWORD
    ```
 
-4. Run a build-only preview. Check both Windows jobs for successful signing and signature verification. The public `rove-windows-signing.cer` is included with the installers and CLI archives. The private `.pfx` is never published.
+4. Run a build-only preview. Check both Windows jobs for successful signing and signature verification. The public `paperplane-windows-signing.cer` is included with the installers and CLI archives. The private `.pfx` is never published.
 5. Test installation and a two-version update on Windows with the certificate trusted. Confirm that a changed payload or different signing certificate fails verification.
 
 CI runs native signing tests and updater, schema, and preview checks on Windows x64 and arm64. The broader Windows suite remains manual. These checks do not replace an installed-app upgrade test. Leave `WINDOWS_SIGNING_MODE` unset to retain the existing Azure signing path.

@@ -166,7 +166,7 @@ case "$version" in
     ;;
 esac
 
-stem="rove-${version}-${platform}-${arch}"
+stem="paperplane-${version}-${platform}-${arch}"
 archive="${stem}.tar.gz"
 versions_dir="${paperplane_home}/runtime/versions"
 target_dir="${versions_dir}/${version}"

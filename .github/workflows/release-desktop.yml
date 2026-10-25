@@ -485,7 +485,7 @@ jobs:
         env:
           CSC_LINK: ${{ secrets.CSC_LINK }}
           CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
-          CSC_NAME: ${{ vars.MACOS_SIGNING_IDENTITY || 'Rove Code Release Signing' }}
+          CSC_NAME: ${{ vars.MACOS_SIGNING_IDENTITY || 'Paperplane Release Signing' }}
         run: bash scripts/import-macos-self-signed.sh
 
       # The CLI archive and the desktop app build concurrently and both ship
@@ -714,7 +714,7 @@ jobs:
           elif [[ "${{ inputs.platform }}" == "win" ]]; then
             # Embed the Linux CLI archive built by the same-arch Linux job as
             # the WSL runtime. Required for a working WSL backend on Windows.
-            args+=(--wsl-runtime "$GITHUB_WORKSPACE"/wsl-runtime/rove-*-linux-${{ inputs.arch }}.tar.gz)
+            args+=(--wsl-runtime "$GITHUB_WORKSPACE"/wsl-runtime/paperplane-*-linux-${{ inputs.arch }}.tar.gz)
             unset CSC_LINK CSC_KEY_PASSWORD
             if [[ "${PAPERPLANE_WINDOWS_SIGNING_MODE:-azure}" == "self-signed" ]]; then
               if ! has_all "${WIN_CSC_LINK:-}" "$WIN_CSC_KEY_PASSWORD" "${PAPERPLANE_WINDOWS_SIGNING_THUMBPRINT:-}"; then
@@ -773,9 +773,9 @@ jobs:
           fi
 
           if [[ "${mac_unsigned:-false}" == "true" || "${mac_unnotarized:-false}" == "true" ]]; then
-            app_name="$(node -p "require('./apps/desktop/package.json').productName || 'Rove Code'")"
+            app_name="$(node -p "require('./apps/desktop/package.json').productName || 'Paperplane'")"
             if [[ "${{ inputs.release_channel }}" == "nightly" ]]; then
-              app_name="Rove Code (Nightly)"
+              app_name="Paperplane (Nightly)"
             fi
             {
               echo "### Installing this unnotarized macOS build"

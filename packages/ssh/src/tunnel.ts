@@ -520,7 +520,7 @@ if ! paperplane_runtime_ready; then
     x86_64 | amd64) PAPERPLANE_ARCH="x64" ;;
     *) printf 'Remote host %s has no paperplane release archive.\\n' "$(uname -m)" >&2; exit 1 ;;
   esac
-  PAPERPLANE_ARCHIVE="rove-$PAPERPLANE_ARCHIVE_VERSION-$PAPERPLANE_PLATFORM-$PAPERPLANE_ARCH.tar.gz"
+  PAPERPLANE_ARCHIVE="paperplane-$PAPERPLANE_ARCHIVE_VERSION-$PAPERPLANE_PLATFORM-$PAPERPLANE_ARCH.tar.gz"
   PAPERPLANE_STAGING="$(mktemp -d "$HOME/.paperplane/runtime/versions/.staging-XXXXXX")"
   trap 'rm -rf "$PAPERPLANE_STAGING" "$PAPERPLANE_LOCK"' EXIT
   paperplane_fetch() {

@@ -47,7 +47,7 @@ function runner() {
         console.log('-----BEGIN CERTIFICATE-----\\nfixture\\n-----END CERTIFICATE-----');
         break;
       case 'find-identity':
-        console.log('  1) ' + (process.env.WRONG_IDENTITY ? '0'.repeat(40) : '${fingerprint}') + ' "Rove Code Release Signing"');
+        console.log('  1) ' + (process.env.WRONG_IDENTITY ? '0'.repeat(40) : '${fingerprint}') + ' "Paperplane Release Signing"');
         break;
       case 'list-keychains':
         if (!args.includes('-s')) console.log('    "/tmp/existing keychain-db"');
@@ -75,7 +75,7 @@ function runner() {
     `
     const fs = require('node:fs');
     const path = require('node:path');
-    if (!process.env.EMPTY_ZIP) fs.mkdirSync(path.join(process.argv.at(-1), 'Rove Code.app'), { recursive: true });
+    if (!process.env.EMPTY_ZIP) fs.mkdirSync(path.join(process.argv.at(-1), 'Paperplane.app'), { recursive: true });
   `,
   );
   executable(
@@ -100,7 +100,7 @@ function runner() {
     COMMAND_LOG: logFile,
     CSC_LINK: Buffer.from("private signing identity fixture").toString("base64"),
     CSC_KEY_PASSWORD: "export-password-fixture",
-    CSC_NAME: "Rove Code Release Signing",
+    CSC_NAME: "Paperplane Release Signing",
     PAPERPLANE_MACOS_SIGNING_CERT_SHA1: fingerprint,
   };
   return {
@@ -145,7 +145,7 @@ function runner() {
       NodeFS.mkdirSync(NodePath.join(root, "apps/desktop"), { recursive: true });
       NodeFS.writeFileSync(
         NodePath.join(root, "apps/desktop/package.json"),
-        '{"productName":"Rove Code"}',
+        '{"productName":"Paperplane"}',
       );
       return NodeChildProcess.execFileSync("bash", ["-e", "-o", "pipefail"], {
         input: script,
@@ -166,7 +166,7 @@ function runner() {
         "bash",
         [
           NodePath.resolve(import.meta.dirname, `${script}-macos-self-signed.sh`),
-          ...(script === "verify" ? ["/tmp/Rove Code.app"] : []),
+          ...(script === "verify" ? ["/tmp/Paperplane.app"] : []),
         ],
         { env: { ...env, ...overrides }, encoding: "utf8", stdio: "pipe" },
       );

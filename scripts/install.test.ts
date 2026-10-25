@@ -23,7 +23,7 @@ describe.skipIf(HostProcess.Platform.defaultValue() !== "linux")("installer term
       const version = "1.2.3";
       const homeDirectory = NodePath.join(root, "user");
       await NodeFSP.mkdir(homeDirectory);
-      const stem = `rove-${version}-linux-${HostProcess.Architecture.defaultValue()}`;
+      const stem = `paperplane-${version}-linux-${HostProcess.Architecture.defaultValue()}`;
       const archiveName = `${stem}.tar.gz`;
       let resumeDownload: (() => void) | undefined;
       let sawPartialProgress = false;

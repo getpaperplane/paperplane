@@ -137,7 +137,7 @@ if ($version -match '-preview\.') {
   }
 }
 
-$stem = "rove-$version-win32-$arch"
+$stem = "paperplane-$version-win32-$arch"
 $archive = "$stem.zip"
 $versionsDir = Join-Path $paperplaneHome "runtime\versions"
 $targetDir = Join-Path $versionsDir $version

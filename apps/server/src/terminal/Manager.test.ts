@@ -2106,9 +2106,9 @@ it.layer(
       const appDir = "/tmp/.mount_PaperplaneCodeabc123";
       const { manager, ptyAdapter } = yield* createManager(5, {
         env: {
-          APPIMAGE: "/home/user/Rove-Code.AppImage",
+          APPIMAGE: "/home/user/Paperplane.AppImage",
           APPDIR: appDir,
-          ARGV0: "/home/user/Rove-Code.AppImage",
+          ARGV0: "/home/user/Paperplane.AppImage",
           OWD: "/home/user/project",
           PATH: `${appDir}/usr/bin:${appDir}:/usr/local/bin:/usr/bin:/bin`,
           LD_LIBRARY_PATH: `${appDir}/usr/lib:/home/user/.local/lib`,

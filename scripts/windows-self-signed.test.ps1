@@ -43,10 +43,10 @@ try {
     }
     & $signingScript -Action Sign -Path $payload -NoTimestamp
     & $signingScript -Action Verify -Path $payload
-    if (!(Test-Path -LiteralPath (Join-Path $payload 'rove-windows-signing.cer'))) {
+    if (!(Test-Path -LiteralPath (Join-Path $payload 'paperplane-windows-signing.cer'))) {
         throw 'The public signing certificate was not packaged.'
     }
-    $publicCertificate = [Security.Cryptography.X509Certificates.X509Certificate2]::new((Join-Path $payload 'rove-windows-signing.cer'))
+    $publicCertificate = [Security.Cryptography.X509Certificates.X509Certificate2]::new((Join-Path $payload 'paperplane-windows-signing.cer'))
     if ($publicCertificate.HasPrivateKey -or $publicCertificate.Thumbprint -ne $certificate.Thumbprint) {
         throw 'The published certificate must match the signer and contain no private key.'
     }
