@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { AppText as Text } from "../../components/ui/AppText";
 import { SymbolView } from "../../components/ui/AppSymbol";
+import { readAppVersion, readNativeBuildNumber } from "../../lib/appVersion";
 import {
   type AppUpdateCheckState,
   isAppUpdateCheckAvailable,
@@ -40,12 +41,14 @@ function AppSettingsSection() {
   const updateInFlight = useRef(false);
   const hiddenUpdateTapCount = useRef(0);
 
-  const version = Constants.expoConfig?.version ?? "0.0.0";
+  const version = readAppVersion();
   // Fall back to "production" to match resolveAppVariant in app.config.ts, so a
   // missing variant never mislabels a production build as development.
   const variant = (Constants.expoConfig?.extra?.appVariant as string | undefined) ?? "production";
   const variantLabel = variant === "production" ? "" : capitalize(variant);
   const versionLabel = variantLabel ? `${version} · ${variantLabel}` : version;
+  const buildNumber = readNativeBuildNumber();
+  const buildLabel = buildNumber ? `Build ${buildNumber}` : undefined;
   const updateCheckAvailable = isAppUpdateCheckAvailable();
   const busy =
     updateState === "checking" || updateState === "downloading" || updateState === "restarting";
@@ -109,11 +112,16 @@ function AppSettingsSection() {
         type="monochrome"
         weight="regular"
       />
-      <Text className="flex-1 text-lg text-foreground">Version</Text>
-      <View className="items-end">
-        <Text className="text-lg text-foreground-muted">{versionLabel}</Text>
+      <Text className="shrink-0 text-lg text-foreground">Version</Text>
+      <View className="min-w-0 flex-1 items-end gap-1">
+        <Text className="self-stretch text-right text-lg text-foreground-muted">
+          {versionLabel}
+        </Text>
+        {buildLabel ? (
+          <Text className="text-right text-xs text-foreground-muted/70">{buildLabel}</Text>
+        ) : null}
         {statusLabel ? (
-          <Text className="text-xs text-foreground-muted/70">{statusLabel}</Text>
+          <Text className="text-right text-xs text-foreground-muted/70">{statusLabel}</Text>
         ) : null}
       </View>
     </View>
@@ -131,7 +139,9 @@ function AppSettingsSection() {
       <SettingsRow icon="doc.text" label="Legal" fullScreenTarget="SettingsLegal" />
       {updateCheckAvailable ? (
         <Pressable
-          accessibilityLabel={`Version ${versionLabel}`}
+          accessibilityLabel={
+            buildLabel ? `Version ${versionLabel}, ${buildLabel}` : `Version ${versionLabel}`
+          }
           accessibilityRole="text"
           disabled={busy}
           onPress={handleVersionPress}

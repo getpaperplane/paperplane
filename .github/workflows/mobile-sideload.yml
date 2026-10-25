@@ -50,6 +50,8 @@ env:
   # Native version strings must be numeric (iOS rejects 2.1.0-preview.1); the
   # asset file name keeps the full release version.
   RELEASE_VERSION: ${{ inputs.version }}
+  # About shows this label, so installed builds can be matched to a release.
+  PAPERPLANE_MOBILE_RELEASE_VERSION: ${{ inputs.version }}
   PAPERPLANE_MOBILE_UPDATES_ENABLED: "0"
   EXPO_NO_DOTENV: "1"
   CI: "1"
