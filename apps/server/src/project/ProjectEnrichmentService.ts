@@ -5,6 +5,7 @@ import * as Context from "effect/Context";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
+import * as Fiber from "effect/Fiber";
 import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
 import * as PubSub from "effect/PubSub";
@@ -89,7 +90,7 @@ function isSuccessfullyResolved<A, E>(cached: Option.Option<Exit.Exit<A, E>>): b
 }
 
 interface EnrichmentWorkLane {
-  readonly pendingRoots: Ref.Ref<ReadonlySet<string>>;
+  readonly pendingRoots: Ref.Ref<ReadonlyMap<string, { invalidated: boolean }>>;
   readonly queue: Queue.Queue<string>;
 }
 
@@ -98,6 +99,7 @@ export const make = Effect.fn("ProjectEnrichmentService.make")(function* (
 ) {
   const repositoryIdentityResolver = yield* RepositoryIdentityResolver.RepositoryIdentityResolver;
   const faviconResolver = yield* ProjectFaviconResolver.ProjectFaviconResolver;
+  const scope = yield* Effect.scope;
   const cacheCapacity = Math.max(1, options.cacheCapacity ?? DEFAULT_CACHE_CAPACITY);
   const maxPending = Math.max(1, options.maxPending ?? DEFAULT_MAX_PENDING);
   const concurrency = Math.max(1, options.concurrency ?? DEFAULT_CONCURRENCY);
@@ -126,7 +128,7 @@ export const make = Effect.fn("ProjectEnrichmentService.make")(function* (
     },
   );
   const makeWorkLane = Effect.gen(function* () {
-    const pendingRoots = yield* Ref.make<ReadonlySet<string>>(new Set());
+    const pendingRoots = yield* Ref.make<ReadonlyMap<string, { invalidated: boolean }>>(new Map());
     const queue = yield* Effect.acquireRelease(Queue.dropping<string>(maxPending), (queue) =>
       Queue.shutdown(queue),
     );
@@ -134,6 +136,11 @@ export const make = Effect.fn("ProjectEnrichmentService.make")(function* (
   });
   const repositoryIdentityLane = yield* makeWorkLane;
   const faviconLane = yield* makeWorkLane;
+  const repositoryRetries = new Map<
+    string,
+    | { status: "queued"; remaining: number }
+    | { status: "waiting"; remaining: number; fiber: Fiber.Fiber<void> }
+  >();
   const changes = yield* Effect.acquireRelease(
     PubSub.sliding<ProjectEnrichmentChange>(256),
     (pubsub) => PubSub.shutdown(pubsub),
@@ -142,7 +149,7 @@ export const make = Effect.fn("ProjectEnrichmentService.make")(function* (
   const removePending = (lane: EnrichmentWorkLane, workspaceRoot: string) =>
     Ref.update(lane.pendingRoots, (current) => {
       if (!current.has(workspaceRoot)) return current;
-      const next = new Set(current);
+      const next = new Map(current);
       next.delete(workspaceRoot);
       return next;
     });
@@ -152,8 +159,8 @@ export const make = Effect.fn("ProjectEnrichmentService.make")(function* (
       if (current.has(workspaceRoot) || current.size >= maxPending) {
         return [false, current] as const;
       }
-      const next = new Set(current);
-      next.add(workspaceRoot);
+      const next = new Map(current);
+      next.set(workspaceRoot, { invalidated: false });
       return [true, next] as const;
     });
 
@@ -172,10 +179,16 @@ export const make = Effect.fn("ProjectEnrichmentService.make")(function* (
 
   const resolveRepositoryIdentity = Effect.fn("ProjectEnrichmentService.resolveRepositoryIdentity")(
     function* (workspaceRoot: string) {
+      const pending = (yield* Ref.get(repositoryIdentityLane.pendingRoots)).get(workspaceRoot);
       const repositoryIdentity = yield* Cache.get(repositoryIdentityCache, workspaceRoot);
       yield* logFailure(workspaceRoot, "repositoryIdentity", repositoryIdentity);
       const faviconPath = yield* Cache.getSuccess(faviconCache, workspaceRoot);
       const repositoryIdentityResolved = Exit.isSuccess(repositoryIdentity);
+      if (Exit.isSuccess(repositoryIdentity) && repositoryIdentity.value !== null) {
+        yield* cancelRepositoryRetry(workspaceRoot);
+      } else {
+        yield* scheduleRepositoryRetry(workspaceRoot, pending);
+      }
       yield* PubSub.publish(changes, {
         workspaceRoot,
         repositoryIdentityResolved,
@@ -229,15 +242,59 @@ export const make = Effect.fn("ProjectEnrichmentService.make")(function* (
     workspaceRoot: string,
     field: "repositoryIdentity" | "faviconPath",
   ) {
-    if (!(yield* reservePending(lane, workspaceRoot))) return;
+    if (!(yield* reservePending(lane, workspaceRoot))) return false;
     if (!(yield* Queue.offer(lane.queue, workspaceRoot))) {
       yield* removePending(lane, workspaceRoot);
       yield* Effect.logWarning("Project metadata enrichment queue is full", {
         workspaceRoot,
         field,
       });
+      return false;
     }
+    return true;
   });
+
+  const cancelRepositoryRetry = Effect.fn("ProjectEnrichmentService.cancelRepositoryRetry")(
+    function* (workspaceRoot: string) {
+      const retry = repositoryRetries.get(workspaceRoot);
+      repositoryRetries.delete(workspaceRoot);
+      if (retry?.status === "waiting") yield* Fiber.interrupt(retry.fiber);
+    },
+  );
+
+  const scheduleRepositoryRetry = Effect.fn("ProjectEnrichmentService.scheduleRepositoryRetry")(
+    function* (workspaceRoot: string, pending: { invalidated: boolean } | undefined) {
+      if (pending?.invalidated !== false) return;
+      const previous = repositoryRetries.get(workspaceRoot);
+      if (previous?.status === "waiting") return;
+      if (previous === undefined && repositoryRetries.size >= maxPending) return;
+      const remaining = previous?.remaining ?? 2;
+      if (remaining === 0) {
+        yield* cancelRepositoryRetry(workspaceRoot);
+        return;
+      }
+      // Only missing identities get timers; retries use the same bounded worker queue.
+      const fiber: Fiber.Fiber<void> = yield* Effect.gen(function* () {
+        const current = repositoryRetries.get(workspaceRoot);
+        if (current?.status !== "waiting" || current.fiber !== fiber) return;
+        const queued = { status: "queued" as const, remaining: remaining - 1 };
+        repositoryRetries.set(workspaceRoot, queued);
+        const accepted = yield* requestLane(
+          repositoryIdentityLane,
+          workspaceRoot,
+          "repositoryIdentity",
+        );
+        if (!accepted && repositoryRetries.get(workspaceRoot) === queued) {
+          repositoryRetries.delete(workspaceRoot);
+        }
+      }).pipe(Effect.delay("1 minute"), Effect.forkIn(scope));
+      if (pending.invalidated) {
+        yield* Fiber.interrupt(fiber);
+        return;
+      }
+      repositoryRetries.set(workspaceRoot, { status: "waiting", remaining, fiber });
+    },
+  );
 
   const peek: ProjectEnrichmentService["Service"]["peek"] = Effect.fn(
     "ProjectEnrichmentService.peek",
@@ -288,13 +345,18 @@ export const make = Effect.fn("ProjectEnrichmentService.make")(function* (
     yield* Effect.forEach(
       new Set(workspaceRoots),
       (workspaceRoot) =>
-        Effect.all(
-          [
-            Cache.invalidate(repositoryIdentityCache, workspaceRoot),
-            Cache.invalidate(faviconCache, workspaceRoot),
-          ],
-          { concurrency: "unbounded", discard: true },
-        ),
+        Effect.gen(function* () {
+          const pending = (yield* Ref.get(repositoryIdentityLane.pendingRoots)).get(workspaceRoot);
+          if (pending !== undefined) pending.invalidated = true;
+          yield* Effect.all(
+            [
+              cancelRepositoryRetry(workspaceRoot),
+              Cache.invalidate(repositoryIdentityCache, workspaceRoot),
+              Cache.invalidate(faviconCache, workspaceRoot),
+            ],
+            { concurrency: "unbounded", discard: true },
+          );
+        }),
       { discard: true },
     );
   });
