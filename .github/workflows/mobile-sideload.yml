@@ -210,7 +210,8 @@ jobs:
       PAPERPLANE_MOBILE_VERSION: ${{ needs.prepare.outputs.native_version }}
       PAPERPLANE_IOS_PERSONAL_TEAM: "1"
       PAPERPLANE_IOS_UNSIGNED: "1"
-      USE_CCACHE: "1"
+      # Xcode's launcher keeps Clang identifiable for explicit modules.
+      USE_CCACHE: "0"
     steps:
       - uses: actions/checkout@v6
         with:
@@ -234,6 +235,25 @@ jobs:
         uses: ./.github/actions/setup-mobile-compiler-cache
         with:
           cold-cache: ${{ inputs.cold_cache }}
+      - name: Configure Xcode compiler launcher
+        working-directory: apps/mobile
+        shell: bash
+        run: |
+          set -euo pipefail
+          config="$(node --print "require('node:path').join(require.resolve('react-native/package.json'), '..', 'scripts/xcode/ccache.conf')")"
+          toolchain="$( { xcodebuild -version; xcrun --sdk iphoneos --show-sdk-build-version; } | shasum -a 256 | cut -d ' ' -f 1)"
+          # Xcode does not forward arbitrary environment variables to compilers.
+          cat > "$RUNNER_TEMP/ccache-xcode" <<EOF
+          #!/bin/sh
+          export CCACHE_DIR='$CCACHE_DIR'
+          export CCACHE_BASEDIR='$CCACHE_BASEDIR'
+          export CCACHE_COMPILERCHECK=content
+          export CCACHE_MAXSIZE=2G
+          export CCACHE_CONFIGPATH='$config'
+          export CCACHE_NAMESPACE='$toolchain'
+          exec '$(command -v ccache)' "\$@"
+          EOF
+          chmod +x "$RUNNER_TEMP/ccache-xcode"
       - name: Generate native iOS project and install Pods
         working-directory: apps/mobile
         run: |
@@ -249,6 +269,7 @@ jobs:
           xcodebuild -workspace "$workspace" -scheme "$scheme" -configuration Release \
             -showBuildTimingSummary \
             -destination 'generic/platform=iOS' -archivePath "$RUNNER_TEMP/Paperplane.xcarchive" \
+            C_COMPILER_LAUNCHER="$RUNNER_TEMP/ccache-xcode" \
             CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO archive
           mkdir -p "$RUNNER_TEMP/ipa/Payload" release-assets
           cp -R "$RUNNER_TEMP/Paperplane.xcarchive/Products/Applications/"*.app "$RUNNER_TEMP/ipa/Payload/"
@@ -267,6 +288,11 @@ jobs:
             ccache --show-stats
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
+          awk '$1 ~ /^(cache_miss|direct_cache_hit|preprocessed_cache_hit)$/ { calls += $2 } END { exit calls == 0 }' \
+            "$RUNNER_TEMP/mobile-build-reports/ccache-stats.txt" || {
+              echo '::error::iOS compilation did not use the configured compiler cache.'
+              exit 1
+            }
       - name: Upload iOS build reports
         if: always()
         uses: actions/upload-artifact@v7
