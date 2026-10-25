@@ -1,12 +1,5 @@
 export const COMPOSER_ATTACHMENT_DIRECTORY = "paperplane-composer-attachments";
 
-// Saved drafts contain physical file URIs; keep reading their original directory
-// rather than moving files out from under a pending attachment or media player.
-const COMPOSER_ATTACHMENT_READ_DIRECTORIES = [
-  COMPOSER_ATTACHMENT_DIRECTORY,
-  "rove-composer-attachments",
-] as const;
-
 const UUID_PATTERN = "[a-f\\d]{8}-[a-f\\d]{4}-[a-f\\d]{4}-[a-f\\d]{4}-[a-f\\d]{12}";
 const GENERATED_FILE_NAME = new RegExp(`^${UUID_PATTERN}-`, "i");
 const IOS_DOCUMENTS_PATH = new RegExp(
@@ -36,8 +29,7 @@ function ownedFileLocation(uri: string) {
   if (path === null) {
     return null;
   }
-  const directory = COMPOSER_ATTACHMENT_READ_DIRECTORIES.find((name) => path.includes(`/${name}/`));
-  if (directory === undefined) return null;
+  const directory = COMPOSER_ATTACHMENT_DIRECTORY;
   const separator = `/${directory}/`;
   const index = path.lastIndexOf(separator);
   const name = index < 0 ? "" : path.slice(index + separator.length);
