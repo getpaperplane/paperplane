@@ -265,7 +265,7 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
           mode: "dev",
           baseEnv: {
             PAPERPLANE_SERVICE_LAUNCHER_CONTEXT: '{"childVersion":"9.9.9"}',
-            PAPERPLANE_BOOT_SERVICE_UNIT: "rove.service",
+            PAPERPLANE_BOOT_SERVICE_UNIT: "paperplane.service",
           },
           serverOffset: 0,
           webOffset: 0,
