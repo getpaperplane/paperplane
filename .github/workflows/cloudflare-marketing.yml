@@ -32,7 +32,7 @@ jobs:
   build:
     name: Build marketing site
     if: ${{ !inputs.prebuilt }}
-    runs-on: blacksmith-4vcpu-ubuntu-2404
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v6
@@ -83,7 +83,7 @@ jobs:
     name: Deploy marketing site
     if: ${{ inputs.deploy && !cancelled() && (needs.build.result == 'success' || (inputs.prebuilt && needs.build.result == 'skipped')) }}
     needs: build
-    runs-on: blacksmith-4vcpu-ubuntu-2404
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     environment: cloudflare-web
     steps:

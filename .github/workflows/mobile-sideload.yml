@@ -50,7 +50,7 @@ env:
 jobs:
   prepare:
     if: vars.PAPERPLANE_MOBILE_SIDELOAD_READY == 'true'
-    runs-on: blacksmith-4vcpu-ubuntu-2404
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     outputs:
       native_version: ${{ steps.prepare.outputs.native_version }}
@@ -83,6 +83,8 @@ jobs:
   android:
     needs: prepare
     if: needs.prepare.outputs.android_ready == 'true'
+    # The release's slowest job. Keep Blacksmith limited to this build so the
+    # free allowance is not spent on short jobs or 20x-rated macOS minutes.
     runs-on: blacksmith-4vcpu-ubuntu-2404
     timeout-minutes: 90
     env:
@@ -159,7 +161,7 @@ jobs:
 
   ios:
     needs: prepare
-    runs-on: blacksmith-6vcpu-macos-26
+    runs-on: macos-26
     timeout-minutes: 90
     env:
       PAPERPLANE_MOBILE_BUILD_NUMBER: ${{ needs.prepare.outputs.build_number }}
@@ -213,7 +215,7 @@ jobs:
   attach_manual:
     needs: [android, ios]
     if: ${{ !failure() && !cancelled() && github.event_name == 'workflow_dispatch' && inputs.release_tag != '' && needs.ios.result == 'success' }}
-    runs-on: blacksmith-4vcpu-ubuntu-2404
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     permissions:
       contents: write
