@@ -40,6 +40,7 @@ import {
 } from "@earendil-works/pi-coding-agent";
 
 import { createPiUsageLimitCapture, type PiUsageLimitEvidence } from "./PiUsageLimitCapture.ts";
+import { observePiPromptCache, piCompactionStatus } from "./PiCompaction.ts";
 
 type PiThinkingLevel = "off" | "minimal" | "low" | "medium" | "high" | "xhigh" | "max";
 
@@ -275,6 +276,7 @@ async function toPiSessionLike(
     get autoCompactionEnabled() {
       return session.autoCompactionEnabled;
     },
+    getCompactionStatus: () => piCompactionStatus(session),
     prompt: async (text, options) => {
       if (stopped) throw new Error("Pi session has been stopped.");
       let reported = false;
@@ -980,6 +982,7 @@ export async function createPiSession(
       throw error;
     });
   usageLimits.observe(session.agent);
+  const stopObservingCache = observePiPromptCache(session);
 
   // Collect every way the effective model/reasoning selection differs from the
   // requested one: fuzzy-match warnings, the SDK's restore fallback, and
@@ -1005,6 +1008,7 @@ export async function createPiSession(
     startupErrors,
     modelFallbackMessage.length > 0 ? modelFallbackMessage : undefined,
     async () => {
+      stopObservingCache();
       await options.workloads?.disposeOwner(workloadOwner);
       await paperplaneTools.dispose();
     },

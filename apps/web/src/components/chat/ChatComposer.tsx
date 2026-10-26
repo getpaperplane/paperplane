@@ -313,6 +313,7 @@ import {
   renderProviderTraitsPicker,
 } from "./composerProviderState";
 import { ContextWindowMeter, ContextWindowMeterPlaceholder } from "./ContextWindowMeter";
+import type { CompactionReason } from "@getpaperplane/client-runtime/compaction";
 import {
   providerSupportsManualCompaction,
   resolveContextWindowModelDisplayName,
@@ -1423,6 +1424,7 @@ const ComposerFooterPrimaryActions = memo(function ComposerFooterPrimaryActions(
   compactDisabled: boolean;
   compactDisabledReason: string | null;
   compactBeforeSendTokens: number | null;
+  compactionReason?: CompactionReason | undefined;
   keepFullHistory: boolean;
   onToggleKeepFullHistory: () => void;
 }) {
@@ -1464,6 +1466,7 @@ const ComposerFooterPrimaryActions = memo(function ComposerFooterPrimaryActions(
         onInterrupt={props.onInterrupt}
         onImplementPlanInNewThread={props.onImplementPlanInNewThread}
         compactBeforeSendTokens={props.compactBeforeSendTokens}
+        compactionReason={props.compactionReason}
         keepFullHistory={props.keepFullHistory}
         onToggleKeepFullHistory={props.onToggleKeepFullHistory}
       />
@@ -1587,8 +1590,9 @@ export interface ChatComposerProps {
   sendDisabledReason: string | null;
   isPreparingWorktree: boolean;
   bannerItems: readonly ComposerBannerStackItem[];
-  /** Tokens a stale session would re-read; null when the thread is not offered compaction. */
+  /** Current context size; null when the thread is not offered compaction. */
   resumeCompactionTokens: number | null;
+  compactionReason?: CompactionReason | undefined;
   /** The Compact chip is off, so the next send keeps full history. */
   keepFullHistory: boolean;
   /** Flips the Compact chip for the active thread. */
@@ -7737,6 +7741,7 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
                     onInterrupt={handleInterruptPrimaryActionStable}
                     onImplementPlanInNewThread={handleImplementPlanInNewThreadPrimaryActionStable}
                     compactBeforeSendTokens={props.resumeCompactionTokens}
+                    compactionReason={props.compactionReason}
                     keepFullHistory={props.keepFullHistory}
                     onToggleKeepFullHistory={props.onToggleKeepFullHistory}
                     compactDisabled={

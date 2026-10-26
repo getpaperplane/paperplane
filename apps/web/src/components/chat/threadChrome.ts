@@ -38,6 +38,9 @@ function deriveThreadChrome(
   visible: OrchestrationV2ThreadProjection["visibleTurnItems"],
 ) {
   const latestRun = projection ? deriveLatestThreadRun(projection) : null;
+  const activeProviderThread = projection?.providerThreads.find(
+    (thread) => thread.id === projection.thread.activeProviderThreadId,
+  );
   const activityRun = projection ? deriveThreadActivityRun(projection) : null;
   const fullRuntime = projection ? deriveThreadRuntime(projection) : null;
   // updatedAt is an event clock, not runtime state (text appends advance it).
@@ -136,12 +139,13 @@ function deriveThreadChrome(
     ].join("\n"),
     promptCacheTtlMs: latestProviderTurnTokenUsage(projection?.providerTurns ?? [])
       ?.promptCacheTtlMs,
+    contextWindowProviderInstanceId: activeProviderThread?.providerInstanceId ?? null,
     contextWindow: deriveLatestContextWindowSnapshot(
       visible,
-      latestProviderTurnTokenUsage(projection?.providerTurns ?? []),
-      projection?.providerThreads.find(
-        (thread) => thread.id === projection.thread.activeProviderThreadId,
-      ),
+      activeProviderThread?.driver === "pi"
+        ? null
+        : latestProviderTurnTokenUsage(projection?.providerTurns ?? []),
+      activeProviderThread,
     ),
     pendingBackgroundTasks: projection
       ? [

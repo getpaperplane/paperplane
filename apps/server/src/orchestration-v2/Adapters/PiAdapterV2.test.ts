@@ -290,6 +290,33 @@ it.effect(
     }).pipe(Effect.scoped, Effect.provide(layer)),
 );
 
+it.effect("publishes cache warm-up expiry while idle without starting another turn", () =>
+  Effect.gen(function* () {
+    const h = yield* setup();
+    let expiresAt = "2026-10-26T12:05:00.000Z";
+    h.raw.session.getCompactionStatus = () => ({
+      contextModel: "fixture/model",
+      autoCompactThreshold: 48000,
+      promptCacheTtlMs: 300000,
+      promptCacheExpiresAt: expiresAt,
+    });
+    h.raw.settle();
+    yield* Deferred.await(h.terminal);
+    expiresAt = "2026-10-26T12:09:00.000Z";
+    h.raw.emit({ type: "entry_appended", entry: { type: "usage", kind: "cache_warm" } });
+    const updated = yield* h.waitFor(
+      (event) =>
+        event.type === "provider_thread.updated" &&
+        event.providerThread.contextUsage !== null &&
+        event.providerThread.contextUsage !== undefined &&
+        "usedTokens" in event.providerThread.contextUsage &&
+        event.providerThread.contextUsage.promptCacheExpiresAt === expiresAt,
+    );
+    assert.strictEqual(updated.type, "provider_thread.updated");
+    assert.strictEqual(h.events.filter((event) => event.type === "turn.terminal").length, 1);
+  }).pipe(Effect.scoped, Effect.provide(layer)),
+);
+
 it.effect("continues to stop autonomous SDK work outside a committed run", () =>
   Effect.gen(function* () {
     const h = yield* setup();

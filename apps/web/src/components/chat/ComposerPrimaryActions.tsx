@@ -1,4 +1,8 @@
 import { memo, type MouseEventHandler, type PointerEventHandler } from "react";
+import {
+  compactionReasonDescription,
+  type CompactionReason,
+} from "@getpaperplane/client-runtime/compaction";
 import { CheckIcon, ChevronDownIcon, ChevronLeftIcon, Minimize2Icon, PlayIcon } from "lucide-react";
 import { CornerUpRight, ListPlus } from "lucide";
 import { MorphIcon } from "~/components/MorphIcon";
@@ -51,8 +55,9 @@ interface ComposerPrimaryActionsProps {
   onPreviousPendingQuestion: () => void;
   onInterrupt: () => void;
   onImplementPlanInNewThread: () => void;
-  /** Tokens a stale session would re-read. When set, a Compact chip shows the count and Enter compacts first. */
+  /** Current context size. When set, the Compact chip offers compaction before sending. */
   compactBeforeSendTokens?: number | null;
+  compactionReason?: CompactionReason | undefined;
   /** The Compact chip is turned off, so the next send keeps full history. */
   keepFullHistory?: boolean;
   onToggleKeepFullHistory?: () => void;
@@ -110,6 +115,7 @@ export const ComposerPrimaryActions = memo(function ComposerPrimaryActions({
   onInterrupt,
   onImplementPlanInNewThread,
   compactBeforeSendTokens = null,
+  compactionReason = "cache-expiry",
   keepFullHistory = false,
   onToggleKeepFullHistory,
 }: ComposerPrimaryActionsProps) {
@@ -373,11 +379,13 @@ export const ComposerPrimaryActions = memo(function ComposerPrimaryActions({
                 "flex h-9 shrink-0 cursor-pointer items-center gap-1.5 rounded-full border px-2.5 text-xs tabular-nums outline-none transition-colors focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-64 sm:h-8 [&_svg]:pointer-events-none [&_svg]:size-3.5",
                 keepFullHistory
                   ? "border-border text-muted-foreground hover:text-foreground"
-                  : "border-warning/40 text-warning hover:bg-warning/8",
+                  : compactionReason === "context-pressure"
+                    ? "border-warning/40 text-warning hover:bg-warning/8"
+                    : "border-info/40 text-info-foreground hover:bg-info/8",
               )}
               {...pointerFocusProps}
               aria-pressed={!keepFullHistory}
-              aria-label={`Compact ${compactTokens} tokens of history before sending`}
+              aria-label={`${compactionReasonDescription(compactionReason)} ${compactTokens} tokens of history.`}
               disabled={!canOperateThread}
               onClick={onToggleKeepFullHistory}
             />
@@ -385,12 +393,11 @@ export const ComposerPrimaryActions = memo(function ComposerPrimaryActions({
         >
           <Minimize2Icon aria-hidden="true" />
           {keepFullHistory ? "Full" : "Compact"}
-          <span>{compactTokens}</span>
         </TooltipTrigger>
         <TooltipPopup>
           {keepFullHistory
             ? `Next send keeps all ${compactTokens} tokens. Click to compact first`
-            : `Next send compacts ${compactTokens} tokens first. Click to keep full history`}
+            : `${compactionReasonDescription(compactionReason)} Summarize ${compactTokens} tokens of history. Click to keep full history.`}
         </TooltipPopup>
       </Tooltip>
       {submit}

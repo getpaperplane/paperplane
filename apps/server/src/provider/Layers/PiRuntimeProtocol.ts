@@ -64,6 +64,7 @@ export interface PiSessionState {
   hasPendingUserInput: boolean;
   isPreparingPrompt: boolean;
   autoCompactionEnabled: PiSessionLike["autoCompactionEnabled"];
+  compactionStatus: ReturnType<NonNullable<PiSessionLike["getCompactionStatus"]>>;
   thinkingLevel: string | undefined;
   model: ReturnType<NonNullable<PiSessionLike["getModel"]>>;
   stats: ReturnType<NonNullable<PiSessionLike["getSessionStats"]>>;

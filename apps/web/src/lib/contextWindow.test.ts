@@ -7,6 +7,26 @@ import {
 } from "./contextWindow";
 
 describe("V2 context window presentation", () => {
+  it("preserves Pi's model threshold and absolute cache expiry", () => {
+    const snapshot = deriveLatestContextWindowSnapshot([], undefined, {
+      contextUsage: {
+        usedTokens: 80000,
+        maxTokens: 128000,
+        contextModel: "custom/model",
+        autoCompactThreshold: 100000,
+        promptCacheTtlMs: 300000,
+        promptCacheExpiresAt: "2026-10-26T12:05:00.000Z",
+      },
+      updatedAt: DateTime.makeUnsafe("2026-10-26T12:30:00.000Z"),
+    });
+    expect(snapshot).toMatchObject({
+      usedTokens: 80000,
+      autoCompactThreshold: 100000,
+      contextModel: "custom/model",
+      promptCacheTtlMs: 300000,
+      promptCacheExpiresAt: "2026-10-26T12:05:00.000Z",
+    });
+  });
   it("preserves an unknown Pi window without fabricating occupancy after compaction", () => {
     const snapshot = deriveLatestContextWindowSnapshot([], undefined, {
       contextUsage: {

@@ -157,6 +157,12 @@ import { resolveThreadFeedSubmissionAnchor } from "./thread-feed-live-follow";
 import { useGlobalVoiceInput } from "../voice-input/VoiceInputProvider";
 
 export interface ThreadDetailScreenProps {
+  readonly compactionReason?:
+    | import("@getpaperplane/client-runtime/compaction").CompactionReason
+    | null
+    | undefined;
+  readonly keepFullHistory?: boolean | undefined;
+  readonly onToggleKeepFullHistory?: (() => void) | undefined;
   readonly worktreeSetup?: WorktreeSetupCardProps | null;
   readonly setupWorkingStartedAt?: string | null;
   readonly canOperateThread: boolean;
@@ -1528,6 +1534,9 @@ export const ThreadDetailScreen = memo(function ThreadDetailScreen(props: Thread
                         onRemoveDraftImage={props.onRemoveDraftImage}
                         onStopThread={props.onStopThread}
                         onSendMessage={handleSendMessage}
+                        compactionReason={props.compactionReason}
+                        keepFullHistory={props.keepFullHistory}
+                        onToggleKeepFullHistory={props.onToggleKeepFullHistory}
                         onShowUsageLimits={showUsageLimits}
                         canSwitchProvider={props.canSwitchThreadProvider}
                         onUpdateModelSelection={props.onUpdateThreadModelSelection}

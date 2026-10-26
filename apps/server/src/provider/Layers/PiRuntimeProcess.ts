@@ -507,6 +507,9 @@ class RemotePiSession implements PiSessionLike {
   get autoCompactionEnabled() {
     return this.state.autoCompactionEnabled;
   }
+  getCompactionStatus() {
+    return this.state.compactionStatus;
+  }
   getTurnUsageLimit(observedAt: string) {
     return this.runtime.request("getTurnUsageLimit", [this.key, observedAt]);
   }

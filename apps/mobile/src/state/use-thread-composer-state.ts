@@ -116,6 +116,12 @@ import { enqueueThreadOutboxMessage } from "./thread-outbox";
 import { dispatchingQueuedMessageIdAtom, useThreadOutboxMessages } from "./use-thread-outbox";
 import { threadEnvironment } from "./threads";
 import { useAtomCommand } from "./use-atom-command";
+import {
+  hasContextPressure,
+  promptCacheCompactionDueAt,
+  type CompactionReason,
+} from "@getpaperplane/client-runtime/compaction";
+import { useCompactionDue } from "../features/threads/use-compaction-due";
 
 const EMPTY_QUEUE_WORKFLOW_ATOM = Atom.make<null>(null).pipe(
   Atom.withLabel("mobile-thread-queue-workflow:empty"),
@@ -207,6 +213,7 @@ export function useThreadComposerState() {
     label: "edit queued message",
     reportFailure: false,
   });
+  const startTurn = useAtomCommand(threadEnvironment.startTurn);
   const [isSavingQueuedEdit, setIsSavingQueuedEdit] = useState(false);
   const savingQueuedEditRef = useRef(false);
   const pastedTextFileNamesRef = useRef<{ threadKey: string | null; names: Set<string> }>({
@@ -486,6 +493,53 @@ export function useThreadComposerState() {
   }, [editedRunId, selectedThreadKey, selectedThreadRuns]);
 
   const activeThreadBusy = threadRuntimeIsActive(selectedThreadRuntime);
+  const providerThread = selectedThreadProjection?.projection.providerThreads.find(
+    (candidate) => candidate.id === selectedThreadShell?.activeProviderThreadId,
+  );
+  const usage = providerThread?.contextUsage;
+  const knownUsage = usage && "usedTokens" in usage ? usage : null;
+  const cacheDue = useCompactionDue(
+    knownUsage
+      ? promptCacheCompactionDueAt({
+          ...knownUsage,
+          provider: selectedProvider?.driver,
+        })
+      : null,
+  );
+  const canOfferCompaction =
+    knownUsage !== null &&
+    selectedProvider?.driver === "pi" &&
+    providerThread?.providerInstanceId === modelSelection?.instanceId &&
+    knownUsage.contextModel === modelSelection?.model &&
+    !activeThreadBusy &&
+    !runlessWorkActive &&
+    !isCompacting &&
+    selectedThreadCreation === null &&
+    queuedRunEdit === null &&
+    selectedThreadQueuedMessages.length === 0 &&
+    selectedEnvironmentRuntime?.connectionState === "connected" &&
+    selectedProvider.slashCommands.some((command) => command.name === "compact");
+  const compactionReason: CompactionReason | null = canOfferCompaction
+    ? hasContextPressure(knownUsage)
+      ? "context-pressure"
+      : cacheDue
+        ? "cache-expiry"
+        : null
+    : null;
+  const [fullHistoryThreadKeys, setFullHistoryThreadKeys] = useState<ReadonlySet<string>>(
+    () => new Set(),
+  );
+  const keepFullHistory =
+    selectedThreadKey !== null && fullHistoryThreadKeys.has(selectedThreadKey);
+  const onToggleKeepFullHistory = () => {
+    if (selectedThreadKey === null) return;
+    setFullHistoryThreadKeys((current) => {
+      const next = new Set(current);
+      if (next.has(selectedThreadKey)) next.delete(selectedThreadKey);
+      else next.add(selectedThreadKey);
+      return next;
+    });
+  };
   const interruptibleRunId = threadRuntimeHasInterruptibleRun(selectedThreadRuntime)
     ? (selectedThreadRuntime?.activeRunId ?? null)
     : null;
@@ -719,6 +773,30 @@ export function useThreadComposerState() {
             ? "queue"
             : "auto";
 
+      const compactBeforeSend =
+        compactionReason !== null && !keepFullHistory && text !== "/compact";
+      if (compactBeforeSend) {
+        const compactResult = await startTurn({
+          environmentId: thread.environmentId,
+          input: {
+            threadId: thread.id,
+            message: {
+              messageId: MessageId.make(uuidv4()),
+              role: "user",
+              text: "/compact",
+              attachments: [],
+            },
+            modelSelection,
+            runtimeMode: draft.runtimeMode ?? thread.runtimeMode,
+            interactionMode: resolveProviderInteractionMode(
+              provider,
+              draft.interactionMode ?? thread.interactionMode,
+            ),
+          },
+        });
+        if (AsyncResult.isFailure(compactResult)) return null;
+      }
+
       const metadata = makeQueuedMessageMetadata();
       const messageId = MessageId.make(metadata.messageId);
       // A new send supersedes the reason the previous one bounced back.
@@ -742,12 +820,24 @@ export function useThreadComposerState() {
           provider,
           draft.interactionMode ?? thread.interactionMode,
         ),
-        ...(followUpDispatchMode === null ? {} : { dispatchMode: followUpDispatchMode }),
+        ...(compactBeforeSend
+          ? { dispatchMode: "queue" as const }
+          : followUpDispatchMode === null
+            ? {}
+            : { dispatchMode: followUpDispatchMode }),
         createdAt: metadata.createdAt,
       });
       clearComposerDraftContent(threadKey, { deferAttachmentCleanup: true });
       enqueuePromise.then(
-        () => scheduleUnusedComposerAttachmentCleanup(attachments),
+        () => {
+          setFullHistoryThreadKeys((current) => {
+            if (!current.has(threadKey)) return current;
+            const next = new Set(current);
+            next.delete(threadKey);
+            return next;
+          });
+          scheduleUnusedComposerAttachmentCleanup(attachments);
+        },
         (error: unknown) => {
           // Restore text via merge (idempotent) but attachments via the uncapped
           // append: the merge path slots existing attachments first and truncates
@@ -769,6 +859,9 @@ export function useThreadComposerState() {
     },
     [
       activeThreadBusy,
+      compactionReason,
+      keepFullHistory,
+      startTurn,
       canSteerActiveTurn,
       followUpBehavior,
       saveQueuedRunEdit,
@@ -1118,6 +1211,9 @@ export function useThreadComposerState() {
     runtimeMode,
     interactionMode,
     activeThreadBusy,
+    compactionReason,
+    keepFullHistory,
+    onToggleKeepFullHistory,
     interruptibleRunId,
     onChangeDraftMessage,
     onPickDraftMedia,
