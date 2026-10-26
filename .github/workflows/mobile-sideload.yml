@@ -93,7 +93,9 @@ jobs:
   android:
     needs: prepare
     if: needs.prepare.outputs.android_ready == 'true'
-    runs-on: ubuntu-24.04
+    # The release's slowest job. Keep Blacksmith limited to this build so the
+    # free allowance is not spent on short jobs or 20x-rated macOS minutes.
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     timeout-minutes: 90
     env:
       PAPERPLANE_MOBILE_BUILD_NUMBER: ${{ needs.prepare.outputs.build_number }}
