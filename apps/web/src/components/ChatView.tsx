@@ -1,4 +1,5 @@
 import { ThreadFind, ThreadFindCanvas, type ThreadFindControls } from "./chat/ThreadFindProvider";
+import { ThreadSwitchFade } from "./brand/ThreadSwitchFade";
 import { THREAD_FIND_BAR_RESERVED_HEIGHT } from "./chat/ThreadFindBar";
 import { usageLimitRecoveryBannerItem } from "./chat/UsageLimitRecoveryBanner";
 import { ContinueOnBannerButton, useContinueTargets } from "./continueThread/ContinueThreadDialog";
@@ -5957,6 +5958,7 @@ export default function ChatView(props: ChatViewProps) {
   );
   const timelineScrollIntentRef = useRef<"toward-end" | "away-from-end" | null>(null);
   const timelineScrollModeRef = useRef<TimelineScrollMode>("following-end");
+  const messagesWrapperRef = useRef<HTMLDivElement | null>(null);
   // State mirror of the follow mode refs. LegendList's maintainScrollAtEnd
   // re-pins on its own (independent of the refs), so the timeline needs a
   // render-visible flag to switch it off once the user scrolls away.
@@ -11061,7 +11063,10 @@ export default function ChatView(props: ChatViewProps) {
               />
             </div>
             {/* Messages Wrapper */}
-            <div className="relative flex min-h-0 flex-1 flex-col bg-background">
+            <div
+              ref={messagesWrapperRef}
+              className="relative flex min-h-0 flex-1 flex-col bg-background"
+            >
               {/* Messages — LegendList handles virtualization and scrolling internally */}
               <ConnectedTimeline
                 routeThreadDetailRef={routeThreadDetailRef}
@@ -11094,141 +11099,149 @@ export default function ChatView(props: ChatViewProps) {
                   displayedThreadRef,
                   heldPaintContext,
                 }) => (
-                  <MessagesTimeline
-                    citationRequest={paintOnlyDisplayedTimeline ? null : citationRequest}
-                    citationHistoryLoading={threadDetailLoading}
-                    {...(!paintOnlyDisplayedTimeline
-                      ? {
-                          onCiteAssistantText: citeAssistantTextStable,
-                          ...(activeProject ? { onRunShellCommand: runShellCommandStable } : {}),
-                        }
-                      : {})}
-                    isWorking={!paintOnlyDisplayedTimeline && isWorking}
-                    runlessWorkActive={runlessWorkStartedAt !== null}
-                    activeTurnInProgress={
-                      !paintOnlyDisplayedTimeline && (isWorking || !latestRunSettled)
-                    }
-                    isCompacting={!paintOnlyDisplayedTimeline && isCompacting}
-                    awaitingUser={
-                      !paintOnlyDisplayedTimeline &&
-                      (activePendingApproval !== null ||
-                        activePendingUserInput !== null ||
-                        // A secret request has no runtime request; the shell carries it.
-                        activeThreadShell?.hasPendingUserInput === true)
-                    }
-                    activeTurnStartedAt={paintOnlyDisplayedTimeline ? null : activeWorkStartedAt}
-                    worktreeSetup={paintOnlyDisplayedTimeline ? null : worktreeSetup}
-                    onCancelWorktreeSetup={onCancelWorktreeSetupStable}
-                    {...(paintOnlyDisplayedTimeline
-                      ? {}
-                      : {
-                          retryableWorkspacePreparationRunIds,
-                          onRetryWorkspacePreparation: onRetryWorkspacePreparationStable,
-                        })}
-                    {...(draftId
-                      ? { onWorktreeSetupWorkLocally: onWorktreeSetupWorkLocallyStable }
-                      : {})}
-                    {...(onOpenWorktreeSetupTerminal ? { onOpenWorktreeSetupTerminal } : {})}
-                    isPreparingWorktree={!paintOnlyDisplayedTimeline && isPreparingWorktree}
-                    footer={
-                      paintOnlyDisplayedTimeline ? null : pendingHandoff === null ? (
-                        threadStatusLine
-                      ) : (
-                        <>
-                          <div className="chat-content-lane">
-                            <HandoffRow
-                              endpoints={pendingHandoff}
-                              providers={providerStatuses}
-                              pending
-                            />
-                          </div>
-                          {threadStatusLine}
-                        </>
-                      )
-                    }
-                    listRef={legendListRef}
-                    timelineEntries={displayedTimeline.entries}
-                    providerStatuses={
-                      environmentById.get(
-                        displayedThreadRef?.environmentId ?? activeThread.environmentId,
-                      )?.serverConfig?.providers ?? EMPTY_PROVIDERS
-                    }
-                    runs={paintOnlyDisplayedTimeline ? [] : (serverProjection?.runs ?? [])}
-                    latestRun={paintOnlyDisplayedTimeline ? null : activeActivityRun}
-                    runningRunId={paintOnlyDisplayedTimeline ? null : activeRunningTurnId}
-                    turnDiffSummaries={
-                      paintOnlyDisplayedTimeline
-                        ? EMPTY_HELD_TURN_DIFF_SUMMARIES
-                        : turnDiffSummaries
-                    }
-                    activeThreadEnvironmentId={
-                      displayedThreadRef?.environmentId ?? activeThread.environmentId
-                    }
-                    routeThreadKey={displayedTimelineKey}
-                    displayThreadKey={displayedTimelineKey}
-                    paintOnly={paintOnlyDisplayedTimeline}
-                    onOpenTurnDiff={
-                      paintOnlyDisplayedTimeline ? noopHeldTurnDiff : onOpenTurnDiffStable
-                    }
-                    onOpenThread={onOpenRelatedThreadStable}
-                    parentThreadLink={paintOnlyDisplayedTimeline ? null : parentThreadLink}
-                    onForkFromRun={
-                      paintOnlyDisplayedTimeline ? async () => {} : onForkFromRunStable
-                    }
-                    onRollbackCheckpoint={
-                      paintOnlyDisplayedTimeline
-                        ? noopHeldRollback
-                        : onTimelineRollbackCheckpointStable
-                    }
-                    supportsConversationRollback={
-                      !paintOnlyDisplayedTimeline && supportsConversationRollback
-                    }
-                    onRevertToTurnCount={
-                      paintOnlyDisplayedTimeline ? noopHeldRevert : onRevertTimelineTurnStable
-                    }
-                    {...(!paintOnlyDisplayedTimeline
-                      ? {
-                          onUseArtifactTemplate: useArtifactTemplateStable,
-                          onSendAppMessage: sendAppMessageStable,
-                        }
-                      : {})}
-                    isRevertingCheckpoint={isRevertingCheckpoint}
-                    onImageExpand={onExpandTimelineImageStable}
-                    onFileOpen={
-                      paintOnlyDisplayedTimeline ? noopHeldAttachment : openFileAttachmentStable
-                    }
-                    onFileDownload={
-                      paintOnlyDisplayedTimeline ? noopHeldAttachment : downloadFileAttachmentStable
-                    }
-                    markdownCwd={
-                      paintOnlyDisplayedTimeline
-                        ? (heldPaintContext?.markdownCwd ?? undefined)
-                        : (gitCwd ?? undefined)
-                    }
-                    resolvedTheme={resolvedTheme}
-                    timestampFormat={timestampFormat}
-                    workspaceRoot={
-                      paintOnlyDisplayedTimeline
-                        ? (heldPaintContext?.workspaceRoot ?? undefined)
-                        : activeWorkspaceRoot
-                    }
-                    skills={timelineSkills}
-                    anchorMessageId={paintOnlyDisplayedTimeline ? null : timelineAnchorMessageId}
-                    onAnchorReady={onTimelineAnchorReadyStable}
-                    onAnchorSizeChanged={onTimelineAnchorSizeChangedStable}
-                    contentInsetEndAdjustment={composerTimelineInset}
-                    liveFollowEnabled={!paintOnlyDisplayedTimeline && timelineLiveFollowEnabled}
-                    onIsAtEndChange={onIsAtEndChangeStable}
-                    onContentOverflowChange={setTimelineOverflows}
-                    onToolOutputCollapsedAtEnd={onToolOutputCollapsedAtEndStable}
-                    onManualNavigation={cancelTimelineLiveFollowForUserNavigationStable}
-                    cancelPositionRestoreRef={cancelPositionRestoreRef}
-                    hideEmptyPlaceholder={isDraftHeroState || threadDetailLoading}
-                    topFadeEnabled={!hasTimelineTopBanner}
-                    {...(paintOnlyDisplayedTimeline || threadHistoryControls === undefined
-                      ? {}
-                      : { historyControls: threadHistoryControls })}
-                  />
+                  <>
+                    <ThreadSwitchFade
+                      targetRef={messagesWrapperRef}
+                      threadKey={displayedTimelineKey}
+                    />
+                    <MessagesTimeline
+                      citationRequest={paintOnlyDisplayedTimeline ? null : citationRequest}
+                      citationHistoryLoading={threadDetailLoading}
+                      {...(!paintOnlyDisplayedTimeline
+                        ? {
+                            onCiteAssistantText: citeAssistantTextStable,
+                            ...(activeProject ? { onRunShellCommand: runShellCommandStable } : {}),
+                          }
+                        : {})}
+                      isWorking={!paintOnlyDisplayedTimeline && isWorking}
+                      runlessWorkActive={runlessWorkStartedAt !== null}
+                      activeTurnInProgress={
+                        !paintOnlyDisplayedTimeline && (isWorking || !latestRunSettled)
+                      }
+                      isCompacting={!paintOnlyDisplayedTimeline && isCompacting}
+                      awaitingUser={
+                        !paintOnlyDisplayedTimeline &&
+                        (activePendingApproval !== null ||
+                          activePendingUserInput !== null ||
+                          // A secret request has no runtime request; the shell carries it.
+                          activeThreadShell?.hasPendingUserInput === true)
+                      }
+                      activeTurnStartedAt={paintOnlyDisplayedTimeline ? null : activeWorkStartedAt}
+                      worktreeSetup={paintOnlyDisplayedTimeline ? null : worktreeSetup}
+                      onCancelWorktreeSetup={onCancelWorktreeSetupStable}
+                      {...(paintOnlyDisplayedTimeline
+                        ? {}
+                        : {
+                            retryableWorkspacePreparationRunIds,
+                            onRetryWorkspacePreparation: onRetryWorkspacePreparationStable,
+                          })}
+                      {...(draftId
+                        ? { onWorktreeSetupWorkLocally: onWorktreeSetupWorkLocallyStable }
+                        : {})}
+                      {...(onOpenWorktreeSetupTerminal ? { onOpenWorktreeSetupTerminal } : {})}
+                      isPreparingWorktree={!paintOnlyDisplayedTimeline && isPreparingWorktree}
+                      footer={
+                        paintOnlyDisplayedTimeline ? null : pendingHandoff === null ? (
+                          threadStatusLine
+                        ) : (
+                          <>
+                            <div className="chat-content-lane">
+                              <HandoffRow
+                                endpoints={pendingHandoff}
+                                providers={providerStatuses}
+                                pending
+                              />
+                            </div>
+                            {threadStatusLine}
+                          </>
+                        )
+                      }
+                      listRef={legendListRef}
+                      timelineEntries={displayedTimeline.entries}
+                      providerStatuses={
+                        environmentById.get(
+                          displayedThreadRef?.environmentId ?? activeThread.environmentId,
+                        )?.serverConfig?.providers ?? EMPTY_PROVIDERS
+                      }
+                      runs={paintOnlyDisplayedTimeline ? [] : (serverProjection?.runs ?? [])}
+                      latestRun={paintOnlyDisplayedTimeline ? null : activeActivityRun}
+                      runningRunId={paintOnlyDisplayedTimeline ? null : activeRunningTurnId}
+                      turnDiffSummaries={
+                        paintOnlyDisplayedTimeline
+                          ? EMPTY_HELD_TURN_DIFF_SUMMARIES
+                          : turnDiffSummaries
+                      }
+                      activeThreadEnvironmentId={
+                        displayedThreadRef?.environmentId ?? activeThread.environmentId
+                      }
+                      routeThreadKey={displayedTimelineKey}
+                      displayThreadKey={displayedTimelineKey}
+                      paintOnly={paintOnlyDisplayedTimeline}
+                      onOpenTurnDiff={
+                        paintOnlyDisplayedTimeline ? noopHeldTurnDiff : onOpenTurnDiffStable
+                      }
+                      onOpenThread={onOpenRelatedThreadStable}
+                      parentThreadLink={paintOnlyDisplayedTimeline ? null : parentThreadLink}
+                      onForkFromRun={
+                        paintOnlyDisplayedTimeline ? async () => {} : onForkFromRunStable
+                      }
+                      onRollbackCheckpoint={
+                        paintOnlyDisplayedTimeline
+                          ? noopHeldRollback
+                          : onTimelineRollbackCheckpointStable
+                      }
+                      supportsConversationRollback={
+                        !paintOnlyDisplayedTimeline && supportsConversationRollback
+                      }
+                      onRevertToTurnCount={
+                        paintOnlyDisplayedTimeline ? noopHeldRevert : onRevertTimelineTurnStable
+                      }
+                      {...(!paintOnlyDisplayedTimeline
+                        ? {
+                            onUseArtifactTemplate: useArtifactTemplateStable,
+                            onSendAppMessage: sendAppMessageStable,
+                          }
+                        : {})}
+                      isRevertingCheckpoint={isRevertingCheckpoint}
+                      onImageExpand={onExpandTimelineImageStable}
+                      onFileOpen={
+                        paintOnlyDisplayedTimeline ? noopHeldAttachment : openFileAttachmentStable
+                      }
+                      onFileDownload={
+                        paintOnlyDisplayedTimeline
+                          ? noopHeldAttachment
+                          : downloadFileAttachmentStable
+                      }
+                      markdownCwd={
+                        paintOnlyDisplayedTimeline
+                          ? (heldPaintContext?.markdownCwd ?? undefined)
+                          : (gitCwd ?? undefined)
+                      }
+                      resolvedTheme={resolvedTheme}
+                      timestampFormat={timestampFormat}
+                      workspaceRoot={
+                        paintOnlyDisplayedTimeline
+                          ? (heldPaintContext?.workspaceRoot ?? undefined)
+                          : activeWorkspaceRoot
+                      }
+                      skills={timelineSkills}
+                      anchorMessageId={paintOnlyDisplayedTimeline ? null : timelineAnchorMessageId}
+                      onAnchorReady={onTimelineAnchorReadyStable}
+                      onAnchorSizeChanged={onTimelineAnchorSizeChangedStable}
+                      contentInsetEndAdjustment={composerTimelineInset}
+                      liveFollowEnabled={!paintOnlyDisplayedTimeline && timelineLiveFollowEnabled}
+                      onIsAtEndChange={onIsAtEndChangeStable}
+                      onContentOverflowChange={setTimelineOverflows}
+                      onToolOutputCollapsedAtEnd={onToolOutputCollapsedAtEndStable}
+                      onManualNavigation={cancelTimelineLiveFollowForUserNavigationStable}
+                      cancelPositionRestoreRef={cancelPositionRestoreRef}
+                      hideEmptyPlaceholder={isDraftHeroState || threadDetailLoading}
+                      topFadeEnabled={!hasTimelineTopBanner}
+                      {...(paintOnlyDisplayedTimeline || threadHistoryControls === undefined
+                        ? {}
+                        : { historyControls: threadHistoryControls })}
+                    />
+                  </>
                 )}
               </ConnectedTimeline>
 

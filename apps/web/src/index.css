@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "./brand/paperplane.css";
 
 @custom-variant dark (&:is(.dark, .dark *));
 @custom-variant light (&:not(.dark, .dark *));
@@ -1087,7 +1088,8 @@ html[data-mobile-composer-route-transition="true"]::view-transition-old(paperpla
 :root {
   color-scheme: light;
   --radius: 0.625rem;
-  --background: var(--color-zinc-25);
+  /* Paperplane "paper": warm desk, near-white sheets, navy ink, airmail blue. */
+  --background: #f6f5f0;
   --app-chrome-background: var(--background);
   --toolbar-background: var(--app-chrome-background);
   --toolbar-foreground: var(--foreground);
@@ -1096,17 +1098,17 @@ html[data-mobile-composer-route-transition="true"]::view-transition-old(paperpla
   --toolbar-control-foreground: var(--foreground);
   --toolbar-control-hover: var(--accent);
   --surface-raised: color-mix(in srgb, var(--card) 20%, transparent);
-  --foreground: var(--color-zinc-800);
-  --card: var(--color-white);
-  --card-foreground: var(--color-zinc-800);
-  --popover: var(--color-white);
-  --popover-foreground: var(--color-zinc-800);
-  --primary: oklch(0.488 0.217 264);
+  --foreground: #1c2332;
+  --card: #fcfcf9;
+  --card-foreground: #1c2332;
+  --popover: #fcfcf9;
+  --popover-foreground: #1c2332;
+  --primary: #2a4bb0;
   --primary-foreground: var(--color-white);
-  --secondary: var(--color-zinc-50);
-  --secondary-foreground: var(--color-zinc-800);
-  --muted: var(--color-zinc-50);
-  --muted-foreground: var(--color-zinc-500);
+  --secondary: #efeee7;
+  --secondary-foreground: #1c2332;
+  --muted: #efeee7;
+  --muted-foreground: #5c6575;
   --placeholder: var(--muted-foreground);
   --secondary-label: var(--muted-foreground);
   --icon-muted: var(--muted-foreground);
@@ -1115,36 +1117,36 @@ html[data-mobile-composer-route-transition="true"]::view-transition-old(paperpla
   --message-action: var(--primary);
   --message-action-foreground: var(--primary-foreground);
   --message-action-hover: color-mix(in srgb, var(--primary) 90%, var(--background));
-  --accent: var(--color-zinc-100);
-  --accent-foreground: var(--color-zinc-900);
-  --error: var(--color-red-500);
-  --error-foreground: var(--color-red-700);
+  --accent: #ebe9e0;
+  --accent-foreground: #141a27;
+  --error: #c4442f;
+  --error-foreground: #a3321f;
   --tool-error-icon: var(--error);
   --error-surface: color-mix(in srgb, var(--error) 8%, transparent);
   --destructive: var(--error);
-  --border: var(--color-zinc-200);
-  --input: var(--color-zinc-300);
+  --border: #dcd9cd;
+  --input: #c9c5b6;
   --ring: var(--primary);
   --destructive-foreground: var(--error-foreground);
   --info: var(--color-blue-500);
   --info-foreground: var(--color-blue-700);
-  --success: var(--color-emerald-500);
-  --success-foreground: var(--color-emerald-700);
+  --success: #2d7a4f;
+  --success-foreground: #23633f;
   --warning: var(--color-amber-500);
-  --warning-foreground: var(--color-amber-700);
+  --warning-foreground: #a84500;
   --warning-surface: color-mix(in srgb, var(--warning) 8%, transparent);
   --update: var(--primary);
   --update-foreground: var(--primary);
   --update-surface: color-mix(in srgb, var(--update) 12%, transparent);
   /* Keep every sidebar primitive on the same light surface hierarchy, including
      portaled mobile sheets and settings navigation outside the app sidebar. */
-  --sidebar: var(--color-zinc-50);
+  --sidebar: #ecebe3;
   --sidebar-foreground: var(--foreground);
   --sidebar-muted-foreground: var(--muted-foreground);
-  --sidebar-control-surface: var(--color-zinc-100);
-  --sidebar-row-hover: var(--color-zinc-25);
-  --sidebar-row-active: var(--color-white);
-  --sidebar-row-selected: var(--color-white);
+  --sidebar-control-surface: #e3e1d7;
+  --sidebar-row-hover: #e4e2d8;
+  --sidebar-row-active: #fcfcf9;
+  --sidebar-row-selected: #fcfcf9;
   --sidebar-border: var(--border);
   --sidebar-stage-fade: var(--sidebar);
   --code-background: color-mix(in srgb, var(--card) 90%, var(--background));
@@ -1152,46 +1154,51 @@ html[data-mobile-composer-route-transition="true"]::view-transition-old(paperpla
   --terminal-background: var(--background);
   --terminal-foreground: var(--foreground);
   --terminal-cursor: rgb(38 56 78);
-  --terminal-selection-background: rgb(37 63 99 / 20%);
+  --terminal-selection-background: rgb(42 75 176 / 18%);
 
   @variant dark {
     color-scheme: dark;
-    /* Keep controls and floating surfaces close to the neutral-black canvas.
-       Borders and hover states provide separation without milky gray fills. */
-    --background: var(--color-neutral-950);
-    --surface-raised: color-mix(in srgb, var(--background) 97%, var(--color-white));
-    --foreground: var(--color-neutral-100);
-    --card: color-mix(in srgb, var(--background) 97%, var(--color-white));
-    --card-foreground: var(--color-neutral-100);
-    --popover: color-mix(in srgb, var(--background) 97%, var(--color-white));
-    --popover-foreground: var(--color-neutral-100);
-    --primary: oklch(0.571 0.21 264);
-    --secondary: --alpha(var(--color-white) / 3%);
-    --secondary-foreground: var(--color-neutral-100);
-    --muted: --alpha(var(--color-white) / 3%);
-    --muted-foreground: color-mix(in srgb, var(--color-neutral-500) 90%, var(--color-white));
-    --accent: --alpha(var(--color-white) / 4%);
-    --accent-foreground: var(--color-neutral-100);
-    --error: color-mix(in srgb, var(--color-red-500) 90%, var(--color-white));
-    --error-foreground: var(--color-red-400);
-    --tool-error-icon: #fca5a5;
-    --error-surface: color-mix(in srgb, var(--error) 16%, transparent);
-    --border: --alpha(var(--color-white) / 6%);
-    --input: --alpha(var(--color-white) / 8%);
-    --info-foreground: var(--color-blue-400);
-    --success-foreground: var(--color-emerald-400);
+    /* Paperplane "night flight": a midnight desk, cream ink and a cream
+       action colour, with airmail blue kept for focus and links. */
+    --background: #0f131b;
+    --surface-raised: #141924;
+    --foreground: #ece7da;
+    --card: #161b26;
+    --card-foreground: #ece7da;
+    --popover: #161b26;
+    --popover-foreground: #ece7da;
+    --primary: #ece5d3;
+    --primary-foreground: #141925;
+    --ring: #8eaef7;
+    --secondary: rgb(236 231 218 / 4%);
+    --secondary-foreground: #ece7da;
+    --muted: rgb(236 231 218 / 4%);
+    --muted-foreground: #9aa1ae;
+    --accent: rgb(236 231 218 / 6%);
+    --accent-foreground: #f3efe4;
+    --message-surface: #1a1f2d;
+    --error: #f08473;
+    --error-foreground: #f4a294;
+    --tool-error-icon: #f4a294;
+    --error-surface: color-mix(in srgb, var(--error) 14%, transparent);
+    --border: rgb(236 231 218 / 8%);
+    --input: rgb(236 231 218 / 13%);
+    --info-foreground: #8eaef7;
+    --success: #6fcf97;
+    --success-foreground: #6fcf97;
     --warning-foreground: var(--color-amber-400);
     --warning-surface: color-mix(in srgb, var(--warning) 16%, transparent);
-    --update-foreground: var(--color-blue-400);
+    --update: #8eaef7;
+    --update-foreground: #8eaef7;
     --update-surface: color-mix(in srgb, var(--update) 18%, transparent);
-    --sidebar: var(--card);
+    --sidebar: #070a0f;
     --sidebar-control-surface: var(--muted);
-    --sidebar-row-hover: var(--accent);
-    --sidebar-row-active: var(--accent);
-    --sidebar-row-selected: var(--muted);
-    --sidebar-stage-fade: var(--card);
-    --terminal-cursor: rgb(180 203 255);
-    --terminal-selection-background: rgb(180 203 255 / 25%);
+    --sidebar-row-hover: #1a2030;
+    --sidebar-row-active: #1e2534;
+    --sidebar-row-selected: #1a2030;
+    --sidebar-stage-fade: #070a0f;
+    --terminal-cursor: rgb(142 174 247);
+    --terminal-selection-background: rgb(142 174 247 / 28%);
   }
 }
 
@@ -1199,37 +1206,37 @@ html[data-mobile-composer-route-transition="true"]::view-transition-old(paperpla
    zinc hierarchy: zinc-50 navigation, zinc-25 hover, and white selected/raised
    surfaces. */
 [data-app-sidebar] {
-  --background: var(--color-zinc-25);
-  --foreground: var(--color-zinc-800);
-  --card: var(--color-white);
-  --card-foreground: var(--color-zinc-800);
-  --accent: var(--color-zinc-100);
-  --accent-foreground: var(--color-zinc-900);
-  --muted: var(--color-zinc-50);
-  --muted-foreground: var(--color-zinc-500);
-  --border: var(--color-zinc-200);
-  --input: var(--color-zinc-300);
-  --sidebar: var(--color-zinc-50);
-  --sidebar-foreground: var(--color-zinc-800);
-  --sidebar-muted-foreground: var(--color-zinc-500);
-  --sidebar-control-surface: var(--color-zinc-100);
-  --sidebar-row-hover: var(--color-zinc-25);
-  --sidebar-row-active: var(--color-white);
-  --sidebar-row-selected: var(--color-white);
-  --sidebar-border: var(--color-zinc-200);
+  --background: #f6f5f0;
+  --foreground: #1c2332;
+  --card: #fcfcf9;
+  --card-foreground: #1c2332;
+  --accent: #e4e2d8;
+  --accent-foreground: #141a27;
+  --muted: #ecebe3;
+  --muted-foreground: #5c6575;
+  --border: #dcd9cd;
+  --input: #c9c5b6;
+  --sidebar: #ecebe3;
+  --sidebar-foreground: #1c2332;
+  --sidebar-muted-foreground: #5c6575;
+  --sidebar-control-surface: #e3e1d7;
+  --sidebar-row-hover: #e4e2d8;
+  --sidebar-row-active: #fcfcf9;
+  --sidebar-row-selected: #fcfcf9;
+  --sidebar-border: #dcd9cd;
   --sidebar-stage-fade: var(--sidebar);
 
   @variant dark {
-    --background: #000;
-    --foreground: #f1f3f7;
-    --card: #000;
+    --background: #0f131b;
+    --foreground: #ece7da;
+    --card: #070a0f;
     --card-foreground: var(--foreground);
-    --accent: #191a1d;
-    --accent-foreground: #f7f9ff;
-    --muted: #0a0a0a;
-    --muted-foreground: #a3a3a3;
-    --border: rgb(255 255 255 / 8%);
-    --input: rgb(255 255 255 / 18%);
+    --accent: #1e2534;
+    --accent-foreground: #f3efe4;
+    --muted: #151b27;
+    --muted-foreground: #9aa1ae;
+    --border: rgb(236 231 218 / 8%);
+    --input: rgb(236 231 218 / 16%);
     --sidebar: var(--card);
     --sidebar-foreground: var(--foreground);
     --sidebar-muted-foreground: var(--muted-foreground);

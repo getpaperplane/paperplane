@@ -3,8 +3,8 @@
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#161616",
-  "theme_color": "#161616",
+  "background_color": "#0f131b",
+  "theme_color": "#0f131b",
   "icons": [
     {
       "src": "/favicon-32x32.png",

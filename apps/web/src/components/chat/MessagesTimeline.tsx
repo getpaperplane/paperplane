@@ -1,4 +1,6 @@
 import { ThreadFindTimelineContext } from "./ThreadFindProvider";
+import { unfoldIfJustSent } from "~/brand/paperplaneFlight";
+import { PaperPlaneIcon } from "../brand/PaperplaneMarks";
 import { shouldPreserveAssistantLineBreaks } from "@getpaperplane/shared/markdownPipeline";
 import { MarkdownFindContext, useFindRevealRef } from "./markdownFindContext";
 import { useChatCanvas } from "./ChatCanvasContext";
@@ -1594,6 +1596,21 @@ const ConversationTimeline = memo(function ConversationTimeline({
     [listRef],
   );
 
+  // Rows inserted just after a turn ends (the "Worked for" fold replacing the
+  // working row) fade in; history rows opened later do not. Derived during
+  // render so the window is already open in the commit that inserts the fold.
+  const [wasWorking, setWasWorking] = useState(isWorking);
+  const [turnSettling, setTurnSettling] = useState(false);
+  if (wasWorking !== isWorking) {
+    setWasWorking(isWorking);
+    setTurnSettling(!isWorking);
+  }
+  useEffect(() => {
+    if (!turnSettling) return;
+    const timeout = window.setTimeout(() => setTurnSettling(false), 1200);
+    return () => window.clearTimeout(timeout);
+  }, [turnSettling]);
+
   if (
     rows.length === 0 &&
     !isWorking &&
@@ -1612,7 +1629,8 @@ const ConversationTimeline = memo(function ConversationTimeline({
         className="flex h-full items-center justify-center ps-(--chat-lane-inset-start) pe-(--chat-lane-inset-end)"
         style={{ paddingBottom: contentInsetEndAdjustment }}
       >
-        <p className="text-sm text-muted-foreground/30">
+        <p className="flex flex-col items-center gap-3 text-sm text-muted-foreground/30">
+          <PaperPlaneIcon className="paperplane-empty-glide size-6" />
           Send a message to start the conversation.
         </p>
       </div>
@@ -1627,6 +1645,7 @@ const ConversationTimeline = memo(function ConversationTimeline({
             ref={setTimelineViewportElement}
             className="relative h-full min-h-0"
             data-assistant-citation-viewport="true"
+            data-turn-settling={turnSettling ? "" : undefined}
           >
             {onCiteAssistantText && citationThreadRef ? (
               <AssistantSelectionToolbar
@@ -2522,7 +2541,11 @@ function UserTimelineRow({ row }: { row: Extract<TimelineRow, { kind: "message" 
       {row.message.inputIntent && row.message.inputIntent !== "turn_start" ? (
         <UserMessageIntentMarker intent={row.message.inputIntent} />
       ) : null}
-      <div className="relative max-w-[80%] rounded-2xl bg-message p-3 text-message-foreground">
+      <div
+        ref={unfoldIfJustSent}
+        data-paperplane-bubble
+        className="relative max-w-[80%] rounded-2xl bg-message p-3 text-message-foreground"
+      >
         <MessageAuthorHeading>You</MessageAuthorHeading>
         {(regularImages.length > 0 || userVideos.length > 0) && (
           <div className="mb-2 grid max-w-[210px] grid-cols-2 gap-2">
@@ -2828,7 +2851,7 @@ function TurnFoldTimelineRow({ row }: { row: Extract<TimelineRow, { kind: "turn-
   const ctx = use(TimelineRowCtx);
 
   return (
-    <div className="group/timeline-row relative flex items-center gap-1 border-b border-border/60 pb-2 pe-0.5 pt-1">
+    <div className="paperplane-settle-in group/timeline-row relative flex items-center gap-1 border-b border-border/60 pb-2 pe-0.5 pt-1">
       <button
         type="button"
         aria-expanded={row.expanded}

@@ -5,7 +5,7 @@ import {
   type ProviderDriverKind,
   type ResolvedKeybindingsConfig,
 } from "@getpaperplane/contracts";
-import { memo, useEffect, useMemo, useState } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { Badge } from "../ui/badge";
 import { Popover, PopoverPopup, PopoverTrigger } from "../ui/popover";
 import { Tooltip, TooltipPopup, TooltipTrigger } from "../ui/tooltip";
@@ -103,6 +103,20 @@ export const ProviderModelPicker = memo(function ProviderModelPicker(props: {
       setUncontrolledIsMenuOpen(open);
     }
   };
+
+  // A new model is a new stamp: press it once when the selection changes.
+  const stampRef = useRef<HTMLButtonElement>(null);
+  const stampedModelRef = useRef(props.model);
+  useEffect(() => {
+    if (stampedModelRef.current === props.model) return;
+    stampedModelRef.current = props.model;
+    const stamp = stampRef.current;
+    if (!stamp || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    stamp.animate(
+      [{ transform: "none" }, { transform: "scale(0.94) rotate(-1.5deg)" }, { transform: "none" }],
+      { duration: 260, easing: "cubic-bezier(0.23, 1, 0.32, 1)" },
+    );
+  }, [props.model]);
 
   useEffect(() => {
     if (!isMenuOpen) {
@@ -205,6 +219,7 @@ export const ProviderModelPicker = memo(function ProviderModelPicker(props: {
       }}
     >
       <PopoverTrigger
+        ref={stampRef}
         render={
           <ComposerControl
             aria-label={props.triggerAriaLabel ?? allModelNames}
