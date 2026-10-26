@@ -1,12 +1,14 @@
 import * as OtelEnvironment from "@getpaperplane/shared/otelEnvironment";
 import { DEFAULT_SIGNAL_EXPORT } from "@getpaperplane/shared/observability";
 import * as NodeServices from "@effect/platform-node/NodeServices";
+import { checkpointWorkspace } from "@getpaperplane/provider-testing/replayWorkspace";
 import type { ProviderDriverKind, ProviderReplayTranscript } from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
+import type * as Scope from "effect/Scope";
 import type * as SqlClient from "effect/sql/SqlClient";
 import type { MigrationError } from "effect/sql/Migrator";
 import type { SqlError } from "effect/sql/SqlError";
@@ -72,13 +74,13 @@ export function makeReplayServerConfig(
 ): Effect.Effect<
   ServerConfig.ServerConfig["Service"],
   PlatformError.PlatformError,
-  FileSystem.FileSystem | Path.Path
+  FileSystem.FileSystem | Path.Path | Scope.Scope
 > {
   const safeScenario = scenario.replace(/[^a-z0-9_-]+/gi, "-");
   return Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
-    const baseDir = yield* fs.makeTempDirectory({
+    const baseDir = yield* fs.makeTempDirectoryScoped({
       prefix: `paperplane-orchestration-v2-replay-${safeScenario}-`,
     });
     const stateDir = path.join(baseDir, "userdata");
@@ -120,7 +122,7 @@ export function makeReplayServerConfig(
       mode: "web",
       port: 0,
       host: undefined,
-      cwd: process.cwd(),
+      cwd: baseDir,
       baseDir,
       staticDir: undefined,
       devUrl: undefined,
@@ -295,11 +297,28 @@ export function layerWithRegistry<Error>(
     ServerConfig.ServerConfig,
     makeReplayServerConfig(scenario.name).pipe(Effect.orDie),
   ).pipe(Layer.provide(NodeServices.layer));
+  // A null cwd reaches the orchestrator's process.cwd() fallback, which writes
+  // checkpoint refs into the contributor's repository (shared by worktrees).
+  const layerRuntimeDefault = Layer.effect(
+    RuntimePolicy.RuntimePolicyV2,
+    Effect.gen(function* () {
+      const runtime = yield* RuntimePolicy.RuntimePolicyV2;
+      const cwd =
+        scenario.runtimePolicyOverride?.cwd ??
+        (yield* checkpointWorkspace(scenario.name).pipe(Effect.orDie));
+      return RuntimePolicy.RuntimePolicyV2.of({
+        resolve: (input) =>
+          runtime
+            .resolve(input)
+            .pipe(Effect.map((policy) => ({ ...policy, cwd: policy.cwd ?? cwd }))),
+      });
+    }),
+  ).pipe(Layer.provide(RuntimePolicy.layer));
   const layerRuntime =
     scenario.runtimePolicyOverride === undefined
-      ? RuntimePolicy.layer
+      ? layerRuntimeDefault
       : RuntimePolicy.layerWithOverride(scenario.runtimePolicyOverride).pipe(
-          Layer.provide(RuntimePolicy.layer),
+          Layer.provide(layerRuntimeDefault),
         );
   const layerDatabase = options.databaseLayer ?? SqlitePersistence.layerMemory;
   // One queue shared by the adapters, the orchestrator, and the worker, like

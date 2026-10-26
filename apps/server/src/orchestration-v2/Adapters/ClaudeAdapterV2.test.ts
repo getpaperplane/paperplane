@@ -64,6 +64,8 @@ import * as Scheduler from "effect/Scheduler";
 import * as Scope from "effect/Scope";
 import * as Stream from "effect/Stream";
 import * as TestClock from "effect/testing/TestClock";
+import * as ChildProcess from "effect/process/ChildProcess";
+import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import { Tool } from "effect/ai";
 import { formatClaudeResumeCompactionQuestion } from "@getpaperplane/shared/claudeCompaction";
 import * as HostProcess from "@getpaperplane/shared/HostProcess";
@@ -4270,11 +4272,29 @@ describe("ClaudeAdapterV2 background wake turns", () => {
         modelSelection: CLAUDE_MODEL_SELECTION,
       }).pipe(Effect.provide(IdAllocator.layer), provideDeterministicTestRuntime);
       const scenario = { name: transcript.scenario, transcript, ...materialized };
-      yield* Effect.gen(function* () {
+      const workspace = yield* Effect.gen(function* () {
         const result = yield* runOrchestratorV2Scenario(scenario);
         assertBaseProjection({ result, transcript, runCount: 1, runStatuses: ["completed"] });
         const projection = projectionFor(result, transcript.scenario);
         assertSemanticProjectionIntegrity(projection);
+        // Exercise real checkpoint capture, not a non-Git cwd that silently skips it.
+        assert.lengthOf(projection.checkpointScopes, 1);
+        const cwd = projection.checkpointScopes[0]!.cwd;
+        assert.notEqual(cwd, process.cwd());
+        assert.deepEqual(
+          projection.checkpoints.map((checkpoint) => checkpoint.status),
+          ["ready", "ready"],
+        );
+        const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+        const refs = yield* spawner.string(
+          ChildProcess.make("git", ["for-each-ref", "--format=%(refname)", "refs/paperplane"], {
+            cwd,
+          }),
+        );
+        assert.deepEqual(
+          refs.trim().split("\n"),
+          projection.checkpoints.map((checkpoint) => checkpoint.ref),
+        );
         const plans = projection.plans.filter((plan) => plan.kind === "todo_list");
         assert.lengthOf(plans, 1);
         assert.deepEqual(
@@ -4285,11 +4305,18 @@ describe("ClaudeAdapterV2 background wake turns", () => {
           projection.turnItems.filter((item) => item.type === "todo_list"),
           1,
         );
+        return cwd;
       }).pipe(
-        Effect.provide(layerProviderReplay(scenario, ClaudeOrchestratorReplayHarness)),
+        Effect.provide(
+          Layer.merge(
+            layerProviderReplay(scenario, ClaudeOrchestratorReplayHarness),
+            NodeServices.layer,
+          ),
+        ),
         provideDeterministicTestRuntime,
         Effect.scoped,
       );
+      assert.isFalse(NodeFS.existsSync(workspace));
     }),
   );
 

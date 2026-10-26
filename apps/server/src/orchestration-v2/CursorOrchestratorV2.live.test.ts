@@ -1,6 +1,7 @@
 import * as ServerSecretStore from "../auth/ServerSecretStore.ts";
 import * as SourceControlProviderRegistry from "../sourceControl/SourceControlProviderRegistry.ts";
 import * as NodeServices from "@effect/platform-node/NodeServices";
+import { checkpointWorkspace } from "@getpaperplane/provider-testing/replayWorkspace";
 import { assert, it } from "@effect/vitest";
 import {
   EnvironmentId,
@@ -160,6 +161,7 @@ describe.runIf(process.env.PAPERPLANE_CURSOR_LIVE_ORCHESTRATOR === "1")(
           const sourceThreadId = ThreadId.make("thread:cursor-live-portable-fork:source");
           const targetThreadId = ThreadId.make("thread:cursor-live-portable-fork:target");
           const marker = "CURSOR_LIVE_PORTABLE_FORK_7H3Q";
+          const cwd = yield* checkpointWorkspace("cursor-live-portable-fork");
 
           yield* orchestrator.dispatch({
             type: "thread.create",
@@ -173,7 +175,7 @@ describe.runIf(process.env.PAPERPLANE_CURSOR_LIVE_ORCHESTRATOR === "1")(
             runtimeMode: "full-access",
             interactionMode: "default",
             branch: null,
-            worktreePath: process.cwd(),
+            worktreePath: cwd,
           });
           yield* orchestrator.dispatch({
             type: "message.dispatch",
@@ -254,6 +256,7 @@ describe.runIf(process.env.PAPERPLANE_CURSOR_LIVE_ORCHESTRATOR === "1")(
           yield* EffectWorker.runDaemonWithOptions({ concurrency: 2 }).pipe(Effect.forkScoped);
           const orchestrator = yield* Orchestrator.OrchestratorV2;
           const projectId = ProjectId.make("project:cursor-live-sandbox-after-full-access");
+          const cwd = yield* checkpointWorkspace("cursor-live-sandbox-after-full-access");
 
           const runThread = Effect.fn("CursorOrchestratorV2Live.runThread")(function* (input: {
             readonly name: string;
@@ -272,7 +275,7 @@ describe.runIf(process.env.PAPERPLANE_CURSOR_LIVE_ORCHESTRATOR === "1")(
               runtimeMode: input.runtimeMode,
               interactionMode: "default",
               branch: null,
-              worktreePath: process.cwd(),
+              worktreePath: cwd,
             });
             yield* orchestrator.dispatch({
               type: "message.dispatch",
@@ -317,6 +320,7 @@ describe.runIf(process.env.PAPERPLANE_CURSOR_LIVE_ORCHESTRATOR === "1")(
           const orchestrator = yield* Orchestrator.OrchestratorV2;
           const projectId = ProjectId.make("project:cursor-live-subagent-lineage");
           const sourceThreadId = ThreadId.make("thread:cursor-live-subagent-lineage");
+          const cwd = yield* checkpointWorkspace("cursor-live-subagent-lineage");
 
           yield* orchestrator.dispatch({
             type: "thread.create",
@@ -330,7 +334,7 @@ describe.runIf(process.env.PAPERPLANE_CURSOR_LIVE_ORCHESTRATOR === "1")(
             runtimeMode: "full-access",
             interactionMode: "default",
             branch: null,
-            worktreePath: process.cwd(),
+            worktreePath: cwd,
           });
           yield* orchestrator.dispatch({
             type: "message.dispatch",
