@@ -99,7 +99,7 @@ const useContinueThreadStore = create<{ request: ContinueRequest | null }>(() =>
   request: null,
 }));
 
-export function openContinueThread(request: ContinueRequest): void {
+function openContinueThread(request: ContinueRequest): void {
   useContinueThreadStore.setState({ request });
 }
 
